@@ -1,0 +1,87 @@
+# Troubleshooting
+
+Find your problem below. Each answer says what is wrong and what to do.
+
+## Build problems
+
+**`Project directory '.../ftc-helper-lib/library' does not exist`**
+The submodule folder is empty (the project was cloned without it). Run in the Terminal tab:
+```bash
+git submodule update --init
+```
+
+**`Cannot resolve symbol 'octobots'` / red imports**
+Gradle does not know about the library yet. Check steps 2 and 3 in
+[Add it to a project](01-add-to-project.md), then **File > Sync Project with Gradle Files**.
+
+**`Plugin [id: 'com.android.library'] was not found`**
+Your project's top `build.gradle` must list the Android library plugin. Every FtcRobotController
+project does (`id 'com.android.library' version '...' apply false`). If yours is very old, update the SDK.
+
+**Errors in the library after an FTC SDK update**
+See [A new FTC SDK version](02-keep-up-to-date.md#a-new-ftc-sdk-version).
+
+## Driver Station errors
+
+**`No DcMotorEx named "..." in the active robot configuration`**
+The name in code and the name in the Driver Station configuration differ. The message lists the
+names that do exist. Fix the spelling, or pick the right configuration on the Driver Station.
+
+**`AutoDriveConfig.calibrationConfirmed is false`**
+On purpose. Tune `AutoDrive`, then set it to `true`: [Tune AutoDrive](modules/drive.md#tune-autodrive).
+
+## Robot behavior
+
+**The robot drives diagonally, spins, or a wheel fights the others**
+A motor direction or a motor name is wrong. [Check motor directions](modules/drive.md#check-motor-directions).
+
+**Pushing the stick up drives backward**
+You forgot the minus: forward is `-gamepad1.left_stick_y`.
+
+**Field-centric goes the wrong way**
+1. The IMU orientation (logo/USB) does not match the hub on the robot ([ImuSetup](modules/hardware.md#imusetup)).
+2. The heading was not 0 while facing away from the driver. Point the robot away and press your reset button.
+
+**A button action runs over and over**
+You used `bindHold` where you wanted `bindPress`.
+
+**A button does nothing**
+- Is `controls.update(gamepad1, gamepad2)` in the loop?
+- Is it the right pad? `Pad.G1` = gamepad1, `Pad.G2` = gamepad2.
+- Was the button held through START? After `ignoreHeldButtons`, let it go and press again.
+
+**The robot freezes when I press a button**
+An action has a `sleep()` or a waiting loop. Actions must be quick. Set a target or a state
+variable instead and let the loop do the work.
+
+**A lift only goes down, and slowly, at the start**
+It is not homed yet. Push it down until the lower switch is pressed; then it works normally.
+See [Homing](modules/safety.md#homing-with-a-lower-switch).
+
+**A lift will not move**
+- `getAppliedPower()` is 0 while you push the stick: a limit stopped it. Check `getPosition()` and
+  your limits; it may think it is at the bottom or top.
+- The motor was turned on with the lift half up, so 0 is in the wrong place. Lower it and restart,
+  or use a lower limit switch for homing.
+- The motor direction is wrong (positive power must go up). Check with a low power.
+
+**The lift stops early or goes past the top**
+Re-measure the top position with `lift.getPosition()` on telemetry. A slipping belt or string
+changes the count: add a lower limit switch so it re-zeroes each time it reaches the bottom.
+
+**AutoDrive moves the wrong distance**
+Tune `wheelDiameterIn` and `strafeCorrection`: [Tune AutoDrive](modules/drive.md#tune-autodrive).
+
+**AutoDrive turns overshoot or stop short**
+Overshoot: raise `turnKd` or lower `turnKp`. Stop short: raise `turnKp` a little or set `turnMinPower`.
+
+**AutoDrive stops early with "robot stuck"**
+It was blocked, or it moved too slowly. If it was not blocked, raise `moveMinPower` or `stallTimeSec`.
+
+**The loop is slow (telemetry shows under ~30 Hz)**
+Turn on [bulk reads](modules/hardware.md#bulkreads), send fewer telemetry lines, and remove any `sleep()`.
+
+## Still stuck?
+
+Write down what you did, what you expected and what happened, and ask the programming lead.
+If it is a library bug, add a failing test for it: [Contributing](contributing.md).

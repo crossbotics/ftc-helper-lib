@@ -1,0 +1,42 @@
+// ftc-helper-lib: the library module.
+// A robot project includes this folder as a Gradle module (see docs/01-add-to-project.md).
+// The plugin version comes from the robot project's own build.gradle.
+plugins {
+    id 'com.android.library'
+}
+
+// The FTC SDK version this library is built and tested against.
+// The robot project brings its own SDK; Gradle uses the newer of the two.
+def ftcSdkVersion = '11.2.1'
+
+android {
+    namespace 'org.octobots.ftchelper'
+    compileSdk 30
+
+    defaultConfig {
+        minSdk 24
+    }
+
+    compileOptions {
+        // Same as the FTC SDK (build.common.gradle).
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    testOptions {
+        // Android classes do nothing in plain unit tests instead of throwing.
+        unitTests.returnDefaultValues = true
+    }
+}
+
+dependencies {
+    // compileOnly: the robot project already has the SDK, so we do not bundle a second copy.
+    compileOnly "org.firstinspires.ftc:RobotCore:$ftcSdkVersion"
+    compileOnly "org.firstinspires.ftc:Hardware:$ftcSdkVersion"
+    compileOnly "org.firstinspires.ftc:FtcCommon:$ftcSdkVersion"
+
+    testImplementation "org.firstinspires.ftc:RobotCore:$ftcSdkVersion"
+    testImplementation "org.firstinspires.ftc:Hardware:$ftcSdkVersion"
+    testImplementation "org.firstinspires.ftc:FtcCommon:$ftcSdkVersion"
+    testImplementation 'junit:junit:4.13.2'
+}

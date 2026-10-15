@@ -1,0 +1,125 @@
+# Add the library to a robot project
+
+This page adds ftc-helper-lib to an FTC robot project in Android Studio. It takes about 5 minutes.
+You do it **once per robot project**. After that, everyone who clones the project gets the library too.
+
+## How it works (the short version)
+
+- Your robot project is a git repository (a folder whose history git keeps).
+- We put ftc-helper-lib inside it as a **git submodule**: a repository inside a repository.
+  Your project remembers exactly which version of the library it uses.
+- Then we tell Gradle (the tool that builds the robot app) that `TeamCode` uses the library.
+
+Why a submodule? It works at events with no internet, you can read the library code right
+in Android Studio, and everyone on the team gets the same version.
+
+## What you need
+
+- The robot project (the `FtcRobotController` folder) open in Android Studio, and it builds.
+- Git. Android Studio's **Terminal** tab (bottom of the window) has it on most computers.
+  Type `git --version` to check.
+
+## Step 1: Add the submodule
+
+Open the **Terminal** tab in Android Studio. It starts in the project folder (the one that has
+`TeamCode` and `FtcRobotController` in it). Run:
+
+```bash
+git submodule add https://github.com/jasoncross/ftc-helper-lib.git ftc-helper-lib
+```
+
+You now have a new folder, `ftc-helper-lib`, next to `TeamCode`.
+
+> Want a fixed version instead of the newest? See
+> [Use a specific version](02-keep-up-to-date.md#use-a-specific-version) after this page.
+
+## Step 2: Tell Gradle about the library
+
+Open `settings.gradle` (in the project folder, NOT inside TeamCode). At the bottom you see:
+
+```groovy
+include ':FtcRobotController'
+include ':TeamCode'
+```
+
+Add these two lines under them:
+
+```groovy
+include ':ftc-helper-lib'
+project(':ftc-helper-lib').projectDir = new File(rootDir, 'ftc-helper-lib/library')
+```
+
+The second line says "the module's code is in the `library` folder inside the submodule".
+
+## Step 3: Let TeamCode use the library
+
+Open `TeamCode/build.gradle`. Find the `dependencies { ... }` block at the bottom. Add one line inside it:
+
+```groovy
+dependencies {
+    implementation project(':FtcRobotController')
+    implementation project(':ftc-helper-lib')      // <- add this line
+}
+```
+
+## Step 4: Sync
+
+Click **Sync Now** in the yellow bar at the top of the editor
+(or **File > Sync Project with Gradle Files**). Wait until it finishes with no red errors.
+
+## Step 5: Check that it works
+
+Make a new Java file in `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/` named
+`HelperCheck.java`:
+
+```java
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import org.octobots.ftchelper.util.Angles;
+
+@TeleOp(name = "Helper Check")
+public class HelperCheck extends LinearOpMode {
+    @Override
+    public void runOpMode() {
+        telemetry.addData("Library works", Angles.shortestDiff(-170, 170) == 20);
+        telemetry.update();
+        waitForStart();
+    }
+}
+```
+
+Build (**Build > Make Project**, or the hammer icon). If it builds, the library is in.
+You can run "Helper Check" on the robot: it shows `Library works : true`. Then delete the file.
+
+## Step 6: Commit
+
+The submodule is part of your project now, so commit it like any change:
+
+```bash
+git add .gitmodules ftc-helper-lib settings.gradle TeamCode/build.gradle
+git commit -m "Add ftc-helper-lib"
+```
+
+## For everyone else on the team
+
+When a teammate clones the robot project for the first time, they must get the submodule too:
+
+```bash
+git clone --recurse-submodules <robot project URL>
+```
+
+If they already cloned it without that, the `ftc-helper-lib` folder is empty. Fix it with:
+
+```bash
+git submodule update --init
+```
+
+Android Studio's **Git > Clone** does not always get submodules. If the build says
+`Project directory '.../ftc-helper-lib/library' does not exist`, run the command above.
+
+## Next
+
+- [Your first TeleOp](03-first-teleop.md)
+- [Keep it up to date](02-keep-up-to-date.md)

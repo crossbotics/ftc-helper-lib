@@ -1,0 +1,16 @@
+// Standalone build of ftc-helper-lib (used for tests, CI and the examples).
+// Robot projects do NOT use this file. They include only the `library` folder.
+// See docs/01-add-to-project.md.
+
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+rootProject.name = 'ftc-helper-lib'
+
+include ':library'
+include ':examples'

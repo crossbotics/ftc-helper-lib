@@ -1,0 +1,12 @@
+// Standalone build only. Keep the plugin version the same as the FTC SDK's
+// own build.gradle (FtcRobotController 11.2.1 uses 8.13.2).
+plugins {
+    id 'com.android.library' version '8.13.2' apply false
+}
+
+allprojects {
+    repositories {
+        mavenCentral()
+        google()
+    }
+}

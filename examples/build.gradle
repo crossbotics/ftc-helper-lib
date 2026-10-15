@@ -1,0 +1,29 @@
+// Example OpModes. This module is only built in the standalone build, to prove
+// the examples compile. Robot projects do not include it: copy an example into
+// TeamCode and remove its @Disabled line to use it.
+plugins {
+    id 'com.android.library'
+}
+
+def ftcSdkVersion = '11.2.1'
+
+android {
+    namespace 'org.octobots.ftchelper.examples'
+    compileSdk 30
+
+    defaultConfig {
+        minSdk 24
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation project(':library')
+    compileOnly "org.firstinspires.ftc:RobotCore:$ftcSdkVersion"
+    compileOnly "org.firstinspires.ftc:Hardware:$ftcSdkVersion"
+    compileOnly "org.firstinspires.ftc:FtcCommon:$ftcSdkVersion"
+}
