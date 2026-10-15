@@ -16,7 +16,7 @@ Game-specific code (launcher, feed, intake, vision, routes) is NOT in the librar
 | `drive/Drivebase` (Auto helpers) | `drive.AutoDrive` | Settings come from `AutoDriveConfig` (same default numbers as `DriveTuning`). `moveWithTwist` is now `moveWithTurn`. New: `turnTo`, a `Result` for each move. Changes below. |
 | `config/DriveTuning` | `drive.AutoDriveConfig` | Fields renamed in plain words, for example `TURN_KP` is `turnKp`, `AUTO_MOVE_MIN_SPEED` is `moveMinPower`. |
 | `odometry/FieldPose`, `odometry/PoseStore` | `util.FieldPose`, `util.PoseStore` | `setLastKnownPose`/`consumeLastKnownPose` are now `save`/`consume`; `peek`, `has` and `clear` remain. |
-| (new) | `safety.SafeMotor`, `control.PidController`, `control.SlewRateLimiter`, `telemetry.TelemetryHelper`, `hardware.*` | New helpers. |
+| (new) | `drive.TankDrive` (standard drive), `safety.SafeMotor`, `control.PidController`, `control.SlewRateLimiter`, `telemetry.TelemetryHelper`, `hardware.*` | New helpers. |
 
 ## Behavior changes in AutoDrive (on purpose)
 

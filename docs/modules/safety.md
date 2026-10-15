@@ -10,8 +10,9 @@ into the frame, snap a string, or stall a motor at the end of travel.
 | [`SafeMotor`](#safemotor) | a motor with soft limits, limit switches, homing and a slow zone |
 | [`SoftLimits`](#softlimits) | the limit rule by itself (no hardware) |
 
-**Software limits are not enough on their own.** FTC rules say a robot must stay inside its size
-limits at full extension, and inspectors check it. Every moving part needs a **hard stop** (a
+**Software limits are not enough on their own.** Rule R105 B (2026-27 manual) says the robot must
+stay inside its size limits *without the use of software*, and inspectors check the maximum mechanical
+extension. Every moving part needs a **hard stop** (a
 physical block). Use `SafeMotor` AND a hard stop: the software stops the motor before it hits
 the block; the block holds if the software is wrong.
 

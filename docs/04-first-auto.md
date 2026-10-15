@@ -19,7 +19,7 @@ import io.github.jasoncross.ftchelper.drive.DriveConfig;
 
 public final class RobotSettings {
     public static DriveConfig drive() {
-        DriveConfig c = new DriveConfig();
+        DriveConfig c = DriveConfig.mecanum();   // or DriveConfig.tank() / tankTwoMotor()
         c.powerLimit = 0.8;
         return c;
     }
@@ -59,6 +59,7 @@ public class MainAuto extends LinearOpMode {
 ```
 
 Directions in `move`: 0 forward, 90 right, 180 back, -90 left. Turns: positive = left.
+On a standard (tank) drive, `move` only takes 0 or 180: turn first, then move.
 
 ## 3. Tune, then confirm
 

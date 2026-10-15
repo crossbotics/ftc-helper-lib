@@ -37,11 +37,15 @@ Android Studio adds `import` lines for you: when a name is red, click it and pre
 
 ## 2. Drive
 
+(Standard / tank drive? Use `TankDrive` with `DriveConfig.tank()` or `DriveConfig.tankTwoMotor()`,
+and `drive.arcade(forward, turn, speed)` instead of `drive.drive(...)`. Skip field-centric in step 3.
+See [`ExampleTankTeleOp`](../examples/src/main/java/io/github/jasoncross/ftchelper/examples/ExampleTankTeleOp.java).)
+
 In INIT:
 
 ```java
 BulkReads.auto(hardwareMap);                       // faster loop
-DriveConfig driveConfig = new DriveConfig();
+DriveConfig driveConfig = DriveConfig.mecanum();
 driveConfig.powerLimit = 0.5;                      // careful while testing
 MecanumDrive drive = new MecanumDrive(hardwareMap, driveConfig);
 ```

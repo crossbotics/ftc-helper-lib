@@ -2,17 +2,26 @@
 
 Package: `io.github.jasoncross.ftchelper.drive`
 
-Drives a four-wheel mecanum chassis, in TeleOp and in autonomous.
+Drives a **mecanum** chassis (4 mecanum wheels) or a **standard** chassis (also called tank or
+differential drive: normal wheels, a left side and a right side, 2 or 4 motors), in TeleOp and in autonomous.
 Signs used here: [Signs and units](../conventions.md). Read it first.
+
+| Your robot | TeleOp class | Autonomous class | Config |
+| --- | --- | --- | --- |
+| Mecanum, 4 motors | `MecanumDrive` | `AutoDrive` | `DriveConfig.mecanum()` |
+| Standard, 4 motors | `TankDrive` | `AutoDrive` | `DriveConfig.tank()` |
+| Standard, 2 motors | `TankDrive` | `AutoDrive` | `DriveConfig.tankTwoMotor()` |
 
 | Class | Use it to |
 | --- | --- |
-| [`DriveConfig`](#driveconfig) | name the four motors, set their directions and a power limit |
-| [`MecanumDrive`](#mecanumdrive) | drive in TeleOp (robot-centric or field-centric) |
+| [`DriveConfig`](#driveconfig) | choose the drive type, name the motors, set their directions and a power limit |
+| [`MecanumDrive`](#mecanumdrive) | drive a mecanum robot in TeleOp (robot-centric or field-centric) |
+| [`TankDrive`](#tankdrive) | drive a standard (tank) robot in TeleOp (arcade or tank style) |
 | [`ReverseDrive`](#reversedrive) | a mode where the back of the robot acts as the front |
 | [`AutoDriveConfig`](#autodriveconfig) | tuning numbers for autonomous moves |
 | [`AutoDrive`](#autodrive) | autonomous: drive a distance, turn an angle, turn to a heading |
-| [`MecanumMixer`](#mecanummixer) | the wheel-power math (no hardware) |
+| [`MecanumMixer`](#mecanummixer) | the mecanum wheel-power math (no hardware) |
+| [`DifferentialMixer`](#differentialmixer) | the standard-drive left/right math (no hardware) |
 | [`MotionMath`](#motionmath) | the speed-taper math for autonomous moves |
 | [`StallDetector`](#stalldetector) | tell when a move is stuck |
 
@@ -22,20 +31,33 @@ Also in this page: [Check motor directions](#check-motor-directions) and [Tune A
 
 ## DriveConfig
 
-A small settings object. Make one, change what is different on your robot.
+A small settings object. Start from the factory method for your drivetrain, then change what
+is different on your robot.
 
 ```java
-DriveConfig driveConfig = new DriveConfig();
-driveConfig.frontLeft = "fl";        // only if your names are different
+DriveConfig driveConfig = DriveConfig.mecanum();   // or DriveConfig.tank(), DriveConfig.tankTwoMotor()
+driveConfig.frontLeft = "fl";                      // only if your names are different
 driveConfig.powerLimit = 0.6;
 ```
 
+| Factory | Type | Motor names |
+| --- | --- | --- |
+| `DriveConfig.mecanum()` (same as `new DriveConfig()`) | `MECANUM` | `front_left`, `front_right`, `back_left`, `back_right` |
+| `DriveConfig.tank()` | `TANK` | `front_left`, `front_right`, `back_left`, `back_right` |
+| `DriveConfig.tankTwoMotor()` | `TANK` | `left_drive`, `right_drive` (the FTC sample names); back names are `null` |
+
 | Field | Default | Meaning |
 | --- | --- | --- |
-| `frontLeft`, `frontRight`, `backLeft`, `backRight` | `"front_left"` ... `"back_right"` | configuration names of the motors |
+| `type` | `MECANUM` | `DriveType.MECANUM` or `DriveType.TANK` |
+| `frontLeft`, `frontRight`, `backLeft`, `backRight` | `"front_left"` ... `"back_right"` | configuration names of the motors. For a 2-motor tank, use `frontLeft`/`frontRight` and set both back names to `null`. |
 | `frontLeftReversed` ... `backRightReversed` | left = `true`, right = `false` | which motors are reversed |
 | `powerLimit` | `1.0` | the most power any wheel ever gets. Use 0.4 on a new robot. |
 | `brake` | `true` | wheels hold still at power 0 |
+
+| Method | What it does |
+| --- | --- |
+| `hasBackMotors()` | true if both back motor names are set |
+| `validate()` | checks the settings make sense (the drive classes call it for you). A mecanum drive needs 4 names; back names must be both set or both `null`. |
 
 Use the SAME `DriveConfig` in TeleOp and autonomous. A good way: one class in TeamCode with a
 `static DriveConfig make()` method that both use.
@@ -86,6 +108,39 @@ drive.driveFieldCentric(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.
 The IMU heading must be 0 when the robot faces away from the driver. Give the driver a button
 to fix it during a match: `controls.bindPress(Pad.G1, Btn.BACK, imu::resetYaw)` (point the robot
 away from you, then press).
+
+---
+
+## TankDrive
+
+For a standard (tank / differential) drive with 2 or 4 motors. It cannot move sideways.
+
+```java
+TankDrive drive = new TankDrive(hardwareMap, DriveConfig.tankTwoMotor());
+waitForStart();
+while (opModeIsActive()) {
+    drive.arcade(-gamepad1.left_stick_y, gamepad1.right_stick_x);
+}
+drive.stop();
+```
+
+The constructor gets the motors, sets direction and brake, uses plain power, and sets power to 0.
+It refuses a `MECANUM` config (and `MecanumDrive` refuses a `TANK` one), so you cannot mix them up.
+
+| Method | What it does |
+| --- | --- |
+| `arcade(forward, turnClockwise)` | **arcade style:** one stick for forward, one for turning. Each -1 to 1. |
+| `arcade(forward, turnClockwise, speedScale)` | same, with a speed multiplier 0 to 1 |
+| `tank(left, right)` | **tank style:** one stick for each side, e.g. `tank(-gamepad1.left_stick_y, -gamepad1.right_stick_y)` |
+| `tank(left, right, speedScale)` | same, with a speed multiplier |
+| `stop()` | both sides to 0 |
+| `setPowers({left, right})` | set each side yourself. The power limit still applies. |
+| `setBrake(boolean)` | `true` = hold at 0 power, `false` = coast |
+| `getMotors()` | `{left, right}` for 2 motors, `{FL, FR, BL, BR}` for 4 |
+| `getConfig()` | the `DriveConfig` |
+
+**Arcade or tank style?** Arcade is easier for most new drivers. Tank style gives very direct
+control of each side. `ExampleTankTeleOp` lets the driver switch with X.
 
 ---
 
@@ -141,7 +196,8 @@ Tuning numbers for `AutoDrive`. The defaults are last season's robot. **Tune the
 
 ## AutoDrive
 
-Autonomous moves with the wheel encoders and the IMU. Each method **waits until the move ends**,
+Autonomous moves with the wheel encoders and the IMU, for mecanum and standard (tank) robots.
+The `DriveConfig` type tells it which. Each method **waits until the move ends**,
 so use them only in a `LinearOpMode` autonomous. No wheel ever gets more power than
 `DriveConfig.powerLimit`, whatever `maxPower` you pass.
 
@@ -179,6 +235,22 @@ It resets the drive encoders, uses RUN_USING_ENCODER and brake, and sets power t
 | `stop()` | stop all wheels |
 | `setLoopHook(code)` | run your code once per loop during every move, e.g. `auto.setLoopHook(() -> lift.moveTo(target, pid));` Keep it quick. |
 
+### On a standard (tank) drive
+
+A standard drive cannot move sideways, so:
+
+- `move` works only with direction `0` (forward) or `180` (back). Any other direction throws an error
+  that says "turn first, then move".
+- `moveWithTurn` throws an error. Use `turnTo(...)` and then `move(...)`.
+- `turn` and `turnTo` work the same as on mecanum.
+- `strafeCorrection` is not used.
+
+```java
+auto.move(24, 0, 0.6);     // forward
+auto.turnTo(90, 0.5);      // face left
+auto.move(12, 0, 0.6);     // forward again (in the new direction)
+```
+
 ### Results
 
 Every move returns how it ended, an `AutoDrive.Result`:
@@ -212,12 +284,14 @@ always stop at the end, whatever happens (even if your code throws an error).
 
 Do this first on every new drivetrain. **Put the robot on a block, wheels off the ground.**
 
-1. Copy `examples/.../MotorDirectionCheck.java` into TeamCode and remove `@Disabled`.
-2. Run it. Hold X, Y, A, B: each spins one wheel (front-left, front-right, back-left, back-right).
+1. Copy `examples/.../MotorDirectionCheck.java` into TeamCode, set its `config()` to your
+   `DriveConfig`, and remove `@Disabled`.
+2. Run it. Hold X, Y, A, B: each spins one wheel (front-left, front-right, back-left, back-right;
+   on a 2-motor tank only X = left and Y = right).
 3. Every wheel must roll so the robot would go FORWARD.
 4. If one rolls backward, flip its `...Reversed` value in your `DriveConfig`.
-5. Then on the floor with `powerLimit = 0.4`: stick up = forward, stick right = strafe right,
-   right stick right = turn clockwise. If strafing goes diagonal, a motor name is on the wrong wheel.
+5. Then on the floor with `powerLimit = 0.4`: stick up = forward, right stick right = turn clockwise.
+   Mecanum only: left stick right = strafe right. If strafing goes diagonal, a motor name is on the wrong wheel.
 
 ## Tune AutoDrive
 
@@ -227,7 +301,7 @@ Do these in order. Write each result in your team's log.
 2. **Ticks per inch:** set `ticksPerRev` from the motor's product page and `wheelDiameterIn` to the
    real wheel size. Run `auto.move(48, 0, 0.5)`. Measure the real distance. New diameter =
    old diameter x (real distance / 48). Repeat until within half an inch.
-3. **Strafe:** run `auto.move(48, 90, 0.5)`. New `strafeCorrection` = old x (48 / real distance).
+3. **Strafe (mecanum only):** run `auto.move(48, 90, 0.5)`. New `strafeCorrection` = old x (48 / real distance).
 4. **Turns:** run `auto.turn(90, 0.5)` and `auto.turn(-90, 0.5)`. If it overshoots, raise `turnKd`
    or lower `turnKp`. If it stops short, raise `turnKp` (small steps, like 0.002) or set `turnMinPower`.
 5. Set `calibrationConfirmed = true`.
@@ -244,6 +318,16 @@ The math under `MecanumDrive`. No hardware, so you can test it. You only need it
 | `fieldToRobot(fieldForward, fieldRight, headingCcwDeg)` | changes a field-relative command into `{forward, strafeRight}` for the robot |
 | `fieldDirection(fieldClockwiseDeg, headingCcwDeg)` | the robot-relative `{forward, strafeRight}` unit vector for a field direction |
 | `FRONT_LEFT`, `FRONT_RIGHT`, `BACK_LEFT`, `BACK_RIGHT` | the index of each wheel (0-3) |
+
+## DifferentialMixer
+
+The math under `TankDrive`. No hardware.
+
+| Method | What it does |
+| --- | --- |
+| `arcade(forward, turnClockwise, limit)` | `{left, right}` = `{forward + turn, forward - turn}`, scaled together so neither is over `limit`. Both zero if an input is NaN. |
+| `tank(left, right, limit)` | `{left, right}`, each cut to -1..1 and multiplied by `limit` |
+| `LEFT`, `RIGHT` | the index of each side (0, 1) |
 
 ## MotionMath
 

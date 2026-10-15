@@ -3,12 +3,12 @@
 Shortcuts for programming an FTC robot in Java, made by Indianola Robotics (FTC team 8938).
 
 It takes the jobs every robot needs (setting up motors, reading buttons, driving a mecanum
-chassis, PID control, telemetry, keeping a lift inside its safe range) and makes each one a
+chassis or a standard (tank) chassis, PID control, telemetry, keeping a lift inside its safe range) and makes each one a
 line or two of clear code. It started from our 2025-26 (DECODE) robot code, cleaned up and tested.
 
 ```java
 DcMotorEx lift = MotorSetup.get(hardwareMap, "lift").brake().resetEncoder().runWithoutEncoder().done();
-MecanumDrive drive = new MecanumDrive(hardwareMap, new DriveConfig());
+MecanumDrive drive = new MecanumDrive(hardwareMap, DriveConfig.mecanum());   // or TankDrive + DriveConfig.tank()
 
 ControllerBindings controls = new ControllerBindings()
         .bindPress(Pad.G2, Btn.A, () -> claw.setPosition(OPEN))
@@ -41,7 +41,7 @@ Every class and every function is explained in the module pages.
 | --- | --- | --- | --- |
 | Hardware | `io.github.jasoncross.ftchelper.hardware` | Set up motors, servos and the IMU in one line. Clear errors for wrong names. Faster loops with bulk reads. | [hardware.md](docs/modules/hardware.md) |
 | Gamepad | `io.github.jasoncross.ftchelper.gamepad` | Press, hold, toggle and trigger actions. Stick deadband and curves. Slow-mode trigger. Rumble feedback. | [gamepad.md](docs/modules/gamepad.md) |
-| Drive | `io.github.jasoncross.ftchelper.drive` | Mecanum drive (robot-centric and field-centric), reverse mode, autonomous moves and turns with encoders and the IMU. | [drive.md](docs/modules/drive.md) |
+| Drive | `io.github.jasoncross.ftchelper.drive` | Mecanum drive (robot-centric and field-centric) and standard / tank drive (arcade and tank style, 2 or 4 motors), reverse mode, autonomous moves and turns with encoders and the IMU for both. | [drive.md](docs/modules/drive.md) |
 | Control | `io.github.jasoncross.ftchelper.control` | PID controller and slew-rate limiter (ramp). | [control.md](docs/modules/control.md) |
 | Telemetry | `io.github.jasoncross.ftchelper.telemetry` | Neat, same-every-time Driver Station lines. | [telemetry.md](docs/modules/telemetry.md) |
 | Safety | `io.github.jasoncross.ftchelper.safety` | Soft limits, limit switches, homing and slow zones for lifts, slides and arms. | [safety.md](docs/modules/safety.md) |
@@ -51,7 +51,8 @@ Example OpModes you can copy are in [`examples/`](examples/src/main/java/io/gith
 
 ## Works with
 
-- FTC SDK **11.2.1** (tested). Newer SDK versions should work; see [Keep it up to date](docs/02-keep-up-to-date.md#a-new-ftc-sdk-version).
+- FTC SDK **12.0** (the 2026-27 BIOBUZZ release; built and tested). Also works with 11.2.1. See [A new FTC SDK version](docs/02-keep-up-to-date.md#a-new-ftc-sdk-version).
+- Android Studio Narwhal 3 Feature Drop or newer (needed by SDK 12.0).
 - Android Studio. (OnBot Java and Blocks cannot use a library like this.)
 - Java 8 language level, like the SDK.
 
@@ -65,8 +66,12 @@ You only need this if you change the library. From this folder:
 
 You need JDK 17 or newer and the Android SDK (Android Studio installs both). Details: [Contributing](docs/contributing.md).
 
-## Rules check
+## Rules check (2026-27 BIOBUZZ manual, TU01)
 
-The FTC Competition Manual has rules about software written before the season. We keep this
-library in a public repository so any team can see and use it. Read the current manual
-before each season and check that this is still enough.
+- **R304:** custom software can be reused year to year, and robot software made before Kickoff
+  is allowed. So using this library is fine.
+- **R105 B:** the robot must stay inside its size limits **without software**. The soft limits in
+  `SafeMotor` help, but every moving part also needs a physical hard stop. Inspectors check the
+  maximum mechanical extension.
+
+Read the newest manual and Team Updates each season, and update this section.

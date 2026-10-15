@@ -15,8 +15,11 @@ import io.github.jasoncross.ftchelper.util.Angles;
 import io.github.jasoncross.ftchelper.util.MathUtil;
 
 /**
- * Autonomous moves for a mecanum robot, using the wheel encoders and the IMU.
+ * Autonomous moves for a mecanum OR standard (tank) robot, using the wheel encoders and the IMU.
  * (This was the blocking part of last season's Drivebase.)
+ *
+ * <p>Standard (tank) drive can only move forward and back (direction 0 or 180) and turn;
+ * sideways moves and {@link #moveWithTurn} throw an error, because the robot cannot do them.
  *
  * <p>Each method WAITS until the move ends ("blocking"), so use these only in a
  * {@link LinearOpMode} autonomous. Each one stops when it is done, when it is stuck,
@@ -52,6 +55,7 @@ public class AutoDrive {
     }
 
     private final AutoDriveConfig cfg;
+    private final boolean tank;
     private final double powerLimit;
     private final DcMotorEx fl, fr, bl, br;
     private final DcMotorEx[] motors;
@@ -73,11 +77,11 @@ public class AutoDrive {
      * @throws IllegalStateException if {@code autoConfig.calibrationConfirmed} is false
      */
     public AutoDrive(final LinearOpMode opMode, DriveConfig driveConfig, AutoDriveConfig autoConfig, final IMU imu) {
-        this(checked(autoConfig), driveConfig.powerLimit,
+        this(checked(autoConfig), validated(driveConfig).type == DriveConfig.DriveType.TANK, driveConfig.powerLimit,
                 setUp(opMode, driveConfig.frontLeft, driveConfig.frontLeftReversed),
                 setUp(opMode, driveConfig.frontRight, driveConfig.frontRightReversed),
-                setUp(opMode, driveConfig.backLeft, driveConfig.backLeftReversed),
-                setUp(opMode, driveConfig.backRight, driveConfig.backRightReversed),
+                driveConfig.hasBackMotors() ? setUp(opMode, driveConfig.backLeft, driveConfig.backLeftReversed) : null,
+                driveConfig.hasBackMotors() ? setUp(opMode, driveConfig.backRight, driveConfig.backRightReversed) : null,
                 () -> ImuSetup.headingDeg(imu), imu::resetYaw,
                 opMode::opModeIsActive, opMode::idle, line -> opMode.telemetry.addLine(line),
                 System::nanoTime);
@@ -85,19 +89,25 @@ public class AutoDrive {
 
     /**
      * For tests and simulations: everything AutoDrive needs, given directly.
-     * The motors must already be set up (directions, encoder mode).
+     * The motors must already be set up (directions, encoder mode). For a 2-motor tank drive,
+     * {@code bl} and {@code br} are null.
      */
-    AutoDrive(AutoDriveConfig cfg, double powerLimit,
+    AutoDrive(AutoDriveConfig cfg, boolean tank, double powerLimit,
               DcMotorEx fl, DcMotorEx fr, DcMotorEx bl, DcMotorEx br,
               DoubleSupplier headingCcwDeg, Runnable headingReset,
               BooleanSupplier isActive, Runnable idle, Consumer<String> log, LongSupplier clockNanos) {
         this.cfg = checked(cfg);
+        this.tank = tank;
+        if (!tank && (bl == null || br == null)) {
+            throw new IllegalArgumentException("A mecanum AutoDrive needs four motors");
+        }
         this.powerLimit = MathUtil.clamp(powerLimit, 0, 1);
         this.fl = fl;
         this.fr = fr;
-        this.bl = bl;
-        this.br = br;
-        this.motors = new DcMotorEx[]{fl, fr, bl, br};
+        // A 2-motor tank robot reads its "back" wheels from the front motors; the math stays the same.
+        this.bl = bl != null ? bl : fl;
+        this.br = br != null ? br : fr;
+        this.motors = bl != null ? new DcMotorEx[]{fl, fr, bl, br} : new DcMotorEx[]{fl, fr};
         this.heading = headingCcwDeg;
         this.headingReset = headingReset;
         this.isActive = isActive;
@@ -115,6 +125,11 @@ public class AutoDrive {
             throw new IllegalArgumentException("actionTimeoutSec must be a positive number");
         }
         return cfg;
+    }
+
+    private static DriveConfig validated(DriveConfig driveConfig) {
+        driveConfig.validate();
+        return driveConfig;
     }
 
     private static DcMotorEx setUp(LinearOpMode opMode, String name, boolean reversed) {
@@ -142,6 +157,7 @@ public class AutoDrive {
      * @param distanceIn   inches. A negative distance goes the opposite way.
      * @param directionDeg robot-relative direction: 0 forward, 90 right, 180 back, -90 left
      * @param maxPower     0.1 to 1 (0.3 to 0.7 is usual). Never more than the DriveConfig power limit.
+     * @throws IllegalArgumentException on a standard (tank) drive, for any direction except 0 or 180
      */
     public Result move(double distanceIn, double directionDeg, double maxPower) {
         long deadline = deadlineFromNow();
@@ -150,10 +166,14 @@ public class AutoDrive {
                 distanceIn = -distanceIn;
                 directionDeg += 180;
             }
+            if (tank && Math.abs(Math.sin(Math.toRadians(directionDeg))) > 1e-6) {
+                throw new IllegalArgumentException("A standard (tank) drive can only move at 0 (forward) or 180 (back), not "
+                        + directionDeg + ". Turn first, then move.");
+            }
             if (distanceIn * cfg.ticksPerInch() < 5.0) return Result.DONE;
             double maxSpeed = Math.max(cfg.moveMinPower, MathUtil.clamp(maxPower, 0.1, 1.0));
             double rad = Math.toRadians(directionDeg);
-            double[] command = commandFor(Math.cos(rad), Math.sin(rad));
+            double[] command = tank ? new double[]{Math.signum(Math.cos(rad)), 0} : commandFor(Math.cos(rad), Math.sin(rad));
 
             int[] start = getWheelTicks();
             StallDetector stall = new StallDetector(cfg.stallProgressIn, cfg.stallTimeSec);
@@ -190,6 +210,7 @@ public class AutoDrive {
      * inside the same time limit. After a stall it does NOT turn.
      *
      * @param distanceIn        inches (negative = opposite way)
+     * @throws UnsupportedOperationException on a standard (tank) drive
      * @param fieldDirectionDeg direction on the field, clockwise from where heading 0 points:
      *                          0 forward, 90 right, 180 back, -90 left
      * @param targetHeadingDeg  heading to end at, IMU degrees (counterclockwise positive)
@@ -198,6 +219,10 @@ public class AutoDrive {
      */
     public Result moveWithTurn(double distanceIn, double fieldDirectionDeg, double targetHeadingDeg,
                                double maxPower, double maxTurnPower) {
+        if (tank) {
+            throw new UnsupportedOperationException("moveWithTurn needs mecanum wheels. On a standard (tank) drive, "
+                    + "use turnTo(...) and then move(...).");
+        }
         long deadline = deadlineFromNow();
         try {
             if (distanceIn < 0) {
@@ -323,7 +348,10 @@ public class AutoDrive {
         headingReset.run();
     }
 
-    /** Encoder counts, in the order front-left, front-right, back-left, back-right. */
+    /**
+     * Encoder counts, in the order front-left, front-right, back-left, back-right.
+     * On a 2-motor tank drive, the back values repeat the front ones.
+     */
     public int[] getWheelTicks() {
         return new int[]{fl.getCurrentPosition(), fr.getCurrentPosition(),
                 bl.getCurrentPosition(), br.getCurrentPosition()};
@@ -366,8 +394,8 @@ public class AutoDrive {
     private void setPowers(double[] powers) {
         fl.setPower(MathUtil.clamp(powers[0], -powerLimit, powerLimit));
         fr.setPower(MathUtil.clamp(powers[1], -powerLimit, powerLimit));
-        bl.setPower(MathUtil.clamp(powers[2], -powerLimit, powerLimit));
-        br.setPower(MathUtil.clamp(powers[3], -powerLimit, powerLimit));
+        if (bl != fl) bl.setPower(MathUtil.clamp(powers[2], -powerLimit, powerLimit));
+        if (br != fr) br.setPower(MathUtil.clamp(powers[3], -powerLimit, powerLimit));
     }
 
     private long deadlineFromNow() {

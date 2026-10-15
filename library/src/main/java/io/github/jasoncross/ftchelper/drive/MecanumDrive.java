@@ -8,6 +8,7 @@ import io.github.jasoncross.ftchelper.util.MathUtil;
 
 /**
  * Drives a four-wheel mecanum chassis. For TeleOp: call a drive method every loop.
+ * For a standard (tank) drive, use {@link TankDrive}.
  *
  * <pre>{@code
  * MecanumDrive drive = new MecanumDrive(hardwareMap, new DriveConfig());
@@ -31,9 +32,14 @@ public class MecanumDrive {
      * Gets the four motors, sets their directions and brake mode, and sets power to 0.
      * Encoders are not reset and the run mode is RUN_WITHOUT_ENCODER (plain power).
      *
-     * @throws IllegalArgumentException if a motor name is not in the configuration (lists the real names)
+     * @throws IllegalArgumentException if the config is not MECANUM, or a motor name is not in the
+     *                                  configuration (lists the real names)
      */
     public MecanumDrive(HardwareMap hardwareMap, DriveConfig config) {
+        config.validate();
+        if (config.type != DriveConfig.DriveType.MECANUM) {
+            throw new IllegalArgumentException("MecanumDrive needs a MECANUM DriveConfig. For a standard drive use TankDrive.");
+        }
         this.config = config;
         frontLeft = setUp(hardwareMap, config.frontLeft, config.frontLeftReversed);
         frontRight = setUp(hardwareMap, config.frontRight, config.frontRightReversed);

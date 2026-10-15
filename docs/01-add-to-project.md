@@ -16,6 +16,7 @@ in Android Studio, and everyone on the team gets the same version.
 ## What you need
 
 - The robot project (the `FtcRobotController` folder) open in Android Studio, and it builds.
+  For 2026-27 that is FTC SDK 12.0, which needs Android Studio Narwhal 3 Feature Drop or newer.
 - Git. Android Studio's **Terminal** tab (bottom of the window) has it on most computers.
   Type `git --version` to check.
 

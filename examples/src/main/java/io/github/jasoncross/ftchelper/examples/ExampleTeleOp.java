@@ -51,7 +51,7 @@ public class ExampleTeleOp extends LinearOpMode {
         // ---------- INIT: set up hardware ----------
         BulkReads.auto(hardwareMap);
 
-        DriveConfig driveConfig = new DriveConfig();
+        DriveConfig driveConfig = DriveConfig.mecanum();
         driveConfig.powerLimit = 0.8;
         MecanumDrive drive = new MecanumDrive(hardwareMap, driveConfig);
 

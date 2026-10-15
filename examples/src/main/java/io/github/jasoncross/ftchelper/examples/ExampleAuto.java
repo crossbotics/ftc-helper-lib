@@ -27,7 +27,7 @@ public class ExampleAuto extends LinearOpMode {
     public void runOpMode() {
         BulkReads.auto(hardwareMap);
 
-        DriveConfig driveConfig = new DriveConfig();
+        DriveConfig driveConfig = DriveConfig.mecanum();
         AutoDriveConfig autoConfig = new AutoDriveConfig();
         autoConfig.wheelDiameterIn = 3.78;          // 96 mm goBILDA mecanum; tune with a 48-inch test
         autoConfig.calibrationConfirmed = true;     // only after the checks in docs/modules/drive.md

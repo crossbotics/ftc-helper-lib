@@ -4,6 +4,23 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+## v0.2.0 - 2026-10-15
+
+### Added
+
+- **Standard (tank / differential) drive**, 2 or 4 motors: `TankDrive` (arcade and tank style),
+  `DifferentialMixer`, `DriveConfig.type`, and the factories `DriveConfig.mecanum()`, `tank()`, `tankTwoMotor()`.
+- `AutoDrive` works with standard drive too: `move` forward/back, `turn`, `turnTo`.
+  Sideways moves and `moveWithTurn` give a clear error on a standard drive.
+- `DriveConfig.validate()` and `hasBackMotors()`. `MecanumDrive` and `TankDrive` refuse the wrong config type.
+- `ExampleTankTeleOp`. `MotorDirectionCheck` now works for every drive type.
+
+### Changed
+
+- Built and tested against FTC SDK **12.0** (the 2026-27 BIOBUZZ release). Still works with 11.2.1.
+- README rules check now cites the 2026-27 manual (R304 reuse, R105 B hard stops).
+- Package renamed to `io.github.jasoncross.ftchelper` (was `org.octobots.ftchelper` before the first push).
+
 ## v0.1.0 - 2026-10-15
 
 First version. Built and tested against FTC SDK 11.2.1.

@@ -7,8 +7,8 @@ This library uses ONE set of rules everywhere. Learn these and you can read any 
 
 | Value | Positive means | Where you see it |
 | --- | --- | --- |
-| `forward` | robot moves forward | `MecanumDrive.drive`, `MecanumMixer.mix` |
-| `strafeRight` | robot moves to its right | same |
+| `forward` | robot moves forward | `MecanumDrive.drive`, `TankDrive.arcade`, the mixers |
+| `strafeRight` | robot moves to its right (mecanum only) | `MecanumDrive.drive`, `MecanumMixer.mix` |
 | `turnClockwise` | robot turns right (clockwise, seen from above) | same |
 | IMU heading | robot turned **left** (counterclockwise) | `ImuSetup.headingDeg`, `AutoDrive.turn`, `AutoDrive.turnTo`, `FieldPose.headingDeg` |
 | `move(..., directionDeg, ...)` | clockwise from forward: 0 forward, 90 right, 180 back, -90 left | `AutoDrive.move`, `AutoDrive.moveWithTurn` |
@@ -43,5 +43,7 @@ So "forward" is `-gamepad1.left_stick_y`. Every example in these docs has the mi
 Any array of four wheel values is in this order:
 
 `[front-left, front-right, back-left, back-right]`
+
+Standard (tank) drive left/right arrays are `[left, right]`.
 
 `MecanumMixer.FRONT_LEFT` (0), `FRONT_RIGHT` (1), `BACK_LEFT` (2), `BACK_RIGHT` (3) name the positions.

@@ -32,11 +32,23 @@ public class AutoDriveSimTest {
             if (stopActiveAfterLoops >= 0 && loops >= stopActiveAfterLoops) active = false;
             if (stuck) return;
             for (FakeMotor m : all) m.position += m.power * TICKS_PER_LOOP_AT_FULL;
-            heading += (-fl.power - bl.power + fr.power + br.power) / 4 * DEG_PER_LOOP_AT_FULL;
+            if (twoMotorTank) {
+                heading += (-fl.power + fr.power) / 2 * DEG_PER_LOOP_AT_FULL;
+            } else {
+                heading += (-fl.power - bl.power + fr.power + br.power) / 4 * DEG_PER_LOOP_AT_FULL;
+            }
         }
 
+        boolean twoMotorTank = false;
+
         AutoDrive auto(AutoDriveConfig cfg, double powerLimit) {
-            return new AutoDrive(cfg, powerLimit, fl.motor, fr.motor, bl.motor, br.motor,
+            return new AutoDrive(cfg, false, powerLimit, fl.motor, fr.motor, bl.motor, br.motor,
+                    () -> heading, () -> heading = 0, () -> active, this::step, log::append, () -> nanos);
+        }
+
+        AutoDrive tankAuto(AutoDriveConfig cfg, double powerLimit) {
+            twoMotorTank = true;
+            return new AutoDrive(cfg, true, powerLimit, fl.motor, fr.motor, null, null,
                     () -> heading, () -> heading = 0, () -> active, this::step, log::append, () -> nanos);
         }
 
@@ -188,5 +200,40 @@ public class AutoDriveSimTest {
         } catch (RuntimeException expected) {
             assertTrue(r.allStopped());
         }
+    }
+
+    // ---------- Standard (tank) drive, 2 motors ----------
+
+    @Test public void tankMovesForwardBackAndTurns() {
+        SimRobot r = new SimRobot();
+        AutoDriveConfig c = config();
+        AutoDrive auto = r.tankAuto(c, 0.5);
+        assertEquals(AutoDrive.Result.DONE, auto.move(24, 0, 0.6));
+        assertEquals(24, r.fl.position / c.ticksPerInch(), 0.5);
+        assertEquals(24, r.fr.position / c.ticksPerInch(), 0.5);
+        assertEquals(AutoDrive.Result.DONE, auto.move(12, 180, 0.6));
+        assertEquals(12, r.fl.position / c.ticksPerInch(), 0.5);
+        assertEquals(AutoDrive.Result.DONE, auto.turnTo(90, 0.5));
+        assertEquals(90, r.heading, c.turnToleranceDeg + 0.3);
+        assertTrue(r.allStopped());
+        assertEquals(0, r.bl.powerWrites);              // no back motors were touched
+        assertTrue(r.maxPowerSeen() <= 0.5 + 1e-12);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void tankCannotMoveSideways() {
+        new SimRobot().tankAuto(config(), 1).move(12, 90, 0.5);
+    }
+
+    @Test(expected = UnsupportedOperationException.class)
+    public void tankCannotMoveWithTurn() {
+        new SimRobot().tankAuto(config(), 1).moveWithTurn(12, 0, 90, 0.5, 0.5);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void mecanumNeedsFourMotors() {
+        SimRobot r = new SimRobot();
+        new AutoDrive(config(), false, 1, r.fl.motor, r.fr.motor, null, null,
+                () -> 0, () -> { }, () -> true, () -> { }, s -> { }, () -> 0L);
     }
 }
