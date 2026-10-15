@@ -1,6 +1,6 @@
 # Gamepad module
 
-Package: `org.octobots.ftchelper.gamepad`
+Package: `io.github.jasoncross.ftchelper.gamepad`
 
 Turns gamepad buttons, sticks and triggers into robot actions, and gives the driver feedback
 by rumble (vibration).
@@ -50,10 +50,10 @@ and to spot two jobs on one button.
 Add these imports to use the short names:
 
 ```java
-import org.octobots.ftchelper.gamepad.ControllerBindings;
-import org.octobots.ftchelper.gamepad.ControllerBindings.Btn;
-import org.octobots.ftchelper.gamepad.ControllerBindings.Pad;
-import org.octobots.ftchelper.gamepad.ControllerBindings.Trigger;
+import io.github.jasoncross.ftchelper.gamepad.ControllerBindings;
+import io.github.jasoncross.ftchelper.gamepad.ControllerBindings.Btn;
+import io.github.jasoncross.ftchelper.gamepad.ControllerBindings.Pad;
+import io.github.jasoncross.ftchelper.gamepad.ControllerBindings.Trigger;
 ```
 
 ### The `() -> ...` part

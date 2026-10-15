@@ -1,7 +1,7 @@
 # Your first autonomous with the library
 
 This walk-through builds an autonomous with `AutoDrive`. The finished file is
-[`ExampleAuto.java`](../examples/src/main/java/org/octobots/ftchelper/examples/ExampleAuto.java).
+[`ExampleAuto.java`](../examples/src/main/java/io/github/jasoncross/ftchelper/examples/ExampleAuto.java).
 
 Before you start: the drive works in TeleOp, and the IMU heading goes UP when you turn the robot
 left ([check it](modules/hardware.md#imusetup)).
@@ -14,8 +14,8 @@ Make `TeamCode/.../RobotSettings.java`:
 ```java
 package org.firstinspires.ftc.teamcode;
 
-import org.octobots.ftchelper.drive.AutoDriveConfig;
-import org.octobots.ftchelper.drive.DriveConfig;
+import io.github.jasoncross.ftchelper.drive.AutoDriveConfig;
+import io.github.jasoncross.ftchelper.drive.DriveConfig;
 
 public final class RobotSettings {
     public static DriveConfig drive() {

@@ -1,6 +1,6 @@
 # Telemetry module
 
-Package: `org.octobots.ftchelper.telemetry`
+Package: `io.github.jasoncross.ftchelper.telemetry`
 
 Short helpers for Driver Station telemetry that looks the same in every OpMode, so drivers and
 programmers find numbers fast.

@@ -10,7 +10,7 @@ plugins {
 def ftcSdkVersion = '11.2.1'
 
 android {
-    namespace 'org.octobots.ftchelper'
+    namespace 'io.github.jasoncross.ftchelper'
     compileSdk 30
 
     defaultConfig {

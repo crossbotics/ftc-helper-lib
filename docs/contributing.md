@@ -5,7 +5,7 @@ follows the same five steps, so nothing breaks and the docs stay true.
 
 ## The five steps (for every change)
 
-1. **Code** in `library/src/main/java/org/octobots/ftchelper/<module>/`.
+1. **Code** in `library/src/main/java/io/github/jasoncross/ftchelper/<module>/`.
 2. **Javadoc** on every public class and method: what it does, each parameter (with its unit and
    range), what it returns, and a short example. Plain words.
 3. **Test** in `library/src/test/java/...` for any logic (math, timing, button edges, limits).

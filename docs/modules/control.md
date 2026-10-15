@@ -1,6 +1,6 @@
 # Control module
 
-Package: `org.octobots.ftchelper.control`
+Package: `io.github.jasoncross.ftchelper.control`
 
 | Class | Use it to |
 | --- | --- |

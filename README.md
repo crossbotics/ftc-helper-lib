@@ -1,6 +1,6 @@
 # ftc-helper-lib
 
-Shortcuts for programming an FTC robot in Java, made by Indianola Robotics (FTC team 8938, the Octobots).
+Shortcuts for programming an FTC robot in Java, made by Indianola Robotics (FTC team 8938).
 
 It takes the jobs every robot needs (setting up motors, reading buttons, driving a mecanum
 chassis, PID control, telemetry, keeping a lift inside its safe range) and makes each one a
@@ -39,15 +39,15 @@ Every class and every function is explained in the module pages.
 
 | Module | Package | What it does | Docs |
 | --- | --- | --- | --- |
-| Hardware | `org.octobots.ftchelper.hardware` | Set up motors, servos and the IMU in one line. Clear errors for wrong names. Faster loops with bulk reads. | [hardware.md](docs/modules/hardware.md) |
-| Gamepad | `org.octobots.ftchelper.gamepad` | Press, hold, toggle and trigger actions. Stick deadband and curves. Slow-mode trigger. Rumble feedback. | [gamepad.md](docs/modules/gamepad.md) |
-| Drive | `org.octobots.ftchelper.drive` | Mecanum drive (robot-centric and field-centric), reverse mode, autonomous moves and turns with encoders and the IMU. | [drive.md](docs/modules/drive.md) |
-| Control | `org.octobots.ftchelper.control` | PID controller and slew-rate limiter (ramp). | [control.md](docs/modules/control.md) |
-| Telemetry | `org.octobots.ftchelper.telemetry` | Neat, same-every-time Driver Station lines. | [telemetry.md](docs/modules/telemetry.md) |
-| Safety | `org.octobots.ftchelper.safety` | Soft limits, limit switches, homing and slow zones for lifts, slides and arms. | [safety.md](docs/modules/safety.md) |
-| Util | `org.octobots.ftchelper.util` | Math and angle helpers, loop timer, Auto-to-TeleOp pose handoff. | [util.md](docs/modules/util.md) |
+| Hardware | `io.github.jasoncross.ftchelper.hardware` | Set up motors, servos and the IMU in one line. Clear errors for wrong names. Faster loops with bulk reads. | [hardware.md](docs/modules/hardware.md) |
+| Gamepad | `io.github.jasoncross.ftchelper.gamepad` | Press, hold, toggle and trigger actions. Stick deadband and curves. Slow-mode trigger. Rumble feedback. | [gamepad.md](docs/modules/gamepad.md) |
+| Drive | `io.github.jasoncross.ftchelper.drive` | Mecanum drive (robot-centric and field-centric), reverse mode, autonomous moves and turns with encoders and the IMU. | [drive.md](docs/modules/drive.md) |
+| Control | `io.github.jasoncross.ftchelper.control` | PID controller and slew-rate limiter (ramp). | [control.md](docs/modules/control.md) |
+| Telemetry | `io.github.jasoncross.ftchelper.telemetry` | Neat, same-every-time Driver Station lines. | [telemetry.md](docs/modules/telemetry.md) |
+| Safety | `io.github.jasoncross.ftchelper.safety` | Soft limits, limit switches, homing and slow zones for lifts, slides and arms. | [safety.md](docs/modules/safety.md) |
+| Util | `io.github.jasoncross.ftchelper.util` | Math and angle helpers, loop timer, Auto-to-TeleOp pose handoff. | [util.md](docs/modules/util.md) |
 
-Example OpModes you can copy are in [`examples/`](examples/src/main/java/org/octobots/ftchelper/examples).
+Example OpModes you can copy are in [`examples/`](examples/src/main/java/io/github/jasoncross/ftchelper/examples).
 
 ## Works with
 

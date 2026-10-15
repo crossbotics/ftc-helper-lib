@@ -1,6 +1,6 @@
 # Util module
 
-Package: `org.octobots.ftchelper.util`
+Package: `io.github.jasoncross.ftchelper.util`
 
 Small helpers used everywhere.
 

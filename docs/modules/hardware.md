@@ -1,6 +1,6 @@
 # Hardware module
 
-Package: `org.octobots.ftchelper.hardware`
+Package: `io.github.jasoncross.ftchelper.hardware`
 
 Gets motors, servos, sensors and the IMU from the robot configuration and sets them up,
 each in one readable chain. Gives clear errors when a name is wrong.

@@ -77,7 +77,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import org.octobots.ftchelper.util.Angles;
+import io.github.jasoncross.ftchelper.util.Angles;
 
 @TeleOp(name = "Helper Check")
 public class HelperCheck extends LinearOpMode {

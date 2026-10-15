@@ -10,7 +10,7 @@ The submodule folder is empty (the project was cloned without it). Run in the Te
 git submodule update --init
 ```
 
-**`Cannot resolve symbol 'octobots'` / red imports**
+**`Cannot resolve symbol 'jasoncross'` / red imports**
 Gradle does not know about the library yet. Check steps 2 and 3 in
 [Add it to a project](01-add-to-project.md), then **File > Sync Project with Gradle Files**.
 

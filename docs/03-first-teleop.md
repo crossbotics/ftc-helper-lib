@@ -2,7 +2,7 @@
 
 This walk-through builds a TeleOp step by step: a mecanum drive with a slow mode, a toggle,
 and a lift with safe limits. The finished file is
-[`ExampleTeleOp.java`](../examples/src/main/java/org/octobots/ftchelper/examples/ExampleTeleOp.java).
+[`ExampleTeleOp.java`](../examples/src/main/java/io/github/jasoncross/ftchelper/examples/ExampleTeleOp.java).
 
 Before you start: [add the library to your project](01-add-to-project.md), and
 [check the motor directions](modules/drive.md#check-motor-directions).
@@ -33,7 +33,7 @@ public class MainTeleOp extends LinearOpMode {
 ```
 
 Android Studio adds `import` lines for you: when a name is red, click it and press **Alt+Enter**
-(Mac: **Option+Enter**) and pick the `org.octobots.ftchelper...` class.
+(Mac: **Option+Enter**) and pick the `io.github.jasoncross.ftchelper...` class.
 
 ## 2. Drive
 

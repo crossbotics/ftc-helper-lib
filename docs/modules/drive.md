@@ -1,6 +1,6 @@
 # Drive module
 
-Package: `org.octobots.ftchelper.drive`
+Package: `io.github.jasoncross.ftchelper.drive`
 
 Drives a four-wheel mecanum chassis, in TeleOp and in autonomous.
 Signs used here: [Signs and units](../conventions.md). Read it first.

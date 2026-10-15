@@ -1,6 +1,6 @@
 # Safety module
 
-Package: `org.octobots.ftchelper.safety`
+Package: `io.github.jasoncross.ftchelper.safety`
 
 Keeps lifts, slides, arms and turrets inside their safe range, so code can never drive them
 into the frame, snap a string, or stall a motor at the end of travel.
