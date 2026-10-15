@@ -2,6 +2,8 @@
 
 Package: `io.github.jasoncross.ftchelper.safety`
 
+Learn it hands-on: [08 A lift that cannot hurt itself](../tutorials/08-safe-lift.md).
+
 Keeps lifts, slides, arms and turrets inside their safe range, so code can never drive them
 into the frame, snap a string, or stall a motor at the end of travel.
 

@@ -26,8 +26,9 @@ while (opModeIsActive()) {
 | --- | --- |
 | Add the library to our robot project | [Add it to a project](docs/01-add-to-project.md) |
 | Get the newest version, or go back to an older one | [Keep it up to date](docs/02-keep-up-to-date.md) |
-| Write a TeleOp with it, step by step | [Your first TeleOp](docs/03-first-teleop.md) |
-| Write an autonomous with it | [Your first autonomous](docs/04-first-auto.md) |
+| **Learn it step by step (13 hands-on tutorials)** | [Tutorials](docs/tutorials/README.md) |
+| Write a TeleOp | [Tutorial 04: mecanum](docs/tutorials/04-drive-mecanum.md) or [05: tank](docs/tutorials/05-drive-tank.md) |
+| Write an autonomous | [Tutorial 09: first autonomous](docs/tutorials/09-first-auto.md) |
 | Know which way is "positive" | [Signs and units](docs/conventions.md) |
 | Fix a problem | [Troubleshooting](docs/troubleshooting.md) |
 | Find last season's class | [Coming from last season's code](docs/from-last-season.md) |
@@ -47,7 +48,7 @@ Every class and every function is explained in the module pages.
 | Safety | `io.github.jasoncross.ftchelper.safety` | Soft limits, limit switches, homing and slow zones for lifts, slides and arms. | [safety.md](docs/modules/safety.md) |
 | Util | `io.github.jasoncross.ftchelper.util` | Math and angle helpers, loop timer, Auto-to-TeleOp pose handoff. | [util.md](docs/modules/util.md) |
 
-Example OpModes you can copy are in [`examples/`](examples/src/main/java/io/github/jasoncross/ftchelper/examples).
+Example OpModes you can copy are in [`examples/`](examples/src/main/java/io/github/jasoncross/ftchelper/examples), and every tutorial's complete program is in [`examples/.../tutorials/`](examples/src/main/java/io/github/jasoncross/ftchelper/examples/tutorials).
 
 ## Works with
 
@@ -61,7 +62,8 @@ Example OpModes you can copy are in [`examples/`](examples/src/main/java/io/gith
 You only need this if you change the library. From this folder:
 
 ```bash
-./gradlew :library:testDebugUnitTest :examples:assembleDebug
+./gradlew :library:testDebugUnitTest :examples:assembleDebug :examples:testDebugUnitTest
+python3 tools/check_docs.py
 ```
 
 You need JDK 17 or newer and the Android SDK (Android Studio installs both). Details: [Contributing](docs/contributing.md).

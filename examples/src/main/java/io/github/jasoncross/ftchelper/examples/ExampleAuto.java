@@ -17,7 +17,7 @@ import io.github.jasoncross.ftchelper.util.PoseStore;
  * A simple autonomous with AutoDrive: drive a square, then face forward again.
  * Copy it into TeamCode, tune AutoDriveConfig, and remove the {@code @Disabled} line.
  *
- * Walk-through: docs/04-first-auto.md
+ * Tutorial: docs/tutorials/09-first-auto.md
  */
 @Autonomous(name = "Example: Helper Auto", group = "Examples")
 @Disabled

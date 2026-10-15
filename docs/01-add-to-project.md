@@ -122,5 +122,5 @@ Android Studio's **Git > Clone** does not always get submodules. If the build sa
 
 ## Next
 
-- [Your first TeleOp](03-first-teleop.md)
+- [Tutorials](tutorials/README.md): start with Tutorial 01
 - [Keep it up to date](02-keep-up-to-date.md)

@@ -34,7 +34,7 @@ import io.github.jasoncross.ftchelper.util.LoopTimer;
  * Operator (gamepad2): left stick Y = lift by hand, A = lift down, X = lift middle, Y = lift up.
  *                     With a "lift_bottom" switch, push the lift down once at the start to home it.
  *
- * Walk-through: docs/03-first-teleop.md
+ * Tutorials: docs/tutorials/04-drive-mecanum.md and 08-safe-lift.md
  */
 @TeleOp(name = "Example: Helper TeleOp", group = "Examples")
 @Disabled

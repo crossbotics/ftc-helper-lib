@@ -2,6 +2,8 @@
 
 Package: `io.github.jasoncross.ftchelper.hardware`
 
+Learn it hands-on: [02 Motors and servos](../tutorials/02-motors-and-servos.md), [06 A fast, clear loop](../tutorials/06-fast-clear-loop.md).
+
 Gets motors, servos, sensors and the IMU from the robot configuration and sets them up,
 each in one readable chain. Gives clear errors when a name is wrong.
 

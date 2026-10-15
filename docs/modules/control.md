@@ -2,6 +2,8 @@
 
 Package: `io.github.jasoncross.ftchelper.control`
 
+Learn it hands-on: [07 PID lift](../tutorials/07-pid-lift.md), [11 Driver assists](../tutorials/11-driver-assists.md).
+
 | Class | Use it to |
 | --- | --- |
 | [`PidController`](#pidcontroller) | move a mechanism to a target and hold it there |

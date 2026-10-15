@@ -2,6 +2,8 @@
 
 Package: `io.github.jasoncross.ftchelper.drive`
 
+Learn it hands-on: [04 Mecanum](../tutorials/04-drive-mecanum.md), [05 Tank](../tutorials/05-drive-tank.md), [09 First autonomous](../tutorials/09-first-auto.md), [10 Autonomous with mechanisms](../tutorials/10-auto-with-mechanisms.md).
+
 Drives a **mecanum** chassis (4 mecanum wheels) or a **standard** chassis (also called tank or
 differential drive: normal wheels, a left side and a right side, 2 or 4 motors), in TeleOp and in autonomous.
 Signs used here: [Signs and units](../conventions.md). Read it first.

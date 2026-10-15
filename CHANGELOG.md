@@ -4,6 +4,24 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+## v0.3.0 - 2026-10-15
+
+### Added
+
+- **13 hands-on tutorials** in `docs/tutorials/`, from a first OpMode to a full robot structure and
+  testing without a robot. Each has a complete program in `examples/.../tutorials/` that the build
+  compiles, plus "Run it", "If something goes wrong" and "Try this" sections.
+- Tutorial 12's example robot (`Robot`, `Lift`, `LiftHeights`, `Claw`, `MainTeleOp`, `MainAuto`) and
+  tutorial 13's tests (`LiftHeightsTest`), run by the build.
+- `tools/check_docs.py`: checks links, heading links, that every public class is documented, and that
+  every tutorial program is used. Runs on GitHub with every push.
+- Module pages link to the tutorials that teach them.
+
+### Changed
+
+- The old "first TeleOp" and "first autonomous" pages are replaced by tutorials 04, 05 and 09.
+- Contributing: every change now also updates the tutorials (step 5 of 6).
+
 ## v0.2.0 - 2026-10-15
 
 ### Added

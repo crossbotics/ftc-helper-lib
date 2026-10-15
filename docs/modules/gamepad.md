@@ -2,6 +2,8 @@
 
 Package: `io.github.jasoncross.ftchelper.gamepad`
 
+Learn it hands-on: [03 Buttons](../tutorials/03-buttons.md), [11 Driver assists](../tutorials/11-driver-assists.md).
+
 Turns gamepad buttons, sticks and triggers into robot actions, and gives the driver feedback
 by rumble (vibration).
 

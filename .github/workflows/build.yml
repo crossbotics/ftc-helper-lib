@@ -13,5 +13,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - name: Tests and examples
-        run: ./gradlew --no-daemon :library:testDebugUnitTest :examples:assembleDebug
+      - name: Tests, examples and tutorial programs
+        run: ./gradlew --no-daemon :library:testDebugUnitTest :examples:assembleDebug :examples:testDebugUnitTest
+      - name: Docs and tutorials check
+        run: python3 tools/check_docs.py

@@ -1,9 +1,9 @@
 # Contributing: add or change something in the library
 
 Anyone on the team can improve the library. Because every robot project uses it, each change
-follows the same five steps, so nothing breaks and the docs stay true.
+follows the same six steps, so nothing breaks and the docs and tutorials stay true.
 
-## The five steps (for every change)
+## The six steps (for every change)
 
 1. **Code** in `library/src/main/java/io/github/jasoncross/ftchelper/<module>/`.
 2. **Javadoc** on every public class and method: what it does, each parameter (with its unit and
@@ -13,9 +13,24 @@ follows the same five steps, so nothing breaks and the docs stay true.
    `SafeMotor`) and test that.
 4. **Docs:** update the module page in `docs/modules/` (the method table and an example), and
    `docs/troubleshooting.md` if it fixes a common problem.
-5. **CHANGELOG.md:** add a line under "Unreleased": Added / Changed / Fixed.
+5. **Tutorials:** if the change affects how the library is USED, update every tutorial that uses it
+   (both the page in `docs/tutorials/` and its program in `examples/.../tutorials/`). A new feature
+   that students will use needs a place in a tutorial: add a section to the closest one, or a new
+   tutorial with its own program (and a row in `docs/tutorials/README.md`).
+6. **CHANGELOG.md:** add a line under "Unreleased": Added / Changed / Fixed.
 
-A change is not done until all five are done.
+A change is not done until all six are done.
+
+### How the tutorials stay correct
+
+- Every tutorial has a complete program in `examples/src/main/java/.../examples/tutorials/`.
+  The build compiles them, so a library change that breaks a tutorial breaks the build.
+- Tutorial 13's tests (`examples/src/test/...`) run with the build too.
+- `tools/check_docs.py` fails if a link or heading link is broken, if a public library class is
+  missing from the module pages, or if a tutorial program is not mentioned in a tutorial page.
+- Code snippets IN the tutorial pages are not compiled. When you change a program, search its
+  tutorial page for the same lines and update them.
+- Before a release, read the changed tutorials once from top to bottom as a student would.
 
 ## Style
 
@@ -35,10 +50,12 @@ A change is not done until all five are done.
 You need JDK 17 or newer and the Android SDK. Android Studio installs both. From the library folder:
 
 ```bash
-./gradlew :library:testDebugUnitTest :examples:assembleDebug
+./gradlew :library:testDebugUnitTest :examples:assembleDebug :examples:testDebugUnitTest
+python3 tools/check_docs.py
 ```
 
-This runs every test and builds the example OpModes. Both must pass before you push. GitHub
+This runs every test, builds the examples and every tutorial program, and checks the docs.
+All must pass before you push. GitHub
 also runs this on every push (`.github/workflows/build.yml`).
 
 If Gradle cannot find the Android SDK, make a file `local.properties` in this folder with the line
@@ -74,6 +91,22 @@ git push origin main --tags
 
 Version numbers: change the middle number (0.**2**.0) for new features, the last number
 (0.2.**1**) for bug fixes, and the first number when something old stops working the same way.
+
+## Writing a tutorial
+
+Use the same shape as the others, so students always know where to look:
+
+1. **Title, "You will learn", "You need"** (hardware names, earlier tutorials), links to the full
+   program and the module reference.
+2. **Numbered sections** that build the program step by step. Each one: why, the code, what each
+   line does. Explain any new Java idea the first time it appears.
+3. **Run it:** what the student should see, as a checklist.
+4. **If something goes wrong:** a table of problem -> fix.
+5. **Try this:** 2-4 small exercises with hints.
+6. **Next:** the next tutorial.
+
+Write for a high-school student: short sentences, plain words, the "why" before the "how".
+Safety first: low power, wheels off the ground, hard stops.
 
 ## Ideas for later
 

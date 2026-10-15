@@ -2,6 +2,8 @@
 
 Package: `io.github.jasoncross.ftchelper.telemetry`
 
+Learn it hands-on: [06 A fast, clear loop](../tutorials/06-fast-clear-loop.md).
+
 Short helpers for Driver Station telemetry that looks the same in every OpMode, so drivers and
 programmers find numbers fast.
 

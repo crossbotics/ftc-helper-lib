@@ -2,6 +2,8 @@
 
 Package: `io.github.jasoncross.ftchelper.util`
 
+Learn it hands-on: [06 A fast, clear loop](../tutorials/06-fast-clear-loop.md), [10 Autonomous with mechanisms](../tutorials/10-auto-with-mechanisms.md), [13 Testing](../tutorials/13-testing.md).
+
 Small helpers used everywhere.
 
 | Class | Use it to |
