@@ -102,6 +102,10 @@ touch.lift_bottom = lift, below=20
 
 ## The parts catalog
 
+**Every part, with its numbers and links: [parts-catalog.md](parts-catalog.md).** It also shows how to
+use a part that is not in the catalog (numbers in the robot file, or the team's own parts file with
+`parts = parts.json`).
+
 `sim/parts/parts.json` lists the common FTC motors and servos with their real part numbers and the
 numbers from the seller's page (and the date they were checked): goBILDA Yellow Jacket (5203 and 5204,
 every ratio), REV HD Hex (bare, UltraPlanetary combinations, spur gearboxes) and Core Hex, AndyMark

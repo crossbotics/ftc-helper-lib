@@ -74,7 +74,12 @@ final class SimRobot {
     static final double SECONDS_PER_PIECE = 0.3;
     private int shots = 0;
 
-    private SimRobot(Properties p) {
+    // The parts catalog this robot uses: the library's, plus the team's own file if it names one (parts =).
+    private final SimParts parts;
+
+    private SimRobot(Properties p, Path dir) {
+        String teamParts = p.getProperty("parts", "").trim();
+        parts = teamParts.isEmpty() ? SimParts.catalog() : SimParts.withTeamFile(dir.resolve(teamParts).normalize());
         batteryVolts = num(p, "battery", 12.8);
         servoSpeed = num(p, "servo.speed", 1.0);
         int port = 0;
@@ -84,7 +89,7 @@ final class SimRobot {
             // A catalog part (drive.part = gobilda-5203-312) gives the speed and counts; numbers written
             // in the file win over it.
             String drivePart = p.getProperty("drive.part", "").trim();
-            SimParts.Motor dp = drivePart.isEmpty() ? null : SimParts.catalog().motor(drivePart);
+            SimParts.Motor dp = drivePart.isEmpty() ? null : parts.motor(drivePart);
             double maxTicks = num(p, "drive.maxTicksPerSec", dp != null ? dp.maxTicksPerSec() : 2780);
             wheelDiameterIn = num(p, "drive.wheelDiameterIn", 3.78);
             ticksPerRev = num(p, "drive.ticksPerRev", dp != null ? dp.countsPerRev : 537.7);
@@ -109,10 +114,14 @@ final class SimRobot {
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException("Robot file: \"" + key + "\": the kind must be free, lift or flywheel");
             }
-            SimParts.Motor part = s.containsKey("part") ? SimParts.catalog().motor(s.get("part")) : null;
-            double max = dbl(s, "maxTicksPerSec", part != null ? part.maxTicksPerSec() : 2780);
+            SimParts.Motor part = s.containsKey("part") ? parts.motor(s.get("part")) : null;
+            // A motor not in the catalog: rpm= (free speed) and ticksPerRev= give its top speed, or
+            // maxTicksPerSec= directly. Numbers written here win over the part's.
+            double tpr = dbl(s, "ticksPerRev", part != null ? part.countsPerRev : (kind == SimMotor.Kind.FLYWHEEL ? 28 : 537.7));
+            double fromRpm = s.containsKey("rpm") ? dbl(s, "rpm", 0) * tpr / 60.0 : Double.NaN;
+            double max = dbl(s, "maxTicksPerSec", !Double.isNaN(fromRpm) ? fromRpm : part != null ? part.maxTicksPerSec() : 2780);
             SimMotor m = new SimMotor(name, port++, kind, max, kind == SimMotor.Kind.FLYWHEEL ? 0.6 : 0.12);
-            m.ticksPerRev = dbl(s, "ticksPerRev", part != null ? part.countsPerRev : (kind == SimMotor.Kind.FLYWHEEL ? 28 : 537.7));
+            m.ticksPerRev = tpr;
             if (part != null) m.setPart(part);
             if (s.containsKey("min")) m.minTicks = dbl(s, "min", 0);
             if (s.containsKey("max")) m.maxTicks = dbl(s, "max", 0);
@@ -128,9 +137,18 @@ final class SimRobot {
             Map<String, String> s = settings(p.getProperty(key));
             SimServo servo = new SimServo(name, dbl(s, "", 0.5));
             if (s.containsKey("part")) {
-                SimParts.Servo part = SimParts.catalog().servo(s.get("part"));
+                SimParts.Servo part = parts.servo(s.get("part"));
                 servo.partName = part.name;
                 servo.speed = part.rawPerSecond();
+            }
+            // A servo not in the catalog: its range (degrees) and seconds per 60 degrees (at about 5 V).
+            if (s.containsKey("rangeDeg") || s.containsKey("secPer60")) {
+                if (!s.containsKey("rangeDeg") || !s.containsKey("secPer60")) {
+                    throw new IllegalArgumentException("Robot file: \"" + key + "\": give both rangeDeg= and secPer60=");
+                }
+                double range = dbl(s, "rangeDeg", 0), sec = dbl(s, "secPer60", 0);
+                if (range <= 0 || sec <= 0) throw new IllegalArgumentException("Robot file: \"" + key + "\": rangeDeg and secPer60 must be more than 0");
+                servo.speed = (60.0 / sec) / range;
             }
             servos.put(name, servo);
         }
@@ -178,7 +196,7 @@ final class SimRobot {
             int hash = v.indexOf('#');
             if (hash >= 0) p.setProperty(k, v.substring(0, hash).trim());
         }
-        SimRobot robot = new SimRobot(p);
+        SimRobot robot = new SimRobot(p, file.toAbsolutePath().getParent());
         String model = p.getProperty("field.model", "").trim();
         if (!model.isEmpty()) {
             Path m = file.toAbsolutePath().getParent().resolve(model).normalize();

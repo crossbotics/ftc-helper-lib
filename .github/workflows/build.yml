@@ -19,5 +19,7 @@ jobs:
         run: ./gradlew --no-daemon :sim:testDebugUnitTest
       - name: Docs and tutorials check
         run: python3 tools/check_docs.py
+      - name: Parts page up to date
+        run: python3 tools/parts_page.py --check
       - name: Non-blocking check
         run: python3 tools/check_blocking.py

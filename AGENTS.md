@@ -20,7 +20,8 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
   http://localhost:8780). Its code is in `sim/src/test` (the SDK only runs on a laptop there); the
   page is `sim/src/test/resources/sim/index.html`; robot files are in `sim/robots/`. Its scripted
   tests (`FinderSafetyTest`) run whole OpModes: add one when an OpMode's behavior matters (safety,
-  help, buttons). Not part of robot builds. Guide: docs/guides/simulator.md.
+  help, buttons). Not part of robot builds. Guide: docs/guides/simulator.md. Parts page:
+  docs/guides/parts-catalog.md is made from sim/parts/parts.json by tools/parts_page.py (never edit it by hand).
   - To check a change to an OpMode yourself, write a scenario file and run
     `./gradlew :sim:scenario -Pfile=...` (report: each check ok/FAIL with the value seen).
   - `sim/parts/parts.json`: motors and servos with seller-page numbers and the date checked; add a
