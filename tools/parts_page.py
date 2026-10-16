@@ -155,7 +155,7 @@ def page(cat):
     w("parts = parts.json")
     w("```")
     w("")
-    w("It has the same form as the library's catalog. Only `id` and the numbers the simulator uses are needed; "
+    w("It has the same form as the library's catalog. Only `id` and the numbers the simulator uses are needed (a motor: `freeRpm` and `countsPerRev`; a servo: `rangeDeg` and `secPer60Deg`); "
       "the rest is for people. Give each part its own id: an id that is already in the library is refused, so "
       "a typo can't quietly replace a real part.")
     w("")

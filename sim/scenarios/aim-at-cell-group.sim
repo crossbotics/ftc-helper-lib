@@ -11,7 +11,7 @@ press g1.right                        # Camera: Limelight
 expect screen has "Camera: Limelight"
 expect screen has "Target: RED SCORING"
 press g1.a                            # confirm: the camera starts
-expect within 3 value "Tags seen" >= 1
+expect within 3 value "Targets seen" >= 1
 start
 hold g1.rb                            # aim
 expect within 5 robot heading = 90 6

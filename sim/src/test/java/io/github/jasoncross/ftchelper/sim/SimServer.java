@@ -103,9 +103,9 @@ final class SimServer {
             } else if (method.equals("GET") && path.equals("/field")) {
                 send(out, 200, "application/json", sim.robot.field.json.getBytes(StandardCharsets.UTF_8));
             } else if (method.equals("GET") && path.equals("/field-model")) {
-                java.nio.file.Path m = sim.robot.fieldModel;
-                if (m == null) send(out, 404, "text/plain", "no field.model in the robot file".getBytes(StandardCharsets.UTF_8));
-                else send(out, 200, "model/gltf-binary", java.nio.file.Files.readAllBytes(m));
+                byte[] model = fieldModel();
+                if (model == null) send(out, 404, "text/plain", "no field.model in the robot file".getBytes(StandardCharsets.UTF_8));
+                else send(out, 200, "model/gltf-binary", model, "max-age=86400");   // the page asks with ?v=<file time>
             } else if (method.equals("GET") && THREE_FILES.contains(path)) {
                 send(out, 200, "text/javascript; charset=utf-8", resource("/sim" + path));
             } else if (method.equals("GET") && path.equals("/state")) {
@@ -156,6 +156,15 @@ final class SimServer {
         } catch (NumberFormatException e) {
             return 0;
         }
+    }
+
+    // The field model, read once (it can be several MB; every page load and tablet would read it again).
+    private byte[] modelBytes = null;
+
+    private synchronized byte[] fieldModel() throws IOException {
+        if (sim.robot.fieldModel == null) return null;
+        if (modelBytes == null) modelBytes = java.nio.file.Files.readAllBytes(sim.robot.fieldModel);
+        return modelBytes;
     }
 
     // The only files served from the 3D library folder (no other paths can be asked for).
@@ -221,11 +230,15 @@ final class SimServer {
     }
 
     private static void send(OutputStream out, int code, String type, byte[] body) throws IOException {
+        send(out, code, type, body, "no-store");
+    }
+
+    private static void send(OutputStream out, int code, String type, byte[] body, String cache) throws IOException {
         String status = code == 200 ? "OK" : code == 204 ? "No Content" : "Not Found";
         String head = "HTTP/1.1 " + code + " " + status + "\r\n"
                 + "Content-Type: " + type + "\r\n"
                 + "Content-Length: " + body.length + "\r\n"
-                + "Cache-Control: no-store\r\n"
+                + "Cache-Control: " + cache + "\r\n"
                 + "Connection: close\r\n\r\n";
         out.write(head.getBytes(StandardCharsets.ISO_8859_1));
         out.write(body);

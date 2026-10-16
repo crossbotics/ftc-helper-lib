@@ -26,7 +26,18 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - Simulator: robot shapes (`shape.NAME = box|slide|arm|turret|claw|roller|flywheel, on=, at=, size=`,
   moved by their motor or servo): drawn in 3D, and size rules checked now and at full reach (18 in
   start cube; 18 x 24 x 29 in). Scenario checks `expect size start|match|most ok|fail`, `print size`.
-  A robot-file setting's value may now contain commas (`at=-7,0,4`).
+  A robot-file setting's value may now be a list of numbers (`at=-7,0,4`); a later word with no `=`
+  is refused. A `#` starts a note only after a space (so `color=#ff0000` works).
+- Simulator fixes from the Astra/Fable reviews: full-reach size check tries every pose (each hinge at
+  its ends, every multiple of 90 degrees and every few degrees) and passes only if each pose fits;
+  parts below the tiles are reported; a moving part with no range is refused; servo ranges from team
+  parts or `rangeDeg=` reach the shapes; a pretend Limelight's `getLatestResult()` is never null and
+  follows the poll rate; cameras close outside the robot lock; field tags carry their printed up
+  (`up`, from the field CAD), used for single tags; the field model is read once and cached.
+- Docs: `distanceIn` is flat in the camera's own view (floor distance only for a level camera); the
+  SDK's BIOBUZZ cluster aiming point is about 9 in beyond the tag row, not the CELL opening; a webcam
+  reports a clustered tag only as its cluster. Tutorial 18 shows "Targets seen". `TagGroup` refuses
+  repeated tags or places.
 - `TagGroup` and `LimelightTags.groups(...)`: a Limelight now also reports each group of tags in a row
   as ONE target, named like the webcam's SDK cluster (BIOBUZZ: "RED SCORING", "RED AUDIENCE",
   "BLUE AUDIENCE", "BLUE SCORING"), aimed at the middle of the row; needs 2+ of the group's tags.

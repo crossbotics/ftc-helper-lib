@@ -146,6 +146,7 @@ final class SimRobot {
                 SimParts.Servo part = parts.servo(s.get("part"));
                 servo.partName = part.name;
                 servo.partId = part.id;
+                servo.rangeDeg = part.rangeDeg;
                 servo.speed = part.rawPerSecond();
             }
             // A servo not in the catalog: its range (degrees) and seconds per 60 degrees (at about 5 V).
@@ -156,6 +157,7 @@ final class SimRobot {
                 double range = dbl(s, "rangeDeg", 0), sec = dbl(s, "secPer60", 0);
                 if (range <= 0 || sec <= 0) throw new IllegalArgumentException("Robot file: \"" + key + "\": rangeDeg and secPer60 must be more than 0");
                 servo.speed = (60.0 / sec) / range;
+                servo.rangeDeg = range;
             }
             servos.put(name, servo);
         }
@@ -217,10 +219,12 @@ final class SimRobot {
         try (Reader r = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
             p.load(r);
         }
-        // Properties keeps "# comments" out, but not comments after a value: cut them off.
+        // Properties keeps "# comments" out, but not comments after a value: cut them off. A note starts
+        // with a # after a space (or at the start of the value), so color=#ff0000 is not a note.
         for (String k : p.stringPropertyNames()) {
             String v = p.getProperty(k);
-            int hash = v.indexOf('#');
+            int hash = v.startsWith("#") ? 0 : -1;
+            for (int i = 1; i < v.length() && hash < 0; i++) if (v.charAt(i) == '#' && Character.isWhitespace(v.charAt(i - 1))) hash = i;
             if (hash >= 0) p.setProperty(k, v.substring(0, hash).trim());
         }
         SimRobot robot = new SimRobot(p, file.toAbsolutePath().getParent());
@@ -261,10 +265,12 @@ final class SimRobot {
         for (SimMotor m : motors.values()) m.resetConfig();
         for (SimServo s : servos.values()) s.resetConfig();
         for (double[] cr : crServos.values()) { cr[0] = 0; cr[1] = 0; }
-        closeCameras();
     }
 
-    /** Closes every open camera portal (the FTC app does it when an OpMode stops). */
+    /**
+     * Closes every open camera portal (the FTC app does it when an OpMode stops). Call it WITHOUT holding
+     * the robot's lock: a camera's picture thread takes the camera's lock, then the robot's.
+     */
     void closeCameras() {
         for (SimCamera c : cameras.values()) c.closeAll();
     }
@@ -565,11 +571,23 @@ final class SimRobot {
                 out.put(last, part.substring(eq + 1).trim());
             } else if (last == null) {
                 out.put("", part);                                   // the first word: the kind
+            } else if (isNumber(part) && isNumber(out.get(last).substring(out.get(last).lastIndexOf(',') + 1))) {
+                out.put(last, out.get(last) + "," + part);           // "at=-7,0,4": a list of numbers goes on
             } else {
-                out.put(last, out.get(last) + "," + part);           // "at=-7,0,4": the value goes on
+                throw new IllegalArgumentException("Robot file: \"" + text.trim() + "\": \"" + part
+                        + "\" has no =. After the first word, settings are name=value (did you mean " + part + "=...?)");
             }
         }
         return out;
+    }
+
+    private static boolean isNumber(String t) {
+        try {
+            Double.parseDouble(t.trim());
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     private static double dbl(Map<String, String> s, String key, double fallback) {
@@ -589,6 +607,7 @@ final class SimRobot {
         final String name;
         String partName = "";       // the catalog part, if the robot file names one
         String partId = "";         // its catalog id
+        double rangeDeg = Double.NaN;   // how far positions 0..1 turn it (part, or rangeDeg= in the robot file)
         double speed = Double.NaN;  // raw positions per second from the part (NaN = the file's servo.speed)
         double actual;              // where it really is (raw 0..1)
         private double target;      // where it is going (raw)

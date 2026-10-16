@@ -1204,12 +1204,22 @@
    "pitchDeg": -60.0,
    "sizeIn": 3.25,
    "cellState": "down",
+   "up": [
+    -0.866,
+    0.0,
+    -0.5
+   ],
    "tipped": {
     "x": -13.1,
     "y": -6.24,
     "z": 49.8,
     "facingDeg": -180.0,
-    "pitchDeg": -60.0
+    "pitchDeg": -60.0,
+    "up": [
+     -0.866,
+     0.0,
+     0.5
+    ]
    }
   },
   {
@@ -1222,12 +1232,22 @@
    "pitchDeg": -60.0,
    "sizeIn": 3.25,
    "cellState": "down",
+   "up": [
+    -0.866,
+    0.0,
+    -0.5
+   ],
    "tipped": {
     "x": -13.1,
     "y": -9.99,
     "z": 49.8,
     "facingDeg": -180.0,
-    "pitchDeg": -60.0
+    "pitchDeg": -60.0,
+    "up": [
+     -0.866,
+     0.0,
+     0.5
+    ]
    }
   },
   {
@@ -1240,12 +1260,22 @@
    "pitchDeg": -60.0,
    "sizeIn": 3.25,
    "cellState": "down",
+   "up": [
+    -0.866,
+    0.0,
+    -0.5
+   ],
    "tipped": {
     "x": -13.1,
     "y": -15.49,
     "z": 49.8,
     "facingDeg": -180.0,
-    "pitchDeg": -60.0
+    "pitchDeg": -60.0,
+    "up": [
+     -0.866,
+     0.0,
+     0.5
+    ]
    }
   },
   {
@@ -1258,12 +1288,22 @@
    "pitchDeg": -60.0,
    "sizeIn": 3.25,
    "cellState": "down",
+   "up": [
+    -0.866,
+    0.0,
+    -0.5
+   ],
    "tipped": {
     "x": -13.1,
     "y": -19.24,
     "z": 49.8,
     "facingDeg": -180.0,
-    "pitchDeg": -60.0
+    "pitchDeg": -60.0,
+    "up": [
+     -0.866,
+     0.0,
+     0.5
+    ]
    }
   },
   {
@@ -1276,12 +1316,22 @@
    "pitchDeg": -60.0,
    "sizeIn": 3.25,
    "cellState": "up",
+   "up": [
+    0.866,
+    0.0,
+    0.5
+   ],
    "tipped": {
     "x": 11.61,
     "y": -19.24,
     "z": 35.53,
     "facingDeg": -180.0,
-    "pitchDeg": -60.0
+    "pitchDeg": -60.0,
+    "up": [
+     0.866,
+     0.0,
+     -0.5
+    ]
    }
   },
   {
@@ -1294,12 +1344,22 @@
    "pitchDeg": -60.0,
    "sizeIn": 3.25,
    "cellState": "up",
+   "up": [
+    0.866,
+    0.0,
+    0.5
+   ],
    "tipped": {
     "x": 11.61,
     "y": -15.49,
     "z": 35.53,
     "facingDeg": -180.0,
-    "pitchDeg": -60.0
+    "pitchDeg": -60.0,
+    "up": [
+     0.866,
+     0.0,
+     -0.5
+    ]
    }
   },
   {
@@ -1312,12 +1372,22 @@
    "pitchDeg": -60.0,
    "sizeIn": 3.25,
    "cellState": "up",
+   "up": [
+    0.866,
+    0.0,
+    0.5
+   ],
    "tipped": {
     "x": 11.61,
     "y": -9.99,
     "z": 35.53,
     "facingDeg": -180.0,
-    "pitchDeg": -60.0
+    "pitchDeg": -60.0,
+    "up": [
+     0.866,
+     0.0,
+     -0.5
+    ]
    }
   },
   {
@@ -1330,12 +1400,22 @@
    "pitchDeg": -60.0,
    "sizeIn": 3.25,
    "cellState": "up",
+   "up": [
+    0.866,
+    0.0,
+    0.5
+   ],
    "tipped": {
     "x": 11.61,
     "y": -6.24,
     "z": 35.53,
     "facingDeg": -180.0,
-    "pitchDeg": -60.0
+    "pitchDeg": -60.0,
+    "up": [
+     0.866,
+     0.0,
+     -0.5
+    ]
    }
   },
   {
@@ -1348,12 +1428,22 @@
    "pitchDeg": -60.0,
    "sizeIn": 3.25,
    "cellState": "down",
+   "up": [
+    0.866,
+    0.0,
+    -0.5
+   ],
    "tipped": {
     "x": 13.1,
     "y": 6.26,
     "z": 49.8,
     "facingDeg": 0.0,
-    "pitchDeg": -60.0
+    "pitchDeg": -60.0,
+    "up": [
+     0.866,
+     0.0,
+     0.5
+    ]
    }
   },
   {
@@ -1366,12 +1456,22 @@
    "pitchDeg": -60.0,
    "sizeIn": 3.25,
    "cellState": "down",
+   "up": [
+    0.866,
+    0.0,
+    -0.5
+   ],
    "tipped": {
     "x": 13.1,
     "y": 10.01,
     "z": 49.8,
     "facingDeg": 0.0,
-    "pitchDeg": -60.0
+    "pitchDeg": -60.0,
+    "up": [
+     0.866,
+     0.0,
+     0.5
+    ]
    }
   },
   {
@@ -1384,12 +1484,22 @@
    "pitchDeg": -60.0,
    "sizeIn": 3.25,
    "cellState": "down",
+   "up": [
+    0.866,
+    0.0,
+    -0.5
+   ],
    "tipped": {
     "x": 13.1,
     "y": 15.51,
     "z": 49.8,
     "facingDeg": 0.0,
-    "pitchDeg": -60.0
+    "pitchDeg": -60.0,
+    "up": [
+     0.866,
+     0.0,
+     0.5
+    ]
    }
   },
   {
@@ -1402,12 +1512,22 @@
    "pitchDeg": -60.0,
    "sizeIn": 3.25,
    "cellState": "down",
+   "up": [
+    0.866,
+    0.0,
+    -0.5
+   ],
    "tipped": {
     "x": 13.1,
     "y": 19.26,
     "z": 49.8,
     "facingDeg": 0.0,
-    "pitchDeg": -60.0
+    "pitchDeg": -60.0,
+    "up": [
+     0.866,
+     0.0,
+     0.5
+    ]
    }
   },
   {
@@ -1420,12 +1540,22 @@
    "pitchDeg": -60.0,
    "sizeIn": 3.25,
    "cellState": "up",
+   "up": [
+    -0.866,
+    0.0,
+    0.5
+   ],
    "tipped": {
     "x": -11.61,
     "y": 19.26,
     "z": 35.53,
     "facingDeg": 0.0,
-    "pitchDeg": -60.0
+    "pitchDeg": -60.0,
+    "up": [
+     -0.866,
+     0.0,
+     -0.5
+    ]
    }
   },
   {
@@ -1438,12 +1568,22 @@
    "pitchDeg": -60.0,
    "sizeIn": 3.25,
    "cellState": "up",
+   "up": [
+    -0.866,
+    0.0,
+    0.5
+   ],
    "tipped": {
     "x": -11.61,
     "y": 15.51,
     "z": 35.53,
     "facingDeg": 0.0,
-    "pitchDeg": -60.0
+    "pitchDeg": -60.0,
+    "up": [
+     -0.866,
+     0.0,
+     -0.5
+    ]
    }
   },
   {
@@ -1456,12 +1596,22 @@
    "pitchDeg": -60.0,
    "sizeIn": 3.25,
    "cellState": "up",
+   "up": [
+    -0.866,
+    0.0,
+    0.5
+   ],
    "tipped": {
     "x": -11.61,
     "y": 10.01,
     "z": 35.53,
     "facingDeg": 0.0,
-    "pitchDeg": -60.0
+    "pitchDeg": -60.0,
+    "up": [
+     -0.866,
+     0.0,
+     -0.5
+    ]
    }
   },
   {
@@ -1474,14 +1624,24 @@
    "pitchDeg": -60.0,
    "sizeIn": 3.25,
    "cellState": "up",
+   "up": [
+    -0.866,
+    0.0,
+    0.5
+   ],
    "tipped": {
     "x": -11.61,
     "y": 6.26,
     "z": 35.53,
     "facingDeg": 0.0,
-    "pitchDeg": -60.0
+    "pitchDeg": -60.0,
+    "up": [
+     -0.866,
+     0.0,
+     -0.5
+    ]
    }
   }
  ],
- "tagNotes": "IDs from manual 9.9 / Figure 9-17 (TU05): red far-side CELL 30-33, red audience CELL 34-37, blue audience CELL 38-41, blue far-side CELL 42-45. The CAD has one sticker per CELL without the tag patterns; each tag's centre is placed from the sticker's two reference holes with the Figure 9-15 layout (centres 2.75 in above the hole line, at -6.5/-2.75/+2.75/+6.5 in), IDs rising left to right as read from below with the hole edge (toward the field centre) at the bottom; this order matches Figure 9-17. x/y/z/facing are for the HIVE as the CAD has it (cellState); 'tipped' is the same tag after its HIVE tips to the other rest position. facingDeg = horizontal direction the tag faces, counterclockwise from +x; pitchDeg = how far the tag's face points below horizontal (-90 = straight down)."
+ "tagNotes": "IDs from manual 9.9 / Figure 9-17 (TU05): red far-side CELL 30-33, red audience CELL 34-37, blue audience CELL 38-41, blue far-side CELL 42-45. The CAD has one sticker per CELL without the tag patterns; each tag's centre is placed from the sticker's two reference holes with the Figure 9-15 layout (centres 2.75 in above the hole line, at -6.5/-2.75/+2.75/+6.5 in), IDs rising left to right as read from below with the hole edge (toward the field centre) at the bottom; this order matches Figure 9-17. x/y/z/facing are for the HIVE as the CAD has it (cellState); 'tipped' is the same tag after its HIVE tips to the other rest position. 'up' = the tag's printed up (unit vector, simulator frame): in the sticker's plane, away from its hole edge; manual 9.9: the bottom edge faces the field centre. facingDeg = horizontal direction the tag faces, counterclockwise from +x; pitchDeg = how far the tag's face points below horizontal (-90 = straight down)."
 }

@@ -143,7 +143,7 @@ servo.gate = 0.5, rangeDeg=180, secPer60=0.12
 parts = parts.json
 ```
 
-It has the same form as the library's catalog. Only `id` and the numbers the simulator uses are needed; the rest is for people. Give each part its own id: an id that is already in the library is refused, so a typo can't quietly replace a real part.
+It has the same form as the library's catalog. Only `id` and the numbers the simulator uses are needed (a motor: `freeRpm` and `countsPerRev`; a servo: `rangeDeg` and `secPer60Deg`); the rest is for people. Give each part its own id: an id that is already in the library is refused, so a typo can't quietly replace a real part.
 
 ```json
 {

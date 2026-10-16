@@ -34,9 +34,11 @@ import org.firstinspires.ftc.robotcore.external.navigation.Position;
  * tags in a row ({@link TagGroup}; BIOBUZZ: the 4 tags under each CELL) as ONE target, named like the
  * webcam's (the FTC SDK's cluster names), aimed at the middle of the row. It needs at least 2 of the
  * group's tags in view and their 3D poses. So the same code aims with either camera. The webcam's
- * cluster target is the SDK's aiming point, a few inches behind and above the row: its bearing is
- * about the same when you face the group, but its distance is a few inches longer. Make the shot
- * table with the camera the robot uses.
+ * cluster target is the SDK's own aiming point, which is NOT the tag row: the SDK puts it 7.2 in toward
+ * the tags' printed top and 5.6 in behind them. For BIOBUZZ (the tags' printed bottom faces the field
+ * centre, manual 9.9) that is about 9 in farther from a robot in front of the CELL and 1 in higher
+ * than the row (not the CELL opening). So the two cameras give about the same bearing when you face the
+ * group, but different distances: make the shot table with the camera the robot uses.
  *
  * <p>Bearing is the Limelight's tx with the sign flipped (tx is positive to the RIGHT; the
  * library uses positive = LEFT everywhere). Distance comes from the tag's 3D pose and needs the
@@ -228,14 +230,16 @@ public class LimelightTags implements TargetSource {
     }
 
     /**
-     * Distance to the target along the FLOOR (ignoring height), in inches, NaN if there is no pose.
-     * Same meaning as the webcam's distance, so a shot table works with either camera.
+     * Distance to the target in inches, flat in the camera's own view (its up/down left out; the same as
+     * the floor distance only for a level camera), NaN if there is no pose. Same meaning as the webcam's.
+     * See {@link TargetObservation#distanceIn}.
      * Limelight camera space: x right, y down, z forward. Public for tests.
      */
     public static double distanceInches(Pose3D pose) {
         if (pose == null || pose.getPosition() == null) return Double.NaN;
         Position p = pose.getPosition().toUnit(DistanceUnit.INCH);
-        // Only sideways (x) and forward (z): leaving out y (up/down) gives the distance along the floor.
+        // Only sideways (x) and forward (z): leaving out the camera's up/down (y). For a level camera that
+        // is the distance along the floor; for a tilted one it is a little more.
         double d = Math.hypot(p.x, p.z);
         // 0 means the pipeline filled in no real pose (a tag cannot be 0 inches away), so: unknown.
         return d > 0 ? d : Double.NaN;

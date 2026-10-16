@@ -45,12 +45,15 @@ public final class SimVision {
         return out;
     }
 
-    /** A field-file tag's center and face direction: {x, y, z, nx, ny, nz} in inches, or null. */
+    /**
+     * A field-file tag: {x, y, z, nx, ny, nz, upx, upy, upz}: its center (inches), which way its face
+     * points, and its printed up (NaN when the field file does not give it). Null if there is no such tag.
+     */
     public static double[] tag(Object camera, int id) {
         for (SimField.Tag t : ((SimCamera) camera).robot.field.tags) {
             if (t.id == id) {
-                double[] n = SimCamera.tagNormal(t);
-                return new double[] {t.x, t.y, t.z, n[0], n[1], n[2]};
+                double[] n = SimCamera.tagNormal(t), u = t.up != null ? t.up : new double[] {Double.NaN, Double.NaN, Double.NaN};
+                return new double[] {t.x, t.y, t.z, n[0], n[1], n[2], u[0], u[1], u[2]};
             }
         }
         return null;

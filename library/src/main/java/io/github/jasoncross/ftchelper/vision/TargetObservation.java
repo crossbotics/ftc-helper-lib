@@ -10,8 +10,12 @@ import java.util.Locale;
  * <ul>
  *   <li>{@link #bearingDeg}: how far to turn to face it, in degrees. <b>Positive = it is to the LEFT</b>
  *       (counterclockwise, like the IMU). The library converts the Limelight's opposite sign for you.</li>
- *   <li>{@link #distanceIn}: distance from the camera to the target along the FLOOR (height difference
- *       ignored), in inches, or NaN ("not a number": the camera could not tell) if unknown.
+ *   <li>{@link #distanceIn}: distance from the camera to the target in inches, measured flat in the
+ *       camera's own view (sideways and forward from the lens, its up/down left out), or NaN ("not a
+ *       number": the camera could not tell) if unknown. It equals the distance along the floor only when
+ *       the camera is level; a camera tilted up reads more (with the camera 20 degrees up and the target
+ *       2 ft higher: about 51 in instead of 46 in). So make the shot table with the camera mounted as it
+ *       will be on the robot.
  *       Same meaning for every camera.</li>
  *   <li>{@link #timeNanos}: when the camera took the picture, on the {@code System.nanoTime()} clock
  *       (a stopwatch that counts nanoseconds, billionths of a second).</li>
@@ -34,7 +38,7 @@ public final class TargetObservation {
     public final String name;
     /** Degrees to turn to face the target. Positive = target is to the LEFT. NaN if unknown. */
     public final double bearingDeg;
-    /** Inches from the camera to the target along the floor. NaN if unknown. */
+    /** Inches from the camera to the target, flat in the camera's own view (see above). NaN if unknown. */
     public final double distanceIn;
     /** When the picture was taken ({@code System.nanoTime()} clock, nanoseconds). */
     public final long timeNanos;
@@ -45,7 +49,7 @@ public final class TargetObservation {
      * @param id         the tag number, or {@link #CLUSTER}
      * @param name       a name to show
      * @param bearingDeg degrees to turn to face it, positive = LEFT (NaN if unknown)
-     * @param distanceIn inches along the floor (NaN if unknown)
+     * @param distanceIn inches, flat in the camera's own view (NaN if unknown)
      * @param timeNanos  when the picture was taken ({@code System.nanoTime()} clock)
      */
     public TargetObservation(int id, String name, double bearingDeg, double distanceIn, long timeNanos) {

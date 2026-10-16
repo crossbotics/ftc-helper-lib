@@ -38,6 +38,14 @@ public final class TagGroup {
         if (ids.length != alongRowIn.length || ids.length < 2) {
             throw new IllegalArgumentException("TagGroup " + name + ": needs at least 2 tags, each with its place along the row");
         }
+        for (int i = 0; i < ids.length; i++) {
+            for (int j = i + 1; j < ids.length; j++) {
+                if (ids[i] == ids[j]) throw new IllegalArgumentException("TagGroup " + name + ": tag " + ids[i] + " is listed twice");
+                if (alongRowIn[i] == alongRowIn[j]) {
+                    throw new IllegalArgumentException("TagGroup " + name + ": tags " + ids[i] + " and " + ids[j] + " are at the same place along the row");
+                }
+            }
+        }
         this.name = name;
         this.ids = ids.clone();
         this.alongRowIn = alongRowIn.clone();

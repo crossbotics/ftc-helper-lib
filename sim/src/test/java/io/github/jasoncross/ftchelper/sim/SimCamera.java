@@ -179,7 +179,11 @@ final class SimCamera implements InvocationHandler {
      * that matches the FTC docs' ranges for a 2 in tag at 640x480). Field elements do not block the view.
      */
     List<Seen> visibleTags(SimField field, double decimation) {
-        double[][] c = pose();
+        return visibleTags(field, decimation, pose());
+    }
+
+    /** The same, from a camera pose worked out already (see pose()). */
+    List<Seen> visibleTags(SimField field, double decimation, double[][] c) {
         double f = focalPx(), tanH = Math.tan(Math.toRadians(hfovDeg) / 2), tanV = tanH * height / width;
         double minPx = 6.5 * Math.max(1, decimation);
         List<Seen> out = new ArrayList<>();

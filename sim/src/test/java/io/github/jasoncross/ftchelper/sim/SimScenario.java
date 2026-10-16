@@ -298,9 +298,10 @@ public final class SimScenario {
                 op(t, 1);
                 return;
             case "size":
-                need(t, 3, "expect size start|match|most ok|fail");
-                if (!java.util.Arrays.asList("start", "match", "most").contains(t.get(1))) {
-                    throw new IllegalArgumentException("size start (18 in cube now), size match (18 x 24 x 29 now) or size most (at full reach)");
+                need(t, 3, "expect size start|match|most|floor ok|fail");
+                if (!java.util.Arrays.asList("start", "match", "most", "floor").contains(t.get(1))) {
+                    throw new IllegalArgumentException("size start (18 in cube now), size match (18 x 24 x 29 now), "
+                            + "size most (every pose at full reach) or size floor (nothing below the tiles now)");
                 }
                 if (!t.get(2).equals("ok") && !t.get(2).equals("fail")) throw new IllegalArgumentException("ok or fail");
                 return;
@@ -391,8 +392,11 @@ public final class SimScenario {
             case "size": {
                 // expect size start ok (fits the 18 in cube now) | size match ok (18 x 24 x 29 now) | size most ok
                 SimShapes.Extent e = t.get(1).equals("most") ? sim.robot.shapes.most : sim.robot.shapes.now();
-                boolean ok = t.get(1).equals("start") ? e.fits(18, 18, 18) : e.fits(18, 24, 29);
-                why[0] = e.toString();
+                boolean ok = t.get(1).equals("start") ? e.fits(18, 18, 18) && e.aboveFloor()
+                        : t.get(1).equals("most") ? sim.robot.shapes.mostOk
+                        : t.get(1).equals("floor") ? e.aboveFloor() : e.fits(18, 24, 29) && e.aboveFloor();
+                why[0] = t.get(1).equals("most") ? (sim.robot.shapes.mostOk ? "every pose fits; biggest each way: " + e
+                        : "worst pose " + sim.robot.shapes.mostPose + ": " + e) : e.toString();
                 return ok == t.get(2).equals("ok");
             }
             case "camera": {
@@ -489,7 +493,9 @@ public final class SimScenario {
                 }
                 return;
             case "size":
-                report.add("          size now: " + sim.robot.shapes.now() + "; at full reach: " + sim.robot.shapes.most);
+                report.add("          size now: " + sim.robot.shapes.now() + "; at full reach: "
+                        + (sim.robot.shapes.mostOk ? "every pose fits, biggest each way " : "worst pose (" + sim.robot.shapes.mostPose + ") ")
+                        + sim.robot.shapes.most + "; " + sim.robot.shapes.posesTried + " poses tried");
                 return;
             case "cameras":
                 for (SimCamera c : sim.robot.cameras.values()) {

@@ -188,8 +188,8 @@ public class WebcamTags implements TargetSource {
     /** Turns one SDK detection (single tag or cluster) into a TargetObservation. Public for tests. */
     public static TargetObservation convert(AprilTagDetection d) {
         // ftcPose is null for a tag that is not in the tag library (the SDK cannot measure it): use NaN.
-        // The SDK's bearing is already positive = LEFT, and its range is measured flat (sideways and
-        // forward only), the same "along the floor" distance as the Limelight's.
+        // The SDK's bearing is already positive = LEFT, and its range is measured flat in the camera's own
+        // view (sideways and forward only), the same kind of distance as the Limelight's.
         double bearing = d.ftcPose != null ? d.ftcPose.bearing : Double.NaN;
         double range = d.ftcPose != null ? d.ftcPose.range : Double.NaN;
         // "instanceof" asks "is this a single tag?"; then "(AprilTagSingleDetection) d" lets us use it as one.

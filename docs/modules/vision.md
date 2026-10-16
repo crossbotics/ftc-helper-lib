@@ -105,8 +105,10 @@ as one target, with the same name as the webcam's SDK cluster (BIOBUZZ: the 4 ta
 `TagGroup.biobuzz()`). The aiming point is the middle of the tag row, worked out from the tags in
 view: the two seen tags farthest apart give the row's direction, and each seen tag steps back along
 the row by its place in the group. It needs at least 2 of the group's tags and their 3D poses (set the
-tag size in the pipeline). The webcam's cluster target is the SDK's aiming point, a few inches behind
-and above the row: about the same bearing when you face the group, a few inches more distance. Make
+tag size in the pipeline). The webcam's cluster target is the SDK's own aiming point, which is not the
+tag row: the SDK puts it 7.2 in toward the tags' printed top and 5.6 in behind them. For BIOBUZZ (the
+printed bottom faces the field centre) that is about 9 in farther from a robot in front of the CELL
+and 1 in higher than the row, and not the CELL opening. About the same bearing, different distance. Make
 the shot table with the camera the robot uses.
 
 ```java
@@ -128,7 +130,7 @@ camera.groups(java.util.Arrays.asList(goal));
 | --- | --- |
 | `id`, `name` | tag id (`CLUSTER` = -1 for clusters) and name |
 | `bearingDeg` | how far to turn to face it; **+ = it is to the left** |
-| `distanceIn` | inches along the FLOOR from the camera (height difference ignored), or NaN if unknown. Same meaning for both cameras, so a shot table works with either |
+| `distanceIn` | inches from the camera, flat in the camera's own view (its up/down left out), or NaN if unknown. It is the floor distance only for a level camera; a camera tilted up reads more. Same meaning for both cameras, but make the shot table with the camera mounted as on the robot |
 | `timeNanos` | when the picture was taken |
 | `ageMs(now)`, `isFresh(now, maxAgeMs)` | how old; never aim with an old picture |
 | `hasBearing()`, `hasDistance()` | was it worked out? |

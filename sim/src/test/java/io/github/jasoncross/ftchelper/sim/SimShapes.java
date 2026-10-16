@@ -88,11 +88,29 @@ final class SimShapes {
             } else if (m != null && m.maxTicks < 1e300) {
                 hi = start + (m.maxTicks - zeroTicks) / perUnit;    // from the bottom stop to the top stop
             }
-            if (s.containsKey("travel")) { lo = 0; hi = num(s, "travel", name); }
+            if (s.containsKey("travel")) { lo = start; hi = start + num(s, "travel", name); }
             if (s.containsKey("minDeg")) lo = num(s, "minDeg", name);
             if (s.containsKey("maxDeg")) hi = num(s, "maxDeg", name);
             min = Math.min(lo, hi);
             max = Math.max(lo, hi);
+            if (moves() && !(max > min)) {
+                // A moving part needs its range: without it the 3D view could not move it and the
+                // full-reach size check could not see how far it goes.
+                throw new IllegalArgumentException("Robot file: shape." + name + " moves but has no range of motion. "
+                        + (motor != null ? "Give motor." + motor + " its hard stops (min= and max=), or write "
+                        : servo != null ? "Give pos0= and pos1= different values, or write " : "Give it a motor= or servo=, and ")
+                        + (type.equals("slide") ? "travel=" : type.equals("claw") ? "pos0=/pos1=" : "minDeg= and maxDeg=") + " on the shape.");
+            }
+            if (moves() && motor == null && servo == null) {
+                throw new IllegalArgumentException("Robot file: shape." + name + ": a " + type + " needs motor= or servo= (what moves it)");
+            }
+            if (type.equals("turret") && s.containsKey("axis") && !axis.equals("up")) {
+                throw new IllegalArgumentException("Robot file: shape." + name + ": a turret always turns about up (leave out axis=, or use an arm)");
+            }
+            if (type.equals("arm") && (axis.equals("forward") || axis.equals("back"))) {
+                throw new IllegalArgumentException("Robot file: shape." + name + ": an arm reaches forward from its hinge, so its hinge axis "
+                        + "can't be forward/back (use left/right to swing up and down, or up/down to swing sideways)");
+            }
             value = type.equals("claw") ? min : start;
         }
 
@@ -138,12 +156,9 @@ final class SimShapes {
         private static double defaultPos1(String type, SimRobot robot, String servo) {
             // An arm or turret on a catalog servo: position 1 is the servo's whole range.
             if ((type.equals("arm") || type.equals("turret")) && servo != null) {
-                String part = robot.servos.get(servo).partId;
-                if (!part.isEmpty()) {
-                    double range = SimParts.catalog().servos.containsKey(part) ? SimParts.catalog().servo(part).rangeDeg : Double.NaN;
-                    if (!Double.isNaN(range)) return range;
-                }
-                return 180;
+                // the servo's range: from its catalog or team part, or its own rangeDeg= in the robot file
+                double range = robot.servos.get(servo).rangeDeg;
+                return Double.isNaN(range) ? 180 : range;
             }
             if (type.equals("claw")) return 3;          // a 3 in gap when fully open
             return 1;
@@ -187,7 +202,7 @@ final class SimShapes {
 
     /** How big the robot is (inches, robot frame). */
     static final class Extent {
-        double back, front, right, left, top;
+        double back, front, right, left, top, bottom;
 
         double lengthIn() { return front - back; }
         double widthIn() { return left - right; }
@@ -199,17 +214,42 @@ final class SimShapes {
         }
 
         @Override public String toString() {
-            return String.format(Locale.US, "%.1f x %.1f in, %.1f in tall", lengthIn(), widthIn(), top);
+            return String.format(Locale.US, "%.1f x %.1f in, %.1f in tall", lengthIn(), widthIn(), top)
+                    + (bottom < -FLOOR_SLACK ? String.format(Locale.US, ", %.1f in below the tiles", -bottom) : "");
+        }
+
+        /** True if nothing goes below the tiles (a part there would really hit the floor: check the shapes). */
+        boolean aboveFloor() {
+            return bottom >= -FLOOR_SLACK;
+        }
+
+        // How far it is from fitting a by b by h (0 or less = fits): for showing the worst pose.
+        double overflow(double a, double b, double h) {
+            double l = lengthIn(), w = widthIn();
+            double flat = Math.min(Math.max(l - a, w - b), Math.max(l - b, w - a));
+            return Math.max(Math.max(flat, top - h), -bottom - FLOOR_SLACK);
         }
     }
+
+    // A part may touch the tiles; more than this below them is a mistake in the shapes (inches).
+    static final double FLOOR_SLACK = 0.1;
 
     final Map<String, Shape> shapes = new LinkedHashMap<>();
     final double chassisHeightIn;
     private final SimRobot robot;
-    /** The biggest the robot can get: every moving part over its whole range (worked out once). */
+    /**
+     * At full reach: when some pose does not fit, the worst one (furthest from fitting 18 x 24 x 29 in);
+     * when every pose fits, the biggest the robot gets in each direction (not always all in one pose).
+     * Worked out once.
+     */
     final Extent most;
-    /** The shapes at the biggest pose (for the page), as "name=value" text. */
+    /** True if EVERY pose tried fits 18 x 24 x 29 in and stays above the tiles. */
+    final boolean mostOk;
+    /** The worst pose, as "name=value" text. */
     final String mostPose;
+    /** How many poses were tried, and the step used for hinges (degrees). */
+    final int posesTried;
+    final double hingeStepDeg;
 
     SimShapes(SimRobot robot, java.util.Properties p, Map<String, Map<String, String>> lines) {
         this.robot = robot;
@@ -230,38 +270,85 @@ final class SimShapes {
         }
         double defaultChassis = shapes.isEmpty() ? robot.heightIn : 4;
         chassisHeightIn = p.containsKey("robot.chassisHeightIn") ? Double.parseDouble(p.getProperty("robot.chassisHeightIn").trim()) : defaultChassis;
-        // The biggest the robot gets: try each moving part at both ends of its range and in between
-        // (an arm can reach farthest part way round), up to about 4000 combinations.
+        // The robot's worst pose: try every combination of each moving part's important values. A slide
+        // or claw is biggest at one of its two ends. A hinge (arm, turret) reaches farthest at an end of
+        // its range, at a multiple of 90 degrees, or (when it rides on another hinge) part way between:
+        // so hinges are tried every few degrees too (5 or finer when there are few parts; the step grows
+        // with more parts to keep it under 50,000 poses). The step is reported with the result.
         List<Shape> moving = new ArrayList<>();
-        for (Shape s : shapes.values()) if (s.moves() && s.max > s.min) moving.add(s);
-        int steps = moving.isEmpty() ? 1 : Math.max(2, Math.min(9, (int) Math.floor(Math.pow(4000, 1.0 / moving.size()))));
-        Extent best = null;
-        String bestPose = "";
-        int combos = (int) Math.pow(steps, moving.size());
+        for (Shape s : shapes.values()) if (s.moves()) moving.add(s);
+        double step = 1;
+        List<double[]> values;
+        while (true) {
+            values = new ArrayList<>();
+            long combos = 1;
+            for (Shape s : moving) {
+                double[] v = candidates(s, step);
+                values.add(v);
+                combos *= v.length;
+            }
+            if (combos <= 50_000 || step >= 45) break;
+            step *= 1.5;
+        }
+        hingeStepDeg = step;
         double[] keep = new double[moving.size()];
         for (int i = 0; i < moving.size(); i++) keep[i] = moving.get(i).value;
-        Extent all = null;
-        for (int c = 0; c < combos; c++) {
-            int k = c;
-            StringBuilder pose = new StringBuilder();
-            for (Shape s : moving) {
-                int step = k % steps;
-                k /= steps;
-                s.value = s.min + (s.max - s.min) * step / (steps - 1.0);
-                pose.append(String.format(Locale.US, "%s=%.1f ", s.name, s.value));
-            }
+        int[] idx = new int[moving.size()];
+        Extent worst = null, reach = null;
+        double worstScore = -Double.MAX_VALUE;
+        String worstPose = "";
+        boolean allOk = true;
+        int tried = 0;
+        while (true) {
+            for (int i = 0; i < moving.size(); i++) moving.get(i).value = values.get(i)[idx[i]];
             Extent e = extent(pieces());
-            if (all == null) all = e;
-            all.back = Math.min(all.back, e.back);
-            all.front = Math.max(all.front, e.front);
-            all.right = Math.min(all.right, e.right);
-            all.left = Math.max(all.left, e.left);
-            if (e.top > all.top) bestPose = pose.toString().trim();
-            all.top = Math.max(all.top, e.top);
+            tried++;
+            if (reach == null) {
+                reach = new Extent();     // a copy: "worst" may keep e itself
+                reach.back = e.back; reach.front = e.front; reach.right = e.right; reach.left = e.left;
+                reach.top = e.top; reach.bottom = e.bottom;
+            } else {
+                reach.back = Math.min(reach.back, e.back);
+                reach.front = Math.max(reach.front, e.front);
+                reach.right = Math.min(reach.right, e.right);
+                reach.left = Math.max(reach.left, e.left);
+                reach.top = Math.max(reach.top, e.top);
+                reach.bottom = Math.min(reach.bottom, e.bottom);
+            }
+            double score = e.overflow(18, 24, 29);
+            if (score > 1e-6) allOk = false;
+            if (score > worstScore) {
+                worstScore = score;
+                worst = e;
+                StringBuilder pose = new StringBuilder();
+                for (Shape sh : moving) pose.append(String.format(Locale.US, "%s=%.1f ", sh.name, sh.value));
+                worstPose = pose.toString().trim();
+            }
+            int i = 0;
+            while (i < idx.length && ++idx[i] >= values.get(i).length) idx[i++] = 0;
+            if (i == idx.length) break;
         }
         for (int i = 0; i < moving.size(); i++) moving.get(i).value = keep[i];
-        most = all;
-        mostPose = bestPose;
+        most = allOk ? reach : worst;
+        mostOk = allOk;
+        mostPose = allOk ? "" : worstPose;
+        posesTried = tried;
+    }
+
+    // The values to try for one moving part (see above).
+    private static double[] candidates(Shape s, double stepDeg) {
+        java.util.TreeSet<Double> v = new java.util.TreeSet<>();
+        v.add(s.min);
+        v.add(s.max);
+        if (s.type.equals("arm") || s.type.equals("turret")) {
+            for (double a = Math.ceil(s.min / 90) * 90; a < s.max; a += 90) v.add(a);
+            int n = (int) Math.ceil((s.max - s.min) / stepDeg);
+            for (int k = 1; k < n; k++) v.add(s.min + (s.max - s.min) * k / n);
+        }
+        double[] out = new double[v.size()];
+        int i = 0;
+        for (double d : v) out[i++] = d;
+        return out;
     }
 
     /** Reads each shape's driver (motor, servo, CR servo) into its value. */
@@ -362,6 +449,7 @@ final class SimShapes {
         Extent e = new Extent();
         e.back = e.right = Double.MAX_VALUE;
         e.front = e.left = e.top = -Double.MAX_VALUE;
+        e.bottom = Double.MAX_VALUE;
         for (Piece p : pieces) {
             for (double[] c : p.corners()) {
                 e.back = Math.min(e.back, c[0]);
@@ -369,6 +457,7 @@ final class SimShapes {
                 e.right = Math.min(e.right, c[1]);
                 e.left = Math.max(e.left, c[1]);
                 e.top = Math.max(e.top, c[2]);
+                e.bottom = Math.min(e.bottom, c[2]);
             }
         }
         return e;
@@ -455,9 +544,10 @@ final class SimShapes {
     }
 
     /**
-     * Turns by deg about an axis, right-hand rule: about "left", + raises the front (an arm going up);
-     * about "up", + turns left; about "forward", + rolls the left side up... the other names turn the
-     * other way.
+     * Turns by deg about an axis. About "up", + turns left, and about "forward", + rolls the left side up
+     * (both the right-hand rule). About "left", + RAISES THE FRONT: that is the left-hand sense, chosen so
+     * a positive arm angle means "up" (axisFrame depends on it; do not "fix" the sign). "back", "right"
+     * and "down" turn the other way.
      */
     static double[][] rotate(String axis, double deg) {
         double a = Math.toRadians(deg), c = Math.cos(a), s = Math.sin(a);

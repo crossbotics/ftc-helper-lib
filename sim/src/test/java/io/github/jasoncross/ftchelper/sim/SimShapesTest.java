@@ -69,8 +69,30 @@ public class SimShapesTest {
         SimRobot r = SimRobot.load(new File("robots/starter.properties").toPath());
         r.shapes.update(0);
         System.out.println("now  " + r.shapes.now());
-        System.out.println("most " + r.shapes.most + "  (" + r.shapes.mostPose + ")");
+        System.out.println("most " + r.shapes.most + "  (" + r.shapes.mostPose + ", " + r.shapes.posesTried + " poses)");
+        assertTrue("above the tiles now", r.shapes.now().aboveFloor());
         assertTrue("fits the 18 in start cube at the start: " + r.shapes.now(), r.shapes.now().fits(18, 18, 18));
-        assertTrue("fits 18 x 24 x 29 at full extension: " + r.shapes.most, r.shapes.most.fits(18, 24, 29));
+        assertTrue("every pose fits 18 x 24 x 29 and stays above the tiles: " + r.shapes.most, r.shapes.mostOk);
+    }
+
+    @Test public void reviewersCasesAreCaught() throws Exception {
+        // An arm whose highest point is part way round (84 degrees) must not slip through a coarse check:
+        // 19 in hinge + 10 in arm, 2 in thick, on a servo from 0 to 180 degrees reaches 29.05 in.
+        SimRobot r = robot("shape.a = arm, at=0,0,19, size=10x1x2, servo=wrist, pos0=0, pos1=180\n");
+        assertTrue("29.05 in tall somewhere: " + r.shapes.most, !r.shapes.mostOk && r.shapes.most.top > 29.0);
+        // A part below the tiles is shown.
+        r = robot("shape.a = arm, at=0,0,4, size=10x1x1, servo=wrist, pos0=-90, pos1=0\n");
+        assertTrue(!r.shapes.mostOk);
+        // A hex color is not a note, and the rest of the line is still read.
+        r = robot("shape.a = box, color=#ff0000, at=1,0,4\n");
+        assertEquals("#ff0000", r.shapes.shapes.get("a").color);
+        assertEquals(1, r.shapes.shapes.get("a").at[0], 1e-9);
+        // A word with no = after the first is a mistake, not part of the value before it.
+        try {
+            robot("servo.extra = 0.5, part=gobilda-2000-torque, reversed\n");
+            org.junit.Assert.fail("a word with no = must be refused");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("reversed") && e.getMessage().contains("name=value"));
+        }
     }
 }

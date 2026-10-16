@@ -151,11 +151,16 @@ public class VisionTest {
         assertEquals(4, TagGroup.biobuzz().size());
         assertTrue(TagGroup.currentSeason().get(3).contains(45));
         assertTrue(Double.isNaN(TagGroup.biobuzz().get(0).alongRowIn(45)));
-        try {
-            new TagGroup("bad", new int[] {1}, new double[] {0});
-            org.junit.Assert.fail("a group needs 2 tags");
-        } catch (IllegalArgumentException expected) {
-            assertTrue(expected.getMessage().contains("at least 2"));
+        String[][] bad = {{"at least 2"}, {"same place"}, {"twice"}};
+        int[][] ids = {{1}, {1, 2}, {1, 1}};
+        double[][] along = {{0}, {0, 0}, {-1, 1}};
+        for (int i = 0; i < bad.length; i++) {
+            try {
+                new TagGroup("bad", ids[i], along[i]);
+                org.junit.Assert.fail("refused: " + bad[i][0]);
+            } catch (IllegalArgumentException expected) {
+                assertTrue(expected.getMessage(), expected.getMessage().contains(bad[i][0]));
+            }
         }
     }
 }

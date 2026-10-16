@@ -187,7 +187,9 @@ final class SimDriverStation {
             SimAccess.installServices(o, () -> commands.submit(() -> {
                 if (op == o) stop();   // a late request from an old OpMode must not stop the next one
             }));
-            // Like the FTC app at INIT: motor directions, modes and servo ranges back to their defaults.
+            // Like the FTC app at INIT: motor directions, modes and servo ranges back to their defaults,
+            // and no camera left open by the last OpMode.
+            robot.closeCameras();
             robot.resetConfig();
             screen.clearScreen();
             error = "";

@@ -50,6 +50,7 @@ final class SimField {
         final int id;
         final String name;
         final double x, y, z, facingDeg, pitchDeg, sizeIn;
+        final double[] up;   // the tag's printed up (unit vector), or null: then "up" is the world's up turned into the tag's plane
 
         Tag(Map<String, Object> m) {
             id = (int) SimJsonReader.number(m, "id", -1);
@@ -60,6 +61,12 @@ final class SimField {
             facingDeg = SimJsonReader.number(m, "facingDeg", 0);
             pitchDeg = SimJsonReader.number(m, "pitchDeg", 0);   // 0 = the face points level; -90 = straight down
             sizeIn = SimJsonReader.number(m, "sizeIn", 6.5);
+            double[] u = null;
+            if (m.get("up") instanceof java.util.List) {
+                List<Object> l = SimJsonReader.array(m.get("up"), name + " up");
+                if (l.size() == 3) u = new double[] {((Number) l.get(0)).doubleValue(), ((Number) l.get(1)).doubleValue(), ((Number) l.get(2)).doubleValue()};
+            }
+            up = u;
         }
     }
 

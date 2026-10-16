@@ -87,7 +87,7 @@ public class Tut18VisionAim extends LinearOpMode {
         while (opModeInInit()) {
             camera.update();
             t.line("Camera", camera.status());
-            t.line("Tags seen", camera.targets().size());
+            t.line("Targets seen", camera.targets().size());
             t.update();
         }
         // STOP pressed in INIT: close the camera (so the next program can use it) and end.

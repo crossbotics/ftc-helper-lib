@@ -30,8 +30,10 @@ import org.opencv.core.Point;
  * - ftcPose is worked out from rawPose with the SDK's own formulas (range and bearing measured flat).
  * The poses are exact (no noise, no blur). robotPose is not simulated (always null).
  *
- * Tag axes (as the SDK's): x to the right as you look at the tag, y down, z into the tag. A single tag's
- * "up" is taken as the world's up; a cluster's x runs from its first member to its last.
+ * Tag axes (as the SDK's: its corner points are (-s/2, +s/2) bottom-left ... so x is printed right,
+ * y printed down, z into the tag). The printed up comes from the field file ("up"; else the world's up
+ * turned into the tag's plane). A cluster's x runs from its first member to its last; SimCameraTest
+ * checks that the field file's printed up agrees with that.
  */
 public class AprilTagProcessorImpl extends AprilTagProcessor {
     public static final String TAG = "AprilTagProcessorImpl";
@@ -129,16 +131,26 @@ public class AprilTagProcessorImpl extends AprilTagProcessor {
         return String.format(Locale.US, "%s: range %.1f %s, bearing %.1f %s, elevation %.1f %s", what, p.range, u, p.bearing, a, p.elevation, a);
     }
 
-    // A single tag's axes on the field: z into the tag, y "down" as seen (the world's up turned into the
-    // tag's plane, reversed), x = y cross z.
-    private static double[][] singleTagAxes(double[] t) {
+    // A single tag's axes on the field: z into the tag, y printed down (the field file's "up" reversed; or
+    // the world's up turned into the tag's plane, reversed), x = y cross z (printed right).
+    public static double[][] singleTagAxes(double[] t) {
         double[] n = {t[3], t[4], t[5]};
         double[] z = scale(n, -1);
-        double[] upRef = Math.abs(n[2]) > 0.99 ? new double[] {1, 0, 0} : new double[] {0, 0, 1};
+        double[] upRef = !Double.isNaN(t[6]) ? new double[] {t[6], t[7], t[8]}
+                : Math.abs(n[2]) > 0.99 ? new double[] {1, 0, 0} : new double[] {0, 0, 1};
         double[] up = sub(upRef, scale(n, dot(upRef, n)));
         double[] y = norm(scale(up, -1));
         double[] x = cross(y, z);
         return new double[][] {x, y, z};
+    }
+
+    /** SIMULATOR TEST: a cluster's aiming point on the field (inches), as clusterRaw works it out, or null. */
+    public static double[] clusterOrigin(Object cam, AprilTagClusterMetadata cl) {
+        AprilTagProcessorImpl p = new AprilTagProcessorImpl(null, 0, 0, 0, 0, DistanceUnit.INCH, AngleUnit.DEGREES, null,
+                false, false, false, false, null, 1, true);
+        double[][] c = {{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {0, 0, 1}};   // a "camera" at the field origin, on the field axes
+        AprilTagPoseRaw raw = p.clusterRaw(cam, c, cl);
+        return raw == null ? null : new double[] {raw.x, raw.y, raw.z};
     }
 
     // A cluster's pose: its axes from its members on the field (x from the member with the smallest x in

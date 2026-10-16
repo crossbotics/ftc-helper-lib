@@ -84,17 +84,21 @@ shot from the table (tutorial 17); check `target.hasDistance()` first.
 
 - BIOBUZZ tags are on the HIVE cells, and the cells move: good for aiming, not for working out
   where the robot is on the field.
-- SDK 12 "clusters": groups of tags with one aiming point (the center of a cell opening).
+- SDK 12 "clusters": groups of tags with one aiming point. The SDK puts the point 7.2 in toward the
+  tags' printed top and 5.6 in behind them: for BIOBUZZ about 9 in beyond the tag row and 1 in higher
+  (not the CELL opening; this comes from the SDK's numbers and the manual, not yet seen on a real field).
   BIOBUZZ has 4: "RED SCORING", "RED AUDIENCE", "BLUE AUDIENCE", "BLUE SCORING" (the 4 tags under each
   CELL). `WebcamTags` reports each with id `TargetObservation.CLUSTER` and its name. `LimelightTags`
   reports the same groups by the same names (a Limelight sees single tags; the library groups them
   with `TagGroup`, aimed at the middle of the tag row), so `camera.target("RED SCORING")` works with
-  either camera. Single tags still work by number: `camera.target(31)`.
+  either camera. With a Limelight, single tags also work by number (`camera.target(31)`). The webcam
+  reports a tag that belongs to a cluster ONLY as part of its cluster, so `camera.target(31)` gives null
+  there (to see single tags with a webcam, give `WebcamTags.library(...)` a tag library without clusters).
 
 ## Run it
 
 1. INIT: choose the camera and the target with the D-pad, press A. Wait for "STREAMING" (webcam) or
-   "pipeline 0" (Limelight) and "Tags seen: 1".
+   "pipeline 0" (Limelight) and "Targets seen: 1" or more (a Limelight shows each tag and the group).
 2. START. Point the robot so the tag is off to the left. Hold RB: the robot turns left until aimed;
    a buzz; "Aimed: true".
 3. Cover the camera while holding RB: the robot stops turning (no target = 0 power).
@@ -105,7 +109,7 @@ shot from the table (tutorial 17); check `target.hasDistance()` first.
 | --- | --- |
 | Webcam "OPENING..." forever | USB cable / hub port; the configuration name must match |
 | Limelight "not connected" | Ethernet/USB cable; its name in the configuration; restart the robot |
-| Tags seen 0 | pipeline is not AprilTag (Limelight); tag family; too far: higher resolution or decimation 1 |
+| Targets seen 0 | pipeline is not AprilTag (Limelight); tag family; too far: higher resolution or decimation 1 |
 | Turns the wrong way | a minus sign was added in front of `aim.turnPower(...)`: remove it |
 | Shakes around the tag | lower kP or raise the deadband |
 | Distance NaN | webcam: the tag is not in the SDK's library; Limelight: no 3D pose in the pipeline (set tag size) |

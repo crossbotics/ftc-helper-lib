@@ -102,10 +102,10 @@ public class SimFieldTest {
         Files.write(new File(dir, "parts.json").toPath(), ("{\"motors\":[{\"id\":\"team-arm\",\"freeRpm\":90,\"countsPerRev\":2000}],"
                 + "\"servos\":[{\"id\":\"team-gate\",\"rangeDeg\":180,\"secPer60Deg\":0.1}]}").getBytes("UTF-8"));
         File robotFile = new File(dir, "robot.properties");
-        Files.write(robotFile.toPath(), (base + "\nparts = parts.json\nmotor.arm = lift, part=team-arm\nmotor.arm2 = free, rpm=60, ticksPerRev=1000\n"
+        Files.write(robotFile.toPath(), (base + "\nparts = parts.json\nmotor.teamarm = lift, part=team-arm\nmotor.arm2 = free, rpm=60, ticksPerRev=1000\n"
                 + "servo.gate = 0.5, part=team-gate\nservo.gate2 = 0.5, rangeDeg=300, secPer60=0.25\n").getBytes("UTF-8"));
         SimRobot r = SimRobot.load(robotFile.toPath());
-        assertEquals(90 * 2000 / 60.0, r.motors.get("arm").maxTicksPerSec, 1e-6);
+        assertEquals(90 * 2000 / 60.0, r.motors.get("teamarm").maxTicksPerSec, 1e-6);
         assertEquals(60 * 1000 / 60.0, r.motors.get("arm2").maxTicksPerSec, 1e-6);
         assertEquals((60 / 0.1) / 180, r.servos.get("gate").speed, 1e-9);
         assertEquals((60 / 0.25) / 300, r.servos.get("gate2").speed, 1e-9);

@@ -139,10 +139,22 @@ Notes:
   reach uses it: a real robot needs hard stops there too (inspectors check the biggest it can get).
 - The shapes are for the picture and the size rules. They do not bump into the field yet (the
   chassis footprint still does); a physics engine is planned for that.
-- Mistakes (an unknown parent or motor, a loop, a missing size) stop the simulator with the line's name.
+- Mistakes stop the simulator with the line's name: an unknown parent, motor or servo; a loop; a moving
+  part with no range of motion (give the motor `min=` and `max=`, or `travel=` / `minDeg=` `maxDeg=`);
+  a word with no `=` after the first one (`at=-7,0,4` is fine: a list of numbers).
+- A `#` after a space starts a note; `color=#ff0000` is a color, not a note.
+- Nothing may go below the tiles: the panel and `expect size floor ok` show it (a part there would hit
+  the floor on a real robot, so the shapes or the hard stops are wrong).
 
 Scenario checks: `expect size start ok` (fits the 18 in cube now), `expect size match ok` (18 x 24 x 29
-now), `expect size most ok` (at full reach); `fail` instead of `ok` checks the opposite; `print size`.
+now), `expect size most ok` (every pose at full reach), `expect size floor ok` (nothing below the tiles
+now); `fail` instead of `ok` checks the opposite; `print size`.
+
+How "at full reach" is checked: every combination of the moving parts' important values is tried. A
+slide or claw is biggest at an end of its range; a hinge (arm, turret) is tried at both ends, at each
+multiple of 90 degrees, and every few degrees between (5 or finer with a few moving parts; coarser with
+many, to stay under 50,000 poses). The worst pose is shown. It is a careful check, not a proof: leave a
+little margin, and measure the real robot at its hard stops.
 
 ## The parts catalog
 
@@ -215,7 +227,8 @@ expect motor lift power > 0.1          # power | ticks | velocity | amps; > < >=
 expect servo claw target = 0.53 0.01   # target | actual
 expect robot y > -30                   # x | y | heading | imu | shots
 expect bumped none                     # or: bumped "Red HIVE"
-expect camera "Webcam 1" sees 31       # a tag id in the picture; or: sees none | sees "RED SCORING"
+expect camera "Webcam 1" sees 31       # a tag id in the picture; or: sees none | sees "RED SCORING" (webcam only:
+                                       # a Limelight reports single tags; LimelightTags makes the groups)
 expect size most ok                    # size start|match|most ok|fail (see "Robot shapes")
 expect within 2 motor lift ticks > 500 # wait up to 2 s for it to become true
 expect within 30 phase STOPPED         # e.g. wait for an autonomous to finish
@@ -277,7 +290,7 @@ it). `ftcPose` uses the SDK's own formulas, so range, bearing (positive = left) 
 same as on the robot.
 
 On the page, the Control Hub panel lists each camera with the tags in its picture and what was found.
-The 3D view draws its view as a yellow cone on the robot, and "Camera view" shows the picture from the
+The 3D view draws its view as a cone on the robot (webcam yellow, Limelight green), and "Camera view" shows the picture from the
 camera (the tags it sees turn green).
 
 **Limelight 3A**: the same settings with `limelight.` (hfov default 54.5, its spec sheet).

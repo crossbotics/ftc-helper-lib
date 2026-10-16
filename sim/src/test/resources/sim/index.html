@@ -472,8 +472,10 @@ function renderHub(s) {
   if (z) {
     const f = a => `${a[0].toFixed(1)} x ${a[1].toFixed(1)} in, ${a[2].toFixed(1)} in tall`;
     const chip = (ok, text) => `<span class="chip ${ok ? "on" : "bad"}">${text}</span>`;
-    $("#sizeText").innerHTML = `Now: ${f(z.now)} ${chip(z.startOk, "start cube 18 in")} ${chip(z.matchOk, "18 x 24 x 29")}<br>` +
-      `At full reach: ${f(z.most)} ${chip(z.mostOk, z.mostOk ? "fits 18 x 24 x 29" : "too big: add hard stops")}`;
+    $("#sizeText").innerHTML = `Now: ${f(z.now)} ${chip(z.startOk, "start cube 18 in")} ${chip(z.matchOk, "18 x 24 x 29")}` +
+      (z.floorOk ? "" : ` ${chip(false, z.below.toFixed(1) + " in below the tiles: check the shapes")}`) + `<br>` +
+      (z.mostOk ? `At full reach: every pose fits ${chip(true, "18 x 24 x 29")} (biggest each way: ${f(z.most)}; ${z.poses} poses tried)`
+                : `At full reach: ${chip(false, "too big")} worst pose ${escapeHtml(z.mostPose)}: ${f(z.most)}. Add hard stops or change the shapes.`);
   }
   update3d(s.robot, s.cameras || []);
   $("#poseText").textContent = s.robot.drive === "none" ? "No drivetrain in this robot file." :
@@ -682,7 +684,7 @@ function buildSimpleField(fd) {
 function loadCadModel() {
   disposeAll(v3.cadGroup);
   $("#v3note").textContent = "Loading the field model...";
-  new THREE.GLTFLoader().load("/field-model?" + Date.now(), gl => {
+  new THREE.GLTFLoader().load("/field-model?v=" + (lastState && lastState.robot.fieldModelVersion || 0), gl => {
     gl.scene.traverse(o => {
       if (!o.isMesh) return;
       const m = o.material;
@@ -780,7 +782,7 @@ function update3d(r, cams) {
     if (r.fieldModel) loadCadModel();
     showCad();
   }
-  v3.robot.visible = r.drive !== "none";
+  v3.robot.visible = r.drive !== "none" || (r.shapes || []).length > 1;   // a test rig with no drivetrain still shows its parts
   const L = r.length || 18, W = r.width || 18;
   const chassis = (r.shapes || []).find(p => p.name === "chassis"), H = chassis ? chassis.size[2] : (r.height || 18);
   // The robot's shapes replace the plain box: the chassis box is drawn with the other pieces.

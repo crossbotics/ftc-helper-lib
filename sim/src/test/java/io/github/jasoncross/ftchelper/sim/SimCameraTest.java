@@ -162,4 +162,44 @@ public class SimCameraTest {
         ll.close();
         cam.close();
     }
+
+    @Test public void clusterGeometryFollowsTheFieldFileAndTheSdk() throws Exception {
+        SimRobot r = robot();
+        Object cam = SimVision.camera(r.cameras.get("Webcam 1").device);
+        org.firstinspires.ftc.vision.apriltag.AprilTagLibrary lib =
+                org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase.getCurrentGameTagLibrary();
+        for (int first : new int[] {30, 34, 38, 42}) {
+            // The field file's printed up and the SDK's member order must agree: ids rise toward printed right.
+            double[] t0 = SimVision.tag(cam, first), t3 = SimVision.tag(cam, first + 3);
+            double[][] axes = org.firstinspires.ftc.vision.apriltag.AprilTagProcessorImpl.singleTagAxes(t0);
+            double along = (t3[0] - t0[0]) * axes[0][0] + (t3[1] - t0[1]) * axes[0][1] + (t3[2] - t0[2]) * axes[0][2];
+            assertEquals("tag " + first + " to " + (first + 3) + ": 13 in toward printed right", 13, along, 0.05);
+        }
+        // RED SCORING's aiming point: 7.19 in toward the printed top and 5.62 in behind the row (SDK numbers);
+        // for these tags (face +x, 60 degrees down; printed top away from the field centre) that is
+        // 9.0 in toward -x and 1.3 in up from the middle of the row (-11.61, -12.74, 35.53).
+        double[] o = org.firstinspires.ftc.vision.apriltag.AprilTagProcessorImpl.clusterOrigin(cam, lib.lookupCluster(30));
+        assertEquals(-11.61 - 9.04, o[0], 0.1);
+        assertEquals(-12.74, o[1], 0.1);
+        assertEquals(35.53 + 1.27, o[2], 0.1);
+    }
+
+    @Test public void limelightResultIsNeverNullAndFollowsThePollRate() throws Exception {
+        SimRobot r = robot();
+        com.qualcomm.hardware.limelightvision.Limelight3A ll = r.limelights.get("limelight");
+        ll.setPollRateHz(5);                              // a new result every 200 ms
+        ll.start();
+        assertNotNull("like the SDK: an empty result before the first picture", ll.getLatestResult());
+        assertFalse(ll.getLatestResult().isValid());
+        Thread.sleep(600);
+        double first = ll.getLatestResult().getTimestamp();
+        assertTrue(ll.getLatestResult().isValid());
+        Thread.sleep(60);
+        assertEquals("not a new result before 200 ms", first, ll.getLatestResult().getTimestamp(), 1e-9);
+        Thread.sleep(200);
+        assertTrue("a new result after 200 ms", ll.getLatestResult().getTimestamp() > first);
+        ll.stop();
+        assertNotNull(ll.getLatestResult());
+        assertFalse(ll.getLatestResult().isValid());
+    }
 }

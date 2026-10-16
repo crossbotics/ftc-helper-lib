@@ -30,6 +30,7 @@ final class SimLimelight extends Limelight3A {
     private volatile long pollMs = 10;
     private volatile long startedAt = 0;
     private long lastFrame = -1;
+    private long lastPollNanos = 0;
     private LLResult latest = null;
     // What closes this camera when an OpMode stops (the camera's list of open "portals").
     private final AutoCloseable closer = this::stop;
@@ -64,27 +65,42 @@ final class SimLimelight extends Limelight3A {
     @Override public long getTimeSinceLastUpdate() { return running ? 0 : 100_000; }
     @Override public boolean isConnected() { return running; }
 
-    /** The newest result (null before the first picture, about 0.5 s after start()). */
-    @Override public synchronized LLResult getLatestResult() {
-        if (!running) return latest;
-        double t = (System.nanoTime() - startedAt) / 1e9;
-        if (t < 0.5) return null;                       // the first pictures take a moment
-        long frame = (long) (t * FPS);
-        if (frame != lastFrame) {
-            lastFrame = frame;
-            try {
-                latest = SimLLResults.parse(result(t * 1000));
-            } catch (org.json.JSONException e) {
-                throw new IllegalStateException("Simulator: could not build a Limelight result", e);
+    /**
+     * The newest result, like the SDK's: never null (before the first picture, about 0.5 s after start(),
+     * an empty result whose isValid() is false). A new result arrives at the poll rate (setPollRateHz),
+     * at most 50 a second (the camera's picture rate).
+     */
+    @Override public LLResult getLatestResult() {
+        double[][] pose = cam.pose();          // the robot's lock first, never inside this object's lock
+        synchronized (this) {
+            long now = System.nanoTime();
+            double t = (now - startedAt) / 1e9;
+            if (running && t >= 0.5 && now - lastPollNanos >= pollMs * 1_000_000L) {
+                long frame = (long) (t * FPS);
+                if (frame != lastFrame) {
+                    lastFrame = frame;
+                    lastPollNanos = now;
+                    try {
+                        latest = SimLLResults.parse(result(t * 1000, pose));
+                    } catch (org.json.JSONException e) {
+                        throw new IllegalStateException("Simulator: could not build a Limelight result", e);
+                    }
+                }
             }
+            if (latest == null) {
+                try {
+                    latest = SimLLResults.parse(new JSONObject());   // the SDK's empty result: isValid() false
+                } catch (RuntimeException e) {
+                    throw new IllegalStateException("Simulator: could not build an empty Limelight result", e);
+                }
+            }
+            return latest;
         }
-        return latest;
     }
 
     // The JSON a Limelight sends, from the tags the pretend camera sees.
-    private JSONObject result(double timestampMs) throws org.json.JSONException {
-        double[][] c = cam.pose();
-        List<SimCamera.Seen> seen = cam.visibleTags(cam.robot.field, 2);
+    private JSONObject result(double timestampMs, double[][] c) throws org.json.JSONException {
+        List<SimCamera.Seen> seen = cam.visibleTags(cam.robot.field, 2, c);
         List<double[]> ids = new ArrayList<>();
         List<String> notes = new ArrayList<>();
         JSONObject r = new JSONObject();

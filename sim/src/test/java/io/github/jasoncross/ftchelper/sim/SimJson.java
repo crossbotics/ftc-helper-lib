@@ -135,6 +135,7 @@ final class SimJson {
         b.append("\"width\":").append(fmt(r.widthIn)).append(',');
         b.append("\"height\":").append(fmt(r.heightIn)).append(',');
         b.append("\"fieldModel\":").append(r.fieldModel != null).append(',');
+        b.append("\"fieldModelVersion\":").append(modelTime(r)).append(',');
         b.append("\"hasImu\":").append(!r.imuName.isEmpty()).append(',');
         // The robot as shapes (robot frame: f forward, l left, u up, inches) and its size now and at most.
         b.append("\"shapes\":[");
@@ -156,7 +157,12 @@ final class SimJson {
         b.append("\"most\":").append(vec(new double[] {most.lengthIn(), most.widthIn(), most.top})).append(',');
         b.append("\"startOk\":").append(now.fits(18, 18, 18)).append(',');
         b.append("\"matchOk\":").append(now.fits(18, 24, 29)).append(',');
-        b.append("\"mostOk\":").append(most.fits(18, 24, 29)).append('}');
+        b.append("\"mostOk\":").append(r.shapes.mostOk).append(',');
+        b.append("\"floorOk\":").append(now.aboveFloor()).append(',');
+        b.append("\"below\":").append(fmt(Math.max(0, -now.bottom))).append(',');
+        field(b, "mostPose", r.shapes.mostPose).append(',');
+        b.append("\"poses\":").append(r.shapes.posesTried).append(',');
+        b.append("\"hingeStep\":").append(fmt(r.shapes.hingeStepDeg)).append('}');
         b.append('}');
         b.append('}');
         return b.toString();
@@ -181,6 +187,14 @@ final class SimJson {
     private static String fmt(double v) {
         if (Double.isNaN(v) || Double.isInfinite(v)) return "null";
         return String.format(Locale.US, "%.4f", v);
+    }
+
+    private static long modelTime(SimRobot r) {
+        try {
+            return r.fieldModel == null ? 0 : java.nio.file.Files.getLastModifiedTime(r.fieldModel).toMillis();
+        } catch (java.io.IOException e) {
+            return 0;
+        }
     }
 
     private static String vec(double[] v) {
