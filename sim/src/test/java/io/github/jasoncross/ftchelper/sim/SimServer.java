@@ -1,0 +1,188 @@
+package io.github.jasoncross.ftchelper.sim;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+/**
+ * A very small web server for the simulator page. It only answers this computer, unless started
+ * with --lan (then phones and tablets on the same WiFi can join as a gamepad).
+ *
+ * GET /             the page
+ * GET /state        everything the page shows, as JSON
+ * POST /pad/1, /pad/2   a gamepad's buttons and sticks ("a=1&lx=0.5...")
+ * POST /cmd         a Driver Station or panel command ("action=init&opmode=...")
+ */
+final class SimServer {
+    private final SimEngine sim;
+    private final ServerSocket socket;
+    private final ExecutorService pool = Executors.newFixedThreadPool(8, r -> {
+        Thread t = new Thread(r, "sim-web");
+        t.setDaemon(true);
+        return t;
+    });
+    final boolean lan;
+
+    SimServer(SimEngine sim, int port, boolean lan) throws IOException {
+        this.sim = sim;
+        this.lan = lan;
+        this.socket = lan ? new ServerSocket(port, 50) : new ServerSocket(port, 50, InetAddress.getLoopbackAddress());
+    }
+
+    int port() {
+        return socket.getLocalPort();
+    }
+
+    /** Answers requests until the program ends. */
+    void serve() {
+        while (!socket.isClosed()) {
+            try {
+                Socket c = socket.accept();
+                pool.submit(() -> handle(c));
+            } catch (IOException e) {
+                if (socket.isClosed()) return;
+            }
+        }
+    }
+
+    void close() throws IOException {
+        socket.close();
+        pool.shutdownNow();
+    }
+
+    private void handle(Socket c) {
+        try (Socket client = c) {
+            client.setSoTimeout(5000);
+            InputStream in = client.getInputStream();
+            String head = readHead(in);
+            if (head == null) return;
+            String[] first = head.split("\r\n")[0].split(" ");
+            if (first.length < 2) return;
+            String method = first[0], path = first[1];
+            int length = 0;
+            for (String line : head.split("\r\n")) {
+                if (line.toLowerCase(Locale.US).startsWith("content-length:")) length = Integer.parseInt(line.substring(15).trim());
+            }
+            byte[] body = new byte[length];
+            int read = 0;
+            while (read < length) {
+                int n = in.read(body, read, length - read);
+                if (n < 0) break;
+                read += n;
+            }
+            String query = path.contains("?") ? path.substring(path.indexOf('?') + 1) : "";
+            path = path.contains("?") ? path.substring(0, path.indexOf('?')) : path;
+            OutputStream out = client.getOutputStream();
+            if (method.equals("GET") && (path.equals("/") || path.equals("/index.html"))) {
+                send(out, 200, "text/html; charset=utf-8", page());
+            } else if (method.equals("GET") && path.equals("/state")) {
+                send(out, 200, "application/json", SimJson.state(sim, this).getBytes(StandardCharsets.UTF_8));
+            } else if (method.equals("POST") && path.startsWith("/pad/")) {
+                Map<String, String> form = form(new String(body, StandardCharsets.UTF_8));
+                (path.endsWith("2") ? sim.ds.pad2 : sim.ds.pad1).apply(form);
+                send(out, 204, "text/plain", new byte[0]);
+            } else if (method.equals("POST") && path.equals("/cmd")) {
+                String reply = command(form(new String(body, StandardCharsets.UTF_8)));
+                send(out, 200, "text/plain; charset=utf-8", reply.getBytes(StandardCharsets.UTF_8));
+            } else {
+                send(out, 404, "text/plain", ("not found: " + path + " " + query).getBytes(StandardCharsets.UTF_8));
+            }
+        } catch (IOException | RuntimeException ignored) {
+            // a closed tab or a bad request: nothing to do
+        }
+    }
+
+    // A Driver Station button or a panel control.
+    private String command(Map<String, String> f) {
+        String action = f.getOrDefault("action", "");
+        try {
+            switch (action) {
+                case "init": sim.ds.init(f.get("opmode")); return "ok";
+                case "start": sim.ds.start(); return "ok";
+                case "stop": new Thread(sim.ds::stop, "stop").start(); return "ok";
+                case "push":
+                    sim.robot.push(num(f, "forward"), num(f, "right"), num(f, "seconds"));
+                    return "ok";
+                case "resetPose": sim.robot.resetPose(); return "ok";
+                case "touch": sim.robot.toggleTouch(f.get("name")); return "ok";
+                case "autoTimer": sim.ds.autoTimer = "1".equals(f.get("on")); return "ok";
+                case "battery": sim.robot.batteryVolts = num(f, "volts"); return "ok";
+                default: return "unknown action";
+            }
+        } catch (RuntimeException e) {
+            return "error: " + e.getMessage();
+        }
+    }
+
+    private static double num(Map<String, String> f, String key) {
+        try {
+            return Double.parseDouble(f.getOrDefault(key, "0"));
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    private byte[] page() throws IOException {
+        try (InputStream in = SimServer.class.getResourceAsStream("/sim/index.html")) {
+            if (in == null) return "page missing".getBytes(StandardCharsets.UTF_8);
+            ByteArrayOutputStream b = new ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = in.read(buf)) > 0) b.write(buf, 0, n);
+            return b.toByteArray();
+        }
+    }
+
+    private static String readHead(InputStream in) throws IOException {
+        ByteArrayOutputStream b = new ByteArrayOutputStream();
+        int state = 0;
+        while (true) {
+            int ch = in.read();
+            if (ch < 0) return null;
+            b.write(ch);
+            // the head ends at an empty line: \r\n\r\n
+            state = (ch == '\r' && (state == 0 || state == 2)) || (ch == '\n' && (state == 1 || state == 3)) ? state + 1 : 0;
+            if (state == 4) return b.toString("ISO-8859-1");
+            if (b.size() > 16384) return null;
+        }
+    }
+
+    private static Map<String, String> form(String text) {
+        Map<String, String> out = new LinkedHashMap<>();
+        for (String pair : text.split("&")) {
+            if (pair.isEmpty()) continue;
+            int eq = pair.indexOf('=');
+            try {
+                String k = URLDecoder.decode(eq < 0 ? pair : pair.substring(0, eq), "UTF-8");
+                String v = eq < 0 ? "" : URLDecoder.decode(pair.substring(eq + 1), "UTF-8");
+                out.put(k, v);
+            } catch (java.io.UnsupportedEncodingException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+        return out;
+    }
+
+    private static void send(OutputStream out, int code, String type, byte[] body) throws IOException {
+        String status = code == 200 ? "OK" : code == 204 ? "No Content" : "Not Found";
+        String head = "HTTP/1.1 " + code + " " + status + "\r\n"
+                + "Content-Type: " + type + "\r\n"
+                + "Content-Length: " + body.length + "\r\n"
+                + "Cache-Control: no-store\r\n"
+                + "Connection: close\r\n\r\n";
+        out.write(head.getBytes(StandardCharsets.ISO_8859_1));
+        out.write(body);
+        out.flush();
+    }
+}

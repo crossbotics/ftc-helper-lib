@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FTC Simulator</title>
+<style>
+  :root {
+    --bg: #f4f5f7; --panel: #ffffff; --ink: #1d2330; --muted: #6a7282; --line: #d9dde4;
+    --accent: #1f6feb; --go: #1a7f37; --stop: #cf222e; --warn: #9a6700; --screen: #0f1720; --screen-ink: #d6f5d6;
+    --btn: #eef1f5; --btn-down: #1f6feb; --btn-ink-down: #fff; --bar: #1f6feb; --bar-neg: #cf222e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d1117; --panel: #161b22; --ink: #e6edf3; --muted: #8b949e; --line: #30363d;
+      --btn: #21262d; --screen: #010409;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { display: flex; align-items: baseline; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--panel); }
+  header h1 { font-size: 17px; margin: 0; }
+  header .note { color: var(--muted); font-size: 12px; }
+  main { display: grid; grid-template-columns: minmax(330px, 420px) minmax(360px, 1fr) minmax(330px, 420px); gap: 12px; padding: 12px 16px; }
+  @media (max-width: 1150px) { main { grid-template-columns: 1fr; } }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+  h2 { font-size: 14px; margin: 0 0 8px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+  h3 { font-size: 13px; margin: 12px 0 6px; color: var(--muted); }
+  select, button, input[type=number] { font: inherit; color: var(--ink); background: var(--btn); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }
+  button { cursor: pointer; }
+  button:disabled { opacity: .45; cursor: default; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .ds-buttons button { min-width: 74px; font-weight: 600; }
+  #initBtn { border-color: var(--accent); }
+  #startBtn { background: var(--go); color: #fff; border-color: var(--go); }
+  #stopBtn { background: var(--stop); color: #fff; border-color: var(--stop); }
+  #opmode { flex: 1; min-width: 0; }
+  .status { margin: 8px 0; color: var(--muted); font-size: 13px; }
+  .status b { color: var(--ink); }
+  /* The Driver Hub telemetry: about 52 characters wide, like the real screen. */
+  #screen { background: var(--screen); color: var(--screen-ink); font: 13px/1.35 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+            border-radius: 8px; padding: 10px; height: 380px; overflow: auto; white-space: pre-wrap; word-break: break-word; width: 100%; max-width: 54ch; }
+  #error { display: none; margin-top: 8px; padding: 8px; border-radius: 6px; background: color-mix(in srgb, var(--stop) 15%, transparent);
+           color: var(--stop); font: 12px/1.35 ui-monospace, Menlo, monospace; white-space: pre-wrap; }
+  .pad { margin-bottom: 14px; }
+  .pad .src { margin-left: auto; }
+  .gp { position: relative; width: 100%; max-width: 420px; aspect-ratio: 420 / 250; margin: 6px auto 0; user-select: none; touch-action: none;
+        background: color-mix(in srgb, var(--btn) 70%, transparent); border: 1px solid var(--line); border-radius: 60px 60px 90px 90px; }
+  .gp.off { opacity: .35; pointer-events: none; }
+  .b { position: absolute; display: grid; place-items: center; border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+       font-size: 12px; font-weight: 700; border-radius: 50%; cursor: pointer; }
+  .b.on { background: var(--btn-down); color: var(--btn-ink-down); border-color: var(--btn-down); }
+  .b.wide { border-radius: 8px; font-size: 11px; font-weight: 600; }
+  .stick { position: absolute; width: 20%; aspect-ratio: 1; border-radius: 50%; border: 1px dashed var(--line); background: var(--panel); }
+  .knob { position: absolute; width: 46%; height: 46%; left: 27%; top: 27%; border-radius: 50%; background: var(--accent); opacity: .85; cursor: grab; }
+  .trig { position: absolute; width: 16%; top: 2%; }
+  .trig input { width: 100%; }
+  .trig span { font-size: 11px; color: var(--muted); }
+  .keys { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .keys code { background: var(--btn); padding: 0 4px; border-radius: 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  td, th { padding: 3px 4px; border-bottom: 1px solid var(--line); text-align: left; }
+  th { color: var(--muted); font-weight: 600; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .bar { position: relative; height: 10px; width: 80px; background: var(--btn); border-radius: 5px; overflow: hidden; }
+  .bar i { position: absolute; top: 0; bottom: 0; background: var(--bar); }
+  .bar i.neg { background: var(--bar-neg); }
+  .bar::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--line); }
+  .stall { color: var(--stop); font-weight: 700; }
+  #field { width: 100%; max-width: 380px; aspect-ratio: 1; display: block; margin: 0 auto; border-radius: 8px; border: 1px solid var(--line); }
+  .chip { display: inline-block; padding: 2px 8px; border-radius: 10px; border: 1px solid var(--line); margin: 2px; cursor: pointer; font-size: 12px; }
+  .chip.on { background: var(--go); color: #fff; border-color: var(--go); }
+  .muted { color: var(--muted); font-size: 12px; }
+  /* Phone mode: one big gamepad. */
+  body.phone header, body.phone main > section:not(#padsSection) { display: none; }
+  body.phone main { grid-template-columns: 1fr; padding: 6px; }
+  body.phone .gp { max-width: none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>FTC Simulator</h1>
+  <span class="note">A pretend Control Hub and Driver Hub. Your real OpMode code runs here; the hardware and physics are pretend.</span>
+</header>
+<main>
+  <section id="dsSection">
+    <h2>Driver Hub</h2>
+    <div class="row"><select id="opmode" aria-label="OpMode"></select></div>
+    <div class="row ds-buttons" style="margin-top:8px">
+      <button id="initBtn">INIT</button><button id="startBtn">START</button><button id="stopBtn">STOP</button>
+      <label class="muted"><input type="checkbox" id="autoTimer" checked> 30 s autonomous timer</label>
+    </div>
+    <div class="status" id="status">No OpMode running.</div>
+    <div id="screen" aria-live="polite"></div>
+    <div id="error"></div>
+  </section>
+
+  <section id="padsSection">
+    <h2>Gamepads</h2>
+    <div class="pad" data-pad="1">
+      <div class="row"><b>Gamepad 1</b> <span class="muted">(driver)</span>
+        <select class="src" aria-label="Gamepad 1 source"></select></div>
+      <div class="gp"></div>
+    </div>
+    <div class="pad" data-pad="2">
+      <div class="row"><b>Gamepad 2</b> <span class="muted">(operator)</span>
+        <select class="src" aria-label="Gamepad 2 source"></select></div>
+      <div class="gp"></div>
+    </div>
+    <label class="muted"><input type="checkbox" id="sticky"> Sticky on-screen buttons (a click holds a button until clicked again; sticks stay where you leave them) &mdash; to hold two things at once with a mouse.</label>
+    <div class="keys" id="keyHelp">
+      Keyboard: left stick <code>W A S D</code>, right stick <code>arrows</code>, D-pad <code>T F G H</code>,
+      A/B/X/Y <code>K L J I</code>, LB/RB <code>Q E</code>, LT/RT <code>Z C</code>, BACK <code>Backspace</code>,
+      START <code>Enter</code>, GUIDE <code>M</code>.
+      Real controller: plug it in, choose it above, press any of its buttons once (a browser rule).
+      GUIDE/PS often does not reach the browser: use the on-screen GUIDE or <code>M</code>.
+    </div>
+    <div class="keys" id="lanHelp"></div>
+  </section>
+
+  <section id="hubSection">
+    <h2>Control Hub</h2>
+    <canvas id="field" width="380" height="380" aria-label="Field, seen from above"></canvas>
+    <div class="row" style="margin-top:6px">
+      <span class="muted">Push by hand:</span>
+      <button data-push="24,0,2">48 in forward</button><button data-push="-24,0,0.5">12 in back</button>
+      <button data-push="0,24,2">48 in right</button><button id="resetPose">Back to start</button>
+    </div>
+    <div class="muted" id="poseText"></div>
+    <h3>Motors</h3>
+    <table id="motors"><thead><tr><th>Name</th><th>Power</th><th class="num">Count</th><th class="num">Speed/s</th><th class="num">Amps</th></tr></thead><tbody></tbody></table>
+    <h3>Servos</h3>
+    <table id="servos"><tbody></tbody></table>
+    <h3>Switches <span class="muted">(click to hold one pressed)</span></h3>
+    <div id="touches"></div>
+    <h3>Battery</h3>
+    <div class="row"><input type="range" id="battery" min="11" max="13.5" step="0.1" value="12.8"><span id="batteryText"></span></div>
+  </section>
+</main>
+
+<script>
+"use strict";
+const $ = (s, el = document) => el.querySelector(s);
+const params = new URLSearchParams(location.search);
+const phonePad = params.get("phone");          // "?phone=2": this page is one touch gamepad
+if (phonePad) document.body.classList.add("phone");
+
+// ---------------------------------------------------------------- gamepad state
+const BUTTONS = ["a","b","x","y","lb","rb","up","down","left","right","back","start","guide","ls","rs"];
+const AXES = ["lx","ly","rx","ry","lt","rt"];
+function blankPad() { const p = {}; BUTTONS.forEach(b => p[b] = 0); AXES.forEach(a => p[a] = 0); return p; }
+const pads = { 1: blankPad(), 2: blankPad() };
+const source = { 1: "screen", 2: "screen" };      // screen | keyboard | controller:N | remote
+if (phonePad) { source[1] = phonePad === "1" ? "screen" : "remote"; source[2] = phonePad === "2" ? "screen" : "remote"; }
+let sticky = false;
+
+// ---------------------------------------------------------------- on-screen gamepad
+// Positions in % of the gamepad box (420 x 250 drawing units).
+const LAYOUT = [
+  ["lb", "LB", 5, 18, 15, 9, true], ["rb", "RB", 80, 18, 15, 9, true],
+  ["up", "\u25B2", 27.5, 62, 7, 11], ["left", "\u25C0", 21, 72, 7, 11], ["right", "\u25B6", 34, 72, 7, 11], ["down", "\u25BC", 27.5, 82, 7, 11],
+  ["y", "Y", 78.5, 27, 8, 13], ["x", "X", 71, 39, 8, 13], ["b", "B", 86, 39, 8, 13], ["a", "A", 78.5, 51, 8, 13],
+  ["back", "BACK", 35, 30, 9, 8, true], ["guide", "GUIDE", 45.5, 28, 9, 10, true], ["start", "START", 56, 30, 9, 8, true],
+];
+function buildPad(el, n) {
+  el.innerHTML = "";
+  for (const [key, label, x, y, w, h, wide] of LAYOUT) {
+    const b = document.createElement("div");
+    b.className = "b" + (wide ? " wide" : "");
+    b.textContent = label;
+    Object.assign(b.style, { left: x + "%", top: y + "%", width: w + "%", height: h + "%" });
+    b.dataset.key = key;
+    b.title = key.toUpperCase();
+    let downAt = 0;
+    b.addEventListener("pointerdown", e => { e.preventDefault(); b.setPointerCapture(e.pointerId);
+      downAt = performance.now();
+      pads[n][key] = sticky ? (pads[n][key] ? 0 : 1) : 1; sendPads(); });
+    // A quick click still lasts at least 0.12 s, so the OpMode's loop sees it.
+    const up = () => { if (sticky) return;
+      setTimeout(() => { pads[n][key] = 0; sendPads(); }, Math.max(0, 120 - (performance.now() - downAt))); };
+    b.addEventListener("pointerup", up); b.addEventListener("pointercancel", up);
+    el.appendChild(b);
+  }
+  for (const [ax, ay, cx, cy, label] of [["lx","ly",18,45,"L"],["rx","ry",66,76,"R"]]) {
+    const s = document.createElement("div");
+    s.className = "stick"; s.title = label + " stick";
+    Object.assign(s.style, { left: cx + "%", top: cy + "%", transform: "translate(-50%,-50%)" });
+    const k = document.createElement("div"); k.className = "knob"; s.appendChild(k);
+    let dragging = false;
+    const move = e => {
+      const r = s.getBoundingClientRect();
+      let dx = (e.clientX - (r.left + r.width / 2)) / (r.width / 2);
+      let dy = (e.clientY - (r.top + r.height / 2)) / (r.height / 2);
+      const len = Math.hypot(dx, dy); if (len > 1) { dx /= len; dy /= len; }
+      pads[n][ax] = +dx.toFixed(3); pads[n][ay] = +dy.toFixed(3);    // down = positive, like the SDK
+    };
+    k.addEventListener("pointerdown", e => { e.preventDefault(); dragging = true; k.setPointerCapture(e.pointerId); move(e); });
+    k.addEventListener("pointermove", e => { if (dragging) move(e); });
+    const end = () => { dragging = false; if (!sticky) { pads[n][ax] = 0; pads[n][ay] = 0; } };
+    k.addEventListener("pointerup", end); k.addEventListener("pointercancel", end);
+    s.dataset.ax = ax; s.dataset.ay = ay;
+    el.appendChild(s);
+  }
+  for (const [key, label, x] of [["lt","LT",5],["rt","RT",79]]) {
+    const t = document.createElement("div"); t.className = "trig";
+    t.style.left = x + "%";
+    t.innerHTML = `<span>${label}</span><input type="range" min="0" max="1" step="0.05" value="0" aria-label="${label}">`;
+    const r = t.querySelector("input");
+    r.addEventListener("input", () => pads[n][key] = +r.value);
+    const release = () => { if (!sticky) { r.value = 0; pads[n][key] = 0; } };
+    r.addEventListener("pointerup", release); r.addEventListener("pointercancel", release);
+    r.dataset.key = key;
+    el.appendChild(t);
+  }
+}
+function drawPad(el, n) {
+  const p = pads[n];
+  el.querySelectorAll(".b").forEach(b => b.classList.toggle("on", !!p[b.dataset.key]));
+  el.querySelectorAll(".stick").forEach(s => {
+    const k = s.firstChild;
+    k.style.transform = `translate(${p[s.dataset.ax] * 60}%, ${p[s.dataset.ay] * 60}%)`;
+  });
+  el.querySelectorAll(".trig input").forEach(r => { if (document.activeElement !== r) r.value = p[r.dataset.key]; });
+  el.classList.toggle("off", source[n] === "remote");
+}
+
+// ---------------------------------------------------------------- sources: keyboard and controllers
+const KEYMAP = { w:["ly",-1], s:["ly",1], a:["lx",-1], d:["lx",1],
+  arrowup:["ry",-1], arrowdown:["ry",1], arrowleft:["rx",-1], arrowright:["rx",1],
+  t:"up", g:"down", f:"left", h:"right", k:"a", l:"b", j:"x", i:"y", q:"lb", e:"rb",
+  z:["lt",1], c:["rt",1], backspace:"back", enter:"start", m:"guide" };
+const keysDown = new Set();
+function keyboardPads() { return [1,2].filter(n => source[n] === "keyboard"); }
+function applyKeys() {
+  for (const n of keyboardPads()) {
+    const p = blankPad();
+    for (const k of keysDown) {
+      const m = KEYMAP[k]; if (!m) continue;
+      if (typeof m === "string") p[m] = 1; else p[m[0]] = Math.max(-1, Math.min(1, p[m[0]] + m[1]));
+    }
+    pads[n] = p;
+  }
+}
+window.addEventListener("keydown", e => {
+  if (e.target.matches("input, select") && e.target.type !== "range" && e.target.type !== "checkbox") return;
+  const k = e.key.toLowerCase();
+  if (!(k in KEYMAP) || !keyboardPads().length) return;
+  e.preventDefault(); keysDown.add(k); applyKeys();
+});
+window.addEventListener("keyup", e => { keysDown.delete(e.key.toLowerCase()); applyKeys(); });
+window.addEventListener("blur", () => { keysDown.clear(); applyKeys(); });
+
+function readControllers() {
+  const list = navigator.getGamepads ? Array.from(navigator.getGamepads()) : [];
+  for (const n of [1,2]) {
+    if (!source[n].startsWith("controller:")) continue;
+    const g = list[+source[n].split(":")[1]];
+    if (!g) { pads[n] = blankPad(); continue; }
+    const b = i => (g.buttons[i] && g.buttons[i].pressed) ? 1 : 0;
+    const v = i => (g.buttons[i] ? g.buttons[i].value : 0);
+    const ax = i => { const x = g.axes[i] || 0; return Math.abs(x) < 0.04 ? 0 : +x.toFixed(3); };
+    // The browser's "standard" button order (Xbox / PlayStation / Logitech in X mode).
+    pads[n] = { a:b(0), b:b(1), x:b(2), y:b(3), lb:b(4), rb:b(5), lt:+v(6).toFixed(3), rt:+v(7).toFixed(3),
+      back:b(8), start:b(9), ls:b(10), rs:b(11), up:b(12), down:b(13), left:b(14), right:b(15), guide:b(16),
+      lx:ax(0), ly:ax(1), rx:ax(2), ry:ax(3) };
+  }
+}
+function fillSources() {
+  const list = navigator.getGamepads ? Array.from(navigator.getGamepads()) : [];
+  document.querySelectorAll(".pad").forEach(div => {
+    const n = +div.dataset.pad, sel = $(".src", div), now = source[n];
+    const opts = [["screen","On-screen"],["keyboard","Keyboard"]];
+    list.forEach((g, i) => { if (g) opts.push(["controller:" + i, "Controller " + (i + 1) + ": " + g.id.slice(0, 28)]); });
+    opts.push(["remote","Phone / other page"]);
+    const html = opts.map(([v, t]) => `<option value="${v}">${t}</option>`).join("");
+    if (sel.dataset.html !== html) { sel.innerHTML = html; sel.dataset.html = html; }
+    sel.value = opts.some(o => o[0] === now) ? now : "screen";
+  });
+}
+window.addEventListener("gamepadconnected", fillSources);
+window.addEventListener("gamepaddisconnected", fillSources);
+
+// ---------------------------------------------------------------- talking to the simulator
+function post(path, data) {
+  return fetch(path, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams(data).toString() }).catch(() => {});
+}
+function sendPads() {
+  readControllers();
+  for (const n of [1,2]) if (source[n] !== "remote") post("/pad/" + n, pads[n]);
+}
+setInterval(sendPads, 40);
+
+let lastState = null;
+async function poll() {
+  try {
+    const r = await fetch("/state", { cache: "no-store" });
+    lastState = await r.json();
+    render(lastState);
+  } catch (e) {
+    $("#status").textContent = "The simulator is not running. Start it with ./gradlew :sim:run";
+  }
+}
+setInterval(poll, 100);
+
+// ---------------------------------------------------------------- Driver Hub
+function render(s) {
+  const sel = $("#opmode");
+  const key = s.opmodes.map(o => o.kind + o.name).join("|");
+  if (sel.dataset.key !== key) {
+    const keep = sel.value;
+    let html = "";
+    for (const kind of ["TeleOp", "Autonomous"]) {
+      html += `<optgroup label="${kind}">`;
+      for (const o of s.opmodes.filter(o => o.kind === kind)) {
+        const text = (o.group ? o.group + ": " : "") + o.name + (o.disabled ? "  (hidden on robot)" : "");
+        html += `<option value="${escapeHtml(o.name)}">${escapeHtml(text)}</option>`;
+      }
+      html += "</optgroup>";
+    }
+    sel.innerHTML = html; sel.dataset.key = key;
+    if (keep) sel.value = keep;
+  }
+  const running = s.phase === "INIT" || s.phase === "RUNNING";
+  $("#initBtn").disabled = running && sel.value === s.opmode;
+  $("#startBtn").disabled = s.phase !== "INIT";
+  $("#stopBtn").disabled = !running;
+  const t = Math.floor(s.runSeconds);
+  $("#status").innerHTML = s.opmode
+    ? `<b>${escapeHtml(s.opmode)}</b> &middot; ${s.phase === "RUNNING" ? "running " + Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0") : s.phase.toLowerCase()}`
+    : "Choose an OpMode, then INIT.";
+  $("#screen").textContent = s.screen.join("\n");
+  const err = $("#error");
+  err.style.display = s.error ? "block" : "none";
+  err.textContent = s.error;
+  $("#autoTimer").checked = s.autoTimer;
+  renderHub(s);
+  document.querySelectorAll(".pad").forEach(div => drawPad($(".gp", div), +div.dataset.pad));
+  $("#lanHelp").textContent = s.lan && s.addresses.length
+    ? "Phone as gamepad 2: open http://" + s.addresses[0] + ":" + s.port + "/?phone=2 (set gamepad 2 here to Phone)."
+    : "Phone as a gamepad: start with ./gradlew :sim:run -Plan";
+}
+$("#initBtn").onclick = () => post("/cmd", { action: "init", opmode: $("#opmode").value });
+$("#startBtn").onclick = () => post("/cmd", { action: "start" });
+$("#stopBtn").onclick = () => post("/cmd", { action: "stop" });
+$("#autoTimer").onchange = e => post("/cmd", { action: "autoTimer", on: e.target.checked ? 1 : 0 });
+$("#sticky").onchange = e => { sticky = e.target.checked; if (!sticky) for (const n of [1,2]) if (source[n] === "screen") pads[n] = blankPad(); };
+document.querySelectorAll(".pad").forEach(div => {
+  const n = +div.dataset.pad;
+  buildPad($(".gp", div), n);
+  $(".src", div).onchange = e => { source[n] = e.target.value; pads[n] = blankPad(); keysDown.clear(); };
+});
+
+// ---------------------------------------------------------------- Control Hub panel
+function bar(v) {
+  const w = Math.min(1, Math.abs(v)) * 50;
+  return `<div class="bar"><i class="${v < 0 ? "neg" : ""}" style="left:${v < 0 ? 50 - w : 50}%;width:${w}%"></i></div>`;
+}
+function renderHub(s) {
+  $("#motors tbody").innerHTML = s.motors.map(m =>
+    `<tr><td>${escapeHtml(m.name)}<div class="muted">${m.kind}, ${m.mode.replace(/_/g, " ").toLowerCase()}</div></td>
+     <td>${bar(m.power)}<span class="muted">${m.power.toFixed(2)}</span></td>
+     <td class="num">${m.ticks}${m.atStop ? ' <span class="stall">STOP</span>' : ""}</td>
+     <td class="num">${Math.round(m.velocity)}</td><td class="num ${m.amps > 6 ? "stall" : ""}">${m.amps.toFixed(1)}</td></tr>`).join("");
+  $("#servos tbody").innerHTML = s.servos.map(v =>
+    `<tr><td>${escapeHtml(v.name)}</td><td><div class="bar" style="width:140px"><i style="left:0;width:${v.actual * 100}%"></i></div></td>
+     <td class="num">${v.actual.toFixed(3)}</td><td class="muted">to ${v.target.toFixed(3)}</td></tr>`).join("")
+    + s.crservos.map(c => `<tr><td>${escapeHtml(c.name)}</td><td>${bar(c.power)}</td><td class="num">${c.power.toFixed(2)}</td><td class="muted">CR servo</td></tr>`).join("");
+  $("#touches").innerHTML = s.touches.map(t =>
+    `<span class="chip ${t.pressed ? "on" : ""}" data-touch="${escapeHtml(t.name)}">${escapeHtml(t.name)}: ${t.pressed ? "pressed" : "open"}${t.manual ? " (held)" : ""}</span>`).join("") || '<span class="muted">none</span>';
+  const bat = $("#battery");
+  if (document.activeElement !== bat) bat.value = s.battery;
+  $("#batteryText").textContent = s.battery.toFixed(1) + " V";
+  drawField(s.robot);
+  $("#poseText").textContent = s.robot.drive === "none" ? "No drivetrain in this robot file." :
+    `x ${s.robot.x.toFixed(1)} in, y ${s.robot.y.toFixed(1)} in, heading ${s.robot.heading.toFixed(1)}°` +
+    (s.robot.hasImu ? `, IMU yaw ${s.robot.imu.toFixed(1)}°` : "") + ` · shots ${s.robot.shots}`;
+}
+$("#touches").addEventListener("click", e => { const c = e.target.closest("[data-touch]"); if (c) post("/cmd", { action: "touch", name: c.dataset.touch }); });
+document.querySelectorAll("[data-push]").forEach(b => b.onclick = () => {
+  const [f, r, sec] = b.dataset.push.split(",");
+  post("/cmd", { action: "push", forward: f, right: r, seconds: sec });
+});
+$("#resetPose").onclick = () => post("/cmd", { action: "resetPose" });
+$("#battery").onchange = e => post("/cmd", { action: "battery", volts: e.target.value });
+
+function drawField(r) {
+  const c = $("#field"), ctx = c.getContext("2d"), W = c.width, s = W / 144;
+  const css = getComputedStyle(document.documentElement);
+  ctx.clearRect(0, 0, W, W);
+  ctx.fillStyle = css.getPropertyValue("--btn"); ctx.fillRect(0, 0, W, W);
+  ctx.strokeStyle = css.getPropertyValue("--line"); ctx.lineWidth = 1;
+  for (let i = 1; i < 6; i++) { ctx.beginPath(); ctx.moveTo(i * 24 * s, 0); ctx.lineTo(i * 24 * s, W); ctx.moveTo(0, i * 24 * s); ctx.lineTo(W, i * 24 * s); ctx.stroke(); }
+  ctx.fillStyle = css.getPropertyValue("--muted"); ctx.font = "11px system-ui";
+  ctx.fillText("drivers", W / 2 - 18, W - 4);
+  if (r.drive === "none") return;
+  ctx.save();
+  ctx.translate((r.x + 72) * s, (72 - r.y) * s);
+  ctx.rotate(-r.heading * Math.PI / 180);
+  ctx.fillStyle = css.getPropertyValue("--accent"); ctx.globalAlpha = 0.85;
+  ctx.fillRect(-9 * s, -9 * s, 18 * s, 18 * s);
+  ctx.globalAlpha = 1; ctx.fillStyle = "#fff";
+  ctx.beginPath(); ctx.moveTo(0, -8 * s); ctx.lineTo(-4 * s, -2 * s); ctx.lineTo(4 * s, -2 * s); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+function escapeHtml(t) { return String(t).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch])); }
+
+fillSources();
+setInterval(fillSources, 2000);
+setInterval(() => document.querySelectorAll(".pad").forEach(div => drawPad($(".gp", div), +div.dataset.pad)), 50);
+if (phonePad) { document.querySelectorAll(".pad").forEach(div => { if (div.dataset.pad !== phonePad) div.style.display = "none"; }); }
+poll();
+</script>
+</body>
+</html>

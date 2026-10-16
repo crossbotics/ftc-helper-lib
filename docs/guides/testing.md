@@ -75,6 +75,11 @@ Run the **Hardware Check** OpMode ([starter kit](../starter-kit.md), or
 - [ ] After autonomous, TeleOp's INIT screen says "Forward: from autonomous"
 - [ ] Gamepads: 1 = driver (Start+A), 2 = operator (Start+B)
 
+## Without a robot: the simulator
+
+Many problems show up before you touch the robot: a crash at INIT, a wrong button, a screen that does
+not fit. Run the OpMode in the [simulator](simulator.md) first.
+
 ## 7. After a problem
 
 Write it down: what you did, what you expected, what happened, and the telemetry (debug ON). Then

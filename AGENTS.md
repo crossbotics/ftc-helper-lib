@@ -16,6 +16,11 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
   (pretend motors/servos/telemetry in `FakeMotor.java`, `Fakes.java`).
 - `examples/` compiled example OpModes: `ExampleXxx`, the starter kit (`starter/`), and one program per
   tutorial (`tutorials/`, tutorial 13's tests in `examples/src/test`).
+- `sim/` the simulator: a pretend Control Hub and Driver Hub on a laptop (`./gradlew :sim:run`, then
+  http://localhost:8780). Its code is in `sim/src/test` (the SDK only runs on a laptop there); the
+  page is `sim/src/test/resources/sim/index.html`; robot files are in `sim/robots/`. Its scripted
+  tests (`FinderSafetyTest`) run whole OpModes: add one when an OpMode's behavior matters (safety,
+  help, buttons). Not part of robot builds. Guide: docs/guides/simulator.md.
 - `docs/` `modules/` (reference: every public class and method), `tutorials/` (hands-on lessons),
   `guides/` (how-to and checklists), `images/` (SVG diagrams), `starter-kit.md`, setup/update pages.
 - `tools/check_docs.py` checks links, heading links, class coverage and tutorial programs.

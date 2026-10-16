@@ -4,6 +4,14 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+### Added (simulator branch)
+
+- **Simulator** (`sim/`, standalone build only): a pretend Control Hub and Driver Hub on a laptop.
+  `./gradlew :sim:run`, then http://localhost:8780. Real OpMode code with pretend motors, servos,
+  switches, IMU, a robot on a field, simple physics; on-screen, keyboard, real-controller and phone
+  gamepads. Scripted whole-OpMode tests (`FinderSafetyTest`) run on every push.
+  Guide: [docs/guides/simulator.md](docs/guides/simulator.md).
+
 ## v0.7.3 - 2026-10-16
 
 ### Fixed

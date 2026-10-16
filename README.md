@@ -42,6 +42,7 @@ routine.step("Lift up", lift.startStep("HIGH"))
 | Practice vs competition behavior | [Profiles](docs/guides/profiles.md) |
 | Change numbers while the robot runs | [Tuning](docs/guides/tuning.md) |
 | Test the robot (checklists) | [Testing procedures](docs/guides/testing.md) |
+| Try OpModes without a robot (pretend Control Hub + Driver Hub) | [Simulator](docs/guides/simulator.md) |
 | Get ready for a new season | [New season](docs/guides/new-season.md) |
 | Add something new to the library | [Extending](docs/guides/extending.md), [Contributing](docs/contributing.md) |
 | Get the newest version, or an older one | [Keep it up to date](docs/02-keep-up-to-date.md) |
