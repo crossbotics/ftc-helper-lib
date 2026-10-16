@@ -21,6 +21,11 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
   page is `sim/src/test/resources/sim/index.html`; robot files are in `sim/robots/`. Its scripted
   tests (`FinderSafetyTest`) run whole OpModes: add one when an OpMode's behavior matters (safety,
   help, buttons). Not part of robot builds. Guide: docs/guides/simulator.md.
+  - To check a change to an OpMode yourself, write a scenario file and run
+    `./gradlew :sim:scenario -Pfile=...` (report: each check ok/FAIL with the value seen).
+  - `sim/parts/parts.json`: motors and servos with seller-page numbers and the date checked; add a
+    part the same way (never from memory). `sim/fields/<season>.json`: one per season, made from the
+    official field CAD by a script, not typed by hand.
 - `docs/` `modules/` (reference: every public class and method), `tutorials/` (hands-on lessons),
   `guides/` (how-to and checklists), `images/` (SVG diagrams), `starter-kit.md`, setup/update pages.
 - `tools/check_docs.py` checks links, heading links, class coverage and tutorial programs.

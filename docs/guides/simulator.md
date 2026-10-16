@@ -66,19 +66,38 @@ one pressed), and the battery voltage (lower it to see a weaker robot).
 
 ## The robot file
 
-`sim/robots/starter.properties` describes the pretend robot: every device with the SAME name as the
-robot configuration, plus simple physics numbers. Copy it for your robot and change names and numbers:
+The robot file describes the pretend robot: every device with the SAME name as the robot
+configuration, the motors and servos from the parts catalog, the robot's size, where it starts, and the
+season's field. The library's example is `sim/robots/starter.properties`; a team keeps its own in its
+robot project as `simulator/robot.properties` (used automatically, see below).
 
 ```properties
+field = biobuzz-2026                  # the season's field (sim/fields/biobuzz-2026.json)
+robot.lengthIn = 18                   # size, for bumping into field elements
+robot.widthIn = 18
+start.x = 0                           # where it starts (inches from the field center; y away from the drivers)
+start.y = -48
+start.heading = 0                     # degrees, counterclockwise; 0 = facing away from the drivers
 drive.type = mecanum
 drive.motors = front_left, front_right, back_left, back_right
+drive.part = gobilda-5203-312         # from the parts catalog: speed, encoder counts, current
 drive.wheelDiameterIn = 3.90          # the REAL wheel (the Drive Tuner should find it)
 imu = imu
-motor.lift = lift, maxTicksPerSec=2796, min=0, max=2750, gravity=0.06
-motor.flywheel = flywheel, maxTicksPerSec=2800, feeder=feeder, shotDrop=0.15
-servo.claw = 0.5
+motor.lift = lift, part=gobilda-5203-312, min=0, max=2750, gravity=0.06
+motor.flywheel = flywheel, part=gobilda-5203-6000, feeder=feeder, shotDrop=0.15
+servo.claw = 0.5, part=gobilda-2000-torque
 touch.lift_bottom = lift, below=20
 ```
+
+## The parts catalog
+
+`sim/parts/parts.json` lists the common FTC motors and servos with their real part numbers and the
+numbers from the seller's page (and the date they were checked): goBILDA Yellow Jacket (5203 and 5204,
+every ratio), REV HD Hex (bare, UltraPlanetary combinations, spur gearboxes) and Core Hex, AndyMark
+NeveRest, goBILDA 2000 series servos, REV Smart Robot Servos and Axon servos. A robot file names a part
+by its `id` (`part=gobilda-5203-312`); the simulator takes the top speed, encoder counts per turn and
+current (motors) or speed and range (servos) from it. Numbers the seller does not publish are left
+empty, with a note. Real ratios are used (an UltraPlanetary "5:1" is 5.23:1).
 
 Motor kinds: `free` (just spins), `lift` (hard stops, gravity), `flywheel` (coasts; while its `feeder`
 motor runs, a piece goes through every 0.3 s and slows it down). `ticksPerRev=` sets a motor's encoder
@@ -86,16 +105,74 @@ counts per turn (default 537.7; flywheel 28). On a robot, `setPower` in RUN_USIN
 top speed of the motor TYPE chosen in the configuration; here it is the robot file's `maxTicksPerSec`. The wheel motors are on the left/right sides of the robot like a
 real one (the left ones mounted mirrored), so motor directions in your code matter here too.
 
-## Your own OpModes
+## Your own robot code
 
-The simulator lists every OpMode in the library's examples and starter kit, and any OpMode in the
-package `org.firstinspires.ftc.teamcode`. To try your team's own OpMode, copy the file into
-`examples/src/main/java/org/firstinspires/ftc/teamcode/` in the library folder (keep its package line),
-and restart the simulator. (Running TeamCode straight from the robot project is a later step.)
+When the library is a submodule of a robot project (`ftc-helper-lib/` next to `TeamCode/`), run the
+simulator from the `ftc-helper-lib` folder: it builds **that project's TeamCode** too, lists only its
+OpModes, and uses `simulator/robot.properties` from the robot project. Iterative OpModes
+(`init()`/`loop()`) and LinearOpModes both run.
+
+- Another TeamCode folder: `-PteamCode=<folder>`; the library's own examples instead: `-PteamCode=none`.
+- TeamCode uses other libraries (Road Runner, Pedro Pathing, FTC Dashboard...)? Put their Gradle lines in
+  `simulator/sim-dependencies.gradle` in the robot project, for example:
+
+```groovy
+repositories { maven { url = 'https://maven.brott.dev/' } }
+dependencies { testImplementation 'com.acmerobotics.dashboard:dashboard:0.4.16' }
+```
+
+## Scenario files: test without a browser
+
+A scenario file (`.sim`) drives the simulator like a person and checks what happens. Anyone can run
+one, and every scenario also runs as an automatic test (the library's in `sim/scenarios/`, a team's in
+`simulator/scenarios/`):
+
+```bash
+./gradlew :sim:scenario -Pfile=../simulator/scenarios/main-teleop.sim
+```
+
+```text
+# lines starting with # are notes
+init "Main TeleOp"                     # INIT an OpMode (waits for its first screen)
+start                                  # START
+press g1.a                             # press and let go (held until the OpMode surely saw it)
+hold g1.left_stick_y -1                # set a stick or button and keep it
+release g1.left_stick_y                # let go (release g1.all / release all)
+wait 0.5                               # seconds
+loops 3                                # wait for 3 OpMode loops
+push 24 0 2                            # roll the robot by hand: forward in/s, right in/s, seconds
+set battery 12.0
+expect screen has "Ready"              # or: screen not "..."
+expect error none                      # or: error has "..."
+expect phase RUNNING
+expect motor lift power > 0.1          # power | ticks | velocity | amps; > < >= <= =  (= VALUE TOLERANCE)
+expect servo claw target = 0.53 0.01   # target | actual
+expect robot y > -30                   # x | y | heading | imu | shots
+expect bumped none                     # or: bumped "Red HIVE"
+expect within 2 motor lift ticks > 500 # wait up to 2 s for it to become true
+stop
+print screen                           # also: print motors | servos | robot
+```
+
+Gamepad names: `g1.`/`g2.` plus `a b x y lb rb lt rt back start guide ls rs`, `dpad_up` (or `up`),
+`left_stick_x` (or `lx`), `right_trigger` (or `rt`) and the other SDK names. The report shows each line
+as ok or FAIL with the value it saw; the command fails if any check failed.
+
+## Fields: one file per season
+
+`sim/fields/<season>.json` holds a season's field: solid elements (the robot bumps into them), floor
+zones and tape lines, things overhead, and the AprilTags with their position and the way they face. The
+robot file picks one (`field = biobuzz-2026`). The page draws it; the robot turns red and the panel names
+the element when it bumps into one. A new season is a new file: the BIOBUZZ file is made from the official
+field CAD by a script (in the team's design repo), and the same kind of script works for the next CAD.
+
+Coordinates: inches from the field center, +x to the right and +y away from the drivers (drawn at the
+bottom), z up from the tiles; headings and tag facing in degrees, counterclockwise from +x for tags.
 
 ## Not simulated
 
-Cameras (webcam and Limelight): an OpMode that needs one stops with "No WebcamName named...". The Shot and Aim
+Cameras (webcam and Limelight): an OpMode that needs one stops with "No WebcamName named..." (the
+field file has the AprilTags, so a simulated camera is the next step). Game pieces are not simulated yet. The Shot and Aim
 tuners work without a camera when `createCamera()` returns null. Iterative OpModes (`init()/loop()`)
 are not run yet; the library's OpModes are all LinearOpModes. Physics is simple: real numbers
 (gains, speeds, shot tables) must still be found on the robot.

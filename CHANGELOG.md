@@ -11,6 +11,10 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   switches, IMU, a robot on a field, simple physics; on-screen, keyboard, real-controller and phone
   gamepads. Scripted whole-OpMode tests (`FinderSafetyTest`) run on every push.
   Guide: [docs/guides/simulator.md](docs/guides/simulator.md).
+- Simulator: a parts catalog of common FTC motors and servos (`sim/parts/parts.json`, numbers from the
+  sellers' pages) that robot files reference; a robot project's own TeamCode and robot file; iterative
+  OpModes; scenario files (`./gradlew :sim:scenario`) that also run as tests; season field files
+  (`sim/fields/`) with solid elements, zones, tape and AprilTags, starting with BIOBUZZ.
 
 ## v0.7.3 - 2026-10-16
 
