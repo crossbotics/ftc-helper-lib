@@ -168,7 +168,11 @@ simulated robot move like YOURS:
 2. Copy its logs from the Control Hub (`/sdcard/FIRST/ftc-helper/characterizer/*.csv`, with the REV
    Hardware Client or Android Studio's Device Explorer) into a folder on the laptop.
 3. From `ftc-helper-lib`: `./gradlew :sim:fit -Plog=path/to/that/folder` prints the numbers;
-   add `-Pwrite` to put them into the robot file (other settings and notes stay). Check it and commit.
+   add `-Pwrite` to put them into the robot file (other settings and notes stay; the old file is kept
+   as `robot.properties.bak`). Check it and commit. A poor fit (r2 below 0.9) or a number that makes
+   no sense (kS below 0) is reported and left out; `-Pforce` uses it anyway. It writes only to your
+   team's robot file (`simulator/robot.properties`, or `-Probot=`), never to the library's example, and
+   only to motors already in the file (add a motor first, with its kind, part and limits).
 
 Or copy the lines the Characterizer shows on the Driver Hub. The settings it fills in:
 

@@ -28,6 +28,14 @@ public final class SimFit {
 
     /** The settings to write: robot-file key -> (setting -> value). Drive settings use key "" (whole lines). */
     static Map<String, Map<String, String>> fit(List<Path> logs, List<String> report) throws IOException {
+        return fit(logs, report, false);
+    }
+
+    /**
+     * @param force also give numbers from a poor fit (r2 below 0.9) or numbers that make no sense (a
+     *              negative kS or speed-up time): normally those are reported and left out
+     */
+    static Map<String, Map<String, String>> fit(List<Path> logs, List<String> report, boolean force) throws IOException {
         // group the logs: "drive", "turn", "lift:lift", "flywheel:flywheel"
         Map<String, List<double[]>> groups = new LinkedHashMap<>();
         for (Path p : logs) {
@@ -47,9 +55,14 @@ public final class SimFit {
                 }
                 if (line.startsWith("#") || line.startsWith("t,") || line.trim().isEmpty()) continue;
                 String[] f = line.split(",");
-                double[] r = new double[f.length];
-                for (int i = 0; i < f.length; i++) r[i] = Double.parseDouble(f[i]);
-                rows.add(r);
+                if (f.length < 7) { report.add("  skipped a short line in " + p.getFileName()); continue; }
+                try {
+                    double[] r = new double[f.length];
+                    for (int i = 0; i < f.length; i++) r[i] = Double.parseDouble(f[i].trim());
+                    rows.add(r);
+                } catch (NumberFormatException e) {
+                    report.add("  skipped a line that is not numbers in " + p.getFileName() + ": " + line);
+                }
             }
             if (kind == null || !complete) {
                 report.add("skipped " + p.getFileName() + (kind == null ? " (not a Characterizer log)" : " (stopped early)"));
@@ -84,6 +97,13 @@ public final class SimFit {
             }
             report.add(String.format(Locale.US, "%s: kS %.4f, kV %.6g, kA %.6g%s, r2 %.4f, %d moments", g.getKey(), f.kS, f.kV, f.kA,
                     kind.equals("lift") ? String.format(Locale.US, ", kG %.4f", f.kG) : "", f.r2, f.samples));
+            String wrong = f.r2 < 0.9 ? "a poor fit (r2 below 0.9): run the test again on a charged battery"
+                    : f.kS < 0 ? "kS came out below 0 (noisy data?)" : !(f.accelSec() > 0) ? "the speed-up time came out 0 or less (noisy data?)"
+                    : Math.abs(f.kG) > 1 ? "kG is more than full power" : null;
+            if (wrong != null && !force) {
+                report.add("  NOT USED: " + wrong + ". Add -Pforce to use it anyway.");
+                continue;
+            }
             Map<String, String> s = new LinkedHashMap<>();
             switch (kind) {
                 case "drive":
@@ -134,13 +154,23 @@ public final class SimFit {
      * and "motor.NAME = ..." lines get each key=value replaced or added. Notes after # stay.
      */
     static String apply(String text, Map<String, Map<String, String>> settings) {
-        List<String> lines = new ArrayList<>(java.util.Arrays.asList(text.split("\n", -1)));
+        return apply(text, settings, new ArrayList<>());
+    }
+
+    /** The same, with notes about settings it could not place (a motor that is not in the file). */
+    static String apply(String text, Map<String, Map<String, String>> settings, List<String> notes) {
+        // Windows files end lines with \r\n: read either, write back the same way.
+        String newline = text.contains("\r\n") ? "\r\n" : "\n";
+        List<String> lines = new ArrayList<>(java.util.Arrays.asList(text.split("\r?\n", -1)));
         Map<String, String> whole = settings.getOrDefault("", new LinkedHashMap<>());
         for (Map.Entry<String, String> e : whole.entrySet()) {
             boolean found = false;
             for (int i = 0; i < lines.size(); i++) {
-                if (lines.get(i).matches("\\s*" + java.util.regex.Pattern.quote(e.getKey()) + "\\s*[=:].*")) {
-                    lines.set(i, e.getKey() + " = " + e.getValue() + "   # measured (Characterizer)");
+                String line = lines.get(i);
+                if (line.matches("\\s*" + java.util.regex.Pattern.quote(e.getKey()) + "\\s*[=:].*")) {
+                    int hash = noteStart(line);
+                    String note = hash >= 0 ? "   " + line.substring(hash) : "   # measured (Characterizer)";   // keep the team's own note
+                    lines.set(i, e.getKey() + " = " + e.getValue() + note);
                     found = true;
                 }
             }
@@ -158,8 +188,7 @@ public final class SimFit {
                 if (!line.matches("\\s*" + java.util.regex.Pattern.quote(m.getKey()) + "\\s*[=:].*")) continue;
                 found = true;
                 // split off a note (a # after a space)
-                int hash = -1;
-                for (int k = 1; k < line.length() && hash < 0; k++) if (line.charAt(k) == '#' && Character.isWhitespace(line.charAt(k - 1))) hash = k;
+                int hash = noteStart(line);
                 String body = hash >= 0 ? line.substring(0, hash).trim() : line.trim(), note = hash >= 0 ? "   " + line.substring(hash) : "";
                 for (Map.Entry<String, String> kv : m.getValue().entrySet()) {
                     java.util.regex.Matcher x = java.util.regex.Pattern.compile("(,\\s*)" + kv.getKey() + "\\s*=\\s*[^,]*").matcher(body);
@@ -169,20 +198,29 @@ public final class SimFit {
                 lines.set(i, body + note);
             }
             if (!found) {
-                lines.add(m.getKey() + " = free, " + String.join(", ", m.getValue().entrySet().stream()
-                        .map(kv -> kv.getKey() + "=" + kv.getValue()).toArray(String[]::new)) + "   # measured (Characterizer): check the kind");
+                // Not in the file: say so rather than add a line that could replace a setting (a later
+                // line with the same name wins in a robot file).
+                notes.add(m.getKey() + " is not in the robot file: add it first (its kind, part and limits), then fit again.");
             }
         }
-        return String.join("\n", lines);
+        return String.join(newline, lines);
+    }
+
+    // Where a note starts: a # after a space (so color=#ff0000 is not a note), or -1.
+    private static int noteStart(String line) {
+        for (int k = 1; k < line.length(); k++) if (line.charAt(k) == '#' && Character.isWhitespace(line.charAt(k - 1))) return k;
+        return -1;
     }
 
     public static void main(String[] args) throws IOException {
         String robot = null, log = null;
-        boolean write = false;
+        boolean write = false, force = false, sample = false;
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--robot")) robot = args[++i];
             else if (args[i].equals("--log")) log = args[++i];
             else if (args[i].equals("--write")) write = true;
+            else if (args[i].equals("--force")) force = true;
+            else if (args[i].equals("--sample")) sample = true;   // the robot file is the library's example
         }
         if (log == null) throw new IllegalArgumentException("--log file-or-folder");
         File f = new File(log);
@@ -199,7 +237,7 @@ public final class SimFit {
             System.exit(1);
         }
         List<String> report = new ArrayList<>();
-        Map<String, Map<String, String>> settings = fit(logs, report);
+        Map<String, Map<String, String>> settings = fit(logs, report, force);
         for (String r : report) System.out.println(r);
         System.out.println();
         System.out.println("Robot file settings:");
@@ -207,10 +245,15 @@ public final class SimFit {
             if (e.getKey().isEmpty()) for (Map.Entry<String, String> kv : e.getValue().entrySet()) System.out.println("  " + kv.getKey() + " = " + kv.getValue());
             else System.out.println("  " + e.getKey() + ": " + e.getValue().toString().replaceAll("[{}]", ""));
         }
-        if (write && robot != null) {
+        if (write && sample) {
+            System.out.println("\nNot written: the robot file is the library's example. Name yours: -Probot=path/to/robot.properties");
+        } else if (write && robot != null) {
             Path p = Paths.get(robot);
             String text = new String(Files.readAllBytes(p), StandardCharsets.UTF_8);
-            Files.write(p, apply(text, settings).getBytes(StandardCharsets.UTF_8));
+            Files.write(Paths.get(robot + ".bak"), text.getBytes(StandardCharsets.UTF_8));   // the old file, just in case
+            List<String> notes = new ArrayList<>();
+            Files.write(p, apply(text, settings, notes).getBytes(StandardCharsets.UTF_8));
+            for (String n : notes) System.out.println("NOT WRITTEN: " + n);
             System.out.println("\nWrote them into " + p.toAbsolutePath() + " (check it, then commit).");
         } else if (!write) {
             System.out.println("\nAdd -Pwrite to put them into the robot file" + (robot != null ? " (" + robot + ")" : "") + ".");

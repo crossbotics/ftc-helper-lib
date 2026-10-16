@@ -161,7 +161,8 @@ public abstract class FinderOpMode extends LinearOpMode {
             controls.ignoreHeldButtons(gamepad1, gamepad2);
             boolean helpWasOpen = false;
             while (opModeIsActive()) {
-                helpKey.update(gamepad1, gamepad2);
+                // GUIDE, or START held 1 s: the help page (and everything stops), while running too.
+                updateHelpKeys();
                 if (helpOpen) {
                     // Help open: the finder's buttons pause and what moves stops (so nothing moves
                     // while the driver reads). "Release" actions of held buttons run first.

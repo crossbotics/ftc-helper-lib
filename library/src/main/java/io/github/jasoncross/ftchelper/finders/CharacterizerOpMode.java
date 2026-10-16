@@ -103,16 +103,27 @@ public abstract class CharacterizerOpMode extends FinderOpMode {
         return Collections.emptyList();
     }
 
-    /** The highest power the drive and turn ramps reach (default 0.4). Lower it for a small space. */
+    /** The highest power the drive and turn ramps reach (default 0.4, at most 0.5). Lower it for a small space. */
     protected double driveRampMax() {
         return 0.4;
+    }
+
+    /**
+     * The farthest the drive test may roll in one go, in wheel counts (default 2500: about 4.5 ft with
+     * 312 rpm motors and 104 mm wheels; fewer feet with smaller counts per inch). A ramp or step that
+     * gets this far ends early. Lower it for a small space.
+     */
+    protected int maxDriveCounts() {
+        return 2500;
     }
 
     // ---------------------------------------------------------------- the tests as phases
 
     // One part of a test: a power that changes with time, until a time limit or until it is done.
     private interface PowerAt { double at(double sec); }
-    private interface DoneWhen { boolean done(double sec, double pos); }
+    // sec = time in the phase; pos = counts from the test's start; moved = counts since the phase began;
+    // vel = counts per second now.
+    private interface DoneWhen { boolean done(double sec, double pos, double moved, double vel); }
 
     private static final class Phase {
         final String name;
@@ -153,7 +164,9 @@ public abstract class CharacterizerOpMode extends FinderOpMode {
     private Test running = null;
     private List<Phase> phases;
     private int phase;
-    private double phaseStart, testStart;
+    private double phaseStart, testStart, phaseStartPos, stalledSec;
+    private double lastLoop;
+    private final List<String> wheelNames = new ArrayList<>();
     private DcMotorEx mechMotor;
     private double startPos;
     private String status = "Choose a test (D-pad), then A.";
@@ -170,9 +183,13 @@ public abstract class CharacterizerOpMode extends FinderOpMode {
         imu = config.imu(hardwareMap);
         left.add(wheel(drive.frontLeft, drive.frontLeftReversed));
         right.add(wheel(drive.frontRight, drive.frontRightReversed));
+        wheelNames.add(drive.frontLeft);
+        wheelNames.add(drive.frontRight);
         if (drive.hasBackMotors()) {
             left.add(wheel(drive.backLeft, drive.backLeftReversed));
             right.add(wheel(drive.backRight, drive.backRightReversed));
+            wheelNames.add(drive.backLeft);
+            wheelNames.add(drive.backRight);
         }
         batteries = hardwareMap.getAll(VoltageSensor.class);
         tests.add(new Test("Drive (forward and back)", Kind.DRIVE, null));
@@ -234,21 +251,27 @@ public abstract class CharacterizerOpMode extends FinderOpMode {
         log.clear();
         phases = new ArrayList<>();
         phase = 0;
-        testStart = phaseStart = now();
-        double ramp = driveRampMax();
+        testStart = phaseStart = lastLoop = now();
+        phaseStartPos = 0;
+        stalledSec = 0;
+        double ramp = Math.max(0.1, Math.min(0.5, driveRampMax()));
         switch (test.kind) {
             case DRIVE:
             case TURN: {
-                // slow ramps (speed follows power: kS and kV), then quick steps (speeding up: kA)
+                // slow ramps (speed follows power: kS and kV), then quick steps (speeding up: kA). A drive
+                // phase also ends when it has rolled maxDriveCounts().
                 double rate = 0.1;   // power per second
-                phases.add(new Phase("ramp +", ramp / rate, s -> Math.min(ramp, rate * s), null));
+                int far = maxDriveCounts();
+                DoneWhen tooFar = test.kind == Kind.DRIVE ? (sec, pos, moved, vel) -> Math.abs(moved) >= far : null;
+                phases.add(new Phase("ramp +", ramp / rate, s -> Math.min(ramp, rate * s), tooFar));
                 phases.add(new Phase("stop", 0.8, s -> 0, null));
-                phases.add(new Phase("ramp -", ramp / rate, s -> -Math.min(ramp, rate * s), null));
+                phases.add(new Phase("ramp -", ramp / rate, s -> -Math.min(ramp, rate * s), tooFar));
                 phases.add(new Phase("stop", 0.8, s -> 0, null));
-                double step = Math.min(0.6, ramp * 1.5);
-                phases.add(new Phase("step +", 0.6, s -> step, null));
+                // not too hard: spinning wheels would fake a quick speed-up
+                double step = Math.min(0.5, ramp * 1.25);
+                phases.add(new Phase("step +", 0.6, s -> step, tooFar));
                 phases.add(new Phase("stop", 0.8, s -> 0, null));
-                phases.add(new Phase("step -", 0.6, s -> -step, null));
+                phases.add(new Phase("step -", 0.6, s -> -step, tooFar));
                 phases.add(new Phase("stop", 0.8, s -> 0, null));
                 break;
             }
@@ -258,14 +281,18 @@ public abstract class CharacterizerOpMode extends FinderOpMode {
                 startPos = mechMotor.getCurrentPosition();
                 double span = m.high - m.low;
                 double top = m.low + 0.6 * span, bottom = m.low + 0.1 * span;
-                phases.add(new Phase("up slowly", 25, s -> Math.min(0.9, 0.04 * s), (s, p) -> p >= top));
+                phases.add(new Phase("up slowly", 25, s -> Math.min(0.6, 0.04 * s), (s, p, d, v) -> p >= top));
                 phases.add(new Phase("hold", 0.6, s -> 0, null));
-                phases.add(new Phase("down slowly", 25, s -> -Math.min(0.9, 0.04 * s), (s, p) -> p <= bottom));
+                phases.add(new Phase("down slowly", 25, s -> -Math.min(0.6, 0.04 * s), (s, p, d, v) -> p <= bottom));
                 phases.add(new Phase("hold", 0.6, s -> 0, null));
-                phases.add(new Phase("up fast", 3, s -> 0.6, (s, p) -> p >= m.low + 0.8 * span));
+                // quick steps end early enough to stop in time: where it will be 0.15 s from now
+                phases.add(new Phase("up fast", 3, s -> 0.45, (s, p, d, v) -> p + v * 0.15 >= m.low + 0.75 * span));
                 phases.add(new Phase("hold", 0.6, s -> 0, null));
-                phases.add(new Phase("down fast", 3, s -> -0.4, (s, p) -> p <= m.low + 0.15 * span));
-                phases.add(new Phase("hold", 0.4, s -> 0, null));
+                phases.add(new Phase("down fast", 3, s -> -0.3, (s, p, d, v) -> p + v * 0.15 <= m.low + 0.2 * span));
+                phases.add(new Phase("hold", 0.6, s -> 0, null));
+                // back to (nearly) the bottom, so the next run's limits start from the same place
+                phases.add(new Phase("back down", 10, s -> -Math.min(0.3, 0.04 * s), (s, p, d, v) -> p <= m.low + 0.02 * span));
+                phases.add(new Phase("hold", 0.3, s -> 0, null));
                 break;
             }
             default: {
@@ -293,12 +320,33 @@ public abstract class CharacterizerOpMode extends FinderOpMode {
     @Override
     protected void step() {
         if (running == null) return;
-        double t = now(), s = t - phaseStart;
+        // GUIDE or START (the help keys) stops a moving test at once, before help opens.
+        if (helpKeyDown()) {
+            finish("Stopped: GUIDE/START pressed. Nothing was fitted.");
+            return;
+        }
+        double t = now(), s = t - phaseStart, loopSec = t - lastLoop;
+        lastLoop = t;
         Phase ph = phases.get(phase);
         double volts = battery();
-        double power, pos, vel, turnVel = 0, heading = imu != null ? imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES) : 0;
+        // The IMU only when turning (it is a slow read, and a slow loop spoils the fit).
+        double power, pos, vel, turnVel = 0, heading = imu != null && running.kind == Kind.TURN ? imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES) : 0;
+        power = ph.power.at(s);
         if (running.kind == Kind.DRIVE || running.kind == Kind.TURN) {
             double l = 0, r = 0, lp = 0, rp = 0;
+            List<DcMotorEx> wheels = new ArrayList<>();
+            for (int i = 0; i < left.size(); i++) { wheels.add(left.get(i)); wheels.add(right.get(i)); }
+            for (int i = 0; i < wheels.size(); i++) {
+                // Each wheel must turn the way its own power pushes it (one reversed wheel is the classic mistake).
+                boolean isLeft = i % 2 == 0;
+                double wheelPower = isLeft || running.kind == Kind.DRIVE ? power : -power;
+                double wv = wheels.get(i).getVelocity();
+                if (Math.abs(wheelPower) > 0.3 && Math.signum(wv) == -Math.signum(wheelPower) && Math.abs(wv) > 50) {
+                    finish("Stopped: wheel \"" + wheelNames.get(i) + "\" turned the WRONG way. Check its direction in RobotSettings "
+                            + "(run the Motor Direction Check).");
+                    return;
+                }
+            }
             for (DcMotorEx m : left) { l += m.getVelocity() / left.size(); lp += m.getCurrentPosition() / (double) left.size(); }
             for (DcMotorEx m : right) { r += m.getVelocity() / right.size(); rp += m.getCurrentPosition() / (double) right.size(); }
             boolean turn = running.kind == Kind.TURN;
@@ -309,10 +357,24 @@ public abstract class CharacterizerOpMode extends FinderOpMode {
             vel = mechMotor.getVelocity();
             pos = mechMotor.getCurrentPosition() - startPos;
         }
-        power = ph.power.at(s);
-        // Safety: a lift never goes past its soft limits, whatever the phase says.
-        if (running.kind == Kind.LIFT && ((pos > running.mech.high && power > 0) || (pos < running.mech.low - 50 && power < 0))) {
-            finish("Stopped: the lift reached a soft limit. Check its limits and direction.");
+        // Safety: pushing but not moving (jammed, pushing into a hard stop, or an encoder in another port):
+        // stop after 0.7 s.
+        double moves = running.kind == Kind.LIFT ? 0.45 : 0.25;    // a lift needs more (gravity)
+        stalledSec = Math.abs(power) > moves && Math.abs(vel) < 20 ? stalledSec + loopSec : 0;
+        if (stalledSec > 0.7) {
+            finish("Stopped: it is pushing but not moving. Jammed, against a hard stop (wrong direction?), "
+                    + "or the encoder cable in another port?");
+            return;
+        }
+        // Safety: a lift never goes past its soft limits, whatever the power (an encoder that counts the
+        // wrong way would otherwise let it run on), and it must move the way the power pushes it.
+        if (running.kind == Kind.LIFT && (pos > running.mech.high || pos < running.mech.low - 100)) {
+            finish("Stopped: the lift went past a soft limit (" + Math.round(pos) + " counts). Check its limits, "
+                    + "its direction (.reversed()) and that its encoder counts UP when it goes up.");
+            return;
+        }
+        if (running.kind == Kind.LIFT && phase == 0 && power > 0.3 && pos < running.mech.low - 60) {
+            finish("Stopped: going up, the count went DOWN. Check the motor direction (.reversed()) and the encoder.");
             return;
         }
         // Safety: pushing hard but moving the wrong way = the motor direction is wrong.
@@ -325,7 +387,7 @@ public abstract class CharacterizerOpMode extends FinderOpMode {
         if (log.isEmpty() || t - testStart - log.get(log.size() - 1)[0] >= 0.005) {
             log.add(new double[] {t - testStart, volts, power, pos, vel, turnVel, heading});
         }
-        boolean done = s >= ph.maxSec || (ph.done != null && ph.done.done(s, pos));
+        boolean done = s >= ph.maxSec || (ph.done != null && ph.done.done(s, pos, pos - phaseStartPos, vel));
         if (running.kind == Kind.LIFT && phase == 0 && s >= ph.maxSec) {
             finish("Stopped: the lift did not reach 60% of its range in 25 s. Is it free to move, and the limits right?");
             return;
@@ -333,6 +395,8 @@ public abstract class CharacterizerOpMode extends FinderOpMode {
         if (done) {
             phase++;
             phaseStart = t;
+            phaseStartPos = pos;
+            stalledSec = 0;
             if (phase >= phases.size()) finish(null);
         }
         if (running != null) status = running.name + ": " + phases.get(phase).name + " (B = stop)";
@@ -372,7 +436,7 @@ public abstract class CharacterizerOpMode extends FinderOpMode {
             return;
         }
         saveLog(test, true);
-        status = test.name + ": done. " + fitAndShow(test);
+        status = test.name + ": done. " + fitAndShow(test) + (test.kind == Kind.LIFT ? " It is back near the bottom." : "");
     }
 
     // Fits the log and puts the lines in the results. Says how good the fit is.
@@ -389,26 +453,30 @@ public abstract class CharacterizerOpMode extends FinderOpMode {
         String ff = "new Feedforward(" + sci(f.kS) + ", " + sci(f.kV) + ", " + sci(f.kA) + (test.kind == Kind.LIFT ? ", " + sci(f.kG) : "") + ")";
         switch (test.kind) {
             case DRIVE:
-                results.set(key + ":sim", "drive.kS = " + FinderResults.num(f.kS, 3) + "  drive.maxTicksPerSec = " + FinderResults.num(f.ticksPerSecPerPower(), 0)
-                        + "  drive.accelSec = " + FinderResults.num(f.accelSec(), 3) + "   # simulator robot file");
+                results.set(key + ":sim0", "# simulator robot file:");
+                results.set(key + ":sim1", "drive.kS = " + FinderResults.num(f.kS, 3));
+                results.set(key + ":sim2", "drive.maxTicksPerSec = " + FinderResults.num(f.ticksPerSecPerPower(), 0));
+                results.set(key + ":sim3", "drive.accelSec = " + FinderResults.num(f.accelSec(), 3));
                 results.set(key + ":ff", "Feedforward driveFf = " + ff + ";   // wheels, counts per second");
                 break;
             case TURN: {
                 double degPerCount = CharacterizeMath.turnDegPerCount(turnVel, CharacterizeMath.yawRates(t, heading));
-                results.set(key + ":sim", "drive.turnDegPerCount = " + FinderResults.num(degPerCount, 5) + "   # simulator robot file");
+                results.set(key + ":sim0", "# simulator robot file:");
+                results.set(key + ":sim1", "drive.turnDegPerCount = " + FinderResults.num(degPerCount, 5));
                 results.set(key + ":ff", "Feedforward turnFf = " + ff + ";   // turning, wheel counts per second");
                 break;
             }
             case LIFT:
-                results.set(key + ":sim", "motor." + test.mech.motor + ": kS=" + FinderResults.num(f.kS, 3) + ", maxTicksPerSec=" + FinderResults.num(f.ticksPerSecPerPower(), 0)
-                        + ", accelSec=" + FinderResults.num(f.accelSec(), 3) + ", gravity=" + FinderResults.num(f.kG, 3) + "   # add to its line in the robot file");
+                results.set(key + ":sim0", "# add to motor." + test.mech.motor + " in the robot file:");
+                results.set(key + ":sim1", "kS=" + FinderResults.num(f.kS, 3) + ", maxTicksPerSec=" + FinderResults.num(f.ticksPerSecPerPower(), 0)
+                        + ", accelSec=" + FinderResults.num(f.accelSec(), 3) + ", gravity=" + FinderResults.num(f.kG, 3));
                 results.set(key + ":ff", "Feedforward " + test.mech.motor + "Ff = " + ff + ";");
                 break;
             default: {
                 double coast = CharacterizeMath.coastSec(t, power, vel);
-                results.set(key + ":sim", "motor." + test.mech.motor + ": kS=" + FinderResults.num(f.kS, 3) + ", maxTicksPerSec=" + FinderResults.num(f.ticksPerSecPerPower(), 0)
-                        + ", accelSec=" + FinderResults.num(f.accelSec(), 3) + (Double.isNaN(coast) ? "" : ", coastSec=" + FinderResults.num(coast, 2))
-                        + "   # add to its line in the robot file");
+                results.set(key + ":sim0", "# add to motor." + test.mech.motor + " in the robot file:");
+                results.set(key + ":sim1", "kS=" + FinderResults.num(f.kS, 3) + ", maxTicksPerSec=" + FinderResults.num(f.ticksPerSecPerPower(), 0)
+                        + ", accelSec=" + FinderResults.num(f.accelSec(), 3) + (Double.isNaN(coast) ? "" : ", coastSec=" + FinderResults.num(coast, 2)));
                 results.set(key + ":ff", "Feedforward " + test.mech.motor + "Ff = " + ff + ";");
             }
         }
@@ -462,9 +530,20 @@ public abstract class CharacterizerOpMode extends FinderOpMode {
 
     @Override
     protected void stopAll() {
-        for (DcMotorEx m : left) m.setPower(0);
-        for (DcMotorEx m : right) m.setPower(0);
-        if (mechMotor != null) mechMotor.setPower(0);
+        // Every motor gets its stop, even if one of them fails (the first error is reported after).
+        RuntimeException first = null;
+        List<DcMotorEx> all = new ArrayList<>(left);
+        all.addAll(right);
+        if (mechMotor != null) all.add(mechMotor);
+        for (DcMotorEx m : all) {
+            try {
+                m.setPower(0);
+            } catch (RuntimeException e) {
+                if (first == null) first = e;
+            }
+        }
+        if (running != null) status = "Stopped (STOP, help or an error). Nothing was fitted.";
         running = null;
+        if (first != null) throw first;
     }
 }

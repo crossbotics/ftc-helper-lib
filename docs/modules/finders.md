@@ -228,22 +228,29 @@ D-pad chooses a test, **A** runs it, **B** stops it at once.
 
 | Test | It does | Space and safety |
 | --- | --- | --- |
-| Drive | power ramps up slowly forward (to 0.4) and back, then quick steps (0.6, 0.6 s) | about 5 ft clear in front and behind; `driveRampMax()` lowers it |
+| Drive | power ramps up slowly forward (to 0.4) and back, then quick steps (0.5, 0.6 s) | about 5 ft clear in front and behind: each roll ends at `maxDriveCounts()` (default 2500 counts, about 4.5 ft with 312 rpm motors and 104 mm wheels); `driveRampMax()` (at most 0.5) lowers the speed |
 | Turn (needs the IMU) | the same, turning in place | room to turn |
-| Lift/arm | slowly up to 60% of its range, slowly down, then quick steps up and down | start it at the BOTTOM; it never goes past the soft limits; `.reversed()` if positive power goes down |
+| Lift/arm | slowly up to 60% of its range, slowly down, quick steps up and down, then back to the bottom | start it at the BOTTOM (the soft limits count from there); it never goes past them; `.reversed()` if positive power goes down |
 | Flywheel | ramps up to full power, coasts, full power, coasts | hands and pieces away |
 
-It stops itself and says why if a motor moves the wrong way for its power (a direction setting is
-wrong) or a lift reaches a soft limit. A slow ramp shows the power just to start moving (kS) and the
+It stops itself and says why if: a wheel or motor turns the wrong way for its power (a direction
+setting is wrong; each wheel is checked); a lift goes past a soft limit, or counts down while going up;
+something pushes but does not move for 0.7 s (jammed, against a hard stop, or an encoder cable in
+another motor's port); a drive roll reaches `maxDriveCounts()`; GUIDE or START is pressed.
+Spinning wheels spoil the speed-up number (kA): run the drive test on tiles, not on a smooth floor. A slow ramp shows the power just to start moving (kS) and the
 power per speed (kV); a quick step shows the power per speeding-up (kA); a lift also gives the power
 that holds it against gravity (kG); a flywheel's coasting gives how long it takes to slow down.
 Results (also saved with the other finders' results):
 
 ```text
-drive.kS = 0.052  drive.maxTicksPerSec = 2776  drive.accelSec = 0.176   # simulator robot file
-Feedforward driveFf = new Feedforward(0.0523, 0.0003602, 6.329e-05);   // wheels, counts per second
-drive.turnDegPerCount = 0.08012   # simulator robot file
-motor.lift: kS=0.041, maxTicksPerSec=2792, accelSec=0.087, gravity=0.060   # add to its line in the robot file
+# simulator robot file:
+drive.kS = 0.052
+drive.maxTicksPerSec = 2776
+drive.accelSec = 0.176
+Feedforward driveFf = new Feedforward(0.05230, 0.0003602, 6.329e-05);   // wheels, counts per second
+drive.turnDegPerCount = 0.08012
+# add to motor.lift in the robot file:
+kS=0.041, maxTicksPerSec=2792, accelSec=0.087, gravity=0.060
 ```
 
 Each test's log is saved as `characterizer/<test>-<date>.csv` in the results folder. The simulator's
@@ -251,7 +258,9 @@ fit tool reads them and writes the robot file for you (`./gradlew :sim:fit -Plog
 the [simulator guide](../guides/simulator.md#real-numbers-the-characterizer)). Run each test 2-3 times
 on a charged battery; the fit tool fits the logs of the same test together. A fit with r2 below 0.9
 says "poor": run it again. Arms are measured like lifts (the pull of gravity is taken as the same at
-every angle), so the numbers are a middle value for an arm.
+every angle), so the numbers are a middle value for an arm. **For an arm, set the high limit below
+straight up**, so gravity always pulls it back down (past straight up, gravity pulls it on to the
+far side, and a motor's brake does not hold a heavy arm).
 
 ## CharacterizeMath
 

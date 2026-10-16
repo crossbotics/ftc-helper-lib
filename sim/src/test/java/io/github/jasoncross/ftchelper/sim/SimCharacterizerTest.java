@@ -47,7 +47,9 @@ public class SimCharacterizerTest {
             s.robot().setPose(40, -40, 0);          // open space: 5 ft ahead and behind, room to turn
             runTest(s, 0, 20);     // Drive
             s.robot().setPose(40, -40, 0);
+            s.robot().setBattery(12.0);   // a weaker battery: the fit scales the powers by the logged volts
             runTest(s, 1, 20);     // Turn
+            s.robot().setBattery(13.2);
             runTest(s, 1, 40);     // Lift/arm lift
             runTest(s, 2, 25);     // Flywheel flywheel (skips the arm)
         }
@@ -75,5 +77,34 @@ public class SimCharacterizerTest {
         String written = SimFit.apply(robotText, fit);
         assertTrue(written, written.contains("motor.lift = lift, part=gobilda-5203-312, min=0, max=2750, gravity=" + lift.get("gravity")));
         assertTrue(written.contains("drive.turnDegPerCount = " + drive.get("drive.turnDegPerCount")));
+    }
+
+    @Test public void fitToolKeepsWindowsLineEndingsAndNeverAddsADuplicateMotor() {
+        java.util.Map<String, java.util.Map<String, String>> fit = new java.util.LinkedHashMap<>();
+        java.util.Map<String, String> lift = new java.util.LinkedHashMap<>();
+        lift.put("kS", "0.04");
+        fit.put("motor.lift", lift);
+        java.util.Map<String, String> ghost = new java.util.LinkedHashMap<>();
+        ghost.put("kS", "0.1");
+        fit.put("motor.ghost", ghost);
+        String text = "battery = 12.8\r\nmotor.lift = lift, min=0, max=2750   # the lift\r\n";
+        List<String> notes = new ArrayList<>();
+        String out = SimFit.apply(text, fit, notes);
+        assertEquals("battery = 12.8\r\nmotor.lift = lift, min=0, max=2750, kS=0.04   # the lift\r\n", out);
+        assertTrue(notes.toString(), notes.size() == 1 && notes.get(0).contains("motor.ghost"));
+    }
+
+    @Test public void holdingStartStopsARunningTest() throws Exception {
+        try (SimRun s = new SimRun()) {
+            s.init("Characterizer").start();
+            s.robot().setPose(40, -40, 0);
+            s.press(v -> s.g1().a = v);                              // Drive test
+            assertTrue(SimRun.waitFor(() -> s.robot().wheels.get(0).userPower() > 0.05, 5));
+            s.g1().start = true;                                       // START: stops at once
+            assertTrue("the wheels stop", SimRun.waitFor(() -> s.robot().wheels.get(0).userPower() == 0, 1));
+            SimRun.pause(1.3);                                         // held 1 s: the help page opens
+            assertTrue(String.join("\n", s.sim.ds.screen.screen()), s.screenHas("help"));
+            s.g1().start = false;
+        }
     }
 }

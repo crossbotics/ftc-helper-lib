@@ -36,6 +36,17 @@ public class CharacterizeMathTest {
         assertTrue("r2 " + f.r2, f.r2 > 0.99);
     }
 
+    @Test public void aSlowLogStillFits() {
+        // a robot loop at 25 Hz: every 8th moment of the made-up log (40 ms apart)
+        double[][] l = log(0.05, 1 / 2800.0, 0.15 / 2800.0, 0, 12.8);
+        int n = l[0].length / 8;
+        double[][] slow = new double[4][n];
+        for (int k = 0; k < 4; k++) for (int i = 0; i < n; i++) slow[k][i] = l[k][i * 8];
+        CharacterizeMath.Fit f = CharacterizeMath.fit(slow[0], slow[1], slow[2], slow[3], false);
+        assertTrue("a fit from a slow log", f.ok());
+        assertEquals(2800, f.ticksPerSecPerPower(), 100);
+    }
+
     @Test public void liftFitFindsGravityToo() {
         double[][] l = log(0.03, 1 / 2000.0, 0.1 / 2000.0, 0.12, 12.8);
         CharacterizeMath.Fit f = CharacterizeMath.fit(l[0], l[1], l[2], l[3], true);

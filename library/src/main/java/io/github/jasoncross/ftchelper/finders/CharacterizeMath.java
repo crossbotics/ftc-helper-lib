@@ -63,11 +63,15 @@ public final class CharacterizeMath {
     public static double[] accelerations(double[] t, double[] v) {
         int n = t.length;
         double[] a = new double[n];
+        double window = window(t);
         int lo = 0, hi = 0;
         for (int i = 0; i < n; i++) {
-            lo = firstInWindow(t, i, lo);
-            hi = lastInWindow(t, i, hi);
+            lo = firstInWindow(t, i, lo, window);
+            hi = lastInWindow(t, i, hi, window);
+            int[] w = atLeastNeighbours(i, lo, hi, n);
             double mt = 0, mv = 0;
+            lo = w[0];
+            hi = w[1];
             int m = hi - lo + 1;
             for (int j = lo; j <= hi; j++) { mt += t[j] / m; mv += v[j] / m; }
             double sxy = 0, sxx = 0;
@@ -77,20 +81,36 @@ public final class CharacterizeMath {
         return a;
     }
 
+    // The smoothing window: WINDOW_SEC, or 2.5 loops each side for a slower robot loop (enough moments to
+    // average out a robot's noisy speed readings).
+    static double window(double[] t) {
+        if (t.length < 3) return WINDOW_SEC;
+        double[] d = new double[t.length - 1];
+        for (int i = 1; i < t.length; i++) d[i - 1] = t[i] - t[i - 1];
+        java.util.Arrays.sort(d);
+        return Math.max(WINDOW_SEC, 2.5 * d[d.length / 2]);
+    }
+
+    // A slow log (moments far apart) still uses one neighbour each side, so a speed-up can be seen.
+    // Returns {lo, hi}; the next search goes on from the window's own edges.
+    private static int[] atLeastNeighbours(int i, int lo, int hi, int n) {
+        return new int[] {Math.min(lo, Math.max(0, i - 1)), Math.max(hi, Math.min(n - 1, i + 1))};
+    }
+
     // The first moment at most WINDOW_SEC before moment i (searching on from the last answer).
-    private static int firstInWindow(double[] t, int i, int from) {
+    private static int firstInWindow(double[] t, int i, int from, double window) {
         int lo = from;
         for (int j = from; j <= i; j++) {
             lo = j;
-            if (t[i] - t[j] <= WINDOW_SEC) break;
+            if (t[i] - t[j] <= window) break;
         }
         return lo;
     }
 
     // The last moment at most WINDOW_SEC after moment i (searching on from the last answer).
-    private static int lastInWindow(double[] t, int i, int from) {
+    private static int lastInWindow(double[] t, int i, int from, double window) {
         int hi = Math.max(from, i);
-        for (int j = hi + 1; j < t.length && t[j] - t[i] <= WINDOW_SEC; j++) hi = j;
+        for (int j = hi + 1; j < t.length && t[j] - t[i] <= window; j++) hi = j;
         return hi;
     }
 
@@ -98,11 +118,15 @@ public final class CharacterizeMath {
     public static double[] smoothed(double[] t, double[] v) {
         int n = t.length;
         double[] out = new double[n];
+        double window = window(t);
         int lo = 0, hi = 0;
         for (int i = 0; i < n; i++) {
-            lo = firstInWindow(t, i, lo);
-            hi = lastInWindow(t, i, hi);
+            lo = firstInWindow(t, i, lo, window);
+            hi = lastInWindow(t, i, hi, window);
+            int[] w = atLeastNeighbours(i, lo, hi, n);
             double sum = 0;
+            lo = w[0];
+            hi = w[1];
             for (int j = lo; j <= hi; j++) sum += v[j];
             out[i] = sum / (hi - lo + 1);
         }
@@ -128,11 +152,12 @@ public final class CharacterizeMath {
         double moving = Math.max(5, 0.03 * vMax);
         List<double[]> rows = new ArrayList<>();
         List<Double> ys = new ArrayList<>();
+        double jumpSec = window(t) + 0.02;
         for (int i = 0; i < t.length; i++) {
             if (Math.abs(v[i]) < moving) continue;
             // Zero power is braking or coasting, which follows other physics (see coastSec): left out.
             if (Math.abs(power[i]) < 1e-6) continue;
-            if (nearJump(t, power, i, WINDOW_SEC + 0.02)) continue;
+            if (nearJump(t, power, i, jumpSec)) continue;
             double pEff = power[i] * volts[i] / NOMINAL_VOLTS;   // the same push as this power at 12.8 V
             rows.add(gravity ? new double[] {Math.signum(v[i]), v[i], a[i], 1} : new double[] {Math.signum(v[i]), v[i], a[i]});
             ys.add(pEff);

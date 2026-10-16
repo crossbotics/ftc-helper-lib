@@ -281,15 +281,18 @@ final class SimMotor {
                 target = 0;                                           // friction holds it still
             } else {
                 double direction = Math.abs(shaftVel) >= 1 ? Math.signum(shaftVel) : Math.signum(push);
+                // The full model while moving (friction slowing it included); the zero-crossing check
+                // below stops friction from pushing it backward.
                 target = (push - kS * direction) * maxTicksPerSec;
-                // friction slows it but never pushes it backward
-                if (Math.signum(target) == -direction && Math.abs(push) <= kS) target = 0;
                 if (Math.abs(appliedPower) < 1e-6) {
                     // Not driven, FLOAT: it coasts (a lift falls).
                     lag = !Double.isNaN(coastSec) ? coastSec : kind == Kind.FLYWHEEL ? 2.5 : 0.4;
                 }
             }
+            double before = shaftVel;
             shaftVel += (target - shaftVel) * Math.min(1, dt / Math.max(1e-3, lag));
+            // Friction stops a motor; it never turns it around. Crossing zero without enough push: stop.
+            if (Math.signum(shaftVel) == -Math.signum(before) && Math.abs(push) <= kS) shaftVel = 0;
         }
         shaftPos += shaftVel * dt;
         atStop = false;

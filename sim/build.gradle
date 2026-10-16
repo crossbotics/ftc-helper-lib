@@ -109,7 +109,7 @@ tasks.register('scenario', JavaExec) {
     systemProperty 'ftchelper.dataDir', simDataDir
 }
 
-// ./gradlew :sim:fit [-Plog=path/to/log.csv or a folder] [-Probot=...] [-Pwrite]
+// ./gradlew :sim:fit [-Plog=path/to/log.csv or a folder] [-Probot=...] [-Pwrite] [-Pforce]
 // Fits the Characterizer's logs (default: the simulator's own, in sim/build/sim-data/characterizer) and
 // prints the robot-file numbers; -Pwrite also puts them into the robot file.
 tasks.register('fit', JavaExec) {
@@ -122,6 +122,8 @@ tasks.register('fit', JavaExec) {
     workingDir = rootProject.projectDir
     def robot = project.findProperty('robot') ?:
             (teamRobotFile != null && teamRobotFile.isFile() ? teamRobotFile.path : 'sim/robots/starter.properties')
+    def sample = !project.hasProperty('robot') && !(teamRobotFile != null && teamRobotFile.isFile())
     args = ['--robot', robot, '--log', project.findProperty('log') ?: new File(simDataDir, 'characterizer').path] +
-            (project.hasProperty('write') ? ['--write'] : [])
+            (project.hasProperty('write') ? ['--write'] : []) + (project.hasProperty('force') ? ['--force'] : []) +
+            (sample ? ['--sample'] : [])
 }

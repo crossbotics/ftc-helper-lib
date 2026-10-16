@@ -27,6 +27,14 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   and flywheels really move (slow ramps and quick steps, with soft limits and wrong-direction stops)
   and fit their feedforward numbers (kS, kV, kA, kG, coasting); shows robot-file lines and
   `Feedforward` lines, saves each test's log (`characterizer/*.csv`). Starter kit `Characterizer.java`.
+- Characterizer safety and fit fixes from the Astra/Fable reviews: stops when something pushes but does
+  not move (0.7 s), checks each wheel's direction, lift soft limits hold whatever the power, a lift
+  that counts down going up stops, the lift returns to the bottom at the end, drive rolls end at
+  `maxDriveCounts()`, `driveRampMax()` at most 0.5, gentler steps, GUIDE/START stop a test, every
+  motor gets its stop even if one fails. Finders: holding START opens help while running too (it only
+  worked in INIT). Fit: smoothing window follows a slow robot loop. Fit tool: keeps Windows line
+  endings and notes, skips bad lines, leaves out poor or senseless fits (-Pforce), never adds a motor,
+  never writes the library's example robot file, keeps a .bak.
 - `Feedforward` (control): power = kS x sign(speed) + kV x speed + kA x speeding-up + kG, with battery
   scaling. Finder results and logs go to the folder in the Java setting `ftchelper.dataDir` when set
   (the simulator keeps them on the laptop).

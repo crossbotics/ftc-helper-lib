@@ -7,7 +7,7 @@ package io.github.jasoncross.ftchelper.control;
  * <pre>{@code
  * Feedforward ff = new Feedforward(0.06, 0.00037, 0.00004);   // from the Characterizer's results
  * double power = ff.power(1500, 0);          // the power for 1500 counts per second, not speeding up
- * lift.setPower(ff.power(800, 0) + pid.update(target - lift.getCurrentPosition()));   // with a PID for the rest
+ * lift.setPower(liftFf.power(800, 0) + pid.calculate(target, lift.getCurrentPosition()));   // plus a PID for the rest
  * }</pre>
  *
  * <p>power = kS x sign(speed) + kV x speed + kA x acceleration + kG

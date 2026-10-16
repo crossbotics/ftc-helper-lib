@@ -14,6 +14,7 @@ flowchart LR
     F --> D["Drive Tuner<br/>wheel size + strafe"]
     D --> A["Aim Tuner<br/>camera offset"]
     A --> T["Shot Tuner<br/>shot table"]
+    T --> C["Characterizer<br/>feedforward + simulator"]
 ```
 
 1. **Hardware Check first** ([testing](testing.md)): every device found, every motor turns the right way.
@@ -23,12 +24,14 @@ flowchart LR
 3. **Flywheel Finder**: the gains for your `Flywheel`.
 4. **Drive Tuner**: the numbers in `RobotSettings.auto()`, before you write autonomous.
 5. **Aim Tuner**, then **Shot Tuner**: aim first, so the shot table is built with straight shots.
+6. **Characterizer** (any time after the Motor Finder): how the motors really move, for feedforward
+   and the simulator.
 
 ## Before you start
 
 - Put the robot on a block for the Servo, Motor and Flywheel finders (wheels off the floor).
 - Eye protection for the Flywheel Finder, Shot Tuner and Aim Tuner. Nobody in the line of fire.
-- The finders are in the starter kit (`ServoFinder`, `MotorFinder`, `FlywheelFinder`, `DriveTuner`)
+- The finders are in the starter kit (`ServoFinder`, `MotorFinder`, `FlywheelFinder`, `DriveTuner`, `Characterizer`)
   and in the examples (`ExampleShotTuner`, `ExampleAimTuner`: put your launcher and camera in them).
   Remove `@Disabled`, build, and they are in the TeleOp list under "Finders".
 
@@ -102,6 +105,23 @@ Watch the current (amps): a high number while not moving means it is pushing on 
    the speed; outside them it uses the nearest point.
 
 Charge the battery before tuning speeds: a weak battery changes how far the shots go.
+
+## Characterizer: how the robot really moves
+
+Last, when the robot drives and its lifts work: the **Characterizer** measures how each motor really
+behaves (the power to start moving, the power per speed, how quickly it speeds up, and for a lift the
+power that holds it against gravity). Two uses: feedforward in your code (see
+[Feedforward](../modules/control.md#feedforward)), and real numbers for the
+[simulator](simulator.md#real-numbers-the-characterizer).
+
+1. In `Characterizer.java`, list your lifts/arms with soft limits a little inside the hard stops
+   (counts from the bottom) and your flywheels.
+2. Drive test: about 5 ft clear in front and behind, on tiles. Turn test: room to turn.
+3. Lifts start at the BOTTOM. An arm's high limit stays below straight up.
+4. D-pad chooses, **A** runs, **B** stops. It stops by itself if something turns the wrong way, goes
+   past a limit, or pushes without moving. Run each test 2-3 times on a charged battery.
+
+Details: [finders module](../modules/finders.md#characterizeropmode).
 
 ## The results file
 
