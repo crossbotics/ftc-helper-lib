@@ -213,6 +213,17 @@ public final class SimFit {
     }
 
     public static void main(String[] args) throws IOException {
+        try {
+            run(args);
+        } catch (IllegalArgumentException e) {
+            // A mistake in a robot file, field file or command: its message names it; no Java trace.
+            System.err.println();
+            System.err.println("PROBLEM: " + e.getMessage());
+            System.exit(2);
+        }
+    }
+
+    private static void run(String[] args) throws IOException {
         String robot = null, log = null;
         boolean write = false, force = false, sample = false;
         for (int i = 0; i < args.length; i++) {

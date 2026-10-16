@@ -23,6 +23,11 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   AprilTags become the SDK's detections (BIOBUZZ: clusters per CELL group) with the SDK's ftcPose
   formulas. The page lists what each camera sees, draws its view cone and shows its picture in 3D.
   Scenario check: `expect camera "Webcam 1" sees 31|none|"RED SCORING"`.
+- The robot-file skill (`skills/robot-file/`: SKILL.md, interview.md, photos.md): instructions any AI
+  coding agent follows to build a team's simulator robot file from their robot configuration,
+  TeamCode, measurements and photos, then check it. `./gradlew :sim:fromConfig -Pconfig=...` makes the
+  draft from the Control Hub's configuration XML (every device by name, parts where the motor type tells
+  them, TODOs, a load check). Guide: docs/guides/robot-file-skill.md.
 - Simulator stage 3 fixes from the Astra/Fable reviews: FLOWER goals at the CAD-measured opening
   (centre 68.04 in out, 21.4 in up); a piece on the rim with its edge over the opening scores, a fast
   shot flying past or a piece hovering above does not; claw boxes resize as it opens; each shoot. line

@@ -92,7 +92,10 @@ final class SimPieces {
         for (Map.Entry<String, Map<String, String>> e : grabLines.entrySet()) grabs.add(new Grab(e.getKey(), e.getValue()));
         for (Collect c : collects) {
             check(c.shape, "collect." + c.name);
-            if (c.motor != null && !robot.motors.containsKey(c.motor)) throw new IllegalArgumentException("Robot file: collect." + c.name + ": no motor." + c.motor);
+            if (c.motor != null && !robot.motors.containsKey(c.motor)) {
+                throw new IllegalArgumentException("Robot file: collect." + c.name + ": no motor." + c.motor
+                        + (robot.crServos.containsKey(c.motor) ? " (it is a CR servo: write crservo=" + c.motor + ")" : ""));
+            }
             if (c.crservo != null && !robot.crServos.containsKey(c.crservo)) throw new IllegalArgumentException("Robot file: collect." + c.name + ": no crservo." + c.crservo);
         }
         for (Shoot s : shoots) {

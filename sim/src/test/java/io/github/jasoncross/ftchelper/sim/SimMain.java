@@ -11,6 +11,17 @@ public final class SimMain {
     private SimMain() { }
 
     public static void main(String[] args) throws Exception {
+        try {
+            run(args);
+        } catch (IllegalArgumentException e) {
+            // A mistake in a robot file, field file or command: its message names it; no Java trace.
+            System.err.println();
+            System.err.println("PROBLEM: " + e.getMessage());
+            System.exit(2);
+        }
+    }
+
+    private static void run(String[] args) throws Exception {
         Path robotFile = Paths.get("sim/robots/starter.properties");
         boolean lan = false;
         int port = 8780;

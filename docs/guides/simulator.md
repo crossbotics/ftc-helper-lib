@@ -77,6 +77,9 @@ works without the internet. Untick "Show" on a slow computer.
 
 ## The robot file
 
+**Quick start:** an AI coding agent can write most of it for you from your robot configuration,
+TeamCode and a tape measure: see the [robot-file skill](robot-file-skill.md).
+
 The robot file describes the pretend robot: every device with the SAME name as the robot
 configuration, the motors and servos from the parts catalog, the robot's size, where it starts, and the
 season's field. The library's example is `sim/robots/starter.properties`; a team keeps its own in its
@@ -87,6 +90,7 @@ field = biobuzz-2026                  # the season's field (sim/fields/biobuzz-2
 field.model = fields/biobuzz-2026.glb # optional: the field's 3D model for the 3D view (path from this file)
 robot.lengthIn = 18                   # size, for bumping into field elements
 robot.widthIn = 18
+robot.heightIn = 18                   # used only for a robot with no shapes (with shapes, the shapes decide)
 start.x = -56                         # where it starts (inches from the field center; y away from the drivers)
 start.y = -61.55                      # BIOBUZZ G304: touching the wall, outside the LOADING ZONE
 start.heading = 0                     # degrees, counterclockwise; 0 = facing away from the drivers
@@ -94,6 +98,8 @@ drive.type = mecanum
 drive.motors = front_left, front_right, back_left, back_right
 drive.part = gobilda-5203-312         # from the parts catalog: speed, encoder counts, current
 drive.wheelDiameterIn = 3.90          # the REAL wheel (the Drive Tuner should find it)
+drive.gearRatio = 1                   # motor turns per wheel turn (default 1)
+drive.strafeEfficiency = 0.85         # mecanum: how much of a strafe really happens (default 0.85)
 imu = imu
 motor.lift = lift, part=gobilda-5203-312, min=0, max=2750, gravity=0.06
 motor.flywheel = flywheel, part=gobilda-5203-6000, feeder=feeder, shotDrop=0.15
@@ -123,16 +129,17 @@ shape.flywheel = flywheel, at=-1,0,4, size=4x2x4, motor=flywheel
 | Type | What it is | Where `at` points | Moves by |
 | --- | --- | --- | --- |
 | `box` | a part that does not move | the middle of its bottom | nothing |
-| `slide` | a lift or extension: a fixed stage and a moving stage along `axis` (up, down, forward, back, left, right) | the bottom of the fixed stage | motor: `ticksPerIn=` or `spoolIn=` (spool diameter); servo: `pos0=`/`pos1=` inches |
-| `arm` | turns about a hinge; `axis` is the hinge line (`left`: + raises the front) | the hinge; the box reaches forward from it | motor: `ticksPerDeg=` or `gear=` (with the motor's counts per turn), `start=` degrees at the bottom stop; servo: `pos0=`/`pos1=` degrees |
+| `slide` | a lift or extension: a fixed stage and a moving stage along `axis` (up, down, forward, back, left, right); `size=` is ONE stage | the bottom of the fixed stage | motor: `ticksPerIn=` or `spoolIn=` (spool diameter, one-stage only: a cascade's top moves faster than its string); servo: `pos0=`/`pos1=` inches |
+| `arm` | turns about a hinge; `axis` is the hinge line (`left`, the default: + raises the front; 0 = level forward, +90 up, -90 down) | the hinge; the box reaches forward from it | motor: `ticksPerDeg=`, or `gear=` (motor turns per arm turn: counts per degree = the motor's counts per turn x gear / 360), and `start=` degrees at the bottom stop; servo: `pos0=`/`pos1=` degrees |
 | `turret` | turns about up (+ = left) | the middle of its bottom | like `arm` |
-| `claw` | two fingers | the middle of the palm | servo: `pos0=`/`pos1=` the gap in inches |
+| `claw` | two fingers: `size=` palm depth x finger thickness x finger length; the fingers point up from the palm (in the claw's frame) and open left-right | the middle of the palm | servo: `pos0=`/`pos1=` the gap in inches |
 | `roller` | an intake roller (a cylinder along `axis`, default across the robot) | its center | spins with its `motor=` or `crservo=` |
 | `flywheel` | a launcher wheel | its center | spins with its `motor=` |
 
 Notes:
-- `on=` puts a part on another (default: the chassis). A part on a slide rides on its moving stage; a
-  part on an arm turns with it (`at=` from the hinge, so `at=9,0,0` is the tip of a 9 in arm).
+- `on=` puts a part on another (default: the chassis). A part on a slide rides on its moving stage
+  (`at=0,0,<stage length>` is the moving stage's top); a part on an arm turns with it (`at=` from the
+  hinge, so `at=9,0,0` is the tip of a 9 in arm).
 - Directions are the robot's: forward, left, up. `at=` is in inches from the parent's mounting point.
 - The range of motion comes from the motor's hard stops (`min=`/`max=` on `motor.NAME`), the servo's
   `pos0`..`pos1`, or `travel=` (slide) / `minDeg=`, `maxDeg=` (arm, turret). The size check at full

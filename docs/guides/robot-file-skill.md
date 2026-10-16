@@ -1,0 +1,66 @@
+# Your robot in the simulator: the robot-file skill
+
+The simulator moves like YOUR robot only if its robot file (`simulator/robot.properties` in your robot
+project) describes your robot: every device name, the motors and servos, the size, the mechanisms and
+cameras. Writing it by hand works ([simulator guide](simulator.md)); an AI coding agent can do most of
+it for you with the **robot-file skill**, a set of instructions in `ftc-helper-lib/skills/robot-file/`.
+
+```mermaid
+flowchart LR
+    C["Robot configuration<br/>(Control Hub XML)"] --> D["fromConfig<br/>draft robot file"]
+    D --> Q["Agent asks the team<br/>(measurements, parts, photos)"]
+    Q --> R["robot.properties<br/>+ shapes, cameras, pieces"]
+    R --> K["Checks: loads, size rules,<br/>your OpModes INIT"]
+    K --> F["Characterizer + fit<br/>real speeds"]
+```
+
+## Set it up
+
+- **Claude Code**: copy (or link) the skill into your robot project, once:
+  ```bash
+  mkdir -p .claude/skills && cp -r ftc-helper-lib/skills/robot-file .claude/skills/
+  ```
+  Then ask: "Make our simulator robot file" (or "our robot has a new arm: update the robot file").
+- **Other agents (Codex and others)**: add one line to your robot project's `AGENTS.md`:
+  "To make or update the simulator robot file, follow ftc-helper-lib/skills/robot-file/SKILL.md."
+
+## What it does
+
+1. Reads your **robot configuration** (`/sdcard/FIRST/<name>.xml` on the Control Hub: get it with the
+   REV Hardware Client or Android Studio's Device Explorer) and makes a draft with the tool below.
+2. Reads your **TeamCode** (motor names, directions, limits, finder results).
+3. **Asks you** the rest, a few questions at a time: sizes (bring a tape measure), which motors and
+   servos, the lift's and arm's hard stops (from the Motor Finder), where the cameras are, how the robot
+   picks up and scores pieces. Photos of the robot help it draw the mechanisms.
+4. **Checks** the result in the simulator (it loads, the size rules, your OpModes start) and writes a
+   small scenario so it stays checked.
+5. Tells you what is still unknown, and how to get real speeds (the Characterizer).
+
+It never makes up a number without saying so: each number in the file has a note saying where it came
+from (measured, the configuration, a seller page, a photo estimate, a default).
+
+## The draft tool on its own
+
+```bash
+./gradlew :sim:fromConfig -Pconfig=path/to/config.xml -Pout=../simulator/robot.properties
+```
+
+From the `ftc-helper-lib` folder. It lists every device of the configuration, writes a robot file with
+each one under its exact name, matches the motor types that pin down a part (REV HD Hex 20:1 and 40:1,
+Core Hex, NeveRest) to the parts catalog, marks everything else `TODO`, checks the draft loads, and
+prints the questions still open. It finds the drivetrain from the motor names (front/back and
+left/right in any form: `front_left`, `leftFront`, `fl`...). Devices the simulator does not have yet
+(colour and distance sensors, odometry computers, LEDs) are listed as notes. If the robot file exists,
+the draft goes next to it (`robot.properties.draft`). An example configuration is
+`sim/configs/example-config.xml`.
+
+| Configuration type | Becomes |
+| --- | --- |
+| a motor type (goBILDA 5202/3/4, REV HD Hex, Core Hex, NeveRest, unspecified...) | `motor.NAME` (or the drivetrain); the part when the type tells it |
+| `Servo`, `ServoFullRange` | `servo.NAME` |
+| `ContinuousRotationServo` | `crservo.NAME` |
+| `ControlHubImuBHI260AP`, `LynxEmbeddedIMU`, `RevExternalImu` | `imu` |
+| `RevTouchSensor`, `DigitalDevice` | `touch.NAME` |
+| `Webcam` | `camera.KEY = name=...` |
+| `EthernetDevice` (a Limelight) | `limelight.KEY = name=...` |
+| anything else | a note: not simulated yet |

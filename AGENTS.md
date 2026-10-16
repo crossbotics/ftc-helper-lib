@@ -22,6 +22,8 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
   tests (`FinderSafetyTest`) run whole OpModes: add one when an OpMode's behavior matters (safety,
   help, buttons). Not part of robot builds. Guide: docs/guides/simulator.md. Parts page:
   docs/guides/parts-catalog.md is made from sim/parts/parts.json by tools/parts_page.py (never edit it by hand).
+- `skills/robot-file/` the robot-file skill (for teams' agents): builds a team's simulator robot file. When
+  the robot file format or `:sim:fromConfig` changes, update SKILL.md, interview.md and photos.md too.
   - To check a change to an OpMode yourself, write a scenario file and run
     `./gradlew :sim:scenario -Pfile=...` (report: each check ok/FAIL with the value seen).
   - `sim/parts/parts.json`: motors and servos with seller-page numbers and the date checked; add a

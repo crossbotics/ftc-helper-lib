@@ -111,6 +111,21 @@ tasks.register('scenario', JavaExec) {
     systemProperty 'ftchelper.dataDir', simDataDir
 }
 
+// ./gradlew :sim:fromConfig -Pconfig=path/to/config.xml [-Pout=path/to/robot.properties] [-Pfield=biobuzz-2026]
+// A first robot file from the robot configuration (the XML file the Driver Station keeps on the Control Hub).
+tasks.register('fromConfig', JavaExec) {
+    group = 'application'
+    description = 'Makes a draft robot file from a robot configuration XML file.'
+    def unitTest = tasks.named('testDebugUnitTest')
+    dependsOn 'compileDebugUnitTestJavaWithJavac', 'processDebugUnitTestJavaRes'
+    classpath = files({ unitTest.get().classpath })
+    mainClass = 'io.github.jasoncross.ftchelper.sim.SimConfigImport'
+    workingDir = rootProject.projectDir
+    args = ['--config', project.findProperty('config') ?: ''] +
+            (project.findProperty('out') ? ['--out', project.findProperty('out')] : []) +
+            (project.findProperty('field') ? ['--field', project.findProperty('field')] : [])
+}
+
 // ./gradlew :sim:fit [-Plog=path/to/log.csv or a folder] [-Probot=...] [-Pwrite] [-Pforce]
 // Fits the Characterizer's logs (default: the simulator's own, in sim/build/sim-data/characterizer) and
 // prints the robot-file numbers; -Pwrite also puts them into the robot file.

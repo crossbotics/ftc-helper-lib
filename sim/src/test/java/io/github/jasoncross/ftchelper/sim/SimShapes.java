@@ -55,7 +55,8 @@ final class SimShapes {
             servo = s.get("servo");
             crservo = s.get("crservo");
             if (motor != null && !robot.motors.containsKey(motor)) {
-                throw new IllegalArgumentException("Robot file: shape." + name + ": no motor." + motor + " in the robot file");
+                throw new IllegalArgumentException("Robot file: shape." + name + ": no motor." + motor + " in the robot file"
+                        + (robot.crServos.containsKey(motor) ? " (it is a CR servo: write crservo=" + motor + ")" : ""));
             }
             if (servo != null && !robot.servos.containsKey(servo)) {
                 throw new IllegalArgumentException("Robot file: shape." + name + ": no servo." + servo + " in the robot file");
@@ -112,6 +113,11 @@ final class SimShapes {
                         + "can't be forward/back (use left/right to swing up and down, or up/down to swing sideways)");
             }
             value = type.equals("claw") ? min : start;
+        }
+
+        /** The unit of value: inches along a slide, degrees for an arm or turret, the gap for a claw. */
+        String unit() {
+            return type.equals("slide") ? "in up its slide" : type.equals("claw") ? "in apart" : "deg";
         }
 
         boolean moves() {
@@ -223,6 +229,18 @@ final class SimShapes {
             return bottom >= -FLOOR_SLACK;
         }
 
+        /** What breaks the match size rule (18 x 24 in, 29 in tall) or the floor, in words; "" if nothing. */
+        String problems() {
+            List<String> p = new ArrayList<>();
+            if (top > 29 + 1e-6) p.add(String.format(Locale.US, "%.1f in tall: more than 29", top));
+            double l = lengthIn(), w = widthIn();
+            if (!((l <= 24 + 1e-6 && w <= 18 + 1e-6) || (l <= 18 + 1e-6 && w <= 24 + 1e-6))) {
+                p.add(String.format(Locale.US, "%.1f x %.1f in on the floor: more than 18 x 24", l, w));
+            }
+            if (bottom < -FLOOR_SLACK) p.add(String.format(Locale.US, "%.1f in below the tiles", -bottom));
+            return String.join("; ", p);
+        }
+
         // How far it is from fitting a by b by h (0 or less = fits): for showing the worst pose.
         double overflow(double a, double b, double h) {
             double l = lengthIn(), w = widthIn();
@@ -321,8 +339,9 @@ final class SimShapes {
                 worstScore = score;
                 worst = e;
                 StringBuilder pose = new StringBuilder();
-                for (Shape sh : moving) pose.append(String.format(Locale.US, "%s=%.1f ", sh.name, sh.value));
-                worstPose = pose.toString().trim();
+                for (Shape sh : moving) pose.append(String.format(Locale.US, "%s %.1f %s, ", sh.name, sh.value, sh.unit()));
+                String why = e.problems();
+                worstPose = pose.toString().replaceAll(", $", "") + (why.isEmpty() ? "" : " (" + why + ")");
             }
             int i = 0;
             while (i < idx.length && ++idx[i] >= values.get(i).length) idx[i++] = 0;
