@@ -70,6 +70,10 @@ final class SimRobot {
     Path fieldModel = null;
     // The robot as simple shapes (shape.NAME lines): for the 3D view and the size rules.
     final SimShapes shapes;
+    // The physics engine (physics = engine, the default): the robot bumps and slides, its parts hit
+    // things. null = the simple rule (physics = simple): a bump stops the whole move.
+    SimWorld world = null;
+    double massKg = 15, grip = 1.0;
     volatile String bumpedInto = "";
     // The robot on the field: inches from the field center (x right, y away from the drivers),
     // heading in degrees, counterclockwise = positive, 0 = facing away from the drivers.
@@ -220,6 +224,17 @@ final class SimRobot {
         Map<String, Map<String, String>> shapeLines = new LinkedHashMap<>();
         for (String key : sortedKeys(p, "shape.")) shapeLines.put(key.substring("shape.".length()), settings(p.getProperty(key)));
         shapes = new SimShapes(this, p, shapeLines);
+        massKg = num(p, "robot.massKg", 15);
+        grip = num(p, "drive.grip", 1.0);
+        String physics = p.getProperty("physics", "engine").trim();
+        if (!physics.equals("engine") && !physics.equals("simple")) {
+            throw new IllegalArgumentException("Robot file: physics = engine (bumping and sliding, the default) or simple");
+        }
+        if (physics.equals("engine") && !driveType.equals("none")) {
+            world = new SimWorld(field, shapes.chassisHeightIn, massKg, grip);
+            world.place(x, y, headingDeg);
+            world.setRobotParts(shapes.pieces());
+        }
         buildDevices();
     }
 
@@ -390,6 +405,7 @@ final class SimRobot {
         y = startY;
         headingDeg = startHeading;
         bumpedInto = "";
+        if (world != null) world.place(x, y, headingDeg);
     }
 
     /** What a robot at this pose would overlap ("field wall" or an element's name), or null. */
@@ -409,6 +425,7 @@ final class SimRobot {
         y = ny;
         headingDeg = nh;
         bumpedInto = "";
+        if (world != null) world.place(x, y, headingDeg);
     }
 
     /** Holds a switch pressed (on) or lets it go (off), like clicking it in the panel. */
@@ -509,6 +526,20 @@ final class SimRobot {
             // the measured turning: (left - right) / 2 in wheel counts per second, times degrees per count
             double turnCounts = ((v[0] + v[2]) / 2 - (v[1] + v[3]) / 2) / 2 / ipt;
             cw = Math.toRadians(turnDegPerCount * turnCounts);
+        }
+        if (world != null) {
+            // The physics engine: the drive pushes the body toward the wheels' speeds; walls and field
+            // parts stop it or make it slide; its parts (shapes) can hit things too.
+            world.setRobotParts(shapes.pieces());
+            world.step(dt, forward, right, Math.toDegrees(cw));
+            x = world.xIn();
+            y = world.yIn();
+            headingDeg = wrap(world.headingDeg());
+            yawRateDeg = world.yawRateDeg();
+            List<String> touched = world.touching();
+            if (!touched.isEmpty()) bumpedInto = touched.get(0);
+            else if (Math.abs(forward) + Math.abs(right) + Math.abs(cw) > 1e-6) bumpedInto = "";
+            return;
         }
         double h = Math.toRadians(headingDeg);
         // Forward = (-sin h, cos h) on the field; right = (cos h, sin h).

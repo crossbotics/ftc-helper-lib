@@ -283,11 +283,26 @@ as ok or FAIL with the value it saw; the command fails if any check failed.
 zones and tape lines, things overhead, and the AprilTags with their position and the way they face. The
 robot file picks one (`field = biobuzz-2026`). The page draws it; the robot turns red and the panel names
 the element when it bumps into one. A start position that overlaps a wall or an element is refused when
-the robot file loads. Limits: a bump stops the whole move (the robot does not slide along a wall), and
-its wheels keep turning, so wheel encoders keep counting while it pushes (like a real robot): an
-encoder-driven autonomous can "arrive" while pinned. Solid footprints are taken from the floor up to
-29 in, so a short robot may be stopped a little early by a leaning part. A new season is a new file: the BIOBUZZ file is made from the official
+the robot file loads. A new season is a new file: the BIOBUZZ file is made from the official
 field CAD by a script (in the team's design repo), and the same kind of script works for the next CAD.
+
+**Physics.** The robot moves with a physics engine (ode4j, pure Java): the wheels say how fast it wants
+to go, and the drive pushes the robot's body toward that speed as hard as the wheels' grip allows. Walls
+and the field's solid and overhead parts are solid shapes (each part's footprint, from its lowest to its
+highest point): the robot stops at them or slides along them, and its parts (the robot shapes) hit them
+too: a tall lift can hit the HIVE's overhead frame. When the body is blocked the wheels keep turning
+(they slip), so wheel encoders keep counting while it pushes, like a real robot: an encoder-driven
+autonomous can "arrive" while pinned. Robot file settings:
+
+```properties
+robot.massKg = 15        # the robot's mass (default 15)
+drive.grip = 1.0         # how hard the wheels can push, as a share of the robot's weight (about 1 on tiles)
+physics = engine         # the default; "simple" = the old rule: a bump stops the whole move, no sliding
+```
+
+Limits: the robot is held flat (it never tips or climbs); its parts are solid boxes on it and do not stop
+their own motors (an arm swinging into the HIVE pushes the robot, it does not stall the arm); field
+parts are simple prisms (a FLOWER is solid all the way up).
 
 Coordinates: inches from the field center, +x to the right and +y away from the drivers (drawn at the
 bottom), z up from the tiles; headings and tag facing in degrees, counterclockwise from +x for tags.

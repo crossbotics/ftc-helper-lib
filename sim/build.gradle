@@ -66,6 +66,8 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     // The real org.json (Android's is only a stub off the robot): the SDK reads Limelight results with it.
     testImplementation 'org.json:json:20240303'
+    // The physics engine (pure Java; BSD licence, chosen of its BSD/LGPL pair): bumping, sliding, game pieces.
+    testImplementation 'org.ode4j:core:0.5.4'
 }
 
 if (useTeamCode && new File(robotProject, 'simulator/sim-dependencies.gradle').isFile()) {
