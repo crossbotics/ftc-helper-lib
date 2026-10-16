@@ -120,7 +120,23 @@ final class SimJson {
             strings(b, c.detections());
             b.append('}');
         }
-        b.append("],\"robot\":{");
+        // Game pieces: each on the field (or in a claw), what the robot holds, what has scored.
+        b.append("],\"pieces\":[");
+        List<Object[]> drawn = r.pieces.drawn();
+        for (int i = 0; i < drawn.size(); i++) {
+            Object[] d = drawn.get(i);
+            SimField.PieceType t = (SimField.PieceType) d[0];
+            if (i > 0) b.append(',');
+            b.append('{');
+            field(b, "type", t.name).append(',');
+            field(b, "color", t.color).append(',');
+            b.append("\"d\":").append(fmt(t.diameterIn)).append(",\"x\":").append(fmt((Double) d[1]))
+                    .append(",\"y\":").append(fmt((Double) d[2])).append(",\"z\":").append(fmt((Double) d[3])).append('}');
+        }
+        b.append("],\"stored\":").append(counts(r.pieces.stored()));
+        b.append(",\"scored\":").append(counts(r.pieces.scored()));
+        b.append(",\"launched\":").append(r.pieces.launched());
+        b.append(",\"robot\":{");
         synchronized (r) {
             field(b, "drive", r.driveType).append(',');
             b.append("\"x\":").append(fmt(r.x)).append(',');
@@ -195,6 +211,15 @@ final class SimJson {
         } catch (java.io.IOException e) {
             return 0;
         }
+    }
+
+    private static String counts(Map<String, Integer> m) {
+        StringBuilder b = new StringBuilder("{");
+        for (Map.Entry<String, Integer> e : m.entrySet()) {
+            if (b.length() > 1) b.append(',');
+            string(b, e.getKey()).append(':').append(e.getValue());
+        }
+        return b.append('}').toString();
     }
 
     private static String vec(double[] v) {

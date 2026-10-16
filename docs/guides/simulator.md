@@ -156,6 +156,35 @@ multiple of 90 degrees, and every few degrees between (5 or finer with a few mov
 many, to stay under 50,000 poses). The worst pose is shown. It is a careful check, not a proof: leave a
 little margin, and measure the real robot at its hard stops.
 
+## Game pieces
+
+With the physics engine, the field file's game pieces are on the field (BIOBUZZ: the 4 POLLEN in each
+GARDEN; POLLEN 2.8 in and 25 g, NECTAR 3.6 in and 41 g), they roll and bounce, the robot pushes them,
+and the FLOWER tops are goals. The robot file says which robot shapes handle them:
+
+```properties
+# take in a piece within 0.75 in of the intake shape while motor "intake" turns inward (power above 0.2;
+# inward=- if negative power takes in; crservo= instead of motor=); it holds 4
+collect.intake = shape=intake, motor=intake, holds=4
+# each flywheel shot (motor.flywheel = flywheel, feeder=feeder) sends a held piece off this shape,
+# 45 degrees up from its forward, at half the wheel's rim speed
+shoot.launcher = shape=flywheel, angle=45, share=0.5
+# the claw holds a piece in its fingers while servo "claw" is below 0.3, and drops it when it opens
+grab.claw = shape=claw, servo=claw, closedBelow=0.3
+```
+
+A robot that can collect or shoot starts with the field file's preload (BIOBUZZ: 4 POLLEN). With a
+`shoot.` line, a shot needs a piece: no piece, no shot. A piece that comes into a goal (a FLOWER top)
+scores and is taken off. "Back to start" puts the pieces back. The Control Hub panel shows what the
+robot holds, what it shot and what scored; the 3D view and the field from above draw the pieces.
+
+Scenario lines: `set piece POLLEN X Y [Z]`, `expect stored >= 1`, `expect launched >= 1`,
+`expect scored "FLOWER" >= 1` (goals whose name has the text; `"all"` = every goal), `print pieces`.
+
+Not yet: the pieces that start inside the FLOWERs and CELLs and in the alliance areas, the CELLs as
+goals, pieces held by a part pushing back on it (a held piece has no weight on the arm), and robot
+parts that stop when they hit a piece.
+
 ## Real numbers: the Characterizer
 
 The simulator moves each motor by the same "feedforward" model a real motor follows: power (at 12.8 V)
@@ -262,10 +291,12 @@ expect bumped none                     # or: bumped "Red HIVE"
 expect camera "Webcam 1" sees 31       # a tag id in the picture; or: sees none | sees "RED SCORING" (webcam only:
                                        # a Limelight reports single tags; LimelightTags makes the groups)
 expect size most ok                    # size start|match|most ok|fail (see "Robot shapes")
+expect stored >= 1                     # game pieces in the robot; also: launched, scored "FLOWER" (see "Game pieces")
+set piece POLLEN 30 -20                # put a game piece on the field (x y [z])
 expect within 2 motor lift ticks > 500 # wait up to 2 s for it to become true
 expect within 30 phase STOPPED         # e.g. wait for an autonomous to finish
 stop
-print screen                           # also: print motors | servos | cameras | size | robot (not counted as checks)
+print screen                           # also: print motors | servos | cameras | size | pieces | robot (not counted as checks)
 ```
 
 A note after `#` is ignored (outside quotes). A misspelled check fails with a message, never passes.
@@ -303,6 +334,10 @@ physics = engine         # the default; "simple" = the old rule: a bump stops th
 Limits: the robot is held flat (it never tips or climbs); its parts are solid boxes on it and do not stop
 their own motors (an arm swinging into the HIVE pushes the robot, it does not stall the arm); field
 parts are simple prisms (a FLOWER is solid all the way up).
+
+Game pieces in the field file: `pieceTypes` (name, `diameterIn`, `massG`, `color`, `bounce`), `pieces`
+(where each starts: type, x, y, z), `goals` (name, x, y, the opening's height `z`, `radiusIn`) and
+`preload` (how many of each type a robot starts with).
 
 Coordinates: inches from the field center, +x to the right and +y away from the drivers (drawn at the
 bottom), z up from the tiles; headings and tag facing in degrees, counterclockwise from +x for tags.

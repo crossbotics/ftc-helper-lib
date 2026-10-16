@@ -70,6 +70,52 @@ final class SimField {
         }
     }
 
+    /** A kind of game piece: a ball this size, mass and colour. */
+    static final class PieceType {
+        final String name, color;
+        final double diameterIn, massG, bounce;
+
+        PieceType(Map<String, Object> m) {
+            name = SimJsonReader.string(m, "name", "piece");
+            color = SimJsonReader.string(m, "color", "#f2d22e");
+            diameterIn = SimJsonReader.number(m, "diameterIn", 3);
+            massG = SimJsonReader.number(m, "massG", 30);
+            bounce = SimJsonReader.number(m, "bounce", 0.3);
+        }
+    }
+
+    /** A piece where the match starts it. */
+    static final class StagedPiece {
+        final String type;
+        final double x, y, z;
+
+        StagedPiece(Map<String, Object> m) {
+            type = SimJsonReader.string(m, "type", "");
+            x = SimJsonReader.number(m, "x", 0);
+            y = SimJsonReader.number(m, "y", 0);
+            z = SimJsonReader.number(m, "z", 0);
+        }
+    }
+
+    /** A place to score: a piece whose centre comes within radiusIn of (x, y), at or below z, scores. */
+    static final class Goal {
+        final String name;
+        final double x, y, z, radiusIn;
+
+        Goal(Map<String, Object> m) {
+            name = SimJsonReader.string(m, "name", "goal");
+            x = SimJsonReader.number(m, "x", 0);
+            y = SimJsonReader.number(m, "y", 0);
+            z = SimJsonReader.number(m, "z", 0);
+            radiusIn = SimJsonReader.number(m, "radiusIn", 2);
+        }
+    }
+
+    final Map<String, PieceType> pieceTypes = new java.util.LinkedHashMap<>();
+    final List<StagedPiece> pieces = new ArrayList<>();
+    final List<Goal> goals = new ArrayList<>();
+    final Map<String, Integer> preload = new java.util.LinkedHashMap<>();
+
     final String name, season, frameNote;
     final double size;
     // Half the measured inside of the walls (the robot stops there); the nominal size if not measured.
@@ -93,6 +139,24 @@ final class SimField {
         }
         for (Object o : SimJsonReader.array(root.getOrDefault("tags", Collections.emptyList()), "tags")) {
             tags.add(new Tag(SimJsonReader.object(o, "tag")));
+        }
+        for (Object o : SimJsonReader.array(root.getOrDefault("pieceTypes", Collections.emptyList()), "pieceTypes")) {
+            PieceType t = new PieceType(SimJsonReader.object(o, "pieceType"));
+            pieceTypes.put(t.name, t);
+        }
+        for (Object o : SimJsonReader.array(root.getOrDefault("pieces", Collections.emptyList()), "pieces")) {
+            StagedPiece sp = new StagedPiece(SimJsonReader.object(o, "piece"));
+            if (!pieceTypes.containsKey(sp.type)) throw new IllegalArgumentException(name + ": a piece of unknown type \"" + sp.type + "\"");
+            pieces.add(sp);
+        }
+        for (Object o : SimJsonReader.array(root.getOrDefault("goals", Collections.emptyList()), "goals")) {
+            goals.add(new Goal(SimJsonReader.object(o, "goal")));
+        }
+        if (root.get("preload") instanceof Map) {
+            for (Map.Entry<String, Object> e : SimJsonReader.object(root.get("preload"), "preload").entrySet()) {
+                if (!pieceTypes.containsKey(e.getKey())) throw new IllegalArgumentException(name + ": preload of unknown type \"" + e.getKey() + "\"");
+                preload.put(e.getKey(), ((Number) e.getValue()).intValue());
+            }
         }
     }
 

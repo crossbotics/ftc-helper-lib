@@ -140,6 +140,7 @@
     </div>
     <div class="muted" id="poseText"></div>
     <div class="muted" id="sizeText" style="margin-top:4px"></div>
+    <div class="muted" id="piecesText" style="margin-top:4px"></div>
     <h3>Motors</h3>
     <table id="motors"><thead><tr><th>Name</th><th>Power</th><th class="num">Count</th><th class="num">Speed/s</th><th class="num">Amps</th></tr></thead><tbody></tbody></table>
     <h3>Servos</h3>
@@ -478,6 +479,11 @@ function renderHub(s) {
                 : `At full reach: ${chip(false, "too big")} worst pose ${escapeHtml(z.mostPose)}: ${f(z.most)}. Add hard stops or change the shapes.`);
   }
   update3d(s.robot, s.cameras || []);
+  update3dPieces(s.pieces || []);
+  const st = s.stored || {}, sc = s.scored || {};
+  const list = o => Object.entries(o).filter(([k, n]) => n > 0).map(([k, n]) => `${n} ${escapeHtml(k)}`).join(", ") || "none";
+  $("#piecesText").innerHTML = (s.pieces || []).length || Object.keys(st).length || Object.keys(sc).length
+    ? `Pieces in the robot: ${list(st)} · shot: ${s.launched || 0} · scored: ${list(sc)}` : "";
   $("#poseText").textContent = s.robot.drive === "none" ? "No drivetrain in this robot file." :
     `x ${s.robot.x.toFixed(1)} in, y ${s.robot.y.toFixed(1)} in, heading ${s.robot.heading.toFixed(1)}°` +
     (s.robot.hasImu ? `, IMU yaw ${s.robot.imu.toFixed(1)}°` : "") + ` · shots ${s.robot.shots}` +
@@ -533,6 +539,10 @@ function drawField(r) {
     ctx.beginPath(); ctx.moveTo(X(t.x - ux * hw), Y(t.y - uy * hw)); ctx.lineTo(X(t.x + ux * hw), Y(t.y + uy * hw)); ctx.stroke();
     ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(X(t.x), Y(t.y)); ctx.lineTo(X(t.x + Math.cos(a) * 4), Y(t.y + Math.sin(a) * 4)); ctx.stroke();
     ctx.fillStyle = css.getPropertyValue("--ink"); ctx.fillText(String(t.id), X(t.x + Math.cos(a) * 6) - 6, Y(t.y + Math.sin(a) * 6) + 4);
+  }
+  // Game pieces, seen from above.
+  for (const p of (lastState && lastState.pieces) || []) {
+    ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(X(p.x), Y(p.y), Math.max(2, p.d / 2 * s), 0, 2 * Math.PI); ctx.fill();
   }
   // The walls (measured inside size, if the field file has it).
   const wall = ((fieldData && fieldData.field && fieldData.field.insideWallSize) || size) / 2;
@@ -706,6 +716,24 @@ function showCad() {
   // (the model has none); the tag squares stay, to show the IDs.
   v3.simpleGroup.children.forEach(o => o.visible = !cad || o.name === "tiles");
 }
+// Game pieces: a ball each, in field inches (the scene's own frame).
+function update3dPieces(list) {
+  if (!v3.ready) return;
+  if (!v3.pieceGroup) { v3.pieceGroup = new THREE.Group(); v3.scene.add(v3.pieceGroup); v3.pieceMeshes = []; }
+  while (v3.pieceMeshes.length < list.length) {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), new THREE.MeshPhongMaterial({ shininess: 30 }));
+    v3.pieceGroup.add(m); v3.pieceMeshes.push(m);
+  }
+  v3.pieceMeshes.forEach((m, i) => {
+    const p = list[i];
+    m.visible = !!p;
+    if (!p) return;
+    m.scale.setScalar(p.d / 2);
+    m.position.set(p.x, p.y, p.z);
+    m.material.color.set(p.color);
+  });
+}
+
 // The robot's shapes (shape.NAME lines in the robot file), sent in the robot frame: f forward, l left,
 // u up. In the robot group, three.js x = -l, y = f, z = u.
 const RF = v => new THREE.Vector3(-v[1], v[0], v[2]);

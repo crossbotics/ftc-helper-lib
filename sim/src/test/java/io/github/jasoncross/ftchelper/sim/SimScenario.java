@@ -184,7 +184,12 @@ public final class SimScenario {
                         break;
                     // set autotimer on|off (the 30 s autonomous stop)
                     case "autotimer": sim.ds.autoTimer = onOff(t.get(2)); break;
-                    default: throw new IllegalArgumentException("set battery | touch NAME on|off | pose X Y HEADING | autotimer on|off");
+                    // set piece POLLEN X Y [Z]: a game piece on the field
+                    case "piece":
+                        sim.robot.pieces.place(t.get(2), Double.parseDouble(t.get(3)), Double.parseDouble(t.get(4)),
+                                t.size() > 5 ? Double.parseDouble(t.get(5)) : 0);
+                        break;
+                    default: throw new IllegalArgumentException("set battery | touch NAME on|off | pose X Y HEADING | autotimer on|off | piece TYPE X Y [Z]");
                 }
                 ok(n, line, "");
                 return;
@@ -297,6 +302,18 @@ public final class SimScenario {
                 need(t, 3, "expect time < 25   (seconds since START)");
                 op(t, 1);
                 return;
+            case "stored":
+                need(t, 3, "expect stored >= 1   (game pieces inside the robot)");
+                op(t, 1);
+                return;
+            case "launched":
+                need(t, 3, "expect launched >= 1   (pieces shot)");
+                op(t, 1);
+                return;
+            case "scored":
+                need(t, 4, "expect scored \"FLOWER\" >= 1   (pieces in goals whose name has the text; \"all\" = every goal)");
+                op(t, 2);
+                return;
             case "size":
                 need(t, 3, "expect size start|match|most|floor ok|fail");
                 if (!java.util.Arrays.asList("start", "match", "most", "floor").contains(t.get(1))) {
@@ -333,7 +350,7 @@ public final class SimScenario {
                 op(t, 2);
                 return;
             default:
-                throw new IllegalArgumentException("expect what? (screen, value, time, error, phase, motor, servo, robot, bumped, touch, camera, size)");
+                throw new IllegalArgumentException("expect what? (screen, value, time, error, phase, motor, servo, robot, bumped, touch, camera, size, stored, launched, scored)");
         }
     }
 
@@ -388,6 +405,19 @@ public final class SimScenario {
                 boolean pressed = touch.pressed();
                 why[0] = pressed ? "pressed" : "open";
                 return pressed == t.get(2).equals("pressed");
+            }
+            case "stored": {
+                int n = sim.robot.pieces.storedCount();
+                return compare(n, t.subList(1, t.size()), why);
+            }
+            case "launched":
+                return compare(sim.robot.pieces.launched(), t.subList(1, t.size()), why);
+            case "scored": {
+                int n = 0;
+                for (java.util.Map.Entry<String, Integer> e : sim.robot.pieces.scored().entrySet()) {
+                    if (t.get(1).equals("all") || e.getKey().contains(t.get(1))) n += e.getValue();
+                }
+                return compare(n, t.subList(2, t.size()), why);
             }
             case "size": {
                 // expect size start ok (fits the 18 in cube now) | size match ok (18 x 24 x 29 now) | size most ok
@@ -492,6 +522,10 @@ public final class SimScenario {
                     report.add(String.format(Locale.US, "          servo %-12s at %.3f  going to %.3f", s.name, s.actual, s.target()));
                 }
                 return;
+            case "pieces":
+                report.add("          pieces: in the robot " + sim.robot.pieces.stored() + ", shot " + sim.robot.pieces.launched()
+                        + ", scored " + sim.robot.pieces.scored() + ", on the field " + sim.robot.pieces.drawn().size());
+                return;
             case "size":
                 report.add("          size now: " + sim.robot.shapes.now() + "; at full reach: "
                         + (sim.robot.shapes.mostOk ? "every pose fits, biggest each way " : "worst pose (" + sim.robot.shapes.mostPose + ") ")
@@ -510,7 +544,7 @@ public final class SimScenario {
                 }
                 return;
             default:
-                throw new IllegalArgumentException("print screen, motors, servos, cameras, size or robot");
+                throw new IllegalArgumentException("print screen, motors, servos, cameras, size, pieces or robot");
         }
     }
 

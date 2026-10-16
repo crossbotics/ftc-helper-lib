@@ -17,7 +17,12 @@ public class SimShapesTest {
         String base = new String(Files.readAllBytes(new File("robots/starter.properties").toPath()), "UTF-8");
         // drop the starter's shapes, keep its devices
         StringBuilder b = new StringBuilder();
-        for (String line : base.split("\n")) if (!line.startsWith("shape.")) b.append(line).append('\n');
+        for (String line : base.split("\n")) {
+            // keep the devices; drop the shapes and what uses them
+            if (!line.startsWith("shape.") && !line.startsWith("collect.") && !line.startsWith("shoot.") && !line.startsWith("grab.")) {
+                b.append(line).append('\n');
+            }
+        }
         File f = tmp.newFile();
         Files.write(f.toPath(), (b + extra).getBytes("UTF-8"));
         return SimRobot.load(f.toPath());

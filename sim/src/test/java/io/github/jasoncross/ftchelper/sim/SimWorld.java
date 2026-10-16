@@ -45,15 +45,43 @@ final class SimWorld {
     // What a shape is, for the contact rules and for "bumped into ...".
     private static final class Tag {
         final String name;
-        final boolean robot;
+        final boolean robot, floor;
         final double friction;
+        final Ball ball;          // set for a game piece
 
         Tag(String name, boolean robot, double friction) {
+            this(name, robot, false, friction, null);
+        }
+
+        Tag(String name, boolean robot, boolean floor, double friction, Ball ball) {
             this.name = name;
             this.robot = robot;
+            this.floor = floor;
             this.friction = friction;
+            this.ball = ball;
         }
     }
+
+    /** A game piece in the world: a ball. */
+    static final class Ball {
+        final int id;
+        final SimField.PieceType type;
+        final DBody body;
+        final DGeom geom;
+        double ignoreRobotUntil = 0;     // just launched: it does not hit the robot that launched it yet
+        final Set<String> touchingParts = new LinkedHashSet<>();   // robot parts it touched in the last step
+
+        Ball(int id, SimField.PieceType type, DBody body, DGeom geom) {
+            this.id = id;
+            this.type = type;
+            this.body = body;
+            this.geom = geom;
+        }
+    }
+
+    private final List<Ball> balls = new ArrayList<>();
+    private int nextBall = 1;
+    private double time = 0;
 
     private DWorld world;     // set once, in the constructor (not final: the contact code below refers to it)
     private final DSpace space;
@@ -108,6 +136,63 @@ final class SimWorld {
         robot.setPosition(0, 0, 0);
         DPlane2DJoint flat = OdeHelper.createPlane2DJoint(world);
         flat.attach(robot, null);
+        // The tiles, for game pieces (the robot is held at its height and does not touch them).
+        DGeom floor = OdeHelper.createPlane(space, 0, 0, 1, zFloor);
+        floor.setData(new Tag("tiles", false, true, 0.6, null));
+    }
+
+    // ---------------------------------------------------------------- game pieces
+
+    /** Adds a game piece: centre at (x, y, z) inches (z from the tiles), moving at (vx, vy, vz) inches per second. */
+    Ball addBall(SimField.PieceType type, double x, double y, double z, double vx, double vy, double vz) {
+        double r = type.diameterIn / 2 * M;
+        DBody b = OdeHelper.createBody(world);
+        DMass m = OdeHelper.createMass();
+        m.setSphereTotal(type.massG / 1000.0, r);
+        b.setMass(m);
+        b.setPosition(x * M, y * M, zFloor + z * M);
+        b.setLinearVel(vx * M, vy * M, vz * M);
+        b.setLinearDamping(0.002);
+        b.setAngularDamping(0.03);       // rolling slows down (foam on foam tiles)
+        DGeom g = OdeHelper.createSphere(space, r);
+        g.setBody(b);
+        Ball ball = new Ball(nextBall++, type, b, g);
+        g.setData(new Tag(type.name, false, false, 0.6, ball));
+        balls.add(ball);
+        return ball;
+    }
+
+    void removeBall(Ball b) {
+        balls.remove(b);
+        b.geom.destroy();
+        b.body.destroy();
+    }
+
+    List<Ball> balls() {
+        return new ArrayList<>(balls);
+    }
+
+    /** A piece's centre, inches (z from the tiles). */
+    double[] ballPos(Ball b) {
+        DVector3C p = b.body.getPosition();
+        return new double[] {p.get0() / M, p.get1() / M, (p.get2() - zFloor) / M};
+    }
+
+    /** A piece's speed, inches per second. */
+    double[] ballVel(Ball b) {
+        DVector3C v = b.body.getLinearVel();
+        return new double[] {v.get0() / M, v.get1() / M, v.get2() / M};
+    }
+
+    /** The robot's speed over the field, inches per second (x, y). */
+    double[] robotVel() {
+        DVector3C v = robot.getLinearVel();
+        return new double[] {v.get0() / M, v.get1() / M};
+    }
+
+    /** Seconds of physics so far. */
+    double time() {
+        return time;
     }
 
     private void wall(double cx, double cy, double sx, double sy, double h) {
@@ -198,8 +283,10 @@ final class SimWorld {
     void step(double dt, double forwardIn, double rightIn, double cwDeg) {
         leftOver += dt;
         touching.clear();
+        for (Ball b : balls) b.touchingParts.clear();
         while (leftOver >= STEP) {
             leftOver -= STEP;
+            time += STEP;
             drive(forwardIn * M, rightIn * M, -Math.toRadians(cwDeg));
             space.collide(null, near);
             world.quickStep(STEP);
@@ -226,14 +313,25 @@ final class SimWorld {
     private final DGeom.DNearCallback near = (data, o1, o2) -> {
         Tag a = (Tag) o1.getData(), b = (Tag) o2.getData();
         if (a == null || b == null || (a.robot && b.robot)) return;    // the robot's parts do not hit each other
-        if (!a.robot && !b.robot) return;                               // field against field: never
+        boolean ballA = a.ball != null, ballB = b.ball != null;
+        if (!a.robot && !b.robot && !ballA && !ballB) return;          // field against field: never
+        if ((a.robot && b.floor) || (b.robot && a.floor)) return;      // the robot is held at its height
+        Ball ball = ballA ? a.ball : ballB ? b.ball : null;
+        boolean robotPart = a.robot || b.robot;
+        if (ball != null && robotPart && time < ball.ignoreRobotUntil) return;
         int n = OdeHelper.collide(o1, o2, MAX_CONTACTS, buffer.getGeomBuffer());
         if (n == 0) return;
-        touching.add(a.robot ? b.name : a.name);
+        if (ball != null && robotPart) ball.touchingParts.add(a.robot ? a.name : b.name);
+        else if (ball == null) touching.add(a.robot ? b.name : a.name);
         for (int i = 0; i < n; i++) {
             DContact c = buffer.get(i);
             c.surface.mode = OdeConstants.dContactApprox1;
             c.surface.mu = Math.sqrt(a.friction * b.friction);   // Approx1: a friction coefficient
+            if (ball != null) {
+                c.surface.mode |= OdeConstants.dContactBounce;
+                c.surface.bounce = ball.type.bounce;
+                c.surface.bounce_vel = 0.1;
+            }
             OdeHelper.createContactJoint(world, contacts, c).attach(o1.getBody(), o2.getBody());
         }
     };

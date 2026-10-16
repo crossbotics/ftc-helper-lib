@@ -74,6 +74,8 @@ final class SimRobot {
     // things. null = the simple rule (physics = simple): a bump stops the whole move.
     SimWorld world = null;
     double massKg = 15, grip = 1.0;
+    // Game pieces and what the robot does with them (collect., shoot., grab. lines).
+    SimPieces pieces;
     volatile String bumpedInto = "";
     // The robot on the field: inches from the field center (x right, y away from the drivers),
     // heading in degrees, counterclockwise = positive, 0 = facing away from the drivers.
@@ -235,6 +237,7 @@ final class SimRobot {
             world.place(x, y, headingDeg);
             world.setRobotParts(shapes.pieces());
         }
+        pieces = new SimPieces(this, world, p, lines(p, "collect."), lines(p, "shoot."), lines(p, "grab."));
         buildDevices();
     }
 
@@ -406,6 +409,7 @@ final class SimRobot {
         headingDeg = startHeading;
         bumpedInto = "";
         if (world != null) world.place(x, y, headingDeg);
+        if (pieces != null) pieces.reset();   // back to the start of a match: the pieces too
     }
 
     /** What a robot at this pose would overlap ("field wall" or an element's name), or null. */
@@ -474,6 +478,7 @@ final class SimRobot {
         }
         for (SimMotor m : motors.values()) m.step(dt, battery);
         if (!wheels.isEmpty()) moveChassis(dt);
+        pieces.step();
         for (SimServo s : servos.values()) s.step(dt, Double.isNaN(s.speed) ? servoSpeed : s.speed);
         // A flywheel loses speed when its feeder starts pushing a piece in.
         for (SimMotor m : motors.values()) {
@@ -483,8 +488,11 @@ final class SimRobot {
             double since = sinceShot.getOrDefault(m.name, SECONDS_PER_PIECE) + dt;
             // While the feeder runs, a piece goes through every SECONDS_PER_PIECE (the first at once).
             if (on && since >= SECONDS_PER_PIECE && Math.abs(m.shaftSpeed()) > 100) {
-                m.shot();
-                shots++;
+                // With game pieces, a shot needs a piece in the robot (it flies off the shooter shape).
+                if (!pieces.shootsPieces() || pieces.shoot(m)) {
+                    m.shot();
+                    shots++;
+                }
                 since = 0;
             }
             if (!on) since = SECONDS_PER_PIECE;
@@ -631,6 +639,12 @@ final class SimRobot {
         double v = dbl(s, key, 0);
         if (!(v > 0)) throw new IllegalArgumentException("Robot file: \"" + line + "\": " + key + " must be more than 0");
         return v;
+    }
+
+    private static Map<String, Map<String, String>> lines(Properties p, String prefix) {
+        Map<String, Map<String, String>> out = new LinkedHashMap<>();
+        for (String key : sortedKeys(p, prefix)) out.put(key.substring(prefix.length()), settings(p.getProperty(key)));
+        return out;
     }
 
     private static boolean isNumber(String t) {

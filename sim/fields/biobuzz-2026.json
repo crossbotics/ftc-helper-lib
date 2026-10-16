@@ -1193,6 +1193,125 @@
    "notes": "Where the DRIVE TEAM stands, outside the field (manual 9.3/9.5: ~97 x 54 in); includes the tape."
   }
  ],
+ "pieceTypes": [
+  {
+   "name": "POLLEN",
+   "diameterIn": 2.8,
+   "massG": 25,
+   "color": "#f2d22e",
+   "bounce": 0.3
+  },
+  {
+   "name": "red NECTAR",
+   "diameterIn": 3.6,
+   "massG": 41,
+   "color": "#d0312a",
+   "bounce": 0.3
+  },
+  {
+   "name": "blue NECTAR",
+   "diameterIn": 3.6,
+   "massG": 41,
+   "color": "#2c62c8",
+   "bounce": 0.3
+  }
+ ],
+ "pieces": [
+  {
+   "type": "POLLEN",
+   "x": 69.18,
+   "y": -69.18,
+   "z": 1.4,
+   "where": "Red GARDEN"
+  },
+  {
+   "type": "POLLEN",
+   "x": 69.18,
+   "y": -66.38,
+   "z": 1.4,
+   "where": "Red GARDEN"
+  },
+  {
+   "type": "POLLEN",
+   "x": 69.18,
+   "y": -63.58,
+   "z": 1.4,
+   "where": "Red GARDEN"
+  },
+  {
+   "type": "POLLEN",
+   "x": 69.18,
+   "y": -60.78,
+   "z": 1.4,
+   "where": "Red GARDEN"
+  },
+  {
+   "type": "POLLEN",
+   "x": -69.18,
+   "y": 69.18,
+   "z": 1.4,
+   "where": "Blue GARDEN"
+  },
+  {
+   "type": "POLLEN",
+   "x": -69.18,
+   "y": 66.38,
+   "z": 1.4,
+   "where": "Blue GARDEN"
+  },
+  {
+   "type": "POLLEN",
+   "x": -69.18,
+   "y": 63.58,
+   "z": 1.4,
+   "where": "Blue GARDEN"
+  },
+  {
+   "type": "POLLEN",
+   "x": -69.18,
+   "y": 60.78,
+   "z": 1.4,
+   "where": "Blue GARDEN"
+  }
+ ],
+ "goals": [
+  {
+   "name": "FLOWER (audience wall, blue half)",
+   "x": 68.54,
+   "y": 23.57,
+   "z": 21.5,
+   "radiusIn": 2.0,
+   "notes": "top opening ~4 in across, ~21.5 in up (manual 9.7)"
+  },
+  {
+   "name": "FLOWER (blue wall, far half)",
+   "x": -23.57,
+   "y": 68.54,
+   "z": 21.5,
+   "radiusIn": 2.0,
+   "notes": "top opening ~4 in across, ~21.5 in up (manual 9.7)"
+  },
+  {
+   "name": "FLOWER (red wall, audience half)",
+   "x": 23.57,
+   "y": -68.54,
+   "z": 21.5,
+   "radiusIn": 2.0,
+   "notes": "top opening ~4 in across, ~21.5 in up (manual 9.7)"
+  },
+  {
+   "name": "FLOWER (far wall, red half)",
+   "x": -68.54,
+   "y": -23.57,
+   "z": 21.5,
+   "radiusIn": 2.0,
+   "notes": "top opening ~4 in across, ~21.5 in up (manual 9.7)"
+  }
+ ],
+ "preload": {
+  "POLLEN": 4
+ },
+ "pieceNotes": "Manual 9.8 / 10.3.1: 40 POLLEN (2.8 in), 8 red and 8 blue NECTAR (3.6 in). Placed here: the 4 POLLEN in each GARDEN. Each robot starts holding 4 POLLEN (preload). Not placed: 4 POLLEN in each FLOWER, 3 NECTAR in each up CELL, 5 NECTAR in each alliance area. Goals: the FLOWER tops.",
  "tags": [
   {
    "id": 30,

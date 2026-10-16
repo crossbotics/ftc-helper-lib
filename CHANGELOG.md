@@ -23,6 +23,11 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   AprilTags become the SDK's detections (BIOBUZZ: clusters per CELL group) with the SDK's ftcPose
   formulas. The page lists what each camera sees, draws its view cone and shows its picture in 3D.
   Scenario check: `expect camera "Webcam 1" sees 31|none|"RED SCORING"`.
+- Simulator: game pieces (needs the physics engine): the field file's piece types, staged pieces,
+  goals and preload (BIOBUZZ: POLLEN and NECTAR from the manual; 4 POLLEN in each GARDEN; FLOWER tops
+  as goals; 4 POLLEN preload). Robot file `collect.` (intake), `shoot.` (a flywheel shot launches a
+  held piece), `grab.` (claw). Page draws pieces and shows held/shot/scored; scenario `set piece`,
+  `expect stored|launched|scored`, `print pieces`.
 - Simulator: a physics engine (ode4j, pure Java, BSD): the robot is a solid body pushed by its drive
   (as hard as the wheels' grip allows), stops at and slides along walls and field parts, and its robot
   shapes hit things too. `physics = simple` keeps the old rule; `robot.massKg`, `drive.grip`.
