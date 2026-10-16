@@ -113,7 +113,7 @@
       A/B/X/Y <code>K L J I</code>, LB/RB <code>Q E</code>, LT/RT <code>Z C</code>, BACK <code>Backspace</code>,
       START <code>Enter</code>, GUIDE <code>M</code>.
       Real controller: plug it in, choose it above, press any of its buttons once (a browser rule).
-      GUIDE/PS often does not reach the browser: use the on-screen GUIDE or <code>M</code>.
+      GUIDE/PS often does not reach the browser: click the on-screen GUIDE (it works with every source) or press <code>M</code> (keyboard source).
     </div>
     <div class="keys" id="lanHelp"></div>
   </section>
@@ -149,7 +149,15 @@ if (phonePad) document.body.classList.add("phone");
 const BUTTONS = ["a","b","x","y","lb","rb","up","down","left","right","back","start","guide","ls","rs"];
 const AXES = ["lx","ly","rx","ry","lt","rt"];
 function blankPad() { const p = {}; BUTTONS.forEach(b => p[b] = 0); AXES.forEach(a => p[a] = 0); return p; }
-const pads = { 1: blankPad(), 2: blankPad() };
+const pads = { 1: blankPad(), 2: blankPad() };      // from the source: keyboard or controller
+const screenPads = { 1: blankPad(), 2: blankPad() }; // from the on-screen gamepad (works with every source)
+// What is sent: buttons pressed in either; a stick or trigger from the screen when it is moved there.
+function merged(n) {
+  const a = pads[n], b = screenPads[n], out = {};
+  BUTTONS.forEach(k => out[k] = (a[k] || b[k]) ? 1 : 0);
+  AXES.forEach(k => out[k] = b[k] !== 0 ? b[k] : a[k]);
+  return out;
+}
 const source = { 1: "screen", 2: "screen" };      // screen | keyboard | controller:N | remote
 if (phonePad) { source[1] = phonePad === "1" ? "screen" : "remote"; source[2] = phonePad === "2" ? "screen" : "remote"; }
 let sticky = false;
@@ -171,13 +179,14 @@ function buildPad(el, n) {
     Object.assign(b.style, { left: x + "%", top: y + "%", width: w + "%", height: h + "%" });
     b.dataset.key = key;
     b.title = key.toUpperCase();
-    let downAt = 0;
+    let downAt = 0, releaseTimer = 0;
     b.addEventListener("pointerdown", e => { e.preventDefault(); b.setPointerCapture(e.pointerId);
+      clearTimeout(releaseTimer);   // a new press cancels the release still waiting from a quick tap
       downAt = performance.now();
-      pads[n][key] = sticky ? (pads[n][key] ? 0 : 1) : 1; sendPads(); });
+      screenPads[n][key] = sticky ? (screenPads[n][key] ? 0 : 1) : 1; sendPads(); });
     // A quick click still lasts at least 0.12 s, so the OpMode's loop sees it.
     const up = () => { if (sticky) return;
-      setTimeout(() => { pads[n][key] = 0; sendPads(); }, Math.max(0, 120 - (performance.now() - downAt))); };
+      releaseTimer = setTimeout(() => { screenPads[n][key] = 0; sendPads(); }, Math.max(0, 120 - (performance.now() - downAt))); };
     b.addEventListener("pointerup", up); b.addEventListener("pointercancel", up);
     el.appendChild(b);
   }
@@ -192,11 +201,11 @@ function buildPad(el, n) {
       let dx = (e.clientX - (r.left + r.width / 2)) / (r.width / 2);
       let dy = (e.clientY - (r.top + r.height / 2)) / (r.height / 2);
       const len = Math.hypot(dx, dy); if (len > 1) { dx /= len; dy /= len; }
-      pads[n][ax] = +dx.toFixed(3); pads[n][ay] = +dy.toFixed(3);    // down = positive, like the SDK
+      screenPads[n][ax] = +dx.toFixed(3); screenPads[n][ay] = +dy.toFixed(3);    // down = positive, like the SDK
     };
     k.addEventListener("pointerdown", e => { e.preventDefault(); dragging = true; k.setPointerCapture(e.pointerId); move(e); });
     k.addEventListener("pointermove", e => { if (dragging) move(e); });
-    const end = () => { dragging = false; if (!sticky) { pads[n][ax] = 0; pads[n][ay] = 0; } };
+    const end = () => { dragging = false; if (!sticky) { screenPads[n][ax] = 0; screenPads[n][ay] = 0; } };
     k.addEventListener("pointerup", end); k.addEventListener("pointercancel", end);
     s.dataset.ax = ax; s.dataset.ay = ay;
     el.appendChild(s);
@@ -204,17 +213,18 @@ function buildPad(el, n) {
   for (const [key, label, x] of [["lt","LT",5],["rt","RT",79]]) {
     const t = document.createElement("div"); t.className = "trig";
     t.style.left = x + "%";
-    t.innerHTML = `<span>${label}</span><input type="range" min="0" max="1" step="0.05" value="0" aria-label="${label}">`;
+    // tabindex -1: a trigger is pressed with the mouse or touch (keyboard users: Z and C).
+    t.innerHTML = `<span>${label}</span><input type="range" min="0" max="1" step="0.05" value="0" tabindex="-1" aria-label="${label}">`;
     const r = t.querySelector("input");
-    r.addEventListener("input", () => pads[n][key] = +r.value);
-    const release = () => { if (!sticky) { r.value = 0; pads[n][key] = 0; } };
-    r.addEventListener("pointerup", release); r.addEventListener("pointercancel", release);
+    r.addEventListener("input", () => screenPads[n][key] = +r.value);
+    const release = () => { if (!sticky) { r.value = 0; screenPads[n][key] = 0; } };
+    r.addEventListener("pointerup", release); r.addEventListener("pointercancel", release); r.addEventListener("blur", release);
     r.dataset.key = key;
     el.appendChild(t);
   }
 }
 function drawPad(el, n) {
-  const p = pads[n];
+  const p = merged(n);
   el.querySelectorAll(".b").forEach(b => b.classList.toggle("on", !!p[b.dataset.key]));
   el.querySelectorAll(".stick").forEach(s => {
     const k = s.firstChild;
@@ -285,9 +295,22 @@ function post(path, data) {
   return fetch(path, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams(data).toString() }).catch(() => {});
 }
+// Each page has its own session id; every update has a growing number, so the simulator ignores an
+// older update that arrives after a newer one. One update at a time per gamepad; the newest waits.
+const session = Math.random().toString(36).slice(2);
+let seq = 0;
+const inFlight = { 1: false, 2: false }, again = { 1: false, 2: false };
+function sendPad(n) {
+  if (inFlight[n]) { again[n] = true; return; }
+  inFlight[n] = true;
+  post("/pad/" + n, Object.assign({ session, seq: ++seq }, merged(n))).finally(() => {
+    inFlight[n] = false;
+    if (again[n]) { again[n] = false; sendPad(n); }
+  });
+}
 function sendPads() {
   readControllers();
-  for (const n of [1,2]) if (source[n] !== "remote") post("/pad/" + n, pads[n]);
+  for (const n of [1,2]) if (source[n] !== "remote") sendPad(n);
 }
 setInterval(sendPads, 40);
 
@@ -344,11 +367,11 @@ $("#initBtn").onclick = () => post("/cmd", { action: "init", opmode: $("#opmode"
 $("#startBtn").onclick = () => post("/cmd", { action: "start" });
 $("#stopBtn").onclick = () => post("/cmd", { action: "stop" });
 $("#autoTimer").onchange = e => post("/cmd", { action: "autoTimer", on: e.target.checked ? 1 : 0 });
-$("#sticky").onchange = e => { sticky = e.target.checked; if (!sticky) for (const n of [1,2]) if (source[n] === "screen") pads[n] = blankPad(); };
+$("#sticky").onchange = e => { sticky = e.target.checked; if (!sticky) for (const n of [1,2]) screenPads[n] = blankPad(); };
 document.querySelectorAll(".pad").forEach(div => {
   const n = +div.dataset.pad;
   buildPad($(".gp", div), n);
-  $(".src", div).onchange = e => { source[n] = e.target.value; pads[n] = blankPad(); keysDown.clear(); };
+  $(".src", div).onchange = e => { source[n] = e.target.value; pads[n] = blankPad(); screenPads[n] = blankPad(); keysDown.clear(); };
 });
 
 // ---------------------------------------------------------------- Control Hub panel

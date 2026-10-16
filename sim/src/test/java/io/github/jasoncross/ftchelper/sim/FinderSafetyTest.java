@@ -78,7 +78,8 @@ public class FinderSafetyTest {
             s.press(v -> s.g1().a = v);                  // the Push test
             assertTrue(s.screenHas("BY HAND"));
             s.robot().push(24, 0, 2.0);                  // roll it 48 in forward, by hand
-            SimRun.pause(2.4);
+            assertTrue(SimRun.waitFor(() -> !s.robot().pushing(), 10));
+            SimRun.pause(0.2);
             s.press(v -> s.g1().b = v);                  // done
             // The robot file says the real wheel is 3.90 in (the code thinks 3.78).
             assertTrue(String.valueOf(s.screen()), SimRun.waitFor(() -> s.screenHas("c.wheelDiameterIn = "), 1));

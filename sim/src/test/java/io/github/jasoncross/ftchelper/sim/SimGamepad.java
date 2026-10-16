@@ -14,7 +14,18 @@ final class SimGamepad {
 
     /** Sets every button and axis from "name -> value" (buttons: 0/1; sticks and triggers: numbers). */
     synchronized void apply(Map<String, String> s) {
-        Gamepad g = gamepad;
+        // Updates from the page arrive on several threads: an older one must not undo a newer one.
+        String session = s.getOrDefault("session", "");
+        long seq = -1;
+        try { seq = Long.parseLong(s.getOrDefault("seq", "-1")); } catch (NumberFormatException ignored) { }
+        if (seq >= 0) {
+            if (session.equals(lastSession) && seq <= lastSeq) return;
+            lastSession = session;
+            lastSeq = seq;
+        }
+        // Built on a fresh Gamepad, then copied in with the SDK's own copy(), so the SDK's
+        // "was pressed" methods and the PlayStation names (cross, circle...) work too.
+        Gamepad g = new Gamepad();
         g.a = on(s, "a");
         g.b = on(s, "b");
         g.x = on(s, "x");
@@ -36,13 +47,17 @@ final class SimGamepad {
         g.right_stick_y = axis(s, "ry");
         g.left_trigger = Math.max(0, axis(s, "lt"));
         g.right_trigger = Math.max(0, axis(s, "rt"));
+        gamepad.copy(g);
         lastSeen = System.nanoTime();
     }
+
+    private String lastSession = "";
+    private long lastSeq = -1;
 
     /** No news from the page for a while (a closed tab): let go of everything, like a pulled cable. */
     synchronized void releaseIfSilent(double seconds) {
         if (lastSeen != 0 && (System.nanoTime() - lastSeen) / 1e9 > seconds) {
-            apply(java.util.Collections.<String, String>emptyMap());
+            gamepad.copy(new Gamepad());
             lastSeen = 0;
         }
     }
@@ -57,6 +72,7 @@ final class SimGamepad {
         if (v == null) return 0;
         try {
             float f = Float.parseFloat(v);
+            if (Float.isNaN(f) || Float.isInfinite(f)) return 0;
             return Math.max(-1, Math.min(1, f));
         } catch (NumberFormatException e) {
             return 0;

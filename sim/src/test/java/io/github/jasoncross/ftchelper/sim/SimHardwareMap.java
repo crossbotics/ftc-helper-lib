@@ -22,6 +22,17 @@ final class SimHardwareMap extends HardwareMap {
     SimHardwareMap(Map<String, HardwareDevice> devices) {
         super(null, null);
         byName.putAll(devices);
+        // The SDK's typed lists too, for code like hardwareMap.dcMotor.get("lift").
+        for (Map.Entry<String, HardwareDevice> e : devices.entrySet()) {
+            HardwareDevice d = e.getValue();
+            String n = e.getKey();
+            if (d instanceof com.qualcomm.robotcore.hardware.DcMotor) dcMotor.put(n, (com.qualcomm.robotcore.hardware.DcMotor) d);
+            if (d instanceof com.qualcomm.robotcore.hardware.Servo) servo.put(n, (com.qualcomm.robotcore.hardware.Servo) d);
+            if (d instanceof com.qualcomm.robotcore.hardware.CRServo) crservo.put(n, (com.qualcomm.robotcore.hardware.CRServo) d);
+            if (d instanceof com.qualcomm.robotcore.hardware.TouchSensor) touchSensor.put(n, (com.qualcomm.robotcore.hardware.TouchSensor) d);
+            if (d instanceof com.qualcomm.robotcore.hardware.DigitalChannel) digitalChannel.put(n, (com.qualcomm.robotcore.hardware.DigitalChannel) d);
+            if (d instanceof com.qualcomm.robotcore.hardware.VoltageSensor) voltageSensor.put(n, (com.qualcomm.robotcore.hardware.VoltageSensor) d);
+        }
     }
 
     @Override

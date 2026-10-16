@@ -22,6 +22,32 @@ public final class SimAccess {
         wake(op);
     }
 
+    /**
+     * What the FTC app does on every pass of its event loop: updates {@code time} and wakes a
+     * waitForStart() that is sleeping. Called often, so a START that happens just before the OpMode
+     * starts to wait is never lost.
+     */
+    public static void eventLoop(OpMode op) {
+        if (op instanceof LinearOpMode) ((LinearOpMode) op).internalOnEventLoopIteration();
+        else op.time = op.getRuntime();
+    }
+
+    /**
+     * Gives the OpMode the app services it may call: requestOpModeStop() (an OpMode stopping itself)
+     * runs {@code onStopRequest}; telemetry refreshes are ignored.
+     */
+    public static void installServices(OpMode op, final Runnable onStopRequest) {
+        op.internalOpModeServices = (org.firstinspires.ftc.robotcore.internal.opmode.OpModeServices)
+                java.lang.reflect.Proxy.newProxyInstance(SimAccess.class.getClassLoader(),
+                        new Class<?>[] {org.firstinspires.ftc.robotcore.internal.opmode.OpModeServices.class},
+                        (proxy, m, a) -> {
+                            if (m.getName().equals("requestOpModeStop")) onStopRequest.run();
+                            if (m.getName().equals("hashCode")) return System.identityHashCode(proxy);
+                            if (m.getName().equals("equals")) return proxy == a[0];
+                            return null;
+                        });
+    }
+
     // waitForStart() sleeps on a private lock: wake it up.
     private static void wake(OpMode op) {
         if (!(op instanceof LinearOpMode)) return;

@@ -50,6 +50,13 @@ final class SimDriverStation {
     /** Autonomous stops by itself after 30 s, like the Driver Station's timer. */
     volatile boolean autoTimer = true;
     private volatile boolean autoStopping = false;
+    // STOP from the page, the timer or the OpMode itself runs here, one at a time (never on the
+    // OpMode's own thread, which STOP waits for).
+    private final java.util.concurrent.ExecutorService commands = java.util.concurrent.Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r, "ds-commands");
+        t.setDaemon(true);
+        return t;
+    });
 
     SimDriverStation(SimRobot robot) {
         this.robot = robot;
@@ -110,6 +117,11 @@ final class SimDriverStation {
         }
     }
 
+    /** Adds an OpMode that has no @TeleOp (for the simulator's own tests). */
+    void register(String name, String kind, Class<? extends OpMode> type) {
+        opModes.add(new Entry(name, "Tests", kind, false, type));
+    }
+
     Entry find(String name) {
         for (Entry e : opModes) if (e.name.equals(name)) return e;
         return null;
@@ -127,6 +139,12 @@ final class SimDriverStation {
     /** INIT: makes the OpMode, gives it the hardware, gamepads and screen, and runs runOpMode(). */
     synchronized void init(String name) {
         if (phase == Phase.INIT || phase == Phase.RUNNING) stop();
+        Thread old = thread;
+        if (old != null && old.isAlive()) {
+            error = "The last OpMode is still running: it ignores STOP (a loop without opModeIsActive()?). "
+                    + "Its motor commands are blocked. Restart the simulator to run another OpMode.";
+            return;
+        }
         Entry e = find(name);
         if (e == null) throw new IllegalArgumentException("No OpMode called " + name);
         if (!LinearOpMode.class.isAssignableFrom(e.type)) {
@@ -141,6 +159,12 @@ final class SimDriverStation {
             o.gamepad1 = pad1.gamepad;
             o.gamepad2 = pad2.gamepad;
             o.resetRuntime();
+            // An OpMode may stop itself (requestOpModeStop): handle it like STOP, on another thread.
+            SimAccess.installServices(o, () -> commands.submit(() -> {
+                if (op == o) stop();   // a late request from an old OpMode must not stop the next one
+            }));
+            // Like the FTC app at INIT: motor directions, modes and servo ranges back to their defaults.
+            robot.resetConfig();
             screen.clearScreen();
             error = "";
             current = e;
@@ -171,8 +195,12 @@ final class SimDriverStation {
             for (int i = 0; i < Math.min(8, lines.length); i++) b.append(lines[i].trim()).append('\n');
             error = b.toString().trim();
         } finally {
-            robot.allOff();
-            if (op == o) phase = Phase.STOPPED;
+            // Only the CURRENT OpMode may switch things off (an old one that ended late must not
+            // switch off the next one's motors).
+            if (op == o) {
+                robot.allOff();
+                phase = Phase.STOPPED;
+            }
         }
     }
 
@@ -197,7 +225,12 @@ final class SimDriverStation {
                 if (t.isAlive()) {
                     t.interrupt();
                     t.join(1000);
-                    if (t.isAlive()) error = "The OpMode did not stop within 3 s (a loop that never checks opModeIsActive?)";
+                    if (t.isAlive()) {
+                        // Stuck: from now on its hardware commands are ignored, so it cannot move anything.
+                        SimRobot.block(t);
+                        error = "The OpMode did not stop within 3 s (a loop that never checks opModeIsActive()?). "
+                                + "Its motor and servo commands are now ignored.";
+                    }
                 }
             } catch (InterruptedException ignored) {
                 Thread.currentThread().interrupt();
@@ -207,20 +240,25 @@ final class SimDriverStation {
         phase = Phase.STOPPED;
     }
 
+    /** STOP without waiting here (for the page and the timer). */
+    void stopAsync() {
+        commands.submit(this::stop);
+    }
+
     /** Called often by the simulator: the autonomous timer, and gamepads let go when the page goes quiet. */
     void tick() {
+        OpMode o = op;
+        if (o != null && (phase == Phase.INIT || phase == Phase.RUNNING)) SimAccess.eventLoop(o);
         pad1.releaseIfSilent(1.0);
         pad2.releaseIfSilent(1.0);
         Entry e = current;
         if (autoTimer && !autoStopping && phase == Phase.RUNNING && e != null && e.kind.equals("Autonomous")
                 && runSeconds() >= 30) {
             autoStopping = true;
-            Thread t = new Thread(() -> {
+            commands.submit(() -> {
                 stop();
                 autoStopping = false;
-            }, "auto timer");
-            t.setDaemon(true);
-            t.start();
+            });
         }
     }
 }

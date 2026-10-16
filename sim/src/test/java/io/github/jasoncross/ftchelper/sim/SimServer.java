@@ -12,8 +12,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * A very small web server for the simulator page. It only answers this computer, unless started
@@ -27,11 +25,14 @@ import java.util.concurrent.Executors;
 final class SimServer {
     private final SimEngine sim;
     private final ServerSocket socket;
-    private final ExecutorService pool = Executors.newFixedThreadPool(8, r -> {
-        Thread t = new Thread(r, "sim-web");
-        t.setDaemon(true);
-        return t;
-    });
+    // At most 8 requests at once and 64 waiting; more are turned away (a page sends about 50 a second).
+    private final java.util.concurrent.ThreadPoolExecutor pool = new java.util.concurrent.ThreadPoolExecutor(
+            8, 8, 30, java.util.concurrent.TimeUnit.SECONDS, new java.util.concurrent.ArrayBlockingQueue<Runnable>(64), r -> {
+                Thread t = new Thread(r, "sim-web");
+                t.setDaemon(true);
+                return t;
+            });
+    private static final int MAX_BODY = 16 * 1024;
     final boolean lan;
 
     SimServer(SimEngine sim, int port, boolean lan) throws IOException {
@@ -49,7 +50,11 @@ final class SimServer {
         while (!socket.isClosed()) {
             try {
                 Socket c = socket.accept();
-                pool.submit(() -> handle(c));
+                try {
+                    pool.execute(() -> handle(c));
+                } catch (java.util.concurrent.RejectedExecutionException busy) {
+                    c.close();
+                }
             } catch (IOException e) {
                 if (socket.isClosed()) return;
             }
@@ -63,7 +68,7 @@ final class SimServer {
 
     private void handle(Socket c) {
         try (Socket client = c) {
-            client.setSoTimeout(5000);
+            client.setSoTimeout(2000);
             InputStream in = client.getInputStream();
             String head = readHead(in);
             if (head == null) return;
@@ -74,6 +79,7 @@ final class SimServer {
             for (String line : head.split("\r\n")) {
                 if (line.toLowerCase(Locale.US).startsWith("content-length:")) length = Integer.parseInt(line.substring(15).trim());
             }
+            if (length < 0 || length > MAX_BODY) return;   // far too big for a gamepad or a command
             byte[] body = new byte[length];
             int read = 0;
             while (read < length) {
@@ -110,14 +116,14 @@ final class SimServer {
             switch (action) {
                 case "init": sim.ds.init(f.get("opmode")); return "ok";
                 case "start": sim.ds.start(); return "ok";
-                case "stop": new Thread(sim.ds::stop, "stop").start(); return "ok";
+                case "stop": sim.ds.stopAsync(); return "ok";
                 case "push":
                     sim.robot.push(num(f, "forward"), num(f, "right"), num(f, "seconds"));
                     return "ok";
                 case "resetPose": sim.robot.resetPose(); return "ok";
                 case "touch": sim.robot.toggleTouch(f.get("name")); return "ok";
                 case "autoTimer": sim.ds.autoTimer = "1".equals(f.get("on")); return "ok";
-                case "battery": sim.robot.batteryVolts = num(f, "volts"); return "ok";
+                case "battery": sim.robot.setBattery(num(f, "volts")); return "ok";
                 default: return "unknown action";
             }
         } catch (RuntimeException e) {
@@ -127,7 +133,8 @@ final class SimServer {
 
     private static double num(Map<String, String> f, String key) {
         try {
-            return Double.parseDouble(f.getOrDefault(key, "0"));
+            double v = Double.parseDouble(f.getOrDefault(key, "0"));
+            return Double.isNaN(v) || Double.isInfinite(v) ? 0 : v;
         } catch (NumberFormatException e) {
             return 0;
         }

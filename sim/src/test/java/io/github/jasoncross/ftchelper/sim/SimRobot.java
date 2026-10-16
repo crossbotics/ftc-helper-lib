@@ -35,7 +35,17 @@ final class SimRobot {
     final Map<String, SimTouch> touches = new LinkedHashMap<>();
     private final Map<String, HardwareDevice> devices = new LinkedHashMap<>();
     final String imuName;
-    double batteryVolts = 12.8;
+    volatile double batteryVolts = 12.8;
+    // OpMode threads that ignored STOP: their hardware commands are ignored from then on.
+    private static final java.util.Set<Thread> BLOCKED = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+    static void block(Thread t) {
+        BLOCKED.add(t);
+    }
+
+    static boolean isBlocked() {
+        return BLOCKED.contains(Thread.currentThread());
+    }
     double servoSpeed = 1.0;   // raw positions per second
 
     // The drivetrain.
@@ -68,6 +78,7 @@ final class SimRobot {
             strafeEfficiency = num(p, "drive.strafeEfficiency", 0.85);
             for (String name : list(p.getProperty("drive.motors", ""))) {
                 SimMotor m = new SimMotor(name, port++, SimMotor.Kind.WHEEL, maxTicks, 0.15);
+                m.ticksPerRev = ticksPerRev;
                 wheels.add(m);
                 motors.put(name, m);
             }
@@ -78,6 +89,7 @@ final class SimRobot {
             SimMotor.Kind kind = SimMotor.Kind.valueOf(s.getOrDefault("", "free").toUpperCase(Locale.US));
             double max = dbl(s, "maxTicksPerSec", 2780);
             SimMotor m = new SimMotor(name, port++, kind, max, kind == SimMotor.Kind.FLYWHEEL ? 0.6 : 0.12);
+            m.ticksPerRev = dbl(s, "ticksPerRev", kind == SimMotor.Kind.FLYWHEEL ? 28 : 537.7);
             if (s.containsKey("min")) m.minTicks = dbl(s, "min", 0);
             if (s.containsKey("max")) m.maxTicks = dbl(s, "max", 0);
             m.gravity = dbl(s, "gravity", 0);
@@ -132,6 +144,19 @@ final class SimRobot {
         return new SimHardwareMap(devices);
     }
 
+    /** Like the FTC app at INIT: every device's settings back to their defaults (not its position). */
+    synchronized void resetConfig() {
+        for (SimMotor m : motors.values()) m.resetConfig();
+        for (SimServo s : servos.values()) s.resetConfig();
+        for (double[] cr : crServos.values()) cr[0] = 0;
+    }
+
+    /** Battery voltage from the panel: kept to 9..14 V (a real battery's range). */
+    void setBattery(double volts) {
+        if (Double.isNaN(volts) || Double.isInfinite(volts)) return;
+        batteryVolts = Math.max(9, Math.min(14, volts));
+    }
+
     /** All outputs off (the FTC app does this when an OpMode stops). */
     synchronized void allOff() {
         for (SimMotor m : motors.values()) m.device.setPower(0);
@@ -141,9 +166,12 @@ final class SimRobot {
     private CRServo crServo(double[] state) {
         return (CRServo) Proxy.newProxyInstance(CRServo.class.getClassLoader(), new Class<?>[] {CRServo.class},
                 (proxy, m, a) -> {
+                    if (isBlocked() && m.getName().startsWith("set")) return null;
                     switch (m.getName()) {
-                        case "setPower": state[0] = Math.max(-1, Math.min(1, ((Number) a[0]).doubleValue())); return null;
-                        case "getPower": return state[0];
+                        case "setPower":
+                            synchronized (this) { state[0] = Math.max(-1, Math.min(1, ((Number) a[0]).doubleValue())); }
+                            return null;
+                        case "getPower": synchronized (this) { return state[0]; }
                         case "getDeviceName": return "Simulated CR servo";
                         case "hashCode": return System.identityHashCode(proxy);
                         case "equals": return proxy == a[0];
@@ -189,9 +217,19 @@ final class SimRobot {
 
     /** Rolls the robot by hand: inches per second forward and right, for this many seconds. */
     synchronized void push(double forwardInPerSec, double rightInPerSec, double seconds) {
-        pushForward = forwardInPerSec;
-        pushRight = rightInPerSec;
-        pushLeft = seconds;
+        if (!finite(forwardInPerSec) || !finite(rightInPerSec) || !finite(seconds)) return;
+        pushForward = Math.max(-60, Math.min(60, forwardInPerSec));
+        pushRight = Math.max(-60, Math.min(60, rightInPerSec));
+        pushLeft = Math.max(0, Math.min(10, seconds));
+    }
+
+    /** True while a hand push is still going. */
+    synchronized boolean pushing() {
+        return pushLeft > 0;
+    }
+
+    private static boolean finite(double v) {
+        return !Double.isNaN(v) && !Double.isInfinite(v);
     }
 
     /** Puts the robot back at the start spot, facing away from the drivers. */
@@ -222,10 +260,7 @@ final class SimRobot {
             pushLeft -= dt;
         } else {
             // The hand stops: the robot (and so its wheels) stops with it, it does not coast on.
-            for (SimMotor w : wheels) {
-                if (w.forcedVel != null) w.shaftVel = 0;
-                w.forcedVel = null;
-            }
+            for (SimMotor w : wheels) w.stopForcedSpin();
         }
         for (SimMotor m : motors.values()) m.step(dt, battery);
         if (!wheels.isEmpty()) moveChassis(dt);
@@ -235,7 +270,7 @@ final class SimRobot {
             if (m.kind != SimMotor.Kind.FLYWHEEL || m.feeder == null) continue;
             SimMotor feeder = motors.get(m.feeder);
             boolean on = feeder != null && Math.abs(feeder.appliedPower) > 0.3;
-            if (on && !feederWasOn.getOrDefault(m.name, false) && Math.abs(m.shaftVel) > 100) {
+            if (on && !feederWasOn.getOrDefault(m.name, false) && Math.abs(m.shaftSpeed()) > 100) {
                 m.shot();
                 shots++;
             }
@@ -259,7 +294,7 @@ final class SimRobot {
         for (int i = 0; i < 4; i++) {
             // A 2-motor tank drive has no back motors: the back "wheels" are the front ones.
             int index = wheels.size() == 4 ? i : i % 2;
-            v[i] = mount(i) * wheels.get(index).shaftVel * ipt;
+            v[i] = mount(i) * wheels.get(index).shaftSpeed() * ipt;
         }
         double forward, right, cw;
         double k = (trackWidthIn + wheelBaseIn) / 2;
@@ -290,7 +325,7 @@ final class SimRobot {
         double k = (trackWidthIn + wheelBaseIn) / 2;
         double strafe = driveType.equals("mecanum") ? right / strafeEfficiency : 0;
         double[] v = {forward + strafe + cw * k, forward - strafe - cw * k, forward - strafe + cw * k, forward + strafe - cw * k};
-        for (int i = 0; i < wheels.size(); i++) wheels.get(i).forcedVel = mount(i) * v[i] / ipt;
+        for (int i = 0; i < wheels.size(); i++) wheels.get(i).forceSpin(mount(i) * v[i] / ipt);
     }
 
     static double wrap(double deg) {
@@ -356,18 +391,34 @@ final class SimRobot {
                     (proxy, m, a) -> handle(proxy, m.getName(), a, m.getReturnType()));
         }
 
+        /** Like the FTC app at INIT: direction and range back to normal (it stays where it is). */
+        synchronized void resetConfig() {
+            direction = Servo.Direction.FORWARD;
+            scaleMin = 0;
+            scaleMax = 1;
+        }
+
         private synchronized Object handle(Object proxy, String method, Object[] a, Class<?> returns) {
+            if (isBlocked() && method.startsWith("set")) return null;
             switch (method) {
                 case "setPosition": {
                     double pos = Math.max(0, Math.min(1, ((Number) a[0]).doubleValue()));
                     commanded = pos;
-                    double scaled = scaleMin + pos * (scaleMax - scaleMin);
-                    target = direction == Servo.Direction.REVERSE ? 1 - scaled : scaled;
+                    // Like the SDK: reverse first, then scale into the range.
+                    double p = direction == Servo.Direction.REVERSE ? 1 - pos : pos;
+                    target = scaleMin + p * (scaleMax - scaleMin);
                     return null;
                 }
                 // Like the SDK: the last position sent (0 if none yet: the SDK cannot know either).
                 case "getPosition": return Double.isNaN(commanded) ? 0.0 : commanded;
-                case "scaleRange": scaleMin = ((Number) a[0]).doubleValue(); scaleMax = ((Number) a[1]).doubleValue(); return null;
+                case "scaleRange": {
+                    double lo = ((Number) a[0]).doubleValue(), hi = ((Number) a[1]).doubleValue();
+                    // Like the SDK: 0 <= min < max <= 1, or an error.
+                    if (!(lo >= 0 && hi <= 1 && lo < hi)) throw new IllegalArgumentException("scaleRange(" + lo + ", " + hi + "): need 0 <= min < max <= 1");
+                    scaleMin = lo;
+                    scaleMax = hi;
+                    return null;
+                }
                 case "setDirection": direction = (Servo.Direction) a[0]; return null;
                 case "getDirection": return direction;
                 case "getPortNumber": return 0;
@@ -403,7 +454,7 @@ final class SimRobot {
             synchronized (SimRobot.this) {
                 if (manual) return true;
                 SimMotor m = motor == null ? null : motors.get(motor);
-                return m != null && m.shaftPos <= m.minTicks + below;
+                return m != null && m.nearBottom(below);
             }
         }
 

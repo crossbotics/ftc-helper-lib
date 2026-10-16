@@ -1,0 +1,106 @@
+package io.github.jasoncross.ftchelper.sim;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
+import java.util.HashMap;
+import java.util.Map;
+import org.junit.Test;
+
+/** The simulator itself behaves like the FTC app and SDK where OpModes would notice. */
+public class SimBehaviorTest {
+
+    /** Ignores STOP on purpose: loops forever, setting a motor. */
+    public static class Stuck extends LinearOpMode {
+        @Override public void runOpMode() {
+            DcMotorEx m = hardwareMap.get(DcMotorEx.class, "intake");
+            waitForStart();
+            while (true) {
+                try {
+                    m.setPower(0.5);
+                } catch (RuntimeException ignored) {
+                    // keep going whatever happens
+                }
+                Thread.yield();
+                if (Thread.interrupted()) { /* swallow the interrupt, like bad code */ }
+            }
+        }
+    }
+
+    /** Stops itself after START. */
+    public static class StopsItself extends LinearOpMode {
+        @Override public void runOpMode() {
+            waitForStart();
+            requestOpModeStop();
+            while (opModeIsActive()) idle();
+        }
+    }
+
+    /** Shows whether the SDK's "was pressed" check saw A. */
+    public static class EdgeCheck extends LinearOpMode {
+        @Override public void runOpMode() {
+            waitForStart();
+            int presses = 0;
+            while (opModeIsActive()) {
+                if (gamepad1.aWasPressed()) presses++;
+                telemetry.addData("presses", presses);
+                telemetry.update();
+            }
+        }
+    }
+
+    @Test public void aStuckOpModeCannotMoveAnythingAfterStop() throws Exception {
+        try (SimRun s = new SimRun()) {
+            s.sim.ds.register("Stuck", "TeleOp", Stuck.class);
+            s.init("Stuck").start();
+            SimMotor intake = s.robot().motors.get("intake");
+            assertTrue(SimRun.waitFor(() -> intake.userPower() > 0.4, 2));
+            s.sim.ds.stop();
+            assertTrue(s.error(), s.error().contains("did not stop"));
+            assertEquals("its commands are blocked", 0, intake.userPower(), 1e-9);
+            SimRun.pause(0.3);
+            assertEquals(0, intake.userPower(), 1e-9);
+        }
+    }
+
+    @Test public void anOpModeCanStopItself() throws Exception {
+        try (SimRun s = new SimRun()) {
+            s.sim.ds.register("Stops itself", "TeleOp", StopsItself.class);
+            s.init("Stops itself").start();
+            assertTrue(SimRun.waitFor(() -> s.sim.ds.phase() == SimDriverStation.Phase.STOPPED, 4));
+            assertEquals("", s.error());
+        }
+    }
+
+    @Test public void buttonWasPressedChecksWork() throws Exception {
+        try (SimRun s = new SimRun()) {
+            s.sim.ds.register("Edge check", "TeleOp", EdgeCheck.class);
+            s.init("Edge check").start();
+            Map<String, String> down = new HashMap<>();
+            down.put("a", "1");
+            s.sim.ds.pad1.apply(down);
+            s.waitForLoops(3);
+            s.sim.ds.pad1.apply(new HashMap<String, String>());
+            s.waitForLoops(3);
+            assertTrue(String.valueOf(s.screen()), s.screenHas("presses : 1"));
+        }
+    }
+
+    @Test public void reversedServosScaleLikeTheSdk() throws Exception {
+        SimRobot robot = SimRobot.load(java.nio.file.Paths.get("robots/starter.properties"));
+        SimRobot.SimServo claw = robot.servos.get("claw");
+        Servo s = claw.device;
+        s.scaleRange(0.1, 0.6);
+        s.setDirection(Servo.Direction.REVERSE);
+        s.setPosition(0);
+        assertEquals("reverse first, then scale", 0.6, claw.target(), 1e-9);
+        s.setPosition(1);
+        assertEquals(0.1, claw.target(), 1e-9);
+        robot.resetConfig();
+        s.setPosition(0);
+        assertEquals("INIT resets the range and direction", 0.0, claw.target(), 1e-9);
+    }
+}

@@ -35,13 +35,23 @@ final class SimRun implements AutoCloseable {
         return this;
     }
 
-    /** Presses and lets go of a button: set it with the setter, e.g. g -> g.a = ... */
+    /**
+     * Presses and lets go of a button: set it with the setter, e.g. v -> s.g1().a = v. It holds the
+     * button until the OpMode has sent at least two screens (so its loop surely saw it), and waits
+     * the same after letting go, so a busy computer cannot make the test miss a press.
+     */
     SimRun press(Consumer<Boolean> button) throws InterruptedException {
         button.accept(true);
-        pause(0.15);
+        waitForLoops(2);
         button.accept(false);
-        pause(0.15);
+        waitForLoops(2);
         return this;
+    }
+
+    /** Waits until the OpMode has sent this many more screens (each loop sends one), at most 3 s. */
+    void waitForLoops(int loops) throws InterruptedException {
+        int start = sim.ds.screen.updates();
+        waitFor(() -> sim.ds.screen.updates() >= start + loops, 3);
     }
 
     static void pause(double seconds) throws InterruptedException {
