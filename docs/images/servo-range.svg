@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 260" width="680" height="260" font-family="Helvetica, Arial, sans-serif" font-size="15">
+  <rect width="680" height="260" fill="#ffffff"/>
+  <text x="20" y="30" font-size="18" font-weight="bold" fill="#222">A servo's raw position (0 to 1), named positions, limits and degrees</text>
+
+  <!-- raw scale -->
+  <line x1="60" y1="120" x2="620" y2="120" stroke="#333" stroke-width="3"/>
+  <text x="50" y="150" fill="#333">0</text>
+  <text x="612" y="150" fill="#333">1</text>
+  <text x="300" y="175" fill="#333">raw servo position</text>
+
+  <!-- limits 0.1 .. 0.9 shaded -->
+  <rect x="116" y="104" width="448" height="32" fill="#dbe8d4" stroke="#2d7a32"/>
+  <text x="250" y="98" fill="#2d7a32" font-size="13">limits(0.10, 0.90): never outside</text>
+
+  <!-- named positions -->
+  <line x1="172" y1="70" x2="172" y2="136" stroke="#1f4e9c" stroke-width="2"/>
+  <text x="140" y="64" fill="#1f4e9c" font-weight="bold">OPEN 0.20</text>
+  <line x1="480" y1="70" x2="480" y2="136" stroke="#1f4e9c" stroke-width="2"/>
+  <text x="440" y="64" fill="#1f4e9c" font-weight="bold">CLOSED 0.75</text>
+
+  <!-- degrees mapping -->
+  <text x="60" y="210" fill="#b03030">degrees(0.10, 0, 0.90, 25): two measured points, straight line between</text>
+  <text x="116" y="232" fill="#b03030" font-size="13">0.10 = 0 deg</text>
+  <text x="520" y="232" fill="#b03030" font-size="13">0.90 = 25 deg</text>
+  <text x="320" y="232" fill="#b03030" font-size="13">0.50 = 12.5 deg</text>
+</svg>

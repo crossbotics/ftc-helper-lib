@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 420" width="700" height="420" font-family="Helvetica, Arial, sans-serif" font-size="15">
+  <rect width="640" height="420" fill="#ffffff"/>
+  <defs>
+    <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1f4e9c"/>
+    </marker>
+  </defs>
+  <text x="20" y="30" font-size="18" font-weight="bold" fill="#222">Turret angles, limits -190 .. +190 (seen from above)</text>
+
+  <!-- circle -->
+  <circle cx="220" cy="230" r="140" fill="#f4f6fa" stroke="#888" stroke-width="2"/>
+  <!-- overlap zone near 180: between +170 and +190 (= -170..-190). Shade a 20-deg wedge on each side of the back -->
+  <path d="M220,230 L 195.7,367.9 A 140 140 0 0 0 244.3,367.9 Z" fill="#f6d7a6" stroke="none"/>
+  <!-- forward line 0 deg (up) -->
+  <line x1="220" y1="230" x2="220" y2="78" stroke="#1f4e9c" stroke-width="3" marker-end="url(#b)"/>
+  <text x="228" y="80" fill="#1f4e9c" font-weight="bold">0 = robot forward</text>
+  <!-- 90 (left) -->
+  <line x1="220" y1="230" x2="70" y2="230" stroke="#999" stroke-width="1.5" stroke-dasharray="4 4"/>
+  <text x="34" y="225" fill="#444">+90</text>
+  <line x1="220" y1="230" x2="370" y2="230" stroke="#999" stroke-width="1.5" stroke-dasharray="4 4"/>
+  <text x="378" y="235" fill="#444">-90</text>
+  <text x="190" y="392" fill="#444">180 (back)</text>
+  <!-- ccw arrow -->
+  <path d="M 160 120 A 125 125 0 0 0 110 165" fill="none" stroke="#2d7a32" stroke-width="3" marker-end="url(#b)"/>
+  <text x="70" y="115" fill="#2d7a32" font-weight="bold">+ counterclockwise</text>
+  <!-- limit marks -->
+  <text x="262" y="355" fill="#a05a00" font-size="13">overlap: +170..+190 = -190..-170</text>
+
+  <!-- explanation -->
+  <text x="450" y="110" fill="#222">The turret may turn from</text>
+  <text x="450" y="130" fill="#222">-190 to +190 (380 in total).</text>
+  <text x="450" y="165" fill="#a05a00">Near the back (orange) the same</text>
+  <text x="450" y="185" fill="#a05a00">direction has TWO angles:</text>
+  <text x="450" y="205" fill="#a05a00">e.g. +185 and -175.</text>
+  <text x="450" y="240" fill="#222">aimAt() picks the one closest to</text>
+  <text x="450" y="260" fill="#222">where the turret is, inside the</text>
+  <text x="450" y="280" fill="#222">limits, and turns there without</text>
+  <text x="450" y="300" fill="#222">ever passing a limit.</text>
+  <text x="450" y="335" fill="#222">So the cables never wind up.</text>
+</svg>

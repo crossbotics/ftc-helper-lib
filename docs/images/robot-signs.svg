@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" width="640" height="400" font-family="Helvetica, Arial, sans-serif" font-size="15">
+  <rect width="640" height="400" fill="#ffffff"/>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1f4e9c"/>
+    </marker>
+    <marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b03030"/>
+    </marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2d7a32"/>
+    </marker>
+  </defs>
+  <text x="20" y="30" font-size="18" font-weight="bold" fill="#222">Robot seen from above: which way is positive</text>
+
+  <!-- robot body -->
+  <rect x="150" y="140" width="140" height="160" rx="10" fill="#eef2f8" stroke="#333" stroke-width="2"/>
+  <text x="220" y="225" text-anchor="middle" fill="#333">ROBOT</text>
+  <polygon points="220,146 208,166 232,166" fill="#333"/>
+  <text x="220" y="185" text-anchor="middle" font-size="12" fill="#555">front</text>
+
+  <!-- forward -->
+  <line x1="220" y1="135" x2="220" y2="60" stroke="#1f4e9c" stroke-width="4" marker-end="url(#a)"/>
+  <text x="232" y="75" fill="#1f4e9c" font-weight="bold">forward +</text>
+  <!-- strafe right -->
+  <line x1="295" y1="220" x2="380" y2="220" stroke="#1f4e9c" stroke-width="4" marker-end="url(#a)"/>
+  <text x="300" y="250" fill="#1f4e9c" font-weight="bold">strafeRight +</text>
+
+  <!-- turn clockwise -->
+  <path d="M 120 190 A 110 110 0 0 1 180 105" fill="none" stroke="#b03030" stroke-width="4" marker-end="url(#r)"/>
+  <text x="20" y="62" fill="#b03030" font-weight="bold">turnClockwise +</text>
+  <text x="20" y="80" fill="#b03030" font-size="13">(drive commands, right stick X)</text>
+
+  <!-- heading ccw -->
+  <path d="M 420 100 A 110 110 0 0 1 430 300" fill="none" stroke="#2d7a32" stroke-width="4" marker-start="url(#g)"/>
+  <text x="330" y="330" fill="#2d7a32" font-weight="bold">IMU heading + (counterclockwise)</text>
+  <text x="330" y="348" fill="#2d7a32" font-size="13">heading, turn(), turnTo(), turret angles, bearings</text>
+
+  <!-- move directions -->
+  <text x="20" y="372" fill="#222">AutoDrive.move direction: 0 = forward, 90 = right, 180 = back, -90 = left</text>
+  <text x="20" y="394" fill="#222">Sticks: forward = -gamepad.left_stick_y (the SDK says "up" is negative)</text>
+</svg>

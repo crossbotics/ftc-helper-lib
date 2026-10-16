@@ -66,6 +66,7 @@ public class AutoDrive {
     private final Consumer<String> log;
     private final LongSupplier clockNanos;
     private Runnable loopHook = null;
+    private BooleanSupplier stopCondition = null;
 
     /**
      * Sets up the four drive motors (encoders reset, RUN_USING_ENCODER, brake, power 0).
@@ -88,11 +89,11 @@ public class AutoDrive {
     }
 
     /**
-     * For tests and simulations: everything AutoDrive needs, given directly.
+     * For tests and simulations (no robot needed): everything AutoDrive needs, given directly.
      * The motors must already be set up (directions, encoder mode). For a 2-motor tank drive,
      * {@code bl} and {@code br} are null.
      */
-    AutoDrive(AutoDriveConfig cfg, boolean tank, double powerLimit,
+    public AutoDrive(AutoDriveConfig cfg, boolean tank, double powerLimit,
               DcMotorEx fl, DcMotorEx fr, DcMotorEx bl, DcMotorEx br,
               DoubleSupplier headingCcwDeg, Runnable headingReset,
               BooleanSupplier isActive, Runnable idle, Consumer<String> log, LongSupplier clockNanos) {
@@ -144,6 +145,15 @@ public class AutoDrive {
      */
     public void setLoopHook(Runnable hook) {
         this.loopHook = hook;
+    }
+
+    /**
+     * An extra reason to stop a move early: when this is true, the move ends with {@code STOPPED}.
+     * {@code AutoRoutine} uses it to end the main part of autonomous on time for parking.
+     * Pass null to remove it.
+     */
+    public void setStopCondition(BooleanSupplier condition) {
+        this.stopCondition = condition;
     }
 
     // =========================================================================================
@@ -404,6 +414,7 @@ public class AutoDrive {
 
     private Result checkStop(long deadline) {
         if (!isActive.getAsBoolean()) return Result.STOPPED;
+        if (stopCondition != null && stopCondition.getAsBoolean()) return Result.STOPPED;
         if (clockNanos.getAsLong() - deadline >= 0) {
             log.accept("AutoDrive: timed out");
             return Result.TIMED_OUT;

@@ -16,6 +16,14 @@ Game-specific code (launcher, feed, intake, vision, routes) is NOT in the librar
 | `drive/Drivebase` (Auto helpers) | `drive.AutoDrive` | Settings come from `AutoDriveConfig` (same default numbers as `DriveTuning`). `moveWithTwist` is now `moveWithTurn`. New: `turnTo`, a `Result` for each move. Changes below. |
 | `config/DriveTuning` | `drive.AutoDriveConfig` | Fields renamed in plain words, for example `TURN_KP` is `turnKp`, `AUTO_MOVE_MIN_SPEED` is `moveMinPower`. |
 | `odometry/FieldPose`, `odometry/PoseStore` | `util.FieldPose`, `util.PoseStore` | `setLastKnownPose`/`consumeLastKnownPose` are now `save`/`consume`; `peek`, `has` and `clear` remain. |
+| `auto/BaseAuto` + `AutoSequence` | `auto.AutoRoutine`, `auto.EasyAuto` | Same idea (a chain of named steps, endgame/park reserve, remembered heading). Game steps (fire, intake rows) are gone: mechanisms give their own steps. Steps are mirrored for RED by the routine. |
+| `subsystems/Launcher`, `control/FiringController`, `config/AutoRpmConfig` | `launcher.Flywheel`, `launcher.Launcher`, `launcher.ShotTable` | General versions: RPM with settle time and shot detection; readiness gating with named checks and a give-up reason; distance table with hood angles. |
+| `subsystems/Feed` | `launcher.MotorFeeder`, `launcher.ServoFeeder` (`Feeder` interface) | One piece per call; the launcher decides when. |
+| `subsystems/Intake` jam logic | `mechanism.SpinMotor`, `safety.JamDetector` | General jam detection and back-out; the DECODE packing states are not included. |
+| `vision/*` | `vision.WebcamTags`, `vision.LimelightTags`, `vision.AimController` | Rewritten for SDK 12 (single tags and clusters). Bearing is + = left for both cameras. No field localization (BIOBUZZ tags move). |
+| `Alliance`, `TeleOp_Blue`/`TeleOp_Red` | `match.Alliance`, `match.MatchMemory` | One TeleOp for both alliances: it reads the alliance autonomous chose. |
+| TeleOp auto-stop timer | `match.MatchTimer` | Countdown with cues and gamepad buzzes. |
+| `config/*` tunables + FTC Dashboard | `tuning.Tunable`, `tuning.TuningMenu`, `core.Profile` | Tune from the gamepad, saved on the hub; Dashboard still optional. |
 | (new) | `drive.TankDrive` (standard drive), `safety.SafeMotor`, `control.PidController`, `control.SlewRateLimiter`, `telemetry.TelemetryHelper`, `hardware.*` | New helpers. |
 
 ## Behavior changes in AutoDrive (on purpose)

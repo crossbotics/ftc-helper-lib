@@ -1,22 +1,66 @@
 # Instructions for AI agents (Claude Code, Codex)
 
 This is ftc-helper-lib, a Java helper library for FTC robots, used by Indianola Robotics (team 8938)
-as a git submodule in its FtcRobotController projects. Students read this code and its docs, so
-explanations must be plain and short enough for a high-school student.
+as a git submodule in its FtcRobotController projects. Its readers are high-school students with
+little or no Java: the goal is to make setting up and coding a robot as easy as possible, and to
+keep it useful for MANY seasons. Explanations must be plain and short, with the "why".
 
-Read first: `README.md`, `docs/conventions.md` (signs and units), `docs/contributing.md` (the rules).
+Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
+`docs/conventions.md` (signs and units), `docs/contributing.md` (the rules),
+`docs/guides/extending.md` (where new things plug in).
 
-## Rules
+## Layout
 
-- Every change follows the six steps in `docs/contributing.md`: code, Javadoc, test, module doc page,
-  TUTORIALS, CHANGELOG. Docs and tutorials must match the code exactly (method names, defaults, behavior).
-- The tutorials (`docs/tutorials/` + their compiled programs in `examples/.../tutorials/`) are a
-  maintained product, not extras. Any change to how the library is used updates the affected
-  tutorial pages AND programs; new user-facing features get taught in a tutorial.
-- Java 8 language level. FTC SDK dependencies stay `compileOnly` in `library/build.gradle`.
-- One sign convention everywhere (see `docs/conventions.md`). Do not add a second one.
-- Nothing may block TeleOp. Autonomous-only blocking code checks `opModeIsActive()`, has a timeout,
-  and stops motors in `finally`.
-- No game-specific code (field positions, tag IDs, mechanism tuning).
-- Before finishing: `./gradlew :library:testDebugUnitTest :examples:assembleDebug :examples:testDebugUnitTest`
-  and `python3 tools/check_docs.py` must pass.
+- `library/` the library (packages: hardware, gamepad, drive, mechanism, launcher, vision, auto,
+  match, control, telemetry, tuning, safety, core, testing, util). Tests in `library/src/test`
+  (pretend motors/servos/telemetry in `FakeMotor.java`, `Fakes.java`).
+- `examples/` compiled example OpModes: `ExampleXxx`, the starter kit (`starter/`), and one program per
+  tutorial (`tutorials/`, tutorial 13's tests in `examples/src/test`).
+- `docs/` `modules/` (reference: every public class and method), `tutorials/` (hands-on lessons),
+  `guides/` (how-to and checklists), `images/` (SVG diagrams), `starter-kit.md`, setup/update pages.
+- `tools/check_docs.py` checks links, heading links, class coverage and tutorial programs.
+
+## Rules: documentation is part of every change
+
+Every change follows the six steps in `docs/contributing.md`. A change is NOT done until all are done:
+
+1. Code. 2. Javadoc on every public class/method (what, parameters with units and ranges, returns, a short example).
+3. Tests (pretend hardware and an injected clock; simulations for anything that moves).
+4. The module page in `docs/modules/` (method tables + an example). New package = new page + README table row.
+5. Tutorials, guides, diagrams: every tutorial page AND its compiled program that use the changed API;
+   the guide that covers it; any Mermaid diagram or `docs/images/*.svg` that shows it. A new
+   user-facing feature gets taught in a tutorial (a section in the closest one, or a new tutorial
+   with its own program and a row in `docs/tutorials/README.md`). Add code examples with clear
+   "what and why" text.
+6. `CHANGELOG.md` (Added / Changed / Fixed under "Unreleased").
+
+Also keep current when relevant: `docs/troubleshooting.md` (new common problems),
+`docs/from-last-season.md`, `docs/guides/new-season.md` (rules and SDK facts per season),
+`docs/guides/testing.md` (checklists), `docs/starter-kit.md` and its files, and THIS file
+(when the layout or rules change).
+
+Code snippets inside Markdown are not compiled: when you change a program, update the matching
+snippets in its page. Check SVG diagrams by rendering them (e.g. `qlmanage -t -s 700 -o <dir> <file>.svg`).
+
+## Rules: code
+
+- Java 8 language level. FTC SDK dependencies stay `compileOnly` in the module build files.
+- One sign convention everywhere (`docs/conventions.md`): drive forward/strafe right/turn clockwise +;
+  headings, turret angles, bearings counterclockwise +. Do not add a second one.
+- Nothing may block TeleOp: commands are quick; work happens in `update()`. Autonomous-only waiting
+  code checks `opModeIsActive()`/`ctx.isActive()`, has a timeout, and stops motors in `finally`.
+- Hardware setup leaves motors at power 0. Nothing moves before START.
+- Safety stays on in every profile (limits, timeouts, jam checks, stale-target rejection).
+- Extend through the interfaces (`Subsystem`, `AutoStep`, `Feeder`, `TargetSource`); keep new parts
+  testable (devices and a clock in the constructor).
+- No game-specific code (field positions, tag ids, scoring heights): that belongs in TeamCode.
+
+## Before finishing
+
+```bash
+./gradlew :library:testDebugUnitTest :examples:assembleDebug :examples:testDebugUnitTest
+python3 tools/check_docs.py
+```
+
+Both must pass. Releases: follow `docs/contributing.md#releasing-a-version`. The mentor asks for an
+outside review (Codex "Astra", and Fable) of large changes before release.

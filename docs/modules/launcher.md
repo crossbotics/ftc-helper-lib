@@ -1,0 +1,178 @@
+# Launcher module
+
+Package: `io.github.jasoncross.ftchelper.launcher`
+
+Learn it hands-on: [17 Launcher](../tutorials/17-launcher.md), [18 Vision aiming](../tutorials/18-vision-aim.md).
+
+Parts for a robot that shoots game pieces. Each part works alone; the `Launcher` joins them.
+
+| Class | Use it to |
+| --- | --- |
+| [`Flywheel`](#flywheel) | hold a speed in RPM, say "ready", notice shots |
+| [`ShotTable`](#shottable) | distance -> RPM and hood angle, from a few measured shots |
+| [`Feeder`](#feeder) | push ONE piece into the flywheel (an interface) |
+| [`MotorFeeder`](#motorfeeder) | a roller/belt feeder |
+| [`ServoFeeder`](#servofeeder) | a kicker-arm feeder |
+| [`Turret`](#turret) | aim in degrees, never past its limits, hold a field direction |
+| [`Launcher`](#launcher) | spin up, wait until EVERYTHING is ready, feed, repeat |
+
+A hood is a [`PositionServo`](mechanism.md#positionservo) with `degrees(...)`.
+
+```mermaid
+flowchart LR
+    T["ShotTable<br/>distance -> rpm, hood"] --> L
+    L["Launcher"] --> F["Flywheel<br/>(speed)"]
+    L --> H["Hood<br/>(PositionServo)"]
+    L --> FD["Feeder<br/>(one piece)"]
+    C["Ready checks<br/>turret aimed? target seen?"] --> L
+```
+
+## How a shot happens
+
+```mermaid
+stateDiagram-v2
+    [*] --> OFF
+    OFF --> SPINNING: spinUp() / shoot(n)
+    SPINNING --> WAITING_READY: shots left > 0
+    WAITING_READY --> FEEDING: flywheel ready AND hood arrived AND every check true
+    FEEDING --> WAITING_READY: piece through, wait shotInterval, shots left > 0
+    FEEDING --> SPINNING: no shots left
+    WAITING_READY --> SPINNING: not ready within readyTimeout (gives up, says why)
+    SPINNING --> OFF: idle() / stop()
+```
+
+The two safety rules: **never feed into a slow flywheel**, and **never wait forever**.
+
+---
+
+## Flywheel
+
+```java
+Flywheel flywheel = Flywheel.create(hardwareMap, "flywheel")
+        .countsPerRev(28)          // encoder counts per ONE flywheel turn
+        .pidf(10, 3, 0, 12)        // the hub's speed control
+        .tolerance(75)             // ready within 75 rpm...
+        .settleTime(0.15);         // ...for 0.15 s
+```
+
+| Method | What it does |
+| --- | --- |
+| `create(hardwareMap, name)` | coast (a flywheel must spin down freely), speed control on |
+| `.reversed()` | spin the other way |
+| `.follower(hardwareMap, name, reversed)` | a second motor on the same wheel (same speed command) |
+| `.countsPerRev(c)` | counts per FLYWHEEL turn: bare motor 1:1 = 28; with gears multiply by motor turns per wheel turn; a shaft encoder on this motor's port = its counts (REV Through Bore 8192) |
+| `.pidf(p, i, d, f)` | the hub's speed gains. Start 10, 3, 0, 12; tune F first (with a charged battery) |
+| `.tolerance(rpm)`, `.settleTime(s)` | when "ready" |
+| `.maxRpm(r)` | highest speed allowed |
+| `.shotDrop(rpm)` | a drop this big after ready = a shot was seen |
+| `setRpm(r)`, `stop()`, `update()` | use |
+| `isReady()`, `getRpm()`, `getTargetRpm()`, `getShotCount()` | read |
+| `spinUpStep(rpm, timeout)` | autonomous step |
+
+**Check your speed reading** before trusting it: the RPM on telemetry must match a tachometer or
+a slow-motion video. Very high count rates (a fine encoder at high speed) can read wrong.
+
+## ShotTable
+
+```java
+ShotTable pollen = new ShotTable()
+        .add(24, 2600, 6)        // distance in, rpm, hood degrees
+        .add(48, 3100, 14)
+        .add(72, 3700, 21);
+ShotTable.Shot s = pollen.lookup(36);     // 2850 rpm, 10 deg
+```
+
+Straight lines between your points; outside them, the nearest end (it never guesses beyond what you
+tested). `covers(distance)` says if you are inside. One table per game piece if they fly differently.
+How to fill it: [tutorial 17](../tutorials/17-launcher.md#4-fill-the-shot-table).
+
+## Feeder
+
+An interface: `feedOne()`, `isBusy()`, `update()`, `stop()`, and optional `isJammed()`.
+The launcher decides WHEN; the feeder only knows HOW. Next season's new feeding mechanism? Write a
+class with these methods and the launcher works with it. See [Extending](../guides/extending.md).
+
+## MotorFeeder
+
+```java
+MotorFeeder feeder = MotorFeeder.create(hardwareMap, "feeder")
+        .power(1.0).feedTime(0.25)        // run 0.25 s per piece
+        .stopWhen(() -> !beam.getState()) // optional: stop when a sensor sees the piece leave
+        .jamDetection(60, 0.2);           // optional (encoder cable)
+```
+
+`clearJam()` after you fixed a jam. A jam stops the launcher's remaining shots.
+
+## ServoFeeder
+
+```java
+ServoFeeder kicker = ServoFeeder.create(hardwareMap, "kicker")
+        .positions(0.15, 0.60)            // rest, push
+        .times(0.15, 0.15);               // push time, return time
+```
+
+`goToRest()` moves it to rest (only call it in INIT if that is safe).
+
+## Turret
+
+```java
+Turret turret = Turret.create(hardwareMap, "turret")
+        .countsPerDegree(1479 / 360.0)
+        .limits(-190, 190)
+        .homeSwitch(hardwareMap, "turret_home", 45)
+        .pid(0.02, 0, 0.001, 0)
+        .tolerance(1.0);
+```
+
+![Turret angles and limits](../images/turret-limits.svg)
+
+Angles: 0 = robot forward, **counterclockwise positive** (like the IMU). Positive power must turn it
+counterclockwise (else `.reversed()`).
+
+| Method | What it does |
+| --- | --- |
+| `.countsPerDegree(c)` | encoder counts per turret degree (motor counts x gear ratio / 360) |
+| `.limits(min, max)` | allowed range; may be more than 360 in total (e.g. -190..190) |
+| `.startAngle(deg)` | the angle at power-on (no switch) |
+| `.homeSwitch(hardwareMap, name, angle)` / `.homeSwitch(reader, angle)` | a switch that closes at a known angle |
+| `.homingPower(p)`, `.pid(...)`, `.tolerance(deg)`, `.maxPower(p)`, `.slowZone(deg, power)` | tuning |
+| `aimAt(robotDeg)` | turn to a robot-relative angle, **the safe way round** |
+| `aimField(fieldDeg, headingDeg)` | point at a field direction; call every loop while the robot turns |
+| `aimBy(delta)` | turn by an amount (e.g. a camera bearing) |
+| `manual(power)` | a stick; 0 holds where it is |
+| `home(direction)` | turn slowly toward the switch until it closes |
+| `getAngle()`, `getTargetAngle()`, `isAimed()`, `isOutOfRange()`, `isHomed()`, `isHoming()` | read |
+| `aimStep(deg, timeout)` | autonomous step |
+
+**The safe way round:** with limits -190..190, 170 and -190 are the same direction. The turret
+picks the one inside the limits closest to where it is, and turns there without passing a limit,
+so cables never wind up. A direction outside the limits goes to the nearest limit and
+`isOutOfRange()` is true.
+
+**Homing:** with a switch, aiming waits until the switch was seen once (`home(direction)`). Without
+one, the turret trusts `startAngle` (default 0): turn the robot on with the turret facing forward.
+
+## Launcher
+
+```java
+Launcher launcher = new Launcher(flywheel, feeder)
+        .hood(hood)
+        .table(pollen)
+        .requireReady("Turret", turret::isAimed)
+        .shotInterval(0.25)
+        .readyTimeout(3);
+```
+
+| Method | What it does |
+| --- | --- |
+| `.hood(servo)`, `.table(t)` | optional parts |
+| `.requireReady(name, check)` | another condition before each piece (aim, sensor, anything) |
+| `.shotInterval(s)` | least time between pieces |
+| `.readyTimeout(s)` | give up the remaining shots after this long not ready |
+| `.idleRpm(r)` | speed when not shooting (a low idle makes spin-up faster) |
+| `setRpm(r)` / `setDistance(d)` | the shot by hand / from the table (sets the hood too) |
+| `spinUp()`, `idle()`, `shoot(n)`, `stopShooting()`, `stop()` | commands |
+| `update()` | every loop (updates flywheel, feeder and hood for you) |
+| `isReady()`, `whyNotReady()` | e.g. "flywheel, Turret": your first debug clue |
+| `getState()`, `isShooting()`, `getShotsLeft()`, `getShotsFired()`, `getLastProblem()` | read |
+| `spinUpStep()`, `shootStep(n)` | autonomous steps |

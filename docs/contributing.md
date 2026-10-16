@@ -13,10 +13,12 @@ follows the same six steps, so nothing breaks and the docs and tutorials stay tr
    `SafeMotor`) and test that.
 4. **Docs:** update the module page in `docs/modules/` (the method table and an example), and
    `docs/troubleshooting.md` if it fixes a common problem.
-5. **Tutorials:** if the change affects how the library is USED, update every tutorial that uses it
+5. **Tutorials, guides and diagrams:** if the change affects how the library is USED, update every tutorial that uses it
    (both the page in `docs/tutorials/` and its program in `examples/.../tutorials/`). A new feature
    that students will use needs a place in a tutorial: add a section to the closest one, or a new
-   tutorial with its own program (and a row in `docs/tutorials/README.md`).
+   tutorial with its own program (and a row in `docs/tutorials/README.md`). Update the guide that
+   covers it (`docs/guides/`), and any diagram that shows it (Mermaid blocks in the pages, SVGs in
+   `docs/images/`). A new module gets a row in the README table and a page in `docs/modules/`.
 6. **CHANGELOG.md:** add a line under "Unreleased": Added / Changed / Fixed.
 
 A change is not done until all six are done.

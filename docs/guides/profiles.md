@@ -1,0 +1,58 @@
+# Profiles: practice vs competition
+
+The same robot code should be **helpful in the shop** (debug numbers, gentle speeds, live tuning)
+and **safe at an event** (no tuning menu, no surprise values, nothing extra on the screen).
+A profile switches between the two without changing the code.
+
+## The two profiles
+
+| | PRACTICE | COMPETITION |
+| --- | --- | --- |
+| Debug telemetry | starts ON | starts OFF |
+| Tuning menu | can open | stays closed |
+| INIT screen | warns "PRACTICE profile" | normal |
+| Your `Profile.pick(a, b)` values | `a` | `b` |
+
+**COMPETITION is the default**, so a robot that was never set up is in the safe mode.
+
+## Choosing the profile
+
+It is saved on the Control Hub and stays until changed. Three ways:
+
+1. **INIT menu** (easiest): `EasyAuto` always has a "Profile" line; in your TeleOp add `.profile()`
+   to an `InitMenu`. D-pad to it, left/right to change.
+2. **Code**: `Profile.set(Profile.PRACTICE)`.
+3. Look at it: every OpMode can show `Profile.current()`.
+
+## Using it in your code
+
+```java
+// Numbers
+c.powerLimit = Profile.pick(0.6, 1.0);                  // gentle in the shop, full at events
+double slowest = Profile.pick(0.25, 0.35);
+
+// Features
+boolean liveView = Profile.pick(true, false);          // camera preview only in practice
+if (Profile.current().isPractice()) { ...extra checks, logging... }
+```
+
+```mermaid
+flowchart LR
+    P{Profile.current} -- PRACTICE --> A["practice value<br/>debug on, tuning allowed"]
+    P -- COMPETITION --> B["competition value<br/>debug off, tuning blocked"]
+```
+
+## Event checklist
+
+At the event, before the first match:
+
+1. Run any OpMode, open the INIT menu, set **Profile: COMPETITION**.
+2. Check the INIT screen has **no** "PRACTICE profile" warning.
+3. Check there is no "tuned value(s) differ from the code" warning (or that you meant it).
+
+After the event, set PRACTICE again for the shop.
+
+## What should NOT differ between profiles
+
+Safety: limits, hard stops, jam handling, timeouts. Never make a profile turn off a safety feature.
+Profiles change comfort and convenience, not protection.

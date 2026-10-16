@@ -34,9 +34,11 @@ dependencies {
     compileOnly "org.firstinspires.ftc:RobotCore:$ftcSdkVersion"
     compileOnly "org.firstinspires.ftc:Hardware:$ftcSdkVersion"
     compileOnly "org.firstinspires.ftc:FtcCommon:$ftcSdkVersion"
+    compileOnly "org.firstinspires.ftc:Vision:$ftcSdkVersion"
 
     testImplementation "org.firstinspires.ftc:RobotCore:$ftcSdkVersion"
     testImplementation "org.firstinspires.ftc:Hardware:$ftcSdkVersion"
     testImplementation "org.firstinspires.ftc:FtcCommon:$ftcSdkVersion"
+    testImplementation "org.firstinspires.ftc:Vision:$ftcSdkVersion"
     testImplementation 'junit:junit:4.13.2'
 }

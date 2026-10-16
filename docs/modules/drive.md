@@ -236,6 +236,10 @@ It resets the drive encoders, uses RUN_USING_ENCODER and brake, and sets power t
 | `getWheelTicks()` | encoder counts (FL, FR, BL, BR) |
 | `stop()` | stop all wheels |
 | `setLoopHook(code)` | run your code once per loop during every move, e.g. `auto.setLoopHook(() -> lift.moveTo(target, pid));` Keep it quick. |
+| `setStopCondition(condition)` | end a move early (result `STOPPED`) when this becomes true. `AutoRoutine` uses it for park time. |
+
+There is also a constructor for simulations and tests, with no robot: you give it pretend motors,
+a heading, "is the OpMode running" and "idle". The library's own tests drive a pretend robot this way.
 
 ### On a standard (tank) drive
 

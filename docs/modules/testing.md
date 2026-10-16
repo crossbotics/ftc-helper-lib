@@ -1,0 +1,33 @@
+# Testing module
+
+Package: `io.github.jasoncross.ftchelper.testing`
+
+Learn it hands-on: [19 Testing procedures](../tutorials/19-testing-procedures.md). Full guide: [Testing procedures](../guides/testing.md).
+
+## HardwareCheckOpMode
+
+`HardwareCheckOpMode` is a ready-made OpMode that lists every device in the active robot configuration and lets you test
+each one. Make this tiny file in TeamCode:
+
+```java
+@TeleOp(name = "Hardware Check", group = "Test")
+public class HardwareCheck extends HardwareCheckOpMode { }
+```
+
+It finds: motors, continuous-rotation servos, servos, the IMU, touch sensors, digital channels
+(magnetic switches, beam breaks), color and distance sensors, analog inputs, webcams and Limelights.
+It also shows the battery voltage and warns below 12.0 V.
+
+| Gamepad 1 | Does |
+| --- | --- |
+| D-pad up / down | choose a device (changing stops the last one) |
+| Motor or CR servo: right stick Y | power, max 50% (hold right bumper for 100%) |
+| Motor: A | zero the encoder |
+| Servo: D-pad right / left | +/- 0.01 |
+| Servo: bumpers | +/- 0.1 |
+| Servo: X | go to 0.5 |
+
+A servo does not move until you press a servo button. For each device it shows what to check,
+for example "positive power turns the way you expect, and the encoder counts UP".
+
+**Put the robot on a block** before testing drive motors.

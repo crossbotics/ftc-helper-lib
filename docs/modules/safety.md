@@ -11,6 +11,9 @@ into the frame, snap a string, or stall a motor at the end of travel.
 | --- | --- |
 | [`SafeMotor`](#safemotor) | a motor with soft limits, limit switches, homing and a slow zone |
 | [`SoftLimits`](#softlimits) | the limit rule by itself (no hardware) |
+| [`JamDetector`](#jamdetector) | tell when a motor is jammed (too slow or too much current, for a while) |
+
+Easier: [`PositionMotor`](mechanism.md#positionmotor) wraps `SafeMotor` with PID, named positions and steps.
 
 **Software limits are not enough on their own.** Rule R105 B (2026-27 manual) says the robot must
 stay inside its size limits *without the use of software*, and inspectors check the maximum mechanical
@@ -145,3 +148,25 @@ double safe = SoftLimits.limit(power, position, 0, 2900, 200, 0.25, atBottom, at
 | `atLowerSwitch`, `atUpperSwitch` | switch states (`false` if there is no switch) |
 
 Returns the safe power.
+
+---
+
+## JamDetector
+
+```java
+JamDetector jam = new JamDetector(50, 0.3);       // slower than 50 ticks/s for 0.3 s = jammed
+jam.setMaxCurrent(6);                             // optional: or above 6 A for 0.3 s
+// every loop:
+if (jam.update(power, motor.getVelocity(), amps, getRuntime())) { ...back it out... }
+```
+
+| Method | What it does |
+| --- | --- |
+| `new JamDetector(minSpeed, seconds)` | too slow for this long while powered = jammed |
+| `setMinPower(p)` | below this power the motor is not "trying" (default 0.15) |
+| `setMaxCurrent(amps)` | also jammed when the current is above this |
+| `update(power, speed, nowSec)` / `update(power, speed, amps, nowSec)` | true while jammed |
+| `reset()` | start over after clearing a jam |
+
+`SpinMotor` and `MotorFeeder` use it for you.
+

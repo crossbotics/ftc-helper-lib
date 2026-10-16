@@ -5,6 +5,8 @@ This library uses ONE set of rules everywhere. Learn these and you can read any 
 
 ## Driving
 
+![Robot seen from above: which way is positive](images/robot-signs.svg)
+
 | Value | Positive means | Where you see it |
 | --- | --- | --- |
 | `forward` | robot moves forward | `MecanumDrive.drive`, `TankDrive.arcade`, the mixers |

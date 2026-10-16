@@ -27,6 +27,16 @@ Do them in order the first time. Later, jump to the one you need.
 | 11 | [Driver assists](11-driver-assists.md) | heading snap with PID, `AimRumble`, smooth starts with `SlewRateLimiter` | mecanum + IMU |
 | 12 | [Organize a whole robot](12-robot-structure.md) | `Robot` and subsystem classes, a short TeleOp and auto that share them | drivetrain, lift, claw |
 | 13 | [Test your code without a robot](13-testing.md) | JUnit tests for team code, run on a laptop | none |
+| 14 | [Mechanism helpers](14-mechanisms.md) | `PositionMotor`, `SpinMotor`, `PositionServo`, `SpinServo`, `Subsystems` | lift, servo, intake |
+| 15 | [Telemetry, profiles and tuning](15-telemetry-profiles-tuning.md) | driver vs debug telemetry, practice/competition, live tuning, match timer | a lift |
+| 16 | [Easy autonomous](16-easy-autos.md) | `EasyAuto`: steps, INIT choices, mirroring, park time, the report | tuned drivetrain + lift + claw |
+| 17 | [Launcher](17-launcher.md) | flywheel, hood, feeder, shot table, `Launcher` | a shooter |
+| 18 | [Vision aiming](18-vision-aim.md) | webcam or Limelight 3A through one interface, safe aiming | camera + drivetrain |
+| 19 | [Testing procedures](19-testing-procedures.md) | the Hardware Check and a testing order that finds problems early | any robot |
+
+**Two paths.** Tutorials 01-13 teach how things work by building them yourself. Tutorials 14-19 use
+the ready-made helpers that do the same work for you. New programmers: do 01-06, then jump to 14.
+Want the whole robot fast? Use the [starter kit](../starter-kit.md).
 
 Time: about 30-60 minutes each, more for 07, 09 and 12 (tuning takes time).
 

@@ -2,22 +2,30 @@
 
 Shortcuts for programming an FTC robot in Java, made by Indianola Robotics (FTC team 8938).
 
-It takes the jobs every robot needs (setting up motors, reading buttons, driving a mecanum
-chassis or a standard (tank) chassis, PID control, telemetry, keeping a lift inside its safe range) and makes each one a
-line or two of clear code. It started from our 2025-26 (DECODE) robot code, cleaned up and tested.
+It takes the jobs every robot needs and makes each one a line or two of clear code: motors and
+servos, buttons, mecanum and standard (tank) drive, lifts and arms that cannot hurt themselves,
+intakes with jam back-out, a full shooter kit (flywheel, hood, turret, feeder), AprilTag aiming with a
+webcam or Limelight 3A, autonomous modes written as a list of steps, live tuning, practice and
+competition profiles, and a hardware check. It started from our 2025-26 (DECODE) robot code, and is
+built to be extended every season.
 
 ```java
-DcMotorEx lift = MotorSetup.get(hardwareMap, "lift").brake().resetEncoder().runWithoutEncoder().done();
-MecanumDrive drive = new MecanumDrive(hardwareMap, DriveConfig.mecanum());   // or TankDrive + DriveConfig.tank()
+PositionMotor lift = PositionMotor.create(hardwareMap, "lift")
+        .limits(0, 2600).pid(0.004, 0, 0.0002, 0.05)
+        .position("DOWN", 0).position("HIGH", 2400);
+SpinMotor intake = SpinMotor.create(hardwareMap, "intake").powers(1.0, -0.7);
 
 ControllerBindings controls = new ControllerBindings()
-        .bindPress(Pad.G2, Btn.A, () -> claw.setPosition(OPEN))
-        .bindToggle(Pad.G1, Btn.Y, () -> slow = true, () -> slow = false);
+        .bindPress(Pad.G2, Btn.Y, () -> lift.goTo("HIGH"))
+        .bindToggle(Pad.G2, Btn.A, intake::in, intake::stop);
 
-while (opModeIsActive()) {
-    controls.update(gamepad1, gamepad2);
-    drive.drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
-}
+// An autonomous is a list of steps:
+routine.step("Lift up", lift.startStep("HIGH"))
+       .move("To the goal", 24, 0, 0.6)
+       .turn("Face it", 45, 0.5)            // mirrored for RED automatically
+       .step("Score", claw.goToStep("OPEN"))
+       .thenPark()
+       .move("Park", 20, 90, 0.8);
 ```
 
 ## Start here
@@ -25,14 +33,20 @@ while (opModeIsActive()) {
 | I want to... | Read |
 | --- | --- |
 | Add the library to our robot project | [Add it to a project](docs/01-add-to-project.md) |
-| Get the newest version, or go back to an older one | [Keep it up to date](docs/02-keep-up-to-date.md) |
-| **Learn it step by step (13 hands-on tutorials)** | [Tutorials](docs/tutorials/README.md) |
-| Write a TeleOp | [Tutorial 04: mecanum](docs/tutorials/04-drive-mecanum.md) or [05: tank](docs/tutorials/05-drive-tank.md) |
-| Write an autonomous | [Tutorial 09: first autonomous](docs/tutorials/09-first-auto.md) |
+| **A whole robot program, fast** | [Starter kit](docs/starter-kit.md) |
+| **Learn it step by step (19 hands-on tutorials)** | [Tutorials](docs/tutorials/README.md) |
+| See how it all fits together | [Architecture](docs/guides/architecture.md) |
+| Make autonomous modes the easy way | [Easy autonomous modes](docs/guides/easy-autos.md) |
+| Drive + slow mode + intake, ready to copy | [Example: drive and intake](docs/guides/example-drive-intake.md) |
+| Practice vs competition behavior | [Profiles](docs/guides/profiles.md) |
+| Change numbers while the robot runs | [Tuning](docs/guides/tuning.md) |
+| Test the robot (checklists) | [Testing procedures](docs/guides/testing.md) |
+| Get ready for a new season | [New season](docs/guides/new-season.md) |
+| Add something new to the library | [Extending](docs/guides/extending.md), [Contributing](docs/contributing.md) |
+| Get the newest version, or an older one | [Keep it up to date](docs/02-keep-up-to-date.md) |
 | Know which way is "positive" | [Signs and units](docs/conventions.md) |
 | Fix a problem | [Troubleshooting](docs/troubleshooting.md) |
 | Find last season's class | [Coming from last season's code](docs/from-last-season.md) |
-| Add or change something in the library | [Contributing](docs/contributing.md) |
 
 ## What is inside
 
@@ -41,14 +55,22 @@ Every class and every function is explained in the module pages.
 | Module | Package | What it does | Docs |
 | --- | --- | --- | --- |
 | Hardware | `io.github.jasoncross.ftchelper.hardware` | Set up motors, servos and the IMU in one line. Clear errors for wrong names. Faster loops with bulk reads. | [hardware.md](docs/modules/hardware.md) |
-| Gamepad | `io.github.jasoncross.ftchelper.gamepad` | Press, hold, toggle and trigger actions. Stick deadband and curves. Slow-mode trigger. Rumble feedback. | [gamepad.md](docs/modules/gamepad.md) |
-| Drive | `io.github.jasoncross.ftchelper.drive` | Mecanum drive (robot-centric and field-centric) and standard / tank drive (arcade and tank style, 2 or 4 motors), reverse mode, autonomous moves and turns with encoders and the IMU for both. | [drive.md](docs/modules/drive.md) |
+| Gamepad | `io.github.jasoncross.ftchelper.gamepad` | Press, hold, release, toggle and trigger actions. Stick shaping. Slow-mode trigger. Rumble feedback. | [gamepad.md](docs/modules/gamepad.md) |
+| Drive | `io.github.jasoncross.ftchelper.drive` | Mecanum (robot- and field-centric) and standard/tank drive, reverse mode, autonomous moves and turns for both. | [drive.md](docs/modules/drive.md) |
+| Mechanism | `io.github.jasoncross.ftchelper.mechanism` | Lifts/arms to named positions, intakes with jam back-out, servos with positions or degrees, continuous servos. | [mechanism.md](docs/modules/mechanism.md) |
+| Launcher | `io.github.jasoncross.ftchelper.launcher` | Flywheel in RPM, shot table, feeders, turret with safe limits, and a Launcher that only feeds when ready. | [launcher.md](docs/modules/launcher.md) |
+| Vision | `io.github.jasoncross.ftchelper.vision` | AprilTags with a webcam (SDK 12 clusters too) or a Limelight 3A, one interface, safe aiming. | [vision.md](docs/modules/vision.md) |
+| Auto | `io.github.jasoncross.ftchelper.auto` | Autonomous as a list of named steps; EasyAuto does menu, timer, mirroring, park time, report. | [auto.md](docs/modules/auto.md) |
+| Match | `io.github.jasoncross.ftchelper.match` | Alliance and mirroring, match timer with buzz cues, INIT menu, auto-to-TeleOp memory. | [match.md](docs/modules/match.md) |
 | Control | `io.github.jasoncross.ftchelper.control` | PID controller and slew-rate limiter (ramp). | [control.md](docs/modules/control.md) |
-| Telemetry | `io.github.jasoncross.ftchelper.telemetry` | Neat, same-every-time Driver Station lines. | [telemetry.md](docs/modules/telemetry.md) |
-| Safety | `io.github.jasoncross.ftchelper.safety` | Soft limits, limit switches, homing and slow zones for lifts, slides and arms. | [safety.md](docs/modules/safety.md) |
+| Telemetry | `io.github.jasoncross.ftchelper.telemetry` | Driver and debug levels, warnings on top, rate limit; one-line helpers. | [telemetry.md](docs/modules/telemetry.md) |
+| Tuning | `io.github.jasoncross.ftchelper.tuning` | Change numbers live from the gamepad; saved on the hub. | [tuning.md](docs/modules/tuning.md) |
+| Safety | `io.github.jasoncross.ftchelper.safety` | Soft limits, limit switches, homing, slow zones, jam detection. | [safety.md](docs/modules/safety.md) |
+| Core | `io.github.jasoncross.ftchelper.core` | The Subsystem pattern, practice/competition profiles, settings file. | [core.md](docs/modules/core.md) |
+| Testing | `io.github.jasoncross.ftchelper.testing` | A ready-made Hardware Check OpMode. | [testing.md](docs/modules/testing.md) |
 | Util | `io.github.jasoncross.ftchelper.util` | Math and angle helpers, loop timer, Auto-to-TeleOp pose handoff. | [util.md](docs/modules/util.md) |
 
-Example OpModes you can copy are in [`examples/`](examples/src/main/java/io/github/jasoncross/ftchelper/examples), and every tutorial's complete program is in [`examples/.../tutorials/`](examples/src/main/java/io/github/jasoncross/ftchelper/examples/tutorials).
+Example OpModes you can copy (including the [starter kit](docs/starter-kit.md)) are in [`examples/`](examples/src/main/java/io/github/jasoncross/ftchelper/examples), and every tutorial's complete program is in [`examples/.../tutorials/`](examples/src/main/java/io/github/jasoncross/ftchelper/examples/tutorials).
 
 ## Works with
 

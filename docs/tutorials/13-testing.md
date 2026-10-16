@@ -15,7 +15,7 @@ The robot is shared, the battery runs out, and the build team needs it too. Many
 about hardware at all: a wrong list index, a sign error, a height out of range. A test finds those
 in one second, on any laptop, every time you change the code.
 
-The library itself has over 70 such tests. They found real bugs before any robot moved.
+The library itself has over 100 such tests. They found real bugs before any robot moved.
 
 ## 2. What you can test
 
@@ -139,8 +139,7 @@ Run them before every commit, and always before an event.
    `update`, check your counter. (The library's `GamepadTest` shows how.)
 3. Write a test for a mirror function `double side(boolean red)` from Tutorial 10.
 
-## You finished the tutorials
+## Next
 
-You can now build a full robot program with the library. Keep the
-[module pages](../modules/) open as a reference while you work, and see
-[Contributing](../contributing.md) if you want to add something to the library itself.
+[Tutorial 14: Mechanism helpers](14-mechanisms.md): the ready-made versions of everything you built
+in tutorials 07-12.

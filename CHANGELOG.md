@@ -4,6 +4,38 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+## v0.4.0 - 2026-10-15
+
+### Added
+
+- **Mechanism helpers** (`mechanism`): `PositionMotor` (named positions, PID, limits, homing switch,
+  slow zone, manual with hold, units, tunable), `SpinMotor` (in/out/stop, jam back-out),
+  `PositionServo` (named positions, degrees, slow moves, arrival estimate), `SpinServo` (CR servo, timed runs, angle sensor).
+- **Launcher kit** (`launcher`): `Flywheel` (RPM, hub speed control, ready with settle time, shot detection),
+  `ShotTable`, the `Feeder` interface with `MotorFeeder` and `ServoFeeder`, `Turret` (degrees, safe way
+  round inside limits, field-relative aim, homing), and `Launcher` (feeds only when every check is ready, gives up with a reason).
+- **Vision** (`vision`): `TargetSource` interface, `WebcamTags` (SDK 12 single tags and clusters),
+  `LimelightTags` (Limelight 3A), `TargetObservation` (bearing + = left), `AimController` (no aim on stale/missing targets).
+- **Easy autonomous** (`auto`): `AutoRoutine` (named steps, mirroring for RED, park reserve, report),
+  `EasyAuto` base class (INIT menu, placement text, timer, delay, cleanup, TeleOp hand-off), `AutoStep`, `AutoContext`.
+  Mechanisms provide ready-made steps (`goToStep`, `startStep`, `shootStep`, `aimStep`...).
+- **Match** (`match`): `Alliance`, `MatchTimer` (cues and gamepad buzzes), `InitMenu`, `MatchMemory`.
+- **Core** (`core`): `Subsystem` interface and `Subsystems` group, `Profile` (PRACTICE/COMPETITION, saved), `SettingsFile`.
+- **Tuning** (`tuning`): `Tunable`, `PidTunables`, `TuningMenu` (gamepad menu, PRACTICE only, saved on the hub).
+- **Telemetry**: `RobotTelemetry` (standard and debug levels, warnings on top, rate limit).
+- **Safety**: `JamDetector`.
+- **Testing**: `HardwareCheckOpMode` (lists and tests every configured device).
+- `AutoDrive.setStopCondition(...)`; the simulation constructor is now public.
+- Examples: `ExampleDriveIntake` (mecanum + slow toggle + intake on at start, stop/start/reverse), the
+  6-file **starter kit**, tutorial programs 14-19.
+- Docs: module pages for every new package, guides (architecture, profiles, tuning, easy autos, testing
+  procedures, new season, extending, the drive+intake example), the starter kit page, tutorials 14-19,
+  diagrams (Mermaid and SVG).
+
+### Changed
+
+- Built and tested against FTC SDK 12.0 with the `Vision` artifact (compileOnly) for the vision classes.
+
 ## v0.3.0 - 2026-10-15
 
 ### Added
