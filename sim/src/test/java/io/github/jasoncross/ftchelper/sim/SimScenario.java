@@ -29,6 +29,7 @@ import java.util.Map;
  * </pre>
  *
  * Command line: SimScenario --robot robot.properties file.sim [file2.sim ...]  (exit code 1 on a failure)
+ * A line "robot PATH" in the file (from the file's folder) runs that scenario with that robot file instead.
  */
 public final class SimScenario {
     private final SimEngine sim;
@@ -64,7 +65,8 @@ public final class SimScenario {
         }
         int failed = 0;
         for (Path f : files) {
-            SimEngine sim = new SimEngine(SimRobot.load(robot));
+            Path useRobot = robotFor(f, robot);
+            SimEngine sim = new SimEngine(SimRobot.load(useRobot));
             sim.start();
             SimScenario s = new SimScenario(sim);
             try {
@@ -72,13 +74,29 @@ public final class SimScenario {
             } finally {
                 sim.shutdown();
             }
-            System.out.println("== " + f + " (robot file " + robot + ")");
+            System.out.println("== " + f + " (robot file " + useRobot + ")");
             for (String line : s.report) System.out.println(line);
             System.out.println(s.failures == 0 ? "PASSED" : "FAILED: " + s.failures + " check(s)");
             System.out.println();
             if (s.failures > 0) failed++;
         }
         System.exit(failed == 0 ? 0 : 1);
+    }
+
+    /**
+     * The robot file a scenario asks for with a "robot PATH" line (PATH from the scenario's folder,
+     * e.g. robot ../robots/starter-bot-gobilda.properties), or the given one when it has none.
+     */
+    static Path robotFor(Path scenario, Path fallback) throws IOException {
+        for (String raw : Files.readAllLines(scenario, StandardCharsets.UTF_8)) {
+            String line = raw.trim();
+            if (line.isEmpty() || line.startsWith("#")) continue;
+            List<String> t = tokens(line);
+            if (t.size() >= 2 && t.get(0).equalsIgnoreCase("robot")) {
+                return scenario.toAbsolutePath().getParent().resolve(t.get(1)).normalize();
+            }
+        }
+        return fallback;
     }
 
     /** Runs every line of the file. */
@@ -206,6 +224,9 @@ public final class SimScenario {
                 return;
             case "print":
                 print(t.get(1));
+                return;
+            case "robot":
+                // Chosen before the run (robotFor): nothing to do here.
                 return;
             case "expect":
                 expect(n, line, t.subList(1, t.size()));
