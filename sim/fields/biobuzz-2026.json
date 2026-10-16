@@ -1,0 +1,1838 @@
+{
+ "season": "BIOBUZZ 2026-27",
+ "source": "official field CAD field-cad-step.step via export_sim_field.py",
+ "units": "in",
+ "frameNote": "Origin = field centre, z up from the top of the tiles. BIOBUZZ has the red and blue ALLIANCE AREAS on opposite sides of the field and the audience on a third side, so 'drivers at the bottom' is the RED drive team: y = -72 is the red wall, +y points toward the blue ALLIANCE AREA, +x is the red drivers' right (toward the audience), headings counterclockwise from +x. For the blue drive team's view turn everything 180 degrees: (x, y) -> (-x, -y). Field symmetry: blue elements are the red ones turned 180 degrees about the centre. CAD -> sim: (x, y, z) = (CAD z, CAD x, CAD y) / 25.4.",
+ "field": {
+  "size": 144.0,
+  "insideWallSize": 141.17,
+  "wallHeight": 11.64,
+  "tileSize": 141.17,
+  "notes": "'size' is the nominal 144 in the simulator draws; the CAD's perimeter rails stand 141.17 in apart inside (walls at +/-70.585 in). wallHeight = top of the perimeter rail above the tiles."
+ },
+ "elements": [
+  {
+   "name": "HIVE frame base (red side)",
+   "kind": "solid",
+   "color": "#3b4148",
+   "polygon": [
+    [
+     5.8,
+     -15.5
+    ],
+    [
+     6.43,
+     -15.57
+    ],
+    [
+     19.4,
+     -22.76
+    ],
+    [
+     19.45,
+     -22.8
+    ],
+    [
+     19.46,
+     -22.82
+    ],
+    [
+     19.47,
+     -22.85
+    ],
+    [
+     19.47,
+     -22.88
+    ],
+    [
+     19.48,
+     -24.57
+    ],
+    [
+     19.47,
+     -24.64
+    ],
+    [
+     19.46,
+     -24.73
+    ],
+    [
+     19.45,
+     -24.73
+    ],
+    [
+     -19.45,
+     -24.73
+    ],
+    [
+     -19.46,
+     -24.71
+    ],
+    [
+     -19.47,
+     -24.67
+    ],
+    [
+     -19.48,
+     -24.57
+    ],
+    [
+     -19.47,
+     -22.88
+    ],
+    [
+     -19.47,
+     -22.85
+    ],
+    [
+     -19.46,
+     -22.82
+    ],
+    [
+     -19.45,
+     -22.8
+    ],
+    [
+     -19.4,
+     -22.76
+    ],
+    [
+     -6.43,
+     -15.57
+    ],
+    [
+     -5.94,
+     -15.52
+    ],
+    [
+     -5.34,
+     -15.46
+    ],
+    [
+     5.34,
+     -15.46
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 29.0,
+   "notes": "One A-frame of the HIVE frame (manual 9.6.1): the 2.15 in tall foot bar on the tiles plus the two legs up to 29 in (they lean inward, so a tall robot meets them further in). Convex outline of 1 piece(s); the small pocket between the legs is counted as blocked."
+  },
+  {
+   "name": "HIVE frame base (blue side)",
+   "kind": "solid",
+   "color": "#3b4148",
+   "polygon": [
+    [
+     -5.47,
+     15.48
+    ],
+    [
+     -5.89,
+     15.53
+    ],
+    [
+     -6.43,
+     15.58
+    ],
+    [
+     -19.4,
+     22.76
+    ],
+    [
+     -19.45,
+     22.8
+    ],
+    [
+     -19.46,
+     22.82
+    ],
+    [
+     -19.47,
+     22.85
+    ],
+    [
+     -19.47,
+     22.88
+    ],
+    [
+     -19.48,
+     24.59
+    ],
+    [
+     -19.47,
+     24.68
+    ],
+    [
+     -19.46,
+     24.73
+    ],
+    [
+     -19.45,
+     24.73
+    ],
+    [
+     19.45,
+     24.73
+    ],
+    [
+     19.46,
+     24.71
+    ],
+    [
+     19.48,
+     24.59
+    ],
+    [
+     19.47,
+     22.88
+    ],
+    [
+     19.47,
+     22.85
+    ],
+    [
+     19.46,
+     22.82
+    ],
+    [
+     19.45,
+     22.8
+    ],
+    [
+     19.4,
+     22.76
+    ],
+    [
+     6.43,
+     15.58
+    ],
+    [
+     5.48,
+     15.48
+    ],
+    [
+     5.34,
+     15.47
+    ],
+    [
+     -5.34,
+     15.47
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 29.0,
+   "notes": "One A-frame of the HIVE frame (manual 9.6.1): the 2.15 in tall foot bar on the tiles plus the two legs up to 29 in (they lean inward, so a tall robot meets them further in). Convex outline of 1 piece(s); the small pocket between the legs is counted as blocked."
+  },
+  {
+   "name": "HIVE frame top",
+   "kind": "overhead",
+   "color": "#3b4148",
+   "polygon": [
+    [
+     4.04,
+     -15.06
+    ],
+    [
+     -4.04,
+     -15.06
+    ],
+    [
+     -4.29,
+     -14.57
+    ],
+    [
+     -4.29,
+     14.59
+    ],
+    [
+     -4.04,
+     15.07
+    ],
+    [
+     4.04,
+     15.07
+    ],
+    [
+     4.29,
+     14.59
+    ],
+    [
+     4.29,
+     -14.57
+    ]
+   ],
+   "zMin": 34.07,
+   "zMax": 44.31,
+   "notes": "Top bar, top corners, axle holders and the logo panels (ACM + sticker) of the HIVE frame. Every frame part below 29 in is in the two 'HIVE frame base' elements."
+  },
+  {
+   "name": "Red HIVE",
+   "kind": "overhead",
+   "color": "#c8322a",
+   "polygon": [
+    [
+     -25.04,
+     -12.91
+    ],
+    [
+     -25.04,
+     -12.57
+    ],
+    [
+     -25.01,
+     -11.95
+    ],
+    [
+     -22.14,
+     -2.94
+    ],
+    [
+     -21.77,
+     -2.45
+    ],
+    [
+     -21.5,
+     -2.25
+    ],
+    [
+     -21.02,
+     -2.24
+    ],
+    [
+     21.02,
+     -2.24
+    ],
+    [
+     21.5,
+     -2.25
+    ],
+    [
+     21.77,
+     -2.45
+    ],
+    [
+     22.14,
+     -2.94
+    ],
+    [
+     25.01,
+     -11.95
+    ],
+    [
+     25.04,
+     -12.57
+    ],
+    [
+     25.04,
+     -12.91
+    ],
+    [
+     25.01,
+     -13.54
+    ],
+    [
+     22.14,
+     -22.54
+    ],
+    [
+     21.77,
+     -23.03
+    ],
+    [
+     21.5,
+     -23.23
+    ],
+    [
+     21.02,
+     -23.24
+    ],
+    [
+     -21.02,
+     -23.24
+    ],
+    [
+     -21.5,
+     -23.23
+    ],
+    [
+     -21.82,
+     -22.97
+    ],
+    [
+     -22.14,
+     -22.54
+    ],
+    [
+     -25.01,
+     -13.54
+    ]
+   ],
+   "zMin": 30.65,
+   "zMax": 65.93,
+   "notes": "Two CELLS on a pivot 43.95 in above the tiles; it tips so one CELL faces up. The outline covers both rest positions (CAD state: lowest point 30.65 in; tipped: 30.65 in). Above the 29 in robot limit, so a legal robot drives under it.",
+   "cadState": "audience CELL up"
+  },
+  {
+   "name": "Blue HIVE",
+   "kind": "overhead",
+   "color": "#2a62c4",
+   "polygon": [
+    [
+     -25.04,
+     12.59
+    ],
+    [
+     -25.04,
+     12.93
+    ],
+    [
+     -25.01,
+     13.55
+    ],
+    [
+     -22.14,
+     22.55
+    ],
+    [
+     -21.77,
+     23.05
+    ],
+    [
+     -21.5,
+     23.25
+    ],
+    [
+     -21.02,
+     23.26
+    ],
+    [
+     21.02,
+     23.26
+    ],
+    [
+     21.5,
+     23.25
+    ],
+    [
+     21.77,
+     23.05
+    ],
+    [
+     22.14,
+     22.55
+    ],
+    [
+     25.01,
+     13.55
+    ],
+    [
+     25.04,
+     12.93
+    ],
+    [
+     25.04,
+     12.59
+    ],
+    [
+     25.01,
+     11.96
+    ],
+    [
+     22.14,
+     2.96
+    ],
+    [
+     21.82,
+     2.53
+    ],
+    [
+     21.5,
+     2.27
+    ],
+    [
+     21.02,
+     2.26
+    ],
+    [
+     -21.02,
+     2.26
+    ],
+    [
+     -21.5,
+     2.27
+    ],
+    [
+     -21.77,
+     2.47
+    ],
+    [
+     -22.14,
+     2.96
+    ],
+    [
+     -25.01,
+     11.96
+    ]
+   ],
+   "zMin": 30.65,
+   "zMax": 65.93,
+   "notes": "Two CELLS on a pivot 43.95 in above the tiles; it tips so one CELL faces up. The outline covers both rest positions (CAD state: lowest point 30.65 in; tipped: 30.65 in). Above the 29 in robot limit, so a legal robot drives under it.",
+   "cadState": "far CELL up"
+  },
+  {
+   "name": "FLOWER (audience wall, blue half)",
+   "kind": "solid",
+   "color": "#f2c230",
+   "polygon": [
+    [
+     65.69,
+     25.4
+    ],
+    [
+     65.86,
+     25.63
+    ],
+    [
+     65.97,
+     25.71
+    ],
+    [
+     66.17,
+     25.79
+    ],
+    [
+     67.8,
+     26.33
+    ],
+    [
+     67.96,
+     26.36
+    ],
+    [
+     69.98,
+     26.73
+    ],
+    [
+     70.39,
+     26.73
+    ],
+    [
+     71.22,
+     26.72
+    ],
+    [
+     71.27,
+     26.69
+    ],
+    [
+     71.76,
+     26.29
+    ],
+    [
+     71.79,
+     26.22
+    ],
+    [
+     71.79,
+     20.57
+    ],
+    [
+     71.76,
+     20.49
+    ],
+    [
+     71.27,
+     20.09
+    ],
+    [
+     71.21,
+     20.07
+    ],
+    [
+     69.99,
+     20.06
+    ],
+    [
+     67.97,
+     20.42
+    ],
+    [
+     67.8,
+     20.46
+    ],
+    [
+     66.1,
+     21.02
+    ],
+    [
+     65.86,
+     21.16
+    ],
+    [
+     65.69,
+     21.39
+    ],
+    [
+     65.63,
+     21.67
+    ],
+    [
+     65.63,
+     25.12
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 22.65,
+   "notes": "Fixed to the perimeter wall (manual 9.7). Top opening ~21.5 in up; POLLEN can be taken from the Retrieval Opening at the bottom (z ~0.35-3.9 in), open toward the field and both sides.",
+   "center": [
+    68.74,
+    23.39
+   ]
+  },
+  {
+   "name": "FLOWER (blue wall, far half)",
+   "kind": "solid",
+   "color": "#f2c230",
+   "polygon": [
+    [
+     -25.4,
+     65.69
+    ],
+    [
+     -25.63,
+     65.86
+    ],
+    [
+     -25.71,
+     65.97
+    ],
+    [
+     -25.79,
+     66.17
+    ],
+    [
+     -26.33,
+     67.8
+    ],
+    [
+     -26.36,
+     67.96
+    ],
+    [
+     -26.73,
+     69.98
+    ],
+    [
+     -26.73,
+     70.39
+    ],
+    [
+     -26.72,
+     71.22
+    ],
+    [
+     -26.69,
+     71.27
+    ],
+    [
+     -26.29,
+     71.76
+    ],
+    [
+     -26.22,
+     71.79
+    ],
+    [
+     -20.57,
+     71.79
+    ],
+    [
+     -20.49,
+     71.76
+    ],
+    [
+     -20.09,
+     71.27
+    ],
+    [
+     -20.07,
+     71.21
+    ],
+    [
+     -20.06,
+     69.99
+    ],
+    [
+     -20.42,
+     67.97
+    ],
+    [
+     -20.46,
+     67.8
+    ],
+    [
+     -21.02,
+     66.1
+    ],
+    [
+     -21.16,
+     65.86
+    ],
+    [
+     -21.39,
+     65.69
+    ],
+    [
+     -21.67,
+     65.63
+    ],
+    [
+     -25.12,
+     65.63
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 22.65,
+   "notes": "Fixed to the perimeter wall (manual 9.7). Top opening ~21.5 in up; POLLEN can be taken from the Retrieval Opening at the bottom (z ~0.35-3.9 in), open toward the field and both sides.",
+   "center": [
+    -23.39,
+    68.74
+   ]
+  },
+  {
+   "name": "FLOWER (red wall, audience half)",
+   "kind": "solid",
+   "color": "#f2c230",
+   "polygon": [
+    [
+     25.4,
+     -65.69
+    ],
+    [
+     25.63,
+     -65.86
+    ],
+    [
+     25.71,
+     -65.97
+    ],
+    [
+     25.79,
+     -66.17
+    ],
+    [
+     26.33,
+     -67.8
+    ],
+    [
+     26.36,
+     -67.96
+    ],
+    [
+     26.73,
+     -69.98
+    ],
+    [
+     26.73,
+     -70.39
+    ],
+    [
+     26.72,
+     -71.22
+    ],
+    [
+     26.69,
+     -71.27
+    ],
+    [
+     26.29,
+     -71.76
+    ],
+    [
+     26.22,
+     -71.79
+    ],
+    [
+     20.57,
+     -71.79
+    ],
+    [
+     20.49,
+     -71.76
+    ],
+    [
+     20.09,
+     -71.27
+    ],
+    [
+     20.07,
+     -71.21
+    ],
+    [
+     20.06,
+     -69.99
+    ],
+    [
+     20.42,
+     -67.97
+    ],
+    [
+     20.46,
+     -67.8
+    ],
+    [
+     21.02,
+     -66.1
+    ],
+    [
+     21.16,
+     -65.86
+    ],
+    [
+     21.39,
+     -65.69
+    ],
+    [
+     21.67,
+     -65.63
+    ],
+    [
+     25.12,
+     -65.63
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 22.65,
+   "notes": "Fixed to the perimeter wall (manual 9.7). Top opening ~21.5 in up; POLLEN can be taken from the Retrieval Opening at the bottom (z ~0.35-3.9 in), open toward the field and both sides.",
+   "center": [
+    23.39,
+    -68.74
+   ]
+  },
+  {
+   "name": "FLOWER (far wall, red half)",
+   "kind": "solid",
+   "color": "#f2c230",
+   "polygon": [
+    [
+     -65.69,
+     -25.4
+    ],
+    [
+     -65.86,
+     -25.63
+    ],
+    [
+     -65.97,
+     -25.71
+    ],
+    [
+     -66.17,
+     -25.79
+    ],
+    [
+     -67.8,
+     -26.33
+    ],
+    [
+     -67.96,
+     -26.36
+    ],
+    [
+     -69.98,
+     -26.73
+    ],
+    [
+     -70.39,
+     -26.73
+    ],
+    [
+     -71.22,
+     -26.72
+    ],
+    [
+     -71.27,
+     -26.69
+    ],
+    [
+     -71.76,
+     -26.29
+    ],
+    [
+     -71.79,
+     -26.22
+    ],
+    [
+     -71.79,
+     -20.57
+    ],
+    [
+     -71.76,
+     -20.49
+    ],
+    [
+     -71.27,
+     -20.09
+    ],
+    [
+     -71.21,
+     -20.07
+    ],
+    [
+     -69.99,
+     -20.06
+    ],
+    [
+     -67.97,
+     -20.42
+    ],
+    [
+     -67.8,
+     -20.46
+    ],
+    [
+     -66.1,
+     -21.02
+    ],
+    [
+     -65.86,
+     -21.16
+    ],
+    [
+     -65.69,
+     -21.39
+    ],
+    [
+     -65.63,
+     -21.67
+    ],
+    [
+     -65.63,
+     -25.12
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 22.65,
+   "notes": "Fixed to the perimeter wall (manual 9.7). Top opening ~21.5 in up; POLLEN can be taken from the Retrieval Opening at the bottom (z ~0.35-3.9 in), open toward the field and both sides.",
+   "center": [
+    -68.74,
+    -23.39
+   ]
+  },
+  {
+   "name": "Blue NECTAR tray",
+   "kind": "solid",
+   "color": "#d8d2c4",
+   "polygon": [
+    [
+     -7.87,
+     81.9
+    ],
+    [
+     7.88,
+     81.9
+    ],
+    [
+     7.88,
+     71.65
+    ],
+    [
+     -7.87,
+     71.65
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 3.0,
+   "notes": "Tray holding the alliance's NECTAR, on the floor in the ALLIANCE AREA outside the field wall (the robot never reaches it). zMin/zMax are from the floor outside the field, not the tiles."
+  },
+  {
+   "name": "Red NECTAR tray",
+   "kind": "solid",
+   "color": "#d8d2c4",
+   "polygon": [
+    [
+     -7.87,
+     -71.65
+    ],
+    [
+     7.88,
+     -71.65
+    ],
+    [
+     7.88,
+     -81.9
+    ],
+    [
+     -7.87,
+     -81.9
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 3.0,
+   "notes": "Tray holding the alliance's NECTAR, on the floor in the ALLIANCE AREA outside the field wall (the robot never reaches it). zMin/zMax are from the floor outside the field, not the tiles."
+  },
+  {
+   "name": "Red LOADING ZONE tape",
+   "kind": "line",
+   "color": "#d0312a",
+   "polygon": [
+    [
+     -45.6,
+     -59.1
+    ],
+    [
+     -24.91,
+     -59.1
+    ],
+    [
+     -24.91,
+     -60.1
+    ],
+    [
+     -45.6,
+     -60.1
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 0.01,
+   "notes": "1 in gaffer tape, 20.69 in long (20.69in. in the CAD name)"
+  },
+  {
+   "name": "Blue ALLIANCE AREA tape",
+   "kind": "line",
+   "color": "#2c62c8",
+   "polygon": [
+    [
+     -47.41,
+     125.65
+    ],
+    [
+     47.41,
+     125.65
+    ],
+    [
+     47.41,
+     124.65
+    ],
+    [
+     -47.41,
+     124.65
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 0.01,
+   "notes": "1 in gaffer tape, 94.82 in long (94.82in. in the CAD name); on the floor outside the field"
+  },
+  {
+   "name": "Blue LOADING ZONE tape",
+   "kind": "line",
+   "color": "#2c62c8",
+   "polygon": [
+    [
+     23.91,
+     70.1
+    ],
+    [
+     24.91,
+     70.1
+    ],
+    [
+     24.91,
+     59.1
+    ],
+    [
+     23.91,
+     59.1
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 0.01,
+   "notes": "1 in gaffer tape, 11.00 in long (11in. in the CAD name)"
+  },
+  {
+   "name": "Blue GARDEN tape",
+   "kind": "line",
+   "color": "#2c62c8",
+   "polygon": [
+    [
+     -69.1,
+     70.1
+    ],
+    [
+     -68.1,
+     70.1
+    ],
+    [
+     -68.1,
+     47.41
+    ],
+    [
+     -69.1,
+     47.41
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 0.01,
+   "notes": "1 in gaffer tape, 22.69 in long (22.69in. in the CAD name)"
+  },
+  {
+   "name": "Blue GARDEN tape",
+   "kind": "line",
+   "color": "#2c62c8",
+   "polygon": [
+    [
+     -70.1,
+     70.1
+    ],
+    [
+     -69.1,
+     70.1
+    ],
+    [
+     -69.1,
+     47.41
+    ],
+    [
+     -70.1,
+     47.41
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 0.01,
+   "notes": "1 in gaffer tape, 22.69 in long (22.69in. in the CAD name)"
+  },
+  {
+   "name": "Red LOADING ZONE tape",
+   "kind": "line",
+   "color": "#d0312a",
+   "polygon": [
+    [
+     -24.91,
+     -59.1
+    ],
+    [
+     -23.91,
+     -59.1
+    ],
+    [
+     -23.91,
+     -70.1
+    ],
+    [
+     -24.91,
+     -70.1
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 0.01,
+   "notes": "1 in gaffer tape, 11.00 in long (11in. in the CAD name)"
+  },
+  {
+   "name": "Red GARDEN tape",
+   "kind": "line",
+   "color": "#d0312a",
+   "polygon": [
+    [
+     69.1,
+     -47.41
+    ],
+    [
+     70.1,
+     -47.41
+    ],
+    [
+     70.1,
+     -70.1
+    ],
+    [
+     69.1,
+     -70.1
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 0.01,
+   "notes": "1 in gaffer tape, 22.69 in long (22.69in. in the CAD name)"
+  },
+  {
+   "name": "Red ALLIANCE AREA tape",
+   "kind": "line",
+   "color": "#d0312a",
+   "polygon": [
+    [
+     47.41,
+     -71.65
+    ],
+    [
+     48.41,
+     -71.65
+    ],
+    [
+     48.41,
+     -125.65
+    ],
+    [
+     47.41,
+     -125.65
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 0.01,
+   "notes": "1 in gaffer tape, 54.00 in long (54in. in the CAD name); on the floor outside the field"
+  },
+  {
+   "name": "Blue LOADING ZONE tape",
+   "kind": "line",
+   "color": "#2c62c8",
+   "polygon": [
+    [
+     45.6,
+     70.1
+    ],
+    [
+     46.6,
+     70.1
+    ],
+    [
+     46.6,
+     59.1
+    ],
+    [
+     45.6,
+     59.1
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 0.01,
+   "notes": "1 in gaffer tape, 11.00 in long (11in. in the CAD name)"
+  },
+  {
+   "name": "Blue ALLIANCE AREA tape",
+   "kind": "line",
+   "color": "#2c62c8",
+   "polygon": [
+    [
+     -48.41,
+     125.65
+    ],
+    [
+     -47.41,
+     125.65
+    ],
+    [
+     -47.41,
+     71.65
+    ],
+    [
+     -48.41,
+     71.65
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 0.01,
+   "notes": "1 in gaffer tape, 54.00 in long (54in. in the CAD name); on the floor outside the field"
+  },
+  {
+   "name": "Blue LOADING ZONE tape",
+   "kind": "line",
+   "color": "#2c62c8",
+   "polygon": [
+    [
+     24.91,
+     60.1
+    ],
+    [
+     45.6,
+     60.1
+    ],
+    [
+     45.6,
+     59.1
+    ],
+    [
+     24.91,
+     59.1
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 0.01,
+   "notes": "1 in gaffer tape, 20.69 in long (20.69in. in the CAD name)"
+  },
+  {
+   "name": "Red ALLIANCE AREA tape",
+   "kind": "line",
+   "color": "#d0312a",
+   "polygon": [
+    [
+     -47.41,
+     -124.65
+    ],
+    [
+     47.41,
+     -124.65
+    ],
+    [
+     47.41,
+     -125.65
+    ],
+    [
+     -47.41,
+     -125.65
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 0.01,
+   "notes": "1 in gaffer tape, 94.82 in long (94.82in. in the CAD name); on the floor outside the field"
+  },
+  {
+   "name": "Red GARDEN tape",
+   "kind": "line",
+   "color": "#d0312a",
+   "polygon": [
+    [
+     68.1,
+     -47.41
+    ],
+    [
+     69.1,
+     -47.41
+    ],
+    [
+     69.1,
+     -70.1
+    ],
+    [
+     68.1,
+     -70.1
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 0.01,
+   "notes": "1 in gaffer tape, 22.69 in long (22.69in. in the CAD name)"
+  },
+  {
+   "name": "Red ALLIANCE AREA tape",
+   "kind": "line",
+   "color": "#d0312a",
+   "polygon": [
+    [
+     -48.41,
+     -71.65
+    ],
+    [
+     -47.41,
+     -71.65
+    ],
+    [
+     -47.41,
+     -125.65
+    ],
+    [
+     -48.41,
+     -125.65
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 0.01,
+   "notes": "1 in gaffer tape, 54.00 in long (54in. in the CAD name); on the floor outside the field"
+  },
+  {
+   "name": "Red LOADING ZONE tape",
+   "kind": "line",
+   "color": "#d0312a",
+   "polygon": [
+    [
+     -46.6,
+     -59.1
+    ],
+    [
+     -45.6,
+     -59.1
+    ],
+    [
+     -45.6,
+     -70.1
+    ],
+    [
+     -46.6,
+     -70.1
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 0.01,
+   "notes": "1 in gaffer tape, 11.00 in long (11in. in the CAD name)"
+  },
+  {
+   "name": "Blue ALLIANCE AREA tape",
+   "kind": "line",
+   "color": "#2c62c8",
+   "polygon": [
+    [
+     47.41,
+     125.65
+    ],
+    [
+     48.41,
+     125.65
+    ],
+    [
+     48.41,
+     71.65
+    ],
+    [
+     47.41,
+     71.65
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 0.01,
+   "notes": "1 in gaffer tape, 54.00 in long (54in. in the CAD name); on the floor outside the field"
+  },
+  {
+   "name": "Red LOADING ZONE",
+   "kind": "zone",
+   "color": "#d0312a",
+   "polygon": [
+    [
+     -46.6,
+     -59.1
+    ],
+    [
+     -23.91,
+     -59.1
+    ],
+    [
+     -23.91,
+     -70.58
+    ],
+    [
+     -46.6,
+     -70.58
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 0.0,
+   "notes": "ALLIANCE-specific zone bounded by the tape and the wall; includes the tape lines (manual 9.3: ~23 x 11 in)."
+  },
+  {
+   "name": "Red GARDEN",
+   "kind": "zone",
+   "color": "#d0312a",
+   "polygon": [
+    [
+     68.1,
+     -47.41
+    ],
+    [
+     70.1,
+     -47.41
+    ],
+    [
+     70.1,
+     -70.1
+    ],
+    [
+     68.1,
+     -70.1
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 0.0,
+   "notes": "Area of the two tape strips in the corner (manual 9.3: ~23 x 2 in); POLLEN start here."
+  },
+  {
+   "name": "Red ALLIANCE AREA",
+   "kind": "zone",
+   "color": "#d0312a",
+   "polygon": [
+    [
+     -48.41,
+     -71.65
+    ],
+    [
+     48.41,
+     -71.65
+    ],
+    [
+     48.41,
+     -125.65
+    ],
+    [
+     -48.41,
+     -125.65
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 0.0,
+   "notes": "Where the DRIVE TEAM stands, outside the field (manual 9.3/9.5: ~97 x 54 in); includes the tape."
+  },
+  {
+   "name": "Blue LOADING ZONE",
+   "kind": "zone",
+   "color": "#2c62c8",
+   "polygon": [
+    [
+     23.91,
+     70.58
+    ],
+    [
+     46.6,
+     70.58
+    ],
+    [
+     46.6,
+     59.1
+    ],
+    [
+     23.91,
+     59.1
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 0.0,
+   "notes": "ALLIANCE-specific zone bounded by the tape and the wall; includes the tape lines (manual 9.3: ~23 x 11 in)."
+  },
+  {
+   "name": "Blue GARDEN",
+   "kind": "zone",
+   "color": "#2c62c8",
+   "polygon": [
+    [
+     -70.1,
+     70.1
+    ],
+    [
+     -68.1,
+     70.1
+    ],
+    [
+     -68.1,
+     47.41
+    ],
+    [
+     -70.1,
+     47.41
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 0.0,
+   "notes": "Area of the two tape strips in the corner (manual 9.3: ~23 x 2 in); POLLEN start here."
+  },
+  {
+   "name": "Blue ALLIANCE AREA",
+   "kind": "zone",
+   "color": "#2c62c8",
+   "polygon": [
+    [
+     -48.41,
+     125.65
+    ],
+    [
+     48.41,
+     125.65
+    ],
+    [
+     48.41,
+     71.65
+    ],
+    [
+     -48.41,
+     71.65
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 0.0,
+   "notes": "Where the DRIVE TEAM stands, outside the field (manual 9.3/9.5: ~97 x 54 in); includes the tape."
+  }
+ ],
+ "tags": [
+  {
+   "id": 30,
+   "name": "Red far-side CELL tag",
+   "x": -11.61,
+   "y": -6.24,
+   "z": 35.53,
+   "facingDeg": -0.0,
+   "pitchDeg": -60.0,
+   "sizeIn": 3.25,
+   "cellState": "down",
+   "tipped": {
+    "x": -13.1,
+    "y": -6.24,
+    "z": 49.8,
+    "facingDeg": -180.0,
+    "pitchDeg": -60.0
+   }
+  },
+  {
+   "id": 31,
+   "name": "Red far-side CELL tag",
+   "x": -11.61,
+   "y": -9.99,
+   "z": 35.53,
+   "facingDeg": -0.0,
+   "pitchDeg": -60.0,
+   "sizeIn": 3.25,
+   "cellState": "down",
+   "tipped": {
+    "x": -13.1,
+    "y": -9.99,
+    "z": 49.8,
+    "facingDeg": -180.0,
+    "pitchDeg": -60.0
+   }
+  },
+  {
+   "id": 32,
+   "name": "Red far-side CELL tag",
+   "x": -11.61,
+   "y": -15.49,
+   "z": 35.53,
+   "facingDeg": -0.0,
+   "pitchDeg": -60.0,
+   "sizeIn": 3.25,
+   "cellState": "down",
+   "tipped": {
+    "x": -13.1,
+    "y": -15.49,
+    "z": 49.8,
+    "facingDeg": -180.0,
+    "pitchDeg": -60.0
+   }
+  },
+  {
+   "id": 33,
+   "name": "Red far-side CELL tag",
+   "x": -11.61,
+   "y": -19.24,
+   "z": 35.53,
+   "facingDeg": -0.0,
+   "pitchDeg": -60.0,
+   "sizeIn": 3.25,
+   "cellState": "down",
+   "tipped": {
+    "x": -13.1,
+    "y": -19.24,
+    "z": 49.8,
+    "facingDeg": -180.0,
+    "pitchDeg": -60.0
+   }
+  },
+  {
+   "id": 34,
+   "name": "Red audience-side CELL tag",
+   "x": 13.1,
+   "y": -19.24,
+   "z": 49.8,
+   "facingDeg": -0.0,
+   "pitchDeg": -60.0,
+   "sizeIn": 3.25,
+   "cellState": "up",
+   "tipped": {
+    "x": 11.61,
+    "y": -19.24,
+    "z": 35.53,
+    "facingDeg": -180.0,
+    "pitchDeg": -60.0
+   }
+  },
+  {
+   "id": 35,
+   "name": "Red audience-side CELL tag",
+   "x": 13.1,
+   "y": -15.49,
+   "z": 49.8,
+   "facingDeg": -0.0,
+   "pitchDeg": -60.0,
+   "sizeIn": 3.25,
+   "cellState": "up",
+   "tipped": {
+    "x": 11.61,
+    "y": -15.49,
+    "z": 35.53,
+    "facingDeg": -180.0,
+    "pitchDeg": -60.0
+   }
+  },
+  {
+   "id": 36,
+   "name": "Red audience-side CELL tag",
+   "x": 13.1,
+   "y": -9.99,
+   "z": 49.8,
+   "facingDeg": -0.0,
+   "pitchDeg": -60.0,
+   "sizeIn": 3.25,
+   "cellState": "up",
+   "tipped": {
+    "x": 11.61,
+    "y": -9.99,
+    "z": 35.53,
+    "facingDeg": -180.0,
+    "pitchDeg": -60.0
+   }
+  },
+  {
+   "id": 37,
+   "name": "Red audience-side CELL tag",
+   "x": 13.1,
+   "y": -6.24,
+   "z": 49.8,
+   "facingDeg": -0.0,
+   "pitchDeg": -60.0,
+   "sizeIn": 3.25,
+   "cellState": "up",
+   "tipped": {
+    "x": 11.61,
+    "y": -6.24,
+    "z": 35.53,
+    "facingDeg": -180.0,
+    "pitchDeg": -60.0
+   }
+  },
+  {
+   "id": 38,
+   "name": "Blue audience-side CELL tag",
+   "x": 11.61,
+   "y": 6.26,
+   "z": 35.53,
+   "facingDeg": 180.0,
+   "pitchDeg": -60.0,
+   "sizeIn": 3.25,
+   "cellState": "down",
+   "tipped": {
+    "x": 13.1,
+    "y": 6.26,
+    "z": 49.8,
+    "facingDeg": 0.0,
+    "pitchDeg": -60.0
+   }
+  },
+  {
+   "id": 39,
+   "name": "Blue audience-side CELL tag",
+   "x": 11.61,
+   "y": 10.01,
+   "z": 35.53,
+   "facingDeg": 180.0,
+   "pitchDeg": -60.0,
+   "sizeIn": 3.25,
+   "cellState": "down",
+   "tipped": {
+    "x": 13.1,
+    "y": 10.01,
+    "z": 49.8,
+    "facingDeg": 0.0,
+    "pitchDeg": -60.0
+   }
+  },
+  {
+   "id": 40,
+   "name": "Blue audience-side CELL tag",
+   "x": 11.61,
+   "y": 15.51,
+   "z": 35.53,
+   "facingDeg": 180.0,
+   "pitchDeg": -60.0,
+   "sizeIn": 3.25,
+   "cellState": "down",
+   "tipped": {
+    "x": 13.1,
+    "y": 15.51,
+    "z": 49.8,
+    "facingDeg": 0.0,
+    "pitchDeg": -60.0
+   }
+  },
+  {
+   "id": 41,
+   "name": "Blue audience-side CELL tag",
+   "x": 11.61,
+   "y": 19.26,
+   "z": 35.53,
+   "facingDeg": 180.0,
+   "pitchDeg": -60.0,
+   "sizeIn": 3.25,
+   "cellState": "down",
+   "tipped": {
+    "x": 13.1,
+    "y": 19.26,
+    "z": 49.8,
+    "facingDeg": 0.0,
+    "pitchDeg": -60.0
+   }
+  },
+  {
+   "id": 42,
+   "name": "Blue far-side CELL tag",
+   "x": -13.1,
+   "y": 19.26,
+   "z": 49.8,
+   "facingDeg": 180.0,
+   "pitchDeg": -60.0,
+   "sizeIn": 3.25,
+   "cellState": "up",
+   "tipped": {
+    "x": -11.61,
+    "y": 19.26,
+    "z": 35.53,
+    "facingDeg": 0.0,
+    "pitchDeg": -60.0
+   }
+  },
+  {
+   "id": 43,
+   "name": "Blue far-side CELL tag",
+   "x": -13.1,
+   "y": 15.51,
+   "z": 49.8,
+   "facingDeg": 180.0,
+   "pitchDeg": -60.0,
+   "sizeIn": 3.25,
+   "cellState": "up",
+   "tipped": {
+    "x": -11.61,
+    "y": 15.51,
+    "z": 35.53,
+    "facingDeg": 0.0,
+    "pitchDeg": -60.0
+   }
+  },
+  {
+   "id": 44,
+   "name": "Blue far-side CELL tag",
+   "x": -13.1,
+   "y": 10.01,
+   "z": 49.8,
+   "facingDeg": 180.0,
+   "pitchDeg": -60.0,
+   "sizeIn": 3.25,
+   "cellState": "up",
+   "tipped": {
+    "x": -11.61,
+    "y": 10.01,
+    "z": 35.53,
+    "facingDeg": 0.0,
+    "pitchDeg": -60.0
+   }
+  },
+  {
+   "id": 45,
+   "name": "Blue far-side CELL tag",
+   "x": -13.1,
+   "y": 6.26,
+   "z": 49.8,
+   "facingDeg": 180.0,
+   "pitchDeg": -60.0,
+   "sizeIn": 3.25,
+   "cellState": "up",
+   "tipped": {
+    "x": -11.61,
+    "y": 6.26,
+    "z": 35.53,
+    "facingDeg": 0.0,
+    "pitchDeg": -60.0
+   }
+  }
+ ],
+ "tagNotes": "IDs from manual 9.9 / Figure 9-17 (TU05): red far-side CELL 30-33, red audience CELL 34-37, blue audience CELL 38-41, blue far-side CELL 42-45. The CAD has one sticker per CELL without the tag patterns; each tag's centre is placed from the sticker's two reference holes with the Figure 9-15 layout (centres 2.75 in above the hole line, at -6.5/-2.75/+2.75/+6.5 in), IDs rising left to right as read from below with the hole edge (toward the field centre) at the bottom; this order matches Figure 9-17. x/y/z/facing are for the HIVE as the CAD has it (cellState); 'tipped' is the same tag after its HIVE tips to the other rest position. facingDeg = horizontal direction the tag faces, counterclockwise from +x; pitchDeg = how far the tag's face points below horizontal (-90 = straight down)."
+}

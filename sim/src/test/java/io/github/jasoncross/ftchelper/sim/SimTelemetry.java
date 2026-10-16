@@ -71,6 +71,16 @@ final class SimTelemetry {
         return new ArrayList<>(screen);
     }
 
+    /**
+     * Sends the screen only if lines were added since the last send (like the FTC app after each
+     * init_loop()/loop() of an iterative OpMode: the Driver Station keeps the last screen otherwise).
+     */
+    void updateIfDirty() {
+        boolean dirty;
+        synchronized (this) { dirty = !building.isEmpty(); }
+        if (dirty) telemetry.update();
+    }
+
     synchronized int updates() {
         return updates;
     }

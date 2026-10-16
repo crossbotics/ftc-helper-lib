@@ -53,6 +53,12 @@ final class SimRobot {
     final List<SimMotor> wheels = new ArrayList<>();   // FL, FR, BL, BR (tank: FL, FR, [BL, BR])
     double wheelDiameterIn = 3.78, ticksPerRev = 537.7, gearRatio = 1, trackWidthIn = 15, wheelBaseIn = 13;
     double strafeEfficiency = 0.85;
+    // The robot's size (for bumping into field elements) and where it starts.
+    double lengthIn = 18, widthIn = 18, heightIn = 18;
+    double startX = 0, startY = -48, startHeading = 0;
+    // The season's field, and the element the robot bumped into last ("" = none).
+    SimField field = SimField.empty();
+    volatile String bumpedInto = "";
     // The robot on the field: inches from the field center (x right, y away from the drivers),
     // heading in degrees, counterclockwise = positive, 0 = facing away from the drivers.
     double x = 0, y = -48, headingDeg = 0;
@@ -131,6 +137,23 @@ final class SimRobot {
             touches.put(key.substring("touch.".length()), new SimTouch(s.get(""), dbl(s, "below", 20)));
         }
         imuName = p.getProperty("imu", "").trim();
+        lengthIn = num(p, "robot.lengthIn", 18);
+        widthIn = num(p, "robot.widthIn", 18);
+        heightIn = num(p, "robot.heightIn", 18);
+        startX = num(p, "start.x", 0);
+        startY = num(p, "start.y", -48);
+        startHeading = num(p, "start.heading", 0);
+        String fieldName = p.getProperty("field", "").trim();
+        if (!fieldName.isEmpty()) {
+            try {
+                field = SimField.load(fieldName);
+            } catch (IOException e) {
+                throw new IllegalArgumentException("Robot file: could not read field \"" + fieldName + "\": " + e.getMessage());
+            }
+        }
+        x = startX;
+        y = startY;
+        headingDeg = startHeading;
         buildDevices();
     }
 
@@ -275,9 +298,23 @@ final class SimRobot {
 
     /** Puts the robot back at the start spot, facing away from the drivers. */
     synchronized void resetPose() {
-        x = 0;
-        y = -48;
-        headingDeg = 0;
+        x = startX;
+        y = startY;
+        headingDeg = startHeading;
+        bumpedInto = "";
+    }
+
+    /** The robot's four corners on the field (inches), for bumping. */
+    synchronized List<double[]> footprint(double cx, double cy, double headingDegrees) {
+        double h = Math.toRadians(headingDegrees);
+        double fx = -Math.sin(h), fy = Math.cos(h), rx = Math.cos(h), ry = Math.sin(h);
+        double l = lengthIn / 2, w = widthIn / 2;
+        List<double[]> c = new ArrayList<>();
+        c.add(new double[] {cx + fx * l + rx * w, cy + fy * l + ry * w});
+        c.add(new double[] {cx + fx * l - rx * w, cy + fy * l - ry * w});
+        c.add(new double[] {cx - fx * l - rx * w, cy - fy * l - ry * w});
+        c.add(new double[] {cx - fx * l + rx * w, cy - fy * l + ry * w});
+        return c;
     }
 
     synchronized void toggleTouch(String name) {
@@ -355,14 +392,24 @@ final class SimRobot {
         }
         double h = Math.toRadians(headingDeg);
         // Forward = (-sin h, cos h) on the field; right = (cos h, sin h).
-        x += (-Math.sin(h) * forward + Math.cos(h) * right) * dt;
-        y += (Math.cos(h) * forward + Math.sin(h) * right) * dt;
-        headingDeg = wrap(headingDeg - Math.toDegrees(cw * dt));
+        double nx = x + (-Math.sin(h) * forward + Math.cos(h) * right) * dt;
+        double ny = y + (Math.cos(h) * forward + Math.sin(h) * right) * dt;
+        double nh = wrap(headingDeg - Math.toDegrees(cw * dt));
+        // The field walls: no corner of the robot past the wall.
+        double half = field.size / 2;
+        boolean wall = false;
+        for (double[] c : footprint(nx, ny, nh)) if (Math.abs(c[0]) > half || Math.abs(c[1]) > half) wall = true;
+        SimField.Element hit = wall ? null : field.bumps(footprint(nx, ny, nh), heightIn);
+        if (wall || hit != null) {
+            // Bumped: the robot stays where it is (its wheels may still turn, like a real robot pushing a wall).
+            bumpedInto = wall ? "field wall" : hit.name;
+            yawRateDeg = 0;
+            return;
+        }
+        x = nx;
+        y = ny;
+        headingDeg = nh;
         yawRateDeg = -Math.toDegrees(cw);
-        // The field walls: 72 in from the center, minus half the robot.
-        double edge = 72 - 9;
-        x = Math.max(-edge, Math.min(edge, x));
-        y = Math.max(-edge, Math.min(edge, y));
     }
 
     // The wheels turn to match a hand push (they are not driven).

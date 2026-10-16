@@ -97,6 +97,8 @@ final class SimServer {
             OutputStream out = client.getOutputStream();
             if (method.equals("GET") && (path.equals("/") || path.equals("/index.html"))) {
                 send(out, 200, "text/html; charset=utf-8", page());
+            } else if (method.equals("GET") && path.equals("/field")) {
+                send(out, 200, "application/json", sim.robot.field.json.getBytes(StandardCharsets.UTF_8));
             } else if (method.equals("GET") && path.equals("/state")) {
                 send(out, 200, "application/json", SimJson.state(sim, this).getBytes(StandardCharsets.UTF_8));
             } else if (method.equals("POST") && path.startsWith("/pad/")) {

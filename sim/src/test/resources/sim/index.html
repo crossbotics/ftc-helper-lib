@@ -437,7 +437,8 @@ function renderHub(s) {
   drawField(s.robot);
   $("#poseText").textContent = s.robot.drive === "none" ? "No drivetrain in this robot file." :
     `x ${s.robot.x.toFixed(1)} in, y ${s.robot.y.toFixed(1)} in, heading ${s.robot.heading.toFixed(1)}°` +
-    (s.robot.hasImu ? `, IMU yaw ${s.robot.imu.toFixed(1)}°` : "") + ` · shots ${s.robot.shots}`;
+    (s.robot.hasImu ? `, IMU yaw ${s.robot.imu.toFixed(1)}°` : "") + ` · shots ${s.robot.shots}` +
+    ` · field: ${s.robot.field}` + (s.robot.bumped ? ` · bumped into: ${s.robot.bumped}` : "");
 }
 $("#touches").addEventListener("click", e => { const c = e.target.closest("[data-touch]"); if (c) command({ action: "touch", name: c.dataset.touch }); });
 document.querySelectorAll("[data-push]").forEach(b => b.onclick = () => {
@@ -447,23 +448,60 @@ document.querySelectorAll("[data-push]").forEach(b => b.onclick = () => {
 $("#resetPose").onclick = () => command({ action: "resetPose" });
 $("#battery").onchange = e => command({ action: "battery", volts: e.target.value });
 
+// The season's field (from /field): read once, again when the robot file's field changes.
+let fieldData = null, fieldName = null;
+async function loadField(name) {
+  fieldName = name;
+  try { fieldData = await (await fetch("/field", { cache: "no-store" })).json(); } catch (e) { fieldData = null; }
+}
 function drawField(r) {
-  const c = $("#field"), ctx = c.getContext("2d"), W = c.width, s = W / 144;
+  if (r.field !== fieldName) loadField(r.field);
+  const c = $("#field"), ctx = c.getContext("2d"), W = c.width;
+  const size = (fieldData && fieldData.field && fieldData.field.size) || 144, s = W / size, half = size / 2;
+  const X = x => (x + half) * s, Y = y => (half - y) * s;      // field inches -> canvas (drivers at the bottom)
   const css = getComputedStyle(document.documentElement);
   ctx.clearRect(0, 0, W, W);
   ctx.fillStyle = css.getPropertyValue("--btn"); ctx.fillRect(0, 0, W, W);
   ctx.strokeStyle = css.getPropertyValue("--line"); ctx.lineWidth = 1;
   for (let i = 1; i < 6; i++) { ctx.beginPath(); ctx.moveTo(i * 24 * s, 0); ctx.lineTo(i * 24 * s, W); ctx.moveTo(0, i * 24 * s); ctx.lineTo(W, i * 24 * s); ctx.stroke(); }
+  // Field elements: zones first (under), then lines, solid parts and overhead parts.
+  const order = { zone: 0, line: 1, solid: 2, overhead: 3 };
+  const els = fieldData && fieldData.elements ? [...fieldData.elements].sort((a, b) => (order[a.kind] ?? 2) - (order[b.kind] ?? 2)) : [];
+  for (const e of els) {
+    if (!e.polygon || e.polygon.length < 2) continue;
+    ctx.beginPath();
+    e.polygon.forEach(([px, py], i) => i ? ctx.lineTo(X(px), Y(py)) : ctx.moveTo(X(px), Y(py)));
+    if (e.kind !== "line") ctx.closePath();
+    ctx.setLineDash(e.kind === "overhead" ? [4, 3] : []);
+    if (e.kind === "line") { ctx.strokeStyle = e.color; ctx.lineWidth = 2; ctx.stroke(); }
+    else {
+      ctx.globalAlpha = e.kind === "zone" ? 0.25 : e.kind === "overhead" ? 0.15 : 0.8;
+      ctx.fillStyle = e.color; ctx.fill(); ctx.globalAlpha = 1;
+      ctx.strokeStyle = e.color; ctx.lineWidth = 1; ctx.stroke();
+    }
+    ctx.setLineDash([]);
+  }
+  // AprilTags: a short bar across the way the tag faces, with its number.
+  ctx.font = "10px system-ui";
+  for (const t of (fieldData && fieldData.tags) || []) {
+    const a = t.facingDeg * Math.PI / 180, hw = (t.sizeIn || 6.5) / 2;
+    const ux = -Math.sin(a), uy = Math.cos(a);                   // along the tag face
+    ctx.strokeStyle = css.getPropertyValue("--ink"); ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(X(t.x - ux * hw), Y(t.y - uy * hw)); ctx.lineTo(X(t.x + ux * hw), Y(t.y + uy * hw)); ctx.stroke();
+    ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(X(t.x), Y(t.y)); ctx.lineTo(X(t.x + Math.cos(a) * 4), Y(t.y + Math.sin(a) * 4)); ctx.stroke();
+    ctx.fillStyle = css.getPropertyValue("--ink"); ctx.fillText(String(t.id), X(t.x + Math.cos(a) * 6) - 6, Y(t.y + Math.sin(a) * 6) + 4);
+  }
   ctx.fillStyle = css.getPropertyValue("--muted"); ctx.font = "11px system-ui";
   ctx.fillText("drivers", W / 2 - 18, W - 4);
   if (r.drive === "none") return;
+  const L = r.length || 18, Wd = r.width || 18;
   ctx.save();
-  ctx.translate((r.x + 72) * s, (72 - r.y) * s);
+  ctx.translate(X(r.x), Y(r.y));
   ctx.rotate(-r.heading * Math.PI / 180);
-  ctx.fillStyle = css.getPropertyValue("--accent"); ctx.globalAlpha = 0.85;
-  ctx.fillRect(-9 * s, -9 * s, 18 * s, 18 * s);
+  ctx.fillStyle = r.bumped ? css.getPropertyValue("--stop") : css.getPropertyValue("--accent"); ctx.globalAlpha = 0.85;
+  ctx.fillRect(-Wd / 2 * s, -L / 2 * s, Wd * s, L * s);
   ctx.globalAlpha = 1; ctx.fillStyle = "#fff";
-  ctx.beginPath(); ctx.moveTo(0, -8 * s); ctx.lineTo(-4 * s, -2 * s); ctx.lineTo(4 * s, -2 * s); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(0, -L / 2 * s + 1); ctx.lineTo(-4 * s, -L / 2 * s + 6 * s); ctx.lineTo(4 * s, -L / 2 * s + 6 * s); ctx.closePath(); ctx.fill();
   ctx.restore();
 }
 function escapeHtml(t) { return String(t).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch])); }

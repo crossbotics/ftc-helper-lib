@@ -186,18 +186,18 @@ final class SimDriverStation {
     private void runIterative(OpMode o) {
         try {
             o.init();
-            o.telemetry.update();
+            screen.updateIfDirty();
             while (!SimAccess.isStarted(o) && !SimAccess.isStopRequested(o)) {
                 o.init_loop();
-                o.telemetry.update();
+                screen.updateIfDirty();
                 Thread.sleep(5);
             }
             if (SimAccess.isStarted(o) && !SimAccess.isStopRequested(o)) {
                 o.start();
-                o.telemetry.update();
+                screen.updateIfDirty();
                 while (!SimAccess.isStopRequested(o)) {
                     o.loop();
-                    o.telemetry.update();
+                    screen.updateIfDirty();
                     Thread.sleep(5);
                 }
             }

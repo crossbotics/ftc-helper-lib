@@ -256,6 +256,12 @@ public final class SimScenario {
                 why[0] = err.isEmpty() ? "no error" : err.split("\n")[0];
                 return err.contains(t.get(2));
             }
+            case "bumped": {
+                // expect bumped none | expect bumped "Red HIVE"
+                String b = sim.robot.bumpedInto;
+                why[0] = b.isEmpty() ? "nothing" : b;
+                return t.get(1).equals("none") ? b.isEmpty() : b.contains(t.get(1));
+            }
             case "phase":
                 why[0] = "phase " + sim.ds.phase();
                 return sim.ds.phase().name().equalsIgnoreCase(t.get(1));
@@ -293,7 +299,7 @@ public final class SimScenario {
                 return compare(v, t.subList(2, t.size()), why);
             }
             default:
-                throw new IllegalArgumentException("expect what? (screen, error, phase, motor, servo, robot)");
+                throw new IllegalArgumentException("expect what? (screen, error, phase, motor, servo, robot, bumped)");
         }
     }
 

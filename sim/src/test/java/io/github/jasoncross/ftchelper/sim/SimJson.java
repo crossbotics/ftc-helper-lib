@@ -107,6 +107,10 @@ final class SimJson {
         }
         b.append("\"imu\":").append(fmt(r.imuYaw())).append(',');
         b.append("\"shots\":").append(r.shots()).append(',');
+        field(b, "bumped", r.bumpedInto).append(',');
+        field(b, "field", r.field.season).append(',');
+        b.append("\"length\":").append(fmt(r.lengthIn)).append(',');
+        b.append("\"width\":").append(fmt(r.widthIn)).append(',');
         b.append("\"hasImu\":").append(!r.imuName.isEmpty()).append('}');
         b.append('}');
         return b.toString();

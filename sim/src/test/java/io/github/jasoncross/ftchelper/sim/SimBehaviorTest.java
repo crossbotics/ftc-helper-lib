@@ -138,4 +138,33 @@ public class SimBehaviorTest {
         assertTrue(robot.servos.get("claw").partName.contains("Torque"));
         assertTrue("a servo part gives its own speed", robot.servos.get("claw").speed > 0);
     }
+
+    /** An iterative OpMode (init/loop), like many teams write. */
+    public static class Iterative extends com.qualcomm.robotcore.eventloop.opmode.OpMode {
+        private DcMotorEx intake;
+        private int loops = 0;
+        @Override public void init() { intake = hardwareMap.get(DcMotorEx.class, "intake"); telemetry.addData("state", "init"); }
+        @Override public void loop() {
+            loops++;
+            intake.setPower(gamepad1.a ? 1 : 0);
+            telemetry.addData("loops", loops);
+        }
+    }
+
+    @Test public void iterativeOpModesRun() throws Exception {
+        try (SimRun s = new SimRun()) {
+            s.sim.ds.register("Iterative", "TeleOp", Iterative.class);
+            s.init("Iterative");
+            assertTrue(s.screenHas("state : init"));
+            s.start();
+            SimMotor intake = s.robot().motors.get("intake");
+            Map<String, String> a = new HashMap<>();
+            a.put("a", "1");
+            s.sim.ds.pad1.apply(a);
+            assertTrue(SimRun.waitFor(() -> intake.userPower() > 0.9, 2));
+            s.sim.ds.stop();
+            assertEquals(0, intake.userPower(), 1e-9);
+            assertEquals("", s.error());
+        }
+    }
 }
