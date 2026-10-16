@@ -23,6 +23,12 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   AprilTags become the SDK's detections (BIOBUZZ: clusters per CELL group) with the SDK's ftcPose
   formulas. The page lists what each camera sees, draws its view cone and shows its picture in 3D.
   Scenario check: `expect camera "Webcam 1" sees 31|none|"RED SCORING"`.
+- `TagGroup` and `LimelightTags.groups(...)`: a Limelight now also reports each group of tags in a row
+  as ONE target, named like the webcam's SDK cluster (BIOBUZZ: "RED SCORING", "RED AUDIENCE",
+  "BLUE AUDIENCE", "BLUE SCORING"), aimed at the middle of the row; needs 2+ of the group's tags.
+  `camera.target("RED SCORING")` now works with either camera. Tutorial 18 aims at a BIOBUZZ CELL
+  group (it used last season's tag 20); docs and examples use BIOBUZZ targets.
+- Simulator scenario `aim-at-cell-group.sim`: Tutorial 18 turns the robot onto the group with each camera.
 - Simulator: a pretend Limelight 3A (`limelight.KEY = name=limelight, ...`): the SDK's Limelight3A with
   its network part replaced; results are built as the Limelight's JSON and read by the SDK's own
   LLResult (one FiducialResult per tag, tx/ty/ta, target pose in camera space). `LimelightTags` works.

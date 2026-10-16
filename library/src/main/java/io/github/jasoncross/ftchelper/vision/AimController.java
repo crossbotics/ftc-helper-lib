@@ -18,7 +18,7 @@ import java.util.function.LongSupplier;
  *         .maxPower(0.5)
  *         .maxAgeMs(150);                              // ignore pictures older than this
  * // every loop, while the driver holds the aim button:
- * drive.drive(forward, strafe, aim.turnPower(camera.target(20)));   // ready for the drive's turn
+ * drive.drive(forward, strafe, aim.turnPower(camera.target("RED SCORING")));   // ready for the drive's turn
  * }</pre>
  *
  * For a turret, use {@code turret.aimAtTarget(target, cameraOnTurret)} instead.
@@ -97,7 +97,7 @@ public class AimController {
      * ({@code drive.drive(f, s, aim.turnPower(t))}, {@code tank.arcade(f, aim.turnPower(t))}).
      * 0 when there is no fresh target. Call it every loop while aiming.
      *
-     * @param target the target from the camera, e.g. {@code camera.target(20)}; null is fine (gives 0)
+     * @param target the target from the camera, e.g. {@code camera.target("RED SCORING")}; null is fine (gives 0)
      */
     public double turnPower(TargetObservation target) {
         // The math below works counterclockwise-positive (like the bearing and the IMU).

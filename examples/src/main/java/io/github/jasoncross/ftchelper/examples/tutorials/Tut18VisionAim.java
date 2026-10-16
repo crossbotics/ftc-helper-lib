@@ -17,15 +17,16 @@ import io.github.jasoncross.ftchelper.vision.TargetSource;
 import io.github.jasoncross.ftchelper.vision.WebcamTags;
 
 /**
- * Tutorial 18: aim at an AprilTag with a webcam OR a Limelight 3A (choose in INIT).
- * Hold the right bumper: the robot turns to face the tag while you keep driving.
+ * Tutorial 18: aim at a target with a webcam OR a Limelight 3A (choose in INIT).
+ * Hold the right bumper: the robot turns to face the target while you keep driving.
  * Needs: the drivetrain, and a webcam "Webcam 1" or a Limelight "limelight".
  *
  * An AprilTag is a black-and-white square printed on the field, a bit like a QR code. Each has a
  * number (its id), and the camera can tell which one it sees and in which direction it is.
  *
  * Before you use it: remove the {@code @Disabled} line, make "Webcam 1" / "limelight" match your
- * configuration, and choose the tag ids for this season's field.
+ * configuration, and choose the targets for this season's field (BIOBUZZ: the 4 tags under each CELL
+ * are one target, e.g. "RED SCORING").
  *
  * Tutorial: docs/tutorials/18-vision-aim.md (more in docs/modules/vision.md)
  */
@@ -44,11 +45,11 @@ public class Tut18VisionAim extends LinearOpMode {
         // The mecanum drive, with motor names and power limit from RobotSettings.java.
         MecanumDrive drive = new MecanumDrive(hardwareMap, RobotSettings.drive());
 
-        // ---- INIT: choose the camera and the tag ----
+        // ---- INIT: choose the camera and the target ----
         // Two menu lines, changed with gamepad 1's D-pad. The first option is the default.
         InitMenu menu = new InitMenu(gamepad1)
                 .choice("Camera", "Webcam", "Limelight")
-                .choice("Tag id", "20", "24", "any");
+                .choice("Target", "RED SCORING", "BLUE SCORING", "any");
         // Stay in this menu until A is pressed (or START/STOP ends INIT). The camera starts only
         // after A, because we need to know WHICH camera to start.
         while (opModeInInit() && !gamepad1.a) {
@@ -67,7 +68,7 @@ public class Tut18VisionAim extends LinearOpMode {
                 ? LimelightTags.create(hardwareMap, "limelight").pipeline(0)
                 : WebcamTags.create(hardwareMap, "Webcam 1").resolution(640, 480);
         camera.start();   // a webcam needs about 1-2 seconds to start; this is why we do it in INIT
-        String tagChoice = menu.get("Tag id");
+        String targetChoice = menu.get("Target");
 
         // AimController turns "the tag is 10 degrees to the left" into a turn power.
         // 0.02 = turn power per degree off (10 degrees off gives 0.2); 0.003 = eases off as it
@@ -101,14 +102,15 @@ public class Tut18VisionAim extends LinearOpMode {
             // ---------- Every loop (many times per second until STOP) ----------
             while (opModeIsActive()) {
                 camera.update();   // get the newest picture's results (never waits for a picture)
-                // Which tag to aim at. TargetObservation = one target the camera sees (its id,
+                // What to aim at. TargetObservation = one target the camera sees (its name,
                 // direction and distance). null means "nothing seen right now".
-                // "any": the first tag in the list, or null if the list is empty.
-                // Otherwise: the tag with the chosen number. Integer.parseInt turns the text "20"
-                // into the number 20. camera.target(...) gives null if that tag is not seen now.
-                TargetObservation target = tagChoice.equals("any")
+                // "any": the first target in the list, or null if the list is empty.
+                // Otherwise: the target with the chosen name. In BIOBUZZ the 4 tags under a CELL are
+                // one target ("RED SCORING"...), with either camera. camera.target(...) gives null if
+                // it is not seen now. (One tag by its number also works: camera.target(31).)
+                TargetObservation target = targetChoice.equals("any")
                         ? (camera.targets().isEmpty() ? null : camera.targets().get(0))
-                        : camera.target(Integer.parseInt(tagChoice));
+                        : camera.target(targetChoice);
 
                 // The driver's turn from the right stick (dead zone 0.05, squared for fine control).
                 double turn = StickShaping.shape(gamepad1.right_stick_x, 0.05, 2);

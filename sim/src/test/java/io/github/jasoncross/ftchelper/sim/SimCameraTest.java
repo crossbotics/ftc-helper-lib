@@ -95,12 +95,13 @@ public class SimCameraTest {
         LimelightTags ll = LimelightTags.create(r.hardwareMap(), "limelight").pipeline(3);
         ll.start();
         List<TargetObservation> seen = null;
-        for (int i = 0; i < 100 && (seen == null || seen.size() < 4); i++) {
+        for (int i = 0; i < 100 && (seen == null || seen.size() < 5); i++) {
             Thread.sleep(20);
             ll.update();
             seen = ll.targets();
         }
-        assertEquals("a Limelight reports each tag (no clusters): " + seen, 4, seen.size());
+        assertEquals("each tag, plus the group as one target: " + seen, 5, seen.size());
+        assertNotNull(ll.target("RED SCORING"));
         assertTrue(ll.status(), ll.isWorking());
         TargetObservation t31 = null, t32 = null;
         for (TargetObservation t : seen) { if (t.id == 31) t31 = t; if (t.id == 32) t32 = t; }
@@ -120,5 +121,45 @@ public class SimCameraTest {
         assertEquals(3, sdk.getStatus().getPipelineIndex());
         r.closeCameras();                         // what the simulator does when an OpMode stops
         assertFalse(sdk.isRunning());
+    }
+
+    @Test public void libraryTagGroupsMatchTheSdkClusters() throws Exception {
+        org.firstinspires.ftc.vision.apriltag.AprilTagLibrary lib =
+                org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase.getCurrentGameTagLibrary();
+        for (io.github.jasoncross.ftchelper.vision.TagGroup g : io.github.jasoncross.ftchelper.vision.TagGroup.currentSeason()) {
+            for (int id : g.ids()) {
+                org.firstinspires.ftc.vision.apriltag.AprilTagClusterMetadata c = lib.lookupCluster(id);
+                assertNotNull("tag " + id + " is in an SDK cluster", c);
+                assertEquals(g.name, c.name);
+                java.lang.reflect.Method member = c.getClass().getDeclaredMethod("getMemberMetadata", int.class);
+                member.setAccessible(true);
+                org.firstinspires.ftc.vision.apriltag.AprilTagClusterMemberMetadata m =
+                        (org.firstinspires.ftc.vision.apriltag.AprilTagClusterMemberMetadata) member.invoke(c, id);
+                assertEquals("tag " + id + " place along the row", m.positionInClusterPlane.get(0), g.alongRowIn(id), 1e-3);
+            }
+        }
+    }
+
+    @Test public void limelightGroupTargetAimsLikeTheWebcamCluster() throws Exception {
+        SimRobot r = robot();
+        synchronized (r) { r.headingDeg = 100; }       // 10 degrees left of the group: it is to the right
+        LimelightTags ll = LimelightTags.create(r.hardwareMap(), "limelight");
+        WebcamTags cam = WebcamTags.create(r.hardwareMap(), "Webcam 1");
+        ll.start();
+        cam.start();
+        TargetObservation fromLl = null, fromCam = waitForTarget(cam, "RED SCORING");
+        for (int i = 0; i < 50 && fromLl == null; i++) {
+            ll.update();
+            fromLl = ll.target("RED SCORING");
+            Thread.sleep(20);
+        }
+        assertNotNull(fromLl);
+        assertNotNull(fromCam);
+        assertEquals(TargetObservation.CLUSTER, fromLl.id);
+        // Both cameras sit 8 in forward on the robot's center line here, so the bearings nearly agree.
+        assertEquals(fromCam.bearingDeg, fromLl.bearingDeg, 1.5);
+        assertTrue("right of the robot: " + fromLl, fromLl.bearingDeg < -5);
+        ll.close();
+        cam.close();
     }
 }

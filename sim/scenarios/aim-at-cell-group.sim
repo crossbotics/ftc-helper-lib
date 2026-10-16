@@ -1,0 +1,38 @@
+# Tutorial 18 aims the robot at the red CELL group ("RED SCORING") with each camera.
+# The group is straight ahead at heading 90 (the Limelight sits 3 in right of center, so it ends a
+# few degrees off; the tolerance allows it).
+# Run it:  ./gradlew :sim:scenario -Pfile=sim/scenarios/aim-at-cell-group.sim
+
+# --- Limelight: start turned 30 degrees left (the group is to the right)
+set pose 32 -12.74 120
+init "Tutorial 18: Vision Aim"
+expect screen has "Camera: Webcam"
+press g1.right                        # Camera: Limelight
+expect screen has "Camera: Limelight"
+expect screen has "Target: RED SCORING"
+press g1.a                            # confirm: the camera starts
+expect within 3 value "Tags seen" >= 1
+start
+hold g1.rb                            # aim
+expect within 5 robot heading = 90 6
+wait 2                                # it stays aimed (no swinging past)
+expect robot heading = 90 6
+print robot
+release all
+stop
+expect error none
+
+# --- Webcam: start turned 30 degrees right (the group is to the left)
+set pose 32 -12.74 60
+init "Tutorial 18: Vision Aim"
+press g1.a                            # Camera: Webcam (the first choice)
+expect within 3 screen has "STREAMING"
+start
+hold g1.rb
+expect within 5 robot heading = 90 4
+wait 2
+expect robot heading = 90 3
+print robot
+release all
+stop
+expect error none

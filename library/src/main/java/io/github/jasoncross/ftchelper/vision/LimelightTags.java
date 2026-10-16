@@ -26,8 +26,17 @@ import org.firstinspires.ftc.robotcore.external.navigation.Position;
  * camera.start();                    // in INIT
  * // every loop:
  * camera.update();
- * TargetObservation tag = camera.target(20);
+ * TargetObservation tag = camera.target(31);                // one tag, by its number
+ * TargetObservation goal = camera.target("RED SCORING");    // a tag group (see below)
  * }</pre>
+ *
+ * <p>Tag groups: a Limelight reports each tag on its own. This class also reports each group of
+ * tags in a row ({@link TagGroup}; BIOBUZZ: the 4 tags under each CELL) as ONE target, named like the
+ * webcam's (the FTC SDK's cluster names), aimed at the middle of the row. It needs at least 2 of the
+ * group's tags in view and their 3D poses. So the same code aims with either camera. The webcam's
+ * cluster target is the SDK's aiming point, a few inches behind and above the row: its bearing is
+ * about the same when you face the group, but its distance is a few inches longer. Make the shot
+ * table with the camera the robot uses.
  *
  * <p>Bearing is the Limelight's tx with the sign flipped (tx is positive to the RIGHT; the
  * library uses positive = LEFT everywhere). Distance comes from the tag's 3D pose and needs the
@@ -46,6 +55,7 @@ public class LimelightTags implements TargetSource {
     // The Limelight's time stamp of the last picture we read, to notice when it sends the same one again.
     private double lastTimestamp = Double.NaN;
     private double keepMs = 500;
+    private List<TagGroup> groups = TagGroup.currentSeason();
     // pipelineSwitch() and updateRobotOrientation() are network requests that WAIT for an answer.
     // They run on this worker so the robot's loop never waits.
     private BackgroundWorker worker = null;
@@ -73,6 +83,15 @@ public class LimelightTags implements TargetSource {
         // Already running? Switch now. Switching is a network request that waits for an answer, so it
         // goes to the background worker ("() -> ..." is a small piece of code handed over to run later).
         if (started) worker().submitLatest("pipeline", () -> limelight.pipelineSwitch(index));   // never waits
+        return this;
+    }
+
+    /**
+     * The tag groups reported as one target each (default: this season's, {@link TagGroup#currentSeason()}).
+     * An empty list turns groups off (only single tags are reported).
+     */
+    public LimelightTags groups(List<TagGroup> tagGroups) {
+        groups = tagGroups == null ? Collections.<TagGroup>emptyList() : new ArrayList<>(tagGroups);
         return this;
     }
 
@@ -135,13 +154,63 @@ public class LimelightTags implements TargetSource {
         long pictureTime = pictureTimeNanos(System.nanoTime(), result.getStaleness(),
                 result.getCaptureLatency(), result.getTargetingLatency(), result.getParseLatency());
         List<TargetObservation> out = new ArrayList<>();
+        // Each tag's place in camera space (inches), for the tag groups.
+        java.util.Map<Integer, double[]> places = new java.util.HashMap<>();
         for (LLResultTypes.FiducialResult f : result.getFiducialResults()) {
+            double[] p = cameraSpaceInches(f.getTargetPoseCameraSpace());
+            if (p != null) places.put(f.getFiducialId(), p);
             // The minus sign flips the Limelight's tx (positive = RIGHT) into our bearing (positive = LEFT),
             // so the Limelight and the webcam agree. See docs/conventions.md.
             out.add(new TargetObservation(f.getFiducialId(), "Tag " + f.getFiducialId(),
                     -f.getTargetXDegrees(), distanceInches(f.getTargetPoseCameraSpace()), pictureTime));
         }
+        for (TagGroup g : groups) {
+            TargetObservation o = groupTarget(g, places, pictureTime);
+            if (o != null) out.add(o);
+        }
         latest = out;
+    }
+
+    // A tag's place in camera space in inches (x right, y down, z out of the lens), or null if no pose.
+    private static double[] cameraSpaceInches(Pose3D pose) {
+        if (pose == null || pose.getPosition() == null) return null;
+        Position p = pose.getPosition().toUnit(DistanceUnit.INCH);
+        if (p.x == 0 && p.y == 0 && p.z == 0) return null;     // the pipeline filled in no real pose
+        return new double[] {p.x, p.y, p.z};
+    }
+
+    /**
+     * One target for a tag group: the middle of its row, from the tags in view. The row's direction comes
+     * from the two seen tags farthest apart; each seen tag then gives the middle by stepping back along
+     * the row by its place in the group; the average is the aiming point. Null with fewer than 2 tags.
+     * Public for tests.
+     *
+     * @param places each seen tag's place in camera space, inches (x right, y down, z out of the lens)
+     */
+    public static TargetObservation groupTarget(TagGroup group, java.util.Map<Integer, double[]> places, long timeNanos) {
+        int lo = -1, hi = -1;
+        int count = 0;
+        for (int id : group.ids()) {
+            if (!places.containsKey(id)) continue;
+            count++;
+            if (lo < 0 || group.alongRowIn(id) < group.alongRowIn(lo)) lo = id;
+            if (hi < 0 || group.alongRowIn(id) > group.alongRowIn(hi)) hi = id;
+        }
+        if (count < 2) return null;
+        double[] a = places.get(lo), b = places.get(hi);
+        double span = group.alongRowIn(hi) - group.alongRowIn(lo);
+        // The row's direction: one inch along the row, in camera space.
+        double[] dir = {(b[0] - a[0]) / span, (b[1] - a[1]) / span, (b[2] - a[2]) / span};
+        double[] mid = {0, 0, 0};
+        for (int id : group.ids()) {
+            double[] p = places.get(id);
+            if (p == null) continue;
+            double along = group.alongRowIn(id);
+            for (int k = 0; k < 3; k++) mid[k] += (p[k] - dir[k] * along) / count;
+        }
+        // Limelight camera space: x right, z forward. The bearing is positive to the LEFT, so the minus sign.
+        double bearing = -Math.toDegrees(Math.atan2(mid[0], mid[2]));
+        return new TargetObservation(TargetObservation.CLUSTER, group.name, bearing, Math.hypot(mid[0], mid[2]), timeNanos);
     }
 
     /**

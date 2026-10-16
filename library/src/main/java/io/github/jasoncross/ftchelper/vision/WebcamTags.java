@@ -33,7 +33,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagSingleDetection;
  * camera.start();                    // in INIT
  * // every loop:
  * camera.update();
- * TargetObservation tag = camera.target(20);
+ * TargetObservation goal = camera.target("RED SCORING");   // a BIOBUZZ CELL group (an SDK cluster)
  * }</pre>
  *
  * <p>The tag library (the list of tags the SDK knows: their numbers, names and sizes) is this

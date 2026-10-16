@@ -29,7 +29,8 @@ flowchart LR
 **2026-27 note:** BIOBUZZ tags are on the HIVE cells and the cells MOVE, so they are good for
 aiming but not for finding the robot's position on the field. SDK 12 also adds tag
 **clusters** (groups of tags with one aiming point); `WebcamTags` reports a cluster as a target
-with id `TargetObservation.CLUSTER` and its name.
+with id `TargetObservation.CLUSTER` and its name. `LimelightTags` reports the same groups by the
+same names ([TagGroup](#taggroup)), so `camera.target("RED SCORING")` works with either camera.
 
 ---
 
@@ -86,6 +87,7 @@ on the robot network). Set the correct tag size there for distances.
 | `.pollRate(hz)` | results per second |
 | `setRobotHeading(deg)` | for the Limelight's MegaTag2 position feature (not needed to aim). Safe every loop: sent in the background |
 | `.keepTargetsMs(ms)` | how long targets stay without a new picture (default 500) |
+| `.groups(list)` | tag groups reported as one target each (default `TagGroup.currentSeason()`; empty list = off) |
 | `getLimelight()` | the SDK object, for color pipelines and more |
 | `LimelightTags.distanceInches(pose)` | distance from a 3D pose |
 
@@ -95,6 +97,30 @@ the library sends them on a background thread, so they never slow the loop.
 The library flips the Limelight's `tx` sign so that bearing is **positive to the LEFT**, like
 everywhere else. The picture time includes the Limelight's own capture and processing time, so
 "how old is this picture" is honest. The same picture is not reported twice.
+
+## TagGroup
+
+A Limelight reports each tag on its own. `LimelightTags` also reports each **group** of tags in a row
+as one target, with the same name as the webcam's SDK cluster (BIOBUZZ: the 4 tags under each CELL,
+`TagGroup.biobuzz()`). The aiming point is the middle of the tag row, worked out from the tags in
+view: the two seen tags farthest apart give the row's direction, and each seen tag steps back along
+the row by its place in the group. It needs at least 2 of the group's tags and their 3D poses (set the
+tag size in the pipeline). The webcam's cluster target is the SDK's aiming point, a few inches behind
+and above the row: about the same bearing when you face the group, a few inches more distance. Make
+the shot table with the camera the robot uses.
+
+```java
+// Next season, or your own targets: a name, the tag ids, each tag's place along the row (inches
+// from the middle, + = right as printed).
+TagGroup goal = new TagGroup("GOAL", new int[] {1, 2, 3}, new double[] {-5, 0, 5});
+camera.groups(java.util.Arrays.asList(goal));
+```
+
+| Method | What it does |
+| --- | --- |
+| `TagGroup.biobuzz()` / `TagGroup.currentSeason()` | this season's groups |
+| `contains(id)`, `alongRowIn(id)`, `ids()` | what is in a group |
+| `LimelightTags.groupTarget(group, places, time)` | the group's target from tag places in camera space (public for tests) |
 
 ## TargetObservation
 
@@ -115,8 +141,8 @@ AimController aim = new AimController(0.02, 0.003)   // kP and kD, on the bearin
         .maxPower(0.5)      // never turn harder than this while aiming
         .maxAgeMs(150)      // ignore pictures older than 150 ms (they point the wrong way)
         .offset(0);         // where the target sits in view when the launcher is aimed (left = +); Aim Tuner finds it
-// camera.target(20) = tag 20, or null if not seen now; turnPower(null) gives 0 (no turn)
-drive.drive(forward, strafe, aim.turnPower(camera.target(20)));   // ready for any drive's turn
+// camera.target("RED SCORING") = that tag group, or null if not seen now; turnPower(null) gives 0
+drive.drive(forward, strafe, aim.turnPower(camera.target("RED SCORING")));   // ready for any drive's turn
 ```
 
 `turnPower` is **clockwise positive**, the same as every drive's `turn` argument, so it plugs straight

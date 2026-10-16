@@ -22,7 +22,8 @@ import java.util.List;
  * camera.start();
  * // every loop:
  * camera.update();
- * TargetObservation goal = camera.target(20);      // by tag id (null if not seen)
+ * TargetObservation goal = camera.target("RED SCORING");   // a tag group, by name (null if not seen)
+ * TargetObservation tag = camera.target(31);                // one tag, by its number
  * }</pre>
  *
  * Docs: docs/modules/vision.md. How to write your own: docs/guides/extending.md

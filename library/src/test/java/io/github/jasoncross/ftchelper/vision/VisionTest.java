@@ -115,4 +115,47 @@ public class VisionTest {
         // Centered in the camera = the launcher points left of it: turn RIGHT (clockwise = positive).
         assertTrue(aim.turnPower(new TargetObservation(20, "t", 0, 40, now[0] + 1)) > 0);
     }
+
+    // ---- TagGroup: a Limelight's single tags reported as one group target ----
+
+    private static java.util.Map<Integer, double[]> row(double offsetX, double z, boolean upsideDown, int... ids) {
+        java.util.Map<Integer, double[]> m = new java.util.HashMap<>();
+        TagGroup g = TagGroup.biobuzz().get(0);
+        for (int id : ids) {
+            double along = g.alongRowIn(id) * (upsideDown ? -1 : 1);   // upside down: printed right = camera left
+            m.put(id, new double[] {offsetX + along, -10, z});
+        }
+        return m;
+    }
+
+    @Test public void groupTargetIsTheMiddleOfTheRowFromAnyTwoTags() {
+        TagGroup red = TagGroup.biobuzz().get(0);
+        assertEquals("RED SCORING", red.name);
+        double expectBearing = -Math.toDegrees(Math.atan2(5, 40));      // the middle is 5 in RIGHT: negative
+        for (boolean upsideDown : new boolean[] {false, true}) {
+            TargetObservation all = LimelightTags.groupTarget(red, row(5, 40, upsideDown, 30, 31, 32, 33), 7);
+            TargetObservation two = LimelightTags.groupTarget(red, row(5, 40, upsideDown, 31, 33), 7);
+            for (TargetObservation o : new TargetObservation[] {all, two}) {
+                assertEquals(TargetObservation.CLUSTER, o.id);
+                assertEquals("RED SCORING", o.name);
+                assertEquals(expectBearing, o.bearingDeg, 1e-9);
+                assertEquals(Math.hypot(5, 40), o.distanceIn, 1e-9);
+                assertEquals(7, o.timeNanos);
+            }
+        }
+        assertNull("one tag is not enough", LimelightTags.groupTarget(red, row(5, 40, false, 32), 7));
+        assertNull("other tags do not count", LimelightTags.groupTarget(red, row(5, 40, false, 34, 35), 7));
+    }
+
+    @Test public void tagGroupsAreChecked() {
+        assertEquals(4, TagGroup.biobuzz().size());
+        assertTrue(TagGroup.currentSeason().get(3).contains(45));
+        assertTrue(Double.isNaN(TagGroup.biobuzz().get(0).alongRowIn(45)));
+        try {
+            new TagGroup("bad", new int[] {1}, new double[] {0});
+            org.junit.Assert.fail("a group needs 2 tags");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("at least 2"));
+        }
+    }
 }

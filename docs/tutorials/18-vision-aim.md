@@ -34,7 +34,7 @@ TargetSource camera = menu.get("Camera").equals("Limelight")
 camera.start();
 ```
 
-After this line, the program never cares which camera it is: `camera.update()`, `camera.target(20)`,
+After this line, the program never cares which camera it is: `camera.update()`, `camera.target("RED SCORING")`,
 `camera.status()`. Next year's camera is a new class with the same methods.
 
 The webcam needs 1-2 s to start, so start it in INIT. The INIT loop shows `camera.status()` and how
@@ -72,7 +72,7 @@ feel.update(target.bearingDeg);       // buzzes inside 3 degrees, stronger when 
 ## 5. With a turret instead
 
 ```java
-turret.aimAtTarget(camera.target(20), true);    // true = the camera turns with the turret
+turret.aimAtTarget(camera.target("RED SCORING"), true);    // true = the camera turns with the turret
 ```
 
 `aimAtTarget` uses a picture only if it is fresh, and each picture only ONCE. (Turning "by the
@@ -85,12 +85,15 @@ shot from the table (tutorial 17); check `target.hasDistance()` first.
 - BIOBUZZ tags are on the HIVE cells, and the cells move: good for aiming, not for working out
   where the robot is on the field.
 - SDK 12 "clusters": groups of tags with one aiming point (the center of a cell opening).
-  `WebcamTags` reports a cluster with id `TargetObservation.CLUSTER` and its name:
-  `camera.target("cluster name")`.
+  BIOBUZZ has 4: "RED SCORING", "RED AUDIENCE", "BLUE AUDIENCE", "BLUE SCORING" (the 4 tags under each
+  CELL). `WebcamTags` reports each with id `TargetObservation.CLUSTER` and its name. `LimelightTags`
+  reports the same groups by the same names (a Limelight sees single tags; the library groups them
+  with `TagGroup`, aimed at the middle of the tag row), so `camera.target("RED SCORING")` works with
+  either camera. Single tags still work by number: `camera.target(31)`.
 
 ## Run it
 
-1. INIT: choose the camera and the tag id with the D-pad, press A. Wait for "STREAMING" (webcam) or
+1. INIT: choose the camera and the target with the D-pad, press A. Wait for "STREAMING" (webcam) or
    "pipeline 0" (Limelight) and "Tags seen: 1".
 2. START. Point the robot so the tag is off to the left. Hold RB: the robot turns left until aimed;
    a buzz; "Aimed: true".
