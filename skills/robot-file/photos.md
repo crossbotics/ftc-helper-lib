@@ -16,7 +16,9 @@ numbers that matter for the rules and for touching the field.
 
 - Use the known-size object to turn pixels into inches. Say "estimate" in the note.
 - Find the robot's centre on the floor (the middle of the drive frame). Every `at=` is measured from
-  there: forward, left, up (inches).
+  there: forward, left, up (inches). A part with `on=` is measured from its parent's mount point instead.
+- What `at=` points to: the bottom centre of a `box`, `slide` or `turret`; the hinge of an `arm`; the
+  centre of a `roller` or `flywheel`; the palm of a `claw`.
 - Only the parts that move, reach out, or touch pieces need shapes. Bolts and wires do not.
 
 ## Which shape

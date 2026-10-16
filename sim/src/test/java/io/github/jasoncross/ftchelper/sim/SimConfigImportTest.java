@@ -53,4 +53,37 @@ public class SimConfigImportTest {
             // refused, as it should be
         }
     }
+
+    @Test public void reviewersCases() throws Exception {
+        String xml = "<Robot><LynxUsbDevice name=\"p\"><LynxModule name=\"Control Hub\" port=\"173\">"
+                + "<goBILDA5202SeriesMotor name=\"left front\" port=\"0\"/><goBILDA5202SeriesMotor name=\"FRMotor\" port=\"1\"/>"
+                + "<goBILDA5202SeriesMotor name=\"drive_bl\" port=\"2\"/><goBILDA5202SeriesMotor name=\"rightBack\" port=\"3\"/>"
+                + "<Servo name=\"speed\" port=\"0\"/><Servo name=\"claw grip\" port=\"1\"/>"
+                + "<ControlHubImuBHI260AP name=\"imu\" port=\"0\" bus=\"0\"/></LynxModule>"
+                + "<LynxModule name=\"Expansion Hub 2\" port=\"2\"><goBILDA5202SeriesMotor name=\"leftFrontIntake\" port=\"0\"/>"
+                + "<LynxEmbeddedIMU name=\"imu2\" port=\"0\" bus=\"0\"/></LynxModule></LynxUsbDevice>"
+                + "<Webcam name=\"Webcam 1\" serialNumber=\"a\"/><Webcam name=\"webcam_1\" serialNumber=\"b\"/></Robot>";
+        List<SimConfigImport.Device> devices = SimConfigImport.read(xml);
+        assertEquals("names in any style; an intake is not a wheel",
+                Arrays.asList("left front", "FRMotor", "drive_bl", "rightBack"), Arrays.asList(SimConfigImport.driveMotors(devices)));
+        List<String> q = new ArrayList<>();
+        String text = SimConfigImport.draft("x", devices, "biobuzz-2026", q);
+        assertTrue("one IMU line", text.contains("imu = imu\n") && !text.contains("imu = imu2\n"));
+        assertTrue("two webcams, two keys", text.contains("camera.webcam_1 = name=Webcam 1") && text.contains("camera.webcam_1_2 = name=webcam_1"));
+        File f = tmp.newFile("names.properties");
+        Files.write(f.toPath(), text.getBytes("UTF-8"));
+        SimRobot r = SimRobot.load(f.toPath());
+        assertTrue("a name with a space works", r.servos.containsKey("claw grip") && r.motors.containsKey("left front"));
+        assertTrue("no servo called speed", !r.servos.containsKey("speed"));
+        String tank = "<Robot><LynxUsbDevice name=\"p\"><LynxModule name=\"Control Hub\" port=\"173\">"
+                + "<goBILDA5202SeriesMotor name=\"leftDrive\" port=\"0\"/><goBILDA5202SeriesMotor name=\"rightDrive\" port=\"1\"/>"
+                + "</LynxModule></LynxUsbDevice></Robot>";
+        String[] two = SimConfigImport.driveMotors(SimConfigImport.read(tank));
+        assertEquals(Arrays.asList("leftDrive", "rightDrive"), Arrays.asList(two));
+        String tankText = SimConfigImport.draft("t", SimConfigImport.read(tank), "biobuzz-2026", new ArrayList<>());
+        assertTrue(tankText.contains("drive.type = tank"));
+        File g = tmp.newFile("tank.properties");
+        Files.write(g.toPath(), tankText.getBytes("UTF-8"));
+        assertEquals(2, SimRobot.load(g.toPath()).wheels.size());
+    }
 }

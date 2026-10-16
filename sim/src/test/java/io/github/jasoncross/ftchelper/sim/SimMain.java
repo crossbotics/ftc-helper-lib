@@ -13,10 +13,20 @@ public final class SimMain {
     public static void main(String[] args) throws Exception {
         try {
             run(args);
+        } catch (NumberFormatException e) {
+            // a number that is not one, somewhere: the message alone would not say where, so the trace too
+            System.err.println();
+            System.err.println("PROBLEM: a number was expected (" + e.getMessage() + "). Check the robot file's numbers and the scenario's lines; where:");
+            e.printStackTrace();
+            System.exit(2);
         } catch (IllegalArgumentException e) {
             // A mistake in a robot file, field file or command: its message names it; no Java trace.
             System.err.println();
             System.err.println("PROBLEM: " + e.getMessage());
+            System.exit(2);
+        } catch (java.nio.file.NoSuchFileException e) {
+            System.err.println();
+            System.err.println("PROBLEM: no such file: " + e.getMessage() + " (paths are from the ftc-helper-lib folder)");
             System.exit(2);
         }
     }

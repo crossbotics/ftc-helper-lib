@@ -37,18 +37,20 @@ Check: a starting robot must fit an 18 in cube. A frame longer than 18 in is a m
 11. Which motor is it (part number / RPM)? -> `part=` (catalog), or `rpm=` and `ticksPerRev=`.
 12. Lift/arm: its encoder counts at the bottom and top hard stops? The Motor Finder shows them (or
     `finder-results.txt`). -> `min=`, `max=`. How much power holds it still (0.05-0.2 typical, the
-    Characterizer measures it)? -> `gravity=`.
+    Characterizer measures it; that tool finds the power a part needs at each speed)? -> `gravity=`.
 13. **Lift: how tall is the robot with the lift all the way up, floor to the top?** This one number
     decides the 29 in rule. The shape's travel = that height - the lift's folded top. Then
-    `ticksPerIn=` = (top count - bottom count) / travel. Use `spoolIn=` only for a one-stage lift
-    pulled straight by its spool: a cascade or multi-stage slide moves its top faster than its string.
+    `ticksPerIn=` = (top count - bottom count) / travel (negative if the counts go down as it rises). Use `spoolIn=` only for a one-stage lift
+    pulled straight by its spool: a cascade (multi-stage slide where each stage pulls the next) moves its
+    top faster than its string.
 14. Lift shape: how tall is one stage, and where does its bottom sit (forward/left/up from the robot's
     centre)? -> `size=` (ONE stage) and `at=`. A part riding on the lift: `on=lift`, `at=0,0,<stage height>`
     is the top of the moving stage.
 15. Arm: what angle is it at the bottom stop, and at the top stop? Angles: 0 = level and pointing
-    forward, +90 = straight up, -90 = straight down. -> `start=` (the bottom stop's angle), and either
+    forward, +90 = straight up, -90 = straight down. -> `start=` (the angle at the `min=` count, usually the bottom stop), and either
     `ticksPerDeg=` = (top count - bottom count) / (top angle - bottom angle), or `gear=` = motor turns per
-    arm turn (then the catalog's counts per motor turn x gear / 360 counts per degree). How long is it
+    arm turn (then the catalog's counts per motor turn x gear / 360 counts per degree). If the counts go
+    DOWN as the arm goes up, `ticksPerDeg=` is negative. How long is it
     (hinge to tip), and how wide and thick? -> `size=length x width x thickness`.
 
 Check: a lift that goes past 29 in at its top, or an arm that reaches past 24 in: tell the team (they

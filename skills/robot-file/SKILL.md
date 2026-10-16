@@ -89,7 +89,8 @@ expect error none
 stop
 ```
 
-1. **It loads.** Errors start with `PROBLEM:` and name the line. Fix each one.
+1. **It loads.** Errors start with `PROBLEM:` and name the line. Fix each one. An error inside the
+   team's OpMode (a missing device, a crash) shows up as a failed `expect error none` with the message.
 2. **The size rules.** `print size` shows the worst pose with its values (inches up a slide, degrees for
    an arm) and what it breaks. Compare those heights with the tape-measured ones: if the shapes make
    the robot taller or longer than the team measured, the shapes or numbers are wrong (ask them to

@@ -57,7 +57,7 @@ public final class SimConfigImport {
     static {
         MOTOR_FAMILIES.put("goBILDA5202SeriesMotor", "a goBILDA Yellow Jacket (5202/5203/5204): which RPM? part=gobilda-5203-<rpm>");
         MOTOR_FAMILIES.put("goBILDA5201SeriesMotor", "an old goBILDA 5201: closest Yellow Jacket part, or rpm= and ticksPerRev=");
-        MOTOR_FAMILIES.put("RevRoboticsUltraplanetaryHDHexMotor", "a REV HD Hex with UltraPlanetary cartridges: which ratio? part=rev-hd-hex-up<ratio>");
+        MOTOR_FAMILIES.put("RevRoboticsUltraplanetaryHDHexMotor", "a REV HD Hex with UltraPlanetary cartridges: which ratio? part=rev-hd-hex-up<ratio> (3, 4, 5, 12, 15, 20 or 60), or rpm= and ticksPerRev=");
         MOTOR_FAMILIES.put("Motor", "an \"unspecified\" motor: which motor and ratio? (part= from the catalog, or rpm= and ticksPerRev=)");
         MOTOR_FAMILIES.put("StudicaMaverick", "a Studica Maverick: not in the catalog yet: rpm= and ticksPerRev= from Studica's page");
         MOTOR_FAMILIES.put("Matrix12vMotor", "a Matrix 12 V motor: rpm= and ticksPerRev=");
@@ -99,33 +99,79 @@ public final class SimConfigImport {
         if (isMotor(tag)) return "motor";
         if (tag.equals("Servo") || tag.equals("ServoFullRange")) return "servo";
         if (tag.equals("ContinuousRotationServo")) return "crservo";
-        if (tag.equals("ControlHubImuBHI260AP") || tag.equals("LynxEmbeddedIMU") || tag.equals("RevExternalImu")) return "imu";
+        if (tag.toLowerCase(Locale.US).contains("imu")) return "imu";              // any hub or external IMU type
+        if (tag.equals("RevSPARKMini")) return "crservo";                           // a motor controller on a servo port: power -1..1
         if (tag.equals("RevTouchSensor") || tag.equals("DigitalDevice") || tag.equals("ModernRoboticsAnalogTouchSensor")) return "touch";
         if (tag.equals("Webcam")) return "webcam";
-        if (tag.equals("EthernetDevice")) return "limelight";
+        if (tag.equals("EthernetDevice") || tag.contains("Limelight")) return "limelight";
         return "other";
     }
 
-    // The drivetrain's four motors from their names (front/back, left/right; fl, frontLeft, leftFront ...).
+    // A name's words, lower case: "leftFront" -> left, front; "drive_fl" -> drive, fl; "FLMotor" -> fl, motor.
+    static List<String> words(String name) {
+        String spaced = name.replaceAll("([a-z0-9])([A-Z])", "$1 $2").replaceAll("([A-Z]+)([A-Z][a-z])", "$1 $2");
+        List<String> out = new ArrayList<>();
+        for (String w : spaced.toLowerCase(Locale.US).split("[^a-z]+")) if (!w.isEmpty()) out.add(w);
+        return out;
+    }
+
+    // Words that mean a mechanism, not a wheel ("leftFrontIntake" is not a drive motor).
+    private static final List<String> NOT_WHEELS = java.util.Arrays.asList("arm", "intake", "lift", "slide", "shooter", "fly",
+            "flywheel", "launcher", "claw", "wrist", "turret", "feeder", "elevator", "spinner", "odo", "encoder", "pod");
+
+    /**
+     * The drivetrain from the motor names: four motors (front/back x left/right, in any form: front_left,
+     * leftFront, fl, drive_fl, FLMotor) as FL, FR, BL, BR; or two (left/right only: leftDrive, rightDrive)
+     * as a 2-motor tank. Null if neither is clear.
+     */
     static String[] driveMotors(List<Device> devices) {
-        String[] order = new String[4];   // FL, FR, BL, BR
+        String[] four = new String[4];   // FL, FR, BL, BR
+        String[] two = new String[2];    // left, right
         for (Device d : devices) {
             if (!kindOf(d.tag).equals("motor")) continue;
-            String raw = d.name.toLowerCase(Locale.US), n = raw.replaceAll("[^a-z]", "");
-            // short names (fl fr bl br, lf rf lb rb, rl rr) only as a whole word: "flywheel" is not front-left
-            java.util.regex.Matcher m = java.util.regex.Pattern.compile("^(fl|fr|bl|br|lf|rf|lb|rb|rl|rr)(?![a-z])").matcher(raw);
-            String two = m.find() ? m.group(1) : "";
-            boolean front = n.contains("front") || two.equals("fl") || two.equals("fr") || two.equals("lf") || two.equals("rf");
-            boolean back = n.contains("back") || n.contains("rear") || two.equals("bl") || two.equals("br") || two.equals("lb")
-                    || two.equals("rb") || two.equals("rl") || two.equals("rr");
-            boolean left = n.contains("left") || two.equals("fl") || two.equals("bl") || two.equals("lf") || two.equals("lb") || two.equals("rl");
-            boolean right = n.contains("right") || two.equals("fr") || two.equals("br") || two.equals("rf") || two.equals("rb") || two.equals("rr");
-            if (front == back || left == right) continue;
-            int i = (back ? 2 : 0) + (right ? 1 : 0);
-            if (order[i] == null) order[i] = d.name;
+            List<String> w = words(d.name);
+            boolean mechanism = false;
+            for (String x : w) if (NOT_WHEELS.contains(x)) mechanism = true;
+            if (mechanism) continue;
+            boolean front = false, back = false, left = false, right = false;
+            for (String x : w) {
+                if (x.equals("front") || x.equals("f")) front = true;
+                if (x.equals("back") || x.equals("rear") || x.equals("b")) back = true;
+                if (x.equals("left") || x.equals("l")) left = true;
+                if (x.equals("right") || x.equals("r")) right = true;
+                if (x.length() == 2 && "fl fr bl br lf rf lb rb".contains(x)) {
+                    front |= x.contains("f");
+                    back |= x.contains("b");
+                    left |= x.contains("l");
+                    right |= x.contains("r");
+                }
+            }
+            if (left == right) continue;
+            if (front != back) {
+                int i = (back ? 2 : 0) + (right ? 1 : 0);
+                if (four[i] == null) four[i] = d.name;
+            } else if (!front) {
+                int i = right ? 1 : 0;
+                if (two[i] == null) two[i] = d.name;
+            }
         }
-        for (String s : order) if (s == null) return null;
-        return order;
+        boolean all4 = true;
+        for (String x : four) if (x == null) all4 = false;
+        if (all4) return four;
+        if (two[0] != null && two[1] != null && four[0] == null && four[1] == null) return two;
+        return null;
+    }
+
+    // A device name as a robot-file key: java properties keys end at a space, "=" or ":", so those
+    // (and a leading # or !) are written with a backslash; the simulator reads the name back unchanged.
+    static String key(String name) {
+        StringBuilder b = new StringBuilder();
+        for (int i = 0; i < name.length(); i++) {
+            char c = name.charAt(i);
+            if (c == ' ' || c == '=' || c == ':' || c == '\\' || (i == 0 && (c == '#' || c == '!'))) b.append('\\');
+            b.append(c);
+        }
+        return b.toString();
     }
 
     /** The draft robot file, and the questions still open (TODO lines). */
@@ -138,13 +184,21 @@ public final class SimConfigImport {
         b.append("field = ").append(field).append("\n\n");
         b.append("# ---- Size and start (TODO: measure the robot) ----\n");
         b.append("robot.lengthIn = 18   # TODO: front to back, inches\nrobot.widthIn = 18    # TODO: side to side\nrobot.heightIn = 18   # TODO: tallest at the start\n");
-        b.append("start.x = -56\nstart.y = -61.55\nstart.heading = 0     # TODO: where it starts (inches from the field centre; 0 = facing away from the drivers)\n\n");
+        if (field.equals("biobuzz-2026")) {
+            b.append("start.x = -56\nstart.y = -61.55\nstart.heading = 0     # TODO: where it starts (inches from the field centre; 0 = facing away from the drivers)\n\n");
+        } else {
+            b.append("start.x = 0\nstart.y = -48\nstart.heading = 0     # TODO: where it starts on this field (it must not overlap a field part)\n\n");
+        }
         questions.add("Robot size: length, width, height at the start (inches), and where it starts on the field.");
         String[] drive = driveMotors(devices);
         b.append("# ---- Drivetrain ----\n");
         List<String> used = new ArrayList<>();
-        if (drive != null) {
+        if (drive != null && drive.length == 2) {
+            b.append("drive.type = tank   # two drive motors: left, right\n");
+        } else if (drive != null) {
             b.append("drive.type = mecanum   # TODO: mecanum or tank?\n");
+        }
+        if (drive != null) {
             b.append("drive.motors = ").append(String.join(", ", drive)).append("\n");
             Device d0 = find(devices, drive[0]);
             String part = MOTOR_PARTS.get(d0.tag);
@@ -154,43 +208,55 @@ public final class SimConfigImport {
             questions.add("Drivetrain: mecanum or tank? Which motors (catalog part) and wheels (diameter)? Track width and wheelbase (wheel centre to wheel centre).");
             for (String s : drive) used.add(s);
         } else {
-            b.append("drive.type = none   # TODO: no motors named like front_left/back_right were found: name the four drive motors\n");
+            b.append("drive.type = none   # TODO: no drive motors found by name (front/back + left/right): which motors drive it?\n");
             questions.add("Which four motors drive the robot (front left, front right, back left, back right)?");
         }
         b.append("\n# ---- Motors ----\n# motor.NAME = kind (free, lift or flywheel), part=, min=, max= (hard stops in counts), gravity=\n");
         for (Device d : devices) {
             if (!kindOf(d.tag).equals("motor") || used.contains(d.name)) continue;
             String part = MOTOR_PARTS.get(d.tag);
-            b.append("motor.").append(d.name).append(" = free").append(part != null ? ", part=" + part : "")
+            b.append("motor.").append(key(d.name)).append(" = free").append(part != null ? ", part=" + part : "")
                     .append("   # TODO: what is it (lift/arm = lift with min= max=; launcher = flywheel; intake = free)?")
-                    .append(part == null ? " Motor: " + MOTOR_FAMILIES.getOrDefault(d.tag, d.tag) : "").append("\n");
+                    .append(part == null ? " Motor: " + MOTOR_FAMILIES.getOrDefault(d.tag, d.tag) : "")
+                    .append(" (A port used only for an odometry encoder: delete this line.)").append("\n");
             questions.add("Motor \"" + d.name + "\" (" + d.module + " port " + d.port + "): what does it move, which part, and its limits?");
         }
         b.append("\n# ---- Servos ----\n# servo.NAME = start position, part=  (servo.speed = positions per second for servos with no part)\nservo.speed = 1.0\n");
         for (Device d : devices) {
             if (!kindOf(d.tag).equals("servo")) continue;
-            b.append("servo.").append(d.name).append(" = 0.5   # TODO: start position and part= (which servo?)\n");
+            if (d.name.equals("speed")) {
+                b.append("# TODO: a servo named \"speed\" cannot be simulated (servo.speed is a setting): rename it in the configuration\n");
+                questions.add("Servo \"speed\": please rename it in the Driver Station configuration (the simulator uses servo.speed for a setting).");
+                continue;
+            }
+            b.append("servo.").append(key(d.name)).append(" = 0.5   # TODO: start position and part= (which servo?)\n");
             questions.add("Servo \"" + d.name + "\": what does it move, which servo (part), where does it start?");
         }
         for (Device d : devices) {
             if (!kindOf(d.tag).equals("crservo")) continue;
-            b.append("crservo.").append(d.name).append(" =\n");
+            b.append("crservo.").append(key(d.name)).append(" =").append(d.tag.equals("RevSPARKMini") ? "   # a SPARK Mini: power -1..1, like a CR servo" : "").append("\n");
         }
         b.append("\n# ---- Sensors and cameras ----\n");
+        boolean imuDone = false;
+        java.util.Set<String> keys = new java.util.HashSet<>();
         for (Device d : devices) {
             String k = kindOf(d.tag);
-            if (k.equals("imu")) b.append("imu = ").append(d.name).append("\n");
+            if (k.equals("imu")) {
+                // one IMU: the first (usually the Control Hub's); any other as a note
+                b.append(imuDone ? "# another IMU: " + d.name + " (" + d.module + "); imu = " + d.name + " if the code uses this one\n" : "imu = " + d.name + "\n");
+                imuDone = true;
+            }
             if (k.equals("touch")) {
-                b.append("touch.").append(d.name).append(" =    # TODO: the motor it watches and how near its bottom: touch.").append(d.name).append(" = lift, below=20\n");
+                b.append("touch.").append(key(d.name)).append(" =    # TODO: the motor it watches and how near its bottom: touch.").append(d.name).append(" = lift, below=20\n");
                 questions.add("Switch \"" + d.name + "\": what presses it (a lift at its bottom? which motor)?");
             }
             if (k.equals("webcam")) {
-                b.append("camera.").append(safe(d.name)).append(" = name=").append(d.name)
+                b.append("camera.").append(unique(safe(d.name), keys)).append(" = name=").append(d.name)
                         .append(", forward=0, left=0, up=10, yaw=0, pitch=0   # TODO: where it sits and how it is tilted\n");
                 questions.add("Webcam \"" + d.name + "\": where is it (forward/left/up from the robot's centre, inches) and how is it tilted?");
             }
             if (k.equals("limelight")) {
-                b.append("limelight.").append(safe(d.name)).append(" = name=").append(d.name)
+                b.append("limelight.").append(unique(safe(d.name), keys)).append(" = name=").append(d.name)
                         .append(", forward=0, left=0, up=10, yaw=0, pitch=0   # TODO: a Limelight 3A? where it sits and its tilt\n");
                 questions.add("Ethernet device \"" + d.name + "\": is it a Limelight 3A? Where does it sit, how is it tilted?");
             }
@@ -203,7 +269,8 @@ public final class SimConfigImport {
             b.append("#   ").append(d.name).append(" (").append(d.tag).append(")\n");
         }
         b.append("\n# ---- Shapes and game pieces (TODO: the robot-file skill builds these from photos and measurements) ----\n");
-        b.append("robot.chassisHeightIn = 4   # TODO: the chassis frame's height\n");
+        b.append("# robot.chassisHeightIn = 4   # TODO: the chassis frame's height (remove the # when the shapes are added;\n");
+        b.append("#   until then the size checks only see the robot.lengthIn x widthIn x heightIn box)\n");
         questions.add("Mechanisms: for each one (intake, lift, arm, claw, launcher), what it looks like and where it sits (photos + a few measurements).");
         return b.toString();
     }
@@ -211,6 +278,14 @@ public final class SimConfigImport {
     private static Device find(List<Device> devices, String name) {
         for (Device d : devices) if (d.name.equals(name)) return d;
         return null;
+    }
+
+    // A key not used yet: "webcam_1", then "webcam_1_2"...
+    private static String unique(String k, java.util.Set<String> used) {
+        String out = k;
+        for (int i = 2; used.contains(out); i++) out = k + "_" + i;
+        used.add(out);
+        return out;
     }
 
     // A robot-file key from a configuration name ("Webcam 1" -> "webcam_1").
@@ -221,10 +296,24 @@ public final class SimConfigImport {
     public static void main(String[] args) throws Exception {
         try {
             run(args);
+        } catch (NumberFormatException e) {
+            // a number that is not one, somewhere: the message alone would not say where, so the trace too
+            System.err.println();
+            System.err.println("PROBLEM: a number was expected (" + e.getMessage() + "). Check the robot file's numbers and the scenario's lines; where:");
+            e.printStackTrace();
+            System.exit(2);
         } catch (IllegalArgumentException e) {
             // A mistake in a robot file, field file or command: its message names it; no Java trace.
             System.err.println();
             System.err.println("PROBLEM: " + e.getMessage());
+            System.exit(2);
+        } catch (org.xml.sax.SAXException e) {
+            System.err.println();
+            System.err.println("PROBLEM: that is not a robot configuration XML file (" + e.getMessage() + ")");
+            System.exit(2);
+        } catch (java.nio.file.NoSuchFileException e) {
+            System.err.println();
+            System.err.println("PROBLEM: no such file: " + e.getMessage() + " (paths are from the ftc-helper-lib folder)");
             System.exit(2);
         }
     }
@@ -236,7 +325,7 @@ public final class SimConfigImport {
             else if (args[i].equals("--out")) out = args[++i];
             else if (args[i].equals("--field")) field = args[++i];
         }
-        if (config == null) throw new IllegalArgumentException("-Pconfig=path/to/the/configuration.xml (from the Control Hub's /sdcard/FIRST/)");
+        if (config == null || config.isEmpty()) throw new IllegalArgumentException("-Pconfig=path/to/the/configuration.xml (from the Control Hub's /sdcard/FIRST/)");
         Path in = Paths.get(config);
         List<Device> devices = read(new String(Files.readAllBytes(in), StandardCharsets.UTF_8));
         List<String> questions = new ArrayList<>();
