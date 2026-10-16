@@ -29,7 +29,10 @@ public class BackgroundWorkerTest {
         BackgroundWorker w = new BackgroundWorker("test");
         CountDownLatch gate = new CountDownLatch(1);
         List<Integer> sent = Collections.synchronizedList(new ArrayList<>());
-        w.submit(() -> { try { gate.await(); } catch (InterruptedException ignored) { } });   // keep the worker busy
+        CountDownLatch busy = new CountDownLatch(1);
+        w.submit(() -> { busy.countDown(); try { gate.await(); } catch (InterruptedException ignored) { } });   // keep the worker busy
+        // Wait until the worker has TAKEN that job, so it is no longer counted as waiting.
+        assertTrue(busy.await(2, TimeUnit.SECONDS));
         for (int i = 1; i <= 20; i++) {
             final int value = i;
             w.submitLatest("heading", () -> sent.add(value));
