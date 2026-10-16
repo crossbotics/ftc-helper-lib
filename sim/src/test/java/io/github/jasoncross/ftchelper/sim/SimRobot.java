@@ -57,6 +57,9 @@ final class SimRobot {
     final List<SimMotor> wheels = new ArrayList<>();   // FL, FR, BL, BR (tank: FL, FR, [BL, BR])
     double wheelDiameterIn = 3.78, ticksPerRev = 537.7, gearRatio = 1, trackWidthIn = 15, wheelBaseIn = 13;
     double strafeEfficiency = 0.85;
+    // Degrees the robot turns per wheel count of turning ((left - right) / 2), measured by the
+    // Characterizer; NaN = worked out from the wheel size and track (wheels that never slip).
+    double turnDegPerCount = Double.NaN;
     // The robot's size (for bumping into field elements) and where it starts.
     double lengthIn = 18, widthIn = 18, heightIn = 18;
     double startX = 0, startY = -48, startHeading = 0;
@@ -103,8 +106,11 @@ final class SimRobot {
             trackWidthIn = num(p, "drive.trackWidthIn", 15);
             wheelBaseIn = num(p, "drive.wheelBaseIn", 13);
             strafeEfficiency = num(p, "drive.strafeEfficiency", 0.85);
+            double driveKs = num(p, "drive.kS", 0), driveAccel = num(p, "drive.accelSec", 0.15);
+            turnDegPerCount = num(p, "drive.turnDegPerCount", Double.NaN);
             for (String name : list(p.getProperty("drive.motors", ""))) {
-                SimMotor m = new SimMotor(name, port++, SimMotor.Kind.WHEEL, maxTicks, 0.15);
+                SimMotor m = new SimMotor(name, port++, SimMotor.Kind.WHEEL, maxTicks, driveAccel);
+                m.kS = driveKs;
                 m.ticksPerRev = ticksPerRev;
                 if (dp != null) m.setPart(dp);
                 wheels.add(m);
@@ -129,6 +135,10 @@ final class SimRobot {
             SimMotor m = new SimMotor(name, port++, kind, max, kind == SimMotor.Kind.FLYWHEEL ? 0.6 : 0.12);
             m.ticksPerRev = tpr;
             if (part != null) m.setPart(part);
+            // Measured numbers (the Characterizer's): friction, how quickly it speeds up, how it coasts.
+            m.kS = dbl(s, "kS", 0);
+            if (s.containsKey("accelSec")) m.lagSec = positive(s, "accelSec", key);
+            if (s.containsKey("coastSec")) m.coastSec = positive(s, "coastSec", key);
             if (s.containsKey("min")) m.minTicks = dbl(s, "min", 0);
             if (s.containsKey("max")) m.maxTicks = dbl(s, "max", 0);
             m.gravity = dbl(s, "gravity", 0);
@@ -495,6 +505,11 @@ final class SimRobot {
             right = 0;
             cw = (left - rightSide) / 2 / (trackWidthIn / 2);
         }
+        if (!Double.isNaN(turnDegPerCount)) {
+            // the measured turning: (left - right) / 2 in wheel counts per second, times degrees per count
+            double turnCounts = ((v[0] + v[2]) / 2 - (v[1] + v[3]) / 2) / 2 / ipt;
+            cw = Math.toRadians(turnDegPerCount * turnCounts);
+        }
         double h = Math.toRadians(headingDeg);
         // Forward = (-sin h, cos h) on the field; right = (cos h, sin h).
         double nx = x + (-Math.sin(h) * forward + Math.cos(h) * right) * dt;
@@ -579,6 +594,12 @@ final class SimRobot {
             }
         }
         return out;
+    }
+
+    private static double positive(Map<String, String> s, String key, String line) {
+        double v = dbl(s, key, 0);
+        if (!(v > 0)) throw new IllegalArgumentException("Robot file: \"" + line + "\": " + key + " must be more than 0");
+        return v;
     }
 
     private static boolean isNumber(String t) {

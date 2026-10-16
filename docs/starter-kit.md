@@ -14,7 +14,7 @@ names and numbers, and you have a working robot.
 | 4 | `StarterAuto.java` | what every autonomous shares | nothing |
 | 5 | `AutoScoreAndPark.java` | one autonomous (copy for more) | the steps |
 | 6 | `HardwareCheck.java` | tests every device | nothing |
-| + | `ServoFinder.java`, `MotorFinder.java`, `FlywheelFinder.java`, `DriveTuner.java` | [finders](guides/finders.md): measure servo ends, lift limits, flywheel gains, wheel size, and show the code to copy | nothing |
+| + | `ServoFinder.java`, `MotorFinder.java`, `FlywheelFinder.java`, `DriveTuner.java`, `Characterizer.java` | [finders](guides/finders.md): measure servo ends, lift limits, flywheel gains, wheel size, how the motors really move (feedforward, simulator), and show the code to copy | `Characterizer`: your lift/arm limits and flywheel names |
 
 ```mermaid
 flowchart LR

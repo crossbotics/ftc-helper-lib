@@ -156,6 +156,34 @@ multiple of 90 degrees, and every few degrees between (5 or finer with a few mov
 many, to stay under 50,000 poses). The worst pose is shown. It is a careful check, not a proof: leave a
 little margin, and measure the real robot at its hard stops.
 
+## Real numbers: the Characterizer
+
+The simulator moves each motor by the same "feedforward" model a real motor follows: power (at 12.8 V)
+= kS (to start moving) + speed / maxTicksPerSec + accelSec / maxTicksPerSec x speeding-up (+ gravity
+for a lift). Without measurements it uses the parts catalog's top speed and typical values. To make the
+simulated robot move like YOURS:
+
+1. Run the **Characterizer** on the real robot (a finder: [finders](../modules/finders.md#characterizeropmode)):
+   Drive, Turn, each lift/arm and flywheel, 2-3 times each, on a charged battery.
+2. Copy its logs from the Control Hub (`/sdcard/FIRST/ftc-helper/characterizer/*.csv`, with the REV
+   Hardware Client or Android Studio's Device Explorer) into a folder on the laptop.
+3. From `ftc-helper-lib`: `./gradlew :sim:fit -Plog=path/to/that/folder` prints the numbers;
+   add `-Pwrite` to put them into the robot file (other settings and notes stay). Check it and commit.
+
+Or copy the lines the Characterizer shows on the Driver Hub. The settings it fills in:
+
+| Setting | Means |
+| --- | --- |
+| `drive.kS`, `drive.maxTicksPerSec`, `drive.accelSec` | the wheels: power to start moving, speed per unit of power (counts/s), seconds to reach ~63% of a new speed |
+| `drive.turnDegPerCount` | degrees the robot turns per wheel count of turning ((left - right) / 2): wheels slip when a robot turns |
+| `motor.NAME = ..., kS=, maxTicksPerSec=, accelSec=, gravity=` | a lift or arm (gravity = power that holds it) |
+| `motor.NAME = ..., kS=, maxTicksPerSec=, accelSec=, coastSec=` | a flywheel (coastSec: seconds to lose ~63% of its speed with power off) |
+
+`maxTicksPerSec` is the speed gained per unit of power: at full power the speed is (1 - kS) x this.
+Run in the simulator, the Characterizer writes its logs in `sim/build/sim-data/characterizer`, and
+`./gradlew :sim:fit` (no -Plog) reads those: a test (SimCharacterizerTest) gives the simulated robot
+known numbers and checks the fit finds them again.
+
 ## The parts catalog
 
 **Every part, with its numbers and links: [parts-catalog.md](parts-catalog.md).** It also shows how to

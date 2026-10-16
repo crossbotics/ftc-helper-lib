@@ -27,7 +27,15 @@ import java.util.function.Consumer;
  */
 public final class FinderResults {
     // Where results are saved. Tests use another file.
-    static File file = new File("/sdcard/FIRST/ftc-helper", "finder-results.txt");
+    static File file = new File(folder(), "finder-results.txt");
+
+    /**
+     * The folder for results and logs: /sdcard/FIRST/ftc-helper on the robot. The simulator sets the
+     * Java setting "ftchelper.dataDir" to keep them on the laptop instead.
+     */
+    public static File folder() {
+        return new File(System.getProperty("ftchelper.dataDir", "/sdcard/FIRST/ftc-helper"));
+    }
     // One background thread for every save, so the robot loop never waits for the storage.
     private static BackgroundWorker saver;
 

@@ -18,11 +18,13 @@ STOP, so nobody copies numbers from the screen by hand.
 | [`DriveTunerOpMode`](#drivetuneropmode) | find the wheel size and strafe correction for autonomous | `robotConfig()` |
 | [`ShotTunerOpMode`](#shottuneropmode) | build the shot table: distance -> speed (and hood angle) | your launcher (+ camera) |
 | [`AimTunerOpMode`](#aimtuneropmode) | find the camera offset so shots go in the middle | your camera (+ turret or drive) |
+| [`CharacterizerOpMode`](#characterizeropmode) | measure how the drive, lifts and flywheels really move (feedforward numbers, and the simulator's robot file) | `robotConfig()`, `mechanisms()` |
 | [`FinderOpMode`](#finderopmode) | the shared frame of every finder (for writing your own) | |
 | [`FinderResults`](#finderresults) | the code lines a finder shows and saves | |
 | [`FinderMath`](#findermath) | the arithmetic behind the finders | |
 | [`Chooser`](#chooser) | a list to choose from with the D-pad | |
 | [`ShotPoints`](#shotpoints) | the saved good shots of the shot tuner | |
+| [`CharacterizeMath`](#characterizemath) | the fitting math behind the Characterizer | |
 
 Each finder is a TeleOp. To use one, make a tiny file in TeamCode (the [starter kit](../starter-kit.md)
 has them ready):
@@ -204,6 +206,60 @@ launcher's line, or tune at the distance you shoot from most.
 Output: `new AimController(...).offset(-1.5)` or `turret.cameraOffset(-1.5)`.
 
 ---
+
+## CharacterizerOpMode
+
+Measures how the real robot moves, for two uses: **feedforward** in your code (the power a motor needs
+for a speed, see [Feedforward](control.md#feedforward)) and **real numbers in the simulator** (its robot
+file). Needs `robotConfig()` and, for lifts, arms and flywheels, `mechanisms()`:
+
+```java
+@TeleOp(name = "Characterizer", group = "Finders")
+public class Characterizer extends CharacterizerOpMode {
+    protected RobotConfig robotConfig() { return new RobotSettings(); }
+    protected List<Mechanism> mechanisms() {
+        return Arrays.asList(Mechanism.lift("lift", 0, 2600),   // soft limits: counts from the bottom
+                Mechanism.lift("arm", 0, 1100), Mechanism.flywheel("flywheel"));
+    }
+}
+```
+
+D-pad chooses a test, **A** runs it, **B** stops it at once.
+
+| Test | It does | Space and safety |
+| --- | --- | --- |
+| Drive | power ramps up slowly forward (to 0.4) and back, then quick steps (0.6, 0.6 s) | about 5 ft clear in front and behind; `driveRampMax()` lowers it |
+| Turn (needs the IMU) | the same, turning in place | room to turn |
+| Lift/arm | slowly up to 60% of its range, slowly down, then quick steps up and down | start it at the BOTTOM; it never goes past the soft limits; `.reversed()` if positive power goes down |
+| Flywheel | ramps up to full power, coasts, full power, coasts | hands and pieces away |
+
+It stops itself and says why if a motor moves the wrong way for its power (a direction setting is
+wrong) or a lift reaches a soft limit. A slow ramp shows the power just to start moving (kS) and the
+power per speed (kV); a quick step shows the power per speeding-up (kA); a lift also gives the power
+that holds it against gravity (kG); a flywheel's coasting gives how long it takes to slow down.
+Results (also saved with the other finders' results):
+
+```text
+drive.kS = 0.052  drive.maxTicksPerSec = 2776  drive.accelSec = 0.176   # simulator robot file
+Feedforward driveFf = new Feedforward(0.0523, 0.0003602, 6.329e-05);   // wheels, counts per second
+drive.turnDegPerCount = 0.08012   # simulator robot file
+motor.lift: kS=0.041, maxTicksPerSec=2792, accelSec=0.087, gravity=0.060   # add to its line in the robot file
+```
+
+Each test's log is saved as `characterizer/<test>-<date>.csv` in the results folder. The simulator's
+fit tool reads them and writes the robot file for you (`./gradlew :sim:fit -Plog=... -Pwrite`, see
+the [simulator guide](../guides/simulator.md#real-numbers-the-characterizer)). Run each test 2-3 times
+on a charged battery; the fit tool fits the logs of the same test together. A fit with r2 below 0.9
+says "poor": run it again. Arms are measured like lifts (the pull of gravity is taken as the same at
+every angle), so the numbers are a middle value for an arm.
+
+## CharacterizeMath
+
+The fitting math, pure (no hardware): `fit(t, volts, power, speed, gravity)` gives kS, kV, kA (kG) and
+r2 by least squares over the moments the motor was moving and powered (speeds smoothed over 30 ms
+each side, and moments within 50 ms of a jump in power left out); `coastSec(...)`,
+`turnDegPerCount(...)`, `yawRates(...)`, `accelerations(...)`, `smoothed(...)`, `leastSquares(...)`.
+Powers are scaled to 12.8 V with the logged battery voltage.
 
 ## FinderOpMode
 

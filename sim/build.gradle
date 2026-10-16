@@ -49,7 +49,10 @@ android {
         // Android calls the SDK makes (logging) do nothing on a laptop instead of failing.
         unitTests.returnDefaultValues = true
         // The scenario test runs the team's scenarios (simulator/scenarios) only when TeamCode is built in.
-        unitTests.all { systemProperty 'sim.teamDir', useTeamCode ? robotProject.path : '' }
+        unitTests.all {
+            systemProperty 'sim.teamDir', useTeamCode ? robotProject.path : ''
+            systemProperty 'ftchelper.dataDir', new File(buildDir, 'sim-data-test').path
+        }
     }
 }
 
@@ -69,6 +72,9 @@ if (useTeamCode && new File(robotProject, 'simulator/sim-dependencies.gradle').i
     apply from: new File(robotProject, 'simulator/sim-dependencies.gradle')
 }
 
+// Finder results and Characterizer logs from simulator runs go here (on a robot: /sdcard/FIRST/ftc-helper).
+def simDataDir = new File(buildDir, 'sim-data').path
+
 // ./gradlew :sim:run  [-Probot=path/to/robot.properties] [-Plan]  (-Plan: phones on the same WiFi can join)
 tasks.register('run', JavaExec) {
     group = 'application'
@@ -82,6 +88,7 @@ tasks.register('run', JavaExec) {
             (teamRobotFile != null && teamRobotFile.isFile() ? teamRobotFile.path : 'sim/robots/starter.properties')
     args = [robot] + (project.hasProperty('lan') ? ['--lan'] : [])
     systemProperty 'sim.teamOnly', useTeamCode
+    systemProperty 'ftchelper.dataDir', simDataDir
 }
 
 // ./gradlew :sim:scenario -Pfile=path/to/test.sim [-Probot=...]   (several: -Pfile=a.sim,b.sim)
@@ -99,4 +106,22 @@ tasks.register('scenario', JavaExec) {
     def files = (project.findProperty('file') ?: '').split(',').findAll { it }
     args = ['--robot', robot] + files
     systemProperty 'sim.teamOnly', useTeamCode
+    systemProperty 'ftchelper.dataDir', simDataDir
+}
+
+// ./gradlew :sim:fit [-Plog=path/to/log.csv or a folder] [-Probot=...] [-Pwrite]
+// Fits the Characterizer's logs (default: the simulator's own, in sim/build/sim-data/characterizer) and
+// prints the robot-file numbers; -Pwrite also puts them into the robot file.
+tasks.register('fit', JavaExec) {
+    group = 'application'
+    description = 'Fits Characterizer logs and prints (or writes) the robot file numbers.'
+    def unitTest = tasks.named('testDebugUnitTest')
+    dependsOn 'compileDebugUnitTestJavaWithJavac', 'processDebugUnitTestJavaRes'
+    classpath = files({ unitTest.get().classpath })
+    mainClass = 'io.github.jasoncross.ftchelper.sim.SimFit'
+    workingDir = rootProject.projectDir
+    def robot = project.findProperty('robot') ?:
+            (teamRobotFile != null && teamRobotFile.isFile() ? teamRobotFile.path : 'sim/robots/starter.properties')
+    args = ['--robot', robot, '--log', project.findProperty('log') ?: new File(simDataDir, 'characterizer').path] +
+            (project.hasProperty('write') ? ['--write'] : [])
 }

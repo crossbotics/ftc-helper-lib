@@ -8,6 +8,7 @@ Learn it hands-on: [07 PID lift](../tutorials/07-pid-lift.md), [11 Driver assist
 | --- | --- |
 | [`PidController`](#pidcontroller) | move a mechanism to a target and hold it there |
 | [`SlewRateLimiter`](#slewratelimiter) | stop a value from changing too fast (a ramp) |
+| [`Feedforward`](#feedforward) | the power a motor needs for a speed, from measured numbers |
 
 ---
 
@@ -105,3 +106,32 @@ With rate 2.0, going from 0 to full power takes 0.5 seconds.
 | `getValue()` | the last output |
 
 Tip: let it slow down faster than it speeds up (`fall` > `rise`), so the robot still stops quickly.
+
+## Feedforward
+
+The power a motor needs for a speed, worked out from how the motor behaves, instead of waiting for
+an error to build up (what a PID does). The [Characterizer](finders.md#characterizeropmode) measures
+the numbers on your robot.
+
+```
+power = kS x sign(speed) + kV x speed + kA x speeding-up + kG
+```
+
+kS = the power just to start moving (friction); kV = the power per count per second of speed;
+kA = the power per count per second, per second, of speeding up; kG = the power that holds a lift
+against gravity. Speeds in encoder counts per second, like `DcMotorEx.getVelocity()`; powers at 12.8 V.
+
+```java
+Feedforward ff = new Feedforward(0.06, 0.00037, 0.00004);        // from the Characterizer
+motor.setPower(ff.power(1500, 0, battery.getVoltage()));          // 1500 counts/s, scaled for the battery
+// a lift: feedforward for the move plus a PID for what is left over
+lift.setPower(liftFf.power(targetSpeed, 0) + pid.calculate(target, lift.getCurrentPosition()));
+```
+
+| Method | What it does |
+| --- | --- |
+| `new Feedforward(kS, kV, kA)` / `(kS, kV, kA, kG)` | the numbers (kG for a lift) |
+| `power(speed, accel)` | the power at 12.8 V |
+| `power(speed, accel, batteryVolts)` | the same, scaled for the battery now (not limited to -1..1) |
+| `topSpeed()` | the speed at full power |
+

@@ -23,6 +23,16 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   AprilTags become the SDK's detections (BIOBUZZ: clusters per CELL group) with the SDK's ftcPose
   formulas. The page lists what each camera sees, draws its view cone and shows its picture in 3D.
   Scenario check: `expect camera "Webcam 1" sees 31|none|"RED SCORING"`.
+- `CharacterizerOpMode` (finders) and `CharacterizeMath`: measure how the drive, turning, lifts/arms
+  and flywheels really move (slow ramps and quick steps, with soft limits and wrong-direction stops)
+  and fit their feedforward numbers (kS, kV, kA, kG, coasting); shows robot-file lines and
+  `Feedforward` lines, saves each test's log (`characterizer/*.csv`). Starter kit `Characterizer.java`.
+- `Feedforward` (control): power = kS x sign(speed) + kV x speed + kA x speeding-up + kG, with battery
+  scaling. Finder results and logs go to the folder in the Java setting `ftchelper.dataDir` when set
+  (the simulator keeps them on the laptop).
+- Simulator: motors follow the same feedforward model (`kS=`, `accelSec=`, `coastSec=` on motors;
+  `drive.kS`, `drive.accelSec`, `drive.turnDegPerCount`); `./gradlew :sim:fit [-Plog=] [-Pwrite]` fits
+  Characterizer logs and writes the robot file; SimCharacterizerTest checks a full round trip.
 - Simulator: robot shapes (`shape.NAME = box|slide|arm|turret|claw|roller|flywheel, on=, at=, size=`,
   moved by their motor or servo): drawn in 3D, and size rules checked now and at full reach (18 in
   start cube; 18 x 24 x 29 in). Scenario checks `expect size start|match|most ok|fail`, `print size`.

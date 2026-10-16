@@ -15,7 +15,11 @@ final class SimRun implements AutoCloseable {
     final SimEngine sim;
 
     SimRun() throws Exception {
-        sim = new SimEngine(SimRobot.load(Paths.get("robots/starter.properties")));
+        this("robots/starter.properties");
+    }
+
+    SimRun(String robotFile) throws Exception {
+        sim = new SimEngine(SimRobot.load(Paths.get(robotFile)));
         sim.start();
     }
 

@@ -21,7 +21,11 @@ final class SimMotor {
     final Kind kind;
     final double maxTicksPerSec;      // shaft speed at full power
     double ticksPerRev = 537.7;       // encoder counts per output-shaft turn (for degrees/radians per second)
-    final double lagSec;              // how long it takes to get to speed
+    // The motor's "feedforward" model (see the library's Feedforward and the Characterizer):
+    //   power x battery = kS x sign(speed) + speed / maxTicksPerSec + accelSec / maxTicksPerSec x acceleration (+ gravity)
+    double lagSec;                    // accelSec: seconds to reach about 63% of a new speed
+    double kS = 0;                    // power just to start moving (friction)
+    double coastSec = Double.NaN;     // FLOAT at zero power: seconds to lose about 63% of its speed (NaN = by kind)
     // LIFT: hard stops (shaft counts from the start position) and how hard gravity pulls (power units).
     double minTicks = -Double.MAX_VALUE, maxTicks = Double.MAX_VALUE, gravity = 0;
     // FLYWHEEL: the motor that feeds it, and how much a shot slows it (share of the speed).
@@ -264,17 +268,25 @@ final class SimMotor {
         if (forcedVel != null) {
             shaftVel = forcedVel;
         } else {
-            double target = appliedPower * maxTicksPerSec * battery;
-            if (kind == Kind.LIFT) target -= gravity * maxTicksPerSec;
+            // The push left after gravity (a lift), and the speed it would settle at with friction (kS).
+            double push = appliedPower * battery - (kind == Kind.LIFT ? gravity : 0);
+            double target;
             double lag = lagSec;
-            if (Math.abs(appliedPower) < 1e-6) {
-                // Not driven: brake stops it fast (and holds a lift against gravity); float coasts.
-                if (braking()) {
-                    // A heavy flywheel takes a while to stop even with brake; everything else stops fast.
-                    target = 0;
-                    lag = kind == Kind.FLYWHEEL ? 0.6 : 0.05;
-                } else {
-                    lag = kind == Kind.FLYWHEEL ? 2.5 : 0.4;
+            if (Math.abs(appliedPower) < 1e-6 && braking()) {
+                // Not driven, BRAKE: it stops fast (and holds a lift against gravity). A heavy flywheel
+                // takes a while to stop even with brake.
+                target = 0;
+                lag = kind == Kind.FLYWHEEL ? 0.6 : 0.05;
+            } else if (Math.abs(shaftVel) < 1 && Math.abs(push) <= kS) {
+                target = 0;                                           // friction holds it still
+            } else {
+                double direction = Math.abs(shaftVel) >= 1 ? Math.signum(shaftVel) : Math.signum(push);
+                target = (push - kS * direction) * maxTicksPerSec;
+                // friction slows it but never pushes it backward
+                if (Math.signum(target) == -direction && Math.abs(push) <= kS) target = 0;
+                if (Math.abs(appliedPower) < 1e-6) {
+                    // Not driven, FLOAT: it coasts (a lift falls).
+                    lag = !Double.isNaN(coastSec) ? coastSec : kind == Kind.FLYWHEEL ? 2.5 : 0.4;
                 }
             }
             shaftVel += (target - shaftVel) * Math.min(1, dt / Math.max(1e-3, lag));
