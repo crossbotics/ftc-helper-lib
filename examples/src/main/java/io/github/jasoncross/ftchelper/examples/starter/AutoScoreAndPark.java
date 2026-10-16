@@ -13,7 +13,7 @@ import io.github.jasoncross.ftchelper.match.InitMenu;
  *
  * {@code preselectTeleOp} makes the Driver Station pick Main TeleOp after autonomous.
  *
- * Before it runs, set calibrationConfirmed to true in RobotSettings.auto() (after tuning):
+ * Before it runs, set calibrationConfirmed to true in RobotSettings.java, auto() (after tuning):
  * until then it stops in INIT with a message, on purpose. Writing autos: docs/guides/easy-autos.md
  * and docs/tutorials/16-easy-autos.md.
  */

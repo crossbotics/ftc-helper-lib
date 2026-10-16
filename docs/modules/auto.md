@@ -41,9 +41,7 @@ Extend it and fill in:
 
 | Method | Required? | What you return / do |
 | --- | --- | --- |
-| `driveConfig()` | yes | the drive settings (same as TeleOp) |
-| `autoDriveConfig()` | yes | the autonomous tuning |
-| `createImu()` | yes | the IMU for your hub mounting |
+| `robotConfig()` | yes* | `new RobotSettings()`: the [`RobotConfig`](core.md#robotconfig) shared with TeleOp |
 | `buildRoutine(r)` | yes | add the steps; runs AFTER INIT, so choices are known |
 | `createSubsystems()` | no | your mechanisms (kept working during every step). Make new objects here: it runs again if the profile is changed in INIT. |
 | `addChoices(menu)` | no | extra INIT choices: `menu.choice("Route", "Near", "Far")` |
@@ -52,6 +50,8 @@ Extend it and fill in:
 | `parkReserveSec()` | no | seconds kept for the steps after `thenPark()` |
 | `maxStartDelaySec()` | no | longest start delay in the menu (default 10) |
 | `mirrorForRed()` | no | true (default): routes written for BLUE are mirrored for RED. Return false on a ROTATED field |
+
+\* Or, without a `RobotConfig`: override `driveConfig()`, `autoDriveConfig()` and `createImu()`.
 
 Inside your steps you can use `alliance()`, `choice(label)` and `autoDrive()`.
 

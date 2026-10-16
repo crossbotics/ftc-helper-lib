@@ -6,6 +6,7 @@ package io.github.jasoncross.ftchelper.examples.tutorials;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
+import io.github.jasoncross.ftchelper.core.RobotConfig;
 import io.github.jasoncross.ftchelper.drive.AutoDriveConfig;
 import io.github.jasoncross.ftchelper.drive.DriveConfig;
 import io.github.jasoncross.ftchelper.hardware.ImuSetup;
@@ -57,5 +58,18 @@ public final class RobotSettings {
         return ImuSetup.get(hardwareMap, "imu",
                 RevHubOrientationOnRobot.LogoFacingDirection.UP,
                 RevHubOrientationOnRobot.UsbFacingDirection.FORWARD);
+    }
+
+    /**
+     * The same three settings as one object, for EasyAuto and EasyTeleOp (tutorials 16 and 20):
+     * {@code protected RobotConfig robotConfig() { return RobotSettings.config(); }}
+     */
+    // "new RobotConfig() { ... }" makes a one-off object whose methods hand back the settings above.
+    public static RobotConfig config() {
+        return new RobotConfig() {
+            @Override public DriveConfig drive() { return RobotSettings.drive(); }
+            @Override public AutoDriveConfig auto() { return RobotSettings.auto(); }
+            @Override public IMU imu(HardwareMap hardwareMap) { return RobotSettings.imu(hardwareMap); }
+        };
     }
 }

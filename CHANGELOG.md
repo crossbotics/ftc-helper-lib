@@ -4,6 +4,28 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+## v0.6.0 - 2026-10-15
+
+### Added
+
+- **`EasyTeleOp`** (new package `teleop`): a whole TeleOp where you add only your mechanisms, buttons
+  and per-loop code. Driving, field-centric switch, "forward" from autonomous, match timer buzzes,
+  tuning menu, debug telemetry, warnings and stopping everything come with it.
+- **`RobotConfig`** (core): the drivetrain, autonomous tuning and IMU described once.
+  `EasyTeleOp` and `EasyAuto` both read it from `robotConfig()`.
+- **`DriverControls`** (drive): standard stick driving for mecanum and tank, slow trigger,
+  field-centric switch. Usable on its own.
+- Tutorial 20 (Easy TeleOp) and its program; module page `docs/modules/teleop.md`.
+
+### Changed
+
+- `EasyAuto`: `driveConfig()`, `autoDriveConfig()` and `createImu()` are no longer required; return
+  `new RobotSettings()` from `robotConfig()` instead. Old autonomous code that overrides them still works.
+- Starter kit: `RobotSettings` extends `RobotConfig`; `MainTeleOp` is built on `EasyTeleOp`
+  (about 40 lines of code instead of 109, same buttons); `StarterAuto` uses `robotConfig()`.
+  A tank drivetrain now needs only `DriveConfig.tank()` in `RobotSettings`.
+- Tutorial `RobotSettings.config()`; tutorial 16 uses it and preselects tutorial 20's TeleOp.
+
 ## v0.5.0 - 2026-10-15
 
 ### Added

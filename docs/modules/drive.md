@@ -19,6 +19,7 @@ Signs used here: [Signs and units](../conventions.md). Read it first.
 | [`DriveConfig`](#driveconfig) | choose the drive type, name the motors, set their directions and a power limit |
 | [`MecanumDrive`](#mecanumdrive) | drive a mecanum robot in TeleOp (robot-centric or field-centric) |
 | [`TankDrive`](#tankdrive) | drive a standard (tank) robot in TeleOp (arcade or tank style) |
+| [`DriverControls`](#drivercontrols) | standard TeleOp driving from one gamepad (mecanum or tank, slow trigger, field-centric switch) |
 | [`DriverHeading`](#driverheading) | which way the robot faces compared with the driver; continues from autonomous |
 | [`ReverseDrive`](#reversedrive) | a mode where the back of the robot acts as the front |
 | [`AutoDriveConfig`](#autodriveconfig) | tuning numbers for autonomous moves |
@@ -112,6 +113,38 @@ drive.driveFieldCentric(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.
 The heading must be 0 when the robot faces away from the driver. In a match, use
 [`DriverHeading`](#driverheading) instead of the plain IMU heading: it continues from where
 autonomous ended, so "forward" is right from the first second of TeleOp.
+
+## DriverControls
+
+Standard TeleOp driving from one gamepad, for mecanum AND tank robots, in one line per loop.
+[`EasyTeleOp`](teleop.md) uses it for you.
+
+```java
+DriverHeading heading = new DriverHeading(imu);              // or null: no field-centric
+DriverControls driving = DriverControls.create(hardwareMap, new RobotSettings().drive(), heading);
+// every loop:
+driving.update(gamepad1);
+// at the end (in finally):
+driving.stop();
+```
+
+| Control | Does |
+| --- | --- |
+| left stick | drive (mecanum: any direction; tank: forward/back) |
+| right stick X | turn |
+| left trigger | slow: down to `slowSpeed` at a full squeeze |
+
+| Method | What it does |
+| --- | --- |
+| `DriverControls.create(hardwareMap, config, heading)` | makes a `MecanumDrive` or a `TankDrive`, from `config.type` |
+| `update(gamepad)` | drives from the sticks. Every loop. |
+| `hold()` | wheels still this loop (e.g. while a menu uses the gamepad) |
+| `stop()` | all wheels to 0 |
+| `slowSpeed(s)` | speed at full slow trigger, default 0.3 |
+| `sticks(deadband, exponent)` | stick feel, default 0.05 and 2 ([StickShaping](gamepad.md)) |
+| `setFieldCentric(on)`, `toggleFieldCentric()`, `isFieldCentric()` | field-centric switch. Starts off. Stays off on a tank robot or without a heading. |
+| `canFieldCentric()` | true with mecanum wheels and a heading |
+| `isSlow()`, `status()` | for telemetry: `status()` is e.g. "field  SLOW" |
 
 ## DriverHeading
 

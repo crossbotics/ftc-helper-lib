@@ -1,0 +1,99 @@
+# TeleOp module
+
+Package: `io.github.jasoncross.ftchelper.teleop`
+
+Learn it hands-on: [20 Easy TeleOp](../tutorials/20-easy-teleop.md). Ready to copy: the
+[starter kit](../starter-kit.md)'s `MainTeleOp`.
+
+A whole TeleOp where you only write what is special about your robot.
+
+| Class | Use it to |
+| --- | --- |
+| [`EasyTeleOp`](#easyteleop) | a whole TeleOp OpMode: give it your robot settings and mechanisms, add the operator's buttons |
+
+```mermaid
+flowchart LR
+    I["INIT<br/>drive, IMU, 'forward' from auto,<br/>your mechanisms + buttons,<br/>warnings, alliance"] --> S["START<br/>match timer starts"]
+    S --> L["every loop:<br/>buttons -> driving -> everyLoop() -><br/>mechanisms update() -> telemetry"]
+    L --> L
+    L --> E["STOP (or an error)<br/>wheels and every mechanism stopped"]
+```
+
+---
+
+## EasyTeleOp
+
+```java
+@TeleOp(name = "Main TeleOp")
+public class MainTeleOp extends EasyTeleOp {
+    private Robot robot;
+
+    // the robot's settings, shared with every autonomous
+    @Override protected RobotConfig robotConfig() { return new RobotSettings(); }
+
+    // the mechanisms: updated every loop, shown, stopped at the end
+    @Override protected Subsystems createSubsystems() {
+        robot = new Robot(hardwareMap);
+        return robot.all;
+    }
+
+    // the operator's buttons (gamepad 2)
+    @Override protected void bindButtons(ControllerBindings driver, ControllerBindings operator) {
+        operator.bindPress(Pad.G2, Btn.RB, () -> robot.claw.toggle("OPEN", "CLOSED"));
+    }
+
+    // anything else, every loop (here: the lift by hand)
+    @Override protected void everyLoop() {
+        robot.lift.manual(StickShaping.shape(-gamepad2.left_stick_y, 0.1, 1));
+    }
+}
+```
+
+### What it does for you
+
+| | |
+| --- | --- |
+| Driving (gamepad 1) | left stick drive, right stick X turn, left trigger slow. Mecanum and tank, picked by your `DriveConfig`. See [`DriverControls`](drive.md#drivercontrols). |
+| Field-centric | starts robot-centric. **Y** turns field-centric on/off (two buzzes = on, one = off). Mecanum with an IMU only. |
+| "Forward" | continues from where autonomous ended ([`DriverHeading`](drive.md#driverheading)). **BACK** = "the robot now faces away from me". |
+| Alliance | the one autonomous chose, from [`MatchMemory`](match.md); BLUE if no autonomous ran. |
+| Match timer | 2:00, both gamepads buzz at 1:00 and 0:20. The time is on the screen. |
+| Tuning menu | **GUIDE** opens it (PRACTICE profile only). Gamepad 1 runs the menu; the wheels hold still. |
+| Telemetry | your mechanisms' lines, drive mode, time; **hold START, press BACK** = debug lines on/off. |
+| Warnings | PRACTICE profile, tuned values that differ from the code, slow button actions or `update()`s. |
+| Safety | buttons held through START are ignored; the wheels and every mechanism stop at the end, even after an error. |
+
+### Fill in
+
+| Method | Required? | What you return / do |
+| --- | --- | --- |
+| `robotConfig()` | yes* | `new RobotSettings()`: the [`RobotConfig`](core.md#robotconfig) shared with autonomous |
+| `createSubsystems()` | no | your mechanisms. Default: none |
+| `bindButtons(driver, operator)` | no | your buttons. Gamepad 2 on `operator`; extra gamepad 1 buttons on `driver` (they pause while the tuning menu is open). Taken on gamepad 1: Y, BACK, START + BACK, GUIDE. |
+| `everyLoop()` | no | your code for every loop (sticks for mechanisms, simple rules). Must not wait. |
+| `addTelemetry(t)` | no | extra screen lines |
+
+\* Or, without a `RobotConfig`: override `driveConfig()` and `createImu()` (return null for no IMU).
+
+### Optional settings
+
+| Method | Default | |
+| --- | --- | --- |
+| `startFieldCentric()` | false | true = start in field-centric |
+| `slowSpeed()` | 0.3 | speed at a full squeeze of the slow trigger |
+| `buzzAtSecondsLeft()` | {60, 20} | when both gamepads buzz |
+| `drive(gamepad)` | the standard controls | replace it to drive your own way (`driving()` is the drive) |
+
+### For your code
+
+| Method | Gives |
+| --- | --- |
+| `alliance()` | RED or BLUE |
+| `robotTelemetry()` | the screen helper ([RobotTelemetry](telemetry.md)) |
+| `driving()` | the [`DriverControls`](drive.md#drivercontrols) (field-centric, slow) |
+| `heading()` | the [`DriverHeading`](drive.md#driverheading), or null without an IMU |
+| `matchTimer()` | the [`MatchTimer`](match.md) |
+| `isTuningMenuOpen()` | true while the menu has gamepad 1: do not read gamepad 1's sticks then |
+
+`runOpMode()` is `final`: your class cannot replace it, so the safety steps always run. Need a
+completely different loop? Write a plain `LinearOpMode` (tutorials 04 and 12) with the same parts.

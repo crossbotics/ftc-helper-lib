@@ -12,6 +12,7 @@ The small pieces every other part of the library is built on.
 | [`Subsystems`](#subsystems) | update, stop and show a group of mechanisms together |
 | [`Profile`](#profile) | behave differently in PRACTICE and COMPETITION |
 | [`SettingsFile`](#settingsfile) | keep small settings on the Control Hub between restarts |
+| [`RobotConfig`](#robotconfig) | describe the drivetrain once, for TeleOp and every autonomous |
 
 ---
 
@@ -117,3 +118,37 @@ A tiny key/value file on the Control Hub: `/sdcard/FIRST/ftc-helper/settings.pro
 | `SettingsFile.useForTests(file)` | tests only: use another file |
 
 A damaged or missing file simply means "nothing saved": the values in the code are used.
+
+## RobotConfig
+
+The drivetrain described ONCE: motor names and directions, autonomous tuning, and how the Control
+Hub is mounted. [`EasyTeleOp`](teleop.md) and [`EasyAuto`](auto.md) both read it from their
+`robotConfig()`, so TeleOp and every autonomous always match. Change a motor name here and every
+program gets it.
+
+```java
+public class RobotSettings extends RobotConfig {
+    @Override public DriveConfig drive() {
+        DriveConfig c = DriveConfig.mecanum();
+        c.frontLeft = "front_left";   // ... the other three names
+        c.powerLimit = Profile.pick(0.6, 1.0);
+        return c;
+    }
+    @Override public AutoDriveConfig auto() { ... }     // optional: only autonomous uses it
+    @Override public IMU imu(HardwareMap hardwareMap) {
+        return ImuSetup.get(hardwareMap, "imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD);
+    }
+}
+
+// in every TeleOp and autonomous:
+@Override protected RobotConfig robotConfig() { return new RobotSettings(); }
+```
+
+| Method | Required? | What you return |
+| --- | --- | --- |
+| `drive()` | yes | the [`DriveConfig`](drive.md#driveconfig) |
+| `auto()` | no | the [`AutoDriveConfig`](drive.md#autodriveconfig). Default: untuned (autonomous refuses to run until you tune it) |
+| `imu(hardwareMap)` | yes | the IMU, usually one [`ImuSetup.get`](hardware.md) line |
+
+The mechanisms are not in here: they go in your own `Robot` class, so your programs can reach them
+by name (`robot.lift`). See the [starter kit](../starter-kit.md).

@@ -8,9 +8,9 @@ names and numbers, and you have a working robot.
 
 | # | File | What it is | You change |
 | --- | --- | --- | --- |
-| 1 | `RobotSettings.java` | drive type, motor names, IMU mounting, autonomous tuning | names, numbers |
+| 1 | `RobotSettings.java` | drive type, motor names, IMU mounting, autonomous tuning (a [`RobotConfig`](modules/core.md#robotconfig), shared by TeleOp and every autonomous) | names, numbers |
 | 2 | `Robot.java` | your mechanisms (lift, claw, intake...) | add/remove mechanisms |
-| 3 | `MainTeleOp.java` | the TeleOp: drive, mechanisms, timer cues, tuning menu | button map |
+| 3 | `MainTeleOp.java` | the TeleOp, built on [`EasyTeleOp`](modules/teleop.md): driving, timer cues and tuning menu come with it; the file adds the operator's buttons | button map |
 | 4 | `StarterAuto.java` | what every autonomous shares | nothing |
 | 5 | `AutoScoreAndPark.java` | one autonomous (copy for more) | the steps |
 | 6 | `HardwareCheck.java` | tests every device | nothing |
@@ -37,8 +37,9 @@ flowchart LR
    Fix directions in `RobotSettings` / `Robot`. Write down servo positions.
 5. **`Robot.java`**: delete mechanisms you do not have, set positions and limits. Each mechanism
    type is explained in [mechanism.md](modules/mechanism.md).
-6. **Main TeleOp**: drive at the PRACTICE profile's gentle power. Check every button on the list at
-   the top of the file. Print that list for the drive team.
+6. **Main TeleOp**: drive at the PRACTICE profile's gentle power. It starts robot-centric; Y turns
+   field-centric on. Check every button on the list at the top of the file. Print that list for the
+   drive team.
 7. **Tune** the lift with the tuning menu (GUIDE button, PRACTICE profile), copy the numbers into
    `Robot.java` ([tuning guide](guides/tuning.md)).
 8. **Autonomous**: tune the drivetrain (tutorial 09's Drive Tuner), set `calibrationConfirmed = true`,
@@ -47,7 +48,7 @@ flowchart LR
 
 ## Standard (tank) drivetrain?
 
-In `RobotSettings.drive()` use `DriveConfig.tank()` (4 motors) or `DriveConfig.tankTwoMotor()`;
-in `MainTeleOp` replace `MecanumDrive` with `TankDrive` and `drive.drive(...)` with
-`drive.arcade(forward, turn, speed)` (no field-centric). Autonomous: only forward/back moves and
-turns (`move(d, 0 or 180, p)`, `turn`, `turnTo`).
+In `RobotSettings.drive()` use `DriveConfig.tank()` (4 motors) or `DriveConfig.tankTwoMotor()`.
+That is all: `MainTeleOp` drives arcade style by itself (left stick forward/back, right stick turn;
+no field-centric). Autonomous: only forward/back moves and turns (`move(d, 0 or 180, p)`, `turn`,
+`turnTo`).

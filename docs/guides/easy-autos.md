@@ -44,7 +44,7 @@ Each autonomous then only lists its steps:
 
 ```mermaid
 flowchart TB
-    E["EasyAuto (library)"] --> S["StarterAuto (TeamCode)<br/>drive, IMU, Robot"]
+    E["EasyAuto (library)"] --> S["StarterAuto (TeamCode)<br/>RobotSettings + Robot"]
     S --> A1["ScoreAndPark"]
     S --> A2["ParkOnly"]
     S --> A3["TwoPieces"]

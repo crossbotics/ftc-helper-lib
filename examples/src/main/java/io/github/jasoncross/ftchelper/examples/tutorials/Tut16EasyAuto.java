@@ -4,12 +4,10 @@ package io.github.jasoncross.ftchelper.examples.tutorials;
 // and helper-library classes (io.github.jasoncross.ftchelper...).
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.hardware.IMU;
 import io.github.jasoncross.ftchelper.auto.AutoRoutine;
 import io.github.jasoncross.ftchelper.auto.EasyAuto;
+import io.github.jasoncross.ftchelper.core.RobotConfig;
 import io.github.jasoncross.ftchelper.core.Subsystems;
-import io.github.jasoncross.ftchelper.drive.AutoDriveConfig;
-import io.github.jasoncross.ftchelper.drive.DriveConfig;
 import io.github.jasoncross.ftchelper.match.InitMenu;
 import io.github.jasoncross.ftchelper.mechanism.PositionMotor;
 import io.github.jasoncross.ftchelper.mechanism.PositionServo;
@@ -30,7 +28,7 @@ import io.github.jasoncross.ftchelper.mechanism.PositionServo;
 // @Autonomous puts this program in the Driver Station's autonomous list. preselectTeleOp: when
 // autonomous ends, the Driver Station gets this TeleOp ready, so the drivers only press INIT.
 // The name must match the TeleOp's name exactly (and that TeleOp must not be @Disabled either).
-@Autonomous(name = "Tutorial 16: Easy Auto", group = "Tutorials", preselectTeleOp = "Tutorial 12: Main TeleOp")
+@Autonomous(name = "Tutorial 16: Easy Auto", group = "Tutorials", preselectTeleOp = "Tutorial 20: Easy TeleOp")
 // @Disabled hides it from the Driver Station. Delete this line to use the program.
 @Disabled
 // "extends EasyAuto": this program is an EasyAuto (which is itself an FTC LinearOpMode) and gets
@@ -45,10 +43,8 @@ public class Tut16EasyAuto extends EasyAuto {
     // ---- 1. The robot ----
     // Each "@Override" line fills in a method that EasyAuto asks for. Java checks that the names
     // match what EasyAuto expects, so a typo is caught when you build.
-    // The drive and IMU settings come from RobotSettings.java: the same numbers TeleOp uses.
-    @Override protected DriveConfig driveConfig() { return RobotSettings.drive(); }
-    @Override protected AutoDriveConfig autoDriveConfig() { return RobotSettings.auto(); }
-    @Override protected IMU createImu() { return RobotSettings.imu(hardwareMap); }
+    // The drive, autonomous tuning and IMU, all from RobotSettings.java: the same as TeleOp (tutorial 20).
+    @Override protected RobotConfig robotConfig() { return RobotSettings.config(); }
 
     // The mechanisms. EasyAuto keeps them updated during EVERY step (moves and waits included),
     // and stops them all at the end, even after an error.

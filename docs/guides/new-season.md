@@ -47,7 +47,7 @@ and the `FtcRobotController` folder). Read the SDK release notes for **breaking 
 ## 4. TeamCode: the new robot
 
 1. Start from the [starter kit](../starter-kit.md): copy its 6 files.
-2. `RobotSettings`: drive type, motor names, IMU mounting.
+2. `RobotSettings`: drive type, motor names, IMU mounting. TeleOp and every autonomous read it.
 3. `Robot`: delete last year's mechanisms, add this year's (one `PositionMotor`/`SpinMotor`/servo
    line each). Keep anything that still fits.
 4. Hardware Check, then tutorial 09's tuning for the drivetrain.

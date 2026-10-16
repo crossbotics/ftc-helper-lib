@@ -24,9 +24,8 @@ public class Tut16EasyAuto extends EasyAuto {
     private PositionMotor lift;
     private PositionServo claw;
 
-    @Override protected DriveConfig driveConfig() { return RobotSettings.drive(); }
-    @Override protected AutoDriveConfig autoDriveConfig() { return RobotSettings.auto(); }
-    @Override protected IMU createImu() { return RobotSettings.imu(hardwareMap); }
+    // drive, autonomous tuning and IMU, all from RobotSettings: the same as TeleOp (tutorial 20)
+    @Override protected RobotConfig robotConfig() { return RobotSettings.config(); }
 
     @Override protected Subsystems createSubsystems() {
         lift = PositionMotor.create(hardwareMap, "lift")...;
@@ -35,7 +34,9 @@ public class Tut16EasyAuto extends EasyAuto {
     }
 ```
 
-`@Override` means "I am filling in a method `EasyAuto` asks for". The mechanisms you return are
+`@Override` means "I am filling in a method `EasyAuto` asks for". `RobotSettings.config()` hands
+over the drive, tuning and IMU settings from tutorial 09 as one object (a
+[`RobotConfig`](../modules/core.md#robotconfig)); tutorial 20's TeleOp uses the same one. The mechanisms you return are
 updated every loop during every step, so a lift keeps holding while the robot drives.
 
 ## 3. INIT: placement and choices

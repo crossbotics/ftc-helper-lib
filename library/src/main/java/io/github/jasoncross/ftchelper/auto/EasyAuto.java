@@ -3,6 +3,7 @@ package io.github.jasoncross.ftchelper.auto;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.IMU;
 import io.github.jasoncross.ftchelper.core.Profile;
+import io.github.jasoncross.ftchelper.core.RobotConfig;
 import io.github.jasoncross.ftchelper.core.Subsystems;
 import io.github.jasoncross.ftchelper.drive.AutoDrive;
 import io.github.jasoncross.ftchelper.drive.AutoDriveConfig;
@@ -40,9 +41,7 @@ import io.github.jasoncross.ftchelper.util.FieldPose;
  * public class BasketSide extends EasyAuto {
  *     private Robot robot;
  *
- *     protected DriveConfig driveConfig() { return RobotSettings.drive(); }
- *     protected AutoDriveConfig autoDriveConfig() { return RobotSettings.auto(); }
- *     protected IMU createImu() { return RobotSettings.imu(hardwareMap); }
+ *     protected RobotConfig robotConfig() { return new RobotSettings(); }   // shared with TeleOp
  *     protected Subsystems createSubsystems() { robot = new Robot(hardwareMap); return robot.all; }
  *     protected String startPosition() { return "Back wall, 2nd tile from the left, facing in"; }
  *
@@ -71,14 +70,39 @@ public abstract class EasyAuto extends LinearOpMode {
     // ----------------------------- you fill these in -----------------------------
     // ("protected": only your OpMode class, which extends this one, can see and fill these in.)
 
-    /** The drivetrain settings (use the same as TeleOp, e.g. {@code RobotSettings.drive()}). */
-    protected abstract DriveConfig driveConfig();
+    /**
+     * Your robot's settings, shared with TeleOp (see {@link RobotConfig}). Return
+     * {@code new RobotSettings()}. If you do not have one, override {@link #driveConfig()},
+     * {@link #autoDriveConfig()} and {@link #createImu()} instead.
+     */
+    protected RobotConfig robotConfig() {
+        return null;
+    }
 
-    /** The autonomous tuning. */
-    protected abstract AutoDriveConfig autoDriveConfig();
+    /** The drivetrain settings. Default: {@code robotConfig().drive()}. */
+    protected DriveConfig driveConfig() {
+        return needConfig().drive();
+    }
 
-    /** The IMU, set up for your hub's mounting. */
-    protected abstract IMU createImu();
+    /** The autonomous tuning. Default: {@code robotConfig().auto()}. */
+    protected AutoDriveConfig autoDriveConfig() {
+        return needConfig().auto();
+    }
+
+    /** The IMU, set up for your hub's mounting. Default: {@code robotConfig().imu(...)}. */
+    protected IMU createImu() {
+        return needConfig().imu(hardwareMap);
+    }
+
+    // robotConfig(), or a clear message saying what to fill in.
+    private RobotConfig needConfig() {
+        RobotConfig config = robotConfig();
+        if (config == null) {
+            throw new IllegalStateException("EasyAuto needs your robot settings: override robotConfig() "
+                    + "(return new RobotSettings()), or driveConfig(), autoDriveConfig() and createImu().");
+        }
+        return config;
+    }
 
     /** Adds the steps. Runs AFTER INIT, so {@link #alliance()} and {@link #choice(String)} are known. */
     protected abstract void buildRoutine(AutoRoutine routine);

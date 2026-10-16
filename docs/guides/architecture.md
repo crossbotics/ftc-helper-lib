@@ -7,18 +7,18 @@ One page to see the whole library, and where your team's code goes.
 ```mermaid
 flowchart TB
     subgraph TEAM["TeamCode (your team, changes every season)"]
-        RS["RobotSettings<br/>names, numbers"]
+        RS["RobotSettings (RobotConfig)<br/>names, numbers"]
         RB["Robot<br/>your mechanisms"]
-        TO["MainTeleOp<br/>buttons -> actions"]
+        TO["MainTeleOp (EasyTeleOp)<br/>buttons -> actions"]
         AU["Autos (EasyAuto)<br/>lists of steps"]
     end
     subgraph LIB["ftc-helper-lib (stays the same across seasons)"]
         direction TB
-        A["auto: EasyAuto, AutoRoutine, AutoStep"]
+        A["teleop + auto: EasyTeleOp, EasyAuto, AutoRoutine, AutoStep"]
         M["mechanism + launcher + vision<br/>PositionMotor, SpinMotor, servos, Flywheel, Turret, Launcher, cameras"]
-        D["drive: MecanumDrive, TankDrive, AutoDrive"]
+        D["drive: MecanumDrive, TankDrive, DriverControls, DriverHeading, AutoDrive"]
         G["gamepad + match + tuning + telemetry<br/>ControllerBindings, InitMenu, MatchTimer, Tunable, RobotTelemetry"]
-        C["core + control + safety + hardware + util<br/>Subsystem, Profile, PidController, SafeMotor, MotorSetup, MathUtil"]
+        C["core + control + safety + hardware + util<br/>Subsystem, Profile, RobotConfig, PidController, SafeMotor, MotorSetup, MathUtil"]
     end
     SDK["FTC SDK (FIRST, new version each season)"]
     TEAM --> LIB --> SDK
@@ -44,7 +44,8 @@ flowchart LR
 - **No `sleep()` in TeleOp.** While the code sleeps, the robot cannot react. Full guide:
   [Non-blocking code](non-blocking.md). Only autonomous moves and steps block, on purpose.
 
-In autonomous, `AutoRoutine` runs the same `update()` for you during every move and wait.
+[`EasyTeleOp`](../modules/teleop.md) runs this loop for you in TeleOp. In autonomous, `AutoRoutine`
+runs the same `update()` for you during every move and wait.
 
 ## The interfaces (where new things plug in)
 

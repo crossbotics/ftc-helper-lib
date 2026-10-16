@@ -24,6 +24,7 @@ ALLOWED_LOOPS = {
     "auto/AutoRoutine.java": "autonomous step runner blocks on purpose (keeps mechanisms updating)",
     "auto/EasyAuto.java": "an OpMode: its INIT and run loops",
     "testing/HardwareCheckOpMode.java": "an OpMode: its run loop",
+    "teleop/EasyTeleOp.java": "an OpMode: its INIT and run loops (each pass is quick; it never waits)",
     "util/BackgroundWorker.java": "the background thread's own loop (not the robot's loop)",
 }
 

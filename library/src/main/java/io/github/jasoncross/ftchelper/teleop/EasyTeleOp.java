@@ -1,0 +1,279 @@
+package io.github.jasoncross.ftchelper.teleop;
+
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.Gamepad;
+import com.qualcomm.robotcore.hardware.IMU;
+import io.github.jasoncross.ftchelper.core.Profile;
+import io.github.jasoncross.ftchelper.core.RobotConfig;
+import io.github.jasoncross.ftchelper.core.Subsystems;
+import io.github.jasoncross.ftchelper.drive.DriveConfig;
+import io.github.jasoncross.ftchelper.drive.DriverControls;
+import io.github.jasoncross.ftchelper.drive.DriverHeading;
+import io.github.jasoncross.ftchelper.gamepad.ControllerBindings;
+import io.github.jasoncross.ftchelper.gamepad.ControllerBindings.Btn;
+import io.github.jasoncross.ftchelper.gamepad.ControllerBindings.Pad;
+import io.github.jasoncross.ftchelper.gamepad.ToggleRumble;
+import io.github.jasoncross.ftchelper.hardware.BulkReads;
+import io.github.jasoncross.ftchelper.match.Alliance;
+import io.github.jasoncross.ftchelper.match.MatchMemory;
+import io.github.jasoncross.ftchelper.match.MatchTimer;
+import io.github.jasoncross.ftchelper.telemetry.RobotTelemetry;
+import io.github.jasoncross.ftchelper.tuning.Tunable;
+import io.github.jasoncross.ftchelper.tuning.TuningMenu;
+
+/**
+ * A whole TeleOp where you only write what is special about YOUR robot: its mechanisms, the
+ * operator's buttons, and any extra screen lines. Everything every TeleOp needs is done for you:
+ *
+ * <ul>
+ *   <li>Driving on gamepad 1 ({@link DriverControls}): left stick drive, right stick X turn, left
+ *       trigger slow. Mecanum and tank. Robot-centric to start; Y = field-centric on/off (mecanum).</li>
+ *   <li>Field-centric "forward" continues from autonomous ({@link DriverHeading}); BACK resets it.</li>
+ *   <li>The alliance from autonomous ({@link #alliance()}), the 2:00 match timer with gamepad buzzes
+ *       at 1:00 and 0:20, the tuning menu on GUIDE (PRACTICE profile only), debug telemetry on
+ *       START + BACK, warnings for slow code, a tuned value or the PRACTICE profile.</li>
+ *   <li>Every mechanism updated every loop, and EVERYTHING stopped at the end, even after an error.</li>
+ * </ul>
+ *
+ * <pre>{@code
+ * @TeleOp(name = "Main TeleOp")
+ * public class MainTeleOp extends EasyTeleOp {
+ *     private Robot robot;
+ *
+ *     @Override protected RobotConfig robotConfig() { return new RobotSettings(); }
+ *     @Override protected Subsystems createSubsystems() { robot = new Robot(hardwareMap); return robot.all; }
+ *
+ *     @Override protected void bindButtons(ControllerBindings driver, ControllerBindings operator) {
+ *         operator.bindPress(Pad.G2, Btn.RB, robot.claw::toggle);
+ *     }
+ * }
+ * }</pre>
+ *
+ * <p>Order in each loop: buttons, driving, {@link #everyLoop()}, mechanisms' update(), telemetry.
+ * Nothing here waits. Your code must not wait either (docs/guides/non-blocking.md).
+ *
+ * Docs: docs/modules/teleop.md. Tutorial: docs/tutorials/20-easy-teleop.md.
+ */
+public abstract class EasyTeleOp extends LinearOpMode {
+
+    private RobotTelemetry t;
+    private DriverControls driving;
+    private DriverHeading heading;
+    private MatchTimer timer;
+    private Alliance alliance = Alliance.BLUE;
+    private TuningMenu tuning;
+
+    // ----------------------------- you fill these in -----------------------------
+    // ("protected": only your OpMode class, which extends this one, can see and fill these in.)
+
+    /**
+     * Your robot's settings, shared with autonomous (see {@link RobotConfig}). Return
+     * {@code new RobotSettings()}. If you do not have one, override {@link #driveConfig()} and
+     * {@link #createImu()} instead.
+     */
+    protected RobotConfig robotConfig() {
+        return null;
+    }
+
+    /** The drivetrain settings. Default: {@code robotConfig().drive()}. */
+    protected DriveConfig driveConfig() {
+        RobotConfig config = robotConfig();
+        if (config == null) {
+            throw new IllegalStateException("EasyTeleOp needs your robot settings: override robotConfig() "
+                    + "(return new RobotSettings()) or driveConfig().");
+        }
+        return config.drive();
+    }
+
+    /** The IMU, for field-centric driving. Default: {@code robotConfig().imu(...)}. Return null for none. */
+    protected IMU createImu() {
+        RobotConfig config = robotConfig();
+        return config == null ? null : config.imu(hardwareMap);
+    }
+
+    /** Your mechanisms: kept updated every loop and stopped at the end. Default: none. */
+    protected Subsystems createSubsystems() {
+        return new Subsystems();
+    }
+
+    /**
+     * Your buttons. Put gamepad 2 buttons on {@code operator}. Extra gamepad 1 buttons go on
+     * {@code driver}: those pause while the tuning menu is open (it uses gamepad 1).
+     * Already taken on gamepad 1: Y (field-centric), BACK, START + BACK, GUIDE.
+     */
+    protected void bindButtons(ControllerBindings driver, ControllerBindings operator) { }
+
+    /**
+     * Your own code for every loop, e.g. a stick that moves the lift by hand. Runs after the buttons
+     * and driving, before the mechanisms update. Must be quick: never wait here.
+     */
+    protected void everyLoop() { }
+
+    /** Extra lines for the Driver Station, every loop. The mechanisms' lines are already shown. */
+    protected void addTelemetry(RobotTelemetry t) { }
+
+    // ----------------------------- optional settings -----------------------------
+
+    /** True to start in field-centric mode. Default false (robot-centric). */
+    protected boolean startFieldCentric() {
+        return false;
+    }
+
+    /** Speed at a full squeeze of the slow trigger, 0 to 1. Default 0.3. */
+    protected double slowSpeed() {
+        return 0.3;
+    }
+
+    /** Seconds left when both gamepads buzz. Default 60 and 20 (2026-27: 1:00 FLOWER ownership; final 20 s). */
+    protected double[] buzzAtSecondsLeft() {
+        return new double[] {60, 20};
+    }
+
+    /**
+     * Drives the robot from gamepad 1, every loop (not while the tuning menu is open).
+     * Default: the standard controls. Replace it to drive your own way, e.g. a tank-style
+     * two-stick drive; {@link #driving()} is the drive.
+     */
+    protected void drive(Gamepad gamepad) {
+        driving.update(gamepad);
+    }
+
+    // ----------------------------- for your code -----------------------------
+
+    /** The alliance autonomous chose (BLUE if no autonomous ran in the last few minutes). */
+    protected Alliance alliance() {
+        return alliance;
+    }
+
+    /** The Driver Station screen helper (warnings, standard and debug lines). */
+    protected RobotTelemetry robotTelemetry() {
+        return t;
+    }
+
+    /** The driving (field-centric on/off, slow mode). */
+    protected DriverControls driving() {
+        return driving;
+    }
+
+    /** The heading compared with the driver, or null if there is no IMU. */
+    protected DriverHeading heading() {
+        return heading;
+    }
+
+    /** The 2:00 match timer (started at START). */
+    protected MatchTimer matchTimer() {
+        return timer;
+    }
+
+    /** True while the tuning menu is open. Gamepad 1 belongs to the menu then: do not read its sticks. */
+    protected boolean isTuningMenuOpen() {
+        return tuning != null && tuning.isOpen();
+    }
+
+    // ----------------------------- the program -----------------------------
+
+    /**
+     * The whole TeleOp. The FTC SDK calls this when you press INIT.
+     * {@code final}: your class cannot replace it, so the safety steps here always run.
+     */
+    @Override
+    public final void runOpMode() {
+        // ---- Setup (INIT) ----
+        t = new RobotTelemetry(telemetry);
+        BulkReads.auto(hardwareMap);
+        IMU imu = createImu();
+        // After the IMU is set up: take autonomous's heading, so "forward" carries over.
+        heading = imu != null ? new DriverHeading(imu) : null;
+        driving = DriverControls.create(hardwareMap, driveConfig(), heading).slowSpeed(slowSpeed());
+        driving.setFieldCentric(startFieldCentric());
+        alliance = MatchMemory.allianceOr(Alliance.BLUE);
+        timer = MatchTimer.teleOp();
+        for (double s : buzzAtSecondsLeft()) timer.rumbleAt(s, gamepad1, gamepad2);
+        tuning = new TuningMenu(gamepad1);
+        ToggleRumble confirm = new ToggleRumble(gamepad1);
+
+        // Three groups of buttons, so the driver's can pause while the tuning menu uses gamepad 1.
+        ControllerBindings menuKey = new ControllerBindings().bindPress(Pad.G1, Btn.GUIDE, tuning::toggle);
+        ControllerBindings driver = new ControllerBindings()
+                // BACK alone: "the robot now faces away from me". With START held: debug lines on/off.
+                .bindPress(Pad.G1, Btn.BACK, () -> {
+                    if (gamepad1.start) t.toggleDebug();
+                    else if (heading != null) heading.reset();
+                });
+        // Y: field-centric on/off (two buzzes = on, one = off). Only where it is possible.
+        if (driving.canFieldCentric()) {
+            driver.bindPress(Pad.G1, Btn.Y, () -> confirm.play(driving.toggleFieldCentric()));
+        }
+        ControllerBindings operator = new ControllerBindings();
+
+        Subsystems robot = null;
+        try {
+            // Inside the "try": if making the mechanisms fails, the wheels are still stopped below.
+            robot = createSubsystems();
+            if (robot == null) robot = new Subsystems();
+            bindButtons(driver, operator);
+
+            // ---- INIT loop: warnings and what the drivers need to know. Never waits. ----
+            while (opModeInInit()) {
+                if (Profile.current().isPractice()) t.warn("PRACTICE profile");
+                int changed = Tunable.countChanged();
+                if (changed > 0) t.warn(changed + " tuned value(s) differ from the code");
+                t.line("Alliance", alliance);
+                if (heading != null) {
+                    t.line("Forward", heading.isFromAuto() ? "from autonomous" : "the way the robot faces now");
+                }
+                t.update();
+            }
+            if (isStopRequested()) return;
+
+            // ---- START ----
+            timer.start();
+            // A button held through START must not count as a press.
+            menuKey.ignoreHeldButtons(gamepad1, gamepad2);
+            driver.ignoreHeldButtons(gamepad1, gamepad2);
+            operator.ignoreHeldButtons(gamepad1, gamepad2);
+            boolean menuWasOpen = false;
+
+            while (opModeIsActive()) {
+                menuKey.update(gamepad1, gamepad2);
+                operator.update(gamepad1, gamepad2);
+                timer.update();
+                tuning.update();
+                if (tuning.isOpen()) {
+                    // Gamepad 1 runs the menu: no driver buttons, and the wheels hold still.
+                    menuWasOpen = true;
+                    driving.hold();
+                } else {
+                    // Just closed: a button still held from the menu must not act.
+                    if (menuWasOpen) driver.ignoreHeldButtons(gamepad1, gamepad2);
+                    menuWasOpen = false;
+                    driver.update(gamepad1, gamepad2);
+                    drive(gamepad1);
+                }
+                everyLoop();
+                robot.update();
+
+                if (tuning.isOpen()) {
+                    tuning.addTelemetry(t);
+                } else {
+                    if (!driver.getSlowActionWarning().isEmpty()) t.warn(driver.getSlowActionWarning());
+                    if (!operator.getSlowActionWarning().isEmpty()) t.warn(operator.getSlowActionWarning());
+                    t.line("Time", timer.format());
+                    t.line("Drive", driving.status());
+                    robot.addTelemetry(t);
+                    addTelemetry(t);
+                    if (heading != null) {
+                        t.debug("Heading", "%.1f%s", heading.degrees(), heading.isFromAuto() ? " (from auto)" : "");
+                    }
+                }
+                t.update();
+            }
+        } finally {
+            // SAFETY: stop the wheels and every mechanism, each on its own, even if one throws.
+            RuntimeException first = null;
+            try { driving.stop(); } catch (RuntimeException e) { first = e; }
+            try { if (robot != null) robot.stop(); } catch (RuntimeException e) { if (first == null) first = e; }
+            if (first != null) throw first;
+        }
+    }
+}

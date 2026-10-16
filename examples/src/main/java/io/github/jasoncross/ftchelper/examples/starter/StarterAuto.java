@@ -2,11 +2,9 @@
 package io.github.jasoncross.ftchelper.examples.starter;
 
 // "import" lines list the ready-made pieces this file uses.
-import com.qualcomm.robotcore.hardware.IMU;
 import io.github.jasoncross.ftchelper.auto.EasyAuto;
+import io.github.jasoncross.ftchelper.core.RobotConfig;
 import io.github.jasoncross.ftchelper.core.Subsystems;
-import io.github.jasoncross.ftchelper.drive.AutoDriveConfig;
-import io.github.jasoncross.ftchelper.drive.DriveConfig;
 
 /**
  * STARTER KIT, file 4 of 6: what every autonomous shares. Each real autonomous (file 5) extends
@@ -24,14 +22,10 @@ public abstract class StarterAuto extends EasyAuto {
     // (as robot.lift, robot.claw...). It is filled in by createSubsystems() below, during INIT.
     protected Robot robot;
 
-    // EasyAuto asks for these four things. "@Override" = "this is my answer to a method EasyAuto
-    // asks for". Each one just hands over the shared settings, so every autonomous matches TeleOp.
-    // The drive settings: motor names, directions, power limit (RobotSettings.java).
-    @Override protected DriveConfig driveConfig() { return RobotSettings.drive(); }
-    // The autonomous tuning: wheel size, strafe correction (RobotSettings.java).
-    @Override protected AutoDriveConfig autoDriveConfig() { return RobotSettings.auto(); }
-    // The IMU (turn sensor), set up for how YOUR hub is mounted (RobotSettings.java).
-    @Override protected IMU createImu() { return RobotSettings.imu(hardwareMap); }
+    // EasyAuto asks for two things. "@Override" = "this is my answer to a method EasyAuto asks for".
+    // The robot's settings (drive, autonomous tuning, IMU): the SAME object type TeleOp uses,
+    // so every autonomous matches TeleOp.
+    @Override protected RobotConfig robotConfig() { return new RobotSettings(); }
 
     // The mechanisms. EasyAuto keeps every one of them working during every step (for example
     // the lift keeps holding its height while the robot drives), and stops them all at the end.
