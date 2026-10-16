@@ -50,6 +50,15 @@ final class SimMotor {
     volatile double appliedPower = 0;   // the power the shaft really gets this step, in its own direction
 
     final DcMotorEx device;
+    // From the catalog part (or typical numbers): current when free and when stalled at full power.
+    String partName = "";
+    double freeAmps = 0.25, stallAmps = 9.2;
+
+    void setPart(SimParts.Motor part) {
+        partName = part.name;
+        if (!Double.isNaN(part.freeCurrentA)) freeAmps = part.freeCurrentA;
+        if (!Double.isNaN(part.stallCurrentA)) stallAmps = part.stallCurrentA;
+    }
 
     SimMotor(String name, int port, Kind kind, double maxTicksPerSec, double lagSec) {
         this.name = name;
@@ -269,9 +278,11 @@ final class SimMotor {
         if (shaftPos <= minTicks) { shaftPos = minTicks; if (shaftVel < 0) { shaftVel = 0; atStop = true; } }
         if (shaftPos >= maxTicks) { shaftPos = maxTicks; if (shaftVel > 0) { shaftVel = 0; atStop = true; } }
         // Current: small when free, large when pushing and not turning (stalled).
-        double speedShare = Math.min(1, Math.abs(shaftVel) / Math.max(1, Math.abs(appliedPower) * maxTicksPerSec));
-        amps = Math.abs(appliedPower) * (1.0 + 8.0 * (1 - speedShare));
-        if (atStop && Math.abs(appliedPower) > 0.01) amps = 2 + 9 * Math.abs(appliedPower);
+        // A DC motor's current grows as it slows under load: free current at full speed, stall current
+        // when it cannot turn (scaled by the power it gets).
+        double p = Math.abs(appliedPower);
+        double speedShare = Math.min(1, Math.abs(shaftVel) / Math.max(1, p * maxTicksPerSec));
+        amps = p < 0.01 ? 0 : p * (freeAmps + (stallAmps - freeAmps) * (1 - speedShare));
     }
 
     /** A piece went through the flywheel: it loses some speed. */

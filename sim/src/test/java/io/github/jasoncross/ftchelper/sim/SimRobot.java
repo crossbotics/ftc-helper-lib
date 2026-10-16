@@ -72,9 +72,13 @@ final class SimRobot {
         // Drivetrain motors first, so they get the first ports like on a real hub.
         driveType = p.getProperty("drive.type", "none").trim().toLowerCase(Locale.US);
         if (!driveType.equals("none")) {
-            double maxTicks = num(p, "drive.maxTicksPerSec", 2780);
+            // A catalog part (drive.part = gobilda-5203-312) gives the speed and counts; numbers written
+            // in the file win over it.
+            String drivePart = p.getProperty("drive.part", "").trim();
+            SimParts.Motor dp = drivePart.isEmpty() ? null : SimParts.catalog().motor(drivePart);
+            double maxTicks = num(p, "drive.maxTicksPerSec", dp != null ? dp.maxTicksPerSec() : 2780);
             wheelDiameterIn = num(p, "drive.wheelDiameterIn", 3.78);
-            ticksPerRev = num(p, "drive.ticksPerRev", 537.7);
+            ticksPerRev = num(p, "drive.ticksPerRev", dp != null ? dp.countsPerRev : 537.7);
             gearRatio = num(p, "drive.gearRatio", 1);
             trackWidthIn = num(p, "drive.trackWidthIn", 15);
             wheelBaseIn = num(p, "drive.wheelBaseIn", 13);
@@ -82,6 +86,7 @@ final class SimRobot {
             for (String name : list(p.getProperty("drive.motors", ""))) {
                 SimMotor m = new SimMotor(name, port++, SimMotor.Kind.WHEEL, maxTicks, 0.15);
                 m.ticksPerRev = ticksPerRev;
+                if (dp != null) m.setPart(dp);
                 wheels.add(m);
                 motors.put(name, m);
             }
@@ -95,9 +100,11 @@ final class SimRobot {
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException("Robot file: \"" + key + "\": the kind must be free, lift or flywheel");
             }
-            double max = dbl(s, "maxTicksPerSec", 2780);
+            SimParts.Motor part = s.containsKey("part") ? SimParts.catalog().motor(s.get("part")) : null;
+            double max = dbl(s, "maxTicksPerSec", part != null ? part.maxTicksPerSec() : 2780);
             SimMotor m = new SimMotor(name, port++, kind, max, kind == SimMotor.Kind.FLYWHEEL ? 0.6 : 0.12);
-            m.ticksPerRev = dbl(s, "ticksPerRev", kind == SimMotor.Kind.FLYWHEEL ? 28 : 537.7);
+            m.ticksPerRev = dbl(s, "ticksPerRev", part != null ? part.countsPerRev : (kind == SimMotor.Kind.FLYWHEEL ? 28 : 537.7));
+            if (part != null) m.setPart(part);
             if (s.containsKey("min")) m.minTicks = dbl(s, "min", 0);
             if (s.containsKey("max")) m.maxTicks = dbl(s, "max", 0);
             m.gravity = dbl(s, "gravity", 0);
@@ -108,7 +115,15 @@ final class SimRobot {
         for (String key : sortedKeys(p, "servo.")) {
             if (key.equals("servo.speed")) continue;
             String name = key.substring("servo.".length());
-            servos.put(name, new SimServo(name, num(p, key, 0.5)));
+            // servo.NAME = start position [, part=catalog-id]
+            Map<String, String> s = settings(p.getProperty(key));
+            SimServo servo = new SimServo(name, dbl(s, "", 0.5));
+            if (s.containsKey("part")) {
+                SimParts.Servo part = SimParts.catalog().servo(s.get("part"));
+                servo.partName = part.name;
+                servo.speed = part.rawPerSecond();
+            }
+            servos.put(name, servo);
         }
         for (String key : sortedKeys(p, "crservo.")) crServos.put(key.substring("crservo.".length()), new double[] {0, 0});
         for (String key : sortedKeys(p, "touch.")) {
@@ -290,7 +305,7 @@ final class SimRobot {
         }
         for (SimMotor m : motors.values()) m.step(dt, battery);
         if (!wheels.isEmpty()) moveChassis(dt);
-        for (SimServo s : servos.values()) s.step(dt, servoSpeed);
+        for (SimServo s : servos.values()) s.step(dt, Double.isNaN(s.speed) ? servoSpeed : s.speed);
         // A flywheel loses speed when its feeder starts pushing a piece in.
         for (SimMotor m : motors.values()) {
             if (m.kind != SimMotor.Kind.FLYWHEEL || m.feeder == null) continue;
@@ -417,6 +432,8 @@ final class SimRobot {
     /** A pretend servo: it moves toward where it was sent, at the servo speed. */
     static final class SimServo {
         final String name;
+        String partName = "";       // the catalog part, if the robot file names one
+        double speed = Double.NaN;  // raw positions per second from the part (NaN = the file's servo.speed)
         double actual;              // where it really is (raw 0..1)
         private double target;      // where it is going (raw)
         private double commanded = Double.NaN;   // the last position the OpMode set (its own scale)

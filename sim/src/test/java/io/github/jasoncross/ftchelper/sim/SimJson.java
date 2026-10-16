@@ -59,6 +59,7 @@ final class SimJson {
             b.append('{');
             field(b, "name", m.name).append(',');
             field(b, "kind", m.kind.name().toLowerCase(Locale.US)).append(',');
+            field(b, "part", m.partName).append(',');
             field(b, "mode", m.modeName()).append(',');
             b.append("\"power\":").append(fmt(m.userPower())).append(',');
             b.append("\"applied\":").append(fmt(m.appliedPower)).append(',');
@@ -74,6 +75,7 @@ final class SimJson {
             firstItem = false;
             b.append('{');
             field(b, "name", s.name).append(',');
+            field(b, "part", s.partName).append(',');
             b.append("\"actual\":").append(fmt(s.actual)).append(',');
             b.append("\"target\":").append(fmt(s.target())).append('}');
         }

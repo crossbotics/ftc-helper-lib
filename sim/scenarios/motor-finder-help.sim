@@ -1,0 +1,21 @@
+# The Motor Finder stops the lift for help, and a stick held through help does not count.
+# Run it:  ./gradlew :sim:scenario -Pfile=sim/scenarios/motor-finder-help.sim
+init "Motor Finder"
+expect screen has "Motor finder"
+start
+press g1.dpad_up
+press g1.a
+expect screen has "Motor \"lift\""
+hold g1.right_stick_y -1
+expect within 2 motor lift ticks > 100
+press g1.guide
+expect screen has "help"
+expect motor lift power = 0
+press g1.guide
+expect screen has "Let go"
+expect motor lift power = 0
+release g1.right_stick_y
+hold g1.right_stick_y -1
+expect within 1 motor lift power > 0.1
+release all
+expect error none

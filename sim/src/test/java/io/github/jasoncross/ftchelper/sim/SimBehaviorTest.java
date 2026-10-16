@@ -24,8 +24,11 @@ public class SimBehaviorTest {
                 } catch (RuntimeException ignored) {
                     // keep going whatever happens
                 }
-                Thread.yield();
-                if (Thread.interrupted()) { /* swallow the interrupt, like bad code */ }
+                try {
+                    Thread.sleep(5);
+                } catch (InterruptedException ignored) {
+                    // swallow the interrupt, like bad code (and keep the CPU free for the other tests)
+                }
             }
         }
     }
@@ -124,5 +127,15 @@ public class SimBehaviorTest {
         robot.motors.get("feeder").device.setPower(1);
         for (int i = 0; i < 100; i++) robot.step(0.01);            // 1 s of feeding
         assertTrue("about 3-4 pieces in a second, not 1: " + robot.shots(), robot.shots() >= 3);
+    }
+
+    @Test public void partsComeFromTheCatalog() throws Exception {
+        SimParts.Motor m312 = SimParts.catalog().motor("gobilda-5203-312");
+        assertEquals(537.7, m312.countsPerRev, 1e-9);
+        assertEquals(312 * 537.7 / 60, m312.maxTicksPerSec(), 1e-6);
+        SimRobot robot = SimRobot.load(java.nio.file.Paths.get("robots/starter.properties"));
+        assertEquals("the robot file's lift uses the 312 RPM motor", m312.maxTicksPerSec(), robot.motors.get("lift").maxTicksPerSec, 1e-6);
+        assertTrue(robot.servos.get("claw").partName.contains("Torque"));
+        assertTrue("a servo part gives its own speed", robot.servos.get("claw").speed > 0);
     }
 }

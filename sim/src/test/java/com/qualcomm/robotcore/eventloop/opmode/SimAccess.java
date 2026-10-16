@@ -16,6 +16,16 @@ public final class SimAccess {
         wake(op);
     }
 
+    /** True after START (for running iterative OpModes). */
+    public static boolean isStarted(OpMode op) {
+        return op.isStarted;
+    }
+
+    /** True after STOP (or the OpMode asked to stop). */
+    public static boolean isStopRequested(OpMode op) {
+        return op.stopRequested;
+    }
+
     /** STOP was pressed: opModeIsActive() becomes false; a waiting waitForStart() returns. */
     public static void stop(OpMode op) {
         op.stopRequested = true;

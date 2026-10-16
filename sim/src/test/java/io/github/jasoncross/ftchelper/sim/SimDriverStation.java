@@ -89,7 +89,9 @@ final class SimDriverStation {
             {
                 // The library's examples and starter kit, the simulator's own, and team code copied in
                 // with its TeamCode package.
-                boolean ours = rel.startsWith("io/github/jasoncross/") || rel.startsWith("org/firstinspires/ftc/teamcode/");
+                // With the team's TeamCode built in (-PteamCode / inside a robot project), list only it.
+                boolean team = rel.startsWith("org/firstinspires/ftc/teamcode/");
+                boolean ours = Boolean.getBoolean("sim.teamOnly") ? team : (team || rel.startsWith("io/github/jasoncross/"));
                 if (!ours || rel.contains("$")) continue;
                 String className = rel.substring(0, rel.length() - ".class".length()).replace('/', '.');
                 try {
@@ -150,11 +152,6 @@ final class SimDriverStation {
         }
         Entry e = find(name);
         if (e == null) throw new IllegalArgumentException("No OpMode called " + name);
-        if (!LinearOpMode.class.isAssignableFrom(e.type)) {
-            error = name + " is an iterative OpMode (init/loop): the simulator runs LinearOpModes only for now.";
-            phase = Phase.STOPPED;
-            return;
-        }
         try {
             OpMode o = e.type.getDeclaredConstructor().newInstance();
             o.hardwareMap = robot.hardwareMap();
@@ -173,14 +170,57 @@ final class SimDriverStation {
             current = e;
             op = o;
             phase = Phase.INIT;
-            final LinearOpMode linear = (LinearOpMode) o;
-            thread = new Thread(() -> run(linear), "OpMode " + e.name);
+            thread = o instanceof LinearOpMode
+                    ? new Thread(() -> run((LinearOpMode) o), "OpMode " + e.name)
+                    : new Thread(() -> runIterative(o), "OpMode " + e.name);
             thread.setDaemon(true);
             thread.start();
         } catch (ReflectiveOperationException ex) {
             error = "Could not make " + name + ": " + ex;
             phase = Phase.STOPPED;
         }
+    }
+
+    // An iterative OpMode, the way the FTC app runs it: init(), init_loop() until START, start(), loop()
+    // until STOP, stop(); the telemetry is sent after each call.
+    private void runIterative(OpMode o) {
+        try {
+            o.init();
+            o.telemetry.update();
+            while (!SimAccess.isStarted(o) && !SimAccess.isStopRequested(o)) {
+                o.init_loop();
+                o.telemetry.update();
+                Thread.sleep(5);
+            }
+            if (SimAccess.isStarted(o) && !SimAccess.isStopRequested(o)) {
+                o.start();
+                o.telemetry.update();
+                while (!SimAccess.isStopRequested(o)) {
+                    o.loop();
+                    o.telemetry.update();
+                    Thread.sleep(5);
+                }
+            }
+            o.stop();
+        } catch (InterruptedException ignored) {
+            try { o.stop(); } catch (RuntimeException e) { /* stopping anyway */ }
+        } catch (Throwable t) {
+            if (!t.getClass().getName().endsWith("ForceStopException")) error = firstLines(t);
+        } finally {
+            if (op == o) {
+                robot.allOff();
+                phase = Phase.STOPPED;
+            }
+        }
+    }
+
+    private static String firstLines(Throwable t) {
+        StringWriter sw = new StringWriter();
+        t.printStackTrace(new PrintWriter(sw));
+        String[] lines = sw.toString().split("\n");
+        StringBuilder b = new StringBuilder();
+        for (int i = 0; i < Math.min(8, lines.length); i++) b.append(lines[i].trim()).append('\n');
+        return b.toString().trim();
     }
 
     private void run(LinearOpMode o) {

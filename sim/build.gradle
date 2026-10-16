@@ -10,6 +10,18 @@ plugins {
 
 def ftcSdkVersion = '12.0.0'
 
+// ---- The team's own code ----
+// When this library sits inside a robot project (ftc-helper-lib/ next to TeamCode/), the simulator also
+// builds that TeamCode and lists only its OpModes. -PteamCode=<folder> picks another TeamCode folder;
+// -PteamCode=none turns it off. Libraries TeamCode needs (Road Runner, Pedro, FTC Dashboard...) go in
+// <robot project>/simulator/sim-dependencies.gradle (see docs/guides/simulator.md).
+def teamCodeProp = project.findProperty('teamCode')
+def teamCodeDir = teamCodeProp == 'none' ? null
+        : (teamCodeProp ? file(teamCodeProp) : new File(rootProject.projectDir, '../TeamCode'))
+def useTeamCode = teamCodeDir != null && new File(teamCodeDir, 'src/main/java').isDirectory()
+def robotProject = useTeamCode ? teamCodeDir.parentFile : null
+def teamRobotFile = robotProject != null ? new File(robotProject, 'simulator/robot.properties') : null
+
 android {
     namespace 'io.github.jasoncross.ftchelper.sim'
     compileSdk 30
@@ -21,6 +33,12 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    sourceSets {
+        // The parts catalog and the season fields are data files, read from the classpath.
+        test.resources.srcDirs += ['parts', 'fields']
+        if (useTeamCode) test.java.srcDirs += [new File(teamCodeDir, 'src/main/java')]
     }
 
     testOptions {
@@ -39,6 +57,10 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
 }
 
+if (useTeamCode && new File(robotProject, 'simulator/sim-dependencies.gradle').isFile()) {
+    apply from: new File(robotProject, 'simulator/sim-dependencies.gradle')
+}
+
 // ./gradlew :sim:run  [-Probot=path/to/robot.properties] [-Plan]  (-Plan: phones on the same WiFi can join)
 tasks.register('run', JavaExec) {
     group = 'application'
@@ -48,6 +70,25 @@ tasks.register('run', JavaExec) {
     classpath = files({ unitTest.get().classpath })
     mainClass = 'io.github.jasoncross.ftchelper.sim.SimMain'
     workingDir = rootProject.projectDir
-    args = [project.findProperty('robot') ?: 'sim/robots/starter.properties'] + (project.hasProperty('lan') ? ['--lan'] : [])
-    standardInput = System.in
+    def robot = project.findProperty('robot') ?:
+            (teamRobotFile != null && teamRobotFile.isFile() ? teamRobotFile.path : 'sim/robots/starter.properties')
+    args = [robot] + (project.hasProperty('lan') ? ['--lan'] : [])
+    systemProperty 'sim.teamOnly', useTeamCode
+}
+
+// ./gradlew :sim:scenario -Pfile=path/to/test.sim [-Probot=...]   (several: -Pfile=a.sim,b.sim)
+// Runs scenario files without a browser and prints a report; fails if any "expect" fails.
+tasks.register('scenario', JavaExec) {
+    group = 'verification'
+    description = 'Runs simulator scenario files (see docs/guides/simulator.md).'
+    def unitTest = tasks.named('testDebugUnitTest')
+    dependsOn 'compileDebugUnitTestJavaWithJavac', 'processDebugUnitTestJavaRes'
+    classpath = files({ unitTest.get().classpath })
+    mainClass = 'io.github.jasoncross.ftchelper.sim.SimScenario'
+    workingDir = rootProject.projectDir
+    def robot = project.findProperty('robot') ?:
+            (teamRobotFile != null && teamRobotFile.isFile() ? teamRobotFile.path : 'sim/robots/starter.properties')
+    def files = (project.findProperty('file') ?: '').split(',').findAll { it }
+    args = ['--robot', robot] + files
+    systemProperty 'sim.teamOnly', useTeamCode
 }

@@ -421,12 +421,12 @@ function bar(v) {
 }
 function renderHub(s) {
   $("#motors tbody").innerHTML = s.motors.map(m =>
-    `<tr><td>${escapeHtml(m.name)}<div class="muted">${m.kind}, ${m.mode.replace(/_/g, " ").toLowerCase()}</div></td>
+    `<tr><td>${escapeHtml(m.name)}<div class="muted">${m.part ? escapeHtml(m.part) + ", " : ""}${m.kind}, ${m.mode.replace(/_/g, " ").toLowerCase()}</div></td>
      <td>${bar(m.power)}<span class="muted">${m.power.toFixed(2)}</span></td>
      <td class="num">${m.ticks}${m.atStop ? ' <span class="stall">STOP</span>' : ""}</td>
      <td class="num">${Math.round(m.velocity)}</td><td class="num ${m.amps > 6 ? "stall" : ""}">${m.amps.toFixed(1)}</td></tr>`).join("");
   $("#servos tbody").innerHTML = s.servos.map(v =>
-    `<tr><td>${escapeHtml(v.name)}</td><td><div class="bar" style="width:140px"><i style="left:0;width:${v.actual * 100}%"></i></div></td>
+    `<tr><td>${escapeHtml(v.name)}${v.part ? '<div class="muted">' + escapeHtml(v.part) + '</div>' : ""}</td><td><div class="bar" style="width:140px"><i style="left:0;width:${v.actual * 100}%"></i></div></td>
      <td class="num">${v.actual.toFixed(3)}</td><td class="muted">to ${v.target.toFixed(3)}</td></tr>`).join("")
     + s.crservos.map(c => `<tr><td>${escapeHtml(c.name)}</td><td>${bar(c.power)}</td><td class="num">${c.power.toFixed(2)}</td><td class="muted">CR servo</td></tr>`).join("");
   $("#touches").innerHTML = s.touches.map(t =>
