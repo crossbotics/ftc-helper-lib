@@ -4,7 +4,7 @@ start
 hold g1.left_stick_y -1
 wait 0.5
 release g1.left_stick_y
-expect robot y > -30
+expect robot y > -45
 hold g1.right_stick_x 0.5
 wait 0.5
 release all

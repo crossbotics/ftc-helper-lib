@@ -2,6 +2,7 @@
  "season": "BIOBUZZ 2026-27",
  "source": "official field CAD field-cad-step.step via export_sim_field.py",
  "units": "in",
+ "driversLabel": "red drivers",
  "frameNote": "Origin = field centre, z up from the top of the tiles. BIOBUZZ has the red and blue ALLIANCE AREAS on opposite sides of the field and the audience on a third side, so 'drivers at the bottom' is the RED drive team: y = -72 is the red wall, +y points toward the blue ALLIANCE AREA, +x is the red drivers' right (toward the audience), headings counterclockwise from +x. For the blue drive team's view turn everything 180 degrees: (x, y) -> (-x, -y). Field symmetry: blue elements are the red ones turned 180 degrees about the centre. CAD -> sim: (x, y, z) = (CAD z, CAD x, CAD y) / 25.4.",
  "field": {
   "size": 144.0,

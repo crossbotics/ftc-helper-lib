@@ -56,4 +56,28 @@ public class SimFieldTest {
             }
         }
     }
+
+    @Test public void aStartInsideAnElementIsRefusedAndBumpsClear() throws Exception {
+        File robotFile = tmp.newFile("bad-start.properties");
+        String base = new String(Files.readAllBytes(new File("robots/starter.properties").toPath()), "UTF-8");
+        Files.write(robotFile.toPath(), (base + "\nstart.x = 0\nstart.y = -20\n").getBytes("UTF-8"));   // in the HIVE frame base
+        try {
+            SimRobot.load(robotFile.toPath());
+            org.junit.Assert.fail("a start inside the HIVE frame base must be refused");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage(), expected.getMessage().contains("HIVE frame base"));
+        }
+        SimRobot r = SimRobot.load(new File("robots/starter.properties").toPath());   // the legal start
+        r.push(-10, 0, 0.5);                                 // back into the red wall
+        for (int i = 0; i < 100; i++) r.step(0.01);
+        assertEquals("field wall", r.bumpedInto);
+        r.push(10, 0, 0.5);                                  // and away from it again
+        for (int i = 0; i < 100; i++) r.step(0.01);
+        assertEquals("moving freely clears the bump", "", r.bumpedInto);
+    }
+
+    @Test public void servoSpeedIsTheFiveVoltRow() {
+        SimParts.Servo torque = SimParts.catalog().servo("gobilda-2000-torque");
+        assertEquals("the 4.8 V row (0.25 s per 60 deg), not the 6 V headline", 0.25, torque.secPer60Deg, 1e-9);
+    }
 }

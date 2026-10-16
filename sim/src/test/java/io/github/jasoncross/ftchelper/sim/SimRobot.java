@@ -154,6 +154,12 @@ final class SimRobot {
         x = startX;
         y = startY;
         headingDeg = startHeading;
+        // A start that overlaps a wall or a solid element would leave the robot stuck: say so now.
+        String blocked = blockedAt(startX, startY, startHeading);
+        if (blocked != null) {
+            throw new IllegalArgumentException("Robot file: the start position (start.x/start.y/start.heading) overlaps "
+                    + blocked + ". Move it (BIOBUZZ G304: touching the wall, not in the LOADING ZONE).");
+        }
         buildDevices();
     }
 
@@ -304,6 +310,32 @@ final class SimRobot {
         bumpedInto = "";
     }
 
+    /** What a robot at this pose would overlap ("field wall" or an element's name), or null. */
+    private String blockedAt(double cx, double cy, double h) {
+        for (double[] c : footprint(cx, cy, h)) {
+            if (Math.abs(c[0]) > field.wallHalf + 1e-6 || Math.abs(c[1]) > field.wallHalf + 1e-6) return "the field wall";
+        }
+        SimField.Element e = field.bumps(footprint(cx, cy, h), heightIn);
+        return e == null ? null : e.name;
+    }
+
+    /** Puts the robot at a pose (scenario "set pose"); refused if it would overlap something. */
+    synchronized void setPose(double nx, double ny, double nh) {
+        String blocked = blockedAt(nx, ny, nh);
+        if (blocked != null) throw new IllegalArgumentException("that pose overlaps " + blocked);
+        x = nx;
+        y = ny;
+        headingDeg = nh;
+        bumpedInto = "";
+    }
+
+    /** Holds a switch pressed (on) or lets it go (off), like clicking it in the panel. */
+    synchronized void setTouch(String name, boolean on) {
+        SimTouch t = touches.get(name);
+        if (t == null) throw new IllegalArgumentException("no switch \"" + name + "\" in the robot file");
+        t.manual = on;
+    }
+
     /** The robot's four corners on the field (inches), for bumping. */
     synchronized List<double[]> footprint(double cx, double cy, double headingDegrees) {
         double h = Math.toRadians(headingDegrees);
@@ -396,7 +428,7 @@ final class SimRobot {
         double ny = y + (Math.cos(h) * forward + Math.sin(h) * right) * dt;
         double nh = wrap(headingDeg - Math.toDegrees(cw * dt));
         // The field walls: no corner of the robot past the wall.
-        double half = field.wallHalf;
+        double half = field.wallHalf + 1e-6;
         boolean wall = false;
         for (double[] c : footprint(nx, ny, nh)) if (Math.abs(c[0]) > half || Math.abs(c[1]) > half) wall = true;
         SimField.Element hit = wall ? null : field.bumps(footprint(nx, ny, nh), heightIn);
@@ -410,6 +442,8 @@ final class SimRobot {
         y = ny;
         headingDeg = nh;
         yawRateDeg = -Math.toDegrees(cw);
+        // Moving freely again: no longer bumping (a robot standing still keeps its last bump shown).
+        if (Math.abs(forward) + Math.abs(right) + Math.abs(cw) > 1e-6) bumpedInto = "";
     }
 
     // The wheels turn to match a hand push (they are not driven).

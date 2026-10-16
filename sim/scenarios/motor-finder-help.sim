@@ -8,6 +8,8 @@ press g1.a
 expect screen has "Motor \"lift\""
 hold g1.right_stick_y -1
 expect within 2 motor lift ticks > 100
+expect within 1 value "Count" > 100   # the number on the screen line "Count : ..."
+expect time < 30
 press g1.guide
 expect screen has "help"
 expect motor lift power = 0

@@ -496,7 +496,7 @@ function drawField(r) {
   ctx.strokeStyle = css.getPropertyValue("--ink"); ctx.lineWidth = 2;
   ctx.strokeRect(X(-wall), Y(wall), 2 * wall * s, 2 * wall * s);
   ctx.fillStyle = css.getPropertyValue("--muted"); ctx.font = "11px system-ui";
-  ctx.fillText(fieldData && fieldData.frameNote && fieldData.frameNote.includes("RED") ? "red drivers" : "drivers", W / 2 - 26, W - 2);
+  ctx.fillText((fieldData && fieldData.driversLabel) || "drivers", W / 2 - 26, W - 2);
   if (r.drive === "none") return;
   const L = r.length || 18, Wd = r.width || 18;
   ctx.save();

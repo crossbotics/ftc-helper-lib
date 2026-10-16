@@ -75,8 +75,8 @@ robot project as `simulator/robot.properties` (used automatically, see below).
 field = biobuzz-2026                  # the season's field (sim/fields/biobuzz-2026.json)
 robot.lengthIn = 18                   # size, for bumping into field elements
 robot.widthIn = 18
-start.x = 0                           # where it starts (inches from the field center; y away from the drivers)
-start.y = -48
+start.x = -56                         # where it starts (inches from the field center; y away from the drivers)
+start.y = -61.55                      # BIOBUZZ G304: touching the wall, outside the LOADING ZONE
 start.heading = 0                     # degrees, counterclockwise; 0 = facing away from the drivers
 drive.type = mecanum
 drive.motors = front_left, front_right, back_left, back_right
@@ -97,7 +97,8 @@ every ratio), REV HD Hex (bare, UltraPlanetary combinations, spur gearboxes) and
 NeveRest, goBILDA 2000 series servos, REV Smart Robot Servos and Axon servos. A robot file names a part
 by its `id` (`part=gobilda-5203-312`); the simulator takes the top speed, encoder counts per turn and
 current (motors) or speed and range (servos) from it. Numbers the seller does not publish are left
-empty, with a note. Real ratios are used (an UltraPlanetary "5:1" is 5.23:1).
+empty, with a note. Real ratios are used (an UltraPlanetary "5:1" is 5.23:1). Servo speeds use the
+seller's row closest to 5 V (a Control Hub servo port gives about 5 V; the headline number is often 6 V).
 
 Motor kinds: `free` (just spins), `lift` (hard stops, gravity), `flywheel` (coasts; while its `feeder`
 motor runs, a piece goes through every 0.3 s and slows it down). `ticksPerRev=` sets a motor's encoder
@@ -142,7 +143,13 @@ wait 0.5                               # seconds
 loops 3                                # wait for 3 OpMode loops
 push 24 0 2                            # roll the robot by hand: forward in/s, right in/s, seconds
 set battery 12.0
+set touch lift_bottom on               # hold a switch pressed (off = let go)
+set pose -56 -61.55 0                  # put the robot somewhere (x y heading)
+set autotimer off                      # no 30 s autonomous stop
 expect screen has "Ready"              # or: screen not "..."
+expect value "Lift" > 500              # the number on the screen line that starts with Lift
+expect time < 25                       # seconds since START (e.g. how long an autonomous took)
+expect touch lift_bottom pressed       # or: open
 expect error none                      # or: error has "..."
 expect phase RUNNING
 expect motor lift power > 0.1          # power | ticks | velocity | amps; > < >= <= =  (= VALUE TOLERANCE)
@@ -150,9 +157,15 @@ expect servo claw target = 0.53 0.01   # target | actual
 expect robot y > -30                   # x | y | heading | imu | shots
 expect bumped none                     # or: bumped "Red HIVE"
 expect within 2 motor lift ticks > 500 # wait up to 2 s for it to become true
+expect within 30 phase STOPPED         # e.g. wait for an autonomous to finish
 stop
-print screen                           # also: print motors | servos | robot
+print screen                           # also: print motors | servos | robot (not counted as checks)
 ```
+
+A note after `#` is ignored (outside quotes). A misspelled check fails with a message, never passes.
+Button presses wait for the OpMode's loops, counted by its screen updates (or by `loop()` calls in an
+iterative OpMode); an OpMode that never sends telemetry cannot be counted, so each step then waits 3 s
+and the report says so.
 
 Gamepad names: `g1.`/`g2.` plus `a b x y lb rb lt rt back start guide ls rs`, `dpad_up` (or `up`),
 `left_stick_x` (or `lx`), `right_trigger` (or `rt`) and the other SDK names. The report shows each line
@@ -163,7 +176,11 @@ as ok or FAIL with the value it saw; the command fails if any check failed.
 `sim/fields/<season>.json` holds a season's field: solid elements (the robot bumps into them), floor
 zones and tape lines, things overhead, and the AprilTags with their position and the way they face. The
 robot file picks one (`field = biobuzz-2026`). The page draws it; the robot turns red and the panel names
-the element when it bumps into one. A new season is a new file: the BIOBUZZ file is made from the official
+the element when it bumps into one. A start position that overlaps a wall or an element is refused when
+the robot file loads. Limits: a bump stops the whole move (the robot does not slide along a wall), and
+its wheels keep turning, so wheel encoders keep counting while it pushes (like a real robot): an
+encoder-driven autonomous can "arrive" while pinned. Solid footprints are taken from the floor up to
+29 in, so a short robot may be stopped a little early by a leaning part. A new season is a new file: the BIOBUZZ file is made from the official
 field CAD by a script (in the team's design repo), and the same kind of script works for the next CAD.
 
 Coordinates: inches from the field center, +x to the right and +y away from the drivers (drawn at the
@@ -172,10 +189,9 @@ bottom), z up from the tiles; headings and tag facing in degrees, counterclockwi
 ## Not simulated
 
 Cameras (webcam and Limelight): an OpMode that needs one stops with "No WebcamName named..." (the
-field file has the AprilTags, so a simulated camera is the next step). Game pieces are not simulated yet. The Shot and Aim
-tuners work without a camera when `createCamera()` returns null. Iterative OpModes (`init()/loop()`)
-are not run yet; the library's OpModes are all LinearOpModes. Physics is simple: real numbers
-(gains, speeds, shot tables) must still be found on the robot.
+field file has the AprilTags, so a simulated camera is the next step). Game pieces are not simulated
+yet. The Shot and Aim tuners work without a camera when `createCamera()` returns null. Physics is
+simple: real numbers (gains, speeds, shot tables) must still be found on the robot.
 
 Differences to know: the screen here updates as fast as the OpMode sends (a real Driver Station
 redraws about 4 times a second, so a flickering line looks steadier there). STOP works like on a

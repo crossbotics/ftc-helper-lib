@@ -42,7 +42,23 @@ final class SimParts {
             id = SimJsonReader.string(m, "id", "");
             name = SimJsonReader.string(m, "name", id);
             rangeDeg = SimJsonReader.number(m, "rangeDeg", Double.NaN);
-            secPer60Deg = SimJsonReader.number(m, "secPer60Deg", Double.NaN);
+            // A Control Hub servo port gives about 5 V, so use the seller's row closest to 5 V when there
+            // is a table by voltage (the headline number is usually at 6 V).
+            double sec = SimJsonReader.number(m, "secPer60Deg", Double.NaN);
+            Object rows = m.get("byVoltage");
+            if (rows instanceof java.util.List) {
+                double best = Double.MAX_VALUE;
+                for (Object r : (java.util.List<?>) rows) {
+                    if (!(r instanceof Map)) continue;
+                    Map<String, Object> row = SimJsonReader.object(r, "byVoltage");
+                    double v = SimJsonReader.number(row, "voltage", Double.NaN), s60 = SimJsonReader.number(row, "secPer60Deg", Double.NaN);
+                    if (!Double.isNaN(v) && !Double.isNaN(s60) && Math.abs(v - 5.0) < best) {
+                        best = Math.abs(v - 5.0);
+                        sec = s60;
+                    }
+                }
+            }
+            secPer60Deg = sec;
             torqueKgCm = SimJsonReader.number(m, "torqueKgCm", Double.NaN);
         }
 

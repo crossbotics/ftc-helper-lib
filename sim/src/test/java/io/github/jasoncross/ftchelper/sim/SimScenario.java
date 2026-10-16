@@ -110,10 +110,12 @@ public final class SimScenario {
         String cmd = t.get(0).toLowerCase(Locale.US);
         switch (cmd) {
             case "init": {
-                int before = sim.ds.screen.updates();
+                int before = sim.ds.activity();
                 sim.ds.init(t.get(1));
-                SimRun.waitFor(() -> sim.ds.screen.updates() > before || !sim.ds.error().isEmpty()
-                        || sim.ds.phase() == SimDriverStation.Phase.STOPPED, 3);
+                if (!SimRun.waitFor(() -> sim.ds.activity() > before || !sim.ds.error().isEmpty()
+                        || sim.ds.phase() == SimDriverStation.Phase.STOPPED, 3)) {
+                    note = "waited 3 s: the OpMode shows nothing in INIT";
+                }
                 ok(n, line, "");
                 return;
             }
@@ -172,8 +174,18 @@ public final class SimScenario {
                 return;
             }
             case "set":
-                if (t.get(1).equals("battery")) sim.robot.setBattery(Double.parseDouble(t.get(2)));
-                else throw new IllegalArgumentException("set what? (battery)");
+                switch (t.get(1)) {
+                    case "battery": sim.robot.setBattery(Double.parseDouble(t.get(2))); break;
+                    // set touch lift_bottom on|off
+                    case "touch": sim.robot.setTouch(t.get(2), onOff(t.get(3))); break;
+                    // set pose X Y HEADING
+                    case "pose":
+                        sim.robot.setPose(Double.parseDouble(t.get(2)), Double.parseDouble(t.get(3)), Double.parseDouble(t.get(4)));
+                        break;
+                    // set autotimer on|off (the 30 s autonomous stop)
+                    case "autotimer": sim.ds.autoTimer = onOff(t.get(2)); break;
+                    default: throw new IllegalArgumentException("set battery | touch NAME on|off | pose X Y HEADING | autotimer on|off");
+                }
                 ok(n, line, "");
                 return;
             case "print":
@@ -194,6 +206,12 @@ public final class SimScenario {
      * Waits until the OpMode has run this many more loops (screen updates or iterative loops), at
      * most 3 s. An OpMode that never sends telemetry cannot be counted: then it notes that it waited.
      */
+    private static boolean onOff(String v) {
+        if (v.equals("on")) return true;
+        if (v.equals("off")) return false;
+        throw new IllegalArgumentException("on or off");
+    }
+
     private void loops(int count) throws InterruptedException {
         if (sim.ds.phase() != SimDriverStation.Phase.INIT && sim.ds.phase() != SimDriverStation.Phase.RUNNING) return;
         int start = sim.ds.activity();
@@ -271,6 +289,18 @@ public final class SimScenario {
             case "bumped":
                 need(t, 2, "expect bumped none  (or: bumped \"name\")");
                 return;
+            case "value":
+                need(t, 4, "expect value \"Lift\" > 500   (the number on the screen line that starts with Lift)");
+                op(t, 2);
+                return;
+            case "time":
+                need(t, 3, "expect time < 25   (seconds since START)");
+                op(t, 1);
+                return;
+            case "touch":
+                need(t, 3, "expect touch NAME pressed|open");
+                if (!t.get(2).equals("pressed") && !t.get(2).equals("open")) throw new IllegalArgumentException("pressed or open");
+                return;
             case "motor":
                 need(t, 5, "expect motor NAME power|ticks|velocity|amps OP VALUE");
                 if (!java.util.Arrays.asList("power", "ticks", "velocity", "amps").contains(t.get(2))) {
@@ -291,7 +321,7 @@ public final class SimScenario {
                 op(t, 2);
                 return;
             default:
-                throw new IllegalArgumentException("expect what? (screen, error, phase, motor, servo, robot, bumped)");
+                throw new IllegalArgumentException("expect what? (screen, value, time, error, phase, motor, servo, robot, bumped, touch)");
         }
     }
 
@@ -325,6 +355,27 @@ public final class SimScenario {
                 }
                 why[0] = err.isEmpty() ? "no error" : err.split("\n")[0];
                 return err.contains(t.get(2));
+            }
+            case "value": {
+                // The first number after the label on a screen line: "Lift : 1203 ticks" -> 1203.
+                for (String l : sim.ds.screen.screen()) {
+                    String s = l.trim();
+                    if (!s.startsWith(t.get(1))) continue;
+                    java.util.regex.Matcher m = java.util.regex.Pattern.compile("-?[0-9]+(\\.[0-9]+)?")
+                            .matcher(s.substring(t.get(1).length()));
+                    if (m.find()) return compare(Double.parseDouble(m.group()), t.subList(2, t.size()), why);
+                }
+                why[0] = "no screen line starts with \"" + t.get(1) + "\" and has a number";
+                return false;
+            }
+            case "time":
+                return compare(sim.ds.runSeconds(), t.subList(1, t.size()), why);
+            case "touch": {
+                SimRobot.SimTouch touch = sim.robot.touches.get(t.get(1));
+                if (touch == null) throw new IllegalArgumentException("no switch \"" + t.get(1) + "\" in the robot file");
+                boolean pressed = touch.pressed();
+                why[0] = pressed ? "pressed" : "open";
+                return pressed == t.get(2).equals("pressed");
             }
             case "bumped": {
                 // expect bumped none | expect bumped "Red HIVE"
