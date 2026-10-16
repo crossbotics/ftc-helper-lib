@@ -48,6 +48,8 @@ public class MainAuto extends LinearOpMode {
 
         // Wait here until the driver presses START.
         waitForStart();
+        // STOP pressed during INIT: end here, so not even the claw moves.
+        if (isStopRequested()) return;
         // try/finally: the "finally" part runs however autonomous ends (all done, STOP, or an error).
         try {
             // Grab the piece we start with.

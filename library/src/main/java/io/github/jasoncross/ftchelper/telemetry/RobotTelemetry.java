@@ -129,8 +129,8 @@ public class RobotTelemetry {
 
     /**
      * A warning: always shown, at the top, with a "!!" in front. Same text twice in one loop shows once.
-     * Call it every loop while the problem lasts: like other lines, warnings are cleared after each
-     * {@link #update()}.
+     * Call it every loop while the problem lasts: warnings are cleared after each {@link #update()}
+     * that sends (with {@link #setMinIntervalMs}, a warning from a skipped loop waits for the next send).
      */
     public RobotTelemetry warn(String text) {
         String line = "!! " + text;
@@ -156,7 +156,8 @@ public class RobotTelemetry {
 
     /**
      * Sends at most once per this many milliseconds (0 = every loop, the default). Sending less often
-     * makes the loop faster; 100 ms (10 per second) is plenty for people to read.
+     * makes the loop faster; 100 ms (10 per second) is plenty for people to read. Warnings raised in
+     * the skipped loops are kept and sent with the next send, so none are lost.
      *
      * @param ms milliseconds between sends; below 0 counts as 0
      * @return this RobotTelemetry, so you can chain more settings
@@ -186,9 +187,10 @@ public class RobotTelemetry {
             telemetry.update();
             lastSentNanos = now;
         }
-        // Always start the next loop with an empty screen, even when we skipped sending,
-        // so old lines never pile up.
-        warnings.clear();
+        // Always start the next loop with no lines, even when we skipped sending, so old lines never
+        // pile up. Warnings are only cleared once they were sent: a warning raised in a skipped loop
+        // still reaches the screen on the next send. (Repeats are skipped, so they cannot pile up.)
+        if (send) warnings.clear();
         lines.clear();
         return send;
     }

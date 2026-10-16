@@ -218,8 +218,9 @@ public class AutoRoutine {
     /** Waits until something is true, at most {@code timeoutSec}. The report says if it timed out. */
     public AutoRoutine waitUntil(String label, BooleanSupplier condition, double timeoutSec) {
         return add(label, ctx -> {
-            // Write "timed out" in the report, but not when the OpMode was simply stopped.
-            if (!ctx.waitUntil(condition, timeoutSec) && active.getAsBoolean()) note("timed out");
+            // Write "timed out" in the report only for a real time-out: not when the OpMode was
+            // stopped, and not when the park time cut the wait short (runAll writes that note).
+            if (!ctx.waitUntil(condition, timeoutSec) && ctx.isActive()) note("timed out");
         });
     }
 
@@ -275,6 +276,11 @@ public class AutoRoutine {
                 stepNote = "";
                 // Run the step. It blocks until it is finished (or stopped), calling tick() while it waits.
                 e.step.run(context);
+                // A main step that ended because the park time came was cut short: say so, so the
+                // report does not claim it was "done".
+                if (!e.park && stepNote.isEmpty() && active.getAsBoolean() && mainTimeOver()) {
+                    stepNote = "cut short (time for park)";
+                }
                 // Write what happened: "done", or the notes the step left (e.g. "STALLED", "timed out").
                 report.add(e.label + (stepNote.isEmpty() ? ": done" : ": " + stepNote));
             }

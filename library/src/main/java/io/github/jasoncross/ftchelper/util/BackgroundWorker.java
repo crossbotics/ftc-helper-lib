@@ -138,10 +138,12 @@ public final class BackgroundWorker {
             // this slow one runs.
             try {
                 job.run();
-            } catch (RuntimeException e) {
+            } catch (Exception | LinkageError e) {
                 // A failed job must not kill the helper or crash the robot: keep the message
-                // for getLastError() and go on with the next job.
-                lastError = String.valueOf(e.getMessage());
+                // for getLastError() and go on with the next job. (LinkageError: a missing piece of
+                // the SDK, e.g. an old SDK version. Other serious Java errors still stop the helper.)
+                // No message? Use the error's name, so the note is never just "null".
+                lastError = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
             }
         }
     }

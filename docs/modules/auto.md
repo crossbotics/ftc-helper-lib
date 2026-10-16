@@ -45,7 +45,7 @@ Extend it and fill in:
 | `autoDriveConfig()` | yes | the autonomous tuning |
 | `createImu()` | yes | the IMU for your hub mounting |
 | `buildRoutine(r)` | yes | add the steps; runs AFTER INIT, so choices are known |
-| `createSubsystems()` | no | your mechanisms (kept working during every step) |
+| `createSubsystems()` | no | your mechanisms (kept working during every step). Make new objects here: it runs again if the profile is changed in INIT. |
 | `addChoices(menu)` | no | extra INIT choices: `menu.choice("Route", "Near", "Far")` |
 | `startPosition()` | no | where to place the robot, shown in INIT |
 | `parkReserveSec()` | no | seconds kept for the steps after `thenPark()` |
@@ -87,7 +87,8 @@ run at once (`ctx.waitFor(s)`) only exist inside a step, on the `ctx` it gets. S
 be mixed up. If a step throws an error, the drive is stopped before the error goes on.
 
 Every move's result goes in the report: `"Drive to basket: STALLED"`, `"Lift up: timed out"`,
-`"Score: skipped (time for park)"`. Read it after every practice run.
+`"Wait for lift: cut short (time for park)"`, `"Score: skipped (time for park)"`. Read it after every
+practice run.
 
 ## AutoStep
 

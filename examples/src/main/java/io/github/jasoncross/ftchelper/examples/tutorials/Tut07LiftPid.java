@@ -139,7 +139,8 @@ public class Tut07LiftPid extends LinearOpMode {
     private void changeGain(PidController pid, boolean up) {
         if (selected == 3) {
             // F is a fixed extra push (e.g. to hold the lift up), so it changes in plain steps.
-            gains[3] += up ? 0.01 : -0.01;                    // F: small steps up and down
+            // Math.max(0, ...): F never goes below 0 (a negative F would push the lift DOWN).
+            gains[3] = Math.max(0, gains[3] + (up ? 0.01 : -0.01));   // F: small steps up and down
         } else if (gains[selected] == 0) {
             // Multiplying 0 by 1.25 is still 0, so a gain at 0 first jumps to a small starting value:
             // 0.001 for P, 0.0001 for I and D. Down from 0 stays at 0.

@@ -4,6 +4,34 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+## v0.4.2 - 2026-10-15
+
+### Changed
+
+- Plain-language comments through the whole library, every example and tutorial program, and the
+  code blocks in the docs, written for new programmers. Style: [docs/commenting-style.md](docs/commenting-style.md).
+- Slow-code alarms (`getSlowActionWarning`, `getSlowUpdateWarning`) now go away 5 s after the last slow event.
+- Starter TeleOp: hold START and press BACK for debug telemetry. BACK alone still resets "forward";
+  with START held it no longer also resets it.
+
+### Fixed
+
+- `AutoRoutine`: a step cut short by the park time says "cut short (time for park)", not "done" or "timed out".
+- `EasyAuto`: STOP in INIT no longer overwrites the alliance and heading saved for TeleOp. A profile
+  change in INIT rebuilds the mechanisms too, not only the drive. `createSubsystems()` may return null,
+  and if it throws, the wheels are still stopped.
+- `MatchTimer`: a cue at exactly the full length runs; works with any clock value.
+- `Flywheel`: the follower gets the `pidf` gains whether `pidf` is called before or after `follower`.
+- `Launcher.shoot` with no shot speed says so at once ("no shot speed ...").
+- `RobotTelemetry.setMinIntervalMs`: warnings from skipped loops are kept for the next send.
+- `BackgroundWorker`: an error without a message is reported by its name, not "null"; a missing SDK
+  class no longer stops the worker.
+- `WebcamTags` / `LimelightTags`: `close()` then `start()` again works like new (exposure is sent again;
+  the first Limelight frame is not taken for an old one).
+- `HardwareCheckOpMode`: the first nudge of a servo with no known position starts from 0.5.
+- Examples: tutorial 07's F gain and tutorial 17's manual speed cannot go below 0; tutorial 12's
+  autonomous does nothing if STOP is pressed in INIT.
+
 ## v0.4.1 - 2026-10-15
 
 ### Fixed (non-blocking audit)

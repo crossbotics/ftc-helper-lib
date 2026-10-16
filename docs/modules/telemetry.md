@@ -34,7 +34,7 @@ t.update();                                             // ONCE, at the end of t
 | `debug(label, value)` / `debug(label, format, args...)` | a programmer line (only in debug) |
 | `warn(text)` | `!! text` at the top, always; the same warning once per loop |
 | `setDebug(on)`, `toggleDebug()`, `isDebug()` | debug level |
-| `setMinIntervalMs(ms)` | send at most every N ms (100 = 10/s is plenty) for a faster loop |
+| `setMinIntervalMs(ms)` | send at most every N ms (100 = 10/s is plenty) for a faster loop. Warnings from skipped loops are kept for the next send |
 | `update()` | send (warnings first) and start a fresh screen |
 | `pending()`, `raw()` | the lines waiting (for tests); the SDK telemetry |
 
@@ -45,8 +45,6 @@ Mechanism helpers already split their lines this way.
 flowchart TB
     W["!! warnings (always, top)"] --> S["standard lines<br/>drivers: modes, targets, OK/READY"] --> D["debug lines (PRACTICE or toggled)<br/>powers, errors, raw sensor values, loop speed"]
 ```
-
-## TelemetryHelper
 
 ## TelemetryHelper
 

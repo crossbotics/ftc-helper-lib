@@ -169,9 +169,15 @@ public class Launcher implements Subsystem {
         // Nothing was waiting: start the "ready" time limit fresh. (If shots were already waiting,
         // keep the old timer, so pressing again and again cannot keep it waiting forever.)
         if (shotsLeft == 0) waitingSince = Double.NaN;
+        lastProblem = "";
+        // No shot speed yet: refuse now with a clear reason, instead of waiting and then
+        // "giving up" with a confusing flywheel message.
+        if (shotRpm <= 0) {
+            lastProblem = "no shot speed: call setRpm(...) or setDistance(...) first";
+            return;
+        }
         // Math.max(0, count): a negative count must not take away shots.
         shotsLeft += Math.max(0, count);
-        lastProblem = "";
     }
 
     /** Cancels the shots still waiting (keeps spinning). */

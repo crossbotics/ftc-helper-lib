@@ -195,6 +195,8 @@ public class LimelightTags implements TargetSource {
         started = false;
         // nothing seen any more: an old target must never be used after the camera stopped
         latest = Collections.emptyList();
+        // forget the last frame's time, so the first frame after a restart is not taken for an old one
+        lastTimestamp = Double.NaN;
         // end the background helper, so it does not keep running after the OpMode
         if (worker != null) worker.shutdown();
         worker = null;

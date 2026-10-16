@@ -41,8 +41,10 @@ public class MatchTimer {
     // Gives the time now in nanoseconds (billionths of a second). Handed in so tests can fake it.
     private final LongSupplier clockNanos;
     private final List<Cue> cues = new ArrayList<>();
-    // When start() was called, in nanoseconds. -1 = not started yet.
-    private long startNanos = -1;
+    // When start() was called, in nanoseconds (only meaningful while "running" is true).
+    private long startNanos = 0;
+    // True after start(). A separate flag, because any clock reading (even a negative one) is a valid start time.
+    private boolean running = false;
 
     // One cue: what to run, and at how many seconds left. "done" makes sure it runs only once.
     private static final class Cue {
@@ -105,13 +107,14 @@ public class MatchTimer {
     /** Starts counting (call right after {@code waitForStart()}). Starting again restarts it. */
     public void start() {
         startNanos = clockNanos.getAsLong();
+        running = true;
         // A restart means every cue may run again.
         for (Cue c : cues) c.done = false;
     }
 
     /** True after {@link #start()}. */
     public boolean isRunning() {
-        return startNanos >= 0;
+        return running;
     }
 
     /** Seconds since start (0 before). */
@@ -139,8 +142,9 @@ public class MatchTimer {
             // on the first loop at or after its time. "done" stops it running again next loop.
             if (!c.done && left <= c.secondsLeft) {
                 c.done = true;
-                // A cue for a time that was already over at start (e.g. 200 s left in a 120 s period) never runs.
-                if (c.secondsLeft < lengthSec) c.action.run();
+                // A cue for a time that was already over at start (e.g. 200 s left in a 120 s period)
+                // never runs. A cue at exactly the full length runs on the first update after start.
+                if (c.secondsLeft <= lengthSec) c.action.run();
             }
         }
     }

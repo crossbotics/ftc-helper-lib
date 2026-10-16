@@ -324,4 +324,18 @@ public class LauncherTest {
         assertTrue(fw.getFault().contains("follower"));
         assertEquals(0, follow.power, E);
     }
+
+    @Test public void followerGetsTheGainsInEitherOrder() {
+        FakeMotor lead = new FakeMotor(), follow = new FakeMotor();
+        Flywheel fw = new Flywheel("fly", lead.motor).pidf(10, 3, 0, 12);   // gains BEFORE the follower
+        fw.attachFollowerForTests(follow.motor);
+        assertEquals(12, follow.pidf[3], E);
+    }
+
+    @Test public void shootingWithNoSpeedSaysWhy() {
+        Launcher l = new Launcher(new Flywheel("fly", new FakeMotor().motor), new MotorFeeder("f", new FakeMotor().motor));
+        l.shoot(1);
+        assertTrue(l.getLastProblem().startsWith("no shot speed"));
+        assertFalse(l.isShooting());
+    }
 }

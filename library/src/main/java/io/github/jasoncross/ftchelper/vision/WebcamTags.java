@@ -245,6 +245,8 @@ public class WebcamTags implements TargetSource {
         worker = null;
         if (portal != null) portal.close();
         portal = null;
+        // a new start() must send the exposure and gain again to the new camera stream
+        controlsApplied = false;
         // nothing seen any more: an old target must never be used after the camera stopped
         latest = Collections.emptyList();
     }

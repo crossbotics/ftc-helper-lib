@@ -107,7 +107,8 @@ public class Tut17Launcher extends LinearOpMode {
                 // Testing only (gamepad 1): "!manualRpm" means "not manualRpm", so X flips it.
                 .bindPress(Pad.G1, Btn.X, () -> manualRpm = !manualRpm)
                 .bindPress(Pad.G1, Btn.DPAD_RIGHT, () -> rpm += 100)
-                .bindPress(Pad.G1, Btn.DPAD_LEFT, () -> rpm -= 100);
+                // Math.max(0, ...): never below 0, or the wheel would spin backward.
+                .bindPress(Pad.G1, Btn.DPAD_LEFT, () -> rpm = Math.max(0, rpm - 100));
 
         // Wait here until the driver presses START.
         waitForStart();

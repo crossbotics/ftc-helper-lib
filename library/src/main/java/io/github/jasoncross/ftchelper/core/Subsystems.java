@@ -29,10 +29,15 @@ public class Subsystems implements Subsystem {
     /** A part whose update() takes longer than this (milliseconds) is reported in telemetry. */
     public static final double SLOW_UPDATE_MS = 25;
 
+    /** A slow-update note stays on the screen this many seconds after the last slow update. */
+    public static final double WARNING_SHOW_SEC = 5;
+
     // The parts, in the order they were added.
     private final List<Subsystem> parts = new ArrayList<>();
     // The latest slow-update note, or "" if no part has been slow.
     private String slowWarning = "";
+    // When the note was written (System.nanoTime). The note disappears WARNING_SHOW_SEC later.
+    private long slowWarningAt = 0;
 
     /**
      * Adds parts. Null parts are skipped (handy for optional hardware).
@@ -64,15 +69,19 @@ public class Subsystems implements Subsystem {
                 // Locale.US: always "." for decimals, whatever the phone's language setting.
                 slowWarning = String.format(java.util.Locale.US,
                         "%s update took %.0f ms: update() must not wait or sleep", s.name(), ms);
+                slowWarningAt = System.nanoTime();
             }
         }
     }
 
     /**
      * "" or the last slow update (see {@link #SLOW_UPDATE_MS}).
-     * Once set, it stays until a later slow update replaces it.
+     * It stays {@link #WARNING_SHOW_SEC} seconds after the last slow update, so the drivers have
+     * time to read it, then goes away.
      */
     public String getSlowUpdateWarning() {
+        // Hide the note once it is older than WARNING_SHOW_SEC: the problem may be fixed by now.
+        if (!slowWarning.isEmpty() && (System.nanoTime() - slowWarningAt) / 1e9 > WARNING_SHOW_SEC) slowWarning = "";
         return slowWarning;
     }
 

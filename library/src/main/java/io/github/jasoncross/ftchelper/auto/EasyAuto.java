@@ -62,6 +62,10 @@ public abstract class EasyAuto extends LinearOpMode {
     private InitMenu menu;
     private AutoRoutine routine;
     private AutoDrive autoDrive;
+    // The mechanisms from createSubsystems(). Never null once made (an empty group if you return null).
+    private Subsystems robot;
+    // True once START was pressed. Only then is the alliance and heading handed to TeleOp.
+    private boolean started = false;
 
     // ----------------------------- you fill these in -----------------------------
     // ("protected": only your OpMode class, which extends this one, can see and fill these in.)
@@ -80,7 +84,11 @@ public abstract class EasyAuto extends LinearOpMode {
 
     // ----------------------------- optional -----------------------------
 
-    /** Your mechanisms, kept working during every step. Default: none. */
+    /**
+     * Your mechanisms, kept working during every step. Default: none. Returning null also means none.
+     * It is called again (after START) if the drivers change the profile in INIT, so the mechanisms
+     * get the new profile's values: make new objects here, do not keep old ones.
+     */
     protected Subsystems createSubsystems() {
         return new Subsystems();
     }
@@ -144,25 +152,26 @@ public abstract class EasyAuto extends LinearOpMode {
         BulkReads.auto(hardwareMap);
         IMU imu = createImu();
         autoDrive = new AutoDrive(this, driveConfig(), autoDriveConfig(), imu);
-        Subsystems robot = createSubsystems();
         // Remember the profile (PRACTICE / COMPETITION) now, to notice if the drivers change it in the menu.
         Profile profileAtInit = Profile.current();
         // try/finally: the "finally" part runs however the "try" part ends: finished, stopped,
         // or crashed with an error. So the robot is always stopped at the end.
         try {
-            runAfterSetup(t, imu, robot, profileAtInit);
+            // Inside the "try": if making the mechanisms fails, the wheels are still stopped below.
+            robot = makeSubsystems();
+            runAfterSetup(t, imu, profileAtInit);
         } finally {
             // Stop EVERYTHING, each part on its own, even if one of them throws.
             // Each part gets its own try/catch: if stopping the mechanisms throws an error, we still
             // stop the wheels. We keep the FIRST error and throw it at the very end, so it is not lost.
             RuntimeException first = null;
-            try { robot.stop(); } catch (RuntimeException e) { first = e; }
+            try { if (robot != null) robot.stop(); } catch (RuntimeException e) { first = e; }
             try { if (autoDrive != null) autoDrive.stop(); } catch (RuntimeException e) { if (first == null) first = e; }
             try {
                 // Hand the alliance and the final heading to TeleOp (see match/MatchMemory.java),
                 // so ONE TeleOp works for both alliances and knows which way the robot ended up facing.
-                // Only if the menu exists, because alliance() reads it.
-                if (menu != null && autoDrive != null) {
+                // Only after START: if STOP was pressed in INIT, the last match's memory stays as it was.
+                if (started && menu != null && autoDrive != null) {
                     MatchMemory.remember(alliance(), new FieldPose(0, 0, autoDrive.headingDeg()));
                 }
             } catch (RuntimeException e) { if (first == null) first = e; }
@@ -170,8 +179,14 @@ public abstract class EasyAuto extends LinearOpMode {
         }
     }
 
+    // Your createSubsystems(), but never null: "return null" counts as "no mechanisms".
+    private Subsystems makeSubsystems() {
+        Subsystems made = createSubsystems();
+        return made != null ? made : new Subsystems();
+    }
+
     // Everything after the drive, IMU and mechanisms are made: the INIT menu, the steps, the report.
-    private void runAfterSetup(RobotTelemetry t, IMU imu, Subsystems robot, Profile profileAtInit) {
+    private void runAfterSetup(RobotTelemetry t, IMU imu, Profile profileAtInit) {
 
         // ---- The INIT menu: alliance, start delay, your own choices, and the profile last ----
         menu = new InitMenu(gamepad1).alliance().delay(maxStartDelaySec());
@@ -195,10 +210,14 @@ public abstract class EasyAuto extends LinearOpMode {
         }
         // STOP was pressed during INIT: do nothing (the "finally" in runOpMode still stops everything).
         if (isStopRequested()) return;
+        started = true;
         if (Profile.current() != profileAtInit) {
-            // The profile changed in INIT: rebuild the drive so profile-dependent values (power limit) apply.
-            // (The drive read its settings when it was made, before the menu, so it still has the old ones.)
+            // The profile changed in INIT: rebuild the drive AND the mechanisms, so profile-dependent
+            // values (power limits, speeds) apply. They read their settings when they were made,
+            // before the menu, so they still have the old ones.
             autoDrive = new AutoDrive(this, driveConfig(), autoDriveConfig(), imu);
+            robot.stop();
+            robot = makeSubsystems();
         }
 
         // ---- START: the match clock begins now ----

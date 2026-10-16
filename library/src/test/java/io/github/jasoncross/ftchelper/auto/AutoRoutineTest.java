@@ -91,6 +91,7 @@ public class AutoRoutineTest {
         r.runAll();
         assertTrue(parked[0]);
         assertTrue(s.clock.nanos / 1e9 < 2.1);                // main part ended at 2 s (3 - 1)
+        assertEquals("Long wait: cut short (time for park)", r.getReport().get(0));
         assertEquals("Never: skipped (time for park)", r.getReport().get(1));
     }
 
@@ -146,5 +147,18 @@ public class AutoRoutineTest {
             assertEquals(0, s.fl.power, 1e-12);
             assertEquals(0, s.fr.power, 1e-12);
         }
+    }
+
+    @Test public void aWaitCutByParkTimeIsNotATimeout() {
+        Sim s = new Sim();
+        MatchTimer timer = new MatchTimer(3, s.clock::get);
+        timer.start();
+        AutoRoutine r = s.routine(timer).reserveForPark(1.0)
+                .waitUntil("Never true", () -> false, 10)
+                .thenPark()
+                .run("Park", () -> { });
+        r.runAll();
+        assertEquals("Never true: cut short (time for park)", r.getReport().get(0));
+        assertEquals("Park: done", r.getReport().get(1));
     }
 }

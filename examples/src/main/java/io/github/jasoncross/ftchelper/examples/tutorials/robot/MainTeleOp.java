@@ -41,8 +41,8 @@ public class MainTeleOp extends LinearOpMode {
         // The wheels, with the settings from RobotSettings.java.
         MecanumDrive drive = new MecanumDrive(hardwareMap, RobotSettings.drive());
 
-        // If autonomous saved a pose, it is still there. Its heading is the IMU's, so nothing to do
-        // here except show it. (With odometry you would set your position from it.)
+        // If autonomous saved a pose, it is still there. This TeleOp only shows it.
+        // (With odometry you would set your position from it.)
         // Careful: the IMU was set up again above, so its heading now starts at 0 from where the robot
         // faces in TeleOp INIT, not from where autonomous started. Face the robot away from you and
         // press BACK if field-centric "forward" looks wrong.

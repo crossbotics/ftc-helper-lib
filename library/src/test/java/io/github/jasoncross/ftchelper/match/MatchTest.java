@@ -112,4 +112,22 @@ public class MatchTest {
             default: throw new IllegalArgumentException(button);
         }
     }
+
+    @Test public void aCueAtTheFullLengthRunsAtStart() {
+        Fakes.Clock c = new Fakes.Clock();
+        List<String> fired = new ArrayList<>();
+        MatchTimer timer = new MatchTimer(120, c::get).cueAt(120, () -> fired.add("start"));
+        timer.start();
+        timer.update();
+        assertEquals(1, fired.size());
+    }
+
+    @Test public void aNegativeClockStillCountsAsStarted() {
+        long[] now = {-5_000_000_000L};
+        MatchTimer timer = new MatchTimer(30, () -> now[0]);
+        timer.start();
+        assertTrue(timer.isRunning());
+        now[0] += 10_000_000_000L;
+        assertEquals(20, timer.secondsLeft(), 1e-9);
+    }
 }

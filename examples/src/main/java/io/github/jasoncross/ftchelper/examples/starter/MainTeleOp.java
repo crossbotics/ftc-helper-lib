@@ -33,7 +33,7 @@ import io.github.jasoncross.ftchelper.tuning.TuningMenu;
  *   Y              field-centric on/off   right bumper    claw open/close
  *   BACK           reset "forward"        left bumper     intake on/off
  *   GUIDE          tuning menu (practice) B (hold)        intake reverse
- *   START + BACK   debug telemetry
+ *   hold START, press BACK   debug telemetry on/off
  * While the tuning menu is open, gamepad 1 runs the menu (its other buttons and sticks pause).
  *
  * Buzzes at 1:00 and 0:20 left (2026-27 BIOBUZZ: FLOWER ownership unlocks at 1:00; final 20 s).
@@ -97,13 +97,11 @@ public class MainTeleOp extends LinearOpMode {
                 .bindToggle(Pad.G1, Btn.Y,
                         () -> { fieldCentric = false; confirm.play(false); },
                         () -> { fieldCentric = true; confirm.play(true); })
-                // BACK: "the way the robot faces now is forward (0 degrees)". Point the robot AWAY
-                // from the driver first.
-                .bindPress(Pad.G1, Btn.BACK, imu::resetYaw)
-                // START while BACK is held: debug telemetry (extra lines for fixing problems) on/off.
-                // Needing two buttons makes it hard to do by accident. (Pressing BACK also resets
-                // "forward", so point the robot away from you first.)
-                .bindPress(Pad.G1, Btn.START, () -> { if (gamepad1.back) t.toggleDebug(); });
+                // BACK on its own: "the way the robot faces now is forward (0 degrees)". Point the robot
+                // AWAY from the driver first.
+                // BACK while START is held: debug telemetry (extra lines for fixing problems) on/off
+                // instead, and "forward" is NOT reset. Needing two buttons makes it hard to do by accident.
+                .bindPress(Pad.G1, Btn.BACK, () -> { if (gamepad1.start) t.toggleDebug(); else imu.resetYaw(); });
         ControllerBindings operator = new ControllerBindings()
                 // D-pad up/down: the lift goes to the next named height up or down (DOWN, LOW, HIGH).
                 .bindPress(Pad.G2, Btn.DPAD_UP, robot.lift::stepUp)

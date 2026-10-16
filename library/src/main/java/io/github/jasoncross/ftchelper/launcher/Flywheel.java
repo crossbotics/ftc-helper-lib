@@ -45,6 +45,8 @@ public class Flywheel implements Subsystem {
     private final String name;
     private final DcMotorEx motor;
     private DcMotorEx follower = null;   // an optional second motor on the same wheel; null = none
+    // The gains from pidf(), kept so a follower added later gets them too. null = pidf() not called.
+    private double[] gains = null;
     // Where we get the time (nanoseconds). Tests swap in a fake clock.
     private LongSupplier clockNanos = System::nanoTime;
 
@@ -93,16 +95,23 @@ public class Flywheel implements Subsystem {
      * cable</b> (the hub's speed control reads it). If its encoder reads nothing while the wheel spins,
      * the follower is switched off and a warning shows (without an encoder, its speed control would
      * drive it to full power and fight the first motor).
-     * Call it before {@link #pidf}, so the follower gets the same gains.
+     * It gets the same {@link #pidf} gains, whether you call pidf before or after this.
      */
     public Flywheel follower(HardwareMap hardwareMap, String followerName, boolean reversed) {
         follower = MotorSetup.get(hardwareMap, followerName).reversed(reversed).coast().runUsingEncoder().done();
+        applyGainsToFollower();
         return this;
     }
 
     /** For tests: a pretend follower motor. */
     void attachFollowerForTests(DcMotorEx followerMotor) {
         follower = followerMotor;
+        applyGainsToFollower();
+    }
+
+    // If pidf() was already called, give the new follower the same gains.
+    private void applyGainsToFollower() {
+        if (gains != null) follower.setVelocityPIDFCoefficients(gains[0], gains[1], gains[2], gains[3]);
     }
 
     /** Encoder counts per ONE flywheel turn. Default 28. */
@@ -112,10 +121,11 @@ public class Flywheel implements Subsystem {
     }
 
     /**
-     * The hub's speed-control gains (P, I, D, F). Applied to the follower too, if
-     * {@link #follower} was called first. F is the main one: the steady power for a given speed.
+     * The hub's speed-control gains (P, I, D, F). Applied to the follower too (in any order).
+     * F is the main one: the steady power for a given speed.
      */
     public Flywheel pidf(double p, double i, double d, double f) {
+        gains = new double[] {p, i, d, f};
         motor.setVelocityPIDFCoefficients(p, i, d, f);
         if (follower != null) follower.setVelocityPIDFCoefficients(p, i, d, f);
         return this;

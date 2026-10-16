@@ -114,6 +114,7 @@ After every practice run, the Driver Station shows each step's result:
 Grab: done
 Drive to goal: STALLED          <- something was in the way
 Lift is up: timed out           <- the lift was slow: tune it, or wait longer
+Wait for partner: cut short (time for park)  <- the park time came during this step
 Score: skipped (time for park)  <- the route is too long
 Park: done
 ```

@@ -102,6 +102,18 @@ public class CoreTest {
         assertEquals(Arrays.asList("a : 3"), ft.lastScreen);
     }
 
+    @Test public void aWarningInASkippedLoopIsSentNextTime() {
+        Fakes.FakeTelemetry ft = new Fakes.FakeTelemetry();
+        long[] now = {0};
+        RobotTelemetry t = new RobotTelemetry(ft.telemetry, () -> now[0]).setMinIntervalMs(100);
+        assertTrue(t.line("a", 1).update());
+        now[0] += 50_000_000L;
+        assertFalse(t.warn("Jam").update());                     // skipped loop: the warning waits
+        now[0] += 60_000_000L;
+        assertTrue(t.line("a", 3).update());
+        assertEquals(Arrays.asList("!! Jam", "a : 3"), ft.lastScreen);
+    }
+
     @Test public void aSlowUpdateIsReported() {
         Subsystem slow = new Subsystem() {
             public void update() {

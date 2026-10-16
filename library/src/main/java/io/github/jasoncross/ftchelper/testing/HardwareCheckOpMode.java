@@ -175,6 +175,9 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
             // Start from the position we last sent; if we have not sent one yet, from the position the
             // SDK last sent to this servo (the servo's real position is never known: a servo cannot report it).
             double p = Double.isNaN(d.servoPosition) ? s.getPosition() : d.servoPosition;
+            // No position sent yet since power-on (the SDK may report NaN or a number out of range):
+            // start from the middle, 0.5, so the first nudge is a small known step.
+            if (Double.isNaN(p) || p < 0 || p > 1) p = 0.5;
             boolean change = false;
             if (pressed(now, 2)) { p += 0.01; change = true; }
             if (pressed(now, 3)) { p -= 0.01; change = true; }

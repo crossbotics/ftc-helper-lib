@@ -53,4 +53,14 @@ public class BackgroundWorkerTest {
         assertEquals("boom", w.getLastError());
         w.shutdown();
     }
+
+    @Test public void anErrorWithNoMessageGivesItsName() throws Exception {
+        BackgroundWorker w = new BackgroundWorker("test");
+        CountDownLatch done = new CountDownLatch(1);
+        w.submit(() -> { throw new IllegalStateException(); });
+        w.submit(done::countDown);
+        assertTrue(done.await(2, TimeUnit.SECONDS));
+        assertEquals("IllegalStateException", w.getLastError());
+        w.shutdown();
+    }
 }

@@ -63,7 +63,7 @@ Flywheel flywheel = Flywheel.create(hardwareMap, "flywheel")
 | --- | --- |
 | `create(hardwareMap, name)` | coast (a flywheel must spin down freely), speed control on |
 | `.reversed()` | spin the other way |
-| `.follower(hardwareMap, name, reversed)` | a second motor on the same wheel (same speed command). **It needs its own encoder cable.** If its encoder reads nothing while the wheel spins, it is switched off with a warning |
+| `.follower(hardwareMap, name, reversed)` | a second motor on the same wheel (same speed command). **It needs its own encoder cable.** If its encoder reads nothing while the wheel spins, it is switched off with a warning. It gets the `pidf` gains whether you call `pidf` before or after it |
 | `.countsPerRev(c)` | counts per FLYWHEEL turn: bare motor 1:1 = 28; with gears multiply by motor turns per wheel turn; a shaft encoder on this motor's port = its counts (REV Through Bore 8192) |
 | `.pidf(p, i, d, f)` | the hub's speed gains. Start 10, 3, 0, 12; tune F first (with a charged battery) |
 | `.tolerance(rpm)`, `.settleTime(s)` | when "ready" |

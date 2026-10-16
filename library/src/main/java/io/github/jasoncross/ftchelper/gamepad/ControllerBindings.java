@@ -103,12 +103,17 @@ public class ControllerBindings {
     /** An action slower than this (milliseconds) is reported by {@link #getSlowActionWarning()}. */
     public static final double SLOW_ACTION_MS = 20;
 
+    /** A slow-action note stays on the screen this many seconds after the last slow action. */
+    public static final double WARNING_SHOW_SEC = 5;
+
     // Every input that has something bound to it, by its name such as "G2:A".
     // A LinkedHashMap is a lookup table (name -> slot) that remembers the order things were
     // added, so actions always run in the order you bound them.
     private final Map<String, Slot> slots = new LinkedHashMap<>();
     // The latest slow-action note, or "" when no action has been slow.
     private String slowWarning = "";
+    // When the note was written (System.nanoTime). The note disappears WARNING_SHOW_SEC later.
+    private long slowWarningAt = 0;
     // How to read the extra paddles M1/M2, which the SDK's Gamepad does not know about.
     private final Map<String, BooleanSupplier> extraButtons = new LinkedHashMap<>();
     // The trigger-axis bindings, which run every loop no matter what.
@@ -257,10 +262,12 @@ public class ControllerBindings {
      * "G2:A action took 250 ms: actions must not wait or sleep". Show it with {@code t.warn(...)}.
      * A slow action freezes the WHOLE robot for that time.
      *
-     * <p>Once set, the note stays until a later slow action replaces it, so the drivers have time
-     * to read it.
+     * <p>The note stays {@link #WARNING_SHOW_SEC} seconds after the last slow action, so the drivers
+     * have time to read it, then goes away.
      */
     public String getSlowActionWarning() {
+        // Hide the note once it is older than WARNING_SHOW_SEC: the problem may be fixed by now.
+        if (!slowWarning.isEmpty() && (System.nanoTime() - slowWarningAt) / 1e9 > WARNING_SHOW_SEC) slowWarning = "";
         return slowWarning;
     }
 
@@ -271,6 +278,7 @@ public class ControllerBindings {
             // Locale.US makes the number always print the same way, whatever the phone's language.
             slowWarning = String.format(java.util.Locale.US,
                     "%s action took %.0f ms: actions must not wait or sleep", what, ms);
+            slowWarningAt = System.nanoTime();
         }
     }
 
