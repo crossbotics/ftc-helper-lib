@@ -64,6 +64,8 @@ final class SimField {
 
     final String name, season, frameNote;
     final double size;
+    // Half the measured inside of the walls (the robot stops there); the nominal size if not measured.
+    final double wallHalf;
     final List<Element> elements = new ArrayList<>();
     final List<Tag> tags = new ArrayList<>();
     final String json;   // the file as read, for the page
@@ -77,6 +79,7 @@ final class SimField {
         Map<String, Object> field = root.get("field") instanceof Map
                 ? SimJsonReader.object(root.get("field"), "field") : Collections.<String, Object>emptyMap();
         size = SimJsonReader.number(field, "size", 144);
+        wallHalf = SimJsonReader.number(field, "insideWallSize", size) / 2;
         for (Object o : SimJsonReader.array(root.getOrDefault("elements", Collections.emptyList()), "elements")) {
             elements.add(new Element(SimJsonReader.object(o, "element")));
         }

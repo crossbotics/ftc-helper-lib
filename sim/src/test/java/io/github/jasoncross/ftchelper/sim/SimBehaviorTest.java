@@ -51,6 +51,7 @@ public class SimBehaviorTest {
                 if (gamepad1.aWasPressed()) presses++;
                 telemetry.addData("presses", presses);
                 telemetry.update();
+                sleep(5);   // a real loop takes a few milliseconds (hardware calls)
             }
         }
     }
@@ -86,9 +87,10 @@ public class SimBehaviorTest {
             down.put("a", "1");
             s.sim.ds.pad1.apply(down);
             s.waitForLoops(3);
+            String afterPress = "after the press: a=" + s.sim.ds.pad1.gamepad.a + ", screen " + s.screen();
             s.sim.ds.pad1.apply(new HashMap<String, String>());
             s.waitForLoops(3);
-            assertTrue(String.valueOf(s.screen()), s.screenHas("presses : 1"));
+            assertTrue(afterPress + "; at the end: " + s.screen(), s.screenHas("presses : 1"));
         }
     }
 

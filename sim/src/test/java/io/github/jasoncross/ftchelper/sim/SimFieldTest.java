@@ -33,7 +33,7 @@ public class SimFieldTest {
                 + "\"tags\":[{\"id\":20,\"x\":0,\"y\":10,\"z\":8,\"facingDeg\":-90}]}").getBytes("UTF-8"));
         File robotFile = tmp.newFile("robot.properties");
         String robot = new String(Files.readAllBytes(new File("robots/starter.properties").toPath()), "UTF-8")
-                + "\nfield = " + field.getPath() + "\nstart.y = -48\n";
+                + "\nfield = " + field.getPath() + "\nstart.x = 0\nstart.y = -48\n";
         Files.write(robotFile.toPath(), robot.getBytes("UTF-8"));
         SimRobot r = SimRobot.load(robotFile.toPath());
         assertEquals(1, r.field.tags.size());

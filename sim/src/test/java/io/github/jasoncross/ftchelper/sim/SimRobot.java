@@ -396,7 +396,7 @@ final class SimRobot {
         double ny = y + (Math.cos(h) * forward + Math.sin(h) * right) * dt;
         double nh = wrap(headingDeg - Math.toDegrees(cw * dt));
         // The field walls: no corner of the robot past the wall.
-        double half = field.size / 2;
+        double half = field.wallHalf;
         boolean wall = false;
         for (double[] c : footprint(nx, ny, nh)) if (Math.abs(c[0]) > half || Math.abs(c[1]) > half) wall = true;
         SimField.Element hit = wall ? null : field.bumps(footprint(nx, ny, nh), heightIn);

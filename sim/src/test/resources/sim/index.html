@@ -491,8 +491,12 @@ function drawField(r) {
     ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(X(t.x), Y(t.y)); ctx.lineTo(X(t.x + Math.cos(a) * 4), Y(t.y + Math.sin(a) * 4)); ctx.stroke();
     ctx.fillStyle = css.getPropertyValue("--ink"); ctx.fillText(String(t.id), X(t.x + Math.cos(a) * 6) - 6, Y(t.y + Math.sin(a) * 6) + 4);
   }
+  // The walls (measured inside size, if the field file has it).
+  const wall = ((fieldData && fieldData.field && fieldData.field.insideWallSize) || size) / 2;
+  ctx.strokeStyle = css.getPropertyValue("--ink"); ctx.lineWidth = 2;
+  ctx.strokeRect(X(-wall), Y(wall), 2 * wall * s, 2 * wall * s);
   ctx.fillStyle = css.getPropertyValue("--muted"); ctx.font = "11px system-ui";
-  ctx.fillText("drivers", W / 2 - 18, W - 4);
+  ctx.fillText(fieldData && fieldData.frameNote && fieldData.frameNote.includes("RED") ? "red drivers" : "drivers", W / 2 - 26, W - 2);
   if (r.drive === "none") return;
   const L = r.length || 18, Wd = r.width || 18;
   ctx.save();
