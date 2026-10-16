@@ -13,6 +13,7 @@ import io.github.jasoncross.ftchelper.telemetry.RobotTelemetry;
 import io.github.jasoncross.ftchelper.util.Angles;
 import io.github.jasoncross.ftchelper.util.MathUtil;
 import java.util.function.BooleanSupplier;
+import java.util.function.LongSupplier;
 
 /**
  * A turret: turns to an angle in degrees, never past its limits (so cables never wind up),
@@ -58,12 +59,18 @@ public class Turret implements Subsystem {
     private BooleanSupplier homeSwitch = null;
     private double homeAngle = 0;
     private double homingPower = 0.2;
+    private double homingTimeoutSec = 5.0;
+    private double maxAgeMs = 150;
+    private LongSupplier clockNanos = System::nanoTime;
 
     private double offsetDeg = 0;           // angle = counts / countsPerDegree + offset
     private boolean homed = true;
     private boolean homing = false;
     private double homingDirection = 1;
     private boolean switchWas = false;
+    private double homingStartedSec = 0;
+    private String fault = "";
+    private long lastFrameUsed = Long.MIN_VALUE;
 
     private double targetDeg = Double.NaN;
     private boolean outOfRange = false;
@@ -78,6 +85,12 @@ public class Turret implements Subsystem {
         this.name = name;
         this.motor = motor;
         pid.setAngleMode(false);   // we pick the legal target ourselves; plain error is correct
+    }
+
+    /** For tests. */
+    Turret withClock(LongSupplier clock) {
+        clockNanos = clock;
+        return this;
     }
 
     public Turret reversed() {
@@ -108,6 +121,7 @@ public class Turret implements Subsystem {
     public Turret homeSwitch(HardwareMap hardwareMap, String switchName, double angleDeg) {
         TouchSensor s = Hw.tryGet(hardwareMap, TouchSensor.class, switchName);
         if (s != null) homeSwitch(s::isPressed, angleDeg);
+        else fault = "no switch \"" + switchName + "\" in the configuration (trusting the start angle)";
         return this;
     }
 
@@ -119,9 +133,21 @@ public class Turret implements Subsystem {
         return this;
     }
 
-    /** Power while homing, 0 to 1. Default 0.2. */
+    /** Power while homing, 0 to 1. Default 0.2. Also the most manual power before homing. */
     public Turret homingPower(double p) {
         homingPower = Math.abs(p);
+        return this;
+    }
+
+    /** Homing stops with a fault if the switch is not found within this many seconds. Default 5. */
+    public Turret homingTimeout(double seconds) {
+        homingTimeoutSec = Math.abs(seconds);
+        return this;
+    }
+
+    /** {@link #aimAtTarget} ignores camera pictures older than this (milliseconds). Default 150. */
+    public Turret maxTargetAgeMs(double ms) {
+        maxAgeMs = Math.abs(ms);
         return this;
     }
 
@@ -167,12 +193,34 @@ public class Turret implements Subsystem {
         aimAt(fieldDeg - headingCcwDeg);
     }
 
-    /** Turns BY an amount from where it is now (e.g. a camera's bearing to a target). */
+    /** Turns BY an amount from where it is now. For camera targets use {@link #aimAtTarget} instead. */
     public void aimBy(double deltaDeg) {
         aimAt(getAngle() + deltaDeg);
     }
 
-    /** Manual control (a stick), -1 to 1. Limits still apply. 0 = hold where it is. */
+    /**
+     * Aims at a camera target, safely: only a FRESH picture is used, and each picture only once
+     * (an old or repeated picture would push the turret further and further). No fresh target =
+     * the turret holds where it is.
+     *
+     * @param target         from {@code camera.target(...)} (may be null)
+     * @param cameraOnTurret true if the camera turns with the turret, false if it is on the robot body
+     * @return true if this picture was used
+     */
+    public boolean aimAtTarget(io.github.jasoncross.ftchelper.vision.TargetObservation target, boolean cameraOnTurret) {
+        long now = clockNanos.getAsLong();
+        if (target == null || !target.hasBearing() || !target.isFresh(now, maxAgeMs)) return false;
+        if (target.timeNanos == lastFrameUsed) return false;
+        lastFrameUsed = target.timeNanos;
+        if (cameraOnTurret) aimBy(target.bearingDeg);
+        else aimAt(target.bearingDeg);
+        return true;
+    }
+
+    /**
+     * Manual control (a stick), -1 to 1. Limits apply once homed. Before homing the angle is not
+     * known, so manual power is kept to the homing power. 0 = hold where it is.
+     */
     public void manual(double power) {
         if (power == 0 && manualPower != 0) targetDeg = homed ? getAngle() : Double.NaN;
         manualPower = power;
@@ -185,7 +233,13 @@ public class Turret implements Subsystem {
      */
     public void home(double direction) {
         if (homeSwitch == null) return;
+        fault = "";
+        if (homeSwitch.getAsBoolean()) {        // already on the switch: home at once, no motion
+            setHomedHere();
+            return;
+        }
         homing = true;
+        homingStartedSec = clockNanos.getAsLong() / 1e9;
         homingDirection = Math.signum(direction) == 0 ? 1 : Math.signum(direction);
         targetDeg = Double.NaN;
     }
@@ -193,23 +247,21 @@ public class Turret implements Subsystem {
     @Override
     public void update() {
         boolean switchNow = homeSwitch != null && homeSwitch.getAsBoolean();
-        if (switchNow && !switchWas) {
+        if (switchNow && (!switchWas || homing)) {
             // Seen the switch: now we know the angle exactly.
-            offsetDeg = homeAngle - rawDeg();
-            homed = true;
-            if (homing) {
-                homing = false;
-                targetDeg = homeAngle;
-                pid.reset();
-            }
+            setHomedHere();
         }
         switchWas = switchNow;
+        if (homing && clockNanos.getAsLong() / 1e9 - homingStartedSec > homingTimeoutSec) {
+            homing = false;
+            fault = "homing failed: switch not found";
+        }
 
         double power;
         if (homing) {
             power = homingPower * homingDirection;
         } else if (manualPower != 0) {
-            power = manualPower * maxPower;
+            power = manualPower * (homed ? maxPower : homingPower);
         } else if (!homed || Double.isNaN(targetDeg)) {
             power = 0;
         } else {
@@ -242,10 +294,17 @@ public class Turret implements Subsystem {
         return targetDeg;
     }
 
-    /** True when homed, holding a target, and within the tolerance. */
+    /**
+     * True when homed, holding a target that is REACHABLE (not out of range), and within the tolerance.
+     * Safe to use as a launcher ready check.
+     */
     public boolean isAimed() {
-        return homed && !homing && !Double.isNaN(targetDeg) && Math.abs(targetDeg - getAngle()) <= toleranceDeg;
+        return homed && !homing && !outOfRange && !Double.isNaN(targetDeg)
+                && Math.abs(targetDeg - getAngle()) <= toleranceDeg;
     }
+
+    /** "" or a problem, e.g. "homing failed: switch not found". */
+    public String getFault() { return fault; }
 
     /** True if the last aim was outside the limits (it went to the nearest limit instead). */
     public boolean isOutOfRange() { return outOfRange; }
@@ -264,6 +323,7 @@ public class Turret implements Subsystem {
 
     @Override
     public void addTelemetry(RobotTelemetry t) {
+        if (!fault.isEmpty()) t.warn(name + " " + fault);
         if (!homed) t.warn(name + " not homed");
         if (outOfRange) t.warn(name + ": target out of range");
         t.line(name, "%.1f deg%s", getAngle(), isAimed() ? "  AIMED" : "");
@@ -292,6 +352,16 @@ public class Turret implements Subsystem {
         double toMin = Math.abs(Angles.shortestDiff(wantedDeg, minDeg));
         double toMax = Math.abs(Angles.shortestDiff(wantedDeg, maxDeg));
         return toMin <= toMax ? minDeg : maxDeg;
+    }
+
+    private void setHomedHere() {
+        offsetDeg = homeAngle - rawDeg();
+        homed = true;
+        if (homing) {
+            homing = false;
+            targetDeg = homeAngle;
+            pid.reset();
+        }
     }
 
     private double rawDeg() {

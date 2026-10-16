@@ -30,6 +30,19 @@ names that do exist. Fix the spelling, or pick the right configuration on the Dr
 **`AutoDriveConfig.calibrationConfirmed is false`**
 On purpose. Tune `AutoDrive`, then set it to `true`: [Tune AutoDrive](modules/drive.md#tune-autodrive).
 
+## Warnings on the Driver Station (`!! ...` at the top)
+
+| Warning | Meaning |
+| --- | --- |
+| `lift: push it DOWN to the switch to home it` | homing: drive it down once |
+| `lift: no switch "lift_bottom" in the configuration` | the switch name is wrong or missing: it runs without the switch |
+| `claw: no position called "OPNE"` | a typo in a position name: the command was ignored |
+| `Turret homing failed: switch not found` | the switch never closed: wire, magnet gap, or the wrong direction in `home(...)` |
+| `flywheel: follower encoder not reading` | the second flywheel motor has no encoder cable: plug it in (or use one motor) |
+| `Launcher gave up: flywheel` (or `hood`, `Turret`...) | it was not ready in time: that part is the problem |
+| `PRACTICE profile` | set COMPETITION at events |
+| `N tuned value(s) differ from the code` | saved tuning values are in use: copy them into the code, then reset |
+
 ## Robot behavior
 
 **The robot drives diagonally, spins, or a wheel fights the others**

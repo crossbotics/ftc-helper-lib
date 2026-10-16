@@ -50,7 +50,9 @@ public class Bucket implements Subsystem {
 }
 ```
 
-The pattern: **commands** change a little state; **`update()`** turns state into hardware actions.
+The pattern: **commands** change a little state and are quick (safe from a button); **`update()`**
+turns that state into hardware actions. (A servo command may move the servo at once; never command
+anything in INIT unless moving then is safe.)
 
 ## Subsystems
 

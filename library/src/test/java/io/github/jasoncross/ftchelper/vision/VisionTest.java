@@ -28,11 +28,12 @@ public class VisionTest {
         TargetObservation noBearing = new TargetObservation(20, "Tag 20", Double.NaN, Double.NaN, now[0]);
         assertEquals(0, aim.turnPower(noBearing), E);
         TargetObservation left = new TargetObservation(20, "Tag 20", 10, 40, now[0]);
-        assertEquals(0.2, aim.turnPower(left), E);           // target to the left -> positive (CCW)
+        assertEquals(-0.2, aim.turnPower(left), E);          // target to the left -> turn LEFT = negative (drive: clockwise +)
+        assertEquals(0.2, aim.ccwPower(left), E);            // the same, counterclockwise +
         TargetObservation close = new TargetObservation(20, "Tag 20", 0.5, 40, now[0]);
         assertEquals(0, aim.turnPower(close), E);
         assertTrue(aim.isAimed());
-        assertEquals(0.5, aim.turnPower(new TargetObservation(20, "x", 90, 40, now[0])), E);   // clamped
+        assertEquals(-0.5, aim.turnPower(new TargetObservation(20, "x", 90, 40, now[0])), E);  // clamped
     }
 
     @Test public void derivativeOnlyChangesOnANewPicture() {
@@ -42,9 +43,9 @@ public class VisionTest {
         aim.turnPower(a);
         now[0] = 100_000_000L;
         TargetObservation b = new TargetObservation(1, "a", 8, 0, 100_000_000L);   // -2 deg in 0.1 s
-        assertEquals(-20, aim.turnPower(b), 1e-6);
+        assertEquals(-20, aim.ccwPower(b), 1e-6);
         now[0] = 150_000_000L;
-        assertEquals(-20, aim.turnPower(b), 1e-6);         // the same picture again: no new derivative
+        assertEquals(-20, aim.ccwPower(b), 1e-6);          // the same picture again: no new derivative
     }
 
     @Test public void freshAndAge() {
@@ -83,9 +84,25 @@ public class VisionTest {
     }
 
     @Test public void limelightDistanceFromPoseInInches() {
-        Pose3D pose = new Pose3D(new Position(DistanceUnit.METER, 0.3, 0.4, 0, 0),
+        // Camera space: x right, y down, z forward. 0.3 m right, 0.8 m down (ignored), 0.4 m forward.
+        Pose3D pose = new Pose3D(new Position(DistanceUnit.METER, 0.3, 0.8, 0.4, 0),
                 new YawPitchRollAngles(AngleUnit.DEGREES, 0, 0, 0, 0));
-        assertEquals(0.5 / 0.0254, LimelightTags.distanceInches(pose), 1e-6);
+        assertEquals(0.5 / 0.0254, LimelightTags.distanceInches(pose), 1e-6);   // along the floor
         assertTrue(Double.isNaN(LimelightTags.distanceInches(null)));
+    }
+
+    @Test public void limelightPictureTimeIncludesItsOwnLatency() {
+        long now = 10_000_000_000L;
+        // 20 ms since the hub got it + 25 ms capture + 15 ms processing + 1 ms parse = 61 ms old.
+        assertEquals(now - 61_000_000L, LimelightTags.pictureTimeNanos(now, 20, 25, 15, 1));
+    }
+
+    @Test public void oldTargetsAreDropped() {
+        List<TargetObservation> list = Arrays.asList(
+                new TargetObservation(1, "a", 0, 0, 1_000_000_000L),
+                new TargetObservation(2, "b", 0, 0, 1_400_000_000L));
+        List<TargetObservation> kept = WebcamTags.dropOld(list, 1_600_000_000L, 500);
+        assertEquals(1, kept.size());
+        assertEquals(2, kept.get(0).id);
     }
 }

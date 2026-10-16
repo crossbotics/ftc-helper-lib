@@ -65,6 +65,9 @@ public class PositionMotor implements Subsystem {
     private PidTunables pidTunables = null;
     private final Map<String, Tunable> positionTunables = new LinkedHashMap<>();
 
+    private boolean unitsLocked = false;   // limits/positions/tolerance were set: units() may no longer change
+    private String warning = "";
+
     private Double targetTicks = null;
     private String targetName = null;
     private double manualPower = 0;
@@ -102,20 +105,26 @@ public class PositionMotor implements Subsystem {
      * @param unitName     shown in telemetry, e.g. "deg"
      */
     public PositionMotor units(double ticksPerUnit, String unitName) {
+        if (unitsLocked) {
+            throw new IllegalStateException(name + ": call units(...) FIRST, before limits, slowZone, tolerance and positions");
+        }
         this.ticksPerUnit = ticksPerUnit;
         this.unit = unitName;
-        tolerance(20 / Math.abs(ticksPerUnit));   // keep the default at about 20 ticks
+        toleranceUnits = 20 / Math.abs(ticksPerUnit);   // keep the default at about 20 ticks
+        pid.setTolerance(toleranceUnits);
         return this;
     }
 
     /** The safe range, in units. */
     public PositionMotor limits(double min, double max) {
+        unitsLocked = true;
         safe.setLimits(min * ticksPerUnit, max * ticksPerUnit);
         return this;
     }
 
     /** Slow down within {@code distance} units of a limit, down to {@code powerAtLimit}. */
     public PositionMotor slowZone(double distance, double powerAtLimit) {
+        unitsLocked = true;
         safe.setSlowZone(Math.abs(distance * ticksPerUnit), powerAtLimit);
         return this;
     }
@@ -130,6 +139,7 @@ public class PositionMotor implements Subsystem {
     public PositionMotor lowerSwitch(HardwareMap hardwareMap, String switchName) {
         TouchSensor sensor = Hw.tryGet(hardwareMap, TouchSensor.class, switchName);
         if (sensor != null) safe.setLowerSwitch(sensor::isPressed);
+        else warning = "no switch \"" + switchName + "\" in the configuration (running without it)";
         return this;
     }
 
@@ -153,6 +163,7 @@ public class PositionMotor implements Subsystem {
 
     /** How close counts as "there", in units. Default: about 20 encoder ticks. */
     public PositionMotor tolerance(double units) {
+        unitsLocked = true;
         toleranceUnits = Math.abs(units);
         pid.setTolerance(toleranceUnits);
         return this;
@@ -160,6 +171,7 @@ public class PositionMotor implements Subsystem {
 
     /** Adds a named position, in units. */
     public PositionMotor position(String positionName, double value) {
+        unitsLocked = true;
         positions.put(positionName, value);
         return this;
     }
@@ -194,11 +206,22 @@ public class PositionMotor implements Subsystem {
     // Commands (quick: safe to call from buttons)
     // ---------------------------------------------------------------------------------------
 
-    /** Go to a named position and hold it. */
+    /**
+     * Go to a named position and hold it. An unknown name (a typo) does nothing and shows a warning,
+     * so a typo in a button never stops the OpMode in a match.
+     */
     public void goTo(String positionName) {
         Double value = positionValue(positionName);
-        if (value == null) throw new IllegalArgumentException("No position called \"" + positionName + "\" on " + name);
+        if (value == null) {
+            warning = "no position called \"" + positionName + "\" (known: " + positions.keySet() + ")";
+            return;
+        }
         setTarget(value * ticksPerUnit, positionName);
+    }
+
+    /** "" or the last setup/command problem (missing switch, unknown position name). */
+    public String getWarning() {
+        return warning;
     }
 
     /** Go to a position in units and hold it. */
@@ -355,6 +378,7 @@ public class PositionMotor implements Subsystem {
     @Override
     public void addTelemetry(RobotTelemetry t) {
         if (safe.isWaitingForHoming()) t.warn(name + ": push it DOWN to the switch to home it");
+        if (!warning.isEmpty()) t.warn(name + ": " + warning);
         t.line(name, "%s  %.0f %s%s", getTargetName(), getPosition(), unit, isAtTarget() ? "  OK" : "");
         t.debug(name + " target", targetTicks == null ? "-" : String.format(java.util.Locale.US, "%.0f %s", targetTicks / ticksPerUnit, unit));
         t.debug(name + " power", "asked %.2f  sent %.2f", safe.getRequestedPower(), safe.getAppliedPower());

@@ -46,7 +46,7 @@ many tags it sees: check that before START.
 AimController aim = new AimController(0.02, 0.003).deadband(1.5).maxPower(0.5).maxAgeMs(150);
 ...
 if (gamepad1.right_bumper) {
-    turn = -aim.turnPower(target);    // aim gives counterclockwise power; the drive's turn is clockwise
+    turn = aim.turnPower(target);     // same sign as the drive's turn (clockwise +)
 } else {
     aim.reset();
 }
@@ -59,7 +59,8 @@ While the driver holds RB, the robot turns toward the tag; they keep control of 
 150 ms, or when there is no bearing. The robot never turns toward a tag it cannot see NOW. (Without
 this, a robot keeps spinning toward where a tag WAS.)
 
-The minus sign: see [Signs and units](../conventions.md). Forget it and the robot turns away from the tag.
+`turnPower` already uses the drive's sign (clockwise +), so no minus sign is needed. (Bearings are
+counterclockwise +; `ccwPower` gives that sign if you ever need it. See [Signs and units](../conventions.md).)
 
 ## 4. Feel it
 
@@ -70,10 +71,14 @@ feel.update(target.bearingDeg);       // buzzes inside 3 degrees, stronger when 
 
 ## 5. With a turret instead
 
-If the camera is on the turret: `turret.aimBy(target.bearingDeg)` turns the turret by the bearing.
-If the camera is on the robot body: `turret.aimAt(target.bearingDeg)` (both measured from robot forward).
-And `launcher.setDistance(target.distanceIn)` picks the shot from the table (tutorial 17).
-Check `target.hasDistance()` first.
+```java
+turret.aimAtTarget(camera.target(20), true);    // true = the camera turns with the turret
+```
+
+`aimAtTarget` uses a picture only if it is fresh, and each picture only ONCE. (Turning "by the
+bearing" with the same old picture again and again would push the turret further each loop.) No
+fresh target: the turret holds where it is. And `launcher.setDistance(target.distanceIn)` picks the
+shot from the table (tutorial 17); check `target.hasDistance()` first.
 
 ## 2026-27 notes
 
@@ -98,7 +103,7 @@ Check `target.hasDistance()` first.
 | Webcam "OPENING..." forever | USB cable / hub port; the configuration name must match |
 | Limelight "not connected" | Ethernet/USB cable; its name in the configuration; restart the robot |
 | Tags seen 0 | pipeline is not AprilTag (Limelight); tag family; too far: higher resolution or decimation 1 |
-| Turns the wrong way | the minus sign in section 3 |
+| Turns the wrong way | a minus sign was added in front of `aim.turnPower(...)`: remove it |
 | Shakes around the tag | lower kP or raise the deadband |
 | Distance NaN | webcam: the tag is not in the SDK's library; Limelight: no 3D pose in the pipeline (set tag size) |
 

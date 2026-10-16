@@ -114,4 +114,37 @@ public class AutoRoutineTest {
         r.runAll();
         assertEquals(0, ran[0]);
     }
+
+    @Test public void parkTimeEndsAPoweredDriveAndParks() {
+        Sim s = new Sim();
+        MatchTimer timer = new MatchTimer(3, s.clock::get);
+        timer.start();
+        boolean[] parked = {false};
+        AutoRoutine r = s.routine(timer).reserveForPark(1.0)
+                .move("Very long drive", 500, 0, 0.3)          // would take far longer than 2 s
+                .thenPark()
+                .run("Park", () -> parked[0] = true);
+        r.runAll();
+        assertTrue(parked[0]);
+        assertEquals("Very long drive: STOPPED", r.getReport().get(0));
+        assertTrue(s.clock.nanos / 1e9 < 2.2);
+    }
+
+    @Test public void aStepThatThrowsLeavesTheWheelsStopped() {
+        Sim s = new Sim();
+        MatchTimer timer = new MatchTimer(30, s.clock::get);
+        timer.start();
+        AutoRoutine r = s.routine(timer).step("Drive then crash", ctx -> {
+            s.fl.motor.setPower(0.5);
+            s.fr.motor.setPower(0.5);
+            throw new RuntimeException("bug in team code");
+        });
+        try {
+            r.runAll();
+            org.junit.Assert.fail("the error should come through");
+        } catch (RuntimeException expected) {
+            assertEquals(0, s.fl.power, 1e-12);
+            assertEquals(0, s.fr.power, 1e-12);
+        }
+    }
 }

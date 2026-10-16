@@ -70,7 +70,7 @@ public class Tut18VisionAim extends LinearOpMode {
 
                 double turn = StickShaping.shape(gamepad1.right_stick_x, 0.05, 2);
                 if (gamepad1.right_bumper) {
-                    turn = -aim.turnPower(target);   // aim is counterclockwise +; the drive's turn is clockwise +
+                    turn = aim.turnPower(target);    // same sign as the drive's turn (clockwise +)
                     if (target != null) feel.update(target.bearingDeg);
                 } else {
                     aim.reset();

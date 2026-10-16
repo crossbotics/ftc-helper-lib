@@ -55,6 +55,7 @@ public class WebcamTags implements TargetSource {
     private AprilTagProcessor processor = null;
     private List<TargetObservation> latest = Collections.emptyList();
     private boolean controlsApplied = false;
+    private double keepMs = 500;
     private String controlsNote = "";
 
     public static WebcamTags create(HardwareMap hardwareMap, String webcamName) {
@@ -64,6 +65,15 @@ public class WebcamTags implements TargetSource {
     public WebcamTags(String name, WebcamName webcam) {
         this.name = name;
         this.webcam = webcam;
+    }
+
+    /**
+     * Targets older than this are dropped from {@link #targets()} (milliseconds, default 500), so a
+     * camera that stops sending pictures never leaves old targets behind.
+     */
+    public WebcamTags keepTargetsMs(double ms) {
+        keepMs = Math.abs(ms);
+        return this;
     }
 
     /** Camera resolution. 640x480 is a good start. Higher = farther tags, slower. */
@@ -125,7 +135,10 @@ public class WebcamTags implements TargetSource {
             applyControls();
         }
         List<AprilTagDetection> fresh = processor.getFreshDetections();
-        if (fresh == null) return;    // no new picture since last time: keep the last list
+        if (fresh == null) {          // no new picture since last time: keep the last list, while it is recent
+            latest = dropOld(latest, System.nanoTime(), keepMs);
+            return;
+        }
         List<TargetObservation> out = new ArrayList<>();
         for (AprilTagDetection d : fresh) out.add(convert(d));
         latest = out;
@@ -151,6 +164,14 @@ public class WebcamTags implements TargetSource {
     @Override
     public List<TargetObservation> targets() {
         return latest;
+    }
+
+    /** The observations not older than {@code keepMs}. Public for tests. */
+    public static List<TargetObservation> dropOld(List<TargetObservation> list, long nowNanos, double keepMs) {
+        if (list.isEmpty()) return list;
+        List<TargetObservation> out = new ArrayList<>();
+        for (TargetObservation o : list) if (o.isFresh(nowNanos, keepMs)) out.add(o);
+        return out.size() == list.size() ? list : out;
     }
 
     @Override

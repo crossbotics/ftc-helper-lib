@@ -123,7 +123,8 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
         if (selected != before) stopAll();
 
         Device d = devices.get(selected);
-        double stickPower = -gamepad1.right_stick_y * (gamepad1.right_bumper ? 1.0 : 0.5);
+        double stick = Math.abs(gamepad1.right_stick_y) < 0.05 ? 0 : -gamepad1.right_stick_y;   // ignore stick drift
+        double stickPower = stick * (gamepad1.right_bumper ? 1.0 : 0.5);
         if (d.device instanceof DcMotorEx) {
             DcMotorEx m = (DcMotorEx) d.device;
             m.setPower(stickPower);

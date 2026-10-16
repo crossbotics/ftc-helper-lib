@@ -89,6 +89,10 @@ Write every route for **BLUE**. On RED, `turn`, `turnTo`, sideways `move` direct
 `moveWithTurn` are mirrored for you. Use `alliance()` for anything else
 (`alliance().pick(blueTag, redTag)`).
 
+**Check the field drawing each season.** Mirroring is right for a field that is a MIRROR image
+between the alliances. If the field is ROTATED (turned 180 degrees) instead, the same robot-relative
+route works for both alliances: add `@Override protected boolean mirrorForRed() { return false; }`.
+
 ## Time for parking
 
 ```java

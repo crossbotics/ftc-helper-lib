@@ -50,6 +50,7 @@ Extend it and fill in:
 | `startPosition()` | no | where to place the robot, shown in INIT |
 | `parkReserveSec()` | no | seconds kept for the steps after `thenPark()` |
 | `maxStartDelaySec()` | no | longest start delay in the menu (default 10) |
+| `mirrorForRed()` | no | true (default): routes written for BLUE are mirrored for RED. Return false on a ROTATED field |
 
 Inside your steps you can use `alliance()`, `choice(label)` and `autoDrive()`.
 
@@ -75,11 +76,15 @@ your TeleOp after autonomous.
 | --- | --- |
 | `new AutoRoutine(this)` | for your OpMode (or `new AutoRoutine(isActive, idle, telemetry)` in tests) |
 | `.drive(autoDrive)`, `.subsystems(group)`, `.telemetry(t)`, `.timer(timer)` | what it uses |
-| `.mirrorFor(alliance)` | flip turns, headings and sideways moves for RED |
+| `.mirrorFor(alliance)` | flip turns, headings and sideways moves for RED (null = no mirroring, e.g. a rotated field) |
 | `.reserveForPark(seconds)` | main steps stop when this much time is left |
 | `runAll()` | run every step (after `waitForStart()`) |
 | `getReport()` | what happened to each step |
 | `size()` | number of steps |
+
+`AutoRoutine` itself has only step methods: `waitFor("label", s)` ADDS a wait step. The waits that
+run at once (`ctx.waitFor(s)`) only exist inside a step, on the `ctx` it gets. So the two can never
+be mixed up. If a step throws an error, the drive is stopped before the error goes on.
 
 Every move's result goes in the report: `"Drive to basket: STALLED"`, `"Lift up: timed out"`,
 `"Score: skipped (time for park)"`. Read it after every practice run.

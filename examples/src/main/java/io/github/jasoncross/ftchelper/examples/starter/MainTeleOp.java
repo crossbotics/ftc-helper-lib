@@ -31,6 +31,7 @@ import io.github.jasoncross.ftchelper.tuning.TuningMenu;
  *   BACK           reset "forward"        left bumper     intake on/off
  *   GUIDE          tuning menu (practice) B (hold)        intake reverse
  *   START + BACK   debug telemetry
+ * While the tuning menu is open, gamepad 1 runs the menu (its other buttons and sticks pause).
  *
  * Buzzes at 1:00 and 0:20 left (2026-27 BIOBUZZ: FLOWER ownership unlocks at 1:00; final 20 s).
  */
@@ -54,15 +55,14 @@ public class MainTeleOp extends LinearOpMode {
         TuningMenu tuning = new TuningMenu(gamepad1);
         ToggleRumble confirm = new ToggleRumble(gamepad1);
 
-        ControllerBindings controls = new ControllerBindings()
-                // Driver
+        ControllerBindings menuKey = new ControllerBindings().bindPress(Pad.G1, Btn.GUIDE, tuning::toggle);
+        ControllerBindings driver = new ControllerBindings()
                 .bindToggle(Pad.G1, Btn.Y,
                         () -> { fieldCentric = false; confirm.play(false); },
                         () -> { fieldCentric = true; confirm.play(true); })
                 .bindPress(Pad.G1, Btn.BACK, imu::resetYaw)
-                .bindPress(Pad.G1, Btn.GUIDE, tuning::toggle)
-                .bindPress(Pad.G1, Btn.START, () -> { if (gamepad1.back) t.toggleDebug(); })
-                // Operator
+                .bindPress(Pad.G1, Btn.START, () -> { if (gamepad1.back) t.toggleDebug(); });
+        ControllerBindings operator = new ControllerBindings()
                 .bindPress(Pad.G2, Btn.DPAD_UP, robot.lift::stepUp)
                 .bindPress(Pad.G2, Btn.DPAD_DOWN, robot.lift::stepDown)
                 .bindPress(Pad.G2, Btn.A, () -> robot.lift.goTo("DOWN"))
@@ -82,13 +82,24 @@ public class MainTeleOp extends LinearOpMode {
         }
         if (isStopRequested()) return;
         timer.start();
-        controls.ignoreHeldButtons(gamepad1, gamepad2);
+        menuKey.ignoreHeldButtons(gamepad1, gamepad2);
+        driver.ignoreHeldButtons(gamepad1, gamepad2);
+        operator.ignoreHeldButtons(gamepad1, gamepad2);
+        boolean menuWasOpen = false;
 
         try {
             while (opModeIsActive()) {
-                controls.update(gamepad1, gamepad2);
+                menuKey.update(gamepad1, gamepad2);
+                operator.update(gamepad1, gamepad2);
                 timer.update();
                 tuning.update();
+                if (tuning.isOpen()) {
+                    menuWasOpen = true;
+                } else {
+                    if (menuWasOpen) driver.ignoreHeldButtons(gamepad1, gamepad2);
+                    menuWasOpen = false;
+                    driver.update(gamepad1, gamepad2);
+                }
 
                 // ---- Drive (not while the tuning menu uses gamepad 1) ----
                 double forward = 0, strafe = 0, turn = 0;

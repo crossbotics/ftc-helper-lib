@@ -22,7 +22,7 @@ flowchart LR
     N["next year's camera"] -.-> S
     S --> O["TargetObservation<br/>bearing (+ = left), distance, time"]
     O --> A["AimController -> drive turn"]
-    O --> T["turret.aimBy(bearing)"]
+    O --> T["turret.aimAtTarget(target, onTurret)"]
     O --> D["launcher.setDistance(distance)"]
 ```
 
@@ -39,7 +39,7 @@ with id `TargetObservation.CLUSTER` and its name.
 | --- | --- |
 | `start()` | start the camera (in INIT; a webcam needs 1-2 s) |
 | `update()` | every loop: get the newest picture's targets |
-| `targets()` | everything in the newest picture |
+| `targets()` | everything in the newest picture (dropped once older than 500 ms: a camera that stops sending never leaves old targets) |
 | `target(id)` / `target(name)` | one target, or null |
 | `isWorking()`, `status()` | is it streaming? e.g. "STREAMING 28 fps", "not connected" |
 | `close()` / `stop()` | free the camera |
@@ -62,6 +62,7 @@ camera.start();
 | `.liveView(on)` | picture on the Robot Controller screen (costs speed) |
 | `.library(lib)` | another tag library (default: this season's, from the SDK) |
 | `.exposure(ms, gain)` | manual exposure; `status()` says if the camera refused |
+| `.keepTargetsMs(ms)` | how long targets stay in `targets()` without a new picture (default 500) |
 | `WebcamTags.convert(detection)` | turns an SDK detection into a TargetObservation |
 
 Better distances: calibrate the camera (the FTC docs explain "camera calibration") or use a
@@ -84,11 +85,13 @@ on the robot network). Set the correct tag size there for distances.
 | `.pipeline(n)` | which pipeline (also switches at once if already started) |
 | `.pollRate(hz)` | results per second |
 | `setRobotHeading(deg)` | for the Limelight's MegaTag2 position feature (not needed to aim) |
+| `.keepTargetsMs(ms)` | how long targets stay without a new picture (default 500) |
 | `getLimelight()` | the SDK object, for color pipelines and more |
 | `LimelightTags.distanceInches(pose)` | distance from a 3D pose |
 
 The library flips the Limelight's `tx` sign so that bearing is **positive to the LEFT**, like
-everywhere else. The same picture is not reported twice.
+everywhere else. The picture time includes the Limelight's own capture and processing time, so
+"how old is this picture" is honest. The same picture is not reported twice.
 
 ## TargetObservation
 
@@ -96,7 +99,7 @@ everywhere else. The same picture is not reported twice.
 | --- | --- |
 | `id`, `name` | tag id (`CLUSTER` = -1 for clusters) and name |
 | `bearingDeg` | how far to turn to face it; **+ = it is to the left** |
-| `distanceIn` | inches, or NaN if unknown |
+| `distanceIn` | inches along the FLOOR from the camera (height difference ignored), or NaN if unknown. Same meaning for both cameras, so a shot table works with either |
 | `timeNanos` | when the picture was taken |
 | `ageMs(now)`, `isFresh(now, maxAgeMs)` | how old; never aim with an old picture |
 | `hasBearing()`, `hasDistance()` | was it worked out? |
@@ -109,13 +112,16 @@ AimController aim = new AimController(0.02, 0.003)
         .maxPower(0.5)
         .maxAgeMs(150)
         .offset(0);         // aim to the side of the target (camera not centered on the shooter)
-double ccw = aim.turnPower(camera.target(20));
-drive.drive(forward, strafe, -ccw);    // the drive's turn is clockwise: flip
+drive.drive(forward, strafe, aim.turnPower(camera.target(20)));   // ready for any drive's turn
 ```
+
+`turnPower` is **clockwise positive**, the same as every drive's `turn` argument, so it plugs straight
+in. `ccwPower` gives the same power counterclockwise positive, for your own heading math.
 
 Gives **0** when there is no target, the picture is old, or there is no bearing: the robot never
 turns toward something it cannot see now. The D part only changes on a NEW picture, so a repeated
 picture never fakes motion. `isAimed()`, `reset()` (call when the driver lets go of the aim button).
 
-For a turret you usually do not need it: `turret.aimBy(target.bearingDeg)` (when the camera is on
-the turret) or `turret.aimAt(target.bearingDeg)` (camera on the robot body).
+For a turret, use `turret.aimAtTarget(target, cameraOnTurret)`: it uses only fresh pictures, each
+picture once (an old bearing used again would push the turret further and further), and holds still
+when there is no target. See [launcher.md: Turret](launcher.md#turret).

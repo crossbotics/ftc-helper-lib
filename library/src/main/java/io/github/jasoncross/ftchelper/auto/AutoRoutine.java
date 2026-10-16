@@ -39,7 +39,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
  *
  * <p>{@code EasyAuto} makes and runs one of these for you. Docs: docs/modules/auto.md
  */
-public class AutoRoutine implements AutoContext {
+public class AutoRoutine {
 
     private static final class Entry {
         final String label;
@@ -116,7 +116,11 @@ public class AutoRoutine implements AutoContext {
         return this;
     }
 
-    /** Flips turns, headings and sideways directions when {@code alliance} is RED. Write routes for BLUE. */
+    /**
+     * Flips turns, headings and sideways directions when {@code alliance} is RED. Write routes for BLUE.
+     * For a field that is ROTATED (not mirrored) between alliances, do not call this: robot-relative
+     * moves and turns are then the same for both alliances. Pass null to turn mirroring off.
+     */
     public AutoRoutine mirrorFor(Alliance alliance) {
         mirror = alliance;
         return this;
@@ -201,7 +205,7 @@ public class AutoRoutine implements AutoContext {
 
     /** Runs every step in order. Call after {@code waitForStart()}. Returns when done or stopped. */
     public void runAll() {
-        if (telemetry == null) telemetry = new RobotTelemetry(rawTelemetry);
+        robotTelemetry();
         if (timer == null) {
             timer = MatchTimer.autonomous();
             timer.start();
@@ -220,7 +224,7 @@ public class AutoRoutine implements AutoContext {
                     continue;
                 }
                 stepNote = "";
-                e.step.run(this);
+                e.step.run(context);
                 report.add(e.label + (stepNote.isEmpty() ? ": done" : ": " + stepNote));
             }
         } finally {
@@ -228,6 +232,7 @@ public class AutoRoutine implements AutoContext {
             if (drive != null) {
                 drive.setLoopHook(null);
                 drive.setStopCondition(null);
+                drive.stop();      // a custom step that drove and then threw an error must not leave wheels running
             }
         }
     }
@@ -238,46 +243,48 @@ public class AutoRoutine implements AutoContext {
     }
 
     // ---------------------------------------------------------------------------------------
-    // AutoContext (what steps can use)
+    // What a running step can use. A separate object, so routine.waitFor("label", s) (a step)
+    // can never be confused with a wait that runs at once.
     // ---------------------------------------------------------------------------------------
 
-    @Override
-    public boolean isActive() {
-        return active.getAsBoolean() && (inPark || !mainTimeOver());
-    }
-
-    @Override
-    public void loop() {
-        tick();
-        idle.run();
-    }
-
-    @Override
-    public boolean waitUntil(BooleanSupplier done, double timeoutSec) {
-        long end = clock.getAsLong() + (long) (timeoutSec * 1e9);
-        while (isActive() && clock.getAsLong() < end) {
-            if (done.getAsBoolean()) return true;
-            loop();
+    private final AutoContext context = new AutoContext() {
+        @Override
+        public boolean isActive() {
+            return active.getAsBoolean() && (inPark || !mainTimeOver());
         }
-        return done.getAsBoolean();
-    }
 
-    @Override
-    public void waitFor(double seconds) {
-        long end = clock.getAsLong() + (long) (seconds * 1e9);
-        while (isActive() && clock.getAsLong() < end) loop();
-    }
+        @Override
+        public void loop() {
+            tick();
+            idle.run();
+        }
 
-    @Override
-    public double secondsLeft() {
-        return timer == null ? MatchTimer.AUTO_SECONDS : timer.secondsLeft();
-    }
+        @Override
+        public boolean waitUntil(BooleanSupplier done, double timeoutSec) {
+            long end = clock.getAsLong() + (long) (timeoutSec * 1e9);
+            while (isActive() && clock.getAsLong() < end) {
+                if (done.getAsBoolean()) return true;
+                loop();
+            }
+            return done.getAsBoolean();
+        }
 
-    @Override
-    public RobotTelemetry telemetry() {
-        if (telemetry == null) telemetry = new RobotTelemetry(rawTelemetry);
-        return telemetry;
-    }
+        @Override
+        public void waitFor(double seconds) {
+            long end = clock.getAsLong() + (long) (seconds * 1e9);
+            while (isActive() && clock.getAsLong() < end) loop();
+        }
+
+        @Override
+        public double secondsLeft() {
+            return timer == null ? MatchTimer.AUTO_SECONDS : timer.secondsLeft();
+        }
+
+        @Override
+        public RobotTelemetry telemetry() {
+            return robotTelemetry();
+        }
+    };
 
     /** Number of steps added. */
     public int size() {
@@ -296,7 +303,7 @@ public class AutoRoutine implements AutoContext {
     private void tick() {
         if (robot != null) robot.update();
         if (timer != null) timer.update();
-        RobotTelemetry t = telemetry();
+        RobotTelemetry t = robotTelemetry();
         if (current >= 0 && current < entries.size()) {
             Entry e = entries.get(current);
             t.line("Step", "%d/%d %s%s", current + 1, entries.size(), e.label, e.park ? " (park)" : "");
@@ -304,6 +311,11 @@ public class AutoRoutine implements AutoContext {
         t.line("Time left", timer == null ? "-" : timer.format());
         if (robot != null) robot.addTelemetry(t);
         t.update();
+    }
+
+    private RobotTelemetry robotTelemetry() {
+        if (telemetry == null) telemetry = new RobotTelemetry(rawTelemetry);
+        return telemetry;
     }
 
     private boolean mainTimeOver() {

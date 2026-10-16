@@ -48,10 +48,14 @@ public class PositionServo implements Subsystem {
     private double travelTimeSec = 0.5;
     private double maxSpeed = 0;    // positions per second; 0 = full speed
 
+    private String warning = "";
     private double target = Double.NaN;
     private String targetName = null;
     private double commanded = Double.NaN;
     private double doneAtSec = 0;
+    // Estimate of where the servo REALLY is (it moves at a limited speed).
+    private double moveFrom = Double.NaN;
+    private double moveStartSec = 0;
     private long lastNanos = -1;
 
     /** Gets the servo. Does not move it. */
@@ -126,11 +130,19 @@ public class PositionServo implements Subsystem {
 
     // ---------------------------------------------------------------------------------------
 
-    /** Goes to a named position. */
+    /** Goes to a named position. An unknown name (a typo) does nothing and shows a warning. */
     public void goTo(String positionName) {
         Double v = valueOf(positionName);
-        if (v == null) throw new IllegalArgumentException("No position called \"" + positionName + "\" on " + name);
+        if (v == null) {
+            warning = "no position called \"" + positionName + "\" (known: " + positions.keySet() + ")";
+            return;
+        }
         moveTo(v, positionName);
+    }
+
+    /** "" or the last command problem (unknown position name). */
+    public String getWarning() {
+        return warning;
     }
 
     /** Goes to a raw position (0 to 1, kept inside the limits). */
@@ -207,6 +219,7 @@ public class PositionServo implements Subsystem {
 
     @Override
     public void addTelemetry(RobotTelemetry t) {
+        if (!warning.isEmpty()) t.warn(name + ": " + warning);
         t.line(name, getTargetName());
         t.debug(name + " pos", "%.3f%s", commanded, hasDegrees ? String.format(java.util.Locale.US, " (%.1f deg)", getDegrees()) : "");
     }
@@ -215,14 +228,27 @@ public class PositionServo implements Subsystem {
 
     private void moveTo(double position, String positionName) {
         double clamped = MathUtil.clamp(position, min, max);
-        double from = Double.isNaN(commanded) ? clamped : commanded;
-        target = clamped;
         targetName = positionName;
+        // The same target again (e.g. called every loop): keep the move that is under way.
+        if (clamped == target) return;
+        double now = clockNanos.getAsLong() / 1e9;
+        boolean unknown = Double.isNaN(commanded);
+        double from = unknown ? clamped : estimatedPosition(now);
+        target = clamped;
+        moveFrom = from;
+        moveStartSec = now;
         double moveTime = maxSpeed > 0 ? Math.abs(clamped - from) / maxSpeed : 0;
         // Unknown start (first move): assume a full move.
-        double distance = Double.isNaN(commanded) ? 1 : Math.abs(clamped - from);
-        doneAtSec = clockNanos.getAsLong() / 1e9 + Math.max(moveTime, distance * travelTimeSec);
-        if (maxSpeed == 0 || Double.isNaN(commanded)) write(clamped);
+        double distance = unknown ? 1 : Math.abs(clamped - from);
+        doneAtSec = now + Math.max(moveTime, distance * travelTimeSec);
+        if (maxSpeed == 0 || unknown) write(clamped);
+    }
+
+    /** Where the servo probably is now, between where the move started and the target. */
+    private double estimatedPosition(double now) {
+        if (Double.isNaN(moveFrom) || now >= doneAtSec || doneAtSec <= moveStartSec) return target;
+        double t = (now - moveStartSec) / (doneAtSec - moveStartSec);
+        return moveFrom + (target - moveFrom) * t;
     }
 
     private void write(double position) {
@@ -234,7 +260,8 @@ public class PositionServo implements Subsystem {
 
     private Double valueOf(String positionName) {
         Tunable t = tunables.get(positionName);
-        return t != null ? t.get() : positions.get(positionName);
+        if (t != null) return t.get();
+        return positions.get(positionName);   // null if unknown (no unboxing here)
     }
 
     private void cycle(int direction) {

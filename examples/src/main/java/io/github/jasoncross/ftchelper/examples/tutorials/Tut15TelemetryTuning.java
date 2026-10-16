@@ -19,8 +19,9 @@ import io.github.jasoncross.ftchelper.util.LoopTimer;
  * Tutorial 15: telemetry levels, practice/competition profiles, live tuning, and the match timer.
  * Needs a motor "lift" (like tutorial 08).
  *
- * INIT: D-pad to choose the profile. RUN: A/Y = lift DOWN/HIGH, BACK = debug lines on/off,
- * GUIDE (the center button) = tuning menu (PRACTICE profile only).
+ * INIT: D-pad to choose the profile. RUN: gamepad 2 A/Y = lift DOWN/HIGH (so you can test while
+ * tuning), gamepad 1 BACK = debug lines on/off, gamepad 1 GUIDE (center button) = tuning menu
+ * (PRACTICE profile only). While the menu is open, gamepad 1's other buttons belong to the menu.
  *
  * Tutorial: docs/tutorials/15-telemetry-profiles-tuning.md
  */
@@ -46,11 +47,13 @@ public class Tut15TelemetryTuning extends LinearOpMode {
         TuningMenu tuning = new TuningMenu(gamepad1);
         MatchTimer timer = MatchTimer.teleOp().rumbleAt(20, gamepad1);
 
-        ControllerBindings controls = new ControllerBindings()
-                .bindPress(Pad.G1, Btn.A, () -> lift.goTo("DOWN"))
-                .bindPress(Pad.G1, Btn.Y, () -> lift.goTo("HIGH"))
-                .bindPress(Pad.G1, Btn.BACK, t::toggleDebug)
-                .bindPress(Pad.G1, Btn.GUIDE, tuning::toggle);
+        // Three small button lists: the menu key, the driver's (paused while the menu is open), the operator's.
+        ControllerBindings menuKey = new ControllerBindings().bindPress(Pad.G1, Btn.GUIDE, tuning::toggle);
+        ControllerBindings driver = new ControllerBindings().bindPress(Pad.G1, Btn.BACK, t::toggleDebug);
+        ControllerBindings operator = new ControllerBindings()
+                .bindPress(Pad.G2, Btn.A, () -> lift.goTo("DOWN"))
+                .bindPress(Pad.G2, Btn.Y, () -> lift.goTo("HIGH"));
+        boolean menuWasOpen = false;
 
         // ---------- INIT: choose the profile ----------
         InitMenu menu = new InitMenu(gamepad1).profile();
@@ -63,13 +66,23 @@ public class Tut15TelemetryTuning extends LinearOpMode {
         }
         if (isStopRequested()) return;
         timer.start();
-        controls.ignoreHeldButtons(gamepad1, gamepad2);
+        menuKey.ignoreHeldButtons(gamepad1, gamepad2);
+        driver.ignoreHeldButtons(gamepad1, gamepad2);
+        operator.ignoreHeldButtons(gamepad1, gamepad2);
 
         try {
             while (opModeIsActive()) {
                 loopTimer.update();
-                controls.update(gamepad1, gamepad2);
+                menuKey.update(gamepad1, gamepad2);
+                operator.update(gamepad1, gamepad2);
                 tuning.update();
+                if (tuning.isOpen()) {
+                    menuWasOpen = true;           // gamepad 1's buttons belong to the menu now
+                } else {
+                    if (menuWasOpen) driver.ignoreHeldButtons(gamepad1, gamepad2);   // a button still held from the menu does not fire
+                    menuWasOpen = false;
+                    driver.update(gamepad1, gamepad2);
+                }
                 timer.update();
 
                 // Profile.pick: gentle in practice, full at events. Tunable: changed live.

@@ -172,4 +172,50 @@ public class MechanismTest {
         assertEquals(0, fs.power, E);
         assertFalse(roller.isRunning());
     }
+
+    // ---------------- review regressions ----------------
+
+    @Test public void sameServoTargetEveryLoopKeepsTheTravelTime() {
+        Fakes.FakeServo fs = new Fakes.FakeServo();
+        Fakes.Clock c = new Fakes.Clock();
+        PositionServo s = new PositionServo("s", fs.servo).withClock(c::get).travelTime(1.0);
+        s.set(0);
+        c.addSec(2);
+        s.set(1);                                  // a full move: about 1 s
+        for (int i = 0; i < 10; i++) { c.addSec(0.05); s.set(1); }   // re-sent every loop
+        assertFalse(s.isDone());                   // only 0.5 s passed
+        c.addSec(0.55);
+        assertTrue(s.isDone());
+    }
+
+    @Test public void interruptedServoMoveStartsFromWhereItProbablyIs() {
+        Fakes.FakeServo fs = new Fakes.FakeServo();
+        Fakes.Clock c = new Fakes.Clock();
+        PositionServo s = new PositionServo("s", fs.servo).withClock(c::get).travelTime(1.0);
+        s.set(0);
+        c.addSec(2);
+        s.set(1);
+        c.addSec(0.5);                             // halfway (about 0.5)
+        s.set(0);                                  // back: about 0.5 of travel = 0.5 s, not "instant"
+        c.addSec(0.3);
+        assertFalse(s.isDone());
+        c.addSec(0.25);
+        assertTrue(s.isDone());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void unitsAfterLimitsIsAClearError() {
+        new PositionMotor("arm", new FakeMotor().motor).limits(0, 90).units(10, "deg");
+    }
+
+    @Test public void typoInAPositionNameWarnsInsteadOfCrashing() {
+        FakeMotor m = new FakeMotor();
+        PositionMotor lift = lift(m);
+        lift.goTo("HGIH");
+        assertTrue(lift.getWarning().contains("HGIH"));
+        assertEquals("none", lift.getTargetName());
+        PositionServo claw = new PositionServo("claw", new Fakes.FakeServo().servo).position("OPEN", 0.2);
+        claw.goTo("OPNE");
+        assertTrue(claw.getWarning().contains("OPNE"));
+    }
 }

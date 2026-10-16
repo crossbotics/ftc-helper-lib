@@ -26,7 +26,7 @@ public interface TargetSource extends Subsystem {
     /** Starts the camera. Call in INIT (a webcam needs about 1-2 s). */
     void start();
 
-    /** Everything seen in the latest picture (empty if nothing). */
+    /** Everything seen in the latest picture (empty if nothing, or if the latest picture is too old). */
     List<TargetObservation> targets();
 
     /** The target with this id in the latest picture, or null. */

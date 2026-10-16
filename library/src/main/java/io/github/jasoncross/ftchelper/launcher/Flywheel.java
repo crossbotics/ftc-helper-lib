@@ -56,6 +56,9 @@ public class Flywheel implements Subsystem {
     private boolean armedForShot = false;
     private int shots = 0;
     private double lastSent = Double.NaN;
+    private boolean followerDisabled = false;
+    private double followerBadSince = Double.NaN;
+    private String fault = "";
 
     /** Gets the motor: coast (a flywheel must spin down freely), speed control on. */
     public static Flywheel create(HardwareMap hardwareMap, String name) {
@@ -80,10 +83,20 @@ public class Flywheel implements Subsystem {
         return this;
     }
 
-    /** A second motor on the same flywheel. It gets the same speed command; only the first is measured. */
+    /**
+     * A second motor on the same flywheel. It gets the same speed command, so <b>it needs its own encoder
+     * cable</b> (the hub's speed control reads it). If its encoder reads nothing while the wheel spins,
+     * the follower is switched off and a warning shows (without an encoder, its speed control would
+     * drive it to full power and fight the first motor).
+     */
     public Flywheel follower(HardwareMap hardwareMap, String followerName, boolean reversed) {
         follower = MotorSetup.get(hardwareMap, followerName).reversed(reversed).coast().runUsingEncoder().done();
         return this;
+    }
+
+    /** For tests: a pretend follower motor. */
+    void attachFollowerForTests(DcMotorEx followerMotor) {
+        follower = followerMotor;
     }
 
     /** Encoder counts per ONE flywheel turn. Default 28. */
@@ -136,18 +149,22 @@ public class Flywheel implements Subsystem {
         targetRpm = clamped;
     }
 
-    /** Coasts to a stop. */
+    /** Coasts to a stop (no braking: a fast flywheel must spin down freely). */
     @Override
     public void stop() {
         setRpm(0);
         send(0);
     }
 
+    /** "" or a problem, e.g. the follower's encoder not reading. */
+    public String getFault() { return fault; }
+
     @Override
     public void update() {
         double now = clockNanos.getAsLong() / 1e9;
         send(targetRpm / 60.0 * countsPerRev);
         rpm = motor.getVelocity() / countsPerRev * 60.0;
+        checkFollower(now);
 
         if (targetRpm == 0) {
             ready = false;
@@ -196,16 +213,42 @@ public class Flywheel implements Subsystem {
 
     @Override
     public void addTelemetry(RobotTelemetry t) {
+        if (!fault.isEmpty()) t.warn(name + ": " + fault);
         t.line(name, "%.0f / %.0f rpm%s", rpm, targetRpm, ready ? "  READY" : "");
         t.debug(name + " shots seen", shots);
     }
 
     private void send(double ticksPerSec) {
-        if (ticksPerSec != lastSent) {
-            if (motor.getMode() != DcMotor.RunMode.RUN_USING_ENCODER) motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            motor.setVelocity(ticksPerSec);
-            if (follower != null) follower.setVelocity(ticksPerSec);
-            lastSent = ticksPerSec;
+        if (ticksPerSec == lastSent) return;
+        lastSent = ticksPerSec;
+        DcMotorEx f = followerDisabled ? null : follower;
+        if (ticksPerSec == 0) {
+            // Coast: plain power 0 (speed control at 0 would brake hard).
+            motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            motor.setPower(0);
+            if (f != null) { f.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); f.setPower(0); }
+            return;
+        }
+        if (motor.getMode() != DcMotor.RunMode.RUN_USING_ENCODER) motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motor.setVelocity(ticksPerSec);
+        if (f != null) {
+            if (f.getMode() != DcMotor.RunMode.RUN_USING_ENCODER) f.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            f.setVelocity(ticksPerSec);
+        }
+    }
+
+    /** A follower whose encoder reads (almost) nothing while the wheel clearly spins is switched off. */
+    private void checkFollower(double now) {
+        if (follower == null || followerDisabled) return;
+        double followerRpm = follower.getVelocity() / countsPerRev * 60.0;
+        boolean bad = Math.abs(rpm) > 500 && Math.abs(followerRpm) < 0.2 * Math.abs(rpm);
+        if (!bad) { followerBadSince = Double.NaN; return; }
+        if (Double.isNaN(followerBadSince)) followerBadSince = now;
+        if (now - followerBadSince > 0.5) {
+            followerDisabled = true;
+            follower.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            follower.setPower(0);
+            fault = "follower encoder not reading: follower switched off";
         }
     }
 }

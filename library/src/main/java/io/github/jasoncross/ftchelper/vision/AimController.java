@@ -13,11 +13,10 @@ import java.util.function.LongSupplier;
  *         .maxPower(0.5)
  *         .maxAgeMs(150);                              // ignore pictures older than this
  * // every loop, while the driver holds the aim button:
- * double ccw = aim.turnPower(camera.target(20));
- * drive.drive(forward, strafe, -ccw);                  // the drive's turn is clockwise: flip
+ * drive.drive(forward, strafe, aim.turnPower(camera.target(20)));   // ready for the drive's turn
  * }</pre>
  *
- * For a turret, you usually do not need this: {@code turret.aimBy(target.bearingDeg)}.
+ * For a turret, use {@code turret.aimAtTarget(target, cameraOnTurret)} instead.
  * Docs: docs/modules/vision.md
  */
 public class AimController {
@@ -71,10 +70,19 @@ public class AimController {
     }
 
     /**
-     * The turn power toward the target, COUNTERCLOCKWISE positive. 0 when there is no fresh target.
-     * The D part only changes on a NEW picture, so a repeated picture never fakes motion.
+     * The turn power toward the target, CLOCKWISE positive: the same sign as every drive's turn
+     * ({@code drive.drive(f, s, aim.turnPower(t))}, {@code tank.arcade(f, aim.turnPower(t))}).
+     * 0 when there is no fresh target.
      */
     public double turnPower(TargetObservation target) {
+        return -ccwPower(target);
+    }
+
+    /**
+     * The same power, COUNTERCLOCKWISE positive (the IMU's sign), e.g. for your own heading math.
+     * The D part only changes on a NEW picture, so a repeated picture never fakes motion.
+     */
+    public double ccwPower(TargetObservation target) {
         long now = clockNanos.getAsLong();
         if (target == null || !target.hasBearing() || !target.isFresh(now, maxAgeMs)) {
             reset();

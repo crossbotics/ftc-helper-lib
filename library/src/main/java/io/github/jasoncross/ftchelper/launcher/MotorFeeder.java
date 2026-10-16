@@ -114,7 +114,8 @@ public class MotorFeeder implements Feeder {
         motor.setPower(0);
     }
 
-    /** Clears the jam flag (after you fixed it). */
+    /** Clears the jam flag. The launcher calls this when the driver asks to shoot again. */
+    @Override
     public void clearJam() {
         jammed = false;
     }

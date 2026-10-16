@@ -8,7 +8,8 @@ import java.util.Locale;
  * <ul>
  *   <li>{@link #bearingDeg}: how far to turn to face it. <b>Positive = it is to the LEFT</b>
  *       (counterclockwise, like the IMU). The library converts the Limelight's opposite sign for you.</li>
- *   <li>{@link #distanceIn}: straight-line distance in inches, or NaN if the camera cannot tell.</li>
+ *   <li>{@link #distanceIn}: distance from the camera to the target along the FLOOR (height difference
+ *       ignored), in inches, or NaN if the camera cannot tell. Same meaning for every camera.</li>
  *   <li>{@link #timeNanos}: when the camera took the picture ({@code System.nanoTime()} clock).</li>
  * </ul>
  *

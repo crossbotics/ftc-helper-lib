@@ -92,6 +92,15 @@ public abstract class EasyAuto extends LinearOpMode {
         return 0;
     }
 
+    /**
+     * True (default): routes are written for BLUE and mirrored left/right for RED. Return false for a
+     * field that is ROTATED between alliances (then the same robot-relative route works for both).
+     * Check each season's field drawing.
+     */
+    protected boolean mirrorForRed() {
+        return true;
+    }
+
     /** Longest start delay offered in the menu, seconds. Default 10. */
     protected double maxStartDelaySec() {
         return 10;
@@ -123,6 +132,24 @@ public abstract class EasyAuto extends LinearOpMode {
         IMU imu = createImu();
         autoDrive = new AutoDrive(this, driveConfig(), autoDriveConfig(), imu);
         Subsystems robot = createSubsystems();
+        Profile profileAtInit = Profile.current();
+        try {
+            runAfterSetup(t, imu, robot, profileAtInit);
+        } finally {
+            // Stop EVERYTHING, each part on its own, even if one of them throws.
+            RuntimeException first = null;
+            try { robot.stop(); } catch (RuntimeException e) { first = e; }
+            try { if (autoDrive != null) autoDrive.stop(); } catch (RuntimeException e) { if (first == null) first = e; }
+            try {
+                if (menu != null && autoDrive != null) {
+                    MatchMemory.remember(alliance(), new FieldPose(0, 0, autoDrive.headingDeg()));
+                }
+            } catch (RuntimeException e) { if (first == null) first = e; }
+            if (first != null) throw first;
+        }
+    }
+
+    private void runAfterSetup(RobotTelemetry t, IMU imu, Subsystems robot, Profile profileAtInit) {
 
         menu = new InitMenu(gamepad1).alliance().delay(maxStartDelaySec());
         addChoices(menu);
@@ -139,6 +166,10 @@ public abstract class EasyAuto extends LinearOpMode {
             t.update();
         }
         if (isStopRequested()) return;
+        if (Profile.current() != profileAtInit) {
+            // The profile changed in INIT: rebuild the drive so profile-dependent values (power limit) apply.
+            autoDrive = new AutoDrive(this, driveConfig(), autoDriveConfig(), imu);
+        }
 
         MatchTimer timer = MatchTimer.autonomous();
         timer.start();
@@ -147,17 +178,13 @@ public abstract class EasyAuto extends LinearOpMode {
                 .subsystems(robot)
                 .telemetry(t)
                 .timer(timer)
-                .mirrorFor(alliance())
+                .mirrorFor(mirrorForRed() ? alliance() : null)
                 .reserveForPark(parkReserveSec());
-        try {
-            if (menu.getDelaySec() > 0) routine.waitFor(menu.getDelaySec());
-            buildRoutine(routine);
-            routine.runAll();
-        } finally {
-            robot.stop();
-            autoDrive.stop();
-            MatchMemory.remember(alliance(), new FieldPose(0, 0, autoDrive.headingDeg()));
-        }
+        if (menu.getDelaySec() > 0) routine.waitFor("Start delay", menu.getDelaySec());
+        buildRoutine(routine);
+        routine.runAll();
+        robot.stop();
+        autoDrive.stop();
         while (opModeIsActive()) {
             t.section("Autonomous finished");
             for (String line : routine.getReport()) t.text(line);

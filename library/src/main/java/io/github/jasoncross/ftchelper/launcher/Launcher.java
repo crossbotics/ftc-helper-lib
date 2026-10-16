@@ -37,7 +37,7 @@ import java.util.function.LongSupplier;
 public class Launcher implements Subsystem {
 
     /** What the launcher is doing. */
-    public enum State { OFF, SPINNING, WAITING_READY, FEEDING }
+    public enum State { OFF, IDLE, SPINNING, WAITING_READY, FEEDING }
 
     private final Flywheel flywheel;
     private final Feeder feeder;
@@ -53,6 +53,7 @@ public class Launcher implements Subsystem {
 
     private double shotRpm = 0;
     private boolean spinning = false;
+    private boolean off = true;          // stop() keeps it fully off (even the idle speed) until started again
     private int shotsLeft = 0;
     private int fired = 0;
     private double nextFeedAt = 0;
@@ -124,17 +125,20 @@ public class Launcher implements Subsystem {
     /** Spins the flywheel up to the shot speed and keeps it there. */
     public void spinUp() {
         spinning = true;
+        off = false;
     }
 
-    /** Goes back to the idle speed (cancels any shots). */
+    /** Goes back to the idle speed (cancels any shots). Use {@link #stop()} for fully off. */
     public void idle() {
         spinning = false;
         shotsLeft = 0;
+        off = false;
     }
 
     /** Shoots {@code count} pieces (spins up first if needed). Adds to any shots still waiting. */
     public void shoot(int count) {
         spinUp();
+        feeder.clearJam();          // the driver asks again: try again (a new jam is detected again)
         if (shotsLeft == 0) waitingSince = Double.NaN;
         shotsLeft += Math.max(0, count);
         lastProblem = "";
@@ -145,18 +149,22 @@ public class Launcher implements Subsystem {
         shotsLeft = 0;
     }
 
+    /** Fully off: no shots, no idle speed. Stays off until spinUp(), shoot() or idle(). */
     @Override
     public void stop() {
         spinning = false;
         shotsLeft = 0;
-        feeder.stop();
-        flywheel.stop();
+        off = true;
+        RuntimeException first = null;
+        try { feeder.stop(); } catch (RuntimeException e) { first = e; }
+        try { flywheel.stop(); } catch (RuntimeException e) { if (first == null) first = e; }
+        if (first != null) throw first;
     }
 
     @Override
     public void update() {
         double now = clockNanos.getAsLong() / 1e9;
-        flywheel.setRpm(spinning ? shotRpm : idleRpm);
+        flywheel.setRpm(off ? 0 : spinning ? shotRpm : idleRpm);
         flywheel.update();
         feeder.update();
         if (hood != null) hood.update();
@@ -194,7 +202,7 @@ public class Launcher implements Subsystem {
     /** What is not ready yet, e.g. "flywheel, Turret" ("" when ready). */
     public String whyNotReady() {
         StringBuilder sb = new StringBuilder();
-        if (!spinning) sb.append("not spinning");
+        if (!spinning) sb.append(off ? "off" : "not spinning");
         else if (!flywheel.isReady()) sb.append("flywheel");
         if (hood != null && !hood.isDone()) append(sb, "hood");
         for (int i = 0; i < checks.size(); i++) if (!checks.get(i).getAsBoolean()) append(sb, checkNames.get(i));
@@ -204,7 +212,8 @@ public class Launcher implements Subsystem {
     public State getState() {
         if (feeder.isBusy()) return State.FEEDING;
         if (shotsLeft > 0) return State.WAITING_READY;
-        return spinning ? State.SPINNING : State.OFF;
+        if (off) return State.OFF;
+        return spinning ? State.SPINNING : State.IDLE;
     }
 
     /** True while shots are waiting or a piece is being fed. */

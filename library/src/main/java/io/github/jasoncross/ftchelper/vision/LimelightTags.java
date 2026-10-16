@@ -41,6 +41,7 @@ public class LimelightTags implements TargetSource {
     private boolean started = false;
     private List<TargetObservation> latest = Collections.emptyList();
     private double lastTimestamp = Double.NaN;
+    private double keepMs = 500;
 
     public static LimelightTags create(HardwareMap hardwareMap, String deviceName) {
         return new LimelightTags(deviceName, Hw.get(hardwareMap, Limelight3A.class, deviceName));
@@ -55,6 +56,12 @@ public class LimelightTags implements TargetSource {
     public LimelightTags pipeline(int index) {
         pipeline = index;
         if (started) limelight.pipelineSwitch(index);
+        return this;
+    }
+
+    /** Targets older than this are dropped (milliseconds, default 500). */
+    public LimelightTags keepTargetsMs(double ms) {
+        keepMs = Math.abs(ms);
         return this;
     }
 
@@ -89,9 +96,13 @@ public class LimelightTags implements TargetSource {
             latest = Collections.emptyList();
             return;
         }
-        if (result.getTimestamp() == lastTimestamp) return;   // the same frame again: keep the list
+        if (result.getTimestamp() == lastTimestamp) {          // the same frame again: keep the list while recent
+            latest = WebcamTags.dropOld(latest, System.nanoTime(), keepMs);
+            return;
+        }
         lastTimestamp = result.getTimestamp();
-        long pictureTime = System.nanoTime() - (long) (result.getStaleness() * 1_000_000L);
+        long pictureTime = pictureTimeNanos(System.nanoTime(), result.getStaleness(),
+                result.getCaptureLatency(), result.getTargetingLatency(), result.getParseLatency());
         List<TargetObservation> out = new ArrayList<>();
         for (LLResultTypes.FiducialResult f : result.getFiducialResults()) {
             out.add(new TargetObservation(f.getFiducialId(), "Tag " + f.getFiducialId(),
@@ -100,11 +111,25 @@ public class LimelightTags implements TargetSource {
         latest = out;
     }
 
-    /** Straight-line distance from a pose, in inches (NaN if there is no pose). Public for tests. */
+    /**
+     * When the picture was really taken: now, minus the time since the hub got the result (staleness),
+     * minus the Limelight's own capture, processing and parse time. All latencies in milliseconds.
+     * Public for tests.
+     */
+    public static long pictureTimeNanos(long nowNanos, long stalenessMs, double captureMs, double targetingMs, double parseMs) {
+        double totalMs = Math.max(0, stalenessMs) + Math.max(0, captureMs) + Math.max(0, targetingMs) + Math.max(0, parseMs);
+        return nowNanos - (long) (totalMs * 1_000_000L);
+    }
+
+    /**
+     * Distance to the target along the FLOOR (ignoring height), in inches, NaN if there is no pose.
+     * Same meaning as the webcam's distance, so a shot table works with either camera.
+     * Limelight camera space: x right, y down, z forward. Public for tests.
+     */
     public static double distanceInches(Pose3D pose) {
         if (pose == null || pose.getPosition() == null) return Double.NaN;
         Position p = pose.getPosition().toUnit(DistanceUnit.INCH);
-        double d = Math.sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
+        double d = Math.hypot(p.x, p.z);
         return d > 0 ? d : Double.NaN;
     }
 

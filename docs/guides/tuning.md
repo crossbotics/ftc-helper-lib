@@ -45,16 +45,30 @@ A PID controller you made yourself: `PidTunables.of("Arm", kP, kI, kD, kF).apply
 
 ## 2. Add the menu to the TeleOp
 
+The menu uses gamepad 1's D-pad, A, X, Y and bumpers. So give the menu key its own small button
+list, and pause the driver's gamepad-1 buttons (and sticks) while the menu is open:
+
 ```java
 TuningMenu tuning = new TuningMenu(gamepad1);
-controls.bindPress(Pad.G1, Btn.GUIDE, tuning::toggle);
+ControllerBindings menuKey = new ControllerBindings().bindPress(Pad.G1, Btn.GUIDE, tuning::toggle);
+ControllerBindings driver = new ControllerBindings()...;     // gamepad 1 buttons
+ControllerBindings operator = new ControllerBindings()...;   // gamepad 2 buttons (keep working)
+boolean menuWasOpen = false;
 // loop:
+menuKey.update(gamepad1, gamepad2);
+operator.update(gamepad1, gamepad2);
 tuning.update();
 if (tuning.isOpen()) {
-    tuning.addTelemetry(t);
-    // and do NOT drive with gamepad1 while it is open
+    menuWasOpen = true;
+    tuning.addTelemetry(t);                                   // and ignore gamepad 1's sticks
+} else {
+    if (menuWasOpen) driver.ignoreHeldButtons(gamepad1, gamepad2);   // a button held from the menu does not fire
+    menuWasOpen = false;
+    driver.update(gamepad1, gamepad2);
 }
 ```
+
+Otherwise pressing Y in the menu ("reset all") would ALSO do whatever Y does for the driver.
 
 The starter kit's `MainTeleOp` already has it.
 

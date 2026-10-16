@@ -33,12 +33,16 @@ flowchart LR
 stateDiagram-v2
     [*] --> OFF
     OFF --> SPINNING: spinUp() / shoot(n)
+    OFF --> IDLE: idle()
+    IDLE --> SPINNING: spinUp() / shoot(n)
     SPINNING --> WAITING_READY: shots left > 0
     WAITING_READY --> FEEDING: flywheel ready AND hood arrived AND every check true
     FEEDING --> WAITING_READY: piece through, wait shotInterval, shots left > 0
     FEEDING --> SPINNING: no shots left
     WAITING_READY --> SPINNING: not ready within readyTimeout (gives up, says why)
-    SPINNING --> OFF: idle() / stop()
+    SPINNING --> IDLE: idle()
+    SPINNING --> OFF: stop()
+    IDLE --> OFF: stop()
 ```
 
 The two safety rules: **never feed into a slow flywheel**, and **never wait forever**.
@@ -59,14 +63,14 @@ Flywheel flywheel = Flywheel.create(hardwareMap, "flywheel")
 | --- | --- |
 | `create(hardwareMap, name)` | coast (a flywheel must spin down freely), speed control on |
 | `.reversed()` | spin the other way |
-| `.follower(hardwareMap, name, reversed)` | a second motor on the same wheel (same speed command) |
+| `.follower(hardwareMap, name, reversed)` | a second motor on the same wheel (same speed command). **It needs its own encoder cable.** If its encoder reads nothing while the wheel spins, it is switched off with a warning |
 | `.countsPerRev(c)` | counts per FLYWHEEL turn: bare motor 1:1 = 28; with gears multiply by motor turns per wheel turn; a shaft encoder on this motor's port = its counts (REV Through Bore 8192) |
 | `.pidf(p, i, d, f)` | the hub's speed gains. Start 10, 3, 0, 12; tune F first (with a charged battery) |
 | `.tolerance(rpm)`, `.settleTime(s)` | when "ready" |
 | `.maxRpm(r)` | highest speed allowed |
 | `.shotDrop(rpm)` | a drop this big after ready = a shot was seen |
-| `setRpm(r)`, `stop()`, `update()` | use |
-| `isReady()`, `getRpm()`, `getTargetRpm()`, `getShotCount()` | read |
+| `setRpm(r)`, `stop()`, `update()` | use. `stop()` and speed 0 COAST (no hard braking of a fast wheel) |
+| `isReady()`, `getRpm()`, `getTargetRpm()`, `getShotCount()`, `getFault()` | read |
 | `spinUpStep(rpm, timeout)` | autonomous step |
 
 **Check your speed reading** before trusting it: the RPM on telemetry must match a tachometer or
@@ -88,7 +92,7 @@ How to fill it: [tutorial 17](../tutorials/17-launcher.md#4-fill-the-shot-table)
 
 ## Feeder
 
-An interface: `feedOne()`, `isBusy()`, `update()`, `stop()`, and optional `isJammed()`.
+An interface: `feedOne()`, `isBusy()`, `update()`, `stop()`, and optional `isJammed()` and `clearJam()`.
 The launcher decides WHEN; the feeder only knows HOW. Next season's new feeding mechanism? Write a
 class with these methods and the launcher works with it. See [Extending](../guides/extending.md).
 
@@ -101,7 +105,8 @@ MotorFeeder feeder = MotorFeeder.create(hardwareMap, "feeder")
         .jamDetection(60, 0.2);           // optional (encoder cable)
 ```
 
-`clearJam()` after you fixed a jam. A jam stops the launcher's remaining shots.
+A jam stops the launcher's remaining shots. The next `shoot(...)` clears it and tries again (a new
+jam is detected again), so the driver just presses shoot after clearing the piece.
 
 ## ServoFeeder
 
@@ -135,13 +140,16 @@ counterclockwise (else `.reversed()`).
 | `.limits(min, max)` | allowed range; may be more than 360 in total (e.g. -190..190) |
 | `.startAngle(deg)` | the angle at power-on (no switch) |
 | `.homeSwitch(hardwareMap, name, angle)` / `.homeSwitch(reader, angle)` | a switch that closes at a known angle |
-| `.homingPower(p)`, `.pid(...)`, `.tolerance(deg)`, `.maxPower(p)`, `.slowZone(deg, power)` | tuning |
+| `.homingPower(p)`, `.pid(...)`, `.tolerance(deg)`, `.maxPower(p)`, `.slowZone(deg, power)` | tuning. Before homing, manual power is kept to the homing power |
+| `.homingTimeout(s)` | homing stops with a fault if the switch is not found in time (default 5 s) |
+| `.maxTargetAgeMs(ms)` | how old a camera picture may be for `aimAtTarget` (default 150) |
 | `aimAt(robotDeg)` | turn to a robot-relative angle, **the safe way round** |
 | `aimField(fieldDeg, headingDeg)` | point at a field direction; call every loop while the robot turns |
-| `aimBy(delta)` | turn by an amount (e.g. a camera bearing) |
+| `aimBy(delta)` | turn by an amount |
+| `aimAtTarget(target, cameraOnTurret)` | aim at a camera target: fresh pictures only, each picture once; holds when there is none |
 | `manual(power)` | a stick; 0 holds where it is |
-| `home(direction)` | turn slowly toward the switch until it closes |
-| `getAngle()`, `getTargetAngle()`, `isAimed()`, `isOutOfRange()`, `isHomed()`, `isHoming()` | read |
+| `home(direction)` | turn slowly toward the switch until it closes (at once if already on it; fault after the timeout) |
+| `getAngle()`, `getTargetAngle()`, `isAimed()`, `isOutOfRange()`, `isHomed()`, `isHoming()`, `getFault()` | read. `isAimed()` is false for an out-of-range target, so it is safe as a launcher check |
 | `aimStep(deg, timeout)` | autonomous step |
 
 **The safe way round:** with limits -190..190, 170 and -190 are the same direction. The turret
@@ -149,8 +157,10 @@ picks the one inside the limits closest to where it is, and turns there without 
 so cables never wind up. A direction outside the limits goes to the nearest limit and
 `isOutOfRange()` is true.
 
-**Homing:** with a switch, aiming waits until the switch was seen once (`home(direction)`). Without
-one, the turret trusts `startAngle` (default 0): turn the robot on with the turret facing forward.
+**Homing:** with a switch, aiming waits until the switch was seen once (`home(direction)`). If the
+switch is not found within `homingTimeout`, homing stops and `getFault()` says so (a broken wire never
+spins the turret forever). Without a switch, the turret trusts `startAngle` (default 0): turn the robot
+on with the turret facing forward.
 
 ## Launcher
 
@@ -171,8 +181,10 @@ Launcher launcher = new Launcher(flywheel, feeder)
 | `.readyTimeout(s)` | give up the remaining shots after this long not ready |
 | `.idleRpm(r)` | speed when not shooting (a low idle makes spin-up faster) |
 | `setRpm(r)` / `setDistance(d)` | the shot by hand / from the table (sets the hood too) |
-| `spinUp()`, `idle()`, `shoot(n)`, `stopShooting()`, `stop()` | commands |
+| `spinUp()`, `shoot(n)`, `stopShooting()` | commands |
+| `idle()` | back to the idle speed |
+| `stop()` | fully OFF, even the idle speed, until `spinUp()`, `shoot()` or `idle()` |
 | `update()` | every loop (updates flywheel, feeder and hood for you) |
 | `isReady()`, `whyNotReady()` | e.g. "flywheel, Turret": your first debug clue |
-| `getState()`, `isShooting()`, `getShotsLeft()`, `getShotsFired()`, `getLastProblem()` | read |
+| `getState()` (OFF, IDLE, SPINNING, WAITING_READY, FEEDING), `isShooting()`, `getShotsLeft()`, `getShotsFired()`, `getLastProblem()` | read |
 | `spinUpStep()`, `shootStep(n)` | autonomous steps |

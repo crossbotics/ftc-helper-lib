@@ -58,7 +58,7 @@ and the `FtcRobotController` folder). Read the SDK release notes for **breaking 
 | --- | --- |
 | Which AprilTag id or cluster name is the target | TeamCode constants; `alliance().pick(blueId, redId)` |
 | Field positions, routes | your `EasyAuto` classes |
-| A ROTATED field (not mirrored) | your own mirror rule: e.g. a small helper that flips forward/back too, used inside `buildRoutine` |
+| A ROTATED field (not mirrored) | `mirrorForRed()` returns false in your autos: the same robot-relative route then works for both alliances |
 | Scoring heights, shot table | `Robot` positions (`tunable`), `ShotTable` |
 | Match-time cues | `MatchTimer.cueAt(...)` in the TeleOp |
 

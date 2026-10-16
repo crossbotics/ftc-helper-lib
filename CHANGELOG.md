@@ -36,6 +36,21 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 - Built and tested against FTC SDK 12.0 with the `Vision` artifact (compileOnly) for the vision classes.
 
+### Checked
+
+- Full outside reviews by Codex ("Astra") and Fable before release. Fixed from their findings:
+  turret homing (already-on-switch, timeout with fault, slow manual before homing), out-of-range turret
+  targets never count as aimed, `Turret.aimAtTarget` (fresh pictures only, each once), servo arrival
+  estimate when the same target is re-sent, `Launcher.stop()` stays OFF (new IDLE state), cleanup that
+  stops every part even if one throws (Launcher, EasyAuto, AutoRoutine), Limelight picture time
+  includes its own latency, one distance meaning for both cameras (along the floor), old camera
+  targets dropped after 500 ms, flywheel follower without an encoder is switched off, flywheel stop
+  coasts, a new `shoot()` clears a feeder jam, `AimController.turnPower` uses the drive's sign
+  (`ccwPower` added), `AutoRoutine` no longer mixes step-building and running waits, `EasyAuto`
+  applies a profile changed in INIT and has `mirrorForRed()`, `PositionMotor.units()` order check,
+  typo'd position names warn instead of crashing, missing switch names warn, hardware check stick
+  deadband, tuning-menu buttons no longer also drive the robot in the examples.
+
 ## v0.3.0 - 2026-10-15
 
 ### Added

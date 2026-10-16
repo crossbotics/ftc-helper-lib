@@ -50,11 +50,15 @@ It now works in `Subsystems`, in `EasyAuto`, with buttons, and shows telemetry l
 
 ```java
 AutoStep alignWithWall = ctx -> {
-    while (ctx.isActive() && !wallSensor.isPressed()) {
-        drive.setPowers(new double[]{-0.2, -0.2, -0.2, -0.2});   // back up slowly
-        ctx.loop();                                             // mechanisms + telemetry keep running
+    ElapsedTime timer = new ElapsedTime();
+    try {
+        while (ctx.isActive() && !wallSensor.isPressed() && timer.seconds() < 2.0) {   // a way out!
+            drive.setPowers(new double[]{-0.2, -0.2, -0.2, -0.2});   // back up slowly
+            ctx.loop();                                             // mechanisms + telemetry keep running
+        }
+    } finally {
+        drive.stop();                                               // even if something throws
     }
-    drive.stop();
 };
 routine.step("Back into the wall", alignWithWall);
 ```

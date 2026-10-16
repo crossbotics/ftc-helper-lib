@@ -47,11 +47,21 @@ static final Tunable LIFT_MAX_POWER = Tunable.number("Lift/maxPower", 0.8, 0.05)
 ...
 PositionMotor lift = ... .tunable("Lift");     // its PID gains and positions too
 TuningMenu tuning = new TuningMenu(gamepad1);
-.bindPress(Pad.G1, Btn.GUIDE, tuning::toggle)
+ControllerBindings menuKey = new ControllerBindings().bindPress(Pad.G1, Btn.GUIDE, tuning::toggle);
+ControllerBindings driver = new ControllerBindings().bindPress(Pad.G1, Btn.BACK, t::toggleDebug);
+ControllerBindings operator = new ControllerBindings()
+        .bindPress(Pad.G2, Btn.A, () -> lift.goTo("DOWN"))
+        .bindPress(Pad.G2, Btn.Y, () -> lift.goTo("HIGH"));
 ...
+menuKey.update(gamepad1, gamepad2);
+operator.update(gamepad1, gamepad2);
 tuning.update();
-if (tuning.isOpen()) tuning.addTelemetry(t);
+if (!tuning.isOpen()) driver.update(gamepad1, gamepad2);   // gamepad 1 belongs to the menu while it is open
 ```
+
+**Why three button lists?** The menu uses gamepad 1's D-pad, A, X and Y. If the driver's gamepad-1
+buttons kept working, pressing Y to "reset all" would also run whatever Y does for the robot. The
+lift buttons are on gamepad 2, so a second person can test each change while you tune.
 
 Press GUIDE (the center button) in PRACTICE: a menu lists every tunable. D-pad up/down chooses,
 right/left changes, A saves on the hub. Read the value **every loop** (`LIFT_MAX_POWER.get()`), so
@@ -84,7 +94,8 @@ event. `EasyAuto` shows it for you.
 
 1. INIT: set Profile to PRACTICE with the D-pad. START.
 2. Debug lines (Loop, Profile, lift power) are visible. BACK hides them.
-3. GUIDE: the tuning menu. Change `Lift/maxPower` to 0.3: A/Y now move the lift slowly. A saves.
+3. GUIDE: the tuning menu. Change `Lift/maxPower` to 0.3: gamepad 2 A/Y now move the lift slowly.
+   Gamepad 1 A saves.
 4. Stop and run again: the INIT screen warns "1 tuned value(s) differ from the code".
 5. Open the menu, Y: back to the code values; the warning is gone next time.
 6. Set Profile to COMPETITION: GUIDE does nothing, debug starts off.

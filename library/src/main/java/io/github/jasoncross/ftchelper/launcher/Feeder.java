@@ -32,4 +32,7 @@ public interface Feeder extends Subsystem {
     default boolean isJammed() {
         return false;
     }
+
+    /** Forgets a jam (the launcher calls it when the driver asks to shoot again). Default: nothing. */
+    default void clearJam() { }
 }
