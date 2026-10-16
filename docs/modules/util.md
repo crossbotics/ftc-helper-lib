@@ -84,6 +84,7 @@ PoseStore.save(new FieldPose(x, y, auto.headingDeg()));   // inches, inches, deg
 // TeleOp INIT:
 FieldPose start = PoseStore.consume();   // null if autonomous did not save one
 if (start != null) { ... use it ... }    // always check for null first
+// For the heading alone, use DriverHeading (docs/modules/drive.md): it does this for you.
 ```
 
 | Method | What it does |
@@ -93,6 +94,7 @@ if (start != null) { ... use it ... }    // always check for null first
 | `peek()` | gives a copy and keeps it saved |
 | `has()` | true if one is saved |
 | `clear()` | forgets it |
+| `ageSec()` | seconds since it was saved (very large if none). Over a few minutes = an earlier match. |
 
 ## BackgroundWorker
 

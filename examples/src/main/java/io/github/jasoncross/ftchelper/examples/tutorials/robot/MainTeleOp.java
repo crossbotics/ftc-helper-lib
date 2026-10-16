@@ -6,19 +6,17 @@ package io.github.jasoncross.ftchelper.examples.tutorials.robot;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import io.github.jasoncross.ftchelper.drive.DriverHeading;
 import io.github.jasoncross.ftchelper.drive.MecanumDrive;
 import io.github.jasoncross.ftchelper.examples.tutorials.RobotSettings;
 import io.github.jasoncross.ftchelper.gamepad.ControllerBindings;
 import io.github.jasoncross.ftchelper.gamepad.ControllerBindings.Btn;
 import io.github.jasoncross.ftchelper.gamepad.ControllerBindings.Pad;
 import io.github.jasoncross.ftchelper.gamepad.StickShaping;
-import io.github.jasoncross.ftchelper.hardware.ImuSetup;
-import io.github.jasoncross.ftchelper.util.FieldPose;
-import io.github.jasoncross.ftchelper.util.PoseStore;
 
 /**
  * Tutorial 12: a short TeleOp, because the Robot and subsystem classes do the work.
- * Driver: drive (field-centric), BACK = reset heading. Operator: D-pad up/down = lift step,
+ * Driver: drive (robot-centric; Y = field-centric on/off), BACK = reset heading. Operator: D-pad up/down = lift step,
  * A = bottom, Y = high, right bumper = claw, left stick Y = lift by hand.
  *
  * Tutorial: docs/tutorials/12-robot-structure.md
@@ -29,6 +27,9 @@ import io.github.jasoncross.ftchelper.util.PoseStore;
 @Disabled
 // "extends LinearOpMode" = an FTC program that runs from top to bottom (see tutorial 01).
 public class MainTeleOp extends LinearOpMode {
+
+    // Robot-centric at the start: the stick drives the way the robot's nose points. Y switches.
+    private boolean fieldCentric = false;
 
     // @Override = "this replaces the SDK's own runOpMode()". It runs when INIT is pressed.
     @Override
@@ -41,19 +42,17 @@ public class MainTeleOp extends LinearOpMode {
         // The wheels, with the settings from RobotSettings.java.
         MecanumDrive drive = new MecanumDrive(hardwareMap, RobotSettings.drive());
 
-        // If autonomous saved a pose, it is still there. This TeleOp only shows it.
-        // (With odometry you would set your position from it.)
-        // Careful: the IMU was set up again above, so its heading now starts at 0 from where the robot
-        // faces in TeleOp INIT, not from where autonomous started. Face the robot away from you and
-        // press BACK if field-centric "forward" looks wrong.
-        // consume() gives the saved pose and forgets it, so an old one is never used twice.
-        FieldPose fromAuto = PoseStore.consume();
+        // Which way the robot faces compared with the driver. It continues from the heading
+        // autonomous saved, so field-centric "forward" is right at once (drive/DriverHeading.java).
+        DriverHeading heading = new DriverHeading(robot.imu);
 
         // The buttons. "() -> ..." is a lambda: code run LATER, when the button is pressed.
         // "robot.lift::stepUp" is a method reference: "run robot.lift.stepUp() when pressed".
         ControllerBindings controls = new ControllerBindings()
+                // Driver Y: field-centric on (first press) / off.
+                .bindToggle(Pad.G1, Btn.Y, () -> fieldCentric = true, () -> fieldCentric = false)
                 // Driver BACK: "the way the robot faces now is forward". Point it away from you first.
-                .bindPress(Pad.G1, Btn.BACK, robot.imu::resetYaw)
+                .bindPress(Pad.G1, Btn.BACK, heading::reset)
                 // Operator D-pad: one set height up / down.
                 .bindPress(Pad.G2, Btn.DPAD_UP, robot.lift::stepUp)
                 .bindPress(Pad.G2, Btn.DPAD_DOWN, robot.lift::stepDown)
@@ -64,7 +63,7 @@ public class MainTeleOp extends LinearOpMode {
                 .bindPress(Pad.G2, Btn.RB, robot.claw::toggle);
 
         // "a ? b : c" = if a is true use b, otherwise c.
-        telemetry.addData("From auto", fromAuto == null ? "nothing" : fromAuto.toString());
+        telemetry.addData("Heading", heading.isFromAuto() ? "from autonomous" : "0 = the way the robot faces now");
         telemetry.update();
         // Wait here until START is pressed.
         waitForStart();
@@ -81,15 +80,16 @@ public class MainTeleOp extends LinearOpMode {
                 // The lift does its work (switch, PID or hand power), once per loop.
                 robot.update();
 
-                // Field-centric drive: "forward" on the stick is away from the driver.
                 // shape(stick, 0.05, 2) ignores tiny stick values and "squares" the rest for fine control.
                 // Left trigger = slow: not pressed = full speed, squeezed all the way = 30%.
-                drive.driveFieldCentric(
-                        StickShaping.shape(-gamepad1.left_stick_y, 0.05, 2),
-                        StickShaping.shape(gamepad1.left_stick_x, 0.05, 2),
-                        StickShaping.shape(gamepad1.right_stick_x, 0.05, 2),
-                        ImuSetup.headingDeg(robot.imu),
-                        StickShaping.slowScale(gamepad1.left_trigger, 0.3));
+                double forward = StickShaping.shape(-gamepad1.left_stick_y, 0.05, 2);
+                double strafe = StickShaping.shape(gamepad1.left_stick_x, 0.05, 2);
+                double turn = StickShaping.shape(gamepad1.right_stick_x, 0.05, 2);
+                double speed = StickShaping.slowScale(gamepad1.left_trigger, 0.3);
+                // Field-centric: "forward" on the stick is away from the driver. Robot-centric: the
+                // way the robot's nose points.
+                if (fieldCentric) drive.driveFieldCentric(forward, strafe, turn, heading.degrees(), speed);
+                else drive.drive(forward, strafe, turn, speed);
 
                 robot.addTelemetry(telemetry);
                 telemetry.update();

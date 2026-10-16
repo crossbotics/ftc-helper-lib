@@ -4,6 +4,19 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+## v0.5.0 - 2026-10-15
+
+### Added
+
+- `DriverHeading` (drive): field-centric "forward" continues from where autonomous ended, so drivers
+  do not need to reset it at the start of TeleOp. `EasyAuto.startHeadingDeg()` for robots that do not
+  start facing straight away from their driver. `PoseStore.ageSec()`.
+
+### Changed
+
+- Starter TeleOp and tutorial 12's TeleOp start in robot-centric mode; Y turns field-centric on.
+  Both use `DriverHeading`.
+
 ## v0.4.2 - 2026-10-15
 
 ### Changed

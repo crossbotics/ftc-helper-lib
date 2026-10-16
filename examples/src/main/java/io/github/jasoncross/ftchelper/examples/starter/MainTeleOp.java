@@ -8,13 +8,13 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.IMU;
 import io.github.jasoncross.ftchelper.core.Profile;
+import io.github.jasoncross.ftchelper.drive.DriverHeading;
 import io.github.jasoncross.ftchelper.drive.MecanumDrive;
 import io.github.jasoncross.ftchelper.gamepad.ControllerBindings;
 import io.github.jasoncross.ftchelper.gamepad.ControllerBindings.Btn;
 import io.github.jasoncross.ftchelper.gamepad.ControllerBindings.Pad;
 import io.github.jasoncross.ftchelper.gamepad.StickShaping;
 import io.github.jasoncross.ftchelper.gamepad.ToggleRumble;
-import io.github.jasoncross.ftchelper.hardware.ImuSetup;
 import io.github.jasoncross.ftchelper.match.Alliance;
 import io.github.jasoncross.ftchelper.match.MatchMemory;
 import io.github.jasoncross.ftchelper.match.MatchTimer;
@@ -30,7 +30,7 @@ import io.github.jasoncross.ftchelper.tuning.TuningMenu;
  *   left stick     drive                  D-pad up/down   lift one position up/down
  *   right stick X  turn                   A / Y           lift DOWN / HIGH
  *   left trigger   slow (squeeze)         left stick Y    lift by hand
- *   Y              field-centric on/off   right bumper    claw open/close
+ *   Y              field-centric on/off (starts off)   right bumper    claw open/close
  *   BACK           reset "forward"        left bumper     intake on/off
  *   GUIDE          tuning menu (practice) B (hold)        intake reverse
  *   hold START, press BACK   debug telemetry on/off
@@ -51,9 +51,10 @@ import io.github.jasoncross.ftchelper.tuning.TuningMenu;
 public class MainTeleOp extends LinearOpMode {
 
     // "Fields": true/false switches the whole program can see. Buttons flip them; the loop reads them.
-    // Field-centric starts ON: "forward" on the stick is away from the driver, whichever way the
-    // robot faces. Most drivers find that easier.
-    private boolean fieldCentric = true;
+    // Field-centric starts OFF: the stick drives the way the robot's nose points (robot-centric).
+    // Y turns field-centric on: "forward" on the stick is then away from the driver, whichever way
+    // the robot faces.
+    private boolean fieldCentric = false;
     // The intake starts off; the operator's left bumper turns it on.
     private boolean intakeOn = false;
     // True only while the operator holds B.
@@ -72,6 +73,9 @@ public class MainTeleOp extends LinearOpMode {
         MecanumDrive drive = new MecanumDrive(hardwareMap, RobotSettings.drive());
         // The IMU (the hub's turn sensor), needed for field-centric driving.
         IMU imu = RobotSettings.imu(hardwareMap);
+        // Which way the robot faces compared with the driver. It continues from where autonomous
+        // ended, so field-centric "forward" is right from the first second (drive/DriverHeading.java).
+        DriverHeading heading = new DriverHeading(imu);
         // The alliance the last autonomous chose. If there was no autonomous in the last few
         // minutes, use BLUE. One TeleOp then works for both alliances.
         Alliance alliance = MatchMemory.allianceOr(Alliance.BLUE);
@@ -92,16 +96,15 @@ public class MainTeleOp extends LinearOpMode {
         // reference: "run tuning.toggle() when pressed".
         ControllerBindings menuKey = new ControllerBindings().bindPress(Pad.G1, Btn.GUIDE, tuning::toggle);
         ControllerBindings driver = new ControllerBindings()
-                // Y: field-centric on/off. A toggle starts in its "first press" state, and here the first
-                // press turns field-centric OFF (it starts ON), so the actions are in that order.
+                // Y: field-centric on/off. The first press turns it ON (it starts OFF).
                 .bindToggle(Pad.G1, Btn.Y,
-                        () -> { fieldCentric = false; confirm.play(false); },
-                        () -> { fieldCentric = true; confirm.play(true); })
+                        () -> { fieldCentric = true; confirm.play(true); },
+                        () -> { fieldCentric = false; confirm.play(false); })
                 // BACK on its own: "the way the robot faces now is forward (0 degrees)". Point the robot
                 // AWAY from the driver first.
                 // BACK while START is held: debug telemetry (extra lines for fixing problems) on/off
                 // instead, and "forward" is NOT reset. Needing two buttons makes it hard to do by accident.
-                .bindPress(Pad.G1, Btn.BACK, () -> { if (gamepad1.start) t.toggleDebug(); else imu.resetYaw(); });
+                .bindPress(Pad.G1, Btn.BACK, () -> { if (gamepad1.start) t.toggleDebug(); else heading.reset(); });
         ControllerBindings operator = new ControllerBindings()
                 // D-pad up/down: the lift goes to the next named height up or down (DOWN, LOW, HIGH).
                 .bindPress(Pad.G2, Btn.DPAD_UP, robot.lift::stepUp)
@@ -176,9 +179,7 @@ public class MainTeleOp extends LinearOpMode {
                 }
                 // Left trigger = slow: not pressed = full speed (1.0), squeezed all the way = 30%.
                 double speed = StickShaping.slowScale(gamepad1.left_trigger, 0.3);
-                // Which way the robot faces, in degrees (turning left makes it bigger).
-                double heading = ImuSetup.headingDeg(imu);
-                if (fieldCentric) drive.driveFieldCentric(forward, strafe, turn, heading, speed);
+                if (fieldCentric) drive.driveFieldCentric(forward, strafe, turn, heading.degrees(), speed);
                 else drive.drive(forward, strafe, turn, speed);
 
                 // ---- Mechanisms ----
@@ -207,7 +208,7 @@ public class MainTeleOp extends LinearOpMode {
                     t.line("Drive", "%s%s", fieldCentric ? "field" : "robot", speed < 0.99 ? "  SLOW" : "");
                     robot.all.addTelemetry(t);
                     // Only shown when debug telemetry is on.
-                    t.debug("Heading", "%.1f", heading);
+                    t.debug("Heading", "%.1f%s", heading.degrees(), heading.isFromAuto() ? " (from auto)" : "");
                 }
                 t.update();
             }

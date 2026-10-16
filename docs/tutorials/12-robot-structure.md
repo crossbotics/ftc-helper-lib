@@ -156,16 +156,18 @@ position:** `sleep` stops all your code, including the lift's PID.
 
 ## 7. Hand-over from autonomous
 
-`MainAuto` saves its heading with `PoseStore.save(...)` in `finally`; `MainTeleOp` reads it in
-INIT with `PoseStore.consume()` and shows it. Because the IMU keeps running between the two
-OpModes, field-centric "forward" stays correct after autonomous. (Do not reset the IMU in TeleOp
-INIT if you rely on that.)
+`MainAuto` saves its heading with `PoseStore.save(...)` in `finally`. `MainTeleOp` makes a
+`DriverHeading` in INIT, which takes that heading. TeleOp sets up the IMU again (that makes "0" the
+way the robot faces now), so `DriverHeading` adds the saved heading back. Field-centric "forward"
+(Y turns it on) is then right from the start of TeleOp, without a reset. The robot must start
+autonomous facing straight away from the driver. See
+[DriverHeading](../modules/drive.md#driverheading).
 
 ## Run it
 
 1. Copy the `robot` folder and `RobotSettings` into TeamCode (fix the package lines).
 2. Run Main Auto: claw closes, lift rises while driving, claw opens, lift lowers on the way back.
-3. Run Main TeleOp: telemetry shows "From auto". D-pad steps the lift through LOW, MIDDLE, HIGH.
+3. Run Main TeleOp: telemetry shows "Heading: from autonomous". D-pad steps the lift through LOW, MIDDLE, HIGH.
    Right bumper toggles the claw. The stick takes over the lift.
 
 ## If something goes wrong

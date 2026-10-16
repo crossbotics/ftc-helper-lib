@@ -14,6 +14,7 @@ import io.github.jasoncross.ftchelper.match.MatchMemory;
 import io.github.jasoncross.ftchelper.match.MatchTimer;
 import io.github.jasoncross.ftchelper.telemetry.RobotTelemetry;
 import io.github.jasoncross.ftchelper.tuning.Tunable;
+import io.github.jasoncross.ftchelper.util.Angles;
 import io.github.jasoncross.ftchelper.util.FieldPose;
 
 /**
@@ -115,6 +116,15 @@ public abstract class EasyAuto extends LinearOpMode {
         return true;
     }
 
+    /**
+     * Which way the robot faces at the start, compared with "straight away from your driver", in
+     * degrees (left = positive). Default 0. TeleOp's field-centric "forward" uses it (see
+     * drive/DriverHeading.java). Example: the robot starts turned a quarter turn left, so return 90.
+     */
+    protected double startHeadingDeg() {
+        return 0;
+    }
+
     /** Longest start delay offered in the menu, seconds. Default 10. */
     protected double maxStartDelaySec() {
         return 10;
@@ -172,7 +182,9 @@ public abstract class EasyAuto extends LinearOpMode {
                 // so ONE TeleOp works for both alliances and knows which way the robot ended up facing.
                 // Only after START: if STOP was pressed in INIT, the last match's memory stays as it was.
                 if (started && menu != null && autoDrive != null) {
-                    MatchMemory.remember(alliance(), new FieldPose(0, 0, autoDrive.headingDeg()));
+                    // Heading compared with the driver = the start direction + how far autonomous turned.
+                    double endHeading = Angles.wrapDegrees(startHeadingDeg() + autoDrive.headingDeg());
+                    MatchMemory.remember(alliance(), new FieldPose(0, 0, endHeading));
                 }
             } catch (RuntimeException e) { if (first == null) first = e; }
             if (first != null) throw first;

@@ -32,6 +32,14 @@ public class AutoScoreAndPark extends StarterAuto {
         return "Against the back wall, 2nd tile from the left, facing the field";
     }
 
+    // Which way the robot faces at the start, compared with "straight away from your driver"
+    // (degrees, left = +). Facing the field = facing away from the driver = 0. TeleOp uses it so
+    // field-centric "forward" is right as soon as TeleOp starts. Change it if you start turned.
+    @Override
+    protected double startHeadingDeg() {
+        return 0;
+    }
+
     // Extra lines in the INIT menu (the alliance, start delay and profile lines are already there).
     // "Score" starts at YES; the drivers can switch it to NO with the D-pad, e.g. when a partner scores.
     @Override

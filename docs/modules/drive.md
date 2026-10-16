@@ -19,6 +19,7 @@ Signs used here: [Signs and units](../conventions.md). Read it first.
 | [`DriveConfig`](#driveconfig) | choose the drive type, name the motors, set their directions and a power limit |
 | [`MecanumDrive`](#mecanumdrive) | drive a mecanum robot in TeleOp (robot-centric or field-centric) |
 | [`TankDrive`](#tankdrive) | drive a standard (tank) robot in TeleOp (arcade or tank style) |
+| [`DriverHeading`](#driverheading) | which way the robot faces compared with the driver; continues from autonomous |
 | [`ReverseDrive`](#reversedrive) | a mode where the back of the robot acts as the front |
 | [`AutoDriveConfig`](#autodriveconfig) | tuning numbers for autonomous moves |
 | [`AutoDrive`](#autodrive) | autonomous: drive a distance, turn an angle, turn to a heading |
@@ -108,9 +109,41 @@ double heading = ImuSetup.headingDeg(imu);   // read every loop: which way the r
 drive.driveFieldCentric(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x, heading);
 ```
 
-The IMU heading must be 0 when the robot faces away from the driver. Give the driver a button
-to fix it during a match: `controls.bindPress(Pad.G1, Btn.BACK, imu::resetYaw)` (point the robot
-away from you, then press).
+The heading must be 0 when the robot faces away from the driver. In a match, use
+[`DriverHeading`](#driverheading) instead of the plain IMU heading: it continues from where
+autonomous ended, so "forward" is right from the first second of TeleOp.
+
+## DriverHeading
+
+Which way the robot faces compared with the driver: 0 = straight away from the driver, left = +.
+
+**Why:** TeleOp sets up the IMU again in INIT, and that makes "0" the way the robot faces at that
+moment, which is wherever autonomous left it. Drivers may not touch the robot between autonomous and
+TeleOp. Without help, field-centric "forward" would be wrong until the driver turns the robot and
+presses a reset button.
+
+```java
+// TeleOp INIT, after the IMU is set up:
+DriverHeading heading = new DriverHeading(imu);          // takes autonomous's saved heading
+controls.bindPress(Pad.G1, Btn.BACK, heading::reset);    // manual reset: face away first
+
+// every loop:
+drive.driveFieldCentric(forward, strafe, turn, heading.degrees(), speed);
+```
+
+| Method | What it does |
+| --- | --- |
+| `new DriverHeading(imu)` | call in TeleOp INIT, after the IMU is set up. Takes the heading autonomous saved (once, and only if less than 5 minutes old). Otherwise 0 = the way the robot faces now. |
+| `degrees()` | the heading compared with the driver, -180 to 180. Call every loop. |
+| `reset()` | "the robot now faces away from me": now = 0. For a button. |
+| `isFromAuto()` | true while it still counts from autonomous (no reset since) |
+
+Where the saved heading comes from:
+
+- **EasyAuto** saves it for you at the end. If the robot does not start facing straight away from
+  its driver, override `startHeadingDeg()` with the start angle (left = +).
+- **Your own autonomous:** at the end, `PoseStore.save(new FieldPose(0, 0, heading))`, with the
+  heading measured from "away from the driver" (`auto.headingDeg()` if the robot started facing away).
 
 ---
 

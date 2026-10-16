@@ -76,4 +76,19 @@ public class UtilTest {
         PoseStore.save(null);
         assertFalse(PoseStore.has());
     }
+
+    @Test public void poseStoreKnowsHowOldThePoseIs() {
+        long[] now = {0};
+        PoseStore.clockNanos = () -> now[0];
+        try {
+            PoseStore.clear();
+            assertEquals(Double.MAX_VALUE, PoseStore.ageSec(), 0);
+            PoseStore.save(new FieldPose(0, 0, 90));
+            now[0] += 3_000_000_000L;
+            assertEquals(3, PoseStore.ageSec(), 1e-9);
+        } finally {
+            PoseStore.clockNanos = System::nanoTime;
+            PoseStore.clear();
+        }
+    }
 }
