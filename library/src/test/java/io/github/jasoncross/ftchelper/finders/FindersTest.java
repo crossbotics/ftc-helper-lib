@@ -135,8 +135,8 @@ public class FindersTest {
         for (FinderOpMode f : finders) {
             String[] lines = f.helpLines();
             assertTrue(f.finderName() + ": help is empty", lines.length > 0);
-            assertTrue(f.finderName() + ": help is too long for the screen", lines.length <= 15);
-            for (String line : lines) assertTrue(f.finderName() + ": line too wide: " + line, line.length() <= 54);
+            assertTrue(f.finderName() + ": help is too long for the screen", lines.length <= 13);
+            for (String line : lines) assertTrue(f.finderName() + ": line too wide: " + line, line.length() <= 52);
         }
     }
 }

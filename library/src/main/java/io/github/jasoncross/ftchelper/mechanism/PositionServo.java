@@ -58,6 +58,8 @@ public class PositionServo implements Subsystem {
 
     private String warning = "";
     // NaN ("not a number") means "none yet": no target was ever given / nothing sent yet.
+    // A slow move never steps more than this much time at once (see update()).
+    private static final double MAX_STEP_SEC = 0.1;
     private double target = Double.NaN;      // where we want it to end up
     private String targetName = null;
     private double commanded = Double.NaN;   // the position sent to the servo last
@@ -205,6 +207,9 @@ public class PositionServo implements Subsystem {
         // speed whether the loop runs fast or slow.
         long nowN = clockNanos.getAsLong();
         double dt = lastNanos < 0 ? 0 : (nowN - lastNanos) / 1e9;
+        // After a pause in updates (a menu, a help page), do not jump: move at most one normal
+        // loop's worth (0.1 s) this time, so a slow move stays slow.
+        dt = Math.min(dt, MAX_STEP_SEC);
         lastNanos = nowN;
         // No target yet: leave the servo alone.
         if (Double.isNaN(target)) return;

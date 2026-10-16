@@ -23,6 +23,7 @@ import java.util.Map;
  *          Once both are marked, it stays between them (hold LB to go past, e.g. to mark again)
  *          A = save this as a position (P1, P2, ...; rename them in your code), Y = undo the last one
  *          BACK = choose another servo
+ * Help: GUIDE (or hold START 1 s) = a help page with every button; everything pauses.
  * </pre>
  *
  * The servo does not move until you press A at the start point (its real position is unknown).

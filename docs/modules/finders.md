@@ -32,8 +32,12 @@ has them ready):
 public class ServoFinder extends ServoFinderOpMode { }
 ```
 
-**GUIDE (the center button) = help**, in every finder, in INIT or while it runs: a page with every
-button and the steps. While help is open, the finder's buttons pause and everything that moves stops.
+**GUIDE = help**, in every finder, in INIT or while it runs: a page with every button and the steps.
+GUIDE is the center button (Logitech/Xbox logo, PlayStation PS button). Some controllers have none,
+or the Driver Hub keeps it for itself: then **hold START for 1 second**. While help is open, the
+finder's buttons pause and its motors stop (servos stay where they were sent; a camera keeps running).
+After START, and after help closes, **let go of every stick, trigger and button on gamepad 1** once:
+until then the finder ignores them, so a finger that was already down cannot start anything.
 
 Every finder: nothing moves in INIT; the loop never waits (except the drive tuner's test moves,
 like autonomous); everything it moved is stopped at the end, even after an error.
@@ -126,7 +130,8 @@ Needs `robotConfig()` (your `RobotSettings`). D-pad chooses a test, **A** starts
 | Turn | it turns 90 left; check with a square | (the IMU's heading, to compare) |
 
 The Drive, Strafe and Turn tests WAIT while the robot moves, like autonomous (STOP still works).
-A move that ends STALLED or TIMED_OUT is not measured: clear the path and run it again.
+A move that ends STALLED or TIMED_OUT is not measured: clear the path and run it again. GUIDE (or
+START) stops a moving test at once and opens help; that test is not measured either.
 Each new number is used at once inside the tuner (no rebuild): run Drive and Strafe again until
 they measure 48, then copy the lines into `RobotSettings.auto()`.
 `testDistanceIn()` changes the 48. Output:
@@ -203,18 +208,23 @@ Output: `new AimController(...).offset(-1.5)` or `turret.cameraOffset(-1.5)`.
 ## FinderOpMode
 
 The shared frame: INIT (`setup()`, `showInit()`), the loop (`bind()` once, then `step()` and
-`show()` every loop, plus the results), and `stopAll()` at the end, always. The results are saved in
-the background when it stops. `runOpMode()` is `final`. Write your own finder by extending it.
+`show()` every loop, plus the results), and `stopAll()` at the end, always. The results are saved to
+the file when it stops, and the screen says if that worked. `runOpMode()` is `final`. Write your own
+finder by extending it.
 
 | Field / method | |
 | --- | --- |
 | `t` | the [RobotTelemetry](telemetry.md) |
 | `results` | the [FinderResults](#finderresults) |
-| `finderName()`, `setup()`, `bind(controls)`, `step()`, `show(t)`, `stopAll()`, `helpLines()` | fill these in (`helpLines()`: the help page, about 15 lines) |
+| `finderName()`, `setup()`, `bind(controls)`, `step()`, `show(t)`, `stopAll()` | fill these in |
+| `helpLines()` | optional (please write it): the help page, at most 13 lines of about 50 characters. Default: "No help page for this finder yet." |
 | `showInit(t)` | optional: what INIT shows |
 | `pause()` | optional: what stops while help is open (default `stopAll()`; override when `stopAll()` also closes a camera) |
+| `inputsReady()` | false after START and after help, until gamepad 1 was let go: check it before acting on a stick, trigger or held button you read directly |
+| `openHelp()` | opens the help page (e.g. when a help key stopped a test) |
+| `helpKeyDown()` | true while GUIDE or START is down (e.g. as a stop condition for a moving test) |
 
-GUIDE is the help key in every finder, so a finder must not bind GUIDE itself.
+GUIDE and START are the help keys in every finder, so a finder must not bind them itself.
 
 ## FinderResults
 

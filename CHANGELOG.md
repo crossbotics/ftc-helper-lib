@@ -4,6 +4,22 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+## v0.7.2 - 2026-10-16
+
+### Fixed (Codex "Astra" and Fable reviews of the help page)
+
+- After START and after help closes, a finder ignores gamepad 1's sticks, triggers and held buttons
+  until they are let go once (`FinderOpMode.inputsReady()`), so a finger already down cannot restart
+  a motor, a speed test, aiming or driving.
+- Drive Tuner: GUIDE (or START) stops a moving test at once and opens help; the test is not measured.
+  The help page uses the real test distance.
+- Help also opens by holding START 1 s, for controllers whose GUIDE button never reaches the app.
+- `helpLines()` has a default, so a team's own finder still compiles.
+- Flywheel Finder: after help, the motor is back in step 1's set-up (a new top-speed test is right).
+- `PositionServo` slow moves never jump the rest of the way after a pause in updates.
+- Help wording: what really stops (motors; servos hold, the camera runs), LOW/HIGH end names,
+  step sizes, homing after help; every finder's Javadoc names the help key.
+
 ## v0.7.1 - 2026-10-16
 
 ### Added

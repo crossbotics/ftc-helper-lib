@@ -25,6 +25,7 @@ import java.util.List;
  *   Strafe:  it drives 48 in to the right (mecanum). Measure, set it, press A.
  *   Turn:    it turns 90 left. Check it with a square; the screen shows the IMU's heading.
  * Distance:  D-pad up/down = +/- 1 in, right/left = +/- 0.25 in.
+ * Help: GUIDE (or hold START 1 s) = a help page with every button; everything pauses.
  * </pre>
  *
  * Each new number is used at once in this tuner (no rebuild): run the Drive and Strafe tests again
@@ -156,8 +157,23 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
         }
     }
 
-    // Runs a test that moves the robot. BLOCKS on purpose until the move is done (STOP still works).
+    // Runs a test that moves the robot. BLOCKS on purpose until the move is done. STOP and GUIDE
+    // both end it at once (GUIDE then opens the help page; the test is not measured).
     private void runTest(int which) {
+        auto.setStopCondition(this::helpKeyDown);
+        try {
+            runMove(which);
+        } finally {
+            auto.setStopCondition(null);
+        }
+        if (helpKeyDown() && opModeIsActive()) {
+            lastResult = "Stopped by GUIDE/START: not measured.";
+            waiting = Wait.CHOOSE;
+            openHelp();
+        }
+    }
+
+    private void runMove(int which) {
         switch (which) {
             case 1:
                 afterMove("Drive", auto.move(testDistanceIn(), 0, 0.5));
@@ -248,19 +264,20 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
 
     @Override
     protected String[] helpLines() {
+        String d = FinderResults.num(testDistanceIn(), 0) + " in";
         return new String[] {
-            "Finds wheel size and strafe correction for auto.",
-            "Tape on the floor, 5 ft of space ahead and right.",
+            "Wheel size + strafe correction. Tape, 5 ft space.",
             "D-pad up/down = choose a test, A = start it.",
-            "Push: A, roll the robot BY HAND exactly 48 in",
-            "  along the tape, straight, then B.",
-            "Drive: it drives 48 in. Measure. D-pad = the real",
-            "  distance (up/down 1 in, right/left 0.25 in), A.",
+            "GUIDE or START stops a moving test (not measured).",
+            "Push: A, roll the robot BY HAND exactly " + d + ",",
+            "  straight along the tape, then B.",
+            "Drive: drives " + d + ". Measure it, set the real",
+            "  distance (D-pad up/down 1 in, l/r 0.25 in), A.",
             "Strafe (mecanum): the same, to the right.",
-            "Turn: it turns 90 left: check with a square.",
+            "Turn: turns 90 left: check it with a square.",
             "Each new number is used at once: repeat Drive and",
-            "Strafe until they measure 48. A stuck move is not",
-            "measured. Then copy the lines into RobotSettings.",
+            "  Strafe until they measure " + d + ".",
+            "Then copy the lines into RobotSettings.auto().",
         };
     }
 

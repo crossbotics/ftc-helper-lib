@@ -23,6 +23,7 @@ import java.util.ArrayList;
  *          RB / LB = F gain +2% / -2%. Feed a piece by hand: it shows the recovery time.
  *          X = the wheel spins the wrong way: reverse it (for both steps; adds .reversed())
  *          BACK = choose another motor
+ * Help: GUIDE (or hold START 1 s) = a help page with every button; everything pauses.
  * </pre>
  *
  * KEEP HANDS AND LOOSE CLOTHING AWAY from the wheel; wear eye protection.
@@ -186,7 +187,7 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
         // Step 1: full power while A is held, at most MAX_TOP_SPEED_SEC. The A press that chose the
         // motor does not count: A must be let go and pressed again.
         if (!gamepad1.a) aReleased = true;
-        if (gamepad1.a && aReleased) {
+        if (gamepad1.a && aReleased && inputsReady()) {
             if (Double.isNaN(fullPowerSince)) {
                 fullPowerSince = now();
                 recentCount = 0;
@@ -283,6 +284,17 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
             "   B again = stop. BACK = another motor.",
             "STOP saves the code lines.",
         };
+    }
+
+    // Help open: stop, and go back to step 1's set-up (plain power, chosen direction), so a new
+    // top-speed test after help is measured correctly.
+    @Override
+    protected void pause() {
+        stopAll();
+        if (motor != null) plainPower();
+        flywheel = null;
+        fullPowerSince = Double.NaN;
+        aReleased = false;
     }
 
     @Override

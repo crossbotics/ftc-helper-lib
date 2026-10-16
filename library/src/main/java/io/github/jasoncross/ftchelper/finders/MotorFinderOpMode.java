@@ -24,6 +24,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
  *          A = save this as a position (P1, P2, ...), Y = undo the last one
  *          hold RT = speed test: full power toward the HIGH end, stops before it (needs both ends)
  *          BACK = choose another motor
+ * Help: GUIDE (or hold START 1 s) = a help page with every button; everything pauses.
  * </pre>
  *
  * In your TeamCode: {@code @TeleOp(name = "Motor Finder", group = "Finders")
@@ -118,6 +119,11 @@ public abstract class MotorFinderOpMode extends FinderOpMode {
     @Override
     protected void step() {
         if (motor == null) return;
+        // A stick or trigger already pushed after START or help does not count until let go.
+        if (!inputsReady()) {
+            motor.setPower(0);
+            return;
+        }
         // "up" = toward the HIGH end. Which way the count goes up there is not known until both are marked.
         double sign = bothEnds() && highEnd < lowEnd ? -1 : 1;
         double power;
@@ -191,19 +197,19 @@ public abstract class MotorFinderOpMode extends FinderOpMode {
     @Override
     protected String[] helpLines() {
         return new String[] {
-            "Finds limits, positions, top speed (lift/arm/turret).",
-            "0. Robot on a block. Mechanism at its BOTTOM.",
+            "Finds limits, positions, top speed (lift/arm...).",
+            "Before: robot on a block, mechanism at its BOTTOM.",
             "1. D-pad up/down = choose a motor, A = use it",
             "   (its count starts at 0 here).",
             "2. Right stick = move slowly. D-pad up/down =",
             "   max power (0.1 to 0.6, starts at 0.3).",
-            "3. Just before the bottom: X. Just before the top: B.",
-            "   Then it stops at them (hold LB to go past).",
+            "3. Just above the bottom: X = LOW end. Just below",
+            "   the top: B = HIGH end. Then it stops at them",
+            "   (hold LB to go past).",
             "4. Each height you need: A (P1, P2...). Y = undo.",
-            "5. Hold RT = speed test: full power up, stops",
-            "   before the top.",
-            "High amps while not moving = pushing on something:",
-            "stop. BACK = another motor. STOP saves the lines.",
+            "5. After X and B: hold RT = speed test (full power",
+            "   up, stops before the top).",
+            "High amps, not moving = pushing on something: stop.",
         };
     }
 

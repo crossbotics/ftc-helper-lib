@@ -35,7 +35,10 @@ flowchart LR
 ## Help on the robot
 
 Press **GUIDE** (the center button) in any finder, in INIT or while it runs: a page shows every
-button and the steps. While it is open, everything stops. GUIDE again goes back.
+button and the steps. No GUIDE button (or it does nothing)? Hold **START** for 1 second instead.
+While help is open, the finder's buttons pause and its motors stop. GUIDE again goes back.
+Then let go of every stick, trigger and button once: until then the finder ignores them.
+Check once on your own Driver Hub and controllers that the help page fits and is easy to read.
 
 ## Servo Finder: ends and positions
 

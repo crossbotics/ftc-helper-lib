@@ -153,10 +153,21 @@ public class MechanismTest {
         wrist.set(0);
         wrist.update();
         wrist.set(1);
-        c.addSec(0.5); wrist.update();
+        for (int i = 0; i < 5; i++) { c.addSec(0.1); wrist.update(); }
         assertEquals(0.25, fs.position, 1e-6);
-        c.addSec(1.5); wrist.update();
+        for (int i = 0; i < 15; i++) { c.addSec(0.1); wrist.update(); }
         assertEquals(1.0, fs.position, 1e-6);
+    }
+
+    @Test public void aSlowMoveDoesNotJumpAfterAPause() {
+        Fakes.FakeServo fs = new Fakes.FakeServo();
+        Fakes.Clock c = new Fakes.Clock();
+        PositionServo hood = new PositionServo("hood", fs.servo).withClock(c::get).maxSpeed(0.5);
+        hood.set(0);
+        hood.update();
+        hood.set(1);
+        c.addSec(5); hood.update();                 // no updates for 5 s (a help page, a menu)
+        assertEquals(0.05, fs.position, 1e-6);      // one 0.1 s step, not the whole way
     }
 
     @Test public void spinServoRunsForATime() {

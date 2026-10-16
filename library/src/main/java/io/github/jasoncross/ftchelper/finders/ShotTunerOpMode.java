@@ -30,6 +30,7 @@ import io.github.jasoncross.ftchelper.vision.TargetSource;
  *   RB             = shoot one         hold RT = keep shooting        B = stop shooting
  *   A              = save this point (replaces one within 1 in)       X = delete the point here
  *   sticks         = drive (with robotConfig()), left trigger = slow
+ * Help: GUIDE (or hold START 1 s) = a help page with every button; everything pauses.
  * </pre>
  *
  * KEEP PEOPLE OUT OF THE LINE OF FIRE; eye protection on.
@@ -219,7 +220,11 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
             TargetObservation seen = findTarget(camera);
             target = seen != null && seen.isFresh(System.nanoTime(), MAX_TARGET_AGE_MS) ? seen : null;
         }
-        if (driving != null) driving.update(gamepad1);
+        // The sticks and RT only count once gamepad 1 was let go after START or help (inputsReady()).
+        if (driving != null) {
+            if (inputsReady()) driving.update(gamepad1);
+            else driving.hold();
+        }
         // Keep the speed and hood inside what the hardware really does, so a saved point is what
         // was really tested (the flywheel and the hood would cut it silently otherwise).
         double maxRpm = launcher.getFlywheel().getMaxRpm();
@@ -236,7 +241,7 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         }
         // Hold RT: keep shooting, one piece at a time. It starts on a fresh RT press and stops for
         // good after B, a jam or a "gave up" (press RT again to go on), so a jam is never pushed on.
-        boolean rt = gamepad1.right_trigger > 0.5;
+        boolean rt = gamepad1.right_trigger > 0.5 && inputsReady();
         boolean freshPress = rt && !rtWasDown;
         rtWasDown = rt;
         if (!rt) continuous = false;
@@ -292,14 +297,14 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
             "Nobody in the line of fire. Eye protection on.",
             "LB = flywheel on/off (off at START).",
             "Y = what the D-pad changes: SPEED / HOOD / DISTANCE.",
-            "D-pad up/down = big step, right/left = small step.",
+            "D-pad up/down: 100 RPM / 5 deg / 6 in steps;",
+            "  right/left: 10 RPM / 0.5 deg / 1 in steps.",
             "RB = shoot one, hold RT = keep shooting, B = stop.",
             "A = save this point, X = delete the point here.",
             "Sticks = drive (if set up), left trigger = slow.",
-            "Steps: park at the nearest distance. Change speed",
-            "(and hood) until several shots in a row go in: A.",
-            "Move back 1-2 ft, again. 4-6 points. Charged",
-            "battery. STOP saves the ShotTable lines.",
+            "Park at the nearest distance. Change speed (and",
+            "hood) until shots go in several times: A. Move",
+            "back 1-2 ft, again: 4-6 points. Charged battery.",
         };
     }
 

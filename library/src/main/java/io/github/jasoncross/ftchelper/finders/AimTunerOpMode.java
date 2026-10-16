@@ -30,6 +30,7 @@ import io.github.jasoncross.ftchelper.vision.TargetSource;
  *   RB               = shoot one (with createLauncher()), LB = flywheel off
  *   X                = home the turret (if it has a home switch; it will not aim before)
  *   sticks           = drive when not aiming (with robotConfig()), left trigger = slow
+ * Help: GUIDE (or hold START 1 s) = a help page with every button; everything pauses.
  * </pre>
  *
  * KEEP PEOPLE OUT OF THE LINE OF FIRE; eye protection on.
@@ -187,7 +188,8 @@ public abstract class AimTunerOpMode extends FinderOpMode {
     protected void step() {
         camera.update();
         target = findTarget(camera);
-        boolean aiming = gamepad1.a;
+        // A (and the sticks) only count once gamepad 1 was let go after START or help (inputsReady()).
+        boolean aiming = gamepad1.a && inputsReady();
         // A let go: forget the last picture, so the next aim starts fresh (no stale D part).
         if (wasAiming && !aiming) aim.reset();
         wasAiming = aiming;
@@ -200,7 +202,8 @@ public abstract class AimTunerOpMode extends FinderOpMode {
                 // Turn the robot toward the target (the controller gives 0 without a fresh target).
                 driving.drive(0, 0, aim.turnPower(target), 1);
             } else {
-                driving.update(gamepad1);
+                if (inputsReady()) driving.update(gamepad1);
+                else driving.hold();
             }
         }
         if (launcher != null) launcher.update();
@@ -244,7 +247,8 @@ public abstract class AimTunerOpMode extends FinderOpMode {
             "4. Repeat at 2-3 distances. If the offset that",
             "   works changes with distance, the camera is off",
             "   to the side: move it onto the launcher's line.",
-            "Sticks = drive when not aiming. STOP saves the line.",
+            "Sticks = drive when not aiming. Help stops homing:",
+            "press X again after. STOP saves the line.",
         };
     }
 
