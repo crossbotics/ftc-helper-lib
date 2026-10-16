@@ -33,6 +33,8 @@ final class SimRobot {
     final Map<String, SimServo> servos = new LinkedHashMap<>();
     final Map<String, double[]> crServos = new LinkedHashMap<>();   // name -> {power, reversed (1/0)}
     final Map<String, SimTouch> touches = new LinkedHashMap<>();
+    // Webcams (camera.KEY = name=Webcam 1, forward=..., see SimCamera), by their configuration name.
+    final Map<String, SimCamera> cameras = new LinkedHashMap<>();
     private final Map<String, HardwareDevice> devices = new LinkedHashMap<>();
     final String imuName;
     volatile double batteryVolts = 12.8;
@@ -157,6 +159,14 @@ final class SimRobot {
             Map<String, String> s = settings(p.getProperty(key));
             touches.put(key.substring("touch.".length()), new SimTouch(s.get(""), dbl(s, "below", 20)));
         }
+        for (String key : sortedKeys(p, "camera.")) {
+            Map<String, String> s = settings(p.getProperty(key));
+            // The name in the robot configuration: name=Webcam 1 (a name with a space can't be a key),
+            // or the part after "camera." when there is no name=.
+            String camName = s.containsKey("name") ? s.get("name") : key.substring("camera.".length());
+            if (camName.isEmpty()) throw new IllegalArgumentException("Robot file: \"" + key + "\" needs a name");
+            cameras.put(camName, new SimCamera(camName, s, this));
+        }
         imuName = p.getProperty("imu", "").trim();
         lengthIn = num(p, "robot.lengthIn", 18);
         widthIn = num(p, "robot.widthIn", 18);
@@ -219,6 +229,7 @@ final class SimRobot {
             devices.put(e.getKey(), e.getValue().touchSensor());
         }
         if (!imuName.isEmpty()) devices.put(imuName, imu());
+        for (SimCamera c : cameras.values()) devices.put(c.name, c.device);
         devices.put("Control Hub battery", voltageSensor());
     }
 
@@ -232,6 +243,12 @@ final class SimRobot {
         for (SimMotor m : motors.values()) m.resetConfig();
         for (SimServo s : servos.values()) s.resetConfig();
         for (double[] cr : crServos.values()) { cr[0] = 0; cr[1] = 0; }
+        closeCameras();
+    }
+
+    /** Closes every open camera portal (the FTC app does it when an OpMode stops). */
+    void closeCameras() {
+        for (SimCamera c : cameras.values()) c.closeAll();
     }
 
     /** Battery voltage from the panel: kept to 9..14 V (a real battery's range). */

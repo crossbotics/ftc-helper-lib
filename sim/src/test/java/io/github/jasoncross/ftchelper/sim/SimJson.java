@@ -98,6 +98,27 @@ final class SimJson {
             b.append("\"pressed\":").append(e.getValue().pressed()).append(',');
             b.append("\"manual\":").append(e.getValue().manual).append('}');
         }
+        b.append("],\"cameras\":[");
+        boolean firstCam = true;
+        for (SimCamera c : r.cameras.values()) {
+            if (!firstCam) b.append(',');
+            firstCam = false;
+            b.append('{');
+            field(b, "name", c.name).append(',');
+            b.append("\"forward\":").append(fmt(c.forwardIn)).append(',');
+            b.append("\"left\":").append(fmt(c.leftIn)).append(',');
+            b.append("\"up\":").append(fmt(c.upIn)).append(',');
+            b.append("\"yaw\":").append(fmt(c.yawDeg)).append(',');
+            b.append("\"pitch\":").append(fmt(c.pitchDeg)).append(',');
+            b.append("\"hfov\":").append(fmt(c.hfovDeg)).append(',');
+            b.append("\"width\":").append(c.width).append(',');
+            b.append("\"height\":").append(c.height).append(',');
+            b.append("\"open\":").append(c.openPortals() > 0).append(',');
+            b.append("\"seen\":").append(c.seenIds().toString()).append(',');
+            b.append("\"detections\":");
+            strings(b, c.detections());
+            b.append('}');
+        }
         b.append("],\"robot\":{");
         synchronized (r) {
             field(b, "drive", r.driveType).append(',');

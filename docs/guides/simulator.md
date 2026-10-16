@@ -1,9 +1,9 @@
 # The simulator: a pretend Control Hub and Driver Hub
 
 Try OpModes without a robot. Your real OpMode code runs on the laptop; the motors, servos, switches,
-turn sensor (IMU) and the robot on the field are pretend, with simple physics. Good for: checking
-buttons and screens, testing the finders, learning the controls, catching crashes before a meeting.
-Not for: exact speeds, real shots, camera pictures.
+turn sensor (IMU), webcam and the robot on the field are pretend, with simple physics. Good for:
+checking buttons and screens, testing the finders and camera code, learning the controls, catching
+crashes before a meeting. Not for: exact speeds, real shots, real camera pictures.
 
 ```mermaid
 flowchart LR
@@ -62,7 +62,7 @@ GUIDE, the M key, or hold START for 1 second (the finders accept that too).
 **Control Hub** (right): the field from above (the drivers are at the bottom), "push by hand"
 buttons (for the Drive Tuner's push test), every motor (power, count, speed, current; "STOP" when it
 is at a hard stop), every servo (where it is and where it is going), the switches (click to hold
-one pressed), and the battery voltage (lower it to see a weaker robot).
+one pressed), the cameras and the tags they see, and the battery voltage (lower it to see a weaker robot).
 
 **Field in 3D** (bottom, full width): the field and the robot in 3D. Drag to turn the view, scroll to
 zoom, right-drag (or two fingers) to slide. View buttons: Drivers, Audience, From above, Follow robot
@@ -71,7 +71,8 @@ zoom, right-drag (or two fingers) to slide. View buttons: Drivers, Audience, Fro
 something. The field is built from the field file's shapes (tiles, walls, tape, solid and overhead
 parts) with each AprilTag as a square with its ID. If the robot file names a 3D model of the field
 (`field.model`), the page shows that model instead (with the tag squares on top); the "Field CAD model"
-box switches between them. The 3D library (three.js, MIT license) comes with the simulator, so the page
+box switches between them. Each camera shows as a yellow cone; "Camera view" shows the first
+camera's picture in the corner. The 3D library (three.js, MIT license) comes with the simulator, so the page
 works without the internet. Untick "Show" on a slow computer.
 
 ## The robot file
@@ -97,6 +98,7 @@ imu = imu
 motor.lift = lift, part=gobilda-5203-312, min=0, max=2750, gravity=0.06
 motor.flywheel = flywheel, part=gobilda-5203-6000, feeder=feeder, shotDrop=0.15
 servo.claw = 0.5, part=gobilda-2000-torque
+camera.front = name=Webcam 1, forward=7, up=12, pitch=20   # see "Cameras" below
 touch.lift_bottom = lift, below=20
 ```
 
@@ -171,10 +173,11 @@ expect motor lift power > 0.1          # power | ticks | velocity | amps; > < >=
 expect servo claw target = 0.53 0.01   # target | actual
 expect robot y > -30                   # x | y | heading | imu | shots
 expect bumped none                     # or: bumped "Red HIVE"
+expect camera "Webcam 1" sees 31       # a tag id in the picture; or: sees none | sees "RED SCORING"
 expect within 2 motor lift ticks > 500 # wait up to 2 s for it to become true
 expect within 30 phase STOPPED         # e.g. wait for an autonomous to finish
 stop
-print screen                           # also: print motors | servos | robot (not counted as checks)
+print screen                           # also: print motors | servos | cameras | robot (not counted as checks)
 ```
 
 A note after `#` is ignored (outside quotes). A misspelled check fails with a message, never passes.
@@ -207,11 +210,42 @@ the library: models made from FIRST's field CAD belong in the team's own robot p
 from the field file. The BIOBUZZ model is made by `export_sim_field_glb.py` in the team's design repo
 from the field CAD export.
 
+## Cameras
+
+A webcam in the robot file lets your real camera code run: `WebcamTags`, or the SDK's own
+`VisionPortal` and `AprilTagProcessor` (the simulator has pretend copies of the SDK's camera classes,
+made by the SDK's own builders).
+
+```properties
+# name = the name in the robot configuration. Where it sits: inches forward/left/up from the robot's
+# center on the floor; yaw (+ = turned left) and pitch (+ = tilted up) in degrees. hfov = how wide it
+# sees, in degrees (Logitech C920 at 640x480: about 70). Defaults: 0, 0, 10, 0, 0, 70.4, 640, 480.
+camera.front = name=Webcam 1, forward=7, left=0, up=12, yaw=0, pitch=20, hfov=70.4, width=640, height=480
+```
+
+What it does: the camera opens about 1 s after the OpMode makes it, then sends 30 pictures a second.
+For each picture it works out which of the field file's AprilTags are in view: inside the picture,
+facing the camera (within 75 degrees), and big enough to find at the OpMode's decimation (about 6.5
+pixels across per step of decimation, which matches the FTC docs' ranges). The tags then become the
+SDK's own detections, the way the SDK makes them: a tag in one of the tag library's clusters gives a
+cluster detection (BIOBUZZ: the SDK 12 library has one cluster per CELL group of 4 tags, "RED SCORING"
+and so on); any other tag gives a single-tag detection (without a pose if the library does not know
+it). `ftcPose` uses the SDK's own formulas, so range, bearing (positive = left) and elevation mean the
+same as on the robot.
+
+On the page, the Control Hub panel lists each camera with the tags in its picture and what was found.
+The 3D view draws its view as a yellow cone on the robot, and "Camera view" shows the picture from the
+camera (the tags it sees turn green).
+
+Limits: the poses are exact (no noise, blur or lag); field parts do not block the view; `robotPose`
+is always null; only the AprilTag finder gets pictures (other VisionProcessors get `init()` and
+nothing more); phone cameras and the Limelight are not simulated; the resolution comes from the robot
+file, not from `setCameraResolution`.
+
 ## Not simulated
 
-Cameras (webcam and Limelight): an OpMode that needs one stops with "No WebcamName named..." (the
-field file has the AprilTags, so a simulated camera is the next step). Game pieces are not simulated
-yet. The Shot and Aim tuners work without a camera when `createCamera()` returns null. Physics is
+The Limelight (an OpMode that needs one stops with "Unable to find a hardware device..."), phone
+cameras, and game pieces. The Shot and Aim tuners work without a camera when `createCamera()` returns null. Physics is
 simple: real numbers (gains, speeds, shot tables) must still be found on the robot.
 
 Differences to know: the screen here updates as fast as the OpMode sends (a real Driver Station

@@ -1,0 +1,12 @@
+# The pretend webcam finds BIOBUZZ tags through the Aim Tuner's real camera code (WebcamTags).
+# Run it:  ./gradlew :sim:scenario -Pfile=sim/scenarios/camera-sees-tags.sim
+set pose 32 -12.74 90                 # facing the red CELL group with tags 30-33
+init "Aim Tuner"
+expect within 3 screen has "STREAMING"
+expect within 1 camera "Webcam 1" sees 31
+expect camera "Webcam 1" sees "RED SCORING"
+print cameras
+set pose 32 -12.74 -90                # turned away
+expect within 1 camera "Webcam 1" sees none
+stop
+expect error none

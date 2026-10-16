@@ -18,6 +18,11 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - Simulator: the field in 3D on the page (three.js, served by the simulator so it works offline):
   the field from the field file or a team's 3D model (`field.model` in the robot file), the robot box,
   AprilTag squares, and Drivers / Audience / From above / Follow robot views.
+- Simulator: pretend webcams (`camera.KEY = name=Webcam 1, forward=..., pitch=...` in the robot file).
+  `WebcamTags` and the SDK's own `VisionPortal`/`AprilTagProcessor` builders work; the field file's
+  AprilTags become the SDK's detections (BIOBUZZ: clusters per CELL group) with the SDK's ftcPose
+  formulas. The page lists what each camera sees, draws its view cone and shows its picture in 3D.
+  Scenario check: `expect camera "Webcam 1" sees 31|none|"RED SCORING"`.
 - Simulator: a parts catalog page (`docs/guides/parts-catalog.md`, made from `parts.json` by
   `tools/parts_page.py`; the build checks it is current). Parts not in the catalog: `rpm=`/`ticksPerRev=`
   on a motor, `rangeDeg=`/`secPer60=` on a servo, or a team parts file (`parts = parts.json`).

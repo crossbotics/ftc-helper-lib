@@ -138,6 +138,7 @@ final class SimServer {
                     sim.robot.push(num(f, "forward"), num(f, "right"), num(f, "seconds"));
                     return "ok";
                 case "resetPose": sim.robot.resetPose(); return "ok";
+                case "pose": sim.robot.setPose(num(f, "x"), num(f, "y"), num(f, "heading")); return "ok";
                 case "touch": sim.robot.toggleTouch(f.get("name")); return "ok";
                 case "autoTimer": sim.ds.autoTimer = "1".equals(f.get("on")); return "ok";
                 case "battery": sim.robot.setBattery(num(f, "volts")); return "ok";

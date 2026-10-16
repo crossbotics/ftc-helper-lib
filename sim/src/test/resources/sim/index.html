@@ -68,6 +68,8 @@
   .bar::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--line); }
   .stall { color: var(--stop); font-weight: 700; }
   #field { width: 100%; max-width: 380px; aspect-ratio: 1; display: block; margin: 0 auto; border-radius: 8px; border: 1px solid var(--line); }
+  .cam { margin: 4px 0; font-size: 12.5px; }
+  .cam ul { margin: 2px 0 0 18px; padding: 0; }
   .chip { display: inline-block; padding: 2px 8px; border-radius: 10px; border: 1px solid var(--line); margin: 2px; cursor: pointer; font-size: 12px; }
   .chip.on { background: var(--go); color: #fff; border-color: var(--go); }
   .muted { color: var(--muted); font-size: 12px; }
@@ -142,6 +144,8 @@
     <table id="servos"><tbody></tbody></table>
     <h3>Switches <span class="muted">(click to hold one pressed)</span></h3>
     <div id="touches"></div>
+    <h3>Cameras</h3>
+    <div id="cameras"></div>
     <h3>Battery</h3>
     <div class="row"><input type="range" id="battery" min="11" max="13.5" step="0.1" value="12.8"><span id="batteryText"></span></div>
   </section>
@@ -152,6 +156,7 @@
       <span class="muted">View:</span>
       <button data-view="drivers" class="on">Drivers</button><button data-view="audience">Audience</button>
       <button data-view="top">From above</button><button data-view="follow">Follow robot</button>
+      <label class="muted" id="camViewLabel" style="display:none"><input type="checkbox" id="camView" checked> Camera view</label>
       <label class="muted" id="cadLabel" style="display:none"><input type="checkbox" id="useCad" checked> Field CAD model</label>
       <span class="muted" id="v3note"></span>
     </div>
@@ -450,11 +455,17 @@ function renderHub(s) {
     + s.crservos.map(c => `<tr><td>${escapeHtml(c.name)}</td><td>${bar(c.power)}</td><td class="num">${c.power.toFixed(2)}</td><td class="muted">CR servo</td></tr>`).join("");
   $("#touches").innerHTML = s.touches.map(t =>
     `<span class="chip ${t.pressed ? "on" : ""}" data-touch="${escapeHtml(t.name)}">${escapeHtml(t.name)}: ${t.pressed ? "pressed" : "open"}${t.manual ? " (held)" : ""}</span>`).join("") || '<span class="muted">none</span>';
+  $("#cameras").innerHTML = (s.cameras || []).map(c =>
+    `<div class="cam"><b>${escapeHtml(c.name)}</b> <span class="muted">${c.width}x${c.height}, ${c.hfov}° across, ` +
+    `${c.forward} in forward, ${c.left} in left, ${c.up} in up, yaw ${c.yaw}°, pitch ${c.pitch}°</span><br>` +
+    (!c.open ? '<span class="muted">Not open (the OpMode has no VisionPortal on it).</span>'
+      : c.seen.length ? `Tags in the picture: ${c.seen.join(", ")}<ul>${c.detections.map(d => `<li>${escapeHtml(d)}</li>`).join("")}</ul>`
+      : '<span class="muted">Open, no tags in the picture.</span>') + `</div>`).join("") || '<span class="muted">none (add camera.NAME to the robot file)</span>';
   const bat = $("#battery");
   if (document.activeElement !== bat) bat.value = s.battery;
   $("#batteryText").textContent = s.battery.toFixed(1) + " V";
   drawField(s.robot);
-  update3d(s.robot);
+  update3d(s.robot, s.cameras || []);
   $("#poseText").textContent = s.robot.drive === "none" ? "No drivetrain in this robot file." :
     `x ${s.robot.x.toFixed(1)} in, y ${s.robot.y.toFixed(1)} in, heading ${s.robot.heading.toFixed(1)}°` +
     (s.robot.hasImu ? `, IMU yaw ${s.robot.imu.toFixed(1)}°` : "") + ` · shots ${s.robot.shots}` +
@@ -582,9 +593,13 @@ function build3d() {
   const arrowShape = new THREE.Shape([new THREE.Vector2(0, 0.5), new THREE.Vector2(-0.22, 0.2), new THREE.Vector2(0.22, 0.2)]);
   const arrow = new THREE.Mesh(new THREE.ShapeGeometry(arrowShape), new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }));
   robot.add(body, edges, arrow); scene.add(robot);
+  // Layer 1: drawn in the main view only (the robot's own cameras look out from inside its box).
+  [body, edges, arrow].forEach(o => o.layers.set(1));
+  camera.layers.enable(1);
+  const camMounts = new THREE.Group(); robot.add(camMounts);
   robot.visible = false;
 
-  Object.assign(v3, { renderer, scene, camera, controls, fieldGroup, simpleGroup, tagGroup, cadGroup, robot, body, edges, arrow, bodyMat });
+  Object.assign(v3, { renderer, scene, camera, controls, fieldGroup, simpleGroup, tagGroup, cadGroup, robot, body, edges, arrow, bodyMat, camMounts });
   new ResizeObserver(resize3d).observe(stage);
   resize3d();
   setView(v3.view);
@@ -679,8 +694,39 @@ function showCad() {
   // (the model has none); the tag squares stay, to show the IDs.
   v3.simpleGroup.children.forEach(o => o.visible = !cad || o.name === "tiles");
 }
-function update3d(r) {
+// The robot's cameras: a yellow view cone on the robot, and a three.js camera at the same place for the
+// "Camera view" picture. Mount: forward/left/up from the robot's center, yaw (+ = left), pitch (+ = up).
+function buildCameras(cams) {
+  disposeAll(v3.camMounts);
+  v3.simCams = [];
+  for (const c of cams) {
+    const mount = new THREE.Group(), tilt = new THREE.Group();
+    mount.position.set(-c.left, c.forward, c.up);
+    mount.rotation.z = c.yaw * Math.PI / 180;
+    tilt.rotation.x = Math.PI / 2 + c.pitch * Math.PI / 180;      // a three.js camera looks down its -z
+    mount.add(tilt); v3.camMounts.add(mount);
+    const vfov = 2 * Math.atan(Math.tan(c.hfov * Math.PI / 360) * c.height / c.width) * 180 / Math.PI;
+    const cam = new THREE.PerspectiveCamera(vfov, c.width / c.height, 1, 400);
+    cam.up.set(0, 1, 0); tilt.add(cam);
+    // the cone: 4 edges and the far rectangle, 36 in long
+    const L = 36, hx = Math.tan(c.hfov * Math.PI / 360) * L, hy = hx * c.height / c.width;
+    const far = [[-hx, -hy], [hx, -hy], [hx, hy], [-hx, hy]].map(([x, y]) => new THREE.Vector3(x, y, -L));
+    const pts = [];
+    far.forEach((p, i) => { pts.push(new THREE.Vector3(0, 0, 0), p, p, far[(i + 1) % 4]); });
+    const cone = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0xffc400 }));
+    cone.layers.set(1); tilt.add(cone);
+    v3.simCams.push({ name: c.name, cam, cone });
+  }
+  $("#camViewLabel").style.display = cams.length ? "" : "none";
+}
+function update3d(r, cams) {
   if (!v3.ready) return;
+  const camKey = JSON.stringify((cams || []).map(c => [c.name, c.forward, c.left, c.up, c.yaw, c.pitch, c.hfov, c.width, c.height]));
+  if (v3.camKey !== camKey) { v3.camKey = camKey; buildCameras(cams || []); }
+  // Tags in a camera's picture turn green; the cone is bright while the camera is open.
+  const seen = new Set();
+  (cams || []).forEach((c, i) => { (c.seen || []).forEach(id => seen.add(id)); if (v3.simCams[i]) v3.simCams[i].cone.material.color.set(c.open ? 0xffc400 : 0x7a6a33); });
+  v3.tagGroup.children.forEach(m => m.material.color.set(seen.has(+m.name.slice(4)) ? 0x7dff8a : 0xffffff));
   const key = r.field + "|" + r.fieldModel;
   if (fieldData && v3.fieldKey !== key) {
     v3.fieldKey = key;
@@ -731,7 +777,17 @@ function frame3d() {
     }
   }
   v3.controls.update();
-  v3.renderer.render(v3.scene, v3.camera);
+  const R = v3.renderer;
+  R.render(v3.scene, v3.camera);
+  // What the first camera sees, in the bottom-right corner (the same shapes; no robot).
+  if (v3.simCams && v3.simCams.length && $("#camView").checked) {
+    const st = $("#stage"), W = st.clientWidth, H = st.clientHeight, sc = v3.simCams[0].cam;
+    const w = Math.round(Math.min(W * 0.36, 360)), h = Math.round(w / sc.aspect), m = 8;
+    R.setScissorTest(true);
+    R.setViewport(W - w - m, m, w, h); R.setScissor(W - w - m, m, w, h);
+    R.render(v3.scene, sc);
+    R.setScissorTest(false); R.setViewport(0, 0, W, H);
+  }
 }
 document.querySelectorAll("[data-view]").forEach(b => b.onclick = () => setView(b.dataset.view));
 $("#useCad").onchange = () => showCad();

@@ -235,6 +235,7 @@ final class SimDriverStation {
         } finally {
             if (op == o) {
                 robot.allOff();
+                robot.closeCameras();
                 phase = Phase.STOPPED;
             }
         }
@@ -270,6 +271,7 @@ final class SimDriverStation {
             // switch off the next one's motors).
             if (op == o) {
                 robot.allOff();
+                robot.closeCameras();
                 phase = Phase.STOPPED;
             }
         }
@@ -310,6 +312,7 @@ final class SimDriverStation {
             }
         }
         robot.allOff();
+        robot.closeCameras();
         phase = Phase.STOPPED;
     }
 

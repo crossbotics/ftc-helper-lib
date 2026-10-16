@@ -49,7 +49,7 @@ final class SimField {
     static final class Tag {
         final int id;
         final String name;
-        final double x, y, z, facingDeg, sizeIn;
+        final double x, y, z, facingDeg, pitchDeg, sizeIn;
 
         Tag(Map<String, Object> m) {
             id = (int) SimJsonReader.number(m, "id", -1);
@@ -58,6 +58,7 @@ final class SimField {
             y = SimJsonReader.number(m, "y", 0);
             z = SimJsonReader.number(m, "z", 0);
             facingDeg = SimJsonReader.number(m, "facingDeg", 0);
+            pitchDeg = SimJsonReader.number(m, "pitchDeg", 0);   // 0 = the face points level; -90 = straight down
             sizeIn = SimJsonReader.number(m, "sizeIn", 6.5);
         }
     }

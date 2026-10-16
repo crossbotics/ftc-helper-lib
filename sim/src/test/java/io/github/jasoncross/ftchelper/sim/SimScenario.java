@@ -297,6 +297,10 @@ public final class SimScenario {
                 need(t, 3, "expect time < 25   (seconds since START)");
                 op(t, 1);
                 return;
+            case "camera":
+                need(t, 4, "expect camera \"Webcam 1\" sees 31|none|\"RED SCORING\"");
+                if (!t.get(2).equals("sees")) throw new IllegalArgumentException("expect camera NAME sees ...");
+                return;
             case "touch":
                 need(t, 3, "expect touch NAME pressed|open");
                 if (!t.get(2).equals("pressed") && !t.get(2).equals("open")) throw new IllegalArgumentException("pressed or open");
@@ -321,7 +325,7 @@ public final class SimScenario {
                 op(t, 2);
                 return;
             default:
-                throw new IllegalArgumentException("expect what? (screen, value, time, error, phase, motor, servo, robot, bumped, touch)");
+                throw new IllegalArgumentException("expect what? (screen, value, time, error, phase, motor, servo, robot, bumped, touch, camera)");
         }
     }
 
@@ -376,6 +380,19 @@ public final class SimScenario {
                 boolean pressed = touch.pressed();
                 why[0] = pressed ? "pressed" : "open";
                 return pressed == t.get(2).equals("pressed");
+            }
+            case "camera": {
+                // expect camera "Webcam 1" sees 31 | sees none | sees "RED SCORING" (a detection's text)
+                SimCamera c = sim.robot.cameras.get(t.get(1));
+                if (c == null) throw new IllegalArgumentException("no camera \"" + t.get(1) + "\" in the robot file");
+                java.util.List<Integer> ids = c.seenIds();
+                java.util.List<String> found = c.detections();
+                why[0] = c.openPortals() == 0 ? "the camera is not open (no VisionPortal)" : "sees tags " + ids + " " + found;
+                String want = t.get(3);
+                if (want.equals("none")) return ids.isEmpty();
+                if (want.matches("[0-9]+")) return ids.contains(Integer.parseInt(want));
+                for (String d : found) if (d.contains(want)) return true;
+                return false;
             }
             case "bumped": {
                 // expect bumped none | expect bumped "Red HIVE"
@@ -457,6 +474,12 @@ public final class SimScenario {
                     report.add(String.format(Locale.US, "          servo %-12s at %.3f  going to %.3f", s.name, s.actual, s.target()));
                 }
                 return;
+            case "cameras":
+                for (SimCamera c : sim.robot.cameras.values()) {
+                    report.add("          camera " + c.name + (c.openPortals() == 0 ? ": not open" : ": sees tags " + c.seenIds()));
+                    for (String d : c.detections()) report.add("            " + d);
+                }
+                return;
             case "robot":
                 synchronized (sim.robot) {
                     report.add(String.format(Locale.US, "          robot x %.1f in  y %.1f in  heading %.1f deg  imu %.1f",
@@ -464,7 +487,7 @@ public final class SimScenario {
                 }
                 return;
             default:
-                throw new IllegalArgumentException("print screen, motors, servos or robot");
+                throw new IllegalArgumentException("print screen, motors, servos, cameras or robot");
         }
     }
 
