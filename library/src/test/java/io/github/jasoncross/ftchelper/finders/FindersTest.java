@@ -139,4 +139,17 @@ public class FindersTest {
             for (String line : lines) assertTrue(f.finderName() + ": line too wide: " + line, line.length() <= 52);
         }
     }
+
+    // v0.7.2 shipped a help-key method that called itself forever: every finder crashed at INIT.
+    @Test public void theHelpKeysCanBeReadWithoutCrashing() throws Exception {
+        FinderOpMode f = new ServoFinderOpMode() { };
+        f.gamepad1 = new com.qualcomm.robotcore.hardware.Gamepad();
+        f.gamepad2 = new com.qualcomm.robotcore.hardware.Gamepad();
+        java.lang.reflect.Method m = FinderOpMode.class.getDeclaredMethod("updateHelpKeys");
+        m.setAccessible(true);
+        m.invoke(f);                                    // no help key: nothing happens
+        f.gamepad1.start = true;
+        m.invoke(f);                                    // START just pressed: not held long enough yet
+        assertFalse(f.helpKeyDown() == false);
+    }
 }

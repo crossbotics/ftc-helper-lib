@@ -4,6 +4,13 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+## v0.7.3 - 2026-10-16
+
+### Fixed
+
+- **Every finder crashed at INIT in v0.7.2** (the help-key code called itself without end). Found by
+  the new simulator on its first run. A test now covers it.
+
 ## v0.7.2 - 2026-10-16
 
 ### Fixed (Codex "Astra" and Fable reviews of the help page)

@@ -102,7 +102,7 @@ public abstract class FinderOpMode extends LinearOpMode {
 
     // GUIDE press, or START held START_HOLD_SEC: open or close help.
     private void updateHelpKeys() {
-        updateHelpKeys();
+        helpKey.update(gamepad1, gamepad2);
         if (!gamepad1.start) {
             startHeldSince = Double.NaN;
             startHoldUsed = false;
