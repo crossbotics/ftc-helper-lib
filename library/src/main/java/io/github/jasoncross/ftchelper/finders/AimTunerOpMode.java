@@ -231,6 +231,33 @@ public abstract class AimTunerOpMode extends FinderOpMode {
     }
 
     @Override
+    protected String[] helpLines() {
+        return new String[] {
+            "Finds the camera offset so shots go in the middle.",
+            "Nobody in the line of fire. Eye protection on.",
+            "1. Park 4-6 ft from the target, facing it.",
+            "   Turret with a home switch: X = home it first.",
+            "2. Hold A = aim. RB = shoot one. LB = flywheel off.",
+            "3. Shots go LEFT of the middle: D-pad RIGHT.",
+            "   Shots go RIGHT: D-pad LEFT. (right/left = 0.5",
+            "   deg, up/down = 2 deg.)",
+            "4. Repeat at 2-3 distances. If the offset that",
+            "   works changes with distance, the camera is off",
+            "   to the side: move it onto the launcher's line.",
+            "Sticks = drive when not aiming. STOP saves the line.",
+        };
+    }
+
+    // Help open: the launcher, turret and wheels stop; the camera keeps running.
+    @Override
+    protected void pause() {
+        if (launcher != null) launcher.stop();
+        if (turret != null) turret.stop();
+        if (driving != null) driving.stop();
+        others.stop();
+    }
+
+    @Override
     protected void stopAll() {
         RuntimeException first = null;
         try { if (launcher != null) launcher.stop(); } catch (RuntimeException e) { first = e; }

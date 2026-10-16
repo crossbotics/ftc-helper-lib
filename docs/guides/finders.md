@@ -32,6 +32,11 @@ flowchart LR
   and in the examples (`ExampleShotTuner`, `ExampleAimTuner`: put your launcher and camera in them).
   Remove `@Disabled`, build, and they are in the TeleOp list under "Finders".
 
+## Help on the robot
+
+Press **GUIDE** (the center button) in any finder, in INIT or while it runs: a page shows every
+button and the steps. While it is open, everything stops. GUIDE again goes back.
+
 ## Servo Finder: ends and positions
 
 1. Choose the servo (D-pad, A). A servo cannot tell where it is, so first choose a START POINT near

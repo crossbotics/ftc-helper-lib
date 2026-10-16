@@ -32,6 +32,9 @@ has them ready):
 public class ServoFinder extends ServoFinderOpMode { }
 ```
 
+**GUIDE (the center button) = help**, in every finder, in INIT or while it runs: a page with every
+button and the steps. While help is open, the finder's buttons pause and everything that moves stops.
+
 Every finder: nothing moves in INIT; the loop never waits (except the drive tuner's test moves,
 like autonomous); everything it moved is stopped at the end, even after an error.
 
@@ -207,8 +210,11 @@ the background when it stops. `runOpMode()` is `final`. Write your own finder by
 | --- | --- |
 | `t` | the [RobotTelemetry](telemetry.md) |
 | `results` | the [FinderResults](#finderresults) |
-| `finderName()`, `setup()`, `bind(controls)`, `step()`, `show(t)`, `stopAll()` | fill these in |
+| `finderName()`, `setup()`, `bind(controls)`, `step()`, `show(t)`, `stopAll()`, `helpLines()` | fill these in (`helpLines()`: the help page, about 15 lines) |
 | `showInit(t)` | optional: what INIT shows |
+| `pause()` | optional: what stops while help is open (default `stopAll()`; override when `stopAll()` also closes a camera) |
+
+GUIDE is the help key in every finder, so a finder must not bind GUIDE itself.
 
 ## FinderResults
 

@@ -3,6 +3,8 @@ package io.github.jasoncross.ftchelper.finders;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.RobotLog;
 import io.github.jasoncross.ftchelper.gamepad.ControllerBindings;
+import io.github.jasoncross.ftchelper.gamepad.ControllerBindings.Btn;
+import io.github.jasoncross.ftchelper.gamepad.ControllerBindings.Pad;
 import io.github.jasoncross.ftchelper.hardware.BulkReads;
 import io.github.jasoncross.ftchelper.telemetry.RobotTelemetry;
 
@@ -39,9 +41,32 @@ public abstract class FinderOpMode extends LinearOpMode {
     /** Stops every motor and servo it moves. Called at the end, always. */
     protected abstract void stopAll();
 
+    /**
+     * The help page: every button and the steps, a line each (about 15 lines fit on the screen).
+     * GUIDE shows it, in INIT or while running.
+     */
+    protected abstract String[] helpLines();
+
+    /**
+     * Stops what moves, while the help page is open (the finder's buttons pause then). Default:
+     * {@link #stopAll()}. A finder overrides it when stopAll() also closes something (a camera)
+     * that must keep working.
+     */
+    protected void pause() {
+        stopAll();
+    }
+
     /** What INIT shows (the controls, a safety note). */
     protected void showInit(RobotTelemetry t) {
         t.text(finderName() + ": press START.");
+    }
+
+    // The help page, or the normal screen. Toggled by GUIDE.
+    private boolean helpOpen = false;
+
+    private void showHelp(RobotTelemetry t) {
+        t.section(finderName() + " help  (GUIDE = back)");
+        for (String line : helpLines()) t.text(line);
     }
 
     /**
@@ -54,22 +79,49 @@ public abstract class FinderOpMode extends LinearOpMode {
         results = new FinderResults(finderName());
         BulkReads.auto(hardwareMap);
         ControllerBindings controls = new ControllerBindings();
+        // GUIDE (the center button) opens and closes the help page, in INIT too.
+        ControllerBindings helpKey = new ControllerBindings().bindPress(Pad.G1, Btn.GUIDE, () -> helpOpen = !helpOpen);
         Throwable failure = null;
         try {
             setup();
             bind(controls);
             while (opModeInInit()) {
-                showInit(t);
+                helpKey.update(gamepad1, gamepad2);
+                if (helpOpen) {
+                    showHelp(t);
+                } else {
+                    showInit(t);
+                    t.text("GUIDE (center button) = help: every button and the steps.");
+                }
                 t.update();
             }
             if (isStopRequested()) return;
             // A button held through START must not count as a press.
             controls.ignoreHeldButtons(gamepad1, gamepad2);
+            boolean helpWasOpen = false;
             while (opModeIsActive()) {
+                helpKey.update(gamepad1, gamepad2);
+                if (helpOpen) {
+                    // Help open: the finder's buttons pause and what moves stops (so nothing moves
+                    // while the driver reads). "Release" actions of held buttons run first.
+                    if (!helpWasOpen) {
+                        controls.releaseAll();
+                        pause();
+                    }
+                    helpWasOpen = true;
+                    showHelp(t);
+                    t.text("Help is open: everything is stopped.");
+                    t.update();
+                    continue;
+                }
+                // Just closed: a button still held from the help page must not act.
+                if (helpWasOpen) controls.ignoreHeldButtons(gamepad1, gamepad2);
+                helpWasOpen = false;
                 controls.update(gamepad1, gamepad2);
                 step();
                 if (!controls.getSlowActionWarning().isEmpty()) t.warn(controls.getSlowActionWarning());
                 show(t);
+                t.text("GUIDE = help");
                 results.addTelemetry(t);
                 if (!results.isEmpty()) t.text("(saved to the hub when you press STOP)");
                 t.update();

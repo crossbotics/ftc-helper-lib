@@ -116,4 +116,27 @@ public class FindersTest {
         assertTrue(Double.isNaN(FinderMath.pushTicks(new int[] {0, 0, 0, 0})));
         assertEquals(-1000, FinderMath.pushTicks(new int[] {-1000, -1000, -1000, -1000}), E);  // all backward: caller says so
     }
+
+    @Test public void everyHelpPageFitsOnTheDriverStation() {
+        FinderOpMode[] finders = {
+            new ServoFinderOpMode() { },
+            new MotorFinderOpMode() { },
+            new FlywheelFinderOpMode() { },
+            new DriveTunerOpMode() {
+                @Override protected io.github.jasoncross.ftchelper.core.RobotConfig robotConfig() { return null; }
+            },
+            new ShotTunerOpMode() {
+                @Override protected io.github.jasoncross.ftchelper.launcher.Launcher createLauncher() { return null; }
+            },
+            new AimTunerOpMode() {
+                @Override protected io.github.jasoncross.ftchelper.vision.TargetSource createCamera() { return null; }
+            },
+        };
+        for (FinderOpMode f : finders) {
+            String[] lines = f.helpLines();
+            assertTrue(f.finderName() + ": help is empty", lines.length > 0);
+            assertTrue(f.finderName() + ": help is too long for the screen", lines.length <= 15);
+            for (String line : lines) assertTrue(f.finderName() + ": line too wide: " + line, line.length() <= 54);
+        }
+    }
 }

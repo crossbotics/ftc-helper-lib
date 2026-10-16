@@ -189,6 +189,25 @@ public abstract class MotorFinderOpMode extends FinderOpMode {
     }
 
     @Override
+    protected String[] helpLines() {
+        return new String[] {
+            "Finds limits, positions, top speed (lift/arm/turret).",
+            "0. Robot on a block. Mechanism at its BOTTOM.",
+            "1. D-pad up/down = choose a motor, A = use it",
+            "   (its count starts at 0 here).",
+            "2. Right stick = move slowly. D-pad up/down =",
+            "   max power (0.1 to 0.6, starts at 0.3).",
+            "3. Just before the bottom: X. Just before the top: B.",
+            "   Then it stops at them (hold LB to go past).",
+            "4. Each height you need: A (P1, P2...). Y = undo.",
+            "5. Hold RT = speed test: full power up, stops",
+            "   before the top.",
+            "High amps while not moving = pushing on something:",
+            "stop. BACK = another motor. STOP saves the lines.",
+        };
+    }
+
+    @Override
     protected void stopAll() {
         if (motor != null) motor.setPower(0);
     }

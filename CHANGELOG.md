@@ -4,6 +4,14 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+## v0.7.1 - 2026-10-16
+
+### Added
+
+- Finders: **GUIDE = help page** (every button and the steps), in INIT or while running. While it is
+  open, the finder's buttons pause and everything that moves stops. New `FinderOpMode.helpLines()`
+  and `pause()`.
+
 ## v0.7.0 - 2026-10-16
 
 ### Added

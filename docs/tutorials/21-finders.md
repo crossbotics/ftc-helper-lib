@@ -32,7 +32,8 @@ public class ServoFinder extends ServoFinderOpMode {
 }
 ```
 
-Like the Hardware Check (tutorial 19), the library wrote the whole OpMode. It reads the robot
+Like the Hardware Check (tutorial 19), the library wrote the whole OpMode. Press **GUIDE** (the center
+button) in any finder for a help page with every button and the steps. It reads the robot
 configuration, so you do not even give it a servo name: you choose one from a list.
 
 ## 3. Use the Servo Finder

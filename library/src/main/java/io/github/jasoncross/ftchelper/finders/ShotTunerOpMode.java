@@ -286,6 +286,34 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
     }
 
     @Override
+    protected String[] helpLines() {
+        return new String[] {
+            "Builds the shot table: distance -> speed (+ hood).",
+            "Nobody in the line of fire. Eye protection on.",
+            "LB = flywheel on/off (off at START).",
+            "Y = what the D-pad changes: SPEED / HOOD / DISTANCE.",
+            "D-pad up/down = big step, right/left = small step.",
+            "RB = shoot one, hold RT = keep shooting, B = stop.",
+            "A = save this point, X = delete the point here.",
+            "Sticks = drive (if set up), left trigger = slow.",
+            "Steps: park at the nearest distance. Change speed",
+            "(and hood) until several shots in a row go in: A.",
+            "Move back 1-2 ft, again. 4-6 points. Charged",
+            "battery. STOP saves the ShotTable lines.",
+        };
+    }
+
+    // Help open: the flywheel, feeding and wheels stop; the camera keeps running.
+    @Override
+    protected void pause() {
+        spinning = false;
+        continuous = false;
+        launcher.stop();
+        if (driving != null) driving.stop();
+        others.stop();
+    }
+
+    @Override
     protected void stopAll() {
         RuntimeException first = null;
         try { if (launcher != null) launcher.stop(); } catch (RuntimeException e) { first = e; }

@@ -267,6 +267,25 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
     }
 
     @Override
+    protected String[] helpLines() {
+        return new String[] {
+            "Finds flywheel gains, top speed, recovery time.",
+            "Hands away from the wheel. Eye protection on.",
+            "1. D-pad up/down = choose the motor, A = use it.",
+            "2. Let go of A. Hold A = full power (max 5 s) until",
+            "   the speed stops rising: gains worked out.",
+            "   Wrong way? Let go, X = reverse, try again.",
+            "3. B = hold a speed (60% of top). D-pad up/down =",
+            "   +/-100 RPM, right/left = +/-25 RPM.",
+            "4. Too slow at every speed: RB (F +2%).",
+            "   Too fast: LB (F -2%).",
+            "5. Feed a piece by hand: the recovery time shows.",
+            "   B again = stop. BACK = another motor.",
+            "STOP saves the code lines.",
+        };
+    }
+
+    @Override
     protected void stopAll() {
         holding = false;
         if (flywheel != null) flywheel.stop();

@@ -247,6 +247,30 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
     }
 
     @Override
+    protected String[] helpLines() {
+        return new String[] {
+            "Finds wheel size and strafe correction for auto.",
+            "Tape on the floor, 5 ft of space ahead and right.",
+            "D-pad up/down = choose a test, A = start it.",
+            "Push: A, roll the robot BY HAND exactly 48 in",
+            "  along the tape, straight, then B.",
+            "Drive: it drives 48 in. Measure. D-pad = the real",
+            "  distance (up/down 1 in, right/left 0.25 in), A.",
+            "Strafe (mecanum): the same, to the right.",
+            "Turn: it turns 90 left: check with a square.",
+            "Each new number is used at once: repeat Drive and",
+            "Strafe until they measure 48. A stuck move is not",
+            "measured. Then copy the lines into RobotSettings.",
+        };
+    }
+
+    // Help open: stop the wheels, but during a push leave them free to roll (nothing is powered).
+    @Override
+    protected void pause() {
+        if (waiting != Wait.PUSHING && auto != null) auto.stop();
+    }
+
+    @Override
     protected void stopAll() {
         if (auto != null) auto.stop();
     }

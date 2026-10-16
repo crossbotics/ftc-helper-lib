@@ -168,6 +168,24 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
         }
     }
 
+    @Override
+    protected String[] helpLines() {
+        return new String[] {
+            "Finds a servo's safe ends and positions.",
+            "1. D-pad up/down = choose a servo, A = use it.",
+            "2. D-pad = a START POINT near where it sits now",
+            "   (nothing moves), A = move it there.",
+            "3. D-pad right/left = +/-0.01, up/down = +/-0.05,",
+            "   hold RB = 10x finer.",
+            "4. Move to one end until it JUST stops pushing on",
+            "   the frame (a straining servo hums), back off a",
+            "   little: X. The other end: B. Then it stays",
+            "   between them (hold LB to go past).",
+            "5. Each position you need: A (P1, P2...). Y = undo.",
+            "BACK = another servo. STOP saves the code lines.",
+        };
+    }
+
     // A servo has no "off" that is safe for every mechanism, so it stays where it is.
     @Override protected void stopAll() { }
 }
