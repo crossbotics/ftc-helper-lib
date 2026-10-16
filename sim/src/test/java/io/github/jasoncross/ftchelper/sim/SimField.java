@@ -97,7 +97,10 @@ final class SimField {
         }
     }
 
-    /** A place to score: a piece whose centre comes within radiusIn of (x, y), at or below z, scores. */
+    /**
+     * A place to score: an opening of radiusIn around (x, y), z above the tiles. A piece over it (its edge
+     * within the opening), down to it, not going up and not flying past fast, scores (see SimPieces).
+     */
     static final class Goal {
         final String name;
         final double x, y, z, radiusIn;

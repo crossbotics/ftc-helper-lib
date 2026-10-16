@@ -36,8 +36,10 @@ public class SimPiecesTest {
     @Test public void theIntakeTakesInAPieceInFront() throws Exception {
         SimRobot r = robot("collect.intake = shape=intake, motor=intake, holds=8\n");
         r.setPose(30, -30, 0);                              // facing +y
-        r.pieces.place("POLLEN", 30, -19.5, 0);            // just ahead of the robot's front (y -21)
+        r.pieces.place("POLLEN", 30, -16, 0);              // 3.6 in ahead of the robot's front (y -21): out of reach
         r.motors.get("intake").device.setPower(1);
+        run(r, 0.3);
+        assertEquals("not taken from afar", 4, r.pieces.storedCount());
         r.push(10, 0, 1.0);                                  // roll forward into it
         run(r, 1.5);
         assertEquals("taken in", 5, r.pieces.storedCount());
@@ -65,9 +67,19 @@ public class SimPiecesTest {
 
     @Test public void aPieceDroppedIntoAFlowerScores() throws Exception {
         SimRobot r = robot("");
-        r.pieces.place("POLLEN", 23.57, -68.54, 30);        // above the red-wall FLOWER's top
+        r.pieces.place("POLLEN", 23.57, -68.04, 30);        // above the red-wall FLOWER's opening
         run(r, 1.0);
         assertEquals(1, (int) r.pieces.scored().get("FLOWER (red wall, audience half)"));
+        // dropped 2.5 in off the centre: it lands on the rim and rolls in (it counts)
+        SimRobot o = robot("");
+        o.pieces.place("POLLEN", 23.57 + 2.5, -68.04, 30);
+        run(o, 1.5);
+        assertEquals(1, (int) o.pieces.scored().get("FLOWER (red wall, audience half)"));
+        // a piece just set above the opening, not yet fallen in, has not scored
+        SimRobot q = robot("");
+        q.pieces.place("POLLEN", 23.57, -68.04, 26);
+        q.pieces.step();
+        assertEquals(0, (int) q.pieces.scored().get("FLOWER (red wall, audience half)"));
     }
 
     @Test public void theClawHoldsAPieceAndDropsItWhenItOpens() throws Exception {

@@ -117,7 +117,7 @@ final class SimWorld {
         world.setContactMaxCorrectingVel(1.0);
         space = OdeHelper.createHashSpace();
         // The walls: four boxes just outside the inside line, 12 in tall.
-        double half = field.wallHalf * M, t = 0.05, h = 0.3;
+        double half = field.wallHalf * M, t = 0.15, h = 0.3;     // thick, so a fast piece cannot pass through
         wall(0, half + t / 2, 2 * half + 2 * t, t, h);
         wall(0, -half - t / 2, 2 * half + 2 * t, t, h);
         wall(half + t / 2, 0, t, 2 * half, h);
@@ -152,8 +152,10 @@ final class SimWorld {
         b.setMass(m);
         b.setPosition(x * M, y * M, zFloor + z * M);
         b.setLinearVel(vx * M, vy * M, vz * M);
-        b.setLinearDamping(0.002);
-        b.setAngularDamping(0.03);       // rolling slows down (foam on foam tiles)
+        // Slowing down, as rates per second turned into the engine's per-step share: rolling on foam tiles
+        // (a ball at 1 m/s rolls about 2 m; a guess to check against a real roll) and a little air.
+        b.setLinearDamping(1 - Math.exp(-0.05 * STEP));
+        b.setAngularDamping(1 - Math.exp(-0.5 * STEP));
         DGeom g = OdeHelper.createSphere(space, r);
         g.setBody(b);
         Ball ball = new Ball(nextBall++, type, b, g);
@@ -249,6 +251,8 @@ final class SimWorld {
         for (int i = 0; i < pieces.size(); i++) {
             SimShapes.Piece p = pieces.get(i);
             DGeom g = robotParts.get(i);
+            // its size too (a claw's palm widens as it opens)
+            ((org.ode4j.ode.DBox) g).setLengths(Math.max(0.005, p.sf * M), Math.max(0.005, p.sl * M), Math.max(0.005, p.su * M));
             // robot frame (f, l, u) -> body frame (x = right = -l, y = forward = f, z = up from the body centre)
             g.setOffsetPosition(-p.center[1] * M, p.center[0] * M, p.center[2] * M + zFloor);
             DMatrix3 r = new DMatrix3();
@@ -286,11 +290,21 @@ final class SimWorld {
         for (Ball b : balls) b.touchingParts.clear();
         while (leftOver >= STEP) {
             leftOver -= STEP;
-            time += STEP;
-            drive(forwardIn * M, rightIn * M, -Math.toRadians(cwDeg));
-            space.collide(null, near);
-            world.quickStep(STEP);
-            contacts.empty();
+            // A fast piece (a shot) would move several inches in one step and could pass through a thin
+            // part: then the step is cut into smaller ones (each piece moves at most about 0.5 in).
+            double fastest = 0;
+            for (Ball b : balls) {
+                DVector3C v = b.body.getLinearVel();
+                fastest = Math.max(fastest, Math.sqrt(v.get0() * v.get0() + v.get1() * v.get1() + v.get2() * v.get2()));
+            }
+            int parts = (int) Math.min(8, Math.max(1, Math.ceil(fastest * STEP / 0.0127)));
+            for (int k = 0; k < parts; k++) {
+                time += STEP / parts;
+                drive(forwardIn * M, rightIn * M, -Math.toRadians(cwDeg));
+                space.collide(null, near);
+                world.quickStep(STEP / parts);
+                contacts.empty();
+            }
         }
     }
 

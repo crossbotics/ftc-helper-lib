@@ -10,9 +10,11 @@ import java.util.Properties;
  * Game pieces and what the robot does with them (needs physics = engine). The field file stages the
  * pieces and names the goals; the robot file says which robot shapes handle them:
  *
- *   collect.NAME = shape=intake, motor=intake, holds=4    a roller (or any part) that takes in a piece it
- *                                                          touches while its motor (or crservo=) turns inward
- *                                                          (power above 0.2; inward=- if negative power takes in)
+ *   collect.NAME = shape=intake, motor=intake, holds=4    a roller (or any part) that takes in a piece within
+ *                                                          reach= (0.75 in) while its motor (or crservo=) turns
+ *                                                          inward (power after its direction setting above 0.2;
+ *                                                          inward=- if negative power takes in). BIOBUZZ: a robot
+ *                                                          may hold at most 4.
  *   shoot.NAME = shape=flywheel, angle=40, share=0.5      when the flywheel's feeder fires a shot (motor.NAME =
  *                                                          flywheel, feeder=...), a held piece leaves from this
  *                                                          shape, angle degrees up from the shape's forward, at
@@ -45,12 +47,13 @@ final class SimPieces {
     }
 
     private static final class Shoot {
-        final String name, shape;
+        final String name, shape, flywheel;
         final double angleDeg, share;
 
         Shoot(String name, Map<String, String> s) {
             this.name = name;
             shape = req(s, "shape", "shoot." + name);
+            flywheel = s.get("flywheel");     // which flywheel motor fires it (needed when there are two)
             angleDeg = num(s, "angle", 40, "shoot." + name);
             share = num(s, "share", 0.5, "shoot." + name);
         }
@@ -92,7 +95,11 @@ final class SimPieces {
             if (c.motor != null && !robot.motors.containsKey(c.motor)) throw new IllegalArgumentException("Robot file: collect." + c.name + ": no motor." + c.motor);
             if (c.crservo != null && !robot.crServos.containsKey(c.crservo)) throw new IllegalArgumentException("Robot file: collect." + c.name + ": no crservo." + c.crservo);
         }
-        for (Shoot s : shoots) check(s.shape, "shoot." + s.name);
+        for (Shoot s : shoots) {
+            check(s.shape, "shoot." + s.name);
+            if (s.flywheel != null && !robot.motors.containsKey(s.flywheel)) throw new IllegalArgumentException("Robot file: shoot." + s.name + ": no motor." + s.flywheel);
+            if (s.flywheel == null && shoots.size() > 1) throw new IllegalArgumentException("Robot file: shoot." + s.name + ": with two launchers, say which flywheel fires each (flywheel=NAME)");
+        }
         for (Grab g : grabs) {
             check(g.shape, "grab." + g.name);
             if (!robot.servos.containsKey(g.servo)) throw new IllegalArgumentException("Robot file: grab." + g.name + ": no servo." + g.servo);
@@ -116,9 +123,21 @@ final class SimPieces {
             for (SimField.StagedPiece sp : robot.field.pieces) {
                 world.addBall(robot.field.pieceTypes.get(sp.type), sp.x, sp.y, sp.z, 0, 0, 0);
             }
+            // The preload (manual 10.3.1: in or on the robot, or on the tiles touching it): inside a robot that
+            // can take in or shoot pieces; otherwise on the tiles in a row behind it.
             if (!collects.isEmpty() || !shoots.isEmpty()) {
                 for (Map.Entry<String, Integer> e : robot.field.preload.entrySet()) {
                     for (int i = 0; i < e.getValue(); i++) stored.add(robot.field.pieceTypes.get(e.getKey()));
+                }
+            } else if (!grabs.isEmpty()) {
+                int k = 0;
+                for (Map.Entry<String, Integer> e : robot.field.preload.entrySet()) {
+                    SimField.PieceType t = robot.field.pieceTypes.get(e.getKey());
+                    for (int i = 0; i < e.getValue(); i++, k++) {
+                        double[] at = toField(new double[] {-robot.lengthIn / 2 - t.diameterIn / 2 - 0.1,
+                                (k - 1.5) * (t.diameterIn + 0.2), t.diameterIn / 2});
+                        world.addBall(t, at[0], at[1], at[2], 0, 0, 0);
+                    }
                 }
             }
             for (String k : scored.keySet()) scored.put(k, 0);
@@ -135,7 +154,10 @@ final class SimPieces {
     boolean shoot(SimMotor flywheel) {
         synchronized (robot) {
             if (!shootsPieces() || stored.isEmpty()) return false;
-            Shoot s = shoots.get(0);
+            Shoot s = null;
+            for (Shoot x : shoots) if (flywheel.name.equals(x.flywheel)) s = x;
+            if (s == null && shoots.size() == 1) s = shoots.get(0);
+            if (s == null) return false;
             SimShapes.Piece piece = pieceOf(s.shape);
             if (piece == null) return false;
             SimField.PieceType type = stored.remove(0);
@@ -164,7 +186,8 @@ final class SimPieces {
                 double[] bp = world.ballPos(b);
                 for (Collect c : collects) {
                     if (stored.size() >= c.holds || !(b.touchingParts.contains(c.shape) || near(c.shape, bp, b.type.diameterIn / 2, c.reach))) continue;
-                    double power = c.motor != null ? robot.motors.get(c.motor).userPower()
+                    // the power after the motor's (or CR servo's) direction setting, for both
+                    double power = c.motor != null ? robot.motors.get(c.motor).appliedPower
                             : robot.crServos.get(c.crservo)[0] * (robot.crServos.get(c.crservo)[1] == 1 ? -1 : 1);
                     if (c.threshold > 0 ? power >= c.threshold : power <= c.threshold) {
                         stored.add(b.type);
@@ -186,9 +209,16 @@ final class SimPieces {
                 if (taken) continue;
                 double[] p = world.ballPos(b);
                 for (SimField.Goal goal : robot.field.goals) {
-                    // In the opening: within its radius, from a little above it (a piece resting on the
-                    // opening; the field's FLOWER is a solid block here) down into it.
-                    if (Math.hypot(p[0] - goal.x, p[1] - goal.y) <= goal.radiusIn && p[2] <= goal.z + b.type.diameterIn + 2 && p[2] >= goal.z - 6) {
+                    // In the opening: its centre over the opening, and low enough to be sitting in it or on
+                    // its rim (the simulator's FLOWER is a solid block whose backstop stands 1.3 in above the
+                    // opening; a piece there would drop in), not going up.
+                    // A piece resting on the block with its edge over the opening would roll in: it counts.
+                    // A shot flying past (fast) does not.
+                    double r = b.type.diameterIn / 2;
+                    double[] v = world.ballVel(b);
+                    double speed = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+                    if (Math.hypot(p[0] - goal.x, p[1] - goal.y) <= goal.radiusIn + r && p[2] <= goal.z + r + 1.3
+                            && p[2] >= goal.z - 6 && v[2] <= 1 && speed <= 60) {
                         scored.put(goal.name, scored.get(goal.name) + 1);
                         world.removeBall(b);
                         taken = true;
@@ -334,7 +364,7 @@ final class SimPieces {
         synchronized (robot) {
             SimField.PieceType t = robot.field.pieceTypes.get(type);
             if (t == null) throw new IllegalArgumentException("no piece type \"" + type + "\" in the field file (" + robot.field.pieceTypes.keySet() + ")");
-            if (world == null) throw new IllegalArgumentException("game pieces need physics = engine");
+            if (world == null) throw new IllegalArgumentException("game pieces need physics = engine and a drivetrain");
             world.addBall(t, x, y, Math.max(z, t.diameterIn / 2), 0, 0, 0);
         }
     }

@@ -159,8 +159,9 @@ little margin, and measure the real robot at its hard stops.
 ## Game pieces
 
 With the physics engine, the field file's game pieces are on the field (BIOBUZZ: the 4 POLLEN in each
-GARDEN; POLLEN 2.8 in and 25 g, NECTAR 3.6 in and 41 g), they roll and bounce, the robot pushes them,
-and the FLOWER tops are goals. The robot file says which robot shapes handle them:
+GARDEN; POLLEN 2.8 in, NECTAR 3.6 in from manual 9.8; 25 g and 41 g from AndyMark's am-5851/am-5852
+pages, not the manual), they roll and bounce, the robot pushes them, and the FLOWER tops are goals
+(the opening's centre and height measured in the FLOWER CAD). The robot file says which robot shapes handle them:
 
 ```properties
 # take in a piece within 0.75 in of the intake shape while motor "intake" turns inward (power above 0.2;
@@ -173,7 +174,9 @@ shoot.launcher = shape=flywheel, angle=45, share=0.5
 grab.claw = shape=claw, servo=claw, closedBelow=0.3
 ```
 
-A robot that can collect or shoot starts with the field file's preload (BIOBUZZ: 4 POLLEN). With a
+A robot that can collect or shoot starts with the field file's preload inside it (BIOBUZZ: 4 POLLEN;
+`holds=4` is the game's rule: no more than 4 at a time); any other robot gets them on the tiles touching
+its back. With a
 `shoot.` line, a shot needs a piece: no piece, no shot. A piece that comes into a goal (a FLOWER top)
 scores and is taken off. "Back to start" puts the pieces back. The Control Hub panel shows what the
 robot holds, what it shot and what scored; the 3D view and the field from above draw the pieces.
@@ -181,9 +184,10 @@ robot holds, what it shot and what scored; the 3D view and the field from above 
 Scenario lines: `set piece POLLEN X Y [Z]`, `expect stored >= 1`, `expect launched >= 1`,
 `expect scored "FLOWER" >= 1` (goals whose name has the text; `"all"` = every goal), `print pieces`.
 
-Not yet: the pieces that start inside the FLOWERs and CELLs and in the alliance areas, the CELLs as
-goals, pieces held by a part pushing back on it (a held piece has no weight on the arm), and robot
-parts that stop when they hit a piece.
+Not yet: the pieces that start inside the FLOWERs and CELLs and in the alliance areas; the CELLs as
+goals (the HIVE and its CELLs are one solid block, 30.65 to 65.93 in up: a shot at a CELL bounces off);
+GARDEN scoring; a held piece's weight on the arm; robot parts that stop when they hit a piece. How far
+a ball rolls on the tiles is a guess (about 2 m from 1 m/s) until someone times a real one.
 
 ## Real numbers: the Characterizer
 
@@ -330,6 +334,9 @@ robot.massKg = 15        # the robot's mass (default 15)
 drive.grip = 1.0         # how hard the wheels can push, as a share of the robot's weight (about 1 on tiles)
 physics = engine         # the default; "simple" = the old rule: a bump stops the whole move, no sliding
 ```
+
+The body follows the wheels a little behind (its grip takes about 0.02 s to catch up), so an
+encoder-driven autonomous ends within about half an inch of where `physics = simple` would put it.
 
 Limits: the robot is held flat (it never tips or climbs); its parts are solid boxes on it and do not stop
 their own motors (an arm swinging into the HIVE pushes the robot, it does not stall the arm); field

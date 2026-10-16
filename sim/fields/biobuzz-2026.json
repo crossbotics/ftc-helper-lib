@@ -1277,35 +1277,35 @@
  "goals": [
   {
    "name": "FLOWER (audience wall, blue half)",
-   "x": 68.54,
+   "x": 68.04,
    "y": 23.57,
-   "z": 21.5,
+   "z": 21.4,
    "radiusIn": 2.0,
-   "notes": "top opening ~4 in across, ~21.5 in up (manual 9.7)"
+   "notes": "top opening ~4 in across (manual 9.7); centre and height from the FLOWER CAD (lifter/flower_cad.py)"
   },
   {
    "name": "FLOWER (blue wall, far half)",
    "x": -23.57,
-   "y": 68.54,
-   "z": 21.5,
+   "y": 68.04,
+   "z": 21.4,
    "radiusIn": 2.0,
-   "notes": "top opening ~4 in across, ~21.5 in up (manual 9.7)"
+   "notes": "top opening ~4 in across (manual 9.7); centre and height from the FLOWER CAD (lifter/flower_cad.py)"
   },
   {
    "name": "FLOWER (red wall, audience half)",
    "x": 23.57,
-   "y": -68.54,
-   "z": 21.5,
+   "y": -68.04,
+   "z": 21.4,
    "radiusIn": 2.0,
-   "notes": "top opening ~4 in across, ~21.5 in up (manual 9.7)"
+   "notes": "top opening ~4 in across (manual 9.7); centre and height from the FLOWER CAD (lifter/flower_cad.py)"
   },
   {
    "name": "FLOWER (far wall, red half)",
-   "x": -68.54,
+   "x": -68.04,
    "y": -23.57,
-   "z": 21.5,
+   "z": 21.4,
    "radiusIn": 2.0,
-   "notes": "top opening ~4 in across, ~21.5 in up (manual 9.7)"
+   "notes": "top opening ~4 in across (manual 9.7); centre and height from the FLOWER CAD (lifter/flower_cad.py)"
   }
  ],
  "preload": {

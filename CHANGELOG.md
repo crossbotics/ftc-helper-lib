@@ -23,6 +23,13 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   AprilTags become the SDK's detections (BIOBUZZ: clusters per CELL group) with the SDK's ftcPose
   formulas. The page lists what each camera sees, draws its view cone and shows its picture in 3D.
   Scenario check: `expect camera "Webcam 1" sees 31|none|"RED SCORING"`.
+- Simulator stage 3 fixes from the Astra/Fable reviews: FLOWER goals at the CAD-measured opening
+  (centre 68.04 in out, 21.4 in up); a piece on the rim with its edge over the opening scores, a fast
+  shot flying past or a piece hovering above does not; claw boxes resize as it opens; each shoot. line
+  can name its flywheel; fast pieces get smaller physics steps; thicker walls; rolling and air drag as
+  per-second rates; intake power after the direction setting; a claw-only robot gets its preload on the
+  tiles behind it; new tests (a part stops the robot, wheels slip while pinned, the robot pushes a piece,
+  the intake needs the piece close, an off-centre drop scores); docs on sources and limits.
 - Simulator: game pieces (needs the physics engine): the field file's piece types, staged pieces,
   goals and preload (BIOBUZZ: POLLEN and NECTAR from the manual; 4 POLLEN in each GARDEN; FLOWER tops
   as goals; 4 POLLEN preload). Robot file `collect.` (intake), `shoot.` (a flywheel shot launches a

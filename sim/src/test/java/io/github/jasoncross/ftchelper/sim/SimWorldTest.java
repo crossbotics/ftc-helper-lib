@@ -48,13 +48,35 @@ public class SimWorldTest {
         assertEquals(-70.585 + 9, r.y, 0.3);
     }
 
+    @Test public void wheelsKeepCountingWhilePinnedAgainstAWall() throws Exception {
+        SimRobot r = robot("");
+        r.setPose(40, -55, 0);
+        // drive backward into the red wall (the left wheels are mounted mirrored: +power on them is backward)
+        for (int i = 0; i < r.wheels.size(); i++) r.wheels.get(i).device.setPower(i % 2 == 0 ? 0.5 : -0.5);
+        for (double t = 0; t < 1.5; t += 0.01) r.step(0.01);
+        int before = r.wheels.get(1).encoder();
+        for (double t = 0; t < 1.0; t += 0.01) r.step(0.01);
+        assertEquals("pinned at the wall", -70.585 + 9, r.y, 0.3);
+        assertTrue("its wheels still turn (they slip): " + (r.wheels.get(1).encoder() - before),
+                Math.abs(r.wheels.get(1).encoder() - before) > 500);
+    }
+
+    @Test public void theRobotPushesAPiece() throws Exception {
+        SimRobot r = robot("");
+        r.setPose(30, -40, 0);
+        r.pieces.place("POLLEN", 30, -25, 0);              // 6 in ahead of the robot's front
+        push(r, 15, 0, 1.5);
+        double y = (Double) r.pieces.drawn().stream().filter(d -> Math.abs((Double) d[1] - 30) < 6).findFirst().get()[2];
+        assertTrue("pushed forward: y " + y, y > -15);
+    }
+
     @Test public void aPartHitsTheFieldTooAndThePhysicsCanBeOff() throws Exception {
-        // a 10 in tall "mast" 10 in in front of the robot, at the height of the HIVE frame top (34-44 in)
-        SimRobot r = robot("shape.mast = box, at=10,0,4, size=1x1x36\n");
-        r.setPose(0, -40, 0);                 // facing +y, the HIVE frame top (x +-4.3, y +-15.1) ahead
-        push(r, 15, 0, 2.5);
-        assertTrue("the mast hits something of the HIVE: " + r.bumpedInto, r.bumpedInto.contains("HIVE"));
-        assertTrue("stopped before the HIVE: y " + r.y, r.y < -24);
+        // a 1 in pole reaching 20 in in front of the robot, low (the chassis alone would stop at y -33.7)
+        SimRobot r = robot("physics = engine\nshape.pole = box, at=20,0,2, size=1x1x1\n");
+        r.setPose(0, -60, 0);                 // facing +y, the HIVE frame base (y -24.7..-15.5) ahead
+        push(r, 15, 0, 3.0);
+        assertTrue("the pole hits the HIVE: " + r.bumpedInto, r.bumpedInto.contains("HIVE"));
+        assertEquals("stopped by the pole's tip, 20.5 in ahead of the robot's centre", -24.73 - 20.5, r.y, 0.5);
         // physics = simple: the old rule, a bump stops the whole move
         SimRobot s = robot("physics = simple\n");
         assertTrue(s.world == null);
