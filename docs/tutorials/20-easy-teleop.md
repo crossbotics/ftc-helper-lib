@@ -36,7 +36,9 @@ public class Tut20EasyTeleOp extends EasyTeleOp {
     }
 ```
 
-These are the SAME two methods as tutorial 16's autonomous. `robotConfig()` gives the drive, the
+These are the SAME two methods as tutorial 16's autonomous. The tutorial `RobotSettings` (from
+tutorial 09) keeps its settings in `static` methods, so `RobotSettings.config()` wraps them into one
+object. The starter kit's `RobotSettings` IS such an object, so there you write `new RobotSettings()`. `robotConfig()` gives the drive, the
 autonomous tuning and the IMU in one object (a [`RobotConfig`](../modules/core.md#robotconfig)), so
 TeleOp and autonomous can never use different motor names or directions. The mechanisms you return
 are updated every loop, shown on the screen, and stopped at the end.
@@ -51,12 +53,12 @@ You get these on gamepad 1 without writing anything:
 | right stick X | turn |
 | left trigger | slow: squeeze for fine moves |
 | Y | field-centric on/off (starts off) |
-| BACK | "the robot now faces away from me" |
+| BACK (alone, on release) | "the robot now faces away from me" (one buzz) |
 | GUIDE | tuning menu (PRACTICE profile) |
-| hold START, press BACK | debug telemetry on/off |
+| START + BACK together | debug telemetry on/off (does not reset "forward") |
 
-Field-centric "forward" continues from where autonomous ended, so the driver does not need BACK at
-the start of a match ([DriverHeading](../modules/drive.md#driverheading)).
+Field-centric "forward" continues from where autonomous ended (also after INIT, STOP, INIT again),
+so the driver does not need BACK at the start of a match ([DriverHeading](../modules/drive.md#driverheading)).
 
 ## 4. The operator's buttons
 
@@ -81,7 +83,8 @@ target and returns; the lift moves in its own `update()`. Extra buttons for the 
 ```
 
 A stick is not a button, so it goes here. `everyLoop()` runs after the buttons and the driving,
-before the mechanisms update. Keep it quick: never `sleep()` or wait here
+before the mechanisms update. It keeps running while the tuning menu is open: if you read
+gamepad 1's sticks here, check `isTuningMenuOpen()` first (the menu uses gamepad 1). Keep it quick: never `sleep()` or wait here
 ([Non-blocking code](../guides/non-blocking.md)).
 
 ## 6. Extra screen lines (optional)

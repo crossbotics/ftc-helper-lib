@@ -34,7 +34,10 @@ import io.github.jasoncross.ftchelper.drive.DriveConfig;
  */
 public abstract class RobotConfig {
 
-    /** The drivetrain: type, motor names, directions, power limit. Called each time a program starts. */
+    /**
+     * The drivetrain: type, motor names, directions, power limit. It may be called more than once
+     * per program: make a fresh DriveConfig each time.
+     */
     public abstract DriveConfig drive();
 
     /**
@@ -45,6 +48,10 @@ public abstract class RobotConfig {
         return new AutoDriveConfig();
     }
 
-    /** The IMU (turn sensor), set up for how the hub is mounted. Usually one {@code ImuSetup.get(...)} line. */
+    /**
+     * The IMU (turn sensor), set up for how the hub is mounted. Usually one {@code ImuSetup.get(...)} line.
+     * Every Control Hub has one, so return it. (Returning null means "no IMU": TeleOp then drives
+     * robot-centric only, and autonomous refuses to start, because its turns need the IMU.)
+     */
     public abstract IMU imu(HardwareMap hardwareMap);
 }

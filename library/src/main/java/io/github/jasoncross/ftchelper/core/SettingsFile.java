@@ -1,5 +1,6 @@
 package io.github.jasoncross.ftchelper.core;
 
+import io.github.jasoncross.ftchelper.util.BackgroundWorker;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -7,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Properties;
+import java.util.function.Consumer;
 
 /**
  * A small settings file on the Control Hub, so choices and tuned numbers survive a restart.
@@ -36,6 +38,10 @@ public final class SettingsFile {
     private final Properties values = new Properties();
     // True once we have read the file, so we read it only once.
     private boolean loaded = false;
+    // Held while writing the file, so two saves never write at the same moment.
+    private final Object writeLock = new Object();
+    // The background thread for saveInBackground(), shared by every settings file.
+    private static BackgroundWorker saver;
 
     // Every public method below is "synchronized": only one piece of code at a time may use the
     // values, so a background thread and the loop cannot mix up a read and a write.
@@ -115,12 +121,51 @@ public final class SettingsFile {
     }
 
     /**
-     * Writes the file.
+     * Writes the file. This WAITS for the storage (a few milliseconds, sometimes more): in a
+     * running OpMode use {@link #saveInBackground} instead.
      *
      * @return true if it worked. False (for example no storage) never stops the robot.
      */
-    public synchronized boolean save() {
-        load();
+    public boolean save() {
+        // Copy the values while holding the lock (quick), then write the copy WITHOUT the lock, so
+        // the loop can still read and change values while the storage is slow.
+        Properties copy;
+        synchronized (this) {
+            load();
+            copy = (Properties) values.clone();
+        }
+        // Only one write to this file at a time.
+        synchronized (writeLock) {
+            return write(copy);
+        }
+    }
+
+    /**
+     * Writes the file on a background thread and returns at once, so the robot loop never waits
+     * for the storage. Saves asked for while one is waiting are merged: only the newest values are written.
+     *
+     * @param whenDone gets true if it worked, false if not (runs on the background thread); may be null
+     */
+    public void saveInBackground(Consumer<Boolean> whenDone) {
+        saver().submitLatest("save " + file.getPath(), () -> {
+            boolean ok = save();
+            if (whenDone != null) whenDone.accept(ok);
+        });
+    }
+
+    /** {@link #saveInBackground(Consumer)} without a result. */
+    public void saveInBackground() {
+        saveInBackground(null);
+    }
+
+    // One background thread for every settings save in the app (made the first time it is needed).
+    private static synchronized BackgroundWorker saver() {
+        if (saver == null) saver = new BackgroundWorker("settings");
+        return saver;
+    }
+
+    // Writes these values to the file. Called with writeLock held.
+    private boolean write(Properties copy) {
         try {
             // Make the folder if it is not there yet. If that fails, give up quietly.
             File folder = file.getParentFile();
@@ -128,7 +173,7 @@ public final class SettingsFile {
             // "try (...)" opens the file and closes it again automatically at the end,
             // even if writing fails part way.
             try (OutputStream out = new FileOutputStream(file)) {
-                values.store(out, "ftc-helper-lib settings");
+                copy.store(out, "ftc-helper-lib settings");
             }
             return true;
         } catch (IOException | SecurityException e) {

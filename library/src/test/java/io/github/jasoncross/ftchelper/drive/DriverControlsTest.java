@@ -22,6 +22,9 @@ public class DriverControlsTest {
         @Override public void fieldCentric(double f, double r, double t, double h, double sp) {
             mode = "field"; forward = f; side = r; turn = t; heading = h; speed = sp;
         }
+        @Override public void tank(double l, double r, double sp) {
+            mode = "tank"; forward = l; side = r; speed = sp;
+        }
         @Override public boolean canStrafe() { return strafe; }
         @Override public void stop() { stopped = true; }
     }
@@ -83,5 +86,18 @@ public class DriverControlsTest {
         assertEquals(0, w.forward, 1e-9);
         d.stop();
         assertTrue(w.stopped);
+    }
+
+    @Test public void customDrivingCommandsReachTheWheels() {
+        Wheels w = new Wheels(true);
+        DriverControls d = new DriverControls(w, null);
+        d.tank(0.5, -0.5, 0.8);
+        assertEquals("tank", w.mode);
+        assertEquals(0.5, w.forward, 1e-9);
+        assertEquals(-0.5, w.side, 1e-9);
+        assertTrue(d.isSlow());
+        d.drive(1, 0, 0, 1);
+        assertEquals("robot", w.mode);
+        assertFalse(d.isSlow());
     }
 }

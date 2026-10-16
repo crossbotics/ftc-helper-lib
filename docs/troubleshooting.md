@@ -43,7 +43,22 @@ On purpose. Tune `AutoDrive`, then set it to `true`: [Tune AutoDrive](modules/dr
 | `PRACTICE profile` | set COMPETITION at events |
 | `N tuned value(s) differ from the code` | saved tuning values are in use: copy them into the code, then reset |
 
+**`EasyTeleOp needs your robot settings` / `EasyAuto needs your robot settings`**
+Add `robotConfig()` to the OpMode: `return new RobotSettings();` (starter kit) or
+`return RobotSettings.config();` (tutorials). See [RobotConfig](modules/core.md#robotconfig).
+
+**`Autonomous needs the IMU (turn sensor)`**
+`RobotSettings.imu()` returned null. Return `ImuSetup.get(...)` there: every Control Hub has an IMU.
+
 ## Robot behavior
+
+**Y does nothing (no field-centric) in an EasyTeleOp**
+Field-centric needs mecanum wheels and the IMU. A tank drivetrain, or `imu()` returning null, keeps
+it off on purpose.
+
+**Field-centric "forward" is wrong at the start of TeleOp**
+The robot did not start autonomous facing straight away from its driver. Set `startHeadingDeg()` in
+the autonomous (written for BLUE), or press BACK after turning the robot to face away from you.
 
 **The robot drives diagonally, spins, or a wheel fights the others**
 A motor direction or a motor name is wrong. [Check motor directions](modules/drive.md#check-motor-directions).

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Consumer;
 
 /**
  * A number you can change while the robot runs, from the gamepad ({@link TuningMenu}),
@@ -89,11 +90,52 @@ public final class Tunable {
     }
 
     /**
-     * Saves every tunable's value on the Control Hub.
+     * Saves every tunable's value on the Control Hub. WAITS for the storage: in a running OpMode use
+     * {@link #saveAllInBackground} (the tuning menu does).
      *
      * @return true if it worked
      */
-    public static synchronized boolean saveAll() {
+    public static boolean saveAll() {
+        copyToSettings();
+        // The slow part (writing the file) runs without the lock, so the loop can still read tunables.
+        return SettingsFile.shared().save();
+    }
+
+    /**
+     * Saves every tunable's value on a background thread; returns at once.
+     *
+     * @param whenDone gets true if it worked (runs on the background thread); may be null
+     */
+    public static void saveAllInBackground(Consumer<Boolean> whenDone) {
+        copyToSettings();
+        SettingsFile.shared().saveInBackground(whenDone);
+    }
+
+    /**
+     * Puts every tunable back to its code value and deletes the saved values. WAITS for the storage:
+     * in a running OpMode use {@link #resetAllInBackground}.
+     *
+     * @return true if the file was saved
+     */
+    public static boolean resetAll() {
+        resetValues();
+        // Saving now removes every tunable from the file (none is "changed" any more).
+        return saveAll();
+    }
+
+    /** {@link #resetAll()}, with the file written on a background thread. The values change at once. */
+    public static void resetAllInBackground(Consumer<Boolean> whenDone) {
+        resetValues();
+        saveAllInBackground(whenDone);
+    }
+
+    // Every value back to its code value (quick: no file).
+    private static synchronized void resetValues() {
+        for (Tunable t : ALL) t.value = t.defaultValue;
+    }
+
+    // Puts the values into the settings in memory (quick: no file).
+    private static synchronized void copyToSettings() {
         SettingsFile settings = SettingsFile.shared();
         for (Tunable t : ALL) {
             // Only changed values are written. A value equal to the code is removed from the file,
@@ -101,18 +143,6 @@ public final class Tunable {
             if (t.isChanged()) settings.put(PREFIX + t.name, Double.toString(t.value));
             else settings.remove(PREFIX + t.name);
         }
-        return settings.save();
-    }
-
-    /**
-     * Puts every tunable back to its code value and deletes the saved values.
-     *
-     * @return true if the file was saved
-     */
-    public static synchronized boolean resetAll() {
-        for (Tunable t : ALL) t.value = t.defaultValue;
-        // Saving now removes every tunable from the file (none is "changed" any more).
-        return saveAll();
     }
 
     /** For tests: forget all tunables. */

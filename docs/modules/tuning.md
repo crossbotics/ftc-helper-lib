@@ -32,7 +32,8 @@ pid.setGains(LIFT_KP.get(), 0, 0, 0);   // read it every loop
 | `isChanged()` | true if it differs from the code value |
 | `name()`, `group()`, `defaultValue()`, `step()`, `display()` | information |
 | `Tunable.all()` | every tunable made |
-| `Tunable.saveAll()` | saves the changed ones on the hub |
+| `Tunable.saveAll()` | saves the changed ones on the hub (waits for the storage) |
+| `Tunable.saveAllInBackground(ok -> ...)`, `Tunable.resetAllInBackground(ok -> ...)` | the same without waiting; the tuning menu uses these |
 | `Tunable.resetAll()` | all back to code values; saved values deleted |
 | `Tunable.countChanged()` | how many differ from the code (EasyAuto warns in INIT) |
 

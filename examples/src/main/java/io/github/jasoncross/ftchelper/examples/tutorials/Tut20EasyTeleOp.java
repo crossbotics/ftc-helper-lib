@@ -21,7 +21,7 @@ import io.github.jasoncross.ftchelper.teleop.EasyTeleOp;
  * Needs: the drivetrain from RobotSettings, motor "lift", servo "claw".
  *
  * Driver (gamepad 1), from EasyTeleOp: left stick drive, right stick X turn, left trigger slow,
- * Y field-centric on/off, BACK reset "forward", GUIDE tuning menu.
+ * Y field-centric on/off, BACK reset "forward", GUIDE tuning menu, START + BACK debug lines.
  * Operator (gamepad 2), from this file: A = lift down, Y = lift high, right bumper = claw,
  * left stick Y = lift by hand.
  *

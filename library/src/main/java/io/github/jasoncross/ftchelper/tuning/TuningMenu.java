@@ -36,7 +36,8 @@ public class TuningMenu {
     // Which tunable is chosen, counted from 0.
     private int selected = 0;
     // A short note for the driver, e.g. "Saved on the hub.".
-    private String message = "";
+    // "volatile": a background save writes it, the loop reads it.
+    private volatile String message = "";
     // Each button's state in the last loop, to spot the loop where it was just pressed
     // (an "edge"), so holding a button does not repeat the action every loop.
     // Same order as "now" in update(): up, down, right, left, A, X, Y, (spare).
@@ -87,9 +88,17 @@ public class TuningMenu {
                 if (pressed(now, 2)) for (int i = 0; i < times; i++) t.increase();
                 if (pressed(now, 3)) for (int i = 0; i < times; i++) t.decrease();
                 // A saves, X resets the chosen one (not saved until A), Y resets all and saves.
-                if (pressed(now, 4)) message = Tunable.saveAll() ? "Saved on the hub." : "SAVE FAILED.";
+                // Saving writes a file, which can be slow, so it runs in the background and the
+                // robot loop never waits; the message changes when it is done.
+                if (pressed(now, 4)) {
+                    message = "Saving...";
+                    Tunable.saveAllInBackground(ok -> message = ok ? "Saved on the hub." : "SAVE FAILED.");
+                }
                 if (pressed(now, 5)) { t.reset(); message = t.name() + " back to the code value."; }
-                if (pressed(now, 6)) message = Tunable.resetAll() ? "All back to code values." : "RESET FAILED.";
+                if (pressed(now, 6)) {
+                    message = "Resetting...";
+                    Tunable.resetAllInBackground(ok -> message = ok ? "All back to code values." : "RESET FAILED.");
+                }
             }
         }
         // Remember this loop's buttons for the next loop, even while closed, so a button held

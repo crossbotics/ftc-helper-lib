@@ -18,14 +18,20 @@ import java.util.function.DoubleSupplier;
  * until the driver turns the robot and presses a reset button.
  *
  * <p>This class fixes that. Autonomous saves its final heading (EasyAuto does this for you). Made in
- * TeleOp INIT, a DriverHeading takes that saved heading and keeps counting from it, so "forward" on
- * the stick is the same as at the start of autonomous. The saved heading is used only once, and only
- * if it is less than {@link MatchMemory#MAX_AGE_SEC} old. Otherwise, 0 = the way the robot faces in INIT.
+ * TeleOp INIT, a DriverHeading reads that saved heading and keeps counting from it, so "forward" on
+ * the stick is the same as at the start of autonomous. It is used only if it is less than
+ * {@link MatchMemory#MAX_AGE_SEC} old. Otherwise, 0 = the way the robot faces in INIT.
+ *
+ * <p>Call {@link #forgetSaved()} right after START: from then on the saved heading belongs to this
+ * TeleOp run, and a later TeleOp run (after the robot was driven) must not use it. It is not
+ * forgotten in INIT, so pressing INIT, STOP, INIT again before a match still works.
  *
  * <pre>{@code
  * // TeleOp INIT, after the IMU is set up:
  * DriverHeading heading = new DriverHeading(imu);
  * controls.bindPress(Pad.G1, Btn.BACK, heading::reset);   // manual reset: face away first
+ * waitForStart();
+ * heading.forgetSaved();                                  // used by this run now
  *
  * // every loop:
  * drive.driveFieldCentric(forward, strafe, turn, heading.degrees(), speed);
@@ -65,12 +71,20 @@ public final class DriverHeading {
         this.fromAuto = savedHeadingDeg != null;
     }
 
-    // Takes the heading autonomous saved, if it is from this match. Clears it either way, so an old
-    // heading is never used by a later TeleOp run (it would be wrong after the robot was moved).
-    private static Double takeSavedHeading() {
-        boolean recent = PoseStore.ageSec() <= MatchMemory.MAX_AGE_SEC;
-        FieldPose saved = PoseStore.consume();
-        return recent && saved != null ? saved.headingDeg : null;
+    // Reads the heading autonomous saved, if it is from this match. Does not clear it, so a second
+    // INIT before the match still finds it; forgetSaved() clears it after START.
+    static Double takeSavedHeading() {
+        if (PoseStore.ageSec() > MatchMemory.MAX_AGE_SEC) return null;
+        FieldPose saved = PoseStore.peek();
+        return saved != null ? saved.headingDeg : null;
+    }
+
+    /**
+     * Clears the heading autonomous saved. Call right after START, so a later TeleOp run (after the
+     * robot has been driven) does not use it. This object keeps its own copy.
+     */
+    public void forgetSaved() {
+        PoseStore.clear();
     }
 
     /** The heading compared with the driver, -180 to 180 degrees. 0 = away from the driver. Call every loop. */

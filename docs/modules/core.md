@@ -114,7 +114,8 @@ A tiny key/value file on the Control Hub: `/sdcard/FIRST/ftc-helper/settings.pro
 | `SettingsFile.shared()` | the robot's settings file |
 | `get(key, fallback)`, `getDouble(key, fallback)`, `has(key)` | read |
 | `put(key, value)`, `remove(key)` | change in memory |
-| `save()` | write the file; returns false if it could not (the robot keeps working) |
+| `save()` | write the file; returns false if it could not (the robot keeps working). It waits for the storage: use it in INIT or tests |
+| `saveInBackground()`, `saveInBackground(ok -> ...)` | write the file on a background thread and return at once. Use this while the robot runs. |
 | `SettingsFile.useForTests(file)` | tests only: use another file |
 
 A damaged or missing file simply means "nothing saved": the values in the code are used.
@@ -142,13 +143,14 @@ public class RobotSettings extends RobotConfig {
 
 // in every TeleOp and autonomous:
 @Override protected RobotConfig robotConfig() { return new RobotSettings(); }
+// (the tutorials' RobotSettings uses static methods instead: return RobotSettings.config();)
 ```
 
 | Method | Required? | What you return |
 | --- | --- | --- |
-| `drive()` | yes | the [`DriveConfig`](drive.md#driveconfig) |
+| `drive()` | yes | the [`DriveConfig`](drive.md#driveconfig). May be called more than once: make a fresh one each time. |
 | `auto()` | no | the [`AutoDriveConfig`](drive.md#autodriveconfig). Default: untuned (autonomous refuses to run until you tune it) |
-| `imu(hardwareMap)` | yes | the IMU, usually one [`ImuSetup.get`](hardware.md) line |
+| `imu(hardwareMap)` | yes | the IMU, usually one [`ImuSetup.get`](hardware.md) line. Every Control Hub has one. (Null = no IMU: TeleOp is robot-centric only, and autonomous refuses to start.) |
 
 The mechanisms are not in here: they go in your own `Robot` class, so your programs can reach them
 by name (`robot.lift`). See the [starter kit](../starter-kit.md).

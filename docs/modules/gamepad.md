@@ -94,6 +94,7 @@ All `bind...` methods return the same `ControllerBindings`, so you can chain the
 | --- | --- |
 | `update(gamepad1, gamepad2)` | **Call once every loop.** Reads the gamepads and runs the actions. |
 | `ignoreHeldButtons(gamepad1, gamepad2)` | Call once right after `waitForStart()`. For a button or trigger held through START, NOTHING bound to it runs (press, release, hold or toggle) until it is let go once. Stops surprises. Trigger axis bindings are not affected. |
+| `releaseAll()` | acts as if every button were let go: "release" actions run for held buttons. Call it before you pause `update()` (e.g. while a menu uses the gamepad); call `ignoreHeldButtons` when you start again. |
 | `isDown(pad, btn)` | True if the button was down at the last `update`. |
 | `getSlowActionWarning()` | "" or a note that an action took more than 20 ms (it waited or slept). It goes away 5 s after the last slow action. Show it with `t.warn(...)`. See [Non-blocking code](../guides/non-blocking.md). |
 | `clear()` | Removes all bindings. |

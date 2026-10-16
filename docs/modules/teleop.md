@@ -55,11 +55,11 @@ public class MainTeleOp extends EasyTeleOp {
 | --- | --- |
 | Driving (gamepad 1) | left stick drive, right stick X turn, left trigger slow. Mecanum and tank, picked by your `DriveConfig`. See [`DriverControls`](drive.md#drivercontrols). |
 | Field-centric | starts robot-centric. **Y** turns field-centric on/off (two buzzes = on, one = off). Mecanum with an IMU only. |
-| "Forward" | continues from where autonomous ended ([`DriverHeading`](drive.md#driverheading)). **BACK** = "the robot now faces away from me". |
+| "Forward" | continues from where autonomous ended ([`DriverHeading`](drive.md#driverheading)), also after INIT, STOP, INIT again. **BACK** alone (on release, one buzz) = "the robot now faces away from me". |
 | Alliance | the one autonomous chose, from [`MatchMemory`](match.md); BLUE if no autonomous ran. |
 | Match timer | 2:00, both gamepads buzz at 1:00 and 0:20. The time is on the screen. |
 | Tuning menu | **GUIDE** opens it (PRACTICE profile only). Gamepad 1 runs the menu; the wheels hold still. |
-| Telemetry | your mechanisms' lines, drive mode, time; **hold START, press BACK** = debug lines on/off. |
+| Telemetry | your mechanisms' lines, drive mode, time; **START + BACK together** (either order) = debug lines on/off. |
 | Warnings | PRACTICE profile, tuned values that differ from the code, slow button actions or `update()`s. |
 | Safety | buttons held through START are ignored; the wheels and every mechanism stop at the end, even after an error. |
 
@@ -73,7 +73,12 @@ public class MainTeleOp extends EasyTeleOp {
 | `everyLoop()` | no | your code for every loop (sticks for mechanisms, simple rules). Must not wait. |
 | `addTelemetry(t)` | no | extra screen lines |
 
-\* Or, without a `RobotConfig`: override `driveConfig()` and `createImu()` (return null for no IMU).
+\* Starter kit: `return new RobotSettings();`. Tutorials (09-20): `return RobotSettings.config();`
+(the tutorial `RobotSettings` keeps its settings in `static` methods, so `config()` wraps them).
+Or, without a `RobotConfig`: override `driveConfig()` and `createImu()`.
+
+Note: the bindings name the gamepad (`Pad.G1`, `Pad.G2`) themselves. A `Pad.G1` button put on
+`operator` works, but it does not pause while the tuning menu is open: put gamepad 1 buttons on `driver`.
 
 ### Optional settings
 
@@ -82,7 +87,7 @@ public class MainTeleOp extends EasyTeleOp {
 | `startFieldCentric()` | false | true = start in field-centric |
 | `slowSpeed()` | 0.3 | speed at a full squeeze of the slow trigger |
 | `buzzAtSecondsLeft()` | {60, 20} | when both gamepads buzz |
-| `drive(gamepad)` | the standard controls | replace it to drive your own way (`driving()` is the drive) |
+| `drive(gamepad)` | the standard controls | replace it to drive your own way, e.g. two-stick tank style: `driving().tank(-gamepad.left_stick_y, -gamepad.right_stick_y, 1)` |
 
 ### For your code
 

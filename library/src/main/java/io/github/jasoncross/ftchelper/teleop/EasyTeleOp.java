@@ -3,6 +3,7 @@ package io.github.jasoncross.ftchelper.teleop;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.util.RobotLog;
 import io.github.jasoncross.ftchelper.core.Profile;
 import io.github.jasoncross.ftchelper.core.RobotConfig;
 import io.github.jasoncross.ftchelper.core.Subsystems;
@@ -85,7 +86,10 @@ public abstract class EasyTeleOp extends LinearOpMode {
         return config.drive();
     }
 
-    /** The IMU, for field-centric driving. Default: {@code robotConfig().imu(...)}. Return null for none. */
+    /**
+     * The IMU, for field-centric driving and "forward" from autonomous. Default:
+     * {@code robotConfig().imu(...)}. Null = no IMU: robot-centric driving only.
+     */
     protected IMU createImu() {
         RobotConfig config = robotConfig();
         return config == null ? null : config.imu(hardwareMap);
@@ -124,15 +128,29 @@ public abstract class EasyTeleOp extends LinearOpMode {
         return 0.3;
     }
 
-    /** Seconds left when both gamepads buzz. Default 60 and 20 (2026-27: 1:00 FLOWER ownership; final 20 s). */
+    /**
+     * Changes how driving feels, once, in INIT, right after the drive is made. Example:
+     * {@code driving.sticks(0.08, 3);} for a bigger deadband and a stronger curve.
+     */
+    protected void configureDriving(DriverControls driving) { }
+
+    /**
+     * Seconds left when both gamepads buzz. Default 60 and 20 (1:00 and 0:20 left). Change it to the
+     * moments that matter in this season's game.
+     */
     protected double[] buzzAtSecondsLeft() {
         return new double[] {60, 20};
     }
 
     /**
      * Drives the robot from gamepad 1, every loop (not while the tuning menu is open).
-     * Default: the standard controls. Replace it to drive your own way, e.g. a tank-style
-     * two-stick drive; {@link #driving()} is the drive.
+     * Default: the standard controls. Replace it to drive your own way, with
+     * {@link #driving()}'s {@code drive(...)} or {@code tank(...)}. Example, two-stick tank style:
+     * <pre>{@code
+     * @Override protected void drive(Gamepad gamepad) {
+     *     driving().tank(-gamepad.left_stick_y, -gamepad.right_stick_y, 1);
+     * }
+     * }</pre>
      */
     protected void drive(Gamepad gamepad) {
         driving.update(gamepad);
@@ -186,6 +204,7 @@ public abstract class EasyTeleOp extends LinearOpMode {
         heading = imu != null ? new DriverHeading(imu) : null;
         driving = DriverControls.create(hardwareMap, driveConfig(), heading).slowSpeed(slowSpeed());
         driving.setFieldCentric(startFieldCentric());
+        configureDriving(driving);
         alliance = MatchMemory.allianceOr(Alliance.BLUE);
         timer = MatchTimer.teleOp();
         for (double s : buzzAtSecondsLeft()) timer.rumbleAt(s, gamepad1, gamepad2);
@@ -194,11 +213,23 @@ public abstract class EasyTeleOp extends LinearOpMode {
 
         // Three groups of buttons, so the driver's can pause while the tuning menu uses gamepad 1.
         ControllerBindings menuKey = new ControllerBindings().bindPress(Pad.G1, Btn.GUIDE, tuning::toggle);
+        // BACK alone (on its release): "the robot now faces away from me", with one buzz.
+        // START and BACK together, in either order: debug lines on/off, and "forward" is NOT reset.
+        boolean[] chord = {false};   // true once START was pressed during this BACK press
+        Runnable debugChord = () -> {
+            if (gamepad1.start && gamepad1.back && !chord[0]) {
+                chord[0] = true;
+                t.toggleDebug();
+            }
+        };
         ControllerBindings driver = new ControllerBindings()
-                // BACK alone: "the robot now faces away from me". With START held: debug lines on/off.
-                .bindPress(Pad.G1, Btn.BACK, () -> {
-                    if (gamepad1.start) t.toggleDebug();
-                    else if (heading != null) heading.reset();
+                .bindPress(Pad.G1, Btn.BACK, () -> { chord[0] = false; debugChord.run(); })
+                .bindPress(Pad.G1, Btn.START, debugChord)
+                .bindRelease(Pad.G1, Btn.BACK, () -> {
+                    if (!chord[0] && heading != null) {
+                        heading.reset();
+                        confirm.play(false);
+                    }
                 });
         // Y: field-centric on/off (two buzzes = on, one = off). Only where it is possible.
         if (driving.canFieldCentric()) {
@@ -207,6 +238,8 @@ public abstract class EasyTeleOp extends LinearOpMode {
         ControllerBindings operator = new ControllerBindings();
 
         Subsystems robot = null;
+        // The first error from the program itself, if any (so an error while stopping cannot hide it).
+        Throwable failure = null;
         try {
             // Inside the "try": if making the mechanisms fails, the wheels are still stopped below.
             robot = createSubsystems();
@@ -228,6 +261,8 @@ public abstract class EasyTeleOp extends LinearOpMode {
 
             // ---- START ----
             timer.start();
+            // The saved heading belongs to this run now; a later TeleOp run must not use it.
+            if (heading != null) heading.forgetSaved();
             // A button held through START must not count as a press.
             menuKey.ignoreHeldButtons(gamepad1, gamepad2);
             driver.ignoreHeldButtons(gamepad1, gamepad2);
@@ -241,6 +276,13 @@ public abstract class EasyTeleOp extends LinearOpMode {
                 tuning.update();
                 if (tuning.isOpen()) {
                     // Gamepad 1 runs the menu: no driver buttons, and the wheels hold still.
+                    // Just opened: run the "release" actions of driver buttons still held, so
+                    // nothing started by a held button keeps running while the menu is open.
+                    // (chord = true first, so letting go of BACK here does not reset "forward".)
+                    if (!menuWasOpen) {
+                        chord[0] = true;
+                        driver.releaseAll();
+                    }
                     menuWasOpen = true;
                     driving.hold();
                 } else {
@@ -262,18 +304,28 @@ public abstract class EasyTeleOp extends LinearOpMode {
                     t.line("Drive", driving.status());
                     robot.addTelemetry(t);
                     addTelemetry(t);
-                    if (heading != null) {
+                    // Only when debug is on: reading the IMU takes time, so do not read it for nothing.
+                    if (heading != null && t.isDebug()) {
                         t.debug("Heading", "%.1f%s", heading.degrees(), heading.isFromAuto() ? " (from auto)" : "");
                     }
                 }
                 t.update();
             }
+        } catch (Throwable e) {
+            // Remember it, then let it go on (the Driver Station shows it).
+            failure = e;
+            throw e;
         } finally {
             // SAFETY: stop the wheels and every mechanism, each on its own, even if one throws.
             RuntimeException first = null;
             try { driving.stop(); } catch (RuntimeException e) { first = e; }
             try { if (robot != null) robot.stop(); } catch (RuntimeException e) { if (first == null) first = e; }
-            if (first != null) throw first;
+            // A stop error is shown only if the program had no error of its own; otherwise it goes
+            // in the robot log, and the Driver Station shows the program's error (the real cause).
+            if (first != null) {
+                if (failure == null) throw first;
+                RobotLog.ee("ftchelper", first, "stopping failed after an earlier error");
+            }
         }
     }
 }

@@ -14,6 +14,7 @@ public final class FakeMotor {
     public int powerWrites = 0;
     public double maxAbsPower = 0;
     public double[] pidf = null;
+    public boolean failSetPower = false;  // true = setPower throws, like a disconnected motor
     public DcMotor.RunMode mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER;
     public DcMotor.ZeroPowerBehavior zeroPower = DcMotor.ZeroPowerBehavior.BRAKE;
     public final DcMotorEx motor;
@@ -23,6 +24,7 @@ public final class FakeMotor {
                 new Class<?>[]{DcMotorEx.class}, (proxy, method, args) -> {
                     switch (method.getName()) {
                         case "setPower":
+                            if (failSetPower) throw new RuntimeException("motor unplugged");
                             power = (Double) args[0];
                             powerWrites++;
                             maxAbsPower = Math.max(maxAbsPower, Math.abs(power));

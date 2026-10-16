@@ -138,6 +138,8 @@ driving.stop();
 | --- | --- |
 | `DriverControls.create(hardwareMap, config, heading)` | makes a `MecanumDrive` or a `TankDrive`, from `config.type` |
 | `update(gamepad)` | drives from the sticks. Every loop. |
+| `drive(forward, strafeRight, turnClockwise, speed)` | drive with your own numbers (robot-centric), for custom controls |
+| `tank(left, right, speed)` | two-stick tank style: one value per side. Works on tank and mecanum robots. |
 | `hold()` | wheels still this loop (e.g. while a menu uses the gamepad) |
 | `stop()` | all wheels to 0 |
 | `slowSpeed(s)` | speed at full slow trigger, default 0.3 |
@@ -157,8 +159,10 @@ presses a reset button.
 
 ```java
 // TeleOp INIT, after the IMU is set up:
-DriverHeading heading = new DriverHeading(imu);          // takes autonomous's saved heading
+DriverHeading heading = new DriverHeading(imu);          // reads autonomous's saved heading
 controls.bindPress(Pad.G1, Btn.BACK, heading::reset);    // manual reset: face away first
+waitForStart();
+heading.forgetSaved();                                   // this run uses it now
 
 // every loop:
 drive.driveFieldCentric(forward, strafe, turn, heading.degrees(), speed);
@@ -166,7 +170,8 @@ drive.driveFieldCentric(forward, strafe, turn, heading.degrees(), speed);
 
 | Method | What it does |
 | --- | --- |
-| `new DriverHeading(imu)` | call in TeleOp INIT, after the IMU is set up. Takes the heading autonomous saved (once, and only if less than 5 minutes old). Otherwise 0 = the way the robot faces now. |
+| `new DriverHeading(imu)` | call in TeleOp INIT, after the IMU is set up. Reads the heading autonomous saved (only if less than 5 minutes old). Otherwise 0 = the way the robot faces now. |
+| `forgetSaved()` | call right after START: clears the saved heading, so a later TeleOp run does not use it. (Not in INIT, so INIT, STOP, INIT again still works.) EasyTeleOp does this for you. |
 | `degrees()` | the heading compared with the driver, -180 to 180. Call every loop. |
 | `reset()` | "the robot now faces away from me": now = 0. For a button. |
 | `isFromAuto()` | true while it still counts from autonomous (no reset since) |
@@ -174,7 +179,8 @@ drive.driveFieldCentric(forward, strafe, turn, heading.degrees(), speed);
 Where the saved heading comes from:
 
 - **EasyAuto** saves it for you at the end. If the robot does not start facing straight away from
-  its driver, override `startHeadingDeg()` with the start angle (left = +).
+  its driver, override `startHeadingDeg()` with the start angle (left = +), written for BLUE: it is
+  mirrored for RED, like the turns.
 - **Your own autonomous:** at the end, `PoseStore.save(new FieldPose(0, 0, heading))`, with the
   heading measured from "away from the driver" (`auto.headingDeg()` if the robot started facing away).
 

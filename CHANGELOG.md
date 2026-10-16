@@ -25,6 +25,22 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   (about 40 lines of code instead of 109, same buttons); `StarterAuto` uses `robotConfig()`.
   A tank drivetrain now needs only `DriveConfig.tank()` in `RobotSettings`.
 - Tutorial `RobotSettings.config()`; tutorial 16 uses it and preselects tutorial 20's TeleOp.
+- Debug telemetry: START + BACK together, in either order. BACK alone resets "forward" when it is
+  let go, with one buzz, so the chord can never reset it by accident.
+- Settings (tuning menu, profile) are saved on a background thread: the robot loop never waits.
+
+### Fixed (Codex "Astra" and Fable reviews)
+
+- `DriverHeading` no longer loses autonomous's heading on INIT, STOP, INIT again; it is cleared at
+  START (`forgetSaved()`).
+- `EasyAuto`: `startHeadingDeg()` is mirrored for RED like the routes. A missing IMU gives a clear
+  message instead of a crash. An error while stopping no longer hides the program's own error
+  (same in `EasyTeleOp`).
+- Opening the tuning menu runs the "release" actions of held driver buttons
+  (`ControllerBindings.releaseAll()`), so nothing started by a held button keeps running.
+- `MecanumDrive` / `TankDrive`: one failing motor no longer keeps the others from getting their power (or stop).
+- `DriverControls.drive(...)` and `tank(...)` for custom driving; `EasyTeleOp.configureDriving(...)`.
+- The IMU is read for the debug heading line only when debug is on.
 
 ## v0.5.0 - 2026-10-15
 

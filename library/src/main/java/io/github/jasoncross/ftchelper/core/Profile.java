@@ -58,8 +58,9 @@ public enum Profile {
         current = profile;
         SettingsFile settings = SettingsFile.shared();
         settings.put(KEY, profile.name());
+        // Written on a background thread, so the INIT loop never waits for the storage.
         // If saving fails (no storage), the new profile still works until the app restarts.
-        settings.save();
+        settings.saveInBackground();
     }
 
     /** For tests: forget the loaded value so it is read again. */

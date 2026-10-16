@@ -67,6 +67,8 @@ public class MainTeleOp extends LinearOpMode {
         telemetry.update();
         // Wait here until START is pressed.
         waitForStart();
+        // The heading autonomous saved belongs to this run now: a later TeleOp run must not use it.
+        heading.forgetSaved();
         // A button held down while START was pressed must not count as a press.
         controls.ignoreHeldButtons(gamepad1, gamepad2);
         // try/finally: the "finally" part runs however the program ends, so everything stops.

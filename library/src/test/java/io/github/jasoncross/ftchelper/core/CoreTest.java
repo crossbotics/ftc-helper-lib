@@ -131,4 +131,16 @@ public class CoreTest {
         t.update();
         assertTrue(ft.lastScreen.get(0).startsWith("!! Slowpoke update took"));
     }
+
+    @Test public void settingsSaveInTheBackground() throws Exception {
+        File f = new File(tmp.getRoot(), "bg.properties");
+        SettingsFile s = new SettingsFile(f);
+        s.put("a", "1");
+        java.util.concurrent.CountDownLatch done = new java.util.concurrent.CountDownLatch(1);
+        boolean[] ok = {false};
+        s.saveInBackground(result -> { ok[0] = result; done.countDown(); });
+        assertTrue(done.await(2, java.util.concurrent.TimeUnit.SECONDS));
+        assertTrue(ok[0]);
+        assertEquals("1", new SettingsFile(f).get("a", "x"));
+    }
 }

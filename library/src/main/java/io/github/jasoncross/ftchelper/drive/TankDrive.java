@@ -121,11 +121,21 @@ public class TankDrive {
         double limit = config.powerLimit;
         double left = MathUtil.clamp(leftRight[0], -limit, limit);
         double right = MathUtil.clamp(leftRight[1], -limit, limit);
-        frontLeft.setPower(left);
-        frontRight.setPower(right);
-        // A 2-motor drive has no back motors (null), so skip them.
-        if (backLeft != null) backLeft.setPower(left);
-        if (backRight != null) backRight.setPower(right);
+        // Each motor on its own: if one throws an error, the others still get their power
+        // (most important for stop()). The first error is thrown at the end, so it is not lost.
+        DcMotorEx[] motors = {frontLeft, frontRight, backLeft, backRight};
+        double[] power = {left, right, left, right};
+        RuntimeException first = null;
+        for (int i = 0; i < 4; i++) {
+            // A 2-motor drive has no back motors (null), so skip them.
+            if (motors[i] == null) continue;
+            try {
+                motors[i].setPower(power[i]);
+            } catch (RuntimeException e) {
+                if (first == null) first = e;
+            }
+        }
+        if (first != null) throw first;
     }
 
     /** True = hold at 0 power, false = coast. */

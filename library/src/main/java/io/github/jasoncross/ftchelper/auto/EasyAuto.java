@@ -2,6 +2,7 @@ package io.github.jasoncross.ftchelper.auto;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.util.RobotLog;
 import io.github.jasoncross.ftchelper.core.Profile;
 import io.github.jasoncross.ftchelper.core.RobotConfig;
 import io.github.jasoncross.ftchelper.core.Subsystems;
@@ -144,6 +145,7 @@ public abstract class EasyAuto extends LinearOpMode {
      * Which way the robot faces at the start, compared with "straight away from your driver", in
      * degrees (left = positive). Default 0. TeleOp's field-centric "forward" uses it (see
      * drive/DriverHeading.java). Example: the robot starts turned a quarter turn left, so return 90.
+     * Write it for BLUE, like the routes: it is mirrored for RED when {@link #mirrorForRed()} is true.
      */
     protected double startHeadingDeg() {
         return 0;
@@ -185,15 +187,25 @@ public abstract class EasyAuto extends LinearOpMode {
         // time, which makes every loop faster. See hardware/BulkReads.java.
         BulkReads.auto(hardwareMap);
         IMU imu = createImu();
+        if (imu == null) {
+            throw new IllegalStateException("Autonomous needs the IMU (turn sensor) for its turns, but "
+                    + "createImu() / RobotSettings.imu() returned null. Return ImuSetup.get(...) there.");
+        }
         autoDrive = new AutoDrive(this, driveConfig(), autoDriveConfig(), imu);
         // Remember the profile (PRACTICE / COMPETITION) now, to notice if the drivers change it in the menu.
         Profile profileAtInit = Profile.current();
         // try/finally: the "finally" part runs however the "try" part ends: finished, stopped,
         // or crashed with an error. So the robot is always stopped at the end.
+        // The first error from the program itself, if any (so an error while stopping cannot hide it).
+        Throwable failure = null;
         try {
             // Inside the "try": if making the mechanisms fails, the wheels are still stopped below.
             robot = makeSubsystems();
             runAfterSetup(t, imu, profileAtInit);
+        } catch (Throwable e) {
+            // Remember it, then let it go on (the Driver Station shows it).
+            failure = e;
+            throw e;
         } finally {
             // Stop EVERYTHING, each part on its own, even if one of them throws.
             // Each part gets its own try/catch: if stopping the mechanisms throws an error, we still
@@ -207,11 +219,18 @@ public abstract class EasyAuto extends LinearOpMode {
                 // Only after START: if STOP was pressed in INIT, the last match's memory stays as it was.
                 if (started && menu != null && autoDrive != null) {
                     // Heading compared with the driver = the start direction + how far autonomous turned.
-                    double endHeading = Angles.wrapDegrees(startHeadingDeg() + autoDrive.headingDeg());
+                    // The start heading is written for BLUE, like the routes: mirrored for RED.
+                    double start = mirrorForRed() ? alliance().mirror(startHeadingDeg()) : startHeadingDeg();
+                    double endHeading = Angles.wrapDegrees(start + autoDrive.headingDeg());
                     MatchMemory.remember(alliance(), new FieldPose(0, 0, endHeading));
                 }
             } catch (RuntimeException e) { if (first == null) first = e; }
-            if (first != null) throw first;
+            // A stop error is shown only if the program had no error of its own; otherwise it goes
+            // in the robot log, and the Driver Station shows the program's error (the real cause).
+            if (first != null) {
+                if (failure == null) throw first;
+                RobotLog.ee("ftchelper", first, "stopping failed after an earlier error");
+            }
         }
     }
 

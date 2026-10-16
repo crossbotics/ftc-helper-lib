@@ -194,4 +194,18 @@ public class GamepadTest {
         c.update(g1, g2);
         assertTrue(c.getSlowActionWarning().startsWith("G2:A action took"));
     }
+
+    @Test public void releaseAllRunsReleaseActionsForHeldButtons() {
+        Gamepad g1 = new Gamepad(), g2 = new Gamepad();
+        int[] stops = {0};
+        ControllerBindings c = new ControllerBindings().bindRelease(Pad.G1, Btn.RB, () -> stops[0]++);
+        c.update(g1, g2);
+        g1.right_bumper = true; c.update(g1, g2);          // intake started by holding RB
+        c.releaseAll();                                    // a menu takes the gamepad
+        assertEquals(1, stops[0]);
+        g1.right_bumper = false;
+        c.ignoreHeldButtons(g1, g2);
+        c.update(g1, g2);
+        assertEquals("no second release", 1, stops[0]);
+    }
 }

@@ -18,7 +18,7 @@ import io.github.jasoncross.ftchelper.gamepad.StickShaping;
  * {@link DriverHeading}. Robot-centric ("stick up = where the robot points") is the default.
  *
  * <pre>{@code
- * DriverControls driving = DriverControls.create(hardwareMap, RobotSettings.drive(), heading);
+ * DriverControls driving = DriverControls.create(hardwareMap, new RobotSettings().drive(), heading);
  * // every loop:
  * driving.update(gamepad1);
  * // at the end (in finally):
@@ -33,6 +33,7 @@ public final class DriverControls {
     interface Wheels {
         void robotCentric(double forward, double strafeRight, double turnClockwise, double speed);
         void fieldCentric(double forward, double right, double turnClockwise, double headingDeg, double speed);
+        void tank(double left, double right, double speed);
         boolean canStrafe();
         void stop();
     }
@@ -61,6 +62,7 @@ public final class DriverControls {
                 // A standard drive cannot go sideways, so the strafe value is not used.
                 @Override public void robotCentric(double f, double s, double t, double speed) { tank.arcade(f, t, speed); }
                 @Override public void fieldCentric(double f, double r, double t, double h, double speed) { tank.arcade(f, t, speed); }
+                @Override public void tank(double left, double right, double speed) { tank.tank(left, right, speed); }
                 @Override public boolean canStrafe() { return false; }
                 @Override public void stop() { tank.stop(); }
             }, heading);
@@ -70,6 +72,10 @@ public final class DriverControls {
             @Override public void robotCentric(double f, double s, double t, double speed) { mecanum.drive(f, s, t, speed); }
             @Override public void fieldCentric(double f, double r, double t, double h, double speed) {
                 mecanum.driveFieldCentric(f, r, t, h, speed);
+            }
+            // Two-stick tank style on mecanum wheels: the average is forward, the difference is the turn.
+            @Override public void tank(double left, double right, double speed) {
+                mecanum.drive((left + right) / 2, 0, (left - right) / 2, speed);
             }
             @Override public boolean canStrafe() { return true; }
             @Override public void stop() { mecanum.stop(); }
@@ -108,6 +114,24 @@ public final class DriverControls {
         lastSpeed = StickShaping.slowScale(gamepad.left_trigger, slowSpeed);
         if (isFieldCentric()) wheels.fieldCentric(forward, strafe, turn, heading.degrees(), lastSpeed);
         else wheels.robotCentric(forward, strafe, turn, lastSpeed);
+    }
+
+    /**
+     * Drives with numbers you worked out yourself (robot-centric), for your own controls.
+     * Each value -1 to 1; a tank robot ignores strafeRight.
+     */
+    public void drive(double forward, double strafeRight, double turnClockwise, double speed) {
+        lastSpeed = speed;
+        wheels.robotCentric(forward, strafeRight, turnClockwise, speed);
+    }
+
+    /**
+     * Two-stick "tank style": one value per side, -1 to 1. Works on tank AND mecanum robots.
+     * Example: {@code driving.tank(-gamepad1.left_stick_y, -gamepad1.right_stick_y, 1)}.
+     */
+    public void tank(double left, double right, double speed) {
+        lastSpeed = speed;
+        wheels.tank(left, right, speed);
     }
 
     /** Holds the wheels still this loop (e.g. while a menu uses the gamepad). */

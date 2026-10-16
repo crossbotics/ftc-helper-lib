@@ -72,6 +72,7 @@ Run the **Hardware Check** OpMode ([starter kit](../starter-kit.md), or
 - [ ] Profile: COMPETITION, no "tuned values differ" warning
 - [ ] Right autonomous selected, right alliance and delay in the menu
 - [ ] Robot placed exactly as the INIT screen's "Place robot" says
+- [ ] After autonomous, TeleOp's INIT screen says "Forward: from autonomous"
 - [ ] Gamepads: 1 = driver (Start+A), 2 = operator (Start+B)
 
 ## 7. After a problem

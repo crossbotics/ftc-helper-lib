@@ -128,10 +128,18 @@ public class MecanumDrive {
     public void setPowers(double[] powers) {
         // Cut every power to the limit, so even a direct call can never go past it.
         double limit = config.powerLimit;
-        frontLeft.setPower(MathUtil.clamp(powers[0], -limit, limit));
-        frontRight.setPower(MathUtil.clamp(powers[1], -limit, limit));
-        backLeft.setPower(MathUtil.clamp(powers[2], -limit, limit));
-        backRight.setPower(MathUtil.clamp(powers[3], -limit, limit));
+        // Each wheel on its own: if one motor throws an error, the others still get their power
+        // (most important for stop()). The first error is thrown at the end, so it is not lost.
+        DcMotorEx[] motors = {frontLeft, frontRight, backLeft, backRight};
+        RuntimeException first = null;
+        for (int i = 0; i < 4; i++) {
+            try {
+                motors[i].setPower(MathUtil.clamp(powers[i], -limit, limit));
+            } catch (RuntimeException e) {
+                if (first == null) first = e;
+            }
+        }
+        if (first != null) throw first;
     }
 
     /** True = wheels hold still at power 0. False = wheels coast. */

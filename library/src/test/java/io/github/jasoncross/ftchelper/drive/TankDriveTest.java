@@ -85,4 +85,18 @@ public class TankDriveTest {
             throw new AssertionError("only one back motor should fail");
         } catch (IllegalArgumentException expected) { }
     }
+
+    @Test public void oneFailingMotorDoesNotStopTheOthersFromStopping() {
+        FakeMotor fl = new FakeMotor(), fr = new FakeMotor(), bl = new FakeMotor(), br = new FakeMotor();
+        TankDrive drive = new TankDrive(DriveConfig.tank(), fl.motor, fr.motor, bl.motor, br.motor);
+        drive.tank(0.5, 0.5);
+        fl.failSetPower = true;
+        try {
+            drive.stop();
+            org.junit.Assert.fail("the error must not be hidden");
+        } catch (RuntimeException expected) { }
+        assertEquals(0, fr.power, 1e-9);
+        assertEquals(0, bl.power, 1e-9);
+        assertEquals(0, br.power, 1e-9);
+    }
 }

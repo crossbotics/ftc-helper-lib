@@ -304,6 +304,22 @@ public class ControllerBindings {
         }
     }
 
+    /**
+     * Acts as if every button were let go now: "release" actions run for buttons that are down.
+     * Call it before you stop calling {@link #update} for a while (for example while a menu uses
+     * the gamepad), so a "start on press, stop on release" action can never be left running.
+     * Afterwards, call {@link #ignoreHeldButtons} when you start calling update() again.
+     */
+    public void releaseAll() {
+        for (Map.Entry<String, Slot> entry : slots.entrySet()) {
+            for (Action action : entry.getValue().actions) {
+                long start = System.nanoTime();
+                action.run(false);
+                checkSlow(entry.getKey(), start);
+            }
+        }
+    }
+
     /** Removes every binding. */
     public void clear() {
         slots.clear();

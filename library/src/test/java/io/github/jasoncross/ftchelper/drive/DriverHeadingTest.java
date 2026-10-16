@@ -31,4 +31,16 @@ public class DriverHeadingTest {
         assertFalse(h.isFromAuto());
         assertEquals(0, h.degrees(), 1e-9);
     }
+
+    @Test public void aSecondInitStillFindsTheSavedHeadingUntilStart() {
+        io.github.jasoncross.ftchelper.util.PoseStore.save(new io.github.jasoncross.ftchelper.util.FieldPose(0, 0, 90));
+        try {
+            assertEquals(90, DriverHeading.takeSavedHeading(), 1e-9);   // first INIT
+            assertEquals(90, DriverHeading.takeSavedHeading(), 1e-9);   // INIT again after STOP
+            new DriverHeading(() -> 0, () -> { }, 90.0).forgetSaved();   // START
+            assertEquals(null, DriverHeading.takeSavedHeading());
+        } finally {
+            io.github.jasoncross.ftchelper.util.PoseStore.clear();
+        }
+    }
 }
