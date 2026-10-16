@@ -103,4 +103,26 @@ public class SimBehaviorTest {
         s.setPosition(0);
         assertEquals("INIT resets the range and direction", 0.0, claw.target(), 1e-9);
     }
+
+    @Test public void runToPositionWithoutATargetFailsLikeOnARobot() throws Exception {
+        SimRobot robot = SimRobot.load(java.nio.file.Paths.get("robots/starter.properties"));
+        DcMotorEx lift = robot.motors.get("lift").device;
+        try {
+            lift.setMode(com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_TO_POSITION);
+            org.junit.Assert.fail("the SDK throws here");
+        } catch (com.qualcomm.robotcore.exception.TargetPositionNotSetException expected) {
+            // right
+        }
+        lift.setTargetPosition(100);
+        lift.setMode(com.qualcomm.robotcore.hardware.DcMotor.RunMode.RUN_TO_POSITION);
+    }
+
+    @Test public void aRunningFeederSendsAPieceEveryFewTenthsOfASecond() throws Exception {
+        SimRobot robot = SimRobot.load(java.nio.file.Paths.get("robots/starter.properties"));
+        robot.motors.get("flywheel").device.setPower(1);
+        for (int i = 0; i < 200; i++) robot.step(0.01);            // 2 s: the wheel spins up
+        robot.motors.get("feeder").device.setPower(1);
+        for (int i = 0; i < 100; i++) robot.step(0.01);            // 1 s of feeding
+        assertTrue("about 3-4 pieces in a second, not 1: " + robot.shots(), robot.shots() >= 3);
+    }
 }

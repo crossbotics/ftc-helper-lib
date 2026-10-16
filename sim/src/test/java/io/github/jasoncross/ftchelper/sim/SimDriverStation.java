@@ -87,7 +87,10 @@ final class SimDriverStation {
         }
         for (String rel : classFiles) {
             {
-                if (!rel.startsWith("io/github/jasoncross/") || rel.contains("$")) continue;
+                // The library's examples and starter kit, the simulator's own, and team code copied in
+                // with its TeamCode package.
+                boolean ours = rel.startsWith("io/github/jasoncross/") || rel.startsWith("org/firstinspires/ftc/teamcode/");
+                if (!ours || rel.contains("$")) continue;
                 String className = rel.substring(0, rel.length() - ".class".length()).replace('/', '.');
                 try {
                     Class<?> c = Class.forName(className, false, getClass().getClassLoader());
@@ -186,6 +189,8 @@ final class SimDriverStation {
         } catch (InterruptedException ignored) {
             // stopped
         } catch (Throwable t) {
+            // terminateOpModeNow(): a clean stop on a robot, not an error.
+            if (t.getClass().getName().endsWith("ForceStopException")) return;
             StringWriter sw = new StringWriter();
             t.printStackTrace(new PrintWriter(sw));
             String trace = sw.toString();
@@ -219,6 +224,8 @@ final class SimDriverStation {
         Thread t = thread;
         if (o == null) return;
         SimAccess.stop(o);
+        // Like the FTC app: a sleep() in the OpMode ends at once (its thread is interrupted right away).
+        if (t != null) t.interrupt();
         if (t != null) {
             try {
                 t.join(2000);
@@ -240,6 +247,11 @@ final class SimDriverStation {
         phase = Phase.STOPPED;
     }
 
+    /** A problem in the simulator itself (not the OpMode): shown like an OpMode error. */
+    void physicsError(String text) {
+        if (error.isEmpty()) error = text;
+    }
+
     /** STOP without waiting here (for the page and the timer). */
     void stopAsync() {
         commands.submit(this::stop);
@@ -249,8 +261,9 @@ final class SimDriverStation {
     void tick() {
         OpMode o = op;
         if (o != null && (phase == Phase.INIT || phase == Phase.RUNNING)) SimAccess.eventLoop(o);
-        pad1.releaseIfSilent(1.0);
-        pad2.releaseIfSilent(1.0);
+        // 2.5 s: a hidden browser tab only sends once a second.
+        pad1.releaseIfSilent(2.5);
+        pad2.releaseIfSilent(2.5);
         Entry e = current;
         if (autoTimer && !autoStopping && phase == Phase.RUNNING && e != null && e.kind.equals("Autonomous")
                 && runSeconds() >= 30) {

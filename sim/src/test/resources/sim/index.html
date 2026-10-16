@@ -91,7 +91,8 @@
       <label class="muted"><input type="checkbox" id="autoTimer" checked> 30 s autonomous timer</label>
     </div>
     <div class="status" id="status">No OpMode running.</div>
-    <div id="screen" aria-live="polite"></div>
+    <div class="status" id="cmdNote" style="color:var(--stop)"></div>
+    <div id="screen" role="log" aria-label="Driver Hub telemetry"></div>
     <div id="error"></div>
   </section>
 
@@ -100,11 +101,13 @@
     <div class="pad" data-pad="1">
       <div class="row"><b>Gamepad 1</b> <span class="muted">(driver)</span>
         <select class="src" aria-label="Gamepad 1 source"></select></div>
+      <div class="muted owner"></div>
       <div class="gp"></div>
     </div>
     <div class="pad" data-pad="2">
       <div class="row"><b>Gamepad 2</b> <span class="muted">(operator)</span>
         <select class="src" aria-label="Gamepad 2 source"></select></div>
+      <div class="muted owner"></div>
       <div class="gp"></div>
     </div>
     <label class="muted"><input type="checkbox" id="sticky"> Sticky on-screen buttons (a click holds a button until clicked again; sticks stay where you leave them) &mdash; to hold two things at once with a mouse.</label>
@@ -170,17 +173,22 @@ const LAYOUT = [
   ["y", "Y", 78.5, 27, 8, 13], ["x", "X", 71, 39, 8, 13], ["b", "B", 86, 39, 8, 13], ["a", "A", 78.5, 51, 8, 13],
   ["back", "BACK", 35, 30, 9, 8, true], ["guide", "GUIDE", 45.5, 28, 9, 10, true], ["start", "START", 56, 30, 9, 8, true],
 ];
+// Keep getting this pointer's events even if it slides off the button (fails quietly if it cannot).
+function capture(el, e) { try { el.setPointerCapture(e.pointerId); } catch (err) { /* not a real pointer */ } }
 function buildPad(el, n) {
   el.innerHTML = "";
   for (const [key, label, x, y, w, h, wide] of LAYOUT) {
     const b = document.createElement("div");
     b.className = "b" + (wide ? " wide" : "");
     b.textContent = label;
+    b.setAttribute("role", "button");
+    b.setAttribute("aria-label", "Gamepad " + n + " " + key.toUpperCase());
+    b.setAttribute("aria-pressed", "false");
     Object.assign(b.style, { left: x + "%", top: y + "%", width: w + "%", height: h + "%" });
     b.dataset.key = key;
     b.title = key.toUpperCase();
     let downAt = 0, releaseTimer = 0;
-    b.addEventListener("pointerdown", e => { e.preventDefault(); b.setPointerCapture(e.pointerId);
+    b.addEventListener("pointerdown", e => { e.preventDefault(); capture(b, e);
       clearTimeout(releaseTimer);   // a new press cancels the release still waiting from a quick tap
       downAt = performance.now();
       screenPads[n][key] = sticky ? (screenPads[n][key] ? 0 : 1) : 1; sendPads(); });
@@ -203,7 +211,7 @@ function buildPad(el, n) {
       const len = Math.hypot(dx, dy); if (len > 1) { dx /= len; dy /= len; }
       screenPads[n][ax] = +dx.toFixed(3); screenPads[n][ay] = +dy.toFixed(3);    // down = positive, like the SDK
     };
-    k.addEventListener("pointerdown", e => { e.preventDefault(); dragging = true; k.setPointerCapture(e.pointerId); move(e); });
+    k.addEventListener("pointerdown", e => { e.preventDefault(); dragging = true; capture(k, e); move(e); });
     k.addEventListener("pointermove", e => { if (dragging) move(e); });
     const end = () => { dragging = false; if (!sticky) { screenPads[n][ax] = 0; screenPads[n][ay] = 0; } };
     k.addEventListener("pointerup", end); k.addEventListener("pointercancel", end);
@@ -225,7 +233,11 @@ function buildPad(el, n) {
 }
 function drawPad(el, n) {
   const p = merged(n);
-  el.querySelectorAll(".b").forEach(b => b.classList.toggle("on", !!p[b.dataset.key]));
+  el.querySelectorAll(".b").forEach(b => {
+    const on = !!p[b.dataset.key];
+    b.classList.toggle("on", on);
+    b.setAttribute("aria-pressed", on ? "true" : "false");
+  });
   el.querySelectorAll(".stick").forEach(s => {
     const k = s.firstChild;
     k.style.transform = `translate(${p[s.dataset.ax] * 60}%, ${p[s.dataset.ay] * 60}%)`;
@@ -255,11 +267,12 @@ window.addEventListener("keydown", e => {
   if (e.target.matches("input, select") && e.target.type !== "range" && e.target.type !== "checkbox") return;
   const k = e.key.toLowerCase();
   if (!(k in KEYMAP) || !keyboardPads().length) return;
-  e.preventDefault(); keysDown.add(k); applyKeys();
+  e.preventDefault(); keysDown.add(k); applyKeys(); sendPads();
 });
-window.addEventListener("keyup", e => { keysDown.delete(e.key.toLowerCase()); applyKeys(); });
+window.addEventListener("keyup", e => { keysDown.delete(e.key.toLowerCase()); applyKeys(); sendPads(); });
 window.addEventListener("blur", () => { keysDown.clear(); applyKeys(); });
 
+let lastControllerState = "";
 function readControllers() {
   const list = navigator.getGamepads ? Array.from(navigator.getGamepads()) : [];
   for (const n of [1,2]) {
@@ -275,14 +288,28 @@ function readControllers() {
       lx:ax(0), ly:ax(1), rx:ax(2), ry:ax(3) };
   }
 }
+// Real controllers are read often (every animation frame), and a change is sent at once, so a
+// quick tap is not lost between the regular updates.
+function watchControllers() {
+  readControllers();
+  const now = JSON.stringify([pads[1], pads[2]]);
+  if (now !== lastControllerState && (source[1].startsWith("controller") || source[2].startsWith("controller"))) {
+    lastControllerState = now;
+    for (const n of [1,2]) if (source[n].startsWith("controller")) sendPad(n);
+  }
+  requestAnimationFrame(watchControllers);
+}
+requestAnimationFrame(watchControllers);
 function fillSources() {
   const list = navigator.getGamepads ? Array.from(navigator.getGamepads()) : [];
   document.querySelectorAll(".pad").forEach(div => {
     const n = +div.dataset.pad, sel = $(".src", div), now = source[n];
     const opts = [["screen","On-screen"],["keyboard","Keyboard"]];
-    list.forEach((g, i) => { if (g) opts.push(["controller:" + i, "Controller " + (i + 1) + ": " + g.id.slice(0, 28)]); });
+    // A controller without the browser's "standard" button layout may have its buttons mixed up.
+    list.forEach((g, i) => { if (g) opts.push(["controller:" + i, "Controller " + (i + 1) + ": " + g.id.slice(0, 28)
+      + (g.mapping === "standard" ? "" : " (buttons may be mixed up)")]); });
     opts.push(["remote","Phone / other page"]);
-    const html = opts.map(([v, t]) => `<option value="${v}">${t}</option>`).join("");
+    const html = opts.map(([v, t]) => `<option value="${v}">${escapeHtml(t)}</option>`).join("");
     if (sel.dataset.html !== html) { sel.innerHTML = html; sel.dataset.html = html; }
     sel.value = opts.some(o => o[0] === now) ? now : "screen";
   });
@@ -294,6 +321,12 @@ window.addEventListener("gamepaddisconnected", fillSources);
 function post(path, data) {
   return fetch(path, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams(data).toString() }).catch(() => {});
+}
+// A Driver Station or panel command: shows the simulator's answer if it is a problem.
+function command(data) {
+  return post("/cmd", data).then(r => r && r.text ? r.text() : "").then(t => {
+    if (t && t !== "ok") { $("#cmdNote").textContent = t; setTimeout(() => $("#cmdNote").textContent = "", 5000); }
+  });
 }
 // Each page has its own session id; every update has a growing number, so the simulator ignores an
 // older update that arrives after a newer one. One update at a time per gamepad; the newest waits.
@@ -352,21 +385,28 @@ function render(s) {
   $("#status").innerHTML = s.opmode
     ? `<b>${escapeHtml(s.opmode)}</b> &middot; ${s.phase === "RUNNING" ? "running " + Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0") : s.phase.toLowerCase()}`
     : "Choose an OpMode, then INIT.";
-  $("#screen").textContent = s.screen.join("\n");
+  const text = s.screen.join("\n");
+  if ($("#screen").textContent !== text) $("#screen").textContent = text;   // only when it changed
   const err = $("#error");
   err.style.display = s.error ? "block" : "none";
   err.textContent = s.error;
   $("#autoTimer").checked = s.autoTimer;
   renderHub(s);
-  document.querySelectorAll(".pad").forEach(div => drawPad($(".gp", div), +div.dataset.pad));
+  document.querySelectorAll(".pad").forEach(div => {
+    const n = +div.dataset.pad, o = (s.pads || [])[n - 1];
+    drawPad($(".gp", div), n);
+    // Another page (a phone, a second tab) pressed something on this gamepad last.
+    $(".owner", div).textContent = o && o.owner && o.owner !== session
+      ? "Last used from another page (" + o.from + "). Set this one to \"Phone / other page\" so they do not fight." : "";
+  });
   $("#lanHelp").textContent = s.lan && s.addresses.length
     ? "Phone as gamepad 2: open http://" + s.addresses[0] + ":" + s.port + "/?phone=2 (set gamepad 2 here to Phone)."
     : "Phone as a gamepad: start with ./gradlew :sim:run -Plan";
 }
-$("#initBtn").onclick = () => post("/cmd", { action: "init", opmode: $("#opmode").value });
-$("#startBtn").onclick = () => post("/cmd", { action: "start" });
-$("#stopBtn").onclick = () => post("/cmd", { action: "stop" });
-$("#autoTimer").onchange = e => post("/cmd", { action: "autoTimer", on: e.target.checked ? 1 : 0 });
+$("#initBtn").onclick = () => command({ action: "init", opmode: $("#opmode").value });
+$("#startBtn").onclick = () => command({ action: "start" });
+$("#stopBtn").onclick = () => command({ action: "stop" });
+$("#autoTimer").onchange = e => command({ action: "autoTimer", on: e.target.checked ? 1 : 0 });
 $("#sticky").onchange = e => { sticky = e.target.checked; if (!sticky) for (const n of [1,2]) screenPads[n] = blankPad(); };
 document.querySelectorAll(".pad").forEach(div => {
   const n = +div.dataset.pad;
@@ -399,13 +439,13 @@ function renderHub(s) {
     `x ${s.robot.x.toFixed(1)} in, y ${s.robot.y.toFixed(1)} in, heading ${s.robot.heading.toFixed(1)}°` +
     (s.robot.hasImu ? `, IMU yaw ${s.robot.imu.toFixed(1)}°` : "") + ` · shots ${s.robot.shots}`;
 }
-$("#touches").addEventListener("click", e => { const c = e.target.closest("[data-touch]"); if (c) post("/cmd", { action: "touch", name: c.dataset.touch }); });
+$("#touches").addEventListener("click", e => { const c = e.target.closest("[data-touch]"); if (c) command({ action: "touch", name: c.dataset.touch }); });
 document.querySelectorAll("[data-push]").forEach(b => b.onclick = () => {
   const [f, r, sec] = b.dataset.push.split(",");
-  post("/cmd", { action: "push", forward: f, right: r, seconds: sec });
+  command({ action: "push", forward: f, right: r, seconds: sec });
 });
-$("#resetPose").onclick = () => post("/cmd", { action: "resetPose" });
-$("#battery").onchange = e => post("/cmd", { action: "battery", volts: e.target.value });
+$("#resetPose").onclick = () => command({ action: "resetPose" });
+$("#battery").onchange = e => command({ action: "battery", volts: e.target.value });
 
 function drawField(r) {
   const c = $("#field"), ctx = c.getContext("2d"), W = c.width, s = W / 144;

@@ -23,15 +23,20 @@ final class SimRun implements AutoCloseable {
     Gamepad g2() { return sim.ds.pad2.gamepad; }
     SimRobot robot() { return sim.robot; }
 
+    /** INIT, then waits until the OpMode has shown its INIT screen (or stopped with an error). */
     SimRun init(String opMode) throws InterruptedException {
+        int before = sim.ds.screen.updates();
         sim.ds.init(opMode);
-        pause(0.3);
+        waitFor(() -> sim.ds.screen.updates() > before || !sim.ds.error().isEmpty()
+                || sim.ds.phase() == SimDriverStation.Phase.STOPPED, 3);
         return this;
     }
 
+    /** START, then waits until the OpMode has run a couple of loops (or stopped). */
     SimRun start() throws InterruptedException {
         sim.ds.start();
-        pause(0.3);
+        int before = sim.ds.screen.updates();
+        waitFor(() -> sim.ds.screen.updates() >= before + 2 || sim.ds.phase() != SimDriverStation.Phase.RUNNING, 3);
         return this;
     }
 

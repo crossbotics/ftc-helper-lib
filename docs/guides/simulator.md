@@ -21,8 +21,10 @@ From the ftc-helper-lib folder:
 ./gradlew :sim:run
 ```
 
-Then open **http://localhost:8780** in a browser. Ctrl+C in the terminal stops it. It needs only Java
-(Android Studio's built-in Java works). Windows, macOS and Linux; a Chromebook with Linux turned on.
+Then open **http://localhost:8780** in a browser. Ctrl+C in the terminal stops it. It needs what
+building the library needs: Java and the Android SDK, which Android Studio installs (if Gradle says
+"SDK location not found", see [Contributing](../contributing.md)). Windows, macOS and Linux; a
+Chromebook with Linux turned on.
 
 Options:
 
@@ -31,7 +33,8 @@ Options:
 ```
 
 `-Probot` uses another robot file. `-Plan` lets phones and tablets on the same WiFi join (Windows asks
-about the firewall the first time).
+about the firewall the first time). With `-Plan`, anyone on that WiFi can open the page and run
+OpModes in the simulator: use it on a team or home network, not open school WiFi.
 
 ## The page
 
@@ -47,7 +50,11 @@ An error in the OpMode shows in red, with the line where it happened.
 | On-screen | click or touch the buttons; drag the sticks; slide the triggers. **Sticky** (the box under the gamepads): a click holds a button until the next click and sticks stay where you leave them, so you can hold two things at once with one mouse. |
 | Keyboard | left stick W A S D, right stick arrows, D-pad T F G H, A/B/X/Y K L J I, LB/RB Q E, LT/RT Z C, BACK Backspace, START Enter, GUIDE M |
 | Controller | plug in a USB or Bluetooth controller, choose it, press any of its buttons once (a browser rule). Xbox, PS4, PS5 everywhere; Logitech F310 on Windows (on a Mac set its back switch to "D"). Chrome and Edge work best. |
-| Phone / other page | start with `-Plan`, open `http://<computer address>:8780/?phone=2` on the phone (the page shows the address): the phone becomes gamepad 2. Set gamepad 2 here to "Phone / other page". |
+| Phone / other page | start with `-Plan`, open `http://<computer address>:8780/?phone=2` on the phone (the page shows the address): the phone becomes gamepad 2 (`?phone=1`: gamepad 1). Set that gamepad here to "Phone / other page"; if you forget, the page says another page is using it. |
+
+If both gamepads are set to Keyboard, the same keys work both. A browser tab in the background sends
+gamepad updates only once a second, and after 2.5 s without news the simulator lets go of every
+button (like a pulled cable): keep the simulator tab visible while you drive.
 
 The GUIDE (PS) button often does not reach the browser (Windows and macOS keep it): use the on-screen
 GUIDE, the M key, or hold START for 1 second (the finders accept that too).
@@ -73,22 +80,30 @@ servo.claw = 0.5
 touch.lift_bottom = lift, below=20
 ```
 
-Motor kinds: `free` (just spins), `lift` (hard stops, gravity), `flywheel` (coasts; slows down when its
-`feeder` motor runs, like a shot). The wheel motors are on the left/right sides of the robot like a
+Motor kinds: `free` (just spins), `lift` (hard stops, gravity), `flywheel` (coasts; while its `feeder`
+motor runs, a piece goes through every 0.3 s and slows it down). `ticksPerRev=` sets a motor's encoder
+counts per turn (default 537.7; flywheel 28). On a robot, `setPower` in RUN_USING_ENCODER aims for the
+top speed of the motor TYPE chosen in the configuration; here it is the robot file's `maxTicksPerSec`. The wheel motors are on the left/right sides of the robot like a
 real one (the left ones mounted mirrored), so motor directions in your code matter here too.
 
 ## Your own OpModes
 
-The simulator lists every OpMode in the library's examples and starter kit. To try your team's own
-OpMode, copy it into `examples/src/main/java/...` (or the starter folder) in the library folder, build,
-and restart the simulator. (Running TeamCode directly is a later step.)
+The simulator lists every OpMode in the library's examples and starter kit, and any OpMode in the
+package `org.firstinspires.ftc.teamcode`. To try your team's own OpMode, copy the file into
+`examples/src/main/java/org/firstinspires/ftc/teamcode/` in the library folder (keep its package line),
+and restart the simulator. (Running TeamCode straight from the robot project is a later step.)
 
 ## Not simulated
 
-Cameras (webcam and Limelight): an OpMode that needs one stops with "no webcam". The Shot and Aim
+Cameras (webcam and Limelight): an OpMode that needs one stops with "No WebcamName named...". The Shot and Aim
 tuners work without a camera when `createCamera()` returns null. Iterative OpModes (`init()/loop()`)
 are not run yet; the library's OpModes are all LinearOpModes. Physics is simple: real numbers
 (gains, speeds, shot tables) must still be found on the robot.
+
+Differences to know: the screen here updates as fast as the OpMode sends (a real Driver Station
+redraws about 4 times a second, so a flickering line looks steadier there). STOP works like on a
+robot: a `sleep()` ends at once, and an OpMode that ignores STOP for 3 s is cut off from the hardware
+(restart the simulator to run another).
 
 ## Automatic tests
 

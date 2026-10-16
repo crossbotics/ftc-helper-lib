@@ -87,6 +87,11 @@ final class SimServer {
                 if (n < 0) break;
                 read += n;
             }
+            // A request from another web site (its page open in the same browser) is refused.
+            if (method.equals("POST") && !sameOrigin(head)) {
+                send(client.getOutputStream(), 404, "text/plain", "refused".getBytes(StandardCharsets.UTF_8));
+                return;
+            }
             String query = path.contains("?") ? path.substring(path.indexOf('?') + 1) : "";
             path = path.contains("?") ? path.substring(0, path.indexOf('?')) : path;
             OutputStream out = client.getOutputStream();
@@ -96,6 +101,7 @@ final class SimServer {
                 send(out, 200, "application/json", SimJson.state(sim, this).getBytes(StandardCharsets.UTF_8));
             } else if (method.equals("POST") && path.startsWith("/pad/")) {
                 Map<String, String> form = form(new String(body, StandardCharsets.UTF_8));
+                form.put("_from", client.getInetAddress().getHostAddress());
                 (path.endsWith("2") ? sim.ds.pad2 : sim.ds.pad1).apply(form);
                 send(out, 204, "text/plain", new byte[0]);
             } else if (method.equals("POST") && path.equals("/cmd")) {
@@ -163,6 +169,19 @@ final class SimServer {
             if (state == 4) return b.toString("ISO-8859-1");
             if (b.size() > 16384) return null;
         }
+    }
+
+    // True when there is no Origin header, or it names the same host:port as the Host header.
+    private static boolean sameOrigin(String head) {
+        String origin = null, host = null;
+        for (String line : head.split("\r\n")) {
+            String low = line.toLowerCase(Locale.US);
+            if (low.startsWith("origin:")) origin = line.substring(7).trim();
+            if (low.startsWith("host:")) host = line.substring(5).trim();
+        }
+        if (origin == null || origin.equals("null")) return origin == null;
+        String o = origin.replaceFirst("^https?://", "");
+        return host != null && o.equalsIgnoreCase(host);
     }
 
     private static Map<String, String> form(String text) {

@@ -19,9 +19,20 @@ final class SimGamepad {
         long seq = -1;
         try { seq = Long.parseLong(s.getOrDefault("seq", "-1")); } catch (NumberFormatException ignored) { }
         if (seq >= 0) {
-            if (session.equals(lastSession) && seq <= lastSeq) return;
-            lastSession = session;
-            lastSeq = seq;
+            Long last = lastSeqBySession.get(session);
+            if (last != null && seq <= last) return;
+            lastSeqBySession.put(session, seq);
+        }
+        // Two pages for one gamepad (a phone and the laptop, or a second tab): the page that last
+        // pressed something owns it; while it is active, "nothing pressed" from another page is ignored.
+        boolean blank = isBlank(s);
+        long now = System.nanoTime();
+        if (!blank) {
+            owner = session;
+            ownerFrom = s.getOrDefault("_from", "");
+            ownerSeen = now;
+        } else if (!session.equals(owner) && (now - ownerSeen) / 1e9 < 1.0) {
+            return;
         }
         // Built on a fresh Gamepad, then copied in with the SDK's own copy(), so the SDK's
         // "was pressed" methods and the PlayStation names (cross, circle...) work too.
@@ -51,8 +62,28 @@ final class SimGamepad {
         lastSeen = System.nanoTime();
     }
 
-    private String lastSession = "";
-    private long lastSeq = -1;
+    private final Map<String, Long> lastSeqBySession = new java.util.HashMap<>();
+    private String owner = "", ownerFrom = "";
+    private long ownerSeen = 0;
+
+    /** The page that last pressed something on this gamepad: its session id and address. */
+    synchronized String owner() { return owner; }
+    synchronized String ownerFrom() { return ownerFrom; }
+
+    private static boolean isBlank(Map<String, String> s) {
+        for (Map.Entry<String, String> e : s.entrySet()) {
+            String k = e.getKey();
+            if (k.equals("session") || k.equals("seq") || k.startsWith("_")) continue;
+            String v = e.getValue();
+            if (v == null) continue;
+            try {
+                if (Math.abs(Double.parseDouble(v)) > 0.02) return false;
+            } catch (NumberFormatException ex) {
+                if (v.equals("true")) return false;
+            }
+        }
+        return true;
+    }
 
     /** No news from the page for a while (a closed tab): let go of everything, like a pulled cable. */
     synchronized void releaseIfSilent(double seconds) {

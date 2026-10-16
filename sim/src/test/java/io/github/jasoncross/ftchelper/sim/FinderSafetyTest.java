@@ -1,7 +1,6 @@
 package io.github.jasoncross.ftchelper.sim;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -102,34 +101,45 @@ public class FinderSafetyTest {
                 assertTrue(f, SimRun.waitFor(() -> s.screenHas("help"), 1));
                 List<String> lines = s.screen();
                 assertTrue(f + ": " + lines.size() + " lines", lines.size() <= 16);
-                for (String line : lines) assertTrue(f + ": too wide: " + line, line.length() <= 56);
+                // 54 characters: the page's screen width, close to a Driver Hub's in landscape.
+                for (String line : lines) assertTrue(f + ": too wide: " + line, line.length() <= 54);
                 s.sim.ds.stop();
             }
         }
     }
 
+    // OpModes that cannot run here on purpose, and the reason that must show. Every other one must
+    // run with no error at all.
+    private static final java.util.Map<String, String> EXPECTED = new java.util.HashMap<>();
+    static {
+        EXPECTED.put("Tutorial 05: Tank Drive", "\"left_drive\"");        // needs a tank robot file
+        EXPECTED.put("Example: Helper Tank TeleOp", "\"left_drive\"");
+        EXPECTED.put("Tutorial 18: Vision Aim", "Webcam");                 // no camera in the simulator
+        EXPECTED.put("Shot Tuner", "Webcam");
+        EXPECTED.put("Aim Tuner", "Webcam");
+    }
+
     @Test public void everyExampleStartsAndStopsCleanly() throws Exception {
         List<String> problems = new ArrayList<>();
+        List<String> seen = new ArrayList<>();
         try (SimRun s = new SimRun()) {
             for (SimDriverStation.Entry e : new ArrayList<>(s.sim.ds.opModes)) {
-                s.sim.ds.init(e.name);
-                SimRun.pause(0.2);
-                s.sim.ds.start();
-                SimRun.pause(0.3);
+                s.init(e.name);
+                s.start();
                 s.sim.ds.stop();
                 String err = s.error();
-                // Expected in the simulator: no camera, and autonomous refusing an untuned drive.
-                boolean expected = err.isEmpty() || err.contains("Webcam") || err.contains("WebcamName")
-                        || err.contains("Limelight") || err.contains("calibrationConfirmed")
-                        // the tank-drive examples need a tank robot file (left_drive, right_drive)
-                        || err.contains("\"left_drive\"");
-                if (!expected) problems.add(e.name + ": " + err.split("\n")[0]);
+                String expected = EXPECTED.get(e.name);
+                // An autonomous refusing an untuned drivetrain is right (calibrationConfirmed is false).
+                boolean ok = err.isEmpty() || (expected != null && err.contains(expected))
+                        || (e.kind.equals("Autonomous") && err.contains("calibrationConfirmed"));
+                if (!ok) problems.add(e.name + ": " + err.split("\n")[0]);
+                if (!err.isEmpty()) seen.add(e.name + " -> " + err.split("\n")[0]);
                 for (SimMotor m : s.robot().motors.values()) {
                     if (Math.abs(m.userPower()) > 1e-9) problems.add(e.name + ": motor " + m.name + " still on after STOP");
                 }
             }
         }
+        System.out.println("Expected errors seen:\n" + String.join("\n", seen));
         assertTrue(String.join("\n", problems), problems.isEmpty());
-        assertFalse(problems.size() > 0);
     }
 }

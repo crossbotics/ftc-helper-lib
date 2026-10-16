@@ -24,8 +24,12 @@ final class SimEngine {
                 long now = System.nanoTime();
                 double dt = Math.min(0.05, (now - last) / 1e9);
                 last = now;
-                robot.step(dt);
-                ds.tick();
+                try {
+                    robot.step(dt);
+                    ds.tick();
+                } catch (RuntimeException e) {
+                    ds.physicsError("Simulator physics error: " + e);
+                }
                 try {
                     Thread.sleep(10);
                 } catch (InterruptedException e) {

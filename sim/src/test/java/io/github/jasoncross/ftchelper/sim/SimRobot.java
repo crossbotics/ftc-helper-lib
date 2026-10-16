@@ -31,7 +31,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 final class SimRobot {
     final Map<String, SimMotor> motors = new LinkedHashMap<>();
     final Map<String, SimServo> servos = new LinkedHashMap<>();
-    final Map<String, double[]> crServos = new LinkedHashMap<>();   // name -> {power}
+    final Map<String, double[]> crServos = new LinkedHashMap<>();   // name -> {power, reversed (1/0)}
     final Map<String, SimTouch> touches = new LinkedHashMap<>();
     private final Map<String, HardwareDevice> devices = new LinkedHashMap<>();
     final String imuName;
@@ -57,9 +57,12 @@ final class SimRobot {
     // heading in degrees, counterclockwise = positive, 0 = facing away from the drivers.
     double x = 0, y = -48, headingDeg = 0;
     private double imuZero = 0;
+    private volatile double yawRateDeg = 0;   // degrees per second, counterclockwise
     // A hand push: inches per second forward/right, and how long it still lasts.
     private double pushForward = 0, pushRight = 0, pushLeft = 0;
-    private final Map<String, Boolean> feederWasOn = new LinkedHashMap<>();
+    // Per flywheel: seconds since the last piece went through (a running feeder sends one every 0.3 s).
+    private final Map<String, Double> sinceShot = new LinkedHashMap<>();
+    static final double SECONDS_PER_PIECE = 0.3;
     private int shots = 0;
 
     private SimRobot(Properties p) {
@@ -86,7 +89,12 @@ final class SimRobot {
         for (String key : sortedKeys(p, "motor.")) {
             String name = key.substring("motor.".length());
             Map<String, String> s = settings(p.getProperty(key));
-            SimMotor.Kind kind = SimMotor.Kind.valueOf(s.getOrDefault("", "free").toUpperCase(Locale.US));
+            SimMotor.Kind kind;
+            try {
+                kind = SimMotor.Kind.valueOf(s.getOrDefault("", "free").toUpperCase(Locale.US));
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Robot file: \"" + key + "\": the kind must be free, lift or flywheel");
+            }
             double max = dbl(s, "maxTicksPerSec", 2780);
             SimMotor m = new SimMotor(name, port++, kind, max, kind == SimMotor.Kind.FLYWHEEL ? 0.6 : 0.12);
             m.ticksPerRev = dbl(s, "ticksPerRev", kind == SimMotor.Kind.FLYWHEEL ? 28 : 537.7);
@@ -100,9 +108,9 @@ final class SimRobot {
         for (String key : sortedKeys(p, "servo.")) {
             if (key.equals("servo.speed")) continue;
             String name = key.substring("servo.".length());
-            servos.put(name, new SimServo(name, Double.parseDouble(p.getProperty(key).trim())));
+            servos.put(name, new SimServo(name, num(p, key, 0.5)));
         }
-        for (String key : sortedKeys(p, "crservo.")) crServos.put(key.substring("crservo.".length()), new double[] {0});
+        for (String key : sortedKeys(p, "crservo.")) crServos.put(key.substring("crservo.".length()), new double[] {0, 0});
         for (String key : sortedKeys(p, "touch.")) {
             Map<String, String> s = settings(p.getProperty(key));
             touches.put(key.substring("touch.".length()), new SimTouch(s.get(""), dbl(s, "below", 20)));
@@ -148,7 +156,7 @@ final class SimRobot {
     synchronized void resetConfig() {
         for (SimMotor m : motors.values()) m.resetConfig();
         for (SimServo s : servos.values()) s.resetConfig();
-        for (double[] cr : crServos.values()) cr[0] = 0;
+        for (double[] cr : crServos.values()) { cr[0] = 0; cr[1] = 0; }
     }
 
     /** Battery voltage from the panel: kept to 9..14 V (a real battery's range). */
@@ -172,6 +180,9 @@ final class SimRobot {
                             synchronized (this) { state[0] = Math.max(-1, Math.min(1, ((Number) a[0]).doubleValue())); }
                             return null;
                         case "getPower": synchronized (this) { return state[0]; }
+                        // state[0] is the power asked for; the panel shows the turning direction (reversed flips it).
+                        case "setDirection": synchronized (this) { state[1] = a[0] == com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.REVERSE ? 1 : 0; } return null;
+                        case "getDirection": synchronized (this) { return state[1] == 1 ? com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.REVERSE : com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.FORWARD; }
                         case "getDeviceName": return "Simulated CR servo";
                         case "hashCode": return System.identityHashCode(proxy);
                         case "equals": return proxy == a[0];
@@ -188,6 +199,21 @@ final class SimRobot {
                         case "resetYaw": synchronized (this) { imuZero = headingDeg; } return null;
                         case "getRobotYawPitchRollAngles":
                             return new YawPitchRollAngles(AngleUnit.DEGREES, imuYaw(), 0, 0, System.nanoTime());
+                        case "getRobotOrientation": {
+                            // (reference, order, unit): yaw is the turn about Z; pitch and roll are 0 on a flat field
+                            org.firstinspires.ftc.robotcore.external.navigation.AngleUnit unit =
+                                    (org.firstinspires.ftc.robotcore.external.navigation.AngleUnit) a[2];
+                            float yaw = (float) (unit == AngleUnit.RADIANS ? Math.toRadians(imuYaw()) : imuYaw());
+                            return new org.firstinspires.ftc.robotcore.external.navigation.Orientation(
+                                    (org.firstinspires.ftc.robotcore.external.navigation.AxesReference) a[0],
+                                    (org.firstinspires.ftc.robotcore.external.navigation.AxesOrder) a[1], unit, yaw, 0f, 0f, System.nanoTime());
+                        }
+                        case "getRobotAngularVelocity": {
+                            org.firstinspires.ftc.robotcore.external.navigation.AngleUnit unit =
+                                    (org.firstinspires.ftc.robotcore.external.navigation.AngleUnit) a[0];
+                            float z = (float) (unit == AngleUnit.RADIANS ? Math.toRadians(yawRateDeg) : yawRateDeg);
+                            return new org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity(unit, 0f, 0f, z, System.nanoTime());
+                        }
                         case "getDeviceName": return "Simulated IMU";
                         case "hashCode": return System.identityHashCode(proxy);
                         case "equals": return proxy == a[0];
@@ -270,11 +296,15 @@ final class SimRobot {
             if (m.kind != SimMotor.Kind.FLYWHEEL || m.feeder == null) continue;
             SimMotor feeder = motors.get(m.feeder);
             boolean on = feeder != null && Math.abs(feeder.appliedPower) > 0.3;
-            if (on && !feederWasOn.getOrDefault(m.name, false) && Math.abs(m.shaftSpeed()) > 100) {
+            double since = sinceShot.getOrDefault(m.name, SECONDS_PER_PIECE) + dt;
+            // While the feeder runs, a piece goes through every SECONDS_PER_PIECE (the first at once).
+            if (on && since >= SECONDS_PER_PIECE && Math.abs(m.shaftSpeed()) > 100) {
                 m.shot();
                 shots++;
+                since = 0;
             }
-            feederWasOn.put(m.name, on);
+            if (!on) since = SECONDS_PER_PIECE;
+            sinceShot.put(m.name, since);
         }
     }
 
@@ -313,6 +343,7 @@ final class SimRobot {
         x += (-Math.sin(h) * forward + Math.cos(h) * right) * dt;
         y += (Math.cos(h) * forward + Math.sin(h) * right) * dt;
         headingDeg = wrap(headingDeg - Math.toDegrees(cw * dt));
+        yawRateDeg = -Math.toDegrees(cw);
         // The field walls: 72 in from the center, minus half the robot.
         double edge = 72 - 9;
         x = Math.max(-edge, Math.min(edge, x));
@@ -339,7 +370,12 @@ final class SimRobot {
 
     private static double num(Properties p, String key, double fallback) {
         String v = p.getProperty(key);
-        return v == null || v.trim().isEmpty() ? fallback : Double.parseDouble(v.trim());
+        if (v == null || v.trim().isEmpty()) return fallback;
+        try {
+            return Double.parseDouble(v.trim());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Robot file: \"" + key + " = " + v + "\" needs a number");
+        }
     }
 
     private static List<String> list(String text) {
@@ -368,7 +404,12 @@ final class SimRobot {
 
     private static double dbl(Map<String, String> s, String key, double fallback) {
         String v = s.get(key);
-        return v == null ? fallback : Double.parseDouble(v);
+        if (v == null) return fallback;
+        try {
+            return Double.parseDouble(v);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Robot file: \"" + key + "=" + v + "\" needs a number");
+        }
     }
 
     // ---------------------------------------------------------------- servos and switches
@@ -409,8 +450,13 @@ final class SimRobot {
                     target = scaleMin + p * (scaleMax - scaleMin);
                     return null;
                 }
-                // Like the SDK: the last position sent (0 if none yet: the SDK cannot know either).
-                case "getPosition": return Double.isNaN(commanded) ? 0.0 : commanded;
+                // Like the SDK: the hub's last raw position (0 before any command) turned back through
+                // the range and the direction. After a command that is just the position sent.
+                case "getPosition": {
+                    if (!Double.isNaN(commanded)) return commanded;
+                    double p = Math.max(0, Math.min(1, (0 - scaleMin) / (scaleMax - scaleMin)));
+                    return direction == Servo.Direction.REVERSE ? 1 - p : p;
+                }
                 case "scaleRange": {
                     double lo = ((Number) a[0]).doubleValue(), hi = ((Number) a[1]).doubleValue();
                     // Like the SDK: 0 <= min < max <= 1, or an error.

@@ -35,6 +35,8 @@ final class SimMotor {
     private double power = 0;
     private double targetVelocity = Double.NaN;   // NaN = setPower was used last
     private int targetPosition = 0;
+    private boolean targetSet = false;   // RUN_TO_POSITION needs a target first, like the SDK
+    private boolean enabled = true;
     private double p = 10, i = 3, d = 0, f = 0;   // the hub's default velocity gains
     private double integral = 0;
 
@@ -98,6 +100,8 @@ final class SimMotor {
         targetVelocity = Double.NaN;
         p = 10; i = 3; d = 0; f = 0;
         integral = 0;
+        targetSet = false;
+        enabled = true;
     }
 
     /** A hand push turns this wheel at this shaft speed (counts per second). */
@@ -109,6 +113,19 @@ final class SimMotor {
     synchronized void stopForcedSpin() {
         if (forcedVel != null) shaftVel = 0;
         forcedVel = null;
+    }
+
+    // The motor type the configuration would name: counts per turn and top speed from the robot file.
+    private Object motorType() {
+        try {
+            com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType t =
+                    new com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType();
+            t.setTicksPerRev(ticksPerRev);
+            t.setMaxRPM(maxTicksPerSec / ticksPerRev * 60.0);
+            return t;
+        } catch (Throwable e) {
+            return null;
+        }
     }
 
     private double perSecondIn(AngleUnit unit, double ticksPerSec) {
@@ -128,8 +145,12 @@ final class SimMotor {
             case "setDirection": direction = (DcMotorSimple.Direction) a[0]; return null;
             case "getDirection": return direction;
             case "setMode":
+                // Like the SDK: RUN_TO_POSITION before setTargetPosition() is an error.
+                if (a[0] == DcMotor.RunMode.RUN_TO_POSITION && !targetSet) {
+                    throw new com.qualcomm.robotcore.exception.TargetPositionNotSetException();
+                }
                 mode = (DcMotor.RunMode) a[0];
-                if (mode == DcMotor.RunMode.STOP_AND_RESET_ENCODER) {
+                if (mode == DcMotor.RunMode.STOP_AND_RESET_ENCODER || !enabled) {
                     encoderZero = shaftPos;
                     power = 0;
                     targetVelocity = Double.NaN;
@@ -168,13 +189,18 @@ final class SimMotor {
                 }
                 return null;
             case "getPIDFCoefficients": return new PIDFCoefficients(p, i, d, f);
-            case "setTargetPosition": targetPosition = (Integer) a[0]; return null;
+            case "setTargetPosition": targetPosition = (Integer) a[0]; targetSet = true; return null;
             case "getTargetPosition": return targetPosition;
             case "isBusy":
-                return mode == DcMotor.RunMode.RUN_TO_POSITION && Math.abs(encoder() - targetPosition) > 10;
-            case "getCurrent": return amps;
+                return mode == DcMotor.RunMode.RUN_TO_POSITION && Math.abs(encoder() - targetPosition) > 5;
+            case "getCurrent":
+                // the unit asked for (amps or milliamps)
+                return a != null && a.length == 1 && String.valueOf(a[0]).equals("MILLIAMPS") ? amps * 1000 : amps;
+            case "setMotorEnable": enabled = true; return null;
+            case "setMotorDisable": enabled = false; power = 0; return null;
+            case "getMotorType": return motorType();
             case "getPortNumber": return port;
-            case "isMotorEnabled": return true;
+            case "isMotorEnabled": return enabled;
             case "getDeviceName": return "Simulated motor";
             case "getConnectionInfo": return "simulated port " + port;
             case "getManufacturer": return com.qualcomm.robotcore.hardware.HardwareDevice.Manufacturer.Other;
@@ -229,8 +255,9 @@ final class SimMotor {
             if (Math.abs(appliedPower) < 1e-6) {
                 // Not driven: brake stops it fast (and holds a lift against gravity); float coasts.
                 if (braking()) {
+                    // A heavy flywheel takes a while to stop even with brake; everything else stops fast.
                     target = 0;
-                    lag = 0.05;
+                    lag = kind == Kind.FLYWHEEL ? 0.6 : 0.05;
                 } else {
                     lag = kind == Kind.FLYWHEEL ? 2.5 : 0.4;
                 }

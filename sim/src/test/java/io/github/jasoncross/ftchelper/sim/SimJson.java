@@ -30,6 +30,14 @@ final class SimJson {
         b.append("\"addresses\":");
         strings(b, server.lan ? addresses() : Collections.<String>emptyList());
         b.append(',');
+        b.append("\"pads\":[");
+        for (SimGamepad g : new SimGamepad[] {ds.pad1, ds.pad2}) {
+            if (g != ds.pad1) b.append(',');
+            b.append('{');
+            field(b, "owner", g.owner()).append(',');
+            field(b, "from", g.ownerFrom()).append('}');
+        }
+        b.append("],");
         b.append("\"opmodes\":[");
         boolean firstItem = true;
         for (SimDriverStation.Entry e : ds.opModes) {
