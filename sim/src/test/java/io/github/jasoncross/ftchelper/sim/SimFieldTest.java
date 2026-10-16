@@ -43,4 +43,17 @@ public class SimFieldTest {
         assertTrue("stopped before the box (robot front at y < 0): y = " + r.y, r.y + 9 <= 0.5);
         assertTrue("went past the tape zone", r.y > -20);
     }
+
+    @Test public void theJsonReaderIsStrict() {
+        assertEquals(2.5e3, (Double) SimJsonReader.parse("2.5e3"), 1e-9);
+        assertEquals("a\"b\u00e9", SimJsonReader.parse("\"a\\\"b\\u00e9\""));
+        for (String bad : new String[] {"+1", "01", ".5", "1e999", "\"\\q\"", "\"\\u12\"", "\"a\nb\"", "[1,]"}) {
+            try {
+                SimJsonReader.parse(bad);
+                org.junit.Assert.fail("should refuse " + bad);
+            } catch (IllegalArgumentException expected) {
+                assertTrue(expected.getMessage(), expected.getMessage().startsWith("JSON line"));
+            }
+        }
+    }
 }

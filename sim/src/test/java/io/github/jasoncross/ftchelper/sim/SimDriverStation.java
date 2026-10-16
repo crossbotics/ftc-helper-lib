@@ -58,9 +58,26 @@ final class SimDriverStation {
         return t;
     });
 
+    /** Which OpModes to list: the library's (examples, starter kit) or the team's (TeamCode). */
+    enum Scope { LIBRARY, TEAM }
+    final Scope scope;
+
     SimDriverStation(SimRobot robot) {
+        this(robot, Boolean.getBoolean("sim.teamOnly") ? Scope.TEAM : Scope.LIBRARY);
+    }
+
+    SimDriverStation(SimRobot robot, Scope scope) {
         this.robot = robot;
+        this.scope = scope;
         findOpModes();
+    }
+
+    // Loops run by an iterative OpMode (a LinearOpMode's loops are counted by its telemetry updates).
+    private volatile int iterations = 0;
+
+    /** A number that grows as the OpMode runs: its screen updates plus its iterative loops. */
+    int activity() {
+        return screen.updates() + iterations;
     }
 
     // Every class with @TeleOp or @Autonomous in the examples, the starter kit and the simulator's own.
@@ -89,9 +106,10 @@ final class SimDriverStation {
             {
                 // The library's examples and starter kit, the simulator's own, and team code copied in
                 // with its TeamCode package.
-                // With the team's TeamCode built in (-PteamCode / inside a robot project), list only it.
-                boolean team = rel.startsWith("org/firstinspires/ftc/teamcode/");
-                boolean ours = Boolean.getBoolean("sim.teamOnly") ? team : (team || rel.startsWith("io/github/jasoncross/"));
+                // The team's TeamCode, or the library's examples and starter kit: never both, so two
+                // OpModes with the same name ("Main TeleOp") cannot be mixed up.
+                boolean ours = scope == Scope.TEAM ? rel.startsWith("org/firstinspires/ftc/teamcode/")
+                        : rel.startsWith("io/github/jasoncross/");
                 if (!ours || rel.contains("$")) continue;
                 String className = rel.substring(0, rel.length() - ".class".length()).replace('/', '.');
                 try {
@@ -128,8 +146,14 @@ final class SimDriverStation {
     }
 
     Entry find(String name) {
-        for (Entry e : opModes) if (e.name.equals(name)) return e;
-        return null;
+        Entry found = null;
+        for (Entry e : opModes) {
+            if (!e.name.equals(name)) continue;
+            if (found != null) throw new IllegalArgumentException("Two OpModes are named \"" + name + "\" ("
+                    + found.type.getName() + " and " + e.type.getName() + "): give one another name");
+            found = e;
+        }
+        return found;
     }
 
     Phase phase() { return phase; }
@@ -190,6 +214,7 @@ final class SimDriverStation {
             while (!SimAccess.isStarted(o) && !SimAccess.isStopRequested(o)) {
                 o.init_loop();
                 screen.updateIfDirty();
+                iterations++;
                 Thread.sleep(5);
             }
             if (SimAccess.isStarted(o) && !SimAccess.isStopRequested(o)) {
@@ -198,6 +223,7 @@ final class SimDriverStation {
                 while (!SimAccess.isStopRequested(o)) {
                     o.loop();
                     screen.updateIfDirty();
+                    iterations++;
                     Thread.sleep(5);
                 }
             }

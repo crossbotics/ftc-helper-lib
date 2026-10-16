@@ -93,11 +93,14 @@ public final class SimScenario {
         return report;
     }
 
-    private void ok(int n, String line, String note) {
-        report.add(String.format(Locale.US, "  ok    %3d  %s%s", n, line, note.isEmpty() ? "" : "   (" + note + ")"));
+    private void ok(int n, String line, String why) {
+        String all = why.isEmpty() ? note : (note.isEmpty() ? why : why + "; " + note);
+        note = "";
+        report.add(String.format(Locale.US, "  ok    %3d  %s%s", n, line, all.isEmpty() ? "" : "   (" + all + ")"));
     }
 
     private void fail(int n, String line, String why) {
+        note = "";
         failures++;
         report.add(String.format(Locale.US, "  FAIL  %3d  %s   -> %s", n, line, why));
     }
@@ -149,12 +152,12 @@ public final class SimScenario {
                 if (t.get(1).equals("all")) {
                     pad1.clear();
                     pad2.clear();
-                    sim.ds.pad1.apply(pad1);
-                    sim.ds.pad2.apply(pad2);
+                    sim.ds.pad1.apply(pad1, false);
+                    sim.ds.pad2.apply(pad2, false);
                 } else if (t.get(1).endsWith(".all")) {
                     Map<String, String> p = t.get(1).startsWith("g2") ? pad2 : pad1;
                     p.clear();
-                    (p == pad2 ? sim.ds.pad2 : sim.ds.pad1).apply(p);
+                    (p == pad2 ? sim.ds.pad2 : sim.ds.pad1).apply(p, false);
                 } else {
                     setInput(t.get(1), "0");
                 }
@@ -184,10 +187,19 @@ public final class SimScenario {
         }
     }
 
+    // Notes for the current line (e.g. a wait that ran out of time).
+    private String note = "";
+
+    /**
+     * Waits until the OpMode has run this many more loops (screen updates or iterative loops), at
+     * most 3 s. An OpMode that never sends telemetry cannot be counted: then it notes that it waited.
+     */
     private void loops(int count) throws InterruptedException {
         if (sim.ds.phase() != SimDriverStation.Phase.INIT && sim.ds.phase() != SimDriverStation.Phase.RUNNING) return;
-        int start = sim.ds.screen.updates();
-        SimRun.waitFor(() -> sim.ds.screen.updates() >= start + count, 3);
+        int start = sim.ds.activity();
+        if (!SimRun.waitFor(() -> sim.ds.activity() >= start + count, 3)) {
+            note = "waited 3 s: the OpMode sends no telemetry, so its loops cannot be counted";
+        }
     }
 
     // g1.a / g2.right_stick_y / g1.lt ... (SDK names and the page's short names both work)
@@ -200,7 +212,7 @@ public final class SimScenario {
         if (!KEYS.contains(key)) throw new IllegalArgumentException("unknown gamepad input \"" + parts[1] + "\"");
         Map<String, String> p = parts[0].equals("g2") ? pad2 : pad1;
         p.put(key, value);
-        (p == pad2 ? sim.ds.pad2 : sim.ds.pad1).apply(new HashMap<>(p));
+        (p == pad2 ? sim.ds.pad2 : sim.ds.pad1).apply(new HashMap<>(p), false);
     }
 
     private static final List<String> KEYS = java.util.Arrays.asList("a", "b", "x", "y", "lb", "rb", "up", "down", "left",
@@ -232,10 +244,68 @@ public final class SimScenario {
             t = t.subList(2, t.size());
         }
         final List<String> check = t;
+        validate(check);
         String[] why = {""};
         boolean pass = SimRun.waitFor(() -> holds(check, why), within);
         if (pass) ok(n, line, why[0]);
         else fail(n, line, why[0]);
+    }
+
+    // Checks the words of an expect line before running it, so a typo fails instead of passing.
+    private static void validate(List<String> t) {
+        String what = t.isEmpty() ? "" : t.get(0);
+        switch (what) {
+            case "screen":
+                need(t, 3, "expect screen has \"text\"  (or: screen not \"text\")");
+                if (!t.get(1).equals("has") && !t.get(1).equals("not")) throw new IllegalArgumentException("screen has / screen not");
+                return;
+            case "error":
+                if (t.size() == 2 && t.get(1).equals("none")) return;
+                need(t, 3, "expect error none  (or: error has \"text\")");
+                if (!t.get(1).equals("has")) throw new IllegalArgumentException("error none / error has \"text\"");
+                return;
+            case "phase":
+                need(t, 2, "expect phase IDLE|INIT|RUNNING|STOPPED");
+                SimDriverStation.Phase.valueOf(t.get(1).toUpperCase(Locale.US));
+                return;
+            case "bumped":
+                need(t, 2, "expect bumped none  (or: bumped \"name\")");
+                return;
+            case "motor":
+                need(t, 5, "expect motor NAME power|ticks|velocity|amps OP VALUE");
+                if (!java.util.Arrays.asList("power", "ticks", "velocity", "amps").contains(t.get(2))) {
+                    throw new IllegalArgumentException("motor field: power, ticks, velocity or amps");
+                }
+                op(t, 3);
+                return;
+            case "servo":
+                need(t, 5, "expect servo NAME target|actual OP VALUE");
+                if (!t.get(2).equals("target") && !t.get(2).equals("actual")) throw new IllegalArgumentException("servo field: target or actual");
+                op(t, 3);
+                return;
+            case "robot":
+                need(t, 4, "expect robot x|y|heading|imu|shots OP VALUE");
+                if (!java.util.Arrays.asList("x", "y", "heading", "imu", "shots").contains(t.get(1))) {
+                    throw new IllegalArgumentException("robot field: x, y, heading, imu or shots");
+                }
+                op(t, 2);
+                return;
+            default:
+                throw new IllegalArgumentException("expect what? (screen, error, phase, motor, servo, robot, bumped)");
+        }
+    }
+
+    private static void need(List<String> t, int words, String usage) {
+        if (t.size() < words) throw new IllegalArgumentException("too short: " + usage);
+    }
+
+    private static void op(List<String> t, int at) {
+        if (!java.util.Arrays.asList(">", "<", ">=", "<=", "=").contains(t.get(at))) {
+            throw new IllegalArgumentException("compare with > < >= <= or =");
+        }
+        Double.parseDouble(t.get(at + 1));
+        if (t.size() > at + 2) Double.parseDouble(t.get(at + 2));
+        if (t.size() > at + 3) throw new IllegalArgumentException("too many words at the end");
     }
 
     private boolean holds(List<String> t, String[] why) {
@@ -354,6 +424,7 @@ public final class SimScenario {
         while (i < line.length()) {
             char c = line.charAt(i);
             if (Character.isWhitespace(c)) { i++; continue; }
+            if (c == '#') break;   // the rest of the line is a note
             if (c == '"') {
                 // Quoted text; \" inside it is a quote mark.
                 StringBuilder b = new StringBuilder();

@@ -9,23 +9,28 @@ import java.util.List;
 import org.junit.Test;
 
 /**
- * Runs every scenario file: the library's (sim/scenarios) and, inside a robot project, the team's
- * (simulator/scenarios next to TeamCode). Each must pass.
+ * Runs every scenario file: the library's (sim/scenarios, with the library's OpModes and the starter
+ * robot file) and, when the team's TeamCode is built in, the team's (simulator/scenarios in the robot
+ * project, with the team's OpModes and robot file). Each must pass.
  */
 public class SimScenarioTest {
 
     @Test public void everyScenarioPasses() throws Exception {
-        List<File> files = new ArrayList<>();
-        for (String dir : new String[] {"scenarios", "../../simulator/scenarios"}) {
-            File[] list = new File(dir).listFiles((d, n) -> n.endsWith(".sim"));
-            if (list != null) for (File f : list) files.add(f);
-        }
         List<String> failed = new ArrayList<>();
-        for (File f : files) {
-            boolean team = f.getPath().contains("simulator");
-            String robot = team && new File("../../simulator/robot.properties").isFile()
-                    ? "../../simulator/robot.properties" : "robots/starter.properties";
-            SimEngine sim = new SimEngine(SimRobot.load(Paths.get(robot)));
+        run(new File("scenarios"), "robots/starter.properties", SimDriverStation.Scope.LIBRARY, failed);
+        String teamDir = System.getProperty("sim.teamDir", "");
+        if (!teamDir.isEmpty()) {
+            run(new File(teamDir, "simulator/scenarios"), new File(teamDir, "simulator/robot.properties").getPath(),
+                    SimDriverStation.Scope.TEAM, failed);
+        }
+        assertTrue(String.join("\n", failed), failed.isEmpty());
+    }
+
+    private static void run(File dir, String robot, SimDriverStation.Scope scope, List<String> failed) throws Exception {
+        File[] list = dir.listFiles((d, n) -> n.endsWith(".sim"));
+        if (list == null) return;
+        for (File f : list) {
+            SimEngine sim = new SimEngine(SimRobot.load(Paths.get(robot)), scope);
             sim.start();
             SimScenario s = new SimScenario(sim);
             try {
@@ -37,6 +42,5 @@ public class SimScenarioTest {
             for (String line : s.report()) System.out.println(line);
             if (s.failures() > 0) failed.add(f + ": " + s.failures() + " failed check(s)");
         }
-        assertTrue(String.join("\n", failed), failed.isEmpty());
     }
 }

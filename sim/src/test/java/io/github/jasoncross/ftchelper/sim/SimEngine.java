@@ -15,6 +15,11 @@ final class SimEngine {
         this.ds = new SimDriverStation(robot);
     }
 
+    SimEngine(SimRobot robot, SimDriverStation.Scope scope) {
+        this.robot = robot;
+        this.ds = new SimDriverStation(robot, scope);
+    }
+
     /** Starts the physics thread. */
     void start() {
         running = true;

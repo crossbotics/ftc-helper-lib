@@ -85,10 +85,10 @@ public class SimBehaviorTest {
             s.init("Edge check").start();
             Map<String, String> down = new HashMap<>();
             down.put("a", "1");
-            s.sim.ds.pad1.apply(down);
+            s.sim.ds.pad1.apply(down, false);
             s.waitForLoops(3);
             String afterPress = "after the press: a=" + s.sim.ds.pad1.gamepad.a + ", screen " + s.screen();
-            s.sim.ds.pad1.apply(new HashMap<String, String>());
+            s.sim.ds.pad1.apply(new HashMap<String, String>(), false);
             s.waitForLoops(3);
             assertTrue(afterPress + "; at the end: " + s.screen(), s.screenHas("presses : 1"));
         }
@@ -162,11 +162,43 @@ public class SimBehaviorTest {
             SimMotor intake = s.robot().motors.get("intake");
             Map<String, String> a = new HashMap<>();
             a.put("a", "1");
-            s.sim.ds.pad1.apply(a);
+            s.sim.ds.pad1.apply(a, false);
             assertTrue(SimRun.waitFor(() -> intake.userPower() > 0.9, 2));
             s.sim.ds.stop();
             assertEquals(0, intake.userPower(), 1e-9);
             assertEquals("", s.error());
+        }
+    }
+
+    @Test public void scenarioTyposFailAndNotesAreIgnored() throws Exception {
+        java.io.File f = java.io.File.createTempFile("typo", ".sim");
+        java.nio.file.Files.write(f.toPath(), java.util.Arrays.asList(
+                "init \"Motor Finder\"   # a note after a command",
+                "expect screen hass \"nothing\"",
+                "expect servo claw targett = 0",
+                "expect motor lift power = 0 # stopped"));
+        SimEngine sim = new SimEngine(SimRobot.load(java.nio.file.Paths.get("robots/starter.properties")), SimDriverStation.Scope.LIBRARY);
+        sim.start();
+        SimScenario s = new SimScenario(sim);
+        try {
+            s.run(f.toPath());
+        } finally {
+            sim.shutdown();
+        }
+        assertEquals("the two typos fail; the note is ignored: " + s.report(), 2, s.failures());
+    }
+
+    @Test public void aScenarioHoldStaysHeld() throws Exception {
+        SimEngine sim = new SimEngine(SimRobot.load(java.nio.file.Paths.get("robots/starter.properties")), SimDriverStation.Scope.LIBRARY);
+        sim.start();
+        try {
+            Map<String, String> a = new HashMap<>();
+            a.put("a", "1");
+            sim.ds.pad1.apply(a, false);
+            SimRun.pause(3.0);                               // longer than the page's 2.5 s silence rule
+            assertTrue("still held", sim.ds.pad1.gamepad.a);
+        } finally {
+            sim.shutdown();
         }
     }
 }

@@ -14,6 +14,14 @@ final class SimGamepad {
 
     /** Sets every button and axis from "name -> value" (buttons: 0/1; sticks and triggers: numbers). */
     synchronized void apply(Map<String, String> s) {
+        apply(s, true);
+    }
+
+    /**
+     * fromPage: true for the web page (a silent page lets go after a while, like a pulled cable);
+     * false for a scenario or a test (what it holds stays held until it lets go).
+     */
+    synchronized void apply(Map<String, String> s, boolean fromPage) {
         // Updates from the page arrive on several threads: an older one must not undo a newer one.
         String session = s.getOrDefault("session", "");
         long seq = -1;
@@ -59,7 +67,7 @@ final class SimGamepad {
         g.left_trigger = Math.max(0, axis(s, "lt"));
         g.right_trigger = Math.max(0, axis(s, "rt"));
         gamepad.copy(g);
-        lastSeen = System.nanoTime();
+        lastSeen = fromPage ? System.nanoTime() : 0;
     }
 
     private final Map<String, Long> lastSeqBySession = new java.util.HashMap<>();

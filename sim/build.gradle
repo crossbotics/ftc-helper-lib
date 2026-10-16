@@ -16,9 +16,13 @@ def ftcSdkVersion = '12.0.0'
 // -PteamCode=none turns it off. Libraries TeamCode needs (Road Runner, Pedro, FTC Dashboard...) go in
 // <robot project>/simulator/sim-dependencies.gradle (see docs/guides/simulator.md).
 def teamCodeProp = project.findProperty('teamCode')
+// An explicit path is read from the library's folder (where you run ./gradlew), like -Probot and -Pfile.
 def teamCodeDir = teamCodeProp == 'none' ? null
-        : (teamCodeProp ? file(teamCodeProp) : new File(rootProject.projectDir, '../TeamCode'))
+        : (teamCodeProp ? rootProject.file(teamCodeProp) : new File(rootProject.projectDir, '../TeamCode'))
 def useTeamCode = teamCodeDir != null && new File(teamCodeDir, 'src/main/java').isDirectory()
+if (teamCodeProp && teamCodeProp != 'none' && !useTeamCode) {
+    throw new GradleException("-PteamCode=$teamCodeProp: no src/main/java in $teamCodeDir")
+}
 def robotProject = useTeamCode ? teamCodeDir.parentFile : null
 def teamRobotFile = robotProject != null ? new File(robotProject, 'simulator/robot.properties') : null
 
@@ -44,6 +48,8 @@ android {
     testOptions {
         // Android calls the SDK makes (logging) do nothing on a laptop instead of failing.
         unitTests.returnDefaultValues = true
+        // The scenario test runs the team's scenarios (simulator/scenarios) only when TeamCode is built in.
+        unitTests.all { systemProperty 'sim.teamDir', useTeamCode ? robotProject.path : '' }
     }
 }
 

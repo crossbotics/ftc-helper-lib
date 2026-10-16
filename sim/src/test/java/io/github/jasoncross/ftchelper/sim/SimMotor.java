@@ -159,7 +159,7 @@ final class SimMotor {
                     throw new com.qualcomm.robotcore.exception.TargetPositionNotSetException();
                 }
                 mode = (DcMotor.RunMode) a[0];
-                if (mode == DcMotor.RunMode.STOP_AND_RESET_ENCODER || !enabled) {
+                if (mode == DcMotor.RunMode.STOP_AND_RESET_ENCODER) {
                     encoderZero = shaftPos;
                     power = 0;
                     targetVelocity = Double.NaN;
@@ -225,7 +225,8 @@ final class SimMotor {
     /** The power the shaft gets now, in its own direction (the hub's speed control included). */
     synchronized double shaftPower(double dt) {
         double user;
-        if (mode == DcMotor.RunMode.STOP_AND_RESET_ENCODER) {
+        if (mode == DcMotor.RunMode.STOP_AND_RESET_ENCODER || !enabled) {
+            // reset, or switched off with setMotorDisable(): no drive at all (speed control included)
             user = 0;
         } else if (mode == DcMotor.RunMode.RUN_TO_POSITION) {
             double err = targetPosition - encoder();

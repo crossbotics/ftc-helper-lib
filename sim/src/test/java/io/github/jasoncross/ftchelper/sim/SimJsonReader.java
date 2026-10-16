@@ -101,16 +101,29 @@ final class SimJsonReader {
         while (i < s.length()) {
             char c = s.charAt(i++);
             if (c == '"') return b.toString();
+            if (c < 0x20) throw error("a control character inside text (write it as \\n, \\t...)");
             if (c == '\\') {
+                if (i >= s.length()) throw error("text ends after a backslash");
                 char e = s.charAt(i++);
                 switch (e) {
+                    case '"': b.append('"'); break;
+                    case '\\': b.append('\\'); break;
+                    case '/': b.append('/'); break;
                     case 'n': b.append('\n'); break;
                     case 't': b.append('\t'); break;
                     case 'r': b.append('\r'); break;
                     case 'b': b.append('\b'); break;
                     case 'f': b.append('\f'); break;
-                    case 'u': b.append((char) Integer.parseInt(s.substring(i, i + 4), 16)); i += 4; break;
-                    default: b.append(e);
+                    case 'u':
+                        if (i + 4 > s.length()) throw error("\\u needs 4 hex digits");
+                        try {
+                            b.append((char) Integer.parseInt(s.substring(i, i + 4), 16));
+                        } catch (NumberFormatException ex) {
+                            throw error("\\u needs 4 hex digits");
+                        }
+                        i += 4;
+                        break;
+                    default: throw error("unknown escape \\" + e);
                 }
             } else {
                 b.append(c);
@@ -119,11 +132,18 @@ final class SimJsonReader {
         throw error("a text value never ends");
     }
 
+    private static final java.util.regex.Pattern NUMBER =
+            java.util.regex.Pattern.compile("-?(0|[1-9][0-9]*)(\\.[0-9]+)?([eE][+-]?[0-9]+)?");
+
     private Double num() {
         int start = i;
         while (i < s.length() && "+-0123456789.eE".indexOf(s.charAt(i)) >= 0) i++;
-        if (start == i) throw error("unexpected '" + s.charAt(i) + "'");
-        return Double.parseDouble(s.substring(start, i));
+        String text = s.substring(start, i);
+        if (text.isEmpty()) throw error("unexpected '" + s.charAt(i) + "'");
+        if (!NUMBER.matcher(text).matches()) { i = start; throw error("not a JSON number: " + text); }
+        double v = Double.parseDouble(text);
+        if (Double.isInfinite(v)) { i = start; throw error("number too big: " + text); }
+        return v;
     }
 
     private void word(String w) {
