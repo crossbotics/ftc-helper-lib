@@ -23,6 +23,9 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   AprilTags become the SDK's detections (BIOBUZZ: clusters per CELL group) with the SDK's ftcPose
   formulas. The page lists what each camera sees, draws its view cone and shows its picture in 3D.
   Scenario check: `expect camera "Webcam 1" sees 31|none|"RED SCORING"`.
+- Simulator: a pretend Limelight 3A (`limelight.KEY = name=limelight, ...`): the SDK's Limelight3A with
+  its network part replaced; results are built as the Limelight's JSON and read by the SDK's own
+  LLResult (one FiducialResult per tag, tx/ty/ta, target pose in camera space). `LimelightTags` works.
 - Simulator: a parts catalog page (`docs/guides/parts-catalog.md`, made from `parts.json` by
   `tools/parts_page.py`; the build checks it is current). Parts not in the catalog: `rpm=`/`ticksPerRev=`
   on a motor, `rangeDeg=`/`secPer60=` on a servo, or a team parts file (`parts = parts.json`).

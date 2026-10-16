@@ -157,6 +157,7 @@
       <button data-view="drivers" class="on">Drivers</button><button data-view="audience">Audience</button>
       <button data-view="top">From above</button><button data-view="follow">Follow robot</button>
       <label class="muted" id="camViewLabel" style="display:none"><input type="checkbox" id="camView" checked> Camera view</label>
+      <select id="camPick" aria-label="Which camera" style="display:none"></select>
       <label class="muted" id="cadLabel" style="display:none"><input type="checkbox" id="useCad" checked> Field CAD model</label>
       <span class="muted" id="v3note"></span>
     </div>
@@ -456,9 +457,9 @@ function renderHub(s) {
   $("#touches").innerHTML = s.touches.map(t =>
     `<span class="chip ${t.pressed ? "on" : ""}" data-touch="${escapeHtml(t.name)}">${escapeHtml(t.name)}: ${t.pressed ? "pressed" : "open"}${t.manual ? " (held)" : ""}</span>`).join("") || '<span class="muted">none</span>';
   $("#cameras").innerHTML = (s.cameras || []).map(c =>
-    `<div class="cam"><b>${escapeHtml(c.name)}</b> <span class="muted">${c.width}x${c.height}, ${c.hfov}° across, ` +
+    `<div class="cam"><b>${escapeHtml(c.name)}</b> <span class="muted">${c.kind === "limelight" ? "Limelight 3A" : "webcam"}, ${c.width}x${c.height}, ${c.hfov}° across, ` +
     `${c.forward} in forward, ${c.left} in left, ${c.up} in up, yaw ${c.yaw}°, pitch ${c.pitch}°</span><br>` +
-    (!c.open ? '<span class="muted">Not open (the OpMode has no VisionPortal on it).</span>'
+    (!c.open ? `<span class="muted">Not open (${c.kind === "limelight" ? "the OpMode has not called start()" : "the OpMode has no VisionPortal on it"}).</span>`
       : c.seen.length ? `Tags in the picture: ${c.seen.join(", ")}<ul>${c.detections.map(d => `<li>${escapeHtml(d)}</li>`).join("")}</ul>`
       : '<span class="muted">Open, no tags in the picture.</span>') + `</div>`).join("") || '<span class="muted">none (add camera.NAME to the robot file)</span>';
   const bat = $("#battery");
@@ -713,11 +714,15 @@ function buildCameras(cams) {
     const far = [[-hx, -hy], [hx, -hy], [hx, hy], [-hx, hy]].map(([x, y]) => new THREE.Vector3(x, y, -L));
     const pts = [];
     far.forEach((p, i) => { pts.push(new THREE.Vector3(0, 0, 0), p, p, far[(i + 1) % 4]); });
-    const cone = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: 0xffc400 }));
+    const color = c.kind === "limelight" ? 0x39d353 : 0xffc400;     // Limelight green, webcam yellow
+    const cone = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color }));
     cone.layers.set(1); tilt.add(cone);
-    v3.simCams.push({ name: c.name, cam, cone });
+    v3.simCams.push({ name: c.name, cam, cone, color, dim: c.kind === "limelight" ? 0x2a6b35 : 0x7a6a33 });
   }
   $("#camViewLabel").style.display = cams.length ? "" : "none";
+  const pick = $("#camPick");
+  pick.innerHTML = cams.map((c, i) => `<option value="${i}">${escapeHtml(c.name)}</option>`).join("");
+  pick.style.display = cams.length > 1 ? "" : "none";
 }
 function update3d(r, cams) {
   if (!v3.ready) return;
@@ -725,7 +730,7 @@ function update3d(r, cams) {
   if (v3.camKey !== camKey) { v3.camKey = camKey; buildCameras(cams || []); }
   // Tags in a camera's picture turn green; the cone is bright while the camera is open.
   const seen = new Set();
-  (cams || []).forEach((c, i) => { (c.seen || []).forEach(id => seen.add(id)); if (v3.simCams[i]) v3.simCams[i].cone.material.color.set(c.open ? 0xffc400 : 0x7a6a33); });
+  (cams || []).forEach((c, i) => { (c.seen || []).forEach(id => seen.add(id)); if (v3.simCams[i]) v3.simCams[i].cone.material.color.set(c.open ? v3.simCams[i].color : v3.simCams[i].dim); });
   v3.tagGroup.children.forEach(m => m.material.color.set(seen.has(+m.name.slice(4)) ? 0x7dff8a : 0xffffff));
   const key = r.field + "|" + r.fieldModel;
   if (fieldData && v3.fieldKey !== key) {
@@ -781,7 +786,7 @@ function frame3d() {
   R.render(v3.scene, v3.camera);
   // What the first camera sees, in the bottom-right corner (the same shapes; no robot).
   if (v3.simCams && v3.simCams.length && $("#camView").checked) {
-    const st = $("#stage"), W = st.clientWidth, H = st.clientHeight, sc = v3.simCams[0].cam;
+    const st = $("#stage"), W = st.clientWidth, H = st.clientHeight, sc = (v3.simCams[+$("#camPick").value || 0] || v3.simCams[0]).cam;
     const w = Math.round(Math.min(W * 0.36, 360)), h = Math.round(w / sc.aspect), m = 8;
     R.setScissorTest(true);
     R.setViewport(W - w - m, m, w, h); R.setScissor(W - w - m, m, w, h);

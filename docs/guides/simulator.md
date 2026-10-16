@@ -71,8 +71,8 @@ zoom, right-drag (or two fingers) to slide. View buttons: Drivers, Audience, Fro
 something. The field is built from the field file's shapes (tiles, walls, tape, solid and overhead
 parts) with each AprilTag as a square with its ID. If the robot file names a 3D model of the field
 (`field.model`), the page shows that model instead (with the tag squares on top); the "Field CAD model"
-box switches between them. Each camera shows as a yellow cone; "Camera view" shows the first
-camera's picture in the corner. The 3D library (three.js, MIT license) comes with the simulator, so the page
+box switches between them. Each camera shows as a cone (webcam yellow, Limelight green); "Camera
+view" shows a camera's picture in the corner (pick the camera when there are two). The 3D library (three.js, MIT license) comes with the simulator, so the page
 works without the internet. Untick "Show" on a slow computer.
 
 ## The robot file
@@ -225,7 +225,7 @@ camera.front = name=Webcam 1, forward=7, left=0, up=12, yaw=0, pitch=20, hfov=70
 
 What it does: the camera opens about 1 s after the OpMode makes it, then sends 30 pictures a second.
 For each picture it works out which of the field file's AprilTags are in view: inside the picture,
-facing the camera (within 75 degrees), and big enough to find at the OpMode's decimation (about 6.5
+facing the camera (within 60 degrees), and big enough to find at the OpMode's decimation (about 6.5
 pixels across per step of decimation, which matches the FTC docs' ranges). The tags then become the
 SDK's own detections, the way the SDK makes them: a tag in one of the tag library's clusters gives a
 cluster detection (BIOBUZZ: the SDK 12 library has one cluster per CELL group of 4 tags, "RED SCORING"
@@ -237,15 +237,30 @@ On the page, the Control Hub panel lists each camera with the tags in its pictur
 The 3D view draws its view as a yellow cone on the robot, and "Camera view" shows the picture from the
 camera (the tags it sees turn green).
 
-Limits: the poses are exact (no noise, blur or lag); field parts do not block the view; `robotPose`
-is always null; only the AprilTag finder gets pictures (other VisionProcessors get `init()` and
-nothing more); phone cameras and the Limelight are not simulated; the resolution comes from the robot
-file, not from `setCameraResolution`.
+**Limelight 3A**: the same settings with `limelight.` (hfov default 54.5, its spec sheet).
+
+```properties
+limelight.ll = name=limelight, forward=6, left=-3, up=14, yaw=0, pitch=25
+```
+
+The hardware map gives your code a Limelight3A (the SDK's own class, with its network part replaced),
+so `LimelightTags` and direct `getLatestResult()` code work. About 0.5 s after `start()` it sends 50
+results a second, made as the same JSON a real Limelight sends and read by the SDK's own `LLResult`:
+`isValid()`, `tx`/`ty`/`ta` (the biggest tag), and one `FiducialResult` per tag (a Limelight does not
+group tags into clusters) with `tx` (+ = right), `ty` (+ = up), `ta`, pixel position and
+`getTargetPoseCameraSpace()` (metres; x right, y down, z out of the lens). Every pipeline finds
+AprilTags; `pipelineSwitch` changes the index it reports. Not simulated: botpose / MegaTag (no field
+map), robot-space poses, Python, color and neural pipelines, snapshots.
+
+Limits: the poses are exact (no noise, blur or lag beyond the Limelight's reported latency); field
+parts do not block the view; tags slanted more than 60 degrees are not found; the webcam's `robotPose`
+is always null; only the AprilTag finder gets webcam pictures (other VisionProcessors get `init()` and
+nothing more); phone cameras are not simulated; the resolution comes from the robot file, not from
+`setCameraResolution`.
 
 ## Not simulated
 
-The Limelight (an OpMode that needs one stops with "Unable to find a hardware device..."), phone
-cameras, and game pieces. The Shot and Aim tuners work without a camera when `createCamera()` returns null. Physics is
+Phone cameras and game pieces. The Shot and Aim tuners work without a camera when `createCamera()` returns null. Physics is
 simple: real numbers (gains, speeds, shot tables) must still be found on the robot.
 
 Differences to know: the screen here updates as fast as the OpMode sends (a real Driver Station

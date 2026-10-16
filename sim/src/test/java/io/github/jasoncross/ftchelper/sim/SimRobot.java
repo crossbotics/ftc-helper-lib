@@ -35,6 +35,8 @@ final class SimRobot {
     final Map<String, SimTouch> touches = new LinkedHashMap<>();
     // Webcams (camera.KEY = name=Webcam 1, forward=..., see SimCamera), by their configuration name.
     final Map<String, SimCamera> cameras = new LinkedHashMap<>();
+    // Limelights (limelight.KEY = name=limelight, ...): their pretend camera is in cameras too.
+    final Map<String, SimLimelight> limelights = new LinkedHashMap<>();
     private final Map<String, HardwareDevice> devices = new LinkedHashMap<>();
     final String imuName;
     volatile double batteryVolts = 12.8;
@@ -167,6 +169,15 @@ final class SimRobot {
             if (camName.isEmpty()) throw new IllegalArgumentException("Robot file: \"" + key + "\" needs a name");
             cameras.put(camName, new SimCamera(camName, s, this));
         }
+        for (String key : sortedKeys(p, "limelight.")) {
+            Map<String, String> s = settings(p.getProperty(key));
+            String llName = s.containsKey("name") ? s.get("name") : key.substring("limelight.".length());
+            if (llName.isEmpty()) throw new IllegalArgumentException("Robot file: \"" + key + "\" needs a name");
+            if (cameras.containsKey(llName)) throw new IllegalArgumentException("Robot file: two cameras are called \"" + llName + "\"");
+            SimCamera c = new SimCamera(llName, "limelight", s, this);
+            cameras.put(llName, c);
+            limelights.put(llName, new SimLimelight(c));
+        }
         imuName = p.getProperty("imu", "").trim();
         lengthIn = num(p, "robot.lengthIn", 18);
         widthIn = num(p, "robot.widthIn", 18);
@@ -229,7 +240,8 @@ final class SimRobot {
             devices.put(e.getKey(), e.getValue().touchSensor());
         }
         if (!imuName.isEmpty()) devices.put(imuName, imu());
-        for (SimCamera c : cameras.values()) devices.put(c.name, c.device);
+        for (SimCamera c : cameras.values()) if (c.device != null) devices.put(c.name, c.device);
+        for (SimLimelight l : limelights.values()) devices.put(l.cam.name, l);
         devices.put("Control Hub battery", voltageSensor());
     }
 

@@ -105,6 +105,7 @@ final class SimJson {
             firstCam = false;
             b.append('{');
             field(b, "name", c.name).append(',');
+            field(b, "kind", c.kind).append(',');
             b.append("\"forward\":").append(fmt(c.forwardIn)).append(',');
             b.append("\"left\":").append(fmt(c.leftIn)).append(',');
             b.append("\"up\":").append(fmt(c.upIn)).append(',');

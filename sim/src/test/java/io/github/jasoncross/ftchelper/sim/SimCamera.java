@@ -18,27 +18,35 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
  */
 final class SimCamera implements InvocationHandler {
     final String name;
+    final String kind;          // "webcam" or "limelight"
     final double forwardIn, leftIn, upIn, yawDeg, pitchDeg, hfovDeg;
     final int width, height;
-    final WebcamName device;
+    final WebcamName device;     // null for a Limelight (SimLimelight is its device)
     final SimRobot robot;
     // The portals open on this camera (the FTC app closes them when an OpMode stops).
     private final List<AutoCloseable> portals = new ArrayList<>();
 
     SimCamera(String name, Map<String, String> s, SimRobot robot) {
+        this(name, "webcam", s, robot);
+    }
+
+    SimCamera(String name, String kind, Map<String, String> s, SimRobot robot) {
         this.name = name;
+        this.kind = kind;
         this.robot = robot;
         forwardIn = num(s, "forward", 0);
         leftIn = num(s, "left", 0);
         upIn = num(s, "up", 10);
         yawDeg = num(s, "yaw", 0);
         pitchDeg = num(s, "pitch", 0);
-        hfovDeg = num(s, "hfov", 70.4);      // Logitech C920 at 640x480 (about 70 degrees across)
+        // Logitech C920 at 640x480: about 70 degrees across; Limelight 3A: 54.5 (its spec sheet)
+        hfovDeg = num(s, "hfov", kind.equals("limelight") ? 54.5 : 70.4);
         width = (int) num(s, "width", 640);
         height = (int) num(s, "height", 480);
         if (hfovDeg <= 1 || hfovDeg >= 179) throw new IllegalArgumentException("Robot file: camera." + name + ": hfov must be between 1 and 179 degrees");
         if (width < 16 || height < 16) throw new IllegalArgumentException("Robot file: camera." + name + ": width and height must be at least 16 pixels");
-        device = (WebcamName) Proxy.newProxyInstance(WebcamName.class.getClassLoader(), new Class<?>[] {WebcamName.class}, this);
+        device = kind.equals("webcam")
+                ? (WebcamName) Proxy.newProxyInstance(WebcamName.class.getClassLoader(), new Class<?>[] {WebcamName.class}, this) : null;
     }
 
     private static double num(Map<String, String> s, String key, double fallback) {
@@ -166,7 +174,7 @@ final class SimCamera implements InvocationHandler {
     }
 
     /**
-     * The tags this camera can see: in the picture, facing the camera (within 75 degrees), and big
+     * The tags this camera can see: in the picture, facing the camera (within 60 degrees), and big
      * enough to find at this decimation (AprilTag needs about 6.5 pixels across per step of decimation;
      * that matches the FTC docs' ranges for a 2 in tag at 640x480). Field elements do not block the view.
      */
@@ -183,7 +191,7 @@ final class SimCamera implements InvocationHandler {
             double[] n = tagNormal(t);
             double dist = Math.sqrt(dot(d, d));
             double facing = -dot(n, d) / dist;                                  // cos of the angle to the tag's face
-            if (facing < Math.cos(Math.toRadians(75))) continue;              // edge-on or from behind
+            if (facing < Math.cos(Math.toRadians(60))) continue;              // too slanted, edge-on or from behind
             double pixels = t.sizeIn * f / cam[2] * Math.sqrt(facing);
             if (pixels < minPx) continue;                                      // too small to find
             out.add(new Seen(t, cam, pixels, width / 2.0 + f * cam[0] / cam[2], height / 2.0 + f * cam[1] / cam[2]));

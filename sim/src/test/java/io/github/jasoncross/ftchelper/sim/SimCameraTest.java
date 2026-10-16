@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import io.github.jasoncross.ftchelper.vision.TargetObservation;
+import io.github.jasoncross.ftchelper.vision.LimelightTags;
 import io.github.jasoncross.ftchelper.vision.WebcamTags;
 import java.io.File;
 import java.nio.file.Files;
@@ -25,7 +26,8 @@ public class SimCameraTest {
     private SimRobot robot() throws Exception {
         String base = new String(Files.readAllBytes(new File("robots/starter.properties").toPath()), "UTF-8");
         File f = tmp.newFile("camera.properties");
-        Files.write(f.toPath(), (base + "\ncamera.front = name=Webcam 1, forward=8, up=10, pitch=30\n").getBytes("UTF-8"));
+        Files.write(f.toPath(), (base + "\ncamera.front = name=Webcam 1, forward=8, up=10, pitch=30\n"
+                + "limelight.ll = name=limelight, forward=8, up=10, pitch=30\n").getBytes("UTF-8"));
         SimRobot r = SimRobot.load(f.toPath());
         // Facing -x, level with the red CELL group of tags 30-33 (they face +x and down, 35.5 in up).
         r.setPose(32, -12.74, 90);
@@ -86,5 +88,37 @@ public class SimCameraTest {
         assertEquals("seen by the page", "[30, 31, 32, 33]", r.cameras.get("Webcam 1").seenIds().toString());
         r.closeCameras();                       // what the simulator does when an OpMode stops
         assertEquals(VisionPortal.CameraState.CAMERA_DEVICE_CLOSED, portal.getCameraState());
+    }
+
+    @Test public void limelightTagsSeesEachTagAndTheSdkReadsThePretendResult() throws Exception {
+        SimRobot r = robot();
+        LimelightTags ll = LimelightTags.create(r.hardwareMap(), "limelight").pipeline(3);
+        ll.start();
+        List<TargetObservation> seen = null;
+        for (int i = 0; i < 100 && (seen == null || seen.size() < 4); i++) {
+            Thread.sleep(20);
+            ll.update();
+            seen = ll.targets();
+        }
+        assertEquals("a Limelight reports each tag (no clusters): " + seen, 4, seen.size());
+        assertTrue(ll.status(), ll.isWorking());
+        TargetObservation t31 = null, t32 = null;
+        for (TargetObservation t : seen) { if (t.id == 31) t31 = t; if (t.id == 32) t32 = t; }
+        assertNotNull(t31);
+        assertNotNull(t32);
+        // Facing -x, the camera's right is +y: tag 31 (y -9.99) is right of the robot's line (y -12.74),
+        // so its bearing is negative (the library's bearing is + = left); tag 32 (y -15.49) is left.
+        assertTrue("tag 31 right: " + t31, t31.bearingDeg < -1);
+        assertTrue("tag 32 left: " + t32, t32.bearingDeg > 1);
+        assertTrue("distance along the floor: " + t31, t31.distanceIn > 35 && t31.distanceIn < 60);
+        // The SDK's own objects, read from the pretend JSON.
+        com.qualcomm.hardware.limelightvision.Limelight3A sdk = ll.getLimelight();
+        Thread.sleep(100);                        // the pipeline switch runs in the background
+        assertTrue(sdk.getLatestResult().isValid());
+        assertEquals(3, sdk.getLatestResult().getPipelineIndex());
+        assertEquals(4, sdk.getLatestResult().getFiducialResults().size());
+        assertEquals(3, sdk.getStatus().getPipelineIndex());
+        r.closeCameras();                         // what the simulator does when an OpMode stops
+        assertFalse(sdk.isRunning());
     }
 }
