@@ -135,7 +135,29 @@ final class SimJson {
         b.append("\"width\":").append(fmt(r.widthIn)).append(',');
         b.append("\"height\":").append(fmt(r.heightIn)).append(',');
         b.append("\"fieldModel\":").append(r.fieldModel != null).append(',');
-        b.append("\"hasImu\":").append(!r.imuName.isEmpty()).append('}');
+        b.append("\"hasImu\":").append(!r.imuName.isEmpty()).append(',');
+        // The robot as shapes (robot frame: f forward, l left, u up, inches) and its size now and at most.
+        b.append("\"shapes\":[");
+        List<SimShapes.Piece> pieces = r.shapes.pieces();
+        for (int i = 0; i < pieces.size(); i++) {
+            SimShapes.Piece p = pieces.get(i);
+            if (i > 0) b.append(',');
+            b.append('{');
+            field(b, "name", p.shape).append(',');
+            field(b, "kind", p.kind).append(',');
+            field(b, "color", p.color).append(',');
+            b.append("\"c\":").append(vec(p.center)).append(",\"ef\":").append(vec(p.ef)).append(",\"el\":").append(vec(p.el))
+                    .append(",\"eu\":").append(vec(p.eu)).append(",\"size\":").append(vec(new double[] {p.sf, p.sl, p.su}))
+                    .append(",\"spin\":").append(fmt(p.spinDeg)).append('}');
+        }
+        b.append("],\"size\":{");
+        SimShapes.Extent now = SimShapes.extent(pieces), most = r.shapes.most;
+        b.append("\"now\":").append(vec(new double[] {now.lengthIn(), now.widthIn(), now.top})).append(',');
+        b.append("\"most\":").append(vec(new double[] {most.lengthIn(), most.widthIn(), most.top})).append(',');
+        b.append("\"startOk\":").append(now.fits(18, 18, 18)).append(',');
+        b.append("\"matchOk\":").append(now.fits(18, 24, 29)).append(',');
+        b.append("\"mostOk\":").append(most.fits(18, 24, 29)).append('}');
+        b.append('}');
         b.append('}');
         return b.toString();
     }
@@ -159,6 +181,10 @@ final class SimJson {
     private static String fmt(double v) {
         if (Double.isNaN(v) || Double.isInfinite(v)) return "null";
         return String.format(Locale.US, "%.4f", v);
+    }
+
+    private static String vec(double[] v) {
+        return "[" + fmt(v[0]) + "," + fmt(v[1]) + "," + fmt(v[2]) + "]";
     }
 
     private static StringBuilder field(StringBuilder b, String name, String value) {

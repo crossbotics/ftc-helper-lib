@@ -65,6 +65,8 @@ final class SimRobot {
     // A 3D model of the field for the page (field.model in the robot file), or null: the page then
     // builds the field from the field file's shapes.
     Path fieldModel = null;
+    // The robot as simple shapes (shape.NAME lines): for the 3D view and the size rules.
+    final SimShapes shapes;
     volatile String bumpedInto = "";
     // The robot on the field: inches from the field center (x right, y away from the drivers),
     // heading in degrees, counterclockwise = positive, 0 = facing away from the drivers.
@@ -143,6 +145,7 @@ final class SimRobot {
             if (s.containsKey("part")) {
                 SimParts.Servo part = parts.servo(s.get("part"));
                 servo.partName = part.name;
+                servo.partId = part.id;
                 servo.speed = part.rawPerSecond();
             }
             // A servo not in the catalog: its range (degrees) and seconds per 60 degrees (at about 5 V).
@@ -202,6 +205,9 @@ final class SimRobot {
             throw new IllegalArgumentException("Robot file: the start position (start.x/start.y/start.heading) overlaps "
                     + blocked + ". Move it (BIOBUZZ G304: touching the wall, not in the LOADING ZONE).");
         }
+        Map<String, Map<String, String>> shapeLines = new LinkedHashMap<>();
+        for (String key : sortedKeys(p, "shape.")) shapeLines.put(key.substring("shape.".length()), settings(p.getProperty(key)));
+        shapes = new SimShapes(this, p, shapeLines);
         buildDevices();
     }
 
@@ -422,6 +428,7 @@ final class SimRobot {
 
     /** Moves everything forward by dt seconds. */
     synchronized void step(double dt) {
+        shapes.update(dt);
         double battery = batteryVolts / 12.8;
         // Wheels: a hand push decides how they turn; otherwise their motors do.
         boolean pushing = pushLeft > 0;
@@ -550,10 +557,17 @@ final class SimRobot {
     // "lift, max=2700, gravity=0.08" -> {"": "lift", "max": "2700", "gravity": "0.08"}
     private static Map<String, String> settings(String text) {
         Map<String, String> out = new LinkedHashMap<>();
+        String last = null;
         for (String part : list(text)) {
             int eq = part.indexOf('=');
-            if (eq < 0) out.put("", part);
-            else out.put(part.substring(0, eq).trim(), part.substring(eq + 1).trim());
+            if (eq >= 0) {
+                last = part.substring(0, eq).trim();
+                out.put(last, part.substring(eq + 1).trim());
+            } else if (last == null) {
+                out.put("", part);                                   // the first word: the kind
+            } else {
+                out.put(last, out.get(last) + "," + part);           // "at=-7,0,4": the value goes on
+            }
         }
         return out;
     }
@@ -574,6 +588,7 @@ final class SimRobot {
     static final class SimServo {
         final String name;
         String partName = "";       // the catalog part, if the robot file names one
+        String partId = "";         // its catalog id
         double speed = Double.NaN;  // raw positions per second from the part (NaN = the file's servo.speed)
         double actual;              // where it really is (raw 0..1)
         private double target;      // where it is going (raw)

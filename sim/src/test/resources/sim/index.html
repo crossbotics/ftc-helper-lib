@@ -71,6 +71,7 @@
   .cam { margin: 4px 0; font-size: 12.5px; }
   .cam ul { margin: 2px 0 0 18px; padding: 0; }
   .chip { display: inline-block; padding: 2px 8px; border-radius: 10px; border: 1px solid var(--line); margin: 2px; cursor: pointer; font-size: 12px; }
+  .chip.bad { background: var(--stop); color: #fff; border-color: var(--stop); }
   .chip.on { background: var(--go); color: #fff; border-color: var(--go); }
   .muted { color: var(--muted); font-size: 12px; }
   /* 3D field view */
@@ -138,6 +139,7 @@
       <button data-push="0,24,2">48 in right</button><button id="resetPose">Back to start</button>
     </div>
     <div class="muted" id="poseText"></div>
+    <div class="muted" id="sizeText" style="margin-top:4px"></div>
     <h3>Motors</h3>
     <table id="motors"><thead><tr><th>Name</th><th>Power</th><th class="num">Count</th><th class="num">Speed/s</th><th class="num">Amps</th></tr></thead><tbody></tbody></table>
     <h3>Servos</h3>
@@ -466,6 +468,13 @@ function renderHub(s) {
   if (document.activeElement !== bat) bat.value = s.battery;
   $("#batteryText").textContent = s.battery.toFixed(1) + " V";
   drawField(s.robot);
+  const z = s.robot.size;
+  if (z) {
+    const f = a => `${a[0].toFixed(1)} x ${a[1].toFixed(1)} in, ${a[2].toFixed(1)} in tall`;
+    const chip = (ok, text) => `<span class="chip ${ok ? "on" : "bad"}">${text}</span>`;
+    $("#sizeText").innerHTML = `Now: ${f(z.now)} ${chip(z.startOk, "start cube 18 in")} ${chip(z.matchOk, "18 x 24 x 29")}<br>` +
+      `At full reach: ${f(z.most)} ${chip(z.mostOk, z.mostOk ? "fits 18 x 24 x 29" : "too big: add hard stops")}`;
+  }
   update3d(s.robot, s.cameras || []);
   $("#poseText").textContent = s.robot.drive === "none" ? "No drivetrain in this robot file." :
     `x ${s.robot.x.toFixed(1)} in, y ${s.robot.y.toFixed(1)} in, heading ${s.robot.heading.toFixed(1)}°` +
@@ -695,6 +704,36 @@ function showCad() {
   // (the model has none); the tag squares stay, to show the IDs.
   v3.simpleGroup.children.forEach(o => o.visible = !cad || o.name === "tiles");
 }
+// The robot's shapes (shape.NAME lines in the robot file), sent in the robot frame: f forward, l left,
+// u up. In the robot group, three.js x = -l, y = f, z = u.
+const RF = v => new THREE.Vector3(-v[1], v[0], v[2]);
+function updateShapes(r) {
+  const list = r.shapes || [];
+  const key = list.map(p => [p.name, p.kind, p.color, ...p.size].join(",")).join("|");
+  if (v3.shapeKey !== key) {
+    v3.shapeKey = key;
+    if (!v3.shapeGroup) { v3.shapeGroup = new THREE.Group(); v3.robot.add(v3.shapeGroup); }
+    disposeAll(v3.shapeGroup);
+    v3.shapeMeshes = list.map(p => {
+      const geo = p.kind === "cyl" ? new THREE.CylinderGeometry(p.size[0] / 2, p.size[0] / 2, p.size[1], 20) : new THREE.BoxGeometry(...p.size);
+      const mat = new THREE.MeshPhongMaterial({ color: p.color, transparent: p.name === "chassis", opacity: p.name === "chassis" ? 0.85 : 1, shininess: 20 });
+      const m = new THREE.Mesh(geo, mat);
+      const e = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({ color: 0x1b1f24, transparent: true, opacity: 0.35 }));
+      m.add(e); m.matrixAutoUpdate = false;
+      m.layers.set(1); e.layers.set(1);
+      v3.shapeGroup.add(m);
+      return m;
+    });
+  }
+  list.forEach((p, i) => {
+    const m = v3.shapeMeshes[i], basis = new THREE.Matrix4().makeBasis(RF(p.ef), RF(p.el), RF(p.eu));
+    if (p.kind === "cyl") basis.multiply(new THREE.Matrix4().makeRotationY(p.spin * Math.PI / 180));
+    basis.setPosition(RF(p.c));
+    m.matrix.copy(basis); m.matrixWorldNeedsUpdate = true;
+    if (p.name === "chassis") m.material.color.set(r.bumped ? 0xcf222e : p.color);
+  });
+}
+
 // The robot's cameras: a yellow view cone on the robot, and a three.js camera at the same place for the
 // "Camera view" picture. Mount: forward/left/up from the robot's center, yaw (+ = left), pitch (+ = up).
 function buildCameras(cams) {
@@ -742,11 +781,15 @@ function update3d(r, cams) {
     showCad();
   }
   v3.robot.visible = r.drive !== "none";
-  const L = r.length || 18, W = r.width || 18, H = r.height || 18;
+  const L = r.length || 18, W = r.width || 18;
+  const chassis = (r.shapes || []).find(p => p.name === "chassis"), H = chassis ? chassis.size[2] : (r.height || 18);
+  // The robot's shapes replace the plain box: the chassis box is drawn with the other pieces.
+  v3.body.visible = v3.edges.visible = !chassis;
   v3.body.scale.set(W, L, H); v3.body.position.z = H / 2;
   v3.edges.scale.set(W, L, H); v3.edges.position.z = H / 2;
   v3.arrow.scale.set(Math.min(W, L), L, 1); v3.arrow.position.z = H + 0.1;
   v3.bodyMat.color.set(r.bumped ? 0xcf222e : 0x1f6feb);
+  updateShapes(r);
   v3.target = { x: r.x, y: r.y, h: r.heading * Math.PI / 180 };
   if (!v3.pose) v3.pose = { ...v3.target };
 }

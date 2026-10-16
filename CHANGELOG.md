@@ -23,6 +23,10 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   AprilTags become the SDK's detections (BIOBUZZ: clusters per CELL group) with the SDK's ftcPose
   formulas. The page lists what each camera sees, draws its view cone and shows its picture in 3D.
   Scenario check: `expect camera "Webcam 1" sees 31|none|"RED SCORING"`.
+- Simulator: robot shapes (`shape.NAME = box|slide|arm|turret|claw|roller|flywheel, on=, at=, size=`,
+  moved by their motor or servo): drawn in 3D, and size rules checked now and at full reach (18 in
+  start cube; 18 x 24 x 29 in). Scenario checks `expect size start|match|most ok|fail`, `print size`.
+  A robot-file setting's value may now contain commas (`at=-7,0,4`).
 - `TagGroup` and `LimelightTags.groups(...)`: a Limelight now also reports each group of tags in a row
   as ONE target, named like the webcam's SDK cluster (BIOBUZZ: "RED SCORING", "RED AUDIENCE",
   "BLUE AUDIENCE", "BLUE SCORING"), aimed at the middle of the row; needs 2+ of the group's tags.

@@ -1,0 +1,17 @@
+# The robot's shapes and the size rules: it starts inside the 18 in cube, grows past it when the lift
+# goes up, and still fits 18 x 24 x 29 in (also at full reach).
+# Run it:  ./gradlew :sim:scenario -Pfile=sim/scenarios/robot-size.sim
+init "Motor Finder"
+expect size start ok
+expect size most ok
+start
+press g1.dpad_up                      # the list wraps round to the last motor: lift
+press g1.a
+expect screen has "Motor \"lift\""
+hold g1.right_stick_y -1              # lift up
+expect within 4 size start fail
+expect size match ok
+print size
+release all
+stop
+expect error none

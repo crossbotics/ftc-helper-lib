@@ -78,6 +78,11 @@ final class SimMotor {
         return (int) Math.round(sign() * (shaftPos - encoderZero));
     }
 
+    /** Where the shaft is (its own counts from the start, before the direction setting and encoder resets). */
+    synchronized double shaft() {
+        return shaftPos;
+    }
+
     /** The shaft's own speed (before the direction setting), counts per second. */
     synchronized double shaftSpeed() {
         return shaftVel;

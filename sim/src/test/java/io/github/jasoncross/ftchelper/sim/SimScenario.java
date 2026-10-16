@@ -297,6 +297,13 @@ public final class SimScenario {
                 need(t, 3, "expect time < 25   (seconds since START)");
                 op(t, 1);
                 return;
+            case "size":
+                need(t, 3, "expect size start|match|most ok|fail");
+                if (!java.util.Arrays.asList("start", "match", "most").contains(t.get(1))) {
+                    throw new IllegalArgumentException("size start (18 in cube now), size match (18 x 24 x 29 now) or size most (at full reach)");
+                }
+                if (!t.get(2).equals("ok") && !t.get(2).equals("fail")) throw new IllegalArgumentException("ok or fail");
+                return;
             case "camera":
                 need(t, 4, "expect camera \"Webcam 1\" sees 31|none|\"RED SCORING\"");
                 if (!t.get(2).equals("sees")) throw new IllegalArgumentException("expect camera NAME sees ...");
@@ -325,7 +332,7 @@ public final class SimScenario {
                 op(t, 2);
                 return;
             default:
-                throw new IllegalArgumentException("expect what? (screen, value, time, error, phase, motor, servo, robot, bumped, touch, camera)");
+                throw new IllegalArgumentException("expect what? (screen, value, time, error, phase, motor, servo, robot, bumped, touch, camera, size)");
         }
     }
 
@@ -380,6 +387,13 @@ public final class SimScenario {
                 boolean pressed = touch.pressed();
                 why[0] = pressed ? "pressed" : "open";
                 return pressed == t.get(2).equals("pressed");
+            }
+            case "size": {
+                // expect size start ok (fits the 18 in cube now) | size match ok (18 x 24 x 29 now) | size most ok
+                SimShapes.Extent e = t.get(1).equals("most") ? sim.robot.shapes.most : sim.robot.shapes.now();
+                boolean ok = t.get(1).equals("start") ? e.fits(18, 18, 18) : e.fits(18, 24, 29);
+                why[0] = e.toString();
+                return ok == t.get(2).equals("ok");
             }
             case "camera": {
                 // expect camera "Webcam 1" sees 31 | sees none | sees "RED SCORING" (a detection's text)
@@ -474,6 +488,9 @@ public final class SimScenario {
                     report.add(String.format(Locale.US, "          servo %-12s at %.3f  going to %.3f", s.name, s.actual, s.target()));
                 }
                 return;
+            case "size":
+                report.add("          size now: " + sim.robot.shapes.now() + "; at full reach: " + sim.robot.shapes.most);
+                return;
             case "cameras":
                 for (SimCamera c : sim.robot.cameras.values()) {
                     report.add("          camera " + c.name + (c.openPortals() == 0 ? ": not open" : ": sees tags " + c.seenIds()));
@@ -487,7 +504,7 @@ public final class SimScenario {
                 }
                 return;
             default:
-                throw new IllegalArgumentException("print screen, motors, servos, cameras or robot");
+                throw new IllegalArgumentException("print screen, motors, servos, cameras, size or robot");
         }
     }
 

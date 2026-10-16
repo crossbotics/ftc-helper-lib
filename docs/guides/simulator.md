@@ -102,6 +102,48 @@ camera.front = name=Webcam 1, forward=7, up=12, pitch=20   # see "Cameras" below
 touch.lift_bottom = lift, below=20
 ```
 
+## Robot shapes
+
+The robot can be drawn as simple shapes: the chassis box plus parts from a short menu, each moved by
+its motor or servo. The 3D view draws them, and the simulator checks the size rules with them: the 18
+in start cube, and 18 x 24 in and 29 in tall (R105) now and **at full reach** (every moving part tried
+over its whole range). The Control Hub panel shows the sizes in green or red.
+
+```properties
+robot.chassisHeightIn = 4
+# shape.NAME = TYPE, on=PARENT, at=forward,left,up, size=forward x left-right x up, then what moves it
+shape.lift = slide, at=-7,0,4, size=2x8x8, axis=up, motor=lift, ticksPerIn=344
+shape.arm = arm, on=lift, at=0,0,8, size=9x1.5x1.5, axis=left, motor=arm, gear=3.5, start=-90
+shape.wrist = arm, on=arm, at=9,0,0, size=2.5x1.5x1.5, servo=wrist, pos0=-90, pos1=90
+shape.claw = claw, on=wrist, at=2.5,0,-1.5, size=2x0.5x3, servo=claw, pos0=0, pos1=3
+shape.intake = roller, at=8,0,1.5, size=2x14x2, motor=intake
+shape.flywheel = flywheel, at=-1,0,4, size=4x2x4, motor=flywheel
+```
+
+| Type | What it is | Where `at` points | Moves by |
+| --- | --- | --- | --- |
+| `box` | a part that does not move | the middle of its bottom | nothing |
+| `slide` | a lift or extension: a fixed stage and a moving stage along `axis` (up, down, forward, back, left, right) | the bottom of the fixed stage | motor: `ticksPerIn=` or `spoolIn=` (spool diameter); servo: `pos0=`/`pos1=` inches |
+| `arm` | turns about a hinge; `axis` is the hinge line (`left`: + raises the front) | the hinge; the box reaches forward from it | motor: `ticksPerDeg=` or `gear=` (with the motor's counts per turn), `start=` degrees at the bottom stop; servo: `pos0=`/`pos1=` degrees |
+| `turret` | turns about up (+ = left) | the middle of its bottom | like `arm` |
+| `claw` | two fingers | the middle of the palm | servo: `pos0=`/`pos1=` the gap in inches |
+| `roller` | an intake roller (a cylinder along `axis`, default across the robot) | its center | spins with its `motor=` or `crservo=` |
+| `flywheel` | a launcher wheel | its center | spins with its `motor=` |
+
+Notes:
+- `on=` puts a part on another (default: the chassis). A part on a slide rides on its moving stage; a
+  part on an arm turns with it (`at=` from the hinge, so `at=9,0,0` is the tip of a 9 in arm).
+- Directions are the robot's: forward, left, up. `at=` is in inches from the parent's mounting point.
+- The range of motion comes from the motor's hard stops (`min=`/`max=` on `motor.NAME`), the servo's
+  `pos0`..`pos1`, or `travel=` (slide) / `minDeg=`, `maxDeg=` (arm, turret). The size check at full
+  reach uses it: a real robot needs hard stops there too (inspectors check the biggest it can get).
+- The shapes are for the picture and the size rules. They do not bump into the field yet (the
+  chassis footprint still does); a physics engine is planned for that.
+- Mistakes (an unknown parent or motor, a loop, a missing size) stop the simulator with the line's name.
+
+Scenario checks: `expect size start ok` (fits the 18 in cube now), `expect size match ok` (18 x 24 x 29
+now), `expect size most ok` (at full reach); `fail` instead of `ok` checks the opposite; `print size`.
+
 ## The parts catalog
 
 **Every part, with its numbers and links: [parts-catalog.md](parts-catalog.md).** It also shows how to
@@ -174,10 +216,11 @@ expect servo claw target = 0.53 0.01   # target | actual
 expect robot y > -30                   # x | y | heading | imu | shots
 expect bumped none                     # or: bumped "Red HIVE"
 expect camera "Webcam 1" sees 31       # a tag id in the picture; or: sees none | sees "RED SCORING"
+expect size most ok                    # size start|match|most ok|fail (see "Robot shapes")
 expect within 2 motor lift ticks > 500 # wait up to 2 s for it to become true
 expect within 30 phase STOPPED         # e.g. wait for an autonomous to finish
 stop
-print screen                           # also: print motors | servos | cameras | robot (not counted as checks)
+print screen                           # also: print motors | servos | cameras | size | robot (not counted as checks)
 ```
 
 A note after `#` is ignored (outside quotes). A misspelled check fails with a message, never passes.
