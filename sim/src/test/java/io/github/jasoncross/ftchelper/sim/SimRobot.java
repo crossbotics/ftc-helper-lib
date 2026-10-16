@@ -58,6 +58,9 @@ final class SimRobot {
     double startX = 0, startY = -48, startHeading = 0;
     // The season's field, and the element the robot bumped into last ("" = none).
     SimField field = SimField.empty();
+    // A 3D model of the field for the page (field.model in the robot file), or null: the page then
+    // builds the field from the field file's shapes.
+    Path fieldModel = null;
     volatile String bumpedInto = "";
     // The robot on the field: inches from the field center (x right, y away from the drivers),
     // heading in degrees, counterclockwise = positive, 0 = facing away from the drivers.
@@ -175,7 +178,17 @@ final class SimRobot {
             int hash = v.indexOf('#');
             if (hash >= 0) p.setProperty(k, v.substring(0, hash).trim());
         }
-        return new SimRobot(p);
+        SimRobot robot = new SimRobot(p);
+        String model = p.getProperty("field.model", "").trim();
+        if (!model.isEmpty()) {
+            Path m = file.toAbsolutePath().getParent().resolve(model).normalize();
+            if (!Files.isRegularFile(m)) throw new IllegalArgumentException("Robot file: field.model \"" + model + "\": no such file (" + m + ")");
+            if (!m.getFileName().toString().toLowerCase(Locale.US).endsWith(".glb")) {
+                throw new IllegalArgumentException("Robot file: field.model must be a .glb file");
+            }
+            robot.fieldModel = m;
+        }
+        return robot;
     }
 
     // ---------------------------------------------------------------- devices

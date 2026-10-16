@@ -71,6 +71,12 @@
   .chip { display: inline-block; padding: 2px 8px; border-radius: 10px; border: 1px solid var(--line); margin: 2px; cursor: pointer; font-size: 12px; }
   .chip.on { background: var(--go); color: #fff; border-color: var(--go); }
   .muted { color: var(--muted); font-size: 12px; }
+  /* 3D field view */
+  #view3dSection { grid-column: 1 / -1; }
+  #stage { position: relative; width: 100%; height: min(70vh, 620px); border-radius: 8px; overflow: hidden; border: 1px solid var(--line); margin-top: 8px; }
+  #stage canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+  #stage.off { display: none; }
+  #view3dSection .row button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
   /* Phone mode: one big gamepad. */
   body.phone header, body.phone main > section:not(#padsSection) { display: none; }
   body.phone main { grid-template-columns: 1fr; padding: 6px; }
@@ -138,6 +144,19 @@
     <div id="touches"></div>
     <h3>Battery</h3>
     <div class="row"><input type="range" id="battery" min="11" max="13.5" step="0.1" value="12.8"><span id="batteryText"></span></div>
+  </section>
+  <section id="view3dSection">
+    <div class="row">
+      <h2 style="margin:0">Field in 3D</h2>
+      <label class="muted"><input type="checkbox" id="show3d"> Show</label>
+      <span class="muted">View:</span>
+      <button data-view="drivers" class="on">Drivers</button><button data-view="audience">Audience</button>
+      <button data-view="top">From above</button><button data-view="follow">Follow robot</button>
+      <label class="muted" id="cadLabel" style="display:none"><input type="checkbox" id="useCad" checked> Field CAD model</label>
+      <span class="muted" id="v3note"></span>
+    </div>
+    <div id="stage" class="off" aria-label="Field and robot in 3D. Drag to turn, scroll to zoom, right-drag to slide."></div>
+    <div class="muted" style="margin-top:4px">Drag to turn the view, scroll to zoom, right-drag (or two fingers) to slide.</div>
   </section>
 </main>
 
@@ -435,6 +454,7 @@ function renderHub(s) {
   if (document.activeElement !== bat) bat.value = s.battery;
   $("#batteryText").textContent = s.battery.toFixed(1) + " V";
   drawField(s.robot);
+  update3d(s.robot);
   $("#poseText").textContent = s.robot.drive === "none" ? "No drivetrain in this robot file." :
     `x ${s.robot.x.toFixed(1)} in, y ${s.robot.y.toFixed(1)} in, heading ${s.robot.heading.toFixed(1)}°` +
     (s.robot.hasImu ? `, IMU yaw ${s.robot.imu.toFixed(1)}°` : "") + ` · shots ${s.robot.shots}` +
@@ -508,6 +528,222 @@ function drawField(r) {
   ctx.beginPath(); ctx.moveTo(0, -L / 2 * s + 1); ctx.lineTo(-4 * s, -L / 2 * s + 6 * s); ctx.lineTo(4 * s, -L / 2 * s + 6 * s); ctx.closePath(); ctx.fill();
   ctx.restore();
 }
+// ---------------------------------------------------------------- Field in 3D
+// three.js (the same 3D library as the turret page) comes from this simulator, so it works offline.
+// Units are inches in the simulator frame: x to the red drivers' right, y away from them, z up.
+const v3 = { on: false, loading: false, ready: false, view: "drivers", fieldKey: null, pose: null };
+function loadScript(src) {
+  return new Promise((ok, bad) => { const el = document.createElement("script"); el.src = src; el.onload = ok; el.onerror = bad; document.head.appendChild(el); });
+}
+async function start3d() {
+  if (v3.ready || v3.loading) return;
+  v3.loading = true;
+  $("#v3note").textContent = "Loading the 3D view...";
+  try {
+    await loadScript("/three/three.min.js");
+    await loadScript("/three/OrbitControls.js");
+    await loadScript("/three/GLTFLoader.js");
+  } catch (e) { $("#v3note").textContent = "Could not load the 3D library (three.js)."; v3.loading = false; return; }
+  build3d();
+  v3.ready = true; v3.loading = false;
+  $("#v3note").textContent = "";
+  if (lastState) update3d(lastState.robot);
+}
+function build3d() {
+  const stage = $("#stage");
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  stage.appendChild(renderer.domElement);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 1, 1, 2000);
+  camera.up.set(0, 0, 1);
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true; controls.maxPolarAngle = Math.PI * 0.495; controls.minDistance = 12; controls.maxDistance = 500;
+  // Turning the view by hand ends "Follow robot".
+  controls.addEventListener("start", () => { if (v3.view === "follow") setView("free"); });
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x667788, 0.85));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.75); sun.position.set(-80, -120, 240); scene.add(sun);
+  const fill = new THREE.DirectionalLight(0xffffff, 0.3); fill.position.set(120, 80, 120); scene.add(fill);
+  const theme = () => {
+    const dark = matchMedia("(prefers-color-scheme: dark)").matches && document.documentElement.dataset.theme !== "light";
+    scene.background = new THREE.Color(dark ? 0x0b0f12 : 0xd9e0e5);
+  };
+  theme(); matchMedia("(prefers-color-scheme: dark)").addEventListener("change", theme);
+
+  const fieldGroup = new THREE.Group(), simpleGroup = new THREE.Group(), tagGroup = new THREE.Group(), cadGroup = new THREE.Group();
+  fieldGroup.add(simpleGroup, tagGroup, cadGroup); scene.add(fieldGroup);
+
+  // The robot: a box its size from the robot file, with a white arrow on top at the front.
+  const robot = new THREE.Group();
+  const bodyMat = new THREE.MeshPhongMaterial({ color: 0x1f6feb, transparent: true, opacity: 0.8, shininess: 20 });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), bodyMat);
+  const edges = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1)), new THREE.LineBasicMaterial({ color: 0x0b2a5c }));
+  const arrowShape = new THREE.Shape([new THREE.Vector2(0, 0.5), new THREE.Vector2(-0.22, 0.2), new THREE.Vector2(0.22, 0.2)]);
+  const arrow = new THREE.Mesh(new THREE.ShapeGeometry(arrowShape), new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.DoubleSide }));
+  robot.add(body, edges, arrow); scene.add(robot);
+  robot.visible = false;
+
+  Object.assign(v3, { renderer, scene, camera, controls, fieldGroup, simpleGroup, tagGroup, cadGroup, robot, body, edges, arrow, bodyMat });
+  new ResizeObserver(resize3d).observe(stage);
+  resize3d();
+  setView(v3.view);
+  requestAnimationFrame(frame3d);
+}
+function resize3d() {
+  const st = $("#stage"), w = st.clientWidth, h = st.clientHeight;
+  if (!v3.renderer || !w || !h) return;
+  v3.renderer.setSize(w, h, false);
+  v3.camera.aspect = w / h; v3.camera.updateProjectionMatrix();
+}
+function disposeAll(group) {
+  group.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) [].concat(o.material).forEach(m => { if (m.map) m.map.dispose(); m.dispose(); }); });
+  group.clear();
+}
+// The field from the field file: tiles, walls, zones, tape, solid and overhead parts, AprilTags.
+function buildSimpleField(fd) {
+  disposeAll(v3.simpleGroup); disposeAll(v3.tagGroup);
+  const f = (fd && fd.field) || {}, size = f.size || 144, wall = (f.insideWallSize || size) / 2, wallH = f.wallHeight || 12;
+  const tile = (f.tileSize || 2 * wall) / 6;
+  // tiles: 6 x 6 gray foam
+  const c = document.createElement("canvas"); c.width = c.height = 1024; const g = c.getContext("2d");
+  g.fillStyle = "#6f757b"; g.fillRect(0, 0, 1024, 1024); g.strokeStyle = "#5a6066"; g.lineWidth = 3;
+  for (let i = 1; i < 6; i++) { const p = i * 1024 / 6; g.beginPath(); g.moveTo(p, 0); g.lineTo(p, 1024); g.moveTo(0, p); g.lineTo(1024, p); g.stroke(); }
+  const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 4;
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(6 * tile, 6 * tile), new THREE.MeshLambertMaterial({ map: tex }));
+  floor.name = "tiles"; v3.simpleGroup.add(floor);
+  const solids = new THREE.Group(); solids.name = "solids"; v3.simpleGroup.add(solids);
+  // walls: four rails, 1 in thick, outside the inside line
+  const wallMat = new THREE.MeshPhongMaterial({ color: 0x9aa3ad, transparent: true, opacity: 0.55, depthWrite: false });
+  for (const [x, y, w, d] of [[0, wall + 0.5, 2 * wall + 2, 1], [0, -wall - 0.5, 2 * wall + 2, 1], [wall + 0.5, 0, 1, 2 * wall], [-wall - 0.5, 0, 1, 2 * wall]]) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, d, wallH), wallMat); m.position.set(x, y, wallH / 2); solids.add(m);
+  }
+  for (const e of (fd && fd.elements) || []) {
+    if (!e.polygon || e.polygon.length < 2) continue;
+    const pts = e.polygon.map(([x, y]) => new THREE.Vector2(x, y)), color = new THREE.Color(e.color || "#888888");
+    if (e.kind === "line") {
+      const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts.map(p => new THREE.Vector3(p.x, p.y, 0.15))), new THREE.LineBasicMaterial({ color }));
+      v3.simpleGroup.add(line);
+    } else if (e.kind === "zone") {
+      const m = new THREE.Mesh(new THREE.ShapeGeometry(new THREE.Shape(pts)), new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.22, depthWrite: false }));
+      m.position.z = 0.1; v3.simpleGroup.add(m);
+    } else {
+      const depth = Math.max((e.zMax || 0) - (e.zMin || 0), 0.1);
+      const geo = new THREE.ExtrudeGeometry(new THREE.Shape(pts), { depth, bevelEnabled: false });
+      const over = e.kind === "overhead";
+      const m = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({ color, transparent: over, opacity: over ? 0.45 : 1, depthWrite: !over, flatShading: true, shininess: 12 }));
+      m.position.z = e.zMin || 0; m.name = e.name; solids.add(m);
+    }
+  }
+  // AprilTags: a square their size, facing the way the field file says, with the ID on it.
+  for (const t of (fd && fd.tags) || []) {
+    const tc = document.createElement("canvas"); tc.width = tc.height = 128; const tg = tc.getContext("2d");
+    tg.fillStyle = "#fff"; tg.fillRect(0, 0, 128, 128); tg.fillStyle = "#000"; tg.fillRect(16, 16, 96, 96);
+    tg.fillStyle = "#fff"; tg.font = "bold 52px system-ui"; tg.textAlign = "center"; tg.textBaseline = "middle"; tg.fillText(String(t.id), 64, 66);
+    const tt = new THREE.CanvasTexture(tc); tt.encoding = THREE.sRGBEncoding;
+    const s = t.sizeIn || 6.5;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(s, s), new THREE.MeshBasicMaterial({ map: tt }));
+    const f0 = (t.facingDeg || 0) * Math.PI / 180, p0 = (t.pitchDeg || 0) * Math.PI / 180;
+    const n = new THREE.Vector3(Math.cos(f0) * Math.cos(p0), Math.sin(f0) * Math.cos(p0), Math.sin(p0));
+    // Turn the plane so its face (+z) points along n with the tag's top as high as it can be.
+    const up = Math.abs(n.z) > 0.999 ? new THREE.Vector3(Math.cos(f0), Math.sin(f0), 0) : new THREE.Vector3(0, 0, 1);
+    const xAxis = new THREE.Vector3().crossVectors(up, n).normalize(), yAxis = new THREE.Vector3().crossVectors(n, xAxis);
+    m.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(xAxis, yAxis, n));
+    m.position.set(t.x, t.y, t.z).addScaledVector(n, 0.05);
+    m.name = "tag " + t.id; v3.tagGroup.add(m);
+  }
+}
+// The field CAD model (field.model in the robot file), shaded flat like the turret page.
+function loadCadModel() {
+  disposeAll(v3.cadGroup);
+  $("#v3note").textContent = "Loading the field model...";
+  new THREE.GLTFLoader().load("/field-model?" + Date.now(), gl => {
+    gl.scene.traverse(o => {
+      if (!o.isMesh) return;
+      const m = o.material;
+      o.geometry.computeVertexNormals();
+      o.material = new THREE.MeshPhongMaterial({ color: m.color, transparent: m.transparent, opacity: m.opacity, side: THREE.DoubleSide,
+        depthWrite: !m.transparent, flatShading: true, shininess: 12 });
+      m.dispose();
+    });
+    v3.cadGroup.add(gl.scene);
+    $("#v3note").textContent = "";
+    showCad();
+  }, undefined, () => { $("#v3note").textContent = "Could not load the field model (field.model in the robot file)."; v3.cadLoaded = false; showCad(); });
+  v3.cadLoaded = true;
+}
+function showCad() {
+  const cad = v3.cadLoaded && v3.cadGroup.children.length > 0 && $("#useCad").checked;
+  v3.cadGroup.visible = cad;
+  // With the CAD model, the simple shapes are hidden (the model has its own walls and tape) but not the tiles
+  // (the model has none); the tag squares stay, to show the IDs.
+  v3.simpleGroup.children.forEach(o => o.visible = !cad || o.name === "tiles");
+}
+function update3d(r) {
+  if (!v3.ready) return;
+  const key = r.field + "|" + r.fieldModel;
+  if (fieldData && v3.fieldKey !== key) {
+    v3.fieldKey = key;
+    buildSimpleField(fieldData);
+    $("#cadLabel").style.display = r.fieldModel ? "" : "none";
+    v3.cadLoaded = false; disposeAll(v3.cadGroup);
+    if (r.fieldModel) loadCadModel();
+    showCad();
+  }
+  v3.robot.visible = r.drive !== "none";
+  const L = r.length || 18, W = r.width || 18, H = r.height || 18;
+  v3.body.scale.set(W, L, H); v3.body.position.z = H / 2;
+  v3.edges.scale.set(W, L, H); v3.edges.position.z = H / 2;
+  v3.arrow.scale.set(Math.min(W, L), L, 1); v3.arrow.position.z = H + 0.1;
+  v3.bodyMat.color.set(r.bumped ? 0xcf222e : 0x1f6feb);
+  v3.target = { x: r.x, y: r.y, h: r.heading * Math.PI / 180 };
+  if (!v3.pose) v3.pose = { ...v3.target };
+}
+const VIEWS = {
+  drivers: (w) => [[0, -w - 120, 110], [0, -10, 0]],
+  audience: (w) => [[w + 120, 0, 110], [10, 0, 0]],
+  top: (w) => [[0, -1, 2.6 * w], [0, 0, 0]],
+};
+function setView(v) {
+  v3.view = v;
+  document.querySelectorAll("[data-view]").forEach(b => b.classList.toggle("on", b.dataset.view === v));
+  if (!v3.ready && !v3.camera) return;
+  const w = (fieldData && fieldData.field && (fieldData.field.insideWallSize || fieldData.field.size) / 2) || 72;
+  if (VIEWS[v]) {
+    const [p, t] = VIEWS[v](w);
+    v3.camera.position.set(...p); v3.controls.target.set(...t); v3.controls.update();
+  }
+}
+function frame3d() {
+  requestAnimationFrame(frame3d);
+  if (!v3.on || document.hidden) return;
+  // Glide to the newest pose (the page reads it 10 times a second).
+  if (v3.pose && v3.target) {
+    const k = 0.35, p = v3.pose, t = v3.target;
+    let dh = t.h - p.h; dh = Math.atan2(Math.sin(dh), Math.cos(dh));
+    p.x += (t.x - p.x) * k; p.y += (t.y - p.y) * k; p.h += dh * k;
+    v3.robot.position.set(p.x, p.y, 0); v3.robot.rotation.z = p.h;
+    if (v3.view === "follow") {
+      // Behind the robot and above it, looking past it.
+      const fx = -Math.sin(p.h), fy = Math.cos(p.h);
+      v3.camera.position.set(p.x - fx * 55, p.y - fy * 55, 40);
+      v3.controls.target.set(p.x + fx * 20, p.y + fy * 20, 6);
+    }
+  }
+  v3.controls.update();
+  v3.renderer.render(v3.scene, v3.camera);
+}
+document.querySelectorAll("[data-view]").forEach(b => b.onclick = () => setView(b.dataset.view));
+$("#useCad").onchange = () => showCad();
+function set3d(on) {
+  v3.on = on;
+  $("#show3d").checked = on;
+  $("#stage").classList.toggle("off", !on);
+  try { localStorage.setItem("sim3d", on ? "1" : "0"); } catch (e) {}
+  if (on) { start3d(); resize3d(); }
+}
+$("#show3d").onchange = e => set3d(e.target.checked);
+{ let saved = null; try { saved = localStorage.getItem("sim3d"); } catch (e) {} set3d(saved !== "0" && !phonePad); }
 function escapeHtml(t) { return String(t).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch])); }
 
 fillSources();

@@ -111,6 +111,8 @@ final class SimJson {
         field(b, "field", r.field.season).append(',');
         b.append("\"length\":").append(fmt(r.lengthIn)).append(',');
         b.append("\"width\":").append(fmt(r.widthIn)).append(',');
+        b.append("\"height\":").append(fmt(r.heightIn)).append(',');
+        b.append("\"fieldModel\":").append(r.fieldModel != null).append(',');
         b.append("\"hasImu\":").append(!r.imuName.isEmpty()).append('}');
         b.append('}');
         return b.toString();

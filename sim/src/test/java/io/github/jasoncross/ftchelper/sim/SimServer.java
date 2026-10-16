@@ -19,6 +19,9 @@ import java.util.Map;
  *
  * GET /             the page
  * GET /state        everything the page shows, as JSON
+ * GET /field        the season's field file
+ * GET /field-model  the 3D field model named by field.model in the robot file (404 if none)
+ * GET /three/...    the 3D library (three.js), so the page works without the internet
  * POST /pad/1, /pad/2   a gamepad's buttons and sticks ("a=1&lx=0.5...")
  * POST /cmd         a Driver Station or panel command ("action=init&opmode=...")
  */
@@ -99,6 +102,12 @@ final class SimServer {
                 send(out, 200, "text/html; charset=utf-8", page());
             } else if (method.equals("GET") && path.equals("/field")) {
                 send(out, 200, "application/json", sim.robot.field.json.getBytes(StandardCharsets.UTF_8));
+            } else if (method.equals("GET") && path.equals("/field-model")) {
+                java.nio.file.Path m = sim.robot.fieldModel;
+                if (m == null) send(out, 404, "text/plain", "no field.model in the robot file".getBytes(StandardCharsets.UTF_8));
+                else send(out, 200, "model/gltf-binary", java.nio.file.Files.readAllBytes(m));
+            } else if (method.equals("GET") && THREE_FILES.contains(path)) {
+                send(out, 200, "text/javascript; charset=utf-8", resource("/sim" + path));
             } else if (method.equals("GET") && path.equals("/state")) {
                 send(out, 200, "application/json", SimJson.state(sim, this).getBytes(StandardCharsets.UTF_8));
             } else if (method.equals("POST") && path.startsWith("/pad/")) {
@@ -148,9 +157,17 @@ final class SimServer {
         }
     }
 
+    // The only files served from the 3D library folder (no other paths can be asked for).
+    private static final java.util.Set<String> THREE_FILES = new java.util.HashSet<>(java.util.Arrays.asList(
+            "/three/three.min.js", "/three/OrbitControls.js", "/three/GLTFLoader.js"));
+
     private byte[] page() throws IOException {
-        try (InputStream in = SimServer.class.getResourceAsStream("/sim/index.html")) {
-            if (in == null) return "page missing".getBytes(StandardCharsets.UTF_8);
+        return resource("/sim/index.html");
+    }
+
+    private static byte[] resource(String name) throws IOException {
+        try (InputStream in = SimServer.class.getResourceAsStream(name)) {
+            if (in == null) return (name + " missing").getBytes(StandardCharsets.UTF_8);
             ByteArrayOutputStream b = new ByteArrayOutputStream();
             byte[] buf = new byte[8192];
             int n;

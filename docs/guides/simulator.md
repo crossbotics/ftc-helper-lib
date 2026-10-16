@@ -64,6 +64,16 @@ buttons (for the Drive Tuner's push test), every motor (power, count, speed, cur
 is at a hard stop), every servo (where it is and where it is going), the switches (click to hold
 one pressed), and the battery voltage (lower it to see a weaker robot).
 
+**Field in 3D** (bottom, full width): the field and the robot in 3D. Drag to turn the view, scroll to
+zoom, right-drag (or two fingers) to slide. View buttons: Drivers, Audience, From above, Follow robot
+(behind the robot; turning the view by hand ends it). The robot is a box its size from the robot file
+(`robot.lengthIn/widthIn/heightIn`) with a white arrow at the front; it turns red when it bumps into
+something. The field is built from the field file's shapes (tiles, walls, tape, solid and overhead
+parts) with each AprilTag as a square with its ID. If the robot file names a 3D model of the field
+(`field.model`), the page shows that model instead (with the tag squares on top); the "Field CAD model"
+box switches between them. The 3D library (three.js, MIT license) comes with the simulator, so the page
+works without the internet. Untick "Show" on a slow computer.
+
 ## The robot file
 
 The robot file describes the pretend robot: every device with the SAME name as the robot
@@ -73,6 +83,7 @@ robot project as `simulator/robot.properties` (used automatically, see below).
 
 ```properties
 field = biobuzz-2026                  # the season's field (sim/fields/biobuzz-2026.json)
+field.model = fields/biobuzz-2026.glb # optional: the field's 3D model for the 3D view (path from this file)
 robot.lengthIn = 18                   # size, for bumping into field elements
 robot.widthIn = 18
 start.x = -56                         # where it starts (inches from the field center; y away from the drivers)
@@ -185,6 +196,12 @@ field CAD by a script (in the team's design repo), and the same kind of script w
 
 Coordinates: inches from the field center, +x to the right and +y away from the drivers (drawn at the
 bottom), z up from the tiles; headings and tag facing in degrees, counterclockwise from +x for tags.
+
+A field's 3D model (for the 3D view) is a `.glb` file in the same frame, in inches, z up. It is not in
+the library: models made from FIRST's field CAD belong in the team's own robot project
+(`simulator/fields/`), named by `field.model` in the robot file. Without one, the 3D view builds the field
+from the field file. The BIOBUZZ model is made by `export_sim_field_glb.py` in the team's design repo
+from the field CAD export.
 
 ## Not simulated
 

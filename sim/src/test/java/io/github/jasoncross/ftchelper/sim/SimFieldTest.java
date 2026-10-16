@@ -76,6 +76,26 @@ public class SimFieldTest {
         assertEquals("moving freely clears the bump", "", r.bumpedInto);
     }
 
+    @Test public void fieldModelIsFoundFromTheRobotFile() throws Exception {
+        String base = new String(Files.readAllBytes(new File("robots/starter.properties").toPath()), "UTF-8");
+        File dir = tmp.newFolder("team"), fields = new File(dir, "fields");
+        assertTrue(fields.mkdir());
+        Files.write(new File(fields, "test.glb").toPath(), new byte[] {'g', 'l', 'T', 'F'});
+        File robotFile = new File(dir, "robot.properties");
+        Files.write(robotFile.toPath(), (base + "\nfield.model = fields/test.glb\n").getBytes("UTF-8"));
+        SimRobot r = SimRobot.load(robotFile.toPath());
+        assertEquals(new File(fields, "test.glb").getCanonicalFile(), r.fieldModel.toFile().getCanonicalFile());
+        assertEquals("no field.model: the page builds the field from the field file", null,
+                SimRobot.load(new File("robots/starter.properties").toPath()).fieldModel);
+        Files.write(robotFile.toPath(), (base + "\nfield.model = fields/missing.glb\n").getBytes("UTF-8"));
+        try {
+            SimRobot.load(robotFile.toPath());
+            org.junit.Assert.fail("a missing field.model must be refused");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage(), expected.getMessage().contains("field.model"));
+        }
+    }
+
     @Test public void servoSpeedIsTheFiveVoltRow() {
         SimParts.Servo torque = SimParts.catalog().servo("gobilda-2000-torque");
         assertEquals("the 4.8 V row (0.25 s per 60 deg), not the 6 V headline", 0.25, torque.secPer60Deg, 1e-9);

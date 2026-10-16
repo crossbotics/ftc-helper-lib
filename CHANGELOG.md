@@ -15,6 +15,9 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   sellers' pages) that robot files reference; a robot project's own TeamCode and robot file; iterative
   OpModes; scenario files (`./gradlew :sim:scenario`) that also run as tests; season field files
   (`sim/fields/`) with solid elements, zones, tape and AprilTags, starting with BIOBUZZ.
+- Simulator: the field in 3D on the page (three.js, served by the simulator so it works offline):
+  the field from the field file or a team's 3D model (`field.model` in the robot file), the robot box,
+  AprilTag squares, and Drivers / Audience / From above / Follow robot views.
 
 ## v0.7.3 - 2026-10-16
 
