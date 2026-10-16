@@ -18,6 +18,7 @@ import io.github.jasoncross.ftchelper.util.FieldPose;
 
 /**
  * The easiest way to write an autonomous: fill in a few methods, and list your steps.
+ * (Autonomous steps block on purpose; everything else here keeps the loop running.)
  * Everything else is done for you:
  *
  * <ol>

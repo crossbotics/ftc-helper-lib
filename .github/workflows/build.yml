@@ -17,3 +17,5 @@ jobs:
         run: ./gradlew --no-daemon :library:testDebugUnitTest :examples:assembleDebug :examples:testDebugUnitTest
       - name: Docs and tutorials check
         run: python3 tools/check_docs.py
+      - name: Non-blocking check
+        run: python3 tools/check_blocking.py

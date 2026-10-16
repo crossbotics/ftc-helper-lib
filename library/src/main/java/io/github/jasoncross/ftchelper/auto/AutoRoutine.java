@@ -203,7 +203,11 @@ public class AutoRoutine {
     // Running
     // ---------------------------------------------------------------------------------------
 
-    /** Runs every step in order. Call after {@code waitForStart()}. Returns when done or stopped. */
+    /**
+     * Runs every step in order. Call after {@code waitForStart()}.
+     * <b>BLOCKS</b> (on purpose): returns when the routine is done or stopped. Autonomous only.
+     * Mechanisms are updated every loop the whole time.
+     */
     public void runAll() {
         robotTelemetry();
         if (timer == null) {

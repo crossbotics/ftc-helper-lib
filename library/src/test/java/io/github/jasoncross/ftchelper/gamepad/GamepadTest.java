@@ -181,4 +181,17 @@ public class GamepadTest {
         g1.dpad_up = false; c.update(g1, g2);
         assertArrayEquals(new int[]{1, 1}, counts);
     }
+
+    @Test public void aSlowButtonActionIsReported() {
+        Gamepad g1 = new Gamepad(), g2 = new Gamepad();
+        ControllerBindings c = new ControllerBindings().bindPress(Pad.G2, Btn.A, () -> {
+            long end = System.nanoTime() + 40_000_000L;      // 40 ms: like a sleep() in an action
+            while (System.nanoTime() < end) { }
+        });
+        c.update(g1, g2);
+        assertEquals("", c.getSlowActionWarning());
+        g2.a = true;
+        c.update(g1, g2);
+        assertTrue(c.getSlowActionWarning().startsWith("G2:A action took"));
+    }
 }

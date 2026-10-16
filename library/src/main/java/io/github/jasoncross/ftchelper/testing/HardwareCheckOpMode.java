@@ -68,12 +68,12 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
     private final List<Device> devices = new ArrayList<>();
     private int selected = 0;
     private final boolean[] was = new boolean[10];
-    private boolean imuStarted = false;
 
     @Override
     public void runOpMode() {
         RobotTelemetry t = new RobotTelemetry(telemetry);
         findDevices();
+        startImus();   // IMU start-up can take a moment: do it in INIT, never in the loop
         t.text("Found " + devices.size() + " devices. Robot on a block! Press START.");
         t.update();
         waitForStart();
@@ -197,12 +197,6 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
             t.text("Write down the positions you need (open, closed...).");
         } else if (h instanceof IMU) {
             IMU imu = (IMU) h;
-            if (!imuStarted) {
-                imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(
-                        RevHubOrientationOnRobot.LogoFacingDirection.UP, RevHubOrientationOnRobot.UsbFacingDirection.FORWARD)));
-                imu.resetYaw();
-                imuStarted = true;
-            }
             YawPitchRollAngles a = imu.getRobotYawPitchRollAngles();
             t.line("Yaw", "%.1f deg", a.getYaw(AngleUnit.DEGREES));
             t.line("Pitch / Roll", "%.1f / %.1f deg", a.getPitch(AngleUnit.DEGREES), a.getRoll(AngleUnit.DEGREES));
@@ -229,6 +223,17 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
             t.line("Type", h.getDeviceName());
         }
         t.debug("Connection", h.getConnectionInfo());
+    }
+
+    private void startImus() {
+        for (Device d : devices) {
+            if (d.device instanceof IMU) {
+                IMU imu = (IMU) d.device;
+                imu.initialize(new IMU.Parameters(new RevHubOrientationOnRobot(
+                        RevHubOrientationOnRobot.LogoFacingDirection.UP, RevHubOrientationOnRobot.UsbFacingDirection.FORWARD)));
+                imu.resetYaw();
+            }
+        }
     }
 
     private void stopAll() {

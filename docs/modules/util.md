@@ -13,6 +13,7 @@ Small helpers used everywhere.
 | [`LoopTimer`](#looptimer) | see how fast your loop runs |
 | [`FieldPose`](#fieldpose) | hold an x, y, heading |
 | [`PoseStore`](#posestore) | pass the robot's pose from Autonomous to TeleOp |
+| [`BackgroundWorker`](#backgroundworker) | run slow jobs (network, camera settings) without stopping the loop |
 
 ---
 
@@ -92,3 +93,25 @@ if (start != null) { ... use it ... }
 | `peek()` | gives a copy and keeps it saved |
 | `has()` | true if one is saved |
 | `clear()` | forgets it |
+
+## BackgroundWorker
+
+Runs slow jobs on its own thread, so the robot's loop never waits. The library uses it for the
+Limelight's network requests and webcam settings. Guide: [Non-blocking code](../guides/non-blocking.md).
+
+```java
+BackgroundWorker worker = new BackgroundWorker("my-sensor");
+worker.submitLatest("setting", () -> sensor.slowSetting(value));   // returns at once
+worker.shutdown();                                                // in stop()
+```
+
+| Method | What it does |
+| --- | --- |
+| `new BackgroundWorker(name)` | starts the thread (a daemon) |
+| `submit(job)` | queue a job |
+| `submitLatest(key, job)` | queue a job, replacing a waiting one with the same key (only the newest runs) |
+| `queued()`, `getLastError()`, `isRunning()` | read; a job that throws never crashes the robot |
+| `shutdown()` | stop; waiting jobs are dropped |
+
+Never move motors or servos from a background job: only the loop does that.
+

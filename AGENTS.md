@@ -47,8 +47,14 @@ snippets in its page. Check SVG diagrams by rendering them (e.g. `qlmanage -t -s
 - Java 8 language level. FTC SDK dependencies stay `compileOnly` in the module build files.
 - One sign convention everywhere (`docs/conventions.md`): drive forward/strafe right/turn clockwise +;
   headings, turret angles, bearings counterclockwise +. Do not add a second one.
-- Nothing may block TeleOp: commands are quick; work happens in `update()`. Autonomous-only waiting
-  code checks `opModeIsActive()`/`ctx.isActive()`, has a timeout, and stops motors in `finally`.
+- **Non-blocking (see `docs/guides/non-blocking.md`):** nothing that runs in the loop may wait:
+  no `sleep`, no waiting loops, no synchronous network/USB requests in commands, `update()` or
+  button actions. Slow hardware requests go on a `BackgroundWorker` (use `submitLatest` for
+  repeated values; never move motors from it). Only autonomous moves/steps block, ON PURPOSE: they
+  say BLOCKS in their Javadoc, check `opModeIsActive()`/`ctx.isActive()`, keep mechanisms updating,
+  have a time limit, and stop motors in `finally`. Examples never call `sleep()`.
+  `tools/check_blocking.py` enforces this; a new intentionally blocking class must be added to its
+  allow-list with the reason.
 - Hardware setup leaves motors at power 0. Nothing moves before START.
 - Safety stays on in every profile (limits, timeouts, jam checks, stale-target rejection).
 - Extend through the interfaces (`Subsystem`, `AutoStep`, `Feeder`, `TargetSource`); keep new parts
@@ -60,7 +66,8 @@ snippets in its page. Check SVG diagrams by rendering them (e.g. `qlmanage -t -s
 ```bash
 ./gradlew :library:testDebugUnitTest :examples:assembleDebug :examples:testDebugUnitTest
 python3 tools/check_docs.py
+python3 tools/check_blocking.py
 ```
 
-Both must pass. Releases: follow `docs/contributing.md#releasing-a-version`. The mentor asks for an
+All must pass. Releases: follow `docs/contributing.md#releasing-a-version`. The mentor asks for an
 outside review (Codex "Astra", and Fable) of large changes before release.

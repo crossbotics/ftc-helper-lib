@@ -79,7 +79,11 @@ public class ControllerBindings {
         abstract void handle(boolean isDown);
     }
 
+    /** An action slower than this (milliseconds) is reported by {@link #getSlowActionWarning()}. */
+    public static final double SLOW_ACTION_MS = 20;
+
     private final Map<String, Slot> slots = new LinkedHashMap<>();
+    private String slowWarning = "";
     private final Map<String, BooleanSupplier> extraButtons = new LinkedHashMap<>();
     private final List<Runnable> axisActions = new ArrayList<>();
 
@@ -163,9 +167,34 @@ public class ControllerBindings {
         this.g2 = gamepad2;
         for (Map.Entry<String, Slot> entry : slots.entrySet()) {
             boolean down = isDown(entry.getKey());
-            for (Action action : entry.getValue().actions) action.run(down);
+            for (Action action : entry.getValue().actions) {
+                long start = System.nanoTime();
+                action.run(down);
+                checkSlow(entry.getKey(), start);
+            }
         }
-        for (Runnable axis : axisActions) axis.run();
+        for (Runnable axis : axisActions) {
+            long start = System.nanoTime();
+            axis.run();
+            checkSlow("trigger axis", start);
+        }
+    }
+
+    /**
+     * "" or a note about a button action that took too long (more than {@link #SLOW_ACTION_MS}), e.g.
+     * "G2:A action took 250 ms: actions must not wait or sleep". Show it with {@code t.warn(...)}.
+     * A slow action freezes the WHOLE robot for that time.
+     */
+    public String getSlowActionWarning() {
+        return slowWarning;
+    }
+
+    private void checkSlow(String what, long startNanos) {
+        double ms = (System.nanoTime() - startNanos) / 1e6;
+        if (ms > SLOW_ACTION_MS) {
+            slowWarning = String.format(java.util.Locale.US,
+                    "%s action took %.0f ms: actions must not wait or sleep", what, ms);
+        }
     }
 
     /**

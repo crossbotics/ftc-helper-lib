@@ -84,10 +84,13 @@ on the robot network). Set the correct tag size there for distances.
 | --- | --- |
 | `.pipeline(n)` | which pipeline (also switches at once if already started) |
 | `.pollRate(hz)` | results per second |
-| `setRobotHeading(deg)` | for the Limelight's MegaTag2 position feature (not needed to aim) |
+| `setRobotHeading(deg)` | for the Limelight's MegaTag2 position feature (not needed to aim). Safe every loop: sent in the background |
 | `.keepTargetsMs(ms)` | how long targets stay without a new picture (default 500) |
 | `getLimelight()` | the SDK object, for color pipelines and more |
 | `LimelightTags.distanceInches(pose)` | distance from a 3D pose |
+
+The Limelight's pipeline switch and heading updates are network requests that wait for an answer;
+the library sends them on a background thread, so they never slow the loop.
 
 The library flips the Limelight's `tx` sign so that bearing is **positive to the LEFT**, like
 everywhere else. The picture time includes the Limelight's own capture and processing time, so

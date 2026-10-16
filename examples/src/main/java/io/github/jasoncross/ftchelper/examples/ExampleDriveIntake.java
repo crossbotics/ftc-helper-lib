@@ -84,6 +84,7 @@ public class ExampleDriveIntake extends LinearOpMode {
                 intake.update();
 
                 // ---- Telemetry ----
+                if (!controls.getSlowActionWarning().isEmpty()) t.warn(controls.getSlowActionWarning());
                 t.section("Driver");
                 t.line("Speed", slowMode ? "SLOW" : "full");
                 t.line("Intake", reversing ? "REVERSING" : intakeOn ? "ON" : "off");

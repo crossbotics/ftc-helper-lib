@@ -47,6 +47,7 @@ public class MainAuto extends LinearOpMode {
         ElapsedTime timer = new ElapsedTime();
         while (opModeIsActive() && !robot.lift.isAtTarget() && timer.seconds() < maxSeconds) {
             robot.update();
+            idle();
         }
     }
 
@@ -58,6 +59,7 @@ public class MainAuto extends LinearOpMode {
         ElapsedTime timer = new ElapsedTime();
         while (opModeIsActive() && timer.seconds() < seconds) {
             robot.update();
+            idle();
         }
     }
 }

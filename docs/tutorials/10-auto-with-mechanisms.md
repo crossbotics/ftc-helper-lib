@@ -110,7 +110,17 @@ while (opModeIsActive() && !liftPid.atTarget() && wait.seconds() < 2.0) {
 Three conditions, every time: **the match is still on, the job is not done, the time is not up.**
 A loop without a time limit can wait forever and waste the whole autonomous.
 
-`sleep(...)` is OK only when nothing needs to keep working, like the start delay before any motion.
+**Do not use `sleep(...)`**, even for a start delay: while the code sleeps, nothing runs (no
+telemetry, no mechanism updates). Wait with a loop instead, like the start delay in the program:
+
+```java
+ElapsedTime delay = new ElapsedTime();
+while (opModeIsActive() && delay.seconds() < delaySec) {
+    telemetry.addData("Waiting", "%.1f s", delaySec - delay.seconds());
+    telemetry.update();
+    idle();
+}
+```
 
 ## 7. Clean up and hand over to TeleOp
 

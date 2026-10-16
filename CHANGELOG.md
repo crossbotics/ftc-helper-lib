@@ -4,6 +4,24 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+## v0.4.1 - 2026-10-15
+
+### Fixed (non-blocking audit)
+
+- `LimelightTags`: the pipeline switch and `setRobotHeading` are network requests that wait for an
+  answer; they now run on a background thread, so they never slow the loop (heading: only the newest is sent).
+- `WebcamTags`: manual exposure settings (USB requests) are applied in the background.
+- `HardwareCheckOpMode`: IMUs are started in INIT, not in the loop.
+- Tutorial 10: the start delay no longer uses `sleep()`; waiting loops call `idle()`.
+
+### Added
+
+- `BackgroundWorker` (util): slow jobs off the robot's loop.
+- Slow-code alarms: `ControllerBindings.getSlowActionWarning()` (actions over 20 ms) and
+  `Subsystems` warns when a part's `update()` takes over 25 ms.
+- Every intentionally blocking method says BLOCKS in its Javadoc.
+- Guide: [Non-blocking code](docs/guides/non-blocking.md). `tools/check_blocking.py`, run on every push.
+
 ## v0.4.0 - 2026-10-15
 
 ### Added

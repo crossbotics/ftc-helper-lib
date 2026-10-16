@@ -124,6 +124,8 @@ public class MainTeleOp extends LinearOpMode {
                 if (tuning.isOpen()) {
                     tuning.addTelemetry(t);
                 } else {
+                    if (!driver.getSlowActionWarning().isEmpty()) t.warn(driver.getSlowActionWarning());
+                    if (!operator.getSlowActionWarning().isEmpty()) t.warn(operator.getSlowActionWarning());
                     t.line("Time", timer.format());
                     t.line("Drive", "%s%s", fieldCentric ? "field" : "robot", speed < 0.99 ? "  SLOW" : "");
                     robot.all.addTelemetry(t);

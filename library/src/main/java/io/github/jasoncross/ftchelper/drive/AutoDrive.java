@@ -21,8 +21,9 @@ import io.github.jasoncross.ftchelper.util.MathUtil;
  * <p>Standard (tank) drive can only move forward and back (direction 0 or 180) and turn;
  * sideways moves and {@link #moveWithTurn} throw an error, because the robot cannot do them.
  *
- * <p>Each method WAITS until the move ends ("blocking"), so use these only in a
- * {@link LinearOpMode} autonomous. Each one stops when it is done, when it is stuck,
+ * <p><b>BLOCKING ON PURPOSE:</b> each move/turn method WAITS until the move ends, so use these only
+ * in a {@link LinearOpMode} autonomous, never in TeleOp. Your mechanisms keep working during a move
+ * through {@link #setLoopHook} (or {@code AutoRoutine}, which does that for you). Each one stops when it is done, when it is stuck,
  * when it times out, or when the OpMode stops. The motors are always stopped at the end.
  * No wheel ever gets more than {@link DriveConfig#powerLimit}.
  *
@@ -168,6 +169,7 @@ public class AutoDrive {
      * @param directionDeg robot-relative direction: 0 forward, 90 right, 180 back, -90 left
      * @param maxPower     0.1 to 1 (0.3 to 0.7 is usual). Never more than the DriveConfig power limit.
      * @throws IllegalArgumentException on a standard (tank) drive, for any direction except 0 or 180
+     * <p><b>BLOCKS</b> (on purpose): returns when the move ends. Autonomous only; never in TeleOp.
      */
     public Result move(double distanceIn, double directionDeg, double maxPower) {
         long deadline = deadlineFromNow();
@@ -226,6 +228,7 @@ public class AutoDrive {
      * @param targetHeadingDeg  heading to end at, IMU degrees (counterclockwise positive)
      * @param maxPower          translation power, 0.1 to 1
      * @param maxTurnPower      turn power, 0.1 to 1
+     * <p><b>BLOCKS</b> (on purpose): returns when the move ends. Autonomous only; never in TeleOp.
      */
     public Result moveWithTurn(double distanceIn, double fieldDirectionDeg, double targetHeadingDeg,
                                double maxPower, double maxTurnPower) {
@@ -297,6 +300,7 @@ public class AutoDrive {
      *
      * @param degrees  positive = left (counterclockwise), negative = right
      * @param maxPower 0.2 to 1 (0.3 to 0.6 is usual)
+     * <p><b>BLOCKS</b> (on purpose): returns when the move ends. Autonomous only; never in TeleOp.
      */
     public Result turn(double degrees, double maxPower) {
         return turnTo(Angles.wrapDegrees(heading.getAsDouble() + degrees), maxPower);
@@ -307,6 +311,7 @@ public class AutoDrive {
      *
      * @param headingDeg target IMU heading, degrees (counterclockwise positive, 0 = start direction)
      * @param maxPower   0.2 to 1
+     * <p><b>BLOCKS</b> (on purpose): returns when the move ends. Autonomous only; never in TeleOp.
      */
     public Result turnTo(double headingDeg, double maxPower) {
         return turnUntil(headingDeg, maxPower, deadlineFromNow());

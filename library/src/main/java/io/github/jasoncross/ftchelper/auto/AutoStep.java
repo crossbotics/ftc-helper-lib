@@ -3,7 +3,7 @@ package io.github.jasoncross.ftchelper.auto;
 /**
  * One step of an autonomous routine: "drive 24 inches", "raise the lift", "wait 1 second".
  *
- * <p>A step runs from start to finish, then the next step starts. While a step waits, it must call
+ * <p>A step BLOCKS on purpose: it runs from start to finish, then the next step starts. While a step waits, it must call
  * {@code ctx.loop()} (or {@code ctx.waitUntil}/{@code ctx.waitFor}) so the mechanisms keep working
  * and the routine can stop it when the match ends.
  *

@@ -38,6 +38,7 @@ routine.step("Lift up", lift.startStep("HIGH"))
 | See how it all fits together | [Architecture](docs/guides/architecture.md) |
 | Make autonomous modes the easy way | [Easy autonomous modes](docs/guides/easy-autos.md) |
 | Drive + slow mode + intake, ready to copy | [Example: drive and intake](docs/guides/example-drive-intake.md) |
+| Keep the loop fast: what blocks and what never does | [Non-blocking code](docs/guides/non-blocking.md) |
 | Practice vs competition behavior | [Profiles](docs/guides/profiles.md) |
 | Change numbers while the robot runs | [Tuning](docs/guides/tuning.md) |
 | Test the robot (checklists) | [Testing procedures](docs/guides/testing.md) |
@@ -86,6 +87,7 @@ You only need this if you change the library. From this folder:
 ```bash
 ./gradlew :library:testDebugUnitTest :examples:assembleDebug :examples:testDebugUnitTest
 python3 tools/check_docs.py
+python3 tools/check_blocking.py
 ```
 
 You need JDK 17 or newer and the Android SDK (Android Studio installs both). Details: [Contributing](docs/contributing.md).

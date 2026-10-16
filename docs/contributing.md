@@ -39,7 +39,7 @@ A change is not done until all six are done.
 - Java 8 (no `var`, no `List.of`). Same as the FTC SDK.
 - Signs and units from [Signs and units](conventions.md). Put the sign in the name when it can be
   confused: `turnClockwise`, `headingCcwDeg`, `distanceIn`, `timeoutMs`.
-- Nothing in the library may block TeleOp: no `sleep()`, no waiting loops, except in clearly
+- Nothing in the library may block TeleOp ([Non-blocking code](guides/non-blocking.md)): no `sleep()`, no waiting loops, except in clearly
   autonomous-only classes like `AutoDrive` (which always check `opModeIsActive()`, have a timeout,
   and stop motors in `finally`).
 - Hardware setup methods leave motors at power 0.
@@ -54,6 +54,7 @@ You need JDK 17 or newer and the Android SDK. Android Studio installs both. From
 ```bash
 ./gradlew :library:testDebugUnitTest :examples:assembleDebug :examples:testDebugUnitTest
 python3 tools/check_docs.py
+python3 tools/check_blocking.py
 ```
 
 This runs every test, builds the examples and every tutorial program, and checks the docs.

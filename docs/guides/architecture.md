@@ -41,7 +41,8 @@ flowchart LR
 
 - **Commands are quick.** A button sets a target ("lift to HIGH"). It never waits.
 - **`update()` does the work**, once per loop: PID, limits, jam checks, timing.
-- **No `sleep()` in TeleOp.** While the code sleeps, the robot cannot react.
+- **No `sleep()` in TeleOp.** While the code sleeps, the robot cannot react. Full guide:
+  [Non-blocking code](non-blocking.md). Only autonomous moves and steps block, on purpose.
 
 In autonomous, `AutoRoutine` runs the same `update()` for you during every move and wait.
 

@@ -101,4 +101,22 @@ public class CoreTest {
         assertEquals(2, ft.updates);
         assertEquals(Arrays.asList("a : 3"), ft.lastScreen);
     }
+
+    @Test public void aSlowUpdateIsReported() {
+        Subsystem slow = new Subsystem() {
+            public void update() {
+                long end = System.nanoTime() + 40_000_000L;   // 40 ms of busy work (like a hidden wait)
+                while (System.nanoTime() < end) { }
+            }
+            public String name() { return "Slowpoke"; }
+        };
+        Subsystems group = new Subsystems().add(slow);
+        group.update();
+        assertTrue(group.getSlowUpdateWarning().startsWith("Slowpoke update took"));
+        Fakes.FakeTelemetry ft = new Fakes.FakeTelemetry();
+        RobotTelemetry t = new RobotTelemetry(ft.telemetry, () -> 0L);
+        group.addTelemetry(t);
+        t.update();
+        assertTrue(ft.lastScreen.get(0).startsWith("!! Slowpoke update took"));
+    }
 }

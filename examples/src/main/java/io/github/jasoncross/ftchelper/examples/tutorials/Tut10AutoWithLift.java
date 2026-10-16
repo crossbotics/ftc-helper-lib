@@ -69,7 +69,13 @@ public class Tut10AutoWithLift extends LinearOpMode {
         double side = red ? -1 : 1;
 
         try {
-            sleep((long) (delaySec * 1000));   // OK here: autonomous, before any motion
+            // Start delay: wait WITHOUT sleep(), so STOP and telemetry keep working.
+            ElapsedTime delay = new ElapsedTime();
+            while (opModeIsActive() && delay.seconds() < delaySec) {
+                telemetry.addData("Waiting", "%.1f s", delaySec - delay.seconds());
+                telemetry.update();
+                idle();
+            }
 
             liftTarget = LIFT_UP;                          // start raising...
             AutoDrive.Result r = auto.move(30, 0, 0.6);    // ...while driving
@@ -85,6 +91,7 @@ public class Tut10AutoWithLift extends LinearOpMode {
             while (opModeIsActive() && !liftPid.atTarget() && wait.seconds() < 2.0) {
                 lift.update();
                 lift.moveTo(liftTarget, liftPid);
+                idle();
             }
 
             liftTarget = LIFT_DOWN;

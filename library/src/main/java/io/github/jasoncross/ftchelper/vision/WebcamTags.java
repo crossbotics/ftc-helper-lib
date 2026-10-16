@@ -3,6 +3,7 @@ package io.github.jasoncross.ftchelper.vision;
 import android.util.Size;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import io.github.jasoncross.ftchelper.hardware.Hw;
+import io.github.jasoncross.ftchelper.util.BackgroundWorker;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -54,9 +55,10 @@ public class WebcamTags implements TargetSource {
     private VisionPortal portal = null;
     private AprilTagProcessor processor = null;
     private List<TargetObservation> latest = Collections.emptyList();
-    private boolean controlsApplied = false;
+    private volatile boolean controlsApplied = false;
+    private BackgroundWorker worker = null;
     private double keepMs = 500;
-    private String controlsNote = "";
+    private volatile String controlsNote = "";
 
     public static WebcamTags create(HardwareMap hardwareMap, String webcamName) {
         return new WebcamTags(webcamName, Hw.get(hardwareMap, WebcamName.class, webcamName));
@@ -132,7 +134,10 @@ public class WebcamTags implements TargetSource {
     public void update() {
         if (portal == null) start();
         if (!controlsApplied && exposureMs >= 0 && portal.getCameraState() == VisionPortal.CameraState.STREAMING) {
-            applyControls();
+            // Camera settings are USB requests that can take a moment: do them in the background, once.
+            controlsApplied = true;
+            if (worker == null) worker = new BackgroundWorker("webcam");
+            worker.submit(this::applyControls);
         }
         List<AprilTagDetection> fresh = processor.getFreshDetections();
         if (fresh == null) {          // no new picture since last time: keep the last list, while it is recent
@@ -188,6 +193,8 @@ public class WebcamTags implements TargetSource {
 
     @Override
     public void close() {
+        if (worker != null) worker.shutdown();
+        worker = null;
         if (portal != null) portal.close();
         portal = null;
         latest = Collections.emptyList();
@@ -196,7 +203,6 @@ public class WebcamTags implements TargetSource {
     @Override public String name() { return name; }
 
     private void applyControls() {
-        controlsApplied = true;
         try {
             ExposureControl exposure = portal.getCameraControl(ExposureControl.class);
             boolean ok = exposure != null && exposure.setMode(ExposureControl.Mode.Manual)

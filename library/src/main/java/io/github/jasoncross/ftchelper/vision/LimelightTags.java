@@ -5,6 +5,7 @@ import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import io.github.jasoncross.ftchelper.hardware.Hw;
+import io.github.jasoncross.ftchelper.util.BackgroundWorker;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -42,6 +43,9 @@ public class LimelightTags implements TargetSource {
     private List<TargetObservation> latest = Collections.emptyList();
     private double lastTimestamp = Double.NaN;
     private double keepMs = 500;
+    // pipelineSwitch() and updateRobotOrientation() are network requests that WAIT for an answer.
+    // They run on this worker so the robot's loop never waits.
+    private BackgroundWorker worker = null;
 
     public static LimelightTags create(HardwareMap hardwareMap, String deviceName) {
         return new LimelightTags(deviceName, Hw.get(hardwareMap, Limelight3A.class, deviceName));
@@ -55,7 +59,7 @@ public class LimelightTags implements TargetSource {
     /** The pipeline to use (set up on the Limelight's web page). Default 0. */
     public LimelightTags pipeline(int index) {
         pipeline = index;
-        if (started) limelight.pipelineSwitch(index);
+        if (started) worker().submitLatest("pipeline", () -> limelight.pipelineSwitch(index));   // never waits
         return this;
     }
 
@@ -73,18 +77,20 @@ public class LimelightTags implements TargetSource {
 
     /**
      * Tells the Limelight the robot's heading (for its MegaTag2 field position feature).
-     * Not needed for aiming. Call it every loop if you use MegaTag2.
+     * Not needed for aiming. Safe to call every loop: it is sent in the background, and only the
+     * newest heading is sent if the network is slower than the loop.
      */
     public void setRobotHeading(double headingCcwDeg) {
-        limelight.updateRobotOrientation(headingCcwDeg);
+        worker().submitLatest("heading", () -> limelight.updateRobotOrientation(headingCcwDeg));
     }
 
     @Override
     public void start() {
         if (started) return;
         limelight.setPollRateHz(pollRateHz);
-        limelight.pipelineSwitch(pipeline);
-        limelight.start();
+        final int first = pipeline;
+        worker().submitLatest("pipeline", () -> limelight.pipelineSwitch(first));   // a network request: in the background
+        limelight.start();                                                             // starts the SDK's own polling thread
         started = true;
     }
 
@@ -152,6 +158,13 @@ public class LimelightTags implements TargetSource {
         if (started) limelight.stop();
         started = false;
         latest = Collections.emptyList();
+        if (worker != null) worker.shutdown();
+        worker = null;
+    }
+
+    private BackgroundWorker worker() {
+        if (worker == null) worker = new BackgroundWorker("limelight");
+        return worker;
     }
 
     /** The SDK's Limelight object, for anything this class does not cover (e.g. color pipelines). */

@@ -68,7 +68,8 @@ robot.stop();                 // stops each, even if one throws an error
 | Method | What it does |
 | --- | --- |
 | `add(parts...)` | adds parts (null is skipped, for optional hardware) |
-| `update()`, `stop()`, `addTelemetry(t)` | does it for every part, in order |
+| `update()`, `stop()`, `addTelemetry(t)` | does it for every part, in order. `update()` times each part: one slower than 25 ms (it waits or sleeps) shows a warning |
+| `getSlowUpdateWarning()` | "" or the last slow part |
 | `all()` | the list of parts |
 
 `Subsystems` is itself a `Subsystem`, so groups can contain groups.
