@@ -32,19 +32,31 @@ import java.util.function.LongSupplier;
  * <p>If it is not ready within {@link #readyTimeout}, it gives up the remaining shots and
  * {@link #whyNotReady()} says what was missing. That is your first debug clue.
  *
+ * <p>How it works: {@link #shoot} only adds to a count of "shots still to fire". Each loop,
+ * {@link #update()} feeds ONE piece if everything is ready, and otherwise just checks again next loop.
+ * No waiting anywhere (see docs/guides/non-blocking.md). Tutorial 17 builds a shooter step by step.
+ *
  * Docs: docs/modules/launcher.md
  */
 public class Launcher implements Subsystem {
+    // "implements Subsystem": it has update/stop/addTelemetry/name like every mechanism helper.
 
-    /** What the launcher is doing. */
+    /**
+     * What the launcher is doing (for telemetry). An "enum" is a fixed list of named choices.
+     * OFF = fully off after stop(); IDLE = at the idle speed; SPINNING = at shot speed, no shots waiting;
+     * WAITING_READY = shots waiting for everything to be ready; FEEDING = a piece is being pushed in now.
+     */
     public enum State { OFF, IDLE, SPINNING, WAITING_READY, FEEDING }
 
     private final Flywheel flywheel;
     private final Feeder feeder;
-    private PositionServo hood = null;
-    private ShotTable table = null;
+    private PositionServo hood = null;   // null = no hood
+    private ShotTable table = null;      // null = no table (use setRpm)
+    // The extra "ready" checks: a name for telemetry, and a yes/no question asked every loop.
+    // The two lists go together: checkNames.get(i) is the name of checks.get(i).
     private final List<String> checkNames = new ArrayList<>();
     private final List<BooleanSupplier> checks = new ArrayList<>();
+    // Where we get the time (nanoseconds). Tests swap in a fake clock.
     private LongSupplier clockNanos = System::nanoTime;
 
     private double shotIntervalSec = 0.25;
@@ -52,19 +64,24 @@ public class Launcher implements Subsystem {
     private double idleRpm = 0;
 
     private double shotRpm = 0;
-    private boolean spinning = false;
+    private boolean spinning = false;    // true = at shot speed; false = idle speed (or off)
     private boolean off = true;          // stop() keeps it fully off (even the idle speed) until started again
     private int shotsLeft = 0;
     private int fired = 0;
-    private double nextFeedAt = 0;
-    private double waitingSince = Double.NaN;
+    private double nextFeedAt = 0;       // the earliest time (seconds) the next piece may be fed
+    private double waitingSince = Double.NaN;   // when it started waiting for "ready"; NaN = not waiting
     private String lastProblem = "";
 
+    /**
+     * Makes a launcher from a flywheel and a feeder you already made. It starts OFF.
+     * Put only the launcher in your loop (or Subsystems group): it updates both for you.
+     */
     public Launcher(Flywheel flywheel, Feeder feeder) {
         this.flywheel = flywheel;
         this.feeder = feeder;
     }
 
+    /** For tests: use a pretend clock so tests do not wait for real time. */
     Launcher withClock(LongSupplier clock) {
         clockNanos = clock;
         return this;
@@ -82,7 +99,12 @@ public class Launcher implements Subsystem {
         return this;
     }
 
-    /** Another condition that must be true before each piece is fed (aim, sensor, anything). */
+    /**
+     * Another condition that must be true before each piece is fed (aim, sensor, anything).
+     * {@code checkName} is shown by {@link #whyNotReady()} while it is false.
+     * Example: {@code requireReady("Turret", turret::isAimed)}: "turret::isAimed" hands over the
+     * question "is the turret aimed?" so the launcher can ask it every loop.
+     */
     public Launcher requireReady(String checkName, BooleanSupplier check) {
         checkNames.add(checkName);
         checks.add(check);
@@ -101,20 +123,25 @@ public class Launcher implements Subsystem {
         return this;
     }
 
-    /** Speed to keep when not shooting (0 = stop). A low idle speed makes spin-up faster. */
+    /** Speed to keep when not shooting, in RPM (0 = stop). A low idle speed makes spin-up faster. */
     public Launcher idleRpm(double rpm) {
         idleRpm = rpm;
         return this;
     }
 
     // ---------------------------------------------------------------------------------------
+    // Commands (quick: safe to call from buttons; update() does the work)
+    // ---------------------------------------------------------------------------------------
 
-    /** Sets the shot speed by hand. */
+    /** Sets the shot speed by hand, in RPM. */
     public void setRpm(double rpm) {
         shotRpm = rpm;
     }
 
-    /** Sets the shot from the table (speed, and hood angle if there is a hood). */
+    /**
+     * Sets the shot from the table (speed, and hood angle if there is a hood). Distance in the table's
+     * unit (inches in the examples). Safe to call every loop, e.g. with the camera's distance.
+     */
     public void setDistance(double distance) {
         if (table == null) throw new IllegalStateException("Launcher.setDistance needs a table(...)");
         ShotTable.Shot shot = table.lookup(distance);
@@ -139,7 +166,10 @@ public class Launcher implements Subsystem {
     public void shoot(int count) {
         spinUp();
         feeder.clearJam();          // the driver asks again: try again (a new jam is detected again)
+        // Nothing was waiting: start the "ready" time limit fresh. (If shots were already waiting,
+        // keep the old timer, so pressing again and again cannot keep it waiting forever.)
         if (shotsLeft == 0) waitingSince = Double.NaN;
+        // Math.max(0, count): a negative count must not take away shots.
         shotsLeft += Math.max(0, count);
         lastProblem = "";
     }
@@ -154,28 +184,48 @@ public class Launcher implements Subsystem {
     public void stop() {
         spinning = false;
         shotsLeft = 0;
+        // This flag is what keeps it OFF: update() sends 0 RPM while it is true, instead of the idle speed.
         off = true;
+        // Safety: stop BOTH parts even if stopping the first one fails.
+        // "try { ... } catch (RuntimeException e) { ... }" means: run this, and if it fails with an
+        // error, do not crash right away; keep the error (e) and go on. We report the first error at the end.
         RuntimeException first = null;
         try { feeder.stop(); } catch (RuntimeException e) { first = e; }
         try { flywheel.stop(); } catch (RuntimeException e) { if (first == null) first = e; }
         if (first != null) throw first;
     }
 
+    // ---------------------------------------------------------------------------------------
+    // Every loop
+    // ---------------------------------------------------------------------------------------
+
+    /**
+     * Once per loop: sets the flywheel speed, updates the flywheel, feeder and hood, then feeds one piece
+     * if shots are waiting and everything is ready. Gives up (with a reason) if not ready in time.
+     */
     @Override
     public void update() {
-        double now = clockNanos.getAsLong() / 1e9;
+        double now = clockNanos.getAsLong() / 1e9;   // seconds
+        // Off: 0. Spinning: the shot speed. Otherwise: the idle speed.
+        // ("a ? b : c ? d : e" reads: if a then b, else if c then d, else e.)
         flywheel.setRpm(off ? 0 : spinning ? shotRpm : idleRpm);
         flywheel.update();
         feeder.update();
         if (hood != null) hood.update();
 
+        // A jammed feeder: cancel the shots. Pushing more pieces into a jam only makes it worse.
+        // The driver clears it by pressing shoot again.
         if (feeder.isJammed()) {
             shotsLeft = 0;
             lastProblem = "feeder jammed";
             return;
         }
+        // Nothing to do this loop: no shots waiting, the feeder is still pushing the last piece,
+        // or it is too soon after the last piece (the wheel needs a moment to get back to speed).
         if (shotsLeft == 0 || feeder.isBusy() || now < nextFeedAt) return;
 
+        // Feed only when EVERYTHING is ready: flywheel at speed, hood arrived, every extra check true.
+        // A piece fed too early flies short or wide.
         if (isReady()) {
             feeder.feedOne();
             shotsLeft--;
@@ -183,7 +233,10 @@ public class Launcher implements Subsystem {
             nextFeedAt = now + shotIntervalSec;
             waitingSince = Double.NaN;
         } else {
+            // Not ready: start the clock (first time only) and check again next loop.
             if (Double.isNaN(waitingSince)) waitingSince = now;
+            // Waited too long: give up the rest of the shots, and say WHY, so the drivers are not left
+            // wondering and the robot does not fire later at a bad moment.
             if (now - waitingSince > readyTimeoutSec) {
                 lastProblem = "gave up: " + whyNotReady();
                 shotsLeft = 0;
@@ -193,22 +246,28 @@ public class Launcher implements Subsystem {
     }
 
     // ---------------------------------------------------------------------------------------
+    // Questions
+    // ---------------------------------------------------------------------------------------
 
     /** True when the flywheel is at speed, the hood has arrived, and every check passes. */
     public boolean isReady() {
+        // Ready = nothing on the "not ready" list. One place decides, so the two can never disagree.
         return whyNotReady().isEmpty();
     }
 
     /** What is not ready yet, e.g. "flywheel, Turret" ("" when ready). */
     public String whyNotReady() {
+        // A StringBuilder builds up a piece of text bit by bit.
         StringBuilder sb = new StringBuilder();
         if (!spinning) sb.append(off ? "off" : "not spinning");
         else if (!flywheel.isReady()) sb.append("flywheel");
         if (hood != null && !hood.isDone()) append(sb, "hood");
+        // Ask every extra check; add the name of each one that says "no".
         for (int i = 0; i < checks.size(); i++) if (!checks.get(i).getAsBoolean()) append(sb, checkNames.get(i));
         return sb.toString();
     }
 
+    /** What it is doing now (see {@link State}). */
     public State getState() {
         if (feeder.isBusy()) return State.FEEDING;
         if (shotsLeft > 0) return State.WAITING_READY;
@@ -218,15 +277,22 @@ public class Launcher implements Subsystem {
 
     /** True while shots are waiting or a piece is being fed. */
     public boolean isShooting() { return shotsLeft > 0 || feeder.isBusy(); }
+    /** Shots still waiting to be fired. */
     public int getShotsLeft() { return shotsLeft; }
     /** Pieces fed since the OpMode started. */
     public int getShotsFired() { return fired; }
     /** The last problem (e.g. why it gave up), or "". */
     public String getLastProblem() { return lastProblem; }
+    /** The flywheel inside. */
     public Flywheel getFlywheel() { return flywheel; }
+
+    // ---------------------------------------------------------------------------------------
+    // Autonomous steps
+    // ---------------------------------------------------------------------------------------
 
     /** A step: spin up and wait until ready (or the ready timeout). */
     public AutoStep spinUpStep() {
+        // "ctx -> { ... }" is a small piece of code handed over to run later, when the routine reaches it.
         return ctx -> {
             spinUp();
             ctx.waitUntil(this::isReady, readyTimeoutSec);
@@ -237,13 +303,17 @@ public class Launcher implements Subsystem {
     public AutoStep shootStep(int count) {
         return ctx -> {
             shoot(count);
+            // Time limit: for each piece, the gap between pieces plus the longest wait for "ready",
+            // and 2 s spare. Normally the launcher finishes or gives up long before this.
             ctx.waitUntil(() -> !isShooting(), count * (shotIntervalSec + readyTimeoutSec) + 2);
+            // If the time limit ended the wait, cancel what is left so it does not fire during the next step.
             stopShooting();
         };
     }
 
     @Override public String name() { return "Launcher"; }
 
+    /** Shows the state, shots left and READY; problems as warnings; then the flywheel, feeder and hood. */
     @Override
     public void addTelemetry(RobotTelemetry t) {
         if (!lastProblem.isEmpty()) t.warn("Launcher " + lastProblem);
@@ -255,6 +325,8 @@ public class Launcher implements Subsystem {
         if (hood != null) hood.addTelemetry(t);
     }
 
+    // Adds text to the list, with ", " between items.
+    // "static": it uses nothing from a particular launcher, only what it is given.
     private static void append(StringBuilder sb, String text) {
         if (sb.length() > 0) sb.append(", ");
         sb.append(text);

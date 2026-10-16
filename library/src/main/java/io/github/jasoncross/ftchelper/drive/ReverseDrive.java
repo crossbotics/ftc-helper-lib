@@ -13,12 +13,17 @@ package io.github.jasoncross.ftchelper.drive;
  * drive.drive(reverse.apply(forward), reverse.apply(strafe), turn);
  * }</pre>
  *
- * Docs: docs/modules/drive.md
+ * Docs: docs/modules/drive.md. Tutorial 04 ("Reverse drive") shows it in a TeleOp.
  */
 public final class ReverseDrive {
+    // The mode, remembered between loops. Starts OFF (normal driving).
     private boolean reversed = false;
 
-    /** Flips the mode. @return the new state (true = reversed) */
+    /**
+     * Flips the mode.
+     *
+     * @return the new state (true = reversed), handy for a sound or rumble that tells the driver
+     */
     public boolean toggle() {
         reversed = !reversed;
         return reversed;
@@ -34,8 +39,12 @@ public final class ReverseDrive {
         return reversed;
     }
 
-    /** Use on forward and strafe only. Returns the value, flipped if reversed. */
+    /**
+     * Use on forward and strafe only. Returns the value, flipped if reversed.
+     * (Not on turning: a stick pushed right should still turn the robot clockwise.)
+     */
     public double apply(double translation) {
+        // "a ? b : c" = "if a then b, else c".
         return reversed ? -translation : translation;
     }
 }

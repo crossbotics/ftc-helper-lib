@@ -15,23 +15,43 @@ import java.util.Properties;
  * <p>The file is {@code /sdcard/FIRST/ftc-helper/settings.properties} on the Control Hub.
  * You can see it with the REV Hardware Client or Android Studio's Device Explorer.
  *
+ * <p>Inside, each line is {@code key=value}, for example {@code profile=PRACTICE}. Every value is
+ * stored as text; {@link #getDouble} turns it back into a number.
+ *
+ * <p>Safety: nothing here ever stops the robot. A missing, damaged or unwritable file only means
+ * the values written in the code are used.
+ *
  * Docs: docs/modules/core.md
  */
 public final class SettingsFile {
+    // Where the robot's settings file lives on the Control Hub.
     private static final File DEFAULT_FOLDER = new File("/sdcard/FIRST/ftc-helper");
+    // The one shared settings file for the whole app ("static": one copy, not one per object).
     private static SettingsFile shared;
 
+    // This object's file on disk.
     private final File file;
+    // The values in memory. Properties is Java's ready-made "key=value" list that can read and
+    // write this kind of file.
     private final Properties values = new Properties();
+    // True once we have read the file, so we read it only once.
     private boolean loaded = false;
 
-    /** A settings file at a path you choose (used by tests). */
+    // Every public method below is "synchronized": only one piece of code at a time may use the
+    // values, so a background thread and the loop cannot mix up a read and a write.
+
+    /**
+     * A settings file at a path you choose (used by tests).
+     *
+     * @param file the file to read and write
+     */
     public SettingsFile(File file) {
         this.file = file;
     }
 
     /** The robot's settings file. */
     public static synchronized SettingsFile shared() {
+        // Made the first time someone asks, then the same one is handed out every time.
         if (shared == null) shared = new SettingsFile(new File(DEFAULT_FOLDER, "settings.properties"));
         return shared;
     }
@@ -41,16 +61,28 @@ public final class SettingsFile {
         shared = file;
     }
 
-    /** A saved text value, or {@code fallback} if none is saved. */
+    /**
+     * A saved text value, or {@code fallback} if none is saved.
+     *
+     * @param key      the name the value is saved under
+     * @param fallback what to return when nothing is saved
+     */
     public synchronized String get(String key, String fallback) {
         load();
         return values.getProperty(key, fallback);
     }
 
-    /** A saved number, or {@code fallback} if none is saved or it is not a number. */
+    /**
+     * A saved number, or {@code fallback} if none is saved or it is not a number.
+     *
+     * @param key      the name the value is saved under
+     * @param fallback what to return when nothing usable is saved
+     */
     public synchronized double getDouble(String key, double fallback) {
         String text = get(key, null);
         if (text == null) return fallback;
+        // "try/catch": if the text is not a number (someone edited the file by hand), use the
+        // fallback instead of crashing.
         try {
             return Double.parseDouble(text);
         } catch (NumberFormatException e) {
@@ -64,8 +96,14 @@ public final class SettingsFile {
         return values.containsKey(key);
     }
 
-    /** Sets a value in memory. Call {@link #save()} to write it to the file. */
+    /**
+     * Sets a value in memory. Call {@link #save()} to write it to the file.
+     *
+     * @param key   the name to save it under
+     * @param value the text to save; null removes the key
+     */
     public synchronized void put(String key, String value) {
+        // Read the file first, so saving later does not wipe out values we never loaded.
         load();
         if (value == null) values.remove(key);
         else values.setProperty(key, value);
@@ -84,20 +122,26 @@ public final class SettingsFile {
     public synchronized boolean save() {
         load();
         try {
+            // Make the folder if it is not there yet. If that fails, give up quietly.
             File folder = file.getParentFile();
             if (folder != null && !folder.exists() && !folder.mkdirs()) return false;
+            // "try (...)" opens the file and closes it again automatically at the end,
+            // even if writing fails part way.
             try (OutputStream out = new FileOutputStream(file)) {
                 values.store(out, "ftc-helper-lib settings");
             }
             return true;
         } catch (IOException | SecurityException e) {
+            // Could not write (no storage, no permission): report false, do not crash the robot.
             return false;
         }
     }
 
+    // Reads the file into memory, the first time only.
     private void load() {
         if (loaded) return;
         loaded = true;
+        // No file yet is normal (first run): start with no saved values.
         if (!file.exists()) return;
         try (InputStream in = new FileInputStream(file)) {
             values.load(in);

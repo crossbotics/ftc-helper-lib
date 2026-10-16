@@ -11,12 +11,16 @@ package io.github.jasoncross.ftchelper.drive;
  * }</pre>
  *
  * <p>This checks progress over a time window, not per loop, so it works the same at any loop speed.
+ * (At 200 loops a second each loop moves only a tiny bit, so "did it move this loop?" would
+ * give false alarms; "did it move 0.25 in during the last 0.4 s?" does not.)
  *
- * Docs: docs/modules/drive.md
+ * Docs: docs/modules/drive.md (section "StallDetector")
  */
 public final class StallDetector {
     private final double minProgress;
     private final double windowSec;
+    // The "remaining" value at the last time real progress was seen, and when that was.
+    // NaN ("not a number") means "nothing remembered yet": the first update() starts the count.
     private double refRemaining = Double.NaN;
     private double refTime;
 
@@ -25,6 +29,7 @@ public final class StallDetector {
      * @param windowSec   the window, seconds
      */
     public StallDetector(double minProgress, double windowSec) {
+        // abs() so a minus sign typed by mistake still works the same.
         this.minProgress = Math.abs(minProgress);
         this.windowSec = Math.abs(windowSec);
     }
@@ -37,12 +42,16 @@ public final class StallDetector {
      * @return true if stuck. Never true when {@code remaining} is already within {@code minProgress}.
      */
     public boolean update(double remaining, double timeSec) {
+        // First call, or we got at least minProgress closer since the remembered point:
+        // that is real progress, so remember this new point and time, and start the clock again.
         if (Double.isNaN(refRemaining) || refRemaining - remaining >= minProgress) {
             refRemaining = remaining;
             refTime = timeSec;
             return false;
         }
+        // Almost there: the last bit may be smaller than minProgress, so do not call that stuck.
         if (remaining <= minProgress) return false;
+        // No real progress since refTime. Stuck once that has lasted the whole window.
         return timeSec - refTime >= windowSec;
     }
 

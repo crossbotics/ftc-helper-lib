@@ -35,12 +35,17 @@ import java.util.function.LongSupplier;
  * <p>Speed control runs on the hub (RUN_USING_ENCODER), so it is fast and smooth. A dropping
  * battery still changes the result a little: tune the F gain with a charged battery.
  *
+ * <p>RPM = revolutions (turns) per minute. The hub works in encoder counts per second, so this class
+ * converts between the two. Tutorial 17 builds a shooter step by step.
+ *
  * Docs: docs/modules/launcher.md
  */
 public class Flywheel implements Subsystem {
+    // "implements Subsystem": it has update/stop/addTelemetry/name like every mechanism helper.
     private final String name;
     private final DcMotorEx motor;
-    private DcMotorEx follower = null;
+    private DcMotorEx follower = null;   // an optional second motor on the same wheel; null = none
+    // Where we get the time (nanoseconds). Tests swap in a fake clock.
     private LongSupplier clockNanos = System::nanoTime;
 
     private double countsPerRev = 28;
@@ -50,12 +55,12 @@ public class Flywheel implements Subsystem {
     private double shotDropRpm = 150;
 
     private double targetRpm = 0;
-    private double rpm = 0;
-    private double inBandSince = Double.NaN;
+    private double rpm = 0;                     // the speed measured in the last update()
+    private double inBandSince = Double.NaN;    // when the speed came within tolerance; NaN = it is not
     private boolean ready = false;
-    private boolean armedForShot = false;
+    private boolean armedForShot = false;       // true once ready: the next big speed drop is a shot
     private int shots = 0;
-    private double lastSent = Double.NaN;
+    private double lastSent = Double.NaN;       // the speed sent to the hub last (counts/s); NaN = none
     private boolean followerDisabled = false;
     private double followerBadSince = Double.NaN;
     private String fault = "";
@@ -71,7 +76,7 @@ public class Flywheel implements Subsystem {
         this.motor = motor;
     }
 
-    /** For tests. */
+    /** For tests: use a pretend clock so tests do not wait for real time. */
     Flywheel withClock(LongSupplier clock) {
         clockNanos = clock;
         return this;
@@ -88,6 +93,7 @@ public class Flywheel implements Subsystem {
      * cable</b> (the hub's speed control reads it). If its encoder reads nothing while the wheel spins,
      * the follower is switched off and a warning shows (without an encoder, its speed control would
      * drive it to full power and fight the first motor).
+     * Call it before {@link #pidf}, so the follower gets the same gains.
      */
     public Flywheel follower(HardwareMap hardwareMap, String followerName, boolean reversed) {
         follower = MotorSetup.get(hardwareMap, followerName).reversed(reversed).coast().runUsingEncoder().done();
@@ -105,7 +111,10 @@ public class Flywheel implements Subsystem {
         return this;
     }
 
-    /** The hub's speed-control gains (P, I, D, F). Applied to the follower too. */
+    /**
+     * The hub's speed-control gains (P, I, D, F). Applied to the follower too, if
+     * {@link #follower} was called first. F is the main one: the steady power for a given speed.
+     */
     public Flywheel pidf(double p, double i, double d, double f) {
         motor.setVelocityPIDFCoefficients(p, i, d, f);
         if (follower != null) follower.setVelocityPIDFCoefficients(p, i, d, f);
@@ -124,7 +133,7 @@ public class Flywheel implements Subsystem {
         return this;
     }
 
-    /** The highest speed it may be asked for. Default 6000. */
+    /** The highest speed it may be asked for, in RPM. Default 6000. */
     public Flywheel maxRpm(double max) {
         maxRpm = Math.abs(max);
         return this;
@@ -137,10 +146,17 @@ public class Flywheel implements Subsystem {
     }
 
     // ---------------------------------------------------------------------------------------
+    // Commands (quick; update() does the work)
+    // ---------------------------------------------------------------------------------------
 
-    /** Spins to this speed (0 = coast to a stop). Changing the target restarts the "ready" timer. */
+    /**
+     * Spins to this speed in RPM (0 = coast to a stop). Changing the target restarts the "ready" timer.
+     * Safe to call every loop with the same (or almost the same) speed.
+     */
     public void setRpm(double newRpm) {
         double clamped = MathUtil.clamp(newRpm, -maxRpm, maxRpm);
+        // A real change (more than half the tolerance): it is no longer ready at the new speed.
+        // Tiny changes (e.g. a distance reading that jitters every loop) keep "ready", or it would never fire.
         if (Math.abs(clamped - targetRpm) > toleranceRpm / 2) {
             inBandSince = Double.NaN;
             ready = false;
@@ -153,25 +169,37 @@ public class Flywheel implements Subsystem {
     @Override
     public void stop() {
         setRpm(0);
+        // Send the 0 now, not in the next update(), so it stops at once.
         send(0);
     }
 
     /** "" or a problem, e.g. the follower's encoder not reading. */
     public String getFault() { return fault; }
 
+    // ---------------------------------------------------------------------------------------
+    // Every loop
+    // ---------------------------------------------------------------------------------------
+
+    /** Once per loop: sends the speed, reads the real speed, works out "ready", and counts shots. */
     @Override
     public void update() {
-        double now = clockNanos.getAsLong() / 1e9;
+        double now = clockNanos.getAsLong() / 1e9;   // seconds
+        // Turn RPM into what the hub wants, encoder counts per second:
+        // turns per minute / 60 = turns per second; x counts per turn = counts per second.
         send(targetRpm / 60.0 * countsPerRev);
+        // And back the other way for the measured speed.
         rpm = motor.getVelocity() / countsPerRev * 60.0;
         checkFollower(now);
 
+        // Not spinning on purpose: never ready, nothing to count.
         if (targetRpm == 0) {
             ready = false;
             armedForShot = false;
             inBandSince = Double.NaN;
             return;
         }
+        // "Ready" only after the speed has STAYED within tolerance for settleTime, not on the first
+        // good reading: a wheel speeding up passes through the right speed for a moment on its way.
         boolean inBand = Math.abs(rpm - targetRpm) <= toleranceRpm;
         if (inBand) {
             if (Double.isNaN(inBandSince)) inBandSince = now;
@@ -182,11 +210,17 @@ public class Flywheel implements Subsystem {
         }
         if (ready) armedForShot = true;
         // A sudden drop after being ready = a ball went through.
+        // (A ball takes energy from the wheel, so it slows down for a moment.) Count it once, then wait
+        // until it is ready again before the next drop can count.
         if (armedForShot && Math.abs(targetRpm) - Math.abs(rpm) > shotDropRpm) {
             shots++;
             armedForShot = false;
         }
     }
+
+    // ---------------------------------------------------------------------------------------
+    // Questions and steps
+    // ---------------------------------------------------------------------------------------
 
     /** True when at speed and steady. */
     public boolean isReady() { return ready; }
@@ -200,17 +234,21 @@ public class Flywheel implements Subsystem {
     /** How many shots were noticed (speed drops) since the OpMode started. */
     public int getShotCount() { return shots; }
 
-    /** A step: spin up and wait until ready (or {@code timeoutSec}). */
+    /** A step (autonomous): spin up and wait until ready (or {@code timeoutSec}). */
     public AutoStep spinUpStep(double targetRpmValue, double timeoutSec) {
+        // "ctx -> { ... }" is a small piece of code handed over to run later, when the routine reaches it.
         return ctx -> {
             setRpm(targetRpmValue);
+            // The time limit stops a weak battery from freezing the autonomous here.
             ctx.waitUntil(this::isReady, timeoutSec);
         };
     }
 
+    /** The FTC motor inside, for anything this helper does not do. */
     public DcMotorEx getMotor() { return motor; }
     @Override public String name() { return name; }
 
+    /** Shows measured / target RPM and READY; shots seen in debug mode; a warning for a fault. */
     @Override
     public void addTelemetry(RobotTelemetry t) {
         if (!fault.isEmpty()) t.warn(name + ": " + fault);
@@ -218,17 +256,27 @@ public class Flywheel implements Subsystem {
         t.debug(name + " shots seen", shots);
     }
 
+    // ---------------------------------------------------------------------------------------
+    // Small helpers used only inside this class
+    // ---------------------------------------------------------------------------------------
+
+    // Sends a speed (encoder counts per second) to the motor, and to the follower if it is working.
     private void send(double ticksPerSec) {
+        // Same as last time: skip it, each hardware command costs loop time.
         if (ticksPerSec == lastSent) return;
         lastSent = ticksPerSec;
+        // A switched-off follower gets nothing. ("a ? b : c" means: if a use b, otherwise c.)
         DcMotorEx f = followerDisabled ? null : follower;
         if (ticksPerSec == 0) {
             // Coast: plain power 0 (speed control at 0 would brake hard).
+            // A hard stop strains the motor, gears and belts of a fast, heavy wheel.
             motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             motor.setPower(0);
             if (f != null) { f.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); f.setPower(0); }
             return;
         }
+        // Speeding up again after a coast: switch speed control back on (only when needed, as
+        // changing the mode takes time).
         if (motor.getMode() != DcMotor.RunMode.RUN_USING_ENCODER) motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motor.setVelocity(ticksPerSec);
         if (f != null) {
@@ -241,9 +289,13 @@ public class Flywheel implements Subsystem {
     private void checkFollower(double now) {
         if (follower == null || followerDisabled) return;
         double followerRpm = follower.getVelocity() / countsPerRev * 60.0;
+        // "Bad" = the main motor clearly spins (over 500 RPM) but the follower's encoder reads under
+        // a fifth of that. Both motors turn the same wheel, so a working encoder would read about the same.
         boolean bad = Math.abs(rpm) > 500 && Math.abs(followerRpm) < 0.2 * Math.abs(rpm);
         if (!bad) { followerBadSince = Double.NaN; return; }
         if (Double.isNaN(followerBadSince)) followerBadSince = now;
+        // Bad for over half a second (not one odd reading): switch it off for the rest of the OpMode.
+        // Its speed control would otherwise push it to full power, fighting the main motor.
         if (now - followerBadSince > 0.5) {
             followerDisabled = true;
             follower.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);

@@ -39,7 +39,7 @@ is different on your robot.
 ```java
 DriveConfig driveConfig = DriveConfig.mecanum();   // or DriveConfig.tank(), DriveConfig.tankTwoMotor()
 driveConfig.frontLeft = "fl";                      // only if your names are different
-driveConfig.powerLimit = 0.6;
+driveConfig.powerLimit = 0.6;                      // no wheel ever gets more than 0.6 power
 ```
 
 | Factory | Type | Motor names |
@@ -72,9 +72,10 @@ Use the SAME `DriveConfig` in TeleOp and autonomous. A good way: one class in Te
 MecanumDrive drive = new MecanumDrive(hardwareMap, driveConfig);
 waitForStart();
 while (opModeIsActive()) {
+    // forward, strafe right, turn clockwise. Minus: the SDK gives stick UP as negative.
     drive.drive(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x);
 }
-drive.stop();
+drive.stop();   // wheels off when the OpMode ends
 ```
 
 The constructor gets the four motors, sets direction and brake, uses plain power
@@ -103,7 +104,7 @@ wheels are scaled down together. The robot keeps the direction you asked for.
   new drivers. Needs the IMU.
 
 ```java
-double heading = ImuSetup.headingDeg(imu);
+double heading = ImuSetup.headingDeg(imu);   // read every loop: which way the robot faces now
 drive.driveFieldCentric(-gamepad1.left_stick_y, gamepad1.left_stick_x, gamepad1.right_stick_x, heading);
 ```
 
@@ -121,9 +122,10 @@ For a standard (tank / differential) drive with 2 or 4 motors. It cannot move si
 TankDrive drive = new TankDrive(hardwareMap, DriveConfig.tankTwoMotor());
 waitForStart();
 while (opModeIsActive()) {
+    // left stick = forward/back (minus: stick UP is negative), right stick = turn
     drive.arcade(-gamepad1.left_stick_y, gamepad1.right_stick_x);
 }
-drive.stop();
+drive.stop();   // wheels off when the OpMode ends
 ```
 
 The constructor gets the motors, sets direction and brake, uses plain power, and sets power to 0.
@@ -152,6 +154,7 @@ When ON, forward and strafe flip, so the back of the robot acts as the front. Tu
 
 ```java
 ReverseDrive reverse = new ReverseDrive();
+// toggle() flips the mode and returns it; confirm (a ToggleRumble) buzzes 2x = ON, 1x = OFF
 controls.bindPress(Pad.G1, Btn.L_STICK_BTN, () -> confirm.play(reverse.toggle()));
 // every loop:
 drive.drive(reverse.apply(forward), reverse.apply(strafe), turn);
@@ -204,8 +207,9 @@ so use them only in a `LinearOpMode` autonomous. No wheel ever gets more power t
 `DriveConfig.powerLimit`, whatever `maxPower` you pass.
 
 ```java
-AutoDrive auto = new AutoDrive(this, driveConfig, autoConfig, imu);
+AutoDrive auto = new AutoDrive(this, driveConfig, autoConfig, imu);   // this = your OpMode
 waitForStart();
+// Each line waits until that move is done, then the next one starts. 0.6 = top power.
 auto.move(24, 0, 0.6);    // 24 in forward
 auto.move(12, 90, 0.5);   // 12 in right
 auto.turn(90, 0.5);       // turn 90 degrees left
@@ -271,6 +275,7 @@ Every move returns how it ended, an `AutoDrive.Result`:
 You can ignore it, or react:
 
 ```java
+// STALLED = stuck: pushing on would waste time and strain the motors
 if (auto.move(30, 0, 0.7) == AutoDrive.Result.STALLED) {
     auto.move(4, 180, 0.4);   // back off a little
 }
@@ -347,7 +352,7 @@ Tells when something with a target is stuck. `AutoDrive` uses it; you can use it
 
 ```java
 StallDetector stall = new StallDetector(0.25, 0.4);   // 0.25 of progress within 0.4 s
-// every loop:
+// every loop: how far is still left, and the time now (getRuntime() = seconds since INIT)
 if (stall.update(distanceLeft, getRuntime())) { ... stuck ... }
 ```
 

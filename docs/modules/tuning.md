@@ -17,6 +17,7 @@ Change numbers while the robot runs, from the gamepad, with no rebuild.
 ## Tunable
 
 ```java
+// static final: one shared Tunable, made once (the number inside can still change)
 static final Tunable LIFT_KP = Tunable.number("Lift/kP", 0.004, 0.0005);   // name, code value, step
 ...
 pid.setGains(LIFT_KP.get(), 0, 0, 0);   // read it every loop
@@ -42,8 +43,9 @@ when a number is good, **copy it into the code** and press "reset all". The code
 ## PidTunables
 
 ```java
+// name prefix, then the code values of kP, kI, kD, kF
 static final PidTunables LIFT = PidTunables.of("Lift", 0.004, 0, 0.0002, 0.05);
-LIFT.applyTo(liftPid);       // every loop
+LIFT.applyTo(liftPid);       // every loop: copies the menu's values into the controller
 ```
 
 Makes "Lift/kP", "Lift/kI", "Lift/kD", "Lift/kF" with sensible steps (1/8 of the value).
@@ -53,10 +55,10 @@ Makes "Lift/kP", "Lift/kI", "Lift/kD", "Lift/kF" with sensible steps (1/8 of the
 
 ```java
 TuningMenu menu = new TuningMenu(gamepad1);
-controls.bindPress(Pad.G1, Btn.GUIDE, menu::toggle);
+controls.bindPress(Pad.G1, Btn.GUIDE, menu::toggle);   // center button opens/closes it
 // every loop:
 menu.update();
-if (menu.isOpen()) menu.addTelemetry(t);
+if (menu.isOpen()) menu.addTelemetry(t);   // the menu shows only while it is open
 ```
 
 | While open | Does |

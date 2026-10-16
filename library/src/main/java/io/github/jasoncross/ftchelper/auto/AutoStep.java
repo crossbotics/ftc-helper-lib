@@ -7,6 +7,10 @@ package io.github.jasoncross.ftchelper.auto;
  * {@code ctx.loop()} (or {@code ctx.waitUntil}/{@code ctx.waitFor}) so the mechanisms keep working
  * and the routine can stop it when the match ends.
  *
+ * <p>An {@code interface} with just one method can be written as a lambda: {@code ctx -> { ... }} is a
+ * small piece of code that the routine runs later, when its turn comes. {@code ctx} is the
+ * {@link AutoContext} the routine hands to it.
+ *
  * <pre>{@code
  * // A custom step, as a lambda:
  * AutoStep dropPiece = ctx -> {
@@ -21,7 +25,7 @@ package io.github.jasoncross.ftchelper.auto;
  *
  * <p>Mechanism helpers give you ready-made steps, e.g. {@code lift.goToStep("HIGH")}.
  *
- * Docs: docs/modules/auto.md
+ * Docs: docs/modules/auto.md, docs/guides/easy-autos.md
  */
 public interface AutoStep {
     /** Does the step. Returns when it is finished, or as soon as {@code ctx.isActive()} turns false. */

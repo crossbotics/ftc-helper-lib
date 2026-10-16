@@ -19,16 +19,18 @@ flowchart TB
 /** A two-servo gripper that closes both sides together. */
 public class DualGripper implements Subsystem {
     private final PositionServo left, right;
-    private boolean closed = false;
+    private boolean closed = false;   // the state; the commands below only change this
 
     public DualGripper(HardwareMap hw) {
         left = PositionServo.create(hw, "grip_left").position("OPEN", 0.2).position("CLOSED", 0.7);
+        // reversed(): the right servo is mounted mirrored, so the same numbers work for both
         right = PositionServo.create(hw, "grip_right").reversed().position("OPEN", 0.2).position("CLOSED", 0.7);
     }
 
     public void close() { closed = true; }
     public void open() { closed = false; }
 
+    // update() turns the state into servo moves, every loop. "a ? b : c" = if a then b, else c.
     @Override public void update() {
         String p = closed ? "CLOSED" : "OPEN";
         left.goTo(p); right.goTo(p);
@@ -39,6 +41,7 @@ public class DualGripper implements Subsystem {
 
     /** Autonomous step. */
     public AutoStep closeStep() {
+        // close, then wait until both should have arrived, at most 1.0 s
         return ctx -> { close(); ctx.waitUntil(() -> left.isDone() && right.isDone(), 1.0); };
     }
 }
@@ -50,8 +53,8 @@ It now works in `Subsystems`, in `EasyAuto`, with buttons, and shows telemetry l
 
 ```java
 AutoStep alignWithWall = ctx -> {
-    ElapsedTime timer = new ElapsedTime();
-    try {
+    ElapsedTime timer = new ElapsedTime();   // a stopwatch, starts now
+    try {                                    // try/finally: "finally" always runs
         while (ctx.isActive() && !wallSensor.isPressed() && timer.seconds() < 2.0) {   // a way out!
             drive.setPowers(new double[]{-0.2, -0.2, -0.2, -0.2});   // back up slowly
             ctx.loop();                                             // mechanisms + telemetry keep running
@@ -72,14 +75,15 @@ waiting, have a way out (a time limit), and stop the motors you started.
 /** A gate servo that opens briefly to let one piece roll in. */
 public class GateFeeder implements Feeder {
     private final Servo gate;
-    private double closeAt = -1;
+    private double closeAt = -1;   // when to close the gate, seconds; -1 = not feeding
     public GateFeeder(HardwareMap hw) { gate = hw.get(Servo.class, "gate"); }
 
+    // Never waits: feedOne() opens the gate and notes the time; update() closes it 0.2 s later.
     @Override public void feedOne() { if (!isBusy()) { gate.setPosition(0.8); closeAt = now() + 0.2; } }
     @Override public boolean isBusy() { return closeAt > 0; }
     @Override public void update() { if (closeAt > 0 && now() >= closeAt) { gate.setPosition(0.1); closeAt = -1; } }
     @Override public void stop() { gate.setPosition(0.1); closeAt = -1; }
-    private static double now() { return System.nanoTime() / 1e9; }
+    private static double now() { return System.nanoTime() / 1e9; }   // nanoseconds -> seconds
 }
 ```
 

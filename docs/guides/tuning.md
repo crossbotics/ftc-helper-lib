@@ -36,6 +36,7 @@ PositionServo claw = PositionServo.create(hardwareMap, "claw")
 Any other number:
 
 ```java
+// (menu name, value in the code, change per D-pad press), kept between 0.1 and 1.0
 static final Tunable SLOW_SPEED = Tunable.number("Drive/slow", 0.35, 0.05).range(0.1, 1.0);
 ...
 double speed = slowMode ? SLOW_SPEED.get() : 1.0;     // read it EVERY loop
@@ -53,11 +54,11 @@ TuningMenu tuning = new TuningMenu(gamepad1);
 ControllerBindings menuKey = new ControllerBindings().bindPress(Pad.G1, Btn.GUIDE, tuning::toggle);
 ControllerBindings driver = new ControllerBindings()...;     // gamepad 1 buttons
 ControllerBindings operator = new ControllerBindings()...;   // gamepad 2 buttons (keep working)
-boolean menuWasOpen = false;
+boolean menuWasOpen = false;   // was the menu open last loop?
 // loop:
 menuKey.update(gamepad1, gamepad2);
 operator.update(gamepad1, gamepad2);
-tuning.update();
+tuning.update();               // the menu reads gamepad 1 (only while open)
 if (tuning.isOpen()) {
     menuWasOpen = true;
     tuning.addTelemetry(t);                                   // and ignore gamepad 1's sticks

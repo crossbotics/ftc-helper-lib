@@ -23,15 +23,16 @@ by rumble (vibration).
 Without it, every button needs code like this, to run once per press and not 50 times per second:
 
 ```java
-boolean aWasDown = false;
+boolean aWasDown = false;   // was A down last loop?
 ...
-if (gamepad2.a && !aWasDown) claw.setPosition(OPEN);
-aWasDown = gamepad2.a;
+if (gamepad2.a && !aWasDown) claw.setPosition(OPEN);   // down now, up before = a new press
+aWasDown = gamepad2.a;                                 // remember for the next loop
 ```
 
 With it, you write each button's job once, at the top, and the class does the rest:
 
 ```java
+// in INIT, once: gamepad 2's A opens the claw, once per press
 ControllerBindings controls = new ControllerBindings()
         .bindPress(Pad.G2, Btn.A, () -> claw.setPosition(OPEN));
 ...
@@ -66,7 +67,7 @@ For more than one line, use braces:
 ```java
 .bindPress(Pad.G2, Btn.B, () -> {
     claw.setPosition(OPEN);
-    liftTarget = 0;
+    liftTarget = 0;   // only sets the target: the loop moves the lift, the button never waits
 })
 ```
 
@@ -120,7 +121,7 @@ button, and it keeps the whole button map in one place.
 The usual one-line stick setup: a deadband with a smooth start, then a curve.
 
 ```java
-double forward = StickShaping.shape(-gamepad1.left_stick_y, 0.05, 2);
+double forward = StickShaping.shape(-gamepad1.left_stick_y, 0.05, 2);   // minus: stick UP is negative
 ```
 
 | Parameter | Meaning |
@@ -138,8 +139,8 @@ Only the curve part. The sign is kept: -0.5 squared gives -0.25.
 Turns a trigger into a speed multiplier. This is last season's "trigger brake".
 
 ```java
-double speed = StickShaping.slowScale(gamepad1.left_trigger, 0.25);
-drive.drive(forward, strafe, turn, speed);
+double speed = StickShaping.slowScale(gamepad1.left_trigger, 0.25);   // 1.0 down to 0.25
+drive.drive(forward, strafe, turn, speed);   // every wheel power is multiplied by speed
 ```
 
 Not pressed gives 1.0 (full speed). Fully pressed gives `slowest` (0.25 = quarter speed).
@@ -153,6 +154,7 @@ Two quick buzzes mean ON, one means OFF, so the driver knows a mode changed with
 
 ```java
 ToggleRumble confirm = new ToggleRumble(gamepad1);
+// bindToggle(pad, button, code run when it turns ON, code run when it turns OFF)
 controls.bindToggle(Pad.G1, Btn.Y,
         () -> { slowMode = true;  confirm.play(true);  },
         () -> { slowMode = false; confirm.play(false); });
@@ -175,7 +177,7 @@ Last season this told the driver "you are aimed at the goal". (It was called `Ru
 ```java
 AimRumble aimFeel = new AimRumble(gamepad1).setThreshold(2.5);
 ...
-// every loop:
+// every loop (but not while the toggle buzz plays, so the driver can tell them apart):
 if (!confirm.isPlaying()) aimFeel.update(headingErrorDeg);
 ```
 

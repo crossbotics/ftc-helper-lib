@@ -14,9 +14,13 @@ import io.github.jasoncross.ftchelper.util.MathUtil;
  *       so the mechanism does not slam into the end.</li>
  * </ol>
  *
- * Docs: docs/modules/safety.md
+ * <p>These are "soft" (software) limits. The robot still needs a hard stop (a physical block):
+ * if the software is ever wrong, the block holds.
+ *
+ * Docs: docs/modules/safety.md (section "SoftLimits")
  */
 public final class SoftLimits {
+    // Private constructor: nobody makes a SoftLimits object; call SoftLimits.limit(...) directly.
     private SoftLimits() { }
 
     /**
@@ -35,11 +39,17 @@ public final class SoftLimits {
     public static double limit(double power, double position, double min, double max,
                                double slowZone, double slowZonePower,
                                boolean atLowerSwitch, boolean atUpperSwitch) {
+        // A motor only takes -1 to 1.
         power = MathUtil.clamp(power, -1, 1);
+        // Moving down (toward min): only the LOWER limit matters. At or past it, stop.
+        // So a mechanism at the top can always come down, and one at the bottom can always go up:
+        // it can never get "stuck" at an end.
         if (power < 0) {
             if (atLowerSwitch || position <= min) return 0;
+            // Work with the size of the power (positive), then put the minus sign back.
             return -scaleNear(-power, position - min, slowZone, slowZonePower);
         }
+        // Moving up (toward max): only the UPPER limit matters.
         if (power > 0) {
             if (atUpperSwitch || position >= max) return 0;
             return scaleNear(power, max - position, slowZone, slowZonePower);
@@ -49,9 +59,14 @@ public final class SoftLimits {
 
     /** Scales a positive power down when {@code distance} to the limit is inside the slow zone. */
     private static double scaleNear(double power, double distance, double slowZone, double slowZonePower) {
+        // No slow zone, or still far from the limit: full power is fine.
         if (slowZone <= 0 || distance >= slowZone) return power;
+        // Inside the zone, the most power allowed shrinks in a straight line: 1.0 at the zone's
+        // outer edge, down to slowZonePower right at the limit. Example: zone 200 ticks, floor 0.25,
+        // 100 ticks from the limit -> at most 0.625.
         double floor = MathUtil.clamp(slowZonePower, 0, 1);
         double cap = floor + (1 - floor) * (distance / slowZone);
+        // Only ever lowers the power: a gentle request stays as it is.
         return Math.min(power, cap);
     }
 }

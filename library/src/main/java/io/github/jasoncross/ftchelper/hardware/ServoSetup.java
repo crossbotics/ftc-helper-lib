@@ -6,6 +6,8 @@ import com.qualcomm.robotcore.hardware.Servo;
 /**
  * Sets up a servo in one readable chain.
  *
+ * <p>A servo is a small motor that turns to a position you choose (0 to 1) and holds it there.
+ *
  * <pre>{@code
  * Servo claw = ServoSetup.get(hardwareMap, "claw")
  *         .reversed()
@@ -15,11 +17,16 @@ import com.qualcomm.robotcore.hardware.Servo;
  *
  * <p>This does NOT move the servo. A servo moves the first time you set a position.
  *
+ * <p>Each step hands back the same ServoSetup ({@code return this}) so the next step can follow.
+ * Tutorial 02 (docs/tutorials/02-motors-and-servos.md) shows servos in a full program.
+ *
  * Docs: docs/modules/hardware.md
  */
 public final class ServoSetup {
+    // "final" on the class: nobody can extend it. "final" on the field: set once, never changed.
     private final Servo servo;
 
+    // Private: start a chain with ServoSetup.get(...) or ServoSetup.of(...), never with "new".
     private ServoSetup(Servo servo) {
         this.servo = servo;
     }
@@ -27,13 +34,21 @@ public final class ServoSetup {
     /**
      * Starts the setup for a servo in the configuration.
      *
+     * @param hardwareMap the OpMode's {@code hardwareMap}
+     * @param name        the servo's configuration name
+     * @return the start of the chain
      * @throws IllegalArgumentException with the list of real servo names if the name is wrong
      */
     public static ServoSetup get(HardwareMap hardwareMap, String name) {
         return new ServoSetup(Hw.get(hardwareMap, Servo.class, name));
     }
 
-    /** Starts the setup for a servo you already have. */
+    /**
+     * Starts the setup for a servo you already have.
+     *
+     * @param servo the servo to set up
+     * @return the start of the chain
+     */
     public static ServoSetup of(Servo servo) {
         return new ServoSetup(servo);
     }
@@ -52,11 +67,16 @@ public final class ServoSetup {
      * @param max 0 to 1, the real position used for 1 (must be bigger than min)
      */
     public ServoSetup range(double min, double max) {
+        // The SDK's scaleRange does the work; it stays in force for every later setPosition.
         servo.scaleRange(min, max);
         return this;
     }
 
-    /** Gives you the servo. */
+    /**
+     * Gives you the servo. Always end the chain with this.
+     *
+     * @return the servo, set up (it has not moved yet)
+     */
     public Servo done() {
         return servo;
     }

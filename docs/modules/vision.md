@@ -49,10 +49,10 @@ with id `TargetObservation.CLUSTER` and its name.
 
 ```java
 WebcamTags camera = WebcamTags.create(hardwareMap, "Webcam 1")
-        .resolution(640, 480)
-        .decimation(2)
+        .resolution(640, 480)    // pixels: a good start
+        .decimation(2)           // 2 = default balance of speed and range
         .exposure(6, 85);        // optional: short exposure = sharp tags while driving
-camera.start();
+camera.start();                  // in INIT: a webcam needs 1-2 s to start
 ```
 
 | Method | What it does |
@@ -72,8 +72,8 @@ camera the SDK already knows (Logitech C270/C920 at common resolutions).
 
 ```java
 LimelightTags camera = LimelightTags.create(hardwareMap, "limelight")
-        .pipeline(0)
-        .pollRate(100);
+        .pipeline(0)        // pipeline 0, set up on the Limelight's web page
+        .pollRate(100);     // results per second
 camera.start();
 ```
 
@@ -110,11 +110,12 @@ everywhere else. The picture time includes the Limelight's own capture and proce
 ## AimController
 
 ```java
-AimController aim = new AimController(0.02, 0.003)
+AimController aim = new AimController(0.02, 0.003)   // kP and kD, on the bearing in degrees
         .deadband(1.5)      // close enough
-        .maxPower(0.5)
-        .maxAgeMs(150)
+        .maxPower(0.5)      // never turn harder than this while aiming
+        .maxAgeMs(150)      // ignore pictures older than 150 ms (they point the wrong way)
         .offset(0);         // aim to the side of the target (camera not centered on the shooter)
+// camera.target(20) = tag 20, or null if not seen now; turnPower(null) gives 0 (no turn)
 drive.drive(forward, strafe, aim.turnPower(camera.target(20)));   // ready for any drive's turn
 ```
 

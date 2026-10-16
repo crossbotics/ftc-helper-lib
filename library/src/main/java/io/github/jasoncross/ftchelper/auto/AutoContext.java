@@ -6,7 +6,10 @@ import java.util.function.BooleanSupplier;
 /**
  * What a running {@link AutoStep} can use. {@link AutoRoutine} gives it to every step.
  *
- * Docs: docs/modules/auto.md
+ * <p>An {@code interface} is a list of methods without their insides: AutoRoutine fills them in.
+ * Your step only sees these few methods, so it cannot, for example, add new steps while running.
+ *
+ * Docs: docs/modules/auto.md. Why we wait this way and never sleep(): docs/guides/non-blocking.md
  */
 public interface AutoContext {
 
@@ -21,6 +24,7 @@ public interface AutoContext {
 
     /**
      * Loops until {@code done} is true, the time runs out, or the routine stops.
+     * <b>BLOCKS</b> (on purpose, autonomous only), but keeps every mechanism updating while it waits.
      *
      * @param done       the condition, e.g. {@code lift::isAtTarget}
      * @param timeoutSec most seconds to wait
@@ -28,7 +32,7 @@ public interface AutoContext {
      */
     boolean waitUntil(BooleanSupplier done, double timeoutSec);
 
-    /** Loops for this many seconds (mechanisms keep working). Use this instead of sleep(). */
+    /** Loops for this many seconds (mechanisms keep working). Use this instead of sleep(). <b>BLOCKS</b>. */
     void waitFor(double seconds);
 
     /** Seconds left in autonomous. */

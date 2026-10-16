@@ -27,6 +27,7 @@ Gets devices by their configuration name (the names you typed in the Driver Stat
 Gets a device, or stops the OpMode with a message that lists the names that DO exist.
 
 ```java
+// (where to look, what kind of device, its name in the robot configuration)
 DcMotorEx intake = Hw.get(hardwareMap, DcMotorEx.class, "intake");
 TouchSensor bottom = Hw.get(hardwareMap, TouchSensor.class, "lift_bottom");
 ```
@@ -54,6 +55,7 @@ Use it for optional parts (a sensor that is only on the practice robot). **Alway
 
 ```java
 TouchSensor bottom = Hw.tryGet(hardwareMap, TouchSensor.class, "lift_bottom");
+// null = not on this robot. bottom::isPressed hands over "how to read it" (a method reference).
 if (bottom != null) lift.setLowerSwitch(bottom::isPressed);
 ```
 
@@ -69,11 +71,11 @@ Gets a motor and sets it up in one chain. The settings are applied in the order 
 
 ```java
 DcMotorEx lift = MotorSetup.get(hardwareMap, "lift")
-        .reversed()
-        .brake()
-        .resetEncoder()
+        .reversed()          // mounted mirrored: positive power should still mean "up"
+        .brake()             // at power 0, hold still instead of letting the lift drop
+        .resetEncoder()      // here counts as 0 (reset BEFORE the run mode)
         .runUsingEncoder()
-        .done();
+        .done();             // finish: power 0, and hand back the motor
 ```
 
 | Method | What it does |
@@ -105,7 +107,7 @@ DcMotorEx lift = MotorSetup.get(hardwareMap, "lift")
 ```java
 Servo claw = ServoSetup.get(hardwareMap, "claw")
         .reversed()
-        .range(0.20, 0.75)
+        .range(0.20, 0.75)   // only this part of the travel: it can never hit the frame
         .done();
 ```
 
@@ -136,6 +138,7 @@ Gets the IMU, tells it how the hub is mounted, and sets the heading to 0.
 If the IMU does not start, it stops the OpMode with a clear message (it does not hand you a broken IMU).
 
 ```java
+// How the hub sits on the robot: logo pointing UP, USB ports toward the robot's FRONT.
 IMU imu = ImuSetup.get(hardwareMap, "imu",
         RevHubOrientationOnRobot.LogoFacingDirection.UP,
         RevHubOrientationOnRobot.UsbFacingDirection.FORWARD);
@@ -183,6 +186,7 @@ The fastest way. You clear the saved readings yourself at the top of every loop.
 **If you forget `clear`, the readings never change** and the robot acts very strangely.
 
 ```java
+// List<LynxModule> = a list of the hubs (a LynxModule is one Control or Expansion Hub)
 List<LynxModule> hubs = BulkReads.manual(hardwareMap);
 waitForStart();
 while (opModeIsActive()) {

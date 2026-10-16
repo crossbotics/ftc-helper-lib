@@ -83,7 +83,7 @@ ShotTable pollen = new ShotTable()
         .add(24, 2600, 6)        // distance in, rpm, hood degrees
         .add(48, 3100, 14)
         .add(72, 3700, 21);
-ShotTable.Shot s = pollen.lookup(36);     // 2850 rpm, 10 deg
+ShotTable.Shot s = pollen.lookup(36);     // 2850 rpm, 10 deg (halfway between 24 and 48)
 ```
 
 Straight lines between your points; outside them, the nearest end (it never guesses beyond what you
@@ -101,6 +101,8 @@ class with these methods and the launcher works with it. See [Extending](../guid
 ```java
 MotorFeeder feeder = MotorFeeder.create(hardwareMap, "feeder")
         .power(1.0).feedTime(0.25)        // run 0.25 s per piece
+        // optional: stop when a sensor sees the piece leave. beam = a beam-break sensor
+        // (a DigitalChannel); "!" = not: it reads false while something blocks the beam
         .stopWhen(() -> !beam.getState()) // optional: stop when a sensor sees the piece leave
         .jamDetection(60, 0.2);           // optional (encoder cable)
 ```
@@ -122,11 +124,12 @@ ServoFeeder kicker = ServoFeeder.create(hardwareMap, "kicker")
 
 ```java
 Turret turret = Turret.create(hardwareMap, "turret")
-        .countsPerDegree(1479 / 360.0)
-        .limits(-190, 190)
-        .homeSwitch(hardwareMap, "turret_home", 45)
-        .pid(0.02, 0, 0.001, 0)
-        .tolerance(1.0);
+        .countsPerDegree(1479 / 360.0)    // encoder counts per turret turn / 360. ".0": a
+                                          // decimal result (1479 / 360 alone would drop it)
+        .limits(-190, 190)                // degrees; it never turns past these (cables!)
+        .homeSwitch(hardwareMap, "turret_home", 45)   // the switch closes at 45 degrees
+        .pid(0.02, 0, 0.001, 0)           // kP, kI, kD, kF on the angle in degrees
+        .tolerance(1.0);                  // within 1 degree = aimed
 ```
 
 ![Turret angles and limits](../images/turret-limits.svg)
@@ -168,9 +171,9 @@ on with the turret facing forward.
 Launcher launcher = new Launcher(flywheel, feeder)
         .hood(hood)
         .table(pollen)
-        .requireReady("Turret", turret::isAimed)
-        .shotInterval(0.25)
-        .readyTimeout(3);
+        .requireReady("Turret", turret::isAimed)   // never feed before the turret is aimed
+        .shotInterval(0.25)                        // at least 0.25 s between pieces
+        .readyTimeout(3);                          // not ready in 3 s: give up, say why
 ```
 
 | Method | What it does |

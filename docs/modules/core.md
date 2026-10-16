@@ -34,10 +34,12 @@ without changing anything else.
 Your own mechanism:
 
 ```java
+// "implements Subsystem": Bucket promises to have update() (and may add stop(), addTelemetry())
 public class Bucket implements Subsystem {
     private final PositionServo servo;
-    private boolean dumping = false;
+    private boolean dumping = false;   // the state: what the bucket should be doing
 
+    // Runs once, when the robot code makes the Bucket (in INIT). "bucket" = configuration name.
     public Bucket(HardwareMap hw) {
         servo = PositionServo.create(hw, "bucket").position("CARRY", 0.3).position("DUMP", 0.9);
     }
@@ -45,6 +47,7 @@ public class Bucket implements Subsystem {
     public void dump()  { dumping = true; }   // commands only change state: quick, safe from a button
     public void carry() { dumping = false; }
 
+    // @Override: fills in a method Subsystem asks for. "a ? b : c" = if a then b, else c.
     @Override public void update() { servo.goTo(dumping ? "DUMP" : "CARRY"); servo.update(); }
     @Override public void addTelemetry(RobotTelemetry t) { t.line("Bucket", dumping ? "DUMP" : "carry"); }
 }
@@ -93,6 +96,7 @@ robot.stop();                 // stops each, even if one throws an error
 | `profile.isPractice()` | true for PRACTICE |
 
 ```java
+// Profile.pick(value in PRACTICE, value in COMPETITION)
 c.powerLimit = Profile.pick(0.6, 1.0);         // gentle in the shop
 boolean showCamera = Profile.pick(true, false); // live view only in practice
 ```

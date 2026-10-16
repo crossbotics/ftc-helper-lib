@@ -11,9 +11,14 @@ import io.github.jasoncross.ftchelper.util.MathUtil;
  * drive.drive(forward, strafe, turn, speed);
  * }</pre>
  *
+ * <p>The minus sign on {@code left_stick_y} is needed because the SDK gives a negative number
+ * when you push the stick UP (away from you). See docs/conventions.md.
+ *
  * Docs: docs/modules/gamepad.md
  */
 public final class StickShaping {
+    // "final" class with a private constructor: a box of "static" helper methods that you call
+    // on the class name (StickShaping.shape(...)), never an object you make with "new".
     private StickShaping() { }
 
     /**
@@ -28,12 +33,19 @@ public final class StickShaping {
      * @return the curved value, -1 to 1
      */
     public static double curve(double value, double exponent) {
+        // Keep the stick inside -1..1 first, so the curve can never give more than full power.
         double clamped = MathUtil.clamp(value, -1, 1);
+        // Curve the SIZE of the push (Math.abs drops the sign), then put the sign back
+        // (Math.signum gives -1, 0 or +1). Without this, squaring would turn "back" into "forward".
         return Math.signum(clamped) * Math.pow(Math.abs(clamped), Math.max(1, exponent));
     }
 
     /**
      * Deadband (with a smooth start) and then a curve. The usual one-line stick setup.
+     *
+     * <p>A "deadband" (dead zone) ignores tiny stick values near the middle. Sticks rarely rest at
+     * exactly 0, and without a dead zone the robot would creep when nobody touches the stick.
+     * "Smooth start" means the power starts from 0 at the edge of the dead zone instead of jumping.
      *
      * @param value    stick value, -1 to 1
      * @param deadband dead zone, e.g. 0.05
@@ -55,7 +67,9 @@ public final class StickShaping {
      * @return the speed multiplier, from {@code slowest} to 1
      */
     public static double slowScale(double trigger, double slowest) {
+        // Keep both inputs in 0..1 so a bad value can never make the robot faster than full speed.
         double floor = MathUtil.clamp(slowest, 0, 1);
+        // Take away part of the speed: none at trigger 0, all the way down to "slowest" at trigger 1.
         return 1 - MathUtil.clamp(trigger, 0, 1) * (1 - floor);
     }
 }

@@ -27,20 +27,20 @@ the block; the block holds if the software is wrong.
 
 ```java
 DcMotorEx liftMotor = MotorSetup.get(hardwareMap, "lift")
-        .brake().resetEncoder().runWithoutEncoder().done();
+        .brake().resetEncoder().runWithoutEncoder().done();   // hold at 0 power, start at 0
 TouchSensor bottom = hardwareMap.get(TouchSensor.class, "lift_bottom");
 
 SafeMotor lift = new SafeMotor(liftMotor)
         .setLimits(0, 2900)               // encoder ticks
-        .setLowerSwitch(bottom::isPressed)
-        .setSlowZone(200, 0.25);
+        .setLowerSwitch(bottom::isPressed)   // "how to read the switch", asked every loop
+        .setSlowZone(200, 0.25);          // last 200 ticks: power down to 0.25 at the end
 
 waitForStart();
 while (opModeIsActive()) {
     lift.update();                                  // FIRST: read switches, re-zero at bottom
     lift.setPower(-gamepad2.left_stick_y);          // limits are applied for you
 }
-lift.stop();
+lift.stop();                                        // no power once the OpMode ends
 ```
 
 ### What it does each loop
@@ -135,6 +135,7 @@ So **turn the robot on with the mechanism all the way down**.
 The limit rule by itself. `SafeMotor` uses it. Use it if you control a motor some other way.
 
 ```java
+// (power you want, position now, min, max, slow zone, power at the limit, bottom switch, top switch)
 double safe = SoftLimits.limit(power, position, 0, 2900, 200, 0.25, atBottom, atTop);
 ```
 
@@ -156,7 +157,7 @@ Returns the safe power.
 ```java
 JamDetector jam = new JamDetector(50, 0.3);       // slower than 50 ticks/s for 0.3 s = jammed
 jam.setMaxCurrent(6);                             // optional: or above 6 A for 0.3 s
-// every loop:
+// every loop: (power sent, speed in ticks/s, current in amps, time now in seconds)
 if (jam.update(power, motor.getVelocity(), amps, getRuntime())) { ...back it out... }
 ```
 

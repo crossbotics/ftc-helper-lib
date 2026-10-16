@@ -7,10 +7,14 @@ import io.github.jasoncross.ftchelper.util.MathUtil;
  * No hardware here, so it is easy to test. {@link TankDrive} uses it.
  *
  * <p>Signs: forward + = forward, turnClockwise + = turn right. Same as {@link MecanumMixer}.
+ * All the sign rules: docs/conventions.md.
  *
- * Docs: docs/modules/drive.md
+ * Docs: docs/modules/drive.md. Tutorial 05 drives a standard robot with it.
  */
 public final class DifferentialMixer {
+    // A "private" constructor means nobody can make a DifferentialMixer object: it is only a
+    // home for the "static" methods below, which you call on the class itself
+    // (DifferentialMixer.arcade(...)). "final" here means no other class can extend it.
     private DifferentialMixer() { }
 
     /** Index of each side in the arrays this class returns. */
@@ -28,10 +32,17 @@ public final class DifferentialMixer {
      * @return {left, right}. Both zero if an input is NaN or infinite.
      */
     public static double[] arcade(double forward, double turnClockwise, double limit) {
+        // A broken reading (NaN = "not a number", or infinity) must never reach a motor:
+        // stop both sides instead. "new double[2]" is two zeros.
         if (!Double.isFinite(forward) || !Double.isFinite(turnClockwise) || !Double.isFinite(limit)) {
             return new double[2];
         }
+        // To turn right (clockwise), the left side drives faster and the right side slower,
+        // so add the turn to the left and take it away from the right.
         double[] powers = {forward + turnClockwise, forward - turnClockwise};
+        // Full forward plus full turn can ask for 2.0, more than a motor can give. Divide BOTH
+        // sides by the bigger one so their ratio (and so the curve the robot drives) stays the same.
+        // Cutting only the big side would change the curve.
         double largest = Math.max(1.0, Math.max(Math.abs(powers[0]), Math.abs(powers[1])));
         double scale = MathUtil.clamp(limit, 0, 1) / largest;
         powers[0] *= scale;

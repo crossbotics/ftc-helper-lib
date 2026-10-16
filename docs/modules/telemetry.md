@@ -51,11 +51,12 @@ flowchart TB
 ## TelemetryHelper
 
 ```java
+// Each line only ADDS text; nothing is shown until telemetry.update().
 TelemetryHelper.section(telemetry, "Lift");
-TelemetryHelper.motor(telemetry, "Lift", liftMotor);
+TelemetryHelper.motor(telemetry, "Lift", liftMotor);   // power, position, speed
 TelemetryHelper.value(telemetry, "Target", liftTarget, "ticks");
-TelemetryHelper.flag(telemetry, "At bottom", lift.isAtLower());
-telemetry.update();
+TelemetryHelper.flag(telemetry, "At bottom", lift.isAtLower());   // true/false shown as yes/no
+telemetry.update();                                                // send: once per loop
 ```
 
 The Driver Station shows:

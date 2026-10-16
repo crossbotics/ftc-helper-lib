@@ -31,9 +31,9 @@ PidController liftPid = new PidController(0.005, 0, 0.0002)   // kP, kI, kD
         .setOutputLimits(-0.5, 1.0)     // go down at half power at most
         .setTolerance(15);              // within 15 ticks counts as "there"
 
-// every loop:
+// every loop: (where we want to be, where the encoder says we are) -> a power
 double power = liftPid.calculate(liftTarget, lift.getCurrentPosition());
-lift.setPower(power);
+lift.setPower(power);   // send it every loop: that is what holds the lift up
 ```
 
 Make the controller ONCE (in INIT), not in the loop: it remembers past errors.
@@ -76,6 +76,7 @@ growing. When it is free, the big build-up throws it past the target. `setIntegr
 
 ```java
 PidController headingPid = new PidController(0.012, 0, 0.003).setAngleMode(true);
+// IMU headings are counterclockwise-positive, so this power is too (positive = turn left)
 double turnCcw = headingPid.calculate(targetHeading, ImuSetup.headingDeg(imu));
 drive.drive(0, 0, -turnCcw);   // the drive's turn is clockwise-positive, so flip the sign
 ```
@@ -89,7 +90,7 @@ mechanism does not jerk, when the driver slams a stick.
 
 ```java
 SlewRateLimiter forwardRamp = new SlewRateLimiter(2.0, 4.0);   // speed up 2/s, slow down 4/s
-// every loop:
+// every loop (minus: the SDK gives stick UP as negative, and up should mean forward):
 double forward = forwardRamp.calculate(-gamepad1.left_stick_y);
 ```
 

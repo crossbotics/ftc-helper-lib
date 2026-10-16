@@ -43,8 +43,8 @@ from 170 to -170 is a 20 degree turn, but -170 - 170 = -340.
 ```java
 LoopTimer loopTimer = new LoopTimer();
 while (opModeIsActive()) {
-    loopTimer.update();
-    telemetry.addData("Loop", "%.0f Hz", loopTimer.getHz());
+    loopTimer.update();                                        // top of every loop
+    telemetry.addData("Loop", "%.0f Hz", loopTimer.getHz());   // loops per second, no decimals
     ...
 }
 ```
@@ -79,11 +79,11 @@ value stays between them (until the app restarts or the robot loses power).
 
 ```java
 // End of Autonomous:
-PoseStore.save(new FieldPose(x, y, auto.headingDeg()));
+PoseStore.save(new FieldPose(x, y, auto.headingDeg()));   // inches, inches, degrees (left = +)
 
 // TeleOp INIT:
-FieldPose start = PoseStore.consume();
-if (start != null) { ... use it ... }
+FieldPose start = PoseStore.consume();   // null if autonomous did not save one
+if (start != null) { ... use it ... }    // always check for null first
 ```
 
 | Method | What it does |
@@ -100,6 +100,7 @@ Runs slow jobs on its own thread, so the robot's loop never waits. The library u
 Limelight's network requests and webcam settings. Guide: [Non-blocking code](../guides/non-blocking.md).
 
 ```java
+// "() -> ..." is a lambda: the slow job, handed over to run on the worker's own thread
 BackgroundWorker worker = new BackgroundWorker("my-sensor");
 worker.submitLatest("setting", () -> sensor.slowSetting(value));   // returns at once
 worker.shutdown();                                                // in stop()

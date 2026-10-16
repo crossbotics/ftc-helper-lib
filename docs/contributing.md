@@ -5,7 +5,8 @@ follows the same six steps, so nothing breaks and the docs and tutorials stay tr
 
 ## The six steps (for every change)
 
-1. **Code** in `library/src/main/java/io/github/jasoncross/ftchelper/<module>/`.
+1. **Code** in `library/src/main/java/io/github/jasoncross/ftchelper/<module>/`, commented for novice
+   programmers: plain everyday words, the WHY, and pointers to the docs ([Commenting style](commenting-style.md)).
 2. **Javadoc** on every public class and method: what it does, each parameter (with its unit and
    range), what it returns, and a short example. Plain words.
 3. **Test** in `library/src/test/java/...` for any logic (math, timing, button edges, limits).

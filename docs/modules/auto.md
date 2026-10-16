@@ -94,10 +94,12 @@ Every move's result goes in the report: `"Drive to basket: STALLED"`, `"Lift up:
 An interface with one method, `run(AutoContext ctx)`. Write your own as a lambda:
 
 ```java
+// "ctx -> { ... }" is a lambda: code handed to the routine, run when this step's turn comes.
 AutoStep shake = ctx -> {
+    // 3 times, but quit at once if STOP is pressed or time is up (ctx.isActive() is false)
     for (int i = 0; i < 3 && ctx.isActive(); i++) {
         claw.goTo("OPEN");
-        ctx.waitFor(0.15);
+        ctx.waitFor(0.15);   // wait 0.15 s; mechanisms keep working (never use sleep())
         claw.goTo("CLOSED");
         ctx.waitFor(0.15);
     }

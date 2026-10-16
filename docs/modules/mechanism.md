@@ -41,14 +41,14 @@ homing, a slow zone, named positions, stepping, manual override with hold, tunin
 
 ```java
 PositionMotor lift = PositionMotor.create(hardwareMap, "lift")
-        .limits(0, 2600)
-        .lowerSwitch(hardwareMap, "lift_bottom")
-        .slowZone(250, 0.2)
-        .pid(0.004, 0, 0.0002, 0.05)
-        .position("DOWN", 0)
+        .limits(0, 2600)                          // safe range, encoder ticks
+        .lowerSwitch(hardwareMap, "lift_bottom")  // touch sensor at the bottom: resets to 0
+        .slowZone(250, 0.2)                       // last 250 ticks: power down to 0.2, no slamming
+        .pid(0.004, 0, 0.0002, 0.05)              // kP, kI, kD, kF (0.05 holds it up)
+        .position("DOWN", 0)                      // named heights, ticks: measure yours
         .position("LOW", 900)
         .position("HIGH", 2400)
-        .tunable("Lift");
+        .tunable("Lift");                         // put the numbers in the tuning menu
 ```
 
 Setup (chain them; **positive power must move toward bigger positions**):
@@ -112,23 +112,24 @@ SpinMotor intake = SpinMotor.create(hardwareMap, "intake")
 A common pattern: "reverse wins, then on/off":
 
 ```java
+// every loop; reverseHeld and intakeOn are your own true/false values (e.g. from buttons)
 if (reverseHeld) intake.out();
 else if (intakeOn) intake.in();
 else intake.stop();
-intake.update();
+intake.update();   // only here does the motor actually get its power
 ```
 
 ## PositionServo
 
 ```java
 PositionServo claw = PositionServo.create(hardwareMap, "claw")
-        .position("OPEN", 0.20)
+        .position("OPEN", 0.20)           // raw servo positions, 0 to 1: find yours by testing
         .position("CLOSED", 0.75)
-        .travelTime(0.3);
+        .travelTime(0.3);                 // seconds for a full 0..1 move (measure it)
 
 PositionServo hood = PositionServo.create(hardwareMap, "hood")
         .degrees(0.10, 0, 0.90, 25);      // two measured points: raw 0.10 = 0 deg, raw 0.90 = 25 deg
-hood.setDegrees(18);
+hood.setDegrees(18);                      // moves the servo at once (servos do)
 ```
 
 ![How a servo's raw position maps to named positions and degrees](../images/servo-range.svg)
@@ -156,6 +157,7 @@ For a servo in **continuous rotation** mode (set the port as "Continuous Rotatio
 
 ```java
 SpinServo roller = SpinServo.create(hardwareMap, "roller").power(0.8);
+// hold X = spin forward at 0.8; let go = stop. roller::forward = "() -> roller.forward()"
 controls.bindHold(Pad.G2, Btn.X, roller::forward).bindRelease(Pad.G2, Btn.X, roller::stop);
 ```
 

@@ -27,12 +27,13 @@ It is saved on the Control Hub and stays until changed. Three ways:
 ## Using it in your code
 
 ```java
-// Numbers
+// Numbers: Profile.pick(value in PRACTICE, value in COMPETITION)
 c.powerLimit = Profile.pick(0.6, 1.0);                  // gentle in the shop, full at events
 double slowest = Profile.pick(0.25, 0.35);
 
 // Features
 boolean liveView = Profile.pick(true, false);          // camera preview only in practice
+// or ask directly which profile is on:
 if (Profile.current().isPractice()) { ...extra checks, logging... }
 ```
 

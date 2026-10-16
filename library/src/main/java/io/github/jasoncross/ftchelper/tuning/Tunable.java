@@ -23,34 +23,52 @@ import java.util.Locale;
  * <b>copy it into the code</b> as the new default, then reset the saved value: the code is the
  * record, the saved file is only for tuning.
  *
+ * <p>Saved values are kept in the robot's {@link SettingsFile}, under names that start with
+ * "tunable.". Tutorial 15 (docs/tutorials/15-telemetry-profiles-tuning.md) walks through it.
+ *
  * Docs: docs/guides/tuning.md
  */
 public final class Tunable {
+    // Every tunable made so far. "static": one shared list for the whole app, so the menu can
+    // find tunables made anywhere in the code.
     private static final List<Tunable> ALL = new ArrayList<>();
+    // Added in front of each name in the settings file, so tunables never clash with other settings.
     private static final String PREFIX = "tunable.";
 
+    // "final" fields are set once, when the tunable is made, and never change.
     private final String name;
+    // The value written in the code.
     private final double defaultValue;
+    // How much one D-pad press changes the value (always positive).
     private final double step;
+    // The allowed range. "Infinity" means no limit until range(...) is called.
     private double min = Double.NEGATIVE_INFINITY;
     private double max = Double.POSITIVE_INFINITY;
+    // The value in use right now.
     private double value;
 
+    // Private: make one with Tunable.number(...), so the same name never gives two tunables.
     private Tunable(String name, double defaultValue, double step) {
         this.name = name;
         this.defaultValue = defaultValue;
         this.step = Math.abs(step);
+        // Start from the saved value on the hub if there is one, otherwise the code value.
         this.value = SettingsFile.shared().getDouble(PREFIX + name, defaultValue);
     }
 
+    // "synchronized" (here and on the other static methods): only one piece of code at a time may
+    // use the shared list.
     /**
      * Makes a tunable number, or returns the existing one with this name.
+     * (If one with this name already exists, the default and step given here are not used.)
      *
      * @param name         "Group/Name", e.g. "Lift/kP"
      * @param defaultValue the value in the code
      * @param step         how much one D-pad press changes it
+     * @return the tunable
      */
     public static synchronized Tunable number(String name, double defaultValue, double step) {
+        // Already made (for example the OpMode was run before)? Hand back that one.
         for (Tunable t : ALL) if (t.name.equals(name)) return t;
         Tunable t = new Tunable(name, defaultValue, step);
         ALL.add(t);
@@ -59,6 +77,7 @@ public final class Tunable {
 
     /** Every tunable made so far, in the order they were made. */
     public static synchronized List<Tunable> all() {
+        // A read-only copy: the caller cannot change the real list, and it does not change under them.
         return Collections.unmodifiableList(new ArrayList<>(ALL));
     }
 
@@ -69,19 +88,30 @@ public final class Tunable {
         return n;
     }
 
-    /** Saves every tunable's value on the Control Hub. @return true if it worked */
+    /**
+     * Saves every tunable's value on the Control Hub.
+     *
+     * @return true if it worked
+     */
     public static synchronized boolean saveAll() {
         SettingsFile settings = SettingsFile.shared();
         for (Tunable t : ALL) {
+            // Only changed values are written. A value equal to the code is removed from the file,
+            // so a later change to the code default is not hidden by an old saved copy.
             if (t.isChanged()) settings.put(PREFIX + t.name, Double.toString(t.value));
             else settings.remove(PREFIX + t.name);
         }
         return settings.save();
     }
 
-    /** Puts every tunable back to its code value and deletes the saved values. */
+    /**
+     * Puts every tunable back to its code value and deletes the saved values.
+     *
+     * @return true if the file was saved
+     */
     public static synchronized boolean resetAll() {
         for (Tunable t : ALL) t.value = t.defaultValue;
+        // Saving now removes every tunable from the file (none is "changed" any more).
         return saveAll();
     }
 
@@ -90,10 +120,19 @@ public final class Tunable {
         ALL.clear();
     }
 
-    /** Limits the value to a range (the menu will not go past it). */
+    /**
+     * Limits the value to a range (the menu will not go past it).
+     * Use it so tuning can never reach a dangerous number, for example a negative gain.
+     *
+     * @param min the smallest allowed value
+     * @param max the largest allowed value
+     * @return this tunable, so you can write {@code Tunable.number(...).range(0, 1)}
+     */
     public Tunable range(double min, double max) {
+        // Works even if min and max are typed the wrong way round.
         this.min = Math.min(min, max);
         this.max = Math.max(min, max);
+        // A saved value outside the new range is pulled back inside it.
         value = MathUtil.clamp(value, this.min, this.max);
         return this;
     }
@@ -103,7 +142,11 @@ public final class Tunable {
         return value;
     }
 
-    /** Sets the value (inside the range). Not saved until {@link #saveAll()}. */
+    /**
+     * Sets the value (inside the range). Not saved until {@link #saveAll()}.
+     *
+     * @param newValue the new value; outside the range it is pulled back to the nearest end
+     */
     public void set(double newValue) {
         value = MathUtil.clamp(newValue, min, max);
     }
@@ -125,21 +168,29 @@ public final class Tunable {
 
     /** True if the value is not the code value. */
     public boolean isChanged() {
+        // Compare with a tiny allowance (1e-12), because adding and taking away steps can leave
+        // a decimal number a hair off, like 0.30000000000000004 instead of 0.3.
         return Math.abs(value - defaultValue) > 1e-12;
     }
 
+    /** The full name, e.g. "Lift/kP". */
     public String name() { return name; }
+    /** The value written in the code. */
     public double defaultValue() { return defaultValue; }
+    /** How much one D-pad press changes the value. */
     public double step() { return step; }
 
     /** The group: the part of the name before the first "/" ("" if none). */
     public String group() {
+        // indexOf gives the position of the first "/", or -1 if there is none.
         int slash = name.indexOf('/');
         return slash < 0 ? "" : name.substring(0, slash);
     }
 
     /** The value as short text, e.g. "0.0040". */
     public String display() {
+        // Choose how many decimals to show from the step size: enough to see one step change,
+        // not so many that the screen fills with digits.
         double size = Math.abs(step == 0 ? value : step);
         int decimals = size >= 1 ? 1 : size >= 0.1 ? 2 : size >= 0.01 ? 3 : size >= 0.001 ? 4 : 6;
         return String.format(Locale.US, "%." + decimals + "f", value);

@@ -31,8 +31,9 @@ flowchart TB
 
 ```java
 private boolean intakeOn = true;          // the intake starts ON
-private boolean reversing = false;
+private boolean reversing = false;        // true while the left bumper is held
 ...
+// The buttons only change the two switches. "!" = not, so RB flips intakeOn.
 .bindPress(Pad.G1, Btn.RB, () -> intakeOn = !intakeOn)
 .bindPress(Pad.G1, Btn.LB, () -> reversing = true)
 .bindRelease(Pad.G1, Btn.LB, () -> reversing = false)
@@ -41,7 +42,7 @@ private boolean reversing = false;
 if (reversing) intake.out();       // reverse wins
 else if (intakeOn) intake.in();
 else intake.stop();
-intake.update();
+intake.update();                   // the motor gets its power here
 ```
 
 **Why switches instead of calling `intake.in()` from the buttons directly?** Because then the rules
@@ -57,12 +58,13 @@ runs during INIT (motors must not move before START).
 ## How slow mode works
 
 ```java
+// bindToggle(pad, button, code when it turns ON, code when it turns OFF)
 .bindToggle(Pad.G1, Btn.Y,
         () -> { slowMode = true;  confirm.play(true); },
         () -> { slowMode = false; confirm.play(false); })
 ...
-double speed = slowMode ? SLOW_SPEED : 1.0;
-drive.drive(forward, strafe, turn, speed);
+double speed = slowMode ? SLOW_SPEED : 1.0;   // "a ? b : c" = if a then b, else c
+drive.drive(forward, strafe, turn, speed);    // every wheel power times speed
 ```
 
 A toggle is invisible, so `ToggleRumble` buzzes: two = on, one = off. `SLOW_SPEED` (0.35) is a

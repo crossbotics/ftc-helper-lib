@@ -10,7 +10,8 @@ import io.github.jasoncross.ftchelper.util.MathUtil;
  *
  * <p>It adds three things to a normal motor:
  * <ul>
- *   <li><b>Soft limits:</b> software stops at a lowest and highest encoder position.</li>
+ *   <li><b>Soft limits:</b> software stops at a lowest and highest encoder position.
+ *       (The encoder is a sensor on the motor that counts how far it has turned, in "ticks".)</li>
  *   <li><b>Limit switches</b> (optional): a pressed switch always stops power toward it.
  *       Pressing the lower switch also sets the position to 0 ("homing"), which fixes
  *       encoder drift.</li>
@@ -37,22 +38,35 @@ import io.github.jasoncross.ftchelper.util.MathUtil;
  *
  * <p>Soft limits are software. FTC rules also need a HARD stop (a physical block) at the
  * end of travel. Use both. See docs/modules/safety.md.
+ * Tutorial 08 ("A lift that cannot hurt itself") builds a lift with it step by step.
+ * {@code PositionMotor} (docs/modules/mechanism.md) wraps a SafeMotor with PID and named positions.
+ *
+ * <p>The setters return {@code this} (the same SafeMotor), so you can chain them in one line:
+ * {@code new SafeMotor(m).setLimits(0, 2900).setSlowZone(200, 0.25)}.
  */
 public class SafeMotor {
     private final DcMotorEx motor;
+    // ---- Settings (see the setters) ----
+    // The safe range, in ticks. Infinity at both ends means "no limits" until setLimits() is called.
     private double min = Double.NEGATIVE_INFINITY;
     private double max = Double.POSITIVE_INFINITY;
     private double slowZone = 0;
     private double slowZonePower = 0.25;
     private double maxPower = 1.0;
+    // How to read each switch; null = no switch.
     private BooleanSupplier lowerSwitch = null;
     private BooleanSupplier upperSwitch = null;
 
+    // ---- What it remembers between loops ----
+    // The raw encoder count at the home position. getPosition() subtracts it, so home reads 0.
     private int zeroOffset = 0;
+    // The lower switch's state last loop, to notice the moment it gets pressed.
     private boolean lowerWasPressed = false;
     private boolean homed = false;
+    // The last power asked for (before limits) and the last one really sent (after limits).
     private double lastRequested = 0;
     private double lastApplied = 0;
+    // False until the first power is sent, so the very first value is always sent.
     private boolean sentOnce = false;
     private boolean requireHoming = true;
     private double homingPower = 0.3;
@@ -67,8 +81,10 @@ public class SafeMotor {
      *
      * @param min lowest allowed position, usually 0
      * @param max highest allowed position
+     * @return this SafeMotor, so you can chain more setters
      */
     public SafeMotor setLimits(double min, double max) {
+        // Accept the two numbers in either order: the smaller one is always the lower limit.
         this.min = Math.min(min, max);
         this.max = Math.max(min, max);
         return this;
@@ -79,6 +95,7 @@ public class SafeMotor {
      *
      * @param distance      ticks from a limit where slowing starts, e.g. 200
      * @param powerAtLimit  largest power right at the limit, 0 to 1, e.g. 0.25
+     * @return this SafeMotor, so you can chain more setters
      */
     public SafeMotor setSlowZone(double distance, double powerAtLimit) {
         this.slowZone = Math.abs(distance);
@@ -95,6 +112,8 @@ public class SafeMotor {
     /**
      * Adds a lower limit switch. Give a way to read it, for example {@code touchSensor::isPressed}
      * or {@code () -> !digitalChannel.getState()} for a REV magnetic switch (it reads false when triggered).
+     * ({@code touchSensor::isPressed} means "call touchSensor.isPressed() each time we ask";
+     * {@code () -> ...} is a small piece of code we keep and run each time we ask.)
      */
     public SafeMotor setLowerSwitch(BooleanSupplier isPressed) {
         this.lowerSwitch = isPressed;
@@ -129,9 +148,13 @@ public class SafeMotor {
     /**
      * Call once per loop, BEFORE {@link #setPower} or {@link #moveTo}. Reads the switches.
      * When the lower switch is first pressed, the position becomes 0 (homed).
+     * It never waits: it reads, maybe corrects the power, and returns.
      */
     public void update() {
         boolean lowerPressed = isAtLowerSwitch();
+        // Home only at the moment the switch goes from "not pressed" to "pressed", not on every
+        // loop while it stays pressed. That one moment is the true bottom; the encoder count
+        // there becomes the new 0, wiping out any drift (a slipping belt, a skipped gear tooth).
         if (lowerPressed && !lowerWasPressed) {
             zeroHere();
         }
@@ -154,18 +177,21 @@ public class SafeMotor {
     /**
      * Moves toward a target position with a PID controller. Call every loop.
      * The limits still apply, and the target is kept inside them.
+     * (PID works out a power from how far away the target is. Tutorial 07 explains it.)
      *
      * @param target target position, ticks
      * @param pid    the controller (keep one per mechanism, do not make a new one each loop)
      * @return the power really sent
      */
     public double moveTo(double target, PidController pid) {
+        // A target outside the safe range is moved to the nearest limit, so PID never aims past it.
         double safeTarget = MathUtil.clamp(target, min, max);
         return setPower(pid.calculate(safeTarget, getPosition()));
     }
 
     /** Stops the motor. */
     public void stop() {
+        // Forget the last request too, so update() does not start the motor again.
         lastRequested = 0;
         lastApplied = 0;
         motor.setPower(0);
@@ -178,6 +204,8 @@ public class SafeMotor {
 
     /** Makes the current position 0. Use it to home by hand (for example when there is no switch). */
     public void zeroHere() {
+        // We do not reset the motor's own encoder (that would stop the motor for a moment);
+        // we just remember today's count and subtract it from now on.
         zeroOffset = motor.getCurrentPosition();
         homed = true;
     }
@@ -212,11 +240,15 @@ public class SafeMotor {
         return lastApplied;
     }
 
-    /** The motor inside, for anything this class does not cover. */
+    /**
+     * The motor inside, for anything this class does not cover.
+     * Careful: power sent straight to this motor skips all the limits.
+     */
     public DcMotorEx getMotor() {
         return motor;
     }
 
+    // No switch set (null) counts as "not pressed".
     private boolean isAtLowerSwitch() {
         return lowerSwitch != null && lowerSwitch.getAsBoolean();
     }
@@ -225,15 +257,20 @@ public class SafeMotor {
         return upperSwitch != null && upperSwitch.getAsBoolean();
     }
 
+    // The one place where power reaches the motor. Every safety rule is applied here, in order.
     private double apply(double power) {
         double limited;
         if (isWaitingForHoming()) {
             // Zero is not known yet: only go down, slowly, until the lower switch is pressed.
+            // ("a ? b : c" = "if a then b, else c". Math.max with a negative number keeps the
+            // power from going below -homingPower, so it can never go down faster than that.)
             limited = (power < 0 && !isAtLowerSwitch()) ? Math.max(power, -homingPower) : 0;
         } else {
+            // Homed (or no switch): soft limits, switches and slow zone. See SoftLimits.java.
             limited = SoftLimits.limit(power, getPosition(), min, max, slowZone, slowZonePower,
                     isAtLowerSwitch(), isAtUpperSwitch());
         }
+        // Last, never more than the overall power cap.
         limited = MathUtil.clamp(limited, -maxPower, maxPower);
         // Only send when it changes: each send to the hub takes time.
         if (limited != lastApplied || !sentOnce) motor.setPower(limited);

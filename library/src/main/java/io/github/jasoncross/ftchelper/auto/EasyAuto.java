@@ -30,6 +30,10 @@ import io.github.jasoncross.ftchelper.util.FieldPose;
  *       and shows what happened to each step.</li>
  * </ol>
  *
+ * <p>{@code abstract} means this class is not finished on its own: your class "extends EasyAuto"
+ * and fills in the {@code abstract} methods below (marked "you fill these in"). The methods marked
+ * "optional" already have a body; write your own version only if you need something different.
+ *
  * <pre>{@code
  * @Autonomous(name = "Basket Side", preselectTeleOp = "Main TeleOp")
  * public class BasketSide extends EasyAuto {
@@ -51,7 +55,7 @@ import io.github.jasoncross.ftchelper.util.FieldPose;
  * }
  * }</pre>
  *
- * Docs: docs/guides/easy-autos.md
+ * Docs: docs/guides/easy-autos.md (Tutorial 16, docs/tutorials/16-easy-autos.md, builds one step by step)
  */
 public abstract class EasyAuto extends LinearOpMode {
 
@@ -60,6 +64,7 @@ public abstract class EasyAuto extends LinearOpMode {
     private AutoDrive autoDrive;
 
     // ----------------------------- you fill these in -----------------------------
+    // ("protected": only your OpMode class, which extends this one, can see and fill these in.)
 
     /** The drivetrain settings (use the same as TeleOp, e.g. {@code RobotSettings.drive()}). */
     protected abstract DriveConfig driveConfig();
@@ -126,22 +131,37 @@ public abstract class EasyAuto extends LinearOpMode {
 
     // ----------------------------- the program -----------------------------
 
+    /**
+     * The whole autonomous, from INIT to the end. The FTC SDK calls this when you press INIT.
+     * {@code final}: your class cannot replace it, so the safety steps here always run.
+     */
     @Override
     public final void runOpMode() {
+        // ---- Setup (INIT) ----
         RobotTelemetry t = new RobotTelemetry(telemetry);
+        // Bulk reads: each hub answers with all its motor readings in one message instead of one at a
+        // time, which makes every loop faster. See hardware/BulkReads.java.
         BulkReads.auto(hardwareMap);
         IMU imu = createImu();
         autoDrive = new AutoDrive(this, driveConfig(), autoDriveConfig(), imu);
         Subsystems robot = createSubsystems();
+        // Remember the profile (PRACTICE / COMPETITION) now, to notice if the drivers change it in the menu.
         Profile profileAtInit = Profile.current();
+        // try/finally: the "finally" part runs however the "try" part ends: finished, stopped,
+        // or crashed with an error. So the robot is always stopped at the end.
         try {
             runAfterSetup(t, imu, robot, profileAtInit);
         } finally {
             // Stop EVERYTHING, each part on its own, even if one of them throws.
+            // Each part gets its own try/catch: if stopping the mechanisms throws an error, we still
+            // stop the wheels. We keep the FIRST error and throw it at the very end, so it is not lost.
             RuntimeException first = null;
             try { robot.stop(); } catch (RuntimeException e) { first = e; }
             try { if (autoDrive != null) autoDrive.stop(); } catch (RuntimeException e) { if (first == null) first = e; }
             try {
+                // Hand the alliance and the final heading to TeleOp (see match/MatchMemory.java),
+                // so ONE TeleOp works for both alliances and knows which way the robot ended up facing.
+                // Only if the menu exists, because alliance() reads it.
                 if (menu != null && autoDrive != null) {
                     MatchMemory.remember(alliance(), new FieldPose(0, 0, autoDrive.headingDeg()));
                 }
@@ -150,30 +170,43 @@ public abstract class EasyAuto extends LinearOpMode {
         }
     }
 
+    // Everything after the drive, IMU and mechanisms are made: the INIT menu, the steps, the report.
     private void runAfterSetup(RobotTelemetry t, IMU imu, Subsystems robot, Profile profileAtInit) {
 
+        // ---- The INIT menu: alliance, start delay, your own choices, and the profile last ----
         menu = new InitMenu(gamepad1).alliance().delay(maxStartDelaySec());
         addChoices(menu);
         menu.profile();
 
+        // ---- INIT loop: runs until START (or STOP) is pressed. It never waits: one quick pass per loop. ----
         while (opModeInInit()) {
+            // read the gamepad and move through the menu
             menu.update();
+            // Warnings that stay on top of the screen, so nobody plays a real match by mistake with
+            // the practice settings or with test values changed in the tuning menu.
             if (Profile.current().isPractice()) t.warn("PRACTICE profile (change to COMPETITION at events)");
             int changed = Tunable.countChanged();
             if (changed > 0) t.warn(changed + " tuned value(s) differ from the code");
+            // tell the drive team where to put the robot
             String where = startPosition();
             if (where != null) t.line("Place robot", where);
             menu.addTelemetry(t);
             t.update();
         }
+        // STOP was pressed during INIT: do nothing (the "finally" in runOpMode still stops everything).
         if (isStopRequested()) return;
         if (Profile.current() != profileAtInit) {
             // The profile changed in INIT: rebuild the drive so profile-dependent values (power limit) apply.
+            // (The drive read its settings when it was made, before the menu, so it still has the old ones.)
             autoDrive = new AutoDrive(this, driveConfig(), autoDriveConfig(), imu);
         }
 
+        // ---- START: the match clock begins now ----
         MatchTimer timer = MatchTimer.autonomous();
         timer.start();
+        // Build the routine with everything chosen in INIT. Each ".something(...)" sets one thing and
+        // hands the routine back, so the settings can be chained like this.
+        // "a ? b : c" means "if a then b, otherwise c": mirror for the chosen alliance, or not at all.
         routine = new AutoRoutine(this)
                 .drive(autoDrive)
                 .subsystems(robot)
@@ -181,15 +214,21 @@ public abstract class EasyAuto extends LinearOpMode {
                 .timer(timer)
                 .mirrorFor(mirrorForRed() ? alliance() : null)
                 .reserveForPark(parkReserveSec());
+        // The start delay is the first step, so the mechanisms keep updating while we wait.
         if (menu.getDelaySec() > 0) routine.waitFor("Start delay", menu.getDelaySec());
+        // Your steps, added after the menu so they can use the alliance and choices.
         buildRoutine(routine);
+        // Run every step. BLOCKS (on purpose) until all steps are done or the OpMode stops.
         routine.runAll();
+        // Done: stop the mechanisms and wheels now (not only at the very end), so nothing keeps moving.
         robot.stop();
         autoDrive.stop();
+        // ---- The report: show what happened to each step until the OpMode ends ----
         while (opModeIsActive()) {
             t.section("Autonomous finished");
             for (String line : routine.getReport()) t.text(line);
             t.update();
+            // give the phone a moment for its own work
             idle();
         }
     }

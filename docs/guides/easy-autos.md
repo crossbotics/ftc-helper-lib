@@ -25,9 +25,10 @@ flowchart TB
 ## The smallest autonomous
 
 ```java
+// preselectTeleOp: after this auto, the Driver Station gets "Main TeleOp" ready
 @Autonomous(name = "Park Only", preselectTeleOp = "Main TeleOp")
 public class ParkOnly extends StarterAuto {           // StarterAuto = the robot setup (starter kit)
-    @Override
+    @Override                                         // fills in the method EasyAuto asks for
     protected void buildRoutine(AutoRoutine r) {
         r.move("Park", 24, 90, 0.6);                  // 24 in to the right (left on RED)
     }
@@ -72,9 +73,11 @@ r.step("Lift starts up", lift.startStep("HIGH"))      // does not wait
 
 ```java
 @Override protected void addChoices(InitMenu menu) {
+    // "Near" is the default (first); the YES/NO line starts at YES
     menu.choice("Route", "Near", "Far").yesNo("Score", true);
 }
 @Override protected void buildRoutine(AutoRoutine r) {
+    // the drivers' choices are known here; equals() compares two pieces of text
     if (choice("Score").equals("YES")) { ... }
     if (choice("Route").equals("Far")) r.move("Long way", 48, 0, 0.7);
 }
@@ -96,7 +99,7 @@ route works for both alliances: add `@Override protected boolean mirrorForRed() 
 ## Time for parking
 
 ```java
-@Override protected double parkReserveSec() { return 4; }
+@Override protected double parkReserveSec() { return 4; }   // seconds kept for parking
 ...
 r.move(...).move(...)          // main steps: cut short when 4 s are left
  .thenPark()

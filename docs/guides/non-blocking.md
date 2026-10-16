@@ -36,15 +36,16 @@ claw.goTo("OPEN");
 sleep(300);
 claw.goTo("CLOSED");
 
-// RIGHT: a tiny state machine
-private double closeAt = -1;
+// RIGHT: a tiny state machine (it remembers WHEN to act, and checks every loop)
+private double closeAt = -1;   // seconds; -1 = nothing planned
 ...
+// getRuntime() = seconds since the OpMode started: close 0.3 s from now
 .bindPress(Pad.G2, Btn.A, () -> { claw.goTo("OPEN"); closeAt = getRuntime() + 0.3; })
 ...
 // every loop:
 if (closeAt > 0 && getRuntime() >= closeAt) {
     claw.goTo("CLOSED");
-    closeAt = -1;
+    closeAt = -1;              // done: nothing planned any more
 }
 ```
 
@@ -76,6 +77,7 @@ The library watches for blocking code and tells you on the Driver Station:
 Show the button warning in your TeleOp:
 
 ```java
+// "" means all good; anything else is a warning text to show
 if (!controls.getSlowActionWarning().isEmpty()) t.warn(controls.getSlowActionWarning());
 ```
 
@@ -87,7 +89,7 @@ Some hardware requests must wait for an answer (a network request to the Limelig
 runs those on a `BackgroundWorker` thread, so your loop goes on. If you ever add such a request:
 
 ```java
-BackgroundWorker worker = new BackgroundWorker("my-sensor");
+BackgroundWorker worker = new BackgroundWorker("my-sensor");   // its own thread (a 2nd worker)
 worker.submitLatest("setting", () -> sensor.slowSetting(value));   // returns at once
 ...
 worker.shutdown();      // in stop()

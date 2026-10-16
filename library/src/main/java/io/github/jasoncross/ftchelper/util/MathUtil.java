@@ -7,6 +7,8 @@ package io.github.jasoncross.ftchelper.util;
  * any number of times. Docs: docs/modules/util.md
  */
 public final class MathUtil {
+    // "final" class + private constructor: a box of "static" helpers you call on the class name
+    // (MathUtil.clamp(...)), never an object you make with "new".
     private MathUtil() { }
 
     /**
@@ -21,12 +23,17 @@ public final class MathUtil {
      *         Returns {@code 0} if value is NaN (not a number), so a bad reading never reaches a motor.
      */
     public static double clamp(double value, double min, double max) {
+        // Safety: NaN would pass straight through Math.max/Math.min, so turn it into 0 (stop).
         if (Double.isNaN(value)) return 0;
+        // If min and max were typed the wrong way round, swap them instead of giving nonsense.
         if (min > max) { double t = min; min = max; max = t; }
         return Math.max(min, Math.min(max, value));
     }
 
-    /** Same as {@link #clamp(double, double, double)} for whole numbers (for example encoder ticks). */
+    /**
+     * Same as {@link #clamp(double, double, double)} for whole numbers (for example encoder ticks).
+     * (Whole numbers cannot be NaN, so there is no NaN check here.)
+     */
     public static int clamp(int value, int min, int max) {
         if (min > max) { int t = min; min = max; max = t; }
         return Math.max(min, Math.min(max, value));
@@ -43,6 +50,7 @@ public final class MathUtil {
      * @return 0 inside the band, else the value unchanged
      */
     public static double deadband(double value, double band) {
+        // "a ? b : c" is a short if/else: if the value is inside the band give 0, else the value.
         return Math.abs(value) < Math.abs(band) ? 0 : value;
     }
 
@@ -58,9 +66,13 @@ public final class MathUtil {
      */
     public static double deadbandScaled(double value, double band) {
         band = Math.abs(band);
+        // A band of 1 or more covers the whole stick, so everything is dead (and we must not
+        // divide by 1 - band = 0 below).
         if (band >= 1) return 0;
         double size = Math.abs(value);
         if (size < band) return 0;
+        // Stretch what is left (band..1) back to 0..1, then put the sign back.
+        // Math.min(1, ...) keeps a value above 1 from giving more than full power.
         return Math.signum(value) * Math.min(1, (size - band) / (1 - band));
     }
 
@@ -72,6 +84,7 @@ public final class MathUtil {
      * @param a the result when t is 0
      * @param b the result when t is 1
      * @param t how far to go, usually 0 to 1 (not limited)
+     * @return the number that far along, from a toward b
      */
     public static double lerp(double a, double b, double t) {
         return a + (b - a) * t;
@@ -85,6 +98,7 @@ public final class MathUtil {
      * @param a         first number
      * @param b         second number
      * @param tolerance the largest allowed difference
+     * @return true if a and b differ by no more than the tolerance
      */
     public static boolean isNear(double a, double b, double tolerance) {
         return Math.abs(a - b) <= Math.abs(tolerance);
@@ -94,6 +108,10 @@ public final class MathUtil {
      * Scales a group of numbers down together so that none is bigger than {@code limit}.
      * The ratios between them stay the same. Used for wheel powers.
      *
+     * <p>Why keep the ratios? If one wheel asks for 2 and the others for 1, just cutting the 2 down
+     * to 1 would make the wheels equal and the robot would drive the wrong way. Scaling them all
+     * keeps the direction right.
+     *
      * <p>Example: {@code normalize([2, 1, -1, 0], 1)} gives {@code [1, 0.5, -0.5, 0]}.
      *
      * @param values the numbers (changed in place and also returned)
@@ -101,9 +119,11 @@ public final class MathUtil {
      * @return the same array, scaled
      */
     public static double[] normalize(double[] values, double limit) {
+        // Find the biggest size (ignoring the sign).
         double largest = 0;
         for (double v : values) largest = Math.max(largest, Math.abs(v));
         limit = Math.abs(limit);
+        // Only scale DOWN, never up: small powers stay small. (largest > 0 avoids dividing by 0.)
         if (largest > limit && largest > 0) {
             for (int i = 0; i < values.length; i++) values[i] = values[i] * limit / largest;
         }

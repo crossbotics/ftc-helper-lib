@@ -24,7 +24,9 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
 
 Every change follows the six steps in `docs/contributing.md`. A change is NOT done until all are done:
 
-1. Code. 2. Javadoc on every public class/method (what, parameters with units and ranges, returns, a short example).
+1. Code, **commented for novice programmers** per `docs/commenting-style.md` (plain everyday words, the WHY,
+   pointers to the docs that explain more; examples and tutorial programs get the most comments).
+2. Javadoc on every public class/method (what, parameters with units and ranges, returns, a short example).
 3. Tests (pretend hardware and an injected clock; simulations for anything that moves).
 4. The module page in `docs/modules/` (method tables + an example). New package = new page + README table row.
 5. Tutorials, guides, diagrams: every tutorial page AND its compiled program that use the changed API;

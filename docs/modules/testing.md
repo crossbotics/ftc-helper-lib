@@ -11,6 +11,7 @@ each one. Make this tiny file in TeamCode:
 
 ```java
 @TeleOp(name = "Hardware Check", group = "Test")
+// "extends": it IS the library's hardware check; the empty { } adds nothing of our own
 public class HardwareCheck extends HardwareCheckOpMode { }
 ```
 
