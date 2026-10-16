@@ -291,6 +291,10 @@ public class Launcher implements Subsystem {
     public String getLastProblem() { return lastProblem; }
     /** The flywheel inside. */
     public Flywheel getFlywheel() { return flywheel; }
+    /** The hood servo, or null if there is none. */
+    public PositionServo getHood() { return hood; }
+    /** True if a shot table was given ({@link #setDistance} works). */
+    public boolean hasTable() { return table != null; }
 
     // ---------------------------------------------------------------------------------------
     // Autonomous steps

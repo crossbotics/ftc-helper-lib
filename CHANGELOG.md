@@ -4,6 +4,26 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+## v0.7.0 - 2026-10-16
+
+### Added
+
+- **Finders** (new package `finders`): ready-made OpModes that measure the numbers your code needs
+  and show the code lines to copy (also saved in `/sdcard/FIRST/ftc-helper/finder-results.txt`):
+  `ServoFinderOpMode` (servo ends and positions), `MotorFinderOpMode` (limits, positions, top speed),
+  `FlywheelFinderOpMode` (top speed, speed-control gains, recovery time), `DriveTunerOpMode` (wheel
+  size by push and drive tests, strafe correction), `ShotTunerOpMode` (builds the shot table: speed,
+  hood, distance from the camera, single or continuous shots), `AimTunerOpMode` (camera offset).
+  Shared parts: `FinderOpMode`, `FinderResults`, `FinderMath`, `Chooser`, `ShotPoints`.
+- `Turret.cameraOffset(deg)`; `Launcher.getHood()`, `Launcher.hasTable()`.
+- Starter kit: `ServoFinder`, `MotorFinder`, `FlywheelFinder`, `DriveTuner`. Examples:
+  `ExampleShotTuner`, `ExampleAimTuner`. Tutorial 21 and the [finders guide](docs/guides/finders.md).
+
+### Changed
+
+- `AimController.offset` docs: it is where the target sits in the camera's view when the launcher is
+  aimed (left = +). The code is unchanged.
+
 ## v0.6.0 - 2026-10-15
 
 ### Added

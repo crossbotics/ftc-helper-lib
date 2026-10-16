@@ -14,6 +14,7 @@ names and numbers, and you have a working robot.
 | 4 | `StarterAuto.java` | what every autonomous shares | nothing |
 | 5 | `AutoScoreAndPark.java` | one autonomous (copy for more) | the steps |
 | 6 | `HardwareCheck.java` | tests every device | nothing |
+| + | `ServoFinder.java`, `MotorFinder.java`, `FlywheelFinder.java`, `DriveTuner.java` | [finders](guides/finders.md): measure servo ends, lift limits, flywheel gains, wheel size, and show the code to copy | nothing |
 
 ```mermaid
 flowchart LR
@@ -29,20 +30,21 @@ flowchart LR
 ## Steps
 
 1. **Add the library** to the robot project: [Add it to a project](01-add-to-project.md).
-2. **Copy the 6 files** into `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/` and change the
+2. **Copy the 6 files (and the 4 finder files)** into `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/` and change the
    first line of each to `package org.firstinspires.ftc.teamcode;`. Delete each `@Disabled` line.
 3. **Configure the robot** on the Driver Station with the names in `RobotSettings` and `Robot`
    (or change the names in the code to match yours).
 4. **Hardware Check** (robot on a block): every device listed, every motor turns the right way.
    Fix directions in `RobotSettings` / `Robot`. Write down servo positions.
-5. **`Robot.java`**: delete mechanisms you do not have, set positions and limits. Each mechanism
-   type is explained in [mechanism.md](modules/mechanism.md).
+5. **`Robot.java`**: delete mechanisms you do not have. Find each servo's and lift's limits and
+   positions with the **Servo Finder** and **Motor Finder** ([finders](guides/finders.md)) and copy
+   the lines they show. Each mechanism type is explained in [mechanism.md](modules/mechanism.md).
 6. **Main TeleOp**: drive at the PRACTICE profile's gentle power. It starts robot-centric; Y turns
    field-centric on. Check every button on the list at the top of the file. Print that list for the
    drive team.
 7. **Tune** the lift with the tuning menu (GUIDE button, PRACTICE profile), copy the numbers into
    `Robot.java` ([tuning guide](guides/tuning.md)).
-8. **Autonomous**: tune the drivetrain (tutorial 09's Drive Tuner), set `calibrationConfirmed = true`,
+8. **Autonomous**: tune the drivetrain with the **Drive Tuner** finder, set `calibrationConfirmed = true`,
    then change `AutoScoreAndPark`'s steps for your game ([easy autos](guides/easy-autos.md)).
 9. **Before the event**: Profile COMPETITION, [testing checklist](guides/testing.md).
 

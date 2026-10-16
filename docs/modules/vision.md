@@ -114,7 +114,7 @@ AimController aim = new AimController(0.02, 0.003)   // kP and kD, on the bearin
         .deadband(1.5)      // close enough
         .maxPower(0.5)      // never turn harder than this while aiming
         .maxAgeMs(150)      // ignore pictures older than 150 ms (they point the wrong way)
-        .offset(0);         // aim to the side of the target (camera not centered on the shooter)
+        .offset(0);         // where the target sits in view when the launcher is aimed (left = +); Aim Tuner finds it
 // camera.target(20) = tag 20, or null if not seen now; turnPower(null) gives 0 (no turn)
 drive.drive(forward, strafe, aim.turnPower(camera.target(20)));   // ready for any drive's turn
 ```

@@ -146,6 +146,7 @@ counterclockwise (else `.reversed()`).
 | `.homingPower(p)`, `.pid(...)`, `.tolerance(deg)`, `.maxPower(p)`, `.slowZone(deg, power)` | tuning. Before homing, manual power is kept to the homing power |
 | `.homingTimeout(s)` | homing stops with a fault if the switch is not found in time (default 5 s) |
 | `.maxTargetAgeMs(ms)` | how old a camera picture may be for `aimAtTarget` (default 150) |
+| `.cameraOffset(deg)` | where the target sits in the camera's view when the launcher points at it (left = +), for a camera not centered on the launcher. The [Aim Tuner](finders.md#aimtuneropmode) finds it. |
 | `aimAt(robotDeg)` | turn to a robot-relative angle, **the safe way round** |
 | `aimField(fieldDeg, headingDeg)` | point at a field direction; call every loop while the robot turns |
 | `aimBy(delta)` | turn by an amount |
@@ -184,6 +185,7 @@ Launcher launcher = new Launcher(flywheel, feeder)
 | `.readyTimeout(s)` | give up the remaining shots after this long not ready |
 | `.idleRpm(r)` | speed when not shooting (a low idle makes spin-up faster) |
 | `setRpm(r)` / `setDistance(d)` | the shot by hand / from the table (sets the hood too) |
+| `getHood()`, `hasTable()` | the hood servo (or null); true if a table was given |
 | `spinUp()`, `shoot(n)`, `stopShooting()` | commands |
 | `idle()` | back to the idle speed |
 | `stop()` | fully OFF, even the idle speed, until `spinUp()`, `shoot()` or `idle()` |

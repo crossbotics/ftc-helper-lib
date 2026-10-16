@@ -124,4 +124,5 @@ The lift and claw already show their own lines, and the time and drive mode are 
 
 ## Next
 
-The [starter kit](../starter-kit.md) puts tutorials 16 and 20 together into a whole robot program.
+[Tutorial 21: Find your numbers](21-finders.md). The [starter kit](../starter-kit.md) puts tutorials
+16 and 20 together into a whole robot program.

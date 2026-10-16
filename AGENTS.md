@@ -11,7 +11,7 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
 
 ## Layout
 
-- `library/` the library (packages: hardware, gamepad, drive, mechanism, launcher, vision, teleop, auto,
+- `library/` the library (packages: hardware, gamepad, drive, mechanism, launcher, vision, teleop, auto, finders,
   match, control, telemetry, tuning, safety, core, testing, util). Tests in `library/src/test`
   (pretend motors/servos/telemetry in `FakeMotor.java`, `Fakes.java`).
 - `examples/` compiled example OpModes: `ExampleXxx`, the starter kit (`starter/`), and one program per

@@ -52,6 +52,9 @@ and the highest angle, and measure those angles (a phone level app works).
 
 ## 4. Fill the shot table
 
+Measure these numbers with the **Shot Tuner** and the flywheel gains with the **Flywheel Finder**
+([tutorial 21](21-finders.md)): it shows the `new ShotTable()` lines to copy.
+
 ```java
 ShotTable table = new ShotTable()
         .add(24, 2600, 6)

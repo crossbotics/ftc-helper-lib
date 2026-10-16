@@ -15,6 +15,10 @@ flowchart LR
     E --> F["Y = reset all<br/>(saved values deleted)"]
 ```
 
+To FIND a number the first time (servo ends, lift limits, flywheel gains, wheel size, shot table),
+use the [finders](finders.md): they measure it and show the code line. This menu is for adjusting
+numbers you already have.
+
 Steps 5 and 6 matter: **the code is the record.** A value saved only on the hub is lost with a new
 Control Hub, invisible to teammates, and easy to forget at an event (the INIT screen warns you).
 

@@ -111,7 +111,8 @@ shot from the table (tutorial 17); check `target.hasDistance()` first.
 
 1. Aim at the nearest tag: pick the observation with the smallest `distanceIn`.
 2. Show "LOCKED" in big letters at the top when `aim.isAimed()`.
-3. Add `offset(...)` when the camera is not centered on the shooter.
+3. Add `offset(...)` when the camera is not centered on the shooter. The **Aim Tuner**
+   ([tutorial 21](21-finders.md)) finds the number.
 
 ## Next
 

@@ -105,4 +105,14 @@ public class VisionTest {
         assertEquals(1, kept.size());
         assertEquals(2, kept.get(0).id);
     }
+
+    @Test public void aimOffsetIsWhereTheTargetSitsWhenAimed() {
+        long[] now = {1_000_000_000L};
+        AimController aim = new AimController(0.02, 0, () -> now[0]).deadband(0.5).offset(5);
+        // The target 5 deg left of the camera's center = aimed (the launcher points at it).
+        assertEquals(0, aim.turnPower(new TargetObservation(20, "t", 5, 40, now[0])), E);
+        assertTrue(aim.isAimed());
+        // Centered in the camera = the launcher points left of it: turn RIGHT (clockwise = positive).
+        assertTrue(aim.turnPower(new TargetObservation(20, "t", 0, 40, now[0] + 1)) > 0);
+    }
 }

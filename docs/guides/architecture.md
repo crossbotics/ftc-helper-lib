@@ -17,6 +17,7 @@ flowchart TB
         A["teleop + auto: EasyTeleOp, EasyAuto, AutoRoutine, AutoStep"]
         M["mechanism + launcher + vision<br/>PositionMotor, SpinMotor, servos, Flywheel, Turret, Launcher, cameras"]
         D["drive: MecanumDrive, TankDrive, DriverControls, DriverHeading, AutoDrive"]
+        FI["finders + testing: Servo/Motor/Flywheel finders, Drive/Shot/Aim tuners, Hardware Check"]
         G["gamepad + match + tuning + telemetry<br/>ControllerBindings, InitMenu, MatchTimer, Tunable, RobotTelemetry"]
         C["core + control + safety + hardware + util<br/>Subsystem, Profile, RobotConfig, PidController, SafeMotor, MotorSetup, MathUtil"]
     end

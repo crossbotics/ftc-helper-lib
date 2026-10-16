@@ -338,4 +338,14 @@ public class LauncherTest {
         assertTrue(l.getLastProblem().startsWith("no shot speed"));
         assertFalse(l.isShooting());
     }
+
+    @Test public void turretCameraOffsetShiftsTheAim() {
+        FakeMotor m = new FakeMotor();
+        long[] now = {1_000_000_000L};
+        Turret turret = new Turret("turret", m.motor).withClock(() -> now[0]).countsPerDegree(10)
+                .limits(-190, 190).cameraOffset(4);
+        // Camera on the body: the target at bearing 10, offset 4 -> the turret goes to 6.
+        assertTrue(turret.aimAtTarget(new io.github.jasoncross.ftchelper.vision.TargetObservation(1, "t", 10, 40, now[0]), false));
+        assertEquals(6, turret.getTargetAngle(), E);
+    }
 }

@@ -81,8 +81,11 @@ public class AimController {
     }
 
     /**
-     * Aim this many degrees to the side of the target (positive = left), e.g. when the camera is not
-     * centered on the launcher.
+     * Where the target should sit in the camera's view when the LAUNCHER points straight at it, in
+     * degrees (positive = the target appears left of the camera's center). Use it when the camera is
+     * not centered on the launcher. Example: a camera mounted left of the launcher sees the target a
+     * little to its right when the launcher is aimed, so the offset is negative. Find it with the aim
+     * tuner (docs/modules/finders.md). Default 0.
      */
     public AimController offset(double deg) {
         offsetDeg = deg;

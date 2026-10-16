@@ -7,7 +7,8 @@
 a tape measure and tape. About an hour for tuning.
 
 **Full programs:** [`RobotSettings.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/tutorials/RobotSettings.java),
-[`Tut09DriveTuner.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/tutorials/Tut09DriveTuner.java),
+[`Tut09DriveTuner.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/tutorials/Tut09DriveTuner.java)
+(the library's **Drive Tuner** finder does the same with a push test and the numbers to copy: [tutorial 21](21-finders.md)),
 [`Tut09FirstAuto.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/tutorials/Tut09FirstAuto.java)
 **Reference:** [drive.md: AutoDrive](../modules/drive.md#autodrive)
 

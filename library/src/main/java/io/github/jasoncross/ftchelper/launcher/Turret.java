@@ -80,6 +80,8 @@ public class Turret implements Subsystem {
     // The time stamp of the last camera picture used, so the same picture is never used twice.
     // Long.MIN_VALUE = the smallest possible number: "none used yet".
     private long lastFrameUsed = Long.MIN_VALUE;
+    // Where the target sits in the camera's view when the launcher points at it (see cameraOffset).
+    private double cameraOffsetDeg = 0;
 
     private double targetDeg = Double.NaN;  // where it should point; NaN = no target (no power)
     private boolean outOfRange = false;
@@ -172,6 +174,16 @@ public class Turret implements Subsystem {
         return this;
     }
 
+    /**
+     * Where the target should sit in the camera's view when the LAUNCHER points straight at it, in
+     * degrees (positive = left of the camera's center), for a camera that is not centered on the
+     * launcher. Used by {@link #aimAtTarget}. Find it with the aim tuner. Default 0.
+     */
+    public Turret cameraOffset(double deg) {
+        cameraOffsetDeg = deg;
+        return this;
+    }
+
     /** {@link #aimAtTarget} ignores camera pictures older than this (milliseconds). Default 150. */
     public Turret maxTargetAgeMs(double ms) {
         maxAgeMs = Math.abs(ms);
@@ -254,8 +266,10 @@ public class Turret implements Subsystem {
         lastFrameUsed = target.timeNanos;
         // Camera on the turret: the bearing is measured from where the turret points, so turn BY it.
         // Camera on the body: the bearing is measured from the robot's front, so it IS the robot angle.
-        if (cameraOnTurret) aimBy(target.bearingDeg);
-        else aimAt(target.bearingDeg);
+        // The camera offset: the bearing the target has when the launcher is aimed.
+        double error = target.bearingDeg - cameraOffsetDeg;
+        if (cameraOnTurret) aimBy(error);
+        else aimAt(error);
         return true;
     }
 
