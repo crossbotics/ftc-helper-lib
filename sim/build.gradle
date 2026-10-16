@@ -1,0 +1,53 @@
+// The simulator: a pretend Control Hub and Driver Hub on a laptop. Only in the standalone build
+// (like examples/): robot projects never include it. Start it with:  ./gradlew :sim:run
+// then open http://localhost:8780 . Docs: docs/guides/simulator.md
+//
+// Why the code is in src/test: the FTC SDK only ships as Android libraries. The unit-test set-up of
+// an Android module already runs them on a laptop's Java, so the simulator runs there too.
+plugins {
+    id 'com.android.library'
+}
+
+def ftcSdkVersion = '12.0.0'
+
+android {
+    namespace 'io.github.jasoncross.ftchelper.sim'
+    compileSdk 30
+
+    defaultConfig {
+        minSdk 24
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    testOptions {
+        // Android calls the SDK makes (logging) do nothing on a laptop instead of failing.
+        unitTests.returnDefaultValues = true
+    }
+}
+
+dependencies {
+    testImplementation project(':library')
+    testImplementation project(':examples')
+    testImplementation "org.firstinspires.ftc:RobotCore:$ftcSdkVersion"
+    testImplementation "org.firstinspires.ftc:Hardware:$ftcSdkVersion"
+    testImplementation "org.firstinspires.ftc:FtcCommon:$ftcSdkVersion"
+    testImplementation "org.firstinspires.ftc:Vision:$ftcSdkVersion"
+    testImplementation 'junit:junit:4.13.2'
+}
+
+// ./gradlew :sim:run  [-Probot=path/to/robot.properties] [-Plan]  (-Plan: phones on the same WiFi can join)
+tasks.register('run', JavaExec) {
+    group = 'application'
+    description = 'Starts the simulator (open http://localhost:8780).'
+    def unitTest = tasks.named('testDebugUnitTest')
+    dependsOn 'compileDebugUnitTestJavaWithJavac', 'processDebugUnitTestJavaRes'
+    classpath = files({ unitTest.get().classpath })
+    mainClass = 'io.github.jasoncross.ftchelper.sim.SimMain'
+    workingDir = rootProject.projectDir
+    args = [project.findProperty('robot') ?: 'sim/robots/starter.properties'] + (project.hasProperty('lan') ? ['--lan'] : [])
+    standardInput = System.in
+}

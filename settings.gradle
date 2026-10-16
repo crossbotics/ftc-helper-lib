@@ -14,3 +14,4 @@ rootProject.name = 'ftc-helper-lib'
 
 include ':library'
 include ':examples'
+include ':sim'
