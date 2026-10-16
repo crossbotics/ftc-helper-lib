@@ -44,14 +44,16 @@ Lists every servo in the configuration. Nudge the chosen one and mark what you f
 | Button | Does |
 | --- | --- |
 | D-pad up/down (list) | choose a servo; **A** = use it |
+| D-pad, then **A** (first) | choose a START POINT near where the servo sits now (it does not move), then **A** moves it there |
 | D-pad right/left | +/- 0.01 (hold **RB**: 10 times finer) |
 | D-pad up/down | +/- 0.05 |
-| **X** / **B** | mark one END / the other END (where it just stops pushing on the frame) |
+| **X** / **B** | mark one END / the other END (where it just stops pushing on the frame). Then it stays between them (hold **LB** to go past, e.g. to mark again) |
 | **A** | save this as a position (P1, P2...; rename them in your code) |
 | **Y** | undo the last position |
 | **BACK** | choose another servo (its lines stay) |
 
-The servo does not move until the first nudge (a servo cannot report where it is). Output:
+A servo cannot report where it is, so nothing moves until you press A at the start point. A
+position saved outside the marked ends gets a note in its line. Output:
 
 ```java
 PositionServo.create(hardwareMap, "claw").limits(0.180, 0.770)
@@ -89,10 +91,14 @@ Lists every motor. Keep hands away; eye protection on.
 
 | Step | Button | Does |
 | --- | --- | --- |
-| 1 | hold **A** | full power (at most 5 s): measures the top speed, works out starting gains |
+| 1 | hold **A** | full power (at most 5 s): measures the top speed, works out starting gains. (The A press that chose the motor does not count: let go and press again.) |
 | 2 | **B** | hold a speed on/off (the library's `Flywheel`, with those gains) |
 | 2 | D-pad up/down, right/left | target +/- 100 / 25 RPM (starts at 60% of top speed) |
 | 2 | **RB** / **LB** | F gain +2% / -2% (F does most of the work: too slow everywhere = more F) |
+| 1, 2 | **X** | the wheel spins the wrong way: reverse it (adds `.reversed()`) |
+
+If the encoder counts BACKWARD at forward power, it warns (check the encoder cable and port) and step
+2 is not allowed: speed control with a backward encoder would run away.
 
 Feed a piece by hand in step 2: it shows the **recovery time** (shot -> ready again).
 The gains: F = 32767 / top speed (counts/s), P = F / 10, I = P / 10, D = 0 (a common starting
@@ -111,13 +117,15 @@ Needs `robotConfig()` (your `RobotSettings`). D-pad chooses a test, **A** starts
 
 | Test | You do | It finds |
 | --- | --- | --- |
-| Push | roll the robot BY HAND exactly 48 in along a tape, press **B** | the wheel size, from the counts |
+| Push | roll the robot BY HAND exactly 48 in along a tape, press **B** | the wheel size, from the counts. Every wheel must count up about the same; if not, it says so (a wrong motor direction or encoder cable) |
 | Drive | it drives 48 in; measure, set the real distance (D-pad +/- 1 / 0.25 in), **A** | a corrected wheel size |
 | Strafe (mecanum) | it drives 48 in right; measure, set it, **A** | a corrected strafe correction |
 | Turn | it turns 90 left; check with a square | (the IMU's heading, to compare) |
 
 The Drive, Strafe and Turn tests WAIT while the robot moves, like autonomous (STOP still works).
-Put the new numbers in `RobotSettings.auto()` and run Drive and Strafe again until they measure 48.
+A move that ends STALLED or TIMED_OUT is not measured: clear the path and run it again.
+Each new number is used at once inside the tuner (no rebuild): run Drive and Strafe again until
+they measure 48, then copy the lines into `RobotSettings.auto()`.
 `testDistanceIn()` changes the 48. Output:
 
 ```java
@@ -137,17 +145,19 @@ Builds the shot table. Fill in:
 | `robotConfig()` | no | drive with the sticks between distances |
 | `createSubsystems()` | no | other mechanisms to keep updated (an intake that loads it) |
 | `startRpm()` | no | the starting speed, default 3000 |
+| `startHoodDeg()` | no | the starting hood angle if the hood was never moved, default 0 |
 
 | Button | Does |
 | --- | --- |
 | **Y** | what the D-pad changes: SPEED, HOOD (with a hood), DISTANCE (no camera) |
 | D-pad up/down, right/left | big / small step (100 / 10 RPM, 5 / 0.5 deg, 6 / 1 in) |
-| **LB** | flywheel on/off (it spins up at START) |
-| **RB** / hold **RT** / **B** | shoot one / keep shooting / stop shooting |
+| **LB** | flywheel on/off (it is OFF at START) |
+| **RB** / hold **RT** / **B** | shoot one / keep shooting / stop shooting. Keep shooting stops after B, a jam or a "gave up": press RT again to go on |
 | **A** / **X** | save this point (replaces one within 1 in) / delete the point here |
 | sticks, left trigger | drive, slow (with `robotConfig()`) |
 
-The screen shows the target and measured speed, ready (or why not), shots fired, the recovery
+The speed stays at or below the flywheel's `maxRpm`, and the hood inside its limits (a warning shows
+when the D-pad reaches one), so a saved point is what was really tested. The screen shows the target and measured speed, ready (or why not), shots fired, the recovery
 time, the distance and bearing, and the saved points. Output:
 
 ```java
@@ -175,8 +185,13 @@ straight at it (degrees, left = +). Fill in:
 | --- | --- |
 | hold **A** | aim at the target |
 | D-pad right/left, up/down | aim 0.5 / 2 deg more right / left. **Shots go left of the middle? press RIGHT.** |
-| **RB** | shoot one |
+| **RB** / **LB** | shoot one / flywheel off |
+| **X** | home the turret (a turret with a home switch does not aim before it is homed; `homeDirection()`, default -1) |
 | sticks | drive when not aiming |
+
+A camera to the SIDE of the launcher needs a different offset at each distance (it sees the target
+from a different angle). If the offset that works changes with distance, move the camera onto the
+launcher's line, or tune at the distance you shoot from most.
 
 Output: `new AimController(...).offset(-1.5)` or `turret.cameraOffset(-1.5)`.
 
@@ -203,7 +218,8 @@ the background when it stops. `runOpMode()` is `final`. Write your own finder by
 | `remove(key)`, `removeStartingWith(start)` | removes lines |
 | `lines()`, `isEmpty()` | read |
 | `addTelemetry(t)` | shows them under "Copy into your code" |
-| `saveInBackground(ok -> ...)` | adds them to `/sdcard/FIRST/ftc-helper/finder-results.txt` |
+| `saveNow()` | adds them to `/sdcard/FIRST/ftc-helper/finder-results.txt` now (FinderOpMode does this at STOP and shows the result) |
+| `saveInBackground(ok -> ...)` | the same on a background thread |
 | `FinderResults.num(value, decimals)` | a number as text, always with "." |
 
 ## FinderMath
@@ -211,7 +227,8 @@ the background when it stops. `runOpMode()` is `final`. Write your own finder by
 `flywheelPidf(topTicksPerSec)`, `ticksPerSecToRpm(ticksPerSec, countsPerRev)`,
 `wheelDiameterFromPush(ticks, inches, ticksPerRev, gearRatio)`,
 `correctedDiameter(old, asked, measured)`, `correctedStrafe(old, asked, measured)`,
-`limits(lowEndTicks, highEndTicks)` (-> min, max, reversed), `servoPosition(p)` (kept in 0..1).
+`limits(lowEndTicks, highEndTicks)` (-> min, max, reversed), `pushTicks(deltas)` (the push test's
+count, NaN if the wheels disagree), `servoPosition(p)` (kept in 0..1).
 
 ## Chooser
 

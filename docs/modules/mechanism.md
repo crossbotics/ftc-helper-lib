@@ -148,6 +148,7 @@ hood.setDegrees(18);                      // moves the servo at once (servos do)
 | `toggle(a, b)`, `next()`, `previous()` | for buttons |
 | `isDone()` | true when it should have arrived (estimate) |
 | `getPosition()`, `getDegrees()`, `getTargetName()` | read |
+| `getTargetDegrees()` | the angle it is going to (after its limits); differs from `getDegrees()` only during a slow move |
 | `goToStep(name)` | autonomous: move and wait until it should have arrived |
 | `update()` | every loop (needed for slow moves and "done") |
 

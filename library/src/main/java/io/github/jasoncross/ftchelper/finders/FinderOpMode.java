@@ -20,8 +20,6 @@ public abstract class FinderOpMode extends LinearOpMode {
     protected RobotTelemetry t;
     /** What the finder found, as code lines. */
     protected FinderResults results;
-    // Shown once the results file was written (or could not be).
-    private volatile String saveNote = "";
 
     /** The finder's name, e.g. "Servo finder". */
     protected abstract String finderName();
@@ -74,7 +72,6 @@ public abstract class FinderOpMode extends LinearOpMode {
                 show(t);
                 results.addTelemetry(t);
                 if (!results.isEmpty()) t.text("(saved to the hub when you press STOP)");
-                if (!saveNote.isEmpty()) t.text(saveNote);
                 t.update();
             }
         } catch (Throwable e) {
@@ -83,9 +80,15 @@ public abstract class FinderOpMode extends LinearOpMode {
         } finally {
             RuntimeException first = null;
             try { stopAll(); } catch (RuntimeException e) { first = e; }
-            // Save what was found, on a background thread (the OpMode can end at once).
+            // Save what was found. The finder is ending, so waiting a few milliseconds for the file is
+            // fine here (never in the loop). The result goes to the screen and the robot log.
             if (results != null && !results.isEmpty()) {
-                results.saveInBackground(ok -> saveNote = ok ? "Saved." : "Could not save the results file.");
+                boolean ok = results.saveNow();
+                String msg = ok ? "Results saved to " + FinderResults.file.getPath()
+                        : "Could not save the results file: copy the lines from the screen.";
+                RobotLog.ii("ftchelper", msg);
+                telemetry.addLine(msg);
+                telemetry.update();
             }
             if (first != null) {
                 if (failure == null) throw first;

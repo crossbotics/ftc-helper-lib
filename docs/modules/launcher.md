@@ -70,7 +70,7 @@ Flywheel flywheel = Flywheel.create(hardwareMap, "flywheel")
 | `.maxRpm(r)` | highest speed allowed |
 | `.shotDrop(rpm)` | a drop this big after ready = a shot was seen |
 | `setRpm(r)`, `stop()`, `update()` | use. `stop()` and speed 0 COAST (no hard braking of a fast wheel) |
-| `isReady()`, `getRpm()`, `getTargetRpm()`, `getShotCount()`, `getFault()` | read |
+| `isReady()`, `getRpm()`, `getTargetRpm()`, `getMaxRpm()`, `getShotCount()`, `getFault()` | read |
 | `spinUpStep(rpm, timeout)` | autonomous step |
 
 **Check your speed reading** before trusting it: the RPM on telemetry must match a tachometer or

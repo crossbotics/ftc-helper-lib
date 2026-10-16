@@ -26,7 +26,7 @@ import io.github.jasoncross.ftchelper.vision.TargetSource;
  * Gamepad 1:
  *   Y              = what the D-pad changes: SPEED, HOOD (if any), DISTANCE (no camera)
  *   D-pad up/down  = big step (100 RPM / 5 deg / 6 in), right/left = small step (10 RPM / 0.5 deg / 1 in)
- *   LB             = flywheel on/off
+ *   LB             = flywheel on/off (off at START)
  *   RB             = shoot one         hold RT = keep shooting        B = stop shooting
  *   A              = save this point (replaces one within 1 in)       X = delete the point here
  *   sticks         = drive (with robotConfig()), left trigger = slow
@@ -38,7 +38,7 @@ import io.github.jasoncross.ftchelper.vision.TargetSource;
  * @TeleOp(name = "Shot Tuner", group = "Finders")
  * public class ShotTuner extends ShotTunerOpMode {
  *     @Override protected Launcher createLauncher() { return new Robot(hardwareMap).launcher; }
- *     @Override protected TargetSource createCamera() { return new WebcamTags(hardwareMap, "Webcam 1"); }
+ *     @Override protected TargetSource createCamera() { return WebcamTags.create(hardwareMap, "Webcam 1"); }
  *     @Override protected RobotConfig robotConfig() { return new RobotSettings(); }
  * }
  * }</pre>
@@ -81,6 +81,11 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         return 3000;
     }
 
+    /** The hood angle it starts at (if the hood has not been moved yet), degrees. Default 0. */
+    protected double startHoodDeg() {
+        return 0;
+    }
+
     // ----------------------------- the tuner -----------------------------
 
     private enum Field { SPEED, HOOD, DISTANCE }
@@ -95,12 +100,17 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
     private double rpm;
     private double hoodDeg;
     private double manualDistance = 48;
-    private boolean spinning = true;
+    private boolean spinning = false;   // off at START: LB turns it on
     private TargetObservation target;
     private int lastShots = 0;
     private double shotAt = Double.NaN;
     private double recoverySec = Double.NaN;
     private String note = "";
+    // Hold-RT shooting: on only after a fresh RT press; off after B, a jam or a "gave up".
+    private boolean continuous = false;
+    private boolean rtWasDown = false;
+    // True when the D-pad tried to go past the flywheel's or hood's limit.
+    private boolean atLimit = false;
 
     @Override protected String finderName() { return "Shot tuner"; }
 
@@ -115,8 +125,13 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         others = createSubsystems();
         if (others == null) others = new Subsystems();
         points = new ShotPoints(hood != null);
+        launcher.stop();   // off until LB
         rpm = startRpm();
-        if (hood != null) hoodDeg = hood.getDegrees();
+        if (hood != null) {
+            // A hood that was never moved has no angle yet (NaN): start from startHoodDeg().
+            double now = hood.getTargetDegrees();
+            hoodDeg = Double.isNaN(now) || Double.isInfinite(now) ? startHoodDeg() : now;
+        }
     }
 
     @Override
@@ -124,7 +139,7 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         t.text("Shot tuner: builds the shot table (distance -> speed" + (hood != null ? ", hood" : "") + ").");
         t.warn("Nobody in the line of fire. Eye protection on.");
         if (camera != null) t.line("Camera", camera.status());
-        t.text("The flywheel spins up at START. Press START.");
+        t.text("The flywheel stays off until you press LB. Press START.");
     }
 
     @Override
@@ -139,7 +154,7 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
                     if (!spinning) launcher.stop();   // fully off (it stays off until spinUp)
                 })
          .bindPress(Pad.G1, Btn.RB, () -> { if (spinning) launcher.shoot(1); })
-         .bindPress(Pad.G1, Btn.B, () -> launcher.stopShooting())
+         .bindPress(Pad.G1, Btn.B, () -> { continuous = false; launcher.stopShooting(); })
          .bindPress(Pad.G1, Btn.A, this::savePoint)
          .bindPress(Pad.G1, Btn.X, this::deletePoint);
     }
@@ -174,6 +189,10 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
             note = "No distance: the camera does not see the target.";
             return;
         }
+        if (Double.isNaN(hoodDeg) || Double.isInfinite(hoodDeg)) {
+            note = "No hood angle yet: change it with the D-pad first.";
+            return;
+        }
         points.save(d, rpm, hoodDeg);
         note = "Saved " + FinderResults.num(d, 1) + " in -> " + FinderResults.num(rpm, 0) + " RPM.";
         writeResults();
@@ -201,13 +220,33 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
             target = seen != null && seen.isFresh(System.nanoTime(), MAX_TARGET_AGE_MS) ? seen : null;
         }
         if (driving != null) driving.update(gamepad1);
-        // Hold RT: keep shooting, one piece at a time, while the launcher is ready.
-        if (spinning && gamepad1.right_trigger > 0.5 && !launcher.isShooting()) launcher.shoot(1);
+        // Keep the speed and hood inside what the hardware really does, so a saved point is what
+        // was really tested (the flywheel and the hood would cut it silently otherwise).
+        double maxRpm = launcher.getFlywheel().getMaxRpm();
+        atLimit = rpm > maxRpm;
+        rpm = Math.min(rpm, maxRpm);
+        if (hood != null) {
+            hood.setDegrees(hoodDeg);
+            // Where the hood is really going after its limits (not where a slow move is now).
+            double real = hood.getTargetDegrees();
+            if (!Double.isNaN(real) && Math.abs(real - hoodDeg) > 0.05) {
+                atLimit = true;
+                hoodDeg = real;
+            }
+        }
+        // Hold RT: keep shooting, one piece at a time. It starts on a fresh RT press and stops for
+        // good after B, a jam or a "gave up" (press RT again to go on), so a jam is never pushed on.
+        boolean rt = gamepad1.right_trigger > 0.5;
+        boolean freshPress = rt && !rtWasDown;
+        rtWasDown = rt;
+        if (!rt) continuous = false;
+        else if (freshPress) continuous = true;   // a new press tries again (shoot() clears an old jam)
+        else if (!launcher.getLastProblem().isEmpty()) continuous = false;
+        if (spinning && continuous && !launcher.isShooting()) launcher.shoot(1);
         if (spinning) {
             launcher.setRpm(rpm);
             launcher.spinUp();
         }
-        if (hood != null) hood.setDegrees(hoodDeg);
         launcher.update();
         others.update();
         // Recovery: from a shot (the flywheel's shot counter goes up) until it is ready again.
@@ -233,6 +272,7 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         if (camera == null) t.line((field == Field.DISTANCE ? "> " : "  ") + "Distance", dText + " (by hand)");
         else t.line("  Distance", dText + (target != null && target.hasBearing()
                 ? ", bearing " + FinderResults.num(target.bearingDeg, 1) + " deg" : ""));
+        if (atLimit) t.warn("At the flywheel's maxRpm or the hood's limit");
         t.line("Ready", launcher.isReady() ? "YES" : "no: " + launcher.whyNotReady());
         t.line("Shots fired", launcher.getShotsFired());
         if (!Double.isNaN(recoverySec)) t.line("Recovery", FinderResults.num(recoverySec, 2) + " s");

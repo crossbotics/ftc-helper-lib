@@ -69,7 +69,7 @@ public abstract class MotorFinderOpMode extends FinderOpMode {
          .bindPress(Pad.G1, Btn.A, () -> { if (motor == null) choose(); else savePosition(); })
          .bindPress(Pad.G1, Btn.X, () -> { if (motor != null) { lowEnd = ticks(); writeResults(); } })
          .bindPress(Pad.G1, Btn.B, () -> { if (motor != null) { highEnd = ticks(); writeResults(); } })
-         .bindPress(Pad.G1, Btn.Y, this::undoPosition)
+         .bindPress(Pad.G1, Btn.Y, () -> { if (motor != null) undoPosition(); })
          .bindPress(Pad.G1, Btn.BACK, this::release);
     }
 
@@ -149,7 +149,7 @@ public abstract class MotorFinderOpMode extends FinderOpMode {
     // The code lines for this motor.
     private void writeResults() {
         String key = "motor:" + motorName;
-        results.removeStartingWith(key);
+        results.removeStartingWith(key + ":");
         String line = "PositionMotor.create(hardwareMap, \"" + motorName + "\")";
         boolean reversed = false;
         if (bothEnds()) {

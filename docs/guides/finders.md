@@ -34,8 +34,9 @@ flowchart LR
 
 ## Servo Finder: ends and positions
 
-1. Choose the servo (D-pad, A). Nudge it with the D-pad: right/left = 0.01, up/down = 0.05,
-   hold RB for 10 times finer.
+1. Choose the servo (D-pad, A). A servo cannot tell where it is, so first choose a START POINT near
+   where it sits now (D-pad; nothing moves), then press A: it moves there. Then nudge it with the
+   D-pad: right/left = 0.01, up/down = 0.05, hold RB for 10 times finer.
 2. Move it toward one end until it JUST stops pushing on the frame (listen: a straining servo hums).
    Back off 0.01. Press **X**. Do the same at the other end and press **B**. These are the limits:
    the code will never send the servo past them.
@@ -54,8 +55,9 @@ Watch the current (amps): a high number while not moving means it is pushing on 
 
 ## Flywheel Finder: gains and recovery
 
-1. Choose the flywheel motor. Hold **A**: full power until the speed stops rising. It works out the
-   gains from the top speed.
+1. Choose the flywheel motor. Let go of A, then hold **A** again: full power until the speed stops
+   rising. It works out the gains from the top speed. Wheel spinning the wrong way? Let go, press
+   **X** (reverse), try again.
 2. Press **B**: it holds a speed (60% of the top). Change it with the D-pad to the speed you shoot at.
 3. If the measured speed stays below the target at every speed, press **RB** (more F); above, **LB**.
 4. Feed a piece by hand: the screen shows the recovery time. Use it for the launcher's
@@ -64,23 +66,27 @@ Watch the current (amps): a high number while not moving means it is pushing on 
 ## Drive Tuner: wheel size and strafe correction
 
 1. **Push test:** A, then roll the robot by hand exactly 48 in along the tape, straight, then B.
-   This gives the wheel size from the encoder counts alone.
-2. Put the number in `RobotSettings.auto()` (`c.wheelDiameterIn`), build, run again.
-3. **Drive test:** A; it drives 48 in. Measure, set the real distance with the D-pad, A. Repeat
-   until it measures 48 (wheels slip a little on tiles, so this is the final word).
-4. **Strafe test** (mecanum): the same, for `c.strafeCorrection`.
-5. Then set `c.calibrationConfirmed = true`: autonomous may run.
+   This gives the wheel size from the encoder counts alone. Every wheel must count up by about the
+   same amount; if one does not, fix its direction or encoder cable first.
+2. **Drive test:** A; it drives 48 in. Measure, set the real distance with the D-pad, A. The new
+   wheel size is used at once: run it again until it measures 48 (wheels slip a little on tiles, so
+   this is the final word). A move that got stuck is not measured.
+3. **Strafe test** (mecanum): the same, for `c.strafeCorrection`.
+4. Copy the lines into `RobotSettings.auto()`, then set `c.calibrationConfirmed = true`: autonomous may run.
 
 ## Aim Tuner: camera offset
 
-1. Park the robot 4-6 ft from the target, facing it.
-2. Hold **A**: it aims. Shoot (**RB**).
+1. Park the robot 4-6 ft from the target, facing it. A turret with a home switch: press **X** first.
+2. Hold **A**: it aims. Shoot (**RB**). LB stops the flywheel.
 3. Shots go LEFT of the middle: press D-pad RIGHT (aim more to the right). Shots go right: LEFT.
 4. Repeat until shots go in the middle, at two or three distances. Copy the offset line.
+   If the offset that works changes with distance, the camera is off to the side of the launcher:
+   move it onto the launcher's line (or as close as you can), or tune at the distance you shoot from most.
 
 ## Shot Tuner: the shot table
 
 1. Park at the nearest distance you will shoot from. The screen shows the camera's distance.
+   Press **LB** to start the flywheel (it is off at START).
 2. Change the speed (and hood) with the D-pad (**Y** chooses which) and shoot (**RB**, or hold **RT**)
    until the shots go in, several in a row. Press **A** to save the point.
 3. Move back 1-2 ft (drive with the sticks) and do it again. 4-6 points cover the field.
@@ -92,5 +98,5 @@ Charge the battery before tuning speeds: a weak battery changes how far the shot
 ## The results file
 
 Every finder adds its lines to `/sdcard/FIRST/ftc-helper/finder-results.txt` on the Control Hub when
-you press STOP, with the date. Get it with the REV Hardware Client (file manager) or Android
+you press STOP, with the date. The Driver Station says whether it worked. Get it with the REV Hardware Client (file manager) or Android
 Studio's Device Explorer. The newest results are at the end.

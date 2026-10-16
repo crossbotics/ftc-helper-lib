@@ -27,7 +27,8 @@ import io.github.jasoncross.ftchelper.vision.TargetSource;
  *   hold A           = aim at the target
  *   D-pad right/left = aim 0.5 deg more right/left, up/down = 2 deg more right/left
  *                      (shots go LEFT of the middle? press RIGHT)
- *   RB               = shoot one (with createLauncher())
+ *   RB               = shoot one (with createLauncher()), LB = flywheel off
+ *   X                = home the turret (if it has a home switch; it will not aim before)
  *   sticks           = drive when not aiming (with robotConfig()), left trigger = slow
  * </pre>
  *
@@ -36,7 +37,7 @@ import io.github.jasoncross.ftchelper.vision.TargetSource;
  * <pre>{@code
  * @TeleOp(name = "Aim Tuner", group = "Finders")
  * public class AimTuner extends AimTunerOpMode {
- *     @Override protected TargetSource createCamera() { return new WebcamTags(hardwareMap, "Webcam 1"); }
+ *     @Override protected TargetSource createCamera() { return WebcamTags.create(hardwareMap, "Webcam 1"); }
  *     @Override protected RobotConfig robotConfig() { return new RobotSettings(); }
  *     @Override protected Launcher createLauncher() { return new Robot(hardwareMap).launcher; }
  * }
@@ -60,6 +61,11 @@ public abstract class AimTunerOpMode extends FinderOpMode {
     /** Your turret, or null (default) to aim by turning the robot. */
     protected Turret createTurret() {
         return null;
+    }
+
+    /** Which way the turret turns to find its home switch: +1 or -1 (see {@code Turret.home}). Default -1. */
+    protected double homeDirection() {
+        return -1;
     }
 
     /** True (default) if the camera turns with the turret; false if it is on the robot body. */
@@ -107,6 +113,7 @@ public abstract class AimTunerOpMode extends FinderOpMode {
     private Subsystems others;
     private double offset;
     private TargetObservation target;
+    private boolean wasAiming = false;
 
     @Override protected String finderName() { return "Aim tuner"; }
 
@@ -142,7 +149,9 @@ public abstract class AimTunerOpMode extends FinderOpMode {
          .bindPress(Pad.G1, Btn.DPAD_LEFT, () -> changeOffset(-0.5))
          .bindPress(Pad.G1, Btn.DPAD_UP, () -> changeOffset(2))
          .bindPress(Pad.G1, Btn.DPAD_DOWN, () -> changeOffset(-2))
-         .bindPress(Pad.G1, Btn.RB, this::shoot);
+         .bindPress(Pad.G1, Btn.RB, this::shoot)
+         .bindPress(Pad.G1, Btn.LB, () -> { if (launcher != null) launcher.stop(); })
+         .bindPress(Pad.G1, Btn.X, () -> { if (turret != null) turret.home(homeDirection()); });
     }
 
     // Positive = aim further RIGHT. Aiming stops when the target's bearing equals the offset; to point
@@ -179,6 +188,9 @@ public abstract class AimTunerOpMode extends FinderOpMode {
         camera.update();
         target = findTarget(camera);
         boolean aiming = gamepad1.a;
+        // A let go: forget the last picture, so the next aim starts fresh (no stale D part).
+        if (wasAiming && !aiming) aim.reset();
+        wasAiming = aiming;
         if (turret != null) {
             if (aiming) turret.aimAtTarget(target, cameraOnTurret());
             turret.update();
@@ -206,10 +218,15 @@ public abstract class AimTunerOpMode extends FinderOpMode {
             t.line("Still to turn", FinderResults.num(target.bearingDeg - offset, 1) + " deg");
             if (target.hasDistance()) t.line("Distance", FinderResults.num(target.distanceIn, 1) + " in");
         }
-        if (turret != null) t.line("Turret", FinderResults.num(turret.getAngle(), 1) + " deg");
+        if (turret != null) {
+            t.line("Turret", FinderResults.num(turret.getAngle(), 1) + " deg");
+            if (turret.isHoming()) t.text("Homing...");
+            else if (!turret.isHomed()) t.warn("Turret not homed: press X (it will not aim before)");
+            if (!turret.getFault().isEmpty()) t.warn(turret.getFault());
+        }
         if (launcher != null) {
             t.line("Launcher", launcher.isReady() ? "ready" : launcher.whyNotReady());
-            t.text("RB = shoot one. Shots go left: D-pad RIGHT. Shots go right: D-pad LEFT.");
+            t.text("RB = shoot one, LB = flywheel off. Shots go left: D-pad RIGHT. Shots go right: D-pad LEFT.");
         }
     }
 

@@ -253,6 +253,15 @@ public class PositionServo implements Subsystem {
         return degA + (commanded - posA) * (degB - degA) / (posB - posA);
     }
 
+    /**
+     * The angle it is GOING to, in degrees (after the limits), or NaN before the first command.
+     * Differs from {@link #getDegrees()} only during a slow move ({@link #maxSpeed}).
+     */
+    public double getTargetDegrees() {
+        if (!hasDegrees || Double.isNaN(target)) return Double.NaN;
+        return degA + (target - posA) * (degB - degA) / (posB - posA);
+    }
+
     /** The named position it is at or going to, or "-" . */
     public String getTargetName() { return targetName == null ? "-" : targetName; }
 

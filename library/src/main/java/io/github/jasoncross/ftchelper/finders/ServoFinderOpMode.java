@@ -16,13 +16,16 @@ import java.util.Map;
  *
  * <pre>
  * Choose:  D-pad up/down = servo, A = use it
+ * Start:   D-pad = choose a start point (the servo does NOT move yet), A = move it there.
+ *          Pick a value near where it sits now: a servo cannot tell where it is.
  * Nudge:   D-pad right/left = +/- 0.01   D-pad up/down = +/- 0.05   hold RB = 10 times finer
- *          X = mark this as one END, B = mark the other END (where it just stops touching the frame)
+ *          X = mark this as one END, B = mark the other END (where it just stops touching the frame).
+ *          Once both are marked, it stays between them (hold LB to go past, e.g. to mark again)
  *          A = save this as a position (P1, P2, ...; rename them in your code), Y = undo the last one
  *          BACK = choose another servo
  * </pre>
  *
- * The servo does not move until you first nudge it (its real position is unknown before that).
+ * The servo does not move until you press A at the start point (its real position is unknown).
  * In your TeamCode: {@code @TeleOp(name = "Servo Finder", group = "Finders")
  * public class ServoFinder extends ServoFinderOpMode { }}
  *
@@ -34,6 +37,7 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
     private Servo servo;          // null = still choosing
     private String servoName;
     private double position = Double.NaN;   // NaN = not moved yet
+    private double startAt = 0.5;           // the start point chosen before the first move
     private double endA = Double.NaN, endB = Double.NaN;
     private final Map<String, Double> positions = new LinkedHashMap<>();
 
@@ -56,10 +60,14 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
          .bindPress(Pad.G1, Btn.DPAD_DOWN, () -> { if (servo == null) chooser.next(); else nudge(-0.05); })
          .bindPress(Pad.G1, Btn.DPAD_RIGHT, () -> { if (servo != null) nudge(0.01); })
          .bindPress(Pad.G1, Btn.DPAD_LEFT, () -> { if (servo != null) nudge(-0.01); })
-         .bindPress(Pad.G1, Btn.A, () -> { if (servo == null) choose(); else savePosition(); })
+         .bindPress(Pad.G1, Btn.A, () -> {
+                    if (servo == null) choose();
+                    else if (!moved()) moveToStart();
+                    else savePosition();
+                })
          .bindPress(Pad.G1, Btn.X, () -> { if (moved()) { endA = position; writeResults(); } })
          .bindPress(Pad.G1, Btn.B, () -> { if (moved()) { endB = position; writeResults(); } })
-         .bindPress(Pad.G1, Btn.Y, this::undoPosition)
+         .bindPress(Pad.G1, Btn.Y, () -> { if (servo != null) undoPosition(); })
          .bindPress(Pad.G1, Btn.BACK, () -> servo = null);
     }
 
@@ -69,6 +77,7 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
         servoName = chooser.current();
         servo = hardwareMap.get(Servo.class, servoName);
         position = Double.NaN;
+        startAt = 0.5;
         endA = endB = Double.NaN;
         positions.clear();
     }
@@ -77,12 +86,26 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
         return servo != null && !Double.isNaN(position);
     }
 
-    // Moves by "amount" (10 times finer while RB is held). The first nudge starts from the position
-    // the SDK last sent, or 0.5 if none is known.
+    // A, before the first move: the servo goes to the chosen start point.
+    private void moveToStart() {
+        position = startAt;
+        servo.setPosition(position);
+    }
+
+    // Moves by "amount" (10 times finer while RB is held). Before the first move it only changes the
+    // start point: nothing moves until A.
     private void nudge(double amount) {
-        if (Double.isNaN(position)) position = FinderMath.servoPosition(servo.getPosition());
         double step = gamepad1.right_bumper ? amount / 10 : amount;
-        position = FinderMath.servoPosition(position + step);
+        if (Double.isNaN(position)) {
+            startAt = FinderMath.servoPosition(startAt + step);
+            return;
+        }
+        double next = FinderMath.servoPosition(position + step);
+        // Once both ends are marked, it stays between them (hold LB to go past, e.g. to mark again).
+        if (!Double.isNaN(endA) && !Double.isNaN(endB) && !gamepad1.left_bumper) {
+            next = Math.max(Math.min(endA, endB), Math.min(Math.max(endA, endB), next));
+        }
+        position = next;
         servo.setPosition(position);
     }
 
@@ -103,7 +126,7 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
     // The code lines for this servo. "servo:<name>" keys, so each servo has its own lines.
     private void writeResults() {
         String key = "servo:" + servoName;
-        results.removeStartingWith(key);
+        results.removeStartingWith(key + ":");
         String line = "PositionServo.create(hardwareMap, \"" + servoName + "\")";
         if (!Double.isNaN(endA) && !Double.isNaN(endB)) {
             line += ".limits(" + FinderResults.num(Math.min(endA, endB), 3) + ", "
@@ -111,8 +134,12 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
         }
         results.set(key + ":0", line);
         int n = 1;
+        boolean ends = !Double.isNaN(endA) && !Double.isNaN(endB);
         for (Map.Entry<String, Double> p : positions.entrySet()) {
-            results.set(key + ":" + n++, "    .position(\"" + p.getKey() + "\", " + FinderResults.num(p.getValue(), 3) + ")");
+            double v = p.getValue();
+            boolean outside = ends && (v < Math.min(endA, endB) - 1e-9 || v > Math.max(endA, endB) + 1e-9);
+            results.set(key + ":" + n++, "    .position(\"" + p.getKey() + "\", " + FinderResults.num(v, 3) + ")"
+                    + (outside ? "   // OUTSIDE the ends: it will stop at the end" : ""));
         }
     }
 
@@ -126,10 +153,15 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
             return;
         }
         t.section("Servo \"" + servoName + "\"  (BACK = another)");
-        t.line("Position", Double.isNaN(position) ? "not moved yet: nudge it" : FinderResults.num(position, 3));
+        if (Double.isNaN(position)) {
+            t.line("Start point", FinderResults.num(startAt, 3) + "  (D-pad; A = move the servo there)");
+            t.text("Choose a start point near where the servo sits now. Nothing moves until A.");
+            return;
+        }
+        t.line("Position", FinderResults.num(position, 3));
         t.line("End X", Double.isNaN(endA) ? "-" : FinderResults.num(endA, 3));
         t.line("End B", Double.isNaN(endB) ? "-" : FinderResults.num(endB, 3));
-        t.text("D-pad nudge (RB = finer), X/B = ends, A = save position, Y = undo");
+        t.text("D-pad nudge (RB = finer, LB = past the ends), X/B = ends, A = save position, Y = undo");
         if (!Double.isNaN(endA) && !Double.isNaN(endB)
                 && (position < Math.min(endA, endB) - 1e-9 || position > Math.max(endA, endB) + 1e-9)) {
             t.warn("Outside the marked ends");

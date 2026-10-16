@@ -235,6 +235,9 @@ public class Flywheel implements Subsystem {
     /** True when at speed and steady. */
     public boolean isReady() { return ready; }
 
+    /** The highest speed it may be asked for (see {@link #maxRpm}). */
+    public double getMaxRpm() { return maxRpm; }
+
     /** The measured speed (RPM). */
     public double getRpm() { return rpm; }
 

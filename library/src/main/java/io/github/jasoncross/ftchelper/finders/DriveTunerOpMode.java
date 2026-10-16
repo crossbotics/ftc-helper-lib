@@ -27,8 +27,8 @@ import java.util.List;
  * Distance:  D-pad up/down = +/- 1 in, right/left = +/- 0.25 in.
  * </pre>
  *
- * Use the new numbers in RobotSettings, then run the Drive and Strafe tests again until they
- * measure 48. Leave 5 ft of space in front of and to the right of the robot.
+ * Each new number is used at once in this tuner (no rebuild): run the Drive and Strafe tests again
+ * until they measure 48, then copy the lines into RobotSettings. Leave 5 ft of space in front of and to the right of the robot.
  * In your TeamCode: {@code @TeleOp(name = "Drive Tuner", group = "Finders") public class DriveTuner
  * extends DriveTunerOpMode { protected RobotConfig robotConfig() { return new RobotSettings(); } }}
  *
@@ -59,6 +59,11 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
     private int[] pushStart;
     private double measured;
     private String lastResult = "";
+    // A test asked for by A, run in step() (not inside the button action, because it waits).
+    private int pendingTest = -1;
+    // The wheels' settings before the push test, given back after it.
+    private final List<DcMotor.RunMode> savedModes = new ArrayList<>();
+    private final List<DcMotor.ZeroPowerBehavior> savedZero = new ArrayList<>();
 
     @Override protected String finderName() { return "Drive tuner"; }
 
@@ -116,36 +121,49 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
     // A: start the chosen test, or confirm the measured distance.
     private void pressA() {
         if (waiting == Wait.MEASURE) {
+            // The new number is used at once (AutoDrive reads these settings on every move), so the
+            // next test already uses it.
             if (test == 1) {
                 double d = FinderMath.correctedDiameter(autoConfig.wheelDiameterIn, testDistanceIn(), measured);
-                results.set("drive:diameter", "c.wheelDiameterIn = " + FinderResults.num(d, 3) + ";   // RobotSettings.auto(), from the drive test");
-                lastResult = "Wheel size " + FinderResults.num(d, 3) + " in. Put it in RobotSettings and test again.";
+                autoConfig.wheelDiameterIn = d;
+                results.set("drive:diameter", "c.wheelDiameterIn = " + FinderResults.num(d, 3) + ";   // RobotSettings.auto()");
+                lastResult = "Wheel size now " + FinderResults.num(d, 3) + " in. Run the Drive test again.";
             } else if (test == 2) {
                 double s = FinderMath.correctedStrafe(autoConfig.strafeCorrection, testDistanceIn(), measured);
+                autoConfig.strafeCorrection = s;
                 results.set("drive:strafe", "c.strafeCorrection = " + FinderResults.num(s, 3) + ";   // RobotSettings.auto()");
-                lastResult = "Strafe correction " + FinderResults.num(s, 3) + ". Put it in RobotSettings and test again.";
+                lastResult = "Strafe correction now " + FinderResults.num(s, 3) + ". Run the Strafe test again.";
             }
             waiting = Wait.CHOOSE;
             return;
         }
         if (waiting != Wait.CHOOSE) return;
-        switch (test) {
-            case 0:
-                // Push: wheels free to roll, remember where the counts start.
-                for (DcMotorEx w : wheels) w.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-                pushStart = auto.getWheelTicks();
-                waiting = Wait.PUSHING;
-                break;
+        if (test == 0) {
+            // Push: wheels free to roll (no speed control holding them, no brake), counts from here.
+            savedModes.clear();
+            savedZero.clear();
+            for (DcMotorEx w : wheels) {
+                savedModes.add(w.getMode());
+                savedZero.add(w.getZeroPowerBehavior());
+                w.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                w.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+                w.setPower(0);
+            }
+            pushStart = auto.getWheelTicks();
+            waiting = Wait.PUSHING;
+        } else {
+            pendingTest = test;   // step() runs it
+        }
+    }
+
+    // Runs a test that moves the robot. BLOCKS on purpose until the move is done (STOP still works).
+    private void runTest(int which) {
+        switch (which) {
             case 1:
-                // BLOCKS on purpose until the move is done (STOP still works).
-                lastResult = "Drive: " + auto.move(testDistanceIn(), 0, 0.5);
-                measured = testDistanceIn();
-                waiting = Wait.MEASURE;
+                afterMove("Drive", auto.move(testDistanceIn(), 0, 0.5));
                 break;
             case 2:
-                lastResult = "Strafe: " + auto.move(testDistanceIn(), 90, 0.5);
-                measured = testDistanceIn();
-                waiting = Wait.MEASURE;
+                afterMove("Strafe", auto.move(testDistanceIn(), 90, 0.5));
                 break;
             default:
                 auto.resetHeading();
@@ -155,35 +173,64 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
         }
     }
 
+    // Only a move that finished normally can be measured: a stuck or timed-out move did not try to
+    // go the whole distance, so measuring it would give a wrong number.
+    private void afterMove(String name, AutoDrive.Result result) {
+        measured = testDistanceIn();
+        if (result == AutoDrive.Result.DONE) {
+            lastResult = name + ": done.";
+            waiting = Wait.MEASURE;
+        } else {
+            lastResult = name + ": " + result + ". Not measured: clear the path and run it again.";
+        }
+    }
+
     // B: the push is done. Wheel size from the counts.
     private void finishPush() {
         if (waiting != Wait.PUSHING) return;
         int[] now = auto.getWheelTicks();
-        double sum = 0;
-        for (int i = 0; i < now.length; i++) sum += now[i] - pushStart[i];
-        double avgTicks = sum / now.length;
-        for (DcMotorEx w : wheels) w.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        double d = FinderMath.wheelDiameterFromPush(avgTicks, testDistanceIn(), autoConfig.ticksPerRev, autoConfig.gearRatio);
-        if (Double.isNaN(d)) {
-            lastResult = "The wheels did not count. Check the encoder cables.";
-        } else {
-            results.set("drive:diameter", "c.wheelDiameterIn = " + FinderResults.num(d, 3) + ";   // RobotSettings.auto(), from the push test");
-            lastResult = "Wheel size " + FinderResults.num(d, 3) + " in" + (avgTicks < 0 ? " (counts went DOWN: check motor directions)" : "");
+        int[] deltas = new int[now.length];
+        for (int i = 0; i < now.length; i++) deltas[i] = now[i] - pushStart[i];
+        // The wheels get their settings back.
+        for (int i = 0; i < wheels.size(); i++) {
+            wheels.get(i).setMode(savedModes.get(i));
+            wheels.get(i).setZeroPowerBehavior(savedZero.get(i));
         }
         waiting = Wait.CHOOSE;
+        double avgTicks = FinderMath.pushTicks(deltas);
+        if (Double.isNaN(avgTicks)) {
+            lastResult = "The wheels disagree (" + java.util.Arrays.toString(deltas) + "): a wheel did not count "
+                    + "or turns the wrong way. Check the motor directions (Hardware Check) and the encoder cables.";
+            return;
+        }
+        if (avgTicks < 0) {
+            lastResult = "Every wheel counted DOWN: the motor directions are wrong, or you pushed backward.";
+            return;
+        }
+        double d = FinderMath.wheelDiameterFromPush(avgTicks, testDistanceIn(), autoConfig.ticksPerRev, autoConfig.gearRatio);
+        autoConfig.wheelDiameterIn = d;
+        results.set("drive:diameter", "c.wheelDiameterIn = " + FinderResults.num(d, 3) + ";   // RobotSettings.auto()");
+        lastResult = "Wheel size now " + FinderResults.num(d, 3) + " in. Next: the Drive test.";
     }
 
-    @Override protected void step() { }
+    @Override
+    protected void step() {
+        if (pendingTest < 0) return;
+        int which = pendingTest;
+        pendingTest = -1;
+        runTest(which);
+    }
 
     @Override
     protected void show(RobotTelemetry t) {
         t.section("Drive tuner");
         if (waiting == Wait.PUSHING) {
             int[] now = auto.getWheelTicks();
-            double sum = 0;
-            for (int i = 0; i < now.length; i++) sum += now[i] - pushStart[i];
+            int[] deltas = new int[now.length];
+            for (int i = 0; i < now.length; i++) deltas[i] = now[i] - pushStart[i];
             t.text("Roll the robot BY HAND exactly " + FinderResults.num(testDistanceIn(), 0) + " in, straight. Then press B.");
-            t.line("Wheel counts", FinderResults.num(sum / now.length, 0));
+            // Each wheel: they should all go up by about the same amount.
+            t.line("Wheel counts", java.util.Arrays.toString(deltas));
         } else if (waiting == Wait.MEASURE) {
             t.text("Measure how far it really went. Set it with the D-pad, then press A.");
             t.line("Measured", FinderResults.num(measured, 2) + " in");

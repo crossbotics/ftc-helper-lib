@@ -81,6 +81,29 @@ public final class FinderMath {
         return new double[] {Math.min(low, high), Math.max(low, high), reversed ? 1 : 0};
     }
 
+    /**
+     * The wheel count of a push test from each wheel's change in counts. All wheels must agree: the
+     * same sign, and none less than half of the biggest (a wheel turning the wrong way, or not
+     * counting, would spoil the average).
+     *
+     * @return the average count (negative if every wheel counted down), or NaN if the wheels disagree
+     */
+    public static double pushTicks(int[] deltas) {
+        double biggest = 0;
+        for (int d : deltas) biggest = Math.max(biggest, Math.abs(d));
+        if (biggest < 1) return Double.NaN;
+        int sign = 0;
+        double sum = 0;
+        for (int d : deltas) {
+            int s = d > 0 ? 1 : d < 0 ? -1 : 0;
+            if (Math.abs(d) < biggest / 2) return Double.NaN;
+            if (sign == 0) sign = s;
+            else if (s != sign) return Double.NaN;
+            sum += d;
+        }
+        return sum / deltas.length;
+    }
+
     /** Keeps a servo position inside 0..1, the only range a servo accepts. NaN becomes 0.5. */
     public static double servoPosition(double position) {
         if (Double.isNaN(position)) return 0.5;

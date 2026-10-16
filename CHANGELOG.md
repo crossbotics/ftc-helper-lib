@@ -15,7 +15,8 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   size by push and drive tests, strafe correction), `ShotTunerOpMode` (builds the shot table: speed,
   hood, distance from the camera, single or continuous shots), `AimTunerOpMode` (camera offset).
   Shared parts: `FinderOpMode`, `FinderResults`, `FinderMath`, `Chooser`, `ShotPoints`.
-- `Turret.cameraOffset(deg)`; `Launcher.getHood()`, `Launcher.hasTable()`.
+- `Turret.cameraOffset(deg)`; `Launcher.getHood()`, `Launcher.hasTable()`; `Flywheel.getMaxRpm()`;
+  `PositionServo.getTargetDegrees()`.
 - Starter kit: `ServoFinder`, `MotorFinder`, `FlywheelFinder`, `DriveTuner`. Examples:
   `ExampleShotTuner`, `ExampleAimTuner`. Tutorial 21 and the [finders guide](docs/guides/finders.md).
 
@@ -23,6 +24,20 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 - `AimController.offset` docs: it is where the target sits in the camera's view when the launcher is
   aimed (left = +). The code is unchanged.
+
+### Safety and correctness (Codex "Astra" and Fable reviews, before release)
+
+- Servo Finder: nothing moves until you choose a start point and press A; the servo stays between
+  the marked ends (LB to go past); a position outside the ends is noted.
+- Flywheel Finder: the A press that chooses the motor does not start the wheel; X reverses the
+  wheel; a backward encoder is reported instead of guessed as `.reversed()`.
+- Shot Tuner: the flywheel is off at START (LB on); hold-RT shooting stops after B, a jam or a
+  "gave up"; speed and hood stay inside the hardware's limits, and a hood never moved starts at a
+  real angle.
+- Drive Tuner: a stuck or timed-out move is not measured; the push test checks every wheel agrees
+  and lets the wheels roll freely; new numbers are used at once; the moves run outside button actions.
+- Aim Tuner: X homes a turret; LB stops the flywheel; the aim restarts fresh after A.
+- Results: one device's lines no longer delete another's; the save result shows on the screen.
 
 ## v0.6.0 - 2026-10-15
 

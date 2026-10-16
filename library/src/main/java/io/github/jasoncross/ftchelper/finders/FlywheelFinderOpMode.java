@@ -21,6 +21,7 @@ import java.util.ArrayList;
  * Step 1:  hold A = full power (at most 5 s). Release when the speed stops rising.
  * Step 2:  B = hold a speed on/off. D-pad up/down = +/- 100 RPM, right/left = +/- 25 RPM.
  *          RB / LB = F gain +2% / -2%. Feed a piece by hand: it shows the recovery time.
+ *          X = the wheel spins the wrong way: reverse it (for both steps; adds .reversed())
  *          BACK = choose another motor
  * </pre>
  *
@@ -45,6 +46,10 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
     private final double[] recent = new double[8];
     private int recentCount = 0;
     private double fullPowerSince = Double.NaN;
+    // False right after choosing with A: A must be let go once before it means "full power".
+    private boolean aReleased = false;
+    // X: the wheel spins the wrong way, so the motor runs reversed (the code line gets .reversed()).
+    private boolean reversed = false;
     private double[] gains = null;      // {P, I, D, F}
     private double targetRpm = 0;
     private int lastShots = 0;
@@ -83,6 +88,7 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
          .bindPress(Pad.G1, Btn.B, this::toggleHold)
          .bindPress(Pad.G1, Btn.RB, () -> changeF(1.02))
          .bindPress(Pad.G1, Btn.LB, () -> changeF(1 / 1.02))
+         .bindPress(Pad.G1, Btn.X, this::toggleReverse)
          .bindPress(Pad.G1, Btn.BACK, this::release);
     }
 
@@ -95,6 +101,8 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
         plainPower();
         flywheel = null;
         holding = false;
+        aReleased = false;
+        reversed = false;
         topTicks = 0;
         gains = null;
         recoverySec = Double.NaN;
@@ -124,12 +132,12 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
     // B: hold the chosen speed with the hub's speed control (step 2), or stop.
     private void toggleHold() {
         if (motor == null || gains == null) return;
+        if (topTicks < 0) return;   // the encoder counts backward: speed control would run away
         holding = !holding;
         if (holding) {
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             flywheel = new Flywheel(motorName, motor).countsPerRev(countsPerRev())
                     .maxRpm(topRpm()).pidf(gains[0], gains[1], gains[2], gains[3]);
-            if (topTicks < 0) flywheel.reversed();
             if (targetRpm == 0) targetRpm = Math.round(topRpm() * 0.6 / 25) * 25.0;
             lastShots = 0;
         } else {
@@ -138,9 +146,17 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
         }
     }
 
-    // Step 1's set-up: plain power, the motor's normal direction (step 2 may have reversed it).
+    // X: reverse the wheel. Only while it is not spinning on purpose (step 1 or 2 running).
+    private void toggleReverse() {
+        if (motor == null || holding || !Double.isNaN(fullPowerSince)) return;
+        reversed = !reversed;
+        plainPower();
+        writeResults();
+    }
+
+    // Step 1's set-up: plain power, in the chosen direction.
     private void plainPower() {
-        motor.setDirection(DcMotorSimple.Direction.FORWARD);
+        motor.setDirection(reversed ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
         motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         motor.setPower(0);
     }
@@ -167,8 +183,10 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
             }
             return;
         }
-        // Step 1: full power while A is held, at most MAX_TOP_SPEED_SEC.
-        if (gamepad1.a) {
+        // Step 1: full power while A is held, at most MAX_TOP_SPEED_SEC. The A press that chose the
+        // motor does not count: A must be let go and pressed again.
+        if (!gamepad1.a) aReleased = true;
+        if (gamepad1.a && aReleased) {
             if (Double.isNaN(fullPowerSince)) {
                 fullPowerSince = now();
                 recentCount = 0;
@@ -200,10 +218,10 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
     private void writeResults() {
         if (gains == null) return;
         String key = "flywheel:" + motorName;
-        results.removeStartingWith(key);
+        results.removeStartingWith(key + ":");
         String line = "Flywheel.create(hardwareMap, \"" + motorName + "\")"
                 + ".countsPerRev(" + FinderResults.num(countsPerRev(), 1) + ")"
-                + (topTicks < 0 ? ".reversed()" : "")
+                + (reversed ? ".reversed()" : "")
                 + ".pidf(" + FinderResults.num(gains[0], 2) + ", " + FinderResults.num(gains[1], 3) + ", 0, "
                 + FinderResults.num(gains[3], 2) + ")"
                 + ".maxRpm(" + FinderResults.num(Math.floor(topRpm() * 0.9 / 100) * 100, 0) + ")";
@@ -226,10 +244,15 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
         double rpm = FinderMath.ticksPerSecToRpm(motor.getVelocity(), countsPerRev());
         t.line("Speed", FinderResults.num(rpm, 0) + " RPM");
         if (gains == null) {
+            t.line("Direction", reversed ? "reversed (X)" : "normal (X = reverse)");
             t.text("Step 1: hold A for full power until the speed stops rising.");
+            t.text("Wheel spins the wrong way? Let go, press X, try again.");
             return;
         }
-        t.line("Top speed", FinderResults.num(topRpm(), 0) + " RPM" + (topTicks < 0 ? " (backward: reversed)" : ""));
+        t.line("Top speed", FinderResults.num(topRpm(), 0) + " RPM");
+        // Forward power but the count goes down: the encoder disagrees with the motor. Speed control
+        // cannot work like that (it would run away), so step 2 is not allowed.
+        if (topTicks < 0) t.warn("The encoder counts BACKWARD at forward power: check the encoder cable and motor port.");
         t.line("F gain", FinderResults.num(gains[3], 2) + " (RB/LB)");
         if (!holding) {
             t.text("Step 2: B = hold a speed. (Or hold A again to measure the top speed again.)");

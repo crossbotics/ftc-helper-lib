@@ -100,4 +100,20 @@ public class FindersTest {
         noHood.save(36.4, 2950, 0);
         assertEquals(Arrays.asList("new ShotTable()", "    .add(36.4, 2950)"), noHood.codeLines());
     }
+
+    @Test public void removingOneDevicesLinesKeepsADeviceWithALongerName() {
+        FinderResults r = new FinderResults("Test finder");
+        r.set("servo:claw:0", "claw");
+        r.set("servo:claw_right:0", "claw_right");
+        r.removeStartingWith("servo:claw:");
+        assertEquals(Arrays.asList("claw_right"), r.lines());
+    }
+
+    @Test public void pushTestNeedsEveryWheelToAgree() {
+        assertEquals(1000, FinderMath.pushTicks(new int[] {990, 1010, 1000, 1000}), E);
+        assertTrue(Double.isNaN(FinderMath.pushTicks(new int[] {1000, 1000, 1000, -1000})));   // one wheel backward
+        assertTrue(Double.isNaN(FinderMath.pushTicks(new int[] {1000, 1000, 1000, 100})));     // one wheel barely counts
+        assertTrue(Double.isNaN(FinderMath.pushTicks(new int[] {0, 0, 0, 0})));
+        assertEquals(-1000, FinderMath.pushTicks(new int[] {-1000, -1000, -1000, -1000}), E);  // all backward: caller says so
+    }
 }

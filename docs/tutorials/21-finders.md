@@ -37,7 +37,8 @@ configuration, so you do not even give it a servo name: you choose one from a li
 
 ## 3. Use the Servo Finder
 
-1. Run it, choose the claw servo with the D-pad, press A.
+1. Run it, choose the claw servo with the D-pad, press A. Choose a start point near where the claw
+   sits now (D-pad; nothing moves yet), press A: it moves there.
 2. Nudge it with the D-pad until the claw is fully open without straining. Press **X**.
 3. Nudge it to fully closed (on a game piece). Press **B**.
 4. Nudge it to "open just enough" and press **A** (saved as P1).
@@ -78,7 +79,7 @@ Shot Tuner. Each one builds on the one before: the [guide](../guides/finders.md)
 | Problem | Fix |
 | --- | --- |
 | The list is empty | the robot configuration has no devices of that kind: check the Driver Station configuration |
-| The servo jumps when first nudged | it starts from the last position the SDK sent (or 0.5): nudge with RB held near the frame |
+| The servo jumps when it first moves | the start point was far from where it sat: choose a start point near its real position before pressing A |
 | The motor will not move past a mark | hold LB to move past, then mark again |
 | "Speed test" does nothing | mark both ends first (X and B) |
 | Drive Tuner: "counts went DOWN" | a wheel motor direction is wrong: fix it in `RobotSettings` (Hardware Check) |

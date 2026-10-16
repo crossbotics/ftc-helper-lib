@@ -74,14 +74,26 @@ public final class FinderResults {
     }
 
     /**
+     * Adds the lines to the results file NOW and says if it worked. It waits for the storage (a few
+     * milliseconds): only for the end of a finder, never in its loop.
+     */
+    public boolean saveNow() {
+        return append(header(), lines());
+    }
+
+    // "== Servo finder, 2026-10-16 14:05 ==" above each saved group of lines.
+    private String header() {
+        return "== " + finderName + ", " + new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(new Date()) + " ==";
+    }
+
+    /**
      * Adds the lines to the results file on a background thread; returns at once.
      *
      * @param whenDone gets true if it worked (runs on the background thread); may be null
      */
     public void saveInBackground(Consumer<Boolean> whenDone) {
         final List<String> copy = lines();
-        final String header = "== " + finderName + ", "
-                + new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(new Date()) + " ==";
+        final String header = header();
         saver().submit(() -> {
             boolean ok = append(header, copy);
             if (whenDone != null) whenDone.accept(ok);
