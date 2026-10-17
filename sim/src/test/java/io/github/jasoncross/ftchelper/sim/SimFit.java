@@ -49,8 +49,10 @@ public final class SimFit {
                 if (line.startsWith("# kind=")) {
                     for (String part : line.substring(2).trim().split("\\s+")) {
                         if (part.startsWith("kind=")) kind = part.substring(5);
-                        if (part.startsWith("motor=")) motor = part.substring(6);
                     }
+                    // the motor's name is the rest of the line: a configuration name may have spaces
+                    int at = line.indexOf(" motor=");
+                    if (at >= 0) motor = line.substring(at + 7).trim();
                     continue;
                 }
                 if (line.startsWith("#") || line.startsWith("t,") || line.trim().isEmpty()) continue;
@@ -157,6 +159,12 @@ public final class SimFit {
         return apply(text, settings, new ArrayList<>());
     }
 
+    // A robot-file key as written, either plainly or with the spaces, = and : escaped (motor.left\ lift).
+    private static String keyPattern(String key) {
+        String escaped = key.replace("\\", "\\\\").replace(" ", "\\ ").replace("=", "\\=").replace(":", "\\:");
+        return "(?:" + java.util.regex.Pattern.quote(key) + "|" + java.util.regex.Pattern.quote(escaped) + ")";
+    }
+
     /** The same, with notes about settings it could not place (a motor that is not in the file). */
     static String apply(String text, Map<String, Map<String, String>> settings, List<String> notes) {
         // Windows files end lines with \r\n: read either, write back the same way.
@@ -185,7 +193,7 @@ public final class SimFit {
             boolean found = false;
             for (int i = 0; i < lines.size(); i++) {
                 String line = lines.get(i);
-                if (!line.matches("\\s*" + java.util.regex.Pattern.quote(m.getKey()) + "\\s*[=:].*")) continue;
+                if (!line.matches("\\s*" + keyPattern(m.getKey()) + "\\s*[=:].*")) continue;
                 found = true;
                 // split off a note (a # after a space)
                 int hash = noteStart(line);

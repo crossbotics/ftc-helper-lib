@@ -318,6 +318,11 @@ final class SimDriverStation {
         phase = Phase.STOPPED;
     }
 
+    /** Ends the command thread (when the simulator shuts down). */
+    void close() {
+        commands.shutdownNow();
+    }
+
     /** A problem in the simulator itself (not the OpMode): shown like an OpMode error. */
     void physicsError(String text) {
         if (error.isEmpty()) error = text;
@@ -325,7 +330,9 @@ final class SimDriverStation {
 
     /** STOP without waiting here (for the page and the timer). */
     void stopAsync() {
-        commands.submit(this::stop);
+        // Only the OpMode that was running when STOP was pressed: a quick INIT after it must not be stopped.
+        OpMode o = op;
+        commands.submit(() -> { if (op == o) stop(); });
     }
 
     /** Called often by the simulator: the autonomous timer, and gamepads let go when the page goes quiet. */
@@ -339,8 +346,9 @@ final class SimDriverStation {
         if (autoTimer && !autoStopping && phase == Phase.RUNNING && e != null && e.kind.equals("Autonomous")
                 && runSeconds() >= 30) {
             autoStopping = true;
+            OpMode timed = o;
             commands.submit(() -> {
-                stop();
+                if (op == timed) stop();
                 autoStopping = false;
             });
         }

@@ -49,7 +49,17 @@ final class SimEngine {
     /** Stops the OpMode and the physics. */
     void shutdown() {
         ds.stop();
+        ds.close();
         running = false;
-        if (physics != null) physics.interrupt();
+        if (physics != null) {
+            physics.interrupt();
+            try {
+                physics.join(2000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        // the physics world only once the physics thread has stopped using it
+        if (physics == null || !physics.isAlive()) robot.closeWorld();
     }
 }

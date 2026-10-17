@@ -100,7 +100,7 @@ final class SimRobot {
         String teamParts = p.getProperty("parts", "").trim();
         parts = teamParts.isEmpty() ? SimParts.catalog() : SimParts.withTeamFile(dir.resolve(teamParts).normalize());
         batteryVolts = num(p, "battery", 12.8);
-        servoSpeed = num(p, "servo.speed", 1.0);
+        servoSpeed = above0(p, "servo.speed", 1.0);
         int port = 0;
         // Drivetrain motors first, so they get the first ports like on a real hub.
         driveType = p.getProperty("drive.type", "none").trim().toLowerCase(Locale.US);
@@ -115,12 +115,12 @@ final class SimRobot {
             // in the file win over it.
             String drivePart = p.getProperty("drive.part", "").trim();
             SimParts.Motor dp = drivePart.isEmpty() ? null : parts.motor(drivePart);
-            double maxTicks = num(p, "drive.maxTicksPerSec", dp != null ? dp.maxTicksPerSec() : 2780);
-            wheelDiameterIn = num(p, "drive.wheelDiameterIn", 3.78);
-            ticksPerRev = num(p, "drive.ticksPerRev", dp != null ? dp.countsPerRev : 537.7);
-            gearRatio = num(p, "drive.gearRatio", 1);
-            trackWidthIn = num(p, "drive.trackWidthIn", 15);
-            wheelBaseIn = num(p, "drive.wheelBaseIn", 13);
+            double maxTicks = above0(p, "drive.maxTicksPerSec", dp != null ? dp.maxTicksPerSec() : 2780);
+            wheelDiameterIn = above0(p, "drive.wheelDiameterIn", 3.78);
+            ticksPerRev = above0(p, "drive.ticksPerRev", dp != null ? dp.countsPerRev : 537.7);
+            gearRatio = above0(p, "drive.gearRatio", 1);
+            trackWidthIn = above0(p, "drive.trackWidthIn", 15);
+            wheelBaseIn = above0(p, "drive.wheelBaseIn", 13);
             strafeEfficiency = num(p, "drive.strafeEfficiency", 0.85);
             double driveKs = num(p, "drive.kS", 0), driveAccel = num(p, "drive.accelSec", 0.15);
             turnDegPerCount = num(p, "drive.turnDegPerCount", Double.NaN);
@@ -148,6 +148,13 @@ final class SimRobot {
             double tpr = dbl(s, "ticksPerRev", part != null ? part.countsPerRev : (kind == SimMotor.Kind.FLYWHEEL ? 28 : 537.7));
             double fromRpm = s.containsKey("rpm") ? dbl(s, "rpm", 0) * tpr / 60.0 : Double.NaN;
             double max = dbl(s, "maxTicksPerSec", !Double.isNaN(fromRpm) ? fromRpm : part != null ? part.maxTicksPerSec() : 2780);
+            if (!(tpr > 0) || !(max > 0) || !finite(tpr) || !finite(max)) {
+                throw new IllegalArgumentException("Robot file: \"" + key + "\": its counts per turn and top speed must be more than 0");
+            }
+            if (motors.containsKey(name)) {
+                throw new IllegalArgumentException("Robot file: \"" + key + "\": \"" + name + "\" is already a drive motor (drive.motors): "
+                        + "list it in one place only");
+            }
             SimMotor m = new SimMotor(name, port++, kind, max, kind == SimMotor.Kind.FLYWHEEL ? 0.6 : 0.12);
             m.ticksPerRev = tpr;
             if (part != null) m.setPart(part);
@@ -217,9 +224,9 @@ final class SimRobot {
             limelights.put(llName, new SimLimelight(c));
         }
         imuName = p.getProperty("imu", "").trim();
-        lengthIn = num(p, "robot.lengthIn", 18);
-        widthIn = num(p, "robot.widthIn", 18);
-        heightIn = num(p, "robot.heightIn", 18);
+        lengthIn = above0(p, "robot.lengthIn", 18);
+        widthIn = above0(p, "robot.widthIn", 18);
+        heightIn = above0(p, "robot.heightIn", 18);
         startX = num(p, "start.x", 0);
         startY = num(p, "start.y", -48);
         startHeading = num(p, "start.heading", 0);
@@ -243,7 +250,7 @@ final class SimRobot {
         Map<String, Map<String, String>> shapeLines = new LinkedHashMap<>();
         for (String key : sortedKeys(p, "shape.")) shapeLines.put(key.substring("shape.".length()), settings(p.getProperty(key)));
         shapes = new SimShapes(this, p, shapeLines, dir);
-        massKg = num(p, "robot.massKg", 15);
+        massKg = above0(p, "robot.massKg", 15);
         grip = num(p, "drive.grip", 1.0);
         String physics = p.getProperty("physics", "engine").trim();
         if (!physics.equals("engine") && !physics.equals("simple")) {
@@ -419,8 +426,17 @@ final class SimRobot {
         return !Double.isNaN(v) && !Double.isInfinite(v);
     }
 
+    /** Frees the physics engine's world (the simulator is shutting down). */
+    synchronized void closeWorld() {
+        if (world != null) world.close();
+        world = null;
+    }
+
     /** Puts the robot back at the start spot, facing away from the drivers. */
     synchronized void resetPose() {
+        pushLeft = 0;                          // a hand push in progress ends
+        shots = 0;
+        sinceShot.clear();
         x = startX;
         y = startY;
         headingDeg = startHeading;
@@ -614,11 +630,21 @@ final class SimRobot {
     private static double num(Properties p, String key, double fallback) {
         String v = p.getProperty(key);
         if (v == null || v.trim().isEmpty()) return fallback;
+        double d;
         try {
-            return Double.parseDouble(v.trim());
+            d = Double.parseDouble(v.trim());
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Robot file: \"" + key + " = " + v + "\" needs a number");
         }
+        if (!finite(d)) throw new IllegalArgumentException("Robot file: \"" + key + " = " + v + "\" needs an ordinary number");
+        return d;
+    }
+
+    // A number that must be more than 0 (a size, a speed, counts per turn): 0 would divide by zero in the physics.
+    private static double above0(Properties p, String key, double fallback) {
+        double d = num(p, key, fallback);
+        if (!(d > 0)) throw new IllegalArgumentException("Robot file: \"" + key + "\" must be more than 0");
+        return d;
     }
 
     private static List<String> list(String text) {
@@ -679,11 +705,14 @@ final class SimRobot {
     private static double dbl(Map<String, String> s, String key, double fallback) {
         String v = s.get(key);
         if (v == null) return fallback;
+        double d;
         try {
-            return Double.parseDouble(v);
+            d = Double.parseDouble(v);
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Robot file: \"" + key + "=" + v + "\" needs a number");
         }
+        if (!finite(d)) throw new IllegalArgumentException("Robot file: \"" + key + "=" + v + "\" needs an ordinary number");
+        return d;
     }
 
     // ---------------------------------------------------------------- servos and switches

@@ -24,6 +24,7 @@ final class SimGamepad {
     synchronized void apply(Map<String, String> s, boolean fromPage) {
         // Updates from the page arrive on several threads: an older one must not undo a newer one.
         String session = s.getOrDefault("session", "");
+        if (session.length() > 64) session = session.substring(0, 64);
         long seq = -1;
         try { seq = Long.parseLong(s.getOrDefault("seq", "-1")); } catch (NumberFormatException ignored) { }
         if (seq >= 0) {
@@ -70,7 +71,11 @@ final class SimGamepad {
         lastSeen = fromPage ? System.nanoTime() : 0;
     }
 
-    private final Map<String, Long> lastSeqBySession = new java.util.HashMap<>();
+    // the newest numbers of the last 32 pages (a page makes one session; older ones are forgotten, so a
+    // device on the network cannot fill the memory with made-up sessions)
+    private final Map<String, Long> lastSeqBySession = new java.util.LinkedHashMap<String, Long>(16, 0.75f, true) {
+        @Override protected boolean removeEldestEntry(Map.Entry<String, Long> e) { return size() > 32; }
+    };
     private String owner = "", ownerFrom = "";
     private long ownerSeen = 0;
 

@@ -423,7 +423,7 @@ zones and tape lines, things overhead, and the AprilTags with their position and
 robot file picks one (`field = biobuzz-2026`). The page draws it; the robot turns red and the panel names
 the element when it bumps into one. A start position that overlaps a wall or an element is refused when
 the robot file loads. A new season is a new file: the BIOBUZZ file is made from the official
-field CAD by a script (in the team's design repo), and the same kind of script works for the next CAD.
+field CAD by a script that is not in this library yet (ask the maintainer); the same kind of script works for the next CAD.
 
 **Physics.** The robot moves with a physics engine (ode4j, pure Java): the wheels say how fast it wants
 to go, and the drive pushes the robot's body toward that speed as hard as the wheels' grip allows. Walls
@@ -456,7 +456,7 @@ bottom), z up from the tiles; headings and tag facing in degrees, counterclockwi
 A field's 3D model (for the 3D view) is a `.glb` file in the same frame, in inches, z up. It is not in
 the library: models made from FIRST's field CAD belong in the team's own robot project
 (`simulator/fields/`), named by `field.model` in the robot file. Without one, the 3D view builds the field
-from the field file. The BIOBUZZ model is made by `export_sim_field_glb.py` in the team's design repo
+from the field file. The BIOBUZZ model is made by a script (`export_sim_field_glb.py`) that is not in this library yet (ask the maintainer)
 from the field CAD export.
 
 ## Cameras
@@ -509,8 +509,9 @@ nothing more); phone cameras are not simulated; the resolution comes from the ro
 
 ## Not simulated
 
-Phone cameras and game pieces. The Shot and Aim tuners work without a camera when `createCamera()` returns null. Physics is
-simple: real numbers (gains, speeds, shot tables) must still be found on the robot.
+Phone cameras, colour and distance sensors, and odometry pods. The Shot and Aim tuners work without a
+camera when `createCamera()` returns null. The physics is a model: real numbers (gains, speeds, shot
+tables) must still be found on the robot.
 
 Differences to know: the screen here updates as fast as the OpMode sends (a real Driver Station
 redraws about 4 times a second, so a flickering line looks steadier there). STOP works like on a

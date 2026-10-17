@@ -71,8 +71,7 @@ motor (+0.5), and the shot leaves up and backward at 147 degrees from forward (t
 toward the back in the CAD).
 
 Not modelled or not published:
-- The real feeder is the windmill (a CR servo); using the intake motor as the feeder is our stand-in. The
-  exit angle and speed of a shot are not published (estimated from the hood; `share=0.5` is the default).
+- The exit angle and speed of a shot are not published (estimated from the hood; `share=0.5` is the default).
 - The 100T/20T gear pair on the intake: which gear is on the motor is not clear from the guide. The
   simulator does not use it anyway (a roller only needs to turn).
 - The lower 264 mm roller of small "Intake Roller" parts at the front is not drawn.
@@ -128,12 +127,13 @@ Not modelled or not published:
 
 ## What the simulator could not express (input for its next stages)
 
-1. **A feeder that is a servo.** Three of the four robots feed their flywheel with a CR servo (REV,
-   goBILDA) or a positional servo flap (Studica). `feeder=` only takes a motor, so REV and Studica cannot
-   shoot, and goBILDA uses its intake motor as a stand-in.
+1. **A feeder that is a positional servo.** Studica feeds with a servo flap; `feeder=` takes a motor or a
+   CR servo (REV's and goBILDA's feeders work), not a positional servo.
 2. **A gear between a flywheel motor and its wheel.** Studica's 2:1 bevel gears; the rim speed would be
    twice too fast. A `gear=` on the flywheel shape would fix it.
 3. **A catapult.** AndyMark's rubber-band catapult (wound by a motor, released at the top of each turn).
+   Now a stand-in: the motor as a `flywheel` with `feeder=` itself and a fixed `speed=` on the shot, once a
+   real shot is filmed.
 4. **An arm that reaches sideways and swings up/down** (REV's poker): the arm's box always reaches
    forward from its hinge, and parts cannot be turned in place.
 5. **Tilted boxes** (goBILDA's hood is a plate at 33 degrees): a box is always level, so a tilted plate

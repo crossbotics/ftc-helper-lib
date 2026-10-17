@@ -275,6 +275,13 @@ public final class SimScenario {
         }
         String key = ALIASES.getOrDefault(parts[1], parts[1]);
         if (!KEYS.contains(key)) throw new IllegalArgumentException("unknown gamepad input \"" + parts[1] + "\"");
+        double v;
+        try {
+            v = Double.parseDouble(value);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("\"" + value + "\" is not a number for " + what + " (sticks and triggers -1 to 1, buttons 1 or 0)");
+        }
+        if (!(v >= -1 && v <= 1)) throw new IllegalArgumentException(what + " goes from -1 to 1 (triggers 0 to 1), not " + value);
         Map<String, String> p = parts[0].equals("g2") ? pad2 : pad1;
         p.put(key, value);
         (p == pad2 ? sim.ds.pad2 : sim.ds.pad1).apply(new HashMap<>(p), false);

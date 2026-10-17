@@ -488,6 +488,13 @@ final class SimShapes {
 
     /** Everything to draw now: the chassis and each shape's boxes, in the robot frame. */
     List<Piece> pieces() {
+        // one moment: the physics changes the shapes' values while it holds the robot
+        synchronized (robot) {
+            return piecesNow();
+        }
+    }
+
+    private List<Piece> piecesNow() {
         List<Piece> out = new ArrayList<>();
         double[][] base = identity();
         out.add(new Piece("chassis", "box", "#1f6feb", base, new double[] {0, 0, chassisHeightIn / 2},
