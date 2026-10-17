@@ -160,12 +160,14 @@ final class SimCamera implements InvocationHandler {
     /** One tag the camera can see now. */
     static final class Seen {
         final SimField.Tag tag;
+        final double[] pose;         // where the tag was when it was seen (SimField.Tag.pose())
         final double[] cam;          // the tag's center in camera axes (inches)
         final double pixels;         // about how many pixels across it is in the picture
         final double cx, cy;         // its center in the picture (pixels)
 
-        Seen(SimField.Tag tag, double[] cam, double pixels, double cx, double cy) {
+        Seen(SimField.Tag tag, double[] pose, double[] cam, double pixels, double cx, double cy) {
             this.tag = tag;
+            this.pose = pose;
             this.cam = cam;
             this.pixels = pixels;
             this.cx = cx;
@@ -188,24 +190,25 @@ final class SimCamera implements InvocationHandler {
         double minPx = 6.5 * Math.max(1, decimation);
         List<Seen> out = new ArrayList<>();
         for (SimField.Tag t : field.tags) {
-            double[] d = {t.x - c[0][0], t.y - c[0][1], t.z - c[0][2]};
+            double[] tp = t.pose();
+            double[] d = {tp[0] - c[0][0], tp[1] - c[0][1], tp[2] - c[0][2]};
             double[] cam = {dot(d, c[1]), dot(d, c[2]), dot(d, c[3])};
             if (cam[2] < 1) continue;                                          // behind the lens
             if (Math.abs(cam[0] / cam[2]) > tanH || Math.abs(cam[1] / cam[2]) > tanV) continue;   // out of the picture
-            double[] n = tagNormal(t);
+            double[] n = tagNormal(tp);
             double dist = Math.sqrt(dot(d, d));
             double facing = -dot(n, d) / dist;                                  // cos of the angle to the tag's face
             if (facing < Math.cos(Math.toRadians(60))) continue;              // too slanted, edge-on or from behind
             double pixels = t.sizeIn * f / cam[2] * Math.sqrt(facing);
             if (pixels < minPx) continue;                                      // too small to find
-            out.add(new Seen(t, cam, pixels, width / 2.0 + f * cam[0] / cam[2], height / 2.0 + f * cam[1] / cam[2]));
+            out.add(new Seen(t, tp, cam, pixels, width / 2.0 + f * cam[0] / cam[2], height / 2.0 + f * cam[1] / cam[2]));
         }
         return out;
     }
 
     /** Which way a tag's face points (unit vector), from the field file's facingDeg and pitchDeg. */
-    static double[] tagNormal(SimField.Tag t) {
-        double a = Math.toRadians(t.facingDeg), p = Math.toRadians(t.pitchDeg);
+    static double[] tagNormal(double[] pose) {
+        double a = Math.toRadians(pose[3]), p = Math.toRadians(pose[4]);
         return new double[] {Math.cos(a) * Math.cos(p), Math.sin(a) * Math.cos(p), Math.sin(p)};
     }
 

@@ -2,6 +2,34 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## v0.8.1 - 2026-10-17
+
+Nothing changes for a robot project that pulls this version. Everything here is in the simulator.
+
+### Added
+
+- **The HIVEs tip.** Each CELL is an open box (floor, back, sides and roof, from the field CAD: about
+  20 x 14 in open, 12 in deep), so a shot goes in, rolls to the back and stays. When the pieces resting
+  in a HIVE's up CELL weigh 187 g or more (the team's field tests; the 3 staged NECTAR are 123 g, so the
+  3rd POLLEN tips it) the HIVE turns 60 degrees: the other CELL comes up, the pieces fall out and the 8
+  AprilTags on its CELLs move with it, so cameras see them where they are now. The field file's new
+  `hives` list gives each HIVE's pivot, which CELL starts up, the CELL shape, the tipping weight and its
+  tag IDs. In a match only LAUNCHED pieces may tip it (manual 10.5.1, G417); the simulator does not
+  referee that.
+- The page shows the pieces in each up CELL and the tips (Control Hub, Robot tab); with a field model
+  its HIVE parts turn, without one the CELLs are drawn as plates.
+- A piece that goes over a wall is taken off and counted ("left the field").
+- Scenario checks `expect cell "Red" >= 1`, `expect tips "Red" >= 1`, `expect left >= 1`; `print pieces`
+  lists them. Example: `sim/scenarios/hive-tips.sim`.
+- **What the robot holds, on the 3D view:** a badge in the corner with a dot in each held piece's
+  colour, an empty dot for each free place (`holds=`) and the count.
+
+### Changed
+
+- The HIVEs are no longer solid blocks: a shot at a CELL used to bounce off, now it goes in. The 3 staged
+  NECTAR in each up CELL are loose pieces resting in the CELL (they fall out when it tips).
+- A piece is taken off the field as soon as it is past a wall (was 10 ft from the centre).
+
 ## v0.8.0 - 2026-10-17
 
 Nothing changes for a robot project that pulls this version: the library builds the same way and no

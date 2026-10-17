@@ -606,7 +606,7 @@ public final class SimScenario {
                         + ", scored " + sim.robot.pieces.scored() + ", in CELLs " + sim.robot.pieces.inCells()
                         + ", HIVE tips " + sim.robot.pieces.tips() + ", left the field " + sim.robot.pieces.leftField()
                         + ", on the field " + sim.robot.pieces.drawn().size()
-                        + " (" + sim.robot.pieces.inStacks() + " of them in FLOWERs and CELLs)");
+                        + " (" + sim.robot.pieces.inStacks() + " of them in FLOWERs)");
                 return;
             case "size":
                 report.add("          size now: " + sim.robot.shapes.now() + "; at full reach: "

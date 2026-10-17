@@ -140,27 +140,29 @@ final class SimJson {
         b.append(",\"holds\":").append(r.pieces.capacity());
         b.append(",\"leftField\":").append(r.pieces.leftField());
         // each HIVE: which CELL is up (+1: toward +x), tips, pieces in its up CELL, and its CELL plates now (for the picture)
-        b.append(",\"hives\":[");
-        java.util.Map<String, Integer> cells = r.pieces.inCells();
-        for (int i = 0; i < r.field.hives.size(); i++) {
-            SimField.Hive h = r.field.hives.get(i);
-            if (i > 0) b.append(',');
-            b.append('{');
-            field(b, "name", h.name).append(',');
-            field(b, "alliance", h.alliance).append(',');
-            b.append("\"up\":").append(h.up).append(",\"startUp\":").append(h.startUp).append(",\"tips\":").append(h.tips)
-                    .append(",\"inCell\":").append(cells.getOrDefault(h.name, 0)).append(",\"tipDeg\":").append(fmt(h.tipDeg))
-                    .append(",\"pivot\":").append(vec(h.pivot)).append(",\"plates\":[");
-            int k = 0;
-            for (int s : new int[] {1, -1}) {
-                for (double[] p : h.plates(s)) {
-                    if (k++ > 0) b.append(',');
-                    b.append(vec(p));
+        synchronized (r) {
+            b.append(",\"hives\":[");
+            java.util.Map<String, Integer> cells = r.pieces.inCells();
+            for (int i = 0; i < r.field.hives.size(); i++) {
+                SimField.Hive h = r.field.hives.get(i);
+                if (i > 0) b.append(',');
+                b.append('{');
+                field(b, "name", h.name).append(',');
+                field(b, "alliance", h.alliance).append(',');
+                b.append("\"up\":").append(h.up).append(",\"startUp\":").append(h.startUp).append(",\"tips\":").append(h.tips)
+                        .append(",\"inCell\":").append(cells.getOrDefault(h.name, 0)).append(",\"tipDeg\":").append(fmt(h.tipDeg))
+                        .append(",\"pivot\":").append(vec(h.pivot)).append(",\"plates\":[");
+                int k = 0;
+                for (int s : new int[] {1, -1}) {
+                    for (double[] p : h.plates(s)) {
+                        if (k++ > 0) b.append(',');
+                        b.append(vec(p));
+                    }
                 }
+                b.append("]}");
             }
-            b.append("]}");
+            b.append(']');
         }
-        b.append(']');
         b.append(",\"robot\":{");
         synchronized (r) {
             field(b, "drive", r.driveType).append(',');

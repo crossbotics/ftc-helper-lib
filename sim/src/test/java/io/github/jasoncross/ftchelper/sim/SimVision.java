@@ -52,8 +52,8 @@ public final class SimVision {
     public static double[] tag(Object camera, int id) {
         for (SimField.Tag t : ((SimCamera) camera).robot.field.tags) {
             if (t.id == id) {
-                double[] n = SimCamera.tagNormal(t), u = t.up != null ? t.up : new double[] {Double.NaN, Double.NaN, Double.NaN};
-                return new double[] {t.x, t.y, t.z, n[0], n[1], n[2], u[0], u[1], u[2]};
+                double[] p = t.pose(), n = SimCamera.tagNormal(p);
+                return new double[] {p[0], p[1], p[2], n[0], n[1], n[2], p[5], p[6], p[7]};
             }
         }
         return null;

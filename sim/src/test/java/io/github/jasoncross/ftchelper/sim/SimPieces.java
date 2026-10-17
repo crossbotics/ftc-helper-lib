@@ -98,6 +98,10 @@ final class SimPieces {
     private int launched = 0;
     private int leftField = 0;                                      // pieces that went over a wall (taken off)
     private final Map<String, Integer> inCells = new LinkedHashMap<>();   // HIVE name -> pieces in its up CELL now
+    // How long each piece has been slow (seconds): a piece counts in a CELL once it has rested there a moment, so a
+    // shot slowing at the top of its flight does not tip the HIVE.
+    private final Map<SimWorld.Ball, Double> slowFor = new java.util.HashMap<>();
+    private double lastStepTime = 0;
     // The field's stacks (pieces inside FLOWERs and CELLs): the types in each now, lowest first. Each stays in
     // its slots from the field file: when the lowest is taken, the others drop one slot.
     private final List<List<SimField.PieceType>> stackNow = new ArrayList<>();
@@ -170,6 +174,7 @@ final class SimPieces {
             robot.field.resetHives();
             for (SimField.Hive h : robot.field.hives) world.placeHive(h);
             inCells.clear();
+            slowFor.clear();
             leftField = 0;
             for (SimField.StagedPiece sp : robot.field.pieces) {
                 world.addBall(robot.field.pieceTypes.get(sp.type), sp.x, sp.y, sp.z, 0, 0, 0);
@@ -234,6 +239,24 @@ final class SimPieces {
                 }
             }
         }
+    }
+
+    // A ball (centre p, radius r) that overlaps a plate (centre, three directions, sizes; see SimField.Hive.plates):
+    // where it must go to just touch the plate's face on its own side; null if it does not overlap.
+    static double[] pushOut(double[] pl, double[] p, double r) {
+        double[] d = {p[0] - pl[0], p[1] - pl[1], p[2] - pl[2]};
+        double[] q = new double[3];
+        double out2 = 0;
+        for (int k = 0; k < 3; k++) {
+            double c = d[0] * pl[3 + 3 * k] + d[1] * pl[4 + 3 * k] + d[2] * pl[5 + 3 * k];
+            q[k] = c;
+            double over = Math.abs(c) - pl[12 + k] / 2;
+            if (over > 0) out2 += over * over;
+        }
+        if (out2 >= r * r) return null;
+        // out through the thin side (the third direction), to the side the centre is on
+        double side = q[2] >= 0 ? 1 : -1, move = side * (pl[14] / 2 + r + 0.05) - q[2];
+        return new double[] {p[0] + move * pl[9], p[1] + move * pl[10], p[2] + move * pl[11]};
     }
 
     // A stack in a HIVE's up CELL (the staged NECTAR), when that HIVE can tip.
@@ -353,14 +376,25 @@ final class SimPieces {
             }
             // The HIVEs: what is in each up CELL; enough weight there tips it (the pieces in its CELLs turn with it
             // and, the CELL now facing down, roll out).
+            double tNow = world.time(), dt = Math.max(0, tNow - lastStepTime);
+            lastStepTime = tNow;
+            if (!robot.field.hives.isEmpty()) {
+                java.util.Set<SimWorld.Ball> alive = new java.util.HashSet<>(world.balls());
+                slowFor.keySet().retainAll(alive);
+                for (SimWorld.Ball b : alive) {
+                    double[] v = world.ballVel(b);
+                    boolean slow = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) < 10;
+                    slowFor.put(b, slow ? slowFor.getOrDefault(b, 0.0) + dt : 0.0);
+                }
+            }
             for (SimField.Hive h : robot.field.hives) {
                 double grams = 0;
                 int n = 0;
                 List<SimWorld.Ball> load = new ArrayList<>();
                 for (SimWorld.Ball b : world.balls()) {
-                    double[] bp = world.ballPos(b), bv = world.ballVel(b);
-                    // counted once it has come to rest in the CELL (a shot passing through does not tip it)
-                    boolean resting = Math.sqrt(bv[0] * bv[0] + bv[1] * bv[1] + bv[2] * bv[2]) < 30;
+                    double[] bp = world.ballPos(b);
+                    // counted once it has rested in the CELL for 0.3 s (a shot passing through does not tip it)
+                    boolean resting = slowFor.getOrDefault(b, 0.0) >= 0.3;
                     if (h.inside(h.up, bp) && resting) { grams += b.type.massG; n++; }
                     if (h.inside(h.up, bp) || h.inside(-h.up, bp)) load.add(b);
                 }
@@ -371,6 +405,19 @@ final class SimPieces {
                     robot.field.tip(h);
                     world.placeHive(h);
                     for (int k = 0; k < load.size(); k++) world.moveBall(load.get(k), to.get(k));
+                    // a piece next to the HIVE (not in a CELL) that a moved plate now cuts through: out to the side
+                    // the plate faces, still
+                    for (SimWorld.Ball b : world.balls()) {
+                        if (load.contains(b)) continue;
+                        double[] bp = world.ballPos(b);
+                        double r = b.type.diameterIn / 2;
+                        for (int s : new int[] {1, -1}) {
+                            for (double[] pl : h.plates(s)) {
+                                double[] out = pushOut(pl, bp, r);
+                                if (out != null) { bp = out; world.moveBall(b, bp); }
+                            }
+                        }
+                    }
                     inCells.put(h.name, 0);
                 }
             }

@@ -110,7 +110,7 @@ final class SimLimelight extends Limelight3A {
             double tx = Math.toDegrees(Math.atan2(s.cam[0], s.cam[2]));          // + = right of the crosshair
             double ty = -Math.toDegrees(Math.atan2(s.cam[1], s.cam[2]));         // + = above it
             double area = 100.0 * s.pixels * s.pixels / (cam.width * cam.height);
-            double[] n = SimCamera.tagNormal(s.tag);
+            double[] n = SimCamera.tagNormal(s.pose);
             double[] nc = {SimCamera.dot(n, c[1]), SimCamera.dot(n, c[2]), SimCamera.dot(n, c[3])};
             // The tag's turn as the camera sees it: yaw about the camera's up/down axis, pitch about its
             // left/right axis (0, 0 when the tag faces the lens straight on). Roll is not worked out.

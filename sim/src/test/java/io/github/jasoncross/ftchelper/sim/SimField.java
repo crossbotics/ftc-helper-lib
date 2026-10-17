@@ -87,6 +87,15 @@ final class SimField {
             startUp = up;
         }
 
+        /**
+         * Where it is now, read in one go (a HIVE may be tipping it on another thread): x, y, z, facingDeg,
+         * pitchDeg, then its printed up (NaN when not given).
+         */
+        synchronized double[] pose() {
+            double[] u = up != null ? up : new double[] {Double.NaN, Double.NaN, Double.NaN};
+            return new double[] {x, y, z, facingDeg, pitchDeg, u[0], u[1], u[2]};
+        }
+
         /** To its other place (its HIVE tipped). */
         synchronized void flip() {
             if (other == null) return;

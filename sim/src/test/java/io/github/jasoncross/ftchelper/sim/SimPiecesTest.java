@@ -239,4 +239,21 @@ public class SimPiecesTest {
         run(r, 1.0);
         assertEquals(3, (int) r.pieces.inCells().get("Red HIVE"));
     }
+
+    // After a tip, a piece that a moved CELL wall now cuts through is pushed out of it (not left inside the wall).
+    @Test public void aPieceInAMovedWallIsPushedOut() throws Exception {
+        SimRobot r = robot("");
+        SimField.Hive h = r.field.hives.get(0);
+        r.field.tip(h);
+        for (double[] pl : h.plates(1)) {
+            double[] c = {pl[0], pl[1], pl[2]};
+            double[] out = SimPieces.pushOut(pl, c, 1.4);
+            assertTrue("a ball at a plate's centre overlaps it", out != null);
+            double moved = Math.sqrt(Math.pow(out[0] - c[0], 2) + Math.pow(out[1] - c[1], 2) + Math.pow(out[2] - c[2], 2));
+            assertEquals("out by the plate's half thickness and the ball's radius", pl[14] / 2 + 1.4 + 0.05, moved, 1e-6);
+            assertTrue("and then clear of it", SimPieces.pushOut(pl, out, 1.4) == null);
+        }
+        double[] far = {0, 0, 1.4};
+        assertTrue(SimPieces.pushOut(h.plates(1).get(0), far, 1.4) == null);
+    }
 }

@@ -263,10 +263,13 @@ the bottom POLLEN, and the next one drops into its place about 0.12 s later.
 
 **The HIVEs tip** (manual 9.6, 10.5.1). Each CELL is an open box (its floor, back, sides and roof, from
 the field CAD: about 20 x 14 in open, 12 in deep), so a shot can go in, roll down to the back and stay.
-The 3 staged NECTAR rest in each up CELL. When the pieces resting in a HIVE's up CELL weigh 187 g or
-more (the team's field tests: no tip at 175 g, a tip at 199 g; the 3 NECTAR are 123 g, so the 3rd POLLEN
-tips it), the HIVE turns 60 degrees: the other CELL comes up, the pieces in the CELL that went down
-fall out, and the 8 AprilTags on its CELLs move with it (cameras see them where they are now). The page
+The 3 staged NECTAR rest in each up CELL. When the pieces that have come to rest in a HIVE's up CELL
+(slow for 0.3 s) weigh 187 g or more (the team's field tests: no tip at about 175 g, a tip at about
+199-200 g; the 3 NECTAR are 123 g, so the 3rd POLLEN tips it), the HIVE turns 60 degrees: the other CELL
+comes up, the pieces in the CELL that went down fall out, and the 8 AprilTags on its CELLs move with it
+(cameras see them where they are now). In a match only LAUNCHED pieces may tip it (10.5.1, G417), and a
+robot may not catch what falls out until it has touched something else (G409); the simulator does not
+referee either. The page
 shows the pieces in each up CELL (they score if they are still there at the end) and the tips. A piece
 that goes over a wall is taken off and counted ("left the field"). `print pieces` lists it all;
 scenario checks: `expect cell "Red" >= 2`, `expect tips "Red" >= 1`, `expect left >= 1`.
@@ -281,10 +284,12 @@ empty robot. In the robot file `preload = off` starts it empty; in a scenario `s
 `set field start`.
 
 Scenario lines: `set piece POLLEN X Y [Z]`, `expect stored >= 1`, `expect launched >= 1`,
-`expect scored "FLOWER" >= 1` (goals whose name has the text; `"all"` = every goal), `print pieces`.
+`expect scored "FLOWER" >= 1` (goals whose name has the text; `"all"` = every goal), `expect cell "Red"
+>= 1`, `expect tips "Red" >= 1`, `expect left >= 1`, `print pieces`.
 
-Not yet: the alliance areas' NECTAR (the human player's); the HIVE's arm between its CELLs (a piece
-there passes through); a HIVE turning slowly (it tips at once); points and GARDEN scoring; a held piece's weight on the arm; robot parts that stop when they hit a piece. How far
+Not yet: the alliance areas' NECTAR (the human player's, and the one a tip lets them enter, G426); the
+HIVE's arm between its CELLs (a piece there passes through); a HIVE turning slowly (it tips at once,
+and the tip is not judged at the damper, 10.5.1); points and GARDEN scoring; a held piece's weight on the arm; robot parts that stop when they hit a piece. How far
 a ball rolls on the tiles is a guess (about 2 m from 1 m/s) until someone times a real one.
 
 ### How shots fly, and shot tables
@@ -416,7 +421,7 @@ expect bumped none                     # or: bumped "Red HIVE"
 expect camera "Webcam 1" sees 31       # a tag id in the picture; or: sees none | sees "RED SCORING" (webcam only:
                                        # a Limelight reports single tags; LimelightTags makes the groups)
 expect size most ok                    # size start|match|most ok|fail (see "Robot shapes")
-expect stored >= 1                     # game pieces in the robot; also: launched, scored "FLOWER" (see "Game pieces")
+expect stored >= 1                     # game pieces in the robot; also: launched, scored, cell, tips, left (see "Game pieces")
 set piece POLLEN 30 -20                # put a game piece on the field (x y [z])
 expect within 2 motor lift ticks > 500 # wait up to 2 s for it to become true
 expect within 30 phase STOPPED         # e.g. wait for an autonomous to finish
