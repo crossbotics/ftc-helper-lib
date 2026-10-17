@@ -144,8 +144,7 @@ Notes:
 - The range of motion comes from the motor's hard stops (`min=`/`max=` on `motor.NAME`), the servo's
   `pos0`..`pos1`, or `travel=` (slide) / `minDeg=`, `maxDeg=` (arm, turret). The size check at full
   reach uses it: a real robot needs hard stops there too (inspectors check the biggest it can get).
-- The shapes are for the picture and the size rules. They do not bump into the field yet (the
-  chassis footprint still does); a physics engine is planned for that.
+- With `physics = engine` (the default) the shapes' boxes bump into the field and push game pieces too.
 - Mistakes stop the simulator with the line's name: an unknown parent, motor or servo; a loop; a moving
   part with no range of motion (give the motor `min=` and `max=`, or `travel=` / `minDeg=` `maxDeg=`);
   a word with no `=` after the first one (`at=-7,0,4` is fine: a list of numbers).
@@ -155,13 +154,45 @@ Notes:
 
 Scenario checks: `expect size start ok` (fits the 18 in cube now), `expect size match ok` (18 x 24 x 29
 now), `expect size most ok` (every pose at full reach), `expect size floor ok` (nothing below the tiles
-now); `fail` instead of `ok` checks the opposite; `print size`.
+now); `fail` instead of `ok` checks the opposite; `print size`; `print cad` (see CAD models below).
 
 How "at full reach" is checked: every combination of the moving parts' important values is tried. A
 slide or claw is biggest at an end of its range; a hinge (arm, turret) is tried at both ends, at each
 multiple of 90 degrees, and every few degrees between (5 or finer with a few moving parts; coarser with
 many, to stay under 50,000 poses). The worst pose is shown. It is a careful check, not a proof: leave a
 little margin, and measure the real robot at its hard stops.
+
+### CAD models of the parts
+
+A team with CAD (Onshape, Fusion, SolidWorks...) can draw its real parts in place of the boxes. The size
+rules then use the CAD's shape too. Physics and game pieces keep using the boxes (`size=`).
+
+1. In the whole-robot assembly, put the robot in its **start pose** (the pose the simulator starts in:
+   motors at their counts at the start, servos at their `servo.NAME` positions).
+2. Export each moving part **on its own, in the assembly's coordinates** (not "part origin"), as STL
+   (or OBJ). Group the bodies that move together: the chassis and everything fixed to it in one file,
+   the lift's moving stage and what rides on it in another, and so on. A coarse export is fine.
+3. Put the files next to the robot file (or in a folder under it) and name them:
+
+```properties
+cad.units = mm                 # mm (the usual export), cm, m or in
+cad.axes = y,-x,z              # which CAD axis points the robot's forward, left and up (- = the other way)
+cad.origin = 0,0,0             # the robot's centre on the floor (the middle of the drive frame), CAD units
+robot.model = cad/chassis.stl  # drawn in place of the chassis box
+shape.lift = slide, ..., model=cad/lift-stage.stl, baseModel=cad/lift-base.stl
+shape.arm = arm, ..., model=cad/arm.stl
+```
+
+- `model=` rides the moving part: a slide's moving stage, an arm or turret, a claw's palm (its fingers
+  stay boxes, so the gap shows), a roller (it spins), a box. `baseModel=` is a slide's fixed stage.
+- `cadPose=` on a shape: the value (inches or degrees) it was at in the CAD, when that is not the start.
+- `print cad` in a scenario lists each model next to the box it covers: its size, and how far its
+  middle is from the box's. "FAR from its box" means `cad.axes`, `cad.origin` or the shape's `at=` is
+  wrong. Make `size=` close to the CAD's size: the boxes are what bump into things.
+- At most 2,000,000 triangles in all. The size rules use about 1,000 outermost points of each model:
+  they are within a small fraction of an inch of the real mesh.
+- CAD from a seller (a kit's STEP or Onshape files) belongs to the seller: keep it in your team's
+  repository, not in a public one, unless the seller's terms allow it.
 
 ## Game pieces
 

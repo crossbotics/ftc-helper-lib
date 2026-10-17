@@ -152,6 +152,7 @@ final class SimJson {
         b.append("\"height\":").append(fmt(r.heightIn)).append(',');
         b.append("\"fieldModel\":").append(r.fieldModel != null).append(',');
         b.append("\"fieldModelVersion\":").append(modelTime(r)).append(',');
+        b.append("\"robotModels\":").append(r.shapes.cad == null ? 0 : r.shapes.cad.meshes.size()).append(',');
         b.append("\"hasImu\":").append(!r.imuName.isEmpty()).append(',');
         // The robot as shapes (robot frame: f forward, l left, u up, inches) and its size now and at most.
         b.append("\"shapes\":[");
@@ -165,7 +166,14 @@ final class SimJson {
             field(b, "color", p.color).append(',');
             b.append("\"c\":").append(vec(p.center)).append(",\"ef\":").append(vec(p.ef)).append(",\"el\":").append(vec(p.el))
                     .append(",\"eu\":").append(vec(p.eu)).append(",\"size\":").append(vec(new double[] {p.sf, p.sl, p.su}))
-                    .append(",\"spin\":").append(fmt(p.spinDeg)).append('}');
+                    .append(",\"spin\":").append(fmt(p.spinDeg));
+            if (p.mesh != null) {
+                // the CAD mesh drawn in the box's place (GET /robot-model?i=N), and where it is now
+                b.append(",\"model\":").append(r.shapes.cad.meshes.indexOf(p.mesh)).append(",\"m\":[");
+                for (int k = 0; k < 12; k++) b.append(k > 0 ? "," : "").append(fmt(p.meshFrame[k / 4][k % 4]));
+                b.append(']');
+            }
+            b.append('}');
         }
         b.append("],\"size\":{");
         SimShapes.Extent now = SimShapes.extent(pieces), most = r.shapes.most;

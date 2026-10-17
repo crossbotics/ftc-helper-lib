@@ -21,6 +21,7 @@ import java.util.Map;
  * GET /state        everything the page shows, as JSON
  * GET /field        the season's field file
  * GET /field-model  the 3D field model named by field.model in the robot file (404 if none)
+ * GET /robot-model?i=N  CAD mesh N of the robot (float32 triangles, robot frame inches)
  * GET /three/...    the 3D library (three.js), so the page works without the internet
  * POST /pad/1, /pad/2   a gamepad's buttons and sticks ("a=1&lx=0.5...")
  * POST /cmd         a Driver Station or panel command ("action=init&opmode=...")
@@ -106,6 +107,17 @@ final class SimServer {
                 byte[] model = fieldModel();
                 if (model == null) send(out, 404, "text/plain", "no field.model in the robot file".getBytes(StandardCharsets.UTF_8));
                 else send(out, 200, "model/gltf-binary", model, "max-age=86400");   // the page asks with ?v=<file time>
+            } else if (method.equals("GET") && path.equals("/robot-model")) {
+                // one CAD mesh: float32 triangles (forward, left, up inches), little-endian
+                SimCad cad = sim.robot.shapes.cad;
+                int i = -1;
+                for (String kv : query.split("&")) {
+                    if (kv.startsWith("i=")) {
+                        try { i = Integer.parseInt(kv.substring(2)); } catch (NumberFormatException ignored) { /* 404 below */ }
+                    }
+                }
+                if (cad == null || i < 0 || i >= cad.meshes.size()) send(out, 404, "text/plain", "no such robot model".getBytes(StandardCharsets.UTF_8));
+                else send(out, 200, "application/octet-stream", cad.meshes.get(i).bytes());
             } else if (method.equals("GET") && THREE_FILES.contains(path)) {
                 send(out, 200, "text/javascript; charset=utf-8", resource("/sim" + path));
             } else if (method.equals("GET") && path.equals("/state")) {

@@ -573,6 +573,9 @@ public final class SimScenario {
                         + (sim.robot.shapes.mostOk ? "every pose fits, biggest each way " : "worst pose (" + sim.robot.shapes.mostPose + ") ")
                         + sim.robot.shapes.most + "; " + sim.robot.shapes.posesTried + " poses tried");
                 return;
+            case "cad":
+                for (String l : sim.robot.shapes.cadReport()) report.add("          " + l);
+                return;
             case "cameras":
                 for (SimCamera c : sim.robot.cameras.values()) {
                     report.add("          camera " + c.name + (c.openPortals() == 0 ? ": not open" : ": sees tags " + c.seenIds()));
@@ -586,7 +589,7 @@ public final class SimScenario {
                 }
                 return;
             default:
-                throw new IllegalArgumentException("print screen, motors, servos, cameras, size, pieces or robot");
+                throw new IllegalArgumentException("print screen, motors, servos, cameras, size, cad, pieces or robot");
         }
     }
 

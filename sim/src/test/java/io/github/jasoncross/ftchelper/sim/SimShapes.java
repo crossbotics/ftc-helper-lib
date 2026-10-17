@@ -30,6 +30,8 @@ final class SimShapes {
         final double[] at;              // f, l, u in the parent's frame
         final double sf, sl, su;        // size: forward, left-right, up
         final String motor, servo, crservo;
+        final String model, baseModel;  // CAD files (see SimCad): model= rides the moving part, baseModel= a slide's fixed stage
+        final Double cadPose;           // the value the CAD was drawn at (cadPose=); null: the simulator's start
         // How the driver's position becomes inches (slide) or degrees (arm, turret) or a gap (claw):
         // motors: (shaft - zeroTicks) / perUnit + start; servos: pos0 + position * (pos1 - pos0).
         final double perUnit, zeroTicks, start, pos0, pos1;
@@ -54,6 +56,12 @@ final class SimShapes {
             motor = s.get("motor");
             servo = s.get("servo");
             crservo = s.get("crservo");
+            model = s.get("model");
+            baseModel = s.get("baseModel");
+            if (baseModel != null && !type.equals("slide")) {
+                throw new IllegalArgumentException("Robot file: shape." + name + ": baseModel= is a slide's fixed stage; other shapes have one model=");
+            }
+            cadPose = s.containsKey("cadPose") ? num(s, "cadPose", name) : null;
             if (motor != null && !robot.motors.containsKey(motor)) {
                 throw new IllegalArgumentException("Robot file: shape." + name + ": no motor." + motor + " in the robot file"
                         + (robot.crServos.containsKey(motor) ? " (it is a CR servo: write crservo=" + motor + ")" : ""));
@@ -174,6 +182,9 @@ final class SimShapes {
     /** One box (or cylinder) to draw: its center and axes in the robot frame, and its size. */
     static final class Piece {
         final String shape, kind, color;
+        String part = "main";                  // which piece of its shape: main, base (a slide's fixed stage), finger
+        SimCad.Mesh mesh = null;               // the CAD drawn in its place (and used for its size), or null
+        double[][] meshFrame = null;           // where the mesh is now: robot frame from its start-pose coordinates
         final double[] center, ef, el, eu;     // robot frame; ef/el/eu = the piece's own forward/left/up
         final double sf, sl, su;
         final double spinDeg;
@@ -191,6 +202,28 @@ final class SimShapes {
             this.sl = sl;
             this.su = su;
             this.spinDeg = spinDeg;
+        }
+
+        /** The points that decide the robot's size: the CAD's outermost points, or the box's corners. */
+        List<double[]> points() {
+            if (mesh == null) return corners();
+            List<double[]> out = new ArrayList<>(mesh.hull.length);
+            for (double[] h : mesh.hull) out.add(apply(meshFrame, h));
+            return out;
+        }
+
+        // The piece's own frame (its spin too, for a roller): rotation columns forward, left, up, then its centre.
+        double[][] frame() {
+            double[][] f = new double[3][4];
+            double c = Math.cos(Math.toRadians(spinDeg)), sn = Math.sin(Math.toRadians(spinDeg));
+            for (int i = 0; i < 3; i++) {
+                // turned about its own left line, the way the page turns a roller (three.js makeRotationY)
+                f[i][0] = ef[i] * c - eu[i] * sn;
+                f[i][1] = el[i];
+                f[i][2] = ef[i] * sn + eu[i] * c;
+                f[i][3] = center[i];
+            }
+            return f;
         }
 
         /** The 8 corners in the robot frame. */
@@ -254,6 +287,12 @@ final class SimShapes {
 
     final Map<String, Shape> shapes = new LinkedHashMap<>();
     final double chassisHeightIn;
+    /** The CAD models (robot.model, model=, baseModel=), or null when the robot file has none. */
+    final SimCad cad;
+    // shape|part -> its mesh, and that piece's frame in the pose the CAD was drawn in
+    private final Map<String, SimCad.Mesh> meshes = new LinkedHashMap<>();
+    private final Map<String, double[][]> cadStart = new LinkedHashMap<>();
+    private final Map<String, double[]> cadBox = new LinkedHashMap<>();
     private final SimRobot robot;
     /**
      * At full reach: when some pose does not fit, the worst one (furthest from fitting 18 x 24 x 29 in);
@@ -269,7 +308,7 @@ final class SimShapes {
     final int posesTried;
     final double hingeStepDeg;
 
-    SimShapes(SimRobot robot, java.util.Properties p, Map<String, Map<String, String>> lines) {
+    SimShapes(SimRobot robot, java.util.Properties p, Map<String, Map<String, String>> lines, java.nio.file.Path dir) {
         this.robot = robot;
         for (Map.Entry<String, Map<String, String>> e : lines.entrySet()) {
             if (e.getKey().equals("chassis")) throw new IllegalArgumentException("Robot file: \"chassis\" is the robot's base; give the shape another name");
@@ -288,6 +327,30 @@ final class SimShapes {
         }
         double defaultChassis = shapes.isEmpty() ? robot.heightIn : 4;
         chassisHeightIn = p.containsKey("robot.chassisHeightIn") ? Double.parseDouble(p.getProperty("robot.chassisHeightIn").trim()) : defaultChassis;
+        // CAD: each mesh, and where its piece was when the CAD was drawn (cadPose=, or the start).
+        String robotModel = p.getProperty("robot.model", "").trim();
+        boolean anyCad = !robotModel.isEmpty();
+        for (Shape s : shapes.values()) anyCad |= s.model != null || s.baseModel != null;
+        cad = anyCad ? new SimCad(p, dir) : null;
+        if (cad != null) {
+            if (!robotModel.isEmpty()) meshes.put("chassis|main", cad.load(robotModel, "robot.model"));
+            for (Shape s : shapes.values()) {
+                if (s.model != null) meshes.put(s.name + "|main", cad.load(s.model, "shape." + s.name + " model="));
+                if (s.baseModel != null) meshes.put(s.name + "|base", cad.load(s.baseModel, "shape." + s.name + " baseModel="));
+            }
+            Map<String, Double> keepNow = new LinkedHashMap<>();
+            for (Shape s : shapes.values()) keepNow.put(s.name, s.value);
+            update(0);
+            for (Shape s : shapes.values()) if (s.cadPose != null) s.value = s.cadPose;
+            for (Piece pc : pieces()) {
+                String key = pc.shape + "|" + pc.part;
+                if (meshes.containsKey(key) && !cadStart.containsKey(key)) {
+                    cadStart.put(key, pc.frame());
+                    cadBox.put(key, new double[] {pc.sf, pc.sl, pc.su});
+                }
+            }
+            for (Shape s : shapes.values()) s.value = keepNow.get(s.name);
+        }
         // The robot's worst pose: try every combination of each moving part's important values. A slide
         // or claw is biggest at one of its two ends. A hinge (arm, turret) reaches farthest at an end of
         // its range, at a multiple of 90 degrees, or (when it rides on another hinge) part way between:
@@ -420,6 +483,7 @@ final class SimShapes {
                         double[][] turn = axisFrame(s.axis);
                         double len = along(s, column(turn, 2)), a = along(s, column(turn, 0)), b = along(s, column(turn, 1));
                         out.add(new Piece(s.name, "box", s.color, dirFrame, new double[] {0, 0, len / 2}, a, b, len, 0));
+                        out.get(out.size() - 1).part = "base";
                         double[][] carriage = mul(dirFrame, translate(new double[] {0, 0, s.value}));
                         out.add(new Piece(s.name, "box", lighter(s.color), carriage, new double[] {0, 0, len / 2},
                                 a * 0.8, b * 0.8, len, 0));
@@ -441,6 +505,8 @@ final class SimShapes {
                         out.add(new Piece(s.name, "box", s.color, f, new double[] {0, 0, s.su * 0.15}, s.sf, gap + 2 * finger, s.su * 0.3, 0));
                         out.add(new Piece(s.name, "box", s.color, f, new double[] {0, (gap + finger) / 2, s.su / 2}, s.sf, finger, s.su, 0));
                         out.add(new Piece(s.name, "box", s.color, f, new double[] {0, -(gap + finger) / 2, s.su / 2}, s.sf, finger, s.su, 0));
+                        out.get(out.size() - 1).part = "finger";
+                        out.get(out.size() - 2).part = "finger";
                         mounts.put(s.name, f);
                         break;
                     }
@@ -460,7 +526,58 @@ final class SimShapes {
                 }
             }
         }
+        // A CAD mesh goes where its piece goes: (the piece now) x (the piece when the CAD was drawn)^-1.
+        if (!cadStart.isEmpty()) {
+            for (Piece pc : out) {
+                double[][] start = cadStart.get(pc.shape + "|" + pc.part);
+                if (start == null) continue;
+                pc.mesh = meshes.get(pc.shape + "|" + pc.part);
+                pc.meshFrame = mul(pc.frame(), invert(start));
+            }
+        }
         return out;
+    }
+
+    /**
+     * Each CAD mesh next to the box it covers, in that box's own directions (forward, left, up) at the pose
+     * the CAD was drawn in: its size, and how far its middle is from the box's middle. A mesh far from its
+     * box means cad.axes or cad.origin (or the at=) is wrong; a different size, that size= could match it.
+     */
+    List<String> cadReport() {
+        List<String> out = new ArrayList<>();
+        if (cad == null) {
+            out.add("no CAD models (robot.model, model=, baseModel=)");
+            return out;
+        }
+        for (Map.Entry<String, double[][]> e : cadStart.entrySet()) {
+            String[] key = e.getKey().split("\\|");
+            SimCad.Mesh m = meshes.get(e.getKey());
+            double[][] back = invert(e.getValue());
+            double[] lo = {Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE}, hi = {-Double.MAX_VALUE, -Double.MAX_VALUE, -Double.MAX_VALUE};
+            for (double[] h : m.hull) {
+                double[] q = apply(back, h);
+                for (int k = 0; k < 3; k++) { lo[k] = Math.min(lo[k], q[k]); hi[k] = Math.max(hi[k], q[k]); }
+            }
+            double[] box = cadBox.get(e.getKey());
+            double off = Math.sqrt(Math.pow((lo[0] + hi[0]) / 2, 2) + Math.pow((lo[1] + hi[1]) / 2, 2) + Math.pow((lo[2] + hi[2]) / 2, 2));
+            String what = key[0].equals("chassis") ? "robot.model" : "shape." + key[0] + (key[1].equals("base") ? " baseModel" : " model");
+            String line = String.format(Locale.US, "%s %s: CAD %.1f x %.1f x %.1f in, its middle %.1f in from the box's; box %.1f x %.1f x %.1f in",
+                    what, m.file, hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2], off, box[0], box[1], box[2]);
+            double big = Math.max(box[0], Math.max(box[1], box[2]));
+            if (off > big / 2 + 1) line += " (FAR from its box: check cad.axes, cad.origin and at=)";
+            out.add(line);
+        }
+        return out;
+    }
+
+    // A rigid frame's inverse: the rotation turned back (transposed), and the position undone.
+    private static double[][] invert(double[][] f) {
+        double[][] r = new double[3][4];
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) r[i][j] = f[j][i];
+            r[i][3] = -(f[0][i] * f[0][3] + f[1][i] * f[1][3] + f[2][i] * f[2][3]);
+        }
+        return r;
     }
 
     /** How big the robot is with these pieces. */
@@ -470,7 +587,7 @@ final class SimShapes {
         e.front = e.left = e.top = -Double.MAX_VALUE;
         e.bottom = Double.MAX_VALUE;
         for (Piece p : pieces) {
-            for (double[] c : p.corners()) {
+            for (double[] c : p.points()) {
                 e.back = Math.min(e.back, c[0]);
                 e.front = Math.max(e.front, c[0]);
                 e.right = Math.min(e.right, c[1]);

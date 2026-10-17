@@ -37,6 +37,13 @@ numbers that matter for the rules and for touching the field.
 Mount parts on parts with `on=`: a claw on a wrist on an arm on a lift. A part on a slide rides on the
 moving stage; a part on an arm turns with it.
 
+## Have CAD?
+
+Build the shapes first (the boxes bump into things), then add the CAD models on top: see "CAD models
+of the parts" in `docs/guides/simulator.md`. Use `print cad` to check each model sits on its box,
+and make each `size=` close to the CAD's size. Photos are still useful to check the CAD is the robot
+as built.
+
 ## No photos?
 
 Ask for a hand sketch from the side and from the top with a few dimensions, or describe each mechanism

@@ -44,9 +44,12 @@ Ask for these, and use whatever the team has:
    to read the device list off the Driver Station's configuration screens.
 2. **TeamCode.** Read it yourself: `RobotSettings`/`Robot.java` (motor names, directions, limits), the
    `hardwareMap.get(...)` calls, any `Characterizer`/finder results (`finder-results.txt`).
-3. **Parts list**: the motors (seller part numbers, gear ratios), servos, wheels, and their CAD if any.
+3. **Parts list**: the motors (seller part numbers, gear ratios), servos, wheels.
 4. **Photos**: front, side, top, and each mechanism at both ends of its travel (lift down and up, arm
    folded and out, claw open and closed). See `photos.md`.
+5. **CAD of the whole robot**, if they have it (Onshape, Fusion...): it can draw the real parts and
+   make the size check follow the real shape. See "CAD models of the parts" in `simulator.md`.
+   Shapes come first anyway: the boxes are what bump into things.
 
 ## 2. Make the draft
 
@@ -81,6 +84,7 @@ expect size start ok        # fits the 18 in start cube now
 expect size floor ok        # nothing below the tiles
 expect size most ok         # every pose at full reach fits 18 x 24 x 29 in
 print size                  # the sizes, and the worst pose if one does not fit
+print cad                   # only with CAD models: each one next to its box
 init "Main TeleOp"          # TODO: the team's TeleOp (an OpMode that uses every device)
 expect error none           # no "Unable to find a hardware device": every name matches
 start

@@ -225,7 +225,7 @@ final class SimRobot {
         }
         Map<String, Map<String, String>> shapeLines = new LinkedHashMap<>();
         for (String key : sortedKeys(p, "shape.")) shapeLines.put(key.substring("shape.".length()), settings(p.getProperty(key)));
-        shapes = new SimShapes(this, p, shapeLines);
+        shapes = new SimShapes(this, p, shapeLines, dir);
         massKg = num(p, "robot.massKg", 15);
         grip = num(p, "drive.grip", 1.0);
         String physics = p.getProperty("physics", "engine").trim();
