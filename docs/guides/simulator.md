@@ -262,6 +262,9 @@ CELL. The FLOWERs and HIVEs are solid blocks in the physics, so the pieces insid
 takes the bottom POLLEN; the next one drops into its place about 0.12 s later. The CELL NECTAR stay
 put. `print pieces` says how many are still in FLOWERs and CELLs.
 
+The 3D view shows what the robot holds in its top-left corner: a dot in each piece's colour, an empty dot
+for each free place (its `holds=`), and the count ("In the robot: 3 / 4 · 3 POLLEN").
+
 On the page (Control Hub, Robot tab): **Back to start** puts the robot on its start spot and every piece
 where the match starts it; **Reset field** puts the pieces back and leaves the robot where it is;
 **Preloaded** (ticked by default) gives the robot the preload now and at every reset; untick it for an

@@ -137,6 +137,7 @@ final class SimJson {
         b.append(",\"scored\":").append(counts(r.pieces.scored()));
         b.append(",\"launched\":").append(r.pieces.launched());
         b.append(",\"preloaded\":").append(r.pieces.preloaded());
+        b.append(",\"holds\":").append(r.pieces.capacity());
         b.append(",\"robot\":{");
         synchronized (r) {
             field(b, "drive", r.driveType).append(',');

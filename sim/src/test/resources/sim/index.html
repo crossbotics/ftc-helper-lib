@@ -111,6 +111,12 @@
   .tab.on { display: block; }
   details.keys summary { cursor: pointer; }
   #padsSection.small .gp, #padsSection.small .owner { display: none; }
+  /* What the robot holds, on the 3D view: a dot per piece in its colour, empty dots for the free places. */
+  #heldBadge { position: absolute; left: 8px; top: 8px; z-index: 2; display: none; align-items: center; gap: 6px;
+    padding: 4px 9px; border-radius: 14px; background: color-mix(in srgb, var(--panel) 88%, transparent);
+    border: 1px solid var(--line); font-size: 12.5px; font-weight: 600; pointer-events: none; }
+  #heldBadge i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--muted); }
+  #heldBadge i.full { border-color: rgba(0,0,0,.35); }
   #stageOff { display: none; color: var(--muted); padding: 24px; text-align: center; }
   #stage.off + #stageOff { display: block; }
 </style>
@@ -532,6 +538,7 @@ function renderHub(s) {
   }
   update3d(s.robot, s.cameras || []);
   update3dPieces(s.pieces || []);
+  showHeld(s.stored || {}, s.holds || 0);
   if (document.activeElement !== $("#preloaded")) $("#preloaded").checked = s.preloaded !== false;
   const st = s.stored || {}, sc = s.scored || {};
   const list = o => Object.entries(o).filter(([k, n]) => n > 0).map(([k, n]) => `${n} ${escapeHtml(k)}`).join(", ") || "none";
@@ -806,6 +813,24 @@ function robotModel(i) {
     });
   }
   return v3.cadGeo[i];
+}
+
+// The held-pieces badge on the 3D view (and the same words for screen readers).
+function showHeld(stored, holds) {
+  const st = $("#stage");
+  let b = $("#heldBadge");
+  if (!b) { b = document.createElement("div"); b.id = "heldBadge"; b.setAttribute("role", "status"); st.appendChild(b); }
+  const types = (fieldData && fieldData.pieceTypes) || [];
+  const colour = name => (types.find(t => t.name === name) || {}).color || "#999";
+  const held = Object.entries(stored).filter(([k, n]) => n > 0);
+  const count = held.reduce((a, [k, n]) => a + n, 0);
+  if (!holds && !count) { b.style.display = "none"; return; }
+  let dots = "";
+  for (const [k, n] of held) for (let i = 0; i < n; i++) dots += `<i class="full" style="background:${colour(k)}" title="${escapeHtml(k)}"></i>`;
+  for (let i = count; i < holds; i++) dots += "<i></i>";
+  const words = held.map(([k, n]) => `${n} ${escapeHtml(k)}`).join(", ");
+  b.innerHTML = `In the robot: ${dots} <span>${count}${holds ? " / " + holds : ""}${count ? " &middot; " + words : " &middot; empty"}</span>`;
+  b.style.display = "flex";
 }
 
 function updateShapes(r) {

@@ -452,6 +452,16 @@ final class SimPieces {
         }
     }
 
+    /** How many pieces the robot can hold: its biggest collect. holds= (and one per claw); 0 if it cannot. */
+    int capacity() {
+        synchronized (robot) {
+            int n = 0;
+            for (Collect c : collects) n = Math.max(n, c.holds);
+            if (n == 0 && !shoots.isEmpty()) for (Map.Entry<String, Integer> e : robot.field.preload.entrySet()) n += e.getValue();
+            return n + grabs.size();
+        }
+    }
+
     int storedCount() {
         synchronized (robot) {
             int n = stored.size();
