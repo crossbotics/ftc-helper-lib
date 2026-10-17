@@ -262,6 +262,12 @@ CELL. The FLOWERs and HIVEs are solid blocks in the physics, so the pieces insid
 takes the bottom POLLEN; the next one drops into its place about 0.12 s later. The CELL NECTAR stay
 put. `print pieces` says how many are still in FLOWERs and CELLs.
 
+On the page (Control Hub, Robot tab): **Back to start** puts the robot on its start spot and every piece
+where the match starts it; **Reset field** puts the pieces back and leaves the robot where it is;
+**Preloaded** (ticked by default) gives the robot the preload now and at every reset; untick it for an
+empty robot. In the robot file `preload = off` starts it empty; in a scenario `set preload on|off` and
+`set field start`.
+
 Scenario lines: `set piece POLLEN X Y [Z]`, `expect stored >= 1`, `expect launched >= 1`,
 `expect scored "FLOWER" >= 1` (goals whose name has the text; `"all"` = every goal), `print pieces`.
 

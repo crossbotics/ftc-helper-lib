@@ -176,7 +176,12 @@
     <div class="row" style="margin-top:6px">
       <span class="muted">Push by hand:</span>
       <button data-push="24,0,2">48 in forward</button><button data-push="-24,0,0.5">12 in back</button>
-      <button data-push="0,24,2">48 in right</button><button id="resetPose">Back to start</button>
+      <button data-push="0,24,2">48 in right</button>
+    </div>
+    <div class="row" style="margin-top:6px">
+      <button id="resetPose" title="The robot to its start spot and every game piece back where the match starts">Back to start</button>
+      <button id="resetField" title="Every game piece back where the match starts; the robot stays where it is">Reset field</button>
+      <label class="muted" title="The robot holds the preload (BIOBUZZ: 4 POLLEN) at the start; untick for an empty robot"><input type="checkbox" id="preloaded" checked> Preloaded</label>
     </div>
     <div class="muted" id="poseText"></div>
     <div class="muted" id="sizeText" style="margin-top:4px"></div>
@@ -527,6 +532,7 @@ function renderHub(s) {
   }
   update3d(s.robot, s.cameras || []);
   update3dPieces(s.pieces || []);
+  if (document.activeElement !== $("#preloaded")) $("#preloaded").checked = s.preloaded !== false;
   const st = s.stored || {}, sc = s.scored || {};
   const list = o => Object.entries(o).filter(([k, n]) => n > 0).map(([k, n]) => `${n} ${escapeHtml(k)}`).join(", ") || "none";
   $("#piecesText").innerHTML = (s.pieces || []).length || Object.keys(st).length || Object.keys(sc).length
@@ -542,6 +548,8 @@ document.querySelectorAll("[data-push]").forEach(b => b.onclick = () => {
   command({ action: "push", forward: f, right: r, seconds: sec });
 });
 $("#resetPose").onclick = () => command({ action: "resetPose" });
+$("#resetField").onclick = () => command({ action: "resetField" });
+$("#preloaded").onchange = e => command({ action: "preload", on: e.target.checked ? "1" : "0" });
 $("#battery").onchange = e => command({ action: "battery", volts: e.target.value });
 
 // The season's field (from /field): read once, again when the robot file's field changes.

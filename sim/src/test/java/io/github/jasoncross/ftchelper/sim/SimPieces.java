@@ -131,6 +131,10 @@ final class SimPieces {
         }
         // physics = simple (or no drivetrain): no game pieces; the collect/shoot/grab lines are checked, then unused.
         for (SimField.Goal g : robot.field.goals) scored.put(g.name, 0);
+        // preload = off in the robot file: the robot starts empty (the page's "Preloaded" changes it)
+        String pre = p.getProperty("preload", "on").trim().toLowerCase(java.util.Locale.US);
+        if (!pre.equals("on") && !pre.equals("off")) throw new IllegalArgumentException("Robot file: preload must be on or off");
+        preloaded = pre.equals("on");
         for (SimField.Stack st : robot.field.stacks) {
             stackNow.add(new ArrayList<>());
             double depth = 0;
@@ -169,8 +173,10 @@ final class SimPieces {
                 for (SimField.StagedPiece sp : robot.field.stacks.get(i).pieces) stackNow.get(i).add(robot.field.pieceTypes.get(sp.type));
             }
             // The preload (manual 10.3.1: in or on the robot, or on the tiles touching it): inside a robot that
-            // can take in or shoot pieces; otherwise on the tiles in a row behind it.
-            if (!collects.isEmpty() || !shoots.isEmpty()) {
+            // can take in or shoot pieces; otherwise on the tiles in a row behind it. None when it is turned off.
+            if (!preloaded) {
+                // no preload: the robot starts empty
+            } else if (!collects.isEmpty() || !shoots.isEmpty()) {
                 for (Map.Entry<String, Integer> e : robot.field.preload.entrySet()) {
                     for (int i = 0; i < e.getValue(); i++) stored.add(robot.field.pieceTypes.get(e.getKey()));
                 }
@@ -187,6 +193,33 @@ final class SimPieces {
             }
             for (String k : scored.keySet()) scored.put(k, 0);
             launched = 0;
+        }
+    }
+
+    // Whether the robot starts a match holding the field file's preload (the page's "Preloaded", set preload).
+    private boolean preloaded = true;
+
+    boolean preloaded() {
+        synchronized (robot) {
+            return preloaded;
+        }
+    }
+
+    /**
+     * Preloaded or not: from the next reset, and now too: a robot that holds pieces and is set to "not
+     * preloaded" is emptied; an empty one set to "preloaded" gets the preload.
+     */
+    void setPreloaded(boolean on) {
+        synchronized (robot) {
+            preloaded = on;
+            if (world == null || (collects.isEmpty() && shoots.isEmpty())) return;
+            if (!on) {
+                stored.clear();
+            } else if (stored.isEmpty()) {
+                for (Map.Entry<String, Integer> e : robot.field.preload.entrySet()) {
+                    for (int i = 0; i < e.getValue(); i++) stored.add(robot.field.pieceTypes.get(e.getKey()));
+                }
+            }
         }
     }
 

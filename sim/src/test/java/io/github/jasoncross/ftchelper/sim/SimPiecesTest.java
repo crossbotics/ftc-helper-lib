@@ -176,4 +176,24 @@ public class SimPiecesTest {
             assertTrue(e.getMessage(), e.getMessage().contains("feeder=nothing"));
         }
     }
+
+    // Preloaded or not (the page's checkbox, "set preload", or "preload = off" in the robot file), and the
+    // field put back without moving the robot.
+    @Test public void preloadCanBeTurnedOffAndTheFieldReset() throws Exception {
+        SimRobot r = robot("preload = off\n");
+        assertEquals("starts empty", 0, r.pieces.storedCount());
+        r.pieces.setPreloaded(true);
+        assertEquals("preloaded now", 4, r.pieces.storedCount());
+        r.pieces.place("POLLEN", 0, 0, 0);
+        r.setPose(40, -40, 90);
+        r.pieces.setPreloaded(false);
+        assertEquals("emptied", 0, r.pieces.storedCount());
+        r.pieces.reset();
+        assertEquals("the field is back: the extra piece is gone", 30, r.pieces.drawn().size());
+        assertEquals("still not preloaded", 0, r.pieces.storedCount());
+        assertEquals("the robot stayed", 40, r.x, 0.5);
+        r.pieces.setPreloaded(true);
+        r.resetPose();
+        assertEquals(4, r.pieces.storedCount());
+    }
 }

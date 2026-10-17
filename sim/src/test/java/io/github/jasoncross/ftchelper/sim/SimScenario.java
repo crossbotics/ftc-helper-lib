@@ -228,7 +228,14 @@ public final class SimScenario {
                         sim.robot.pieces.place(t.get(2), Double.parseDouble(t.get(3)), Double.parseDouble(t.get(4)),
                                 t.size() > 5 ? Double.parseDouble(t.get(5)) : 0);
                         break;
-                    default: throw new IllegalArgumentException("set battery | touch NAME on|off | pose X Y HEADING | autotimer on|off | piece TYPE X Y [Z]");
+                    // set preload on|off: the robot holds the preload (now and after each reset) or starts empty
+                    case "preload": sim.robot.pieces.setPreloaded(onOff(t.get(2))); break;
+                    // set field start: every game piece back where the match starts it (the robot stays)
+                    case "field":
+                        if (!t.get(2).equals("start")) throw new IllegalArgumentException("set field start");
+                        sim.robot.pieces.reset();
+                        break;
+                    default: throw new IllegalArgumentException("set battery | touch NAME on|off | pose X Y HEADING | autotimer on|off | piece TYPE X Y [Z] | preload on|off | field start");
                 }
                 ok(n, line, "");
                 return;
