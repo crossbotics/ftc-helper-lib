@@ -21,8 +21,28 @@
   header { display: flex; align-items: baseline; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--panel); }
   header h1 { font-size: 17px; margin: 0; }
   header .note { color: var(--muted); font-size: 12px; }
-  main { display: grid; grid-template-columns: minmax(330px, 420px) minmax(360px, 1fr) minmax(330px, 420px); gap: 12px; padding: 12px 16px; }
-  @media (max-width: 1150px) { main { grid-template-columns: 1fr; } }
+  /* Narrow screens: one column you scroll. */
+  main { display: grid; grid-template-columns: 1fr; gap: 10px; padding: 10px 12px; }
+  /* A laptop or bigger: everything on one screen, no page scroll. The 3D field in the middle, the gamepads under
+     it, the Driver Hub on the left, the Control Hub (in tabs) on the right. */
+  @media (min-width: 1100px) and (min-height: 640px) {
+    body:not(.phone) { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    body:not(.phone) main { flex: 1; min-height: 0; grid-template-columns: minmax(280px, 340px) minmax(420px, 1fr) minmax(290px, 360px);
+      grid-template-rows: minmax(0, 1fr) auto; grid-template-areas: "ds view hub" "ds pads hub"; }
+    body:not(.phone) #dsSection { grid-area: ds; display: flex; flex-direction: column; min-height: 0; }
+    body:not(.phone) #screen { flex: 1; height: auto; min-height: 120px; }
+    body:not(.phone) #view3dSection { grid-area: view; display: flex; flex-direction: column; min-height: 0; }
+    body:not(.phone) #stage { flex: 1; height: auto; min-height: 200px; }
+    body:not(.phone) #padsSection { grid-area: pads; }
+    body:not(.phone) #hubSection { grid-area: hub; display: flex; flex-direction: column; min-height: 0; }
+    body:not(.phone) .tabbody { flex: 1; min-height: 0; overflow: auto; }
+    body:not(.phone) .pads { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    body:not(.phone) .pad { margin-bottom: 4px; }
+    body:not(.phone) .gp { max-width: 340px; }
+    body:not(.phone) .padfoot { display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; }
+    body:not(.phone) .padfoot > * { margin-top: 2px; }
+    header { padding: 6px 16px; }
+  }
   section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
   h2 { font-size: 14px; margin: 0 0 8px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
   h3 { font-size: 13px; margin: 12px 0 6px; color: var(--muted); }
@@ -75,7 +95,6 @@
   .chip.on { background: var(--go); color: #fff; border-color: var(--go); }
   .muted { color: var(--muted); font-size: 12px; }
   /* 3D field view */
-  #view3dSection { grid-column: 1 / -1; }
   #stage { position: relative; width: 100%; height: min(70vh, 620px); border-radius: 8px; overflow: hidden; border: 1px solid var(--line); margin-top: 8px; }
   #stage canvas { display: block; width: 100%; height: 100%; touch-action: none; }
   #stage.off { display: none; }
@@ -84,6 +103,16 @@
   body.phone header, body.phone main > section:not(#padsSection) { display: none; }
   body.phone main { grid-template-columns: 1fr; padding: 6px; }
   body.phone .gp { max-width: none; }
+  /* Control Hub tabs */
+  .tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+  .tabs button { padding: 4px 9px; font-size: 12.5px; }
+  .tabs button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab { display: none; }
+  .tab.on { display: block; }
+  details.keys summary { cursor: pointer; }
+  #padsSection.small .gp, #padsSection.small .owner { display: none; }
+  #stageOff { display: none; color: var(--muted); padding: 24px; text-align: center; }
+  #stage.off + #stageOff { display: block; }
 </style>
 </head>
 <body>
@@ -106,7 +135,9 @@
   </section>
 
   <section id="padsSection">
-    <h2>Gamepads</h2>
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0">Gamepads</h2>
+      <button id="padsToggle" title="Hide the on-screen gamepads (the keyboard, a real controller or a phone still work): more room for the 3D field">Hide</button></div>
+    <div class="pads">
     <div class="pad" data-pad="1">
       <div class="row"><b>Gamepad 1</b> <span class="muted">(driver)</span>
         <select class="src" aria-label="Gamepad 1 source"></select></div>
@@ -119,19 +150,28 @@
       <div class="muted owner"></div>
       <div class="gp"></div>
     </div>
-    <label class="muted"><input type="checkbox" id="sticky"> Sticky on-screen buttons (a click holds a button until clicked again; sticks stay where you leave them) &mdash; to hold two things at once with a mouse.</label>
-    <div class="keys" id="keyHelp">
+    </div>
+    <div class="padfoot">
+    <label class="muted" title="A click holds a button until clicked again; sticks stay where you leave them: to hold two things at once with a mouse."><input type="checkbox" id="sticky"> Sticky buttons</label>
+    <details class="keys" id="keyHelp"><summary>Keys and controllers</summary>
       Keyboard: left stick <code>W A S D</code>, right stick <code>arrows</code>, D-pad <code>T F G H</code>,
       A/B/X/Y <code>K L J I</code>, LB/RB <code>Q E</code>, LT/RT <code>Z C</code>, BACK <code>Backspace</code>,
       START <code>Enter</code>, GUIDE <code>M</code>.
       Real controller: plug it in, choose it above, press any of its buttons once (a browser rule).
       GUIDE/PS often does not reach the browser: click the on-screen GUIDE (it works with every source) or press <code>M</code> (keyboard source).
-    </div>
+    </details>
     <div class="keys" id="lanHelp"></div>
+    </div>
   </section>
 
   <section id="hubSection">
     <h2>Control Hub</h2>
+    <div class="tabs" role="tablist">
+      <button data-tab="robot" class="on">Robot</button><button data-tab="motors">Motors</button>
+      <button data-tab="servos">Servos &amp; switches</button><button data-tab="cams">Cameras</button>
+    </div>
+    <div class="tabbody">
+    <div class="tab on" data-tab="robot">
     <canvas id="field" width="380" height="380" aria-label="Field, seen from above"></canvas>
     <div class="row" style="margin-top:6px">
       <span class="muted">Push by hand:</span>
@@ -141,16 +181,22 @@
     <div class="muted" id="poseText"></div>
     <div class="muted" id="sizeText" style="margin-top:4px"></div>
     <div class="muted" id="piecesText" style="margin-top:4px"></div>
-    <h3>Motors</h3>
+    <h3>Battery</h3>
+    <div class="row"><input type="range" id="battery" min="11" max="13.5" step="0.1" value="12.8"><span id="batteryText"></span></div>
+    </div>
+    <div class="tab" data-tab="motors">
     <table id="motors"><thead><tr><th>Name</th><th>Power</th><th class="num">Count</th><th class="num">Speed/s</th><th class="num">Amps</th></tr></thead><tbody></tbody></table>
-    <h3>Servos</h3>
+    </div>
+    <div class="tab" data-tab="servos">
+    <h3 style="margin-top:0">Servos</h3>
     <table id="servos"><tbody></tbody></table>
     <h3>Switches <span class="muted">(click to hold one pressed)</span></h3>
     <div id="touches"></div>
-    <h3>Cameras</h3>
+    </div>
+    <div class="tab" data-tab="cams">
     <div id="cameras"></div>
-    <h3>Battery</h3>
-    <div class="row"><input type="range" id="battery" min="11" max="13.5" step="0.1" value="12.8"><span id="batteryText"></span></div>
+    </div>
+    </div>
   </section>
   <section id="view3dSection">
     <div class="row">
@@ -165,6 +211,7 @@
       <span class="muted" id="v3note"></span>
     </div>
     <div id="stage" class="off" aria-label="Field and robot in 3D. Drag to turn, scroll to zoom, right-drag to slide."></div>
+    <div id="stageOff">The 3D view is off (tick "Show"). The field from above is in the Control Hub's Robot tab.</div>
     <div class="muted" style="margin-top:4px">Drag to turn the view, scroll to zoom, right-drag (or two fingers) to slide.</div>
   </section>
 </main>
@@ -907,6 +954,21 @@ function set3d(on) {
   if (on) { start3d(); resize3d(); }
 }
 $("#show3d").onchange = e => set3d(e.target.checked);
+// The on-screen gamepads can be hidden (remembered in this browser): the sources and keys still work.
+function setPadsSmall(small) {
+  $("#padsSection").classList.toggle("small", small);
+  $("#padsToggle").textContent = small ? "Show" : "Hide";
+  try { localStorage.setItem("simPadsSmall", small ? "1" : "0"); } catch (e) {}
+}
+$("#padsToggle").onclick = () => setPadsSmall(!$("#padsSection").classList.contains("small"));
+{ let v = null; try { v = localStorage.getItem("simPadsSmall"); } catch (e) {} setPadsSmall(v === "1" && !phonePad); }
+// Control Hub tabs (the last one chosen is remembered in this browser)
+function showTab(name) {
+  document.querySelectorAll("#hubSection [data-tab]").forEach(el => el.classList.toggle("on", el.dataset.tab === name));
+  try { localStorage.setItem("simTab", name); } catch (e) {}
+}
+document.querySelectorAll("#hubSection .tabs button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+{ let t = null; try { t = localStorage.getItem("simTab"); } catch (e) {} if (t && document.querySelector(`#hubSection .tab[data-tab="${t}"]`)) showTab(t); }
 { let saved = null; try { saved = localStorage.getItem("sim3d"); } catch (e) {} set3d(saved !== "0" && !phonePad); }
 function escapeHtml(t) { return String(t).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch])); }
 

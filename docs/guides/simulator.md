@@ -26,6 +26,12 @@ building the library needs: Java and the Android SDK, which Android Studio insta
 "SDK location not found", see [Contributing](../contributing.md)). Windows, macOS and Linux; a
 Chromebook with Linux turned on.
 
+The page fits one laptop screen: the Driver Hub on the left (OpMode, INIT/START/STOP, telemetry), the field
+in 3D in the middle with the gamepads under it, and the Control Hub on the right in tabs (Robot: the field
+from above, pushing the robot, size and pieces, battery; Motors; Servos & switches; Cameras). "Hide" on the
+gamepads gives the 3D field more room when you drive with the keyboard, a real controller or a phone. On a
+narrow screen the parts stack and the page scrolls.
+
 Options:
 
 ```bash
