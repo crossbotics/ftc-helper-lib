@@ -68,6 +68,8 @@ dependencies {
     testImplementation 'org.json:json:20240303'
     // The physics engine (pure Java; BSD licence, chosen of its BSD/LGPL pair): bumping, sliding, game pieces.
     testImplementation 'org.ode4j:core:0.5.4'
+    // the convex hull of a CAD mesh (for the size rules): QuickHull3D by John E. Lloyd, BSD licence
+    testImplementation 'com.github.quickhull3d:quickhull3d:1.0.0'
 }
 
 if (useTeamCode && new File(robotProject, 'simulator/sim-dependencies.gradle').isFile()) {

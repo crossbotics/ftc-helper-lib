@@ -65,6 +65,7 @@ public class SimCadTest {
     // An arm on a hinge 10 in up, 0..120 degrees. Its CAD is a 14 in bar (the box says 10), drawn level and
     // forward, in mm, with CAD y forward and x to the right, and the robot's centre at (100, 200, 0) mm.
     private static final String CAD = "cad.units = mm\ncad.axes = y,-x,z\ncad.origin = 100,200,0\n";
+    private static final String HDR = "cad.units = mm\ncad.axes = x,y,z\n";
     private static final String ARM = "shape.arm = arm, at=0,0,10, size=10x1x1, motor=arm, ticksPerDeg=10, start=0, model=arm.stl\n";
 
     private static byte[] bar() {
@@ -80,13 +81,14 @@ public class SimCadTest {
         assertEquals("in the robot frame: 14 in forward", 14, arm.mesh.hi[0], 1e-3);
         assertEquals(-0.5, arm.mesh.lo[1], 1e-3);
         assertEquals(10.5, arm.mesh.hi[2], 1e-3);
-        assertEquals("level: the CAD's 14 in decides the front, not the 10 in box", 14, r.shapes.now().front, 1e-3);
+        atLeast("level: the CAD's 14 in decides the front, not the 10 in box", 14, r.shapes.now().front);
         r.shapes.shapes.get("arm").value = 90;
         assertEquals("straight up: 10 + 14 in", 24, top(r, "arm"), 0.05);
         assertTrue("the boxes stay for physics: corners still 10 in long",
                 Math.abs(arm.corners().stream().mapToDouble(c -> c[0]).max().getAsDouble() - 10) < 1e-6);
-        assertEquals("the full-reach check uses the mesh", 24, r.shapes.most.top, 0.05);
-        String report = r.shapes.cadReport().get(0);
+        atLeast("the full-reach check uses the mesh", 24, r.shapes.most.top);
+        assertEquals("CAD in mm; the robot's forward is CAD y, left -x, up z; its centre on the floor is CAD 100,200,0", r.shapes.cadReport().get(0));
+        String report = r.shapes.cadReport().get(1);
         assertTrue(report, report.contains("CAD 14.0 x 1.0 x 1.0 in, its middle 2.0 in from the box's; box 10.0 x 1.0 x 1.0 in") && !report.contains("FAR"));
     }
 
@@ -94,21 +96,92 @@ public class SimCadTest {
         // the same bar drawn straight up (arm at 90 degrees): at 0 it is level again
         write("arm.stl", boxStl(new double[] {100 - 12.7, 200 - 12.7, 254}, new double[] {100 + 12.7, 200 + 12.7, 254 + 14 * 25.4}));
         SimRobot r = robot(CAD + ARM.replace("model=arm.stl", "model=arm.stl, cadPose=90"));
-        assertEquals(14, r.shapes.now().front, 0.05);
+        atLeast("level again", 14, r.shapes.now().front);
         assertEquals(10.5, top(r, "arm"), 0.05);
     }
 
     @Test public void objWorksTooAndMistakesAreExplained() throws Exception {
-        String obj = "v 0 0 0\nv 25.4 0 0\nv 0 25.4 0\nv 0 0 25.4\nf 1 3 2\nf 1 2 4\nf 1 4 3\nf 2 3 4\n";
+        String obj = "v 0 0 0\nv\t25.4 0 0\nv 0 25.4 0\nv 0 0 25.4\nf 1/1 3/3 2/2\nf\t1 2 4\nf 1 4 3\nf -3 -2 -1\n";
         write("tip.obj", obj.getBytes("UTF-8"));
-        SimRobot r = robot("cad.units = mm\nrobot.model = tip.obj\n");
+        SimRobot r = robot(HDR + "robot.model = tip.obj\n");
         assertEquals(1, r.shapes.cad.meshes.size());
         assertEquals(1, r.shapes.cad.meshes.get(0).hi[0], 1e-6);
-        expectProblem("cad.axes = x,-y,z\nrobot.model = tip.obj\n", "mirrored");
-        expectProblem("robot.model = nothing.stl\n", "no such file");
-        expectProblem("robot.model = robot.properties\n", ".stl or .obj");
-        expectProblem("cad.units = feet\nrobot.model = tip.obj\n", "cad.units");
-        expectProblem("shape.b = box, baseModel=tip.obj\n", "baseModel");
+        expectProblem("cad.units = mm\ncad.axes = x,-y,z\nrobot.model = tip.obj\n", "mirrored");
+        expectProblem(HDR + "robot.model = nothing.stl\n", "no such file");
+        expectProblem("robot.model = tip.obj\n", "need cad.units");
+        expectProblem(HDR + "robot.model = robot.properties\n", ".stl or .obj");
+        write("bad.obj", "v 1,5 0 0\n".getBytes("UTF-8"));
+        expectProblem(HDR + "robot.model = bad.obj\n", "a number it can't read: For input string");
+        expectProblem("cad.units = feet\ncad.axes = x,y,z\nrobot.model = tip.obj\n", "cad.units");
+        expectProblem(HDR + "shape.b = box, baseModel=tip.obj\n", "baseModel");
+    }
+
+    // The size rules never say a mesh is smaller than it is, and are within 0.1 in: a flat, tilted cone
+    // (18 in across, 0.4 in high: a shape whose tip is easy to miss) on an arm, at many angles.
+    @Test public void theSizeRulesAreSafeForAnyShape() throws Exception {
+        java.util.List<double[]> tri = new java.util.ArrayList<>();
+        double[] tip = {9 + 0.4 * Math.sin(0.7), 0, 10 + 0.4 * Math.cos(0.7)};
+        for (int i = 0; i < 48; i++) {
+            double a = 2 * Math.PI * i / 48, b = 2 * Math.PI * (i + 1) / 48;
+            double[] p = rim(a), q = rim(b);
+            tri.add(tip); tri.add(p); tri.add(q);
+            tri.add(new double[] {9, 0, 10}); tri.add(q); tri.add(p);
+        }
+        write("cone.stl", stl(tri));
+        SimRobot r = robot("cad.units = in\ncad.axes = x,y,z\n" + ARM.replace("arm.stl", "cone.stl"));
+        SimShapes.Shape arm = r.shapes.shapes.get("arm");
+        for (double deg = 0; deg <= 120; deg += 7.5) {
+            arm.value = deg;
+            double truth = -1e9;
+            double c = Math.cos(Math.toRadians(deg)), sn = Math.sin(Math.toRadians(deg));
+            for (double[] v : tri) truth = Math.max(truth, 10 + (v[0] * sn + (v[2] - 10) * c));   // turned about the hinge (0,0,10)
+            double top = r.shapes.now().top;
+            assertTrue("at " + deg + " deg: " + top + " vs the real " + truth, top >= truth - 1e-6 && top <= truth + 0.1);
+        }
+    }
+
+    private static double[] rim(double a) {
+        // a circle of radius 9 round (9, 0, 10), in the plane square to the tilted axis (sin 0.7, 0, cos 0.7)
+        double[] u = {Math.cos(0.7), 0, -Math.sin(0.7)}, w = {0, 1, 0};
+        return new double[] {9 + 9 * (u[0] * Math.cos(a) + w[0] * Math.sin(a)), 9 * Math.sin(a), 10 + 9 * u[2] * Math.cos(a)};
+    }
+
+    private static byte[] stl(java.util.List<double[]> corners) {
+        ByteBuffer b = ByteBuffer.allocate(84 + corners.size() / 3 * 50).order(ByteOrder.LITTLE_ENDIAN);
+        b.position(80);
+        b.putInt(corners.size() / 3);
+        for (int i = 0; i < corners.size(); i += 3) {
+            for (int k = 0; k < 3; k++) b.putFloat(0);
+            for (int j = 0; j < 3; j++) for (int k = 0; k < 3; k++) b.putFloat((float) corners.get(i + j)[k]);
+            b.putShort((short) 0);
+        }
+        return b.array();
+    }
+
+    // A roller's mesh with a paddle sticking 3 in out forward: as it spins the paddle points up too.
+    @Test public void aSpinningRollerReachesAllRound() throws Exception {
+        write("paddle.stl", boxStl(new double[] {8, -7, 1}, new double[] {11, 7, 2}));
+        SimRobot r = robot("cad.units = in\ncad.axes = x,y,z\nshape.intake = roller, at=8,0,1.5, size=2x14x2, motor=intake, model=paddle.stl\n");
+        // (a 16-sided cylinder round the real circle: up to 2% more, plus the margin)
+        double top = r.shapes.now().top, reach = 1.5 + Math.hypot(3, 0.5);
+        assertTrue("3 in above the roller's centre, whichever way it is turned: " + top, top >= reach && top < reach + 0.2);
+        assertTrue("and 3 in below it: below the tiles", r.shapes.now().bottom < -1);
+    }
+
+    private static void atLeast(String what, double expected, double actual) {
+        assertTrue(what + ": " + actual + " (expected " + expected + " to 0.1 more)", actual >= expected - 1e-6 && actual <= expected + 0.1);
+    }
+
+    // Parts that move together, one file each: one model. Inches exported but mm written: told so.
+    @Test public void severalFilesMakeOneModelAndWrongUnitsAreNamed() throws Exception {
+        write("a.stl", boxStl(new double[] {0, -1, 0}, new double[] {1, 1, 1}));
+        write("b.stl", boxStl(new double[] {5, -1, 0}, new double[] {6, 1, 1}));
+        SimRobot r = robot("cad.units = in\ncad.axes = x,y,z\nshape.part = box, at=0,0,0, size=6x2x1, model=a.stl; b.stl\n");
+        assertEquals(1, r.shapes.cad.meshes.size());
+        assertEquals(6, r.shapes.cad.meshes.get(0).hi[0], 1e-6);
+        assertEquals(24, r.shapes.cad.meshes.get(0).triangles.length / 9);
+        SimRobot mm = robot("cad.units = mm\ncad.axes = x,y,z\nshape.part = box, at=0,0,0, size=6x2x1, model=a.stl; b.stl\n");
+        assertTrue(mm.shapes.cadReport().get(1), mm.shapes.cadReport().get(1).contains("25 times smaller than its box: check cad.units"));
     }
 
     private void expectProblem(String extra, String words) throws Exception {

@@ -165,32 +165,56 @@ little margin, and measure the real robot at its hard stops.
 ### CAD models of the parts
 
 A team with CAD (Onshape, Fusion, SolidWorks...) can draw its real parts in place of the boxes. The size
-rules then use the CAD's shape too. Physics and game pieces keep using the boxes (`size=`).
+rules then use the CAD's shape too. Physics and game pieces keep using the boxes (`size=`), so build
+the shapes first.
 
-1. In the whole-robot assembly, put the robot in its **start pose** (the pose the simulator starts in:
-   motors at their counts at the start, servos at their `servo.NAME` positions).
-2. Export each moving part **on its own, in the assembly's coordinates** (not "part origin"), as STL
-   (or OBJ). Group the bodies that move together: the chassis and everything fixed to it in one file,
-   the lift's moving stage and what rides on it in another, and so on. A coarse export is fine.
-3. Put the files next to the robot file (or in a folder under it) and name them:
+**1. Put the CAD robot in its start pose.** That is the robot as the simulator shows it when it opens:
+each lift and arm at its `start=` value (0 if you wrote none; with a motor whose `min=` is not 0, check
+the 3D view), each servo part at the position on its `servo.NAME` line. A part that is somewhere else in
+your CAD gets `cadPose=` (below).
+
+**2. Make the robot's centre on the floor easy to find.** The easy way: in the assembly, place the
+drive frame so the CAD origin is the middle of the drive frame, at the bottom of the wheels (where they
+touch the tiles). Then `cad.origin = 0,0,0`. Otherwise measure that point from the origin (Onshape:
+Measure tool; Fusion: Inspect > Measure) and write it in CAD units.
+
+**3. Export each group of parts that move together as one STL file, in the assembly's positions.**
+The chassis and everything fixed to it is one group; the lift's moving stage and what rides on it,
+another; and so on. A coarse export is fine.
+- **Onshape:** in the **Assembly** tab (never a Part Studio: a Part Studio export puts parts where they
+  were drawn, not where the assembly put them), select every part of the group, right-click > Export,
+  format STL, **untick** "Export unique parts as individual files". Pick the units in that window.
+- **Fusion:** hide every part that is not in the group, right-click the **top** component > Save As
+  Mesh, STL, one file. (Exporting one body on its own can move it to the origin.) Note the unit it uses.
+- Already have one file per part? List them: `model=cad/rail-l.stl; cad/rail-r.stl; cad/carriage.stl`.
+
+**4. Name the files in the robot file** (next to it, or in a folder under it):
 
 ```properties
-cad.units = mm                 # mm (the usual export), cm, m or in
-cad.axes = y,-x,z              # which CAD axis points the robot's forward, left and up (- = the other way)
-cad.origin = 0,0,0             # the robot's centre on the floor (the middle of the drive frame), CAD units
+cad.units = mm                 # the unit in the export window: mm, cm, m or in (required)
+cad.axes = y,-x,z              # the CAD axes that point the robot's forward, left and up (required)
+cad.origin = 0,0,0             # the robot's centre on the floor, in CAD units (default 0,0,0)
 robot.model = cad/chassis.stl  # drawn in place of the chassis box
 shape.lift = slide, ..., model=cad/lift-stage.stl, baseModel=cad/lift-base.stl
 shape.arm = arm, ..., model=cad/arm.stl
 ```
 
+- `cad.axes`: look at the CAD's axis triad. Onshape and SolidWorks have up = z (if the robot's front
+  points along +y: `y,-x,z`). Fusion usually has up = y (front along +x: `x,-z,y`). A minus sign means
+  the other way. A choice that would draw the robot mirrored is refused.
 - `model=` rides the moving part: a slide's moving stage, an arm or turret, a claw's palm (its fingers
   stay boxes, so the gap shows), a roller (it spins), a box. `baseModel=` is a slide's fixed stage.
-- `cadPose=` on a shape: the value (inches or degrees) it was at in the CAD, when that is not the start.
-- `print cad` in a scenario lists each model next to the box it covers: its size, and how far its
-  middle is from the box's. "FAR from its box" means `cad.axes`, `cad.origin` or the shape's `at=` is
-  wrong. Make `size=` close to the CAD's size: the boxes are what bump into things.
-- At most 2,000,000 triangles in all. The size rules use about 1,000 outermost points of each model:
-  they are within a small fraction of an inch of the real mesh.
+- `cadPose=` on a shape: the value (inches or degrees) it is at in the CAD, when that is not the start.
+
+**5. Check it.** `print cad` in a scenario prints the settings in words, then each model next to the
+box it covers: its size, and how far its middle is from the box's. "FAR from its box" means
+`cad.origin`, `cad.axes` or the shape's `at=` is wrong (for `robot.model`, almost always `cad.origin`);
+"25 times smaller" means `cad.units` is wrong. Then make each `size=` close to its CAD size: the boxes
+are what bump into things. Look at the 3D view too.
+
+- At most 2,000,000 triangles in all. The size rules use each model's outside (its convex hull) plus a
+  small margin (about 1/200 of the part's size), so they never call a robot smaller than its CAD. A
+  roller's model counts as everything it reaches while it spins.
 - CAD from a seller (a kit's STEP or Onshape files) belongs to the seller: keep it in your team's
   repository, not in a public one, unless the seller's terms allow it.
 

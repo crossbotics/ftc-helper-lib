@@ -185,6 +185,7 @@ final class SimShapes {
         String part = "main";                  // which piece of its shape: main, base (a slide's fixed stage), finger
         SimCad.Mesh mesh = null;               // the CAD drawn in its place (and used for its size), or null
         double[][] meshFrame = null;           // where the mesh is now: robot frame from its start-pose coordinates
+        double[] sweep = null;                 // a spinning mesh (roller): radius, and its ends along its axis
         final double[] center, ef, el, eu;     // robot frame; ef/el/eu = the piece's own forward/left/up
         final double sf, sl, su;
         final double spinDeg;
@@ -207,6 +208,20 @@ final class SimShapes {
         /** The points that decide the robot's size: the CAD's outermost points, or the box's corners. */
         List<double[]> points() {
             if (mesh == null) return corners();
+            if (sweep != null) {
+                // a roller turns: everywhere its mesh can reach is a cylinder (a 16-sided one round it)
+                List<double[]> out = new ArrayList<>(32);
+                double r = sweep[0] / Math.cos(Math.PI / 16);
+                for (int k = 0; k < 16; k++) {
+                    double a = r * Math.cos(Math.PI * k / 8), c = r * Math.sin(Math.PI * k / 8);
+                    for (int end = 1; end <= 2; end++) {
+                        double b = sweep[end];
+                        out.add(new double[] {center[0] + ef[0] * a + el[0] * b + eu[0] * c,
+                                center[1] + ef[1] * a + el[1] * b + eu[1] * c, center[2] + ef[2] * a + el[2] * b + eu[2] * c});
+                    }
+                }
+                return out;
+            }
             List<double[]> out = new ArrayList<>(mesh.hull.length);
             for (double[] h : mesh.hull) out.add(apply(meshFrame, h));
             return out;
@@ -293,6 +308,7 @@ final class SimShapes {
     private final Map<String, SimCad.Mesh> meshes = new LinkedHashMap<>();
     private final Map<String, double[][]> cadStart = new LinkedHashMap<>();
     private final Map<String, double[]> cadBox = new LinkedHashMap<>();
+    private final Map<String, double[]> cadSweep = new LinkedHashMap<>();
     private final SimRobot robot;
     /**
      * At full reach: when some pose does not fit, the worst one (furthest from fitting 18 x 24 x 29 in);
@@ -347,6 +363,18 @@ final class SimShapes {
                 if (meshes.containsKey(key) && !cadStart.containsKey(key)) {
                     cadStart.put(key, pc.frame());
                     cadBox.put(key, new double[] {pc.sf, pc.sl, pc.su});
+                    if (pc.kind.equals("cyl")) {
+                        // a roller's mesh in its own frame: how far from its axis, and from where to where along it
+                        double[][] back = invert(pc.frame());
+                        double[] w = {0, Double.MAX_VALUE, -Double.MAX_VALUE};
+                        for (double[] h : meshes.get(key).hull) {
+                            double[] q = apply(back, h);
+                            w[0] = Math.max(w[0], Math.hypot(q[0], q[2]));
+                            w[1] = Math.min(w[1], q[1]);
+                            w[2] = Math.max(w[2], q[1]);
+                        }
+                        cadSweep.put(key, w);
+                    }
                 }
             }
             for (Shape s : shapes.values()) s.value = keepNow.get(s.name);
@@ -533,6 +561,7 @@ final class SimShapes {
                 if (start == null) continue;
                 pc.mesh = meshes.get(pc.shape + "|" + pc.part);
                 pc.meshFrame = mul(pc.frame(), invert(start));
+                pc.sweep = cadSweep.get(pc.shape + "|" + pc.part);
             }
         }
         return out;
@@ -549,6 +578,7 @@ final class SimShapes {
             out.add("no CAD models (robot.model, model=, baseModel=)");
             return out;
         }
+        out.add(cad.frame.words);
         for (Map.Entry<String, double[][]> e : cadStart.entrySet()) {
             String[] key = e.getKey().split("\\|");
             SimCad.Mesh m = meshes.get(e.getKey());
@@ -564,7 +594,13 @@ final class SimShapes {
             String line = String.format(Locale.US, "%s %s: CAD %.1f x %.1f x %.1f in, its middle %.1f in from the box's; box %.1f x %.1f x %.1f in",
                     what, m.file, hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2], off, box[0], box[1], box[2]);
             double big = Math.max(box[0], Math.max(box[1], box[2]));
-            if (off > big / 2 + 1) line += " (FAR from its box: check cad.axes, cad.origin and at=)";
+            double cadBig = Math.max(hi[0] - lo[0], Math.max(hi[1] - lo[1], hi[2] - lo[2]));
+            if (cadBig * 5 < big) line += String.format(Locale.US, " (%.0f times smaller than its box: check cad.units)", big / cadBig);
+            else if (cadBig > big * 5) line += String.format(Locale.US, " (%.0f times bigger than its box: check cad.units)", cadBig / big);
+            if (off > big / 2 + 1) {
+                line += " (FAR from its box: check cad.origin, cad.axes and at="
+                        + (key[0].equals("chassis") ? "; for robot.model it is almost always cad.origin)" : ")");
+            }
             out.add(line);
         }
         return out;
@@ -587,13 +623,14 @@ final class SimShapes {
         e.front = e.left = e.top = -Double.MAX_VALUE;
         e.bottom = Double.MAX_VALUE;
         for (Piece p : pieces) {
+            double m = p.mesh == null ? 0 : p.mesh.margin;     // a mesh's outside is kept to within this
             for (double[] c : p.points()) {
-                e.back = Math.min(e.back, c[0]);
-                e.front = Math.max(e.front, c[0]);
-                e.right = Math.min(e.right, c[1]);
-                e.left = Math.max(e.left, c[1]);
-                e.top = Math.max(e.top, c[2]);
-                e.bottom = Math.min(e.bottom, c[2]);
+                e.back = Math.min(e.back, c[0] - m);
+                e.front = Math.max(e.front, c[0] + m);
+                e.right = Math.min(e.right, c[1] - m);
+                e.left = Math.max(e.left, c[1] + m);
+                e.top = Math.max(e.top, c[2] + m);
+                e.bottom = Math.min(e.bottom, c[2] - m);
             }
         }
         return e;
