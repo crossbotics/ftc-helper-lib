@@ -49,8 +49,15 @@ final class SimField {
     static final class Tag {
         final int id;
         final String name;
-        final double x, y, z, facingDeg, pitchDeg, sizeIn;
-        final double[] up;   // the tag's printed up (unit vector), or null: then "up" is the world's up turned into the tag's plane
+        final double sizeIn;
+        // Where it is now. A tag on a HIVE's CELL has two places (the field file's "tipped" is the other one): flip()
+        // swaps them when the HIVE tips.
+        volatile double x, y, z, facingDeg, pitchDeg;
+        volatile double[] up;   // the tag's printed up (unit vector), or null: then "up" is the world's up turned into the tag's plane
+        private double[] other;           // the other place: x, y, z, facingDeg, pitchDeg (null: it does not move)
+        private double[] otherUp;
+        private final double[] start;     // the place at the start of a match, and its up
+        private final double[] startUp;
 
         Tag(Map<String, Object> m) {
             id = (int) SimJsonReader.number(m, "id", -1);
@@ -67,6 +74,168 @@ final class SimField {
                 if (l.size() == 3) u = new double[] {((Number) l.get(0)).doubleValue(), ((Number) l.get(1)).doubleValue(), ((Number) l.get(2)).doubleValue()};
             }
             up = u;
+            if (m.get("tipped") instanceof Map) {
+                Map<String, Object> t = SimJsonReader.object(m.get("tipped"), name + " tipped");
+                other = new double[] {SimJsonReader.number(t, "x", x), SimJsonReader.number(t, "y", y), SimJsonReader.number(t, "z", z),
+                        SimJsonReader.number(t, "facingDeg", facingDeg), SimJsonReader.number(t, "pitchDeg", pitchDeg)};
+                if (t.get("up") instanceof java.util.List) {
+                    List<Object> l = SimJsonReader.array(t.get("up"), name + " tipped up");
+                    if (l.size() == 3) otherUp = new double[] {((Number) l.get(0)).doubleValue(), ((Number) l.get(1)).doubleValue(), ((Number) l.get(2)).doubleValue()};
+                }
+            }
+            start = new double[] {x, y, z, facingDeg, pitchDeg};
+            startUp = up;
+        }
+
+        /** To its other place (its HIVE tipped). */
+        synchronized void flip() {
+            if (other == null) return;
+            double[] now = {x, y, z, facingDeg, pitchDeg};
+            double[] nowUp = up;
+            x = other[0]; y = other[1]; z = other[2]; facingDeg = other[3]; pitchDeg = other[4];
+            up = otherUp;
+            other = now;
+            otherUp = nowUp;
+        }
+
+        /** Back to where the match starts it. */
+        synchronized void reset() {
+            if (other != null && (x != start[0] || y != start[1] || z != start[2])) flip();
+        }
+
+        /** True when it is not where the match starts it (its HIVE is tipped). */
+        boolean flipped() {
+            return x != start[0] || y != start[1] || z != start[2];
+        }
+    }
+
+    /**
+     * A HIVE that tips (manual 9.6, 10.5.1): two CELLs on an arm that turns about a pivot along y. In each CELL's own
+     * frame: a = along the arm from the pivot, w = along y, h = across the CELL's floor (0 = the floor). The CELL is
+     * open at a = aOut and closed at aIn; its cross-section is the opening pentagon. upSide: the CELL toward +x (+1)
+     * or -x (-1) is up. When the up CELL holds tipGrams or more, the HIVE turns tipDeg and the other CELL comes up.
+     */
+    static final class Hive {
+        final String name, alliance, element;
+        final double[] pivot;
+        final int startUp;
+        final double tipDeg, tipGrams, aIn, aOut, floor;
+        final List<double[]> opening = new ArrayList<>();
+        final List<Integer> tagsPlus = new ArrayList<>(), tagsMinus = new ArrayList<>();
+        volatile int up;         // +1 or -1: which CELL is up now
+        volatile int tips;       // how many times it has tipped since the start
+
+        Hive(Map<String, Object> m) {
+            name = SimJsonReader.string(m, "name", "HIVE");
+            alliance = SimJsonReader.string(m, "alliance", "");
+            element = SimJsonReader.string(m, "element", name);
+            List<Object> pv = SimJsonReader.array(m.get("pivot"), name + " pivot");
+            pivot = new double[] {((Number) pv.get(0)).doubleValue(), ((Number) pv.get(1)).doubleValue(), ((Number) pv.get(2)).doubleValue()};
+            startUp = SimJsonReader.number(m, "upSide", 1) >= 0 ? 1 : -1;
+            up = startUp;
+            tipDeg = SimJsonReader.number(m, "tipDeg", 60);
+            tipGrams = SimJsonReader.number(m, "tipGrams", 187);
+            Map<String, Object> c = SimJsonReader.object(m.get("cell"), name + " cell");
+            aIn = SimJsonReader.number(c, "aIn", 9.42);
+            aOut = SimJsonReader.number(c, "aOut", 21.44);
+            floor = SimJsonReader.number(c, "floor", 0);
+            for (Object o : SimJsonReader.array(c.get("opening"), name + " opening")) {
+                List<Object> xy = SimJsonReader.array(o, name + " opening point");
+                opening.add(new double[] {((Number) xy.get(0)).doubleValue(), ((Number) xy.get(1)).doubleValue()});
+            }
+            if (m.get("tags") instanceof Map) {
+                Map<String, Object> t = SimJsonReader.object(m.get("tags"), name + " tags");
+                for (Object o : SimJsonReader.array(t.getOrDefault("+x", Collections.emptyList()), name)) tagsPlus.add(((Number) o).intValue());
+                for (Object o : SimJsonReader.array(t.getOrDefault("-x", Collections.emptyList()), name)) tagsMinus.add(((Number) o).intValue());
+            }
+        }
+
+        /**
+         * The CELL on side s (+1: toward +x) now: its arm direction, y, and the direction across its floor, as
+         * rows {a, w, h} (unit vectors, field frame). The up CELL's arm rises tipDeg / 2 above level; the other
+         * CELL is where it would be up, turned back by the tip.
+         */
+        double[][] cellAxes(int s) {
+            double half = Math.toRadians(tipDeg / 2), c = Math.cos(half), sn = Math.sin(half);
+            double[] a = {s * c, 0, sn}, h = {-s * sn, 0, c};
+            if (s != up) {
+                double psi = Math.toRadians(-up * tipDeg);
+                a = turnY(a, psi);
+                h = turnY(h, psi);
+            }
+            return new double[][] {a, {0, 1, 0}, h};
+        }
+
+        /** A point (field inches) in the CELL on side s: {a, w, h}. */
+        double[] inCell(int s, double[] p) {
+            double[][] ax = cellAxes(s);
+            double[] r = {p[0] - pivot[0], p[1] - pivot[1], p[2] - pivot[2]};
+            return new double[] {dot(r, ax[0]), dot(r, ax[1]), dot(r, ax[2]) - floor};
+        }
+
+        /** True when a point (a piece's centre) is inside the CELL on side s. */
+        boolean inside(int s, double[] p) {
+            double[] q = inCell(s, p);
+            if (q[0] <= aIn || q[0] >= aOut) return false;
+            boolean in = false;     // the opening pentagon: an even-odd test
+            for (int i = 0, j = opening.size() - 1; i < opening.size(); j = i++) {
+                double[] pi = opening.get(i), pj = opening.get(j);
+                if ((pi[1] > q[2]) != (pj[1] > q[2]) && q[1] < (pj[0] - pi[0]) * (q[2] - pi[1]) / (pj[1] - pi[1]) + pi[0]) in = !in;
+            }
+            return in;
+        }
+
+        /**
+         * The CELL on side s as thin plates (for the physics and the picture): one along each edge of the opening
+         * pentagon, the length of the CELL, and one closing its back. Each: centre x y z, then its own three
+         * directions (length, width, thickness: 9 numbers), then its sizes (inches).
+         */
+        List<double[]> plates(int s) {
+            final double t = 0.25;                                   // wall thickness (in): thin polycarbonate and metal
+            double[][] ax = cellAxes(s);
+            List<double[]> out = new ArrayList<>();
+            double len = aOut - aIn, am = (aIn + aOut) / 2;
+            for (int i = 0; i < opening.size(); i++) {
+                double[] p = opening.get(i), q = opening.get((i + 1) % opening.size());
+                double dw = q[0] - p[0], dh = q[1] - p[1], L = Math.hypot(dw, dh);
+                if (L < 1e-6) continue;
+                double nw = dh / L, nh = -dw / L;                    // outward (the pentagon is counterclockwise)
+                double w = (p[0] + q[0]) / 2 + nw * t / 2, h = (p[1] + q[1]) / 2 + nh * t / 2;
+                out.add(plate(ax, am, w, h, ax[0], comb(ax, dw / L, dh / L), comb(ax, nw, nh), len, L, t));
+            }
+            double wMax = 0, hMax = 0;
+            for (double[] p : opening) { wMax = Math.max(wMax, Math.abs(p[0])); hMax = Math.max(hMax, p[1]); }
+            out.add(plate(ax, aIn - t / 2, 0, hMax / 2, ax[1], ax[2], ax[0], 2 * wMax + 2 * t, hMax, t));
+            return out;
+        }
+
+        // A plate at (a, w, h) in the CELL's frame with these three directions and sizes, in the field frame.
+        private double[] plate(double[][] ax, double a, double w, double h, double[] e1, double[] e2, double[] e3,
+                               double s1, double s2, double s3) {
+            double[] c = new double[3];
+            for (int k = 0; k < 3; k++) c[k] = pivot[k] + a * ax[0][k] + w * ax[1][k] + (h + floor) * ax[2][k];
+            return new double[] {c[0], c[1], c[2], e1[0], e1[1], e1[2], e2[0], e2[1], e2[2], e3[0], e3[1], e3[2], s1, s2, s3};
+        }
+
+        // w and h directions combined into one field direction
+        private static double[] comb(double[][] ax, double w, double h) {
+            return new double[] {w * ax[1][0] + h * ax[2][0], w * ax[1][1] + h * ax[2][1], w * ax[1][2] + h * ax[2][2]};
+        }
+
+        /** Where a point goes when the HIVE tips now (it turns with the HIVE about the pivot). */
+        double[] tipped(double[] p) {
+            double[] r = {p[0] - pivot[0], p[1] - pivot[1], p[2] - pivot[2]};
+            double[] t = turnY(r, Math.toRadians(up * tipDeg));
+            return new double[] {pivot[0] + t[0], pivot[1] + t[1], pivot[2] + t[2]};
+        }
+
+        static double[] turnY(double[] v, double ang) {
+            double c = Math.cos(ang), s = Math.sin(ang);
+            return new double[] {v[0] * c + v[2] * s, v[1], -v[0] * s + v[2] * c};
+        }
+
+        private static double dot(double[] a, double[] b) {
+            return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
         }
     }
 
@@ -139,6 +308,7 @@ final class SimField {
     final List<StagedPiece> pieces = new ArrayList<>();
     final List<Goal> goals = new ArrayList<>();
     final List<Stack> stacks = new ArrayList<>();
+    final List<Hive> hives = new ArrayList<>();
     final Map<String, Integer> preload = new java.util.LinkedHashMap<>();
 
     final String name, season, frameNote;
@@ -181,6 +351,9 @@ final class SimField {
             }
             stacks.add(st);
         }
+        for (Object o : SimJsonReader.array(root.getOrDefault("hives", Collections.emptyList()), "hives")) {
+            hives.add(new Hive(SimJsonReader.object(o, "hive")));
+        }
         for (Object o : SimJsonReader.array(root.getOrDefault("goals", Collections.emptyList()), "goals")) {
             goals.add(new Goal(SimJsonReader.object(o, "goal")));
         }
@@ -190,6 +363,26 @@ final class SimField {
                 preload.put(e.getKey(), ((Number) e.getValue()).intValue());
             }
         }
+    }
+
+    /** The tag with this id, or null. */
+    Tag tag(int id) {
+        for (Tag t : tags) if (t.id == id) return t;
+        return null;
+    }
+
+    /** Tips a HIVE: the other CELL comes up, and the tags on both CELLs move with it. */
+    void tip(Hive h) {
+        h.up = -h.up;
+        h.tips++;
+        for (int id : h.tagsPlus) { Tag t = tag(id); if (t != null) t.flip(); }
+        for (int id : h.tagsMinus) { Tag t = tag(id); if (t != null) t.flip(); }
+    }
+
+    /** Every HIVE and tag back to the start of a match. */
+    void resetHives() {
+        for (Hive h : hives) { h.up = h.startUp; h.tips = 0; }
+        for (Tag t : tags) t.reset();
     }
 
     /** An empty 12 ft field (no elements). */

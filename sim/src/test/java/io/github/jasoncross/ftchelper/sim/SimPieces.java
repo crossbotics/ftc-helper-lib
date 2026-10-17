@@ -96,6 +96,8 @@ final class SimPieces {
     private final List<SimField.PieceType> stored = new ArrayList<>();
     private final Map<String, Integer> scored = new LinkedHashMap<>();
     private int launched = 0;
+    private int leftField = 0;                                      // pieces that went over a wall (taken off)
+    private final Map<String, Integer> inCells = new LinkedHashMap<>();   // HIVE name -> pieces in its up CELL now
     // The field's stacks (pieces inside FLOWERs and CELLs): the types in each now, lowest first. Each stays in
     // its slots from the field file: when the lowest is taken, the others drop one slot.
     private final List<List<SimField.PieceType>> stackNow = new ArrayList<>();
@@ -164,13 +166,24 @@ final class SimPieces {
             for (SimWorld.Ball b : world.balls()) world.removeBall(b);
             for (Grab g : grabs) g.heldType = null;
             stored.clear();
+            // the HIVEs back as the match starts them
+            robot.field.resetHives();
+            for (SimField.Hive h : robot.field.hives) world.placeHive(h);
+            inCells.clear();
+            leftField = 0;
             for (SimField.StagedPiece sp : robot.field.pieces) {
                 world.addBall(robot.field.pieceTypes.get(sp.type), sp.x, sp.y, sp.z, 0, 0, 0);
             }
             for (int i = 0; i < stackNow.size(); i++) {
                 stackNow.get(i).clear();
                 stackReady.set(i, 0.0);
-                for (SimField.StagedPiece sp : robot.field.stacks.get(i).pieces) stackNow.get(i).add(robot.field.pieceTypes.get(sp.type));
+                SimField.Stack st = robot.field.stacks.get(i);
+                if (inAHive(st)) {
+                    // pieces staged in a CELL that can tip are real pieces: they rest in it and fall out when it tips
+                    for (SimField.StagedPiece sp : st.pieces) world.addBall(robot.field.pieceTypes.get(sp.type), sp.x, sp.y, sp.z, 0, 0, 0);
+                    continue;
+                }
+                for (SimField.StagedPiece sp : st.pieces) stackNow.get(i).add(robot.field.pieceTypes.get(sp.type));
             }
             // The preload (manual 10.3.1: in or on the robot, or on the tiles touching it): inside a robot that
             // can take in or shoot pieces; otherwise on the tiles in a row behind it. None when it is turned off.
@@ -221,6 +234,14 @@ final class SimPieces {
                 }
             }
         }
+    }
+
+    // A stack in a HIVE's up CELL (the staged NECTAR), when that HIVE can tip.
+    private boolean inAHive(SimField.Stack st) {
+        if (st.pieces.isEmpty()) return false;
+        SimField.StagedPiece p = st.pieces.get(0);
+        for (SimField.Hive h : robot.field.hives) if (h.inside(h.up, new double[] {p.x, p.y, p.z})) return true;
+        return false;
     }
 
     /** True when shots need a piece (the robot shoots real pieces), false when shots are only counted. */
@@ -323,7 +344,35 @@ final class SimPieces {
                         break;
                     }
                 }
-                if (!taken && (p[2] < -12 || Math.abs(p[0]) > 120 || Math.abs(p[1]) > 120)) world.removeBall(b);   // left the field
+                // over a wall (or through the floor): off the field, counted
+                double wall = robot.field.wallHalf + 2;
+                if (!taken && (p[2] < -12 || Math.abs(p[0]) > wall || Math.abs(p[1]) > wall)) {
+                    world.removeBall(b);
+                    leftField++;
+                }
+            }
+            // The HIVEs: what is in each up CELL; enough weight there tips it (the pieces in its CELLs turn with it
+            // and, the CELL now facing down, roll out).
+            for (SimField.Hive h : robot.field.hives) {
+                double grams = 0;
+                int n = 0;
+                List<SimWorld.Ball> load = new ArrayList<>();
+                for (SimWorld.Ball b : world.balls()) {
+                    double[] bp = world.ballPos(b), bv = world.ballVel(b);
+                    // counted once it has come to rest in the CELL (a shot passing through does not tip it)
+                    boolean resting = Math.sqrt(bv[0] * bv[0] + bv[1] * bv[1] + bv[2] * bv[2]) < 30;
+                    if (h.inside(h.up, bp) && resting) { grams += b.type.massG; n++; }
+                    if (h.inside(h.up, bp) || h.inside(-h.up, bp)) load.add(b);
+                }
+                inCells.put(h.name, n);
+                if (grams >= h.tipGrams) {
+                    List<double[]> to = new ArrayList<>();
+                    for (SimWorld.Ball b : load) to.add(h.tipped(world.ballPos(b)));
+                    robot.field.tip(h);
+                    world.placeHive(h);
+                    for (int k = 0; k < load.size(); k++) world.moveBall(load.get(k), to.get(k));
+                    inCells.put(h.name, 0);
+                }
             }
             // A stack's lowest piece: an intake running inward (or a closed claw) at the opening takes it.
             for (int i = 0; i < stackNow.size(); i++) {
@@ -473,6 +522,29 @@ final class SimPieces {
     Map<String, Integer> scored() {
         synchronized (robot) {
             return new LinkedHashMap<>(scored);
+        }
+    }
+
+    /** Pieces in each HIVE's up CELL now (they score if they are still there at the end). */
+    Map<String, Integer> inCells() {
+        synchronized (robot) {
+            return new LinkedHashMap<>(inCells);
+        }
+    }
+
+    /** How many times each HIVE has tipped since the start. */
+    Map<String, Integer> tips() {
+        synchronized (robot) {
+            Map<String, Integer> m = new LinkedHashMap<>();
+            for (SimField.Hive h : robot.field.hives) m.put(h.name, h.tips);
+            return m;
+        }
+    }
+
+    /** Pieces that went over a wall since the start (taken off the field). */
+    int leftField() {
+        synchronized (robot) {
+            return leftField;
         }
     }
 

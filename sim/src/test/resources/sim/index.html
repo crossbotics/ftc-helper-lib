@@ -539,11 +539,15 @@ function renderHub(s) {
   update3d(s.robot, s.cameras || []);
   update3dPieces(s.pieces || []);
   showHeld(s.stored || {}, s.holds || 0);
+  updateHives(s.hives);
   if (document.activeElement !== $("#preloaded")) $("#preloaded").checked = s.preloaded !== false;
   const st = s.stored || {}, sc = s.scored || {};
   const list = o => Object.entries(o).filter(([k, n]) => n > 0).map(([k, n]) => `${n} ${escapeHtml(k)}`).join(", ") || "none";
   $("#piecesText").innerHTML = (s.pieces || []).length || Object.keys(st).length || Object.keys(sc).length
-    ? `Pieces in the robot: ${list(st)} · shot: ${s.launched || 0} · scored: ${list(sc)}` : "";
+    ? `Pieces in the robot: ${list(st)} · shot: ${s.launched || 0} · scored: ${list(sc)}` +
+      ((s.hives || []).length ? " · in the up CELLs: " + s.hives.map(h => `${escapeHtml(h.alliance)} ${h.inCell}`).join(", ") +
+        " · HIVE tips: " + s.hives.map(h => `${escapeHtml(h.alliance)} ${h.tips}`).join(", ") : "") +
+      (s.leftField ? ` · <b>${s.leftField} left the field</b>` : "") : "";
   $("#poseText").textContent = s.robot.drive === "none" ? "No drivetrain in this robot file." :
     `x ${s.robot.x.toFixed(1)} in, y ${s.robot.y.toFixed(1)} in, heading ${s.robot.heading.toFixed(1)}°` +
     (s.robot.hasImu ? `, IMU yaw ${s.robot.imu.toFixed(1)}°` : "") + ` · shots ${s.robot.shots}` +
@@ -667,7 +671,8 @@ function build3d() {
   theme(); matchMedia("(prefers-color-scheme: dark)").addEventListener("change", theme);
 
   const fieldGroup = new THREE.Group(), simpleGroup = new THREE.Group(), tagGroup = new THREE.Group(), cadGroup = new THREE.Group();
-  fieldGroup.add(simpleGroup, tagGroup, cadGroup); scene.add(fieldGroup);
+  const cellGroup = new THREE.Group();     // the HIVEs' CELLs as plates (when there is no field model)
+  fieldGroup.add(simpleGroup, tagGroup, cadGroup, cellGroup); scene.add(fieldGroup);
 
   // The robot: a box its size from the robot file, with a white arrow on top at the front.
   const robot = new THREE.Group();
@@ -683,7 +688,7 @@ function build3d() {
   const camMounts = new THREE.Group(); robot.add(camMounts);
   robot.visible = false;
 
-  Object.assign(v3, { renderer, scene, camera, controls, fieldGroup, simpleGroup, tagGroup, cadGroup, robot, body, edges, arrow, bodyMat, camMounts });
+  Object.assign(v3, { renderer, scene, camera, controls, fieldGroup, simpleGroup, tagGroup, cadGroup, cellGroup, robot, body, edges, arrow, bodyMat, camMounts });
   new ResizeObserver(resize3d).observe(stage);
   resize3d();
   setView(v3.view);
@@ -717,8 +722,9 @@ function buildSimpleField(fd) {
   for (const [x, y, w, d] of [[0, wall + 0.5, 2 * wall + 2, 1], [0, -wall - 0.5, 2 * wall + 2, 1], [wall + 0.5, 0, 1, 2 * wall], [-wall - 0.5, 0, 1, 2 * wall]]) {
     const m = new THREE.Mesh(new THREE.BoxGeometry(w, d, wallH), wallMat); m.position.set(x, y, wallH / 2); solids.add(m);
   }
+  const tipping = new Set(((fd && fd.hives) || []).map(h => h.element));   // drawn as CELLs instead (updateHives)
   for (const e of (fd && fd.elements) || []) {
-    if (!e.polygon || e.polygon.length < 2) continue;
+    if (!e.polygon || e.polygon.length < 2 || tipping.has(e.name)) continue;
     const pts = e.polygon.map(([x, y]) => new THREE.Vector2(x, y)), color = new THREE.Color(e.color || "#888888");
     if (e.kind === "line") {
       const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts.map(p => new THREE.Vector3(p.x, p.y, 0.15))), new THREE.LineBasicMaterial({ color }));
@@ -734,8 +740,14 @@ function buildSimpleField(fd) {
       m.position.z = e.zMin || 0; m.name = e.name; solids.add(m);
     }
   }
-  // AprilTags: a square their size, facing the way the field file says, with the ID on it.
-  for (const t of (fd && fd.tags) || []) {
+  buildTags(fd);
+}
+// AprilTags: a square their size, facing the way the field file says, with the ID on it. A tag on a tipped HIVE's
+// CELL is drawn at its "tipped" place.
+function buildTags(fd) {
+  disposeAll(v3.tagGroup);
+  for (const t0 of (fd && fd.tags) || []) {
+    const t = v3.flippedTags && v3.flippedTags.has(t0.id) && t0.tipped ? Object.assign({}, t0, t0.tipped) : t0;
     const tc = document.createElement("canvas"); tc.width = tc.height = 128; const tg = tc.getContext("2d");
     tg.fillStyle = "#fff"; tg.fillRect(0, 0, 128, 128); tg.fillStyle = "#000"; tg.fillRect(16, 16, 96, 96);
     tg.fillStyle = "#fff"; tg.font = "bold 52px system-ui"; tg.textAlign = "center"; tg.textBaseline = "middle"; tg.fillText(String(t.id), 64, 66);
@@ -752,6 +764,34 @@ function buildSimpleField(fd) {
     m.name = "tag " + t.id; v3.tagGroup.add(m);
   }
 }
+// The HIVEs as they are now: in the field model each HIVE's parts (hive_metal_red, hive_skin_red...) turn about
+// their pivot; without it, each CELL is drawn as its plates. Tags on a tipped HIVE move to their other place.
+function updateHives(hives) {
+  if (!v3.ready || !hives) return;
+  const key = hives.map(h => h.name + h.up).join("|");
+  if (key === v3.hiveKey) return;
+  v3.hiveKey = key;
+  disposeAll(v3.cellGroup);
+  const flipped = new Set();
+  for (const h of hives) {
+    const mat = new THREE.MeshPhongMaterial({ color: h.alliance === "blue" ? 0x2a62c4 : 0xc8322a, transparent: true, opacity: 0.55,
+      side: THREE.DoubleSide, depthWrite: false, shininess: 12 });
+    for (const p of h.plates) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(p[12], p[13], p[14]), mat);
+      m.matrixAutoUpdate = false;
+      const e1 = new THREE.Vector3(p[3], p[4], p[5]), e2 = new THREE.Vector3(p[6], p[7], p[8]), e3 = new THREE.Vector3().crossVectors(e1, e2);
+      m.matrix.makeBasis(e1, e2, e3).setPosition(p[0], p[1], p[2]);
+      v3.cellGroup.add(m);
+    }
+    const fh = ((fieldData && fieldData.hives) || []).find(x => x.name === h.name);
+    if (fh && h.up !== h.startUp) for (const id of [...(fh.tags["+x"] || []), ...(fh.tags["-x"] || [])]) flipped.add(id);
+    // the field model's parts of this HIVE turn about its pivot (they are placed at the pivot)
+    const ang = h.up !== h.startUp ? h.startUp * h.tipDeg * Math.PI / 180 : 0;
+    v3.cadGroup.traverse(o => { if (o.name && o.name.startsWith("hive_") && o.name.endsWith("_" + h.alliance)) o.rotation.x = ang; });
+  }
+  v3.flippedTags = flipped;
+  buildTags(fieldData);
+}
 // The field CAD model (field.model in the robot file), shaded flat like the turret page.
 function loadCadModel() {
   disposeAll(v3.cadGroup);
@@ -766,6 +806,7 @@ function loadCadModel() {
       m.dispose();
     });
     v3.cadGroup.add(gl.scene);
+    v3.hiveKey = null;                          // turn its HIVEs to where they are now
     $("#v3note").textContent = "";
     showCad();
   }, undefined, () => { $("#v3note").textContent = "Could not load the field model (field.model in the robot file)."; v3.cadLoaded = false; showCad(); });
@@ -774,6 +815,7 @@ function loadCadModel() {
 function showCad() {
   const cad = v3.cadLoaded && v3.cadGroup.children.length > 0 && $("#useCad").checked;
   v3.cadGroup.visible = cad;
+  v3.cellGroup.visible = !cad;
   // With the CAD model, the simple shapes are hidden (the model has its own walls and tape) but not the tiles
   // (the model has none); the tag squares stay, to show the IDs.
   v3.simpleGroup.children.forEach(o => o.visible = !cad || o.name === "tiles");

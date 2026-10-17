@@ -28,7 +28,7 @@ public class SimPiecesTest {
         SimRobot r = robot("");
         assertEquals("BIOBUZZ preload: 4 POLLEN", 4, r.pieces.storedCount());
         assertEquals("4 POLLEN in each GARDEN and FLOWER, 3 NECTAR in each up CELL", 30, r.pieces.drawn().size());
-        assertEquals(22, r.pieces.inStacks());
+        assertEquals("in the FLOWERs (the CELL NECTAR are loose pieces in their CELLs)", 16, r.pieces.inStacks());
         run(r, 1.0);
         assertEquals("they stay put", 30, r.pieces.drawn().size());
         int low = 0;
@@ -109,7 +109,7 @@ public class SimPiecesTest {
         SimRobot r = robot("collect.intake = shape=intake, motor=intake, holds=8\n");
         r.setPose(23.39, -68.04 + 2.41 + 9.6, 180);          // facing the FLOWER (-y), intake 0.6 in from its face
         run(r, 0.3);
-        assertEquals("the intake is off: nothing taken", 22, r.pieces.inStacks());
+        assertEquals("the intake is off: nothing taken", 16, r.pieces.inStacks());
         r.motors.get("intake").device.setPower(1);
         run(r, 0.05);
         assertEquals("the bottom one taken", 5, r.pieces.storedCount());
@@ -121,13 +121,13 @@ public class SimPiecesTest {
         assertTrue("the next ones dropped down: " + left + " left, lowest at " + lowest, left >= 1 && lowest < 1.5);
         run(r, 2.0);
         assertEquals("it keeps taking them until the FLOWER is empty", 8, r.pieces.storedCount());
-        assertEquals(18, r.pieces.inStacks());
+        assertEquals(12, r.pieces.inStacks());
         // from the far side of the field it takes nothing
         SimRobot far = robot("collect.intake = shape=intake, motor=intake, holds=8\n");
         far.setPose(0, -40, 180);
         far.motors.get("intake").device.setPower(1);
         run(far, 0.5);
-        assertEquals(22, far.pieces.inStacks());
+        assertEquals(16, far.pieces.inStacks());
     }
 
     // A shot table (the launcher program's, or filmed shots): each shot takes its speed, angle and exit point from it.
@@ -195,5 +195,48 @@ public class SimPiecesTest {
         r.pieces.setPreloaded(true);
         r.resetPose();
         assertEquals(4, r.pieces.storedCount());
+    }
+
+    // The red HIVE (pivot 0, -12.75, 43.95; the CELL toward +x up at the start, holding the 3 staged NECTAR,
+    // 123 g): 3 POLLEN dropped into it make 198 g, over the 187 g that tips it. It tips: the other CELL comes up,
+    // its pieces fall out, its tags move. A piece over a wall is counted. Back to start puts it all back.
+    @Test public void aHiveTipsWhenItsUpCellIsHeavyEnough() throws Exception {
+        SimRobot r = robot("");
+        r.setPose(40, -55, 0);
+        run(r, 1.5);
+        assertEquals("the 3 NECTAR rest in the red up CELL", 3, (int) r.pieces.inCells().get("Red HIVE"));
+        assertEquals(0, (int) r.pieces.tips().get("Red HIVE"));
+        double tagZ = r.field.tag(34).z;
+        // into the up CELL's opening, from above
+        SimField.Hive h = r.field.hives.get(0);
+        for (double w : new double[] {-3, 2, 6}) {
+            double[][] ax = h.cellAxes(1);
+            double a = 17, hh = 5 + h.floor;
+            r.pieces.place("POLLEN", h.pivot[0] + a * ax[0][0] + hh * ax[2][0], h.pivot[1] + w, h.pivot[2] + a * ax[0][2] + hh * ax[2][2]);
+        }
+        run(r, 2.0);
+        assertEquals("tipped once", 1, (int) r.pieces.tips().get("Red HIVE"));
+        assertEquals("now the -x CELL is up", -1, h.up);
+        assertEquals("nothing in the new up CELL", 0, (int) r.pieces.inCells().get("Red HIVE"));
+        assertTrue("the tags moved with it: " + r.field.tag(34).z, Math.abs(r.field.tag(34).z - tagZ) > 5);
+        run(r, 2.0);
+        // all 6 fell out of the red HIVE (they roll on, away from it): nothing high up on the red side any more
+        int high = 0, onTiles = 0;
+        for (Object[] d : r.pieces.drawn()) {
+            if ((Double) d[2] < 0 && (Double) d[3] > 20) high++;
+            if ((Double) d[3] < 2.5) onTiles++;
+        }
+        assertEquals("nothing left up in the red HIVE", 0, high);
+        assertTrue("its 6 pieces are on the tiles now: " + onTiles, onTiles >= 12 + 6);
+        // a piece over the wall
+        r.pieces.place("POLLEN", 0, -75, 20);
+        run(r, 1.0);
+        assertEquals(1, r.pieces.leftField());
+        r.resetPose();
+        assertEquals("back as the match starts", 1, h.up);
+        assertEquals(tagZ, r.field.tag(34).z, 1e-9);
+        assertEquals(0, r.pieces.leftField());
+        run(r, 1.0);
+        assertEquals(3, (int) r.pieces.inCells().get("Red HIVE"));
     }
 }

@@ -1,0 +1,14 @@
+# A HIVE tips when its up CELL is heavy enough: the red HIVE's up CELL holds the 3 staged NECTAR (123 g);
+# 3 POLLEN dropped into it (75 g) make 198 g, over the 187 g that tips it.
+# Run it:  ./gradlew :sim:scenario -Pfile=sim/scenarios/hive-tips.sim
+wait 1
+expect cell "Red" = 3          # the staged NECTAR rest in the up CELL
+expect tips "Red" = 0
+# into the up CELL (toward +x), from above its middle
+set piece POLLEN 12.9 -15.75 55.6
+set piece POLLEN 12.9 -10.75 55.6
+set piece POLLEN 12.9 -6.75 55.6
+wait 2
+expect tips "Red" = 1          # it tipped
+expect cell "Red" = 0          # the new up CELL is empty; the 6 pieces fell out
+print pieces

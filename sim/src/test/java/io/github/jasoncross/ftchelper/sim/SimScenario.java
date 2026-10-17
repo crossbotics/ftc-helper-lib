@@ -370,6 +370,18 @@ public final class SimScenario {
                 need(t, 4, "expect scored \"FLOWER\" >= 1   (pieces in goals whose name has the text; \"all\" = every goal)");
                 op(t, 2);
                 return;
+            case "cell":
+                need(t, 4, "expect cell \"Red\" >= 1   (pieces now in the up CELL of HIVEs whose name has the text)");
+                op(t, 2);
+                return;
+            case "tips":
+                need(t, 4, "expect tips \"Red\" >= 1   (times the HIVEs whose name has the text have tipped)");
+                op(t, 2);
+                return;
+            case "left":
+                need(t, 3, "expect left >= 1   (pieces that went over a wall)");
+                op(t, 1);
+                return;
             case "size":
                 need(t, 3, "expect size start|match|most|floor ok|fail");
                 if (!java.util.Arrays.asList("start", "match", "most", "floor").contains(t.get(1))) {
@@ -468,6 +480,17 @@ public final class SimScenario {
             }
             case "launched":
                 return compare(sim.robot.pieces.launched(), t.subList(1, t.size()), why);
+            case "cell":
+            case "tips": {
+                int n = 0;
+                java.util.Map<String, Integer> m = t.get(0).equals("cell") ? sim.robot.pieces.inCells() : sim.robot.pieces.tips();
+                for (java.util.Map.Entry<String, Integer> e : m.entrySet()) {
+                    if (t.get(1).equals("all") || e.getKey().contains(t.get(1))) n += e.getValue();
+                }
+                return compare(n, t.subList(2, t.size()), why);
+            }
+            case "left":
+                return compare(sim.robot.pieces.leftField(), t.subList(1, t.size()), why);
             case "scored": {
                 int n = 0;
                 for (java.util.Map.Entry<String, Integer> e : sim.robot.pieces.scored().entrySet()) {
@@ -580,7 +603,9 @@ public final class SimScenario {
                 return;
             case "pieces":
                 report.add("          pieces: in the robot " + sim.robot.pieces.stored() + ", shot " + sim.robot.pieces.launched()
-                        + ", scored " + sim.robot.pieces.scored() + ", on the field " + sim.robot.pieces.drawn().size()
+                        + ", scored " + sim.robot.pieces.scored() + ", in CELLs " + sim.robot.pieces.inCells()
+                        + ", HIVE tips " + sim.robot.pieces.tips() + ", left the field " + sim.robot.pieces.leftField()
+                        + ", on the field " + sim.robot.pieces.drawn().size()
                         + " (" + sim.robot.pieces.inStacks() + " of them in FLOWERs and CELLs)");
                 return;
             case "size":

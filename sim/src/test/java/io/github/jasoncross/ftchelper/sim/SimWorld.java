@@ -123,10 +123,14 @@ final class SimWorld {
         wall(half + t / 2, 0, t, 2 * half, h);
         wall(-half - t / 2, 0, t, 2 * half, h);
         // The field file's solid and overhead parts: their footprint, from zMin to zMax.
+        // A HIVE that can tip is not a block: its two CELLs are open boxes of thin plates (placeHive).
+        java.util.Set<String> tipping = new java.util.HashSet<>();
+        for (SimField.Hive hv : field.hives) tipping.add(hv.element);
         for (SimField.Element e : field.elements) {
-            if (!(e.kind.equals("solid") || e.kind.equals("overhead")) || e.hull.size() < 3) continue;
+            if (!(e.kind.equals("solid") || e.kind.equals("overhead")) || e.hull.size() < 3 || tipping.contains(e.name)) continue;
             prism(e.name, e.hull, e.zMin, e.zMax);
         }
+        for (SimField.Hive hv : field.hives) placeHive(hv);
         // The robot: one body, held flat on the tiles, with its parts as shapes on it.
         robot = OdeHelper.createBody(world);
         DMass mass = OdeHelper.createMass();
@@ -201,6 +205,43 @@ final class SimWorld {
     }
 
     // A straight-sided solid: the footprint (inches, counterclockwise) from zMin to zMax, as triangles.
+    // The plates of each HIVE's two CELLs, where the HIVE is now.
+    private final java.util.Map<String, List<DGeom>> hivePlates = new java.util.HashMap<>();
+
+    /** Puts a HIVE's CELLs where the HIVE is now (after it tips). */
+    void placeHive(SimField.Hive h) {
+        List<DGeom> old = hivePlates.remove(h.name);
+        if (old != null) for (DGeom g : old) g.destroy();
+        List<DGeom> now = new ArrayList<>();
+        for (int s : new int[] {1, -1}) {
+            for (double[] p : h.plates(s)) {
+                DGeom g = OdeHelper.createBox(space, p[12] * M, p[13] * M, p[14] * M);
+                g.setPosition(p[0] * M, p[1] * M, zFloor + p[2] * M);
+                DMatrix3 r = new DMatrix3();
+                // a turn, not a mirror: the third direction is the first two's cross product (a box is the same
+                // whichever way its thickness points)
+                double[] e1 = {p[3], p[4], p[5]}, e2 = {p[6], p[7], p[8]};
+                double[] e3 = {e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]};
+                for (int k = 0; k < 3; k++) {
+                    r.set(k, 0, e1[k]);
+                    r.set(k, 1, e2[k]);
+                    r.set(k, 2, e3[k]);
+                }
+                g.setRotation(r);
+                g.setData(new Tag(h.name, false, 0.3));
+                now.add(g);
+            }
+        }
+        hivePlates.put(h.name, now);
+    }
+
+    /** Moves a piece to a place (field inches), still. */
+    void moveBall(Ball b, double[] p) {
+        b.body.setPosition(p[0] * M, p[1] * M, zFloor + p[2] * M);
+        b.body.setLinearVel(0, 0, 0);
+        b.body.setAngularVel(0, 0, 0);
+    }
+
     private void prism(String name, List<double[]> hull, double zMin, double zMax) {
         int n = hull.size();
         float[] v = new float[n * 2 * 3];

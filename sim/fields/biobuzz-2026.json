@@ -1484,6 +1484,142 @@
    "notes": "4 POLLEN in the FLOWER (10.3.1 A.i), from the field CAD; open at the bottom front and sides (9-99 mm up): an intake there takes the bottom one and the rest drop."
   }
  ],
+ "hives": [
+  {
+   "name": "Red HIVE",
+   "alliance": "red",
+   "element": "Red HIVE",
+   "pivot": [
+    0.0,
+    -12.75,
+    43.95
+   ],
+   "upSide": 1,
+   "tipDeg": 60.0,
+   "tipGrams": 187.0,
+   "cell": {
+    "aIn": 9.42,
+    "aOut": 21.437,
+    "floor": -1.404,
+    "opening": [
+     [
+      -8.998,
+      0.0
+     ],
+     [
+      8.998,
+      0.0
+     ],
+     [
+      10.018,
+      1.02
+     ],
+     [
+      10.018,
+      7.811
+     ],
+     [
+      0.547,
+      13.878
+     ],
+     [
+      -0.547,
+      13.878
+     ],
+     [
+      -10.018,
+      7.811
+     ],
+     [
+      -10.018,
+      1.02
+     ]
+    ]
+   },
+   "tags": {
+    "+x": [
+     34,
+     35,
+     36,
+     37
+    ],
+    "-x": [
+     30,
+     31,
+     32,
+     33
+    ]
+   },
+   "notes": "The CELL toward +x or -x is up (upSide). a: along the arm (rising 30 deg toward the up CELL); w: along y; h: across the floor. tipGrams from the team's field tests."
+  },
+  {
+   "name": "Blue HIVE",
+   "alliance": "blue",
+   "element": "Blue HIVE",
+   "pivot": [
+    0.0,
+    12.75,
+    43.95
+   ],
+   "upSide": -1,
+   "tipDeg": 60.0,
+   "tipGrams": 187.0,
+   "cell": {
+    "aIn": 9.42,
+    "aOut": 21.437,
+    "floor": -1.404,
+    "opening": [
+     [
+      -8.998,
+      0.0
+     ],
+     [
+      8.998,
+      0.0
+     ],
+     [
+      10.018,
+      1.02
+     ],
+     [
+      10.018,
+      7.811
+     ],
+     [
+      0.547,
+      13.878
+     ],
+     [
+      -0.547,
+      13.878
+     ],
+     [
+      -10.018,
+      7.811
+     ],
+     [
+      -10.018,
+      1.02
+     ]
+    ]
+   },
+   "tags": {
+    "+x": [
+     38,
+     39,
+     40,
+     41
+    ],
+    "-x": [
+     42,
+     43,
+     44,
+     45
+    ]
+   },
+   "notes": "The CELL toward +x or -x is up (upSide). a: along the arm (rising 30 deg toward the up CELL); w: along y; h: across the floor. tipGrams from the team's field tests."
+  }
+ ],
  "preload": {
   "POLLEN": 4
  },
