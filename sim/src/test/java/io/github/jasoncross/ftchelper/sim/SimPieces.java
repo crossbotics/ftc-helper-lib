@@ -82,6 +82,14 @@ final class SimPieces {
     private final List<SimField.PieceType> stored = new ArrayList<>();
     private final Map<String, Integer> scored = new LinkedHashMap<>();
     private int launched = 0;
+    // The field's stacks (pieces inside FLOWERs and CELLs): the types in each now, lowest first. Each stays in
+    // its slots from the field file: when the lowest is taken, the others drop one slot.
+    private final List<List<SimField.PieceType>> stackNow = new ArrayList<>();
+    // How far a stack's lowest piece sits inside its element's block (inches): an intake against the block
+    // reaches in that far through the opening.
+    private final List<Double> stackDepth = new ArrayList<>();
+    // When each stack's next piece has dropped into the lowest slot (physics time, s).
+    private final List<Double> stackReady = new ArrayList<>();
 
     SimPieces(SimRobot robot, SimWorld world, Properties p, Map<String, Map<String, String>> collectLines,
               Map<String, Map<String, String>> shootLines, Map<String, Map<String, String>> grabLines) {
@@ -109,6 +117,21 @@ final class SimPieces {
         }
         // physics = simple (or no drivetrain): no game pieces; the collect/shoot/grab lines are checked, then unused.
         for (SimField.Goal g : robot.field.goals) scored.put(g.name, 0);
+        for (SimField.Stack st : robot.field.stacks) {
+            stackNow.add(new ArrayList<>());
+            double depth = 0;
+            if (!st.pieces.isEmpty()) {
+                SimField.StagedPiece low = st.pieces.get(0);
+                for (SimField.Element e : robot.field.elements) {
+                    if (e.hull.size() >= 3 && e.zMin <= low.z && low.z <= e.zMax && inside(e.hull, low.x, low.y)) {
+                        double r = robot.field.pieceTypes.get(low.type).diameterIn / 2;
+                        depth = Math.max(depth, edgeDistance(e.hull, low.x, low.y) - r);
+                    }
+                }
+            }
+            stackDepth.add(Math.max(0, depth));
+            stackReady.add(0.0);
+        }
         reset();
     }
 
@@ -125,6 +148,11 @@ final class SimPieces {
             stored.clear();
             for (SimField.StagedPiece sp : robot.field.pieces) {
                 world.addBall(robot.field.pieceTypes.get(sp.type), sp.x, sp.y, sp.z, 0, 0, 0);
+            }
+            for (int i = 0; i < stackNow.size(); i++) {
+                stackNow.get(i).clear();
+                stackReady.set(i, 0.0);
+                for (SimField.StagedPiece sp : robot.field.stacks.get(i).pieces) stackNow.get(i).add(robot.field.pieceTypes.get(sp.type));
             }
             // The preload (manual 10.3.1: in or on the robot, or on the tiles touching it): inside a robot that
             // can take in or shoot pieces; otherwise on the tiles in a row behind it.
@@ -229,6 +257,39 @@ final class SimPieces {
                     }
                 }
                 if (!taken && (p[2] < -12 || Math.abs(p[0]) > 120 || Math.abs(p[1]) > 120)) world.removeBall(b);   // left the field
+            }
+            // A stack's lowest piece: an intake running inward (or a closed claw) at the opening takes it.
+            for (int i = 0; i < stackNow.size(); i++) {
+                List<SimField.PieceType> now = stackNow.get(i);
+                SimField.Stack st = robot.field.stacks.get(i);
+                if (now.isEmpty() || !st.take.equals("bottom") || world.time() < stackReady.get(i)) continue;
+                SimField.StagedPiece slot = st.pieces.get(0);
+                double[] p = {slot.x, slot.y, slot.z};
+                double r = now.get(0).diameterIn / 2, depth = stackDepth.get(i);
+                boolean taken = false;
+                // the next one falls one slot (from rest, under gravity) before it can be taken
+                double drop = st.pieces.size() > 1 ? st.pieces.get(1).z - slot.z : 0;
+                double fall = Math.sqrt(2 * Math.max(0, drop) / 386.1);
+                for (Collect c : collects) {
+                    if (stored.size() >= c.holds || !near(c.shape, p, r, c.reach + depth)) continue;
+                    double power = c.motor != null ? robot.motors.get(c.motor).appliedPower
+                            : robot.crServos.get(c.crservo)[0] * (robot.crServos.get(c.crservo)[1] == 1 ? -1 : 1);
+                    if (c.threshold > 0 ? power >= c.threshold : power <= c.threshold) {
+                        stored.add(now.remove(0));
+                        stackReady.set(i, world.time() + fall);
+                        taken = true;
+                        break;
+                    }
+                }
+                if (taken) continue;
+                for (Grab g : grabs) {
+                    if (g.heldType != null || !near(g.shape, p, r, g.reach + depth)) continue;
+                    if (robot.servos.get(g.servo).actual < g.closedBelow) {
+                        g.heldType = now.remove(0);
+                        stackReady.set(i, world.time() + fall);
+                        break;
+                    }
+                }
             }
             // A claw that opens lets its piece go where it is.
             for (Grab g : grabs) {
@@ -358,8 +419,45 @@ final class SimPieces {
                 double[] p = toField(heldAt(g));
                 out.add(new Object[] {g.heldType, p[0], p[1], p[2]});
             }
+            for (int i = 0; i < stackNow.size(); i++) {
+                List<SimField.StagedPiece> slots = robot.field.stacks.get(i).pieces;
+                for (int k = 0; k < stackNow.get(i).size(); k++) {
+                    SimField.StagedPiece sp = slots.get(k);
+                    out.add(new Object[] {stackNow.get(i).get(k), sp.x, sp.y, sp.z});
+                }
+            }
             return out;
         }
+    }
+
+    /** How many pieces are still in the field's stacks (inside FLOWERs and CELLs). */
+    int inStacks() {
+        synchronized (robot) {
+            int n = 0;
+            for (List<SimField.PieceType> l : stackNow) n += l.size();
+            return n;
+        }
+    }
+
+    // Inside a counterclockwise convex outline?
+    private static boolean inside(List<double[]> hull, double x, double y) {
+        for (int i = 0; i < hull.size(); i++) {
+            double[] a = hull.get(i), b = hull.get((i + 1) % hull.size());
+            if ((b[0] - a[0]) * (y - a[1]) - (b[1] - a[1]) * (x - a[0]) < 0) return false;
+        }
+        return true;
+    }
+
+    // From a point inside a convex outline to its nearest edge.
+    private static double edgeDistance(List<double[]> hull, double x, double y) {
+        double best = Double.MAX_VALUE;
+        for (int i = 0; i < hull.size(); i++) {
+            double[] a = hull.get(i), b = hull.get((i + 1) % hull.size());
+            double dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy);
+            if (len < 1e-9) continue;
+            best = Math.min(best, Math.abs(dx * (y - a[1]) - dy * (x - a[0])) / len);
+        }
+        return best;
     }
 
     /** Puts a piece on the field (scenarios and the page). */

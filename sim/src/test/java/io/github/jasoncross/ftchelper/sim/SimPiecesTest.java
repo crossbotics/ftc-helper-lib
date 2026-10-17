@@ -27,10 +27,13 @@ public class SimPiecesTest {
     @Test public void piecesAreStagedAndTheRobotStartsWithItsPreload() throws Exception {
         SimRobot r = robot("");
         assertEquals("BIOBUZZ preload: 4 POLLEN", 4, r.pieces.storedCount());
-        assertEquals("4 POLLEN in each GARDEN", 8, r.pieces.drawn().size());
+        assertEquals("4 POLLEN in each GARDEN and FLOWER, 3 NECTAR in each up CELL", 30, r.pieces.drawn().size());
+        assertEquals(22, r.pieces.inStacks());
         run(r, 1.0);
-        assertEquals("they stay put on the tiles", 8, r.pieces.drawn().size());
-        for (Object[] d : r.pieces.drawn()) assertEquals(1.4, (Double) d[3], 0.1);
+        assertEquals("they stay put", 30, r.pieces.drawn().size());
+        int low = 0;
+        for (Object[] d : r.pieces.drawn()) if ((Double) d[3] < 2) { low++; assertEquals(1.4, (Double) d[3], 0.1); }
+        assertEquals("on the tiles: 8 in the GARDENs, the lowest in each FLOWER", 12, low);
     }
 
     @Test public void theIntakeTakesInAPieceInFront() throws Exception {
@@ -43,7 +46,7 @@ public class SimPiecesTest {
         r.push(10, 0, 1.0);                                  // roll forward into it
         run(r, 1.5);
         assertEquals("taken in", 5, r.pieces.storedCount());
-        assertEquals(8, r.pieces.drawn().size());
+        assertEquals(30, r.pieces.drawn().size());
     }
 
     @Test public void theLauncherShootsAHeldPieceThatFlies() throws Exception {
@@ -56,7 +59,7 @@ public class SimPiecesTest {
         r.motors.get("feeder").device.setPower(0);
         assertEquals("one shot", 1, r.pieces.launched());
         assertEquals(3, r.pieces.storedCount());
-        assertEquals(9, r.pieces.drawn().size());
+        assertEquals(31, r.pieces.drawn().size());
         double maxZ = 0;
         for (int i = 0; i < 100; i++) {
             run(r, 0.01);
@@ -97,6 +100,33 @@ public class SimPiecesTest {
         r.servos.get("claw").device.setPosition(0.9);       // open
         run(r, 1.5);
         assertEquals("dropped", 4, r.pieces.storedCount());
-        assertEquals(9, r.pieces.drawn().size());
+        assertEquals(31, r.pieces.drawn().size());
+    }
+
+    // The red-wall FLOWER (opening centre 23.39, -68.04; its POLLEN 2.4 in in from the front face): an intake
+    // against the front takes the bottom POLLEN, and the next one drops into its place.
+    @Test public void theIntakeTakesTheBottomPollenOutOfAFlower() throws Exception {
+        SimRobot r = robot("collect.intake = shape=intake, motor=intake, holds=8\n");
+        r.setPose(23.39, -68.04 + 2.41 + 9.6, 180);          // facing the FLOWER (-y), intake 0.6 in from its face
+        run(r, 0.3);
+        assertEquals("the intake is off: nothing taken", 22, r.pieces.inStacks());
+        r.motors.get("intake").device.setPower(1);
+        run(r, 0.05);
+        assertEquals("the bottom one taken", 5, r.pieces.storedCount());
+        int left = 0;
+        double lowest = 99;
+        for (Object[] d : r.pieces.drawn()) {
+            if (Math.abs((Double) d[1] - 23.39) < 0.1 && Math.abs((Double) d[2] + 68.04) < 0.1) { left++; lowest = Math.min(lowest, (Double) d[3]); }
+        }
+        assertTrue("the next ones dropped down: " + left + " left, lowest at " + lowest, left >= 1 && lowest < 1.5);
+        run(r, 2.0);
+        assertEquals("it keeps taking them until the FLOWER is empty", 8, r.pieces.storedCount());
+        assertEquals(18, r.pieces.inStacks());
+        // from the far side of the field it takes nothing
+        SimRobot far = robot("collect.intake = shape=intake, motor=intake, holds=8\n");
+        far.setPose(0, -40, 180);
+        far.motors.get("intake").device.setPower(1);
+        run(far, 0.5);
+        assertEquals(22, far.pieces.inStacks());
     }
 }

@@ -98,6 +98,25 @@ final class SimField {
     }
 
     /**
+     * Pieces staged INSIDE a field element (BIOBUZZ: 4 POLLEN in each FLOWER, 3 NECTAR in each up CELL). The
+     * element is a solid block in the physics, so these are not loose pieces: they hold their places. take =
+     * "bottom": an intake (or claw) at the element's opening takes the lowest one and the rest drop down one
+     * place; "none": they stay (the simulator does not tip HIVEs).
+     */
+    static final class Stack {
+        final String where, take;
+        final List<StagedPiece> pieces = new ArrayList<>();
+
+        Stack(Map<String, Object> m) {
+            where = SimJsonReader.string(m, "where", "?");
+            take = SimJsonReader.string(m, "take", "none");
+            for (Object o : SimJsonReader.array(m.getOrDefault("pieces", Collections.emptyList()), where + " pieces")) {
+                pieces.add(new StagedPiece(SimJsonReader.object(o, "piece")));
+            }
+        }
+    }
+
+    /**
      * A place to score: an opening of radiusIn around (x, y), z above the tiles. A piece over it (its edge
      * within the opening), down to it, not going up and not flying past fast, scores (see SimPieces).
      */
@@ -117,6 +136,7 @@ final class SimField {
     final Map<String, PieceType> pieceTypes = new java.util.LinkedHashMap<>();
     final List<StagedPiece> pieces = new ArrayList<>();
     final List<Goal> goals = new ArrayList<>();
+    final List<Stack> stacks = new ArrayList<>();
     final Map<String, Integer> preload = new java.util.LinkedHashMap<>();
 
     final String name, season, frameNote;
@@ -151,6 +171,13 @@ final class SimField {
             StagedPiece sp = new StagedPiece(SimJsonReader.object(o, "piece"));
             if (!pieceTypes.containsKey(sp.type)) throw new IllegalArgumentException(name + ": a piece of unknown type \"" + sp.type + "\"");
             pieces.add(sp);
+        }
+        for (Object o : SimJsonReader.array(root.getOrDefault("stacks", Collections.emptyList()), "stacks")) {
+            Stack st = new Stack(SimJsonReader.object(o, "stack"));
+            for (StagedPiece sp : st.pieces) {
+                if (!pieceTypes.containsKey(sp.type)) throw new IllegalArgumentException(name + ": a piece of unknown type \"" + sp.type + "\" in " + st.where);
+            }
+            stacks.add(st);
         }
         for (Object o : SimJsonReader.array(root.getOrDefault("goals", Collections.emptyList()), "goals")) {
             goals.add(new Goal(SimJsonReader.object(o, "goal")));

@@ -566,7 +566,8 @@ public final class SimScenario {
                 return;
             case "pieces":
                 report.add("          pieces: in the robot " + sim.robot.pieces.stored() + ", shot " + sim.robot.pieces.launched()
-                        + ", scored " + sim.robot.pieces.scored() + ", on the field " + sim.robot.pieces.drawn().size());
+                        + ", scored " + sim.robot.pieces.scored() + ", on the field " + sim.robot.pieces.drawn().size()
+                        + " (" + sim.robot.pieces.inStacks() + " of them in FLOWERs and CELLs)");
                 return;
             case "size":
                 report.add("          size now: " + sim.robot.shapes.now() + "; at full reach: "

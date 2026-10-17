@@ -249,10 +249,17 @@ its back. With a
 scores and is taken off. "Back to start" puts the pieces back. The Control Hub panel shows what the
 robot holds, what it shot and what scored; the 3D view and the field from above draw the pieces.
 
+The match starts with every piece the manual stages on the field (10.3.1), placed from the official field
+CAD: 4 POLLEN in each GARDEN (loose on the tiles), 4 POLLEN in each FLOWER and 3 NECTAR in each upward
+CELL. The FLOWERs and HIVEs are solid blocks in the physics, so the pieces inside them hold their places
+(the field file's `stacks`). An intake running inward (or a closed claw) at a FLOWER's bottom opening
+takes the bottom POLLEN; the next one drops into its place about 0.12 s later. The CELL NECTAR stay
+put. `print pieces` says how many are still in FLOWERs and CELLs.
+
 Scenario lines: `set piece POLLEN X Y [Z]`, `expect stored >= 1`, `expect launched >= 1`,
 `expect scored "FLOWER" >= 1` (goals whose name has the text; `"all"` = every goal), `print pieces`.
 
-Not yet: the pieces that start inside the FLOWERs and CELLs and in the alliance areas; the CELLs as
+Not yet: the alliance areas' NECTAR (the human player's); a HIVE that tips; the CELLs as
 goals (the HIVE and its CELLs are one solid block, 30.65 to 65.93 in up: a shot at a CELL bounces off);
 GARDEN scoring; a held piece's weight on the arm; robot parts that stop when they hit a piece. How far
 a ball rolls on the tiles is a guess (about 2 m from 1 m/s) until someone times a real one.
