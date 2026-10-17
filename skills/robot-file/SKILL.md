@@ -47,9 +47,12 @@ Ask for these, and use whatever the team has:
 3. **Parts list**: the motors (seller part numbers, gear ratios), servos, wheels.
 4. **Photos**: front, side, top, and each mechanism at both ends of its travel (lift down and up, arm
    folded and out, claw open and closed). See `photos.md`.
-5. **CAD of the whole robot**, if they have it (Onshape, Fusion...): it can draw the real parts and
-   make the size check follow the real shape. See "CAD models of the parts" in `simulator.md`.
-   Shapes come first anyway: the boxes are what bump into things.
+5. **CAD of the whole robot**, if they have it (a STEP file, or Onshape / Fusion that can export one):
+   it gives exact sizes, places, spin axes and seller part numbers, and draws the real parts. Follow
+   `cad.md`: it reads the CAD, you guess which motor drives what from its clues and ask only when
+   unsure, and it writes the CAD models. Shapes come first anyway: the boxes are what bump into things.
+
+With CAD, do `cad.md` steps 1-3 now: its numbers and clues answer most of the interview.
 
 ## 2. Make the draft
 

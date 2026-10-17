@@ -32,6 +32,9 @@ flowchart LR
 3. **Asks you** the rest, a few questions at a time: sizes (bring a tape measure), which motors and
    servos, the lift's and arm's hard stops (from the Motor Finder), where the cameras are, how the robot
    picks up and scores pieces. Photos of the robot help it draw the mechanisms.
+   **Have CAD of the whole robot?** Give it the STEP file: it reads the exact sizes, places, spin axes and
+   seller part numbers from it, guesses which motor drives which part (and asks you only when it is not
+   sure), and draws your real parts in the 3D view (`skills/robot-file/cad.md`, tools in `tools/cad/`).
 4. **Checks** the result in the simulator (it loads, the size rules, your OpModes start) and writes a
    small scenario so it stays checked.
 5. Tells you what is still unknown, and how to get real speeds (the Characterizer).
