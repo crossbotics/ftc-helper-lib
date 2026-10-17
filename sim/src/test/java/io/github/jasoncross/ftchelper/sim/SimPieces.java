@@ -21,7 +21,9 @@ import java.util.Properties;
  *                                                          share x the wheel's rim speed; spin=1 gives it
  *                                                          backspin as if it rolled along a still hood
  *                                                          (-1 topspin); table=FILE: how the launcher really
- *                                                          throws, with scatter (SimShotTable; tools/launcher)
+ *                                                          throws, with scatter (SimShotTable; tools/launcher);
+ *                                                          speed=IN/S: a fixed exit speed (a catapult: make
+ *                                                          its motor a flywheel with feeder= itself)
  *   grab.NAME = shape=claw, servo=claw, closedBelow=0.3   a claw that holds a piece it touches while the servo
  *                                                          is below closedBelow, and lets it go when it opens
  *
@@ -51,7 +53,7 @@ final class SimPieces {
 
     private static final class Shoot {
         final String name, shape, flywheel;
-        final double angleDeg, share, spin;
+        final double angleDeg, share, spin, fixedSpeed;
         final SimShotTable table;      // table=: how this launcher really throws (null: angle/share/spin)
 
         Shoot(String name, Map<String, String> s, java.nio.file.Path dir) {
@@ -63,6 +65,8 @@ final class SimPieces {
             // the ball's spin, as a share of "rolling": 1 = it leaves turning like a ball rolling along a still hood
             // (speed / radius) with backspin (the wheel under the ball, the hood over it); -1 topspin; 0 none
             spin = num(s, "spin", 0, "shoot." + name);
+            // speed=: a fixed exit speed (in/s) instead of share x rim speed: a catapult or a spring launcher
+            fixedSpeed = num(s, "speed", Double.NaN, "shoot." + name);
             String t = s.get("table");
             table = t == null ? null : new SimShotTable(dir == null ? java.nio.file.Paths.get(t) : dir.resolve(t).normalize(),
                     "shoot." + name, name.hashCode());
@@ -204,7 +208,7 @@ final class SimPieces {
             SimField.PieceType type = stored.remove(0);
             double dia = Math.max(piece.sf, piece.su);
             double rimSpeed = Math.abs(flywheel.shaftSpeed()) / Math.max(1, flywheel.ticksPerRev) * Math.PI * dia;   // in/s
-            double angle = s.angleDeg, speed = rimSpeed * s.share, backspin = s.spin * speed / (type.diameterIn / 2);
+            double angle = s.angleDeg, speed = Double.isNaN(s.fixedSpeed) ? rimSpeed * s.share : s.fixedSpeed, backspin = s.spin * speed / (type.diameterIn / 2);
             double gap = dia / 2 + type.diameterIn / 2 + 0.3;
             double[] exit = null;
             SimShotTable.Shot pick = s.table == null ? null
@@ -225,7 +229,8 @@ final class SimPieces {
             SimWorld.Ball b = world.addBall(type, at[0], at[1], at[2], d[0] * speed + rv[0], d[1] * speed + rv[1], d[2] * speed);
             if (backspin != 0) {
                 // backspin turns about (direction x up); its sign along the wheel's axle when the axle is square to the shot
-                double[] axle = toFieldDir(piece.el);
+                double[] el = toFieldDir(piece.el);
+                double[] axle = {-el[0], -el[1], -el[2]};          // straight up: backspin turns about the shape's right
                 double[] back = {d[1], -d[0], 0};                                   // d x up
                 double n = Math.hypot(back[0], back[1]);
                 double[] ax = n > 1e-6 ? new double[] {back[0] / n, back[1] / n, 0} : axle;

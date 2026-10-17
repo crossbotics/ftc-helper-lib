@@ -329,12 +329,13 @@ empty, with a note. Real ratios are used (an UltraPlanetary "5:1" is 5.23:1). Se
 seller's row closest to 5 V (a Control Hub servo port gives about 5 V; the headline number is often 6 V).
 
 Motor kinds: `free` (just spins), `lift` (hard stops, gravity), `flywheel` (coasts; while its `feeder`
-motor runs, a piece goes through every 0.3 s and slows it down). `ticksPerRev=` sets a motor's encoder
+(a motor or a CR servo) runs, a piece goes through every 0.3 s and slows it down). `ticksPerRev=` sets a motor's encoder
 counts per turn (default 537.7; flywheel 28). On a robot, `setPower` in RUN_USING_ENCODER aims for the
 top speed of the motor TYPE chosen in the configuration; here it is the robot file's `maxTicksPerSec`. The wheel motors are on the left/right sides of the robot like a
 real one, with one side's motors mounted mirrored, so motor directions in your code matter here too.
 That side is the left unless `drive.mirrored = right`: write the side your code reverses to drive
-straight (goBILDA's starter bot reverses the right one).
+straight (goBILDA's starter bot reverses the right one), or the other side if your code drives forward
+with negative power. Check it: the drive stick forward must drive the robot forward.
 
 ## Your own robot code
 
@@ -343,7 +344,8 @@ simulator from the `ftc-helper-lib` folder: it builds **that project's TeamCode*
 OpModes, and uses `simulator/robot.properties` from the robot project. Iterative OpModes
 (`init()`/`loop()`) and LinearOpModes both run.
 
-- Another TeamCode folder: `-PteamCode=<folder>`; the library's own examples instead: `-PteamCode=none`.
+- Another TeamCode folder: `-PteamCode=<folder>` (the TeamCode module: it must have `src/main/java`); the
+  library's own examples instead: `-PteamCode=none`.
 - TeamCode uses other libraries (Road Runner, Pedro Pathing, FTC Dashboard...)? Put their Gradle lines in
   `simulator/sim-dependencies.gradle` in the robot project, for example:
 

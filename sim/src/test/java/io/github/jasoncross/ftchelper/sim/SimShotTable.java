@@ -33,7 +33,7 @@ final class SimShotTable {
 
         Row(Map<String, Object> m, String what) {
             rpm = SimJsonReader.number(m, "shaftRpm", Double.NaN);
-            if (Double.isNaN(rpm)) throw new IllegalArgumentException(what + ": a row with no shaftRpm");
+            if (!(rpm > 0)) throw new IllegalArgumentException("Robot file: " + what + ": every row needs a shaftRpm above 0");
             shot = SimJsonReader.number(m, "shot", 1);
             speed = pair(m, "speedIn", what, null);
             angle = pair(m, "angleDeg", what, null);
@@ -107,7 +107,9 @@ final class SimShotTable {
         Shot s = new Shot();
         s.shot = random.nextDouble() < mix(a.shot, b.shot, t);
         s.speedIn = scale * draw(a.speed, b.speed, t);
-        s.angleDeg = draw(a.angle, b.angle, t);
+        // angles blend the short way round (179 to -179 passes 180, not 0)
+        double turn = ((b.angle[0] - a.angle[0]) % 360 + 540) % 360 - 180;
+        s.angleDeg = a.angle[0] + turn * t + random.nextGaussian() * mix(a.angle[1], b.angle[1], t);
         s.backspin = scale * draw(a.spin, b.spin, t);
         s.exitForward = mix(a.exit[0], b.exit[0], t);
         s.exitUp = mix(a.exit[1], b.exit[1], t);

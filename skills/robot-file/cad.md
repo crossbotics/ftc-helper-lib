@@ -7,7 +7,8 @@ as the interview makes, plus CAD models for the 3D view and the size rules ("CAD
 `docs/guides/simulator.md`).
 
 **CAD from a seller belongs to the seller.** Keep the STEP and the STL files with the team (their own repository
-or computer), never in a public repository.
+or computer), never in a public repository. Commit only `cad-work/cad/*.stl` and the JSON files you write; add
+`cad-work/meshes.npz` and `cad-work/parts.json` to `.gitignore` (big, and `read` makes them again).
 
 ## 1. Read the CAD
 
@@ -30,14 +31,15 @@ Write `cad-work/frame.json` with the three settings the robot file will use:
 {"cad.units": "mm", "cad.axes": "y,-x,z", "cad.origin": "0,0,0"}
 ```
 
-- **up:** the CAD axis the robot stands along (Onshape and SolidWorks: z; Fusion: usually y).
+`cad.axes` is three CAD axes in this order: the robot's forward, left, up.
 - **forward:** the side the intake (or the front the team drives toward) is on. Say which side you picked and why.
-- **left:** whatever makes forward x left = up (the tool refuses a mirrored choice).
-- **origin:** the middle of the drive frame, at the bottom of the wheels. `parts.json` has every part's box; the
-  drive wheels' lowest points give the floor.
+- **left:** whatever makes forward x left = up (the tool refuses a mirrored choice: then flip one sign).
+- **up:** the CAD axis the robot stands along (Onshape and SolidWorks: z; Fusion: usually y).
+- **origin:** start with `0,0,0`. `clues` finds the drive wheels and prints a suggested `cad.origin` (the middle of
+  the wheels, at the bottom of the lowest): copy it into `frame.json` and run `clues` again.
 
-Then run `clues` and check its first lines: the whole robot about as big as the team says, its lowest point about 0
-in, the drive wheels found with a left-right axle. If not, fix `frame.json` first.
+Then check `clues`' first lines: the whole robot about as big as the team says, its lowest point about 0 in, the
+drive wheels found. If not, fix `frame.json` first.
 
 ```bash
 python tools/cad/robot_cad.py clues ../simulator/cad-work ../simulator/cad-work/frame.json
@@ -49,6 +51,13 @@ python tools/cad/robot_cad.py clues ../simulator/cad-work ../simulator/cad-work/
 parts that line up with it (on the same axis, or linked by gears, belts or chains on shared axles). Put that next to
 the configuration file and TeamCode, and make a table:
 
+`clues` prints lines like this (goBILDA's starter bot):
+
+```text
+  motor gobilda-5203-117         5203-2402-0051:1    at 6.8 2.1 5.5 in (forward, left, up), shaft left
+        turns: 3613-4008-0048:4 (1.9 in across, axle left; the other way (through gears) as the motor)
+```
+
 | CAD part | Clues | Guess (configuration name) | Sure? |
 | --- | --- | --- | --- |
 | 2 x 312 RPM motors, low, one per side | drive layout; names left_drive / right_drive | drive motors | yes |
@@ -59,6 +68,11 @@ Clues, strongest first: the code (what a motor does: `setVelocity` with a high t
 motor an intake, run-to-position with limits a lift or arm); the shaft lining up with a part or a gear train to it;
 the configuration names ("intake", "lift"); the motor's speed (6000 RPM near a big wheel: a launcher; a slow motor
 near a slide: a lift); left and right from the names.
+
+**When the CAD and the code disagree, ask.** Kits change parts: goBILDA's starter bot uses a 312 RPM motor with
+its gearbox taken off (1:1, about 6000 RPM) as the launcher, so the CAD's part number says 312 RPM, but the code's
+launcher speed only makes sense at 6000. A motor missing from the parts catalog: use the catalog entry with the
+same motor and ratio, with a note (`# am-5550 NeveRest Hex 19.2: same motor and ratio as the Orbital 20`).
 
 Show the team the table. Ask only about the rows that are not sure, and about anything the CAD and the code
 disagree on. Note where each answer came from in the robot file: `# from the CAD`, `# guessed from the CAD and the
@@ -77,9 +91,9 @@ Each shape gets the parts that move with it; everything else is the chassis. Wri
 }
 ```
 
-- `"parts"`: the part numbers (`i` in parts.json). `"near"` + `"within"`: every part whose middle is within that
+- `"parts"`: the part index (`i` in parts.json; not the seller's part number). `"near"` + `"within"`: every part whose middle is within that
   many inches of the point (robot frame). `"onAxis": true` keeps only parts centred on the axle line through the
-  point (`"axle"`): use it for anything that spins. `"names"`: a regex on the part's name. `"except"`: drop parts.
+  point (`"axle"`; within `"axisTolIn"`, default 0.15 in): use it for anything that spins. `"names"`: a regex on the part's name. `"except"`: drop parts.
 - **A spinning group holds only the parts that spin** (wheels, hubs, shaft): the size rules count a spinning model
   as the whole circle it sweeps, so a motor or bracket in it makes the robot look bigger than it is. Keep motors in
   the chassis group unless they really turn with the part.
@@ -89,8 +103,9 @@ Each shape gets the parts that move with it; everything else is the chassis. Wri
 python tools/cad/robot_cad.py groups ../simulator/cad-work ../simulator/cad-work/frame.json ../simulator/cad-work/groups.json
 ```
 
-It writes `cad-work/cad/<group>.stl` and prints each group's size and place in the robot frame. Use those numbers
-for the shapes: `at=` (see "What `at=` points to" in `photos.md`) and `size=` close to the group's size, axis from
+It writes `cad-work/cad/<group>.stl` (simplified to at most 150,000 triangles each: a few MB), prints each group's
+size and place in the robot frame, and a starting shape line for each group. A simplified model is blurred by up to
+the amount it prints; the size rules are good to about that much. Use those numbers for the shapes: `at=` (see "What `at=` points to" in `photos.md`) and `size=` close to the group's size, axis from
 the clues.
 
 ## 5. Write the robot file and check it
@@ -101,7 +116,7 @@ with `print cad` and `print size`:
 
 - `print cad`: every model sits on its box (no "FAR"), the right size (no "times smaller").
 - `print size`: the size at the start and at full reach should match the CAD's own size (the `clues` first line)
-  within about 0.1 in. More: a group holds a part it should not (a bracket in a roller group).
+  within about 0.2 in (the size rules add a small safety margin). More: a group holds a part it should not (a bracket in a roller group).
 - Run the team's TeleOp with `init`: no "Unable to find a hardware device", and pushing the drive stick forward
   moves the robot forward (if it goes backward, set `drive.mirrored` to the other side).
 - Show the 3D view and ask the team whether it looks like their robot.

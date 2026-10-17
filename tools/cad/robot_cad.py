@@ -6,7 +6,7 @@ Three steps, each a command (run them with the Python that has build123d: see to
                            name, seller part number and the parts catalog match, size, position, and for round parts
                            their spin axis and radius) and OUT/meshes.npz (a coarse mesh of each part).
   clues  OUT FRAME         With the robot frame (FRAME = a JSON file with cad.units, cad.axes, cad.origin as in the
-                           robot file), prints the drive wheels, every motor and servo with what it lines up with
+                           robot file), prints the drive wheels (and a suggested cad.origin), every motor and servo with what it turns
                            (same axis, or linked by gears/belts/chains on shared axles), and the round parts: the
                            facts the agent guesses from. Writes OUT/clues.json.
   groups OUT FRAME GROUPS  Writes one STL per group (GROUPS = a JSON file the agent writes: which parts make the
@@ -159,8 +159,6 @@ def read(step, out_dir, deflection=0.6):
                     return
             walk(ref, loc2, path + [here])
             return
-            walk(ref, loc2, path + [here])
-            return
         if st.IsAssembly_s(label):
             kids = Sequence_TDF_Label()
             st.GetComponents_s(label, kids)
@@ -227,8 +225,9 @@ def read(step, out_dir, deflection=0.6):
             entry["actuator"] = entry["catalog"]["kind"]
         elif actuator_kind(entry["name"]):
             entry["actuator"] = actuator_kind(entry["name"])     # a motor or servo the catalog does not have
-        # Round: a direction its cylinder faces turn about (biggest area first) across which the part is as wide one
-        # way as the other, and no wider than a circle round the middle. A plate with round holes is not round.
+        # Round: a direction its cylinder faces turn about (biggest area first) around which the part's outline reaches
+        # out to nearly its full radius all the way round (every one of 24 sectors). A square plate with a round hole
+        # has its corners far out and its edges in between closer: not round, however it is turned.
         total = sum(cyl.values())
         for dkey, area in sorted(cyl.items(), key=lambda kv: -kv[1])[:3]:
             d = np.array(dkey) / np.linalg.norm(dkey)
@@ -236,12 +235,15 @@ def read(step, out_dir, deflection=0.6):
             u /= np.linalg.norm(u)
             v = np.cross(d, u)
             a, b, w = pts @ u, pts @ v, pts @ d
-            wa, wb = a.max() - a.min(), b.max() - b.min()
-            if wa < 1 or min(wa, wb) / max(wa, wb) < 0.85:
+            if a.max() - a.min() < 1:
                 continue
             ca, cb = (a.max() + a.min()) / 2, (b.max() + b.min()) / 2
-            radius = float(np.sqrt((a - ca) ** 2 + (b - cb) ** 2).max())
-            if radius * 2 > 1.15 * max(wa, wb):
+            rad = np.hypot(a - ca, b - cb)
+            radius = float(rad.max())
+            sector = ((np.arctan2(b - cb, a - ca) + math.pi) / (2 * math.pi) * 24).astype(int) % 24
+            reach = np.zeros(24)
+            np.maximum.at(reach, sector, rad)
+            if reach.min() < 0.9 * radius:
                 continue
             mid = ca * u + cb * v + d * (w.max() + w.min()) / 2
             entry["round"] = {"axis": [round(float(x), 3) for x in d], "centre": [round(float(x), 1) for x in mid],
@@ -282,7 +284,7 @@ class Frame:
         for i, a in enumerate(f["cad.axes"].replace(" ", "").split(",")):
             self.m[i, "xyz".index(a[-1])] = -1.0 if a.startswith("-") else 1.0
         if np.linalg.det(self.m) < 0:
-            sys.exit("cad.axes would draw the robot mirrored")
+            sys.exit("cad.axes would draw the robot mirrored: flip the sign of one of them (x <-> -x)")
         self.origin = np.array([float(v) for v in str(f.get("cad.origin", "0,0,0")).split(",")])
         self.text = f
 
@@ -332,11 +334,54 @@ def clues(out_dir, frame_path):
         return np.linalg.norm(off) < tol_in and abs(along) < (a["_length"] + b["_length"]) / 2 + 4
 
     rnd = [e for e in parts if "round" in e]
-    wheels = [e for e in rnd if 1.4 <= e["_radius"] <= 3.0 and e["_centre"][2] <= e["_radius"] + 0.6
-              and axis_name(e["_axis"]) == "left"]
+    # drive wheels: round, 2.8-6 in across, axle left-right, and the lowest of those (whatever cad.origin says)
+    cand = [e for e in rnd if 1.4 <= e["_radius"] <= 3.0 and axis_name(e["_axis"]) == "left"]
+    floor = min((e["_centre"][2] - e["_radius"] for e in cand), default=0.0)
+    wheels = [e for e in cand if e["_centre"][2] - e["_radius"] <= floor + 0.3]
     drive = [{"i": e["i"], "name": e["name"], "partNumber": e["partNumber"], "diameterIn": round(2 * e["_radius"], 2),
               "at": [round(float(v), 2) for v in e["_centre"]]} for e in wheels]
-    links = [e for e in rnd if re.search(r"gear|sprocket|pulley|belt|chain|\b2[23]\d\d-|\b3[34]\d\d-", e["path"], re.I)]
+    # what links shafts: gears (mesh: the next shaft turns the other way), sprockets and pulleys (a chain or belt:
+    # the same way). By name, or by goBILDA part number series (2301-2306 gears, 33xx/34xx sprockets/pulleys,
+    # 3309/3410 chain loops/belts): a guess for other sellers' numbers.
+    def kind(e):
+        t = e["path"]
+        if re.search(r"chain|belt|loop|\b3309-|\b3410-", t, re.I):
+            return "band"
+        if re.search(r"gear|\b230[1-6]-", t, re.I):
+            return "gear"
+        if re.search(r"sprocket|pulley|htd|\b33\d\d-|\b34\d\d-", t, re.I):
+            return "wheel-for-band"
+        return None
+    bands = [e for e in parts if kind(e) == "band"]
+
+    def driven_by(a):
+        """Parts turned by actuator a: on its shaft, then through gear meshes and chains/belts. -> {part i: flips}"""
+        seen = {a["i"]: 0}
+        todo = [(a, 0)]
+        while todo:
+            x, flips = todo.pop()
+            for e in rnd:
+                if e["i"] in seen or e is x:
+                    continue
+                f = None
+                if coaxial(x, e):
+                    f = flips
+                elif kind(x) == "gear" and kind(e) == "gear" and abs(x["_axis"] @ e["_axis"]) > 0.995:
+                    w = e["_centre"] - x["_centre"]
+                    gap = np.linalg.norm(w - (w @ x["_axis"]) * x["_axis"])
+                    if abs(gap - (x["_radius"] + e["_radius"])) < 0.35 and abs(w @ x["_axis"]) < 1.0:
+                        f = flips + 1                         # meshing gears: the other way round
+                elif kind(x) == "wheel-for-band" and kind(e) == "wheel-for-band" and abs(x["_axis"] @ e["_axis"]) > 0.995:
+                    for bnd in bands:
+                        lo_, hi_ = bnd["_lo"] - 0.3, bnd["_hi"] + 0.3
+                        if np.all((x["_centre"] > lo_) & (x["_centre"] < hi_)) and np.all((e["_centre"] > lo_) & (e["_centre"] < hi_)):
+                            f = flips                          # a chain or belt: the same way round
+                            break
+                if f is not None:
+                    seen[e["i"]] = f
+                    todo.append((e, f))
+        del seen[a["i"]]
+        return seen
     actuators = [e for e in parts if e.get("actuator")]
     out = {"frame": F.text, "driveWheels": drive, "actuators": []}
     print(f"Robot frame: {F.text}")
@@ -349,29 +394,32 @@ def clues(out_dir, frame_path):
         ys = sorted({round(float(w['_centre'][1]), 1) for w in wheels})
         print(f"\nDrive wheels ({len(wheels)}): diameters {sorted({w['diameterIn'] for w in drive})} in; "
               f"axles at forward {xs}; sides at left {ys}")
+        # the robot's centre on the floor, from the wheels: the middle of their axles, the bottom of the lowest
+        off = np.array([(min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2, floor])
+        if np.linalg.norm(off) > 0.1:
+            new = F.origin + (F.m.T @ off) / F.scale
+            print(f"  The wheels say the robot's centre on the floor is {off.round(2)} in from cad.origin. Suggested: "
+                  f"\"cad.origin\": \"{','.join(f'{v:.1f}' for v in new)}\" (then run clues again)")
     else:
         print("\nNo drive wheels found (round parts touching the floor with a left-right axle): check cad.axes and cad.origin.")
-    print("\nMotors and servos (from the parts catalog) and what each lines up with:")
+    print("\nMotors and servos and what each turns (on its shaft, through gears, chains or belts):")
     for a in actuators:
         c = a.get("catalog") or {"kind": a["actuator"], "id": "(not in catalog)"}
         mid = (a["_lo"] + a["_hi"]) / 2
-        same = [e for e in rnd if e is not a and coaxial(a, e)] if "_axis" in a else []
-        linked = []
-        for g in links:
-            if "_axis" in a and coaxial(a, g):
-                linked += [e for e in rnd if e is not g and e not in same and e is not a and abs(e["_axis"] @ g["_axis"]) > 0.995
-                           and np.linalg.norm(e["_centre"] - g["_centre"]) < 6 and not coaxial(a, e)]
-        driven = sorted({(e["name"], round(2 * e["_radius"], 1), axis_name(e["_axis"])) for e in same + linked
-                         if e["_radius"] > 0.4 and not e.get("actuator")}, key=lambda t: -t[1])
+        turned = driven_by(a) if "_axis" in a else {}
+        driven = sorted({(parts[i]["name"], round(2 * parts[i]["_radius"], 1), axis_name(parts[i]["_axis"]),
+                          "same way" if f % 2 == 0 else "the other way (through gears)")
+                         for i, f in turned.items() if parts[i]["_radius"] > 0.4 and not parts[i].get("actuator")},
+                        key=lambda t: -t[1])
         line = (f"  {c['kind']:5s} {c['id']:24s} {a['name'][:40]:40s} at {mid[0]:6.1f} {mid[1]:6.1f} {mid[2]:5.1f} in (forward, left, up)"
                 + (f", shaft {axis_name(a['_axis'])}" if "_axis" in a else ""))
         print(line)
-        for n, dia, ax in driven[:6]:
-            print(f"        lines up with: {n} ({dia} in across, axle {ax})")
+        for n, dia, ax, way in driven[:8]:
+            print(f"        turns: {n} ({dia} in across, axle {ax}; {way} as the motor)")
         out["actuators"].append({"i": a["i"], "name": a["name"], "path": a["path"], "catalog": c,
                                  "at": [round(float(v), 2) for v in mid],
                                  "shaft": axis_name(a["_axis"]) if "_axis" in a else None,
-                                 "linesUpWith": [{"name": n, "diameterIn": dia, "axle": ax} for n, dia, ax in driven]})
+                                 "turns": [{"name": n, "diameterIn": dia, "axle": ax, "way": way} for n, dia, ax, way in driven]})
     unknown = sorted({f"{e['name']} ({e['partNumber'] or 'no part number'})" for e in actuators if not e.get("catalog")})
     if unknown:
         print("\nMotors and servos not in the parts catalog: find the catalog entry with the same motor and ratio, "
@@ -413,7 +461,34 @@ def select(parts, F, rule):
     return pick - set(rule.get("except", []))
 
 
-def groups(out_dir, frame_path, groups_path):
+def simplify(t, max_tris):
+    """Fewer triangles (n, 9): every corner moves to the middle of the corners in its small cube, and triangles that
+    shrink to a line or point go; the cubes grow until it is under max_tris. The outline stays within a cube's size."""
+    if len(t) <= max_tris:
+        return t, 0.0
+    pts = t.reshape(-1, 3).astype(np.float64)
+    lo = pts.min(0)
+    size = max(float((pts.max(0) - lo).max()), 1e-6)
+    cells = 4000.0
+    while True:
+        cell = size / cells
+        key = np.floor((pts - lo) / cell).astype(np.int64)
+        k = (key[:, 0] * 8192 + key[:, 1]) * 8192 + key[:, 2]
+        uniq, inv = np.unique(k, return_inverse=True)
+        sums = np.zeros((len(uniq), 3))
+        np.add.at(sums, inv, pts)
+        cnt = np.bincount(inv, minlength=len(uniq))[:, None]
+        mid = sums / cnt
+        tri = inv.reshape(-1, 3)
+        ok = (tri[:, 0] != tri[:, 1]) & (tri[:, 1] != tri[:, 2]) & (tri[:, 0] != tri[:, 2])
+        tri = tri[ok]
+        tri = np.unique(np.sort(tri, 1), axis=0) if len(tri) else tri
+        if len(tri) <= max_tris or cells < 30:
+            return mid[tri].reshape(-1, 9).astype(np.float32), cell
+        cells /= 1.4
+
+
+def groups(out_dir, frame_path, groups_path, max_tris=150000):
     d, m = load(out_dir)
     F = Frame(frame_path)
     G = json.load(open(groups_path))
@@ -432,8 +507,12 @@ def groups(out_dir, frame_path, groups_path):
             picks[g] = {e["i"] for e in parts} - taken
     os.makedirs(os.path.join(out_dir, "cad"), exist_ok=True)
     print(f"{'group':22s} {'parts':>5s} {'triangles':>9s}   size (forward x left x up, in)   from (f, l, u)  to (f, l, u)")
+    suggest = []
     for g, ids in picks.items():
-        t = np.concatenate([m[f"p{i}"] for i in sorted(ids)] or [np.zeros(0, np.float32)]).reshape(-1, 9)
+        full = np.concatenate([m[f"p{i}"] for i in sorted(ids)] or [np.zeros(0, np.float32)]).reshape(-1, 9)
+        # at most max_tris triangles per file (a few MB, well under GitHub's 100 MB file limit; the 3D view draws
+        # about that many anyway)
+        t, cell = simplify(full, max_tris)
         fn = os.path.join(out_dir, "cad", f"{g}.stl")
         with open(fn, "wb") as fh:
             fh.write(b"\0" * 80)
@@ -444,11 +523,28 @@ def groups(out_dir, frame_path, groups_path):
         if not len(t):
             print(f"{g:22s} {0:5d}  (empty)")
             continue
-        r = F.p(t.reshape(-1, 3))
+        r = F.p(full.reshape(-1, 3))
         lo, hi = r.min(0), r.max(0)
+        note = f"  (simplified from {len(full)}, details under {cell * F.scale:.2f} in blur)" if cell else ""
         print(f"{g:22s} {len(ids):5d} {len(t):9d}   {hi[0] - lo[0]:5.2f} x {hi[1] - lo[1]:5.2f} x {hi[2] - lo[2]:5.2f}"
-              f"   {lo[0]:6.2f} {lo[1]:6.2f} {lo[2]:5.2f}  {hi[0]:6.2f} {hi[1]:6.2f} {hi[2]:5.2f}")
+              f"   {lo[0]:6.2f} {lo[1]:6.2f} {lo[2]:5.2f}  {hi[0]:6.2f} {hi[1]:6.2f} {hi[2]:5.2f}{note}")
+        # a starting shape line: a roller/flywheel round its biggest round part when that part spans the group;
+        # otherwise a box on the group's bottom middle (adjust type, axis and size to the mechanism)
+        rd = [parts[i] for i in ids if "round" in parts[i]]
+        big = max(rd, key=lambda e: e["round"]["radius"], default=None)
+        if big is not None and 2 * big["round"]["radius"] * F.scale > 0.6 * max(hi - lo):
+            c = F.p(big["round"]["centre"])
+            ax = axis_name(F.d(big["round"]["axis"]))
+            dia, ln = 2 * big["round"]["radius"] * F.scale, big["round"]["length"] * F.scale
+            size = {"left": (dia, ln, dia), "forward": (ln, dia, dia), "up": (dia, dia, ln)}.get(ax, (dia, ln, dia))
+            suggest.append(f"shape.{g} = roller, at={c[0]:.2f},{c[1]:.2f},{c[2]:.2f}, size={size[0]:.2f}x{size[1]:.2f}x{size[2]:.2f}"
+                           + (f", axis={ax}" if ax in ("up", "forward") else "") + f", model=cad-work/cad/{g}.stl")
+        elif g != "chassis":
+            suggest.append(f"shape.{g} = box, at={(lo[0] + hi[0]) / 2:.2f},{(lo[1] + hi[1]) / 2:.2f},{lo[2]:.2f}, "
+                           f"size={hi[0] - lo[0]:.2f}x{hi[1] - lo[1]:.2f}x{hi[2] - lo[2]:.2f}, model=cad-work/cad/{g}.stl")
     print(f"\nwrote {len(picks)} STL files to {os.path.join(out_dir, 'cad')}")
+    if suggest:
+        print("\nStarting shape lines (check the type, what moves it, axis and size):\n  " + "\n  ".join(suggest))
 
 
 if __name__ == "__main__":

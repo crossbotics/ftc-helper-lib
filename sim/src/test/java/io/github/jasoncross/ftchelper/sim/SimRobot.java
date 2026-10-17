@@ -188,6 +188,13 @@ final class SimRobot {
             servos.put(name, servo);
         }
         for (String key : sortedKeys(p, "crservo.")) crServos.put(key.substring("crservo.".length()), new double[] {0, 0});
+        // A flywheel's feeder is a motor or a CR servo (a windmill, a feed roller).
+        for (SimMotor m : motors.values()) {
+            if (m.feeder != null && !motors.containsKey(m.feeder) && !crServos.containsKey(m.feeder)) {
+                throw new IllegalArgumentException("Robot file: motor." + m.name + ": feeder=" + m.feeder
+                        + " is not a motor or crservo in the robot file");
+            }
+        }
         for (String key : sortedKeys(p, "touch.")) {
             Map<String, String> s = settings(p.getProperty(key));
             touches.put(key.substring("touch.".length()), new SimTouch(s.get(""), dbl(s, "below", 20)));
@@ -494,7 +501,8 @@ final class SimRobot {
         for (SimMotor m : motors.values()) {
             if (m.kind != SimMotor.Kind.FLYWHEEL || m.feeder == null) continue;
             SimMotor feeder = motors.get(m.feeder);
-            boolean on = feeder != null && Math.abs(feeder.appliedPower) > 0.3;
+            double[] cr = crServos.get(m.feeder);
+            boolean on = feeder != null ? Math.abs(feeder.appliedPower) > 0.3 : cr != null && Math.abs(cr[0]) > 0.3;
             double since = sinceShot.getOrDefault(m.name, SECONDS_PER_PIECE) + dt;
             // While the feeder runs, a piece goes through every SECONDS_PER_PIECE (the first at once).
             if (on && since >= SECONDS_PER_PIECE && Math.abs(m.shaftSpeed()) > 100) {

@@ -154,4 +154,26 @@ public class SimPiecesTest {
         assertTrue("table speed at " + rpm + " rpm: " + want, want > 100);
         assertEquals(1, r.pieces.launched());
     }
+
+    // A CR servo can feed a flywheel (a windmill); speed= gives a fixed exit speed (a catapult).
+    @Test public void aCrServoFeedsAndSpeedFixesTheShot() throws Exception {
+        SimRobot r = robot("motor.flywheel = flywheel, part=gobilda-5203-6000, feeder=spinner\n"
+                + "shoot.launcher = shape=flywheel, angle=45, speed=200\n");
+        r.setPose(0, -40, 0);
+        r.motors.get("flywheel").device.setPower(1);
+        run(r, 2.0);
+        r.crServos.get("spinner")[0] = 1;
+        run(r, 0.05);
+        r.crServos.get("spinner")[0] = 0;
+        assertEquals("one shot from the CR servo feeder", 1, r.pieces.launched());
+        SimWorld.Ball last = r.world.balls().get(r.world.balls().size() - 1);
+        double[] v = r.world.ballVel(last);
+        assertEquals("speed=200 in/s (less what gravity and air took in the first 0.05 s)", 200, Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]), 20);
+        try {
+            robot("motor.flywheel = flywheel, part=gobilda-5203-6000, feeder=nothing\n");
+            assertTrue("a feeder that is not a device is refused", false);
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("feeder=nothing"));
+        }
+    }
 }

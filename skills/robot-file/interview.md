@@ -27,9 +27,10 @@ Check: a starting robot must fit an 18 in cube. A frame longer than 18 in is a m
 8. Distance between the left and right wheel centres (track) and front and back wheel centres
    (wheelbase)? -> `drive.trackWidthIn`, `drive.wheelBaseIn`. (Defaults: `drive.gearRatio = 1`,
    `drive.strafeEfficiency = 0.85`; the Drive Tuner and Characterizer measure the real ones.)
-9. Do your drive motor names and directions match RobotSettings? (Read TeamCode: the side whose motors
-   are set to REVERSE to drive straight is the mirrored side -> `drive.mirrored = left` (the default)
-   or `right`.)
+9. Do your drive motor names and directions match RobotSettings? -> `drive.mirrored = left` (the
+   default) or `right`: the side whose motors TeamCode sets to REVERSE (the code already makes up for any
+   gears). Flip it if the code drives forward with NEGATIVE power (for example `left_stick_y` used
+   without a minus sign). The check scenario's forward-stick test says whether it is right.
 
 ## Each mechanism motor (lift, arm, turret, intake, launcher)
 
@@ -85,11 +86,16 @@ need hard stops), then make sure the shapes are right before blaming the robot.
 
 21. How does the robot pick up pieces (a roller? a claw?), which way of the motor pulls them in, and how
     many can it hold? -> `collect.` with `motor=` (or `crservo=` for a CR servo), `inward=-` if negative
-    power pulls in, `holds=` (BIOBUZZ allows at most 4); or `grab.` for a claw.
+    power pulls in, `holds=` (BIOBUZZ allows at most 4); or `grab.` for a claw. "Negative" is AFTER the
+    code's `setDirection`: a CR servo set to REVERSE that the code runs at +1 to pull in turns at -1, so it
+    needs `inward=-`. The intake shape must stick out past the chassis box (`robot.lengthIn`), or a piece on
+    the tiles is pushed away by the box before it reaches the roller.
 22. How does it score (shoot? lift and drop?) -> `shoot.` (`angle=` degrees up from forward, `share=`
     of the wheel's rim speed, about 0.5) or `grab.` with the lift/arm shapes. Where is the middle of the
     launcher wheel (forward/left/up)? -> its `flywheel` shape's `at=` (a roller or flywheel's `at=` is its
-    centre).
+    centre). What feeds it? -> `feeder=` on the flywheel motor (a motor or a CR servo). With CAD, make a
+    shot table (`cad.md` step 6). A catapult or spring launcher: make its motor a `flywheel` with
+    `feeder=` itself and give the shot a fixed `speed=` (in/s, from a filmed shot).
 
 ## Odd answers
 

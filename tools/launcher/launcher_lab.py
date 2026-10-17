@@ -14,11 +14,10 @@ LAUNCHER.json (paths relative to it; inches and the robot frame: forward, left, 
    "wheel": {"parts": [233]},                      the launcher wheel (a robot_cad.py group rule)
    "guides": {"near": [-1.6, 0, 6.6], "within": 6},   parts the ball can touch (default: everything else near the wheel)
    "entry": {"at": [1.5, -0.2, 5.0], "speedIn": [-20, 10]},   where the ball starts (centre) and its speed (in/s,
-                                                    along the robot's forward and up) as it reaches the wheel
+                                                    in the ball's plane: across and up, as printed) as it reaches the wheel
    "entrySpreadIn": 0.3,                            how much the start point varies
    "feedForceN": 1.0, "feedTimeS": 0.05,            the feeder's push along the entry direction, and for how long
-   "wheelTurn": "auto",                             +1 / -1: which way the wheel turns (seen from the robot's left:
-                                                    +1 = counterclockwise); auto = the way that shoots
+   "wheelTurn": "auto",                             +1: the front of the wheel moves up; -1: down; auto = try both
    "gear": 1, "shaftRpm": [1500, 2000, 2500, 3000],  wheel turns per motor turn, and the motor speeds to table
    "shape": [-1.57, -0.18, 6.61],                   the flywheel shape's at= (exit points are given from it)
    "pieces": {"POLLEN": {"diameterIn": 2.8, "massG": 25}},
@@ -49,6 +48,10 @@ def plane_basis(axle):
         f = np.array([0, 1.0, 0]) - a[1] * a
     e1 = f / np.linalg.norm(f)
     e2 = np.cross(e1, a)
+    if e2[2] < 0 or (abs(e2[2]) < 1e-9 and e2[1] < 0):
+        # the axle's sign is arbitrary: turn it so the plane's second direction is up (angles and exits up-positive,
+        # like the simulator's angle=)
+        a, e2 = -a, -e2
     return a, e1, e2
 
 
@@ -58,7 +61,7 @@ def slice_segments(tris, centre, a, e1, e2, offsets, reach):
     t = tris.reshape(-1, 3, 3) - centre
     segs = []
     for o in offsets:
-        h = t @ a - o
+        h = t @ a - (o + 1.3e-6)       # a hair off, so no corner lies exactly on the cutting plane
         s0, s1, s2 = np.sign(h[:, 0]), np.sign(h[:, 1]), np.sign(h[:, 2])
         cut = ~((s0 == s1) & (s1 == s2))
         tc, hc = t[cut], h[cut]
@@ -116,14 +119,14 @@ def run(cfg, base):
     offsets = [-0.6 * rmax, 0.0, 0.6 * rmax]
     S = slice_segments(tris, centre, a, e1, e2, offsets, R + 2 * rmax + 3)
     print(f"wheel: {w['name']}, {2 * R:.2f} in across, centre {centre.round(2)} (robot frame), axle {robot_cad.axis_name(a)}")
+    print(f"the ball's plane: across = {robot_cad.axis_name(e1)}, up = {robot_cad.axis_name(e2)} (angles are up from 'across'; "
+          f"the table is in the flywheel shape's own forward/up, so the shape must face the robot's forward in the CAD pose)")
     print(f"guides: {len(guide_ids)} parts -> {len(S)} outline pieces in the ball's plane")
 
     ent = cfg["entry"]
     p0 = np.asarray(ent["at"], float) - centre
     p0 = np.array([p0 @ e1, p0 @ e2]) * IN
-    sp = np.asarray(ent.get("speedIn", [0, 0]), float)        # robot forward, up
-    v0 = (sp[0] * np.array([1, 0, 0]) + sp[1] * np.array([0, 0, 1]))
-    v0 = np.array([v0 @ e1, v0 @ e2]) * IN
+    v0 = np.asarray(ent.get("speedIn", [0, 0]), float) * IN      # in the ball's plane: across, up
     # the start must be clear of the parts and the wheel, or the first step throws the ball out
     rmin = min(pc["diameterIn"] for pc in pieces.values()) / 2
     if len(S):
@@ -157,10 +160,14 @@ def run(cfg, base):
     n = len(rows)
     r = np.array([row[1]["diameterIn"] / 2 * IN for row in rows])
     m = np.array([row[1]["massG"] / 1000 for row in rows])
-    I = 2 / 3 * m * r * r                                   # a thin-walled foam ball
+    # inertia: 2/3 m r^2 for a thin-walled ball, 2/5 for a solid one ("inertiaShare" per piece; default thin-walled)
+    I = np.array([row[1].get("inertiaShare", 2 / 3) for row in rows]) * m * r * r
     pick = lambda key: rng.uniform(*ranges[key], n)
     kb, mu_w, mu_g = pick("ballStiffness"), pick("wheelGrip"), pick("guideGrip")
-    cb = 2 * 0.15 * np.sqrt(kb * m)
+    # damping from the piece's bounce (the field file's "bounce": the speed kept after a hit; default 0.3)
+    e_ = np.clip(np.array([row[1].get("bounce", 0.3) for row in rows]), 0.01, 0.99)
+    zeta = -np.log(e_) / np.sqrt(math.pi ** 2 + np.log(e_) ** 2)
+    cb = 2 * zeta * np.sqrt(kb * m)
     wsurf = np.array([row[4] * row[2] * gear * 2 * math.pi / 60 for row in rows])   # wheel spin, rad/s (+ = e1 -> e2)
     Rm = R * IN
     p = np.tile(p0, (n, 1)) + rng.normal(0, spread, (n, 2))
@@ -199,7 +206,7 @@ def run(cfg, base):
         dvec = p
         dist = np.linalg.norm(dvec, axis=1)
         nrm = dvec / dist[:, None]
-        delta = r + Rm - dist
+        delta = np.minimum(r + Rm - dist, r)
         on = (delta > 0) & live
         tan = np.stack([-nrm[:, 1], nrm[:, 0]], 1)
         vn = (v * nrm).sum(1)
@@ -227,18 +234,34 @@ def run(cfg, base):
             hit = (dl > 0) & live[:, None]
             if hit.any():
                 nn = dv / np.maximum(dd, 1e-9)[..., None]
-                tt = np.stack([-nn[..., 1], nn[..., 0]], 2)
-                vn = (v[:, None, :] * nn).sum(2)
-                fn = np.where(hit, kb[:, None] * dl - cb[:, None] * vn, 0).clip(min=0)
-                sl = (v[:, None, :] * tt).sum(2) - om[:, None] * r[:, None]
-                ftt = friction(fn, sl, mu_g[:, None])
-                Fx += (fn[..., None] * nn + ftt[..., None] * tt).sum(1)
-                Tq += (-r[:, None] * ftt).sum(1)
+                # One push per surface: the outline of one plate is many short pieces (and three cuts), all touching
+                # the ball together. Pieces are grouped by the direction they push (12 sectors of 30 degrees) and
+                # only the deepest in each group pushes.
+                sector = np.floor((np.arctan2(nn[..., 1], nn[..., 0]) + math.pi) / (math.pi / 6)).astype(int) % 12
+                for b_ in range(12):
+                    mask = hit & (sector == b_)
+                    if not mask.any():
+                        continue
+                    dlm = np.where(mask, dl, -1.0)
+                    j = dlm.argmax(1)
+                    rows_ = np.nonzero(dlm.max(1) > 0)[0]
+                    if not len(rows_):
+                        continue
+                    jj = j[rows_]
+                    nb = nn[rows_, jj]
+                    tb = np.stack([-nb[:, 1], nb[:, 0]], 1)
+                    db = np.minimum(dl[rows_, jj], r[rows_])           # a squeeze past the ball's radius is not real
+                    vn = (v[rows_] * nb).sum(1)
+                    fn = (kb[rows_] * db - cb[rows_] * vn).clip(min=0)
+                    sl = (v[rows_] * tb).sum(1) - om[rows_] * r[rows_]
+                    ftt = friction(fn, sl, mu_g[rows_])
+                    Fx[rows_] += fn[:, None] * nb + ftt[:, None] * tb
+                    Tq[rows_] += -r[rows_] * ftt
                 contact |= hit.any(1)
         # the feeder keeps pushing the ball along its entry direction for the first feedTimeS (a ball that is only
         # dropped would bounce off the wheel)
         if step * DT < feed_t:
-            Fx += feed_dir[None] * feed_n
+            Fx += np.where((~touched)[:, None] | (np.linalg.norm(p, axis=1) < Rm + r + 0.01)[:, None], feed_dir[None] * feed_n, 0)
         v = np.where(live[:, None], v + Fx / m[:, None] * DT, v)
         p = np.where(live[:, None], p + v * DT, p)
         om = np.where(live, om + Tq / I * DT, om)
@@ -248,11 +271,11 @@ def run(cfg, base):
         # left: touched the wheel, free of everything for 3 ms, moving away from the wheel. A shot if it leaves at
         # least 30 % of the wheel's surface speed (slower: it bounced off or dribbled out, not thrown)
         outward = (p * v).sum(1) > 0
-        left = live & touched & (free_t > 0.003) & away & outward & (step * DT > feed_t)
+        left = live & touched & (free_t > 0.003) & away & outward
         done = left & (speed > 0.3 * np.abs(wsurf) * Rm)
         exit_p[done], exit_v[done], exit_w[done] = p[done], v[done], om[done]
         status[done] = 1
-        status[left & ~done] = 2
+        status[left & ~done & (step * DT > feed_t)] = 2       # slow and free: dropped (the feeder may still push it)
         lost = live & (np.linalg.norm(p, axis=1) > Rm + 0.25)
         status[lost & ~done] = 2
     status[status == 0] = 2
@@ -271,9 +294,8 @@ def run(cfg, base):
             else:
                 print(f"wheel turn {t:+d}: no shots")
         if min(rate.values()) > 0.2:
-            print(f"WARNING: both ways shoot. Using {turn:+d} (more shots), but ask the team which way the wheel turns "
-                  "(as seen from the robot's left: +1 = counterclockwise, the front of the wheel moving up) and set "
-                  "\"wheelTurn\" to it.")
+            print(f"WARNING: both ways shoot. Using {turn:+d} (more shots), but ask the team: does the front of the "
+                  "wheel move up (+1) or down (-1) when it shoots? Then set \"wheelTurn\".")
     else:
         turn = turns[0]
     table = {"source": f"tools/launcher/launcher_lab.py from {d['step']}: {ncase} cases per row, ranges {ranges}; "
@@ -286,11 +308,16 @@ def run(cfg, base):
             idx = [i for i, row in enumerate(rows) if row[0] == name and row[2] == rpm and row[4] == turn]
             ok = [i for i in idx if status[i] == 1]
             if not ok:
+                # kept, so the simulator knows nothing leaves at this speed (it would otherwise scale another row)
+                out.append({"shaftRpm": rpm, "shot": 0, "speedIn": [0, 0], "angleDeg": [0, 0], "backspin": [0, 0], "exit": [0, 0]})
                 print(f"{name:12s} {rpm:5d}  none left the launcher")
                 continue
             V = exit_v[ok] / IN
             spd = np.linalg.norm(V, axis=1)
-            ang = np.degrees(np.arctan2(V[:, 1], V[:, 0]))
+            # angles as directions: their mean direction, and the spread around it (179 and -179 are 2 degrees apart)
+            ang_r = np.arctan2(V[:, 1], V[:, 0])
+            mean_r = math.atan2(np.sin(ang_r).mean(), np.cos(ang_r).mean())
+            ang = np.degrees(mean_r + (ang_r - mean_r + math.pi) % (2 * math.pi) - math.pi)
             back = exit_w[ok] * np.sign(V[:, 0] + 1e-12)
             ex = exit_p[ok] / IN - shape2
             row = {"shaftRpm": rpm, "shot": round(len(ok) / len(idx), 3),
