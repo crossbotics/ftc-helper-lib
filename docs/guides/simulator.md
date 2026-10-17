@@ -82,7 +82,7 @@ TeamCode and a tape measure: see the [robot-file skill](robot-file-skill.md).
 
 The robot file describes the pretend robot: every device with the SAME name as the robot
 configuration, the motors and servos from the parts catalog, the robot's size, where it starts, and the
-season's field. The library's example is `sim/robots/starter.properties`; a team keeps its own in its
+season's field. The library's example is `sim/robots/starter.properties`; the four sellers' BIOBUZZ starter bots are in `sim/robots/starter-bot-*.properties` ([starter-bots.md](starter-bots.md)); a team keeps its own in its
 robot project as `simulator/robot.properties` (used automatically, see below).
 
 ```properties
@@ -277,6 +277,8 @@ one, and every scenario also runs as an automatic test (the library's in `sim/sc
 
 ```text
 # lines starting with # are notes
+robot ../robots/starter-bot-rev.properties  # optional: run this scenario with this robot file (path from
+                                       # the scenario's folder) instead of the usual one
 init "Main TeleOp"                     # INIT an OpMode (waits for its first screen)
 start                                  # START
 press g1.a                             # press and let go (held until the OpMode surely saw it)

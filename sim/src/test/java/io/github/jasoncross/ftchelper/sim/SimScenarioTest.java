@@ -11,7 +11,8 @@ import org.junit.Test;
 /**
  * Runs every scenario file: the library's (sim/scenarios, with the library's OpModes and the starter
  * robot file) and, when the team's TeamCode is built in, the team's (simulator/scenarios in the robot
- * project, with the team's OpModes and robot file). Each must pass.
+ * project, with the team's OpModes and robot file). Each must pass. A scenario with a "robot PATH" line
+ * uses that robot file instead (the starter bots in sim/robots).
  */
 public class SimScenarioTest {
 
@@ -30,7 +31,7 @@ public class SimScenarioTest {
         File[] list = dir.listFiles((d, n) -> n.endsWith(".sim"));
         if (list == null) return;
         for (File f : list) {
-            SimEngine sim = new SimEngine(SimRobot.load(Paths.get(robot)), scope);
+            SimEngine sim = new SimEngine(SimRobot.load(SimScenario.robotFor(f.toPath(), Paths.get(robot))), scope);
             sim.start();
             SimScenario s = new SimScenario(sim);
             try {

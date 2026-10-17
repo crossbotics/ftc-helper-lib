@@ -1,0 +1,12 @@
+# The REV DUO Starter Bot (2026-27) loads, fits the size rules at full reach, and rolls a little.
+# Run it:  ./gradlew :sim:scenario -Pfile=sim/scenarios/starter-bot-rev.sim
+robot ../robots/starter-bot-rev.properties
+init "Motor Finder"
+expect size start ok
+expect size most ok
+expect size floor ok
+print size
+push 12 0 1                            # roll it forward by hand: 12 in/s for 1 s
+expect robot y > -55
+stop
+expect error none
