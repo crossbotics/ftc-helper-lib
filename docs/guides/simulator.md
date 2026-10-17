@@ -264,6 +264,23 @@ goals (the HIVE and its CELLs are one solid block, 30.65 to 65.93 in up: a shot 
 GARDEN scoring; a held piece's weight on the arm; robot parts that stop when they hit a piece. How far
 a ball rolls on the tiles is a guess (about 2 m from 1 m/s) until someone times a real one.
 
+### How shots fly, and shot tables
+
+A shot leaves the launcher shape at `angle=` (degrees up from its forward) and `share=` of the wheel's rim speed
+(default 0.5: a guess), with `spin=` (1 = backspin as if the ball rolled along a still hood, -1 topspin, 0 none).
+In flight the air slows it (drag, Cd 0.5: assumed, not measured for POLLEN or NECTAR; a piece type can set
+`dragCd` in the field file) and spin lifts or drops it (the Magnus force, lift coefficient = radius x spin / speed,
+at most 0.5).
+
+**Shot tables** replace the guesses with how the launcher really throws: `shoot.NAME = shape=flywheel,
+table=launcher-table.json`. For each piece and wheel speed the table gives the likely exit speed, angle, spin and
+exit point and how much they scatter; each shot picks its numbers from that spread (so shots scatter like real
+ones), and a share of feeds that do not become shots drop out. Make one with the **launcher program**
+(`tools/launcher/`): it cuts your robot's CAD along the ball's path, runs many shots through it (the ball as a soft
+disc squeezed against the spinning wheel and the hood), tries the numbers the CAD cannot give over ranges (how soft
+the balls are, how much the wheel and hood grip, where the ball comes in), and writes the table. It is still a
+model: film a few real shots (a phone's slow motion, next to a tape measure) and compare.
+
 ## Real numbers: the Characterizer
 
 The simulator moves each motor by the same "feedforward" model a real motor follows: power (at 12.8 V)

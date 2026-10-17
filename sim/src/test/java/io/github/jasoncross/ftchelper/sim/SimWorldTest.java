@@ -81,4 +81,24 @@ public class SimWorldTest {
         SimRobot s = robot("physics = simple\n");
         assertTrue(s.world == null);
     }
+
+    // Air: a POLLEN (25 g, 2.8 in) thrown level at 10 m/s, high up, slows as drag says: dv/dt = -k v^2 with
+    // k = 1/2 rho Cd A / m = 0.0477 per metre, so after 0.1 s it is at 10 / (1 + k 10 0.1) = 9.545 m/s.
+    @Test public void airSlowsAFlyingPieceAndBackspinLiftsIt() throws Exception {
+        SimRobot r = robot("");
+        r.setPose(0, -60, 0);
+        SimField.PieceType pollen = r.field.pieceTypes.get("POLLEN");
+        SimWorld.Ball b = r.world.addBall(pollen, -40, 20, 200, 10 / SimWorld.M, 0, 0);
+        for (int i = 0; i < 10; i++) r.world.step(0.01, 0, 0, 0);
+        double vx = r.world.ballVel(b)[0] * SimWorld.M;
+        assertEquals("drag: 9.545 m/s after 0.1 s", 9.545, vx, 0.01);
+        // the same throw with backspin (it turns about -y when it flies along +x) rises above the plain one
+        SimWorld.Ball plain = r.world.addBall(pollen, -40, 40, 200, 10 / SimWorld.M, 0, 0);
+        SimWorld.Ball spun = r.world.addBall(pollen, -40, 50, 200, 10 / SimWorld.M, 0, 0);
+        r.world.spin(spun, 0, -10 / (1.4 * SimWorld.M), 0);
+        for (int i = 0; i < 30; i++) r.world.step(0.01, 0, 0, 0);
+        double rise = r.world.ballPos(spun)[2] - r.world.ballPos(plain)[2];
+        // lift coefficient r w / v = 1 is capped at 0.5: lift = 1/2 rho A 0.5 v^2 = 0.12 N on 0.245 N of weight
+        assertTrue("backspin holds it up: " + rise + " in higher after 0.3 s", rise > 3 && rise < 12);
+    }
 }

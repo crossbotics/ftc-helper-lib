@@ -69,6 +69,8 @@ final class SimRobot {
     // A 3D model of the field for the page (field.model in the robot file), or null: the page then
     // builds the field from the field file's shapes.
     Path fieldModel = null;
+    // The robot file's folder (relative paths in it start here); null for a robot not read from a file.
+    final Path dir;
     // The robot as simple shapes (shape.NAME lines): for the 3D view and the size rules.
     final SimShapes shapes;
     // The physics engine (physics = engine, the default): the robot bumps and slides, its parts hit
@@ -94,6 +96,7 @@ final class SimRobot {
     private final SimParts parts;
 
     private SimRobot(Properties p, Path dir) {
+        this.dir = dir;
         String teamParts = p.getProperty("parts", "").trim();
         parts = teamParts.isEmpty() ? SimParts.catalog() : SimParts.withTeamFile(dir.resolve(teamParts).normalize());
         batteryVolts = num(p, "battery", 12.8);

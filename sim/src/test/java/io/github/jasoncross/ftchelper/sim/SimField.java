@@ -74,6 +74,7 @@ final class SimField {
     static final class PieceType {
         final String name, color;
         final double diameterIn, massG, bounce;
+        final double dragCd;            // air drag coefficient (a ball: about 0.5; not measured for these pieces)
 
         PieceType(Map<String, Object> m) {
             name = SimJsonReader.string(m, "name", "piece");
@@ -81,6 +82,7 @@ final class SimField {
             diameterIn = SimJsonReader.number(m, "diameterIn", 3);
             massG = SimJsonReader.number(m, "massG", 30);
             bounce = SimJsonReader.number(m, "bounce", 0.3);
+            dragCd = SimJsonReader.number(m, "dragCd", 0.5);
         }
     }
 

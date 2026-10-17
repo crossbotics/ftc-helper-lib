@@ -152,10 +152,7 @@ final class SimWorld {
         b.setMass(m);
         b.setPosition(x * M, y * M, zFloor + z * M);
         b.setLinearVel(vx * M, vy * M, vz * M);
-        // Slowing down, as rates per second turned into the engine's per-step share: rolling on foam tiles
-        // (a ball at 1 m/s rolls about 2 m; a guess to check against a real roll) and a little air.
-        b.setLinearDamping(1 - Math.exp(-0.05 * STEP));
-        b.setAngularDamping(1 - Math.exp(-0.5 * STEP));
+        // Slowing down on the tiles is set each step (air()): only while it touches them.
         DGeom g = OdeHelper.createSphere(space, r);
         g.setBody(b);
         Ball ball = new Ball(nextBall++, type, b, g);
@@ -301,11 +298,42 @@ final class SimWorld {
             for (int k = 0; k < parts; k++) {
                 time += STEP / parts;
                 drive(forwardIn * M, rightIn * M, -Math.toRadians(cwDeg));
+                air(STEP / parts);
                 space.collide(null, near);
                 world.quickStep(STEP / parts);
                 contacts.empty();
             }
         }
+    }
+
+    // Air on each piece: drag against its motion, F = 1/2 rho Cd A v^2; and the lift from its spin (Magnus), F =
+    // 1/2 rho A r (w x v), the usual rule for a slowly spinning ball (lift coefficient r w / v, at most 0.5).
+    // On the tiles it also slows down rolling: rates per second turned into the engine's per-step share (a ball
+    // at 1 m/s rolls about 2 m: a guess to check against a real roll).
+    static final double AIR_DENSITY = 1.2;          // kg/m^3, at about 20 C near sea level
+    private static final double ROLL_SLOW = 0.05, SPIN_SLOW = 0.5;   // per second, on the tiles
+
+    private void air(double dt) {
+        for (Ball b : balls) {
+            double r = b.type.diameterIn / 2 * M;
+            DVector3C p = b.body.getPosition(), v = b.body.getLinearVel(), w = b.body.getAngularVel();
+            boolean onTiles = p.get2() - zFloor < r + 0.003;
+            b.body.setLinearDamping(onTiles ? 1 - Math.exp(-ROLL_SLOW * dt) : 0);
+            b.body.setAngularDamping(onTiles ? 1 - Math.exp(-SPIN_SLOW * dt) : 0);
+            double speed = Math.sqrt(v.get0() * v.get0() + v.get1() * v.get1() + v.get2() * v.get2());
+            if (speed < 1e-6) continue;
+            double area = Math.PI * r * r, drag = 0.5 * AIR_DENSITY * b.type.dragCd * area * speed;
+            double[] lift = {w.get1() * v.get2() - w.get2() * v.get1(), w.get2() * v.get0() - w.get0() * v.get2(),
+                    w.get0() * v.get1() - w.get1() * v.get0()};
+            double spin = Math.sqrt(w.get0() * w.get0() + w.get1() * w.get1() + w.get2() * w.get2());
+            double cl = r * spin / speed, k = 0.5 * AIR_DENSITY * area * r * (cl > 0.5 ? 0.5 / cl : 1);
+            b.body.addForce(-drag * v.get0() + k * lift[0], -drag * v.get1() + k * lift[1], -drag * v.get2() + k * lift[2]);
+        }
+    }
+
+    /** Sets a piece's spin, radians per second about (x, y, z) in the field frame. */
+    void spin(Ball b, double wx, double wy, double wz) {
+        b.body.setAngularVel(wx, wy, wz);
     }
 
     // The wheels' grip: a push toward the wanted speed, never more than the traction allows. The same for

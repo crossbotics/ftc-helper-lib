@@ -129,4 +129,29 @@ public class SimPiecesTest {
         run(far, 0.5);
         assertEquals(22, far.pieces.inStacks());
     }
+
+    // A shot table (the launcher program's, or filmed shots): each shot takes its speed, angle and exit point from it.
+    @Test public void aShotTableSetsTheShot() throws Exception {
+        File table = tmp.newFile("launcher.json");
+        Files.write(table.toPath(), ("{\"pieces\": {\"POLLEN\": ["
+                + "{\"shaftRpm\": 1000, \"shot\": 1, \"speedIn\": [100, 0], \"angleDeg\": [60, 0], \"backspin\": [0, 0], \"exit\": [3, 2]},"
+                + "{\"shaftRpm\": 3000, \"shot\": 1, \"speedIn\": [300, 0], \"angleDeg\": [40, 0], \"backspin\": [0, 0], \"exit\": [3, 2]}]}}").getBytes("UTF-8"));
+        SimRobot r = robot("shoot.launcher = shape=flywheel, table=" + table.getAbsolutePath() + "\n");
+        r.setPose(0, -40, 0);
+        SimMotor fw = r.motors.get("flywheel");
+        fw.device.setPower(1);
+        run(r, 2.0);
+        double rpm = fw.shaftSpeed() / fw.ticksPerRev * 60;
+        int before = r.pieces.drawn().size();
+        r.pieces.shoot(fw);
+        Object[] ball = null;
+        for (Object[] d : r.pieces.drawn()) if (Math.abs((Double) d[2] + 40) < 8 && (Double) d[3] > 2.5) ball = d;
+        assertEquals(before + 1, r.pieces.drawn().size());
+        assertTrue("it left from the table's exit point (3 in forward and 2 up of the flywheel's centre)", ball != null);
+        // its speed: blended between the rows by the wheel's speed (or grown past the last row)
+        SimShotTable t = new SimShotTable(table.toPath(), "test", 1);
+        double want = t.pick("POLLEN", rpm).speedIn;
+        assertTrue("table speed at " + rpm + " rpm: " + want, want > 100);
+        assertEquals(1, r.pieces.launched());
+    }
 }
