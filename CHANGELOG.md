@@ -2,92 +2,98 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
-## Unreleased
+## v0.8.0 - 2026-10-17
 
-### Added (simulator branch)
+Nothing changes for a robot project that pulls this version: the library builds the same way and no
+class was removed. Everything under "Simulator" runs only on a laptop, from the `ftc-helper-lib` folder.
 
-- **Simulator** (`sim/`, standalone build only): a pretend Control Hub and Driver Hub on a laptop.
-  `./gradlew :sim:run`, then http://localhost:8780. Real OpMode code with pretend motors, servos,
-  switches, IMU, a robot on a field, simple physics; on-screen, keyboard, real-controller and phone
-  gamepads. Scripted whole-OpMode tests (`FinderSafetyTest`) run on every push.
+### Added
+
+- **Simulator** (`sim/`): a pretend Control Hub and Driver Hub on your laptop. `./gradlew :sim:run`,
+  then open http://localhost:8780. Your real OpMode code runs with pretend motors, servos, switches,
+  IMU and battery, and a robot on the season's field. The page fits one laptop screen: Driver Hub,
+  the field in 3D with the gamepads under it, and the Control Hub in tabs. Gamepads: on-screen,
+  keyboard, a real USB or Bluetooth controller, or a phone on the same WiFi (`-Plan`).
   Guide: [docs/guides/simulator.md](docs/guides/simulator.md).
-- Simulator: a parts catalog of common FTC motors and servos (`sim/parts/parts.json`, numbers from the
-  sellers' pages) that robot files reference; a robot project's own TeamCode and robot file; iterative
-  OpModes; scenario files (`./gradlew :sim:scenario`) that also run as tests; season field files
-  (`sim/fields/`) with solid elements, zones, tape and AprilTags, starting with BIOBUZZ.
-- Simulator: the field in 3D on the page (three.js, served by the simulator so it works offline):
-  the field from the field file or a team's 3D model (`field.model` in the robot file), the robot box,
-  AprilTag squares, and Drivers / Audience / From above / Follow robot views.
-- Simulator: pretend webcams (`camera.KEY = name=Webcam 1, forward=..., pitch=...` in the robot file).
-  `WebcamTags` and the SDK's own `VisionPortal`/`AprilTagProcessor` builders work; the field file's
-  AprilTags become the SDK's detections (BIOBUZZ: clusters per CELL group) with the SDK's ftcPose
-  formulas. The page lists what each camera sees, draws its view cone and shows its picture in 3D.
-  Scenario check: `expect camera "Webcam 1" sees 31|none|"RED SCORING"`.
-- The robot-file skill (`skills/robot-file/`: SKILL.md, interview.md, photos.md): instructions any AI
-  coding agent follows to build a team's simulator robot file from their robot configuration,
-  TeamCode, measurements and photos, then check it. `./gradlew :sim:fromConfig -Pconfig=...` makes the
-  draft from the Control Hub's configuration XML (every device by name, parts where the motor type tells
-  them, TODOs, a load check). Guide: docs/guides/robot-file-skill.md.
-- Simulator stage 3 fixes from the Astra/Fable reviews: FLOWER goals at the CAD-measured opening
-  (centre 68.04 in out, 21.4 in up); a piece on the rim with its edge over the opening scores, a fast
-  shot flying past or a piece hovering above does not; claw boxes resize as it opens; each shoot. line
-  can name its flywheel; fast pieces get smaller physics steps; thicker walls; rolling and air drag as
-  per-second rates; intake power after the direction setting; a claw-only robot gets its preload on the
-  tiles behind it; new tests (a part stops the robot, wheels slip while pinned, the robot pushes a piece,
-  the intake needs the piece close, an off-centre drop scores); docs on sources and limits.
-- Simulator: game pieces (needs the physics engine): the field file's piece types, staged pieces,
-  goals and preload (BIOBUZZ: POLLEN and NECTAR from the manual; 4 POLLEN in each GARDEN; FLOWER tops
-  as goals; 4 POLLEN preload). Robot file `collect.` (intake), `shoot.` (a flywheel shot launches a
-  held piece), `grab.` (claw). Page draws pieces and shows held/shot/scored; scenario `set piece`,
-  `expect stored|launched|scored`, `print pieces`.
-- Simulator: a physics engine (ode4j, pure Java, BSD): the robot is a solid body pushed by its drive
-  (as hard as the wheels' grip allows), stops at and slides along walls and field parts, and its robot
-  shapes hit things too. `physics = simple` keeps the old rule; `robot.massKg`, `drive.grip`.
-- `CharacterizerOpMode` (finders) and `CharacterizeMath`: measure how the drive, turning, lifts/arms
-  and flywheels really move (slow ramps and quick steps, with soft limits and wrong-direction stops)
-  and fit their feedforward numbers (kS, kV, kA, kG, coasting); shows robot-file lines and
-  `Feedforward` lines, saves each test's log (`characterizer/*.csv`). Starter kit `Characterizer.java`.
-- Characterizer safety and fit fixes from the Astra/Fable reviews: stops when something pushes but does
-  not move (0.7 s), checks each wheel's direction, lift soft limits hold whatever the power, a lift
-  that counts down going up stops, the lift returns to the bottom at the end, drive rolls end at
-  `maxDriveCounts()`, `driveRampMax()` at most 0.5, gentler steps, GUIDE/START stop a test, every
-  motor gets its stop even if one fails. Finders: holding START opens help while running too (it only
-  worked in INIT). Fit: smoothing window follows a slow robot loop. Fit tool: keeps Windows line
-  endings and notes, skips bad lines, leaves out poor or senseless fits (-Pforce), never adds a motor,
-  never writes the library's example robot file, keeps a .bak.
-- `Feedforward` (control): power = kS x sign(speed) + kV x speed + kA x speeding-up + kG, with battery
-  scaling. Finder results and logs go to the folder in the Java setting `ftchelper.dataDir` when set
-  (the simulator keeps them on the laptop).
-- Simulator: motors follow the same feedforward model (`kS=`, `accelSec=`, `coastSec=` on motors;
-  `drive.kS`, `drive.accelSec`, `drive.turnDegPerCount`); `./gradlew :sim:fit [-Plog=] [-Pwrite]` fits
-  Characterizer logs and writes the robot file; SimCharacterizerTest checks a full round trip.
-- Simulator: robot shapes (`shape.NAME = box|slide|arm|turret|claw|roller|flywheel, on=, at=, size=`,
-  moved by their motor or servo): drawn in 3D, and size rules checked now and at full reach (18 in
-  start cube; 18 x 24 x 29 in). Scenario checks `expect size start|match|most ok|fail`, `print size`.
-  A robot-file setting's value may now be a list of numbers (`at=-7,0,4`); a later word with no `=`
-  is refused. A `#` starts a note only after a space (so `color=#ff0000` works).
-- Simulator fixes from the Astra/Fable reviews: full-reach size check tries every pose (each hinge at
-  its ends, every multiple of 90 degrees and every few degrees) and passes only if each pose fits;
-  parts below the tiles are reported; a moving part with no range is refused; servo ranges from team
-  parts or `rangeDeg=` reach the shapes; a pretend Limelight's `getLatestResult()` is never null and
-  follows the poll rate; cameras close outside the robot lock; field tags carry their printed up
-  (`up`, from the field CAD), used for single tags; the field model is read once and cached.
-- Docs: `distanceIn` is flat in the camera's own view (floor distance only for a level camera); the
-  SDK's BIOBUZZ cluster aiming point is about 9 in beyond the tag row, not the CELL opening; a webcam
-  reports a clustered tag only as its cluster. Tutorial 18 shows "Targets seen". `TagGroup` refuses
-  repeated tags or places.
-- `TagGroup` and `LimelightTags.groups(...)`: a Limelight now also reports each group of tags in a row
-  as ONE target, named like the webcam's SDK cluster (BIOBUZZ: "RED SCORING", "RED AUDIENCE",
-  "BLUE AUDIENCE", "BLUE SCORING"), aimed at the middle of the row; needs 2+ of the group's tags.
-  `camera.target("RED SCORING")` now works with either camera. Tutorial 18 aims at a BIOBUZZ CELL
-  group (it used last season's tag 20); docs and examples use BIOBUZZ targets.
-- Simulator scenario `aim-at-cell-group.sim`: Tutorial 18 turns the robot onto the group with each camera.
-- Simulator: a pretend Limelight 3A (`limelight.KEY = name=limelight, ...`): the SDK's Limelight3A with
-  its network part replaced; results are built as the Limelight's JSON and read by the SDK's own
-  LLResult (one FiducialResult per tag, tx/ty/ta, target pose in camera space). `LimelightTags` works.
-- Simulator: a parts catalog page (`docs/guides/parts-catalog.md`, made from `parts.json` by
-  `tools/parts_page.py`; the build checks it is current). Parts not in the catalog: `rpm=`/`ticksPerRev=`
-  on a motor, `rangeDeg=`/`secPer60=` on a servo, or a team parts file (`parts = parts.json`).
+- Simulator physics (ode4j): the robot is a solid body pushed by its wheels as hard as their grip
+  allows; it stops at and slides along walls and field parts, its wheels slip while it pushes, and its
+  parts hit things too. `physics = simple` keeps a plain "a bump stops the move" rule. `robot.massKg`,
+  `drive.grip`.
+- **The robot file** (`sim/robots/*.properties`): every device under its configuration name, the
+  motors and servos from the parts catalog, the robot's size, start pose, field and which side's motors
+  are mirrored (`drive.mirrored`). In a robot project (`ftc-helper-lib/` next to `TeamCode/`) the
+  simulator builds **your TeamCode**, lists only your OpModes and uses `simulator/robot.properties`;
+  other libraries go in `simulator/sim-dependencies.gradle`. Iterative OpModes run too.
+- **Parts catalog** (`sim/parts/parts.json`, page: [docs/guides/parts-catalog.md](docs/guides/parts-catalog.md)):
+  common FTC motors and servos with the numbers from the sellers' pages and the date checked. A part
+  not in it: `rpm=`/`ticksPerRev=` on a motor, `rangeDeg=`/`secPer60=` on a servo, or a team parts file.
+- **Season fields** (`sim/fields/biobuzz-2026.json`, measured from the official field CAD): solid and
+  overhead elements, 16 AprilTags, walls, tape and zones; the game pieces (POLLEN, NECTAR) where the
+  match starts them (4 POLLEN in each GARDEN and each FLOWER, 3 NECTAR in each up CELL), the FLOWER tops
+  as goals, and the 4-POLLEN preload. An intake at a FLOWER's bottom opening takes its POLLEN one by one.
+- **Back to start, Reset field and Preloaded** on the page (and `preload = off`, `set preload`,
+  `set field start`): start a practice run with or without the preload, or put the pieces back.
+- **The field in 3D** on the page (three.js, bundled so it works offline): field, robot, tag squares,
+  camera cones and pictures, Drivers / Audience / From above / Follow robot views; a team's own field
+  model with `field.model`.
+- **Robot shapes** (`shape.NAME = box|slide|arm|turret|claw|roller|flywheel`, moved by their motor or
+  servo), drawn in 3D and used for the **size rules**: the 18 in start cube and 18 x 24 x 29 in now and
+  at full reach (every pose tried), and nothing below the tiles. Scenario checks `expect size ...`,
+  `print size`.
+- **CAD models of the parts**: `robot.model`, `model=`, `baseModel=`, `cad.units`, `cad.axes`,
+  `cad.origin`, `cadPose=` draw a team's STL or OBJ exports in place of the boxes; the size rules use
+  them too; big models are simplified for the picture. `print cad` checks each model sits on its box.
+- **Game pieces in the robot file**: `collect.` (an intake), `shoot.` (a flywheel shot: `angle=`,
+  `share=`, `spin=`, `speed=`, or a `table=`), `grab.` (a claw). A flywheel's feeder may be a motor or
+  a CR servo. Shots fly with air drag and spin. **Shot tables** replace the guesses with how your
+  launcher really throws, with scatter.
+- **Pretend cameras**: webcams (`camera.KEY = name=..., forward=, up=, pitch=`) that work with
+  `WebcamTags` and the SDK's own `VisionPortal`/`AprilTagProcessor` (BIOBUZZ cluster detections, the
+  SDK's ftcPose formulas); a pretend Limelight 3A (`limelight.KEY`) that `LimelightTags` and
+  `getLatestResult()` code read.
+- **Scenario files** (`.sim`, `./gradlew :sim:scenario -Pfile=...`): drive the simulator like a person
+  and check what happens (screen text, motors, servos, position, bumps, pieces, cameras, size rules).
+  Every scenario also runs as an automatic test; `sim/scenarios/` has examples.
+- **Whole-OpMode tests** (`FinderSafetyTest` and others) run on every push (they found the v0.7.3 bug).
+- **Robot-file skill** (`skills/robot-file/`): instructions an AI coding agent follows to build your
+  robot file from your robot configuration, TeamCode, measurements, photos or CAD, then check it.
+  `./gradlew :sim:fromConfig -Pconfig=...` drafts the file from the Control Hub's configuration XML.
+  Guide: [docs/guides/robot-file-skill.md](docs/guides/robot-file-skill.md).
+- **Four BIOBUZZ starter bots** (REV, goBILDA, AndyMark, Studica) as simulator robots and scenarios,
+  with every number's source noted: [docs/guides/starter-bots.md](docs/guides/starter-bots.md).
+- **CAD tools** (`tools/cad/robot_cad.py`, Python with build123d): read a whole-robot STEP file into a
+  parts list with seller part numbers, find which motor drives what, and write one STL per moving
+  group. **Launcher program** (`tools/launcher/launcher_lab.py`): works out how a flywheel launcher
+  throws from the CAD and writes a shot table.
+- **Characterizer** (`CharacterizerOpMode`, `CharacterizeMath`, starter kit `Characterizer.java`):
+  measures how the drive, turning, lifts/arms and flywheels really move and fits their feedforward
+  numbers (kS, kV, kA, kG, coasting); shows the lines to copy and saves each test's log.
+  `./gradlew :sim:fit -Plog=... -Pwrite` puts the real numbers into your robot file.
+- **`Feedforward`** (control): power = kS x sign(speed) + kV x speed + kA x speeding-up + kG, with
+  battery scaling.
+- **`TagGroup`** and `LimelightTags.groups(...)`: a Limelight also reports each row of tags as ONE
+  target named like the webcam's cluster ("RED SCORING", ...), so `camera.target("RED SCORING")` works
+  with either camera.
+- CI runs the simulator tests and checks the parts page is current.
+
+### Changed
+
+- Tutorial 18 and the examples aim at a BIOBUZZ CELL group (they used last season's tag 20) and show
+  "Targets seen".
+- Docs: `distanceIn` is flat in the camera's own view; the SDK's BIOBUZZ cluster aiming point is about
+  9 in beyond the tag row, not the CELL opening; a webcam reports a clustered tag only as its cluster.
+- Finders: holding START opens help while running too (it only worked in INIT).
+- Finder results and Characterizer logs go to the folder in the Java setting `ftchelper.dataDir` when
+  it is set (the simulator uses it); on the robot the folder is unchanged.
+
+### Fixed
+
+- Characterizer safety: it stops when something pushes but does not move (each drive wheel on its own,
+  a lift going up or down), when a lift move runs out of time, when a wheel turns the wrong way, at the
+  lift's soft limits whatever the power, and on GUIDE or START; a drive roll ends at `maxDriveCounts()`
+  from where it started; every motor is stopped even if one fails.
+- Fit tool: keeps Windows line endings, notes and motor names with spaces; skips bad lines; leaves out
+  poor fits (`-Pforce` uses them); never adds a motor; keeps a `.bak`.
 
 ## v0.7.3 - 2026-10-16
 
