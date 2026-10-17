@@ -165,6 +165,7 @@ public abstract class CharacterizerOpMode extends FinderOpMode {
     private List<Phase> phases;
     private int phase;
     private double phaseStart, testStart, phaseStartPos, stalledSec;
+    private double[] wheelStalledSec = new double[0];   // per drive wheel: one jammed wheel hides in an average
     private double lastLoop;
     private final List<String> wheelNames = new ArrayList<>();
     private DcMotorEx mechMotor;
@@ -252,8 +253,9 @@ public abstract class CharacterizerOpMode extends FinderOpMode {
         phases = new ArrayList<>();
         phase = 0;
         testStart = phaseStart = lastLoop = now();
-        phaseStartPos = 0;
+        phaseStartPos = Double.NaN;      // set from the first reading: the encoders need not start at 0
         stalledSec = 0;
+        wheelStalledSec = new double[left.size() + right.size()];
         double ramp = Math.max(0.1, Math.min(0.5, driveRampMax()));
         switch (test.kind) {
             case DRIVE:
@@ -341,6 +343,13 @@ public abstract class CharacterizerOpMode extends FinderOpMode {
                 boolean isLeft = i % 2 == 0;
                 double wheelPower = isLeft || running.kind == Kind.DRIVE ? power : -power;
                 double wv = wheels.get(i).getVelocity();
+                // Each pushed wheel must move too: one jammed wheel would hide in the average below.
+                wheelStalledSec[i] = Math.abs(wheelPower) > 0.25 && Math.abs(wv) < 20 ? wheelStalledSec[i] + loopSec : 0;
+                if (wheelStalledSec[i] > 0.7) {
+                    finish("Stopped: wheel \"" + wheelNames.get(i) + "\" is pushed but not turning. Jammed, or its encoder "
+                            + "cable in another port?");
+                    return;
+                }
                 if (Math.abs(wheelPower) > 0.3 && Math.signum(wv) == -Math.signum(wheelPower) && Math.abs(wv) > 50) {
                     finish("Stopped: wheel \"" + wheelNames.get(i) + "\" turned the WRONG way. Check its direction in RobotSettings "
                             + "(run the Motor Direction Check).");
@@ -357,10 +366,12 @@ public abstract class CharacterizerOpMode extends FinderOpMode {
             vel = mechMotor.getVelocity();
             pos = mechMotor.getCurrentPosition() - startPos;
         }
+        if (Double.isNaN(phaseStartPos)) phaseStartPos = pos;
         // Safety: pushing but not moving (jammed, pushing into a hard stop, or an encoder in another port):
-        // stop after 0.7 s.
-        double moves = running.kind == Kind.LIFT ? 0.45 : 0.25;    // a lift needs more (gravity)
-        stalledSec = Math.abs(power) > moves && Math.abs(vel) < 20 ? stalledSec + loopSec : 0;
+        // stop after 0.7 s. A lift going up needs more power before it moves (gravity holds it); going down,
+        // gravity helps, so a little power must move it.
+        boolean pushed = running.kind != Kind.LIFT ? Math.abs(power) > 0.25 : power >= 0.4 || power <= -0.2;
+        stalledSec = pushed && Math.abs(vel) < 20 ? stalledSec + loopSec : 0;
         if (stalledSec > 0.7) {
             finish("Stopped: it is pushing but not moving. Jammed, against a hard stop (wrong direction?), "
                     + "or the encoder cable in another port?");
@@ -390,6 +401,12 @@ public abstract class CharacterizerOpMode extends FinderOpMode {
         boolean done = s >= ph.maxSec || (ph.done != null && ph.done.done(s, pos, pos - phaseStartPos, vel));
         if (running.kind == Kind.LIFT && phase == 0 && s >= ph.maxSec) {
             finish("Stopped: the lift did not reach 60% of its range in 25 s. Is it free to move, and the limits right?");
+            return;
+        }
+        // A lift move that runs out of time without reaching its place: something holds it. Stop.
+        if (running.kind == Kind.LIFT && ph.done != null && s >= ph.maxSec) {
+            finish("Stopped: the lift did not get where \"" + ph.name + "\" goes in " + Math.round(ph.maxSec)
+                    + " s. Is it caught on something? Nothing was fitted.");
             return;
         }
         if (done) {
