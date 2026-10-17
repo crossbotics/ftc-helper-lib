@@ -54,6 +54,7 @@ final class SimRobot {
 
     // The drivetrain.
     final String driveType;          // mecanum, tank, none
+    final boolean rightMirrored;     // drive.mirrored = right: the right wheels' motors face backward (default: the left)
     final List<SimMotor> wheels = new ArrayList<>();   // FL, FR, BL, BR (tank: FL, FR, [BL, BR])
     double wheelDiameterIn = 3.78, ticksPerRev = 537.7, gearRatio = 1, trackWidthIn = 15, wheelBaseIn = 13;
     double strafeEfficiency = 0.85;
@@ -100,6 +101,12 @@ final class SimRobot {
         int port = 0;
         // Drivetrain motors first, so they get the first ports like on a real hub.
         driveType = p.getProperty("drive.type", "none").trim().toLowerCase(Locale.US);
+        String mirrored = p.getProperty("drive.mirrored", "left").trim().toLowerCase(Locale.US);
+        if (!mirrored.equals("left") && !mirrored.equals("right")) {
+            throw new IllegalArgumentException("Robot file: drive.mirrored is the side whose wheel motors face the other way "
+                    + "(the side your code reverses to drive straight): left or right");
+        }
+        rightMirrored = mirrored.equals("right");
         if (!driveType.equals("none")) {
             // A catalog part (drive.part = gobilda-5203-312) gives the speed and counts; numbers written
             // in the file win over it.
@@ -504,9 +511,11 @@ final class SimRobot {
         return Math.PI * wheelDiameterIn / (ticksPerRev * gearRatio);
     }
 
-    // Left wheels are mounted mirrored: their shaft turns backward when the wheel rolls forward.
+    // One side's wheels are mounted mirrored (the left, unless drive.mirrored = right): their shaft turns
+    // backward when the wheel rolls forward. Even indexes are the left wheels.
     private double mount(int index) {
-        return index % 2 == 0 ? -1 : 1;
+        boolean left = index % 2 == 0;
+        return left != rightMirrored ? -1 : 1;
     }
 
     // The robot's motion from its wheels (forward, right in inches per second; turn clockwise rad/s).

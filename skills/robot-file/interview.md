@@ -27,8 +27,9 @@ Check: a starting robot must fit an 18 in cube. A frame longer than 18 in is a m
 8. Distance between the left and right wheel centres (track) and front and back wheel centres
    (wheelbase)? -> `drive.trackWidthIn`, `drive.wheelBaseIn`. (Defaults: `drive.gearRatio = 1`,
    `drive.strafeEfficiency = 0.85`; the Drive Tuner and Characterizer measure the real ones.)
-9. Do your drive motor names and directions match RobotSettings? (Read TeamCode; if the left side is
-   reversed there, it is a normal mecanum robot: the simulator mounts the left wheels mirrored too.)
+9. Do your drive motor names and directions match RobotSettings? (Read TeamCode: the side whose motors
+   are set to REVERSE to drive straight is the mirrored side -> `drive.mirrored = left` (the default)
+   or `right`.)
 
 ## Each mechanism motor (lift, arm, turret, intake, launcher)
 

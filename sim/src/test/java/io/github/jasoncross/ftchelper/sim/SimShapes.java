@@ -593,6 +593,9 @@ final class SimShapes {
             String what = key[0].equals("chassis") ? "robot.model" : "shape." + key[0] + (key[1].equals("base") ? " baseModel" : " model");
             String line = String.format(Locale.US, "%s %s: CAD %.1f x %.1f x %.1f in, its middle %.1f in from the box's; box %.1f x %.1f x %.1f in",
                     what, m.file, hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2], off, box[0], box[1], box[2]);
+            if (m.triangles.length / 9 < m.readTriangles) {
+                line += String.format(Locale.US, " (drawn with %d of its %d triangles)", m.triangles.length / 9, m.readTriangles);
+            }
             double big = Math.max(box[0], Math.max(box[1], box[2]));
             double cadBig = Math.max(hi[0] - lo[0], Math.max(hi[1] - lo[1], hi[2] - lo[2]));
             if (cadBig * 5 < big) line += String.format(Locale.US, " (%.0f times smaller than its box: check cad.units)", big / cadBig);

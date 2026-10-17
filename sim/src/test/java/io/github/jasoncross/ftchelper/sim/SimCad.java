@@ -29,20 +29,25 @@ import java.util.Properties;
  * game pieces keep using the boxes (size=): a box is a far simpler thing to bump into.
  */
 final class SimCad {
-    // A mesh larger than this would make the page slow (and is more detail than the size check needs).
-    static final int MAX_TRIANGLES = 2_000_000;
+    // More than this (all models together) would take too much memory to read: about 0.4 GB.
+    static final int MAX_TRIANGLES = 12_000_000;
+    // The page draws at most this many of each model's triangles: a bigger one is simplified for the
+    // picture (the size rules still use every triangle).
+    static final int DRAWN_TRIANGLES = 300_000;
 
     /** One part's mesh: triangles in the robot frame at the start pose (forward, left, up; inches). */
     static final class Mesh {
         final String file;
-        final float[] triangles;        // x y z per corner, 9 floats per triangle
+        final float[] triangles;        // x y z per corner, 9 floats per triangle (as drawn: maybe simplified)
+        final int readTriangles;        // how many the file had
         final double[][] hull;          // the corners of its outside (convex hull), for the size rules
         final double margin;            // how far the real mesh can be outside those corners (inches)
         final double[] lo, hi;          // its box in the robot frame at the start
 
         Mesh(String file, float[] triangles) {
             this.file = file;
-            this.triangles = triangles;
+            readTriangles = triangles.length / 9;
+            this.triangles = simplify(triangles, DRAWN_TRIANGLES);
             lo = new double[] {Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE};
             hi = new double[] {-Double.MAX_VALUE, -Double.MAX_VALUE, -Double.MAX_VALUE};
             for (int i = 0; i < triangles.length; i += 3) {
@@ -198,7 +203,7 @@ final class SimCad {
         triangles += t.length / 9;
         if (triangles > MAX_TRIANGLES) {
             throw new IllegalArgumentException("Robot file: the CAD models have more than " + MAX_TRIANGLES
-                    + " triangles together. Export them coarser (a lower STL resolution), or leave out small parts (bolts).");
+                    + " triangles together, too many to read. Export them coarser (a lower STL resolution), or leave out small parts (bolts).");
         }
         return t;
     }
@@ -210,7 +215,7 @@ final class SimCad {
             ByteBuffer buf = ByteBuffer.wrap(b).order(ByteOrder.LITTLE_ENDIAN);
             long n = buf.getInt(80) & 0xffffffffL;
             if (84 + n * 50 <= b.length && (84 + n * 50 == b.length || !new String(b, 0, 5, StandardCharsets.US_ASCII).equals("solid"))) {
-                if (n > MAX_TRIANGLES) throw new IllegalArgumentException("Robot file: an STL with " + n + " triangles: export it coarser");
+                if (n > MAX_TRIANGLES) throw new IllegalArgumentException("Robot file: an STL with " + n + " triangles, too many to read: export it coarser");
                 float[] out = new float[(int) n * 9];
                 for (int i = 0; i < n; i++) {
                     int at = 84 + i * 50 + 12;      // skip the normal
@@ -265,6 +270,55 @@ final class SimCad {
             frame.toRobot(p[0], p[1], p[2], out, i * 3);
         }
         return out;
+    }
+
+    // Fewer triangles for the picture: every corner moves to the middle of the corners in its small cube,
+    // and triangles that shrink to a line or a point go. The cubes grow until it is under the limit. Small
+    // details (bolt threads) blur first; the outline stays.
+    static float[] simplify(float[] t, int max) {
+        if (t.length / 9 <= max) return t;
+        double[] lo = {Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE}, hi = {-Double.MAX_VALUE, -Double.MAX_VALUE, -Double.MAX_VALUE};
+        for (int i = 0; i < t.length; i += 3) {
+            for (int k = 0; k < 3; k++) { lo[k] = Math.min(lo[k], t[i + k]); hi[k] = Math.max(hi[k], t[i + k]); }
+        }
+        double size = Math.max(1e-6, Math.max(hi[0] - lo[0], Math.max(hi[1] - lo[1], hi[2] - lo[2])));
+        for (double cells = 2000; ; cells /= 1.4) {
+            double cell = size / cells;
+            Map<Long, Integer> id = new HashMap<>();
+            List<double[]> sum = new ArrayList<>();
+            int[] corner = new int[t.length / 3];
+            for (int i = 0; i < t.length; i += 3) {
+                long key = ((long) ((t[i] - lo[0]) / cell) * 4096 + (long) ((t[i + 1] - lo[1]) / cell)) * 4096 + (long) ((t[i + 2] - lo[2]) / cell);
+                Integer k = id.get(key);
+                if (k == null) {
+                    k = sum.size();
+                    id.put(key, k);
+                    sum.add(new double[4]);
+                }
+                double[] a = sum.get(k);
+                a[0] += t[i]; a[1] += t[i + 1]; a[2] += t[i + 2]; a[3]++;
+                corner[i / 3] = k;
+            }
+            java.util.Set<String> seen = new java.util.HashSet<>();
+            List<Integer> keep = new ArrayList<>();
+            for (int j = 0; j < corner.length; j += 3) {
+                int a = corner[j], b = corner[j + 1], c = corner[j + 2];
+                if (a == b || b == c || a == c) continue;
+                int[] o = {a, b, c};
+                java.util.Arrays.sort(o);
+                if (seen.add(o[0] + "," + o[1] + "," + o[2])) keep.add(j);
+            }
+            if (keep.size() > max && cells > 20) continue;
+            float[] out = new float[keep.size() * 9];
+            int n = 0;
+            for (int j : keep) {
+                for (int c = 0; c < 3; c++) {
+                    double[] a = sum.get(corner[j + c]);
+                    for (int k = 0; k < 3; k++) out[n++] = (float) (a[k] / a[3]);
+                }
+            }
+            return out;
+        }
     }
 
     // The corners of the mesh's convex hull (the shape a rubber sheet stretched round it would make): the

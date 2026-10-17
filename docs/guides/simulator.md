@@ -205,6 +205,11 @@ shape.arm = arm, ..., model=cad/arm.stl
 - `model=` rides the moving part: a slide's moving stage, an arm or turret, a claw's palm (its fingers
   stay boxes, so the gap shows), a roller (it spins), a box. `baseModel=` is a slide's fixed stage.
 - `cadPose=` on a shape: the value (inches or degrees) it is at in the CAD, when that is not the start.
+- A roller's or flywheel's model must hold only the parts that spin (wheels, hubs, shaft). The size
+  rules count a spinning model as the whole circle it sweeps, so a servo bracket in it would make the
+  robot look bigger than it is.
+- A fixed `box` shape that the `robot.model` CAD already draws (a tower, a hood) can go: the CAD now
+  decides the size there. Keep it only if it should bump into things on its own.
 
 **5. Check it.** `print cad` in a scenario prints the settings in words, then each model next to the
 box it covers: its size, and how far its middle is from the box's. "FAR from its box" means
@@ -212,7 +217,8 @@ box it covers: its size, and how far its middle is from the box's. "FAR from its
 "25 times smaller" means `cad.units` is wrong. Then make each `size=` close to its CAD size: the boxes
 are what bump into things. Look at the 3D view too.
 
-- At most 2,000,000 triangles in all. The size rules use each model's outside (its convex hull) plus a
+- Up to 12,000,000 triangles in all can be read. A model with more than 300,000 is simplified for the
+  3D view (small details like bolt threads blur; `print cad` says so). The size rules use each model's outside (its convex hull) plus a
   small margin (about 1/200 of the part's size), so they never call a robot smaller than its CAD. A
   roller's model counts as everything it reaches while it spins.
 - CAD from a seller (a kit's STEP or Onshape files) belongs to the seller: keep it in your team's
@@ -302,7 +308,9 @@ Motor kinds: `free` (just spins), `lift` (hard stops, gravity), `flywheel` (coas
 motor runs, a piece goes through every 0.3 s and slows it down). `ticksPerRev=` sets a motor's encoder
 counts per turn (default 537.7; flywheel 28). On a robot, `setPower` in RUN_USING_ENCODER aims for the
 top speed of the motor TYPE chosen in the configuration; here it is the robot file's `maxTicksPerSec`. The wheel motors are on the left/right sides of the robot like a
-real one (the left ones mounted mirrored), so motor directions in your code matter here too.
+real one, with one side's motors mounted mirrored, so motor directions in your code matter here too.
+That side is the left unless `drive.mirrored = right`: write the side your code reverses to drive
+straight (goBILDA's starter bot reverses the right one).
 
 ## Your own robot code
 

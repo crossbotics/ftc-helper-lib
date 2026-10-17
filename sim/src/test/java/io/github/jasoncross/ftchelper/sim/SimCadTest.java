@@ -184,6 +184,36 @@ public class SimCadTest {
         assertTrue(mm.shapes.cadReport().get(1), mm.shapes.cadReport().get(1).contains("25 times smaller than its box: check cad.units"));
     }
 
+    // A big export is drawn with fewer triangles; its outline stays, and the size rules use every one.
+    @Test public void bigModelsAreSimplifiedForThePicture() throws Exception {
+        java.util.List<double[]> tri = new java.util.ArrayList<>();
+        int n = 300;                                   // a 10 x 10 in bumpy plate of 2 x 300 x 300 triangles
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                double[] a = bump(i, j, n), b = bump(i + 1, j, n), c = bump(i + 1, j + 1, n), d = bump(i, j + 1, n);
+                tri.add(a); tri.add(b); tri.add(c);
+                tri.add(a); tri.add(c); tri.add(d);
+            }
+        }
+        float[] t = new float[tri.size() * 3];
+        for (int i = 0; i < tri.size(); i++) for (int k = 0; k < 3; k++) t[i * 3 + k] = (float) tri.get(i)[k];
+        float[] s = SimCad.simplify(t, 20_000);
+        assertTrue("fewer: " + s.length / 9, s.length / 9 <= 20_000 && s.length / 9 > 2_000);
+        double[] lo = {1e9, 1e9, 1e9}, hi = {-1e9, -1e9, -1e9};
+        for (int i = 0; i < s.length; i += 3) for (int k = 0; k < 3; k++) { lo[k] = Math.min(lo[k], s[i + k]); hi[k] = Math.max(hi[k], s[i + k]); }
+        assertEquals("the outline stays", 0, lo[0], 0.1);
+        assertEquals(10, hi[0], 0.1);
+        assertEquals(10, hi[1], 0.1);
+        write("plate.stl", stl(tri));
+        SimRobot r = robot(HDR.replace("mm", "in") + "robot.model = plate.stl\n");
+        atLeast("the size rules use every triangle", 0.5 + 0.3, r.shapes.now().top);
+    }
+
+    private static double[] bump(int i, int j, int n) {
+        double x = 10.0 * i / n, y = 10.0 * j / n;
+        return new double[] {x, y, 0.5 + 0.3 * Math.sin(x * 3) * Math.sin(y * 3)};
+    }
+
     private void expectProblem(String extra, String words) throws Exception {
         try {
             robot(extra);
