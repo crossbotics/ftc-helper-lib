@@ -2,7 +2,10 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
-## Unreleased
+## v0.9.0 - 2026-10-19
+
+Nothing old stops working: the starter kit and every class from v0.8 build and behave the same. The new
+way to write a robot (the robot in five files) is added next to it; tutorial 22 shows how to start.
 
 ### Added
 
