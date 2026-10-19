@@ -76,6 +76,11 @@ public class Robot extends RobotDefinition {
 
 ```java
 public class Tunables {
+    public static class Drive {
+        public static double maxPower = 1.0, practiceMaxPower = 0.6, slowSpeed = 0.3;
+        public static double strafeCorrection = 1.15, turnKp = 0.012, turnKd = 0.003, moveMinPower = 0.30;
+        public static boolean calibrated = false;   // true after the Drive Tuner
+    }
     public static class Intake {
         public static double inPower = 1.0, outPower = 1.0;
     }
@@ -85,6 +90,9 @@ public class Tunables {
     }
     public static class Windmill {
         public static double power = 1.0, feedSec = 0.3;
+    }
+    public static class Auto {
+        public static double backInches = 4.7, backPower = 0.4;   // for the autonomous
     }
 }
 ```
@@ -127,7 +135,7 @@ gamepad 1, like goBILDA's code. You only write what is different: here, Y fires 
 ## 4. Actions.java: steps that use several parts
 
 ```java
-public static Action fireAll(Robot r) {
+public static Action fireAllWithIntake(Robot r) {
     return Action.named("Fire all")
             .then(r.intake::in, () -> r.launcher.fire(3))
             .waitUntil("the shots", () -> !r.launcher.isShooting(), 8.0)
@@ -140,6 +148,9 @@ blocks**: it does a little every loop, so the robot keeps driving and every othe
 working while it runs. Things to know:
 
 - `then(a, b)` does both at once (here the intake helps push while the launcher fires).
+- **Which parts an action uses matters.** The autonomous uses this one. For TeleOp the example has
+  `fireAll`, which uses only the launcher: the driver holds RT to run the intake while it fires. An
+  action that also ran the intake would stop the moment the driver touched RT (see the next point).
 - A `waitUntil` that times out STOPS the action, and the Driver Station says why. (A lift that never
   got to the top must not open the claw.)
 - **The driver always wins:** moving one of the action's parts by hand stops it. Pressing its button
@@ -155,7 +166,7 @@ public class LaunchAndBackUp extends Auto<Robot> {
     @Override
     protected void steps(Steps s, Robot robot) {
         s.start("Against the goal, facing it", 0)
-         .action(Actions.fireAll(robot), 12)
+         .action(Actions.fireAllWithIntake(robot), 12)
          .move("Back up", Tunables.Auto.backInches, 180, Tunables.Auto.backPower);
     }
 }
@@ -174,10 +185,11 @@ The simulator has goBILDA's starter bot, made from its CAD: `sim/robots/starter-
 The examples are built into the simulator, so:
 
 ```bash
-./gradlew :sim:run -Probot=sim/robots/starter-bot-gobilda.properties
+./gradlew :sim:run -PteamCode=none -Probot=sim/robots/starter-bot-gobilda.properties
 ```
 
-Open http://localhost:8780, pick "goBILDA Bot TeleOp", INIT (read the button map), START. LB spins
+`-PteamCode=none` lists the library's examples instead of your own TeamCode's OpModes. (On a real robot
+the examples are hidden: they are marked `@Disabled`.) Open http://localhost:8780, pick "goBILDA Bot TeleOp", INIT (read the button map), START. LB spins
 up, RB fires. ([Simulator guide](../guides/simulator.md).)
 
 ## Your own robot

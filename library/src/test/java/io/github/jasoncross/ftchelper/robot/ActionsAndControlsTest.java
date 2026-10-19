@@ -247,6 +247,25 @@ public class ActionsAndControlsTest {
         assertEquals("", line(plan.help(), "G2 RT"));
     }
 
+    @Test public void freeKeepsAButtonFreeEvenIfAModuleSuggestedIt() {
+        ButtonPlan plan = ControlMap.makePlan(robot, false, true, (g1, g2) -> g2.b.free());
+        assertEquals("", line(plan.help(), "G2 B:"));
+        assertTrue(line(plan.help(), "G2 free"), line(plan.help(), "G2 free").contains("B"));
+    }
+
+    @Test public void aNonStaticOneDriverStopsWithAMessage() {
+        try {
+            ControlMap.readOneDriver(WrongOneDriver.class);
+            fail("expected an error");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("public static boolean oneDriver"));
+        }
+    }
+
+    public abstract static class WrongOneDriver extends ControlMap<RobotModulesTest.LiftBot> {
+        public boolean oneDriver = true;
+    }
+
     @Test public void oneDriverIsReadFromTheTeamsStaticField() {
         assertTrue(ControlMap.readOneDriver(OneDriverControls.class));
         assertFalse(ControlMap.readOneDriver(TwoDriverControls.class));

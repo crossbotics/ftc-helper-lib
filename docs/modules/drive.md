@@ -138,6 +138,7 @@ driving.stop();
 | --- | --- |
 | `DriverControls.create(hardwareMap, config, heading)` | makes a `MecanumDrive` or a `TankDrive`, from `config.type` |
 | `update(gamepad)` | drives from the sticks. Every loop. |
+| `update(gamepad, slow)` | the same, with slow mode from your own code instead of the left trigger |
 | `drive(forward, strafeRight, turnClockwise, speed)` | drive with your own numbers (robot-centric), for custom controls |
 | `tank(left, right, speed)` | two-stick tank style: one value per side. Works on tank and mecanum robots. |
 | `hold()` | wheels still this loop (e.g. while a menu uses the gamepad) |

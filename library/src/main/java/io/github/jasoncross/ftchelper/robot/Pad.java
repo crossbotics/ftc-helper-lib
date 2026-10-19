@@ -129,9 +129,9 @@ public final class Pad {
             return put(ButtonPlan.Kind.TOGGLE, onEnable, onDisable, "toggle");
         }
 
-        /** No job yet: listed as free on the help page. */
+        /** No job: it stays free, even if a module suggested one for it. Listed as free on the help page. */
         public Button free() {
-            last = null;
+            last = pad.plan.put(this, new ButtonPlan.Entry(ButtonPlan.Kind.FREE, null, null, "free", null));
             return this;
         }
 
@@ -179,9 +179,9 @@ public final class Pad {
             return this;
         }
 
-        /** No job yet: listed as free on the help page. */
+        /** No job: it stays free, even if a module suggested one for it. */
         public Stick free() {
-            last = null;
+            last = pad.plan.put(this, new ButtonPlan.Entry(ButtonPlan.Kind.FREE, null, null, "free", null));
             return this;
         }
 

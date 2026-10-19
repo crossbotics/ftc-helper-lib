@@ -225,8 +225,22 @@ public final class SimNewRobot {
         if (!intakeServos.isEmpty()) {
             StringBuilder names = new StringBuilder();
             for (String n : intakeServos) names.append(names.length() == 0 ? "" : ", ").append(q(n));
-            parts.add(new Part("Intake", intakeId[0], "Intake.crServos(" + names + ")" + intakeId[2], intakeId[1])
-                    .num("inPower", "1.0").num("outPower", "0.7"));
+            Part motorIntake = null;
+            for (Part p : parts) if (p.type.equals("Intake") && motorIntake == null) motorIntake = p;
+            if (motorIntake != null) {
+                // An intake motor already: the CR servos run with it (one module, one pair of buttons).
+                // TODO in the line: which servo turns the other way (.reversed("...")).
+                Part with = new Part("Intake", motorIntake.field, motorIntake.line
+                        + "\n                .withCrServos(" + names + ")", motorIntake.section);
+                with.numbers.putAll(motorIntake.numbers);
+                with.note = "TODO check which intake servo must run .reversed(\"...\")";
+                parts.set(parts.indexOf(motorIntake), with);
+                usedNames.remove(intakeId[0]);
+                usedNames.remove(intakeId[1]);
+            } else {
+                parts.add(new Part("Intake", intakeId[0], "Intake.crServos(" + names + ")" + intakeId[2], intakeId[1])
+                        .num("inPower", "1.0").num("outPower", "0.7"));
+            }
         }
         // A launcher takes the indexer; any other indexer stands alone.
         if (launcher != null && !indexers.isEmpty()) {

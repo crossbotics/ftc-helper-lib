@@ -1,6 +1,7 @@
 package io.github.jasoncross.ftchelper.sim;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import io.github.jasoncross.ftchelper.robot.RobotDefinition;
@@ -63,6 +64,19 @@ public class SimNewRobotTest {
         compileAndLoad(f);
     }
 
+    @Test public void intakeServosRunWithAnIntakeMotor() throws Exception {
+        String xml = "<Robot><LynxUsbDevice name=\"p\"><LynxModule name=\"Control Hub\" port=\"173\">"
+                + "<goBILDA5202SeriesMotor name=\"left_drive\" port=\"0\"/><goBILDA5202SeriesMotor name=\"right_drive\" port=\"1\"/>"
+                + "<goBILDA5202SeriesMotor name=\"intake\" port=\"2\"/>"
+                + "<ContinuousRotationServo name=\"left_intake_servo\" port=\"0\"/><ContinuousRotationServo name=\"right_intake_servo\" port=\"1\"/>"
+                + "</LynxModule></LynxUsbDevice></Robot>";
+        Map<String, String> f = SimNewRobot.files(SimConfigImport.read(xml), "org.firstinspires.ftc.teamcode");
+        String robot = f.get("Robot.java");
+        assertTrue(robot, robot.contains("intake = add(Intake.motor(\"intake\")\n                .withCrServos(\"left_intake_servo\", \"right_intake_servo\"));"));
+        assertFalse(robot, robot.contains("Intake.crServos"));
+        compileAndLoad(f);
+    }
+
     private void compileAndLoad(Map<String, String> f) throws Exception {
         File src = tmp.newFolder("src");
         File out = tmp.newFolder("classes");
@@ -88,7 +102,7 @@ public class SimNewRobotTest {
         try (URLClassLoader loader = new URLClassLoader(new URL[] {out.toURI().toURL()}, getClass().getClassLoader())) {
             RobotDefinition robot = (RobotDefinition) loader.loadClass("org.firstinspires.ftc.teamcode.Robot")
                     .getDeclaredConstructor().newInstance();
-            assertTrue(robot.notes().toString(), robot.notes().isEmpty());   // every section is in Tunables.java
+            assertFalse(robot.notes().toString(), robot.notes().toString().contains("missing"));   // every section is in Tunables.java
             SimFromRobot.Result r = SimFromRobot.merge(null, robot.simLines(), "Robot", "biobuzz-2026");
             Path file = tmp.newFile("robot.properties").toPath();
             Files.write(file, r.text.getBytes(StandardCharsets.UTF_8));

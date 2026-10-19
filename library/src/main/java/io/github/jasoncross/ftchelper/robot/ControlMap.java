@@ -187,10 +187,12 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
         for (Class<?> k = c; k != null && k != ControlMap.class; k = k.getSuperclass()) {
             try {
                 Field f = k.getDeclaredField("oneDriver");
-                if (Modifier.isStatic(f.getModifiers()) && f.getType() == boolean.class) {
-                    f.setAccessible(true);
-                    return f.getBoolean(null);
+                if (!Modifier.isStatic(f.getModifiers()) || f.getType() != boolean.class) {
+                    throw new IllegalStateException(k.getSimpleName() + ": write oneDriver as "
+                            + "\"public static boolean oneDriver = ...;\" (static, true or false)");
                 }
+                f.setAccessible(true);
+                return f.getBoolean(null);
             } catch (NoSuchFieldException | IllegalAccessException e) {
                 // not in this class: look in the one above
             }

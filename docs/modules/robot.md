@@ -95,6 +95,8 @@ Nothing moves in INIT.
 | `modules()`, `drive()`, `all()` | the parts, the drivetrain, the update group |
 | `robotConfig()` | the drive settings for `EasyTeleOp`/`EasyAuto` |
 | `simLines()` | the simulator robot file's lines from the code |
+| `setup(hardwareMap)` | makes every module's hardware (the OpMode classes call it in INIT) |
+| `tunablesClass()` | the Tunables class found (null if none) |
 | `static changedTunables()` | values tuned on the robot that differ from Tunables.java, as lines to copy back |
 | `static sectionName(device)` | the Tunables section a device reads: "intake_deploy" -> `IntakeDeploy` |
 
@@ -117,12 +119,24 @@ public class Tunables {
 
 - **One section per part**, named after its configuration name in CamelCase: `intake_deploy` reads
   `IntakeDeploy`. Pick another with `.tunables("Name")` on the module.
-- **The code is the record.** Every number becomes a [`Tunable`](tuning.md) ("Lift/kP"): the tuning
-  menu (GUIDE, PRACTICE profile) changes it live and saves it on the Control Hub. INIT then shows
-  "Tuned on this robot (copy into Tunables.java)" with the lines to copy back.
+- **The code is the record.** The numbers you tune most become [`Tunable`](tuning.md)s ("Lift/kP"):
+  the tuning menu (GUIDE, PRACTICE profile) changes them and saves them on the Control Hub. INIT then
+  shows "Tuned on this robot (copy into Tunables.java)" with the lines to copy back.
 - **Missing numbers are not errors:** the library's default is used and INIT says which.
-- **Safety:** a tuned position stays inside `min`..`max`; limits are read once and cannot be tuned live.
+- **Safety:** a tuned position stays inside `min`..`max`; limits are read once and cannot be tuned.
 - `public static` fields: FTC Dashboard can show them too.
+- The menu's names ("Lift/kP") are shared by the whole robot app: keep one Robot class per app.
+
+| | In the tuning menu, used at once | In the tuning menu, used from the next INIT | Code only (read at INIT) |
+| --- | --- | --- | --- |
+| Drive | | every number | `calibrated` |
+| Intake | `inPower`, `outPower` | | |
+| Lift, Arm | `kP`, `kI`, `kD`, `kF`, every named position | | `min`, `max`, `maxPower`, `slowZone`, `slowZonePower`, `tolerance` |
+| Claw, Wrist, Positioner | every named position | | `travelSec` |
+| Turret | `kP`, `kI`, `kD` | | `min`, `max`, `maxPower`, `tolerance`, `slowZone`, `slowZonePower`, `cameraOffset` |
+| Launcher | `speedRpm`, `stepRpm` | | `readyBandRpm`, `idleRpm`, `shotIntervalSec`, `speedByDistance`, `kP`..`kF` |
+| Indexer | every number | | |
+| Camera | | | `pipeline` |
 
 ---
 
@@ -183,7 +197,10 @@ lift = add(Lift.slide("lift").bottomSwitch("lift_bottom"));
 `Tunables.Lift` (encoder counts): `min`, `max`, `kP`, `kI`, `kD`, `kF` (the steady push that holds it
 up), `maxPower`, `slowZone`, `slowZonePower`, `tolerance`; every other number is a named height.
 Buttons (operator): A lowest, X second, Y highest, D-pad up/down next height, left stick by hand.
-With a bottom switch, the lift only goes down (slowly) until the switch has been pressed once.
+With a bottom switch, the lift only goes down (slowly) until the switch has been pressed once, and the
+switch sets 0. **Without one, 0 is wherever the lift is at INIT** (the encoder starts from there):
+press INIT with the lift all the way down, also for TeleOp after an autonomous that left it up, or
+`max` will be too high by that much. INIT reminds you.
 
 ## Arm
 
@@ -191,7 +208,8 @@ With a bottom switch, the lift only goes down (slowly) until the switch has been
 arm = add(Arm.motor("arm", "gobilda-5203-117").gearRatio(2));
 ```
 
-The same as Lift, in degrees (`gearRatio`: motor turns per arm turn). 0 degrees is where the arm is
+The same as Lift, in degrees (`gearRatio`: motor turns per arm turn; `bottomSwitch(name)` like the
+lift's). 0 degrees is where the arm is
 when the program starts. Button: operator right stick Y by hand.
 
 ---
@@ -312,7 +330,8 @@ public static Action scoreHigh(Robot r) {
 | `then(Runnable...)` | do these at once (several parts together), then go on |
 | `waitSeconds(s)` | wait (the robot keeps running) |
 | `waitUntil(what, condition, timeoutSec)` | wait until true; if it times out the action STOPS and says why |
-| `isRunning()`, `status()`, `result()` | "Score high: step 2 of 5 (lift at the top)"; "done", "cancelled", "stopped: Lift moved by hand" |
+| `waitUntil(condition, timeoutSec)` | the same, with "the condition" as its words |
+| `name()`, `isRunning()`, `status()`, `result()` | "Score high: step 2 of 5 (lift at the top)"; "done", "cancelled", "stopped: Lift moved by hand" |
 
 - **Never blocks:** an action does a little every loop.
 - **Parts are claimed:** an action owns the parts it commands while it runs. Another action that
@@ -358,7 +377,7 @@ has its standard buttons; write only what differs. A [`Pad`](#controlmap) has ev
 | `hold(whileHeld)`, `hold(whileHeld, onRelease)` | every loop while held (and once on release) |
 | `toggle(Toggleable)` | switches a part on/off (an intake, a launcher, a claw, a mode: a [`Toggleable`](#controlmap)) |
 | `toggle(onEnable, onDisable)` | each press flips |
-| `free()` | a note in your file: no job (it does not remove a module's suggestion) |
+| `free()` | no job: the button stays free, even if a module suggested one for it |
 | `says(words)` | the words on the help page |
 | on a stick: `use(DoubleConsumer)` | its value every loop (small dead zone, gentle curve) |
 
@@ -376,7 +395,8 @@ has its standard buttons; write only what differs. A [`Pad`](#controlmap) has ev
 | BACK | "forward" = away from you now | turret following on/off |
 | START + BACK, GUIDE | debug lines, tuning menu | |
 
-One driver: left stick click is slow on/off and right stick click field-centric. A module whose
+One driver: left stick click is slow on/off and right stick click field-centric. Write the switch
+exactly as `public static boolean oneDriver = true;` (INIT stops with a message if it is not static). A module whose
 button is taken gets none (INIT notes it). Checked at INIT: two jobs on one button in Controls.java,
 or a job on a driving button, stop with the button's name. INIT shows the whole map and the free
 buttons.
@@ -427,8 +447,13 @@ are the simulator's [parts catalog](../guides/parts-catalog.md) (a test keeps th
 
 [`Module`](#module) is what every mechanism shares: `name()` (its Tunables section), `deviceName()`,
 `tunables(section)`. [`Devices`](#module) is where modules find their hardware: `Devices.of(hardwareMap)`
-on the robot; tests give pretend devices. A new kind of mechanism: use the plain parts
-([mechanism](mechanism.md)) in your own class, or see [extending](../guides/extending.md).
+on the robot; tests give pretend devices. A new kind of module is a change to the library (its parts are
+package-private, see AGENTS.md); in team code, use the plain parts ([mechanism](mechanism.md)) in
+your own class and call it from Controls.java and your autos.
+
+**`stop()` on any module** switches it off now (a launcher fully off, until `spinUp()`/`fire()`), and
+counts as the driver's command: an action using that part stops. To let a launcher coast while keeping
+it ready, use `idle()`.
 
 ---
 

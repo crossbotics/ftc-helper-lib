@@ -45,6 +45,7 @@ Extend it and fill in:
 | `buildRoutine(r)` | yes | add the steps; runs AFTER INIT, so choices are known |
 | `createSubsystems()` | no | your mechanisms (kept working during every step). Make new objects here: it runs again if the profile is changed in INIT. |
 | `addChoices(menu)` | no | extra INIT choices: `menu.choice("Route", "Near", "Far")` |
+| `addInitTelemetry(t)` | no | extra screen lines during INIT |
 | `startPosition()` | no | where to place the robot, shown in INIT |
 | `startHeadingDeg()` | no | which way the robot faces at the start, compared with "away from your driver" (default 0), written for BLUE (mirrored for RED). TeleOp's field-centric "forward" uses it. |
 | `parkReserveSec()` | no | seconds kept for the steps after `thenPark()` |

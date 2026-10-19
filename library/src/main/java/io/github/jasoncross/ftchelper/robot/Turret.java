@@ -90,6 +90,10 @@ public final class Turret extends Module<Turret> {
 
     @Override
     void build(Devices devices, TunableSection t) {
+        if (camera != null && camera.robot != robot) {
+            throw new IllegalStateException("Robot.java: " + name() + " follows a camera that is not added: "
+                    + "write camera = add(Camera...) and follows(camera)");
+        }
         min = t.number("min", -90);
         max = t.number("max", 90);
         kP = t.tunable("kP", 0.02, 0.002).range(0, 1);

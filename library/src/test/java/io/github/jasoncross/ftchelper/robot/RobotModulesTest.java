@@ -317,6 +317,43 @@ public class RobotModulesTest {
         assertEquals("[Never: timed out waiting for the impossible]", routine.getReport().toString());
     }
 
+    @Test public void aCameraThatIsNotAddedStopsAtInit() {
+        RobotDefinition r = new RobotDefinition() {
+            @Override protected void define() {
+                drive(Drive.tank("l", "r"));
+                add(Turret.motor("turret", "gobilda-5203-117").follows(Camera.limelight("limelight")));
+            }
+        };
+        try {
+            r.setup(new RobotTestKit());
+            fail("expected an error");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("camera that is not added"));
+        }
+    }
+
+    public static class FastNumbers {
+        public static class Launcher {
+            public static double speedRpm = 7000;
+        }
+    }
+
+    @Test public void aLauncherSpeedAboveTheMotorsTopSpeedStops() {
+        RobotDefinition r = new RobotDefinition() {
+            @Override protected void define() {
+                tunables(FastNumbers.class);
+                drive(Drive.tank("l", "r"));
+                add(Launcher.flywheel("launcher", "gobilda-5203-6000"));
+            }
+        };
+        try {
+            r.setup(new RobotTestKit());
+            fail("expected an error");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("above the gobilda-5203-6000's top speed"));
+        }
+    }
+
     @Test public void usingAModuleBeforeSetupSaysSo() {
         LiftBot r = new LiftBot();
         r.describe();

@@ -32,7 +32,7 @@ final class ButtonPlan {
     static final String TEAM = "Controls.java";
     static final String LIBRARY = "library";
 
-    enum Kind { PRESS, RELEASE, HOLD, TOGGLE, ACTION, AXIS, RESERVED }
+    enum Kind { PRESS, RELEASE, HOLD, TOGGLE, ACTION, AXIS, RESERVED, FREE }
 
     /** One job on one input. */
     static final class Entry {
@@ -106,7 +106,7 @@ final class ButtonPlan {
             throw new IllegalStateException("Controls.java: " + input + " is the library's \"" + old.says
                     + "\" button. Pick another button.");
         }
-        if (old != null && TEAM.equals(old.source)) {
+        if (old != null && TEAM.equals(old.source) && old.kind != Kind.FREE && e.kind != Kind.FREE) {
             throw new IllegalStateException("Controls.java: " + input + " has two jobs. Give each button "
                     + "one job (put both commands in one lambda if you want both).");
         }
@@ -127,12 +127,12 @@ final class ButtonPlan {
      */
     List<String> help() {
         List<String> out = new ArrayList<>();
-        for (Pad p : new Pad[] {g1, g2}) {
+        for (Pad p : oneDriver ? new Pad[] {g1} : new Pad[] {g1, g2}) {
             StringBuilder free = new StringBuilder();
             for (Object input : inputs(p)) {
                 Entry e = jobs.get(input);
                 String name = input instanceof Pad.Button ? ((Pad.Button) input).label : ((Pad.Stick) input).label;
-                if (e == null) {
+                if (e == null || e.kind == Kind.FREE) {
                     free.append(free.length() == 0 ? "" : ", ").append(name);
                     continue;
                 }
@@ -152,7 +152,7 @@ final class ButtonPlan {
                  List<StickJob> sticks, Supplier<Gamepad> pad1, Supplier<Gamepad> pad2) {
         for (Map.Entry<Object, Entry> j : jobs.entrySet()) {
             Entry e = j.getValue();
-            if (e.kind == Kind.RESERVED) continue;
+            if (e.kind == Kind.RESERVED || e.kind == Kind.FREE) continue;
             if (j.getKey() instanceof Pad.Stick) {
                 Pad.Stick s = (Pad.Stick) j.getKey();
                 sticks.add(new StickJob(s, e.axis, s.pad.which == ControllerBindings.Pad.G1 ? pad1 : pad2));

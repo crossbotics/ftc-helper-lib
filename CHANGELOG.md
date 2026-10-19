@@ -16,7 +16,8 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   `Launcher` (spin up, fire, speed from the camera's distance), `Indexer` (servo, CR servo or motor) and
   `Camera` (Limelight or webcam, the alliance's goal). Each brings its Tunables section with safe
   defaults and its standard buttons.
-- **Tunables:** every number is live-tunable from the tuning menu; INIT lists the values tuned on the
+- **Tunables:** the numbers tuned most are in the tuning menu (which ones, and when they apply:
+  docs/modules/robot.md); INIT lists the values tuned on the
   robot that differ from Tunables.java, as lines to copy back. Missing numbers fall back to defaults
   (INIT notes them); a tuned position stays inside its safe range.
 - **The standard button map**, with a one-driver switch (`oneDriver` in Controls.java), checked at INIT

@@ -107,7 +107,16 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
 
     @Override
     void build(Devices devices, TunableSection t) {
+        if (distanceCamera != null && distanceCamera.robot != robot) {
+            throw new IllegalStateException("Robot.java: " + name() + " takes its speed from a camera that is not "
+                    + "added: write camera = add(Camera...) and speedFromDistance(camera)");
+        }
         Motors.Kind kind = Motors.get(motorId);
+        double codeSpeed = t.number("speedRpm", 2600);
+        if (codeSpeed > kind.freeRpm) {
+            throw new IllegalStateException("Tunables." + name() + ".speedRpm = " + codeSpeed + " is above the "
+                    + motorId + "'s top speed (" + kind.freeRpm + " RPM)");
+        }
         speedRpm = t.tunable("speedRpm", 2600, 50).range(0, kind.freeRpm);
         stepRpm = t.tunable("stepRpm", 100, 10).range(0, 1000);
         DcMotorEx motor = MotorSetup.of(devices.get(DcMotorEx.class, device)).reversed(reversed)
@@ -184,7 +193,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
      * the program ends; the Tunables value is not changed.
      */
     public void adjust(int steps) {
-        touch();
+        // Not touch(): changing the speed is not taking the launcher away from an action.
         adjustSteps += steps;
     }
 

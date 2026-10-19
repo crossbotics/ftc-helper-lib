@@ -72,6 +72,8 @@ public class MainTeleOp extends EasyTeleOp {
 | `bindButtons(driver, operator)` | no | your buttons. Gamepad 2 on `operator`; extra gamepad 1 buttons on `driver` (they pause while the tuning menu is open). Taken on gamepad 1: Y, BACK, START + BACK, GUIDE. |
 | `everyLoop()` | no | your code for every loop (sticks for mechanisms, simple rules). Must not wait. |
 | `addTelemetry(t)` | no | extra screen lines |
+| `addInitTelemetry(t)` | no | extra screen lines during INIT |
+| `onStart()` | no | runs once right after START, before the first loop (the first moment anything may move) |
 
 \* Starter kit: `return new RobotSettings();`. Tutorials (09-20): `return RobotSettings.config();`
 (the tutorial `RobotSettings` keeps its settings in `static` methods, so `config()` wraps them).
@@ -86,6 +88,7 @@ Note: the bindings name the gamepad (`Pad.G1`, `Pad.G2`) themselves. A `Pad.G1` 
 | --- | --- | --- |
 | `startFieldCentric()` | false | true = start in field-centric |
 | `slowSpeed()` | 0.3 | speed at a full squeeze of the slow trigger |
+| `fieldCentricButton()` | `Btn.Y` | the gamepad 1 button for field-centric on/off; null = none |
 | `buzzAtSecondsLeft()` | {60, 20} | when both gamepads buzz |
 | `drive(gamepad)` | the standard controls | replace it to drive your own way, e.g. two-stick tank style: `driving().tank(-gamepad.left_stick_y, -gamepad.right_stick_y, 1)` |
 

@@ -86,6 +86,8 @@ All `bind...` methods return the same `ControllerBindings`, so you can chain the
 | `bindToggle(pad, btn, onAction, offAction)` | each press flips ON/OFF. Starts OFF. Either action may be `null`. |
 | `bindTriggerPress(pad, trigger, action)` | once, when the trigger goes past the threshold |
 | `bindTriggerHold(pad, trigger, action)` | every loop while the trigger is past the threshold |
+| `bindTriggerRelease(pad, trigger, action)` | once when the trigger comes back under the threshold |
+| `bindTriggerToggle(pad, trigger, onEnable, onDisable)` | each pull flips on / off |
 | `bindTriggerAxis(pad, trigger, use)` | every loop, with the trigger's value 0 to 1. Example: `v -> intake.setPower(v)` |
 | `setTriggerThreshold(value)` | how far a trigger must be pulled to count as pressed. Default 0.5. |
 | `registerExtraButton(pad, btn, reader)` | for controllers with extra paddles. `btn` must be `M1` or `M2`; `reader` tells how to read it. |

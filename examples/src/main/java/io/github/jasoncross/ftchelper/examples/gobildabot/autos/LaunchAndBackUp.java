@@ -20,7 +20,7 @@ public class LaunchAndBackUp extends Auto<Robot> {
     @Override
     protected void steps(Steps s, Robot robot) {
         s.start("Against the goal, facing it", 0)
-         .action(Actions.fireAll(robot), 12)
+         .action(Actions.fireAllWithIntake(robot), 12)
          .move("Back up", Tunables.Auto.backInches, 180, Tunables.Auto.backPower);
     }
 }

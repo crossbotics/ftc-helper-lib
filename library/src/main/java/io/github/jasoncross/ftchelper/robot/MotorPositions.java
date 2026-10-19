@@ -45,6 +45,14 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
     }
 
     @Override
+    List<String> notes() {
+        List<String> out = super.notes();
+        // Without a switch, 0 is wherever the part is at INIT (the encoder is set to 0 then).
+        if (switchName == null) out.add(name() + ": 0 is where it is at INIT: start with it at its bottom stop");
+        return out;
+    }
+
+    @Override
     List<String> deviceNames() {
         return switchName == null ? Collections.singletonList(device) : Arrays.asList(device, switchName);
     }
