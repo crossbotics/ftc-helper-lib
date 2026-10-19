@@ -128,6 +128,39 @@ tasks.register('fromConfig', JavaExec) {
             (project.findProperty('field') ? ['--field', project.findProperty('field')] : [])
 }
 
+// ./gradlew :sim:fromRobot -PteamCode=../TeamCode [-ProbotClass=org.firstinspires.ftc.teamcode.Robot]
+//                          [-Pout=simulator/robot.properties] [-Pfield=biobuzz-2026]
+// The robot file from the team's Robot.java: every device name and the drive from the code. Lines it
+// writes are marked "# from Robot.java"; the team's own lines are kept.
+tasks.register('fromRobot', JavaExec) {
+    group = 'application'
+    description = 'Writes (or refreshes) the simulator robot file from Robot.java.'
+    def unitTest = tasks.named('testDebugUnitTest')
+    dependsOn 'compileDebugUnitTestJavaWithJavac', 'processDebugUnitTestJavaRes'
+    classpath = files({ unitTest.get().classpath })
+    mainClass = 'io.github.jasoncross.ftchelper.sim.SimFromRobot'
+    workingDir = rootProject.projectDir
+    def out = project.findProperty('out') ?: (teamRobotFile != null ? teamRobotFile.path : '')
+    args = ['--robot', project.findProperty('robotClass') ?: '', '--out', out,
+            '--field', project.findProperty('field') ?: '']
+}
+
+// ./gradlew :sim:newRobot -Pconfig=path/to/config.xml -PteamCode=../TeamCode [-Ppackage=org.firstinspires.ftc.teamcode]
+// The team's five starting files (Robot, Tunables, Controls, Actions, autos/LeaveStart) from the robot
+// configuration. Never overwrites a file.
+tasks.register('newRobot', JavaExec) {
+    group = 'application'
+    description = 'Writes Robot.java, Tunables.java, Controls.java, Actions.java and a first autonomous from a configuration XML.'
+    def unitTest = tasks.named('testDebugUnitTest')
+    dependsOn 'compileDebugUnitTestJavaWithJavac', 'processDebugUnitTestJavaRes'
+    classpath = files({ unitTest.get().classpath })
+    mainClass = 'io.github.jasoncross.ftchelper.sim.SimNewRobot'
+    workingDir = rootProject.projectDir
+    args = ['--config', project.findProperty('config') ?: '',
+            '--teamCode', teamCodeDir != null ? teamCodeDir.path : '',
+            '--package', project.findProperty('package') ?: '']
+}
+
 // ./gradlew :sim:fit [-Plog=path/to/log.csv or a folder] [-Probot=...] [-Pwrite] [-Pforce]
 // Fits the Characterizer's logs (default: the simulator's own, in sim/build/sim-data/characterizer) and
 // prints the robot-file numbers; -Pwrite also puts them into the robot file.

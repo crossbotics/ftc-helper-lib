@@ -184,6 +184,27 @@ public class ControllerBindings {
     }
 
     /**
+     * Runs {@code onRelease} once each time the trigger comes back under the threshold. Pair it with
+     * {@link #bindTriggerHold} to stop a mechanism when the trigger is let go.
+     *
+     * @return this ControllerBindings, so you can chain the next binding
+     */
+    public ControllerBindings bindTriggerRelease(Pad pad, Trigger trigger, Runnable onRelease) {
+        return add(key(pad, trigger), edge(onRelease, false));
+    }
+
+    /**
+     * Each pull flips between ON and OFF, like {@link #bindToggle} for a button. Starts OFF.
+     *
+     * @param onEnable  runs when it turns ON (may be null)
+     * @param onDisable runs when it turns OFF (may be null)
+     * @return this ControllerBindings, so you can chain the next binding
+     */
+    public ControllerBindings bindTriggerToggle(Pad pad, Trigger trigger, Runnable onEnable, Runnable onDisable) {
+        return add(key(pad, trigger), toggle(onEnable, onDisable));
+    }
+
+    /**
      * Gives the trigger's value (0 to 1) to {@code use} every loop.
      * Example: {@code bindTriggerAxis(Pad.G2, Trigger.RT, v -> intake.setPower(v))}.
      *

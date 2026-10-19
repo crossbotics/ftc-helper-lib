@@ -11,11 +11,17 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
 
 ## Layout
 
-- `library/` the library (packages: hardware, gamepad, drive, mechanism, launcher, vision, teleop, auto, finders,
+- `library/` the library (packages: hardware, gamepad, drive, mechanism, launcher, vision, teleop, auto, robot, finders,
   match, control, telemetry, tuning, safety, core, testing, util). Tests in `library/src/test`
   (pretend motors/servos/telemetry in `FakeMotor.java`, `Fakes.java`).
-- `examples/` compiled example OpModes: `ExampleXxx`, the starter kit (`starter/`), and one program per
-  tutorial (`tutorials/`, tutorial 13's tests in `examples/src/test`).
+- `examples/` compiled example OpModes: `ExampleXxx`, the starter kit (`starter/`), one program per
+  tutorial (`tutorials/`, tutorial 13's tests in `examples/src/test`), and three robots in five files
+  (`gobildabot/`, `flywheelbot/`, `turretbot/`: package `robot`, tutorial 22; `SimFromRobotTest` runs them).
+- `library/.../robot/` the five-files layer: `RobotDefinition` + modules built on the plain parts. A new
+  module: extend `Module` (or `MotorPositions`/`ServoPositions`), read numbers through `TunableSection`,
+  route every command through `touch()` (actions and the driver rely on it), add `suggestButtons` and
+  `simLines`, and a row in docs/modules/robot.md. `./gradlew :sim:newRobot` (SimNewRobot) guesses modules
+  from device names: teach it the new one.
 - `sim/` the simulator: a pretend Control Hub and Driver Hub on a laptop (`./gradlew :sim:run`, then
   http://localhost:8780). Its code is in `sim/src/test` (the SDK only runs on a laptop there); the
   page is `sim/src/test/resources/sim/index.html`; robot files are in `sim/robots/`. Its scripted

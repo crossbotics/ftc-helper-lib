@@ -61,6 +61,20 @@ in TeamCode (copy the layout of `sim/robots/starter.properties`), and skip step 
 
 ## 2. Make the draft
 
+**TeamCode in five files** (a `Robot.java` that `extends RobotDefinition`, docs/modules/robot.md)? Make
+the draft from the code instead: it knows each device's module, the drive, the stops and the claw's
+positions.
+
+```bash
+./gradlew :sim:fromRobot -PteamCode=path/to/TeamCode
+```
+
+Its lines end with `# from Robot.java` and are rewritten each run. When you measure a value, write it on
+a line WITHOUT that mark (or remove the mark): your line is then kept on every later run. Then go on
+with step 3 for the TODO lines (sizes, places, the shot).
+
+Otherwise, from the configuration file:
+
 ```bash
 ./gradlew :sim:fromConfig -Pconfig=path/to/config.xml -Pout=../simulator/robot.properties
 ```
@@ -68,6 +82,9 @@ in TeamCode (copy the layout of `sim/robots/starter.properties`), and skip step 
 It writes a draft with every device, matches the motor types it can to the parts catalog, marks the
 rest `TODO`, checks the draft loads, and prints the open questions. (If the file exists it writes
 `robot.properties.draft` next to it: merge by hand.)
+
+A team that has no code yet: `./gradlew :sim:newRobot -Pconfig=... -PteamCode=...` writes the five files
+from the configuration (check its TODOs with the team), then use `:sim:fromRobot`.
 
 ## 3. Ask the open questions
 

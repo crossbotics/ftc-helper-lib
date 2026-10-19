@@ -25,7 +25,8 @@ import java.util.Properties;
  *                                                          speed=IN/S: a fixed exit speed (a catapult: make
  *                                                          its motor a flywheel with feeder= itself)
  *   grab.NAME = shape=claw, servo=claw, closedBelow=0.3   a claw that holds a piece it touches while the servo
- *                                                          is below closedBelow, and lets it go when it opens
+ *                                                          is below closedBelow (or above closedAbove=, for a
+ *                                                          claw that closes toward 1), and lets it go when it opens
  *
  * The robot starts holding the field file's preload (BIOBUZZ: 4 POLLEN) when it can collect or shoot. A
  * piece whose centre comes into a goal (a FLOWER top) scores and is taken off the field.
@@ -75,15 +76,21 @@ final class SimPieces {
 
     private static final class Grab {
         final String name, shape, servo;
-        final double closedBelow, reach;
+        final double closedBelow, closedAbove, reach;   // closed when below closedBelow (or above closedAbove)
         SimField.PieceType heldType = null;   // the piece in the claw (kept off the field while held)
 
         Grab(String name, Map<String, String> s) {
             this.name = name;
             shape = req(s, "shape", "grab." + name);
             servo = req(s, "servo", "grab." + name);
-            closedBelow = num(s, "closedBelow", 0.3, "grab." + name);
+            // A claw closes toward 0 (closedBelow) or toward 1 (closedAbove): give one of the two.
+            closedAbove = s.containsKey("closedAbove") ? num(s, "closedAbove", 0.7, "grab." + name) : Double.NaN;
+            closedBelow = Double.isNaN(closedAbove) ? num(s, "closedBelow", 0.3, "grab." + name) : Double.NaN;
             reach = num(s, "reach", 0.5, "grab." + name);
+        }
+
+        boolean isClosed(double servoPosition) {
+            return Double.isNaN(closedAbove) ? servoPosition < closedBelow : servoPosition > closedAbove;
         }
     }
 
@@ -341,7 +348,7 @@ final class SimPieces {
                 if (taken) continue;
                 for (Grab g : grabs) {
                     if (g.heldType != null || !(b.touchingParts.contains(g.shape) || near(g.shape, bp, b.type.diameterIn / 2, g.reach))) continue;
-                    if (robot.servos.get(g.servo).actual < g.closedBelow) {
+                    if (g.isClosed(robot.servos.get(g.servo).actual)) {
                         g.heldType = b.type;
                         world.removeBall(b);
                         taken = true;
@@ -447,7 +454,7 @@ final class SimPieces {
                 if (taken) continue;
                 for (Grab g : grabs) {
                     if (g.heldType != null || !near(g.shape, p, r, g.reach + depth)) continue;
-                    if (robot.servos.get(g.servo).actual < g.closedBelow) {
+                    if (g.isClosed(robot.servos.get(g.servo).actual)) {
                         g.heldType = now.remove(0);
                         stackReady.set(i, world.time() + fall);
                         break;
@@ -456,7 +463,7 @@ final class SimPieces {
             }
             // A claw that opens lets its piece go where it is.
             for (Grab g : grabs) {
-                if (g.heldType == null || robot.servos.get(g.servo).actual < g.closedBelow) continue;
+                if (g.heldType == null || g.isClosed(robot.servos.get(g.servo).actual)) continue;
                 double[] at = toField(heldAt(g));
                 double[] rv = world.robotVel();
                 SimWorld.Ball b = world.addBall(g.heldType, at[0], at[1], at[2], rv[0], rv[1], 0);

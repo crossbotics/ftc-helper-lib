@@ -90,6 +90,8 @@ final class SimRobot {
     // Per flywheel: seconds since the last piece went through (a running feeder sends one every 0.3 s).
     private final Map<String, Double> sinceShot = new LinkedHashMap<>();
     static final double SECONDS_PER_PIECE = 0.3;
+    // A servo feeder (an indexer) is feeding while it is this far (raw position) from where it starts.
+    static final double SERVO_FEED_MOVE = 0.15;
     private int shots = 0;
 
     // The parts catalog this robot uses: the library's, plus the team's own file if it names one (parts =).
@@ -195,11 +197,13 @@ final class SimRobot {
             servos.put(name, servo);
         }
         for (String key : sortedKeys(p, "crservo.")) crServos.put(key.substring("crservo.".length()), new double[] {0, 0});
-        // A flywheel's feeder is a motor or a CR servo (a windmill, a feed roller).
+        // A flywheel's feeder is a motor or a CR servo (a windmill, a feed roller), or a servo that
+        // pushes each piece in (an indexer: it feeds while it is away from where it starts).
         for (SimMotor m : motors.values()) {
-            if (m.feeder != null && !motors.containsKey(m.feeder) && !crServos.containsKey(m.feeder)) {
+            if (m.feeder != null && !motors.containsKey(m.feeder) && !crServos.containsKey(m.feeder)
+                    && !servos.containsKey(m.feeder)) {
                 throw new IllegalArgumentException("Robot file: motor." + m.name + ": feeder=" + m.feeder
-                        + " is not a motor or crservo in the robot file");
+                        + " is not a motor, crservo or servo in the robot file");
             }
         }
         for (String key : sortedKeys(p, "touch.")) {
@@ -518,7 +522,10 @@ final class SimRobot {
             if (m.kind != SimMotor.Kind.FLYWHEEL || m.feeder == null) continue;
             SimMotor feeder = motors.get(m.feeder);
             double[] cr = crServos.get(m.feeder);
-            boolean on = feeder != null ? Math.abs(feeder.appliedPower) > 0.3 : cr != null && Math.abs(cr[0]) > 0.3;
+            SimServo pusher = servos.get(m.feeder);
+            boolean on = feeder != null ? Math.abs(feeder.appliedPower) > 0.3
+                    : cr != null ? Math.abs(cr[0]) > 0.3
+                    : pusher != null && Math.abs(pusher.actual - pusher.start) > SERVO_FEED_MOVE;
             double since = sinceShot.getOrDefault(m.name, SECONDS_PER_PIECE) + dt;
             // While the feeder runs, a piece goes through every SECONDS_PER_PIECE (the first at once).
             if (on && since >= SECONDS_PER_PIECE && Math.abs(m.shaftSpeed()) > 100) {
@@ -731,8 +738,11 @@ final class SimRobot {
         private Servo.Direction direction = Servo.Direction.FORWARD;
         final Servo device;
 
+        final double start;         // where it starts (the robot file's number)
+
         SimServo(String name, double start) {
             this.name = name;
+            this.start = start;
             this.actual = start;
             this.target = start;
             this.device = (Servo) Proxy.newProxyInstance(Servo.class.getClassLoader(), new Class<?>[] {Servo.class},

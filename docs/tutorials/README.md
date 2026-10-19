@@ -35,10 +35,12 @@ Do them in order the first time. Later, jump to the one you need.
 | 19 | [Testing procedures](19-testing-procedures.md) | the Hardware Check and a testing order that finds problems early | any robot |
 | 20 | [Easy TeleOp](20-easy-teleop.md) | `EasyTeleOp`: driving, timer and menu for free; add buttons and mechanisms; one `RobotConfig` for TeleOp and auto | drivetrain + lift + claw |
 | 21 | [Find your numbers](21-finders.md) | the finders: servo ends, lift limits, flywheel gains, wheel size, camera offset, shot table | the parts to measure |
+| 22 | [The robot in five files](22-robot-in-five-files.md) | `Robot.java`, `Tunables.java`, `Controls.java`, `Actions.java`, autos: modules with their numbers and buttons; make them from your configuration; the simulator robot file from the code | none, then your robot |
 
 **Two paths.** Tutorials 01-13 teach how things work by building them yourself. Tutorials 14-21 use
 the ready-made helpers that do the same work for you. New programmers: do 01-06, then jump to 14.
-Want the whole robot fast? Use the [starter kit](../starter-kit.md).
+Want the whole robot fast? [Tutorial 22](22-robot-in-five-files.md): the robot in five files, made from your configuration
+(or the older [starter kit](../starter-kit.md)).
 
 Time: about 30-60 minutes each, more for 07, 09 and 12 (tuning takes time).
 

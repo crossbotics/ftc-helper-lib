@@ -117,6 +117,13 @@ public class FinderSafetyTest {
         EXPECTED.put("Tutorial 18: Vision Aim", "Webcam");                 // no camera in the simulator
         EXPECTED.put("Shot Tuner", "Webcam");
         EXPECTED.put("Aim Tuner", "Webcam");
+        // The two Robot.java examples are other robots (SimFromRobotTest runs them on their own files).
+        EXPECTED.put("FlywheelBot TeleOp", "\"left_drive\"");
+        EXPECTED.put("FlywheelBot Shoot and Leave", "\"left_drive\"");
+        EXPECTED.put("TurretBot TeleOp", "\"turret\"");
+        EXPECTED.put("TurretBot Shoot from Start", "\"turret\"");
+        EXPECTED.put("goBILDA Bot TeleOp", "\"left_drive\"");
+        EXPECTED.put("goBILDA Bot Launch and Back Up", "\"left_drive\"");
     }
 
     @Test public void everyExampleStartsAndStopsCleanly() throws Exception {

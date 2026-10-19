@@ -103,7 +103,8 @@ public abstract class EasyTeleOp extends LinearOpMode {
     /**
      * Your buttons. Put gamepad 2 buttons on {@code operator}. Extra gamepad 1 buttons go on
      * {@code driver}: those pause while the tuning menu is open (it uses gamepad 1).
-     * Already taken on gamepad 1: Y (field-centric), BACK, START + BACK, GUIDE.
+     * Already taken on gamepad 1: Y (field-centric; see {@link #fieldCentricButton()}), BACK,
+     * START + BACK, GUIDE.
      */
     protected void bindButtons(ControllerBindings driver, ControllerBindings operator) { }
 
@@ -116,11 +117,28 @@ public abstract class EasyTeleOp extends LinearOpMode {
     /** Extra lines for the Driver Station, every loop. The mechanisms' lines are already shown. */
     protected void addTelemetry(RobotTelemetry t) { }
 
+    /** Extra lines for the Driver Station during INIT (before START), every INIT loop. */
+    protected void addInitTelemetry(RobotTelemetry t) { }
+
+    /**
+     * Runs once, right after START, before the first loop. Must be quick: start things here, never
+     * wait. Nothing may move before START, so this is the first moment a mechanism may move.
+     */
+    protected void onStart() { }
+
     // ----------------------------- optional settings -----------------------------
 
     /** True to start in field-centric mode. Default false (robot-centric). */
     protected boolean startFieldCentric() {
         return false;
+    }
+
+    /**
+     * The gamepad 1 button that switches field-centric driving on and off (mecanum with an IMU only).
+     * Default Y. Return null for none (then field-centric stays as {@link #startFieldCentric()} says).
+     */
+    protected Btn fieldCentricButton() {
+        return Btn.Y;
     }
 
     /** Speed at a full squeeze of the slow trigger, 0 to 1. Default 0.3. */
@@ -231,9 +249,11 @@ public abstract class EasyTeleOp extends LinearOpMode {
                         confirm.play(false);
                     }
                 });
-        // Y: field-centric on/off (two buzzes = on, one = off). Only where it is possible.
-        if (driving.canFieldCentric()) {
-            driver.bindPress(Pad.G1, Btn.Y, () -> confirm.play(driving.toggleFieldCentric()));
+        // Y (or your fieldCentricButton()): field-centric on/off (two buzzes = on, one = off).
+        // Only where it is possible.
+        Btn fieldCentricBtn = fieldCentricButton();
+        if (driving.canFieldCentric() && fieldCentricBtn != null) {
+            driver.bindPress(Pad.G1, fieldCentricBtn, () -> confirm.play(driving.toggleFieldCentric()));
         }
         ControllerBindings operator = new ControllerBindings();
 
@@ -255,6 +275,7 @@ public abstract class EasyTeleOp extends LinearOpMode {
                 if (heading != null) {
                     t.line("Forward", heading.isFromAuto() ? "from autonomous" : "the way the robot faces now");
                 }
+                addInitTelemetry(t);
                 t.update();
             }
             if (isStopRequested()) return;
@@ -267,6 +288,7 @@ public abstract class EasyTeleOp extends LinearOpMode {
             menuKey.ignoreHeldButtons(gamepad1, gamepad2);
             driver.ignoreHeldButtons(gamepad1, gamepad2);
             operator.ignoreHeldButtons(gamepad1, gamepad2);
+            onStart();
             boolean menuWasOpen = false;
 
             while (opModeIsActive()) {

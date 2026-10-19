@@ -107,11 +107,27 @@ public final class DriverControls {
 
     /** Drives from the gamepad's sticks. Call once every loop. Never waits. */
     public void update(Gamepad gamepad) {
+        // The left trigger slows it down: the further it is pulled, the slower.
+        driveSticks(gamepad, StickShaping.slowScale(gamepad.left_trigger, slowSpeed));
+    }
+
+    /**
+     * Drives from the gamepad's sticks, with slow mode switched by your own code instead of the left
+     * trigger (for example a one-driver layout where the trigger has another job). Call every loop.
+     *
+     * @param gamepad the driver's gamepad
+     * @param slow    true = drive at the slow speed
+     */
+    public void update(Gamepad gamepad, boolean slow) {
+        driveSticks(gamepad, slow ? slowSpeed : 1);
+    }
+
+    private void driveSticks(Gamepad gamepad, double speed) {
         // Minus: the SDK reads stick UP as negative (docs/conventions.md).
         double forward = StickShaping.shape(-gamepad.left_stick_y, deadband, exponent);
         double strafe = StickShaping.shape(gamepad.left_stick_x, deadband, exponent);
         double turn = StickShaping.shape(gamepad.right_stick_x, deadband, exponent);
-        lastSpeed = StickShaping.slowScale(gamepad.left_trigger, slowSpeed);
+        lastSpeed = speed;
         if (isFieldCentric()) wheels.fieldCentric(forward, strafe, turn, heading.degrees(), lastSpeed);
         else wheels.robotCentric(forward, strafe, turn, lastSpeed);
     }

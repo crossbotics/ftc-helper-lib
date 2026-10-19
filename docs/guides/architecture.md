@@ -14,6 +14,7 @@ flowchart TB
     end
     subgraph LIB["ftc-helper-lib (stays the same across seasons)"]
         direction TB
+        R["robot: RobotDefinition, the modules (Intake, Lift, Claw, Launcher...),<br/>ControlMap, Action, Auto + Steps"]
         A["teleop + auto: EasyTeleOp, EasyAuto, AutoRoutine, AutoStep"]
         M["mechanism + launcher + vision<br/>PositionMotor, SpinMotor, servos, Flywheel, Turret, Launcher, cameras"]
         D["drive: MecanumDrive, TankDrive, DriverControls, DriverHeading, AutoDrive"]
@@ -24,6 +25,11 @@ flowchart TB
     SDK["FTC SDK (FIRST, new version each season)"]
     TEAM --> LIB --> SDK
 ```
+
+The five-files way ([robot module](../modules/robot.md)) sits on top: the team's `Robot.java`,
+`Tunables.java`, `Controls.java`, `Actions.java` and autos use the `robot` package, which builds the
+same mechanism, drive, teleop and auto parts underneath. Both ways work; a team can mix them (a module's
+`part()` gives the plain part inside).
 
 **Rule of thumb:** if it is true for any game, it goes in the library. If it is about THIS game
 (field positions, which tag, how many pieces, scoring heights), it goes in TeamCode.
@@ -63,7 +69,8 @@ See [Extending the library](extending.md).
 
 | Number | Lives in | Changed by |
 | --- | --- | --- |
-| motor names, directions, gear ratios | TeamCode `RobotSettings` / `Robot` | code |
+| motor names, directions, gear ratios | TeamCode `RobotSettings` / `Robot` (five files: `Robot.java`) | code |
+| every module's numbers (five files) | TeamCode `Tunables.java`, one section per part | tuning menu, then copied into the file (INIT lists the lines) |
 | PID gains, positions, shot table | TeamCode, made `tunable(...)` while tuning | tuning menu, then copied into code |
 | practice vs competition values | `Profile.pick(a, b)` | the INIT menu's profile line |
 | match choices (alliance, delay, route) | `InitMenu` | the drivers, in INIT |

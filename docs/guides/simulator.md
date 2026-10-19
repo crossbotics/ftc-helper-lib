@@ -108,11 +108,33 @@ drive.gearRatio = 1                   # motor turns per wheel turn (default 1)
 drive.strafeEfficiency = 0.85         # mecanum: how much of a strafe really happens (default 0.85)
 imu = imu
 motor.lift = lift, part=gobilda-5203-312, min=0, max=2750, gravity=0.06
-motor.flywheel = flywheel, part=gobilda-5203-6000, feeder=feeder, shotDrop=0.15
+motor.flywheel = flywheel, part=gobilda-5203-6000, feeder=feeder, shotDrop=0.15   # feeder: a motor, CR servo or servo
 servo.claw = 0.5, part=gobilda-2000-torque
 camera.front = name=Webcam 1, forward=7, up=12, pitch=20   # see "Cameras" below
 touch.lift_bottom = lift, below=20
 ```
+
+### A robot file from Robot.java
+
+A team that writes its robot in five files ([tutorial 22](../tutorials/22-robot-in-five-files.md)) gets
+its robot file from the code:
+
+```bash
+./gradlew :sim:fromRobot -PteamCode=../TeamCode [-ProbotClass=org.firstinspires.ftc.teamcode.Robot] [-Pout=...]
+```
+
+It writes `simulator/robot.properties` (or `-Pout`) from `Robot.java` and `Tunables.java`: every device
+name, the drive (type, motors, wheel, which side the code reverses: `drive.mirrored`), the lift's and
+turret's stops, the claw's open and closed positions, one shape per module, and the `collect.`,
+`shoot.` and `grab.` lines. Each line it writes ends with `# from Robot.java` and is rewritten every
+time; every other line is yours and is kept, even for the same setting (a measured `shape.lift` wins).
+Lines for parts no longer in the code are removed. It stops, writing nothing, when the file describes
+a device differently from the code (`motor.claw` in the file, a claw servo in the code) or names
+other drive motors. The robot's sizes are not in the code: the generated shapes are guesses marked
+`TODO` until someone measures them (or the [robot-file skill](robot-file-skill.md) fills them in).
+
+`./gradlew :sim:newRobot -Pconfig=config.xml -PteamCode=../TeamCode` writes the five files themselves
+from the robot configuration ([robot module](../modules/robot.md#making-the-files)).
 
 ## Robot shapes
 
@@ -241,10 +263,13 @@ pages, not the manual), they roll and bounce, the robot pushes them, and the FLO
 # take in a piece within 0.75 in of the intake shape while motor "intake" turns inward (power above 0.2;
 # inward=- if negative power takes in; crservo= instead of motor=); it holds 4
 collect.intake = shape=intake, motor=intake, holds=4
-# each flywheel shot (motor.flywheel = flywheel, feeder=feeder) sends a held piece off this shape,
-# 45 degrees up from its forward, at half the wheel's rim speed
+# each flywheel shot (motor.flywheel = flywheel, feeder=feeder) sends a held piece off this shape.
+# The feeder is a motor or CR servo (a piece every 0.3 s while it runs), or a servo that pushes
+# (an indexer: it feeds while it is more than 0.15 away from where it starts). The shot leaves
+# 45 degrees up from the shape's forward, at half the wheel's rim speed
 shoot.launcher = shape=flywheel, angle=45, share=0.5
 # the claw holds a piece in its fingers while servo "claw" is below 0.3, and drops it when it opens
+# (a claw that closes toward 1: closedAbove=0.5 instead)
 grab.claw = shape=claw, servo=claw, closedBelow=0.3
 ```
 

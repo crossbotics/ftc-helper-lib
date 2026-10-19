@@ -4,6 +4,11 @@ Six files that make a complete, competition-ready robot program: one TeleOp for 
 an autonomous with a menu, a hardware check, and one place for every setting. Copy them, change
 names and numbers, and you have a working robot.
 
+> **New: the robot in five files.** [Tutorial 22](tutorials/22-robot-in-five-files.md) shows a shorter
+> way: `Robot.java`, `Tunables.java`, `Controls.java`, `Actions.java` and autos, made from your robot
+> configuration by `./gradlew :sim:newRobot`, with ready-made modules ([robot module](modules/robot.md)).
+> This starter kit still works and is kept for teams that use it.
+
 **Files:** [`examples/.../starter/`](../examples/src/main/java/io/github/jasoncross/ftchelper/examples/starter)
 
 | # | File | What it is | You change |

@@ -122,6 +122,9 @@ public abstract class EasyAuto extends LinearOpMode {
     /** Extra INIT choices, e.g. {@code menu.choice("Route", "Near", "Far")}. */
     protected void addChoices(InitMenu menu) { }
 
+    /** Extra lines for the Driver Station during INIT (before START), every INIT loop. */
+    protected void addInitTelemetry(RobotTelemetry t) { }
+
     /** Where to place the robot, shown in INIT so the drive team sets it up right. */
     protected String startPosition() {
         return null;
@@ -261,6 +264,7 @@ public abstract class EasyAuto extends LinearOpMode {
             String where = startPosition();
             if (where != null) t.line("Place robot", where);
             menu.addTelemetry(t);
+            addInitTelemetry(t);
             t.update();
         }
         // STOP was pressed during INIT: do nothing (the "finally" in runOpMode still stops everything).

@@ -37,6 +37,7 @@ routine.step("Lift up", lift.startStep("HIGH"))
 | **Learn it step by step (19 hands-on tutorials)** | [Tutorials](docs/tutorials/README.md) |
 | See how it all fits together | [Architecture](docs/guides/architecture.md) |
 | Make autonomous modes the easy way | [Easy autonomous modes](docs/guides/easy-autos.md) |
+| A whole robot program in five short files (and make them from your configuration) | [Tutorial 22](docs/tutorials/22-robot-in-five-files.md), [robot module](docs/modules/robot.md) |
 | Drive + slow mode + intake, ready to copy | [Example: drive and intake](docs/guides/example-drive-intake.md) |
 | Keep the loop fast: what blocks and what never does | [Non-blocking code](docs/guides/non-blocking.md) |
 | Practice vs competition behavior | [Profiles](docs/guides/profiles.md) |
@@ -66,6 +67,7 @@ Every class and every function is explained in the module pages.
 | Mechanism | `io.github.jasoncross.ftchelper.mechanism` | Lifts/arms to named positions, intakes with jam back-out, servos with positions or degrees, continuous servos. | [mechanism.md](docs/modules/mechanism.md) |
 | Launcher | `io.github.jasoncross.ftchelper.launcher` | Flywheel in RPM, shot table, feeders, turret with safe limits, and a Launcher that only feeds when ready. | [launcher.md](docs/modules/launcher.md) |
 | Vision | `io.github.jasoncross.ftchelper.vision` | AprilTags with a webcam (SDK 12 clusters too) or a Limelight 3A, one interface, safe aiming. | [vision.md](docs/modules/vision.md) |
+| Robot | `io.github.jasoncross.ftchelper.robot` | The robot in five files: Robot.java (what is on it), Tunables.java (its numbers), Controls.java (the buttons and the TeleOp), Actions.java (moves that use several parts) and autos. Ready-made modules: intake, lift, arm, claw, wrist, turret, launcher, indexer, camera. | [robot.md](docs/modules/robot.md) |
 | TeleOp | `io.github.jasoncross.ftchelper.teleop` | EasyTeleOp: a whole TeleOp where you add only your mechanisms and buttons; driving, timer, tuning menu and safety come with it. | [teleop.md](docs/modules/teleop.md) |
 | Auto | `io.github.jasoncross.ftchelper.auto` | Autonomous as a list of named steps; EasyAuto does menu, timer, mirroring, park time, report. | [auto.md](docs/modules/auto.md) |
 | Match | `io.github.jasoncross.ftchelper.match` | Alliance and mirroring, match timer with buzz cues, INIT menu, auto-to-TeleOp memory. | [match.md](docs/modules/match.md) |

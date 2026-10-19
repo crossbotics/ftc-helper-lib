@@ -2,6 +2,39 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Added
+
+- **The robot in five files** (package `robot`, [docs/modules/robot.md](docs/modules/robot.md),
+  [tutorial 22](docs/tutorials/22-robot-in-five-files.md)): `Robot.java` says what is on the robot
+  (`RobotDefinition`: `drive(...)` and one `add(...)` per mechanism), `Tunables.java` holds every number
+  (one section per part), `Controls.java` is the TeleOp and the button map (`ControlMap`), `Actions.java`
+  holds moves that use several parts (`Action`), and each autonomous is a list of `Steps` (`Auto`).
+- **Ready-made modules:** `Drive` (mecanum or tank), `Intake` (motor and/or CR servos, on at the start),
+  `Lift`, `Arm`, `Claw`, `Wrist`, `Positioner`, `Turret` (follows the camera's goal inside its limits),
+  `Launcher` (spin up, fire, speed from the camera's distance), `Indexer` (servo, CR servo or motor) and
+  `Camera` (Limelight or webcam, the alliance's goal). Each brings its Tunables section with safe
+  defaults and its standard buttons.
+- **Tunables:** every number is live-tunable from the tuning menu; INIT lists the values tuned on the
+  robot that differ from Tunables.java, as lines to copy back. Missing numbers fall back to defaults
+  (INIT notes them); a tuned position stays inside its safe range.
+- **The standard button map**, with a one-driver switch (`oneDriver` in Controls.java), checked at INIT
+  (two jobs on one button, a job on a driving button) and shown on the Driver Station in INIT.
+- **Actions** never block, claim the parts they use (the driver moving a part stops them), stop with a
+  reason when a wait times out, and run the same in TeleOp and autonomous. **Modes** for always-on rules
+  (a turret following, a launcher's speed from distance).
+- `./gradlew :sim:newRobot`: the five files from the robot configuration. `./gradlew :sim:fromRobot`:
+  the simulator robot file from Robot.java (generated lines marked, the team's lines kept, a device
+  described differently stops it).
+- Examples: goBILDA's starter bot rewritten in five files (`examples/.../gobildabot`), and two more robots
+  (`flywheelbot`, `turretbot`); all three run in the simulator's tests.
+- `EasyTeleOp`: `onStart()`, `addInitTelemetry(...)` and `fieldCentricButton()`. `EasyAuto`:
+  `addInitTelemetry(...)`. `DriverControls.update(gamepad, slow)`. `ControllerBindings`:
+  `bindTriggerRelease`, `bindTriggerToggle`.
+- Simulator: a flywheel's feeder can be a servo (an indexer that pushes); a claw that closes toward 1
+  (`grab.... closedAbove=`).
+
 ## v0.8.1 - 2026-10-17
 
 Nothing changes for a robot project that pulls this version. Everything here is in the simulator.
