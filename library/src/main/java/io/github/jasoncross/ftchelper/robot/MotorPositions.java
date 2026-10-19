@@ -168,13 +168,20 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
     }
 
     @Override
+    void halt() {
+        if (part != null) part.hold();   // stay at this height
+    }
+
+    @Override
     public void update() {
         part.update();
     }
 
     @Override
     public void stop() {
-        if (part != null) part.stop();
+        if (part == null) return;
+        touch();
+        part.stop();
     }
 
     @Override

@@ -22,7 +22,7 @@ import java.util.Map;
 public abstract class ServoPositions<M extends ServoPositions<M>> extends Module<M> {
     static final List<String> KNOWN = Collections.singletonList("travelSec");
 
-    private boolean reversed = false;
+    boolean reversed = false;
     PositionServo part;
     // The positions' names in the order the servo cycles through them.
     final List<String> order = new ArrayList<>();
@@ -125,10 +125,15 @@ public abstract class ServoPositions<M extends ServoPositions<M>> extends Module
         return m;
     }
 
+    // A position as the simulated servo sees it: a reversed servo's 0.2 is really 0.8.
+    double physical(double position) {
+        return reversed ? 1 - position : position;
+    }
+
     // "servo.claw = 0.2, part=gobilda-2000-torque": where the simulated servo starts (its first position).
     String simServoLine(TunableSection t, String part) {
         Map<String, Double> p = positionsFrom(t);
-        double first = p.isEmpty() ? 0.5 : p.values().iterator().next();
+        double first = physical(p.isEmpty() ? 0.5 : p.values().iterator().next());
         return fmt("servo.%s = %.2f, part=%s   # TODO the real servo", device, first, part);
     }
 }

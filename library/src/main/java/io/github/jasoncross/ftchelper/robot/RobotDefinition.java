@@ -188,7 +188,7 @@ public abstract class RobotDefinition {
         runner.start(action);
     }
 
-    /** Stops an action; its parts stay where they are. */
+    /** Stops an action. Its parts stop safely (a lift holds its height, waiting shots are dropped). */
     public final void cancel(Action action) {
         runner.stop(action, "cancelled");
     }

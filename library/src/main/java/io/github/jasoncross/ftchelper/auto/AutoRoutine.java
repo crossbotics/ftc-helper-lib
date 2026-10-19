@@ -353,6 +353,11 @@ public class AutoRoutine {
         public RobotTelemetry telemetry() {
             return robotTelemetry();
         }
+
+        @Override
+        public void note(String text) {
+            AutoRoutine.this.note(text);
+        }
     };
 
     /** Number of steps added. */

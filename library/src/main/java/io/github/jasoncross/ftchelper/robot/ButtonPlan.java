@@ -222,6 +222,11 @@ final class ButtonPlan {
             return stick.pad.which == ControllerBindings.Pad.G1;
         }
 
+        /** The stick at rest: 0, once. */
+        void letGo() {
+            use.accept(0);
+        }
+
         void run() {
             Gamepad g = gamepad.get();
             if (g == null) return;

@@ -122,3 +122,4 @@ Rules: return when done; inside any waiting loop call `ctx.loop()` (or use `ctx.
 | `waitFor(seconds)` | wait, mechanisms keep working |
 | `secondsLeft()` | seconds left in autonomous |
 | `telemetry()` | add your own lines |
+| `note(text)` | put a note on this step's report line instead of "done" (e.g. "timed out") |

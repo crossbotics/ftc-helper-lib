@@ -227,8 +227,15 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
 
     @Override
     public void stop() {
+        if (part == null) return;
+        touch();
         spinning = false;
-        if (part != null) part.stop();
+        part.stop();
+    }
+
+    @Override
+    void halt() {
+        if (part != null) part.stopShooting();   // drop the shots still waiting; keep the speed
     }
 
     @Override

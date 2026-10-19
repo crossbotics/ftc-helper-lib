@@ -110,6 +110,44 @@ public class ActionsAndControlsTest {
         assertTrue(Double.isNaN(kit.servos.get("claw").position));   // the claw never opened
     }
 
+    @Test public void aCancelledActionStopsItsPartsSafely() {
+        Action a = scoreHigh();
+        robot.run(a);
+        for (int i = 0; i < 5; i++) loop();      // the lift is on its way up
+        robot.runner.toggle(a);                  // cancel
+        double heldAt = robot.lift.position();
+        for (int i = 0; i < 80; i++) loop();
+        assertEquals("the lift holds where it was, it does not go on to the top", heldAt, robot.lift.position(), 30);
+        assertEquals("hold", robot.lift.part().getTargetName());
+    }
+
+    @Test public void aTimedOutActionStopsItsPartsToo() {
+        Action a = Action.named("Up, then wait for nothing")
+                .then(() -> robot.lift.goTo("high"))
+                .waitUntil("the impossible", () -> false, 0.1);
+        robot.run(a);
+        for (int i = 0; i < 10; i++) loop();
+        assertFalse(a.isRunning());
+        assertEquals("hold", robot.lift.part().getTargetName());
+    }
+
+    @Test public void aFinishedActionKeepsItsLastCommands() {
+        Action a = Action.named("Up").then(() -> robot.lift.goTo("high"));
+        robot.run(a);
+        loop();
+        assertEquals("done", a.result());
+        assertEquals("high", robot.lift.part().getTargetName());
+    }
+
+    @Test public void theDriversStopCancelsTheAction() {
+        Action a = scoreHigh();
+        robot.run(a);
+        loop();
+        robot.lift.stop();
+        assertFalse(a.isRunning());
+        assertEquals("stopped: Lift moved by hand", a.result());
+    }
+
     @Test public void pressingAgainCancels() {
         Action a = scoreHigh();
         robot.runner.toggle(a);

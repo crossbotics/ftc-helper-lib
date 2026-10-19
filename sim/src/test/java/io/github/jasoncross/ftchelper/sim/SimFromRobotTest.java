@@ -63,6 +63,14 @@ public class SimFromRobotTest {
         assertEquals(Collections.singletonList("shape.intake"), r.kept);
     }
 
+    @Test public void teamLinesWrittenWithAColonOrASpaceAreTheTeams() {
+        String existing = "drive.wheelDiameterIn: 4.0\ndrive.gearRatio 2\n";
+        SimFromRobot.Result r = SimFromRobot.merge(existing, Arrays.asList(
+                "drive.wheelDiameterIn = 3.780", "drive.gearRatio = 1"), "Robot", "x");
+        assertEquals("drive.wheelDiameterIn: 4.0\ndrive.gearRatio 2\n", r.text);
+        assertEquals(Arrays.asList("drive.wheelDiameterIn", "drive.gearRatio"), r.kept);
+    }
+
     @Test public void aDeviceOfAnotherKindOrOtherDriveMotorsStop() {
         String existing = "motor.claw = free\ndrive.motors = fl, fr, bl, br\n";
         SimFromRobot.Result r = SimFromRobot.merge(existing, Arrays.asList(

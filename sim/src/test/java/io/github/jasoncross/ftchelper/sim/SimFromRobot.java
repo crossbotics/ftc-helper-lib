@@ -189,18 +189,29 @@ public final class SimFromRobot {
         return null;
     }
 
-    // "motor.lift = lift, ..." -> "motor.lift"; null for a comment or a blank line.
+    // "motor.lift = lift, ..." -> "motor.lift"; null for a comment or a blank line. The key ends where the
+    // simulator's reader (java.util.Properties) ends it: at the first =, : or space.
     static String key(String line) {
         String t = line.trim();
-        if (t.isEmpty() || t.startsWith("#")) return null;
-        int eq = t.indexOf('=');
-        if (eq < 0) return null;
-        return t.substring(0, eq).trim();
+        if (t.isEmpty() || t.startsWith("#") || t.startsWith("!")) return null;
+        int end = keyEnd(t);
+        return end == 0 ? null : t.substring(0, end);
+    }
+
+    private static int keyEnd(String t) {
+        for (int i = 0; i < t.length(); i++) {
+            char c = t.charAt(i);
+            if (c == '\\') { i++; continue; }
+            if (c == '=' || c == ':' || Character.isWhitespace(c)) return i;
+        }
+        return t.length();
     }
 
     // The value without its note.
     static String value(String line) {
-        String v = line.substring(line.indexOf('=') + 1);
+        String t = line.trim();
+        String v = t.substring(keyEnd(t)).trim();
+        if (v.startsWith("=") || v.startsWith(":")) v = v.substring(1);
         int hash = v.indexOf(" #");
         return (hash >= 0 ? v.substring(0, hash) : v).trim();
     }

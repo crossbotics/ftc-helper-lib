@@ -154,8 +154,13 @@ public final class Steps {
         if (adding()) {
             routine.step(action.name(), ctx -> {
                 robot.run(action);
-                if (!ctx.waitUntil(() -> !action.isRunning(), timeoutSec) && action.isRunning()) {
+                ctx.waitUntil(() -> !action.isRunning(), timeoutSec);
+                if (action.isRunning()) {
+                    // Out of time (or autonomous is over): stop it, and say so in the report.
                     robot.cancel(action);
+                    if (ctx.isActive()) ctx.note("timed out");
+                } else if (!"done".equals(action.result())) {
+                    ctx.note(action.result());   // e.g. "timed out waiting for lift at the top"
                 }
             });
         }

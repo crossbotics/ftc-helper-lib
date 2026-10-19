@@ -49,8 +49,23 @@ final class ActionRunner implements Subsystem {
     void stop(Action a, String why) {
         if (!a.isRunning()) return;
         a.finish(why);
+        halt(a);
         remember(a);
         running.remove(a);
+    }
+
+    // An action that did not finish ("cancelled", "stopped: ...", "timed out ..."): each part it still
+    // owns stops what the action told it to do, safely (a lift holds where it is, queued shots are
+    // dropped, an intake stops). A part the driver or another action has taken is left alone: its new
+    // command comes right after this. A finished action ("done") keeps its last commands.
+    private void halt(Action a) {
+        for (Module<?> part : a.claimed) {
+            if (part.owner == a) {
+                part.owner = null;
+                part.halt();
+            }
+        }
+        a.claimed.clear();
     }
 
     /** Stops every action (end of the OpMode, or a "cancel all" button). */
@@ -86,6 +101,7 @@ final class ActionRunner implements Subsystem {
                 stop(previous, "stopped: " + part.name() + " taken by " + current.name());
             }
             part.owner = current;
+            current.claimed.add(part);
         } else {
             // The driver (a button or stick): the driver wins.
             if (previous != null && previous.isRunning()) stop(previous, "stopped: " + part.name() + " moved by hand");
@@ -106,6 +122,8 @@ final class ActionRunner implements Subsystem {
         for (Action a : new ArrayList<>(running)) {
             if (!a.isRunning()) {
                 running.remove(a);
+                if ("done".equals(a.result())) a.claimed.clear();
+                else halt(a);   // timed out: stop what it started
                 remember(a);
             }
         }

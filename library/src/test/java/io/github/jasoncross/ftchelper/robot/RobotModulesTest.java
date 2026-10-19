@@ -291,6 +291,32 @@ public class RobotModulesTest {
         assertTrue(all, all.contains("grab.claw = shape=claw, servo=claw, closedAbove=0.48"));
     }
 
+    @Test public void reversedServosGetTheirRealPositionInTheSimulatorFile() {
+        RobotDefinition r = new RobotDefinition() {
+            @Override protected void define() {
+                tunables(Numbers.class);
+                drive(Drive.tank("l", "r"));
+                add(Claw.servo("claw").reversed());
+                add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer").reversed()));
+            }
+        };
+        String all = String.join("\n", r.simLines());
+        assertTrue(all, all.contains("servo.claw = 0.80"));                          // open 0.2, reversed
+        assertTrue(all, all.contains("grab.claw = shape=claw, servo=claw, closedBelow=0.5"));
+        assertTrue(all, all.contains("servo.indexer = 1.00"));                       // rest 0 (default), reversed
+    }
+
+    @Test public void anAutonomousActionThatFailsSaysSoInTheReport() {
+        LiftBot r = new LiftBot();
+        r.setup(new RobotTestKit());
+        io.github.jasoncross.ftchelper.auto.AutoRoutine routine = new io.github.jasoncross.ftchelper.auto.AutoRoutine(
+                () -> true, () -> { }, new io.github.jasoncross.ftchelper.Fakes.FakeTelemetry().telemetry).subsystems(r.all());
+        Steps s = new Steps(routine, null, r);
+        s.action(Action.named("Never").waitUntil("the impossible", () -> false, 0.05), 2);
+        routine.runAll();
+        assertEquals("[Never: timed out waiting for the impossible]", routine.getReport().toString());
+    }
+
     @Test public void usingAModuleBeforeSetupSaysSo() {
         LiftBot r = new LiftBot();
         r.describe();

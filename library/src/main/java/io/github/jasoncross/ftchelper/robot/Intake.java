@@ -139,6 +139,12 @@ public final class Intake extends Module<Intake> implements Toggleable {
 
     /** Stops (and ends a reverse). */
     @Override
+    void halt() {
+        on = false;
+        out = false;
+    }
+
+    @Override
     public void stop() {
         touch();
         on = false;

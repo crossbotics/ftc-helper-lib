@@ -40,4 +40,12 @@ public interface AutoContext {
 
     /** The telemetry (add your own lines; the routine sends them). */
     RobotTelemetry telemetry();
+
+    /**
+     * Adds a note to this step's line in the end-of-autonomous report, e.g. "timed out", instead of
+     * "done". Default: nothing (a context that keeps no report).
+     *
+     * @param text a few words
+     */
+    default void note(String text) { }
 }

@@ -94,6 +94,12 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
         return java.util.Collections.singletonList(device);
     }
 
+    /**
+     * Stops what an unfinished action told this part to do, safely and without counting as the
+     * driver's command (see ActionRunner). Default: nothing (a servo is already where it was sent).
+     */
+    void halt() { }
+
     /** Modules inside this one (a launcher's indexer): set up with it, not updated on their own. */
     List<Module<?>> children() {
         return java.util.Collections.emptyList();

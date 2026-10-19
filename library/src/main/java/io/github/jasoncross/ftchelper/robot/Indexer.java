@@ -149,7 +149,9 @@ public final class Indexer extends Module<Indexer> implements Feeder {
 
     @Override
     public void stop() {
-        if (feeder != null) feeder.stop();
+        if (feeder == null) return;
+        touch();
+        feeder.stop();
     }
 
     @Override
@@ -164,7 +166,11 @@ public final class Indexer extends Module<Indexer> implements Feeder {
 
     @Override
     void simLines(List<String> out, TunableSection t) {
-        if (kind == Kind.SERVO) out.add(fmt("servo.%s = %.2f, part=gobilda-2000-speed   # TODO the real servo", device, t.number("rest", 0)));
+        if (kind == Kind.SERVO) {
+            // Where it rests, as the simulated servo sees it (a reversed servo's 0.15 is really 0.85).
+            double rest = t.number("rest", 0);
+            out.add(fmt("servo.%s = %.2f, part=gobilda-2000-speed   # TODO the real servo", device, reversed ? 1 - rest : rest));
+        }
         else if (kind == Kind.CR_SERVO) out.add("crservo." + device + " =");
         else out.add("motor." + device + " = free, part=gobilda-5203-1150   # TODO the real motor");
     }

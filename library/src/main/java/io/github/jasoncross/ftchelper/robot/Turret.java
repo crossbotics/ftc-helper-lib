@@ -175,8 +175,15 @@ public final class Turret extends Module<Turret> {
 
     @Override
     public void stop() {
+        if (part == null) return;
+        touch();
         follow.off();
-        if (part != null) part.stop();
+        part.stop();
+    }
+
+    @Override
+    void halt() {
+        if (part != null && part.isHomed()) part.aimAt(part.getAngle());   // hold where it points now
     }
 
     @Override

@@ -77,6 +77,10 @@ public final class Claw extends ServoPositions<Claw> implements Toggleable {
     void simLines(List<String> out, TunableSection t) {
         Map<String, Double> p = positionsFrom(t);
         Double closed = p.get("closed"), open = p.get("open");
+        if (closed != null && open != null) {
+            closed = physical(closed);
+            open = physical(open);
+        }
         out.add(simServoLine(t, "gobilda-2000-torque"));
         out.add(fmt("shape.%s = claw, at=8,0,4, size=2x0.5x2, servo=%s, pos0=0, pos1=3   # TODO measure", device, device));
         if (closed != null && open != null) {

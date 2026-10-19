@@ -29,6 +29,7 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   described differently stops it).
 - Examples: goBILDA's starter bot rewritten in five files (`examples/.../gobildabot`), and two more robots
   (`flywheelbot`, `turretbot`); all three run in the simulator's tests.
+- `AutoContext.note(text)`: a custom step can put a note on its report line.
 - `EasyTeleOp`: `onStart()`, `addInitTelemetry(...)` and `fieldCentricButton()`. `EasyAuto`:
   `addInitTelemetry(...)`. `DriverControls.update(gamepad, slow)`. `ControllerBindings`:
   `bindTriggerRelease`, `bindTriggerToggle`.

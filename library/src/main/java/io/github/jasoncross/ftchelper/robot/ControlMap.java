@@ -47,6 +47,7 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
     private ButtonPlan plan;
     private final List<ButtonPlan.StickJob> sticks = new ArrayList<>();
     private boolean slowOn = false;
+    private boolean menuWasOpen = false;
 
     /**
      * Your buttons, after the modules' standard ones. A job here replaces a module's suggestion on
@@ -120,11 +121,17 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
 
     @Override
     protected final void everyLoop() {
+        boolean menu = isTuningMenuOpen();
         for (ButtonPlan.StickJob job : sticks) {
-            // The tuning menu uses gamepad 1: its sticks are not the robot's then.
-            if (job.isDriverPad() && isTuningMenuOpen()) continue;
+            // The tuning menu uses gamepad 1: its sticks are not the robot's then. The moment it opens,
+            // each gamepad 1 stick job gets 0 once ("let go"), so nothing keeps moving from before.
+            if (job.isDriverPad() && menu) {
+                if (!menuWasOpen) job.letGo();
+                continue;
+            }
             job.run();
         }
+        menuWasOpen = menu;
     }
 
     @Override

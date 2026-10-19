@@ -318,8 +318,10 @@ public static Action scoreHigh(Robot r) {
 - **Parts are claimed:** an action owns the parts it commands while it runs. Another action that
   commands one of them stops it ("taken by ..."); so does the driver moving it by hand (a button or a
   stick away from the middle): the driver always wins.
-- **Press again to cancel** (a button bound with `press(action)`). A stopped action leaves its parts
-  where they are (a lift holds).
+- **Press again to cancel** (a button bound with `press(action)`). A stopped action (cancelled, taken
+  over, timed out) stops what it started, safely: a lift or arm holds its height, a turret its angle,
+  shots still waiting are dropped, an intake stops. An action that finishes keeps its last commands.
+  A failed action in an autonomous says why in the report.
 
 ## Modes
 

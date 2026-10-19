@@ -29,7 +29,9 @@ import java.util.function.BooleanSupplier;
  *       (the driver always wins).</li>
  *   <li><b>A wait that times out stops the action</b> (a lift that never reached the top must not
  *       open the claw). The Driver Station says why.</li>
- *   <li>Stopping leaves each part where it is (a lift holds its height).</li>
+ *   <li>A stopped action (cancelled, taken over, timed out) stops what it started, safely: a lift or
+ *       arm holds its height, a turret its angle, waiting shots are dropped, an intake stops. An
+ *       action that finishes keeps its last commands.</li>
  * </ul>
  *
  * <p>{@code () -> r.lift.goTo("high")} is a small piece of code (a "lambda") that the action runs
@@ -59,6 +61,8 @@ public final class Action {
     private int index = -1;
     private double stepStart = 0;
     private String result = "";
+    // The parts this run has commanded (see ActionRunner.touched), to halt them if it is stopped.
+    final java.util.Set<Module<?>> claimed = new java.util.LinkedHashSet<>();
 
     private Action(String name) {
         this.name = name;
@@ -142,6 +146,7 @@ public final class Action {
         index = 0;
         stepStart = now;
         result = "";
+        claimed.clear();
         advance(runner, now);
     }
 

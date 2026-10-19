@@ -143,7 +143,8 @@ working while it runs. Things to know:
 - A `waitUntil` that times out STOPS the action, and the Driver Station says why. (A lift that never
   got to the top must not open the claw.)
 - **The driver always wins:** moving one of the action's parts by hand stops it. Pressing its button
-  again cancels it.
+  again cancels it. A stopped action stops what it started, safely: a lift holds its height, shots
+  still waiting are dropped, the intake stops.
 - The same action works in an autonomous: `s.action(Actions.fireAll(robot))`.
 
 ## 5. autos/: the autonomous programs

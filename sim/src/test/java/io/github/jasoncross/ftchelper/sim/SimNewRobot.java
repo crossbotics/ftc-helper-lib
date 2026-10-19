@@ -86,11 +86,35 @@ public final class SimNewRobot {
         return false;
     }
 
-    // "intake_deploy" -> "intakeDeploy": a Java field name.
-    static String fieldName(String device) {
-        String s = RobotDefinition.sectionName(device);
-        s = Character.toLowerCase(s.charAt(0)) + s.substring(1);
-        return Character.isDigit(s.charAt(0)) ? "part" + s : s;
+    /**
+     * A device's Java names: {field, Tunables section, rename}. "intake_deploy" -> intakeDeploy,
+     * IntakeDeploy, "". A name Java cannot use ("1_lift") or one already taken ("left-claw" next to
+     * "left_claw") gets another section, and rename is then the {@code .tunables("...")} that tells
+     * the module where its numbers are.
+     */
+    static String[] ids(String device, Set<String> used) {
+        String natural = RobotDefinition.sectionName(device);
+        String section = Character.isDigit(natural.charAt(0)) ? "Part" + natural : natural;
+        String base = section;
+        for (int i = 2; used.contains(section) || used.contains(lowerFirst(section)) || section.equals("Drive")
+                || section.equals("Auto") || JAVA_WORDS.contains(lowerFirst(section)); i++) section = base + i;
+        used.add(section);
+        String field = lowerFirst(section);
+        used.add(field);
+        String ren = section.equals(natural) ? "" : ".tunables(" + q(section) + ")";
+        return new String[] {field, section, ren};
+    }
+
+    // Words Java keeps for itself: a field cannot be called one of these.
+    private static final Set<String> JAVA_WORDS = new java.util.HashSet<>(java.util.Arrays.asList(
+            "abstract", "assert", "boolean", "break", "byte", "case", "catch", "char", "class", "const", "continue",
+            "default", "do", "double", "else", "enum", "extends", "final", "finally", "float", "for", "goto", "if",
+            "implements", "import", "instanceof", "int", "interface", "long", "native", "new", "package", "private",
+            "protected", "public", "return", "short", "static", "strictfp", "super", "switch", "synchronized", "this",
+            "throw", "throws", "transient", "try", "void", "volatile", "while", "true", "false", "null"));
+
+    private static String lowerFirst(String s) {
+        return Character.toLowerCase(s.charAt(0)) + s.substring(1);
     }
 
     private static String q(String s) {
@@ -101,11 +125,13 @@ public final class SimNewRobot {
     static Map<String, String> files(List<SimConfigImport.Device> devices, String pkg) {
         String[] drive = SimConfigImport.driveMotors(devices);
         Set<String> used = new LinkedHashSet<>();
+        Set<String> usedNames = new LinkedHashSet<>();   // field and section names given out so far
         if (drive != null) for (String d : drive) used.add(d);
         String imu = null;
         List<String> todo = new ArrayList<>();
         List<Part> parts = new ArrayList<>();
         List<String> intakeServos = new ArrayList<>();
+        String[] intakeId = null;   // the first intake CR servo's names (the module's)
         Part launcher = null;
         List<Part> indexers = new ArrayList<>();
         List<SimConfigImport.Device> switches = new ArrayList<>();
@@ -114,8 +140,8 @@ public final class SimNewRobot {
             if (used.contains(d.name)) continue;
             String kind = SimConfigImport.kindOf(d.tag);
             List<String> w = SimConfigImport.words(d.name);
-            String field = fieldName(d.name);
-            String section = RobotDefinition.sectionName(d.name);
+            String[] id = ids(d.name, usedNames);
+            String field = id[0], section = id[1], ren = id[2];
             String part = SimConfigImport.MOTOR_PARTS.get(d.tag);
             switch (kind) {
                 case "imu":
@@ -123,31 +149,31 @@ public final class SimNewRobot {
                     break;
                 case "motor":
                     if (has(w, "intake", "roller", "sweeper", "collector")) {
-                        parts.add(new Part("Intake", field, "Intake.motor(" + q(d.name) + ")", section)
+                        parts.add(new Part("Intake", field, "Intake.motor(" + q(d.name) + ")" + ren, section)
                                 .num("inPower", "1.0").num("outPower", "0.7"));
                     } else if (has(w, "lift", "slide", "slides", "elevator", "viper", "linear", "extension")) {
-                        parts.add(new Part("Lift", field, "Lift.slide(" + q(d.name) + ")", section)
+                        parts.add(new Part("Lift", field, "Lift.slide(" + q(d.name) + ")" + ren, section)
                                 .num("min", "0").num("max", "2600").num("kP", "0.004").num("kI", "0").num("kD", "0.0002")
                                 .num("kF", "0.05").num("down", "0").num("low", "900").num("high", "2400"));
                     } else if (has(w, "arm", "pivot", "shoulder", "elbow")) {
-                        Part p = new Part("Arm", field, "Arm.motor(" + q(d.name) + ", " + q(part != null ? part : "gobilda-5203-117") + ")", section)
+                        Part p = new Part("Arm", field, "Arm.motor(" + q(d.name) + ", " + q(part != null ? part : "gobilda-5203-117") + ")" + ren, section)
                                 .num("min", "0").num("max", "180").num("kP", "0.02").num("kI", "0").num("kD", "0.001")
                                 .num("kF", "0").num("stowed", "0").num("score", "90");
                         if (part == null) p.note = "TODO the motor's catalog id (docs/guides/parts-catalog.md) and gearRatio(...)";
                         parts.add(p);
                     } else if (has(w, "turret")) {
-                        Part p = new Part("Turret", field, "Turret.motor(" + q(d.name) + ", " + q(part != null ? part : "gobilda-5203-117") + ")", section)
+                        Part p = new Part("Turret", field, "Turret.motor(" + q(d.name) + ", " + q(part != null ? part : "gobilda-5203-117") + ")" + ren, section)
                                 .num("min", "-90").num("max", "90").num("kP", "0.02").num("kI", "0").num("kD", "0.001")
                                 .num("maxPower", "0.8").num("tolerance", "1.0");
                         p.note = "TODO the motor's catalog id and gearRatio(...); follows(camera) to follow the goal";
                         parts.add(p);
                     } else if (has(w, "launcher", "shooter", "flywheel", "fly", "outtake")) {
-                        launcher = new Part("Launcher", field, "Launcher.flywheel(" + q(d.name) + ", " + q(part != null ? part : "gobilda-5203-6000") + ")", section)
+                        launcher = new Part("Launcher", field, "Launcher.flywheel(" + q(d.name) + ", " + q(part != null ? part : "gobilda-5203-6000") + ")" + ren, section)
                                 .num("speedRpm", "2600").num("stepRpm", "100").num("readyBandRpm", "60").num("idleRpm", "0");
                         if (part == null) launcher.note = "TODO the motor's catalog id";
                         parts.add(launcher);
                     } else if (has(w, "feeder", "indexer", "kicker", "transfer", "windmill", "feed", "index")) {
-                        indexers.add(new Part("Indexer", field, "Indexer.motor(" + q(d.name) + ")", section)
+                        indexers.add(new Part("Indexer", field, "Indexer.motor(" + q(d.name) + ")" + ren, section)
                                 .num("power", "1.0").num("feedSec", "0.4"));
                     } else {
                         todo.add("motor " + q(d.name) + ": which module? (Intake, Lift, Arm, Turret, Launcher)");
@@ -155,25 +181,28 @@ public final class SimNewRobot {
                     break;
                 case "servo":
                     if (has(w, "claw", "grab", "grabber", "gripper", "grip", "pincer")) {
-                        parts.add(new Part("Claw", field, "Claw.servo(" + q(d.name) + ")", section)
+                        parts.add(new Part("Claw", field, "Claw.servo(" + q(d.name) + ")" + ren, section)
                                 .num("open", "0.20").num("closed", "0.75").num("travelSec", "0.3"));
                     } else if (has(w, "wrist")) {
-                        parts.add(new Part("Wrist", field, "Wrist.servo(" + q(d.name) + ")", section)
+                        parts.add(new Part("Wrist", field, "Wrist.servo(" + q(d.name) + ")" + ren, section)
                                 .num("down", "0.15").num("level", "0.5").num("up", "0.85"));
                     } else if (has(w, "indexer", "kicker", "pusher", "feeder", "index", "feed")) {
-                        indexers.add(new Part("Indexer", field, "Indexer.servo(" + q(d.name) + ")", section)
+                        indexers.add(new Part("Indexer", field, "Indexer.servo(" + q(d.name) + ")" + ren, section)
                                 .num("rest", "0.0").num("push", "0.5").num("pushSec", "0.25").num("returnSec", "0.25"));
                     } else {
-                        Part p = new Part("Positioner", field, "Positioner.servo(" + q(d.name) + ")", section)
+                        Part p = new Part("Positioner", field, "Positioner.servo(" + q(d.name) + ")" + ren, section)
                                 .num("stowed", "0.0").num("deployed", "0.5");
                         p.note = "TODO name its positions in Tunables." + section;
                         parts.add(p);
                     }
                     break;
                 case "crservo":
-                    if (has(w, "intake", "roller", "sweeper", "collector")) intakeServos.add(d.name);
+                    if (has(w, "intake", "roller", "sweeper", "collector")) {
+                        if (intakeServos.isEmpty()) intakeId = id;
+                        intakeServos.add(d.name);
+                    }
                     else if (has(w, "feeder", "indexer", "kicker", "transfer", "windmill", "feed", "index")) {
-                        indexers.add(new Part("Indexer", field, "Indexer.crServo(" + q(d.name) + ")", section)
+                        indexers.add(new Part("Indexer", field, "Indexer.crServo(" + q(d.name) + ")" + ren, section)
                                 .num("power", "1.0").num("feedSec", "0.4"));
                     } else {
                         todo.add("CR servo " + q(d.name) + ": which module? (Intake.crServos, Indexer.crServo)");
@@ -183,10 +212,10 @@ public final class SimNewRobot {
                     switches.add(d);
                     break;
                 case "webcam":
-                    parts.add(0, new Part("Camera", field, "Camera.webcam(" + q(d.name) + ")" + goal(), section));
+                    parts.add(0, new Part("Camera", field, "Camera.webcam(" + q(d.name) + ")" + goal() + ren, section));
                     break;
                 case "limelight":
-                    parts.add(0, new Part("Camera", field, "Camera.limelight(" + q(d.name) + ")" + goal(), section)
+                    parts.add(0, new Part("Camera", field, "Camera.limelight(" + q(d.name) + ")" + goal() + ren, section)
                             .num("pipeline", "0"));
                     break;
                 default:
@@ -196,8 +225,8 @@ public final class SimNewRobot {
         if (!intakeServos.isEmpty()) {
             StringBuilder names = new StringBuilder();
             for (String n : intakeServos) names.append(names.length() == 0 ? "" : ", ").append(q(n));
-            parts.add(new Part("Intake", fieldName(intakeServos.get(0)), "Intake.crServos(" + names + ")",
-                    RobotDefinition.sectionName(intakeServos.get(0))).num("inPower", "1.0").num("outPower", "0.7"));
+            parts.add(new Part("Intake", intakeId[0], "Intake.crServos(" + names + ")" + intakeId[2], intakeId[1])
+                    .num("inPower", "1.0").num("outPower", "0.7"));
         }
         // A launcher takes the indexer; any other indexer stands alone.
         if (launcher != null && !indexers.isEmpty()) {

@@ -47,7 +47,23 @@ public class SimNewRobotTest {
     }
 
     @Test public void theFilesCompileAndMakeASimulatorRobot() throws Exception {
-        Map<String, String> f = fromExampleConfig();
+        compileAndLoad(fromExampleConfig());
+    }
+
+    @Test public void oddDeviceNamesStillCompile() throws Exception {
+        String xml = "<Robot><LynxUsbDevice name=\"p\"><LynxModule name=\"Control Hub\" port=\"173\">"
+                + "<goBILDA5202SeriesMotor name=\"leftDrive\" port=\"0\"/><goBILDA5202SeriesMotor name=\"rightDrive\" port=\"1\"/>"
+                + "<goBILDA5202SeriesMotor name=\"1_lift\" port=\"2\"/>"
+                + "<Servo name=\"left-claw\" port=\"0\"/><Servo name=\"left_claw\" port=\"1\"/><Servo name=\"new\" port=\"2\"/>"
+                + "</LynxModule></LynxUsbDevice></Robot>";
+        Map<String, String> f = SimNewRobot.files(SimConfigImport.read(xml), "org.firstinspires.ftc.teamcode");
+        String robot = f.get("Robot.java");
+        assertTrue(robot, robot.contains("Lift.slide(\"1_lift\").tunables(\"Part1Lift\")"));
+        assertTrue(robot, robot.contains("Claw.servo(\"left_claw\").tunables(\"LeftClaw2\")"));
+        compileAndLoad(f);
+    }
+
+    private void compileAndLoad(Map<String, String> f) throws Exception {
         File src = tmp.newFolder("src");
         File out = tmp.newFolder("classes");
         List<String> args = new ArrayList<>();
