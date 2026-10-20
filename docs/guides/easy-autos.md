@@ -106,6 +106,13 @@ r.move(...).move(...)          // main steps: cut short when 4 s are left
  .move("Park", 20, 90, 0.8);   // always runs
 ```
 
+## Where to place the robot
+
+`startPosition()` is the note the drive team reads in INIT. `startSpotIn()` (in a five-files autonomous:
+`s.start(note, x, y, heading)`) also gives the spot, seen from the BLUE drivers' wall and mirrored for RED
+like the routes: x inches right of the field's centre line, y from the centre toward the far wall
+(negative = your half). The simulator puts the robot there in INIT.
+
 ## Read the report
 
 When the steps are done, autonomous ends at once (even with time left), so the Driver Station moves

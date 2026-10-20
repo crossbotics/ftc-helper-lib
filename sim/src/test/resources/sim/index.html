@@ -87,7 +87,7 @@
   .bar i.neg { background: var(--bar-neg); }
   .bar::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--line); }
   .stall { color: var(--stop); font-weight: 700; }
-  #field { width: 100%; max-width: 380px; aspect-ratio: 1; display: block; margin: 0 auto; border-radius: 8px; border: 1px solid var(--line); }
+  #field { width: 100%; max-width: 380px; aspect-ratio: 1; display: block; margin: 0 auto; border-radius: 8px; border: 1px solid var(--line); touch-action: none; }
   .cam { margin: 4px 0; font-size: 12.5px; }
   .cam ul { margin: 2px 0 0 18px; padding: 0; }
   .chip { display: inline-block; padding: 2px 8px; border-radius: 10px; border: 1px solid var(--line); margin: 2px; cursor: pointer; font-size: 12px; }
@@ -179,6 +179,7 @@
     <div class="tabbody">
     <div class="tab on" data-tab="robot">
     <canvas id="field" width="380" height="380" aria-label="Field, seen from above"></canvas>
+    <div class="muted" style="text-align:center">While no program runs (or in INIT): drag the robot to move it, mouse wheel over it to turn it.</div>
     <div class="row" style="margin-top:6px">
       <span class="muted">Push by hand:</span>
       <button data-push="24,0,2">48 in forward</button><button data-push="-24,0,0.5">12 in back</button>
@@ -538,6 +539,7 @@ function renderHub(s) {
   if (document.activeElement !== bat) bat.value = s.battery;
   $("#batteryText").textContent = s.battery.toFixed(1) + " V";
   drawField(s.robot);
+  drag.robot = s.robot; drag.running = s.phase === "RUNNING";
   const z = s.robot.size;
   if (z) {
     const f = a => `${a[0].toFixed(1)} x ${a[1].toFixed(1)} in, ${a[2].toFixed(1)} in tall`;
@@ -580,6 +582,50 @@ async function loadField(name) {
   fieldName = name;
   try { fieldData = await (await fetch("/field", { cache: "no-store" })).json(); } catch (e) { fieldData = null; }
 }
+// Move the robot by hand on the field map while no program runs (or in INIT): drag it to a spot, and
+// turn the mouse wheel over it to turn it (15 degrees a notch).
+const drag = { robot: null, running: false, on: false, dx: 0, dy: 0, sentAt: 0 };
+function mapToField(ev) {
+  const c = $("#field"), b = c.getBoundingClientRect();
+  const size = (fieldData && fieldData.field && fieldData.field.size) || 144;
+  const px = (ev.clientX - b.left) * c.width / b.width, py = (ev.clientY - b.top) * c.height / b.height;
+  return [px / (c.width / size) - size / 2, size / 2 - py / (c.width / size)];
+}
+function placeRobot(x, y, h) {
+  command({ action: "pose", x: x.toFixed(2), y: y.toFixed(2), heading: h.toFixed(1) });
+}
+$("#field").addEventListener("pointerdown", ev => {
+  const r = drag.robot;
+  if (!r || drag.running) return;
+  const [fx, fy] = mapToField(ev);
+  if (Math.hypot(fx - r.x, fy - r.y) > 12) return;      // only by grabbing the robot
+  drag.on = true; drag.dx = r.x - fx; drag.dy = r.y - fy;
+  $("#field").setPointerCapture(ev.pointerId);
+  ev.preventDefault();
+});
+$("#field").addEventListener("pointermove", ev => {
+  if (!drag.on || drag.running) return;
+  const now = performance.now();
+  if (now - drag.sentAt < 60) return;                 // a few moves a second is plenty
+  drag.sentAt = now;
+  const [fx, fy] = mapToField(ev);
+  placeRobot(fx + drag.dx, fy + drag.dy, drag.robot.heading);
+});
+$("#field").addEventListener("pointerup", ev => {
+  if (!drag.on) return;
+  drag.on = false;
+  const [fx, fy] = mapToField(ev);
+  if (!drag.running) placeRobot(fx + drag.dx, fy + drag.dy, drag.robot.heading);
+});
+$("#field").addEventListener("wheel", ev => {
+  const r = drag.robot;
+  if (!r || drag.running) return;
+  const [fx, fy] = mapToField(ev);
+  if (Math.hypot(fx - r.x, fy - r.y) > 12) return;
+  ev.preventDefault();
+  placeRobot(r.x, r.y, r.heading + (ev.deltaY > 0 ? -15 : 15));
+}, { passive: false });
+
 function drawField(r) {
   if (r.field !== fieldName) loadField(r.field);
   const c = $("#field"), ctx = c.getContext("2d"), W = c.width;

@@ -307,19 +307,24 @@ public abstract class EasyTeleOp extends LinearOpMode {
             // ---- INIT loop: warnings and what the drivers need to know. Never waits. ----
             boolean fromAuto = MatchMemory.hasAlliance();
             List<String> autoReport = MatchMemory.lastReport();
+            // The alliance in use: autonomous's, or none until the drivers choose one below.
+            MatchMemory.setChosen(fromAuto ? alliance : null);
+            boolean chosenHere = false;
             while (opModeInInit()) {
                 // The alliance: from autonomous, or chosen here (gamepad 1: X = BLUE, B = RED).
-                if (gamepad1.x && alliance != Alliance.BLUE) { alliance = Alliance.BLUE; fromAuto = false; }
-                if (gamepad1.b && alliance != Alliance.RED) { alliance = Alliance.RED; fromAuto = false; }
-                MatchMemory.setChosen(alliance);
+                if (gamepad1.x) { alliance = Alliance.BLUE; fromAuto = false; chosenHere = true; }
+                if (gamepad1.b) { alliance = Alliance.RED; fromAuto = false; chosenHere = true; }
+                if (fromAuto || chosenHere) MatchMemory.setChosen(alliance);
                 if (Profile.current().isPractice()) t.warn("PRACTICE profile");
                 int changed = Tunable.countChanged();
                 if (changed > 0) t.warn(changed + " tuned value(s) differ from the code");
                 if (fromAuto) {
                     t.line("Alliance", alliance + " (from autonomous; X = BLUE, B = RED to change)");
+                } else if (chosenHere) {
+                    t.line("Alliance", alliance + " (chosen here)");
                 } else {
                     t.warn("Choose the alliance: gamepad 1 X = BLUE, B = RED");
-                    t.line("Alliance", alliance + " (chosen here)");
+                    t.line("Alliance", alliance + " until you choose");
                 }
                 if (heading != null) {
                     t.line("Forward", heading.isFromAuto() ? "from autonomous" : "the way the robot faces now");

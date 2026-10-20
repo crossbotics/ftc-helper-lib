@@ -154,6 +154,16 @@ public abstract class EasyAuto extends LinearOpMode {
         return 0;
     }
 
+    /**
+     * Where to place the robot, as seen from the BLUE drivers' wall (mirrored for RED like the routes,
+     * when {@link #mirrorForRed()}): {x, y} in inches, x to the right of the field's centre line, y from
+     * the centre toward the far wall (negative = your half). Null (default) = not given. The heading is
+     * {@link #startHeadingDeg()}. The simulator puts the robot there in INIT.
+     */
+    protected double[] startSpotIn() {
+        return null;
+    }
+
     /** Longest start delay offered in the menu, seconds. Default 10. */
     protected double maxStartDelaySec() {
         return 10;
@@ -249,6 +259,20 @@ public abstract class EasyAuto extends LinearOpMode {
         }
     }
 
+    // The start spot for the chosen alliance in the field frame, or null if none was given.
+    private FieldPose startPose() {
+        double[] spot = startSpotIn();
+        if (spot == null) return null;
+        Alliance a = alliance();
+        double x = spot[0], y = spot[1], h = startHeadingDeg();
+        // Written for BLUE. RED: mirrored left-right (or the same from its own wall on a turned field).
+        if (a == Alliance.RED && mirrorForRed()) {
+            x = -x;
+            h = -h;
+        }
+        return MatchMemory.fieldPose(a, x, y, h);
+    }
+
     // The autonomous settings, or null if the drive is not tuned (calibrationConfirmed false). In the
     // simulator an untuned drive runs anyway (a pretend robot cannot get hurt), with a warning in INIT.
     private AutoDriveConfig tunedConfig() {
@@ -292,6 +316,7 @@ public abstract class EasyAuto extends LinearOpMode {
             // read the gamepad and move through the menu
             menu.update();
             MatchMemory.setChosen(menu.getAlliance());
+            MatchMemory.setPlacement(startPose(), startPosition());
             // Warnings that stay on top of the screen, so nobody plays a real match by mistake with
             // the practice settings or with test values changed in the tuning menu.
             if (Profile.current().isPractice()) t.warn("PRACTICE profile (change to COMPETITION at events)");

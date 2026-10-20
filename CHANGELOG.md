@@ -20,6 +20,12 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   also to change it), and shows autonomous's report. `MatchMemory.hasAlliance()`, `rememberReport()`,
   `lastReport()`.
 - Simulator: when an autonomous ends, the Driver Station chooses its `preselectTeleOp`, like the real one.
+- **An autonomous names its start spot** with its note: `s.start(note, x, y, heading)` (EasyAuto:
+  `startSpotIn()`), seen from the BLUE wall and mirrored for RED. The simulator puts the robot there in
+  INIT for the chosen alliance. `MatchMemory.placement()`, `setPlacement()`, `fieldPose()`.
+- Simulator: a TeleOp with no autonomous before it puts the robot at its alliance's default spot once the
+  drivers choose the alliance; drag the robot on the field map (and turn it with the mouse wheel) while
+  no program runs or in INIT.
 - Simulator: the Drivers and From-above views are from the alliance in use (autonomous's INIT menu, or
   TeleOp's choice): `MatchMemory.chosen()` / `setChosen()`.
 

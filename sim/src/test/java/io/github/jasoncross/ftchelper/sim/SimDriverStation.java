@@ -170,7 +170,14 @@ final class SimDriverStation {
     }
 
     /** INIT: makes the OpMode, gives it the hardware, gamepads and screen, and runs runOpMode(). */
+    // How many times INIT was pressed (the simulator places the robot once per INIT).
+    volatile int initCount = 0;
+
     synchronized void init(String name) {
+        initCount++;
+        // A new program: its own alliance and start spot (not the last program's).
+        io.github.jasoncross.ftchelper.match.MatchMemory.setChosen(null);
+        io.github.jasoncross.ftchelper.match.MatchMemory.setPlacement(null, null);
         if (phase == Phase.INIT || phase == Phase.RUNNING) stop();
         Thread old = thread;
         if (old != null && old.isAlive()) {

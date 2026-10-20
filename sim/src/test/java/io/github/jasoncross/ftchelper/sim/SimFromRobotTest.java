@@ -259,4 +259,36 @@ public class SimFromRobotTest {
             assertEquals("", s.error());
         }
     }
+
+    @Test public void theAutosStartSpotPlacesTheRobotForEachAlliance() throws Exception {
+        Path file = generate(io.github.jasoncross.ftchelper.examples.flywheelbot.Robot.class);
+        io.github.jasoncross.ftchelper.match.MatchMemory.clear();
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("FlywheelBot Shoot and Leave");                 // the INIT menu starts on BLUE
+            assertTrue("blue: the spot from the blue wall", SimRun.waitFor(() -> Math.abs(s.robot().x + 56) < 0.01
+                    && Math.abs(s.robot().y - 61.55) < 0.01 && Math.abs(Math.abs(s.robot().headingDeg) - 180) < 0.01, 2));
+            s.press(v -> s.g1().b = v);                          // RED
+            assertTrue("red: mirrored", SimRun.waitFor(() -> Math.abs(s.robot().x + 56) < 0.01
+                    && Math.abs(s.robot().y + 61.55) < 0.01 && Math.abs(s.robot().headingDeg) < 0.01, 2));
+            assertEquals("", s.error());
+        }
+    }
+
+    @Test public void teleOpWithoutAutoStartsOnItsAlliancesSide() throws Exception {
+        Path file = generate(io.github.jasoncross.ftchelper.examples.flywheelbot.Robot.class);
+        io.github.jasoncross.ftchelper.match.MatchMemory.clear();
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("FlywheelBot TeleOp");                          // no autonomous: nothing chosen yet
+            SimRun.pause(0.5);
+            assertEquals("it stays at the robot file's start until the alliance is chosen", -61.55, s.robot().y, 0.01);
+            s.press(v -> s.g1().x = v);                          // BLUE: the mirror image, at the blue wall
+            assertTrue(SimRun.waitFor(() -> Math.abs(s.robot().y - 61.55) < 0.01 && Math.abs(s.robot().x + 56) < 0.01, 2));
+            s.press(v -> s.g1().b = v);                          // RED: the robot file's start
+            assertTrue(SimRun.waitFor(() -> Math.abs(s.robot().y + 61.55) < 0.01, 2));
+            s.sim.robot.setPose(-56, -45, 0);                     // dragged on the map
+            SimRun.pause(0.3);
+            assertEquals("a dragged robot stays", -45, s.robot().y, 0.01);
+            assertEquals("", s.error());
+        }
+    }
 }

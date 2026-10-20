@@ -1,5 +1,7 @@
 package io.github.jasoncross.ftchelper.match;
 
+import io.github.jasoncross.ftchelper.util.Angles;
+import io.github.jasoncross.ftchelper.util.FieldPose;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,6 +39,9 @@ public final class MatchMemory {
     private static Alliance alliance = null;
     // When remember() was called, in nanoseconds (billionths of a second) on the system clock.
     private static long savedAtNanos = 0;
+    // Where the running autonomous wants the robot (null = not said), and its note.
+    private static FieldPose placement = null;
+    private static String placementNote = "";
     // The alliance the running program uses now (null = none said).
     private static Alliance chosen = null;
     // Autonomous's last report, and when it was saved.
@@ -72,6 +77,40 @@ public final class MatchMemory {
     /** Sets {@link #chosen()} (EasyAuto and EasyTeleOp do it for you). */
     public static synchronized void setChosen(Alliance a) {
         chosen = a;
+    }
+
+    /**
+     * Where the running autonomous wants the robot placed (field frame, see {@link #fieldPose}), and its
+     * note for the drive team; null if it did not say. EasyAuto sets it in INIT; the simulator puts
+     * the robot there.
+     */
+    public static synchronized FieldPose placement() {
+        return placement == null ? null : placement.copy();
+    }
+
+    /** The drive team's note for {@link #placement()} ("" if none). */
+    public static synchronized String placementNote() {
+        return placementNote;
+    }
+
+    /** Sets {@link #placement()} (null = none) and its note (EasyAuto does it for you). */
+    public static synchronized void setPlacement(FieldPose pose, String note) {
+        placement = pose == null ? null : pose.copy();
+        placementNote = note == null ? "" : note;
+    }
+
+    /**
+     * A start spot seen from the drivers' wall, as a field position. The drivers' frame: x inches to the
+     * right of the field's centre line, y inches from the centre toward the far wall (negative = your
+     * half), heading 0 = facing away from you, counterclockwise +. The field frame (the simulator's): the
+     * RED drivers at the bottom (y negative), x to their right, heading 0 = facing away from them.
+     *
+     * @param alliance whose drivers' wall
+     */
+    public static FieldPose fieldPose(Alliance alliance, double x, double y, double headingDeg) {
+        if (alliance == Alliance.RED) return new FieldPose(x, y, headingDeg);
+        // BLUE's wall is the far one: turned half a turn.
+        return new FieldPose(-x, -y, Angles.wrapDegrees(headingDeg + 180));
     }
 
     /** True if autonomous left an alliance for this match (not older than {@link #MAX_AGE_SEC}). */

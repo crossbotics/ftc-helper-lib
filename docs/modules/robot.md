@@ -435,7 +435,9 @@ public class ScoreAndPark extends Auto<Robot> {
 }
 ```
 
-[`Steps`](#auto): `start(where, headingDeg)`, `menuYesNo(label, yes)`, `menuChoice(label, options...)`,
+[`Steps`](#auto): `start(where, headingDeg)`, `start(where, xIn, yIn, headingDeg)` (also the spot, seen from
+the BLUE wall and mirrored for RED: x right of the centre line, y from the centre toward the far wall,
+negative = your half; the simulator puts the robot there in INIT), `menuYesNo(label, yes)`, `menuChoice(label, options...)`,
 `onlyIf(label)` / `onlyIf(label, option)` ... `end()`, `isYes(label)`, `choice(label)`,
 `move(label, inches, directionDeg, power)` (0 forward, 90 right), `turn`, `turnTo`,
 `run(label, command)` (starts and goes on), `waitSeconds`, `waitUntil`, `action(action[, timeout])`

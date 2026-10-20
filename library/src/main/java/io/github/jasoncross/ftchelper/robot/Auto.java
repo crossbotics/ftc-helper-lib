@@ -87,6 +87,11 @@ public abstract class Auto<R extends RobotDefinition> extends EasyAuto {
     }
 
     @Override
+    protected final double[] startSpotIn() {
+        return learned == null || Double.isNaN(learned.spotX) ? null : new double[] {learned.spotX, learned.spotY};
+    }
+
+    @Override
     protected final double startHeadingDeg() {
         return learned == null ? 0 : learned.headingDeg;
     }

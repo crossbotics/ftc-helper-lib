@@ -74,7 +74,14 @@ one pressed), the cameras and the tags they see, and the battery voltage (lower 
 zoom, right-drag (or two fingers) to slide. View buttons: Drivers, Audience, From above, Follow robot
 (behind the robot; turning the view by hand ends it). Drivers and From above are from your alliance's
 wall: the alliance the running program uses (autonomous's INIT menu, or TeleOp's choice); red until a
-program says. The robot is a box its size from the robot file
+program says.
+
+**Where the robot starts.** In INIT the robot is put where the program says: an autonomous that names its
+start spot (`s.start(note, x, y, heading)`, or `startSpotIn()` in an EasyAuto) puts it there for the
+alliance chosen in its menu; a TeleOp with no autonomous before it puts it at the robot file's start for
+RED, or that spot's mirror image for BLUE, once the drivers choose the alliance (X / B). After an
+autonomous, TeleOp leaves it where autonomous ended. **Move it by hand:** while no program runs (or in
+INIT), drag the robot on the field map (Control Hub, Robot tab) and turn it with the mouse wheel over it. The robot is a box its size from the robot file
 (`robot.lengthIn/widthIn/heightIn`) with a white arrow at the front; it turns red when it bumps into
 something. Its shapes (below) move with their motors and servos. Rollers and wheels have dark
 stripes, so you see them turn and which way; a roller glows **green** while it takes pieces in and

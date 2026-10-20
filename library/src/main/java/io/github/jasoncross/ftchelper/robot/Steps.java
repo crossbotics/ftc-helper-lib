@@ -45,6 +45,7 @@ public final class Steps {
     private final Deque<Boolean> blocks = new ArrayDeque<>();
     String where = null;
     double headingDeg = 0;
+    double spotX = Double.NaN, spotY = Double.NaN;
     double parkSec = 0;
 
     Steps(AutoRoutine routine, InitMenu menu, RobotDefinition robot) {
@@ -66,6 +67,22 @@ public final class Steps {
         where = whereToPlace;
         this.headingDeg = headingDeg;
         return this;
+    }
+
+    /**
+     * Where to place the robot: the note for the drive team (shown in INIT), and the spot as seen from
+     * the BLUE drivers' wall (mirrored for RED like the routes): {@code xIn} inches to the right of the
+     * field's centre line, {@code yIn} from the centre toward the far wall (negative = your half),
+     * heading 0 = facing away from you, counterclockwise +. The simulator puts the robot there.
+     *
+     * <pre>{@code
+     * s.start("Against our wall, 2nd tile from the left, facing the field", -36, -63, 0)
+     * }</pre>
+     */
+    public Steps start(String whereToPlace, double xIn, double yIn, double headingDeg) {
+        spotX = xIn;
+        spotY = yIn;
+        return start(whereToPlace, headingDeg);
     }
 
     // ----------------------------- the INIT menu -----------------------------

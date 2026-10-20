@@ -22,7 +22,9 @@ public class ShootAndLeave extends Auto<Robot> {
 
     @Override
     protected void steps(Steps s, Robot robot) {
-        s.start("Back wall, touching the goal side, facing the goal", 0)
+        // The note for the drive team, then the spot as seen from the BLUE wall (mirrored for RED):
+        // 56 in right of the centre line, 61.55 in from the centre toward our wall, facing the field.
+        s.start("Back wall, touching the goal side, facing the goal", 56, -61.55, 0)
          .menuYesNo("Shoot", true)                                    // a choice in the INIT menu
          .onlyIf("Shoot")
              .run("Spin up", robot.launcher::spinUp)                  // starts, and goes on at once
