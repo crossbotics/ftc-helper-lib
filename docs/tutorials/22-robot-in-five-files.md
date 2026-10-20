@@ -126,7 +126,7 @@ triggers, the launcher on the bumpers, its speed on the D-pad. `oneDriver = true
 gamepad 1, like goBILDA's code. You only write what is different: here, Y fires all three.
 
 - **INIT shows the map** on the Driver Station: every button with its job, and the free ones. During the
-  match, a tap of GUIDE shows it again (tap again to close).
+  match, a tap of GUIDE shows it again, without the free ones (tap again to close).
 - **BACK pauses the robot:** everything stops on brake; BACK again and each part goes on as before
   (hold BACK 1 s instead to reset field-centric "forward"). STOP brakes everything too.
 - Each button takes ONE job. Two jobs on one button in this file, or a job on a driving button (the
