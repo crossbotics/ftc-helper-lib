@@ -52,6 +52,7 @@ flowchart LR
 | [`Auto`](#auto), [`Steps`](#auto) | one autonomous as a list of steps |
 | [`Toggleable`](#controlmap) | anything one button switches on and off |
 | [`Motors`](#motors) | encoder counts and speed of the common motors, by catalog id |
+| [`Shape`](#shapes-and-parts), [`Parts`](#shapes-and-parts) | how each part looks and where it sits, for the simulator; wheels, rollers and servos by catalog id |
 | [`Module`](#module), [`MotorPositions`](#lift), [`ServoPositions`](#claw), [`Devices`](#module) | what the modules share (you rarely use these by name) |
 
 ---
@@ -86,6 +87,7 @@ Nothing moves in INIT.
 | `T add(T module)` | a mechanism; hands it back for the field |
 | `atStart(Supplier<Action>)` | an action that runs once right after START, in autonomous and TeleOp |
 | `tunables(Class)` | the Tunables class if it is not `Tunables` in the same folder |
+| `chassisMm(l, w, h)`, `heightMm(h)`, `fixed(Shape...)` | for the simulator: the chassis box, the whole robot's height, parts the code does not move ([Shapes](#shapes-and-parts)) |
 
 | For your code | |
 | --- | --- |
@@ -153,6 +155,8 @@ drive(Drive.tank("left_drive", "right_drive").reversed("right_drive"));
 | `mecanum(fl, fr, bl, br)`, `tank(left, right)`, `tank(fl, fr, bl, br)` | the type and motor names |
 | `motor(id)` | the drive motor's [catalog id](#motors) (default `gobilda-5203-312`) |
 | `wheelMm(mm)`, `gearRatio(r)` | wheel diameter (default 96), motor turns per wheel turn |
+| `wheel(id)` | the wheel by its [catalog id](#shapes-and-parts), e.g. `"gobilda-hogback-96"`: its diameter comes from the catalog |
+| `wheelsAtMm(track, wheelBase)` | for the simulator: wheel centres side to side and front to back, mm |
 | `reversed(names...)` | exactly these motors run reversed (default: the left side) |
 | `imu(name, logo, usb)`, `noImu()` | the IMU and how the hub is mounted (default "imu", UP, FORWARD) |
 
@@ -177,6 +181,7 @@ intake = add(Intake.motor("intake").withCrServos("left_wheel", "right_wheel").re
 | `reverse()`, `endReverse()` | push out while a button is held, then back to what it was doing |
 | `isRunning()` | |
 | `onAtStart()` | runs in from START until stopped |
+| `holds(n)` | for the simulator: how many pieces it carries (default: a guess of 3) |
 
 `Tunables.Intake`: `inPower` (1.0), `outPower` (0.7). Buttons: hold operator RT in, LT out; with
 `onAtStart()`: RT switches it on/off, hold LT pushes out.
@@ -241,7 +246,9 @@ wrist = add(Wrist.servo("wrist"));    // Tunables.Wrist: any positions, e.g. dow
 intakeDeploy = add(Positioner.servo("intake_deploy"));   // Tunables.IntakeDeploy: stowed, deployed
 ```
 
-`goTo(name)`, `next()`. No suggested buttons: use it from Controls.java or an action.
+`goTo(name)`, `next()`. No suggested buttons: use it from Controls.java or an action. For the simulator,
+it swings an arm shape: `.looks(Shape.arm()...angle("stowed", 90).angle("deployed", 20))`, and can push a
+passive part over (`Shape.dropsWhen`, [Shapes](#shapes-and-parts)).
 
 ---
 
@@ -282,6 +289,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer
 | `speedMode()` | the [mode](#modes) that sets the speed from the camera's distance |
 | `isReady()`, `isShooting()`, `targetRpm()`, `part()` | |
 | `requireReady(what, check)` | another check before each feed (e.g. the turret is aimed) |
+| `shotAngle(deg)` | for the simulator: which way a piece leaves, degrees up from forward (135 = up and out of the back) |
 
 `Tunables.Launcher`: `speedRpm`, `stepRpm`, `readyBandRpm`, `idleRpm`, `shotIntervalSec`,
 `speedByDistance` (`{{inches, rpm}, ...}`, blended between rows; with no goal in view the last speed
@@ -438,6 +446,68 @@ the timer, stopping everything, the report. Autonomous refuses to run until `Tun
 
 ---
 
+## Shapes and parts
+
+`Robot.java` can also say what each part IS (its catalog id) and how it LOOKS (a `Shape`). Then
+`./gradlew :sim:fromRobot` writes the simulator robot file with no guesses: the 3D view draws the robot,
+the size rules are checked on it, and each shape moves with its part, so the simulator shows whether the
+controls do what they should (the intake drops, the rollers spin, a piece is fired). Worked example:
+[`flywheelbot/Robot.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/flywheelbot/Robot.java).
+
+**Name the part, give only what is not known.** A part in the [parts catalog](../guides/parts-catalog.md)
+brings its numbers: a motor its speed and encoder counts, a servo its speed and range, a wheel or roller
+its diameter (and width, when the seller gives it). Places are always the robot's own.
+
+```java
+drive(Drive.tank("left_drive", "right_drive").motor("gobilda-5203-312").wheel("gobilda-hogback-96")
+        .wheelsAtMm(380, 290).reversed("right_drive"));
+chassisMm(400, 400, 100);                     // the chassis box, mm
+heightMm(300);                                // the whole robot
+
+intakeDeploy = add(Positioner.servo("intake_deploy").part("gobilda-2000-torque")
+        .looks(Shape.arm().name("kicker").atMm(150, 120, 100).sizeMm(60, 20, 15)
+                .angle("stowed", 90).angle("deployed", 20)));
+intake = add(Intake.motor("intake").part("gobilda-5203-1150").holds(3)
+        .looks(Shape.arm().name("intake_arm").atMm(150, 0, 100).sizeMm(110, 200, 20)
+                        .range(-15, 90).startAt(90).dropsWhen(intakeDeploy, "deployed", -15),
+               Shape.roller("gobilda-gecko-48-rex").on("intake_arm").atMm(110, 0, 0).lengthMm(300)));
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
+        .looks(Shape.flywheel("gobilda-hogback-96").atMm(-40, 0, 170)).shotAngle(50));
+fixed(Shape.box("tower").atMm(-90, 0, 40).sizeMm(50, 180, 260));
+```
+
+| On a part | |
+| --- | --- |
+| `part(id)` | the main motor's or servo's catalog id (a typo stops with the list of ids). A launcher's motor is in `Launcher.flywheel(name, id)` |
+| `looks(Shape...)` | how it looks. Intake, Positioner, Launcher and Indexer take shapes; the others are drawn in the robot file ([simulator guide](../guides/simulator.md#robot-shapes)) |
+
+| `Shape` | What it is | Moved by |
+| --- | --- | --- |
+| `roller(ids...)` | a cylinder; several ids (90 mm and 60 mm rollers taking turns) draw one as big as the biggest | spins with its part's motor or CR servo |
+| `flywheel(id)` | a launcher wheel | spins with the launcher's motor |
+| `arm()` | swings about a hinge: `atMm` is the hinge, `sizeMm(length, width, thickness)` reaches forward at 0 degrees | a Positioner's servo (`angle(position, deg)` twice), or nothing (`passive`) |
+| `slide()` | moves in a straight line along its axis (default up): `sizeMm` is one stage | nothing (`passive`, `travelMm`) |
+| `box(name)` | does not move: `atMm` is the middle of its bottom | nothing |
+
+| Setting | |
+| --- | --- |
+| `atMm(forward, left, up)` / `atIn` | from the middle of the chassis on the tiles, or from the hinge (or middle) of the shape it rides on |
+| `sizeMm(forward, left, up)` / `sizeIn` | its box (not needed for a catalog roller or flywheel) |
+| `lengthMm(mm)`, `diameterMm(mm)` | a roller's length along its axle (needed when the catalog has no width); a part not in the catalog |
+| `axis(dir)` | `up`, `down`, `forward`, `back`, `left`, `right`: a roller's axle (`up` = lying flat), an arm's hinge |
+| `on(part)`, `on("name")` | rides on another part's first shape, or on a shape by its name |
+| `name(n)` | its name in the robot file (default: the part's name, then `name_2`...) |
+| `angle(position, deg)` | an arm on a servo: its angle at a named position; give two (0 = level forward, +90 up) |
+| `passive()`, `range(min, max)`, `startAt(deg)`, `travelMm(mm)` | moved by gravity or springs, not the code: drawn at its start, the size rules try its whole range (its hard stops) |
+| `dropsWhen(servoPart, position, toDeg)` | a passive arm that a servo pushes over: once the servo is three quarters of the way to the position, it falls to `toDeg` and stays (a folded intake) |
+| `note(text)` | where a number came from ("est.", "measured 2026-10-20"), written after the line |
+
+Mistakes stop with the part's name: a typo in an id (with the known ids), a roller with no length, an
+arm with fewer than two angles or an unknown position name, shapes on a part that cannot take them.
+Lines without a shape stay as before: guesses marked TODO.
+
+---
+
 ## Motors
 
 `Motors.get("gobilda-5203-312")` gives `countsPerRev` and `freeRpm`; `Motors.all()` lists them. The ids
@@ -473,6 +543,7 @@ not sure of is a `TODO` in Robot.java. It never overwrites a file.
 ```
 
 Writes (or refreshes) `simulator/robot.properties` from Robot.java and Tunables.java: every device
-name, the drive, each module's lines. Lines it writes end with `# from Robot.java`; your own lines
+name, the drive, each module's lines (from its part and shapes when Robot.java gives them,
+[Shapes](#shapes-and-parts)). Lines it writes end with `# from Robot.java`; your own lines
 (measured, from photos or CAD) are kept. It stops if the file describes a device differently from
 the code. See the [simulator guide](../guides/simulator.md#a-robot-file-from-robotjava).

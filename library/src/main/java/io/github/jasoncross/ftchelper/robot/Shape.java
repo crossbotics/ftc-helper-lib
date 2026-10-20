@@ -46,8 +46,6 @@ public final class Shape {
     // An arm on a servo: its angle (degrees, 0 = level forward, +90 = up) at named servo positions.
     final Map<String, Double> angles = new LinkedHashMap<>();
     private String note, color;
-    // An arm on a motor: motor turns per arm turn, and where it is at the bottom stop.
-    private double gear = Double.NaN, startDeg = Double.NaN;
     // A passive part (gravity or springs): its range, where it starts, and what makes it drop.
     boolean passive = false;
     private double rangeMin = Double.NaN, rangeMax = Double.NaN, startAt = Double.NaN, travelIn = Double.NaN;
@@ -190,18 +188,6 @@ public final class Shape {
     }
 
     /**
-     * An arm on a motor (an {@link Arm}): motor turns per arm turn, and its angle at the bottom stop.
-     *
-     * @param motorTurnsPerArmTurn e.g. 3.5 for a 3.5:1 gear down
-     * @param startDegrees         e.g. -60
-     */
-    public Shape gear(double motorTurnsPerArmTurn, double startDegrees) {
-        gear = motorTurnsPerArmTurn;
-        startDeg = startDegrees;
-        return this;
-    }
-
-    /**
      * Moved by gravity or springs, not by the code (a floating intake, a sprung flywheel mount). The
      * simulator draws it at {@link #startAt} and checks the size rules over its whole range: give
      * {@link #range} (arm) or {@link #travelMm} (slide), the hard stops a real robot needs too.
@@ -280,14 +266,13 @@ public final class Shape {
         double[] s = boxSize(lineName);
         sb.append(", size=").append(n(s[0])).append('x').append(n(s[1])).append('x').append(n(s[2]));
         if (axis != null) sb.append(", axis=").append(axis);
-        if (!Double.isNaN(gear)) sb.append(", gear=").append(n(gear)).append(", start=").append(n(startDeg));
         if (driver != null) sb.append(", ").append(driver);
         if (passive) sb.append(passiveWords(lineName));
         if (color != null) sb.append(", color=").append(color);
         List<String> notes = new ArrayList<>();
-        if (!parts.isEmpty()) notes.add(String.join(" + ", parts));
+        if (!parts.isEmpty()) notes.add(joined(parts, " + "));
         if (note != null) notes.add(note);
-        if (!notes.isEmpty()) sb.append("   # ").append(String.join(". ", notes));
+        if (!notes.isEmpty()) sb.append("   # ").append(joined(notes, ". "));
         return sb.toString();
     }
 
@@ -325,12 +310,19 @@ public final class Shape {
         if (Double.isNaN(d)) throw new IllegalStateException("Robot.java: shape " + lineName + " needs a part id or .diameterMm(...)");
         if (Double.isNaN(len)) {
             throw new IllegalStateException("Robot.java: shape " + lineName + " needs .lengthMm(...): the catalog has no width for "
-                    + (parts.isEmpty() ? "it" : String.join(" + ", parts)));
+                    + (parts.isEmpty() ? "it" : joined(parts, " + ")));
         }
         String a = axis != null ? axis : "left";
         if (a.equals("up") || a.equals("down")) return new double[] {d, d, len};
         if (a.equals("forward") || a.equals("back")) return new double[] {len, d, d};
         return new double[] {d, len, d};
+    }
+
+    // "a + b": the words with sep between them.
+    private static String joined(List<String> words, String sep) {
+        StringBuilder sb = new StringBuilder();
+        for (String w : words) sb.append(sb.length() == 0 ? "" : sep).append(w);
+        return sb.toString();
     }
 
     // 2 decimals at most, no trailing zeros: 3.50 -> "3.5", -0.00 -> "0".

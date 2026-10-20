@@ -1,4 +1,4 @@
-# Parts catalog: motors and servos
+# Parts catalog: motors, servos, wheels and rollers
 
 <!-- Made by tools/parts_page.py from sim/parts/parts.json. Edit parts.json, then run the script. -->
 
@@ -120,6 +120,18 @@ A Control Hub servo port gives about 5 V, so the simulator uses the seller's spe
 | `axon-mini-plus` | [Axon MINI+](https://docs.axon-robotics.com/archive/mini) | — | — | 0.11 at 4.8 V | 0.09 at 6 V | 25 | 3.8 | yes |
 
 A servo with no range here (—) moves at the robot file's `servo.speed` (positions per second) in the simulator; its range is set by programming it.
+
+## Wheels and rollers
+
+For `Robot.java` (not the robot file): a `Shape` names one of these and takes its size from here, and `Drive.wheel(id)` its diameter ([robot module, Shapes](../modules/robot.md#shapes-and-parts)). **Width** is along the axle; a dash (—) means the seller does not give it, so the shape gives its length (`lengthMm`).
+
+| id | Part | Part number | Diameter (mm) | Width (mm) | Checked | Notes |
+|---|---|---|---|---|---|---|
+| `gobilda-gecko-48-rex` | [goBILDA GripForce Gecko Wheel 48 mm (8 mm REX bore, 30A)](https://www.gobilda.com/gripforce-gecko-wheel-8mm-rex-bore-48mm-diameter-30a-durometer/) | 3613-4008-0048 | 48 | — | 2026-10-20 | The page gives the diameter, not the width. |
+| `gobilda-gecko-72` | [goBILDA GripForce Gecko Wheel 72 mm (14 mm bore, 30A)](https://www.gobilda.com/gripforce-gecko-wheel-14mm-bore-72mm-diameter-30a-durometer/) | 3613-0014-0072 | 72 | 24 | 2026-10-20 | widthMm measured in goBILDA's STEP CAD of its BIOBUZZ starter bot (3200-2627-0003, see sim/robots/starter-bot-gobilda.properties); the page gives the diameter only. |
+| `gobilda-hogback-96` | [goBILDA Hogback Traction Wheel 96 mm (50A)](https://www.gobilda.com/hogback-traction-wheel-96mm-diameter-50a-durometer/) | 3626-0014-0096 | 96 | 24 | 2026-10-20 | widthMm measured in goBILDA's STEP CAD of its BIOBUZZ starter bot (3200-2627-0003, see sim/robots/starter-bot-gobilda.properties); the page gives the diameter only. |
+| `offset-tubing-60` | [Offset Surgical Tubing Roller 60 mm](https://offsetrobotics.com/product/offset-surgical-tubing-rollers) | — | 60 | — | 2026-10-20 | 55A silicone tubing pieces on the OFFSET HEXAHUB, sold in packs of 6 (60 mm, 90 mm or both). No part number on the page. The page gives the diameter only; how long a roller is depends on how many hubs are on the shaft. |
+| `offset-tubing-90` | [Offset Surgical Tubing Roller 90 mm](https://offsetrobotics.com/product/offset-surgical-tubing-rollers) | — | 90 | — | 2026-10-20 | 55A silicone tubing pieces on the OFFSET HEXAHUB, sold in packs of 6 (60 mm, 90 mm or both). No part number on the page. The page gives the diameter only; how long a roller is depends on how many hubs are on the shaft. |
 
 ## A part that is not in the list
 

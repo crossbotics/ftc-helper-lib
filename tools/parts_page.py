@@ -53,7 +53,7 @@ def page(cat):
     motors, servos = cat["motors"], cat["servos"]
     out = []
     w = out.append
-    w("# Parts catalog: motors and servos")
+    w("# Parts catalog: motors, servos, wheels and rollers")
     w("")
     w("<!-- Made by tools/parts_page.py from sim/parts/parts.json. Edit parts.json, then run the script. -->")
     w("")
@@ -131,6 +131,19 @@ def page(cat):
     w("")
     w("A servo with no range here (—) moves at the robot file's `servo.speed` (positions per second) in the "
       "simulator; its range is set by programming it.")
+    w("")
+    w("## Wheels and rollers")
+    w("")
+    w("For `Robot.java` (not the robot file): a `Shape` names one of these and takes its size from here, "
+      "and `Drive.wheel(id)` its diameter ([robot module, Shapes](../modules/robot.md#shapes-and-parts)). "
+      "**Width** is along the axle; a dash (—) means the seller does not give it, so the shape gives its "
+      "length (`lengthMm`).")
+    w("")
+    w("| id | Part | Part number | Diameter (mm) | Width (mm) | Checked | Notes |")
+    w("|---|---|---|---|---|---|---|")
+    for x in cat.get("wheels", []):
+        w(f"| `{x['id']}` | [{x['name']}]({x['url']}) | {x.get('partNumber') or '—'} | {num(x.get('diameterMm'))} "
+          f"| {num(x.get('widthMm'))} | {x['checked']} | {x.get('notes') or ''} |")
     w("")
     w("## A part that is not in the list")
     w("")

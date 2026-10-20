@@ -2,6 +2,26 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+Nothing old stops working: a Robot.java without parts or shapes writes the same simulator lines as before.
+
+### Added
+
+- **Shapes and parts in Robot.java** ([docs/modules/robot.md](docs/modules/robot.md#shapes-and-parts)):
+  `part(id)` gives a part's motor or servo by its catalog id, `looks(Shape...)` how it looks and where it
+  sits (`Shape.roller`, `flywheel`, `arm`, `slide`, `box`), and `./gradlew :sim:fromRobot` writes them into
+  the simulator robot file with no guesses. Intake, Positioner, Launcher and Indexer take shapes. Also
+  `chassisMm`, `heightMm` and `fixed(...)` on the robot, `Drive.wheel(id)` and `wheelsAtMm`,
+  `Intake.holds(n)`, `Launcher.shotAngle(deg)`.
+- **Wheels and rollers in the parts catalog** (`Parts`, `sim/parts/parts.json`): goBILDA Gecko 48 and
+  72 mm, Hogback 96 mm, Offset surgical tubing rollers 60 and 90 mm. A shape takes its size from here.
+- **Passive parts in the simulator** (`passive=yes`): moved by gravity or springs, not the code; the
+  size rules try their whole range. `drop=SERVO>0.6`: a part a servo pushes over falls to its stop and
+  stays (an intake folded up at the start).
+- **Scenarios:** `expect shape NAME OP VALUE` (an arm's angle, a slide's inches).
+- The flywheelbot example names its parts and draws its robot, with a folding intake.
+
 ## v0.9.0 - 2026-10-19
 
 Nothing old stops working: the starter kit and every class from v0.8 build and behave the same. The new

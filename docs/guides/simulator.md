@@ -130,8 +130,9 @@ turret's stops, the claw's open and closed positions, one shape per module, and 
 time; every other line is yours and is kept, even for the same setting (a measured `shape.lift` wins).
 Lines for parts no longer in the code are removed. It stops, writing nothing, when the file describes
 a device differently from the code (`motor.claw` in the file, a claw servo in the code) or names
-other drive motors. The robot's sizes are not in the code: the generated shapes are guesses marked
-`TODO` until someone measures them (or the [robot-file skill](robot-file-skill.md) fills them in).
+other drive motors. Sizes and places come from Robot.java when it gives them (`chassisMm`, each part's
+`looks(...)`: [Shapes](../modules/robot.md#shapes-and-parts)); otherwise the generated shapes are guesses
+marked `TODO` until someone measures them (or the [robot-file skill](robot-file-skill.md) fills them in).
 
 `./gradlew :sim:newRobot -Pconfig=config.xml -PteamCode=../TeamCode` writes the five files themselves
 from the robot configuration ([robot module](../modules/robot.md#making-the-files)).
@@ -165,6 +166,11 @@ shape.flywheel = flywheel, at=-1,0,4, size=4x2x4, motor=flywheel
 | `flywheel` | a launcher wheel | its center | spins with its `motor=` |
 
 Notes:
+- `passive=yes` (arm or slide): gravity or springs move it, not the code (a floating intake, a sprung
+  flywheel mount). It is drawn at `start=`; the size rules try its whole range (`minDeg=`/`maxDeg=` or
+  `travel=`). `drop=SERVO>0.6` (or `<`) with `fallsTo=`: once that servo passes the position, it falls to
+  that end and stays (an intake folded up at the start and pushed over at START); a new match puts it back.
+  `Robot.java` writes these with `Shape.passive()` and `Shape.dropsWhen(...)` ([robot module](../modules/robot.md#shapes-and-parts)).
 - `on=` puts a part on another (default: the chassis). A part on a slide rides on its moving stage
   (`at=0,0,<stage length>` is the moving stage's top); a part on an arm turns with it (`at=` from the
   hinge, so `at=9,0,0` is the tip of a 9 in arm).

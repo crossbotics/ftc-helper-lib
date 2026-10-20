@@ -192,6 +192,30 @@ The examples are built into the simulator, so:
 the examples are hidden: they are marked `@Disabled`.) Open http://localhost:8780, pick "goBILDA Bot TeleOp", INIT (read the button map), START. LB spins
 up, RB fires. ([Simulator guide](../guides/simulator.md).)
 
+### Draw your robot from Robot.java
+
+The simulator draws the robot from its robot file. `Robot.java` can write that file for you, if it also
+says what each part is and how it looks ([Shapes and parts](../modules/robot.md#shapes-and-parts)).
+Name each part by its catalog id; give a size or a place only when the catalog does not know it:
+
+```java
+chassisMm(400, 400, 100);
+intake = add(Intake.motor("intake").part("gobilda-5203-1150").holds(3)
+        .looks(Shape.roller("gobilda-gecko-48-rex").atMm(190, 0, 60).lengthMm(300)));
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.crServo("windmill"))
+        .looks(Shape.flywheel("gobilda-hogback-96").atMm(-40, 0, 170)).shotAngle(50));
+```
+
+Then, from the `ftc-helper-lib` folder:
+
+```bash
+./gradlew :sim:fromRobot -PteamCode=../TeamCode
+```
+
+Open the simulator: the roller spins when the intake runs, a piece is picked up and fired, and the
+size rules are checked on your shapes. The flywheel example (`examples/.../flywheelbot/Robot.java`) also
+has an intake that folds up at the start and falls over at START.
+
 ## Your own robot
 
 1. **Make the five files** from your robot configuration (copy the XML file from the Control Hub,
