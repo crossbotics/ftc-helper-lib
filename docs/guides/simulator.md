@@ -83,7 +83,10 @@ start spot (`s.start(note, x, y, heading)`, or `startSpotIn()` in an EasyAuto) p
 alliance chosen in its menu; a TeleOp with no autonomous before it puts it at the robot file's start for
 RED, or that spot's mirror image for BLUE, once the drivers choose the alliance (X / B). After an
 autonomous, TeleOp leaves it where autonomous ended. **Move it by hand:** while no program runs (or in
-INIT), drag the robot on the field map (Control Hub, Robot tab) and turn it with the mouse wheel over it. The robot is a box its size from the robot file
+INIT), drag the robot on the field map (Control Hub, Robot tab) and turn it with the mouse wheel over it,
+or in the 3D view: double-click the robot, then drag it to move it or drag its yellow ring to turn it
+(double-click again to stop). Under the map, the spot is shown as an autonomous start spot from your
+alliance's wall, ready for `s.start("...", x, y, heading)`. The robot is a box its size from the robot file
 (`robot.lengthIn/widthIn/heightIn`) with a white arrow at the front; it turns red when it bumps into
 something. Its shapes (below) move with their motors and servos. Rollers and wheels have dark
 stripes, so you see them turn and which way; a roller glows **green** while it takes pieces in and

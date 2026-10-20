@@ -183,6 +183,7 @@
     <div class="tab on" data-tab="robot">
     <canvas id="field" width="380" height="380" aria-label="Field, seen from above"></canvas>
     <div class="muted" style="text-align:center">While no program runs (or in INIT): drag the robot to move it, mouse wheel over it to turn it.</div>
+    <div id="spotText" class="muted" style="text-align:center"></div>
     <div class="row" style="margin-top:6px">
       <span class="muted">Push by hand:</span>
       <button data-push="24,0,2">48 in forward</button><button data-push="-24,0,0.5">12 in back</button>
@@ -229,7 +230,9 @@
     </div>
     <div id="stage" class="off" aria-label="Field and robot in 3D. Drag to turn, scroll to zoom, right-drag to slide."></div>
     <div id="stageOff">The 3D view is off (tick "Show"). The field from above is in the Control Hub's Robot tab.</div>
-    <div class="muted" style="margin-top:4px">Drag to turn the view, scroll to zoom, right-drag (or two fingers) to slide.</div>
+    <div class="muted" style="margin-top:4px">Drag to turn the view, scroll to zoom, right-drag (or two fingers) to slide.
+      While no program runs (or in INIT): double-click the robot, then drag it to move it or drag its ring to turn it
+      (double-click again to stop).</div>
   </section>
 </main>
 
@@ -545,6 +548,8 @@ function renderHub(s) {
   $("#batteryText").textContent = s.battery.toFixed(1) + " V";
   drawField(s.robot);
   drag.robot = s.robot; drag.running = s.phase === "RUNNING";
+  showSpot(s.robot);
+  if (drag.running && v3.edit) setEdit(false);
   const z = s.robot.size;
   if (z) {
     const f = a => `${a[0].toFixed(1)} x ${a[1].toFixed(1)} in, ${a[2].toFixed(1)} in tall`;
@@ -630,6 +635,20 @@ $("#field").addEventListener("wheel", ev => {
   ev.preventDefault();
   placeRobot(r.x, r.y, r.heading + (ev.deltaY > 0 ? -15 : 15));
 }, { passive: false });
+
+// The robot's spot as an autonomous start spot: seen from this alliance's drivers' wall (RED: the
+// field's numbers; BLUE: turned half a turn), as s.start(...) takes it.
+function showSpot(r) {
+  const el = $("#spotText");
+  if (!r || r.x === undefined) { el.textContent = ""; return; }
+  const blue = viewAlliance === "BLUE";
+  const x = blue ? -r.x : r.x, y = blue ? -r.y : r.y;
+  let h = blue ? r.heading + 180 : r.heading;
+  h = ((h % 360) + 540) % 360 - 180;
+  const n = v => (Math.abs(v) < 0.05 ? 0 : v).toFixed(1);
+  el.innerHTML = `Start spot from the ${blue ? "blue" : "red"} wall: x ${n(x)} in, y ${n(y)} in, heading ${n(h)}&deg;` +
+    `<br><code>s.start("...", ${n(x)}, ${n(y)}, ${n(h)})</code>`;
+}
 
 function drawField(r) {
   if (r.field !== fieldName) loadField(r.field);
@@ -750,11 +769,81 @@ function build3d() {
   const camMounts = new THREE.Group(); robot.add(camMounts);
   robot.visible = false;
 
-  Object.assign(v3, { renderer, scene, camera, controls, fieldGroup, simpleGroup, tagGroup, cadGroup, cellGroup, robot, body, edges, arrow, bodyMat, camMounts });
+  // Move/turn handles (double-click the robot while no program runs): a yellow ring on the floor
+  // around it; drag the robot to move it, the ring to turn it.
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(1, 0.05, 8, 64), new THREE.MeshBasicMaterial({ color: 0xf2c230 }));
+  const knob = new THREE.Mesh(new THREE.SphereGeometry(0.1, 16, 12), new THREE.MeshBasicMaterial({ color: 0xf2c230 }));
+  knob.position.set(0, 1, 0);
+  const handles = new THREE.Group(); handles.add(ring, knob); handles.visible = false; scene.add(handles);
+  [ring, knob].forEach(o => o.layers.set(1));
+
+  Object.assign(v3, { renderer, scene, camera, controls, fieldGroup, simpleGroup, tagGroup, cadGroup, cellGroup, robot, body, edges, arrow, bodyMat, camMounts, handles, ring, knob });
+  setupHandles(stage);
   new ResizeObserver(resize3d).observe(stage);
   resize3d();
   setView(v3.view);
   requestAnimationFrame(frame3d);
+}
+function setEdit(on) {
+  v3.edit = on && !drag.running;
+  if (v3.handles) v3.handles.visible = v3.edit;
+}
+function setupHandles(stage) {
+  const ray = new THREE.Raycaster(), floor = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+  ray.layers.enable(1);
+  const at = ev => {
+    const b = v3.renderer.domElement.getBoundingClientRect();
+    ray.setFromCamera(new THREE.Vector2((ev.clientX - b.left) / b.width * 2 - 1, -(ev.clientY - b.top) / b.height * 2 + 1), v3.camera);
+  };
+  const onFloor = () => { const p = new THREE.Vector3(); return ray.ray.intersectPlane(floor, p) ? p : null; };
+  const hits = obj => ray.intersectObject(obj, true).length > 0;
+  const g = { mode: null, dx: 0, dy: 0, a0: 0, h0: 0, sentAt: 0 };
+  const send = (x, y, h, now) => {
+    v3.target = { x, y, h: h * Math.PI / 180 };      // the view follows at once
+    if (now || performance.now() - g.sentAt > 60) { g.sentAt = performance.now(); placeRobot(x, y, h); }
+  };
+  stage.addEventListener("dblclick", ev => {
+    if (!drag.robot || drag.running) { setEdit(false); return; }
+    at(ev);
+    setEdit(!v3.edit && hits(v3.robot));
+  });
+  // Capture phase: a grab on the robot or the ring takes the pointer before the view's own dragging.
+  stage.addEventListener("pointerdown", ev => {
+    if (!v3.edit || drag.running || !drag.robot || ev.button !== 0) return;
+    at(ev);
+    const p = onFloor(), r = drag.robot;
+    if (!p) return;
+    if (hits(v3.handles)) {
+      g.mode = "turn"; g.a0 = Math.atan2(p.y - r.y, p.x - r.x); g.h0 = r.heading;
+    } else if (hits(v3.robot)) {
+      g.mode = "move"; g.dx = r.x - p.x; g.dy = r.y - p.y;
+    } else return;
+    v3.controls.enabled = false;
+    stage.setPointerCapture(ev.pointerId);
+    ev.stopPropagation(); ev.preventDefault();
+  }, true);
+  stage.addEventListener("pointermove", ev => {
+    if (!g.mode) return;
+    at(ev);
+    const p = onFloor(), r = drag.robot;
+    if (!p) return;
+    if (g.mode === "move") send(p.x + g.dx, p.y + g.dy, r.heading);
+    else send(r.x, r.y, g.h0 + (Math.atan2(p.y - r.y, p.x - r.x) - g.a0) * 180 / Math.PI);
+    ev.stopPropagation();
+  }, true);
+  const end = ev => {
+    if (!g.mode) return;
+    at(ev);
+    const p = onFloor(), r = drag.robot;
+    if (p && !drag.running) {
+      if (g.mode === "move") send(p.x + g.dx, p.y + g.dy, r.heading, true);
+      else send(r.x, r.y, g.h0 + (Math.atan2(p.y - r.y, p.x - r.x) - g.a0) * 180 / Math.PI, true);
+    }
+    g.mode = null; v3.controls.enabled = true;
+    ev.stopPropagation();
+  };
+  stage.addEventListener("pointerup", end, true);
+  stage.addEventListener("pointercancel", end, true);
 }
 function resize3d() {
   const st = $("#stage"), w = st.clientWidth, h = st.clientHeight;
@@ -1083,6 +1172,10 @@ function frame3d() {
     let dh = t.h - p.h; dh = Math.atan2(Math.sin(dh), Math.cos(dh));
     p.x += (t.x - p.x) * k; p.y += (t.y - p.y) * k; p.h += dh * k;
     v3.robot.position.set(p.x, p.y, 0); v3.robot.rotation.z = p.h;
+    if (v3.handles.visible) {
+      const r = drag.robot, rad = Math.hypot((r && r.length) || 18, (r && r.width) || 18) / 2 + 2;
+      v3.handles.position.set(p.x, p.y, 0.3); v3.handles.rotation.z = p.h; v3.handles.scale.set(rad, rad, rad);
+    }
     if (v3.view === "follow") {
       // Behind the robot and above it, looking past it.
       const fx = -Math.sin(p.h), fy = Math.cos(p.h);

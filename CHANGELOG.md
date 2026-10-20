@@ -15,6 +15,8 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   is pulled, down to `slowSpeed`; on a button, slow while held. `DriverControls.update(gamepad, speed)`.
 - Simulator: an intake takes pieces in at every roller and spinner (`collect.intake = shape=intake+left_spinner+...`),
   so side spinners that reach into a FLOWER's opening can take its bottom POLLEN.
+- Simulator 3D view: double-click the robot (no program running, or in INIT) to move it by dragging and
+  turn it with a ring. The robot's spot shows under the map as an `s.start(...)` start spot.
 - The GUIDE button map leaves out the free buttons (INIT still lists them).
 - `./gradlew :sim:run -Pport=8781`: another port, to run two simulators at once.
 - **GUIDE shows the button map** in a Controls.java TeleOp (a tap; tap again to close); holding GUIDE
