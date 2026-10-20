@@ -72,7 +72,9 @@ one pressed), the cameras and the tags they see, and the battery voltage (lower 
 
 **Field in 3D** (bottom, full width): the field and the robot in 3D. Drag to turn the view, scroll to
 zoom, right-drag (or two fingers) to slide. View buttons: Drivers, Audience, From above, Follow robot
-(behind the robot; turning the view by hand ends it). The robot is a box its size from the robot file
+(behind the robot; turning the view by hand ends it). Drivers and From above are from your alliance's
+wall: the alliance the running program uses (autonomous's INIT menu, or TeleOp's choice); red until a
+program says. The robot is a box its size from the robot file
 (`robot.lengthIn/widthIn/heightIn`) with a white arrow at the front; it turns red when it bumps into
 something. Its shapes (below) move with their motors and servos. Rollers and wheels have dark
 stripes, so you see them turn and which way; a roller glows **green** while it takes pieces in and

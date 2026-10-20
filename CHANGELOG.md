@@ -20,6 +20,8 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   also to change it), and shows autonomous's report. `MatchMemory.hasAlliance()`, `rememberReport()`,
   `lastReport()`.
 - Simulator: when an autonomous ends, the Driver Station chooses its `preselectTeleOp`, like the real one.
+- Simulator: the Drivers and From-above views are from the alliance in use (autonomous's INIT menu, or
+  TeleOp's choice): `MatchMemory.chosen()` / `setChosen()`.
 
 ### Changed
 

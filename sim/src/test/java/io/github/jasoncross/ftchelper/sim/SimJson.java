@@ -23,6 +23,10 @@ final class SimJson {
         field(b, "kind", cur == null ? "" : cur.kind).append(',');
         field(b, "error", ds.error()).append(',');
         field(b, "next", ds.next).append(',');
+        // The alliance the program uses now (its INIT menu or TeleOp's choice): the page turns the
+        // drivers' view to that side. "" = none said.
+        io.github.jasoncross.ftchelper.match.Alliance chosen = io.github.jasoncross.ftchelper.match.MatchMemory.chosen();
+        field(b, "alliance", chosen == null ? "" : chosen.name()).append(',');
         b.append("\"nextCount\":").append(ds.nextCount).append(',');
         b.append("\"runSeconds\":").append(fmt(ds.runSeconds())).append(',');
         b.append("\"autoTimer\":").append(ds.autoTimer).append(',');

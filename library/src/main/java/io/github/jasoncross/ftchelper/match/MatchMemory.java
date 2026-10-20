@@ -37,6 +37,8 @@ public final class MatchMemory {
     private static Alliance alliance = null;
     // When remember() was called, in nanoseconds (billionths of a second) on the system clock.
     private static long savedAtNanos = 0;
+    // The alliance the running program uses now (null = none said).
+    private static Alliance chosen = null;
     // Autonomous's last report, and when it was saved.
     private static List<String> report = new ArrayList<>();
     private static long reportAtNanos = 0;
@@ -57,6 +59,19 @@ public final class MatchMemory {
         // so an old match's color never sneaks into a new one.
         if (alliance == null || ageSec() > MAX_AGE_SEC) return fallback;
         return alliance;
+    }
+
+    /**
+     * The alliance the program running now uses (autonomous's INIT menu, or TeleOp's), or null if none
+     * said. EasyAuto and EasyTeleOp set it in INIT; the simulator turns its drivers' view to that side.
+     */
+    public static synchronized Alliance chosen() {
+        return chosen;
+    }
+
+    /** Sets {@link #chosen()} (EasyAuto and EasyTeleOp do it for you). */
+    public static synchronized void setChosen(Alliance a) {
+        chosen = a;
     }
 
     /** True if autonomous left an alliance for this match (not older than {@link #MAX_AGE_SEC}). */

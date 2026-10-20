@@ -311,6 +311,7 @@ public abstract class EasyTeleOp extends LinearOpMode {
                 // The alliance: from autonomous, or chosen here (gamepad 1: X = BLUE, B = RED).
                 if (gamepad1.x && alliance != Alliance.BLUE) { alliance = Alliance.BLUE; fromAuto = false; }
                 if (gamepad1.b && alliance != Alliance.RED) { alliance = Alliance.RED; fromAuto = false; }
+                MatchMemory.setChosen(alliance);
                 if (Profile.current().isPractice()) t.warn("PRACTICE profile");
                 int changed = Tunable.countChanged();
                 if (changed > 0) t.warn(changed + " tuned value(s) differ from the code");

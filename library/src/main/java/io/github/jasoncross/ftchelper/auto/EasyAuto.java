@@ -291,6 +291,7 @@ public abstract class EasyAuto extends LinearOpMode {
         while (opModeInInit()) {
             // read the gamepad and move through the menu
             menu.update();
+            MatchMemory.setChosen(menu.getAlliance());
             // Warnings that stay on top of the screen, so nobody plays a real match by mistake with
             // the practice settings or with test values changed in the tuning menu.
             if (Profile.current().isPractice()) t.warn("PRACTICE profile (change to COMPETITION at events)");

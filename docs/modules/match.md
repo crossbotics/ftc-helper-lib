@@ -103,6 +103,8 @@ Alliance a = MatchMemory.allianceOr(Alliance.BLUE);  // TeleOp INIT
 boolean fromAuto = MatchMemory.hasAlliance();        // false: let the drivers choose (EasyTeleOp does)
 MatchMemory.rememberReport(lines);                   // end of autonomous: its report (EasyAuto does it)
 List<String> report = MatchMemory.lastReport();      // TeleOp INIT shows it
+MatchMemory.setChosen(Alliance.RED);                 // the alliance in use now (EasyAuto/EasyTeleOp do it);
+Alliance now = MatchMemory.chosen();                 //   the simulator turns its drivers' view to it
 ```
 
 Lets ONE TeleOp serve both alliances. The memory lasts until the app restarts and is ignored
