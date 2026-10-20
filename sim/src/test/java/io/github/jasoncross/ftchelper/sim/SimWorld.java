@@ -48,6 +48,7 @@ final class SimWorld {
         final boolean robot, floor;
         final double friction;
         final Ball ball;          // set for a game piece
+        boolean piecesOnly;       // a thin floor plate: only pieces hit it, the robot rolls over
 
         Tag(String name, boolean robot, double friction) {
             this(name, robot, false, friction, null);
@@ -128,7 +129,7 @@ final class SimWorld {
         for (SimField.Hive hv : field.hives) tipping.add(hv.element);
         for (SimField.Element e : field.elements) {
             if (!(e.kind.equals("solid") || e.kind.equals("overhead")) || e.hull.size() < 3 || tipping.contains(e.name)) continue;
-            prism(e.name, e.hull, e.zMin, e.zMax);
+            prism(e.name, e.hull, e.zMin, e.zMax, e.piecesOnly);
         }
         for (SimField.Hive hv : field.hives) placeHive(hv);
         // The robot: one body, held flat on the tiles, with its parts as shapes on it.
@@ -163,6 +164,13 @@ final class SimWorld {
         g.setData(new Tag(type.name, false, false, 0.6, ball));
         balls.add(ball);
         return ball;
+    }
+
+    /** Holds a piece still at p (inches): a staged piece stays put while nothing touches it. */
+    void hold(Ball b, double[] p) {
+        b.body.setPosition(p[0] * M, p[1] * M, zFloor + p[2] * M);
+        b.body.setLinearVel(0, 0, 0);
+        b.body.setAngularVel(0, 0, 0);
     }
 
     void removeBall(Ball b) {
@@ -242,7 +250,7 @@ final class SimWorld {
         b.body.setAngularVel(0, 0, 0);
     }
 
-    private void prism(String name, List<double[]> hull, double zMin, double zMax) {
+    private void prism(String name, List<double[]> hull, double zMin, double zMax, boolean piecesOnly) {
         int n = hull.size();
         float[] v = new float[n * 2 * 3];
         double z0 = zFloor + zMin * M, z1 = zFloor + Math.max(zMax, zMin + 0.1) * M;
@@ -267,7 +275,9 @@ final class SimWorld {
         data.build(v, ix);
         data.preprocess();
         DGeom g = OdeHelper.createTriMesh(space, data, null, null, null);
-        g.setData(new Tag(name, false, 0.3));
+        Tag t = new Tag(name, false, 0.3);
+        t.piecesOnly = piecesOnly;
+        g.setData(t);
     }
 
     /**
@@ -399,6 +409,7 @@ final class SimWorld {
         boolean ballA = a.ball != null, ballB = b.ball != null;
         if (!a.robot && !b.robot && !ballA && !ballB) return;          // field against field: never
         if ((a.robot && b.floor) || (b.robot && a.floor)) return;      // the robot is held at its height
+        if ((a.robot && b.piecesOnly) || (b.robot && a.piecesOnly)) return;
         Ball ball = ballA ? a.ball : ballB ? b.ball : null;
         boolean robotPart = a.robot || b.robot;
         if (ball != null && robotPart && time < ball.ignoreRobotUntil) return;
@@ -414,10 +425,38 @@ final class SimWorld {
                 c.surface.mode |= OdeConstants.dContactBounce;
                 c.surface.bounce = ball.type.bounce;
                 c.surface.bounce_vel = 0.1;
+                if (robotPart && this.surfaceSpeed != null) roll(c, a.robot ? a.name : b.name, a.robot);
             }
             OdeHelper.createContactJoint(world, contacts, c).attach(o1.getBody(), o2.getBody());
         }
     };
+
+    /**
+     * A spinning robot part's surface speed (inches per second, field frame) at a field point (inches), or
+     * null if the part does not spin. Set by the robot's pieces.
+     */
+    interface SurfaceSpeed {
+        double[] at(String part, double[] fieldPointIn);
+    }
+
+    SurfaceSpeed surfaceSpeed = null;
+
+    // A turning roller drags a piece along with its surface (as far as the grip allows): the contact's
+    // surface moves at the roller's surface speed, minus the part along the contact's normal.
+    private void roll(DContact c, String part, boolean robotFirst) {
+        DVector3C p = c.geom.pos, n = c.geom.normal;
+        double[] v = surfaceSpeed.at(part, new double[] {p.get0() / M, p.get1() / M, (p.get2() - zFloor) / M});
+        if (v == null) return;
+        double dot = v[0] * n.get0() + v[1] * n.get1() + v[2] * n.get2();
+        double tx = v[0] - dot * n.get0(), ty = v[1] - dot * n.get1(), tz = v[2] - dot * n.get2();
+        double t = Math.sqrt(tx * tx + ty * ty + tz * tz);
+        if (t < 0.01) return;
+        c.fdir1.set(tx / t, ty / t, tz / t);
+        c.surface.mode |= OdeConstants.dContactFDir1 | OdeConstants.dContactMotion1;
+        // ode4j's contact joint holds (body 1 - body 2) along fdir1 at motion1 (sign checked by
+        // SimPiecesTest.aSpinningRollerDragsAPieceAlong)
+        c.surface.motion1 = (robotFirst ? -t : t) * M;
+    }
 
     double xIn() { return robot.getPosition().get0() / M; }
     double yIn() { return robot.getPosition().get1() / M; }

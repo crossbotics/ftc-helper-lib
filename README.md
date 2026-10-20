@@ -6,7 +6,8 @@ It takes the jobs every robot needs and makes each one a line or two of clear co
 servos, buttons, mecanum and standard (tank) drive, lifts and arms that cannot hurt themselves,
 intakes with jam back-out, a full shooter kit (flywheel, hood, turret, feeder), AprilTag aiming with a
 webcam or Limelight 3A, autonomous modes written as a list of steps, live tuning, practice and
-competition profiles, and a hardware check. It started from our 2025-26 (DECODE) robot code, and is
+competition profiles, a hardware check, and a **simulator** that runs your real code on a laptop with
+the field in 3D (see below). It started from our 2025-26 (DECODE) robot code, and is
 built to be extended every season.
 
 ```java
@@ -28,6 +29,32 @@ routine.step("Lift up", lift.startStep("HIGH"))
        .move("Park", 20, 90, 0.8);
 ```
 
+## Try your robot without a robot: the simulator
+
+![The simulator: Driver Hub, the BIOBUZZ field in 3D, gamepads and the Control Hub](docs/images/simulator.png)
+
+Your **real OpMode code** runs on a laptop against a pretend Control Hub and Driver Hub, in a browser.
+No robot, no field, no phone needed:
+
+- **The real field in 3D** (BIOBUZZ 2026-27, from the official field CAD), with physics: the robot
+  drives, bumps into field parts and pushes game pieces; intakes take them in, launchers shoot them,
+  FLOWERs and HIVEs score and tip.
+- **Your robot's real size and parts**, made from your `Robot.java` (or your CAD): it checks the start
+  cube and the 18 x 24 x 29 in limits in every pose.
+- **Drive it** with the keyboard, a real gamepad (USB or Bluetooth) or a phone as a gamepad.
+- **See inside**: motors, servos, switches and cameras (with the AprilTags they see), telemetry on the
+  Driver Hub, the button map on GUIDE.
+- **Place the robot** by dragging it on the map or in 3D; the spot is shown as an autonomous start spot.
+- **Scripted tests** (scenario files) that press buttons and check results, to catch mistakes before a
+  meeting.
+
+```bash
+./gradlew :sim:run
+```
+
+Then open http://localhost:8780. Everything else: [the simulator guide](docs/guides/simulator.md) and
+the [four BIOBUZZ starter bots](docs/guides/starter-bots.md) to try.
+
 ## Start here
 
 | I want to... | Read |
@@ -43,7 +70,7 @@ routine.step("Lift up", lift.startStep("HIGH"))
 | Practice vs competition behavior | [Profiles](docs/guides/profiles.md) |
 | Change numbers while the robot runs | [Tuning](docs/guides/tuning.md) |
 | Test the robot (checklists) | [Testing procedures](docs/guides/testing.md) |
-| Try OpModes without a robot (pretend Control Hub + Driver Hub) | [Simulator](docs/guides/simulator.md) |
+| **Try OpModes without a robot (pretend Control Hub + Driver Hub, field in 3D)** | [Simulator](docs/guides/simulator.md) |
 | Motors and servos the simulator knows (and how to add your own) | [Parts catalog](docs/guides/parts-catalog.md) |
 | Your real robot in the simulator, with an AI agent's help | [Robot-file skill](docs/guides/robot-file-skill.md) |
 | Four real BIOBUZZ starter bots to try in the simulator | [Starter bots](docs/guides/starter-bots.md) |

@@ -24,6 +24,8 @@ final class SimField {
         final List<double[]> polygon;   // footprint, x/y in inches
         final List<double[]> hull;      // its convex hull (for bumping)
         final double zMin, zMax;
+        // A thin floor plate pieces rest on (a FLOWER's "lip"): the robot rolls over it, pieces do not.
+        final boolean piecesOnly;
 
         Element(Map<String, Object> m) {
             name = SimJsonReader.string(m, "name", "?");
@@ -37,11 +39,12 @@ final class SimField {
             hull = convexHull(polygon);
             zMin = SimJsonReader.number(m, "zMin", 0);
             zMax = SimJsonReader.number(m, "zMax", 0);
+            piecesOnly = "lip".equals(SimJsonReader.string(m, "part", ""));
         }
 
         /** True if the robot bumps into it: a solid part that starts below the robot's top. */
         boolean blocks(double robotHeightIn) {
-            return kind.equals("solid") && zMin < robotHeightIn && hull.size() >= 3;
+            return kind.equals("solid") && zMin < robotHeightIn && hull.size() >= 3 && !piecesOnly;
         }
     }
 

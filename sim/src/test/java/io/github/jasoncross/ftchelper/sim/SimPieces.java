@@ -131,6 +131,12 @@ final class SimPieces {
     private final List<Double> stackDepth = new ArrayList<>();
     // When each stack's next piece has dropped into the lowest slot (physics time, s).
     private final List<Double> stackReady = new ArrayList<>();
+    // Whether a stack's lowest slot is open (no solid over the piece: a FLOWER's Retrieval Opening). Its
+    // lowest piece is then a real piece the robot can knock out; the next one drops into the slot.
+    private final List<Boolean> stackOpen = new ArrayList<>();
+    // The real piece in each open stack's lowest slot (null: none there now), and where it rests.
+    private final List<SimWorld.Ball> stackBall = new ArrayList<>();
+    private final List<double[]> stackRest = new ArrayList<>();
 
     SimPieces(SimRobot robot, SimWorld world, Properties p, Map<String, Map<String, String>> collectLines,
               Map<String, Map<String, String>> shootLines, Map<String, Map<String, String>> grabLines) {
@@ -178,6 +184,9 @@ final class SimPieces {
             }
             stackDepth.add(Math.max(0, depth));
             stackReady.add(0.0);
+            stackOpen.add(st.take.equals("bottom") && openSlot(st));
+            stackBall.add(null);
+            stackRest.add(null);
         }
         reset();
     }
@@ -212,6 +221,8 @@ final class SimPieces {
                     continue;
                 }
                 for (SimField.StagedPiece sp : st.pieces) stackNow.get(i).add(robot.field.pieceTypes.get(sp.type));
+                stackBall.set(i, null);
+                if (stackOpen.get(i)) dropIntoSlot(i);
             }
             // The preload (manual 10.3.1: in or on the robot, or on the tiles touching it): inside a robot that
             // can take in or shoot pieces; otherwise on the tiles in a row behind it. None when it is turned off.
@@ -280,6 +291,66 @@ final class SimPieces {
         // out through the thin side (the third direction), to the side the centre is on
         double side = q[2] >= 0 ? 1 : -1, move = side * (pl[14] / 2 + r + 0.05) - q[2];
         return new double[] {p[0] + move * pl[9], p[1] + move * pl[10], p[2] + move * pl[11]};
+    }
+
+    // True when nothing solid sits over the stack's lowest piece (it may rest on a thin floor plate, like a
+    // FLOWER's lip): the piece is in the open and can be knocked out.
+    private boolean openSlot(SimField.Stack st) {
+        if (st.pieces.isEmpty() || inAHive(st)) return false;
+        SimField.StagedPiece low = st.pieces.get(0);
+        double r = robot.field.pieceTypes.get(low.type).diameterIn / 2;
+        for (SimField.Element e : robot.field.elements) {
+            if (e.hull.size() < 3 || !inside(e.hull, low.x, low.y)) continue;
+            double overlap = Math.min(low.z + r, e.zMax) - Math.max(low.z - r, e.zMin);
+            if (overlap > 0.5) return false;
+        }
+        return true;
+    }
+
+    // The stack's next piece becomes a real piece in its lowest slot.
+    private void dropIntoSlot(int i) {
+        List<SimField.PieceType> now = stackNow.get(i);
+        if (now.isEmpty()) return;
+        SimField.StagedPiece slot = robot.field.stacks.get(i).pieces.get(0);
+        SimField.PieceType type = now.remove(0);
+        double[] at = restingSpot(new double[] {slot.x, slot.y, slot.z}, type.diameterIn / 2);
+        stackBall.set(i, world.addBall(type, at[0], at[1], at[2], 0, 0, 0));
+        stackRest.set(i, at);
+    }
+
+    // Where a piece put at p rests without cutting into the field: on top of a thin floor plate under it
+    // (a FLOWER's lip), and moved off a wall beside it (the FLOWER's closed back).
+    private double[] restingSpot(double[] p, double r) {
+        double[] q = p.clone();
+        for (SimField.Element e : robot.field.elements) {
+            if (e.hull.size() < 3) continue;
+            if (Math.min(q[2] + r, e.zMax) - Math.max(q[2] - r, e.zMin) <= 0) continue;
+            if (inside(e.hull, q[0], q[1])) {
+                if (e.zMax - (q[2] - r) <= 0.5) q[2] = e.zMax + r + 0.01;
+                continue;
+            }
+            double[] n = closestOnHull(e.hull, q[0], q[1]);
+            double d = Math.hypot(q[0] - n[0], q[1] - n[1]);
+            if (d < r && d > 1e-9) {
+                q[0] += (q[0] - n[0]) / d * (r + 0.01 - d);
+                q[1] += (q[1] - n[1]) / d * (r + 0.01 - d);
+            }
+        }
+        return q;
+    }
+
+    // The point of an outline's edge nearest to (x, y).
+    private static double[] closestOnHull(List<double[]> hull, double x, double y) {
+        double[] best = null;
+        double bestD = Double.MAX_VALUE;
+        for (int k = 0; k < hull.size(); k++) {
+            double[] a = hull.get(k), b = hull.get((k + 1) % hull.size());
+            double dx = b[0] - a[0], dy = b[1] - a[1], len2 = dx * dx + dy * dy;
+            double t = len2 == 0 ? 0 : Math.max(0, Math.min(1, ((x - a[0]) * dx + (y - a[1]) * dy) / len2));
+            double px = a[0] + t * dx, py = a[1] + t * dy, d = Math.hypot(x - px, y - py);
+            if (d < bestD) { bestD = d; best = new double[] {px, py}; }
+        }
+        return best;
     }
 
     // A stack in a HIVE's up CELL (the staged NECTAR), when that HIVE can tip.
@@ -445,23 +516,48 @@ final class SimPieces {
                 }
             }
             // A stack's lowest piece: an intake running inward (or a closed claw) at the opening takes it.
+            // In an open slot it is a real piece: knocked out (or taken), the next one drops into the slot.
+            List<SimWorld.Ball> loose = world.balls();
             for (int i = 0; i < stackNow.size(); i++) {
                 List<SimField.PieceType> now = stackNow.get(i);
                 SimField.Stack st = robot.field.stacks.get(i);
-                if (now.isEmpty() || !st.take.equals("bottom") || world.time() < stackReady.get(i)) continue;
+                if (!st.take.equals("bottom")) continue;
                 SimField.StagedPiece slot = st.pieces.get(0);
                 double[] p = {slot.x, slot.y, slot.z};
-                double r = now.get(0).diameterIn / 2, depth = stackDepth.get(i);
-                boolean taken = false;
                 // the next one falls one slot (from rest, under gravity) before it can be taken
                 double drop = st.pieces.size() > 1 ? st.pieces.get(1).z - slot.z : 0;
                 double fall = Math.sqrt(2 * Math.max(0, drop) / 386.1);
+                SimWorld.Ball inSlot = null;
+                if (stackOpen.get(i)) {
+                    SimWorld.Ball sb = stackBall.get(i);
+                    if (sb != null) {
+                        double[] q = loose.contains(sb) ? world.ballPos(sb) : null;
+                        if (q == null || Math.hypot(q[0] - slot.x, q[1] - slot.y) > sb.type.diameterIn / 2) {
+                            stackBall.set(i, null);                     // knocked out or taken in
+                            stackReady.set(i, world.time() + fall);
+                        } else {
+                            inSlot = sb;
+                            // it stays put in the opening until the robot or another piece comes near it
+                            if (!disturbed(sb, q)) world.hold(sb, stackRest.get(i));
+                        }
+                    }
+                    if (stackBall.get(i) == null && !now.isEmpty() && world.time() >= stackReady.get(i) && slotClear(p, now.get(0))) {
+                        dropIntoSlot(i);
+                        inSlot = stackBall.get(i);
+                    }
+                    if (inSlot == null) continue;
+                } else if (now.isEmpty() || world.time() < stackReady.get(i)) {
+                    continue;
+                }
+                SimField.PieceType type = inSlot != null ? inSlot.type : now.get(0);
+                double r = type.diameterIn / 2, depth = stackDepth.get(i);
+                boolean taken = false;
                 for (Collect c : collects) {
                     if (stored.size() >= c.holds || !nearAny(c.shapes, p, r, c.reach + depth)) continue;
                     double power = c.motor != null ? robot.motors.get(c.motor).appliedPower
                             : robot.crServos.get(c.crservo)[0] * (robot.crServos.get(c.crservo)[1] == 1 ? -1 : 1);
                     if (c.threshold > 0 ? power >= c.threshold : power <= c.threshold) {
-                        stored.add(now.remove(0));
+                        stored.add(takeFromStack(i, inSlot));
                         stackReady.set(i, world.time() + fall);
                         taken = true;
                         break;
@@ -471,7 +567,7 @@ final class SimPieces {
                 for (Grab g : grabs) {
                     if (g.heldType != null || !near(g.shape, p, r, g.reach + depth)) continue;
                     if (g.isClosed(robot.servos.get(g.servo).actual)) {
-                        g.heldType = now.remove(0);
+                        g.heldType = takeFromStack(i, inSlot);
                         stackReady.set(i, world.time() + fall);
                         break;
                     }
@@ -490,6 +586,53 @@ final class SimPieces {
     }
 
     // True if a piece (centre at p, field inches; radius r) is within reach of one of the shape's boxes.
+    // Takes a stack's lowest piece: the real one in its slot, or the first staged one.
+    private SimField.PieceType takeFromStack(int i, SimWorld.Ball inSlot) {
+        if (inSlot == null) return stackNow.get(i).remove(0);
+        world.removeBall(inSlot);
+        stackBall.set(i, null);
+        return inSlot.type;
+    }
+
+    /**
+     * A spinning part's surface speed at a field point (inches per second, field frame), or null: a roller
+     * or flywheel turns about its own left-right line (right hand), as the picture shows it.
+     */
+    double[] surfaceSpeed(String shape, double[] at) {
+        for (SimShapes.Piece pc : robot.shapes.pieces()) {
+            if (!pc.shape.equals(shape) || !pc.kind.equals("cyl") || Math.abs(pc.run) < 1e-6) continue;
+            double[] q = toRobot(at), d = {q[0] - pc.center[0], q[1] - pc.center[1], q[2] - pc.center[2]};
+            double w = pc.run * 2 * Math.PI, ax = pc.el[0] * w, ay = pc.el[1] * w, az = pc.el[2] * w;
+            return toFieldDir(new double[] {ay * d[2] - az * d[1], az * d[0] - ax * d[2], ax * d[1] - ay * d[0]});
+        }
+        return null;
+    }
+
+    // A robot part or another piece near this piece (it may be pushed).
+    private boolean disturbed(SimWorld.Ball b, double[] q) {
+        double r = b.type.diameterIn / 2;
+        if (!b.touchingParts.isEmpty()) return true;
+        for (SimShapes.Piece piece : robot.shapes.pieces()) if (near(piece.shape, q, r, 0.3)) return true;
+        for (SimWorld.Ball o : world.balls()) {
+            if (o == b) continue;
+            double[] p = world.ballPos(o);
+            if (Math.sqrt((p[0] - q[0]) * (p[0] - q[0]) + (p[1] - q[1]) * (p[1] - q[1]) + (p[2] - q[2]) * (p[2] - q[2]))
+                    < r + o.type.diameterIn / 2 + 0.3) return true;
+        }
+        return false;
+    }
+
+    // No real piece (and no robot part) in the way of a piece dropping into this slot.
+    private boolean slotClear(double[] p, SimField.PieceType next) {
+        for (SimShapes.Piece piece : robot.shapes.pieces()) if (near(piece.shape, p, next.diameterIn / 2, 0)) return false;
+        for (SimWorld.Ball b : world.balls()) {
+            double[] q = world.ballPos(b);
+            double d = Math.sqrt((q[0] - p[0]) * (q[0] - p[0]) + (q[1] - p[1]) * (q[1] - p[1]) + (q[2] - p[2]) * (q[2] - p[2]));
+            if (d < (b.type.diameterIn + next.diameterIn) / 2 * 0.95) return false;
+        }
+        return true;
+    }
+
     private static boolean touchesAny(SimWorld.Ball b, String[] shapes) {
         for (String s : shapes) if (b.touchingParts.contains(s)) return true;
         return false;
@@ -650,8 +793,9 @@ final class SimPieces {
             }
             for (int i = 0; i < stackNow.size(); i++) {
                 List<SimField.StagedPiece> slots = robot.field.stacks.get(i).pieces;
-                for (int k = 0; k < stackNow.get(i).size(); k++) {
-                    SimField.StagedPiece sp = slots.get(k);
+                int up = stackOpen.get(i) ? 1 : 0;      // an open stack's lowest slot holds a real piece (or none yet)
+                for (int k = 0; k < stackNow.get(i).size() && k + up < slots.size(); k++) {
+                    SimField.StagedPiece sp = slots.get(k + up);
                     out.add(new Object[] {stackNow.get(i).get(k), sp.x, sp.y, sp.z});
                 }
             }
@@ -664,6 +808,7 @@ final class SimPieces {
         synchronized (robot) {
             int n = 0;
             for (List<SimField.PieceType> l : stackNow) n += l.size();
+            for (SimWorld.Ball b : stackBall) if (b != null) n++;      // still in its slot
             return n;
         }
     }

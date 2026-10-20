@@ -32,7 +32,8 @@ public class SimPiecesTest {
         run(r, 1.0);
         assertEquals("they stay put", 30, r.pieces.drawn().size());
         int low = 0;
-        for (Object[] d : r.pieces.drawn()) if ((Double) d[3] < 2) { low++; assertEquals(1.4, (Double) d[3], 0.1); }
+        // (a FLOWER's lowest POLLEN rests on its floor plate, 0.35 in up: 1.75)
+        for (Object[] d : r.pieces.drawn()) if ((Double) d[3] < 2) { low++; assertEquals(1.4, (Double) d[3], 0.4); }
         assertEquals("on the tiles: 8 in the GARDENs, the lowest in each FLOWER", 12, low);
     }
 
@@ -105,6 +106,44 @@ public class SimPiecesTest {
 
     // The red-wall FLOWER (opening centre 23.39, -68.04; its POLLEN 2.4 in in from the front face): an intake
     // against the front takes the bottom POLLEN, and the next one drops into its place.
+    // A turning roller drags a piece with its surface: a spinner standing up (axis up) at the robot's left
+    // turns counterclockwise seen from above with + power, so its outer side moves backward.
+    @Test public void aSpinningRollerDragsAPieceAlong() throws Exception {
+        for (int way : new int[] {1, -1}) {
+            SimRobot r = robot("shape.spin = roller, at=8,10.5,1.5, size=3.5x3.5x1, axis=up, motor=intake\n");
+            r.setPose(48, -45, 0);                              // facing +y (its left is -x), in the open
+            run(r, 0.5);                                         // the robot settles first
+            double x0 = r.x - 13.7, y0 = r.y + 8;
+            r.pieces.place("POLLEN", x0, y0, 1.4);              // just beside the spinner's outer side
+            r.motors.get("intake").device.setPower(0.1 * way);  // slow: a 1150 RPM motor would fling it
+            run(r, 0.3);
+            r.push(0, -3, 0.4);                                  // lean the spinner on it (to the left)
+            run(r, 0.4);
+            double y = y0;
+            for (Object[] d : r.pieces.drawn()) if (Math.abs((Double) d[1] - x0) < 8 && Math.abs((Double) d[2] - y0) < 20 && (Double) d[3] < 3) y = (Double) d[2];
+            if (way > 0) assertTrue("+ power: dragged back, y " + (y - y0), y < y0 - 0.5);
+            else assertTrue("- power: dragged forward, y " + (y - y0), y > y0 + 0.5);
+        }
+    }
+
+    // A part that reaches into the opening (intake off) knocks the bottom POLLEN out of the FLOWER onto the
+    // tiles; the next one drops into its place.
+    @Test public void aLowPartKnocksTheBottomPollenOutOfAFlower() throws Exception {
+        SimRobot r = robot("shape.pole = box, at=11,0,1.8, size=1x1x1\n");
+        r.setPose(19.39, -50, 180);                          // facing the red-wall FLOWER (-y), 4 in to its right
+        r.push(10, 0, 1.0);                                  // the pole goes into the opening beside the POLLEN
+        run(r, 1.2);
+        r.push(0, -10, 1.5);                                 // and sweeps across it, out the other side
+        run(r, 2.5);
+        int out = 0;
+        for (Object[] d : r.pieces.drawn()) {
+            double x = (Double) d[1], y = (Double) d[2];
+            if (Math.hypot(x - 23.39, y + 68.04) > 4 && x > 0 && y > -72 && y < -60 && (Double) d[3] < 2) out++;   // rolled off along the wall
+        }
+        assertTrue("a POLLEN knocked out of the FLOWER", out >= 1);
+        assertEquals("3 left in the FLOWER (the lowest one dropped into the opening)", 15, r.pieces.inStacks());
+    }
+
     @Test public void theIntakeTakesTheBottomPollenOutOfAFlower() throws Exception {
         SimRobot r = robot("collect.intake = shape=intake, motor=intake, holds=8\n");
         r.setPose(23.39, -68.04 + 2.41 + 9.6, 180);          // facing the FLOWER (-y), intake 0.6 in from its face
@@ -114,11 +153,12 @@ public class SimPiecesTest {
         run(r, 0.05);
         assertEquals("the bottom one taken", 5, r.pieces.storedCount());
         int left = 0;
-        double lowest = 99;
         for (Object[] d : r.pieces.drawn()) {
-            if (Math.abs((Double) d[1] - 23.39) < 0.1 && Math.abs((Double) d[2] + 68.04) < 0.1) { left++; lowest = Math.min(lowest, (Double) d[3]); }
+            if (Math.abs((Double) d[1] - 23.39) < 0.5 && Math.abs((Double) d[2] + 68.04) < 0.5) left++;
         }
-        assertTrue("the next ones dropped down: " + left + " left, lowest at " + lowest, left >= 1 && lowest < 1.5);
+        assertEquals("3 left in the FLOWER", 3, left);
+        run(r, 0.3);
+        assertTrue("the next one dropped into its place and was taken too", r.pieces.storedCount() >= 6);
         run(r, 2.0);
         assertEquals("it keeps taking them until the FLOWER is empty", 8, r.pieces.storedCount());
         assertEquals(12, r.pieces.inStacks());

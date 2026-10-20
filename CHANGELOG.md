@@ -18,6 +18,10 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - Simulator 3D view: double-click the robot (no program running, or in INIT) to move it by dragging and
   turn it with a ring. The robot's spot shows under the map as an `s.start(...)` start spot.
 - Simulator 3D view: the in-the-robot badge says when the robot is full (it takes no more pieces).
+- Simulator physics: a FLOWER's bottom POLLEN is a real piece the robot can knock out (the next one drops
+  in); rollers and spinners drag the pieces they touch at their surface speed; the robot rolls over a
+  FLOWER's thin floor plate.
+- README: a simulator section with a picture.
 - The GUIDE button map leaves out the free buttons (INIT still lists them).
 - `./gradlew :sim:run -Pport=8781`: another port, to run two simulators at once.
 - **GUIDE shows the button map** in a Controls.java TeleOp (a tap; tap again to close); holding GUIDE

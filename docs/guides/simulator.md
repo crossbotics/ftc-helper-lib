@@ -310,9 +310,16 @@ robot holds, what it shot and what scored; the 3D view and the field from above 
 
 The match starts with every piece the manual stages on the field (10.3.1), placed from the official field
 CAD: 4 POLLEN in each GARDEN (loose on the tiles), 4 POLLEN in each FLOWER and 3 NECTAR in each upward
-CELL. The FLOWERs are solid blocks in the physics, so the POLLEN inside them hold their places (the
-field file's `stacks`): an intake running inward (or a closed claw) at a FLOWER's bottom opening takes
-the bottom POLLEN, and the next one drops into its place about 0.12 s later.
+CELL. A FLOWER is solid above its bottom opening (the Retrieval Opening, 9-99 mm up, open toward the
+field and both sides), so the POLLEN above the opening hold their places (the field file's `stacks`).
+The bottom POLLEN sits in the opening as a real piece: it stays still until the robot or another piece
+comes near, and a part that reaches in can knock it out. An intake running inward (or a closed claw) at
+the opening takes it. Either way, the next one drops into its place about 0.12 s later. The robot rolls
+over the FLOWER's thin floor plate (0.35 in); pieces rest on it.
+
+**Rollers turn the pieces they touch.** A roller or spinner (any `roller` or `flywheel` shape) drags a
+piece along with its surface, at its real surface speed, as far as the grip allows. So spinners can pull
+a piece in, or fling one away, even when the robot cannot take it (when it is full).
 
 **The HIVEs tip** (manual 9.6, 10.5.1). Each CELL is an open box (its floor, back, sides and roof, from
 the field CAD: about 20 x 14 in open, 12 in deep), so a shot can go in, roll down to the back and stay.

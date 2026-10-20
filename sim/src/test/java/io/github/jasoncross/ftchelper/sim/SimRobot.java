@@ -270,6 +270,7 @@ final class SimRobot {
             world.setRobotParts(shapes.pieces());
         }
         pieces = new SimPieces(this, world, p, lines(p, "collect."), lines(p, "shoot."), lines(p, "grab."));
+        if (world != null) world.surfaceSpeed = pieces::surfaceSpeed;
         buildDevices();
     }
 
