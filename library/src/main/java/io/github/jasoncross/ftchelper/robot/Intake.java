@@ -251,6 +251,12 @@ public final class Intake extends Module<Intake> implements Toggleable {
             out.add("shape." + device + " = roller, at=8,0,2, size=2x14x2, "
                     + (servos ? "crservo=" : "motor=") + names[0] + "   # TODO measure: place and size");
         } else {
+            boolean roller = false;
+            for (Shape s : looks) if (s.spins()) roller = true;
+            if (!roller) {
+                throw new IllegalStateException("Robot.java: " + name() + "'s looks(...) needs a roller "
+                        + "(Shape.roller(...)): pieces come in where it spins");
+            }
             lookLines(out, t);
         }
         for (String n : extraCrServos) out.add("crservo." + n + " =");

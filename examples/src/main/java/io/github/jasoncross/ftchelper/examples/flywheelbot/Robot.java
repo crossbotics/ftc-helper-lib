@@ -47,7 +47,7 @@ public class Robot extends RobotDefinition {
         // "kicker") pushes the folded intake over at START, then goes back. It comes first, so the
         // intake can name it.
         intakeDeploy = add(Positioner.servo("intake_deploy").part("gobilda-2000-torque")
-                .looks(Shape.arm().name("kicker").atMm(150, 120, 100).sizeMm(60, 20, 15)
+                .looks(Shape.arm().name("kicker").atMm(150, 90, 100).sizeMm(60, 20, 15)
                         .angle("stowed", 90).angle("deployed", 20)));
 
         // The intake: its arm is folded straight up (90 degrees) at the start. Pushed over, it falls by

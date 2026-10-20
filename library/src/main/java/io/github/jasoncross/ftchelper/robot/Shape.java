@@ -50,6 +50,8 @@ public final class Shape {
     boolean passive = false;
     private double rangeMin = Double.NaN, rangeMax = Double.NaN, startAt = Double.NaN, travelIn = Double.NaN;
     ServoPositions<?> dropBy;
+    // The part whose looks(...) holds this shape (one only), or null.
+    Module<?> owner;
     private String dropPosition;
     private double fallsTo = Double.NaN;
 
@@ -74,7 +76,13 @@ public final class Shape {
 
     /** A launcher wheel, e.g. {@code Shape.flywheel("gobilda-hogback-96")}. */
     public static Shape flywheel(String partId) {
+        if (partId == null) throw new IllegalArgumentException("Shape.flywheel(null): give a catalog id, or use Shape.flywheel() with .diameterMm(...) and .lengthMm(...)");
         return new Shape("flywheel", partId);
+    }
+
+    /** A launcher wheel not in the parts catalog: give {@link #diameterMm} and {@link #lengthMm}. */
+    public static Shape flywheel() {
+        return new Shape("flywheel");
     }
 
     /**
@@ -260,6 +268,7 @@ public final class Shape {
      * @param driver   what moves it ("motor=intake", "servo=x, pos0=95, pos1=-10"), or null
      */
     String line(String lineName, String parent, String driver) {
+        checkSettings(lineName, driver);
         StringBuilder sb = new StringBuilder("shape.").append(lineName).append(" = ").append(type);
         if (parent != null) sb.append(", on=").append(parent);
         sb.append(", at=").append(n(at[0])).append(',').append(n(at[1])).append(',').append(n(at[2]));
@@ -274,6 +283,41 @@ public final class Shape {
         if (note != null) notes.add(note);
         if (!notes.isEmpty()) sb.append("   # ").append(joined(notes, ". "));
         return sb.toString();
+    }
+
+    /**
+     * The name of the shape this one rides on (null = the chassis). A part with no looks(...) and no
+     * shape of its own (a Positioner, an Indexer, a camera) has nothing to ride on: say so here, not
+     * as a broken robot file.
+     */
+    String parentName(String lineName) {
+        if (onModule == null) return onShape;
+        if (onModule.looks.isEmpty() && !onModule.makesDefaultShape()) {
+            throw new IllegalStateException("Robot.java: " + lineName + " rides on " + onModule.name()
+                    + ", but " + onModule.name() + " has no looks(...) to ride on");
+        }
+        return onModule.firstShapeName();
+    }
+
+    // A setting this kind of shape does not use is a mistake: stop with its name instead of ignoring it.
+    private void checkSettings(String lineName, String driver) {
+        String what = "Robot.java: shape " + lineName + " (" + type + (passive ? ", passive" : "") + "): ";
+        boolean servoArm = type.equals("arm") && !passive && driver != null && driver.startsWith("servo=");
+        if (!angles.isEmpty() && !servoArm) {
+            throw new IllegalStateException(what + ".angle(...) is for an arm moved by a servo part (a Positioner); "
+                    + (passive ? "a passive arm takes .range(...) and .startAt(...)" : "this one is not"));
+        }
+        if (angles.size() > 2) throw new IllegalStateException(what + "give exactly two .angle(...), not " + angles.size());
+        boolean passiveArm = type.equals("arm") && passive;
+        if ((!Double.isNaN(rangeMin) || !Double.isNaN(startAt)) && !passiveArm) {
+            throw new IllegalStateException(what + ".range(...) and .startAt(...) are for a passive arm only");
+        }
+        if (!Double.isNaN(travelIn) && !(type.equals("slide") && passive)) {
+            throw new IllegalStateException(what + ".travelMm(...) is for a passive slide only");
+        }
+        if ((!Double.isNaN(lengthIn) || !Double.isNaN(diameterIn)) && !spins()) {
+            throw new IllegalStateException(what + ".lengthMm/.diameterMm are for a roller or flywheel; use .sizeMm(...)");
+        }
     }
 
     // ", start=95, minDeg=-10, maxDeg=95, passive=yes, drop=intake_deploy>0.6, fallsTo=-10"

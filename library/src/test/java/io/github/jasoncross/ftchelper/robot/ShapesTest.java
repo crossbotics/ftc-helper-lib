@@ -202,4 +202,86 @@ public class ShapesTest {
             assertTrue(e.getMessage(), e.getMessage().contains("\"shape.intake\""));
         }
     }
+
+    // Each robot below has one mistake; simLines() must stop and name it.
+    private static void stops(String words, RobotDefinition r) {
+        try {
+            r.simLines();
+            fail("expected an error with: " + words);
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains(words));
+        }
+    }
+
+    @Test public void settingsThatDoNotFitTheShapeStop() {
+        stops(".angle(...) is for an arm moved by a servo part", new RobotDefinition() {
+            @Override protected void define() {
+                drive(Drive.tank("l", "r"));
+                fixed(Shape.arm().name("flap").atMm(0, 0, 50).sizeMm(50, 50, 10).passive().range(0, 90).angle("up", 90));
+            }
+        });
+        stops(".travelMm(...) is for a passive slide only", new RobotDefinition() {
+            @Override protected void define() {
+                drive(Drive.tank("l", "r"));
+                fixed(Shape.box("ramp").atMm(0, 0, 0).sizeMm(10, 10, 10).travelMm(20));
+            }
+        });
+        stops(".lengthMm/.diameterMm are for a roller or flywheel", new RobotDefinition() {
+            @Override protected void define() {
+                drive(Drive.tank("l", "r"));
+                fixed(Shape.box("ramp").atMm(0, 0, 0).sizeMm(10, 10, 10).lengthMm(20));
+            }
+        });
+    }
+
+    @Test public void ridingOnAPartWithNoShapeStops() {
+        stops("rides on IntakeDeploy, but IntakeDeploy has no looks(...)", new RobotDefinition() {
+            @Override protected void define() {
+                tunables(Numbers.class);
+                drive(Drive.tank("l", "r"));
+                Positioner d = add(Positioner.servo("intake_deploy"));
+                add(Intake.motor("intake").looks(Shape.roller("gobilda-gecko-72").on(d).atMm(0, 0, 0).lengthMm(200)));
+            }
+        });
+    }
+
+    @Test public void anIntakeNeedsARoller() {
+        stops("needs a roller", new RobotDefinition() {
+            @Override protected void define() {
+                drive(Drive.tank("l", "r"));
+                add(Intake.motor("intake").looks(Shape.arm().atMm(0, 0, 50).sizeMm(50, 50, 10).passive().range(0, 90)));
+            }
+        });
+    }
+
+    @Test public void oneShapeForTwoPartsStops() {
+        try {
+            Shape s = Shape.roller("gobilda-gecko-72").atMm(0, 0, 0).lengthMm(200);
+            Intake.motor("a").looks(s);
+            Intake.motor("b").looks(s);
+            fail("expected an error");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("make a new Shape for each part"));
+        }
+    }
+
+    @Test public void aShotAngleOutsideZeroTo180Stops() {
+        try {
+            Launcher.flywheel("launcher", "gobilda-5203-6000").shotAngle(1470);
+            fail("expected an error");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("0 to 180"));
+        }
+    }
+
+    @Test public void aFlywheelNotInTheCatalogTakesItsSize() {
+        RobotDefinition r = new RobotDefinition() {
+            @Override protected void define() {
+                drive(Drive.tank("l", "r"));
+                add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+                        .looks(Shape.flywheel().atMm(0, 0, 150).diameterMm(101.6).lengthMm(25.4)).shotAngle(60));
+            }
+        };
+        assertTrue(lines(r), lines(r).contains("shape.launcher = flywheel, at=0,0,5.91, size=4x1x4, motor=launcher"));
+    }
 }

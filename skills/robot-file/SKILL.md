@@ -94,7 +94,15 @@ team the lines you changed.
 
 ## 4. Build the shapes
 
-Use `photos.md` to turn the mechanisms into robot shapes (`shape.NAME = box|slide|arm|turret|claw|roller|flywheel`),
+**TeamCode in five files (a `Robot.java` that `extends RobotDefinition`)?** Put the answers in Robot.java,
+not in the robot file: each part's catalog id (`part(...)`, `Drive.wheel(...)`), its shapes
+(`looks(Shape...)`), `chassisMm`, `heightMm`, `fixed(...)` (docs/modules/robot.md "Shapes and parts"),
+then run `./gradlew :sim:fromRobot`. Write a `shape.` line by hand in the robot file only for a part
+Robot.java cannot draw yet (Lift, Arm, Turret, Claw, Wrist, cameras). Why: the generator keeps every
+unmarked line, so a hand-written `shape.intake` would win over Robot.java's for good (it prints "kept
+your shape.intake" each run); if one exists from before, delete it once Robot.java draws that part.
+
+Otherwise, use `photos.md` to turn the mechanisms into robot shapes (`shape.NAME = box|slide|arm|turret|claw|roller|flywheel`),
 then the game-piece lines (`collect.`, `shoot.`, `grab.`) and the cameras. Mount points (`at=`) and sizes
 (`size=`) in inches from the robot's centre on the floor: forward, left, up.
 

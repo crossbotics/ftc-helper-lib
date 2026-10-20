@@ -196,7 +196,8 @@ up, RB fires. ([Simulator guide](../guides/simulator.md).)
 
 The simulator draws the robot from its robot file. `Robot.java` can write that file for you, if it also
 says what each part is and how it looks ([Shapes and parts](../modules/robot.md#shapes-and-parts)).
-Name each part by its catalog id; give a size or a place only when the catalog does not know it:
+Name each part by its catalog id; give a size or a place only when the catalog does not know it.
+(Shortened from [`flywheelbot/Robot.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/flywheelbot/Robot.java).)
 
 ```java
 chassisMm(400, 400, 100);
@@ -214,7 +215,9 @@ Then, from the `ftc-helper-lib` folder:
 
 Open the simulator: the roller spins when the intake runs, a piece is picked up and fired, and the
 size rules are checked on your shapes. The flywheel example (`examples/.../flywheelbot/Robot.java`) also
-has an intake that folds up at the start and falls over at START.
+has an intake that folds up at the start and falls over at START. An arm on a servo names its angle at
+two positions, `angle("stowed", 90).angle("deployed", 20)`: those names must be positions in that part's
+Tunables section (here `Tunables.IntakeDeploy`).
 
 ## Your own robot
 

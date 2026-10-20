@@ -35,6 +35,9 @@ flowchart LR
    **Have CAD of the whole robot?** Give it the STEP file: it reads the exact sizes, places, spin axes and
    seller part numbers from it, guesses which motor drives which part (and asks you only when it is not
    sure), and draws your real parts in the 3D view (`skills/robot-file/cad.md`, tools in `tools/cad/`).
+   **Robot.java in five files?** The sizes and shapes it learns go into Robot.java (`part(...)`,
+   `looks(...)`, `chassisMm`), and `./gradlew :sim:fromRobot` writes the robot file from it, so the code
+   and the simulator stay one description.
 4. **Checks** the result in the simulator (it loads, the size rules, your OpModes start) and writes a
    small scenario so it stays checked.
 5. Tells you what is still unknown, and how to get real speeds (the Characterizer).

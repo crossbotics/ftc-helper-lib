@@ -153,7 +153,7 @@ drive(Drive.tank("left_drive", "right_drive").reversed("right_drive"));
 | Method | |
 | --- | --- |
 | `mecanum(fl, fr, bl, br)`, `tank(left, right)`, `tank(fl, fr, bl, br)` | the type and motor names |
-| `motor(id)` | the drive motor's [catalog id](#motors) (default `gobilda-5203-312`) |
+| `motor(id)` | the drive motor's [catalog id](#motors) (default `gobilda-5203-312`; the other parts use `part(id)`) |
 | `wheelMm(mm)`, `gearRatio(r)` | wheel diameter (default 96), motor turns per wheel turn |
 | `wheel(id)` | the wheel by its [catalog id](#shapes-and-parts), e.g. `"gobilda-hogback-96"`: its diameter comes from the catalog |
 | `wheelsAtMm(track, wheelBase)` | for the simulator: wheel centres side to side and front to back, mm |
@@ -449,7 +449,7 @@ the timer, stopping everything, the report. Autonomous refuses to run until `Tun
 ## Shapes and parts
 
 `Robot.java` can also say what each part IS (its catalog id) and how it LOOKS (a `Shape`). Then
-`./gradlew :sim:fromRobot` writes the simulator robot file with no guesses: the 3D view draws the robot,
+`./gradlew :sim:fromRobot` writes the simulator robot file with no TODO shape guesses: the 3D view draws the robot,
 the size rules are checked on it, and each shape moves with its part, so the simulator shows whether the
 controls do what they should (the intake drops, the rollers spin, a piece is fired). Worked example:
 [`flywheelbot/Robot.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/flywheelbot/Robot.java).
@@ -465,7 +465,7 @@ chassisMm(400, 400, 100);                     // the chassis box, mm
 heightMm(300);                                // the whole robot
 
 intakeDeploy = add(Positioner.servo("intake_deploy").part("gobilda-2000-torque")
-        .looks(Shape.arm().name("kicker").atMm(150, 120, 100).sizeMm(60, 20, 15)
+        .looks(Shape.arm().name("kicker").atMm(150, 90, 100).sizeMm(60, 20, 15)
                 .angle("stowed", 90).angle("deployed", 20)));
 intake = add(Intake.motor("intake").part("gobilda-5203-1150").holds(3)
         .looks(Shape.arm().name("intake_arm").atMm(150, 0, 100).sizeMm(110, 200, 20)
@@ -478,13 +478,13 @@ fixed(Shape.box("tower").atMm(-90, 0, 40).sizeMm(50, 180, 260));
 
 | On a part | |
 | --- | --- |
-| `part(id)` | the main motor's or servo's catalog id (a typo stops with the list of ids). A launcher's motor is in `Launcher.flywheel(name, id)` |
+| `part(id)` | the main motor's or servo's catalog id (a typo stops with the list of ids). A launcher's motor is in `Launcher.flywheel(name, id)`, the drive's in [`Drive.motor(id)`](#drive). On a CR servo the id is only a note (the simulator turns every CR servo at one speed) |
 | `looks(Shape...)` | how it looks. Intake, Positioner, Launcher and Indexer take shapes; the others are drawn in the robot file ([simulator guide](../guides/simulator.md#robot-shapes)) |
 
 | `Shape` | What it is | Moved by |
 | --- | --- | --- |
 | `roller(ids...)` | a cylinder; several ids (90 mm and 60 mm rollers taking turns) draw one as big as the biggest | spins with its part's motor or CR servo |
-| `flywheel(id)` | a launcher wheel | spins with the launcher's motor |
+| `flywheel(id)`, `flywheel()` | a launcher wheel (no id: give `diameterMm` and `lengthMm`) | spins with the launcher's motor |
 | `arm()` | swings about a hinge: `atMm` is the hinge, `sizeMm(length, width, thickness)` reaches forward at 0 degrees | a Positioner's servo (`angle(position, deg)` twice), or nothing (`passive`) |
 | `slide()` | moves in a straight line along its axis (default up): `sizeMm` is one stage | nothing (`passive`, `travelMm`) |
 | `box(name)` | does not move: `atMm` is the middle of its bottom | nothing |
@@ -501,9 +501,15 @@ fixed(Shape.box("tower").atMm(-90, 0, 40).sizeMm(50, 180, 260));
 | `passive()`, `range(min, max)`, `startAt(deg)`, `travelMm(mm)` | moved by gravity or springs, not the code: drawn at its start, the size rules try its whole range (its hard stops) |
 | `dropsWhen(servoPart, position, toDeg)` | a passive arm that a servo pushes over: once the servo is three quarters of the way to the position, it falls to `toDeg` and stays (a folded intake) |
 | `note(text)` | where a number came from ("est.", "measured 2026-10-20"), written after the line |
+| `color(c)` | its colour in the 3D view, e.g. `"#2fa84f"` |
 
 Mistakes stop with the part's name: a typo in an id (with the known ids), a roller with no length, an
-arm with fewer than two angles or an unknown position name, shapes on a part that cannot take them.
+arm with fewer than two angles or an unknown position name (the names in `angle(...)` must be positions in
+that part's Tunables section), shapes on a part that cannot take them, a setting that does not fit the
+shape (`angle` on a passive arm, `range` on a servo arm, `travelMm` on anything but a passive slide,
+`lengthMm` on a box or arm), riding `on` a part that has no shape, an intake whose looks have no roller,
+one `Shape` given to two parts, two parts with one name in the robot file, and a `shotAngle` outside
+0 to 180.
 Lines without a shape stay as before: guesses marked TODO.
 
 ---

@@ -11,7 +11,7 @@ Nothing old stops working: a Robot.java without parts or shapes writes the same 
 - **Shapes and parts in Robot.java** ([docs/modules/robot.md](docs/modules/robot.md#shapes-and-parts)):
   `part(id)` gives a part's motor or servo by its catalog id, `looks(Shape...)` how it looks and where it
   sits (`Shape.roller`, `flywheel`, `arm`, `slide`, `box`), and `./gradlew :sim:fromRobot` writes them into
-  the simulator robot file with no guesses. Intake, Positioner, Launcher and Indexer take shapes. Also
+  the simulator robot file with no TODO shape guesses. Intake, Positioner, Launcher and Indexer take shapes. Also
   `chassisMm`, `heightMm` and `fixed(...)` on the robot, `Drive.wheel(id)` and `wheelsAtMm`,
   `Intake.holds(n)`, `Launcher.shotAngle(deg)`.
 - **Wheels and rollers in the parts catalog** (`Parts`, `sim/parts/parts.json`): goBILDA Gecko 48 and

@@ -61,4 +61,9 @@ public final class Positioner extends ServoPositions<Positioner> {
         out.add(simServoLine(t, "gobilda-2000-torque"));
         lookLines(out, t);
     }
+
+    @Override
+    boolean makesDefaultShape() {
+        return false;   // it draws nothing of its own: a shape cannot ride on it without looks(...)
+    }
 }

@@ -85,6 +85,9 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
      * @param degrees e.g. 147 for a shot up and out of the back
      */
     public Launcher shotAngle(double degrees) {
+        if (degrees < 0 || degrees > 180) {
+            throw new IllegalArgumentException("Robot.java: shotAngle(" + degrees + "): 0 to 180 degrees (0 forward, 90 up, 180 back)");
+        }
         shotAngleDeg = degrees;
         return this;
     }

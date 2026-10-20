@@ -258,4 +258,9 @@ public final class Indexer extends Module<Indexer> implements Feeder {
             t.debug(name(), isBusy() ? "feeding" : "idle");
         }
     }
+
+    @Override
+    boolean makesDefaultShape() {
+        return false;   // it draws nothing of its own: a shape cannot ride on it without looks(...)
+    }
 }

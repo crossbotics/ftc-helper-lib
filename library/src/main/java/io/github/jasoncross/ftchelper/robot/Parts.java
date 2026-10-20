@@ -73,7 +73,8 @@ public final class Parts {
         if (w == null) {
             throw new IllegalArgumentException("Robot.java: no wheel or roller \"" + id + "\" in the parts catalog. Known: "
                     + WHEELS.keySet() + ". A part that is not there: draw it with its size (Shape.box, or "
-                    + "Shape.roller().diameterMm(...)), or add it to sim/parts/parts.json (docs/guides/parts-catalog.md)");
+                    + "Shape.roller().diameterMm(...), or Shape.flywheel().diameterMm(...) for a launcher wheel), or add it to "
+                    + "sim/parts/parts.json and Parts.java (docs/guides/parts-catalog.md)");
         }
         return w;
     }

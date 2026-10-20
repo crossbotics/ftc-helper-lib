@@ -34,6 +34,10 @@ numbers that matter for the rules and for touching the field.
 | intake roller / wheels | `roller` | motor or `crservo=` | runs across the robot (`axis=left`) |
 | launcher wheel | `flywheel` | its motor | add `shoot.` for game pieces |
 
+**Robot.java in five files?** An intake, a folding or deploy servo, a launcher and an indexer are drawn
+in Robot.java instead (`looks(Shape.roller/arm/slide/flywheel/box ...)`, the same shapes, in mm), then
+`./gradlew :sim:fromRobot` writes these lines: see SKILL.md step 4. The table is for the rest.
+
 Mount parts on parts with `on=`: a claw on a wrist on an arm on a lift. A part on a slide rides on the
 moving stage; a part on an arm turns with it.
 

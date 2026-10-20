@@ -67,7 +67,9 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
 
     /**
      * The main device's parts catalog id: a motor ({@link Motors}, e.g. "gobilda-5203-117") or a servo
-     * ({@link Parts#servo}, e.g. "gobilda-2000-speed"). The simulator then moves it like the real one.
+     * ({@link Parts#servo}, e.g. "gobilda-2000-speed"). The simulator then moves a motor or servo like
+     * the real one. For a continuous-rotation (CR) servo the id is only a note in the robot file (the
+     * simulator turns every CR servo at one speed).
      *
      * @param catalogId the id; a typo stops with the list of known ids
      * @return this module
@@ -89,7 +91,14 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
             throw new UnsupportedOperationException("Robot.java: " + name() + " cannot take shapes yet (Intake, Positioner, "
                     + "Launcher and Indexer can). Draw it in the simulator robot file instead (docs/guides/simulator.md).");
         }
-        for (Shape s : shapes) looks.add(s);
+        for (Shape s : shapes) {
+            if (s.owner != null && s.owner != this) {
+                throw new IllegalStateException("Robot.java: one Shape is in both " + s.owner.name() + "'s and " + name()
+                        + "'s looks(...): make a new Shape for each part");
+            }
+            s.owner = this;
+            looks.add(s);
+        }
         return self();
     }
 
@@ -154,6 +163,14 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
         return id;
     }
 
+    /**
+     * True if the module writes a shape of its own when it has no looks(...) (an intake's roller, a
+     * lift's slide), so another shape can ride on it. False for a Positioner, an Indexer, a camera.
+     */
+    boolean makesDefaultShape() {
+        return true;
+    }
+
     /** True for the modules whose {@link #looks} the simulator file draws. */
     boolean drawsLooks() {
         return false;
@@ -192,7 +209,7 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
     final void lookLines(List<String> out, TunableSection t) {
         for (int i = 0; i < looks.size(); i++) {
             Shape s = looks.get(i);
-            String parent = s.onModule != null ? s.onModule.firstShapeName() : s.onShape;
+            String parent = s.parentName(shapeName(i));
             String driver = s.type.equals("box") || s.passive ? null : driverFor(s, t);
             out.add(s.line(shapeName(i), parent, driver));
         }

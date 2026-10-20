@@ -314,7 +314,7 @@ public abstract class RobotDefinition {
             m.simSection = TunableSection.of(tunablesClass, m.name());
         }
         drive.simLines(out);
-        for (Shape s : fixed) out.add(s.line(s.name, s.onModule != null ? s.onModule.firstShapeName() : s.onShape, null));
+        for (Shape s : fixed) out.add(s.line(s.name, s.parentName(s.name), null));
         for (Module<?> m : modules) {
             for (Module<?> c : m.children()) c.simLines(out, TunableSection.of(tunablesClass, c.name()));
             m.simLines(out, TunableSection.of(tunablesClass, m.name()));

@@ -1,6 +1,6 @@
 {
   "checked": "2026-10-16",
-  "notes": "Every number was read from the seller's product page or the seller's own documentation on the 'checked' date (URL per part). Values marked COMPUTED/DERIVED in a part's notes are worked out from the seller's numbers. null = the seller does not publish it. Motor values at 12 V; servo headline values at 6.0 V with the full table in byVoltage. countsPerRev = encoder counts per output-shaft revolution as the FTC SDK reports them (x4 quadrature). Torque converted to kg-cm with 1 N-m = 10.197 kg-cm where the seller gives N-m.",
+  "notes": "Every number was read from the seller's product page or the seller's own documentation on the 'checked' date (URL per part). Values marked COMPUTED/DERIVED in a part's notes are worked out from the seller's numbers. null = the seller does not publish it. Motor values at 12 V; servo headline values at 6.0 V with the full table in byVoltage. countsPerRev = encoder counts per output-shaft revolution as the FTC SDK reports them (x4 quadrature). Torque converted to kg-cm with 1 N-m = 10.197 kg-cm where the seller gives N-m. A part added here is also added to library/.../robot/Parts.java (wheels, servos) or Motors.java (motors); PartsCatalogTest and MotorsCatalogTest check they match.",
   "motors": [
     {
       "id": "gobilda-5203-6000",
@@ -1186,7 +1186,7 @@
       "diameterMm": 48,
       "widthMm": null,
       "checked": "2026-10-20",
-      "notes": "The page gives the diameter, not the width."
+      "notes": "The page gives the diameter, not the width. Not measured yet: goBILDA's STEP CAD of its BIOBUZZ starter bot (3200-2627-0003) has these wheels, so it can be measured there as for the 72 and 96 mm wheels."
     },
     {
       "id": "gobilda-gecko-72",
@@ -1217,24 +1217,24 @@
       "name": "Offset Surgical Tubing Roller 60 mm",
       "partNumber": "OSTR-HEX-07-00",
       "seller": "Offset Robotics",
-      "url": "https://offsetrobotics.com/product/offset-surgical-tubing-rollers",
-      "status": "US warehouse: on backorder",
+      "url": "https://legacy.offsetrobotics.com/product/offset-surgical-tubing-rollers/",
+      "status": "not shown on the page",
       "diameterMm": 60,
       "widthMm": null,
       "checked": "2026-10-20",
-      "notes": "55A silicone tubing pieces on the OFFSET HEXAHUB, sold in packs of 6 (60 mm, 90 mm or both). SKU OSTR-HEX-07-00 is for the product (choose 60 mm, 90 mm or both), from the seller's legacy page https://legacy.offsetrobotics.com/product/offset-surgical-tubing-rollers/ (checked 2026-10-20; the new page shows no SKU). The page gives the diameter only; how long a roller is depends on how many hubs are on the shaft."
+      "notes": "55A silicone tubing pieces, 6 per size (the 'Both' pack: 6 x 60 mm, 6 x 90 mm, 1 OFFSET HEXAHUB, 6 M3 screws). SKU OSTR-HEX-07-00 is for the product (choose 60 mm, 90 mm or both). Read on the seller's legacy page, which shows the text; offsetrobotics.com/product/offset-surgical-tubing-rollers needs a browser. The page gives the diameter only; how long a roller is depends on how many hubs are on the shaft."
     },
     {
       "id": "offset-tubing-90",
       "name": "Offset Surgical Tubing Roller 90 mm",
       "partNumber": "OSTR-HEX-07-00",
       "seller": "Offset Robotics",
-      "url": "https://offsetrobotics.com/product/offset-surgical-tubing-rollers",
-      "status": "US warehouse: on backorder",
+      "url": "https://legacy.offsetrobotics.com/product/offset-surgical-tubing-rollers/",
+      "status": "not shown on the page",
       "diameterMm": 90,
       "widthMm": null,
       "checked": "2026-10-20",
-      "notes": "55A silicone tubing pieces on the OFFSET HEXAHUB, sold in packs of 6 (60 mm, 90 mm or both). SKU OSTR-HEX-07-00 is for the product (choose 60 mm, 90 mm or both), from the seller's legacy page https://legacy.offsetrobotics.com/product/offset-surgical-tubing-rollers/ (checked 2026-10-20; the new page shows no SKU). The page gives the diameter only; how long a roller is depends on how many hubs are on the shaft."
+      "notes": "55A silicone tubing pieces, 6 per size (the 'Both' pack: 6 x 60 mm, 6 x 90 mm, 1 OFFSET HEXAHUB, 6 M3 screws). SKU OSTR-HEX-07-00 is for the product (choose 60 mm, 90 mm or both). Read on the seller's legacy page, which shows the text; offsetrobotics.com/product/offset-surgical-tubing-rollers needs a browser. The page gives the diameter only; how long a roller is depends on how many hubs are on the shaft."
     }
   ]
 }

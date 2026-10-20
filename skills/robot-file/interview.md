@@ -10,6 +10,8 @@ degrees, encoder counts. "Forward/left/up" is from the robot's centre on the flo
 2. How tall is the whole robot at the start of a match (folded), floor to the highest point? ->
    `robot.heightIn`. The size rules use the SHAPES, not this number: if the shapes come out lower,
    a part is missing (add a `box` for the tallest fixed part: electronics, a hopper).
+   **Robot.java in five files?** These answers go in Robot.java (`chassisMm(length, width, height)`,
+   `heightMm(...)`, each part's `looks(...)`), not the robot file: see SKILL.md step 4.
 3. How heavy is it (kg; a bathroom scale works: weigh yourself with and without it)? -> `robot.massKg`.
 4. Where does it start a match (which tile, which way it faces)? -> `start.x`, `start.y`, `start.heading`.
    BIOBUZZ: inches from the field centre, +y away from the red drivers, heading 0 = facing away from them.

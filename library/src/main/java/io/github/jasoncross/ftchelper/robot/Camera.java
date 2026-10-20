@@ -121,4 +121,9 @@ public final class Camera extends Module<Camera> {
         if (limelight) out.add("limelight." + device + " = name=" + device + ", " + where + "   # TODO measure the mount");
         else out.add("camera." + sectionFor(device) + " = name=" + device + ", " + where + ", hfov=70.4, width=640, height=480   # TODO measure the mount");
     }
+
+    @Override
+    boolean makesDefaultShape() {
+        return false;   // it draws nothing of its own: a shape cannot ride on it without looks(...)
+    }
 }
