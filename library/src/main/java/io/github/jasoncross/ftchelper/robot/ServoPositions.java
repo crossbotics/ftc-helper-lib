@@ -131,9 +131,60 @@ public abstract class ServoPositions<M extends ServoPositions<M>> extends Module
     }
 
     // "servo.claw = 0.2, part=gobilda-2000-torque": where the simulated servo starts (its first position).
+    // The part given with part(...), or the default marked TODO.
     String simServoLine(TunableSection t, String part) {
         Map<String, Double> p = positionsFrom(t);
         double first = physical(p.isEmpty() ? 0.5 : p.values().iterator().next());
+        if (partId != null) return fmt("servo.%s = %.2f, part=%s", device, first, partId);
         return fmt("servo.%s = %.2f, part=%s   # TODO the real servo", device, first, part);
+    }
+
+    @Override
+    String checkPart(String id) {
+        return Parts.servo(id);
+    }
+
+    // An arm on this servo: its angles at servo position 0 and 1, from the two named angles.
+    @Override
+    String driverFor(Shape s, TunableSection t) {
+        if (!s.type.equals("arm")) {
+            throw new IllegalStateException("Robot.java: " + name() + " is a servo: it swings an arm shape, not a " + s.type);
+        }
+        if (s.angles.size() < 2) {
+            throw new IllegalStateException("Robot.java: " + name() + "'s arm needs its angle at two positions, e.g. "
+                    + ".angle(\"stowed\", 95).angle(\"deployed\", -10)");
+        }
+        Map<String, Double> p = positionsFrom(t);
+        java.util.Iterator<Map.Entry<String, Double>> it = s.angles.entrySet().iterator();
+        Map.Entry<String, Double> a = it.next(), b = it.next();
+        double va = physical(positionOf(p, a.getKey())), vb = physical(positionOf(p, b.getKey()));
+        if (va == vb) {
+            throw new IllegalStateException("Robot.java: " + name() + ": \"" + a.getKey() + "\" and \"" + b.getKey()
+                    + "\" are the same servo position, so the arm's angles can't be worked out");
+        }
+        double perUnit = (b.getValue() - a.getValue()) / (vb - va);
+        double pos0 = a.getValue() - perUnit * va;
+        return "servo=" + device + ", pos0=" + Shape.n(pos0) + ", pos1=" + Shape.n(pos0 + perUnit);
+    }
+
+    // "intake_deploy>0.6": the servo has gone three quarters of the way from its start to this position.
+    String dropWords(String position) {
+        if (simSection == null) throw new IllegalStateException("Robot.java: " + name() + " is not added to the robot (add(...))");
+        Map<String, Double> p = positionsFrom(simSection);
+        double first = physical(p.values().iterator().next());
+        double target = physical(positionOf(p, position));
+        if (first == target) {
+            throw new IllegalStateException("Robot.java: " + name() + "'s \"" + position + "\" is where it starts: it can't push anything over");
+        }
+        return device + (target > first ? ">" : "<") + Shape.n(first + 0.75 * (target - first));
+    }
+
+    private double positionOf(Map<String, Double> p, String position) {
+        String n = findName(p.keySet(), position);
+        if (n == null) {
+            throw new IllegalStateException("Robot.java: " + name() + " has no position \"" + position + "\" (Tunables."
+                    + name() + " has " + p.keySet() + ")");
+        }
+        return p.get(n);
     }
 }

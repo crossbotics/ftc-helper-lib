@@ -17,6 +17,10 @@ import java.util.Map;
  * robot.intakeDeploy.goTo("deployed");                                // anywhere
  * }</pre>
  *
+ * <p>For the simulator, give its servo and draw what it swings: {@code .part("gobilda-2000-speed")
+ * .looks(Shape.arm().atMm(...).sizeMm(...).angle("stowed", 95).angle("deployed", -10))}. Parts that
+ * ride on it ({@code Shape.on(intakeDeploy)}) fold with it.
+ *
  * Docs: docs/modules/robot.md (section "Positioner")
  */
 public final class Positioner extends ServoPositions<Positioner> {
@@ -48,7 +52,13 @@ public final class Positioner extends ServoPositions<Positioner> {
     }
 
     @Override
+    boolean drawsLooks() {
+        return true;
+    }
+
+    @Override
     void simLines(List<String> out, TunableSection t) {
         out.add(simServoLine(t, "gobilda-2000-torque"));
+        lookLines(out, t);
     }
 }

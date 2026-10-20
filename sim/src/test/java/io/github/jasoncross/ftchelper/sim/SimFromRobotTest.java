@@ -88,10 +88,17 @@ public class SimFromRobotTest {
             s.init("FlywheelBot TeleOp");
             assertTrue("the help page shows in INIT", s.screenHas("G2 RT: in on/off [Intake]"));
             assertEquals("nothing moves in INIT", 0, s.robot().motors.get("intake").userPower(), 1e-9);
+            // The shapes from Robot.java: folded, it fits the start cube; at full reach, 18 x 24 x 29 in.
+            assertTrue("fits the start cube: " + s.robot().shapes.now(), s.robot().shapes.now().fits(18, 18, 18));
+            assertTrue("fits at full reach: " + s.robot().shapes.mostPose, s.robot().shapes.mostOk);
+            SimShapes.Shape arm = s.robot().shapes.shapes.get("intake_arm");
+            assertEquals("the intake starts folded up", 90, arm.value, 1e-9);
             s.start();
             SimRobot.SimServo deploy = s.robot().servos.get("intake_deploy");
             assertTrue("the deploy servo pushes at START", SimRun.waitFor(() -> deploy.actual > 0.5, 2));
-            assertTrue("and comes back", SimRun.waitFor(() -> deploy.actual < 0.1, 3));
+            assertTrue("the intake falls to its stop", SimRun.waitFor(() -> arm.value == -15, 2));
+            assertTrue("the servo comes back", SimRun.waitFor(() -> deploy.actual < 0.1, 3));
+            assertEquals("and the intake stays down", -15, arm.value, 1e-9);
             assertTrue("the intake runs from START", s.robot().motors.get("intake").userPower() > 0.5);
             s.press(v -> s.g2().right_trigger = v ? 1 : 0);           // intake off
             assertTrue(SimRun.waitFor(() -> s.robot().motors.get("intake").userPower() == 0, 1));

@@ -51,6 +51,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     private Tunable speedRpm, stepRpm;
     private int adjustSteps = 0;
     private boolean spinning = false;
+    private double shotAngleDeg = Double.NaN;
 
     private Launcher(String motor, String motorId) {
         super(motor);
@@ -72,6 +73,17 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     public Launcher feeder(Indexer feeder) {
         indexer = feeder;
         feeder.inLauncher = true;
+        return this;
+    }
+
+    /**
+     * Which way a piece leaves the robot, for the simulator: degrees up from the robot's forward, seen
+     * from the side (45 = forward and up, 90 = straight up, 135 = backward and up).
+     *
+     * @param degrees e.g. 147 for a shot up and out of the back
+     */
+    public Launcher shotAngle(double degrees) {
+        shotAngleDeg = degrees;
         return this;
     }
 
@@ -263,12 +275,28 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         }
     }
 
+    // Its motor is named in Launcher.flywheel(name, id).
+    @Override
+    String checkPart(String id) {
+        throw new IllegalStateException("Robot.java: the launcher's motor part goes in Launcher.flywheel(\"" + device + "\", \"" + id + "\")");
+    }
+
+    @Override
+    boolean drawsLooks() {
+        return true;
+    }
+
     @Override
     void simLines(List<String> out, TunableSection t) {
         String feederLine = indexer != null ? ", feeder=" + indexer.device : "";
         out.add(fmt("motor.%s = flywheel, part=%s%s, shotDrop=0.15", device, motorId, feederLine));
-        out.add(fmt("shape.%s = flywheel, at=-1,0,6, size=4x2x4, motor=%s   # TODO measure", device, device));
-        out.add(fmt("shoot.%s = shape=%s, angle=45, share=0.5   # TODO the shot angle (or a shot table: tools/launcher)", device, device));
+        if (looks.isEmpty()) out.add(fmt("shape.%s = flywheel, at=-1,0,6, size=4x2x4, motor=%s   # TODO measure", device, device));
+        else lookLines(out, t);
+        if (Double.isNaN(shotAngleDeg)) {
+            out.add(fmt("shoot.%s = shape=%s, angle=45, share=0.5   # TODO the shot angle (or a shot table: tools/launcher)", device, spinningShapeName()));
+        } else {
+            out.add(fmt("shoot.%s = shape=%s, angle=%s, share=0.5", device, spinningShapeName(), Shape.n(shotAngleDeg)));
+        }
     }
 
     // No indexer: shots only spin the wheel.

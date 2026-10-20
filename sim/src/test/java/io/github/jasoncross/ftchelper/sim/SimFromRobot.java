@@ -110,12 +110,16 @@ public final class SimFromRobot {
             sb.append("# robot, or ask the robot-file skill (skills/robot-file). See docs/guides/simulator.md.\n\n");
             sb.append("battery = 12.8\n");
             sb.append("field = ").append(field).append("\n");
-            sb.append("# TODO measure: the robot's size in inches, and a legal start (inches from the field centre).\n");
-            sb.append("robot.lengthIn = 18\nrobot.widthIn = 18\nrobot.heightIn = 18\n");
-            sb.append("robot.chassisHeightIn = 4\n");
-            sb.append("start.x = -56\nstart.y = -61.55\nstart.heading = 0\n");
-            sb.append("# TODO measure: wheel centres side to side, and front to back.\n");
-            sb.append("drive.trackWidthIn = 15\ndrive.wheelBaseIn = 13\n\n");
+            // The size and start lines, unless the code gives them (then they come with the code's lines).
+            String[][] defaults = {
+                {"# TODO measure: the robot's size in inches, and a legal start (inches from the field centre).", null},
+                {"robot.lengthIn = 18", "robot.lengthIn"}, {"robot.widthIn = 18", "robot.widthIn"},
+                {"robot.heightIn = 18", "robot.heightIn"}, {"robot.chassisHeightIn = 4", "robot.chassisHeightIn"},
+                {"start.x = -56", null}, {"start.y = -61.55", null}, {"start.heading = 0", null},
+                {"# TODO measure: wheel centres side to side, and front to back.", "drive.trackWidthIn"},
+                {"drive.trackWidthIn = 15", "drive.trackWidthIn"}, {"drive.wheelBaseIn = 13", "drive.wheelBaseIn"}};
+            for (String[] d : defaults) if (d[1] == null || !gen.containsKey(d[1])) sb.append(d[0]).append('\n');
+            sb.append('\n');
             sb.append("# ---- from Robot.java ----\n");
             for (String line : gen.values()) sb.append(line).append('\n');
             return new Result(sb.toString(), problems, kept);

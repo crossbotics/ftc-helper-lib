@@ -40,6 +40,8 @@ public final class Drive {
     String motorId = "gobilda-5203-312";
     double wheelMm = 96;
     double gearRatio = 1;
+    String wheelId = null;                                      // parts catalog id, if given
+    double trackMm = Double.NaN, wheelBaseMm = Double.NaN;      // for the simulator; NaN = not given
     String[] reversedNames = null;                              // null = the left side
     String imuName = "imu";
     LogoFacingDirection logo = LogoFacingDirection.UP;
@@ -82,6 +84,27 @@ public final class Drive {
     /** The wheel diameter in millimetres (goBILDA mecanum: 96 or 104). Default 96. */
     public Drive wheelMm(double mm) {
         wheelMm = mm;
+        return this;
+    }
+
+    /**
+     * The wheel by its parts catalog id (see {@link Parts}): its diameter comes from the catalog.
+     *
+     * @param id e.g. "gobilda-hogback-96"
+     */
+    public Drive wheel(String id) {
+        wheelMm = Parts.wheel(id).diameterMm;
+        wheelId = id;
+        return this;
+    }
+
+    /**
+     * Where the wheels sit, for the simulator's turning: wheel centres side to side (track) and front
+     * to back (wheel base), in mm.
+     */
+    public Drive wheelsAtMm(double trackMm, double wheelBaseMm) {
+        this.trackMm = trackMm;
+        this.wheelBaseMm = wheelBaseMm;
         return this;
     }
 
@@ -194,7 +217,11 @@ public final class Drive {
     void simLines(List<String> out) {
         out.add("drive.type = " + (isMecanum() ? "mecanum" : "tank"));
         out.add("drive.part = " + motorId);
-        out.add(Module.fmt("drive.wheelDiameterIn = %.3f", wheelMm / 25.4));
+        out.add(Module.fmt("drive.wheelDiameterIn = %.3f", wheelMm / 25.4) + (wheelId != null ? "   # " + wheelId : ""));
+        if (!Double.isNaN(trackMm)) {
+            out.add("drive.trackWidthIn = " + Shape.n(trackMm / 25.4));
+            out.add("drive.wheelBaseIn = " + Shape.n(wheelBaseMm / 25.4));
+        }
         if (gearRatio != 1) out.add(Module.fmt("drive.gearRatio = %s", gearRatio));
         out.add("drive.motors = " + join(motorNames()));
         // Which side the code reverses; the simulator mirrors that side so forward is forward.

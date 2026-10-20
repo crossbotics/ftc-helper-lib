@@ -31,6 +31,7 @@ public final class Intake extends Module<Intake> implements Toggleable {
     private final List<String> reversed = new ArrayList<>();
     private final List<String> extraCrServos = new ArrayList<>();
     private boolean onAtStart = false;
+    private int holds = 0;                // 0 = not given
 
     private final List<DcMotorEx> motors = new ArrayList<>();
     private final List<CRServo> crServos = new ArrayList<>();
@@ -77,6 +78,17 @@ public final class Intake extends Module<Intake> implements Toggleable {
     /** Reverses the only device (same as {@code reversed(itsName)}). */
     public Intake reversed() {
         reversed.add(device);
+        return this;
+    }
+
+    /**
+     * How many game pieces it can hold at once (for the simulator; default: a guess of 3).
+     *
+     * @param pieces e.g. 4
+     */
+    public Intake holds(int pieces) {
+        if (pieces < 1) throw new IllegalArgumentException("Intake.holds: at least 1");
+        holds = pieces;
         return this;
     }
 
@@ -211,13 +223,40 @@ public final class Intake extends Module<Intake> implements Toggleable {
     }
 
     @Override
+    String checkPart(String id) {
+        return servos ? Parts.servo(id) : super.checkPart(id);
+    }
+
+    @Override
+    boolean drawsLooks() {
+        return true;
+    }
+
+    // Its rollers spin with the motor (or the first CR servo).
+    @Override
+    String driverFor(Shape s, TunableSection t) {
+        if (s.spins()) return (servos ? "crservo=" : "motor=") + names[0];
+        throw new IllegalStateException("Robot.java: an intake spins rollers; a " + s.type
+                + " shape that swings belongs to the part that swings it (a Positioner), or is .passive()");
+    }
+
+    @Override
     void simLines(List<String> out, TunableSection t) {
         for (String n : names) {
-            out.add(servos ? "crservo." + n + " =" : "motor." + n + " = free, part=gobilda-5203-1150   # TODO the real motor");
+            if (servos) out.add("crservo." + n + " =" + (partId != null ? "   # " + partId : ""));
+            else if (partId != null) out.add("motor." + n + " = free, part=" + partId);
+            else out.add("motor." + n + " = free, part=gobilda-5203-1150   # TODO the real motor");
         }
-        out.add("shape." + device + " = roller, at=8,0,2, size=2x14x2, "
-                + (servos ? "crservo=" : "motor=") + names[0] + "   # TODO measure: place and size");
+        if (looks.isEmpty()) {
+            out.add("shape." + device + " = roller, at=8,0,2, size=2x14x2, "
+                    + (servos ? "crservo=" : "motor=") + names[0] + "   # TODO measure: place and size");
+        } else {
+            lookLines(out, t);
+        }
         for (String n : extraCrServos) out.add("crservo." + n + " =");
-        if (!servos) out.add("collect." + device + " = shape=" + device + ", motor=" + device + ", holds=3   # TODO how many it holds");
+        if (!servos) {
+            out.add("collect." + device + " = shape=" + spinningShapeName() + ", motor=" + device + ", holds="
+                    + (holds > 0 ? holds : 3 + "   # TODO how many it holds"));
+        }
     }
 }

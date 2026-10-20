@@ -36,6 +36,13 @@ final class SimShapes {
         // motors: (shaft - zeroTicks) / perUnit + start; servos: pos0 + position * (pos1 - pos0).
         final double perUnit, zeroTicks, start, pos0, pos1;
         final double min, max;          // the range of motion (for the "fully extended" size check)
+        // passive=yes: moved by gravity or springs, not by the code. drop=SERVO>0.6 (or <): when that servo
+        // passes the value, the part falls to fallsTo= (its hard stop) and stays there.
+        final boolean passive;
+        final String dropServo;
+        final double dropAt, fallsTo;
+        final boolean dropAbove;
+        boolean dropped = false;
         double value = 0;               // now: inches, degrees, gap inches; spin degrees for rollers
 
         Shape(String name, Map<String, String> s, SimRobot robot) {
@@ -110,8 +117,36 @@ final class SimShapes {
                         : servo != null ? "Give pos0= and pos1= different values, or write " : "Give it a motor= or servo=, and ")
                         + (type.equals("slide") ? "travel=" : type.equals("claw") ? "pos0=/pos1=" : "minDeg= and maxDeg=") + " on the shape.");
             }
-            if (moves() && motor == null && servo == null) {
-                throw new IllegalArgumentException("Robot file: shape." + name + ": a " + type + " needs motor= or servo= (what moves it)");
+            passive = s.containsKey("passive") && s.get("passive").equalsIgnoreCase("yes");
+            if (passive && (motor != null || servo != null)) {
+                throw new IllegalArgumentException("Robot file: shape." + name + ": passive=yes is for a part nothing drives; remove motor=/servo=");
+            }
+            if (moves() && motor == null && servo == null && !passive) {
+                throw new IllegalArgumentException("Robot file: shape." + name + ": a " + type + " needs motor= or servo= (what moves it), "
+                        + "or passive=yes (gravity or springs move it)");
+            }
+            String drop = s.get("drop");
+            if (drop != null) {
+                java.util.regex.Matcher dm = java.util.regex.Pattern.compile("\\s*([^<>\\s]+)\\s*([<>])\\s*([-0-9.]+)\\s*").matcher(drop);
+                if (!passive || !dm.matches()) {
+                    throw new IllegalArgumentException("Robot file: shape." + name + ": drop= goes with passive=yes and reads like "
+                            + "drop=intake_deploy>0.6 (a servo, > or <, a position 0 to 1)");
+                }
+                if (!robot.servos.containsKey(dm.group(1))) {
+                    throw new IllegalArgumentException("Robot file: shape." + name + ": drop=: no servo." + dm.group(1) + " in the robot file");
+                }
+                dropServo = dm.group(1);
+                dropAbove = dm.group(2).equals(">");
+                dropAt = Double.parseDouble(dm.group(3));
+                fallsTo = s.containsKey("fallsTo") ? num(s, "fallsTo", name) : (Math.abs(min - start) > Math.abs(max - start) ? min : max);
+                if (fallsTo < min || fallsTo > max) {
+                    throw new IllegalArgumentException("Robot file: shape." + name + ": fallsTo=" + fallsTo + " is outside its range " + min + ".." + max);
+                }
+            } else {
+                dropServo = null;
+                dropAbove = false;
+                dropAt = 0;
+                fallsTo = start;
             }
             if (type.equals("turret") && s.containsKey("axis") && !axis.equals("up")) {
                 throw new IllegalArgumentException("Robot file: shape." + name + ": a turret always turns about up (leave out axis=, or use an arm)");
@@ -461,6 +496,15 @@ final class SimShapes {
         return out;
     }
 
+    /** Back to the start of a match: passive parts that dropped are put back (by hand, as on a real robot). */
+    void resetPassive() {
+        for (Shape s : shapes.values()) {
+            if (!s.passive) continue;
+            s.dropped = false;
+            s.value = s.start;
+        }
+    }
+
     /** Reads each shape's driver (motor, servo, CR servo) into its value. */
     void update(double dt) {
         for (Shape s : shapes.values()) {
@@ -477,7 +521,17 @@ final class SimShapes {
                 s.value = (s.value + turnsPerSec * 360 * dt) % 360;
                 continue;
             }
-            if (s.motor != null) {
+            if (s.passive) {
+                // Pushed over: it falls to its stop (fast: about half a turn a second, or 20 in/s) and stays.
+                if (s.dropServo != null && !s.dropped) {
+                    double pos = robot.servos.get(s.dropServo).actual;
+                    s.dropped = s.dropAbove ? pos > s.dropAt : pos < s.dropAt;
+                }
+                if (s.dropped) {
+                    double step = (s.type.equals("slide") ? 20 : 180) * dt;
+                    s.value = Math.abs(s.fallsTo - s.value) <= step ? s.fallsTo : s.value + Math.signum(s.fallsTo - s.value) * step;
+                }
+            } else if (s.motor != null) {
                 s.value = s.start + (robot.motors.get(s.motor).shaft() - s.zeroTicks) / s.perUnit;
             } else if (s.servo != null) {
                 s.value = s.pos0 + robot.servos.get(s.servo).actual * (s.pos1 - s.pos0);

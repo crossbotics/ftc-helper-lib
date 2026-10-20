@@ -34,6 +34,11 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
     TunableSection tunables;
     // The running action that is using this part now (null = none): see touch().
     Action owner;
+    // The main device's parts catalog id (null = not given) and how the part looks (see Shape).
+    String partId;
+    final List<Shape> looks = new ArrayList<>();
+    // While writing the simulator file: this module's Tunables section (another part's shape may need it).
+    TunableSection simSection;
 
     /**
      * @param device the main device's configuration name
@@ -57,6 +62,34 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
      */
     public M tunables(String sectionName) {
         section = sectionName;
+        return self();
+    }
+
+    /**
+     * The main device's parts catalog id: a motor ({@link Motors}, e.g. "gobilda-5203-117") or a servo
+     * ({@link Parts#servo}, e.g. "gobilda-2000-speed"). The simulator then moves it like the real one.
+     *
+     * @param catalogId the id; a typo stops with the list of known ids
+     * @return this module
+     */
+    public M part(String catalogId) {
+        partId = checkPart(catalogId);
+        return self();
+    }
+
+    /**
+     * How the part looks and where it sits ({@link Shape}), for the simulator's 3D view and size checks.
+     * This part moves them: an intake spins its rollers, a positioner swings its arm.
+     *
+     * @param shapes one or more, e.g. {@code Shape.roller("offset-tubing-90").atMm(200, 0, 50).lengthMm(240)}
+     * @return this module
+     */
+    public M looks(Shape... shapes) {
+        if (!drawsLooks()) {
+            throw new UnsupportedOperationException("Robot.java: " + name() + " cannot take shapes yet (Intake, Positioner, "
+                    + "Launcher and Indexer can). Draw it in the simulator robot file instead (docs/guides/simulator.md).");
+        }
+        for (Shape s : shapes) looks.add(s);
         return self();
     }
 
@@ -114,6 +147,56 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
      * the numbers come from {@code t}.
      */
     void simLines(List<String> out, TunableSection t) { }
+
+    /** Checks a parts catalog id for the main device (default: a motor). */
+    String checkPart(String id) {
+        Motors.get(id);
+        return id;
+    }
+
+    /** True for the modules whose {@link #looks} the simulator file draws. */
+    boolean drawsLooks() {
+        return false;
+    }
+
+    /** Shape i's name in the robot file: its own name, or (the shapes with none) the device's name, then name_2, name_3... */
+    final String shapeName(int i) {
+        Shape s = looks.get(i);
+        if (s.name != null) return s.name;
+        int unnamed = 0;
+        for (int k = 0; k < i; k++) if (looks.get(k).name == null) unnamed++;
+        return unnamed == 0 ? device : device + "_" + (unnamed + 1);
+    }
+
+    /** The shape another shape rides on with {@code on(thisPart)}: the first one (or the generated one). */
+    final String firstShapeName() {
+        return looks.isEmpty() ? device : shapeName(0);
+    }
+
+    /** The first shape that spins (an intake's roller, a launcher's wheel), or the first shape. */
+    final String spinningShapeName() {
+        for (int i = 0; i < looks.size(); i++) if (looks.get(i).spins()) return shapeName(i);
+        return firstShapeName();
+    }
+
+    /**
+     * What moves this shape, as robot file words ("motor=intake"), or null for nothing. Default: a
+     * spinning shape turns with the main motor.
+     */
+    String driverFor(Shape s, TunableSection t) {
+        if (s.spins()) return "motor=" + device;
+        throw new IllegalStateException("Robot.java: " + name() + " cannot move a " + s.type + " shape");
+    }
+
+    /** The shape lines of {@link #looks} (a box never moves: no driver). */
+    final void lookLines(List<String> out, TunableSection t) {
+        for (int i = 0; i < looks.size(); i++) {
+            Shape s = looks.get(i);
+            String parent = s.onModule != null ? s.onModule.firstShapeName() : s.onShape;
+            String driver = s.type.equals("box") || s.passive ? null : driverFor(s, t);
+            out.add(s.line(shapeName(i), parent, driver));
+        }
+    }
 
     /** Notes for INIT (missing Tunables fields...). */
     List<String> notes() {

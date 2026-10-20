@@ -1174,5 +1174,67 @@
       "checked": "2026-10-16",
       "notes": "Axon's archive page says the MINI+ is discontinued and replaced by the MINI MK2; its spec table is identical to the MK2's. Dual mode (servo/continuous). Range of motion NOT given on the archive page -> null. No part number published -> null."
     }
+  ],
+  "wheels": [
+    {
+      "id": "gobilda-gecko-48-rex",
+      "name": "goBILDA GripForce Gecko Wheel 48 mm (8 mm REX bore, 30A)",
+      "partNumber": "3613-4008-0048",
+      "seller": "goBILDA",
+      "url": "https://www.gobilda.com/gripforce-gecko-wheel-8mm-rex-bore-48mm-diameter-30a-durometer/",
+      "status": "in stock",
+      "diameterMm": 48,
+      "widthMm": null,
+      "checked": "2026-10-20",
+      "notes": "The page gives the diameter, not the width."
+    },
+    {
+      "id": "gobilda-gecko-72",
+      "name": "goBILDA GripForce Gecko Wheel 72 mm (14 mm bore, 30A)",
+      "partNumber": "3613-0014-0072",
+      "seller": "goBILDA",
+      "url": "https://www.gobilda.com/gripforce-gecko-wheel-14mm-bore-72mm-diameter-30a-durometer/",
+      "status": "in stock",
+      "diameterMm": 72,
+      "widthMm": 24,
+      "checked": "2026-10-20",
+      "notes": "widthMm measured in goBILDA's STEP CAD of its BIOBUZZ starter bot (3200-2627-0003, see sim/robots/starter-bot-gobilda.properties); the page gives the diameter only."
+    },
+    {
+      "id": "gobilda-hogback-96",
+      "name": "goBILDA Hogback Traction Wheel 96 mm (50A)",
+      "partNumber": "3626-0014-0096",
+      "seller": "goBILDA",
+      "url": "https://www.gobilda.com/hogback-traction-wheel-96mm-diameter-50a-durometer/",
+      "status": "in stock",
+      "diameterMm": 96,
+      "widthMm": 24,
+      "checked": "2026-10-20",
+      "notes": "widthMm measured in goBILDA's STEP CAD of its BIOBUZZ starter bot (3200-2627-0003, see sim/robots/starter-bot-gobilda.properties); the page gives the diameter only."
+    },
+    {
+      "id": "offset-tubing-60",
+      "name": "Offset Surgical Tubing Roller 60 mm",
+      "partNumber": null,
+      "seller": "Offset Robotics",
+      "url": "https://offsetrobotics.com/product/offset-surgical-tubing-rollers",
+      "status": "US warehouse: on backorder",
+      "diameterMm": 60,
+      "widthMm": null,
+      "checked": "2026-10-20",
+      "notes": "55A silicone tubing pieces on the OFFSET HEXAHUB, sold in packs of 6 (60 mm, 90 mm or both). No part number on the page. The page gives the diameter only; how long a roller is depends on how many hubs are on the shaft."
+    },
+    {
+      "id": "offset-tubing-90",
+      "name": "Offset Surgical Tubing Roller 90 mm",
+      "partNumber": null,
+      "seller": "Offset Robotics",
+      "url": "https://offsetrobotics.com/product/offset-surgical-tubing-rollers",
+      "status": "US warehouse: on backorder",
+      "diameterMm": 90,
+      "widthMm": null,
+      "checked": "2026-10-20",
+      "notes": "55A silicone tubing pieces on the OFFSET HEXAHUB, sold in packs of 6 (60 mm, 90 mm or both). No part number on the page. The page gives the diameter only; how long a roller is depends on how many hubs are on the shaft."
+    }
   ]
 }

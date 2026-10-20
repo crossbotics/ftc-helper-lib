@@ -13,7 +13,8 @@ import org.junit.Test;
 public class SimShapesTest {
     @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
-    private SimRobot robot(String extra) throws Exception {
+    private SimRobot robot(String... lines) throws Exception {
+        String extra = String.join("\n", lines) + "\n";
         String base = new String(Files.readAllBytes(new File("robots/starter.properties").toPath()), "UTF-8");
         // drop the starter's shapes, keep its devices
         StringBuilder b = new StringBuilder();
@@ -26,6 +27,15 @@ public class SimShapesTest {
         File f = tmp.newFile();
         Files.write(f.toPath(), (b + extra).getBytes("UTF-8"));
         return SimRobot.load(f.toPath());
+    }
+
+    private void expectError(String words, String... lines) throws Exception {
+        try {
+            robot(lines);
+            org.junit.Assert.fail("should be refused: " + String.join(" / ", lines));
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains(words));
+        }
     }
 
     private static double top(SimRobot r, String shape) {
@@ -99,5 +109,34 @@ public class SimShapesTest {
         } catch (IllegalArgumentException e) {
             assertTrue(e.getMessage(), e.getMessage().contains("reversed") && e.getMessage().contains("name=value"));
         }
+    }
+
+    // ----------------------------- passive parts -----------------------------
+
+    @Test public void aPassiveArmDropsWhenItsServoPassesAndStaysThere() throws Exception {
+        SimRobot r = robot("servo.kick = 0, part=gobilda-2000-speed",
+                "shape.kicker = arm, at=4,0,4, size=2x1x1, servo=kick, pos0=90, pos1=0",
+                "shape.fold = arm, at=4,0,4, size=6x8x1, start=90, minDeg=-10, maxDeg=90, passive=yes, drop=kick>0.6, fallsTo=-10");
+        SimShapes.Shape fold = r.shapes.shapes.get("fold");
+        r.shapes.update(0.1);
+        assertEquals("not pushed yet", 90, fold.value, 1e-9);
+        r.servos.get("kick").actual = 0.7;
+        for (int i = 0; i < 20; i++) r.shapes.update(0.1);
+        assertEquals("fell to its stop", -10, fold.value, 1e-9);
+        r.servos.get("kick").actual = 0;
+        r.shapes.update(0.1);
+        assertEquals("stays down when the servo goes back", -10, fold.value, 1e-9);
+        r.resetPose();
+        assertEquals("a new match: folded again", 90, fold.value, 1e-9);
+    }
+
+    @Test public void aPassivePartNeedsARangeAndNoDriver() throws Exception {
+        expectError("needs motor= or servo=", "shape.a = arm, size=2x2x2, minDeg=0, maxDeg=90");
+        expectError("no range of motion", "shape.a = arm, size=2x2x2, passive=yes");
+        expectError("passive=yes", "shape.a = arm, size=2x2x2, minDeg=0, maxDeg=90, drop=x>0.5");
+        expectError("drop=intake_deploy>0.6", "shape.a = arm, size=2x2x2, minDeg=0, maxDeg=90, passive=yes, drop=x=0.5");
+        expectError("no servo.x", "shape.a = arm, size=2x2x2, minDeg=0, maxDeg=90, passive=yes, drop=x>0.5");
+        SimRobot r = robot("shape.s = slide, size=1x1x1, travel=1, passive=yes");
+        assertEquals("a passive slide rests at its start", 0, r.shapes.shapes.get("s").value, 1e-9);
     }
 }

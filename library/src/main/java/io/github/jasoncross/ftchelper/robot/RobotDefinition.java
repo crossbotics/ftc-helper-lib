@@ -54,6 +54,10 @@ public abstract class RobotDefinition {
     private Subsystems all = null;
     private Alliance alliance = Alliance.BLUE;
     private TunableSection driveSection = null;
+    // For the simulator: the chassis box and the whole robot's height (inches; NaN = not given), fixed shapes.
+    private double[] chassisIn = null;
+    private double heightIn = Double.NaN;
+    private final List<Shape> fixed = new ArrayList<>();
     /** Runs the actions; one per robot. */
     final ActionRunner runner = new ActionRunner();
 
@@ -109,6 +113,34 @@ public abstract class RobotDefinition {
      */
     protected final void atStart(Supplier<Action> action) {
         atStart.add(action);
+    }
+
+    /**
+     * The chassis box for the simulator (it bumps into the field and the game pieces): length front
+     * to back, width side to side, height from the tiles to its top, in mm.
+     */
+    protected final void chassisMm(double length, double width, double height) {
+        chassisIn = new double[] {length / 25.4, width / 25.4, height / 25.4};
+    }
+
+    /** The whole robot's height in mm (the tallest fixed part), for the simulator. */
+    protected final void heightMm(double height) {
+        heightIn = height / 25.4;
+    }
+
+    /**
+     * Parts the code does not move, for the simulator: {@code fixed(Shape.box("ramp")...)}, and
+     * {@link Shape#passive} parts that belong to no module.
+     *
+     * @param shapes one or more {@link Shape#box} or passive shapes
+     */
+    protected final void fixed(Shape... shapes) {
+        for (Shape s : shapes) {
+            if (!s.type.equals("box") && !s.passive) throw new IllegalArgumentException("Robot.java: fixed(...) takes Shape.box(...) "
+                    + "and passive parts; a part the code moves goes in its module's looks(...)");
+            if (s.name == null) throw new IllegalArgumentException("Robot.java: a fixed " + s.type + " needs .name(...)");
+            fixed.add(s);
+        }
     }
 
     // ----------------------------- set up -----------------------------
@@ -267,7 +299,18 @@ public abstract class RobotDefinition {
     public final List<String> simLines() {
         describe();
         List<String> out = new ArrayList<>();
+        if (chassisIn != null) {
+            out.add("robot.lengthIn = " + Shape.n(chassisIn[0]));
+            out.add("robot.widthIn = " + Shape.n(chassisIn[1]));
+            out.add("robot.chassisHeightIn = " + Shape.n(chassisIn[2]));
+        }
+        if (!Double.isNaN(heightIn)) out.add("robot.heightIn = " + Shape.n(heightIn));
+        for (Module<?> m : modules) {
+            for (Module<?> c : m.children()) c.simSection = TunableSection.of(tunablesClass, c.name());
+            m.simSection = TunableSection.of(tunablesClass, m.name());
+        }
         drive.simLines(out);
+        for (Shape s : fixed) out.add(s.line(s.name, s.onModule != null ? s.onModule.firstShapeName() : s.onShape, null));
         for (Module<?> m : modules) {
             for (Module<?> c : m.children()) c.simLines(out, TunableSection.of(tunablesClass, c.name()));
             m.simLines(out, TunableSection.of(tunablesClass, m.name()));

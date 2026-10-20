@@ -447,6 +447,7 @@ final class SimRobot {
         bumpedInto = "";
         if (world != null) world.place(x, y, headingDeg);
         if (pieces != null) pieces.reset();   // back to the start of a match: the pieces too
+        if (shapes != null) shapes.resetPassive();   // and a dropped intake goes back up
     }
 
     /** What a robot at this pose would overlap ("field wall" or an element's name), or null. */

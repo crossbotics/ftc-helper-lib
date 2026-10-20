@@ -165,14 +165,34 @@ public final class Indexer extends Module<Indexer> implements Feeder {
     }
 
     @Override
+    String checkPart(String id) {
+        return kind == Kind.MOTOR ? super.checkPart(id) : Parts.servo(id);
+    }
+
+    @Override
+    boolean drawsLooks() {
+        return true;
+    }
+
+    // A feeder wheel spins with its CR servo or motor.
+    @Override
+    String driverFor(Shape s, TunableSection t) {
+        if (s.spins() && kind != Kind.SERVO) return (kind == Kind.CR_SERVO ? "crservo=" : "motor=") + device;
+        throw new IllegalStateException("Robot.java: " + name() + " can only spin a roller (on a CR servo or a motor)");
+    }
+
+    @Override
     void simLines(List<String> out, TunableSection t) {
         if (kind == Kind.SERVO) {
             // Where it rests, as the simulated servo sees it (a reversed servo's 0.15 is really 0.85).
             double rest = t.number("rest", 0);
-            out.add(fmt("servo.%s = %.2f, part=gobilda-2000-speed   # TODO the real servo", device, reversed ? 1 - rest : rest));
+            out.add(partId != null ? fmt("servo.%s = %.2f, part=%s", device, reversed ? 1 - rest : rest, partId)
+                    : fmt("servo.%s = %.2f, part=gobilda-2000-speed   # TODO the real servo", device, reversed ? 1 - rest : rest));
         }
-        else if (kind == Kind.CR_SERVO) out.add("crservo." + device + " =");
+        else if (kind == Kind.CR_SERVO) out.add("crservo." + device + " =" + (partId != null ? "   # " + partId : ""));
+        else if (partId != null) out.add("motor." + device + " = free, part=" + partId);
         else out.add("motor." + device + " = free, part=gobilda-5203-1150   # TODO the real motor");
+        lookLines(out, t);
     }
 
     /** True for a motor feeder (the simulator's flywheel needs to know). */
