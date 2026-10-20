@@ -22,6 +22,8 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   in); rollers and spinners drag the pieces they touch at their surface speed; the robot rolls over a
   FLOWER's thin floor plate.
 - README: a simulator section with a picture.
+- Simulator page: the Driver Hub looks like the Driver Station app (Auto/TeleOp lists, one INIT/play/stop
+  button, battery, gamepad lights) and the on-screen gamepads look like real controllers.
 - The GUIDE button map leaves out the free buttons (INIT still lists them).
 - `./gradlew :sim:run -Pport=8781`: another port, to run two simulators at once.
 - **GUIDE shows the button map** in a Controls.java TeleOp (a tap; tap again to close); holding GUIDE

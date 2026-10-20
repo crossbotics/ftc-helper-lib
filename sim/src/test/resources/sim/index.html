@@ -22,7 +22,8 @@
   header h1 { font-size: 17px; margin: 0; }
   header .note { color: var(--muted); font-size: 12px; }
   /* Narrow screens: one column you scroll. */
-  main { display: grid; grid-template-columns: 1fr; gap: 10px; padding: 10px 12px; }
+  main { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; padding: 10px 12px; }
+  main > section { min-width: 0; }
   /* A laptop or bigger: everything on one screen, no page scroll. The 3D field in the middle, the gamepads under
      it, the Driver Hub on the left, the Control Hub (panels shown or hidden by its buttons) on the right. */
   @media (min-width: 1100px) and (min-height: 640px) {
@@ -30,7 +31,8 @@
     body:not(.phone) main { flex: 1; min-height: 0; grid-template-columns: minmax(280px, 340px) minmax(420px, 1fr) minmax(290px, 360px);
       grid-template-rows: minmax(0, 1fr) auto; grid-template-areas: "ds view hub" "ds pads hub"; }
     body:not(.phone) #dsSection { grid-area: ds; display: flex; flex-direction: column; min-height: 0; }
-    body:not(.phone) #screen { flex: 1; height: auto; min-height: 120px; }
+    body:not(.phone) .dh, body:not(.phone) .dh-screen, body:not(.phone) .dh-tele { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    body:not(.phone) #screen { flex: 1; height: auto; min-height: 90px; }
     body:not(.phone) #view3dSection { grid-area: view; display: flex; flex-direction: column; min-height: 0; }
     body:not(.phone) #stage { flex: 1; height: auto; min-height: 200px; }
     body:not(.phone) #padsSection { grid-area: pads; }
@@ -50,32 +52,81 @@
   button { cursor: pointer; }
   button:disabled { opacity: .45; cursor: default; }
   .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .ds-buttons button { min-width: 74px; font-weight: 600; }
-  #initBtn { border-color: var(--accent); }
-  #startBtn { background: var(--go); color: #fff; border-color: var(--go); }
-  #stopBtn { background: var(--stop); color: #fff; border-color: var(--stop); }
-  #opmode { flex: 1; min-width: 0; }
-  .status { margin: 8px 0; color: var(--muted); font-size: 13px; }
-  .status b { color: var(--ink); }
-  /* The Driver Hub telemetry: about 52 characters wide, like the real screen. */
-  #screen { background: var(--screen); color: var(--screen-ink); font: 13px/1.35 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-            border-radius: 8px; padding: 10px; height: 380px; overflow: auto; white-space: pre-wrap; word-break: break-word; width: 100%; max-width: 54ch; }
+  /* The Driver Hub: a black handheld with the Driver Station app on its screen. */
+  .dh { background: #15171a; border-radius: 18px; padding: 12px 12px 14px; box-shadow: inset 0 0 0 2px #2b2f35, 0 2px 6px rgba(0,0,0,.25); }
+  .dh-screen { background: #eceff1; color: #1d2330; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; }
+  .dh-top { display: flex; align-items: center; gap: 10px; background: #263238; color: #eceff1; padding: 6px 10px; font-size: 12px; }
+  .dh-top .net { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dh-top .net b { font-weight: 600; }
+  .dh-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #9e9e9e; margin-right: 5px; vertical-align: 0; }
+  .dh-dot.ok { background: #4caf50; }
+  .dh-batt { display: inline-flex; align-items: center; gap: 4px; font-variant-numeric: tabular-nums; }
+  .dh-batt svg { width: 22px; height: 11px; }
+  .dh-user { display: inline-flex; align-items: center; gap: 2px; opacity: .45; }
+  .dh-user.on { opacity: 1; color: #81c784; }
+  .dh-user svg { width: 20px; height: 13px; }
+  .dh-op { display: flex; align-items: stretch; gap: 6px; padding: 10px 10px 6px; position: relative; }
+  .dh-kind { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; width: 58px; flex: none;
+    background: #fff; color: #37474f; border: 1px solid #b0bec5; border-radius: 4px; font-size: 10px; font-weight: 600; padding: 4px 2px; }
+  .dh-kind svg { width: 22px; height: 18px; }
+  .dh-kind:hover { background: #e3f2fd; }
+  #opmode { flex: 1; min-width: 0; background: #fff; color: #1d2330; border: 1px solid #b0bec5; border-radius: 4px; font-weight: 600; text-align: center; }
+  .dh-menu { position: absolute; z-index: 5; top: 100%; left: 10px; right: 10px; background: #fff; color: #1d2330; border: 1px solid #90a4ae;
+    border-radius: 4px; box-shadow: 0 6px 18px rgba(0,0,0,.25); max-height: 260px; overflow: auto; }
+  .dh-menu h4 { margin: 0; padding: 6px 10px; background: #263238; color: #eceff1; font-size: 12px; }
+  .dh-menu button { display: block; width: 100%; text-align: left; border: 0; border-bottom: 1px solid #eceff1; border-radius: 0; background: #fff; color: #1d2330; padding: 8px 10px; }
+  .dh-menu button:hover, .dh-menu button:focus-visible { background: #e3f2fd; }
+  .dh-menu .muted { padding: 8px 10px; }
+  .dh-run { display: flex; align-items: center; justify-content: center; gap: 14px; padding: 6px 10px 10px; }
+  .dh-big { width: 74px; height: 74px; border-radius: 50%; border: 3px solid #455a64; background: #fff; color: #263238; display: grid; place-items: center;
+    font-weight: 800; font-size: 17px; letter-spacing: .04em; padding: 0; box-shadow: 0 2px 4px rgba(0,0,0,.2); }
+  .dh-big svg { width: 34px; height: 34px; }
+  #startBtn { border-color: #2e7d32; color: #2e7d32; }
+  #stopBtn { border-color: #c62828; color: #c62828; }
+  .dh-big.small { width: 46px; height: 46px; border-width: 2px; font-size: 12px; }
+  .dh-big.small svg { width: 20px; height: 20px; }
+  .dh-big:hover { filter: brightness(.96); }
+  .dh-big[hidden] { display: none; }
+  .dh-timer { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; color: #546e7a; }
+  .dh-timer .t { font: 700 22px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace; color: #263238; font-variant-numeric: tabular-nums; }
+  .dh-tele { background: #fff; border-top: 1px solid #cfd8dc; padding: 8px 10px; }
+  .status { margin: 0 0 4px; color: #546e7a; font-size: 12.5px; }
+  .status b { color: #1d2330; }
+  /* The telemetry: about 52 characters wide, like the real screen. */
+  #screen { background: #fff; color: #1d2330; font: 13px/1.35 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+            padding: 2px 0; height: 320px; overflow: auto; white-space: pre-wrap; word-break: break-word; width: 100%; max-width: 54ch; }
+  .dh-foot { display: flex; justify-content: center; gap: 26px; padding-top: 9px; }
+  .dh-foot i { width: 26px; height: 4px; border-radius: 2px; background: #3a3f46; }
   #error { display: none; margin-top: 8px; padding: 8px; border-radius: 6px; background: color-mix(in srgb, var(--stop) 15%, transparent);
            color: var(--stop); font: 12px/1.35 ui-monospace, Menlo, monospace; white-space: pre-wrap; }
   .pad { margin-bottom: 14px; }
   .pad .src { margin-left: auto; }
+  /* The on-screen gamepads: drawn like a real controller (Xbox 360 / Logitech layout, the buttons the SDK names). */
   .gp { position: relative; width: 100%; max-width: 420px; aspect-ratio: 420 / 250; margin: 6px auto 0; user-select: none; touch-action: none;
-        background: color-mix(in srgb, var(--btn) 70%, transparent); border: 1px solid var(--line); border-radius: 60px 60px 90px 90px; }
+        container-type: inline-size; }
+  .gp > svg.body { position: absolute; inset: 0; width: 100%; height: 100%; }
   .gp.off { opacity: .35; pointer-events: none; }
-  .b { position: absolute; display: grid; place-items: center; border: 1px solid var(--line); background: var(--panel); color: var(--ink);
-       font-size: 12px; font-weight: 700; border-radius: 50%; cursor: pointer; }
-  .b.on { background: var(--btn-down); color: var(--btn-ink-down); border-color: var(--btn-down); }
-  .b.wide { border-radius: 8px; font-size: 11px; font-weight: 600; }
-  .stick { position: absolute; width: 20%; aspect-ratio: 1; border-radius: 50%; border: 1px dashed var(--line); background: var(--panel); }
-  .knob { position: absolute; width: 46%; height: 46%; left: 27%; top: 27%; border-radius: 50%; background: var(--accent); opacity: .85; cursor: grab; }
-  .trig { position: absolute; width: 16%; top: 2%; }
-  .trig input { width: 100%; }
-  .trig span { font-size: 11px; color: var(--muted); }
+  .b { position: absolute; display: grid; place-items: center; border: 0; background: #3b4047; color: #e8eaed;
+       font-size: 3.2cqw; font-weight: 800; border-radius: 50%; cursor: pointer; line-height: 1; overflow: hidden;
+       box-shadow: inset 0 -2px 0 rgba(0,0,0,.45), 0 1px 1px rgba(0,0,0,.4); }
+  .b.on { filter: brightness(1.35); box-shadow: inset 0 2px 3px rgba(0,0,0,.5), 0 0 0 2px #fff; }
+  .b.face { color: #fff; font-size: 3.6cqw; text-shadow: 0 1px 1px rgba(0,0,0,.5); }
+  .b.k-a { background: #2e9e48; } .b.k-b { background: #d93a3a; } .b.k-x { background: #2f6fd6; } .b.k-y { background: #e8b51c; }
+  .b.dpad { border-radius: 3px; background: #2c3036; font-size: 2.4cqw; color: #9aa0a6; }
+  .b.bumper { border-radius: 3cqw 3cqw 1.2cqw 1.2cqw; background: #4a4f57; font-size: 2.8cqw; }
+  .b.small { border-radius: 2cqw; background: #555b63; font-size: 0; }
+  .b.guide { background: radial-gradient(circle at 40% 35%, #f1f3f4, #9aa0a6 70%); font-size: 0; }
+  .b.guide::after { content: ""; width: 42%; height: 42%; border-radius: 50%; border: .6cqw solid #3c4043; }
+  .stick { position: absolute; width: 17%; aspect-ratio: 1; border-radius: 50%; background: #16181b;
+           box-shadow: inset 0 2px 5px rgba(0,0,0,.8), 0 0 0 2px #30343a; }
+  .knob { position: absolute; width: 66%; height: 66%; left: 17%; top: 17%; border-radius: 50%; cursor: grab;
+          background: radial-gradient(circle at 50% 45%, #3a3f46 0 38%, #5a6068 60%, #2c3036 100%);
+          box-shadow: 0 2px 4px rgba(0,0,0,.6); }
+  .knob::after { content: ""; position: absolute; inset: 30%; border-radius: 50%; border: 1px solid rgba(255,255,255,.12); }
+  .trig { position: absolute; width: 17%; top: 0; height: 11%; display: flex; align-items: center; gap: 1.2cqw; background: #2c3036;
+          border-radius: 2.4cqw 2.4cqw .8cqw .8cqw; padding: 0 1.6cqw; box-shadow: inset 0 -2px 0 rgba(0,0,0,.4); }
+  .trig input { flex: 1; min-width: 0; height: 60%; margin: 0; accent-color: #8ab4f8; }
+  .trig span { font-size: 2.6cqw; font-weight: 800; color: #c4c7c5; }
   .keys { font-size: 12px; color: var(--muted); margin-top: 6px; }
   .keys code { background: var(--btn); padding: 0 4px; border-radius: 4px; }
   table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
@@ -131,14 +182,35 @@
 <main>
   <section id="dsSection">
     <h2>Driver Hub</h2>
-    <div class="row"><select id="opmode" aria-label="OpMode"></select></div>
-    <div class="row ds-buttons" style="margin-top:8px">
-      <button id="initBtn">INIT</button><button id="startBtn">START</button><button id="stopBtn">STOP</button>
-      <label class="muted"><input type="checkbox" id="autoTimer" checked> 30 s autonomous timer</label>
+    <div class="dh">
+    <div class="dh-screen">
+      <div class="dh-top">
+        <span class="net" title="Network: the pretend Robot Controller"><span class="dh-dot" id="dhLink"></span><b>SIM-RC</b></span>
+        <span class="dh-user" id="dhUser1" title="Gamepad 1 (lit while it is used)"><svg viewBox="0 0 24 16" aria-hidden="true"><path fill="currentColor" d="M6 2h12c3 0 5 3 5.6 7.5.4 3-1 5.5-3.2 5.5-1.6 0-2.4-1.4-3.4-3H7c-1 1.6-1.8 3-3.4 3C1.4 15 0 12.5.4 9.5 1 5 3 2 6 2z"/></svg>1</span>
+        <span class="dh-user" id="dhUser2" title="Gamepad 2 (lit while it is used)"><svg viewBox="0 0 24 16" aria-hidden="true"><path fill="currentColor" d="M6 2h12c3 0 5 3 5.6 7.5.4 3-1 5.5-3.2 5.5-1.6 0-2.4-1.4-3.4-3H7c-1 1.6-1.8 3-3.4 3C1.4 15 0 12.5.4 9.5 1 5 3 2 6 2z"/></svg>2</span>
+        <span class="dh-batt" title="Robot battery"><svg viewBox="0 0 24 12" aria-hidden="true"><rect x="1" y="1" width="20" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="21.5" y="4" width="2" height="4" rx=".5" fill="currentColor"/><rect id="dhBattFill" x="3" y="3" width="16" height="6" rx="1" fill="#81c784"/></svg><span id="dhBatt">--</span></span>
+      </div>
+      <div class="dh-op">
+        <button class="dh-kind" data-kind="Autonomous" aria-haspopup="true" title="Choose an autonomous"><svg viewBox="0 0 24 20" aria-hidden="true"><path fill="currentColor" d="M2 3h13v2H2zm0 6h13v2H2zm0 6h9v2H2zm15-2 6-4-6-4z"/></svg>Auto</button>
+        <select id="opmode" aria-label="OpMode"></select>
+        <button class="dh-kind" data-kind="TeleOp" aria-haspopup="true" title="Choose a TeleOp"><svg viewBox="0 0 24 20" aria-hidden="true"><path fill="currentColor" d="M6 4h12c3 0 4.8 2.6 5.4 6.5.3 2.6-.9 4.8-2.8 4.8-1.4 0-2.1-1.2-3-2.6H7.4c-.9 1.4-1.6 2.6-3 2.6C2.5 15.3 1.3 13.1 1.6 10.5 2.2 6.6 4 4 6 4zm1 3v1.5H5.5V10H7v1.5h1.5V10H10V8.5H8.5V7zm9.5.5a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm2 2a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/></svg>TeleOp</button>
+        <div class="dh-menu" id="dhMenu" hidden></div>
+      </div>
+      <div class="dh-run">
+        <button id="initBtn" class="dh-big" title="INIT the chosen OpMode">INIT</button>
+        <button id="startBtn" class="dh-big" title="START" aria-label="START" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 4v16l13-8z"/></svg></button>
+        <button id="stopBtn" class="dh-big" title="STOP" aria-label="STOP" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="1.5" fill="currentColor"/></svg></button>
+        <div class="dh-timer"><span class="t" id="dhTime">0:00</span>
+          <label><input type="checkbox" id="autoTimer" checked> 30 s auto timer</label></div>
+      </div>
+      <div class="dh-tele">
+        <div class="status" id="status">No OpMode running.</div>
+        <div class="status" id="cmdNote" style="color:var(--stop)"></div>
+        <div id="screen" role="log" aria-label="Driver Hub telemetry"></div>
+      </div>
     </div>
-    <div class="status" id="status">No OpMode running.</div>
-    <div class="status" id="cmdNote" style="color:var(--stop)"></div>
-    <div id="screen" role="log" aria-label="Driver Hub telemetry"></div>
+    <div class="dh-foot" aria-hidden="true"><i></i><i></i><i></i></div>
+    </div>
     <div id="error"></div>
   </section>
 
@@ -261,20 +333,33 @@ if (phonePad) { source[1] = phonePad === "1" ? "screen" : "remote"; source[2] = 
 let sticky = false;
 
 // ---------------------------------------------------------------- on-screen gamepad
-// Positions in % of the gamepad box (420 x 250 drawing units).
+// Positions in % of the gamepad box (420 x 250 drawing units): [key, label, left, top, width, height, kind].
 const LAYOUT = [
-  ["lb", "LB", 5, 18, 15, 9, true], ["rb", "RB", 80, 18, 15, 9, true],
-  ["up", "\u25B2", 27.5, 62, 7, 11], ["left", "\u25C0", 21, 72, 7, 11], ["right", "\u25B6", 34, 72, 7, 11], ["down", "\u25BC", 27.5, 82, 7, 11],
-  ["y", "Y", 78.5, 27, 8, 13], ["x", "X", 71, 39, 8, 13], ["b", "B", 86, 39, 8, 13], ["a", "A", 78.5, 51, 8, 13],
-  ["back", "BACK", 35, 30, 9, 8, true], ["guide", "GUIDE", 45.5, 28, 9, 10, true], ["start", "START", 56, 30, 9, 8, true],
+  ["lb", "LB", 10.7, 12, 16.7, 6.8, "bumper"], ["rb", "RB", 72.6, 12, 16.7, 6.8, "bumper"],
+  ["up", "\u25B2", 32.9, 49.6, 5.7, 9.6, "dpad"], ["left", "\u25C0", 27.1, 59.2, 5.7, 9.6, "dpad"],
+  ["right", "\u25B6", 38.6, 59.2, 5.7, 9.6, "dpad"], ["down", "\u25BC", 32.9, 68.8, 5.7, 9.6, "dpad"],
+  ["y", "Y", 71.9, 26.4, 6.2, 10.4, "face"], ["x", "X", 65.7, 37.2, 6.2, 10.4, "face"],
+  ["b", "B", 78.1, 37.2, 6.2, 10.4, "face"], ["a", "A", 71.9, 48, 6.2, 10.4, "face"],
+  ["back", "BACK", 38.1, 34, 7.6, 5.6, "small"], ["guide", "GUIDE", 46.3, 21, 7.4, 12.4, "guide"], ["start", "START", 54.3, 34, 7.6, 5.6, "small"],
 ];
+// The controller's body (dark plastic, the two grips) and the D-pad's middle, in the same 420 x 250 units.
+const PAD_BODY = '<svg class="body" viewBox="0 0 420 250" preserveAspectRatio="none" aria-hidden="true">' +
+  '<defs><linearGradient id="padShade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a3f46"/><stop offset="1" stop-color="#1f2226"/></linearGradient></defs>' +
+  '<path d="M100 44C150 34 270 34 320 44C372 52 400 82 408 132C416 186 406 236 362 240C330 243 312 228 296 212C282 198 262 192 210 192' +
+  'C158 192 138 198 124 212C108 228 90 243 58 240C14 236 4 186 12 132C20 82 48 52 100 44Z" fill="url(#padShade)" stroke="#0e0f11" stroke-width="2"/>' +
+  '<path d="M104 52C150 44 270 44 316 52" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="3"/>' +
+  '<circle cx="150" cy="160" r="40" fill="#1a1c20"/><rect x="138" y="148" width="24" height="24" fill="#2c3036"/>' +
+  '<circle cx="315" cy="105" r="45" fill="#1a1c20"/>' +
+  '<g font-family="system-ui,sans-serif" font-size="8.5" font-weight="700" fill="#8a9097" text-anchor="middle">' +
+  '<text x="176" y="111">BACK</text><text x="244" y="111">START</text><text x="210" y="109">GUIDE</text></g>' +
+  '</svg>';
 // Keep getting this pointer's events even if it slides off the button (fails quietly if it cannot).
 function capture(el, e) { try { el.setPointerCapture(e.pointerId); } catch (err) { /* not a real pointer */ } }
 function buildPad(el, n) {
-  el.innerHTML = "";
-  for (const [key, label, x, y, w, h, wide] of LAYOUT) {
+  el.innerHTML = PAD_BODY;
+  for (const [key, label, x, y, w, h, kind] of LAYOUT) {
     const b = document.createElement("div");
-    b.className = "b" + (wide ? " wide" : "");
+    b.className = "b " + kind + " k-" + key;
     b.textContent = label;
     b.setAttribute("role", "button");
     b.setAttribute("aria-label", "Gamepad " + n + " " + key.toUpperCase());
@@ -293,7 +378,7 @@ function buildPad(el, n) {
     b.addEventListener("pointerup", up); b.addEventListener("pointercancel", up);
     el.appendChild(b);
   }
-  for (const [ax, ay, cx, cy, label] of [["lx","ly",18,45,"L"],["rx","ry",66,76,"R"]]) {
+  for (const [ax, ay, cx, cy, label] of [["lx","ly",25,40,"L"],["rx","ry",64.3,64,"R"]]) {
     const s = document.createElement("div");
     s.className = "stick"; s.title = label + " stick";
     Object.assign(s.style, { left: cx + "%", top: cy + "%", transform: "translate(-50%,-50%)" });
@@ -313,7 +398,7 @@ function buildPad(el, n) {
     s.dataset.ax = ax; s.dataset.ay = ay;
     el.appendChild(s);
   }
-  for (const [key, label, x] of [["lt","LT",5],["rt","RT",79]]) {
+  for (const [key, label, x] of [["lt","LT",10.5],["rt","RT",72.5]]) {
     const t = document.createElement("div"); t.className = "trig";
     t.style.left = x + "%";
     // tabindex -1: a trigger is pressed with the mouse or touch (keyboard users: Z and C).
@@ -335,7 +420,7 @@ function drawPad(el, n) {
   });
   el.querySelectorAll(".stick").forEach(s => {
     const k = s.firstChild;
-    k.style.transform = `translate(${p[s.dataset.ax] * 60}%, ${p[s.dataset.ay] * 60}%)`;
+    k.style.transform = `translate(${p[s.dataset.ax] * 25}%, ${p[s.dataset.ay] * 25}%)`;
   });
   el.querySelectorAll(".trig input").forEach(r => { if (document.activeElement !== r) r.value = p[r.dataset.key]; });
   el.classList.toggle("off", source[n] === "remote");
@@ -450,6 +535,7 @@ async function poll() {
     render(lastState);
   } catch (e) {
     $("#status").textContent = "The simulator is not running. Start it with ./gradlew :sim:run";
+    $("#dhLink").classList.remove("ok");
   }
 }
 setInterval(poll, 100);
@@ -484,13 +570,28 @@ function render(s) {
     window.lastNextCount = s.nextCount;
   }
   const running = s.phase === "INIT" || s.phase === "RUNNING";
-  $("#initBtn").disabled = running && sel.value === s.opmode;
-  $("#startBtn").disabled = s.phase !== "INIT";
-  $("#stopBtn").disabled = !running;
+  // Like the Driver Station app: one big button that is INIT, then START (play), then STOP; in INIT a
+  // small STOP too. A different OpMode chosen while one runs can still be INIT'd (small).
+  const other = running && sel.value !== s.opmode;
+  const big = !running ? "initBtn" : s.phase === "INIT" ? "startBtn" : "stopBtn";
+  const shown = { initBtn: !running || other, startBtn: s.phase === "INIT", stopBtn: running };
+  for (const id of ["initBtn", "startBtn", "stopBtn"]) {
+    const b = $("#" + id);
+    b.hidden = !shown[id];
+    b.classList.toggle("small", id !== big);
+  }
   const t = Math.floor(s.runSeconds);
+  $("#dhTime").textContent = running && s.phase === "RUNNING" ? Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0") : "0:00";
   $("#status").innerHTML = s.opmode
-    ? `<b>${escapeHtml(s.opmode)}</b> &middot; ${s.phase === "RUNNING" ? "running " + Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0") : s.phase.toLowerCase()}`
-    : "Choose an OpMode, then INIT.";
+    ? `Robot Status: <b>${s.phase === "RUNNING" ? "running" : s.phase.toLowerCase()}</b> &middot; Op Mode: <b>${escapeHtml(s.opmode)}</b>`
+    : "Robot Status: <b>stopped</b> &middot; choose an OpMode, then INIT.";
+  $("#dhLink").classList.add("ok");
+  $("#dhBatt").textContent = s.battery.toFixed(2) + " V";
+  const full = Math.max(0, Math.min(1, (s.battery - 11) / 2.5));
+  const fill = $("#dhBattFill");
+  fill.setAttribute("width", (16 * full).toFixed(1));
+  fill.setAttribute("fill", s.battery < 11.8 ? "#e57373" : s.battery < 12.3 ? "#ffd54f" : "#81c784");
+  for (const n of [1, 2]) $("#dhUser" + n).classList.toggle("on", padActive(n));
   const text = s.screen.join("\n");
   if ($("#screen").textContent !== text) $("#screen").textContent = text;   // only when it changed
   const err = $("#error");
@@ -510,6 +611,26 @@ function render(s) {
     : "Phone as a gamepad: start with ./gradlew :sim:run -Plan";
 }
 $("#initBtn").onclick = () => command({ action: "init", opmode: $("#opmode").value });
+// The Auto and TeleOp buttons open a list of that kind, like the Driver Station app.
+function openKind(kind, from) {
+  const menu = $("#dhMenu");
+  if (!menu.hidden && menu.dataset.kind === kind) { menu.hidden = true; return; }
+  const list = lastState ? lastState.opmodes.filter(o => o.kind === kind) : [];
+  menu.dataset.kind = kind;
+  menu.innerHTML = `<h4>${kind}</h4>` + (list.length ? list.map(o => `<button data-name="${escapeHtml(o.name)}">${escapeHtml((o.group ? o.group + ": " : "") + o.name)}${o.disabled ? ' <span class="muted">(hidden on robot)</span>' : ""}</button>`).join("")
+    : '<div class="muted">None in this project.</div>');
+  menu.hidden = false;
+  const first = menu.querySelector("button"); if (first) first.focus();
+  menu.querySelectorAll("button").forEach(b => b.onclick = () => { $("#opmode").value = b.dataset.name; menu.hidden = true; from.focus(); });
+}
+document.querySelectorAll(".dh-kind").forEach(b => b.onclick = () => openKind(b.dataset.kind, b));
+document.addEventListener("pointerdown", e => { if (!e.target.closest(".dh-op")) $("#dhMenu").hidden = true; });
+document.addEventListener("keydown", e => { if (e.key === "Escape") $("#dhMenu").hidden = true; });
+// A gamepad counts as used (its icon lit) while any button or stick is off rest.
+function padActive(n) {
+  const p = merged(n);
+  return Object.keys(p).some(k => Math.abs(p[k]) > 0.05);
+}
 $("#startBtn").onclick = () => command({ action: "start" });
 $("#stopBtn").onclick = () => command({ action: "stop" });
 $("#autoTimer").onchange = e => command({ action: "autoTimer", on: e.target.checked ? 1 : 0 });

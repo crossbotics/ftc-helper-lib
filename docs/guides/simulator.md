@@ -26,11 +26,14 @@ building the library needs: Java and the Android SDK, which Android Studio insta
 "SDK location not found", see [Contributing](../contributing.md)). Windows, macOS and Linux; a
 Chromebook with Linux turned on.
 
-The page fits one laptop screen: the Driver Hub on the left (OpMode, INIT/START/STOP, telemetry), the field
+The page fits one laptop screen: the Driver Hub on the left, drawn like the Driver Station app on a Driver Hub
+(the robot battery, gamepad 1 and 2 lit while used; the Auto and TeleOp buttons list the OpModes of that kind;
+one big button that is INIT, then START (play), then STOP; the match time; the telemetry), the field
 in 3D in the middle with the gamepads under it, and the Control Hub on the right in panels (Robot: the field
 from above, pushing the robot, size and pieces, battery; Motors; Servos & switches; Cameras). Each of its
 buttons shows or hides a panel; the panels shown stack in that order, and this browser remembers the
-choice for the next run. "Hide" on the
+choice for the next run. The on-screen gamepads look like a real controller (Xbox 360 / Logitech layout, the
+button names the SDK uses); a pressed button gets a white ring. "Hide" on the
 gamepads gives the 3D field more room when you drive with the keyboard, a real controller or a phone. On a
 narrow screen the parts stack and the page scrolls.
 
