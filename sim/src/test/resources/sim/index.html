@@ -1022,7 +1022,7 @@ function showHeld(stored, holds) {
   for (const [k, n] of held) for (let i = 0; i < n; i++) dots += `<i class="full" style="background:${colour(k)}" title="${escapeHtml(k)}"></i>`;
   for (let i = count; i < holds; i++) dots += "<i></i>";
   const words = held.map(([k, n]) => `${n} ${escapeHtml(k)}`).join(", ");
-  b.innerHTML = `In the robot: ${dots} <span>${count}${holds ? " / " + holds : ""}${count ? " &middot; " + words : " &middot; empty"}</span>`;
+  b.innerHTML = `In the robot: ${dots} <span>${count}${holds ? " / " + holds : ""}${count ? " &middot; " + words : " &middot; empty"}${holds && count >= holds ? " &middot; <b>full: it takes no more until it fires</b>" : ""}</span>`;
   b.style.display = "flex";
 }
 

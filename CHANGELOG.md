@@ -17,6 +17,7 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   so side spinners that reach into a FLOWER's opening can take its bottom POLLEN.
 - Simulator 3D view: double-click the robot (no program running, or in INIT) to move it by dragging and
   turn it with a ring. The robot's spot shows under the map as an `s.start(...)` start spot.
+- Simulator 3D view: the in-the-robot badge says when the robot is full (it takes no more pieces).
 - The GUIDE button map leaves out the free buttons (INIT still lists them).
 - `./gradlew :sim:run -Pport=8781`: another port, to run two simulators at once.
 - **GUIDE shows the button map** in a Controls.java TeleOp (a tap; tap again to close); holding GUIDE
