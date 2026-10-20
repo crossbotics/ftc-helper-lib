@@ -44,6 +44,7 @@ final class SimShapes {
         final boolean dropAbove;
         boolean dropped = false;
         double value = 0;               // now: inches, degrees, gap inches; spin degrees for rollers
+        double rate = 0;                // for the picture: turns per second (rollers), or value per second
 
         Shape(String name, Map<String, String> s, SimRobot robot) {
             this.name = name;
@@ -224,6 +225,11 @@ final class SimShapes {
         final double[] center, ef, el, eu;     // robot frame; ef/el/eu = the piece's own forward/left/up
         final double sf, sl, su;
         final double spinDeg;
+        // For the picture: turns per second (rollers, flywheels), +1 taking pieces in / -1 pushing out /
+        // 0 not an intake, and true while a passive part is moving.
+        double run = 0;
+        int flow = 0;
+        boolean moving = false;
 
         Piece(String shape, String kind, String color, double[][] frame, double[] localCenter,
               double sf, double sl, double su, double spinDeg) {
@@ -519,8 +525,10 @@ final class SimShapes {
                     turnsPerSec = cr[0] * (cr[1] == 1 ? -1 : 1) * 2.5;    // a CR servo: about 150 RPM
                 }
                 s.value = (s.value + turnsPerSec * 360 * dt) % 360;
+                s.rate = turnsPerSec;
                 continue;
             }
+            double before = s.value;
             if (s.passive) {
                 // Pushed over: it falls to its stop (fast: about half a turn a second, or 20 in/s) and stays.
                 if (s.dropServo != null && !s.dropped) {
@@ -537,6 +545,7 @@ final class SimShapes {
                 s.value = s.pos0 + robot.servos.get(s.servo).actual * (s.pos1 - s.pos0);
             }
             if (s.moves()) s.value = Math.max(s.min, Math.min(s.max, s.value));
+            s.rate = dt > 0 ? (s.value - before) / dt : 0;
         }
     }
 
@@ -563,6 +572,7 @@ final class SimShapes {
                 double[][] parent = mounts.get(s.parent);
                 if (parent == null) continue;
                 it.remove();
+                int first = out.size();
                 double[][] f = mul(parent, translate(s.at));
                 switch (s.type) {
                     case "slide": {
@@ -612,6 +622,15 @@ final class SimShapes {
                     default:
                         out.add(new Piece(s.name, "box", s.color, f, new double[] {0, 0, s.su / 2}, s.sf, s.sl, s.su, 0));
                         mounts.put(s.name, f);
+                }
+                // For the picture: how it is moving now (the page colours a running roller, a moving part).
+                boolean spinner = s.type.equals("roller") || s.type.equals("flywheel");
+                int inward = spinner && robot.pieces != null ? robot.pieces.inwardSign(s.motor, s.crservo) : 0;
+                for (int k = first; k < out.size(); k++) {
+                    Piece pc = out.get(k);
+                    pc.run = spinner ? s.rate : 0;
+                    pc.flow = inward == 0 || Math.abs(s.rate) < 1e-9 ? 0 : (Math.signum(s.rate) == inward ? 1 : -1);
+                    pc.moving = !spinner && s.passive && Math.abs(s.rate) > 1e-6;
                 }
             }
         }

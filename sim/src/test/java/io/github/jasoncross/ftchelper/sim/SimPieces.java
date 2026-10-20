@@ -97,6 +97,18 @@ final class SimPieces {
     private final SimRobot robot;
     private final SimWorld world;
     private final List<Collect> collects = new ArrayList<>();
+
+    /**
+     * Which way of turning takes pieces in for this motor or CR servo: +1 (positive power), -1
+     * (inward=-), or 0 if no collect. line uses it. For the picture (green in, orange out).
+     */
+    int inwardSign(String motor, String crservo) {
+        for (Collect c : collects) {
+            boolean same = (motor != null && motor.equals(c.motor)) || (crservo != null && crservo.equals(c.crservo));
+            if (same) return c.threshold < 0 ? -1 : 1;
+        }
+        return 0;
+    }
     private final List<Shoot> shoots = new ArrayList<>();
     private final List<Grab> grabs = new ArrayList<>();
     // Pieces inside the robot (collected or preloaded), by type, in the order they came in.

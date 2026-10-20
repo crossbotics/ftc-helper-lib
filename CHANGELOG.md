@@ -2,6 +2,15 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Added
+
+- Simulator 3D view: rollers and wheels have dark stripes, so you can see them turn and which way. A
+  roller glows green while it takes pieces in and orange while it pushes them out; a flywheel or other
+  spinner glows yellow while it turns; a passive part (gravity, springs) blinks while it moves.
+- `./gradlew :sim:run -Pport=8781`: another port, to run two simulators at once.
+
 ## v0.10.0 - 2026-10-20
 
 Nothing old stops working: a Robot.java without parts or shapes writes the same simulator lines as before.

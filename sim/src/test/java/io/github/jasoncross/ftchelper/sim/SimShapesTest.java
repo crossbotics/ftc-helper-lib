@@ -88,6 +88,21 @@ public class SimShapesTest {
         assertTrue("too tall for 29 in", !r.shapes.mostOk);
     }
 
+    @Test public void aRollerSaysWhetherItTakesPiecesInOrPushesThemOut() throws Exception {
+        SimRobot r = SimRobot.load(new File("robots/starter.properties").toPath());   // collect.intake on motor "intake"
+        SimMotor intake = r.motors.get("intake");
+        intake.device.setPower(1);
+        for (int i = 0; i < 20; i++) r.step(0.02);
+        SimShapes.Piece roller = null;
+        for (SimShapes.Piece p : r.shapes.pieces()) if (p.shape.equals("intake")) roller = p;
+        assertTrue("turning: " + roller.run, roller.run > 0.2);
+        assertTrue("taking in", roller.flow == 1);
+        intake.device.setPower(-1);
+        for (int i = 0; i < 40; i++) r.step(0.02);
+        for (SimShapes.Piece p : r.shapes.pieces()) if (p.shape.equals("intake")) roller = p;
+        assertTrue("pushing out", roller.flow == -1);
+    }
+
     @Test public void starterRobotShapes() throws Exception {
         SimRobot r = SimRobot.load(new File("robots/starter.properties").toPath());
         r.shapes.update(0);

@@ -897,6 +897,18 @@ function updateShapes(r) {
       const e = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial({ color: 0x1b1f24, transparent: true, opacity: 0.35 }));
       m.add(e); m.matrixAutoUpdate = false;
       m.layers.set(1); e.layers.set(1);
+      if (p.kind === "cyl" && p.model === undefined) {
+        // Three dark stripes along a roller or wheel, so you can see it turn (and which way).
+        const r = p.size[0] / 2, stripeMat = new THREE.MeshBasicMaterial({ color: 0x1b1f24 });
+        for (let k = 0; k < 3; k++) {
+          const a = k * 2 * Math.PI / 3, w = Math.max(0.12, r * 0.18);
+          const st = new THREE.Mesh(new THREE.BoxGeometry(w, p.size[1] * 1.01, w), stripeMat);
+          st.position.set(Math.cos(a) * r, 0, Math.sin(a) * r);
+          st.rotation.y = -a;
+          st.layers.set(1);
+          m.add(st);
+        }
+      }
       v3.shapeGroup.add(m);
       return m;
     });
@@ -913,6 +925,13 @@ function updateShapes(r) {
       m.cad.matrix.copy(RFm.clone().multiply(M).multiply(RFm.clone().invert())); m.cad.matrixWorldNeedsUpdate = true;
     }
     if (p.name === "chassis") m.material.color.set(r.bumped ? 0xcf222e : p.color);
+    // How it moves now: a roller glows green while it takes pieces in and orange while it pushes them
+    // out (a flywheel or other spinner: yellow); a passive part (gravity, springs) blinks while it moves.
+    let glow = 0x000000;
+    if (Math.abs(p.run || 0) > 0.2) glow = p.flow > 0 ? 0x1f9d3a : p.flow < 0 ? 0xe36209 : 0xb08800;
+    else if (p.moving) glow = (Math.floor(performance.now() / 150) % 2) ? 0xb08800 : 0x000000;
+    if (m.material.emissive) m.material.emissive.setHex(glow);
+    if (m.cad && m.cad.material.emissive) m.cad.material.emissive.setHex(glow);
   });
 }
 

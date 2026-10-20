@@ -79,7 +79,8 @@ if (useTeamCode && new File(robotProject, 'simulator/sim-dependencies.gradle').i
 // Finder results and Characterizer logs from simulator runs go here (on a robot: /sdcard/FIRST/ftc-helper).
 def simDataDir = new File(buildDir, 'sim-data').path
 
-// ./gradlew :sim:run  [-Probot=path/to/robot.properties] [-Plan]  (-Plan: phones on the same WiFi can join)
+// ./gradlew :sim:run  [-Probot=path/to/robot.properties] [-Plan] [-Pport=8781]  (-Plan: phones on the same WiFi can join;
+// -Pport: another port, e.g. to run two simulators at once)
 tasks.register('run', JavaExec) {
     group = 'application'
     description = 'Starts the simulator (open http://localhost:8780).'
@@ -90,7 +91,8 @@ tasks.register('run', JavaExec) {
     workingDir = rootProject.projectDir
     def robot = project.findProperty('robot') ?:
             (teamRobotFile != null && teamRobotFile.isFile() ? teamRobotFile.path : 'sim/robots/starter.properties')
-    args = [robot] + (project.hasProperty('lan') ? ['--lan'] : [])
+    args = [robot] + (project.hasProperty('lan') ? ['--lan'] : []) +
+            (project.findProperty('port') ? ['--port', project.findProperty('port')] : [])
     systemProperty 'sim.teamOnly', useTeamCode
     systemProperty 'ftchelper.dataDir', simDataDir
 }

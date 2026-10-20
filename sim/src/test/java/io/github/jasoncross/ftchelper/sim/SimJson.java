@@ -193,7 +193,9 @@ final class SimJson {
             field(b, "color", p.color).append(',');
             b.append("\"c\":").append(vec(p.center)).append(",\"ef\":").append(vec(p.ef)).append(",\"el\":").append(vec(p.el))
                     .append(",\"eu\":").append(vec(p.eu)).append(",\"size\":").append(vec(new double[] {p.sf, p.sl, p.su}))
-                    .append(",\"spin\":").append(fmt(p.spinDeg));
+                    .append(",\"spin\":").append(fmt(p.spinDeg))
+                    .append(",\"run\":").append(fmt(p.run)).append(",\"flow\":").append(p.flow)
+                    .append(",\"moving\":").append(p.moving);
             if (p.mesh != null) {
                 // the CAD mesh drawn in the box's place (GET /robot-model?i=N), and where it is now
                 b.append(",\"model\":").append(r.shapes.cad.meshes.indexOf(p.mesh)).append(",\"m\":[");

@@ -74,7 +74,10 @@ one pressed), the cameras and the tags they see, and the battery voltage (lower 
 zoom, right-drag (or two fingers) to slide. View buttons: Drivers, Audience, From above, Follow robot
 (behind the robot; turning the view by hand ends it). The robot is a box its size from the robot file
 (`robot.lengthIn/widthIn/heightIn`) with a white arrow at the front; it turns red when it bumps into
-something. The field is built from the field file's shapes (tiles, walls, tape, solid and overhead
+something. Its shapes (below) move with their motors and servos. Rollers and wheels have dark
+stripes, so you see them turn and which way; a roller glows **green** while it takes pieces in and
+**orange** while it pushes them out, a flywheel or other spinner glows **yellow** while it turns, and a
+passive part (moved by gravity or springs) **blinks yellow** while it moves. The field is built from the field file's shapes (tiles, walls, tape, solid and overhead
 parts) with each AprilTag as a square with its ID. If the robot file names a 3D model of the field
 (`field.model`), the page shows that model instead (with the tag squares on top); the "Field CAD model"
 box switches between them. Each camera shows as a cone (webcam yellow, Limelight green); "Camera
