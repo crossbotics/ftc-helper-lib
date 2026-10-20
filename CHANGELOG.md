@@ -17,7 +17,8 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   Holding BACK 1 s resets "forward" (`EasyTeleOp.backTap()`). STOP brakes every motor too.
 - **RB fires one; hold it to keep firing** (the launcher's standard button: `fireWhileHeld()`,
   `ceaseFire()`). `tapOrDoubleTap(tap, doubleTap)` for any button. `Shape.reversed()`: a roller that
-  turns the other way from its motor. `Intake.isPushingOut()`.
+  turns the other way from its motor. `Shape.tiltDeg(deg)` (robot file `tilt=`): a part mounted at an
+  angle on its parent. `Intake.isPushingOut()`.
 
 - **TeleOp chooses the alliance in INIT** when autonomous did not pass one (gamepad 1: X = BLUE, B = RED;
   also to change it), and shows autonomous's report. `MatchMemory.hasAlliance()`, `rememberReport()`,

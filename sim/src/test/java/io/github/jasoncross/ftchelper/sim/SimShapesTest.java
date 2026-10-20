@@ -119,6 +119,16 @@ public class SimShapesTest {
         assertTrue("the picture turns slowly enough to see which way", Math.abs(roller.spinDeg) <= 360);
     }
 
+    @Test public void aTiltedSpinnerOnADroppedArmLiesFlat() throws Exception {
+        SimRobot r = robot("shape.arm1 = arm, at=5,0,6, size=4x12x0.5, start=-40, minDeg=-40, maxDeg=95, passive=yes",
+                "shape.spin = roller, on=arm1, at=6,5,0, size=3.5x3.5x1, axis=up, tilt=40, motor=intake");
+        r.shapes.update(0);
+        SimShapes.Piece spin = null;
+        for (SimShapes.Piece p : r.shapes.pieces()) if (p.shape.equals("spin")) spin = p;
+        // its axle (the cylinder's own left-right line, here the robot's up) points straight up
+        assertTrue(java.util.Arrays.toString(spin.el), Math.abs(spin.el[2]) > 0.999);
+    }
+
     @Test public void starterRobotShapes() throws Exception {
         SimRobot r = SimRobot.load(new File("robots/starter.properties").toPath());
         r.shapes.update(0);

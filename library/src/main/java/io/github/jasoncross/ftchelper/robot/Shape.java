@@ -47,6 +47,7 @@ public final class Shape {
     final Map<String, Double> angles = new LinkedHashMap<>();
     private String note, color;
     private boolean reversed = false;
+    private double tiltDeg = 0;
     // A passive part (gravity or springs): its range, where it starts, and what makes it drop.
     boolean passive = false;
     private double rangeMin = Double.NaN, rangeMax = Double.NaN, startAt = Double.NaN, travelIn = Double.NaN;
@@ -243,6 +244,18 @@ public final class Shape {
     }
 
     /**
+     * Mounted turned about its parent's left-right line, in degrees (front up +). For a part fixed at an
+     * angle on what it rides on: a spinner kept level on an intake arm that is down at -40 degrees has
+     * a tilt of 40.
+     *
+     * @param degrees e.g. 40
+     */
+    public Shape tiltDeg(double degrees) {
+        tiltDeg = degrees;
+        return this;
+    }
+
+    /**
      * A roller that turns the other way from its motor, through gears (for example the left one of two
      * spinners geared to one intake shaft, so both pull pieces in).
      */
@@ -288,6 +301,7 @@ public final class Shape {
         if (driver != null) sb.append(", ").append(driver);
         if (passive) sb.append(passiveWords(lineName));
         if (reversed) sb.append(", reversed=yes");
+        if (tiltDeg != 0) sb.append(", tilt=").append(n(tiltDeg));
         if (color != null) sb.append(", color=").append(color);
         List<String> notes = new ArrayList<>();
         if (!parts.isEmpty()) notes.add(joined(parts, " + "));

@@ -34,6 +34,7 @@ final class SimShapes {
         final double sf, sl, su;        // size: forward, left-right, up
         final String motor, servo, crservo;
         final boolean reversed;         // reversed=yes: a roller that turns the other way from its motor (geared)
+        final double tilt;              // tilt=DEG: mounted turned about its parent's left-right line (front up +)
         final String model, baseModel;  // CAD files (see SimCad): model= rides the moving part, baseModel= a slide's fixed stage
         final Double cadPose;           // the value the CAD was drawn at (cadPose=); null: the simulator's start
         // How the driver's position becomes inches (slide) or degrees (arm, turret) or a gap (claw):
@@ -69,6 +70,7 @@ final class SimShapes {
             servo = s.get("servo");
             crservo = s.get("crservo");
             reversed = s.containsKey("reversed") && s.get("reversed").equalsIgnoreCase("yes");
+            tilt = s.containsKey("tilt") ? num(s, "tilt", name) : 0;
             model = s.get("model");
             baseModel = s.get("baseModel");
             if (baseModel != null && !type.equals("slide")) {
@@ -584,6 +586,7 @@ final class SimShapes {
                 it.remove();
                 int first = out.size();
                 double[][] f = mul(parent, translate(s.at));
+                if (s.tilt != 0) f = mul(f, rotate("left", s.tilt));   // mounted at an angle on its parent
                 switch (s.type) {
                     case "slide": {
                         // the fixed stage, and the moving stage pushed out along the axis

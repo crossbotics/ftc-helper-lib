@@ -295,4 +295,14 @@ public class ShapesTest {
         };
         assertTrue(lines(r), lines(r).contains("axis=up, motor=intake, reversed=yes"));
     }
+
+    @Test public void aTiltedPartSaysSo() {
+        RobotDefinition r = new RobotDefinition() {
+            @Override protected void define() {
+                drive(Drive.tank("l", "r"));
+                add(Intake.motor("intake").looks(Shape.roller("gobilda-gecko-72").atMm(200, 0, 40).lengthMm(300).tiltDeg(40)));
+            }
+        };
+        assertTrue(lines(r), lines(r).contains(", tilt=40"));
+    }
 }

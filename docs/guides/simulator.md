@@ -168,6 +168,9 @@ shape.intake = roller, at=8,0,1.5, size=2x14x2, motor=intake
 shape.flywheel = flywheel, at=-1,0,4, size=4x2x4, motor=flywheel
 ```
 
+Any shape can also take `tilt=DEG` (mounted at an angle on its parent, turned about the left-right line,
+front up +) and a roller `reversed=yes` (it turns the other way from its motor, through gears).
+
 | Type | What it is | Where `at` points | Moves by |
 | --- | --- | --- | --- |
 | `box` | a part that does not move | the middle of its bottom | nothing |

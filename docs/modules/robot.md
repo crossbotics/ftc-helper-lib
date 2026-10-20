@@ -510,6 +510,8 @@ fixed(Shape.box("tower").atMm(-90, 0, 40).sizeMm(50, 180, 260));
 | `dropsWhen(servoPart, position, toDeg)` | a passive arm that a servo pushes over: once the servo is three quarters of the way to the position, it falls to `toDeg` and stays (a folded intake) |
 | `note(text)` | where a number came from ("est.", "measured 2026-10-20"), written after the line |
 | `color(c)` | its colour in the 3D view, e.g. `"#2fa84f"` |
+| `tiltDeg(deg)` | mounted at an angle on its parent, about the left-right line (front up +): a spinner kept level on an arm that is down at -40 degrees has 40 |
+| `reversed()` | a roller that turns the other way from its motor (geared) |
 
 Mistakes stop with the part's name: a typo in an id (with the known ids), a roller with no length, an
 arm with fewer than two angles or an unknown position name (the names in `angle(...)` must be positions in
