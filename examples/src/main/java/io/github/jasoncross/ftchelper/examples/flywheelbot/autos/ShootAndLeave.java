@@ -22,9 +22,9 @@ public class ShootAndLeave extends Auto<Robot> {
 
     @Override
     protected void steps(Steps s, Robot robot) {
-        // The note for the drive team, then the spot as seen from the BLUE wall (mirrored for RED):
-        // 56 in right of the centre line, 61.55 in from the centre toward our wall, facing the field.
-        s.start("Back wall, touching the goal side, facing the goal", 56, -61.55, 0)
+        // The note for the drive team, then the spot as seen from our own wall: 56 in left of the centre
+        // line, 61.55 in from the centre toward our wall, facing the field.
+        s.start("Back wall, touching the goal side, facing the goal", -56, -61.55, 0)
          .menuYesNo("Shoot", true)                                    // a choice in the INIT menu
          .onlyIf("Shoot")
              .run("Spin up", robot.launcher::spinUp)                  // starts, and goes on at once
@@ -33,5 +33,12 @@ public class ShootAndLeave extends Auto<Robot> {
          .end()
          .parkWithSeconds(3)                                          // the last 3 s are for leaving
          .move("Leave", Tunables.Auto.leaveInches, 0, Tunables.Auto.leavePower);
+    }
+
+    // BIOBUZZ's field is turned half a turn between the alliances (not mirrored): the same route,
+    // driven from each alliance's own wall, works for both.
+    @Override
+    protected boolean mirrorForRed() {
+        return false;
     }
 }

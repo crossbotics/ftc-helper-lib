@@ -141,6 +141,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         stepRpm = t.tunable("stepRpm", 100, 10).range(0, 1000);
         DcMotorEx motor = MotorSetup.of(devices.get(DcMotorEx.class, device)).reversed(reversed)
                 .coast().runUsingEncoder().done();
+        flywheelMotor = motor;
         flywheel = new Flywheel(name(), motor)
                 .countsPerRev(kind.countsPerRev)
                 .maxRpm(kind.freeRpm)
@@ -290,6 +291,24 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         touch();
         spinning = false;
         part.stop();
+    }
+
+    private DcMotorEx flywheelMotor;
+
+    @Override
+    void pause() {
+        if (part == null) return;
+        // Brake the wheel to a stop (it normally coasts down), and stop the feeder. "spinning" is kept.
+        flywheelMotor.setZeroPowerBehavior(com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE);
+        part.stop();
+    }
+
+    @Override
+    void resume() {
+        if (part == null) return;
+        flywheelMotor.setZeroPowerBehavior(com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.FLOAT);
+        if (spinning) part.spinUp();
+        else part.idle();
     }
 
     @Override

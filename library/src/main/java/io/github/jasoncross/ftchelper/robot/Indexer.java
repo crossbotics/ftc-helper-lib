@@ -142,6 +142,11 @@ public final class Indexer extends Module<Indexer> implements Feeder {
     }
 
     @Override
+    void pause() {
+        if (feeder != null) feeder.stop();   // a feed in progress ends (a push servo goes back to rest)
+    }
+
+    @Override
     public void update() {
         applyTunables();
         feeder.update();

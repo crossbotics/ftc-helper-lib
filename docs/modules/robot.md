@@ -401,7 +401,7 @@ has its standard buttons; write only what differs. A [`Pad`](#controlmap) has ev
 | A / X / Y / B | free / free / field-centric on/off (mecanum) / free | lift lowest / second / highest / claw |
 | D-pad up/down | free | lift next height, or launcher speed |
 | D-pad left/right | free | wrist |
-| BACK | "forward" = away from you now | turret following on/off |
+| BACK | tap: **pause** everything (stopped on brake), tap again: go on; hold 1 s: "forward" = away from you now | turret following on/off |
 | START + BACK | debug lines | |
 | GUIDE | tap: the button map (during the match too); hold 1 s: the tuning menu (PRACTICE) | |
 
@@ -436,7 +436,8 @@ public class ScoreAndPark extends Auto<Robot> {
 ```
 
 [`Steps`](#auto): `start(where, headingDeg)`, `start(where, xIn, yIn, headingDeg)` (also the spot, seen from
-the BLUE wall and mirrored for RED: x right of the centre line, y from the centre toward the far wall,
+your wall and written for BLUE; RED as the routes: mirrored, or the same from the red wall on a turned
+field like BIOBUZZ with `mirrorForRed()` false: x right of the centre line, y from the centre toward the far wall,
 negative = your half; the simulator puts the robot there in INIT), `menuYesNo(label, yes)`, `menuChoice(label, options...)`,
 `onlyIf(label)` / `onlyIf(label, option)` ... `end()`, `isYes(label)`, `choice(label)`,
 `move(label, inches, directionDeg, power)` (0 forward, 90 right), `turn`, `turnTo`,
@@ -533,6 +534,12 @@ are the simulator's [parts catalog](../guides/parts-catalog.md) (a test keeps th
 on the robot; tests give pretend devices. A new kind of module is a change to the library (its parts are
 package-private, see AGENTS.md); in team code, use the plain parts ([mechanism](mechanism.md)) in
 your own class and call it from Controls.java and your autos.
+
+**Pause** (gamepad 1 BACK in a Controls.java TeleOp, or `robot.pauseAll()` / `resume()` /
+`togglePause()`): every part stops at once with its motors on brake, the wheels hold still, actions wait
+(their time limits too), and the Driver Station says PAUSED. Going on, each part does what it did before
+(an intake runs again, a lift goes on to its height, a launcher spins up again). STOP at the end of a
+program (TeleOp or autonomous) brakes everything the same way.
 
 **`stop()` on any module** switches it off now (a launcher fully off, until `spinUp()`/`fire()`), and
 counts as the driver's command: an action using that part stops. To let a launcher coast while keeping

@@ -24,4 +24,11 @@ public class ShootFromStart extends Auto<Robot> {
          .parkWithSeconds(3)
          .move("Leave", 12, 90, 0.7);
     }
+
+    // BIOBUZZ's field is turned half a turn between the alliances (not mirrored): the same route,
+    // driven from each alliance's own wall, works for both.
+    @Override
+    protected boolean mirrorForRed() {
+        return false;
+    }
 }

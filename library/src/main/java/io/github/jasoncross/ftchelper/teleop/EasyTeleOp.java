@@ -127,6 +127,17 @@ public abstract class EasyTeleOp extends LinearOpMode {
         return null;
     }
 
+    /**
+     * What a tap of BACK does, or null (default): then BACK resets "forward". With a job here (a
+     * Controls.java TeleOp: pause everything), holding BACK {@link #BACK_HOLD_SEC} resets "forward".
+     */
+    protected Runnable backTap() {
+        return null;
+    }
+
+    /** How long BACK is held to reset "forward" when a tap of BACK has another job, seconds. */
+    public static final double BACK_HOLD_SEC = 1.0;
+
     /** How long GUIDE is held to open the tuning menu when there is a button map, seconds. */
     public static final double GUIDE_HOLD_SEC = 1.0;
     private boolean helpOpen = false;
@@ -255,11 +266,27 @@ public abstract class EasyTeleOp extends LinearOpMode {
                 t.toggleDebug();
             }
         };
+        // With backTap() (a Controls.java TeleOp: pause everything): a tap of BACK runs it, and "forward"
+        // is reset by holding BACK for BACK_HOLD_SEC instead.
+        final Runnable tap = backTap();
+        final long[] backDownAt = {0};
         ControllerBindings driver = new ControllerBindings()
-                .bindPress(Pad.G1, Btn.BACK, () -> { chord[0] = false; debugChord.run(); })
+                .bindPress(Pad.G1, Btn.BACK, () -> { chord[0] = false; backDownAt[0] = System.nanoTime(); debugChord.run(); })
                 .bindPress(Pad.G1, Btn.START, debugChord)
+                .bindHold(Pad.G1, Btn.BACK, () -> {
+                    if (tap != null && !chord[0] && System.nanoTime() - backDownAt[0] > BACK_HOLD_SEC * 1e9) {
+                        chord[0] = true;     // done: the release does nothing more
+                        if (heading != null) {
+                            heading.reset();
+                            confirm.play(false);
+                        }
+                    }
+                })
                 .bindRelease(Pad.G1, Btn.BACK, () -> {
-                    if (!chord[0] && heading != null) {
+                    if (chord[0]) return;
+                    if (tap != null) {
+                        tap.run();
+                    } else if (heading != null) {
                         heading.reset();
                         confirm.play(false);
                     }

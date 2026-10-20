@@ -93,13 +93,14 @@ final class SimEngine {
     }
 
     /**
-     * The robot file's start (written for RED, at the bottom); for BLUE its mirror image across the
-     * field's middle line (the field is mirrored between the alliances, like the routes).
+     * The robot file's start (written for RED, at the bottom); for BLUE the same spot seen from the blue
+     * wall: turned half a turn about the field's centre (BIOBUZZ's field is turned, not mirrored, between
+     * the alliances: its CAD has each red part's twin there).
      */
     io.github.jasoncross.ftchelper.util.FieldPose defaultSpot(io.github.jasoncross.ftchelper.match.Alliance a) {
         return a == io.github.jasoncross.ftchelper.match.Alliance.RED
                 ? new io.github.jasoncross.ftchelper.util.FieldPose(robot.startX, robot.startY, robot.startHeading)
-                : new io.github.jasoncross.ftchelper.util.FieldPose(robot.startX, -robot.startY, 180 - robot.startHeading);
+                : new io.github.jasoncross.ftchelper.util.FieldPose(-robot.startX, -robot.startY, robot.startHeading + 180);
     }
 
     /** Stops the OpMode and the physics. */

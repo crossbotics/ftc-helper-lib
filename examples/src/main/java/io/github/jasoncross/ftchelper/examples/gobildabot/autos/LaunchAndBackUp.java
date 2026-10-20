@@ -23,4 +23,11 @@ public class LaunchAndBackUp extends Auto<Robot> {
          .action(Actions.fireAllWithIntake(robot), 12)
          .move("Back up", Tunables.Auto.backInches, 180, Tunables.Auto.backPower);
     }
+
+    // BIOBUZZ's field is turned half a turn between the alliances (not mirrored): the same route,
+    // driven from each alliance's own wall, works for both.
+    @Override
+    protected boolean mirrorForRed() {
+        return false;
+    }
 }

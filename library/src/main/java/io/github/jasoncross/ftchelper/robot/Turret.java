@@ -185,6 +185,25 @@ public final class Turret extends Module<Turret> {
         part.stop();
     }
 
+    private double pausedTarget = Double.NaN;
+    private boolean pausedFollowing = false;
+
+    @Override
+    void pause() {
+        if (part == null) return;
+        pausedTarget = part.getTargetAngle();
+        pausedFollowing = follow.isOn();
+        follow.off();
+        part.stop();          // power 0 (it is on brake)
+    }
+
+    @Override
+    void resume() {
+        if (part == null) return;
+        if (!Double.isNaN(pausedTarget) && part.isHomed()) part.aimAt(pausedTarget);
+        if (pausedFollowing) follow.on();
+    }
+
     @Override
     void halt() {
         if (part != null && part.isHomed()) part.aimAt(part.getAngle());   // hold where it points now

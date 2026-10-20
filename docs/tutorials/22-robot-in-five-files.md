@@ -127,6 +127,8 @@ gamepad 1, like goBILDA's code. You only write what is different: here, Y fires 
 
 - **INIT shows the map** on the Driver Station: every button with its job, and the free ones. During the
   match, a tap of GUIDE shows it again (tap again to close).
+- **BACK pauses the robot:** everything stops on brake; BACK again and each part goes on as before
+  (hold BACK 1 s instead to reset field-centric "forward"). STOP brakes everything too.
 - Each button takes ONE job. Two jobs on one button in this file, or a job on a driving button (the
   left stick, LT slow...), stop at INIT with the button's name. A job you put on a button a module
   suggested replaces the suggestion.

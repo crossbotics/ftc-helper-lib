@@ -142,6 +142,15 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
      */
     void halt() { }
 
+    /**
+     * Pause (BACK in TeleOp, and at STOP): stop moving now, motors on brake, but remember what it was
+     * doing for {@link #resume()}. Default: nothing (a servo already holds its place).
+     */
+    void pause() { }
+
+    /** Back to what it was doing before {@link #pause()}. Default: nothing. */
+    void resume() { }
+
     /** Modules inside this one (a launcher's indexer): set up with it, not updated on their own. */
     List<Module<?>> children() {
         return java.util.Collections.emptyList();

@@ -265,10 +265,10 @@ public class SimFromRobotTest {
         io.github.jasoncross.ftchelper.match.MatchMemory.clear();
         try (SimRun s = new SimRun(file.toString())) {
             s.init("FlywheelBot Shoot and Leave");                 // the INIT menu starts on BLUE
-            assertTrue("blue: the spot from the blue wall", SimRun.waitFor(() -> Math.abs(s.robot().x + 56) < 0.01
+            assertTrue("blue: the spot from the blue wall", SimRun.waitFor(() -> Math.abs(s.robot().x - 56) < 0.01
                     && Math.abs(s.robot().y - 61.55) < 0.01 && Math.abs(Math.abs(s.robot().headingDeg) - 180) < 0.01, 2));
-            s.press(v -> s.g1().b = v);                          // RED
-            assertTrue("red: mirrored", SimRun.waitFor(() -> Math.abs(s.robot().x + 56) < 0.01
+            s.press(v -> s.g1().b = v);                          // RED: the same spot from the red wall
+            assertTrue("red: turned half a turn", SimRun.waitFor(() -> Math.abs(s.robot().x + 56) < 0.01
                     && Math.abs(s.robot().y + 61.55) < 0.01 && Math.abs(s.robot().headingDeg) < 0.01, 2));
             assertEquals("", s.error());
         }
@@ -281,13 +281,34 @@ public class SimFromRobotTest {
             s.init("FlywheelBot TeleOp");                          // no autonomous: nothing chosen yet
             SimRun.pause(0.5);
             assertEquals("it stays at the robot file's start until the alliance is chosen", -61.55, s.robot().y, 0.01);
-            s.press(v -> s.g1().x = v);                          // BLUE: the mirror image, at the blue wall
-            assertTrue(SimRun.waitFor(() -> Math.abs(s.robot().y - 61.55) < 0.01 && Math.abs(s.robot().x + 56) < 0.01, 2));
+            s.press(v -> s.g1().x = v);                          // BLUE: the same spot from the blue wall
+            assertTrue(SimRun.waitFor(() -> Math.abs(s.robot().y - 61.55) < 0.01 && Math.abs(s.robot().x - 56) < 0.01, 2));
             s.press(v -> s.g1().b = v);                          // RED: the robot file's start
             assertTrue(SimRun.waitFor(() -> Math.abs(s.robot().y + 61.55) < 0.01, 2));
             s.sim.robot.setPose(-56, -45, 0);                     // dragged on the map
             SimRun.pause(0.3);
             assertEquals("a dragged robot stays", -45, s.robot().y, 0.01);
+            assertEquals("", s.error());
+        }
+    }
+
+    @Test public void backPausesAndGoesOn() throws Exception {
+        Path file = generate(io.github.jasoncross.ftchelper.examples.flywheelbot.Robot.class);
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("FlywheelBot TeleOp").start();
+            SimMotor intake = s.robot().motors.get("intake");
+            assertTrue("the intake runs from START", SimRun.waitFor(() -> intake.userPower() > 0.5, 3));
+            s.press(v -> s.g1().back = v);                       // pause
+            assertTrue(SimRun.waitFor(() -> s.screenHas("PAUSED"), 1));
+            assertEquals(0, intake.userPower(), 1e-9);
+            s.press(v -> s.g1().back = v);                       // go on
+            assertTrue(SimRun.waitFor(() -> intake.userPower() > 0.5, 1));
+            assertFalse(s.screenHas("PAUSED"));
+            s.g1().back = true;                                  // held 1.5 s: resets forward, no pause
+            SimRun.pause(1.5);
+            s.g1().back = false;
+            SimRun.pause(0.3);
+            assertFalse(s.screenHas("PAUSED"));
             assertEquals("", s.error());
         }
     }

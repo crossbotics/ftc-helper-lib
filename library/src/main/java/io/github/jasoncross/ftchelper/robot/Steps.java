@@ -71,9 +71,11 @@ public final class Steps {
 
     /**
      * Where to place the robot: the note for the drive team (shown in INIT), and the spot as seen from
-     * the BLUE drivers' wall (mirrored for RED like the routes): {@code xIn} inches to the right of the
-     * field's centre line, {@code yIn} from the centre toward the far wall (negative = your half),
-     * heading 0 = facing away from you, counterclockwise +. The simulator puts the robot there.
+     * your drivers' wall, written for BLUE: {@code xIn} inches to the right of the field's centre line,
+     * {@code yIn} from the centre toward the far wall (negative = your half), heading 0 = facing away
+     * from you, counterclockwise +. RED uses it like the routes: mirrored left-right, or (with
+     * {@code mirrorForRed()} false, a field turned half a turn like BIOBUZZ) the same numbers from the
+     * red wall. The simulator puts the robot there.
      *
      * <pre>{@code
      * s.start("Against our wall, 2nd tile from the left, facing the field", -36, -63, 0)

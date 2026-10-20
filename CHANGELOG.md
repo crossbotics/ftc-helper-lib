@@ -12,6 +12,9 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - `./gradlew :sim:run -Pport=8781`: another port, to run two simulators at once.
 - **GUIDE shows the button map** in a Controls.java TeleOp (a tap; tap again to close); holding GUIDE
   1 s opens the tuning menu (`EasyTeleOp.buttonHelp()`).
+- **BACK pauses the robot** in a Controls.java TeleOp: every part stops at once on brake, the wheels hold,
+  actions wait; BACK again and each goes on as before (`robot.pauseAll()`, `resume()`, `togglePause()`).
+  Holding BACK 1 s resets "forward" (`EasyTeleOp.backTap()`). STOP brakes every motor too.
 - **RB fires one; hold it to keep firing** (the launcher's standard button: `fireWhileHeld()`,
   `ceaseFire()`). `tapOrDoubleTap(tap, doubleTap)` for any button. `Shape.reversed()`: a roller that
   turns the other way from its motor. `Intake.isPushingOut()`.
@@ -21,8 +24,9 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   `lastReport()`.
 - Simulator: when an autonomous ends, the Driver Station chooses its `preselectTeleOp`, like the real one.
 - **An autonomous names its start spot** with its note: `s.start(note, x, y, heading)` (EasyAuto:
-  `startSpotIn()`), seen from the BLUE wall and mirrored for RED. The simulator puts the robot there in
+  `startSpotIn()`), seen from your wall (written for BLUE; RED as the routes). The simulator puts the robot there in
   INIT for the chosen alliance. `MatchMemory.placement()`, `setPlacement()`, `fieldPose()`.
+- The BIOBUZZ examples say the field is turned half a turn between the alliances (`mirrorForRed()` false).
 - Simulator: a TeleOp with no autonomous before it puts the robot at its alliance's default spot once the
   drivers choose the alliance; drag the robot on the field map (and turn it with the mouse wheel) while
   no program runs or in INIT.

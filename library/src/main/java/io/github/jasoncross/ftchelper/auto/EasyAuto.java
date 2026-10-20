@@ -155,8 +155,8 @@ public abstract class EasyAuto extends LinearOpMode {
     }
 
     /**
-     * Where to place the robot, as seen from the BLUE drivers' wall (mirrored for RED like the routes,
-     * when {@link #mirrorForRed()}): {x, y} in inches, x to the right of the field's centre line, y from
+     * Where to place the robot, as seen from the BLUE drivers' wall (for RED: mirrored like the routes
+     * when {@link #mirrorForRed()}, else the same numbers from the red wall): {x, y} in inches, x to the right of the field's centre line, y from
      * the centre toward the far wall (negative = your half). Null (default) = not given. The heading is
      * {@link #startHeadingDeg()}. The simulator puts the robot there in INIT.
      */

@@ -154,6 +154,11 @@ public final class Action {
         if (isRunning()) advance(runner, now);
     }
 
+    // After a pause: the current step's clock starts later, so a wait does not time out because of it.
+    void shift(double seconds) {
+        stepStart += seconds;
+    }
+
     void finish(String why) {
         index = -1;
         result = why;

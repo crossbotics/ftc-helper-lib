@@ -176,6 +176,12 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
     }
 
     @Override
+    void pause() {
+        // Power 0 now; it is on brake already. Its target stays, so resume goes on toward it.
+        if (part != null) part.getSafeMotor().stop();
+    }
+
+    @Override
     void halt() {
         if (part != null) part.hold();   // stay at this height
     }

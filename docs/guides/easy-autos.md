@@ -109,9 +109,10 @@ r.move(...).move(...)          // main steps: cut short when 4 s are left
 ## Where to place the robot
 
 `startPosition()` is the note the drive team reads in INIT. `startSpotIn()` (in a five-files autonomous:
-`s.start(note, x, y, heading)`) also gives the spot, seen from the BLUE drivers' wall and mirrored for RED
-like the routes: x inches right of the field's centre line, y from the centre toward the far wall
-(negative = your half). The simulator puts the robot there in INIT.
+`s.start(note, x, y, heading)`) also gives the spot, seen from your drivers' wall and written for BLUE:
+x inches right of the field's centre line, y from the centre toward the far wall (negative = your half).
+RED uses it like the routes: mirrored, or, on a field turned half a turn like BIOBUZZ (`mirrorForRed()`
+false), the same numbers from the red wall. The simulator puts the robot there in INIT.
 
 ## Read the report
 

@@ -73,6 +73,21 @@ final class ActionRunner implements Subsystem {
         for (Action a : new ArrayList<>(running)) stop(a, why);
     }
 
+    private double pausedAt = Double.NaN;
+
+    /** The robot is paused: the running actions' waits stop counting. */
+    void pause() {
+        pausedAt = now();
+    }
+
+    /** The robot goes on: each running action's wait goes on from where it was. */
+    void resume() {
+        if (Double.isNaN(pausedAt)) return;
+        double dt = now() - pausedAt;
+        for (Action a : running) a.shift(dt);
+        pausedAt = Double.NaN;
+    }
+
     /** True if any action is running. */
     boolean isBusy() {
         return !running.isEmpty();

@@ -1,6 +1,7 @@
 package io.github.jasoncross.ftchelper.robot;
 
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import io.github.jasoncross.ftchelper.hardware.MotorSetup;
@@ -150,6 +151,21 @@ public final class Intake extends Module<Intake> implements Toggleable {
     }
 
     /** Stops (and ends a reverse). */
+    @Override
+    void pause() {
+        for (DcMotorEx m : motors) m.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        for (DcMotorEx m : motors) m.setPower(0);
+        for (CRServo s : crServos) s.setPower(0);
+        lastPower = Double.NaN;   // resume sends its power again
+    }
+
+    @Override
+    void resume() {
+        // A roller spins down freely again (coast), and runs as it did before.
+        for (DcMotorEx m : motors) m.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        lastPower = Double.NaN;
+    }
+
     @Override
     void halt() {
         on = false;

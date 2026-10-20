@@ -51,6 +51,7 @@ public abstract class RobotDefinition {
     private boolean tunablesGiven = false;
     private boolean defined = false;
     private boolean built = false;
+    private volatile boolean paused = false;
     private Subsystems all = null;
     private Alliance alliance = Alliance.BLUE;
     private TunableSection driveSection = null;
@@ -171,7 +172,18 @@ public abstract class RobotDefinition {
         if (built) throw new IllegalStateException("This robot is already set up: make a new one per OpMode");
         describe();
         built = true;
-        all = new Subsystems().add(runner);
+        // Paused: nothing is updated (so nothing moves). At the end (STOP, or an error) everything is
+        // paused first, so every motor stops on brake, then stopped.
+        all = new Subsystems() {
+            @Override public void update() {
+                if (!paused) super.update();
+            }
+
+            @Override public void stop() {
+                pauseAll();
+                super.stop();
+            }
+        }.add(runner);
         // Cameras first, so the parts that use them see this loop's picture.
         List<Module<?>> ordered = new ArrayList<>();
         for (Module<?> m : modules) if (m instanceof Camera) ordered.add(m);
@@ -213,6 +225,42 @@ public abstract class RobotDefinition {
     public final List<Module<?>> modules() {
         describe();
         return Collections.unmodifiableList(modules);
+    }
+
+    /**
+     * Pauses the whole robot: every part stops now with its motors on brake (actions wait), and
+     * remembers what it was doing. {@link #resume()} goes on from there. TeleOp's BACK does it.
+     */
+    public final void pauseAll() {
+        if (paused || !built) return;
+        paused = true;
+        runner.pause();
+        for (Module<?> m : modules) {
+            for (Module<?> c : m.children()) c.pause();
+            m.pause();
+        }
+    }
+
+    /** Ends {@link #pauseAll()}: every part goes back to what it was doing. */
+    public final void resume() {
+        if (!paused) return;
+        paused = false;
+        runner.resume();
+        for (Module<?> m : modules) {
+            for (Module<?> c : m.children()) c.resume();
+            m.resume();
+        }
+    }
+
+    /** Pauses if running, resumes if paused. */
+    public final void togglePause() {
+        if (paused) resume();
+        else pauseAll();
+    }
+
+    /** True while paused. */
+    public final boolean isPaused() {
+        return paused;
     }
 
     /** Starts an action (from its first step if it was running). It runs a little every loop. */

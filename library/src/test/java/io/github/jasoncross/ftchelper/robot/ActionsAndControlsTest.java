@@ -324,4 +324,36 @@ public class ActionsAndControlsTest {
         l.ceaseFire();                          // let go quickly: the tap's shot still goes
         assertEquals(1, l.part().getShotsLeft());
     }
+
+    @Test public void pauseStopsEverythingOnBrakeAndResumeGoesOn() {
+        io.github.jasoncross.ftchelper.FakeMotor intake = kit.motors.get("intake");
+        robot.intake.in();
+        robot.lift.goTo("high");
+        Action a = Action.named("Wait").waitUntil("never", () -> false, 1.0);
+        robot.run(a);
+        loop();
+        assertEquals(0.8, intake.power, 1e-9);
+        robot.pauseAll();
+        assertTrue(robot.isPaused());
+        assertEquals(0, intake.power, 1e-9);
+        assertEquals(com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE, intake.zeroPower);
+        assertEquals(0, kit.motors.get("lift").power, 1e-9);
+        for (int i = 0; i < 100; i++) loop();          // 2 s paused: nothing moves, the wait does not time out
+        assertEquals(0, intake.power, 1e-9);
+        assertEquals(0, kit.motors.get("lift").power, 1e-9);
+        robot.resume();
+        loop();
+        assertEquals(0.8, intake.power, 1e-9);
+        assertEquals(com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.FLOAT, intake.zeroPower);
+        assertTrue("the lift goes on toward its target", kit.motors.get("lift").power > 0);
+        assertTrue("the action is still waiting", a.isRunning());
+    }
+
+    @Test public void stopBrakesEverything() {
+        robot.intake.in();
+        loop();
+        robot.all().stop();
+        assertEquals(0, kit.motors.get("intake").power, 1e-9);
+        assertEquals(com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE, kit.motors.get("intake").zeroPower);
+    }
 }

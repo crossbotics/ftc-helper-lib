@@ -29,7 +29,8 @@ import java.util.List;
  * }</pre>
  *
  * <p><b>Driving</b> (gamepad 1, always): left stick drives (and strafes on mecanum), right stick X
- * turns, LT slow (hold), Y field-centric on/off (mecanum), BACK resets "forward", START + BACK debug
+ * turns, LT slow (hold), Y field-centric on/off (mecanum), BACK pauses everything (motors on brake; again
+ * to go on), holding BACK 1 s resets "forward", START + BACK debug
  * lines, GUIDE shows the button map (a tap) or opens the tuning menu (held 1 s, PRACTICE profile).
  * With {@code oneDriver = true}: left stick click
  * slow on/off, right stick click field-centric, and the operator's buttons move to gamepad 1.
@@ -115,8 +116,18 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
         return plan == null ? null : plan.help();
     }
 
+    // BACK (a tap): pause everything (motors on brake), a tap again: go on. Hold BACK: reset "forward".
+    @Override
+    protected final Runnable backTap() {
+        return () -> robot().togglePause();
+    }
+
     @Override
     protected final void drive(Gamepad gamepad) {
+        if (robot().isPaused()) {
+            driving().hold();      // paused: the wheels hold still too
+            return;
+        }
         if (oneDriver()) driving().update(gamepad, slowOn);
         else super.drive(gamepad);
     }
@@ -125,6 +136,11 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
     protected final void onStart() {
         robot().setAlliance(alliance());   // it may have been chosen in INIT
         robot().started();
+    }
+
+    @Override
+    protected final void addTelemetry(RobotTelemetry t) {
+        if (robot().isPaused()) t.warn("PAUSED: everything stopped on brake. BACK to go on.");
     }
 
     @Override
@@ -182,7 +198,7 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
             plan.reserve(g1.lt, "slow (hold)");
             if (fieldCentric) plan.reserve(g1.y, "field-centric on/off");
         }
-        plan.reserve(g1.back, "forward = away from you now");
+        plan.reserve(g1.back, "pause / go on (hold: forward = away from you now)");
         plan.reserve(g1.start, "debug lines (with BACK)");
         if (standard) robot.suggestButtons(plan);
         plan.source = null;
