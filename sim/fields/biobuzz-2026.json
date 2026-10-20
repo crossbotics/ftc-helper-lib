@@ -362,13 +362,127 @@
      25.12
     ]
    ],
-   "zMin": 0.0,
+   "zMin": 3.9,
    "zMax": 22.65,
-   "notes": "Fixed to the perimeter wall (manual 9.7). Top opening ~21.5 in up; POLLEN can be taken from the Retrieval Opening at the bottom (z ~0.35-3.9 in), open toward the field and both sides.",
+   "notes": "Fixed to the perimeter wall (manual 9.7). Top opening ~21.5 in up; POLLEN can be taken from the Retrieval Opening at the bottom (z ~0.35-3.9 in), open toward the field and both sides. This part: above the opening.",
    "center": [
     68.74,
     23.39
    ]
+  },
+  {
+   "name": "FLOWER (audience wall, blue half) lip",
+   "kind": "solid",
+   "color": "#f2c230",
+   "polygon": [
+    [
+     65.86,
+     25.63
+    ],
+    [
+     66.17,
+     25.79
+    ],
+    [
+     67.8,
+     26.33
+    ],
+    [
+     69.98,
+     26.73
+    ],
+    [
+     71.22,
+     26.72
+    ],
+    [
+     71.79,
+     26.22
+    ],
+    [
+     71.79,
+     20.57
+    ],
+    [
+     71.21,
+     20.07
+    ],
+    [
+     69.99,
+     20.06
+    ],
+    [
+     67.8,
+     20.46
+    ],
+    [
+     66.1,
+     21.02
+    ],
+    [
+     65.63,
+     21.67
+    ],
+    [
+     65.63,
+     25.12
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 0.35,
+   "notes": "Under the Retrieval Opening: the lower ring's lip.",
+   "center": [
+    68.74,
+    23.39
+   ],
+   "part": "lip"
+  },
+  {
+   "name": "FLOWER (audience wall, blue half) back",
+   "kind": "solid",
+   "color": "#f2c230",
+   "polygon": [
+    [
+     69.22,
+     26.59
+    ],
+    [
+     69.98,
+     26.73
+    ],
+    [
+     71.22,
+     26.72
+    ],
+    [
+     71.79,
+     26.22
+    ],
+    [
+     71.79,
+     20.57
+    ],
+    [
+     71.21,
+     20.07
+    ],
+    [
+     69.99,
+     20.06
+    ],
+    [
+     69.22,
+     20.2
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 3.9,
+   "notes": "Behind the Retrieval Opening (more than 91.3 mm from the front face): the back posts.",
+   "center": [
+    70.55,
+    23.39
+   ],
+   "part": "back"
   },
   {
    "name": "FLOWER (blue wall, far half)",
@@ -428,13 +542,127 @@
      65.63
     ]
    ],
-   "zMin": 0.0,
+   "zMin": 3.9,
    "zMax": 22.65,
-   "notes": "Fixed to the perimeter wall (manual 9.7). Top opening ~21.5 in up; POLLEN can be taken from the Retrieval Opening at the bottom (z ~0.35-3.9 in), open toward the field and both sides.",
+   "notes": "Fixed to the perimeter wall (manual 9.7). Top opening ~21.5 in up; POLLEN can be taken from the Retrieval Opening at the bottom (z ~0.35-3.9 in), open toward the field and both sides. This part: above the opening.",
    "center": [
     -23.39,
     68.74
    ]
+  },
+  {
+   "name": "FLOWER (blue wall, far half) lip",
+   "kind": "solid",
+   "color": "#f2c230",
+   "polygon": [
+    [
+     -25.63,
+     65.86
+    ],
+    [
+     -25.79,
+     66.17
+    ],
+    [
+     -26.33,
+     67.8
+    ],
+    [
+     -26.73,
+     69.98
+    ],
+    [
+     -26.72,
+     71.22
+    ],
+    [
+     -26.22,
+     71.79
+    ],
+    [
+     -20.57,
+     71.79
+    ],
+    [
+     -20.07,
+     71.21
+    ],
+    [
+     -20.06,
+     69.99
+    ],
+    [
+     -20.46,
+     67.8
+    ],
+    [
+     -21.02,
+     66.1
+    ],
+    [
+     -21.67,
+     65.63
+    ],
+    [
+     -25.12,
+     65.63
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 0.35,
+   "notes": "Under the Retrieval Opening: the lower ring's lip.",
+   "center": [
+    -23.39,
+    68.74
+   ],
+   "part": "lip"
+  },
+  {
+   "name": "FLOWER (blue wall, far half) back",
+   "kind": "solid",
+   "color": "#f2c230",
+   "polygon": [
+    [
+     -26.59,
+     69.22
+    ],
+    [
+     -26.73,
+     69.98
+    ],
+    [
+     -26.72,
+     71.22
+    ],
+    [
+     -26.22,
+     71.79
+    ],
+    [
+     -20.57,
+     71.79
+    ],
+    [
+     -20.07,
+     71.21
+    ],
+    [
+     -20.06,
+     69.99
+    ],
+    [
+     -20.2,
+     69.22
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 3.9,
+   "notes": "Behind the Retrieval Opening (more than 91.3 mm from the front face): the back posts.",
+   "center": [
+    -23.39,
+    70.55
+   ],
+   "part": "back"
   },
   {
    "name": "FLOWER (red wall, audience half)",
@@ -494,13 +722,127 @@
      -65.63
     ]
    ],
-   "zMin": 0.0,
+   "zMin": 3.9,
    "zMax": 22.65,
-   "notes": "Fixed to the perimeter wall (manual 9.7). Top opening ~21.5 in up; POLLEN can be taken from the Retrieval Opening at the bottom (z ~0.35-3.9 in), open toward the field and both sides.",
+   "notes": "Fixed to the perimeter wall (manual 9.7). Top opening ~21.5 in up; POLLEN can be taken from the Retrieval Opening at the bottom (z ~0.35-3.9 in), open toward the field and both sides. This part: above the opening.",
    "center": [
     23.39,
     -68.74
    ]
+  },
+  {
+   "name": "FLOWER (red wall, audience half) lip",
+   "kind": "solid",
+   "color": "#f2c230",
+   "polygon": [
+    [
+     25.63,
+     -65.86
+    ],
+    [
+     25.79,
+     -66.17
+    ],
+    [
+     26.33,
+     -67.8
+    ],
+    [
+     26.73,
+     -69.98
+    ],
+    [
+     26.72,
+     -71.22
+    ],
+    [
+     26.22,
+     -71.79
+    ],
+    [
+     20.57,
+     -71.79
+    ],
+    [
+     20.07,
+     -71.21
+    ],
+    [
+     20.06,
+     -69.99
+    ],
+    [
+     20.46,
+     -67.8
+    ],
+    [
+     21.02,
+     -66.1
+    ],
+    [
+     21.67,
+     -65.63
+    ],
+    [
+     25.12,
+     -65.63
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 0.35,
+   "notes": "Under the Retrieval Opening: the lower ring's lip.",
+   "center": [
+    23.39,
+    -68.74
+   ],
+   "part": "lip"
+  },
+  {
+   "name": "FLOWER (red wall, audience half) back",
+   "kind": "solid",
+   "color": "#f2c230",
+   "polygon": [
+    [
+     26.59,
+     -69.22
+    ],
+    [
+     26.73,
+     -69.98
+    ],
+    [
+     26.72,
+     -71.22
+    ],
+    [
+     26.22,
+     -71.79
+    ],
+    [
+     20.57,
+     -71.79
+    ],
+    [
+     20.07,
+     -71.21
+    ],
+    [
+     20.06,
+     -69.99
+    ],
+    [
+     20.2,
+     -69.22
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 3.9,
+   "notes": "Behind the Retrieval Opening (more than 91.3 mm from the front face): the back posts.",
+   "center": [
+    23.39,
+    -70.55
+   ],
+   "part": "back"
   },
   {
    "name": "FLOWER (far wall, red half)",
@@ -560,13 +902,127 @@
      -25.12
     ]
    ],
-   "zMin": 0.0,
+   "zMin": 3.9,
    "zMax": 22.65,
-   "notes": "Fixed to the perimeter wall (manual 9.7). Top opening ~21.5 in up; POLLEN can be taken from the Retrieval Opening at the bottom (z ~0.35-3.9 in), open toward the field and both sides.",
+   "notes": "Fixed to the perimeter wall (manual 9.7). Top opening ~21.5 in up; POLLEN can be taken from the Retrieval Opening at the bottom (z ~0.35-3.9 in), open toward the field and both sides. This part: above the opening.",
    "center": [
     -68.74,
     -23.39
    ]
+  },
+  {
+   "name": "FLOWER (far wall, red half) lip",
+   "kind": "solid",
+   "color": "#f2c230",
+   "polygon": [
+    [
+     -65.86,
+     -25.63
+    ],
+    [
+     -66.17,
+     -25.79
+    ],
+    [
+     -67.8,
+     -26.33
+    ],
+    [
+     -69.98,
+     -26.73
+    ],
+    [
+     -71.22,
+     -26.72
+    ],
+    [
+     -71.79,
+     -26.22
+    ],
+    [
+     -71.79,
+     -20.57
+    ],
+    [
+     -71.21,
+     -20.07
+    ],
+    [
+     -69.99,
+     -20.06
+    ],
+    [
+     -67.8,
+     -20.46
+    ],
+    [
+     -66.1,
+     -21.02
+    ],
+    [
+     -65.63,
+     -21.67
+    ],
+    [
+     -65.63,
+     -25.12
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 0.35,
+   "notes": "Under the Retrieval Opening: the lower ring's lip.",
+   "center": [
+    -68.74,
+    -23.39
+   ],
+   "part": "lip"
+  },
+  {
+   "name": "FLOWER (far wall, red half) back",
+   "kind": "solid",
+   "color": "#f2c230",
+   "polygon": [
+    [
+     -69.22,
+     -26.59
+    ],
+    [
+     -69.98,
+     -26.73
+    ],
+    [
+     -71.22,
+     -26.72
+    ],
+    [
+     -71.79,
+     -26.22
+    ],
+    [
+     -71.79,
+     -20.57
+    ],
+    [
+     -71.21,
+     -20.07
+    ],
+    [
+     -69.99,
+     -20.06
+    ],
+    [
+     -69.22,
+     -20.2
+    ]
+   ],
+   "zMin": 0.0,
+   "zMax": 3.9,
+   "notes": "Behind the Retrieval Opening (more than 91.3 mm from the front face): the back posts.",
+   "center": [
+    -70.55,
+    -23.39
+   ],
+   "part": "back"
   },
   {
    "name": "Blue NECTAR tray",

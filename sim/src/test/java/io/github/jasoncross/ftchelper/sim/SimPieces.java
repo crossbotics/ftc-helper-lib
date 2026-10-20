@@ -37,12 +37,14 @@ import java.util.Properties;
 final class SimPieces {
     private static final class Collect {
         final String name, shape, motor, crservo;
+        final String[] shapes;   // shape=a+b+c: pieces come in at any of them
         final double threshold, reach;   // reach: a piece this close to the shape (inches) can be taken in
         final int holds;
 
         Collect(String name, Map<String, String> s) {
             this.name = name;
             shape = req(s, "shape", "collect." + name);
+            shapes = shape.split("\\s*\\+\\s*");
             motor = s.get("motor");
             crservo = s.get("crservo");
             if (motor == null && crservo == null) throw new IllegalArgumentException("Robot file: collect." + name + " needs motor= or crservo=");
@@ -138,7 +140,7 @@ final class SimPieces {
         for (Map.Entry<String, Map<String, String>> e : shootLines.entrySet()) shoots.add(new Shoot(e.getKey(), e.getValue(), robot.dir));
         for (Map.Entry<String, Map<String, String>> e : grabLines.entrySet()) grabs.add(new Grab(e.getKey(), e.getValue()));
         for (Collect c : collects) {
-            check(c.shape, "collect." + c.name);
+            for (String sh : c.shapes) check(sh, "collect." + c.name);
             if (c.motor != null && !robot.motors.containsKey(c.motor)) {
                 throw new IllegalArgumentException("Robot file: collect." + c.name + ": no motor." + c.motor
                         + (robot.crServos.containsKey(c.motor) ? " (it is a CR servo: write crservo=" + c.motor + ")" : ""));
@@ -166,7 +168,9 @@ final class SimPieces {
             if (!st.pieces.isEmpty()) {
                 SimField.StagedPiece low = st.pieces.get(0);
                 for (SimField.Element e : robot.field.elements) {
-                    if (e.hull.size() >= 3 && e.zMin <= low.z && low.z <= e.zMax && inside(e.hull, low.x, low.y)) {
+                    // How deep the piece sits inside the element's outline: a solid over it counts even when
+                    // the piece is in an opening under it (a FLOWER's Retrieval Opening).
+                    if (e.hull.size() >= 3 && low.z <= e.zMax && inside(e.hull, low.x, low.y)) {
                         double r = robot.field.pieceTypes.get(low.type).diameterIn / 2;
                         depth = Math.max(depth, edgeDistance(e.hull, low.x, low.y) - r);
                     }
@@ -346,7 +350,7 @@ final class SimPieces {
                 boolean taken = false;
                 double[] bp = world.ballPos(b);
                 for (Collect c : collects) {
-                    if (stored.size() >= c.holds || !(b.touchingParts.contains(c.shape) || near(c.shape, bp, b.type.diameterIn / 2, c.reach))) continue;
+                    if (stored.size() >= c.holds || !(touchesAny(b, c.shapes) || nearAny(c.shapes, bp, b.type.diameterIn / 2, c.reach))) continue;
                     // the power after the motor's (or CR servo's) direction setting, for both
                     double power = c.motor != null ? robot.motors.get(c.motor).appliedPower
                             : robot.crServos.get(c.crservo)[0] * (robot.crServos.get(c.crservo)[1] == 1 ? -1 : 1);
@@ -453,7 +457,7 @@ final class SimPieces {
                 double drop = st.pieces.size() > 1 ? st.pieces.get(1).z - slot.z : 0;
                 double fall = Math.sqrt(2 * Math.max(0, drop) / 386.1);
                 for (Collect c : collects) {
-                    if (stored.size() >= c.holds || !near(c.shape, p, r, c.reach + depth)) continue;
+                    if (stored.size() >= c.holds || !nearAny(c.shapes, p, r, c.reach + depth)) continue;
                     double power = c.motor != null ? robot.motors.get(c.motor).appliedPower
                             : robot.crServos.get(c.crservo)[0] * (robot.crServos.get(c.crservo)[1] == 1 ? -1 : 1);
                     if (c.threshold > 0 ? power >= c.threshold : power <= c.threshold) {
@@ -486,6 +490,16 @@ final class SimPieces {
     }
 
     // True if a piece (centre at p, field inches; radius r) is within reach of one of the shape's boxes.
+    private static boolean touchesAny(SimWorld.Ball b, String[] shapes) {
+        for (String s : shapes) if (b.touchingParts.contains(s)) return true;
+        return false;
+    }
+
+    private boolean nearAny(String[] shapes, double[] p, double r, double reach) {
+        for (String s : shapes) if (near(s, p, r, reach)) return true;
+        return false;
+    }
+
     private boolean near(String shape, double[] p, double r, double reach) {
         double[] q = toRobot(p);
         for (SimShapes.Piece piece : robot.shapes.pieces()) {

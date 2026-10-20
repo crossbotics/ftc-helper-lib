@@ -123,4 +123,28 @@ public class SimFieldTest {
         SimParts.Servo torque = SimParts.catalog().servo("gobilda-2000-torque");
         assertEquals("the 4.8 V row (0.25 s per 60 deg), not the 6 V headline", 0.25, torque.secPer60Deg, 1e-9);
     }
+
+    @Test public void aFlowersRetrievalOpeningIsOpen() throws Exception {
+        // BIOBUZZ: open from the front and sides 9-99 mm up, 91 mm deep (intake/out/flower_opening.json in the
+        // team's design repo); the field file makes each FLOWER three solids around it.
+        SimField f = SimField.load("biobuzz-2026");
+        double[] inOpening = {23.0, -67.5};      // 2 in behind the red-wall FLOWER's front face (y -65.63)
+        double[] inBack = {23.0, -70.5};
+        boolean openAt2in = true, solidBehind = false, solidAbove = false;
+        for (SimField.Element e : f.elements) {
+            if (!e.kind.equals("solid") || e.hull.size() < 3) continue;
+            boolean over = SimField.overlap(e.hull, square(inOpening, 0.2));
+            if (over && e.zMin <= 2.0 && e.zMax >= 2.0) openAt2in = false;
+            if (over && e.zMin >= 3.8) solidAbove = true;
+            if (SimField.overlap(e.hull, square(inBack, 0.2)) && e.zMin <= 2.0 && e.zMax >= 2.0) solidBehind = true;
+        }
+        assertTrue("nothing solid in the opening, 2 in up", openAt2in);
+        assertTrue("the FLOWER above the opening", solidAbove);
+        assertTrue("the back posts behind it", solidBehind);
+    }
+
+    private static java.util.List<double[]> square(double[] c, double h) {
+        return java.util.Arrays.asList(new double[] {c[0] - h, c[1] - h}, new double[] {c[0] + h, c[1] - h},
+                new double[] {c[0] + h, c[1] + h}, new double[] {c[0] - h, c[1] + h});
+    }
 }

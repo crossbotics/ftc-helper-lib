@@ -24,6 +24,10 @@ final class ButtonPlan {
     String source = null;
     final boolean oneDriver;
     final Pad g1, g2;
+    // True while a button given Button.slow() is held (one driver).
+    boolean slowHeld = false;
+    // A trigger given Button.slow(): the further it is pulled, the slower (one driver). Null if none.
+    ControllerBindings.Trigger slowTrigger = null;
     // Every input with a job, in the order they were given one.
     private final Map<Object, Entry> jobs = new LinkedHashMap<>();
     // Suggestions that found their button taken (for the INIT notes).
@@ -126,6 +130,11 @@ final class ButtonPlan {
      * E.g. "G2 RT: in (hold) [Intake]".
      */
     List<String> help() {
+        return help(true);
+    }
+
+    /** The map; {@code withFree} false leaves out the free buttons (the GUIDE view). */
+    List<String> help(boolean withFree) {
         List<String> out = new ArrayList<>();
         for (Pad p : oneDriver ? new Pad[] {g1} : new Pad[] {g1, g2}) {
             StringBuilder free = new StringBuilder();
@@ -139,7 +148,7 @@ final class ButtonPlan {
                 String who = e.source.equals(TEAM) ? "" : " [" + e.source + "]";
                 out.add(p + " " + name + ": " + e.says + who);
             }
-            if (free.length() > 0) out.add(p + " free: " + free);
+            if (withFree && free.length() > 0) out.add(p + " free: " + free);
         }
         return out;
     }

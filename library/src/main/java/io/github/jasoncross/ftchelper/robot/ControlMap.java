@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import io.github.jasoncross.ftchelper.core.RobotConfig;
 import io.github.jasoncross.ftchelper.core.Subsystems;
 import io.github.jasoncross.ftchelper.gamepad.ControllerBindings;
+import io.github.jasoncross.ftchelper.gamepad.StickShaping;
 import io.github.jasoncross.ftchelper.gamepad.ControllerBindings.Btn;
 import io.github.jasoncross.ftchelper.teleop.EasyTeleOp;
 import io.github.jasoncross.ftchelper.telemetry.RobotTelemetry;
@@ -113,7 +114,7 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
     // GUIDE (a tap) shows the button map during the match.
     @Override
     protected final List<String> buttonHelp() {
-        return plan == null ? null : plan.help();
+        return plan == null ? null : plan.help(false);   // no free buttons here
     }
 
     // BACK (a tap): pause everything (motors on brake), a tap again: go on. Hold BACK: reset "forward".
@@ -128,8 +129,20 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
             driving().hold();      // paused: the wheels hold still too
             return;
         }
-        if (oneDriver()) driving().update(gamepad, slowOn);
+        if (oneDriver()) driving().update(gamepad, oneDriverSpeed(gamepad));
         else super.drive(gamepad);
+    }
+
+    // One driver: the slow speed when slow is on (left stick click, or a button given slow()), and a
+    // trigger given slow() slows it the further it is pulled.
+    private double oneDriverSpeed(Gamepad gamepad) {
+        double slowest = slowSpeed();
+        double speed = slowOn || (plan != null && plan.slowHeld) ? slowest : 1;
+        if (plan != null && plan.slowTrigger != null) {
+            double pull = plan.slowTrigger == ControllerBindings.Trigger.LT ? gamepad.left_trigger : gamepad.right_trigger;
+            speed = Math.min(speed, StickShaping.slowScale(pull, slowest));
+        }
+        return speed;
     }
 
     @Override

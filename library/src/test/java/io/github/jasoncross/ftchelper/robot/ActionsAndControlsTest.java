@@ -227,6 +227,21 @@ public class ActionsAndControlsTest {
         assertEquals("G1 Y: high [Lift]", line(help, "G1 Y"));
     }
 
+    @Test public void oneDriverCanPutSlowOnATrigger() {
+        ButtonPlan plan = ControlMap.makePlan(robot, true, true, (g1, g2) -> g1.lt.slow());
+        assertEquals("G1 LT: slow (squeeze: the further, the slower)", line(plan.help(), "G1 LT"));
+        assertEquals(io.github.jasoncross.ftchelper.gamepad.ControllerBindings.Trigger.LT, plan.slowTrigger);
+        ButtonPlan b = ControlMap.makePlan(robot, true, true, (g1, g2) -> g1.a.slow());
+        assertEquals("G1 A: slow (hold)", line(b.help(), "G1 A"));
+        assertFalse(b.slowHeld);
+    }
+
+    @Test public void theGuideMapLeavesOutTheFreeButtons() {
+        ButtonPlan plan = ControlMap.makePlan(robot, true, true, (g1, g2) -> g1.b.free());
+        assertTrue(line(plan.help(), "G1 free").contains("B"));
+        assertEquals("", line(plan.help(false), "G1 free"));
+    }
+
     @Test public void aSuggestionWithNoFreeButtonIsNoted() {
         RobotDefinition r = new RobotDefinition() {
             @Override protected void define() {

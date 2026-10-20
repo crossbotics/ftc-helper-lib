@@ -290,6 +290,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer
 | `speedMode()` | the [mode](#modes) that sets the speed from the camera's distance |
 | `isReady()`, `isShooting()`, `targetRpm()`, `part()` | |
 | `requireReady(what, check)` | another check before each feed (e.g. the turret is aimed) |
+| `spinAtStart()` | spins up at START (autonomous and TeleOp), ready for the first shot |
 | `shotAngle(deg)` | for the simulator: which way a piece leaves, degrees up from the wheel shape's forward (the robot's forward for a wheel mounted level; 135 = up and out of the back) |
 
 `Tunables.Launcher`: `speedRpm`, `stepRpm`, `readyBandRpm`, `idleRpm`, `shotIntervalSec`,
@@ -403,9 +404,11 @@ has its standard buttons; write only what differs. A [`Pad`](#controlmap) has ev
 | D-pad left/right | free | wrist |
 | BACK | tap: **pause** everything (stopped on brake), tap again: go on; hold 1 s: "forward" = away from you now | turret following on/off |
 | START + BACK | debug lines | |
-| GUIDE | tap: the button map (during the match too); hold 1 s: the tuning menu (PRACTICE) | |
+| GUIDE | tap: the button map, without the free buttons (during the match too); hold 1 s: the tuning menu (PRACTICE) | |
 
-One driver: left stick click is slow on/off and right stick click field-centric. Write the switch
+One driver: left stick click is slow on/off and right stick click field-centric. To put slow on a
+trigger instead, give it `.slow()`: `g1.lt.slow();` slows the robot the further LT is pulled (down to
+`slowSpeed` at a full squeeze, like the two-driver LT); on a button, `.slow()` is slow while held. Write the switch
 exactly as `public static boolean oneDriver = true;` (INIT stops with a message if it is not static). A module whose
 button is taken gets none (INIT notes it). Checked at INIT: two jobs on one button in Controls.java,
 or a job on a driving button, stop with the button's name. INIT shows the whole map and the free

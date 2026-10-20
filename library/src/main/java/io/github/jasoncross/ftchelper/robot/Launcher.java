@@ -51,6 +51,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     private Tunable speedRpm, stepRpm;
     private int adjustSteps = 0;
     private boolean spinning = false;
+    private boolean spinAtStart = false;
     // fireWhileHeld: true while the button is held, and how many shots this press has asked for.
     private boolean holding = false;
     private int heldShots = 0;
@@ -92,6 +93,15 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
             throw new IllegalArgumentException("Robot.java: shotAngle(" + degrees + "): 0 to 180 degrees (0 forward, 90 up, 180 back)");
         }
         shotAngleDeg = degrees;
+        return this;
+    }
+
+    /**
+     * Spins up at START (in autonomous and TeleOp), so it is at speed when the first shot is wanted.
+     * LB (or {@link #idle()}) still lets it coast down.
+     */
+    public Launcher spinAtStart() {
+        spinAtStart = true;
         return this;
     }
 
@@ -169,6 +179,10 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     @Override
     void start() {
         if (distanceCamera != null) speedMode.on();
+        if (spinAtStart) {
+            spinning = true;
+            part.spinUp();
+        }
     }
 
     // ----------------------------- commands -----------------------------

@@ -122,6 +122,14 @@ public final class DriverControls {
         driveSticks(gamepad, slow ? slowSpeed : 1);
     }
 
+    /**
+     * Drives from the gamepad's sticks at a speed your own code works out (0 to 1, e.g. from a slow
+     * trigger that is not the left one). Call every loop.
+     */
+    public void update(Gamepad gamepad, double speed) {
+        driveSticks(gamepad, Math.max(0, Math.min(1, speed)));
+    }
+
     private void driveSticks(Gamepad gamepad, double speed) {
         // Minus: the SDK reads stick UP as negative (docs/conventions.md).
         double forward = StickShaping.shape(-gamepad.left_stick_y, deadband, exponent);

@@ -27,8 +27,10 @@ building the library needs: Java and the Android SDK, which Android Studio insta
 Chromebook with Linux turned on.
 
 The page fits one laptop screen: the Driver Hub on the left (OpMode, INIT/START/STOP, telemetry), the field
-in 3D in the middle with the gamepads under it, and the Control Hub on the right in tabs (Robot: the field
-from above, pushing the robot, size and pieces, battery; Motors; Servos & switches; Cameras). "Hide" on the
+in 3D in the middle with the gamepads under it, and the Control Hub on the right in panels (Robot: the field
+from above, pushing the robot, size and pieces, battery; Motors; Servos & switches; Cameras). Each of its
+buttons shows or hides a panel; the panels shown stack in that order, and this browser remembers the
+choice for the next run. "Hide" on the
 gamepads gives the 3D field more room when you drive with the keyboard, a real controller or a phone. On a
 narrow screen the parts stack and the page scrolls.
 
@@ -283,7 +285,8 @@ pages, not the manual), they roll and bounce, the robot pushes them, and the FLO
 
 ```properties
 # take in a piece within 0.75 in of the intake shape while motor "intake" turns inward (power above 0.2;
-# inward=- if negative power takes in; crservo= instead of motor=); it holds 4
+# inward=- if negative power takes in; crservo= instead of motor=); it holds 4. Several shapes with +
+# (shape=intake+left_spinner+right_spinner): a piece comes in at any of them
 collect.intake = shape=intake, motor=intake, holds=4
 # each flywheel shot (motor.flywheel = flywheel, feeder=feeder) sends a held piece off this shape.
 # The feeder is a motor or CR servo (a piece every 0.3 s while it runs), or a servo that pushes

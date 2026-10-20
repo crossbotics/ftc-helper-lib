@@ -9,6 +9,13 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - Simulator 3D view: rollers and wheels have dark stripes, so you can see them turn and which way. A
   roller glows green while it takes pieces in and orange while it pushes them out; a flywheel or other
   spinner glows yellow while it turns; a passive part (gravity, springs) blinks while it moves.
+- Simulator: the Control Hub's Robot, Motors, Servos & switches and Cameras panels can each be shown or
+  hidden; the shown ones stack, and the browser remembers the choice.
+- `Pad.Button.slow()`, for one driver: on a trigger (`g1.lt.slow()`) the robot drives slower the further it
+  is pulled, down to `slowSpeed`; on a button, slow while held. `DriverControls.update(gamepad, speed)`.
+- Simulator: an intake takes pieces in at every roller and spinner (`collect.intake = shape=intake+left_spinner+...`),
+  so side spinners that reach into a FLOWER's opening can take its bottom POLLEN.
+- The GUIDE button map leaves out the free buttons (INIT still lists them).
 - `./gradlew :sim:run -Pport=8781`: another port, to run two simulators at once.
 - **GUIDE shows the button map** in a Controls.java TeleOp (a tap; tap again to close); holding GUIDE
   1 s opens the tuning menu (`EasyTeleOp.buttonHelp()`).
@@ -18,7 +25,7 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - **RB fires one; hold it to keep firing** (the launcher's standard button: `fireWhileHeld()`,
   `ceaseFire()`). `tapOrDoubleTap(tap, doubleTap)` for any button. `Shape.reversed()`: a roller that
   turns the other way from its motor. `Shape.tiltDeg(deg)` (robot file `tilt=`): a part mounted at an
-  angle on its parent. `Intake.isPushingOut()`.
+  angle on its parent. `Intake.isPushingOut()`. `Launcher.spinAtStart()`: at speed from START.
 
 - **TeleOp chooses the alliance in INIT** when autonomous did not pass one (gamepad 1: X = BLUE, B = RED;
   also to change it), and shows autonomous's report. `MatchMemory.hasAlliance()`, `rememberReport()`,

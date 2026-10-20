@@ -24,7 +24,7 @@
   /* Narrow screens: one column you scroll. */
   main { display: grid; grid-template-columns: 1fr; gap: 10px; padding: 10px 12px; }
   /* A laptop or bigger: everything on one screen, no page scroll. The 3D field in the middle, the gamepads under
-     it, the Driver Hub on the left, the Control Hub (in tabs) on the right. */
+     it, the Driver Hub on the left, the Control Hub (panels shown or hidden by its buttons) on the right. */
   @media (min-width: 1100px) and (min-height: 640px) {
     body:not(.phone) { height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
     body:not(.phone) main { flex: 1; min-height: 0; grid-template-columns: minmax(280px, 340px) minmax(420px, 1fr) minmax(290px, 360px);
@@ -103,8 +103,10 @@
   body.phone header, body.phone main > section:not(#padsSection) { display: none; }
   body.phone main { grid-template-columns: 1fr; padding: 6px; }
   body.phone .gp { max-width: none; }
-  /* Control Hub tabs */
+  /* Control Hub panels: each button shows or hides its panel; the panels shown stack in order */
   .tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+  .tab.on ~ .tab.on { border-top: 1px solid var(--line); margin-top: 10px; padding-top: 8px; }
+  #noPanels { display: none; }
   .tabs button { padding: 4px 9px; font-size: 12.5px; }
   .tabs button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
   .tab { display: none; }
@@ -172,10 +174,11 @@
 
   <section id="hubSection">
     <h2>Control Hub</h2>
-    <div class="tabs" role="tablist">
-      <button data-tab="robot" class="on">Robot</button><button data-tab="motors">Motors</button>
-      <button data-tab="servos">Servos &amp; switches</button><button data-tab="cams">Cameras</button>
+    <div class="tabs" role="toolbar" aria-label="Show or hide each panel">
+      <button data-tab="robot" class="on" aria-pressed="true">Robot</button><button data-tab="motors" aria-pressed="false">Motors</button>
+      <button data-tab="servos" aria-pressed="false">Servos &amp; switches</button><button data-tab="cams" aria-pressed="false">Cameras</button>
     </div>
+    <div id="noPanels" class="muted">All panels are hidden: click a button above to show one.</div>
     <div class="tabbody">
     <div class="tab on" data-tab="robot">
     <canvas id="field" width="380" height="380" aria-label="Field, seen from above"></canvas>
@@ -197,6 +200,7 @@
     <div class="row"><input type="range" id="battery" min="11" max="13.5" step="0.1" value="12.8"><span id="batteryText"></span></div>
     </div>
     <div class="tab" data-tab="motors">
+    <h3 style="margin-top:0">Motors</h3>
     <table id="motors"><thead><tr><th>Name</th><th>Power</th><th class="num">Count</th><th class="num">Speed/s</th><th class="num">Amps</th></tr></thead><tbody></tbody></table>
     </div>
     <div class="tab" data-tab="servos">
@@ -206,6 +210,7 @@
     <div id="touches"></div>
     </div>
     <div class="tab" data-tab="cams">
+    <h3 style="margin-top:0">Cameras</h3>
     <div id="cameras"></div>
     </div>
     </div>
@@ -1116,13 +1121,30 @@ function setPadsSmall(small) {
 }
 $("#padsToggle").onclick = () => setPadsSmall(!$("#padsSection").classList.contains("small"));
 { let v = null; try { v = localStorage.getItem("simPadsSmall"); } catch (e) {} setPadsSmall(v === "1" && !phonePad); }
-// Control Hub tabs (the last one chosen is remembered in this browser)
-function showTab(name) {
-  document.querySelectorAll("#hubSection [data-tab]").forEach(el => el.classList.toggle("on", el.dataset.tab === name));
-  try { localStorage.setItem("simTab", name); } catch (e) {}
+// Control Hub panels: each button shows or hides its panel, the shown ones stack in order, and the
+// choice is remembered in this browser for the next run.
+function showPanels(names) {
+  document.querySelectorAll("#hubSection [data-tab]").forEach(el => {
+    const on = names.includes(el.dataset.tab);
+    el.classList.toggle("on", on);
+    if (el.tagName === "BUTTON") el.setAttribute("aria-pressed", on ? "true" : "false");
+  });
+  $("#noPanels").style.display = names.length ? "none" : "block";
+  try { localStorage.setItem("simPanels", JSON.stringify(names)); } catch (e) {}
 }
-document.querySelectorAll("#hubSection .tabs button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
-{ let t = null; try { t = localStorage.getItem("simTab"); } catch (e) {} if (t && document.querySelector(`#hubSection .tab[data-tab="${t}"]`)) showTab(t); }
+function shownPanels() {
+  return [...document.querySelectorAll("#hubSection .tabs button.on")].map(b => b.dataset.tab);
+}
+document.querySelectorAll("#hubSection .tabs button").forEach(b => b.onclick = () => {
+  const now = shownPanels(), name = b.dataset.tab;
+  showPanels(now.includes(name) ? now.filter(n => n !== name) : [...now, name]);
+});
+{
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem("simPanels")); } catch (e) {}
+  if (!Array.isArray(saved)) { let t = null; try { t = localStorage.getItem("simTab"); } catch (e) {} saved = [t || "robot"]; }
+  showPanels(saved.filter(n => document.querySelector(`#hubSection .tab[data-tab="${n}"]`)));
+}
 { let saved = null; try { saved = localStorage.getItem("sim3d"); } catch (e) {} set3d(saved !== "0" && !phonePad); }
 function escapeHtml(t) { return String(t).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch])); }
 

@@ -65,7 +65,7 @@ public class ShapesTest {
                 + "drop=intake_deploy>0.575, fallsTo=-10"));
         assertTrue(all, all.contains("shape.launcher_slide = slide, at=-1.57,0,6.61, size=0.79x0.79x0.79, travel=0.98, passive=yes"));
         assertTrue(all, all.contains("shape.left_spinner = roller, on=intake_deploy, at=4,5,0, size=3.54x3.54x1, axis=up, motor=intake"));
-        assertTrue(all, all.contains("collect.intake = shape=intake, motor=intake, holds=2\n"));
+        assertTrue(all, all.contains("collect.intake = shape=intake+left_spinner, motor=intake, holds=2\n"));
         // The flywheel's width comes from the catalog; the shot angle from the code.
         assertTrue(all, all.contains("shape.launcher = flywheel, on=launcher_slide, at=0,0,0, size=3.78x0.94x3.78, motor=launcher"));
         assertTrue(all, all.contains("shoot.launcher = shape=launcher, angle=147, share=0.5"));

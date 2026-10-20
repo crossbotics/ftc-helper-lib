@@ -14,6 +14,7 @@ import java.util.function.DoubleConsumer;
  * g2.y.press(Actions.scoreHigh(robot));               // an action: press again to cancel
  * g2.b.toggle(robot.claw);                            // open / close
  * g2.leftStickY.use(robot.lift::manual);              // up = +, every loop
+ * g1.lt.slow();                                        // slow: the further it is pulled, the slower (one driver)
  * g1.a.free();                                         // free: nothing yet
  * }</pre>
  *
@@ -153,6 +154,22 @@ public final class Pad {
         /** Each press flips between running {@code onEnable} and {@code onDisable}. */
         public Button toggle(Runnable onEnable, Runnable onDisable) {
             return put(ButtonPlan.Kind.TOGGLE, onEnable, onDisable, "toggle");
+        }
+
+        /**
+         * Slow driving, for one driver ({@code Tunables.Drive.slowSpeed}). On a trigger, e.g.
+         * {@code g1.lt.slow()}: the further it is pulled, the slower, down to {@code slowSpeed} at a
+         * full squeeze (like the two-driver LT). On a button: slow while it is held.
+         * (With two drivers, G1 LT already does this.)
+         */
+        public Button slow() {
+            final ButtonPlan p = pad.plan;
+            if (trigger != null) {
+                put(ButtonPlan.Kind.HOLD, () -> { }, null, "slow (squeeze: the further, the slower)");
+                if (last != null) p.slowTrigger = trigger;
+                return this;
+            }
+            return put(ButtonPlan.Kind.HOLD, () -> p.slowHeld = true, () -> p.slowHeld = false, "slow (hold)");
         }
 
         /** No job: it stays free, even if a module suggested one for it. Listed as free on the help page. */

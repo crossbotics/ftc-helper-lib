@@ -205,6 +205,15 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
         return firstShapeName();
     }
 
+    /** Every spinning shape's name joined with "+" (an intake's rollers and spinners all take pieces in). */
+    final String spinningShapeNames() {
+        StringBuilder b = new StringBuilder();
+        for (int i = 0; i < looks.size(); i++) {
+            if (looks.get(i).spins()) b.append(b.length() == 0 ? "" : "+").append(shapeName(i));
+        }
+        return b.length() == 0 ? firstShapeName() : b.toString();
+    }
+
     /**
      * What moves this shape, as robot file words ("motor=intake"), or null for nothing. Default: a
      * spinning shape turns with the main motor.
