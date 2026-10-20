@@ -22,6 +22,8 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   in); rollers and spinners drag the pieces they touch at their surface speed; the robot rolls over a
   FLOWER's thin floor plate.
 - README: a simulator section with a picture.
+- README: how the library is made (experience plus AI: Claude, Codex, cross-model checking). Every docs page
+  and the simulator page say it is a work in progress and link to GitHub issues for feedback.
 - Simulator page: the Driver Hub looks like the Driver Station app (Auto/TeleOp lists, one INIT/play/stop
   button, battery, gamepad lights) and the on-screen gamepads look like real controllers.
 - The GUIDE button map leaves out the free buttons (INIT still lists them).

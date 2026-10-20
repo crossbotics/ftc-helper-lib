@@ -1,5 +1,7 @@
 # Testing procedures
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 Most robot problems at events are found in the pits by a 10-minute check. These procedures say
 what to check, when, and how. Print the checklists.
 

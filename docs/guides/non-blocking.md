@@ -1,5 +1,7 @@
 # Non-blocking code: keep the loop running
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 A robot program is ONE loop that runs 50-200 times per second. Every part of the robot gets a turn
 in every loop. If any one piece of code **waits** (sleeps, loops until something happens, waits for
 a network answer), the whole robot freezes for that time: no driving, no stopping at limits, no

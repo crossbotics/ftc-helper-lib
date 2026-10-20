@@ -1,5 +1,7 @@
 # Keep the library up to date
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 Your robot project remembers ONE exact version of the library (one git commit).
 It does not change by itself. This is good: the robot never changes the night before an event
 because someone changed the library. You choose when to update.

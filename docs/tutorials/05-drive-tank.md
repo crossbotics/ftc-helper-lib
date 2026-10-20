@@ -1,5 +1,7 @@
 # Tutorial 05: Drive a standard (tank) robot
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 **You will learn:** how to set up a standard drivetrain (also called tank, differential, or
 "skid steer"), the two ways to drive it (arcade and tank style), and how 2- and 4-motor versions differ.
 

@@ -1,5 +1,7 @@
 # Tutorial 02: Motors and servos
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 **You will learn:** how to get a motor and a servo from the robot configuration and set them up
 in one readable chain, how to read an encoder, how to limit a servo to a safe range, and how to
 handle a part that is not on every robot.

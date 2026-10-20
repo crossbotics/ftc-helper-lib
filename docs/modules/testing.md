@@ -1,5 +1,7 @@
 # Testing module
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 Package: `io.github.jasoncross.ftchelper.testing`
 
 Learn it hands-on: [19 Testing procedures](../tutorials/19-testing-procedures.md). Full guide: [Testing procedures](../guides/testing.md).

@@ -1,5 +1,7 @@
 # Commenting style
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 The people reading this code are high-school students, many with little or no Java: **assume a
 novice programmer**. Comments are how they learn what each part does and WHY it is written that way.
 Every file follows this guide.

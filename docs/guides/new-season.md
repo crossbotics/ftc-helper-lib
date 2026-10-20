@@ -1,5 +1,7 @@
 # A new season: what to do
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 FTC changes the game every September and the SDK at least once a year. The library is built so
 that most of it carries over unchanged. This page is the checklist, in order.
 

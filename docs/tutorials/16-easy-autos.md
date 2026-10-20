@@ -1,5 +1,7 @@
 # Tutorial 16: Easy autonomous
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 **You will learn:** how `EasyAuto` turns an autonomous into a list of named steps, how to add INIT
 choices, how red/blue mirroring works, how to keep time for parking, and how to read the report.
 

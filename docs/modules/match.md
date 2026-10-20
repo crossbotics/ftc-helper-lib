@@ -1,5 +1,7 @@
 # Match module
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 Package: `io.github.jasoncross.ftchelper.match`
 
 Learn it hands-on: [15 Telemetry, profiles and tuning](../tutorials/15-telemetry-profiles-tuning.md), [16 Easy autonomous](../tutorials/16-easy-autos.md).

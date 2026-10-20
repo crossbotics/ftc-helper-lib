@@ -1,5 +1,7 @@
 # TeleOp module
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 Package: `io.github.jasoncross.ftchelper.teleop`
 
 Learn it hands-on: [20 Easy TeleOp](../tutorials/20-easy-teleop.md). Ready to copy: the

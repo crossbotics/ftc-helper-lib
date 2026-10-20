@@ -1,5 +1,7 @@
 # Finders module
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 Package: `io.github.jasoncross.ftchelper.finders`
 
 Learn it hands-on: [21 Find your numbers](../tutorials/21-finders.md). Step by step on the robot:

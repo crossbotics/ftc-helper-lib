@@ -1,5 +1,7 @@
 # Parts catalog: motors, servos, wheels and rollers
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 <!-- Made by tools/parts_page.py from sim/parts/parts.json. Edit parts.json, then run the script. -->
 
 The simulator knows these FTC motors and servos. A robot file names a part by its **id** (`part=gobilda-5203-312`), and the simulator takes the part's real numbers from here: how fast it turns, how many encoder counts it gives per turn, and its current (motors), or its range and speed (servos).

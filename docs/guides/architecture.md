@@ -1,5 +1,7 @@
 # How it all fits together
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 One page to see the whole library, and where your team's code goes.
 
 ## The layers

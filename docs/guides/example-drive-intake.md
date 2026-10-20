@@ -1,5 +1,7 @@
 # Example: drive, slow mode, and an intake that starts on
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 A complete TeleOp for a common robot: a mecanum drive with a slow-mode toggle, and an intake that
 is **ON from the start**, can be **stopped and started**, and **reversed while a button is held**.
 

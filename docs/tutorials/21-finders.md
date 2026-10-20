@@ -1,5 +1,7 @@
 # Tutorial 21: Find your numbers
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 **You will learn:** how to measure the numbers your code needs (servo ends, lift limits, flywheel
 gains, wheel size, camera offset, shot table) with the finders, and how to move the results into
 your code.

@@ -1,5 +1,7 @@
 # Tutorial 01: OpMode basics with the library
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 **You will learn:** the shape every program in these tutorials uses, how to import library
 classes, why some variables are "fields", what `() -> ...` means, and why we use `try`/`finally`.
 

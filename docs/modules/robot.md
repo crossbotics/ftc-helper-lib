@@ -1,5 +1,7 @@
 # Robot module (the robot in five files)
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 Package: `io.github.jasoncross.ftchelper.robot`
 
 Learn it hands-on: [22 The robot in five files](../tutorials/22-robot-in-five-files.md). Worked

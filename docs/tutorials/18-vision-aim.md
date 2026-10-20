@@ -1,5 +1,7 @@
 # Tutorial 18: Vision aiming (webcam or Limelight 3A)
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 **You will learn:** how to find AprilTags with a webcam or a Limelight 3A through ONE interface,
 what bearing and distance mean, and how to aim the drivetrain (or a turret) at a tag safely.
 

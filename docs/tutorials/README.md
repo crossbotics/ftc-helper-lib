@@ -1,5 +1,7 @@
 # Tutorials
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 Hands-on lessons that teach the library by building real robot programs, one idea at a time.
 Each tutorial has a **complete program** you can copy into TeamCode and run. Those programs are
 built and checked every time the library changes, so the code in these lessons always works

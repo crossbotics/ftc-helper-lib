@@ -1,5 +1,7 @@
 # Tutorial 03: Buttons
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 **You will learn:** every kind of button job (press, hold, release, toggle, triggers), how to
 give the driver feedback with rumble, how to step through a list with the D-pad, and why the
 "held through START" guard matters.

@@ -1,5 +1,7 @@
 # Troubleshooting
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 Find your problem below. Each answer says what is wrong and what to do.
 
 ## Build problems

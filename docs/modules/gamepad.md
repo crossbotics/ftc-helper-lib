@@ -1,5 +1,7 @@
 # Gamepad module
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 Package: `io.github.jasoncross.ftchelper.gamepad`
 
 Learn it hands-on: [03 Buttons](../tutorials/03-buttons.md), [11 Driver assists](../tutorials/11-driver-assists.md).

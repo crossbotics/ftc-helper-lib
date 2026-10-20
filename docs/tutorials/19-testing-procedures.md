@@ -1,5 +1,7 @@
 # Tutorial 19: Testing procedures
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 **You will learn:** how to use the Hardware Check OpMode, a fixed order for testing a robot (laptop,
 bench, floor, autonomous, event), and how to turn a problem into a fix that stays fixed.
 

@@ -1,5 +1,9 @@
 # ftc-helper-lib
 
+> **Work in progress.** This library is new and still changing, and some parts are not yet tested on a
+> real robot. Please try it and [tell us what works and what does not](https://github.com/jasoncross/ftc-helper-lib/issues) (a GitHub issue). Every
+> report helps.
+
 Shortcuts for programming an FTC robot in Java, made by Indianola Robotics (FTC team 8938).
 
 It takes the jobs every robot needs and makes each one a line or two of clear code: motors and
@@ -54,6 +58,26 @@ No robot, no field, no phone needed:
 
 Then open http://localhost:8780. Everything else: [the simulator guide](docs/guides/simulator.md) and
 the [four BIOBUZZ starter bots](docs/guides/starter-bots.md) to try.
+
+## How it is made: experience plus AI
+
+We believe AI can be an amazing tool, and this library is built to show it. It combines what we have
+learned in nearly 30 years of hands-on coding with the power of agentic coding and testing:
+
+- **People set the direction.** An experienced mentor decides what the library must do and how it should
+  feel to a student, checks every design, and tries it on real robots with the team.
+- **AI agents write and test.** Most of the code, the docs and the tests are written by Claude (Anthropic)
+  in Claude Code, working in small, checked steps.
+- **Cross-model checking.** Before each release, other models review the work: OpenAI's Codex and a second
+  Claude model look for the mistakes the first one missed. Their findings are fixed and listed in the
+  [changelog](CHANGELOG.md).
+- **Checks on every change:** unit tests, simulator test scripts, a docs check (every public class is
+  on a docs page, every link works) and a check that nothing stops the robot's loop.
+
+What this means for you: the code is checked, but it is new, and people and AI both make mistakes. Test it
+on your robot, read the code you rely on, and [tell us](https://github.com/jasoncross/ftc-helper-lib/issues) when something is wrong or unclear. For
+students: use AI the same way, as a strong helper whose work you check and understand, not as a
+replacement for learning.
 
 ## Start here
 

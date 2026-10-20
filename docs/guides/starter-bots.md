@@ -1,5 +1,7 @@
 # The four BIOBUZZ starter bots as test robots
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 Each seller in FTC (REV, goBILDA, AndyMark, Studica) gives away the design of a simple "starter bot" for
 the season. For 2026-27 (BIOBUZZ) we wrote one robot file for each, so the simulator has four real,
 different robots to test with. They are also worked examples for the robot-file skill

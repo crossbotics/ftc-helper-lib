@@ -1,5 +1,7 @@
 # Tutorial 07: PID: hold a lift at a height
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 **You will learn:** what a PID controller does, how to use `PidController` to send a lift to a
 height and hold it there, and how to tune it live from the gamepad.
 

@@ -1,5 +1,7 @@
 # Tutorial 06: A fast, clear loop
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 **You will learn:** how to measure your loop speed, how bulk reads make it faster, and how to lay
 out telemetry so drivers find what they need.
 

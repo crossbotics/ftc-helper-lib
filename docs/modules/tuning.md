@@ -1,5 +1,7 @@
 # Tuning module
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 Package: `io.github.jasoncross.ftchelper.tuning`
 
 Learn it hands-on: [15 Telemetry, profiles and tuning](../tutorials/15-telemetry-profiles-tuning.md). Full guide: [Tuning while the robot runs](../guides/tuning.md).

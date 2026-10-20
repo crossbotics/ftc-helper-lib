@@ -1,5 +1,7 @@
 # Tutorial 13: Test your code without a robot
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 **You will learn:** how to write small automatic tests (JUnit) for your team's code, run them on a
 laptop in seconds, and which parts of robot code can be tested this way.
 

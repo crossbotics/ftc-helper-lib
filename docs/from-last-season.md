@@ -1,5 +1,7 @@
 # Coming from last season's code
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 The library started from the 2025-26 (DECODE) robot code, branch `codex/biobuzz-base` of the
 team's FtcRobotController repository. This table shows where each reusable part went and what changed.
 Game-specific code (launcher, feed, intake, vision, routes) is NOT in the library.

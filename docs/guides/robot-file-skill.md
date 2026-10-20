@@ -1,5 +1,7 @@
 # Your robot in the simulator: the robot-file skill
 
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+
 The simulator moves like YOUR robot only if its robot file (`simulator/robot.properties` in your robot
 project) describes your robot: every device name, the motors and servos, the size, the mechanisms and
 cameras. Writing it by hand works ([simulator guide](simulator.md)); an AI coding agent can do most of
