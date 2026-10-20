@@ -304,7 +304,11 @@ public abstract class RobotDefinition {
             out.add("robot.widthIn = " + Shape.n(chassisIn[1]));
             out.add("robot.chassisHeightIn = " + Shape.n(chassisIn[2]));
         }
-        if (!Double.isNaN(heightIn)) out.add("robot.heightIn = " + Shape.n(heightIn));
+        if (!Double.isNaN(heightIn)) {
+            out.add("robot.heightIn = " + Shape.n(heightIn));
+            // With shapes the simulator measures the shapes; this keeps the given height in the size rules.
+            out.add("robot.tallestIn = " + Shape.n(heightIn));
+        }
         for (Module<?> m : modules) {
             for (Module<?> c : m.children()) c.simSection = TunableSection.of(tunablesClass, c.name());
             m.simSection = TunableSection.of(tunablesClass, m.name());
@@ -314,6 +318,17 @@ public abstract class RobotDefinition {
         for (Module<?> m : modules) {
             for (Module<?> c : m.children()) c.simLines(out, TunableSection.of(tunablesClass, c.name()));
             m.simLines(out, TunableSection.of(tunablesClass, m.name()));
+        }
+        // Two lines with one name (a shape named like another part's): the simulator would keep only
+        // the last, and a part could vanish from the size checks. Stop with the name instead.
+        java.util.Set<String> keys = new java.util.HashSet<>();
+        for (String line : out) {
+            int eq = line.indexOf('=');
+            String key = eq < 0 ? line : line.substring(0, eq).trim();
+            if (!keys.add(key)) {
+                throw new IllegalStateException("Robot.java: two parts both make \"" + key + "\" in the simulator "
+                        + "file: give one of them another name (Shape....name(\"...\"))");
+            }
         }
         return out;
     }

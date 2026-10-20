@@ -1215,26 +1215,26 @@
     {
       "id": "offset-tubing-60",
       "name": "Offset Surgical Tubing Roller 60 mm",
-      "partNumber": null,
+      "partNumber": "OSTR-HEX-07-00",
       "seller": "Offset Robotics",
       "url": "https://offsetrobotics.com/product/offset-surgical-tubing-rollers",
       "status": "US warehouse: on backorder",
       "diameterMm": 60,
       "widthMm": null,
       "checked": "2026-10-20",
-      "notes": "55A silicone tubing pieces on the OFFSET HEXAHUB, sold in packs of 6 (60 mm, 90 mm or both). No part number on the page. The page gives the diameter only; how long a roller is depends on how many hubs are on the shaft."
+      "notes": "55A silicone tubing pieces on the OFFSET HEXAHUB, sold in packs of 6 (60 mm, 90 mm or both). SKU OSTR-HEX-07-00 is for the product (choose 60 mm, 90 mm or both), from the seller's legacy page https://legacy.offsetrobotics.com/product/offset-surgical-tubing-rollers/ (checked 2026-10-20; the new page shows no SKU). The page gives the diameter only; how long a roller is depends on how many hubs are on the shaft."
     },
     {
       "id": "offset-tubing-90",
       "name": "Offset Surgical Tubing Roller 90 mm",
-      "partNumber": null,
+      "partNumber": "OSTR-HEX-07-00",
       "seller": "Offset Robotics",
       "url": "https://offsetrobotics.com/product/offset-surgical-tubing-rollers",
       "status": "US warehouse: on backorder",
       "diameterMm": 90,
       "widthMm": null,
       "checked": "2026-10-20",
-      "notes": "55A silicone tubing pieces on the OFFSET HEXAHUB, sold in packs of 6 (60 mm, 90 mm or both). No part number on the page. The page gives the diameter only; how long a roller is depends on how many hubs are on the shaft."
+      "notes": "55A silicone tubing pieces on the OFFSET HEXAHUB, sold in packs of 6 (60 mm, 90 mm or both). SKU OSTR-HEX-07-00 is for the product (choose 60 mm, 90 mm or both), from the seller's legacy page https://legacy.offsetrobotics.com/product/offset-surgical-tubing-rollers/ (checked 2026-10-20; the new page shows no SKU). The page gives the diameter only; how long a roller is depends on how many hubs are on the shaft."
     }
   ]
 }

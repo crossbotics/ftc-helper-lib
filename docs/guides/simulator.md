@@ -97,6 +97,7 @@ field.model = fields/biobuzz-2026.glb # optional: the field's 3D model for the 3
 robot.lengthIn = 18                   # size, for bumping into field elements
 robot.widthIn = 18
 robot.heightIn = 18                   # used only for a robot with no shapes (with shapes, the shapes decide)
+robot.tallestIn = 12                  # optional: a part the shapes do not draw reaches this high (size rules count it)
 start.x = -56                         # where it starts (inches from the field center; y away from the drivers)
 start.y = -61.55                      # BIOBUZZ G304: touching the wall, outside the LOADING ZONE
 start.heading = 0                     # degrees, counterclockwise; 0 = facing away from the drivers

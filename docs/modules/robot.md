@@ -289,7 +289,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer
 | `speedMode()` | the [mode](#modes) that sets the speed from the camera's distance |
 | `isReady()`, `isShooting()`, `targetRpm()`, `part()` | |
 | `requireReady(what, check)` | another check before each feed (e.g. the turret is aimed) |
-| `shotAngle(deg)` | for the simulator: which way a piece leaves, degrees up from forward (135 = up and out of the back) |
+| `shotAngle(deg)` | for the simulator: which way a piece leaves, degrees up from the wheel shape's forward (the robot's forward for a wheel mounted level; 135 = up and out of the back) |
 
 `Tunables.Launcher`: `speedRpm`, `stepRpm`, `readyBandRpm`, `idleRpm`, `shotIntervalSec`,
 `speedByDistance` (`{{inches, rpm}, ...}`, blended between rows; with no goal in view the last speed

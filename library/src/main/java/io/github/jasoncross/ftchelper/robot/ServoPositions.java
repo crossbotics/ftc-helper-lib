@@ -176,7 +176,13 @@ public abstract class ServoPositions<M extends ServoPositions<M>> extends Module
         if (first == target) {
             throw new IllegalStateException("Robot.java: " + name() + "'s \"" + position + "\" is where it starts: it can't push anything over");
         }
-        return device + (target > first ? ">" : "<") + Shape.n(first + 0.75 * (target - first));
+        // 4 decimals: a threshold rounded to 2 could land past where the servo stops (0.50 -> 0.51).
+        return device + (target > first ? ">" : "<") + fine(first + 0.75 * (target - first));
+    }
+
+    private static String fine(double v) {
+        String s = String.format(java.util.Locale.US, "%.4f", v);
+        return s.replaceAll("0+$", "").replaceAll("\\.$", "");
     }
 
     private double positionOf(Map<String, Double> p, String position) {

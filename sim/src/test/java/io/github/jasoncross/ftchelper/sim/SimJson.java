@@ -203,7 +203,7 @@ final class SimJson {
             b.append('}');
         }
         b.append("],\"size\":{");
-        SimShapes.Extent now = SimShapes.extent(pieces), most = r.shapes.most;
+        SimShapes.Extent now = r.shapes.measure(pieces), most = r.shapes.most;
         b.append("\"now\":").append(vec(new double[] {now.lengthIn(), now.widthIn(), now.top})).append(',');
         b.append("\"most\":").append(vec(new double[] {most.lengthIn(), most.widthIn(), most.top})).append(',');
         b.append("\"startOk\":").append(now.fits(18, 18, 18)).append(',');

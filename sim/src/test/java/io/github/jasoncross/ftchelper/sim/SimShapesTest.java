@@ -80,6 +80,14 @@ public class SimShapesTest {
         }
     }
 
+    @Test public void aGivenHeightCountsForTheSizeRules() throws Exception {
+        // Short shapes, but the robot file says a part reaches 31 in (one the shapes do not draw).
+        SimRobot r = robot("robot.tallestIn = 31", "shape.box1 = box, at=0,0,2, size=4x4x4");
+        r.shapes.update(0);
+        assertTrue("never shorter than robot.tallestIn: " + r.shapes.now(), r.shapes.now().top >= 31);
+        assertTrue("too tall for 29 in", !r.shapes.mostOk);
+    }
+
     @Test public void starterRobotShapes() throws Exception {
         SimRobot r = SimRobot.load(new File("robots/starter.properties").toPath());
         r.shapes.update(0);

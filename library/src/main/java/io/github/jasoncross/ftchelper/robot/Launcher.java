@@ -77,8 +77,10 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     }
 
     /**
-     * Which way a piece leaves the robot, for the simulator: degrees up from the robot's forward, seen
-     * from the side (45 = forward and up, 90 = straight up, 135 = backward and up).
+     * Which way a piece leaves the wheel, for the simulator: degrees up from the wheel shape's forward,
+     * seen from the side (45 = forward and up, 90 = straight up, 135 = backward and up). For a wheel
+     * mounted level on the robot that is the robot's forward; on a turned part (an arm, a tilted
+     * slide) the angle turns with it.
      *
      * @param degrees e.g. 147 for a shot up and out of the back
      */

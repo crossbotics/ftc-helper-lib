@@ -48,6 +48,7 @@ public class ShapesTest {
         assertTrue(all, all.contains("robot.lengthIn = 15.12"));
         assertTrue(all, all.contains("robot.chassisHeightIn = 3.82"));
         assertTrue(all, all.contains("robot.heightIn = 12.01"));
+        assertTrue(all, all.contains("robot.tallestIn = 12.01"));
         assertTrue(all, all.contains("drive.wheelDiameterIn = 3.780   # gobilda-hogback-96"));
         assertTrue(all, all.contains("drive.trackWidthIn = 15.83"));
         assertTrue(all, all.contains("drive.wheelBaseIn = 11.34"));
@@ -61,7 +62,7 @@ public class ShapesTest {
                 + "   # offset-tubing-90 + offset-tubing-60"));
         // A passive arm, pushed over by the deploy servo at three quarters of the way (0.2 -> 0.7: 0.575).
         assertTrue(all, all.contains("shape.intake_arm = arm, at=5,0,4, size=5x10x1, start=95, minDeg=-10, maxDeg=95, passive=yes, "
-                + "drop=intake_deploy>0.58, fallsTo=-10"));
+                + "drop=intake_deploy>0.575, fallsTo=-10"));
         assertTrue(all, all.contains("shape.launcher_slide = slide, at=-1.57,0,6.61, size=0.79x0.79x0.79, travel=0.98, passive=yes"));
         assertTrue(all, all.contains("shape.left_spinner = roller, on=intake_deploy, at=4,5,0, size=3.54x3.54x1, axis=up, motor=intake"));
         assertTrue(all, all.contains("collect.intake = shape=intake, motor=intake, holds=2\n"));
@@ -154,6 +155,51 @@ public class ShapesTest {
             fail("expected an error");
         } catch (IllegalArgumentException e) {
             assertTrue(e.getMessage(), e.getMessage().contains(words));
+        }
+    }
+
+    public static class TinyMove {
+        public static class IntakeDeploy { public static double stowed = 0.50, deployed = 0.51; }
+    }
+
+    @Test public void aSmallServoMoveKeepsItsThreshold() {
+        RobotDefinition r = new RobotDefinition() {
+            @Override protected void define() {
+                tunables(TinyMove.class);
+                drive(Drive.tank("l", "r"));
+                Positioner d = add(Positioner.servo("intake_deploy"));
+                fixed(Shape.arm().name("flap").atMm(0, 0, 50).sizeMm(50, 50, 10).passive()
+                        .range(0, 90).startAt(90).dropsWhen(d, "deployed", 0));
+            }
+        };
+        String all = lines(r);
+        assertTrue(all, all.contains("drop=intake_deploy>0.5075"));   // the servo stops at 0.51: past it
+    }
+
+    @Test public void aCrServoIntakeCollectsToo() {
+        RobotDefinition r = new RobotDefinition() {
+            @Override protected void define() {
+                drive(Drive.tank("l", "r"));
+                add(Intake.crServos("roller").holds(2).looks(Shape.roller("gobilda-gecko-72").atMm(200, 0, 40).lengthMm(300)));
+            }
+        };
+        String all = lines(r);
+        assertTrue(all, all.contains("collect.roller = shape=roller, crservo=roller, holds=2"));
+    }
+
+    @Test public void twoPartsWithOneNameStop() {
+        RobotDefinition r = new RobotDefinition() {
+            @Override protected void define() {
+                drive(Drive.tank("l", "r"));
+                add(Intake.motor("intake").looks(Shape.roller("gobilda-gecko-72").atMm(200, 0, 40).lengthMm(300)));
+                fixed(Shape.box("intake").atMm(0, 0, 0).sizeMm(600, 600, 600));
+            }
+        };
+        try {
+            r.simLines();
+            fail("expected an error");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("\"shape.intake\""));
         }
     }
 }

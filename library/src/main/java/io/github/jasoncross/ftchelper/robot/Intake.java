@@ -254,9 +254,8 @@ public final class Intake extends Module<Intake> implements Toggleable {
             lookLines(out, t);
         }
         for (String n : extraCrServos) out.add("crservo." + n + " =");
-        if (!servos) {
-            out.add("collect." + device + " = shape=" + spinningShapeName() + ", motor=" + device + ", holds="
-                    + (holds > 0 ? holds : 3 + "   # TODO how many it holds"));
-        }
+        // The pieces come in while the roller's motor (or first CR servo) turns inward.
+        out.add("collect." + device + " = shape=" + spinningShapeName() + ", " + (servos ? "crservo=" : "motor=")
+                + names[0] + ", holds=" + (holds > 0 ? holds : 3 + "   # TODO how many it holds"));
     }
 }

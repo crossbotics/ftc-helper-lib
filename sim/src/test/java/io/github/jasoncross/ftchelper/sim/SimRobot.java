@@ -63,6 +63,9 @@ final class SimRobot {
     double turnDegPerCount = Double.NaN;
     // The robot's size (for bumping into field elements) and where it starts.
     double lengthIn = 18, widthIn = 18, heightIn = 18;
+    // robot.tallestIn: a part the shapes do not draw reaches this high; the size checks never see the
+    // robot shorter (NaN = not given).
+    double tallestIn = Double.NaN;
     double startX = 0, startY = -48, startHeading = 0;
     // The season's field, and the element the robot bumped into last ("" = none).
     SimField field = SimField.empty();
@@ -231,6 +234,7 @@ final class SimRobot {
         lengthIn = above0(p, "robot.lengthIn", 18);
         widthIn = above0(p, "robot.widthIn", 18);
         heightIn = above0(p, "robot.heightIn", 18);
+        tallestIn = p.containsKey("robot.tallestIn") ? above0(p, "robot.tallestIn", 18) : Double.NaN;
         startX = num(p, "start.x", 0);
         startY = num(p, "start.y", -48);
         startHeading = num(p, "start.heading", 0);

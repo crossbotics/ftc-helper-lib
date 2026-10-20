@@ -445,7 +445,7 @@ final class SimShapes {
         int tried = 0;
         while (true) {
             for (int i = 0; i < moving.size(); i++) moving.get(i).value = values.get(i)[idx[i]];
-            Extent e = extent(pieces());
+            Extent e = measure(pieces());
             tried++;
             if (reach == null) {
                 reach = new Extent();     // a copy: "worst" may keep e itself
@@ -702,7 +702,17 @@ final class SimShapes {
 
     /** How big the robot is now. */
     Extent now() {
-        return extent(pieces());
+        return measure(pieces());
+    }
+
+    /**
+     * How big these pieces make the robot, and never shorter than robot.tallestIn when the robot file
+     * gives it (a tall part the shapes do not draw still counts for the size rules).
+     */
+    Extent measure(List<Piece> pieces) {
+        Extent e = extent(pieces);
+        if (!Double.isNaN(robot.tallestIn)) e.top = Math.max(e.top, robot.tallestIn);
+        return e;
     }
 
     // ---------------------------------------------------------------- frames (3x4: rotation | position)
