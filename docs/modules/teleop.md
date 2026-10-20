@@ -58,7 +58,7 @@ public class MainTeleOp extends EasyTeleOp {
 | "Forward" | continues from where autonomous ended ([`DriverHeading`](drive.md#driverheading)), also after INIT, STOP, INIT again. **BACK** alone (on release, one buzz) = "the robot now faces away from me". |
 | Alliance | the one autonomous chose, from [`MatchMemory`](match.md); BLUE if no autonomous ran. |
 | Match timer | 2:00, both gamepads buzz at 1:00 and 0:20. The time is on the screen. |
-| Tuning menu | **GUIDE** opens it (PRACTICE profile only). Gamepad 1 runs the menu; the wheels hold still. |
+| Tuning menu | **GUIDE** opens it (PRACTICE profile only). Gamepad 1 runs the menu; the wheels hold still. With a button map (`buttonHelp()`, as `ControlMap` has): a tap of GUIDE shows the map during the match (the robot still drives) and holding GUIDE 1 s opens the tuning menu. |
 | Telemetry | your mechanisms' lines, drive mode, time; **START + BACK together** (either order) = debug lines on/off. |
 | Warnings | PRACTICE profile, tuned values that differ from the code, slow button actions or `update()`s. |
 | Safety | buttons held through START are ignored; the wheels and every mechanism stop at the end, even after an error. |
@@ -72,6 +72,7 @@ public class MainTeleOp extends EasyTeleOp {
 | `bindButtons(driver, operator)` | no | your buttons. Gamepad 2 on `operator`; extra gamepad 1 buttons on `driver` (they pause while the tuning menu is open). Taken on gamepad 1: Y, BACK, START + BACK, GUIDE. |
 | `everyLoop()` | no | your code for every loop (sticks for mechanisms, simple rules). Must not wait. |
 | `addTelemetry(t)` | no | extra screen lines |
+| `buttonHelp()` | no | the button map's lines: then a tap of GUIDE shows them, and holding GUIDE 1 s opens the tuning menu |
 | `addInitTelemetry(t)` | no | extra screen lines during INIT |
 | `onStart()` | no | runs once right after START, before the first loop (the first moment anything may move) |
 

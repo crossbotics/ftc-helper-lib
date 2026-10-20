@@ -122,7 +122,7 @@ public class Tunables {
 - **One section per part**, named after its configuration name in CamelCase: `intake_deploy` reads
   `IntakeDeploy`. Pick another with `.tunables("Name")` on the module.
 - **The code is the record.** The numbers you tune most become [`Tunable`](tuning.md)s ("Lift/kP"):
-  the tuning menu (GUIDE, PRACTICE profile) changes them and saves them on the Control Hub. INIT then
+  the tuning menu (hold GUIDE 1 s, PRACTICE profile) changes them and saves them on the Control Hub. INIT then
   shows "Tuned on this robot (copy into Tunables.java)" with the lines to copy back.
 - **Missing numbers are not errors:** the library's default is used and INIT says which.
 - **Safety:** a tuned position stays inside `min`..`max`; limits are read once and cannot be tuned.
@@ -402,7 +402,8 @@ has its standard buttons; write only what differs. A [`Pad`](#controlmap) has ev
 | D-pad up/down | free | lift next height, or launcher speed |
 | D-pad left/right | free | wrist |
 | BACK | "forward" = away from you now | turret following on/off |
-| START + BACK, GUIDE | debug lines, tuning menu | |
+| START + BACK | debug lines | |
+| GUIDE | tap: the button map (during the match too); hold 1 s: the tuning menu (PRACTICE) | |
 
 One driver: left stick click is slow on/off and right stick click field-centric. Write the switch
 exactly as `public static boolean oneDriver = true;` (INIT stops with a message if it is not static). A module whose

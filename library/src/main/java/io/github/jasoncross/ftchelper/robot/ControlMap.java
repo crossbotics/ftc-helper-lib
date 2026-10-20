@@ -30,7 +30,8 @@ import java.util.List;
  *
  * <p><b>Driving</b> (gamepad 1, always): left stick drives (and strafes on mecanum), right stick X
  * turns, LT slow (hold), Y field-centric on/off (mecanum), BACK resets "forward", START + BACK debug
- * lines, GUIDE the tuning menu (PRACTICE profile). With {@code oneDriver = true}: left stick click
+ * lines, GUIDE shows the button map (a tap) or opens the tuning menu (held 1 s, PRACTICE profile).
+ * With {@code oneDriver = true}: left stick click
  * slow on/off, right stick click field-centric, and the operator's buttons move to gamepad 1.
  *
  * <p><b>Checked at INIT:</b> a button with two jobs in this file, or a job on a driving button, stops
@@ -106,6 +107,12 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
         plan = makePlan(robot(), oneDriver(), useStandardButtons(), (g1, g2) -> buttons(robot(), g1, g2));
         plan.compile(robot(), driver, operator, sticks, () -> gamepad1, () -> gamepad2);
         if (oneDriver()) driver.bindPress(ControllerBindings.Pad.G1, Btn.L_STICK_BTN, () -> slowOn = !slowOn);
+    }
+
+    // GUIDE (a tap) shows the button map during the match.
+    @Override
+    protected final List<String> buttonHelp() {
+        return plan == null ? null : plan.help();
     }
 
     @Override

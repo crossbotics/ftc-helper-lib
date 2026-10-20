@@ -193,4 +193,40 @@ public class SimFromRobotTest {
             io.github.jasoncross.ftchelper.examples.gobildabot.Tunables.Drive.calibrated = was;
         }
     }
+
+    @Test public void guideShowsTheButtonMapDuringTheMatch() throws Exception {
+        Path file = generate(io.github.jasoncross.ftchelper.examples.flywheelbot.Robot.class);
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("FlywheelBot TeleOp").start();
+            assertFalse(s.screenHas("Buttons (GUIDE: close)"));
+            s.press(v -> s.g1().guide = v);                      // a tap
+            assertTrue(SimRun.waitFor(() -> s.screenHas("Buttons (GUIDE: close)"), 1));
+            assertTrue(s.screenHas("G2 RB: fire one; hold: keep firing [Launcher]"));
+            s.press(v -> s.g1().guide = v);                      // tap again: closed
+            assertTrue(SimRun.waitFor(() -> !s.screenHas("Buttons (GUIDE: close)"), 1));
+            assertEquals("", s.error());
+        }
+    }
+
+    @Test public void anUntunedAutoRunsInTheSimulatorButNotOnARobot() throws Exception {
+        Path file = generate(io.github.jasoncross.ftchelper.examples.flywheelbot.Robot.class);
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("FlywheelBot Shoot and Leave");
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Drive not tuned: runs in the simulator only"));
+            s.sim.ds.stop();
+            // As on a real robot (no simulator mark): a clear message, no error, nothing moves.
+            System.clearProperty(io.github.jasoncross.ftchelper.auto.EasyAuto.SIMULATOR_PROPERTY);
+            try {
+                s.init("FlywheelBot Shoot and Leave");
+                assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("AUTONOMOUS IS OFF"), 2));
+                double y0 = s.robot().y;
+                s.start();
+                SimRun.pause(1.0);
+                assertEquals("it does not move", y0, s.robot().y, 0.01);
+                assertEquals("", s.error());
+            } finally {
+                System.setProperty(io.github.jasoncross.ftchelper.auto.EasyAuto.SIMULATOR_PROPERTY, "true");
+            }
+        }
+    }
 }

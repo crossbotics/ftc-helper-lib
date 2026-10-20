@@ -97,6 +97,11 @@ public abstract class Auto<R extends RobotDefinition> extends EasyAuto {
     }
 
     @Override
+    protected final String notTunedHelp() {
+        return "Tune it with the Drive Tuner (tutorial 09), then set Tunables.Drive.calibrated = true.";
+    }
+
+    @Override
     protected final void addInitTelemetry(RobotTelemetry t) {
         if (robot != null) for (String n : robot.notes()) t.text(n);
         List<String> changed = RobotDefinition.changedTunables();

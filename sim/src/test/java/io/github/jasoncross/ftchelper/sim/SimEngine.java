@@ -10,6 +10,11 @@ final class SimEngine {
     private volatile boolean running = false;
     private Thread physics;
 
+    static {
+        // OpModes can tell they run here: an untuned autonomous drive runs anyway (EasyAuto).
+        System.setProperty(io.github.jasoncross.ftchelper.auto.EasyAuto.SIMULATOR_PROPERTY, "true");
+    }
+
     SimEngine(SimRobot robot) {
         this.robot = robot;
         this.ds = new SimDriverStation(robot);

@@ -194,7 +194,19 @@ public abstract class EasyAuto extends LinearOpMode {
             throw new IllegalStateException("Autonomous needs the IMU (turn sensor) for its turns, but "
                     + "createImu() / RobotSettings.imu() returned null. Return ImuSetup.get(...) there.");
         }
-        autoDrive = new AutoDrive(this, driveConfig(), autoDriveConfig(), imu);
+        AutoDriveConfig tuned = tunedConfig();
+        if (tuned == null) {
+            // Not tuned: say so on the Driver Station (not as an error) and never move. The safety rule:
+            // a robot with wrong numbers can drive the wrong way or much too far.
+            while (opModeInInit() || opModeIsActive()) {
+                t.warn("AUTONOMOUS IS OFF: the drive is not tuned yet");
+                t.text(notTunedHelp());
+                t.update();
+                idle();
+            }
+            return;
+        }
+        autoDrive = new AutoDrive(this, driveConfig(), tuned, imu);
         // Remember the profile (PRACTICE / COMPETITION) now, to notice if the drivers change it in the menu.
         Profile profileAtInit = Profile.current();
         // try/finally: the "finally" part runs however the "try" part ends: finished, stopped,
@@ -237,6 +249,30 @@ public abstract class EasyAuto extends LinearOpMode {
         }
     }
 
+    // The autonomous settings, or null if the drive is not tuned (calibrationConfirmed false). In the
+    // simulator an untuned drive runs anyway (a pretend robot cannot get hurt), with a warning in INIT.
+    private AutoDriveConfig tunedConfig() {
+        AutoDriveConfig c = autoDriveConfig();
+        if (c.calibrationConfirmed) return c;
+        if (!"true".equals(System.getProperty(SIMULATOR_PROPERTY))) return null;
+        untunedInSimulator = true;
+        c.calibrationConfirmed = true;
+        return c;
+    }
+
+    /** Set to "true" by the simulator; autonomous then runs with an untuned drive (with a warning). */
+    public static final String SIMULATOR_PROPERTY = "ftchelper.simulator";
+    private boolean untunedInSimulator = false;
+
+    /**
+     * What to do when the drive is not tuned, shown on the Driver Station instead of running. Default:
+     * the Drive Tuner, then {@code calibrationConfirmed = true} in your settings.
+     */
+    protected String notTunedHelp() {
+        return "Tune it with the Drive Tuner (tutorial 09), then set calibrationConfirmed = true in "
+                + "RobotSettings.auto().";
+    }
+
     // Your createSubsystems(), but never null: "return null" counts as "no mechanisms".
     private Subsystems makeSubsystems() {
         Subsystems made = createSubsystems();
@@ -260,6 +296,7 @@ public abstract class EasyAuto extends LinearOpMode {
             if (Profile.current().isPractice()) t.warn("PRACTICE profile (change to COMPETITION at events)");
             int changed = Tunable.countChanged();
             if (changed > 0) t.warn(changed + " tuned value(s) differ from the code");
+            if (untunedInSimulator) t.warn("Drive not tuned: runs in the simulator only");
             // tell the drive team where to put the robot
             String where = startPosition();
             if (where != null) t.line("Place robot", where);
@@ -274,7 +311,7 @@ public abstract class EasyAuto extends LinearOpMode {
             // The profile changed in INIT: rebuild the drive AND the mechanisms, so profile-dependent
             // values (power limits, speeds) apply. They read their settings when they were made,
             // before the menu, so they still have the old ones.
-            autoDrive = new AutoDrive(this, driveConfig(), autoDriveConfig(), imu);
+            autoDrive = new AutoDrive(this, driveConfig(), tunedConfig(), imu);
             robot.stop();
             robot = makeSubsystems();
         }

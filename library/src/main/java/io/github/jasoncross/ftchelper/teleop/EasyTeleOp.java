@@ -21,6 +21,7 @@ import io.github.jasoncross.ftchelper.match.MatchTimer;
 import io.github.jasoncross.ftchelper.telemetry.RobotTelemetry;
 import io.github.jasoncross.ftchelper.tuning.Tunable;
 import io.github.jasoncross.ftchelper.tuning.TuningMenu;
+import java.util.List;
 
 /**
  * A whole TeleOp where you only write what is special about YOUR robot: its mechanisms, the
@@ -116,6 +117,20 @@ public abstract class EasyTeleOp extends LinearOpMode {
 
     /** Extra lines for the Driver Station, every loop. The mechanisms' lines are already shown. */
     protected void addTelemetry(RobotTelemetry t) { }
+
+    /**
+     * The button map's lines for the help page, or null (default) for none. With a map, a tap of GUIDE
+     * shows it during the match and holding GUIDE 1 s opens the tuning menu; without one, GUIDE opens
+     * the tuning menu.
+     */
+    protected List<String> buttonHelp() {
+        return null;
+    }
+
+    /** How long GUIDE is held to open the tuning menu when there is a button map, seconds. */
+    public static final double GUIDE_HOLD_SEC = 1.0;
+    private boolean helpOpen = false;
+    private List<String> help = null;
 
     /** Extra lines for the Driver Station during INIT (before START), every INIT loop. */
     protected void addInitTelemetry(RobotTelemetry t) { }
@@ -230,7 +245,7 @@ public abstract class EasyTeleOp extends LinearOpMode {
         ToggleRumble confirm = new ToggleRumble(gamepad1);
 
         // Three groups of buttons, so the driver's can pause while the tuning menu uses gamepad 1.
-        ControllerBindings menuKey = new ControllerBindings().bindPress(Pad.G1, Btn.GUIDE, tuning::toggle);
+        ControllerBindings menuKey = new ControllerBindings();
         // BACK alone (on its release): "the robot now faces away from me", with one buzz.
         // START and BACK together, in either order: debug lines on/off, and "forward" is NOT reset.
         boolean[] chord = {false};   // true once START was pressed during this BACK press
@@ -265,6 +280,29 @@ public abstract class EasyTeleOp extends LinearOpMode {
             robot = createSubsystems();
             if (robot == null) robot = new Subsystems();
             bindButtons(driver, operator);
+            // GUIDE: after bindButtons, so the button map is known.
+            help = buttonHelp();
+            if (help == null) {
+                menuKey.bindPress(Pad.G1, Btn.GUIDE, tuning::toggle);
+            } else {
+                // With a button map: a tap shows it (or closes the tuning menu); holding 1 s opens the
+                // tuning menu (PRACTICE profile).
+                final long[] downAt = {0};
+                final boolean[] held = {false};
+                menuKey.bindPress(Pad.G1, Btn.GUIDE, () -> { downAt[0] = System.nanoTime(); held[0] = false; })
+                        .bindHold(Pad.G1, Btn.GUIDE, () -> {
+                            if (!held[0] && System.nanoTime() - downAt[0] > GUIDE_HOLD_SEC * 1e9) {
+                                held[0] = true;
+                                helpOpen = false;
+                                tuning.toggle();
+                            }
+                        })
+                        .bindRelease(Pad.G1, Btn.GUIDE, () -> {
+                            if (held[0]) return;
+                            if (tuning.isOpen()) tuning.toggle();
+                            else helpOpen = !helpOpen;
+                        });
+            }
 
             // ---- INIT loop: warnings and what the drivers need to know. Never waits. ----
             while (opModeInInit()) {
@@ -319,6 +357,10 @@ public abstract class EasyTeleOp extends LinearOpMode {
 
                 if (tuning.isOpen()) {
                     tuning.addTelemetry(t);
+                } else if (helpOpen && help != null) {
+                    // The button map (the robot still drives; GUIDE again closes it).
+                    t.section("Buttons (GUIDE: close)");
+                    for (String h : help) t.text(h);
                 } else {
                     if (!driver.getSlowActionWarning().isEmpty()) t.warn(driver.getSlowActionWarning());
                     if (!operator.getSlowActionWarning().isEmpty()) t.warn(operator.getSlowActionWarning());

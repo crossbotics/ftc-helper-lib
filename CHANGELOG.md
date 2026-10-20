@@ -10,6 +10,19 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   roller glows green while it takes pieces in and orange while it pushes them out; a flywheel or other
   spinner glows yellow while it turns; a passive part (gravity, springs) blinks while it moves.
 - `./gradlew :sim:run -Pport=8781`: another port, to run two simulators at once.
+- **GUIDE shows the button map** in a Controls.java TeleOp (a tap; tap again to close); holding GUIDE
+  1 s opens the tuning menu (`EasyTeleOp.buttonHelp()`).
+- **RB fires one; hold it to keep firing** (the launcher's standard button: `fireWhileHeld()`,
+  `ceaseFire()`). `tapOrDoubleTap(tap, doubleTap)` for any button. `Shape.reversed()`: a roller that
+  turns the other way from its motor. `Intake.isPushingOut()`.
+
+### Changed
+
+- An autonomous with an untuned drive (`calibrated` / `calibrationConfirmed` false) shows "AUTONOMOUS IS
+  OFF: the drive is not tuned yet" on the Driver Station and does nothing, instead of stopping with an
+  error. In the simulator it runs anyway, with a warning, so autos can be tried before tuning.
+- The 3D view turns a fast wheel slowly (at most 1.2 turns a second), so its direction shows; the real
+  speed is in the telemetry.
 
 ## v0.10.0 - 2026-10-20
 
