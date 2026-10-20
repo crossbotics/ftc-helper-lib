@@ -2,7 +2,7 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
-## Unreleased
+## v0.10.0 - 2026-10-20
 
 Nothing old stops working: a Robot.java without parts or shapes writes the same simulator lines as before.
 
@@ -21,6 +21,13 @@ Nothing old stops working: a Robot.java without parts or shapes writes the same 
   stays (an intake folded up at the start).
 - **Scenarios:** `expect shape NAME OP VALUE` (an arm's angle, a slide's inches).
 - The flywheelbot example names its parts and draws its robot, with a folding intake.
+- `Shape.flywheel()` for a launcher wheel not in the catalog (with `diameterMm` and `lengthMm`).
+- `robot.tallestIn` in the robot file (written by `heightMm`): a part the shapes do not draw still counts
+  in the size rules.
+- Checked when the robot file is made: a shape setting that does not fit its shape, riding `on` a part
+  with no shape, an intake with no roller, one `Shape` in two parts, two parts with one name in the
+  robot file, a `shotAngle` outside 0 to 180. Each stops with the part's name.
+- The robot-file skill puts sizes and shapes in Robot.java for a team that writes its robot in five files.
 
 ## v0.9.0 - 2026-10-19
 
