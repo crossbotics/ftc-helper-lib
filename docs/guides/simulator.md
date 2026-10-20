@@ -441,6 +441,7 @@ expect error none                      # or: error has "..."
 expect phase RUNNING
 expect motor lift power > 0.1          # power | ticks | velocity | amps; > < >= <= =  (= VALUE TOLERANCE)
 expect servo claw target = 0.53 0.01   # target | actual
+expect shape intake_arm < 0            # a shape's angle (arm, turret), inches (slide) or gap (claw)
 expect robot y > -30                   # x | y | heading | imu | shots
 expect bumped none                     # or: bumped "Red HIVE"
 expect camera "Webcam 1" sees 31       # a tag id in the picture; or: sees none | sees "RED SCORING" (webcam only:

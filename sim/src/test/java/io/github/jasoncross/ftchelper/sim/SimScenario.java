@@ -315,7 +315,7 @@ public final class SimScenario {
     }
 
     // expect [within S] screen has "x" | screen not "x" | error none | error has "x" | phase P
-    //        | motor NAME FIELD OP VALUE | servo NAME FIELD OP VALUE | robot FIELD OP VALUE
+    //        | motor NAME FIELD OP VALUE | servo NAME FIELD OP VALUE | shape NAME OP VALUE | robot FIELD OP VALUE
     private void expect(int n, String line, List<String> t) throws InterruptedException {
         double within = 0;
         if (t.get(0).equals("within")) {
@@ -410,6 +410,10 @@ public final class SimScenario {
                 if (!t.get(2).equals("target") && !t.get(2).equals("actual")) throw new IllegalArgumentException("servo field: target or actual");
                 op(t, 3);
                 return;
+            case "shape":
+                need(t, 4, "expect shape NAME OP VALUE  (degrees for an arm, inches up a slide)");
+                op(t, 2);
+                return;
             case "robot":
                 need(t, 4, "expect robot x|y|heading|imu|shots OP VALUE");
                 if (!java.util.Arrays.asList("x", "y", "heading", "imu", "shots").contains(t.get(1))) {
@@ -418,7 +422,7 @@ public final class SimScenario {
                 op(t, 2);
                 return;
             default:
-                throw new IllegalArgumentException("expect what? (screen, value, time, error, phase, motor, servo, robot, bumped, touch, camera, size, stored, launched, scored)");
+                throw new IllegalArgumentException("expect what? (screen, value, time, error, phase, motor, servo, shape, robot, bumped, touch, camera, size, stored, launched, scored)");
         }
     }
 
@@ -549,6 +553,16 @@ public final class SimScenario {
                 double v = t.get(2).equals("target") ? s.target() : s.actual;
                 return compare(v, t.subList(3, t.size()), why);
             }
+            case "shape": {
+                // expect shape intake_arm < 0: an arm's angle (degrees), a slide's inches, a claw's gap
+                SimShapes.Shape sh = sim.robot.shapes.shapes.get(t.get(1));
+                if (sh == null) throw new IllegalArgumentException("no shape \"" + t.get(1) + "\" in the robot file");
+                double v;
+                synchronized (sim.robot) {
+                    v = sh.value;
+                }
+                return compare(v, t.subList(2, t.size()), why);
+            }
             case "robot": {
                 double v;
                 synchronized (sim.robot) {
@@ -564,7 +578,7 @@ public final class SimScenario {
                 return compare(v, t.subList(2, t.size()), why);
             }
             default:
-                throw new IllegalArgumentException("expect what? (screen, error, phase, motor, servo, robot, bumped)");
+                throw new IllegalArgumentException("expect what? (screen, error, phase, motor, servo, shape, robot, bumped)");
         }
     }
 
