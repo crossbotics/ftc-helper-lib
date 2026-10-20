@@ -103,6 +103,22 @@ public class SimShapesTest {
         assertTrue("pushing out", roller.flow == -1);
     }
 
+    @Test public void aReversedRollerTurnsTheOtherWayButStillTakesIn() throws Exception {
+        SimRobot r = robot("shape.intake = roller, at=8,0,2, size=2x14x2, motor=intake",
+                "shape.spinner = roller, at=8,6,2, size=2x2x1, axis=up, motor=intake, reversed=yes",
+                "collect.intake = shape=intake, motor=intake, holds=4");
+        r.motors.get("intake").device.setPower(1);
+        for (int i = 0; i < 20; i++) r.step(0.02);
+        SimShapes.Piece roller = null, spinner = null;
+        for (SimShapes.Piece p : r.shapes.pieces()) {
+            if (p.shape.equals("intake")) roller = p;
+            if (p.shape.equals("spinner")) spinner = p;
+        }
+        assertTrue(roller.run > 0 && spinner.run < 0);
+        assertTrue("both take pieces in", roller.flow == 1 && spinner.flow == 1);
+        assertTrue("the picture turns slowly enough to see which way", Math.abs(roller.spinDeg) <= 360);
+    }
+
     @Test public void starterRobotShapes() throws Exception {
         SimRobot r = SimRobot.load(new File("robots/starter.properties").toPath());
         r.shapes.update(0);

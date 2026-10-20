@@ -12,7 +12,7 @@ import io.github.jasoncross.ftchelper.robot.Pad;
  * <ul>
  *   <li>Gamepad 1 drives: left stick, right stick X turns, LT slow.</li>
  *   <li>Gamepad 2, from the modules: RT intake on/off (it is on from the start), LT push pieces out
- *       while held, LB flywheel spin up/down, RB fire one, D-pad up/down launcher speed +/- 100 RPM.</li>
+ *       while held, LB flywheel spin up/down, RB fire one (hold: keep firing), D-pad up/down launcher speed +/- 100 RPM.</li>
  * </ul>
  * The Driver Station shows the whole map during INIT.
  */

@@ -40,6 +40,11 @@ public final class Pad {
     final ControllerBindings.Pad which;
     final ButtonPlan plan;
 
+    /** Two taps closer together than this (seconds) are a double-tap. */
+    public static final double DOUBLE_TAP_SEC = 0.35;
+    // The time, in nanoseconds (tests use a pretend clock).
+    static java.util.function.LongSupplier clock = System::nanoTime;
+
     Pad(ButtonPlan plan, ControllerBindings.Pad which) {
         this.plan = plan;
         this.which = which;
@@ -102,6 +107,27 @@ public final class Pad {
         public Button press(final Action action) {
             last = pad.plan.put(this, new ButtonPlan.Entry(ButtonPlan.Kind.ACTION, null, null, action.name(), action));
             return this;
+        }
+
+        /**
+         * One tap runs {@code tap}; a second tap soon after (within {@link #DOUBLE_TAP_SEC}) runs
+         * {@code doubleTap} instead. The first tap of a double-tap has already run {@code tap}, so make
+         * the two work together, e.g. tap = intake on/off, double-tap = push out.
+         */
+        public Button tapOrDoubleTap(Runnable tap, Runnable doubleTap) {
+            if (tap == null || doubleTap == null) throw new IllegalArgumentException(this + ": the job is null (a module that is not on the robot?)");
+            final long[] lastTap = {Long.MIN_VALUE};
+            Runnable both = () -> {
+                long now = clock.getAsLong();
+                if (lastTap[0] != Long.MIN_VALUE && now - lastTap[0] <= (long) (DOUBLE_TAP_SEC * 1e9)) {
+                    lastTap[0] = Long.MIN_VALUE;   // a third tap starts again
+                    doubleTap.run();
+                } else {
+                    lastTap[0] = now;
+                    tap.run();
+                }
+            };
+            return put(ButtonPlan.Kind.PRESS, both, null, "tap / double-tap");
         }
 
         /** Runs {@code onRelease} once each time it is let go. */

@@ -285,6 +285,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer
 | --- | --- |
 | `spinUp()`, `idle()`, `toggle()` | to the shot speed; back to `idleRpm` |
 | `fire()`, `fire(n)` | spins up if needed, feeds as soon as it is at speed (gives up after 3 s, saying why) |
+| `fireWhileHeld()`, `ceaseFire()` | for a held button: one shot, then the next as soon as it is fed; on release no more (a tap still fires its one shot) |
 | `adjust(steps)` | speed +/- steps x `stepRpm` (not saved) |
 | `speedMode()` | the [mode](#modes) that sets the speed from the camera's distance |
 | `isReady()`, `isShooting()`, `targetRpm()`, `part()` | |
@@ -294,7 +295,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer
 `Tunables.Launcher`: `speedRpm`, `stepRpm`, `readyBandRpm`, `idleRpm`, `shotIntervalSec`,
 `speedByDistance` (`{{inches, rpm}, ...}`, blended between rows; with no goal in view the last speed
 stays), and `kP`, `kI`, `kD`, `kF` (the hub's speed control; only used when `kF` is there: the
-[Flywheel Finder](../guides/finders.md) finds them). Buttons (operator): LB spin up/down, RB fire one,
+[Flywheel Finder](../guides/finders.md) finds them). Buttons (operator): LB spin up/down, RB fire one (hold: keep firing, `fireWhileHeld()` / `ceaseFire()` on release),
 D-pad up/down speed (when free and no speed-from-distance).
 
 ## Indexer
@@ -396,7 +397,7 @@ has its standard buttons; write only what differs. A [`Pad`](#controlmap) has ev
 | Left stick | drive (and strafe) | lift by hand (Y) |
 | Right stick | turn (X) | arm by hand (Y), turret by hand (X) |
 | LT / RT | slow (hold) / free | intake out (hold) / intake in (hold, or on/off) |
-| LB / RB | free | launcher spin up/down / fire one |
+| LB / RB | free | launcher spin up/down / fire one (hold: keep firing) |
 | A / X / Y / B | free / free / field-centric on/off (mecanum) / free | lift lowest / second / highest / claw |
 | D-pad up/down | free | lift next height, or launcher speed |
 | D-pad left/right | free | wrist |

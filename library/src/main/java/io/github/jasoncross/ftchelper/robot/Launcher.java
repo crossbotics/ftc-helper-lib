@@ -31,7 +31,7 @@ import java.util.List;
  * With {@link #speedFromDistance}, the speed comes from {@code speedByDistance} (blended between rows)
  * while the goal is seen; with no goal in view it keeps the last speed.
  *
- * <p>Suggested buttons (operator): LB spins up / down, RB fires one, D-pad up/down change the speed
+ * <p>Suggested buttons (operator): LB spins up / down, RB fires one (hold it: keeps firing), D-pad up/down change the speed
  * by {@code stepRpm} (when the D-pad is free).
  *
  * Docs: docs/modules/robot.md (section "Launcher"), docs/modules/launcher.md
@@ -51,6 +51,9 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     private Tunable speedRpm, stepRpm;
     private int adjustSteps = 0;
     private boolean spinning = false;
+    // fireWhileHeld: true while the button is held, and how many shots this press has asked for.
+    private boolean holding = false;
+    private int heldShots = 0;
     private double shotAngleDeg = Double.NaN;
 
     private Launcher(String motor, String motorId) {
@@ -206,6 +209,36 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     }
 
     /**
+     * For a held button, every loop: fires one piece, then the next as soon as that one is fed, for as
+     * long as the button is held (the launcher keeps its time between shots). Pair it with
+     * {@link #ceaseFire()} on release: {@code g1.rb.hold(robot.launcher::fireWhileHeld, robot.launcher::ceaseFire)}.
+     */
+    public void fireWhileHeld() {
+        needBuilt(part);
+        touch();
+        spinning = true;
+        if (!holding) {
+            holding = true;
+            heldShots = 0;
+        }
+        if (!part.isShooting()) {
+            part.shoot(1);
+            heldShots++;
+        }
+    }
+
+    /**
+     * The button is let go: no more shots. The press's first shot still goes (a quick tap fires one,
+     * even while the wheel is still spinning up); a later shot still waiting is dropped.
+     */
+    public void ceaseFire() {
+        if (part == null) return;
+        touch();
+        if (holding && heldShots > 1) part.stopShooting();
+        holding = false;
+    }
+
+    /**
      * Changes the speed by {@code steps} x {@code stepRpm} (e.g. +1 or -1 from a D-pad). Kept until
      * the program ends; the Tunables value is not changed.
      */
@@ -273,7 +306,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     void suggestButtons(ButtonPlan plan) {
         Pad op = plan.operator();
         op.lb.toggle(this).says("spin up / down");
-        op.rb.press(this::fire).says("fire one");
+        op.rb.hold(this::fireWhileHeld, this::ceaseFire).says("fire one; hold: keep firing");
         if (distanceCamera == null) {
             op.dpadUp.press(() -> adjust(1)).says("speed up");
             op.dpadDown.press(() -> adjust(-1)).says("speed down");

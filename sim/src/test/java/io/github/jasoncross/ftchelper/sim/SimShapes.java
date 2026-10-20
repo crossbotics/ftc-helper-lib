@@ -25,11 +25,15 @@ final class SimShapes {
     static final List<String> TYPES = java.util.Arrays.asList("box", "slide", "arm", "turret", "claw", "roller", "flywheel");
 
     /** One shape from the robot file. */
+    /** A roller or wheel in the picture turns at most this fast (turns per second); see update(). */
+    static final double PICTURE_TURNS_PER_SEC = 1.2;
+
     static final class Shape {
         final String name, type, parent, color, axis;
         final double[] at;              // f, l, u in the parent's frame
         final double sf, sl, su;        // size: forward, left-right, up
         final String motor, servo, crservo;
+        final boolean reversed;         // reversed=yes: a roller that turns the other way from its motor (geared)
         final String model, baseModel;  // CAD files (see SimCad): model= rides the moving part, baseModel= a slide's fixed stage
         final Double cadPose;           // the value the CAD was drawn at (cadPose=); null: the simulator's start
         // How the driver's position becomes inches (slide) or degrees (arm, turret) or a gap (claw):
@@ -64,6 +68,7 @@ final class SimShapes {
             motor = s.get("motor");
             servo = s.get("servo");
             crservo = s.get("crservo");
+            reversed = s.containsKey("reversed") && s.get("reversed").equalsIgnoreCase("yes");
             model = s.get("model");
             baseModel = s.get("baseModel");
             if (baseModel != null && !type.equals("slide")) {
@@ -524,8 +529,13 @@ final class SimShapes {
                     double[] cr = robot.crServos.get(s.crservo);
                     turnsPerSec = cr[0] * (cr[1] == 1 ? -1 : 1) * 2.5;    // a CR servo: about 150 RPM
                 }
-                s.value = (s.value + turnsPerSec * 360 * dt) % 360;
+                if (s.reversed) turnsPerSec = -turnsPerSec;
                 s.rate = turnsPerSec;
+                // The picture turns at most PICTURE_TURNS_PER_SEC: the page shows about 10 pictures a
+                // second, and a wheel turning faster would look like it turns backward (like a car wheel
+                // in a film). The direction is right; the real speed is in the telemetry.
+                double shown = Math.max(-PICTURE_TURNS_PER_SEC, Math.min(PICTURE_TURNS_PER_SEC, turnsPerSec));
+                s.value = (s.value + shown * 360 * dt) % 360;
                 continue;
             }
             double before = s.value;
@@ -629,7 +639,9 @@ final class SimShapes {
                 for (int k = first; k < out.size(); k++) {
                     Piece pc = out.get(k);
                     pc.run = spinner ? s.rate : 0;
-                    pc.flow = inward == 0 || Math.abs(s.rate) < 1e-9 ? 0 : (Math.signum(s.rate) == inward ? 1 : -1);
+                    // In or out goes by the motor's way of turning (a reversed roller still takes pieces in).
+                    double motorWay = s.reversed ? -s.rate : s.rate;
+                    pc.flow = inward == 0 || Math.abs(motorWay) < 1e-9 ? 0 : (Math.signum(motorWay) == inward ? 1 : -1);
                     pc.moving = !spinner && s.passive && Math.abs(s.rate) > 1e-6;
                 }
             }

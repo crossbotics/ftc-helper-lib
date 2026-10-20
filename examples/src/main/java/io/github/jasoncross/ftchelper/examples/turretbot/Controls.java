@@ -7,7 +7,7 @@ import io.github.jasoncross.ftchelper.robot.Pad;
 
 /**
  * Example robot 2, file 3 of 5. From the modules (gamepad 2): RT intake on/off, LT push out (hold),
- * LB flywheel spin up/down, RB fire one (it waits for the speed for this distance and for the turret
+ * LB flywheel spin up/down, RB fire one, hold to keep firing (each waits for the speed for this distance and for the turret
  * to be aimed), right stick X turret by hand (following pauses while the stick moves), BACK turret
  * following on/off, B claw open/close. Added here: X grab, Y release into a FLOWER.
  */

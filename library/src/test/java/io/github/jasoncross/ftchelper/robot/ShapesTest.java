@@ -284,4 +284,15 @@ public class ShapesTest {
         };
         assertTrue(lines(r), lines(r).contains("shape.launcher = flywheel, at=0,0,5.91, size=4x1x4, motor=launcher"));
     }
+
+    @Test public void aReversedRollerSaysSo() {
+        RobotDefinition r = new RobotDefinition() {
+            @Override protected void define() {
+                drive(Drive.tank("l", "r"));
+                add(Intake.motor("intake").looks(Shape.roller("gobilda-gecko-72").atMm(200, 0, 40).lengthMm(300),
+                        Shape.roller("gobilda-gecko-72").name("left_spinner").atMm(200, 150, 40).axis("up").lengthMm(24).reversed()));
+            }
+        };
+        assertTrue(lines(r), lines(r).contains("axis=up, motor=intake, reversed=yes"));
+    }
 }

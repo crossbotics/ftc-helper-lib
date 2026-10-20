@@ -190,7 +190,7 @@ The examples are built into the simulator, so:
 
 `-PteamCode=none` lists the library's examples instead of your own TeamCode's OpModes. (On a real robot
 the examples are hidden: they are marked `@Disabled`.) Open http://localhost:8780, pick "goBILDA Bot TeleOp", INIT (read the button map), START. LB spins
-up, RB fires. ([Simulator guide](../guides/simulator.md).)
+up, RB fires (hold it to keep firing). ([Simulator guide](../guides/simulator.md).)
 
 ### Draw your robot from Robot.java
 

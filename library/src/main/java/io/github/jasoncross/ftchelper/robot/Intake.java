@@ -186,6 +186,11 @@ public final class Intake extends Module<Intake> implements Toggleable {
         reversing = false;
     }
 
+    /** True while it runs out (after {@link #out()}), until {@link #in()} or {@link #stop()}. */
+    public boolean isPushingOut() {
+        return out;
+    }
+
     /** True while it runs in or out. */
     public boolean isRunning() {
         return on || out || reversing;

@@ -278,4 +278,50 @@ public class ActionsAndControlsTest {
 
     public abstract static class TwoDriverControls extends ControlMap<RobotModulesTest.LiftBot> {
     }
+
+    @Test public void aDoubleTapRunsItsOwnJob() {
+        final int[] taps = {0}, doubles = {0};
+        ButtonPlan plan = ControlMap.makePlan(robot, false, false, (g1, g2) ->
+                g2.b.tapOrDoubleTap(() -> taps[0]++, () -> doubles[0]++));
+        java.util.List<ButtonPlan.StickJob> sticks = new java.util.ArrayList<>();
+        io.github.jasoncross.ftchelper.gamepad.ControllerBindings driver = new io.github.jasoncross.ftchelper.gamepad.ControllerBindings();
+        io.github.jasoncross.ftchelper.gamepad.ControllerBindings operator = new io.github.jasoncross.ftchelper.gamepad.ControllerBindings();
+        plan.compile(robot, driver, operator, sticks, () -> null, () -> null);
+        com.qualcomm.robotcore.hardware.Gamepad g = new com.qualcomm.robotcore.hardware.Gamepad();
+        java.util.function.LongSupplier before = Pad.clock;
+        Pad.clock = clock::get;
+        try {
+            Runnable tap = () -> {
+                g.b = true; operator.update(null, g);
+                g.b = false; operator.update(null, g);
+            };
+            tap.run();                       // one tap
+            assertEquals(1, taps[0]);
+            clock.addSec(0.2);
+            tap.run();                       // soon after: a double-tap
+            assertEquals(1, taps[0]);
+            assertEquals(1, doubles[0]);
+            clock.addSec(1.0);
+            tap.run();                       // much later: a tap again
+            assertEquals(2, taps[0]);
+        } finally {
+            Pad.clock = before;
+        }
+    }
+
+    @Test public void holdingFireKeepsOneShotWaitingAndATapStillFires() {
+        RobotDefinition r = new RobotDefinition() {
+            @Override protected void define() {
+                drive(Drive.tank("l", "r"));
+                add(Launcher.flywheel("launcher", "gobilda-5203-6000"));
+            }
+        };
+        r.setup(new RobotTestKit());
+        Launcher l = (Launcher) r.modules().get(0);
+        l.fireWhileHeld();
+        l.fireWhileHeld();                      // held: still one shot waiting (the wheel is not at speed)
+        assertEquals(1, l.part().getShotsLeft());
+        l.ceaseFire();                          // let go quickly: the tap's shot still goes
+        assertEquals(1, l.part().getShotsLeft());
+    }
 }

@@ -46,6 +46,7 @@ public final class Shape {
     // An arm on a servo: its angle (degrees, 0 = level forward, +90 = up) at named servo positions.
     final Map<String, Double> angles = new LinkedHashMap<>();
     private String note, color;
+    private boolean reversed = false;
     // A passive part (gravity or springs): its range, where it starts, and what makes it drop.
     boolean passive = false;
     private double rangeMin = Double.NaN, rangeMax = Double.NaN, startAt = Double.NaN, travelIn = Double.NaN;
@@ -241,6 +242,15 @@ public final class Shape {
         return this;
     }
 
+    /**
+     * A roller that turns the other way from its motor, through gears (for example the left one of two
+     * spinners geared to one intake shaft, so both pull pieces in).
+     */
+    public Shape reversed() {
+        reversed = true;
+        return this;
+    }
+
     /** Where a number came from, written after the line ("est. from the CAD", "measured 2026-10-20"). */
     public Shape note(String note) {
         this.note = note;
@@ -277,6 +287,7 @@ public final class Shape {
         if (axis != null) sb.append(", axis=").append(axis);
         if (driver != null) sb.append(", ").append(driver);
         if (passive) sb.append(passiveWords(lineName));
+        if (reversed) sb.append(", reversed=yes");
         if (color != null) sb.append(", color=").append(color);
         List<String> notes = new ArrayList<>();
         if (!parts.isEmpty()) notes.add(joined(parts, " + "));
@@ -315,6 +326,7 @@ public final class Shape {
         if (!Double.isNaN(travelIn) && !(type.equals("slide") && passive)) {
             throw new IllegalStateException(what + ".travelMm(...) is for a passive slide only");
         }
+        if (reversed && !spins()) throw new IllegalStateException(what + ".reversed() is for a roller or flywheel");
         if ((!Double.isNaN(lengthIn) || !Double.isNaN(diameterIn)) && !spins()) {
             throw new IllegalStateException(what + ".lengthMm/.diameterMm are for a roller or flywheel; use .sizeMm(...)");
         }
