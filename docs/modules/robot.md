@@ -444,7 +444,10 @@ public class ScoreAndPark extends Auto<Robot> {
 
 The steps are read twice: in INIT (for the menu and the start position; nothing runs) and after
 START. Everything else is [`EasyAuto`](auto.md#easyauto): alliance and delay menu, mirroring for RED,
-the timer, stopping everything, the report. Autonomous refuses to run until `Tunables.Drive.calibrated`.
+the timer, stopping everything, the report. When its steps are done it ends at once (even with time
+left), so the Driver Station moves to its TeleOp; TeleOp's INIT shows the report and the alliance (or
+lets the drivers choose it: X = BLUE, B = RED). Until `Tunables.Drive.calibrated` is true it says
+"AUTONOMOUS IS OFF" and does nothing (in the simulator it runs anyway, with a warning).
 
 ---
 

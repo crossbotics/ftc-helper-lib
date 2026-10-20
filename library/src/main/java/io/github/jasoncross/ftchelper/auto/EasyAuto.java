@@ -338,13 +338,12 @@ public abstract class EasyAuto extends LinearOpMode {
         // Done: stop the mechanisms and wheels now (not only at the very end), so nothing keeps moving.
         robot.stop();
         autoDrive.stop();
-        // ---- The report: show what happened to each step until the OpMode ends ----
-        while (opModeIsActive()) {
-            t.section("Autonomous finished");
-            for (String line : routine.getReport()) t.text(line);
-            t.update();
-            // give the phone a moment for its own work
-            idle();
-        }
+        // ---- The report, then end at once (even with time left), so the Driver Station moves to the
+        // TeleOp (preselectTeleOp) and the drive team can INIT it. TeleOp shows the report in INIT. ----
+        t.section("Autonomous finished");
+        for (String line : routine.getReport()) t.text(line);
+        t.update();
+        MatchMemory.rememberReport(routine.getReport());
+        RobotLog.ii("ftchelper", "autonomous report: " + routine.getReport());
     }
 }

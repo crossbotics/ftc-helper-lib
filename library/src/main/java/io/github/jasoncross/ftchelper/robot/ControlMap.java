@@ -123,6 +123,7 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
 
     @Override
     protected final void onStart() {
+        robot().setAlliance(alliance());   // it may have been chosen in INIT
         robot().started();
     }
 

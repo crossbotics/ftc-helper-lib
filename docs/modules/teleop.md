@@ -56,7 +56,7 @@ public class MainTeleOp extends EasyTeleOp {
 | Driving (gamepad 1) | left stick drive, right stick X turn, left trigger slow. Mecanum and tank, picked by your `DriveConfig`. See [`DriverControls`](drive.md#drivercontrols). |
 | Field-centric | starts robot-centric. **Y** turns field-centric on/off (two buzzes = on, one = off). Mecanum with an IMU only. |
 | "Forward" | continues from where autonomous ended ([`DriverHeading`](drive.md#driverheading)), also after INIT, STOP, INIT again. **BACK** alone (on release, one buzz) = "the robot now faces away from me". |
-| Alliance | the one autonomous chose, from [`MatchMemory`](match.md); BLUE if no autonomous ran. |
+| Alliance | the one autonomous chose, from [`MatchMemory`](match.md). If none came (no autonomous ran, or the robot app restarted), INIT says "Choose the alliance": gamepad 1 **X** = BLUE, **B** = RED (also to change it). INIT also shows autonomous's report. |
 | Match timer | 2:00, both gamepads buzz at 1:00 and 0:20. The time is on the screen. |
 | Tuning menu | **GUIDE** opens it (PRACTICE profile only). Gamepad 1 runs the menu; the wheels hold still. With a button map (`buttonHelp()`, as `ControlMap` has): a tap of GUIDE shows the map during the match (the robot still drives) and holding GUIDE 1 s opens the tuning menu. |
 | Telemetry | your mechanisms' lines, drive mode, time; **START + BACK together** (either order) = debug lines on/off. |

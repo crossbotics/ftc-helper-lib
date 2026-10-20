@@ -1,5 +1,8 @@
 package io.github.jasoncross.ftchelper.match;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import io.github.jasoncross.ftchelper.util.FieldPose;
 import io.github.jasoncross.ftchelper.util.PoseStore;
 
@@ -34,6 +37,9 @@ public final class MatchMemory {
     private static Alliance alliance = null;
     // When remember() was called, in nanoseconds (billionths of a second) on the system clock.
     private static long savedAtNanos = 0;
+    // Autonomous's last report, and when it was saved.
+    private static List<String> report = new ArrayList<>();
+    private static long reportAtNanos = 0;
 
     // Private constructor: nobody makes a MatchMemory object; use MatchMemory.remember(...) etc.
     private MatchMemory() { }
@@ -53,6 +59,23 @@ public final class MatchMemory {
         return alliance;
     }
 
+    /** True if autonomous left an alliance for this match (not older than {@link #MAX_AGE_SEC}). */
+    public static synchronized boolean hasAlliance() {
+        return alliance != null && ageSec() <= MAX_AGE_SEC;
+    }
+
+    /** Saves autonomous's report (one line per step), for TeleOp's INIT screen. */
+    public static synchronized void rememberReport(List<String> lines) {
+        report = new ArrayList<>(lines);
+        reportAtNanos = System.nanoTime();
+    }
+
+    /** Autonomous's report from this match (empty if none, or if it is older than {@link #MAX_AGE_SEC}). */
+    public static synchronized List<String> lastReport() {
+        if (report.isEmpty() || (System.nanoTime() - reportAtNanos) / 1e9 > MAX_AGE_SEC) return new ArrayList<>();
+        return new ArrayList<>(report);
+    }
+
     /** Seconds since {@link #remember} was called (very large if never). */
     public static synchronized double ageSec() {
         return alliance == null ? Double.MAX_VALUE : (System.nanoTime() - savedAtNanos) / 1e9;
@@ -61,6 +84,7 @@ public final class MatchMemory {
     /** Forgets everything (alliance and pose). */
     public static synchronized void clear() {
         alliance = null;
+        report = new ArrayList<>();
         PoseStore.clear();
     }
 }

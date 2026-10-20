@@ -37,6 +37,10 @@ final class SimDriverStation {
     enum Phase { IDLE, INIT, RUNNING, STOPPED }
 
     final List<Entry> opModes = new ArrayList<>();
+    // Like the real Driver Station: when an autonomous ends, its preselectTeleOp is chosen next. The
+    // page selects "next" each time nextCount goes up.
+    volatile String next = "";
+    volatile int nextCount = 0;
     final SimRobot robot;
     final SimGamepad pad1 = new SimGamepad(), pad2 = new SimGamepad();
     final SimTelemetry screen = new SimTelemetry();
@@ -239,6 +243,7 @@ final class SimDriverStation {
                 robot.allOff();
                 robot.closeCameras();
                 phase = Phase.STOPPED;
+                preselectNext(current);
             }
         }
     }
@@ -275,6 +280,22 @@ final class SimDriverStation {
                 robot.allOff();
                 robot.closeCameras();
                 phase = Phase.STOPPED;
+                preselectNext(current);
+            }
+        }
+    }
+
+    // An autonomous that ended: choose its preselectTeleOp next (if that TeleOp is in the list).
+    private void preselectNext(Entry e) {
+        if (e == null || !"Autonomous".equals(e.kind)) return;
+        Autonomous a = e.type.getAnnotation(Autonomous.class);
+        String teleOp = a == null ? "" : a.preselectTeleOp();
+        if (teleOp.isEmpty()) return;
+        for (Entry x : opModes) {
+            if (x.name.equals(teleOp)) {
+                next = teleOp;
+                nextCount++;
+                return;
             }
         }
     }

@@ -108,7 +108,9 @@ r.move(...).move(...)          // main steps: cut short when 4 s are left
 
 ## Read the report
 
-After every practice run, the Driver Station shows each step's result:
+When the steps are done, autonomous ends at once (even with time left), so the Driver Station moves
+to the TeleOp (`preselectTeleOp`) and the drive team can INIT it. The report of each step's result is
+shown at the end of autonomous, in the robot log, and again on TeleOp's INIT screen:
 
 ```
 Grab: done

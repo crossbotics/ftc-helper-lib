@@ -100,6 +100,9 @@ Controls: D-pad up/down = choose a line, left/right = change it. X/B are allianc
 MatchMemory.remember(Alliance.RED, pose);            // end of autonomous (EasyAuto does it)
 // TeleOp INIT: the alliance autonomous saved, or BLUE if nothing (recent) was saved
 Alliance a = MatchMemory.allianceOr(Alliance.BLUE);  // TeleOp INIT
+boolean fromAuto = MatchMemory.hasAlliance();        // false: let the drivers choose (EasyTeleOp does)
+MatchMemory.rememberReport(lines);                   // end of autonomous: its report (EasyAuto does it)
+List<String> report = MatchMemory.lastReport();      // TeleOp INIT shows it
 ```
 
 Lets ONE TeleOp serve both alliances. The memory lasts until the app restarts and is ignored

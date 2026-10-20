@@ -16,8 +16,15 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   `ceaseFire()`). `tapOrDoubleTap(tap, doubleTap)` for any button. `Shape.reversed()`: a roller that
   turns the other way from its motor. `Intake.isPushingOut()`.
 
+- **TeleOp chooses the alliance in INIT** when autonomous did not pass one (gamepad 1: X = BLUE, B = RED;
+  also to change it), and shows autonomous's report. `MatchMemory.hasAlliance()`, `rememberReport()`,
+  `lastReport()`.
+- Simulator: when an autonomous ends, the Driver Station chooses its `preselectTeleOp`, like the real one.
+
 ### Changed
 
+- **Autonomous ends when its steps are done**, even with time left, so the Driver Station moves to the
+  TeleOp at once (the report is shown at the end, in the robot log and in TeleOp's INIT).
 - An autonomous with an untuned drive (`calibrated` / `calibrationConfirmed` false) shows "AUTONOMOUS IS
   OFF: the drive is not tuned yet" on the Driver Station and does nothing, instead of stopping with an
   error. In the simulator it runs anyway, with a warning, so autos can be tried before tuning.

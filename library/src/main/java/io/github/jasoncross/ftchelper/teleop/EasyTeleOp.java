@@ -305,15 +305,29 @@ public abstract class EasyTeleOp extends LinearOpMode {
             }
 
             // ---- INIT loop: warnings and what the drivers need to know. Never waits. ----
+            boolean fromAuto = MatchMemory.hasAlliance();
+            List<String> autoReport = MatchMemory.lastReport();
             while (opModeInInit()) {
+                // The alliance: from autonomous, or chosen here (gamepad 1: X = BLUE, B = RED).
+                if (gamepad1.x && alliance != Alliance.BLUE) { alliance = Alliance.BLUE; fromAuto = false; }
+                if (gamepad1.b && alliance != Alliance.RED) { alliance = Alliance.RED; fromAuto = false; }
                 if (Profile.current().isPractice()) t.warn("PRACTICE profile");
                 int changed = Tunable.countChanged();
                 if (changed > 0) t.warn(changed + " tuned value(s) differ from the code");
-                t.line("Alliance", alliance);
+                if (fromAuto) {
+                    t.line("Alliance", alliance + " (from autonomous; X = BLUE, B = RED to change)");
+                } else {
+                    t.warn("Choose the alliance: gamepad 1 X = BLUE, B = RED");
+                    t.line("Alliance", alliance + " (chosen here)");
+                }
                 if (heading != null) {
                     t.line("Forward", heading.isFromAuto() ? "from autonomous" : "the way the robot faces now");
                 }
                 addInitTelemetry(t);
+                if (!autoReport.isEmpty()) {
+                    t.section("Autonomous");
+                    for (String line : autoReport) t.text(line);
+                }
                 t.update();
             }
             if (isStopRequested()) return;

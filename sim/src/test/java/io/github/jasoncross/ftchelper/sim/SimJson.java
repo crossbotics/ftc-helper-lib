@@ -22,6 +22,8 @@ final class SimJson {
         field(b, "opmode", cur == null ? "" : cur.name).append(',');
         field(b, "kind", cur == null ? "" : cur.kind).append(',');
         field(b, "error", ds.error()).append(',');
+        field(b, "next", ds.next).append(',');
+        b.append("\"nextCount\":").append(ds.nextCount).append(',');
         b.append("\"runSeconds\":").append(fmt(ds.runSeconds())).append(',');
         b.append("\"autoTimer\":").append(ds.autoTimer).append(',');
         b.append("\"battery\":").append(fmt(r.batteryVolts)).append(',');

@@ -463,6 +463,11 @@ function render(s) {
     sel.innerHTML = html; sel.dataset.key = key;
     if (keep) sel.value = keep;
   }
+  // An autonomous ended: like the real Driver Station, its TeleOp is chosen next.
+  if (s.nextCount !== window.lastNextCount) {
+    if (window.lastNextCount !== undefined && s.next) sel.value = s.next;
+    window.lastNextCount = s.nextCount;
+  }
   const running = s.phase === "INIT" || s.phase === "RUNNING";
   $("#initBtn").disabled = running && sel.value === s.opmode;
   $("#startBtn").disabled = s.phase !== "INIT";

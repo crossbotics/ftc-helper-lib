@@ -229,4 +229,34 @@ public class SimFromRobotTest {
             }
         }
     }
+
+    @Test public void autoEndsWhenDoneAndTeleOpKnowsTheAlliance() throws Exception {
+        Path file = generate(io.github.jasoncross.ftchelper.examples.flywheelbot.Robot.class);
+        io.github.jasoncross.ftchelper.match.MatchMemory.clear();
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("FlywheelBot Shoot and Leave");
+            s.press(v -> s.g1().b = v);                          // the INIT menu: B = RED
+            s.start();
+            assertTrue("it ends by itself, with time left",
+                    SimRun.waitFor(() -> s.sim.ds.phase() == SimDriverStation.Phase.STOPPED, 25));
+            assertTrue(s.sim.ds.runSeconds() < 29);
+            assertEquals("the Driver Station moves to its TeleOp", "FlywheelBot TeleOp", s.sim.ds.next);
+            s.init("FlywheelBot TeleOp");
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("(from autonomous"), 2));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Leave: done"));
+            assertEquals("", s.error());
+        }
+    }
+
+    @Test public void withoutAutoTheAllianceIsChosenInInit() throws Exception {
+        Path file = generate(io.github.jasoncross.ftchelper.examples.flywheelbot.Robot.class);
+        io.github.jasoncross.ftchelper.match.MatchMemory.clear();
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("FlywheelBot TeleOp");
+            assertTrue(SimRun.waitFor(() -> s.screenHas("Choose the alliance: gamepad 1 X = BLUE, B = RED"), 2));
+            s.press(v -> s.g1().b = v);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("RED (chosen here)"), 2));
+            assertEquals("", s.error());
+        }
+    }
 }
