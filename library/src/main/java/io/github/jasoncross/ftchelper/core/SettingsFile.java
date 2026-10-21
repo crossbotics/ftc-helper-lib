@@ -6,7 +6,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Properties;
 import java.util.function.Consumer;
 
@@ -170,10 +169,20 @@ public final class SettingsFile {
             // Make the folder if it is not there yet. If that fails, give up quietly.
             File folder = file.getParentFile();
             if (folder != null && !folder.exists() && !folder.mkdirs()) return false;
-            // "try (...)" opens the file and closes it again automatically at the end,
-            // even if writing fails part way.
-            try (OutputStream out = new FileOutputStream(file)) {
+            // Safe against a power cut: write a new file next to it, make sure it is really on the
+            // storage (sync), then swap it in with one rename. A cut before the rename leaves the old
+            // file; after it, the new one. Never a half-written file.
+            // ("try (...)" closes the file again automatically, even if writing fails part way.)
+            File temp = new File(file.getPath() + ".tmp");
+            try (FileOutputStream out = new FileOutputStream(temp)) {
                 copy.store(out, "ftc-helper-lib settings");
+                out.flush();
+                out.getFD().sync();
+            }
+            if (!temp.renameTo(file)) {
+                // Some storage will not rename over a file: remove the old one, then rename.
+                // If that fails too, the new file stays as ".tmp", and the next load reads it.
+                if (!file.delete() || !temp.renameTo(file)) return false;
             }
             return true;
         } catch (IOException | SecurityException e) {
@@ -186,9 +195,12 @@ public final class SettingsFile {
     private void load() {
         if (loaded) return;
         loaded = true;
-        // No file yet is normal (first run): start with no saved values.
-        if (!file.exists()) return;
-        try (InputStream in = new FileInputStream(file)) {
+        // No file yet is normal (first run): start with no saved values. Only a ".tmp" left by a save
+        // that could not rename: read that.
+        File temp = new File(file.getPath() + ".tmp");
+        File from = file.exists() ? file : temp.exists() ? temp : null;
+        if (from == null) return;
+        try (InputStream in = new FileInputStream(from)) {
             values.load(in);
         } catch (IOException | SecurityException e) {
             // A damaged or unreadable file means "no saved settings"; the code's values are used.

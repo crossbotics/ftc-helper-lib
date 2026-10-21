@@ -22,7 +22,9 @@ use the [finders](finders.md): they measure it and show the code line. This menu
 numbers you already have.
 
 Steps 5 and 6 matter: **the code is the record.** A value saved only on the hub is lost with a new
-Control Hub, invisible to teammates, and easy to forget at an event (the INIT screen warns you).
+Control Hub, invisible to teammates, and easy to forget at an event (the INIT screen warns you). B in the
+menu lists the changed values as lines to copy. A save cannot leave a half-written file: it writes a new
+file and swaps it in, so a power cut keeps either the old values or the new ones.
 
 ## 1. Make numbers tunable
 
@@ -89,6 +91,7 @@ The starter kit's `MainTeleOp` already has it.
 | A | save all on the hub |
 | X | the chosen one back to the code value |
 | Y | ALL back to the code values, saved values deleted |
+| B | the changed values as lines to copy into `Tunables.java` (also in the robot log, tag `ftc-helper`); B again: the list |
 
 Changed values show the code value next to them: `Lift/kP = 0.0050  (code 0.004)`.
 

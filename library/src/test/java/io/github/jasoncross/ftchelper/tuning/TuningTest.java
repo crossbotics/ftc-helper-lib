@@ -91,4 +91,14 @@ public class TuningTest {
         Profile.set(Profile.COMPETITION);
         Profile.resetForTests();
     }
+
+    @Test public void changedValuesAsCodeLines() {
+        Tunable a = Tunable.number("Lift/kP", 0.004, 0.0005);
+        Tunable.number("Lift/kD", 0.0002, 0.0001);
+        Tunable b = Tunable.number("speed", 0.5, 0.1);
+        assertTrue(Tunable.changedAsCode().isEmpty());
+        a.increase();
+        b.decrease();
+        assertEquals(java.util.Arrays.asList("Lift: kP = 0.0045", "speed = 0.4"), Tunable.changedAsCode());
+    }
 }

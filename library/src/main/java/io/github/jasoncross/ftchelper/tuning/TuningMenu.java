@@ -38,9 +38,11 @@ public class TuningMenu {
     // A short note for the driver, e.g. "Saved on the hub.".
     // "volatile": a background save writes it, the loop reads it.
     private volatile String message = "";
+    // B: show the changed values as lines to copy into the code, instead of the list.
+    private boolean showCode = false;
     // Each button's state in the last loop, to spot the loop where it was just pressed
     // (an "edge"), so holding a button does not repeat the action every loop.
-    // Same order as "now" in update(): up, down, right, left, A, X, Y, (spare).
+    // Same order as "now" in update(): up, down, right, left, A, X, Y, B.
     private final boolean[] was = new boolean[8];
 
     /**
@@ -68,9 +70,9 @@ public class TuningMenu {
 
     /** Reads the gamepad. Call every loop (it does nothing while closed). */
     public void update() {
-        // The buttons we use, read once. The last spot is spare and always false.
+        // The buttons we use, read once.
         boolean[] now = {gamepad.dpad_up, gamepad.dpad_down, gamepad.dpad_right, gamepad.dpad_left,
-                gamepad.a, gamepad.x, gamepad.y, false};
+                gamepad.a, gamepad.x, gamepad.y, gamepad.b};
         if (open) {
             List<Tunable> all = Tunable.all();
             if (!all.isEmpty()) {
@@ -95,6 +97,12 @@ public class TuningMenu {
                     Tunable.saveAllInBackground(ok -> message = ok ? "Saved on the hub." : "SAVE FAILED.");
                 }
                 if (pressed(now, 5)) { t.reset(); message = t.name() + " back to the code value."; }
+                // B shows the changed values as code lines (and writes them to the robot log, to copy
+                // from a laptop); B again goes back to the list.
+                if (pressed(now, 7)) {
+                    showCode = !showCode;
+                    if (showCode) logCode();
+                }
                 if (pressed(now, 6)) {
                     message = "Resetting...";
                     Tunable.resetAllInBackground(ok -> message = ok ? "All back to code values." : "RESET FAILED.");
@@ -119,6 +127,14 @@ public class TuningMenu {
             t.text("No tunables. Make some with Tunable.number(...).");
             return;
         }
+        if (showCode) {
+            List<String> lines = Tunable.changedAsCode();
+            t.text("Copy into Tunables.java (then Y = reset all):");
+            if (lines.isEmpty()) t.text("  nothing differs from the code");
+            for (String line : lines) t.text("  " + line);
+            t.text("B back to the list");
+            return;
+        }
         // Show only the page that holds the chosen tunable (8 per page), so the list fits on screen.
         // Whole-number division drops the remainder: e.g. selected 10 gives page start 8.
         int first = (selected / PAGE) * PAGE;
@@ -130,8 +146,17 @@ public class TuningMenu {
             t.text(mark + tu.name() + " = " + tu.display() + changed);
         }
         t.text(String.format(java.util.Locale.US, "%d/%d  D-pad: choose/change  bumper: x10", selected + 1, all.size()));
-        t.text("A save   X reset this   Y reset all");
+        t.text("A save   X reset this   Y reset all   B as code");
         if (!message.isEmpty()) t.text(message);
+    }
+
+    // The changed values in the robot log (logcat, tag "ftc-helper"), to copy from a laptop.
+    private static void logCode() {
+        try {
+            for (String line : Tunable.changedAsCode()) com.qualcomm.robotcore.util.RobotLog.ii("ftc-helper", "tuned " + line);
+        } catch (RuntimeException | LinkageError e) {
+            // No robot log (a test without the SDK): the screen still shows them.
+        }
     }
 
     // True only in the loop where button i went from up to down.

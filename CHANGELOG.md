@@ -4,6 +4,16 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+### Added
+
+- Tuning menu: B lists the changed values as lines to copy into `Tunables.java` (also in the robot log);
+  `Tunable.changedAsCode()`.
+
+### Fixed
+
+- Saving settings on the hub cannot leave a half-written file after a power cut: it writes a new file,
+  syncs it, then swaps it in.
+
 ## v0.10.1 - 2026-10-20
 
 Nothing old stops working. The library moved to github.com/crossbotics/ftc-helper-lib (old links

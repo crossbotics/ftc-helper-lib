@@ -132,6 +132,20 @@ public class CoreTest {
         assertTrue(ft.lastScreen.get(0).startsWith("!! Slowpoke update took"));
     }
 
+    @Test public void aSaveLeavesNoTempFileAndATempFileIsReadIfItIsAllThereIs() throws Exception {
+        File f = new File(tmp.getRoot(), "safe/settings.properties");
+        SettingsFile s = new SettingsFile(f);
+        s.put("a", "1");
+        assertTrue(s.save());
+        s.put("a", "2");
+        assertTrue(s.save());
+        assertEquals("2", new SettingsFile(f).get("a", "x"));
+        assertFalse("the temp file is swapped in", new File(f.getPath() + ".tmp").exists());
+        // a save whose swap failed left only the new file as .tmp: it is read
+        assertTrue(f.renameTo(new File(f.getPath() + ".tmp")));
+        assertEquals("2", new SettingsFile(f).get("a", "x"));
+    }
+
     @Test public void settingsSaveInTheBackground() throws Exception {
         File f = new File(tmp.getRoot(), "bg.properties");
         SettingsFile s = new SettingsFile(f);

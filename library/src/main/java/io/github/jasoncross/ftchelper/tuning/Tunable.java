@@ -90,6 +90,25 @@ public final class Tunable {
     }
 
     /**
+     * The values that differ from the code, as lines to copy into it: "Lift: kP = 0.0050" means
+     * {@code kP = 0.0050} in {@code Tunables.java}, class {@code Lift}. Empty if none differ. The
+     * code is the record: a value saved only on the hub is lost with a new Control Hub.
+     */
+    public static synchronized List<String> changedAsCode() {
+        List<String> out = new ArrayList<>();
+        for (Tunable t : ALL) {
+            if (!t.isChanged()) continue;
+            String group = t.group();
+            String field = group.isEmpty() ? t.name : t.name.substring(group.length() + 1);
+            // The shown value without its trailing zeros ("0.004500" -> "0.0045"), as one writes it in code.
+            String value = t.display();
+            if (value.contains(".")) value = value.replaceAll("0+$", "").replaceAll("\\.$", ".0");
+            out.add((group.isEmpty() ? "" : group + ": ") + field + " = " + value);
+        }
+        return out;
+    }
+
+    /**
      * Saves every tunable's value on the Control Hub. WAITS for the storage: in a running OpMode use
      * {@link #saveAllInBackground} (the tuning menu does).
      *
