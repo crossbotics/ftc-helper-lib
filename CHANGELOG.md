@@ -4,7 +4,10 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
-Nothing old changes: odometry is new, and only a robot with an `odometry(...)` line uses it.
+## v0.15.0 - 2026-10-21
+
+Nothing old changes: odometry and the pedro module are new. Only a robot with an `odometry(...)` line
+uses odometry, and only a project that adds the `pedro` folder gets Pedro Pathing.
 
 ### Added
 
@@ -57,7 +60,7 @@ Nothing old changes: odometry is new, and only a robot with an `odometry(...)` l
 - Example: `odometrybot` (lesson 8's robot: a Pinpoint, `ToTheGoal` autonomous with `driveTo`, its
   TeleOp and Odometry Tuner), with a simulator test.
 
-### Added: Pedro Pathing (the optional pedro module)
+### Added: Pedro Pathing (the pedro module)
 
 - A new **`pedro` folder** (`com.crossbotics.ftchelper.pedro`), added to a robot project with two
   Gradle lines (docs/modules/pedro.md). It brings Pedro Pathing 3.0.2; teams that do not add it never
