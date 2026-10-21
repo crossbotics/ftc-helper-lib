@@ -403,6 +403,8 @@ public class AutoDrive {
      * @return DONE, STALLED, TIMED_OUT or STOPPED
      */
     // driveTo's last few inches: proportional speed, so it stops on the point.
+    // How long the odometry may be "not ready" before driveTo gives up (NO_ODOMETRY), seconds.
+    static final double ODOMETRY_LOST_SEC = 0.2;
     static final double DRIVE_TO_NEAR_IN = 8, DRIVE_TO_KP = 0.04, DRIVE_TO_MIN_POWER = 0.12, DRIVE_TO_MIN_TURN = 0.08;
 
     public Result driveTo(java.util.function.Supplier<com.crossbotics.ftchelper.util.FieldPose> pose,
@@ -436,13 +438,24 @@ public class AutoDrive {
             // The heading counts as there within 2 degrees (or the drive's own tolerance, if bigger).
             double headingTol = Math.max(cfg.turnToleranceDeg, 2.0);
             double minTurn = cfg.turnMinPower > 0 ? cfg.turnMinPower : DRIVE_TO_MIN_TURN;
+            // A single bad reading (a CRC glitch) is not a lost odometry: wait still for up to 0.2 s.
+            double notReadySince = Double.NaN;
             while (true) {
                 Result early = checkStop(deadline);
                 if (early != null) return early;
                 if (!ready.getAsBoolean()) {
-                    log.accept("AutoDrive: driveTo stopped, the odometry is not working");
-                    return Result.NO_ODOMETRY;
+                    double now = seconds();
+                    if (Double.isNaN(notReadySince)) notReadySince = now;
+                    if (now - notReadySince >= ODOMETRY_LOST_SEC) {
+                        log.accept("AutoDrive: driveTo stopped, the odometry is not working");
+                        return Result.NO_ODOMETRY;
+                    }
+                    setPowers(new double[]{0, 0, 0, 0});   // the pose cannot be trusted: hold still
+                    runLoopHook();
+                    idle.run();
+                    continue;
                 }
+                notReadySince = Double.NaN;
                 com.crossbotics.ftchelper.util.FieldPose p = pose.get();
                 double dx = xIn - p.x, dy = yIn - p.y;
                 double dist = Math.hypot(dx, dy);

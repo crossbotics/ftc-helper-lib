@@ -108,6 +108,12 @@ public abstract class Auto<R extends RobotDefinition> extends EasyAuto {
 
     @Override
     protected final void addInitTelemetry(RobotTelemetry t) {
+        // The odometry in INIT: read it, and show its status, so a missing pod is seen before START.
+        if (robot.odometry() != null) {
+            robot.odometry().update();
+            if (!robot.odometry().isReady()) t.warn("Odometry (" + robot.odometry().kind() + "): " + robot.odometry().status());
+            else t.line("Odometry", robot.odometry().kind() + " ready");
+        }
         if (robot != null) for (String n : robot.notes()) t.text(n);
         List<String> changed = RobotDefinition.changedTunables();
         if (!changed.isEmpty()) {

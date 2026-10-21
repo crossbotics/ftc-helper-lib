@@ -183,6 +183,28 @@ public class RobotModulesTest {
         assertEquals("max", TunableSection.lookalike("MAX", known, k -> true));   // capitals: always
     }
 
+    // Alex: a reversed(...) name that names no pod stops INIT; two calls add up.
+    @Test public void odometryReversedNamesAreChecked() {
+        Odometry o = Odometry.threeWheels("l", "r", "p").trackWidthIn(12).reversed("l").reversed("p");
+        assertTrue(o.isReversed("l"));
+        assertTrue(o.isReversed("p"));
+        Odometry pin = Odometry.pinpoint("pinpoint").reversed("X");
+        assertTrue(pin.isReversed("x"));
+        final Odometry typo = Odometry.threeWheels("l", "r", "p").trackWidthIn(12).reversed("parleft");
+        RobotDefinition r = new RobotDefinition() {
+            @Override protected void define() {
+                drive(Drive.mecanum("fl", "fr", "bl", "br"));
+                odometry(typo);
+            }
+        };
+        try {
+            r.setup(new RobotTestKit());
+            org.junit.Assert.fail("expected an error");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains(".reversed(\"parleft\")"));
+        }
+    }
+
     @Test public void tunablesSectionsBecomeLiveTunablesAndNotesSayWhatIsMissing() {
         LiftBot r = new LiftBot();
         RobotTestKit kit = new RobotTestKit();

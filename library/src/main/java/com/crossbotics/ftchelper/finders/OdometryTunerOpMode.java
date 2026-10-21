@@ -141,7 +141,13 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
             return;
         }
         double scale = 48 / p.y;
-        lastResult = "Forward OK: " + FinderResults.num(p.y, 1) + " in for 48 (" + FinderResults.num((1 / scale - 1) * 100, 1)
+        double offPct = (1 / scale - 1) * 100;
+        if (Math.abs(offPct) > 10) {
+            lastResult = "It measured " + FinderResults.num(p.y, 1) + " in: was it really 48 in? Measure along the tape "
+                    + "and run the test again (more than 10% off is a test mistake, not the pods).";
+            return;
+        }
+        lastResult = "Forward OK: " + FinderResults.num(p.y, 1) + " in for 48 (" + FinderResults.num(offPct, 1)
                 + "% off). Sideways drift " + FinderResults.num(p.x, 1) + " in.";
         if (spec.kindName().equals("otos")) {
             results.set("odo:linear", "Tunables.Odometry: linearScalar = " + FinderResults.num(scale, 3) + "   // times the one in use now");

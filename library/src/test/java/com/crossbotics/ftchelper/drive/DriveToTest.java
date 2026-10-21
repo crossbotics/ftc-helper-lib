@@ -91,4 +91,12 @@ public class DriveToTest {
         assertEquals(AutoDrive.Result.NO_ODOMETRY, a.driveTo(this::pose, () -> loops[0] < 5, 0, 24, 0, 0.6, 1.0));
         assertTrue(r.allStopped());
     }
+
+    // One bad reading (a glitch) is not a lost odometry: it waits still, then goes on (Alex).
+    @Test public void aShortGlitchDoesNotStopIt() {
+        final int[] loops = {0};
+        AutoDrive a = auto();
+        a.setLoopHook(() -> loops[0]++);
+        assertEquals(AutoDrive.Result.DONE, a.driveTo(this::pose, () -> loops[0] < 5 || loops[0] > 8, 0, 24, 0, 0.6, 1.0));
+    }
 }

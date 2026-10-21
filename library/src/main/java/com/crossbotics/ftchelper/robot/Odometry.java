@@ -32,7 +32,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
  * Docs: docs/modules/odometry.md
  */
 public final class Odometry {
-    enum Kind { PINPOINT, OTOS, THREE, TWO }
+    enum Kind { PINPOINT, OTOS, THREE, TWO, CUSTOM }
 
     // goBILDA pods, in encoder counts per mm (the Pinpoint driver's own numbers).
     static final double FOUR_BAR_TICKS_PER_MM = 19.89436789;
@@ -53,6 +53,21 @@ public final class Odometry {
         }
         this.kind = kind;
         this.names = Arrays.asList(names);
+    }
+
+    // CUSTOM: makes the team's own PoseTracker at INIT.
+    private java.util.function.Function<Devices, PoseTracker> custom;
+
+    /**
+     * Your own pose source (e.g. odometry fused with AprilTags, or another library's localizer), made at
+     * INIT from the robot's devices. It must use the library's frame (x right, y away, heading 0 = away,
+     * counterclockwise +). driveTo, robot.pose() and TeleOp use it like the built-in kinds.
+     */
+    public static Odometry custom(java.util.function.Function<Devices, PoseTracker> make) {
+        if (make == null) throw new IllegalArgumentException("Robot.java: Odometry.custom(...) needs a maker");
+        Odometry o = new Odometry(Kind.CUSTOM, "custom");
+        o.custom = make;
+        return o;
     }
 
     /** A goBILDA Pinpoint (I2C port), with goBILDA 4-bar pods unless you say otherwise. */
@@ -110,9 +125,23 @@ public final class Odometry {
      * for dead wheels the motor port names.
      */
     public Odometry reversed(String... which) {
-        reversed.clear();
-        reversed.addAll(Arrays.asList(which));
+        // Added to what is there (two calls keep both). A name that is not a pod stops INIT (see build).
+        for (String w : which) {
+            String n = kind == Kind.PINPOINT && w != null ? w.toLowerCase(java.util.Locale.US) : w;
+            if (!reversed.contains(n)) reversed.add(n);
+        }
         return this;
+    }
+
+    // A reversed(...) name that names no pod: a typo that would quietly leave a pod counting backward.
+    private void checkReversed() {
+        for (String r : reversed) {
+            boolean ok = kind == Kind.PINPOINT ? r.equals("x") || r.equals("y") : names.contains(r);
+            if (!ok) {
+                throw new IllegalStateException("Robot.java: odometry .reversed(\"" + r + "\"): "
+                        + (kind == Kind.PINPOINT ? "a Pinpoint's pods are \"x\" and \"y\"" : "the pods are " + names));
+            }
+        }
     }
 
     /** OTOS: where it sits: inches forward of the centre, inches left, and its arrow's direction (CCW deg). */
@@ -152,6 +181,7 @@ public final class Odometry {
     /** "pinpoint", "otos", "threeWheels" or "twoWheels" (for the Odometry Tuner). */
     public String kindName() {
         switch (kind) {
+            case CUSTOM: return "custom";
             case PINPOINT: return "pinpoint";
             case OTOS: return "otos";
             case THREE: return "threeWheels";
@@ -181,7 +211,13 @@ public final class Odometry {
 
     // Makes the real thing at INIT.
     PoseTracker build(Devices devices, TunableSection t, Drive drive) {
+        checkReversed();
         switch (kind) {
+            case CUSTOM: {
+                PoseTracker p = custom.apply(devices);
+                if (p == null) throw new IllegalStateException("Robot.java: Odometry.custom(...) made nothing (null)");
+                return p;
+            }
             case PINPOINT: {
                 GoBildaPinpointDriver p = devices.get(GoBildaPinpointDriver.class, names.get(0));
                 GoBildaPinpointDriver.GoBildaOdometryPods pods = customPods ? null
@@ -222,6 +258,9 @@ public final class Odometry {
     /** Lines for the simulator's robot file. */
     void simLines(List<String> out) {
         switch (kind) {
+            case CUSTOM:
+                out.add("# odometry: a custom pose source (the simulator has no pretend device for it)");
+                return;
             case PINPOINT:
                 out.add("odometry = pinpoint " + names.get(0));
                 out.add(Module.fmt("odometry.offsetsMm = %s, %s", Shape.n(xOffsetMm), Shape.n(yOffsetMm)));
