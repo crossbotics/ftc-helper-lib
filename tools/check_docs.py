@@ -7,16 +7,29 @@ It fails (exit 1) when:
   1. a Markdown link points to a file that does not exist, or to a heading (#anchor) that does not exist;
   2. a public library class is not named in any docs/modules/*.md page;
   3. a tutorial program (examples/.../tutorials) is not linked from any tutorial page;
-  4. a tutorial page has no link to its full program.
+  4. a tutorial page has no link to its full program;
+  5. a java code block in docs/cookbook.md is not the same as its marked region in the cookbook's Java
+     files (examples/.../cookbook: "// recipe: name" ... "// end recipe"), or a region is not shown;
+  6. a cookbook recipe that mentions the tuning menu does not say to copy the value into Tunables.java.
+
+After changing a cookbook Java file, copy its regions into docs/cookbook.md with:
+
+    python3 tools/check_docs.py --fix-cookbook
 """
 import pathlib
 import re
 import sys
+import textwrap
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 LIB = ROOT / "library/src/main/java"
 TUT_CODE = ROOT / "examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials"
 TUT_TEST = ROOT / "examples/src/test/java/com/crossbotics/ftchelper/examples/tutorials"
+COOKBOOK_MD = ROOT / "docs/cookbook.md"
+COOKBOOK_CODE = ROOT / "examples/src/main/java/com/crossbotics/ftchelper/examples/cookbook"
+RECIPE_START = re.compile(r"^\s*// recipe: ([a-z0-9-]+)\s*$")
+RECIPE_END = re.compile(r"^\s*// end recipe\s*$")
+RECIPE_MARK = re.compile(r"^<!-- recipe: ([a-z0-9-]+) -->\s*$")
 LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
 problems = []
 
@@ -85,9 +98,102 @@ def check_tutorials():
             problems.append(f"{page.relative_to(ROOT)}: tutorial page has no link to its program")
 
 
+def cookbook_regions():
+    """The marked regions of the cookbook's Java files: name -> (file, line, code without the common indent)."""
+    regions = {}
+    for java in sorted(COOKBOOK_CODE.glob("*.java")):
+        rel = java.relative_to(ROOT)
+        name, start, body = None, 0, []
+        for n, line in enumerate(java.read_text().splitlines(), 1):
+            m = RECIPE_START.match(line)
+            if m:
+                if name:
+                    problems.append(f"{rel}:{n}: recipe {m.group(1)} starts inside recipe {name} (no nesting)")
+                name, start, body = m.group(1), n, []
+            elif RECIPE_END.match(line):
+                if not name:
+                    problems.append(f"{rel}:{n}: '// end recipe' with no '// recipe: name' before it")
+                elif name in regions:
+                    problems.append(f"{rel}:{start}: recipe {name} is also in {regions[name][0]}:{regions[name][1]}")
+                else:
+                    regions[name] = (rel, start, textwrap.dedent("\n".join(body)).strip("\n"))
+                name = None
+            elif name:
+                body.append(line)
+        if name:
+            problems.append(f"{rel}:{start}: recipe {name} has no '// end recipe'")
+    return regions
+
+
+def check_cookbook():
+    if not COOKBOOK_MD.exists():
+        problems.append("docs/cookbook.md is missing")
+        return
+    regions = cookbook_regions()
+    lines = COOKBOOK_MD.read_text().splitlines()
+    shown, pending, i = set(), None, 0
+    while i < len(lines):
+        line = lines[i]
+        m = RECIPE_MARK.match(line)
+        if m:
+            pending = (m.group(1), i + 1)
+        elif line.startswith("```"):
+            lang = line[3:].strip()
+            end = i + 1
+            while end < len(lines) and not lines[end].startswith("```"):
+                end += 1
+            body = "\n".join(lines[i + 1:end]).strip("\n")
+            if lang == "java":
+                if not pending:
+                    problems.append(f"docs/cookbook.md:{i + 1}: java block with no '<!-- recipe: name -->' line before it")
+                elif pending[0] not in regions:
+                    problems.append(f"docs/cookbook.md:{pending[1]}: no recipe {pending[0]} in {COOKBOOK_CODE.relative_to(ROOT)}")
+                else:
+                    rel, start, code = regions[pending[0]]
+                    shown.add(pending[0])
+                    if code != body:
+                        page, java = body.splitlines(), code.splitlines()
+                        k = next((k for k in range(max(len(page), len(java)))
+                                  if k >= len(page) or k >= len(java) or page[k] != java[k]), 0)
+                        problems.append(f"docs/cookbook.md:{i + 2 + k}: recipe {pending[0]} differs from {rel}:{start + 1 + k}"
+                                        f"\n      page: {page[k] if k < len(page) else '(nothing)'}"
+                                        f"\n      java: {java[k] if k < len(java) else '(nothing)'}")
+            elif pending:
+                problems.append(f"docs/cookbook.md:{pending[1]}: recipe {pending[0]} is not followed by a java block")
+            pending, i = None, end
+        elif pending and line.strip():
+            problems.append(f"docs/cookbook.md:{pending[1]}: recipe {pending[0]}: put the marker right before its java block")
+            pending = None
+        i += 1
+    for name in sorted(set(regions) - shown):
+        rel, start, _ = regions[name]
+        problems.append(f"{rel}:{start}: recipe {name} is not shown in docs/cookbook.md")
+    # The code is the record: a recipe that tunes live must say to copy the value back.
+    for section in re.split(r"\n(?=### )", COOKBOOK_MD.read_text()):
+        if "tuning menu" in section and "Tunables.java" not in section:
+            problems.append(f"docs/cookbook.md: '{section.splitlines()[0]}' mentions the tuning menu "
+                            "but not copying the value into Tunables.java")
+
+
+def fix_cookbook():
+    """Rewrites each marked java block of docs/cookbook.md from its Java region."""
+    regions = cookbook_regions()
+    text = COOKBOOK_MD.read_text()
+
+    def fill(m):
+        name = m.group(1)
+        return f"<!-- recipe: {name} -->\n```java\n{regions[name][2]}\n```" if name in regions else m.group(0)
+
+    COOKBOOK_MD.write_text(re.sub(r"<!-- recipe: ([a-z0-9-]+) -->\n```java\n.*?```", fill, text, flags=re.S))
+
+
+if "--fix-cookbook" in sys.argv:
+    fix_cookbook()
+    problems.clear()
 check_links()
 check_classes_documented()
 check_tutorials()
+check_cookbook()
 
 if problems:
     print("Docs check FAILED:")

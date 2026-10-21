@@ -8,6 +8,7 @@ Learn it hands-on: [22 The robot in five files](../tutorials/22-robot-in-five-fi
 examples: [`examples/.../gobildabot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildabot)
 (goBILDA's starter bot), [`flywheelbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot)
 and [`turretbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot).
+Quick answers with code to copy: the [cookbook](../cookbook.md) (driving, buttons, mechanisms, actions, autonomous).
 
 A team's whole robot program in five files a student can read in one sitting. This is the
 recommended way to use the library, and the one the main-track lessons teach: start with lesson 1

@@ -57,6 +57,7 @@ part. You never write it ([From Blocks to Java](../blocks-to-java.md#the-key-ide
 | 9 | [Paths with Pedro Pathing](start/09-paths-with-pedro.md) (optional) | what a path follower does and whether you need one, adding Pedro, lines and curves in your field numbers, Pedro's tuner, the first real run | lesson 8 done, a mecanum drive |
 
 Then: [the button menu](../guides/buttons.md) (every way a button can work),
+[the cookbook](../cookbook.md) (short "how do I...?" answers with code to copy),
 [the autonomous builder](../guides/autonomous-builder.md) (everything autonomous can do),
 [the finders](../guides/finders.md) (measure your numbers), and the [simulator](../guides/simulator.md).
 

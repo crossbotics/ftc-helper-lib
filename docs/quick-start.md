@@ -286,4 +286,5 @@ the robot project already builds:
 
 [Lesson 1: the robot in five files](tutorials/22-robot-in-five-files.md) explains what each of the five
 files is for. Then lessons 2 to 7 of the [main track](tutorials/README.md#start-here-the-main-track)
-add the drive in detail, buttons, mechanisms, actions and the first autonomous.
+add the drive in detail, buttons, mechanisms, actions and the first autonomous. A quick question
+("how do I add a claw?")? The [cookbook](cookbook.md) has short answers with code to copy.

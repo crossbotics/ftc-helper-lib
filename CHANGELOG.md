@@ -4,6 +4,20 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+### Added
+
+- **Cookbook** ([docs/cookbook.md](docs/cookbook.md)): about 70 short "how do I...?" answers in ten
+  topics (driving, buttons and gestures, mechanisms, actions, autonomous, odometry and driveTo, Pedro
+  paths, telemetry, tuning and finders, simulator). Each has a few lines of code to copy, one "why"
+  sentence and links to the lesson and module page. The code lives in compiled Java
+  (`examples/.../cookbook/`, one file per topic, `@Disabled` OpModes); `tools/check_docs.py` fails if a
+  page block and its `// recipe:` region differ (`--fix-cookbook` copies them over), and the simulator
+  test `CookbookTest` INITs and runs every cookbook OpMode. The page starts with a "Coming from Blocks"
+  table and the five files shown whole (from a small cookbook robot), and its scenario example runs as
+  `sim/scenarios/cookbook-intake.sim`. Checked with two persona reviews (a student who never coded, a
+  Blocks student). Linked from the README, the lessons index, the reference, the quick start and the
+  module pages.
+
 ## v0.15.0 - 2026-10-21
 
 Nothing old changes: odometry and the pedro module are new. Only a robot with an `odometry(...)` line

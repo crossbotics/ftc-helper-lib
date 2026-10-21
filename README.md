@@ -97,10 +97,14 @@ replacement for learning.
 5. Lessons 2 to 7 of the [main track](docs/tutorials/README.md#start-here-the-main-track): drive,
    buttons, mechanisms, actions, autonomous, a shooter.
 
+**Have a question like "how do I add a lift?"** The [Cookbook](docs/cookbook.md) has about 70 short
+answers, each with code to copy (the code is built and tested with every change).
+
 Everything else, by what you want to do:
 
 | I want to... | Read |
 | --- | --- |
+| **A quick answer: "how do I...?"** (a few lines of tested code to copy, by topic) | [Cookbook](docs/cookbook.md) |
 | **Install Android Studio and get the robot project** (no Java needed) | [Start from zero](docs/start-from-zero.md) |
 | Know Scratch or Blocks: see where each block went in Java | [From Blocks to Java](docs/blocks-to-java.md) |
 | **Get a robot driving in 30 minutes** (files to copy, the lines to change) | [Quick start](docs/quick-start.md) |

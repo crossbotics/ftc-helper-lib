@@ -33,6 +33,10 @@ A change is not done until all six are done.
 - Tutorial 13's tests (`examples/src/test/...`) run with the build too.
 - `tools/check_docs.py` fails if a link or heading link is broken, if a public library class is
   missing from the module pages, or if a tutorial program is not mentioned in a tutorial page.
+- The [cookbook](cookbook.md) is the exception: every java block in it is copied from a marked region
+  (`// recipe: name` ... `// end recipe`) in `examples/.../cookbook/`, and `tools/check_docs.py` fails
+  if they differ. Change the Java file, then run `python3 tools/check_docs.py --fix-cookbook` to copy
+  the regions into the page. The simulator test `CookbookTest` INITs and runs every cookbook OpMode.
 - Code snippets IN the tutorial pages are not compiled. When you change a program, search its
   tutorial page for the same lines and update them.
 - Before a release, read the changed tutorials once from top to bottom as a student would.

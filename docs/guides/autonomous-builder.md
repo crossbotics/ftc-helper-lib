@@ -4,7 +4,8 @@
 
 **For:** teams with the [robot in five files](../tutorials/22-robot-in-five-files.md) who write
 autonomous modes. **You need:** a tuned drive (the Drive Tuner, [finders](finders.md#drive-tuner-wheel-size-and-strafe-correction));
-the [first autonomous lesson](../tutorials/start/06-first-autonomous.md) is the short version of this page.
+the [first autonomous lesson](../tutorials/start/06-first-autonomous.md) is the short version of this page,
+and the [cookbook](../cookbook.md#autonomous) has short "how do I...?" answers.
 
 An autonomous is a **list of steps, read top to bottom**. You write only the list. The library does
 everything around it: the INIT menu, mirroring for the other alliance, the 30 s timer, keeping time to

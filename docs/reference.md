@@ -11,7 +11,8 @@ always up to date with the version you have. It has a **search box**: type a nam
 `PositionMotor`, `slow`) and jump straight to it.
 
 The module pages ([robot](modules/robot.md), [drive](modules/drive.md), ...) explain how the parts
-fit together, with examples; the reference is for looking one thing up.
+fit together, with examples; the reference is for looking one thing up. For "how do I...?" questions,
+with code to copy, see the [cookbook](cookbook.md).
 
 ## Open it
 
