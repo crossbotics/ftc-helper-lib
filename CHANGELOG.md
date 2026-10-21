@@ -4,6 +4,10 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+## v0.10.2 - 2026-10-20
+
+Nothing old stops working.
+
 ### Added
 
 - Tuning menu: B lists the changed values as lines to copy into `Tunables.java` (also in the robot log);
