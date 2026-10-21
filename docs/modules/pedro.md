@@ -141,6 +141,11 @@ The numbers are the same as for `driveTo` and the start spot: seen from your dri
 inches right of the centre line, **y** inches away from the centre toward the far wall, **heading**
 in degrees, 0 = facing away, counterclockwise + ([the frame](odometry.md#the-frame)).
 
+> **Draw it first:** the [Pedro Path Builder](https://crossbotics.com/ftc-helper/path-builder/) is a web
+> page with the BIOBUZZ field. Draw lines and curves, set the heading and speed of each part, and see
+> the robot's footprint along the path, in red where it hits a field element. It writes the
+> `PedroPath` code (or `driveTo` steps), and reads your code back to change it.
+
 **Make a path:**
 
 | Code | The path |

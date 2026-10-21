@@ -214,6 +214,11 @@ dashed line goes to the control point: the curve bends toward it but does not to
 **Plan your own path on the field map** the same way: check that no part goes through a field element.
 A curve bulges toward its control point, so check the bulge too.
 
+**Or draw it:** the [Pedro Path Builder](https://crossbotics.com/ftc-helper/path-builder/) (a web page, no
+install) shows the BIOBUZZ field like this map. Tap to add parts and drag the points. It draws the
+18 x 18 in robot along the path and marks in red where it hits a field element or a wall. Then it
+writes the `PedroPath` code for you to copy. You can also paste your path into it to change it.
+
 ---
 
 ## 6. Try it in the simulator first
