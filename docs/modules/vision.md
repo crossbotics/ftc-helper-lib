@@ -6,16 +6,22 @@ Package: `com.crossbotics.ftchelper.vision`
 
 Learn it hands-on: [18 Vision aiming](../tutorials/18-vision-aim.md).
 
-Find AprilTags with a USB webcam or a Limelight 3A, and aim at them. Your code talks to ONE
-interface, so switching cameras is a one-line change.
+Find **AprilTags** (square black-and-white field markers, each with an id number) with a USB webcam
+or a Limelight 3A camera, and aim at them. Your code talks to ONE interface (a set of methods every
+camera has), so switching cameras is a one-line change. With the [robot in five files](robot.md#camera),
+its `Camera` part sets this up; start with [lesson 7](../tutorials/start/07-shooter-and-camera.md).
+Use this page to aim in your own code (tutorial 18).
+
+The **bearing** is how far the robot must turn to face a target, in degrees (+ = the target is to the left).
 
 | Class | Use it to |
 | --- | --- |
-| [`TargetSource`](#targetsource) | the interface every camera has |
-| [`WebcamTags`](#webcamtags) | AprilTags with a USB webcam (the SDK's processor; SDK 12 clusters too) |
-| [`LimelightTags`](#limelighttags) | AprilTags with a Limelight 3A |
-| [`TargetObservation`](#targetobservation) | one target: id, name, bearing, distance, picture time |
-| [`AimController`](#aimcontroller) | bearing -> turn power, safely |
+| [`TargetSource`](#targetsource) | talk to any camera the same way (the interface) |
+| [`WebcamTags`](#webcamtags) | find AprilTags with a USB webcam (the SDK's tag finder; SDK 12 clusters too) |
+| [`LimelightTags`](#limelighttags) | find AprilTags with a Limelight 3A |
+| [`TagGroup`](#taggroup) | report a row of tags as one target with a Limelight |
+| [`TargetObservation`](#targetobservation) | read one target: id, name, bearing, distance, picture time |
+| [`AimController`](#aimcontroller) | turn the bearing into a turn power, safely |
 
 ```mermaid
 flowchart LR
@@ -61,7 +67,7 @@ camera.start();                  // in INIT: a webcam needs 1-2 s to start
 | Method | What it does |
 | --- | --- |
 | `.resolution(w, h)` | 640x480 to start; higher sees farther but is slower |
-| `.decimation(d)` | 1 = slow/far, 2 = default, 3 = fast/near |
+| `.decimation(d)` | how much the picture is shrunk before the tag search: 1 = slow/far, 2 = default, 3 = fast/near |
 | `.liveView(on)` | picture on the Robot Controller screen (costs speed) |
 | `.library(lib)` | another tag library (default: this season's, from the SDK) |
 | `.exposure(ms, gain)` | manual exposure; `status()` says if the camera refused |
@@ -80,7 +86,8 @@ LimelightTags camera = LimelightTags.create(hardwareMap, "limelight")
 camera.start();
 ```
 
-Set up an AprilTag (fiducial) pipeline in the Limelight's web page first (http://limelight.local:5801
+A **pipeline** is a saved set of Limelight settings for one kind of target. Set up an AprilTag
+(fiducial) pipeline in the Limelight's web page first (http://limelight.local:5801
 on the robot network). Set the correct tag size there for distances.
 
 | Method | What it does |
@@ -104,14 +111,17 @@ everywhere else. The picture time includes the Limelight's own capture and proce
 
 A Limelight reports each tag on its own. `LimelightTags` also reports each **group** of tags in a row
 as one target, with the same name as the webcam's SDK cluster (BIOBUZZ: the 4 tags under each CELL,
-`TagGroup.biobuzz()`). The aiming point is the middle of the tag row, worked out from the tags in
-view: the two seen tags farthest apart give the row's direction, and each seen tag steps back along
-the row by its place in the group. It needs at least 2 of the group's tags and their 3D poses (set the
-tag size in the pipeline). The webcam's cluster target is the SDK's own aiming point, which is not the
-tag row: the SDK puts it 7.2 in toward the tags' printed top and 5.6 in behind them. For BIOBUZZ (the
-printed bottom faces the field centre) that is about 9 in farther from a robot in front of the CELL
-and 1 in higher than the row, and not the CELL opening. About the same bearing, different distance. Make
-the shot table with the camera the robot uses.
+`TagGroup.biobuzz()`).
+
+**Where it aims:** at the middle of the tag row, worked out from the tags in view. The two seen tags
+farthest apart give the row's direction. Each seen tag then steps back along the row by its place in
+the group. It needs at least 2 of the group's tags and their 3D poses (set the tag size in the pipeline).
+
+**The webcam aims somewhere else.** Its cluster target is the SDK's own aiming point, not the tag row:
+the SDK puts it 7.2 in toward the tags' printed top and 5.6 in behind them. For BIOBUZZ (the printed
+bottom faces the field centre) that is about 9 in farther from a robot in front of the CELL and 1 in
+higher than the row, and not the CELL opening. So the two cameras give about the same bearing but a
+different distance. Make the shot table with the camera the robot uses.
 
 ```java
 // Next season, or your own targets: a name, the tag ids, each tag's place along the row (inches

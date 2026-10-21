@@ -43,6 +43,20 @@ public class TuningTest {
         assertFalse(kp.isChanged());
     }
 
+    // Two robots in one app with the same name: number() keeps the first one's default; fromCode()
+    // (the robot in five files) takes each robot's own code value, unless the value was tuned.
+    @Test public void fromCodeTakesTheCodeValueUnlessTuned() {
+        Tunable a = Tunable.fromCode("Auto/leaveInches", 24, 1);
+        assertEquals(24, Tunable.number("Auto/leaveInches", 99, 1).get(), 1e-12);
+        Tunable b = Tunable.fromCode("Auto/leaveInches", 12, 5);
+        assertTrue(a == b);
+        assertEquals(12, b.get(), 1e-12);
+        assertEquals(12, b.defaultValue(), 1e-12);
+        assertEquals(1, b.step(), 1e-12);
+        b.set(15);
+        assertEquals(15, Tunable.fromCode("Auto/leaveInches", 24, 1).get(), 1e-12);
+    }
+
     @Test public void savedValuesComeBackAfterARestart() {
         Tunable kp = Tunable.number("Lift/kP", 0.004, 0.001);
         kp.set(0.006);

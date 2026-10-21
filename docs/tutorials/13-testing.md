@@ -2,6 +2,8 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**You will build:** six small tests, most of them for the `LiftHeights` class from Tutorial 12, which run on a laptop.
+
 **You will learn:** how to write small automatic tests (JUnit) for your team's code, run them on a
 laptop in seconds, and which parts of robot code can be tested this way.
 
@@ -33,13 +35,15 @@ the subsystem classes. Then the logic is easy to test.
 
 ## 3. Set up TeamCode for tests (once)
 
-Open `TeamCode/build.gradle` and add to `dependencies { ... }`:
+Gradle is the tool that builds your code. `build.gradle` is its settings file.
+
+1. Open `TeamCode/build.gradle` and add to `dependencies { ... }`:
 
 ```groovy
 testImplementation 'junit:junit:4.13.2'
 ```
 
-and inside `android { ... }`:
+2. Inside `android { ... }`, add (so Android classes give default values in tests instead of crashing):
 
 ```groovy
 testOptions {
@@ -47,7 +51,9 @@ testOptions {
 }
 ```
 
-Make the folder `TeamCode/src/test/java/org/firstinspires/ftc/teamcode/` (next to `main`). Sync Gradle.
+3. Make the folder `TeamCode/src/test/java/org/firstinspires/ftc/teamcode/` (next to `main`).
+   Tests live in `test`, so they never go onto the robot.
+4. Sync Gradle (the elephant button in Android Studio).
 
 ## 4. A first test
 
@@ -68,7 +74,7 @@ public class LiftHeightsTest {
 ```
 
 - Each method marked `@Test` is one test.
-- `assertEquals(expected, actual)` fails the test if they differ.
+- `assertEquals(expected, actual)` fails the test if they differ. `assertTrue(x)` fails it if `x` is false.
 - Name tests as sentences about what should be true. When one fails, the name tells you what broke.
 
 A test that protects a safety rule:
@@ -116,7 +122,7 @@ behaves.
 ./gradlew :TeamCode:testDebugUnitTest
 ```
 
-Run them before every commit, and always before an event.
+Run them before every commit (each time you save a version of the code in git), and always before an event.
 
 ## Run it
 

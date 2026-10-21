@@ -2,6 +2,9 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**You will build:** a drive program that shows its loop speed, with buttons to turn bulk reads and debug telemetry on and off.
+The main track does bulk reads for you, so this lesson is only about how it works inside.
+
 **You will learn:** how to measure your loop speed, how bulk reads make it faster, and how to lay
 out telemetry so drivers find what they need.
 
@@ -15,7 +18,8 @@ out telemetry so drivers find what they need.
 ## 1. Why loop speed matters
 
 Everything your robot does happens once per loop: read the sticks, read the sensors, decide, set
-the powers. At 25 loops per second, the robot reacts 40 ms late, PID control gets jumpy, and
+the powers. At 25 loops per second, the robot reacts 40 ms (milliseconds, thousandths of a second) late,
+PID control (the lift holding its height, Tutorial 07) gets jumpy, and
 driving feels mushy. At 100+ it feels instant.
 
 ## 2. Measure it
@@ -34,6 +38,7 @@ Always measure before and after a change. Guessing is usually wrong.
 
 ## 3. Bulk reads
 
+A **hub** is the Control Hub or Expansion Hub the motors and sensors plug into.
 Every time your code reads an encoder or a sensor on a hub, the Control Hub sends a message and
 waits for the answer: about 2 ms each. Four drive encoders plus a lift encoder is about 10 ms per
 loop, just waiting.

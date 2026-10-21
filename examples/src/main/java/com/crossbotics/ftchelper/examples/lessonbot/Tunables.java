@@ -34,7 +34,7 @@ public class Tunables {
 
     /**
      * Lesson 6: the autonomous's distances, in one place. No part reads this section, but its numbers
-     * are in the tuning menu too (TeleOp, PRACTICE, hold GUIDE 1 s): tune, save, run the autonomous,
+     * are in the tuning menu too (TeleOp, PRACTICE, after START hold GUIDE 1 s): tune, save, run the autonomous,
      * then copy the good values back here (INIT lists them): the code is the record.
      */
     public static class Auto {

@@ -2,6 +2,9 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**You will build:** a lift that goes to three heights on buttons and holds there, with gains you can change from the gamepad.
+In the main track, the lift part has its PID built in: [An intake, a lift and a claw](start/04-lift-and-claw.md).
+
 **You will learn:** what a PID controller does, how to use `PidController` to send a lift to a
 height and hold it there, and how to tune it live from the gamepad.
 
@@ -19,8 +22,9 @@ Positive power must move it UP (Tutorial 02, "Run it", step 2). Tutorials 01-03.
 
 ## 1. The idea
 
-You want the lift at 1200 ticks. It is at 400. The **error** is 1200 - 400 = 800.
-A PID controller turns the error into a power, every loop:
+Heights are in encoder **ticks** (the counts from Tutorial 02). You want the lift at 1200 ticks. It is at 400. The **error** is 1200 - 400 = 800.
+A **PID controller** turns the error into a power, every loop. It adds up to four parts. Each part has
+a number you choose, called its **gain**, that sets how strong that part is:
 
 | Part | Gain | What it does | Like... |
 | --- | --- | --- | --- |
@@ -90,7 +94,7 @@ real program.
 
 Do these in order. Switch between targets with A, X and Y after each change and watch.
 
-1. **P only.** Start at kP 0.002. Raise it (D-pad up) until the lift moves quickly to each
+1. **P only.** Start at kP 0.002. Raise it (kP is already selected at the start, so press D-pad up) until the lift moves quickly to each
    height. If it shakes or bounces around the target, go back down one or two steps.
 2. **D.** If it overshoots (goes past and comes back), select kD and raise it from 0.0001
    until the overshoot is gone. Too much D makes it sluggish or buzzy.

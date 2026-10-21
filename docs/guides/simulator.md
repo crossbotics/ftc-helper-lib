@@ -2,10 +2,15 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
-Try OpModes without a robot. Your real OpMode code runs on the laptop; the motors, servos, switches,
-turn sensor (IMU), webcam and the robot on the field are pretend, with simple physics. Good for:
-checking buttons and screens, testing the finders and camera code, learning the controls, catching
-crashes before a meeting. Not for: exact speeds, real shots, real camera pictures.
+**For:** anyone who wants to try robot code without a robot. **You need:** a laptop with Android
+Studio installed (it brings Java and the Android SDK), and the ftc-helper-lib folder.
+
+The simulator runs your real OpMode code on a laptop. The motors, servos, switches, turn sensor (IMU),
+webcam and the robot on the field are pretend, with simple physics. You drive it from a web page.
+
+- **Good for:** checking buttons and screens, testing the finders and camera code, learning the
+  controls, and catching crashes before a meeting.
+- **Not for:** exact speeds, real shots, real camera pictures.
 
 ```mermaid
 flowchart LR
@@ -17,29 +22,34 @@ flowchart LR
 
 ## Start it
 
-From the ftc-helper-lib folder:
+1. Open a terminal in the `ftc-helper-lib` folder (in Android Studio: the **Terminal** tab at the
+   bottom, then `cd ftc-helper-lib` if your robot project holds it). **Why:** the commands only work
+   from that folder.
+2. Run:
 
-```bash
-./gradlew :sim:run
-```
+   ```bash
+   ./gradlew :sim:run
+   ```
 
-Then open **http://localhost:8780** in a browser. Ctrl+C in the terminal stops it. It needs what
-building the library needs: Java and the Android SDK, which Android Studio installs (if Gradle says
-"SDK location not found", see [Contributing](../contributing.md)). Windows, macOS and Linux; a
-Chromebook with Linux turned on.
+   **Why:** `./gradlew` runs Gradle, the tool that builds the code. `:sim:run` is the job to do: the
+   `run` job of the `sim` (simulator) part. It builds the code and starts the simulator.
+3. Open **http://localhost:8780** in a browser. **Why:** that page is your Driver Hub, gamepads and field.
 
-The page fits one laptop screen: the Driver Hub on the left, drawn like the Driver Station app on a Driver Hub
-(the robot battery, gamepad 1 and 2 lit while used; the Auto and TeleOp buttons list the OpModes of that kind;
-one big button that is INIT, then START (play), then STOP; the match time; the telemetry), the field
-in 3D in the middle with the gamepads under it, and the Control Hub on the right in panels (Robot: the field
-from above, pushing the robot, size and pieces, battery; Motors; Servos & switches; Cameras). Each of its
-buttons shows or hides a panel; the panels shown stack in that order, and this browser remembers the
-choice for the next run. The on-screen gamepads look like a real controller (Xbox 360 / Logitech layout, the
-button names the SDK uses); a pressed button gets a white ring. "Hide" on the
-gamepads gives the 3D field more room when you drive with the keyboard, a real controller or a phone. On a
-narrow screen the parts stack and the page scrolls.
+Press Ctrl+C in the terminal to stop it.
 
-Options:
+**What you see:** the Driver Hub on the left, the field in 3D in the middle with the gamepads under it,
+and the Control Hub's panels on the right. Try it: pick an OpMode with the TeleOp button, press INIT,
+then START (the same big button), and drive with the keyboard (set gamepad 1's list to "Keyboard"; left
+stick W A S D, right stick the arrows). [The page](#the-page) explains every part.
+
+**If it does not start:** it needs Java and the Android SDK, which Android Studio installs. If Gradle
+says "SDK location not found", see [Contributing](../contributing.md). It works on Windows, macOS and
+Linux, and on a Chromebook with Linux turned on.
+
+### Options
+
+A `-P` word after the command is an option: `-Pname=value` gives the command a setting (a few, like
+`-Plan`, are just on or off and need no value).
 
 ```bash
 ./gradlew :sim:run -Probot=sim/robots/my-robot.properties -Plan
@@ -62,6 +72,19 @@ TeamCode; with none, it finds `../TeamCode` when the library sits in a robot pro
 | `./gradlew :sim:fit` | fits Characterizer logs ([below](#real-numbers-the-characterizer)) | `-Plog=`, `-Probot=`, `-Pwrite`, `-Pforce` |
 
 ## The page
+
+The page fits one laptop screen. On a narrow screen the parts stack and the page scrolls.
+
+- **Left: the Driver Hub**, drawn like the Driver Station app. It shows the robot battery, gamepad 1
+  and 2 (lit while used), the Auto and TeleOp buttons (each lists the OpModes of that kind), one big
+  button that is INIT, then START (play), then STOP, the match time, and the telemetry.
+- **Middle: the field in 3D**, with the gamepads under it. The on-screen gamepads look like a real
+  controller (Xbox 360 / Logitech layout, with the button names the SDK uses). A pressed button gets a
+  white ring. "Hide" on the gamepads gives the field more room when you drive with the keyboard, a
+  real controller or a phone.
+- **Right: the Control Hub**, in panels: Robot (the field from above, pushing the robot, size and
+  pieces, battery), Motors, Servos & switches, Cameras. Each of its buttons shows or hides a panel.
+  The panels stack in that order, and this browser remembers your choice for the next run.
 
 **Driver Hub** (left): choose an OpMode, then INIT, START, STOP, like the real one. The screen shows
 the telemetry about as wide as a real Driver Hub. OpModes marked "(hidden on robot)" have `@Disabled`:
@@ -120,7 +143,8 @@ works without the internet. Untick "Show" on a slow computer.
 **Quick start:** an AI coding agent can write most of it for you from your robot configuration,
 TeamCode and a tape measure: see the [robot-file skill](robot-file-skill.md).
 
-The robot file describes the pretend robot: every device with the SAME name as the robot
+The robot file is a plain text file of `name = value` lines (a "properties" file). Text after `#` is a
+note for people. It describes the pretend robot: every device with the SAME name as the robot
 configuration, the motors and servos from the parts catalog, the robot's size, where it starts, and the
 season's field. The library's example is `sim/robots/starter.properties`; the four sellers' BIOBUZZ starter bots are in `sim/robots/starter-bot-*.properties` ([starter-bots.md](starter-bots.md)); a team keeps its own in its
 robot project as `simulator/robot.properties` (used automatically, see below).
@@ -504,7 +528,7 @@ dependencies { testImplementation 'com.acmerobotics.dashboard:dashboard:0.4.16' 
 
 ## Scenario files: test without a browser
 
-A scenario file (`.sim`) drives the simulator like a person and checks what happens. Anyone can run
+A scenario file (`.sim`) is a short script: it drives the simulator like a person and checks what happens. Anyone can run
 one, and every scenario also runs as an automatic test (the library's in `sim/scenarios/`, a team's in
 `simulator/scenarios/`):
 

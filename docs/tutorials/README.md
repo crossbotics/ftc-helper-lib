@@ -14,7 +14,8 @@ The tutorials are the "how and why": what to write, in what order, and what to c
 ## Start here: the main track
 
 Want a driving robot first, with no explanations? Do the [Quick start](../quick-start.md) (30 minutes),
-then come back here.
+then come back here. (Lesson 1's file is named `22-robot-in-five-files.md`: the 22 is only a file
+number. It is still the first lesson.)
 
 The shortest way to a whole robot program. You build one robot, the **lesson robot**
 ([`examples/.../lessonbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot)): a
@@ -67,14 +68,15 @@ program.
 | 20 | [Easy TeleOp](20-easy-teleop.md) | `EasyTeleOp`, the layer under `Controls.java` (also used by the [starter kit](../starter-kit.md)) | drivetrain + lift + claw |
 | 21 | [Find your numbers](21-finders.md) | the finders: servo ends, lift limits, flywheel gains, wheel size, camera offset, shot table | the parts to measure |
 
-Time: about 30-60 minutes each, more for 07, 09 and 12 (tuning takes time).
+Time: about 30-60 minutes each, more for 07, 09 and 12 (tuning takes time). New to Java? Do 01 first:
+it explains imports, fields and lambdas (`() -> ...`), which every lesson uses.
 
 ## Before you start
 
 1. The library is in your robot project: [Add it to a project](../01-add-to-project.md).
 2. Read [Signs and units](../conventions.md) once. It saves hours of "why does it turn the wrong way".
-3. Have the robot configuration on the Driver Station match the names in the tutorial,
-   or change the names in the code. Each tutorial lists the names it uses.
+3. Have the robot configuration on the Driver Station (the list of devices and their names) match
+   the names in the tutorial, or change the names in the code. Each tutorial lists the names it uses.
 
 ## How to use a tutorial program
 
@@ -82,7 +84,8 @@ The programs are in the library at
 [`examples/.../examples/tutorials/`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials).
 
 1. Copy the file into `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/`.
-2. Change its first line to `package org.firstinspires.ftc.teamcode;`
+2. Change its first line to `package org.firstinspires.ftc.teamcode;` (the `package` line must
+   match the folder the file is in)
    (tutorial 12's files go in a folder `robot` there, with `package org.firstinspires.ftc.teamcode.robot;`,
    and also need `RobotSettings`).
 3. Delete the `@Disabled` line, so it shows on the Driver Station.

@@ -6,15 +6,20 @@ Package: `com.crossbotics.ftchelper.launcher`
 
 Learn it hands-on: [17 Launcher](../tutorials/17-launcher.md), [18 Vision aiming](../tutorials/18-vision-aim.md).
 
-Parts for a robot that shoots game pieces. Each part works alone; the `Launcher` joins them.
+Parts for a robot that shoots game pieces: a **flywheel** (a fast-spinning wheel that throws the
+piece), a **hood** (a curved plate a servo tilts to set the shot angle), a **feeder** (pushes one
+piece into the flywheel) and a **turret** (turns the shooter to aim). Each part works alone; the
+`Launcher` joins them. With the [robot in five files](robot.md#launcher), its `Launcher` is
+built on these, so start there ([lesson 7](../tutorials/start/07-shooter-and-camera.md)). Use this
+page to build a shooter by hand (tutorial 17). Speeds are in **RPM** (turns per minute).
 
 | Class | Use it to |
 | --- | --- |
 | [`Flywheel`](#flywheel) | hold a speed in RPM, say "ready", notice shots |
-| [`ShotTable`](#shottable) | distance -> RPM and hood angle, from a few measured shots |
+| [`ShotTable`](#shottable) | look up the RPM and hood angle for a distance, from a few measured shots |
 | [`Feeder`](#feeder) | push ONE piece into the flywheel (an interface) |
-| [`MotorFeeder`](#motorfeeder) | a roller/belt feeder |
-| [`ServoFeeder`](#servofeeder) | a kicker-arm feeder |
+| [`MotorFeeder`](#motorfeeder) | run a roller or belt feeder |
+| [`ServoFeeder`](#servofeeder) | run a kicker-arm feeder |
 | [`Turret`](#turret) | aim in degrees, never past its limits, hold a field direction |
 | [`Launcher`](#launcher) | spin up, wait until EVERYTHING is ready, feed, repeat |
 
@@ -70,7 +75,7 @@ Flywheel flywheel = Flywheel.create(hardwareMap, "flywheel")
 | `.reversed()` | spin the other way |
 | `.follower(hardwareMap, name, reversed)` | a second motor on the same wheel (same speed command). **It needs its own encoder cable.** If its encoder reads nothing while the wheel spins, it is switched off with a warning. It gets the `pidf` gains whether you call `pidf` before or after it |
 | `.countsPerRev(c)` | counts per FLYWHEEL turn: bare motor 1:1 = 28; with gears multiply by motor turns per wheel turn; a shaft encoder on this motor's port = its counts (REV Through Bore 8192) |
-| `.pidf(p, i, d, f)` | the hub's speed gains. Start 10, 3, 0, 12; tune F first (with a charged battery) |
+| `.pidf(p, i, d, f)` | the hub's speed gains (PID plus F, a push that grows with the speed; see [PID](control.md#pidcontroller)). Start 10, 3, 0, 12; tune F first (with a charged battery) |
 | `.tolerance(rpm)`, `.settleTime(s)` | when "ready" |
 | `.maxRpm(r)` | highest speed allowed |
 | `.shotDrop(rpm)` | a drop this big after ready = a shot was seen |
@@ -78,8 +83,8 @@ Flywheel flywheel = Flywheel.create(hardwareMap, "flywheel")
 | `isReady()`, `getRpm()`, `getTargetRpm()`, `getMaxRpm()`, `getShotCount()`, `getFault()` | read |
 | `spinUpStep(rpm, timeout)` | autonomous step |
 
-**Check your speed reading** before trusting it: the RPM on telemetry must match a tachometer or
-a slow-motion video. Very high count rates (a fine encoder at high speed) can read wrong.
+**Check your speed reading** before trusting it: the RPM on telemetry must match a tachometer (a
+tool that measures spin speed) or a slow-motion video. Very high count rates (a fine encoder at high speed) can read wrong.
 
 ## ShotTable
 
@@ -108,7 +113,7 @@ MotorFeeder feeder = MotorFeeder.create(hardwareMap, "feeder")
         .power(1.0).feedTime(0.25)        // run 0.25 s per piece
         // optional: stop when a sensor sees the piece leave. beam = a beam-break sensor
         // (a DigitalChannel); "!" = not: it reads false while something blocks the beam
-        .stopWhen(() -> !beam.getState()) // optional: stop when a sensor sees the piece leave
+        .stopWhen(() -> !beam.getState())
         .jamDetection(60, 0.2);           // optional (encoder cable)
 ```
 
@@ -166,7 +171,7 @@ picks the one inside the limits closest to where it is, and turns there without 
 so cables never wind up. A direction outside the limits goes to the nearest limit and
 `isOutOfRange()` is true.
 
-**Homing:** with a switch, aiming waits until the switch was seen once (`home(direction)`). If the
+**Homing** means finding a known angle by turning until a switch closes. With a switch, aiming waits until the switch was seen once (`home(direction)`). If the
 switch is not found within `homingTimeout`, homing stops and `getFault()` says so (a broken wire never
 spins the turret forever). Without a switch, the turret trusts `startAngle` (default 0): turn the robot
 on with the turret facing forward.

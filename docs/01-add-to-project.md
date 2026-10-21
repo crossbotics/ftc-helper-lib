@@ -2,8 +2,11 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
-This page adds ftc-helper-lib to an FTC robot project in Android Studio. It takes about 5 minutes.
-You do it **once per robot project**. After that, everyone who clones the project gets the library too.
+This page adds ftc-helper-lib to an FTC robot project in Android Studio. It takes about 10 minutes.
+You do it **once per robot project**. After that, everyone who clones the project (copies it from
+GitHub to their computer) gets the library too.
+
+**Before this:** nothing. **After this:** the [Quick start](quick-start.md).
 
 ## How it works (the short version)
 
@@ -11,6 +14,7 @@ You do it **once per robot project**. After that, everyone who clones the projec
 - We put ftc-helper-lib inside it as a **git submodule**: a repository inside a repository.
   Your project remembers exactly which version of the library it uses.
 - Then we tell Gradle (the tool that builds the robot app) that `TeamCode` uses the library.
+  `TeamCode` is the folder where your team's robot code lives.
 
 Why a submodule? It works at events with no internet, you can read the library code right
 in Android Studio, and everyone on the team gets the same version.
@@ -25,13 +29,13 @@ in Android Studio, and everyone on the team gets the same version.
 ## Step 1: Add the submodule
 
 Open the **Terminal** tab in Android Studio. It starts in the project folder (the one that has
-`TeamCode` and `FtcRobotController` in it). Run:
+`TeamCode` and `FtcRobotController` in it). Type this line and press Enter:
 
 ```bash
 git submodule add https://github.com/crossbotics/ftc-helper-lib.git ftc-helper-lib
 ```
 
-You now have a new folder, `ftc-helper-lib`, next to `TeamCode`.
+It downloads the library from GitHub. You now have a new folder, `ftc-helper-lib`, next to `TeamCode`.
 
 > Want a fixed version instead of the newest? See
 > [Use a specific version](02-keep-up-to-date.md#use-a-specific-version) after this page.
@@ -52,11 +56,14 @@ include ':ftc-helper-lib'
 project(':ftc-helper-lib').projectDir = new File(rootDir, 'ftc-helper-lib/library')
 ```
 
-The second line says "the module's code is in the `library` folder inside the submodule".
+The first line adds the library to the build. The second line says "its code is in the `library`
+folder inside the submodule". **Why:** the submodule also holds examples, docs and the simulator,
+and the robot app needs only the library part.
 
 ## Step 3: Let TeamCode use the library
 
-Open `TeamCode/build.gradle`. Find the `dependencies { ... }` block at the bottom. Add one line inside it:
+Open `TeamCode/build.gradle`. Find the `dependencies { ... }` block at the bottom. Add one line inside it.
+**Why:** step 2 told Gradle the library exists; this line says TeamCode may use it.
 
 ```groovy
 dependencies {
@@ -69,11 +76,13 @@ dependencies {
 
 Click **Sync Now** in the yellow bar at the top of the editor
 (or **File > Sync Project with Gradle Files**). Wait until it finishes with no red errors.
+**Why:** Android Studio reads the Gradle files again and finds the library.
 
 ## Step 5: Check that it works
 
 Make a new Java file in `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/` named
-`HelperCheck.java`:
+`HelperCheck.java`, and paste this into it. The `import com.crossbotics...` line uses a class from
+the library, so the file only builds if the library is in:
 
 ```java
 package org.firstinspires.ftc.teamcode;
@@ -98,7 +107,9 @@ You can run "Helper Check" on the robot: it shows `Library works : true`. Then d
 
 ## Step 6: Commit
 
-The submodule is part of your project now, so commit it like any change:
+The submodule is part of your project now, so commit it like any change. (A **commit** saves a
+snapshot of your files in git's history.) **Why:** teammates get the library only after you commit
+and push it.
 
 ```bash
 git add .gitmodules ftc-helper-lib settings.gradle TeamCode/build.gradle

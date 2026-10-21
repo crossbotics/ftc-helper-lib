@@ -6,14 +6,16 @@ Package: `com.crossbotics.ftchelper.util`
 
 Learn it hands-on: [06 A fast, clear loop](../tutorials/06-fast-clear-loop.md), [10 Autonomous with mechanisms](../tutorials/10-auto-with-mechanisms.md), [13 Testing](../tutorials/13-testing.md).
 
-Small helpers used everywhere.
+Small helpers used everywhere: number math, angle math, a loop timer, and a way to pass the robot's
+position from autonomous to TeleOp. The rest of the library uses them, and you can use them in any
+code you write. Reach for them when you need one; there is nothing to set up.
 
 | Class | Use it to |
 | --- | --- |
-| [`MathUtil`](#mathutil) | clamp, deadband, lerp, compare, normalize |
+| [`MathUtil`](#mathutil) | keep a number in a range, ignore tiny values, blend two numbers, compare, scale down together |
 | [`Angles`](#angles) | do math with headings (the -180/180 seam) |
 | [`LoopTimer`](#looptimer) | see how fast your loop runs |
-| [`FieldPose`](#fieldpose) | hold an x, y, heading |
+| [`FieldPose`](#fieldpose) | hold a pose: x, y and heading |
 | [`PoseStore`](#posestore) | pass the robot's pose from Autonomous to TeleOp |
 | [`BackgroundWorker`](#backgroundworker) | run slow jobs (network, camera settings) without stopping the loop |
 
@@ -23,10 +25,10 @@ Small helpers used everywhere.
 
 | Method | What it does | Example |
 | --- | --- | --- |
-| `clamp(value, min, max)` | keeps a number inside a range. NaN gives 0 (a safe value for a motor). Also works with `int`. | `clamp(1.3, -1, 1)` = 1.0 |
+| `clamp(value, min, max)` | keeps a number inside a range. NaN ("not a number", e.g. 0 / 0) gives 0, a safe value for a motor. Also works with `int`. | `clamp(1.3, -1, 1)` = 1.0 |
 | `deadband(value, band)` | values smaller than `band` become 0 | `deadband(0.03, 0.05)` = 0 |
 | `deadbandScaled(value, band)` | same, but starts again from 0 at the band edge, so there is no jump | `deadbandScaled(0.55, 0.1)` = 0.5 |
-| `lerp(a, b, t)` | the number part of the way from a to b | `lerp(0, 10, 0.25)` = 2.5 |
+| `lerp(a, b, t)` | the number `t` of the way from a to b (0 = a, 1 = b, 0.25 = a quarter of the way) | `lerp(0, 10, 0.25)` = 2.5 |
 | `isNear(a, b, tolerance)` | true if a and b are within tolerance | `isNear(100, 103, 5)` = true |
 | `normalize(values, limit)` | scales an array down together so none is over `limit` | `[2, 1, -1, 0]`, 1 gives `[1, 0.5, -0.5, 0]` |
 
@@ -100,7 +102,8 @@ if (start != null) { ... use it ... }    // always check for null first
 
 ## BackgroundWorker
 
-Runs slow jobs on its own thread, so the robot's loop never waits. The library uses it for the
+Runs slow jobs on its own **thread** (a second line of work that runs at the same time as your
+loop), so the robot's loop never waits. The library uses it for the
 Limelight's network requests and webcam settings. Guide: [Non-blocking code](../guides/non-blocking.md).
 
 ```java
@@ -112,7 +115,7 @@ worker.shutdown();                                                // in stop()
 
 | Method | What it does |
 | --- | --- |
-| `new BackgroundWorker(name)` | starts the thread (a daemon) |
+| `new BackgroundWorker(name)` | starts the thread (a daemon: it never keeps the app from closing) |
 | `submit(job)` | queue a job |
 | `submitLatest(key, job)` | queue a job, replacing a waiting one with the same key (only the newest runs) |
 | `queued()`, `getLastError()`, `isRunning()` | read; a job that throws never crashes the robot |

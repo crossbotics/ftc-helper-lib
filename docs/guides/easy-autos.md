@@ -2,10 +2,12 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
-How to make an autonomous in a few minutes, and how to make MANY of them without copying code.
+**For:** teams that use `EasyAuto` and the [starter kit](../starter-kit.md). With a `Robot.java` (the
+robot in five files), use [the autonomous builder](autonomous-builder.md) instead. **You need:** a
+drive that works in TeleOp and has been tuned ([tutorial 09](../tutorials/09-first-auto.md)).
 
-This page is for `EasyAuto`, the layer under the robot-in-five-files autonomous. With a `Robot.java`,
-write autonomous modes with the builder instead: [The autonomous builder](autonomous-builder.md).
+How to make an autonomous in a few minutes, and how to make MANY of them without copying code.
+`EasyAuto` is the layer under the robot-in-five-files autonomous.
 
 ## The idea
 
@@ -45,7 +47,7 @@ That is a complete, safe autonomous: menu, delay, mirroring, timer, stop, TeleOp
 ## Many autos, no copied code
 
 Put the robot setup in ONE base class (`StarterAuto` in the [starter kit](../starter-kit.md)).
-Each autonomous then only lists its steps:
+Each autonomous `extends` it: it gets all of that setup for free and only lists its steps:
 
 ```mermaid
 flowchart TB
@@ -61,7 +63,7 @@ flowchart TB
 | --- | --- |
 | Driving | `move`, `turn`, `turnTo`, `moveWithTurn`, `rememberHeading`, `returnToHeading` |
 | Mechanisms | `step(label, lift.goToStep("HIGH"))`, `lift.startStep(...)`, `claw.goToStep(...)`, `intake.inStep()`, `launcher.shootStep(3)`, `turret.aimStep(...)` |
-| Simple code | `run(label, () -> ...)` |
+| Simple code | `run(label, () -> ...)` (`() -> ...` is a lambda: a small piece of code to run later) |
 | Waiting | `waitFor(label, seconds)`, `waitUntil(label, condition, timeout)` |
 | Park | `thenPark()` and the steps after it |
 
@@ -73,6 +75,8 @@ r.step("Lift starts up", lift.startStep("HIGH"))      // does not wait
  .move("Drive to goal", 24, 0, 0.6)                   // lift rises meanwhile
  .waitUntil("Lift is up", lift::isAtTarget, 2.0);     // only waits if it is not there yet
 ```
+
+`lift::isAtTarget` is a method reference: the method itself, which the wait calls every loop.
 
 ## Choices in INIT
 

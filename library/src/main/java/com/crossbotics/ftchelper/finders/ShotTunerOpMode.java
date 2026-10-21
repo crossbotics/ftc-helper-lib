@@ -39,7 +39,7 @@ import com.crossbotics.ftchelper.vision.TargetSource;
  * KEEP PEOPLE OUT OF THE LINE OF FIRE; eye protection on.
  *
  * <p>It shows the table twice: as {@code ShotTable} code and, for the robot in five files, as the
- * line for {@code Tunables.java}: {@code Tunables.Launcher.speedByDistance = {{48, 2550}, {72, 2900}};}
+ * line for {@code Tunables.java}: {@code public static double[][] speedByDistance = {{48, 2550}, {72, 2900}};   // in Tunables.Launcher}
  *
  * <p>In your TeamCode, the robot in five files (next to Robot.java). It uses the robot's launcher,
  * camera and drive, with their numbers from Tunables.java:

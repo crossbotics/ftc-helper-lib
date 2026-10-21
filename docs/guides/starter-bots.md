@@ -2,6 +2,9 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**For:** anyone who wants a ready robot to try in the [simulator](simulator.md), or an example robot
+file. **You need:** the simulator running ([Start it](simulator.md#start-it)).
+
 Each seller in FTC (REV, goBILDA, AndyMark, Studica) gives away the design of a simple "starter bot" for
 the season. For 2026-27 (BIOBUZZ) we wrote one robot file for each, so the simulator has four real,
 different robots to test with. They are also worked examples for the robot-file skill
@@ -16,11 +19,15 @@ different robots to test with. They are also worked examples for the robot-file 
 
 All four fit the 18 in start cube and 18 x 24 x 29 in at full reach. Each has a scenario in
 `sim/scenarios/starter-bot-*.sim` (it loads the robot with a `robot ../robots/...` line, checks the size
-rules, rolls the robot forward by hand and checks for no error), so they run in the automatic tests:
+rules, rolls the robot forward by hand and checks for no error), so they run in the automatic tests.
+
+To drive one in the simulator (`-Probot=` picks the robot file):
 
 ```bash
 ./gradlew :sim:run -Probot=sim/robots/starter-bot-gobilda.properties
 ```
+
+To run its scenario (`-Pfile=` picks the scenario file):
 
 ```bash
 ./gradlew :sim:scenario -Pfile=sim/scenarios/starter-bot-gobilda.sim

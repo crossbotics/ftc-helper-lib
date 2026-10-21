@@ -2,12 +2,14 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
-Find your problem below. Each answer says what is wrong and what to do.
+Find your problem below. Each answer says what is wrong and what to do. Tip: copy the exact error
+text and search this page for it (Ctrl+F, or Cmd+F on a Mac).
 
 ## Build problems
 
 **`Project directory '.../ftc-helper-lib/library' does not exist`**
-The submodule folder is empty (the project was cloned without it). Run in the Terminal tab:
+The submodule folder is empty: the project was cloned (copied from GitHub) without the library in
+it. Run in the Terminal tab:
 ```bash
 git submodule update --init
 ```
@@ -17,7 +19,8 @@ Gradle does not know about the library yet. Check steps 2 and 3 in
 [Add it to a project](01-add-to-project.md), then **File > Sync Project with Gradle Files**.
 
 **`Plugin [id: 'com.android.library'] was not found`**
-Your project's top `build.gradle` must list the Android library plugin. Every FtcRobotController
+Your project's top `build.gradle` (the one in the project folder, not in TeamCode) must list the
+Android library plugin. Every FtcRobotController
 project does (`id 'com.android.library' version '...' apply false`). If yours is very old, update the SDK.
 
 **Errors in the library after an FTC SDK update**
@@ -30,14 +33,14 @@ The name in code and the name in the Driver Station configuration differ. The me
 names that do exist. Fix the spelling, or pick the right configuration on the Driver Station.
 
 **`AutoDriveConfig.calibrationConfirmed is false`**, or **"AUTONOMOUS IS OFF: the drive is not tuned yet"** (EasyAuto, Auto)
-On purpose. Tune `AutoDrive`, then set it to `true`: [Tune AutoDrive](modules/drive.md#tune-autodrive). With the
+On purpose: a robot with untuned numbers can drive much too far. Tune `AutoDrive`, then set it to `true`: [Tune AutoDrive](modules/drive.md#tune-autodrive). With the
 robot in five files: the Drive Tuner, then `Tunables.Drive.calibrated = true`.
 
 ## Warnings on the Driver Station (`!! ...` at the top)
 
 | Warning | Meaning |
 | --- | --- |
-| `lift: push it DOWN to the switch to home it` | homing: drive it down once |
+| `lift: push it DOWN to the switch to home it` | homing (finding where 0 is): drive it down to the switch once |
 | `lift: no switch "lift_bottom" in the configuration` | the switch name is wrong or missing: it runs without the switch |
 | `claw: no position called "OPNE"` | a typo in a position name: the command was ignored |
 | `homing failed: switch not found` (turret) | the switch never closed: wire, magnet gap, or the wrong direction in `home(...)` |
@@ -68,14 +71,16 @@ Controls.java TeleOp, hold BACK for 1 s: a tap pauses the robot).
 A motor direction or a motor name is wrong. [Check motor directions](modules/drive.md#check-motor-directions).
 
 **Pushing the stick up drives backward**
-You forgot the minus: forward is `-gamepad1.left_stick_y`.
+You forgot the minus: forward is `-gamepad1.left_stick_y`. (The gamepad reports stick up as a
+negative number.) With the robot in five files, every direction is flipped: reverse the other side ([Lesson 2](tutorials/start/02-drive.md#7-check-the-motor-directions)).
 
 **Field-centric goes the wrong way**
 1. The IMU orientation (logo/USB) does not match the hub on the robot ([ImuSetup](modules/hardware.md#imusetup)).
 2. The heading was not 0 while facing away from the driver. Point the robot away and press your reset button.
 
 **A button action runs over and over**
-You used `bindHold` where you wanted `bindPress`.
+You used `bindHold` (runs every loop while held) where you wanted `bindPress` (runs once per press).
+In `Controls.java`: `hold(...)` instead of `press(...)`.
 
 **A button does nothing**
 - Is `controls.update(gamepad1, gamepad2)` in the loop?
@@ -83,8 +88,9 @@ You used `bindHold` where you wanted `bindPress`.
 - Was the button held through START? After `ignoreHeldButtons`, let it go and press again.
 
 **The robot freezes when I press a button**
-An action has a `sleep()` or a waiting loop. Actions must be quick. Set a target or a state
-variable instead and let the loop do the work.
+An action has a `sleep()` or a waiting loop. Actions must be quick. **Why:** the program does one
+thing at a time, so while it waits, nothing else runs (not even driving). Set a target or a state
+variable instead and let the loop do the work ([Non-blocking code](guides/non-blocking.md)).
 
 **A lift only goes down, and slowly, at the start**
 It is not homed yet. Push it down until the lower switch is pressed; then it works normally.
@@ -110,7 +116,7 @@ Overshoot: raise `turnKd` or lower `turnKp`. Stop short: raise `turnKp` a little
 **AutoDrive stops early with "robot stuck"**
 It was blocked, or it moved too slowly. If it was not blocked, raise `moveMinPower` or `stallTimeSec`.
 
-**The loop is slow (telemetry shows under ~30 Hz)**
+**The loop is slow (telemetry shows under ~30 Hz, that is, under 30 loops per second)**
 Turn on [bulk reads](modules/hardware.md#bulkreads), send fewer telemetry lines, and remove any `sleep()`.
 
 ## Still stuck?

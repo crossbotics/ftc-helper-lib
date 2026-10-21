@@ -7,12 +7,15 @@ Package: `com.crossbotics.ftchelper.safety`
 Learn it hands-on: [08 A lift that cannot hurt itself](../tutorials/08-safe-lift.md).
 
 Keeps lifts, slides, arms and turrets inside their safe range, so code can never drive them
-into the frame, snap a string, or stall a motor at the end of travel.
+into the frame, snap a string, or stall a motor at the end of travel (stall: the motor pushes but
+cannot turn, and gets hot). [`PositionMotor`](mechanism.md#positionmotor) and the
+[robot in five files](robot.md#lift) use it for you. Use it directly when you control a motor by
+hand. Start with tutorial 08.
 
 | Class | Use it to |
 | --- | --- |
-| [`SafeMotor`](#safemotor) | a motor with soft limits, limit switches, homing and a slow zone |
-| [`SoftLimits`](#softlimits) | the limit rule by itself (no hardware) |
+| [`SafeMotor`](#safemotor) | run a motor with soft limits, limit switches, homing and a slow zone (each explained [below](#what-it-does-each-loop)) |
+| [`SoftLimits`](#softlimits) | use the limit rule by itself (no hardware) |
 | [`JamDetector`](#jamdetector) | tell when a motor is jammed (too slow or too much current, for a while) |
 
 Easier: [`PositionMotor`](mechanism.md#positionmotor) wraps `SafeMotor` with PID, named positions and steps.
@@ -47,7 +50,7 @@ lift.stop();                                        // no power once the OpMode 
 
 ### What it does each loop
 
-1. **Soft limits:** power that would push past `min` or `max` becomes 0.
+1. **Soft limits** (limits in software, from the encoder count): power that would push past `min` or `max` becomes 0.
    Power that moves away from the limit always works, so you can never get "stuck at the top".
 2. **Limit switches:** a pressed switch stops power toward it, whatever the encoder says.
 3. **Homing:** the moment the lower switch closes, the position becomes 0. This fixes encoder drift

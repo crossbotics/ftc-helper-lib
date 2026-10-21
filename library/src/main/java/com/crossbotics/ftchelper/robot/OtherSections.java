@@ -24,6 +24,9 @@ final class OtherSections {
     private static final class Link {
         final Field field;
         final Tunable tunable;
+        // The value last written into the field (NaN: never). Written again only when the tunable
+        // changes, so code that sets the field itself keeps its value until someone tunes it.
+        double written = Double.NaN;
 
         Link(Field field, Tunable tunable) {
             this.field = field;
@@ -51,9 +54,9 @@ final class OtherSections {
                     f.setAccessible(true);
                     double code = ((Number) f.get(null)).doubleValue();
                     boolean whole = f.getType() == int.class || f.getType() == long.class;
-                    // The code value is the default. (Made once per app run: a second robot gets the
-                    // same tunable back, with the first code value as its default.)
-                    Tunable t = Tunable.number(section.getSimpleName() + "/" + f.getName(), code, stepFor(code, whole));
+                    // The code value is the default. (Made once per app run; a second robot with
+                    // another code value gets it, unless the value was tuned.)
+                    Tunable t = Tunable.fromCode(section.getSimpleName() + "/" + f.getName(), code, stepFor(code, whole));
                     links.add(new Link(f, t));
                 } catch (IllegalAccessException | SecurityException | ClassCastException e) {
                     // A field the library cannot read stays as written.
@@ -68,10 +71,15 @@ final class OtherSections {
         return links.size();
     }
 
-    /** Writes each tunable's value into its field. Quick (no file): call it every loop. */
+    /**
+     * Writes each tunable's value into its field when the value changed (tuned in the menu, or a saved
+     * value at the start). Quick (no file): call it every loop.
+     */
     void copy() {
         for (Link l : links) {
             double v = l.tunable.get();
+            if (v == l.written) continue;
+            l.written = v;
             try {
                 Class<?> type = l.field.getType();
                 if (type == double.class) l.field.setDouble(null, v);

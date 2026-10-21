@@ -2,8 +2,11 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**You will build:** only small OpModes that start the library's ready-made finders, which measure your robot and print the code lines to copy.
+The main track uses the same finders: [An intake, a lift and a claw](start/04-lift-and-claw.md).
+
 **You will learn:** how to measure the numbers your code needs (servo ends, lift limits, flywheel
-gains, wheel size, camera offset, shot table) with the finders, and how to move the results into
+gains, wheel size, camera offset, shot table) with the **finders** (library OpModes that measure one kind of number each), and how to move the results into
 your code.
 
 **You need:** a robot with the parts you want to measure. Tutorials 14 (mechanisms) and 19 (Hardware Check).
@@ -45,7 +48,7 @@ the steps.
    sits now (D-pad; nothing moves yet), press A: it moves there.
 2. Nudge it with the D-pad until the claw is fully open without straining. Press **X**.
 3. Nudge it to fully closed (on a game piece). Press **B**.
-4. Nudge it to "open just enough" and press **A** (saved as P1).
+4. Nudge it to "open just enough" and press **A** (saved as P1, "position 1").
 
 The screen shows:
 
@@ -82,7 +85,8 @@ are the numbers it uses.
 ## 5. The order
 
 Hardware Check, then Servo and Motor finders, then Flywheel, then Drive Tuner, then Aim Tuner, then
-Shot Tuner. Each one builds on the one before: the [guide](../guides/finders.md) explains each step.
+Shot Tuner. Each one builds on the one before (the Shot Tuner, for example, needs a flywheel that
+holds its speed and a camera that aims straight): the [guide](../guides/finders.md) explains each step.
 
 ## If something goes wrong
 

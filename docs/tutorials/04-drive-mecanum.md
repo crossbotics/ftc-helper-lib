@@ -2,6 +2,9 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**You will build:** a TeleOp that drives a mecanum robot, with slow mode, field-centric driving and reverse drive.
+The main track gives you all of this in one line: [Drive](start/02-drive.md).
+
 **You will learn:** how to set up a mecanum drivetrain, check its motor directions, make the
 sticks feel good, add a slow mode, switch to field-centric driving, and drive "backwards".
 
@@ -70,6 +73,8 @@ double strafe  = StickShaping.shape(gamepad1.left_stick_x, 0.05, 2);
 double turn    = StickShaping.shape(gamepad1.right_stick_x, 0.05, 2);
 ```
 
+`StickShaping.shape(value, deadband, exponent)` changes the raw stick number before it goes to the motors:
+
 - **Deadband 0.05:** sticks rarely rest at exactly 0. Without this, the robot creeps.
 - **Exponent 2:** half stick gives a quarter of the power. Small moves become precise; a full
   push is still full power. Drivers usually love it. Try 1 (straight) and 3 (very soft) and pick.
@@ -90,7 +95,8 @@ With **robot-centric** driving (what we have so far), "stick up" means "where th
 When the robot faces the driver, everything feels backwards.
 
 With **field-centric** driving, "stick up" always means "away from the driver", whichever way
-the robot faces. It needs the IMU to know which way the robot faces:
+the robot faces. It needs the **IMU** to know which way the robot faces. The IMU is a sensor inside the Control Hub
+that measures turning. The direction the robot faces is its **heading**, in degrees.
 
 ```java
 IMU imu = ImuSetup.get(hardwareMap, "imu",
@@ -111,7 +117,8 @@ The heading is 0 where the robot pointed when the IMU started. Give the driver a
 .bindPress(Pad.G1, Btn.BACK, imu::resetYaw)
 ```
 
-`imu::resetYaw` is a short way to write `() -> imu.resetYaw()`.
+`imu::resetYaw` (two colons) is a short way to write the lambda `() -> imu.resetYaw()`.
+Yaw is the IMU's word for heading.
 
 The program toggles between the two styles with Y, with rumble confirmation (Tutorial 03).
 

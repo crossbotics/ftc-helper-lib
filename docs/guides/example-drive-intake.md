@@ -2,6 +2,10 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**For:** students who have driven a robot with the library and want a full TeleOp to copy. **You
+need:** lessons [2 (drive)](../tutorials/start/02-drive.md) and [3 (buttons)](../tutorials/start/03-buttons.md),
+or the same knowledge.
+
 A complete TeleOp for a common robot: a mecanum drive with a slow-mode toggle, and an intake that
 is **ON from the start**, can be **stopped and started**, and **reversed while a button is held**.
 
@@ -30,6 +34,9 @@ flowchart TB
     Q2 -- yes --> IN["intake.in()"]
     Q2 -- no --> STOP["intake.stop()"]
 ```
+
+In the code below, `() -> ...` is a lambda: a small piece of code handed to a button, to run when it is
+pressed (or, with `bindRelease`, let go).
 
 ```java
 private boolean intakeOn = true;          // the intake starts ON

@@ -6,11 +6,15 @@ Package: `com.crossbotics.ftchelper.core`
 
 Learn it hands-on: [12 Organize a whole robot](../tutorials/12-robot-structure.md), [14 Mechanisms](../tutorials/14-mechanisms.md), [15 Telemetry, profiles and tuning](../tutorials/15-telemetry-profiles-tuning.md).
 
-The small pieces every other part of the library is built on.
+The small pieces every other part of the library is built on. You meet them when you write your
+own mechanism class (`Subsystem`), switch between practice and competition settings (`Profile`), or
+describe your drivetrain once for every program (`RobotConfig`). With the
+[robot in five files](robot.md) you rarely use them by name. To see how they fit together, start
+with tutorial 12.
 
 | Class | Use it to |
 | --- | --- |
-| [`Subsystem`](#subsystem) | make any mechanism "updatable, stoppable, showable" |
+| [`Subsystem`](#subsystem) | give any mechanism the same shape: update it every loop, stop it, show it on the screen |
 | [`Subsystems`](#subsystems) | update, stop and show a group of mechanisms together |
 | [`Profile`](#profile) | behave differently in PRACTICE and COMPETITION |
 | [`SettingsFile`](#settingsfile) | keep small settings on the Control Hub between restarts |
@@ -74,7 +78,7 @@ robot.stop();                 // stops each, even if one throws an error
 | Method | What it does |
 | --- | --- |
 | `add(parts...)` | adds parts (null is skipped, for optional hardware) |
-| `update()`, `stop()`, `addTelemetry(t)` | does it for every part, in order. `update()` times each part: one slower than 25 ms (it waits or sleeps) shows a warning |
+| `update()`, `stop()`, `addTelemetry(t)` | does it for every part, in order. `update()` times each part: a part slower than 25 ms (it waits or sleeps) shows a warning |
 | `getSlowUpdateWarning()` | "" or the last slow part (shown for 5 s after the last slow update) |
 | `all()` | the list of parts |
 
@@ -108,16 +112,16 @@ Full guide: [Profiles](../guides/profiles.md).
 
 ## SettingsFile
 
-A tiny key/value file on the Control Hub: `/sdcard/FIRST/ftc-helper/settings.properties`.
-`Profile` and `Tunable` use it; you rarely need it yourself.
+A tiny file on the Control Hub that keeps settings as name = value pairs:
+`/sdcard/FIRST/ftc-helper/settings.properties`. `Profile` and `Tunable` use it; you rarely need it yourself.
 
 | Method | What it does |
 | --- | --- |
 | `SettingsFile.shared()` | the robot's settings file |
 | `get(key, fallback)`, `getDouble(key, fallback)`, `has(key)` | read |
 | `put(key, value)`, `remove(key)` | change in memory |
-| `save()` | write the file; returns false if it could not (the robot keeps working). It waits for the storage: use it in INIT or tests |
-| `saveInBackground()`, `saveInBackground(ok -> ...)` | write the file on a background thread and return at once. Use this while the robot runs. |
+| `save()` | write the file; returns false if it could not (the robot keeps working). It waits until the file is written: use it in INIT or tests |
+| `saveInBackground()`, `saveInBackground(ok -> ...)` | write the file without waiting (on a background thread) and return at once. Use this while the robot runs. |
 | `SettingsFile.useForTests(file)` | tests only: use another file |
 
 A damaged or missing file simply means "nothing saved": the values in the code are used.

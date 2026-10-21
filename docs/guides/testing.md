@@ -2,6 +2,9 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**For:** the whole team: programmers, builders and drivers. **You need:** a robot that runs, and the
+[Hardware Check](../modules/testing.md) OpMode on it.
+
 Most robot problems at events are found in the pits by a 10-minute check. These procedures say
 what to check, when, and how. Print the checklists.
 
@@ -20,7 +23,8 @@ flowchart LR
 ./gradlew :TeamCode:testDebugUnitTest
 ```
 
-Fast, no robot. Write tests for your own logic ([tutorial 13](../tutorials/13-testing.md)).
+This runs your team's tests on the laptop, with Gradle (the tool that builds the code). Fast, no robot.
+Write tests for your own logic ([tutorial 13](../tutorials/13-testing.md)).
 
 ## 2. Hardware check (after any wiring or configuration change)
 

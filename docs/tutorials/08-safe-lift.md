@@ -2,6 +2,9 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**You will build:** the lift from Tutorial 07, now with limits it cannot drive past, a bottom switch, and stick control that takes over from the buttons.
+In the main track, the lift part has these limits built in: [An intake, a lift and a claw](start/04-lift-and-claw.md).
+
 **You will learn:** how `SafeMotor` keeps a mechanism inside its range with soft limits, a limit
 switch, homing and a slow zone; and the standard pattern for "set heights with buttons, plus the
 stick to take over by hand".
@@ -20,7 +23,8 @@ ideally a touch sensor at the bottom named `lift_bottom`. Tutorials 01-03 and 07
 - Driven into the bottom: motor stalls, gets hot, belt skips.
 - Encoder "drifts" (belt skips, robot turned on with the lift up): now every height is wrong.
 
-`SafeMotor` handles all three in software. **It does not replace hard stops.** Rule R105 B says
+`SafeMotor` handles all three in software. **It does not replace hard stops** (a physical block
+that the lift hits at each end). Rule R105 B says
 the robot must stay inside its size limits without software. Software stops the motor before it
 hits the block; the block holds if the software is wrong.
 
@@ -35,7 +39,7 @@ SafeMotor lift = new SafeMotor(liftMotor)
         .setMaxPower(0.9);
 ```
 
-- **Soft limits:** power that pushes past 0 or 2600 becomes 0. Power AWAY from the limit always
+- **Soft limits** (limits in software, not metal): power that pushes past 0 or 2600 becomes 0. Power AWAY from the limit always
   works, so the lift can never get "stuck at the top".
 - **Slow zone:** close to an end, power toward it is reduced, so it does not slam.
 - **Max power:** the most it ever gets.
@@ -48,6 +52,9 @@ Set MAX a little below the real top, so the soft limit stops it before the hard 
 TouchSensor bottom = Hw.tryGet(hardwareMap, TouchSensor.class, "lift_bottom");
 if (bottom != null) lift.setLowerSwitch(bottom::isPressed);
 ```
+
+`bottom::isPressed` hands `SafeMotor` a way to ask the switch "are you pressed?" whenever it needs to.
+It is short for the lambda `() -> bottom.isPressed()`.
 
 With a lower switch:
 

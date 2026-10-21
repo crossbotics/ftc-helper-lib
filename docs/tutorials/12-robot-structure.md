@@ -2,6 +2,9 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**You will build:** a whole robot program (drive, lift, claw) split into small classes, with a TeleOp and an autonomous that share them.
+The main track gives you this structure ready-made: [The robot in five files](22-robot-in-five-files.md).
+
 **You will learn:** how to split a real robot program into a `Robot` class and one class per
 mechanism ("subsystem"), so TeleOp and autonomous share the same code and stay short.
 
@@ -49,7 +52,8 @@ public enum LiftHeights {
 
 An **enum** is a fixed list of named values. Names like `LiftHeights.HIGH` are much clearer than
 `2400` all over the code, and the numbers live in ONE place. `up()`/`down()` step through the
-list (the D-pad list from Tutorial 03, done properly). No hardware here, so Tutorial 13 can test it.
+list (the D-pad list from Tutorial 03, done properly). `ordinal()` is a value's place in the list
+(BOTTOM = 0, LOW = 1, ...), and `values()` is the whole list. No hardware here, so Tutorial 13 can test it.
 
 ## 3. A subsystem: `Lift`
 
@@ -84,7 +88,7 @@ public class Lift {
 
 The pattern for every subsystem:
 
-- **Constructor**: get and set up the hardware.
+- **Constructor** (the method with the class's name, run by `new Lift(...)`): get and set up the hardware.
 - **Commands** that only change state (`goTo`, `manual`): quick, safe to call from a button.
 - **`update()`**: the one place that talks to the motors, once per loop.
 - **Questions** (`isAtTarget`) and **`addTelemetry`**.
@@ -93,6 +97,8 @@ The pattern for every subsystem:
 `Claw` is the same idea, smaller: `open()`, `close()`, `toggle()`, `isOpen()`.
 
 ## 4. The whole robot: `Robot`
+
+`public final` fields can be read from other classes (`robot.lift`) but never swapped for another object.
 
 ```java
 public class Robot {

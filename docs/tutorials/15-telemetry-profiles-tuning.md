@@ -2,6 +2,9 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**You will build:** a lift program with a hideable debug screen, a practice/competition switch, a tuning menu and a match timer.
+The main track uses the same tuning menu: [An intake, a lift and a claw](start/04-lift-and-claw.md).
+
 **You will learn:** telemetry with a driver level and a debug level, the practice/competition
 profile, changing numbers live with the tuning menu, and the match timer.
 
@@ -32,6 +35,8 @@ splits its lines the same way.
 
 ## 2. Profiles
 
+A **profile** is a setting the whole robot reads: PRACTICE (at the bench) or COMPETITION (at an event).
+
 ```java
 InitMenu menu = new InitMenu(gamepad1).profile();     // a "Profile" line in INIT
 ...
@@ -43,6 +48,8 @@ Control Hub. Use it for comfort (speeds, extra screens), never to turn safety of
 Guide: [Profiles](../guides/profiles.md).
 
 ## 3. Live tuning
+
+A `Tunable` is a number you can change from the gamepad while the program runs, without rebuilding.
 
 ```java
 static final Tunable LIFT_MAX_POWER = Tunable.number("Lift/maxPower", 0.8, 0.05).range(0.1, 1.0);

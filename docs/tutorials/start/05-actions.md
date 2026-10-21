@@ -22,6 +22,10 @@ to drop, lift down. The operator could press four buttons in the right order eve
 
 ## 2. scoreHigh, line by line
 
+`public static Action scoreHigh(Robot r)` is a method that builds the action. `static` means you call it
+by the class name, `Actions.scoreHigh(robot)`, with no setup. `r` is your robot, so the steps can reach
+`r.lift` and `r.claw`.
+
 ```java
 /** Lift up, open the claw at the top, then lift down. */
 public static Action scoreHigh(Robot r) {
@@ -43,6 +47,7 @@ public static Action scoreHigh(Robot r) {
   - **The 2.0 is a time limit, in seconds.** If the lift is not at the top in 2 s, the action
     **stops**. Why: a lift that never got to the top (stuck, or not homed yet) must not open the
     claw and drop the piece in the wrong place.
+  - `isAtTarget` is "is the lift at the height it was sent to?" (within `tolerance`).
 - `.then(r.claw::open)` opens the claw.
 - `.waitSeconds(0.3)` gives the piece time to fall out.
 - `.then(() -> r.lift.goTo("down"))` sends the lift down. That is the last step: the action is done.

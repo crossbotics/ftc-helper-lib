@@ -9,8 +9,11 @@ examples: [`examples/.../gobildabot`](../../examples/src/main/java/com/crossboti
 (goBILDA's starter bot), [`flywheelbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot)
 and [`turretbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot).
 
-A team's whole robot program in five files a student can read in one sitting. Each file answers one
-question, so you always know where to look:
+A team's whole robot program in five files a student can read in one sitting. This is the
+recommended way to use the library, and the one the main-track lessons teach: start with lesson 1
+(above), or the [Quick start](../quick-start.md) for a driving robot in 30 minutes. Each mechanism
+is a **module**: one line in `Robot.java` that brings its own numbers, buttons and autonomous steps.
+Each file answers one question, so you always know where to look:
 
 | File | Answers | Changes when |
 | --- | --- | --- |
@@ -48,12 +51,12 @@ flowchart LR
 | [`Launcher`](#launcher) | a flywheel and its [`Indexer`](#indexer): spin up, fire, speed from distance |
 | [`Indexer`](#indexer) | feeds one piece at a time (servo, CR servo or motor) |
 | [`Camera`](#camera) | a Limelight or webcam; the alliance's goal |
-| [`Action`](#action) | steps across several parts that never block |
-| [`Mode`](#modes) | an always-on rule a module follows while it is on |
+| [`Action`](#action) | steps across several parts that never block (never make the loop wait) |
+| [`Mode`](#modes) | a rule a module follows every loop while the mode is on |
 | [`ControlMap`](#controlmap), [`Pad`](#controlmap) | `Controls.java`: the TeleOp and the button map |
 | [`Auto`](#auto), [`Steps`](#auto) | one autonomous as a list of steps |
 | [`Toggleable`](#controlmap) | anything one button switches on and off |
-| [`Motors`](#motors) | encoder counts and speed of the common motors, by catalog id |
+| [`Motors`](#motors) | look up the encoder counts and speed of common motors, by catalog id (a part's name in the [parts catalog](../guides/parts-catalog.md), e.g. `"gobilda-5203-312"`) |
 | [`Shape`](#shapes-and-parts), [`Parts`](#shapes-and-parts) | how each part looks and where it sits, for the simulator; wheels, rollers and servos by catalog id |
 | [`Module`](#module), [`MotorPositions`](#lift), [`ServoPositions`](#claw), [`Devices`](#module) | what the modules share (you rarely use these by name) |
 
@@ -79,14 +82,14 @@ public class Robot extends RobotDefinition {
 }
 ```
 
-`define()` only describes: it runs in INIT, and also without a robot (to write the simulator file).
-The OpMode classes make the hardware ([`setup`](#robotdefinition)) and update every part each loop.
-Nothing moves in INIT.
+`define()` only describes the robot. It runs in INIT, and also without a robot (to write the
+simulator file). The OpMode classes make the hardware ([`setup`](#robotdefinition)) and update every
+part each loop. Nothing moves in INIT.
 
 | In `define()` | |
 | --- | --- |
 | `drive(Drive d)` | the drivetrain (required) |
-| `T add(T module)` | a mechanism; hands it back for the field |
+| `T add(T module)` | a mechanism; hands it back, so you can keep it in a field (`lift = add(...)`) |
 | `atStart(Supplier<Action>)` | an action that runs once right after START, in autonomous and TeleOp |
 | `tunables(Class)` | the Tunables class if it is not `Tunables` in the same folder |
 | `chassisMm(l, w, h)`, `heightMm(h)`, `fixed(Shape...)` | for the simulator: the chassis box, the whole robot's height, parts the code does not move ([Shapes](#shapes-and-parts)) |
@@ -131,7 +134,7 @@ public class Tunables {
   `Tunables.java`** (INIT lists it): a value saved only on the hub is lost with a new Control Hub.
   True/false settings and tables stay as written.
 - **The code is the record.** The numbers you tune most become [`Tunable`](tuning.md)s ("Lift/kP"):
-  the tuning menu (hold GUIDE 1 s, PRACTICE profile) changes them and saves them on the Control Hub. INIT then
+  the tuning menu (PRACTICE profile, after START hold GUIDE 1 s) changes them and saves them on the Control Hub. INIT then
   shows "Tuned on this robot (copy into Tunables.java)" with the lines to copy back.
 - **Missing numbers are not errors:** the library's default is used and INIT says which.
 - **Safety:** a tuned position stays inside `min`..`max`; limits are read once and cannot be tuned.
@@ -427,13 +430,15 @@ module suggestions); `robot()` and `oneDriver()` read the robot and the one-driv
 | START + BACK | debug lines | |
 | GUIDE | tap: the button map, without the free buttons (during the match too); hold 1 s: the tuning menu (PRACTICE) | |
 
-One driver: left stick click is slow on/off and right stick click field-centric. To put slow on a
-trigger instead (one driver only), give it `.slow()`: `g1.lt.slow();` slows the robot the further LT is pulled (down to
-`slowSpeed` at a full squeeze, like the two-driver LT); on a button, `.slow()` is slow while held. Write the switch
-exactly as `public static boolean oneDriver = true;` (INIT stops with a message if it is not static). A module whose
-button is taken gets none (INIT notes it). Checked at INIT: two jobs on one button in Controls.java,
-or a job on a driving button, stop with the button's name. INIT shows the whole map and the free
-buttons.
+**One driver:** the left stick click switches slow on/off and the right stick click switches
+field-centric. To put slow on a trigger instead, give it `.slow()`: `g1.lt.slow();` slows the robot
+the further LT is pulled (down to `slowSpeed` at a full squeeze, like the two-driver LT). On a button,
+`.slow()` is slow while held. Write the switch exactly as `public static boolean oneDriver = true;`
+(INIT stops with a message if it is not static).
+
+**Checked at INIT:** a module whose button is taken gets none (INIT notes it). Two jobs on one button
+in Controls.java, or a job on a driving button, stop with the button's name. INIT shows the whole
+map and the free buttons.
 
 ---
 
@@ -459,16 +464,30 @@ public class ScoreAndPark extends Auto<Robot> {
 }
 ```
 
-[`Steps`](#auto): `start(where, headingDeg)`, `start(where, xIn, yIn, headingDeg)` (also the spot, seen from
-your wall and written for BLUE; RED as the routes: mirrored, or the same from the red wall on a turned
-field like BIOBUZZ with `mirrorForRed()` false: x right of the centre line, y from the centre toward the far wall,
-negative = your half; the simulator puts the robot there in INIT; both alliances at one wall, like DECODE:
-override `alliancesOnOneWall()` to return true), `menuYesNo(label, yes)`, `menuChoice(label, options...)`,
-`onlyIf(label)` / `onlyIf(label, option)` ... `end()`, `isYes(label)`, `choice(label)`,
-`move(label, inches, directionDeg, power)` (0 forward, 90 right), `turn`, `turnTo`,
-`run(label, command)` (starts and goes on), `waitSeconds`, `waitUntil`, `action(action[, timeout])`
-(waits until done), `alongside(action)` (runs during the next steps), `step(label, AutoStep)`,
-`parkWithSeconds(s)` (the steps after it get the last s seconds: see [Keep time to park](#keep-time-to-park)).
+What [`Steps`](#auto) can do:
+
+| Step | |
+| --- | --- |
+| `start(where, headingDeg)` | where to place the robot (shown in INIT) and which way it faces |
+| `start(where, xIn, yIn, headingDeg)` | the same, plus the spot in inches. The simulator puts the robot there in INIT (see below) |
+| `menuYesNo(label, yes)`, `menuChoice(label, options...)` | a choice for the drivers in INIT |
+| `onlyIf(label)` / `onlyIf(label, option)` ... `end()` | the steps in between run only for that choice |
+| `isYes(label)`, `choice(label)` | read a choice |
+| `move(label, inches, directionDeg, power)` | drive (0 forward, 90 right) |
+| `turn`, `turnTo` | turn by an angle / to a heading |
+| `run(label, command)` | start something and go on at once |
+| `waitSeconds`, `waitUntil` | wait (the robot keeps running) |
+| `action(action[, timeout])` | run an [Action](#action) and wait until it is done |
+| `alongside(action)` | run an action during the next steps |
+| `step(label, AutoStep)` | your own step |
+| `parkWithSeconds(s)` | the steps after it get the last s seconds (see [Keep time to park](#keep-time-to-park)) |
+
+**The spot in `start(where, xIn, yIn, headingDeg)`** is seen from your wall and written for BLUE:
+
+- x = inches right of the centre line; y = inches from the centre toward the far wall (negative = your half).
+- RED works like the routes: mirrored, or, on a turned field like BIOBUZZ with `mirrorForRed()` false,
+  the same numbers seen from the red wall.
+- Both alliances at one wall, like DECODE: override `alliancesOnOneWall()` to return true.
 
 The full guide, with every step and a tested example: [The autonomous builder](../guides/autonomous-builder.md).
 

@@ -6,14 +6,17 @@ Package: `com.crossbotics.ftchelper.auto`
 
 Learn it hands-on: [16 Easy autonomous](../tutorials/16-easy-autos.md). Full guide: [Easy autonomous modes](../guides/easy-autos.md).
 
-Write an autonomous as a list of named steps.
+Write an autonomous (the 30 seconds when the robot drives itself) as a list of named steps. The
+library runs the steps in order, keeps your mechanisms working, flips the route for the RED alliance,
+and keeps time to park. Using the [robot in five files](robot.md#auto)? Its `Auto` class is built on
+this one, so start there. Use this page when you write an autonomous without five files.
 
 | Class | Use it to |
 | --- | --- |
-| [`EasyAuto`](#easyauto) | a whole autonomous OpMode: fill in a few methods, list the steps |
-| [`AutoRoutine`](#autoroutine) | the step list and the runner |
-| [`AutoStep`](#autostep) | one step (an interface; mechanisms give you ready-made ones) |
-| [`AutoContext`](#autocontext) | what a running step can use (waits that keep mechanisms working) |
+| [`EasyAuto`](#easyauto) | write a whole autonomous OpMode: fill in a few methods, list the steps |
+| [`AutoRoutine`](#autoroutine) | hold the list of steps and run them |
+| [`AutoStep`](#autostep) | write one step of your own (mechanisms give you ready-made ones) |
+| [`AutoContext`](#autocontext) | wait inside a step while mechanisms keep working |
 
 ```mermaid
 sequenceDiagram
@@ -49,11 +52,11 @@ Extend it and fill in:
 | `addChoices(menu)` | no | extra INIT choices: `menu.choice("Route", "Near", "Far")` |
 | `addInitTelemetry(t)` | no | extra screen lines during INIT |
 | `startPosition()` | no | where to place the robot, shown in INIT |
-| `startHeadingDeg()` | no | which way the robot faces at the start, compared with "away from your driver" (default 0), written for BLUE (mirrored for RED, unless `mirrorForRed()` returns false). TeleOp's field-centric "forward" uses it. |
+| `startHeadingDeg()` | no | which way the robot faces at the start, in degrees from "facing away from your driver" (default 0). Write it for BLUE: it is mirrored for RED, unless `mirrorForRed()` returns false. TeleOp's field-centric "forward" uses it. |
 | `parkReserveSec()` | no | seconds kept for the steps after `thenPark()` |
 | `maxStartDelaySec()` | no | longest start delay in the menu (default 10) |
 | `mirrorForRed()` | no | true (default): routes written for BLUE are mirrored for RED. Return false on a ROTATED field |
-| `alliancesOnOneWall()` | no | false (default): BLUE's drivers stand at the far wall (BIOBUZZ). True when both alliances' drivers stand at one wall (DECODE): the simulator's start spot uses it |
+| `alliancesOnOneWall()` | no | false (default): BLUE's drivers stand at the far wall (BIOBUZZ). Return true when both alliances' drivers stand at one wall (DECODE). The simulator's start spot uses it |
 
 \* Or, without a `RobotConfig`: override `driveConfig()`, `autoDriveConfig()` and `createImu()`.
 
@@ -87,9 +90,9 @@ your TeleOp after autonomous.
 | `getReport()` | what happened to each step |
 | `size()` | number of steps |
 
-`AutoRoutine` itself has only step methods: `waitFor("label", s)` ADDS a wait step. The waits that
-run at once (`ctx.waitFor(s)`) only exist inside a step, on the `ctx` it gets. So the two can never
-be mixed up. If a step throws an error, the drive is stopped before the error goes on.
+On `AutoRoutine`, `waitFor("label", s)` only ADDS a wait step to the list. A wait that happens
+right now (`ctx.waitFor(s)`) only exists inside a step, on the `ctx` the step gets. So you cannot
+mix the two up. If a step throws an error, the drive stops before the error goes on.
 
 Every move's result goes in the report: `"Drive to basket: STALLED"`, `"Lift up: timed out"`,
 `"Wait for lift: cut short (time for park)"`, `"Score: skipped (time for park)"`. Read it after every
@@ -97,7 +100,8 @@ practice run.
 
 ## AutoStep
 
-An interface with one method, `run(AutoContext ctx)`. Write your own as a lambda:
+An **interface** (a promise that a class has certain methods) with one method,
+`run(AutoContext ctx)`. Write your own as a lambda:
 
 ```java
 // "ctx -> { ... }" is a lambda: code handed to the routine, run when this step's turn comes.
@@ -113,8 +117,11 @@ AutoStep shake = ctx -> {
 routine.step("Shake loose", shake);
 ```
 
-Rules: return when done; inside any waiting loop call `ctx.loop()` (or use `ctx.waitFor` /
-`ctx.waitUntil`); stop as soon as `ctx.isActive()` is false.
+Three rules for your own step:
+
+- Return when the step is done.
+- In any loop that waits, call `ctx.loop()` (or use `ctx.waitFor` / `ctx.waitUntil`).
+- Stop as soon as `ctx.isActive()` is false.
 
 ## AutoContext
 

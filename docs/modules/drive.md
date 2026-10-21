@@ -6,9 +6,11 @@ Package: `com.crossbotics.ftchelper.drive`
 
 Learn it hands-on: [04 Mecanum](../tutorials/04-drive-mecanum.md), [05 Tank](../tutorials/05-drive-tank.md), [09 First autonomous](../tutorials/09-first-auto.md), [10 Autonomous with mechanisms](../tutorials/10-auto-with-mechanisms.md).
 
-Drives a **mecanum** chassis (4 mecanum wheels) or a **standard** chassis (also called tank or
-differential drive: normal wheels, a left side and a right side, 2 or 4 motors), in TeleOp and in autonomous.
-Signs used here: [Signs and units](../conventions.md). Read it first.
+Drives a **mecanum** chassis (4 mecanum wheels, so it can also slide sideways) or a **standard**
+chassis (also called tank or differential drive: normal wheels, a left side and a right side, 2 or 4
+motors), in TeleOp and in autonomous. With the [robot in five files](robot.md#drive) you describe the
+drive in one line and these classes work underneath. Use this page to drive by hand in your own
+OpMode, or to look up a setting. Which way is plus and minus: [Signs and units](../conventions.md). Read it first.
 
 | Your robot | TeleOp class | Autonomous class | Config |
 | --- | --- | --- | --- |
@@ -28,7 +30,7 @@ Signs used here: [Signs and units](../conventions.md). Read it first.
 | [`AutoDrive`](#autodrive) | autonomous: drive a distance, turn an angle, turn to a heading |
 | [`MecanumMixer`](#mecanummixer) | the mecanum wheel-power math (no hardware) |
 | [`DifferentialMixer`](#differentialmixer) | the standard-drive left/right math (no hardware) |
-| [`MotionMath`](#motionmath) | the speed-taper math for autonomous moves |
+| [`MotionMath`](#motionmath) | the math that slows a move down near its end (the "taper") |
 | [`StallDetector`](#stalldetector) | tell when a move is stuck |
 
 Also in this page: [Check motor directions](#check-motor-directions) and [Tune AutoDrive](#tune-autodrive).
@@ -37,8 +39,8 @@ Also in this page: [Check motor directions](#check-motor-directions) and [Tune A
 
 ## DriveConfig
 
-A small settings object. Start from the factory method for your drivetrain, then change what
-is different on your robot.
+A small settings object. Start from the factory method for your drivetrain (a method that makes
+one with the usual settings), then change what is different on your robot.
 
 ```java
 DriveConfig driveConfig = DriveConfig.mecanum();   // or DriveConfig.tank(), DriveConfig.tankTwoMotor()
@@ -58,7 +60,7 @@ driveConfig.powerLimit = 0.6;                      // no wheel ever gets more th
 | `frontLeft`, `frontRight`, `backLeft`, `backRight` | `"front_left"` ... `"back_right"` | configuration names of the motors. For a 2-motor tank, use `frontLeft`/`frontRight` and set both back names to `null`. |
 | `frontLeftReversed` ... `backRightReversed` | left = `true`, right = `false` | which motors are reversed |
 | `powerLimit` | `1.0` | the most power any wheel ever gets. Use 0.4 on a new robot. |
-| `brake` | `true` | wheels hold still at power 0 |
+| `brake` | `true` | wheels hold still at power 0 (false = coast: they roll freely) |
 
 | Method | What it does |
 | --- | --- |
@@ -105,7 +107,7 @@ wheels are scaled down together. The robot keeps the direction you asked for.
 - **Robot-centric:** stick up = robot drives where IT faces. Simple. If the robot faces you,
   stick up drives it toward you.
 - **Field-centric:** stick up = robot drives AWAY FROM YOU, whichever way it faces. Easier for
-  new drivers. Needs the IMU.
+  new drivers. Needs the IMU (the turn sensor inside the Control Hub, see [ImuSetup](hardware.md#imusetup)).
 
 ```java
 double heading = ImuSetup.headingDeg(imu);   // read every loop: which way the robot faces now
@@ -277,8 +279,9 @@ Tuning numbers for `AutoDrive`. The defaults are last season's robot. **Tune the
 
 ## AutoDrive
 
-Autonomous moves with the wheel encoders and the IMU, for mecanum and standard (tank) robots.
-The `DriveConfig` type tells it which. Each method **waits until the move ends**,
+Autonomous moves for mecanum and standard (tank) robots. It measures distance with the wheel
+**encoders** (sensors that count how far each motor turned) and turns with the IMU.
+The `DriveConfig` type tells it which drive you have. Each method **waits until the move ends**,
 so use them only in a `LinearOpMode` autonomous. No wheel ever gets more power than
 `DriveConfig.powerLimit`, whatever `maxPower` you pass.
 
@@ -397,13 +400,13 @@ Do these in order. Write each result in your team's log.
 
 ## MecanumMixer
 
-The math under `MecanumDrive`. No hardware, so you can test it. You only need it to build your own drive.
+The math under `MecanumDrive`. It uses no hardware, so you can test it on a laptop. You only need it to build your own drive.
 
 | Method | What it does |
 | --- | --- |
 | `mix(forward, strafeRight, turnClockwise, limit)` | four wheel powers (FL, FR, BL, BR), scaled together so none is over `limit`. All zero if an input is NaN. |
 | `fieldToRobot(fieldForward, fieldRight, headingCcwDeg)` | changes a field-relative command into `{forward, strafeRight}` for the robot |
-| `fieldDirection(fieldClockwiseDeg, headingCcwDeg)` | the robot-relative `{forward, strafeRight}` unit vector for a field direction |
+| `fieldDirection(fieldClockwiseDeg, headingCcwDeg)` | a field direction as `{forward, strafeRight}` for the robot, with a length of 1 |
 | `FRONT_LEFT`, `FRONT_RIGHT`, `BACK_LEFT`, `BACK_RIGHT` | the index of each wheel (0-3) |
 
 ## DifferentialMixer

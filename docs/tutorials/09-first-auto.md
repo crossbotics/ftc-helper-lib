@@ -2,6 +2,9 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**You will build:** a settings file, a tuner that measures your drivetrain, and an autonomous that drives a square.
+The main track does this with less code: [Your first autonomous](start/06-first-autonomous.md).
+
 **You will learn:** how to keep all robot settings in one place, how to tune the drivetrain so
 "24 inches" really is 24 inches, and how to write an autonomous with `AutoDrive`.
 
@@ -44,10 +47,13 @@ public final class RobotSettings {
 }
 ```
 
+`static` means you call the method on the class itself (`RobotSettings.drive()`), without making a
+`RobotSettings` object first. `final` on the class means no other class can extend it.
+
 Now `new MecanumDrive(hardwareMap, RobotSettings.drive())` in TeleOp and
 `RobotSettings.drive()` in autonomous always match. Use this class in your TeleOp from now on too.
 
-`ticksPerRev` comes from your motor's product page ("encoder resolution at the output shaft"):
+`ticksPerRev` is how many encoder ticks make one turn of the motor's output shaft. It comes from your motor's product page ("encoder resolution at the output shaft"):
 goBILDA 312 RPM = 537.7, 435 RPM = 384.5. Check yours.
 
 ## 2. How AutoDrive works
@@ -93,7 +99,8 @@ move in INIT), press START, it runs that one test and shows the result.
 
 **Strafe (mecanum only):** B (right 48). New `strafeCorrection` = old x (48 / real distance).
 
-**Turns:** X and Y (90 left and right). Use a corner of a field tile to check the angle.
+**Turns:** X and Y (90 left and right). `turnKp` and `turnKd` are the P and D gains of the turn
+(Tutorial 07 explains gains). Use a corner of a field tile to check the angle.
 Overshoots: raise `turnKd` (try +0.001) or lower `turnKp`. Stops short: raise `turnKp` a little
 (+0.002), or set `turnMinPower = 0.06`.
 

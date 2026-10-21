@@ -6,6 +6,10 @@ Package: `com.crossbotics.ftchelper.testing`
 
 Learn it hands-on: [19 Testing procedures](../tutorials/19-testing-procedures.md). Full guide: [Testing procedures](../guides/testing.md).
 
+Checks that every motor, servo and sensor is wired and named right, before you write robot code.
+Run it on a new robot, after rewiring, and whenever a part acts strangely. It needs no code from
+you, only the tiny file below.
+
 ## HardwareCheckOpMode
 
 `HardwareCheckOpMode` is a ready-made OpMode that lists every device in the active robot configuration and lets you test
@@ -17,7 +21,7 @@ each one. Make this tiny file in TeamCode:
 public class HardwareCheck extends HardwareCheckOpMode { }
 ```
 
-It finds: motors, continuous-rotation servos, servos, the IMU, touch sensors, digital channels
+It finds: motors, continuous-rotation (CR) servos that spin like a motor, servos, the IMU, touch sensors, digital channels
 (magnetic switches, beam breaks), color and distance sensors, analog inputs, webcams and Limelights.
 It also shows the battery voltage and warns below 12.0 V.
 

@@ -2,6 +2,9 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**For:** students who adjust numbers on a running robot. **You need:** a robot whose mechanisms work,
+and the PRACTICE [profile](profiles.md) (the menu stays closed in COMPETITION).
+
 Tuning (PID gains, positions, servo angles, speeds) takes many small changes. Rebuilding and
 reinstalling for each one takes 2 minutes. The tuning menu changes numbers **while the robot runs**,
 from the gamepad.
@@ -45,7 +48,8 @@ PositionServo claw = PositionServo.create(hardwareMap, "claw")
         .tunable("Claw");          // "Claw/OPEN", "Claw/CLOSED"
 ```
 
-Any other number:
+Any other number. `static final` makes one `Tunable` for the whole program, made once (the menu still
+changes its value):
 
 ```java
 // (menu name, value in the code, change per D-pad press), kept between 0.1 and 1.0
@@ -63,7 +67,7 @@ list, and pause the driver's gamepad-1 buttons (and sticks) while the menu is op
 
 ```java
 TuningMenu tuning = new TuningMenu(gamepad1);
-ControllerBindings menuKey = new ControllerBindings().bindPress(Pad.G1, Btn.GUIDE, tuning::toggle);
+ControllerBindings menuKey = new ControllerBindings().bindPress(Pad.G1, Btn.GUIDE, tuning::toggle);   // tuning::toggle = run toggle() on press
 ControllerBindings driver = new ControllerBindings()...;     // gamepad 1 buttons
 ControllerBindings operator = new ControllerBindings()...;   // gamepad 2 buttons (keep working)
 boolean menuWasOpen = false;   // was the menu open last loop?
@@ -89,7 +93,7 @@ The starter kit's `MainTeleOp` already has it.
 
 | Button | Does |
 | --- | --- |
-| GUIDE (or whatever you bound) | open / close (a Controls.java TeleOp: hold GUIDE 1 s; a tap shows the button map) |
+| GUIDE (or whatever you bound) | open / close (a Controls.java TeleOp, after START: hold GUIDE 1 s; a tap shows the button map) |
 | D-pad up / down | choose |
 | D-pad right / left | +/- one step (hold a bumper: x10) |
 | A | save all on the hub |
@@ -102,8 +106,8 @@ Changed values show the code value next to them: `Lift/kP = 0.0050  (code 0.004)
 ## Optional: FTC Dashboard
 
 [FTC Dashboard](https://acmerobotics.github.io/ftc-dashboard/) shows graphs and lets you change
-`public static` fields from a laptop browser. Your team used it in 2025-26. It is added in the
-robot project (not this library): add its Maven repository and dependency to
-`build.dependencies.gradle`, then put `@Config` on a class with `public static` fields. It works
+`public static` fields (settings that belong to the class, not to one object) from a laptop browser. Your team used it in 2025-26. It is added in the
+robot project (not this library): add its Maven repository and dependency (where to download it,
+and its name and version) to `build.dependencies.gradle`, then put `@Config` on a class with `public static` fields. It works
 alongside the tuning menu; use whichever is easier for the job (graphs: Dashboard; at the field
 without a laptop: the menu).

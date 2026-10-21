@@ -2,6 +2,10 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**For:** teams with the [robot in five files](../tutorials/22-robot-in-five-files.md) who write
+autonomous modes. **You need:** a tuned drive (the Drive Tuner, [finders](finders.md#drive-tuner-wheel-size-and-strafe-correction));
+the [first autonomous lesson](../tutorials/start/06-first-autonomous.md) is the short version of this page.
+
 An autonomous is a **list of steps, read top to bottom**. You write only the list. The library does
 everything around it: the INIT menu, mirroring for the other alliance, the 30 s timer, keeping time to
 park, stopping everything at the end, and a report of what happened to each step.
@@ -62,7 +66,8 @@ public class AutoCookbook extends Auto<Robot> {
 ```
 
 The numbers 1 to 7 match the sections below. Each method adds one step and hands the list back, so
-they chain with dots. Indenting the steps inside `onlyIf ... end()` is only for people: Java ignores it.
+they chain with dots. `extends Auto<Robot>` means: this class is an `Auto` (it gets everything below
+for free), made for your `Robot` class. `@Override` marks a method that replaces one `Auto` already has. Indenting the steps inside `onlyIf ... end()` is only for people: Java ignores it.
 
 ## What you get for free
 
@@ -154,7 +159,7 @@ the inches are only right on a tuned robot.
 
 **Put route numbers in `Tunables.java`** (`Tunables.Auto.collectInches`): every number is in one place,
 named, and easy to find at an event. A section that is not a part, like `Auto`, is in the tuning menu
-too: change `Auto/collectInches` in the TeleOp (PRACTICE profile, hold GUIDE 1 s), save with A, and run
+too: change `Auto/collectInches` in the TeleOp (PRACTICE profile, after START hold GUIDE 1 s), save with A, and run
 the autonomous again with no rebuild. Its INIT lists the values that differ from the file: copy the
 good ones back ([how](../modules/robot.md#tunablesjava)).
 
@@ -271,8 +276,8 @@ the match while they set up.
 
 ## Testing an autonomous
 
-1. **In the simulator** ([guide](simulator.md)): INIT it, choose in the menu with the D-pad (or the
-   keyboard), START, and watch. The report shows at the end. An untuned drive still runs there, with a
+1. **In the simulator** ([guide](simulator.md)): INIT it, choose in the menu with the D-pad (on screen, or the
+   keyboard after you set gamepad 1 to Keyboard), START, and watch. The report shows at the end. An untuned drive still runs there, with a
    warning, so you can try routes before tuning.
 2. **A scenario file** checks it every time, with no clicking:
 

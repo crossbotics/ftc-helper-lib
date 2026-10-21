@@ -11,6 +11,8 @@ names and numbers, and you have a working robot.
 > configuration by `./gradlew :sim:newRobot`, with ready-made modules ([robot module](modules/robot.md)).
 > This starter kit still works and is kept for teams that use it.
 
+**Before this:** [Add it to a project](01-add-to-project.md).
+
 **Files:** [`examples/.../starter/`](../examples/src/main/java/com/crossbotics/ftchelper/examples/starter)
 
 | # | File | What it is | You change |
@@ -44,9 +46,10 @@ flowchart LR
 4. **Hardware Check** (robot on a block): every device listed, every motor turns the right way.
    Fix directions in `RobotSettings` / `Robot`. Write down servo positions.
 5. **`Robot.java`**: delete mechanisms you do not have. Find each servo's and lift's limits and
-   positions with the **Servo Finder** and **Motor Finder** ([finders](guides/finders.md)) and copy
-   the lines they show. Each mechanism type is explained in [mechanism.md](modules/mechanism.md).
-6. **Main TeleOp**: drive at the PRACTICE profile's gentle power. It starts robot-centric; Y turns
+   positions with the **Servo Finder** and **Motor Finder** ([finders](guides/finders.md): small
+   OpModes that measure a number and show the code line to copy) and copy the lines they show. Each mechanism type is explained in [mechanism.md](modules/mechanism.md).
+6. **Main TeleOp**: drive at the PRACTICE profile's gentle power (a profile is a set of limits:
+   PRACTICE is gentle for the shop, COMPETITION is full power). It starts robot-centric; Y turns
    field-centric on. Check every button on the list at the top of the file. Print that list for the
    drive team.
 7. **Tune** the lift with the tuning menu (GUIDE button, PRACTICE profile), copy the numbers into

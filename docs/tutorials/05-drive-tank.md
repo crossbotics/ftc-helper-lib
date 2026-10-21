@@ -2,6 +2,9 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**You will build:** a TeleOp that drives a standard (tank) robot, with a button to switch between two driving styles.
+The main track sets up a tank drive in one line: [Drive](start/02-drive.md).
+
 **You will learn:** how to set up a standard drivetrain (also called tank, differential, or
 "skid steer"), the two ways to drive it (arcade and tank style), and how 2- and 4-motor versions differ.
 
@@ -15,7 +18,7 @@
 
 ## 1. How a standard drive moves
 
-Normal wheels on a left side and a right side. Both sides forward = drive forward. Left
+It has normal wheels on a left side and a right side. Both sides forward = drive forward. Left
 forward, right back = spin right. It cannot move sideways.
 
 ## 2. Set up the drive
@@ -92,7 +95,7 @@ error that says "turn first, then move".
 
 | Problem | Fix |
 | --- | --- |
-| Spins when both sides should go forward | One side's direction is wrong: flip `frontLeftReversed` or `frontRightReversed`. |
+| Spins when both sides should go forward | One side's direction is wrong: flip `frontLeftReversed` or `frontRightReversed`. (With 2 motors, the library stores `left_drive` and `right_drive` as the "front" motors.) |
 | Turns the wrong way in arcade | Left and right motor names are swapped. |
 | "TankDrive needs a TANK DriveConfig" | Use `DriveConfig.tank()` or `tankTwoMotor()`. |
 | 4-motor robot: one wheel fights | That one motor's direction is wrong. Use MotorDirectionCheck. |

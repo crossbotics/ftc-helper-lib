@@ -9,6 +9,10 @@ in the simulator.
 
 **Robot needed:** none to start (the simulator), then your robot. **Time:** about 45 minutes.
 
+This is **lesson 1** of the [main track](README.md#start-here-the-main-track). **Before this:** the
+[Quick start](../quick-start.md), or at least [Add it to a project](../01-add-to-project.md). New to
+Java? [Tutorial 01](01-opmode-basics.md) explains imports, fields and lambdas.
+
 The program: goBILDA's BIOBUZZ starter bot, rewritten in this style, in
 [`examples/.../gobildabot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildabot).
 Two more complete robots are next to it:
@@ -63,6 +67,9 @@ public class Robot extends RobotDefinition {
 }
 ```
 
+- `extends RobotDefinition`: your `Robot` is built on a library class, so it gets all its work for
+  free. `@Override` marks a method that fills in one the library class leaves to you; the library calls
+  it for you: here `define()`.
 - The names in quotes are the names in the robot configuration on the Driver Station. They must
   match exactly (capitals too). A wrong name stops at INIT with the names that DO exist.
 - `"gobilda-5203-312"` is the motor, by its id in the [parts catalog](../guides/parts-catalog.md). The
@@ -70,8 +77,9 @@ public class Robot extends RobotDefinition {
   with its gearbox taken off, so it has the 6000 RPM motor's numbers.)
 - `.reversed("right_drive")`: the right motor is mounted facing the other way. If your robot drives
   backward or spins when you push the stick forward, change which motors are reversed.
-- `add(...)` hands the module back, so `intake = add(...)` keeps it in a field. Controls, Actions and
-  the autos reach it as `robot.intake`.
+- `add(...)` hands the module back, so `intake = add(...)` keeps it in a field (a variable that
+  belongs to the class, like `public Intake intake;` at the top). Controls, Actions and the autos
+  reach it as `robot.intake`.
 - `define()` only DESCRIBES the robot. Nothing moves in INIT; the modules move only after START.
 
 ## 2. Tunables.java: the numbers
@@ -99,12 +107,15 @@ public class Tunables {
 }
 ```
 
-- One **section** per part, named after its configuration name in CamelCase: device `"windmill"`
-  reads `Tunables.Windmill`, `"intake_deploy"` would read `IntakeDeploy`.
+- `static` means the number belongs to the class itself, not to one object. So any file can read it
+  as `Tunables.Drive.maxPower`, with no setup.
+- One **section** per part, named after its configuration name in CamelCase (each word starts with a
+  capital letter, no spaces or `_`): device `"windmill"` reads `Tunables.Windmill`, `"intake_deploy"`
+  would read `IntakeDeploy`.
 - Where these came from: goBILDA's code spins the launcher to 1250 counts per second (1250 / 28 counts
   per turn x 60 = 2679 RPM) and feeds above 1200 (that is 107 RPM less): `readyBandRpm = 107`.
 - A number you leave out uses the library's default, and INIT tells you which.
-- **Tune on the robot:** in the PRACTICE profile, holding GUIDE for a second opens the tuning menu (D-pad to choose and
+- **Tune on the robot:** in the PRACTICE profile, after START, holding GUIDE for a second opens the tuning menu (D-pad to choose and
   change, A to save on the hub). At the next INIT the Driver Station lists every value that differs
   from this file, for example `Tunables.Launcher.speedRpm = 2750 (code 2679)`. Copy the good ones
   into this file: the file stays the record. The `Auto` section is in the menu too (`Auto/backInches`):
@@ -125,6 +136,9 @@ public class Controls extends ControlMap<Robot> {
 }
 ```
 
+`@TeleOp(name = ...)` is the name on the Driver Station. `ControlMap<Robot>` is a whole TeleOp from
+the library; the `<Robot>` in angle brackets says which robot it is for: yours.
+
 That is the whole TeleOp. The modules already have their **standard buttons**: the intake on the
 triggers, the launcher on the bumpers, its speed on the D-pad. `oneDriver = true` puts them all on
 gamepad 1, like goBILDA's code. You only write what is different: here, Y fires all three.
@@ -137,7 +151,8 @@ gamepad 1, like goBILDA's code. You only write what is different: here, Y fires 
   left stick, LT slow...), stop at INIT with the button's name. A job you put on a button a module
   suggested replaces the suggestion.
 - The kinds of jobs: `press(...)`, `hold(whileHeld, onRelease)`, `toggle(robot.intake)`,
-  `release(...)`, and for sticks `g2.leftStickY.use(robot.lift::manual)`.
+  `release(...)`, and for sticks `g2.leftStickY.use(robot.lift::manual)`. `robot.lift::manual` means
+  "the lift's `manual` method": the library calls it later, every loop. Lesson 3 has them all.
 
 ## 4. Actions.java: steps that use several parts
 
@@ -150,8 +165,11 @@ public static Action fireAllWithIntake(Robot r) {
 }
 ```
 
+`r.intake::in` and `() -> r.launcher.fire(3)` are two ways to write a small piece of code that runs
+later, when the action gets to that step (lesson 5 explains both).
+
 An action is a list of steps: do these (`then`), wait (`waitSeconds`, `waitUntil`). It **never
-blocks**: it does a little every loop, so the robot keeps driving and every other button keeps
+blocks** (never makes the program stop and wait): it does a little every loop, so the robot keeps driving and every other button keeps
 working while it runs. Things to know:
 
 - `then(a, b)` does both at once (here the intake helps push while the launcher fires).
@@ -183,6 +201,9 @@ public class LaunchAndBackUp extends Auto<Robot> {
     }
 }
 ```
+
+`extends Auto<Robot>`: an autonomous from the library, for your `Robot`. You fill in
+`steps(...)`. `mirrorForRed()` you add only when the answer is false (it is explained just below).
 
 One short file per autonomous, read top to bottom. The INIT menu (alliance, start delay, the profile)
 comes for free; moves and turns are written for BLUE and mirrored for RED (or, on a field turned half a
@@ -248,7 +269,8 @@ Tunables section (here `Tunables.IntakeDeploy`).
 
    Each device gets its module from its name and type ("lift" is a Lift, a servo called "claw" a
    Claw). Read every `TODO` in Robot.java: the drive motor and wheel size, how the hub is mounted,
-   and anything it was not sure about.
+   and anything it was not sure about. If one of the five files is already in TeamCode, it writes
+   nothing and says which file: move that file away first.
 2. **Build and drive.** The drive works on day one; each module has safe starting numbers.
 3. **A simulator robot file** from the code:
 

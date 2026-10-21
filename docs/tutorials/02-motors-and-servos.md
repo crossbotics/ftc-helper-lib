@@ -2,6 +2,9 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**You will build:** a program that moves an arm with the stick and opens and closes a claw with buttons.
+The main track sets up motors and servos for you: [An intake, a lift and a claw](start/04-lift-and-claw.md).
+
 **You will learn:** how to get a motor and a servo from the robot configuration and set them up
 in one readable chain, how to read an encoder, how to limit a servo to a safe range, and how to
 handle a part that is not on every robot.
@@ -15,6 +18,9 @@ Optional: a touch sensor named `arm_touch`. Tutorial 01.
 ---
 
 ## 1. Get and set up the motor
+
+An **encoder** is a sensor on the motor that counts how far the shaft has turned. The count is
+called the **position**, measured in "ticks".
 
 Without the library, setting up a motor is five separate lines that are easy to get in the
 wrong order. With it:
@@ -63,6 +69,9 @@ A servo goes to a position from 0 to 1. But your claw probably only works betwee
 `.range(0.20, 0.75)` fixes that for good: after it, **0 means 0.20 and 1 means 0.75.** Your
 code says `setPosition(0)` for open and `setPosition(1)` for closed, and can never go further.
 
+`CLAW_OPEN` and `CLAW_CLOSED` in the program are named numbers (0 and 1). A name says what a
+number means; a bare `0.0` does not.
+
 ### How to find the two numbers
 
 1. Temporarily remove `.range(...)`.
@@ -79,7 +88,7 @@ If the claw closes at 0 and opens at 1 and you want it the other way, add `.reve
 TouchSensor touch = Hw.tryGet(hardwareMap, TouchSensor.class, "arm_touch");
 ```
 
-`tryGet` returns `null` (nothing) if there is no device with that name, instead of stopping.
+`tryGet` returns `null` (Java's word for "nothing here") if there is no device with that name, instead of stopping.
 Use it for parts that are only on some robots. **Always check for null** before using it:
 
 ```java
@@ -110,7 +119,8 @@ TelemetryHelper.motor(telemetry, "Arm", arm);
 TelemetryHelper.servo(telemetry, "Claw", claw);
 ```
 
-- `-gamepad1.left_stick_y`: the minus is needed, because the SDK says "stick up" is negative.
+- `-gamepad1.left_stick_y`: the minus is needed, because the SDK (the FTC software your code runs on)
+  says "stick up" is negative.
 - `shape(..., 0.05, 1)` ignores tiny stick noise. `* 0.5` limits the arm to half power while you test.
 - `TelemetryHelper.motor` shows power, encoder position, and speed on one line.
 

@@ -6,8 +6,10 @@ Package: `com.crossbotics.ftchelper.hardware`
 
 Learn it hands-on: [02 Motors and servos](../tutorials/02-motors-and-servos.md), [06 A fast, clear loop](../tutorials/06-fast-clear-loop.md).
 
-Gets motors, servos, sensors and the IMU from the robot configuration and sets them up,
-each in one readable chain. Gives clear errors when a name is wrong.
+Gets motors, servos, sensors and the IMU (the turn sensor in the Control Hub) from the robot
+configuration and sets them up, each in one readable chain. When a name is wrong, the error says
+which names do exist. Use it whenever your own code needs a device. The
+[robot in five files](robot.md) does this for its parts, so there you only type the names. Start with tutorial 02.
 
 | Class | Use it to |
 | --- | --- |
@@ -15,7 +17,7 @@ each in one readable chain. Gives clear errors when a name is wrong.
 | [`MotorSetup`](#motorsetup) | get and set up a motor |
 | [`ServoSetup`](#servosetup) | get and set up a servo |
 | [`ImuSetup`](#imusetup) | start the IMU and read the heading |
-| [`BulkReads`](#bulkreads) | make your loop faster |
+| [`BulkReads`](#bulkreads) | make your loop faster by reading a hub's encoders and simple sensors at once |
 
 ---
 
@@ -70,6 +72,8 @@ Gives the error text that `get` uses. You rarely need it.
 ## MotorSetup
 
 Gets a motor and sets it up in one chain. The settings are applied in the order you write them.
+The **encoder** is the motor's sensor that counts how far it has turned; its cable goes to the
+hub's encoder port.
 
 ```java
 DcMotorEx lift = MotorSetup.get(hardwareMap, "lift")
@@ -167,8 +171,8 @@ It is 0 where the robot pointed when the IMU was set up or last reset with `imu.
 
 ## BulkReads
 
-Each time your code reads an encoder or sensor, the phone sends a message to the hub and waits
-(about 2 milliseconds). With 6 encoders that is 12 ms each loop. A **bulk read** gets
+Each time your code reads an encoder or sensor, it sends a message to the hub and waits for the
+answer (about 2 milliseconds). With 6 encoders that is 12 ms each loop. A **bulk read** gets
 everything from a hub in one message.
 
 ### `BulkReads.auto(hardwareMap)`

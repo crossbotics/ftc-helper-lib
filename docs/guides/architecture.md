@@ -2,7 +2,11 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
-One page to see the whole library, and where your team's code goes.
+**For:** students who have written a TeleOp and want the big picture. **You need:** nothing to
+install; the first [lessons](../tutorials/README.md#start-here-the-main-track) help.
+
+One page to see the whole library, and where your team's code goes. TeamCode is the folder in your
+robot project where your team's own code lives.
 
 ## The layers
 
@@ -29,7 +33,8 @@ flowchart TB
 ```
 
 The five-files way ([robot module](../modules/robot.md)) sits on top: the team's `Robot.java`,
-`Tunables.java`, `Controls.java`, `Actions.java` and autos use the `robot` package, which builds the
+`Tunables.java`, `Controls.java`, `Actions.java` and autos use the `robot` package (a package is a
+folder of classes that belong together), which builds the
 same mechanism, drive, teleop and auto parts underneath. Both ways work; a team can mix them (a module's
 `part()` gives the plain part inside).
 
@@ -49,7 +54,8 @@ flowchart LR
 ```
 
 - **Commands are quick.** A button sets a target ("lift to HIGH"). It never waits.
-- **`update()` does the work**, once per loop: PID, limits, jam checks, timing.
+- **`update()` does the work**, once per loop: PID (the math that moves a motor to a target and
+  holds it there), limits, jam checks, timing.
 - **No `sleep()` in TeleOp.** While the code sleeps, the robot cannot react. Full guide:
   [Non-blocking code](non-blocking.md). Only autonomous moves and steps block, on purpose.
 
@@ -57,6 +63,8 @@ flowchart LR
 runs the same `update()` for you during every move and wait.
 
 ## The interfaces (where new things plug in)
+
+An interface is a short list of methods a class promises to have. Any class that has them can plug in.
 
 | Interface | Ready-made | Write your own when... |
 | --- | --- | --- |

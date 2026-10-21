@@ -2,6 +2,9 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**For:** teams getting ready for practice and events. **You need:** a TeleOp or autonomous that
+runs (any [lesson](../tutorials/README.md#start-here-the-main-track) robot).
+
 The same robot code should be **helpful in the shop** (debug numbers, gentle speeds, live tuning)
 and **safe at an event** (no tuning menu, no surprise values, nothing extra on the screen).
 A profile switches between the two without changing the code.
@@ -19,13 +22,14 @@ A profile switches between the two without changing the code.
 
 ## Choosing the profile
 
-It is saved on the Control Hub and stays until changed. Three ways:
+It is saved on the Control Hub and stays until changed. Two ways:
 
 1. **INIT menu** (easiest): every autonomous (`EasyAuto`, `Auto`) has a "Profile" line. D-pad to it,
    left/right to change. A TeleOp has none (it only warns when PRACTICE is on); a TeleOp you write
    yourself can add `.profile()` to an `InitMenu`.
 2. **Code**: `Profile.set(Profile.PRACTICE)`.
-3. Look at it: every OpMode can show `Profile.current()`.
+
+To see which one is on, any OpMode can show `Profile.current()`.
 
 ## Using it in your code
 

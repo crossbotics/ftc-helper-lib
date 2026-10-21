@@ -5,7 +5,7 @@
 **Goal:** know which buttons your robot already has, and give the buttons that are left your own jobs
 in `Controls.java`.
 
-**You need:** none: the simulator. Then your robot and gamepads 1 and 2.
+**You need:** nothing at first: start in the simulator. Then your robot and gamepads 1 and 2.
 
 **The code:** the lesson robot's [`Controls.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/Controls.java)
 (and the [`Actions.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/Actions.java)
@@ -29,8 +29,13 @@ public class Controls extends ControlMap<Robot> {
 ```
 
 `ControlMap<Robot>` is a whole TeleOp: driving, the match timer, every part updated each loop, and
-everything stopped at the end. `g1` is gamepad 1 (the driver), `g2` is gamepad 2 (the operator).
-(Delete `@Disabled` in your copy, or the Driver Station will not list it.)
+everything stopped at the end. The `<Robot>` says which robot it runs: yours, from `Robot.java`.
+`g1` is gamepad 1 (the driver), `g2` is gamepad 2 (the operator).
+
+- `@TeleOp(name = ...)`: the name on the Driver Station.
+- `@Disabled`: hides the example on a real robot. Delete it in your copy, or the Driver Station will not list it.
+- `@Override`: `buttons(...)` fills in a method the library class leaves to you; the library calls it
+  to set up the buttons.
 
 ## 2. The buttons the parts bring
 
@@ -66,8 +71,11 @@ public static boolean oneDriver = false;   // true: everything on gamepad 1
 
 ## 4. Add your own jobs
 
-Inside `buttons(...)`, one line per job: the pad, the button, the kind of job. `robot.claw::open` is a
-short way to write `() -> robot.claw.open()`: "run this later, when the button says so".
+Inside `buttons(...)`, one line per job: the pad, the button, the kind of job.
+
+`() -> robot.claw.open()` is a **lambda**: a small piece of code you hand over now, and the button runs
+later. `robot.claw::open` is a shorter way to write the same thing (a **method reference**). A
+`Runnable`, in the table below, is any such piece of code with no inputs.
 
 | Kind | Example | Does |
 | --- | --- | --- |
@@ -159,7 +167,7 @@ From the `ftc-helper-lib` folder (skip the first line if you did it in lesson 2)
 ```
 
 Open http://localhost:8780, pick "Lesson Bot TeleOp" and INIT: read the map. START. Use the on-screen
-gamepad 2, or the keyboard (A/B/X/Y are K L J I, LB/RB are Q E, LT/RT are Z C, GUIDE is M, BACK is
+gamepad 2, or the keyboard (set gamepad 2's list to "Keyboard" first; A/B/X/Y are K L J I, LB/RB are Q E, LT/RT are Z C, GUIDE is M, BACK is
 Backspace). Press RB and watch the lift rise. Press RB again while it moves: it cancels. Tap GUIDE.
 Then add one job of your own to Controls.java, and one on a button that already has one, to see the
 INIT message. For your own robot: `-PteamCode=../TeamCode` ([simulator guide](../../guides/simulator.md)).

@@ -7,12 +7,14 @@ Package: `com.crossbotics.ftchelper.gamepad`
 Learn it hands-on: [03 Buttons](../tutorials/03-buttons.md), [11 Driver assists](../tutorials/11-driver-assists.md).
 
 Turns gamepad buttons, sticks and triggers into robot actions, and gives the driver feedback
-by rumble (vibration).
+by rumble (vibration). Use it in a TeleOp you write yourself, or in [`EasyTeleOp`](teleop.md)'s
+`bindButtons`. With the [robot in five files](robot.md#controlmap), `Controls.java` does this job
+in a shorter way. New to buttons? Start with tutorial 03.
 
 | Class | Use it to |
 | --- | --- |
 | [`ControllerBindings`](#controllerbindings) | say what each button does, in one place |
-| [`StickShaping`](#stickshaping) | make sticks feel smooth: deadband, curves, slow-mode trigger |
+| [`StickShaping`](#stickshaping) | make sticks feel smooth: ignore tiny stick moves, add a curve, slow down with a trigger |
 | [`ToggleRumble`](#togglerumble) | buzz to confirm a toggle (2 buzzes = ON, 1 = OFF) |
 | [`AimRumble`](#aimrumble) | buzz when an error is small, e.g. "aimed at the target" |
 
@@ -86,7 +88,7 @@ All `bind...` methods return the same `ControllerBindings`, so you can chain the
 | `bindRelease(pad, btn, action)` | once, when the button comes up |
 | `bindHold(pad, btn, action)` | every loop while the button is down |
 | `bindToggle(pad, btn, onAction, offAction)` | each press flips ON/OFF. Starts OFF. Either action may be `null`. |
-| `bindTriggerPress(pad, trigger, action)` | once, when the trigger goes past the threshold |
+| `bindTriggerPress(pad, trigger, action)` | once, when the trigger goes past the threshold (how far it must be pulled, default half way) |
 | `bindTriggerHold(pad, trigger, action)` | every loop while the trigger is past the threshold |
 | `bindTriggerRelease(pad, trigger, action)` | once when the trigger comes back under the threshold |
 | `bindTriggerToggle(pad, trigger, onEnable, onDisable)` | each pull flips on / off |
@@ -97,8 +99,8 @@ All `bind...` methods return the same `ControllerBindings`, so you can chain the
 | Method | What it does |
 | --- | --- |
 | `update(gamepad1, gamepad2)` | **Call once every loop.** Reads the gamepads and runs the actions. |
-| `ignoreHeldButtons(gamepad1, gamepad2)` | Call once right after `waitForStart()`. For a button or trigger held through START, NOTHING bound to it runs (press, release, hold or toggle) until it is let go once. Stops surprises. Trigger axis bindings are not affected. |
-| `releaseAll()` | acts as if every button were let go: "release" actions run for held buttons. Call it before you pause `update()` (e.g. while a menu uses the gamepad); call `ignoreHeldButtons` when you start again. |
+| `ignoreHeldButtons(gamepad1, gamepad2)` | Call once right after `waitForStart()`. A button or trigger held down through START does NOTHING (press, release, hold or toggle) until it is let go once. This stops surprises. `bindTriggerAxis` still works. |
+| `releaseAll()` | Acts as if every button were let go: "release" actions run for held buttons. Call it before you stop calling `update()` for a while (e.g. while a menu uses the gamepad). Call `ignoreHeldButtons` when you start again. |
 | `isDown(pad, btn)` | True if the button was down at the last `update`. |
 | `getSlowActionWarning()` | "" or a note that an action took more than 20 ms (it waited or slept). It goes away 5 s after the last slow action. Show it with `t.warn(...)`. See [Non-blocking code](../guides/non-blocking.md). |
 | `clear()` | Removes all bindings. |
@@ -123,7 +125,8 @@ button, and it keeps the whole button map in one place.
 
 ### `StickShaping.shape(value, deadband, exponent)`
 
-The usual one-line stick setup: a deadband with a smooth start, then a curve.
+The usual one-line stick setup. First a **deadband**: a stick that is only a tiny bit off the
+middle counts as 0, then power starts smoothly from there. Then a curve, for fine control at low speed.
 
 ```java
 double forward = StickShaping.shape(-gamepad1.left_stick_y, 0.05, 2);   // minus: stick UP is negative

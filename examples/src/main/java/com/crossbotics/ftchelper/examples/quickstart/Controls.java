@@ -19,7 +19,8 @@ public class Controls extends ControlMap<Robot> {
 
     @Override
     protected void buttons(Robot robot, Pad g1, Pad g2) {
-        // Your own buttons here, later (lesson 3). One example: an action on gamepad 2's A.
+        // Your own buttons here, later (lesson 3). One example: an action on gamepad 2's A
+        // (delete it if you deleted the intake in STEP 5).
         g2.a.press(Actions.spitOut(robot)).says("spit out");
     }
 }

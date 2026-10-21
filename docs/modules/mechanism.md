@@ -8,7 +8,9 @@ Learn it hands-on: [14 Mechanisms](../tutorials/14-mechanisms.md). Example: [Dri
 
 Ready-made helpers for the four kinds of mechanism almost every robot has. Each one is a
 [`Subsystem`](core.md#subsystem), connects to buttons with one line, and gives autonomous
-steps with one call.
+steps with one call. The [robot in five files](robot.md)'s Lift, Arm, Claw and other parts are
+built on them, so with five files you rarely make them yourself. Use them in your own mechanism
+class, or for a part five files has no module for. Start with tutorial 14.
 
 | Class | For | Hardware |
 | --- | --- | --- |
@@ -28,8 +30,9 @@ flowchart LR
 
 1. Commands (`goTo`, `in`, `toggle`...) are quick and safe to call from a button. Motor helpers act
    in `update()`, once per loop: call `update()` every loop (or put them in a `Subsystems` group).
-2. **Servo commands move the servo AT ONCE** (that is how servos work; with `.maxSpeed()`, `update()` moves it in steps after the first move). So never call a command in
-   INIT unless that movement is allowed and safe: nothing may move before START.
+2. **Servo commands move the servo AT ONCE.** That is how servos work. (With `.maxSpeed()`, the
+   first move happens at once and `update()` does the rest in small steps.) So never call a command
+   in INIT unless that movement is allowed and safe: nothing may move before START.
 
 **A typo in a position name** (`goTo("HGIH")`) does nothing and shows a warning on the Driver
 Station, so it can never stop the OpMode in a match. `getWarning()` returns it.
@@ -38,8 +41,14 @@ Station, so it can never stop the OpMode in a match. `getWarning()` returns it.
 
 ## PositionMotor
 
-Everything from tutorials 07, 08 and 12 in one helper: PID, soft limits, a bottom switch with
-homing, a slow zone, named positions, stepping, manual override with hold, tuning, steps.
+Everything from tutorials 07, 08 and 12 in one helper:
+
+- **PID** to reach a position and hold it ([PidController](control.md#pidcontroller)).
+- **Soft limits:** code that never pushes past the safe range.
+- A bottom switch with **homing**: pressing the switch sets the position to 0, so the count is right.
+- A **slow zone** near the ends, so it does not slam.
+- Named positions, stepping between them, control by hand that holds where you let go, live tuning,
+  and autonomous steps.
 
 ```java
 PositionMotor lift = PositionMotor.create(hardwareMap, "lift")
@@ -62,7 +71,7 @@ Setup (chain them; **positive power must move toward bigger positions**):
 | `.reversed()` | positive power the other way (call first) |
 | `.units(ticksPerUnit, "deg")` | work in degrees/inches instead of ticks. Must come FIRST: calling it after limits, positions, slowZone or tolerance stops with a clear error |
 | `.limits(min, max)` | the safe range |
-| `.lowerSwitch(hardwareMap, name)` / `.lowerSwitch(reader)` | bottom switch: stops downward power and homes (position 0). Until homed: only slow downward power. A name not in the configuration shows a warning (and runs without a switch) |
+| `.lowerSwitch(hardwareMap, name)` / `.lowerSwitch(reader)` | bottom switch: stops downward power and homes (sets position 0). Until homed, only slow downward power works. A name not in the configuration shows a warning, and it runs without a switch |
 | `.upperSwitch(reader)` | top switch |
 | `.slowZone(distance, powerAtLimit)` | slow near the ends |
 | `.maxPower(p)` | most power ever |
@@ -102,8 +111,8 @@ SpinMotor intake = SpinMotor.create(hardwareMap, "intake")
 | --- | --- |
 | `create(hardwareMap, name)` | gets the motor: coast, plain power |
 | `.reversed()`, `.powers(in, out)` | direction and powers |
-| `.jamDetection(minSpeed, jamSec, unjamSec)` | while IN: a jam is backed out, then IN again (needs the encoder cable) |
-| `.jamCurrent(amps)` | also a jam when the current is too high |
+| `.jamDetection(minSpeed, jamSec, unjamSec)` | while IN: a jam (motor powered but barely turning) is backed out, then IN again (needs the encoder cable) |
+| `.jamCurrent(amps)` | also a jam when the motor draws too much current |
 | `in()`, `out()`, `stop()` | **safe to call every loop** (in() does not interrupt a jam back-out) |
 | `toggleIn()`, `toggleOut()` | for one button |
 | `setPower(p)` | any power, e.g. from a trigger |

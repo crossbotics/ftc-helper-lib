@@ -7,14 +7,16 @@ Package: `com.crossbotics.ftchelper.match`
 Learn it hands-on: [15 Telemetry, profiles and tuning](../tutorials/15-telemetry-profiles-tuning.md), [16 Easy autonomous](../tutorials/16-easy-autos.md).
 
 Things about the MATCH, not the robot: red or blue, the clock, choices made in INIT, and what
-autonomous tells TeleOp.
+autonomous tells TeleOp. [`EasyAuto`](auto.md), [`EasyTeleOp`](teleop.md) and the
+[robot in five files](robot.md) use these for you. Use this page when you write your own OpMode,
+or to add a timer cue or an INIT choice.
 
 | Class | Use it to |
 | --- | --- |
 | [`Alliance`](#alliance) | red/blue, and mirror a route written for blue |
 | [`MatchTimer`](#matchtimer) | count down a period and buzz at set times |
 | [`InitMenu`](#initmenu) | choose alliance, delay, route... with the gamepad in INIT |
-| [`MatchMemory`](#matchmemory) | pass the alliance (and pose) from autonomous to TeleOp |
+| [`MatchMemory`](#matchmemory) | pass the alliance (and pose: where the robot is and which way it faces) from autonomous to TeleOp |
 
 ---
 
@@ -30,8 +32,8 @@ autonomous tells TeleOp.
 | `sign()` | +1 blue, -1 red | |
 
 **Write routes for BLUE.** `AutoRoutine.mirrorFor(alliance)` flips every turn, heading and
-sideways direction for RED. Check each season's field: if it is ROTATED (not mirrored), forward
-and back flip as well, and you need your own rule for that (see [New season](../guides/new-season.md)).
+sideways direction for RED. Check each season's field. If the red half is ROTATED (turned around)
+instead of mirrored, forward and back flip as well, and you need your own rule for that (see [New season](../guides/new-season.md)).
 
 ```mermaid
 flowchart LR

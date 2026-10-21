@@ -2,6 +2,9 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**You will build:** a 3-line OpMode that lets you test every motor, servo and sensor on the robot by hand.
+This lesson is also part of the main track.
+
 **You will learn:** how to use the Hardware Check OpMode, a fixed order for testing a robot (laptop,
 bench, floor, autonomous, event), and how to turn a problem into a fix that stays fixed.
 
@@ -25,7 +28,7 @@ class does. The library wrote the OpMode; you only give it a name.
 
 ## 2. Use it
 
-Robot on a block. Run it. It lists every device in the active configuration and the battery voltage.
+Put the robot on a block, so the wheels are off the ground. Run it. It lists every device in the active configuration and the battery voltage.
 
 - **D-pad up/down**: choose a device. Changing device stops the last motor.
 - **Motor**: right stick = power (50% max; hold RB for 100%). Watch: does positive power turn it the
@@ -41,7 +44,7 @@ flowchart LR
     A["laptop tests"] --> B["Hardware Check<br/>(on a block)"] --> C["mechanism checks"] --> D["floor, low power"] --> E["autonomous runs<br/>read the report"]
 ```
 
-Each step catches problems the next one would make dangerous or confusing. Example: a reversed drive
+Do the steps in this order. Each step catches problems the next one would make dangerous or confusing. Example: a reversed drive
 motor (found in seconds at step B) looks like "the robot spins randomly" at step D.
 
 The full checklists, including the 2-minute pre-match check, are in
@@ -52,7 +55,7 @@ The full checklists, including the 2-minute pre-match check, are in
 1. **Write it down**: what you did, what you expected, what happened. Turn debug telemetry on and
    take a photo of the screen.
 2. **Reproduce it** on the bench. A problem you cannot repeat cannot be fixed on purpose.
-3. **Find the layer**: hardware (Hardware Check shows it)? configuration (names)? your code? the library?
+3. **Find the layer** (where the problem lives): hardware (Hardware Check shows it)? configuration (names)? your code? the library?
 4. **Fix it and add a test** if it was logic (tutorial 13), so it can never come back silently.
 5. **Note it** in the team's log: the next driver or programmer will meet it again.
 

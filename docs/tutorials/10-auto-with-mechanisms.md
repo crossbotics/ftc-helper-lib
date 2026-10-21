@@ -2,6 +2,9 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**You will build:** an autonomous that raises the lift while it drives, with alliance and start delay chosen on the gamepad in INIT.
+The main track does this with steps and actions: [Actions](start/05-actions.md) and [Your first autonomous](start/06-first-autonomous.md).
+
 **You will learn:** how to keep a lift working WHILE the robot drives, how to choose alliance
 and a start delay in INIT with the gamepad, how to mirror a route for red and blue, how to react
 when a move gets stuck, how to wait for a mechanism safely, and how to hand information to TeleOp.
@@ -20,6 +23,7 @@ code runs: a lift PID in your loop would stop being updated, and the lift would 
 
 ## 2. The loop hook
 
+A **hook** is a job you hand to someone else's code, so it runs at the right moment.
 Give `AutoDrive` a job to run once per loop **inside** every move and turn:
 
 ```java
@@ -124,6 +128,8 @@ while (opModeIsActive() && delay.seconds() < delaySec) {
 }
 ```
 
+`idle()` lets the rest of the robot software run for a moment before the loop goes around again.
+
 ## 7. Clean up and hand over to TeleOp
 
 ```java
@@ -133,9 +139,10 @@ while (opModeIsActive() && delay.seconds() < delaySec) {
 }
 ```
 
-`finally` runs even if the match ends in the middle of a move. `PoseStore` keeps the saved pose
+`finally` runs even if the match ends in the middle of a move. A **pose** is where the robot is
+(x, y) and which way it faces (heading). `PoseStore` keeps the saved pose
 until TeleOp reads it (Tutorial 12 uses `DriverHeading` for this). Here we only know the
-heading; with odometry pods you would save x and y too.
+heading; with odometry pods (extra unpowered wheels with encoders that track x and y) you would save x and y too.
 
 ## Run it
 

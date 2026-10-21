@@ -111,7 +111,7 @@ public class FindersTest {
         assertEquals("", p.tunablesLine("Launcher"));
         p.save(72, 2900, 0);
         p.save(48.5, 2550, 0);
-        assertEquals("Tunables.Launcher.speedByDistance = {{48.5, 2550}, {72, 2900}};", p.tunablesLine("Launcher"));
+        assertEquals("public static double[][] speedByDistance = {{48.5, 2550}, {72, 2900}};   // in Tunables.Launcher", p.tunablesLine("Launcher"));
     }
 
     @Test public void removingOneDevicesLinesKeepsADeviceWithALongerName() {

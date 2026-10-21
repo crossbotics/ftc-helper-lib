@@ -2,8 +2,15 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**For:** students and mentors who add something new to the library. **You need:** comfort with Java
+classes, and the library building on your laptop ([Contributing](../contributing.md#build-and-test)).
+
 The library is meant to grow every season. This page shows the four places new things plug in,
 with a complete example for each, and the rules that keep it easy for the next team.
+
+Each place is an interface: a short list of methods a class promises to have. A class that
+`implements` it writes those methods (each marked `@Override`), and then it plugs in anywhere the
+library expects one.
 
 ## Where does my new code go?
 
@@ -105,8 +112,9 @@ and the picture time in `System.nanoTime()`. Then `AimController`, `Turret.aimBy
 2. **Nothing blocks TeleOp**: commands are quick; work happens in `update()`. Only autonomous steps wait.
 3. **Hardware setup leaves motors at 0 power.** Nothing moves before START.
 4. **Safety stays on in every profile.** Limits, timeouts, jam checks.
-5. **Testable**: put the logic in a part with no hardware, or take a clock (`LongSupplier`) and
-   devices in the constructor, so tests can use pretend ones (see `library/src/test`).
+5. **Testable**: put the logic in a part with no hardware, or take a clock (`LongSupplier`, a method
+   that returns the time) and devices in the constructor (the code that makes the object), so tests can
+   use pretend ones (see `library/src/test`).
 6. **The six steps**: code, Javadoc, test, module page, tutorial, CHANGELOG ([Contributing](../contributing.md)).
 7. **No game-specific numbers** in the library.
 

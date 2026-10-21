@@ -2,8 +2,11 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**You will build:** one program that runs a lift, a wrist, an intake and a spinner with the library's ready-made helpers.
+The main track's parts are made from these helpers: [An intake, a lift and a claw](start/04-lift-and-claw.md).
+
 **You will learn:** the four ready-made mechanism helpers (a motor that goes to positions, a motor
-that spins, a servo with positions, a continuous servo), how each connects to buttons in one line,
+that spins, a servo with positions, a continuous servo that spins round and round like a small motor), how each connects to buttons in one line,
 and how a `Subsystems` group runs them all.
 
 **You need:** whatever you have of: motor `lift` (+ touch `lift_bottom`), servo `wrist`, motor
@@ -73,7 +76,8 @@ if (!gamepad1.b) {
 }
 ```
 
-Add `.jamDetection(80, 0.3, 0.4)` (with the encoder cable) and a jam backs itself out.
+Add `.jamDetection(80, 0.3, 0.4)` (with the encoder cable) and a jam backs itself out. (A jam is
+when a game piece gets stuck and the intake stops turning while it has power.)
 
 ## 5. A spinner: `SpinServo`
 

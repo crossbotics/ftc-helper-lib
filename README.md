@@ -5,6 +5,7 @@
 > report helps.
 
 Shortcuts for programming an FTC robot in Java, made by Indianola Robotics (FTC team 8938).
+A **library** is code someone else wrote that your program can use, so you do not write it again.
 
 It takes the jobs every robot needs and makes each one a line or two of clear code: motors and
 servos, buttons, mecanum and standard (tank) drive, lifts and arms that cannot hurt themselves,
@@ -32,6 +33,9 @@ routine.step("Lift up", lift.startStep("HIGH"))
        .thenPark()
        .move("Park", 20, 90, 0.8);
 ```
+
+New to Java? Do not worry if this looks strange. The [lessons](docs/tutorials/README.md) explain each
+line, one at a time.
 
 ## Try your robot without a robot: the simulator
 
@@ -81,6 +85,15 @@ replacement for learning.
 
 ## Start here
 
+**New to the library?** Read in this order:
+
+1. [Quick start](docs/quick-start.md): add the library, get five files, and drive.
+2. [Lesson 1: the robot in five files](docs/tutorials/22-robot-in-five-files.md): what each file is for.
+3. Lessons 2 to 7 of the [main track](docs/tutorials/README.md#start-here-the-main-track): drive,
+   buttons, mechanisms, actions, autonomous, a shooter.
+
+Everything else, by what you want to do:
+
 | I want to... | Read |
 | --- | --- |
 | **Get a robot driving in 30 minutes** (files to copy, the lines to change) | [Quick start](docs/quick-start.md) |
@@ -111,7 +124,8 @@ replacement for learning.
 
 ## What is inside
 
-Every class and every function is explained in the module pages.
+Every class and every function is explained in the module pages. A **package** is a folder of Java
+classes; its name is how your code finds them (in an `import` line).
 
 | Module | Package | What it does | Docs |
 | --- | --- | --- | --- |

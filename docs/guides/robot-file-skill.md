@@ -2,10 +2,15 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**For:** teams that want the [simulator](simulator.md) to act like their own robot. **You need:** an AI
+coding agent (Claude Code, Codex or similar), your robot project with ftc-helper-lib in it, and a tape
+measure.
+
 The simulator moves like YOUR robot only if its robot file (`simulator/robot.properties` in your robot
 project) describes your robot: every device name, the motors and servos, the size, the mechanisms and
 cameras. Writing it by hand works ([simulator guide](simulator.md)); an AI coding agent can do most of
-it for you with the **robot-file skill**, a set of instructions in `ftc-helper-lib/skills/robot-file/`.
+it for you with the **robot-file skill**. A skill is a set of written instructions the agent follows;
+this one is in `ftc-helper-lib/skills/robot-file/`.
 
 ```mermaid
 flowchart LR
@@ -18,7 +23,9 @@ flowchart LR
 
 ## Set it up
 
-- **Claude Code**: copy (or link) the skill into your robot project, once:
+Do this once, in your robot project.
+
+- **Claude Code**: copy (or link) the skill into your robot project:
   ```bash
   mkdir -p .claude/skills && cp -r ftc-helper-lib/skills/robot-file .claude/skills/
   ```
@@ -53,7 +60,8 @@ from (measured, the configuration, a seller page, a photo estimate, a default).
 ./gradlew :sim:fromConfig -Pconfig=path/to/config.xml -Pout=../simulator/robot.properties
 ```
 
-From the `ftc-helper-lib` folder. It lists every device of the configuration, writes a robot file with
+Run it from the `ftc-helper-lib` folder. `-Pconfig=` is the configuration file to read, `-Pout=` the
+robot file to write. It lists every device of the configuration, writes a robot file with
 each one under its exact name, matches the motor types that pin down a part (REV HD Hex 20:1 and 40:1,
 Core Hex, NeveRest) to the parts catalog, marks everything else `TODO`, checks the draft loads, and
 prints the questions still open. It finds the drivetrain from the motor names (front/back and

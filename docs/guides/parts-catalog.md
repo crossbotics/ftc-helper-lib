@@ -61,12 +61,12 @@ Free speed and current at 12 V. **Counts per turn** are encoder counts per turn 
 | id | Part | Part number | Ratio | Free speed (RPM) | Counts per turn | Top speed (counts/s) | Stall torque (kg-cm) | Stall current (A) |
 |---|---|---|---|---|---|---|---|---|
 | `rev-hd-hex` | [REV HD Hex Motor (no gearbox)](https://www.revrobotics.com/rev-41-1291/) | REV-41-1291 | 1:1 | 6000 | 28 | 2800 | 1.07 | 8.5 |
-| `rev-hd-hex-up3` | [REV HD Hex + UltraPlanetary 3:1 (nominal)](https://www.revrobotics.com/rev-41-1600/) | REV-41-1291 + REV-41-1601 | 2.9:1 | 2071.4 | 81.1 | 28 | 3.1 | 8.5 |
-| `rev-hd-hex-up4` | [REV HD Hex + UltraPlanetary 4:1 (nominal)](https://www.revrobotics.com/rev-41-1600/) | REV-41-1291 + REV-41-1602 | 3.62:1 | 1657.9 | 101.33 | 28 | 3.87 | 8.5 |
-| `rev-hd-hex-up5` | [REV HD Hex + UltraPlanetary 5:1 (nominal)](https://www.revrobotics.com/rev-41-1600/) | REV-41-1291 + REV-41-1603 | 5.23:1 | 1147 | 146.46 | 28 | 5.61 | 8.5 |
-| `rev-hd-hex-up12` | [REV HD Hex + UltraPlanetary 12:1 (nominal)](https://www.revrobotics.com/rev-41-1600/) | REV-41-1291 + REV-41-1601 + REV-41-1602 | 10.48:1 | 572.4 | 293.52 | 28 | 11.23 | 8.5 |
-| `rev-hd-hex-up15` | [REV HD Hex + UltraPlanetary 15:1 (nominal)](https://www.revrobotics.com/rev-41-1600/) | REV-41-1291 + REV-41-1601 + REV-41-1603 | 15.15:1 | 396 | 424.23 | 28 | 16.22 | 8.5 |
-| `rev-hd-hex-up20` | [REV HD Hex + UltraPlanetary 20:1 (nominal)](https://www.revrobotics.com/rev-41-1600/) | REV-41-1291 + REV-41-1602 + REV-41-1603 | 18.93:1 | 317 | 530.05 | 28 | 20.19 | 8.5 |
+| `rev-hd-hex-up3` | [REV HD Hex + UltraPlanetary 3:1 (nominal)](https://www.revrobotics.com/rev-41-1600/) | REV-41-1291 + REV-41-1601 | 2.9:1 | 2071.4 | 81.1 | 2800 | 3.1 | 8.5 |
+| `rev-hd-hex-up4` | [REV HD Hex + UltraPlanetary 4:1 (nominal)](https://www.revrobotics.com/rev-41-1600/) | REV-41-1291 + REV-41-1602 | 3.62:1 | 1657.9 | 101.33 | 2800 | 3.87 | 8.5 |
+| `rev-hd-hex-up5` | [REV HD Hex + UltraPlanetary 5:1 (nominal)](https://www.revrobotics.com/rev-41-1600/) | REV-41-1291 + REV-41-1603 | 5.23:1 | 1147 | 146.46 | 2800 | 5.61 | 8.5 |
+| `rev-hd-hex-up12` | [REV HD Hex + UltraPlanetary 12:1 (nominal)](https://www.revrobotics.com/rev-41-1600/) | REV-41-1291 + REV-41-1601 + REV-41-1602 | 10.48:1 | 572.4 | 293.52 | 2800 | 11.23 | 8.5 |
+| `rev-hd-hex-up15` | [REV HD Hex + UltraPlanetary 15:1 (nominal)](https://www.revrobotics.com/rev-41-1600/) | REV-41-1291 + REV-41-1601 + REV-41-1603 | 15.15:1 | 396 | 424.23 | 2800 | 16.22 | 8.5 |
+| `rev-hd-hex-up20` | [REV HD Hex + UltraPlanetary 20:1 (nominal)](https://www.revrobotics.com/rev-41-1600/) | REV-41-1291 + REV-41-1602 + REV-41-1603 | 18.93:1 | 317 | 530.05 | 2800 | 20.19 | 8.5 |
 | `rev-hd-hex-up60` | [REV HD Hex + UltraPlanetary 60:1 (nominal)](https://www.revrobotics.com/rev-41-1600/) | REV-41-1291 + REV-41-1601 + REV-41-1602 + REV-41-1603 | 54.83:1 | 109.5 | 1535.32 | 2802 | 58.63 | 8.5 |
 | `rev-hd-hex-40` | [REV HD Hex Motor 40:1 Spur Gearbox](https://www.revrobotics.com/rev-41-1301/) | REV-41-1301 | 40:1 | 150 | 1120 | 2800 | 42.83 | 8.5 |
 | `rev-hd-hex-20` | [REV HD Hex Motor 20:1 Spur Gearbox](https://docs.revrobotics.com/duo-build/motion/motors/hd-hex-motor) | REV-41-1298 | 20:1 | 300 | 560 | 2800 | 21.41 | 8.5 |
@@ -82,7 +82,7 @@ Free speed and current at 12 V. **Counts per turn** are encoder counts per turn 
 | id | Part | Part number | Ratio | Free speed (RPM) | Counts per turn | Top speed (counts/s) | Stall torque (kg-cm) | Stall current (A) |
 |---|---|---|---|---|---|---|---|---|
 | `am-neverest-orbital-1` | [AndyMark NeveRest Orbital 1:1](https://andymark.com/products/neverest-orbital-gearmotors) | am-5185a / am-5185b | 1:1 | 6600 | 28 | 3080 | — | 11 |
-| `am-neverest-orbital-3-7` | [AndyMark NeveRest Orbital 3.7:1](https://andymark.com/products/neverest-orbital-gearmotors) | am-3461a / am-3461b | 3.7:1 | 1784 | 103.6 | 308 | — | 11 |
+| `am-neverest-orbital-3-7` | [AndyMark NeveRest Orbital 3.7:1](https://andymark.com/products/neverest-orbital-gearmotors) | am-3461a / am-3461b | 3.7:1 | 1784 | 103.6 | 3080 | — | 11 |
 | `am-neverest-orbital-20` | [AndyMark NeveRest Orbital 19.2:1](https://andymark.com/products/neverest-orbital-gearmotors) | am-3637b | 19.2:1 | 344 | 537.6 | 3082 | — | 11 |
 | `am-neverest-orbital-50` | [AndyMark NeveRest Orbital 50.9:1](https://andymark.com/products/neverest-orbital-gearmotors) | am-4609a | 50.9:1 | 130 | 1425.2 | 3088 | — | 11 |
 | `am-neverest-orbital-264` | [AndyMark NeveRest Orbital 263.7:1](https://andymark.com/products/neverest-orbital-gearmotors) | am-4608a / am-4608b | 263.7:1 | 25 | 7383.6 | 3076 | — | 11 |

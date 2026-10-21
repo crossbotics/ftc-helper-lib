@@ -2,6 +2,9 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**You will build:** an autonomous written as a list of named steps: grab, drive, lift, drop, park.
+The main track's autonomous is built on `EasyAuto` and is shorter still: [Your first autonomous](start/06-first-autonomous.md).
+
 **You will learn:** how `EasyAuto` turns an autonomous into a list of named steps, how to add INIT
 choices, how red/blue mirroring works, how to keep time for parking, and how to read the report.
 
@@ -20,6 +23,9 @@ waiting loops with time limits, `finally` cleanup, a pose hand-off. All needed, 
 every autonomous. `EasyAuto` does all of it; you write only what is special about THIS autonomous.
 
 ## 2. Tell it about the robot
+
+`extends EasyAuto` means your class starts with everything `EasyAuto` already does. You only fill in
+the parts it asks for.
 
 ```java
 public class Tut16EasyAuto extends EasyAuto {
@@ -95,10 +101,10 @@ Read it out loud: it IS the plan. Things to notice:
 
 1. INIT: read the placement line. Choose BLUE, Route = Score. START.
 2. The screen shows "Step 4/11 To the goal" and the time left.
-3. At the end: the report. Every step "done"? 
+3. At the end: the report. Is every step "done"?
 4. Run as RED: it turns the other way and parks to the left.
 5. Choose "Park only": just grab, off the wall, park.
-6. Override `maxStartDelaySec()` to return 25 (the menu stops at 10 s), then set a 25 s start delay: the
+6. Override `maxStartDelaySec()` (write your own version of it, with `@Override`) to return 25 (the menu stops at 10 s), then set a 25 s start delay: the
    main steps are skipped ("skipped (time for park)") but it still parks.
 
 ## If something goes wrong

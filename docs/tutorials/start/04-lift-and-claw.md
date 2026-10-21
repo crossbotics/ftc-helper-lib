@@ -6,7 +6,8 @@
 
 **You need:**
 
-- The lesson robot from the earlier lessons: a drive that works ([lesson 1](../22-robot-in-five-files.md)).
+- The lesson robot from the earlier lessons: a drive that works ([lesson 2](02-drive.md)) and the
+  buttons from [lesson 3](03-buttons.md).
 - On the robot: an intake motor, a lift motor with an encoder, a touch sensor at the bottom of the
   lift, and a claw servo. In the robot configuration they are called `intake`, `lift`,
   `lift_bottom` and `claw`.
@@ -48,7 +49,8 @@ toggles, which buttons they use: the module already does that.
 
 ## 2. Their numbers in Tunables.java
 
-Each module reads the section with its device's name in CamelCase: `"lift"` reads `Tunables.Lift`.
+Each module reads the section with its device's name in CamelCase (each word starts with a capital,
+no `_`): `"lift"` reads `Tunables.Lift`.
 
 ```java
 public static class Intake {
@@ -73,8 +75,9 @@ What each number means:
   the shaft has turned. 0 is the bottom; bigger numbers are higher.
   - `min`, `max`: the safe range. The lift never goes outside it. You cannot change these from the
     tuning menu, so tuning can never push the lift past a stop.
-  - `kP`, `kI`, `kD`, `kF`: how hard it pushes to reach and hold a height (step 6). `kF` is the steady
-    push that keeps the lift from sagging.
+  - `kP`, `kI`, `kD`, `kF`: how hard it pushes to reach and hold a height (step 6). These are the
+    **PID** numbers (P = push harder the further away it is, D = brake as it gets close, I = fix a
+    small error that stays). `kF` is the steady push that keeps the lift from sagging.
   - `down`, `low`, `high`: **named heights**. Every other number in the section is a height, and you
     can pick any names. Your code then says `robot.lift.goTo("high")`.
 - **Claw:** servo positions, 0 to 1. A claw needs both `open` and `closed` (INIT stops without them).
@@ -101,9 +104,9 @@ replaces the module's suggestion.
 ## 4. Why the bottom switch matters (homing)
 
 The encoder only counts *changes*. It does not know where the bottom is. So the library needs a
-known 0.
+known 0. **Homing** means finding that 0.
 
-- **With a bottom switch:** pressing the switch sets the count to 0. This is called **homing**.
+- **With a bottom switch:** pressing the switch sets the count to 0.
   Until the switch has been pressed once, the lift only goes **down, slowly** (at most 0.3 power),
   and the height buttons do nothing. The screen says `Lift: push it DOWN to the switch to home it`.
   If the lift starts resting on the switch, it homes on the first loop. Every later press fixes any
@@ -136,8 +139,14 @@ public class MotorFinder extends MotorFinderOpMode {
 }
 ```
 
-- **Servo Finder, for the claw:** choose `claw`, mark its two ends (X and B), then press A fully
-  open without straining, and A again fully closed on a game piece.
+- **Servo Finder, for the claw:**
+  1. Choose `claw` (D-pad, A).
+  2. A servo cannot tell where it is, so choose a start point near where it sits now (D-pad; nothing
+     moves), then press A: it moves there. X and B do nothing before this.
+  3. Nudge it with the D-pad to each end, just before it strains. Press X at one end and B at the other.
+  4. Press A fully open without straining, and A again fully closed on a game piece.
+
+  Details: [Servo Finder](../../guides/finders.md#servo-finder-ends-and-positions).
 - **Motor Finder, for the lift:** put the lift at the bottom first (the count starts at 0 there).
   Move it slowly with the stick. Press X just before the bottom block and B just before the top
   block: those are `min` and `max`. Press A at each height you want.
@@ -175,7 +184,7 @@ and [tutorial 21](../21-finders.md).
 `kP` to `kF` and the named heights change **while the robot runs**, so you do not rebuild for each
 try.
 
-1. INIT the TeleOp with the **PRACTICE** profile.
+1. INIT the TeleOp with the **PRACTICE** profile, then press START.
 2. **Hold GUIDE for 1 second:** the tuning menu opens on gamepad 1 (the wheels hold still).
 3. D-pad up/down chooses a number (`Lift/kP`, `Lift/high`, `Claw/open`...), right/left changes it
    (hold a bumper for 10 times bigger steps). Use gamepad 2 to send the lift between heights and watch.

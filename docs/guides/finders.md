@@ -2,6 +2,9 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**For:** anyone setting up a robot's numbers for the first time. **You need:** a robot with its
+configuration done, the [Hardware Check](testing.md) passed, and a block to lift it.
+
 Every robot program is full of numbers: where a servo opens, how high a lift may go, how fast a
 flywheel spins, how big the wheels really are. Guessing them wastes practice time and breaks parts.
 The **finders** measure them for you and show the code to copy. Reference: [finders.md](../modules/finders.md).
@@ -13,7 +16,9 @@ Each finder shows two kinds of lines. Use the kind that fits your code:
 | the robot in five files ([lessons](../tutorials/README.md#start-here-the-main-track)) | `Tunables.` or `Robot.java:` | `Tunables.Lift: min = 0, max = 2580, P1 = 1200` = in `Tunables.java`, section `Lift`, set those three numbers |
 | the older helpers | the rest (`PositionMotor.create(...)`, `c.wheelDiameterIn = ...`) | `PositionMotor.create(hardwareMap, "lift").limits(0, 2580)` |
 
-The section is the device's name in CamelCase: `lift` -> `Lift`, `intake_deploy` -> `IntakeDeploy`.
+The section is the device's name in CamelCase (each word starts with a capital, no spaces): `lift` ->
+`Lift`, `intake_deploy` -> `IntakeDeploy` (unless you gave the part its own section with
+`.tunables("Name")` in Robot.java: then copy the numbers into that section).
 The finders call positions P1, P2...: give them real names (`low`, `high`, `open`, `closed`).
 
 ## The order
@@ -50,7 +55,8 @@ flowchart LR
   and in the examples (`ExampleShotTuner`, `ExampleAimTuner`: put your launcher and camera in them).
   Remove `@Disabled`, build, and they are in the TeleOp list under "Finders".
 - The robot in five files: the Servo, Motor and Flywheel finders need no code. The Drive Tuner and the
-  Shot Tuner need one line that names your robot (examples: the lesson robot's
+  Shot Tuner need one line that names your robot (it makes your `Robot`, so the tuner uses its parts;
+  examples: the lesson robot's
   [DriveTuner.java](../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/DriveTuner.java),
   the turret robot's [ShotTuner.java](../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/ShotTuner.java)):
 
@@ -138,8 +144,8 @@ Watch the current (amps): a high number while not moving means it is pushing on 
 2. Change the speed (and hood) with the D-pad (**Y** chooses which) and shoot (**RB**, or hold **RT**)
    until the shots go in, several in a row. Press **A** to save the point.
 3. Move back 1-2 ft (drive with the sticks) and do it again. 4-6 points cover the field.
-4. Copy the table. Five files: the line `Tunables.Launcher.speedByDistance = {{24, 2600}, {48, 3100}};`
-   goes into `Tunables.Launcher` as it is (with `public static double[][]` in front). Older helpers: the
+4. Copy the table. Five files: the line `public static double[][] speedByDistance = {{24, 2600}, {48, 3100}};   // in Tunables.Launcher`
+   replaces the `speedByDistance` line in `Tunables.Launcher`. Older helpers: the
    `new ShotTable()` lines go into your Robot class. Between the points the launcher fills in the
    speed; outside them it uses the nearest point.
 

@@ -2,7 +2,10 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
-Your robot project remembers ONE exact version of the library (one git commit).
+**Before this:** [Add it to a project](01-add-to-project.md).
+
+Your robot project remembers ONE exact version of the library (one git commit: one saved snapshot
+of the library's files).
 It does not change by itself. This is good: the robot never changes the night before an event
 because someone changed the library. You choose when to update.
 
@@ -14,7 +17,8 @@ All commands run in the **Terminal** tab of Android Studio, in the robot project
 git submodule status
 ```
 
-It prints the commit and, if there is one, the version tag, for example
+It prints the commit and, if there is one, the version tag (a name like `v0.1.0` given to one
+release), for example
 ` 3f2c1a9 ftc-helper-lib (v0.1.0)`.
 
 The [CHANGELOG](../CHANGELOG.md) says what changed in each version.
@@ -25,7 +29,7 @@ The [CHANGELOG](../CHANGELOG.md) says what changed in each version.
 git submodule update --remote ftc-helper-lib
 ```
 
-Then:
+This downloads the newest library into the `ftc-helper-lib` folder. Then:
 
 1. **Sync** Gradle (the yellow bar, or **File > Sync Project with Gradle Files**).
 2. **Build** (hammer icon). Fix anything the CHANGELOG says changed.
@@ -52,11 +56,15 @@ git add ftc-helper-lib
 git commit -m "Use ftc-helper-lib v0.1.0"
 ```
 
+What the lines do: go into the library folder, download the list of versions, switch to `v0.1.0`,
+go back to the project folder, and commit the choice (push it, and the team gets it too).
+
 Use this to go back to an older version if a new one causes a problem.
 
 ## Rule of thumb for the season
 
-- **Before an event:** do not update. Use the version you tested.
+- **Before an event:** do not update. Use the version you tested. **Why:** a change you have not
+  tested can break the robot when there is no time to fix it.
 - **After an event:** update, test, commit.
 
 ## After a teammate updates it
@@ -72,7 +80,8 @@ this command also puts it back to the version the project expects.
 
 ## A new FTC SDK version
 
-The FTC SDK changes every season (and sometimes during one). The library is built against one SDK
+The FTC SDK (the code from FIRST that every robot app is built on) changes every season (and
+sometimes during one). The library is built against one SDK
 version (now **12.0.0**, the 2026-27 release, set in `library/build.gradle`), but your robot app always uses the SDK
 version in YOUR project's `build.dependencies.gradle`: the library is only compiled against 12.0.0 and
 brings no SDK of its own.

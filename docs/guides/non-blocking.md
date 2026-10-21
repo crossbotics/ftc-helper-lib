@@ -2,6 +2,9 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**For:** anyone writing TeleOp or autonomous code. **You need:** a first OpMode
+([lesson 2](../tutorials/start/02-drive.md) or [tutorial 01](../tutorials/01-opmode-basics.md)).
+
 A robot program is ONE loop that runs 50-200 times per second. Every part of the robot gets a turn
 in every loop. If any one piece of code **waits** (sleeps, loops until something happens, waits for
 a network answer), the whole robot freezes for that time: no driving, no stopping at limits, no
@@ -26,7 +29,8 @@ flowchart LR
 | Setup in INIT (`create(...)`, `ImuSetup.get`, camera `start()`) | A short moment, once, in INIT. Not in the loop. |
 | `AutoDrive.move/turn/turnTo/moveWithTurn`, `AutoRoutine.runAll`, `AutoStep`s, `EasyAuto` | **Yes, on purpose**, and only in autonomous. While they wait they keep updating your mechanisms, check STOP, and have time limits. |
 
-Each blocking method says **BLOCKS** in its Javadoc.
+Each blocking method says **BLOCKS** in its Javadoc (the explanation above it in the code, also in the
+[reference](../reference.md)).
 
 ## How to wait without blocking
 
@@ -66,6 +70,9 @@ library's waits, never `sleep()`:
 | `while (!lift.isAtTarget()) {}` | `routine.waitUntil("Lift up", lift::isAtTarget, 2.0)` (time limit!) |
 | a custom waiting loop | inside an `AutoStep`: `ctx.waitFor(...)`, `ctx.waitUntil(...)`, or call `ctx.loop()` in your loop |
 
+`lift::isAtTarget` is a method reference: it hands over the method itself, so the wait can call it
+again every loop.
+
 ## The alarms
 
 The library watches for blocking code and tells you on the Driver Station:
@@ -74,7 +81,7 @@ The library watches for blocking code and tells you on the Driver Station:
 | --- | --- | --- |
 | `G2:A action took 250 ms: actions must not wait or sleep` | a button action waited | remove the sleep/loop; use a state machine (above) |
 | `Lift update took 120 ms: update() must not wait or sleep` | a mechanism's `update()` waited | same |
-| Loop speed under ~30 Hz (`LoopTimer`) | something is slow every loop | bulk reads, fewer telemetry lines, look for waits |
+| Loop speed under ~30 Hz (`LoopTimer`; Hz = loops per second) | something is slow every loop | bulk reads, fewer telemetry lines, look for waits |
 
 Show the button warning in your TeleOp:
 
@@ -88,7 +95,8 @@ if (!controls.getSlowActionWarning().isEmpty()) t.warn(controls.getSlowActionWar
 ## Background jobs
 
 Some hardware requests must wait for an answer (a network request to the Limelight). The library
-runs those on a `BackgroundWorker` thread, so your loop goes on. If you ever add such a request:
+runs those on a `BackgroundWorker` thread: a second line of work that runs at the same time as your
+loop, so your loop goes on. If you ever add such a request:
 
 ```java
 BackgroundWorker worker = new BackgroundWorker("my-sensor");   // its own thread (a 2nd worker)

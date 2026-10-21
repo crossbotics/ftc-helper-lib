@@ -2,6 +2,9 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**You will build:** a small program that counts A presses and shows the loop speed on the Driver Station.
+It is the base of every other tutorial. The main track skips these details: [The robot in five files](22-robot-in-five-files.md).
+
 **You will learn:** the shape every program in these tutorials uses, how to import library
 classes, why some variables are "fields", what `() -> ...` means, and why we use `try`/`finally`.
 
@@ -14,7 +17,8 @@ No motors.
 
 ## 1. The four parts of an OpMode
 
-An OpMode is a program you pick on the Driver Station. A `LinearOpMode` runs from top to bottom:
+An **OpMode** is a program you pick on the Driver Station. A `LinearOpMode` is the kind that runs
+from top to bottom, like a recipe:
 
 ```java
 @TeleOp(name = "Tutorial 01: Hello Library", group = "Tutorials")
@@ -38,7 +42,9 @@ public class Tut01HelloLibrary extends LinearOpMode {
 
 - `@TeleOp(name = ...)` puts it in the TeleOp list. `@Autonomous` puts it in the Autonomous list.
 - `group` sorts the list.
-- The **loop** must be quick. It reads the gamepads, decides, sets motor powers, and goes around
+- `while (opModeIsActive()) { ... }` is a **loop**: the code inside the braces runs again and again
+  while the OpMode is running.
+- The loop must be quick. It reads the gamepads, decides, sets motor powers, and goes around
   again. Never put `sleep()` in a TeleOp loop: the robot cannot react while it sleeps.
 
 ### Why `try`/`finally`?
@@ -76,7 +82,7 @@ ControllerBindings controls = new ControllerBindings()
         .bindPress(Pad.G1, Btn.A, () -> presses++);
 ```
 
-- `new LoopTimer()` makes a loop-speed meter.
+- `new` makes a new object from a class. `new LoopTimer()` makes a loop-speed meter.
 - `new ControllerBindings()` makes the button list. `.bindPress(...)` adds one job:
   "when gamepad 1's A goes down, add one to `presses`".
 - The dots on new lines are a **chain**: each `.bind...` returns the same object, so you can keep
@@ -97,7 +103,8 @@ public class Tut01HelloLibrary extends LinearOpMode {
 ```
 
 Java does not let a lambda change a normal local variable (one made inside `runOpMode`).
-A **field** (made inside the class, outside any method) is allowed. Rule of thumb:
+A **field** is a variable made inside the class but outside any method (a **method** is a named
+block of code, like `runOpMode`). A lambda may change a field. Rule of thumb:
 *anything a button changes is a field.*
 
 ## 4. The loop
@@ -128,7 +135,7 @@ while (opModeIsActive()) {
 1. INIT: the screen says "Ready".
 2. START. Press A a few times: the count goes up by exactly one per press, even if you hold it.
 3. Hold B: "B held : yes".
-4. Loop speed: probably 100+ Hz with nothing connected.
+4. Loop speed: probably 100+ Hz with nothing connected. (Hz means "times per second".)
 
 ## If something goes wrong
 

@@ -14,7 +14,22 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 - `:sim:newRobot`'s `Controls.java` comment describes BACK (tap: pause; hold: reset forward) and GUIDE
   (tap: button map; hold: tuning menu) as they work now.
-- Simulator tests start each run with a fresh tuning list, so one test robot's numbers cannot leak into another.
+- Docs: the tuning menu opens after START (INIT, START, then hold GUIDE 1 s); lessons 4 and 6 said INIT only.
+- The quick start template says what else to delete when a robot has no intake.
+- Docs: every page reviewed for a student new to Java (each Java idea and technical word explained where it
+  is first used, steps numbered, a "why" for each choice), then checked line by line against the code.
+  About 20 wrong statements fixed on the way (e.g. the simulator's keyboard works only after you set the
+  gamepad to "Keyboard"; the Servo Finder needs its start point before X and B).
+
+### Fixed
+
+- Robot in five files: a `Tunables.java` section that no part reads (like `Tunables.Auto`) no longer
+  overwrites a value your code sets while it runs; the menu writes into the field only when its value changes.
+- Two robots in one project with the same tunable name (like `Auto/leaveInches`): each robot now gets
+  its own code value, unless the value was tuned. New: `Tunable.fromCode(...)` (the robot in five files
+  uses it; `Tunable.number(...)` is unchanged).
+- Parts catalog page: the "Top speed (counts/s)" column showed 28 instead of 2800 for the REV UltraPlanetary motors (and 308 instead of 3080 for the NeveRest Orbital 3.7). The simulator was not affected.
+- Shot Tuner: the line to copy now compiles: `public static double[][] speedByDistance = {{48, 2550}};   // in Tunables.Launcher`.
 
 ## v0.12.0 - 2026-10-21
 

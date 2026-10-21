@@ -2,6 +2,9 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**You will build:** a full TeleOp (driving, lift and claw) in a few short methods.
+The main track's `Controls.java` is built on `EasyTeleOp` and is shorter still: [Buttons](start/03-buttons.md).
+
 **You will learn:** how `EasyTeleOp` turns a TeleOp into a few short methods, which controls you get
 for free, how to add the operator's buttons and sticks, and how TeleOp and autonomous share one
 robot description.
@@ -65,6 +68,8 @@ so the driver does not need BACK at the start of a match ([DriverHeading](../mod
 
 ## 4. The operator's buttons
 
+The **operator** is the second driver, on gamepad 2. They run the mechanisms while the driver drives.
+
 ```java
 @Override protected void bindButtons(ControllerBindings driver, ControllerBindings operator) {
     operator.bindPress(Pad.G2, Btn.A, () -> lift.goTo("DOWN"))
@@ -73,7 +78,7 @@ so the driver does not need BACK at the start of a match ([DriverHeading](../mod
 }
 ```
 
-The same bindings as tutorial 03, on the `operator` object it hands you. Each action only sets a
+These are the same bindings as tutorial 03, on the `operator` object `EasyTeleOp` hands you. Each action only sets a
 target and returns; the lift moves in its own `update()`. Extra buttons for the driver go on
 `driver` (they pause while the tuning menu is open, because the menu uses gamepad 1).
 

@@ -28,7 +28,8 @@ public class Robot extends RobotDefinition {
                 //         .reversed("front_left", "back_left") listing EVERY reversed drive motor.
 
         // STEP 5: your mechanisms, one line each. This robot has one intake motor called "intake".
-        //         Delete it if you have none. More you can add (then add their numbers in Tunables.java):
+        //         No intake? Delete this line, the "intake" field above, the g2.a line in Controls.java
+        //         and spitOut in Actions.java. More you can add (then add their numbers in Tunables.java):
         //           lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom"));
         //           claw = add(Claw.servo("claw"));
         //         (and a field for each, like "public Lift lift;" above)

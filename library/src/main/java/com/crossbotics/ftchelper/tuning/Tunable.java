@@ -39,7 +39,7 @@ public final class Tunable {
     // "final" fields are set once, when the tunable is made, and never change.
     private final String name;
     // The value written in the code.
-    private final double defaultValue;
+    private double defaultValue;
     // How much one D-pad press changes the value (always positive).
     private final double step;
     // The allowed range. "Infinity" means no limit until range(...) is called.
@@ -59,6 +59,27 @@ public final class Tunable {
 
     // "synchronized" (here and on the other static methods): only one piece of code at a time may
     // use the shared list.
+    /**
+     * Like {@link #number}, for a number written in the team's code (the robot in five files uses it
+     * for every {@code Tunables.java} field). If a tunable with this name already exists, was not
+     * changed (not tuned, nothing saved) and has another code value, it takes this code value: the
+     * code is the record. Example: two robots in one app with {@code Tunables.Auto.leaveInches} 24 and
+     * 12; each robot drives its own distance. The step of an existing one is kept.
+     *
+     * @param name         "Group/Name", e.g. "Auto/leaveInches"
+     * @param defaultValue the value in the code
+     * @param step         how much one D-pad press changes it, used only when the tunable is new
+     * @return the tunable
+     */
+    public static synchronized Tunable fromCode(String name, double defaultValue, double step) {
+        Tunable t = number(name, defaultValue, step);
+        if (!t.isChanged() && Math.abs(t.defaultValue - defaultValue) > 1e-12) {
+            t.defaultValue = defaultValue;
+            t.value = defaultValue;
+        }
+        return t;
+    }
+
     /**
      * Makes a tunable number, or returns the existing one with this name.
      * (If one with this name already exists, the default and step given here are not used.)

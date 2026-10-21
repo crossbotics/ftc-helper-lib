@@ -2,6 +2,9 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**You will build:** a test program that shows every kind of button job on telemetry.
+The main track puts buttons in one file for you: [Buttons](start/03-buttons.md).
+
 **You will learn:** every kind of button job (press, hold, release, toggle, triggers), how to
 give the driver feedback with rumble, how to step through a list with the D-pad, and why the
 "held through START" guard matters.
@@ -21,7 +24,7 @@ The loop runs about 100 times per second. If you write
 if (gamepad1.a) presses++;
 ```
 
-one quick tap adds about 10, because A is "down" for about 10 loops. You usually want
+one quick tap adds about 10, because A stays "down" for about 10 trips around the loop. You usually want
 **one action per press**. Doing that by hand needs an extra variable for every button.
 `ControllerBindings` does it for you, for every button at once, and keeps all the button jobs
 in one list that is easy to read.
@@ -81,6 +84,8 @@ private int heightIndex = 0;
 .bindPress(Pad.G1, Btn.DPAD_DOWN, () -> heightIndex = Math.max(heightIndex - 1, 0))
 ```
 
+`HEIGHT_NAMES` is an **array**: a list of values in one variable. `heightIndex` is the
+place in the list, counting from 0, so `HEIGHT_NAMES[0]` is "Floor".
 `Math.min` and `Math.max` stop the number at the ends of the list, so it can never point past it.
 Tutorial 12 turns this into a neat `LiftHeights` list with `up()` and `down()`.
 
@@ -140,7 +145,7 @@ while (opModeIsActive()) {
 ## Try this
 
 1. Make the right bumper toggle a "turbo" mode with its own rumble confirmation.
-2. Make the D-pad list wrap around: up from High goes to Floor. (Hint: `% HEIGHT_NAMES.length`.)
+2. Make the D-pad list wrap around: up from High goes to Floor. (Hint: `% HEIGHT_NAMES.length`. `%` gives the remainder after dividing, so it wraps 4 back to 0.)
 3. Use `bindHold` and `bindRelease` together on gamepad 2's A: hold = "intake running", let go = "intake stopped".
 4. Change the trigger threshold to 0.9 and feel the difference.
 

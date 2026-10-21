@@ -6,12 +6,15 @@ Package: `com.crossbotics.ftchelper.telemetry`
 
 Learn it hands-on: [06 A fast, clear loop](../tutorials/06-fast-clear-loop.md).
 
-Driver Station telemetry that is easy to read during a match and useful when debugging.
+**Telemetry** is the text your program shows on the Driver Station screen. This module makes it
+easy to read during a match and useful when you hunt for a bug. [`EasyTeleOp`](teleop.md) and the
+[robot in five files](robot.md) set it up for you; every mechanism adds its own lines. Use this page
+to add your own lines, or in an OpMode you write yourself. Start with tutorial 06.
 
 | Class | Use it to |
 | --- | --- |
-| [`RobotTelemetry`](#robottelemetry) | two levels (standard for drivers, debug for programmers), warnings on top, rate limit |
-| [`TelemetryHelper`](#telemetryhelper) | one-line helpers for plain SDK telemetry |
+| [`RobotTelemetry`](#robottelemetry) | show lines at two levels (standard for drivers, debug for programmers), warnings on top, and send less often for a faster loop |
+| [`TelemetryHelper`](#telemetryhelper) | add common lines (a motor, a yes/no) to the SDK's plain `telemetry` in one call |
 
 ## RobotTelemetry
 

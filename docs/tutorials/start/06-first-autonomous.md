@@ -4,8 +4,8 @@
 
 **Goal:** the lesson robot holds its piece, drives to the goal, scores, and always parks, on its own.
 
-**You need:** the lesson robot from the earlier lessons (it drives, and the "score high" action works),
-the IMU, a tape measure and some tape, and about 5 ft of clear floor. About an hour, most of it tuning.
+**You need:** the lesson robot from the earlier lessons (it drives, and the "score high" action from
+[lesson 5](05-actions.md) works), the IMU (the turn sensor in the Control Hub), a tape measure and some tape, and about 5 ft of clear floor. About an hour, most of it tuning.
 
 **The program:** [`autos/ScoreAndPark.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/autos/ScoreAndPark.java),
 with its numbers in [`Tunables.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/Tunables.java).
@@ -98,15 +98,16 @@ public class ScoreAndPark extends Auto<Robot> {
 - `@Autonomous(name = ...)` is the name on the Driver Station. `preselectTeleOp` must be the exact
   name of your TeleOp: when autonomous ends, the Driver Station has the TeleOp chosen and ready.
 - `@Disabled` hides the example on a real robot. Delete it in your copy, or you will not see it.
-- `extends Auto<Robot>`: an autonomous for the lesson robot. Every part from `Robot.java` is in `robot`.
+- `extends Auto<Robot>`: an autonomous for the lesson robot. `Auto` is the library's autonomous; the
+  `<Robot>` in angle brackets says which robot it drives. Every part from `Robot.java` is in `robot`.
 - `mirrorForRed()` false. Most routes are written for BLUE and mirrored left/right for RED. BIOBUZZ's
   field is turned half a turn between the alliances instead: from your own wall the field looks the
   same for both, so RED drives the same route. (A mirrored field would return true, the default.)
 - `steps(...)` is a **list of steps, read top to bottom**. Each method adds one step and hands the
   list back, so they chain with dots.
 - `start("Against our wall, facing the field", 0)`: the note tells the drive team where to put the
-  robot (it is shown in INIT, so write it for a nervous driver). The `0` is the heading: the robot faces
-  straight away from your drivers. TeleOp's field-centric "forward" uses it, so get it right.
+  robot (it is shown in INIT, so write it for a nervous driver). The `0` is the heading (the way the
+  robot faces, in degrees): 0 = straight away from your drivers. TeleOp's field-centric "forward" uses it, so get it right.
 - `run("Hold the piece", robot.claw::close)` **starts** something and goes on at once. The claw closes
   while the next step already drives.
 - `move("To the goal", Tunables.Auto.toGoalInches, 0, 0.6)`: drive this many inches, in direction 0
@@ -134,7 +135,8 @@ record of what worked.
 
 **Tune them without a rebuild.** Every number in `Tunables.Auto` is in the tuning menu too:
 
-1. INIT the **TeleOp** with the PRACTICE profile and hold **GUIDE** for 1 second (the menu from lesson 4).
+1. INIT the **TeleOp** with the PRACTICE profile, press START, and hold **GUIDE** for 1 second (the menu
+   from lesson 4; it opens only after START).
 2. Choose `Auto/parkInches`, change it, and press **A** to save it on the Control Hub.
 3. Run the autonomous again. It uses the saved value. Its INIT screen lists every value that is
    different from the code, like `Tunables.Auto.parkInches = 18.0 (code 20.0)`.

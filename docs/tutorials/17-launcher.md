@@ -2,6 +2,9 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**You will build:** a shooter that spins a flywheel, sets the hood angle from the distance, and feeds a piece only when everything is ready.
+The main track builds a shooter with less code: [A shooter, a camera and a turret](start/07-shooter-and-camera.md).
+
 **You will learn:** how a flywheel shooter is controlled (speed, ready, feeding), how to build a
 shot table from real shots, and how `Launcher` makes sure a piece is only fed when everything is ready.
 
@@ -16,7 +19,7 @@ Safety glasses: a flywheel throws things.
 ## 1. How a flywheel shot works
 
 A spinning wheel grabs the game piece and throws it. Two things decide where it lands: the
-wheel's **speed** (RPM) and the **angle** it leaves at (the hood). Both depend on distance.
+wheel's **speed** (RPM: turns per minute) and the **angle** it leaves at (the hood). Both depend on distance.
 And one rule matters more than any other: **never feed a piece into a wheel that is not up to speed**,
 or it falls short.
 
@@ -30,14 +33,15 @@ Flywheel flywheel = Flywheel.create(hardwareMap, "flywheel")
         .settleTime(0.15);      // ...for 0.15 s
 ```
 
-The hub holds the speed itself (fast and smooth). "Ready" needs the speed to STAY in the band for
+`pidf` sets the gains of the hub's own speed control (P, I, D and F, like Tutorial 07). The hub
+holds the speed itself (fast and smooth). "Ready" needs the speed to STAY in the band for
 0.15 s, so one lucky reading during spin-up does not count.
 
 **countsPerRev:** a bare goBILDA/REV motor encoder gives 28 counts per motor turn. If the flywheel
 turns at the motor's speed, that is 28. Geared: multiply by motor turns per flywheel turn. An
 encoder on the flywheel shaft (plugged into this motor's encoder port): its own counts per turn.
 
-**Check the reading:** run at 3000 rpm and compare with a tachometer (or count turns in a
+**Check the reading:** run at 3000 rpm and compare with a tachometer (a tool that measures turning speed) (or count turns in a
 slow-motion video). If they disagree, countsPerRev is wrong.
 
 ## 3. The hood and the feeder
@@ -101,7 +105,8 @@ not ready within `readyTimeout`, it gives up and says why: "gave up: flywheel".
 ## Run it
 
 1. Safety glasses. No game piece first. START.
-2. A: the flywheel spins up; telemetry shows "3000 / 3000 rpm READY".
+2. A: the flywheel spins up; telemetry shows about "2850 / 2850 rpm READY". (The program starts at
+   36 in, halfway between the 24 and 48 in rows of the table.)
 3. RB without a piece: the feeder runs once. LB: three times, 0.3 s apart.
 4. With pieces: D-pad up/down changes the distance; the hood moves; shoot.
 5. Stop the OpMode and unplug the flywheel's encoder cable. Run again and `shoot(1)`: the flywheel

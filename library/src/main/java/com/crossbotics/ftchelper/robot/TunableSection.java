@@ -67,7 +67,7 @@ final class TunableSection {
      * @param step     how much one press in the tuning menu changes it
      */
     Tunable tunable(String field, double fallback, double step) {
-        return Tunable.number(name + "/" + field, number(field, fallback), step);
+        return Tunable.fromCode(name + "/" + field, number(field, fallback), step);
     }
 
     /**

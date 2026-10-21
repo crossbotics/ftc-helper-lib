@@ -2,6 +2,8 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**You will build:** a mecanum TeleOp where a D-pad press turns the robot to face an exact direction, the gamepad buzzes when it is lined up, and starts are smooth.
+
 **You will learn:** how to make the robot turn to an exact heading with one button (PID on the
 IMU), how to let the driver FEEL when it is pointed right (`AimRumble`), and how to smooth out
 sudden starts (`SlewRateLimiter`).
@@ -48,6 +50,7 @@ drive.driveFieldCentric(forward, strafe, turn, heading);
 ```
 
 The same pattern as the lift in Tutorial 08: a button sets a target, touching the stick cancels it.
+`targetHeading` is a `Double` (capital D), not a `double`, so it can be `null`.
 
 ### Why the minus sign?
 
@@ -73,7 +76,7 @@ short way around. (Use it for any "how far off am I" with headings.)
 ## 4. Smooth starts
 
 A tall robot that goes from 0 to full speed in one loop can tip, and wheels slip. A
-`SlewRateLimiter` lets a value change only so fast:
+`SlewRateLimiter` lets a value change only so fast ("slew rate" means "how fast it may change"):
 
 ```java
 SlewRateLimiter forwardRamp = new SlewRateLimiter(2.5, 6.0);   // speed up 2.5/s, slow down 6/s

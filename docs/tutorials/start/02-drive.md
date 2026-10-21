@@ -5,7 +5,7 @@
 **Goal:** write the one `drive(...)` line in `Robot.java`, drive the robot with gamepad 1, and check that
 every wheel turns the right way.
 
-**You need:** none: the simulator. Then a drivetrain (mecanum or tank), a block to lift its wheels off
+**You need:** nothing at first: start in the simulator. Then a drivetrain (mecanum or tank), a block to lift its wheels off
 the ground, and gamepad 1.
 
 **The code:** the lesson robot's [`Robot.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/Robot.java)
@@ -47,7 +47,8 @@ drive(Drive.tank("left_drive", "right_drive").motor("gobilda-5203-312").wheelMm(
 - `.gearRatio(r)`: motor turns per wheel turn, if gears or a belt sit between them. Default 1.
 
 **Why:** TeleOp does not need these, the sticks just set power. But autonomous does: "drive 24 inches"
-becomes encoder counts from the motor's counts per turn, the gears and the wheel size (lesson 6). The
+becomes encoder counts from the motor's counts per turn, the gears and the wheel size (lesson 6). An
+**encoder** is a sensor on the motor that counts how far its shaft turned. The
 simulator uses them too.
 
 ## 3. Say which motors are reversed
@@ -79,7 +80,8 @@ Field-centric driving and autonomous turns use it.
 - `.noImu()`: no IMU. TeleOp then drives robot-centric only, and autonomous refuses to start.
 
 **Why it matters:** with the wrong directions the heading is wrong, so field-centric driving goes the
-wrong way and autonomous turns go wrong. Robot.java needs these two imports at the top:
+wrong way and autonomous turns go wrong. Robot.java needs these two imports at the top (an `import`
+line tells Java where to find a name, here the two direction lists):
 
 ```java
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.LogoFacingDirection;
@@ -95,6 +97,9 @@ public static class Drive {
     public static boolean calibrated = false;
 }
 ```
+
+A **profile** is a set of limits for the whole robot: PRACTICE (gentle, for the shop) or COMPETITION
+(full power, for matches).
 
 - `maxPower`: the most power any wheel gets in the COMPETITION profile (0.1 to 1).
 - `practiceMaxPower`: the same in the PRACTICE profile. **Why:** in the shop, new drivers and new code
@@ -154,7 +159,8 @@ the ground.**
    add its name to the list, or take it out. Remember the list replaces the default (the left side). For
    example, if the lesson robot's back right wheel rolls backward, it needs
    `.reversed("front_left", "back_left", "back_right")`.
-4. **The IMU:** run your TeleOp, press START and BACK together (debug lines on; this does not pause),
+4. **The IMU:** run your TeleOp, press START and BACK together (this turns on the extra debug lines on
+   the Driver Station; it does not pause),
    and turn the robot LEFT by hand. The `Heading` line must go UP. If it goes down or barely moves, fix
    the logo and USB directions. (The Hardware Check also shows the IMU, but it always assumes logo up,
    USB forward, so it only proves your directions if the hub is mounted that way.)
@@ -168,7 +174,7 @@ From the `ftc-helper-lib` folder, write the lesson robot's simulator file from i
 ./gradlew :sim:run -PteamCode=none -Probot=build/lessonbot.properties
 ```
 
-Open http://localhost:8780, pick "Lesson Bot TeleOp", INIT, START. On the keyboard: left stick W A S D,
+Open http://localhost:8780, pick "Lesson Bot TeleOp", INIT, START. Set gamepad 1's list to "Keyboard". On the keyboard: left stick W A S D,
 right stick the arrows, LT is Z, Y is I, BACK is Backspace. Drive, strafe, turn, pull LT, switch to
 field-centric and turn the robot around. For your own robot: `./gradlew :sim:fromRobot -PteamCode=../TeamCode`,
 then `./gradlew :sim:run -PteamCode=../TeamCode`. ([Simulator guide](../../guides/simulator.md).)

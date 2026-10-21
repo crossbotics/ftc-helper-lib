@@ -6,11 +6,16 @@ Package: `com.crossbotics.ftchelper.control`
 
 Learn it hands-on: [07 PID lift](../tutorials/07-pid-lift.md), [11 Driver assists](../tutorials/11-driver-assists.md).
 
+The math that turns "where I want to be" into a motor power. Use it when you build a mechanism by
+hand: a lift that holds a height, a turn to a heading, a smooth start. The ready-made mechanisms
+([`PositionMotor`](mechanism.md#positionmotor), the [robot in five files](robot.md)) already use it,
+so you only set their numbers. To learn what PID means, start with tutorial 07.
+
 | Class | Use it to |
 | --- | --- |
 | [`PidController`](#pidcontroller) | move a mechanism to a target and hold it there |
 | [`SlewRateLimiter`](#slewratelimiter) | stop a value from changing too fast (a ramp) |
-| [`Feedforward`](#feedforward) | the power a motor needs for a speed, from measured numbers |
+| [`Feedforward`](#feedforward) | work out the power a motor needs for a speed, from measured numbers |
 
 ---
 
@@ -18,8 +23,10 @@ Learn it hands-on: [07 PID lift](../tutorials/07-pid-lift.md), [11 Driver assist
 
 ### What a PID controller does
 
-You have a **target** (lift at 1500 ticks) and a **measurement** (lift is at 900 now).
-The difference is the **error** (600). Each loop, the controller turns the error into a power:
+You have a **target** (lift at 1500 ticks) and a **measurement** (lift is at 900 now). Ticks are
+counts from the motor's **encoder**, a sensor that counts how far the motor has turned.
+The difference is the **error** (600). Each loop, the controller turns the error into a power.
+It adds up to four parts. Each part has a number you tune, called a **gain** (kP, kI, kD, kF):
 
 - **P (proportional):** power = kP x error. Far away = push hard. Close = push gently.
 - **I (integral):** adds up error over time. Fixes a small error that P alone never closes
@@ -51,7 +58,7 @@ With a [`SafeMotor`](safety.md), use `safeLift.moveTo(target, liftPid)` instead:
 | `calculate(target, measured)` | **call every loop.** Returns the power, inside the output limits. |
 | `setGains(kP, kI, kD, kF)` | change the gains (for live tuning) |
 | `setOutputLimits(min, max)` | limit the output. Default -1 to 1. |
-| `setIntegralLimit(max)` | the most power the I part may add (stops "windup", see below) |
+| `setIntegralLimit(max)` | the most power the I part may add (stops "windup": see below) |
 | `setTolerance(value)` | how close counts as "at target" |
 | `setAngleMode(true)` | for headings in degrees: the error takes the short way around (170 to -170 = +20) |
 | `atTarget()` | true if the last error was within the tolerance |
@@ -111,17 +118,20 @@ Tip: let it slow down faster than it speeds up (`fall` > `rise`), so the robot s
 
 ## Feedforward
 
-The power a motor needs for a speed, worked out from how the motor behaves, instead of waiting for
-an error to build up (what a PID does). The [Characterizer](finders.md#characterizeropmode) measures
-the numbers on your robot.
+**Feedforward** means: work out the power a motor needs for a speed BEFORE there is an error, from
+how the motor behaves. A PID only reacts once an error has built up. The two work well together.
+The [Characterizer](finders.md#characterizeropmode) measures the numbers on your robot.
 
 ```
 power = kS x sign(speed) + kV x speed + kA x speeding-up + kG
 ```
 
-kS = the power just to start moving (friction); kV = the power per count per second of speed;
-kA = the power per count per second, per second, of speeding up; kG = the power that holds a lift
-against gravity. Speeds in encoder counts per second, like `DcMotorEx.getVelocity()`; powers at 12.8 V.
+- **kS:** the power just to start moving (to beat friction).
+- **kV:** the extra power for each count per second of speed.
+- **kA:** the extra power for speeding up (per count per second, per second).
+- **kG:** the power that holds a lift up against gravity.
+
+Speeds are in encoder counts per second, like `DcMotorEx.getVelocity()`. Powers are for a 12.8 V battery.
 
 ```java
 Feedforward ff = new Feedforward(0.06, 0.00037, 0.00004);        // from the Characterizer

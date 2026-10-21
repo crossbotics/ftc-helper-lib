@@ -7,7 +7,10 @@ Package: `com.crossbotics.ftchelper.teleop`
 Learn it hands-on: [20 Easy TeleOp](../tutorials/20-easy-teleop.md). Ready to copy: the
 [starter kit](../starter-kit.md)'s `MainTeleOp`.
 
-A whole TeleOp where you only write what is special about your robot.
+A whole TeleOp (the driver-controlled part of the match) where you only write what is special
+about your robot. Driving, the match timer, safety at START and STOP, and the tuning menu come
+ready-made. The [robot in five files](robot.md#controlmap)'s `Controls.java` is built on it, so with
+five files start there. Use `EasyTeleOp` directly with the [starter kit](../starter-kit.md) or your own classes.
 
 | Class | Use it to |
 | --- | --- |
@@ -56,8 +59,8 @@ public class MainTeleOp extends EasyTeleOp {
 | | |
 | --- | --- |
 | Driving (gamepad 1) | left stick drive, right stick X turn, left trigger slow. Mecanum and tank, picked by your `DriveConfig`. See [`DriverControls`](drive.md#drivercontrols). |
-| Field-centric | starts robot-centric. **Y** turns field-centric on/off (two buzzes = on, one = off). Mecanum with an IMU only. |
-| "Forward" | continues from where autonomous ended ([`DriverHeading`](drive.md#driverheading)), also after INIT, STOP, INIT again. **BACK** alone (on release, one buzz) = "the robot now faces away from me" (with `backTap()`: hold BACK 1 s; a tap does that job). |
+| Field-centric | starts robot-centric (stick up = the way the robot faces). **Y** turns field-centric (stick up = away from the driver) on/off (two buzzes = on, one = off). Mecanum with an IMU only. |
+| "Forward" | carries on from where autonomous ended ([`DriverHeading`](drive.md#driverheading)), even after INIT, STOP, INIT again. Press and let go of **BACK** alone (one buzz) = "the robot now faces away from me". With `backTap()`, a tap of BACK does your job instead, and holding BACK 1 s sets "forward". |
 | Alliance | the one autonomous chose, from [`MatchMemory`](match.md). If none came (no autonomous ran, or the robot app restarted), INIT says "Choose the alliance": gamepad 1 **X** = BLUE, **B** = RED (also to change it). INIT also shows autonomous's report. |
 | Match timer | 2:00, both gamepads buzz at 1:00 and 0:20. The time is on the screen. |
 | Tuning menu | **GUIDE** opens it (PRACTICE profile only). Gamepad 1 runs the menu; the wheels hold still. With a button map (`buttonHelp()`, as `ControlMap` has): a tap of GUIDE shows the map during the match (the robot still drives) and holding GUIDE 1 s opens the tuning menu. |

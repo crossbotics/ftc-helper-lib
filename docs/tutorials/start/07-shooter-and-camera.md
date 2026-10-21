@@ -4,7 +4,8 @@
 
 **Goal:** add a flywheel shooter with a feeder, then a camera that aims a turret and picks the shot speed.
 
-**You need:** lessons 1 to 6. A flywheel on a motor with its encoder cable, and a feeder (a servo, a CR
+**You need:** lessons 1 to 6 (the last one: [Your first autonomous](06-first-autonomous.md)). A flywheel
+(a heavy wheel that spins fast and throws the game piece) on a motor with its encoder cable, and a feeder (a servo, a CR
 servo or a motor). For the second half, a Limelight 3A (or a webcam) and a turret on a motor.
 **Safety glasses:** a flywheel throws things.
 
@@ -61,7 +62,7 @@ public static class Windmill {
 | `stepRpm` | how much one D-pad press changes the speed |
 | `readyBandRpm` | how close to `speedRpm` counts as "at speed" (it must stay there 0.15 s) |
 | `idleRpm` | the speed it drops back to when the driver spins it down (0 = coast to a stop) |
-| `kP`, `kI`, `kD`, `kF` | how the hub holds the speed. Used only when `kF` is there. |
+| `kP`, `kI`, `kD`, `kF` | the **gains**: how hard the hub pushes to hold the speed. Used only when `kF` is there. |
 | `power`, `feedSec` (Windmill) | the feeder's power, and how long it runs per piece |
 
 A servo feeder (`Indexer.servo`) has `rest`, `push`, `pushSec`, `returnSec` instead. It goes to `rest`
@@ -178,15 +179,17 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
   public static double[][] speedByDistance = {{24, 2200}, {48, 2550}, {72, 2900}, {96, 3250}};
   ```
 
-  Each row is `{inches, rpm}`. Between rows the speed is blended. With no goal in view, it keeps the last
+  `double[][]` is a table of numbers: a list of rows, each row in `{ }`. Each row is `{inches, rpm}`.
+  Between rows the speed is blended. With no goal in view, it keeps the last
   speed (a sudden change would spoil the next shot); before the goal is first seen, it uses `speedRpm`.
   Fill the rows from real shots with the [Shot Tuner](../../guides/finders.md#shot-tuner-the-shot-table).
-  It shows the whole line to copy: `Tunables.Launcher.speedByDistance = {{24, 2200}, {48, 2550}};`.
+  It shows the whole line to copy: `public static double[][] speedByDistance = {{24, 2200}, {48, 2550}};   // in Tunables.Launcher`.
   Its file needs one method that names your robot (the turret robot's
   [ShotTuner.java](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/ShotTuner.java)):
   `@Override protected RobotDefinition robot() { return new Robot(); }`. It uses your launcher, camera
   and drive. The turret stays still and the "turret aimed" check is off: point the robot with the sticks.
-- `.requireReady("turret aimed", () -> turret.isAimed())`: one more check before each piece is fed. The
+- `.requireReady("turret aimed", () -> turret.isAimed())`: one more check before each piece is fed.
+  `() -> turret.isAimed()` is a lambda (lesson 5): the launcher asks it again before every piece. The
   words are what the Driver Station shows if it gives up: `Launcher gave up: turret aimed`.
 
 ## Try it in the simulator

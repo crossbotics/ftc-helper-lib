@@ -2,6 +2,9 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
+**You will build:** a drive program that turns the robot toward an AprilTag (a printed square code on the field) while the driver holds a button.
+The main track adds a camera with less code: [A shooter, a camera and a turret](start/07-shooter-and-camera.md).
+
 **You will learn:** how to find AprilTags with a webcam or a Limelight 3A through ONE interface,
 what bearing and distance mean, and how to aim the drivetrain (or a turret) at a tag safely.
 
@@ -23,11 +26,16 @@ flowchart LR
     O --> T["timeNanos: when the picture was taken"]
 ```
 
+`NaN` means "not a number": the camera could not tell the distance.
+
 **Bearing** is the angle between "straight ahead" and the target. Positive = the target is to the
 LEFT (counterclockwise, like the IMU). The Limelight reports the opposite sign; the library flips it
 for you, so both cameras agree.
 
 ## 2. One interface, two cameras
+
+An **interface** is a list of methods that several classes promise to have. `TargetSource` is one:
+both camera classes have its methods, so your code can use either.
 
 ```java
 TargetSource camera = menu.get("Camera").equals("Limelight")
@@ -43,6 +51,8 @@ The webcam needs 1-2 s to start, so start it in INIT. The INIT loop shows `camer
 many tags it sees: check that before START.
 
 ## 3. Aim the drivetrain
+
+`AimController` is a small PID for aiming: the two numbers are kP and kD (Tutorial 07).
 
 ```java
 AimController aim = new AimController(0.02, 0.003).deadband(1.5).maxPower(0.5).maxAgeMs(150);

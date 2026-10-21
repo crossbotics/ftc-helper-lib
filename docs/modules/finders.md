@@ -8,22 +8,24 @@ Learn it hands-on: [21 Find your numbers](../tutorials/21-finders.md). Step by s
 [Finders guide](../guides/finders.md).
 
 Ready-made programs that **measure** the numbers your code needs (servo ends, lift limits, flywheel
-gains, wheel size, shot speeds, camera offset) and show them as **lines of code to copy**. They also
-save those lines on the Control Hub in `/sdcard/FIRST/ftc-helper/finder-results.txt` when you press
-STOP, so nobody copies numbers from the screen by hand.
+gains, wheel size, shot speeds, camera offset) and show them as **lines of code to copy**. Use one
+whenever a part is new or was rebuilt, before you tune by hand. They also save those lines on the
+Control Hub in `/sdcard/FIRST/ftc-helper/finder-results.txt` when you press STOP, so nobody copies
+numbers from the screen by hand. Start with tutorial 21, or [lesson 4](../tutorials/start/04-lift-and-claw.md) for the robot in five files.
 
 Each finder shows its numbers in two forms: code for the older helpers (`PositionServo.create(...)`,
 `PositionMotor.create(...)`, `c.wheelDiameterIn = ...`) and lines for the
 [robot in five files](robot.md): `Tunables.Lift: min = 0, max = 2580, P1 = 1200` means "in
 `Tunables.java`, section `Lift`, set `min = 0`, `max = 2580`, `P1 = 1200`". The section is the
 device's name in CamelCase (`lift` -> `Lift`, `intake_deploy` -> `IntakeDeploy`,
-[`RobotDefinition.sectionName`](robot.md)). Copy the lines that fit your code.
+[`RobotDefinition.sectionName`](robot.md)), unless you gave the part its own section with
+`.tunables("Name")` in Robot.java: then copy the numbers into that section. Copy the lines that fit your code.
 
 | Class | Use it to | Needs code from you? |
 | --- | --- | --- |
 | [`ServoFinderOpMode`](#servofinderopmode) | find a servo's safe ends and positions | no |
 | [`MotorFinderOpMode`](#motorfinderopmode) | find a lift's, arm's or turret's limits, positions and top speed | no |
-| [`FlywheelFinderOpMode`](#flywheelfinderopmode) | find a flywheel's top speed, speed-control gains and recovery time | no |
+| [`FlywheelFinderOpMode`](#flywheelfinderopmode) | find a flywheel's top speed, speed-control gains (the tuning numbers) and recovery time | no |
 | [`DriveTunerOpMode`](#drivetuneropmode) | find the wheel size and strafe correction for autonomous | `robot()` (five files) or `robotConfig()` |
 | [`ShotTunerOpMode`](#shottuneropmode) | build the shot table: distance -> speed (and hood angle) | `robot()` (five files), or your launcher (+ camera) |
 | [`AimTunerOpMode`](#aimtuneropmode) | find the camera offset so shots go in the middle | your camera (+ turret or drive) |
@@ -33,7 +35,7 @@ device's name in CamelCase (`lift` -> `Lift`, `intake_deploy` -> `IntakeDeploy`,
 | [`FinderMath`](#findermath) | the arithmetic behind the finders | |
 | [`Chooser`](#chooser) | a list to choose from with the D-pad | |
 | [`ShotPoints`](#shotpoints) | the saved good shots of the shot tuner | |
-| [`CharacterizeMath`](#characterizemath) | the fitting math behind the Characterizer | |
+| [`CharacterizeMath`](#characterizemath) | the math behind the Characterizer (it fits numbers to the measurements) | |
 
 Each finder is a TeleOp. To use one, make a tiny file in TeamCode (the [starter kit](../starter-kit.md)
 has them ready):
@@ -50,8 +52,11 @@ finder's buttons pause and its motors stop (servos stay where they were sent; a 
 After START, and after help closes, **let go of every stick, trigger and button on gamepad 1** once:
 until then the finder ignores them, so a finger that was already down cannot start anything.
 
-Every finder: nothing moves in INIT; the loop never waits (except the drive tuner's test moves,
-like autonomous); everything it moved is stopped at the end, even after an error.
+Safe in every finder:
+
+- Nothing moves in INIT.
+- The loop never waits (except the drive tuner's test moves, like autonomous).
+- Everything it moved is stopped at the end, even after an error.
 
 ---
 
@@ -238,7 +243,7 @@ new ShotTable()
 Without a hood it also shows the line for five files (the section is the launcher's):
 
 ```java
-Tunables.Launcher.speedByDistance = {{24, 2600}, {48.5, 3100}, {72, 3700}};
+public static double[][] speedByDistance = {{24, 2600}, {48.5, 3100}, {72, 3700}};   // in Tunables.Launcher
 ```
 
 ## AimTunerOpMode
@@ -274,9 +279,10 @@ Output: `new AimController(...).offset(-1.5)` or `turret.cameraOffset(-1.5)`; wi
 
 ## CharacterizerOpMode
 
-Measures how the real robot moves, for two uses: **feedforward** in your code (the power a motor needs
-for a speed, see [Feedforward](control.md#feedforward)) and **real numbers in the simulator** (its robot
-file). Needs `robotConfig()` and, for lifts, arms and flywheels, `mechanisms()`:
+Measures how the real robot moves (this is called **characterizing** it), for two uses:
+**feedforward** in your code (the power a motor needs for a speed, see [Feedforward](control.md#feedforward))
+and **real numbers in the simulator** (its robot file). Needs `robotConfig()` and, for lifts, arms and
+flywheels, `mechanisms()`:
 
 ```java
 @TeleOp(name = "Characterizer", group = "Finders")
@@ -303,9 +309,14 @@ setting is wrong; each wheel is checked); a lift goes past a soft limit, or coun
 something pushes but does not move for 0.7 s (jammed, against a hard stop, or an encoder cable in
 another motor's port); GUIDE or START is pressed. A drive roll that reaches `maxDriveCounts()` ends early,
 and the test goes on with the next part.
-Spinning wheels spoil the speed-up number (kA): run the drive test on tiles, not on a smooth floor. A slow ramp shows the power just to start moving (kS) and the
-power per speed (kV); a quick step shows the power per speeding-up (kA); a lift also gives the power
-that holds it against gravity (kG); a flywheel's coasting gives how long it takes to slow down.
+What each part of a test measures:
+
+- A slow ramp: the power just to start moving (kS) and the power per speed (kV).
+- A quick step: the power for speeding up (kA). Spinning wheels spoil this number, so run the drive
+  test on tiles, not on a smooth floor.
+- A lift: also the power that holds it against gravity (kG).
+- A flywheel's coasting: how long it takes to slow down.
+
 Results (also saved with the other finders' results):
 
 ```text
@@ -323,7 +334,8 @@ Each test's log is saved in the results folder as `characterizer/<test>[-<motor>
 (for example `lift-lift-20261021-101500.csv`); a test stopped early saves its log too, marked "(stopped early)". The simulator's
 fit tool reads them and writes the robot file for you (`./gradlew :sim:fit -Plog=... -Pwrite`, see
 the [simulator guide](../guides/simulator.md#real-numbers-the-characterizer)). Run each test 2-3 times
-on a charged battery; the fit tool fits the logs of the same test together. A fit with r2 below 0.9
+on a charged battery; the fit tool fits the logs of the same test together. It also gives r2, a
+score from 0 to 1 for how well the numbers match the measurements. Below 0.9 it
 says "poor: run it again"; below 0.5 it says "Could not fit". Arms are measured like lifts (the pull of gravity is taken as the same at
 every angle), so the numbers are a middle value for an arm. **For an arm, set the high limit below
 straight up**, so gravity always pulls it back down (past straight up, gravity pulls it on to the
@@ -389,4 +401,4 @@ A D-pad list: `new Chooser(names)` (sorted A to Z), `next()`, `previous()`, `cur
 The shot tuner's saved points: `new ShotPoints(hasHood)`, `save(distance, rpm, hoodDeg)` (replaces
 one within `SAME_DISTANCE` = 1), `removeNear(distance)`, `points()` (nearest first),
 `codeLines()` (the `ShotTable` code), `tunablesLine(section)` (the five-files line,
-`Tunables.Launcher.speedByDistance = {{48, 2550}, ...};`, empty if nothing is saved).
+`public static double[][] speedByDistance = {{48, 2550}, ...};   // in Tunables.Launcher`, empty if nothing is saved).

@@ -6,13 +6,16 @@ Package: `com.crossbotics.ftchelper.tuning`
 
 Learn it hands-on: [15 Telemetry, profiles and tuning](../tutorials/15-telemetry-profiles-tuning.md). Full guide: [Tuning while the robot runs](../guides/tuning.md).
 
-Change numbers while the robot runs, from the gamepad, with no rebuild.
+Change numbers while the robot runs, from the gamepad, with no rebuild. Use it to tune PID gains,
+positions and speeds quickly in the shop. A **tunable** is one number the menu can change.
+`PositionMotor.tunable(...)` and the [robot in five files](robot.md#tunablesjava) make their numbers tunable for
+you; this page is for your own numbers and for how the menu works.
 
 | Class | Use it to |
 | --- | --- |
-| [`Tunable`](#tunable) | one changeable number |
-| [`PidTunables`](#pidtunables) | the four PID gains of a controller, as tunables |
-| [`TuningMenu`](#tuningmenu) | the on-screen menu that changes them (PRACTICE only) |
+| [`Tunable`](#tunable) | make one number changeable from the menu |
+| [`PidTunables`](#pidtunables) | make the four PID gains of a controller tunable |
+| [`TuningMenu`](#tuningmenu) | show the on-screen menu that changes them (PRACTICE profile only) |
 
 ---
 

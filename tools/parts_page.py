@@ -22,7 +22,8 @@ def num(v, digits=1):
         return "yes" if v else "no"
     if float(v).is_integer():
         return str(int(v))
-    return f"{v:.{digits}f}".rstrip("0").rstrip(".")
+    text = f"{v:.{digits}f}"
+    return text.rstrip("0").rstrip(".") if digits > 0 else text
 
 
 def servo_5v(s):
