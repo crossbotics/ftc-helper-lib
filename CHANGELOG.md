@@ -4,6 +4,8 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+## v0.12.0 - 2026-10-21
+
 Nothing old stops working.
 
 ### Added
