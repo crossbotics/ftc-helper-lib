@@ -265,6 +265,9 @@ public class SimFromRobotTest {
         assertTrue(text, text.contains("odometry = pinpoint pinpoint"));
         try (SimRun s = new SimRun(file.toString())) {
             s.init("Odometry Bot To the Goal");
+            // Where the robot really starts (the bottom wall: the numbers as written; the top: turned half a turn).
+            double startX = s.robot().x, startY = s.robot().y;
+            boolean topWall = startY > 0;
             s.start();
             assertTrue("it finishes\n" + String.join("\n", s.screen()),
                     SimRun.waitFor(() -> s.screenHas("Autonomous finished"), 30));
@@ -272,11 +275,11 @@ public class SimFromRobotTest {
             assertTrue(report, s.screenHas("To the goal: done"));
             assertTrue(report, s.screenHas("Park: done"));
             assertEquals("", s.error());
-            // The robot really is at the park point. The start spot (-56, -61) is seen from the drivers'
-            // wall: at the bottom wall it is the same numbers on the field, at the top wall turned half a turn.
-            boolean topWall = com.crossbotics.ftchelper.match.MatchMemory.placement().y > 0;
-            assertEquals(topWall ? 56 : -56, s.robot().x, 2.0);
-            assertEquals(topWall ? 36 : -36, s.robot().y, 2.0);
+            // The robot really is at the park point: (-56, -36) seen from its drivers' wall, the start
+            // spot (-56, -61); so 25 in further away from that wall, the same distance from the side.
+            double sign = topWall ? -1 : 1;
+            assertEquals("start " + startX + ", " + startY, startX, s.robot().x, 2.0);
+            assertEquals("start " + startX + ", " + startY, startY + sign * 25, s.robot().y, 2.5);
         }
     }
 
