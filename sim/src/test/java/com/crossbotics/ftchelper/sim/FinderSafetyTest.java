@@ -67,6 +67,10 @@ public class FinderSafetyTest {
             assertEquals("nothing moves before A", before, claw.target(), 1e-9);
             s.press(v -> s.g1().a = v);                  // move there
             assertEquals(0.53, claw.target(), 1e-6);
+            s.press(v -> s.g1().a = v);                  // save it as P1
+            // The line for the older helpers, and the one for the robot in five files.
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas(".position(\"P1\", 0.530)"), 1));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Tunables.Claw: P1 = 0.530"));
             assertEquals("", s.error());
         }
     }
@@ -122,6 +126,7 @@ public class FinderSafetyTest {
         EXPECTED.put("FlywheelBot Shoot and Leave", "\"left_drive\"");
         EXPECTED.put("TurretBot TeleOp", "\"turret\"");
         EXPECTED.put("TurretBot Shoot from Start", "\"turret\"");
+        EXPECTED.put("TurretBot Shot Tuner", "\"turret\"");
         EXPECTED.put("goBILDA Bot TeleOp", "\"left_drive\"");
         EXPECTED.put("goBILDA Bot Launch and Back Up", "\"left_drive\"");
         EXPECTED.put("goBILDA Bot Auto Cookbook", "\"left_drive\"");

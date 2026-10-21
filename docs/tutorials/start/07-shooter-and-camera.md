@@ -68,9 +68,14 @@ A servo feeder (`Indexer.servo`) has `rest`, `push`, `pushSec`, `returnSec` inst
 at START, never in INIT.
 
 **Find the gains with the Flywheel Finder** ([how](../../guides/finders.md#flywheel-finder-gains-and-recovery)).
-It needs no code. It shows a line ending in `.pidf(1.17, 0.117, 0, 11.70)`: those four numbers are
-`kP`, `kI`, `kD`, `kF`, in that order. It also shows the recovery time after a shot: if it is longer
-than 0.25 s, add `shotIntervalSec` (the time between two feeds) a little above it.
+It needs no code. Choose the `launcher` motor; it shows a line to copy into `Tunables.Launcher`:
+
+```text
+Tunables.Launcher: kP = 1.17, kI = 0.117, kD = 0, kF = 11.70
+```
+
+If the wheel needs longer than 0.25 s to get back to speed after a shot, the line also has
+`shotIntervalSec` (the time between two feeds), a little above that time.
 
 You can change `speedRpm` and `stepRpm` with the tuning menu (PRACTICE profile, hold GUIDE 1 s). The
 others are read once at INIT: change them in the file.
@@ -175,8 +180,12 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 
   Each row is `{inches, rpm}`. Between rows the speed is blended. With no goal in view, it keeps the last
   speed (a sudden change would spoil the next shot); before the goal is first seen, it uses `speedRpm`.
-  Fill the rows from real shots: the [Shot Tuner](../../guides/finders.md#shot-tuner-the-shot-table)
-  gives lines like `.add(48.0, 2550)`; each one is a row `{48, 2550}`.
+  Fill the rows from real shots with the [Shot Tuner](../../guides/finders.md#shot-tuner-the-shot-table).
+  It shows the whole line to copy: `Tunables.Launcher.speedByDistance = {{24, 2200}, {48, 2550}};`.
+  Its file needs one method that names your robot (the turret robot's
+  [ShotTuner.java](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/ShotTuner.java)):
+  `@Override protected RobotDefinition robot() { return new Robot(); }`. It uses your launcher, camera
+  and drive. The turret stays still and the "turret aimed" check is off: point the robot with the sticks.
 - `.requireReady("turret aimed", () -> turret.isAimed())`: one more check before each piece is fed. The
   words are what the Driver Station shows if it gives up: `Launcher gave up: turret aimed`.
 

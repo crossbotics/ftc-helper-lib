@@ -7,12 +7,16 @@ import com.crossbotics.ftchelper.gamepad.ControllerBindings.Pad;
 import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Finds a servo's numbers: its safe ends (limits) and the positions you want (open, closed, ...).
  * Nudge the servo with the D-pad, mark the ends and positions, and copy the code lines it shows.
  * No code to write: it lists every servo in the robot configuration.
+ *
+ * <p>It shows the code for {@code PositionServo} and, for the robot in five files, the line for
+ * {@code Tunables.java}: {@code Tunables.Claw: P1 = 0.210, P2 = 0.770} (rename P1, P2 to open, closed).
  *
  * <pre>
  * Choose:  D-pad up/down = servo, A = use it
@@ -141,6 +145,18 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
             boolean outside = ends && (v < Math.min(endA, endB) - 1e-9 || v > Math.max(endA, endB) + 1e-9);
             results.set(key + ":" + n++, "    .position(\"" + p.getKey() + "\", " + FinderResults.num(v, 3) + ")"
                     + (outside ? "   // OUTSIDE the ends: it will stop at the end" : ""));
+        }
+        // The same positions for the robot in five files (Tunables.java). A servo module has no ends
+        // of its own, so the ends become a reminder: keep every position between them.
+        if (!positions.isEmpty()) {
+            List<String> fields = new ArrayList<>();
+            for (Map.Entry<String, Double> p : positions.entrySet()) {
+                fields.add(p.getKey() + " = " + FinderResults.num(p.getValue(), 3));
+            }
+            results.set(key + ":t0", FinderResults.tunablesLine(servoName, fields));
+            results.set(key + ":t1", "    // rename P1, P2... (open, closed)"
+                    + (ends ? "; keep them between " + FinderResults.num(Math.min(endA, endB), 3)
+                            + " and " + FinderResults.num(Math.max(endA, endB), 3) : ""));
         }
     }
 

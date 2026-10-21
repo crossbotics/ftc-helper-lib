@@ -179,6 +179,9 @@ public abstract class AimTunerOpMode extends FinderOpMode {
     private void writeResults() {
         if (turret != null) {
             results.set("aim", "turret.cameraOffset(" + FinderResults.num(offset, 1) + ")   // with the turret's other settings");
+            // The same number for the robot in five files (Tunables.java).
+            results.set("aim:t0", FinderResults.tunablesLine(turret.name(),
+                    java.util.Collections.singletonList("cameraOffset = " + FinderResults.num(offset, 1))));
         } else {
             results.set("aim", "new AimController(...).offset(" + FinderResults.num(offset, 1) + ")   // with your aim gains");
         }

@@ -164,7 +164,9 @@ drive(Drive.tank("left_drive", "right_drive").reversed("right_drive"));
 
 `Tunables.Drive`: `maxPower`, `practiceMaxPower` (PRACTICE profile), `slowSpeed` (the slow trigger),
 `strafeCorrection`, `turnKp`, `turnKd`, `moveMinPower`, and `calibrated` (autonomous refuses to run
-until it is `true`: tune with the Drive Tuner first, [tutorial 09](../tutorials/09-first-auto.md)).
+until it is `true`: tune with the Drive Tuner first, [lesson 6](../tutorials/start/06-first-autonomous.md)).
+The Drive Tuner and the Shot Tuner take the whole robot: `@Override protected RobotDefinition robot() { return new Robot(); }`;
+every finder shows `Tunables.` lines to copy ([finders](finders.md)).
 
 ---
 

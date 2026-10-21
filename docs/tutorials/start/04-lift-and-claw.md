@@ -136,16 +136,38 @@ public class MotorFinder extends MotorFinderOpMode {
 }
 ```
 
-- **Servo Finder, for the claw:** choose `claw`, move it until it is fully open without straining,
-  and note the number. Then fully closed on a game piece. Those are `open` and `closed`.
+- **Servo Finder, for the claw:** choose `claw`, mark its two ends (X and B), then press A fully
+  open without straining, and A again fully closed on a game piece.
 - **Motor Finder, for the lift:** put the lift at the bottom first (the count starts at 0 there).
   Move it slowly with the stick. Press X just before the bottom block and B just before the top
-  block: those are `min` and `max`. Press A at each height you want. If the finder says
-  `.reversed()`, add `.reversed()` to the lift in `Robot.java`: the motor counts down as it goes up.
+  block: those are `min` and `max`. Press A at each height you want.
 
-The finders print code for the older helpers (`.limits(0, 2580)`, `.position("P1", 1200)`).
-Put the numbers into `Tunables.java` instead: `min = 0, max = 2580`, and give P1 a name such as
-`low = 1200`. Steps and buttons: [Finding your numbers](../../guides/finders.md#motor-finder-limits-positions-top-speed)
+Each finder shows a line that starts with `Tunables.`. It says which section of `Tunables.java` the
+numbers go in:
+
+```text
+Tunables.Claw: P1 = 0.210, P2 = 0.770
+Tunables.Lift: min = 0, max = 2580, P1 = 900, P2 = 2400
+```
+
+Copy the numbers into those sections, and give each P a real name:
+
+```java
+public static class Claw {
+    public static double open = 0.210, closed = 0.770;
+}
+
+public static class Lift {
+    public static double min = 0, max = 2580;
+    public static double kP = 0.004, kI = 0, kD = 0.0002, kF = 0.05;
+    public static double down = 0, low = 900, high = 2400;
+}
+```
+
+If the Motor Finder also says `Robot.java: add .reversed() to the "lift" part`, do that: the motor
+counts down as the lift goes up. The other lines (`PositionServo.create(...)`) are for the older
+helpers: skip them. The lines are also saved in `finder-results.txt` on the Control Hub. Steps and
+buttons: [Finding your numbers](../../guides/finders.md#motor-finder-limits-positions-top-speed)
 and [tutorial 21](../21-finders.md).
 
 ## 6. Tune the lift live

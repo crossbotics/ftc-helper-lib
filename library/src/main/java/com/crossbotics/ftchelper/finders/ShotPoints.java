@@ -53,4 +53,23 @@ public final class ShotPoints {
         }
         return out;
     }
+
+    /**
+     * The table for the robot in five files, one line for {@code Tunables.java} (inches, rpm; no hood):
+     * {@code Tunables.Launcher.speedByDistance = {{48, 2550}, {72, 2900}};}. Empty if nothing is saved.
+     *
+     * @param section the launcher's Tunables section, e.g. "Launcher"
+     */
+    public String tunablesLine(String section) {
+        if (points.isEmpty()) return "";
+        List<String> rows = new ArrayList<>();
+        for (ShotTable.Shot p : points) rows.add("{" + shortNum(p.distance) + ", " + FinderResults.num(p.rpm, 0) + "}");
+        return "Tunables." + section + ".speedByDistance = {" + FinderResults.commas(rows) + "};";
+    }
+
+    // 48.0 -> "48", 48.5 -> "48.5"
+    private static String shortNum(double v) {
+        String s = FinderResults.num(v, 1);
+        return s.endsWith(".0") ? s.substring(0, s.length() - 2) : s;
+    }
 }

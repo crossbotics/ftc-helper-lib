@@ -249,6 +249,45 @@ public class SimFromRobotTest {
         }
     }
 
+    // The finders' hookup for the robot in five files (lesson 6): robot() { return new Robot(); }, and
+    // lines for Robot.java and Tunables.java.
+    @Test public void theLessonBotDriveTunerShowsFiveFilesLines() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.lessonbot.Robot.class);
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("Lesson Bot Drive Tuner").start();
+            s.press(v -> s.g1().a = v);                               // the Push test
+            assertTrue(s.screenHas("BY HAND"));
+            s.robot().push(24, 0, 2.0);                               // roll it 48 in forward, by hand
+            assertTrue(SimRun.waitFor(() -> !s.robot().pushing(), 10));
+            SimRun.pause(0.2);
+            s.press(v -> s.g1().b = v);                               // done
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Robot.java: .wheelMm("), 1));
+            assertTrue(s.screenHas("c.wheelDiameterIn = "));          // and the RobotSettings line
+            assertEquals("", s.error());
+        }
+    }
+
+    // The Shot Tuner with robot(): the robot's launcher and camera, and the "turret aimed" check is off
+    // (the turret stays still), so a shot goes.
+    @Test public void theTurretBotShotTunerShootsWithTheRobotsLauncher() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.turretbot.Robot.class);
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("TurretBot Shot Tuner");
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Camera"));
+            s.start();
+            s.press(v -> s.g1().left_bumper = v);                     // flywheel on
+            int before = s.robot().shots();
+            SimRun.pause(1.5);
+            s.press(v -> s.g1().right_bumper = v);                    // shoot one
+            assertTrue("a shot goes\n" + String.join("\n", s.screen()), SimRun.waitFor(() -> s.robot().shots() > before, 5));
+            s.press(v -> s.g1().a = v);                               // try to save a point
+            // The distance comes from the robot's camera (no goal in view from the start position;
+            // without a camera it would be a distance set by hand). The table line: FindersTest.
+            assertTrue(String.join("\n", s.screen()), s.screenHas("No distance: the camera does not see the target."));
+            assertEquals("", s.error());
+        }
+    }
+
     @Test public void guideShowsTheButtonMapDuringTheMatch() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.flywheelbot.Robot.class);
         try (SimRun s = new SimRun(file.toString())) {

@@ -26,14 +26,16 @@ TeamCode (it only hands the Drive Tuner your robot's drive):
 @TeleOp(name = "Drive Tuner", group = "Finders")
 public class DriveTuner extends DriveTunerOpMode {
     @Override
-    protected RobotConfig robotConfig() {
-        return new Robot().robotConfig();
+    protected RobotDefinition robot() {
+        return new Robot();
     }
 }
 ```
 
 Its imports: `com.qualcomm.robotcore.eventloop.opmode.TeleOp`,
-`com.crossbotics.ftchelper.core.RobotConfig` and `com.crossbotics.ftchelper.finders.DriveTunerOpMode`. Run it, choose a test with the D-pad, start it with **A**:
+`com.crossbotics.ftchelper.robot.RobotDefinition` and `com.crossbotics.ftchelper.finders.DriveTunerOpMode`.
+The whole file: [DriveTuner.java](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/DriveTuner.java).
+Run it, choose a test with the D-pad, start it with **A**:
 
 | Test | You do | It finds |
 | --- | --- | --- |
@@ -45,11 +47,16 @@ Its imports: `com.qualcomm.robotcore.eventloop.opmode.TeleOp`,
 Run Drive and Strafe again until they measure 48. Each new number is used at once inside the tuner.
 Details and the results file: [Drive Tuner](../../guides/finders.md#drive-tuner-wheel-size-and-strafe-correction).
 
-**Where the numbers go.** The tuner shows its lines in the old style (`c.wheelDiameterIn = 3.937;`).
-In the five files:
+**Where the numbers go.** The tuner shows these lines (it also saves them in `finder-results.txt`):
 
-- the wheel size goes in `Robot.java`, in millimetres: inches x 25.4. 3.937 in is `.wheelMm(100)`.
-- the strafe correction goes in `Tunables.Drive.strafeCorrection`.
+```text
+Robot.java: .wheelMm(100.0)   // in the drive(...) line
+Tunables.Drive: strafeCorrection = 1.120
+```
+
+- the wheel size goes in the drive line of `Robot.java`: `.wheelMm(96)` becomes `.wheelMm(100.0)`.
+- the strafe correction goes in `Tunables.Drive`: `strafeCorrection = 1.120`.
+- the lines that start with `c.` are for the older helpers: skip them.
 - a turn that overshoots: raise `turnKd` a little (+0.001) or lower `turnKp`. A turn that stops short:
   raise `turnKp` a little (+0.002). Both are in `Tunables.Drive`.
 

@@ -9,12 +9,16 @@ import com.crossbotics.ftchelper.gamepad.ControllerBindings.Pad;
 import com.crossbotics.ftchelper.launcher.Flywheel;
 import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Finds a flywheel's speed-control numbers. Step 1 measures the top speed at full power and works
  * out starting gains from it. Step 2 holds a speed you choose, so you can fine-tune the main gain
  * (F), feed a piece by hand, and see how fast the wheel gets back to speed after a shot.
  * No code to write: it lists every motor in the robot configuration.
+ *
+ * <p>It shows the code for {@code Flywheel} and, for the robot in five files, the line for
+ * {@code Tunables.java}: {@code Tunables.Launcher: kP = 1.17, kI = 0.117, kD = 0, kF = 11.70}.
  *
  * <pre>
  * Choose:  D-pad up/down = motor, A = use it
@@ -232,6 +236,18 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
             results.set(key + ":2", "    // recovery after a shot at " + FinderResults.num(targetRpm, 0) + " RPM: "
                     + FinderResults.num(recoverySec, 2) + " s");
         }
+        // The same gains for the robot in five files (Tunables.java). A slow recovery also needs a
+        // longer time between two shots (shotIntervalSec, default 0.25 s): a little above the recovery.
+        List<String> fields = new ArrayList<>();
+        fields.add("kP = " + FinderResults.num(gains[0], 2));
+        fields.add("kI = " + FinderResults.num(gains[1], 3));
+        fields.add("kD = 0");
+        fields.add("kF = " + FinderResults.num(gains[3], 2));
+        if (!Double.isNaN(recoverySec) && recoverySec > 0.25) {
+            fields.add("shotIntervalSec = " + FinderResults.num(Math.ceil(recoverySec * 20) / 20 + 0.05, 2));
+        }
+        results.set(key + ":t0", FinderResults.tunablesLine(motorName, fields));
+        if (reversed) results.set(key + ":t1", "Robot.java: add .reversed() to the \"" + motorName + "\" launcher");
     }
 
     @Override

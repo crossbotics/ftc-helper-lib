@@ -4,6 +4,30 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+Nothing old stops working.
+
+### Added
+
+- Finders: every finder also shows (and saves in `finder-results.txt`) the lines for the robot in five
+  files, so nobody translates by hand: `Tunables.Claw: P1 = 0.210, P2 = 0.770` (Servo Finder),
+  `Tunables.Lift: min = 0, max = 2580, P1 = 1200` (Motor Finder; `Robot.java: add .reversed()` when
+  needed), `Tunables.Launcher: kP = ..., kF = ...` (Flywheel Finder), `Robot.java: .wheelMm(100.0)` and
+  `Tunables.Drive: strafeCorrection = 1.120` (Drive Tuner), `Tunables.Launcher.speedByDistance = {{48, 2550}, ...};`
+  (Shot Tuner, without a hood), `Tunables.Turret: cameraOffset = -1.5` (Aim Tuner, with a turret). The
+  section is the device's name in CamelCase. New: `FinderResults.tunablesLine(...)`, `ShotPoints.tunablesLine(...)`.
+- `DriveTunerOpMode.robot()` and `ShotTunerOpMode.robot()`: the robot in five files in one line,
+  `@Override protected RobotDefinition robot() { return new Robot(); }`. The Shot Tuner then uses the
+  robot's first launcher, camera and drive (its turret stays still, its "fire when aimed" checks are off).
+- Examples: `lessonbot/DriveTuner.java` (lesson 6) and `turretbot/ShotTuner.java` (lesson 7), both `@Disabled`.
+- `launcher.Launcher.clearReadyChecks()`: removes every `requireReady` check.
+
+### Changed
+
+- `DriveTunerOpMode.robotConfig()` and `ShotTunerOpMode.createLauncher()` are no longer abstract (they
+  come from `robot()` by default). Code that overrides them works as before.
+- Lessons 4, 6 and 7, the finders guide and reference: copy the `Tunables.` lines; the hand
+  translation is gone.
+
 ## v0.11.2 - 2026-10-21
 
 Nothing old stops working.

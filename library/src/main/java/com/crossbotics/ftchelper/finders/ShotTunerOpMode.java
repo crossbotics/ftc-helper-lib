@@ -9,6 +9,9 @@ import com.crossbotics.ftchelper.gamepad.ControllerBindings.Pad;
 import com.crossbotics.ftchelper.launcher.Launcher;
 import com.crossbotics.ftchelper.launcher.ShotTable;
 import com.crossbotics.ftchelper.mechanism.PositionServo;
+import com.crossbotics.ftchelper.robot.Camera;
+import com.crossbotics.ftchelper.robot.Module;
+import com.crossbotics.ftchelper.robot.RobotDefinition;
 import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
 import com.crossbotics.ftchelper.vision.TargetObservation;
 import com.crossbotics.ftchelper.vision.TargetSource;
@@ -35,6 +38,18 @@ import com.crossbotics.ftchelper.vision.TargetSource;
  *
  * KEEP PEOPLE OUT OF THE LINE OF FIRE; eye protection on.
  *
+ * <p>It shows the table twice: as {@code ShotTable} code and, for the robot in five files, as the
+ * line for {@code Tunables.java}: {@code Tunables.Launcher.speedByDistance = {{48, 2550}, {72, 2900}};}
+ *
+ * <p>In your TeamCode, the robot in five files (next to Robot.java). It uses the robot's launcher,
+ * camera and drive, with their numbers from Tunables.java:
+ * <pre>{@code
+ * @TeleOp(name = "Shot Tuner", group = "Finders")
+ * public class ShotTuner extends ShotTunerOpMode {
+ *     @Override protected RobotDefinition robot() { return new Robot(); }
+ * }
+ * }</pre>
+ * With the older helpers instead:
  * <pre>{@code
  * @TeleOp(name = "Shot Tuner", group = "Finders")
  * public class ShotTuner extends ShotTunerOpMode {
@@ -53,11 +68,36 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
 
     // ----------------------------- you fill these in -----------------------------
 
-    /** Your launcher (flywheel, feeder, hood), set up as in your TeleOp. */
-    protected abstract Launcher createLauncher();
+    /**
+     * Your robot in five files: {@code return new Robot();}. The tuner sets it up and uses its first
+     * launcher, its first camera and its drive. Its other parts are set up but stay still. Default
+     * null: then give {@link #createLauncher()} (and, if you have them, the camera and robotConfig()).
+     */
+    protected RobotDefinition robot() {
+        return null;
+    }
 
-    /** Your camera, or null to set the distance by hand. It is started for you. */
+    /**
+     * Your launcher (flywheel, feeder, hood), set up as in your TeleOp. Default: the first launcher
+     * of {@link #robot()}. Give one of the two.
+     */
+    protected Launcher createLauncher() {
+        com.crossbotics.ftchelper.robot.Launcher module = robotLauncher();
+        if (module == null) {
+            throw new IllegalStateException(robotDef == null
+                    ? "The shot tuner needs your robot: add \"@Override protected RobotDefinition robot() { return new Robot(); }\" (or createLauncher())."
+                    : "The shot tuner found no Launcher in Robot.java.");
+        }
+        return module.part();
+    }
+
+    /**
+     * Your camera, or null to set the distance by hand. It is started for you. Default: the first
+     * camera of {@link #robot()}, or null.
+     */
     protected TargetSource createCamera() {
+        if (robotDef == null) return null;
+        for (Module<?> m : robotDef.modules()) if (m instanceof Camera) return ((Camera) m).source();
         return null;
     }
 
@@ -67,9 +107,9 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         return null;
     }
 
-    /** Your robot settings, to drive with the sticks. Null (default) = no driving. */
+    /** Your robot settings, to drive with the sticks. Default: the drive of {@link #robot()}, or null = no driving. */
     protected RobotConfig robotConfig() {
-        return null;
+        return robotDef == null ? null : robotDef.robotConfig();
     }
 
     /** Other mechanisms to keep updated (for example an intake that loads the launcher). */
@@ -91,6 +131,7 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
 
     private enum Field { SPEED, HOOD, DISTANCE }
 
+    private RobotDefinition robotDef;   // the robot in five files, or null
     private Launcher launcher;
     private PositionServo hood;
     private TargetSource camera;
@@ -117,7 +158,13 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
 
     @Override
     protected void setup() {
+        // The robot in five files: every part is made now (INIT), with its numbers from Tunables.java.
+        robotDef = robot();
+        if (robotDef != null) robotDef.setup(hardwareMap);
         launcher = createLauncher();
+        // Robot.java's "fire only when aimed" checks are off here: you aim by hand in the tuner, and
+        // the turret (if any) stays still.
+        if (robotDef != null) launcher.clearReadyChecks();
         hood = launcher.getHood();
         camera = createCamera();
         if (camera != null) camera.start();
@@ -211,6 +258,20 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         results.removeStartingWith("shots:");
         int n = 0;
         for (String line : points.codeLines()) results.set("shots:" + n++, line);
+        // The same table for the robot in five files. Its launcher has no hood, so only without one.
+        if (hood == null && !points.points().isEmpty()) {
+            com.crossbotics.ftchelper.robot.Launcher module = robotLauncher();
+            results.set("shots:t0", points.tunablesLine(module != null ? module.name() : "Launcher"));
+        }
+    }
+
+    // The first Launcher in Robot.java, or null (no robot() or no launcher).
+    private com.crossbotics.ftchelper.robot.Launcher robotLauncher() {
+        if (robotDef == null) return null;
+        for (Module<?> m : robotDef.modules()) {
+            if (m instanceof com.crossbotics.ftchelper.robot.Launcher) return (com.crossbotics.ftchelper.robot.Launcher) m;
+        }
+        return null;
     }
 
     @Override
@@ -325,6 +386,8 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         try { if (driving != null) driving.stop(); } catch (RuntimeException e) { if (first == null) first = e; }
         try { if (others != null) others.stop(); } catch (RuntimeException e) { if (first == null) first = e; }
         try { if (camera != null) camera.close(); } catch (RuntimeException e) { if (first == null) first = e; }
+        // The robot in five files: every part it made stops too.
+        try { if (robotDef != null && robotDef.all() != null) robotDef.all().stop(); } catch (RuntimeException e) { if (first == null) first = e; }
         if (first != null) throw first;
     }
 }

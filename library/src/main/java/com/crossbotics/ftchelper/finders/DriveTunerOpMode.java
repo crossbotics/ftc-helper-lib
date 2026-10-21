@@ -10,6 +10,7 @@ import com.crossbotics.ftchelper.drive.DriveConfig;
 import com.crossbotics.ftchelper.gamepad.ControllerBindings;
 import com.crossbotics.ftchelper.gamepad.ControllerBindings.Btn;
 import com.crossbotics.ftchelper.gamepad.ControllerBindings.Pad;
+import com.crossbotics.ftchelper.robot.RobotDefinition;
 import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,9 +30,19 @@ import java.util.List;
  * </pre>
  *
  * Each new number is used at once in this tuner (no rebuild): run the Drive and Strafe tests again
- * until they measure 48, then copy the lines into RobotSettings. Leave 5 ft of space in front of and to the right of the robot.
- * In your TeamCode: {@code @TeleOp(name = "Drive Tuner", group = "Finders") public class DriveTuner
- * extends DriveTunerOpMode { protected RobotConfig robotConfig() { return new RobotSettings(); } }}
+ * until they measure 48, then copy the lines into your code. Leave 5 ft of space in front of and to
+ * the right of the robot. It shows each number twice: for {@code RobotSettings.auto()}
+ * ({@code c.wheelDiameterIn = 3.937;}) and for the robot in five files ({@code Robot.java: .wheelMm(100.0)},
+ * {@code Tunables.Drive: strafeCorrection = 1.120}).
+ *
+ * <p>In your TeamCode, the robot in five files (next to Robot.java):
+ * <pre>{@code
+ * @TeleOp(name = "Drive Tuner", group = "Finders")
+ * public class DriveTuner extends DriveTunerOpMode {
+ *     @Override protected RobotDefinition robot() { return new Robot(); }
+ * }
+ * }</pre>
+ * With a RobotSettings class instead: {@code @Override protected RobotConfig robotConfig() { return new RobotSettings(); }}
  *
  * <p>The Drive, Strafe and Turn tests WAIT while the robot moves (like autonomous): STOP still works.
  *
@@ -41,8 +52,26 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
 
     private static final String[] TESTS = {"Push (by hand)", "Drive forward", "Strafe right", "Turn 90 left"};
 
-    /** Your robot's settings (the same as TeleOp and autonomous). */
-    protected abstract RobotConfig robotConfig();
+    /**
+     * Your robot in five files: {@code return new Robot();}. The tuner uses its drive (motors, wheel,
+     * IMU and {@code Tunables.Drive}). Default null: then {@link #robotConfig()} must be given.
+     */
+    protected RobotDefinition robot() {
+        return null;
+    }
+
+    /**
+     * Your robot's settings (the same as TeleOp and autonomous), e.g. {@code return new RobotSettings();}.
+     * Default: the drive of {@link #robot()}. Give one of the two.
+     */
+    protected RobotConfig robotConfig() {
+        RobotDefinition r = robot();
+        if (r == null) {
+            throw new IllegalStateException("The drive tuner needs your robot: add "
+                    + "\"@Override protected RobotDefinition robot() { return new Robot(); }\" (or robotConfig()).");
+        }
+        return r.robotConfig();
+    }
 
     /** How far each distance test goes, inches. Default 48 (two tiles). */
     protected double testDistanceIn() {
@@ -77,7 +106,7 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
         // check it, so it switches that safety off for itself only.
         autoConfig.calibrationConfirmed = true;
         IMU imu = config.imu(hardwareMap);
-        if (imu == null) throw new IllegalStateException("The drive tuner needs the IMU: RobotSettings.imu() returned null.");
+        if (imu == null) throw new IllegalStateException("The drive tuner needs the IMU: add .imu(...) to the drive in Robot.java (or RobotSettings.imu()).");
         auto = new AutoDrive(this, driveConfig, autoConfig, imu);
         // The wheel motors, so the push test can let them roll freely.
         wheels.add(hardwareMap.get(DcMotorEx.class, driveConfig.frontLeft));
@@ -127,12 +156,13 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
             if (test == 1) {
                 double d = FinderMath.correctedDiameter(autoConfig.wheelDiameterIn, testDistanceIn(), measured);
                 autoConfig.wheelDiameterIn = d;
-                results.set("drive:diameter", "c.wheelDiameterIn = " + FinderResults.num(d, 3) + ";   // RobotSettings.auto()");
+                setDiameterResult(d);
                 lastResult = "Wheel size now " + FinderResults.num(d, 3) + " in. Run the Drive test again.";
             } else if (test == 2) {
                 double s = FinderMath.correctedStrafe(autoConfig.strafeCorrection, testDistanceIn(), measured);
                 autoConfig.strafeCorrection = s;
                 results.set("drive:strafe", "c.strafeCorrection = " + FinderResults.num(s, 3) + ";   // RobotSettings.auto()");
+                results.set("drive:strafe5", "Tunables.Drive: strafeCorrection = " + FinderResults.num(s, 3));
                 lastResult = "Strafe correction now " + FinderResults.num(s, 3) + ". Run the Strafe test again.";
             }
             waiting = Wait.CHOOSE;
@@ -201,6 +231,12 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
         }
     }
 
+    // The wheel size, for RobotSettings and for the robot in five files (Robot.java takes millimetres).
+    private void setDiameterResult(double inches) {
+        results.set("drive:diameter", "c.wheelDiameterIn = " + FinderResults.num(inches, 3) + ";   // RobotSettings.auto()");
+        results.set("drive:diameter5", "Robot.java: .wheelMm(" + FinderResults.num(inches * 25.4, 1) + ")   // in the drive(...) line");
+    }
+
     // B: the push is done. Wheel size from the counts.
     private void finishPush() {
         if (waiting != Wait.PUSHING) return;
@@ -225,7 +261,7 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
         }
         double d = FinderMath.wheelDiameterFromPush(avgTicks, testDistanceIn(), autoConfig.ticksPerRev, autoConfig.gearRatio);
         autoConfig.wheelDiameterIn = d;
-        results.set("drive:diameter", "c.wheelDiameterIn = " + FinderResults.num(d, 3) + ";   // RobotSettings.auto()");
+        setDiameterResult(d);
         lastResult = "Wheel size now " + FinderResults.num(d, 3) + " in. Next: the Drive test.";
     }
 
@@ -277,7 +313,7 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
             "Turn: turns 90 left: check it with a square.",
             "Each new number is used at once: repeat Drive and",
             "  Strafe until they measure " + d + ".",
-            "Then copy the lines into RobotSettings.auto().",
+            "Then copy the lines into your code.",
         };
     }
 

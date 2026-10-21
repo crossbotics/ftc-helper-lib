@@ -1,5 +1,6 @@
 package com.crossbotics.ftchelper.finders;
 
+import com.crossbotics.ftchelper.robot.RobotDefinition;
 import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
 import com.crossbotics.ftchelper.util.BackgroundWorker;
 import java.io.File;
@@ -22,6 +23,10 @@ import java.util.function.Consumer;
  * Android Studio's Device Explorer).
  *
  * <p>Each line has a key: setting the same key again replaces the line, so the newest result wins.
+ *
+ * <p>Each finder shows its numbers twice: as code for the older helpers ({@code PositionServo.create(...)})
+ * and as lines for the robot in five files ({@code Tunables.Claw: P1 = 0.210, P2 = 0.770}): copy each
+ * {@code name = value} into that section of {@code Tunables.java}.
  *
  * Docs: docs/modules/finders.md
  */
@@ -128,6 +133,33 @@ public final class FinderResults {
     private static synchronized BackgroundWorker saver() {
         if (saver == null) saver = new BackgroundWorker("finder-results");
         return saver;
+    }
+
+    /**
+     * A line for the robot in five files: the section of {@code Tunables.java} and its numbers.
+     * Copy each {@code name = value} into that section ({@code public static double ...}).
+     *
+     * <pre>{@code
+     * tunablesLine("lift", Arrays.asList("min = 0", "max = 2580"))   // "Tunables.Lift: min = 0, max = 2580"
+     * }</pre>
+     *
+     * @param deviceName the device's configuration name; the section is that name in CamelCase
+     *                   ("intake_deploy" reads Tunables.IntakeDeploy, see {@link RobotDefinition#sectionName})
+     * @param fields     the numbers as "name = value" texts, in order
+     * @return e.g. "Tunables.Claw: P1 = 0.210, P2 = 0.770"
+     */
+    public static String tunablesLine(String deviceName, List<String> fields) {
+        return "Tunables." + RobotDefinition.sectionName(deviceName) + ": " + commas(fields);
+    }
+
+    // "a, b, c". (Not String.join: the blocking check reads every ".join(" as a thread wait.)
+    static String commas(List<String> parts) {
+        StringBuilder sb = new StringBuilder();
+        for (String p : parts) {
+            if (sb.length() > 0) sb.append(", ");
+            sb.append(p);
+        }
+        return sb.toString();
     }
 
     /** A number as text with this many decimals, always with a "." (whatever the phone's language). */

@@ -101,6 +101,19 @@ public class FindersTest {
         assertEquals(Arrays.asList("new ShotTable()", "    .add(36.4, 2950)"), noHood.codeLines());
     }
 
+    // The lines for the robot in five files: the section is the device name in CamelCase.
+    @Test public void tunablesLinesUseTheSectionName() {
+        assertEquals("Tunables.Lift: min = 0, max = 2580, P1 = 1200",
+                FinderResults.tunablesLine("lift", Arrays.asList("min = 0", "max = 2580", "P1 = 1200")));
+        assertEquals("Tunables.IntakeDeploy: P1 = 0.210",
+                FinderResults.tunablesLine("intake_deploy", Arrays.asList("P1 = 0.210")));
+        ShotPoints p = new ShotPoints(false);
+        assertEquals("", p.tunablesLine("Launcher"));
+        p.save(72, 2900, 0);
+        p.save(48.5, 2550, 0);
+        assertEquals("Tunables.Launcher.speedByDistance = {{48.5, 2550}, {72, 2900}};", p.tunablesLine("Launcher"));
+    }
+
     @Test public void removingOneDevicesLinesKeepsADeviceWithALongerName() {
         FinderResults r = new FinderResults("Test finder");
         r.set("servo:claw:0", "claw");

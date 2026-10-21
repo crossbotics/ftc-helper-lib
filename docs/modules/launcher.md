@@ -186,6 +186,7 @@ Launcher launcher = new Launcher(flywheel, feeder)
 | --- | --- |
 | `.hood(servo)`, `.table(t)` | optional parts |
 | `.requireReady(name, check)` | another condition before each piece (aim, sensor, anything) |
+| `.clearReadyChecks()` | removes every `requireReady` check (the Shot Tuner does this: you aim by hand there) |
 | `.shotInterval(s)` | least time between pieces |
 | `.readyTimeout(s)` | give up the remaining shots after this long not ready |
 | `.idleRpm(r)` | speed when not shooting (a low idle makes spin-up faster) |

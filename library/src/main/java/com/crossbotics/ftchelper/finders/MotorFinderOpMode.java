@@ -8,6 +8,7 @@ import com.crossbotics.ftchelper.gamepad.ControllerBindings.Pad;
 import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
@@ -15,6 +16,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
  * Finds a motor mechanism's numbers (a lift, an arm, a turret): its limits in encoder counts, the
  * positions you want, and its top speed. Move it slowly with the stick, mark the ends and positions,
  * and copy the code lines it shows. No code to write: it lists every motor in the robot configuration.
+ *
+ * <p>It shows the code for {@code PositionMotor} and, for the robot in five files, the line for
+ * {@code Tunables.java}: {@code Tunables.Lift: min = 0, max = 2580, P1 = 1200} (rename P1 to low...).
  *
  * <pre>
  * Choose:  D-pad up/down = motor, A = use it (its count starts at 0 HERE: start at the bottom)
@@ -173,6 +177,20 @@ public abstract class MotorFinderOpMode extends FinderOpMode {
         if (topSpeed > 0) {
             results.set(key + ":speed", "    // top speed up: " + FinderResults.num(topSpeed, 0) + " counts/s");
         }
+        // The same numbers for the robot in five files (Tunables.java): min, max and the positions.
+        List<String> fields = new ArrayList<>();
+        if (bothEnds()) {
+            double[] lim = FinderMath.limits(lowEnd, highEnd);
+            fields.add("min = " + FinderResults.num(lim[0], 0));
+            fields.add("max = " + FinderResults.num(lim[1], 0));
+        }
+        for (Map.Entry<String, Integer> p : positions.entrySet()) {
+            fields.add(p.getKey() + " = " + (reversed ? 0 - p.getValue() : p.getValue()));
+        }
+        if (fields.isEmpty()) return;
+        results.set(key + ":t0", FinderResults.tunablesLine(motorName, fields));
+        results.set(key + ":t1", "    // encoder counts: right for a Lift; an Arm's numbers are degrees");
+        if (reversed) results.set(key + ":t2", "Robot.java: add .reversed() to the \"" + motorName + "\" part");
     }
 
     @Override

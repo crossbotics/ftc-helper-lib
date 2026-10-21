@@ -12,13 +12,20 @@ gains, wheel size, shot speeds, camera offset) and show them as **lines of code 
 save those lines on the Control Hub in `/sdcard/FIRST/ftc-helper/finder-results.txt` when you press
 STOP, so nobody copies numbers from the screen by hand.
 
+Each finder shows its numbers in two forms: code for the older helpers (`PositionServo.create(...)`,
+`PositionMotor.create(...)`, `c.wheelDiameterIn = ...`) and lines for the
+[robot in five files](robot.md): `Tunables.Lift: min = 0, max = 2580, P1 = 1200` means "in
+`Tunables.java`, section `Lift`, set `min = 0`, `max = 2580`, `P1 = 1200`". The section is the
+device's name in CamelCase (`lift` -> `Lift`, `intake_deploy` -> `IntakeDeploy`,
+[`RobotDefinition.sectionName`](robot.md)). Copy the lines that fit your code.
+
 | Class | Use it to | Needs code from you? |
 | --- | --- | --- |
 | [`ServoFinderOpMode`](#servofinderopmode) | find a servo's safe ends and positions | no |
 | [`MotorFinderOpMode`](#motorfinderopmode) | find a lift's, arm's or turret's limits, positions and top speed | no |
 | [`FlywheelFinderOpMode`](#flywheelfinderopmode) | find a flywheel's top speed, speed-control gains and recovery time | no |
-| [`DriveTunerOpMode`](#drivetuneropmode) | find the wheel size and strafe correction for autonomous | `robotConfig()` |
-| [`ShotTunerOpMode`](#shottuneropmode) | build the shot table: distance -> speed (and hood angle) | your launcher (+ camera) |
+| [`DriveTunerOpMode`](#drivetuneropmode) | find the wheel size and strafe correction for autonomous | `robot()` (five files) or `robotConfig()` |
+| [`ShotTunerOpMode`](#shottuneropmode) | build the shot table: distance -> speed (and hood angle) | `robot()` (five files), or your launcher (+ camera) |
 | [`AimTunerOpMode`](#aimtuneropmode) | find the camera offset so shots go in the middle | your camera (+ turret or drive) |
 | [`CharacterizerOpMode`](#characterizeropmode) | measure how the drive, lifts and flywheels really move (feedforward numbers, and the simulator's robot file) | `robotConfig()`, `mechanisms()` |
 | [`FinderOpMode`](#finderopmode) | the shared frame of every finder (for writing your own) | |
@@ -70,7 +77,12 @@ position saved outside the marked ends gets a note in its line. Output:
 PositionServo.create(hardwareMap, "claw").limits(0.180, 0.770)
     .position("P1", 0.210)
     .position("P2", 0.740)
+Tunables.Claw: P1 = 0.210, P2 = 0.740
+    // rename P1, P2... (open, closed); keep them between 0.180 and 0.770
 ```
+
+In five files: `public static double open = 0.210, closed = 0.740;` in `Tunables.Claw`. A servo
+module has no ends of its own, so the ends become a reminder.
 
 ## MotorFinderOpMode
 
@@ -94,7 +106,14 @@ output adds `.reversed()` and flips the signs. Output:
 PositionMotor.create(hardwareMap, "lift").limits(0, 2580)
     .position("P1", 1200)
     // top speed up: 2650 counts/s
+Tunables.Lift: min = 0, max = 2580, P1 = 1200
+    // encoder counts: right for a Lift; an Arm's numbers are degrees
 ```
+
+In five files: `min = 0, max = 2580` and a named height such as `low = 1200` in `Tunables.Lift`.
+A reversed motor also gets `Robot.java: add .reversed() to the "lift" part`. An `Arm` reads degrees
+from `Tunables.java`, so divide its counts by the counts per degree (motor counts per turn x gear
+ratio / 360).
 
 ## FlywheelFinderOpMode
 
@@ -120,11 +139,28 @@ override it for a geared wheel. Output:
 Flywheel.create(hardwareMap, "flywheel").countsPerRev(28.0).pidf(1.17, 0.117, 0, 11.70).maxRpm(5400)
     // top speed 6000 RPM; maxRpm = 90% of it
     // recovery after a shot at 3600 RPM: 0.38 s
+Tunables.Flywheel: kP = 1.17, kI = 0.117, kD = 0, kF = 11.70, shotIntervalSec = 0.45
 ```
+
+The `Tunables` line is for a [`Launcher`](robot.md) module on that motor (here a motor named
+`flywheel`; the lessons call it `launcher`, so `Tunables.Launcher`). `shotIntervalSec` is only there
+when the recovery is longer than the default 0.25 s.
 
 ## DriveTunerOpMode
 
-Needs `robotConfig()` (your `RobotSettings`). D-pad chooses a test, **A** starts it.
+Needs your robot. The robot in five files (next to `Robot.java`; the lesson robot's
+[DriveTuner.java](../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/DriveTuner.java)):
+
+```java
+@TeleOp(name = "Drive Tuner", group = "Finders")
+public class DriveTuner extends DriveTunerOpMode {
+    @Override protected RobotDefinition robot() { return new Robot(); }
+}
+```
+
+With a `RobotSettings` class instead: `@Override protected RobotConfig robotConfig() { return new RobotSettings(); }`.
+
+D-pad chooses a test, **A** starts it.
 
 | Test | You do | It finds |
 | --- | --- | --- |
@@ -137,21 +173,41 @@ The Drive, Strafe and Turn tests WAIT while the robot moves, like autonomous (ST
 A move that ends STALLED or TIMED_OUT is not measured: clear the path and run it again. GUIDE (or
 START) stops a moving test at once and opens help; that test is not measured either.
 Each new number is used at once inside the tuner (no rebuild): run Drive and Strafe again until
-they measure 48, then copy the lines into `RobotSettings.auto()`.
+they measure 48, then copy the lines into your code.
 `testDistanceIn()` changes the 48. Output:
 
 ```java
-c.wheelDiameterIn = 3.812;   // RobotSettings.auto(), from the drive test
+c.wheelDiameterIn = 3.812;   // RobotSettings.auto()
+Robot.java: .wheelMm(96.8)   // in the drive(...) line
 c.strafeCorrection = 1.180;   // RobotSettings.auto()
+Tunables.Drive: strafeCorrection = 1.180
 ```
+
+Five files: the wheel size goes in the drive line of `Robot.java` (`.wheelMm(96.8)`, millimetres),
+the strafe correction in `Tunables.Drive`. Then `Tunables.Drive.calibrated = true`.
 
 ## ShotTunerOpMode
 
-Builds the shot table. Fill in:
+Builds the shot table. The robot in five files needs one method (the turret robot's
+[ShotTuner.java](../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/ShotTuner.java)):
+
+```java
+@TeleOp(name = "Shot Tuner", group = "Finders")
+public class ShotTuner extends ShotTunerOpMode {
+    @Override protected RobotDefinition robot() { return new Robot(); }
+}
+```
+
+It sets the robot up at INIT and uses its first `Launcher` (with its numbers from `Tunables.java`),
+its first `Camera` and its drive. Its other parts are set up but not moved: a turret stays still, and
+the launcher's `requireReady(...)` checks (like "turret aimed") are off, because you aim by hand here.
+
+Without five files, fill in:
 
 | Method | Required? | |
 | --- | --- | --- |
-| `createLauncher()` | yes | your [`Launcher`](launcher.md), as in TeleOp (with a hood, it tunes the hood too) |
+| `robot()` | no | the robot in five files: gives the three below |
+| `createLauncher()` | without `robot()` | your [`Launcher`](launcher.md), as in TeleOp (with a hood, it tunes the hood too) |
 | `createCamera()` | no | the camera gives the distance; null = set the distance by hand |
 | `findTarget(camera)` | no | which target; default: the first with a distance |
 | `robotConfig()` | no | drive with the sticks between distances |
@@ -177,6 +233,12 @@ new ShotTable()
     .add(24.0, 2600, 6.0)
     .add(48.5, 3100, 14.0)
     .add(72.0, 3700, 21.0)
+```
+
+Without a hood it also shows the line for five files (the section is the launcher's):
+
+```java
+Tunables.Launcher.speedByDistance = {{24, 2600}, {48.5, 3100}, {72, 3700}};
 ```
 
 ## AimTunerOpMode
@@ -205,7 +267,8 @@ A camera to the SIDE of the launcher needs a different offset at each distance (
 from a different angle). If the offset that works changes with distance, move the camera onto the
 launcher's line, or tune at the distance you shoot from most.
 
-Output: `new AimController(...).offset(-1.5)` or `turret.cameraOffset(-1.5)`.
+Output: `new AimController(...).offset(-1.5)` or `turret.cameraOffset(-1.5)`; with a turret also
+`Tunables.Turret: cameraOffset = -1.5` (the section is the turret motor's name).
 
 ---
 
@@ -306,6 +369,7 @@ GUIDE and START are the help keys in every finder, so a finder must not bind the
 | `saveNow()` | adds them to `/sdcard/FIRST/ftc-helper/finder-results.txt` now (FinderOpMode does this at STOP and shows the result) |
 | `saveInBackground(ok -> ...)` | the same on a background thread |
 | `FinderResults.num(value, decimals)` | a number as text, always with "." |
+| `FinderResults.tunablesLine(deviceName, fields)` | a line for five files: `tunablesLine("lift", Arrays.asList("min = 0", "max = 2580"))` gives `Tunables.Lift: min = 0, max = 2580` |
 
 ## FinderMath
 
@@ -324,4 +388,5 @@ A D-pad list: `new Chooser(names)` (sorted A to Z), `next()`, `previous()`, `cur
 
 The shot tuner's saved points: `new ShotPoints(hasHood)`, `save(distance, rpm, hoodDeg)` (replaces
 one within `SAME_DISTANCE` = 1), `removeNear(distance)`, `points()` (nearest first),
-`codeLines()` (the `ShotTable` code).
+`codeLines()` (the `ShotTable` code), `tunablesLine(section)` (the five-files line,
+`Tunables.Launcher.speedByDistance = {{48, 2550}, ...};`, empty if nothing is saved).

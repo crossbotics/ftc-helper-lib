@@ -52,10 +52,12 @@ The screen shows:
 ```java
 PositionServo.create(hardwareMap, "claw").limits(0.180, 0.770)
     .position("P1", 0.210)
+Tunables.Claw: P1 = 0.210
+    // rename P1, P2... (open, closed); keep them between 0.180 and 0.770
 ```
 
 Copy it into your code and rename P1 to "OPEN". With the [robot in five files](22-robot-in-five-files.md),
-the numbers go into `Tunables.java` instead (for a claw: `open = 0.210` in `Tunables.Claw`). Press STOP: the same lines are saved in
+copy the `Tunables.Claw` line instead: `open = 0.210` in `Tunables.Claw`. Press STOP: the same lines are saved in
 `/sdcard/FIRST/ftc-helper/finder-results.txt` on the hub.
 
 ## 4. The finders that need your code

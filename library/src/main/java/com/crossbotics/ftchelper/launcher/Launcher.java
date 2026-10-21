@@ -111,6 +111,16 @@ public class Launcher implements Subsystem {
         return this;
     }
 
+    /**
+     * Removes every {@link #requireReady} check. The Shot Tuner does this for a robot in five files:
+     * there you aim by hand, so a "turret aimed" check must not stop each shot.
+     */
+    public Launcher clearReadyChecks() {
+        checkNames.clear();
+        checks.clear();
+        return this;
+    }
+
     /** Least time between two pieces, seconds. Default 0.25. */
     public Launcher shotInterval(double seconds) {
         shotIntervalSec = Math.abs(seconds);
