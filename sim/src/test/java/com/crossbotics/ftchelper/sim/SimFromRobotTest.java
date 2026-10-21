@@ -257,6 +257,28 @@ public class SimFromRobotTest {
         }
     }
 
+    // Lesson 8: odometry. The simulator's pretend Pinpoint follows the robot; driveTo ends at the field
+    // points (the start spot is the drivers' frame: x right, y away, for BLUE).
+    @Test public void theOdometryBotDrivesToFieldPoints() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.odometrybot.Robot.class);
+        String text = new String(java.nio.file.Files.readAllBytes(file), java.nio.charset.StandardCharsets.UTF_8);
+        assertTrue(text, text.contains("odometry = pinpoint pinpoint"));
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("Odometry Bot To the Goal");
+            s.start();
+            assertTrue("it finishes\n" + String.join("\n", s.screen()),
+                    SimRun.waitFor(() -> s.screenHas("Autonomous finished"), 30));
+            String report = String.join("\n", s.screen());
+            assertTrue(report, s.screenHas("To the goal: done"));
+            assertTrue(report, s.screenHas("Park: done"));
+            assertEquals("", s.error());
+            // The robot really is at the park point: the start spot was placed as written (both alliances
+            // start at the bottom wall in the simulator's frame here), so the field point is the same numbers.
+            assertEquals(-56, s.robot().x, 2.0);
+            assertEquals(-36, s.robot().y, 2.0);
+        }
+    }
+
     // The finders' hookup for the robot in five files (lesson 6): robot() { return new Robot(); }, and
     // lines for Robot.java and Tunables.java.
     @Test public void theLessonBotDriveTunerShowsFiveFilesLines() throws Exception {

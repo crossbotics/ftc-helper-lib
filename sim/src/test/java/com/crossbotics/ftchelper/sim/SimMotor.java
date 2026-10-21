@@ -54,6 +54,8 @@ final class SimMotor {
     volatile double appliedPower = 0;   // the power the shaft really gets this step, in its own direction
 
     final DcMotorEx device;
+    // A dead-wheel odometry pod plugged into this port: its count replaces the motor's own (null = none).
+    volatile java.util.function.IntSupplier encoderOverride = null;
     // From the catalog part (or typical numbers): current when free and when stalled at full power.
     String partName = "";
     double freeAmps = 0.25, stallAmps = 9.2;
@@ -178,7 +180,7 @@ final class SimMotor {
             case "getMode": return mode;
             case "setZeroPowerBehavior": zeroPower = (DcMotor.ZeroPowerBehavior) a[0]; return null;
             case "getZeroPowerBehavior": return zeroPower;
-            case "getCurrentPosition": return encoder();
+            case "getCurrentPosition": return encoderOverride != null ? sign() * encoderOverride.getAsInt() : encoder();
             case "getVelocity":
                 if (a != null && a.length == 1 && a[0] instanceof AngleUnit) return perSecondIn((AngleUnit) a[0], velocity());
                 return velocity();

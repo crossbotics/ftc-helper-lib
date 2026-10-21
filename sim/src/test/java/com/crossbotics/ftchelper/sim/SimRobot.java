@@ -39,6 +39,8 @@ final class SimRobot {
     final Map<String, SimLimelight> limelights = new LinkedHashMap<>();
     private final Map<String, HardwareDevice> devices = new LinkedHashMap<>();
     final String imuName;
+    // Pretend odometry (a Pinpoint, an OTOS or dead wheels), or null.
+    final SimOdometry odometry;
     volatile double batteryVolts = 12.8;
     // OpMode threads that ignored STOP: their hardware commands are ignored from then on.
     private static final java.util.Set<Thread> BLOCKED = java.util.concurrent.ConcurrentHashMap.newKeySet();
@@ -231,6 +233,7 @@ final class SimRobot {
             limelights.put(llName, new SimLimelight(c));
         }
         imuName = p.getProperty("imu", "").trim();
+        odometry = p.getProperty("odometry", "").trim().isEmpty() ? null : new SimOdometry(p);
         lengthIn = above0(p, "robot.lengthIn", 18);
         widthIn = above0(p, "robot.widthIn", 18);
         heightIn = above0(p, "robot.heightIn", 18);
@@ -311,6 +314,7 @@ final class SimRobot {
             devices.put(e.getKey(), e.getValue().touchSensor());
         }
         if (!imuName.isEmpty()) devices.put(imuName, imu());
+        if (odometry != null) odometry.addDevices(devices, motors);
         for (SimCamera c : cameras.values()) if (c.device != null) devices.put(c.name, c.device);
         for (SimLimelight l : limelights.values()) devices.put(l.cam.name, l);
         devices.put("Control Hub battery", voltageSensor());
@@ -451,6 +455,7 @@ final class SimRobot {
         headingDeg = startHeading;
         bumpedInto = "";
         if (world != null) world.place(x, y, headingDeg);
+        if (odometry != null) odometry.teleported(x, y, headingDeg);
         if (pieces != null) pieces.reset();   // back to the start of a match: the pieces too
         if (shapes != null) shapes.resetPassive();   // and a dropped intake goes back up
     }
@@ -473,6 +478,7 @@ final class SimRobot {
         headingDeg = nh;
         bumpedInto = "";
         if (world != null) world.place(x, y, headingDeg);
+        if (odometry != null) odometry.teleported(x, y, headingDeg);
     }
 
     /** Holds a switch pressed (on) or lets it go (off), like clicking it in the panel. */
@@ -521,6 +527,7 @@ final class SimRobot {
         }
         for (SimMotor m : motors.values()) m.step(dt, battery);
         if (!wheels.isEmpty()) moveChassis(dt);
+        if (odometry != null) odometry.step(x, y, headingDeg, dt);
         pieces.step();
         for (SimServo s : servos.values()) s.step(dt, Double.isNaN(s.speed) ? servoSpeed : s.speed);
         // A flywheel loses speed when its feeder starts pushing a piece in.

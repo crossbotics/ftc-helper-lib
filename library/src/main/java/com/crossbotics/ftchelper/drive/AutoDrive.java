@@ -400,6 +400,9 @@ public class AutoDrive {
      * @param toleranceIn close enough, inches (1 is usual)
      * @return DONE, STALLED, TIMED_OUT or STOPPED
      */
+    // driveTo's last few inches: proportional speed, so it stops on the point.
+    static final double DRIVE_TO_NEAR_IN = 8, DRIVE_TO_KP = 0.04, DRIVE_TO_MIN_POWER = 0.12, DRIVE_TO_MIN_TURN = 0.08;
+
     public Result driveTo(java.util.function.Supplier<com.crossbotics.ftchelper.util.FieldPose> pose,
                           double xIn, double yIn, double headingDeg, double maxPower, double toleranceIn) {
         if (tank) {
@@ -432,15 +435,24 @@ public class AutoDrive {
                 double h = Math.toRadians(p.headingDeg);
                 double forwardErr = -dx * Math.sin(h) + dy * Math.cos(h);
                 double rightErr = dx * Math.cos(h) + dy * Math.sin(h);
-                // Speed: slow down near the end (like move()), never below moveMinPower until close.
-                double speed = dist <= toleranceIn ? 0 : MotionMath.taperSpeed(dist / startDist,
-                        cfg.moveMinPower, maxSpeed, cfg.taperStartFraction);
+                // Speed: like move() far away; in the last few inches, proportional to the distance left
+                // (DRIVE_TO_KP per inch, at least DRIVE_TO_MIN_POWER), so it settles on the point instead
+                // of circling it.
+                double speed;
+                if (dist <= toleranceIn) speed = 0;
+                else if (dist < DRIVE_TO_NEAR_IN) speed = MathUtil.clamp(DRIVE_TO_KP * dist, DRIVE_TO_MIN_POWER, maxSpeed);
+                else speed = MotionMath.taperSpeed(dist / startDist, cfg.moveMinPower, maxSpeed, cfg.taperStartFraction);
                 double fwd = dist > 1e-6 ? speed * forwardErr / dist : 0;
                 double right = dist > 1e-6 ? speed * rightErr / dist : 0;
                 // PID output is counterclockwise; the drive's turn is clockwise.
                 double turn = -headingPid.calculate(headingDeg, p.headingDeg);
+                // A small turn is too weak to move the robot: at least DRIVE_TO_MIN_TURN until it is there.
+                if (Math.abs(headingErr) > cfg.turnToleranceDeg && Math.abs(turn) < DRIVE_TO_MIN_TURN) {
+                    turn = -Math.signum(headingErr) * DRIVE_TO_MIN_TURN;
+                }
                 setPowers(MecanumMixer.mix(fwd, right, turn, powerLimit));
-                if (cfg.stallExitEnabled && dist > toleranceIn && stall.update(dist, seconds())) {
+                // Stuck only counts away from the point: the last inches are slow on purpose.
+                if (cfg.stallExitEnabled && dist > DRIVE_TO_NEAR_IN && stall.update(dist, seconds())) {
                     log.accept("AutoDrive: driveTo stopped, robot stuck");
                     return Result.STALLED;
                 }
