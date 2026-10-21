@@ -4,6 +4,11 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+## v0.10.1 - 2026-10-20
+
+Nothing old stops working. The library moved to github.com/crossbotics/ftc-helper-lib (old links
+forward there).
+
 ### Added
 
 - Simulator 3D view: rollers and wheels have dark stripes, so you can see them turn and which way. A
