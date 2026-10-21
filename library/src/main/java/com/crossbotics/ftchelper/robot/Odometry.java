@@ -149,6 +149,31 @@ public final class Odometry {
         if (kind != k) throw new IllegalStateException("Robot.java: " + what + "(...) is not for this kind of odometry (" + kind.name().toLowerCase(java.util.Locale.US) + ")");
     }
 
+    /** "pinpoint", "otos", "threeWheels" or "twoWheels" (for the Odometry Tuner). */
+    public String kindName() {
+        switch (kind) {
+            case PINPOINT: return "pinpoint";
+            case OTOS: return "otos";
+            case THREE: return "threeWheels";
+            default: return "twoWheels";
+        }
+    }
+
+    /** The configuration names, in the order written. */
+    public List<String> names() {
+        return java.util.Collections.unmodifiableList(names);
+    }
+
+    /** Pod encoder counts per mm. */
+    public double podTicksPerMm() {
+        return ticksPerMm;
+    }
+
+    /** True if this pod ("x"/"y" for a Pinpoint, a port name for dead wheels) is in {@code reversed(...)}. */
+    public boolean isReversed(String which) {
+        return reversed.contains(which);
+    }
+
     /** The configuration names it uses (checked with the rest at INIT). */
     List<String> deviceNames() {
         return names;

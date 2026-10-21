@@ -272,10 +272,37 @@ public class SimFromRobotTest {
             assertTrue(report, s.screenHas("To the goal: done"));
             assertTrue(report, s.screenHas("Park: done"));
             assertEquals("", s.error());
-            // The robot really is at the park point: the start spot was placed as written (both alliances
-            // start at the bottom wall in the simulator's frame here), so the field point is the same numbers.
-            assertEquals(-56, s.robot().x, 2.0);
-            assertEquals(-36, s.robot().y, 2.0);
+            // The robot really is at the park point. The start spot (-56, -61) is seen from the drivers'
+            // wall: at the bottom wall it is the same numbers on the field, at the top wall turned half a turn.
+            boolean topWall = com.crossbotics.ftchelper.match.MatchMemory.placement().y > 0;
+            assertEquals(topWall ? 56 : -56, s.robot().x, 2.0);
+            assertEquals(topWall ? 36 : -36, s.robot().y, 2.0);
+        }
+    }
+
+    // Lesson 8: the Odometry Tuner's spin test finds the Pinpoint's offsets (the robot file has -84, -168).
+    @Test public void theOdometryTunerFindsThePinpointOffsets() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.odometrybot.Robot.class);
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("Odometry Bot Odometry Tuner").start();
+            s.press(v -> s.g1().dpad_down = v);
+            s.press(v -> s.g1().dpad_down = v);                     // "Spin 3+ turns"
+            s.press(v -> s.g1().a = v);
+            s.g1().right_stick_x = 1;                                // turn in place (30%)
+            assertTrue("it turns 3 times\n" + String.join("\n", s.screen()),
+                    SimRun.waitFor(() -> Math.abs(s.robot().odometry.turnTotalDeg()) > 3.2 * 360, 40));
+            s.g1().right_stick_x = 0;
+            SimRun.pause(0.3);
+            s.press(v -> s.g1().b = v);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Offsets measured"), 2));
+            String line = "";
+            for (String l : s.screen()) if (l.contains("Offsets measured")) line = l;
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile("X pod (-?[0-9.]+) mm left, Y pod (-?[0-9.]+) mm forward").matcher(line);
+            assertTrue(line, m.find());
+            // Within 6 mm: the robot drifts a little while it spins, as a real one does.
+            assertEquals(-84, Double.parseDouble(m.group(1)), 6);
+            assertEquals(-168, Double.parseDouble(m.group(2)), 6);
+            assertEquals("", s.error());
         }
     }
 

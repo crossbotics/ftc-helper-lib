@@ -42,6 +42,9 @@ final class SimOdometry {
     // The pretend device's own pose (X forward, Y left, inches; heading CCW deg), as a Pinpoint/OTOS keeps it.
     private double devX, devY, devH;
     private double vX, vY, vH;
+    // A Pinpoint's raw pod counts and its heading not wrapped to -180..180 (the tuner's spin test).
+    private double encX, encY, turnTotalDeg;
+    private final double xPodLeftMm, yPodForwardMm;
     private boolean started = false;
     private double lastX, lastY, lastH;
 
@@ -60,6 +63,10 @@ final class SimOdometry {
         String r = p.getProperty("odometry.reversed", "").trim();
         reversed = r.isEmpty() ? new ArrayList<>() : Arrays.asList(r.split("\\s*,\\s*"));
         scaleError = num(p, "odometry.scaleError", 0);
+        String off = p.getProperty("odometry.offsetsMm", "0, 0").split("#")[0].trim();
+        String[] o = off.split("\\s*,\\s*");
+        xPodLeftMm = o.length > 0 && !o[0].isEmpty() ? Double.parseDouble(o[0]) : 0;
+        yPodForwardMm = o.length > 1 ? Double.parseDouble(o[1]) : 0;
         driftDegPerMin = num(p, "odometry.driftDegPerMin", 0);
     }
 
@@ -71,6 +78,11 @@ final class SimOdometry {
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Robot file: " + key + " must be a number");
         }
+    }
+
+    /** How far the robot has turned in total since the start (degrees, counterclockwise +). */
+    synchronized double turnTotalDeg() {
+        return turnTotalDeg;
     }
 
     /** The robot was put somewhere by hand (a reset or "place" in the simulator): not a move the pods see. */
@@ -109,6 +121,10 @@ final class SimOdometry {
             pods[0] += (forward - parallelLeftIn * turn) * ticksPerIn;
             pods[2] += (left + perpForwardIn * turn) * ticksPerIn;
         }
+        // A Pinpoint's pods, where the robot file says they sit (4-bar pods, 19.894 counts per mm).
+        encX += (forward - xPodLeftMm / 25.4 * turn) * 25.4 * 19.89436789;
+        encY += (left + yPodForwardMm / 25.4 * turn) * 25.4 * 19.89436789;
+        turnTotalDeg += Math.toDegrees(turn);
         // A Pinpoint or OTOS: its own pose, turned with the robot (the middle of the turn).
         double mid = Math.toRadians(devH) + turn / 2;
         devX += forward * Math.cos(mid) - left * Math.sin(mid);
@@ -211,6 +227,9 @@ final class SimOdometry {
         @Override public double getVelY(DistanceUnit unit) { synchronized (SimOdometry.this) { return unit.fromInches(vY); } }
         @Override public double getHeadingVelocity(UnnormalizedAngleUnit unit) { synchronized (SimOdometry.this) { return unit.fromDegrees(vH); } }
         @Override public DeviceStatus getDeviceStatus() { return DeviceStatus.READY; }
+        @Override public int getEncoderX() { synchronized (SimOdometry.this) { return (int) Math.round(encX); } }
+        @Override public int getEncoderY() { synchronized (SimOdometry.this) { return (int) Math.round(encY); } }
+        @Override public double getHeading(UnnormalizedAngleUnit unit) { synchronized (SimOdometry.this) { return unit.fromDegrees(turnTotalDeg); } }
         @Override public Pose2D getPosition() {
             synchronized (SimOdometry.this) {
                 return new Pose2D(DistanceUnit.INCH, devX, devY, AngleUnit.DEGREES, devH);

@@ -130,6 +130,9 @@ public class FinderSafetyTest {
         EXPECTED.put("goBILDA Bot TeleOp", "\"left_drive\"");
         EXPECTED.put("goBILDA Bot Launch and Back Up", "\"left_drive\"");
         EXPECTED.put("goBILDA Bot Auto Cookbook", "\"left_drive\"");
+        EXPECTED.put("Odometry Bot TeleOp", "\"pinpoint\"");
+        EXPECTED.put("Odometry Bot To the Goal", "\"pinpoint\"");
+        EXPECTED.put("Odometry Bot Odometry Tuner", "\"pinpoint\"");
     }
 
     @Test public void everyExampleStartsAndStopsCleanly() throws Exception {
