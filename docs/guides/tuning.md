@@ -1,6 +1,6 @@
 # Tuning while the robot runs
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
 Tuning (PID gains, positions, servo angles, speeds) takes many small changes. Rebuilding and
 reinstalling for each one takes 2 minutes. The tuning menu changes numbers **while the robot runs**,

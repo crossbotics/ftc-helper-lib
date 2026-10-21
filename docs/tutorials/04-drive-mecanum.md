@@ -1,6 +1,6 @@
 # Tutorial 04: Drive a mecanum robot
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
 **You will learn:** how to set up a mecanum drivetrain, check its motor directions, make the
 sticks feel good, add a slow mode, switch to field-centric driving, and drive "backwards".

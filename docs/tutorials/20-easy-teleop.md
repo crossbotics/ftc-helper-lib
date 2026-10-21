@@ -1,6 +1,6 @@
 # Tutorial 20: Easy TeleOp
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
 **You will learn:** how `EasyTeleOp` turns a TeleOp into a few short methods, which controls you get
 for free, how to add the operator's buttons and sticks, and how TeleOp and autonomous share one

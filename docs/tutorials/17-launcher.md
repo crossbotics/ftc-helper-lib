@@ -1,6 +1,6 @@
 # Tutorial 17: Launcher
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
 **You will learn:** how a flywheel shooter is controlled (speed, ready, feeding), how to build a
 shot table from real shots, and how `Launcher` makes sure a piece is only fed when everything is ready.

@@ -1,6 +1,6 @@
 # Tutorial 09: Your first autonomous
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
 **You will learn:** how to keep all robot settings in one place, how to tune the drivetrain so
 "24 inches" really is 24 inches, and how to write an autonomous with `AutoDrive`.

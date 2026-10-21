@@ -1,6 +1,6 @@
 # Finding your numbers (the finders)
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
 Every robot program is full of numbers: where a servo opens, how high a lift may go, how fast a
 flywheel spins, how big the wheels really are. Guessing them wastes practice time and breaks parts.

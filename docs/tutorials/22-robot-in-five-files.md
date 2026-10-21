@@ -1,6 +1,6 @@
 # 22 The robot in five files
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
 **You learn:** to write a whole robot program the short way: what is on the robot (`Robot.java`), its
 numbers (`Tunables.java`), its buttons (`Controls.java`), combo moves (`Actions.java`) and the

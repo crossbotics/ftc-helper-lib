@@ -1,6 +1,6 @@
 # Easy autonomous modes
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
 How to make an autonomous in a few minutes, and how to make MANY of them without copying code.
 

@@ -1,6 +1,6 @@
 # Extending the library
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
 The library is meant to grow every season. This page shows the four places new things plug in,
 with a complete example for each, and the rules that keep it easy for the next team.

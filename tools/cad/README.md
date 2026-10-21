@@ -1,6 +1,6 @@
 # Robot CAD tools
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
 `robot_cad.py` turns a STEP file of a whole robot into what the simulator needs: a parts list with seller part
 numbers and spin axes (`read`), the clues for which motor drives which part (`clues`), and one STL model per moving

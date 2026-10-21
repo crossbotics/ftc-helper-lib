@@ -1,6 +1,6 @@
 # Tutorial 12: Organize a whole robot
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
 **You will learn:** how to split a real robot program into a `Robot` class and one class per
 mechanism ("subsystem"), so TeleOp and autonomous share the same code and stay short.

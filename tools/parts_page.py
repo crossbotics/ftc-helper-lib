@@ -55,7 +55,7 @@ def page(cat):
     w = out.append
     w("# Parts catalog: motors, servos, wheels and rollers")
     w("")
-    w("> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).")
+    w("> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).")
     w("")
     w("<!-- Made by tools/parts_page.py from sim/parts/parts.json. Edit parts.json, then run the script. -->")
     w("")

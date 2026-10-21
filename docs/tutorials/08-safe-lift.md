@@ -1,6 +1,6 @@
 # Tutorial 08: A lift that cannot hurt itself
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
 **You will learn:** how `SafeMotor` keeps a mechanism inside its range with soft limits, a limit
 switch, homing and a slow zone; and the standard pattern for "set heights with buttons, plus the

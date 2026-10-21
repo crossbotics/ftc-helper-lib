@@ -1,6 +1,6 @@
 # Starter kit: a whole robot program in 30 minutes
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
 Six files that make a complete, competition-ready robot program: one TeleOp for both alliances,
 an autonomous with a menu, a hardware check, and one place for every setting. Copy them, change

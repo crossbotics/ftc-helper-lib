@@ -1,6 +1,6 @@
 # The launcher program
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
 `launcher_lab.py` works out how a robot's flywheel launcher throws, from the robot's CAD, and writes a shot table
 for the simulator (`shoot.NAME = ..., table=FILE`; docs/guides/simulator.md, "How shots fly, and shot tables").

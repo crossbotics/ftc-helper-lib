@@ -1,6 +1,6 @@
 # Tutorial 11: Driver assists
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/jasoncross/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
 **You will learn:** how to make the robot turn to an exact heading with one button (PID on the
 IMU), how to let the driver FEEL when it is pointed right (`AimRumble`), and how to smooth out
