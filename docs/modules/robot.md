@@ -127,7 +127,9 @@ public class Tunables {
   distances): every `public static` number that is not `final` is in the tuning menu too
   ("Auto/parkInches"). The menu's value is written into the field, so your code reads
   `Tunables.Auto.parkInches` as usual. Tune it in the TeleOp, save it (A), run the autonomous: it
-  uses the saved value from its INIT, with no rebuild. True/false settings and tables stay as written.
+  uses the saved value from its INIT, with no rebuild. **Then copy the good value into
+  `Tunables.java`** (INIT lists it): a value saved only on the hub is lost with a new Control Hub.
+  True/false settings and tables stay as written.
 - **The code is the record.** The numbers you tune most become [`Tunable`](tuning.md)s ("Lift/kP"):
   the tuning menu (hold GUIDE 1 s, PRACTICE profile) changes them and saves them on the Control Hub. INIT then
   shows "Tuned on this robot (copy into Tunables.java)" with the lines to copy back.

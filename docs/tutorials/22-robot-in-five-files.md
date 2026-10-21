@@ -108,7 +108,8 @@ public class Tunables {
   change, A to save on the hub). At the next INIT the Driver Station lists every value that differs
   from this file, for example `Tunables.Launcher.speedRpm = 2750 (code 2679)`. Copy the good ones
   into this file: the file stays the record. The `Auto` section is in the menu too (`Auto/backInches`):
-  tune it in the TeleOp, save, and the autonomous uses it at its next INIT.
+  tune it in the TeleOp, save, and the autonomous uses it at its next INIT. Copy those into this file
+  too, every time.
 
 ## 3. Controls.java: the buttons (and the TeleOp)
 

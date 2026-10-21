@@ -28,6 +28,7 @@ file and swaps it in, so a power cut keeps either the old values or the new ones
 
 With the [robot in five files](../modules/robot.md#tunablesjava) there is nothing to set up: the
 parts' numbers and every number in your own sections (like `Tunables.Auto`) are in the menu already.
+Always copy a good tuned value back into `Tunables.java`: the code is the record.
 
 ## 1. Make numbers tunable
 
