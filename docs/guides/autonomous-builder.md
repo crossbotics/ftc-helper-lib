@@ -230,8 +230,9 @@ in the tuning menu too.
 
 ## Follow a curved path: follow (pedro module)
 
-With the optional [pedro module](../modules/pedro.md) and a `follower(Pedro.follower(...))` line in
-`Robot.java`, a step can follow a whole path, curves included, with Pedro Pathing:
+With the [pedro module](../modules/pedro.md) and a `follower(Pedro.follower(...))` line in
+`Robot.java`, a step can follow a whole path, curves included, with Pedro Pathing. **Mecanum drives
+only** (Pedro has no tank drive; a tank robot uses `turnTo` and `move`):
 
 ```java
 s.start("Against our wall, in the left corner tile, facing the field", -56, -61, 0)

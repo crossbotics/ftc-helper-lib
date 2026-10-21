@@ -13,6 +13,13 @@ Read [the odometry module](odometry.md) first: Pedro needs a working, checked od
 path (a line or a smooth curve), and it drives the robot along it fast, correcting all the way, and
 brakes at the end. `driveTo` goes to one point. Pedro follows a whole path, curves included.
 
+> **Mecanum drives only.** Pedro corrects the robot's position by sliding it sideways, so it needs
+> wheels that can strafe. Pedro 3.0.2 has two drivetrains, Mecanum and Swerve, and no tank (two-side)
+> drive. With a tank `drive(...)` line, `Pedro.follower(...)` stops INIT with a clear message. A tank
+> robot uses odometry with `turnTo` and `move` instead ([autonomous builder](../guides/autonomous-builder.md)).
+> Swerve: build Pedro's `Swerve` drivetrain yourself through the
+> [escape hatch](#escape-hatches) (not tested; the library has no swerve `drive(...)` line).
+
 **When to use which:**
 
 | You want | Use |
@@ -313,7 +320,7 @@ put back after it.
 | You want | Use |
 | --- | --- |
 | Pedro's own Follower (its debug data, its settings) | `Pedro.of(robot)` |
-| another drivetrain or algorithm | `follower(Pedro.follower((hardwareMap, localizer) -> new Follower(localizer, yourDrivetrain, yourAlgorithm)))`. Make the Follower with the `localizer` you are given |
+| another drivetrain (e.g. Pedro's `Swerve`) or algorithm | `follower(Pedro.follower((hardwareMap, localizer) -> new Follower(localizer, yourDrivetrain, yourAlgorithm)))`. Make the Follower with the `localizer` you are given. Not for tank: Pedro has no tank drivetrain |
 | Pedro's Mecanum settings from your drive line | `Pedro.mecanumConfig(robot.drive())` |
 | the pose for Pedro in a tool with no robot loop | `PedroTuning.localizer(Robot::new)` |
 

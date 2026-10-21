@@ -10,6 +10,13 @@ as lesson 8.
 is `true`. A **mecanum** drive. About 5 by 8 ft of clear floor (a field is best). About two hours:
 about one hour for Pedro's tuning, the rest to set up and try paths.
 
+> **Mecanum drives only.** Pedro corrects the robot's position by sliding it sideways, so it needs
+> wheels that can strafe. Pedro has no tank (two-side) drive. **On a tank drive** the library stops
+> INIT with a clear message; use odometry with `turnTo` and `move` instead (lesson 8 and the
+> [autonomous builder](../../guides/autonomous-builder.md)). `driveTo` needs mecanum too.
+> A swerve drive can work through Pedro's own `Swerve` drivetrain (see the
+> [escape hatches](../../modules/pedro.md#escape-hatches)); this is not tested.
+
 **This lesson is optional.** Lesson 8's `driveTo` already drives to field points. Many teams never
 need more. Read section 1, then decide.
 
