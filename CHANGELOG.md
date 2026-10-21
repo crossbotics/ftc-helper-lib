@@ -4,6 +4,31 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+### Added
+
+- **Venue lighting** (camera settings that suit the light where you are): in INIT the camera tries a
+  few settings, counts the pictures that see AprilTags with each, and keeps the best one. A tie goes
+  to the first setting; if no tag is seen, it keeps trying, and after START it gives up after 3 s and
+  keeps the first one. It never waits (switches go to a background helper).
+  - Limelight: `LimelightTags.autoPipelines(0, 1, 2)` (one pipeline per kind of light; a picture
+    counts only if that pipeline made it). Ported from the team's 2025-26 `LimelightPipelineAutoSelector`.
+  - Webcam: `WebcamTags.autoExposure()` (the camera's own exposure, then 3, 6 and 12 ms) or
+    `autoExposure(ms...)`, with `.gain(g)` (default: the camera's highest), using the SDK's
+    `ExposureControl` and `GainControl`.
+  - `LightingSweep`: the helper behind both (`lighting()` gives it: `status()`, `scores()`, `restart()`).
+  - Five-files robot: `Camera.limelight(...).autoPipelines(0, 1, 2)` / `Camera.webcam(...).autoExposure()`.
+    The result is on the Driver Station at INIT, with the `Tunables` line that skips the test next
+    time. Optional Tunables: `autoLighting`, `lightingSettleMs`, `lightingPictures`,
+    `lightingMinPictures`, `lightingAfterStartMs`, and for a webcam `exposureMs` and `gain`.
+  - Modules can do quick work in the INIT loop (`Module.initLoop`; the camera keeps reading pictures).
+  - Simulator: `goodPipelines=1|2` (Limelight) and `goodExposureMs=4-10` (webcam) make a pretend
+    camera find tags only with those settings.
+- Example robot 2 (turretbot) uses `autoPipelines(0, 1, 2)`; Lesson 7 teaches it.
+
+### Changed
+
+- `WebcamTags.exposure(ms, gain)`: a gain of -1 now means the camera's highest gain.
+
 ## v0.15.0 - 2026-10-21
 
 Nothing old changes: odometry and the pedro module are new. Only a robot with an `odometry(...)` line

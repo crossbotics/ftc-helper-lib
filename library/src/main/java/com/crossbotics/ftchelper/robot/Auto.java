@@ -114,7 +114,11 @@ public abstract class Auto<R extends RobotDefinition> extends EasyAuto {
             if (!robot.odometry().isReady()) t.warn("Odometry (" + robot.odometry().kind() + "): " + robot.odometry().status());
             else t.line("Odometry", robot.odometry().kind() + " ready");
         }
-        if (robot != null) for (String n : robot.notes()) t.text(n);
+        if (robot != null) {
+            // The modules' INIT work (a camera's lighting test), with their lines.
+            robot.initLoop(t);
+            for (String n : robot.notes()) t.text(n);
+        }
         List<String> changed = RobotDefinition.changedTunables();
         if (!changed.isEmpty()) {
             t.section("Tuned on this robot (copy into Tunables.java)");

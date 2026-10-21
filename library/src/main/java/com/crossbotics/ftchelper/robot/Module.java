@@ -131,6 +131,12 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
     /** Called once right after START (for example an intake that is "on at the start"). */
     void start() { }
 
+    /**
+     * Every pass of the INIT loop, before START (a camera keeps reading pictures here). Must be quick,
+     * never wait and never move anything. May add INIT lines. Default: nothing.
+     */
+    void initLoop(RobotTelemetry t) { }
+
     /** Every device this module uses, by configuration name (checked: each name once per robot). */
     List<String> deviceNames() {
         return java.util.Collections.singletonList(device);

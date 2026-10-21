@@ -71,6 +71,9 @@ camera.start();                  // in INIT: a webcam needs 1-2 s to start
 | `.liveView(on)` | picture on the Robot Controller screen (costs speed) |
 | `.library(lib)` | another tag library (default: this season's, from the SDK) |
 | `.exposure(ms, gain)` | manual exposure; `status()` says if the camera refused |
+| `.autoExposure()` / `.autoExposure(6, 3, 12, 0)` | [venue lighting](#venue-lighting): tries exposures in INIT (ms; 0 = the camera's own automatic), keeps the best |
+| `.gain(g)` | the gain for `autoExposure`'s manual exposures (default: the camera's highest) |
+| `lighting()` / `matchStarted()` | the lighting test (null without `autoExposure`); tell it START happened |
 | `.keepTargetsMs(ms)` | how long targets stay in `targets()` without a new picture (default 500) |
 | `WebcamTags.convert(detection)` | turns an SDK detection into a TargetObservation |
 
@@ -93,6 +96,8 @@ on the robot network). Set the correct tag size there for distances.
 | Method | What it does |
 | --- | --- |
 | `.pipeline(n)` | which pipeline (also switches at once if already started) |
+| `.autoPipelines(0, 1, 2)` | [venue lighting](#venue-lighting): tries these pipelines in INIT, keeps the best (replaces `.pipeline`) |
+| `lighting()` / `matchStarted()` | the lighting test (null without `autoPipelines`); tell it START happened |
 | `.pollRate(hz)` | results per second |
 | `setRobotHeading(deg)` | for the Limelight's MegaTag2 position feature (not needed to aim). Safe every loop: sent in the background |
 | `.keepTargetsMs(ms)` | how long targets stay without a new picture (default 500) |
@@ -106,6 +111,71 @@ the library sends them on a background thread, so they never slow the loop.
 The library flips the Limelight's `tx` sign so that bearing is **positive to the LEFT**, like
 everywhere else. The picture time includes the Limelight's own capture and processing time, so
 "how old is this picture" is honest. The same picture is not reported twice.
+
+## Venue lighting
+
+Every venue has different light: a bright gym, a dim practice room, spotlights at an event. A camera
+setting that finds tags well in one place can miss them in another. The lighting test picks the
+setting for the place you are in, by itself, during INIT:
+
+1. It switches to the first setting, waits a moment (300 ms) for the camera to settle, then counts
+   the next 10 pictures that see at least one AprilTag.
+2. It does the same with each setting in the list.
+3. The setting with the most pictures with tags wins. A tie goes to the one earlier in the list, so
+   **put your usual setting first**.
+4. If no setting saw at least 3 pictures with tags (the robot is not facing a tag yet), it starts over
+   and keeps trying. After START it tries for 3 s more, then keeps the FIRST setting.
+
+It never waits: each switch goes to a background helper, and the test is one quick step per loop.
+Face the robot toward a tag in INIT (where it starts in the match is fine) so the test can finish.
+
+**Limelight:** set up one AprilTag pipeline per kind of light on the Limelight's web page (for
+example 0 = normal, 1 = bright: lower exposure, 2 = dim: higher exposure and gain), then:
+
+```java
+LimelightTags camera = LimelightTags.create(hardwareMap, "limelight").autoPipelines(0, 1, 2);
+```
+
+Only pictures taken with the pipeline being tried count (the Limelight says which pipeline made
+each picture).
+
+**Webcam:** the test tries manual exposures (how long each picture collects light):
+
+```java
+WebcamTags camera = WebcamTags.create(hardwareMap, "Webcam 1").autoExposure();   // auto, 3, 6, 12 ms
+WebcamTags camera = WebcamTags.create(hardwareMap, "Webcam 1").autoExposure(6, 3, 12, 0);   // your own list
+```
+
+`0` is the camera's own automatic exposure. A short exposure gives sharp tags while the robot moves,
+but a dark picture; the gain (a brightness boost) makes up for it. Manual exposures use the gain from
+`.gain(g)` or `.exposure(ms, gain)`, or the camera's highest. The same idea as the FTC SDK's sample
+`ConceptAprilTagOptimizeExposure`, done for you. Not every webcam allows manual exposure:
+`status()` says "exposure not supported".
+
+In the five-files robot it is one word on the camera's line:
+`Camera.limelight("limelight").autoPipelines(0, 1, 2)` or `Camera.webcam("Webcam 1").autoExposure()`
+(see [robot.md](robot.md#camera)). The result is on the Driver Station at INIT, with the line to copy
+into `Tunables.java` if you want to skip the test at this venue next time.
+
+## LightingSweep
+
+The helper behind the lighting test: tries settings one after the other and keeps the one whose
+pictures see the most tags. `LimelightTags` and `WebcamTags` make one for you; get it with
+`lighting()` for its result or to change its numbers.
+
+| Method | What it does |
+| --- | --- |
+| `new LightingSweep(labels, apply, clock)` | one label per setting (usual first); `apply` switches to setting i (must not wait); `System::nanoTime` |
+| `update(tags)` | every loop: tags in a new picture, or `LightingSweep.NO_PICTURE` |
+| `.settleMs(ms)` | wait after a switch before counting (default 300) |
+| `.pictures(n)` | pictures counted per setting (default 10) |
+| `.trialMs(ms)` | most time per setting (default 2000) |
+| `.minPictures(n)` | pictures with tags needed to count as good (default 3) |
+| `.giveUpAfterStartMs(ms)` | after START, how long to keep trying before keeping the first setting (default 3000) |
+| `matchStarted()` | START happened |
+| `restart()` | try every setting again (for a button) |
+| `isDone()`, `gaveUp()`, `chosen()`, `chosenLabel()`, `current()` | the result |
+| `status()`, `scores()` | "dim (9 of 10 pictures saw tags)"; "normal 2/10, bright 0/10, dim 9/10" |
 
 ## TagGroup
 

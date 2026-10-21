@@ -733,6 +733,16 @@ group tags into clusters) with `tx` (+ = right), `ty` (+ = up), `ta`, pixel posi
 AprilTags; `pipelineSwitch` changes the index it reports. Not simulated: botpose / MegaTag (no field
 map), robot-space poses, Python, color and neural pipelines, snapshots.
 
+**Pretend venue lighting** (to try the library's [lighting test](../modules/vision.md#venue-lighting)):
+`goodPipelines=1|2` on a `limelight.` line finds tags only on those pipelines; `goodExposureMs=4-10` on a
+`camera.` line finds tags only with a manual exposure in that range (put 0 in the range for the
+camera's own automatic exposure). Without them, every setting finds tags.
+
+```properties
+limelight.ll = name=limelight, forward=6, up=14, pitch=25, goodPipelines=2
+camera.front = name=Webcam 1, forward=7, up=12, pitch=20, goodExposureMs=5-8
+```
+
 Limits: the poses are exact (no noise, blur or lag beyond the Limelight's reported latency); field
 parts do not block the view; tags slanted more than 60 degrees are not found; the webcam's `robotPose`
 is always null; only the AprilTag finder gets webcam pictures (other VisionProcessors get `init()` and

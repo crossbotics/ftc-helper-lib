@@ -21,6 +21,9 @@ public final class SimVision {
     public static int height(Object camera) { return ((SimCamera) camera).height; }
     public static Object device(Object camera) { return ((SimCamera) camera).device; }
 
+    /** The webcam's exposure now, in ms (0 = its automatic exposure), for the pretend venue lighting. */
+    public static void exposure(Object camera, long ms) { ((SimCamera) camera).exposureMs = ms; }
+
     public static void opened(Object camera, AutoCloseable portal) { ((SimCamera) camera).opened(portal); }
     public static void closed(Object camera, AutoCloseable portal) { ((SimCamera) camera).closed(portal); }
 

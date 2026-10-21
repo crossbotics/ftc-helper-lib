@@ -42,7 +42,9 @@ public class Robot extends RobotDefinition {
                 .imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD));
 
         // The camera knows this season's goal for each alliance: the tag group's name.
-        camera = add(Camera.limelight("limelight").goal("BLUE SCORING", "RED SCORING"));
+        // autoPipelines: venue lighting. In INIT it tries pipelines 0 (normal light), 1 (bright) and
+        // 2 (dim), each set up on the Limelight's web page, and keeps the one that sees the most tags.
+        camera = add(Camera.limelight("limelight").autoPipelines(0, 1, 2).goal("BLUE SCORING", "RED SCORING"));
 
         intake = add(Intake.motor("intake").onAtStart());
 

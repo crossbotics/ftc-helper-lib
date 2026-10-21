@@ -425,6 +425,12 @@ public abstract class RobotDefinition {
 
     // ----------------------------- the library's -----------------------------
 
+    /** Every pass of the INIT loop (the OpMode classes call this): each module's quick INIT work and lines. */
+    final void initLoop(com.crossbotics.ftchelper.telemetry.RobotTelemetry t) {
+        if (!built) return;
+        for (Module<?> m : modules) m.initLoop(t);
+    }
+
     /** Right after START: the modules' start (an intake "on at the start") and the atStart actions. */
     final void started() {
         for (Module<?> m : modules) {
