@@ -86,23 +86,26 @@ Read it out loud: it IS the plan. Things to notice:
   rises while the robot drives. `claw.goToStep("CLOSED")` waits until the claw should be closed.
 - **`waitUntil` has a time limit** (2 s). If the lift never gets there, the routine goes on and the
   report says "timed out".
-- **Mirroring:** written for BLUE. On RED, `turn(45)` becomes -45 and `move(20, 90)` goes left.
+- **Mirroring:** written for BLUE. On RED, `turn(45)` becomes -45 and `move(20, 90)` goes left. On a field
+  turned half a turn between the alliances (BIOBUZZ), override `mirrorForRed()` to return false: the same
+  route works for both.
 - **Park:** everything before `thenPark()` stops when 4 s are left; Park always runs.
 
 ## Run it
 
 1. INIT: read the placement line. Choose BLUE, Route = Score. START.
-2. The screen shows "Step 3/10 To the goal" and the time left.
+2. The screen shows "Step 4/11 To the goal" and the time left.
 3. At the end: the report. Every step "done"? 
 4. Run as RED: it turns the other way and parks to the left.
 5. Choose "Park only": just grab, off the wall, park.
-6. Set a 25 s start delay: the main steps are skipped ("skipped (time for park)") but it still parks.
+6. Override `maxStartDelaySec()` to return 25 (the menu stops at 10 s), then set a 25 s start delay: the
+   main steps are skipped ("skipped (time for park)") but it still parks.
 
 ## If something goes wrong
 
 | Problem | Fix |
 | --- | --- |
-| "calibrationConfirmed is false" in INIT | tune with tutorial 09, then set it true in `RobotSettings.auto()` |
+| "AUTONOMOUS IS OFF: the drive is not tuned yet" in INIT | tune with tutorial 09, then set `calibrationConfirmed` true in `RobotSettings.auto()` |
 | Lift sags while driving | the lift is not in `createSubsystems()` |
 | A step says STALLED | something was in the way, or the power is too low to move |
 | "timed out" on Lift is up | the lift is slow: tune it, or give `waitUntil` more time |

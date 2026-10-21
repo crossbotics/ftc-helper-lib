@@ -69,5 +69,6 @@ The full checklists, including the 2-minute pre-match check, are in
 
 ## You finished the tutorials
 
-Next: [Tutorial 20: Easy TeleOp](20-easy-teleop.md). Then the [starter kit](../starter-kit.md) for a complete robot program, and
+Next: [Tutorial 20: Easy TeleOp](20-easy-teleop.md), [21: Find your numbers](21-finders.md) and
+[22: The robot in five files](22-robot-in-five-files.md), the shortest way to a whole robot program.
 [Extending the library](../guides/extending.md) when you build something new.

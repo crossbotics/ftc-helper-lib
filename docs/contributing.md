@@ -55,12 +55,14 @@ A change is not done until all six are done.
 You need JDK 17 or newer and the Android SDK. Android Studio installs both. From the library folder:
 
 ```bash
-./gradlew :library:testDebugUnitTest :examples:assembleDebug :examples:testDebugUnitTest
+./gradlew :library:testDebugUnitTest :examples:assembleDebug :examples:testDebugUnitTest :sim:testDebugUnitTest
 python3 tools/check_docs.py
 python3 tools/check_blocking.py
+python3 tools/parts_page.py --check
 ```
 
-This runs every test, builds the examples and every tutorial program, and checks the docs.
+This runs every test (the library's, the examples' and the simulator's), builds the examples and every
+tutorial program, and checks the docs and the parts page.
 All must pass before you push. GitHub
 also runs this on every push (`.github/workflows/build.yml`).
 
@@ -116,6 +118,5 @@ Safety first: low power, wheels off the ground, hard stops.
 
 ## Ideas for later
 
-- A vision module (AprilTags, from last season's `AprilTagVision`), once the new season's camera is chosen.
 - Odometry pods (goBILDA Pinpoint) and pose tracking.
 - A subsystem/command structure for bigger robots.

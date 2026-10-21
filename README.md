@@ -27,7 +27,7 @@ ControllerBindings controls = new ControllerBindings()
 // An autonomous is a list of steps:
 routine.step("Lift up", lift.startStep("HIGH"))
        .move("To the goal", 24, 0, 0.6)
-       .turn("Face it", 45, 0.5)            // mirrored for RED automatically
+       .turn("Face it", 45, 0.5)            // mirrored for RED (unless the field is turned, like BIOBUZZ)
        .step("Score", claw.goToStep("OPEN"))
        .thenPark()
        .move("Park", 20, 90, 0.8);
@@ -85,7 +85,7 @@ replacement for learning.
 | --- | --- |
 | Add the library to our robot project | [Add it to a project](docs/01-add-to-project.md) |
 | **A whole robot program, fast** | [Starter kit](docs/starter-kit.md) |
-| **Learn it step by step (19 hands-on tutorials)** | [Tutorials](docs/tutorials/README.md) |
+| **Learn it step by step (22 hands-on tutorials)** | [Tutorials](docs/tutorials/README.md) |
 | See how it all fits together | [Architecture](docs/guides/architecture.md) |
 | **Write autonomous modes with the builder (every feature, with a tested example)** | [The autonomous builder](docs/guides/autonomous-builder.md) |
 | Make autonomous modes the easy way (EasyAuto) | [Easy autonomous modes](docs/guides/easy-autos.md) |
@@ -137,9 +137,10 @@ Example OpModes you can copy (including the [starter kit](docs/starter-kit.md)) 
 
 ## Works with
 
-- FTC SDK **12.0** (the 2026-27 BIOBUZZ release; built and tested). Also works with 11.2.1. See [A new FTC SDK version](docs/02-keep-up-to-date.md#a-new-ftc-sdk-version).
-- Android Studio Narwhal 3 Feature Drop or newer (needed by SDK 12.0).
-- Android Studio. (OnBot Java and Blocks cannot use a library like this.)
+- FTC SDK **12.0** (the 2026-27 BIOBUZZ release; built and tested). Older SDKs are not tested, and the
+  vision classes need 12.0. See [A new FTC SDK version](docs/02-keep-up-to-date.md#a-new-ftc-sdk-version).
+- Android Studio Narwhal 3 Feature Drop or newer (needed by SDK 12.0). OnBot Java and Blocks cannot use a
+  library like this.
 - Java 8 language level, like the SDK.
 
 ## Build and test the library by itself
@@ -147,9 +148,10 @@ Example OpModes you can copy (including the [starter kit](docs/starter-kit.md)) 
 You only need this if you change the library. From this folder:
 
 ```bash
-./gradlew :library:testDebugUnitTest :examples:assembleDebug :examples:testDebugUnitTest
+./gradlew :library:testDebugUnitTest :examples:assembleDebug :examples:testDebugUnitTest :sim:testDebugUnitTest
 python3 tools/check_docs.py
 python3 tools/check_blocking.py
+python3 tools/parts_page.py --check
 ```
 
 You need JDK 17 or newer and the Android SDK (Android Studio installs both). Details: [Contributing](docs/contributing.md).

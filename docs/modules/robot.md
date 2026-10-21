@@ -181,7 +181,7 @@ intake = add(Intake.motor("intake").withCrServos("left_wheel", "right_wheel").re
 | --- | --- |
 | `in()`, `out()`, `stop()`, `toggle()` | run in / out until stopped; on/off |
 | `reverse()`, `endReverse()` | push out while a button is held, then back to what it was doing |
-| `isRunning()` | |
+| `isRunning()`, `isPushingOut()` | running at all; pushing out now |
 | `onAtStart()` | runs in from START until stopped |
 | `holds(n)` | for the simulator: how many pieces it carries (default: a guess of 3) |
 
@@ -194,8 +194,9 @@ intake = add(Intake.motor("intake").withCrServos("left_wheel", "right_wheel").re
 
 [`MotorPositions`](#lift) is what Lift and Arm share: `goTo(name)` (capitals do not matter; a typo
 shows a warning and does nothing), `stepUp()`, `stepDown()`, `manual(power)` (0 holds where it was
-let go), `hold()`, `isAtTarget()`, `isAt(name)`, `position()`, `positions()`, `part()`
-(the [`PositionMotor`](mechanism.md#positionmotor) inside).
+let go), `hold()`, `stop()`, `isAtTarget()`, `isAt(name)`, `position()`, `positions()`, `part()`
+(the [`PositionMotor`](mechanism.md#positionmotor) inside), and `.reversed()` when positive power moves
+it down. Every number has a default, so a part works before it is tuned.
 
 ```java
 lift = add(Lift.slide("lift").bottomSwitch("lift_bottom"));
@@ -203,7 +204,7 @@ lift = add(Lift.slide("lift").bottomSwitch("lift_bottom"));
 
 `Tunables.Lift` (encoder counts): `min`, `max`, `kP`, `kI`, `kD`, `kF` (the steady push that holds it
 up), `maxPower`, `slowZone`, `slowZonePower`, `tolerance`; every other number is a named height.
-Buttons (operator): A lowest, X second, Y highest, D-pad up/down next height, left stick by hand.
+Buttons (operator): A lowest, Y highest (2 or more heights), X second (3 or more), D-pad up/down next height, left stick by hand.
 With a bottom switch, the lift only goes down (slowly) until the switch has been pressed once, and the
 switch sets 0. **Without one, 0 is wherever the lift is at INIT** (the encoder starts from there):
 press INIT with the lift all the way down, also for TeleOp after an autonomous that left it up, or
@@ -306,7 +307,7 @@ D-pad up/down speed (when free and no speed-from-distance).
 `Indexer.servo(name)` (Tunables: `rest`, `push`, `pushSec`, `returnSec`), `Indexer.crServo(name)` and
 `Indexer.motor(name)` (`power`, `feedSec` per piece), `.reversed()`. Usually given to a launcher with
 `.feeder(...)`; added on its own its button is operator RB (feed one). A servo indexer goes to `rest`
-at START.
+at START. Commands: `feedOne()`, `isBusy()`, `isJammed()`, `clearJam()`.
 
 ---
 
@@ -389,9 +390,17 @@ has its standard buttons; write only what differs. A [`Pad`](#controlmap) has ev
 | `hold(whileHeld)`, `hold(whileHeld, onRelease)` | every loop while held (and once on release) |
 | `toggle(Toggleable)` | switches a part on/off (an intake, a launcher, a claw, a mode: a [`Toggleable`](#controlmap)) |
 | `toggle(onEnable, onDisable)` | each press flips |
+| `tapOrDoubleTap(tap, doubleTap)` | one tap runs `tap`; a second tap within 0.35 s (`Pad.DOUBLE_TAP_SEC`) runs `doubleTap` instead (the first tap has already run `tap`: e.g. tap = intake on/off, double-tap = push out) |
+| `slow()` | one driver only: on a trigger, drives slower the further it is pulled (down to `slowSpeed`); on a button, slow while held |
 | `free()` | no job: the button stays free, even if a module suggested one for it |
 | `says(words)` | the words on the help page |
 | on a stick: `use(DoubleConsumer)` | its value every loop (small dead zone, gentle curve) |
+| on a stick: `free()`, `says(words)` | as on a button |
+
+While the robot is paused (BACK), no button or stick job runs.
+
+In `Controls.java` you can also override `useStandardButtons()` (return false: only your own jobs, no
+module suggestions); `robot()` and `oneDriver()` read the robot and the one-driver switch.
 
 **The standard map** (two drivers; with `oneDriver = true` the operator's buttons move to gamepad 1):
 
@@ -563,7 +572,7 @@ package-private, see AGENTS.md); in team code, use the plain parts ([mechanism](
 your own class and call it from Controls.java and your autos.
 
 **Pause** (gamepad 1 BACK in a Controls.java TeleOp, or `robot.pauseAll()` / `resume()` /
-`togglePause()`): every part stops at once with its motors on brake, the wheels hold still, actions wait
+`togglePause()`, `isPaused()`): every part stops at once with its motors on brake, the wheels hold still, actions wait
 (their time limits too), and the Driver Station says PAUSED. Going on, each part does what it did before
 (an intake runs again, a lift goes on to its height, a launcher spins up again). STOP at the end of a
 program (TeleOp or autonomous) brakes everything the same way.

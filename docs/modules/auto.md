@@ -49,7 +49,7 @@ Extend it and fill in:
 | `addChoices(menu)` | no | extra INIT choices: `menu.choice("Route", "Near", "Far")` |
 | `addInitTelemetry(t)` | no | extra screen lines during INIT |
 | `startPosition()` | no | where to place the robot, shown in INIT |
-| `startHeadingDeg()` | no | which way the robot faces at the start, compared with "away from your driver" (default 0), written for BLUE (mirrored for RED). TeleOp's field-centric "forward" uses it. |
+| `startHeadingDeg()` | no | which way the robot faces at the start, compared with "away from your driver" (default 0), written for BLUE (mirrored for RED, unless `mirrorForRed()` returns false). TeleOp's field-centric "forward" uses it. |
 | `parkReserveSec()` | no | seconds kept for the steps after `thenPark()` |
 | `maxStartDelaySec()` | no | longest start delay in the menu (default 10) |
 | `mirrorForRed()` | no | true (default): routes written for BLUE are mirrored for RED. Return false on a ROTATED field |

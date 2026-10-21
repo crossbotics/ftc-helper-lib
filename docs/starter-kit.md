@@ -37,7 +37,7 @@ flowchart LR
 ## Steps
 
 1. **Add the library** to the robot project: [Add it to a project](01-add-to-project.md).
-2. **Copy the 6 files (and the 4 finder files)** into `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/` and change the
+2. **Copy the 6 files (and the 5 finder files)** into `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/` and change the
    first line of each to `package org.firstinspires.ftc.teamcode;`. Delete each `@Disabled` line.
 3. **Configure the robot** on the Driver Station with the names in `RobotSettings` and `Robot`
    (or change the names in the code to match yours).

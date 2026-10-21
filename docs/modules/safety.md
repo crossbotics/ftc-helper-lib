@@ -50,7 +50,7 @@ lift.stop();                                        // no power once the OpMode 
 1. **Soft limits:** power that would push past `min` or `max` becomes 0.
    Power that moves away from the limit always works, so you can never get "stuck at the top".
 2. **Limit switches:** a pressed switch stops power toward it, whatever the encoder says.
-3. **Homing:** when the lower switch is pressed, the position becomes 0. This fixes encoder drift
+3. **Homing:** the moment the lower switch closes, the position becomes 0. This fixes encoder drift
    (a slipping belt, or a robot turned on with the lift half up). Until the first homing it only goes
    down, slowly ([Homing](#homing-with-a-lower-switch)).
 4. **Slow zone:** close to a limit, power toward it is reduced, so the mechanism does not slam.
@@ -77,7 +77,7 @@ Every loop:
 
 | Method | What it does |
 | --- | --- |
-| `update()` | **call first in every loop.** Reads the switches and homes at the lower switch. |
+| `update()` | **call first in every loop.** Reads the switches, homes when the lower switch closes, and sends your last power again with the limits applied (so they act with no new `setPower` call). |
 | `setPower(power)` | set power, -1 to 1, with the limits applied. Returns the power really sent. |
 | `moveTo(target, pid)` | move toward a target with a [`PidController`](control.md#pidcontroller). The target is kept inside the limits. Returns the power sent. |
 | `stop()` | power 0 |

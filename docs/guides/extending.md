@@ -96,7 +96,7 @@ steps, telemetry) is unchanged.
 
 Return `TargetObservation`s with **bearing positive to the LEFT**, distance in inches (or NaN),
 and the picture time in `System.nanoTime()`. Then `AimController`, `Turret.aimBy` and
-`Launcher.setDistance` all work with it. Look at `LimelightTags` (about 100 lines) as the model.
+`Launcher.setDistance` all work with it. Look at `LimelightTags` as the model.
 
 ## The rules (so the next team can use it)
 
@@ -113,4 +113,6 @@ and the picture time in `System.nanoTime()`. Then `AimController`, `Turret.aimBy
 ## Versions
 
 Adding something new = a new middle number (0.4.0 -> 0.5.0). Changing how something old works =
-a new first number, and a "Changed" note in the CHANGELOG that says what teams must change.
+a new first number, and a "Changed" note in the CHANGELOG that says what teams must change. Before
+1.0, a change that breaks old code also only moves the middle number (v0.11.0 renamed the package), with
+the steps for teams in the CHANGELOG.

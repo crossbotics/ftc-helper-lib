@@ -42,6 +42,9 @@ stateDiagram-v2
     FEEDING --> WAITING_READY: piece through, wait shotInterval, shots left > 0
     FEEDING --> SPINNING: no shots left
     WAITING_READY --> SPINNING: not ready within readyTimeout (gives up, says why)
+    WAITING_READY --> SPINNING: stopShooting()
+    FEEDING --> SPINNING: feeder jammed (shots dropped, says why) / stopShooting()
+    WAITING_READY --> IDLE: idle()
     SPINNING --> IDLE: idle()
     SPINNING --> OFF: stop()
     IDLE --> OFF: stop()
@@ -143,7 +146,7 @@ counterclockwise (else `.reversed()`).
 | --- | --- |
 | `.countsPerDegree(c)` | encoder counts per turret degree (motor counts x gear ratio / 360) |
 | `.limits(min, max)` | allowed range; may be more than 360 in total (e.g. -190..190) |
-| `.startAngle(deg)` | the angle at power-on (no switch) |
+| `.startAngle(deg)` | the angle at power-on (no switch). It reads the encoder when called: call it after `countsPerDegree` and `reversed` |
 | `.homeSwitch(hardwareMap, name, angle)` / `.homeSwitch(reader, angle)` | a switch that closes at a known angle |
 | `.homingPower(p)`, `.pid(...)`, `.tolerance(deg)`, `.maxPower(p)`, `.slowZone(deg, power)` | tuning. Before homing, manual power is kept to the homing power |
 | `.homingTimeout(s)` | homing stops with a fault if the switch is not found in time (default 5 s) |

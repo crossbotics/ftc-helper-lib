@@ -39,7 +39,7 @@ and the `FtcRobotController` folder). Read the SDK release notes for **breaking 
 
 ## 3. The library
 
-1. Change `ftcSdkVersion` in `library/build.gradle` and `examples/build.gradle` to the new version.
+1. Change `ftcSdkVersion` in `library/build.gradle`, `examples/build.gradle` and `sim/build.gradle` to the new version.
 2. Build and test: `./gradlew :library:testDebugUnitTest :examples:assembleDebug :examples:testDebugUnitTest`
    and `python3 tools/check_docs.py`.
 3. Fix what broke (usually vision, sometimes hardware classes). Add a test for each fix.
@@ -48,7 +48,8 @@ and the `FtcRobotController` folder). Read the SDK release notes for **breaking 
 
 ## 4. TeamCode: the new robot
 
-1. Start from the [starter kit](../starter-kit.md): copy its 6 files.
+1. Start from the [robot in five files](../tutorials/22-robot-in-five-files.md): `./gradlew :sim:newRobot`
+   writes them from your robot configuration. (Teams that use the [starter kit](../starter-kit.md) copy its 6 files.)
 2. `RobotSettings`: drive type, motor names, IMU mounting. TeleOp and every autonomous read it.
 3. `Robot`: delete last year's mechanisms, add this year's (one `PositionMotor`/`SpinMotor`/servo
    line each). Keep anything that still fits.

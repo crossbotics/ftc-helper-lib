@@ -8,7 +8,8 @@ degrees, encoder counts. "Forward/left/up" is from the robot's centre on the flo
 1. How long (front to back) and wide (side to side) is the drive frame, and how tall is it? ->
    `robot.lengthIn`, `robot.widthIn`, `robot.chassisHeightIn`.
 2. How tall is the whole robot at the start of a match (folded), floor to the highest point? ->
-   `robot.heightIn`. The size rules use the SHAPES, not this number: if the shapes come out lower,
+   `robot.heightIn`. The size rules use the SHAPES, not this number (it still decides which overhead
+   field parts the robot bumps): if the shapes come out lower,
    a part is missing (add a `box` for the tallest fixed part: electronics, a hopper).
    **Robot.java in five files?** These answers go in Robot.java (`chassisMm(length, width, height)`,
    `heightMm(...)`, each part's `looks(...)`), not the robot file: see SKILL.md step 4.
@@ -96,7 +97,7 @@ need hard stops), then make sure the shapes are right before blaming the robot.
 22. How does it score (shoot? lift and drop?) -> `shoot.` (`angle=` degrees up from forward, `share=`
     of the wheel's rim speed, about 0.5) or `grab.` with the lift/arm shapes. Where is the middle of the
     launcher wheel (forward/left/up)? -> its `flywheel` shape's `at=` (a roller or flywheel's `at=` is its
-    centre). What feeds it? -> `feeder=` on the flywheel motor (a motor or a CR servo). With CAD, make a
+    centre). What feeds it? -> `feeder=` on the flywheel motor (a motor, a CR servo, or a servo that pushes: it feeds while it is more than 0.15 from where it starts). With CAD, make a
     shot table (`cad.md` step 6). A catapult or spring launcher: make its motor a `flywheel` with
     `feeder=` itself and give the shot a fixed `speed=` (in/s, from a filmed shot).
 

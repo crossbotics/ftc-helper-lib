@@ -74,10 +74,12 @@ this command also puts it back to the version the project expects.
 
 The FTC SDK changes every season (and sometimes during one). The library is built against one SDK
 version (now **12.0.0**, the 2026-27 release, set in `library/build.gradle`), but your robot app always uses the SDK
-version in YOUR project's `build.dependencies.gradle`. Gradle uses the newer one.
+version in YOUR project's `build.dependencies.gradle`: the library is only compiled against 12.0.0 and
+brings no SDK of its own.
 
-SDK 12.0 changed AprilTag detections (single tags and "clusters"). The library does not use
-AprilTags, so it is not affected, but your own AprilTag code may need the fix in the SDK's release notes.
+SDK 12.0 changed AprilTag detections (single tags and "clusters"). The library's `WebcamTags` is written
+for the SDK 12 types, so its vision classes need SDK 12 or newer; your own AprilTag code may need the
+fix in the SDK's release notes.
 
 So after you update the SDK:
 

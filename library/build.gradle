@@ -6,7 +6,7 @@ plugins {
 }
 
 // The FTC SDK version this library is built and tested against.
-// The robot project brings its own SDK; Gradle uses the newer of the two.
+// The robot project brings its own SDK, and the robot app runs with that one (compileOnly below).
 def ftcSdkVersion = '12.0.0'
 
 android {

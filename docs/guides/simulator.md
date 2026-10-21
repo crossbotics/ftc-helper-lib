@@ -49,6 +49,18 @@ Options:
 about the firewall the first time). With `-Plan`, anyone on that WiFi can open the page and run
 OpModes in the simulator: use it on a team or home network, not open school WiFi.
 
+Every simulator command, from the ftc-helper-lib folder (`-PteamCode=` points at your robot project's
+TeamCode; with none, it finds `../TeamCode` when the library sits in a robot project):
+
+| Command | Does | Options |
+| --- | --- | --- |
+| `./gradlew :sim:run` | the simulator page | `-Probot=FILE` (default: your `simulator/robot.properties`, else the library's example), `-Plan` (phones on the WiFi), `-Pport=8781` (another port, to run two at once; default 8780), `-PteamCode=DIR` |
+| `./gradlew :sim:scenario -Pfile=a.sim` | runs test scripts ([below](#scenario-files-test-without-a-browser)) | `-Pfile=a.sim,b.sim` (a comma list), `-Probot=`, `-PteamCode=` |
+| `./gradlew :sim:fromRobot` | writes the robot file from your `Robot.java` | `-ProbotClass=` (which class), `-Pout=FILE`, `-Pfield=NAME` (default `biobuzz-2026`) |
+| `./gradlew :sim:fromConfig -Pconfig=FILE.xml` | a first robot file from a robot configuration | `-Pout=FILE`, `-Pfield=NAME` |
+| `./gradlew :sim:newRobot -Pconfig=FILE.xml` | the five files (Robot.java, ...) from a configuration | `-PteamCode=DIR`, `-Ppackage=` (default `org.firstinspires.ftc.teamcode`) |
+| `./gradlew :sim:fit` | fits Characterizer logs ([below](#real-numbers-the-characterizer)) | `-Plog=`, `-Probot=`, `-Pwrite`, `-Pforce` |
+
 ## The page
 
 **Driver Hub** (left): choose an OpMode, then INIT, START, STOP, like the real one. The screen shows
@@ -77,7 +89,7 @@ buttons (for the Drive Tuner's push test), every motor (power, count, speed, cur
 is at a hard stop), every servo (where it is and where it is going), the switches (click to hold
 one pressed), the cameras and the tags they see, and the battery voltage (lower it to see a weaker robot).
 
-**Field in 3D** (bottom, full width): the field and the robot in 3D. Drag to turn the view, scroll to
+**Field in 3D** (middle, above the gamepads; at the bottom on a narrow screen): the field and the robot in 3D. Drag to turn the view, scroll to
 zoom, right-drag (or two fingers) to slide. View buttons: Drivers, Audience, From above, Follow robot
 (behind the robot; turning the view by hand ends it). Drivers and From above are from your alliance's
 wall: the alliance the running program uses (autonomous's INIT menu, or TeleOp's choice); red until a
@@ -91,8 +103,8 @@ autonomous, TeleOp leaves it where autonomous ended. **Move it by hand:** while 
 INIT), drag the robot on the field map (Control Hub, Robot tab) and turn it with the mouse wheel over it,
 or in the 3D view: double-click the robot, then drag it to move it or drag its yellow ring to turn it
 (double-click again to stop). Under the map, the spot is shown as an autonomous start spot from your
-alliance's wall, ready for `s.start("...", x, y, heading)`. The robot is a box its size from the robot file
-(`robot.lengthIn/widthIn/heightIn`) with a white arrow at the front; it turns red when it bumps into
+alliance's wall, ready for `s.start("...", x, y, heading)`. The robot is a box from the robot file
+(`robot.lengthIn` x `widthIn` x `chassisHeightIn`) with a white arrow at the front; it turns red when it bumps into
 something. Its shapes (below) move with their motors and servos. Rollers and wheels have dark
 stripes, so you see them turn and which way; a roller glows **green** while it takes pieces in and
 **orange** while it pushes them out, a flywheel or other spinner glows **yellow** while it turns, and a
@@ -118,7 +130,7 @@ field = biobuzz-2026                  # the season's field (sim/fields/biobuzz-2
 field.model = fields/biobuzz-2026.glb # optional: the field's 3D model for the 3D view (path from this file)
 robot.lengthIn = 18                   # size, for bumping into field elements
 robot.widthIn = 18
-robot.heightIn = 18                   # used only for a robot with no shapes (with shapes, the shapes decide)
+robot.heightIn = 18                   # the chassis box with no shapes, and which overhead field parts it bumps (with shapes, the shapes decide the size rules)
 robot.tallestIn = 12                  # optional: a part the shapes do not draw reaches this high (size rules count it)
 start.x = -56                         # where it starts (inches from the field center; y away from the drivers)
 start.y = -61.55                      # BIOBUZZ G304: touching the wall, outside the LOADING ZONE
@@ -136,6 +148,47 @@ servo.claw = 0.5, part=gobilda-2000-torque
 camera.front = name=Webcam 1, forward=7, up=12, pitch=20   # see "Cameras" below
 touch.lift_bottom = lift, below=20
 ```
+
+### Every setting
+
+The example above shows the common ones. All of them, with their defaults (a missing line takes the
+default):
+
+| Line | Default | Means |
+| --- | --- | --- |
+| `field = NAME` | `biobuzz-2026` | the field file in `sim/fields/` |
+| `field.model = FILE` | none | the field's 3D model for the 3D view (path from the robot file) |
+| `parts = FILE.json` | none | your own parts catalog, added to the library's ([parts catalog](parts-catalog.md)) |
+| `battery = V` | 12.8 | battery volts at the start (the page's slider: 11 to 13.5) |
+| `robot.lengthIn`, `robot.widthIn` | 18 | the footprint, for bumping into field parts |
+| `robot.heightIn` | 18 | the chassis box with no shapes, and which overhead field parts it bumps |
+| `robot.chassisHeightIn` | 4 with shapes, else `heightIn` | the height of the chassis box |
+| `robot.tallestIn` | none | a part the shapes do not draw reaches this high (the size rules count it) |
+| `drive.type` | `none` | `mecanum`, `tank` (2 or 4 motors) or `none` (a test rig) |
+| `drive.motors = a, b, ...` | none | the wheel motors |
+| `drive.part` | none | the wheels' motor from the catalog |
+| `drive.wheelDiameterIn` | 3.78 | wheel size |
+| `drive.trackWidthIn`, `drive.wheelBaseIn` | 15, 13 | left-right and front-back wheel spacing |
+| `drive.mirrored` | `left` | which side's motors are mounted mirrored (turn the other way for the same power) |
+| `drive.strafeEfficiency` | 0.85 | how much of a strafe really happens (mecanum) |
+| `drive.kS`, `drive.accelSec`, `drive.turnDegPerCount` | 0, 0.15, worked out | from the Characterizer ([below](#real-numbers-the-characterizer)) |
+| `imu = NAME` | none | the IMU's name |
+| `motor.NAME = KIND, ...` | | a motor: `free`, `lift` or `flywheel`, then `part=`, `ticksPerRev=` (catalog, else 537.7 or 28 for a flywheel), `rpm=` or `maxTicksPerSec=` (catalog, else 2780), `min=`, `max=` (counts), `gravity=` (0), `kS=` (0), `accelSec=`, `coastSec=`, `feeder=` (a motor, CR servo or servo that feeds a flywheel), `shotDrop=` (0.15: how much a shot slows the wheel) |
+| `servo.NAME = START, ...` | start 0.5 | a servo: `part=` (catalog), or `rangeDeg=` and `secPer60=` for one not in the catalog |
+| `servo.speed` | 1.0 | positions per second for a servo with no part |
+| `crservo.NAME =` | | a continuous servo (the value is not used) |
+| `touch.NAME = MOTOR, below=N` | below 20 | a switch pressed while that motor is within N counts of its `min` (reads `getState()` false when pressed) |
+| `camera.NAME = ...` | | a webcam or Limelight ([cameras](#cameras)) |
+| `shape.NAME = TYPE, ...` | | a part to draw and check ([robot shapes](#robot-shapes)). Sizes when `size=` is left out: slide 2x2x12, arm 10x2x2, turret 8x8x2, claw 3x1x3, roller 2x12x2, flywheel 4x2x4 |
+| `collect.NAME = shape=a+b, motor=M, holds=N` | `reach=0.75`, `holds=4` | takes pieces in ([game pieces](#game-pieces)); `crservo=` instead of `motor=`, `inward=-` |
+| `shoot.NAME = shape=S, ...` | `angle=40`, `share=0.5` | shoots pieces: `spin=`, `speed=` (a fixed speed, in/s), `table=` (a shot table, path from the robot file), `flywheel=` (which flywheel, when there are two) |
+| `grab.NAME = shape=S, servo=V, closedBelow=X` | `reach=0.5` | a claw that holds a piece (`closedAbove=` for one that closes toward 1) |
+| `start.x`, `start.y`, `start.heading` | | where the robot starts |
+| `preload = on/off` | on | the field file's preload in the robot at the start |
+| `physics = engine/simple` | engine | the physics engine, or the old "a bump stops the move" rule |
+
+A flywheel's rim speed comes from its `flywheel` shape: the diameter is the larger of the shape's
+forward and up sizes.
 
 ### A robot file from Robot.java
 
@@ -245,7 +298,7 @@ The chassis and everything fixed to it is one group; the lift's moving stage and
 another; and so on. A coarse export is fine.
 - **Onshape:** in the **Assembly** tab (never a Part Studio: a Part Studio export puts parts where they
   were drawn, not where the assembly put them), select every part of the group, right-click > Export,
-  format STL, **untick** "Export unique parts as individual files". Pick the units in that window.
+  format STL (`model=` also takes .obj), **untick** "Export unique parts as individual files". Pick the units in that window.
 - **Fusion:** hide every part that is not in the group, right-click the **top** component > Save As
   Mesh, STL, one file. (Exporting one body on its own can move it to the origin.) Note the unit it uses.
 - Already have one file per part? List them: `model=cad/rail-l.stl; cad/rail-r.stl; cad/carriage.stl`.
@@ -301,16 +354,16 @@ collect.intake = shape=intake, motor=intake, holds=4
 # each flywheel shot (motor.flywheel = flywheel, feeder=feeder) sends a held piece off this shape.
 # The feeder is a motor or CR servo (a piece every 0.3 s while it runs), or a servo that pushes
 # (an indexer: it feeds while it is more than 0.15 away from where it starts). The shot leaves
-# 45 degrees up from the shape's forward, at half the wheel's rim speed
+# 45 degrees up from the shape's forward (angle= defaults to 40), at half the wheel's rim speed
 shoot.launcher = shape=flywheel, angle=45, share=0.5
 # the claw holds a piece in its fingers while servo "claw" is below 0.3, and drops it when it opens
 # (a claw that closes toward 1: closedAbove=0.5 instead)
 grab.claw = shape=claw, servo=claw, closedBelow=0.3
 ```
 
-A robot that can collect or shoot starts with the field file's preload inside it (BIOBUZZ: 4 POLLEN;
-`holds=4` is the game's rule: no more than 4 at a time); any other robot gets them on the tiles touching
-its back. With a
+A robot with a `collect.` or `shoot.` line starts with the field file's preload inside it (BIOBUZZ: 4
+POLLEN; `holds=4` is the game's rule: no more than 4 at a time); a robot with only a `grab.` line gets it
+on the tiles touching its back; a robot with none of the three gets none. With a
 `shoot.` line, a shot needs a piece: no piece, no shot. A piece that comes into a goal (a FLOWER top)
 scores and is taken off. "Back to start" puts the pieces back. The Control Hub panel shows what the
 robot holds, what it shot and what scored; the 3D view and the field from above draw the pieces.
@@ -361,7 +414,7 @@ a ball rolls on the tiles is a guess (about 2 m from 1 m/s) until someone times 
 
 ### How shots fly, and shot tables
 
-A shot leaves the launcher shape at `angle=` (degrees up from its forward) and `share=` of the wheel's rim speed
+A shot leaves the launcher shape at `angle=` (degrees up from its forward; default 40) and `share=` of the wheel's rim speed
 (default 0.5: a guess), with `spin=` (1 = backspin as if the ball rolled along a still hood, -1 topspin, 0 none).
 In flight the air slows it (drag, Cd 0.5: assumed, not measured for POLLEN or NECTAR; a piece type can set
 `dragCd` in the field file) and spin lifts or drops it (the Magnus force, lift coefficient = radius x spin / speed,
@@ -391,8 +444,8 @@ simulated robot move like YOURS:
    add `-Pwrite` to put them into the robot file (other settings and notes stay; the old file is kept
    as `robot.properties.bak`). Check it and commit. A poor fit (r2 below 0.9) or a number that makes
    no sense (kS below 0) is reported and left out; `-Pforce` uses it anyway. It writes only to your
-   team's robot file (`simulator/robot.properties`, or `-Probot=`), never to the library's example, and
-   only to motors already in the file (add a motor first, with its kind, part and limits).
+   team's robot file (`simulator/robot.properties`, or `-Probot=`); with no `-Probot` and no team file it
+   uses the library's example and refuses to write. It writes only to motors already in the file (add a motor first, with its kind, part and limits).
 
 Or copy the lines the Characterizer shows on the Driver Hub. The settings it fills in:
 
@@ -480,7 +533,7 @@ expect value "Lift" > 500              # the number on the screen line that star
 expect time < 25                       # seconds since START (e.g. how long an autonomous took)
 expect touch lift_bottom pressed       # or: open
 expect error none                      # or: error has "..."
-expect phase RUNNING
+expect phase RUNNING                   # IDLE | INIT | RUNNING | STOPPED
 expect motor lift power > 0.1          # power | ticks | velocity | amps; > < >= <= =  (= VALUE TOLERANCE)
 expect servo claw target = 0.53 0.01   # target | actual
 expect shape intake_arm < 0            # a shape's angle (arm, turret), inches (slide) or gap (claw)
@@ -494,7 +547,7 @@ set piece POLLEN 30 -20                # put a game piece on the field (x y [z])
 expect within 2 motor lift ticks > 500 # wait up to 2 s for it to become true
 expect within 30 phase STOPPED         # e.g. wait for an autonomous to finish
 stop
-print screen                           # also: print motors | servos | cameras | size | pieces | robot (not counted as checks)
+print screen                           # also: print motors | servos | cameras | size | pieces | robot | cad (not counted as checks)
 ```
 
 A note after `#` is ignored (outside quotes). A misspelled check fails with a message, never passes.

@@ -3,7 +3,7 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
 `launcher_lab.py` works out how a robot's flywheel launcher throws, from the robot's CAD, and writes a shot table
-for the simulator (`shoot.NAME = ..., table=FILE`; docs/guides/simulator.md, "How shots fly, and shot tables").
+for the simulator (`shoot.NAME = ..., table=FILE`, the path from the robot file; docs/guides/simulator.md, "How shots fly, and shot tables").
 
 1. Read the CAD with `tools/cad/robot_cad.py read` and make its `frame.json` (skills/robot-file/cad.md).
 2. Write `LAUNCHER.json` (the format is at the top of `launcher_lab.py`): which parts are the wheel, where the ball

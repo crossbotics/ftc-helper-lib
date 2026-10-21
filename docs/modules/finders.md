@@ -230,15 +230,16 @@ D-pad chooses a test, **A** runs it, **B** stops it at once.
 
 | Test | It does | Space and safety |
 | --- | --- | --- |
-| Drive | power ramps up slowly forward (to 0.4) and back, then quick steps (0.5, 0.6 s) | about 5 ft clear in front and behind: each roll ends at `maxDriveCounts()` (default 2500 counts, about 4.5 ft with 312 rpm motors and 104 mm wheels); `driveRampMax()` (at most 0.5) lowers the speed |
+| Drive | power ramps up slowly forward (to 0.4) and back, then quick steps (0.5, 0.6 s) | about 5 ft clear in front and behind: each roll ends at `maxDriveCounts()` (default 2500 counts, about 5 ft with 312 rpm motors and 104 mm wheels; 4.6 ft with 96 mm); `driveRampMax()` (at most 0.5) lowers the speed |
 | Turn (needs the IMU) | the same, turning in place | room to turn |
-| Lift/arm | slowly up to 60% of its range, slowly down, quick steps up and down, then back to the bottom | start it at the BOTTOM (the soft limits count from there); it never goes past them; `.reversed()` if positive power goes down |
+| Lift/arm | slowly up to 60% of its range, slowly down, quick steps up and down, then back to the bottom | start it at the BOTTOM (the soft limits count from there); it stops and says why if it goes past them; `.reversed()` if positive power goes down |
 | Flywheel | ramps up to full power, coasts, full power, coasts | hands and pieces away |
 
 It stops itself and says why if: a wheel or motor turns the wrong way for its power (a direction
 setting is wrong; each wheel is checked); a lift goes past a soft limit, or counts down while going up;
 something pushes but does not move for 0.7 s (jammed, against a hard stop, or an encoder cable in
-another motor's port); a drive roll reaches `maxDriveCounts()`; GUIDE or START is pressed.
+another motor's port); GUIDE or START is pressed. A drive roll that reaches `maxDriveCounts()` ends early,
+and the test goes on with the next part.
 Spinning wheels spoil the speed-up number (kA): run the drive test on tiles, not on a smooth floor. A slow ramp shows the power just to start moving (kS) and the
 power per speed (kV); a quick step shows the power per speeding-up (kA); a lift also gives the power
 that holds it against gravity (kG); a flywheel's coasting gives how long it takes to slow down.
@@ -255,11 +256,12 @@ drive.turnDegPerCount = 0.08012
 kS=0.041, maxTicksPerSec=2792, accelSec=0.087, gravity=0.060
 ```
 
-Each test's log is saved as `characterizer/<test>-<date>.csv` in the results folder. The simulator's
+Each test's log is saved in the results folder as `characterizer/<test>[-<motor>]-<yyyyMMdd-HHmmss>.csv`
+(for example `lift-lift-20261021-101500.csv`); a test stopped early saves its log too, marked "(stopped early)". The simulator's
 fit tool reads them and writes the robot file for you (`./gradlew :sim:fit -Plog=... -Pwrite`, see
 the [simulator guide](../guides/simulator.md#real-numbers-the-characterizer)). Run each test 2-3 times
 on a charged battery; the fit tool fits the logs of the same test together. A fit with r2 below 0.9
-says "poor": run it again. Arms are measured like lifts (the pull of gravity is taken as the same at
+says "poor: run it again"; below 0.5 it says "Could not fit". Arms are measured like lifts (the pull of gravity is taken as the same at
 every angle), so the numbers are a middle value for an arm. **For an arm, set the high limit below
 straight up**, so gravity always pulls it back down (past straight up, gravity pulls it on to the
 far side, and a motor's brake does not hold a heavy arm).
@@ -268,7 +270,7 @@ far side, and a motor's brake does not hold a heavy arm).
 
 The fitting math, pure (no hardware): `fit(t, volts, power, speed, gravity)` gives kS, kV, kA (kG) and
 r2 by least squares over the moments the motor was moving and powered (speeds smoothed over 30 ms
-each side, and moments within 50 ms of a jump in power left out); `coastSec(...)`,
+each side, or 2.5 loops on a slower loop; moments within that window plus 20 ms of a jump in power left out); `coastSec(...)`,
 `turnDegPerCount(...)`, `yawRates(...)`, `accelerations(...)`, `smoothed(...)`, `leastSquares(...)`.
 Powers are scaled to 12.8 V with the logged battery voltage.
 

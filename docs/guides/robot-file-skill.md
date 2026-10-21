@@ -66,9 +66,9 @@ the draft goes next to it (`robot.properties.draft`). An example configuration i
 | --- | --- |
 | a motor type (goBILDA 5202/3/4, REV HD Hex, Core Hex, NeveRest, unspecified...) | `motor.NAME` (or the drivetrain); the part when the type tells it |
 | `Servo`, `ServoFullRange` | `servo.NAME` |
-| `ContinuousRotationServo` | `crservo.NAME` |
-| `ControlHubImuBHI260AP`, `LynxEmbeddedIMU`, `RevExternalImu` | `imu` |
-| `RevTouchSensor`, `DigitalDevice` | `touch.NAME` |
+| `ContinuousRotationServo`, `RevSPARKMini` | `crservo.NAME` |
+| any type with "imu" in its name (`ControlHubImuBHI260AP`, `LynxEmbeddedIMU`, `RevExternalImu`...) | `imu` |
+| `RevTouchSensor`, `DigitalDevice`, `ModernRoboticsAnalogTouchSensor` | `touch.NAME` |
 | `Webcam` | `camera.KEY = name=...` |
 | `EthernetDevice` (a Limelight) | `limelight.KEY = name=...` |
 | anything else | a note: not simulated yet |

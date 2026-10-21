@@ -21,8 +21,9 @@ A profile switches between the two without changing the code.
 
 It is saved on the Control Hub and stays until changed. Three ways:
 
-1. **INIT menu** (easiest): `EasyAuto` always has a "Profile" line; in your TeleOp add `.profile()`
-   to an `InitMenu`. D-pad to it, left/right to change.
+1. **INIT menu** (easiest): every autonomous (`EasyAuto`, `Auto`) has a "Profile" line. D-pad to it,
+   left/right to change. A TeleOp has none (it only warns when PRACTICE is on); a TeleOp you write
+   yourself can add `.profile()` to an `InitMenu`.
 2. **Code**: `Profile.set(Profile.PRACTICE)`.
 3. Look at it: every OpMode can show `Profile.current()`.
 
@@ -49,7 +50,7 @@ flowchart LR
 
 At the event, before the first match:
 
-1. Run any OpMode, open the INIT menu, set **Profile: COMPETITION**.
+1. INIT any autonomous and set **Profile: COMPETITION** in its menu.
 2. Check the INIT screen has **no** "PRACTICE profile" warning.
 3. Check there is no "tuned value(s) differ from the code" warning (or that you meant it).
 

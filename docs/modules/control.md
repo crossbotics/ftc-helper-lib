@@ -103,7 +103,7 @@ With rate 2.0, going from 0 to full power takes 0.5 seconds.
 | --- | --- |
 | `new SlewRateLimiter(rate)` | same limit both ways, per second |
 | `new SlewRateLimiter(rise, fall)` | `rise` = away from zero (speeding up), `fall` = toward zero (slowing down) |
-| `calculate(input)` | **call every loop.** Moves toward the input, no faster than the limit. The first call returns 0. |
+| `calculate(input)` | **call every loop.** Moves toward the input, no faster than the limit. The first call returns the current value (0 unless you used `reset`). |
 | `reset(value)` | jump straight to a value (e.g. 0 when you stop) |
 | `getValue()` | the last output |
 

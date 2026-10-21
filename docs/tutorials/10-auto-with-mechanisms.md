@@ -134,7 +134,7 @@ while (opModeIsActive() && delay.seconds() < delaySec) {
 ```
 
 `finally` runs even if the match ends in the middle of a move. `PoseStore` keeps the saved pose
-until TeleOp reads it with `PoseStore.consume()` (Tutorial 12 shows this). Here we only know the
+until TeleOp reads it (Tutorial 12 uses `DriverHeading` for this). Here we only know the
 heading; with odometry pods you would save x and y too.
 
 ## Run it

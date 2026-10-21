@@ -54,7 +54,8 @@ PositionServo.create(hardwareMap, "claw").limits(0.180, 0.770)
     .position("P1", 0.210)
 ```
 
-Copy it into `Robot.java` and rename P1 to "OPEN". Press STOP: the same lines are saved in
+Copy it into your code and rename P1 to "OPEN". With the [robot in five files](22-robot-in-five-files.md),
+the numbers go into `Tunables.java` instead (for a claw: `open = 0.210` in `Tunables.Claw`). Press STOP: the same lines are saved in
 `/sdcard/FIRST/ftc-helper/finder-results.txt` on the hub.
 
 ## 4. The finders that need your code
@@ -69,6 +70,9 @@ public class ShotTuner extends ShotTunerOpMode {
     @Override protected RobotConfig robotConfig() { return new RobotSettings(); }   // drive between spots
 }
 ```
+
+(This is the [starter kit](../starter-kit.md)'s `Robot` and `RobotSettings`. With the tutorials'
+`RobotSettings`, write `RobotSettings.config()`.)
 
 Use the SAME launcher set-up as your TeleOp (best: from your `Robot` class), so the numbers you find
 are the numbers it uses.
@@ -91,7 +95,7 @@ Shot Tuner. Each one builds on the one before: the [guide](../guides/finders.md)
 
 ## Try this
 
-1. Run the Motor Finder on the lift and replace the limits in `Robot.java` with the measured ones.
+1. Run the Motor Finder on the lift and replace the limits in your code (five files: `Tunables.Lift`) with the measured ones.
 2. Run the Flywheel Finder twice, with a full and a half-charged battery: compare the top speeds.
 
 ## Next

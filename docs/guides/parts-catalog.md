@@ -6,7 +6,7 @@
 
 The simulator knows these FTC motors and servos. A robot file names a part by its **id** (`part=gobilda-5203-312`), and the simulator takes the part's real numbers from here: how fast it turns, how many encoder counts it gives per turn, and its current (motors), or its range and speed (servos).
 
-Every number comes from the seller's page or the seller's own documents, read on **2026-10-16** (the link is in each row). A dash (—) means the seller does not publish that number. 39 motors and 13 servos. See also: [the simulator guide](simulator.md).
+Every number comes from the seller's page or the seller's own documents (motors and servos read on **2026-10-16**; wheels and rollers on the date in their Checked column; the link is in each row). A dash (—) means the seller does not publish that number. 39 motors and 13 servos. See also: [the simulator guide](simulator.md).
 
 ## Use a part
 

@@ -29,8 +29,9 @@ See [A new FTC SDK version](02-keep-up-to-date.md#a-new-ftc-sdk-version).
 The name in code and the name in the Driver Station configuration differ. The message lists the
 names that do exist. Fix the spelling, or pick the right configuration on the Driver Station.
 
-**`AutoDriveConfig.calibrationConfirmed is false`**
-On purpose. Tune `AutoDrive`, then set it to `true`: [Tune AutoDrive](modules/drive.md#tune-autodrive).
+**`AutoDriveConfig.calibrationConfirmed is false`**, or **"AUTONOMOUS IS OFF: the drive is not tuned yet"** (EasyAuto, Auto)
+On purpose. Tune `AutoDrive`, then set it to `true`: [Tune AutoDrive](modules/drive.md#tune-autodrive). With the
+robot in five files: the Drive Tuner, then `Tunables.Drive.calibrated = true`.
 
 ## Warnings on the Driver Station (`!! ...` at the top)
 
@@ -39,8 +40,8 @@ On purpose. Tune `AutoDrive`, then set it to `true`: [Tune AutoDrive](modules/dr
 | `lift: push it DOWN to the switch to home it` | homing: drive it down once |
 | `lift: no switch "lift_bottom" in the configuration` | the switch name is wrong or missing: it runs without the switch |
 | `claw: no position called "OPNE"` | a typo in a position name: the command was ignored |
-| `Turret homing failed: switch not found` | the switch never closed: wire, magnet gap, or the wrong direction in `home(...)` |
-| `flywheel: follower encoder not reading` | the second flywheel motor has no encoder cable: plug it in (or use one motor) |
+| `homing failed: switch not found` (turret) | the switch never closed: wire, magnet gap, or the wrong direction in `home(...)` |
+| `follower encoder not reading: follower switched off` (flywheel) | the second flywheel motor has no encoder cable: plug it in (or use one motor) |
 | `Launcher gave up: flywheel` (or `hood`, `Turret`...) | it was not ready in time: that part is the problem |
 | `PRACTICE profile` | set COMPETITION at events |
 | `N tuned value(s) differ from the code` | saved tuning values are in use: copy them into the code, then reset |
@@ -60,7 +61,8 @@ it off on purpose.
 
 **Field-centric "forward" is wrong at the start of TeleOp**
 The robot did not start autonomous facing straight away from its driver. Set `startHeadingDeg()` in
-the autonomous (written for BLUE), or press BACK after turning the robot to face away from you.
+the autonomous (written for BLUE), or press BACK after turning the robot to face away from you (in a
+Controls.java TeleOp, hold BACK for 1 s: a tap pauses the robot).
 
 **The robot drives diagonally, spins, or a wheel fights the others**
 A motor direction or a motor name is wrong. [Check motor directions](modules/drive.md#check-motor-directions).

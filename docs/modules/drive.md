@@ -184,7 +184,7 @@ Where the saved heading comes from:
 
 - **EasyAuto** saves it for you at the end. If the robot does not start facing straight away from
   its driver, override `startHeadingDeg()` with the start angle (left = +), written for BLUE: it is
-  mirrored for RED, like the turns.
+  mirrored for RED, like the turns (unless `mirrorForRed()` returns false).
 - **Your own autonomous:** at the end, `PoseStore.save(new FieldPose(0, 0, heading))`, with the
   heading measured from "away from the driver" (`auto.headingDeg()` if the robot started facing away).
 
@@ -296,7 +296,7 @@ auto.turnTo(0, 0.5);      // face the start direction
 
 `new AutoDrive(opMode, driveConfig, autoConfig, imu)`
 
-- `opMode`: your OpMode, usually `this`.
+- `opMode`: your `LinearOpMode`, usually `this`.
 - `driveConfig`: the same `DriveConfig` TeleOp uses.
 - `autoConfig`: tuning. Throws an error if `calibrationConfirmed` is false.
 - `imu`: from `ImuSetup.get(...)`.

@@ -61,7 +61,7 @@ tuning.update();
 if (!tuning.isOpen()) driver.update(gamepad1, gamepad2);   // gamepad 1 belongs to the menu while it is open
 ```
 
-**Why three button lists?** The menu uses gamepad 1's D-pad, A, X and Y. If the driver's gamepad-1
+**Why three button lists?** The menu uses gamepad 1's D-pad, bumpers, A, B, X and Y. If the driver's gamepad-1
 buttons kept working, pressing Y to "reset all" would also run whatever Y does for the robot. The
 lift buttons are on gamepad 2, so a second person can test each change while you tune.
 

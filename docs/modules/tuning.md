@@ -38,7 +38,7 @@ pid.setGains(LIFT_KP.get(), 0, 0, 0);   // read it every loop
 | `Tunable.saveAllInBackground(ok -> ...)`, `Tunable.resetAllInBackground(ok -> ...)` | the same without waiting; the tuning menu uses these |
 | `Tunable.resetAll()` | all back to code values; saved values deleted |
 | `Tunable.countChanged()` | how many differ from the code (EasyAuto warns in INIT) |
-| `Tunable.changedAsCode()` | the ones that differ, as lines to copy into the code: `"Lift: kP = 0.0050"` (in `Tunables.java`, class `Lift`) |
+| `Tunable.changedAsCode()` | the ones that differ, as lines to copy into the code: `"Lift: kP = 0.005"` (in `Tunables.java`, class `Lift`) |
 
 **Saved values come back after a restart.** That is what makes tuning fast, and also a risk:
 a value tuned in the shop is used at the event even if the code says something else. So:

@@ -169,6 +169,11 @@ working while it runs. Things to know:
 @Autonomous(name = "goBILDA Bot Launch and Back Up", preselectTeleOp = "goBILDA Bot TeleOp")
 public class LaunchAndBackUp extends Auto<Robot> {
     @Override
+    protected boolean mirrorForRed() {
+        return false;     // BIOBUZZ's field is turned half a turn: the same route for both alliances
+    }
+
+    @Override
     protected void steps(Steps s, Robot robot) {
         s.start("Against the goal, facing it", 0)
          .action(Actions.fireAllWithIntake(robot), 12)
@@ -178,7 +183,8 @@ public class LaunchAndBackUp extends Auto<Robot> {
 ```
 
 One short file per autonomous, read top to bottom. The INIT menu (alliance, start delay, the profile)
-comes for free; moves and turns are written for BLUE and mirrored for RED; the report at the end
+comes for free; moves and turns are written for BLUE and mirrored for RED (or, on a field turned half a
+turn like BIOBUZZ, the same for both: `mirrorForRed()` false); the report at the end
 says what happened to each step. A new autonomous: copy the file, change its name and its steps.
 
 Parking points come at the end, so a park step must not run out of time. Put `.parkWithSeconds(3)` just

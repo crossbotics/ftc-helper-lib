@@ -17,7 +17,7 @@ The robot is shared, the battery runs out, and the build team needs it too. Many
 about hardware at all: a wrong list index, a sign error, a height out of range. A test finds those
 in one second, on any laptop, every time you change the code.
 
-The library itself has over 100 such tests. They found real bugs before any robot moved.
+The library itself has over 250 such tests. They found real bugs before any robot moved.
 
 ## 2. What you can test
 

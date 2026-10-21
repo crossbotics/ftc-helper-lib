@@ -15,6 +15,10 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 ### Changed
 
 - Docs: "Keep time to park" explains `parkWithSeconds` (robot module, tutorial 22, easy autos).
+- Docs checked against the code (three outside checks): about 40 wrong or out-of-date statements fixed
+  (module pages, guides, tutorials, simulator), and missing items added: a table of every simulator
+  command and option, every robot-file setting with its default, and the five-files button methods
+  (`tapOrDoubleTap`, `slow`, stick `free`/`says`) and part commands.
 
 ## v0.11.0 - 2026-10-20
 

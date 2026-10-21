@@ -71,7 +71,7 @@ public class MainTeleOp extends EasyTeleOp {
 | --- | --- | --- |
 | `robotConfig()` | yes* | `new RobotSettings()`: the [`RobotConfig`](core.md#robotconfig) shared with autonomous |
 | `createSubsystems()` | no | your mechanisms. Default: none |
-| `bindButtons(driver, operator)` | no | your buttons. Gamepad 2 on `operator`; extra gamepad 1 buttons on `driver` (they pause while the tuning menu is open). Taken on gamepad 1: Y, BACK, START + BACK, GUIDE. |
+| `bindButtons(driver, operator)` | no | your buttons. Gamepad 2 on `operator`; extra gamepad 1 buttons on `driver` (they pause while the tuning menu is open). Taken on gamepad 1: Y (field-centric, when the drive has it), BACK, START (with BACK: debug lines), GUIDE. |
 | `everyLoop()` | no | your code for every loop (sticks for mechanisms, simple rules). Must not wait. |
 | `addTelemetry(t)` | no | extra screen lines |
 | `backTap()` | no | a job for a tap of BACK (a Controls.java TeleOp: pause everything); then holding BACK 1 s resets "forward" |

@@ -28,7 +28,7 @@ flowchart LR
 
 1. Commands (`goTo`, `in`, `toggle`...) are quick and safe to call from a button. Motor helpers act
    in `update()`, once per loop: call `update()` every loop (or put them in a `Subsystems` group).
-2. **Servo commands move the servo AT ONCE** (that is how servos work). So never call a command in
+2. **Servo commands move the servo AT ONCE** (that is how servos work; with `.maxSpeed()`, `update()` moves it in steps after the first move). So never call a command in
    INIT unless that movement is allowed and safe: nothing may move before START.
 
 **A typo in a position name** (`goTo("HGIH")`) does nothing and shows a warning on the Driver
@@ -60,7 +60,7 @@ Setup (chain them; **positive power must move toward bigger positions**):
 | `PositionMotor.create(hardwareMap, name)` | gets the motor: brake, encoder zeroed, plain power |
 | `new PositionMotor(name, motor)` | wraps a motor you already have |
 | `.reversed()` | positive power the other way (call first) |
-| `.units(ticksPerUnit, "deg")` | work in degrees/inches instead of ticks. Must come FIRST: calling it after limits/positions/tolerance stops with a clear error |
+| `.units(ticksPerUnit, "deg")` | work in degrees/inches instead of ticks. Must come FIRST: calling it after limits, positions, slowZone or tolerance stops with a clear error |
 | `.limits(min, max)` | the safe range |
 | `.lowerSwitch(hardwareMap, name)` / `.lowerSwitch(reader)` | bottom switch: stops downward power and homes (position 0). Until homed: only slow downward power. A name not in the configuration shows a warning (and runs without a switch) |
 | `.upperSwitch(reader)` | top switch |

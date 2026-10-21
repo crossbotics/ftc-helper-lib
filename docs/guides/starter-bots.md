@@ -50,8 +50,8 @@ wheels) on its frame; the feeder roller (`crServo`, Smart Robot Servo in CR mode
 ("poker", `pollenServo`) as an arm on the left side. Collects POLLEN.
 
 Not modelled or not published:
-- The shot: its feeder is a CR servo, and the simulator only feeds a flywheel from a motor. The flywheel's
-  target speed and the launch angle are not on REV's pages.
+- The shot: its CR-servo feeder could be the launcher's `feeder=`, but the flywheel's target speed and the
+  launch angle are not on REV's pages, so there is no `shoot.` line.
 - Sizes: all estimated (no CAD measured). The pollen pusher's preset positions are not on the page; the
   model swings it 0 to 90 degrees out to the side (a guess).
 - The pusher really swings up and down out to the side; the simulator's arm always points forward from its
@@ -68,9 +68,8 @@ Modelled: drop-center 6-wheel tank drive (`left_drive`, `right_drive`: 19.2:1 Ye
 30T to 30T gears); the intake (`intake`, 50.9:1, seven 48 mm Gecko wheels) and the two flat 72 mm Gecko
 wheels at the front corners (`left_intake_servo`, `right_intake_servo`, CR servos); the launcher (`launcher`,
 a 19.2:1 converted to 1:1, one 96 mm Hogback wheel) under the hood gridplate; the `windmill` feeder CR servo.
-Collects POLLEN and **shoots**: `feeder=intake`, because while launching goBILDA's code also runs the intake
-motor (+0.5), and the shot leaves up and backward at 147 degrees from forward (the hood rises 33 degrees
-toward the back in the CAD).
+Collects POLLEN and **shoots**: the launcher's `feeder=windmill` (the CR servo), and the shot leaves up and
+backward at 147 degrees from forward (the hood rises 33 degrees toward the back in the CAD).
 
 Not modelled or not published:
 - The exit angle and speed of a shot are not published (estimated from the hood; `share=0.5` is the default).
@@ -120,8 +119,8 @@ the code). The Maverick motors are not in the parts catalog: `rpm=` and `ticksPe
 Collects POLLEN.
 
 Not modelled or not published:
-- The shot: it is fed by a servo flap, and the simulator only feeds a flywheel from a motor. The launch
-  direction and angle are not published.
+- The shot: the servo flap could be the feeder (`feeder=` a servo feeds while it is more than 0.15 from
+  where it starts), but the launch direction and angle are not published, so there is no `shoot.` line.
 - The flywheel turns at half the motor's speed (13T to 26T bevel gears); the simulator takes the rim speed
   straight from the motor, so a `shoot.` line would need `share=` halved.
 - Sizes: all estimated (no CAD measured). The Multi-Mode Smart Servo is not in the parts catalog and its
@@ -129,17 +128,14 @@ Not modelled or not published:
 
 ## What the simulator could not express (input for its next stages)
 
-1. **A feeder that is a positional servo.** Studica feeds with a servo flap; `feeder=` takes a motor or a
-   CR servo (REV's and goBILDA's feeders work), not a positional servo.
-2. **A gear between a flywheel motor and its wheel.** Studica's 2:1 bevel gears; the rim speed would be
-   twice too fast. A `gear=` on the flywheel shape would fix it.
-3. **A catapult.** AndyMark's rubber-band catapult (wound by a motor, released at the top of each turn).
-   Now a stand-in: the motor as a `flywheel` with `feeder=` itself and a fixed `speed=` on the shot, once a
-   real shot is filmed.
-4. **An arm that reaches sideways and swings up/down** (REV's poker): the arm's box always reaches
-   forward from its hinge, and parts cannot be turned in place.
-5. **Tilted boxes** (goBILDA's hood is a plate at 33 degrees): a box is always level, so a tilted plate
-   is drawn as the box around it.
-6. **Shot direction and angle** are not published by any seller; a shot needs them.
-7. **Motors not in the catalog:** Studica Maverick (every ratio) and the AndyMark NeveRest Hex gearmotors.
+1. **A gear between a flywheel motor and its wheel.** Studica's 2:1 bevel gears: the rim speed comes
+   straight from the motor, so the stand-in is `share=` halved on the `shoot.` line (`gear=` on a flywheel
+   shape does not change the shot).
+2. **A catapult.** AndyMark's rubber-band catapult (wound by a motor, released at the top of each turn).
+   A stand-in is possible: the motor as a `flywheel` with `feeder=` itself and a fixed `speed=` (in/s) on
+   the `shoot.` line, once a real shot is filmed. The AndyMark file does not do this yet.
+3. **An arm that reaches sideways and swings up/down** (REV's poker): `axis=up` only swings an arm flat;
+   swinging it up and down while it reaches sideways needs a second hinge.
+4. **Shot direction and angle** are not published by any seller; a shot needs them.
+5. **Motors not in the catalog:** Studica Maverick (every ratio) and the AndyMark NeveRest Hex gearmotors.
    Studica's Multi-Mode Smart Servo and AndyMark's programmable servos are not in it either.

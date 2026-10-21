@@ -58,6 +58,7 @@ You get these on gamepad 1 without writing anything:
 | BACK (alone, on release) | "the robot now faces away from me" (one buzz) |
 | GUIDE | tuning menu (PRACTICE profile) |
 | START + BACK together | debug telemetry on/off (does not reset "forward") |
+| X / B in INIT | choose BLUE / RED when no autonomous ran before (it remembers autonomous's choice) |
 
 Field-centric "forward" continues from where autonomous ended (also after INIT, STOP, INIT again),
 so the driver does not need BACK at the start of a match ([DriverHeading](../modules/drive.md#driverheading)).
@@ -113,7 +114,7 @@ The lift and claw already show their own lines, and the time and drive mode are 
 | Problem | Fix |
 | --- | --- |
 | "EasyTeleOp needs your robot settings" | add `robotConfig()` |
-| Field-centric "forward" is off | the robot did not start autonomous facing away from you: set `startHeadingDeg()` in the autonomous, or press BACK |
+| Field-centric "forward" is off | the robot did not start autonomous facing away from you: set `startHeadingDeg()` in the autonomous, or press BACK (in a Controls.java TeleOp: hold BACK 1 s) |
 | Y does nothing | tank drivetrain or no IMU: field-centric needs mecanum wheels and the IMU |
 | The robot will not drive | the tuning menu is open (GUIDE closes it) |
 | A warning "action took ... ms" | a button action waits: remove the wait ([Non-blocking code](../guides/non-blocking.md)) |
