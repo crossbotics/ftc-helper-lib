@@ -4,6 +4,11 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+### Changed
+
+- Docs: the reference is online at crossbotics.com/ftc-helper/reference ([Reference](docs/reference.md)).
+- `:library:reference` writes an empty web-font file, so the pages no longer ask for a missing one.
+
 ## v0.11.1 - 2026-10-21
 
 Nothing old stops working.

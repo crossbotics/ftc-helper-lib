@@ -12,7 +12,10 @@ fit together, with examples; the reference is for looking one thing up.
 
 ## Open it
 
-Make it on your computer, from the ftc-helper-lib folder:
+**Online:** [crossbotics.com/ftc-helper/reference](https://crossbotics.com/ftc-helper/reference/) (the
+newest release).
+
+Or make it on your computer (for the version you have), from the ftc-helper-lib folder:
 
 ```bash
 ./gradlew :library:reference

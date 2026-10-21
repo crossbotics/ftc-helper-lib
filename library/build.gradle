@@ -60,5 +60,11 @@ android.libraryVariants.configureEach { variant ->
         options.windowTitle = 'ftc-helper-lib reference'
         options.addStringOption('Xdoclint:none', '-quiet')
         options.addBooleanOption('html5', true)
+        // The pages ask for a web-font file this javadoc does not write: an empty one stops the 404.
+        doLast {
+            def font = new File(destinationDir, 'resources/fonts/dejavu.css')
+            font.parentFile.mkdirs()
+            if (!font.exists()) font.text = '/* no web font: the pages use the browser\'s own */\n'
+        }
     }
 }
