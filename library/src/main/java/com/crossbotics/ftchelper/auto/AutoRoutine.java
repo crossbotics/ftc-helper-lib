@@ -191,6 +191,17 @@ public class AutoRoutine {
                 m(headingDeg), maxPower, maxTurnPower)));
     }
 
+    /**
+     * Drives to a field point with odometry and ends at a heading (mecanum). Written for BLUE: for RED
+     * with mirroring on, x and the heading are mirrored.
+     *
+     * @param pose the odometry's pose (x right, y away, heading CCW from "away")
+     */
+    public AutoRoutine driveTo(String label, java.util.function.Supplier<com.crossbotics.ftchelper.util.FieldPose> pose,
+                               double xIn, double yIn, double headingDeg, double maxPower, double toleranceIn) {
+        return add(label, ctx -> record(needDrive().driveTo(pose, m(xIn), yIn, m(headingDeg), maxPower, toleranceIn)));
+    }
+
     /** Remembers the heading now, for {@link #returnToHeading}. */
     public AutoRoutine rememberHeading(String label) {
         return add(label, ctx -> storedHeading = needDrive().headingDeg());

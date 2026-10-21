@@ -45,6 +45,9 @@ import java.util.function.Supplier;
  */
 public abstract class RobotDefinition {
     private Drive drive = null;
+    // The odometry, if Robot.java has an odometry(...) line; the real thing after setup.
+    private Odometry odometrySpec = null;
+    private com.crossbotics.ftchelper.odometry.PoseTracker tracker = null;
     private final List<Module<?>> modules = new ArrayList<>();
     private final List<Supplier<Action>> atStart = new ArrayList<>();
     private Class<?> tunablesClass = null;
@@ -80,6 +83,15 @@ public abstract class RobotDefinition {
      */
     protected final void drive(Drive d) {
         drive = d;
+    }
+
+    /**
+     * The odometry: what tells the robot where it is on the field (see {@link Odometry}).
+     *
+     * @param o e.g. {@code Odometry.pinpoint("pinpoint").offsetsMm(-84, -168)}
+     */
+    protected final void odometry(Odometry o) {
+        odometrySpec = o;
     }
 
     /**
@@ -189,7 +201,13 @@ public abstract class RobotDefinition {
                 try { super.stop(); } catch (RuntimeException e) { if (first == null) first = e; }
                 if (first != null) throw first;
             }
-        }.add(runner);
+        };
+        // The odometry first of all, so every part and action reads this loop's pose.
+        if (odometrySpec != null) {
+            tracker = odometrySpec.build(devices, TunableSection.of(tunablesClass, "Odometry"), drive);
+            all.add(tracker);
+        }
+        all.add(runner);
         // Cameras first, so the parts that use them see this loop's picture.
         List<Module<?>> ordered = new ArrayList<>();
         for (Module<?> m : modules) if (m instanceof Camera) ordered.add(m);
@@ -203,6 +221,7 @@ public abstract class RobotDefinition {
         // before the autonomous reads them to build its steps.
         Set<String> used = new LinkedHashSet<>();
         used.add("Drive");
+        used.add("Odometry");   // Tunables.Odometry: the odometry's scales and "checked", read here
         used.add("Buttons");   // Tunables.Buttons: the gesture times, read by Controls.java's buttons
         for (Module<?> m : modules) {
             for (Module<?> c : m.children()) used.add(c.name());
@@ -229,6 +248,35 @@ public abstract class RobotDefinition {
     public final RobotConfig robotConfig() {
         describe();
         return drive.config(driveSection);
+    }
+
+    /** The odometry as running (null before setup, or with no odometry(...) line). */
+    public final com.crossbotics.ftchelper.odometry.PoseTracker odometry() {
+        return tracker;
+    }
+
+    /** The odometry as written in define() (null if none). */
+    public final Odometry odometrySpec() {
+        describe();
+        return odometrySpec;
+    }
+
+    /**
+     * Where the robot is now, from the odometry: x inches right, y inches away from your drivers' wall,
+     * heading 0 = facing away, counterclockwise + (the same as autonomous start spots). Null if the robot
+     * has no odometry. A copy: changing it does not move anything.
+     */
+    public final com.crossbotics.ftchelper.util.FieldPose pose() {
+        return tracker == null ? null : tracker.pose();
+    }
+
+    /**
+     * True once {@code Tunables.Odometry.checked = true}: the odometry's directions and offsets were checked
+     * with the Odometry Tuner. Until then, {@code driveTo} steps do not run on a real robot.
+     */
+    public final boolean odometryChecked() {
+        describe();
+        return TunableSection.of(tunablesClass, "Odometry").flag("checked", false);
     }
 
     /** The drivetrain as written in define(). */
@@ -383,6 +431,7 @@ public abstract class RobotDefinition {
             m.simSection = TunableSection.of(tunablesClass, m.name());
         }
         drive.simLines(out);
+        if (odometrySpec != null) odometrySpec.simLines(out);
         for (Shape s : fixed) out.add(s.line(s.name, s.parentName(s.name), null));
         for (Module<?> m : modules) {
             for (Module<?> c : m.children()) c.simLines(out, TunableSection.of(tunablesClass, c.name()));
@@ -467,6 +516,12 @@ public abstract class RobotDefinition {
         Set<String> devices = new LinkedHashSet<>(drive.motorNames());
         if (devices.size() != drive.motorNames().size()) {
             throw new IllegalStateException("Robot.java: the drive uses one motor name twice: " + drive.motorNames());
+        }
+        // A Pinpoint or an OTOS is its own device; dead wheels use motor ports another part may also use.
+        if (odometrySpec != null && (odometrySpec.kind == Odometry.Kind.PINPOINT || odometrySpec.kind == Odometry.Kind.OTOS)) {
+            for (String d : odometrySpec.deviceNames()) {
+                if (!devices.add(d)) throw new IllegalStateException("Robot.java: the device \"" + d + "\" is used twice");
+            }
         }
         Set<String> sections = new LinkedHashSet<>();
         sections.add("Drive");

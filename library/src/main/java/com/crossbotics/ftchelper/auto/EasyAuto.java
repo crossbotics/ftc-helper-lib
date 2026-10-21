@@ -256,7 +256,8 @@ public abstract class EasyAuto extends LinearOpMode {
                     // The start heading is written for BLUE, like the routes: mirrored for RED.
                     double start = mirrorForRed() ? alliance().mirror(startHeadingDeg()) : startHeadingDeg();
                     double endHeading = Angles.wrapDegrees(start + autoDrive.headingDeg());
-                    MatchMemory.remember(alliance(), new FieldPose(0, 0, endHeading));
+                    FieldPose end = endPose();
+                    MatchMemory.remember(alliance(), end != null ? end : new FieldPose(0, 0, endHeading));
                 }
             } catch (RuntimeException e) { if (first == null) first = e; }
             // A stop error is shown only if the program had no error of its own; otherwise it goes
@@ -292,6 +293,14 @@ public abstract class EasyAuto extends LinearOpMode {
         untunedInSimulator = true;
         c.calibrationConfirmed = true;
         return c;
+    }
+
+    /**
+     * The pose to hand to TeleOp at the end, or null (the default: the heading from the drive's IMU
+     * only). With odometry: x inches right, y away from the drivers' wall, heading 0 = facing away.
+     */
+    protected FieldPose endPose() {
+        return null;
     }
 
     /** Set to "true" by the simulator; autonomous then runs with an untuned drive (with a warning). */

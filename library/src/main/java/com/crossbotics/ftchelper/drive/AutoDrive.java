@@ -383,6 +383,76 @@ public class AutoDrive {
     }
 
     /**
+     * Drives to a point on the field and turns to a heading at the same time, using odometry (mecanum
+     * only). It keeps correcting with the odometry's pose every loop, so a bump or wheel slip does not
+     * matter: it ends where the field point is, not where the wheels think it is.
+     *
+     * <p>The frame is the odometry's: x inches right, y inches away from the drivers' wall, heading 0 =
+     * facing away, counterclockwise +.
+     *
+     * <p><b>BLOCKS</b> (on purpose): returns when it arrives, gets stuck or runs out of time.
+     *
+     * @param pose        the odometry's pose, read each loop (the loop hook updates it)
+     * @param xIn         where to go: inches right
+     * @param yIn         inches away from the drivers' wall
+     * @param headingDeg  the heading to end at (counterclockwise +; 0 = facing away)
+     * @param maxPower    0.1 to 1
+     * @param toleranceIn close enough, inches (1 is usual)
+     * @return DONE, STALLED, TIMED_OUT or STOPPED
+     */
+    public Result driveTo(java.util.function.Supplier<com.crossbotics.ftchelper.util.FieldPose> pose,
+                          double xIn, double yIn, double headingDeg, double maxPower, double toleranceIn) {
+        if (tank) {
+            throw new UnsupportedOperationException("driveTo needs mecanum wheels (it drives sideways). On a standard "
+                    + "(tank) drive, use turnTo(...) and then move(...).");
+        }
+        long deadline = deadlineFromNow();
+        try {
+            double maxSpeed = Math.max(cfg.moveMinPower, MathUtil.clamp(maxPower, 0.1, 1.0));
+            PidController headingPid = new PidController(cfg.turnKp, 0, cfg.turnKd, 0, clockNanos)
+                    .setAngleMode(true).setOutputLimits(-cfg.moveMaxTurnPower, cfg.moveMaxTurnPower);
+            StallDetector stall = new StallDetector(cfg.stallProgressIn, cfg.stallTimeSec);
+            double startDist = -1;
+            int closeLoops = 0;
+            while (true) {
+                Result early = checkStop(deadline);
+                if (early != null) return early;
+                com.crossbotics.ftchelper.util.FieldPose p = pose.get();
+                double dx = xIn - p.x, dy = yIn - p.y;
+                double dist = Math.hypot(dx, dy);
+                if (startDist < 0) startDist = Math.max(dist, 1e-6);
+                double headingErr = Angles.shortestDiff(headingDeg, p.headingDeg);
+                // There: close enough in place AND heading, for 3 loops in a row (no stopping on a pass-by).
+                if (dist <= toleranceIn && Math.abs(headingErr) <= cfg.turnToleranceDeg) {
+                    if (++closeLoops >= 3) return Result.DONE;
+                } else {
+                    closeLoops = 0;
+                }
+                // The field error seen from the robot: heading h (CCW from "away") faces (-sin h, cos h).
+                double h = Math.toRadians(p.headingDeg);
+                double forwardErr = -dx * Math.sin(h) + dy * Math.cos(h);
+                double rightErr = dx * Math.cos(h) + dy * Math.sin(h);
+                // Speed: slow down near the end (like move()), never below moveMinPower until close.
+                double speed = dist <= toleranceIn ? 0 : MotionMath.taperSpeed(dist / startDist,
+                        cfg.moveMinPower, maxSpeed, cfg.taperStartFraction);
+                double fwd = dist > 1e-6 ? speed * forwardErr / dist : 0;
+                double right = dist > 1e-6 ? speed * rightErr / dist : 0;
+                // PID output is counterclockwise; the drive's turn is clockwise.
+                double turn = -headingPid.calculate(headingDeg, p.headingDeg);
+                setPowers(MecanumMixer.mix(fwd, right, turn, powerLimit));
+                if (cfg.stallExitEnabled && dist > toleranceIn && stall.update(dist, seconds())) {
+                    log.accept("AutoDrive: driveTo stopped, robot stuck");
+                    return Result.STALLED;
+                }
+                runLoopHook();
+                idle.run();
+            }
+        } finally {
+            stop();
+        }
+    }
+
+    /**
      * Turns in place by an amount.
      *
      * <p><b>BLOCKS</b> (on purpose): returns when the move ends. Autonomous only; never in TeleOp.

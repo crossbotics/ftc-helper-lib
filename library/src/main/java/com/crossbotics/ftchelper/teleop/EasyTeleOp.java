@@ -95,6 +95,16 @@ public abstract class EasyTeleOp extends LinearOpMode {
      * The IMU, for field-centric driving and "forward" from autonomous. Default:
      * {@code robotConfig().imu(...)}. Null = no IMU: robot-centric driving only.
      */
+    /**
+     * The driver's heading for field-centric driving: from the IMU (with autonomous's saved heading).
+     * The robot in five files uses its odometry instead when it has one.
+     *
+     * @param imu the IMU from {@link #createImu()}, or null
+     */
+    protected DriverHeading createHeading(IMU imu) {
+        return imu != null ? new DriverHeading(imu) : null;
+    }
+
     protected IMU createImu() {
         RobotConfig config = robotConfig();
         return config == null ? null : config.imu(hardwareMap);
@@ -267,7 +277,7 @@ public abstract class EasyTeleOp extends LinearOpMode {
         BulkReads.auto(hardwareMap);
         IMU imu = createImu();
         // After the IMU is set up: take autonomous's heading, so "forward" carries over.
-        heading = imu != null ? new DriverHeading(imu) : null;
+        heading = createHeading(imu);
         driving = DriverControls.create(hardwareMap, driveConfig(), heading).slowSpeed(slowSpeed());
         driving.setFieldCentric(startFieldCentric());
         configureDriving(driving);

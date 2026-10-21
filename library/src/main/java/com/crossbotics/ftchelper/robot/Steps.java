@@ -138,6 +138,35 @@ public final class Steps {
         return this;
     }
 
+    /**
+     * Drives to a point on the field, using the odometry, and turns to a heading at the same time
+     * (mecanum). Seen from your drivers' wall, written for BLUE like the start spot: {@code xIn} inches
+     * right of the centre line, {@code yIn} inches from the centre toward the far wall, heading 0 =
+     * facing away, counterclockwise +. Waits until it is there (within 1 inch).
+     *
+     * <p>Needs an {@code odometry(...)} line in Robot.java, and {@code Tunables.Odometry.checked = true}
+     * on a real robot (the Odometry Tuner); until then the step is skipped and the report says why.
+     */
+    public Steps driveTo(String label, double xIn, double yIn, double headingDeg, double maxPower) {
+        return driveTo(label, xIn, yIn, headingDeg, maxPower, 1.0);
+    }
+
+    /** {@link #driveTo(String, double, double, double, double)} with your own "close enough", inches. */
+    public Steps driveTo(String label, double xIn, double yIn, double headingDeg, double maxPower, double toleranceIn) {
+        if (robot.odometrySpec() == null) {
+            throw new IllegalStateException("Steps: driveTo(\"" + label + "\") needs odometry: add an odometry(...) line "
+                    + "to Robot.java (docs/modules/odometry.md)");
+        }
+        if (!adding()) return this;
+        boolean simulator = "true".equals(System.getProperty(com.crossbotics.ftchelper.auto.EasyAuto.SIMULATOR_PROPERTY));
+        if (!robot.odometryChecked() && !simulator) {
+            routine.step(label, ctx -> ctx.note("skipped: Tunables.Odometry.checked is false (run the Odometry Tuner first)"));
+            return this;
+        }
+        routine.driveTo(label, robot::pose, xIn, yIn, headingDeg, maxPower, toleranceIn);
+        return this;
+    }
+
     /** Turns by an angle (counterclockwise +). Waits until done. */
     public Steps turn(String label, double degrees, double maxPower) {
         if (adding()) routine.turn(label, degrees, maxPower);

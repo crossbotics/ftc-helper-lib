@@ -116,10 +116,28 @@ public abstract class Auto<R extends RobotDefinition> extends EasyAuto {
         }
     }
 
+    // With odometry, TeleOp gets the whole end pose (where, and which way it faces).
+    @Override
+    protected final com.crossbotics.ftchelper.util.FieldPose endPose() {
+        return robot.pose();
+    }
+
     @Override
     protected final void buildRoutine(AutoRoutine routine) {
         robot.setAlliance(alliance());
-        routine.run("Start", robot::started);
+        routine.run("Start", () -> {
+            // The odometry starts at the start spot (written for BLUE; mirrored for RED like the routes).
+            if (robot.odometry() != null) {
+                double[] spot = startSpotIn();
+                double x = spot == null ? 0 : spot[0], y = spot == null ? 0 : spot[1], h = startHeadingDeg();
+                if (alliance() == com.crossbotics.ftchelper.match.Alliance.RED && mirrorForRed()) {
+                    x = -x;
+                    h = -h;
+                }
+                robot.odometry().setPose(new com.crossbotics.ftchelper.util.FieldPose(x, y, h));
+            }
+            robot.started();
+        });
         steps(new Steps(routine, menu, robot), robot);
     }
 }

@@ -102,7 +102,31 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
     protected final Subsystems createSubsystems() {
         robot().setAlliance(alliance());
         robot().setup(hardwareMap);
+        // With odometry: start where autonomous ended (its whole pose), if it ran in this match.
+        if (robot().odometry() != null && startsFromAuto()) robot().odometry().setPose(com.crossbotics.ftchelper.util.PoseStore.peek());
         return robot().all();
+    }
+
+    // True if autonomous left a pose from this match.
+    private static boolean startsFromAuto() {
+        return com.crossbotics.ftchelper.util.PoseStore.peek() != null
+                && com.crossbotics.ftchelper.util.PoseStore.ageSec() <= com.crossbotics.ftchelper.match.MatchMemory.MAX_AGE_SEC;
+    }
+
+    // With odometry, field-centric "forward" comes from the odometry's heading (it does not drift like
+    // a re-zeroed IMU, and carries on from autonomous). BACK (held, field-centric) makes the way the
+    // robot faces now 0, keeping x and y.
+    @Override
+    protected final com.crossbotics.ftchelper.drive.DriverHeading createHeading(com.qualcomm.robotcore.hardware.IMU imu) {
+        if (robot().odometrySpec() == null) return super.createHeading(imu);
+        return com.crossbotics.ftchelper.drive.DriverHeading.of(
+                () -> robot().odometry() == null ? 0 : robot().odometry().pose().headingDeg,
+                () -> {
+                    if (robot().odometry() == null) return;
+                    com.crossbotics.ftchelper.util.FieldPose p = robot().odometry().pose();
+                    robot().odometry().setPose(new com.crossbotics.ftchelper.util.FieldPose(p.x, p.y, 0));
+                },
+                startsFromAuto());
     }
 
     @Override

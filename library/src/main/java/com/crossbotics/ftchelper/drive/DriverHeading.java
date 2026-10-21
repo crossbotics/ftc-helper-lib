@@ -62,6 +62,20 @@ public final class DriverHeading {
         this(() -> ImuSetup.headingDeg(imu), imu::resetYaw, takeSavedHeading());
     }
 
+    /**
+     * A driver heading from your own source, e.g. odometry (whose pose already carries autonomous's
+     * heading, so nothing is added).
+     *
+     * @param headingDeg the heading compared with the driver (0 = away), counterclockwise +
+     * @param reset      makes the current direction 0 (BACK)
+     * @param fromAuto   true if the source started from autonomous's end pose
+     */
+    public static DriverHeading of(DoubleSupplier headingDeg, Runnable reset, boolean fromAuto) {
+        DriverHeading h = new DriverHeading(headingDeg, reset, null);
+        h.fromAuto = fromAuto;
+        return h;
+    }
+
     /** For tests: a pretend IMU and a given saved heading (null = none). */
     DriverHeading(DoubleSupplier imuHeading, Runnable resetImu, Double savedHeadingDeg) {
         this.imuHeading = imuHeading;
