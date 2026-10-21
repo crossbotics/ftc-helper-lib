@@ -214,7 +214,7 @@ public class ActionsAndControlsTest {
             ControlMap.makePlan(robot, false, true, (g1, g2) -> g1.lt.press(robot.claw::open));
             fail("expected an error");
         } catch (IllegalStateException e) {
-            assertTrue(e.getMessage(), e.getMessage().contains("G1 LT is the library's \"slow (hold)\""));
+            assertTrue(e.getMessage(), e.getMessage().contains("G1 LT is the library's \"slow (squeeze: the further, the slower)\""));
         }
     }
 

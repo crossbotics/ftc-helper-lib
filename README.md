@@ -84,13 +84,13 @@ replacement for learning.
 | I want to... | Read |
 | --- | --- |
 | Add the library to our robot project | [Add it to a project](docs/01-add-to-project.md) |
-| **A whole robot program, fast** | [Starter kit](docs/starter-kit.md) |
-| **Learn it step by step (22 hands-on tutorials)** | [Tutorials](docs/tutorials/README.md) |
+| **A whole robot program, fast: the robot in five files** (made from your configuration) | [Lesson 1](docs/tutorials/22-robot-in-five-files.md), [robot module](docs/modules/robot.md) |
+| **Learn it step by step** (a 7-lesson main track, plus 21 "under the hood" tutorials) | [Tutorials](docs/tutorials/README.md) |
 | See how it all fits together | [Architecture](docs/guides/architecture.md) |
 | **Write autonomous modes with the builder (every feature, with a tested example)** | [The autonomous builder](docs/guides/autonomous-builder.md) |
-| Make autonomous modes the easy way (EasyAuto) | [Easy autonomous modes](docs/guides/easy-autos.md) |
+| Make autonomous modes the older way (EasyAuto) | [Easy autonomous modes](docs/guides/easy-autos.md) |
+| The older six-file starter kit (EasyTeleOp, EasyAuto) | [Starter kit](docs/starter-kit.md) |
 | Look up any class or method (searchable) | [Reference](docs/reference.md) |
-| A whole robot program in five short files (and make them from your configuration) | [Tutorial 22](docs/tutorials/22-robot-in-five-files.md), [robot module](docs/modules/robot.md) |
 | Drive + slow mode + intake, ready to copy | [Example: drive and intake](docs/guides/example-drive-intake.md) |
 | Keep the loop fast: what blocks and what never does | [Non-blocking code](docs/guides/non-blocking.md) |
 | Practice vs competition behavior | [Profiles](docs/guides/profiles.md) |

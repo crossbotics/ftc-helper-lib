@@ -4,8 +4,22 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+### Fixed
+
+- `Lift.slide(...).part(id)`: the simulator now uses that motor (before, it always wrote a 312 RPM motor).
+
+### Added
+
+- Tutorials: a **main track** of 7 lessons on the robot in five files (lesson 1 is tutorial 22; new
+  lessons in `docs/tutorials/start/`: drive, buttons, intake/lift/claw, actions, first autonomous,
+  shooter and camera), built on a new example robot (`examples/.../lessonbot`, run by a simulator test).
+  Tutorials 01-21 are now the "under the hood" track. The README, "Add it to a project", the starter kit
+  and the new-season guide point to the main track first.
+
 ### Changed
 
+- The two-driver slow trigger's label says what it does: "slow (squeeze: the further, the slower)".
+- The untuned-drive message points to the main track's lesson 6.
 - Docs: the reference is online at crossbotics.com/ftc-helper/reference ([Reference](docs/reference.md)).
 - `:library:reference` writes an empty web-font file, so the pages no longer ask for a missing one.
 

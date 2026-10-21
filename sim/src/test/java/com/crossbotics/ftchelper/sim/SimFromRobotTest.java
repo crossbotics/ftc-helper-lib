@@ -226,6 +226,29 @@ public class SimFromRobotTest {
         }
     }
 
+    // The main-track lessons' robot (docs/tutorials/start/): its actions and its autonomous run.
+    @Test public void theLessonBotScoresAndParks() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.lessonbot.Robot.class);
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("Lesson Bot TeleOp");
+            assertTrue(String.join("\n", s.screen()), s.screenHas("G2 RB: score high"));
+            s.start();
+            s.press(v -> s.g2().right_bumper = v);                    // score high
+            assertTrue("the lift rises\n" + String.join("\n", s.screen()),
+                    SimRun.waitFor(() -> s.robot().motors.get("lift").shaft() > 1500, 5));
+            assertEquals("", s.error());
+            s.sim.ds.stop();
+
+            s.init("Lesson Bot Score and Park");
+            s.start();
+            assertTrue("it finishes", SimRun.waitFor(() -> s.screenHas("Autonomous finished"), 30));
+            String report = String.join("\n", s.screen());
+            assertTrue(report, s.screenHas("Score high:"));
+            assertTrue(report, s.screenHas("Park:"));
+            assertEquals("", s.error());
+        }
+    }
+
     @Test public void guideShowsTheButtonMapDuringTheMatch() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.flywheelbot.Robot.class);
         try (SimRun s = new SimRun(file.toString())) {

@@ -266,3 +266,8 @@ Tunables section (here `Tunables.IntakeDeploy`).
 - The operator wants the claw on X instead of B. Which file? (Controls.java: `g2.x.toggle(robot.claw)`.)
 - An action is lifting the lift and the operator moves the lift stick. What happens? (The action stops: the driver wins.)
 - Why does `define()` not move anything? (It runs in INIT, and nothing may move before START.)
+
+## Next
+
+This is lesson 1 of the [main track](README.md#start-here-the-main-track). Next:
+[Lesson 2: Drive](start/02-drive.md), where you build the lesson robot one part at a time.

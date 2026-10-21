@@ -408,12 +408,12 @@ module suggestions); `robot()` and `oneDriver()` read the robot and the one-driv
 | --- | --- | --- |
 | Left stick | drive (and strafe) | lift by hand (Y) |
 | Right stick | turn (X) | arm by hand (Y), turret by hand (X) |
-| LT / RT | slow (hold) / free | intake out (hold) / intake in (hold, or on/off) |
+| LT / RT | slow (the further, the slower) / free | intake out (hold) / intake in (hold, or on/off) |
 | LB / RB | free | launcher spin up/down / fire one (hold: keep firing) |
 | A / X / Y / B | free / free / field-centric on/off (mecanum) / free | lift lowest / second / highest / claw |
 | D-pad up/down | free | lift next height, or launcher speed |
 | D-pad left/right | free | wrist |
-| BACK | tap: **pause** everything (stopped on brake), tap again: go on; hold 1 s: "forward" = away from you now | turret following on/off |
+| BACK | tap: **pause** everything (stopped on brake), tap again: go on; hold 1 s: "forward" = away from you now | turret following on/off (with a turret; else free) |
 | START + BACK | debug lines | |
 | GUIDE | tap: the button map, without the free buttons (during the match too); hold 1 s: the tuning menu (PRACTICE) | |
 

@@ -152,8 +152,9 @@ cannot finish (pushed into a wall, stuck) ends by itself, and the report says `S
 `TIMED_OUT`. **Tune the drive first** with the Drive Tuner ([tutorial 09](../tutorials/09-first-auto.md)):
 the inches are only right on a tuned robot.
 
-**Put route numbers in `Tunables.java`** (`Tunables.Auto.collectInches`): they can then be changed with
-the tuning menu in the PRACTICE profile, and the code keeps a record of them.
+**Put route numbers in `Tunables.java`** (`Tunables.Auto.collectInches`): every number is in one place,
+named, and easy to find at an event. (A section that is not a part, like `Auto`, is not in the tuning
+menu: change it in the file and build again.)
 
 ## 3. Mechanisms: run and wait
 

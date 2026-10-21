@@ -21,10 +21,13 @@ flowchart LR
 
 1. **Hardware Check first** ([testing](testing.md)): every device found, every motor turns the right way.
 2. **Servo Finder** for each servo, **Motor Finder** for each lift, arm or turret: put the limits
-   and positions in `Robot.java`. Do this BEFORE you drive a mechanism with code: a wrong limit
+   and positions in your code (with the robot in five files: `Tunables.java`, e.g. `min`, `max` and the
+   named heights in `Tunables.Lift`, `open` and `closed` in `Tunables.Claw`; the finders print them as
+   `PositionMotor`/`PositionServo` code: copy the numbers). Do this BEFORE you drive a mechanism with code: a wrong limit
    breaks parts.
 3. **Flywheel Finder**: the gains for your `Flywheel`.
-4. **Drive Tuner**: the numbers in `RobotSettings.auto()`, before you write autonomous.
+4. **Drive Tuner**: the numbers in `RobotSettings.auto()` (with the robot in five files: `Tunables.Drive` and the
+   drive line's `wheelMm`; then `Tunables.Drive.calibrated = true`), before you write autonomous.
 5. **Aim Tuner**, then **Shot Tuner**: aim first, so the shot table is built with straight shots.
 6. **Characterizer** (any time after the Motor Finder): how the motors really move, for feedforward
    and the simulator.

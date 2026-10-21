@@ -30,7 +30,7 @@ import java.util.List;
  * }</pre>
  *
  * <p><b>Driving</b> (gamepad 1, always): left stick drives (and strafes on mecanum), right stick X
- * turns, LT slow (hold), Y field-centric on/off (mecanum), BACK pauses everything (motors on brake; again
+ * turns, LT slow (the further it is pulled, the slower), Y field-centric on/off (mecanum), BACK pauses everything (motors on brake; again
  * to go on), holding BACK 1 s resets "forward", START + BACK debug
  * lines, GUIDE shows the button map (a tap) or opens the tuning menu (held 1 s, PRACTICE profile).
  * With {@code oneDriver = true}: left stick click
@@ -216,7 +216,7 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
             plan.reserve(g1.leftStickButton, "slow on/off");
             if (fieldCentric) plan.reserve(g1.rightStickButton, "field-centric on/off");
         } else {
-            plan.reserve(g1.lt, "slow (hold)");
+            plan.reserve(g1.lt, "slow (squeeze: the further, the slower)");
             if (fieldCentric) plan.reserve(g1.y, "field-centric on/off");
         }
         plan.reserve(g1.back, "pause / go on (hold: forward = away from you now)");

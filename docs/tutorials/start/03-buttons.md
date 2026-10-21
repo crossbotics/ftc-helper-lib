@@ -1,0 +1,194 @@
+# Lesson 3: Buttons (Controls.java)
+
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+
+**Goal:** know which buttons your robot already has, and give the buttons that are left your own jobs
+in `Controls.java`.
+
+**You need:** none: the simulator. Then your robot and gamepads 1 and 2.
+
+**The code:** the lesson robot's [`Controls.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/Controls.java)
+(and the [`Actions.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/Actions.java)
+it uses). Every method: [the robot module, ControlMap](../../modules/robot.md#controlmap). Before this:
+[Lesson 2: Drive](02-drive.md).
+
+## 1. The whole TeleOp is this file
+
+```java
+@TeleOp(name = "Lesson Bot TeleOp", group = "Examples")
+@Disabled
+public class Controls extends ControlMap<Robot> {
+    public static boolean oneDriver = false;   // true: everything on gamepad 1
+
+    @Override
+    protected void buttons(Robot robot, Pad g1, Pad g2) {
+        g2.rb.press(Actions.scoreHigh(robot)).says("score high");     // lesson 5
+        g2.lb.press(Actions.grabAndLift(robot)).says("grab and lift");
+    }
+}
+```
+
+`ControlMap<Robot>` is a whole TeleOp: driving, the match timer, every part updated each loop, and
+everything stopped at the end. `g1` is gamepad 1 (the driver), `g2` is gamepad 2 (the operator).
+(Delete `@Disabled` in your copy, or the Driver Station will not list it.)
+
+## 2. The buttons the parts bring
+
+Each part in `Robot.java` brings its **standard buttons**. You write nothing for them. The lesson robot
+gets this map (two drivers):
+
+| Input | Gamepad 1 (driver) | Gamepad 2 (operator) |
+| --- | --- | --- |
+| Left stick | drive (and strafe) | lift by hand |
+| Right stick X | turn | free |
+| LT / RT | slow / free | intake out (hold) / intake in (hold) |
+| A / X / Y | free / free / field-centric on/off | lift down / low / high |
+| B | free | claw open / close |
+| D-pad up / down | free | lift next height up / down |
+| BACK | pause / go on (hold 1 s: reset "forward") | free |
+
+The lift's buttons come from its named heights in `Tunables.Lift` (`down = 0, low = 900, high = 2400`):
+A is the lowest, Y the highest, X the second. Every part's buttons are in
+[robot.md's standard map](../../modules/robot.md#controlmap). **Why:** most robots use the same buttons
+for the same parts, so you only write what is different.
+
+## 3. One driver or two
+
+```java
+public static boolean oneDriver = false;   // true: everything on gamepad 1
+```
+
+- `false`: two drivers, as in the table above.
+- `true`: the operator's buttons move to gamepad 1. Slow becomes the left stick click (on/off) and
+  field-centric the right stick click. A part whose button is taken by the driving gets none, and INIT
+  says so, for example `Lift by hand: no button (G1 left stick Y is taken by library)`.
+- Write it exactly like that: `public static boolean`. If it is not `static`, INIT stops with a message.
+
+## 4. Add your own jobs
+
+Inside `buttons(...)`, one line per job: the pad, the button, the kind of job. `robot.claw::open` is a
+short way to write `() -> robot.claw.open()`: "run this later, when the button says so".
+
+| Kind | Example | Does |
+| --- | --- | --- |
+| `press(Runnable)` | `g2.dpadLeft.press(robot.claw::open)` | once per press |
+| `press(Action)` | `g2.rb.press(Actions.scoreHigh(robot))` | starts the action; press again to cancel it |
+| `hold(whileHeld)` | `g1.rt.hold(robot.intake::in)` | every loop while held |
+| `hold(whileHeld, onRelease)` | `g1.rt.hold(robot.intake::in, robot.intake::stop)` | every loop while held, then once when let go |
+| `release(Runnable)` | `g1.a.release(robot.claw::close)` | once when let go |
+| `toggle(part)` | `g1.x.toggle(robot.intake)` | switches a part on/off (an intake, a claw, a launcher) |
+| `toggle(onEnable, onDisable)` | `g2.dpadRight.toggle(robot.claw::open, robot.claw::close)` | each press flips between the two |
+| `tapOrDoubleTap(tap, doubleTap)` | `g2.rt.tapOrDoubleTap(robot.intake::toggle, robot.intake::out)` | a tap runs the first; a second tap within 0.35 s runs the second |
+| `slow()` | `g1.lt.slow()` | one driver only: slow driving (see below) |
+| `free()` | `g2.dpadDown.free()` | no job, even if a part suggested one |
+| `says(words)` | `.says("score high")` | the words on the button map |
+
+Notes:
+
+- `tapOrDoubleTap`: the first tap of a double-tap has already run `tap`. So make the two fit: tap =
+  intake on/off, double-tap = push out.
+- `slow()` works only with `oneDriver = true` (with two drivers, gamepad 1 LT is slow already, and
+  INIT stops with a message). On a trigger, the further you pull, the slower, down to
+  `Tunables.Drive.slowSpeed`. On a button, slow while it is held.
+- A trigger counts as "pressed" past half way.
+- Add `.says("...")` to every job. **Why:** the drivers read the map on the Driver Station, and
+  "press" tells them nothing.
+
+**Sticks** take `use(...)`: the stick's value every loop, from -1 to 1, up and right are +, with a small
+dead zone and a gentle curve. To move the lift by hand on the right stick instead of the left:
+
+```java
+g2.rightStickY.use(robot.lift::manual).says("lift by hand");
+g2.leftStickY.free();
+```
+
+A stick also takes `free()` and `says(...)`.
+
+## 5. One job per button
+
+Each button has ONE job. **Why:** a button that does two things depends on which runs first, and the
+drivers cannot guess it. The rules, checked at INIT:
+
+- A job of yours on a button a part suggested **replaces** the suggestion. (The part simply has no
+  button there; use `free()` to clear one without a new job.)
+- Two jobs of yours on one button stop at INIT: `Controls.java: G2 RB has two jobs. Give each button one
+  job (put both commands in one lambda if you want both).`
+- A job on a driving button (gamepad 1's left stick, right stick X, LT with two drivers, Y on a mecanum
+  with an IMU, BACK, START) stops at INIT: `Controls.java: G1 LT is the library's "slow (squeeze: the further, the slower)" button.
+  Pick another button.`
+
+Want two things on one button? Put them in one lambda:
+`g2.dpadLeft.press(() -> { robot.claw.open(); robot.intake.stop(); }).says("drop")`.
+
+## 6. The button map: INIT and GUIDE
+
+- **At INIT** the Driver Station shows the whole map, one line per input, with the part that gave it,
+  for example `G2 A: down [Lift]` and `G2 RB: score high`, then the free buttons:
+  `G2 free: ...`. Read it before every match.
+- **During the match**, tap GUIDE: the map again, without the free buttons. The robot still drives.
+  Tap GUIDE again to close it. (Holding GUIDE 1 s opens the tuning menu, PRACTICE profile only.)
+- In TeleOp's INIT (before START), gamepad 1 X and B choose the alliance: X = BLUE, B = RED. After an
+  autonomous, its alliance is already set.
+
+## 7. Pause with BACK
+
+A tap of gamepad 1 BACK pauses the robot: every part stops on brake, the wheels hold still, actions
+wait, and no button or stick job runs. The Driver Station says PAUSED. Tap BACK again and every part
+goes on with what it was doing (a lift goes on to its height, the intake runs again). **Why:** a safe
+stop for a jam or a dropped piece, without ending the program. (Hold BACK 1 s instead to reset
+field-centric "forward", lesson 2.)
+
+## 8. The lesson robot's two actions
+
+The lesson robot uses gamepad 2's bumpers, which no part suggested:
+
+- **RB, "score high":** lift up, open the claw at the top, lift down.
+- **LB, "grab and lift":** close the claw, then lift the piece a little.
+
+An action runs a little every loop, so the robot keeps driving. Press the same button again to cancel
+it. If the operator moves one of its parts by hand (say, the lift stick), the action stops: the driver
+always wins. Lesson 5 shows how to write them.
+
+## Try it in the simulator
+
+From the `ftc-helper-lib` folder (skip the first line if you did it in lesson 2):
+
+```bash
+./gradlew :sim:fromRobot -PteamCode=none -ProbotClass=com.crossbotics.ftchelper.examples.lessonbot.Robot -Pout=build/lessonbot.properties
+./gradlew :sim:run -PteamCode=none -Probot=build/lessonbot.properties
+```
+
+Open http://localhost:8780, pick "Lesson Bot TeleOp" and INIT: read the map. START. Use the on-screen
+gamepad 2, or the keyboard (A/B/X/Y are K L J I, LB/RB are Q E, LT/RT are Z C, GUIDE is M, BACK is
+Backspace). Press RB and watch the lift rise. Press RB again while it moves: it cancels. Tap GUIDE.
+Then add one job of your own to Controls.java, and one on a button that already has one, to see the
+INIT message. For your own robot: `-PteamCode=../TeamCode` ([simulator guide](../../guides/simulator.md)).
+
+## Check it on the robot
+
+1. INIT: read the map. Is every job on the button you planned? Any notes about parts with no button?
+2. START. Press each of your buttons once. Does each do what its words say?
+3. Tap GUIDE: the map shows. Tap again: it closes.
+4. Start an action, then press its button again: it stops, and the lift holds where it is.
+5. Tap BACK: everything stops. Tap again: everything goes on.
+
+## If something goes wrong
+
+| Problem | Fix |
+| --- | --- |
+| INIT stops: "has two jobs" | Two of your lines use one button. Pick another, or put both in one lambda. |
+| INIT stops: "is the library's ... button" | That button drives the robot. Pick a free one (INIT lists them). |
+| INIT stops: "slow() is for one driver" | With two drivers, G1 LT is slow already. Delete the line. |
+| A part's button does nothing | Your job replaced its suggestion, or INIT says it has no button (one driver). |
+| No button does anything | The robot is paused: tap BACK. |
+| A button held at START does nothing | Let it go and press again: a button held through START does not count. |
+| The help says "press" | Add `.says("...")` to that job. |
+
+## Under the hood
+
+How buttons work inside (presses, holds, toggles, rumble), built by hand:
+[Tutorial 03: Buttons](../03-buttons.md).
+
+## Next
+
+[Lesson 4: An intake, a lift and a claw](04-lift-and-claw.md)

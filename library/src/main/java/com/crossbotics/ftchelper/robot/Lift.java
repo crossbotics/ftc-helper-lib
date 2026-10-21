@@ -96,8 +96,11 @@ public final class Lift extends MotorPositions<Lift> {
     void simLines(List<String> out, TunableSection t) {
         double[] d = defaults();
         double min = t.number("min", d[0]), max = t.number("max", d[1]);
-        out.add(fmt("motor.%s = lift, part=gobilda-5203-312, min=%.0f, max=%.0f, gravity=0.06   # TODO the real motor",
-                device, min, max));
+        // The motor from .part(...); without one, a common lift motor, marked to check.
+        out.add(partId != null
+                ? fmt("motor.%s = lift, part=%s, min=%.0f, max=%.0f, gravity=0.06", device, partId, min, max)
+                : fmt("motor.%s = lift, part=gobilda-5203-312, min=%.0f, max=%.0f, gravity=0.06   # TODO the real motor",
+                        device, min, max));
         if (switchName != null) out.add(fmt("touch.%s = %s, below=20", switchName, device));
         out.add(fmt("shape.%s = slide, at=-7,0,4, size=2x8x8, axis=up, motor=%s, ticksPerIn=%.0f   # TODO measure",
                 device, device, Math.max(1, max / 8)));

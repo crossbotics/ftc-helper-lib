@@ -306,6 +306,16 @@ public class ShapesTest {
         assertTrue(lines(r), lines(r).contains(", tilt=40"));
     }
 
+    @Test public void aLiftsPartGoesToTheSimulator() {
+        RobotDefinition r = new RobotDefinition() {
+            @Override protected void define() {
+                drive(Drive.tank("l", "r"));
+                add(Lift.slide("lift").part("gobilda-5203-435"));
+            }
+        };
+        assertTrue(lines(r), lines(r).contains("motor.lift = lift, part=gobilda-5203-435,"));
+    }
+
     @Test public void aSoftRollerSaysSo() {
         RobotDefinition r = new RobotDefinition() {
             @Override protected void define() {

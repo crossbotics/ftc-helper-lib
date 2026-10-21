@@ -124,5 +124,6 @@ Android Studio's **Git > Clone** does not always get submodules. If the build sa
 
 ## Next
 
-- [Tutorials](tutorials/README.md): start with Tutorial 01
+- [Tutorials](tutorials/README.md): start with the main track, lesson 1: [the robot in five files](tutorials/22-robot-in-five-files.md)
+  (`./gradlew :sim:newRobot` writes the five files from your robot configuration)
 - [Keep it up to date](02-keep-up-to-date.md)

@@ -2,7 +2,8 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
-Hands-on lessons that teach the library by building real robot programs, one idea at a time.
+Hands-on lessons that teach the library by building real robot programs, one idea at a time. There are
+two tracks: the **main track** (start here) and **under the hood**.
 Each tutorial has a **complete program** you can copy into TeamCode and run. Those programs are
 built and checked every time the library changes, so the code in these lessons always works
 with the current version.
@@ -10,39 +11,58 @@ with the current version.
 The [module pages](../modules/) are the reference: every function, every parameter.
 The tutorials are the "how and why": what to write, in what order, and what to check on the robot.
 
-## The learning path
+## Start here: the main track
 
-Do them in order the first time. Later, jump to the one you need.
+The shortest way to a whole robot program. You build one robot, the **lesson robot**
+([`examples/.../lessonbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot)): a
+mecanum drive, an intake, a lift and a claw, in five short files. Every part brings its own numbers and
+buttons, so each lesson adds only a few lines. A simulator test runs the finished robot, so the code here
+always works. Do these in order.
+
+| # | Lesson | You learn | Robot needed |
+| --- | --- | --- | --- |
+| 1 | [The robot in five files](22-robot-in-five-files.md) | what each of the five files is for; make them from your robot configuration; try it in the simulator | none |
+| 2 | [Drive](start/02-drive.md) | the drive line: mecanum or tank, motors, wheels, the IMU; the driving you get for free; check the directions | a drivetrain (or the simulator) |
+| — | [Check the hardware](19-testing-procedures.md) | the Hardware Check, and a testing order that finds problems early | your robot |
+| 3 | [Buttons](start/03-buttons.md) | `Controls.java`: the buttons the parts bring, your own jobs, one or two drivers | a gamepad |
+| 4 | [An intake, a lift and a claw](start/04-lift-and-claw.md) | parts, their numbers in `Tunables.java`, homing, finding and tuning the numbers | the mechanisms |
+| 5 | [Actions](start/05-actions.md) | several parts together, from a button or in an autonomous | the mechanisms |
+| 6 | [Your first autonomous](start/06-first-autonomous.md) | tune the drive, then steps, park time, the report | a tuned drivetrain |
+| 7 | [A shooter, a camera and a turret](start/07-shooter-and-camera.md) | a flywheel and feeder, aiming with a camera | a shooter, a camera |
+
+Then: [the autonomous builder](../guides/autonomous-builder.md) (everything autonomous can do),
+[the finders](../guides/finders.md) (measure your numbers), and the [simulator](../guides/simulator.md).
+
+## Under the hood: how it works
+
+These tutorials build the same things by hand, with the library's building blocks. Do them to learn
+how a robot program works inside (what a PID is, what a bulk read is, why software limits do not
+replace hard stops), or when you need a part that has no five-files module. Each has a complete
+program.
 
 | # | Tutorial | You learn | Robot needed |
 | --- | --- | --- | --- |
-| 01 | [OpMode basics with the library](01-opmode-basics.md) | the shape of every program here, imports, fields, lambdas, `try`/`finally` | Control Hub + gamepad only |
+| 01 | [OpMode basics with the library](01-opmode-basics.md) | the shape of every program, imports, fields, lambdas, `try`/`finally` (Java basics) | Control Hub + gamepad only |
 | 02 | [Motors and servos](02-motors-and-servos.md) | `MotorSetup`, `ServoSetup`, `Hw`, encoders, servo ranges | 1 motor, 1 servo |
-| 03 | [Buttons](03-buttons.md) | every kind of binding, toggles with rumble, triggers, choosing from a list | gamepad only |
+| 03 | [Buttons](03-buttons.md) | `ControllerBindings`: every kind of binding, toggles with rumble, triggers | gamepad only |
 | 04 | [Drive a mecanum robot](04-drive-mecanum.md) | `MecanumDrive`, stick shaping, slow mode, field-centric, reverse | mecanum chassis |
 | 05 | [Drive a standard (tank) robot](05-drive-tank.md) | `TankDrive`, arcade vs tank style, 2 or 4 motors | standard chassis |
 | 06 | [A fast, clear loop](06-fast-clear-loop.md) | bulk reads, `LoopTimer`, telemetry layout | any drivetrain |
-| 07 | [PID: hold a lift at a height](07-pid-lift.md) | `PidController`, live tuning from the gamepad | a lift with an encoder |
-| 08 | [A lift that cannot hurt itself](08-safe-lift.md) | `SafeMotor`: soft limits, homing, slow zone, set heights + hand control | a lift (+ bottom switch) |
-| 09 | [Your first autonomous](09-first-auto.md) | `AutoDrive`, shared `RobotSettings`, tuning distance and turns | any drivetrain |
-| 10 | [Autonomous with mechanisms](10-auto-with-mechanisms.md) | loop hook, results, choosing the plan in INIT, mirroring red/blue, pose handoff | drivetrain + lift |
-| 11 | [Driver assists](11-driver-assists.md) | heading snap with PID, `AimRumble`, smooth starts with `SlewRateLimiter` | mecanum + IMU |
-| 12 | [Organize a whole robot](12-robot-structure.md) | `Robot` and subsystem classes, a short TeleOp and auto that share them | drivetrain, lift, claw |
+| 07 | [PID: hold a lift at a height](07-pid-lift.md) | what P, I, D and F do; `PidController`; live tuning | a lift with an encoder |
+| 08 | [A lift that cannot hurt itself](08-safe-lift.md) | `SafeMotor`: soft limits, homing, slow zone; why hard stops still matter | a lift (+ bottom switch) |
+| 09 | [Your first autonomous](09-first-auto.md) | `AutoDrive`, tuning distance and turns | any drivetrain |
+| 10 | [Autonomous with mechanisms](10-auto-with-mechanisms.md) | loop hook, results, INIT choices, mirroring, pose handoff, by hand | drivetrain + lift |
+| 11 | [Driver assists](11-driver-assists.md) | heading snap with PID, `AimRumble`, `SlewRateLimiter` | mecanum + IMU |
+| 12 | [Organize a whole robot](12-robot-structure.md) | `Robot` and subsystem classes by hand (what five files does for you) | drivetrain, lift, claw |
 | 13 | [Test your code without a robot](13-testing.md) | JUnit tests for team code, run on a laptop | none |
-| 14 | [Mechanism helpers](14-mechanisms.md) | `PositionMotor`, `SpinMotor`, `PositionServo`, `SpinServo`, `Subsystems` | lift, servo, intake |
+| 14 | [Mechanism helpers](14-mechanisms.md) | `PositionMotor`, `SpinMotor`, `PositionServo`, `SpinServo`, `Subsystems`: what the modules are made of | lift, servo, intake |
 | 15 | [Telemetry, profiles and tuning](15-telemetry-profiles-tuning.md) | driver vs debug telemetry, practice/competition, live tuning, match timer | a lift |
-| 16 | [Easy autonomous](16-easy-autos.md) | `EasyAuto`: steps, INIT choices, mirroring, park time, the report | tuned drivetrain + lift + claw |
-| 17 | [Launcher](17-launcher.md) | flywheel, hood, feeder, shot table, `Launcher` | a shooter |
+| 16 | [Easy autonomous](16-easy-autos.md) | `EasyAuto`, the layer under the five-files autonomous | tuned drivetrain + lift + claw |
+| 17 | [Launcher](17-launcher.md) | flywheel, hood, feeder, shot table, by hand | a shooter |
 | 18 | [Vision aiming](18-vision-aim.md) | webcam or Limelight 3A through one interface, safe aiming | camera + drivetrain |
-| 19 | [Testing procedures](19-testing-procedures.md) | the Hardware Check and a testing order that finds problems early | any robot |
-| 20 | [Easy TeleOp](20-easy-teleop.md) | `EasyTeleOp`: driving, timer and menu for free; add buttons and mechanisms; one `RobotConfig` for TeleOp and auto | drivetrain + lift + claw |
+| 19 | [Testing procedures](19-testing-procedures.md) | the Hardware Check and a testing order (also in the main track) | any robot |
+| 20 | [Easy TeleOp](20-easy-teleop.md) | `EasyTeleOp`, the layer under `Controls.java` (also used by the [starter kit](../starter-kit.md)) | drivetrain + lift + claw |
 | 21 | [Find your numbers](21-finders.md) | the finders: servo ends, lift limits, flywheel gains, wheel size, camera offset, shot table | the parts to measure |
-| 22 | [The robot in five files](22-robot-in-five-files.md) | `Robot.java`, `Tunables.java`, `Controls.java`, `Actions.java`, autos: modules with their numbers and buttons; make them from your configuration; the simulator robot file from the code | none, then your robot |
-
-**Two paths.** Tutorials 01-13 teach how things work by building them yourself. Tutorials 14-21 use
-the ready-made helpers that do the same work for you. New programmers: do 01-06, then jump to 14.
-Want the whole robot fast? [Tutorial 22](22-robot-in-five-files.md): the robot in five files, made from your configuration
-(or the older [starter kit](../starter-kit.md)).
 
 Time: about 30-60 minutes each, more for 07, 09 and 12 (tuning takes time).
 
