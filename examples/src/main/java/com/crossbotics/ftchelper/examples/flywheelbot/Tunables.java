@@ -47,7 +47,10 @@ public class Tunables {
         public static double travelSec = 1.0;
     }
 
-    /** Distances and speeds for the autonomous programs, tuned like the rest. */
+    /**
+     * Distances and speeds for the autonomous programs, tuned like the rest: they are in the tuning
+     * menu too ("Auto/leaveInches"), and the autonomous uses a saved value at its next INIT.
+     */
     public static class Auto {
         public static double leaveInches = 24, leavePower = 0.6;
     }

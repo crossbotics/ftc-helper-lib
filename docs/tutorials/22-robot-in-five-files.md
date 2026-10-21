@@ -107,7 +107,8 @@ public class Tunables {
 - **Tune on the robot:** in the PRACTICE profile, holding GUIDE for a second opens the tuning menu (D-pad to choose and
   change, A to save on the hub). At the next INIT the Driver Station lists every value that differs
   from this file, for example `Tunables.Launcher.speedRpm = 2750 (code 2679)`. Copy the good ones
-  into this file: the file stays the record.
+  into this file: the file stays the record. The `Auto` section is in the menu too (`Auto/backInches`):
+  tune it in the TeleOp, save, and the autonomous uses it at its next INIT.
 
 ## 3. Controls.java: the buttons (and the TeleOp)
 

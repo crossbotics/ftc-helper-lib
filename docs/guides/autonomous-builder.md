@@ -153,8 +153,10 @@ cannot finish (pushed into a wall, stuck) ends by itself, and the report says `S
 the inches are only right on a tuned robot.
 
 **Put route numbers in `Tunables.java`** (`Tunables.Auto.collectInches`): every number is in one place,
-named, and easy to find at an event. (A section that is not a part, like `Auto`, is not in the tuning
-menu: change it in the file and build again.)
+named, and easy to find at an event. A section that is not a part, like `Auto`, is in the tuning menu
+too: change `Auto/collectInches` in the TeleOp (PRACTICE profile, hold GUIDE 1 s), save with A, and run
+the autonomous again with no rebuild. Its INIT lists the values that differ from the file: copy the
+good ones back ([how](../modules/robot.md#tunablesjava)).
 
 ## 3. Mechanisms: run and wait
 
