@@ -162,4 +162,20 @@ public class OdometryTest {
         assertEquals(-60, otos.pos.y, E);
         assertEquals(90, otos.pos.h, E);
     }
+
+    // Review (Fable): a pose set while the Pinpoint calibrates is written once it is ready.
+    @Test public void aPoseSetWhileCalibratingIsWrittenWhenReady() {
+        FakePinpoint pp = new FakePinpoint();
+        PinpointOdometry o = new PinpointOdometry("pinpoint", pp, 0, 0, GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD, 0, false, false);
+        pp.status = GoBildaPinpointDriver.DeviceStatus.CALIBRATING;
+        o.setPose(new FieldPose(12, -60, 90));
+        o.update();
+        assertEquals(0, pp.x, E);                    // not written yet
+        assertEquals(12, o.pose().x, E);             // but the pose is already the one we gave
+        pp.status = GoBildaPinpointDriver.DeviceStatus.READY;
+        o.update();
+        assertEquals(-60, pp.x, E);
+        assertEquals(-12, pp.y, E);
+        assertEquals(12, o.pose().x, E);
+    }
 }

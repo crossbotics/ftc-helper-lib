@@ -16,7 +16,6 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.IMU;
 import java.util.ArrayList;
 import java.util.List;
-import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit;
 
 /**
  * Checks and measures the odometry of the robot in five files (lesson 8): which way each pod counts,
@@ -59,7 +58,8 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
     // At the start of a test: the pose, the IMU heading added up, and the raw pod counts.
     private double imuTurnDeg, lastImu;
     private double[] podsAtStart, podsNow;
-    private double pinpointTurnAtStart;
+    // The turn since the test began, from the odometry's own heading (added up loop by loop).
+    private double odoTurnDeg, lastOdoH;
     private final List<DcMotorEx> pods = new ArrayList<>();
 
     @Override
@@ -80,6 +80,10 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
         if (spec.kindName().endsWith("Wheels")) {
             for (String n : spec.names()) pods.add(hardwareMap.get(DcMotorEx.class, n));
         }
+        // Dead wheels and the OTOS: the Spin test compares with the IMU.
+        if (imu == null && !spec.kindName().equals("pinpoint")) {
+            throw new IllegalStateException("Robot.java: the Odometry Tuner's Spin test needs the IMU: add .imu(...) to drive(...)");
+        }
     }
 
     @Override
@@ -95,8 +99,9 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
         odo.setPose(new FieldPose(0, 0, 0));
         imuTurnDeg = 0;
         lastImu = imuDeg();
-        podsAtStart = podCounts();
-        pinpointTurnAtStart = pinpointTurnRad();
+        odoTurnDeg = 0;
+        lastOdoH = 0;
+        podsAtStart = null;   // taken in the next loop, after the device has read fresh counts
         lastResult = "";
     }
 
@@ -107,6 +112,10 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
         imuTurnDeg += Angles.shortestDiff(h, lastImu);
         lastImu = h;
         podsNow = podCounts();
+        if (running >= 0 && podsAtStart == null) podsAtStart = podsNow.clone();
+        double oh = odo.pose().headingDeg;
+        odoTurnDeg += Angles.shortestDiff(oh, lastOdoH);
+        lastOdoH = oh;
         driving.update(gamepad1, 0.3);
     }
 
@@ -137,7 +146,9 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
         if (spec.kindName().equals("otos")) {
             results.set("odo:linear", "Tunables.Odometry: linearScalar = " + FinderResults.num(scale, 3) + "   // times the one in use now");
         } else if (Math.abs(scale - 1) > 0.02) {
-            lastResult += " More than 2% off: check the pod type (4-bar or swingarm) and the tape.";
+            lastResult += spec.kindName().equals("pinpoint")
+                    ? " More than 2% off: check the pod type (4-bar or swingarm) and the tape."
+                    : " More than 2% off: check ticksPerMm(...) for your pods, and the tape.";
         }
     }
 
@@ -153,7 +164,8 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
 
     private void spin() {
         double turnRad = Math.toRadians(imuTurnDeg);
-        if (spec.kindName().equals("pinpoint")) turnRad = pinpointTurnRad() - pinpointTurnAtStart;
+        if (spec.kindName().equals("pinpoint")) turnRad = Math.toRadians(odoTurnDeg);
+        if (podsAtStart == null) podsAtStart = podsNow;
         if (Math.abs(turnRad) < 2 * Math.PI) {
             lastResult = "Only " + FinderResults.num(Math.toDegrees(Math.abs(turnRad)) / 360, 1) + " turns: spin at least 3 (right stick).";
             return;
@@ -237,10 +249,6 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
         return out;
     }
 
-    private double pinpointTurnRad() {
-        return odo instanceof PinpointOdometry
-                ? ((PinpointOdometry) odo).device().getHeading(UnnormalizedAngleUnit.RADIANS) : 0;
-    }
 
     private double imuDeg() {
         return imu == null ? 0 : ImuSetup.headingDeg(imu);

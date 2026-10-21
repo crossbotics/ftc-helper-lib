@@ -13,7 +13,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.UnnormalizedAngleUnit
  *
  * <pre>{@code
  * // In Robot.java (the robot layer does this for you):
- * odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168).pods4Bar());
+ * odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));   // 4-bar pods unless .podsSwingarm()
  * }</pre>
  *
  * <p>The offsets (from the SDK): x = how far to the LEFT of the robot's centre the forward-measuring

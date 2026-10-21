@@ -27,6 +27,8 @@ public abstract class PoseTracker implements Subsystem {
     // Inches per second and degrees per second, this loop (for telemetry and "has it stopped?").
     private double speedInPerSec = 0, turnDegPerSec = 0;
     private final String name;
+    // A pose set while the device was not ready yet (a Pinpoint calibrating): written once it is.
+    private FieldPose pending = null;
 
     protected PoseTracker(String name) {
         this.name = name;
@@ -37,6 +39,11 @@ public abstract class PoseTracker implements Subsystem {
      */
     @Override
     public final void update() {
+        if (pending != null) {
+            if (!isReady()) return;   // keep the pose we were given until the device can take it
+            write(pending.y, -pending.x, pending.headingDeg);
+            pending = null;
+        }
         double[] p = read();
         if (p == null) return;
         // The device's own frame: X forward and Y left at heading 0 (goBILDA, SparkFun and dead
@@ -70,8 +77,10 @@ public abstract class PoseTracker implements Subsystem {
      * autonomous ended. Our frame (see the class).
      */
     public final void setPose(FieldPose p) {
+        // Not ready yet (calibrating after INIT): written as soon as it is (see update()).
+        if (!isReady()) pending = p.copy();
         // Back to the device's frame: X = our y, Y = -our x.
-        write(p.y, -p.x, p.headingDeg);
+        else write(p.y, -p.x, p.headingDeg);
         pose.x = p.x;
         pose.y = p.y;
         pose.headingDeg = Angles.wrapDegrees(p.headingDeg);

@@ -428,8 +428,14 @@ public class AutoDrive {
             PidController headingPid = new PidController(cfg.turnKp, 0, cfg.turnKd, 0, clockNanos)
                     .setAngleMode(true).setOutputLimits(-cfg.moveMaxTurnPower, cfg.moveMaxTurnPower);
             StallDetector stall = new StallDetector(cfg.stallProgressIn, cfg.stallTimeSec);
+            // In the last inches it moves slowly on purpose: "stuck" there means no progress for 2 s.
+            StallDetector nearStall = new StallDetector(0.1, 2.0);
+            boolean wasNear = false;
             double startDist = -1;
             int closeLoops = 0;
+            // The heading counts as there within 2 degrees (or the drive's own tolerance, if bigger).
+            double headingTol = Math.max(cfg.turnToleranceDeg, 2.0);
+            double minTurn = cfg.turnMinPower > 0 ? cfg.turnMinPower : DRIVE_TO_MIN_TURN;
             while (true) {
                 Result early = checkStop(deadline);
                 if (early != null) return early;
@@ -443,7 +449,7 @@ public class AutoDrive {
                 if (startDist < 0) startDist = Math.max(dist, 1e-6);
                 double headingErr = Angles.shortestDiff(headingDeg, p.headingDeg);
                 // There: close enough in place AND heading, for 3 loops in a row (no stopping on a pass-by).
-                if (dist <= toleranceIn && Math.abs(headingErr) <= cfg.turnToleranceDeg) {
+                if (dist <= toleranceIn && Math.abs(headingErr) <= headingTol) {
                     if (++closeLoops >= 3) return Result.DONE;
                 } else {
                     closeLoops = 0;
@@ -464,12 +470,19 @@ public class AutoDrive {
                 // PID output is counterclockwise; the drive's turn is clockwise.
                 double turn = -headingPid.calculate(headingDeg, p.headingDeg);
                 // A small turn is too weak to move the robot: at least DRIVE_TO_MIN_TURN until it is there.
-                if (Math.abs(headingErr) > cfg.turnToleranceDeg && Math.abs(turn) < DRIVE_TO_MIN_TURN) {
-                    turn = -Math.signum(headingErr) * DRIVE_TO_MIN_TURN;
+                if (Math.abs(headingErr) > headingTol && Math.abs(turn) < minTurn) {
+                    turn = -Math.signum(headingErr) * minTurn;
                 }
                 setPowers(MecanumMixer.mix(fwd, right, turn, powerLimit));
-                // Stuck only counts away from the point: the last inches are slow on purpose.
-                if (cfg.stallExitEnabled && dist > DRIVE_TO_NEAR_IN && stall.update(dist, seconds())) {
+                // Stuck: far away, the usual rule; in the last inches (slow on purpose), no progress for 2 s.
+                boolean near = dist <= DRIVE_TO_NEAR_IN;
+                if (near != wasNear) {
+                    stall.reset();
+                    nearStall.reset();
+                    wasNear = near;
+                }
+                boolean stuck = near ? dist > toleranceIn && nearStall.update(dist, seconds()) : stall.update(dist, seconds());
+                if (cfg.stallExitEnabled && stuck) {
                     log.accept("AutoDrive: driveTo stopped, robot stuck");
                     return Result.STALLED;
                 }

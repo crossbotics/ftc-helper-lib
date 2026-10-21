@@ -157,6 +157,10 @@ public final class Steps {
             throw new IllegalStateException("Steps: driveTo(\"" + label + "\") needs odometry: add an odometry(...) line "
                     + "to Robot.java (docs/modules/odometry.md)");
         }
+        if (!robot.drive().isMecanum()) {
+            throw new IllegalStateException("Steps: driveTo(\"" + label + "\") needs a mecanum drive (it drives sideways). "
+                    + "On a tank drive, use turnTo(...) and then move(...).");
+        }
         if (!adding()) return this;
         boolean simulator = "true".equals(System.getProperty(com.crossbotics.ftchelper.auto.EasyAuto.SIMULATOR_PROPERTY));
         if (!robot.odometryChecked() && !simulator) {

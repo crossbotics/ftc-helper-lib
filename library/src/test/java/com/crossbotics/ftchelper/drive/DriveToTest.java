@@ -54,7 +54,7 @@ public class DriveToTest {
         assertEquals(AutoDrive.Result.DONE, res);
         assertEquals(-10, x, 1.0);
         assertEquals(30, y, 1.0);
-        assertEquals(90, Angles.wrapDegrees(r.heading), c.turnToleranceDeg + 0.5);
+        assertEquals(90, Angles.wrapDegrees(r.heading), 2.5);   // driveTo: within 2 degrees
     }
 
     @Test public void aBumpIsCorrected() {

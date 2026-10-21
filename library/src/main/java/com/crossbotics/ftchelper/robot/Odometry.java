@@ -146,7 +146,7 @@ public final class Odometry {
     }
 
     private void need(Kind k, String what) {
-        if (kind != k) throw new IllegalStateException("Robot.java: " + what + "(...) is not for this kind of odometry (" + kind.name().toLowerCase(java.util.Locale.US) + ")");
+        if (kind != k) throw new IllegalStateException("Robot.java: " + what + "(...) is not for this kind of odometry (" + kindName() + ")");
     }
 
     /** "pinpoint", "otos", "threeWheels" or "twoWheels" (for the Odometry Tuner). */
