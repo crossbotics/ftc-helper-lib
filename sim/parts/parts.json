@@ -1177,6 +1177,18 @@
   ],
   "wheels": [
     {
+      "id": "gobilda-boot-72-rex",
+      "name": "goBILDA Boot-Wheel 72 mm (8 mm REX bore, 30A)",
+      "partNumber": "3615-4008-0072",
+      "seller": "goBILDA",
+      "url": "https://www.gobilda.com/3615-series-boot-wheel-8mm-rex-bore-72mm-diameter-30a-durometer",
+      "status": "sold out",
+      "diameterMm": 72,
+      "widthMm": null,
+      "checked": "2026-10-20",
+      "notes": "Silicone rubber (30A) on an acetal hex core, 14 g. Read on goBILDA's page and Core Electronics (GB-3615-4008-0072) through a web search; the page gives no width: give lengthMm."
+    },
+    {
       "id": "gobilda-gecko-48-rex",
       "name": "goBILDA GripForce Gecko Wheel 48 mm (8 mm REX bore, 30A)",
       "partNumber": "3613-4008-0048",

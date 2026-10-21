@@ -179,7 +179,9 @@ shape.flywheel = flywheel, at=-1,0,4, size=4x2x4, motor=flywheel
 ```
 
 Any shape can also take `tilt=DEG` (mounted at an angle on its parent, turned about the left-right line,
-front up +) and a roller `reversed=yes` (it turns the other way from its motor, through gears).
+front up +) and a roller `reversed=yes` (it turns the other way from its motor, through gears) or `soft=yes`
+(soft tubing or flaps that bend: game pieces touch it, the field does not stop it; it still counts for the
+size rules).
 
 | Type | What it is | Where `at` points | Moves by |
 | --- | --- | --- | --- |

@@ -49,6 +49,7 @@ final class SimWorld {
         final double friction;
         final Ball ball;          // set for a game piece
         boolean piecesOnly;       // a thin floor plate: only pieces hit it, the robot rolls over
+        boolean soft;             // a soft robot part (tubing roller): only pieces hit it, it bends past the field
 
         Tag(String name, boolean robot, double friction) {
             this(name, robot, false, friction, null);
@@ -299,6 +300,7 @@ final class SimWorld {
         for (int i = 0; i < pieces.size(); i++) {
             SimShapes.Piece p = pieces.get(i);
             DGeom g = robotParts.get(i);
+            ((Tag) g.getData()).soft = p.soft;
             // its size too (a claw's palm widens as it opens)
             ((org.ode4j.ode.DBox) g).setLengths(Math.max(0.005, p.sf * M), Math.max(0.005, p.sl * M), Math.max(0.005, p.su * M));
             // robot frame (f, l, u) -> body frame (x = right = -l, y = forward = f, z = up from the body centre)
@@ -410,6 +412,7 @@ final class SimWorld {
         if (!a.robot && !b.robot && !ballA && !ballB) return;          // field against field: never
         if ((a.robot && b.floor) || (b.robot && a.floor)) return;      // the robot is held at its height
         if ((a.robot && b.piecesOnly) || (b.robot && a.piecesOnly)) return;
+        if ((a.soft && !ballB) || (b.soft && !ballA)) return;           // soft tubing bends past the field
         Ball ball = ballA ? a.ball : ballB ? b.ball : null;
         boolean robotPart = a.robot || b.robot;
         if (ball != null && robotPart && time < ball.ignoreRobotUntil) return;

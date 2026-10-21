@@ -51,6 +51,7 @@ public final class Parts {
 
     // Copied from sim/parts/parts.json ("wheels": diameterMm, widthMm; "servos": id). PartsCatalogTest checks they match.
     static {
+        wheel("gobilda-boot-72-rex", 72, Double.NaN);
         wheel("gobilda-gecko-48-rex", 48, Double.NaN);
         wheel("gobilda-gecko-72", 72, 24);
         wheel("gobilda-hogback-96", 96, 24);

@@ -305,4 +305,16 @@ public class ShapesTest {
         };
         assertTrue(lines(r), lines(r).contains(", tilt=40"));
     }
+
+    @Test public void aSoftRollerSaysSo() {
+        RobotDefinition r = new RobotDefinition() {
+            @Override protected void define() {
+                drive(Drive.tank("l", "r"));
+                add(Intake.motor("intake").looks(Shape.roller("offset-tubing-90").atMm(200, 0, 40).lengthMm(300).soft(),
+                        Shape.roller("gobilda-boot-72-rex").name("spin").atMm(200, 160, 20).axis("up").lengthMm(25)));
+            }
+        };
+        assertTrue(lines(r), lines(r).contains(", soft=yes"));
+        assertTrue(lines(r), lines(r).contains("size=2.83x2.83x0.98, axis=up"));
+    }
 }

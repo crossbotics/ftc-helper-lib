@@ -35,6 +35,7 @@ final class SimShapes {
         final String motor, servo, crservo;
         final boolean reversed;         // reversed=yes: a roller that turns the other way from its motor (geared)
         final double tilt;              // tilt=DEG: mounted turned about its parent's left-right line (front up +)
+        final boolean soft;             // soft=yes: a soft roller (tubing): only game pieces touch it, not the field
         final String model, baseModel;  // CAD files (see SimCad): model= rides the moving part, baseModel= a slide's fixed stage
         final Double cadPose;           // the value the CAD was drawn at (cadPose=); null: the simulator's start
         // How the driver's position becomes inches (slide) or degrees (arm, turret) or a gap (claw):
@@ -71,6 +72,7 @@ final class SimShapes {
             crservo = s.get("crservo");
             reversed = s.containsKey("reversed") && s.get("reversed").equalsIgnoreCase("yes");
             tilt = s.containsKey("tilt") ? num(s, "tilt", name) : 0;
+            soft = s.containsKey("soft") && s.get("soft").equalsIgnoreCase("yes");
             model = s.get("model");
             baseModel = s.get("baseModel");
             if (baseModel != null && !type.equals("slide")) {
@@ -237,6 +239,7 @@ final class SimShapes {
         double run = 0;
         int flow = 0;
         boolean moving = false;
+        boolean soft = false;                  // a soft roller: the field does not stop it (pieces still touch it)
 
         Piece(String shape, String kind, String color, double[][] frame, double[] localCenter,
               double sf, double sl, double su, double spinDeg) {
@@ -646,6 +649,7 @@ final class SimShapes {
                     double motorWay = s.reversed ? -s.rate : s.rate;
                     pc.flow = inward == 0 || Math.abs(motorWay) < 1e-9 ? 0 : (Math.signum(motorWay) == inward ? 1 : -1);
                     pc.moving = !spinner && s.passive && Math.abs(s.rate) > 1e-6;
+                    pc.soft = s.soft;
                 }
             }
         }

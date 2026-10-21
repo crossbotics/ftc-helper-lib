@@ -70,6 +70,21 @@ public class SimWorldTest {
         assertTrue("pushed forward: y " + y, y > -15);
     }
 
+    @Test public void aSoftPartBendsPastTheFieldButTouchesPieces() throws Exception {
+        // the same low pole as below, soft (tubing): the HIVE base does not stop it, the chassis does
+        SimRobot r = robot("physics = engine\nshape.pole = box, at=20,0,2, size=1x1x1, soft=yes\n");
+        r.setPose(0, -60, 0);
+        push(r, 15, 0, 3.0);
+        assertTrue("stopped by the chassis, not the pole: y " + r.y, r.y > -24.73 - 20.5 + 5);
+        // it still pushes a piece
+        SimRobot q = robot("physics = engine\nshape.pole = box, at=20,0,2, size=1x1x1, soft=yes\n");
+        q.setPose(45, -60, 0);
+        q.pieces.place("POLLEN", 45, -36, 0);               // 4 in ahead of the pole
+        push(q, 15, 0, 1.5);
+        double y = (Double) q.pieces.drawn().stream().filter(d -> Math.abs((Double) d[1] - 45) < 6 && (Double) d[2] > -50).findFirst().get()[2];
+        assertTrue("pushed forward: y " + y, y > -30);
+    }
+
     @Test public void aPartHitsTheFieldTooAndThePhysicsCanBeOff() throws Exception {
         // a 1 in pole reaching 20 in in front of the robot, low (the chassis alone would stop at y -33.7)
         SimRobot r = robot("physics = engine\nshape.pole = box, at=20,0,2, size=1x1x1\n");

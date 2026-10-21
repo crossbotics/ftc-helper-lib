@@ -21,6 +21,8 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - Simulator physics: a FLOWER's bottom POLLEN is a real piece the robot can knock out (the next one drops
   in); rollers and spinners drag the pieces they touch at their surface speed; the robot rolls over a
   FLOWER's thin floor plate.
+- `Shape.soft()` / `soft=yes`: a soft roller (tubing) that bends past the field; pieces still touch it.
+- Parts catalog: goBILDA Boot-Wheel 72 mm (`gobilda-boot-72-rex`, 3615-4008-0072).
 - README: a simulator section with a picture.
 - README: how the library is made (experience plus AI: Claude, Codex, cross-model checking). Every docs page
   and the simulator page say it is a work in progress and link to GitHub issues for feedback.

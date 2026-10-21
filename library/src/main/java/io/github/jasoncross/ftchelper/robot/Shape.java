@@ -48,6 +48,7 @@ public final class Shape {
     private String note, color;
     private boolean reversed = false;
     private double tiltDeg = 0;
+    private boolean soft = false;
     // A passive part (gravity or springs): its range, where it starts, and what makes it drop.
     boolean passive = false;
     private double rangeMin = Double.NaN, rangeMax = Double.NaN, startAt = Double.NaN, travelIn = Double.NaN;
@@ -256,6 +257,15 @@ public final class Shape {
     }
 
     /**
+     * A soft roller (surgical tubing, flaps): it bends against the field, so in the simulator only game
+     * pieces touch it; the field does not stop it. It still counts for the size rules.
+     */
+    public Shape soft() {
+        soft = true;
+        return this;
+    }
+
+    /**
      * A roller that turns the other way from its motor, through gears (for example the left one of two
      * spinners geared to one intake shaft, so both pull pieces in).
      */
@@ -302,6 +312,7 @@ public final class Shape {
         if (passive) sb.append(passiveWords(lineName));
         if (reversed) sb.append(", reversed=yes");
         if (tiltDeg != 0) sb.append(", tilt=").append(n(tiltDeg));
+        if (soft) sb.append(", soft=yes");
         if (color != null) sb.append(", color=").append(color);
         List<String> notes = new ArrayList<>();
         if (!parts.isEmpty()) notes.add(joined(parts, " + "));
