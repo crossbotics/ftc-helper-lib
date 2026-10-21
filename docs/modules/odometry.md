@@ -7,6 +7,7 @@ is in `com.crossbotics.ftchelper.robot`).
 
 Learn it hands-on: [Lesson 7: Odometry](../tutorials/start/07-odometry.md). Worked example:
 [`examples/.../odometrybot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/odometrybot).
+Quick answers with code to copy: [cookbook: odometry and driveTo](../cookbook.md#odometry-and-driveto).
 
 **Odometry** tells the robot where it is on the field. Small unpowered wheels, called **pods**, roll
 on the tiles and count how far the robot moved forward and sideways. Or an **optical sensor** under

@@ -17,7 +17,8 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
 - `examples/` compiled example OpModes: `ExampleXxx`, the starter kit (`starter/`), one program per
   tutorial (`tutorials/`, tutorial 13's tests in `examples/src/test`), and robots in five files (the four kit bots
   `gobildabot/`, `revbot/`, `andymarkbot/`, `studicabot/`, and `lessonbot/`, `flywheelbot/`, `turretbot/`,
-  `odometrybot/`, `pedrobot/`, `quickstart/`; docs/templates.md lists them; main-track lesson 1 explains them; `SimFromRobotTest` runs them).
+  `odometrybot/`, `pedrobot/`, `quickstart/`; docs/templates.md lists them; main-track lesson 1 explains them; `SimFromRobotTest` runs them), and the cookbook's recipes (`cookbook/`, one file per topic,
+  shown in `docs/cookbook.md`; `CookbookTest` in `sim/` INITs and runs every cookbook OpMode).
 - `library/.../robot/` the five-files layer: `RobotDefinition` + modules built on the plain parts. A new
   module: extend `Module` (or `MotorPositions`/`ServoPositions`), read numbers through `TunableSection`,
   route every command through `touch()` (actions and the driver rely on it), add `suggestButtons` and
@@ -38,7 +39,9 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
     official field CAD by a script, not typed by hand.
 - `docs/` `modules/` (reference: every public class and method), `tutorials/` (hands-on lessons),
   `guides/` (how-to and checklists), `images/` (SVG diagrams), `starter-kit.md`, setup/update pages.
-- `tools/check_docs.py` checks links, heading links, class coverage and tutorial programs.
+- `tools/check_docs.py` checks links, heading links, class coverage, tutorial programs, and that every
+  java block in `docs/cookbook.md` matches its `// recipe: name` region in `examples/.../cookbook/`
+  (after changing one: `python3 tools/check_docs.py --fix-cookbook`).
 
 ## Rules: documentation is part of every change
 
@@ -61,8 +64,9 @@ Also keep current when relevant: `docs/troubleshooting.md` (new common problems)
 `docs/guides/testing.md` (checklists), `docs/starter-kit.md` and its files, and THIS file
 (when the layout or rules change).
 
-Code snippets inside Markdown are not compiled: when you change a program, update the matching
-snippets in its page. Check SVG diagrams by rendering them (e.g. `qlmanage -t -s 700 -o <dir> <file>.svg`).
+Code snippets inside Markdown are not compiled (except the cookbook's, checked against
+`examples/.../cookbook/`): when you change a program, update the matching snippets in its page. When
+an API changes, update the cookbook recipes that use it too; a new user-facing feature gets a recipe. Check SVG diagrams by rendering them (e.g. `qlmanage -t -s 700 -o <dir> <file>.svg`).
 
 ## Rules: code
 

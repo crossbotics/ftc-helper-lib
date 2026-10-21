@@ -6,6 +6,7 @@ Package: `com.crossbotics.ftchelper.pedro`, in the **`pedro`** folder (an option
 library never needs it). The step that uses it, `follow(...)`, is in `Steps`.
 
 New to path following? Start with [Lesson 8: Paths with Pedro Pathing](../tutorials/start/08-paths-with-pedro.md).
+Quick answers with code to copy: [cookbook: Pedro paths](../cookbook.md#pedro-paths).
 Worked example: [`examples/.../pedrobot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/pedrobot).
 Read [the odometry module](odometry.md) first: Pedro needs a working, checked odometry.
 

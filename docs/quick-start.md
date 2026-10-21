@@ -287,7 +287,8 @@ the robot project already builds:
 [Lesson 1: the robot in five files](tutorials/start/01-robot-in-five-files.md) explains what each of the five
 files is for. Then lessons 2 to 6 of the [main track](tutorials/README.md#start-here-the-main-track)
 add the drive in detail, buttons, mechanisms, actions and the first autonomous. After that, do only the
-lessons your robot needs (7 odometry, 8 paths, 9 a shooter).
+lessons your robot needs (7 odometry, 8 paths, 9 a shooter). A quick question
+("how do I add a claw?")? The [cookbook](cookbook.md) has short answers with code to copy.
 
 Your robot is a kit bot (goBILDA, REV, AndyMark, Studica), or like one of the example robots? Start
 from its code instead of an empty robot: [Pick your template](templates.md).

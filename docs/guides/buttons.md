@@ -214,6 +214,8 @@ line per gesture, and the button map lists every gesture.
 
 ## See also
 
+- [Cookbook: buttons and gestures](../cookbook.md#buttons-and-gestures): one question, a few tested lines, per job.
+
 - [Lesson 3: Buttons](../tutorials/start/03-buttons.md): the standard buttons each part brings.
 - [The robot module: ControlMap](../modules/robot.md#controlmap): every method in one table.
 - [Gamepad module](../modules/gamepad.md): the same jobs with `ControllerBindings`, without the five files.

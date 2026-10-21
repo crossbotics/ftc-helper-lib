@@ -58,6 +58,7 @@ part. You never write it ([From Blocks to Java](../blocks-to-java.md#the-key-ide
 | 9 | [A shooter, a camera and a turret](start/09-shooter-and-camera.md) (for robots that shoot) | a flywheel and feeder, aiming with a camera | lesson 6 done, a shooter, a camera |
 
 Then: [the button menu](../guides/buttons.md) (every way a button can work),
+[the cookbook](../cookbook.md) (short "how do I...?" answers with code to copy),
 [the autonomous builder](../guides/autonomous-builder.md) (everything autonomous can do),
 [the finders](../guides/finders.md) (measure your numbers), and the [simulator](../guides/simulator.md).
 

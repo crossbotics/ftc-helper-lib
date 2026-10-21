@@ -1,0 +1,9 @@
+# The cookbook's scenario example (docs/cookbook.md#how-do-i-test-my-code-with-a-script):
+# holding RT on gamepad 2 runs the intake, letting go stops it.
+init "Quick Start TeleOp"            # your TeleOp's name
+start
+hold g2.rt 1                         # hold RT (the intake runs while it is held)
+expect within 1 motor intake power > 0.5
+release g2.rt
+expect within 1 motor intake power = 0 0.01
+expect error none

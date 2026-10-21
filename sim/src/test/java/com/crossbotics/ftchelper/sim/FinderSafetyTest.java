@@ -140,6 +140,11 @@ public class FinderSafetyTest {
         EXPECTED.put("Odometry Bot To the Goal", "\"pinpoint\"");
         EXPECTED.put("Odometry Bot Odometry Tuner", "\"pinpoint\"");
         EXPECTED.put("Pedro Bot Curve to the Goal", "\"pinpoint\"");
+        // The cookbook's robot has a Pinpoint (CookbookTest runs its files on their own robot file).
+        EXPECTED.put("Cookbook TeleOp", "\"pinpoint\"");
+        EXPECTED.put("Cookbook Leave the Start", "\"pinpoint\"");
+        EXPECTED.put("Cookbook Odometry Tuner", "\"pinpoint\"");
+        EXPECTED.put("Cookbook Shot Tuner", "\"pinpoint\"");
     }
 
     @Test public void everyExampleStartsAndStopsCleanly() throws Exception {
