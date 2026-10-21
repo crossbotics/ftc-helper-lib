@@ -53,11 +53,13 @@ public class PedroLocalizer implements Localizer {
         if (lastNanos != 0) {
             double dt = (t - lastNanos) / 1e9;
             if (dt < 0.001) return;   // called twice in one loop: keep the speed from the first call
-            if (dt < 0.5) {
+            // More than 12 in in one loop is not driving: the pose was set (the start spot, setPose).
+            boolean jumped = Math.hypot(now.x() - pose.x(), now.y() - pose.y()) > 12;
+            if (dt < 0.5 && !jumped) {
                 double dh = Math.atan2(Math.sin(now.heading() - pose.heading()), Math.cos(now.heading() - pose.heading()));
                 velocity = new Velocity((now.x() - pose.x()) / dt, (now.y() - pose.y()) / dt, dh / dt);
             } else {
-                velocity = Velocity.zero();   // a long pause: the change says nothing about the speed now
+                velocity = Velocity.zero();   // a long pause or a jump: the change says nothing about the speed now
             }
         }
         pose = now;

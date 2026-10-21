@@ -27,8 +27,9 @@ import java.util.function.BiFunction;
  *
  * The drive motors come from the {@code drive(...)} line (names and which ones are reversed). The pose
  * comes from the {@code odometry(...)} line. No wheel gets more than the drive's power limit
- * ({@code Tunables.Drive.maxPower}, or {@code practiceMaxPower} in the PRACTICE profile). {@code PedroConstants.foresight} holds the numbers from
- * Pedro's own tuning OpModes. Docs: docs/modules/pedro.md
+ * ({@code Tunables.Drive.maxPower}, or {@code practiceMaxPower} in the PRACTICE profile).
+ * {@code PedroConstants.foresight} holds the numbers from Pedro's Foresight tuner (its web page on the
+ * robot). Docs: docs/modules/pedro.md
  */
 public final class Pedro {
     private Pedro() { }

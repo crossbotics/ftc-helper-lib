@@ -487,6 +487,8 @@ button (Robot tab). **Left**: drive left with the left stick (there is no push b
 
 You have finished the main track. From here:
 
+- [Lesson 9: Paths with Pedro Pathing](09-paths-with-pedro.md) (optional): smooth curves and lines, one after another.
+
 - [The odometry module](../../modules/odometry.md): every kind (OTOS, dead wheels), every setting, the frame.
 - [The autonomous builder](../../guides/autonomous-builder.md): everything an autonomous can do.
 - [The finders](../../guides/finders.md): measure every number instead of guessing.

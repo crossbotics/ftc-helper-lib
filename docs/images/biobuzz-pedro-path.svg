@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="840" height="880" viewBox="0 0 840 880" font-family="system-ui, sans-serif">
+<defs><marker id="head" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="context-stroke"/></marker></defs>
+<rect width="100%" height="100%" fill="#ffffff"/>
+<polygon points="60.0,780.0 780.0,780.0 780.0,60.0 60.0,60.0" fill="#e9ebee" stroke="#555" fill-opacity="1.00"/>
+<line x1="60.0" y1="780.0" x2="60.0" y2="60.0" stroke="#b8bcc4" stroke-width="1"/>
+<line x1="60.0" y1="780.0" x2="780.0" y2="780.0" stroke="#b8bcc4" stroke-width="1"/>
+<text x="60.0" y="798.0" font-size="13" text-anchor="middle" fill="#333">-72</text>
+<text x="54.0" y="784.0" font-size="13" text-anchor="end" fill="#333">-72</text>
+<line x1="180.0" y1="780.0" x2="180.0" y2="60.0" stroke="#b8bcc4" stroke-width="1"/>
+<line x1="60.0" y1="660.0" x2="780.0" y2="660.0" stroke="#b8bcc4" stroke-width="1"/>
+<text x="180.0" y="798.0" font-size="13" text-anchor="middle" fill="#333">-48</text>
+<text x="54.0" y="664.0" font-size="13" text-anchor="end" fill="#333">-48</text>
+<line x1="300.0" y1="780.0" x2="300.0" y2="60.0" stroke="#b8bcc4" stroke-width="1"/>
+<line x1="60.0" y1="540.0" x2="780.0" y2="540.0" stroke="#b8bcc4" stroke-width="1"/>
+<text x="300.0" y="798.0" font-size="13" text-anchor="middle" fill="#333">-24</text>
+<text x="54.0" y="544.0" font-size="13" text-anchor="end" fill="#333">-24</text>
+<line x1="420.0" y1="780.0" x2="420.0" y2="60.0" stroke="#b8bcc4" stroke-width="1"/>
+<line x1="60.0" y1="420.0" x2="780.0" y2="420.0" stroke="#b8bcc4" stroke-width="1"/>
+<text x="420.0" y="798.0" font-size="13" text-anchor="middle" fill="#333">0</text>
+<text x="54.0" y="424.0" font-size="13" text-anchor="end" fill="#333">0</text>
+<line x1="540.0" y1="780.0" x2="540.0" y2="60.0" stroke="#b8bcc4" stroke-width="1"/>
+<line x1="60.0" y1="300.0" x2="780.0" y2="300.0" stroke="#b8bcc4" stroke-width="1"/>
+<text x="540.0" y="798.0" font-size="13" text-anchor="middle" fill="#333">24</text>
+<text x="54.0" y="304.0" font-size="13" text-anchor="end" fill="#333">24</text>
+<line x1="660.0" y1="780.0" x2="660.0" y2="60.0" stroke="#b8bcc4" stroke-width="1"/>
+<line x1="60.0" y1="180.0" x2="780.0" y2="180.0" stroke="#b8bcc4" stroke-width="1"/>
+<text x="660.0" y="798.0" font-size="13" text-anchor="middle" fill="#333">48</text>
+<text x="54.0" y="184.0" font-size="13" text-anchor="end" fill="#333">48</text>
+<line x1="780.0" y1="780.0" x2="780.0" y2="60.0" stroke="#b8bcc4" stroke-width="1"/>
+<line x1="60.0" y1="60.0" x2="780.0" y2="60.0" stroke="#b8bcc4" stroke-width="1"/>
+<text x="780.0" y="798.0" font-size="13" text-anchor="middle" fill="#333">72</text>
+<text x="54.0" y="64.0" font-size="13" text-anchor="end" fill="#333">72</text>
+<polygon points="452.2,497.8 517.0,533.8 517.4,534.4 517.2,543.7 322.8,543.7 322.6,534.4 323.0,533.8 387.8,497.8 393.3,497.3 446.7,497.3" fill="#3b4148" stroke="none" fill-opacity="0.90"/>
+<polygon points="387.8,342.1 323.0,306.2 322.6,305.6 322.8,296.3 517.2,296.3 517.4,305.6 517.0,306.2 452.2,342.1 446.7,342.6 393.3,342.6" fill="#3b4148" stroke="none" fill-opacity="0.90"/>
+<polygon points="440.2,495.3 399.8,495.3 398.5,492.8 398.5,347.0 399.8,344.6 440.2,344.6 441.5,347.0 441.5,492.8" fill="#3b4148" stroke="none" fill-opacity="0.30"/>
+<polygon points="294.9,479.8 309.3,434.7 312.5,431.2 314.9,431.2 525.1,431.2 527.5,431.2 530.7,434.7 545.0,479.8 545.0,487.7 530.7,532.7 527.5,536.2 525.1,536.2 314.9,536.2 312.5,536.2 309.3,532.7 294.9,487.7" fill="#c8322a" stroke="none" fill-opacity="0.30"/>
+<polygon points="294.9,352.2 309.3,307.2 312.5,303.8 314.9,303.7 525.1,303.7 527.5,303.8 530.7,307.2 545.0,352.2 545.0,360.2 530.7,405.2 527.5,408.7 525.1,408.7 314.9,408.7 312.5,408.7 309.3,405.2 294.9,360.2" fill="#2a62c4" stroke="none" fill-opacity="0.30"/>
+<polygon points="749.3,291.9 750.9,291.1 759.0,288.4 769.9,286.3 776.1,286.4 779.0,288.9 779.0,317.1 776.0,319.6 770.0,319.7 759.0,317.7 750.5,314.9 748.1,311.6 748.1,294.4" fill="#f2c230" stroke="none" fill-opacity="0.90"/>
+<polygon points="291.9,90.7 291.1,89.1 288.4,81.0 286.3,70.1 286.4,63.9 288.9,61.0 317.1,61.0 319.6,64.0 319.7,70.1 317.7,81.0 314.9,89.5 311.6,91.9 294.4,91.9" fill="#f2c230" stroke="none" fill-opacity="0.90"/>
+<polygon points="548.1,749.3 548.9,750.9 551.6,759.0 553.7,769.9 553.6,776.1 551.1,779.0 522.8,779.0 520.3,776.0 520.3,770.0 522.3,759.0 525.1,750.5 528.4,748.1 545.6,748.1" fill="#f2c230" stroke="none" fill-opacity="0.90"/>
+<polygon points="90.7,548.1 89.1,548.9 81.0,551.6 70.1,553.7 63.9,553.6 61.0,551.1 61.0,522.8 64.0,520.3 70.1,520.3 81.0,522.3 89.5,525.1 91.9,528.4 91.9,545.6" fill="#f2c230" stroke="none" fill-opacity="0.90"/>
+<polygon points="187.0,715.5 300.5,715.5 300.5,772.9 187.0,772.9" fill="#d0312a" stroke="none" fill-opacity="0.35"/>
+<polygon points="760.5,657.0 770.5,657.0 770.5,770.5 760.5,770.5" fill="#d0312a" stroke="none" fill-opacity="0.35"/>
+<polygon points="539.5,67.1 653.0,67.1 653.0,124.5 539.5,124.5" fill="#2c62c8" stroke="none" fill-opacity="0.35"/>
+<polygon points="69.5,69.5 79.5,69.5 79.5,183.0 69.5,183.0" fill="#2c62c8" stroke="none" fill-opacity="0.35"/>
+<text x="420.0" y="520.0" font-size="13" text-anchor="middle" fill="#222">HIVE (red)</text>
+<text x="420.0" y="320.0" font-size="13" text-anchor="middle" fill="#222">HIVE (blue)</text>
+<text x="535.0" y="735.0" font-size="13" text-anchor="middle" fill="#222">FLOWER</text>
+<text x="80.0" y="535.0" font-size="13" text-anchor="middle" fill="#222">FLOWER</text>
+<text x="245.0" y="740.0" font-size="13" text-anchor="middle" fill="#222">red loading zone</text>
+<polyline points="140.0,725.0 180.0,670.0" fill="none" stroke="#1b5fa8" stroke-width="4"/>
+<polyline points="180.0,670.0 181.0,666.5 182.1,663.1 183.3,659.7 184.5,656.4 185.8,653.1 187.1,649.9 188.5,646.7 190.0,643.6 191.5,640.5 193.1,637.5 194.8,634.5 196.5,631.6 198.3,628.7 200.1,625.9 202.0,623.1 204.0,620.4 206.0,617.7 208.1,615.1 210.3,612.5 212.5,610.0 214.8,607.5 217.1,605.1 219.5,602.7 222.0,600.4 224.5,598.1 227.1,595.9 229.8,593.7 232.5,591.6 235.3,589.5 238.1,587.5 241.0,585.5 244.0,583.6 247.0,581.7 250.1,579.9 253.3,578.1 256.5,576.4 259.8,574.7 263.1,573.1 266.5,571.5 270.0,570.0" fill="none" stroke="#1b5fa8" stroke-width="4"/>
+<polyline points="180.0,670.0 200.0,600.0 270.0,570.0" fill="none" stroke="#1b5fa8" stroke-width="1" stroke-dasharray="4 4"/>
+<circle cx="200.0" cy="600.0" r="5" fill="none" stroke="#1b5fa8" stroke-width="2"/>
+<text x="214.0" y="630.0" font-size="13" fill="#1b5fa8">control point (-44, -36)</text>
+<circle cx="180.0" cy="670.0" r="4" fill="#1b5fa8"/>
+<text x="188.0" y="684.0" font-size="13" fill="#1b5fa8">part 1 ends, part 2 starts (-48, -50)</text>
+<polyline points="270.0,570.0 140.0,600.0" fill="none" stroke="#5b2a86" stroke-width="2" stroke-dasharray="6 4"/>
+<circle cx="140.0" cy="725.0" r="7" fill="#1b7f3b"/>
+<line x1="140.0" y1="725.0" x2="140.0" y2="680.0" stroke="#1b7f3b" stroke-width="4" marker-end="url(#head)"/>
+<text x="155.0" y="710.0" font-size="15" font-weight="600" fill="#1b7f3b">start (-56, -61), heading 0</text>
+<circle cx="270.0" cy="570.0" r="7" fill="#c05600"/>
+<line x1="270.0" y1="570.0" x2="238.2" y2="538.2" stroke="#c05600" stroke-width="4" marker-end="url(#head)"/>
+<text x="280.0" y="590.0" font-size="15" font-weight="600" fill="#c05600">goal (-30, -30), heading 45, hold</text>
+<circle cx="140.0" cy="600.0" r="7" fill="#5b2a86"/>
+<line x1="140.0" y1="600.0" x2="140.0" y2="555.0" stroke="#5b2a86" stroke-width="4" marker-end="url(#head)"/>
+<text x="65.0" y="570.0" font-size="15" font-weight="600" fill="#5b2a86">park (-56, -36): driveTo</text>
+<circle cx="420.0" cy="420.0" r="4" fill="#000"/>
+<text x="426.0" y="414.0" font-size="13" fill="#000">(0, 0)</text>
+<text x="420.0" y="820.0" font-size="15" font-weight="600" text-anchor="middle" fill="#c8322a">your drivers stand here (this wall): x right, y away, heading 0 = facing away, + = left (counterclockwise)</text>
+</svg>

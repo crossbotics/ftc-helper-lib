@@ -52,6 +52,14 @@ public final class Steps {
         this.routine = routine;
         this.menu = menu;
         this.robot = robot;
+        // A path that holds its end point keeps driving after its step; any other driving step ends that
+        // hold first, so the follower and the step never drive the wheels at once.
+        if (routine != null && robot != null && robot.hasFollower()) {
+            routine.beforeDriving(() -> {
+                PathFollower f = robot.follower();
+                if (f != null && f.isHolding()) f.cancel();
+            });
+        }
     }
 
     // True when steps are being added (after START, and not inside a skipped onlyIf).

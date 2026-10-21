@@ -2,6 +2,8 @@ package com.crossbotics.ftchelper.pedro;
 
 import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
 import com.crossbotics.ftchelper.robot.PathFollower;
+import com.pedropathing.algorithm.Foresight;
+import com.pedropathing.algorithm.ForesightConfig;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.paths.Path;
 import com.pedropathing.revhub.drivetrains.Mecanum;
@@ -27,12 +29,27 @@ public class PedroFollower implements PathFollower {
     // The drive's brake/coast setting before a path (Pedro sets coast while it drives): put back after.
     private DcMotor.ZeroPowerBehavior savedZero = null;
     private boolean running = false;
+    // The hold at the end of a path: its time limit, when it started (0: not yet), its point (Pedro's frame).
+    private double holdLimitSec = 0;
+    private long holdStartNanos = 0;
+    private com.pedropathing.math.Pose holdPoint = null;
+    // A note for the Driver Station after a hold ran out of time, and until when it shows.
+    private String holdNote = "";
+    private long holdNoteUntil = 0;
+    private final java.util.function.LongSupplier clockNanos;
 
     public PedroFollower(Follower follower, PedroLocalizer localizer, List<DcMotor> driveMotors) {
+        this(follower, localizer, driveMotors, System::nanoTime);
+    }
+
+    /** With your own clock (for tests). */
+    public PedroFollower(Follower follower, PedroLocalizer localizer, List<DcMotor> driveMotors,
+                         java.util.function.LongSupplier clockNanos) {
+        this.clockNanos = clockNanos;
         this.follower = follower;
         this.localizer = localizer;
         this.driveMotors = driveMotors;
-        // At the end of a path: stop, do not hold the end point (the next step decides what to do).
+        // At the end of a path: stop, unless the path asks to hold its end (set per path in follow()).
         follower.holdEnd.set(false);
     }
 
@@ -50,13 +67,35 @@ public class PedroFollower implements PathFollower {
             throw new IllegalArgumentException("give a PedroPath (PedroPath.line(...) or .curve(...)) or a Pedro Path, not "
                     + (path == null ? "null" : path.getClass().getSimpleName()));
         }
+        if (path instanceof PedroPath && ((PedroPath) path).hasSpeedLimit() && foresight() == null) {
+            throw new IllegalArgumentException("maxSpeed(...) needs Pedro's Foresight follower (Pedro.follower(ForesightConfig))");
+        }
+    }
+
+    // Pedro's Foresight settings, or null with another algorithm.
+    private ForesightConfig foresight() {
+        return follower.algorithm() instanceof Foresight ? ((Foresight) follower.algorithm()).config : null;
     }
 
     @Override
     public void follow(Object path, boolean mirrorX) {
         check(path);
         // Pedro's own path: used as it is (in Pedro's frame, never mirrored).
-        Path p = path instanceof PedroPath ? ((PedroPath) path).build(mirrorX) : (Path) path;
+        Path p;
+        double hold = 0;
+        if (path instanceof PedroPath) {
+            PedroPath pp = (PedroPath) path;
+            final ForesightConfig cfg = foresight();
+            p = pp.build(mirrorX, cfg == null ? null : speed -> cfg.maxPathSpeed.at(speed));
+            hold = pp.holdSeconds();
+        } else {
+            p = (Path) path;
+        }
+        // Hold the end point only if the path asks for it (PedroPath.holdEnd()).
+        follower.holdEnd.set(hold > 0);
+        holdLimitSec = hold;
+        holdStartNanos = 0;
+        holdPoint = p.endPose();
         // Pedro sets plain power. Autonomous runs the drive motors at a set speed (RUN_USING_ENCODER),
         // which would change what Pedro's power means: plain power while the path runs.
         if (!running) {
@@ -79,13 +118,38 @@ public class PedroFollower implements PathFollower {
         if (!running) return;
         follower.update();
         // following(), not isBusy(): Pedro 3.0.1 kept isBusy() true after a path with holdEnd off
-        // (Pedro issue #191). The mode says the truth.
-        if (!follower.following()) finish();
+        // (Pedro issue #191). The mode says the truth. While it holds the end point, it keeps running.
+        if (!follower.following() && !follower.holding()) {
+            finish();
+            return;
+        }
+        if (follower.holding()) {
+            long now = clockNanos.getAsLong();
+            if (holdStartNanos == 0) holdStartNanos = now;
+            // A time limit: a wedged robot must not push for the rest of autonomous.
+            if ((now - holdStartNanos) / 1e9 > holdLimitSec) {
+                finish();
+                holdNote = String.format(Locale.US, "Path: the hold ended after %.0f s (its limit)", holdLimitSec);
+                holdNoteUntil = now + 3_000_000_000L;
+            }
+        }
+    }
+
+    /** How far the robot is from the point it holds, inches (NaN when not holding). */
+    public double holdErrorIn() {
+        if (!isHolding() || holdPoint == null) return Double.NaN;
+        com.pedropathing.math.Pose at = localizer.state().pose();
+        return Math.hypot(at.x() - holdPoint.x(), at.y() - holdPoint.y());
     }
 
     @Override
     public boolean isBusy() {
         return running && follower.following();
+    }
+
+    @Override
+    public boolean isHolding() {
+        return running && follower.holding();
     }
 
     @Override
@@ -95,7 +159,7 @@ public class PedroFollower implements PathFollower {
 
     @Override
     public double remainingIn() {
-        return running ? follower.remainingDistance() : 0;
+        return running && follower.following() ? follower.remainingDistance() : 0;
     }
 
     @Override
@@ -136,6 +200,8 @@ public class PedroFollower implements PathFollower {
 
     @Override
     public void addTelemetry(RobotTelemetry t) {
-        if (running) t.line("Path", String.format(Locale.US, "%.0f in to go", follower.remainingDistance()));
+        if (!holdNote.isEmpty() && clockNanos.getAsLong() < holdNoteUntil) t.warn(holdNote);
+        if (isHolding()) t.line("Path", String.format(Locale.US, "holding the end (%.1f in off)", holdErrorIn()));
+        else if (running) t.line("Path", String.format(Locale.US, "%.0f in to go", follower.remainingDistance()));
     }
 }

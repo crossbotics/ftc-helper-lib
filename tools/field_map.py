@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Draws docs/images/biobuzz-field-map.svg: the BIOBUZZ field from above, in the library's frame as seen
+"""Draws docs/images/biobuzz-field-map.svg (lesson 8) and docs/images/biobuzz-pedro-path.svg (lesson 9): the BIOBUZZ field from above, in the library's frame as seen
 from the RED drivers' wall (x right, y away, inches; heading 0 = away, counterclockwise +), with the
 6 x 6 tiles, the field parts the simulator knows (sim/fields/biobuzz-2026.json) and lesson 8's three
-points. From the BLUE wall the numbers are the same: BIOBUZZ's field is turned half a turn.
+points (lesson 9: the Pedro example's path instead). From the BLUE wall the numbers are the same: BIOBUZZ's field is turned half a turn.
 
     python3 tools/field_map.py          (writes the file)
     python3 tools/field_map.py --check  (exit 1 if the file is out of date)
@@ -15,6 +15,7 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FIELD = os.path.join(ROOT, "sim", "fields", "biobuzz-2026.json")
 OUT = os.path.join(ROOT, "docs", "images", "biobuzz-field-map.svg")
+OUT_PEDRO = os.path.join(ROOT, "docs", "images", "biobuzz-pedro-path.svg")
 
 S = 5.0          # pixels per inch
 M = 60           # margin, pixels
@@ -44,7 +45,25 @@ def arrow(x, y, heading_deg, color, label, dx=6, dy=-6):
     return "\n".join(out)
 
 
-def build():
+def bezier(pts, n=40):
+    # Points along a Bezier curve (de Casteljau), for drawing.
+    out = []
+    for i in range(n + 1):
+        t = i / n
+        q = list(pts)
+        while len(q) > 1:
+            q = [(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t) for a, b in zip(q, q[1:])]
+        out.append(q[0])
+    return out
+
+
+def polyline(points, color, width=4, dash=None):
+    d = " ".join("%.1f,%.1f" % px(x, y) for x, y in points)
+    return '<polyline points="%s" fill="none" stroke="%s" stroke-width="%d"%s/>' % (
+        d, color, width, ' stroke-dasharray="%s"' % dash if dash else "")
+
+
+def build(pedro=False):
     f = json.load(open(FIELD))
     w = h = int(2 * M + 2 * HALF * S)
     out = ['<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" viewBox="0 0 %d %d" '
@@ -83,10 +102,26 @@ def build():
     for x, y, t in labels:
         lx, ly = px(x, y)
         out.append('<text x="%.1f" y="%.1f" font-size="13" text-anchor="middle" fill="#222">%s</text>' % (lx, ly, t))
-    # Lesson 8's points (odometrybot/autos/ToTheGoal.java and Tunables.Auto).
-    out.append(arrow(-56, -61, 0, "#1b7f3b", "start (-56, -61), heading 0"))
-    out.append(arrow(-30, -30, 45, "#c05600", "goal (-30, -30), heading 45", dx=4, dy=-8))
-    out.append(arrow(-56, -36, 0, "#5b2a86", "park (-56, -36), heading 0", dx=4, dy=-4))
+    if pedro:
+        # Lesson 9: pedrobot/autos/CurveToTheGoal.java. Part 1 a line, part 2 a curve; then driveTo park.
+        out.append(polyline([(-56, -61), (-48, -50)], "#1b5fa8"))
+        out.append(polyline(bezier([(-48, -50), (-44, -36), (-30, -30)]), "#1b5fa8"))
+        out.append(polyline([(-48, -50), (-44, -36), (-30, -30)], "#1b5fa8", 1, "4 4"))
+        cx, cy = px(-44, -36)
+        out.append('<circle cx="%.1f" cy="%.1f" r="5" fill="none" stroke="#1b5fa8" stroke-width="2"/>' % (cx, cy))
+        out.append('<text x="%.1f" y="%.1f" font-size="13" fill="#1b5fa8">control point (-44, -36)</text>' % (cx + 14, cy + 30))
+        jx, jy = px(-48, -50)
+        out.append('<circle cx="%.1f" cy="%.1f" r="4" fill="#1b5fa8"/>' % (jx, jy))
+        out.append('<text x="%.1f" y="%.1f" font-size="13" fill="#1b5fa8">part 1 ends, part 2 starts (-48, -50)</text>' % (jx + 8, jy + 14))
+        out.append(polyline([(-30, -30), (-56, -36)], "#5b2a86", 2, "6 4"))
+        out.append(arrow(-56, -61, 0, "#1b7f3b", "start (-56, -61), heading 0"))
+        out.append(arrow(-30, -30, 45, "#c05600", "goal (-30, -30), heading 45, hold", dx=4, dy=8))
+        out.append(arrow(-56, -36, 0, "#5b2a86", "park (-56, -36): driveTo", dx=-30, dy=-12))
+    else:
+        # Lesson 8's points (odometrybot/autos/ToTheGoal.java and Tunables.Auto).
+        out.append(arrow(-56, -61, 0, "#1b7f3b", "start (-56, -61), heading 0"))
+        out.append(arrow(-30, -30, 45, "#c05600", "goal (-30, -30), heading 45", dx=4, dy=-8))
+        out.append(arrow(-56, -36, 0, "#5b2a86", "park (-56, -36), heading 0", dx=4, dy=-4))
     # The axes and the drivers.
     ox, oy = px(0, 0)
     out.append('<circle cx="%.1f" cy="%.1f" r="4" fill="#000"/>' % (ox, oy))
@@ -100,14 +135,15 @@ def build():
 
 
 def main():
-    text = build()
+    files = [(OUT, build()), (OUT_PEDRO, build(pedro=True))]
     if "--check" in sys.argv:
-        ok = os.path.exists(OUT) and open(OUT).read() == text
-        print("Field map is up to date." if ok else "Field map is out of date: run python3 tools/field_map.py")
+        ok = all(os.path.exists(f) and open(f).read() == t for f, t in files)
+        print("Field maps are up to date." if ok else "Field maps are out of date: run python3 tools/field_map.py")
         sys.exit(0 if ok else 1)
-    os.makedirs(os.path.dirname(OUT), exist_ok=True)
-    open(OUT, "w").write(text)
-    print("wrote " + os.path.relpath(OUT, ROOT))
+    for f, t in files:
+        os.makedirs(os.path.dirname(f), exist_ok=True)
+        open(f, "w").write(t)
+        print("wrote " + os.path.relpath(f, ROOT))
 
 
 if __name__ == "__main__":

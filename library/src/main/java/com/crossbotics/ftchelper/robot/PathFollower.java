@@ -25,7 +25,15 @@ public interface PathFollower extends Subsystem {
     /** True while it is following (not yet at the end). */
     boolean isBusy();
 
-    /** Stops following now and stops the wheels. */
+    /**
+     * True while it holds the end point of a path after its step ended (a path that asked for it). The
+     * next driving step, a new path or the end of the OpMode ends the hold.
+     */
+    default boolean isHolding() {
+        return false;
+    }
+
+    /** Stops following (or holding) now and stops the wheels. */
     void cancel();
 
     /** Inches left to the end of the path (for "stuck" checks). */

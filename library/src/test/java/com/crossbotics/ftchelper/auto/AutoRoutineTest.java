@@ -161,4 +161,19 @@ public class AutoRoutineTest {
         assertEquals("Never true: cut short (time for park)", r.getReport().get(0));
         assertEquals("Park: done", r.getReport().get(1));
     }
+
+    // A path follower's hold must end before another step drives the wheels (beforeDriving).
+    @Test public void beforeDrivingRunsAtEachDrivingStepOnly() {
+        Sim s = new Sim();
+        MatchTimer timer = new MatchTimer(30, s.clock::get);
+        timer.start();
+        List<String> order = new ArrayList<>();
+        AutoRoutine r = s.routine(timer).beforeDriving(() -> order.add("release"))
+                .run("A", () -> order.add("A"))
+                .move("Drive", 6, 0, 0.6)
+                .waitFor("Pause", 0.1)
+                .turn("Turn", 10, 0.5);
+        r.runAll();
+        assertEquals("[A, release, release]", order.toString());
+    }
 }

@@ -5,6 +5,7 @@
 Package: `com.crossbotics.ftchelper.pedro`, in the **`pedro`** folder (an optional add-on: the core
 library never needs it). The step that uses it, `follow(...)`, is in `Steps`.
 
+New to path following? Start with [Lesson 9: Paths with Pedro Pathing](../tutorials/start/09-paths-with-pedro.md).
 Worked example: [`examples/.../pedrobot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/pedrobot).
 Read [the odometry module](odometry.md) first: Pedro needs a working, checked odometry.
 
@@ -132,7 +133,7 @@ in degrees, 0 = facing away, counterclockwise + ([the frame](odometry.md#the-fra
 | --- | --- |
 | `PedroPath.line(x1, y1, x2, y2)` | a straight line |
 | `PedroPath.line(fromPose, toPose)` | a straight line, turning from the first heading to the second |
-| `PedroPath.curve(x1, y1, cx, cy, x2, y2)` | a smooth curve from (x1, y1) to (x2, y2). The control point (cx, cy) pulls the curve toward it; the robot does not drive through it. More control points: put more pairs in the middle |
+| `PedroPath.curve(x1, y1,  cx, cy,  x2, y2)` | a smooth curve from (x1, y1) to (x2, y2). The control point (cx, cy) pulls the curve toward it; the robot does not drive through it. More control points: put more pairs in the middle |
 
 **Then choose the heading** (one of these; the default is `facePath()`):
 
@@ -144,15 +145,56 @@ in degrees, 0 = facing away, counterclockwise + ([the frame](odometry.md#the-fra
 | `.facePathBackwards()` | faces along the path, back first |
 | `.facePoint(x, y)` | keeps facing a field point, e.g. the goal |
 
-**Each `follow` brakes to a stop at its end.** Two `follow` steps in a row stop between them (there
-are no path chains yet).
+**More options** (add them after the heading):
+
+| Code | What it does |
+| --- | --- |
+| `.then(otherPath)` | adds another part: the robot drives on with **no stop** between the parts. Start the next part where this one ends, at the same heading (or it turns fast at the join). If `otherPath` has `.holdEnd()`, the whole path holds |
+| `.maxSpeed(0.5)` | at most half of the robot's top speed on this part (Pedro's `maxPathSpeed`), e.g. near a field element. The limit starts where the part starts, so the robot brakes inside the part: give it room |
+| `.holdEnd()`, `.holdEnd(seconds)` | keeps holding the end point after the robot gets there, at most 5 s or your time ([hold](#hold-the-end-point)) |
+
+The heading and `maxSpeed` settings work on the **last part added so far**. `holdEnd()` works on the
+whole path. So write each part's settings right after that part:
+
+```java
+static final PedroPath TO_GOAL = PedroPath.line(-56, -61, -48, -50).keepHeading(0)   // part 1
+        .then(PedroPath.curve(-48, -50, -44, -36, -30, -30)).turnTo(0, 45)        // part 2
+        .maxSpeed(0.6)                                                            // part 2 only
+        .holdEnd();                                                               // the whole path
+```
+
+Without `then`, each `follow` brakes to a stop at its end: two `follow` steps in a row stop between them.
+
+### Hold the end point
+
+With `.holdEnd()`, the `follow` step still ends when the robot gets to the end, so the next steps run.
+But Pedro keeps the robot on that point: if a robot bumps it, Pedro pushes back. The hold ends at:
+
+- the next `follow` (the new path takes over),
+- the next driving step (`driveTo`, `move`, `turn`, `turnTo`): it ends the hold first, so the two
+  never drive the wheels at once,
+- the end of the autonomous,
+- its time limit: 5 s, or your own with `.holdEnd(seconds)`. **Why:** a robot wedged against
+  something must not push for the rest of autonomous. The Driver Station then shows
+  `Path: the hold ended after 5 s (its limit)`.
+
+`run`, `waitSeconds`, `waitUntil` and `alongside` do **not** end the hold: they do not drive the wheels.
+Your own `step(...)` or an action that drives the wheels does not end it either: call
+`robot.follower().cancel()` first.
+
+**A PedroPath never changes.** Every method (`then`, `turnTo`, `holdEnd`...) gives back a new path. So
+`TO_GOAL.then(...)` makes a longer path and leaves `TO_GOAL` as it was. `then` also checks that the
+next part starts where the path ends (within 0.5 in), and stops INIT if not.
+
+Use it for a step that needs the robot still, for example `waitSeconds` while it scores. The Driver
+Station shows `Path: holding the end (0.4 in off)`: how far the robot is from the point.
 
 **Mirroring:** with `mirrorForRed()` on, the path is mirrored for RED (x and headings flip), like
 every other step. Write it once.
 
 **Tip:** make each path once, as a `static final` field (see the example). It is the same every match.
 
-**Pedro's own paths:** `follow` also takes a Pedro `Path` (for example with Pedro's path modifiers).
+**Pedro's own paths:** `follow` also takes a Pedro `Path` (for example with Pedro's other path modifiers).
 Pedro's paths use **Pedro's** numbers, not ours ([the frame](#the-frame)), and they are **never
 mirrored**.
 
@@ -210,7 +252,7 @@ Tune in this order. Each step needs the one before it.
    - Run it as [Pedro's tuning page](https://pedropathing.com/docs/pathing/tuning/foresight) says
      (the robot's web page, "Foresight Procedure"). Copy the "Java" output into `PedroConstants`.
      **Copy the numbers back into `PedroConstants.java` every time**: the tuner does not change your code.
-4. **Test before you trust it:** run Pedro's "Tests" procedure (Line and Curve tests; add it to
+4. **Test before you trust it** (optional, but a good idea): run Pedro's "Tests" procedure (Line and Curve tests; add it to
    `Tuning.java` the same way, from Pedro's [testing page](https://pedropathing.com/docs/pathing/tuning/test)),
    then one `follow` step at low power (the PRACTICE profile).
 
@@ -218,6 +260,9 @@ Tune in this order. Each step needs the one before it.
 it). The tuning library asks for an older Pedro (3.0.x); this module asks for 3.0.2. Gradle uses the
 newer one, 3.0.2. That is correct: do not change it back. The `repo.dairy.foundation` line is needed:
 the tuning library gets one of its parts (Sloth) from there. (Checked 2026-10-21.)
+
+**The tuner drives at full power.** It uses Pedro's own drivetrain, without the library's power
+limit (`practiceMaxPower`). Give it room, and keep a hand on STOP.
 
 **Skip Pedro's localization tuners.** Your `odometry(...)` line is already tuned by step 2, and
 `PedroTuning.localizer` uses it.
@@ -243,9 +288,9 @@ c.headingDeviationTolerance.set(Math.toRadians(5));          // 5 degrees
 1. The odometry reads the device (first of all parts).
 2. `PedroLocalizer` copies that pose for Pedro and works out the speed from the change since the last
    loop (Pedro brakes using the speed).
-3. **Only while a path runs:** Pedro's Follower works out the wheel powers and sets them.
+3. **Only while a path runs or holds its end:** Pedro's Follower works out the wheel powers and sets them.
 
-When no path runs, Pedro sets nothing. So it never fights TeleOp driving or a `driveTo` step.
+When no path runs or holds, Pedro sets nothing. So it never fights TeleOp driving or a `driveTo` step.
 
 **The power limit:** no wheel gets more than the drive's limit (`Tunables.Drive.maxPower`, or
 `practiceMaxPower` in the PRACTICE profile), as with every other drive in the library.
@@ -257,10 +302,9 @@ purpose). After the path, the robot's own setting (brake) comes back.
 Pedro expects plain power. So during a path the motors are switched to `RUN_WITHOUT_ENCODER`, and
 put back after it.
 
-**At the end of a path** the wheels stop. Pedro does not hold the end point (the next step decides
-what the robot does).
+**At the end of a path** the wheels stop, unless the path asks to [hold the end](#hold-the-end-point).
 
-**Telemetry:** `Path: 18 in to go` while a path runs.
+**Telemetry:** `Path: 18 in to go` while a path runs; `Path: holding the end (0.4 in off)` while it holds.
 
 ---
 
@@ -273,10 +317,8 @@ what the robot does).
 | Pedro's Mecanum settings from your drive line | `Pedro.mecanumConfig(robot.drive())` |
 | the pose for Pedro in a tool with no robot loop | `PedroTuning.localizer(Robot::new)` |
 
-**Not in this module yet:** holding the end point, path chains (several paths with no stop between
-them), a speed limit per path, and Pedro's path modifiers. Pedro's Follower is updated only during a
-`follow` step, so a `hold(...)` you start yourself does not run. For these, use Pedro directly in your
-own OpMode for now.
+**Pedro commands you start yourself** (`Pedro.of(robot).hold(...)`, `manual(...)`) do not run: Pedro's
+Follower is updated only during a `follow` step and its hold. Use `.holdEnd()` for a hold.
 
 ---
 

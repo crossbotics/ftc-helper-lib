@@ -239,7 +239,9 @@ s.start("Against our wall, in the left corner tile, facing the field", -56, -61,
  .follow("Park", PedroPath.curve(-30, -30, -50, -24, -56, -36).keepHeading(0));
 ```
 
-The same field numbers and mirroring as `driveTo`, and the same "skipped until
+A path can have several parts with no stop between them (`.then(...)`), a speed limit per part
+(`.maxSpeed(0.5)`), and can hold its end point while the next steps run (`.holdEnd()`, at most 5 s; the next
+`follow` or driving step ends the hold; `run`, `waitSeconds` and `waitUntil` do not). The same field numbers and mirroring as `driveTo`, and the same "skipped until
 `Tunables.Odometry.checked`" rule. It ends `done`, `timed out` (10 s, or your own limit), `STALLED`
 or `NO_ODOMETRY`, and the next steps still run. Pedro decides when it is close enough (2.5 in by
 default). Details, tuning and the report words: [pedro module](../modules/pedro.md#follow-the-autonomous-step).

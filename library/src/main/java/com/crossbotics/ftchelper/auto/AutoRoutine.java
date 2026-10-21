@@ -68,6 +68,7 @@ public class AutoRoutine {
     private LongSupplier clock = System::nanoTime;
     // ---- Setup choices (null / 0 = not given) ----
     private AutoDrive drive = null;
+    private final java.util.List<Runnable> beforeDriving = new java.util.ArrayList<>();
     private Subsystem robot = null;
     private RobotTelemetry telemetry = null;
     private MatchTimer timer = null;
@@ -176,23 +177,23 @@ public class AutoRoutine {
      * @param maxPower    0 to 1
      */
     public AutoRoutine move(String label, double distanceIn, double directionDeg, double maxPower) {
-        return add(label, ctx -> record(needDrive().move(distanceIn, m(directionDeg), maxPower)));
+        return add(label, ctx -> record(takeDrive().move(distanceIn, m(directionDeg), maxPower)));
     }
 
     /** Turns by an amount, in degrees: positive = left (mirrored for RED). */
     public AutoRoutine turn(String label, double degrees, double maxPower) {
-        return add(label, ctx -> record(needDrive().turn(m(degrees), maxPower)));
+        return add(label, ctx -> record(takeDrive().turn(m(degrees), maxPower)));
     }
 
     /** Turns to a heading (0 = the direction at the start, positive = left; mirrored for RED). */
     public AutoRoutine turnTo(String label, double headingDeg, double maxPower) {
-        return add(label, ctx -> record(needDrive().turnTo(m(headingDeg), maxPower)));
+        return add(label, ctx -> record(takeDrive().turnTo(m(headingDeg), maxPower)));
     }
 
     /** Drives in a field direction while turning to a heading (mecanum only). Both angles are mirrored for RED. */
     public AutoRoutine moveWithTurn(String label, double distanceIn, double fieldDirectionDeg,
                                     double headingDeg, double maxPower, double maxTurnPower) {
-        return add(label, ctx -> record(needDrive().moveWithTurn(distanceIn, m(fieldDirectionDeg),
+        return add(label, ctx -> record(takeDrive().moveWithTurn(distanceIn, m(fieldDirectionDeg),
                 m(headingDeg), maxPower, maxTurnPower)));
     }
 
@@ -210,7 +211,7 @@ public class AutoRoutine {
     /** {@link #driveTo(String, java.util.function.Supplier, double, double, double, double, double)}; stops if {@code ready} turns false. */
     public AutoRoutine driveTo(String label, java.util.function.Supplier<com.crossbotics.ftchelper.util.FieldPose> pose,
                                BooleanSupplier ready, double xIn, double yIn, double headingDeg, double maxPower, double toleranceIn) {
-        return add(label, ctx -> record(needDrive().driveTo(pose, ready, m(xIn), yIn, m(headingDeg), maxPower, toleranceIn)));
+        return add(label, ctx -> record(takeDrive().driveTo(pose, ready, m(xIn), yIn, m(headingDeg), maxPower, toleranceIn)));
     }
 
     /** Remembers the heading now, for {@link #returnToHeading}. */
@@ -223,7 +224,7 @@ public class AutoRoutine {
         return add(label, ctx -> {
             if (Double.isNaN(storedHeading)) { note("no heading remembered"); return; }
             // not mirrored with m(): the saved heading was measured on the real robot, so it is already right
-            record(needDrive().turnTo(storedHeading, maxPower));
+            record(takeDrive().turnTo(storedHeading, maxPower));
         });
     }
 
@@ -435,6 +436,23 @@ public class AutoRoutine {
     }
 
     // The drive, or a clear error message if a move/turn step was added without one.
+    /**
+     * Code to run when a step starts driving the wheels (move, turn, driveTo...). The robot layer uses it
+     * to end a path follower's hold at the end of a path, so the two never drive the wheels at once.
+     * Each call adds one more; they run in order.
+     */
+    public AutoRoutine beforeDriving(Runnable hook) {
+        if (hook != null) beforeDriving.add(hook);
+        return this;
+    }
+
+    // A drive step starts: the hook first (see beforeDriving).
+    private AutoDrive takeDrive() {
+        AutoDrive d = needDrive();
+        for (Runnable r : beforeDriving) r.run();
+        return d;
+    }
+
     private AutoDrive needDrive() {
         if (drive == null) throw new IllegalStateException("This step needs a drive: call routine.drive(autoDrive) first");
         return drive;

@@ -71,6 +71,12 @@ Nothing old changes: odometry is new, and only a robot with an `odometry(...)` l
 - `PedroPath`: lines and curves in our field numbers (the same as `driveTo`), with `turnTo`,
   `keepHeading`, `facePath`, `facePathBackwards`; mirrored for RED like every step. Pedro's own paths
   work too (Pedro's frame, not mirrored).
+- `PedroPath.then(...)` (several parts with no stop between them), `.maxSpeed(fraction)` per part,
+  `.facePoint(x, y)`, and `.holdEnd([seconds])`: the robot holds the end point while the next steps
+  run; the next driving step (`driveTo`, `move`, `turn`), the next path, the end of the OpMode or the
+  time limit (5 s by default) ends the hold (`AutoRoutine.beforeDriving(...)`, `PathFollower.isHolding()`).
+  A `PedroPath` never changes (every method returns a new one); `then` stops INIT when a part does not
+  start where the last one ended.
 - `PedroTuning`: Pedro's Foresight tuner (from Pedro's Quickstart) on Robot.java's drive and odometry.
 - `PathFollower` (core): the small plug a path-following module implements; `RobotDefinition.follower(...)`,
   `makeOdometry(...)`; `Drive.isReversed(...)` is public.
