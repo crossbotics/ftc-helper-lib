@@ -1,4 +1,6 @@
 package com.crossbotics.ftchelper.examples.quickstart.autos;
+// In your TeamCode, change the line above to exactly:  package org.firstinspires.ftc.teamcode.autos;
+// and the two imports below to:  import org.firstinspires.ftc.teamcode.Robot;  import org.firstinspires.ftc.teamcode.Tunables;
 
 import com.crossbotics.ftchelper.examples.quickstart.Robot;
 import com.crossbotics.ftchelper.examples.quickstart.Tunables;

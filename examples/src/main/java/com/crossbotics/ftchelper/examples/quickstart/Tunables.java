@@ -1,4 +1,5 @@
 package com.crossbotics.ftchelper.examples.quickstart;
+// In your TeamCode, change the line above to exactly:  package org.firstinspires.ftc.teamcode;
 
 /**
  * Quick start, file 2 of 5: every number, one section per part. A section's name is the part's name in

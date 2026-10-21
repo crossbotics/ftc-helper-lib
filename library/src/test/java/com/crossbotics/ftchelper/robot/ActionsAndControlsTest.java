@@ -254,6 +254,7 @@ public class ActionsAndControlsTest {
     @Test public void aSuggestionWithNoFreeButtonIsNoted() {
         RobotDefinition r = new RobotDefinition() {
             @Override protected void define() {
+                tunables(RobotModulesTest.Numbers.class);   // a lift needs its min and max
                 drive(Drive.tank("l", "r"));
                 add(Lift.slide("lift"));
                 add(Launcher.flywheel("launcher", "gobilda-5203-6000"));

@@ -10,6 +10,17 @@ import com.crossbotics.ftchelper.mechanism.PositionServo;
 import org.junit.Test;
 
 public class LauncherTest {
+    private long keepBefore;
+
+    // These tests move the pretend turret motor with no time passing: read the encoder every time.
+    @org.junit.Before public void freshReads() {
+        keepBefore = Turret.READ_KEEP_NANOS;
+        Turret.READ_KEEP_NANOS = 0;
+    }
+
+    @org.junit.After public void back() {
+        Turret.READ_KEEP_NANOS = keepBefore;
+    }
     private static final double E = 1e-9;
 
     @Test public void flywheelSendsTicksPerSecondAndNeedsToSettle() {

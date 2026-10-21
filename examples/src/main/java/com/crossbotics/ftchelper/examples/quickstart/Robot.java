@@ -1,5 +1,5 @@
-// STEP 0: in your TeamCode, this first line is: package org.firstinspires.ftc.teamcode;
 package com.crossbotics.ftchelper.examples.quickstart;
+// In your TeamCode, change the line above to exactly:  package org.firstinspires.ftc.teamcode;
 
 import com.crossbotics.ftchelper.robot.Drive;
 import com.crossbotics.ftchelper.robot.Intake;

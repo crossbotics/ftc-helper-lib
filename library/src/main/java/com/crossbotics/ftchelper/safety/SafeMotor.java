@@ -68,6 +68,16 @@ public class SafeMotor {
     private double lastApplied = 0;
     // False until the first power is sent, so the very first value is always sent.
     private boolean sentOnce = false;
+    // The encoder, read at most once per loop: a reading is used again for READ_KEEP_NANOS (3 ms,
+    // shorter than any loop), so update(), the PID and the telemetry share one read. Each read is a trip
+    // to the hub. Code that never calls update() still gets a fresh reading every time it asks later.
+    private int encoderNow = 0;
+    private long readAt = Long.MIN_VALUE;
+    static long READ_KEEP_NANOS = 3_000_000L;
+    // Loops since the power was last sent; it is sent again every RESEND_LOOPS loops even if it did
+    // not change, so a power written straight to the motor (getMotor()) cannot stick.
+    private int loopsSinceSend = 0;
+    private static final int RESEND_LOOPS = 25;
     private boolean requireHoming = true;
     private double homingPower = 0.3;
 
@@ -151,6 +161,8 @@ public class SafeMotor {
      * It never waits: it reads, maybe corrects the power, and returns.
      */
     public void update() {
+        readEncoder();
+        loopsSinceSend++;
         boolean lowerPressed = isAtLowerSwitch();
         // Home only at the moment the switch goes from "not pressed" to "pressed", not on every
         // loop while it stays pressed. That one moment is the true bottom; the encoder count
@@ -160,7 +172,8 @@ public class SafeMotor {
         }
         lowerWasPressed = lowerPressed;
         // Re-check the last power against the new readings, so a switch stops the motor at once.
-        if (lastApplied != 0) apply(lastRequested);
+        // (Also every RESEND_LOOPS loops, so a power written straight to the motor is corrected even at rest.)
+        if (lastApplied != 0 || loopsSinceSend >= RESEND_LOOPS) apply(lastRequested);
     }
 
     /**
@@ -199,14 +212,23 @@ public class SafeMotor {
 
     /** Position in ticks, measured from the home (zero) position. */
     public int getPosition() {
-        return motor.getCurrentPosition() - zeroOffset;
+        long now = System.nanoTime();
+        if (readAt == Long.MIN_VALUE || now - readAt >= READ_KEEP_NANOS) readEncoder();
+        return encoderNow - zeroOffset;
+    }
+
+    // Reads the encoder now (a trip to the hub) and remembers when.
+    private void readEncoder() {
+        encoderNow = motor.getCurrentPosition();
+        readAt = System.nanoTime();
     }
 
     /** Makes the current position 0. Use it to home by hand (for example when there is no switch). */
     public void zeroHere() {
         // We do not reset the motor's own encoder (that would stop the motor for a moment);
         // we just remember today's count and subtract it from now on.
-        zeroOffset = motor.getCurrentPosition();
+        readEncoder();
+        zeroOffset = encoderNow;
         homed = true;
     }
 
@@ -242,7 +264,8 @@ public class SafeMotor {
 
     /**
      * The motor inside, for anything this class does not cover.
-     * Careful: power sent straight to this motor skips all the limits.
+     * Careful: power sent straight to this motor skips all the limits. It lasts at most about half a
+     * second while {@link #update()} runs every loop: the limited power is sent again every 25 loops.
      */
     public DcMotorEx getMotor() {
         return motor;
@@ -272,8 +295,12 @@ public class SafeMotor {
         }
         // Last, never more than the overall power cap.
         limited = MathUtil.clamp(limited, -maxPower, maxPower);
-        // Only send when it changes: each send to the hub takes time.
-        if (limited != lastApplied || !sentOnce) motor.setPower(limited);
+        // Only send when it changes (each send to the hub takes time), and again every RESEND_LOOPS
+        // loops, so a power someone wrote straight to the motor cannot stay.
+        if (limited != lastApplied || !sentOnce || loopsSinceSend >= RESEND_LOOPS) {
+            motor.setPower(limited);
+            loopsSinceSend = 0;
+        }
         sentOnce = true;
         lastApplied = limited;
         return limited;

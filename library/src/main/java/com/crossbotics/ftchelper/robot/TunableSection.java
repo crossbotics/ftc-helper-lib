@@ -134,9 +134,57 @@ final class TunableSection {
             if (!Modifier.isStatic(f.getModifiers()) || known.contains(f.getName())) continue;
             Class<?> t = f.getType();
             if (t != double.class && t != int.class && t != float.class && t != long.class) continue;
+            String typo = lookalike(f.getName(), known);
+            if (typo != null) {
+                // "Max" would quietly become a position named Max, and max would stay the library's
+                // default: a lift could drive past its real top. Stop instead.
+                throw new IllegalStateException("Tunables." + name + "." + f.getName() + " looks like \"" + typo
+                        + "\" (capitals and spelling count). Fix the name in Tunables.java; a position must not "
+                        + "look like a setting.");
+            }
             out.put(f.getName(), number(f.getName(), 0));
         }
         return out;
+    }
+
+    /**
+     * Stops at INIT if the section does not write {@code field} itself (a safety number, like a
+     * lift's max, must never come from a library default).
+     *
+     * @param field the field name, e.g. "max"
+     * @param why   the end of the message, e.g. "the top of the safe range (Motor Finder: B)"
+     */
+    void require(String field, String why) {
+        if (has(field)) return;
+        throw new IllegalStateException((section == null ? "Tunables.java has no " + name + " section" : "Tunables." + name
+                + " has no " + field) + ": write " + field + " (" + why + "). A safety limit never comes from a "
+                + "library default.");
+    }
+
+    // A known setting this name looks like: the same but for capitals ("Max" -> "max"), or one letter off
+    // for longer names ("maxPowr" -> "maxPower"). Null if none.
+    static String lookalike(String name, Collection<String> known) {
+        for (String k : known) {
+            if (k.equalsIgnoreCase(name)) return k;
+            if (k.length() >= 5 && name.length() >= 5 && oneEditApart(k.toLowerCase(Locale.US), name.toLowerCase(Locale.US))) return k;
+        }
+        return null;
+    }
+
+    // True if a and b differ by one letter added, removed or changed.
+    private static boolean oneEditApart(String a, String b) {
+        if (Math.abs(a.length() - b.length()) > 1 || a.equals(b)) return false;
+        // Same length: exactly one letter differs. Else: dropping one letter of the longer gives the shorter.
+        if (a.length() == b.length()) {
+            int diff = 0;
+            for (int k = 0; k < a.length(); k++) if (a.charAt(k) != b.charAt(k)) diff++;
+            return diff == 1;
+        }
+        String longer = a.length() > b.length() ? a : b, shorter = longer == a ? b : a;
+        for (int k = 0; k < longer.length(); k++) {
+            if ((longer.substring(0, k) + longer.substring(k + 1)).equals(shorter)) return true;
+        }
+        return false;
     }
 
     /** "" or a note for INIT, e.g. "Tunables.Lift: kD, kF missing (library defaults used)". */

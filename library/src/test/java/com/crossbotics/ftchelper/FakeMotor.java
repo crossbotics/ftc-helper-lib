@@ -12,6 +12,7 @@ public final class FakeMotor {
     public double velocityCommand = 0;   // last setVelocity()
     public double currentAmps = 0;
     public int powerWrites = 0;
+    public int positionReads = 0;        // how many times getCurrentPosition() was called (each is a hub trip)
     public double maxAbsPower = 0;
     public double[] pidf = null;
     public boolean failSetPower = false;  // true = setPower throws, like a disconnected motor
@@ -30,7 +31,7 @@ public final class FakeMotor {
                             maxAbsPower = Math.max(maxAbsPower, Math.abs(power));
                             return null;
                         case "getPower": return power;
-                        case "getCurrentPosition": return (int) Math.round(position);
+                        case "getCurrentPosition": positionReads++; return (int) Math.round(position);
                         case "getVelocity": return velocity;
                         case "setVelocity": velocityCommand = (Double) args[0]; return null;
                         case "getCurrent": return currentAmps;

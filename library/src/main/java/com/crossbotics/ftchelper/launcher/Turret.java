@@ -460,10 +460,20 @@ public class Turret implements Subsystem {
         }
     }
 
-    // The angle from the encoder alone (no offset), in degrees.
+    // The angle from the encoder alone (no offset), in degrees. A reading is used again for 3 ms (less
+    // than a loop), so update(), the PID and the telemetry share one trip to the hub.
     private double rawDeg() {
-        return motor.getCurrentPosition() / countsPerDegree;
+        long now = System.nanoTime();
+        if (readAt == Long.MIN_VALUE || now - readAt >= READ_KEEP_NANOS) {
+            encoderNow = motor.getCurrentPosition();
+            readAt = now;
+        }
+        return encoderNow / countsPerDegree;
     }
+
+    private int encoderNow = 0;
+    private long readAt = Long.MIN_VALUE;
+    static long READ_KEEP_NANOS = 3_000_000L;
 
     // Sends a power only when it changes: each hardware command costs loop time.
     private void write(double power) {

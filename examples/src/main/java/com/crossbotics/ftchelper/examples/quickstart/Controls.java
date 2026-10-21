@@ -1,4 +1,5 @@
 package com.crossbotics.ftchelper.examples.quickstart;
+// In your TeamCode, change the line above to exactly:  package org.firstinspires.ftc.teamcode;
 
 import com.crossbotics.ftchelper.robot.ControlMap;
 import com.crossbotics.ftchelper.robot.Pad;

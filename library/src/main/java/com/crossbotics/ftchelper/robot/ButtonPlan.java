@@ -275,9 +275,26 @@ final class ButtonPlan {
      */
     void loop(boolean paused, boolean menuOpen) {
         for (LoopJob j : loopJobs) {
+            long start = System.nanoTime();
             if (j.driverPad && menuOpen) j.reset();
             else j.run(paused);
+            double ms = (System.nanoTime() - start) / 1e6;
+            if (ms > ControllerBindings.SLOW_ACTION_MS) {
+                slowWarning = String.format(java.util.Locale.US, "a button job took %.0f ms: the whole robot stopped "
+                        + "that long. No sleep() or while loop in a button job: use an Action with waitSeconds (lesson 5)", ms);
+                slowWarningAt = System.nanoTime();
+            }
         }
+    }
+
+    // A note about a gesture or watch job that took too long (shown for a few seconds).
+    private String slowWarning = "";
+    private long slowWarningAt = 0;
+
+    /** "" or the note about the last slow gesture job (kept 5 s so the drivers can read it). */
+    String slowWarning() {
+        if (!slowWarning.isEmpty() && (System.nanoTime() - slowWarningAt) / 1e9 > 5) slowWarning = "";
+        return slowWarning;
     }
 
     /** Something watched every loop. */

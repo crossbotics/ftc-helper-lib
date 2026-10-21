@@ -155,6 +155,43 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
     @Override
     protected final void addTelemetry(RobotTelemetry t) {
         if (robot().isPaused()) t.warn("PAUSED: everything stopped on brake. BACK to go on.");
+        if (plan != null && !plan.slowWarning().isEmpty()) t.warn(plan.slowWarning());
+        for (Shown s : shown) {
+            Object v;
+            try {
+                v = s.value.get();
+            } catch (RuntimeException e) {
+                v = "error: " + e.getMessage();
+            }
+            t.line(s.label, v);
+        }
+    }
+
+    // ----------------------------- your own lines on the Driver Station -----------------------------
+
+    private final List<Shown> shown = new ArrayList<>();
+
+    private static final class Shown {
+        final String label;
+        final java.util.function.Supplier<?> value;
+
+        Shown(String label, java.util.function.Supplier<?> value) {
+            this.label = label;
+            this.value = value;
+        }
+    }
+
+    /**
+     * Shows a value of your own on the Driver Station during the match, read again every loop. Call
+     * it in {@code buttons(...)}, e.g. {@code show("Lift ticks", robot.lift::position);} or
+     * {@code show("Ready", () -> robot.launcher.isReady());}.
+     *
+     * @param label the words before the value
+     * @param value how to read it (a method reference or a small lambda; it must not wait)
+     */
+    protected final void show(String label, java.util.function.Supplier<?> value) {
+        if (label == null || value == null) throw new IllegalArgumentException("show(label, value): neither may be null");
+        shown.add(new Shown(label, value));
     }
 
     @Override

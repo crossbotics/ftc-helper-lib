@@ -10,6 +10,42 @@ import com.crossbotics.ftchelper.control.PidController;
 
 public class SafeMotorTest {
     private static final double E = 1e-9;
+    private long keepBefore;
+
+    // These tests move the pretend motor between calls with no time passing: read the encoder every time.
+    @org.junit.Before public void freshReads() {
+        keepBefore = SafeMotor.READ_KEEP_NANOS;
+        SafeMotor.READ_KEEP_NANOS = 0;
+    }
+
+    @org.junit.After public void back() {
+        SafeMotor.READ_KEEP_NANOS = keepBefore;
+    }
+
+    // One loop reads the encoder once: update(), the limits and the position all share it.
+    @Test public void oneEncoderReadPerLoop() {
+        SafeMotor.READ_KEEP_NANOS = 60_000_000_000L;      // "the same loop" for the whole test
+        FakeMotor m = new FakeMotor();
+        SafeMotor lift = new SafeMotor(m.motor).setLimits(0, 1000);
+        int before = m.positionReads;
+        lift.update();
+        lift.setPower(0.5);
+        lift.getPosition();
+        lift.isAtUpper();
+        assertEquals(1, m.positionReads - before);
+    }
+
+    // A power written straight to the motor is corrected within 25 loops, even at rest.
+    @Test public void aRawPowerDoesNotStick() {
+        FakeMotor m = new FakeMotor();
+        m.position = 5000;
+        SafeMotor lift = new SafeMotor(m.motor).setLimits(0, 1000);
+        lift.update();
+        lift.setPower(0);
+        lift.getMotor().setPower(0.8);
+        for (int i = 0; i < 25; i++) lift.update();
+        assertEquals(0, m.power, E);
+    }
 
     @Test public void softLimitsWithoutSwitch() {
         FakeMotor m = new FakeMotor();

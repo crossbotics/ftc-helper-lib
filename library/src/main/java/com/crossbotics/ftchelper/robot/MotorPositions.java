@@ -71,8 +71,12 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
     @Override
     void build(Devices devices, TunableSection t) {
         double[] d = defaults();
+        // The safe range must be the team's own numbers (from the Motor Finder), never a default.
+        t.require("min", "the bottom of the safe range, in " + unit() + ": Motor Finder, X");
+        t.require("max", "the top of the safe range, in " + unit() + ": Motor Finder, B");
         min = t.number("min", d[0]);
         max = t.number("max", d[1]);
+        if (!(max > min)) throw new IllegalStateException("Tunables." + name() + ": max (" + max + ") must be more than min (" + min + ")");
         DcMotorEx motor = MotorSetup.of(devices.get(DcMotorEx.class, device)).reversed(reversed)
                 .brake().resetEncoder().runWithoutEncoder().done();
         part = new PositionMotor(name(), motor);
