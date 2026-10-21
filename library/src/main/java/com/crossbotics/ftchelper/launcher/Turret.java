@@ -313,6 +313,9 @@ public class Turret implements Subsystem {
     /** Once per loop: checks the home switch, picks the power (homing, stick or PID), applies the limits. */
     @Override
     public void update() {
+        // A fresh encoder reading at the start of every loop (homing below uses it).
+        encoderNow = motor.getCurrentPosition();
+        readAt = System.nanoTime();
         boolean switchNow = homeSwitch != null && homeSwitch.getAsBoolean();
         // The moment the switch closes (or any time it is closed while homing), reset the angle.
         // This also fixes any slow drift each time the turret passes the switch in a match.
@@ -460,8 +463,8 @@ public class Turret implements Subsystem {
         }
     }
 
-    // The angle from the encoder alone (no offset), in degrees. A reading is used again for 3 ms (less
-    // than a loop), so update(), the PID and the telemetry share one trip to the hub.
+    // The angle from the encoder alone (no offset), in degrees. update() reads it fresh; later reads
+    // within 3 ms use that reading, so update(), the PID and the telemetry share one trip to the hub.
     private double rawDeg() {
         long now = System.nanoTime();
         if (readAt == Long.MIN_VALUE || now - readAt >= READ_KEEP_NANOS) {

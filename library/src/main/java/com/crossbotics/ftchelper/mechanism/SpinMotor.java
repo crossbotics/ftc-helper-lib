@@ -234,10 +234,16 @@ public class SpinMotor implements Subsystem {
     }
 
     // Sends a power only when it changes: each hardware command costs loop time.
+    // Sends only when the power changes (each send takes time), and again every 25 calls, so a power
+    // written straight to the motor (getMotor()) cannot stay.
     private void write(double power) {
-        if (power != sentPower) {
+        writesSkipped++;
+        if (power != sentPower || writesSkipped >= 25) {
             motor.setPower(power);
             sentPower = power;
+            writesSkipped = 0;
         }
     }
+
+    private int writesSkipped = 0;
 }

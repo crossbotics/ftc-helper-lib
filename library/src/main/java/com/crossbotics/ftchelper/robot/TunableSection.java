@@ -134,7 +134,7 @@ final class TunableSection {
             if (!Modifier.isStatic(f.getModifiers()) || known.contains(f.getName())) continue;
             Class<?> t = f.getType();
             if (t != double.class && t != int.class && t != float.class && t != long.class) continue;
-            String typo = lookalike(f.getName(), known);
+            String typo = lookalike(f.getName(), known, this::has);
             if (typo != null) {
                 // "Max" would quietly become a position named Max, and max would stay the library's
                 // default: a lift could drive past its real top. Stop instead.
@@ -155,36 +155,64 @@ final class TunableSection {
      * @param why   the end of the message, e.g. "the top of the safe range (Motor Finder: B)"
      */
     void require(String field, String why) {
-        if (has(field)) return;
+        Field f = field(field);
+        if (f != null) {
+            Class<?> t = f.getType();
+            boolean numeric = t == double.class || t == int.class || t == float.class || t == long.class;
+            double v = Double.NaN;
+            if (numeric) {
+                try {
+                    v = ((Number) f.get(null)).doubleValue();
+                } catch (IllegalAccessException | RuntimeException e) {
+                    v = Double.NaN;
+                }
+            }
+            if (numeric && !Double.isNaN(v) && !Double.isInfinite(v)) return;
+            throw new IllegalStateException("Tunables." + name + "." + field + " must be a public static number (like "
+                    + "\"public static double " + field + " = 1000;\"): " + why + ". A safety limit never comes from a library default.");
+        }
         throw new IllegalStateException((section == null ? "Tunables.java has no " + name + " section" : "Tunables." + name
                 + " has no " + field) + ": write " + field + " (" + why + "). A safety limit never comes from a "
                 + "library default.");
     }
 
-    // A known setting this name looks like: the same but for capitals ("Max" -> "max"), or one letter off
-    // for longer names ("maxPowr" -> "maxPower"). Null if none.
-    static String lookalike(String name, Collection<String> known) {
+    // A known setting this name looks like, or null. Always: the same but for capitals or "_" ("Max",
+    // "k_P"). Only when the real setting is NOT written (so "slowZone2" next to "slowZone" is a position):
+    // up to two letters off for names of 5 letters or more ("maxPowr", "maxPwr" -> "maxPower").
+    static String lookalike(String name, Collection<String> known, java.util.function.Predicate<String> written) {
+        String n = squash(name);
         for (String k : known) {
-            if (k.equalsIgnoreCase(name)) return k;
-            if (k.length() >= 5 && name.length() >= 5 && oneEditApart(k.toLowerCase(Locale.US), name.toLowerCase(Locale.US))) return k;
+            if (squash(k).equals(n)) return k;
+        }
+        for (String k : known) {
+            if (written.test(k)) continue;
+            if (k.length() >= 5 && n.length() >= 5 && editDistance(squash(k), n) <= 2) return k;
         }
         return null;
     }
 
-    // True if a and b differ by one letter added, removed or changed.
-    private static boolean oneEditApart(String a, String b) {
-        if (Math.abs(a.length() - b.length()) > 1 || a.equals(b)) return false;
-        // Same length: exactly one letter differs. Else: dropping one letter of the longer gives the shorter.
-        if (a.length() == b.length()) {
-            int diff = 0;
-            for (int k = 0; k < a.length(); k++) if (a.charAt(k) != b.charAt(k)) diff++;
-            return diff == 1;
+    static String lookalike(String name, Collection<String> known) {
+        return lookalike(name, known, k -> false);
+    }
+
+    // Lower case without "_": the forms a typo hides in.
+    private static String squash(String s) {
+        return s.replace("_", "").toLowerCase(Locale.US);
+    }
+
+    // How many letters must be added, removed or changed to turn a into b (no loops that wait: short names).
+    private static int editDistance(String a, String b) {
+        int[] prev = new int[b.length() + 1], cur = new int[b.length() + 1];
+        for (int j = 0; j <= b.length(); j++) prev[j] = j;
+        for (int i = 1; i <= a.length(); i++) {
+            cur[0] = i;
+            for (int j = 1; j <= b.length(); j++) {
+                int change = prev[j - 1] + (a.charAt(i - 1) == b.charAt(j - 1) ? 0 : 1);
+                cur[j] = Math.min(change, Math.min(prev[j] + 1, cur[j - 1] + 1));
+            }
+            int[] t = prev; prev = cur; cur = t;
         }
-        String longer = a.length() > b.length() ? a : b, shorter = longer == a ? b : a;
-        for (int k = 0; k < longer.length(); k++) {
-            if ((longer.substring(0, k) + longer.substring(k + 1)).equals(shorter)) return true;
-        }
-        return false;
+        return prev[b.length()];
     }
 
     /** "" or a note for INIT, e.g. "Tunables.Lift: kD, kF missing (library defaults used)". */

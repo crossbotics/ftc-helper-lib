@@ -35,6 +35,32 @@ public class SafeMotorTest {
         assertEquals(1, m.positionReads - before);
     }
 
+    // Past a limit, a raw power is corrected on the next loop, not after 25 (review: Alex).
+    @Test public void aRawPowerPastALimitIsCorrectedAtOnce() {
+        FakeMotor m = new FakeMotor();
+        m.position = 2950;
+        SafeMotor lift = new SafeMotor(m.motor).setLimits(0, 3000);
+        lift.update();
+        lift.setPower(0);
+        lift.getMotor().setPower(1.0);
+        m.position = 3010;                                  // it went past max
+        lift.update();
+        assertEquals(0, m.power, E);
+    }
+
+    // update() reads the switch fresh, even inside the 3 ms reuse window (review: Codex).
+    @Test public void updateReadsTheSwitchFresh() {
+        SafeMotor.READ_KEEP_NANOS = 60_000_000_000L;
+        FakeMotor m = new FakeMotor();
+        boolean[] bottom = {false};
+        SafeMotor lift = new SafeMotor(m.motor).setLimits(0, 1000).setLowerSwitch(() -> bottom[0]);
+        lift.update();
+        assertTrue(lift.isWaitingForHoming());
+        bottom[0] = true;
+        lift.update();
+        assertTrue(lift.isHomed());
+    }
+
     // A power written straight to the motor is corrected within 25 loops, even at rest.
     @Test public void aRawPowerDoesNotStick() {
         FakeMotor m = new FakeMotor();

@@ -18,6 +18,21 @@ public class LauncherTest {
         Turret.READ_KEEP_NANOS = 0;
     }
 
+    // Review (Codex): homing uses a fresh encoder count, even inside the 3 ms reuse window.
+    @Test public void turretHomesWithAFreshCount() {
+        Turret.READ_KEEP_NANOS = 60_000_000_000L;
+        FakeMotor m = new FakeMotor();
+        boolean[] closed = {false};
+        Turret t = new Turret("turret", m.motor).countsPerDegree(10).limits(-190, 190).homeSwitch(() -> closed[0], 0);
+        m.position = 100;
+        t.update();
+        m.position = 101;
+        closed[0] = true;
+        t.update();
+        Turret.READ_KEEP_NANOS = 0;
+        assertEquals(0, t.getAngle(), 0.01);
+    }
+
     @org.junit.After public void back() {
         Turret.READ_KEEP_NANOS = keepBefore;
     }

@@ -68,13 +68,21 @@ public class SafeMotor {
     private double lastApplied = 0;
     // False until the first power is sent, so the very first value is always sent.
     private boolean sentOnce = false;
-    // The encoder, read at most once per loop: a reading is used again for READ_KEEP_NANOS (3 ms,
-    // shorter than any loop), so update(), the PID and the telemetry share one read. Each read is a trip
-    // to the hub. Code that never calls update() still gets a fresh reading every time it asks later.
+    // The encoder, read at most once per loop: update() always reads it fresh, and later reads within
+    // READ_KEEP_NANOS (3 ms) use that reading, so update(), the PID and the telemetry share one read
+    // (a reading is at most 3 ms old). Each read is a trip to the hub. Code that never calls update()
+    // gets a reading at most 3 ms old every time it asks.
     private int encoderNow = 0;
     private long readAt = Long.MIN_VALUE;
-    /** How long one encoder or switch reading is used again, nanoseconds (3 ms). Tests that move a pretend motor with no time passing set it to 0. */
-    public static long READ_KEEP_NANOS = 3_000_000L;
+    static long READ_KEEP_NANOS = 3_000_000L;
+
+    /**
+     * For tests that move a pretend motor with no time passing: true = read the encoder and switches
+     * every time; false = the normal 3 ms reuse. Robot code never needs it.
+     */
+    public static void freshReadingsForTests(boolean fresh) {
+        READ_KEEP_NANOS = fresh ? 0 : 3_000_000L;
+    }
     // Loops since the power was last sent; it is sent again every RESEND_LOOPS loops even if it did
     // not change, so a power written straight to the motor (getMotor()) cannot stick.
     private int loopsSinceSend = 0;
@@ -162,7 +170,10 @@ public class SafeMotor {
      * It never waits: it reads, maybe corrects the power, and returns.
      */
     public void update() {
+        // Every loop starts with fresh readings: the encoder and both switches. Later reads in the
+        // same loop (the PID, telemetry) use these for up to READ_KEEP_NANOS.
         readEncoder();
+        readSwitches();
         loopsSinceSend++;
         boolean lowerPressed = isAtLowerSwitch();
         // Home only at the moment the switch goes from "not pressed" to "pressed", not on every
@@ -174,7 +185,9 @@ public class SafeMotor {
         lowerWasPressed = lowerPressed;
         // Re-check the last power against the new readings, so a switch stops the motor at once.
         // (Also every RESEND_LOOPS loops, so a power written straight to the motor is corrected even at rest.)
-        if (lastApplied != 0 || loopsSinceSend >= RESEND_LOOPS) apply(lastRequested);
+        // And every loop while it is at a limit or a switch is pressed, so a power written straight to the
+        // motor can never push past a limit.
+        if (lastApplied != 0 || loopsSinceSend >= RESEND_LOOPS || atALimit()) apply(lastRequested);
     }
 
     /**
@@ -277,6 +290,22 @@ public class SafeMotor {
     private boolean lowerNow, upperNow;
     private long lowerAt = Long.MIN_VALUE, upperAt = Long.MIN_VALUE;
 
+    // Reads both switches now (the start of a loop).
+    private void readSwitches() {
+        lowerAt = Long.MIN_VALUE;
+        upperAt = Long.MIN_VALUE;
+        isAtLowerSwitch();
+        isAtUpperSwitch();
+    }
+
+    // Past a soft limit: the power is checked and sent every loop (not only when it changes), so a power
+    // written straight to the motor cannot keep pushing past it. (Resting exactly at a limit, like a lift
+    // on its bottom switch, does not send every loop: that would cost a hub write each loop for nothing.)
+    private boolean atALimit() {
+        double p = getPosition();
+        return p < min || p > max;
+    }
+
     private boolean isAtLowerSwitch() {
         if (lowerSwitch == null) return false;
         long now = System.nanoTime();
@@ -313,8 +342,8 @@ public class SafeMotor {
         // Last, never more than the overall power cap.
         limited = MathUtil.clamp(limited, -maxPower, maxPower);
         // Only send when it changes (each send to the hub takes time), and again every RESEND_LOOPS
-        // loops, so a power someone wrote straight to the motor cannot stay.
-        if (limited != lastApplied || !sentOnce || loopsSinceSend >= RESEND_LOOPS) {
+        // loops (and every time at a limit), so a power someone wrote straight to the motor cannot stay.
+        if (limited != lastApplied || !sentOnce || loopsSinceSend >= RESEND_LOOPS || atALimit()) {
             motor.setPower(limited);
             loopsSinceSend = 0;
         }

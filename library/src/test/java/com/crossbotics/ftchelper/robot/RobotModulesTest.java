@@ -113,6 +113,76 @@ public class RobotModulesTest {
         }
     }
 
+    // Review (Alex, Codex): "Max" must not quietly become a position while max stays a default.
+    public static class TypoNumbers {
+        public static class Lift {
+            public static double min = 0, max = 3000, Max = 1500, down = 0, high = 1400;
+        }
+    }
+
+    public static class NoMaxNumbers {
+        public static class Lift {
+            public static double min = 0, down = 0, high = 1400;
+        }
+    }
+
+    public static class StringMaxNumbers {
+        public static class Lift {
+            public static double min = 0, down = 0;
+            public static String max = "1000";
+        }
+    }
+
+    public static class NearPositionNumbers {
+        public static class Lift {
+            public static double min = 0, max = 1000, slowZone = 50, slowZone2 = 500, down = 0;
+        }
+    }
+
+    private static RobotDefinition liftWith(final Class<?> numbers) {
+        return new RobotDefinition() {
+            @Override protected void define() {
+                tunables(numbers);
+                drive(Drive.tank("l", "r"));
+                add(Lift.slide("lift"));
+            }
+        };
+    }
+
+    private static String initError(Class<?> numbers) {
+        try {
+            liftWith(numbers).setup(new RobotTestKit());
+            return null;
+        } catch (IllegalStateException e) {
+            return e.getMessage();
+        }
+    }
+
+    @Test public void safetyNumbersInTunablesAreChecked() {
+        String e = initError(TypoNumbers.class);
+        assertTrue(e, e != null && e.contains("Tunables.Lift.Max looks like \"max\""));
+        e = initError(NoMaxNumbers.class);
+        assertTrue(e, e != null && e.contains("Tunables.Lift has no max"));
+        e = initError(StringMaxNumbers.class);
+        assertTrue(e, e != null && e.contains("Tunables.Lift.max must be a public static number"));
+        // A position near a setting that IS written is fine.
+        assertEquals(null, initError(NearPositionNumbers.class));
+    }
+
+    @Test public void lookalikeNamesAreCaughtButRealPositionsAreNot() {
+        java.util.List<String> known = java.util.Arrays.asList("min", "max", "kP", "maxPower", "tolerance", "slowZone");
+        assertEquals("kP", TunableSection.lookalike("kp", known));
+        assertEquals("kP", TunableSection.lookalike("k_P", known));
+        assertEquals("maxPower", TunableSection.lookalike("maxPowr", known));
+        assertEquals("maxPower", TunableSection.lookalike("maxPwr", known));
+        assertEquals("tolerance", TunableSection.lookalike("tolerence", known));
+        assertEquals(null, TunableSection.lookalike("high", known));
+        assertEquals(null, TunableSection.lookalike("low", known));
+        assertEquals(null, TunableSection.lookalike("maxi", known));     // short names: only capitals count
+        assertEquals(null, TunableSection.lookalike("slowZone2", known, k -> k.equals("slowZone")));
+        assertEquals("max", TunableSection.lookalike("MAX", known, k -> true));   // capitals: always
+    }
+
     @Test public void tunablesSectionsBecomeLiveTunablesAndNotesSayWhatIsMissing() {
         LiftBot r = new LiftBot();
         RobotTestKit kit = new RobotTestKit();
