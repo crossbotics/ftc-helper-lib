@@ -176,13 +176,17 @@ gamepad 1, like goBILDA's code. You only write what is different: here, Y fires 
 - **INIT shows the map** on the Driver Station: every button with its job, and the free ones. During the
   match, a tap of GUIDE shows it again, without the free ones (tap again to close).
 - **BACK pauses the robot:** everything stops on brake; BACK again and each part goes on as before
-  (hold BACK 1 s instead to reset field-centric "forward"). STOP brakes everything too.
+  (with field-centric on, hold BACK 1 s instead to reset "forward"; in robot-centric driving that does nothing). STOP brakes everything too.
 - Each button takes ONE job. Two jobs on one button in this file, or a job on a driving button (the
   left stick, LT slow...), stop at INIT with the button's name. A job you put on a button a module
   suggested replaces the suggestion.
 - The kinds of jobs: `press(...)`, `hold(whileHeld, onRelease)`, `toggle(robot.intake)`,
   `release(...)`, and for sticks `g2.leftStickY.use(robot.lift::manual)`. `robot.lift::manual` means
   "the lift's `manual` method": the library calls it later, every loop. Lesson 3 has them all.
+- **The loop:** a robot program runs a **loop**: many times a second, it reads the gamepads, runs the
+  button jobs and updates every part. Each time round is "a loop". The library runs this loop for
+  you; `buttons(...)` runs only once, at INIT, and plugs a job into each button
+  ([From Blocks to Java](../blocks-to-java.md) explains it with blocks).
 
 ## 4. Actions.java: steps that use several parts
 
@@ -262,6 +266,17 @@ The examples are built into the simulator, so:
 the examples are hidden: they are marked `@Disabled`.) Open http://localhost:8780, pick "goBILDA Bot TeleOp", INIT (read the button map), START. LB spins
 up, RB fires (hold it to keep firing). ([Simulator guide](../guides/simulator.md).)
 
+**Your own robot** (the five files in your TeamCode), from the `ftc-helper-lib` folder:
+
+```bash
+./gradlew :sim:fromRobot -PteamCode=../TeamCode
+./gradlew :sim:run -PteamCode=../TeamCode
+```
+
+The first line writes your robot's simulator file, `simulator/robot.properties` (see below). Open
+http://localhost:8780, pick your TeleOp, INIT, START. Press **Ctrl+C** in the Terminal to stop the
+simulator.
+
 ### Draw your robot from Robot.java
 
 The simulator draws the robot from its **robot file**: a text file that describes the robot to the
@@ -285,7 +300,7 @@ Then, from the `ftc-helper-lib` folder:
 ./gradlew :sim:fromRobot -PteamCode=../TeamCode
 ```
 
-Open the simulator: the roller spins when the intake runs, a piece is picked up and fired, and the
+Then start it with `./gradlew :sim:run -PteamCode=../TeamCode` and open http://localhost:8780: the roller spins when the intake runs, a piece is picked up and fired, and the
 size rules are checked on your shapes. The flywheel example (`examples/.../flywheelbot/Robot.java`) also
 has an intake that folds up at the start and falls over at START. An arm on a servo names its angle at
 two positions, `angle("stowed", 90).angle("deployed", 20)`: those names must be positions in that part's
@@ -328,4 +343,5 @@ of written instructions an AI coding agent, like Claude Code, follows). Run it a
 ## Next
 
 This is lesson 1 of the [main track](README.md#start-here-the-main-track). Next:
-[Lesson 2: Drive](start/02-drive.md), where you build the lesson robot one part at a time.
+[Lesson 2: Drive](start/02-drive.md). From there on you build **your own robot** in your five files,
+one part at a time; the lesson robot is the worked example (and the answer key).

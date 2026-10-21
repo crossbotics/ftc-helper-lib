@@ -127,12 +127,15 @@ new value is used from the next INIT.
 | Slow | LT: the further you pull it, the slower (down to `slowSpeed`) | left stick click: slow on/off |
 | Field-centric on/off (mecanum with an IMU) | Y | right stick click |
 | BACK | tap: pause everything; tap again: go on | the same |
-| BACK held 1 s | "forward" = the way the robot faces now | the same |
+| BACK held 1 s | field-centric on: "forward" = the way the robot faces now (one buzz). Robot-centric: nothing | the same |
 
 - **Robot-centric** (the start): stick up = the way the robot faces. **Field-centric**: stick up = away
   from the driver, whichever way the robot faces. Two buzzes = field-centric on, one buzz = off.
 - **"Forward"** for field-centric is the way the robot faced at INIT, or what autonomous left behind.
-  If it is wrong, point the robot straight away from you and hold BACK for 1 second (one buzz).
+  If it is wrong, turn field-centric on, point the robot straight away from you and hold BACK for
+  1 second (one buzz). In robot-centric driving, holding BACK does nothing (no buzz), and the Driver
+  Station shows for 3 s: `BACK held: "forward" is only reset in field-centric driving (turn it on first)`.
+  **Why:** robot-centric driving does not use "forward", so a reset there would only surprise you later.
 - **Pause:** a tap of BACK stops every part on brake, and the wheels hold still. The Driver Station
   says PAUSED. Tap BACK again and each part goes on with what it was doing. **Why:** a quick, safe stop
   that does not end the program.
@@ -206,7 +209,7 @@ For the first drive, set `maxPower` and `practiceMaxPower` to 0.4. Raise them wh
 | Spins or drifts when it should go straight | A motor direction is wrong: step 7. |
 | Pushing the stick up drives backward | Every direction is flipped: reverse the other side. |
 | Slides diagonally when it should strafe | Two motor names are on the wrong wheels (e.g. front_left and back_left swapped). |
-| Field-centric goes the wrong way or circles | The logo/USB directions do not match the hub, or "forward" is wrong: hold BACK 1 s while facing away. |
+| Field-centric goes the wrong way or circles | The logo/USB directions do not match the hub, or "forward" is wrong: with field-centric on, hold BACK 1 s while facing away. |
 | Y does nothing | Field-centric needs mecanum and an IMU. With one driver it is the right stick click. |
 | Everything stopped and will not move | It is paused: tap BACK. |
 | Slow even without LT | You are in the PRACTICE profile (`practiceMaxPower`), or `maxPower` is low. |

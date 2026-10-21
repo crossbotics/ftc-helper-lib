@@ -13,6 +13,10 @@ The tutorials are the "how and why": what to write, in what order, and what to c
 
 ## Start here: the main track
 
+Never used Android Studio? Start with [Start from zero](../start-from-zero.md) (45 to 60 minutes). Used
+Scratch or Blocks before? Read [From Blocks to Java](../blocks-to-java.md): it shows where each block
+you know went.
+
 Want a driving robot first, with no explanations? Do the [Quick start](../quick-start.md) (30 minutes),
 then come back here. (Lesson 1's file is named `22-robot-in-five-files.md`: the 22 is only a file
 number. It is still the first lesson.)
@@ -28,9 +32,16 @@ explains with goBILDA's starter bot, and lesson 7 with two shooter robots, the s
 brings its own numbers and buttons, so each lesson adds only a few lines. A simulator test runs the
 finished lesson robot, so the code here always works.
 
-**The simulator commands:** the lessons show them for the lesson robot (`-PteamCode=none`: the
-library's examples). For your own robot, use `-PteamCode=../TeamCode` instead:
+**The simulator commands:** each lesson shows two sets. The lesson robot's use `-PteamCode=none` (the
+library's examples). Your own robot's use `-PteamCode=../TeamCode`:
 `./gradlew :sim:fromRobot -PteamCode=../TeamCode`, then `./gradlew :sim:run -PteamCode=../TeamCode`.
+Run them from the `ftc-helper-lib` folder ([the Terminal tab](../start-from-zero.md#6-the-terminal-tab)).
+Scenario files (test scripts, lesson 5) for your own robot go in your robot project's
+`simulator/scenarios/` folder, so they are saved with your code.
+
+**"Every loop":** the lessons often say a job runs "every loop". The **loop** is the library's loop: it
+runs many times a second, and each time round it reads the gamepads, runs the jobs and updates every
+part. You never write it ([From Blocks to Java](../blocks-to-java.md#the-key-idea-you-never-write-the-loop)).
 
 | # | Lesson | You learn | Robot needed |
 | --- | --- | --- | --- |

@@ -105,7 +105,7 @@ public class Subsystems implements Subsystem {
     /** Adds every part's telemetry. A slow-update warning goes on top. */
     @Override
     public void addTelemetry(RobotTelemetry t) {
-        if (!slowWarning.isEmpty()) t.warn(slowWarning);
+        if (!getSlowUpdateWarning().isEmpty()) t.warn(getSlowUpdateWarning());
         for (Subsystem s : parts) s.addTelemetry(t);
     }
 

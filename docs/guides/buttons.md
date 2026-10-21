@@ -45,6 +45,10 @@ with an IMU). INIT stops with a message if you use one.
 
 ## 2. How it starts
 
+"Every loop" below means: each time round the library's **loop**. The loop runs many times a second;
+each time round it reads the gamepads, runs the jobs that are due and updates every part. You never
+write it: `buttons(...)` runs once, at INIT, and only plugs the jobs into the buttons.
+
 ### One job on the button
 
 | You want | Write | When the job runs |
@@ -146,6 +150,13 @@ The job is any of these:
 | An action (several steps) | `Actions.scoreHigh(robot)` | for `press`, `tap`, `doubleTap`, `taps`, `heldFor`, `with`: starts it; the same gesture again cancels it ([lesson 5](../tutorials/start/05-actions.md)) |
 | A part to switch | `robot.intake` | for `toggle(...)` only |
 
+**A job must never wait.** No `sleep(...)` and no `while` loop in a job. It compiles, but it freezes
+the **whole robot** (no driving, no other button, no part updates) until the job ends. The Driver
+Station then warns: `... took 512 ms: the whole robot stopped that long. No sleep() or while loop in a
+button job: use an Action with waitSeconds (lesson 5)`. To wait between steps, make an action with
+`waitSeconds(...)` or `waitUntil(...)` ([lesson 5](../tutorials/start/05-actions.md)), and put the action
+on the button.
+
 While the robot is paused (a tap of gamepad 1 BACK), no button job runs, with one exception: a hold's
 stop job (the second job in `hold(job, stopJob)`) still runs when the button is let go, or when the
 pause starts in the middle of a gesture's hold. **Why:** so a part a hold started is told to stop, and
@@ -164,6 +175,12 @@ stays stopped when the pause ends.
 `rumbleWhen` is not tied to a button: it is a line of its own inside `buttons(...)`, like the others
 (it ends with `;`, nothing chains after it), and it is not on the button map. With the Quick start
 robot: `g2.rumbleWhen(robot.intake::isRunning);` buzzes when the intake starts.
+
+**Show a value on the Driver Station:** `show("Lift ticks", robot.lift::position);` (or
+`show("Intake on", robot.intake::isRunning);` with the Quick start robot). Like `rumbleWhen`, it is a
+line of its own inside `buttons(...)`, not tied to a button. The library reads the value again every
+loop and shows it during the match. **Why:** you see what the robot "thinks" while you drive. The
+value must be quick to read (a method reference or a small lambda).
 
 `.says(...)` and `.rumble()` belong to the gesture just before them:
 `g2.rb.tap(a).says("one").doubleTap(b).says("three").rumble()` buzzes on the double-tap only.

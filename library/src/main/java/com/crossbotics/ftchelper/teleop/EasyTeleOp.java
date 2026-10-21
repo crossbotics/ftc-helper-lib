@@ -61,6 +61,10 @@ public abstract class EasyTeleOp extends LinearOpMode {
     private RobotTelemetry t;
     private DriverControls driving;
     private DriverHeading heading;
+    // Buzzes to confirm a toggle or a reset (two = on, one = off).
+    private ToggleRumble confirm;
+    // How long each loop takes (shown in the debug lines).
+    private final com.crossbotics.ftchelper.util.LoopTimer loopTimer = new com.crossbotics.ftchelper.util.LoopTimer();
     private MatchTimer timer;
     private Alliance alliance = Alliance.BLUE;
     private TuningMenu tuning;
@@ -125,6 +129,22 @@ public abstract class EasyTeleOp extends LinearOpMode {
      */
     protected List<String> buttonHelp() {
         return null;
+    }
+
+    // When the "forward only in field-centric" note was last shown (System.nanoTime), for 3 s.
+    private long forwardNoteAt = Long.MIN_VALUE / 2;
+
+    // BACK (held, or tapped without a pause job): "the robot now faces away from me", with one buzz.
+    // Only in field-centric driving (mentor, 2026-10-21: only when the robot is relative to the driver);
+    // in robot-centric driving "forward" means nothing, so it does nothing and says why.
+    private void resetForward() {
+        if (heading == null || driving == null) return;
+        if (!driving.isFieldCentric()) {
+            forwardNoteAt = System.nanoTime();
+            return;
+        }
+        heading.reset();
+        confirm.play(false);
     }
 
     /**
@@ -253,7 +273,7 @@ public abstract class EasyTeleOp extends LinearOpMode {
         timer = MatchTimer.teleOp();
         for (double s : buzzAtSecondsLeft()) timer.rumbleAt(s, gamepad1, gamepad2);
         tuning = new TuningMenu(gamepad1);
-        ToggleRumble confirm = new ToggleRumble(gamepad1);
+        confirm = new ToggleRumble(gamepad1);
 
         // Three groups of buttons, so the driver's can pause while the tuning menu uses gamepad 1.
         ControllerBindings menuKey = new ControllerBindings();
@@ -276,19 +296,15 @@ public abstract class EasyTeleOp extends LinearOpMode {
                 .bindHold(Pad.G1, Btn.BACK, () -> {
                     if (tap != null && !chord[0] && System.nanoTime() - backDownAt[0] > BACK_HOLD_SEC * 1e9) {
                         chord[0] = true;     // done: the release does nothing more
-                        if (heading != null) {
-                            heading.reset();
-                            confirm.play(false);
-                        }
+                        resetForward();
                     }
                 })
                 .bindRelease(Pad.G1, Btn.BACK, () -> {
                     if (chord[0]) return;
                     if (tap != null) {
                         tap.run();
-                    } else if (heading != null) {
-                        heading.reset();
-                        confirm.play(false);
+                    } else {
+                        resetForward();
                     }
                 });
         // Y (or your fieldCentricButton()): field-centric on/off (two buzzes = on, one = off).
@@ -400,6 +416,7 @@ public abstract class EasyTeleOp extends LinearOpMode {
                     driver.update(gamepad1, gamepad2);
                     drive(gamepad1);
                 }
+                loopTimer.update();
                 everyLoop();
                 robot.update();
 
@@ -411,6 +428,7 @@ public abstract class EasyTeleOp extends LinearOpMode {
                     for (String h : help) t.text(h);
                 } else {
                     if (!driver.getSlowActionWarning().isEmpty()) t.warn(driver.getSlowActionWarning());
+                    if (System.nanoTime() - forwardNoteAt < 3e9) t.warn("BACK held: \"forward\" is only reset in field-centric driving (turn it on first).");
                     if (!operator.getSlowActionWarning().isEmpty()) t.warn(operator.getSlowActionWarning());
                     t.line("Time", timer.format());
                     t.line("Drive", driving.status());
@@ -420,6 +438,8 @@ public abstract class EasyTeleOp extends LinearOpMode {
                     if (heading != null && t.isDebug()) {
                         t.debug("Heading", "%.1f%s", heading.degrees(), heading.isFromAuto() ? " (from auto)" : "");
                     }
+                    // The loop time (debug lines: START + BACK). Lower is better; under 20 ms is good.
+                    t.debug("Loop", "%.1f ms (%.0f Hz)", loopTimer.getAverageMs(), loopTimer.getHz());
                 }
                 t.update();
             }

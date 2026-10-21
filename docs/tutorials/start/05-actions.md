@@ -8,8 +8,9 @@ the same move in an autonomous.
 
 **You need:**
 
-- The lesson robot with its intake, lift and claw from [lesson 4](04-lift-and-claw.md), tuned so the
-  lift reaches its heights.
+- **Your own robot** with the mechanisms you added in [lesson 4](04-lift-and-claw.md), tuned so they
+  reach their positions. The lesson robot (intake, lift and claw) is the worked example: read its
+  lines, then write the same kind of action for your parts.
 - About 30 minutes.
 
 The finished files: [`Actions.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/Actions.java)
@@ -99,6 +100,11 @@ These come from the `Action` class itself:
 
 - **It never waits.** An action does a little every loop, then lets the loop go on. The robot keeps
   driving and every other button keeps working while it runs.
+  **This is why you need actions:** a button job must never wait. `sleep(500)` or a `while` loop in a
+  job compiles, but it freezes the whole robot (no driving, no other button) until it ends. The Driver
+  Station then warns: `... took 512 ms: the whole robot stopped that long. No sleep() or while loop in a
+  button job: use an Action with waitSeconds (lesson 5)`. Put the wait in an action
+  (`.waitSeconds(0.5)`, `.waitUntil(...)`) instead.
 - **Parts are claimed.** A part belongs to the action from the step that first commands it. If
   another action commands that part, the first action stops.
 - **The driver always wins.** If the operator moves a claimed part (a lift button, the lift stick),
@@ -171,6 +177,43 @@ stop
 and run `./gradlew :sim:scenario -PteamCode=none -Probot=build/lessonbot.properties -Pfile=build/score-high.sim`.
 If the claw line fails and the screen says `timed out waiting for lift at the top`, the lift is too
 slow for the 2 s limit (see the table below). ([Scenario files](../../guides/simulator.md#scenario-files-test-without-a-browser).)
+
+**Your own robot.** From the `ftc-helper-lib` folder, write your simulator file and start it:
+
+```bash
+./gradlew :sim:fromRobot -PteamCode=../TeamCode
+./gradlew :sim:run -PteamCode=../TeamCode
+```
+
+Then try your own action's button, as in steps 1 to 3 above. To test it without a browser, write a
+scenario file **in your robot project**, in a folder `simulator/scenarios/` (next to `TeamCode`), for
+example `simulator/scenarios/my-test.sim`. **Why there:** it is saved and committed with your code, and
+the simulator's automatic tests run every scenario in that folder. (The library's `build/` folder is
+wiped by a clean build.) This one checks the Quick start robot's intake (G2 RT) and its `spitOut` action
+(G2 D-pad left):
+
+```text
+init "Quick Start TeleOp"                    # your TeleOp's name, exactly as in Controls.java
+start
+hold g2.rt 1                                 # hold RT: the intake runs in
+expect within 1 motor intake power > 0.5
+release g2.rt                                # let go: it stops
+expect within 1 motor intake power = 0
+press g2.dpad_left                           # spit out: out for 0.5 s, then stop
+expect within 1 motor intake power < -0.5
+expect within 2 motor intake power = 0
+expect error none
+stop
+```
+
+Run it from the `ftc-helper-lib` folder (the path is from that folder):
+
+```bash
+./gradlew :sim:scenario -PteamCode=../TeamCode -Pfile=../simulator/scenarios/my-test.sim
+```
+
+The report shows each line as `ok` or `FAIL`, and ends with `PASSED` or `FAILED`. Change the names to
+your own (`intake` is the motor's name in the configuration), then add lines for your action.
 
 ## Check it on the robot
 

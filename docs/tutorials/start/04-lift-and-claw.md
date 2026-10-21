@@ -7,8 +7,9 @@ numbers, and tune them on the robot.
 
 **You need:**
 
-- The lesson robot from the earlier lessons: a drive that works ([lesson 2](02-drive.md)) and the
-  buttons from [lesson 3](03-buttons.md).
+- **Your own robot** from the earlier lessons (its five files in your TeamCode): a drive that works
+  ([lesson 2](02-drive.md)) and the buttons from [lesson 3](03-buttons.md). The lesson robot is the
+  worked example: read its lines, then make the same change in your files.
 - On the robot: an intake motor, a lift motor with an encoder, a touch sensor at the bottom of the
   lift, and a claw servo. In the robot configuration they are called `intake`, `lift`,
   `lift_bottom` and `claw`.

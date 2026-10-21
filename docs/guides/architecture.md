@@ -60,7 +60,13 @@ flowchart LR
   [Non-blocking code](non-blocking.md). Only autonomous moves and steps block, on purpose.
 
 [`EasyTeleOp`](../modules/teleop.md) runs this loop for you in TeleOp. In autonomous, `AutoRoutine`
-runs the same `update()` for you during every move and wait.
+runs the same `update()` for you during every move and wait. The exact order, what each part reads
+and writes on the hub, when files are written and what stays between OpMode runs:
+[what runs every loop](every-loop.md).
+
+You do not have to take all of it: every building block (buttons, `SafeMotor`, `PositionMotor`,
+`PidController`, bulk reads, timers, the finders) works alone in your own `LinearOpMode`.
+See [use only what you need](use-only-what-you-need.md).
 
 ## The interfaces (where new things plug in)
 

@@ -184,7 +184,10 @@ BulkReads.auto(hardwareMap);
 ```
 
 In AUTO mode, a new bulk read happens when you read any value a second time. So reading each
-value once per loop gives the best speed.
+value once per loop gives the best speed. That is why `SafeMotor` (so every Lift, Arm and
+`PositionMotor`) and the launcher's `Turret` read each encoder at most once per loop: a reading is
+used again for 3 ms. `EasyTeleOp`, `EasyAuto` and the finders call `BulkReads.auto` for you. What
+each part reads every loop: [what runs every loop](../guides/every-loop.md#bulk-reads).
 
 ### `BulkReads.manual(hardwareMap)` and `BulkReads.clear(hubs)`
 

@@ -99,6 +99,12 @@ Commands and reading:
 
 Telemetry: standard = target and position; debug = target value, power asked/sent, limits, homed.
 
+**Per loop on the hub** (from its `SafeMotor`): one encoder read (`update()` reads it, and the PID and
+telemetry reuse it for 3 ms); a power is sent only when it changes, and again every 25 loops, so a
+power written straight to `getSafeMotor().getMotor()` lasts at most 25 loops. The launcher's
+[`Turret`](launcher.md#turret) reads its encoder the same way (at most once per 3 ms). All the details:
+[what runs every loop](../guides/every-loop.md#what-a-part-does-on-the-hub-per-loop).
+
 ## SpinMotor
 
 ```java

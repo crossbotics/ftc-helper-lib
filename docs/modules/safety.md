@@ -58,6 +58,12 @@ lift.stop();                                        // no power once the OpMode 
    down, slowly ([Homing](#homing-with-a-lower-switch)).
 4. **Slow zone:** close to a limit, power toward it is reduced, so the mechanism does not slam.
 
+**Hub traffic:** `update()` reads the encoder once. `getPosition()` (and the PID, the limits and the
+telemetry, which use it) reuses that reading for 3 ms, shorter than any loop, so one loop makes one
+encoder read. Code that never calls `update()` gets a fresh reading when it asks more than 3 ms
+after the last one. A power is sent only when it changes, and again every 25 loops (see
+[Rules for use](#rules-for-use)). The switches are read each time they are checked (not cached).
+
 **Set the motor direction first:** positive power must move toward `max` (up / out).
 Check it with a low power before you add limits.
 
@@ -80,7 +86,7 @@ Every loop:
 
 | Method | What it does |
 | --- | --- |
-| `update()` | **call first in every loop.** Reads the switches, homes when the lower switch closes, and sends your last power again with the limits applied (so they act with no new `setPower` call). |
+| `update()` | **call first in every loop.** Reads the encoder and the switches, homes when the lower switch closes, and sends your last power again with the limits applied (so they act with no new `setPower` call). Every 25 loops it sends the limited power even if it did not change. |
 | `setPower(power)` | set power, -1 to 1, with the limits applied. Returns the power really sent. |
 | `moveTo(target, pid)` | move toward a target with a [`PidController`](control.md#pidcontroller). The target is kept inside the limits. Returns the power sent. |
 | `stop()` | power 0 |
@@ -95,7 +101,7 @@ Read:
 | `isWaitingForHoming()` | true while it has a lower switch, needs homing, and is not homed yet |
 | `getRequestedPower()` | the last power you asked for |
 | `getAppliedPower()` | the last power really sent. 0 while you asked for power = a limit stopped it. |
-| `getMotor()` | the `DcMotorEx` inside |
+| `getMotor()` | the `DcMotorEx` inside (power sent to it skips the limits: see [Rules for use](#rules-for-use)) |
 | `zeroHere()` | make the current position 0 (home by hand) |
 
 ### Reading switches
@@ -130,7 +136,9 @@ So **turn the robot on with the mechanism all the way down**.
 ### Rules for use
 
 - Send ALL power for this motor through the `SafeMotor` (`setPower` or `moveTo`). Calling
-  `getMotor().setPower(...)` skips the limits.
+  `getMotor().setPower(...)` skips the limits. It cannot stick: while `update()` runs every loop,
+  `SafeMotor` sends its own limited power again within 25 loops (about half a second at 50 loops a
+  second), even when that power did not change.
 - Call `update()` once per loop, before `setPower` or `moveTo`.
 
 ---

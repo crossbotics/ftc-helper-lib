@@ -43,7 +43,13 @@ Your own `Controls.java` from the Quick start already has them. A name in red? A
 on a Mac) on it adds the import.
 
 `ControlMap<Robot>` is a whole TeleOp: driving, the match timer, every part updated each loop, and
-everything stopped at the end. The `<Robot>` says which robot it runs: yours, from `Robot.java`.
+everything stopped at the end.
+
+**The loop:** a robot program runs a **loop**: many times a second, it reads the gamepads, runs the
+button jobs and updates every part. Each time round is "a loop". The library runs this loop for you.
+`buttons(...)` runs only **once**, at INIT: each line plugs a job into a button, and the loop runs the
+job later, when the button is pressed. (Know Scratch or Blocks? [From Blocks to
+Java](../../blocks-to-java.md) shows the same idea with blocks.) The `<Robot>` says which robot it runs: yours, from `Robot.java`.
 `g1` is gamepad 1 (the driver), `g2` is gamepad 2 (the operator).
 
 - `@TeleOp(name = ...)`: the name on the Driver Station.
@@ -64,7 +70,7 @@ gets this map (two drivers):
 | A / X / Y | free / free / field-centric on/off | lift down / low / high |
 | B | free | claw open / close |
 | D-pad up / down | free | lift next height up / down |
-| BACK | pause / go on (hold 1 s: reset "forward") | free |
+| BACK | pause / go on (held 1 s, field-centric only: reset "forward") | free |
 
 The lift's buttons come from its named heights in `Tunables.Lift` (`down = 0, low = 900, high = 2400`):
 A is the lowest, Y the highest, X the second. Every part's buttons are in
@@ -132,6 +138,30 @@ g2.leftStickY.free();
 
 A stick also takes `free()` and `says(...)`.
 
+**Show a value on the Driver Station** with `show(words, value)`, a line of its own inside
+`buttons(...)` (like `rumbleWhen`). The library reads the value again every loop and shows it during
+the match:
+
+```java
+show("Lift ticks", robot.lift::position);           // the lift's encoder count (a robot with a lift)
+show("Intake on", robot.intake::isRunning);          // true or false
+```
+
+**Why:** you see what the robot "thinks" (a count, a yes/no) while you drive, without writing any
+telemetry code. The value must be quick to read: a method reference like these, or a small lambda.
+
+**A job must never wait.** `sleep(...)` or a `while` loop in a job compiles, but it **freezes the whole
+robot**: the loop stops, so no driving, no other button, no part updates, until the job ends.
+
+```java
+g2.dpadLeft.press(() -> { robot.intake.out(); sleep(500); robot.intake.stop(); });   // WRONG
+g2.dpadLeft.press(Actions.spitOut(robot)).says("spit out");                         // right: an Action waits safely
+```
+
+If a job takes too long, the Driver Station warns you: `... took 512 ms: the whole robot stopped that
+long. No sleep() or while loop in a button job: use an Action with waitSeconds (lesson 5)`. To wait,
+write an Action with `waitSeconds(...)` ([lesson 5](05-actions.md)).
+
 ## 5. One job per button (or several gestures)
 
 Each button has ONE job. **Why:** a button that does two things depends on which runs first, and the
@@ -176,8 +206,8 @@ Want two things on one button? Put them in one lambda:
 A tap of gamepad 1 BACK pauses the robot: every part stops on brake, the wheels hold still, actions
 wait, and no button or stick job runs. The Driver Station says PAUSED. Tap BACK again and every part
 goes on with what it was doing (a lift goes on to its height, the intake runs again). **Why:** a safe
-stop for a jam or a dropped piece, without ending the program. (Hold BACK 1 s instead to reset
-field-centric "forward", lesson 2.)
+stop for a jam or a dropped piece, without ending the program. (With field-centric on, hold BACK 1 s instead to
+reset "forward", lesson 2; in robot-centric driving a held BACK does nothing.)
 
 ## 8. The lesson robot's two actions, and a buzz
 
@@ -208,7 +238,18 @@ Open http://localhost:8780, pick "Lesson Bot TeleOp" and INIT: read the map. STA
 gamepad 2, or the keyboard (set gamepad 2's list to "Keyboard" first; A/B/X/Y are K L J I, LB/RB are Q E, LT/RT are Z C, GUIDE is M, BACK is
 Backspace). Press RB and watch the lift rise. Press RB again while it moves: it cancels. Tap GUIDE.
 Then add one job of your own to Controls.java, and one on a button that already has one, to see the
-INIT message. For your own robot: `-PteamCode=../TeamCode` ([simulator guide](../../guides/simulator.md)).
+INIT message.
+
+**Your own robot** (from the `ftc-helper-lib` folder):
+
+```bash
+./gradlew :sim:fromRobot -PteamCode=../TeamCode
+./gradlew :sim:run -PteamCode=../TeamCode
+```
+
+Pick your own TeleOp, INIT, and read your map. Add a job and a `show(...)` line, build again (stop the
+simulator with **Ctrl+C**, then run both lines again), and check the button and the new line on the
+Driver Station. ([Simulator guide](../../guides/simulator.md).)
 
 ## Check it on the robot
 
@@ -229,6 +270,7 @@ INIT message. For your own robot: `-PteamCode=../TeamCode` ([simulator guide](..
 | No button does anything | The robot is paused: tap BACK. |
 | A button held at START does nothing | Let it go and press again: a button held through START does not count. |
 | The help says "press" | Add `.says("...")` to that job. |
+| Warning: `... took N ms: the whole robot stopped that long` | A job has `sleep(...)` or a `while` loop. Use an Action with `waitSeconds` (lesson 5). |
 
 ## Under the hood
 

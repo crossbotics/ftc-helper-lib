@@ -136,7 +136,18 @@ public class Tunables {
 - **The code is the record.** The numbers you tune most become [`Tunable`](tuning.md)s ("Lift/kP"):
   the tuning menu (PRACTICE profile, after START hold GUIDE 1 s) changes them and saves them on the Control Hub. INIT then
   shows "Tuned on this robot (copy into Tunables.java)" with the lines to copy back.
-- **Missing numbers are not errors:** the library's default is used and INIT says which.
+- **Missing numbers are not errors**, with one exception: the library's default is used and INIT
+  says which. **The exception: a Lift or Arm must write `min` and `max`** (a safety limit never comes
+  from a library default), and `max` must be more than `min`. Otherwise INIT stops:
+  `Tunables.Lift has no max: write max (the top of the safe range, in counts: Motor Finder, B). A safety limit never comes from a library default.`
+  (no section at all: `Tunables.java has no Lift section: ...`; an Arm's are in `deg`; `min` points
+  to Motor Finder X). With `max` not above `min`: `Tunables.Lift: max (...) must be more than min (...)`.
+- **A name that looks like a setting stops INIT.** Every number that is not a known setting is a
+  named position. So a field whose name is a known setting with other capitals (`Max` for `max`,
+  `kp` for `kP`) or, for names of 5 letters or more, one letter off (`maxPowr` for `maxPower`)
+  stops INIT: `Tunables.Lift.Max looks like "max" (capitals and spelling count). Fix the name in Tunables.java; a position must not look like a setting.`
+  Before, it quietly became a position called `Max`, and `max` stayed the library default. The same
+  check runs for Claw, Wrist and Positioner (their setting: `travelSec`).
 - **Safety:** a tuned position stays inside `min`..`max`; limits are read once and cannot be tuned.
 - `public static` fields: FTC Dashboard can show them too.
 - The menu's names ("Lift/kP") are shared by the whole robot app: keep one Robot class per app.
@@ -209,7 +220,8 @@ intake = add(Intake.motor("intake").withCrServos("left_wheel", "right_wheel").re
 shows a warning and does nothing), `stepUp()`, `stepDown()`, `manual(power)` (0 holds where it was
 let go), `hold()`, `stop()`, `isAtTarget()`, `isAt(name)`, `position()`, `positions()`, `part()`
 (the [`PositionMotor`](mechanism.md#positionmotor) inside), and `.reversed()` when positive power moves
-it down. Every number has a default, so a part works before it is tuned.
+it down. Every number but `min` and `max` has a default, so a part works before it is tuned; `min`
+and `max` must be in `Tunables.java` (from the [Motor Finder](../guides/finders.md)), or INIT stops.
 
 ```java
 lift = add(Lift.slide("lift").bottomSwitch("lift_bottom"));
@@ -415,6 +427,7 @@ has its standard buttons; write only what differs. A [`Pad`](#controlmap) has ev
 | on a pad: `g2.rumbleWhen(test)`, `rumbleWhen(test, n)` | feedback from the robot: a buzz each time `test` becomes true |
 | on a stick: `use(DoubleConsumer)` | its value every loop (small dead zone, gentle curve) |
 | on a stick: `free()`, `says(words)` | as on a button |
+| in `buttons(...)`: `show(label, value)` | your own value on the Driver Station, read again every loop, e.g. `show("Lift ticks", robot.lift::position);` or `show("Ready", () -> robot.launcher.isReady());`. Not shown while the tuning menu or the button map is open. `value` must not wait; an error in it shows as `error: ...` instead of stopping |
 
 While the robot is paused (BACK), no button or stick job runs, with one exception: a hold's stop job
 (the second job of `hold(job, stopJob)`) still runs when the button is let go, or when the pause starts

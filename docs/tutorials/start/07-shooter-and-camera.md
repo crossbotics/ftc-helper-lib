@@ -220,6 +220,17 @@ The turret robot: write its robot file from `Robot.java`, then run it:
 Choose "TurretBot TeleOp". Drive until the goal is in view and watch the turret follow it and the
 speed change with the distance. Press BACK on gamepad 2 to stop following. ([Simulator guide](../../guides/simulator.md).)
 
+**Your own robot** with its shooter (and camera), from the `ftc-helper-lib` folder:
+
+```bash
+./gradlew :sim:fromRobot -PteamCode=../TeamCode
+./gradlew :sim:run -PteamCode=../TeamCode
+```
+
+Pick your TeleOp, INIT (read the map: the launcher's standard buttons are there), START, and fire.
+For pieces to be picked up and shot, the simulator needs to know where your intake and flywheel are:
+give each a `looks(...)` shape in `Robot.java` ([Lesson 1: Draw your robot from Robot.java](../22-robot-in-five-files.md#draw-your-robot-from-robotjava)).
+
 ## Check it on the robot
 
 1. Safety glasses, and nobody in front of the launcher.

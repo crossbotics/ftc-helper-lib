@@ -87,15 +87,22 @@ replacement for learning.
 
 **New to the library?** Read in this order:
 
-1. [Quick start](docs/quick-start.md): add the library, get five files, and drive.
-2. [Lesson 1: the robot in five files](docs/tutorials/22-robot-in-five-files.md): what each file is for.
-3. Lessons 2 to 7 of the [main track](docs/tutorials/README.md#start-here-the-main-track): drive,
+1. [Start from zero](docs/start-from-zero.md) (never used Android Studio, or new to Java): install
+   Android Studio, get the robot project, put a first program on the robot, and change one line of
+   Java safely. Skip it if your robot project already builds and installs.
+2. [From Blocks to Java](docs/blocks-to-java.md) (used Scratch or Blocks before): where each block you
+   know went, and why you never write the loop.
+3. [Quick start](docs/quick-start.md): add the library, get five files, and drive.
+4. [Lesson 1: the robot in five files](docs/tutorials/22-robot-in-five-files.md): what each file is for.
+5. Lessons 2 to 7 of the [main track](docs/tutorials/README.md#start-here-the-main-track): drive,
    buttons, mechanisms, actions, autonomous, a shooter.
 
 Everything else, by what you want to do:
 
 | I want to... | Read |
 | --- | --- |
+| **Install Android Studio and get the robot project** (no Java needed) | [Start from zero](docs/start-from-zero.md) |
+| Know Scratch or Blocks: see where each block went in Java | [From Blocks to Java](docs/blocks-to-java.md) |
 | **Get a robot driving in 30 minutes** (files to copy, the lines to change) | [Quick start](docs/quick-start.md) |
 | Add the library to our robot project | [Add it to a project](docs/01-add-to-project.md) |
 | **A whole robot program, fast: the robot in five files** (made from your configuration) | [Lesson 1](docs/tutorials/22-robot-in-five-files.md), [robot module](docs/modules/robot.md) |
@@ -108,6 +115,8 @@ Everything else, by what you want to do:
 | Look up any class or method (searchable) | [Reference](docs/reference.md) |
 | Drive + slow mode + intake, ready to copy | [Example: drive and intake](docs/guides/example-drive-intake.md) |
 | Keep the loop fast: what blocks and what never does | [Non-blocking code](docs/guides/non-blocking.md) |
+| Exactly what runs every loop: order, hub reads and writes, files, statics | [What runs every loop](docs/guides/every-loop.md) |
+| Use just the parts you want in your own LinearOpMode (no framework) | [Use only what you need](docs/guides/use-only-what-you-need.md) |
 | Practice vs competition behavior | [Profiles](docs/guides/profiles.md) |
 | Change numbers while the robot runs | [Tuning](docs/guides/tuning.md) |
 | Test the robot (checklists) | [Testing procedures](docs/guides/testing.md) |

@@ -2,9 +2,11 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
-**Goal:** the lesson robot holds its piece, drives to the goal, scores, and always parks, on its own.
+**Goal:** your robot holds its piece, drives to the goal, scores, and always parks, on its own. The
+lesson robot's autonomous is the worked example: read its lines, then write your own in your `autos`
+folder.
 
-**You need:** the lesson robot from the earlier lessons (it drives, and the "score high" action from
+**You need:** your own robot from the earlier lessons (it drives, and the action you wrote in
 [lesson 5](05-actions.md) works), the IMU (the turn sensor in the Control Hub), a tape measure and some tape, and about 5 ft of clear floor. About an hour, most of it tuning.
 
 **The program:** [`autos/ScoreAndPark.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/autos/ScoreAndPark.java),
@@ -180,6 +182,17 @@ menu; you will see "Drive not tuned: runs in the simulator only". Press START an
 drop and strafe. Read the report at the end. Then change `parkWithSeconds(3)` to `parkWithSeconds(28)`
 and run it again: the score steps are "cut short" or "skipped", and the park still runs.
 ([Simulator guide](../../guides/simulator.md).)
+
+**Your own robot.** From the `ftc-helper-lib` folder:
+
+```bash
+./gradlew :sim:fromRobot -PteamCode=../TeamCode
+./gradlew :sim:run -PteamCode=../TeamCode
+```
+
+Choose your own autonomous, INIT, START, and read its report at the end. The simulator runs it even
+before the Drive Tuner (`calibrated = false`); a real robot does not. Changed a step? Stop the
+simulator (**Ctrl+C** in the Terminal) and run both lines again.
 
 ## Check it on the robot
 

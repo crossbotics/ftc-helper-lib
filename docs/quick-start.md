@@ -6,8 +6,13 @@ The shortest hands-on path: get five files into your robot project, change the f
 **STEP**, build, and drive. Then the [main track lessons](tutorials/README.md#start-here-the-main-track)
 explain each part and add mechanisms.
 
+**Never used Android Studio, or no robot project yet?** Do [Start from zero](start-from-zero.md) first
+(45 to 60 minutes): it installs Android Studio, gets the robot project, and shows how to read and
+change one line of Java.
+
 **You need:** your robot project in Android Studio, a Control Hub and Driver Station, gamepad 1, and a
-block to put the robot on (wheels off the ground). **Before this:** nothing.
+block to put the robot on (wheels off the ground). **Before this:** [Start from zero](start-from-zero.md)
+(skip it if Android Studio already builds and installs your robot project).
 
 Words used on this page:
 
@@ -56,24 +61,75 @@ made on the Driver Station. **Why:** the names are copied for you, so they canno
 
 ### B. Copy the template (no configuration yet, or you want to see every line)
 
-Copy the five files from
-[`examples/.../quickstart/`](../examples/src/main/java/com/crossbotics/ftchelper/examples/quickstart):
-`Robot.java`, `Tunables.java`, `Controls.java`, `Actions.java`, and `autos/FirstAuto.java` (into a
-folder `autos`), into `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/`. Then in **each** file:
+The template is in the library, in this folder (inside your `ftc-helper-lib` folder):
+[`examples/src/main/java/com/crossbotics/ftchelper/examples/quickstart/`](../examples/src/main/java/com/crossbotics/ftchelper/examples/quickstart).
 
-1. Change the `package` line at the top to `package org.firstinspires.ftc.teamcode;` (in `autos/FirstAuto.java`:
-   `package org.firstinspires.ftc.teamcode.autos;`, and its imports
-   `org.firstinspires.ftc.teamcode.Robot` and `org.firstinspires.ftc.teamcode.Tunables`).
-   **Why:** the `package` line must match the folder the file is in, or it does not build.
-2. Delete the `@Disabled` lines **and** their `import com.qualcomm.robotcore.eventloop.opmode.Disabled;`
-   lines (in `Controls.java` and `FirstAuto.java`), so they show on the Driver Station.
-   (`@Disabled` hides the examples on a real robot; an import nothing uses is only clutter.)
+1. Copy `Robot.java`, `Tunables.java`, `Controls.java` and `Actions.java` into
+   `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/`.
+2. Make a folder `autos` there (right-click `teamcode`, **New > Package**, `autos`), and copy
+   `autos/FirstAuto.java` into it.
+3. In `Robot.java`, `Tunables.java`, `Controls.java` and `Actions.java`, change the **first line**.
+   The second line of each file is a comment that says what to change it to.
+
+   Before:
+
+   ```java
+   package com.crossbotics.ftchelper.examples.quickstart;
+   // In your TeamCode, change the line above to exactly:  package org.firstinspires.ftc.teamcode;
+   ```
+
+   After:
+
+   ```java
+   package org.firstinspires.ftc.teamcode;
+   // In your TeamCode, change the line above to exactly:  package org.firstinspires.ftc.teamcode;
+   ```
+
+   (You may delete the comment line once it is done.) **Why:** the `package` line must match the
+   folder the file is in, or it does not build.
+4. In `autos/FirstAuto.java`, change the first line and the two imports of `Robot` and `Tunables`.
+
+   Before:
+
+   ```java
+   package com.crossbotics.ftchelper.examples.quickstart.autos;
+   ...
+   import com.crossbotics.ftchelper.examples.quickstart.Robot;
+   import com.crossbotics.ftchelper.examples.quickstart.Tunables;
+   ```
+
+   After:
+
+   ```java
+   package org.firstinspires.ftc.teamcode.autos;
+   ...
+   import org.firstinspires.ftc.teamcode.Robot;
+   import org.firstinspires.ftc.teamcode.Tunables;
+   ```
+
+   **Why:** this file is in the `autos` folder, and it must find `Robot` and `Tunables` in the folder
+   above it.
+5. In `Controls.java` and `autos/FirstAuto.java`, delete these two lines:
+
+   ```java
+   @Disabled
+   ```
+
+   ```java
+   import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+   ```
+
+   **Why:** `@Disabled` hides the examples on a real robot, so the Driver Station would not list
+   them. The `import` line is then not used: an import nothing uses is only clutter.
 
 A simulator test runs this template on every library change, so it always builds and drives.
 
 ## 3. Change the STEP lines
 
 Open each file and change only the lines marked `// STEP`, in order.
+
+Used Scratch or Blocks before? [From Blocks to Java](blocks-to-java.md) shows where each block you know
+went (the loop, "when pressed", "wait") in these files.
 
 **Java you will see in the files** (more in [lesson 1](tutorials/22-robot-in-five-files.md#java-you-will-meet)):
 
@@ -96,8 +152,8 @@ Open each file and change only the lines marked `// STEP`, in order.
 | 7 | `Controls.java` | the TeleOp's name (renamed it? Change `preselectTeleOp` in `autos/FirstAuto.java` to the same name); `group = "Examples"` to your own group name (or delete it); `oneDriver = true` if one person drives and runs the mechanisms | the name is what you pick on the Driver Station, and `preselectTeleOp` picks the TeleOp for you after the autonomous; one driver puts every button on gamepad 1 |
 | 8 | `autos/FirstAuto.java` | the autonomous's name and `group`, where the drive team puts the robot, and how far it drives | it only drives after the Drive Tuner ([lesson 6](tutorials/start/06-first-autonomous.md)) |
 
-In both files, also delete the `@Disabled` line and its `import ...Disabled;` line (step 2B), if you
-have not yet.
+In `Controls.java` and `autos/FirstAuto.java`, also delete the `@Disabled` line and its
+`import com.qualcomm.robotcore.eventloop.opmode.Disabled;` line (step 2B), if you have not yet.
 
 ## 4. Build and check the hardware
 
@@ -139,14 +195,24 @@ the real robot can. ([Simulator guide](guides/simulator.md).)
 laptop, with no Control Hub. (`fromRobot` is a Gradle **task**: one job Gradle can run. `:sim:` says it
 is in the library's `sim` part.)
 
+**What `simulator/robot.properties` is:** `:sim:fromRobot` writes this file in your robot project (next
+to `TeamCode`). It is the simulator's description of your robot: its size, its motors and servos, and
+how they look. The names and the drive come from `Robot.java`; the sizes are guesses, marked `TODO`.
+
+- **Commit it** with your code. **Why:** everyone on the team then gets the same simulator robot.
+- **When you measure the robot,** edit the `TODO` lines with the real numbers.
+- Run `:sim:fromRobot` again whenever `Robot.java` changes. **Why it is safe:** it refreshes only its
+  own lines (marked `# from Robot.java`) and keeps the lines you wrote.
+- To stop the simulator: click in the Terminal and press **Ctrl+C**.
+
 ### Laptop setup (once)
 
 The library is its own Gradle build, separate from your robot project's. So it needs these, even when
 the robot project already builds:
 
-- **Java.** The commands need `JAVA_HOME` (where Java is). Android Studio has its own Java, in its
-  `jbr` folder. Check the folder exists on your computer, then set it in the terminal (it lasts until
-  you close that terminal):
+- **Java.** The commands need `JAVA_HOME` (where Java is; Java 17 or newer). Android Studio has its
+  own Java, usually in its `jbr` folder. Set it in the terminal (it lasts until you close that
+  terminal):
 
   ```bash
   # Mac
@@ -155,8 +221,17 @@ the robot project already builds:
   $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
   ```
 
+  **That folder may not exist on your computer** (Android Studio installed somewhere else, or a
+  different name). To find a Java folder:
+
+  - In Android Studio: **Settings > Build, Execution, Deployment > Build Tools > Gradle**. The
+    **Gradle JDK** line names the Java that Android Studio uses, with its folder. Use that folder.
+  - On a Mac, in the Terminal: `/usr/libexec/java_home -V` lists the Javas installed for the whole
+    Mac, with their folders. (Android Studio's own Java may not be in that list.)
+
 - **The Android SDK.** If the first command stops with `SDK location not found`, make a file
-  `ftc-helper-lib/local.properties` with one line (put your user name in place of `<you>`):
+  `ftc-helper-lib/local.properties` with one line (put your user name in place of `<you>`; on a Mac,
+  `whoami` in the Terminal prints it, on Windows `$env:USERNAME` in PowerShell):
 
   ```text
   sdk.dir=/Users/<you>/Library/Android/sdk
@@ -166,9 +241,13 @@ the robot project already builds:
   `local.properties` does not count; the library is its own build. (Android Studio shows the SDK path in
   **Settings > Languages & Frameworks > Android SDK**.)
 - **Windows:** type `gradlew.bat` (or `.\gradlew` in PowerShell) instead of `./gradlew`.
-- **Normal warnings you can ignore:** `source value 8 is obsolete` (and `target value 8`), `SDK processing. This
-  version only understands SDK XML versions up to 3`, `Deprecated Gradle features were used`,
-  `[Incubating] Problems report`. The first run downloads a lot and takes a few minutes.
+- **Normal warnings you can ignore:** `source value 8 is obsolete` (and `target value 8`),
+  `Java compiler version 21 has deprecated support for compiling with source/target version 8` (it
+  goes on with `Try one of the following options: 1. [Recommended] Use Java toolchain...`: do
+  nothing), `SDK processing. This version only understands SDK XML versions up to 3`,
+  `Deprecated Gradle features were used`, `[Incubating] Problems report`. The first run downloads a lot
+  and takes a few minutes. How to read the rest of the output: [Start from zero: the Terminal
+  tab](start-from-zero.md#6-the-terminal-tab).
 
 ## If something goes wrong
 
@@ -176,6 +255,8 @@ the robot project already builds:
 | --- | --- |
 | The build cannot find `com.crossbotics.ftchelper` | step 1 is not finished: [Add it to a project](01-add-to-project.md) |
 | A `package` error | the `package` line of a copied file still says `com.crossbotics.ftchelper.examples...` |
+| `class, interface, or enum expected` | the file has two `package` lines, or its first line is broken (a typo, a missing `;`): it must be exactly one `package ...;` line at the top |
+| `cannot find symbol` ... `Robot` or `Tunables` in `FirstAuto.java` | its two imports still say `com.crossbotics.ftchelper.examples.quickstart`: step 2B.4 |
 | The TeleOp is not on the Driver Station | the `@Disabled` line is still there, or the app was not reinstalled |
 | INIT stops with a list of names | a name in `Robot.java` does not match the configuration (capitals count) |
 | It spins when it should drive straight | a wheel direction is wrong: STEP 4 |

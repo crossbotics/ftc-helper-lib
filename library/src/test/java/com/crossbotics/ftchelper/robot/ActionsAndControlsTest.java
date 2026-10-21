@@ -22,7 +22,12 @@ public class ActionsAndControlsTest {
     private RobotModulesTest.LiftBot robot;
     private RobotTestKit kit;
 
+    private long keepBefore;
+
     @Before public void setUp() {
+        // The pretend lift moves with no time passing: read it fresh every time.
+        keepBefore = com.crossbotics.ftchelper.safety.SafeMotor.READ_KEEP_NANOS;
+        com.crossbotics.ftchelper.safety.SafeMotor.READ_KEEP_NANOS = 0;
         SettingsFile.useForTests(new SettingsFile(new File(tmp.getRoot(), "settings.properties")));
         TuningReset.clear();
         robot = new RobotModulesTest.LiftBot();
@@ -36,6 +41,7 @@ public class ActionsAndControlsTest {
     }
 
     @After public void back() {
+        com.crossbotics.ftchelper.safety.SafeMotor.READ_KEEP_NANOS = keepBefore;
         SettingsFile.useForTests(null);
         TuningReset.clear();
     }

@@ -32,6 +32,20 @@ See [A new FTC SDK version](02-keep-up-to-date.md#a-new-ftc-sdk-version).
 The name in code and the name in the Driver Station configuration differ. The message lists the
 names that do exist. Fix the spelling, or pick the right configuration on the Driver Station.
 
+**`Tunables.Lift has no max: write max (the top of the safe range, in counts: Motor Finder, B). A safety limit never comes from a library default.`**
+(also `has no min`, `Tunables.java has no Lift section`, or `Arm` in `deg`.) On purpose: a lift or arm
+must never use a library default for its safe range. Run the [Motor Finder](guides/finders.md), then
+write `min` and `max` in that section of `Tunables.java`.
+
+**`Tunables.Lift: max (...) must be more than min (...)`**
+The two numbers are swapped or equal. `max` is the top of the safe range, `min` the bottom.
+
+**`Tunables.Lift.Max looks like "max" (capitals and spelling count). Fix the name in Tunables.java; a position must not look like a setting.`**
+A field name is a known setting with other capitals (`Max`, `kp`) or one letter off (`maxPowr`).
+Without this stop it would quietly become a named position, and the real setting would stay the
+library's default. Fix the spelling. If it really is a position, give it a name that does not look
+like a setting. The known names: [Lift](modules/robot.md#lift).
+
 **`AutoDriveConfig.calibrationConfirmed is false`**, or **"AUTONOMOUS IS OFF: the drive is not tuned yet"** (EasyAuto, Auto)
 On purpose: a robot with untuned numbers can drive much too far. Tune `AutoDrive`, then set it to `true`: [Tune AutoDrive](modules/drive.md#tune-autodrive). With the
 robot in five files: the Drive Tuner, then `Tunables.Drive.calibrated = true`.
@@ -48,6 +62,8 @@ robot in five files: the Drive Tuner, then `Tunables.Drive.calibrated = true`.
 | `Launcher gave up: flywheel` (or `hood`, `Turret`...) | it was not ready in time: that part is the problem |
 | `PRACTICE profile` | set COMPETITION at events |
 | `N tuned value(s) differ from the code` | saved tuning values are in use: copy them into the code, then reset |
+| `... action took N ms: the whole robot stopped that long. ...` or `a button job took N ms: ...` | a button job waited: see "A job took N ms" under [Robot behavior](#robot-behavior) |
+| `Lift update took N ms: update() must not wait or sleep` | a part's `update()` took more than 25 ms: no wait or `sleep()` in `update()`. It goes away 5 s after the last slow update |
 
 **`EasyTeleOp needs your robot settings` / `EasyAuto needs your robot settings`**
 Add `robotConfig()` to the OpMode: `return new RobotSettings();` (starter kit) or
@@ -86,6 +102,13 @@ In `Controls.java`: `hold(...)` instead of `press(...)`.
 - Is `controls.update(gamepad1, gamepad2)` in the loop?
 - Is it the right pad? `Pad.G1` = gamepad1, `Pad.G2` = gamepad2.
 - Was the button held through START? After `ignoreHeldButtons`, let it go and press again.
+
+**A job took N ms: the whole robot stopped that long**
+A button job (over 20 ms is reported) has a `sleep()` or a `while` loop that waits. The program
+does one thing at a time: while the job waits, nothing else runs, not even driving. Fix: make the
+steps an [Action](modules/robot.md#action) and wait with `waitSeconds(...)` (the robot keeps running
+while it waits). Without the five files: set a target or a state and let the loop do the work
+([Non-blocking code](guides/non-blocking.md)).
 
 **The robot freezes when I press a button**
 An action has a `sleep()` or a waiting loop. Actions must be quick. **Why:** the program does one

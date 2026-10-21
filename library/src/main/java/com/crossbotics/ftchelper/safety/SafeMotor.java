@@ -73,7 +73,8 @@ public class SafeMotor {
     // to the hub. Code that never calls update() still gets a fresh reading every time it asks later.
     private int encoderNow = 0;
     private long readAt = Long.MIN_VALUE;
-    static long READ_KEEP_NANOS = 3_000_000L;
+    /** How long one encoder or switch reading is used again, nanoseconds (3 ms). Tests that move a pretend motor with no time passing set it to 0. */
+    public static long READ_KEEP_NANOS = 3_000_000L;
     // Loops since the power was last sent; it is sent again every RESEND_LOOPS loops even if it did
     // not change, so a power written straight to the motor (getMotor()) cannot stick.
     private int loopsSinceSend = 0;
@@ -271,13 +272,29 @@ public class SafeMotor {
         return motor;
     }
 
-    // No switch set (null) counts as "not pressed".
+    // No switch set (null) counts as "not pressed". Like the encoder, a switch reading is used again for
+    // READ_KEEP_NANOS, so one loop reads each switch once.
+    private boolean lowerNow, upperNow;
+    private long lowerAt = Long.MIN_VALUE, upperAt = Long.MIN_VALUE;
+
     private boolean isAtLowerSwitch() {
-        return lowerSwitch != null && lowerSwitch.getAsBoolean();
+        if (lowerSwitch == null) return false;
+        long now = System.nanoTime();
+        if (lowerAt == Long.MIN_VALUE || now - lowerAt >= READ_KEEP_NANOS) {
+            lowerNow = lowerSwitch.getAsBoolean();
+            lowerAt = now;
+        }
+        return lowerNow;
     }
 
     private boolean isAtUpperSwitch() {
-        return upperSwitch != null && upperSwitch.getAsBoolean();
+        if (upperSwitch == null) return false;
+        long now = System.nanoTime();
+        if (upperAt == Long.MIN_VALUE || now - upperAt >= READ_KEEP_NANOS) {
+            upperNow = upperSwitch.getAsBoolean();
+            upperAt = now;
+        }
+        return upperNow;
     }
 
     // The one place where power reaches the motor. Every safety rule is applied here, in order.

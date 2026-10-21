@@ -4,6 +4,35 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+### Changed
+
+- Holding BACK (or tapping it in an EasyTeleOp without a pause job) resets field-centric "forward" only
+  while field-centric driving is on. In robot-centric driving it does nothing and says why for 3 s.
+- A lift or arm must write `min` and `max` in `Tunables.java`, and a name that looks like a setting
+  (`Max`, `kp`, `maxPowr`) stops INIT. Before, `Max` quietly became a position and `max` stayed the
+  library's default (a lift could drive past its real top).
+
+### Added
+
+- Docs: [Start from zero](docs/start-from-zero.md) (students who never coded: the robot pieces, Android
+  Studio, a first build, reading Java, the Terminal) and [From Blocks to Java](docs/blocks-to-java.md)
+  (you never write the loop; a block-to-Java table). For experienced programmers:
+  [What runs every loop](docs/guides/every-loop.md) and [Use only what you need](docs/guides/use-only-what-you-need.md).
+  Lessons: your own robot's simulator commands, the never-wait rule, and a scenario test of your own.
+- `show(label, value)` in `Controls.java`: your own value on the Driver Station every loop.
+- A gesture job that takes too long (a `sleep()`) shows a Driver Station warning that names the fix.
+
+### Fixed
+
+- Loop time: `SafeMotor` (lifts, arms) and the turret read their encoder once per loop instead of up to
+  seven times. `SafeMotor` sends its limited power again every 25 loops, so a power written straight to
+  the motor cannot stick.
+- The "update took N ms" warning now goes away 5 s after the last slow update (it stayed until the end).
+- Lifts and arms read each limit switch once per loop too.
+- Loop time in the TeleOp debug lines (START + BACK): `Loop: 12.3 ms (81 Hz)`.
+- Quick start template: the package-line note is after the package line (a beginner who replaced the
+  first line got two package lines and "class, interface, or enum expected").
+
 ## v0.13.0 - 2026-10-21
 
 Nothing old stops working, with one change: with `oneDriver = true`, your own `g2` lines move to gamepad 1.
