@@ -271,6 +271,11 @@
       <button id="resetField" title="Every game piece back where the match starts; the robot stays where it is">Reset field</button>
       <label class="muted" title="The robot holds the preload (BIOBUZZ: 4 POLLEN) at the start; untick for an empty robot"><input type="checkbox" id="preloaded" checked> Preloaded</label>
     </div>
+    <div class="row" style="margin-top:6px">
+      <label class="muted" title="Draw the planned path of a follow step and the robot's trail, on this map and in 3D"><input type="checkbox" id="showPaths" checked> Path lines:</label>
+      <span class="muted"><span style="color:#f08c00">- - plan</span>, <span style="color:#2da44e">&mdash; where it went</span> (last 30 s)</span>
+      <button id="clearPaths" title="Clears the trail and the last plan (a path still running comes back)">Clear lines</button>
+    </div>
     <div class="muted" id="poseText"></div>
     <div class="muted" id="sizeText" style="margin-top:4px"></div>
     <div class="muted" id="piecesText" style="margin-top:4px"></div>
@@ -723,6 +728,7 @@ function renderHub(s) {
                 : `At full reach: ${chip(false, "too big")} worst pose ${escapeHtml(z.mostPose)}: ${f(z.most)}. Add hard stops or change the shapes.`);
   }
   update3d(s.robot, s.cameras || []);
+  update3dPaths(s);
   update3dPieces(s.pieces || []);
   showHeld(s.stored || {}, s.holds || 0);
   updateHives(s.hives);
@@ -860,6 +866,7 @@ function drawField(r) {
   ctx.strokeRect(X(-wall), Y(wall), 2 * wall * s, 2 * wall * s);
   ctx.fillStyle = css.getPropertyValue("--muted"); ctx.font = "11px system-ui";
   ctx.fillText((fieldData && fieldData.driversLabel) || "drivers", W / 2 - 26, W - 2);
+  drawPaths(ctx, X, Y);
   if (r.drive === "none") return;
   const L = r.length || 18, Wd = r.width || 18;
   ctx.save();
@@ -870,6 +877,55 @@ function drawField(r) {
   ctx.globalAlpha = 1; ctx.fillStyle = "#fff";
   ctx.beginPath(); ctx.moveTo(0, -L / 2 * s + 1); ctx.lineTo(-4 * s, -L / 2 * s + 6 * s); ctx.lineTo(4 * s, -L / 2 * s + 6 * s); ctx.closePath(); ctx.fill();
   ctx.restore();
+}
+// The planned path of a follow step (orange, dashed; faded once its step ended) and the robot's trail
+// (green): where they part, the robot did not drive the plan (a field element, or too fast to brake).
+const PLAN_COLOR = "#f08c00", TRAIL_COLOR = "#2da44e";
+function drawPaths(ctx, X, Y) {
+  const s = lastState;
+  if (!s || !$("#showPaths").checked) return;
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = TRAIL_COLOR; ctx.lineWidth = 2;
+  for (const piece of s.trail || []) {
+    if (piece.length < 2) continue;
+    ctx.beginPath();
+    piece.forEach(([x, y], i) => i ? ctx.lineTo(X(x), Y(y)) : ctx.moveTo(X(x), Y(y)));
+    ctx.stroke();
+  }
+  const plan = s.plan || [];
+  if (plan.length >= 2) {
+    ctx.globalAlpha = s.planRunning ? 1 : 0.5;
+    ctx.strokeStyle = PLAN_COLOR; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    plan.forEach(([x, y], i) => i ? ctx.lineTo(X(x), Y(y)) : ctx.moveTo(X(x), Y(y)));
+    ctx.stroke(); ctx.setLineDash([]);
+    // The end point: a ring.
+    const [ex, ey] = plan[plan.length - 1];
+    ctx.beginPath(); ctx.arc(X(ex), Y(ey), 4, 0, 2 * Math.PI); ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+}
+$("#clearPaths").onclick = () => command({ action: "clearPaths" });
+$("#showPaths").onchange = () => { if (lastState) { drawField(lastState.robot); update3dPaths(lastState); } };
+// The same two lines in 3D, just above the tiles. Rebuilt only when they change.
+function update3dPaths(s) {
+  if (!v3.ready) return;
+  const show = $("#showPaths").checked;
+  const plan = show ? (s.plan || []) : [], trail = show ? (s.trail || []) : [];
+  const key = JSON.stringify([plan.length, plan[0], plan[plan.length - 1], s.planRunning, trail.map(p => [p.length, p[p.length - 1]])]);
+  if (v3.pathKey === key) return;
+  v3.pathKey = key;
+  disposeAll(v3.pathGroup);
+  const line = (pts, z, mat) => {
+    const g = new THREE.BufferGeometry().setFromPoints(pts.map(([x, y]) => new THREE.Vector3(x, y, z)));
+    const l = new THREE.Line(g, mat);
+    if (mat.isLineDashedMaterial) l.computeLineDistances();
+    v3.pathGroup.add(l);
+  };
+  for (const piece of trail) if (piece.length >= 2) line(piece, 0.4, new THREE.LineBasicMaterial({ color: TRAIL_COLOR }));
+  if (plan.length >= 2) {
+    line(plan, 0.6, new THREE.LineDashedMaterial({ color: PLAN_COLOR, dashSize: 3, gapSize: 2, transparent: true, opacity: s.planRunning ? 1 : 0.5 }));
+  }
 }
 // ---------------------------------------------------------------- Field in 3D
 // three.js (the same 3D library as the turret page) comes from this simulator, so it works offline.
@@ -917,6 +973,7 @@ function build3d() {
   const fieldGroup = new THREE.Group(), simpleGroup = new THREE.Group(), tagGroup = new THREE.Group(), cadGroup = new THREE.Group();
   const cellGroup = new THREE.Group();     // the HIVEs' CELLs as plates (when there is no field model)
   fieldGroup.add(simpleGroup, tagGroup, cadGroup, cellGroup); scene.add(fieldGroup);
+  const pathGroup = new THREE.Group(); scene.add(pathGroup);     // the plan and the trail (update3dPaths)
 
   // The robot: a box its size from the robot file, with a white arrow on top at the front.
   const robot = new THREE.Group();
@@ -940,7 +997,7 @@ function build3d() {
   const handles = new THREE.Group(); handles.add(ring, knob); handles.visible = false; scene.add(handles);
   [ring, knob].forEach(o => o.layers.set(1));
 
-  Object.assign(v3, { renderer, scene, camera, controls, fieldGroup, simpleGroup, tagGroup, cadGroup, cellGroup, robot, body, edges, arrow, bodyMat, camMounts, handles, ring, knob });
+  Object.assign(v3, { renderer, scene, camera, controls, pathGroup, fieldGroup, simpleGroup, tagGroup, cadGroup, cellGroup, robot, body, edges, arrow, bodyMat, camMounts, handles, ring, knob });
   setupHandles(stage);
   new ResizeObserver(resize3d).observe(stage);
   resize3d();

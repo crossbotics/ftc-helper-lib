@@ -6,23 +6,29 @@ import com.pedropathing.math.Matrix;
 import com.pedropathing.math.Vector2D;
 
 /**
- * Pedro's Foresight numbers. THESE ARE PEDRO'S QUICKSTART SAMPLE NUMBERS, NOT YOUR ROBOT'S: run Pedro's
- * Foresight tuner (docs/modules/pedro.md) and paste its "Java" output here. Pedro reads them at INIT, so
- * they are not in the tuning menu: change them here and send the code again.
+ * Pedro's Foresight numbers. THESE ARE THE SIMULATED PEDRO BOT'S NUMBERS, NOT YOUR ROBOT'S: run Pedro's
+ * Foresight tuner on your robot (docs/modules/pedro.md) and paste its "Java" output here. Pedro reads
+ * them at INIT, so they are not in the tuning menu: change them here and send the code again.
+ *
+ * <p>Where these come from: the measuring steps of Pedro's Foresight tuner (Pedro's Quickstart,
+ * 2026-10-15), run in the simulator on this robot's simulator file, with the tuner's default
+ * distances (48 in, 30 in/s, 36 in). The tuner read the physics engine's own speed: speeds worked out
+ * from the simulated odometry were too uneven for it (docs/modules/pedro.md, "The simulator").
+ * So paths in the simulator brake the way the simulated robot really brakes. 2026-10-21.
  */
 public class PedroConstants {
     public static final ForesightConfig foresight = new ForesightConfig(c -> {
-        c.forwardTranslational.set(Controller.piecewise(Controller.proportional(0.1)).put(2.5, Controller.proportional(0.3)));
-        c.strafeTranslational.set(Controller.piecewise(Controller.proportional(0.1)).put(2.5, Controller.proportional(0.3)));
-        c.coast.set(Controller.proportionalFeedforward(0.010978350889324107));
-        c.brake.set(Controller.proportionalFeedforward(0.008731598255925491));
-        c.headingFeedback.set(Controller.proportional(5.258721785960744));
-        c.headingBrakeCoefficients.set(Vector2D.cartesian(0.05642143125655298, 0.0063829525363003695));
-        c.linearBrakeCoefficients.set(Matrix.diag(0.10605894992901523, 0.08719146175596092));
-        c.quadraticBrakeCoefficients.set(Matrix.diag(0.0014663966976606565, 0.0013837064502458813));
-        c.maxAchievableForwardVelocity.set(72.72923108818539);
-        c.maxAchievableStrafeVelocity.set(52.34323936525474);
-        c.naturalForwardDeceleration.set(85.01144677379789);
-        c.naturalStrafeDeceleration.set(104.49787535782846);
+        c.forwardTranslational.set(Controller.piecewise(Controller.proportional(0.0826)).put(2.5, Controller.proportional(0.224)));
+        c.strafeTranslational.set(Controller.piecewise(Controller.proportional(0.0981)).put(2.5, Controller.proportional(0.265)));
+        c.coast.set(Controller.proportionalFeedforward(0.0150));
+        c.brake.set(Controller.proportionalFeedforward(0.0127));
+        c.headingFeedback.set(Controller.proportional(10.1));
+        c.headingBrakeCoefficients.set(Vector2D.cartesian(0.149, 0.00026));
+        c.linearBrakeCoefficients.set(Matrix.diag(0.142, 0.147));
+        c.quadraticBrakeCoefficients.set(Matrix.diag(0.00020, 0.000053));
+        c.maxAchievableForwardVelocity.set(66.7);
+        c.maxAchievableStrafeVelocity.set(56.8);
+        c.naturalForwardDeceleration.set(21.2);
+        c.naturalStrafeDeceleration.set(22.1);
     });
 }

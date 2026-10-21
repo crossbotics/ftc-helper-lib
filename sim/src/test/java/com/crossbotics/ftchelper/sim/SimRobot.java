@@ -88,6 +88,8 @@ final class SimRobot {
     // The robot on the field: inches from the field center (x right, y away from the drivers),
     // heading in degrees, counterclockwise = positive, 0 = facing away from the drivers.
     double x = 0, y = -48, headingDeg = 0;
+    // The running path's plan and the robot's trail, for the field map and the 3D view.
+    final SimPaths paths = new SimPaths();
     private double imuZero = 0;
     private volatile double yawRateDeg = 0;   // degrees per second, counterclockwise
     // A hand push: inches per second forward/right, and how long it still lasts.
@@ -456,6 +458,7 @@ final class SimRobot {
         bumpedInto = "";
         if (world != null) world.place(x, y, headingDeg);
         if (odometry != null) odometry.teleported(x, y, headingDeg);
+        paths.jumped();
         if (pieces != null) pieces.reset();   // back to the start of a match: the pieces too
         if (shapes != null) shapes.resetPassive();   // and a dropped intake goes back up
     }
@@ -479,6 +482,7 @@ final class SimRobot {
         bumpedInto = "";
         if (world != null) world.place(x, y, headingDeg);
         if (odometry != null) odometry.teleported(x, y, headingDeg);
+        paths.jumped();
     }
 
     /** Holds a switch pressed (on) or lets it go (off), like clicking it in the panel. */
@@ -527,6 +531,7 @@ final class SimRobot {
         }
         for (SimMotor m : motors.values()) m.step(dt, battery);
         if (!wheels.isEmpty()) moveChassis(dt);
+        paths.record(x, y, dt);
         if (odometry != null) odometry.step(x, y, headingDeg, dt);
         pieces.step();
         for (SimServo s : servos.values()) s.step(dt, Double.isNaN(s.speed) ? servoSpeed : s.speed);

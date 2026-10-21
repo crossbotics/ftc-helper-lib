@@ -345,9 +345,39 @@ Follower is updated only during a `follow` step and its hold. Use `.holdEnd()` f
 
 ## The simulator
 
-Pedro runs in the simulator like the rest of the robot: `follow` steps drive the simulated robot. The
-simulator uses the numbers in `PedroConstants`, so the paths there show what Pedro does with those
-numbers, not exactly what your robot will do. Tune on the real robot.
+Pedro runs in the simulator like the rest of the robot: `follow` steps drive the simulated robot.
+
+**See the path.** The field map (Control Hub, Robot tab) and the 3D view draw two lines:
+
+| Line | What it is |
+| --- | --- |
+| orange, dashed | the plan: the path the running `follow` step drives, with a ring at its end. Faded after the step ends |
+| green | the trail: where the robot really went, in its last 30 seconds of driving |
+
+**Does a curve hit a field element?** Look at the orange line first: if it crosses a field element,
+change the path (move the control point, or add a part with `then`). Then run it and look at the green
+line. Where the green line leaves the orange one, the robot did not drive the plan: it bumped
+something (the robot turns red), or it was too fast to turn or brake in time (try `maxSpeed(...)` on
+that part). The robot is wider than the line: leave half the robot's width (9 in for an 18 in robot)
+plus a little between the line and any field element.
+
+**Clear lines** clears both. A robot put somewhere by hand starts a new piece of trail.
+
+The plan comes from `PedroFollower.plannedPoints()`: the running path as points about 1 in apart (at
+most 200), in our field numbers, mirrored as driven. It only reads; it changes nothing.
+
+**The numbers.** The simulator uses the numbers in `PedroConstants`. The Pedro example robot
+(`examples/.../pedrobot`) has numbers measured on the simulated robot itself: the measuring steps of
+Pedro's Foresight tuner ran in the simulator. So its paths brake like the simulated robot really brakes.
+Your robot needs its own numbers: tune on the real robot ([Tuning Pedro](#tuning-pedro)).
+
+**Can Pedro's Foresight tuner run in the simulator?** Partly. Pedro's tuner menu (the robot's web
+page) needs the real Robot Controller app, so it does not start in the simulator. Its measuring steps
+are plain OpModes, and those do run there. They need the robot's speed. Worked out from the simulated
+odometry, the speed was too uneven: the tuner gave different brake numbers every run. With the
+physics engine's own speed it gave the same numbers every run (within a few percent). The example's
+numbers come from that. They are not a real robot's numbers (the simulated robot coasts to a stop more
+slowly than a real one, for example).
 
 ---
 

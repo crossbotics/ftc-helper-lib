@@ -2,6 +2,7 @@ package com.crossbotics.ftchelper.pedro;
 
 import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
 import com.crossbotics.ftchelper.robot.PathFollower;
+import com.crossbotics.ftchelper.util.FieldPose;
 import com.pedropathing.algorithm.Foresight;
 import com.pedropathing.algorithm.ForesightConfig;
 import com.pedropathing.follower.Follower;
@@ -9,7 +10,9 @@ import com.pedropathing.paths.Path;
 import com.pedropathing.revhub.drivetrains.Mecanum;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -37,6 +40,13 @@ public class PedroFollower implements PathFollower {
     private String holdNote = "";
     private long holdNoteUntil = 0;
     private final java.util.function.LongSupplier clockNanos;
+    // The planned path as points (our frame, mirrored as driven), made when a path starts. Read by the
+    // simulator from its own threads, so it is replaced whole, never changed.
+    private volatile List<FieldPose> planned = Collections.emptyList();
+    // The follower that started a path last (for the simulator; weak: it never keeps an old robot alive).
+    private static volatile WeakReference<PedroFollower> lastStarted = new WeakReference<>(null);
+    /** How many points {@link #plannedPoints()} gives at most. */
+    public static final int MAX_PLANNED_POINTS = 200;
 
     public PedroFollower(Follower follower, PedroLocalizer localizer, List<DcMotor> driveMotors) {
         this(follower, localizer, driveMotors, System::nanoTime);
@@ -109,7 +119,35 @@ public class PedroFollower implements PathFollower {
             setZero(savedZero);
         }
         running = true;
+        planned = sample(p);
+        lastStarted = new WeakReference<>(this);
         follower.follow(p);
+    }
+
+    /**
+     * The path the robot is driving now, as points along it: our frame (x right, y away, inches;
+     * heading degrees, 0 = away), already mirrored for RED if the autonomous mirrors. The first point is
+     * the path's start, the last its end. Empty when no path runs (kept while it holds the end). Read-only: the
+     * simulator draws it on its field map. One point about every inch, at most {@link #MAX_PLANNED_POINTS}.
+     */
+    public List<FieldPose> plannedPoints() {
+        return running ? planned : Collections.<FieldPose>emptyList();
+    }
+
+    /**
+     * The follower that started a path most recently, or null (none yet, or its robot is gone). For the
+     * simulator, which has no other way to reach the robot inside a running OpMode.
+     */
+    public static PedroFollower lastStarted() {
+        return lastStarted.get();
+    }
+
+    // Points along a Pedro path (Pedro's x and y are ours; only the heading differs).
+    static List<FieldPose> sample(Path p) {
+        int n = (int) Math.max(2, Math.min(MAX_PLANNED_POINTS, Math.ceil(p.curve.length()) + 1));
+        List<FieldPose> out = new ArrayList<>(n);
+        for (int i = 0; i < n; i++) out.add(PedroFrame.fromPedro(p.get(i / (double) (n - 1))));
+        return Collections.unmodifiableList(out);
     }
 
     @Override

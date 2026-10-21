@@ -42,6 +42,12 @@ final class SimOdometry {
     // The pretend device's own pose (X forward, Y left, inches; heading CCW deg), as a Pinpoint/OTOS keeps it.
     private double devX, devY, devH;
     private double vX, vY, vH;
+    // When the last physics step ended (System.nanoTime; 0 = none yet). A real Pinpoint or OTOS updates
+    // far more often than the physics (100 a second): a read between two steps gives the pose moved on
+    // by the speed since then, so a fast loop (Pedro's tuners) sees the robot move at every read.
+    private long stepNanos = 0;
+    // At most this far ahead (s): a paused physics thread must not send the pose flying.
+    private static final double MAX_AHEAD_SEC = 0.02;
     // A Pinpoint's raw pod counts and its heading not wrapped to -180..180 (the tuner's spin test).
     private double encX, encY, turnTotalDeg;
     private final double xPodLeftMm, yPodForwardMm;
@@ -91,6 +97,7 @@ final class SimOdometry {
         lastY = y;
         lastH = headingDeg;
         started = true;
+        vX = vY = vH = 0;   // a hand move is not a speed
     }
 
     /** After each physics step: how the robot really moved (field frame, inches; heading CCW deg). */
@@ -136,6 +143,16 @@ final class SimOdometry {
             vY = left / dt;
             vH = Math.toDegrees(turn) / dt;
         }
+        stepNanos = System.nanoTime();
+    }
+
+    // The device pose now: X, Y (inches), heading (deg), moved on from the last step by its speed.
+    private synchronized double[] devNow() {
+        double age = stepNanos == 0 ? 0 : Math.max(0, Math.min(MAX_AHEAD_SEC, (System.nanoTime() - stepNanos) / 1e9));
+        double h = Math.toRadians(devH + vH * age / 2);
+        double fwd = vX * age, left = vY * age;
+        return new double[] {devX + fwd * Math.cos(h) - left * Math.sin(h), devY + fwd * Math.sin(h) + left * Math.cos(h),
+                SimRobot.wrap(devH + vH * age)};
     }
 
     // A pod's count as the code reads it: a pod the code reverses is wired to count backward.
@@ -148,6 +165,7 @@ final class SimOdometry {
         devX = x;
         devY = y;
         devH = h;
+        stepNanos = 0;   // exactly this pose until the next step
     }
 
     /** Adds the pretend devices: a Pinpoint or OTOS by name, dead wheels on (or as) motor encoders. */
@@ -221,9 +239,9 @@ final class SimOdometry {
         @Override public void setEncoderDirections(EncoderDirection xEncoder, EncoderDirection yEncoder) { }
         @Override public void resetPosAndIMU() { setDevice(0, 0, 0); }
         @Override public void recalibrateIMU() { }
-        @Override public double getPosX(DistanceUnit unit) { synchronized (SimOdometry.this) { return unit.fromInches(devX); } }
-        @Override public double getPosY(DistanceUnit unit) { synchronized (SimOdometry.this) { return unit.fromInches(devY); } }
-        @Override public double getHeading(AngleUnit unit) { synchronized (SimOdometry.this) { return unit.fromDegrees(devH); } }
+        @Override public double getPosX(DistanceUnit unit) { return unit.fromInches(devNow()[0]); }
+        @Override public double getPosY(DistanceUnit unit) { return unit.fromInches(devNow()[1]); }
+        @Override public double getHeading(AngleUnit unit) { return unit.fromDegrees(devNow()[2]); }
         @Override public double getVelX(DistanceUnit unit) { synchronized (SimOdometry.this) { return unit.fromInches(vX); } }
         @Override public double getVelY(DistanceUnit unit) { synchronized (SimOdometry.this) { return unit.fromInches(vY); } }
         @Override public double getHeadingVelocity(UnnormalizedAngleUnit unit) { synchronized (SimOdometry.this) { return unit.fromDegrees(vH); } }
@@ -233,9 +251,8 @@ final class SimOdometry {
         @Override public int getEncoderY() { synchronized (SimOdometry.this) { return (int) Math.round(reversed.contains("y") ? -encY : encY); } }
         @Override public double getHeading(UnnormalizedAngleUnit unit) { synchronized (SimOdometry.this) { return unit.fromDegrees(turnTotalDeg); } }
         @Override public Pose2D getPosition() {
-            synchronized (SimOdometry.this) {
-                return new Pose2D(DistanceUnit.INCH, devX, devY, AngleUnit.DEGREES, devH);
-            }
+            double[] d = devNow();
+            return new Pose2D(DistanceUnit.INCH, d[0], d[1], AngleUnit.DEGREES, d[2]);
         }
         @Override public void setPosition(Pose2D pos) {
             setDevice(pos.getX(DistanceUnit.INCH), pos.getY(DistanceUnit.INCH), pos.getHeading(AngleUnit.DEGREES));
@@ -261,7 +278,7 @@ final class SimOdometry {
         @Override public void setOffset(Pose2D pose) { }
         @Override public void resetTracking() { setDevice(0, 0, 0); }
         // The OTOS's own axes: x = right, y = forward (the device pose here is X forward, Y left).
-        @Override public Pose2D getPosition() { synchronized (SimOdometry.this) { return new Pose2D(-devY, devX, devH); } }
+        @Override public Pose2D getPosition() { double[] d = devNow(); return new Pose2D(-d[1], d[0], d[2]); }
         @Override public Pose2D getVelocity() { synchronized (SimOdometry.this) { return new Pose2D(-vY, vX, vH); } }
         @Override public void setPosition(Pose2D pose) { setDevice(pose.y, -pose.x, pose.h); }
         @Override public String getDeviceName() { return "Simulated SparkFun OTOS"; }

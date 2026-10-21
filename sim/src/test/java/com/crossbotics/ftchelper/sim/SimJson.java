@@ -171,6 +171,24 @@ final class SimJson {
             }
             b.append(']');
         }
+        // The running path's plan and where the robot really went (field inches): see SimPaths.
+        b.append(",\"plan\":[");
+        List<com.crossbotics.ftchelper.util.FieldPose> plan = r.paths.plan();
+        for (int i = 0; i < plan.size(); i++) {
+            b.append(i > 0 ? ",[" : "[").append(fmt1(plan.get(i).x)).append(',').append(fmt1(plan.get(i).y)).append(']');
+        }
+        b.append("],\"planRunning\":").append(r.paths.planRunning());
+        b.append(",\"trail\":[");
+        List<List<double[]>> trail = r.paths.trail();
+        for (int i = 0; i < trail.size(); i++) {
+            b.append(i > 0 ? ",[" : "[");
+            List<double[]> piece = trail.get(i);
+            for (int k = 0; k < piece.size(); k++) {
+                b.append(k > 0 ? ",[" : "[").append(fmt1(piece.get(k)[0])).append(',').append(fmt1(piece.get(k)[1])).append(']');
+            }
+            b.append(']');
+        }
+        b.append(']');
         b.append(",\"robot\":{");
         synchronized (r) {
             field(b, "drive", r.driveType).append(',');
@@ -248,6 +266,12 @@ final class SimJson {
     private static String fmt(double v) {
         if (Double.isNaN(v) || Double.isInfinite(v)) return "null";
         return String.format(Locale.US, "%.4f", v);
+    }
+
+    // A tenth of an inch is plenty for a line on the map (and keeps /state small).
+    private static String fmt1(double v) {
+        if (Double.isNaN(v) || Double.isInfinite(v)) return "null";
+        return String.format(Locale.US, "%.1f", v);
     }
 
     private static long modelTime(SimRobot r) {

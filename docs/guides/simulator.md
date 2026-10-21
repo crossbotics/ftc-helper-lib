@@ -143,6 +143,11 @@ buttons (for the Drive Tuner's push test), every motor (power, count, speed, cur
 is at a hard stop), every servo (where it is and where it is going), the switches (click to hold
 one pressed), the cameras and the tags they see, and the battery voltage (lower it to see a weaker robot).
 
+**Path lines** (on the field map and in the 3D view): an orange dashed line is the path a Pedro `follow`
+step drives (the plan), and a green line is where the robot really went in its last 30 seconds of
+driving (the trail). The plan stays, faded, after its step ends, so you can compare the two. **Clear
+lines** clears both; untick **Path lines** to hide them. More: [Pedro module](../modules/pedro.md#the-simulator).
+
 **Field in 3D** (middle, above the gamepads; at the bottom on a narrow screen): the field and the robot in 3D. Drag to turn the view, scroll to
 zoom, right-drag (or two fingers) to slide. View buttons: Drivers, Audience, From above, Follow robot
 (behind the robot; turning the view by hand ends it). Drivers and From above are from your alliance's

@@ -151,6 +151,7 @@ final class SimServer {
                     return "ok";
                 case "resetPose": sim.robot.resetPose(); return "ok";
                 case "resetField": sim.robot.pieces.reset(); return "ok";
+                case "clearPaths": sim.robot.paths.clear(); return "ok";
                 // a game piece put on the field by hand (like the scenario's set piece)
                 case "piece": sim.robot.pieces.place(f.getOrDefault("type", "POLLEN"), num(f, "x"), num(f, "y"), num(f, "z")); return "ok";
                 case "preload": sim.robot.pieces.setPreloaded("1".equals(f.get("on"))); return "ok";

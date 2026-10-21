@@ -84,6 +84,17 @@ uses odometry, and only a project that adds the `pedro` folder gets Pedro Pathin
 - `PathFollower` (core): the small plug a path-following module implements; `RobotDefinition.follower(...)`,
   `makeOdometry(...)`; `Drive.isReversed(...)` is public.
 - Example `examples/.../pedrobot`; the simulator runs Pedro too.
+- Simulator: the field map and the 3D view draw the running `follow` step's path (orange, dashed) and
+  where the robot really went in its last 30 s of driving (green), with a **Clear lines** button and a
+  **Path lines** box. `PedroFollower.plannedPoints()` gives the path as points (read-only).
+- The Pedro example's `PedroConstants` are now numbers measured on the simulated robot (the measuring
+  steps of Pedro's Foresight tuner, run in the simulator), not Pedro's Quickstart sample numbers.
+
+### Changed: simulator
+
+- The simulated Pinpoint and OTOS give a fresh pose at every read (moved on by the speed since the last
+  physics step), like the real ones, which update much faster than the physics. Before, a fast loop (Pedro's
+  tuners) saw the robot stand still between the physics steps (100 a second).
 
 ## v0.14.0 - 2026-10-21
 

@@ -234,6 +234,19 @@ INIT, START.
 stopping, turning to 45 degrees. It stays still there for half a second (the Driver Station shows
 `Path: holding the end`), then drives to park. At the end the report says `done` for every step.
 
+**Look at the path lines** on the field map (Control Hub, Robot tab) or in the 3D view:
+
+- **Orange, dashed:** the plan, the path Pedro drives. It shows as soon as the `follow` step starts.
+- **Green:** the trail, where the robot really went.
+
+Here the two lines lie on top of each other: the robot drove the plan.
+
+**Check your own path this way.** Before you run it, look at the orange line: does it cross a field
+element? The robot is wider than the line, so keep half its width (9 in for an 18 in robot) clear on
+each side. Then run it. Where the green line leaves the orange one, something went wrong: the robot hit
+something (it turns red), or it went too fast to turn or brake in time. Fix the path (move a control
+point, or slow that part with `maxSpeed(0.5)`), press **Clear lines**, and run it again.
+
 **Your own robot.** From the `ftc-helper-lib` folder:
 
 ```bash

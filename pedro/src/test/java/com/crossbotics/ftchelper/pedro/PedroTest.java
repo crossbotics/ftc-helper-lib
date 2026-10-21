@@ -109,6 +109,21 @@ public class PedroTest {
         assertEquals(-45, PedroFrame.fromPedro(end).headingDeg, 1e-6);
     }
 
+    // The simulator draws the planned path: points from start to end, mirrored as driven.
+    @Test public void thePlannedPointsGoFromStartToEndAsDriven() {
+        assertTrue(follower.plannedPoints().isEmpty());
+        follower.follow(PedroPath.curve(-30, -30, -50, -24, -56, -36).then(PedroPath.line(-56, -36, -56, -20)), true);
+        java.util.List<FieldPose> pts = follower.plannedPoints();
+        assertTrue(pts.size() > 20 && pts.size() <= PedroFollower.MAX_PLANNED_POINTS);
+        assertEquals(30, pts.get(0).x, 1e-6);       // mirrored: x flips
+        assertEquals(-30, pts.get(0).y, 1e-6);
+        assertEquals(56, pts.get(pts.size() - 1).x, 1e-6);
+        assertEquals(-20, pts.get(pts.size() - 1).y, 1e-6);
+        assertTrue(follower == PedroFollower.lastStarted());
+        follower.cancel();
+        assertTrue(follower.plannedPoints().isEmpty());
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void aCurveNeedsAControlPoint() {
         PedroPath.curve(0, 0, 10, 10);
