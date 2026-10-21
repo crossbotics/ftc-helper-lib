@@ -12,7 +12,8 @@ change one line of Java.
 
 **You need:** your robot project in Android Studio, a Control Hub and Driver Station, gamepad 1, and a
 block to put the robot on (wheels off the ground). **Before this:** [Start from zero](start-from-zero.md)
-(skip it if Android Studio already builds and installs your robot project).
+(skip it if Android Studio already builds and installs your robot project). Used Blocks before? Read
+[From Blocks to Java](blocks-to-java.md) first, too.
 
 Words used on this page:
 
@@ -33,6 +34,14 @@ Words used on this page:
 Follow [Add it to a project](01-add-to-project.md) (about 10 minutes). After it, your robot project has
 an `ftc-helper-lib` folder next to `TeamCode`, and a test build passes.
 
+- **Is there already an `ftc-helper-lib` folder next to `TeamCode`, with files in it?** A mentor added
+  it. Skip this step.
+- **Is the folder there but empty?** Your clone did not get it. In the Terminal
+  ([how](start-from-zero.md#6-the-terminal-tab)), in the robot project's folder, run
+  `git submodule update --init`. **Why:** the library is a **submodule** (a project kept inside
+  another project), and a clone does not always fetch it
+  ([more](01-add-to-project.md#for-everyone-else-on-the-team)).
+
 ## 2. Get the five files
 
 Pick **one** way.
@@ -42,12 +51,15 @@ Pick **one** way.
 The library writes the five files for you, with each part already in them, from the configuration you
 made on the Driver Station. **Why:** the names are copied for you, so they cannot have typos.
 
-1. Copy the configuration file off the Control Hub: it is `/sdcard/FIRST/<name>.xml` (for example
-   `MyRobot.xml`). Use the REV Hardware Client, or Android Studio's **Device Explorer** (View > Tool
+1. Copy the configuration file off the Control Hub: it is `/sdcard/FIRST/<name>.xml`. (**`<name>`**
+   is a placeholder: put your configuration's name there, without the `< >`. For a configuration
+   called `MyRobot` it is `MyRobot.xml`. **XML** is a kind of text file that stores a list in
+   labelled `<tags>`; you do not edit it.) Use the REV Hardware Client, or Android Studio's **Device Explorer** (View > Tool
    Windows > Device Explorer) with the hub connected. Save it in your robot project, e.g.
    `MyRobot.xml` next to `TeamCode`.
 2. From the `ftc-helper-lib` folder (it runs on the laptop: do the [laptop setup](#laptop-setup-once)
-   first):
+   first), run this **Gradle task** (one job that Gradle, the build tool, can run; `:sim:` says it is
+   in the library's `sim` part):
 
    ```bash
    ./gradlew :sim:newRobot -Pconfig=../MyRobot.xml -PteamCode=../TeamCode
@@ -146,7 +158,7 @@ went (the loop, "when pressed", "wait") in these files.
 | 1 | `Robot.java` | `Drive.mecanum(...)` or `Drive.tank(...)`, and the motor names **exactly** as in the configuration, in the order front left, front right, back left, back right (a two-motor tank: left, right) | the library works out each wheel's power from its place; a typo stops at INIT with the list of real names |
 | 2 | `Robot.java` | `.motor("gobilda-5203-312")` and `.wheelMm(96)`: your drive motor ([its catalog id](guides/parts-catalog.md)) and wheel size | autonomous turns inches into encoder counts with them (an encoder counts how far the motor shaft turned) |
 | 3 | `Robot.java` | `.imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD)`: which way the Control Hub's logo and USB ports face | the IMU (a sensor in the hub) measures the heading, the way the robot faces; field-centric driving and autonomous turns use it |
-| 4 | `Robot.java` | only if a wheel turns the wrong way (step 5 below): `.reversed(...)` listing **every** reversed drive motor | the list replaces the default (the left side reversed) |
+| 4 | `Robot.java` | only if a wheel turns the wrong way (step 5 below): add `.reversed(...)` listing **every** reversed drive motor, on its own line **before** `.imu(...)` (the STEP 4 comment marks the place) | the list replaces the default (the left side reversed); `.imu(...)` ends the drive line with `));`, so a `.reversed(...)` after it does not build |
 | 5 | `Robot.java` | your mechanisms: keep, delete or add `add(...)` lines (and a field for each). No intake? Also delete the `g2.dpadLeft` line in `Controls.java` and `spitOut` in `Actions.java` | each part brings its numbers and buttons |
 | 6 | `Tunables.java` | leave `maxPower` and `practiceMaxPower` at 0.4 for now | a slow first drive is a safe first drive |
 | 7 | `Controls.java` | the TeleOp's name (renamed it? Change `preselectTeleOp` in `autos/FirstAuto.java` to the same name); `group = "Examples"` to your own group name (or delete it); `oneDriver = true` if one person drives and runs the mechanisms | the name is what you pick on the Driver Station, and `preselectTeleOp` picks the TeleOp for you after the autonomous; one driver puts every button on gamepad 1 |
@@ -228,9 +240,14 @@ the robot project already builds:
     **Gradle JDK** line names the Java that Android Studio uses, with its folder. Use that folder.
   - On a Mac, in the Terminal: `/usr/libexec/java_home -V` lists the Javas installed for the whole
     Mac, with their folders. (Android Studio's own Java may not be in that list.)
+  - **Neither one finds a Java?** Install a **JDK** 17 or 21 (a JDK is Java with the tools that build
+    code), for example Eclipse Temurin from [adoptium.net](https://adoptium.net), with the normal
+    settings. Then use its folder (on a Mac, `/usr/libexec/java_home -V` now lists it). You do
+    **not** need the Java from java.com.
 
-- **The Android SDK.** If the first command stops with `SDK location not found`, make a file
-  `ftc-helper-lib/local.properties` with one line (put your user name in place of `<you>`; on a Mac,
+- **The Android SDK.** If the first command stops with `SDK location not found`, make a plain text file
+  `ftc-helper-lib/local.properties` ([how to make a file](start-from-zero.md#make-a-new-file-or-folder):
+  right-click the `ftc-helper-lib` folder, **New > File**) with one line (put your user name in place of `<you>`; on a Mac,
   `whoami` in the Terminal prints it, on Windows `$env:USERNAME` in PowerShell):
 
   ```text
@@ -267,6 +284,6 @@ the robot project already builds:
 
 ## Next
 
-[Lesson 2: Drive](tutorials/start/02-drive.md) explains the drive line and the directions in detail; then
-the [main track](tutorials/README.md#start-here-the-main-track) adds mechanisms, buttons, actions and
-the first autonomous.
+[Lesson 1: the robot in five files](tutorials/22-robot-in-five-files.md) explains what each of the five
+files is for. Then lessons 2 to 7 of the [main track](tutorials/README.md#start-here-the-main-track)
+add the drive in detail, buttons, mechanisms, actions and the first autonomous.

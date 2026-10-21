@@ -243,9 +243,11 @@ to the simulator) from the lesson robot's `Robot.java`, then run it:
 ```
 
 For your own robot: `./gradlew :sim:fromRobot -PteamCode=../TeamCode`, then
-`./gradlew :sim:run -PteamCode=../TeamCode`. Open http://localhost:8780, pick "Lesson Bot TeleOp",
-INIT, read the button map, START. On gamepad 2: Y lifts, A lowers, B opens and closes the claw,
-hold RT to run the intake. The Control Hub panel shows the lift motor's count and the
+`./gradlew :sim:run -PteamCode=../TeamCode`. Open http://localhost:8780 and pick the TeleOp: for the
+lesson robot "Lesson Bot TeleOp"; for your own robot, your own TeleOp's name (the `name = "..."` in
+`Controls.java`). INIT, read the button map, START. The lesson robot's buttons, on gamepad 2: Y lifts,
+A lowers, B opens and closes the claw, hold RT to run the intake (your own robot: the buttons on its
+button map). The Control Hub panel shows the lift motor's count and the
 `lift_bottom` switch: pressed at the bottom, so the lift homes at once. ([Simulator guide](../../guides/simulator.md).)
 
 ## Check it on the robot

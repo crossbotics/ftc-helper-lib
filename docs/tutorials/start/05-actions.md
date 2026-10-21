@@ -189,7 +189,17 @@ Then try your own action's button, as in steps 1 to 3 above. To test it without 
 scenario file **in your robot project**, in a folder `simulator/scenarios/` (next to `TeamCode`), for
 example `simulator/scenarios/my-test.sim`. **Why there:** it is saved and committed with your code, and
 the simulator's automatic tests run every scenario in that folder. (The library's `build/` folder is
-wiped by a clean build.) This one checks the Quick start robot's intake (G2 RT) and its `spitOut` action
+wiped by a clean build.)
+
+**Make the folder and the file** ([how](../../start-from-zero.md#make-a-new-file-or-folder)):
+
+1. Right-click the top project folder (the one with `TeamCode` in it), **New > Directory**, type
+   `simulator/scenarios`, press Enter. (Already there? `:sim:fromRobot` may have made `simulator/`.)
+2. Right-click `scenarios`, **New > File**, type `my-test.sim` (the full name; no `.txt`). If Android
+   Studio asks what kind of file it is, pick **Text**.
+3. Type the lines below into it. It saves by itself.
+
+This one checks the Quick start robot's intake (G2 RT) and its `spitOut` action
 (G2 D-pad left):
 
 ```text
@@ -214,6 +224,14 @@ Run it from the `ftc-helper-lib` folder (the path is from that folder):
 
 The report shows each line as `ok` or `FAIL`, and ends with `PASSED` or `FAILED`. Change the names to
 your own (`intake` is the motor's name in the configuration), then add lines for your action.
+
+- **Button names are the FTC names here, not the Java names.** `g2.dpadLeft` in `Controls.java` is
+  `g2.dpad_left` in a scenario; `leftStickButton` is `g1.left_stick_button`. The full list:
+  [Scenario files](../../guides/simulator.md#scenario-files-test-without-a-browser).
+- **Check a `show(...)` line by its words.** A `show("Intake on", ...)` line is on the screen as
+  `Intake on : true` (label, space, colon, space, value). Check it with
+  `expect screen has "Intake on : true"`. (`expect value` compares numbers only: with `true` it stops
+  and tells you to use `expect screen has`.)
 
 ## Check it on the robot
 

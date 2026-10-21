@@ -142,10 +142,17 @@ public class Tunables {
   `Tunables.Lift has no max: write max (the top of the safe range, in counts: Motor Finder, B). A safety limit never comes from a library default.`
   (no section at all: `Tunables.java has no Lift section: ...`; an Arm's are in `deg`; `min` points
   to Motor Finder X). With `max` not above `min`: `Tunables.Lift: max (...) must be more than min (...)`.
+  `min` and `max` must be `public static` numbers (`public static double max = 2900;`); not `public`, or
+  not a number, and INIT stops with `Tunables.Lift.max must be a public static number (like "public static double max = 1000;"): ...`.
 - **A name that looks like a setting stops INIT.** Every number that is not a known setting is a
-  named position. So a field whose name is a known setting with other capitals (`Max` for `max`,
-  `kp` for `kP`) or, for names of 5 letters or more, one letter off (`maxPowr` for `maxPower`)
-  stops INIT: `Tunables.Lift.Max looks like "max" (capitals and spelling count). Fix the name in Tunables.java; a position must not look like a setting.`
+  named position. So these field names stop INIT:
+  - **Always:** a known setting with other capitals or an `_` added: `Max`, `MAX` or `MIN` for
+    `max`/`min`, `kp`, `KP` or `k_P` for `kP`. (All capitals is a common habit: it stops too.)
+  - **Only when that setting itself is not written:** for names of 5 letters or more, up to two
+    letters off (`maxPowr` or `maxPwr` for `maxPower`). So `slowZone2` next to a written `slowZone`
+    is a position, but `slowZon` with no `slowZone` stops INIT.
+
+  The message: `Tunables.Lift.Max looks like "max" (capitals and spelling count). Fix the name in Tunables.java; a position must not look like a setting.`
   Before, it quietly became a position called `Max`, and `max` stayed the library default. The same
   check runs for Claw, Wrist and Positioner (their setting: `travelSec`).
 - **Safety:** a tuned position stays inside `min`..`max`; limits are read once and cannot be tuned.

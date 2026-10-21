@@ -21,22 +21,29 @@ An autonomous says "drive 24 inches". The robot only knows how far its wheels tu
 or the strafe correction is a little wrong, every move is a little wrong, and the errors add up. So the
 library has a safety rule: **no autonomous runs until you say the drive is tuned.**
 
-The **Drive Tuner** measures the numbers for you. Add this small file next to `Robot.java` in your
-TeamCode (it only hands the Drive Tuner your robot's drive):
+The **Drive Tuner** measures the numbers for you. Make a new Java file `DriveTuner.java` next to
+`Robot.java` in your `teamcode` folder ([how to make a file](../../start-from-zero.md#make-a-new-file-or-folder)),
+and replace everything in it with this whole file (it only hands the Drive Tuner your robot's drive):
 
 ```java
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.crossbotics.ftchelper.finders.DriveTunerOpMode;
+import com.crossbotics.ftchelper.robot.RobotDefinition;
+
 @TeleOp(name = "Drive Tuner", group = "Finders")
 public class DriveTuner extends DriveTunerOpMode {
     @Override
     protected RobotDefinition robot() {
-        return new Robot();
+        return new Robot();   // your Robot.java, in the same folder
     }
 }
 ```
 
-Its imports: `com.qualcomm.robotcore.eventloop.opmode.TeleOp`,
-`com.crossbotics.ftchelper.robot.RobotDefinition` and `com.crossbotics.ftchelper.finders.DriveTunerOpMode`.
-The whole file: [DriveTuner.java](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/DriveTuner.java).
+The `import` lines say where `TeleOp`, `DriveTunerOpMode` and `RobotDefinition` are; `Robot` needs no
+import because it is in the same folder. The lesson robot's copy:
+[DriveTuner.java](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/DriveTuner.java).
 Run it, choose a test with the D-pad, start it with **A**:
 
 | Test | You do | It finds |
@@ -98,12 +105,48 @@ public class ScoreAndPark extends Auto<Robot> {
 }
 ```
 
-Its imports (the file is in the `autos` folder, so it imports your own classes too):
-`org.firstinspires.ftc.teamcode.Robot`, `org.firstinspires.ftc.teamcode.Tunables`,
-`org.firstinspires.ftc.teamcode.Actions`, `com.crossbotics.ftchelper.robot.Auto`,
-`com.crossbotics.ftchelper.robot.Steps`, `com.qualcomm.robotcore.eventloop.opmode.Autonomous` (and
-`...opmode.Disabled` while `@Disabled` is there). Its first line:
-`package org.firstinspires.ftc.teamcode.autos;`.
+**Your own file, whole.** Make a new Java file `ScoreAndPark.java` in your `autos` folder (right-click
+`autos`, **New > Java Class**), and replace everything in it with this. It is the lesson robot's file
+with your own `package` and `import` lines, and no `@Disabled`:
+
+```java
+package org.firstinspires.ftc.teamcode.autos;
+
+import org.firstinspires.ftc.teamcode.Actions;
+import org.firstinspires.ftc.teamcode.Robot;
+import org.firstinspires.ftc.teamcode.Tunables;
+import com.crossbotics.ftchelper.robot.Auto;
+import com.crossbotics.ftchelper.robot.Steps;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+
+// preselectTeleOp: your TeleOp's name, exactly as in @TeleOp(name = ...) in Controls.java
+@Autonomous(name = "Score and Park", group = "Autos", preselectTeleOp = "Quick Start TeleOp")
+public class ScoreAndPark extends Auto<Robot> {
+
+    @Override
+    protected boolean mirrorForRed() {
+        return false;   // BIOBUZZ's field is turned half a turn between the alliances
+    }
+
+    @Override
+    protected void steps(Steps s, Robot robot) {
+        s.start("Against our wall, facing the field", 0)
+         .run("Hold the piece", robot.claw::close)
+         .move("To the goal", Tunables.Auto.toGoalInches, 0, 0.6)
+         .action(Actions.scoreHigh(robot), 5)
+         .parkWithSeconds(3)
+         .move("Park", Tunables.Auto.parkInches, 90, 0.7);
+    }
+}
+```
+
+- **The `package` line** ends in `.autos`: the file is in the `autos` folder.
+- **Three `import` lines of your own** (`Actions`, `Robot`, `Tunables`): they are in the folder above
+  (`teamcode`), so this file must say where they are. The other three come from the library and the
+  FTC SDK.
+- **Your parts and action:** use the names from your own robot (lessons 4 and 5). No claw? Delete the
+  `run("Hold the piece", ...)` line. Your action has another name? Use it in `action(...)`.
+- **`Tunables.Auto`** must be in your `Tunables.java` (section 3 below).
 
 - `@Autonomous(name = ...)` is the name on the Driver Station. `preselectTeleOp` must be the exact
   name of your TeleOp: when autonomous ends, the Driver Station has the TeleOp chosen and ready.

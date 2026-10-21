@@ -3,11 +3,13 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
 This page is for you if you have made programs with blocks (Scratch, FTC Blocks, or similar) but not
-with Java. It shows where each block you know went in the robot's five files. Read it before or
-together with [Lesson 3: Buttons](tutorials/start/03-buttons.md).
+with Java. It shows where each block you know went in the robot's five files. Come back to it with
+[Lesson 3: Buttons](tutorials/start/03-buttons.md).
 
-**Before this:** the [Quick start](quick-start.md) (you have the five files in your TeamCode). New to
-Android Studio? [Start from zero](start-from-zero.md) first.
+**Before this:** [Start from zero](start-from-zero.md) (if you are new to Android Studio). Read this
+page **before** the [Quick start](quick-start.md): the Quick start gives you the five files this page
+talks about. **The reading order:** Start from zero, then this page, then the Quick start, then
+[Lesson 1](tutorials/22-robot-in-five-files.md) and lessons 2 to 7.
 
 ## The key idea: you never write the loop
 
@@ -58,6 +60,11 @@ and in **autonomous steps** ([lesson 6](tutorials/start/06-first-autonomous.md))
 | `joystick` (a reporter block) | `g2.leftStickY.use(robot.lift::manual);` (the stick's value, -1 to 1, every loop) | `Controls.java` |
 | `if <sensor> then rumble` | `g2.rumbleWhen(robot.intake::isRunning);` (a buzz each time it becomes true) | `Controls.java` |
 | `say` / `show variable` | `show("Lift ticks", robot.lift::position);` (the value on the Driver Station, every loop) | `Controls.java`, in `buttons(...)` |
+| `if <sensor> then ...` | not an `if`. Pick one: `g2.rumbleWhen(...)` (a buzz when it becomes true), `.waitUntil(...)` in an Action (wait for it, then go on), or a `hold(...)` (runs while a button is held) | `Controls.java`, `Actions.java` |
+| `if ... else` inside an action | **not yet** in an Action. Use two actions on two buttons, one for each case | `Actions.java`, `Controls.java` |
+| `repeat 3 times` | write the steps 3 times in the Action, or press the button again (it runs the action again) | `Actions.java` |
+| `change [count] by 1` | a variable (a **field**) in `Controls.java`, changed by a button job: see [Count with a button](#count-with-a-button) | `Controls.java` |
+| `broadcast` / `when I receive` | not needed: a button job or an Action calls the part's method itself (`robot.intake.in()`) | |
 | `stop all` | Tap gamepad 1 **BACK** (pause; tap again to go on), or **STOP** on the Driver Station. | the drive team |
 
 Notes on the table:
@@ -90,8 +97,11 @@ other button, no safety checks. A `while (...) { }` loop in a job does the same,
 Driver Station then shows a warning like this:
 
 ```text
-... took 512 ms: the whole robot stopped that long. No sleep() or while loop in a button job: use an Action with waitSeconds (lesson 5)
+G2:DPAD_LEFT button job took 512 ms: the whole robot stopped that long. No sleep() or while loop in a button job: use an Action with waitSeconds (lesson 5)
 ```
+
+(It starts with the button, `G2:DPAD_LEFT` here. A job on a gesture or a "buzz when" starts with
+`a button job took ...` instead.)
 
 Do this instead (the Quick start's `spitOut` in `Actions.java`):
 
@@ -107,6 +117,57 @@ public static Action spitOut(Robot r) {
 and in `Controls.java`: `g2.dpadLeft.press(Actions.spitOut(robot)).says("spit out");`.
 **Why it works:** the Action waits "inside itself". Each loop it checks the time and lets the loop go
 on, so the robot keeps driving.
+
+## Never an if or while in buttons()
+
+`buttons(...)` runs **once**, at INIT. So an `if` or a `while` in it is wrong too:
+
+```java
+// WRONG: checked once, at INIT, and never again
+if (gamepad2.x) robot.intake.in();
+
+// WRONG: INIT never ends; the robot never starts
+while (true) { ... }
+```
+
+- **An `if`** in `buttons(...)` checks the button **once**, at INIT, when nobody is pressing it, and
+  never again. Nothing happens in the match.
+- **A `while` loop** in `buttons(...)` never lets INIT finish: the robot is stuck in INIT.
+- **Do not read `gamepad2.x` (or `gamepad1...`) yourself** in `buttons(...)`. Use the `g1`/`g2` buttons:
+  `g2.x.press(robot.intake::in);`. **Why:** the library checks those buttons every loop for you.
+
+What to use instead of an `if`:
+
+| You want | Use |
+| --- | --- |
+| do something when a button is pressed | `g2.x.press(job)` |
+| do something while a button is held | `g2.x.hold(job, stopJob)` |
+| a buzz when a sensor becomes true | `g2.rumbleWhen(robot.intake::isRunning)` |
+| wait for something, then go on | `.waitUntil("lift at the top", r.lift::isAtTarget, 2.0)` in an Action |
+| "if A then this, else that" | two actions on two buttons (an Action has no `if`/`else` yet) |
+
+## Count with a button
+
+A Blocks `change [count] by 1` is a **field** in Java: a variable that belongs to the whole file, so it
+keeps its value between loops. Put it in `Controls.java`, inside the class, above `buttons(...)`:
+
+```java
+private int count = 0;   // a whole number, starts at 0; private = only this file uses it
+```
+
+and in `buttons(...)`, a button job that changes it, and a `show(...)` line to see it:
+
+```java
+g2.x.press(() -> count++);        // X: count goes up by 1 (count++ means "count = count + 1")
+show("Count", () -> count);       // the Driver Station shows "Count : 3"
+```
+
+**Why a field, not a variable inside `buttons(...)`:** a variable made inside `buttons(...)` is gone
+when it ends (at INIT), and Java does not let a job change it. A field stays as long as the TeleOp runs.
+
+**Check it in a scenario** (lesson 5): a `show(...)` line is on the screen as `Label : value`, so
+`expect screen has "Count : 1"` after one press of X. A `true`/`false` value is checked the same way:
+`expect screen has "Intake on : true"` ([Scenario files](guides/simulator.md#scenario-files-test-without-a-browser)).
 
 ## Java punctuation: a short guide
 
@@ -136,6 +197,8 @@ on, so the robot keeps driving.
 
 ## Next
 
+- [Quick start](quick-start.md), if you have not done it yet: get the five files and drive. Then
+  [Lesson 1](tutorials/22-robot-in-five-files.md).
 - [Lesson 3: Buttons](tutorials/start/03-buttons.md): every kind of button job.
 - [Lesson 5: Actions](tutorials/start/05-actions.md): steps that wait, safely.
 - [The button menu](guides/buttons.md): every way a button can work.

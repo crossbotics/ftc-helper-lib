@@ -109,7 +109,7 @@ later. `robot.claw::open` is a shorter way to write the same thing (a **method r
 | `tap(a).doubleTap(b)` | `g2.rb.tap(robot.intake::toggle).doubleTap(robot.intake::out)` | a tap runs `a` (after waiting 0.35 s for a second tap); a double-tap runs only `b` |
 | `tapOrDoubleTap(tap, doubleTap)` | `g2.rt.tapOrDoubleTap(robot.intake::toggle, robot.intake::out)` | the older way: a tap runs the first at once; a second tap within 0.35 s runs the second too |
 | `slow()` | `g1.lt.slow()` | one driver only: slow driving (see below) |
-| `tap`, `hold`, `doubleTap`, `tapThenHold`, `taps(n, ...)`, `heldFor(sec, ...)` | `g2.lb.tap(a).heldFor(1.0, b)` | several gestures on one button (section 5) |
+| `tap`, `hold` (with other gestures on the same button: starts after 0.3 s), `doubleTap`, `tapThenHold`, `taps(n, ...)`, `heldFor(sec, ...)` | `g2.lb.tap(a).heldFor(1.0, b)` | several gestures on one button (section 5) |
 | `with(other, job)` | `g2.lb.with(g2.y, job)` | a pair: hold LB, press Y |
 | `rumble()` | `.toggle(robot.claw).rumble()` | a buzz when the job runs; on a toggle 2 = on, 1 = off |
 | `free()` | `g2.dpadDown.free()` | no job, even if a part suggested one |

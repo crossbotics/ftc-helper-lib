@@ -192,7 +192,7 @@ public class GamepadTest {
         assertEquals("", c.getSlowActionWarning());
         g2.a = true;
         c.update(g1, g2);
-        assertTrue(c.getSlowActionWarning().startsWith("G2:A action took"));
+        assertTrue(c.getSlowActionWarning().startsWith("G2:A button job took"));
     }
 
     @Test public void releaseAllRunsReleaseActionsForHeldButtons() {

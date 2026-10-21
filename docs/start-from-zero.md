@@ -4,7 +4,8 @@
 
 This page is for you if you have never built an FTC robot program in Java. It needs no Java. At the end
 you have Android Studio, the robot project, a first program on the robot, and one safe edit. Then the
-[Quick start](quick-start.md) is the next page.
+[Quick start](quick-start.md) is the next page (used Blocks before? [From Blocks to Java](blocks-to-java.md)
+first).
 
 **You need:** a laptop (Mac or Windows) with internet, a Control Hub, a Driver Station (see below), and
 a USB cable for the Control Hub. **Time:** 45 to 60 minutes, most of it waiting for downloads.
@@ -49,6 +50,11 @@ These words are on every page of these docs.
      Pick a folder on your laptop. Click **Clone**. ("Clone" means copy the project, with its
      history, from GitHub to your laptop.)
      **Why:** everyone on the team then works on the same code.
+     **The library may already be in it:** if a mentor added it, there is an `ftc-helper-lib` folder
+     next to `TeamCode`. If that folder is **empty**, Android Studio did not get it: in the Terminal
+     ([section 6](#6-the-terminal-tab)), type `git submodule update --init` and press Enter. **Why:**
+     the library is a **submodule** (a project kept inside another project), and a clone does not
+     always fetch it ([Add it to a project](01-add-to-project.md#for-everyone-else-on-the-team)).
    - **B. No team project yet.** Download FTC's project from
      [github.com/FIRST-Tech-Challenge/FtcRobotController](https://github.com/FIRST-Tech-Challenge/FtcRobotController).
      Use the **SDK 12.0** version: open **Releases** on that page, pick **v12.0**, and download the
@@ -79,7 +85,7 @@ These words are on every page of these docs.
 2. **Connect to the Control Hub.** Turn on the robot. Then pick **one**:
    - **USB (the easiest):** a USB cable from the laptop to the Control Hub's USB-C port.
    - **Wi-Fi:** join the laptop to the Control Hub's Wi-Fi network (the one the Driver Station uses;
-     ask your mentor for its name and password). Then, in the Terminal (step 6 below), type
+     ask your mentor for its name and password). Then, in the Terminal ([section 6](#6-the-terminal-tab)), type
      `adb connect 192.168.43.1:5555`. If it says `adb` is not found, use USB.
 3. **Pick the hub.** At the top of the window is a list of devices. After a few seconds it shows the
    Control Hub (its name starts with `REV Robotics`). Pick it.
@@ -89,9 +95,11 @@ These words are on every page of these docs.
    you click Run again.
 5. **Check on the Driver Station.** It connects to the robot and shows the OpMode lists (the
    TeleOp list and the Autonomous list).
-   - Your team's project already has OpModes? Pick one that moves nothing, press INIT, START, then STOP.
+   - Your team's project already has OpModes? Ask your code lead which one moves nothing (a test
+     OpMode, for example), then press INIT, START, then STOP. Not sure? Skip this: in section 5 you
+     install **Concept: NullOp**, a program that moves nothing.
    - FTC's new project shows **empty** lists: its sample OpModes are hidden. You run your first one in
-     step 5 below.
+     [section 5](#5-copy-a-file-into-teamcode-and-change-one-line) below.
 
 ## 4. Reading Java without writing it
 
@@ -146,13 +154,32 @@ That says: the file (`Robot.java`), the line number (12), and the problem (a `;`
 to go to the line. Fix it, then build again. **Why the first:** one missing `;` or `}` can make
 twenty more errors below it, and they all go away with the first fix.
 
+### Java words
+
+These words are in the code and in these docs. One line each; you meet them again in the lessons.
+
+- **variable:** a name that holds a value, like a box with a label. `maxPower` holds `0.4`.
+- **`double`:** a kind of variable that holds a number with a decimal point (`0.4`, `96`).
+  **`int`** holds a whole number (`3`).
+- **`boolean`:** a kind of variable that holds only `true` or `false` (yes or no).
+- **`true` / `false`:** the two answers to a yes/no question, for example "is the button pressed?".
+- **method:** a named list of commands, like a custom block. `init()` and `buttons(...)` are methods.
+  The `( )` after the name hold its inputs.
+- **`void`:** written before a method's name when the method hands nothing back.
+- **`return`:** hands a result back from a method, and ends the method.
+- **object:** one thing the program made from a class, with its own values: your robot, its intake.
+  `robot.intake.in()` asks the intake object to run its `in` method.
+- **`public`:** other files may use this name. (`private`: only this file may.)
+- **`static`:** belongs to the class itself, not to one object, so there is only one. In
+  `Tunables.java`, `public static double maxPower` is one number the whole program shares.
+
 ## 5. Copy a file into TeamCode and change one line
 
 Now run your own first OpMode: a copy of the FTC sample above. It needs no motors.
 
 1. In the **Project** panel, find the sample:
    `FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptNullOp.java`.
-2. Click it, and copy it (**Edit > Copy**). Click the `teamcode` folder from step 2, and paste it
+2. Click it, and copy it (**Edit > Copy**). Click the `teamcode` folder (section 2, step 6), and paste it
    (**Edit > Paste**). If Android Studio asks, click **OK** (keep the name).
    **Why copy:** never change FTC's own files. Your team's code lives only in TeamCode.
 3. Open the copy (in `teamcode`). Change **exactly one line**, the first one:
@@ -183,10 +210,31 @@ Common mistakes:
 - **A deleted `;` or `}`:** the build says `';' expected` or `reached end of file while parsing`.
   Press **Edit > Undo** until the file is as it was.
 
-**Make a folder.** The Quick start puts the autonomous programs in a folder `autos` inside `teamcode`.
-To make it: right-click the `teamcode` folder, **New > Package**, and type `autos` (after the
-`teamcode.` that is already there). A file in it starts with `package org.firstinspires.ftc.teamcode.autos;`.
-**Why "Package":** in Java, a folder of code is called a package.
+### Make a new file or folder
+
+Later pages say "make a file" or "make a folder". This is how, in the **Project** panel (the
+**Project** view from section 2, step 6). Each kind is made a different way:
+
+1. **A new Java file** (a class, for example `HardwareCheck.java`): right-click the `teamcode` folder,
+   **New > Java Class**. Type the name **without** `.java` (`HardwareCheck`), pick **Class**, and
+   press Enter. Android Studio writes the `package` line for you. Then replace everything in the new
+   file with the whole file the page shows (select all with **Edit > Select All**, then paste), and
+   check that the first line is still `package org.firstinspires.ftc.teamcode;`.
+   **Why:** the file name must be the class name, and the `package` line must match the folder.
+2. **A Java folder** (a folder of code, for example `autos`): right-click the `teamcode` folder,
+   **New > Package**, and type `autos` (after the `teamcode.` that is already there). A file in it
+   starts with `package org.firstinspires.ftc.teamcode.autos;`. **Why "Package":** in Java, a folder
+   of code is called a package.
+3. **A plain text file** (not Java: for example `local.properties` or a scenario `my-test.sim`):
+   right-click the folder it goes in, **New > File**, and type the **full** name with its ending
+   (`local.properties`, `my-test.sim`). Do not add `.txt`. If Android Studio asks what kind of file
+   it is ("Register New File Type Association"), pick **Text**.
+   **Why the full name:** the ending tells the tools what the file is; `my-test.sim.txt` is not found.
+4. **A plain folder** (not Java: for example `simulator/scenarios` next to `TeamCode`): right-click
+   the top project folder (the one with `TeamCode` in it), **New > Directory**, and type
+   `simulator/scenarios`. The `/` makes a folder inside a folder.
+
+The Quick start puts the autonomous programs in a Java folder `autos` inside `teamcode` (kind 2).
 
 ## 6. The Terminal tab
 
@@ -197,6 +245,9 @@ Some steps in these docs are commands you type. You type them in Android Studio'
    The text before the cursor (the **prompt**) shows the folder's name.
 3. **`cd`** ("change directory") goes into a folder: `cd ftc-helper-lib`. `cd ..` goes back up one
    folder. The library's commands (the simulator, the file maker) run **inside** `ftc-helper-lib`.
+   **No `ftc-helper-lib` folder yet?** It is there only after the library was added to the project
+   ([Add it to a project](01-add-to-project.md), the Quick start's step 1). With FTC's new project
+   (way B), it is not there until you do that step.
 4. **Run one command:** type it (or paste it), press **Enter**, and wait for the prompt to come back.
    Run one line at a time.
 5. **Gradle commands print a lot** (`./gradlew ...`). The first one downloads for a few minutes. Look
@@ -217,7 +268,7 @@ The library's commands also need a one-time **laptop setup** (where Java and the
 A **commit** saves a snapshot of your changes on your laptop, with a short note about what changed
 (**Git > Commit** in Android Studio), and a **push** sends your commits to the team's GitHub so
 everyone gets them (**Git > Push**). Commit after each thing that works; ask your code lead before you
-push to the team's main branch.
+push to the team's **main branch** (the team's shared copy of the code, the one everyone builds from).
 
 **The library itself:** a mentor or code lead usually adds it to the robot project once, for the
 whole team ([Add it to a project](01-add-to-project.md), about 10 minutes). After that, everyone who
@@ -225,6 +276,8 @@ clones the project gets it.
 
 ## Next
 
-1. [Quick start](quick-start.md): get the five robot files, change the lines marked STEP, and drive.
-2. Used Scratch or Blocks before? [From Blocks to Java](blocks-to-java.md) shows where each block you
-   know went.
+1. Used Scratch or Blocks before? Read [From Blocks to Java](blocks-to-java.md) next, **before** the
+   Quick start: it shows where each block you know went.
+2. [Quick start](quick-start.md): get the five robot files, change the lines marked STEP, and drive.
+3. [Lesson 1: the robot in five files](tutorials/22-robot-in-five-files.md), then lessons 2 to 7 of the
+   [main track](tutorials/README.md#start-here-the-main-track).

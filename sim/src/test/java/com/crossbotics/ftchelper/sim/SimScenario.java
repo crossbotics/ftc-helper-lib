@@ -430,12 +430,22 @@ public final class SimScenario {
         if (t.size() < words) throw new IllegalArgumentException("too short: " + usage);
     }
 
+    // A number to compare with; a word (true, "ready") gets a plain answer instead of Java's error.
+    private static void number(String s) {
+        try {
+            Double.parseDouble(s);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("\"" + s + "\" is not a number. To check words on the screen "
+                    + "(true/false, a name), use: expect screen has \"Label : true\"");
+        }
+    }
+
     private static void op(List<String> t, int at) {
         if (!java.util.Arrays.asList(">", "<", ">=", "<=", "=").contains(t.get(at))) {
             throw new IllegalArgumentException("compare with > < >= <= or =");
         }
-        Double.parseDouble(t.get(at + 1));
-        if (t.size() > at + 2) Double.parseDouble(t.get(at + 2));
+        number(t.get(at + 1));
+        if (t.size() > at + 2) number(t.get(at + 2));
         if (t.size() > at + 3) throw new IllegalArgumentException("too many words at the end");
     }
 

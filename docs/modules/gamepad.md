@@ -102,7 +102,7 @@ All `bind...` methods return the same `ControllerBindings`, so you can chain the
 | `ignoreHeldButtons(gamepad1, gamepad2)` | Call once right after `waitForStart()`. A button or trigger held down through START does NOTHING (press, release, hold or toggle) until it is let go once. This stops surprises. `bindTriggerAxis` still works. |
 | `releaseAll()` | Acts as if every button were let go: "release" actions run for held buttons. Call it before you stop calling `update()` for a while (e.g. while a menu uses the gamepad). Call `ignoreHeldButtons` when you start again. |
 | `isDown(pad, btn)` | True if the button was down at the last `update`. |
-| `getSlowActionWarning()` | "" or a note that an action took more than 20 ms (it waited or slept). It goes away 5 s after the last slow action. Show it with `t.warn(...)`. See [Non-blocking code](../guides/non-blocking.md). |
+| `getSlowActionWarning()` | "" or a note that a button job took more than 20 ms (it waited or slept), like `G2:A button job took 40 ms: the whole robot stopped that long. ...`. It goes away 5 s after the last slow action. Show it with `t.warn(...)`. See [Non-blocking code](../guides/non-blocking.md). |
 | `clear()` | Removes all bindings. |
 
 ### Rules

@@ -14,8 +14,8 @@ The tutorials are the "how and why": what to write, in what order, and what to c
 ## Start here: the main track
 
 Never used Android Studio? Start with [Start from zero](../start-from-zero.md) (45 to 60 minutes). Used
-Scratch or Blocks before? Read [From Blocks to Java](../blocks-to-java.md): it shows where each block
-you know went.
+Scratch or Blocks before? Read [From Blocks to Java](../blocks-to-java.md) next, before the Quick start:
+it shows where each block you know went.
 
 Want a driving robot first, with no explanations? Do the [Quick start](../quick-start.md) (30 minutes),
 then come back here. (Lesson 1's file is named `22-robot-in-five-files.md`: the 22 is only a file

@@ -122,7 +122,7 @@ The lift and claw already show their own lines, and the time and drive mode are 
 | Field-centric "forward" is off | the robot did not start autonomous facing away from you: set `startHeadingDeg()` in the autonomous, or press BACK (in a Controls.java TeleOp: hold BACK 1 s) |
 | Y does nothing | tank drivetrain or no IMU: field-centric needs mecanum wheels and the IMU |
 | The robot will not drive | the tuning menu is open (GUIDE closes it) |
-| A warning "action took ... ms" | a button action waits: remove the wait ([Non-blocking code](../guides/non-blocking.md)) |
+| A warning "button job took ... ms" | a button action waits: remove the wait ([Non-blocking code](../guides/non-blocking.md)) |
 
 ## Try this
 

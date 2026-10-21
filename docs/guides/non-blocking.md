@@ -79,7 +79,7 @@ The library watches for blocking code and tells you on the Driver Station:
 
 | Warning | Means | Fix |
 | --- | --- | --- |
-| `G2:A action took 250 ms: actions must not wait or sleep` | a button action waited | remove the sleep/loop; use a state machine (above) |
+| `G2:A button job took 250 ms: the whole robot stopped that long. ...` | a button action waited | remove the sleep/loop; use a state machine (above) |
 | `Lift update took 120 ms: update() must not wait or sleep` | a mechanism's `update()` waited | same |
 | Loop speed under ~30 Hz (`LoopTimer`; Hz = loops per second) | something is slow every loop | bulk reads, fewer telemetry lines, look for waits |
 

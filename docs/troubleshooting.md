@@ -37,11 +37,19 @@ names that do exist. Fix the spelling, or pick the right configuration on the Dr
 must never use a library default for its safe range. Run the [Motor Finder](guides/finders.md), then
 write `min` and `max` in that section of `Tunables.java`.
 
+**`Tunables.Lift.max must be a public static number (like "public static double max = 1000;"): ...`**
+The field is there but written another way: not `public`, or not a number (for example a `String`).
+Write it exactly like `public static double max = 2900;`. (Without `static`, it counts as missing: you
+get `has no max` instead.)
+
 **`Tunables.Lift: max (...) must be more than min (...)`**
 The two numbers are swapped or equal. `max` is the top of the safe range, `min` the bottom.
 
 **`Tunables.Lift.Max looks like "max" (capitals and spelling count). Fix the name in Tunables.java; a position must not look like a setting.`**
-A field name is a known setting with other capitals (`Max`, `kp`) or one letter off (`maxPowr`).
+A field name is a known setting with other capitals or an `_` (`Max`, `MAX`, `MIN`, `kp`, `KP`,
+`k_P`): this always stops INIT. Or it is up to two letters off a setting (`maxPowr`, `maxPwr` for
+`maxPower`) that the section does not write itself: then too. (`slowZone2` next to a written
+`slowZone` is a position, not a typo.)
 Without this stop it would quietly become a named position, and the real setting would stay the
 library's default. Fix the spelling. If it really is a position, give it a name that does not look
 like a setting. The known names: [Lift](modules/robot.md#lift).
@@ -62,7 +70,7 @@ robot in five files: the Drive Tuner, then `Tunables.Drive.calibrated = true`.
 | `Launcher gave up: flywheel` (or `hood`, `Turret`...) | it was not ready in time: that part is the problem |
 | `PRACTICE profile` | set COMPETITION at events |
 | `N tuned value(s) differ from the code` | saved tuning values are in use: copy them into the code, then reset |
-| `... action took N ms: the whole robot stopped that long. ...` or `a button job took N ms: ...` | a button job waited: see "A job took N ms" under [Robot behavior](#robot-behavior) |
+| `... button job took N ms: the whole robot stopped that long. ...` or `a button job took N ms: ...` | a button job waited: see "A job took N ms" under [Robot behavior](#robot-behavior) |
 | `Lift update took N ms: update() must not wait or sleep` | a part's `update()` took more than 25 ms: no wait or `sleep()` in `update()`. It goes away 5 s after the last slow update |
 
 **`EasyTeleOp needs your robot settings` / `EasyAuto needs your robot settings`**

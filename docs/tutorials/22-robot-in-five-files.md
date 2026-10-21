@@ -175,7 +175,7 @@ gamepad 1, like goBILDA's code. You only write what is different: here, Y fires 
 
 - **INIT shows the map** on the Driver Station: every button with its job, and the free ones. During the
   match, a tap of GUIDE shows it again, without the free ones (tap again to close).
-- **BACK pauses the robot:** everything stops on brake; BACK again and each part goes on as before
+- **BACK pauses the robot:** everything stops on **brake** (the motors hold still instead of coasting); BACK again and each part goes on as before
   (with field-centric on, hold BACK 1 s instead to reset "forward"; in robot-centric driving that does nothing). STOP brakes everything too.
 - Each button takes ONE job. Two jobs on one button in this file, or a job on a driving button (the
   left stick, LT slow...), stop at INIT with the button's name. A job you put on a button a module
@@ -251,7 +251,7 @@ before it: the steps above stop when 3 s are left, and the steps below always ru
 branches, actions, your own steps): [The autonomous builder](../guides/autonomous-builder.md).
 
 It refuses to run until `Tunables.Drive.calibrated = true`: tune the drive first with the Drive Tuner
-([tutorial 09](09-first-auto.md), [21](21-finders.md)), then set it.
+([lesson 6](start/06-first-autonomous.md#1-tune-the-drive-first) shows how), then set it.
 
 ## Try it in the simulator
 

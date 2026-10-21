@@ -132,7 +132,8 @@ public abstract class EasyTeleOp extends LinearOpMode {
     }
 
     // When the "forward only in field-centric" note was last shown (System.nanoTime), for 3 s.
-    private long forwardNoteAt = Long.MIN_VALUE / 2;
+    private long forwardNoteAt = 0;
+    private boolean forwardNoteShown = false;
 
     // BACK (held, or tapped without a pause job): "the robot now faces away from me", with one buzz.
     // Only in field-centric driving (mentor, 2026-10-21: only when the robot is relative to the driver);
@@ -141,6 +142,7 @@ public abstract class EasyTeleOp extends LinearOpMode {
         if (heading == null || driving == null) return;
         if (!driving.isFieldCentric()) {
             forwardNoteAt = System.nanoTime();
+            forwardNoteShown = true;
             return;
         }
         heading.reset();
@@ -428,7 +430,7 @@ public abstract class EasyTeleOp extends LinearOpMode {
                     for (String h : help) t.text(h);
                 } else {
                     if (!driver.getSlowActionWarning().isEmpty()) t.warn(driver.getSlowActionWarning());
-                    if (System.nanoTime() - forwardNoteAt < 3e9) t.warn("BACK held: \"forward\" is only reset in field-centric driving (turn it on first).");
+                    if (forwardNoteShown && System.nanoTime() - forwardNoteAt < 3e9) t.warn("BACK: \"forward\" is only reset in field-centric driving (turn it on first).");
                     if (!operator.getSlowActionWarning().isEmpty()) t.warn(operator.getSlowActionWarning());
                     t.line("Time", timer.format());
                     t.line("Drive", driving.status());

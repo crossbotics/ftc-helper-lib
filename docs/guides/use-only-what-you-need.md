@@ -9,13 +9,20 @@ You do not have to use `EasyTeleOp`, `ControlMap` or the robot in five files. Ev
 below works on its own, next to plain SDK code, in your own loop. For each one: the import, a short
 example, what it depends on, and how to get around it.
 
+**Mixing with the five files:** there is no per-part switch yet to take one part out of
+`robot.update()`. A part added in `Robot.java` (`add(...)`) is updated every loop, and it sends its own
+power to its motor. So if you want to drive a motor yourself, **do not** add it as a part in
+`Robot.java`. Use the building block for it (`PositionMotor` or `SafeMotor`, below) in your own OpMode
+instead. **Why:** two pieces of code sending power to one motor fight each other: the part keeps sending
+its own power (a Lift or Arm sends it again at least every 25 loops), so yours does not last.
+
 "Depends on" was checked in the source. **None of these blocks reads or writes a file, and none
 keeps static state, unless the table says so.**
 
 | Block | Depends on | Files or statics |
 | --- | --- | --- |
 | [`ControllerBindings`](#controllerbindings) | the SDK `Gamepad` | none |
-| [`SafeMotor`](#safemotor) | `PidController`, `SoftLimits`, `MathUtil` | none |
+| [`SafeMotor`](#safemotor) | `PidController`, `SoftLimits`, `MathUtil` | one static: the 3 ms reading reuse, changed only by the test hook `SafeMotor.freshReadingsForTests(boolean)` (tests only) |
 | [`PositionMotor`](#positionmotor) | `SafeMotor`, `PidController`, `MotorSetup`, `Hw` | none, **unless** you call `.tunable(...)` (see there) |
 | [`PidController`](#pidcontroller) | `MathUtil`, `Angles` | none |
 | [`MotorSetup`, `Hw`](#motorsetup-and-hw) | the SDK `HardwareMap` | none |
@@ -43,7 +50,8 @@ while (opModeIsActive()) {
 }
 ```
 
-Each job is timed: one over 20 ms sets `getSlowActionWarning()` (show it if you like).
+Each job is timed: one over 20 ms sets `getSlowActionWarning()` (show it if you like), for example
+`G2:A button job took 40 ms: the whole robot stopped that long. ...`.
 Escape hatch: `isDown(pad, btn)` reads a button yourself; you can always read `gamepad1` directly
 next to it. Full list: [gamepad](../modules/gamepad.md#controllerbindings).
 
@@ -63,8 +71,9 @@ while (opModeIsActive()) {
 lift.stop();
 ```
 
-It reads the encoder once per loop (a reading is used again for 3 ms) and sends a power only when it
-changes, plus every 25 loops. Escape hatch: `getMotor()` gives the `DcMotorEx`. Power written straight
+`update()` reads the encoder and the switches fresh each loop (later reads within 3 ms reuse them, so a
+reading is at most 3 ms old) and sends a power only when it changes, plus every 25 loops (every loop
+while it is past a soft limit). Escape hatch: `getMotor()` gives the `DcMotorEx`. Power written straight
 to it skips the limits, and lasts at most 25 loops while `update()` runs every loop: `SafeMotor` then
 sends its own limited power again. For a different power on purpose, stop calling `update()` for
 that motor. Details: [safety](../modules/safety.md#safemotor).

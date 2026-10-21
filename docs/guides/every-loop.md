@@ -71,19 +71,28 @@ ControlMap (`RobotDefinition.setup`):
 
 | Part | Reads | Writes |
 | --- | --- | --- |
-| Lift, Arm (`PositionMotor` / `SafeMotor`) | the encoder **once** (`SafeMotor.update()` reads it; later reads within 3 ms use that reading). Each switch the same way: read once, and that reading is used again for 3 ms. | the power only when it changes, and again every 25 loops |
+| Lift, Arm (`PositionMotor` / `SafeMotor`) | `SafeMotor.update()` reads the encoder and each switch **fresh**, every loop. Later reads in the same loop (the PID, telemetry) within 3 ms reuse those readings, so a reading is at most 3 ms old. | the power only when it changes, and again every 25 loops. **Past a soft limit** (below min or above max): the power is checked and sent **every loop** |
 | Turret (`launcher.Turret`) | the encoder at most once per 3 ms | the power only when it changes |
 | Drive (`MecanumDrive`, `TankDrive`) | none, except the IMU in field-centric | every wheel power, every loop |
+| Intake in the five files (`robot.Intake`) | none | each motor's and CR servo's power only when it changes (no re-send) |
+| Intake building block (`mechanism.SpinMotor`) | while running in with jam detection: the speed (`getVelocity()`, part of the bulk read) every loop, and, if the jam check uses current, `getCurrent()` every loop: a **separate** hub command, not part of a bulk read | the power only when it changes, and again every 25 writes (one write per `update()`) |
+| Flywheel, launcher (`launcher.Flywheel`, used by `robot.Launcher`) | the speed (`getVelocity()`) every loop; a follower motor's speed too | the speed (`setVelocity`) only when the target changes |
+| Servos (`mechanism.PositionServo`, used by the claw, wrist and other servo parts) | none (a servo cannot report where it is) | the position only when it changes; during a slow move, a small step each loop |
+| Cameras (`vision.WebcamTags`, `vision.LimelightTags`) | the newest tags, from the camera's own process (webcam) or the Limelight's last result: no hub command | none |
 
 Why the 3 ms: in a loop, `update()`, the PID and the telemetry all ask for the position. Each ask
-used to be a trip to the hub. Now the first read is kept for 3 ms (`READ_KEEP_NANOS`, shorter than
-any loop), so they share one. Code that never calls `update()` still gets a fresh reading when it
-asks more than 3 ms later. If more than 3 ms pass between `update()` and the telemetry (slow parts
-in between), the telemetry reads again.
+used to be a trip to the hub. Now `update()` always reads fresh at the start of the loop, and later
+asks within 3 ms reuse that reading, so they share one. **A reading is at most 3 ms old.** Code that
+never calls `update()` gets a reading at most 3 ms old every time it asks. If more than 3 ms pass
+between `update()` and the telemetry (slow parts in between), the telemetry reads again. (Tests that
+move a pretend motor with no time passing turn the reuse off with
+`SafeMotor.freshReadingsForTests(true)`; robot code never needs it.)
 
 Why the 25 loops: a power written straight to `getMotor()` skips the limits. `SafeMotor` sends its
 own limited power again every 25 loops, even if it did not change, so a raw write lasts at most 25
-loops (about half a second at 50 loops a second).
+loops (about half a second at 50 loops a second). Past a soft limit it sends every loop, so a raw
+write can never keep pushing past the limit. (Resting exactly at a limit, like a lift on its bottom
+switch, is not "past": it does not send every loop.) `SpinMotor` re-sends every 25 writes the same way.
 
 ### Bulk reads
 
@@ -101,7 +110,7 @@ EasyTeleOp does not do this for you.
 | Timed | Limit | Warning (top of the Driver Station) |
 | --- | --- | --- |
 | each part's `update()` (`Subsystems.SLOW_UPDATE_MS`) | 25 ms | `<part> update took 40 ms: update() must not wait or sleep` |
-| each button job (`ControllerBindings.SLOW_ACTION_MS`) | 20 ms | `... action took 40 ms: the whole robot stopped that long. ...` |
+| each button job (`ControllerBindings.SLOW_ACTION_MS`) | 20 ms | `G2:A button job took 40 ms: the whole robot stopped that long. ...` (the gamepad and button first) |
 | each gesture or "buzz when" job (ControlMap) | 20 ms | `a button job took 40 ms: the whole robot stopped that long. ...` |
 
 Each warning goes away 5 s after the last slow update or job. Fixes: [troubleshooting](../troubleshooting.md#robot-behavior).
@@ -185,7 +194,7 @@ next, until the app restarts. The library keeps these:
 | `MatchMemory` (alliance, report, placement) | autonomous hands them to TeleOp | ignored after 5 minutes (`MAX_AGE_SEC`). The remembered alliance is written only after an autonomous's START; the "chosen" alliance and the placement are set in every INIT loop (the simulator reads them) |
 | `PoseStore` | autonomous hands the end heading to TeleOp | EasyTeleOp forgets it at START, so a later TeleOp run does not use it |
 | `ButtonPlan.buzzer` | a test hook: tests count buzzes instead of buzzing | package-private; robot code never changes it |
-| `SafeMotor.READ_KEEP_NANOS`, `Turret.READ_KEEP_NANOS` | test hooks (3 ms) | package-private |
+| `SafeMotor.READ_KEEP_NANOS`, `Turret.READ_KEEP_NANOS` | the 3 ms reuse time | package-private. Tests change `SafeMotor`'s with the public hook `SafeMotor.freshReadingsForTests(boolean)` (true = read every time); robot code never needs it |
 | background threads (`SettingsFile`, finders) | one thread for file writes | made on first use |
 
 ## See also

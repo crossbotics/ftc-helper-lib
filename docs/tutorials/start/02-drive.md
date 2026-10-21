@@ -134,9 +134,9 @@ new value is used from the next INIT.
 - **"Forward"** for field-centric is the way the robot faced at INIT, or what autonomous left behind.
   If it is wrong, turn field-centric on, point the robot straight away from you and hold BACK for
   1 second (one buzz). In robot-centric driving, holding BACK does nothing (no buzz), and the Driver
-  Station shows for 3 s: `BACK held: "forward" is only reset in field-centric driving (turn it on first)`.
+  Station shows for 3 s: `BACK: "forward" is only reset in field-centric driving (turn it on first).`
   **Why:** robot-centric driving does not use "forward", so a reset there would only surprise you later.
-- **Pause:** a tap of BACK stops every part on brake, and the wheels hold still. The Driver Station
+- **Pause:** a tap of BACK stops every part on **brake** (the motors hold still instead of coasting), and the wheels hold still. The Driver Station
   says PAUSED. Tap BACK again and each part goes on with what it was doing. **Why:** a quick, safe stop
   that does not end the program.
 - The sticks have a small dead zone (a resting stick is never exactly 0) and a gentle curve, so small
@@ -152,13 +152,26 @@ the ground.**
    power? That shows the motor and its wires work.
 2. **With the code's directions:** copy
    [`MotorDirectionCheck.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/MotorDirectionCheck.java)
-   into TeamCode (next to Robot.java), delete `@Disabled`, and make its `config()` read your Robot.java:
+   into TeamCode (next to Robot.java; in Android Studio, copy it from `ftc-helper-lib/examples/...` and
+   paste it on the `teamcode` folder, as in [Start from zero](../../start-from-zero.md#5-copy-a-file-into-teamcode-and-change-one-line)).
+   Then change three things in your copy:
+   - **Line 2,** the `package` line. Before: `package com.crossbotics.ftchelper.examples;`. After:
 
-   ```java
-   static DriveConfig config() {
-       return new Robot().robotConfig().drive();   // the same names and directions as Robot.java
-   }
-   ```
+     ```java
+     package org.firstinspires.ftc.teamcode;
+     ```
+
+     **Why:** the `package` line must match the folder the file is in, or it does not build.
+   - **Delete the line `@Disabled`.** **Why:** with it, the Driver Station hides the OpMode.
+   - **Make its `config()` read your Robot.java.** Find these lines and change the `return` line:
+
+     ```java
+     static DriveConfig config() {
+         return new Robot().robotConfig().drive();   // the same names and directions as Robot.java
+     }
+     ```
+
+     `Robot` needs no `import` line: it is in the same folder.
 
    Hold X, Y, A, B: each spins one wheel at 30% (front left, front right, back left, back right; a
    two-motor tank: X = left, Y = right). **Every wheel must roll the way that moves the robot forward.**

@@ -4,6 +4,11 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+## v0.14.0 - 2026-10-21
+
+One change can stop INIT on purpose: a lift or arm without `min`/`max`, or a setting name with a typo, in
+`Tunables.java`. The message says what to fix.
+
 ### Changed
 
 - Holding BACK (or tapping it in an EasyTeleOp without a pause job) resets field-centric "forward" only
@@ -24,6 +29,13 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Fixed
 
+- From the reviews (Codex, Fable, and three personas: a student who never coded, a Blocks student, a
+  veteran): a lift's `update()` reads its encoder and switches fresh every loop (a reading is used again
+  for at most 3 ms); past a soft limit the power is checked and sent every loop; the turret homes on a
+  fresh count; a required `min`/`max` must be a real number; capitals and `_` (`MAX`, `k_P`) always stop
+  INIT, near names (`maxPwr`) only when the real setting is missing (so `slowZone2` next to `slowZone` is
+  a position); `SpinMotor` re-sends its power too. The slow-job warning says "button job". A scenario
+  compare with a word explains how to check words (`expect screen has "Label : true"`).
 - Loop time: `SafeMotor` (lifts, arms) and the turret read their encoder once per loop instead of up to
   seven times. `SafeMotor` sends its limited power again every 25 loops, so a power written straight to
   the motor cannot stick.

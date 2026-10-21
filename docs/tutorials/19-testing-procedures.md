@@ -17,14 +17,31 @@ bench, floor, autonomous, event), and how to turn a problem into a fix that stay
 
 ## 1. The 3-line OpMode
 
+The OpMode itself is 3 lines. With the lines every Java file needs, the whole file is this. Make a
+new Java file `HardwareCheck.java` in your `teamcode` folder
+([how to make a file](../start-from-zero.md#make-a-new-file-or-folder)), and replace everything in it
+with:
+
 ```java
-@TeleOp(name = "Tutorial 19: Hardware Check", group = "Tutorials")
-public class Tut19HardwareCheck extends HardwareCheckOpMode {
+package org.firstinspires.ftc.teamcode;
+
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.crossbotics.ftchelper.testing.HardwareCheckOpMode;
+
+@TeleOp(name = "Hardware Check", group = "Tests")
+public class HardwareCheck extends HardwareCheckOpMode {
 }
 ```
 
+- **File name:** `HardwareCheck.java`, the same as the class name after `public class`.
+- **The `package` line** says the file is in the `teamcode` folder.
+- **The two `import` lines** say where `TeleOp` (from the FTC SDK) and `HardwareCheckOpMode` (from
+  this library) are. **Why:** without them, the build says `cannot find symbol`.
+- **No `@Disabled` line:** the Driver Station lists it.
+
 `extends` means "is a kind of": this OpMode is a `HardwareCheckOpMode`, so it does everything that
-class does. The library wrote the OpMode; you only give it a name.
+class does. The library wrote the OpMode; you only give it a name. (The tutorial's own copy is named
+"Tutorial 19: Hardware Check"; the name in `@TeleOp(name = ...)` can be anything.)
 
 ## 2. Use it
 
@@ -61,7 +78,7 @@ The full checklists, including the 2-minute pre-match check, are in
 
 ## Run it
 
-1. Copy the 3 lines into TeamCode (package line, delete `@Disabled`), run it.
+1. Make the file from section 1 in TeamCode (the whole file, with its `package` and `import` lines), build, install and run it.
 2. Go through every device once. Fix any direction or name problem you find.
 3. Take the pre-match checklist from the guide and time yourself: it should take about 2 minutes.
 

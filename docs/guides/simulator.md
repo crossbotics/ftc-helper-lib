@@ -57,6 +57,12 @@ the robot project already builds:
   it in the terminal (it lasts until you close that terminal): Mac
   `export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`, Windows PowerShell
   `$env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"`.
+  **No such folder?** Look in Android Studio: **Settings > Build, Execution, Deployment > Build Tools >
+  Gradle**. The **Gradle JDK** line names the Java Android Studio uses, with its folder: use that
+  folder. On a Mac, `/usr/libexec/java_home -V` in the Terminal also lists the Javas on the laptop.
+  **Still none?** Install a JDK 17 or 21 (a **JDK** is Java with the tools that build code), for
+  example Eclipse Temurin from [adoptium.net](https://adoptium.net), and use its folder. You do
+  **not** need the Java from java.com.
 - **The Android SDK.** If the first command stops with `SDK location not found`, make a file
   `ftc-helper-lib/local.properties` with one line: Mac `sdk.dir=/Users/<you>/Library/Android/sdk`,
   Windows `sdk.dir=C\:\\Users\\<you>\\AppData\\Local\\Android\\Sdk` (your user name in place of `<you>`).
@@ -607,6 +613,31 @@ and the report says so.
 Gamepad names: `g1.`/`g2.` plus `a b x y lb rb lt rt back start guide ls rs`, `dpad_up` (or `up`),
 `left_stick_x` (or `lx`), `right_trigger` (or `rt`) and the other SDK names. The report shows each line
 as ok or FAIL with the value it saw; the command fails if any check failed.
+
+**Button names in a scenario are not the Java names.** A scenario uses the FTC SDK's names (or the
+short names); `Controls.java` uses the library's names. The ones that differ:
+
+| In `Controls.java` (Java) | In a scenario |
+| --- | --- |
+| `g2.dpadUp`, `dpadDown`, `dpadLeft`, `dpadRight` | `g2.dpad_up` (or `g2.up`), `dpad_down` (`down`), `dpad_left` (`left`), `dpad_right` (`right`) |
+| `leftStickButton`, `rightStickButton` | `left_stick_button` (or `ls`), `right_stick_button` (or `rs`) |
+| `leftStickX`, `leftStickY`, `rightStickX`, `rightStickY` | `left_stick_x` (`lx`), `left_stick_y` (`ly`), `right_stick_x` (`rx`), `right_stick_y` (`ry`) |
+| `lb`, `rb` | `lb`, `rb` (or `left_bumper`, `right_bumper`) |
+| `lt`, `rt` | `lt`, `rt` (or `left_trigger`, `right_trigger`); a value from 0 to 1 |
+| `a b x y back start` | the same |
+
+So `g2.dpadLeft.press(...)` in Java is `press g2.dpad_left` in a scenario.
+
+**Check a `show(...)` line.** A `show("Intake on", ...)` line is on the screen as `Label : value`
+(the label, a space, a colon, a space, the value). Check it with its words:
+
+```text
+expect screen has "Intake on : true"
+```
+
+`expect value "Intake on" = true` does not work: `expect value` compares numbers only, and the
+scenario stops with `"true" is not a number. To check words on the screen
+(true/false, a name), use: expect screen has "Label : true"`.
 
 ## Fields: one file per season
 

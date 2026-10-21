@@ -180,7 +180,9 @@ public class SafeMotor {
         // loop while it stays pressed. That one moment is the true bottom; the encoder count
         // there becomes the new 0, wiping out any drift (a slipping belt, a skipped gear tooth).
         if (lowerPressed && !lowerWasPressed) {
-            zeroHere();
+            // The encoder was just read above: use that reading (one hub read per loop).
+            zeroOffset = encoderNow;
+            homed = true;
         }
         lowerWasPressed = lowerPressed;
         // Re-check the last power against the new readings, so a switch stops the motor at once.

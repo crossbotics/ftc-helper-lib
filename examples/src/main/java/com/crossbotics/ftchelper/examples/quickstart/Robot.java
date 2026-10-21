@@ -23,9 +23,10 @@ public class Robot extends RobotDefinition {
                 // STEP 2: your drive motor (its parts-catalog id) and wheel size in mm.
                 .motor("gobilda-5203-312").wheelMm(96)
                 // STEP 3: which way the Control Hub's logo and its USB ports face on the robot.
+                // STEP 4 (only if a wheel turns the wrong way, see the quick start): on its own line HERE,
+                //         before .imu(...), add .reversed("front_left", "back_left") listing EVERY reversed
+                //         drive motor.
                 .imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD));
-                // STEP 4 (only if a wheel turns the wrong way, see the quick start): add
-                //         .reversed("front_left", "back_left") listing EVERY reversed drive motor.
 
         // STEP 5: your mechanisms, one line each. This robot has one intake motor called "intake".
         //         No intake? Delete this line, the "intake" field above, the g2.dpadLeft line in Controls.java
