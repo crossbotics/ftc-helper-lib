@@ -64,6 +64,20 @@ public class SimNewRobotTest {
         compileAndLoad(f);
     }
 
+    // A Pinpoint in the configuration becomes the odometry line (offsets to measure), a Tunables.Odometry
+    // section, and the simulator robot file's odometry lines.
+    @Test public void aPinpointBecomesTheOdometry() throws Exception {
+        String xml = "<Robot><LynxUsbDevice name=\"p\"><LynxModule name=\"Control Hub\" port=\"173\">"
+                + "<goBILDA5202SeriesMotor name=\"front_left\" port=\"0\"/><goBILDA5202SeriesMotor name=\"front_right\" port=\"1\"/>"
+                + "<goBILDA5202SeriesMotor name=\"back_left\" port=\"2\"/><goBILDA5202SeriesMotor name=\"back_right\" port=\"3\"/>"
+                + "<goBILDAPinpoint name=\"pinpoint\" port=\"1\" bus=\"1\"/>"
+                + "</LynxModule></LynxUsbDevice></Robot>";
+        Map<String, String> f = SimNewRobot.files(SimConfigImport.read(xml), "org.firstinspires.ftc.teamcode");
+        assertTrue(f.get("Robot.java"), f.get("Robot.java").contains("odometry(Odometry.pinpoint(\"pinpoint\").offsetsMm(0, 0));"));
+        assertTrue(f.get("Tunables.java"), f.get("Tunables.java").contains("public static class Odometry"));
+        compileAndLoad(f);
+    }
+
     @Test public void intakeServosRunWithAnIntakeMotor() throws Exception {
         String xml = "<Robot><LynxUsbDevice name=\"p\"><LynxModule name=\"Control Hub\" port=\"173\">"
                 + "<goBILDA5202SeriesMotor name=\"left_drive\" port=\"0\"/><goBILDA5202SeriesMotor name=\"right_drive\" port=\"1\"/>"

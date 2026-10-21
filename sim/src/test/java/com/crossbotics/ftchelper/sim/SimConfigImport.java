@@ -103,6 +103,8 @@ public final class SimConfigImport {
         if (tag.equals("RevSPARKMini")) return "crservo";                           // a motor controller on a servo port: power -1..1
         if (tag.equals("RevTouchSensor") || tag.equals("DigitalDevice") || tag.equals("ModernRoboticsAnalogTouchSensor")) return "touch";
         if (tag.equals("Webcam")) return "webcam";
+        if (tag.equals("goBILDAPinpoint")) return "pinpoint";
+        if (tag.equals("SparkFunOTOS")) return "otos";
         if (tag.equals("EthernetDevice") || tag.contains("Limelight")) return "limelight";
         return "other";
     }
@@ -249,6 +251,12 @@ public final class SimConfigImport {
             if (k.equals("touch")) {
                 b.append("touch.").append(key(d.name)).append(" =    # TODO: the motor it watches and how near its bottom: touch.").append(d.name).append(" = lift, below=20\n");
                 questions.add("Switch \"" + d.name + "\": what presses it (a lift at its bottom? which motor)?");
+            }
+            if ((k.equals("pinpoint") || k.equals("otos")) && !keys.contains("odometry")) {
+                keys.add("odometry");
+                b.append("odometry = ").append(k).append(' ').append(d.name).append('\n');
+                if (k.equals("pinpoint")) b.append("odometry.offsetsMm = 0, 0   # TODO: the Odometry Tuner measures them\n");
+                else b.append("odometry.mountIn = 0, 0, 0   # TODO: where the OTOS sits (forward, left inches; its heading)\n");
             }
             if (k.equals("webcam")) {
                 b.append("camera.").append(unique(safe(d.name), keys)).append(" = name=").append(d.name)

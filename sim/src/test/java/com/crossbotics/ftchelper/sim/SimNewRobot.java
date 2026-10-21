@@ -128,6 +128,7 @@ public final class SimNewRobot {
         Set<String> usedNames = new LinkedHashSet<>();   // field and section names given out so far
         if (drive != null) for (String d : drive) used.add(d);
         String imu = null;
+        String odometry = null;   // the Robot.java odometry line, or null
         List<String> todo = new ArrayList<>();
         List<Part> parts = new ArrayList<>();
         List<String> intakeServos = new ArrayList<>();
@@ -146,6 +147,12 @@ public final class SimNewRobot {
             switch (kind) {
                 case "imu":
                     if (imu == null) imu = d.name;
+                    break;
+                case "pinpoint":
+                    if (odometry == null) odometry = "Odometry.pinpoint(" + q(d.name) + ").offsetsMm(0, 0)";
+                    break;
+                case "otos":
+                    if (odometry == null) odometry = "Odometry.otos(" + q(d.name) + ").mountIn(0, 0, 0)";
                     break;
                 case "motor":
                     if (has(w, "intake", "roller", "sweeper", "collector")) {
@@ -270,8 +277,8 @@ public final class SimNewRobot {
         }
 
         Map<String, String> files = new LinkedHashMap<>();
-        files.put("Robot.java", robotJava(pkg, drive, imu, parts, todo));
-        files.put("Tunables.java", tunablesJava(pkg, parts));
+        files.put("Robot.java", robotJava(pkg, drive, imu, odometry, parts, todo));
+        files.put("Tunables.java", tunablesJava(pkg, parts, odometry != null));
         files.put("Controls.java", controlsJava(pkg));
         files.put("Actions.java", actionsJava(pkg, parts));
         files.put("autos/LeaveStart.java", autoJava(pkg));
@@ -290,12 +297,13 @@ public final class SimNewRobot {
 
     // ----------------------------- the files -----------------------------
 
-    private static String robotJava(String pkg, String[] drive, String imu, List<Part> parts, List<String> todo) {
+    private static String robotJava(String pkg, String[] drive, String imu, String odometry, List<Part> parts, List<String> todo) {
         StringBuilder sb = new StringBuilder();
         sb.append("package ").append(pkg).append(";\n\n");
         Set<String> types = new java.util.TreeSet<>();
         types.add("Drive");
         types.add("RobotDefinition");
+        if (odometry != null) types.add("Odometry");
         for (Part p : parts) {
             types.add(p.type);
             if (p.line.contains("Indexer.")) types.add("Indexer");
@@ -334,6 +342,11 @@ public final class SimNewRobot {
             sb.append("                .noImu()");
         }
         sb.append(");\n");
+        if (odometry != null) {
+            sb.append("        // TODO the Odometry Tuner (lesson 8) measures where the pods / sensor sit, then set\n");
+            sb.append("        //      Tunables.Odometry.checked = true\n");
+            sb.append("        odometry(").append(odometry).append(");\n");
+        }
         for (Part p : parts) {
             sb.append('\n');
             if (!p.note.isEmpty()) sb.append("        // ").append(p.note).append('\n');
@@ -347,7 +360,7 @@ public final class SimNewRobot {
         return sb.toString();
     }
 
-    private static String tunablesJava(String pkg, List<Part> parts) {
+    private static String tunablesJava(String pkg, List<Part> parts, boolean odometry) {
         StringBuilder sb = new StringBuilder();
         sb.append("package ").append(pkg).append(";\n\n");
         sb.append("/**\n");
@@ -364,6 +377,12 @@ public final class SimNewRobot {
         sb.append("        public static double strafeCorrection = 1.15, turnKp = 0.012, turnKd = 0.003, moveMinPower = 0.30;\n");
         sb.append("        public static boolean calibrated = false;\n");
         sb.append("    }\n");
+        if (odometry) {
+            sb.append("\n    /** checked: set true after the Odometry Tuner (driveTo steps are skipped before). */\n");
+            sb.append("    public static class Odometry {\n");
+            sb.append("        public static boolean checked = false;\n");
+            sb.append("    }\n");
+        }
         Map<String, Map<String, String>> sections = new LinkedHashMap<>();
         for (Part p : parts) {
             if (!p.numbers.isEmpty()) sections.put(p.section, p.numbers);

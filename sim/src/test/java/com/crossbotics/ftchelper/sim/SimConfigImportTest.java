@@ -27,7 +27,7 @@ public class SimConfigImportTest {
         assertTrue(text.contains("motor.arm = free, part=rev-core-hex"));
         assertTrue(text.contains("camera.webcam_1 = name=Webcam 1"));
         assertTrue(text.contains("limelight.limelight = name=limelight"));
-        assertTrue(text.contains("#   odo (goBILDAPinpoint)"));
+        assertTrue(text, text.contains("odometry = pinpoint odo"));   // the Pinpoint is simulated now
         assertTrue(questions.size() >= 8);
         File f = tmp.newFile("draft.properties");
         Files.write(f.toPath(), text.getBytes("UTF-8"));
