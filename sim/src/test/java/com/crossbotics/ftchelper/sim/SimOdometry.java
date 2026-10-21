@@ -103,11 +103,12 @@ final class SimOdometry {
             return;
         }
         double dx = x - lastX, dy = y - lastY, dh = SimRobot.wrap(headingDeg - lastH);
-        double h0 = Math.toRadians(lastH);
-        // The move seen from the robot (heading 0 faces +y): forward and left, inches; turn radians.
+        // The move seen from the robot at the MIDDLE of the step (heading 0 faces +y): forward and left,
+        // inches; turn radians. The middle heading matches how the library adds pod moves back up.
+        double hm = Math.toRadians(lastH + dh / 2);
         double scale = 1 + scaleError;
-        double forward = (-dx * Math.sin(h0) + dy * Math.cos(h0)) * scale;
-        double left = -(dx * Math.cos(h0) + dy * Math.sin(h0)) * scale;
+        double forward = (-dx * Math.sin(hm) + dy * Math.cos(hm)) * scale;
+        double left = -(dx * Math.cos(hm) + dy * Math.sin(hm)) * scale;
         double turn = Math.toRadians(dh + driftDegPerMin / 60 * dt);
         lastX = x;
         lastY = y;
@@ -258,9 +259,10 @@ final class SimOdometry {
         @Override public boolean setAngularScalar(double s) { return true; }
         @Override public void setOffset(Pose2D pose) { }
         @Override public void resetTracking() { setDevice(0, 0, 0); }
-        @Override public Pose2D getPosition() { synchronized (SimOdometry.this) { return new Pose2D(devX, devY, devH); } }
-        @Override public Pose2D getVelocity() { synchronized (SimOdometry.this) { return new Pose2D(vX, vY, vH); } }
-        @Override public void setPosition(Pose2D pose) { setDevice(pose.x, pose.y, pose.h); }
+        // The OTOS's own axes: x = right, y = forward (the device pose here is X forward, Y left).
+        @Override public Pose2D getPosition() { synchronized (SimOdometry.this) { return new Pose2D(-devY, devX, devH); } }
+        @Override public Pose2D getVelocity() { synchronized (SimOdometry.this) { return new Pose2D(-vY, vX, vH); } }
+        @Override public void setPosition(Pose2D pose) { setDevice(pose.y, -pose.x, pose.h); }
         @Override public String getDeviceName() { return "Simulated SparkFun OTOS"; }
         @Override public Manufacturer getManufacturer() { return Manufacturer.Other; }
     }

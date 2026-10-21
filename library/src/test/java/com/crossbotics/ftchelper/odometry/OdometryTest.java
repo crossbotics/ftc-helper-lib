@@ -6,6 +6,8 @@ import static org.junit.Assert.assertTrue;
 import com.crossbotics.ftchelper.FakeMotor;
 import com.crossbotics.ftchelper.util.FieldPose;
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
+import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
+import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynchSimple;
 import java.lang.reflect.Proxy;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -112,5 +114,52 @@ public class OdometryTest {
         assertTrue(o.isReady());
         pp.status = GoBildaPinpointDriver.DeviceStatus.FAULT_Y_POD_NOT_DETECTED;
         assertEquals("Y pod not found: check its cable", o.status());
+    }
+
+    // A pretend OTOS: its own axes are x = RIGHT, y = FORWARD (the SDK sample).
+    static final class FakeOtos extends SparkFunOTOS {
+        Pose2D pos = new Pose2D(0, 0, 0), offset = new Pose2D(0, 0, 0);
+        boolean connected = true;
+
+        FakeOtos() {
+            super((I2cDeviceSynch) Proxy.newProxyInstance(I2cDeviceSynch.class.getClassLoader(),
+                    new Class<?>[]{I2cDeviceSynch.class}, (pr, m, a) -> {
+                        Class<?> t = m.getReturnType();
+                        if (t == boolean.class) return false;
+                        if (t == int.class || t == short.class || t == byte.class) return 0;
+                        if (t == long.class) return 0L;
+                        if (t == double.class || t == float.class) return 0.0f;
+                        return null;
+                    }));
+        }
+
+        @Override public boolean isConnected() { return connected; }
+        @Override public boolean calibrateImu() { return true; }
+        @Override public void setLinearUnit(DistanceUnit unit) { }
+        @Override public void setAngularUnit(AngleUnit unit) { }
+        @Override public boolean setLinearScalar(double s) { return true; }
+        @Override public boolean setAngularScalar(double s) { return true; }
+        @Override public void setOffset(Pose2D p) { offset = p; }
+        @Override public void resetTracking() { pos = new Pose2D(0, 0, 0); }
+        @Override public Pose2D getPosition() { return pos; }
+        @Override public Pose2D getVelocity() { return new Pose2D(0, 0, 0); }
+        @Override public void setPosition(Pose2D p) { pos = p; }
+    }
+
+    @Test public void otosAxesAreTurnedIntoOurs() {
+        FakeOtos otos = new FakeOtos();
+        // Mounted 10 in forward and 5 in left: the OTOS's own offset is (-5, 10).
+        OtosOdometry o = new OtosOdometry("otos", otos, 10, 5, 0, 1, 1);
+        assertEquals(-5, otos.offset.x, E);
+        assertEquals(10, otos.offset.y, E);
+        // 10 in forward (heading 0 = away): the OTOS reads y = 10; ours is y = 10 too.
+        otos.pos = new SparkFunOTOS.Pose2D(0, 10, 0);
+        o.update();
+        assertEquals(0, o.pose().x, E);
+        assertEquals(10, o.pose().y, E);
+        o.setPose(new FieldPose(12, -60, 90));
+        assertEquals(12, otos.pos.x, E);
+        assertEquals(-60, otos.pos.y, E);
+        assertEquals(90, otos.pos.h, E);
     }
 }

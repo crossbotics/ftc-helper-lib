@@ -55,6 +55,8 @@ public class AutoDrive {
     public enum Result {
         /** Reached the target. */
         DONE,
+        /** Did not move, or stopped: the odometry is not working (a cable, a fault). */
+        NO_ODOMETRY,
         /** Stopped early because the robot was stuck. */
         STALLED,
         /** Stopped because it took longer than {@code actionTimeoutSec}. */
@@ -405,6 +407,17 @@ public class AutoDrive {
 
     public Result driveTo(java.util.function.Supplier<com.crossbotics.ftchelper.util.FieldPose> pose,
                           double xIn, double yIn, double headingDeg, double maxPower, double toleranceIn) {
+        return driveTo(pose, () -> true, xIn, yIn, headingDeg, maxPower, toleranceIn);
+    }
+
+    /**
+     * {@link #driveTo(java.util.function.Supplier, double, double, double, double, double)}, checking every
+     * loop that the odometry works: if {@code ready} turns false, the robot stops at once (NO_ODOMETRY).
+     * Without it the robot would drive on a frozen pose until the time runs out.
+     */
+    public Result driveTo(java.util.function.Supplier<com.crossbotics.ftchelper.util.FieldPose> pose,
+                          BooleanSupplier ready,
+                          double xIn, double yIn, double headingDeg, double maxPower, double toleranceIn) {
         if (tank) {
             throw new UnsupportedOperationException("driveTo needs mecanum wheels (it drives sideways). On a standard "
                     + "(tank) drive, use turnTo(...) and then move(...).");
@@ -420,6 +433,10 @@ public class AutoDrive {
             while (true) {
                 Result early = checkStop(deadline);
                 if (early != null) return early;
+                if (!ready.getAsBoolean()) {
+                    log.accept("AutoDrive: driveTo stopped, the odometry is not working");
+                    return Result.NO_ODOMETRY;
+                }
                 com.crossbotics.ftchelper.util.FieldPose p = pose.get();
                 double dx = xIn - p.x, dy = yIn - p.y;
                 double dist = Math.hypot(dx, dy);

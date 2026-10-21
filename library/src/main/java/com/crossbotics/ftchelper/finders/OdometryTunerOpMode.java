@@ -166,11 +166,11 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
                 double dy = (pp.device().getEncoderY() - podsAtStart[1]) / perMm * (spec.isReversed("y") ? -1 : 1);
                 // A pod LEFT of the centre rolls backward when the robot turns left; one FORWARD of it rolls left.
                 double xLeft = -dx / turnRad, yForward = dy / turnRad;
-                String line = "Robot.java: odometry(Odometry.pinpoint(\"" + spec.names().get(0) + "\").offsetsMm("
-                        + FinderResults.num(xLeft, 1) + ", " + FinderResults.num(yForward, 1) + "))";
-                results.set("odo:offsets", line);
+                // Only the numbers to change: the rest of the line (pods, .reversed) stays as it is.
+                results.set("odo:offsets", "Robot.java: in the odometry(...) line, .offsetsMm("
+                        + FinderResults.num(xLeft, 1) + ", " + FinderResults.num(yForward, 1) + ")");
                 lastResult = "Offsets measured: X pod " + FinderResults.num(xLeft, 1) + " mm left, Y pod "
-                        + FinderResults.num(yForward, 1) + " mm forward. Copy the line, rebuild, then the Loop test.";
+                        + FinderResults.num(yForward, 1) + " mm forward. Change those two numbers in Robot.java, rebuild, then the Loop test.";
                 break;
             }
             case "otos": {
@@ -185,9 +185,8 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
                 double l = signed(0), r = signed(1), pp = signed(2);
                 double track = (r - l) / perMm / 25.4 / turnRad;
                 double perp = pp / perMm / 25.4 / turnRad;
-                String n = spec.names().toString().replace("[", "\"").replace("]", "\"").replace(", ", "\", \"");
-                results.set("odo:offsets", "Robot.java: odometry(Odometry.threeWheels(" + n + ").trackWidthIn("
-                        + FinderResults.num(track, 2) + ").perpForwardIn(" + FinderResults.num(perp, 2) + "))");
+                results.set("odo:offsets", "Robot.java: in the odometry(...) line, .trackWidthIn("
+                        + FinderResults.num(track, 2) + ").perpForwardIn(" + FinderResults.num(perp, 2) + ")");
                 lastResult = "Track width " + FinderResults.num(track, 2) + " in, sideways pod " + FinderResults.num(perp, 2) + " in forward.";
                 break;
             }
@@ -195,9 +194,8 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
                 double par = signed(0), pp = signed(1);
                 double left = -par / perMm / 25.4 / turnRad;
                 double perp = pp / perMm / 25.4 / turnRad;
-                results.set("odo:offsets", "Robot.java: odometry(Odometry.twoWheels(\"" + spec.names().get(0) + "\", \""
-                        + spec.names().get(1) + "\").parallelLeftIn(" + FinderResults.num(left, 2) + ").perpForwardIn("
-                        + FinderResults.num(perp, 2) + "))");
+                results.set("odo:offsets", "Robot.java: in the odometry(...) line, .parallelLeftIn("
+                        + FinderResults.num(left, 2) + ").perpForwardIn(" + FinderResults.num(perp, 2) + ")");
                 lastResult = "Forward pod " + FinderResults.num(left, 2) + " in left, sideways pod " + FinderResults.num(perp, 2) + " in forward.";
                 break;
             }

@@ -199,7 +199,13 @@ public class AutoRoutine {
      */
     public AutoRoutine driveTo(String label, java.util.function.Supplier<com.crossbotics.ftchelper.util.FieldPose> pose,
                                double xIn, double yIn, double headingDeg, double maxPower, double toleranceIn) {
-        return add(label, ctx -> record(needDrive().driveTo(pose, m(xIn), yIn, m(headingDeg), maxPower, toleranceIn)));
+        return driveTo(label, pose, () -> true, xIn, yIn, headingDeg, maxPower, toleranceIn);
+    }
+
+    /** {@link #driveTo(String, java.util.function.Supplier, double, double, double, double, double)}; stops if {@code ready} turns false. */
+    public AutoRoutine driveTo(String label, java.util.function.Supplier<com.crossbotics.ftchelper.util.FieldPose> pose,
+                               BooleanSupplier ready, double xIn, double yIn, double headingDeg, double maxPower, double toleranceIn) {
+        return add(label, ctx -> record(needDrive().driveTo(pose, ready, m(xIn), yIn, m(headingDeg), maxPower, toleranceIn)));
     }
 
     /** Remembers the heading now, for {@link #returnToHeading}. */

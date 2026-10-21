@@ -163,7 +163,8 @@ public final class Steps {
             routine.step(label, ctx -> ctx.note("skipped: Tunables.Odometry.checked is false (run the Odometry Tuner first)"));
             return this;
         }
-        routine.driveTo(label, robot::pose, xIn, yIn, headingDeg, maxPower, toleranceIn);
+        routine.driveTo(label, robot::pose, () -> robot.odometry() != null && robot.odometry().isReady(),
+                xIn, yIn, headingDeg, maxPower, toleranceIn);
         return this;
     }
 

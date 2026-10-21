@@ -83,4 +83,12 @@ public class DriveToTest {
     public void tankCannotDriveTo() {
         r.tankAuto(c, 1).driveTo(this::pose, 0, 24, 0, 0.6, 1.0);
     }
+
+    @Test public void stopsWhenTheOdometryFails() {
+        final int[] loops = {0};
+        AutoDrive a = auto();
+        a.setLoopHook(() -> loops[0]++);
+        assertEquals(AutoDrive.Result.NO_ODOMETRY, a.driveTo(this::pose, () -> loops[0] < 5, 0, 24, 0, 0.6, 1.0));
+        assertTrue(r.allStopped());
+    }
 }
