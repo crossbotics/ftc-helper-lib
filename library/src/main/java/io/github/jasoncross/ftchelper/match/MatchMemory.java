@@ -138,7 +138,11 @@ public final class MatchMemory {
     /** Forgets everything (alliance and pose). */
     public static synchronized void clear() {
         alliance = null;
+        chosen = null;
+        placement = null;
+        placementNote = "";
         report = new ArrayList<>();
+        reportAtNanos = 0;
         PoseStore.clear();
     }
 }

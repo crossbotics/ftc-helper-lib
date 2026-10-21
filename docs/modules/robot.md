@@ -409,7 +409,7 @@ has its standard buttons; write only what differs. A [`Pad`](#controlmap) has ev
 | GUIDE | tap: the button map, without the free buttons (during the match too); hold 1 s: the tuning menu (PRACTICE) | |
 
 One driver: left stick click is slow on/off and right stick click field-centric. To put slow on a
-trigger instead, give it `.slow()`: `g1.lt.slow();` slows the robot the further LT is pulled (down to
+trigger instead (one driver only), give it `.slow()`: `g1.lt.slow();` slows the robot the further LT is pulled (down to
 `slowSpeed` at a full squeeze, like the two-driver LT); on a button, `.slow()` is slow while held. Write the switch
 exactly as `public static boolean oneDriver = true;` (INIT stops with a message if it is not static). A module whose
 button is taken gets none (INIT notes it). Checked at INIT: two jobs on one button in Controls.java,
@@ -443,7 +443,8 @@ public class ScoreAndPark extends Auto<Robot> {
 [`Steps`](#auto): `start(where, headingDeg)`, `start(where, xIn, yIn, headingDeg)` (also the spot, seen from
 your wall and written for BLUE; RED as the routes: mirrored, or the same from the red wall on a turned
 field like BIOBUZZ with `mirrorForRed()` false: x right of the centre line, y from the centre toward the far wall,
-negative = your half; the simulator puts the robot there in INIT), `menuYesNo(label, yes)`, `menuChoice(label, options...)`,
+negative = your half; the simulator puts the robot there in INIT; both alliances at one wall, like DECODE:
+override `alliancesOnOneWall()` to return true), `menuYesNo(label, yes)`, `menuChoice(label, options...)`,
 `onlyIf(label)` / `onlyIf(label, option)` ... `end()`, `isYes(label)`, `choice(label)`,
 `move(label, inches, directionDeg, power)` (0 forward, 90 right), `turn`, `turnTo`,
 `run(label, command)` (starts and goes on), `waitSeconds`, `waitUntil`, `action(action[, timeout])`

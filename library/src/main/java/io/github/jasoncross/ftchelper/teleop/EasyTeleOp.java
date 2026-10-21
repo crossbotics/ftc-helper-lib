@@ -339,8 +339,9 @@ public abstract class EasyTeleOp extends LinearOpMode {
             boolean chosenHere = false;
             while (opModeInInit()) {
                 // The alliance: from autonomous, or chosen here (gamepad 1: X = BLUE, B = RED).
-                if (gamepad1.x) { alliance = Alliance.BLUE; fromAuto = false; chosenHere = true; }
-                if (gamepad1.b) { alliance = Alliance.RED; fromAuto = false; chosenHere = true; }
+                // (not while START is held: START+B pairs a gamepad on the Driver Station)
+                if (gamepad1.x && !gamepad1.start) { alliance = Alliance.BLUE; fromAuto = false; chosenHere = true; }
+                if (gamepad1.b && !gamepad1.start) { alliance = Alliance.RED; fromAuto = false; chosenHere = true; }
                 if (fromAuto || chosenHere) MatchMemory.setChosen(alliance);
                 if (Profile.current().isPractice()) t.warn("PRACTICE profile");
                 int changed = Tunable.countChanged();

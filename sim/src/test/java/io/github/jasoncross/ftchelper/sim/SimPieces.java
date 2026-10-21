@@ -521,7 +521,7 @@ final class SimPieces {
             for (int i = 0; i < stackNow.size(); i++) {
                 List<SimField.PieceType> now = stackNow.get(i);
                 SimField.Stack st = robot.field.stacks.get(i);
-                if (!st.take.equals("bottom")) continue;
+                if (!st.take.equals("bottom") || st.pieces.isEmpty()) continue;
                 SimField.StagedPiece slot = st.pieces.get(0);
                 double[] p = {slot.x, slot.y, slot.z};
                 // the next one falls one slot (from rest, under gravity) before it can be taken
@@ -532,7 +532,8 @@ final class SimPieces {
                     SimWorld.Ball sb = stackBall.get(i);
                     if (sb != null) {
                         double[] q = loose.contains(sb) ? world.ballPos(sb) : null;
-                        if (q == null || Math.hypot(q[0] - slot.x, q[1] - slot.y) > sb.type.diameterIn / 2) {
+                        double[] rest = stackRest.get(i);
+                        if (q == null || Math.hypot(q[0] - rest[0], q[1] - rest[1]) > sb.type.diameterIn / 2) {
                             stackBall.set(i, null);                     // knocked out or taken in
                             stackReady.set(i, world.time() + fall);
                         } else {

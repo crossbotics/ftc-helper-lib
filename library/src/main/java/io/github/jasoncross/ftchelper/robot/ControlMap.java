@@ -50,6 +50,7 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
     private ButtonPlan plan;
     private final List<ButtonPlan.StickJob> sticks = new ArrayList<>();
     private boolean slowOn = false;
+    private boolean pausedSticks = false;
     private boolean menuWasOpen = false;
 
     /**
@@ -159,6 +160,13 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
     @Override
     protected final void everyLoop() {
         boolean menu = isTuningMenuOpen();
+        // Paused (BACK): the sticks move nothing; each job got 0 once when the pause began.
+        if (robot().isPaused()) {
+            if (!pausedSticks) for (ButtonPlan.StickJob job : sticks) job.letGo();
+            pausedSticks = true;
+            return;
+        }
+        pausedSticks = false;
         for (ButtonPlan.StickJob job : sticks) {
             // The tuning menu uses gamepad 1: its sticks are not the robot's then. The moment it opens,
             // each gamepad 1 stick job gets 0 once ("let go"), so nothing keeps moving from before.

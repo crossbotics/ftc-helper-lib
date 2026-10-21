@@ -114,7 +114,9 @@ r.move(...).move(...)          // main steps: cut short when 4 s are left
 `s.start(note, x, y, heading)`) also gives the spot, seen from your drivers' wall and written for BLUE:
 x inches right of the field's centre line, y from the centre toward the far wall (negative = your half).
 RED uses it like the routes: mirrored, or, on a field turned half a turn like BIOBUZZ (`mirrorForRed()`
-false), the same numbers from the red wall. The simulator puts the robot there in INIT.
+false), the same numbers from the red wall. The simulator puts the robot there in INIT. On a field where
+both alliances' drivers stand at one wall (like DECODE 2025-26), also add
+`@Override protected boolean alliancesOnOneWall() { return true; }`, or the simulator puts BLUE at the far wall.
 
 ## Read the report
 

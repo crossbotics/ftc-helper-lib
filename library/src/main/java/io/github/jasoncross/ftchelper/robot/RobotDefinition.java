@@ -180,8 +180,10 @@ public abstract class RobotDefinition {
             }
 
             @Override public void stop() {
-                pauseAll();
-                super.stop();
+                RuntimeException first = null;
+                try { pauseAll(); } catch (RuntimeException e) { first = e; }
+                try { super.stop(); } catch (RuntimeException e) { if (first == null) first = e; }
+                if (first != null) throw first;
             }
         }.add(runner);
         // Cameras first, so the parts that use them see this loop's picture.
@@ -234,11 +236,16 @@ public abstract class RobotDefinition {
     public final void pauseAll() {
         if (paused || !built) return;
         paused = true;
-        runner.pause();
+        // Every part pauses even if one fails (a motor that throws); the first error is reported after.
+        RuntimeException first = null;
+        try { runner.pause(); } catch (RuntimeException e) { first = e; }
         for (Module<?> m : modules) {
-            for (Module<?> c : m.children()) c.pause();
-            m.pause();
+            for (Module<?> c : m.children()) {
+                try { c.pause(); } catch (RuntimeException e) { if (first == null) first = e; }
+            }
+            try { m.pause(); } catch (RuntimeException e) { if (first == null) first = e; }
         }
+        if (first != null) throw first;
     }
 
     /** Ends {@link #pauseAll()}: every part goes back to what it was doing. */

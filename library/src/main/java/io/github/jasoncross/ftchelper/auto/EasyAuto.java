@@ -145,6 +145,15 @@ public abstract class EasyAuto extends LinearOpMode {
     }
 
     /**
+     * True when both alliances' drivers stand at the same wall (a mirrored field like DECODE 2025-26);
+     * false (default) when BLUE's drivers face RED's from the far wall (BIOBUZZ 2026-27). Only the
+     * simulator's start spot ({@link #startSpotIn()}) uses it. Check each season's field drawing.
+     */
+    protected boolean alliancesOnOneWall() {
+        return false;
+    }
+
+    /**
      * Which way the robot faces at the start, compared with "straight away from your driver", in
      * degrees (left = positive). Default 0. TeleOp's field-centric "forward" uses it (see
      * drive/DriverHeading.java). Example: the robot starts turned a quarter turn left, so return 90.
@@ -270,7 +279,8 @@ public abstract class EasyAuto extends LinearOpMode {
             x = -x;
             h = -h;
         }
-        return MatchMemory.fieldPose(a, x, y, h);
+        // Both alliances at one wall: that wall is the field frame's driver wall for both.
+        return MatchMemory.fieldPose(alliancesOnOneWall() ? Alliance.RED : a, x, y, h);
     }
 
     // The autonomous settings, or null if the drive is not tuned (calibrationConfirmed false). In the
@@ -337,7 +347,18 @@ public abstract class EasyAuto extends LinearOpMode {
             // The profile changed in INIT: rebuild the drive AND the mechanisms, so profile-dependent
             // values (power limits, speeds) apply. They read their settings when they were made,
             // before the menu, so they still have the old ones.
-            autoDrive = new AutoDrive(this, driveConfig(), tunedConfig(), imu);
+            AutoDriveConfig retuned = tunedConfig();
+            if (retuned == null) {
+                // The new profile's drive is not tuned: the same "AUTONOMOUS IS OFF" as above, no crash.
+                while (opModeIsActive()) {
+                    t.warn("AUTONOMOUS IS OFF: the drive is not tuned yet (" + Profile.current() + " profile)");
+                    t.text(notTunedHelp());
+                    t.update();
+                    idle();
+                }
+                return;
+            }
+            autoDrive = new AutoDrive(this, driveConfig(), retuned, imu);
             robot.stop();
             robot = makeSubsystems();
         }

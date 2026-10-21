@@ -2,6 +2,7 @@ package io.github.jasoncross.ftchelper.match;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.qualcomm.robotcore.hardware.Gamepad;
@@ -129,5 +130,14 @@ public class MatchTest {
         assertTrue(timer.isRunning());
         now[0] += 10_000_000_000L;
         assertEquals(20, timer.secondsLeft(), 1e-9);
+    }
+
+    @Test public void clearForgetsTheStartSpotAndTheChosenAlliance() {
+        MatchMemory.setPlacement(new io.github.jasoncross.ftchelper.util.FieldPose(1, 2, 3), "here");
+        MatchMemory.setChosen(Alliance.RED);
+        MatchMemory.clear();
+        assertNull(MatchMemory.placement());
+        assertEquals("", MatchMemory.placementNote());
+        assertNull(MatchMemory.chosen());
     }
 }

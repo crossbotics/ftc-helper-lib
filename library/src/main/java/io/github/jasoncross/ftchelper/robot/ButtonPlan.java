@@ -173,15 +173,23 @@ final class ButtonPlan {
         }
     }
 
-    private static void bind(final RobotDefinition robot, ControllerBindings into, Pad.Button btn, final Entry e) {
+    // While the robot is paused (BACK), a button's job does nothing: a part told to move would start
+    // with nothing updating it to stop.
+    private static Runnable unlessPaused(final RobotDefinition robot, final Runnable job) {
+        if (job == null) return null;
+        return () -> { if (!robot.isPaused()) job.run(); };
+    }
+
+    private static void bind(final RobotDefinition robot, ControllerBindings into, Pad.Button btn, Entry given) {
         ControllerBindings.Pad pad = btn.pad.which;
+        final Entry e = new Entry(given.kind, unlessPaused(robot, given.a), unlessPaused(robot, given.b), given.says, given.action);
         switch (e.kind) {
             case PRESS:
                 if (btn.btn != null) into.bindPress(pad, btn.btn, e.a);
                 else into.bindTriggerPress(pad, btn.trigger, e.a);
                 break;
             case ACTION:
-                Runnable run = () -> robot.runner.toggle(e.action);
+                Runnable run = unlessPaused(robot, () -> robot.runner.toggle(e.action));
                 if (btn.btn != null) into.bindPress(pad, btn.btn, run);
                 else into.bindTriggerPress(pad, btn.trigger, run);
                 break;

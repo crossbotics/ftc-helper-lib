@@ -309,10 +309,15 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
 
     private DcMotorEx flywheelMotor;
 
+    // Shots still waiting when the robot paused: fired after it goes on.
+    private int shotsAtPause = 0;
+
     @Override
     void pause() {
         if (part == null) return;
-        // Brake the wheel to a stop (it normally coasts down), and stop the feeder. "spinning" is kept.
+        // Brake the wheel to a stop (it normally coasts down), and stop the feeder. "spinning" is kept,
+        // and so are the shots still waiting (stop() would drop them).
+        shotsAtPause = part.getShotsLeft();
         flywheelMotor.setZeroPowerBehavior(com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE);
         part.stop();
     }
@@ -323,10 +328,13 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         flywheelMotor.setZeroPowerBehavior(com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.FLOAT);
         if (spinning) part.spinUp();
         else part.idle();
+        if (shotsAtPause > 0) part.shoot(shotsAtPause);
+        shotsAtPause = 0;
     }
 
     @Override
     void halt() {
+        shotsAtPause = 0;                         // a cancel while paused drops them too
         if (part != null) part.stopShooting();   // drop the shots still waiting; keep the speed
     }
 

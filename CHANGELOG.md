@@ -64,6 +64,23 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - The 3D view turns a fast wheel slowly (at most 1.2 turns a second), so its direction shows; the real
   speed is in the telemetry.
 
+### Fixed (outside review)
+
+- While paused (BACK), buttons and sticks do nothing: before, a button could start a part (a CR-servo
+  feeder) with nothing updating it to stop.
+- STOP stops every part even if one fails to pause (an unplugged motor); the first error is reported after.
+- Shots still waiting when the robot pauses are fired after it goes on (before, they were dropped).
+- Simulator: a field file stack with no pieces no longer stops the physics.
+- An autonomous whose profile is changed in INIT to one with an untuned drive shows "AUTONOMOUS IS OFF"
+  instead of stopping with an error.
+- `EasyAuto.alliancesOnOneWall()` (new, default false): on a field where both alliances' drivers stand at
+  one wall (DECODE), the simulator puts BLUE's start spot at that wall, not the far one.
+- `Pad.Button.slow()` with two drivers stops at INIT with a message (before, it did nothing).
+- `MatchMemory.clear()` also forgets the start spot and the chosen alliance.
+- TeleOp INIT: START+B (pairing a gamepad) no longer picks RED.
+- Simulator: a FLOWER's bottom piece counts as knocked out when it leaves where it rests (not the field
+  file's spot, which may be in a wall).
+
 ## v0.10.0 - 2026-10-20
 
 Nothing old stops working: a Robot.java without parts or shapes writes the same simulator lines as before.

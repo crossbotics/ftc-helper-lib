@@ -164,6 +164,10 @@ public final class Pad {
          */
         public Button slow() {
             final ButtonPlan p = pad.plan;
+            if (!p.oneDriver) {
+                throw new IllegalStateException("Controls.java: " + this + ".slow() is for one driver (oneDriver = true); "
+                        + "with two drivers, G1 LT is slow already");
+            }
             if (trigger != null) {
                 put(ButtonPlan.Kind.HOLD, () -> { }, null, "slow (squeeze: the further, the slower)");
                 if (last != null) p.slowTrigger = trigger;

@@ -53,6 +53,7 @@ Extend it and fill in:
 | `parkReserveSec()` | no | seconds kept for the steps after `thenPark()` |
 | `maxStartDelaySec()` | no | longest start delay in the menu (default 10) |
 | `mirrorForRed()` | no | true (default): routes written for BLUE are mirrored for RED. Return false on a ROTATED field |
+| `alliancesOnOneWall()` | no | false (default): BLUE's drivers stand at the far wall (BIOBUZZ). True when both alliances' drivers stand at one wall (DECODE): the simulator's start spot uses it |
 
 \* Or, without a `RobotConfig`: override `driveConfig()`, `autoDriveConfig()` and `createImu()`.
 

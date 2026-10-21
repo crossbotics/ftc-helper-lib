@@ -236,6 +236,15 @@ public class ActionsAndControlsTest {
         assertFalse(b.slowHeld);
     }
 
+    @Test public void slowIsForOneDriver() {
+        try {
+            ControlMap.makePlan(robot, false, true, (g1, g2) -> g2.lt.slow());
+            fail("expected an error");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("one driver"));
+        }
+    }
+
     @Test public void theGuideMapLeavesOutTheFreeButtons() {
         ButtonPlan plan = ControlMap.makePlan(robot, true, true, (g1, g2) -> g1.b.free());
         assertTrue(line(plan.help(), "G1 free").contains("B"));
@@ -362,6 +371,63 @@ public class ActionsAndControlsTest {
         assertEquals(com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.FLOAT, intake.zeroPower);
         assertTrue("the lift goes on toward its target", kit.motors.get("lift").power > 0);
         assertTrue("the action is still waiting", a.isRunning());
+    }
+
+    @Test public void whilePausedButtonsDoNothing() {
+        final int[] presses = {0};
+        ButtonPlan plan = ControlMap.makePlan(robot, false, true, (g1, g2) -> g2.a.press(() -> presses[0]++));
+        java.util.List<ButtonPlan.StickJob> sticks = new java.util.ArrayList<>();
+        io.github.jasoncross.ftchelper.gamepad.ControllerBindings driver = new io.github.jasoncross.ftchelper.gamepad.ControllerBindings();
+        io.github.jasoncross.ftchelper.gamepad.ControllerBindings operator = new io.github.jasoncross.ftchelper.gamepad.ControllerBindings();
+        plan.compile(robot, driver, operator, sticks, () -> null, () -> null);
+        com.qualcomm.robotcore.hardware.Gamepad g = new com.qualcomm.robotcore.hardware.Gamepad();
+        Runnable press = () -> { g.a = true; operator.update(null, g); g.a = false; operator.update(null, g); };
+        robot.pauseAll();
+        press.run();
+        assertEquals("paused: nothing", 0, presses[0]);
+        robot.resume();
+        press.run();
+        assertEquals(1, presses[0]);
+    }
+
+    @Test public void pausedShotsAreFiredAfterResume() {
+        RobotDefinition r = new RobotDefinition() {
+            @Override protected void define() {
+                drive(Drive.tank("l", "r"));
+                add(Launcher.flywheel("launcher", "gobilda-5203-6000"));
+            }
+        };
+        r.setup(new RobotTestKit());
+        Launcher l = (Launcher) r.modules().get(0);
+        l.fire(3);
+        assertEquals(3, l.part().getShotsLeft());
+        r.pauseAll();
+        assertEquals(0, l.part().getShotsLeft());
+        r.resume();
+        assertEquals("the 3 shots wait again", 3, l.part().getShotsLeft());
+    }
+
+    @Test public void stopStopsEveryPartEvenIfOneFailsToPause() {
+        RobotDefinition r = new RobotDefinition() {
+            @Override protected void define() {
+                drive(Drive.tank("l", "r"));
+                add(Intake.motor("first"));
+                add(Intake.motor("second"));
+            }
+        };
+        RobotTestKit k = new RobotTestKit();
+        r.setup(k);
+        ((Intake) r.modules().get(0)).in();
+        ((Intake) r.modules().get(1)).in();
+        r.all().update();
+        k.motors.get("first").failSetPower = true;     // unplugged: stopping it throws
+        try {
+            r.all().stop();
+            fail("expected the motor's error");
+        } catch (RuntimeException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("unplugged"));
+        }
+        assertEquals("the other intake stopped anyway", 0, k.motors.get("second").power, 1e-9);
     }
 
     @Test public void stopBrakesEverything() {
