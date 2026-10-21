@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Checks and measures the odometry of the robot in five files (lesson 8): which way each pod counts,
+ * Checks and measures the odometry of the robot in five files (lesson 7): which way each pod counts,
  * how far it measures, and where the pods sit (the offsets). Then it writes the lines to copy.
  *
  * <pre>

@@ -1,4 +1,4 @@
-# Lesson 8: Odometry: where am I on the field?
+# Lesson 7: Odometry: where am I on the field?
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
@@ -58,7 +58,7 @@ counterclockwise is + (90 = facing left).
 
 Here is the BIOBUZZ field from above, with this lesson's three points:
 
-![The BIOBUZZ field from above, seen from the red drivers' wall: tiles every 24 in from -72 to 72, the two HIVEs in the middle, the FLOWERs, the red loading zone, and lesson 8's start, goal and park points with heading arrows](../../images/biobuzz-field-map.svg)
+![The BIOBUZZ field from above, seen from the red drivers' wall: tiles every 24 in from -72 to 72, the two HIVEs in the middle, the FLOWERs, the red loading zone, and lesson 7's start, goal and park points with heading arrows](../../images/biobuzz-field-map.svg)
 
 How to read it:
 
@@ -485,9 +485,10 @@ button (Robot tab). **Left**: drive left with the left stick (there is no push b
 
 ## Next
 
-You have finished the main track. From here:
+The main track is lessons 1 to 6, plus the lessons your robot needs. From here:
 
-- [Lesson 9: Paths with Pedro Pathing](09-paths-with-pedro.md) (optional): smooth curves and lines, one after another.
+- [Lesson 8: Paths with Pedro Pathing](08-paths-with-pedro.md) (optional): smooth curves and lines, one after another.
+- [Lesson 9: A shooter, a camera and a turret](09-shooter-and-camera.md): for robots that shoot.
 
 - [The odometry module](../../modules/odometry.md): every kind (OTOS, dead wheels), every setting, the frame.
 - [The autonomous builder](../../guides/autonomous-builder.md): everything an autonomous can do.

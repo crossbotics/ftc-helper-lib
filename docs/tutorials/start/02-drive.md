@@ -10,7 +10,7 @@ the ground, and gamepad 1.
 
 **The code:** the lesson robot's [`Robot.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/Robot.java)
 and [`Tunables.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/Tunables.java).
-Every method: [the robot module, Drive](../../modules/robot.md#drive). Before this: [Lesson 1](../22-robot-in-five-files.md).
+Every method: [the robot module, Drive](../../modules/robot.md#drive). Before this: [Lesson 1](01-robot-in-five-files.md).
 
 ## 1. Pick the drive type and name the motors
 
@@ -234,4 +234,5 @@ and [Tutorial 05: Drive a standard (tank) robot](../05-drive-tank.md).
 
 ## Next
 
-[Lesson 3: Buttons (Controls.java)](03-buttons.md)
+On your robot: [Lesson 2b: Check the hardware](../19-testing-procedures.md) (every motor, servo and sensor,
+by hand). Then [Lesson 3: Buttons (Controls.java)](03-buttons.md)

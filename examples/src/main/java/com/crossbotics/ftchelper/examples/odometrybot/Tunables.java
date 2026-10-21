@@ -1,6 +1,6 @@
 package com.crossbotics.ftchelper.examples.odometrybot;
 
-/** Lesson 8's robot, every number. */
+/** Lesson 7's robot, every number. */
 public class Tunables {
     public static class Drive {
         public static double maxPower = 1.0, practiceMaxPower = 0.6, slowSpeed = 0.3;
@@ -8,7 +8,7 @@ public class Tunables {
         public static boolean calibrated = false;
     }
 
-    /** checked: set true after the Odometry Tuner (lesson 8); until then driveTo steps are skipped. */
+    /** checked: set true after the Odometry Tuner (lesson 7); until then driveTo steps are skipped. */
     public static class Odometry {
         public static boolean checked = false;
     }

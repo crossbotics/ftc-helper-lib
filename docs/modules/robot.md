@@ -4,7 +4,7 @@
 
 Package: `com.crossbotics.ftchelper.robot`
 
-Learn it hands-on: [22 The robot in five files](../tutorials/22-robot-in-five-files.md). Worked
+Learn it hands-on: [Lesson 1: The robot in five files](../tutorials/start/01-robot-in-five-files.md). Worked
 examples: [`examples/.../gobildabot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildabot)
 (goBILDA's starter bot), [`flywheelbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot)
 and [`turretbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot).
@@ -223,7 +223,7 @@ odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));   // in define(), 
 skipped on a real robot), and for an OTOS `linearScalar` and `angularScalar`. With it: `robot.pose()`
 every loop, `driveTo` steps in [autonomous](#auto), and TeleOp starting where autonomous ended. The
 odometry is updated first each loop, before every part. Everything, with sketches of the offsets:
-[odometry module](odometry.md); hands-on: [lesson 8](../tutorials/start/08-odometry.md).
+[odometry module](odometry.md); hands-on: [lesson 7](../tutorials/start/07-odometry.md).
 
 ---
 

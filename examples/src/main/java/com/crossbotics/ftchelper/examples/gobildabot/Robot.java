@@ -19,7 +19,7 @@ import com.crossbotics.ftchelper.robot.RobotDefinition;
  *       turn, so the 6000 RPM motor's numbers), fed by the "windmill", a CR servo.</li>
  * </ul>
  *
- * <p>Tutorial: docs/tutorials/22-robot-in-five-files.md walks through all five files.
+ * <p>Tutorial: docs/tutorials/start/01-robot-in-five-files.md walks through all five files.
  */
 public class Robot extends RobotDefinition {
     public Intake intake;

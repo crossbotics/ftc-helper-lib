@@ -5,7 +5,7 @@ import com.crossbotics.ftchelper.robot.RobotDefinition;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-/** Lesson 8: the Odometry Tuner for this robot (directions, distance, offsets, a loop check). */
+/** Lesson 7: the Odometry Tuner for this robot (directions, distance, offsets, a loop check). */
 @TeleOp(name = "Odometry Bot Odometry Tuner", group = "Finders")
 @Disabled
 public class OdometryTuner extends OdometryTunerOpMode {

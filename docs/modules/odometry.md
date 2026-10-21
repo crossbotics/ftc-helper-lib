@@ -5,7 +5,7 @@
 Package: `com.crossbotics.ftchelper.odometry` (the `Robot.java` line, [`Odometry`](#robotjava-the-odometry-line),
 is in `com.crossbotics.ftchelper.robot`).
 
-Learn it hands-on: [Lesson 8: Odometry](../tutorials/start/08-odometry.md). Worked example:
+Learn it hands-on: [Lesson 7: Odometry](../tutorials/start/07-odometry.md). Worked example:
 [`examples/.../odometrybot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/odometrybot).
 
 **Odometry** tells the robot where it is on the field. Small unpowered wheels, called **pods**, roll
@@ -67,11 +67,11 @@ the field:
 - The pose is the pose of the robot's **centre**: the point it turns around (on a mecanum robot,
   the middle of the four wheels).
 
-The BIOBUZZ field in this frame, with lesson 8's start, goal and park points (drawn from the RED wall;
+The BIOBUZZ field in this frame, with lesson 7's start, goal and park points (drawn from the RED wall;
 from the BLUE wall the numbers are the same, because the field is turned half a turn between the
 alliances and `mirrorForRed()` is false):
 
-![The BIOBUZZ field from above in the library's frame: tiles every 24 in from -72 to 72, the HIVEs, FLOWERs, the red loading zone and lesson 8's three points with heading arrows](../images/biobuzz-field-map.svg)
+![The BIOBUZZ field from above in the library's frame: tiles every 24 in from -72 to 72, the HIVEs, FLOWERs, the red loading zone and lesson 7's three points with heading arrows](../images/biobuzz-field-map.svg)
 
 The map is made by `tools/field_map.py` from the simulator's field file (`sim/fields/biobuzz-2026.json`).
 
@@ -573,7 +573,7 @@ out of) `.reversed(...)`. The Spin test measures the turn from the odometry's ow
 Pinpoint, and from the Control Hub's IMU for dead wheels and the OTOS. So dead wheels and the OTOS need
 the IMU in the drive line (`drive(...).imu(...)`): without it the tuner stops at INIT with
 `the Odometry Tuner's Spin test needs the IMU: add .imu(...) to drive(...)`. Copy the lines (also saved in `finder-results.txt` at STOP), rebuild, run
-Loop. The full walk-through: [lesson 8](../tutorials/start/08-odometry.md#5-the-odometry-tuner) and the
+Loop. The full walk-through: [lesson 7](../tutorials/start/07-odometry.md#5-the-odometry-tuner) and the
 [finders guide](../guides/finders.md#odometry-tuner-directions-offsets-and-a-loop-check).
 
 ### OTOS turn scale by hand

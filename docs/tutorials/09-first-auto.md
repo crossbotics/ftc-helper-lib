@@ -1,4 +1,4 @@
-# Tutorial 09: Your first autonomous
+# Tutorial 09: Autonomous by hand with AutoDrive
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 

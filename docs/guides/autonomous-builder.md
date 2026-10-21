@@ -2,7 +2,7 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
-**For:** teams with the [robot in five files](../tutorials/22-robot-in-five-files.md) who write
+**For:** teams with the [robot in five files](../tutorials/start/01-robot-in-five-files.md) who write
 autonomous modes. **You need:** a tuned drive (the Drive Tuner, [finders](finders.md#drive-tuner-wheel-size-and-strafe-correction));
 the [first autonomous lesson](../tutorials/start/06-first-autonomous.md) is the short version of this page.
 
@@ -11,7 +11,7 @@ everything around it: the INIT menu, mirroring for the other alliance, the 30 s 
 park, stopping everything at the end, and a report of what happened to each step.
 
 This guide covers every part of the builder (`Auto` and `Steps`, from the
-[robot in five files](../tutorials/22-robot-in-five-files.md)). The example used all the way through is
+[robot in five files](../tutorials/start/01-robot-in-five-files.md)). The example used all the way through is
 one real, tested program:
 [`AutoCookbook.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildabot/autos/AutoCookbook.java).
 A simulator test runs it with each menu choice, so the code here always works.
@@ -166,7 +166,7 @@ good ones back ([how](../modules/robot.md#tunablesjava)).
 ## Drive to a field point: driveTo
 
 With an `odometry(...)` line in `Robot.java` ([odometry](../modules/odometry.md),
-[lesson 8](../tutorials/start/08-odometry.md)), a step can drive to a **place on the field** instead of
+[lesson 7](../tutorials/start/07-odometry.md)), a step can drive to a **place on the field** instead of
 a distance:
 
 ```java

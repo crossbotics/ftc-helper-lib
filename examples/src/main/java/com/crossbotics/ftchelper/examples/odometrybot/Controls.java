@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import java.util.Locale;
 
-/** Lesson 8's TeleOp: the intake's own buttons, and the robot's place on the field on the Driver Station. */
+/** Lesson 7's TeleOp: the intake's own buttons, and the robot's place on the field on the Driver Station. */
 @TeleOp(name = "Odometry Bot TeleOp", group = "Examples")
 @Disabled
 public class Controls extends ControlMap<Robot> {

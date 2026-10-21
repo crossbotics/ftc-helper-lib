@@ -9,7 +9,7 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.LogoFacingDirection;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.UsbFacingDirection;
 
 /**
- * Lesson 8's robot plus Pedro Pathing: the same drive, Pinpoint and intake, and one more line. With the
+ * Lesson 7's robot plus Pedro Pathing: the same drive, Pinpoint and intake, and one more line. With the
  * follower line, autonomous can follow(...) curved paths; driveTo(...) still works too.
  */
 public class Robot extends RobotDefinition {

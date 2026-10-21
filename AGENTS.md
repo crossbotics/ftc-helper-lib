@@ -15,8 +15,9 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
   match, control, telemetry, tuning, safety, core, testing, util). Tests in `library/src/test`
   (pretend motors/servos/telemetry in `FakeMotor.java`, `Fakes.java`).
 - `examples/` compiled example OpModes: `ExampleXxx`, the starter kit (`starter/`), one program per
-  tutorial (`tutorials/`, tutorial 13's tests in `examples/src/test`), and three robots in five files
-  (`gobildabot/`, `flywheelbot/`, `turretbot/`: package `robot`, tutorial 22; `SimFromRobotTest` runs them).
+  tutorial (`tutorials/`, tutorial 13's tests in `examples/src/test`), and robots in five files (the four kit bots
+  `gobildabot/`, `revbot/`, `andymarkbot/`, `studicabot/`, and `lessonbot/`, `flywheelbot/`, `turretbot/`,
+  `odometrybot/`, `pedrobot/`, `quickstart/`; docs/templates.md lists them; main-track lesson 1 explains them; `SimFromRobotTest` runs them).
 - `library/.../robot/` the five-files layer: `RobotDefinition` + modules built on the plain parts. A new
   module: extend `Module` (or `MotorPositions`/`ServoPositions`), read numbers through `TunableSection`,
   route every command through `touch()` (actions and the driver rely on it), add `suggestButtons` and

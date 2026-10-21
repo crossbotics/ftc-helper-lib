@@ -261,11 +261,17 @@ simulator (**Ctrl+C** in the Terminal) and run both lines again.
 
 ## Next
 
-[Lesson 7: A shooter, a camera and a turret](07-shooter-and-camera.md).
+The main track ends here: lessons 1 to 6. After that, do only the lessons your robot needs:
+
+- [Lesson 7: Odometry: where am I on the field?](07-odometry.md): for a mecanum robot with an odometry
+  device. Autonomous drives to field points.
+- [Lesson 8: Paths with Pedro Pathing](08-paths-with-pedro.md) (optional, after lesson 7): smooth curves
+  and lines.
+- [Lesson 9: A shooter, a camera and a turret](09-shooter-and-camera.md): for robots that shoot.
 
 **Everything else the builder can do** (menu choices, branches, your own steps, recipes):
 [The autonomous builder](../../guides/autonomous-builder.md).
 
-**Under the hood:** [09 Your first autonomous](../09-first-auto.md) (`AutoDrive` and tuning by hand),
+**Under the hood:** [09 Autonomous by hand with AutoDrive](../09-first-auto.md) (`AutoDrive` and tuning by hand),
 [10 Autonomous with mechanisms](../10-auto-with-mechanisms.md) (the loop hook, mirroring, handing over),
 [16 Easy autonomous](../16-easy-autos.md) (`EasyAuto`, the layer under `Auto`).

@@ -138,4 +138,4 @@ in two seconds.
 
 ## Next
 
-[Tutorial 09: Your first autonomous](09-first-auto.md)
+[Tutorial 09: Autonomous by hand with AutoDrive](09-first-auto.md)

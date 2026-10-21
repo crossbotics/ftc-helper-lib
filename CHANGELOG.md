@@ -11,12 +11,28 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   **Path lines** box. `PedroFollower.plannedPoints()` gives the path as points (read-only).
 - The Pedro example's `PedroConstants` are now numbers measured on the simulated robot (the measuring
   steps of Pedro's Foresight tuner, run in the simulator), not Pedro's Quickstart sample numbers.
+- **Kit bot templates:** the REV DUO FTC Starter Bot, the AndyMark Robits BIOBUZZ StarterBot and the
+  Studica FTC Starter Bot in five files (`examples/.../revbot`, `andymarkbot`, `studicabot`), with each
+  seller's configuration names, next to `gobildabot`. A simulator test runs each one's TeleOp and
+  autonomous on its robot file. AndyMark's catapult (no catapult part: an `Indexer` on its motor) and
+  Studica's Maverick motors and 2:1 flywheel gear (goBILDA motors stand in) are said plainly in the files.
+- `docs/templates.md`, **Pick your template**: which code to start from for your robot, and how to copy
+  it into TeamCode. Linked from the README, the Quick start, Start from zero and the tutorials page.
 
 ### Changed
 
 - The simulated Pinpoint and OTOS give a fresh pose at every read (moved on by the speed since the last
   physics step), like the real ones, which update much faster than the physics. Before, a fast loop (Pedro's
   tuners) saw the robot stand still between the physics steps (100 a second).
+- **The main track's order:** 1 five files, 2 drive, 2b check the hardware, 3 buttons, 4 intake/lift/claw,
+  5 actions, 6 first autonomous, then the lessons your robot needs: 7 odometry, 8 Pedro paths (optional),
+  9 a shooter, a camera and a turret (for robots that shoot).
+- **Renamed lesson pages** (their web addresses change): `docs/tutorials/22-robot-in-five-files.md` is now
+  `docs/tutorials/start/01-robot-in-five-files.md`; `start/08-odometry.md` is now `start/07-odometry.md`;
+  `start/09-paths-with-pedro.md` is now `start/08-paths-with-pedro.md`; `start/07-shooter-and-camera.md`
+  is now `start/09-shooter-and-camera.md`.
+- Under-the-hood tutorial 09 is now called "Autonomous by hand with AutoDrive" (same file), so it is no
+  longer a second "Your first autonomous".
 
 ## v0.15.0 - 2026-10-21
 
@@ -65,7 +81,7 @@ uses odometry, and only a project that adds the `pedro` folder gets Pedro Pathin
   (`odometry.scaleError`, `odometry.driftDegPerMin`); `:sim:fromRobot` writes the `odometry` lines.
   `:sim:newRobot` and `:sim:fromConfig`: a goBILDA Pinpoint or SparkFun OTOS in the robot configuration
   becomes the odometry (the `Robot.java` line with a `Tunables.Odometry` section, or the robot-file line).
-- Docs: [Lesson 8: Odometry](docs/tutorials/start/08-odometry.md) (which device to buy, wiring, the
+- Docs: [Lesson 8: Odometry](docs/tutorials/start/07-odometry.md) (which device to buy, wiring, the
   tuner, `driveTo`, TeleOp hand-off), a labelled
   [BIOBUZZ field map](docs/images/biobuzz-field-map.svg) in the lesson's frame (made by
   `tools/field_map.py` from the simulator's field file) and the [odometry module](docs/modules/odometry.md); `driveTo` in
@@ -430,7 +446,7 @@ way to write a robot (the robot in five files) is added next to it; tutorial 22 
 ### Added
 
 - **The robot in five files** (package `robot`, [docs/modules/robot.md](docs/modules/robot.md),
-  [tutorial 22](docs/tutorials/22-robot-in-five-files.md)): `Robot.java` says what is on the robot
+  [tutorial 22](docs/tutorials/start/01-robot-in-five-files.md)): `Robot.java` says what is on the robot
   (`RobotDefinition`: `drive(...)` and one `add(...)` per mechanism), `Tunables.java` holds every number
   (one section per part), `Controls.java` is the TeleOp and the button map (`ControlMap`), `Actions.java`
   holds moves that use several parts (`Action`), and each autonomous is a list of `Steps` (`Auto`).

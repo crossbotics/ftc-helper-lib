@@ -136,7 +136,7 @@ Watch the current (amps): a high number while not moving means it is pushing on 
 For a robot in five files with an `odometry(...)` line ([odometry](../modules/odometry.md)). It needs
 your robot, in a small file next to `Robot.java` (the odometry robot's
 [OdometryTuner.java](../../examples/src/main/java/com/crossbotics/ftchelper/examples/odometrybot/OdometryTuner.java);
-the whole file to type: [lesson 8](../tutorials/start/08-odometry.md#5-the-odometry-tuner)). Put a 48 in
+the whole file to type: [lesson 7](../tutorials/start/07-odometry.md#5-the-odometry-tuner)). Put a 48 in
 strip of tape on the floor with a mark at its start. The sticks drive slowly (30%) in every test; you
 can also push the robot by hand. D-pad chooses, **A** starts, **B** ends the test.
 

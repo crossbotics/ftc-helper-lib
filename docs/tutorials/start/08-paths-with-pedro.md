@@ -1,33 +1,33 @@
-# Lesson 9: Paths with Pedro Pathing (optional)
+# Lesson 8: Paths with Pedro Pathing (optional)
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
 **Goal:** your autonomous drives along **paths**: smooth curves and lines, one after another, fast, and
 correcting all the way. Pedro Pathing does the driving; you write the path in the same field numbers
-as lesson 8.
+as lesson 7.
 
 **You need:**
 
 - A **mecanum** drive.
 - **Odometry**: a goBILDA Pinpoint, a SparkFun OTOS, or dead-wheel pods, set up and checked in
-  [lesson 8](08-odometry.md) (`Tunables.Odometry.checked` is `true`).
+  [lesson 7](07-odometry.md) (`Tunables.Odometry.checked` is `true`).
 - About 5 by 8 ft of clear floor (a field is best).
 - About two hours: about one hour for Pedro's tuning, the rest to set up and try paths.
 
 > **Why odometry is required.** Pedro steers by where the robot really is on the field, every loop. Only
 > odometry tells it that: a goBILDA Pinpoint, a SparkFun OTOS, or dead-wheel pods, set up and checked
-> in [lesson 8](08-odometry.md). The drive wheels' encoders are not enough (they slip). Without an
+> in [lesson 7](07-odometry.md). The drive wheels' encoders are not enough (they slip). Without an
 > `odometry(...)` line, INIT stops with `follower(...) needs an odometry(...) line too`, and until
 > `Tunables.Odometry.checked` is `true` every `follow` step is skipped.
 
 > **Why mecanum only.** Pedro corrects the robot's position by sliding it sideways, so it needs
 > wheels that can strafe. Pedro has no tank (two-side) drive. **On a tank drive** the library stops
-> INIT with a clear message; use odometry with `turnTo` and `move` instead (lesson 8 and the
+> INIT with a clear message; use odometry with `turnTo` and `move` instead (lesson 7 and the
 > [autonomous builder](../../guides/autonomous-builder.md)). `driveTo` needs mecanum too.
 > A swerve drive can work through Pedro's own `Swerve` drivetrain (see the
 > [escape hatches](../../modules/pedro.md#escape-hatches)); this is not tested.
 
-**This lesson is optional.** Lesson 8's `driveTo` already drives to field points. Many teams never
+**This lesson is optional.** Lesson 7's `driveTo` already drives to field points. Many teams never
 need more. Read section 1, then decide.
 
 **The code:** the Pedro robot, [`examples/.../pedrobot`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/pedrobot):
@@ -35,7 +35,7 @@ need more. Read section 1, then decide.
 [`PedroConstants.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/pedrobot/PedroConstants.java),
 [`Tunables.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/pedrobot/Tunables.java) and
 [`autos/CurveToTheGoal.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/pedrobot/autos/CurveToTheGoal.java).
-It is lesson 8's robot plus one line.
+It is lesson 7's robot plus one line.
 **Reference:** [the pedro module](../../modules/pedro.md).
 
 ---
@@ -53,7 +53,7 @@ on the point. If it is pushed off the road, it steers back onto it.
 **Pedro Pathing** is a free path follower that many FTC teams use ([pedropathing.com](https://pedropathing.com)).
 This library connects it to your five files, so you write paths in your own field numbers.
 
-| | `driveTo` (lesson 8) | Pedro (this lesson) |
+| | `driveTo` (lesson 7) | Pedro (this lesson) |
 | --- | --- | --- |
 | How you say where | a point and a heading | a road: lines and curves |
 | Around a field element | a point in between (it stops there) | a curve (no stop) |
@@ -172,7 +172,7 @@ protected void steps(Steps s, Robot robot) {
 ```
 
 - **`PedroPath.line(-56, -61, -48, -50)`**: a straight line from the start spot to (-48, -50). The
-  numbers are the same field numbers as lesson 8: x right, y away from your wall, in inches.
+  numbers are the same field numbers as lesson 7: x right, y away from your wall, in inches.
 - **`.keepHeading(0)`**: the robot keeps facing away from you on this part. (A mecanum robot can slide
   sideways while it faces one way.)
 - **`.then(PedroPath.curve(-48, -50,  -44, -36,  -30, -30))`**: a second part, a curve. Read the
@@ -189,7 +189,7 @@ protected void steps(Steps s, Robot robot) {
 **Headings must match at a join.** Part 1 ends facing 0, and part 2 starts at 0 (`turnTo(0, 45)`).
 If part 2 started at another heading, the robot would turn fast at the join.
 
-Like lesson 8, the example also has `mirrorForRed()` returning `false` (BIOBUZZ's field is turned, not
+Like lesson 7, the example also has `mirrorForRed()` returning `false` (BIOBUZZ's field is turned, not
 mirrored). Keep yours.
 
 **Settings after a part apply to that part.** `.turnTo(0, 45)` comes after the curve, so it is the
@@ -206,7 +206,7 @@ spin up the shooter on the way). It runs during the next steps.
 **Start each path where the robot is:** the first path at the start spot in `s.start(...)`, and each
 next path where the last one ended.
 
-**Here is the example's path on the field** (seen from the red wall, like lesson 8's map). The thin
+**Here is the example's path on the field** (seen from the red wall, like lesson 7's map). The thin
 dashed line goes to the control point: the curve bends toward it but does not touch it.
 
 ![The example path: a line from the start to (-48, -50), a curve to the goal at (-30, -30), then a driveTo to park](../../images/biobuzz-pedro-path.svg)
@@ -220,7 +220,7 @@ A curve bulges toward its control point, so check the bulge too.
 
 The simulator runs Pedro like the real robot. It is the safe place to find a path that hits a wall.
 
-**The example first.** From the `ftc-helper-lib` folder, as in lesson 8 but with the Pedro robot:
+**The example first.** From the `ftc-helper-lib` folder, as in lesson 7 but with the Pedro robot:
 
 ```bash
 ./gradlew :sim:fromRobot -PteamCode=none -ProbotClass=com.crossbotics.ftchelper.examples.pedrobot.Robot -Pout=build/pedrobot.properties
@@ -259,7 +259,7 @@ so it does not show up on your real robot's list; the simulator shows it anyway.
 must not have `@Disabled`.)
 
 In the simulator, `follow` runs even when `Tunables.Odometry.checked` is `false`. On the real robot it
-is skipped until then (lesson 8).
+is skipped until then (lesson 7).
 
 ---
 
@@ -269,7 +269,7 @@ Pedro needs to measure your robot: its top speed, how far it slides when it brak
 correct. Pedro's **Foresight tuner** does this for you. It drives the robot by itself, so you need
 clear floor and a person ready at the Driver Station to stop it.
 
-**Before you start:** lesson 8 is done (the odometry is checked). Use a charged battery.
+**Before you start:** lesson 7 is done (the odometry is checked). Use a charged battery.
 
 1. **Add Pedro's tuning library.** Open `build.dependencies.gradle`. It is in the project folder,
    next to `settings.gradle`. It has a `repositories { ... }` block and a `dependencies { ... }` block.
@@ -369,9 +369,9 @@ not work here). Keep clear of the robot, and keep a hand on STOP.
 | `Pedro` or `PedroPath` is red in Android Studio | section 3, then Sync |
 | INIT stops: `follower(...) needs an odometry(...) line too` | the `follower` line needs the `odometry` line above it |
 | INIT stops: `Pedro.follower needs a mecanum drive(...) line` | Pedro needs mecanum. On a tank drive, use `turnTo` and `move` |
-| Every `follow` says `skipped` in the report | `Tunables.Odometry.checked` is `false`: finish lesson 8 |
+| Every `follow` says `skipped` in the report | `Tunables.Odometry.checked` is `false`: finish lesson 7 |
 | It overshoots and comes back, or shakes | `PedroConstants` still has the sample numbers: section 7 |
-| It drives the wrong way at once | STOP. Run lesson 8's Odometry Tuner again; check the motor directions (lesson 2) |
+| It drives the wrong way at once | STOP. Run lesson 7's Odometry Tuner again; check the motor directions (lesson 2) |
 | It stops a little short of the end | normal: Pedro is done within 2.5 in. To change it, see [the module page](../../modules/pedro.md#when-is-a-path-done) |
 | The report says `STALLED` | the robot was stuck (against a wall or a robot). The next steps still run |
 | The report says `timed out` | the path took more than 10 s: make it shorter, or give `follow` more seconds: `.follow("To the goal", TO_GOAL, 15)` |
@@ -380,6 +380,9 @@ not work here). Keep clear of the robot, and keep a hand on STOP.
 | The tuner does not compile | step 1 of section 7 (both lines), then Sync |
 
 ## Next
+
+The main track is lessons 1 to 6, plus the lessons your robot needs. Is your robot a shooter? Next:
+[Lesson 9: A shooter, a camera and a turret](09-shooter-and-camera.md).
 
 - [The pedro module](../../modules/pedro.md): every option, how it works inside, the escape hatches.
 - [Pedro Pathing's own docs](https://pedropathing.com): more about tuning and what Foresight does.

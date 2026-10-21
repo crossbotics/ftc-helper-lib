@@ -5,7 +5,7 @@
 Package: `com.crossbotics.ftchelper.pedro`, in the **`pedro`** folder (an optional add-on: the core
 library never needs it). The step that uses it, `follow(...)`, is in `Steps`.
 
-New to path following? Start with [Lesson 9: Paths with Pedro Pathing](../tutorials/start/09-paths-with-pedro.md).
+New to path following? Start with [Lesson 8: Paths with Pedro Pathing](../tutorials/start/08-paths-with-pedro.md).
 Worked example: [`examples/.../pedrobot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/pedrobot).
 Read [the odometry module](odometry.md) first: Pedro needs a working, checked odometry.
 
@@ -17,7 +17,7 @@ brakes at the end. `driveTo` goes to one point. Pedro follows a whole path, curv
 >
 > **Odometry:** Pedro steers by the robot's real place on the field, every loop, and only
 > the `odometry(...)` line gives that (a Pinpoint, an OTOS or dead wheels, set up and checked:
-> [odometry](odometry.md), [lesson 8](../tutorials/start/08-odometry.md)). Drive-wheel encoders slip,
+> [odometry](odometry.md), [lesson 7](../tutorials/start/07-odometry.md)). Drive-wheel encoders slip,
 > so they are not enough. No odometry line: INIT stops. Not checked yet: `follow` steps are skipped.
 
 > **Mecanum:** Pedro corrects the robot's position by sliding it sideways, so it needs

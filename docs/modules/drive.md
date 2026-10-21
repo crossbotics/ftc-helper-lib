@@ -4,7 +4,7 @@
 
 Package: `com.crossbotics.ftchelper.drive`
 
-Learn it hands-on: [04 Mecanum](../tutorials/04-drive-mecanum.md), [05 Tank](../tutorials/05-drive-tank.md), [09 First autonomous](../tutorials/09-first-auto.md), [10 Autonomous with mechanisms](../tutorials/10-auto-with-mechanisms.md).
+Learn it hands-on: [04 Mecanum](../tutorials/04-drive-mecanum.md), [05 Tank](../tutorials/05-drive-tank.md), [09 Autonomous by hand](../tutorials/09-first-auto.md), [10 Autonomous with mechanisms](../tutorials/10-auto-with-mechanisms.md).
 
 Drives a **mecanum** chassis (4 mecanum wheels, so it can also slide sideways) or a **standard**
 chassis (also called tank or differential drive: normal wheels, a left side and a right side, 2 or 4

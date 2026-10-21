@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 /**
- * Lesson 8: drive to field points with odometry. The start spot is where the robot really is; each
+ * Lesson 7: drive to field points with odometry. The start spot is where the robot really is; each
  * driveTo goes to a place on the field (not "24 inches forward"), and keeps correcting on the way.
  */
 @Autonomous(name = "Odometry Bot To the Goal", group = "Examples", preselectTeleOp = "Odometry Bot TeleOp")
