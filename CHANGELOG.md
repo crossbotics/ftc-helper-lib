@@ -57,6 +57,25 @@ Nothing old changes: odometry is new, and only a robot with an `odometry(...)` l
 - Example: `odometrybot` (lesson 8's robot: a Pinpoint, `ToTheGoal` autonomous with `driveTo`, its
   TeleOp and Odometry Tuner), with a simulator test.
 
+### Added: Pedro Pathing (the optional pedro module)
+
+- A new **`pedro` folder** (`com.crossbotics.ftchelper.pedro`), added to a robot project with two
+  Gradle lines (docs/modules/pedro.md). It brings Pedro Pathing 3.0.2; teams that do not add it never
+  download Pedro.
+- `Robot.java`: `follower(Pedro.follower(PedroConstants.foresight))`. Pedro uses the `drive(...)` names
+  and directions and the `odometry(...)` pose (one odometry, tuned once). It drives only while a path
+  runs; the drive motors are plain power during a path and put back after it.
+- `follow(label, path[, seconds])` in autonomous (`Steps`): waits until Pedro is at the end; the report
+  says `timed out`, `STALLED` or `NO_ODOMETRY`; skipped until `Tunables.Odometry.checked`; a path of the
+  wrong kind stops INIT.
+- `PedroPath`: lines and curves in our field numbers (the same as `driveTo`), with `turnTo`,
+  `keepHeading`, `facePath`, `facePathBackwards`; mirrored for RED like every step. Pedro's own paths
+  work too (Pedro's frame, not mirrored).
+- `PedroTuning`: Pedro's Foresight tuner (from Pedro's Quickstart) on Robot.java's drive and odometry.
+- `PathFollower` (core): the small plug a path-following module implements; `RobotDefinition.follower(...)`,
+  `makeOdometry(...)`; `Drive.isReversed(...)` is public.
+- Example `examples/.../pedrobot`; the simulator runs Pedro too.
+
 ## v0.14.0 - 2026-10-21
 
 One change can stop INIT on purpose: a lift or arm without `min`/`max`, or a setting name with a typo, in

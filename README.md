@@ -111,6 +111,7 @@ Everything else, by what you want to do:
 | See how it all fits together | [Architecture](docs/guides/architecture.md) |
 | **Write autonomous modes with the builder (every feature, with a tested example)** | [The autonomous builder](docs/guides/autonomous-builder.md) |
 | **Know where the robot is on the field** (odometry: goBILDA Pinpoint, SparkFun OTOS, dead wheels) and drive to field points | [Lesson 8](docs/tutorials/start/08-odometry.md), [odometry module](docs/modules/odometry.md) |
+| **Follow curved paths** with Pedro Pathing, in the same field numbers (optional add-on) | [pedro module](docs/modules/pedro.md) |
 | Make autonomous modes the older way (EasyAuto) | [Easy autonomous modes](docs/guides/easy-autos.md) |
 | The older six-file starter kit (EasyTeleOp, EasyAuto) | [Starter kit](docs/starter-kit.md) |
 | Look up any class or method (searchable) | [Reference](docs/reference.md) |
@@ -146,6 +147,7 @@ the library, with its own docs page. (In the lessons, a module is also a ready-m
 | Gamepad | `com.crossbotics.ftchelper.gamepad` | Press, hold, release, toggle and trigger actions. Stick shaping. Slow-mode trigger. Rumble feedback. | [gamepad.md](docs/modules/gamepad.md) |
 | Drive | `com.crossbotics.ftchelper.drive` | Mecanum (robot- and field-centric) and standard/tank drive, standard driver controls, "forward" carried over from autonomous, reverse mode, autonomous moves and turns for both. | [drive.md](docs/modules/drive.md) |
 | Odometry | `com.crossbotics.ftchelper.odometry` | Where the robot is on the field: a goBILDA Pinpoint, a SparkFun OTOS, or three or two dead wheels; one pose for every kind, updated first every loop; `driveTo` field points in autonomous. | [odometry.md](docs/modules/odometry.md) |
+| Pedro (add-on) | `com.crossbotics.ftchelper.pedro` | Pedro Pathing on your robot's drive and odometry lines: `follower(Pedro.follower(...))` in Robot.java, `follow(...)` steps with `PedroPath` lines and curves in our field numbers, Pedro's tuners on the same lines. In the `pedro` folder; only teams that add it get Pedro. | [pedro.md](docs/modules/pedro.md) |
 | Mechanism | `com.crossbotics.ftchelper.mechanism` | Lifts/arms to named positions, intakes with jam back-out, servos with positions or degrees, continuous servos. | [mechanism.md](docs/modules/mechanism.md) |
 | Launcher | `com.crossbotics.ftchelper.launcher` | Flywheel in RPM, shot table, feeders, turret with safe limits, and a Launcher that only feeds when ready. | [launcher.md](docs/modules/launcher.md) |
 | Vision | `com.crossbotics.ftchelper.vision` | AprilTags with a webcam (SDK 12 clusters too) or a Limelight 3A, one interface, safe aiming. | [vision.md](docs/modules/vision.md) |

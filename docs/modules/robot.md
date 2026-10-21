@@ -91,6 +91,7 @@ part each loop. Nothing moves in INIT.
 | --- | --- |
 | `drive(Drive d)` | the drivetrain (required) |
 | `odometry(Odometry o)` | optional: what tells the robot where it is on the field ([Odometry](#odometry)) |
+| `follower(PathFollower.Maker m)` | optional: a path follower, e.g. `follower(Pedro.follower(...))` ([PathFollower](#pathfollower)); needs an `odometry(...)` line |
 | `T add(T module)` | a mechanism; hands it back, so you can keep it in a field (`lift = add(...)`) |
 | `atStart(Supplier<Action>)` | an action that runs once right after START, in autonomous and TeleOp |
 | `tunables(Class)` | the Tunables class if it is not `Tunables` in the same folder |
@@ -104,6 +105,7 @@ part each loop. Nothing moves in INIT.
 | `modules()`, `drive()`, `all()` | the parts, the drivetrain, the update group |
 | `pose()` | where the robot is now, from the odometry: a [`FieldPose`](util.md#fieldpose) (x in right, y in away from your wall, heading 0 = away, counterclockwise +); a copy; null with no odometry line |
 | `odometry()`, `odometrySpec()`, `odometryChecked()` | the running [`PoseTracker`](odometry.md#posetracker) (null before `setup`), the odometry line as written, and `Tunables.Odometry.checked` |
+| `follower()`, `hasFollower()`, `makeOdometry(hardwareMap)` | the running path follower (null before `setup`), whether there is a follower line, and the odometry alone for a tool (Pedro's tuners) |
 | `robotConfig()` | the drive settings for `EasyTeleOp`/`EasyAuto` |
 | `simLines()` | the simulator robot file's lines from the code |
 | `setup(hardwareMap)` | makes every module's hardware (the OpMode classes call it in INIT) |
@@ -224,6 +226,21 @@ odometry is updated first each loop, before every part. Everything, with sketche
 [odometry module](odometry.md); hands-on: [lesson 8](../tutorials/start/08-odometry.md).
 
 ---
+
+## PathFollower
+
+The small plug a path-following add-on fills in, so the core library never needs that other library.
+The [pedro module](pedro.md) is one: `follower(Pedro.follower(PedroConstants.foresight))` in `define()`,
+then `follow(label, path)` steps in autonomous.
+
+| Method | What it does |
+| --- | --- |
+| `follow(path, mirrorX)` | starts a path (mirrored for RED when routes are mirrored) |
+| `isBusy()`, `cancel()`, `remainingIn()` | still going; stop now; inches left (for the "stuck" check) |
+| `isReady()` | false while its pose source is not ready (the step then ends `NO_ODOMETRY`) |
+| `check(path)` | at INIT: throws if it cannot follow this kind of path |
+
+It is updated every loop right after the odometry, and drives the wheels only while a path runs.
 
 ## Intake
 

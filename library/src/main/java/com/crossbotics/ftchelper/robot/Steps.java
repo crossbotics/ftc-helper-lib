@@ -172,6 +172,93 @@ public final class Steps {
         return this;
     }
 
+    /**
+     * Follows a path with the robot's path follower (Robot.java's {@code follower(...)} line, e.g. Pedro
+     * Pathing through the "pedro" module), and waits until it is at the end. The path is written for
+     * BLUE like everything else: on RED with mirroring on, the follower mirrors it. At most 10 s.
+     * Like driveTo, it is skipped until {@code Tunables.Odometry.checked = true} (not in the simulator).
+     *
+     * @param path the path (for Pedro: {@code PedroPath.line(...)} or a Pedro Path)
+     */
+    public Steps follow(String label, Object path) {
+        return follow(label, path, 10);
+    }
+
+    /** {@link #follow(String, Object)} with your own time limit, seconds. */
+    public Steps follow(String label, final Object path, final double timeoutSec) {
+        if (!robot.hasFollower()) {
+            throw new IllegalStateException("Steps: follow(\"" + label + "\") needs a path follower: add a "
+                    + "follower(...) line to Robot.java (docs/modules/pedro.md)");
+        }
+        if (path == null) throw new IllegalStateException("Steps: follow(\"" + label + "\"): the path is null");
+        if (robot.follower() != null) {
+            try {
+                robot.follower().check(path);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalStateException("Steps: follow(\"" + label + "\"): " + e.getMessage(), e);
+            }
+        }
+        if (!adding()) return this;
+        // Like driveTo: an odometry that was never checked could send the robot anywhere.
+        boolean simulator = "true".equals(System.getProperty(com.crossbotics.ftchelper.auto.EasyAuto.SIMULATOR_PROPERTY));
+        if (!robot.odometryChecked() && !simulator) {
+            routine.step(label, ctx -> ctx.note("skipped: Tunables.Odometry.checked is false (run the Odometry Tuner first)"));
+            return this;
+        }
+        final boolean mirror = routine.mirrorsX();
+        routine.step(label, ctx -> {
+            PathFollower f = robot.follower();
+            if (!f.isReady()) {
+                ctx.note("NO_ODOMETRY");
+                return;
+            }
+            f.follow(path, mirror);
+            long start = System.nanoTime();
+            com.crossbotics.ftchelper.drive.StallDetector stall = new com.crossbotics.ftchelper.drive.StallDetector(0.25, 1.5);
+            double notReadySince = Double.NaN;
+            // The distance left means nothing before the follower's first update (Pedro says 0), and
+            // jumps up when a Pedro path chain starts its next part: the stuck check skips both.
+            boolean updated = false;
+            double lastRemaining = Double.NaN;
+            try {
+                while (f.isBusy()) {
+                    double t = (System.nanoTime() - start) / 1e9;
+                    if (!ctx.isActive()) return;   // park time or STOP: the report says "cut short"
+                    if (t > timeoutSec) {
+                        ctx.note("timed out");
+                        return;
+                    }
+                    if (!f.isReady()) {
+                        if (Double.isNaN(notReadySince)) notReadySince = t;
+                        if (t - notReadySince >= 0.2) {
+                            ctx.note("NO_ODOMETRY");
+                            return;
+                        }
+                    } else {
+                        notReadySince = Double.NaN;
+                    }
+                    if (updated) {
+                        double left = f.remainingIn();
+                        if (left > lastRemaining + 1) stall.reset();
+                        lastRemaining = left;
+                        // The last 3 in: the follower may still be finishing its turn while the
+                        // distance hardly changes. The time limit still guards it.
+                        if (left <= 3) stall.reset();
+                        else if (stall.update(left, t)) {
+                            ctx.note("STALLED");
+                            return;
+                        }
+                    }
+                    ctx.loop();
+                    updated = true;
+                }
+            } finally {
+                if (f.isBusy()) f.cancel();
+            }
+        });
+        return this;
+    }
+
     /** Turns by an angle (counterclockwise +). Waits until done. */
     public Steps turn(String label, double degrees, double maxPower) {
         if (adding()) routine.turn(label, degrees, maxPower);

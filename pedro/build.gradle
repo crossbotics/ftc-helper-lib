@@ -1,0 +1,43 @@
+// ftc-helper-lib "pedro" module: Pedro Pathing (https://pedropathing.com) plugged into the robot in five
+// files. Optional: a robot project adds it only to use Pedro (docs/modules/pedro.md); the core library
+// never needs it.
+plugins {
+    id 'com.android.library'
+}
+
+def ftcSdkVersion = '12.0.0'
+// The Pedro Pathing version this module is built and tested against (Maven Central, 2026-10-16).
+def pedroVersion = '3.0.2'
+
+android {
+    namespace 'com.crossbotics.ftchelper.pedro'
+    compileSdk 30
+
+    defaultConfig {
+        minSdk 24
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+}
+
+dependencies {
+    // The core library: ':ftc-helper-lib' in a robot project, ':library' in this repository's own build.
+    implementation project(findProject(':ftc-helper-lib') != null ? ':ftc-helper-lib' : ':library')
+    api "com.pedropathing:core:$pedroVersion"
+    api "com.pedropathing:revhub:$pedroVersion"
+    compileOnly "org.firstinspires.ftc:RobotCore:$ftcSdkVersion"
+    compileOnly "org.firstinspires.ftc:Hardware:$ftcSdkVersion"
+    compileOnly "org.firstinspires.ftc:FtcCommon:$ftcSdkVersion"
+
+    testImplementation "org.firstinspires.ftc:RobotCore:$ftcSdkVersion"
+    testImplementation "org.firstinspires.ftc:Hardware:$ftcSdkVersion"
+    testImplementation "org.firstinspires.ftc:FtcCommon:$ftcSdkVersion"
+    testImplementation 'junit:junit:4.13.2'
+}

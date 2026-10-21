@@ -283,6 +283,29 @@ public class SimFromRobotTest {
         }
     }
 
+    // The pedro module: Pedro Pathing follows a line and a curve on the simulated robot, in the same
+    // field numbers as driveTo. Pedro's Quickstart sample numbers (PedroConstants), not tuned for it.
+    @Test public void thePedroBotFollowsPaths() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.pedrobot.Robot.class);
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("Pedro Bot Curve to the Goal");
+            double startX = s.robot().x, startY = s.robot().y;
+            boolean topWall = startY > 0;
+            s.start();
+            assertTrue("it finishes\n" + String.join("\n", s.screen()),
+                    SimRun.waitFor(() -> s.screenHas("Autonomous finished"), 30));
+            String report = String.join("\n", s.screen());
+            assertTrue(report, s.screenHas("To the goal: done"));
+            assertTrue(report, s.screenHas("Park: done"));
+            assertEquals("", s.error());
+            // At the park point (-56, -36): 25 in further from the wall than the start (-56, -61).
+            // Within Pedro's own "done" distance (2.5 in) plus a little.
+            double sign = topWall ? -1 : 1;
+            assertEquals("start " + startX + ", " + startY, startX, s.robot().x, 3.0);
+            assertEquals("start " + startX + ", " + startY, startY + sign * 25, s.robot().y, 3.0);
+        }
+    }
+
     // Lesson 8: the Odometry Tuner's spin test finds the Pinpoint's offsets (the robot file has -84, -168).
     @Test public void theOdometryTunerFindsThePinpointOffsets() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.odometrybot.Robot.class);

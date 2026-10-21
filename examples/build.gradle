@@ -27,6 +27,8 @@ android {
 
 dependencies {
     implementation project(':library')
+    // The Pedro bot example (examples/pedrobot) uses the pedro module.
+    implementation project(':pedro')
     compileOnly "org.firstinspires.ftc:RobotCore:$ftcSdkVersion"
     compileOnly "org.firstinspires.ftc:Hardware:$ftcSdkVersion"
     compileOnly "org.firstinspires.ftc:FtcCommon:$ftcSdkVersion"

@@ -149,6 +149,11 @@ public class AutoRoutine {
         return this;
     }
 
+    /** True when routes are mirrored now (RED with {@link #mirrorFor}): x and headings flip. */
+    public boolean mirrorsX() {
+        return mirror == Alliance.RED;
+    }
+
     /** Main steps stop when this many seconds are left, so the park steps have time. Default 0 (off). */
     public AutoRoutine reserveForPark(double seconds) {
         parkReserveSec = Math.abs(seconds);

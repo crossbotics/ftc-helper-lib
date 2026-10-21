@@ -227,6 +227,22 @@ direction), but `driveTo(..., 0, ...)` faces away from your wall. With odometry,
 Put the points in `Tunables.Auto` (`goalX`, `goalY`, `goalHeading`), like the move distances: they are
 in the tuning menu too.
 
+
+## Follow a curved path: follow (pedro module)
+
+With the optional [pedro module](../modules/pedro.md) and a `follower(Pedro.follower(...))` line in
+`Robot.java`, a step can follow a whole path, curves included, with Pedro Pathing:
+
+```java
+s.start("Against our wall, in the left corner tile, facing the field", -56, -61, 0)
+ .follow("To the goal", PedroPath.line(-56, -61, -30, -30).turnTo(0, 45))
+ .follow("Park", PedroPath.curve(-30, -30, -50, -24, -56, -36).keepHeading(0));
+```
+
+The same field numbers and mirroring as `driveTo`, and the same "skipped until
+`Tunables.Odometry.checked`" rule. It ends `done`, `timed out` (10 s, or your own limit), `STALLED`
+or `NO_ODOMETRY`, and the next steps still run. Pedro decides when it is close enough (2.5 in by
+default). Details, tuning and the report words: [pedro module](../modules/pedro.md#follow-the-autonomous-step).
 ## 3. Mechanisms: run and wait
 
 ```java

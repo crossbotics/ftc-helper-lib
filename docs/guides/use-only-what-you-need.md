@@ -219,11 +219,11 @@ You can also start big and step down:
 
 ## When not to use it
 
-- **Path following** (splines, following a curved path): the library has none. It has odometry
-  ([`PoseTracker`](../modules/odometry.md): Pinpoint, OTOS, dead wheels) and `driveTo` (straight to a
-  field point), and `AutoDrive` drives straight moves and turns with the wheel encoders and the IMU. Use
-  [Pedro Pathing](https://pedropathing.com/) or [Road Runner](https://rr.brott.dev/) for that.
-  Library support for them is planned.
+- **Path following** (splines, following a curved path): the core library has none. Add the optional
+  [pedro module](../modules/pedro.md): it plugs [Pedro Pathing](https://pedropathing.com/) into your
+  `odometry(...)` and `drive(...)` lines and adds a `follow(...)` step. For
+  [Road Runner](https://rr.brott.dev/), use it directly with the library's odometry
+  ([`PoseTracker`](../modules/odometry.md)); a Road Runner module is planned.
 - **You already have a working command framework** (your own, FTCLib, NextFTC): use the small blocks
   above (`SafeMotor`, `PidController`, `BulkReads`) inside it, not `EasyTeleOp`.
 - **You need a value the library does not show:** read the SDK device yourself; every block hands

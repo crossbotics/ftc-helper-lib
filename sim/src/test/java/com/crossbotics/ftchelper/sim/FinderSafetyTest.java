@@ -133,6 +133,7 @@ public class FinderSafetyTest {
         EXPECTED.put("Odometry Bot TeleOp", "\"pinpoint\"");
         EXPECTED.put("Odometry Bot To the Goal", "\"pinpoint\"");
         EXPECTED.put("Odometry Bot Odometry Tuner", "\"pinpoint\"");
+        EXPECTED.put("Pedro Bot Curve to the Goal", "\"pinpoint\"");
     }
 
     @Test public void everyExampleStartsAndStopsCleanly() throws Exception {

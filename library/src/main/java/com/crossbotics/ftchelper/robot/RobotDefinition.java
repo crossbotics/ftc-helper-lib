@@ -48,6 +48,9 @@ public abstract class RobotDefinition {
     // The odometry, if Robot.java has an odometry(...) line; the real thing after setup.
     private Odometry odometrySpec = null;
     private com.crossbotics.ftchelper.odometry.PoseTracker tracker = null;
+    // A path follower (the pedro module), if Robot.java has a follower(...) line; the real thing after setup.
+    private PathFollower.Maker followerMaker = null;
+    private PathFollower follower = null;
     private final List<Module<?>> modules = new ArrayList<>();
     private final List<Supplier<Action>> atStart = new ArrayList<>();
     private Class<?> tunablesClass = null;
@@ -92,6 +95,14 @@ public abstract class RobotDefinition {
      */
     protected final void odometry(Odometry o) {
         odometrySpec = o;
+    }
+
+    /**
+     * A path follower from another library, e.g. {@code follower(Pedro.follower(Constants.foresight))} with
+     * the ftc-helper-lib "pedro" module. It needs an {@link #odometry} line too (it uses the same pose).
+     */
+    protected final void follower(PathFollower.Maker maker) {
+        followerMaker = maker;
     }
 
     /**
@@ -207,6 +218,13 @@ public abstract class RobotDefinition {
             tracker = odometrySpec.build(devices, TunableSection.of(tunablesClass, "Odometry"), drive);
             all.add(tracker);
         }
+        // The path follower right after it: it reads this loop's pose.
+        if (followerMaker != null) {
+            if (tracker == null) throw new IllegalStateException("Robot.java: follower(...) needs an odometry(...) line too");
+            follower = followerMaker.make(devices, this);
+            if (follower == null) throw new IllegalStateException("Robot.java: follower(...) made nothing (null)");
+            all.add(follower);
+        }
         all.add(runner);
         // Cameras first, so the parts that use them see this loop's picture.
         List<Module<?>> ordered = new ArrayList<>();
@@ -253,6 +271,32 @@ public abstract class RobotDefinition {
     /** The odometry as running (null before setup, or with no odometry(...) line). */
     public final com.crossbotics.ftchelper.odometry.PoseTracker odometry() {
         return tracker;
+    }
+
+    /** The path follower as running (null before setup, or with no follower(...) line). */
+    public final PathFollower follower() {
+        return follower;
+    }
+
+    /** True if Robot.java has a follower(...) line. */
+    public final boolean hasFollower() {
+        describe();
+        return followerMaker != null;
+    }
+
+    /**
+     * Makes only the odometry from the odometry(...) line, for a tool that runs without the rest of the
+     * robot (e.g. Pedro's tuners through the pedro module). Your code calls update() on it each loop.
+     */
+    public final com.crossbotics.ftchelper.odometry.PoseTracker makeOdometry(HardwareMap hardwareMap) {
+        return makeOdometry(Devices.of(hardwareMap));
+    }
+
+    /** {@link #makeOdometry(HardwareMap)} with any {@link Devices} (tests use pretend ones). */
+    public final com.crossbotics.ftchelper.odometry.PoseTracker makeOdometry(Devices devices) {
+        describe();
+        if (odometrySpec == null) throw new IllegalStateException("Robot.java: there is no odometry(...) line");
+        return odometrySpec.build(devices, TunableSection.of(tunablesClass, "Odometry"), drive);
     }
 
     /** The odometry as written in define() (null if none). */

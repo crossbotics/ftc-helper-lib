@@ -157,7 +157,8 @@ public final class Drive {
     }
 
     // True if this motor runs reversed.
-    boolean isReversed(String name) {
+    /** True if this drive motor is reversed in Robot.java (a path follower module sets its motors the same way). */
+    public boolean isReversed(String name) {
         if (reversedNames == null) return name.equals(frontLeft) || name.equals(backLeft);
         for (String n : reversedNames) if (n.equals(name)) return true;
         return false;

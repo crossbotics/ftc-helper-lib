@@ -59,6 +59,8 @@ android {
 dependencies {
     testImplementation project(':library')
     testImplementation project(':examples')
+    // Team code that uses Pedro Pathing (the pedro module) runs in the simulator too.
+    testImplementation project(':pedro')
     testImplementation "org.firstinspires.ftc:RobotCore:$ftcSdkVersion"
     testImplementation "org.firstinspires.ftc:Hardware:$ftcSdkVersion"
     testImplementation "org.firstinspires.ftc:FtcCommon:$ftcSdkVersion"

@@ -25,6 +25,11 @@ public interface Devices {
     /** The device with this name and type, or null if there is none (for optional parts). */
     <T> T tryGet(Class<? extends T> type, String name);
 
+    /** The OpMode's hardwareMap, for code that needs it whole (a path follower); null in tests. */
+    default com.qualcomm.robotcore.hardware.HardwareMap hardwareMap() {
+        return null;
+    }
+
     /**
      * The robot's devices, from the OpMode's hardwareMap.
      *
@@ -40,6 +45,10 @@ public interface Devices {
 
             @Override public <T> T tryGet(Class<? extends T> type, String name) {
                 return Hw.tryGet(hardwareMap, type, name);
+            }
+
+            @Override public HardwareMap hardwareMap() {
+                return hardwareMap;
             }
         };
     }
