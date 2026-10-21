@@ -21,20 +21,37 @@ Nothing old changes: odometry is new, and only a robot with an `odometry(...)` l
 - `driveTo(label, x, y, heading, power[, tolerance])` in autonomous (`Steps`, `AutoRoutine`,
   `AutoDrive`): drives to a field point and turns at once (mecanum), correcting all the way; it slows
   in proportion in the last 8 inches so it stops on the point. Written for BLUE, mirrored like the start
-  spot. Skipped on a real robot, with a report line, until `Tunables.Odometry.checked = true`; stops at once
-  with `NO_ODOMETRY` if the odometry stops working (Pinpoint fault, OTOS not answering: re-checked once a second).
+  spot. Done within the tolerance (1 in) and 2 degrees; while the heading is off it turns with at least
+  0.08 power (or `AutoDriveConfig.turnMinPower`, if set). Stuck: the usual stall rule far from the point,
+  and less than 0.1 in of progress in 2 s in the last 8 inches. Skipped on a real robot, with a report
+  line, until `Tunables.Odometry.checked = true`. A short odometry glitch is waited out (the robot holds
+  still up to 0.2 s); still not ready, the step ends with `NO_ODOMETRY` (Pinpoint fault, OTOS not
+  answering: re-checked once a second). After a `driveTo` that did not finish, the autonomous goes on
+  with its next steps. On a tank drive, `driveTo` stops at INIT with a message (not in the match).
 - The pose starts at the autonomous start spot; the end pose goes to TeleOp, which starts the
-  odometry there, and field-centric "forward" comes from the odometry's heading.
+  odometry there, and field-centric "forward" comes from the odometry's heading. A pose set while the
+  Pinpoint is still calibrating (TeleOp's INIT) is kept and written as soon as it is ready.
+- Autonomous INIT shows the odometry's status: `Odometry: Pinpoint ready`, or a warning such as
+  `Odometry (Pinpoint): X pod not found: check its cable`, so a missing pod is seen before START.
+- `.reversed(...)` in the odometry line: names add up over several calls, a Pinpoint takes `"X"` or
+  `"x"`, and a name that is not a pod stops INIT (`a Pinpoint's pods are "x" and "y"`).
+- `Odometry.custom(devices -> yourPoseTracker)`: your own pose source (it must use the library's frame);
+  `driveTo`, `robot.pose()` and TeleOp use it like the built-in kinds. No simulator device for it.
 - The **Odometry Tuner** (`OdometryTunerOpMode`): Forward, Left, Spin and Loop tests: which way each
   pod counts, the offsets (or track width), an OTOS's distance scale, and a loop check for `checked`.
   Only the numbers to change are shown (`.offsetsMm(...)`, `.trackWidthIn(..).perpForwardIn(..)`...), so
-  `.reversed(...)` and the pod type stay as written; also saved in `finder-results.txt`.
+  `.reversed(...)` and the pod type stay as written; also saved in `finder-results.txt`. The Spin test
+  measures the turn from the Pinpoint's own heading (dead wheels and the OTOS: the IMU, so they need
+  `.imu(...)` in `drive(...)`, or the tuner stops at INIT). A Forward push more than 10% off says
+  "was it really 48 in?" (a test mistake).
 - Simulator: a pretend Pinpoint, OTOS and dead wheels from the robot's true motion, with noise
   (`odometry.scaleError`, `odometry.driftDegPerMin`); `:sim:fromRobot` writes the `odometry` lines.
   `:sim:newRobot` and `:sim:fromConfig`: a goBILDA Pinpoint or SparkFun OTOS in the robot configuration
   becomes the odometry (the `Robot.java` line with a `Tunables.Odometry` section, or the robot-file line).
 - Docs: [Lesson 8: Odometry](docs/tutorials/start/08-odometry.md) (which device to buy, wiring, the
-  tuner, `driveTo`, TeleOp hand-off) and the [odometry module](docs/modules/odometry.md); `driveTo` in
+  tuner, `driveTo`, TeleOp hand-off), a labelled
+  [BIOBUZZ field map](docs/images/biobuzz-field-map.svg) in the lesson's frame (made by
+  `tools/field_map.py` from the simulator's field file) and the [odometry module](docs/modules/odometry.md); `driveTo` in
   the [autonomous builder](docs/guides/autonomous-builder.md#drive-to-a-field-point-driveto), the
   Odometry Tuner in the [finders guide](docs/guides/finders.md#odometry-tuner-directions-offsets-and-a-loop-check).
 - Example: `odometrybot` (lesson 8's robot: a Pinpoint, `ToTheGoal` autonomous with `driveTo`, its

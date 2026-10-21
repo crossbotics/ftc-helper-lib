@@ -67,6 +67,14 @@ the field:
 - The pose is the pose of the robot's **centre**: the point it turns around (on a mecanum robot,
   the middle of the four wheels).
 
+The BIOBUZZ field in this frame, with lesson 8's start, goal and park points (drawn from the RED wall;
+from the BLUE wall the numbers are the same, because the field is turned half a turn between the
+alliances and `mirrorForRed()` is false):
+
+![The BIOBUZZ field from above in the library's frame: tiles every 24 in from -72 to 72, the HIVEs, FLOWERs, the red loading zone and lesson 8's three points with heading arrows](../images/biobuzz-field-map.svg)
+
+The map is made by `tools/field_map.py` from the simulator's field file (`sim/fields/biobuzz-2026.json`).
+
 Where is (0, 0)? Wherever the pose was last set. An `Auto` sets it from its start spot after START,
 so with `s.start(note, x, y, heading)` it is the middle of the field. With `s.start(note, heading)`
 (no spot) the robot starts at (0, 0), so x and y are measured from where it started.
@@ -120,7 +128,7 @@ It works out the pose itself, about 1500 times a second, and the library reads t
 | `offsetsMm(xPodLeftMm, yPodForwardMm)` | where the pods sit, mm (see the sketch) | 0, 0 |
 | `podsSwingarm()` | goBILDA swingarm pods instead of 4-bar pods | 4-bar pods |
 | `ticksPerMm(counts)` | other pods: encoder counts per mm of wheel travel | |
-| `reversed("x")`, `reversed("y")`, `reversed("x", "y")` | a pod that counts the wrong way (the tuner says which) | none |
+| `reversed("x")`, `reversed("y")`, `reversed("x", "y")` | a pod that counts the wrong way (the tuner says which). Names add up over several calls; `"X"` and `"x"` both work; a name that is not a pod stops INIT (`a Pinpoint's pods are "x" and "y"`) | none |
 
 The two offsets (goBILDA's own meaning, from the SDK):
 
@@ -160,7 +168,14 @@ the floor, like a computer mouse, and has its own IMU. No pods. It must sit 10 t
 | Setting | Means | Default |
 | --- | --- | --- |
 | `otos(name)` | the OTOS's configuration name | |
-| `mountIn(forwardIn, leftIn, headingDeg)` | where it sits: inches FORWARD of the centre (back = negative), inches LEFT (right = negative), and which way its arrow points, degrees counterclockwise from the robot's front | 0, 0, 0 |
+| `mountIn(forwardIn, leftIn, headingDeg)` | where it sits: inches FORWARD of the centre (back = negative), inches LEFT (right = negative), and which way the sensor's **Y arrow** points, degrees counterclockwise from the robot's front | 0, 0, 0 |
+
+**The heading in `mountIn`:** the OTOS's own axes are x = right and y = forward (as in the SDK's
+sample), so its **Y arrow** is its forward axis. Heading 0 = the Y arrow points to the robot's front.
+A sensor turned so its **X arrow** points forward has its Y arrow pointing left: that is **90**
+(counterclockwise). Its Y arrow pointing right is -90. (From `OtosOdometry`: the offset goes to the
+OTOS as `(-leftIn, forwardIn, headingDeg)`. Not yet checked on a robot: if a push forward shows up
+as sideways in the `Pose` line, try the other sign.)
 
 Measure `mountIn` with a tape: the tuner does not measure it for an OTOS. Its two scale numbers are in
 [`Tunables.Odometry`](#tunablesodometry).
@@ -219,8 +234,23 @@ with one I2C read per loop. Three dead wheels need no extra computer but use thr
 wheels save a port but trust the IMU for turning. An OTOS has no wheels to mount, but its height
 above the tiles matters and it needs its scale numbers measured.
 
+### Your own pose source: Odometry.custom
+
+```java
+odometry(Odometry.custom(devices -> new MyPoseTracker(devices.get(MyDevice.class, "my_device"))));
+```
+
+For a pose from somewhere else (odometry fused with AprilTags, another library's localizer): your class
+extends [`PoseTracker`](#posetracker) (`read()`, `write()`, `isReady()`, `status()`, `kind()`), and the library makes it at INIT from the robot's devices.
+`robot.pose()`, `driveTo` and the hand-off to TeleOp use it like the built-in kinds. **It must use the
+library's frame** ([above](#the-frame)); `PoseTracker`'s `read()` and `write()` work in the device
+frame (X forward, Y left) and are turned for you. The simulator has no pretend device for it
+(`:sim:fromRobot` writes only a comment), and the Odometry Tuner does not measure it.
+
 Mistakes stop INIT with a message: a setting for another kind (`mountIn` on a Pinpoint), three wheels
-with no `trackWidthIn`, two wheels with no IMU, a device name used twice, an empty name.
+with no `trackWidthIn`, two wheels with no IMU, a device name used twice, an empty name, a
+`reversed(...)` name that is not a pod (`the pods are [par_left, par_right, perp]`), a `custom(...)`
+that makes nothing (null).
 
 ---
 
@@ -279,8 +309,8 @@ Every kind of odometry is a `PoseTracker`, so your code reads them all the same 
 | --- | --- |
 | `update()` | reads the device once and works out the new pose. The robot calls it for you, once per loop, first |
 | `pose()` | this loop's pose (a copy) |
-| `setPose(FieldPose)` | says "the robot is here now" (autonomous does this from its start spot; TeleOp from where autonomous ended) |
-| `speedInPerSec()`, `turnDegPerSec()` | how fast it moves and turns, if the device says (Pinpoint, OTOS); 0 if not (dead wheels) |
+| `setPose(FieldPose)` | says "the robot is here now" (autonomous does this from its start spot; TeleOp from where autonomous ended). Set while the device is not ready yet (a Pinpoint still calibrating in TeleOp's INIT), the pose is kept and written to the device as soon as it is ready |
+| `speedInPerSec()`, `turnDegPerSec()` | how fast it moves and turns, if the device says (Pinpoint, OTOS). **Always 0 for dead wheels**: do not use them for "has it stopped?" there (compare two poses a few loops apart instead) |
 | `isReady()` | true when the device works and gives a pose |
 | `status()` | words for the Driver Station (table below) |
 | `kind()` | "Pinpoint", "OTOS", "three dead wheels" or "two dead wheels + IMU" |
@@ -300,7 +330,9 @@ Every kind of odometry is a `PoseTracker`, so your code reads them all the same 
 | OTOS | `ready` / `not answering: check the I2C cable and the configuration` | checked at INIT, then again once a second |
 | Dead wheels | `ready` | always (an encoder cannot say it is unplugged: the Odometry Tuner's counts show it) |
 
-A device that is not ready does not stop the program: the warning tells the drive team.
+A device that is not ready does not stop the program: the warning tells the drive team. An
+autonomous also reads the odometry in INIT and shows `Odometry: Pinpoint ready`, or a warning such as
+`Odometry (Pinpoint): X pod not found: check its cable`, so a missing pod is seen before START.
 
 **How the frames fit (for veterans).** Inside, `PoseTracker` works in one shared device frame: X
 forward and Y left at heading 0 (the goBILDA Pinpoint's frame, and the dead-wheel math's). The library's
@@ -355,6 +387,18 @@ IMU and the forward pod's roll during the turn is taken away. The sideways pod's
 is taken away too. Then the move is turned into the field frame using the heading halfway through the
 turn.
 
+### Escape hatches (for veterans)
+
+When the five files do not cover what you need:
+
+| Use | What you get |
+| --- | --- |
+| `robot.odometry()` | the running `PoseTracker` (null before INIT, or with no odometry line) |
+| `((PinpointOdometry) robot.odometry()).device()` | the SDK's `GoBildaPinpointDriver` (raw encoder counts, its own status, its loop rate) |
+| `((OtosOdometry) robot.odometry()).device()` | the SDK's `SparkFunOTOS` |
+| `Odometry.custom(devices -> ...)` | your own pose source in place of the built-in kinds ([above](#your-own-pose-source-odometrycustom)) |
+| `AutoRoutine.driveTo(label, poseSupplier, readySupplier, x, y, heading, maxPower, toleranceIn)` | `driveTo` on any pose you supply, outside the five files; it stops with `NO_ODOMETRY` when `readySupplier` stays false for 0.2 s (leave it out, and the pose is always trusted) |
+
 ---
 
 ## What runs every loop
@@ -385,8 +429,9 @@ s.start("Against our wall, in the left corner tile, facing the field", -56, -61,
 
 `driveTo(label, xIn, yIn, headingDeg, maxPower)` drives to a point on the field and turns to a
 heading at the same time. It is a [Steps](robot.md#auto) step (and an `AutoRoutine` and `AutoDrive`
-method underneath). Mecanum only: it drives sideways. (A tank drive stops with "driveTo needs
-mecanum wheels...": use `turnTo` and then `move`.)
+method underneath). Mecanum only: it drives sideways. (On a tank drive, INIT stops with
+`Steps: driveTo("...") needs a mecanum drive (it drives sideways)...`, so you find out before the
+match, not in the middle of it: use `turnTo` and then `move`.)
 
 How it drives, every loop:
 
@@ -395,19 +440,27 @@ How it drives, every loop:
 3. **In the last 8 inches:** speed in proportion to the distance left (0.04 power per inch, at least
    0.12), so it settles on the point instead of circling it.
 4. **The heading** is corrected all the way with the drive's turn numbers (`turnKp`, `turnKd` in
-   `Tunables.Drive`). A turn power too small to move the robot is raised to 0.08 until the heading is
-   right.
-5. **Done** when it is within the tolerance (1 inch unless you give one) and within 1 degree of the
-   heading, for 3 loops in a row (so passing by does not count).
+   `Tunables.Drive`). While the heading is off, the turn power is at least `AutoDriveConfig.turnMinPower`
+   if that is set (more than 0), else 0.08, so a weak turn cannot stop just short. (`Tunables.Drive`
+   has no `turnMinPower` yet, so a five-file robot uses 0.08.)
+5. **Done** when it is within the **tolerance** ("close enough": 1 inch unless you give one) and
+   within 2 degrees of the heading (or the drive's `turnToleranceDeg`, if that is bigger), for 3 loops
+   in a row (so passing by does not count).
 
 **If the odometry stops working** during a `driveTo` (a Pinpoint fault such as a pod unplugged, or an
-OTOS that stops answering: `isReady()` false), the robot stops at once and the report word is
-`NO_ODOMETRY`. Why: driving on a frozen pose, it would never arrive and would push on until the time
-ran out. The OTOS's connection is checked again once a second.
+OTOS that stops answering: `isReady()` false): a short glitch is fine, the robot holds still and waits
+up to 0.2 s. If it is still not ready, the step ends and the report word is `NO_ODOMETRY`. Why:
+driving on a frozen pose, it would never arrive and would push on until the time ran out. The OTOS's
+connection is checked again once a second.
 
-It also ends early, like a `move`: `STALLED` if it is stuck (less than 0.25 in closer in 0.4 s, counted only
-farther than 8 inches from the point: the last inches are slow on purpose), `TIMED_OUT` after 10 s,
-`STOPPED` on STOP or park time. The report shows the word.
+It also ends early: `STALLED` if it is stuck (farther than 8 inches from the point, the same rule as a
+`move`: less than 0.25 in closer in 0.4 s; in the last 8 inches, where it is slow on purpose, less than
+0.1 in closer in 2 s), `TIMED_OUT` after 10 s, `STOPPED` on STOP or park time. The report shows the word.
+
+**After any of these, the autonomous goes on with its next steps**, from wherever the robot is. So put
+a mechanism action that needs the right place right after the `driveTo` that gets it there, and check
+the report after practice runs: a `driveTo` that did not say `done` means the next steps started from
+the wrong place. (In your own `step(...)` you can check `robot.pose()` before an action.)
 
 **Why `driveTo` and not `move`?** A `move` counts the drive wheels: a bump, a slip or a push and every
 later step is off. `driveTo` checks the real pose every loop and keeps correcting, so it ends at the
@@ -428,6 +481,13 @@ does not shift the steps after it.
   from the red wall.
 - Use the start spot (`s.start(note, x, y, heading)`) with it: the pose starts there. Without a spot
   the pose starts at (0, 0) where the robot stands, and the points are measured from there.
+
+**`turnTo` and `driveTo` use different headings.** `turn` and `turnTo` use the Control Hub's IMU, with
+0 = the way the robot faced at the start. `driveTo` uses the field heading from the odometry, with
+0 = facing away from your wall. They agree only when the start heading is 0. With
+`s.start(note, x, y, 90)`, `turnTo(..., 0, ...)` turns back to the start direction, which is field
+heading 90, while `driveTo(..., 0, ...)` faces away from your wall. **With odometry, give headings in
+`driveTo`** (field numbers, like the points); if you also use `turnTo`, remember its 0 is the start.
 
 Every step: [the autonomous builder](../guides/autonomous-builder.md#drive-to-a-field-point-driveto).
 
@@ -471,7 +531,8 @@ see why `driveTo` keeps correcting.
 A Pinpoint or OTOS in the robot configuration XML becomes the odometry line too:
 `./gradlew :sim:fromConfig` writes `odometry = pinpoint NAME` (and `odometry.offsetsMm = 0, 0` with a
 TODO), and `./gradlew :sim:newRobot` writes the `odometry(...)` line in `Robot.java` and a
-`Tunables.Odometry` section with `checked = false`. Only the first one found is used. Details:
+`Tunables.Odometry` section with `checked = false`. Only the first one found is used. An `Odometry.custom(...)`
+line has no pretend device: `:sim:fromRobot` writes only a comment for it. Details:
 [simulator guide](../guides/simulator.md#every-setting).
 
 ---
@@ -502,14 +563,16 @@ ends it. GUIDE (or hold START 1 s) shows help. Each test starts the pose at (0, 
 
 | Test | You do | It finds |
 | --- | --- | --- |
-| 1 Forward 48 in | push or drive the robot 48 in straight forward along a tape, B | the forward pod's direction; how far off the distance is (sideways drift too). OTOS: `Tunables.Odometry: linearScalar = ...` (multiply it with the one in use). Pods more than 2% off: check the pod type and the tape |
+| 1 Forward 48 in | push or drive the robot 48 in straight forward along a tape, B | the forward pod's direction; how far off the distance is (sideways drift too). OTOS: `Tunables.Odometry: linearScalar = ...` (multiply it with the one in use). Pods more than 2% off: check the pod type (Pinpoint) or `ticksPerMm(...)` (dead wheels), and the tape. More than 10% off: "was it really 48 in?" (a mistake in the test, not the pods: nothing to copy) |
 | 2 Left 24 in | push or drive it 24 in straight to its LEFT, B | the sideways pod's direction (a tank robot: push it) |
 | 3 Spin 3+ turns | turn it in place at least 3 times (right stick), B | only the numbers to change: `Robot.java: in the odometry(...) line, .offsetsMm(-84.2, -167.5)`, or `.trackWidthIn(..).perpForwardIn(..)` (three wheels), `.parallelLeftIn(..).perpForwardIn(..)` (two); `.reversed(...)` and the pod type stay as written. OTOS: no offsets ([turn scale by hand](#otos-turn-scale-by-hand)) |
 | 4 Loop and back | start on a tape mark, drive anywhere, come back onto the mark facing the same way, B | within 1 in and 2 degrees: `Tunables.Odometry: checked = true` |
 
 A pod that counts the wrong way: the Forward or Left test says so and which name to put in (or take
-out of) `.reversed(...)`. The Spin test measures the turn with the Pinpoint's own IMU, or the Control
-Hub's IMU for dead wheels. Copy the lines (also saved in `finder-results.txt` at STOP), rebuild, run
+out of) `.reversed(...)`. The Spin test measures the turn from the odometry's own heading on a
+Pinpoint, and from the Control Hub's IMU for dead wheels and the OTOS. So dead wheels and the OTOS need
+the IMU in the drive line (`drive(...).imu(...)`): without it the tuner stops at INIT with
+`the Odometry Tuner's Spin test needs the IMU: add .imu(...) to drive(...)`. Copy the lines (also saved in `finder-results.txt` at STOP), rebuild, run
 Loop. The full walk-through: [lesson 8](../tutorials/start/08-odometry.md#5-the-odometry-tuner) and the
 [finders guide](../guides/finders.md#odometry-tuner-directions-offsets-and-a-loop-check).
 
@@ -528,6 +591,27 @@ Why 10 turns: a 1% error is only 3.6 degrees after one turn, too small to read; 
 
 ---
 
+## Questions for veterans
+
+What the code shows, and what is **not yet checked on a robot**:
+
+- **Do `getEncoderX()`/`getEncoderY()` include the Pinpoint's direction setting?** The tuner's Spin
+  test assumes they do **not**: it reads the raw counts and flips a pod in `.reversed(...)` itself.
+  Not yet checked on a robot. If the raw counts are already flipped, a reversed pod's offset from the
+  Spin test would come out with the wrong sign (the Loop test would then fail).
+- **Does `setPosition` stick while the Pinpoint is calibrating?** The library does not depend on it:
+  a pose set while the device is not ready is kept and written once `isReady()` is true
+  ([`setPose`](#posetracker)). Whether the device would have kept it is not yet checked on a robot.
+- **Is a pod unplugged in the middle of a match flagged?** The Pinpoint has fault statuses
+  (`X pod not found`, `Y pod not found`, `no pods found`, `IMU fault`, `bad reading`); the library shows
+  them as a warning and ends a `driveTo` with `NO_ODOMETRY` after 0.2 s of not ready. Whether the
+  Pinpoint reports a pod pulled out while it runs (and not only at power-up) is not yet checked on a
+  robot. Dead wheels cannot tell at all: an unplugged encoder just stops counting.
+- **Why the field heading for TeleOp's field-centric, not the IMU?** It carries on from autonomous
+  with nothing added ([above](#teleop-starts-where-autonomous-ended)).
+
+---
+
 ## If something goes wrong
 
 | What you see | Why, and what to do |
@@ -540,7 +624,10 @@ Why 10 turns: a 1% error is only 3.6 degrees after one turn, too small to read; 
 | x and y look swapped | the pods are in the wrong ports (Pinpoint: X = forward pod), or the OTOS's `mountIn` heading is wrong |
 | `skipped: Tunables.Odometry.checked is false` | run the tuner's Loop test, then set `checked = true` |
 | `driveTo` goes to the mirror spot on RED | `mirrorForRed()`: false on a turned field (BIOBUZZ) |
-| `driveTo` ends with `NO_ODOMETRY` | the odometry stopped working during the drive: read its warning (a pod cable, the I2C cable) |
+| `driveTo` ends with `NO_ODOMETRY` | the odometry was not ready for more than 0.2 s during the drive: read its warning (a pod cable, the I2C cable). The next steps still ran |
+| INIT stops: `odometry .reversed("...")` | a name that is not a pod: a Pinpoint's are `"x"` and `"y"`, dead wheels' are their port names |
+| The tuner stops at INIT: `needs the IMU` | dead wheels or an OTOS: add `.imu(...)` to `drive(...)` |
+| `turnTo(0)` and `driveTo(..., 0, ...)` face different ways | `turnTo` uses the IMU with 0 = the start direction; `driveTo` uses the field heading ([driveTo](#driveto)) |
 | `driveTo` circles the point, or stops short | `Tunables.Drive.turnKp`/`turnKd` (the heading), `moveMinPower`; or a tolerance under 1 in that it cannot reach |
 | TeleOp's field-centric is wrong after autonomous | the start spot's heading in `s.start(...)` is wrong |
 | `robot.pose()` is null | `Robot.java` has no `odometry(...)` line |

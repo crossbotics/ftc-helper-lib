@@ -61,7 +61,7 @@ public class OdometryTest {
     }
 
     // A pretend Pinpoint: the SDK class with a do-nothing I2C client and its reads overridden.
-    static final class FakePinpoint extends GoBildaPinpointDriver {
+    static class FakePinpoint extends GoBildaPinpointDriver {
         double x, y, h;   // the device's frame: X forward, Y left (inches), heading CCW degrees
         DeviceStatus status = DeviceStatus.READY;
 
@@ -177,5 +177,26 @@ public class OdometryTest {
         assertEquals(-60, pp.x, E);
         assertEquals(-12, pp.y, E);
         assertEquals(12, o.pose().x, E);
+    }
+
+    // Docs review: like the real SDK, the status only changes on update(). A pose set while
+    // calibrating must still be written once the Pinpoint is ready (update() keeps reading).
+    @Test public void theCalibratingStatusIsReadAgainEachLoop() {
+        final GoBildaPinpointDriver.DeviceStatus[] live = {GoBildaPinpointDriver.DeviceStatus.CALIBRATING};
+        FakePinpoint pp = new FakePinpoint() {
+            @Override public void update() { status = live[0]; }
+        };
+        pp.status = GoBildaPinpointDriver.DeviceStatus.CALIBRATING;
+        PinpointOdometry o = new PinpointOdometry("pinpoint", pp, 0, 0, GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD, 0, false, false);
+        o.setPose(new FieldPose(12, -60, 90));
+        o.update();
+        assertEquals(0, pp.x, E);
+        live[0] = GoBildaPinpointDriver.DeviceStatus.READY;   // calibration ends inside the device
+        o.update();
+        assertEquals(-60, pp.x, E);
+        assertEquals(-12, pp.y, E);
+        o.update();
+        assertEquals(12, o.pose().x, E);
+        assertEquals(-60, o.pose().y, E);
     }
 }

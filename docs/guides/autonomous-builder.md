@@ -149,7 +149,7 @@ start position.
 | --- | --- | --- |
 | `move(label, inches, directionDeg, maxPower)` | degrees **clockwise** from forward: 0 forward, 90 right, 180 back, 270 left | mecanum strafes at any angle; a tank drive only 0 and 180 (any other angle stops with "Turn first, then move") |
 | `turn(label, degrees, maxPower)` | **counterclockwise +** | by an angle from where it is now |
-| `turnTo(label, headingDeg, maxPower)` | **counterclockwise +** | to a heading; 0 = the way it faced at the start |
+| `turnTo(label, headingDeg, maxPower)` | **counterclockwise +** | to a heading; 0 = the way it faced at the start (the IMU's heading, not the field's: see [driveTo](#drive-to-a-field-point-driveto)) |
 
 Each waits until it is done. A move slows down near its end so it does not overshoot. It does not
 correct the heading on the way: after a bump or a long drive, add a `turnTo` to square up. A move that
@@ -185,13 +185,25 @@ steps after it.
 
 | | |
 | --- | --- |
-| `driveTo(label, xIn, yIn, headingDeg, maxPower)` | done within 1 inch and 1 degree (for 3 loops in a row) |
+| `driveTo(label, xIn, yIn, headingDeg, maxPower)` | done within 1 inch and 2 degrees (for 3 loops in a row) |
 | `driveTo(label, xIn, yIn, headingDeg, maxPower, toleranceIn)` | your own "close enough", inches: larger for a quick pass-through point, never below what the robot can reach |
 
 It slows down in proportion to the distance in the last 8 inches, so it stops on the point. Like a
-move, it can end `STALLED` (stuck farther than 8 inches from the point), `TIMED_OUT` (10 s) or `STOPPED`.
-If the odometry stops working on the way (a Pinpoint fault, an OTOS that stops answering), it stops at
-once with `NO_ODOMETRY`: driving on a frozen pose, it would never arrive.
+move, it can end `STALLED`, `TIMED_OUT` (10 s) or `STOPPED`. Stuck means: farther than 8 inches from
+the point, the usual move rule; in the last 8 inches (slow on purpose), less than 0.1 in closer in 2 s.
+If the odometry stops working on the way (a Pinpoint fault, an OTOS that stops answering), the robot
+holds still and waits up to 0.2 s (a short glitch is fine); still not ready, the step ends with
+`NO_ODOMETRY`: driving on a frozen pose, it would never arrive.
+
+**After a `driveTo` that did not finish, the next steps still run**, from wherever the robot is. Put
+a mechanism action that needs the right place right after the `driveTo` that gets it there, and read
+the report after practice runs.
+
+**Its heading is the field's, not `turnTo`'s.** `turn` and `turnTo` use the IMU, with 0 = the way the
+robot faced at the start. `driveTo` uses the odometry's field heading, with 0 = facing away from your
+wall. With `s.start(note, x, y, 90)`, `turnTo(..., 0, ...)` faces field heading 90 (the start
+direction), but `driveTo(..., 0, ...)` faces away from your wall. With odometry, give headings in
+`driveTo`; if you also use `turnTo`, remember its 0 is the start.
 
 **Mirroring rules** (written for BLUE, like the start spot):
 
@@ -209,7 +221,8 @@ once with `NO_ODOMETRY`: driving on a frozen pose, it would never arrive.
   `To the goal: skipped: Tunables.Odometry.checked is false (run the Odometry Tuner first)`. The
   simulator runs it anyway. Set `checked = true` after the Odometry Tuner's Loop test passes
   ([finders](finders.md#odometry-tuner-directions-offsets-and-a-loop-check)).
-- A tank drive: it stops with "driveTo needs mecanum wheels (it drives sideways)". Use `turnTo`, then `move`.
+- A tank drive: INIT stops with `Steps: driveTo("...") needs a mecanum drive (it drives sideways)`.
+  Use `turnTo`, then `move`.
 
 Put the points in `Tunables.Auto` (`goalX`, `goalY`, `goalHeading`), like the move distances: they are
 in the tuning menu too.
@@ -318,7 +331,7 @@ Leave the launch zone: done
 | `done` | it finished |
 | `timed out` | a wait or an action ran out of time; the list went on |
 | `STALLED`, `TIMED_OUT`, `STOPPED` | a move could not finish (stuck, too long, stopped) |
-| `NO_ODOMETRY` | a `driveTo` stopped because the odometry stopped working (see its warning) |
+| `NO_ODOMETRY` | a `driveTo` stopped because the odometry was not ready for more than 0.2 s (see its warning); the list went on |
 | `cut short (time for park)` | stopped early so the park steps had time |
 | `skipped: Tunables.Odometry.checked is false (run the Odometry Tuner first)` | a `driveTo` on a real robot before the Odometry Tuner ([driveTo](#drive-to-a-field-point-driveto)) |
 | `skipped (time for park)` | not started: no time left before parking |

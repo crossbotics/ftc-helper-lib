@@ -40,9 +40,13 @@ public abstract class PoseTracker implements Subsystem {
     @Override
     public final void update() {
         if (pending != null) {
+            // Read anyway: a Pinpoint's status is only fresh after a read (getDeviceStatus() gives the
+            // value its last update() saved). Without it, "calibrating" would never change.
+            read();
             if (!isReady()) return;   // keep the pose we were given until the device can take it
             write(pending.y, -pending.x, pending.headingDeg);
             pending = null;
+            return;   // the device has the new pose; the next loop reads from it
         }
         double[] p = read();
         if (p == null) return;

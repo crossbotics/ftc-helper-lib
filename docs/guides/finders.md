@@ -143,9 +143,13 @@ can also push the robot by hand. D-pad chooses, **A** starts, **B** ends the tes
 1. **Forward 48 in:** drive or push it 48 in straight forward along the tape, B. "Forward OK" (and how
    many % off), or "counted BACKWARD": add `"x"` to `.reversed(...)` (dead wheels: that pod's port
    name). An OTOS gets `Tunables.Odometry: linearScalar = ...` to copy (multiply it with the one in use).
+   More than 2% off: check the pod type (Pinpoint) or `ticksPerMm(...)` (dead wheels), and the tape.
+   More than 10% off: "was it really 48 in?" (a mistake in the test: measure and run it again).
 2. **Left 24 in:** drive or push it 24 in to its LEFT, B. "Left OK", or "counted RIGHT": add `"y"` to
    `.reversed(...)` (dead wheels: the sideways pod's name). A tank robot: push it.
-3. **Spin 3+ turns:** turn it in place at least 3 times with the right stick, B. It shows the offsets
+3. **Spin 3+ turns:** turn it in place at least 3 times with the right stick, B. It measures the turn
+   from the Pinpoint's own heading, or from the Control Hub's IMU for dead wheels and the OTOS (so they
+   need `.imu(...)` in `drive(...)`, or the tuner stops at INIT and says so). It shows the offsets
    as the numbers to change: `Robot.java: in the odometry(...) line, .offsetsMm(-84.2, -167.5)`
    (three wheels: `.trackWidthIn(..).perpForwardIn(..)`; two: `.parallelLeftIn(..).perpForwardIn(..)`).
    Change only those numbers: `.reversed(...)` and the pod type stay as you wrote them.
