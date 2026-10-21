@@ -4,6 +4,10 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+## v0.12.1 - 2026-10-21
+
+Nothing old stops working.
+
 ### Added
 
 - [Quick start](docs/quick-start.md): a driving robot in 30 minutes. The five files come from your robot
