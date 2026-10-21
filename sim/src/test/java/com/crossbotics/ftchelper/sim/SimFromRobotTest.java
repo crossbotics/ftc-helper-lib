@@ -232,11 +232,16 @@ public class SimFromRobotTest {
         try (SimRun s = new SimRun(file.toString())) {
             s.init("Lesson Bot TeleOp");
             assertTrue(String.join("\n", s.screen()), s.screenHas("G2 RB: score high"));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("G2 LB: tap: grab and lift; held 1 s: lift all the way down"));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("G2 B: claw (buzz: 2 on, 1 off)"));
             s.start();
             s.press(v -> s.g2().right_bumper = v);                    // score high
             assertTrue("the lift rises\n" + String.join("\n", s.screen()),
                     SimRun.waitFor(() -> s.robot().motors.get("lift").shaft() > 1500, 5));
             assertEquals("", s.error());
+            // Feedback: B toggles the claw and buzzes gamepad 2 (the page shakes its picture).
+            s.press(v -> s.g2().b = v);
+            assertTrue("gamepad 2 buzzes", SimRun.waitFor(() -> s.sim.ds.pad2.rumbleLeft() > 0, 1));
             s.sim.ds.stop();
 
             s.init("Lesson Bot Score and Park");

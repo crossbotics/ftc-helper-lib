@@ -41,7 +41,8 @@ final class SimJson {
             if (g != ds.pad1) b.append(',');
             b.append('{');
             field(b, "owner", g.owner()).append(',');
-            field(b, "from", g.ownerFrom()).append('}');
+            field(b, "from", g.ownerFrom()).append(',');
+            b.append("\"rumble\":").append(fmt(g.rumbleLeft())).append('}');
         }
         b.append("],");
         b.append("\"opmodes\":[");

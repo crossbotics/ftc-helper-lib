@@ -34,7 +34,8 @@ always works. Do these in order.
 | 6 | [Your first autonomous](start/06-first-autonomous.md) | tune the drive, then steps, park time, the report | a tuned drivetrain |
 | 7 | [A shooter, a camera and a turret](start/07-shooter-and-camera.md) | a flywheel and feeder, aiming with a camera | a shooter, a camera |
 
-Then: [the autonomous builder](../guides/autonomous-builder.md) (everything autonomous can do),
+Then: [the button menu](../guides/buttons.md) (every way a button can work),
+[the autonomous builder](../guides/autonomous-builder.md) (everything autonomous can do),
 [the finders](../guides/finders.md) (measure your numbers), and the [simulator](../guides/simulator.md).
 
 ## Under the hood: how it works

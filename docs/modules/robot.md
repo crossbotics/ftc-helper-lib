@@ -404,13 +404,22 @@ has its standard buttons; write only what differs. A [`Pad`](#controlmap) has ev
 | `toggle(Toggleable)` | switches a part on/off (an intake, a launcher, a claw, a mode: a [`Toggleable`](#controlmap)) |
 | `toggle(onEnable, onDisable)` | each press flips |
 | `tapOrDoubleTap(tap, doubleTap)` | one tap runs `tap`; a second tap within 0.35 s (`Pad.DOUBLE_TAP_SEC`) runs `doubleTap` instead (the first tap has already run `tap`: e.g. tap = intake on/off, double-tap = push out) |
+| `tap(job)`, `doubleTap(job)`, `taps(n, job)`, `heldFor(sec, job)` | **gestures**, several on one button: once per quick tap; on the second quick tap; on the n-th (2 to 5); once after held `sec` s. Each also takes an `Action` |
+| `hold(...)` with other gestures | every loop while held, from 0.3 s on (`Tunables.Buttons.holdSec`), so a quick tap stays a tap |
+| `tapThenHold(whileHeld)`, `tapThenHold(whileHeld, onRelease)` | a quick tap, then press again and hold: every loop while held |
+| `with(other, job)` | a pair: hold this button (the shift key, no job of its own), press `other` (same gamepad): `job` once. `other` keeps its own job alone |
+| `rumble()`, `rumble(n)` | feedback: buzzes when the job (or the gesture just before) runs; a toggle buzzes 2 = on, 1 = off |
 | `slow()` | one driver only: on a trigger, drives slower the further it is pulled (down to `slowSpeed`); on a button, slow while held |
 | `free()` | no job: the button stays free, even if a module suggested one for it |
 | `says(words)` | the words on the help page |
+| on a pad: `g2.rumbleWhen(test)`, `rumbleWhen(test, n)` | feedback from the robot: a buzz each time `test` becomes true |
 | on a stick: `use(DoubleConsumer)` | its value every loop (small dead zone, gentle curve) |
 | on a stick: `free()`, `says(words)` | as on a button |
 
-While the robot is paused (BACK), no button or stick job runs.
+While the robot is paused (BACK), no button or stick job runs. A gesture's job runs at once unless the
+button has a longer gesture that starts the same way; then it waits until it knows (let go, or
+`Tunables.Buttons.tapGapSec`, 0.35 s). Both times are in `Tunables.Buttons` and the tuning menu.
+Every option as a menu: [the button menu](../guides/buttons.md).
 
 In `Controls.java` you can also override `useStandardButtons()` (return false: only your own jobs, no
 module suggestions); `robot()` and `oneDriver()` read the robot and the one-driver switch.

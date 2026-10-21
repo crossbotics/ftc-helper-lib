@@ -79,6 +79,26 @@ final class SimGamepad {
     private String owner = "", ownerFrom = "";
     private long ownerSeen = 0;
 
+    // When the latest buzz the OpMode asked for ends (System.nanoTime), 0 = none yet.
+    private long rumbleUntil = 0;
+
+    /**
+     * Seconds of buzzing left: the OpMode's buzzes (gamepad.rumble, runRumbleEffect) wait in the
+     * SDK's rumble queue; each one is taken out here and its length added up. The page shakes the
+     * gamepad picture (and a real controller or a phone buzzes) while this is more than 0.
+     */
+    synchronized double rumbleLeft() {
+        long now = System.nanoTime();
+        Gamepad.RumbleEffect e;
+        while (gamepad.rumbleQueue != null && (e = gamepad.rumbleQueue.poll()) != null) {
+            long ms = 0;
+            for (Gamepad.RumbleEffect.Step s : e.steps) ms += Math.max(0, s.duration);
+            // A new effect replaces the one playing (as on a real gamepad).
+            rumbleUntil = now + Math.min(ms, 10_000) * 1_000_000L;
+        }
+        return Math.max(0, (rumbleUntil - now) / 1e9);
+    }
+
     /** The page that last pressed something on this gamepad: its session id and address. */
     synchronized String owner() { return owner; }
     synchronized String ownerFrom() { return ownerFrom; }

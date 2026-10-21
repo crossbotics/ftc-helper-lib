@@ -15,7 +15,7 @@ in a shorter way. New to buttons? Start with tutorial 03.
 | --- | --- |
 | [`ControllerBindings`](#controllerbindings) | say what each button does, in one place |
 | [`StickShaping`](#stickshaping) | make sticks feel smooth: ignore tiny stick moves, add a curve, slow down with a trigger |
-| [`ToggleRumble`](#togglerumble) | buzz to confirm a toggle (2 buzzes = ON, 1 = OFF) |
+| [`ToggleRumble`](#togglerumble) | buzz to confirm a toggle (2 buzzes = ON, 1 = OFF). In `Controls.java`: `.rumble()` ([the button menu](../guides/buttons.md)) |
 | [`AimRumble`](#aimrumble) | buzz when an error is small, e.g. "aimed at the target" |
 
 ---

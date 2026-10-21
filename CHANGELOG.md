@@ -4,6 +4,24 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+### Added
+
+- [The button menu](docs/guides/buttons.md): every way a button can work in `Controls.java`, as a menu
+  (which button, how it starts, what it does, feedback).
+- Gestures, several on one button: `tap`, `hold` (with other gestures: from 0.3 s), `doubleTap`,
+  `tapThenHold` (last season's "spray"), `taps(n, ...)`, `heldFor(sec, ...)`. A job runs at once unless
+  a longer gesture starts the same way. Times in `Tunables.Buttons` (`tapGapSec` 0.35, `holdSec` 0.3),
+  live in the tuning menu. The button map lists each gesture.
+- Pairs: `g2.back.with(g2.y, job)` (hold the shift key, press the other button).
+- Feedback: `.rumble()` / `.rumble(n)` on any job or gesture (a toggle: 2 buzzes = on, 1 = off);
+  `g2.rumbleWhen(test)` buzzes each time the robot's test becomes true. `Launcher.isSpinning()`.
+- Simulator: a buzz shakes the gamepad picture; a real controller or a phone buzzes too.
+- Lesson robot: the claw buzzes, and LB has two gestures (tap: grab and lift; held 1 s: lift down).
+
+### Changed
+
+- `toggle(onEnable, onDisable)` in `Controls.java` keeps its on/off state itself (same behavior).
+
 ## v0.12.1 - 2026-10-21
 
 Nothing old stops working.

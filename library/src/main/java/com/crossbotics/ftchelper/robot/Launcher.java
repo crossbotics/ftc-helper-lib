@@ -203,6 +203,11 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         part.idle();
     }
 
+    /** True while it is spun up (or spinning up), false when idle. */
+    public boolean isSpinning() {
+        return spinning;
+    }
+
     /** Spins up if idle, idles if spinning. */
     @Override
     public void toggle() {

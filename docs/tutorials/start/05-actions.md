@@ -78,11 +78,14 @@ In `Controls.java`:
 @Override
 protected void buttons(Robot robot, Pad g1, Pad g2) {
     g2.rb.press(Actions.scoreHigh(robot)).says("score high");     // lesson 5
-    g2.lb.press(Actions.grabAndLift(robot)).says("grab and lift");
+    g2.b.toggle(robot.claw).says("claw").rumble();                 // 2 buzzes = closed, 1 = open
+    g2.lb.tap(Actions.grabAndLift(robot)).says("grab and lift")    // a tap...
+         .heldFor(1.0, () -> robot.lift.goTo("down")).says("lift all the way down");   // ...or held 1 s
 }
 ```
 
-- `press(action)` starts the action. **Pressing again while it runs cancels it.**
+- `press(action)` starts the action. **Pressing again while it runs cancels it.** The same goes for a
+  gesture: `tap(action)` starts it, another tap cancels it.
 - `.says(...)` is the words on the button map.
 - RB and LB on gamepad 2 are free on this robot, so nothing is replaced.
 

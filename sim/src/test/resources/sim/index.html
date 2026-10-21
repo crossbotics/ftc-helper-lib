@@ -154,6 +154,10 @@
   body.phone header, body.phone main > section:not(#padsSection) { display: none; }
   body.phone main { grid-template-columns: 1fr; padding: 6px; }
   body.phone .gp { max-width: none; }
+  /* The OpMode buzzes this gamepad: the picture shakes. */
+  @keyframes buzz { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+  .gp.buzzing { animation: buzz 0.09s linear infinite; }
+  @media (prefers-reduced-motion: reduce) { .gp.buzzing { animation: none; outline: 3px solid #e8a33d; border-radius: 12px; } }
   /* Control Hub panels: each button shows or hides its panel; the panels shown stack in order */
   .tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
   .tab.on ~ .tab.on { border-top: 1px solid var(--line); margin-top: 10px; padding-top: 8px; }
@@ -542,6 +546,20 @@ async function poll() {
 setInterval(poll, 100);
 
 // ---------------------------------------------------------------- Driver Hub
+// Buzz the real thing for a gamepad that is a USB/Bluetooth controller or a phone (best effort).
+function buzzReal(n, seconds) {
+  const ms = Math.round(Math.min(seconds, 3) * 1000);
+  try {
+    const src = source[n] || "";
+    if (src.startsWith("controller:")) {
+      const g = navigator.getGamepads()[+src.split(":")[1]];
+      if (g && g.vibrationActuator) g.vibrationActuator.playEffect("dual-rumble", { duration: ms, strongMagnitude: 0.8, weakMagnitude: 0.8 });
+    } else if (document.body.classList.contains("phone") && navigator.vibrate) {
+      navigator.vibrate(ms);
+    }
+  } catch (e) { /* no buzz on this device */ }
+}
+
 function render(s) {
   const sel = $("#opmode");
   const key = s.opmodes.map(o => o.kind + o.name).join("|");
@@ -603,6 +621,10 @@ function render(s) {
   document.querySelectorAll(".pad").forEach(div => {
     const n = +div.dataset.pad, o = (s.pads || [])[n - 1];
     drawPad($(".gp", div), n);
+    // A buzz from the OpMode: shake the picture; a real controller or a phone buzzes too.
+    const left = o ? o.rumble || 0 : 0, gp = $(".gp", div);
+    if (left > 0 && !gp.classList.contains("buzzing")) buzzReal(n, left);
+    gp.classList.toggle("buzzing", left > 0);
     // Another page (a phone, a second tab) pressed something on this gamepad last.
     $(".owner", div).textContent = o && o.owner && o.owner !== session
       ? "Last used from another page (" + o.from + "). Set this one to \"Phone / other page\" so they do not fight." : "";

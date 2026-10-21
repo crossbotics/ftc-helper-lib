@@ -23,7 +23,9 @@ public class Controls extends ControlMap<Robot> {
     @Override
     protected void buttons(Robot robot, Pad g1, Pad g2) {
         g2.rb.press(Actions.scoreHigh(robot)).says("score high");     // lesson 5
-        g2.lb.press(Actions.grabAndLift(robot)).says("grab and lift");
+        g2.b.toggle(robot.claw).says("claw").rumble();                 // 2 buzzes = closed, 1 = open
+        g2.lb.tap(Actions.grabAndLift(robot)).says("grab and lift")    // a tap...
+             .heldFor(1.0, () -> robot.lift.goTo("down")).says("lift all the way down");   // ...or held 1 s
     }
 }
 ```
@@ -88,6 +90,9 @@ later. `robot.claw::open` is a shorter way to write the same thing (a **method r
 | `toggle(onEnable, onDisable)` | `g2.dpadRight.toggle(robot.claw::open, robot.claw::close)` | each press flips between the two |
 | `tapOrDoubleTap(tap, doubleTap)` | `g2.rt.tapOrDoubleTap(robot.intake::toggle, robot.intake::out)` | a tap runs the first; a second tap within 0.35 s runs the second |
 | `slow()` | `g1.lt.slow()` | one driver only: slow driving (see below) |
+| `tap`, `hold`, `doubleTap`, `tapThenHold`, `taps(n, ...)`, `heldFor(sec, ...)` | `g2.lb.tap(a).heldFor(1.0, b)` | several gestures on one button (section 5) |
+| `with(other, job)` | `g2.back.with(g2.y, job)` | a pair: hold BACK, press Y |
+| `rumble()` | `.toggle(robot.claw).rumble()` | a buzz when the job runs; on a toggle 2 = on, 1 = off |
 | `free()` | `g2.dpadDown.free()` | no job, even if a part suggested one |
 | `says(words)` | `.says("score high")` | the words on the button map |
 
@@ -112,10 +117,23 @@ g2.leftStickY.free();
 
 A stick also takes `free()` and `says(...)`.
 
-## 5. One job per button
+## 5. One job per button (or several gestures)
 
 Each button has ONE job. **Why:** a button that does two things depends on which runs first, and the
-drivers cannot guess it. The rules, checked at INIT:
+drivers cannot guess it.
+
+The one exception is **gestures**: different ways of pressing the same button, each with its own job.
+The lesson robot's LB: a tap grabs and lifts, holding it 1 s sends the lift all the way down.
+
+```java
+g2.lb.tap(Actions.grabAndLift(robot)).says("grab and lift")
+     .heldFor(1.0, () -> robot.lift.goTo("down")).says("lift all the way down");
+```
+
+The library tells them apart for you: a tap is a press shorter than 0.3 s, a double-tap is two taps
+less than 0.35 s apart. Every gesture, pairs of buttons and buzzes: [the button menu](../../guides/buttons.md).
+
+The rules, checked at INIT:
 
 - A job of yours on a button a part suggested **replaces** the suggestion. (The part simply has no
   button there; use `free()` to clear one without a new job.)
@@ -146,12 +164,17 @@ goes on with what it was doing (a lift goes on to its height, the intake runs ag
 stop for a jam or a dropped piece, without ending the program. (Hold BACK 1 s instead to reset
 field-centric "forward", lesson 2.)
 
-## 8. The lesson robot's two actions
+## 8. The lesson robot's two actions, and a buzz
 
 The lesson robot uses gamepad 2's bumpers, which no part suggested:
 
 - **RB, "score high":** lift up, open the claw at the top, lift down.
-- **LB, "grab and lift":** close the claw, then lift the piece a little.
+- **LB, "grab and lift"** (a tap): close the claw, then lift the piece a little. Held 1 s: the lift
+  goes all the way down.
+
+It also replaces the claw's own B button with the same toggle plus `.rumble()`: gamepad 2 buzzes twice
+when the claw closes and once when it opens. **Why:** the operator feels it without looking away from
+the robot.
 
 An action runs a little every loop, so the robot keeps driving. Press the same button again to cancel
 it. If the operator moves one of its parts by hand (say, the lift stick), the action stops: the driver

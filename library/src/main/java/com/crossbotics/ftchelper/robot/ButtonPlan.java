@@ -7,13 +7,15 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleConsumer;
+import java.util.function.ObjIntConsumer;
 import java.util.function.Supplier;
 
 /**
  * The whole button map while it is being made: the library's own buttons (driving), each module's
  * suggestions, then the team's {@code Controls.java}. Checks it (one job per button) and turns it
- * into {@link ControllerBindings}.
+ * into {@link ControllerBindings}, plus the jobs watched every loop (gestures, pairs, buzzes).
  *
  * <p>Rules: a module's suggestion goes only on a free button (else a note says it has none). A job
  * in Controls.java replaces a suggestion; two jobs on one button in Controls.java, or a job on one of
@@ -32,11 +34,22 @@ final class ButtonPlan {
     private final Map<Object, Entry> jobs = new LinkedHashMap<>();
     // Suggestions that found their button taken (for the INIT notes).
     private final List<Entry> rejected = new ArrayList<>();
+    // Two-button jobs ("hold LB, press Y"), in the order given.
+    final List<Entry> pairs = new ArrayList<>();
+    // "Buzz when this becomes true" (feedback from the robot), per gamepad.
+    final List<Watch> watches = new ArrayList<>();
+    // Made by compile(): run every loop by ControlMap (gestures, buzz watches).
+    final List<LoopJob> loopJobs = new ArrayList<>();
+    // The robot (set by ControlMap.makePlan): runs actions given to gestures and pairs.
+    RobotDefinition robot;
+
+    /** Plays {@code n} short buzzes on a gamepad (tests count them instead). n = 0 does nothing. */
+    static ObjIntConsumer<Gamepad> buzzer = ButtonPlan::buzz;
 
     static final String TEAM = "Controls.java";
     static final String LIBRARY = "library";
 
-    enum Kind { PRESS, RELEASE, HOLD, TOGGLE, ACTION, AXIS, RESERVED, FREE }
+    enum Kind { PRESS, RELEASE, HOLD, TOGGLE, ACTION, AXIS, RESERVED, FREE, GESTURES, SHIFT, PAIR }
 
     /** One job on one input. */
     static final class Entry {
@@ -49,6 +62,14 @@ final class ButtonPlan {
         // Only for a suggestion that found its input taken: the input, and who has it.
         Object input;
         String takenBy;
+        // Feedback: buzzes when the job runs (0 none; -1 a toggle: 2 = on, 1 = off).
+        int rumble = 0;
+        // toggle(part): the part (to know on or off for the buzz).
+        Toggleable part;
+        // GESTURES: the button's gestures.
+        Gestures gestures;
+        // PAIR: the shift key held down, and the button pressed with it.
+        Pad.Button shift, with;
 
         Entry(Kind kind, Runnable a, Runnable b, String says, Action action) {
             this.kind = kind;
@@ -87,6 +108,20 @@ final class ButtonPlan {
         jobs.put(input, e);
     }
 
+    /** The input's job given by whoever is adding jobs now (a module, or Controls.java), or null. */
+    Entry mine(Object input) {
+        Entry old = jobs.get(input);
+        String who = source != null ? source : TEAM;
+        return old != null && who.equals(old.source) ? old : null;
+    }
+
+    /** Puts {@code e} in place of the input's job from the same source (a hold that gains gestures). */
+    Entry replace(Object input, Entry e) {
+        e.source = jobs.get(input).source;
+        jobs.put(input, e);
+        return e;
+    }
+
     /**
      * Gives an input a job (see the rules above). Returns the job, so {@code says(...)} can name it;
      * a suggestion that found its input taken is returned too, but only kept for the notes.
@@ -106,6 +141,8 @@ final class ButtonPlan {
             return e;
         }
         e.source = TEAM;
+        // One shift key can start several pairs (LB + X, LB + Y).
+        if (old != null && TEAM.equals(old.source) && old.kind == Kind.SHIFT && e.kind == Kind.SHIFT) return old;
         if (old != null && old.kind == Kind.RESERVED) {
             throw new IllegalStateException("Controls.java: " + input + " is the library's \"" + old.says
                     + "\" button. Pick another button.");
@@ -146,11 +183,21 @@ final class ButtonPlan {
                     continue;
                 }
                 String who = e.source.equals(TEAM) ? "" : " [" + e.source + "]";
-                out.add(p + " " + name + ": " + e.says + who);
+                out.add(p + " " + name + ": " + words(e) + who);
+            }
+            for (Entry pair : pairs) {
+                if (pair.shift.pad == p) out.add(p + " " + pair.shift.label + " + " + pair.with.label + ": " + words(pair));
             }
             if (withFree && free.length() > 0) out.add(p + " free: " + free);
         }
         return out;
+    }
+
+    // A job's words on the help page, with "(buzz)" when it buzzes.
+    private static String words(Entry e) {
+        if (e.kind == Kind.GESTURES) return e.gestures.help();
+        if (e.rumble == 0) return e.says;
+        return e.says + (e.rumble < 0 ? " (buzz: 2 on, 1 off)" : " (buzz)");
     }
 
     /**
@@ -169,8 +216,221 @@ final class ButtonPlan {
             }
             Pad.Button btn = (Pad.Button) j.getKey();
             ControllerBindings into = btn.pad.which == ControllerBindings.Pad.G1 ? driver : operator;
-            bind(robot, into, btn, e);
+            Supplier<Gamepad> gp = btn.pad.which == ControllerBindings.Pad.G1 ? pad1 : pad2;
+            BooleanSupplier shifted = shifted(btn, gp);
+            if (e.kind == Kind.GESTURES) {
+                loopJobs.add(gestureJob(robot, btn, e, gp, shifted));
+            } else if (e.kind != Kind.SHIFT) {
+                bind(robot, into, btn, e, gp, shifted);
+            }
         }
+        // Pairs: pressing the second button while the shift key is down.
+        for (Entry pair : pairs) {
+            final Pad.Button shift = pair.shift;
+            final Supplier<Gamepad> gp = shift.pad.which == ControllerBindings.Pad.G1 ? pad1 : pad2;
+            ControllerBindings into = shift.pad.which == ControllerBindings.Pad.G1 ? driver : operator;
+            final Runnable job = withBuzz(unlessPaused(robot, pair.a), pair, gp, robot);
+            Runnable run = () -> { if (isDown(gp.get(), shift)) job.run(); };
+            if (pair.with.btn != null) into.bindPress(pair.with.pad.which, pair.with.btn, run);
+            else into.bindTriggerPress(pair.with.pad.which, pair.with.trigger, run);
+        }
+        for (Watch w : watches) {
+            loopJobs.add(new LoopJob(w.pad == ControllerBindings.Pad.G1) {
+                private boolean was = true;   // true at first: something already true at START does not buzz
+                @Override void run(boolean paused) {
+                    boolean now = w.when.getAsBoolean();
+                    if (now && !was) buzzer.accept((w.pad == ControllerBindings.Pad.G1 ? pad1 : pad2).get(), w.buzzes);
+                    was = now;
+                }
+                @Override void reset() { }
+            });
+        }
+    }
+
+    /**
+     * One loop of the watched jobs (ControlMap calls it after the buttons).
+     *
+     * @param paused   the robot is paused (BACK): gestures forget what they were doing
+     * @param menuOpen the tuning menu is open: gamepad 1's gestures forget what they were doing
+     */
+    void loop(boolean paused, boolean menuOpen) {
+        for (LoopJob j : loopJobs) {
+            if (j.driverPad && menuOpen) j.reset();
+            else j.run(paused);
+        }
+    }
+
+    /** Something watched every loop. */
+    abstract static class LoopJob {
+        final boolean driverPad;
+
+        LoopJob(boolean driverPad) {
+            this.driverPad = driverPad;
+        }
+
+        abstract void run(boolean paused);
+
+        /** Forget what it was doing (a hold gets its "let go" job). */
+        abstract void reset();
+    }
+
+    /** A "buzz when this becomes true" from {@link Pad#rumbleWhen}. */
+    static final class Watch {
+        final ControllerBindings.Pad pad;
+        final BooleanSupplier when;
+        final int buzzes;
+
+        Watch(ControllerBindings.Pad pad, BooleanSupplier when, int buzzes) {
+            this.pad = pad;
+            this.when = when;
+            this.buzzes = buzzes;
+        }
+    }
+
+    // The gesture machine of one button, with each job paused-safe and buzzing as asked.
+    private LoopJob gestureJob(RobotDefinition robot, final Pad.Button btn, Entry e,
+                               final Supplier<Gamepad> gp, final BooleanSupplier shifted) {
+        Gestures given = e.gestures;
+        Gestures g = new Gestures();
+        g.tap = job(robot, given, Gestures.TAP, given.tap, gp);
+        g.doubleTap = job(robot, given, Gestures.DOUBLE, given.doubleTap, gp);
+        for (Map.Entry<Integer, Runnable> t : given.taps.entrySet()) {
+            g.taps.put(t.getKey(), job(robot, given, Gestures.tapsKey(t.getKey()), t.getValue(), gp));
+        }
+        g.heldForSec = given.heldForSec;
+        g.heldFor = job(robot, given, Gestures.heldForKey(given.heldForSec), given.heldFor, gp);
+        Runnable[] hold = holdJobs(robot, given, Gestures.HOLD, given.hold, given.holdEnd, gp);
+        g.hold = hold[0];
+        g.holdEnd = hold[1];
+        Runnable[] tapHold = holdJobs(robot, given, Gestures.TAP_HOLD, given.tapThenHold, given.tapThenHoldEnd, gp);
+        g.tapThenHold = tapHold[0];
+        g.tapThenHoldEnd = tapHold[1];
+        TunableSection times = TunableSection.of(robot.tunablesClass(), "Buttons");
+        final com.crossbotics.ftchelper.tuning.Tunable gap = times.tunable("tapGapSec", 0.35, 0.05).range(0.1, 1);
+        final com.crossbotics.ftchelper.tuning.Tunable holdSec = times.tunable("holdSec", 0.3, 0.05).range(0.1, 2);
+        final Gestures.Machine m = new Gestures.Machine(g, gap::get, holdSec::get, () -> Pad.clock.getAsLong());
+        return new LoopJob(btn.pad.which == ControllerBindings.Pad.G1) {
+            private boolean pausedBefore = false;
+            @Override void run(boolean paused) {
+                boolean down = isDown(gp.get(), btn) && !shifted.getAsBoolean();
+                // Paused (BACK): forget the gesture; a button held through the pause does nothing.
+                if (paused || pausedBefore) {
+                    m.reset(down);
+                    pausedBefore = paused;
+                    return;
+                }
+                m.update(down);
+            }
+            @Override void reset() {
+                m.reset(isDown(gp.get(), btn));
+            }
+        };
+    }
+
+    // One gesture's job: does nothing while paused, buzzes if asked.
+    private static Runnable job(RobotDefinition robot, Gestures g, String key, Runnable job, Supplier<Gamepad> gp) {
+        if (job == null) return null;
+        final Runnable safe = unlessPaused(robot, job);
+        final Integer n = g.rumble.get(key);
+        if (n == null || n == 0) return safe;
+        return () -> { safe.run(); buzzer.accept(gp.get(), Math.max(1, n)); };
+    }
+
+    // A hold's two jobs (every loop while held, once at let-go); the buzz plays once when it starts.
+    private static Runnable[] holdJobs(RobotDefinition robot, Gestures g, String key, Runnable whileHeld,
+                                       Runnable end, final Supplier<Gamepad> gp) {
+        if (whileHeld == null) return new Runnable[] {null, null};
+        final Runnable held = unlessPaused(robot, whileHeld);
+        final Runnable letGo = end == null ? null : unlessPaused(robot, end);
+        final Integer n = g.rumble.get(key);
+        if (n == null || n == 0) return new Runnable[] {held, letGo};
+        final boolean[] started = {false};
+        Runnable first = () -> {
+            if (!started[0]) buzzer.accept(gp.get(), Math.max(1, n));
+            started[0] = true;
+            held.run();
+        };
+        Runnable last = () -> {
+            started[0] = false;
+            if (letGo != null) letGo.run();
+        };
+        return new Runnable[] {first, last};
+    }
+
+    // True while one of the shift keys paired with this button is down (its own job waits then).
+    private BooleanSupplier shifted(Pad.Button btn, final Supplier<Gamepad> gp) {
+        final List<Pad.Button> shifts = new ArrayList<>();
+        for (Entry pair : pairs) if (pair.with == btn) shifts.add(pair.shift);
+        if (shifts.isEmpty()) return () -> false;
+        return () -> {
+            Gamepad g = gp.get();
+            for (Pad.Button s : shifts) if (isDown(g, s)) return true;
+            return false;
+        };
+    }
+
+    /** Is this button (or trigger, past half way) down on this gamepad? False with no gamepad. */
+    static boolean isDown(Gamepad g, Pad.Button b) {
+        if (g == null) return false;
+        if (b.trigger != null) return (b.trigger == ControllerBindings.Trigger.LT ? g.left_trigger : g.right_trigger) > 0.5;
+        switch (b.btn) {
+            case A: return g.a;
+            case B: return g.b;
+            case X: return g.x;
+            case Y: return g.y;
+            case LB: return g.left_bumper;
+            case RB: return g.right_bumper;
+            case BACK: return g.back;
+            case START: return g.start;
+            case GUIDE: return g.guide;
+            case DPAD_UP: return g.dpad_up;
+            case DPAD_DOWN: return g.dpad_down;
+            case DPAD_LEFT: return g.dpad_left;
+            case DPAD_RIGHT: return g.dpad_right;
+            case L_STICK_BTN: return g.left_stick_button;
+            case R_STICK_BTN: return g.right_stick_button;
+            default: return false;
+        }
+    }
+
+    // n short buzzes (0.12 s each, 0.08 s apart), handed to the gamepad at once (it never waits).
+    private static void buzz(Gamepad g, int n) {
+        if (g == null || n <= 0) return;
+        Gamepad.RumbleEffect.Builder b = new Gamepad.RumbleEffect.Builder();
+        for (int i = 0; i < n; i++) {
+            if (i > 0) b.addStep(0, 0, 80);
+            b.addStep(0.8, 0.8, 120);
+        }
+        g.runRumbleEffect(b.build());
+    }
+
+    // A job that buzzes after it runs: n buzzes, or for a toggle 2 if now on, 1 if now off.
+    private static Runnable withBuzz(final Runnable job, final Entry e, final Supplier<Gamepad> gp, final RobotDefinition robot) {
+        if (job == null || e.rumble == 0) return job;
+        final boolean[] parity = {false};
+        return () -> {
+            if (robot.isPaused()) return;
+            job.run();
+            int n = e.rumble;
+            if (n < 0) {
+                Boolean on = isOn(e.part);
+                if (on == null) {
+                    parity[0] = !parity[0];
+                    on = parity[0];
+                }
+                n = on ? 2 : 1;
+            }
+            buzzer.accept(gp.get(), n);
+        };
+    }
+
+    // On or off, for the toggle buzz; null if the part cannot say.
+    private static Boolean isOn(Toggleable part) {
+        if (part instanceof Intake) return ((Intake) part).isRunning();
+        if (part instanceof Launcher) return ((Launcher) part).isSpinning();
+        if (part instanceof Claw) return ((Claw) part).isClosed();
+        if (part instanceof Mode) return ((Mode) part).isOn();
+        return null;
     }
 
     // While the robot is paused (BACK), a button's job does nothing: a part told to move would start
@@ -180,39 +440,62 @@ final class ButtonPlan {
         return () -> { if (!robot.isPaused()) job.run(); };
     }
 
-    private static void bind(final RobotDefinition robot, ControllerBindings into, Pad.Button btn, Entry given) {
+    private static void bind(final RobotDefinition robot, ControllerBindings into, Pad.Button btn, Entry given,
+                             final Supplier<Gamepad> gp, final BooleanSupplier shifted) {
         ControllerBindings.Pad pad = btn.pad.which;
         final Entry e = new Entry(given.kind, unlessPaused(robot, given.a), unlessPaused(robot, given.b), given.says, given.action);
+        e.rumble = given.rumble;
+        e.part = given.part;
         switch (e.kind) {
             case PRESS:
-                if (btn.btn != null) into.bindPress(pad, btn.btn, e.a);
-                else into.bindTriggerPress(pad, btn.trigger, e.a);
+                press(into, btn, unlessShifted(shifted, withBuzz(e.a, e, gp, robot)));
                 break;
             case ACTION:
-                Runnable run = unlessPaused(robot, () -> robot.runner.toggle(e.action));
-                if (btn.btn != null) into.bindPress(pad, btn.btn, run);
-                else into.bindTriggerPress(pad, btn.trigger, run);
+                press(into, btn, unlessShifted(shifted, withBuzz(unlessPaused(robot, () -> robot.runner.toggle(e.action)), e, gp, robot)));
                 break;
             case RELEASE:
-                if (btn.btn != null) into.bindRelease(pad, btn.btn, e.a);
-                else into.bindTriggerRelease(pad, btn.trigger, e.a);
+                Runnable letGo = unlessShifted(shifted, withBuzz(e.a, e, gp, robot));
+                if (btn.btn != null) into.bindRelease(pad, btn.btn, letGo);
+                else into.bindTriggerRelease(pad, btn.trigger, letGo);
                 break;
             case HOLD:
+                Runnable whileHeld = unlessShifted(shifted, e.a);
                 if (btn.btn != null) {
-                    into.bindHold(pad, btn.btn, e.a);
+                    into.bindHold(pad, btn.btn, whileHeld);
                     if (e.b != null) into.bindRelease(pad, btn.btn, e.b);
                 } else {
-                    into.bindTriggerHold(pad, btn.trigger, e.a);
+                    into.bindTriggerHold(pad, btn.trigger, whileHeld);
                     if (e.b != null) into.bindTriggerRelease(pad, btn.trigger, e.b);
                 }
+                // The buzz plays once, when the hold starts.
+                if (e.rumble != 0) press(into, btn, unlessShifted(shifted, withBuzz(() -> { }, e, gp, robot)));
                 break;
             case TOGGLE:
-                if (btn.btn != null) into.bindToggle(pad, btn.btn, e.a, e.b);
-                else into.bindTriggerToggle(pad, btn.trigger, e.a, e.b);
+                // Each press flips: the first runs a (on), the next b (off). Two buzzes = on, one = off.
+                final boolean[] on = {false};
+                final Entry onOff = e;
+                Runnable flip = () -> {
+                    if (robot.isPaused()) return;
+                    on[0] = !on[0];
+                    (on[0] ? onOff.a : onOff.b).run();
+                    if (onOff.rumble != 0) buzzer.accept(gp.get(), onOff.rumble < 0 ? (on[0] ? 2 : 1) : onOff.rumble);
+                };
+                press(into, btn, unlessShifted(shifted, flip));
                 break;
             default:
                 break;
         }
+    }
+
+    private static void press(ControllerBindings into, Pad.Button btn, Runnable job) {
+        if (btn.btn != null) into.bindPress(btn.pad.which, btn.btn, job);
+        else into.bindTriggerPress(btn.pad.which, btn.trigger, job);
+    }
+
+    // While a shift key paired with this button is down, the button's own job waits (the pair runs).
+    private static Runnable unlessShifted(final BooleanSupplier shifted, final Runnable job) {
+        if (job == null) return null;
+        return () -> { if (!shifted.getAsBoolean()) job.run(); };
     }
 
     // Every input of a pad, in the help page's order.

@@ -203,6 +203,7 @@ public abstract class RobotDefinition {
         // before the autonomous reads them to build its steps.
         Set<String> used = new LinkedHashSet<>();
         used.add("Drive");
+        used.add("Buttons");   // Tunables.Buttons: the gesture times, read by Controls.java's buttons
         for (Module<?> m : modules) {
             for (Module<?> c : m.children()) used.add(c.name());
             used.add(m.name());

@@ -160,6 +160,8 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
     @Override
     protected final void everyLoop() {
         boolean menu = isTuningMenuOpen();
+        // Gestures (tap, hold, double-tap...) and "buzz when" watches: every loop.
+        if (plan != null) plan.loop(robot().isPaused(), menu);
         // Paused (BACK): the sticks move nothing; each job got 0 once when the pause began.
         if (robot().isPaused()) {
             if (!pausedSticks) for (ButtonPlan.StickJob job : sticks) job.letGo();
@@ -207,6 +209,7 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
      */
     static ButtonPlan makePlan(RobotDefinition robot, boolean oneDriver, boolean standard, TeamButtons team) {
         ButtonPlan plan = new ButtonPlan(oneDriver);
+        plan.robot = robot;
         Pad g1 = plan.g1;
         boolean fieldCentric = robot.drive().isMecanum() && robot.drive().imuName != null;
         plan.reserve(g1.leftStickX, robot.drive().isMecanum() ? "strafe" : "(drive)");
