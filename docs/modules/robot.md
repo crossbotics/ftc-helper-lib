@@ -2,12 +2,12 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
-Package: `io.github.jasoncross.ftchelper.robot`
+Package: `com.crossbotics.ftchelper.robot`
 
 Learn it hands-on: [22 The robot in five files](../tutorials/22-robot-in-five-files.md). Worked
-examples: [`examples/.../gobildabot`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/gobildabot)
-(goBILDA's starter bot), [`flywheelbot`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/flywheelbot)
-and [`turretbot`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/turretbot).
+examples: [`examples/.../gobildabot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildabot)
+(goBILDA's starter bot), [`flywheelbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot)
+and [`turretbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot).
 
 A team's whole robot program in five files a student can read in one sitting. Each file answers one
 question, so you always know where to look:
@@ -466,7 +466,7 @@ lets the drivers choose it: X = BLUE, B = RED). Until `Tunables.Drive.calibrated
 `./gradlew :sim:fromRobot` writes the simulator robot file with no TODO shape guesses: the 3D view draws the robot,
 the size rules are checked on it, and each shape moves with its part, so the simulator shows whether the
 controls do what they should (the intake drops, the rollers spin, a piece is fired). Worked example:
-[`flywheelbot/Robot.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/flywheelbot/Robot.java).
+[`flywheelbot/Robot.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot/Robot.java).
 
 **Name the part, give only what is not known.** A part in the [parts catalog](../guides/parts-catalog.md)
 brings its numbers: a motor its speed and encoder counts, a servo its speed and range, a wheel or roller

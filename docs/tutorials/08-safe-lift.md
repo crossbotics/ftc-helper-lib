@@ -9,7 +9,7 @@ stick to take over by hand".
 **You need:** the lift from Tutorial 07 (motor `lift`, positive = up), its PID gains, and
 ideally a touch sensor at the bottom named `lift_bottom`. Tutorials 01-03 and 07.
 
-**Full program:** [`Tut08SafeLift.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/tutorials/Tut08SafeLift.java)
+**Full program:** [`Tut08SafeLift.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut08SafeLift.java)
 **Reference:** [safety.md](../modules/safety.md)
 
 ---

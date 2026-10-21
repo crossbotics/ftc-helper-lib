@@ -2,7 +2,7 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
-Package: `io.github.jasoncross.ftchelper.launcher`
+Package: `com.crossbotics.ftchelper.launcher`
 
 Learn it hands-on: [17 Launcher](../tutorials/17-launcher.md), [18 Vision aiming](../tutorials/18-vision-aim.md).
 

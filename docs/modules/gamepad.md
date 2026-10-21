@@ -2,7 +2,7 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
-Package: `io.github.jasoncross.ftchelper.gamepad`
+Package: `com.crossbotics.ftchelper.gamepad`
 
 Learn it hands-on: [03 Buttons](../tutorials/03-buttons.md), [11 Driver assists](../tutorials/11-driver-assists.md).
 
@@ -55,10 +55,10 @@ and to spot two jobs on one button.
 Add these imports to use the short names:
 
 ```java
-import io.github.jasoncross.ftchelper.gamepad.ControllerBindings;
-import io.github.jasoncross.ftchelper.gamepad.ControllerBindings.Btn;
-import io.github.jasoncross.ftchelper.gamepad.ControllerBindings.Pad;
-import io.github.jasoncross.ftchelper.gamepad.ControllerBindings.Trigger;
+import com.crossbotics.ftchelper.gamepad.ControllerBindings;
+import com.crossbotics.ftchelper.gamepad.ControllerBindings.Btn;
+import com.crossbotics.ftchelper.gamepad.ControllerBindings.Pad;
+import com.crossbotics.ftchelper.gamepad.ControllerBindings.Trigger;
 ```
 
 ### The `() -> ...` part

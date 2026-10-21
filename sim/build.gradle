@@ -27,7 +27,7 @@ def robotProject = useTeamCode ? teamCodeDir.parentFile : null
 def teamRobotFile = robotProject != null ? new File(robotProject, 'simulator/robot.properties') : null
 
 android {
-    namespace 'io.github.jasoncross.ftchelper.sim'
+    namespace 'com.crossbotics.ftchelper.sim'
     compileSdk 30
 
     defaultConfig {
@@ -87,7 +87,7 @@ tasks.register('run', JavaExec) {
     def unitTest = tasks.named('testDebugUnitTest')
     dependsOn 'compileDebugUnitTestJavaWithJavac', 'processDebugUnitTestJavaRes'
     classpath = files({ unitTest.get().classpath })
-    mainClass = 'io.github.jasoncross.ftchelper.sim.SimMain'
+    mainClass = 'com.crossbotics.ftchelper.sim.SimMain'
     workingDir = rootProject.projectDir
     def robot = project.findProperty('robot') ?:
             (teamRobotFile != null && teamRobotFile.isFile() ? teamRobotFile.path : 'sim/robots/starter.properties')
@@ -105,7 +105,7 @@ tasks.register('scenario', JavaExec) {
     def unitTest = tasks.named('testDebugUnitTest')
     dependsOn 'compileDebugUnitTestJavaWithJavac', 'processDebugUnitTestJavaRes'
     classpath = files({ unitTest.get().classpath })
-    mainClass = 'io.github.jasoncross.ftchelper.sim.SimScenario'
+    mainClass = 'com.crossbotics.ftchelper.sim.SimScenario'
     workingDir = rootProject.projectDir
     def robot = project.findProperty('robot') ?:
             (teamRobotFile != null && teamRobotFile.isFile() ? teamRobotFile.path : 'sim/robots/starter.properties')
@@ -123,7 +123,7 @@ tasks.register('fromConfig', JavaExec) {
     def unitTest = tasks.named('testDebugUnitTest')
     dependsOn 'compileDebugUnitTestJavaWithJavac', 'processDebugUnitTestJavaRes'
     classpath = files({ unitTest.get().classpath })
-    mainClass = 'io.github.jasoncross.ftchelper.sim.SimConfigImport'
+    mainClass = 'com.crossbotics.ftchelper.sim.SimConfigImport'
     workingDir = rootProject.projectDir
     args = ['--config', project.findProperty('config') ?: ''] +
             (project.findProperty('out') ? ['--out', project.findProperty('out')] : []) +
@@ -140,7 +140,7 @@ tasks.register('fromRobot', JavaExec) {
     def unitTest = tasks.named('testDebugUnitTest')
     dependsOn 'compileDebugUnitTestJavaWithJavac', 'processDebugUnitTestJavaRes'
     classpath = files({ unitTest.get().classpath })
-    mainClass = 'io.github.jasoncross.ftchelper.sim.SimFromRobot'
+    mainClass = 'com.crossbotics.ftchelper.sim.SimFromRobot'
     workingDir = rootProject.projectDir
     def out = project.findProperty('out') ?: (teamRobotFile != null ? teamRobotFile.path : '')
     args = ['--robot', project.findProperty('robotClass') ?: '', '--out', out,
@@ -156,7 +156,7 @@ tasks.register('newRobot', JavaExec) {
     def unitTest = tasks.named('testDebugUnitTest')
     dependsOn 'compileDebugUnitTestJavaWithJavac', 'processDebugUnitTestJavaRes'
     classpath = files({ unitTest.get().classpath })
-    mainClass = 'io.github.jasoncross.ftchelper.sim.SimNewRobot'
+    mainClass = 'com.crossbotics.ftchelper.sim.SimNewRobot'
     workingDir = rootProject.projectDir
     args = ['--config', project.findProperty('config') ?: '',
             '--teamCode', teamCodeDir != null ? teamCodeDir.path : '',
@@ -172,7 +172,7 @@ tasks.register('fit', JavaExec) {
     def unitTest = tasks.named('testDebugUnitTest')
     dependsOn 'compileDebugUnitTestJavaWithJavac', 'processDebugUnitTestJavaRes'
     classpath = files({ unitTest.get().classpath })
-    mainClass = 'io.github.jasoncross.ftchelper.sim.SimFit'
+    mainClass = 'com.crossbotics.ftchelper.sim.SimFit'
     workingDir = rootProject.projectDir
     def robot = project.findProperty('robot') ?:
             (teamRobotFile != null && teamRobotFile.isFile() ? teamRobotFile.path : 'sim/robots/starter.properties')

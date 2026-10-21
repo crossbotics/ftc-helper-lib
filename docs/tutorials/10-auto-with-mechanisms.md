@@ -8,7 +8,7 @@ when a move gets stuck, how to wait for a mechanism safely, and how to hand info
 
 **You need:** a tuned drivetrain (Tutorial 09) and the lift from Tutorial 08.
 
-**Full program:** [`Tut10AutoWithLift.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/tutorials/Tut10AutoWithLift.java)
+**Full program:** [`Tut10AutoWithLift.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut10AutoWithLift.java)
 **Reference:** [drive.md: AutoDrive](../modules/drive.md#autodrive), [safety.md](../modules/safety.md), [util.md: PoseStore](../modules/util.md#posestore)
 
 ---

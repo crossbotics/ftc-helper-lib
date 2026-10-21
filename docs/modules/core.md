@@ -2,7 +2,7 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
-Package: `io.github.jasoncross.ftchelper.core`
+Package: `com.crossbotics.ftchelper.core`
 
 Learn it hands-on: [12 Organize a whole robot](../tutorials/12-robot-structure.md), [14 Mechanisms](../tutorials/14-mechanisms.md), [15 Telemetry, profiles and tuning](../tutorials/15-telemetry-profiles-tuning.md).
 

@@ -9,7 +9,7 @@ height and hold it there, and how to tune it live from the gamepad.
 Positive power must move it UP (Tutorial 02, "Run it", step 2). Tutorials 01-03.
 **Turn the robot on with the lift at the bottom.**
 
-**Full program:** [`Tut07LiftPid.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/tutorials/Tut07LiftPid.java)
+**Full program:** [`Tut07LiftPid.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut07LiftPid.java)
 **Reference:** [control.md](../modules/control.md#pidcontroller)
 
 > This tutorial keeps the power low, but it has no real limits. Tutorial 08 adds them.

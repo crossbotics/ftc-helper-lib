@@ -7,7 +7,7 @@ profile, changing numbers live with the tuning menu, and the match timer.
 
 **You need:** a motor `lift` (tutorial 08). Tutorial 14.
 
-**Full program:** [`Tut15TelemetryTuning.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/tutorials/Tut15TelemetryTuning.java)
+**Full program:** [`Tut15TelemetryTuning.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut15TelemetryTuning.java)
 **Reference:** [telemetry.md](../modules/telemetry.md), [core.md: Profile](../modules/core.md#profile), [tuning.md](../modules/tuning.md), [match.md: MatchTimer](../modules/match.md#matchtimer)
 
 ---

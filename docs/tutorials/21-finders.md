@@ -9,13 +9,13 @@ your code.
 **You need:** a robot with the parts you want to measure. Tutorials 14 (mechanisms) and 19 (Hardware Check).
 
 **Programs:** the starter kit's
-[`ServoFinder.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/starter/ServoFinder.java),
-[`MotorFinder.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/starter/MotorFinder.java),
-[`FlywheelFinder.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/starter/FlywheelFinder.java),
-[`DriveTuner.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/starter/DriveTuner.java),
+[`ServoFinder.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/starter/ServoFinder.java),
+[`MotorFinder.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/starter/MotorFinder.java),
+[`FlywheelFinder.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/starter/FlywheelFinder.java),
+[`DriveTuner.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/starter/DriveTuner.java),
 and the examples
-[`ExampleShotTuner.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/ExampleShotTuner.java) and
-[`ExampleAimTuner.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/ExampleAimTuner.java).
+[`ExampleShotTuner.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/ExampleShotTuner.java) and
+[`ExampleAimTuner.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/ExampleAimTuner.java).
 **Reference:** [finders.md](../modules/finders.md). Step by step: [Finders guide](../guides/finders.md).
 
 ---

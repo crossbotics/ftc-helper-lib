@@ -9,7 +9,7 @@ sudden starts (`SlewRateLimiter`).
 **You need:** a mecanum robot with the IMU, `RobotSettings` from Tutorial 09. Tutorials 04 and 07.
 (A standard drive works the same way with `TankDrive.arcade`.)
 
-**Full program:** [`Tut11HeadingHold.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/tutorials/Tut11HeadingHold.java)
+**Full program:** [`Tut11HeadingHold.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut11HeadingHold.java)
 **Reference:** [control.md](../modules/control.md), [gamepad.md: AimRumble](../modules/gamepad.md#aimrumble)
 
 ---

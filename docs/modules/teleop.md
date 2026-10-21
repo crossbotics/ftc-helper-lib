@@ -2,7 +2,7 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
-Package: `io.github.jasoncross.ftchelper.teleop`
+Package: `com.crossbotics.ftchelper.teleop`
 
 Learn it hands-on: [20 Easy TeleOp](../tutorials/20-easy-teleop.md). Ready to copy: the
 [starter kit](../starter-kit.md)'s `MainTeleOp`.

@@ -8,7 +8,7 @@ sticks feel good, add a slow mode, switch to field-centric driving, and drive "b
 **You need:** a mecanum chassis with motors `front_left`, `front_right`, `back_left`,
 `back_right`, and the hub's IMU (`imu`). Tutorials 01-03. **A block to lift the wheels off the ground.**
 
-**Full program:** [`Tut04MecanumDrive.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/tutorials/Tut04MecanumDrive.java)
+**Full program:** [`Tut04MecanumDrive.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut04MecanumDrive.java)
 **Reference:** [drive.md](../modules/drive.md), [Signs and units](../conventions.md)
 
 ---
@@ -43,7 +43,7 @@ If one motor is reversed wrongly, the robot spins or drifts in strange ways, and
 will make sense. Check before driving on the floor:
 
 1. Wheels off the ground (robot on a block).
-2. Run [`MotorDirectionCheck`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/MotorDirectionCheck.java)
+2. Run [`MotorDirectionCheck`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/MotorDirectionCheck.java)
    (copy it like a tutorial program). Hold X, Y, A, B to spin one wheel each.
 3. Every wheel must roll the way that would move the robot **forward**.
 4. Wrong one? Flip it in your config, e.g. `driveConfig.backRightReversed = true;`.

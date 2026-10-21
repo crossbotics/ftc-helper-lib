@@ -8,7 +8,7 @@ give the driver feedback with rumble, how to step through a list with the D-pad,
 
 **You need:** a Control Hub and gamepads 1 and 2. No motors: everything shows on telemetry.
 
-**Full program:** [`Tut03Buttons.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/tutorials/Tut03Buttons.java)
+**Full program:** [`Tut03Buttons.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut03Buttons.java)
 **Reference:** [gamepad.md](../modules/gamepad.md)
 
 ---

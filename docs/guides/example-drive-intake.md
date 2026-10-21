@@ -5,7 +5,7 @@
 A complete TeleOp for a common robot: a mecanum drive with a slow-mode toggle, and an intake that
 is **ON from the start**, can be **stopped and started**, and **reversed while a button is held**.
 
-**Program:** [`ExampleDriveIntake.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/ExampleDriveIntake.java)
+**Program:** [`ExampleDriveIntake.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/ExampleDriveIntake.java)
 **Needs:** motors `front_left`, `front_right`, `back_left`, `back_right`, `intake`.
 
 ## The controls (gamepad 1)

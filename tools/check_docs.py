@@ -15,8 +15,8 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 LIB = ROOT / "library/src/main/java"
-TUT_CODE = ROOT / "examples/src/main/java/io/github/jasoncross/ftchelper/examples/tutorials"
-TUT_TEST = ROOT / "examples/src/test/java/io/github/jasoncross/ftchelper/examples/tutorials"
+TUT_CODE = ROOT / "examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials"
+TUT_TEST = ROOT / "examples/src/test/java/com/crossbotics/ftchelper/examples/tutorials"
 LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
 problems = []
 

@@ -9,7 +9,7 @@ handle a part that is not on every robot.
 **You need:** one motor named `arm` (with its encoder cable plugged in), one servo named `claw`.
 Optional: a touch sensor named `arm_touch`. Tutorial 01.
 
-**Full program:** [`Tut02MotorAndServo.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/tutorials/Tut02MotorAndServo.java)
+**Full program:** [`Tut02MotorAndServo.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut02MotorAndServo.java)
 **Reference:** [hardware.md](../modules/hardware.md)
 
 ---

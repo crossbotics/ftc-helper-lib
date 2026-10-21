@@ -8,7 +8,7 @@ classes, why some variables are "fields", what `() -> ...` means, and why we use
 **You need:** a Control Hub (or a Robot Controller phone), a Driver Station, gamepad 1.
 No motors.
 
-**Full program:** [`Tut01HelloLibrary.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/tutorials/Tut01HelloLibrary.java)
+**Full program:** [`Tut01HelloLibrary.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut01HelloLibrary.java)
 
 ---
 
@@ -48,12 +48,12 @@ crashed with an error. Putting `drive.stop()` there means a bug never leaves a m
 
 ## 2. Imports: telling Java where a class lives
 
-Library classes live in packages like `io.github.jasoncross.ftchelper.util`. At the top of the
+Library classes live in packages like `com.crossbotics.ftchelper.util`. At the top of the
 file, `import` lines tell Java where to find them:
 
 ```java
-import io.github.jasoncross.ftchelper.util.LoopTimer;
-import io.github.jasoncross.ftchelper.telemetry.TelemetryHelper;
+import com.crossbotics.ftchelper.util.LoopTimer;
+import com.crossbotics.ftchelper.telemetry.TelemetryHelper;
 ```
 
 You do not need to type these. Type the class name (it turns red), click it, press
@@ -63,9 +63,9 @@ You do not need to type these. Type the class name (it turns red), click it, pre
 you can write `Pad.G1` instead of `ControllerBindings.Pad.G1`:
 
 ```java
-import io.github.jasoncross.ftchelper.gamepad.ControllerBindings;
-import io.github.jasoncross.ftchelper.gamepad.ControllerBindings.Btn;
-import io.github.jasoncross.ftchelper.gamepad.ControllerBindings.Pad;
+import com.crossbotics.ftchelper.gamepad.ControllerBindings;
+import com.crossbotics.ftchelper.gamepad.ControllerBindings.Btn;
+import com.crossbotics.ftchelper.gamepad.ControllerBindings.Pad;
 ```
 
 ## 3. Set up in INIT

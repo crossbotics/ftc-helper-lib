@@ -7,7 +7,7 @@ out telemetry so drivers find what they need.
 
 **You need:** a mecanum drivetrain (change to `TankDrive` for a standard one). Tutorials 01-04.
 
-**Full program:** [`Tut06FastLoop.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/tutorials/Tut06FastLoop.java)
+**Full program:** [`Tut06FastLoop.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut06FastLoop.java)
 **Reference:** [hardware.md: BulkReads](../modules/hardware.md#bulkreads), [util.md: LoopTimer](../modules/util.md#looptimer), [telemetry.md](../modules/telemetry.md)
 
 ---

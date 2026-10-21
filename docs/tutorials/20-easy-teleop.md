@@ -9,7 +9,7 @@ robot description.
 **You need:** a drivetrain set up in `RobotSettings` (tutorial 09), a motor `lift`, a servo `claw`.
 Tutorials 03, 14 and 16.
 
-**Full program:** [`Tut20EasyTeleOp.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/tutorials/Tut20EasyTeleOp.java)
+**Full program:** [`Tut20EasyTeleOp.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut20EasyTeleOp.java)
 **Reference:** [teleop.md](../modules/teleop.md).
 
 ---

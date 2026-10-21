@@ -7,7 +7,7 @@ mechanism ("subsystem"), so TeleOp and autonomous share the same code and stay s
 
 **You need:** Tutorials 08-10. A drivetrain, a lift (`lift`, optional `lift_bottom`) and a claw servo (`claw`).
 
-**Full programs:** the [`robot`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/tutorials/robot) folder:
+**Full programs:** the [`robot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/robot) folder:
 `Robot`, `Lift`, `LiftHeights`, `Claw`, `MainTeleOp`, `MainAuto` (and `RobotSettings` from Tutorial 09).
 
 ---

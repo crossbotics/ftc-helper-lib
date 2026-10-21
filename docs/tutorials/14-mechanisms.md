@@ -9,7 +9,7 @@ and how a `Subsystems` group runs them all.
 **You need:** whatever you have of: motor `lift` (+ touch `lift_bottom`), servo `wrist`, motor
 `intake`, continuous servo `spinner`. Delete the lines for parts you do not have. Tutorials 03, 08.
 
-**Full program:** [`Tut14Mechanisms.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/tutorials/Tut14Mechanisms.java)
+**Full program:** [`Tut14Mechanisms.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut14Mechanisms.java)
 **Reference:** [mechanism.md](../modules/mechanism.md)
 
 ---

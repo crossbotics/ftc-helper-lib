@@ -15,7 +15,7 @@ import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-LIB = ROOT / "library/src/main/java/io/github/jasoncross/ftchelper"
+LIB = ROOT / "library/src/main/java/com/crossbotics/ftchelper"
 EXAMPLES = ROOT / "examples/src/main/java"
 
 # Library classes allowed to wait, and why.

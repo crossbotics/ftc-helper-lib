@@ -56,7 +56,7 @@ Time: about 30-60 minutes each, more for 07, 09 and 12 (tuning takes time).
 ## How to use a tutorial program
 
 The programs are in the library at
-[`examples/.../examples/tutorials/`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/tutorials).
+[`examples/.../examples/tutorials/`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials).
 
 1. Copy the file into `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/`.
 2. Change its first line to `package org.firstinspires.ftc.teamcode;`

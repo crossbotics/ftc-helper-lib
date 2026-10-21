@@ -8,7 +8,7 @@ shot table from real shots, and how `Launcher` makes sure a piece is only fed wh
 **You need:** motor `flywheel` (with its encoder cable), servo `hood`, motor `feeder`. Tutorials 03, 14.
 Safety glasses: a flywheel throws things.
 
-**Full program:** [`Tut17Launcher.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/tutorials/Tut17Launcher.java)
+**Full program:** [`Tut17Launcher.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut17Launcher.java)
 **Reference:** [launcher.md](../modules/launcher.md)
 
 ---

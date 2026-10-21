@@ -10,12 +10,12 @@ in the simulator.
 **Robot needed:** none to start (the simulator), then your robot. **Time:** about 45 minutes.
 
 The program: goBILDA's BIOBUZZ starter bot, rewritten in this style, in
-[`examples/.../gobildabot`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/gobildabot).
+[`examples/.../gobildabot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildabot).
 Two more complete robots are next to it:
-[`flywheelbot`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/flywheelbot)
+[`flywheelbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot)
 (an intake that runs from the start, a flywheel the driver speeds up and down, an indexer servo, a
 deploy servo at START) and
-[`turretbot`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/turretbot)
+[`turretbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot)
 (a turret with a Limelight that follows the goal inside its range, speed from distance, a folding claw).
 The reference for every method: [the robot module](../modules/robot.md).
 
@@ -202,7 +202,7 @@ up, RB fires (hold it to keep firing). ([Simulator guide](../guides/simulator.md
 The simulator draws the robot from its robot file. `Robot.java` can write that file for you, if it also
 says what each part is and how it looks ([Shapes and parts](../modules/robot.md#shapes-and-parts)).
 Name each part by its catalog id; give a size or a place only when the catalog does not know it.
-(Shortened from [`flywheelbot/Robot.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/flywheelbot/Robot.java).)
+(Shortened from [`flywheelbot/Robot.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot/Robot.java).)
 
 ```java
 chassisMm(400, 400, 100);

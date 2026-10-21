@@ -7,7 +7,7 @@ bench, floor, autonomous, event), and how to turn a problem into a fix that stay
 
 **You need:** any robot. Tutorials 01-03.
 
-**Full program:** [`Tut19HardwareCheck.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/tutorials/Tut19HardwareCheck.java) (yes, it is 3 lines)
+**Full program:** [`Tut19HardwareCheck.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut19HardwareCheck.java) (yes, it is 3 lines)
 **Reference:** [testing.md](../modules/testing.md). Guide with all checklists: [Testing procedures](../guides/testing.md).
 
 ---

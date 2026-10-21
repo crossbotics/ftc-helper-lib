@@ -7,7 +7,7 @@ laptop in seconds, and which parts of robot code can be tested this way.
 
 **You need:** Tutorial 12 (the `LiftHeights` class). No robot.
 
-**Full program:** [`LiftHeightsTest.java`](../../examples/src/test/java/io/github/jasoncross/ftchelper/examples/tutorials/robot/LiftHeightsTest.java)
+**Full program:** [`LiftHeightsTest.java`](../../examples/src/test/java/com/crossbotics/ftchelper/examples/tutorials/robot/LiftHeightsTest.java)
 
 ---
 

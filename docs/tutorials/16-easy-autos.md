@@ -8,7 +8,7 @@ choices, how red/blue mirroring works, how to keep time for parking, and how to 
 **You need:** a tuned drivetrain (tutorial 09: `RobotSettings` with `calibrationConfirmed = true`),
 a motor `lift`, a servo `claw`. Tutorials 09, 10, 14.
 
-**Full program:** [`Tut16EasyAuto.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/tutorials/Tut16EasyAuto.java)
+**Full program:** [`Tut16EasyAuto.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut16EasyAuto.java)
 **Reference:** [auto.md](../modules/auto.md). Guide: [Easy autonomous modes](../guides/easy-autos.md).
 
 ---

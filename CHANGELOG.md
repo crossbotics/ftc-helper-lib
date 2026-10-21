@@ -4,6 +4,29 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+## v0.11.0 - 2026-10-20
+
+**The Java package has a new name: `com.crossbotics.ftchelper`** (it was `io.github.jasoncross.ftchelper`).
+The library now lives at github.com/crossbotics/ftc-helper-lib, and the package name follows the
+crossbotics.com domain, so it stays right even if the code moves again. Nothing else changed: same
+classes, same methods, same behavior.
+
+### How to update your robot code
+
+1. Update the submodule to v0.11.0 (see [Keep it up to date](docs/02-keep-up-to-date.md)).
+2. In Android Studio: **Edit > Find > Replace in Files** (Ctrl+Shift+R, Cmd+Shift+R on a Mac). Find
+   `io.github.jasoncross.ftchelper`, replace with `com.crossbotics.ftchelper`, scope **TeamCode**,
+   **Replace All**.
+3. Build. Red imports left over mean a file still has the old name: run step 2 again.
+
+Robot files for the simulator (`.properties`) and scenario files do not name the package, so they do not
+change.
+
+### Changed
+
+- Package `io.github.jasoncross.ftchelper` → `com.crossbotics.ftchelper` in the library, examples,
+  simulator, tools, docs and tutorials. The Android namespaces and the simulator's Gradle tasks follow.
+
 ## v0.10.2 - 2026-10-20
 
 Nothing old stops working.

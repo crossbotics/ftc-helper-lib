@@ -8,7 +8,7 @@ what bearing and distance mean, and how to aim the drivetrain (or a turret) at a
 **You need:** the drivetrain and `RobotSettings` (tutorial 09), and a webcam named `Webcam 1` or a
 Limelight named `limelight` (with an AprilTag pipeline set up on its web page). An AprilTag to point at.
 
-**Full program:** [`Tut18VisionAim.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/tutorials/Tut18VisionAim.java)
+**Full program:** [`Tut18VisionAim.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut18VisionAim.java)
 **Reference:** [vision.md](../modules/vision.md)
 
 ---

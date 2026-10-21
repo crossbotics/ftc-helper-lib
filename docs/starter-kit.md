@@ -11,7 +11,7 @@ names and numbers, and you have a working robot.
 > configuration by `./gradlew :sim:newRobot`, with ready-made modules ([robot module](modules/robot.md)).
 > This starter kit still works and is kept for teams that use it.
 
-**Files:** [`examples/.../starter/`](../examples/src/main/java/io/github/jasoncross/ftchelper/examples/starter)
+**Files:** [`examples/.../starter/`](../examples/src/main/java/com/crossbotics/ftchelper/examples/starter)
 
 | # | File | What it is | You change |
 | --- | --- | --- | --- |

@@ -2,7 +2,7 @@ package org.firstinspires.ftc.vision;
 
 import android.graphics.Bitmap;
 import android.util.Size;
-import io.github.jasoncross.ftchelper.sim.SimVision;
+import com.crossbotics.ftchelper.sim.SimVision;
 import java.lang.reflect.Proxy;
 import org.firstinspires.ftc.robotcore.external.function.Consumer;
 import org.firstinspires.ftc.robotcore.external.function.Continuation;

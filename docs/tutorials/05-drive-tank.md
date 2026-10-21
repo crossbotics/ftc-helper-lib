@@ -8,7 +8,7 @@
 **You need:** a standard chassis with two motors `left_drive` and `right_drive`
 (or four: `front_left`, `front_right`, `back_left`, `back_right`). Tutorials 01-03.
 
-**Full program:** [`Tut05TankDrive.java`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/tutorials/Tut05TankDrive.java)
+**Full program:** [`Tut05TankDrive.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut05TankDrive.java)
 **Reference:** [drive.md: TankDrive](../modules/drive.md#tankdrive)
 
 ---
@@ -34,7 +34,7 @@ TankDrive drive = new TankDrive(hardwareMap, driveConfig);
 With 4 motors, both motors on a side always get the same power.
 
 The left side is reversed by default (motors on the left face the other way). Check it with
-[`MotorDirectionCheck`](../../examples/src/main/java/io/github/jasoncross/ftchelper/examples/MotorDirectionCheck.java):
+[`MotorDirectionCheck`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/MotorDirectionCheck.java):
 set its `config()` to `DriveConfig.tankTwoMotor()`, wheels off the ground, X = left, Y = right.
 Both must roll forward.
 
