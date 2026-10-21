@@ -4,6 +4,10 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+## v0.11.2 - 2026-10-21
+
+Nothing old stops working.
+
 ### Fixed
 
 - `Lift.slide(...).part(id)`: the simulator now uses that motor (before, it always wrote a 312 RPM motor).
