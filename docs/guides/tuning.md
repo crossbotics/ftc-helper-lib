@@ -103,7 +103,14 @@ The starter kit's `MainTeleOp` already has it.
 
 Changed values show the code value next to them: `Lift/kP = 0.0050  (code 0.004)`.
 
-## Optional: FTC Dashboard
+## Optional: FTC Dashboard (practice only)
+
+> **Not at events (2026-27 rule R704.D):** the game manual bans "additional logging/streaming
+> services, such as those hosted by third party plugins and tools such as FTC Dashboard, FTControl
+> Panels, and others". Only the Driver Station app may stream telemetry. Use these tools at home and
+> in practice only, and **take them out of the robot project before an event** (remove or comment out
+> their Gradle lines, then build and install again). The library's own tuning menu works through the
+> Driver Station, so it is allowed.
 
 [FTC Dashboard](https://acmerobotics.github.io/ftc-dashboard/) shows graphs and lets you change
 `public static` fields (settings that belong to the class, not to one object) from a laptop browser. Your team used it in 2025-26. It is added in the

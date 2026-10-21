@@ -214,6 +214,64 @@ public class AutoRoutine {
         return add(label, ctx -> record(takeDrive().driveTo(pose, ready, m(xIn), yIn, m(headingDeg), maxPower, toleranceIn)));
     }
 
+    /**
+     * Follows a path driven by another library (see {@link PathJob}) and waits until it is at the end,
+     * at most {@code timeoutSec}. The report says {@code timed out}, {@code STALLED} (the distance left
+     * stopped going down for 1.5 s, more than 3 in from the end) or {@code NO_ODOMETRY} (the pose was
+     * not ready at the start, or for 0.2 s on the way). BLOCKS until then, keeping the mechanisms updated.
+     */
+    public AutoRoutine followPath(String label, final PathJob job, final double timeoutSec) {
+        return add(label, ctx -> {
+            if (!job.isReady()) {
+                ctx.note("NO_ODOMETRY");
+                return;
+            }
+            job.start();
+            long start = System.nanoTime();
+            com.crossbotics.ftchelper.drive.StallDetector stall = new com.crossbotics.ftchelper.drive.StallDetector(0.25, 1.5);
+            double notReadySince = Double.NaN;
+            // The distance left means nothing before the follower's first update (Pedro says 0), and
+            // jumps up when a Pedro path chain starts its next part: the stuck check skips both.
+            boolean updated = false;
+            double lastRemaining = Double.NaN;
+            try {
+                while (job.isBusy()) {
+                    double t = (System.nanoTime() - start) / 1e9;
+                    if (!ctx.isActive()) return;   // park time or STOP: the report says "cut short"
+                    if (t > timeoutSec) {
+                        ctx.note("timed out");
+                        return;
+                    }
+                    if (!job.isReady()) {
+                        if (Double.isNaN(notReadySince)) notReadySince = t;
+                        if (t - notReadySince >= 0.2) {
+                            ctx.note("NO_ODOMETRY");
+                            return;
+                        }
+                    } else {
+                        notReadySince = Double.NaN;
+                    }
+                    if (updated) {
+                        double left = job.remainingIn();
+                        if (left > lastRemaining + 1) stall.reset();
+                        lastRemaining = left;
+                        // The last 3 in: the follower may still be finishing its turn while the
+                        // distance hardly changes. The time limit still guards it.
+                        if (left <= 3) stall.reset();
+                        else if (stall.update(left, t)) {
+                            ctx.note("STALLED");
+                            return;
+                        }
+                    }
+                    ctx.loop();
+                    updated = true;
+                }
+            } finally {
+                if (job.isBusy()) job.cancel();
+            }
+        });
+    }
+
     /** Remembers the heading now, for {@link #returnToHeading}. */
     public AutoRoutine rememberHeading(String label) {
         return add(label, ctx -> storedHeading = needDrive().headingDeg());

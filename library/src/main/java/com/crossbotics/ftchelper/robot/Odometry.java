@@ -270,18 +270,25 @@ public final class Odometry {
                 out.add(Module.fmt("odometry.mountIn = %s, %s, %s", Shape.n(forwardIn), Shape.n(leftIn), Shape.n(mountHeadingDeg)));
                 break;
             case THREE:
-                out.add("odometry = threeWheels " + String.join(", ", names));
+                out.add("odometry = threeWheels " + commaList(names));
                 out.add("odometry.trackWidthIn = " + Shape.n(trackWidthIn));
                 out.add("odometry.perpForwardIn = " + Shape.n(perpForwardIn));
                 out.add(Module.fmt("odometry.ticksPerIn = %.3f", ticksPerMm * 25.4));
                 break;
             default:
-                out.add("odometry = twoWheels " + String.join(", ", names));
+                out.add("odometry = twoWheels " + commaList(names));
                 out.add("odometry.parallelLeftIn = " + Shape.n(parallelLeftIn));
                 out.add("odometry.perpForwardIn = " + Shape.n(perpForwardIn));
                 out.add(Module.fmt("odometry.ticksPerIn = %.3f", ticksPerMm * 25.4));
                 break;
         }
-        if (!reversed.isEmpty()) out.add("odometry.reversed = " + String.join(", ", reversed));
+        if (!reversed.isEmpty()) out.add("odometry.reversed = " + commaList(reversed));
+    }
+
+    // "a, b, c" (not String.join: the blocking check reads ".join(" as a thread wait).
+    private static String commaList(java.util.List<String> items) {
+        StringBuilder b = new StringBuilder();
+        for (String item : items) b.append(b.length() == 0 ? "" : ", ").append(item);
+        return b.toString();
     }
 }

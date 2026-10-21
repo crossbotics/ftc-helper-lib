@@ -10,6 +10,12 @@ as lesson 8.
 is `true`. A **mecanum** drive. About 5 by 8 ft of clear floor (a field is best). About two hours:
 about one hour for Pedro's tuning, the rest to set up and try paths.
 
+> **Odometry is required.** Pedro steers by where the robot really is on the field, every loop. Only
+> odometry tells it that: a goBILDA Pinpoint, a SparkFun OTOS, or dead-wheel pods, set up and checked
+> in [lesson 8](08-odometry.md). The drive wheels' encoders are not enough (they slip). Without an
+> `odometry(...)` line, INIT stops with `follower(...) needs an odometry(...) line too`, and until
+> `Tunables.Odometry.checked` is `true` every `follow` step is skipped.
+
 > **Mecanum drives only.** Pedro corrects the robot's position by sliding it sideways, so it needs
 > wheels that can strafe. Pedro has no tank (two-side) drive. **On a tank drive** the library stops
 > INIT with a clear message; use odometry with `turnTo` and `move` instead (lesson 8 and the
@@ -314,6 +320,12 @@ not work here). Keep clear of the robot, and keep a hand on STOP.
    the tuner does not change your code.
 
 6. Send the code again.
+
+7. **Before an event, take the tuner out.** Pedro's tuner runs a web page on the robot, and this
+   season's rule R704.D bans tools like that at events (like FTC Dashboard). Comment out the
+   `tuning` line in `build.dependencies.gradle` (put `//` in front of it), move `Tuning.java` and the
+   `procedures` folder out of TeamCode, then build and install again. Your paths still work: they
+   only need `PedroConstants`. Put them back after the event to tune again.
 
 ---
 

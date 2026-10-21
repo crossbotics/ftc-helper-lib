@@ -214,56 +214,13 @@ public final class Steps {
             return this;
         }
         final boolean mirror = routine.mirrorsX();
-        routine.step(label, ctx -> {
-            PathFollower f = robot.follower();
-            if (!f.isReady()) {
-                ctx.note("NO_ODOMETRY");
-                return;
-            }
-            f.follow(path, mirror);
-            long start = System.nanoTime();
-            com.crossbotics.ftchelper.drive.StallDetector stall = new com.crossbotics.ftchelper.drive.StallDetector(0.25, 1.5);
-            double notReadySince = Double.NaN;
-            // The distance left means nothing before the follower's first update (Pedro says 0), and
-            // jumps up when a Pedro path chain starts its next part: the stuck check skips both.
-            boolean updated = false;
-            double lastRemaining = Double.NaN;
-            try {
-                while (f.isBusy()) {
-                    double t = (System.nanoTime() - start) / 1e9;
-                    if (!ctx.isActive()) return;   // park time or STOP: the report says "cut short"
-                    if (t > timeoutSec) {
-                        ctx.note("timed out");
-                        return;
-                    }
-                    if (!f.isReady()) {
-                        if (Double.isNaN(notReadySince)) notReadySince = t;
-                        if (t - notReadySince >= 0.2) {
-                            ctx.note("NO_ODOMETRY");
-                            return;
-                        }
-                    } else {
-                        notReadySince = Double.NaN;
-                    }
-                    if (updated) {
-                        double left = f.remainingIn();
-                        if (left > lastRemaining + 1) stall.reset();
-                        lastRemaining = left;
-                        // The last 3 in: the follower may still be finishing its turn while the
-                        // distance hardly changes. The time limit still guards it.
-                        if (left <= 3) stall.reset();
-                        else if (stall.update(left, t)) {
-                            ctx.note("STALLED");
-                            return;
-                        }
-                    }
-                    ctx.loop();
-                    updated = true;
-                }
-            } finally {
-                if (f.isBusy()) f.cancel();
-            }
-        });
+        routine.followPath(label, new com.crossbotics.ftchelper.auto.PathJob() {
+            @Override public void start() { robot.follower().follow(path, mirror); }
+            @Override public boolean isBusy() { return robot.follower().isBusy(); }
+            @Override public boolean isReady() { return robot.follower().isReady(); }
+            @Override public double remainingIn() { return robot.follower().remainingIn(); }
+            @Override public void cancel() { robot.follower().cancel(); }
+        }, timeoutSec);
         return this;
     }
 

@@ -13,6 +13,11 @@ Read [the odometry module](odometry.md) first: Pedro needs a working, checked od
 path (a line or a smooth curve), and it drives the robot along it fast, correcting all the way, and
 brakes at the end. `driveTo` goes to one point. Pedro follows a whole path, curves included.
 
+> **Odometry is required.** Pedro steers by the robot's real place on the field, every loop, and only
+> the `odometry(...)` line gives that (a Pinpoint, an OTOS or dead wheels, set up and checked:
+> [odometry](odometry.md), [lesson 8](../tutorials/start/08-odometry.md)). Drive-wheel encoders slip,
+> so they are not enough. No odometry line: INIT stops. Not checked yet: `follow` steps are skipped.
+
 > **Mecanum drives only.** Pedro corrects the robot's position by sliding it sideways, so it needs
 > wheels that can strafe. Pedro 3.0.2 has two drivetrains, Mecanum and Swerve, and no tank (two-side)
 > drive. With a tank `drive(...)` line, `Pedro.follower(...)` stops INIT with a clear message. A tank
@@ -267,6 +272,13 @@ Tune in this order. Each step needs the one before it.
 it). The tuning library asks for an older Pedro (3.0.x); this module asks for 3.0.2. Gradle uses the
 newer one, 3.0.2. That is correct: do not change it back. The `repo.dairy.foundation` line is needed:
 the tuning library gets one of its parts (Sloth) from there. (Checked 2026-10-21.)
+
+**Take the tuner out before an event.** Pedro's tuning library runs a web page on the robot (the
+"192.168.43.1:10158" page). This season's rule R704.D bans "additional logging/streaming services"
+like FTC Dashboard and FTControl Panels at events. Remove or comment out the `tuning` line in
+`build.dependencies.gradle` and the `pedro/Tuning.java` and `procedures` files (or move them out of
+TeamCode) before an event, then build and install again. Your `PedroConstants` numbers stay: the
+follower does not need the tuner.
 
 **The tuner drives at full power.** It uses Pedro's own drivetrain, without the library's power
 limit (`practiceMaxPower`). Give it room, and keep a hand on STOP.

@@ -73,6 +73,8 @@ your TeleOp after autonomous.
 | `turn(label, degrees, power)` | turn by (positive = left) |
 | `turnTo(label, heading, power)` | turn to a heading (0 = start direction) |
 | `moveWithTurn(label, inches, fieldDir, heading, power, turnPower)` | drive and turn together (mecanum) |
+| `driveTo(label, pose, ready, x, y, heading, power, tolerance)` | drive to a field point with odometry (mecanum); the five-files `Steps.driveTo` fills in the pose for you ([odometry](odometry.md#driveto)) |
+| `followPath(label, pathJob, timeoutSec)` | follow a path another library drives, e.g. Pedro; `PathJob` is its small plug (start, busy, ready, distance left, cancel). The five-files `Steps.follow` makes it for you ([pedro](pedro.md)) |
 | `rememberHeading(label)` / `returnToHeading(label, power)` | come back to a saved heading |
 | `run(label, code)` | run code at once, continue (e.g. `claw::open`) |
 | `waitFor(label, seconds)` | wait; mechanisms keep working |
@@ -86,6 +88,7 @@ your TeleOp after autonomous.
 | `.drive(autoDrive)`, `.subsystems(group)`, `.telemetry(t)`, `.timer(timer)` | what it uses |
 | `.mirrorFor(alliance)` | flip turns, headings and sideways moves for RED (null = no mirroring, e.g. a rotated field) |
 | `.reserveForPark(seconds)` | main steps stop when this much time is left |
+| `.beforeDriving(code)` | code to run when a driving step starts (each call adds one); the robot layer ends a path's hold with it |
 | `runAll()` | run every step (after `waitForStart()`) |
 | `getReport()` | what happened to each step |
 | `size()` | number of steps |
