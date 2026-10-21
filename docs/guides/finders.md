@@ -29,7 +29,8 @@ flowchart LR
     S --> M["Motor Finder<br/>limits + positions"]
     M --> F["Flywheel Finder<br/>gains + recovery"]
     F --> D["Drive Tuner<br/>wheel size + strafe"]
-    D --> A["Aim Tuner<br/>camera offset"]
+    D --> O["Odometry Tuner<br/>pod directions + offsets"]
+    O --> A["Aim Tuner<br/>camera offset"]
     A --> T["Shot Tuner<br/>shot table"]
     T --> C["Characterizer<br/>feedforward + simulator"]
 ```
@@ -43,8 +44,11 @@ flowchart LR
 4. **Drive Tuner**: the wheel size and strafe correction (five files: `.wheelMm(...)` in `Robot.java`
    and `strafeCorrection` in `Tunables.Drive`, then `Tunables.Drive.calibrated = true`; older helpers:
    `RobotSettings.auto()`), before you write autonomous.
-5. **Aim Tuner**, then **Shot Tuner**: aim first, so the shot table is built with straight shots.
-6. **Characterizer** (any time after the Motor Finder): how the motors really move, for feedforward
+5. **Odometry Tuner** (a robot with an `odometry(...)` line): which way each pod counts and where it
+   sits (five files: the offsets in the odometry line of `Robot.java`, then
+   `Tunables.Odometry.checked = true`), before autonomous uses `driveTo`.
+6. **Aim Tuner**, then **Shot Tuner**: aim first, so the shot table is built with straight shots.
+7. **Characterizer** (any time after the Motor Finder): how the motors really move, for feedforward
    and the simulator.
 
 ## Before you start
@@ -54,8 +58,8 @@ flowchart LR
 - The finders are in the starter kit (`ServoFinder`, `MotorFinder`, `FlywheelFinder`, `DriveTuner`, `Characterizer`)
   and in the examples (`ExampleShotTuner`, `ExampleAimTuner`: put your launcher and camera in them).
   Remove `@Disabled`, build, and they are in the TeleOp list under "Finders".
-- The robot in five files: the Servo, Motor and Flywheel finders need no code. The Drive Tuner and the
-  Shot Tuner need one line that names your robot (it makes your `Robot`, so the tuner uses its parts;
+- The robot in five files: the Servo, Motor and Flywheel finders need no code. The Drive Tuner, the
+  Odometry Tuner and the Shot Tuner need one line that names your robot (it makes your `Robot`, so the tuner uses its parts;
   examples: the lesson robot's
   [DriveTuner.java](../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot/DriveTuner.java),
   the turret robot's [ShotTuner.java](../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/ShotTuner.java)):
@@ -126,6 +130,31 @@ Watch the current (amps): a high number while not moving means it is pushing on 
      used a catalog wheel), `Tunables.Drive: strafeCorrection = 1.180` in `Tunables.Drive`. Then
      `Tunables.Drive.calibrated = true`.
    - older helpers: the `c.` lines go in `RobotSettings.auto()`, then `c.calibrationConfirmed = true`.
+
+## Odometry Tuner: directions, offsets and a loop check
+
+For a robot in five files with an `odometry(...)` line ([odometry](../modules/odometry.md)). It needs
+your robot, in a small file next to `Robot.java` (the odometry robot's
+[OdometryTuner.java](../../examples/src/main/java/com/crossbotics/ftchelper/examples/odometrybot/OdometryTuner.java);
+the whole file to type: [lesson 8](../tutorials/start/08-odometry.md#5-the-odometry-tuner)). Put a 48 in
+strip of tape on the floor with a mark at its start. The sticks drive slowly (30%) in every test; you
+can also push the robot by hand. D-pad chooses, **A** starts, **B** ends the test.
+
+1. **Forward 48 in:** drive or push it 48 in straight forward along the tape, B. "Forward OK" (and how
+   many % off), or "counted BACKWARD": add `"x"` to `.reversed(...)` (dead wheels: that pod's port
+   name). An OTOS gets `Tunables.Odometry: linearScalar = ...` to copy (multiply it with the one in use).
+2. **Left 24 in:** drive or push it 24 in to its LEFT, B. "Left OK", or "counted RIGHT": add `"y"` to
+   `.reversed(...)` (dead wheels: the sideways pod's name). A tank robot: push it.
+3. **Spin 3+ turns:** turn it in place at least 3 times with the right stick, B. It shows the offsets
+   as the numbers to change: `Robot.java: in the odometry(...) line, .offsetsMm(-84.2, -167.5)`
+   (three wheels: `.trackWidthIn(..).perpForwardIn(..)`; two: `.parallelLeftIn(..).perpForwardIn(..)`).
+   Change only those numbers: `.reversed(...)` and the pod type stay as you wrote them.
+   An OTOS has no offsets to measure: measure `mountIn` with a tape, and its turn scale
+   [by hand](../modules/odometry.md#otos-turn-scale-by-hand).
+4. Copy the numbers into your odometry line, rebuild.
+5. **Loop and back:** start on the mark, drive anywhere, come back onto the mark facing the same way, B.
+   Within 1 in and 2 degrees it shows `Tunables.Odometry: checked = true`: set it in `Tunables.java`.
+   Until then, autonomous `driveTo` steps are skipped on the robot.
 
 ## Aim Tuner: camera offset
 

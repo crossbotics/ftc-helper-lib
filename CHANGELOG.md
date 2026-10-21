@@ -4,6 +4,42 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+Nothing old changes: odometry is new, and only a robot with an `odometry(...)` line uses it.
+
+### Added
+
+- **Odometry** (package `com.crossbotics.ftchelper.odometry`): where the robot is on the field, from a
+  goBILDA Pinpoint (`PinpointOdometry`), a SparkFun OTOS (`OtosOdometry`), or three or two dead wheels
+  (`DeadWheelOdometry`). Every kind is a `PoseTracker`: one pose in the drivers' frame (x right, y away,
+  heading 0 = facing away, counterclockwise +, the same as the autonomous start spot), `setPose`,
+  `isReady` and plain status words ("X pod not found: check its cable"). It updates first every loop,
+  before every part; a Pinpoint costs one I2C read per loop.
+- `Robot.java`: one line, `odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168))` (or `otos(...)`
+  `.mountIn(...)`, `threeWheels(...)`, `twoWheels(...)`), and a `Tunables.Odometry` section (`checked`,
+  and an OTOS's `linearScalar` / `angularScalar`).
+- `robot.pose()`: the robot's place every loop (also a `Pose` line on the Driver Station).
+- `driveTo(label, x, y, heading, power[, tolerance])` in autonomous (`Steps`, `AutoRoutine`,
+  `AutoDrive`): drives to a field point and turns at once (mecanum), correcting all the way; it slows
+  in proportion in the last 8 inches so it stops on the point. Written for BLUE, mirrored like the start
+  spot. Skipped on a real robot, with a report line, until `Tunables.Odometry.checked = true`; stops at once
+  with `NO_ODOMETRY` if the odometry stops working (Pinpoint fault, OTOS not answering: re-checked once a second).
+- The pose starts at the autonomous start spot; the end pose goes to TeleOp, which starts the
+  odometry there, and field-centric "forward" comes from the odometry's heading.
+- The **Odometry Tuner** (`OdometryTunerOpMode`): Forward, Left, Spin and Loop tests: which way each
+  pod counts, the offsets (or track width), an OTOS's distance scale, and a loop check for `checked`.
+  Only the numbers to change are shown (`.offsetsMm(...)`, `.trackWidthIn(..).perpForwardIn(..)`...), so
+  `.reversed(...)` and the pod type stay as written; also saved in `finder-results.txt`.
+- Simulator: a pretend Pinpoint, OTOS and dead wheels from the robot's true motion, with noise
+  (`odometry.scaleError`, `odometry.driftDegPerMin`); `:sim:fromRobot` writes the `odometry` lines.
+  `:sim:newRobot` and `:sim:fromConfig`: a goBILDA Pinpoint or SparkFun OTOS in the robot configuration
+  becomes the odometry (the `Robot.java` line with a `Tunables.Odometry` section, or the robot-file line).
+- Docs: [Lesson 8: Odometry](docs/tutorials/start/08-odometry.md) (which device to buy, wiring, the
+  tuner, `driveTo`, TeleOp hand-off) and the [odometry module](docs/modules/odometry.md); `driveTo` in
+  the [autonomous builder](docs/guides/autonomous-builder.md#drive-to-a-field-point-driveto), the
+  Odometry Tuner in the [finders guide](docs/guides/finders.md#odometry-tuner-directions-offsets-and-a-loop-check).
+- Example: `odometrybot` (lesson 8's robot: a Pinpoint, `ToTheGoal` autonomous with `driveTo`, its
+  TeleOp and Odometry Tuner), with a simulator test.
+
 ## v0.14.0 - 2026-10-21
 
 One change can stop INIT on purpose: a lift or arm without `min`/`max`, or a setting name with a typo, in

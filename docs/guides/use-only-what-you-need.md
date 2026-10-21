@@ -219,8 +219,9 @@ You can also start big and step down:
 
 ## When not to use it
 
-- **Path following** (splines, odometry pods, following a curved path): the library has none.
-  `AutoDrive` drives straight moves and turns with the wheel encoders and the IMU. Use
+- **Path following** (splines, following a curved path): the library has none. It has odometry
+  ([`PoseTracker`](../modules/odometry.md): Pinpoint, OTOS, dead wheels) and `driveTo` (straight to a
+  field point), and `AutoDrive` drives straight moves and turns with the wheel encoders and the IMU. Use
   [Pedro Pathing](https://pedropathing.com/) or [Road Runner](https://rr.brott.dev/) for that.
   Library support for them is planned.
 - **You already have a working command framework** (your own, FTCLib, NextFTC): use the small blocks

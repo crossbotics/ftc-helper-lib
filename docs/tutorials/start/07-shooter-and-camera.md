@@ -256,6 +256,8 @@ give each a `looks(...)` shape in `Robot.java` ([Lesson 1: Draw your robot from 
 
 ## Where next
 
+- **Next:** [Lesson 8: Odometry: where am I on the field?](08-odometry.md): the robot knows its place
+  on the field, and autonomous drives to field points.
 - [The autonomous builder](../../guides/autonomous-builder.md): everything an autonomous can do (fire
   during a move with `alongside`, menu choices, branches).
 - [The finders](../../guides/finders.md): measure every number instead of guessing.

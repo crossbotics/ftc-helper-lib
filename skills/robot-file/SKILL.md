@@ -137,7 +137,7 @@ stop
    measure again, e.g. "floor to the top with the lift all the way up"); if they agree, it is a real
    problem: tell the team they need hard stops or a shorter part. Never tune a shape just to pass.
 3. **Names match.** `init` of the team's OpModes gives no error (every configured name is in the file).
-   An OpMode that uses a device the simulator does not have (colour sensor, odometry) stops there: tell
+   An OpMode that uses a device the simulator does not have (a colour sensor) stops there: tell
    the team which OpModes those are.
 4. **It looks right.** Show the 3D view (`./gradlew :sim:run`, http://localhost:8780) next to a photo; ask
    the team: "does this look like your robot?" Fix what they point at.

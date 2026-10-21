@@ -228,8 +228,9 @@ final class SimOdometry {
         @Override public double getVelY(DistanceUnit unit) { synchronized (SimOdometry.this) { return unit.fromInches(vY); } }
         @Override public double getHeadingVelocity(UnnormalizedAngleUnit unit) { synchronized (SimOdometry.this) { return unit.fromDegrees(vH); } }
         @Override public DeviceStatus getDeviceStatus() { return DeviceStatus.READY; }
-        @Override public int getEncoderX() { synchronized (SimOdometry.this) { return (int) Math.round(encX); } }
-        @Override public int getEncoderY() { synchronized (SimOdometry.this) { return (int) Math.round(encY); } }
+        // A pod the code reverses is wired to count backward (like the dead wheels).
+        @Override public int getEncoderX() { synchronized (SimOdometry.this) { return (int) Math.round(reversed.contains("x") ? -encX : encX); } }
+        @Override public int getEncoderY() { synchronized (SimOdometry.this) { return (int) Math.round(reversed.contains("y") ? -encY : encY); } }
         @Override public double getHeading(UnnormalizedAngleUnit unit) { synchronized (SimOdometry.this) { return unit.fromDegrees(turnTotalDeg); } }
         @Override public Pose2D getPosition() {
             synchronized (SimOdometry.this) {

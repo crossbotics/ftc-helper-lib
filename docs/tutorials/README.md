@@ -28,7 +28,7 @@ put in your TeamCode), a few lines per lesson. Each lesson explains with a worke
 **lesson robot** ([`examples/.../lessonbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot)):
 a mecanum drive, an intake, a lift and a claw, in five short files. Read the lesson robot's lines, then
 make the same change in your own TeamCode; the lesson robot's files are also the answer key. (Lesson 1
-explains with goBILDA's starter bot, and lesson 7 with two shooter robots, the same way.) Every part
+explains with goBILDA's starter bot, lesson 7 with two shooter robots, and lesson 8 with an odometry robot, the same way.) Every part
 brings its own numbers and buttons, so each lesson adds only a few lines. A simulator test runs the
 finished lesson robot, so the code here always works.
 
@@ -53,6 +53,7 @@ part. You never write it ([From Blocks to Java](../blocks-to-java.md#the-key-ide
 | 5 | [Actions](start/05-actions.md) | several parts together, from a button or in an autonomous | the mechanisms |
 | 6 | [Your first autonomous](start/06-first-autonomous.md) | tune the drive, then steps, park time, the report | a tuned drivetrain |
 | 7 | [A shooter, a camera and a turret](start/07-shooter-and-camera.md) | a flywheel and feeder, aiming with a camera | a shooter, a camera |
+| 8 | [Odometry: where am I on the field?](start/08-odometry.md) | which device to buy, the odometry line, the Odometry Tuner, `driveTo` field points, TeleOp starting where autonomous ended | a mecanum drive, a Pinpoint (or OTOS, or dead wheels) |
 
 Then: [the button menu](../guides/buttons.md) (every way a button can work),
 [the autonomous builder](../guides/autonomous-builder.md) (everything autonomous can do),

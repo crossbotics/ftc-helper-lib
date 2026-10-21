@@ -60,6 +60,8 @@ and in **autonomous steps** ([lesson 6](tutorials/start/06-first-autonomous.md))
 | `joystick` (a reporter block) | `g2.leftStickY.use(robot.lift::manual);` (the stick's value, -1 to 1, every loop) | `Controls.java` |
 | `if <sensor> then rumble` | `g2.rumbleWhen(robot.intake::isRunning);` (a buzz each time it becomes true) | `Controls.java` |
 | `say` / `show variable` | `show("Lift ticks", robot.lift::position);` (the value on the Driver Station, every loop) | `Controls.java`, in `buttons(...)` |
+| `x position` / `y position` / `direction` (where am I?) | `robot.pose()`: `.x`, `.y` (inches) and `.headingDeg`, from the odometry; show it with `show("Where", robot::pose);` ([Lesson 8](tutorials/start/08-odometry.md)) | `Controls.java`, autonomous |
+| `go to x: y:` | `s.driveTo("To the goal", -30, -30, 45, 0.6)` (x, y, heading, power), with odometry | `autos/` |
 | `if <sensor> then ...` | not an `if`. Pick one: `g2.rumbleWhen(...)` (a buzz when it becomes true), `.waitUntil(...)` in an Action (wait for it, then go on), or a `hold(...)` (runs while a button is held) | `Controls.java`, `Actions.java` |
 | `if ... else` inside an action | **not yet** in an Action. Use two actions on two buttons, one for each case | `Actions.java`, `Controls.java` |
 | `repeat 3 times` | write the steps 3 times in the Action, or press the button again (it runs the action again) | `Actions.java` |

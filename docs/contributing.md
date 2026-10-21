@@ -118,5 +118,4 @@ Safety first: low power, wheels off the ground, hard stops.
 
 ## Ideas for later
 
-- Odometry pods (goBILDA Pinpoint) and pose tracking.
 - A subsystem/command structure for bigger robots.

@@ -65,8 +65,9 @@ robot file to write. It lists every device of the configuration, writes a robot 
 each one under its exact name, matches the motor types that pin down a part (REV HD Hex 20:1 and 40:1,
 Core Hex, NeveRest) to the parts catalog, marks everything else `TODO`, checks the draft loads, and
 prints the questions still open. It finds the drivetrain from the motor names (front/back and
-left/right in any form: `front_left`, `leftFront`, `fl`...). Devices the simulator does not have yet
-(colour and distance sensors, odometry computers, LEDs) are listed as notes. If the robot file exists,
+left/right in any form: `front_left`, `leftFront`, `fl`...). A goBILDA Pinpoint or SparkFun OTOS becomes
+the `odometry = ...` line (with a `TODO` for its offsets or mounting). Devices the simulator does not
+have yet (colour and distance sensors, LEDs) are listed as notes. If the robot file exists,
 the draft goes next to it (`robot.properties.draft`). An example configuration is
 `sim/configs/example-config.xml`.
 

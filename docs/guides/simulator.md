@@ -228,6 +228,15 @@ default):
 | `drive.strafeEfficiency` | 0.85 | how much of a strafe really happens (mecanum) |
 | `drive.kS`, `drive.accelSec`, `drive.turnDegPerCount` | 0, 0.15, worked out | from the Characterizer ([below](#real-numbers-the-characterizer)) |
 | `imu = NAME` | none | the IMU's name |
+| `odometry = KIND NAMES` | none | pretend odometry from the robot's true motion: `pinpoint NAME`, `otos NAME`, `threeWheels L, R, P` or `twoWheels PAR, PERP` ([odometry](../modules/odometry.md#the-simulator)) |
+| `odometry.offsetsMm = X, Y` | 0, 0 | Pinpoint: where the pods sit (X pod mm left, Y pod mm forward); sets the raw pod counts the Odometry Tuner's Spin test reads |
+| `odometry.mountIn = F, L, H` | | OTOS: where it sits (written from Robot.java); the pretend OTOS reports the centre's pose, so it does not change the simulation |
+| `odometry.trackWidthIn` | 12 | three dead wheels: left to right pod, inches |
+| `odometry.parallelLeftIn`, `odometry.perpForwardIn` | 0, 0 | dead wheels: the forward pod's inches left (two wheels), the sideways pod's inches forward |
+| `odometry.ticksPerIn` | 505.3 | dead wheels: pod counts per inch (goBILDA 4-bar pods) |
+| `odometry.reversed = names` | none | these pods count backward (as wired; the code's `reversed(...)` turns them back): dead-wheel port names, or `x`/`y` for a Pinpoint's pods |
+| `odometry.scaleError` | 0 | noise: 0.01 = it measures 1% too far (wheel slip, a wrong pod size) |
+| `odometry.driftDegPerMin` | 0 | noise: the heading creeps this many degrees per minute |
 | `motor.NAME = KIND, ...` | | a motor: `free`, `lift` or `flywheel`, then `part=`, `ticksPerRev=` (catalog, else 537.7 or 28 for a flywheel), `rpm=` or `maxTicksPerSec=` (catalog, else 2780), `min=`, `max=` (counts), `gravity=` (0), `kS=` (0), `accelSec=`, `coastSec=`, `feeder=` (a motor, CR servo or servo that feeds a flywheel), `shotDrop=` (0.15: how much a shot slows the wheel) |
 | `servo.NAME = START, ...` | start 0.5 | a servo: `part=` (catalog), or `rangeDeg=` and `secPer60=` for one not in the catalog |
 | `servo.speed` | 1.0 | positions per second for a servo with no part |
@@ -256,7 +265,7 @@ its robot file from the code:
 
 It writes `simulator/robot.properties` (or `-Pout`) from `Robot.java` and `Tunables.java`: every device
 name, the drive (type, motors, wheel, which side the code reverses: `drive.mirrored`), the lift's and
-turret's stops, the claw's open and closed positions, one shape per module, and the `collect.`,
+turret's stops, the claw's open and closed positions, the `odometry` lines, one shape per module, and the `collect.`,
 `shoot.` and `grab.` lines. Each line it writes ends with `# from Robot.java` and is rewritten every
 time; every other line is yours and is kept, even for the same setting (a measured `shape.lift` wins).
 Lines for parts no longer in the code are removed. It stops, writing nothing, when the file describes
@@ -732,7 +741,7 @@ nothing more); phone cameras are not simulated; the resolution comes from the ro
 
 ## Not simulated
 
-Phone cameras, colour and distance sensors, and odometry pods. The Shot and Aim tuners work without a
+Phone cameras, and colour and distance sensors. The Shot and Aim tuners work without a
 camera when `createCamera()` returns null. The physics is a model: real numbers (gains, speeds, shot
 tables) must still be found on the robot.
 

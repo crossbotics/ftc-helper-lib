@@ -63,9 +63,12 @@ ControlMap (`RobotDefinition.setup`):
 1. Your own `Tunables` sections (like `Tunables.Auto`) get the tuning menu's values (a field is
    written only when its value changed; no file).
 2. Nothing else while the robot is paused (BACK).
-3. `ActionRunner` first: each running Action does its step for this loop. So an Action's command
+3. **The odometry first of all** (with an `odometry(...)` line): it reads the device once and works
+   out this loop's pose, so every action, part and `driveTo` reads the same, fresh pose
+   ([odometry](../modules/odometry.md#what-runs-every-loop)).
+4. `ActionRunner` next: each running Action does its step for this loop. So an Action's command
    reaches a part before that part updates, in the same loop.
-4. Cameras, then every other module, in the order `Robot.java` adds them.
+5. Cameras, then every other module, in the order `Robot.java` adds them.
 
 ### What a part does on the hub per loop
 
@@ -78,6 +81,9 @@ ControlMap (`RobotDefinition.setup`):
 | Intake building block (`mechanism.SpinMotor`) | while running in with jam detection: the speed (`getVelocity()`, part of the bulk read) every loop, and, if the jam check uses current, `getCurrent()` every loop: a **separate** hub command, not part of a bulk read | the power only when it changes, and again every 25 writes (one write per `update()`) |
 | Flywheel, launcher (`launcher.Flywheel`, used by `robot.Launcher`) | the speed (`getVelocity()`) every loop; a follower motor's speed too | the speed (`setVelocity`) only when the target changes |
 | Servos (`mechanism.PositionServo`, used by the claw, wrist and other servo parts) | none (a servo cannot report where it is) | the position only when it changes; during a slow move, a small step each loop |
+| Odometry, Pinpoint (`odometry.PinpointOdometry`) | one I2C read per loop: the Pinpoint's position, speed and status in one go (it works out the pose itself, about 1500 times a second) | none (only when the pose is set: at the start of autonomous, TeleOp's INIT, BACK held) |
+| Odometry, OTOS (`odometry.OtosOdometry`) | two I2C reads per loop: position, then speed | none (only when the pose is set) |
+| Odometry, dead wheels (`odometry.DeadWheelOdometry`) | each pod's encoder (part of the bulk read); two wheels: also the IMU's heading (a separate read) | none |
 | Cameras (`vision.WebcamTags`, `vision.LimelightTags`) | the newest tags, from the camera's own process (webcam) or the Limelight's last result: no hub command | none |
 
 Why the 3 ms: in a loop, `update()`, the PID and the telemetry all ask for the position. Each ask
@@ -158,11 +164,14 @@ private final LoopTimer loop = new LoopTimer();
   wheel encoders for a move, the IMU for a turn), sets the wheel powers, then calls the routine's
   `tick()`, then `idle()`.
   A wait (`waitFor`, `waitUntil`) calls `tick()` and `idle()`.
-- **`tick()`:** `robot.update()` (the same as TeleOp's), `timer.update()`, the step's line, the
+- **`driveTo`** (with odometry) reads the pose that the last `tick()` worked out, so the odometry is
+  read once per loop, not twice.
+- **`tick()`:** `robot.update()` (the same as TeleOp's, odometry first), `timer.update()`, the step's line, the
   time left, every part's telemetry, `t.update()`.
 - **End:** when the steps are done, everything is stopped and the report goes to `MatchMemory`.
   After any end (done, STOP or an error) everything is stopped again, and, only if START was
-  pressed, the alliance and the end heading go to `MatchMemory` for TeleOp.
+  pressed, the alliance and the end heading go to `MatchMemory` for TeleOp (with odometry: the whole
+  end pose, and TeleOp's INIT starts the odometry there).
 
 ## When the library touches storage
 

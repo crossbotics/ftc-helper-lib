@@ -163,6 +163,57 @@ too: change `Auto/collectInches` in the TeleOp (PRACTICE profile, after START ho
 the autonomous again with no rebuild. Its INIT lists the values that differ from the file: copy the
 good ones back ([how](../modules/robot.md#tunablesjava)).
 
+## Drive to a field point: driveTo
+
+With an `odometry(...)` line in `Robot.java` ([odometry](../modules/odometry.md),
+[lesson 8](../tutorials/start/08-odometry.md)), a step can drive to a **place on the field** instead of
+a distance:
+
+```java
+s.start("Against our wall, in the left corner tile, facing the field", -56, -61, 0)
+ .driveTo("To the goal", -30, -30, 45, 0.6)     // x, y, heading, max power
+ .parkWithSeconds(4)
+ .driveTo("Park", -56, -36, 0, 0.7, 2.0);       // last number: close enough, inches (default 1)
+```
+
+**Field points, not moves.** `move` and `turn` are robot-relative: "24 in forward from wherever the
+robot is now". `driveTo` uses field numbers, the same as the start spot: x inches right of the centre
+line, y inches away from your drivers' wall, heading 0 = facing away, counterclockwise +. It drives
+and turns at the same time (mecanum only), checks the odometry's pose every loop and keeps correcting,
+so a bump or wheel slip does not matter: it ends at the point. Changing one step does not shift the
+steps after it.
+
+| | |
+| --- | --- |
+| `driveTo(label, xIn, yIn, headingDeg, maxPower)` | done within 1 inch and 1 degree (for 3 loops in a row) |
+| `driveTo(label, xIn, yIn, headingDeg, maxPower, toleranceIn)` | your own "close enough", inches: larger for a quick pass-through point, never below what the robot can reach |
+
+It slows down in proportion to the distance in the last 8 inches, so it stops on the point. Like a
+move, it can end `STALLED` (stuck farther than 8 inches from the point), `TIMED_OUT` (10 s) or `STOPPED`.
+If the odometry stops working on the way (a Pinpoint fault, an OTOS that stops answering), it stops at
+once with `NO_ODOMETRY`: driving on a frozen pose, it would never arrive.
+
+**Mirroring rules** (written for BLUE, like the start spot):
+
+- `mirrorForRed()` true (the default, a mirrored field): RED flips x and the heading. `(-30, -30, 45)`
+  becomes `(30, -30, -45)`; y stays.
+- `mirrorForRed()` false (a field turned half a turn, BIOBUZZ): RED uses the same numbers, seen from
+  the red wall.
+- The odometry starts at the start spot, flipped the same way, so the points and the start always
+  agree. Give the spot (`start(note, x, y, heading)`): without one the pose starts at (0, 0).
+
+**The rules it checks:**
+
+- No `odometry(...)` line: INIT stops with `Steps: driveTo("To the goal") needs odometry: add an odometry(...) line to Robot.java (docs/modules/odometry.md)`.
+- `Tunables.Odometry.checked` false, on a real robot: the step does nothing and the report says
+  `To the goal: skipped: Tunables.Odometry.checked is false (run the Odometry Tuner first)`. The
+  simulator runs it anyway. Set `checked = true` after the Odometry Tuner's Loop test passes
+  ([finders](finders.md#odometry-tuner-directions-offsets-and-a-loop-check)).
+- A tank drive: it stops with "driveTo needs mecanum wheels (it drives sideways)". Use `turnTo`, then `move`.
+
+Put the points in `Tunables.Auto` (`goalX`, `goalY`, `goalHeading`), like the move distances: they are
+in the tuning menu too.
+
 ## 3. Mechanisms: run and wait
 
 ```java
@@ -267,7 +318,9 @@ Leave the launch zone: done
 | `done` | it finished |
 | `timed out` | a wait or an action ran out of time; the list went on |
 | `STALLED`, `TIMED_OUT`, `STOPPED` | a move could not finish (stuck, too long, stopped) |
+| `NO_ODOMETRY` | a `driveTo` stopped because the odometry stopped working (see its warning) |
 | `cut short (time for park)` | stopped early so the park steps had time |
+| `skipped: Tunables.Odometry.checked is false (run the Odometry Tuner first)` | a `driveTo` on a real robot before the Odometry Tuner ([driveTo](#drive-to-a-field-point-driveto)) |
 | `skipped (time for park)` | not started: no time left before parking |
 | your own words | from `ctx.note(...)` or an action's reason |
 
@@ -326,6 +379,7 @@ wait in the middle, add `.waitSeconds("Let our partner pass", 3)` inside an `onl
 | `move(label, inches, directionDeg, maxPower)` | drive (clockwise from forward) | yes |
 | `turn(label, degrees, maxPower)` | turn by (counterclockwise +) | yes |
 | `turnTo(label, headingDeg, maxPower)` | turn to a heading (0 = start) | yes |
+| `driveTo(label, xIn, yIn, headingDeg, maxPower[, toleranceIn])` | drive to a field point and heading with odometry (mecanum) | yes |
 | `run(label, command)` | start something | no |
 | `waitSeconds(label, seconds)` | wait | yes |
 | `waitUntil(label, condition, timeoutSec)` | wait until true | yes |
@@ -353,4 +407,6 @@ Every class and method of the library: the [reference](../reference.md).
 - **A route that works on BLUE but not RED**: check `mirrorForRed()` against the field drawing.
 - **Untuned drive**: the inches are wrong until the Drive Tuner is done; the autonomous refuses to run
   on the robot until `Tunables.Drive.calibrated = true`.
+- **driveTo does nothing on the robot**: `Tunables.Odometry.checked` is still false (the report says
+  so). Run the Odometry Tuner first.
 - **No park time**: without `parkWithSeconds`, a slow step can eat the time for parking.

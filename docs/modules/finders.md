@@ -8,7 +8,7 @@ Learn it hands-on: [21 Find your numbers](../tutorials/21-finders.md). Step by s
 [Finders guide](../guides/finders.md).
 
 Ready-made programs that **measure** the numbers your code needs (servo ends, lift limits, flywheel
-gains, wheel size, shot speeds, camera offset) and show them as **lines of code to copy**. Use one
+gains, wheel size, odometry offsets, shot speeds, camera offset) and show them as **lines of code to copy**. Use one
 whenever a part is new or was rebuilt, before you tune by hand. They also save those lines on the
 Control Hub in `/sdcard/FIRST/ftc-helper/finder-results.txt` when you press STOP, so nobody copies
 numbers from the screen by hand. Start with tutorial 21, or [lesson 4](../tutorials/start/04-lift-and-claw.md) for the robot in five files.
@@ -27,6 +27,7 @@ device's name in CamelCase (`lift` -> `Lift`, `intake_deploy` -> `IntakeDeploy`,
 | [`MotorFinderOpMode`](#motorfinderopmode) | find a lift's, arm's or turret's limits, positions and top speed | no |
 | [`FlywheelFinderOpMode`](#flywheelfinderopmode) | find a flywheel's top speed, speed-control gains (the tuning numbers) and recovery time | no |
 | [`DriveTunerOpMode`](#drivetuneropmode) | find the wheel size and strafe correction for autonomous | `robot()` (five files) or `robotConfig()` |
+| [`OdometryTunerOpMode`](#odometrytuneropmode) | check which way each odometry pod counts and measure where it sits (the offsets); a loop check sets `checked` | `robot()` (five files, with an `odometry(...)` line) |
 | [`ShotTunerOpMode`](#shottuneropmode) | build the shot table: distance -> speed (and hood angle) | `robot()` (five files), or your launcher (+ camera) |
 | [`AimTunerOpMode`](#aimtuneropmode) | find the camera offset so shots go in the middle | your camera (+ turret or drive) |
 | [`CharacterizerOpMode`](#characterizeropmode) | measure how the drive, lifts and flywheels really move (feedforward numbers, and the simulator's robot file) | `robotConfig()`, `mechanisms()` |
@@ -190,6 +191,44 @@ Tunables.Drive: strafeCorrection = 1.180
 
 Five files: the wheel size goes in the drive line of `Robot.java` (`.wheelMm(96.8)`, millimetres),
 the strafe correction in `Tunables.Drive`. Then `Tunables.Drive.calibrated = true`.
+
+## OdometryTunerOpMode
+
+Needs your robot in five files, with an `odometry(...)` line ([odometry](odometry.md)). Next to
+`Robot.java` (the odometry robot's
+[OdometryTuner.java](../../examples/src/main/java/com/crossbotics/ftchelper/examples/odometrybot/OdometryTuner.java)):
+
+```java
+@TeleOp(name = "Odometry Tuner", group = "Finders")
+public class OdometryTuner extends OdometryTunerOpMode {
+    @Override protected RobotDefinition robot() { return new Robot(); }
+}
+```
+
+The sticks drive slowly (30%) in every test. D-pad up/down chooses a test, **A** starts it (the pose
+is set to 0, 0, 0), **B** ends it and shows the result.
+
+| Test | You do | It finds |
+| --- | --- | --- |
+| 1 Forward 48 in | push or drive 48 in straight forward along a tape | the forward pod's direction, how far off the distance is; OTOS: `linearScalar` |
+| 2 Left 24 in | push or drive 24 in to the left | the sideways pod's direction |
+| 3 Spin 3+ turns | turn in place at least 3 times | the offsets (Pinpoint), `trackWidthIn` + `perpForwardIn` (three wheels), `parallelLeftIn` + `perpForwardIn` (two). Not for an OTOS |
+| 4 Loop and back | from a tape mark, drive anywhere and back onto it | within 1 in and 2 degrees: `checked = true` |
+
+The Spin test divides each pod's roll by the turn: the Pinpoint's own heading (not wrapped), or the
+Control Hub's IMU for dead wheels. It prints only the numbers to change (dead wheels:
+`.trackWidthIn(..).perpForwardIn(..)` or `.parallelLeftIn(..).perpForwardIn(..)`), so `.reversed(...)` and
+the pod type stay as written. Output:
+
+```java
+Robot.java: in the odometry(...) line, .offsetsMm(-84.2, -167.5)
+Tunables.Odometry: linearScalar = 1.012   // times the one in use now  (OTOS only)
+Tunables.Odometry: checked = true
+```
+
+A reversed pod: the result says which name to add to (or take out of) `.reversed(...)`. While a test
+runs, the screen shows the pose and the raw pod counts since it began. Walk-through:
+[finders guide](../guides/finders.md#odometry-tuner-directions-offsets-and-a-loop-check).
 
 ## ShotTunerOpMode
 

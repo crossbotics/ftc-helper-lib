@@ -41,6 +41,7 @@ flowchart LR
 | --- | --- |
 | [`RobotDefinition`](#robotdefinition) | describe the robot in `Robot.java`: `drive(...)` and one `add(...)` per mechanism |
 | [`Drive`](#drive) | the drivetrain: mecanum or tank, motor names, motor, wheel, IMU |
+| [`Odometry`](#odometry) | where the robot is on the field: a goBILDA Pinpoint, a SparkFun OTOS, or dead wheels |
 | [`Intake`](#intake) | a roller on a motor and/or CR servos: in, out, on at the start |
 | [`Lift`](#lift) | a slide on a motor with named heights and a bottom switch |
 | [`Arm`](#arm) | an arm on a motor with named angles in degrees |
@@ -89,6 +90,7 @@ part each loop. Nothing moves in INIT.
 | In `define()` | |
 | --- | --- |
 | `drive(Drive d)` | the drivetrain (required) |
+| `odometry(Odometry o)` | optional: what tells the robot where it is on the field ([Odometry](#odometry)) |
 | `T add(T module)` | a mechanism; hands it back, so you can keep it in a field (`lift = add(...)`) |
 | `atStart(Supplier<Action>)` | an action that runs once right after START, in autonomous and TeleOp |
 | `tunables(Class)` | the Tunables class if it is not `Tunables` in the same folder |
@@ -100,6 +102,8 @@ part each loop. Nothing moves in INIT.
 | `alliance()` | this match's alliance (from autonomous's menu; TeleOp remembers it) |
 | `notes()` | INIT notes: missing Tunables sections or fields (the library's defaults are used) |
 | `modules()`, `drive()`, `all()` | the parts, the drivetrain, the update group |
+| `pose()` | where the robot is now, from the odometry: a [`FieldPose`](util.md#fieldpose) (x in right, y in away from your wall, heading 0 = away, counterclockwise +); a copy; null with no odometry line |
+| `odometry()`, `odometrySpec()`, `odometryChecked()` | the running [`PoseTracker`](odometry.md#posetracker) (null before `setup`), the odometry line as written, and `Tunables.Odometry.checked` |
 | `robotConfig()` | the drive settings for `EasyTeleOp`/`EasyAuto` |
 | `simLines()` | the simulator robot file's lines from the code |
 | `setup(hardwareMap)` | makes every module's hardware (the OpMode classes call it in INIT) |
@@ -169,6 +173,7 @@ public class Tunables {
 | Launcher | `speedRpm`, `stepRpm` | | `readyBandRpm`, `idleRpm`, `shotIntervalSec`, `speedByDistance`, `kP`..`kF` |
 | Indexer | every number | | |
 | Camera | | | `pipeline` |
+| Odometry | | | `checked`, `linearScalar`, `angularScalar` (OTOS) |
 | Your own sections (`Auto`...) | every number (a TeleOp reads the field each time) | an autonomous reads them when it builds its steps (INIT) | `final` numbers, true/false, tables |
 
 ---
@@ -196,6 +201,27 @@ drive(Drive.tank("left_drive", "right_drive").reversed("right_drive"));
 until it is `true`: tune with the Drive Tuner first, [lesson 6](../tutorials/start/06-first-autonomous.md)).
 The Drive Tuner and the Shot Tuner take the whole robot: `@Override protected RobotDefinition robot() { return new Robot(); }`;
 every finder shows `Tunables.` lines to copy ([finders](finders.md)).
+
+---
+
+## Odometry
+
+```java
+odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));   // in define(), after drive(...)
+```
+
+| Method | |
+| --- | --- |
+| `pinpoint(name)` | a goBILDA Pinpoint: `offsetsMm(xPodLeft, yPodForward)`, `podsSwingarm()`, `ticksPerMm(n)`, `reversed("x", "y")` |
+| `otos(name)` | a SparkFun OTOS: `mountIn(forward, left, headingDeg)` |
+| `threeWheels(left, right, perp)` | three dead wheels on encoder ports: `trackWidthIn(in)` (required), `perpForwardIn(in)` |
+| `twoWheels(parallel, perp)` | two dead wheels and the drive's IMU: `parallelLeftIn(in)`, `perpForwardIn(in)` |
+
+`Tunables.Odometry`: `checked` (set true after the Odometry Tuner; until then `driveTo` steps are
+skipped on a real robot), and for an OTOS `linearScalar` and `angularScalar`. With it: `robot.pose()`
+every loop, `driveTo` steps in [autonomous](#auto), and TeleOp starting where autonomous ended. The
+odometry is updated first each loop, before every part. Everything, with sketches of the offsets:
+[odometry module](odometry.md); hands-on: [lesson 8](../tutorials/start/08-odometry.md).
 
 ---
 
@@ -458,7 +484,7 @@ module suggestions); `robot()` and `oneDriver()` read the robot and the one-driv
 | A / X / Y / B | free / free / field-centric on/off (mecanum) / free | lift lowest / second / highest / claw |
 | D-pad up/down | free | lift next height, or launcher speed |
 | D-pad left/right | free | wrist |
-| BACK | tap: **pause** everything (stopped on brake), tap again: go on; hold 1 s: "forward" = away from you now | turret following on/off (with a turret; else free) |
+| BACK | tap: **pause** everything (stopped on brake), tap again: go on; hold 1 s: "forward" = away from you now (with odometry: its heading becomes 0, x and y stay) | turret following on/off (with a turret; else free) |
 | START + BACK | debug lines | |
 | GUIDE | tap: the button map, without the free buttons (during the match too); hold 1 s: the tuning menu (PRACTICE) | |
 
@@ -507,6 +533,7 @@ What [`Steps`](#auto) can do:
 | `isYes(label)`, `choice(label)` | read a choice |
 | `move(label, inches, directionDeg, power)` | drive (0 forward, 90 right) |
 | `turn`, `turnTo` | turn by an angle / to a heading |
+| `driveTo(label, xIn, yIn, headingDeg, power[, toleranceIn])` | drive to a field point and heading with the odometry, correcting all the way (mecanum; needs `Tunables.Odometry.checked` on a robot) ([driveTo](../guides/autonomous-builder.md#drive-to-a-field-point-driveto)) |
 | `run(label, command)` | start something and go on at once |
 | `waitSeconds`, `waitUntil` | wait (the robot keeps running) |
 | `action(action[, timeout])` | run an [Action](#action) and wait until it is done |
@@ -520,6 +547,8 @@ What [`Steps`](#auto) can do:
 - RED works like the routes: mirrored, or, on a turned field like BIOBUZZ with `mirrorForRed()` false,
   the same numbers seen from the red wall.
 - Both alliances at one wall, like DECODE: override `alliancesOnOneWall()` to return true.
+- With odometry, the first step ("Start") sets the pose to the spot (mirrored for RED the same way),
+  and at the end the whole pose goes to TeleOp. Without a spot the pose starts at (0, 0).
 
 The full guide, with every step and a tested example: [The autonomous builder](../guides/autonomous-builder.md).
 
@@ -652,8 +681,9 @@ it ready, use `idle()`.
 
 Writes `Robot.java`, `Tunables.java`, `Controls.java`, `Actions.java` and `autos/LeaveStart.java` from
 the robot configuration (the XML file the Driver Station keeps on the Control Hub). Each device gets
-its module from its name and type ("lift" is a Lift, a servo called "claw" a Claw); every guess it is
-not sure of is a `TODO` in Robot.java. It never overwrites a file.
+its module from its name and type ("lift" is a Lift, a servo called "claw" a Claw); a goBILDA Pinpoint
+or SparkFun OTOS becomes the `odometry(...)` line (offsets 0 and a `TODO` for the Odometry Tuner) with a
+`Tunables.Odometry` section; every guess it is not sure of is a `TODO` in Robot.java. It never overwrites a file.
 
 ```bash
 ./gradlew :sim:fromRobot -PteamCode=../TeamCode
