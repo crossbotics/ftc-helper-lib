@@ -51,6 +51,13 @@ public class RobotModulesTest {
         public static class Intake {
             public static double inPower = 0.8;     // outPower missing on purpose
         }
+        // No part reads this section: its numbers are live in the tuning menu anyway.
+        public static class Auto {
+            public static double parkInches = 20;
+            public static int laps = 2;
+            public static final double FIXED = 1;      // final: stays as written
+            public static boolean useLeft = true;      // not a number: stays as written
+        }
     }
 
     /** A robot like the design's first sketch. */
@@ -70,6 +77,41 @@ public class RobotModulesTest {
     }
 
     // ------------------------------------------------------------------------------------------
+
+    // Tunables.Auto (no part reads it): live in the tuning menu, written back into the fields, and a
+    // value saved on the hub is in the field right after setup (before the autonomous builds its steps).
+    @Test public void otherSectionsAreLiveAndWrittenIntoTheFields() {
+        try {
+            LiftBot r = new LiftBot();
+            r.setup(new RobotTestKit());
+            Tunable park = Tunable.number("Auto/parkInches", 99, 1);
+            assertEquals(20, park.defaultValue(), 1e-12);
+            assertEquals(1, park.step(), 1e-12);
+            assertEquals(1, Tunable.number("Auto/laps", 99, 5).step(), 1e-12);
+            for (Tunable t : Tunable.all()) {
+                assertFalse(t.name(), t.name().equals("Auto/FIXED") || t.name().equals("Auto/useLeft"));
+                // A part's own section is not linked twice: Lift's min and max stay out of the menu.
+                assertFalse(t.name(), t.name().equals("Lift/min") || t.name().equals("Drive/calibrated"));
+            }
+            park.set(18);
+            Tunable.number("Auto/laps", 99, 1).set(3.4);
+            r.all().update();
+            assertEquals(18, Numbers.Auto.parkInches, 1e-12);
+            assertEquals(3, Numbers.Auto.laps);
+            assertTrue(RobotDefinition.changedTunables().contains("Tunables.Auto.parkInches = 18.0 (code 20.0)"));
+
+            // Saved on the hub, then a new app run: the field has the saved value right after setup.
+            assertTrue(Tunable.saveAll());
+            TuningReset.clear();
+            Numbers.Auto.parkInches = 20;
+            new LiftBot().setup(new RobotTestKit());
+            assertEquals(18, Numbers.Auto.parkInches, 1e-12);
+            assertEquals(20, Tunable.number("Auto/parkInches", 99, 1).defaultValue(), 1e-12);
+        } finally {
+            Numbers.Auto.parkInches = 20;
+            Numbers.Auto.laps = 2;
+        }
+    }
 
     @Test public void tunablesSectionsBecomeLiveTunablesAndNotesSayWhatIsMissing() {
         LiftBot r = new LiftBot();

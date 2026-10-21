@@ -123,6 +123,11 @@ public class Tunables {
 
 - **One section per part**, named after its configuration name in CamelCase: `intake_deploy` reads
   `IntakeDeploy`. Pick another with `.tunables("Name")` on the module.
+- **Sections for your own code** (no part reads them, like `Tunables.Auto` with the autonomous's
+  distances): every `public static` number that is not `final` is in the tuning menu too
+  ("Auto/parkInches"). The menu's value is written into the field, so your code reads
+  `Tunables.Auto.parkInches` as usual. Tune it in the TeleOp, save it (A), run the autonomous: it
+  uses the saved value from its INIT, with no rebuild. True/false settings and tables stay as written.
 - **The code is the record.** The numbers you tune most become [`Tunable`](tuning.md)s ("Lift/kP"):
   the tuning menu (hold GUIDE 1 s, PRACTICE profile) changes them and saves them on the Control Hub. INIT then
   shows "Tuned on this robot (copy into Tunables.java)" with the lines to copy back.
@@ -141,6 +146,7 @@ public class Tunables {
 | Launcher | `speedRpm`, `stepRpm` | | `readyBandRpm`, `idleRpm`, `shotIntervalSec`, `speedByDistance`, `kP`..`kF` |
 | Indexer | every number | | |
 | Camera | | | `pipeline` |
+| Your own sections (`Auto`...) | every number (a TeleOp reads the field each time) | an autonomous reads them when it builds its steps (INIT) | `final` numbers, true/false, tables |
 
 ---
 

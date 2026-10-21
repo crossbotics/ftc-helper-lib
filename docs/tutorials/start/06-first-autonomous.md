@@ -130,7 +130,16 @@ public static class Auto {
 
 Why not write `24` in the step? Because route numbers change at every practice. In `Tunables.java`
 they sit with the robot's other numbers, under names that say what they are, and the file stays the
-record of what worked. Change one there and build again.
+record of what worked.
+
+**Tune them without a rebuild.** Every number in `Tunables.Auto` is in the tuning menu too:
+
+1. INIT the **TeleOp** with the PRACTICE profile and hold **GUIDE** for 1 second (the menu from lesson 4).
+2. Choose `Auto/parkInches`, change it, and press **A** to save it on the Control Hub.
+3. Run the autonomous again. It uses the saved value. Its INIT screen lists every value that is
+   different from the code, like `Tunables.Auto.parkInches = 18.0 (code 20.0)`.
+4. When the route works, copy those values into `Tunables.java`: the code is the record. A value
+   saved only on the hub is lost with a new Control Hub.
 
 ## 4. What you get for free
 

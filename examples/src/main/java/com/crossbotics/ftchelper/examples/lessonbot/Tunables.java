@@ -32,7 +32,10 @@ public class Tunables {
         public static double open = 0.20, closed = 0.75;
     }
 
-    /** Lesson 6: the autonomous's distances, in one place (change them here and build again). */
+    /**
+     * Lesson 6: the autonomous's distances, in one place. No part reads this section, but its numbers
+     * are in the tuning menu too (TeleOp, PRACTICE, hold GUIDE 1 s): tune, save, run the autonomous.
+     */
     public static class Auto {
         public static double toGoalInches = 24, parkInches = 20;
     }

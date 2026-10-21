@@ -18,6 +18,10 @@ Nothing old stops working.
 - `DriveTunerOpMode.robot()` and `ShotTunerOpMode.robot()`: the robot in five files in one line,
   `@Override protected RobotDefinition robot() { return new Robot(); }`. The Shot Tuner then uses the
   robot's first launcher, camera and drive (its turret stays still, its "fire when aimed" checks are off).
+- Robot in five files: the `Tunables.java` sections that no part reads (like `Tunables.Auto`) are in
+  the tuning menu too ("Auto/parkInches"). The menu's value is written into the field, so the team's
+  code reads it as usual; a saved value is used from the next INIT (an autonomous needs no rebuild).
+  Only non-`final` numbers; true/false settings and tables stay as written.
 - Examples: `lessonbot/DriveTuner.java` (lesson 6) and `turretbot/ShotTuner.java` (lesson 7), both `@Disabled`.
 - `launcher.Launcher.clearReadyChecks()`: removes every `requireReady` check.
 

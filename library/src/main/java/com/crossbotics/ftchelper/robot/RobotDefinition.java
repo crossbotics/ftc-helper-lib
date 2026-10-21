@@ -55,6 +55,8 @@ public abstract class RobotDefinition {
     private Subsystems all = null;
     private Alliance alliance = Alliance.BLUE;
     private TunableSection driveSection = null;
+    // Tunables sections no part reads (Tunables.Auto): live in the tuning menu. Null before setup.
+    private OtherSections otherSections = null;
     // For the simulator: the chassis box and the whole robot's height (inches; NaN = not given), fixed shapes.
     private double[] chassisIn = null;
     private double heightIn = Double.NaN;
@@ -176,6 +178,8 @@ public abstract class RobotDefinition {
         // paused first, so every motor stops on brake, then stopped.
         all = new Subsystems() {
             @Override public void update() {
+                // A number changed in the tuning menu reaches Tunables.Auto (and the like) at once.
+                if (otherSections != null) otherSections.copy();
                 if (!paused) super.update();
             }
 
@@ -195,6 +199,15 @@ public abstract class RobotDefinition {
             buildOne(m, devices);
             all.add(m);
         }
+        // The other sections (Tunables.Auto...): in the tuning menu, and their saved values used now,
+        // before the autonomous reads them to build its steps.
+        Set<String> used = new LinkedHashSet<>();
+        used.add("Drive");
+        for (Module<?> m : modules) {
+            for (Module<?> c : m.children()) used.add(c.name());
+            used.add(m.name());
+        }
+        otherSections = new OtherSections(tunablesClass, used);
         return this;
     }
 

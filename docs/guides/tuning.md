@@ -26,6 +26,9 @@ Control Hub, invisible to teammates, and easy to forget at an event (the INIT sc
 menu lists the changed values as lines to copy. A save cannot leave a half-written file: it writes a new
 file and swaps it in, so a power cut keeps either the old values or the new ones.
 
+With the [robot in five files](../modules/robot.md#tunablesjava) there is nothing to set up: the
+parts' numbers and every number in your own sections (like `Tunables.Auto`) are in the menu already.
+
 ## 1. Make numbers tunable
 
 The easy way, on mechanisms:
