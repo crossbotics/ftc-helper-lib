@@ -1,10 +1,11 @@
-# Lesson 7: A shooter, a camera and a turret
+# Lesson 9: A shooter, a camera and a turret (for robots that shoot)
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
 **Goal:** add a flywheel shooter with a feeder, then a camera that aims a turret and picks the shot speed.
 
-**You need:** lessons 1 to 6 (the last one: [Your first autonomous](06-first-autonomous.md)). A flywheel
+**You need:** lessons 1 to 6 (the last one: [Your first autonomous](06-first-autonomous.md)); lessons 7 and 8
+are not needed. Skip this lesson if your robot does not shoot. A flywheel
 (a heavy wheel that spins fast and throws the game piece) on a motor with its encoder cable, and a feeder (a servo, a CR
 servo or a motor). For the second half, a Limelight 3A (or a webcam) and a turret on a motor.
 **Safety glasses:** a flywheel throws things.
@@ -229,7 +230,7 @@ speed change with the distance. Press BACK on gamepad 2 to stop following. ([Sim
 
 Pick your TeleOp, INIT (read the map: the launcher's standard buttons are there), START, and fire.
 For pieces to be picked up and shot, the simulator needs to know where your intake and flywheel are:
-give each a `looks(...)` shape in `Robot.java` ([Lesson 1: Draw your robot from Robot.java](../22-robot-in-five-files.md#draw-your-robot-from-robotjava)).
+give each a `looks(...)` shape in `Robot.java` ([Lesson 1: Draw your robot from Robot.java](01-robot-in-five-files.md#draw-your-robot-from-robotjava)).
 
 ## Check it on the robot
 
@@ -256,8 +257,9 @@ give each a `looks(...)` shape in `Robot.java` ([Lesson 1: Draw your robot from 
 
 ## Where next
 
-- **Next:** [Lesson 8: Odometry: where am I on the field?](08-odometry.md): the robot knows its place
-  on the field, and autonomous drives to field points.
+- This is the last lesson. The main track is lessons 1 to 6, plus the lessons your robot needs. Not
+  done yet: [Lesson 7: Odometry: where am I on the field?](07-odometry.md) (the robot knows its place
+  on the field, and autonomous drives to field points).
 - [The autonomous builder](../../guides/autonomous-builder.md): everything an autonomous can do (fire
   during a move with `alongside`, menu choices, branches).
 - [The finders](../../guides/finders.md): measure every number instead of guessing.

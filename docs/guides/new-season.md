@@ -53,7 +53,7 @@ Gradle is the tool that builds the code; `./gradlew ...` runs it from the `ftc-h
 
 ## 4. TeamCode: the new robot
 
-1. Start from the [robot in five files](../tutorials/22-robot-in-five-files.md): `./gradlew :sim:newRobot`
+1. Start from the [robot in five files](../tutorials/start/01-robot-in-five-files.md): `./gradlew :sim:newRobot`
    writes them from your robot configuration. (Teams that use the [starter kit](../starter-kit.md) copy its 6 files.)
 2. `RobotSettings`: drive type, motor names, IMU mounting. TeleOp and every autonomous read it.
 3. `Robot`: delete last year's mechanisms, add this year's (one `PositionMotor`/`SpinMotor`/servo

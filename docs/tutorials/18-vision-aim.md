@@ -3,7 +3,7 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
 **You will build:** a drive program that turns the robot toward an AprilTag (a printed square code on the field) while the driver holds a button.
-The main track adds a camera with less code: [A shooter, a camera and a turret](start/07-shooter-and-camera.md).
+The main track adds a camera with less code: [A shooter, a camera and a turret](start/09-shooter-and-camera.md).
 
 **You will learn:** how to find AprilTags with a webcam or a Limelight 3A through ONE interface,
 what bearing and distance mean, and how to aim the drivetrain (or a turret) at a tag safely.

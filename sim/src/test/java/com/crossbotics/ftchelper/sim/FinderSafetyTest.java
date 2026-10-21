@@ -121,7 +121,7 @@ public class FinderSafetyTest {
         EXPECTED.put("Tutorial 18: Vision Aim", "Webcam");                 // no camera in the simulator
         EXPECTED.put("Shot Tuner", "Webcam");
         EXPECTED.put("Aim Tuner", "Webcam");
-        // The two Robot.java examples are other robots (SimFromRobotTest runs them on their own files).
+        // The Robot.java examples are other robots (SimFromRobotTest runs them on their own files).
         EXPECTED.put("FlywheelBot TeleOp", "\"left_drive\"");
         EXPECTED.put("FlywheelBot Shoot and Leave", "\"left_drive\"");
         EXPECTED.put("TurretBot TeleOp", "\"turret\"");
@@ -130,6 +130,12 @@ public class FinderSafetyTest {
         EXPECTED.put("goBILDA Bot TeleOp", "\"left_drive\"");
         EXPECTED.put("goBILDA Bot Launch and Back Up", "\"left_drive\"");
         EXPECTED.put("goBILDA Bot Auto Cookbook", "\"left_drive\"");
+        EXPECTED.put("REV Bot TeleOp", "\"leftDrive\"");
+        EXPECTED.put("REV Bot Shoot and Leave", "\"leftDrive\"");
+        EXPECTED.put("AndyMark Bot TeleOp", "\"left_drive\"");
+        EXPECTED.put("AndyMark Bot Throw and Leave", "\"left_drive\"");
+        EXPECTED.put("Studica Bot TeleOp", "\"leftDrive\"");
+        EXPECTED.put("Studica Bot Shoot and Leave", "\"leftDrive\"");
         EXPECTED.put("Odometry Bot TeleOp", "\"pinpoint\"");
         EXPECTED.put("Odometry Bot To the Goal", "\"pinpoint\"");
         EXPECTED.put("Odometry Bot Odometry Tuner", "\"pinpoint\"");

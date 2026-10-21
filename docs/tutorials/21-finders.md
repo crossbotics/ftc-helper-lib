@@ -59,7 +59,7 @@ Tunables.Claw: P1 = 0.210
     // rename P1, P2... (open, closed); keep them between 0.180 and 0.770
 ```
 
-Copy it into your code and rename P1 to "OPEN". With the [robot in five files](22-robot-in-five-files.md),
+Copy it into your code and rename P1 to "OPEN". With the [robot in five files](start/01-robot-in-five-files.md),
 copy the `Tunables.Claw` line instead: `open = 0.210` in `Tunables.Claw`. Press STOP: the same lines are saved in
 `/sdcard/FIRST/ftc-helper/finder-results.txt` on the hub.
 

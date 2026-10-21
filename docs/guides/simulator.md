@@ -256,7 +256,7 @@ forward and up sizes.
 
 ### A robot file from Robot.java
 
-A team that writes its robot in five files ([tutorial 22](../tutorials/22-robot-in-five-files.md)) gets
+A team that writes its robot in five files ([lesson 1](../tutorials/start/01-robot-in-five-files.md)) gets
 its robot file from the code:
 
 ```bash

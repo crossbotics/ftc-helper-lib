@@ -93,9 +93,9 @@ replacement for learning.
 2. [From Blocks to Java](docs/blocks-to-java.md) (used Scratch or Blocks before): where each block you
    know went, and why you never write the loop.
 3. [Quick start](docs/quick-start.md): add the library, get five files, and drive.
-4. [Lesson 1: the robot in five files](docs/tutorials/22-robot-in-five-files.md): what each file is for.
-5. Lessons 2 to 7 of the [main track](docs/tutorials/README.md#start-here-the-main-track): drive,
-   buttons, mechanisms, actions, autonomous, a shooter.
+4. [Lesson 1: the robot in five files](docs/tutorials/start/01-robot-in-five-files.md): what each file is for.
+5. Lessons 2 to 6 of the [main track](docs/tutorials/README.md#start-here-the-main-track): drive,
+   buttons, mechanisms, actions, autonomous. Then the lessons your robot needs: odometry, paths, a shooter.
 
 Everything else, by what you want to do:
 
@@ -105,13 +105,14 @@ Everything else, by what you want to do:
 | Know Scratch or Blocks: see where each block went in Java | [From Blocks to Java](docs/blocks-to-java.md) |
 | **Get a robot driving in 30 minutes** (files to copy, the lines to change) | [Quick start](docs/quick-start.md) |
 | Add the library to our robot project | [Add it to a project](docs/01-add-to-project.md) |
-| **A whole robot program, fast: the robot in five files** (made from your configuration) | [Lesson 1](docs/tutorials/22-robot-in-five-files.md), [robot module](docs/modules/robot.md) |
-| **Learn it step by step** (an 8-lesson main track, plus 21 "under the hood" tutorials) | [Tutorials](docs/tutorials/README.md) |
+| **A whole robot program, fast: the robot in five files** (made from your configuration) | [Lesson 1](docs/tutorials/start/01-robot-in-five-files.md), [robot module](docs/modules/robot.md) |
+| **Start from code for a robot like ours** (kit bots, example robots, or made from our configuration) | [Pick your template](docs/templates.md) |
+| **Learn it step by step** (a 9-lesson main track: 6 for every robot, 3 for the robots that need them; plus 21 "under the hood" tutorials) | [Tutorials](docs/tutorials/README.md) |
 | **Every way a button can work: tap, hold, double-tap, tap then hold, pairs, buzzes** | [The button menu](docs/guides/buttons.md) |
 | See how it all fits together | [Architecture](docs/guides/architecture.md) |
 | **Write autonomous modes with the builder (every feature, with a tested example)** | [The autonomous builder](docs/guides/autonomous-builder.md) |
-| **Know where the robot is on the field** (odometry: goBILDA Pinpoint, SparkFun OTOS, dead wheels) and drive to field points | [Lesson 8](docs/tutorials/start/08-odometry.md), [odometry module](docs/modules/odometry.md) |
-| **Smooth paths with Pedro Pathing support**, in the same field numbers (mecanum drives) | [Lesson 9](docs/tutorials/start/09-paths-with-pedro.md), [pedro module](docs/modules/pedro.md) |
+| **Know where the robot is on the field** (odometry: goBILDA Pinpoint, SparkFun OTOS, dead wheels) and drive to field points | [Lesson 7](docs/tutorials/start/07-odometry.md), [odometry module](docs/modules/odometry.md) |
+| **Smooth paths with Pedro Pathing support**, in the same field numbers (mecanum drives) | [Lesson 8](docs/tutorials/start/08-paths-with-pedro.md), [pedro module](docs/modules/pedro.md) |
 | Make autonomous modes the older way (EasyAuto) | [Easy autonomous modes](docs/guides/easy-autos.md) |
 | The older six-file starter kit (EasyTeleOp, EasyAuto) | [Starter kit](docs/starter-kit.md) |
 | Look up any class or method (searchable) | [Reference](docs/reference.md) |

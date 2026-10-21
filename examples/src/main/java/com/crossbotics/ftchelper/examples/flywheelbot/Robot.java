@@ -20,7 +20,7 @@ import com.crossbotics.ftchelper.robot.Shape;
  * <p>The other four files: {@link Tunables} (the numbers), {@link Controls} (the buttons and the
  * TeleOp), {@link Actions} (steps that use several parts) and {@code autos/} (the autonomous programs).
  *
- * <p>Guide: docs/modules/robot.md. Tutorial: docs/tutorials/22-robot-in-five-files.md
+ * <p>Guide: docs/modules/robot.md. Tutorial: docs/tutorials/start/01-robot-in-five-files.md
  */
 public class Robot extends RobotDefinition {
     // One field per mechanism, so Controls, Actions and the autos can reach it by name: robot.intake.

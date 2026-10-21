@@ -9,7 +9,7 @@ with Java. It shows where each block you know went in the robot's five files. Co
 **Before this:** [Start from zero](start-from-zero.md) (if you are new to Android Studio). Read this
 page **before** the [Quick start](quick-start.md): the Quick start gives you the five files this page
 talks about. **The reading order:** Start from zero, then this page, then the Quick start, then
-[Lesson 1](tutorials/22-robot-in-five-files.md) and lessons 2 to 7.
+[Lesson 1](tutorials/start/01-robot-in-five-files.md) and lessons 2 to 6 (then the lessons your robot needs).
 
 ## The key idea: you never write the loop
 
@@ -60,7 +60,7 @@ and in **autonomous steps** ([lesson 6](tutorials/start/06-first-autonomous.md))
 | `joystick` (a reporter block) | `g2.leftStickY.use(robot.lift::manual);` (the stick's value, -1 to 1, every loop) | `Controls.java` |
 | `if <sensor> then rumble` | `g2.rumbleWhen(robot.intake::isRunning);` (a buzz each time it becomes true) | `Controls.java` |
 | `say` / `show variable` | `show("Lift ticks", robot.lift::position);` (the value on the Driver Station, every loop) | `Controls.java`, in `buttons(...)` |
-| `x position` / `y position` / `direction` (where am I?) | `robot.pose()`: `.x`, `.y` (inches) and `.headingDeg`, from the odometry; show it with `show("Where", robot::pose);` ([Lesson 8](tutorials/start/08-odometry.md)) | `Controls.java`, autonomous |
+| `x position` / `y position` / `direction` (where am I?) | `robot.pose()`: `.x`, `.y` (inches) and `.headingDeg`, from the odometry; show it with `show("Where", robot::pose);` ([Lesson 7](tutorials/start/07-odometry.md)) | `Controls.java`, autonomous |
 | `go to x: y:` | `s.driveTo("To the goal", -30, -30, 45, 0.6)` (x, y, heading, power), with odometry | `autos/` |
 | `if <sensor> then ...` | not an `if`. Pick one: `g2.rumbleWhen(...)` (a buzz when it becomes true), `.waitUntil(...)` in an Action (wait for it, then go on), or a `hold(...)` (runs while a button is held) | `Controls.java`, `Actions.java` |
 | `if ... else` inside an action | **not yet** in an Action. Use two actions on two buttons, one for each case | `Actions.java`, `Controls.java` |
@@ -77,7 +77,7 @@ Notes on the table:
 - **Sticks give numbers.** Up and right are `+`, from -1 to 1. `robot.lift::manual` gets that number
   every loop.
 - **A number in `Tunables.java` can be changed live:** in the PRACTICE profile, hold GUIDE for 1 s to
-  open the tuning menu ([Lesson 1](tutorials/22-robot-in-five-files.md#2-tunablesjava-the-numbers)).
+  open the tuning menu ([Lesson 1](tutorials/start/01-robot-in-five-files.md#2-tunablesjava-the-numbers)).
   Then copy the good value back into `Tunables.java`.
 - `atStart(...)` comes from the example robot
   [`flywheelbot/Robot.java`](../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot/Robot.java):
@@ -200,7 +200,7 @@ when it ends (at INIT), and Java does not let a job change it. A field stays as 
 ## Next
 
 - [Quick start](quick-start.md), if you have not done it yet: get the five files and drive. Then
-  [Lesson 1](tutorials/22-robot-in-five-files.md).
+  [Lesson 1](tutorials/start/01-robot-in-five-files.md).
 - [Lesson 3: Buttons](tutorials/start/03-buttons.md): every kind of button job.
 - [Lesson 5: Actions](tutorials/start/05-actions.md): steps that wait, safely.
 - [The button menu](guides/buttons.md): every way a button can work.

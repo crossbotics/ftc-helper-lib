@@ -6,7 +6,7 @@ import com.crossbotics.ftchelper.finders.ShotTunerOpMode;
 import com.crossbotics.ftchelper.robot.RobotDefinition;
 
 /**
- * The turret robot's Shot Tuner (lesson 7, docs/tutorials/start/07-shooter-and-camera.md). It uses
+ * The turret robot's Shot Tuner (lesson 9, docs/tutorials/start/09-shooter-and-camera.md). It uses
  * the robot's launcher, camera and drive, and shows the line to copy into Tunables.java:
  * {@code public static double[][] speedByDistance = {{48, 2550}, {72, 2900}};   // in Tunables.Launcher}. The turret stays still and
  * the "turret aimed" check is off: you point the robot at the goal with the sticks.

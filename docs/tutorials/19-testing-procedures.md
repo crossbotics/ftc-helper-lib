@@ -3,7 +3,7 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
 **You will build:** a 3-line OpMode that lets you test every motor, servo and sensor on the robot by hand.
-This lesson is also part of the main track.
+This is also lesson 2b of the main track (after lesson 2, Drive).
 
 **You will learn:** how to use the Hardware Check OpMode, a fixed order for testing a robot (laptop,
 bench, floor, autonomous, event), and how to turn a problem into a fix that stays fixed.
@@ -89,6 +89,6 @@ The full checklists, including the 2-minute pre-match check, are in
 
 ## You finished the tutorials
 
-On the main track, next: [Lesson 3: Buttons](start/03-buttons.md). Under the hood: [Tutorial 20: Easy TeleOp](20-easy-teleop.md), [21: Find your numbers](21-finders.md) and
-[22: The robot in five files](22-robot-in-five-files.md), the shortest way to a whole robot program.
+On the main track, next: [Lesson 3: Buttons](start/03-buttons.md). Under the hood: [Tutorial 20: Easy TeleOp](20-easy-teleop.md), [21: Find your numbers](21-finders.md), and
+[Lesson 1: The robot in five files](start/01-robot-in-five-files.md), the shortest way to a whole robot program.
 [Extending the library](../guides/extending.md) when you build something new.

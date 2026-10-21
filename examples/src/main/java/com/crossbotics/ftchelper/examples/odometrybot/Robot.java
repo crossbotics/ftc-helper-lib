@@ -8,7 +8,7 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.LogoFacingDirection;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.UsbFacingDirection;
 
 /**
- * Lesson 8's robot: a mecanum drive with a goBILDA Pinpoint and two 4-bar odometry pods, and an
+ * Lesson 7's robot: a mecanum drive with a goBILDA Pinpoint and two 4-bar odometry pods, and an
  * intake. The odometry line is the only new thing: with it, robot.pose() knows where the robot is on
  * the field, autonomous can driveTo(...) a field point, and TeleOp starts where autonomous ended.
  */

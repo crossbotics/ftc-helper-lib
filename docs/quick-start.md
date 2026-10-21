@@ -143,7 +143,7 @@ Open each file and change only the lines marked `// STEP`, in order.
 Used Scratch or Blocks before? [From Blocks to Java](blocks-to-java.md) shows where each block you know
 went (the loop, "when pressed", "wait") in these files.
 
-**Java you will see in the files** (more in [lesson 1](tutorials/22-robot-in-five-files.md#java-you-will-meet)):
+**Java you will see in the files** (more in [lesson 1](tutorials/start/01-robot-in-five-files.md#java-you-will-meet)):
 
 - `() -> r.intake.out()` is a **lambda**: a small piece of code you hand over now, to run later (when
   a button is pressed, or an action gets to that step).
@@ -284,6 +284,10 @@ the robot project already builds:
 
 ## Next
 
-[Lesson 1: the robot in five files](tutorials/22-robot-in-five-files.md) explains what each of the five
-files is for. Then lessons 2 to 7 of the [main track](tutorials/README.md#start-here-the-main-track)
-add the drive in detail, buttons, mechanisms, actions and the first autonomous.
+[Lesson 1: the robot in five files](tutorials/start/01-robot-in-five-files.md) explains what each of the five
+files is for. Then lessons 2 to 6 of the [main track](tutorials/README.md#start-here-the-main-track)
+add the drive in detail, buttons, mechanisms, actions and the first autonomous. After that, do only the
+lessons your robot needs (7 odometry, 8 paths, 9 a shooter).
+
+Your robot is a kit bot (goBILDA, REV, AndyMark, Studica), or like one of the example robots? Start
+from its code instead of an empty robot: [Pick your template](templates.md).

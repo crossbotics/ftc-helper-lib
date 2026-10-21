@@ -76,7 +76,7 @@ public final class SimNewRobot {
             System.out.println("Wrote " + p);
         }
         System.out.println("Next: read the TODO lines in Robot.java, build, and try it in the simulator "
-                + "(./gradlew :sim:fromRobot, then :sim:run). Tutorial: docs/tutorials/22-robot-in-five-files.md");
+                + "(./gradlew :sim:fromRobot, then :sim:run). Tutorial: docs/tutorials/start/01-robot-in-five-files.md");
     }
 
     // ----------------------------- the guesses -----------------------------
@@ -343,7 +343,7 @@ public final class SimNewRobot {
         }
         sb.append(");\n");
         if (odometry != null) {
-            sb.append("        // TODO the Odometry Tuner (lesson 8) measures where the pods / sensor sit, then set\n");
+            sb.append("        // TODO the Odometry Tuner (lesson 7) measures where the pods / sensor sit, then set\n");
             sb.append("        //      Tunables.Odometry.checked = true\n");
             sb.append("        odometry(").append(odometry).append(");\n");
         }

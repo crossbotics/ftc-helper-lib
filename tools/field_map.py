@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Draws docs/images/biobuzz-field-map.svg (lesson 8) and docs/images/biobuzz-pedro-path.svg (lesson 9): the BIOBUZZ field from above, in the library's frame as seen
+"""Draws docs/images/biobuzz-field-map.svg (lesson 7) and docs/images/biobuzz-pedro-path.svg (lesson 8): the BIOBUZZ field from above, in the library's frame as seen
 from the RED drivers' wall (x right, y away, inches; heading 0 = away, counterclockwise +), with the
-6 x 6 tiles, the field parts the simulator knows (sim/fields/biobuzz-2026.json) and lesson 8's three
-points (lesson 9: the Pedro example's path instead). From the BLUE wall the numbers are the same: BIOBUZZ's field is turned half a turn.
+6 x 6 tiles, the field parts the simulator knows (sim/fields/biobuzz-2026.json) and lesson 7's three
+points (lesson 8: the Pedro example's path instead). From the BLUE wall the numbers are the same: BIOBUZZ's field is turned half a turn.
 
     python3 tools/field_map.py          (writes the file)
     python3 tools/field_map.py --check  (exit 1 if the file is out of date)
@@ -103,7 +103,7 @@ def build(pedro=False):
         lx, ly = px(x, y)
         out.append('<text x="%.1f" y="%.1f" font-size="13" text-anchor="middle" fill="#222">%s</text>' % (lx, ly, t))
     if pedro:
-        # Lesson 9: pedrobot/autos/CurveToTheGoal.java. Part 1 a line, part 2 a curve; then driveTo park.
+        # Lesson 8: pedrobot/autos/CurveToTheGoal.java. Part 1 a line, part 2 a curve; then driveTo park.
         out.append(polyline([(-56, -61), (-48, -50)], "#1b5fa8"))
         out.append(polyline(bezier([(-48, -50), (-44, -36), (-30, -30)]), "#1b5fa8"))
         out.append(polyline([(-48, -50), (-44, -36), (-30, -30)], "#1b5fa8", 1, "4 4"))
@@ -118,7 +118,7 @@ def build(pedro=False):
         out.append(arrow(-30, -30, 45, "#c05600", "goal (-30, -30), heading 45, hold", dx=4, dy=8))
         out.append(arrow(-56, -36, 0, "#5b2a86", "park (-56, -36): driveTo", dx=-30, dy=-12))
     else:
-        # Lesson 8's points (odometrybot/autos/ToTheGoal.java and Tunables.Auto).
+        # Lesson 7's points (odometrybot/autos/ToTheGoal.java and Tunables.Auto).
         out.append(arrow(-56, -61, 0, "#1b7f3b", "start (-56, -61), heading 0"))
         out.append(arrow(-30, -30, 45, "#c05600", "goal (-30, -30), heading 45", dx=4, dy=-8))
         out.append(arrow(-56, -36, 0, "#5b2a86", "park (-56, -36), heading 0", dx=4, dy=-4))

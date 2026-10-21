@@ -17,6 +17,15 @@ different robots to test with. They are also worked examples for the robot-file 
 | [starter-bot-andymark.properties](../../sim/robots/starter-bot-andymark.properties) | 4 wheels, belts, 2 motors | rubber-band rollers (CR servo) | rubber-band catapult | 17.2 x 17.7 in, 17.5 in tall |
 | [starter-bot-studica.properties](../../sim/robots/starter-bot-studica.properties) | 2 driven wheels + 2 omni | 4 wheels (motor) | flywheel + servo flap | 14.0 x 15.0 in, 13.0 in tall |
 
+**Code for each one:** every kit bot is also a robot in five files with the seller's configuration names:
+[`gobildabot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildabot),
+[`revbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/revbot),
+[`andymarkbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/andymarkbot) and
+[`studicabot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/studicabot). To copy one into
+your TeamCode: [Pick your template](../templates.md). The library has no catapult part (AndyMark), no
+Maverick motors and no gear between a flywheel motor and its wheel (Studica): those two files use the
+closest part and say so.
+
 All four fit the 18 in start cube and 18 x 24 x 29 in at full reach. Each has a scenario in
 `sim/scenarios/starter-bot-*.sim` (it loads the robot with a `robot ../robots/...` line, checks the size
 rules, rolls the robot forward by hand and checks for no error), so they run in the automatic tests.

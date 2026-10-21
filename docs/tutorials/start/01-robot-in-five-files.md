@@ -1,4 +1,4 @@
-# 22 The robot in five files
+# Lesson 1: The robot in five files
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
@@ -9,25 +9,27 @@ in the simulator.
 
 **Robot needed:** none to start (the simulator), then your robot. **Time:** about 45 minutes.
 
-This is **lesson 1** of the [main track](README.md#start-here-the-main-track). **Before this:** the
-[Quick start](../quick-start.md), or at least [Add it to a project](../01-add-to-project.md). New to
-Java? [Tutorial 01](01-opmode-basics.md) explains imports, fields and lambdas.
+This is **lesson 1** of the [main track](../README.md#start-here-the-main-track). **Before this:** the
+[Quick start](../../quick-start.md), or at least [Add it to a project](../../01-add-to-project.md). New to
+Java? [Tutorial 01](../01-opmode-basics.md) explains imports, fields and lambdas.
 
 **Which robot:** you build your own robot, in the five files the Quick start put in your TeamCode.
 This lesson explains with a worked example: goBILDA's BIOBUZZ starter bot, rewritten in this style, in
-[`examples/.../gobildabot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildabot)
+[`examples/.../gobildabot`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildabot)
 (a two-motor drive, an intake and a launcher). Lessons 2 to 6 use the **lesson robot**
-([`examples/.../lessonbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot)) the
+([`examples/.../lessonbot`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot)) the
 same way: read its lines, make the same change in your own files, and use its files as the answer key.
 The simulator commands with `-PteamCode=none` run the library's examples; for your own robot use
 `-PteamCode=../TeamCode`.
 Two more complete robots are next to it:
-[`flywheelbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot)
+[`flywheelbot`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot)
 (an intake that runs from the start, a flywheel the driver speeds up and down, an indexer servo, a
 deploy servo at START) and
-[`turretbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot)
+[`turretbot`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot)
 (a turret with a Limelight that follows the goal inside its range, speed from distance, a folding claw).
-The reference for every method: [the robot module](../modules/robot.md).
+The other BIOBUZZ kit bots (REV, AndyMark, Studica) are there too, and more example robots: to pick
+the one most like your robot, see [Pick your template](../../templates.md).
+The reference for every method: [the robot module](../../modules/robot.md).
 
 ## Java you will meet
 
@@ -102,7 +104,7 @@ public class Robot extends RobotDefinition {
   it for you: here `define()`.
 - The names in quotes are the names in the robot configuration on the Driver Station. They must
   match exactly (capitals too). A wrong name stops at INIT with the names that DO exist.
-- `"gobilda-5203-312"` is the motor, by its id in the [parts catalog](../guides/parts-catalog.md). The
+- `"gobilda-5203-312"` is the motor, by its id in the [parts catalog](../../guides/parts-catalog.md). The
   library works out encoder counts and speeds from it. (The starter bot's launcher is a 312 RPM motor
   with its gearbox taken off, so it has the 6000 RPM motor's numbers.)
 - `.reversed("right_drive")`: the right motor is mounted facing the other way. If your robot drives
@@ -186,7 +188,7 @@ gamepad 1, like goBILDA's code. You only write what is different: here, Y fires 
 - **The loop:** a robot program runs a **loop**: many times a second, it reads the gamepads, runs the
   button jobs and updates every part. Each time round is "a loop". The library runs this loop for
   you; `buttons(...)` runs only once, at INIT, and plugs a job into each button
-  ([From Blocks to Java](../blocks-to-java.md) explains it with blocks).
+  ([From Blocks to Java](../../blocks-to-java.md) explains it with blocks).
 
 ## 4. Actions.java: steps that use several parts
 
@@ -247,11 +249,11 @@ says what happened to each step. A new autonomous: copy the file, change its nam
 
 Parking points come at the end, so a park step must not run out of time. Put `.parkWithSeconds(3)` just
 before it: the steps above stop when 3 s are left, and the steps below always run
-([Keep time to park](../modules/robot.md#keep-time-to-park)). Everything else the steps can do (menus,
-branches, actions, your own steps): [The autonomous builder](../guides/autonomous-builder.md).
+([Keep time to park](../../modules/robot.md#keep-time-to-park)). Everything else the steps can do (menus,
+branches, actions, your own steps): [The autonomous builder](../../guides/autonomous-builder.md).
 
 It refuses to run until `Tunables.Drive.calibrated = true`: tune the drive first with the Drive Tuner
-([lesson 6](start/06-first-autonomous.md#1-tune-the-drive-first) shows how), then set it.
+([lesson 6](06-first-autonomous.md#1-tune-the-drive-first) shows how), then set it.
 
 ## Try it in the simulator
 
@@ -264,7 +266,7 @@ The examples are built into the simulator, so:
 
 `-PteamCode=none` lists the library's examples instead of your own TeamCode's OpModes. (On a real robot
 the examples are hidden: they are marked `@Disabled`.) Open http://localhost:8780, pick "goBILDA Bot TeleOp", INIT (read the button map), START. LB spins
-up, RB fires (hold it to keep firing). ([Simulator guide](../guides/simulator.md).)
+up, RB fires (hold it to keep firing). ([Simulator guide](../../guides/simulator.md).)
 
 **Your own robot** (the five files in your TeamCode), from the `ftc-helper-lib` folder:
 
@@ -282,9 +284,9 @@ simulator.
 The simulator draws the robot from its **robot file**: a text file that describes the robot to the
 simulator (its size, parts, motors and shapes). Your team's is `simulator/robot.properties` in the robot
 project. `Robot.java` can write that file for you, if it also
-says what each part is and how it looks ([Shapes and parts](../modules/robot.md#shapes-and-parts)).
+says what each part is and how it looks ([Shapes and parts](../../modules/robot.md#shapes-and-parts)).
 Name each part by its catalog id; give a size or a place only when the catalog does not know it.
-(Shortened from [`flywheelbot/Robot.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot/Robot.java).)
+(Shortened from [`flywheelbot/Robot.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot/Robot.java).)
 
 ```java
 chassisMm(400, 400, 100);
@@ -327,7 +329,7 @@ Tunables section (here `Tunables.IntakeDeploy`).
    ```
 
    The names and the drive come from Robot.java; the sizes are guesses marked TODO until someone
-   measures them (or the [robot-file skill](../guides/robot-file-skill.md) does it from photos or CAD: a **skill** is a set
+   measures them (or the [robot-file skill](../../guides/robot-file-skill.md) does it from photos or CAD: a **skill** is a set
 of written instructions an AI coding agent, like Claude Code, follows). Run it again whenever
    Robot.java changes: your measured lines are kept.
 4. **Add a mechanism later:** one line in Robot.java (and its Tunables section). Its standard buttons
@@ -342,6 +344,6 @@ of written instructions an AI coding agent, like Claude Code, follows). Run it a
 
 ## Next
 
-This is lesson 1 of the [main track](README.md#start-here-the-main-track). Next:
-[Lesson 2: Drive](start/02-drive.md). From there on you build **your own robot** in your five files,
+This is lesson 1 of the [main track](../README.md#start-here-the-main-track). Next:
+[Lesson 2: Drive](02-drive.md). From there on you build **your own robot** in your five files,
 one part at a time; the lesson robot is the worked example (and the answer key).

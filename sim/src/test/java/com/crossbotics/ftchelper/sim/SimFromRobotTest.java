@@ -194,6 +194,58 @@ public class SimFromRobotTest {
         }
     }
 
+    // ----------------------------- the REV, AndyMark and Studica starter bots -----------------------------
+
+    // Each kit bot's TeleOp and autonomous start and stop cleanly on its own robot file
+    // (sim/robots/starter-bot-*.properties), and nothing is left running after STOP.
+    private void kitBotRuns(String robotFile, java.lang.reflect.Field calibrated, String teleOp, String auto)
+            throws Exception {
+        boolean was = calibrated.getBoolean(null);
+        calibrated.setBoolean(null, true);
+        try (SimRun s = new SimRun(robotFile)) {
+            s.init(teleOp);
+            s.start();
+            s.press(v -> s.g1().right_bumper = v);                    // fire / throw one
+            SimRun.pause(1.0);
+            assertEquals(teleOp, "", s.error());
+            s.sim.ds.stop();
+            for (SimMotor m : s.robot().motors.values()) {
+                assertEquals(teleOp + ": motor " + m.name + " is off after STOP", 0, m.userPower(), 1e-9);
+            }
+
+            s.init(auto);
+            s.start();
+            assertTrue(auto + " finishes\n" + String.join("\n", s.screen()),
+                    SimRun.waitFor(() -> s.screenHas("Autonomous finished"), 30));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Leave:"));
+            assertEquals(auto, "", s.error());
+            s.sim.ds.stop();
+            for (SimMotor m : s.robot().motors.values()) {
+                assertEquals(auto + ": motor " + m.name + " is off after STOP", 0, m.userPower(), 1e-9);
+            }
+        } finally {
+            calibrated.setBoolean(null, was);
+        }
+    }
+
+    @Test public void revBotRunsOnItsRobotFile() throws Exception {
+        kitBotRuns("robots/starter-bot-rev.properties",
+                com.crossbotics.ftchelper.examples.revbot.Tunables.Drive.class.getField("calibrated"),
+                "REV Bot TeleOp", "REV Bot Shoot and Leave");
+    }
+
+    @Test public void andyMarkBotRunsOnItsRobotFile() throws Exception {
+        kitBotRuns("robots/starter-bot-andymark.properties",
+                com.crossbotics.ftchelper.examples.andymarkbot.Tunables.Drive.class.getField("calibrated"),
+                "AndyMark Bot TeleOp", "AndyMark Bot Throw and Leave");
+    }
+
+    @Test public void studicaBotRunsOnItsRobotFile() throws Exception {
+        kitBotRuns("robots/starter-bot-studica.properties",
+                com.crossbotics.ftchelper.examples.studicabot.Tunables.Drive.class.getField("calibrated"),
+                "Studica Bot TeleOp", "Studica Bot Shoot and Leave");
+    }
+
     // The guide's example (docs/guides/autonomous-builder.md): every builder feature runs, and the menu
     // choice picks the branch.
     @Test public void theAutoCookbookRunsBothBranches() throws Exception {
@@ -257,7 +309,7 @@ public class SimFromRobotTest {
         }
     }
 
-    // Lesson 8: odometry. The simulator's pretend Pinpoint follows the robot; driveTo ends at the field
+    // Lesson 7: odometry. The simulator's pretend Pinpoint follows the robot; driveTo ends at the field
     // points (the start spot is the drivers' frame: x right, y away, for BLUE).
     @Test public void theOdometryBotDrivesToFieldPoints() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.odometrybot.Robot.class);
@@ -306,7 +358,7 @@ public class SimFromRobotTest {
         }
     }
 
-    // Lesson 8: the Odometry Tuner's spin test finds the Pinpoint's offsets (the robot file has -84, -168).
+    // Lesson 7: the Odometry Tuner's spin test finds the Pinpoint's offsets (the robot file has -84, -168).
     @Test public void theOdometryTunerFindsThePinpointOffsets() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.odometrybot.Robot.class);
         try (SimRun s = new SimRun(file.toString())) {
