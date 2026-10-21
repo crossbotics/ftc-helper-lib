@@ -449,7 +449,23 @@ override `alliancesOnOneWall()` to return true), `menuYesNo(label, yes)`, `menuC
 `move(label, inches, directionDeg, power)` (0 forward, 90 right), `turn`, `turnTo`,
 `run(label, command)` (starts and goes on), `waitSeconds`, `waitUntil`, `action(action[, timeout])`
 (waits until done), `alongside(action)` (runs during the next steps), `step(label, AutoStep)`,
-`parkWithSeconds(s)` (the steps after it get the last s seconds).
+`parkWithSeconds(s)` (the steps after it get the last s seconds: see [Keep time to park](#keep-time-to-park)).
+
+### Keep time to park
+
+Parking points come at the very end of autonomous, so the steps that park must never run out of time.
+`parkWithSeconds(4)` in the list splits the steps in two:
+
+- **The steps before it** (main steps) run while more than 4 s of the 30 s are left. When the 4 s mark
+  comes, the step that is running stops at once (a move stops, a wait stops waiting), and the main
+  steps not started yet are skipped.
+- **The steps after it** (park steps) always run, until autonomous ends.
+
+The report at the end (Driver Station, and TeleOp's INIT) says which main steps were "cut short (time
+for park)" or "skipped (time for park)". Choose the seconds from a timed run: how long the park steps
+take, plus about a second. Without `parkWithSeconds`, every step is a main step and nothing keeps time
+for the end. It is [`EasyAuto`](../guides/easy-autos.md#time-for-parking)'s `thenPark()` and
+`parkReserveSec()` in one call.
 
 The steps are read twice: in INIT (for the menu and the start position; nothing runs) and after
 START. Everything else is [`EasyAuto`](auto.md#easyauto): alliance and delay menu, mirroring for RED,

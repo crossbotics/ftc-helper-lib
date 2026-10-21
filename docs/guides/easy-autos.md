@@ -100,6 +100,10 @@ route works for both alliances: add `@Override protected boolean mirrorForRed() 
 
 ## Time for parking
 
+The main steps stop (or are skipped) when only the reserved seconds are left; the steps after
+`thenPark()` always run. The report says which steps were cut short or skipped. In a robot-in-five-files
+autonomous the same is one call in the steps: `.parkWithSeconds(4)` ([robot module](../modules/robot.md#keep-time-to-park)).
+
 ```java
 @Override protected double parkReserveSec() { return 4; }   // seconds kept for parking
 ...

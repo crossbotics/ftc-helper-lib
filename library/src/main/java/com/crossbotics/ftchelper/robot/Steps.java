@@ -204,8 +204,12 @@ public final class Steps {
     }
 
     /**
-     * The steps after this are PARK steps, and they get the last {@code seconds} of autonomous: the
-     * steps before stop in time for them.
+     * The steps after this are PARK steps, and they get the last {@code seconds} of autonomous: when
+     * only that many seconds are left, the step running before it stops at once and the rest before
+     * it are skipped; the park steps always run. The report says which were cut short or skipped.
+     * Docs: docs/modules/robot.md, "Keep time to park".
+     *
+     * @param seconds how long the park steps take, plus a little (from a timed run)
      */
     public Steps parkWithSeconds(double seconds) {
         parkSec = seconds;

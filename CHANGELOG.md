@@ -4,6 +4,10 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+### Changed
+
+- Docs: "Keep time to park" explains `parkWithSeconds` (robot module, tutorial 22, easy autos).
+
 ## v0.11.0 - 2026-10-20
 
 **The Java package has a new name: `com.crossbotics.ftchelper`** (it was `io.github.jasoncross.ftchelper`).

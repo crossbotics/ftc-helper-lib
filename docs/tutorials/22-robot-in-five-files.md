@@ -181,6 +181,10 @@ One short file per autonomous, read top to bottom. The INIT menu (alliance, star
 comes for free; moves and turns are written for BLUE and mirrored for RED; the report at the end
 says what happened to each step. A new autonomous: copy the file, change its name and its steps.
 
+Parking points come at the end, so a park step must not run out of time. Put `.parkWithSeconds(3)` just
+before it: the steps above stop when 3 s are left, and the steps below always run
+([Keep time to park](../modules/robot.md#keep-time-to-park)).
+
 It refuses to run until `Tunables.Drive.calibrated = true`: tune the drive first with the Drive Tuner
 ([tutorial 09](09-first-auto.md), [21](21-finders.md)), then set it.
 
