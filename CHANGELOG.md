@@ -4,6 +4,10 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+## v0.11.1 - 2026-10-21
+
+Nothing old stops working.
+
 ### Added
 
 - Docs: [The autonomous builder](docs/guides/autonomous-builder.md), the complete guide to `Auto` and
