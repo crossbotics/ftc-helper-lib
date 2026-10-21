@@ -220,6 +220,75 @@ public class GesturesTest {
         }
     }
 
+    // Review fixes (Codex, v0.13.0) -----------------------------------------------------------
+
+    @Test public void aHoldPausedThenLetGoStillGetsItsStopJob() {
+        make((p1, p2) -> {
+            p2.a.tap(log("tap")).hold(log("held"), log("stop"));
+            p2.b.hold(log("b held"), log("b stop"));            // a plain hold too
+        });
+        g2.a = true;
+        g2.b = true;
+        for (int i = 0; i < 25; i++) loop(0.02);               // both holds running
+        robot.togglePause();
+        loop(0.02);                                             // paused: the gesture hold ends now
+        assertTrue(ran.toString(), ran.contains("stop"));
+        g2.a = false;
+        g2.b = false;
+        loop(0.02);                                             // let go while paused: B's stop still runs
+        assertTrue(ran.toString(), ran.contains("b stop"));
+        robot.togglePause();
+    }
+
+    @Test public void aShiftKeyStopsTheOtherButtonsGestureUntilItIsLetGo() {
+        make((p1, p2) -> {
+            p2.a.tap(log("tap")).hold(log("held"));
+            p2.lb.with(p2.a, log("pair"));
+        });
+        g2.left_bumper = true; loop(0.02);
+        g2.a = true; loop(0.02);                                // the pair
+        g2.left_bumper = false; loop(0.02);                     // let go of the shift key, A still down
+        waitSec(1.0);
+        g2.a = false; loop(0.02);
+        waitSec(0.5);
+        assertEquals(java.util.Arrays.asList("pair"), ran);
+        ran.clear();
+        g2.a = true; loop(0.02); loop(0.02);                    // A pressed, then the shift key: A's tap is dropped
+        g2.left_bumper = true; loop(0.02);
+        g2.a = false; loop(0.02);
+        g2.left_bumper = false; loop(0.02);
+        waitSec(0.5);
+        assertTrue(ran.toString(), ran.isEmpty());
+    }
+
+    @Test public void aThresholdPassedBetweenLoopsStillCounts() {
+        make((p1, p2) -> p2.a.tap(log("tap")).heldFor(1.0, log("home")));
+        g2.a = true;
+        loop(0.02);
+        loop(0.96);                                             // last loop with A down: 0.98 s
+        g2.a = false;
+        loop(0.04);                                             // let go at 1.02 s
+        assertEquals(java.util.Arrays.asList("home"), ran);
+    }
+
+    @Test public void aPairCannotUseADrivingButtonAndAFreedShiftKeyDropsItsPairs() {
+        try {
+            make((p1, p2) -> p1.lb.with(p1.back, log("x")));
+            fail("expected an error");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("G1 BACK is one of the library's driving buttons"));
+        }
+        make((p1, p2) -> {
+            p2.lb.with(p2.a, log("pair"));
+            p2.lb.free();
+            p2.lb.press(log("lb"));
+        });
+        assertTrue(plan.pairs.isEmpty());
+        g2.left_bumper = true; loop(0.02);
+        g2.a = true; loop(0.02);
+        assertEquals(java.util.Arrays.asList("lb"), ran);
+    }
+
     // ----------------------------- feedback -----------------------------
 
     @Test public void rumbleBuzzesWhenTheJobRunsAndAToggleSaysOnOrOff() {

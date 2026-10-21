@@ -22,6 +22,11 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 - `toggle(onEnable, onDisable)` in `Controls.java` keeps its on/off state itself (same behavior).
 
+### Fixed
+
+- `Controls.java`: a hold's stop job (`hold(job, stopJob)`) now runs even while the robot is paused,
+  so a part a hold started (an intake) no longer starts again when the pause ends.
+
 ## v0.12.1 - 2026-10-21
 
 Nothing old stops working.

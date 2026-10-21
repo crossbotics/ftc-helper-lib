@@ -108,6 +108,12 @@ final class ButtonPlan {
         jobs.put(input, e);
     }
 
+    /** True if this input is one of the library's own (driving, menus). */
+    boolean isReserved(Object input) {
+        Entry old = jobs.get(input);
+        return old != null && old.kind == Kind.RESERVED;
+    }
+
     /** The input's job given by whoever is adding jobs now (a module, or Controls.java), or null. */
     Entry mine(Object input) {
         Entry old = jobs.get(input);
@@ -150,6 +156,11 @@ final class ButtonPlan {
         if (old != null && TEAM.equals(old.source) && old.kind != Kind.FREE && e.kind != Kind.FREE) {
             throw new IllegalStateException("Controls.java: " + input + " has two jobs. Give each button "
                     + "one job (put both commands in one lambda if you want both).");
+        }
+        // A shift key made free: its pairs go too.
+        if (old != null && old.kind == Kind.SHIFT && e.kind != Kind.SHIFT) {
+            java.util.Iterator<Entry> it = pairs.iterator();
+            while (it.hasNext()) if (it.next().shift == input) it.remove();
         }
         jobs.put(input, e);
         return e;
@@ -312,8 +323,15 @@ final class ButtonPlan {
         return new LoopJob(btn.pad.which == ControllerBindings.Pad.G1) {
             private boolean pausedBefore = false;
             @Override void run(boolean paused) {
-                boolean down = isDown(gp.get(), btn) && !shifted.getAsBoolean();
-                // Paused (BACK): forget the gesture; a button held through the pause does nothing.
+                boolean down = isDown(gp.get(), btn);
+                // Its shift key is down (a pair): this button's own gesture stops, and the button does
+                // nothing more until it is let go.
+                if (shifted.getAsBoolean()) {
+                    m.reset(down);
+                    return;
+                }
+                // Paused (BACK): forget the gesture (a hold gets its let-go job); a button held through
+                // the pause does nothing.
                 if (paused || pausedBefore) {
                     m.reset(down);
                     pausedBefore = paused;
@@ -337,11 +355,13 @@ final class ButtonPlan {
     }
 
     // A hold's two jobs (every loop while held, once at let-go); the buzz plays once when it starts.
+    // The let-go job runs even while paused, so a part a hold started is told to stop (and stays
+    // stopped when the pause ends).
     private static Runnable[] holdJobs(RobotDefinition robot, Gestures g, String key, Runnable whileHeld,
                                        Runnable end, final Supplier<Gamepad> gp) {
         if (whileHeld == null) return new Runnable[] {null, null};
         final Runnable held = unlessPaused(robot, whileHeld);
-        final Runnable letGo = end == null ? null : unlessPaused(robot, end);
+        final Runnable letGo = end;
         final Integer n = g.rumble.get(key);
         if (n == null || n == 0) return new Runnable[] {held, letGo};
         final boolean[] started = {false};
@@ -459,13 +479,15 @@ final class ButtonPlan {
                 else into.bindTriggerRelease(pad, btn.trigger, letGo);
                 break;
             case HOLD:
+                // The let-go job runs even while paused (given.b, not the paused-safe e.b): a part the
+                // hold started is told to stop, and stays stopped when the pause ends.
                 Runnable whileHeld = unlessShifted(shifted, e.a);
                 if (btn.btn != null) {
                     into.bindHold(pad, btn.btn, whileHeld);
-                    if (e.b != null) into.bindRelease(pad, btn.btn, e.b);
+                    if (given.b != null) into.bindRelease(pad, btn.btn, given.b);
                 } else {
                     into.bindTriggerHold(pad, btn.trigger, whileHeld);
-                    if (e.b != null) into.bindTriggerRelease(pad, btn.trigger, e.b);
+                    if (given.b != null) into.bindTriggerRelease(pad, btn.trigger, given.b);
                 }
                 // The buzz plays once, when the hold starts.
                 if (e.rumble != 0) press(into, btn, unlessShifted(shifted, withBuzz(() -> { }, e, gp, robot)));

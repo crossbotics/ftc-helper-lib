@@ -167,6 +167,8 @@ final class Gestures {
         }
 
         private void letGo(long now) {
+            // A threshold passed between the last loop and the let-go still counts (held 1.02 s is held).
+            stillDown(now);
             if (longK != 0) {
                 endLong();
                 count = 0;

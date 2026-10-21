@@ -81,6 +81,10 @@ final class SimGamepad {
 
     // When the latest buzz the OpMode asked for ends (System.nanoTime), 0 = none yet.
     private long rumbleUntil = 0;
+    // The latest buzz pattern: a number that goes up with each new one, and its steps
+    // (milliseconds, and 1 = buzzing / 0 = a gap), so the page plays "two buzzes" as two.
+    private int rumbleSeq = 0;
+    private final java.util.List<int[]> rumbleSteps = new java.util.ArrayList<>();
 
     /**
      * Seconds of buzzing left: the OpMode's buzzes (gamepad.rumble, runRumbleEffect) wait in the
@@ -92,11 +96,27 @@ final class SimGamepad {
         Gamepad.RumbleEffect e;
         while (gamepad.rumbleQueue != null && (e = gamepad.rumbleQueue.poll()) != null) {
             long ms = 0;
-            for (Gamepad.RumbleEffect.Step s : e.steps) ms += Math.max(0, s.duration);
+            rumbleSteps.clear();
+            for (Gamepad.RumbleEffect.Step s : e.steps) {
+                int d = Math.max(0, Math.min(s.duration, 10_000));
+                ms += d;
+                if (rumbleSteps.size() < 20) rumbleSteps.add(new int[] {d, s.large > 0 || s.small > 0 ? 1 : 0});
+            }
             // A new effect replaces the one playing (as on a real gamepad).
             rumbleUntil = now + Math.min(ms, 10_000) * 1_000_000L;
+            rumbleSeq++;
         }
         return Math.max(0, (rumbleUntil - now) / 1e9);
+    }
+
+    /** The latest buzz pattern as JSON: {"seq":n,"steps":[[ms,on],...]} (call after rumbleLeft()). */
+    synchronized String rumbleJson() {
+        StringBuilder b = new StringBuilder("{\"seq\":").append(rumbleSeq).append(",\"steps\":[");
+        for (int i = 0; i < rumbleSteps.size(); i++) {
+            if (i > 0) b.append(',');
+            b.append('[').append(rumbleSteps.get(i)[0]).append(',').append(rumbleSteps.get(i)[1]).append(']');
+        }
+        return b.append("]}").toString();
     }
 
     /** The page that last pressed something on this gamepad: its session id and address. */

@@ -271,6 +271,9 @@ public final class Pad {
             if (other == null || other.pad != pad || other == this) {
                 throw new IllegalArgumentException(this + ".with(...): pick another button on the same gamepad");
             }
+            if (pad.plan.isReserved(other)) {
+                throw new IllegalStateException("Controls.java: " + other + " is one of the library's driving buttons. Pick another button for the pair.");
+            }
             lastGesture = null;
             ButtonPlan.Entry shift = pad.plan.put(this, new ButtonPlan.Entry(ButtonPlan.Kind.SHIFT, null, null, "shift key (hold, then press the other button)", null));
             if (shift.kind != ButtonPlan.Kind.SHIFT) return this;

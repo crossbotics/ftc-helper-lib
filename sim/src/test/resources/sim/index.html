@@ -546,18 +546,37 @@ async function poll() {
 setInterval(poll, 100);
 
 // ---------------------------------------------------------------- Driver Hub
-// Buzz the real thing for a gamepad that is a USB/Bluetooth controller or a phone (best effort).
-function buzzReal(n, seconds) {
-  const ms = Math.round(Math.min(seconds, 3) * 1000);
+// The latest buzz pattern seen per gamepad (the first one seen at page load is not played).
+const lastBuzz = {};
+const buzzTimers = { 1: [], 2: [] };
+// Plays a pattern [[ms, on], ...]: the picture shakes in each "on" step; a real controller or a
+// phone buzzes too (best effort). A new pattern replaces one still playing.
+function playBuzz(n, el, steps) {
+  buzzTimers[n].forEach(clearTimeout);
+  buzzTimers[n] = [];
+  el.classList.remove("buzzing");
+  const src = source[n] || "";
+  let t = 0;
+  const pattern = [];
+  for (const [ms, on] of steps.slice(0, 20)) {
+    const d = Math.max(0, Math.min(ms, 3000));
+    buzzTimers[n].push(setTimeout(() => {
+      el.classList.toggle("buzzing", !!on);
+      try {
+        if (on && src.startsWith("controller:")) {
+          const g = navigator.getGamepads()[+src.split(":")[1]];
+          if (g && g.vibrationActuator) g.vibrationActuator.playEffect("dual-rumble", { duration: d, strongMagnitude: 0.8, weakMagnitude: 0.8 });
+        }
+      } catch (e) { /* no buzz on this controller */ }
+    }, t));
+    pattern.push(d);
+    t += d;
+  }
+  buzzTimers[n].push(setTimeout(() => el.classList.remove("buzzing"), t));
+  // A phone: vibrate takes [on, off, on...] in milliseconds (the first step is "on").
   try {
-    const src = source[n] || "";
-    if (src.startsWith("controller:")) {
-      const g = navigator.getGamepads()[+src.split(":")[1]];
-      if (g && g.vibrationActuator) g.vibrationActuator.playEffect("dual-rumble", { duration: ms, strongMagnitude: 0.8, weakMagnitude: 0.8 });
-    } else if (document.body.classList.contains("phone") && navigator.vibrate) {
-      navigator.vibrate(ms);
-    }
-  } catch (e) { /* no buzz on this device */ }
+    if (document.body.classList.contains("phone") && navigator.vibrate && steps.length && steps[0][1]) navigator.vibrate(pattern);
+  } catch (e) { /* no buzz on this phone */ }
 }
 
 function render(s) {
@@ -621,10 +640,10 @@ function render(s) {
   document.querySelectorAll(".pad").forEach(div => {
     const n = +div.dataset.pad, o = (s.pads || [])[n - 1];
     drawPad($(".gp", div), n);
-    // A buzz from the OpMode: shake the picture; a real controller or a phone buzzes too.
-    const left = o ? o.rumble || 0 : 0, gp = $(".gp", div);
-    if (left > 0 && !gp.classList.contains("buzzing")) buzzReal(n, left);
-    gp.classList.toggle("buzzing", left > 0);
+    // A new buzz pattern from the OpMode: play it step by step (two buzzes shake twice).
+    const bz = o && o.buzz;
+    if (bz && lastBuzz[n] !== undefined && bz.seq !== lastBuzz[n]) playBuzz(n, $(".gp", div), bz.steps);
+    if (bz) lastBuzz[n] = bz.seq;
     // Another page (a phone, a second tab) pressed something on this gamepad last.
     $(".owner", div).textContent = o && o.owner && o.owner !== session
       ? "Last used from another page (" + o.from + "). Set this one to \"Phone / other page\" so they do not fight." : "";

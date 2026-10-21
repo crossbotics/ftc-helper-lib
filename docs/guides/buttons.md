@@ -98,7 +98,9 @@ public static class Buttons {
 
 The first button (`back` here) is the **shift key**: it gets no job of its own. One shift key can start
 several pairs (`g2.back.with(g2.x, ...)`, `g2.back.with(g2.y, ...)`). The second button keeps its own
-job when it is pressed alone. **Why:** a pair is a safe place for rare, big jobs (like a climb) that must
+job when it is pressed alone. While the shift key is down, the second button's own job does not run
+(a hold it started stops), and the button does nothing more until it is let go. Neither button may be
+one of gamepad 1's driving buttons. **Why:** a pair is a safe place for rare, big jobs (like a climb) that must
 not run by accident.
 
 ## 3. What it does
@@ -112,7 +114,10 @@ The job is any of these:
 | An action (several steps) | `Actions.scoreHigh(robot)` | for `press`, `tap`, `doubleTap`, `taps`, `heldFor`, `with`: starts it; the same gesture again cancels it ([lesson 5](../tutorials/start/05-actions.md)) |
 | A part to switch | `robot.intake` | for `toggle(...)` only |
 
-While the robot is paused (a tap of gamepad 1 BACK), no button job runs.
+While the robot is paused (a tap of gamepad 1 BACK), no button job runs, with one exception: a hold's
+stop job (the second job in `hold(job, stopJob)`) still runs when the button is let go, or when the
+pause starts in the middle of a gesture's hold. **Why:** so a part a hold started is told to stop, and
+stays stopped when the pause ends.
 
 ## 4. Feedback
 
@@ -145,7 +150,7 @@ A stick is a number from -1 to 1 (up and right are +), not a button:
 - One job per button, or several gestures. A button with `press(...)` and `tap(...)` stops INIT:
   `Controls.java: G2 B has two jobs`. The same gesture twice stops too: `G2 A has two "tap" jobs`.
 - Your job on a button a part suggested replaces the suggestion. `.free()` clears a button.
-- A shift key has no job of its own.
+- A shift key has no job of its own. `.free()` on a shift key removes its pairs too.
 - A button held when START is pressed (or when the tuning menu closes) does nothing until it is let go.
 
 ## Before this library: how it was done

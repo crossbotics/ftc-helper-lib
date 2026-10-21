@@ -242,6 +242,9 @@ public class SimFromRobotTest {
             // Feedback: B toggles the claw and buzzes gamepad 2 (the page shakes its picture).
             s.press(v -> s.g2().b = v);
             assertTrue("gamepad 2 buzzes", SimRun.waitFor(() -> s.sim.ds.pad2.rumbleLeft() > 0, 1));
+            // The page gets the pattern, so two buzzes play as two (not one long buzz).
+            String buzz = s.sim.ds.pad2.rumbleJson();
+            assertTrue(buzz, buzz.contains("[120,1],[80,0],[120,1]") || buzz.equals("{\"seq\":1,\"steps\":[[120,1]]}"));
             s.sim.ds.stop();
 
             s.init("Lesson Bot Score and Park");

@@ -42,7 +42,8 @@ final class SimJson {
             b.append('{');
             field(b, "owner", g.owner()).append(',');
             field(b, "from", g.ownerFrom()).append(',');
-            b.append("\"rumble\":").append(fmt(g.rumbleLeft())).append('}');
+            b.append("\"rumble\":").append(fmt(g.rumbleLeft())).append(',');
+            b.append("\"buzz\":").append(g.rumbleJson()).append('}');
         }
         b.append("],");
         b.append("\"opmodes\":[");
