@@ -56,7 +56,8 @@ Tunables.Drive: strafeCorrection = 1.120
 
 - the wheel size goes in the drive line of `Robot.java`: `.wheelMm(96)` becomes `.wheelMm(100.0)`.
 - the strafe correction goes in `Tunables.Drive`: `strafeCorrection = 1.120`.
-- the lines that start with `c.` are for the older helpers: skip them.
+- the lines that start with `c.` are for the building-block classes of the "under the hood"
+  tutorials, not the five files: skip them.
 - a turn that overshoots: raise `turnKd` a little (+0.001) or lower `turnKp`. A turn that stops short:
   raise `turnKp` a little (+0.002). Both are in `Tunables.Drive`.
 
@@ -95,9 +96,16 @@ public class ScoreAndPark extends Auto<Robot> {
 }
 ```
 
+Its imports (the file is in the `autos` folder, so it imports your own classes too):
+`org.firstinspires.ftc.teamcode.Robot`, `org.firstinspires.ftc.teamcode.Tunables`,
+`org.firstinspires.ftc.teamcode.Actions`, `com.crossbotics.ftchelper.robot.Auto`,
+`com.crossbotics.ftchelper.robot.Steps`, `com.qualcomm.robotcore.eventloop.opmode.Autonomous` (and
+`...opmode.Disabled` while `@Disabled` is there). Its first line:
+`package org.firstinspires.ftc.teamcode.autos;`.
+
 - `@Autonomous(name = ...)` is the name on the Driver Station. `preselectTeleOp` must be the exact
   name of your TeleOp: when autonomous ends, the Driver Station has the TeleOp chosen and ready.
-- `@Disabled` hides the example on a real robot. Delete it in your copy, or you will not see it.
+- `@Disabled` hides the example on a real robot. Delete it (and its import) in your copy, or you will not see it.
 - `extends Auto<Robot>`: an autonomous for the lesson robot. `Auto` is the library's autonomous; the
   `<Robot>` in angle brackets says which robot it drives. Every part from `Robot.java` is in `robot`.
 - `mirrorForRed()` false. Most routes are written for BLUE and mirrored left/right for RED. BIOBUZZ's

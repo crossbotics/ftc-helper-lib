@@ -13,8 +13,14 @@ This is **lesson 1** of the [main track](README.md#start-here-the-main-track). *
 [Quick start](../quick-start.md), or at least [Add it to a project](../01-add-to-project.md). New to
 Java? [Tutorial 01](01-opmode-basics.md) explains imports, fields and lambdas.
 
-The program: goBILDA's BIOBUZZ starter bot, rewritten in this style, in
-[`examples/.../gobildabot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildabot).
+**Which robot:** you build your own robot, in the five files the Quick start put in your TeamCode.
+This lesson explains with a worked example: goBILDA's BIOBUZZ starter bot, rewritten in this style, in
+[`examples/.../gobildabot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildabot)
+(a two-motor drive, an intake and a launcher). Lessons 2 to 6 use the **lesson robot**
+([`examples/.../lessonbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot)) the
+same way: read its lines, make the same change in your own files, and use its files as the answer key.
+The simulator commands with `-PteamCode=none` run the library's examples; for your own robot use
+`-PteamCode=../TeamCode`.
 Two more complete robots are next to it:
 [`flywheelbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot)
 (an intake that runs from the start, a flywheel the driver speeds up and down, an indexer servo, a
@@ -22,6 +28,29 @@ deploy servo at START) and
 [`turretbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot)
 (a turret with a Limelight that follows the goal inside its range, speed from distance, a folding claw).
 The reference for every method: [the robot module](../modules/robot.md).
+
+## Java you will meet
+
+The five files use a few Java ideas over and over. You do not need more than this to start:
+
+- `public class Robot extends RobotDefinition`: **extends** means "built on": your class gets
+  everything the library class already does. The library class is **abstract**: an unfinished class
+  that leaves a method or two for you to fill in (here `define()`), marked `@Override` in your file.
+- `ControlMap<Robot>`, `Auto<Robot>`: the name in angle brackets (**generics**) says which class the
+  library class works with: your `Robot`.
+- `Drive.tank(...).motor(...).wheelMm(96)`: **method chaining**. Each method hands the same thing back,
+  so the next one adds to it with another dot. Read it left to right as one sentence.
+- `() -> r.launcher.fire(3)`: a **lambda**, a small piece of code you hand over now, to run later (when
+  a button is pressed, or an action gets to that step). `() ->` means "no inputs, run this".
+- `r.intake::in`: a **method reference**, the short way to write the lambda `() -> r.intake.in()`:
+  "the intake's `in` method".
+- `Runnable`: Java's name for "a piece of code with no inputs that can be run later". A lambda or a
+  method reference like the two above is a `Runnable`, so the methods that take one (`press(...)`,
+  `then(...)`) take either.
+
+**Android Studio tip:** a name in red that it cannot find usually needs an `import` line at the top.
+Click it and press **Alt+Enter** (**Option+Enter** on a Mac): it adds the missing import. If it offers
+two, pick the one in `com.crossbotics.ftchelper.robot` for the five files' parts.
 
 ## Why five files
 
@@ -39,7 +68,8 @@ Here each file answers ONE question:
 | `Actions.java` | Which steps use several parts together? |
 | `autos/` | What does the robot do on its own? |
 
-And each mechanism is a **module** that already knows how to work: an `Intake` can run in and out,
+And each mechanism is a **module** (here: a ready-made part class from the library, like `Intake` or
+`Lift`; not a Gradle module, which is a part of the build) that already knows how to work: an `Intake` can run in and out,
 a `Launcher` spins up and feeds one piece when the wheel is at speed. A module brings its numbers,
 its standard buttons and its simulator lines with it.
 
@@ -68,7 +98,7 @@ public class Robot extends RobotDefinition {
 ```
 
 - `extends RobotDefinition`: your `Robot` is built on a library class, so it gets all its work for
-  free. `@Override` marks a method that fills in one the library class leaves to you; the library calls
+  free ([Java you will meet](#java-you-will-meet)). `@Override` marks a method that fills in one the library class leaves to you; the library calls
   it for you: here `define()`.
 - The names in quotes are the names in the robot configuration on the Driver Station. They must
   match exactly (capitals too). A wrong name stops at INIT with the names that DO exist.
@@ -165,8 +195,9 @@ public static Action fireAllWithIntake(Robot r) {
 }
 ```
 
-`r.intake::in` and `() -> r.launcher.fire(3)` are two ways to write a small piece of code that runs
-later, when the action gets to that step (lesson 5 explains both).
+`r.intake::in` (a method reference) and `() -> r.launcher.fire(3)` (a lambda) are two ways to write a
+small piece of code that runs later, when the action gets to that step
+([Java you will meet](#java-you-will-meet)).
 
 An action is a list of steps: do these (`then`), wait (`waitSeconds`, `waitUntil`). It **never
 blocks** (never makes the program stop and wait): it does a little every loop, so the robot keeps driving and every other button keeps
@@ -233,7 +264,9 @@ up, RB fires (hold it to keep firing). ([Simulator guide](../guides/simulator.md
 
 ### Draw your robot from Robot.java
 
-The simulator draws the robot from its robot file. `Robot.java` can write that file for you, if it also
+The simulator draws the robot from its **robot file**: a text file that describes the robot to the
+simulator (its size, parts, motors and shapes). Your team's is `simulator/robot.properties` in the robot
+project. `Robot.java` can write that file for you, if it also
 says what each part is and how it looks ([Shapes and parts](../modules/robot.md#shapes-and-parts)).
 Name each part by its catalog id; give a size or a place only when the catalog does not know it.
 (Shortened from [`flywheelbot/Robot.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot/Robot.java).)
@@ -279,7 +312,8 @@ Tunables section (here `Tunables.IntakeDeploy`).
    ```
 
    The names and the drive come from Robot.java; the sizes are guesses marked TODO until someone
-   measures them (or the robot-file skill does it from photos or CAD). Run it again whenever
+   measures them (or the [robot-file skill](../guides/robot-file-skill.md) does it from photos or CAD: a **skill** is a set
+of written instructions an AI coding agent, like Claude Code, follows). Run it again whenever
    Robot.java changes: your measured lines are kept.
 4. **Add a mechanism later:** one line in Robot.java (and its Tunables section). Its standard buttons
    and its simulator lines come with it.

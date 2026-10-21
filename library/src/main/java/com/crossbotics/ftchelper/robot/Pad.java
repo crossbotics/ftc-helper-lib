@@ -22,7 +22,7 @@ import java.util.function.DoubleConsumer;
  *      .hold(robot.launcher::fireWhileHeld, robot.launcher::ceaseFire).says("keep firing")
  *      .doubleTap(() -> robot.launcher.fire(3)).says("fire three").rumble();
  * g2.a.toggle(robot.intake).rumble();                  // feedback: 2 buzzes = on, 1 = off
- * g2.back.with(g2.y, () -> robot.lift.goTo("high"));   // a pair: hold BACK, press Y
+ * g2.lb.with(g2.y, () -> robot.lift.goTo("high"));     // a pair: hold LB, press Y
  * g2.rumbleWhen(robot.launcher::isReady);              // buzz when the robot says so
  * }</pre>
  *
@@ -276,7 +276,7 @@ public final class Pad {
             }
             lastGesture = null;
             ButtonPlan.Entry shift = pad.plan.put(this, new ButtonPlan.Entry(ButtonPlan.Kind.SHIFT, null, null, "shift key (hold, then press the other button)", null));
-            if (shift.kind != ButtonPlan.Kind.SHIFT) return this;
+            if (shift.input != null) return this;   // a module's suggestion that found the button taken
             for (ButtonPlan.Entry p : pad.plan.pairs) {
                 if (p.shift == this && p.with == other) throw new IllegalStateException("Controls.java: " + this + " + " + other.label + " has two jobs");
             }

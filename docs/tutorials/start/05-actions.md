@@ -2,7 +2,8 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
-**Goal:** write a move that uses the lift and the claw together, start it from one button, and use
+**Goal:** write a move that uses the lift and the claw together (in your own `Actions.java`; the lesson
+robot's is the worked example), start it from one button, and use
 the same move in an autonomous.
 
 **You need:**
@@ -37,6 +38,9 @@ public static Action scoreHigh(Robot r) {
             .then(() -> r.lift.goTo("down"));
 }
 ```
+
+`Actions.java` needs one import at the top: `import com.crossbotics.ftchelper.robot.Action;` (your own
+from the Quick start has it already).
 
 - `Action.named("Score high")` starts a new action. The name shows on the Driver Station.
 - `.then(() -> r.lift.goTo("high"))` does something now, then goes to the next step.

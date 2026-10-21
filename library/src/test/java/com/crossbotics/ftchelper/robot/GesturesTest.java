@@ -289,6 +289,16 @@ public class GesturesTest {
         assertEquals(java.util.Arrays.asList("lb"), ran);
     }
 
+    @Test public void withOneDriverTheTeamsG2LinesAreOnGamepad1() {
+        plan = ControlMap.makePlan(robot, true, false, (p1, p2) -> p2.dpadLeft.press(log("spit")));
+        driver = new ControllerBindings();
+        operator = new ControllerBindings();
+        plan.compile(robot, driver, operator, new ArrayList<>(), () -> g1, () -> g2);
+        g1.dpad_left = true; loop(0.02); g1.dpad_left = false; loop(0.02);
+        assertEquals(java.util.Arrays.asList("spit"), ran);
+        assertTrue(String.join("\n", plan.help()), String.join("\n", plan.help()).contains("G1 D-pad left: press"));
+    }
+
     // ----------------------------- feedback -----------------------------
 
     @Test public void rumbleBuzzesWhenTheJobRunsAndAToggleSaysOnOrOff() {
@@ -366,7 +376,7 @@ public class GesturesTest {
             });
             fail("expected an error");
         } catch (IllegalStateException e) {
-            assertTrue(e.getMessage(), e.getMessage().contains("G2 LB has two jobs"));
+            assertTrue(e.getMessage(), e.getMessage().contains("G2 LB is a shift key in a pair"));
         }
     }
 

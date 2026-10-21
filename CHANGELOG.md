@@ -4,8 +4,15 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+## v0.13.0 - 2026-10-21
+
+Nothing old stops working, with one change: with `oneDriver = true`, your own `g2` lines move to gamepad 1.
+
 ### Added
 
+- Docs from a "new student" walk-through: a laptop setup box (Java, `local.properties`, Windows), every lesson
+  snippet with its imports, which robot you build (your own; the lesson robot is the worked example),
+  Java ideas (lambda, `::`, chaining, generics) explained where first used.
 - [The button menu](docs/guides/buttons.md): every way a button can work in `Controls.java`, as a menu
   (which button, how it starts, what it does, feedback).
 - Gestures, several on one button: `tap`, `hold` (with other gestures: from 0.3 s), `doubleTap`,
@@ -21,6 +28,8 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 ### Changed
 
 - `toggle(onEnable, onDisable)` in `Controls.java` keeps its on/off state itself (same behavior).
+- With `oneDriver = true`, your own `g2` lines in `Controls.java` now go on gamepad 1 too (like the parts'
+  buttons), so one driver can reach them. Before, they stayed on gamepad 2.
 
 ### Fixed
 

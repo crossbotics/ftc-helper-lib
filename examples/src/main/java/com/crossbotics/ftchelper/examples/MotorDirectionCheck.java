@@ -17,8 +17,9 @@ import com.crossbotics.ftchelper.hardware.MotorSetup;
  * Set config() below to the same DriveConfig your TeleOp uses.
  * Hold a button to spin ONE motor at low power:
  *   X = front-left (tank: left), Y = front-right (tank: right), A = back-left, B = back-right.
- * Each wheel must roll so the robot would go FORWARD. If one goes backward, flip its
- * "Reversed" setting in DriveConfig.
+ * Each wheel must roll so the robot would go FORWARD. If one goes backward, flip that motor's
+ * setting: with the robot in five files, add its name to .reversed(...) in Robot.java (or take it
+ * out); with a DriveConfig of your own, flip its "Reversed" setting there.
  *
  * Copy it into TeamCode and remove the @Disabled line. Run it on every new robot, and again
  * after any motor or wire is changed: a wrong direction makes the robot drive in circles.

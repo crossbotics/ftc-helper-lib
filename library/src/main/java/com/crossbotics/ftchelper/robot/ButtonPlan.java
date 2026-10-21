@@ -153,14 +153,18 @@ final class ButtonPlan {
             throw new IllegalStateException("Controls.java: " + input + " is the library's \"" + old.says
                     + "\" button. Pick another button.");
         }
+        if (old != null && TEAM.equals(old.source) && old.kind != Kind.FREE && e.kind != Kind.FREE
+                && (old.kind == Kind.SHIFT || e.kind == Kind.SHIFT)) {
+            throw new IllegalStateException("Controls.java: " + input + " is a shift key in a pair (hold it, "
+                    + "then press the other button): it gets no job of its own. Pick another button for the job.");
+        }
         if (old != null && TEAM.equals(old.source) && old.kind != Kind.FREE && e.kind != Kind.FREE) {
             throw new IllegalStateException("Controls.java: " + input + " has two jobs. Give each button "
                     + "one job (put both commands in one lambda if you want both).");
         }
         // A shift key made free: its pairs go too.
         if (old != null && old.kind == Kind.SHIFT && e.kind != Kind.SHIFT) {
-            java.util.Iterator<Entry> it = pairs.iterator();
-            while (it.hasNext()) if (it.next().shift == input) it.remove();
+            pairs.removeIf(p -> p.shift == input);
         }
         jobs.put(input, e);
         return e;
@@ -234,6 +238,11 @@ final class ButtonPlan {
             } else if (e.kind != Kind.SHIFT) {
                 bind(robot, into, btn, e, gp, shifted);
             }
+        }
+        // A Tunables.Buttons section is in the tuning menu even before any button has gestures.
+        if (TunableSection.of(robot.tunablesClass(), "Buttons").exists()) {
+            tapGap(robot);
+            holdTime(robot);
         }
         // Pairs: pressing the second button while the shift key is down.
         for (Entry pair : pairs) {
@@ -316,9 +325,7 @@ final class ButtonPlan {
         Runnable[] tapHold = holdJobs(robot, given, Gestures.TAP_HOLD, given.tapThenHold, given.tapThenHoldEnd, gp);
         g.tapThenHold = tapHold[0];
         g.tapThenHoldEnd = tapHold[1];
-        TunableSection times = TunableSection.of(robot.tunablesClass(), "Buttons");
-        final com.crossbotics.ftchelper.tuning.Tunable gap = times.tunable("tapGapSec", 0.35, 0.05).range(0.1, 1);
-        final com.crossbotics.ftchelper.tuning.Tunable holdSec = times.tunable("holdSec", 0.3, 0.05).range(0.1, 2);
+        final com.crossbotics.ftchelper.tuning.Tunable gap = tapGap(robot), holdSec = holdTime(robot);
         final Gestures.Machine m = new Gestures.Machine(g, gap::get, holdSec::get, () -> Pad.clock.getAsLong());
         return new LoopJob(btn.pad.which == ControllerBindings.Pad.G1) {
             private boolean pausedBefore = false;
@@ -343,6 +350,15 @@ final class ButtonPlan {
                 m.reset(isDown(gp.get(), btn));
             }
         };
+    }
+
+    // Tunables.Buttons: the gesture times (live in the tuning menu).
+    private static com.crossbotics.ftchelper.tuning.Tunable tapGap(RobotDefinition robot) {
+        return TunableSection.of(robot.tunablesClass(), "Buttons").tunable("tapGapSec", 0.35, 0.05).range(0.1, 1);
+    }
+
+    private static com.crossbotics.ftchelper.tuning.Tunable holdTime(RobotDefinition robot) {
+        return TunableSection.of(robot.tunablesClass(), "Buttons").tunable("holdSec", 0.3, 0.05).range(0.1, 2);
     }
 
     // One gesture's job: does nothing while paused, buzzes if asked.

@@ -10,7 +10,9 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
  * turns, LT slow); the intake's buttons are on gamepad 2 (RT in, LT out). INIT shows the whole map;
  * a tap of GUIDE shows it during the match; a tap of BACK pauses everything (again: go on).
  */
-// STEP 7: the name on the Driver Station. In your TeamCode, delete the @Disabled line.
+// STEP 7: the name on the Driver Station (if you change it, change preselectTeleOp in
+//         autos/FirstAuto.java to the same name). In your TeamCode, delete the @Disabled line and
+//         its import, and change group = "Examples" to your own group name (or delete it).
 @TeleOp(name = "Quick Start TeleOp", group = "Examples")
 @Disabled
 public class Controls extends ControlMap<Robot> {
@@ -19,8 +21,8 @@ public class Controls extends ControlMap<Robot> {
 
     @Override
     protected void buttons(Robot robot, Pad g1, Pad g2) {
-        // Your own buttons here, later (lesson 3). One example: an action on gamepad 2's A
-        // (delete it if you deleted the intake in STEP 5).
-        g2.a.press(Actions.spitOut(robot)).says("spit out");
+        // Your own buttons here, later (lesson 3). One example: an action on gamepad 2's D-pad left,
+        // a button no part uses (delete it if you deleted the intake in STEP 5).
+        g2.dpadLeft.press(Actions.spitOut(robot)).says("spit out");
     }
 }

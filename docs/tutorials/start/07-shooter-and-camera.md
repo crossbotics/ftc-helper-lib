@@ -38,6 +38,13 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
   that runs for a moment per piece. `.reversed()`: it turns the other way.
 - Other feeders: `Indexer.servo("indexer")` pushes and comes back; `Indexer.motor("feeder")` runs a roller.
 
+**Imports:** each part class needs one at the top of `Robot.java`, all from
+`com.crossbotics.ftchelper.robot`: `import com.crossbotics.ftchelper.robot.Launcher;` and
+`...robot.Indexer;` here, `...robot.Camera;` and `...robot.Turret;` in sections 5 and 6. Careful with
+Alt+Enter (Option+Enter on a Mac): it may offer a second `Launcher` and `Turret` in
+`com.crossbotics.ftchelper.launcher` (the building blocks of the under-the-hood tutorials). Pick the
+`robot` ones.
+
 **Why a feeder the launcher controls?** A piece only flies right when the wheel is at its speed. If the
 driver fed by hand, some pieces would go in too early and fall short.
 

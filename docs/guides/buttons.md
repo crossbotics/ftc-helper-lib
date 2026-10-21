@@ -15,6 +15,10 @@ Every button line is built from up to four choices, like ordering from a menu:
 Pick one item from each part below. Parts 1 to 3 are needed; part 4 is optional (but always add
 `.says(...)`: the drivers read it on the button map).
 
+Every line goes inside `buttons(Robot robot, Pad g1, Pad g2) { ... }` in `Controls.java`. The examples
+use `robot.launcher` (if your robot has a launcher; with the Quick start robot, try `robot.intake`:
+its jobs are `in`, `out`, `stop` and `toggle`).
+
 ## 1. Which button
 
 Write the gamepad, a dot, then the button.
@@ -22,7 +26,7 @@ Write the gamepad, a dot, then the button.
 | Gamepad | Who holds it |
 | --- | --- |
 | `g1` | the driver |
-| `g2` | the operator (with `oneDriver = true`, use `g1` for everything) |
+| `g2` | the operator (with `oneDriver = true`, `g2` lines go on gamepad 1 too) |
 
 | Buttons | Name in the code |
 | --- | --- |
@@ -35,7 +39,9 @@ Write the gamepad, a dot, then the button.
 | Sticks (a number, not a button: see the end) | `leftStickX`, `leftStickY`, `rightStickX`, `rightStickY` |
 
 Gamepad 1's driving buttons are taken: the left stick, right stick X, BACK, START, LT (slow, with two
-drivers) and Y (field-centric, on a mecanum with an IMU). INIT stops with a message if you use one.
+drivers) and Y (field-centric, on a mecanum with an IMU, with two drivers). With `oneDriver = true`,
+also the left stick click (slow on/off) and the right stick click (field-centric on/off, on a mecanum
+with an IMU). INIT stops with a message if you use one.
 
 ## 2. How it starts
 
@@ -63,7 +69,7 @@ without waiting for speed) on a tap, then hold.
 | Double-tap | `.doubleTap(job)` | once, on the second quick tap |
 | Tap, then hold | `.tapThenHold(job)` or `.tapThenHold(job, stopJob)` | a quick tap, then press again and hold: every loop while held |
 | Several taps | `.taps(3, job)` (2 to 5) | once, on the last quick tap |
-| Held for a time | `.heldFor(1.0, job)` | once, after it is held 1 s (a safe "are you sure?") |
+| Held for a time | `.heldFor(1.0, job)` | once, after it is held 1 s (a safe "are you sure?"). With a `hold` on the same button, both run: the hold from 0.3 s, `heldFor` once at its time |
 
 Example, the fire button:
 
@@ -76,12 +82,25 @@ g2.rb.tap(robot.launcher::fire).says("fire one")
 **When does a gesture's job run?** At once, unless the same button has a longer gesture that starts
 the same way. Then the library waits only until it knows:
 
-- A tap on a button that also has a hold runs when you let go (a press shorter than 0.3 s is a tap).
+- A tap on a button that also has a hold runs when you let go. A tap is a press let go before the
+  hold starts (`Tunables.Buttons.holdSec`, 0.3 s). With `heldFor` and no hold, any press let go before
+  the `heldFor` time is a tap.
 - A tap on a button that also has a double-tap (or tap-then-hold, or taps) waits 0.35 s for a second
   tap. **Why:** otherwise every double-tap would also run the tap job first.
 - Two quick taps on a button with no double-tap job run the tap job twice.
+- On a button with a double-tap (or taps), a second press within 0.35 s of a tap counts as the second
+  tap, not a hold. To hold, wait a moment after the tap, or give the button `tapThenHold` for "tap, then hold".
 
-The two times are numbers in `Tunables.java` (and in the tuning menu):
+The same thing on the Quick start robot's intake:
+
+```java
+g2.rb.tap(robot.intake::toggle).says("intake on/off")
+     .doubleTap(robot.intake::out).says("push out");
+```
+
+**The two times are optional.** Leave `Tunables.Buttons` out and the defaults below are used. Add the
+section to `Tunables.java` only to change them. They are then in the tuning menu too: a value you tune
+there, copy back into `Tunables.java` (the file is the record):
 
 ```java
 public static class Buttons {
@@ -90,14 +109,27 @@ public static class Buttons {
 }
 ```
 
+### Which double-tap?
+
+There are two ways to put a tap and a double-tap on one button:
+
+| Write | A tap | A double-tap | Use it when |
+| --- | --- | --- | --- |
+| `.tap(a).doubleTap(b)` | runs `a`, 0.35 s after you let go (it waits to be sure no second tap comes) | runs only `b` | `a` must not run on a double-tap |
+| `.tapOrDoubleTap(a, b)` (the older way) | runs `a` at once | runs `a` (first tap), then `b` (second tap) | both fit together, like intake on/off (tap), then push out (double-tap) |
+
+`tapOrDoubleTap` always uses 0.35 s (not `Tunables.Buttons`), and it is one job: it cannot be chained
+with other gestures.
+
 ### Two buttons together
 
 | You want | Write | When the job runs |
 | --- | --- | --- |
-| A pair: hold one, press another | `g2.back.with(g2.y, job)` | once, when Y is pressed while BACK is held |
+| A pair: hold one, press another | `g2.lb.with(g2.y, job).says("climb")` | once, when Y is pressed while LB is held |
 
-The first button (`back` here) is the **shift key**: it gets no job of its own. One shift key can start
-several pairs (`g2.back.with(g2.x, ...)`, `g2.back.with(g2.y, ...)`). The second button keeps its own
+The first button (`lb` here) is the **shift key**: it gets no job of its own. One shift key can start
+several pairs (`g2.lb.with(g2.x, ...)`, `g2.lb.with(g2.y, ...)`). (Not gamepad 1's BACK:
+it is a driving button, and INIT refuses it.) The second button keeps its own
 job when it is pressed alone. While the shift key is down, the second button's own job does not run
 (a hold it started stops), and the button does nothing more until it is let go. Neither button may be
 one of gamepad 1's driving buttons. **Why:** a pair is a safe place for rare, big jobs (like a climb) that must
@@ -127,7 +159,11 @@ stays stopped when the pause ends.
 | A buzz when the job runs | `.rumble()` | one short buzz (a hold: when it starts) |
 | More buzzes | `.rumble(2)` (1 to 3) | that many short buzzes |
 | On / off you can feel | `.toggle(part).rumble()` | two buzzes = on, one buzz = off (a claw: two = closed) |
-| A buzz from the robot | `g2.rumbleWhen(robot.launcher::isReady)` | a buzz each time it becomes true (`rumbleWhen(test, 2)`: two buzzes) |
+| A buzz from the robot | `g2.rumbleWhen(robot.launcher::isReady);` | a buzz each time it becomes true (`rumbleWhen(test, 2)`: two buzzes) |
+
+`rumbleWhen` is not tied to a button: it is a line of its own inside `buttons(...)`, like the others
+(it ends with `;`, nothing chains after it), and it is not on the button map. With the Quick start
+robot: `g2.rumbleWhen(robot.intake::isRunning);` buzzes when the intake starts.
 
 `.says(...)` and `.rumble()` belong to the gesture just before them:
 `g2.rb.tap(a).says("one").doubleTap(b).says("three").rumble()` buzzes on the double-tap only.

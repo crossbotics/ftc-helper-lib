@@ -16,6 +16,12 @@ Words used on this page:
 - **INIT** and **START:** the two buttons on the Driver Station. INIT gets the program ready (nothing
   may move yet); START begins the match part.
 - **TeleOp:** the program the drivers drive with. **Autonomous:** the program that runs on its own.
+- **Field-centric:** stick up drives the robot away from the driver, whichever way the robot faces.
+  (Robot-centric, the start: stick up drives the way the robot faces.)
+- **Profile:** a set of limits for the whole robot. **PRACTICE** is gentle (for the shop),
+  **COMPETITION** is full power (for matches).
+- **Action:** a list of steps that one button starts, for example "push out, wait 0.5 s, stop"
+  (`spitOut` in `Actions.java`). Lesson 5 shows how to write them.
 
 ## 1. Add the library
 
@@ -35,7 +41,8 @@ made on the Driver Station. **Why:** the names are copied for you, so they canno
    `MyRobot.xml`). Use the REV Hardware Client, or Android Studio's **Device Explorer** (View > Tool
    Windows > Device Explorer) with the hub connected. Save it in your robot project, e.g.
    `MyRobot.xml` next to `TeamCode`.
-2. From the `ftc-helper-lib` folder:
+2. From the `ftc-helper-lib` folder (it runs on the laptop: do the [laptop setup](#laptop-setup-once)
+   first):
 
    ```bash
    ./gradlew :sim:newRobot -Pconfig=../MyRobot.xml -PteamCode=../TeamCode
@@ -58,14 +65,25 @@ folder `autos`), into `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/`. 
    `package org.firstinspires.ftc.teamcode.autos;`, and its imports
    `org.firstinspires.ftc.teamcode.Robot` and `org.firstinspires.ftc.teamcode.Tunables`).
    **Why:** the `package` line must match the folder the file is in, or it does not build.
-2. Delete the `@Disabled` lines (in `Controls.java` and `FirstAuto.java`), so they show on the Driver Station.
-   (`@Disabled` hides the examples on a real robot.)
+2. Delete the `@Disabled` lines **and** their `import com.qualcomm.robotcore.eventloop.opmode.Disabled;`
+   lines (in `Controls.java` and `FirstAuto.java`), so they show on the Driver Station.
+   (`@Disabled` hides the examples on a real robot; an import nothing uses is only clutter.)
 
 A simulator test runs this template on every library change, so it always builds and drives.
 
 ## 3. Change the STEP lines
 
-Open each file and change only the lines marked `// STEP`, in order:
+Open each file and change only the lines marked `// STEP`, in order.
+
+**Java you will see in the files** (more in [lesson 1](tutorials/22-robot-in-five-files.md#java-you-will-meet)):
+
+- `() -> r.intake.out()` is a **lambda**: a small piece of code you hand over now, to run later (when
+  a button is pressed, or an action gets to that step).
+- `r.intake::out` is a **method reference**: the short way to write the same lambda, "the intake's
+  `out` method".
+- `Drive.mecanum(...).motor(...).wheelMm(96)` is **method chaining**: each method hands the same thing
+  back, so the next one adds to it with another dot. Read it left to right as one sentence.
+
 
 | STEP | File | Change | Why |
 | --- | --- | --- | --- |
@@ -73,10 +91,13 @@ Open each file and change only the lines marked `// STEP`, in order:
 | 2 | `Robot.java` | `.motor("gobilda-5203-312")` and `.wheelMm(96)`: your drive motor ([its catalog id](guides/parts-catalog.md)) and wheel size | autonomous turns inches into encoder counts with them (an encoder counts how far the motor shaft turned) |
 | 3 | `Robot.java` | `.imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD)`: which way the Control Hub's logo and USB ports face | the IMU (a sensor in the hub) measures the heading, the way the robot faces; field-centric driving and autonomous turns use it |
 | 4 | `Robot.java` | only if a wheel turns the wrong way (step 5 below): `.reversed(...)` listing **every** reversed drive motor | the list replaces the default (the left side reversed) |
-| 5 | `Robot.java` | your mechanisms: keep, delete or add `add(...)` lines (and a field for each). No intake? Also delete the `g2.a` line in `Controls.java` and `spitOut` in `Actions.java` | each part brings its numbers and buttons |
+| 5 | `Robot.java` | your mechanisms: keep, delete or add `add(...)` lines (and a field for each). No intake? Also delete the `g2.dpadLeft` line in `Controls.java` and `spitOut` in `Actions.java` | each part brings its numbers and buttons |
 | 6 | `Tunables.java` | leave `maxPower` and `practiceMaxPower` at 0.4 for now | a slow first drive is a safe first drive |
-| 7 | `Controls.java` | the TeleOp's name; `oneDriver = true` if one person drives and runs the mechanisms | the name is what you pick on the Driver Station; one driver puts every button on gamepad 1 |
-| 8 | `autos/FirstAuto.java` | the autonomous's name, where the drive team puts the robot, and how far it drives | it only drives after the Drive Tuner ([lesson 6](tutorials/start/06-first-autonomous.md)) |
+| 7 | `Controls.java` | the TeleOp's name (renamed it? Change `preselectTeleOp` in `autos/FirstAuto.java` to the same name); `group = "Examples"` to your own group name (or delete it); `oneDriver = true` if one person drives and runs the mechanisms | the name is what you pick on the Driver Station, and `preselectTeleOp` picks the TeleOp for you after the autonomous; one driver puts every button on gamepad 1 |
+| 8 | `autos/FirstAuto.java` | the autonomous's name and `group`, where the drive team puts the robot, and how far it drives | it only drives after the Drive Tuner ([lesson 6](tutorials/start/06-first-autonomous.md)) |
+
+In both files, also delete the `@Disabled` line and its `import ...Disabled;` line (step 2B), if you
+have not yet.
 
 ## 4. Build and check the hardware
 
@@ -97,12 +118,13 @@ Open each file and change only the lines marked `// STEP`, in order:
 
 It drives? Raise `maxPower` and `practiceMaxPower` in `Tunables.java` (1.0 and 0.6 are common).
 `practiceMaxPower` is used in the PRACTICE profile (the gentle mode for the shop), `maxPower` in
-COMPETITION.
+COMPETITION. You pick the profile in any autonomous's INIT menu (the last line); the hub remembers it,
+and a hub that was never set uses COMPETITION.
 
 ## Try it in the simulator first (optional)
 
-No robot nearby? The simulator runs your code on a laptop with a 3D field. In the Terminal, go into
-the `ftc-helper-lib` folder (`cd ftc-helper-lib`) and run:
+No robot nearby? The simulator runs your code on a laptop with a 3D field. Do the laptop setup
+below once. Then, in the Terminal, go into the `ftc-helper-lib` folder (`cd ftc-helper-lib`) and run:
 
 ```bash
 ./gradlew :sim:fromRobot -PteamCode=../TeamCode
@@ -112,6 +134,41 @@ the `ftc-helper-lib` folder (`cd ftc-helper-lib`) and run:
 Then open http://localhost:8780, pick your TeleOp, INIT, START, set gamepad 1's list to "Keyboard", and drive with the keyboard
 (W A S D, arrows). The simulator builds the robot from your code, so it cannot find a wrong motor direction: only
 the real robot can. ([Simulator guide](guides/simulator.md).)
+
+`:sim:fromRobot` builds your TeamCode first, so it is also a quick check that your code builds, on a
+laptop, with no Control Hub. (`fromRobot` is a Gradle **task**: one job Gradle can run. `:sim:` says it
+is in the library's `sim` part.)
+
+### Laptop setup (once)
+
+The library is its own Gradle build, separate from your robot project's. So it needs these, even when
+the robot project already builds:
+
+- **Java.** The commands need `JAVA_HOME` (where Java is). Android Studio has its own Java, in its
+  `jbr` folder. Check the folder exists on your computer, then set it in the terminal (it lasts until
+  you close that terminal):
+
+  ```bash
+  # Mac
+  export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+  # Windows (PowerShell)
+  $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
+  ```
+
+- **The Android SDK.** If the first command stops with `SDK location not found`, make a file
+  `ftc-helper-lib/local.properties` with one line (put your user name in place of `<you>`):
+
+  ```text
+  sdk.dir=/Users/<you>/Library/Android/sdk
+  ```
+
+  On Windows: `sdk.dir=C\:\\Users\\<you>\\AppData\\Local\\Android\\Sdk`. **Why:** your robot project's own
+  `local.properties` does not count; the library is its own build. (Android Studio shows the SDK path in
+  **Settings > Languages & Frameworks > Android SDK**.)
+- **Windows:** type `gradlew.bat` (or `.\gradlew` in PowerShell) instead of `./gradlew`.
+- **Normal warnings you can ignore:** `source value 8 is obsolete` (and `target value 8`), `SDK processing. This
+  version only understands SDK XML versions up to 3`, `Deprecated Gradle features were used`,
+  `[Incubating] Problems report`. The first run downloads a lot and takes a few minutes.
 
 ## If something goes wrong
 
@@ -123,6 +180,8 @@ the real robot can. ([Simulator guide](guides/simulator.md).)
 | INIT stops with a list of names | a name in `Robot.java` does not match the configuration (capitals count) |
 | It spins when it should drive straight | a wheel direction is wrong: STEP 4 |
 | Nothing moves | it is paused (tap BACK) |
+| After the autonomous, the Driver Station does not pick your TeleOp | `preselectTeleOp` in `autos/FirstAuto.java` must be the TeleOp's exact name (STEP 7) |
+| `./gradlew` says `JAVA_HOME is not set`, or `SDK location not found` | the [laptop setup](#laptop-setup-once) |
 | `newRobot` says `is already there: nothing written` | one of the five files is already in TeamCode: move it away (or delete it), then run the command again |
 
 ## Next

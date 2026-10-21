@@ -126,7 +126,9 @@ Everything else, by what you want to do:
 ## What is inside
 
 Every class and every function is explained in the module pages. A **package** is a folder of Java
-classes; its name is how your code finds them (in an `import` line).
+classes; its name is how your code finds them (in an `import` line). A **module** here is one part of
+the library, with its own docs page. (In the lessons, a module is also a ready-made robot part, like
+`Intake` or `Lift`, that you add in `Robot.java`. Neither is a Gradle module.)
 
 | Module | Package | What it does | Docs |
 | --- | --- | --- | --- |

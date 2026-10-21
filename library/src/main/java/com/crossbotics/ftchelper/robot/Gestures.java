@@ -35,7 +35,7 @@ final class Gestures {
         return "held " + trim(sec) + " s";
     }
 
-    /** The help page's words, e.g. "tap: fire one, hold: stream, tap, then hold: spray". */
+    /** The help page's words, e.g. "tap: fire one; hold: keep firing; double-tap: fire three". */
     String help() {
         StringBuilder out = new StringBuilder();
         for (Map.Entry<String, String> e : says.entrySet()) {

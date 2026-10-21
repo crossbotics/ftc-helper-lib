@@ -22,6 +22,8 @@ flowchart LR
 
 ## Start it
 
+First time on this laptop? Do the [laptop setup](#laptop-setup-once) just below first.
+
 1. Open a terminal in the `ftc-helper-lib` folder (in Android Studio: the **Terminal** tab at the
    bottom, then `cd ftc-helper-lib` if your robot project holds it). **Why:** the commands only work
    from that folder.
@@ -32,7 +34,7 @@ flowchart LR
    ```
 
    **Why:** `./gradlew` runs Gradle, the tool that builds the code. `:sim:run` is the job to do: the
-   `run` job of the `sim` (simulator) part. It builds the code and starts the simulator.
+   `run` job of the `sim` (simulator) part. (Gradle calls a job a **task**.) It builds the code and starts the simulator.
 3. Open **http://localhost:8780** in a browser. **Why:** that page is your Driver Hub, gamepads and field.
 
 Press Ctrl+C in the terminal to stop it.
@@ -42,9 +44,30 @@ and the Control Hub's panels on the right. Try it: pick an OpMode with the TeleO
 then START (the same big button), and drive with the keyboard (set gamepad 1's list to "Keyboard"; left
 stick W A S D, right stick the arrows). [The page](#the-page) explains every part.
 
-**If it does not start:** it needs Java and the Android SDK, which Android Studio installs. If Gradle
-says "SDK location not found", see [Contributing](../contributing.md). It works on Windows, macOS and
-Linux, and on a Chromebook with Linux turned on.
+It works on Windows, macOS and Linux, and on a Chromebook with Linux turned on.
+
+### Laptop setup (once)
+
+The library is its own Gradle build, separate from your robot project's. So it needs these, even when
+the robot project already builds:
+
+- **Java.** The commands need `JAVA_HOME` (where Java is). Android Studio has its own Java, in its
+  `jbr` folder: Mac `/Applications/Android Studio.app/Contents/jbr/Contents/Home`, Windows
+  `C:\Program Files\Android\Android Studio\jbr`. Check the folder exists on your computer, then set
+  it in the terminal (it lasts until you close that terminal): Mac
+  `export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"`, Windows PowerShell
+  `$env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"`.
+- **The Android SDK.** If the first command stops with `SDK location not found`, make a file
+  `ftc-helper-lib/local.properties` with one line: Mac `sdk.dir=/Users/<you>/Library/Android/sdk`,
+  Windows `sdk.dir=C\:\\Users\\<you>\\AppData\\Local\\Android\\Sdk` (your user name in place of `<you>`).
+  **Why:** your robot project's own `local.properties` does not count; the library is its own build.
+  (Android Studio shows the SDK path in **Settings > Languages & Frameworks > Android SDK**.)
+- **Windows:** type `gradlew.bat` (or `.\gradlew` in PowerShell) instead of `./gradlew`.
+- **Normal warnings you can ignore:** `source value 8 is obsolete` (and `target value 8`), `SDK processing. This
+  version only understands SDK XML versions up to 3`, `Deprecated Gradle features were used`,
+  `[Incubating] Problems report`.
+- **A quick build check:** `./gradlew :sim:fromRobot -PteamCode=../TeamCode` builds your TeamCode
+  first, so it also tells you on a laptop, with no Control Hub, whether your code builds.
 
 ### Options
 
@@ -55,7 +78,9 @@ A `-P` word after the command is an option: `-Pname=value` gives the command a s
 ./gradlew :sim:run -Probot=sim/robots/my-robot.properties -Plan
 ```
 
-`-Probot` uses another robot file. `-Plan` lets phones and tablets on the same WiFi join (Windows asks
+`-Probot` uses another **robot file**: the text file that describes the robot to the simulator (its
+size, parts, motors and shapes; a team's is `simulator/robot.properties` in the robot project, see
+[The robot file](#the-robot-file)). `-Plan` lets phones and tablets on the same WiFi join (Windows asks
 about the firewall the first time). With `-Plan`, anyone on that WiFi can open the page and run
 OpModes in the simulator: use it on a team or home network, not open school WiFi.
 

@@ -14,7 +14,8 @@ Every method: [the robot module, Drive](../../modules/robot.md#drive). Before th
 
 ## 1. Pick the drive type and name the motors
 
-This is the lesson robot's drive line:
+This is the lesson robot's drive line. Your own `Robot.java` (from the Quick start) already has one:
+check yours against it, line by line.
 
 ```java
 drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
@@ -80,13 +81,16 @@ Field-centric driving and autonomous turns use it.
 - `.noImu()`: no IMU. TeleOp then drives robot-centric only, and autonomous refuses to start.
 
 **Why it matters:** with the wrong directions the heading is wrong, so field-centric driving goes the
-wrong way and autonomous turns go wrong. Robot.java needs these two imports at the top (an `import`
-line tells Java where to find a name, here the two direction lists):
+wrong way and autonomous turns go wrong. Robot.java needs these imports at the top (an `import`
+line tells Java where to find a name: here `Drive` and the two direction lists):
 
 ```java
+import com.crossbotics.ftchelper.robot.Drive;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.LogoFacingDirection;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.UsbFacingDirection;
 ```
+
+A name in red in Android Studio? Click it and press Alt+Enter (Option+Enter on a Mac) to add its import.
 
 ## 5. The numbers: Tunables.Drive
 
@@ -159,8 +163,9 @@ the ground.**
    add its name to the list, or take it out. Remember the list replaces the default (the left side). For
    example, if the lesson robot's back right wheel rolls backward, it needs
    `.reversed("front_left", "back_left", "back_right")`.
-4. **The IMU:** run your TeleOp, press START and BACK together (this turns on the extra debug lines on
-   the Driver Station; it does not pause),
+4. **The IMU:** run your TeleOp, press START and BACK together (this turns on the extra **debug lines**
+   on the Driver Station: more numbers for checking, like powers and the `Heading`; it does
+   not pause),
    and turn the robot LEFT by hand. The `Heading` line must go UP. If it goes down or barely moves, fix
    the logo and USB directions. (The Hardware Check also shows the IMU, but it always assumes logo up,
    USB forward, so it only proves your directions if the hub is mounted that way.)

@@ -30,12 +30,24 @@ public class Controls extends ControlMap<Robot> {
 }
 ```
 
+Its imports, at the top of the file:
+
+```java
+import com.crossbotics.ftchelper.robot.ControlMap;
+import com.crossbotics.ftchelper.robot.Pad;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;   // delete with @Disabled in your copy
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+```
+
+Your own `Controls.java` from the Quick start already has them. A name in red? Alt+Enter (Option+Enter
+on a Mac) on it adds the import.
+
 `ControlMap<Robot>` is a whole TeleOp: driving, the match timer, every part updated each loop, and
 everything stopped at the end. The `<Robot>` says which robot it runs: yours, from `Robot.java`.
 `g1` is gamepad 1 (the driver), `g2` is gamepad 2 (the operator).
 
 - `@TeleOp(name = ...)`: the name on the Driver Station.
-- `@Disabled`: hides the example on a real robot. Delete it in your copy, or the Driver Station will not list it.
+- `@Disabled`: hides the example on a real robot. Delete it (and its import) in your copy, or the Driver Station will not list it.
 - `@Override`: `buttons(...)` fills in a method the library class leaves to you; the library calls it
   to set up the buttons.
 
@@ -88,18 +100,21 @@ later. `robot.claw::open` is a shorter way to write the same thing (a **method r
 | `release(Runnable)` | `g1.a.release(robot.claw::close)` | once when let go |
 | `toggle(part)` | `g1.x.toggle(robot.intake)` | switches a part on/off (an intake, a claw, a launcher) |
 | `toggle(onEnable, onDisable)` | `g2.dpadRight.toggle(robot.claw::open, robot.claw::close)` | each press flips between the two |
-| `tapOrDoubleTap(tap, doubleTap)` | `g2.rt.tapOrDoubleTap(robot.intake::toggle, robot.intake::out)` | a tap runs the first; a second tap within 0.35 s runs the second |
+| `tap(a).doubleTap(b)` | `g2.rb.tap(robot.intake::toggle).doubleTap(robot.intake::out)` | a tap runs `a` (after waiting 0.35 s for a second tap); a double-tap runs only `b` |
+| `tapOrDoubleTap(tap, doubleTap)` | `g2.rt.tapOrDoubleTap(robot.intake::toggle, robot.intake::out)` | the older way: a tap runs the first at once; a second tap within 0.35 s runs the second too |
 | `slow()` | `g1.lt.slow()` | one driver only: slow driving (see below) |
 | `tap`, `hold`, `doubleTap`, `tapThenHold`, `taps(n, ...)`, `heldFor(sec, ...)` | `g2.lb.tap(a).heldFor(1.0, b)` | several gestures on one button (section 5) |
-| `with(other, job)` | `g2.back.with(g2.y, job)` | a pair: hold BACK, press Y |
+| `with(other, job)` | `g2.lb.with(g2.y, job)` | a pair: hold LB, press Y |
 | `rumble()` | `.toggle(robot.claw).rumble()` | a buzz when the job runs; on a toggle 2 = on, 1 = off |
 | `free()` | `g2.dpadDown.free()` | no job, even if a part suggested one |
 | `says(words)` | `.says("score high")` | the words on the button map |
 
 Notes:
 
-- `tapOrDoubleTap`: the first tap of a double-tap has already run `tap`. So make the two fit: tap =
-  intake on/off, double-tap = push out.
+- **Which double-tap?** Use `tap(...).doubleTap(...)` when the tap must not run on a double-tap: the
+  tap waits 0.35 s to be sure. Use `tapOrDoubleTap(tap, doubleTap)` when the tap should run at once and
+  the two fit together: its first tap has already run `tap`, so tap = intake on/off, double-tap = push
+  out. More: [the button menu](../../guides/buttons.md#which-double-tap).
 - `slow()` works only with `oneDriver = true` (with two drivers, gamepad 1 LT is slow already, and
   INIT stops with a message). On a trigger, the further you pull, the slower, down to
   `Tunables.Drive.slowSpeed`. On a button, slow while it is held.
@@ -130,8 +145,8 @@ g2.lb.tap(Actions.grabAndLift(robot)).says("grab and lift")
      .heldFor(1.0, () -> robot.lift.goTo("down")).says("lift all the way down");
 ```
 
-The library tells them apart for you: a tap is a press shorter than 0.3 s, a double-tap is two taps
-less than 0.35 s apart. Every gesture, pairs of buttons and buzzes: [the button menu](../../guides/buttons.md).
+The library tells them apart for you: a tap is a press let go before the hold starts (0.3 s; with only
+`heldFor`, before its time), a double-tap is two taps less than 0.35 s apart. Every gesture, pairs of buttons and buzzes: [the button menu](../../guides/buttons.md).
 
 The rules, checked at INIT:
 

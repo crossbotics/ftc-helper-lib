@@ -2,7 +2,8 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
-**Goal:** add three mechanisms to the lesson robot, give them safe numbers, and tune them on the robot.
+**Goal:** add three mechanisms to your robot (the lesson robot is the worked example), give them safe
+numbers, and tune them on the robot.
 
 **You need:**
 
@@ -19,6 +20,9 @@ and [`Tunables.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/
 
 ## 1. Three lines in Robot.java
 
+**Did the Quick start?** The intake line (and its field) is there already: add only the lift and the
+claw.
+
 ```java
 // Lesson 4: the mechanisms.
 intake = add(Intake.motor("intake"));                                             // Tunables.Intake
@@ -26,8 +30,8 @@ lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom
 claw = add(Claw.servo("claw"));                                                    // Tunables.Claw
 ```
 
-These go in `define()`, after the drive. Each line adds one **module**: a mechanism the library
-already knows how to run.
+These go in `define()`, after the drive. Each line adds one **module**: a ready-made part class (a
+mechanism the library already knows how to run).
 
 - `Intake.motor("intake")`: a roller on one motor. It runs in or out.
 - `Lift.slide("lift")`: a slide that goes up and down on one motor and holds named heights.
@@ -36,13 +40,22 @@ already knows how to run.
   - `.bottomSwitch("lift_bottom")` is the touch sensor at the bottom (step 3 says why it matters).
 - `Claw.servo("claw")`: a claw on one servo, with an `open` and a `closed` position.
 
-Also add the fields at the top of the class, so the other files can reach the parts as `robot.lift`:
+Also add the fields at the top of the class, so the other files can reach the parts as `robot.lift`,
+and an import for each part class at the top of the file (with the other imports):
 
 ```java
-public Intake intake;
-public Lift lift;
-public Claw claw;
+import com.crossbotics.ftchelper.robot.Claw;
+import com.crossbotics.ftchelper.robot.Intake;
+import com.crossbotics.ftchelper.robot.Lift;
+
+public class Robot extends RobotDefinition {
+    public Intake intake;
+    public Lift lift;
+    public Claw claw;
+    ...
 ```
+
+A name still red? Alt+Enter (Option+Enter on a Mac) on it adds the import.
 
 **Why:** each line says only *what* is on the robot. How the lift holds a height, how the claw
 toggles, which buttons they use: the module already does that.
@@ -124,16 +137,28 @@ the software stops the lift before the block, and the block holds if the softwar
 ## 5. Find the real numbers with the finders
 
 The numbers above are safe guesses. Measure the real ones before you drive the lift up with code:
-a wrong `max` can pull the lift off its rails. Add the two finders to TeamCode (the whole file
-each):
+a wrong `max` can pull the lift off its rails. Add the two finders to TeamCode, each in its own file
+next to `Robot.java`. `ServoFinder.java`, the whole file:
 
 ```java
+package org.firstinspires.ftc.teamcode;
+
+import com.crossbotics.ftchelper.finders.ServoFinderOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+
 @TeleOp(name = "Servo Finder", group = "Finders")
 public class ServoFinder extends ServoFinderOpMode {
 }
 ```
 
+`MotorFinder.java`, the whole file:
+
 ```java
+package org.firstinspires.ftc.teamcode;
+
+import com.crossbotics.ftchelper.finders.MotorFinderOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+
 @TeleOp(name = "Motor Finder", group = "Finders")
 public class MotorFinder extends MotorFinderOpMode {
 }
@@ -174,8 +199,8 @@ public static class Lift {
 ```
 
 If the Motor Finder also says `Robot.java: add .reversed() to the "lift" part`, do that: the motor
-counts down as the lift goes up. The other lines (`PositionServo.create(...)`) are for the older
-helpers: skip them. The lines are also saved in `finder-results.txt` on the Control Hub. Steps and
+counts down as the lift goes up. The other lines (`PositionServo.create(...)`) are for the building-block
+classes of the "under the hood" tutorials, not the five files: skip them. The lines are also saved in `finder-results.txt` on the Control Hub. Steps and
 buttons: [Finding your numbers](../../guides/finders.md#motor-finder-limits-positions-top-speed)
 and [tutorial 21](../21-finders.md).
 
@@ -208,8 +233,8 @@ Good: it reaches each height in under a second, goes past by very little, and ho
 
 ## Try it in the simulator
 
-From the `ftc-helper-lib` folder, write a simulator robot file from the lesson robot's `Robot.java`,
-then run it:
+From the `ftc-helper-lib` folder, write a simulator robot file (the text file that describes the robot
+to the simulator) from the lesson robot's `Robot.java`, then run it:
 
 ```bash
 ./gradlew :sim:fromRobot -PteamCode=none -ProbotClass=com.crossbotics.ftchelper.examples.lessonbot.Robot -Pout=build/lessonbot.properties

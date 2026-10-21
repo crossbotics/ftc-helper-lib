@@ -59,7 +59,7 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
      *
      * @param robot your robot (its modules are set up)
      * @param g1    the driver's gamepad (the operator's too with {@code oneDriver})
-     * @param g2    the operator's gamepad
+     * @param g2    the operator's gamepad (with {@code oneDriver = true}: gamepad 1, the same as g1)
      */
     protected abstract void buttons(R robot, Pad g1, Pad g2);
 
@@ -226,7 +226,8 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
         plan.reserve(g1.start, "debug lines (with BACK)");
         if (standard) robot.suggestButtons(plan);
         plan.source = null;
-        team.add(plan.g1, plan.g2);
+        // One driver: the team's g2 lines go on gamepad 1 too, like the parts' buttons.
+        team.add(plan.g1, oneDriver ? plan.g1 : plan.g2);
         return plan;
     }
 

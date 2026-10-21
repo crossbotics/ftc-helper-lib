@@ -17,11 +17,20 @@ Want a driving robot first, with no explanations? Do the [Quick start](../quick-
 then come back here. (Lesson 1's file is named `22-robot-in-five-files.md`: the 22 is only a file
 number. It is still the first lesson.)
 
-The shortest way to a whole robot program. You build one robot, the **lesson robot**
-([`examples/.../lessonbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot)): a
-mecanum drive, an intake, a lift and a claw, in five short files. Every part brings its own numbers and
-buttons, so each lesson adds only a few lines. A simulator test runs the finished robot, so the code here
-always works. Do these in order.
+The shortest way to a whole robot program. Do these in order.
+
+**Which robot you build:** your own. You change **your robot's five files** (the ones the Quick start
+put in your TeamCode), a few lines per lesson. Each lesson explains with a worked example, the
+**lesson robot** ([`examples/.../lessonbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot)):
+a mecanum drive, an intake, a lift and a claw, in five short files. Read the lesson robot's lines, then
+make the same change in your own TeamCode; the lesson robot's files are also the answer key. (Lesson 1
+explains with goBILDA's starter bot, and lesson 7 with two shooter robots, the same way.) Every part
+brings its own numbers and buttons, so each lesson adds only a few lines. A simulator test runs the
+finished lesson robot, so the code here always works.
+
+**The simulator commands:** the lessons show them for the lesson robot (`-PteamCode=none`: the
+library's examples). For your own robot, use `-PteamCode=../TeamCode` instead:
+`./gradlew :sim:fromRobot -PteamCode=../TeamCode`, then `./gradlew :sim:run -PteamCode=../TeamCode`.
 
 | # | Lesson | You learn | Robot needed |
 | --- | --- | --- | --- |

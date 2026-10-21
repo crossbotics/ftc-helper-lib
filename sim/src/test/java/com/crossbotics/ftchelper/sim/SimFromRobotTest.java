@@ -301,14 +301,14 @@ public class SimFromRobotTest {
         Path file = generate(com.crossbotics.ftchelper.examples.quickstart.Robot.class);
         try (SimRun s = new SimRun(file.toString())) {
             s.init("Quick Start TeleOp");
-            assertTrue(String.join("\n", s.screen()), s.screenHas("G2 A: spit out"));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("G2 D-pad left: spit out"));
             s.start();
             double y0 = s.robot().y;
             s.g1().left_stick_y = -1;                                 // stick up: forward
             SimRun.pause(1.0);
             s.g1().left_stick_y = 0;
             assertTrue("it drove forward: " + (s.robot().y - y0), s.robot().y - y0 > 3);
-            s.press(v -> s.g2().a = v);                               // spit out
+            s.press(v -> s.g2().dpad_left = v);                       // spit out
             assertTrue("the intake pushes out", SimRun.waitFor(() -> s.robot().motors.get("intake").appliedPower < -0.1, 1));
             assertEquals("", s.error());
             s.sim.ds.stop();
