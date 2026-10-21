@@ -451,6 +451,8 @@ override `alliancesOnOneWall()` to return true), `menuYesNo(label, yes)`, `menuC
 (waits until done), `alongside(action)` (runs during the next steps), `step(label, AutoStep)`,
 `parkWithSeconds(s)` (the steps after it get the last s seconds: see [Keep time to park](#keep-time-to-park)).
 
+The full guide, with every step and a tested example: [The autonomous builder](../guides/autonomous-builder.md).
+
 ### Keep time to park
 
 Parking points come at the very end of autonomous, so the steps that park must never run out of time.

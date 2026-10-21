@@ -87,7 +87,9 @@ replacement for learning.
 | **A whole robot program, fast** | [Starter kit](docs/starter-kit.md) |
 | **Learn it step by step (19 hands-on tutorials)** | [Tutorials](docs/tutorials/README.md) |
 | See how it all fits together | [Architecture](docs/guides/architecture.md) |
-| Make autonomous modes the easy way | [Easy autonomous modes](docs/guides/easy-autos.md) |
+| **Write autonomous modes with the builder (every feature, with a tested example)** | [The autonomous builder](docs/guides/autonomous-builder.md) |
+| Make autonomous modes the easy way (EasyAuto) | [Easy autonomous modes](docs/guides/easy-autos.md) |
+| Look up any class or method (searchable) | [Reference](docs/reference.md) |
 | A whole robot program in five short files (and make them from your configuration) | [Tutorial 22](docs/tutorials/22-robot-in-five-files.md), [robot module](docs/modules/robot.md) |
 | Drive + slow mode + intake, ready to copy | [Example: drive and intake](docs/guides/example-drive-intake.md) |
 | Keep the loop fast: what blocks and what never does | [Non-blocking code](docs/guides/non-blocking.md) |

@@ -42,3 +42,23 @@ dependencies {
     testImplementation "org.firstinspires.ftc:Vision:$ftcSdkVersion"
     testImplementation 'junit:junit:4.13.2'
 }
+
+// The reference: every public class and method as web pages with a search box.
+//   ./gradlew :library:reference      (then open library/build/reference/index.html)
+// Only made when asked for; a robot project's build never runs it.
+android.libraryVariants.configureEach { variant ->
+    if (variant.name != 'debug') return
+    tasks.register('reference', Javadoc) {
+        group = 'documentation'
+        description = 'Makes the searchable reference (web pages) of every public class and method.'
+        def compile = variant.javaCompileProvider.get()
+        source = compile.source
+        classpath = files(compile.classpath) + files(android.bootClasspath)
+        destinationDir = layout.buildDirectory.dir('reference').get().asFile
+        title = "ftc-helper-lib reference"
+        options.encoding = 'UTF-8'
+        options.windowTitle = 'ftc-helper-lib reference'
+        options.addStringOption('Xdoclint:none', '-quiet')
+        options.addBooleanOption('html5', true)
+    }
+}

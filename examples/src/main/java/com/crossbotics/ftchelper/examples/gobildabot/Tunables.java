@@ -33,5 +33,6 @@ public class Tunables {
 
     public static class Auto {
         public static double backInches = 4.7, backPower = 0.4;   // goBILDA's auto: 120 mm back
+        public static double collectInches = 24, leaveInches = 20;  // AutoCookbook's route
     }
 }

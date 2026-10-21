@@ -194,6 +194,38 @@ public class SimFromRobotTest {
         }
     }
 
+    // The guide's example (docs/guides/autonomous-builder.md): every builder feature runs, and the menu
+    // choice picks the branch.
+    @Test public void theAutoCookbookRunsBothBranches() throws Exception {
+        try (SimRun s = new SimRun("robots/starter-bot-gobilda.properties")) {
+            s.init("goBILDA Bot Auto Cookbook");
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Then"));
+            s.start();
+            assertTrue("it finishes", SimRun.waitFor(() -> s.screenHas("Autonomous finished"), 30));
+            String report = String.join("\n", s.screen());
+            assertTrue(report, s.screenHas("Spin up the flywheel:"));
+            assertTrue(report, s.screenHas("Fire all:"));
+            assertTrue(report, s.screenHas("Clear the intake: done"));
+            assertTrue(report, s.screenHas("Leave the launch zone:"));
+            assertFalse("the other branch did not run\n" + report, s.screenHas("To the pieces"));
+            assertEquals("", s.error());
+            s.sim.ds.stop();
+
+            // "Then" is the third line of the menu (after alliance and start delay): down twice, right once.
+            s.init("goBILDA Bot Auto Cookbook");
+            s.press(v -> s.g1().dpad_down = v);
+            s.press(v -> s.g1().dpad_down = v);
+            s.press(v -> s.g1().dpad_right = v);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Collect more"), 1));
+            s.start();
+            assertTrue("it finishes", SimRun.waitFor(() -> s.screenHas("Autonomous finished"), 30));
+            report = String.join("\n", s.screen());
+            assertTrue(report, s.screenHas("To the pieces:"));
+            assertFalse(report, s.screenHas("Leave the launch zone"));
+            assertEquals("", s.error());
+        }
+    }
+
     @Test public void guideShowsTheButtonMapDuringTheMatch() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.flywheelbot.Robot.class);
         try (SimRun s = new SimRun(file.toString())) {

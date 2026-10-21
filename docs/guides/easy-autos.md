@@ -4,6 +4,9 @@
 
 How to make an autonomous in a few minutes, and how to make MANY of them without copying code.
 
+This page is for `EasyAuto`, the layer under the robot-in-five-files autonomous. With a `Robot.java`,
+write autonomous modes with the builder instead: [The autonomous builder](autonomous-builder.md).
+
 ## The idea
 
 An autonomous is a **list of named steps**. You write the list; `EasyAuto` does the rest:

@@ -26,6 +26,7 @@ public final class Feedforward {
     /** The battery voltage the numbers are for. */
     public static final double NOMINAL_VOLTS = 12.8;
 
+    /** Power to start moving (kS), per speed (kV), per acceleration (kA), to hold against gravity (kG). */
     public final double kS, kV, kA, kG;
 
     /** For wheels and flywheels (no gravity). */

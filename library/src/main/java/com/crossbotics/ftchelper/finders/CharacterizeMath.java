@@ -21,6 +21,7 @@ public final class CharacterizeMath {
 
     /** One fit. NaN where a number could not be found. */
     public static final class Fit {
+        /** Power to start moving (kS), per speed (kV), per acceleration (kA), to hold against gravity (kG). */
         public final double kS, kV, kA, kG;
         /** How well the formula matches the log: 1 = perfectly, below 0.9 = be careful. */
         public final double r2;
@@ -46,6 +47,7 @@ public final class CharacterizeMath {
             return kV > 0 ? kA / kV : Double.NaN;
         }
 
+        /** True when the fit can be used: a speed number was found and it matches the log well enough. */
         public boolean ok() {
             return kV > 0 && !Double.isNaN(kA) && r2 > 0.5;
         }
@@ -139,7 +141,7 @@ public final class CharacterizeMath {
      * @param t       seconds
      * @param volts   battery volts at each moment
      * @param power   the power the motor was given (-1..1)
-     * @param v       its speed, counts per second
+     * @param measured its speed, counts per second
      * @param gravity true for a lift (adds kG, the power that holds it against gravity)
      */
     public static Fit fit(double[] t, double[] volts, double[] power, double[] measured, boolean gravity) {

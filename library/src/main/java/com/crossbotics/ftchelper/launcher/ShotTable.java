@@ -30,6 +30,7 @@ public final class ShotTable {
      */
     public static final class Shot {
         // "final" fields: once a Shot is made, its numbers never change, so it is safe to share.
+        /** The distance to the goal, the flywheel speed (RPM) and the hood angle (degrees) for it. */
         public final double distance, rpm, hoodDeg;
 
         /** A shot: distance in inches, flywheel RPM, hood angle in degrees. */

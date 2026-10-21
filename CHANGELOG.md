@@ -4,6 +4,14 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+### Added
+
+- Docs: [The autonomous builder](docs/guides/autonomous-builder.md), the complete guide to `Auto` and
+  `Steps`, built on a tested example (`examples/.../gobildabot/autos/AutoCookbook.java`, run by a
+  simulator test with each menu choice).
+- `./gradlew :library:reference`: a searchable reference (web pages) of every public class and method
+  ([Reference](docs/reference.md)).
+
 ### Changed
 
 - Docs: "Keep time to park" explains `parkWithSeconds` (robot module, tutorial 22, easy autos).
