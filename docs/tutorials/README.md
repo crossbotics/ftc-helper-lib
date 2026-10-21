@@ -13,6 +13,9 @@ The tutorials are the "how and why": what to write, in what order, and what to c
 
 ## Start here: the main track
 
+Want a driving robot first, with no explanations? Do the [Quick start](../quick-start.md) (30 minutes),
+then come back here.
+
 The shortest way to a whole robot program. You build one robot, the **lesson robot**
 ([`examples/.../lessonbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot)): a
 mecanum drive, an intake, a lift and a claw, in five short files. Every part brings its own numbers and

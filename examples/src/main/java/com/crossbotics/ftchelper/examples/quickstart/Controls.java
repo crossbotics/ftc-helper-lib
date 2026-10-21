@@ -1,0 +1,25 @@
+package com.crossbotics.ftchelper.examples.quickstart;
+
+import com.crossbotics.ftchelper.robot.ControlMap;
+import com.crossbotics.ftchelper.robot.Pad;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+
+/**
+ * Quick start, file 3 of 5: the buttons, and the TeleOp. Gamepad 1 drives (left stick, right stick X
+ * turns, LT slow); the intake's buttons are on gamepad 2 (RT in, LT out). INIT shows the whole map;
+ * a tap of GUIDE shows it during the match; a tap of BACK pauses everything (again: go on).
+ */
+// STEP 7: the name on the Driver Station. In your TeamCode, delete the @Disabled line.
+@TeleOp(name = "Quick Start TeleOp", group = "Examples")
+@Disabled
+public class Controls extends ControlMap<Robot> {
+    // STEP 7: true if one driver does everything on gamepad 1.
+    public static boolean oneDriver = false;
+
+    @Override
+    protected void buttons(Robot robot, Pad g1, Pad g2) {
+        // Your own buttons here, later (lesson 3). One example: an action on gamepad 2's A.
+        g2.a.press(Actions.spitOut(robot)).says("spit out");
+    }
+}

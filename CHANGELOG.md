@@ -4,6 +4,18 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+### Added
+
+- [Quick start](docs/quick-start.md): a driving robot in 30 minutes. The five files come from your robot
+  configuration (`:sim:newRobot`) or from a new copy-in template (`examples/.../quickstart`) whose lines
+  to change are marked STEP 1 to 8. A simulator test drives the template and runs its autonomous.
+
+### Changed
+
+- `:sim:newRobot`'s `Controls.java` comment describes BACK (tap: pause; hold: reset forward) and GUIDE
+  (tap: button map; hold: tuning menu) as they work now.
+- Simulator tests start each run with a fresh tuning list, so one test robot's numbers cannot leak into another.
+
 ## v0.12.0 - 2026-10-21
 
 Nothing old stops working.

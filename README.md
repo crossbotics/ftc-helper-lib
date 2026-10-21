@@ -83,6 +83,7 @@ replacement for learning.
 
 | I want to... | Read |
 | --- | --- |
+| **Get a robot driving in 30 minutes** (files to copy, the lines to change) | [Quick start](docs/quick-start.md) |
 | Add the library to our robot project | [Add it to a project](docs/01-add-to-project.md) |
 | **A whole robot program, fast: the robot in five files** (made from your configuration) | [Lesson 1](docs/tutorials/22-robot-in-five-files.md), [robot module](docs/modules/robot.md) |
 | **Learn it step by step** (a 7-lesson main track, plus 21 "under the hood" tutorials) | [Tutorials](docs/tutorials/README.md) |

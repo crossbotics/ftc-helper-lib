@@ -19,6 +19,11 @@ final class SimRun implements AutoCloseable {
     }
 
     SimRun(String robotFile) throws Exception {
+        // A fresh tuning list for each run: the menu keeps one value per name ("Drive/maxPower") for the
+        // whole app, so one test robot's numbers must not leak into the next (a real app has one Robot).
+        java.lang.reflect.Method clear = com.crossbotics.ftchelper.tuning.Tunable.class.getDeclaredMethod("clearForTests");
+        clear.setAccessible(true);
+        clear.invoke(null);
         sim = new SimEngine(SimRobot.load(Paths.get(robotFile)));
         sim.start();
     }

@@ -288,6 +288,31 @@ public class SimFromRobotTest {
         }
     }
 
+    // The quick start's template (docs/quick-start.md): it drives, its action runs, its autonomous ends.
+    @Test public void theQuickStartTemplateDrivesAndRuns() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.quickstart.Robot.class);
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("Quick Start TeleOp");
+            assertTrue(String.join("\n", s.screen()), s.screenHas("G2 A: spit out"));
+            s.start();
+            double y0 = s.robot().y;
+            s.g1().left_stick_y = -1;                                 // stick up: forward
+            SimRun.pause(1.0);
+            s.g1().left_stick_y = 0;
+            assertTrue("it drove forward: " + (s.robot().y - y0), s.robot().y - y0 > 3);
+            s.press(v -> s.g2().a = v);                               // spit out
+            assertTrue("the intake pushes out", SimRun.waitFor(() -> s.robot().motors.get("intake").appliedPower < -0.1, 1));
+            assertEquals("", s.error());
+            s.sim.ds.stop();
+
+            s.init("Quick Start Auto");
+            s.start();
+            assertTrue("it finishes", SimRun.waitFor(() -> s.screenHas("Autonomous finished"), 30));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Leave the start:"));
+            assertEquals("", s.error());
+        }
+    }
+
     @Test public void guideShowsTheButtonMapDuringTheMatch() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.flywheelbot.Robot.class);
         try (SimRun s = new SimRun(file.toString())) {
