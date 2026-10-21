@@ -129,7 +129,7 @@ The launcher keeps two rules for you. Know them, because they explain what the r
 From [`turretbot/Robot.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/Robot.java):
 
 ```java
-camera = add(Camera.limelight("limelight").goal("BLUE SCORING", "RED SCORING"));
+camera = add(Camera.limelight("limelight").autoPipelines(0, 1, 2).goal("BLUE SCORING", "RED SCORING"));
 ```
 
 - `Camera.limelight("limelight")`: a Limelight 3A, by its configuration name. A webcam is
@@ -137,7 +137,17 @@ camera = add(Camera.limelight("limelight").goal("BLUE SCORING", "RED SCORING"));
 - `.goal("BLUE SCORING", "RED SCORING")`: this season's goal for each alliance, by the name of its group
   of AprilTags (the square black-and-white codes on the field). The camera then gives the goal for this
   match's alliance, chosen in autonomous's INIT menu (TeleOp remembers it).
-- Its numbers: `Tunables.Limelight.pipeline` (the Limelight's pipeline that finds AprilTags; 0 in the example).
+- `.autoPipelines(0, 1, 2)`: venue lighting. Every gym has different light, and a camera setting that
+  finds tags well at school can miss them at an event. Set up three AprilTag pipelines on the
+  Limelight's web page (0 = normal light, 1 = bright: less exposure, 2 = dim: more exposure). In INIT
+  the robot tries each one, counts the pictures that see a tag, and keeps the best. Put your usual
+  pipeline first: it wins a tie. Face the robot toward a tag in INIT so the test can finish. The
+  Driver Station shows the result, e.g. `limelight lighting: pipeline 2 (9 of 10 pictures saw tags)`.
+  A webcam does the same with `.autoExposure()` (it tries exposures instead of pipelines).
+  How it works: [vision.md](../../modules/vision.md#venue-lighting).
+- Its numbers: `Tunables.Limelight.pipeline` (the pipeline to use when the test is off) and
+  `autoLighting` (true = run the test; false = skip it and use `pipeline`). At INIT the Driver Station
+  shows the line that skips the test at this venue next time: copy it into `Tunables.java`.
 - It starts in INIT, so it is already looking at START. It has no buttons.
 
 ## 6. A turret that follows it
@@ -254,6 +264,7 @@ give each a `looks(...)` shape in `Robot.java` ([Lesson 1: Draw your robot from 
 | The turret's angles are wrong | `.gearRatio(...)`, or it did not point forward at INIT. |
 | "goal out of turret range" | the goal is past `min` or `max`: turn the robot. |
 | The speed never changes with distance | no goal in view; check `Tunables.Limelight.pipeline` and the `goal(...)` names. |
+| `limelight lighting: NO TAGS SEEN` | no pipeline saw a tag in INIT, so the first one is kept. Face the robot toward a tag in INIT; check each pipeline on the Limelight's web page. |
 
 ## Where next
 

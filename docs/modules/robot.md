@@ -174,7 +174,7 @@ public class Tunables {
 | Turret | `kP`, `kI`, `kD` | | `min`, `max`, `maxPower`, `tolerance`, `slowZone`, `slowZonePower`, `cameraOffset` |
 | Launcher | `speedRpm`, `stepRpm` | | `readyBandRpm`, `idleRpm`, `shotIntervalSec`, `speedByDistance`, `kP`..`kF` |
 | Indexer | every number | | |
-| Camera | | | `pipeline` |
+| Camera | | | `pipeline`, `autoLighting`, `lightingSettleMs`, `lightingPictures`, `lightingMinPictures`, `lightingAfterStartMs`; webcam `exposureMs`, `gain` |
 | Odometry | | | `checked`, `linearScalar`, `angularScalar` (OTOS) |
 | Your own sections (`Auto`...) | every number (a TeleOp reads the field each time) | an autonomous reads them when it builds its steps (INIT) | `final` numbers, true/false, tables |
 
@@ -395,6 +395,33 @@ camera = add(Camera.webcam("Webcam 1"));
 
 `goal()` (the alliance's goal, or null), `target(name)`, `target(id)`, `source()` (the
 [`TargetSource`](vision.md) inside). Tunables (Limelight): `pipeline`. It starts in INIT.
+
+Venue lighting ([vision.md](vision.md#venue-lighting)): the camera tries a few settings in INIT and
+keeps the one that sees the most AprilTags.
+
+```java
+camera = add(Camera.limelight("limelight").autoPipelines(0, 1, 2).goal("BLUE SCORING", "RED SCORING"));
+camera = add(Camera.webcam("Webcam 1").autoExposure());          // auto, 3, 6, 12 ms; or autoExposure(6, 3, 12)
+```
+
+At INIT the Driver Station shows `limelight lighting: pipeline 2 (9 of 10 pictures saw tags)` (a
+warning while no tag is seen), and the line that skips the test at this venue next time, e.g.
+`Tunables.Limelight.pipeline = 2, autoLighting = false`. `lighting()` gives the test itself.
+
+Its optional Tunables (leave them out for the defaults):
+
+| Number | Default | What it does |
+| --- | --- | --- |
+| `autoLighting` | true | false = skip the test: use `pipeline` (Limelight) or `exposureMs` and `gain` (webcam) |
+| `lightingSettleMs` | 300 | wait after a switch before counting pictures (ms) |
+| `lightingPictures` | 10 | pictures counted per setting |
+| `lightingMinPictures` | 3 | pictures with tags a setting needs to count as good |
+| `lightingAfterStartMs` | 3000 | after START, how long to keep trying before keeping the first setting (ms) |
+| `exposureMs` (webcam) | -1 | a fixed manual exposure (ms) when the test is off; -1 = the camera's own |
+| `gain` (webcam) | -1 | the gain for manual exposures; -1 = the camera's highest |
+
+These are read once, in INIT. Changed one with the tuning menu? Copy the value back into
+`Tunables.java`, or the robot uses the old one at the next INIT.
 
 ---
 

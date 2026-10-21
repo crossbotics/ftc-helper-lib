@@ -23,6 +23,11 @@ final class SimCamera implements InvocationHandler {
     final int width, height;
     final WebcamName device;     // null for a Limelight (SimLimelight is its device)
     final SimRobot robot;
+    private final java.util.Set<Integer> goodPipelines;
+    private final double[] goodExposureMs;
+    // The Limelight's pipeline and the webcam's exposure now (0 = automatic); set by the pretend devices.
+    volatile int pipeline = 0;
+    volatile long exposureMs = 0;
     // The portals open on this camera (the FTC app closes them when an OpMode stops).
     private final List<AutoCloseable> portals = new ArrayList<>();
 
@@ -44,9 +49,40 @@ final class SimCamera implements InvocationHandler {
         width = (int) num(s, "width", 640);
         height = (int) num(s, "height", 480);
         if (hfovDeg <= 1 || hfovDeg >= 179) throw new IllegalArgumentException("Robot file: camera." + name + ": hfov must be between 1 and 179 degrees");
+        // Pretend venue lighting (for the library's lighting test): goodPipelines=1|2 = a Limelight sees
+        // tags only on these pipelines; goodExposureMs=4-10 = a webcam sees tags only with a manual
+        // exposure in this range (0 in the range = its own automatic exposure works too). Default: always.
+        goodPipelines = s.containsKey("goodPipelines") ? parseList(s.get("goodPipelines")) : null;
+        goodExposureMs = s.containsKey("goodExposureMs") ? parseRange(s.get("goodExposureMs")) : null;
         if (width < 16 || height < 16) throw new IllegalArgumentException("Robot file: camera." + name + ": width and height must be at least 16 pixels");
         device = kind.equals("webcam")
                 ? (WebcamName) Proxy.newProxyInstance(WebcamName.class.getClassLoader(), new Class<?>[] {WebcamName.class}, this) : null;
+    }
+
+    private static java.util.Set<Integer> parseList(String v) {
+        java.util.Set<Integer> out = new java.util.HashSet<>();
+        try {
+            for (String p : v.split("\\|")) out.add(Integer.parseInt(p.trim()));
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Robot file: goodPipelines=" + v + " must be pipeline numbers like 1|2");
+        }
+        return out;
+    }
+
+    private static double[] parseRange(String v) {
+        String[] p = v.split("-");
+        try {
+            if (p.length == 2) return new double[] {Double.parseDouble(p[0].trim()), Double.parseDouble(p[1].trim())};
+        } catch (NumberFormatException e) {
+            // the message below
+        }
+        throw new IllegalArgumentException("Robot file: goodExposureMs=" + v + " must be a range like 4-10");
+    }
+
+    /** True if the pretend lighting lets this camera find tags with its setting now. */
+    boolean lightingOk() {
+        if (goodPipelines != null && !goodPipelines.contains(pipeline)) return false;
+        return goodExposureMs == null || (exposureMs >= goodExposureMs[0] && exposureMs <= goodExposureMs[1]);
     }
 
     private static double num(Map<String, String> s, String key, double fallback) {
@@ -189,6 +225,7 @@ final class SimCamera implements InvocationHandler {
         double f = focalPx(), tanH = Math.tan(Math.toRadians(hfovDeg) / 2), tanV = tanH * height / width;
         double minPx = 6.5 * Math.max(1, decimation);
         List<Seen> out = new ArrayList<>();
+        if (!lightingOk()) return out;        // too bright or too dark for this setting: no tags found
         for (SimField.Tag t : field.tags) {
             double[] tp = t.pose();
             double[] d = {tp[0] - c[0][0], tp[1] - c[0][1], tp[2] - c[0][2]};

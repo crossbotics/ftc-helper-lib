@@ -61,6 +61,11 @@ public class LimelightTags implements TargetSource {
     // pipelineSwitch() and updateRobotOrientation() are network requests that WAIT for an answer.
     // They run on this worker so the robot's loop never waits.
     private BackgroundWorker worker = null;
+    // Venue lighting (autoPipelines): the pipelines to try, and the helper that tries them. null = off.
+    private int[] autoList = null;
+    private LightingSweep sweep = null;
+    // The time stamp of the last picture given to the sweep (its own, so update() stays as it was).
+    private double sweepTimestamp = Double.NaN;
 
     /**
      * Finds the Limelight in the robot configuration and wraps it.
@@ -86,6 +91,54 @@ public class LimelightTags implements TargetSource {
         // goes to the background worker ("() -> ..." is a small piece of code handed over to run later).
         if (started) worker().submitLatest("pipeline", () -> limelight.pipelineSwitch(index));   // never waits
         return this;
+    }
+
+    /**
+     * Venue lighting: tries these pipelines one after the other in INIT, counts the pictures that see
+     * AprilTags with each, and keeps the best one. Set up each pipeline on the Limelight's web page
+     * for a kind of lighting (e.g. 0 = normal, 1 = bright, 2 = dim: exposure and black level), then
+     * list them here with your usual one FIRST (it wins ties, and it is kept if no tag is seen at all).
+     * It keeps going after START if it is not done, for at most 3 s more. Replaces {@link #pipeline}.
+     * Never waits: each switch goes to the background helper. {@link #lighting()} has the result.
+     *
+     * <pre>{@code
+     * LimelightTags camera = LimelightTags.create(hardwareMap, "limelight").autoPipelines(0, 1, 2);
+     * }</pre>
+     *
+     * @param pipelines the pipeline numbers to try, usual one first (0 to 9)
+     */
+    public LimelightTags autoPipelines(int... pipelines) {
+        if (pipelines == null || pipelines.length == 0) {
+            autoList = null;
+            sweep = null;
+            return this;
+        }
+        autoList = pipelines.clone();
+        List<String> labels = new ArrayList<>();
+        for (int p : autoList) labels.add("pipeline " + p);
+        // i -> ...: the code the sweep runs to switch to setting number i (a pipeline switch, in the background)
+        sweep = new LightingSweep(labels, i -> switchTo(autoList[i]), System::nanoTime);
+        pipeline = autoList[0];
+        return this;
+    }
+
+    /** The venue-lighting helper (its numbers, status and result), or null without {@link #autoPipelines}. */
+    public LightingSweep lighting() {
+        return sweep;
+    }
+
+    /**
+     * Tell the camera the match has started, so an unfinished {@link #autoPipelines} test gives up in
+     * time (the five-files Camera module does this for you). Safe to call without autoPipelines.
+     */
+    public void matchStarted() {
+        if (sweep != null) sweep.matchStarted();
+    }
+
+    // Switches the pipeline in the background (a network request that waits for an answer).
+    private void switchTo(int index) {
+        pipeline = index;
+        worker().submitLatest("pipeline", () -> limelight.pipelineSwitch(index));   // never waits
     }
 
     /**
@@ -127,7 +180,8 @@ public class LimelightTags implements TargetSource {
         limelight.setPollRateHz(pollRateHz);
         // "final" copy: the code handed to the worker runs later, so it gets a value that cannot change.
         final int first = pipeline;
-        worker().submitLatest("pipeline", () -> limelight.pipelineSwitch(first));   // a network request: in the background
+        // With autoPipelines the lighting test switches pipelines itself (in its first update).
+        if (sweep == null) worker().submitLatest("pipeline", () -> limelight.pipelineSwitch(first));   // a network request: in the background
         limelight.start();                                                             // starts the SDK's own polling thread
         started = true;
     }
@@ -139,6 +193,7 @@ public class LimelightTags implements TargetSource {
         if (!started) start();
         // getLatestResult() does not wait: the SDK keeps the newest result ready for us.
         LLResult result = limelight.getLatestResult();
+        if (sweep != null && !sweep.isDone()) feedSweep(result);
         // No result, or nothing usable in it: we see nothing right now.
         if (result == null || !result.isValid()) {
             latest = Collections.emptyList();
@@ -171,6 +226,19 @@ public class LimelightTags implements TargetSource {
             if (o != null) out.add(o);
         }
         latest = out;
+    }
+
+    // Venue lighting: hands the sweep the number of tags in a NEW picture taken with the pipeline being
+    // tried (a picture from the pipeline before does not count), or NO_PICTURE.
+    private void feedSweep(LLResult result) {
+        int tags = LightingSweep.NO_PICTURE;
+        if (result != null && result.getTimestamp() != sweepTimestamp) {
+            sweepTimestamp = result.getTimestamp();
+            int want = sweep.current() < 0 ? -1 : autoList[sweep.current()];
+            // isValid() is false for a picture with nothing in it: that picture counts, with 0 tags.
+            if (result.getPipelineIndex() == want) tags = result.isValid() ? result.getFiducialResults().size() : 0;
+        }
+        sweep.update(tags);
     }
 
     // A tag's place in camera space in inches (x right, y down, z out of the lens), or null if no pose.
@@ -258,7 +326,8 @@ public class LimelightTags implements TargetSource {
     public String status() {
         if (!started) return "not started";
         if (!limelight.isConnected()) return "not connected";
-        return String.format(Locale.US, "pipeline %d, %d tags", pipeline, latest.size());
+        String s = String.format(Locale.US, "pipeline %d, %d tags", pipeline, latest.size());
+        return sweep == null ? s : s + ", lighting: " + sweep.status();
     }
 
     /** Stops the Limelight, forgets its targets and ends the background worker. */
@@ -270,6 +339,7 @@ public class LimelightTags implements TargetSource {
         latest = Collections.emptyList();
         // forget the last frame's time, so the first frame after a restart is not taken for an old one
         lastTimestamp = Double.NaN;
+        sweepTimestamp = Double.NaN;
         // end the background helper, so it does not keep running after the OpMode
         if (worker != null) worker.shutdown();
         worker = null;

@@ -69,6 +69,17 @@ public class WebcamTags implements TargetSource {
     private double keepMs = 500;
     // A note for status(), written by the background worker ("manual exposure", "exposure failed"...).
     private volatile String controlsNote = "";
+    // Venue lighting (autoExposure): the exposures to try (0 = the camera's own automatic exposure),
+    // and the helper that tries them. null = off.
+    private long[] autoList = null;
+    private LightingSweep sweep = null;
+    // Each switch gets a number; the worker writes the number it has finished. When they match, the
+    // camera has the setting being tried, so its pictures count. (volatile: shared with the worker)
+    private int requested = 0;
+    private volatile int applied = -1;
+
+    /** The exposures {@link #autoExposure()} tries: the camera's own (0), then 3, 6 and 12 ms. */
+    public static final long[] DEFAULT_EXPOSURES_MS = {0, 3, 6, 12};
 
     /**
      * Finds the webcam in the robot configuration and wraps it.
@@ -127,12 +138,85 @@ public class WebcamTags implements TargetSource {
      * supports it; {@link #status()} says if it failed.
      *
      * @param milliseconds how long each picture collects light (shorter = less blur, darker)
-     * @param cameraGain   brightness boost (higher = brighter, more grainy)
+     * @param cameraGain   brightness boost (higher = brighter, more grainy); -1 = the camera's highest
      */
     public WebcamTags exposure(long milliseconds, int cameraGain) {
         exposureMs = milliseconds;
         gain = cameraGain;
         return this;
+    }
+
+    /**
+     * The gain for {@link #autoExposure}'s manual exposures (default -1: the camera's highest).
+     *
+     * @param cameraGain brightness boost (higher = brighter, more grainy)
+     */
+    public WebcamTags gain(int cameraGain) {
+        gain = cameraGain;
+        return this;
+    }
+
+    /**
+     * Venue lighting: tries {@link #DEFAULT_EXPOSURES_MS} (the camera's own automatic exposure, then
+     * 3, 6 and 12 ms) in INIT and keeps the one whose pictures see the most AprilTags.
+     * See {@link #autoExposure(long...)}.
+     */
+    public WebcamTags autoExposure() {
+        return autoExposure(DEFAULT_EXPOSURES_MS);
+    }
+
+    /**
+     * Venue lighting: tries these exposures one after the other in INIT, counts the pictures that see
+     * AprilTags with each, and keeps the best one. Put your usual one FIRST (it wins ties, and it is
+     * kept if no tag is seen at all). It keeps going after START if it is not done, for at most 3 s
+     * more. Each manual exposure uses the gain from {@link #exposure(long, int)}, or the camera's
+     * highest gain if none was given (a short exposure is dark; gain brightens it). Replaces
+     * {@link #exposure(long, int)}'s exposure. Never waits: camera settings are sent in the background.
+     * {@link #lighting()} has the result. Not every webcam allows manual exposure ({@link #status()} says).
+     *
+     * <pre>{@code
+     * WebcamTags camera = WebcamTags.create(hardwareMap, "Webcam 1").autoExposure(6, 3, 12, 0);
+     * }</pre>
+     *
+     * @param exposuresMs exposures in milliseconds, usual one first; 0 = the camera's own automatic exposure
+     */
+    public WebcamTags autoExposure(long... exposuresMs) {
+        if (exposuresMs == null || exposuresMs.length == 0) {
+            autoList = null;
+            sweep = null;
+            return this;
+        }
+        autoList = exposuresMs.clone();
+        List<String> labels = new ArrayList<>();
+        for (long ms : autoList) labels.add(ms <= 0 ? "auto exposure" : ms + " ms exposure");
+        // i -> ...: the code the sweep runs to switch to setting number i (camera settings, in the background)
+        sweep = new LightingSweep(labels, this::switchTo, System::nanoTime);
+        return this;
+    }
+
+    /** The venue-lighting helper (its numbers, status and result), or null without {@link #autoExposure}. */
+    public LightingSweep lighting() {
+        return sweep;
+    }
+
+    /**
+     * Tell the camera the match has started, so an unfinished {@link #autoExposure} test gives up in
+     * time (the five-files Camera module does this for you). Safe to call without autoExposure.
+     */
+    public void matchStarted() {
+        if (sweep != null) sweep.matchStarted();
+    }
+
+    // Sends setting number i to the camera, in the background (USB requests can take a moment).
+    private void switchTo(int i) {
+        final long ms = autoList[i];
+        final int number = ++requested;
+        if (worker == null) worker = new BackgroundWorker("webcam");
+        // submitLatest: if the sweep moves on before this one ran, only the newest setting is sent
+        worker.submitLatest("exposure", () -> {
+            applyExposure(ms, gain);
+            applied = number;        // even if it failed: the sweep must move on
+        });
     }
 
     /**
@@ -164,7 +248,8 @@ public class WebcamTags implements TargetSource {
         // Forgot to call start()? Do it now, so the camera still works.
         if (portal == null) start();
         // Manual exposure can only be set once the camera is streaming, and only needs setting once.
-        if (!controlsApplied && exposureMs >= 0 && portal.getCameraState() == VisionPortal.CameraState.STREAMING) {
+        boolean streaming = portal.getCameraState() == VisionPortal.CameraState.STREAMING;
+        if (!controlsApplied && sweep == null && exposureMs >= 0 && streaming) {
             // Camera settings are USB requests that can take a moment: do them in the background, once.
             controlsApplied = true;
             if (worker == null) worker = new BackgroundWorker("webcam");
@@ -173,6 +258,12 @@ public class WebcamTags implements TargetSource {
         }
         // getFreshDetections() gives the tags from a picture we have not seen yet, or null if there is none.
         List<AprilTagDetection> fresh = processor.getFreshDetections();
+        // Venue lighting: camera settings can only be sent while streaming. A picture counts only once
+        // the camera has the setting being tried (applied == requested).
+        if (sweep != null && !sweep.isDone() && streaming) {
+            boolean counts = fresh != null && applied == requested;
+            sweep.update(counts ? fresh.size() : LightingSweep.NO_PICTURE);
+        }
         if (fresh == null) {          // no new picture since last time: keep the last list, while it is recent
             // Forget targets that are too old, so a camera that stops sending never leaves an old
             // target behind for the robot to aim at.
@@ -235,7 +326,8 @@ public class WebcamTags implements TargetSource {
         if (portal == null) return "not started";
         // the camera's state, plus pictures per second (fps) when it is streaming
         String s = portal.getCameraState() + (isWorking() ? String.format(Locale.US, " %.0f fps", portal.getFps()) : "");
-        return controlsNote.isEmpty() ? s : s + " (" + controlsNote + ")";
+        if (!controlsNote.isEmpty()) s += " (" + controlsNote + ")";
+        return sweep == null ? s : s + ", lighting: " + sweep.status();
     }
 
     /** Stops the camera, frees it for the next OpMode, ends the background worker, forgets its targets. */
@@ -247,26 +339,47 @@ public class WebcamTags implements TargetSource {
         portal = null;
         // a new start() must send the exposure and gain again to the new camera stream
         controlsApplied = false;
+        // the next start() tries the lighting settings again on the new stream
+        if (sweep != null) sweep.restart();
+        applied = -1;
         // nothing seen any more: an old target must never be used after the camera stopped
         latest = Collections.emptyList();
     }
 
     @Override public String name() { return name; }
 
-    // Runs on the background worker, NOT in the loop: these USB requests can take a moment.
-    private void applyControls() {
-        // try/catch: if anything goes wrong here, catch the error and write a note instead of crashing.
+    // Runs on the background worker, NOT in the loop. One lighting setting: ms <= 0 = the camera's own
+    // automatic exposure; otherwise manual, with this gain (-1 = the camera's highest).
+    private boolean applyExposure(long ms, int wantGain) {
         try {
-            // Turn auto exposure off, then set our exposure. "&&" stops at the first step that fails.
             ExposureControl exposure = portal.getCameraControl(ExposureControl.class);
-            boolean ok = exposure != null && exposure.setMode(ExposureControl.Mode.Manual)
-                    && exposure.setExposure(exposureMs, TimeUnit.MILLISECONDS);
-            GainControl gainControl = portal.getCameraControl(GainControl.class);
-            ok = ok && gainControl != null && gainControl.setGain(gain);
-            // Not every webcam allows these settings; status() shows this note so you know.
-            controlsNote = ok ? "manual exposure" : "exposure not supported";
+            boolean ok;
+            if (exposure == null) {
+                ok = false;
+            } else if (ms <= 0) {
+                // Webcams like the Logitech C920 call their automatic mode "aperture priority".
+                ExposureControl.Mode autoMode = exposure.isModeSupported(ExposureControl.Mode.AperturePriority)
+                        ? ExposureControl.Mode.AperturePriority : ExposureControl.Mode.Auto;
+                ok = exposure.setMode(autoMode);
+            } else {
+                // Keep it inside what this camera can do.
+                long lo = exposure.getMinExposure(TimeUnit.MILLISECONDS), hi = exposure.getMaxExposure(TimeUnit.MILLISECONDS);
+                long use = hi > lo ? Math.max(lo, Math.min(hi, ms)) : ms;
+                ok = exposure.setMode(ExposureControl.Mode.Manual) && exposure.setExposure(use, TimeUnit.MILLISECONDS);
+                GainControl gainControl = portal.getCameraControl(GainControl.class);
+                ok = ok && gainControl != null && gainControl.setGain(wantGain >= 0 ? wantGain : gainControl.getMaxGain());
+            }
+            controlsNote = ok ? "" : "exposure not supported";
+            return ok;
         } catch (RuntimeException e) {
             controlsNote = "exposure failed";
+            return false;
         }
+    }
+
+    // Runs on the background worker, NOT in the loop: these USB requests can take a moment.
+    private void applyControls() {
+        // Not every webcam allows these settings; status() shows the note so you know.
+        if (applyExposure(exposureMs, gain)) controlsNote = "manual exposure";
     }
 }

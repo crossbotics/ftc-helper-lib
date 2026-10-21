@@ -244,6 +244,8 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
 
     @Override
     protected final void addInitTelemetry(RobotTelemetry t) {
+        // The modules' INIT work first (a camera's lighting test), with their lines.
+        robot().initLoop(t);
         for (String n : robot().notes()) t.text(n);
         if (plan != null) for (String n : plan.notes()) t.text(n);
         List<String> changed = RobotDefinition.changedTunables();

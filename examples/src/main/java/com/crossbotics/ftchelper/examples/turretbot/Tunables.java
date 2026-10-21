@@ -11,9 +11,13 @@ public class Tunables {
         public static boolean calibrated = false;
     }
 
-    /** Limelight pipeline 0 finds AprilTags. */
+    /**
+     * Limelight pipelines 0, 1 and 2 find AprilTags, each tuned for a kind of light (Robot.java's
+     * autoPipelines tries them in INIT). autoLighting = false skips that test and uses pipeline.
+     */
     public static class Limelight {
         public static double pipeline = 0;
+        public static boolean autoLighting = true;
     }
 
     public static class Intake {

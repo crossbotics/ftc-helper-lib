@@ -140,6 +140,8 @@ public class SimFromRobotTest {
         try (SimRun s = new SimRun(file.toString())) {
             s.init("TurretBot TeleOp");
             assertTrue(s.screenHas("G2 X: grab"));
+            // autoPipelines: the lighting test runs in INIT and its line is on the Driver Station.
+            assertTrue(SimRun.waitFor(() -> s.screenHas("limelight lighting"), 2));
             assertTrue(s.screenHas("G2 BACK: follow the goal on/off [Turret]"));
             s.start();
             s.press(v -> s.g2().x = v);                               // grab

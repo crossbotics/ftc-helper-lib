@@ -9,6 +9,7 @@ import org.firstinspires.ftc.robotcore.external.function.Continuation;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.CameraControl;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessorImpl;
 
 /**
@@ -110,6 +111,15 @@ public class VisionPortalImpl extends VisionPortal implements AutoCloseable {
         if (closed) throw new RuntimeException("Cannot get camera control: the portal is closed");
         return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] {type}, (proxy, m, a) -> {
             Class<?> r = m.getReturnType();
+            // The exposure is remembered (the pretend venue lighting uses it): manual ms, or 0 = automatic.
+            if (m.getName().equals("setExposure")) {
+                SimVision.exposure(cam, ((java.util.concurrent.TimeUnit) a[1]).toMillis((Long) a[0]));
+                return true;
+            }
+            if (m.getName().equals("setMode") && a[0] != ExposureControl.Mode.Manual) SimVision.exposure(cam, 0);
+            if (m.getName().equals("getMinExposure")) return ((java.util.concurrent.TimeUnit) a[0]).convert(1, java.util.concurrent.TimeUnit.MILLISECONDS);
+            if (m.getName().equals("getMaxExposure")) return ((java.util.concurrent.TimeUnit) a[0]).convert(200, java.util.concurrent.TimeUnit.MILLISECONDS);
+            if (m.getName().equals("getMaxGain")) return 255;
             if (r == boolean.class) return true;
             if (m.getName().equals("hashCode")) return System.identityHashCode(proxy);
             if (m.getName().equals("equals")) return proxy == a[0];

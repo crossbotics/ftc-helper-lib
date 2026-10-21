@@ -172,6 +172,7 @@ final class SimLimelight extends Limelight3A {
     @Override public boolean pipelineSwitch(int index) {
         if (index < 0 || index > 9) return false;
         pipeline = index;
+        cam.pipeline = index;
         return true;
     }
 
