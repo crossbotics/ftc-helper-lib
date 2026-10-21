@@ -13,12 +13,14 @@ Read [the odometry module](odometry.md) first: Pedro needs a working, checked od
 path (a line or a smooth curve), and it drives the robot along it fast, correcting all the way, and
 brakes at the end. `driveTo` goes to one point. Pedro follows a whole path, curves included.
 
-> **Odometry is required.** Pedro steers by the robot's real place on the field, every loop, and only
+> **You need odometry and a mecanum drive.**
+>
+> **Odometry:** Pedro steers by the robot's real place on the field, every loop, and only
 > the `odometry(...)` line gives that (a Pinpoint, an OTOS or dead wheels, set up and checked:
 > [odometry](odometry.md), [lesson 8](../tutorials/start/08-odometry.md)). Drive-wheel encoders slip,
 > so they are not enough. No odometry line: INIT stops. Not checked yet: `follow` steps are skipped.
 
-> **Mecanum drives only.** Pedro corrects the robot's position by sliding it sideways, so it needs
+> **Mecanum:** Pedro corrects the robot's position by sliding it sideways, so it needs
 > wheels that can strafe. Pedro 3.0.2 has two drivetrains, Mecanum and Swerve, and no tank (two-side)
 > drive. With a tank `drive(...)` line, `Pedro.follower(...)` stops INIT with a clear message. A tank
 > robot uses odometry with `turnTo` and `move` instead ([autonomous builder](../guides/autonomous-builder.md)).

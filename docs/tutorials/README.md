@@ -54,7 +54,7 @@ part. You never write it ([From Blocks to Java](../blocks-to-java.md#the-key-ide
 | 6 | [Your first autonomous](start/06-first-autonomous.md) | tune the drive, then steps, park time, the report | a tuned drivetrain |
 | 7 | [A shooter, a camera and a turret](start/07-shooter-and-camera.md) | a flywheel and feeder, aiming with a camera | a shooter, a camera |
 | 8 | [Odometry: where am I on the field?](start/08-odometry.md) | which device to buy, the odometry line, the Odometry Tuner, `driveTo` field points, TeleOp starting where autonomous ended | a mecanum drive, a Pinpoint (or OTOS, or dead wheels) |
-| 9 | [Paths with Pedro Pathing](start/09-paths-with-pedro.md) (optional) | what a path follower does and whether you need one, adding Pedro, lines and curves in your field numbers, Pedro's tuner, the first real run | lesson 8 done, a mecanum drive |
+| 9 | [Paths with Pedro Pathing](start/09-paths-with-pedro.md) (optional) | what a path follower does and whether you need one, adding Pedro, lines and curves in your field numbers, Pedro's tuner, the first real run | a mecanum drive and odometry (lesson 8 done) |
 
 Then: [the button menu](../guides/buttons.md) (every way a button can work),
 [the autonomous builder](../guides/autonomous-builder.md) (everything autonomous can do),
