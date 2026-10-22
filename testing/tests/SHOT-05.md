@@ -13,7 +13,7 @@ docs: [tutorials/start/09-shooter-and-camera.md#speed-trim-and-a-low-battery, mo
 
 ## Why
 
-Battery compensation is on by default but not yet proven on a real robot. It should help the wheel get
+Battery compensation is off by default because it is not yet proven on a real robot. This test is how we find out. It should help the wheel get
 back to speed after each shot on a low battery. If it makes no difference, or the wheel overshoots,
 we want to know: then we will change the default.
 
@@ -24,7 +24,7 @@ we want to know: then we will change the default.
 
 ## Setup
 
-- SHOT-01 done: `kF` and `nominalVolts` in `Tunables.Launcher`. (Without `nominalVolts`, INIT says `battery compensation on, nominalVolts not written: assuming 12.8 V`: write yours from the Flywheel Finder.)
+- SHOT-01 done: `kF` and `nominalVolts` in `Tunables.Launcher`, and `public static boolean batteryCompensation = true;` there to turn it on. (Without `nominalVolts`, INIT says `battery compensation on, nominalVolts not written: assuming 12.8 V`: write yours from the Flywheel Finder.)
 - A battery at about 11.5 V under no load (run the robot for a while, or use an older battery). A full battery for step 6.
 - A phone to film the Driver Station screen (the speed numbers), or a second person to write them.
 - 8 pieces.
@@ -34,9 +34,9 @@ we want to know: then we will change the default.
 1. With the 11.5 V battery: INIT, START, spin up (LB). Wait for READY.
 2. Fire 4 shots as fast as the launcher allows (hold RB). Film the launcher's measured RPM and target.
 3. Write the lowest RPM after each shot, and how long it took to get back to READY.
-4. Set `public static boolean batteryCompensation = false;` in `Tunables.Launcher`, rebuild, and repeat steps 1-3 on the same battery.
+4. Set `batteryCompensation = false` in `Tunables.Launcher`, rebuild, and repeat steps 1-3 on the same battery.
 5. Compare: with compensation on, does the wheel come back to speed faster?
-6. Put a full battery in, compensation back on. Spin up: watch for an overshoot (the speed going more than 3% over the target).
+6. Put a full battery in, compensation back on (`true`). Spin up: watch for an overshoot (the speed going more than 3% over the target).
 
 ## Pass rule
 
