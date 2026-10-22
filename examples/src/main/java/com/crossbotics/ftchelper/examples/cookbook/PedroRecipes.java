@@ -7,6 +7,7 @@ import com.crossbotics.ftchelper.robot.Auto;
 import com.crossbotics.ftchelper.robot.Drive;
 import com.crossbotics.ftchelper.robot.Intake;
 import com.crossbotics.ftchelper.robot.Odometry;
+import com.crossbotics.ftchelper.robot.PathAt;
 import com.crossbotics.ftchelper.robot.RobotDefinition;
 import com.crossbotics.ftchelper.robot.Steps;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -91,9 +92,14 @@ public class PedroRecipes {
 
         @Override
         protected void steps(Steps s, Robot robot) {
+            // recipe: pedro-along
             s.start("Against our wall, in the left corner tile, facing the field", -56, -61, 0)
-             .follow("To the goal", Paths.IN_ONE_GO)
+             // PathAt: start things ALONG the path, once each, while the robot keeps driving.
+             .follow("To the goal", Paths.IN_ONE_GO,
+                     PathAt.part(2, "Intake on", robot.intake::in),            // where part 2 starts
+                     PathAt.inchesLeft(6, "Intake off", robot.intake::stop))   // 6 in before the end
              .waitSeconds("Score (the robot holds still)", 0.5);
+            // end recipe
         }
     }
 }

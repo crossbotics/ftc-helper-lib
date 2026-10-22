@@ -99,4 +99,21 @@ public class DriveToTest {
         a.setLoopHook(() -> loops[0]++);
         assertEquals(AutoDrive.Result.DONE, a.driveTo(this::pose, () -> loops[0] < 5 || loops[0] > 8, 0, 24, 0, 0.6, 1.0));
     }
+
+    // AutoRoutine.driveTo with things to do on the way (Steps' PathAt): the "path" is the line to the point.
+    @Test public void aDriveToStepFiresThingsOnTheWay() {
+        final java.util.List<String> fired = new java.util.ArrayList<>();
+        com.crossbotics.ftchelper.auto.AutoRoutine routine = new com.crossbotics.ftchelper.auto.AutoRoutine(
+                () -> r.active, () -> { }, new com.crossbotics.ftchelper.Fakes.FakeTelemetry().telemetry).drive(auto());
+        routine.driveTo("To the point", this::pose, () -> true, 0, 24, 0, 0.6, 1.0, java.util.Arrays.asList(
+                new com.crossbotics.ftchelper.auto.PathEvent("Halfway", p -> p.fraction() >= 0.5, () -> fired.add("half " + y)),
+                new com.crossbotics.ftchelper.auto.PathEvent("Near the end", p -> p.inchesLeft() <= 6, () -> fired.add("end " + y)),
+                new com.crossbotics.ftchelper.auto.PathEvent("Never", p -> p.inchesDone() > 100, () -> fired.add("never"))));
+        routine.runAll();
+        assertEquals("[To the point: done, not fired: Never]", routine.getReport().toString());
+        assertEquals(fired.toString(), 2, fired.size());
+        // Within a loop's drive (about 1 in at this speed) of the place.
+        assertEquals(12, Double.parseDouble(fired.get(0).substring(5)), 1.5);
+        assertEquals(18, Double.parseDouble(fired.get(1).substring(4)), 1.5);
+    }
 }

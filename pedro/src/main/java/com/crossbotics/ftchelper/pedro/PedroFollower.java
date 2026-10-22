@@ -44,6 +44,17 @@ public class PedroFollower implements PathFollower {
     // ends, so it alone says whether a path runs. The simulator reads it from its own threads: it is
     // replaced whole, never changed.
     private volatile List<FieldPose> planned = Collections.emptyList();
+    // Where the robot is along the running path (remainingIn, partNow; PathAt uses them). Pedro's own
+    // distance left is only for the part it steers along now, and Pedro looks ahead: it may switch to
+    // the next part well before the join. So we measure it ourselves: points along the path (each
+    // part's own), the distance along the path to each point, and where each part starts.
+    private double[] alongX = new double[0], alongY = new double[0], alongIn = new double[0];
+    private double[] partStartIn = new double[0];
+    // How far along the path the robot is now, inches (its closest point on the path).
+    private double doneIn = 0;
+    // Where the closest point is looked for: this far back and ahead of the last one, inches. A path
+    // that crosses itself would otherwise jump to the wrong crossing.
+    private static final double LOOK_BACK_IN = 6, LOOK_AHEAD_IN = 18;
     // The follower that started a path last (for the simulator; weak: it never keeps an old robot alive).
     private static volatile WeakReference<PedroFollower> lastStarted = new WeakReference<>(null);
     /** How many points {@link #plannedPoints()} gives at most. */
@@ -120,6 +131,7 @@ public class PedroFollower implements PathFollower {
             setZero(savedZero);
         }
         running = true;
+        measure(p);
         planned = sample(p);
         lastStarted = new WeakReference<>(this);
         follower.follow(p);
@@ -163,6 +175,7 @@ public class PedroFollower implements PathFollower {
             finish();
             return;
         }
+        if (follower.following()) track(localizer.state().pose());
         if (follower.holding()) {
             long now = clockNanos.getAsLong();
             if (holdStartNanos == 0) holdStartNanos = now;
@@ -197,9 +210,92 @@ public class PedroFollower implements PathFollower {
         if (running) finish();
     }
 
+    /**
+     * Inches left to the end of the whole path (all parts), measured along the path from the robot's
+     * closest point on it. 0 when no path runs.
+     */
     @Override
     public double remainingIn() {
-        return running && follower.following() ? follower.remainingDistance() : 0;
+        if (!running || !follower.following()) return 0;
+        return Math.max(0, totalIn() - doneIn);
+    }
+
+    /** The length of the running path, all parts, inches (0 before the first path). */
+    @Override
+    public double totalIn() {
+        return alongIn.length == 0 ? 0 : alongIn[alongIn.length - 1];
+    }
+
+    /**
+     * The part the robot is on now, from 1: the part its closest point on the path is in (0 when no
+     * path runs). It changes at the join, where the robot passes it.
+     */
+    @Override
+    public int partNow() {
+        if (!running || !follower.following()) return 0;
+        int part = 1;
+        for (int i = 1; i < partStartIn.length; i++) if (doneIn >= partStartIn[i]) part = i + 1;
+        return part;
+    }
+
+    /** How many parts the path has: a PedroPath's {@code parts()}, or a Pedro Path's segments. */
+    @Override
+    public int parts(Object path) {
+        if (path instanceof PedroPath) return ((PedroPath) path).parts();
+        if (path instanceof Path) return ((Path) path).getSegments().size();
+        return 0;
+    }
+
+    // Points along each part (Pedro's segments) about every inch, the distance along the path to each,
+    // and where each part starts. x and y are the same in Pedro's frame and ours.
+    private void measure(Path p) {
+        List<com.pedropathing.paths.PathSegment> segs = p.getSegments();
+        List<double[]> pts = new ArrayList<>();
+        partStartIn = new double[segs.size()];
+        double along = 0;
+        for (int k = 0; k < segs.size(); k++) {
+            com.pedropathing.paths.PathSegment seg = segs.get(k);
+            int n = (int) Math.max(2, Math.ceil(seg.curve.length()) + 1);
+            partStartIn[k] = along;   // where the last part ended (0 for the first)
+            for (int i = (k == 0 ? 0 : 1); i < n; i++) {   // its first point is the last part's end
+                com.pedropathing.math.Pose at = seg.get(i / (double) (n - 1));
+                if (!pts.isEmpty()) {
+                    double[] last = pts.get(pts.size() - 1);
+                    along += Math.hypot(at.x() - last[0], at.y() - last[1]);
+                }
+                pts.add(new double[]{at.x(), at.y(), along});
+            }
+        }
+        alongX = new double[pts.size()];
+        alongY = new double[pts.size()];
+        alongIn = new double[pts.size()];
+        for (int i = 0; i < pts.size(); i++) {
+            alongX[i] = pts.get(i)[0];
+            alongY[i] = pts.get(i)[1];
+            alongIn[i] = pts.get(i)[2];
+        }
+        doneIn = 0;
+    }
+
+    // Finds the robot's closest point on the path, near the last one, and how far along the path it is.
+    private void track(com.pedropathing.math.Pose at) {
+        if (at == null || alongX.length < 2) return;
+        double best = Double.MAX_VALUE, bestIn = doneIn;
+        for (int i = 0; i + 1 < alongX.length; i++) {
+            if (alongIn[i + 1] < doneIn - LOOK_BACK_IN) continue;
+            if (alongIn[i] > doneIn + LOOK_AHEAD_IN) break;
+            // The closest point on the short line from point i to point i + 1.
+            double dx = alongX[i + 1] - alongX[i], dy = alongY[i + 1] - alongY[i];
+            double len2 = dx * dx + dy * dy;
+            double t = len2 == 0 ? 0 : ((at.x() - alongX[i]) * dx + (at.y() - alongY[i]) * dy) / len2;
+            t = Math.max(0, Math.min(1, t));
+            double d = Math.hypot(at.x() - (alongX[i] + t * dx), at.y() - (alongY[i] + t * dy));
+            if (d < best) {
+                best = d;
+                bestIn = alongIn[i] + t * (alongIn[i + 1] - alongIn[i]);
+            }
+        }
+        doneIn = bestIn;
     }
 
     @Override
@@ -243,6 +339,6 @@ public class PedroFollower implements PathFollower {
     public void addTelemetry(RobotTelemetry t) {
         if (!holdNote.isEmpty() && clockNanos.getAsLong() < holdNoteUntil) t.warn(holdNote);
         if (isHolding()) t.line("Path", String.format(Locale.US, "holding the end (%.1f in off)", holdErrorIn()));
-        else if (running) t.line("Path", String.format(Locale.US, "%.0f in to go", follower.remainingDistance()));
+        else if (running) t.line("Path", String.format(Locale.US, "%.0f in to go", remainingIn()));
     }
 }

@@ -36,8 +36,34 @@ public interface PathFollower extends Subsystem {
     /** Stops following (or holding) now and stops the wheels. */
     void cancel();
 
-    /** Inches left to the end of the path (for "stuck" checks). */
+    /** Inches left to the end of the WHOLE path, all parts together (for "stuck" checks and {@link PathAt}). */
     double remainingIn();
+
+    /**
+     * The length of the running path, inches, all parts together ({@link PathAt#fraction} and
+     * {@link PathAt#inchesDone} use it). The default, NaN, means "I do not know": the step then takes
+     * the distance left at the start of the path as its length.
+     */
+    default double totalIn() {
+        return Double.NaN;
+    }
+
+    /**
+     * Which part of the running path the follower drives now, counting from 1 ({@link PathAt#part}).
+     * The default, 0, means "I do not know": "part n" things then happen at the end of the path.
+     */
+    default int partNow() {
+        return 0;
+    }
+
+    /**
+     * How many parts a path has (a path made with {@code then(...)} has more than one), or 0 (the
+     * default) when this follower cannot tell. At INIT, {@code PathAt.part(n)} with n more than this
+     * stops INIT with a clear message.
+     */
+    default int parts(Object path) {
+        return 0;
+    }
 
     /**
      * Checks a path at INIT (when the autonomous is built): throws IllegalArgumentException if this

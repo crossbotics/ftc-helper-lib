@@ -41,6 +41,7 @@ Both use the same field numbers and the same odometry, so you can mix them in on
 | --- | --- |
 | [`Pedro`](#robotjava-the-follower-line) | the one line in `Robot.java`: `follower(Pedro.follower(...))` |
 | [`PedroPath`](#pedropath-paths-in-our-field-numbers) | make a line or a curve in our field numbers |
+| [`PathAt`](#do-things-along-the-path) | start things along a path (in the core library: `com.crossbotics.ftchelper.robot`) |
 | [`PedroTuning`](#tuning-pedro) | run Pedro's own tuners on your robot's drive and odometry lines |
 | [`PedroFollower`](#what-runs-every-loop) | Pedro's Follower as a part of the robot (made for you) |
 | [`PedroLocalizer`](#what-runs-every-loop) | gives Pedro the pose from your `odometry(...)` line (made for you) |
@@ -126,6 +127,7 @@ s.start("Against our wall, left corner tile, facing the field", -56, -61, 0)
 | `NO_ODOMETRY` | the odometry did not answer (at the start, or for 0.2 s on the way) | check the Pinpoint cable; the robot stops |
 | `skipped: Tunables.Odometry.checked is false` | the odometry was never checked | run the Odometry Tuner, then set `checked = true` |
 | `cut short` | park time or STOP came first | normal at the end of the match |
+| `..., not fired: Spin up` | the path ended early, so these [`PathAt`](#do-things-along-the-path) things never started | fix the early end; start them in a later step if they matter |
 
 **After a problem the next steps still run**, as with `driveTo`. If the next step needs the robot at
 the end of the path, guard it with a `waitUntil` or plan a safe next step.
@@ -133,6 +135,65 @@ the end of the path, guard it with a `waitUntil` or plan a safe next step.
 **Skipped until checked:** like `driveTo`, `follow` does nothing on a real robot until
 `Tunables.Odometry.checked = true`. **Why:** an odometry with a wrong offset or a reversed pod can
 send the robot the wrong way at full speed. The simulator does not need it.
+
+---
+
+## Do things along the path
+
+Pedro has no "do this at this point" of its own. `PathAt` adds it: put things after the path in the
+`follow` step. Each one **starts** something once, at its place along the path, and the robot keeps
+driving (like a `run` step in the middle of the path):
+
+```java
+s.follow("To the goal", TO_GOAL,
+         PathAt.fraction(0.5, "Intake on", robot.intake::in),            // halfway
+         PathAt.part(2, "Open the gate", robot.gate::open),              // where part 2 starts
+         PathAt.inchesLeft(12, Actions.spinUp(robot)));                 // 12 in before the end
+```
+
+| Write | It starts |
+| --- | --- |
+| `PathAt.inchesDone(10, ...)` | after 10 in of the path |
+| `PathAt.inchesLeft(12, ...)` | when 12 in of the path are left (the whole path, all its parts) |
+| `PathAt.fraction(0.5, ...)` | when that part of the path is done: 0.5 = halfway, 0.25 = a quarter |
+| `PathAt.part(2, ...)` | where part 2 of a `then` path starts (`part(1)` = at once) |
+| `PathAt.near(-40, -40, 6, ...)` | when the robot's centre is within 6 in of the field point (-40, -40) |
+
+**What to do:** a name and a command (`"Intake on", robot.intake::in`), or an action from
+`Actions.java` (`Actions.spinUp(robot)`: its name is used). An action keeps running after the step, like
+`alongside`. A command must not wait: start things (`spinUp`, `goTo`), as in a `run` step.
+
+**The rules:**
+
+- **Once each.** Every loop the step checks them **in the order you wrote them**, so two reached in the
+  same loop start in that order. Write them in the order they come along the path.
+- **At the end of the path**, the ones reached there start, even if Pedro called the path done a
+  little short of the end (it is done within 2.5 in). `near` starts only if the robot really came that
+  close.
+- **If the path ends early** (`timed out`, `STALLED`, `NO_ODOMETRY`, `cut short`), the rest do not
+  start, and the report says which: `To the goal: STALLED, not fired: Spin up`. A path that got to its
+  end but missed a `near` point says `To the goal: done, not fired: ...`.
+- **Mirrored like the path:** distances along the path are the same on both sides; `near`'s point is
+  written for BLUE and mirrored for RED, like `driveTo`'s.
+- **Mistakes stop INIT** with a message: a fraction that is not 0 to 1, a part 0, or `part(3)` on a
+  path with 2 parts.
+
+**How far along is the robot?** The step measures it along the path: the robot's closest point on the
+path, and the distance along the path from there to the end (`PedroFollower.remainingIn()`). The
+"part" is the part that closest point is on, so `part(2)` starts where the robot passes the join.
+(Pedro's own distance left counts only the part it steers along now, and Pedro looks ahead: it may
+start steering along part 2 well before the join. So the step does not use it.)
+
+**With `driveTo` too:** `driveTo("To the goal", -30, -30, 45, 0.7, PathAt.inchesLeft(12, "Spin up", robot.launcher::spinUp))`.
+Its "path" is the straight line from where the robot is when the step starts to the point, so it has
+one part.
+
+**`alongside` or `PathAt`?** `.alongside(action)` before the `follow` starts the action when the path
+starts. `PathAt` starts it later, at a place along the path.
+
+**Another path follower** (an add-on that fills in `PathFollower`) works with `PathAt` too. If it does
+not say its path's length, the distance left at the start is used; if it does not say which part it
+drives, `part(n)` starts at the end of the path ([PathFollower](robot.md#pathfollower)).
 
 ---
 
