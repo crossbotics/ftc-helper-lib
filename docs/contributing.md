@@ -111,10 +111,10 @@ git push origin main --tags
 3. Make a **GitHub release** from the tag. Its notes have three parts, in this order:
    - **What's new:** 3 to 6 lines in plain words, one per new feature, for a student who will not read
      the rest. Say what it does for the team, not how it is built.
-   - **Plain words in these first two parts.** Write for a student or parent who does not code: short
-     sentences, no class or method names, no file paths. If a word like "odometry" is needed, explain it
-     right after it ("odometry: sensors that track where the robot is"). Bold the feature's name at the
-     start of each line. Read it aloud once: if it needs a programmer to understand, rewrite it.
+   - **Plain words in these first two parts.** Write for an FTC student who does not code: short
+     sentences, no class or method names, no file paths. FTC and robot words are fine (AprilTags, INIT,
+     TeleOp, autonomous, servo, odometry, Driver Station): every FTC team knows them. Bold the feature's
+     name at the start of each line. Read it aloud once: if it needs a programmer to understand, rewrite it.
    - **Before you update:** anything that works differently now (a button, a default, a renamed page or
      setting), and what to do about it. If nothing changes, say "Nothing old stops working."
      Then a link to [Keep it up to date](https://crossbotics.com/ftc-helper/docs/02-keep-up-to-date/).
