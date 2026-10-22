@@ -86,7 +86,8 @@ need hard stops), then make sure the shapes are right before blaming the robot.
     turned left or right (yaw: + = left), tilted up or down (pitch: + = up, so "15 down" = -15)? ->
     `camera.KEY = name=..., forward=, left=, up=, yaw=, pitch=` or `limelight.KEY = ...` (KEY is any short
     word; `name=` must be the configuration name). A Logitech C920 sees about 70 degrees across
-    (`hfov=70.4`); a Limelight 3A 54.5.
+    (`hfov=70.4`); a Limelight 3A 54.5. On a turret (or arm)? Add `on=turret` (the shape's name) and
+    measure with the turret pointing straight forward: then it turns with the turret.
 
 ## Game pieces
 

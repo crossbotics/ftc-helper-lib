@@ -25,6 +25,7 @@ final class SimTelemetry {
                             else add(a[0] + " : " + format(String.valueOf(a[1]), (Object[]) a[2]));
                             return chain(Telemetry.Item.class);
                         case "update":
+                            pace();
                             synchronized (this) {
                                 screen = new ArrayList<>(building);
                                 building.clear();
@@ -41,6 +42,30 @@ final class SimTelemetry {
                         default: return SimDefaults.of(m.getReturnType());
                     }
                 });
+    }
+
+    // A real Control Hub spends a few milliseconds a loop talking to its hardware; the pretend hardware
+    // answers at once, so a loop would run 100 000 times a second ("Loop : 0.0 ms" on the Driver
+    // Station, and a busy laptop). Each screen update waits until LOOP_MS have passed since the last
+    // one: about a real robot's loop time. (The simulator may wait; the library never does.)
+    static final long LOOP_MS = 2;
+    private long lastUpdate = 0;
+
+    private void pace() {
+        long now = System.nanoTime(), wait;
+        synchronized (this) {
+            wait = lastUpdate + LOOP_MS * 1_000_000L - now;
+            lastUpdate = Math.max(now, lastUpdate + LOOP_MS * 1_000_000L);
+        }
+        if (wait <= 0) {
+            synchronized (this) { lastUpdate = now; }
+            return;
+        }
+        try {
+            Thread.sleep(wait / 1_000_000L, (int) (wait % 1_000_000L));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();   // STOP: let the OpMode's thread end
+        }
     }
 
     private synchronized void add(String line) {

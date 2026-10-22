@@ -53,6 +53,14 @@ final class SimDriverStation {
     private volatile long startedAt = 0;
     /** Autonomous stops by itself after 30 s, like the Driver Station's timer. */
     volatile boolean autoTimer = true;
+    /**
+     * TeleOp stops by itself after 2:00, like the real Driver Station with its TeleOp timer turned on
+     * (the clock icon next to the OpMode): on here, as in a match. Off: it runs until STOP, the clock
+     * counting up.
+     */
+    volatile boolean teleTimer = true;
+    /** TeleOp's length with the timer on, seconds (FTC: 2:00; tests make it shorter). */
+    volatile double teleOpSec = 120;
     private volatile boolean autoStopping = false;
     // STOP from the page, the timer or the OpMode itself runs here, one at a time (never on the
     // OpMode's own thread, which STOP waits for).
@@ -363,7 +371,7 @@ final class SimDriverStation {
         commands.submit(() -> { if (op == o) stop(); });
     }
 
-    /** Called often by the simulator: the autonomous timer, and gamepads let go when the page goes quiet. */
+    /** Called often by the simulator: the autonomous and TeleOp timers, and gamepads let go when the page goes quiet. */
     void tick() {
         OpMode o = op;
         if (o != null && (phase == Phase.INIT || phase == Phase.RUNNING)) SimAccess.eventLoop(o);
@@ -371,8 +379,9 @@ final class SimDriverStation {
         pad1.releaseIfSilent(2.5);
         pad2.releaseIfSilent(2.5);
         Entry e = current;
-        if (autoTimer && !autoStopping && phase == Phase.RUNNING && e != null && e.kind.equals("Autonomous")
-                && runSeconds() >= 30) {
+        boolean autoEnd = autoTimer && e != null && e.kind.equals("Autonomous") && runSeconds() >= 30;
+        boolean teleEnd = teleTimer && e != null && e.kind.equals("TeleOp") && runSeconds() >= teleOpSec;
+        if (!autoStopping && phase == Phase.RUNNING && (autoEnd || teleEnd)) {
             autoStopping = true;
             OpMode timed = o;
             commands.submit(() -> {

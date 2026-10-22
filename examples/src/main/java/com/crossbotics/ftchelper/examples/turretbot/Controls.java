@@ -28,8 +28,10 @@ public class Controls extends ControlMap<Robot> {
         // The light: the first true rule wins, so the most important comes first.
         robot.lights.show(LightColor.YELLOW).blinking().inLastSeconds(20);     // last 20 s: go park
         robot.lights.show(LightColor.GREEN).when(() -> robot.launcher.isSpinning() && robot.launcher.isReady());  // fire now
-        robot.lights.show(LightColor.BLUE).when(() -> robot.turret.followMode().isOn());   // following the goal
-        robot.lights.otherwise(LightColor.PURPLE);                             // following is off (BACK)
+        // Purple and orange, not blue or red: at INIT the light shows the alliance in red or blue, so the
+        // other rules keep away from those colors (nobody reads "following" as "BLUE alliance").
+        robot.lights.show(LightColor.PURPLE).when(() -> robot.turret.followMode().isOn());   // following the goal
+        robot.lights.otherwise(LightColor.ORANGE);                             // following is off (BACK)
         robot.lights.show(LightColor.WHITE).whenCountGoesUp(() -> robot.launcher.part().getShotsFired());   // a 0.5 s flash per piece fired
     }
 }

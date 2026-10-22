@@ -259,5 +259,5 @@ Launcher launcher = new Launcher(flywheel, feeder)
 | `stop()` | fully OFF, even the idle speed, until `spinUp()`, `shoot()` or `idle()` |
 | `update()` | every loop (updates flywheel, feeder and hood for you) |
 | `isReady()`, `whyNotReady()` | e.g. "flywheel, Turret": your first debug clue |
-| `getState()` (OFF, IDLE, SPINNING, WAITING_READY, FEEDING), `isShooting()`, `getShotsLeft()`, `getShotsFired()`, `getLastProblem()` | read |
+| `getState()` (OFF, IDLE, SPINNING, WAITING_READY, FEEDING), `isShooting()`, `getShotsLeft()`, `getShotsFired()`, `getLastProblem()` | read (the last problem shows as a warning for `PROBLEM_SHOW_SEC`, 5 s; a jam while jammed) |
 | `spinUpStep()`, `shootStep(n)` | autonomous steps |

@@ -87,6 +87,7 @@ public class SimFromRobotTest {
         try (SimRun s = new SimRun(file.toString())) {
             s.init("FlywheelBot TeleOp");
             assertTrue("the help page shows in INIT", s.screenHas("G2 RT: in on/off [Intake]"));
+            assertFalse(String.join("\n", s.screen()), s.screenHas("not written"));
             assertEquals("nothing moves in INIT", 0, s.robot().motors.get("intake").userPower(), 1e-9);
             // The shapes from Robot.java: folded, it fits the start cube; at full reach, 18 x 24 x 29 in.
             assertTrue("fits the start cube: " + s.robot().shapes.now(), s.robot().shapes.now().fits(18, 18, 18));
@@ -140,12 +141,14 @@ public class SimFromRobotTest {
         try (SimRun s = new SimRun(file.toString())) {
             s.init("TurretBot TeleOp");
             assertTrue(s.screenHas("G2 X: grab"));
+            // Every number the modules read is in its Tunables.java: no "not written" notes at INIT.
+            assertFalse(String.join("\n", s.screen()), s.screenHas("not written"));
             // autoPipelines: the lighting test runs in INIT and its line is on the Driver Station.
             assertTrue(SimRun.waitFor(() -> s.screenHas("limelight lighting"), 2));
             assertTrue(s.screenHas("G2 BACK: follow the goal on/off [Turret]"));
             s.start();
-            SimLight light = s.robot().lights.get("light");          // the light: blue while following the goal
-            assertTrue(light.words(), SimRun.waitFor(() -> light.words().equals("BLUE"), 2));
+            SimLight light = s.robot().lights.get("light");          // the light: purple while following the goal
+            assertTrue(light.words(), SimRun.waitFor(() -> light.words().equals("PURPLE"), 3));
             s.press(v -> s.g2().x = v);                               // grab
             SimRobot.SimServo fold = s.robot().servos.get("claw_fold");
             assertTrue("folds out to grab", SimRun.waitFor(() -> Math.abs(fold.actual - 0.62) < 0.02, 2));
@@ -162,6 +165,89 @@ public class SimFromRobotTest {
             SimRobot.SimServo hood = s.robot().servos.get("hood");
             assertTrue("hood home: " + hood.actual, SimRun.waitFor(() -> Math.abs(hood.actual - 0.20) < 0.01, 2));
             assertTrue(String.join("\n", s.screen()), s.screenHas("Hood : 0.0 deg"));
+            assertEquals("", s.error());
+        }
+    }
+
+    // The Limelight rides the turret (Robot.java: follows(camera)): the robot file says on=turret, so the
+    // simulator's camera turns with the turret. RED, beside the HIVE and turned 20 degrees away from the
+    // goal (the Limelight sees 27 degrees each way): the turret turns about -20 degrees, centres the goal, says AIMED, and the shots go in.
+    @Test public void turretBotsCameraTurnsWithTheTurretAndTheShotsScore() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.turretbot.Robot.class);
+        String text = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
+        assertTrue(text, text.contains("limelight.limelight = name=limelight, forward=6, left=0, up=12, yaw=0, pitch=30, on=turret"));
+        assertTrue("the flywheel rides the turret too: " + text, text.contains("shape.launcher = flywheel, on=turret"));
+        // The example's shot table is made-up numbers, not measured on the simulator's pretend launcher:
+        // here the launcher throws like a tuned one from this spot (a fixed 70 degrees and 190 in/s), so
+        // only the aim decides whether the shots go in.
+        text = text.replaceAll("(?m)^shoot\\.launcher = .*$", "shoot.launcher = shape=launcher, angle=70, speed=210");
+        Files.write(file, text.getBytes(StandardCharsets.UTF_8));
+        com.crossbotics.ftchelper.match.MatchMemory.clear();
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("TurretBot TeleOp");
+            s.press(v -> s.g1().b = v);                              // RED: it aims at RED SCORING
+            assertTrue(SimRun.waitFor(() -> s.screenHas("RED (chosen here)"), 2));
+            s.start();
+            s.sim.robot.setPose(44, -14, 110);
+            SimShapes.Shape turret = s.robot().shapes.shapes.get("turret");
+            boolean aimed = SimRun.waitFor(() -> s.screenHas("AIMED"), 6);
+            assertTrue("aimed: " + turret.value + "\n" + String.join("\n", s.screen()), aimed);
+            assertEquals("turned toward the goal", -20, turret.value, 5);
+            SimRun.pause(1.0);
+            assertTrue("still aimed: it does not hunt", s.screenHas("AIMED"));
+            int before = s.robot().pieces.launched();
+            int inBefore = s.robot().pieces.inCells().get("Red HIVE");
+            int tipsBefore = s.robot().pieces.tips().get("Red HIVE");
+            for (int i = 0; i < 3; i++) {
+                s.press(v -> s.g2().right_bumper = v);
+                SimRun.pause(1.0);
+            }
+            SimRun.pause(2.0);
+            assertTrue("it fired", s.robot().pieces.launched() - before >= 2);
+            // In the red up CELL: there now, or they tipped the HIVE (3 NECTAR start in it; a few more tip it).
+            boolean scored = s.robot().pieces.tips().get("Red HIVE") > tipsBefore || s.robot().pieces.inCells().get("Red HIVE") >= inBefore + 2;
+            assertTrue("the shots went into the red up CELL: " + s.robot().pieces.inCells() + ", tips " + s.robot().pieces.tips(), scored);
+            assertEquals("", s.error());
+        }
+    }
+
+    // BLUE's goal (BLUE SCORING, tags 42-45) starts high, under BLUE's raised CELL on the far side of the
+    // HIVE, facing away from the audience: seen from the far side (lesson 9's spot), the turret centres it.
+    @Test public void turretBotOnBlueSeesItsGoalFromTheFarSide() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.turretbot.Robot.class);
+        com.crossbotics.ftchelper.match.MatchMemory.clear();
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("TurretBot TeleOp");
+            s.press(v -> s.g1().x = v);                              // BLUE
+            assertTrue(SimRun.waitFor(() -> s.screenHas("BLUE (chosen here)"), 2));
+            s.start();
+            s.sim.robot.setPose(-50, 14, -80);                       // facing the HIVE (+x), turned 10 degrees left
+            SimShapes.Shape turret = s.robot().shapes.shapes.get("turret");
+            assertTrue("aimed: " + turret.value + "\n" + String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("AIMED"), 6));
+            assertTrue("it sees BLUE SCORING: " + s.robot().cameras.get("limelight").seenIds(),
+                    s.robot().cameras.get("limelight").seenIds().contains(43));
+            assertEquals("turned toward the goal", -10, turret.value, 5);
+            assertEquals("", s.error());
+        }
+    }
+
+    // TeleOp zeroes the IMU at INIT; choosing the alliance then puts the robot on its spot (a hand move).
+    // The IMU must not count that move as a turn: heading 0 on the spot reads 0, not minus the old heading.
+    @Test public void theImuDoesNotSeeTheMoveToTheAlliancesSpot() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.turretbot.Robot.class);
+        com.crossbotics.ftchelper.match.MatchMemory.clear();
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("TurretBot TeleOp").start();
+            s.sim.robot.setPose(-40, -40, 73.6);                     // driven somewhere, turned
+            SimRun.pause(0.3);
+            s.sim.ds.stop();
+            com.crossbotics.ftchelper.match.MatchMemory.clear();
+            s.init("TurretBot TeleOp");                              // INIT zeroes the IMU here (73.6)
+            s.press(v -> s.g1().b = v);                              // RED: placed on RED's spot, heading 0
+            assertTrue(SimRun.waitFor(() -> Math.abs(s.robot().headingDeg) < 0.01 && Math.abs(s.robot().y + 61.55) < 0.01, 2));
+            s.start();
+            SimRun.pause(0.3);
+            assertEquals("the IMU reads the turn since INIT: none", 0, s.robot().imuYaw(), 0.5);
             assertEquals("", s.error());
         }
     }
@@ -489,9 +575,11 @@ public class SimFromRobotTest {
             s.press(v -> s.g1().b = v);                               // B with no shot left to mark
             assertTrue(String.join("\n", s.screen()), s.screenHas("No shot to mark"));
             s.press(v -> s.g1().x = v);                               // X: try to save a point
-            // The distance comes from the robot's camera (no goal in view from the start position;
-            // without a camera it would be a distance set by hand). The table line: FindersTest.
-            assertTrue(String.join("\n", s.screen()), s.screenHas("No distance: the camera does not see the target."));
+            // The distance comes from the robot's camera (its Limelight, tilted 30 degrees up, sees the
+            // goal from the start position; without a camera it would be a distance set by hand).
+            // The table line: FindersTest.
+            assertTrue(String.join("\n", s.screen()), s.screenHas("(camera, "));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Saved "));
             assertEquals("", s.error());
         }
     }
@@ -689,6 +777,35 @@ public class SimFromRobotTest {
             s.sim.robot.setPose(-56, -45, 0);                     // dragged on the map
             SimRun.pause(0.3);
             assertEquals("a dragged robot stays", -45, s.robot().y, 0.01);
+            assertEquals("", s.error());
+        }
+    }
+
+    // Like the real Driver Station with its TeleOp timer on: TeleOp stops at the end of the period (2:00;
+    // shortened here), and nothing keeps driving at "Time : 0:00". With the timer off it runs on.
+    @Test public void teleOpStopsWhenItsTimerRunsOut() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.flywheelbot.Robot.class);
+        try (SimRun s = new SimRun(file.toString())) {
+            s.sim.ds.teleOpSec = 1.5;
+            s.init("FlywheelBot TeleOp").start();
+            assertTrue("it stops by itself", SimRun.waitFor(() -> s.sim.ds.phase() == SimDriverStation.Phase.STOPPED, 4));
+            s.sim.ds.teleTimer = false;
+            s.init("FlywheelBot TeleOp").start();
+            SimRun.pause(2.5);
+            assertEquals("timer off: it runs on", SimDriverStation.Phase.RUNNING, s.sim.ds.phase());
+            assertEquals("", s.error());
+        }
+    }
+
+    // "Set pose here" (hold G1 START 1 s) on a robot without odometry: a note says why nothing happens.
+    @Test public void setPoseHereWithoutOdometrySaysItNeedsOdometry() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.flywheelbot.Robot.class);
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("FlywheelBot TeleOp").start();
+            s.g1().start = true;
+            SimRun.pause(1.3);
+            s.g1().start = false;
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Set pose here needs odometry"), 1));
             assertEquals("", s.error());
         }
     }

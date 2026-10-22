@@ -382,7 +382,7 @@ public class AimTest {
         assertEquals("pollen", l.tableName());
         ButtonPlan plan = ControlMap.makePlan(r, false, true, (g1, g2) -> { });
         String help = plan.help().toString();
-        assertTrue(help, help.contains("G2 D-pad right: next shot table (nectar, pollen)"));
+        assertTrue(help, help.contains("G2 D-pad right: next shot table (NECTAR, POLLEN)"));
         try {
             new RobotDefinition() {
                 @Override protected void define() {

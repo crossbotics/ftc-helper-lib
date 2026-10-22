@@ -564,6 +564,30 @@ final class SimShapes {
         }
     }
 
+    /**
+     * For something that rides a shape (a camera on a turret: limelight.NAME = ..., on=turret): how the
+     * shape's moving part has moved it, from where it is at value 0 (a turret or arm at 0 degrees, a slide
+     * at the bottom). A 3x4 frame in the robot frame: apply it to a point measured with the part at 0.
+     * The caller holds the robot's lock (the physics changes the values).
+     */
+    double[][] ridingNow(String name) {
+        Shape s = shapes.get(name);
+        return mul(mountOf(s, s.value), invert(mountOf(s, 0)));
+    }
+
+    // Where a shape's moving part is (robot frame) with its own value = v and its parents' values now.
+    private double[][] mountOf(Shape s, double v) {
+        double[][] f = s.parent.equals("chassis") ? identity() : mountOf(shapes.get(s.parent), shapes.get(s.parent).value);
+        f = mul(f, translate(s.at));
+        if (s.tilt != 0) f = mul(f, rotate("left", s.tilt));
+        switch (s.type) {
+            case "turret": return mul(f, rotate("up", v));
+            case "arm": return mul(f, rotate(s.axis, v));
+            case "slide": return mul(f, translate(scale(axisVector(s.axis), v)));
+            default: return f;
+        }
+    }
+
     /** Everything to draw now: the chassis and each shape's boxes, in the robot frame. */
     List<Piece> pieces() {
         // one moment: the physics changes the shapes' values while it holds the robot

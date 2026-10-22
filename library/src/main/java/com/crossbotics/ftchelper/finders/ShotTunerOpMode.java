@@ -633,7 +633,7 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
                 + FinderResults.num(launcher.getFlywheel().getRpm(), 0) + (spinning ? "" : "  (OFF: LB)"));
         if (hood != null) t.line((field == Field.HOOD ? "> " : "  ") + "Hood", hoodText(hoodDeg));
         if (names.size() > 1) t.line((field == Field.TABLE ? "> " : "  ") + "Table", tuning.toUpperCase(java.util.Locale.US)
-                + "  (" + FinderResults.commas(names) + ")");
+                + "  (" + FinderResults.commas(names).toUpperCase(java.util.Locale.US) + ")");   // all in capitals, as the table in use
         double d = distance();
         String dText = Double.isNaN(d) ? "no target" : FinderResults.num(d, 1) + " in (" + distanceFrom + ")";
         TargetObservation odo = odometryGoal();

@@ -309,4 +309,124 @@ public class LightsTest {
         assertTrue(bot.simLines().toString(), bot.simLines().contains("light.light = gobilda"));
         assertTrue(new LightBot(true).simLines().contains("light.blinkin = blinkin"));
     }
+
+    // ----------------------------- the alliance at INIT -----------------------------
+
+    // One INIT loop at `seconds`.
+    private void initLoopAt(Lights l, double seconds) {
+        at(seconds);
+        l.initLoop(null);
+    }
+
+    @Test public void inInitTheLightBlinksUntilTheAllianceIsChosenThenShowsIt() {
+        com.crossbotics.ftchelper.match.MatchMemory.clear();
+        Lights l = gobilda();
+        l.show(LightColor.GREEN).when(() -> true);              // a rule: not shown in INIT
+        // Nothing chosen: white, blinking once a second (0.5 s on, 0.5 s off), never faster than 5 a second.
+        java.util.List<Double> flips = new java.util.ArrayList<>();
+        LightColor last = null;
+        for (int i = 0; i <= 200; i++) {
+            initLoopAt(l, i * 0.02);
+            if (last != null && l.showing() != last) flips.add(i * 0.02);
+            last = l.showing();
+            assertTrue(l.showing() + "", l.showing() == LightColor.WHITE || l.showing() == LightColor.OFF);
+        }
+        assertTrue("it blinks: " + flips, flips.size() >= 6);
+        for (int k = 1; k < flips.size(); k++) assertTrue("at most 5 changes a second: " + flips, flips.get(k) - flips.get(k - 1) >= 0.2 - 1e-9);
+        assertEquals(LightColor.WHITE, l.color());
+        // RED chosen: solid red.
+        com.crossbotics.ftchelper.match.MatchMemory.setChosen(com.crossbotics.ftchelper.match.Alliance.RED);
+        for (int i = 0; i < 100; i++) {
+            initLoopAt(l, 5 + i * 0.02);
+            if (i > 10) assertEquals("solid red", LightColor.RED, l.showing());
+        }
+        assertEquals(LightColor.RED.gobildaPosition(), servo().position, 1e-9);
+        com.crossbotics.ftchelper.match.MatchMemory.clear();
+    }
+
+    @Test public void atStartTheAllianceFlashesThenTheRulesAndASwitchFlashesAgain() {
+        com.crossbotics.ftchelper.match.MatchMemory.clear();
+        Lights l = gobilda();
+        l.show(LightColor.GREEN).when(() -> true);
+        com.crossbotics.ftchelper.match.MatchMemory.setChosen(com.crossbotics.ftchelper.match.Alliance.BLUE);
+        initLoopAt(l, 1);
+        assertEquals(LightColor.BLUE, l.showing());
+        at(2);
+        bot.setAlliance(com.crossbotics.ftchelper.match.Alliance.BLUE);
+        l.start();
+        l.update();
+        assertEquals("START: the alliance for 1 s", LightColor.BLUE, l.showing());
+        at(2.9);
+        l.update();
+        assertEquals(LightColor.BLUE, l.showing());
+        at(3.1);
+        l.update();
+        assertEquals("then the rules", LightColor.GREEN, l.showing());
+        // Switched to RED in TeleOp: a 1 s red flash, then the rules.
+        bot.setAlliance(com.crossbotics.ftchelper.match.Alliance.RED);
+        at(5);
+        l.update();
+        assertEquals(LightColor.RED, l.showing());
+        at(6.1);
+        l.update();
+        assertEquals(LightColor.GREEN, l.showing());
+        com.crossbotics.ftchelper.match.MatchMemory.clear();
+    }
+
+    @Test public void turnedOffTheRulesShowInInitAndNothingFlashes() {
+        com.crossbotics.ftchelper.match.MatchMemory.clear();
+        Lights l = gobilda();
+        l.allianceAtInit(false).show(LightColor.GREEN).when(() -> true);
+        com.crossbotics.ftchelper.match.MatchMemory.setChosen(com.crossbotics.ftchelper.match.Alliance.RED);
+        initLoopAt(l, 1);
+        assertEquals("the rules in INIT", LightColor.GREEN, l.showing());
+        bot.setAlliance(com.crossbotics.ftchelper.match.Alliance.RED);
+        l.start();
+        at(1.2);
+        l.update();
+        assertEquals("no flash at START", LightColor.GREEN, l.showing());
+        com.crossbotics.ftchelper.match.MatchMemory.clear();
+    }
+
+    @Test public void otherAllianceColorsAndABlinkinPattern() {
+        com.crossbotics.ftchelper.match.MatchMemory.clear();
+        bot = new LightBot(true);
+        bot.describe();
+        bot.lights.useClock(() -> now);
+        bot.lights.allianceColors(LightColor.PURPLE, LightColor.ORANGE).blinkinPattern(LightColor.ORANGE, BlinkinPattern.RED_ORANGE);
+        kit = new RobotTestKit();
+        bot.setup(kit);
+        com.crossbotics.ftchelper.match.MatchMemory.setChosen(com.crossbotics.ftchelper.match.Alliance.RED);
+        initLoopAt(bot.lights, 1);
+        assertEquals(LightColor.ORANGE, bot.lights.showing());
+        assertEquals(0.2525 + 0.005 * BlinkinPattern.RED_ORANGE.ordinal(), kit.blinkins.get("blinkin")[0], 1e-9);
+        com.crossbotics.ftchelper.match.MatchMemory.clear();
+    }
+
+    /** A team's Tunables with the alliance at INIT turned off. */
+    public static class OffNumbers {
+        public static class Light {
+            public static boolean allianceAtInit = false;
+        }
+    }
+
+    @Test public void tunablesAllianceAtInitFalseTurnsItOff() {
+        com.crossbotics.ftchelper.match.MatchMemory.clear();
+        bot = new LightBot(false) {
+            @Override protected void define() {
+                tunables(OffNumbers.class);
+                super.define();
+            }
+        };
+        bot.describe();
+        bot.lights.useClock(() -> now);
+        kit = new RobotTestKit();
+        bot.setup(kit);
+        assertFalse("Tunables.Light.allianceAtInit = false", bot.lights.showsAllianceAtInit());
+        bot.lights.show(LightColor.GREEN).when(() -> true);
+        initLoopAt(bot.lights, 1);
+        assertEquals("no alliance chosen, but no white blinking: the rules", LightColor.GREEN, bot.lights.showing());
+        assertFalse("an optional line: no \"not written\" note", bot.notes().toString().contains("Light:"));
+        com.crossbotics.ftchelper.match.MatchMemory.clear();
+    }
 }

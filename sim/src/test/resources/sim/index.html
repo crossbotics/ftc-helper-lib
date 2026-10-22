@@ -212,7 +212,8 @@
         <button id="startBtn" class="dh-big" title="START" aria-label="START" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 4v16l13-8z"/></svg></button>
         <button id="stopBtn" class="dh-big" title="STOP" aria-label="STOP" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="1.5" fill="currentColor"/></svg></button>
         <div class="dh-timer"><span class="t" id="dhTime">0:00</span>
-          <label><input type="checkbox" id="autoTimer" checked> 30 s auto timer</label></div>
+          <label><input type="checkbox" id="autoTimer" checked> 30 s auto timer</label>
+          <label><input type="checkbox" id="teleTimer" checked> 2:00 TeleOp timer</label></div>
       </div>
       <div class="dh-tele">
         <div class="status" id="status">No OpMode running.</div>
@@ -385,14 +386,23 @@ function buildPad(el, n) {
     Object.assign(b.style, { left: x + "%", top: y + "%", width: w + "%", height: h + "%" });
     b.dataset.key = key;
     b.title = key.toUpperCase();
-    let downAt = 0, releaseTimer = 0;
+    let downAt = 0, releaseTimer = 0, pressTimer = 0;
+    const press = () => { pressTimer = 0; downAt = performance.now(); screenPads[n][key] = 1; sendPads(); };
+    const release = () => { releaseTimer = 0; screenPads[n][key] = 0; sendPads(); };
     b.addEventListener("pointerdown", e => { e.preventDefault(); capture(b, e);
-      clearTimeout(releaseTimer);   // a new press cancels the release still waiting from a quick tap
-      downAt = performance.now();
-      screenPads[n][key] = sticky ? (screenPads[n][key] ? 0 : 1) : 1; sendPads(); });
+      if (sticky) { screenPads[n][key] = screenPads[n][key] ? 0 : 1; sendPads(); return; }
+      if (releaseTimer) {
+        // A fast double-click: the first click's release is still waiting. Send it now and press again
+        // a moment later, so the OpMode sees two presses (a double-tap), not one long one.
+        clearTimeout(releaseTimer);
+        release();
+        clearTimeout(pressTimer);
+        pressTimer = setTimeout(press, 60);
+      } else if (!pressTimer) press(); });
     // A quick click still lasts at least 0.12 s, so the OpMode's loop sees it.
     const up = () => { if (sticky) return;
-      releaseTimer = setTimeout(() => { screenPads[n][key] = 0; sendPads(); }, Math.max(0, 120 - (performance.now() - downAt))); };
+      const pending = pressTimer ? 60 : 0;      // the press itself has not gone yet
+      releaseTimer = setTimeout(release, pending + Math.max(0, 120 - (pending ? 0 : performance.now() - downAt))); };
     b.addEventListener("pointerup", up); b.addEventListener("pointercancel", up);
     el.appendChild(b);
   }
@@ -631,8 +641,12 @@ function render(s) {
     b.hidden = !shown[id];
     b.classList.toggle("small", id !== big);
   }
-  const t = Math.floor(s.runSeconds);
-  $("#dhTime").textContent = running && s.phase === "RUNNING" ? Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0") : "0:00";
+  // With its timer on, the clock counts down (0:30 autonomous, 2:00 TeleOp) and the OpMode stops at 0:00,
+  // like the real Driver Station; with it off, it counts up.
+  const length = s.kind === "Autonomous" && s.autoTimer ? 30 : s.kind === "TeleOp" && s.teleTimer ? 120 : 0;
+  const t = length ? Math.max(0, Math.ceil(length - s.runSeconds)) : Math.floor(s.runSeconds);
+  const clock = v => Math.floor(v / 60) + ":" + String(v % 60).padStart(2, "0");
+  $("#dhTime").textContent = running && s.phase === "RUNNING" ? clock(t) : length ? clock(length) : "0:00";
   $("#status").innerHTML = s.opmode
     ? `Robot Status: <b>${s.phase === "RUNNING" ? "running" : s.phase.toLowerCase()}</b> &middot; Op Mode: <b>${escapeHtml(s.opmode)}</b>`
     : "Robot Status: <b>stopped</b> &middot; choose an OpMode, then INIT.";
@@ -649,6 +663,7 @@ function render(s) {
   err.style.display = s.error ? "block" : "none";
   err.textContent = s.error;
   $("#autoTimer").checked = s.autoTimer;
+  $("#teleTimer").checked = s.teleTimer;
   renderHub(s);
   document.querySelectorAll(".pad").forEach(div => {
     const n = +div.dataset.pad, o = (s.pads || [])[n - 1];
@@ -689,6 +704,7 @@ function padActive(n) {
 $("#startBtn").onclick = () => command({ action: "start" });
 $("#stopBtn").onclick = () => command({ action: "stop" });
 $("#autoTimer").onchange = e => command({ action: "autoTimer", on: e.target.checked ? 1 : 0 });
+$("#teleTimer").onchange = e => command({ action: "teleTimer", on: e.target.checked ? 1 : 0 });
 $("#sticky").onchange = e => { sticky = e.target.checked; if (!sticky) for (const n of [1,2]) screenPads[n] = blankPad(); };
 document.querySelectorAll(".pad").forEach(div => {
   const n = +div.dataset.pad;
@@ -753,7 +769,7 @@ function renderHub(s) {
         " · HIVE tips: " + s.hives.map(h => `${escapeHtml(h.alliance)} ${h.tips}`).join(", ") : "") +
       (s.leftField ? ` · <b>${s.leftField} left the field</b>` : "") : "";
   $("#poseText").textContent = s.robot.drive === "none" ? "No drivetrain in this robot file." :
-    `x ${s.robot.x.toFixed(1)} in, y ${s.robot.y.toFixed(1)} in, heading ${s.robot.heading.toFixed(1)}°` +
+    `Field (seen from the red wall): x ${s.robot.x.toFixed(1)} in, y ${s.robot.y.toFixed(1)} in, heading ${s.robot.heading.toFixed(1)}°` +
     (s.robot.hasImu ? `, IMU yaw ${s.robot.imu.toFixed(1)}°` : "") + ` · shots ${s.robot.shots}` +
     ` · field: ${s.robot.field}` + (s.robot.bumped ? ` · bumped into: ${s.robot.bumped}` : "");
 }
@@ -827,7 +843,8 @@ function showSpot(r) {
   let h = blue ? r.heading + 180 : r.heading;
   h = ((h % 360) + 540) % 360 - 180;
   const n = v => (Math.abs(v) < 0.05 ? 0 : v).toFixed(1);
-  el.innerHTML = `Start spot from the ${blue ? "blue" : "red"} wall: x ${n(x)} in, y ${n(y)} in, heading ${n(h)}&deg;` +
+  // Two frames on one screen: say which (the line above is always the field's, from the red wall).
+  el.innerHTML = `As a ${blue ? "BLUE" : "RED"} start spot (seen from the ${blue ? "blue" : "red"} wall, as s.start takes it): x ${n(x)} in, y ${n(y)} in, heading ${n(h)}&deg;` +
     `<br><code>s.start("...", ${n(x)}, ${n(y)}, ${n(h)})</code>`;
 }
 

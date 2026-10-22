@@ -119,7 +119,8 @@ The page fits one laptop screen. On a narrow screen the parts stack and the page
 
 **Driver Hub** (left): choose an OpMode, then INIT, START, STOP, like the real one. The screen shows
 the telemetry about as wide as a real Driver Hub. OpModes marked "(hidden on robot)" have `@Disabled`:
-the simulator shows them anyway. Autonomous stops by itself after 30 s (the box turns it off).
+the simulator shows them anyway. Autonomous stops by itself after 30 s, and TeleOp after 2:00, like the
+real Driver Station with its timer on (the clock counts down; a box under it turns each timer off).
 An error in the OpMode shows in red, with the line where it happened.
 
 **Gamepads** (middle): each gamepad has its own source:
@@ -250,7 +251,7 @@ default):
 | `touch.NAME = MOTOR, below=N` | below 20 | a switch pressed while that motor is within N counts of its `min` (reads `getState()` false when pressed) |
 | `color.NAME = at=ready` | | a colour sensor with distance (REV Color Sensor V3) that sees the piece at one spot: `at=ready` (next to fire) or `at=intake` ([game pieces](#game-pieces)) |
 | `distance.NAME = at=intake, acrossMm=150` | `acrossMm=150` | a distance sensor across a channel: `acrossMm` minus the piece's size when one is there ([game pieces](#game-pieces)) |
-| `camera.NAME = ...` | | a webcam or Limelight ([cameras](#cameras)) |
+| `camera.NAME = ...` | | a webcam or Limelight ([cameras](#cameras)); `on=turret`: it turns with the turret |
 | `shape.NAME = TYPE, ...` | | a part to draw and check ([robot shapes](#robot-shapes)). Sizes when `size=` is left out: slide 2x2x12, arm 10x2x2, turret 8x8x2, claw 3x1x3, roller 2x12x2, flywheel 4x2x4 |
 | `collect.NAME = shape=a+b, motor=M, holds=N` | `reach=0.75`, `holds=4` | takes pieces in ([game pieces](#game-pieces)); `crservo=` instead of `motor=`, `inward=-` |
 | `shoot.NAME = shape=S, ...` | `angle=40`, `share=0.5` | shoots pieces: `spin=`, `speed=` (a fixed speed, in/s), `table=` (a shot table, path from the robot file), `flywheel=` (which flywheel, when there are two), `hood=SERVO, hoodAt0=A, hoodAt1=B` (the angle follows a hood servo: A with the servo at 0, B at 1) |
@@ -624,6 +625,7 @@ set battery 12.0
 set touch lift_bottom on               # hold a switch pressed (off = let go)
 set pose -56 -61.55 0                  # put the robot somewhere (x y heading)
 set autotimer off                      # no 30 s autonomous stop
+set teletimer off                      # no 2:00 TeleOp stop
 expect screen has "Ready"              # or: screen not "..."
 expect value "Lift" > 500              # the number on the screen line that starts with Lift
 expect time < 25                       # seconds since START (e.g. how long an autonomous took)
@@ -754,6 +756,18 @@ camera (the tags it sees turn green).
 
 ```properties
 limelight.ll = name=limelight, forward=6, left=-3, up=14, yaw=0, pitch=25
+```
+
+**A camera on a turret** (or an arm or slide): add `on=` and the shape's name. The camera then turns
+(and moves) with that part. Measure forward/left/up/yaw with the turret pointing straight forward (its
+angle 0). `:sim:fromRobot` writes `on=turret` by itself when Robot.java has a turret that
+`follows(camera)` (without `cameraOnBody()`), and puts the flywheel on the turret too, so the shots go
+where the turret points. Without `on=`, the camera stays fixed to the chassis while the turret turns:
+the turret then turns to its limit, or stops off the goal while saying AIMED.
+
+```properties
+shape.turret = turret, at=0,0,8, size=6x6x2, motor=turret, ticksPerDeg=7.467
+limelight.ll = name=limelight, forward=6, left=0, up=12, yaw=0, pitch=30, on=turret
 ```
 
 The hardware map gives your code a Limelight3A (the SDK's own class, with its network part replaced),

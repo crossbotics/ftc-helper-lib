@@ -74,6 +74,10 @@ public class Launcher implements Subsystem {
     private double nextFeedAt = 0;       // the earliest time (seconds) the next piece may be fed
     private double waitingSince = Double.NaN;   // when it started waiting for "ready"; NaN = not waiting
     private String lastProblem = "";
+    private double problemAt = 0;        // when lastProblem happened (seconds), for the warning's few seconds
+
+    /** How long a problem ("gave up: turret aimed") stays as a warning on the Driver Station, seconds. */
+    public static final double PROBLEM_SHOW_SEC = 5;
 
     /**
      * Makes a launcher from a flywheel and a feeder you already made. It starts OFF.
@@ -252,7 +256,7 @@ public class Launcher implements Subsystem {
         // No shot speed yet: refuse now with a clear reason, instead of waiting and then
         // "giving up" with a confusing flywheel message.
         if (shotRpm <= 0) {
-            lastProblem = "no shot speed: call setRpm(...) or setDistance(...) first";
+            problem("no shot speed: call setRpm(...) or setDistance(...) first");
             return;
         }
         // Math.max(0, count): a negative count must not take away shots.
@@ -302,7 +306,7 @@ public class Launcher implements Subsystem {
         // The driver clears it by pressing shoot again.
         if (feeder.isJammed()) {
             shotsLeft = 0;
-            lastProblem = "feeder jammed";
+            problem("feeder jammed");
             return;
         }
         // Nothing to do this loop: no shots waiting, the feeder is still pushing the last piece,
@@ -323,7 +327,7 @@ public class Launcher implements Subsystem {
             // Waited too long: give up the rest of the shots, and say WHY, so the drivers are not left
             // wondering and the robot does not fire later at a bad moment.
             if (now - waitingSince > readyTimeoutSec) {
-                lastProblem = "gave up: " + whyNotReady();
+                problem("gave up: " + whyNotReady());
                 shotsLeft = 0;
                 waitingSince = Double.NaN;
             }
@@ -366,6 +370,12 @@ public class Launcher implements Subsystem {
     public int getShotsLeft() { return shotsLeft; }
     /** Pieces fed since the OpMode started. */
     public int getShotsFired() { return fired; }
+    // Remembers a problem and when, for the warning (shown PROBLEM_SHOW_SEC, then it clears itself).
+    private void problem(String words) {
+        lastProblem = words;
+        problemAt = clockNanos.getAsLong() / 1e9;
+    }
+
     /** The last problem (e.g. why it gave up), or "". */
     public String getLastProblem() { return lastProblem; }
     /** The flywheel inside. */
@@ -405,8 +415,12 @@ public class Launcher implements Subsystem {
     /** Shows the state, shots left and READY; problems as warnings; then the flywheel, feeder and hood. */
     @Override
     public void addTelemetry(RobotTelemetry t) {
-        if (!lastProblem.isEmpty()) t.warn("Launcher " + lastProblem);
-        t.line("Launcher", "%s  left %d%s", getState(), shotsLeft, isReady() ? "  READY" : "");
+        // A problem shows for a few seconds (a jam stays while the feeder says it is jammed).
+        double now = clockNanos.getAsLong() / 1e9;
+        if (!lastProblem.isEmpty() && (now - problemAt < PROBLEM_SHOW_SEC || feeder.isJammed())) t.warn("Launcher " + lastProblem);
+        // Waiting to fire: say for what (e.g. "waits for: turret aimed"), so the drivers know.
+        String waits = getState() == State.WAITING_READY ? whyNotReady() : "";
+        t.line("Launcher", "%s  left %d%s%s", getState(), shotsLeft, isReady() ? "  READY" : "", waits.isEmpty() ? "" : "  waits for: " + waits);
         flywheel.addTelemetry(t);
         t.debug("Launcher waits for", whyNotReady().isEmpty() ? "-" : whyNotReady());
         t.debug("Launcher fired", fired);

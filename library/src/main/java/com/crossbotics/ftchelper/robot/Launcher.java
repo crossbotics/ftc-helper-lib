@@ -886,7 +886,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
             op.dpadDown.tap(() -> step(-1)).says(down)
                     .doubleTap(this::resetTrim).says(usesDistance() ? "speed trim 0" : "back to speedRpm");
         }
-        if (tables.size() > 1) op.dpadRight.press(this::nextTable).says("next shot table (" + tableList() + ")");
+        if (tables.size() > 1) op.dpadRight.press(this::nextTable).says("next shot table (" + tableList().toUpperCase(java.util.Locale.US) + ")");   // as the Driver Station shows them
     }
 
     // Its motor is named in Launcher.flywheel(name, id).
@@ -900,12 +900,22 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         return true;
     }
 
+    // For the simulator file: the turret the default flywheel shape rides (its device name), or null.
+    // Set by RobotDefinition.simLines when the robot has one turret. A launcher with looks(...) says
+    // where it sits itself (Shape...on(turret)).
+    String simOnTurret = null;
+
     @Override
     void simLines(List<String> out, TunableSection t) {
         String feederLine = indexer != null ? ", feeder=" + indexer.device : "";
         out.add(fmt("motor.%s = flywheel, part=%s%s, shotDrop=0.15", device, motorId, feederLine));
-        if (looks.isEmpty()) out.add(fmt("shape.%s = flywheel, at=-1,0,6, size=4x2x4, motor=%s   # TODO measure", device, device));
-        else lookLines(out, t);
+        // On a turret robot the flywheel turns with the turret (the shots go where the turret points).
+        if (looks.isEmpty() && simOnTurret != null) {
+            out.add(fmt("shape.%s = flywheel, on=%s, at=-1,0,2, size=4x2x4, motor=%s   # TODO measure", device, simOnTurret, device));
+        } else if (looks.isEmpty()) {
+            out.add(fmt("shape.%s = flywheel, at=-1,0,6, size=4x2x4, motor=%s   # TODO measure", device, device));
+        }
+        if (!looks.isEmpty()) lookLines(out, t);
         // A hood with shotAngles(...): the simulated shot angle follows the hood servo.
         TunableSection hoodSection = hood == null ? null : hood.simSection != null ? hood.simSection
                 : TunableSection.of(robot == null ? null : robot.tunablesClass(), hood.name());

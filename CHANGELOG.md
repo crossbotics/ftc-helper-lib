@@ -182,6 +182,24 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   `() -> robot.launcher.part().getShotsFired()` gives one flash per piece really fired (`fire(3)`: three).
   The cookbook, lesson 9 and the turret example use it instead of `whenStarts(robot.launcher::isShooting)`.
 
+- **The alliance on the light at INIT** (on by default on every robot with `Lights`): before START the
+  light is solid RED or BLUE for the alliance picked, and blinks white once a second until one is picked;
+  a 1 s flash of the alliance at START (TeleOp after autonomous: the one it got) and when the alliance is
+  switched in TeleOp. Then the rules. Off: `allianceAtInit = false` in the light's Tunables section, or
+  `lights.allianceAtInit(false)`; other colors: `allianceColors(blue, red)`; a Blinkin pattern of your own
+  for a color: `blinkinPattern(color, pattern)`. The game manual has no rule against an alliance-colored
+  light (R202 F/J, R401, R402 checked): the old "not with a light" advice is gone. Cookbook recipe,
+  robot.md "The alliance at INIT", lesson 9 section 13.
+- Simulator: a camera can ride a turret, arm or slide: `on=turret` on its `camera.`/`limelight.` line
+  (measured with the turret at 0). `:sim:fromRobot` writes it when a turret `follows(camera)` (camera on
+  the turret), and puts the default flywheel shape on the turret too, so the shots go where it points.
+- Simulator: TeleOp stops at the end of its 2:00, like the real Driver Station with its TeleOp timer on (a
+  "2:00 TeleOp timer" box turns it off; the clock counts down; scenarios: `set teletimer off`).
+- TeleOp: holding "set pose here" on a robot without odometry shows a short note ("needs odometry")
+  instead of doing nothing.
+- The Launcher line says what it waits for: `Launcher : WAITING_READY  left 1  waits for: turret aimed`
+  (it was only on the debug lines).
+
 ### Changed
 
 - Dead-wheel odometry now gives `speedInPerSec()` and `turnDegPerSec()` (worked out from how far the
@@ -240,8 +258,38 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - TeleOp's "hold BACK: forward = away from you now" changes only the odometry's heading
   (`setHeading`), so it does not count as setting the pose.
 
+- The example and cookbook lights keep away from red and blue (purple = following the goal / intake on,
+  orange = following off / pushing out), so no rule looks like the alliance. The turret robot's
+  "following" was BLUE, which looked like the BLUE alliance on a RED robot.
+- A Tunables number that is not written: the INIT note now says `not written: library defaults used
+  (fine)` instead of `missing`. The turret, cookbook, goBILDA and flywheel examples' Tunables now have the
+  optional `slowZone`, `slowZonePower`, `outOfRangeHold` (Turret) and `shotIntervalSec` (Launcher) lines.
+- `:sim:fromRobot` writes a camera tilted 30 degrees up (was 20): BIOBUZZ's tags are up to 50 in high on
+  a raised CELL, and BLUE's goal starts there.
+- "next shot table (...)" in the help and the Shot Tuner's table list are in capitals, like the Driver
+  Station's `Shot table: POLLEN`.
+- Simulator: the pose line says it is in the field frame (seen from the red wall), and the start-spot line
+  says it is the alliance's own frame (as `s.start` takes it).
+
 ### Fixed
 
+- Simulator: a camera on a turret stayed fixed to the chassis, so a turret that follows the goal turned
+  to its limit, or stopped 55 degrees off while saying AIMED, and the shots missed.
+- Simulator: moving the robot by hand (the alliance's start spot at INIT, a drag on the map, `set pose`)
+  changed the IMU's reading: TeleOp zeroes it at INIT, so a robot put on its spot read minus its old
+  heading. Like the odometry, the IMU does not see a hand move now.
+- `Launcher gave up: ...` and the turret's `target out of range` warnings stayed on the Driver Station for
+  good: the launcher's clears after 5 s (a jam stays while jammed), the turret's 1 s after nothing asks
+  for a target past its limits (following off, or the stick took over).
+- Debug lines showed `NaN` before anything was sent (`Turret target : NaN deg`, `ClawFold pos : NaN`, the
+  hood's position): they show `-`.
+- Simulator: loops ran 100 000 times a second (`Loop : 0.0 ms`); each telemetry update now takes at least
+  2 ms, about a real hub's loop.
+- Simulator: a servo pusher (indexer) held out longer than 0.3 s sent a second piece; it sends one per push.
+- Simulator page: a fast double-click on an on-screen gamepad button (under 0.12 s) was one long press;
+  it is two presses now (a double-tap).
+- The camera lighting test's INIT tip "add a line that is not there" now reads "set these (add any that
+  are not there)": the lines are often already in Tunables.
 - Simulator: the pretend Pinpoint and OTOS gave their speed turned with the robot; like the real ones
   they now give it over the field.
 - After an alliance switch in TeleOp, the odometry pose stayed in the old alliance's numbers, so the

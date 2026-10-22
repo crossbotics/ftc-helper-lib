@@ -281,7 +281,9 @@ public class PositionServo implements AngleDevice {
     public void addTelemetry(RobotTelemetry t) {
         if (!warning.isEmpty()) t.warn(name + ": " + warning);
         t.line(name, getTargetName());
-        t.debug(name + " pos", "%.3f%s", commanded, hasDegrees ? String.format(java.util.Locale.US, " (%.1f deg)", getDegrees()) : "");
+        // Nothing sent yet (before START): "-", not NaN.
+        if (Double.isNaN(commanded)) t.debug(name + " pos", "-");
+        else t.debug(name + " pos", "%.3f%s", commanded, hasDegrees ? String.format(java.util.Locale.US, " (%.1f deg)", getDegrees()) : "");
     }
 
     // ---------------------------------------------------------------------------------------

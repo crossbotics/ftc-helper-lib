@@ -223,6 +223,7 @@ public final class SimScenario {
                         break;
                     // set autotimer on|off (the 30 s autonomous stop)
                     case "autotimer": sim.ds.autoTimer = onOff(t.get(2)); break;
+                    case "teletimer": sim.ds.teleTimer = onOff(t.get(2)); break;
                     // set piece POLLEN X Y [Z]: a game piece on the field
                     case "piece":
                         sim.robot.pieces.place(t.get(2), Double.parseDouble(t.get(3)), Double.parseDouble(t.get(4)),

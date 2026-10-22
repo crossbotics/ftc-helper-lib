@@ -149,7 +149,7 @@ public class SimNewRobotTest {
         try (URLClassLoader loader = new URLClassLoader(new URL[] {out.toURI().toURL()}, getClass().getClassLoader())) {
             RobotDefinition robot = (RobotDefinition) loader.loadClass("org.firstinspires.ftc.teamcode.Robot")
                     .getDeclaredConstructor().newInstance();
-            assertFalse(robot.notes().toString(), robot.notes().toString().contains("missing"));   // every section is in Tunables.java
+            assertFalse(robot.notes().toString(), robot.notes().toString().contains("not written"));   // every section is in Tunables.java
             SimFromRobot.Result r = SimFromRobot.merge(null, robot.simLines(), "Robot", "biobuzz-2026");
             Path file = tmp.newFile("robot.properties").toPath();
             Files.write(file, r.text.getBytes(StandardCharsets.UTF_8));

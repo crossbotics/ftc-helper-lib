@@ -77,6 +77,8 @@ robot in five files: the Drive Tuner, then `Tunables.Drive.calibrated = true`.
 | `No reset spot: add resetX, resetY, resetHeading to Tunables.Odometry` | START was held 1 s ("set pose here") but `Tunables.Odometry` has no spot: add the three numbers (inches and degrees from your wall, for BLUE) |
 | `Alliance now RED (was BLUE)` | the alliance switch is on (`lib.switchAlliance(...)`) and someone held START, then BACK, 1.5 s: the alliance switched. Hold them again to switch back ([ControlMap](modules/robot.md#controlmap)) |
 | `Alliance now RED: odometry aim OFF until the pose is set (...)` | the alliance was switched on a turned field (`mirrorForRed = false`): the pose from autonomous cannot be fixed. Park on the reset spot and hold START 1 s ([buttons guide](guides/buttons.md#switching-the-alliance-in-teleop)) |
+| `Set pose here needs odometry: ...` | START was held 1 s, but the robot has no `odometry(...)` line in Robot.java, so it cannot know where it is ([lesson 7](tutorials/start/07-odometry.md)). Nothing changed |
+| `Launcher : WAITING_READY  left 1  waits for: turret aimed` | the launcher holds the piece until that check is true (here: the turret on the goal). `Launcher gave up: ...` shows for 5 s when it waited too long |
 | `Pose NOT set: stop first ...` | "set pose here" was held while the robot drove (a drive stick pushed) or whole-robot aim was on. Stop, then hold START 1 s again |
 | `No pause button (libraryButtons freed it): ...` | `lib.pause(null)` in `libraryButtons`: nothing pauses the robot. Put it on a button: `lib.pause(g1.back)` |
 | `No slow button (libraryButtons freed it): ...` | `lib.slow(null)` with no `slow()` of your own: add one, e.g. `g1.rt.slow()` |

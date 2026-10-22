@@ -44,6 +44,9 @@ public final class Camera extends Module<Camera> {
     private com.crossbotics.ftchelper.vision.LightingSweep sweep = null;
     // The Tunables lines that skip the test next time, e.g. "pipeline = 1;" (shown at INIT once found).
     private String skipHint = "";
+    // For the simulator file: the turret this camera rides (its device name), or null (set by
+    // RobotDefinition.simLines from the Turret's follows(camera)).
+    String simOnTurret = null;
     // When build() ran, to warn about a camera that is still not working a few seconds later.
     private long builtNanos = 0;
 
@@ -181,7 +184,7 @@ public final class Camera extends Module<Camera> {
         for (String p : sweep.problems()) t.warn(device + " lighting: " + p);
         t.debug("  scores", sweep.scores());
         if (!skipHint.isEmpty()) {
-            t.text("  To skip this test at this venue: in Tunables." + name() + " (add a line that is not there):");
+            t.text("  To skip this test at this venue: in Tunables." + name() + ", set these (add any that are not there):");
             for (String l : skipHint.split("\n")) t.text("    " + l);
         }
     }
@@ -255,7 +258,12 @@ public final class Camera extends Module<Camera> {
 
     @Override
     void simLines(List<String> out, TunableSection t) {
-        String where = "forward=6, left=0, up=12, yaw=0, pitch=20";
+        // A guess until measured. Tilted 30 degrees up: goals' tags are often high (BIOBUZZ: up to 50 in
+        // on a raised CELL), and a flatter camera sees them only from far away.
+        String where = "forward=6, left=0, up=12, yaw=0, pitch=30";
+        // On a turret (a turret follows this camera and cameraOnBody() is not used): it turns with the
+        // turret in the simulator too (on=turret: measured with the turret pointing straight forward).
+        if (simOnTurret != null) where += ", on=" + simOnTurret;
         if (limelight) out.add("limelight." + device + " = name=" + device + ", " + where + "   # TODO measure the mount");
         else out.add("camera." + sectionFor(device) + " = name=" + device + ", " + where + ", hfov=70.4, width=640, height=480   # TODO measure the mount");
     }

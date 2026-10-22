@@ -100,6 +100,8 @@ final class SimRobot {
     private double pushForward = 0, pushRight = 0, pushLeft = 0;
     // Per flywheel: seconds since the last piece went through (a running feeder sends one every 0.3 s).
     private final Map<String, Double> sinceShot = new LinkedHashMap<>();
+    // Per flywheel with a servo pusher: the pusher is out now (it already sent this push's piece).
+    private final java.util.Set<String> pusherOut = new java.util.HashSet<>();
     static final double SECONDS_PER_PIECE = 0.3;
     // A servo feeder (an indexer) is feeding while it is this far (raw position) from where it starts.
     static final double SERVO_FEED_MOVE = 0.15;
@@ -278,6 +280,15 @@ final class SimRobot {
         Map<String, Map<String, String>> shapeLines = new LinkedHashMap<>();
         for (String key : sortedKeys(p, "shape.")) shapeLines.put(key.substring("shape.".length()), settings(p.getProperty(key)));
         shapes = new SimShapes(this, p, shapeLines, dir);
+        // A camera on a turret (on=turret) needs that shape: the turret's angle turns the camera.
+        for (SimCamera c : cameras.values()) {
+            if (c.on == null) continue;
+            SimShapes.Shape s = shapes.shapes.get(c.on);
+            if (s == null || !(s.type.equals("turret") || s.type.equals("arm") || s.type.equals("slide"))) {
+                throw new IllegalArgumentException("Robot file: camera \"" + c.name + "\": on=" + c.on
+                        + " needs a turret (or arm or slide) shape called " + c.on + " (shape." + c.on + " = turret, motor=...)");
+            }
+        }
         massKg = above0(p, "robot.massKg", 15);
         grip = num(p, "drive.grip", 1.0);
         String physics = p.getProperty("physics", "engine").trim();
@@ -469,8 +480,10 @@ final class SimRobot {
         pushLeft = 0;                          // a hand push in progress ends
         shots = 0;
         sinceShot.clear();
+        pusherOut.clear();
         x = startX;
         y = startY;
+        imuZero += wrap(startHeading - headingDeg);   // a hand move: the IMU does not see it (like the odometry)
         headingDeg = startHeading;
         bumpedInto = "";
         if (world != null) world.place(x, y, headingDeg);
@@ -495,6 +508,10 @@ final class SimRobot {
         if (blocked != null) throw new IllegalArgumentException("that pose overlaps " + blocked);
         x = nx;
         y = ny;
+        // A hand move (the INIT start spot, a drag on the map, a scenario's "set pose"): the IMU does not
+        // see it, like the odometry pods. So its reading stays what it was: a TeleOp that zeroed it at
+        // INIT and is then put on its alliance's spot still reads 0, not the turn of the move.
+        imuZero += wrap(nh - headingDeg);
         headingDeg = nh;
         bumpedInto = "";
         if (world != null) world.place(x, y, headingDeg);
@@ -563,7 +580,14 @@ final class SimRobot {
                     : pusher != null && Math.abs(pusher.actual - pusher.start) > SERVO_FEED_MOVE;
             double since = sinceShot.getOrDefault(m.name, SECONDS_PER_PIECE) + dt;
             // While the feeder runs, a piece goes through every SECONDS_PER_PIECE (the first at once).
-            if (on && since >= SECONDS_PER_PIECE && Math.abs(m.shaftSpeed()) > 100) {
+            // A servo pusher (an indexer) sends ONE piece per push, however long it stays out: a push
+            // and a slow return can last longer than SECONDS_PER_PIECE, and that fired a second piece.
+            boolean again = pusher == null || !pusherOut.contains(m.name);
+            if (pusher != null) {
+                if (on) pusherOut.add(m.name);
+                else pusherOut.remove(m.name);
+            }
+            if (on && again && since >= SECONDS_PER_PIECE && Math.abs(m.shaftSpeed()) > 100) {
                 // With game pieces, a shot needs a piece in the robot (it flies off the shooter shape).
                 if (!pieces.shootsPieces() || pieces.shoot(m)) {
                     m.shot();
