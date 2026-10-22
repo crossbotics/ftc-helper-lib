@@ -113,7 +113,8 @@ You write no buttons for them. With two drivers, all three are on gamepad 2:
 | B | claw open / close |
 
 INIT shows this map on the Driver Station. A button you give another job in `Controls.java`
-replaces the module's suggestion.
+replaces the module's suggestion, and INIT then says which job lost its button (`... no button (G2 A is
+your "..." in Controls.java)`).
 
 ## 4. Why the bottom switch matters (homing)
 
@@ -180,7 +181,7 @@ public class MotorFinder extends MotorFinderOpMode {
   in the Servo Finder before choosing the servo. Decide this BEFORE you measure: the numbers change with
   the range. Most claws do not need it. ([Why](../../modules/hardware.md#full-range).)
 - **Motor Finder, for the lift:** put the lift at the bottom first (the count starts at 0 there).
-  Move it slowly with the stick. Press X just before the bottom block and B just before the top
+  Move it slowly with gamepad 1's **right** stick (up and down; the left stick does nothing here). Press X just before the bottom block and B just before the top
   block: those are `min` and `max`. Press A at each height you want.
 
 Each finder shows a line that starts with `Tunables.`. It says which section of `Tunables.java` the
@@ -216,7 +217,9 @@ and [tutorial 21](../21-finders.md).
 `kP` to `kF` and the named heights change **while the robot runs**, so you do not rebuild for each
 try.
 
-1. INIT the TeleOp with the **PRACTICE** profile, then press START.
+1. INIT the TeleOp with the **PRACTICE** profile, then press START. (The profile is chosen in any
+   autonomous's INIT menu, on its last line, and the hub remembers it:
+   [lesson 2, section 5](02-drive.md#5-the-numbers-tunablesdrive).)
 2. **Hold GUIDE for 1 second:** the tuning menu opens on gamepad 1 (the wheels hold still).
 3. D-pad up/down chooses a number (`Lift/kP`, `Lift/high`, `Claw/open`...), right/left changes it
    (hold a bumper for 10 times bigger steps). Use gamepad 2 to send the lift between heights and watch.
@@ -274,7 +277,9 @@ lesson robot "Lesson Bot TeleOp"; for your own robot, your own TeleOp's name (th
 `Controls.java`). INIT, read the button map, START. The lesson robot's buttons, on gamepad 2: Y lifts,
 A lowers, B opens and closes the claw, hold RT to run the intake (your own robot: the buttons on its
 button map). The Control Hub panel shows the lift motor's count and the
-`lift_bottom` switch: pressed at the bottom, so the lift homes at once. ([Simulator guide](../../guides/simulator.md).)
+`lift_bottom` switch: pressed at the bottom, so the lift homes at once. Before the first B the claw's
+line says `Claw : not sent yet`: nothing moves until you ask. The first B opens it (in the simulator
+the claw starts open, so it seems to do nothing); the next B closes it. ([Simulator guide](../../guides/simulator.md).)
 
 ## Check it on the robot
 

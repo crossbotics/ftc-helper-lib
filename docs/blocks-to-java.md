@@ -85,6 +85,30 @@ Notes on the table:
 - `show(...)` goes inside `buttons(...)`, like `rumbleWhen`, as a line of its own. It is in the
   TeleOp (`Controls.java`) only.
 
+## FTC Blocks: the robot blocks
+
+The FTC Blocks editor has blocks for the robot itself. Here is where each one went:
+
+| FTC Blocks block | In Java with this library | Where |
+| --- | --- | --- |
+| `waitForStart` | nothing: the library waits for START. Something right after START: `atStart(...)` ([cookbook](cookbook.md#how-do-i-run-an-action-right-after-start)) | `Robot.java`, in `define()` |
+| `repeat while opModeIsActive` | nothing: the library's loop | |
+| `telemetry.addData("key", value)` and `telemetry.update` | `show("Lift ticks", robot.lift::position);` once, in `buttons(...)`. The library shows it every loop as `Lift ticks : 350`; no `update` needed | `Controls.java` |
+| `gamepad1.left_stick_y` (and the other sticks) | driving is built in. For your own part: `g2.leftStickY.use(robot.lift::manual);` | `Controls.java` |
+| `if gamepad2.y then ...` | `g2.y.press(...)`, one line, once ([lesson 3](tutorials/start/03-buttons.md)) | `Controls.java` |
+| `set servo.Position to 0.75` | a named position in `Tunables.java` (`open = 0.20, closed = 0.75` in `Tunables.Claw`), then `robot.claw.close()`; any servo: `robot.intakeDeploy.goTo("deployed")` | `Tunables.java`, then `Controls.java` or `Actions.java` |
+| `set motor.Direction to REVERSE` | drive motors: `.reversed("front_left", "back_left")` in the `drive(...)` line; a part: `.reversed()` on its line | `Robot.java` |
+| `set motor.Power to 1` | a command of the part: `robot.intake.in()`, `robot.lift.goTo("high")` | `Controls.java`, `Actions.java` |
+| `sleep 500` | `.waitSeconds(0.5)` in an Action or an autonomous | `Actions.java`, `autos/` |
+| `if` the drivers chose something before the match | `onlyIf(...)` with a menu choice ([cookbook](cookbook.md#how-do-i-let-the-drivers-choose-before-the-match)) | an autonomous |
+
+**The stick-up sign.** In FTC Blocks (and in the plain FTC SDK) a stick pushed **up** gives a
+**negative** number, so Blocks programs put a "negative" block (or `-1 *`) in front of
+`gamepad1.left_stick_y`. **Here the sign is already fixed:** every stick value the library hands you
+(`use(...)`, the driving) is **+ when pushed up or right**. Do not add the minus, or the part moves the
+wrong way. (Only if you read `gamepad1.left_stick_y` yourself, outside the library, do you still need
+it: [signs and units](conventions.md#gamepad-sticks).)
+
 ## Never sleep() or a while loop in a button job
 
 This compiles, but it is wrong:

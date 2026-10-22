@@ -26,6 +26,11 @@ The lesson robot has no shooter, so this lesson reads two other example robots b
 **Reference:** [Launcher](../../modules/robot.md#launcher), [Indexer](../../modules/robot.md#indexer), [Hood](../../modules/robot.md#hood),
 [Camera](../../modules/robot.md#camera), [Turret](../../modules/robot.md#turret), [Aim](../../modules/robot.md#aim).
 
+> **A long lesson: you can skip sections 8 to 14 on a first read.** Sections 1 to 7 are what most
+> shooters need: a flywheel, a feeder, a camera, a turret and the speed from the distance. Each of
+> sections 8 to 14 adds one helper (two shot tables, a hood, the odometry backup, whole-robot aim, a
+> buzz, a piece count, a light, shooting while moving). Come back to one when your robot has that part.
+
 ---
 
 ## 1. A flywheel and its feeder
@@ -62,7 +67,7 @@ From [`gobildabot/Tunables.java`](../../../examples/src/main/java/com/crossbotic
 ```java
 public static class Launcher {
     public static double speedRpm = 2679, stepRpm = 50, readyBandRpm = 107, idleRpm = 0;
-    public static double kP = 40, kI = 0, kD = 0, kF = 12.5;
+    public static double kP = 40, kI = 0, kD = 0, kF = 12.5, nominalVolts = 12.8;
 }
 
 public static class Windmill {
@@ -77,6 +82,7 @@ public static class Windmill {
 | `readyBandRpm` | how close to `speedRpm` counts as "at speed" (it must stay there 0.15 s) |
 | `idleRpm` | the speed it drops back to when the driver spins it down (0 = coast to a stop) |
 | `kP`, `kI`, `kD`, `kF` | the **gains**: how hard the hub pushes to hold the speed. Used only when `kF` is there. |
+| `nominalVolts` | the battery voltage when the gains were measured. Used only by battery compensation, which is off unless you turn it on ([section 8](#speed-trim-and-a-low-battery)). |
 | `power`, `feedSec` (Windmill) | the feeder's power, and how long it runs per piece |
 
 A servo feeder (`Indexer.servo`) has `rest`, `push`, `pushSec`, `returnSec` instead. It goes to `rest`
@@ -89,8 +95,9 @@ It needs no code. Choose the `launcher` motor; it shows a line to copy into `Tun
 Tunables.Launcher: kP = 1.17, kI = 0.117, kD = 0, kF = 11.70, nominalVolts = 12.6
 ```
 
-`nominalVolts` is the battery voltage while it measured: the gains are right for that voltage
-([section 8](#speed-trim-and-a-low-battery) says why it matters).
+`nominalVolts` is the battery voltage while it measured: the gains are right for that voltage. Copy
+it too: only battery compensation uses it, which is off unless you turn it on
+([section 8](#speed-trim-and-a-low-battery)).
 
 If the wheel needs longer than 0.25 s to get back to speed after a shot, the line also has
 `shotIntervalSec` (the time between two feeds), a little above that time.
@@ -115,6 +122,13 @@ gamepad 1 with `oneDriver = true`, as in the goBILDA bot:
 
 Spinning up early with LB saves time: the wheel is ready when the shot is lined up. The goBILDA bot adds
 one job of its own, Y to fire all three: `g1.y.press(Actions.fireAll(robot)).says("fire all");`
+
+**Are LB and RB still free?** A job of yours in `Controls.java` on one of these buttons takes it from
+the launcher. If you followed lesson 5, your actions are on gamepad 2's RB and LB, so the launcher gets
+no spin-up and no fire button. INIT says so, for example
+`Launcher fire one; hold: keep firing: no button (G2 RB is your "score high" in Controls.java)`.
+Move your own jobs to free buttons (INIT lists them: `G2 free: ...`), so the launcher gets its
+buttons back.
 
 **Spin up at START.** Add `.spinAtStart()` and the wheel spins up right after START, in autonomous and
 TeleOp, so the first shot does not wait. LB still spins it down.
@@ -149,13 +163,15 @@ camera = add(Camera.limelight("limelight").autoPipelines(0, 1, 2).goal("BLUE SCO
 - `.goal("BLUE SCORING", "RED SCORING")`: this season's goal for each alliance, by the name of its group
   of AprilTags (the square black-and-white codes on the field). The camera then gives the goal for this
   match's alliance, chosen in autonomous's INIT menu (TeleOp remembers it).
-- `.autoPipelines(0, 1, 2)`: venue lighting. Every gym has different light, and a camera setting that
-  finds tags well at school can miss them at an event. In INIT the robot tries each pipeline, counts
-  the pictures that see a tag, and keeps the best. Put your usual pipeline first: it wins a tie.
-  A webcam does the same with `.autoExposure()` (it tries exposures instead of pipelines).
-  How it works: [vision.md](../../modules/vision.md#venue-lighting).
+- `.autoPipelines(0, 1, 2)`: venue lighting. A **pipeline** is one set of camera settings saved on the
+  Limelight, by number (what to look for, how bright the picture is). Every gym has different light,
+  and a pipeline that finds tags well at school can miss them at an event. In INIT the robot tries
+  each pipeline, counts the pictures that see a tag, and keeps the best. Put your usual pipeline
+  first: it wins a tie. A webcam does the same with `.autoExposure()` (it tries exposures instead of
+  pipelines). How it works: [vision.md](../../modules/vision.md#venue-lighting).
 - Its numbers: `Tunables.Limelight.pipeline` (the pipeline to use when the test is off) and
   `autoLighting` (true = run the test; false = skip it and use `pipeline`).
+- The camera starts in INIT, so it is already looking at START. It has no buttons.
 
 **Set up the three pipelines.** On a laptop on the robot's network, open the Limelight's page:
 http://limelight.local:5801. Then, for each pipeline:
@@ -164,17 +180,18 @@ http://limelight.local:5801. Then, for each pipeline:
 2. Set its type to AprilTag (Fiducial), and the tag family and size from the game manual.
 3. In the **Input** tab, move the **Exposure** slider: 0 = your usual light, 1 = bright light (lower
    exposure, so tags are not washed out white), 2 = dim light (higher exposure, and more **Sensor
-   Gain** if it is still dark).
+   Gain**, which makes the whole picture brighter but grainier, if it is still dark).
 4. Save the pipeline. The Limelight's own docs (docs.limelightvision.io) show every setting.
 
 **At INIT and at START.** Have a tag in view at INIT (where the robot starts the match is fine), or the
 test cannot help. The Driver Station shows the result, e.g.
-`limelight lighting: pipeline 2 (9 of 10 pictures saw tags)`. At START the test stops at once and keeps
+`limelight lighting : pipeline 2 (9 of 10 pictures saw tags)`. At START the test stops at once and keeps
 the best pipeline so far (the first one if none saw a tag), so the robot never aims with a pipeline
 it is only trying.
 
 **At an event:** in the queue (or on the practice field), INIT once with the robot facing a HIVE tag.
-Read the pipeline it picks. The Driver Station then shows two lines, e.g.
+Read the pipeline it picks. Under the `limelight lighting` line the Driver Station then shows two lines
+to copy, e.g.
 
 ```java
 public static double pipeline = 2;
@@ -185,7 +202,6 @@ Put them in `Tunables.Limelight` (change the `pipeline` line that is there; add 
 if it is not), and the robot uses that pipeline at once in every match there, with no test. Back at
 school, set `autoLighting = true` again. A webcam shows `exposureMs` instead of `pipeline`: that is a
 new line to add to the camera's section (for example `Tunables.Webcam`).
-- It starts in INIT, so it is already looking at START. It has no buttons.
 
 ## 6. A turret that follows it
 
@@ -216,7 +232,13 @@ public static class Turret {
 - `tolerance`: how many degrees off still counts as "aimed". `cameraOffset`: if shots land to one side,
   the [Aim Tuner](../../guides/finders.md#aim-tuner-camera-offset) finds it.
 - **0 degrees is where the turret points when you press INIT** (`startAngle`, default 0). Point it
-  straight forward first, or add a home switch so it finds its angle by itself at START.
+  straight forward first, or add a home switch so it finds its angle by itself at START. That is why
+  INIT says, on a turret with no home switch:
+  `Turret : no angle from a program before: turn it to startAngle 0 deg by hand and INIT again, or every angle is off`.
+  A TeleOp right after a program (within 5 minutes) goes on from that program's angle instead and says
+  `... carried from the last program ...`. An autonomous says
+  `startAngle 0 deg: put the turret there by hand before INIT, or every angle is off`. (The simulator's
+  turret always starts at 0: there you can ignore these lines.)
 - Its buttons: operator right stick X turns it by hand (following pauses while you move it), BACK
   switches following on and off.
 
@@ -282,7 +304,7 @@ public static double[][] speedByDistanceNectar = {{24, 2400, 0}, {48, 2800, 6}, 
 
 Each row is {inches, RPM, hood angle}: the turret robot has a hood ([below](#a-hood-the-shot-angle)).
 Without a hood a row is just {inches, RPM}. The tables are called `pollen` and `nectar`. The robot starts on the one in `.startTable("pollen")`
-(without it: `speedByDistance` if there is one, else the first by name). Switch:
+(without it: `speedByDistance` if there is one, else the first one in `Tunables.Launcher`). Switch:
 
 - **A button.** The launcher brings one: gamepad 2's **D-pad right** picks the next table. Or one button
   per piece: `g2.x.press(() -> robot.launcher.useTable("pollen"));`
@@ -291,7 +313,7 @@ Without a hood a row is just {inches, RPM}. The tables are called `pollen` and `
   `robot.launcher.useTable("nectar");`, or `robot.launcher.tableFrom(() -> ...)` to let code choose every
   time its answer changes.
 
-The Driver Station shows `Shot table: POLLEN, 48 in (camera)`. A name with no table (a typo) keeps the
+The Driver Station shows `Shot table : POLLEN, 48 in (camera)`. A name with no table (a typo) keeps the
 table in use and warns: `Launcher: no shot table "nectr" (Tunables.Launcher has: nectar, pollen)`.
 
 **Fill each table with the Shot Tuner** ([its file](../../cookbook.md#how-do-i-build-a-shot-table-speed-for-each-distance)).
@@ -309,56 +331,62 @@ Some matches every shot lands a bit short (or long): the wheel is worn, the ball
 operator can fix it on the spot: with the speed from the distance, **D-pad up / down** makes every shot
 1% faster / slower than the table says (all tables alike); hold it and it keeps going, one step every
 0.25 s. **Double-tap D-pad down** goes back to 0. The launcher's first line on the Driver Station says
-`Speed trim: +3%  READY`. It stops at +/- 15% (`trimMaxPercent`; `trimStepPercent` is one press), and
-never asks for more than the motor's top speed (`Speed trim: +3% (motor limit)`: more trim up does
+`Speed trim : +3%  READY`. It stops at +/- 15% (`trimMaxPercent`; `trimStepPercent` is one press), and
+never asks for more than the motor's top speed (`Speed trim : +3% (motor limit)`: more trim up does
 nothing). Code and actions can trim too: `robot.launcher.trimBy(+2)`. The Shot Tuner never uses
 the trim, so the tables stay clean.
 
 The trim starts at 0 at every INIT. The one you used last time is remembered (until the robot app
 restarts) and offered, never put back by itself: at INIT the Driver Station says
-`Trim last time: +3% (double-tap D-pad up after START to use it)`.
+`Trim last time : +3% (double-tap D-pad up after START to use it)`.
 
-**With `kF` set, the battery is already taken care of** (below). So a trim you need again and again
-points at the wheel or the balls, not the battery: the table is off. Make the trim part of the table
+**A trim you need again and again** points at the wheel or the balls: the table is off. Make the trim part of the table
 and go back to no trim. Say it was +3% all season: every speed in the table times 1.03, so the row
 `{48, 2550}` becomes `{48, 2627}` (2550 x 1.03 = 2626.5), and the same for every row (and every
 table). **Copy the new lines into `Tunables.java`**, then trim back to 0. (Or tune the table again with
 the Shot Tuner.)
 
-The launcher helps the battery by itself. The hub's F gain gives the same **power** for a speed, and
-the same power on a weaker battery spins the wheel slower; the I gain catches up, but slowly, so the
-wheel takes longer to get back to speed after a shot. With `kF` set, every 0.25 s the launcher reads
-the battery and scales F by `nominalVolts` / the battery: tuned at 12.6 V, at 11.5 V it is F x 1.10
-(12.6 / 11.5), so the wheel gets the same push as when you tuned it. Without a `nominalVolts` line it
-uses 12.8 V (a charged battery under load). The battery it uses is the highest reading of the last
-second: while the drive pulls hard the battery dips for a moment, and a dip is not a weaker battery
-(F jumping up would push the wheel past its speed). The reading is made on the library's helper thread,
-so the loop never waits for the hubs. Under 11.5 V the Driver Station warns `battery 11.2 V: low`: swap
-the battery. To switch it off: `public static boolean batteryCompensation = false;` in `Tunables.Launcher`.
+**A low battery.** The hub's F gain gives the same **power** for a speed, and the same power on a
+weaker battery spins the wheel slower. The I gain catches up, but slowly, so on a low battery the wheel
+takes longer to get back to speed after a shot. Under 11.5 V the Driver Station warns
+`... battery 11.2 V: low ...`: swap the battery.
 
-> **Battery compensation: on by default, easy to turn off, not yet proven on a robot.**
-> The RPM control already fixes a low battery by itself, but slowly (the small I gain). Compensation
-> only makes that faster: it helps the first shot after spin-up and quick shots in a row. It cannot help
-> when the battery is too low for the speed you ask (the motor is already at full power).
-> - **Turn it off:** `public static boolean batteryCompensation = false;` in `Tunables.Launcher`.
-> - **Test it on your robot:** with a battery at about 11.5 V, fire 4 shots quickly and watch the
->   launcher's measured RPM against its target on the Driver Station. Do it with compensation on, then
->   off. If you see no difference, leave it off; if the wheel overshoots after a battery swap, turn it
->   off and tell us.
+> **Battery compensation: OFF by default, not yet proven on a robot.** We are asking testing teams to
+> try it (test SHOT-05) before it is turned on for everyone.
+> - **What it does:** with `kF` set, every 0.25 s the launcher reads the battery and scales F by
+>   `nominalVolts` / the battery: tuned at 12.6 V, at 11.5 V it is F x 1.10 (12.6 / 11.5), so the wheel
+>   gets the same push as when you tuned it. It uses the highest battery reading of the last second (a
+>   short dip while the drive pulls hard is not a weaker battery), read on the library's helper thread,
+>   so the loop never waits. It only makes the slow I gain's job faster: it helps the first shot after
+>   spin-up and quick shots in a row. It cannot help when the battery is too low for the speed you ask
+>   (the motor is already at full power).
+> - **Turn it on:** in `Tunables.Launcher`, add `public static boolean batteryCompensation = true;`, and
+>   write `nominalVolts` from the Flywheel Finder's line. Without `nominalVolts`, INIT says it assumes
+>   12.8 V (a charged battery under load).
+> - **The 4-shot test:** with a battery at about 11.5 V, fire 4 shots quickly and watch the launcher's
+>   measured RPM against its target on the Driver Station. Do it with compensation off, then on. If you
+>   see no difference, leave it off; if the wheel overshoots (after a battery swap too), turn it off and
+>   tell us what you saw.
 
 ### A hood: the shot angle
 
 A **hood** is the curved plate (or second wheel) over the flywheel that the ball rolls along. Tilt it
 and the ball leaves steeper or flatter. Close to the goal you want a steep shot that drops in; far away,
 a flatter one. So a hood gives each distance two numbers: a speed AND an angle. The turret robot's hood
-is on a servo (from [`turretbot/Robot.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/Robot.java)):
+is on a servo. The whole launcher line, from [`turretbot/Robot.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/Robot.java)
+(the `.hood(...)` line is the new one; add `import com.crossbotics.ftchelper.robot.Hood;` at the top):
 
 ```java
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
         .feeder(Indexer.servo("indexer"))
         .hood(Hood.servo("hood").part("gobilda-2000-torque").shotAngles(80, 55))
         .speedFromDistance(camera)
+        .startTable("pollen")
+        .requireReady("turret aimed", () -> turret.isAimed()));
 ```
+
+`.part("gobilda-2000-torque")` is the servo by its catalog id. `.shotAngles(80, 55)` is only for the
+simulator: how steep the shot leaves at each stop (80 degrees up at the steep end, 55 at the flat end).
 
 Its numbers (from [`turretbot/Tunables.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/Tunables.java),
 the team's own turret design):
@@ -390,10 +418,10 @@ public static class Hood {
   Nothing moves in INIT.
 
 **From the table.** The launcher blends the hood between rows like the speed: at 60 in the POLLEN
-hood is halfway between 11 and 19 = 15. The Driver Station shows `Hood: 15.0 deg (table)`.
+hood is halfway between 11 and 19 = 15. The Driver Station shows `Hood : 15.0 deg (table)`.
 
 **By hand.** Gamepad 2's **left stick up / down**. With the hood from the table it is a **hood trim**:
-`Hood: 16.0 deg (table, trim +1.0 deg)`; double-tap D-pad down sets both trims back to 0. Without a
+`Hood : 16.0 deg (table, trim +1.0 deg)`; double-tap D-pad down sets both trims back to 0. Without a
 table (a fixed speed) it moves the hood itself. Which trim? Shots short or long: the speed trim. Shots
 that arrive at the wrong slope (they bounce off the rim, worn balls leave flatter): the hood trim. Try
 the speed trim first; one change at a time.
@@ -411,8 +439,8 @@ for this section and the next two: **one class, add the lines you use** (every l
 ```java
 public static class Aim {
     // Section 9: the goal on the field, for the odometry backup.
-    public static double goalX = 13, goalY = -13;   // inches, seen from your wall: your HIVE's up CELL
-    public static boolean mirrorForRed = false;     // the default is true; BIOBUZZ needs false (below)
+    public static double goalX = 13, goalY = -13;   // inches, seen from your own wall: your HIVE's up CELL
+    public static boolean mirrorForRed = false;     // BIOBUZZ: false (below)
     // Section 10: whole-robot aim (no turret).
     public static double turnKp = 0.02, turnKd = 0.002, maxTurnPower = 0.5, toleranceDeg = 2;
     public static double cameraOffset = 0;
@@ -421,26 +449,42 @@ public static class Aim {
 }
 ```
 
-- `goalX`, `goalY`: the same numbers as `driveTo` (x right of the field's centre line, y from the centre
-  toward the far wall). Put the point where the camera measures to (the goal's tags), so the camera's
-  distance and the odometry's agree and one shot table fits both.
-- `mirrorForRed`: which one to pick depends on how the field changes between the alliances, like your
-  autonomous's. **Leave it out (the default, `true`)** for a field that is a mirror image (RED's goal
-  is at `-goalX`). **Write `false` for BIOBUZZ**: its field is turned half a turn, so RED uses the same
-  numbers from the red wall. INIT shows the choice, e.g. `Aim: RED, goal x -58, y 55 in (mirrorForRed = false: ...)`:
+- `goalX`, `goalY`: where the goal is, in the field numbers of [lesson 7](07-odometry.md#1-why-odometry)
+  (the same as `driveTo` and the start spots). **Stand at your own drivers' wall:** (0, 0) is the middle
+  of the field, x is inches to the right, y is inches away from you (negative = your half).
+  - BIOBUZZ: your goal is your alliance's HIVE CELL that is up at the start. Its middle is 13 in right
+    of the centre line and 13 in from the middle toward your wall: `goalX = 13, goalY = -13`. (From
+    the season's field file, `sim/fields/biobuzz-2026.json`: the HIVE's pivot is 12.75 in toward your
+    wall, and the up CELL is on your right.)
+  - Put the point where the camera measures to (the goal's tags), so the camera's distance and the
+    odometry's agree and one shot table fits both.
+- `mirrorForRed`: does RED use BLUE's numbers mirrored? It depends on how the field changes between
+  the alliances, like your autonomous's `mirrorForRed()`. **BIOBUZZ: write `false`.** Its field is
+  turned half a turn, so from each team's own wall the field looks the same: RED uses the very same
+  numbers, from the red wall. On a mirror-image field, `true`: the numbers are written for BLUE and RED's
+  goal is at `-goalX`. It is **one setting for the whole robot** (the autonomous, this goal point and
+  TeleOp's reset spot all use it): leave the line out, and the robot uses `Tunables.Odometry.mirrorForRed`,
+  else your autonomous's `mirrorForRed()`, else `true`. INIT shows the choice, e.g.
+  `Aim : RED, goal x 13, y -13 in (the same numbers from each wall: Tunables.Aim.mirrorForRed = false)`:
   check it before the match.
+
+> **One rule for field numbers.** In your code (start spots, `driveTo`, `goalX`/`goalY`, the reset
+> spot) always write the numbers **seen from your own drivers' wall**. On BIOBUZZ they are then the same
+> for BLUE and RED. Only the simulator's field map and its scenario checks (`expect robot x ...`) use one
+> fixed view for both alliances, from the **red** wall: on BLUE their x and y have the other sign.
 
 That is all. The turret (`follows(camera)`) and the speed (`speedFromDistance(camera)`) use the camera
 while it sees the goal, and the odometry while it does not. The Driver Station says which:
-`turret: 12 deg following: odometry`, `Shot table: POLLEN, 52 in (odometry)`. No camera at all? Use
+`Turret : 12 deg  AIMED  following: odometry`, `Shot table : POLLEN, 52 in (odometry)`. No camera at all? Use
 `.followsOdometry()` and `.speedFromOdometry()`.
 
 **Why camera first?** The camera sees the real goal; the odometry only knows where it thinks the robot
 is, and drifts a little over a match (bumps, wheel slip). It is a backup, good enough until the tag is
 back. It needs a good start: the autonomous's start spot, carried into TeleOp. **Without autonomous**,
 TeleOp's pose would be (0, 0), the middle of the field, and the aim would be wrong: so the odometry
-backup stays **off** until the pose was set (autonomous ran, or your code called
-`robot.odometry().setPose(...)`), and the Driver Station says `Aim odometry: the pose was never set`.
+backup stays **off** until the pose was set, and the Driver Station says `Aim odometry: the pose was never set`.
+The pose is set when an autonomous ran in this match, or when the drivers set it with the button: park
+on the reset spot and hold gamepad 1 START for 1 s ([lesson 7, section 7](07-odometry.md#7-teleop-starts-where-autonomous-ended)).
 Two more checks keep a wrong pose from aiming the robot: the odometry is not used while it says the
 goal is farther than the field allows (`maxGoalDistance`, 170 in), and the Driver Station warns when
 the camera and the odometry disagree by more than 6 in (`cameraOdometryAgree`): the pose drifted, or
@@ -469,7 +513,22 @@ the goal stops at INIT with a message.
 turns by itself. `toleranceDeg`: this close is "aimed". `minTurnPower` (optional): the least power that
 really turns your robot, if it stops a few degrees short. Tune them live in the tuning menu, then **copy
 the values back into `Tunables.java`** (INIT lists every tuned value that differs from the file).
-To fire only when aimed: `.requireReady("aimed", () -> aim().isAimed())` on the launcher in `Robot.java`.
+
+**Fire only when aimed.** Add a `requireReady` check to the launcher line in `Robot.java`. The flywheel
+robot's whole launcher line with the check added (its last line is the new one):
+
+```java
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+        .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
+        .looks(Shape.flywheel("gobilda-hogback-96").atMm(-40, 0, 170))
+        .shotAngle(50)
+        .requireReady("aimed", () -> !aimMode().isOn() || aim().isAimed()));
+```
+
+Read the check as: "fire when the aim is off (the driver aims), or when it is on and aimed". With
+only `aim().isAimed()` the robot would never fire while the aim is off. `aim()` and `aimMode()` here
+are the robot's own (the code is inside `Robot.java`); in `Controls.java` and `Actions.java` the same
+things are `robot.aim()` and `robot.aimMode()`.
 
 ## 11. Feel the aim: a buzz when on target
 
@@ -533,7 +592,9 @@ and the [cookbook](../../cookbook.md#game-pieces).
 
 The drivers watch the robot, not the Driver Station. The turret robot has a goBILDA RGB Indicator Light
 on a servo port (`lights = add(Lights.gobilda("light"));` in Robot.java), and its colors are rules in
-[`Controls.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/Controls.java):
+[`Controls.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/Controls.java).
+The rules go **inside `buttons(...)`**, with your button jobs: like a button job, each line is set up
+once at INIT and the library checks it every loop.
 
 ```java
 robot.lights.show(LightColor.YELLOW).blinking().inLastSeconds(20);     // last 20 s: go park
@@ -545,8 +606,8 @@ robot.lights.otherwise(LightColor.ORANGE);                             // follow
 robot.lights.show(LightColor.WHITE).whenCountGoesUp(() -> robot.launcher.part().getShotsFired());   // a 0.5 s flash per piece fired
 ```
 
-`LightColor` needs `import com.crossbotics.ftchelper.robot.LightColor;` at the top of `Controls.java`
-(Alt+Enter on the red word adds it). No turret (section 10)? Purple while whole-robot aim is on:
+`LightColor` needs `import com.crossbotics.ftchelper.robot.LightColor;` at the top of `Controls.java`,
+and of `Actions.java` too if an action sets a color (Alt+Enter on the red word adds it). No turret (section 10)? Purple while whole-robot aim is on:
 `robot.lights.show(LightColor.PURPLE).when(() -> robot.aimMode().isOn());`.
 
 **Before START the light shows the alliance** (the library does it, no line needed): solid red or blue
@@ -582,8 +643,8 @@ to the same `Tunables.Aim` class as section 9:
 ```java
 public static class Aim {
     // ... goalX, goalY, mirrorForRed as in section 9 ...
-    // Section 14: shooting while moving. OFF until you tested it on the real robot.
-    public static boolean shootOnMove = true;
+    // Section 14: shooting while moving.
+    public static boolean shootOnMove = false;   // true only after testing it on the real robot (below)
     public static double flightSec = 0.8;        // seconds in the air: measure it (below)
     public static double flightSecPerIn = 0;     // extra seconds per inch (longer shots fly longer)
     public static double maxLeadIn = 24;         // never aim more than this far off the goal
@@ -594,8 +655,8 @@ public static class Aim {
 }
 ```
 
-That is all: the turret (or whole-robot aim, section 10), `isAimed()` and the launcher's speed all use
-the virtual goal. The Driver Station shows `Aim: moving shot: lead 12.3 deg, 18 in` while the robot
+With `shootOnMove = true`, the turret (or whole-robot aim, section 10), `isAimed()` and the launcher's
+speed all use the virtual goal. The Driver Station shows `Aim : moving shot: lead 12.3 deg, 18 in` while the robot
 moves; standing still, nothing changes. A button can switch it off in a match (`Controls.java`):
 
 ```java
@@ -616,8 +677,8 @@ a little more, so the launcher's own line passes through the goal. While shootin
 these numbers do the job of `cameraOffset`: leave `cameraOffset` at 0 unless shots still go to one side
 standing still.
 
-**It must be tuned on the real robot.** Start with `shootOnMove = true` and the robot standing still:
-the shots must land as before. Then drive slowly sideways past the goal and shoot: misses on the side
+**It must be tuned on the real robot.** Only for the test, set `shootOnMove = true`, and first shoot
+with the robot standing still: the shots must land as before. Then drive slowly sideways past the goal and shoot: misses on the side
 the robot drives toward mean `flightSec` is too short; on the other side, too long. Then faster. If the
 robot drives and turns at once and the shots go wide, keep turning slow while firing. Off
 (`shootOnMove = false`, the default) changes nothing. The math, for your own code:
@@ -651,6 +712,11 @@ stand on the audience side, e.g. x 44, y -14 facing the HIVE (heading 90). BLUE:
 facing the HIVE (heading -90), not too close (the tags must fit in the picture). Drag the robot there on
 the map, or drive. The turret robot's camera is tilted 30 degrees up for that. Press BACK on gamepad 2 to stop following, D-pad right to switch
 between the POLLEN and NECTAR tables.
+
+**Expect misses.** Spin up (LB) and fire (RB) from those spots: most shots fly over the CELL. The
+example's shot tables are made-up numbers, not measured. That is normal: the
+[Shot Tuner](#7-speed-from-distance-and-fire-only-when-aimed) finds the speeds that hit, for each
+distance, on your robot.
 
 The whole-robot aim: do the same with `flywheelbot` (`-ProbotClass=com.crossbotics.ftchelper.examples.flywheelbot.Robot -Pout=build/flywheelbot.properties`),
 choose "FlywheelBot TeleOp", drive until the goal is in view, and press RB on gamepad 1. ([Simulator guide](../../guides/simulator.md).)
@@ -700,10 +766,12 @@ give each a `looks(...)` shape in `Robot.java` ([Lesson 1: Draw your robot from 
 | INIT stops: `Tunables.Hood has no posA` | the hood's stops are needed: run the Hood Finder and copy its line. |
 | `Launcher waits for: hood` and never fires | `travelSec` is very long, or (a motor hood) it cannot reach the angle: raise `maxPower`, check `tolerance`. |
 | INIT stops: `the row at 48 in has hood 30, outside the hood's range` | a table row asks past a stop: fix the row (or the stops). |
-| `battery 11.2 V: low` | swap the battery. Battery compensation helps, but a low battery is still slower. |
-| `following: odometry` points the wrong way | `Tunables.Aim.goalX`, `goalY` (from the BLUE wall), `mirrorForRed`, or the pose did not start right (no autonomous before TeleOp). |
+| `battery 11.2 V: low` | swap the battery: the wheel gets back to speed slower on a low battery. |
+| `following: odometry` points the wrong way | `Tunables.Aim.goalX`, `goalY` (seen from your own wall), `mirrorForRed`, or the pose did not start right (no autonomous before TeleOp). |
 | `Aim: no goal` | whole-robot aim on, but the camera does not see the goal and there is no odometry backup. |
-| `Aim odometry: the pose was never set` | TeleOp ran without autonomous: the odometry backup is off (camera only). Run autonomous first, or set the pose with `robot.odometry().setPose(...)`. |
+| `Aim odometry: the pose was never set` | TeleOp ran without autonomous: the odometry backup is off (camera only). Run autonomous first, or park on the reset spot and hold gamepad 1 START 1 s ([lesson 7](07-odometry.md#7-teleop-starts-where-autonomous-ended)). |
+| INIT: `Launcher fire one; hold: keep firing: no button (G2 RB is your "..." in Controls.java)` | one of your own jobs is on the launcher's button: move it ([section 3](#3-the-buttons-it-brings)). |
+| INIT: `Turret : no angle from a program before: ...` | a turret with no home switch counts from where it points at INIT: turn it to `startAngle` by hand, then INIT again. |
 | `Aim odometry: ... more than the field allows` | the pose is wrong (it did not start right): the odometry backup is off until it is right. |
 | `Aim: camera says 60 in, odometry 48 in` | the pose drifted, or `goalX`, `goalY` are not where the camera measures to. |
 | INIT stops: `robot.aimMode() ... separate modes` | the turret follows the goal: remove the `aimMode()` line (the turret aims), or `follows(...)` for whole-robot aim. |

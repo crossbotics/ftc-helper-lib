@@ -141,7 +141,7 @@ g2.leftStickY.free();
 A stick also takes `free()` and `says(...)`.
 
 **Show a value on the Driver Station** with `show(words, value)`, a line of its own inside
-`buttons(...)` (like `rumbleWhen`). The library reads the value again every loop and shows it during
+`buttons(...)`. The library reads the value again every loop and shows it during
 the match:
 
 ```java
@@ -182,8 +182,13 @@ The library tells them apart for you: a tap is a press let go before the hold st
 
 The rules, checked at INIT:
 
-- A job of yours on a button a part suggested **replaces** the suggestion. (The part simply has no
-  button there; use `free()` to clear one without a new job.)
+- A job of yours on a button a part suggested **replaces** the suggestion. The part then has no
+  button for that job, and INIT says so, for example
+  `Lift down: no button (G2 A is your "drop" in Controls.java)`. Use `free()` to clear a button
+  without a new job.
+- **A free button today may be a part's button tomorrow.** When a later lesson adds a part (a
+  launcher in lesson 9 wants gamepad 2's LB and RB), your job on that button wins and the part gets
+  none. After adding a part, read INIT's notes for `no button`.
 - Two jobs of yours on one button stop at INIT: `Controls.java: G2 RB has two jobs. Give each button one
   job (put both commands in one lambda if you want both).`
 - A job on one of the library's buttons (gamepad 1's left stick, right stick X, LT with two drivers, Y on
@@ -214,8 +219,8 @@ so a driver who grabs BACK in a panic and holds it gets the stop. Holding BACK 1
 "forward" with field-centric on (lesson 2) and the robot stays paused; in robot-centric driving a held
 BACK shows a note ("forward" is only reset in field-centric driving). Going on is always a tap.
 
-**START + BACK: START first.** The debug lines (and the alliance switch below) use START and BACK
-together. Hold START, then press BACK. If BACK goes down first, it is just a pause (it acts at the
+**START + BACK: START first.** The debug lines (and the alliance switch below) use gamepad 1's small
+START and BACK buttons, one after the other: hold START, then press BACK while you still hold START. If BACK goes down first, it is just a pause (it acts at the
 press, and START joining later does not undo it): tap BACK to go on.
 
 **Wrong alliance?** Choose it in INIT (gamepad 1 X = BLUE, B = RED, section 6). Switching during the
@@ -226,18 +231,37 @@ the aim follow at once. It takes 1.5 s on purpose, so it never happens by accide
 
 **Move the library's buttons.** Every library button above (drive sticks, slow, field-centric, pause,
 debug, GUIDE's map and menu, the INIT alliance buttons) can move to another button or be freed, and the
-alliance switch can be turned on. One method next to `buttons(...)`:
+alliance switch can be turned on. It is one more method in `Controls.java`: inside the class, after
+the `}` that closes `buttons(...)`. The whole file, with it:
 
 ```java
-@Override
-protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
-    lib.fieldCentric(g1.x);                  // field-centric on X: Y is free for your own job now
-    lib.slow(g1.rt);                         // slow on the right trigger
-    lib.switchAlliance(g1.start, g1.back);   // optional: hold START, then BACK, 1.5 s to switch the alliance
+package org.firstinspires.ftc.teamcode;
+
+import com.crossbotics.ftchelper.robot.ControlMap;
+import com.crossbotics.ftchelper.robot.Pad;
+import com.crossbotics.ftchelper.teleop.LibraryButtons;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+
+@TeleOp(name = "Quick Start TeleOp")
+public class Controls extends ControlMap<Robot> {
+    public static boolean oneDriver = false;
+
+    @Override
+    protected void buttons(Robot robot, Pad g1, Pad g2) {
+        g2.dpadLeft.press(Actions.spitOut(robot)).says("spit out");
+    }
+
+    @Override
+    protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
+        lib.fieldCentric(g1.x);                  // field-centric on X: Y is free for your own job now
+        lib.slow(g1.rt);                         // slow on the right trigger
+        lib.switchAlliance(g1.start, g1.back);   // optional: hold START, then BACK, 1.5 s to switch the alliance
+    }
 }
 ```
 
-(Import `com.crossbotics.ftchelper.teleop.LibraryButtons`.) INIT checks it like your own buttons:
+(Your `buttons(...)` keeps your own lines; the new parts are the `LibraryButtons` import and the
+`libraryButtons` method.) INIT checks it like your own buttons:
 two library jobs on one button stop with the button's name. A job you free is said at INIT too: with
 `lib.pause(null)` INIT warns that nothing pauses the robot. Every job and how to move it:
 [the button menu](../../guides/buttons.md#moving-the-librarys-buttons).

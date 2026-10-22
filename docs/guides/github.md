@@ -73,10 +73,13 @@ conflict. Talk first: "I am changing `Tunables.java`".
 
 ```bash
 git --version
-git config --global user.name "Sam"
-git config --global user.email "sam-ftc@users.noreply.github.com"
+git config --global user.name "YOUR-NAME"
+git config --global user.email "12345678+YOUR-NAME@users.noreply.github.com"
 git config --global pull.rebase false
 ```
+
+**Change the two lines before you run them:** `YOUR-NAME` is your first name or GitHub username, and
+the email is YOUR private GitHub address (below), not the example's. Keep the quotes.
 
 The last line says what `git pull` does when you and a teammate both made commits: join them with a
 merge (the simplest way). Without it, a new git stops with `You have divergent branches`.

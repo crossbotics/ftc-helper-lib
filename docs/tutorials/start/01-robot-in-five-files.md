@@ -20,7 +20,8 @@ This lesson explains with a worked example: goBILDA's BIOBUZZ starter bot, rewri
 ([`examples/.../lessonbot`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot)) the
 same way: read its lines, make the same change in your own files, and use its files as the answer key.
 The simulator commands with `-PteamCode=none` run the library's examples; for your own robot use
-`-PteamCode=../TeamCode`.
+`-PteamCode=../TeamCode`. That one is the default (`./gradlew :sim:run` alone builds `../TeamCode` too):
+the lessons write it out so you always see which code runs.
 Three more complete robots are next to it:
 [`flywheelbot`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot)
 (an intake that runs from the start, a flywheel the driver speeds up and down, an indexer servo, a
@@ -35,7 +36,8 @@ The reference for every method: [the robot module](../../modules/robot.md).
 
 ## Java you will meet
 
-The five files use a few Java ideas over and over. You do not need more than this to start:
+The five files use a few Java ideas over and over. You do not need more than this to start, and you
+do not need to understand every word yet: read the list once, and come back to it when a lesson uses one.
 
 - `public class Robot extends RobotDefinition`: **extends** means "built on": your class gets
   everything the library class already does. The library class is **abstract**: an unfinished class
@@ -156,8 +158,12 @@ public class Tunables {
   (`Tunables.Intake: outPower not written: library defaults used (fine)`). A few safety numbers, like a
   lift's `min` and `max`, have no default: INIT stops and says which line to write.
 - **Every number each part reads**, with its units, its default and the finder that measures it:
-  [the Tunables reference](../../guides/tunables.md). A misspelled name is not read (capitals count),
-  so after a change, check that INIT's "not written" note does not name a number you wrote.
+  [the Tunables reference](../../guides/tunables.md). **A misspelled name stops INIT** (capitals
+  count), with the closest real name, for example
+  `Tunables.Intake.inPowr is not a setting of Intake (did you mean inPower?): the robot would quietly ignore it. ...`.
+  Fix the name, or delete the line. **Why stop?** Without it, the part would quietly use its default
+  and you would never know your number was not used. A number for your own code (a distance for an
+  autonomous) goes in a section of your own, like `Tunables.Auto`.
 - **Tune on the robot:** in the PRACTICE profile, after START, holding GUIDE for a second opens the tuning menu (D-pad to choose and
   change, A to save on the hub). At the next INIT the Driver Station lists every value that differs
   from this file, for example `Tunables.Launcher.speedRpm = 2750 (code 2679)`. Copy the good ones
@@ -252,6 +258,9 @@ public class LaunchAndBackUp extends Auto<Robot> {
 
 `extends Auto<Robot>`: an autonomous from the library, for your `Robot`. You fill in
 `steps(...)`. `mirrorForRed()` you add only when the answer is false (it is explained just below).
+In `move(label, inches, direction, power)` the direction goes clockwise from the robot's front
+(0 = forward, 90 = right); the last number of `start(...)` is a heading, which goes the other way
+(90 = turned left). [Lesson 6](06-first-autonomous.md) explains these two different 90s.
 
 One short file per autonomous, read top to bottom. The INIT menu (alliance, start delay, the profile)
 comes for free; moves and turns are written for BLUE and mirrored for RED (or, on a field turned half a
@@ -297,7 +306,9 @@ simulator (its size, parts, motors and shapes). Your team's is `simulator/robot.
 project. `Robot.java` can write that file for you, if it also
 says what each part is and how it looks ([Shapes and parts](../../modules/robot.md#shapes-and-parts)).
 Name each part by its catalog id; give a size or a place only when the catalog does not know it.
-(Shortened from [`flywheelbot/Robot.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot/Robot.java).)
+(Shortened from [`flywheelbot/Robot.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot/Robot.java),
+inside `define()`. Adapt it to YOUR parts: keep your own lines and add only the `.part(...)`,
+`.looks(...)` and `.shotAngle(...)` pieces to the parts you have. No launcher? Leave its line out.)
 
 ```java
 chassisMm(400, 400, 100);
@@ -306,6 +317,9 @@ intake = add(Intake.motor("intake").part("gobilda-5203-1150").holds(3)
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.crServo("windmill"))
         .looks(Shape.flywheel("gobilda-hogback-96").atMm(-40, 0, 170)).shotAngle(50));
 ```
+
+`Shape` needs one more import at the top of `Robot.java`: `import com.crossbotics.ftchelper.robot.Shape;`
+(Alt+Enter on the red word adds it).
 
 Then, from the `ftc-helper-lib` folder:
 
@@ -331,7 +345,8 @@ Tunables section (here `Tunables.IntakeDeploy`).
    Each device gets its module from its name and type ("lift" is a Lift, a servo called "claw" a
    Claw). Read every `TODO` in Robot.java: the drive motor and wheel size, how the hub is mounted,
    and anything it was not sure about. If one of the five files is already in TeamCode, it writes
-   nothing and says which file: move that file away first.
+   nothing and says which file: move that file away first. (Gradle then also prints
+   `BUILD FAILED`: that is expected, nothing broke. Your files are untouched.)
 2. **Build and drive.** The drive works on day one; each module has safe starting numbers.
 3. **A simulator robot file** from the code:
 
