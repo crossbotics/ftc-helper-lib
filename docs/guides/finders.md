@@ -115,8 +115,11 @@ Watch the current (amps): a high number while not moving means it is pushing on 
 3. If the measured speed stays below the target at every speed, press **RB** (more F); above, **LB**.
 4. Feed a piece by hand: the screen shows the recovery time. Use it for the launcher's
    `shotInterval(...)` (a little longer than the recovery time).
-5. Five files: copy the `Tunables.Launcher: kP = ..., kI = ..., kD = 0, kF = ...` line into
-   `Tunables.Launcher` (the section is the motor's name). A slow recovery adds `shotIntervalSec`.
+5. Five files: copy the `Tunables.Launcher: kP = ..., kI = ..., kD = 0, kF = ..., nominalVolts = ...` line
+   into `Tunables.Launcher` (the section is the motor's name). A slow recovery adds `shotIntervalSec`.
+   `nominalVolts` is the battery voltage the gains were found at: the launcher's battery compensation
+   uses it, so a low battery spins the wheel back up as fast. The RB/LB F changes are only on the
+   screen: copy the line (with the F you ended on) into `Tunables.java`.
 
 ## Drive Tuner: wheel size and strafe correction
 
@@ -211,7 +214,8 @@ the "fire only when aimed" checks are off: point the robot at the goal with the 
 five files' launcher has no hood. With the older helpers and a hood, keep the hood angle the same while
 you compare speeds: the hit counts are per speed.)
 
-Charge the battery before tuning speeds: a weak battery changes how far the shots go.
+Charge the battery before tuning speeds: a weak battery changes how far the shots go. The launcher's
+speed trim (the D-pad in a match) is not used in the tuner, so the table holds the real speeds.
 
 ## Piece Tuner: what each sensor sees
 

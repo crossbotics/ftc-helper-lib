@@ -31,6 +31,15 @@ public interface Devices {
     }
 
     /**
+     * The battery's voltage now (volts), from the hubs ({@link Hw#batteryVolts}); NaN with no voltage
+     * sensor (tests). Each call asks the hubs (a few milliseconds): the launcher reads it every 0.25 s
+     * for its battery compensation.
+     */
+    default double batteryVolts() {
+        return hardwareMap() == null ? Double.NaN : Hw.batteryVolts(hardwareMap());
+    }
+
+    /**
      * The robot's devices, from the OpMode's hardwareMap.
      *
      * @param hardwareMap the OpMode's {@code hardwareMap}

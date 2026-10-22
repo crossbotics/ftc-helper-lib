@@ -67,6 +67,65 @@ public class AimRecipes {
         }
     }
 
+    /** The numbers for the speed-trim recipe (its own set, so the other recipes stay short). */
+    public static class TrimNumbers {
+        public static class Drive {
+            public static double maxPower = 0.6, slowSpeed = 0.3;
+        }
+
+        // recipe: tunables-speed-trim
+        public static class Launcher {
+            public static double speedRpm = 2600, readyBandRpm = 60, idleRpm = 1500;
+            public static double[][] speedByDistance = {{24, 2200}, {48, 2550}, {72, 2900}};
+            // From the Flywheel Finder: the gains, and the battery voltage they were found at.
+            public static double kP = 1.17, kI = 0.117, kD = 0, kF = 11.70, nominalVolts = 12.6;
+            // Optional (these are the defaults): one D-pad press = 1%, never more than 15% each way.
+            public static double trimStepPercent = 1, trimMaxPercent = 15;
+            // Optional: true (the default) = F follows the battery; false = F exactly as tuned.
+            public static boolean batteryCompensation = true;
+        }
+        // end recipe
+
+        public static class Indexer {
+            public static double rest = 0.15, push = 0.55;
+        }
+    }
+
+    /** A robot whose speed comes from the camera's distance: the D-pad trims it. */
+    public static class TrimRobot extends RobotDefinition {
+        public Camera camera;
+        public Launcher launcher;
+
+        @Override
+        protected void define() {
+            tunables(TrimNumbers.class);
+            drive(Drive.tank("left_drive", "right_drive"));
+            camera = add(Camera.webcam("Webcam 1").goal("BLUE SCORING", "RED SCORING"));
+            launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer"))
+                    .speedFromDistance(camera));
+        }
+    }
+
+    /** The speed trim from your own buttons and an action. */
+    @TeleOp(name = "Cookbook Speed Trim", group = "Cookbook")
+    @Disabled
+    public static class TrimControls extends ControlMap<TrimRobot> {
+        @Override
+        protected void buttons(TrimRobot robot, Pad g1, Pad g2) {
+            // recipe: speed-trim
+            // The launcher's own buttons already do it: gamepad 2 D-pad up/down = speed trim +/- 1%,
+            // hold D-pad down 1 s = back to 0. The Driver Station shows "Speed trim: +3%".
+            // Your own: a bigger step on a button, and a far shot that sets the trim first.
+            g2.y.press(() -> robot.launcher.trimPercent(+3)).says("speed trim +3%");
+            g2.a.press(Action.named("Far shot +5%")
+                    .then(() -> robot.launcher.setTrim(+5), robot.launcher::fire)
+                    // The launcher fires or gives up within 3 s, so 4 s is always enough.
+                    .waitUntil("fired", () -> !robot.launcher.isShooting(), 4.0)
+                    .then(robot.launcher::resetTrim));
+            // end recipe
+        }
+    }
+
     /** A turret robot with a camera AND odometry: the odometry is the backup when the camera loses the goal. */
     public static class Robot extends RobotDefinition {
         public Camera camera;

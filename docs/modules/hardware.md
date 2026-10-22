@@ -67,6 +67,12 @@ if (bottom != null) lift.setLowerSwitch(bottom::isPressed);
 
 Gives the error text that `get` uses. You rarely need it.
 
+### `Hw.batteryVolts(hardwareMap)`
+
+The battery's voltage now (the lowest hub reading; NaN with no voltage sensor). Each call asks the hubs
+(a few milliseconds), so read it a few times a second, not every loop. The flywheel's
+[battery compensation](launcher.md#battery-compensation) uses it.
+
 ---
 
 ## MotorSetup

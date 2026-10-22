@@ -76,6 +76,8 @@ Flywheel flywheel = Flywheel.create(hardwareMap, "flywheel")
 | `.follower(hardwareMap, name, reversed)` | a second motor on the same wheel (same speed command). **It needs its own encoder cable.** If its encoder reads nothing while the wheel spins, it is switched off with a warning. It gets the `pidf` gains whether you call `pidf` before or after it |
 | `.countsPerRev(c)` | counts per FLYWHEEL turn: bare motor 1:1 = 28; with gears multiply by motor turns per wheel turn; a shaft encoder on this motor's port = its counts (REV Through Bore 8192) |
 | `.pidf(p, i, d, f)` | the hub's speed gains (PID plus F, a push that grows with the speed; see [PID](control.md#pidcontroller)). Start 10, 3, 0, 12; tune F first (with a charged battery) |
+| `.batteryCompensation(volts, nominalVolts)`, `.noBatteryCompensation()` | F follows the battery ([below](#battery-compensation)); off (the default) |
+| `getBatteryVolts()`, `getFScale()`, `hasBatteryCompensation()` | the last battery reading (NaN if none), what F is multiplied by now (1 = as tuned) |
 | `.tolerance(rpm)`, `.settleTime(s)` | when "ready" |
 | `.maxRpm(r)` | highest speed allowed |
 | `.shotDrop(rpm)` | a drop this big after ready = a shot was seen |
@@ -85,6 +87,29 @@ Flywheel flywheel = Flywheel.create(hardwareMap, "flywheel")
 
 **Check your speed reading** before trusting it: the RPM on telemetry must match a tachometer (a
 tool that measures spin speed) or a slow-motion video. Very high count rates (a fine encoder at high speed) can read wrong.
+
+### Battery compensation
+
+```java
+Flywheel flywheel = Flywheel.create(hardwareMap, "flywheel").pidf(1.17, 0.117, 0, 11.70)
+        .batteryCompensation(() -> Hw.batteryVolts(hardwareMap), 12.6);   // 12.6 V: from the Flywheel Finder
+```
+
+**Why.** The hub's speed control works in power: F is "this much power for each count per second of
+speed" (the Flywheel Finder sets F = 32767 / the top speed in counts per second, as FIRST's motor
+PIDF tuning guide does; 32767 = full power). Power is a share of the battery's voltage, so the same power on a weaker battery pushes less
+and the wheel runs slower. The P and I gains notice the missing speed and add power, but I builds up
+slowly, so a low battery means a slow spin-up and a slow recovery after each shot (shots fired before it
+is back go short).
+
+**What it does.** Every 0.25 s it reads the battery and sends F x (`nominalVolts` / volts now): tuned at
+12.8 V, at 11.6 V F is x 1.10. Then the wheel gets the same push as when it was tuned. The scale stays
+between 0.8 and 1.3 (a bad reading cannot run the wheel away), a reading outside 7 to 16 V is ignored,
+and a new F is sent only when it changes by more than 2% (each send costs loop time). P and I stay as
+tuned. `nominalVolts` is the battery voltage when you found the gains: the Flywheel Finder shows it.
+Without it, 12.8 V (a charged battery under load). Below 11.5 V the Driver Station warns:
+`battery 11.2 V: low`. Debug mode shows `flywheel battery: 11.62 V (tuned at 12.6 V), F x1.08`.
+The robot in five files turns it on for you when `kF` is set ([robot.md](robot.md#speed-trim-and-battery-compensation)).
 
 ## ShotTable
 
@@ -201,6 +226,7 @@ Launcher launcher = new Launcher(flywheel, feeder)
 | `.readyTimeout(s)` | give up the remaining shots after this long not ready |
 | `.idleRpm(r)` | speed when not shooting (a low idle makes spin-up faster) |
 | `setRpm(r)` / `setDistance(d)` | the shot by hand / from the table (sets the hood too) |
+| `speedScale(s)`, `getSpeedScale()` | the shot speed x `s` (1.03 = +3%), a live trim for a match; not the idle speed. 1 = as set |
 | `getHood()`, `hasTable()` | the hood servo (or null); true if a table was given |
 | `spinUp()`, `shoot(n)`, `stopShooting()` | commands |
 | `idle()` | back to the idle speed |

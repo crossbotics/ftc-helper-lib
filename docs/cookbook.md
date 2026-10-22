@@ -74,6 +74,7 @@ first.
 - [How do I make the gamepad buzz when the aim is on target?](#how-do-i-make-the-gamepad-buzz-when-the-aim-is-on-target)
 - [How do I keep aiming when the camera loses the goal?](#how-do-i-keep-aiming-when-the-camera-loses-the-goal)
 - [How do I use one shot table per game piece?](#how-do-i-use-one-shot-table-per-game-piece)
+- [Every shot is a bit short today. How do I trim the speed (a low battery)?](#every-shot-is-a-bit-short-today-how-do-i-trim-the-speed-a-low-battery)
 
 **Actions** (several steps or parts together)
 - [How do I do several things one after the other?](#how-do-i-do-several-things-one-after-the-other)
@@ -1052,6 +1053,45 @@ public static Action fireNectar(Robot r) {
 table with the [Shot Tuner](guides/finders.md#shot-tuner-the-shot-table) ([its file](#how-do-i-build-a-shot-table-speed-for-each-distance);
 Y until `> Table`, then the D-pad picks the one you tune), then copy its line into `Tunables.java`.
 **More:** [Lesson 9: two shot tables](tutorials/start/09-shooter-and-camera.md#8-two-game-pieces-two-shot-tables), [Launcher](modules/robot.md#launcher).
+
+### Every shot is a bit short today. How do I trim the speed (a low battery)?
+
+**Where:** nothing to write for the D-pad (the launcher brings it); `Tunables.java` for the numbers,
+`Controls.java` or `Actions.java` for your own buttons.
+
+<!-- recipe: tunables-speed-trim -->
+```java
+public static class Launcher {
+    public static double speedRpm = 2600, readyBandRpm = 60, idleRpm = 1500;
+    public static double[][] speedByDistance = {{24, 2200}, {48, 2550}, {72, 2900}};
+    // From the Flywheel Finder: the gains, and the battery voltage they were found at.
+    public static double kP = 1.17, kI = 0.117, kD = 0, kF = 11.70, nominalVolts = 12.6;
+    // Optional (these are the defaults): one D-pad press = 1%, never more than 15% each way.
+    public static double trimStepPercent = 1, trimMaxPercent = 15;
+    // Optional: true (the default) = F follows the battery; false = F exactly as tuned.
+    public static boolean batteryCompensation = true;
+}
+```
+
+<!-- recipe: speed-trim -->
+```java
+// The launcher's own buttons already do it: gamepad 2 D-pad up/down = speed trim +/- 1%,
+// hold D-pad down 1 s = back to 0. The Driver Station shows "Speed trim: +3%".
+// Your own: a bigger step on a button, and a far shot that sets the trim first.
+g2.y.press(() -> robot.launcher.trimPercent(+3)).says("speed trim +3%");
+g2.a.press(Action.named("Far shot +5%")
+        .then(() -> robot.launcher.setTrim(+5), robot.launcher::fire)
+        // The launcher fires or gives up within 3 s, so 4 s is always enough.
+        .waitUntil("fired", () -> !robot.launcher.isShooting(), 4.0)
+        .then(robot.launcher::resetTrim));
+```
+
+**Why:** a battery lower than when you tuned, or a worn wheel, makes every shot a little short. The
+trim (+/- 1% a press, at most 15%, back to 0 at every INIT) fixes it for this match, for every table.
+Trimming the same way every match means the table is off: tune it again with the Shot Tuner and copy the
+new line into `Tunables.java`. Battery compensation (on with `kF`) scales the F gain by `nominalVolts` /
+the battery now, so the wheel gets back to speed after a shot as fast on a low battery.
+**More:** [Lesson 9: speed trim and a low battery](tutorials/start/09-shooter-and-camera.md#speed-trim-and-a-low-battery), [Launcher](modules/robot.md#speed-trim-and-battery-compensation).
 
 ## Actions
 

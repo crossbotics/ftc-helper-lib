@@ -64,6 +64,7 @@ public class Launcher implements Subsystem {
     private double idleRpm = 0;
 
     private double shotRpm = 0;
+    private double speedScale = 1;       // speedScale(): the shot speed x this (1 = as set)
     private boolean spinning = false;    // true = at shot speed; false = idle speed (or off)
     private boolean off = true;          // stop() keeps it fully off (even the idle speed) until started again
     private int shotsLeft = 0;
@@ -159,6 +160,22 @@ public class Launcher implements Subsystem {
         if (hood != null) hood.setDegrees(shot.hoodDeg);
     }
 
+    /**
+     * Multiplies the shot speed (from {@link #setRpm} or the table) by this, e.g. 1.03 = 3% faster: a
+     * live trim for a match (a tired battery, a worn wheel), not a new table. Not the idle speed. 1 = as
+     * set (the default). The robot in five files' speed trim uses it.
+     *
+     * @param scale 0.5 to 1.5 (kept to that); 1.03 = +3%
+     */
+    public void speedScale(double scale) {
+        speedScale = Double.isNaN(scale) ? 1 : Math.max(0.5, Math.min(1.5, scale));
+    }
+
+    /** The shot speed's multiplier ({@link #speedScale}): 1 = as set. */
+    public double getSpeedScale() {
+        return speedScale;
+    }
+
     /** Spins the flywheel up to the shot speed and keeps it there. */
     public void spinUp() {
         spinning = true;
@@ -224,7 +241,7 @@ public class Launcher implements Subsystem {
         double now = clockNanos.getAsLong() / 1e9;   // seconds
         // Off: 0. Spinning: the shot speed. Otherwise: the idle speed.
         // ("a ? b : c ? d : e" reads: if a then b, else if c then d, else e.)
-        flywheel.setRpm(off ? 0 : spinning ? shotRpm : idleRpm);
+        flywheel.setRpm(off ? 0 : spinning ? shotRpm * speedScale : idleRpm);
         flywheel.update();
         feeder.update();
         if (hood != null) hood.update();

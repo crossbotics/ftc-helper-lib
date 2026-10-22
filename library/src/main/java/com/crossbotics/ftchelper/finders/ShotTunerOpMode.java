@@ -32,6 +32,8 @@ import com.crossbotics.ftchelper.vision.TargetSource;
  * <p>The speed starts from the table you already have at this distance (or {@code Tunables.Launcher.speedRpm}),
  * so you only fine-tune. Each shot keeps the flywheel speed MEASURED as the piece was fed; a shot fed
  * while the flywheel was well under the speed asked for is flagged (wait for Ready, charge the battery).
+ * The launcher's speed trim is never used here (tables are recorded clean); its battery compensation
+ * (with {@code kF} in Tunables) stays on.
  *
  * <p><b>One table per game piece.</b> With two or more tables in {@code Tunables.Launcher}
  * ({@code speedByDistancePollen}, {@code speedByDistanceNectar}), choose the one you are tuning (Y until
@@ -248,6 +250,10 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         // Robot.java's "fire only when aimed" checks are off here: you aim by hand in the tuner, and
         // the turret (if any) stays still.
         if (robotDef != null) launcher.clearReadyChecks();
+        // No speed trim here: the table must hold the real speeds, not this match's fix. (The tuner
+        // sets the speed itself, so the launcher's D-pad trim never reaches it either.) The flywheel's
+        // battery compensation stays on: it only helps the wheel reach the speed asked for.
+        launcher.speedScale(1);
         hood = launcher.getHood();
         camera = createCamera();
         if (camera != null) camera.start();

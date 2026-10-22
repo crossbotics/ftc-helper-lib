@@ -6,6 +6,20 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
+- **Launcher speed trim that works with shot tables.** `robot.launcher.trimPercent(+2)` makes every shot
+  speed (the table's or `speedRpm`) 2% faster; `setTrim(percent)`, `resetTrim()`, `speedTrim()`. Kept to
+  +/- `Tunables.Launcher.trimMaxPercent` (15), the same for every table, 0 at every INIT, shown as
+  `Speed trim: +3%`. With speed from the distance, the operator's D-pad up/down trims by
+  `trimStepPercent` (1%); hold D-pad down 1 s = no trim (with a fixed speed: back to `speedRpm`). The
+  Shot Tuner never uses it. `launcher.Launcher.speedScale(s)` / `getSpeedScale()` underneath.
+- **Flywheel battery compensation.** `Flywheel.batteryCompensation(volts, nominalVolts)` scales the hub's
+  F gain by nominalVolts / the battery now (read every 0.25 s, sent only on a 2% change, kept to x0.8..x1.3),
+  so a low battery gets back to speed after a shot as fast as a full one; warns under 11.5 V. On in the
+  robot in five files when `kF` is set (`Tunables.Launcher.nominalVolts`, default 12.8;
+  `batteryCompensation = false` turns it off). The Flywheel Finder now records the battery voltage
+  (`nominalVolts = 12.6` in its line) and runs step 2 with the compensation. `Hw.batteryVolts(hardwareMap)`,
+  `Devices.batteryVolts()`, `Flywheel.getBatteryVolts()`, `getFScale()`, `hasBatteryCompensation()`,
+  `noBatteryCompensation()`.
 - **Shot Tuner: tune the way teams do.** At each distance shoot 3-5 per speed and mark each shot
   A = HIT or B = MISS; the screen shows `Hits at 2550: 3/4` and every speed tried there, and X saves the
   speed with the best hit ratio. The distance is averaged over half a second of fresh readings; each
@@ -92,6 +106,8 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Changed
 
+- The launcher's D-pad down (fixed speed) is now a tap (speed down) and a 1 s hold (back to `speedRpm`), so
+  the tap runs when the button is let go.
 - `PedroFollower.remainingIn()` is now the distance left along the WHOLE path (all its parts), measured
   from the robot's closest point on the path. It was Pedro's distance for the part it steers along now,
   which Pedro may switch well before the join. The Driver Station's `Path: 18 in to go` uses it too.

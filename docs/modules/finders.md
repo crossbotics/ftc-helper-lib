@@ -146,12 +146,17 @@ override it for a geared wheel. Output:
 Flywheel.create(hardwareMap, "flywheel").countsPerRev(28.0).pidf(1.17, 0.117, 0, 11.70).maxRpm(5400)
     // top speed 6000 RPM; maxRpm = 90% of it
     // recovery after a shot at 3600 RPM: 0.38 s
-Tunables.Flywheel: kP = 1.17, kI = 0.117, kD = 0, kF = 11.70, shotIntervalSec = 0.45
+    // tuned at 12.6 V: add .batteryCompensation(() -> Hw.batteryVolts(hardwareMap), 12.6)
+Tunables.Flywheel: kP = 1.17, kI = 0.117, kD = 0, kF = 11.70, nominalVolts = 12.6, shotIntervalSec = 0.45
 ```
 
 The `Tunables` line is for a [`Launcher`](robot.md) module on that motor (here a motor named
 `flywheel`; the lessons call it `launcher`, so `Tunables.Launcher`). `shotIntervalSec` is only there
-when the recovery is longer than the default 0.25 s.
+when the recovery is longer than the default 0.25 s. `nominalVolts` is the battery voltage while the
+top speed was measured (the screen shows `Battery: 12.61 V (gains for 12.6 V)`): the gains are right for
+that voltage, and the launcher's [battery compensation](launcher.md#battery-compensation) scales F from
+it. Step 2 runs with that compensation, so an F you fine-tune there is for the same voltage. Under
+11.5 V it warns: charge the battery first.
 
 ## DriveTunerOpMode
 
@@ -315,7 +320,8 @@ The speed stays at or below the flywheel's `maxRpm`, and the hood inside its lim
 when the D-pad reaches one), so a saved point is what was really tested. The screen shows the target and measured speed, ready (or why not), shots fired (and how many
 are still to mark), `Hits at 2550: 3/4`, every speed tried at this spot, every table's point count
 (`Points: POLLEN 3, NECTAR 0  (4-6 per table)`), the recovery time, the distance and bearing, and the
-saved points. Each shot keeps the flywheel speed **measured** as the piece was fed; one fed more than
+saved points. The launcher's speed trim is never used here (the table holds the real speeds); its battery
+compensation stays on. Each shot keeps the flywheel speed **measured** as the piece was fed; one fed more than
 `sagLimitRpm` (60 RPM or 3%) under the speed asked for is flagged "sagged". The hit counts start again
 when the distance moves more than `SPOT_MOVE_IN` (4 in), after a save, and on another table. Output:
 

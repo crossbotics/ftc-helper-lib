@@ -18,6 +18,15 @@ final class RobotTestKit implements Devices {
     final Map<String, boolean[]> switches = new HashMap<>();
     // Blinkin LED drivers: the last servo position each was sent (NaN = none yet).
     final Map<String, double[]> blinkins = new HashMap<>();
+    // The battery the hubs read (volts); NaN = no voltage sensor, like the default.
+    double volts = Double.NaN;
+    int voltReads = 0;
+
+    @Override
+    public double batteryVolts() {
+        voltReads++;
+        return volts;
+    }
 
     @Override
     @SuppressWarnings("unchecked")

@@ -23,8 +23,22 @@ import java.util.List;
  * public static class Launcher {                             // Tunables.java
  *     public static double speedRpm = 2600, stepRpm = 100, readyBandRpm = 60, idleRpm = 0;
  *     public static double[][] speedByDistance = {{24, 2200}, {48, 2550}, {72, 2900}};   // inches, rpm
+ *     public static double kP = 1.17, kI = 0.117, kD = 0, kF = 11.70, nominalVolts = 12.6;   // Flywheel Finder
+ *     public static double trimStepPercent = 1, trimMaxPercent = 15;   // optional: the speed trim
  * }
  * }</pre>
+ *
+ * <p><b>Speed trim</b> (a fix during a match, when every shot is a little short or long: a tired
+ * battery, a worn wheel): {@link #trimPercent(double)} makes every shot speed (the table's or the fixed
+ * one) that many percent faster or slower, kept to +/- {@code trimMaxPercent} (15). It starts at 0 at
+ * every INIT and is the same for every table (a battery or a wheel changes them all alike). The
+ * Driver Station shows {@code Speed trim: +3%}. The Shot Tuner never uses it (tables are recorded
+ * clean). If you trim the same way match after match, the table is off: tune it again (or fold the
+ * trim into Tunables.java) instead.
+ *
+ * <p><b>Battery compensation</b> (on when {@code kF} is set; {@code batteryCompensation = false} turns
+ * it off): the hub's F gain is scaled by {@code nominalVolts} / the battery now, so a low battery gets
+ * the wheel back to speed after a shot as fast as a full one (see {@link Flywheel#batteryCompensation}).
  *
  * <p>{@link #fire()} spins up if needed and feeds one piece as soon as the wheel is at speed (it gives
  * up after 3 s and says why). The driver can step the speed up and down ({@link #adjust(int)}).
@@ -44,9 +58,10 @@ import java.util.List;
  * {@code speedByDistance} if there is one, else the first by name, or the one given to
  * {@link #startTable(String)}. The Driver Station shows the table in use.
  *
- * <p>Suggested buttons (operator): LB spins up / down, RB fires one (hold it: keeps firing), D-pad up/down change the speed
- * by {@code stepRpm} (when the D-pad is free and the speed does not come from the distance), D-pad
- * right picks the next shot table (with two or more).
+ * <p>Suggested buttons (operator): LB spins up / down, RB fires one (hold it: keeps firing). D-pad
+ * up/down: with the speed from the distance, the speed trim +/- {@code trimStepPercent} (1%); with a
+ * fixed speed, +/- {@code stepRpm}. Hold D-pad down 1 s: back to no trim. D-pad right picks the next
+ * shot table (with two or more). Each only when that button is free.
  *
  * Docs: docs/modules/robot.md (section "Launcher"), docs/modules/launcher.md
  */
@@ -79,6 +94,9 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     private Flywheel flywheel;
     private Tunable speedRpm, stepRpm;
     private int adjustSteps = 0;
+    // The speed trim (percent, 0 = none), one press of the D-pad, and the most it may go each way.
+    private double trimPct = 0;
+    private double trimStepPct = 1, trimMaxPct = 15;
     private boolean spinning = false;
     private boolean spinAtStart = false;
     // fireWhileHeld: true while the button is held, and how many shots this press has asked for.
@@ -241,7 +259,19 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
                 .tolerance(t.number("readyBandRpm", 60));
         if (t.has("kF")) {
             flywheel.pidf(t.number("kP", 0), t.number("kI", 0), t.number("kD", 0), t.number("kF", 0));
+            // Battery compensation: on unless Tunables says batteryCompensation = false. Optional numbers
+            // are read only when written, so a section without them gets no "missing" note.
+            boolean compensate = !t.has("batteryCompensation") || t.flag("batteryCompensation", true);
+            double nominal = t.has("nominalVolts") ? t.number("nominalVolts", Flywheel.DEFAULT_NOMINAL_VOLTS)
+                    : Flywheel.DEFAULT_NOMINAL_VOLTS;
+            if (nominal < 9 || nominal > 14) {
+                throw new IllegalStateException("Tunables." + name() + ".nominalVolts = " + nominal
+                        + ": the battery voltage the gains were tuned at, 9 to 14 V (the Flywheel Finder shows it)");
+            }
+            if (compensate) flywheel.batteryCompensation(devices::batteryVolts, nominal);
         }
+        if (t.has("trimStepPercent")) trimStepPct = Math.abs(t.number("trimStepPercent", 1));
+        if (t.has("trimMaxPercent")) trimMaxPct = Math.max(0, Math.min(50, Math.abs(t.number("trimMaxPercent", 15))));
         Feeder feed = indexer != null ? indexer.forLauncher() : new NoFeeder();
         part = new com.crossbotics.ftchelper.launcher.Launcher(flywheel, feed)
                 .idleRpm(t.number("idleRpm", 0))
@@ -370,6 +400,44 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     public void adjust(int steps) {
         // Not touch(): changing the speed is not taking the launcher away from an action.
         adjustSteps += steps;
+    }
+
+    // ----------------------------- speed trim -----------------------------
+
+    /**
+     * Trims the shot speed by this many percent more: {@code trimPercent(+2)} = every shot 2% faster
+     * than the table (or the fixed speed) says, {@code trimPercent(-1)} = 1% slower. Adds up, kept to
+     * +/- {@code Tunables.Launcher.trimMaxPercent} (15). From a button, an action
+     * ({@code .then(() -> r.launcher.trimPercent(+2))}) or code. Starts at 0 at every INIT; the
+     * Tunables numbers are not changed. A fix for this match: if you need it every match, tune the table again.
+     *
+     * @param change percent to add, e.g. +1 or -1
+     */
+    public void trimPercent(double change) {
+        // Not touch(): changing the speed is not taking the launcher away from an action.
+        if (Double.isNaN(change)) return;
+        setTrim(trimPct + change);
+    }
+
+    /**
+     * Sets the speed trim to this many percent (0 = none), kept to +/- {@code trimMaxPercent}.
+     *
+     * @param percent e.g. 3 for 3% faster, -2 for 2% slower
+     */
+    public void setTrim(double percent) {
+        if (Double.isNaN(percent)) return;
+        trimPct = Math.max(-trimMaxPct, Math.min(trimMaxPct, percent));
+    }
+
+    /** Back to the Tunables speed: the trim to 0, and the {@link #adjust(int)} steps to 0. */
+    public void resetTrim() {
+        trimPct = 0;
+        adjustSteps = 0;
+    }
+
+    /** The speed trim now, percent (0 = none; +3 = 3% faster). */
+    public double speedTrim() {
+        return trimPct;
     }
 
     /**
@@ -510,6 +578,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         } else {
             part.setRpm(speedRpm.get() + adjustSteps * stepRpm.get());
         }
+        // The trim multiplies whichever speed was chosen: +3% = x 1.03.
+        part.speedScale(1 + trimPct / 100.0);
         part.update();
     }
 
@@ -564,7 +634,24 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         } else if (!where.isEmpty()) {
             t.line("Shot distance", where);
         }
+        // The trim: always with the speed from the distance (the operator sees it is 0), else when used.
+        if (usesDistance() || trimPct != 0 || adjustSteps != 0) t.line("Speed trim", trimWords());
         part.addTelemetry(t);
+    }
+
+    // "+3%", "+200 rpm", "+200 rpm, -2%", "0%"; "(limit)" at trimMaxPercent.
+    private String trimWords() {
+        StringBuilder sb = new StringBuilder();
+        if (adjustSteps != 0) sb.append(fmt("%+.0f rpm", adjustSteps * stepRpm.get()));
+        if (trimPct != 0 || sb.length() == 0) sb.append(sb.length() == 0 ? "" : ", ").append(percent(trimPct, true));
+        if (trimPct != 0 && Math.abs(trimPct) >= trimMaxPct) sb.append(" (limit)");
+        return sb.toString();
+    }
+
+    // 3 -> "+3%", -0.5 -> "-0.5%", 0 -> "0%" (sign = show + or -).
+    private static String percent(double v, boolean sign) {
+        String n = Math.abs(v - Math.rint(v)) < 1e-9 ? fmt("%.0f", Math.abs(v)) : fmt("%.1f", Math.abs(v));
+        return (sign && v > 0 ? "+" : v < 0 ? "-" : "") + n + "%";
     }
 
     @Override
@@ -572,9 +659,16 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         Pad op = plan.operator();
         op.lb.toggle(this).says("spin up / down");
         op.rb.hold(this::fireWhileHeld, this::ceaseFire).says("fire one; hold: keep firing");
-        if (!usesDistance()) {
+        if (usesDistance()) {
+            // The speed comes from the table: the D-pad trims it by a percentage.
+            String step = percent(trimStepPct, false);
+            op.dpadUp.press(() -> trimPercent(trimStepPct)).says("speed trim +" + step);
+            op.dpadDown.tap(() -> trimPercent(-trimStepPct)).says("speed trim -" + step)
+                    .heldFor(1.0, this::resetTrim).says("hold 1 s: speed trim 0");
+        } else {
             op.dpadUp.press(() -> adjust(1)).says("speed up");
-            op.dpadDown.press(() -> adjust(-1)).says("speed down");
+            op.dpadDown.tap(() -> adjust(-1)).says("speed down")
+                    .heldFor(1.0, this::resetTrim).says("hold 1 s: back to speedRpm");
         }
         if (tables.size() > 1) op.dpadRight.press(this::nextTable).says("next shot table (" + tableList() + ")");
     }

@@ -100,4 +100,28 @@ public final class Hw {
         message.append("Check the spelling and the active configuration on the Driver Station.");
         return message.toString();
     }
+
+    /**
+     * The battery's voltage now, from the hubs' voltage sensors (the lowest reading, as the Characterizer
+     * does: every hub is on the same battery). NaN if there is no voltage sensor (or none reads).
+     *
+     * <p>Each call asks every hub once (a few milliseconds): call it a few times a second at most, not
+     * every loop. The flywheel's battery compensation reads it every 0.25 s.
+     *
+     * <pre>{@code
+     * flywheel.batteryCompensation(() -> Hw.batteryVolts(hardwareMap), 12.6);
+     * }</pre>
+     *
+     * @param hardwareMap the OpMode's {@code hardwareMap}
+     * @return volts (a charged 12 V FTC battery reads about 12.5 to 13.5 V), or NaN
+     */
+    public static double batteryVolts(HardwareMap hardwareMap) {
+        double lowest = Double.NaN;
+        // A reading of 1 V or less is a hub that does not measure (not a real battery).
+        for (com.qualcomm.robotcore.hardware.VoltageSensor s : hardwareMap.getAll(com.qualcomm.robotcore.hardware.VoltageSensor.class)) {
+            double v = s.getVoltage();
+            if (v > 1 && (Double.isNaN(lowest) || v < lowest)) lowest = v;
+        }
+        return lowest;
+    }
 }

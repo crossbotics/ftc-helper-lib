@@ -68,6 +68,7 @@ robot in five files: the Drive Tuner, then `Tunables.Drive.calibrated = true`.
 | `homing failed: switch not found` (turret) | the switch never closed: wire, magnet gap, or the wrong direction in `home(...)` |
 | `follower encoder not reading: follower switched off` (flywheel) | the second flywheel motor has no encoder cable: plug it in (or use one motor) |
 | `Launcher gave up: flywheel` (or `hood`, `Turret`...) | it was not ready in time: that part is the problem |
+| `Launcher: battery 11.2 V: low. The flywheel gets back to speed slower: charge or swap it` | swap in a charged battery. The launcher's battery compensation helps, but shots still wait longer |
 | `Aim odometry: the pose was never set ...` | TeleOp ran without autonomous, so the robot does not know where it is: aiming uses the camera only. Run autonomous first, or `robot.odometry().setPose(...)` ([Aim](modules/robot.md#aim)) |
 | `Aim odometry: ... more than the field allows` / `Aim: camera says ... odometry ...` | the pose is wrong or drifted, or `Tunables.Aim.goalX, goalY` are not where the camera measures to |
 | `goal out of turret range (behind the robot: holding)` | the goal is behind the robot: turn the robot toward it |
@@ -87,6 +88,14 @@ Add `robotConfig()` to the OpMode: `return new RobotSettings();` (starter kit) o
 `RobotSettings.imu()` returned null. Return `ImuSetup.get(...)` there: every Control Hub has an IMU.
 
 ## Robot behavior
+
+**Every shot is a little short (or long) today**
+The battery is lower than when you tuned, or the wheel is worn. In the match: the operator's D-pad
+up/down trims every shot speed by 1% (`Speed trim: +3%` on the Driver Station; hold D-pad down 1 s = 0).
+If it happens every match, the table is off: tune it again with the Shot Tuner and copy the new line into
+`Tunables.java` ([Lesson 9](tutorials/start/09-shooter-and-camera.md#speed-trim-and-a-low-battery)).
+Check that `kF` and `nominalVolts` (from the Flywheel Finder) are in `Tunables.Launcher`: they turn on the
+battery compensation.
 
 **Y does nothing (no field-centric) in an EasyTeleOp**
 Field-centric needs mecanum wheels and the IMU. A tank drivetrain, or `imu()` returning null, keeps

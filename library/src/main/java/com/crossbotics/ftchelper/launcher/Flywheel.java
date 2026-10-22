@@ -8,6 +8,7 @@ import com.crossbotics.ftchelper.core.Subsystem;
 import com.crossbotics.ftchelper.hardware.MotorSetup;
 import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
 import com.crossbotics.ftchelper.util.MathUtil;
+import java.util.function.DoubleSupplier;
 import java.util.function.LongSupplier;
 
 /**
@@ -33,7 +34,13 @@ import java.util.function.LongSupplier;
  * your top speed correctly (the speed on telemetry must match a tachometer or a slow-motion video).
  *
  * <p>Speed control runs on the hub (RUN_USING_ENCODER), so it is fast and smooth. A dropping
- * battery still changes the result a little: tune the F gain with a charged battery.
+ * battery still changes the result: the hub's F gain gives the same POWER for a speed, and the same
+ * power on a weaker battery spins the wheel slower (the I gain corrects it, but slowly). With
+ * {@link #batteryCompensation} the F gain is scaled by (tuned volts / volts now), so the wheel gets
+ * the same push at any battery level:
+ * <pre>{@code
+ * flywheel.batteryCompensation(() -> Hw.batteryVolts(hardwareMap), 12.6);   // 12.6 V: from the Flywheel Finder
+ * }</pre>
  *
  * <p>RPM = revolutions (turns) per minute. The hub works in encoder counts per second, so this class
  * converts between the two. Tutorial 17 builds a shooter step by step.
@@ -66,6 +73,27 @@ public class Flywheel implements Subsystem {
     private boolean followerDisabled = false;
     private double followerBadSince = Double.NaN;
     private String fault = "";
+
+    // Battery compensation (batteryCompensation()): where the volts come from (null = off), the volts the
+    // gains were tuned at, the last good reading, when to read next, the F scale sent to the hub, and how
+    // many readings in a row were low (for the warning).
+    private DoubleSupplier batteryVolts = null;
+    private double nominalVolts = DEFAULT_NOMINAL_VOLTS;
+    private double volts = Double.NaN;
+    private double nextVoltsAt = Double.NaN;
+    private double fScale = 1;
+    private int lowReadings = 0;
+
+    /** The volts the gains are for when nothing else is said: a charged battery under load (as {@code Feedforward}). */
+    public static final double DEFAULT_NOMINAL_VOLTS = 12.8;
+    /** Below this many volts the Driver Station warns that the battery is low. */
+    public static final double LOW_BATTERY_VOLTS = 11.5;
+    /** How often the battery is read, seconds (each reading asks the hub: a few milliseconds). */
+    public static final double BATTERY_READ_SEC = 0.25;
+    /** The F gain is changed only when the new scale differs by more than this share (2%). */
+    public static final double RESEND_SHARE = 0.02;
+    /** The F scale is kept between these, so a wrong reading cannot make the wheel run away. */
+    public static final double MIN_F_SCALE = 0.8, MAX_F_SCALE = 1.3;
 
     /** Gets the motor: coast (a flywheel must spin down freely), speed control on. */
     public static Flywheel create(HardwareMap hardwareMap, String name) {
@@ -109,9 +137,9 @@ public class Flywheel implements Subsystem {
         applyGainsToFollower();
     }
 
-    // If pidf() was already called, give the new follower the same gains.
+    // If pidf() was already called, give the new follower the same gains (F scaled for the battery).
     private void applyGainsToFollower() {
-        if (gains != null) follower.setVelocityPIDFCoefficients(gains[0], gains[1], gains[2], gains[3]);
+        if (gains != null) follower.setVelocityPIDFCoefficients(gains[0], gains[1], gains[2], gains[3] * fScale);
     }
 
     /** Encoder counts per ONE flywheel turn. Default 28. */
@@ -122,12 +150,51 @@ public class Flywheel implements Subsystem {
 
     /**
      * The hub's speed-control gains (P, I, D, F). Applied to the follower too (in any order).
-     * F is the main one: the steady power for a given speed.
+     * F is the main one: the steady power for a given speed. With {@link #batteryCompensation}, the
+     * hub gets F x (tuned volts / volts now); these numbers stay the ones you tuned.
      */
     public Flywheel pidf(double p, double i, double d, double f) {
         gains = new double[] {p, i, d, f};
-        motor.setVelocityPIDFCoefficients(p, i, d, f);
-        if (follower != null) follower.setVelocityPIDFCoefficients(p, i, d, f);
+        sendGains();
+        return this;
+    }
+
+    /**
+     * Battery compensation: every {@link #BATTERY_READ_SEC} s it reads the battery and gives the hub
+     * F x (nominalVolts / volts now), kept to {@link #MIN_F_SCALE}..{@link #MAX_F_SCALE}, sent again only
+     * when that changes by more than 2%. Why: F is a POWER per speed, and the same power spins the wheel
+     * slower on a weaker battery; scaled, the wheel gets the same push at 11.5 V as at 12.8 V, so it
+     * reaches its speed and gets back to it after a shot as fast as when it was tuned. P and I stay as
+     * tuned. Needs {@link #pidf} (nothing to scale without an F). A reading outside 7..16 V (no sensor,
+     * a bad reading) keeps the last scale. Below {@link #LOW_BATTERY_VOLTS} the Driver Station warns.
+     *
+     * <pre>{@code
+     * Flywheel.create(hardwareMap, "flywheel").pidf(1.17, 0.117, 0, 11.70)
+     *         .batteryCompensation(() -> Hw.batteryVolts(hardwareMap), 12.6);
+     * }</pre>
+     *
+     * @param batteryVolts where the volts come from, e.g. {@code () -> Hw.batteryVolts(hardwareMap)}
+     * @param nominalVolts the battery voltage the gains were tuned at (the Flywheel Finder shows it),
+     *                     9 to 14 V; {@link #DEFAULT_NOMINAL_VOLTS} if you do not know it
+     */
+    public Flywheel batteryCompensation(DoubleSupplier batteryVolts, double nominalVolts) {
+        if (!(nominalVolts >= 9 && nominalVolts <= 14)) {
+            throw new IllegalArgumentException("Flywheel " + name + ": batteryCompensation nominalVolts = " + nominalVolts
+                    + ": a 12 V battery's tuning voltage is 9 to 14 V (the Flywheel Finder shows it)");
+        }
+        this.batteryVolts = batteryVolts;
+        this.nominalVolts = nominalVolts;
+        nextVoltsAt = Double.NaN;   // read at the next update()
+        return this;
+    }
+
+    /** Battery compensation off: the hub gets F exactly as tuned (the default). */
+    public Flywheel noBatteryCompensation() {
+        batteryVolts = null;
+        if (fScale != 1) {
+            fScale = 1;
+            sendGains();
+        }
         return this;
     }
 
@@ -194,6 +261,7 @@ public class Flywheel implements Subsystem {
     @Override
     public void update() {
         double now = clockNanos.getAsLong() / 1e9;   // seconds
+        checkBattery(now);
         // Turn RPM into what the hub wants, encoder counts per second:
         // turns per minute / 60 = turns per second; x counts per turn = counts per second.
         send(targetRpm / 60.0 * countsPerRev);
@@ -247,6 +315,15 @@ public class Flywheel implements Subsystem {
     /** How many shots were noticed (speed drops) since the OpMode started. */
     public int getShotCount() { return shots; }
 
+    /** The last battery reading (volts), NaN before the first or without {@link #batteryCompensation}. */
+    public double getBatteryVolts() { return volts; }
+
+    /** What F is multiplied by for the battery now (1 = as tuned, or compensation off). */
+    public double getFScale() { return fScale; }
+
+    /** True while {@link #batteryCompensation} is on. */
+    public boolean hasBatteryCompensation() { return batteryVolts != null; }
+
     /** A step (autonomous): spin up and wait until ready (or {@code timeoutSec}). */
     public AutoStep spinUpStep(double targetRpmValue, double timeoutSec) {
         // "ctx -> { ... }" is a small piece of code handed over to run later, when the routine reaches it.
@@ -261,17 +338,55 @@ public class Flywheel implements Subsystem {
     public DcMotorEx getMotor() { return motor; }
     @Override public String name() { return name; }
 
-    /** Shows measured / target RPM and READY; shots seen in debug mode; a warning for a fault. */
+    /**
+     * Shows measured / target RPM and READY; shots seen and the battery (volts, F scale) in debug mode;
+     * a warning for a fault or a low battery.
+     */
     @Override
     public void addTelemetry(RobotTelemetry t) {
         if (!fault.isEmpty()) t.warn(name + ": " + fault);
+        // Two low readings in a row (half a second): not one dip while the drive pushes hard.
+        if (lowReadings >= 2) {
+            t.warn(name + String.format(java.util.Locale.US, ": battery %.1f V: low. The flywheel gets back to speed slower: charge or swap it", volts));
+        }
         t.line(name, "%.0f / %.0f rpm%s", rpm, targetRpm, ready ? "  READY" : "");
         t.debug(name + " shots seen", shots);
+        if (batteryVolts != null) {
+            t.debug(name + " battery", Double.isNaN(volts) ? "no reading" : String.format(java.util.Locale.US,
+                    "%.2f V (tuned at %.1f V), F x%.2f", volts, nominalVolts, fScale));
+        }
     }
 
     // ---------------------------------------------------------------------------------------
     // Small helpers used only inside this class
     // ---------------------------------------------------------------------------------------
+
+    // Sends the gains to the hub (and the follower): F scaled for the battery.
+    private void sendGains() {
+        if (gains == null) return;
+        motor.setVelocityPIDFCoefficients(gains[0], gains[1], gains[2], gains[3] * fScale);
+        if (follower != null) applyGainsToFollower();
+    }
+
+    // Battery compensation: reads the volts at most every BATTERY_READ_SEC (each reading costs loop
+    // time), and sends a new F only when it really changed (sending costs loop time too).
+    private void checkBattery(double now) {
+        if (batteryVolts == null) return;
+        if (!Double.isNaN(nextVoltsAt) && now < nextVoltsAt) return;
+        nextVoltsAt = now + BATTERY_READ_SEC;
+        double v = batteryVolts.getAsDouble();
+        // No sensor (NaN) or a reading no 12 V battery gives: keep what we have.
+        if (!(v >= 7 && v <= 16)) return;
+        volts = v;
+        lowReadings = v < LOW_BATTERY_VOLTS ? lowReadings + 1 : 0;
+        if (gains == null) return;   // no F to scale (pidf() was not called)
+        // A weaker battery: more power for the same push. 12.8 V tuned, 11.6 V now: F x 1.10.
+        double want = MathUtil.clamp(nominalVolts / v, MIN_F_SCALE, MAX_F_SCALE);
+        if (Math.abs(want - fScale) > RESEND_SHARE * fScale) {
+            fScale = want;
+            sendGains();
+        }
+    }
 
     // Sends a speed (encoder counts per second) to the motor, and to the follower if it is working.
     private void send(double ticksPerSec) {

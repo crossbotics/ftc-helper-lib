@@ -86,8 +86,11 @@ at START, never in INIT.
 It needs no code. Choose the `launcher` motor; it shows a line to copy into `Tunables.Launcher`:
 
 ```text
-Tunables.Launcher: kP = 1.17, kI = 0.117, kD = 0, kF = 11.70
+Tunables.Launcher: kP = 1.17, kI = 0.117, kD = 0, kF = 11.70, nominalVolts = 12.6
 ```
+
+`nominalVolts` is the battery voltage while it measured: the gains are right for that voltage
+([section 8](#speed-trim-and-a-low-battery) says why it matters).
 
 If the wheel needs longer than 0.25 s to get back to speed after a shot, the line also has
 `shotIntervalSec` (the time between two feeds), a little above that time.
@@ -105,7 +108,8 @@ gamepad 1 with `oneDriver = true`, as in the goBILDA bot:
 | LB | spin up / spin down (to `idleRpm`) |
 | RB | fire one: spins up if needed, feeds as soon as it is at speed |
 | RB held | keeps firing, one piece after another; let go and no more are fed |
-| D-pad up / down | speed + / - `stepRpm` (not with speed from distance, below) |
+| D-pad up / down | speed + / - `stepRpm`; with speed from distance (below), the speed trim + / - 1% |
+| D-pad down held 1 s | back to `speedRpm` (no trim) |
 
 Spinning up early with LB saves time: the wheel is ready when the shot is lined up. The goBILDA bot adds
 one job of its own, Y to fire all three: `g1.y.press(Actions.fireAll(robot)).says("fire all");`
@@ -283,6 +287,27 @@ speed, A = HIT, B = MISS, X saves the best). The screen counts each table's poin
 `public static double[][] speedByDistanceNectar = {{24, 2400}, {48, 2800}};   // in Tunables.Launcher`.
 **Copy the lines into `Tunables.java`** (replace the line with the same name): the robot uses the file,
 not the tuner's screen. They are also saved on the Control Hub when you press STOP.
+
+### Speed trim and a low battery
+
+Some matches every shot lands a bit short: the battery is lower than when you tuned, or the wheel is
+worn. The operator can fix it on the spot: with the speed from the distance, **D-pad up / down** makes
+every shot 1% faster / slower than the table says (all tables alike), and **holding D-pad down 1 s**
+goes back to 0. The Driver Station shows `Speed trim: +3%`. It stops at +/- 15%
+(`trimMaxPercent`; `trimStepPercent` is one press) and starts at 0 at every INIT. Code and actions can
+trim too: `robot.launcher.trimPercent(+2)`. The Shot Tuner never uses the trim, so the tables stay clean.
+
+The trim is a fix for one match. If you trim the same way match after match, the table is off: tune it
+again with the Shot Tuner (or multiply its speeds by the trim) and **copy the new line into
+`Tunables.java`**.
+
+The launcher also helps the battery by itself. The hub's F gain gives the same **power** for a speed,
+and the same power on a weaker battery spins the wheel slower; the I gain catches up, but slowly, so
+the wheel takes longer to get back to speed after a shot. With `kF` set, every 0.25 s the launcher
+reads the battery and scales F by `nominalVolts` / the battery now (tuned at 12.6 V, at 11.5 V: F x
+1.10), so the wheel gets the same push as when you tuned it. Under 11.5 V the Driver Station warns
+`battery 11.2 V: low`: swap the battery. To switch it off: `public static boolean batteryCompensation = false;`
+in `Tunables.Launcher`.
 
 ## 9. When the camera loses the goal: the odometry
 
@@ -499,6 +524,8 @@ give each a `looks(...)` shape in `Robot.java` ([Lesson 1: Draw your robot from 
 | "goal out of turret range" | the goal is past `min` or `max`: turn the robot. |
 | The speed never changes with distance | no goal in view; check `Tunables.Limelight.pipeline` and the `goal(...)` names. |
 | `Launcher: no shot table "..."` | the name in `useTable(...)` has no `speedByDistance...` line; the warning lists the names there. |
+| Shots short (or long) all match | the operator trims with the D-pad ([section 8](#speed-trim-and-a-low-battery)); every match: tune the table again. |
+| `battery 11.2 V: low` | swap the battery. Battery compensation helps, but a low battery is still slower. |
 | `following: odometry` points the wrong way | `Tunables.Aim.goalX`, `goalY` (from the BLUE wall), `mirrorForRed`, or the pose did not start right (no autonomous before TeleOp). |
 | `Aim: no goal` | whole-robot aim on, but the camera does not see the goal and there is no odometry backup. |
 | `Aim odometry: the pose was never set` | TeleOp ran without autonomous: the odometry backup is off (camera only). Run autonomous first, or set the pose with `robot.odometry().setPose(...)`. |

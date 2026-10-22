@@ -175,7 +175,7 @@ public class Tunables {
 | Lift, Arm | `kP`, `kI`, `kD`, `kF`, every named position | | `min`, `max`, `maxPower`, `slowZone`, `slowZonePower`, `tolerance` |
 | Claw, Wrist, Positioner | every named position | | `travelSec` |
 | Turret | `kP`, `kI`, `kD` | | `min`, `max`, `maxPower`, `tolerance`, `slowZone`, `slowZonePower`, `cameraOffset` |
-| Launcher | `speedRpm`, `stepRpm` | | `readyBandRpm`, `idleRpm`, `shotIntervalSec`, `speedByDistance`, `kP`..`kF` |
+| Launcher | `speedRpm`, `stepRpm` | | `readyBandRpm`, `idleRpm`, `shotIntervalSec`, `speedByDistance`, `kP`..`kF`, `nominalVolts`, `batteryCompensation`, `trimStepPercent`, `trimMaxPercent` |
 | Indexer | every number | | |
 | Camera | | | `pipeline`, `autoLighting`, `lightingSettleMs`, `lightingPictures`, `lightingMinPictures`, `lightingAfterStartMs`; webcam `exposureMs`, `gain` |
 | Odometry | | | `checked`, `linearScalar`, `angularScalar` (OTOS) |
@@ -400,6 +400,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer
 | `fire()`, `fire(n)` | spins up if needed, feeds as soon as it is at speed (gives up after 3 s, saying why) |
 | `fireWhileHeld()`, `ceaseFire()` | for a held button: one shot, then the next as soon as it is fed; on release no more (a tap still fires its one shot) |
 | `adjust(steps)` | speed +/- steps x `stepRpm` (not saved) |
+| `trimPercent(change)`, `setTrim(percent)`, `resetTrim()`, `speedTrim()` | the [speed trim](#speed-trim-and-battery-compensation): every shot speed (table or fixed) +/- that many percent, e.g. `trimPercent(+2)`; kept to +/- `trimMaxPercent`; `resetTrim()` also clears `adjust` |
 | `speedMode()` | the [mode](#modes) that sets the speed from the distance to the goal |
 | `speedFromDistance(camera)` | speed from the camera's distance; with odometry and `Tunables.Aim.goalX, goalY`, from the odometry's while the camera does not see the goal ([Aim](#aim)) |
 | `speedFromOdometry()` | speed from the odometry's distance only (no camera) |
@@ -418,8 +419,10 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer
 `speedByDistance` (`{{inches, rpm}, ...}`, blended between rows; with no goal in view the last speed
 stays), or one table per game piece: `speedByDistancePollen`, `speedByDistanceNectar` (any names after
 `speedByDistance`), and `kP`, `kI`, `kD`, `kF` (the hub's speed control; only used when `kF` is there: the
-[Flywheel Finder](../guides/finders.md) finds them). Buttons (operator): LB spin up/down, RB fire one (hold: keep firing, `fireWhileHeld()` / `ceaseFire()` on release),
-D-pad up/down speed (when free and no speed-from-distance), D-pad right the next shot table (two or more).
+[Flywheel Finder](../guides/finders.md) finds them, and `nominalVolts`, the battery voltage they were found
+at). Buttons (operator): LB spin up/down, RB fire one (hold: keep firing, `fireWhileHeld()` / `ceaseFire()` on release),
+D-pad up/down the speed trim +/- `trimStepPercent` with speed from distance, or +/- `stepRpm` with a fixed
+speed; hold D-pad down 1 s = no trim; D-pad right the next shot table (two or more). Each only when free.
 
 ```java
 public static double[][] speedByDistancePollen = {{24, 2200}, {48, 2550}, {72, 2900}};   // Tunables.Launcher
@@ -429,6 +432,28 @@ public static double[][] speedByDistanceNectar = {{24, 2400}, {48, 2800}, {72, 3
 
 The Driver Station shows `Shot table: POLLEN, 48 in (camera)` (`odometry`, or `last seen` while no
 goal is seen); with one table, `Shot distance: 48 in (camera)`.
+
+### Speed trim and battery compensation
+
+**Speed trim**: a fix during a match, when every shot is a bit short or long (a tired battery, a worn
+wheel). `trimPercent(+2)` makes every shot speed 2% faster than the table (or `speedRpm`) says. It
+starts at 0 at every INIT, is the same for every shot table (a battery or a wheel changes them all
+alike), stops at +/- `trimMaxPercent` (15), and shows as `Speed trim: +3%`. The Shot Tuner never uses
+it, so tables are recorded clean. Needing the same trim match after match means the table is off:
+tune it again with the Shot Tuner, or multiply its speeds by the trim in `Tunables.java`.
+
+**Battery compensation** (on when `kF` is set): every 0.25 s the launcher reads the battery and gives the
+hub F x (`nominalVolts` / volts now). The F gain gives the same POWER for a speed, and the same power
+spins the wheel slower on a weaker battery; the hub's I gain only makes it up slowly. Scaled, the
+wheel gets back to speed after a shot as fast at 11.5 V as on a full battery. Under 11.5 V the Driver
+Station warns. `nominalVolts` (default 12.8) comes from the Flywheel Finder; `batteryCompensation =
+false` turns it off. Details: [Flywheel](launcher.md#battery-compensation).
+
+```java
+public static double kP = 1.17, kI = 0.117, kD = 0, kF = 11.70, nominalVolts = 12.6;   // Tunables.Launcher
+public static double trimStepPercent = 1, trimMaxPercent = 15;   // optional (the defaults)
+// a button: g2.y.press(() -> robot.launcher.trimPercent(+3));   an action: .then(() -> r.launcher.setTrim(+5))
+```
 
 ## Indexer
 
@@ -1024,7 +1049,7 @@ are the simulator's [parts catalog](../guides/parts-catalog.md) (a test keeps th
 
 [`Module`](#module) is what every mechanism shares: `name()` (its Tunables section), `deviceName()`,
 `tunables(section)`. [`Devices`](#module) is where modules find their hardware: `Devices.of(hardwareMap)`
-on the robot; tests give pretend devices. A new kind of module is a change to the library (its parts are
+on the robot; tests give pretend devices. `Devices.batteryVolts()` is the battery now (NaN in tests). A new kind of module is a change to the library (its parts are
 package-private, see AGENTS.md); in team code, use the plain parts ([mechanism](mechanism.md)) in
 your own class and call it from Controls.java and your autos.
 
