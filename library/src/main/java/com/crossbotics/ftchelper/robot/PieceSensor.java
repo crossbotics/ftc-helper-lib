@@ -3,6 +3,7 @@ package com.crossbotics.ftchelper.robot;
 import android.util.Size;
 import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
 import com.crossbotics.ftchelper.tuning.Tunable;
+import com.crossbotics.ftchelper.util.BackgroundWorker;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
@@ -11,6 +12,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.LongSupplier;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -44,7 +46,13 @@ import org.firstinspires.ftc.vision.opencv.PredominantColorProcessor;
  * ({@link com.crossbotics.ftchelper.finders.PieceTunerOpMode}). Also {@code nearMm} (a piece is there
  * when the distance is below it), {@code hueTolerance} / {@code sizeToleranceMm} (how far from a
  * kind's number still counts), {@code minSaturation} (camera: how colourful the box must be),
- * {@code steadyMs} (a reading must stay this long before it counts).
+ * {@code steadyMs} (a reading must stay this long before it counts), {@code gapMm} (colour and distance
+ * sensors: two touching pieces count as two when the distance rises and falls again by this much).
+ *
+ * <p>Never waits: a REV 2m Distance Sensor is read on a helper thread (one reading can take up to
+ * 0.2 s), a camera's answer is the SDK's latest. A reading older than 0.25 s is thrown away; with no new
+ * reading for 0.5 s (a sensor unplugged, a camera that stopped) it sees nothing and warns. A sensor
+ * missing from the robot configuration warns at INIT and sees nothing: the OpMode still runs.
  *
  * Docs: docs/modules/robot.md (section "Pieces and PieceSensor")
  */
@@ -60,12 +68,27 @@ public final class PieceSensor extends Module<PieceSensor> {
     private Reader reader;
     private final Map<String, Tunable> kindNumbers = new LinkedHashMap<>();
     private final List<String> untuned = new ArrayList<>();
-    private Tunable nearMm, tolerance, minSaturation, steadyMs;
+    private Tunable nearMm, tolerance, minSaturation, steadyMs, gapMm;
     // The latest reading (NaN = none) and what it says, then the "steady" answer.
     private double hue = Double.NaN, saturation = Double.NaN, distance = Double.NaN;
     private String raw = Pieces.NONE, steady = Pieces.NONE, pending = Pieces.NONE;
-    private long pendingSince = 0;
+    private long pendingSince = 0, steadyFrom = 0;
+    // How many readings in a row said the same (raw).
+    private int rawRun = 0;
+    // Fresh readings: when the last one came (nanoseconds), whether one ever came, how many so far.
+    private long lastReadingAt = 0;
+    private boolean everRead = false, live = false;
+    private int readings = 0;
+    // Separate pieces seen arriving (see watchArrivals), and the distance "dip" between two touching pieces.
+    private int arrivals = 0;
+    private boolean dipCounted = false, dipRising = false;
+    private double dipMin = Double.NaN, dipPeak = Double.NaN;
     LongSupplier clock = System::nanoTime;
+    // Where slow reads run: null = the library's helper thread. Tests run them at once (Runnable::run).
+    Consumer<Runnable> background = null;
+    private BackgroundWorker worker = null;
+    /** A reading older than this is thrown away; no new reading for STALE_NS: it sees nothing and warns. */
+    static final long MAX_AGE_NS = 250_000_000L, STALE_NS = 500_000_000L;
 
     private PieceSensor(Type type, String device) {
         super(device);
@@ -148,13 +171,24 @@ public final class PieceSensor extends Module<PieceSensor> {
         tolerance = size ? t.tunable("sizeToleranceMm", 8, 1).range(0, 500) : t.tunable("hueTolerance", 30, 1).range(1, 180);
         minSaturation = type == Type.DISTANCE ? null : t.tunable("minSaturation", type == Type.CAMERA ? 0.35 : 0, 0.05).range(0, 1);
         steadyMs = t.tunable("steadyMs", 30, 5).range(0, 1000);
+        gapMm = type == Type.CAMERA ? null : t.tunable("gapMm", 8, 1).range(0, 500);
+        // A sensor missing from the robot configuration never stops the OpMode: it warns and sees nothing.
         if (type == Type.COLOR) {
-            NormalizedColorSensor c = devices.get(NormalizedColorSensor.class, device);
-            DistanceSensor d = c instanceof DistanceSensor ? (DistanceSensor) c : null;
-            if (t.has("gain")) c.setGain((float) t.number("gain", 2));
-            reader = new ColorReader(c, d);
+            NormalizedColorSensor c = devices.tryGet(NormalizedColorSensor.class, device);
+            if (c == null) {
+                reader = new BrokenReader("not found: no colour sensor called \"" + device
+                        + "\" in the robot configuration (configure it as \"REV Color Sensor V3\")");
+            } else {
+                DistanceSensor d = c instanceof DistanceSensor ? (DistanceSensor) c : null;
+                if (t.has("gain")) c.setGain((float) t.number("gain", 2));
+                reader = new ColorReader(c, d);
+            }
         } else if (type == Type.DISTANCE) {
-            reader = new DistanceReader(devices.get(DistanceSensor.class, device));
+            DistanceSensor d = devices.tryGet(DistanceSensor.class, device);
+            // The 2m sensor can take up to 0.2 s per reading: read it on a helper thread.
+            reader = d == null ? new BrokenReader("not found: no distance sensor called \"" + device
+                    + "\" in the robot configuration (configure it as \"REV 2M Distance Sensor\")")
+                    : new BackgroundReader(new DistanceReader(d));
         } else {
             // A camera problem never stops the OpMode: it says why and sees nothing.
             WebcamName cam = devices.tryGet(WebcamName.class, device);
@@ -166,6 +200,7 @@ public final class PieceSensor extends Module<PieceSensor> {
     @Override
     List<String> notes() {
         List<String> out = super.notes();
+        if (reader != null && !reader.problem().isEmpty()) out.add(device + ": " + reader.problem() + ": it sees nothing");
         if (!untuned.isEmpty()) {
             StringBuilder names = new StringBuilder();
             for (String k : untuned) names.append(names.length() == 0 ? "" : ", ").append(k);
@@ -177,21 +212,81 @@ public final class PieceSensor extends Module<PieceSensor> {
 
     // ----------------------------- reading -----------------------------
 
-    /** Every loop: reads the sensor (a few ms over I2C) and works out what is there. */
+    /**
+     * Every loop: picks up the newest reading (a colour sensor: a few ms over I2C; a distance sensor or a
+     * camera: never waits) and works out what is there.
+     */
     @Override
     public void update() {
         if (reader == null) return;
+        long now = clock.getAsLong();
         double[] r = reader.read();
+        if (r == null) {
+            // No new reading: keep the last answer for a moment; after STALE_NS it sees nothing.
+            if (live && now - lastReadingAt > STALE_NS) live = false;
+            return;
+        }
+        everRead = true;
+        live = true;
+        lastReadingAt = now;
+        readings++;
         hue = r[0];
         saturation = r[1];
         distance = r[2];
+        String rawBefore = raw;
         raw = classify(hue, saturation, distance);
-        long now = clock.getAsLong();
+        rawRun = raw.equals(rawBefore) ? rawRun + 1 : 1;
         if (!raw.equals(pending)) {
             pending = raw;
             pendingSince = now;
         }
-        if ((now - pendingSince) / 1e6 >= steadyMs.get()) steady = pending;
+        String before = steady;
+        if ((now - pendingSince) / 1e6 >= steadyMs.get()) {
+            steady = pending;
+            steadyFrom = pendingSince;
+        }
+        watchArrivals(before);
+    }
+
+    // Counts each separate piece that arrives: the spot was empty, the steady answer changed from one
+    // known kind to another (a different piece right behind), or, with a distance reading, the distance
+    // rose by gapMm and fell again by gapMm while a piece was there (two touching pieces of the same kind).
+    private void watchArrivals(String before) {
+        if (!steady.equals(before)) {
+            if (before.equals(Pieces.NONE)) {
+                newArrival();
+            } else if (steady.equals(Pieces.NONE)) {
+                dipCounted = false;
+                dipMin = Double.NaN;
+                dipRising = false;
+            } else if (!before.equals(Pieces.UNKNOWN) && !steady.equals(Pieces.UNKNOWN)) {
+                if (dipCounted) dipCounted = false;   // the dip already counted it: its colour comes now
+                else newArrival();
+            }
+            // else UNKNOWN <-> a kind: the same piece, read better
+        }
+        double gap = gapMm == null ? 0 : gapMm.get();
+        if (gap <= 0 || Double.isNaN(distance) || steady.equals(Pieces.NONE)) return;
+        if (Double.isNaN(dipMin) || (!dipRising && distance < dipMin)) dipMin = distance;
+        if (!dipRising) {
+            if (distance > dipMin + gap) {
+                dipRising = true;          // going away: the gap behind this piece
+                dipPeak = distance;
+                dipCounted = false;
+            }
+        } else if (distance > dipPeak) {
+            dipPeak = distance;
+        } else if (distance < dipPeak - gap && distance < nearMm.get()) {
+            newArrival();                  // close again: the next piece, touching the last one
+            dipCounted = true;
+        }
+    }
+
+    private void newArrival() {
+        arrivals++;
+        dipMin = distance;
+        dipRising = false;
+        dipPeak = Double.NaN;
     }
 
     // NONE, UNKNOWN or the nearest kind (see the class notes).
@@ -216,24 +311,60 @@ public final class PieceSensor extends Module<PieceSensor> {
         return best;
     }
 
-    /** What is at the spot now: a kind, {@link Pieces#UNKNOWN}, or {@link Pieces#NONE}. Steady: a reading counts after steadyMs. */
+    /**
+     * What is at the spot now: a kind, {@link Pieces#UNKNOWN}, or {@link Pieces#NONE}. Steady: a reading
+     * counts after steadyMs. NONE while it has no recent reading (see {@link #isWorking()}).
+     */
     public String kind() {
-        return steady;
+        return live ? steady : Pieces.NONE;
     }
 
     /** True if a piece of this kind is at the spot now. */
     public boolean sees(String kind) {
-        return steady.equals(kind);
+        return kind().equals(kind);
     }
 
     /** True if any piece (known or not) is at the spot now. */
     public boolean seesPiece() {
-        return !steady.equals(Pieces.NONE);
+        return !kind().equals(Pieces.NONE);
     }
 
-    /** The latest reading's kind, before the steadyMs wait (the tuner shows it). */
+    /** The latest reading's kind, before the steadyMs wait (the tuner shows it). NONE with no recent reading. */
     public String rawKind() {
-        return raw;
+        return live ? raw : Pieces.NONE;
+    }
+
+    /**
+     * True while it has a recent reading (within 0.5 s). False before the first one, and when the sensor
+     * is missing, unplugged, or a camera stopped sending pictures: then it sees NONE and {@link Pieces}
+     * does not count with it.
+     */
+    public boolean isWorking() {
+        return live;
+    }
+
+    /** How many separate pieces it has seen arrive (a new piece, a different kind right behind, a distance dip). */
+    public int arrivals() {
+        return arrivals;
+    }
+
+    /** How many fresh readings it has had (the Piece Tuner counts only new ones). */
+    public int readings() {
+        return readings;
+    }
+
+    // How many readings in a row gave the latest raw kind.
+    int rawRun() {
+        return rawRun;
+    }
+
+    // When the steady answer's reading began (nanoseconds, this sensor's clock).
+    long steadyFromNs() {
+        return steadyFrom;
+    }
+
+    long nowNs() {
+        return clock.getAsLong();
     }
 
     /** The latest colour, 0-360 degrees (NaN for a distance sensor, or no reading yet). */
@@ -266,9 +397,13 @@ public final class PieceSensor extends Module<PieceSensor> {
         return type != Type.CAMERA;
     }
 
-    /** Why it sees nothing ("" when it works): a camera that is missing or did not start. */
+    /** Why it sees nothing ("" when it works): a sensor or camera that is missing, did not start, or stopped answering. */
     public String problem() {
-        return reader == null ? "" : reader.problem();
+        if (reader == null) return "";
+        String p = reader.problem();
+        if (!p.isEmpty()) return p;
+        if (everRead && !live) return "no new reading for " + fmt("%.1f", (clock.getAsLong() - lastReadingAt) / 1e9) + " s";
+        return "";
     }
 
     /** "color", "distance" or "camera". */
@@ -279,12 +414,24 @@ public final class PieceSensor extends Module<PieceSensor> {
     @Override
     public void stop() {
         if (reader != null) reader.close();
+        if (worker != null) worker.shutdown();
+        worker = null;
+    }
+
+    // Runs a slow read off the robot's loop (on the helper thread, or at once in tests).
+    private void inBackground(Runnable job) {
+        if (background != null) {
+            background.accept(job);
+            return;
+        }
+        if (worker == null) worker = new BackgroundWorker("piece-" + device);
+        worker.submitLatest("read", job);
     }
 
     @Override
     public void addTelemetry(RobotTelemetry t) {
         if (!problem().isEmpty()) t.warn(device + ": " + problem());
-        t.line(name(), steady);
+        t.line(name(), kind());
         if (type == Type.DISTANCE) t.debug("  " + name() + " mm", fmt("%.0f", distance));
         else t.debug("  " + name() + " hue/sat" + (type == Type.COLOR ? "/mm" : ""),
                 type == Type.COLOR ? fmt("%.0f / %.2f / %.0f", hue, saturation, distance) : fmt("%.0f / %.2f", hue, saturation));
@@ -331,7 +478,8 @@ public final class PieceSensor extends Module<PieceSensor> {
 
     // ----------------------------- the readers -----------------------------
 
-    // One sensor's reading: {hue, saturation, distance mm} (NaN for what it cannot measure).
+    // One sensor's reading: {hue, saturation, distance mm} (NaN for what it cannot measure), or null when
+    // there is no new reading since the last call.
     interface Reader {
         double[] read();
 
@@ -374,6 +522,49 @@ public final class PieceSensor extends Module<PieceSensor> {
         }
     }
 
+    // A slow sensor read on the helper thread: read() never waits. It asks for one reading at a time,
+    // gives each finished reading once, with the time it was taken, and throws away one older than
+    // MAX_AGE_NS (a slow answer is about a piece that has moved on).
+    private final class BackgroundReader implements Reader {
+        private final Reader slow;
+        // Shared with the helper thread ("volatile": each side sees the other's change at once).
+        private volatile double[] latest = null;    // {hue, saturation, mm, taken at (ns)}
+        private volatile boolean asked = false;
+        private volatile String error = "";
+        private double[] given = null;
+
+        BackgroundReader(Reader slow) {
+            this.slow = slow;
+        }
+
+        @Override public double[] read() {
+            if (!asked) {
+                asked = true;
+                inBackground(() -> {
+                    try {
+                        long takenAt = clock.getAsLong();
+                        double[] r = slow.read();
+                        if (r != null) latest = new double[] {r[0], r[1], r[2], takenAt};
+                        error = "";
+                    } catch (RuntimeException e) {
+                        error = "read failed: " + e.getMessage();
+                    } finally {
+                        asked = false;
+                    }
+                });
+            }
+            double[] r = latest;
+            if (r == null || r == given) return null;
+            given = r;
+            if (clock.getAsLong() - (long) r[3] > MAX_AGE_NS) return null;   // too old: thrown away
+            return r;
+        }
+
+        @Override public String problem() {
+            return error;
+        }
+    }
+
     private static final class BrokenReader implements Reader {
         private final String why;
 
@@ -382,7 +573,7 @@ public final class PieceSensor extends Module<PieceSensor> {
         }
 
         @Override public double[] read() {
-            return new double[] {Double.NaN, Double.NaN, Double.NaN};
+            return null;   // never a reading: it sees nothing (and says why)
         }
 
         @Override public String problem() {
@@ -391,10 +582,12 @@ public final class PieceSensor extends Module<PieceSensor> {
     }
 
     // A webcam with the SDK's PredominantColorProcessor (SDK 12 Vision). The SDK reads the pictures on
-    // its own threads, so read() only picks up the latest answer (never waits).
+    // its own threads, so read() only picks up the latest answer (never waits). The processor makes a new
+    // answer for each picture: the same answer again means no new picture (no reading).
     private static final class CameraReader implements Reader {
         private final VisionPortal portal;
         private final PredominantColorProcessor processor;
+        private PredominantColorProcessor.Result last = null;
 
         private CameraReader(VisionPortal portal, PredominantColorProcessor processor) {
             this.portal = portal;
@@ -422,8 +615,12 @@ public final class PieceSensor extends Module<PieceSensor> {
         }
 
         @Override public double[] read() {
+            // Not streaming (starting, stopped, error): its last answer is old.
+            if (portal.getCameraState() != VisionPortal.CameraState.STREAMING) return null;
             PredominantColorProcessor.Result r = processor.getAnalysis();
-            if (r == null || r.RGB == null || r.RGB.length < 3) return new double[] {Double.NaN, Double.NaN, Double.NaN};
+            if (r == null || r == last) return null;
+            last = r;
+            if (r.RGB == null || r.RGB.length < 3) return new double[] {Double.NaN, Double.NaN, Double.NaN};
             double[] hs = hueSat(r.RGB[0], r.RGB[1], r.RGB[2]);
             return new double[] {hs[0], hs[1], Double.NaN};
         }
@@ -440,6 +637,12 @@ public final class PieceSensor extends Module<PieceSensor> {
     /** For tests: a sensor that reads from {@code reader} instead of hardware. */
     PieceSensor useReader(Reader r) {
         reader = r;
+        return this;
+    }
+
+    /** For tests: {@code r} as the 2m distance sensor is read (on the helper thread, or {@link #background}). */
+    PieceSensor useSlowReader(Reader r) {
+        reader = new BackgroundReader(r);
         return this;
     }
 }

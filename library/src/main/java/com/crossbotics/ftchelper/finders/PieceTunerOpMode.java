@@ -22,7 +22,7 @@ import java.util.Map;
  * Gamepad 1:
  *   D-pad up/down    = choose the sensor
  *   D-pad left/right = choose what is in front of it: a kind, or EMPTY (nothing)
- *   A                = measure it (about half a second: hold the piece still)
+ *   A                = measure it (20 readings, about half a second: hold the piece still)
  *   B                = forget this sensor's measurements
  * Help: GUIDE (or hold START 1 s).
  * </pre>
@@ -56,6 +56,9 @@ public abstract class PieceTunerOpMode extends FinderOpMode {
     // Per sensor: what was measured, by kind (or EMPTY): {value (hue or mm), saturation, distance mm}.
     private final Map<PieceSensor, Map<String, double[]>> measured = new LinkedHashMap<>();
     private String lastNote = "";
+    // The sensor's reading count at the last sample: only NEW readings are measured (a distance sensor
+    // is read on a helper thread and may have no new one this loop).
+    private int lastReading = -1;
 
     @Override
     protected String finderName() {
@@ -117,6 +120,8 @@ public abstract class PieceTunerOpMode extends FinderOpMode {
         for (PieceSensor s : sensors) s.update();
         if (sampling == null) return;
         PieceSensor s = sensor();
+        if (s.readings() == lastReading) return;     // no new reading since the last sample
+        lastReading = s.readings();
         double v = s.measured();
         if (Double.isNaN(v) && !samplingWhat.equals(EMPTY)) return;   // no colour yet (black, or the camera is starting)
         sampling.add(new double[] {v, s.saturation(), s.distanceMm()});

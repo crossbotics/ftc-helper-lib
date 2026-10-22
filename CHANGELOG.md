@@ -90,6 +90,14 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   `Actions.spinUp(robot)`, which no example defines; `fraction` is of the WHOLE path; lesson 8 shows a
   time limit with `PathAt`. Lights docs: the `LightColor` import, a whole-robot aim rule, and R402 as advice
   (the alliance colour goes on the ROBOT SIGNS).
+- Game pieces: a feed counts its piece out once it has gone (the ready sensor sees it leave, or the
+  feed ends without a jam), not when it starts; `next()` names the piece after the one being fed.
+  `Indexer.isFeeding()`. While the intake pushes out, pieces leaving past the intake sensor count out
+  and nothing counts in. Two touching pieces of the same kind count as two when the distance dips
+  between them (`gapMm`, default 8). Pieces suggests a button: hold G2's left stick button 1 s = count
+  0. `Intake.inAnyway()`, `isRunningOut()`, `heldBackSec()`; with `stopsWhen`, holding the in-button
+  (RT) 1 s runs in anyway, and the Driver Station warns after 2 s held back. `PieceSensor.isWorking()`,
+  `arrivals()`, `readings()`. Docs: the drivers, not the count, are responsible for G407.
 
 ### Fixed
 
@@ -100,6 +108,19 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - `AutoRoutine.followPath`: the path's length was first read on the second loop, so a path done in its
   first loop had length 0 at the end and `PathAt.inchesDone(1)` never fired. It is read after `start()`
   and again before the end check.
+- `PieceSensor.distance`: the REV 2m Distance Sensor (up to 0.2 s per reading) is read on a helper
+  thread, so the loop never waits; a reading older than 0.25 s is thrown away.
+- A colour or distance sensor missing from the robot configuration no longer stops INIT: it warns and
+  sees nothing (like a missing camera).
+- A piece camera that stops streaming, or sends no new picture, no longer keeps its last answer: after
+  0.5 s with no new reading any piece sensor sees nothing and warns; Pieces does not count with it.
+- A jammed or stopped feed no longer counts a piece out (the count said 3 with 4 inside: a 5th piece,
+  rule G407).
+- A piece backed out through the intake and taken in again was counted twice, and one pushed out
+  never counted out (the intake could stay held back by `stopsWhen` for the whole match).
+- The ready sensor was not trusted again when the next piece arrived sooner than `steadyMs` after the
+  last one left; now a new steady reading (or the end of the feed) is enough.
+- Piece Tuner: measures only new readings (20 readings, about half a second, in both finders pages).
 
 ## v0.16.0 - 2026-10-21
 

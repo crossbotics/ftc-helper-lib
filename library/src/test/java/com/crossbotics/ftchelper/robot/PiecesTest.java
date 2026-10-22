@@ -14,8 +14,13 @@ import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import java.io.File;
 import java.lang.reflect.Proxy;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.LongSupplier;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.junit.After;
@@ -80,6 +85,8 @@ public class PiecesTest {
         final RobotTestKit kit = new RobotTestKit();
         final Map<String, FakeColor> colors = new HashMap<>();
         final Map<String, double[]> distances = new HashMap<>();
+        // Names that are not in the robot configuration.
+        final Set<String> missing = new HashSet<>();
 
         @Override
         @SuppressWarnings("unchecked")
@@ -99,7 +106,7 @@ public class PiecesTest {
 
         @Override
         public <T> T tryGet(Class<? extends T> type, String name) {
-            if (type == WebcamName.class) return null;
+            if (type == WebcamName.class || missing.contains(name)) return null;
             return get(type, name);
         }
     }
@@ -120,17 +127,30 @@ public class PiecesTest {
         }
     }
 
+    /** The same, with a ready sensor that waits 30 ms (steadyMs) like a real one. */
+    public static class SlowReady {
+        public static class IntakeColor {
+            public static double POLLEN = 50, RED_NECTAR = 5, BLUE_NECTAR = 222;
+            public static double nearMm = 40, steadyMs = 30;
+        }
+        public static class ReadyColor {
+            public static double POLLEN = 50, RED_NECTAR = 5, BLUE_NECTAR = 222;
+            public static double nearMm = 40, steadyMs = 30;
+        }
+    }
+
     static final class Bot extends RobotDefinition {
         Pieces pieces;
         Intake intake;
         Indexer indexer;
-        boolean withReady = true;
+        boolean withReady = true, servoIndexer = false;
+        Class<?> numbers = Numbers.class;
 
         @Override protected void define() {
-            tunables(Numbers.class);
+            tunables(numbers);
             drive(Drive.tank("l", "r"));
             intake = add(Intake.motor("intake").stopsWhen(() -> pieces.isFull()));
-            indexer = add(Indexer.crServo("indexer"));
+            indexer = add(servoIndexer ? Indexer.servo("indexer") : Indexer.crServo("indexer"));
             Pieces p = Pieces.kinds("POLLEN", "RED_NECTAR", "BLUE_NECTAR")
                     .comingIn(PieceSensor.color("intake_color")).max(4).startsWith(1, "POLLEN");
             if (withReady) p.readyToFire(PieceSensor.color("ready_color"));
@@ -142,13 +162,24 @@ public class PiecesTest {
     private final long[] now = {0};
 
     private Bot setup(Kit kit, boolean withReady) {
+        return setup(kit, withReady, Numbers.class);
+    }
+
+    private Bot setup(Kit kit, boolean withReady, Class<?> numbers) {
         Bot b = new Bot();
         b.withReady = withReady;
+        b.numbers = numbers;
         b.setup(kit);
+        clocks(b);
+        return b;
+    }
+
+    private void clocks(Bot b) {
         b.pieces.intakeSensor().clock = () -> now[0];
         if (b.pieces.readySensor() != null) b.pieces.readySensor().clock = () -> now[0];
         b.indexer.clock = () -> now[0];
-        return b;
+        b.intake.clock = () -> now[0];
+        b.pieces.clock = () -> now[0];
     }
 
     // Runs the robot's loop for ms milliseconds, 10 ms a loop.
@@ -214,14 +245,16 @@ public class PiecesTest {
         assertTrue(b.pieces.whenFull().getAsBoolean());
         assertEquals(2, b.pieces.count("POLLEN"));
 
-        b.indexer.feedOne();                 // one goes out
+        b.indexer.feedOne();                 // one is going out
         b.indexer.feedOne();                 // ignored: still feeding (not a second piece)
-        assertEquals(3, b.pieces.count());
-        assertEquals("RED_NECTAR", b.pieces.next());
+        assertEquals("counted out only once it has gone", 4, b.pieces.count());
+        assertEquals("the next one: the piece after the one going out", "RED_NECTAR", b.pieces.next());
         assertTrue(b.pieces.whenNextIs("RED_NECTAR").getAsBoolean());
         assertEquals("RED_NECTAR", b.pieces.nextKind().get());
+        run(b, 500);                         // the feed ends (feedSec 0.4): no ready sensor, so now it counts
+        assertEquals(3, b.pieces.count());
+        assertEquals("RED_NECTAR", b.pieces.next());
         assertFalse(b.pieces.isFull());
-        run(b, 500);                         // the feed ends (feedSec 0.4)
         for (int i = 0; i < 3; i++) { b.indexer.feedOne(); run(b, 500); }
         assertTrue(b.pieces.isEmpty());
         assertEquals(Pieces.NONE, b.pieces.next());
@@ -261,13 +294,16 @@ public class PiecesTest {
         assertEquals("[RED_NECTAR, BLUE_NECTAR]", b.pieces.held().toString());
         b.indexer.feedOne();                 // it fires; the sensor still sees it for a moment
         run(b, 20);
-        assertEquals("not counted again", 1, b.pieces.count());
+        assertEquals("still there: not counted out yet", 2, b.pieces.count());
         assertEquals("BLUE_NECTAR", b.pieces.next());
-        ready.empty();
+        ready.empty();                       // it left the slot: counted out now, before the feed ends
         run(b, 20);
+        assertEquals(1, b.pieces.count());
         ready.blue();
         run(b, 20);
         assertEquals("BLUE_NECTAR", b.pieces.next());
+        run(b, 500);                         // the feed ends: not counted a second time
+        assertEquals(1, b.pieces.count());
         b.pieces.clear();
         ready.yellow();                      // loaded by hand, never counted
         run(b, 20);
@@ -286,6 +322,7 @@ public class PiecesTest {
         };
         r.setup(kit);
         PieceSensor s = (PieceSensor) r.modules().get(0);
+        s.background = Runnable::run;        // the helper thread's reads, at once (a test)
         double[] mm = kit.distances.get("size_sensor");
         String[] seen = new String[4];
         double[] readings = {150, 80, 57, 68};
@@ -371,5 +408,273 @@ public class PiecesTest {
         String lines = String.join("\n", b.simLines());
         assertTrue(lines, lines.contains("color.intake_color = at=intake"));
         assertTrue(lines, lines.contains("color.ready_color = at=ready"));
+    }
+    // ----------------------------- review fixes -----------------------------
+
+    private static RobotDefinition sizeRobot() {
+        return new RobotDefinition() {
+            @Override protected void define() {
+                tunables(Numbers.class);
+                drive(Drive.tank("l", "r"));
+                add(PieceSensor.distance("size_sensor").kinds("POLLEN", "NECTAR"));
+            }
+        };
+    }
+
+    @Test public void theDistanceSensorIsReadOffTheLoopAndOldReadingsAreThrownAway() {
+        Kit kit = new Kit();
+        RobotDefinition r = sizeRobot();
+        r.setup(kit);
+        PieceSensor s = (PieceSensor) r.modules().get(0);
+        s.clock = () -> now[0];
+        List<Runnable> helper = new ArrayList<>();    // the helper thread's queue: runs only when the test says
+        s.background = helper::add;
+        double[] mm = kit.distances.get("size_sensor");
+        mm[0] = 80;
+        s.update();
+        assertEquals("the loop only asks: one read waiting", 1, helper.size());
+        assertFalse("no reading yet", s.isWorking());
+        assertEquals(Pieces.NONE, s.kind());
+        now[0] += 10_000_000L;
+        s.update();
+        assertEquals("one read at a time", 1, helper.size());
+        helper.remove(0).run();                       // the helper thread reads (it may take a while)
+        now[0] += 10_000_000L;
+        s.update();
+        assertTrue(s.isWorking());
+        assertEquals("POLLEN", s.kind());
+        int readings = s.readings();
+        // A read that takes 0.3 s: by the time it arrives the piece has moved on, so it is thrown away.
+        mm[0] = 57;
+        helper.remove(0).run();
+        now[0] += 300_000_000L;
+        s.update();
+        assertEquals("too old: not used", readings, s.readings());
+        assertEquals("POLLEN", s.kind());
+        // No new reading for more than 0.5 s: it sees nothing and says why.
+        now[0] += 300_000_000L;
+        s.update();
+        assertFalse(s.isWorking());
+        assertEquals(Pieces.NONE, s.kind());
+        assertTrue(s.problem(), s.problem().contains("no new reading"));
+        // Readings again: back to work.
+        helper.remove(0).run();
+        now[0] += 10_000_000L;
+        s.update();
+        assertTrue(s.isWorking());
+        assertEquals("NECTAR", s.kind());
+        assertEquals("", s.problem());
+    }
+
+    @Test public void theDistanceSensorUsesTheLibraryHelperThreadByDefault() throws Exception {
+        Kit kit = new Kit();
+        RobotDefinition r = sizeRobot();
+        r.setup(kit);
+        PieceSensor s = (PieceSensor) r.modules().get(0);
+        kit.distances.get("size_sensor")[0] = 57;
+        for (int i = 0; i < 200 && !s.isWorking(); i++) {
+            s.update();
+            Thread.sleep(5);
+        }
+        assertEquals("NECTAR", s.kind());
+        r.all().stop();
+    }
+
+    @Test public void missingSensorsWarnAtInitAndSeeNothing() {
+        Kit kit = new Kit();
+        kit.missing.add("intake_color");
+        kit.missing.add("size_sensor");
+        Bot b = setup(kit, false);                    // no error: INIT goes on
+        RobotDefinition r = sizeRobot();
+        r.setup(kit);
+        String notes = b.notes() + " " + r.notes();
+        assertTrue(notes, notes.contains("intake_color: not found: no colour sensor called \"intake_color\""));
+        assertTrue(notes, notes.contains("size_sensor: not found: no distance sensor called \"size_sensor\""));
+        run(b, 100);
+        assertEquals(Pieces.NONE, b.pieces.atIntake());
+        assertFalse(b.pieces.intakeSensor().isWorking());
+        assertEquals("the preload, nothing more", 1, b.pieces.count());
+        Fakes.FakeTelemetry ft = new Fakes.FakeTelemetry();
+        RobotTelemetry t = new RobotTelemetry(ft.telemetry, () -> 0L);
+        b.pieces.addTelemetry(t);
+        t.update();
+        assertTrue(String.join("\n", ft.lastScreen).contains("not found"));
+    }
+
+    @Test public void aSensorWithNoNewReadingsStopsCounting() {
+        // Like a camera whose pictures stopped: the same answer again is no new reading.
+        Kit kit = new Kit();
+        Bot b = setup(kit, false);
+        final boolean[] frozen = {false};
+        final double[][] reading = {{48, 0.8, 15}};
+        b.pieces.intakeSensor().useReader(() -> frozen[0] ? null : reading[0].clone());
+        run(b, 60);
+        assertEquals("one came in", 2, b.pieces.count());
+        frozen[0] = true;                             // the camera stops (or is unplugged)
+        run(b, 600);
+        assertFalse(b.pieces.intakeSensor().isWorking());
+        assertEquals("no stale answer", Pieces.NONE, b.pieces.atIntake());
+        assertTrue(b.pieces.intakeSensor().problem().contains("no new reading"));
+        assertEquals(2, b.pieces.count());
+        reading[0] = new double[] {48, 0.8, 15};      // back: the same piece still there, not counted twice
+        frozen[0] = false;
+        run(b, 60);
+        assertEquals(2, b.pieces.count());
+    }
+
+    @Test public void aStoppedOrJammedFeedDoesNotCountOut() {
+        Kit kit = new Kit();
+        Bot b = setup(kit, false);                    // a CR servo indexer, no ready sensor
+        b.indexer.feedOne();
+        run(b, 100);
+        b.indexer.stop();                             // stopped part way: the piece is still in
+        assertEquals(1, b.pieces.count());
+        assertFalse(b.indexer.isFeeding());
+        b.pieces.feedStarted();                       // what a jammed feed tells it
+        b.pieces.feedEnded(false);
+        assertEquals("a jam: still in", 1, b.pieces.count());
+        b.indexer.feedOne();
+        run(b, 500);                                  // a feed that ends normally
+        assertEquals(0, b.pieces.count());
+    }
+
+    @Test public void aServoStoppedAfterItsPushDidFire() {
+        Kit kit = new Kit();
+        Bot b = new Bot();
+        b.withReady = false;
+        b.servoIndexer = true;
+        b.setup(kit);
+        clocks(b);
+        b.indexer.feedOne();
+        run(b, 100);                                  // pushSec 0.25: still pushing
+        b.indexer.stop();
+        assertEquals("stopped mid-push: not fired", 1, b.pieces.count());
+        b.indexer.feedOne();
+        run(b, 300);                                  // the push is done, on its way back
+        b.indexer.stop();
+        assertEquals(0, b.pieces.count());
+    }
+
+    @Test public void aFeedWithTheReadySlotEmptyFiresNothing() {
+        Kit kit = new Kit();
+        Bot b = setup(kit, true);
+        kit.colors.get("ready_color").empty();
+        run(b, 20);
+        b.indexer.feedOne();
+        run(b, 500);
+        assertEquals("the ready sensor saw nothing go: still 1", 1, b.pieces.count());
+    }
+
+    @Test public void theReadySensorIsTrustedAgainAfterAShortGap() {
+        // The next piece arrives sooner than steadyMs after the last one left: the slot never reads
+        // empty for long enough, but the new piece's reading is trusted once it is steady.
+        Kit kit = new Kit();
+        Bot b = setup(kit, true, SlowReady.class);
+        FakeColor ready = kit.colors.get("ready_color");
+        b.pieces.set("POLLEN", "BLUE_NECTAR", "BLUE_NECTAR");   // the count is wrong about the 2nd one
+        ready.yellow();
+        run(b, 60);
+        b.indexer.feedOne();
+        ready.empty();
+        run(b, 20);                                   // 20 ms empty (< steadyMs 30): it left
+        assertEquals(2, b.pieces.count());
+        ready.yellow();                               // a yellow one right behind
+        run(b, 60);
+        assertEquals("the ready sensor knows best again (the feed is still going)", "POLLEN", b.pieces.next());
+        assertEquals("[POLLEN, BLUE_NECTAR]", b.pieces.held().toString());
+    }
+
+    @Test public void piecesPushedOutThroughTheIntakeCountOutAndAreNotCountedInAgain() {
+        Kit kit = new Kit();
+        Bot b = setup(kit, false);
+        FakeColor in = kit.colors.get("intake_color");
+        b.intake.in();
+        in.red(); run(b, 60); in.empty(); run(b, 60);
+        in.blue(); run(b, 60);                        // a jam: a 3rd piece stuck at the sensor
+        assertEquals(3, b.pieces.count());
+        b.intake.out();                               // back it out
+        run(b, 20);
+        in.empty(); run(b, 60);                       // it left through the intake
+        assertEquals(2, b.pieces.count());
+        assertEquals("[POLLEN, RED_NECTAR]", b.pieces.held().toString());
+        in.red(); run(b, 60);                         // a held piece rolls past the sensor on its way out:
+        assertEquals("not counted in", 2, b.pieces.count());
+        in.empty(); run(b, 60);
+        assertEquals("counted out", 1, b.pieces.count());
+        b.intake.in();
+        run(b, 400);
+        in.red(); run(b, 60); in.empty(); run(b, 60); // taken in again: counts again
+        assertEquals(2, b.pieces.count());
+    }
+
+    @Test public void twoTouchingPiecesOfTheSameKindCountTwiceWithADistanceDip() {
+        Kit kit = new Kit();
+        Bot b = setup(kit, false);
+        FakeColor in = kit.colors.get("intake_color");
+        in.yellow();                                  // 15 mm
+        run(b, 60);
+        assertEquals(2, b.pieces.count());
+        in.mm = 19; run(b, 30); in.mm = 14; run(b, 30); // a small wobble (under gapMm 8): the same piece
+        assertEquals(2, b.pieces.count());
+        in.mm = 27; run(b, 30);                       // the join between two balls: farther
+        in.mm = 15; run(b, 30);                       // the second ball: close again
+        assertEquals(3, b.pieces.count());
+        in.empty(); run(b, 60);
+        assertEquals("[POLLEN, POLLEN, POLLEN]", b.pieces.held().toString());
+        in.red(); run(b, 60);                         // a red one, then a blue one touching it:
+        in.mm = 27; run(b, 30);
+        in.mm = 15; run(b, 30);                       // the dip counts it (it still reads red)
+        in.blue(); run(b, 60);                        // its colour: the same piece, kind written down
+        assertEquals("[POLLEN, POLLEN, POLLEN, RED_NECTAR, BLUE_NECTAR]", b.pieces.held().toString());
+    }
+
+    @Test public void theDriversCanOverrideAFullCountAndAreWarned() {
+        LongSupplier padClock = Pad.clock;
+        try {
+            Pad.clock = () -> now[0];
+            Kit kit = new Kit();
+            Bot b = setup(kit, false);
+            b.pieces.set("POLLEN", "POLLEN", "POLLEN", "POLLEN");
+            ButtonPlan plan = ControlMap.makePlan(b, false, true, (p1, p2) -> { });
+            String help = String.join("\n", plan.help());
+            assertTrue(help, help.contains("G2 RT: in (hold; 1 s: in even when full)"));
+            assertTrue(help, help.contains("piece count = 0"));
+            com.crossbotics.ftchelper.gamepad.ControllerBindings driver = new com.crossbotics.ftchelper.gamepad.ControllerBindings();
+            com.crossbotics.ftchelper.gamepad.ControllerBindings operator = new com.crossbotics.ftchelper.gamepad.ControllerBindings();
+            com.qualcomm.robotcore.hardware.Gamepad g1 = new com.qualcomm.robotcore.hardware.Gamepad();
+            com.qualcomm.robotcore.hardware.Gamepad g2 = new com.qualcomm.robotcore.hardware.Gamepad();
+            plan.compile(b, driver, operator, new ArrayList<>(), () -> g1, () -> g2);
+            Runnable loop = () -> {
+                now[0] += 20_000_000L;
+                driver.update(g1, g2);
+                operator.update(g1, g2);
+                plan.loop(false, false);
+                b.all().update();
+            };
+            loop.run();
+            g2.right_trigger = 1;
+            for (int i = 0; i < 25; i++) loop.run();      // 0.5 s
+            assertEquals("full: held back", 0.0, kit.kit.motors.get("intake").power, 1e-9);
+            for (int i = 0; i < 30; i++) loop.run();      // past 1 s
+            assertEquals("held 1 s: in anyway", 1.0, kit.kit.motors.get("intake").power, 1e-9);
+            g2.right_trigger = 0;
+            loop.run();
+            assertEquals(0.0, kit.kit.motors.get("intake").power, 1e-9);
+            // Held back for more than 2 s: the Driver Station says so.
+            b.intake.in();
+            for (int i = 0; i < 110; i++) loop.run();
+            Fakes.FakeTelemetry ft = new Fakes.FakeTelemetry();
+            RobotTelemetry t = new RobotTelemetry(ft.telemetry, () -> 0L);
+            b.intake.addTelemetry(t);
+            t.update();
+            assertTrue(String.join("\n", ft.lastScreen), String.join("\n", ft.lastScreen).contains("held back by stopsWhen"));
+            // Hold the left stick button 1 s: the count is 0, and the intake runs in again.
+            g2.left_stick_button = true;
+            for (int i = 0; i < 55; i++) loop.run();
+            assertEquals(0, b.pieces.count());
+            assertEquals(1.0, kit.kit.motors.get("intake").power, 1e-9);
+        } finally {
+            Pad.clock = padClock;
+        }
     }
 }

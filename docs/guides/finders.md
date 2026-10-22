@@ -205,8 +205,8 @@ Nothing moves, so no block is needed.
 
 1. Mount the sensor where it will stay. Put a piece where it really sits or passes (at the intake: the
    spot where the sensor sees it go by).
-2. D-pad up/down: the sensor. D-pad left/right: which kind is in front of it. **A**: measure (hold
-   still for half a second). Do every kind, then EMPTY (nothing there).
+2. D-pad up/down: the sensor. D-pad left/right: which kind is in front of it. **A**: measure (20
+   readings, about half a second: hold still). Do every kind, then EMPTY (nothing there).
 3. Copy the lines into `Tunables.java` (e.g. `Tunables.IntakeColor: POLLEN = 74`), rebuild, and run it
    again: "It sees" should name each piece you hold up, and NONE with nothing there.
 

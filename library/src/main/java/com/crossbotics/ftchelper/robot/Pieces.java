@@ -5,13 +5,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BooleanSupplier;
+import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
 /**
  * Counts the game pieces the robot holds and knows the kind of the NEXT one to fire. A
- * {@link PieceSensor} at the intake counts each piece coming in (and its kind); every feed of an
- * {@link Indexer} counts one going out; an optional sensor at the "ready to fire" slot says what is
- * next for sure.
+ * {@link PieceSensor} at the intake counts each piece coming in (and its kind), and each piece pushed
+ * back out through the intake; every feed of an {@link Indexer} counts one going out once it really
+ * went (the ready sensor sees it leave, or the feed ended without a jam); an optional sensor at the
+ * "ready to fire" slot says what is next for sure.
  *
  * <pre>{@code
  * public Pieces pieces;                                                   // Robot.java
@@ -28,8 +30,12 @@ import java.util.function.Supplier;
  *
  * <p>Hooks for other parts: {@link #nextKind()} (a {@code Supplier<String>}, e.g. to pick the shot
  * table), {@link #whenFull()}, {@link #whenEmpty()}, {@link #whenNextIs(String)} (BooleanSuppliers,
- * e.g. for LEDs or {@code Intake.stopsWhen}). No Tunables of its own (its sensors have theirs). No
- * suggested buttons.
+ * e.g. for LEDs or {@code Intake.stopsWhen}). No Tunables of its own (its sensors have theirs).
+ * Suggested button: hold operator left-stick button 1 s = count 0 (the count went wrong).
+ *
+ * <p>The count is a helper, not a guarantee: a miscount happens (two touching pieces, a piece that
+ * bounced out). The drivers, not the count, are responsible for the game's limit (BIOBUZZ G407) until
+ * the robot has a hardware stop.
  *
  * Docs: docs/modules/robot.md (section "Pieces and PieceSensor")
  */
@@ -49,8 +55,22 @@ public final class Pieces extends Module<Pieces> {
     private String lastIn = NONE;
     private int totalIn = 0, totalOut = 0;
     // Just fired: the ready sensor may still see the piece that left, so it is not trusted until it sees
-    // the slot empty once (or a feed that left nothing there).
+    // the slot empty, or a new steady reading that began after (the next piece), or the feed ends.
     private boolean readyStale = false;
+    private long staleFrom = 0;
+    // A feed started and not yet counted: did the ready sensor see a piece in it, and did it see it leave?
+    private int feeding = 0;
+    private boolean feedSawPiece = false, feedLeft = false;
+    // The intake sensor's arrivals already counted, and the kind written down for the latest one.
+    private int lastArrivals = 0;
+    private String inRecorded = NONE;
+    // The intakes (pieces leave through them while they push out) and when one last pushed out (ns).
+    private final List<Intake> intakes = new ArrayList<>();
+    private long lastOutAt = Long.MIN_VALUE;
+    private int pushedOut = 0;
+    /** Pieces still roll out this long after the intake stops pushing out. */
+    static final long OUT_COAST_NS = 300_000_000L;
+    LongSupplier clock = System::nanoTime;
 
     private Pieces(List<String> kinds) {
         super("pieces");
@@ -124,14 +144,27 @@ public final class Pieces extends Module<Pieces> {
     void build(Devices devices, TunableSection t) {
         held.clear();
         held.addAll(startWith);
-        // Every feed of an indexer (alone or in a launcher) sends one piece out.
+        // Every feed of an indexer (alone or in a launcher) sends one piece out; an intake that pushes
+        // out sends pieces out the other way.
         if (robot != null) {
+            Indexer.FeedWatcher watcher = new Indexer.FeedWatcher() {
+                @Override public void started() { feedStarted(); }
+                @Override public void ended(boolean fired) { feedEnded(fired); }
+            };
             for (Module<?> m : robot.modules()) {
                 List<Module<?>> group = new ArrayList<>(m.children());
                 group.add(m);
-                for (Module<?> g : group) if (g instanceof Indexer) ((Indexer) g).onFeed(this::removed);
+                for (Module<?> g : group) {
+                    if (g instanceof Indexer) ((Indexer) g).watchFeeds(watcher);
+                    if (g instanceof Intake) intakes.add((Intake) g);
+                }
             }
         }
+    }
+
+    @Override
+    void suggestButtons(ButtonPlan plan) {
+        plan.operator().leftStickButton.heldFor(1.0, this::clear).says("hold 1 s: piece count = 0");
     }
 
     // ----------------------------- every loop -----------------------------
@@ -140,31 +173,121 @@ public final class Pieces extends Module<Pieces> {
     public void update() {
         if (in != null) {
             in.update();
-            String now = in.kind();
-            boolean newPiece = !now.equals(NONE) && (lastIn.equals(NONE)
-                    || (!lastIn.equals(UNKNOWN) && !now.equals(UNKNOWN) && !now.equals(lastIn)));
-            if (newPiece) added(now);
-            // The same piece, now told apart: write its kind down.
-            else if (!now.equals(NONE) && !now.equals(UNKNOWN) && !held.isEmpty() && held.get(held.size() - 1).equals(UNKNOWN)) {
-                held.set(held.size() - 1, now);
-            }
-            lastIn = now;
+            // A sensor with no recent reading (unplugged, missing) counts nothing.
+            if (in.isWorking()) watchIntake();
         }
         if (ready != null) {
             ready.update();
-            String r = ready.kind();
-            if (r.equals(NONE)) readyStale = false;
-            if (readyStale) return;
-            // A piece in the ready slot that was never counted (missed, or the robot was loaded by hand).
-            if (!r.equals(NONE) && held.isEmpty()) held.add(r);
-            // The ready sensor knows best: correct the first piece's kind.
-            if (!r.equals(NONE) && !r.equals(UNKNOWN) && !held.isEmpty()) held.set(0, r);
+            if (ready.isWorking()) watchReady();
         }
+    }
+
+    // The intake sensor: each new piece counts one in; while the intake pushes out, each piece that
+    // leaves counts one out (the newest), and nothing counts in.
+    private void watchIntake() {
+        String now = in.kind();
+        int arrivals = in.arrivals();
+        int newOnes = arrivals - lastArrivals;
+        lastArrivals = arrivals;
+        if (runningOut()) {
+            int out = 0;
+            // A new piece behind one that was there (a different kind, or a distance dip): that one left.
+            if (newOnes > 0) out += lastIn.equals(NONE) ? newOnes - 1 : newOnes;
+            if (!lastIn.equals(NONE) && now.equals(NONE)) out++;
+            for (int i = 0; i < out && !held.isEmpty(); i++) {
+                held.remove(held.size() - 1);
+                pushedOut++;
+            }
+            inRecorded = NONE;
+        } else {
+            for (int i = 0; i < newOnes; i++) added(now);
+            if (newOnes > 0) inRecorded = held.isEmpty() ? NONE : held.get(held.size() - 1);
+            // The same piece, now told apart (or its colour after a dip counted it): write its kind down.
+            else if (!now.equals(NONE) && !now.equals(UNKNOWN) && !now.equals(inRecorded) && !inRecorded.equals(NONE)
+                    && !held.isEmpty() && held.get(held.size() - 1).equals(inRecorded)) {
+                held.set(held.size() - 1, now);
+                inRecorded = now;
+            }
+        }
+        if (now.equals(NONE)) inRecorded = NONE;
+        lastIn = now;
+    }
+
+    // True while an intake pushes out, and a moment after (pieces still roll).
+    private boolean runningOut() {
+        long now = clock.getAsLong();
+        for (Intake i : intakes) {
+            if (i.isRunningOut()) {
+                lastOutAt = now;
+                return true;
+            }
+        }
+        return lastOutAt != Long.MIN_VALUE && now - lastOutAt < OUT_COAST_NS;
+    }
+
+    // The ready sensor: a feed's piece leaving, and the last word on the next piece.
+    private void watchReady() {
+        String raw = ready.rawKind();
+        if (feeding > 0 && !feedLeft) {
+            if (!raw.equals(NONE)) {
+                feedSawPiece = true;
+            } else if (feedSawPiece && (ready.rawRun() >= 2 || ready.kind().equals(NONE))) {
+                // The piece being fed has left the slot: count it out now.
+                feedLeft = true;
+                takeFirst();
+                markReadyStale();
+            }
+        }
+        String r = ready.kind();
+        // Trusted again once the slot reads empty, or a new steady reading began (the next piece).
+        if (readyStale && (r.equals(NONE) || ready.steadyFromNs() > staleFrom)) readyStale = false;
+        if (readyStale || (feeding > 0 && !feedLeft)) return;
+        // A piece in the ready slot that was never counted (missed, or the robot was loaded by hand).
+        if (!r.equals(NONE) && held.isEmpty()) held.add(r);
+        // The ready sensor knows best: correct the first piece's kind.
+        if (!r.equals(NONE) && !r.equals(UNKNOWN) && !held.isEmpty()) held.set(0, r);
+    }
+
+    private boolean readyWorks() {
+        return ready != null && ready.isWorking();
+    }
+
+    private void markReadyStale() {
+        if (ready == null) return;
+        readyStale = true;
+        staleFrom = ready.nowNs();
+    }
+
+    // An indexer started a feed: the piece is counted out when it leaves (or the feed ends normally).
+    void feedStarted() {
+        feeding++;
+        feedLeft = false;
+        feedSawPiece = readyWorks() && !ready.rawKind().equals(NONE);
+    }
+
+    // The feed ended. Not yet counted: count it if it fired (and, with a working ready sensor, if there
+    // was a piece to fire). A jam or a stop part way: the piece is still in, nothing changes.
+    void feedEnded(boolean fired) {
+        if (feeding == 0) return;
+        feeding--;
+        if (!feedLeft && fired && (!readyWorks() || feedSawPiece)) {
+            takeFirst();
+            totalOut++;
+        }
+        if (feedLeft) totalOut++;
+        feedLeft = false;
+        feedSawPiece = false;
+        // Whatever the ready sensor sees now is the next piece (or the one that did not go).
+        readyStale = false;
+    }
+
+    private void takeFirst() {
+        if (!held.isEmpty()) held.remove(0);
     }
 
     // ----------------------------- reading -----------------------------
 
-    /** How many pieces the robot holds now. */
+    /** How many pieces the robot holds now (a piece being fed counts until it has gone). */
     public int count() {
         return held.size();
     }
@@ -176,8 +299,12 @@ public final class Pieces extends Module<Pieces> {
         return n;
     }
 
-    /** The kind of the next piece to fire: a kind, {@link #UNKNOWN}, or {@link #NONE} when empty. */
+    /**
+     * The kind of the next piece to fire: a kind, {@link #UNKNOWN}, or {@link #NONE} when empty. While a
+     * feed is sending one out, the one after it.
+     */
     public String next() {
+        if (feeding > 0 && !feedLeft) return held.size() < 2 ? NONE : held.get(1);
         if (ready != null && !readyStale && ready.seesPiece() && !ready.kind().equals(UNKNOWN)) return ready.kind();
         return held.isEmpty() ? NONE : held.get(0);
     }
@@ -258,16 +385,17 @@ public final class Pieces extends Module<Pieces> {
         totalIn++;
     }
 
-    /** One piece went out (each indexer feed calls this). Nothing if it holds none. */
+    /** One piece went out, the next to fire (for a part that sends pieces out itself). Nothing if it holds none. */
     public void removed() {
-        if (!held.isEmpty()) held.remove(0);
+        takeFirst();
         totalOut++;
-        readyStale = ready != null;
+        markReadyStale();
     }
 
-    /** Empties the count (e.g. a button after the robot was emptied by hand). */
+    /** Empties the count (e.g. a button after the robot was emptied by hand; its suggested button). */
     public void clear() {
         held.clear();
+        readyStale = false;
     }
 
     /** Sets what it holds, next to fire first, e.g. {@code set("POLLEN", "POLLEN")}. */
@@ -291,7 +419,7 @@ public final class Pieces extends Module<Pieces> {
         if (max > 0 && held.size() > max) t.warn("Pieces: holding " + held.size() + ", more than " + max);
         t.line("Pieces", held.size() + (max > 0 ? "/" + max : "") + ", next " + next());
         t.debug("  held", held.toString());
-        t.debug("  in/out", totalIn + " / " + totalOut);
+        t.debug("  in/fired/pushed out", totalIn + " / " + totalOut + " / " + pushedOut);
         if (in != null) in.addTelemetry(t);
         if (ready != null) ready.addTelemetry(t);
     }

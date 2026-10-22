@@ -43,8 +43,21 @@ public final class Indexer extends Module<Indexer> implements Feeder {
     private MotorFeeder motorFeeder;
     private Tunable rest, push, pushSec, returnSec, power, feedSec;
     LongSupplier clock = System::nanoTime;
-    // Told each time a feed really starts (a Pieces counter counts one piece out).
+    // Told each time a feed really starts (team code).
     private final List<Runnable> feedListeners = new java.util.ArrayList<>();
+    // Told when a feed starts and when it ends, and whether it ended normally (a Pieces counter).
+    private final List<FeedWatcher> feedWatchers = new java.util.ArrayList<>();
+    // A feed is going on (started, not yet ended), and when it started (nanoseconds).
+    private boolean feeding = false;
+    private long feedStartedAt = 0;
+
+    /** Told when a feed starts and when it ends ({@link Pieces} counts a piece out only when it really went). */
+    interface FeedWatcher {
+        void started();
+
+        /** @param fired true when the feed ended normally; false when it jammed or was stopped part way */
+        void ended(boolean fired);
+    }
 
     private Indexer(Kind kind, String device) {
         super(device);
@@ -129,18 +142,53 @@ public final class Indexer extends Module<Indexer> implements Feeder {
     }
 
     /**
-     * Runs {@code listener} each time a feed starts (one piece goes out). {@link Pieces} uses it to
-     * count; a team's code can too.
+     * Runs {@code listener} each time a feed starts (a call while busy is not a feed). A feed that
+     * starts may still jam: {@link Pieces} counts a piece out only when the feed ends normally (or its
+     * ready sensor sees the piece leave).
      */
     public void onFeed(Runnable listener) {
         feedListeners.add(listener);
+    }
+
+    void watchFeeds(FeedWatcher watcher) {
+        feedWatchers.add(watcher);
+    }
+
+    /** True from the start of a feed until it ends (normally, jammed or stopped). */
+    public boolean isFeeding() {
+        return feeding;
     }
 
     // Feeds, and tells the listeners if a feed really started (a call while busy is ignored).
     private void feedCounted() {
         boolean wasBusy = feeder.isBusy();
         feeder.feedOne();
-        if (!wasBusy && feeder.isBusy()) for (Runnable r : feedListeners) r.run();
+        if (!wasBusy && feeder.isBusy()) {
+            feeding = true;
+            feedStartedAt = clock.getAsLong();
+            for (Runnable r : feedListeners) r.run();
+            for (FeedWatcher w : feedWatchers) w.started();
+        }
+    }
+
+    // After the feeder's update or a stop: a feed that is no longer busy has ended. It fired unless it
+    // jammed, or was stopped part way (a push servo that finished its push did fire).
+    private void checkFeedEnded(boolean stopped) {
+        if (!feeding || feeder.isBusy()) return;
+        feeding = false;
+        boolean fired = !feeder.isJammed() && (!stopped || pushedFully());
+        for (FeedWatcher w : feedWatchers) w.ended(fired);
+    }
+
+    // A push servo stopped on its way back: the push itself was done.
+    private boolean pushedFully() {
+        return kind == Kind.SERVO && (clock.getAsLong() - feedStartedAt) / 1e9 >= pushSec.get();
+    }
+
+    // Stops the feeder; a feed going on ends without firing (see checkFeedEnded).
+    private void stopFeeder() {
+        feeder.stop();
+        checkFeedEnded(true);
     }
 
     @Override
@@ -160,20 +208,21 @@ public final class Indexer extends Module<Indexer> implements Feeder {
 
     @Override
     void pause() {
-        if (feeder != null) feeder.stop();   // a feed in progress ends (a push servo goes back to rest)
+        if (feeder != null) stopFeeder();   // a feed in progress ends (a push servo goes back to rest)
     }
 
     @Override
     public void update() {
         applyTunables();
         feeder.update();
+        checkFeedEnded(false);
     }
 
     @Override
     public void stop() {
         if (feeder == null) return;
         touch();
-        feeder.stop();
+        stopFeeder();
     }
 
     @Override
@@ -234,7 +283,7 @@ public final class Indexer extends Module<Indexer> implements Feeder {
             @Override public boolean isJammed() { return feeder.isJammed(); }
             @Override public void clearJam() { feeder.clearJam(); }
             @Override public void update() { Indexer.this.update(); }
-            @Override public void stop() { feeder.stop(); }
+            @Override public void stop() { stopFeeder(); }
             @Override public String name() { return Indexer.this.name(); }
             @Override public void addTelemetry(RobotTelemetry t) { feeder.addTelemetry(t); }
         };

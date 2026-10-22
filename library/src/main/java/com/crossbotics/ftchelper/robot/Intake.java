@@ -24,6 +24,8 @@ import java.util.List;
  * <p>{@code Tunables.Intake}: {@code inPower} (default 1.0) and {@code outPower} (default 0.7).
  * Suggested buttons: hold G2 RT to run it in, hold G2 LT to push out. With {@link #onAtStart()}:
  * G2 RT switches it on and off, and holding LT pushes out, then goes back to what it was doing.
+ * With {@link #stopsWhen}: holding RT for 1 s runs it in anyway (the count was wrong), and the Driver
+ * Station warns when it has been held back for more than 2 s.
  *
  * Docs: docs/modules/robot.md (section "Intake")
  */
@@ -44,6 +46,15 @@ public final class Intake extends Module<Intake> implements Toggleable {
     private double lastPower = Double.NaN;
     // While this is true it does not run IN (out still works): e.g. pieces.whenFull(). null = never.
     private java.util.function.BooleanSupplier stopIn = null;
+    // inAnyway(): runs in although stopsWhen says no, until stop() or out().
+    private boolean ignoreStop = false;
+    // The suggested in-button: since when it is held (nanoseconds; -1 = not held).
+    private long inHeldSince = -1;
+    // Since when stopsWhen has held it back (nanoseconds; -1 = not held back).
+    private long heldBackSince = -1;
+    /** Held this long, the in-button runs it in anyway; held back this long, the Driver Station warns. */
+    static final double OVERRIDE_SEC = 1.0, WARN_SEC = 2.0;
+    java.util.function.LongSupplier clock = System::nanoTime;
 
     private Intake(boolean servos, String... names) {
         super(names[0]);
@@ -110,7 +121,17 @@ public final class Intake extends Module<Intake> implements Toggleable {
 
     /** True while the {@link #stopsWhen} condition holds it back from running in. */
     public boolean isHeldBack() {
-        return on && !reversing && !out && stopIn != null && stopIn.getAsBoolean();
+        return on && !reversing && !out && !ignoreStop && stopIn != null && stopIn.getAsBoolean();
+    }
+
+    /**
+     * Runs in even though {@link #stopsWhen} says no, until {@link #stop()} or {@link #out()}: for when
+     * the count is wrong (it says full, but the robot is not). The suggested in-button does this when
+     * held for 1 s. The drivers are then responsible for the game's limit.
+     */
+    public void inAnyway() {
+        in();
+        ignoreStop = true;
     }
 
     /** Starts running in at START (in autonomous and TeleOp), until stopped. */
@@ -168,6 +189,15 @@ public final class Intake extends Module<Intake> implements Toggleable {
         touch();
         out = true;
         on = false;
+        ignoreStop = false;
+    }
+
+    // The suggested in-button, every loop while held: in; held 1 s while held back, in anyway.
+    private void holdIn() {
+        in();
+        long now = clock.getAsLong();
+        if (inHeldSince < 0) inHeldSince = now;
+        if (stopIn != null && (now - inHeldSince) / 1e9 >= OVERRIDE_SEC) ignoreStop = true;
     }
 
     /** Stops (and ends a reverse). */
@@ -190,6 +220,7 @@ public final class Intake extends Module<Intake> implements Toggleable {
     void halt() {
         on = false;
         out = false;
+        ignoreStop = false;
     }
 
     @Override
@@ -198,6 +229,8 @@ public final class Intake extends Module<Intake> implements Toggleable {
         on = false;
         out = false;
         reversing = false;
+        ignoreStop = false;
+        inHeldSince = -1;
         write(0);
     }
 
@@ -227,6 +260,16 @@ public final class Intake extends Module<Intake> implements Toggleable {
         return out;
     }
 
+    /** True while it pushes pieces out: after {@link #out()}, or while {@link #reverse()} is held. */
+    public boolean isRunningOut() {
+        return out || reversing;
+    }
+
+    /** Seconds it has been held back by {@link #stopsWhen} without a break (0 when it is not). */
+    public double heldBackSec() {
+        return heldBackSince < 0 ? 0 : (clock.getAsLong() - heldBackSince) / 1e9;
+    }
+
     /** True while it runs in or out. */
     public boolean isRunning() {
         return on || out || reversing;
@@ -234,6 +277,8 @@ public final class Intake extends Module<Intake> implements Toggleable {
 
     @Override
     public void update() {
+        if (!isHeldBack()) heldBackSince = -1;
+        else if (heldBackSince < 0) heldBackSince = clock.getAsLong();
         double power = reversing || out ? -outPower.get() : on && !isHeldBack() ? inPower.get() : 0;
         write(power);
     }
@@ -248,17 +293,25 @@ public final class Intake extends Module<Intake> implements Toggleable {
 
     @Override
     public void addTelemetry(RobotTelemetry t) {
+        if (heldBackSec() > WARN_SEC) {
+            t.warn(name() + ": held back by stopsWhen for " + fmt("%.0f", heldBackSec()) + " s (the count says full). "
+                    + "Not really full? Hold the in-button 1 s to pull in anyway");
+        }
         t.line(name(), reversing || out ? "OUT" : isHeldBack() ? "IN (held back by stopsWhen)" : on ? "IN" : "stopped");
     }
 
     @Override
     void suggestButtons(ButtonPlan plan) {
         Pad op = plan.operator();
-        if (onAtStart) {
+        if (onAtStart && stopIn != null) {
+            // A tap switches it; held 1 s it runs in even when stopsWhen says no (the count was wrong).
+            op.rt.tap(this::toggle).says("in on/off").heldFor(OVERRIDE_SEC, this::inAnyway).says("in anyway (count says full)");
+            op.lt.hold(this::reverse, this::endReverse).says("out (hold)");
+        } else if (onAtStart) {
             op.rt.toggle(this).says("in on/off");
             op.lt.hold(this::reverse, this::endReverse).says("out (hold)");
         } else {
-            op.rt.hold(this::in, this::stop).says("in (hold)");
+            op.rt.hold(this::holdIn, this::stop).says(stopIn != null ? "in (hold; 1 s: in even when full)" : "in (hold)");
             op.lt.hold(this::out, this::stop).says("out (hold)");
         }
     }

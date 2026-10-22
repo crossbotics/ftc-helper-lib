@@ -17,7 +17,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
  *   distance.NAME = at=intake, acrossMm=150   a distance sensor looking across a channel: acrossMm minus the
  *                                          piece's diameter when one is there, acrossMm when not
  *
- * at=ready: the next piece to fire (the oldest held). at=intake: each piece the intake takes in, for 0.25 s.
+ * at=ready: the next piece to fire (the oldest held); after each shot it reads empty for 0.08 s while the
+ * next piece rolls into the slot. at=intake: each piece the intake takes in, for 0.25 s.
  * The colours are the field file's screen colours, not a real sensor's: tune the real robot with the Piece
  * Tuner (the simulator's numbers will differ).
  */
@@ -47,9 +48,22 @@ final class SimPieceSensor {
         acrossMm = a;
     }
 
+    /** After a shot, the ready slot is empty this long (simulator seconds) while the next piece rolls in. */
+    static final double READY_GAP_SEC = 0.08;
+    private int launchedSeen = -1;
+    private double gapUntil = -1;
+
     // The piece at the spot now, or null.
     private SimField.PieceType piece() {
-        return robot.pieces == null ? null : robot.pieces.atSpot(spot);
+        if (robot.pieces == null) return null;
+        if (spot.equals("ready") && robot.world != null) {
+            int n = robot.pieces.launched();
+            double t = robot.world.time();
+            if (launchedSeen >= 0 && n != launchedSeen) gapUntil = t + READY_GAP_SEC;
+            launchedSeen = n;
+            if (t < gapUntil) return null;
+        }
+        return robot.pieces.atSpot(spot);
     }
 
     /** The distance it reads now, in mm. */
