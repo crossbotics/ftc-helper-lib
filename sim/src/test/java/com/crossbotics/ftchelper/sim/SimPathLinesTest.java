@@ -58,6 +58,8 @@ public class SimPathLinesTest {
             // The plan stays after its step (to compare with the trail), shown as not running.
             assertEquals(plan.size(), paths.plan().size());
             assertFalse(paths.planRunning());
+            // The follower says so too: a path that ended has no points.
+            assertTrue(com.crossbotics.ftchelper.pedro.PedroFollower.lastStarted().plannedPoints().isEmpty());
             // The trail: a point about every 0.1 s of driving, ending where the robot is.
             assertTrue("trail points: " + paths.trailPoints(), paths.trailPoints() > 20);
             List<List<double[]>> trail = paths.trail();

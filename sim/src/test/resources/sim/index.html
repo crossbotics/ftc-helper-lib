@@ -912,7 +912,8 @@ function update3dPaths(s) {
   if (!v3.ready) return;
   const show = $("#showPaths").checked;
   const plan = show ? (s.plan || []) : [], trail = show ? (s.trail || []) : [];
-  const key = JSON.stringify([plan.length, plan[0], plan[plan.length - 1], s.planRunning, trail.map(p => [p.length, p[p.length - 1]])]);
+  // Every point is in the key: two curves with the same ends and the same number of points differ too.
+  const key = JSON.stringify([plan, s.planRunning, trail]);
   if (v3.pathKey === key) return;
   v3.pathKey = key;
   disposeAll(v3.pathGroup);

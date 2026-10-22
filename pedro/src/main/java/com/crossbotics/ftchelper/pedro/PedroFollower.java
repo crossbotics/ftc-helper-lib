@@ -40,8 +40,9 @@ public class PedroFollower implements PathFollower {
     private String holdNote = "";
     private long holdNoteUntil = 0;
     private final java.util.function.LongSupplier clockNanos;
-    // The planned path as points (our frame, mirrored as driven), made when a path starts. Read by the
-    // simulator from its own threads, so it is replaced whole, never changed.
+    // The running path as points (our frame, mirrored as driven): set when a path starts, emptied when it
+    // ends, so it alone says whether a path runs. The simulator reads it from its own threads: it is
+    // replaced whole, never changed.
     private volatile List<FieldPose> planned = Collections.emptyList();
     // The follower that started a path last (for the simulator; weak: it never keeps an old robot alive).
     private static volatile WeakReference<PedroFollower> lastStarted = new WeakReference<>(null);
@@ -131,7 +132,8 @@ public class PedroFollower implements PathFollower {
      * simulator draws it on its field map. One point about every inch, at most {@link #MAX_PLANNED_POINTS}.
      */
     public List<FieldPose> plannedPoints() {
-        return running ? planned : Collections.<FieldPose>emptyList();
+        // One read of one field: the simulator's threads never see a path that ended as still running.
+        return planned;
     }
 
     /**
@@ -222,6 +224,7 @@ public class PedroFollower implements PathFollower {
         }
         savedModes.clear();
         running = false;
+        planned = Collections.emptyList();
     }
 
     // Sets brake/coast through Pedro's Mecanum when there is one (its cache stays right), else directly.
