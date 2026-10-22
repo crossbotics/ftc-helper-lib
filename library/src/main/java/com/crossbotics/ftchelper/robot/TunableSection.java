@@ -25,6 +25,8 @@ final class TunableSection {
     private final Class<?> section;
     // The fields this module asked for that were not in the section (for the INIT note).
     private final List<String> missing = new ArrayList<>();
+    // True for a part that is not on the robot (Module.optional): require() does not stop INIT.
+    boolean lenient = false;
 
     private TunableSection(String name, Class<?> section) {
         this.name = name;
@@ -208,6 +210,8 @@ final class TunableSection {
      * @param why   the end of the message, e.g. "the top of the safe range (Motor Finder: B)"
      */
     void require(String field, String why) {
+        // A part that is not on the robot: its section may be unfinished (the library's default is used).
+        if (lenient) return;
         Field f = field(field);
         if (f != null) {
             Class<?> t = f.getType();

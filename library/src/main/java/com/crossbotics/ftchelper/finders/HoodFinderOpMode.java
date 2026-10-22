@@ -89,6 +89,11 @@ public abstract class HoodFinderOpMode extends FinderOpMode {
                 if (m instanceof Launcher && ((Launcher) m).hood() != null) hood = ((Launcher) m).hood();
             }
             if (hood == null) throw new IllegalStateException("Hood finder: Robot.java has no hood (Launcher...hood(Hood.servo(\"hood\")))");
+            // A hood marked optional() that is not in the configuration yet: say so (not "no Servo named ...").
+            if (hood.isOptional() && hardwareMap.tryGet(com.qualcomm.robotcore.hardware.HardwareDevice.class, hood.deviceName()) == null) {
+                throw new IllegalStateException("Hood finder: \"" + hood.deviceName() + "\" is not in the robot configuration ("
+                        + hood.name() + " is optional in Robot.java, so it is off). Add it to the configuration first.");
+            }
         }
         boolean isMotor;
         if (hood != null) {

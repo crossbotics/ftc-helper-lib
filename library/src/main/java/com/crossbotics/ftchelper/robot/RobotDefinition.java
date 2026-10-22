@@ -246,7 +246,7 @@ public abstract class RobotDefinition {
         describe();
         built = true;
         // A misspelled Tunables field stops INIT here, before anything is made (see TunableFields).
-        checkTunablesNames();
+        checkTunablesNames(devices);
         // Paused: nothing is updated (so nothing moves). At the end (STOP, or an error) everything is
         // paused first, so every motor stops on brake, then stopped.
         all = new Subsystems() {
@@ -286,9 +286,13 @@ public abstract class RobotDefinition {
         for (Module<?> m : modules) if (m instanceof Camera) ordered.add(m);
         for (Module<?> m : modules) if (!(m instanceof Camera)) ordered.add(m);
         for (Module<?> m : ordered) {
-            for (Module<?> child : m.children()) buildOne(child, devices);
-            buildOne(m, devices);
-            all.add(m);
+            // A part marked optional() whose device is not in the configuration is set up "off" (see
+            // MissingPart), with everything inside it (a launcher's feeder and hood).
+            boolean off = m.optional && !m.deviceIn(devices);
+            for (Module<?> child : m.children()) buildOne(child, devices, off);
+            buildOne(m, devices, off);
+            // Off: in the list for its "-" telemetry line only; never updated or stopped.
+            all.add(m.missing ? new MissingPart.Absent(m) : m);
         }
         // The other sections (Tunables.Auto...): in the tuning menu, and their saved values used now,
         // before the autonomous reads them to build its steps.
@@ -309,17 +313,24 @@ public abstract class RobotDefinition {
     }
 
     // Every section the robot reads: a field that no part reads is a typo (or a leftover): stop with its name
-    // and a "did you mean". Two parts sharing a section may hold each other's fields.
-    private void checkTunablesNames() {
+    // and a "did you mean". Two parts sharing a section may hold each other's fields. A missing optional()
+    // part's section is not checked (it may be absent or unfinished until the part is on the robot).
+    private void checkTunablesNames(Devices devices) {
         Map<String, TunableFields.Allowed> sections = new LinkedHashMap<>();
+        Set<String> offSections = new LinkedHashSet<>();
         for (String key : new String[] {"Drive", "Odometry", "Aim", "Buttons"}) sections.put(key, TunableFields.forSection(key));
         for (Module<?> m : modules) {
+            boolean off = m.optional && !m.deviceIn(devices);
             List<Module<?>> group = new ArrayList<>(m.children());
             group.add(m);
-            for (Module<?> g : group) allow(sections, g.name(), TunableFields.forModule(g));
+            for (Module<?> g : group) {
+                if (off || (g.optional && !g.deviceIn(devices))) offSections.add(g.name());
+                else allow(sections, g.name(), TunableFields.forModule(g));
+            }
         }
         for (Interlock r : interlocks.rules) allow(sections, r.name(), TunableFields.forInterlock(r));
         for (Map.Entry<String, TunableFields.Allowed> e : sections.entrySet()) {
+            if (offSections.contains(e.getKey())) continue;   // shared with a missing part: lenient, like its setup
             TunableFields.check(TunableSection.of(tunablesClass, e.getKey()), e.getValue());
         }
     }
@@ -330,10 +341,43 @@ public abstract class RobotDefinition {
         else had.add(a);
     }
 
-    private void buildOne(Module<?> m, Devices devices) {
+    private void buildOne(Module<?> m, Devices devices, boolean parentOff) {
         m.robot = this;
         m.tunables = TunableSection.of(tunablesClass, m.name());
-        m.build(devices, m.tunables);
+        m.missing = parentOff || (m.optional && !m.deviceIn(devices));
+        if (!m.missing) {
+            try {
+                m.build(devices, m.tunables);
+            } catch (IllegalArgumentException e) {
+                // Its first device is not in the configuration: the usual message, and how to leave it off.
+                if (m.deviceIn(devices)) throw e;
+                throw new IllegalArgumentException(e.getMessage() + " Not on the robot yet? Add .optional() to "
+                        + m.name() + "'s line in Robot.java: the part is then off until \"" + m.device
+                        + "\" is in the configuration (docs/modules/robot.md#parts-not-on-the-robot-yet).", e);
+            }
+            return;
+        }
+        // Not on the robot: set up on stand-in devices, so every command and question still works. Its
+        // Tunables section may be unfinished: no "must write max" stop for a part that is not there.
+        m.tunables.lenient = true;
+        try {
+            m.build(MissingPart.devices(), m.tunables);
+        } catch (RuntimeException e) {
+            // A mistake in its numbers: set it up on the library's defaults now, and say so at INIT.
+            m.missingProblem = e.getMessage() == null ? e.toString() : e.getMessage();
+            m.tunables = TunableSection.of(null, m.name());
+            m.tunables.lenient = true;
+            m.build(MissingPart.devices(), m.tunables);
+        }
+    }
+
+    /**
+     * The INIT note for a part that is not on the robot, e.g. "intake_deploy not in the configuration:
+     * IntakeDeploy is off (optional part)". A part inside it (a launcher's feeder) gets none of its own.
+     */
+    private static String missingNote(Module<?> m) {
+        String note = "\"" + m.device + "\" not in the configuration: " + m.name() + " is off (optional part)";
+        return m.missingProblem.isEmpty() ? note : note + ". Fix its Tunables before adding it: " + m.missingProblem;
     }
 
     // ----------------------------- for the team's code -----------------------------
@@ -528,6 +572,70 @@ public abstract class RobotDefinition {
     }
 
     /**
+     * Robot.java against a robot configuration (the Hardware Check shows it): one line for each device
+     * Robot.java names that is NOT in the configuration, and what that means. Empty when all are there.
+     *
+     * <pre>{@code
+     * "lift" (Lift): NOT in the configuration: INIT will stop. Add it, or add .optional() to Lift in Robot.java
+     * "intake_deploy" (IntakeDeploy): not in the configuration: optional, so the part is off (fine)
+     * }</pre>
+     *
+     * @param hardwareMap the OpMode's {@code hardwareMap}
+     */
+    public final List<String> checkConfiguration(HardwareMap hardwareMap) {
+        return checkConfiguration(Devices.of(hardwareMap));
+    }
+
+    /** {@link #checkConfiguration(HardwareMap)} with any {@link Devices} (tests use pretend ones). */
+    public final List<String> checkConfiguration(Devices devices) {
+        describe();
+        List<String> out = new ArrayList<>();
+        for (String d : drive.motorNames()) {
+            if (!devices.has(d)) out.add(stops(d, "Drive", "a robot always needs its drive"));
+        }
+        if (drive.imuName != null && !devices.has(drive.imuName)) {
+            out.add(stops(drive.imuName, "Drive", "or .noImu() on the drive in Robot.java"));
+        }
+        if (odometrySpec != null) {
+            for (String d : odometrySpec.deviceNames()) {
+                if (!devices.has(d)) out.add(stops(d, "Odometry", "or leave the odometry(...) line out until it is on the robot"));
+            }
+        }
+        for (Module<?> m : modules) {
+            if (m.optional && !m.deviceIn(devices)) {
+                out.add(offLine(m));
+                continue;
+            }
+            List<Module<?>> group = new ArrayList<>(m.children());
+            group.add(m);
+            for (Module<?> g : group) {
+                if (g != m && g.optional && !g.deviceIn(devices)) {
+                    out.add(offLine(g));
+                    continue;
+                }
+                for (String d : g.deviceNames()) {
+                    if (devices.has(d)) continue;
+                    if (g.canDoWithout(d)) {
+                        out.add("\"" + d + "\" (" + g.name() + "): not in the configuration: INIT goes on without it ("
+                                + g.name() + " warns at INIT)");
+                    } else {
+                        out.add(stops(d, g.name(), d.equals(g.device) ? "or add .optional() to " + g.name() + " in Robot.java" : null));
+                    }
+                }
+            }
+        }
+        return out;
+    }
+
+    private static String stops(String device, String part, String or) {
+        return "\"" + device + "\" (" + part + "): NOT in the configuration: INIT will stop. Add it" + (or == null ? "" : ", " + or);
+    }
+
+    private static String offLine(Module<?> m) {
+        return "\"" + m.device + "\" (" + m.name() + "): not in the configuration: optional, so the part is off (fine)";
+    }
+
+    /**
      * Pauses the whole robot: every part stops now with its motors on brake (actions wait), and
      * remembers what it was doing. {@link #resume()} goes on from there. TeleOp's BACK does it.
      */
@@ -538,6 +646,7 @@ public abstract class RobotDefinition {
         RuntimeException first = null;
         try { runner.pause(); } catch (RuntimeException e) { first = e; }
         for (Module<?> m : modules) {
+            if (m.missing) continue;   // not on the robot: nothing to pause
             for (Module<?> c : m.children()) {
                 try { c.pause(); } catch (RuntimeException e) { if (first == null) first = e; }
             }
@@ -552,6 +661,7 @@ public abstract class RobotDefinition {
         paused = false;
         runner.resume();
         for (Module<?> m : modules) {
+            if (m.missing) continue;
             for (Module<?> c : m.children()) c.resume();
             m.resume();
         }
@@ -599,11 +709,23 @@ public abstract class RobotDefinition {
         List<String> out = new ArrayList<>();
         if (tunablesClass == null) {
             out.add("No Tunables class next to Robot.java: every module uses the library's defaults");
+            for (Module<?> m : modules) {
+                if (m.missing) out.add(missingNote(m));
+                else for (Module<?> c : m.children()) if (c.missing) out.add(missingNote(c));
+            }
             return out;
         }
         if (driveSection != null && !driveSection.note().isEmpty()) out.add(driveSection.note());
         for (Module<?> m : modules) {
-            for (Module<?> c : m.children()) out.addAll(c.notes());
+            // A part that is not on the robot: one note, not its Tunables notes.
+            if (m.missing) {
+                out.add(missingNote(m));
+                continue;
+            }
+            for (Module<?> c : m.children()) {
+                if (c.missing) out.add(missingNote(c));
+                else out.addAll(c.notes());
+            }
             out.addAll(m.notes());
         }
         if (built) for (Interlock r : interlocks.rules) out.add(r.initLine());
@@ -621,12 +743,13 @@ public abstract class RobotDefinition {
     /** Every pass of the INIT loop (the OpMode classes call this): each module's quick INIT work and lines. */
     final void initLoop(com.crossbotics.ftchelper.telemetry.RobotTelemetry t) {
         if (!built) return;
-        for (Module<?> m : modules) m.initLoop(t);
+        for (Module<?> m : modules) if (!m.missing) m.initLoop(t);
     }
 
     /** Right after START: the modules' start (an intake "on at the start") and the atStart actions. */
     final void started() {
         for (Module<?> m : modules) {
+            if (m.missing) continue;   // not on the robot: nothing to start
             for (Module<?> c : m.children()) c.start();
             m.start();
         }
@@ -644,12 +767,15 @@ public abstract class RobotDefinition {
         for (Module<?> m : modules) {
             for (Module<?> c : m.children()) {
                 plan.source = c.name();
+                plan.sourcePart = c;
                 c.suggestButtons(plan);
             }
             plan.source = m.name();
+            plan.sourcePart = m;
             m.suggestButtons(plan);
         }
         plan.source = null;
+        plan.sourcePart = null;
     }
 
     /**

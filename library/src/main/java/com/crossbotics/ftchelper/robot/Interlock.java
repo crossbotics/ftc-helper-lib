@@ -77,6 +77,8 @@ public final class Interlock {
     private String message = "";
     // Set at INIT.
     private boolean built = false;
+    // Set at INIT: the part of this rule that is not on the robot (Module.optional), or null. The rule is then off.
+    private Module<?> offBecause = null;
 
     Interlock(String name, Zone a, Zone b) {
         this.name = name;
@@ -116,6 +118,13 @@ public final class Interlock {
             if (z.part.robot != robot) {
                 throw new IllegalStateException("Robot.java: interlock \"" + name + "\": " + z.part.name()
                         + " is not on the robot (add(...) it before keepApart)");
+            }
+        }
+        // A part that is not on the robot yet cannot hit anything: the rule is off (no numbers needed).
+        for (Zone z : new Zone[] {a, b}) {
+            if (z.part != null && z.part.missing) {
+                offBecause = z.part;
+                return;
             }
         }
         if (!t.exists()) {
@@ -194,9 +203,15 @@ public final class Interlock {
         return u.isEmpty() ? "servo position, 0 to 1" : u;
     }
 
-    /** The INIT line: the rule in words, with its margins. */
+    /** The INIT line: the rule in words, with its margins (or why it is off). */
     String initLine() {
+        if (offBecause != null) return "Interlock " + name + ": off (" + offBecause.name() + " is not on the robot)";
         return "Interlock " + name + ": " + words();
+    }
+
+    /** True if the rule is off because one of its parts is not on the robot ({@link Module#optional()}). */
+    public boolean isOff() {
+        return offBecause != null;
     }
 
     // ----------------------------- every loop -----------------------------

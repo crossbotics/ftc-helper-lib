@@ -22,7 +22,9 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
 - `library/.../robot/` the five-files layer: `RobotDefinition` + modules built on the plain parts. A new
   module: extend `Module` (or `MotorPositions`/`ServoPositions`), read numbers through `TunableSection`,
   route every command through `touch()` (actions and the driver rely on it), add `suggestButtons` and
-  `simLines`, a row in docs/modules/robot.md, and its fields in docs/guides/tunables.md and `TunableFields.java`. `./gradlew :sim:newRobot` (SimNewRobot) guesses modules
+  `simLines`, a row in docs/modules/robot.md, and its fields in docs/guides/tunables.md and `TunableFields.java`. It must work when `optional()` and missing (built on
+  `MissingPart`'s stand-in devices, never updated): its "done" questions true, its "busy" ones false
+  (`OptionalPartsTest` calls every public method of every module kind that way). `./gradlew :sim:newRobot` (SimNewRobot) guesses modules
   from device names: teach it the new one.
 - `sim/` the simulator: a pretend Control Hub and Driver Hub on a laptop (`./gradlew :sim:run`, then
   http://localhost:8780). Its code is in `sim/src/test` (the SDK only runs on a laptop there); the

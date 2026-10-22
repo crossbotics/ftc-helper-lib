@@ -429,7 +429,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
 
     /** True while it is spun up (or spinning up), false when idle. */
     public boolean isSpinning() {
-        return spinning;
+        return spinning && !missing;
     }
 
     /** Spins up if idle, idles if spinning. */
@@ -700,12 +700,12 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
 
     /** True when the wheel is at speed (and every other check passes). */
     public boolean isReady() {
-        return part != null && part.isReady();
+        return part != null && !missing && part.isReady();
     }
 
     /** True while shots are waiting or a piece is being fed. */
     public boolean isShooting() {
-        return part != null && part.isShooting();
+        return part != null && !missing && part.isShooting();
     }
 
     /** The speed it is aiming for now, RPM. */

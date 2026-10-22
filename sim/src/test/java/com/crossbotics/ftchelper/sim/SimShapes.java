@@ -546,7 +546,12 @@ final class SimShapes {
             double before = s.value;
             if (s.passive) {
                 // Pushed over: it falls to its stop (fast: about half a turn a second, or 20 in/s) and stays.
-                if (s.dropServo != null && !s.dropped) {
+                if (s.dropServo != null && !s.dropped && robot.isMissing(s.dropServo)) {
+                    // The servo that pushes it over is not in the configuration (a part not built yet):
+                    // the team puts it down by hand before the match, so it starts down.
+                    s.dropped = true;
+                    s.value = s.fallsTo;
+                } else if (s.dropServo != null && !s.dropped) {
                     double pos = robot.servos.get(s.dropServo).actual;
                     s.dropped = s.dropAbove ? pos > s.dropAt : pos < s.dropAt;
                 }

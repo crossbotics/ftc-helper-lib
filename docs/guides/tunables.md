@@ -63,7 +63,8 @@ interlock rule. These names are yours to pick and always pass: named positions (
 Claw, Wrist, Positioner), a piece sensor's kinds (`POLLEN`), a launcher's `speedByDistance...` tables, and
 an interlock rule's `<part>From`, `<part>To`, `<part>Above`, `<part>Below`, `<part>Margin` for its two
 parts. A field of the part that your robot does not use (a servo turret's `posA` on a motor turret) passes
-too. Your own sections (`Auto`) are never checked. Every name in the tables below is the full list.
+too. Your own sections (`Auto`) are never checked, and neither is the section of an `optional()` part
+that is not on the robot. Every name in the tables below is the full list.
 
 **Measured servo numbers and the servo's range.** Servo positions (named positions, `posA`/`posB`,
 `rest`/`push`, a hood's `calibration`) are measured for the pulse range the servo had then. Adding or

@@ -275,7 +275,7 @@ public final class Aim {
     // The camera that aims the whole robot: the first one with a goal(...) in Robot.java, or null.
     Camera aimingCamera() {
         for (Module<?> m : robot.modules()) {
-            if (m instanceof Camera && ((Camera) m).hasGoal()) return (Camera) m;
+            if (m instanceof Camera && m.isPresent() && ((Camera) m).hasGoal()) return (Camera) m;
         }
         return null;
     }
@@ -383,7 +383,8 @@ public final class Aim {
     // A turret that follows the goal (follows(camera) or followsOdometry() in Robot.java), or null.
     private Turret followingTurretInRobot() {
         for (Module<?> m : robot.modules()) {
-            if (m instanceof Turret && ((Turret) m).followsGoal()) return (Turret) m;
+            // A turret that is not on the robot yet (optional) does not aim: whole-robot aim may be used.
+            if (m instanceof Turret && m.isPresent() && ((Turret) m).followsGoal()) return (Turret) m;
         }
         return null;
     }
@@ -476,7 +477,7 @@ public final class Aim {
     // The first turret with its follow mode on, or null.
     private Turret followingTurret() {
         for (Module<?> m : robot.modules()) {
-            if (m instanceof Turret && ((Turret) m).followMode().isOn()) return (Turret) m;
+            if (m instanceof Turret && m.isPresent() && ((Turret) m).followMode().isOn()) return (Turret) m;
         }
         return null;
     }

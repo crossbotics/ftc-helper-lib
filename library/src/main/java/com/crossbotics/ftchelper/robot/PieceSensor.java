@@ -156,6 +156,12 @@ public final class PieceSensor extends Module<PieceSensor> {
 
     // ----------------------------- set up -----------------------------
 
+    // A sensor missing from the configuration warns and sees nothing; INIT goes on.
+    @Override
+    boolean canDoWithout(String deviceName) {
+        return true;
+    }
+
     @Override
     void build(Devices devices, TunableSection t) {
         if (kinds.isEmpty()) {

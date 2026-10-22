@@ -22,7 +22,8 @@ follows the same six steps, so nothing breaks and the docs and tutorials stay tr
    tutorial with its own program (and a row in `docs/tutorials/README.md`). Update the guide that
    covers it (`docs/guides/`), and any diagram that shows it (Mermaid blocks in the pages, SVGs in
    `docs/images/`). A new module gets a row in the README table and a page in `docs/modules/`.
-6. **CHANGELOG.md:** add a line under "Unreleased": Added / Changed / Fixed.
+6. **CHANGELOG.md:** add a line under "Unreleased": Added / Changed / Fixed. Start each entry with one plain sentence
+   (what it does for a team), then the details; the release's "What's new" is built from those sentences.
 
 A change is not done until all six are done.
 
@@ -109,8 +110,20 @@ git tag v0.2.0
 git push origin main --tags
 ```
 
-3. Make a **GitHub release** from the tag, with that version's CHANGELOG part as its notes. On GitHub:
-   **Releases** > **Draft a new release**, choose the tag, paste the notes, **Publish release**. Or:
+3. Make a **GitHub release** from the tag. Its notes have three parts, in this order:
+   - **What's new:** 3 to 6 lines in plain words, one per new feature, for a student who will not read
+     the rest. Say what it does for the team, not how it is built.
+   - **Plain words in these first two parts.** Write for an FTC student who does not code: short
+     sentences, no class or method names, no file paths. FTC and robot words are fine (AprilTags, INIT,
+     TeleOp, autonomous, servo, odometry, Driver Station): every FTC team knows them. Bold the feature's
+     name at the start of each line. Read it aloud once: if it needs a programmer to understand, rewrite it.
+   - **Before you update:** anything that works differently now (a button, a default, a renamed page or
+     setting), and what to do about it. If nothing changes, say "Nothing old stops working."
+     Then a link to [Keep it up to date](https://crossbotics.com/ftc-helper/docs/02-keep-up-to-date/).
+   - **Full change list:** that version's CHANGELOG part, pasted as it is.
+
+   On GitHub: **Releases** > **Draft a new release**, choose the tag, paste the notes, **Publish
+   release**. Or:
 
 ```bash
 gh release create v0.2.0 --verify-tag --title "v0.2.0" --notes-file notes.md

@@ -103,9 +103,12 @@ public abstract class ServoPositions<M extends ServoPositions<M>> extends Module
         part.goTo(n != null ? n : position);
     }
 
-    /** True if it should have arrived at its last position (a guess from {@code travelSec}). */
+    /**
+     * True if it should have arrived at its last position (a guess from {@code travelSec}). Always true
+     * for a part that is not on the robot ({@link #optional()}): there is nothing to wait for.
+     */
     public boolean isDone() {
-        return part != null && part.isDone();
+        return part != null && (missing || part.isDone());
     }
 
     /** True if its last command was this position (whether or not it has arrived). */

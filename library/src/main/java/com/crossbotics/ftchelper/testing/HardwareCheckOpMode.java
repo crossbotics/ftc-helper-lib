@@ -15,6 +15,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
+import com.crossbotics.ftchelper.robot.RobotDefinition;
 import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
@@ -40,6 +41,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
  * }</pre>
  * ({@code abstract} on this class means it is only used through such a tiny class of your own;
  * the {@code @TeleOp} line is what puts it in the Driver Station's list.)
+ *
+ * <p>With your robot in five files, add {@code @Override protected RobotDefinition robot() { return new Robot(); }}:
+ * INIT then also lists every device Robot.java names that is NOT in the configuration, and what that
+ * means ("INIT will stop", or for a part marked {@code optional()}: "the part is off (fine)").
  *
  * <p>Controls (gamepad 1): D-pad up/down = choose a device.
  * <ul>
@@ -88,6 +93,9 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
         findDevices();
         startImus();   // IMU start-up can take a moment: do it in INIT, never in the loop
         t.text("Found " + devices.size() + " devices. Robot on a block! Press START.");
+        // Robot.java against this configuration (only if robot() gives the robot).
+        robotLines = robotCheck();
+        for (String line : robotLines) t.text(line);
         t.update();
         waitForStart();
         // ---- Running ----
@@ -102,6 +110,32 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
         } finally {
             stopAll();
         }
+    }
+
+    // The lines about Robot.java's devices (empty without robot()), shown in INIT and above the list.
+    private List<String> robotLines = new ArrayList<>();
+
+    /**
+     * Your robot in five files ({@code return new Robot();}), to check that every device it names is in
+     * this configuration. Default null: no check, just the list of devices.
+     */
+    protected RobotDefinition robot() {
+        return null;
+    }
+
+    // "Robot.java: every device is in the configuration", or one line per device that is not.
+    private List<String> robotCheck() {
+        List<String> out = new ArrayList<>();
+        RobotDefinition r = robot();
+        if (r == null) return out;
+        List<String> missing = r.checkConfiguration(hardwareMap);
+        if (missing.isEmpty()) {
+            out.add("Robot.java: every device is in the configuration");
+            return out;
+        }
+        out.add("Robot.java devices not in this configuration:");
+        out.addAll(missing);
+        return out;
     }
 
     // Makes the list of every device in the active robot configuration, one kind after another.
