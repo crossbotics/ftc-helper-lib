@@ -53,8 +53,13 @@ public class PedroFollower implements PathFollower {
     // How far along the path the robot is now, inches (its closest point on the path).
     private double doneIn = 0;
     // Where the closest point is looked for: this far back and ahead of the last one, inches. A path
-    // that crosses itself would otherwise jump to the wrong crossing.
-    private static final double LOOK_BACK_IN = 6, LOOK_AHEAD_IN = 18;
+    // that crosses itself would otherwise jump to the wrong crossing. Going back is allowed only a
+    // little (the robot may wobble), so the progress never falls back by more than that.
+    private static final double LOOK_BACK_IN = 3, LOOK_AHEAD_IN = 18;
+    // Where two places on the path are about as close (a path that goes out and comes back along the
+    // same line, or crosses itself), the robot is on the one it gets to by driving on: each inch back
+    // from the last progress counts as this many inches off the path, each inch ahead as a little.
+    private static final double BACK_COST = 1.0, AHEAD_COST = 0.05;
     // The follower that started a path last (for the simulator; weak: it never keeps an old robot alive).
     private static volatile WeakReference<PedroFollower> lastStarted = new WeakReference<>(null);
     /** How many points {@link #plannedPoints()} gives at most. */
@@ -278,7 +283,10 @@ public class PedroFollower implements PathFollower {
     }
 
     // Finds the robot's closest point on the path, near the last one, and how far along the path it is.
-    private void track(com.pedropathing.math.Pose at) {
+    // Not just the closest: on a path that goes out and back along the same line, the outbound and
+    // return places are equally close. The one just ahead of the last progress wins (see BACK_COST).
+    // Package-private for tests (a robot that drives out and back by script, without Pedro steering).
+    void track(com.pedropathing.math.Pose at) {
         if (at == null || alongX.length < 2) return;
         double best = Double.MAX_VALUE, bestIn = doneIn;
         for (int i = 0; i + 1 < alongX.length; i++) {
@@ -290,9 +298,12 @@ public class PedroFollower implements PathFollower {
             double t = len2 == 0 ? 0 : ((at.x() - alongX[i]) * dx + (at.y() - alongY[i]) * dy) / len2;
             t = Math.max(0, Math.min(1, t));
             double d = Math.hypot(at.x() - (alongX[i] + t * dx), at.y() - (alongY[i] + t * dy));
-            if (d < best) {
-                best = d;
-                bestIn = alongIn[i] + t * (alongIn[i + 1] - alongIn[i]);
+            double in = alongIn[i] + t * (alongIn[i + 1] - alongIn[i]);
+            if (in < doneIn - LOOK_BACK_IN) continue;
+            double score = d + (in < doneIn ? BACK_COST * (doneIn - in) : AHEAD_COST * (in - doneIn));
+            if (score < best) {
+                best = score;
+                bestIn = in;
             }
         }
         doneIn = bestIn;

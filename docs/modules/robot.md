@@ -256,11 +256,13 @@ Full page: [pedro module, Do things along the path](pedro.md#do-things-along-the
 | --- | --- |
 | `PathAt.inchesDone(in, label, command)` | after `in` inches of the path |
 | `PathAt.inchesLeft(in, label, command)` | when `in` inches are left |
-| `PathAt.fraction(f, label, command)` | when `f` of the path is done (0.5 = halfway) |
+| `PathAt.fraction(f, label, command)` | when that much of the WHOLE path is done (0.5 = halfway, all parts counted) |
 | `PathAt.part(n, label, command)` | where part `n` of a `then` path starts (INIT stops if the path has fewer parts) |
 | `PathAt.near(x, y, withinIn, label, command)` | when the robot is within `withinIn` of a field point (mirrored for RED) |
 
-Each also takes an [Action](#action) instead of a label and a command: `PathAt.inchesLeft(12, Actions.spinUp(robot))`.
+For example `PathAt.inchesLeft(12, "Spin up", robot.launcher::spinUp)` (your own part names). Each also
+takes an [Action](#action) from your `Actions.java` instead of a label and a command:
+`PathAt.inchesLeft(12, Actions.scoreHigh(robot))`, or any action you wrote.
 
 ## Intake
 
@@ -623,7 +625,7 @@ sensors, not the camera.
 ## Lights
 
 A colored light the drivers can see: green when the robot is ready to fire, red blinking when it is
-jammed, a white flash for each shot, yellow in the last 20 seconds. **Why:** the drivers watch the robot,
+jammed, a white flash for each piece fired, yellow in the last 20 seconds. **Why:** the drivers watch the robot,
 not the Driver Station.
 
 ```java
@@ -631,21 +633,24 @@ lights = add(Lights.gobilda("light"));      // Robot.java: a goBILDA RGB Indicat
 lights = add(Lights.blinkin("blinkin"));    // or a REV Blinkin LED Driver and its LED strip ("REV Blinkin LED Driver")
 ```
 
-Which color when goes in `Controls.java`, inside `buttons(...)`: one line per rule.
+Which color when goes in `Controls.java`, inside `buttons(...)`: one line per rule. `Controls.java`
+needs `import com.crossbotics.ftchelper.robot.LightColor;` at the top for the color names.
 
 ```java
 robot.lights.show(LightColor.YELLOW).blinking().inLastSeconds(20);     // the most important first
-robot.lights.show(LightColor.GREEN).when(robot.launcher::isReady);
-robot.lights.show(LightColor.BLUE).when(() -> robot.turret.followMode().isOn());
+robot.lights.show(LightColor.GREEN).when(robot.launcher::isReady);     // ready to fire
+robot.lights.show(LightColor.BLUE).when(() -> robot.turret.followMode().isOn());   // a turret robot
+robot.lights.show(LightColor.BLUE).when(() -> robot.aimMode().isOn()); // or: whole-robot aim on (no turret)
 robot.lights.otherwise(LightColor.OFF);                                 // when no rule is true
-robot.lights.show(LightColor.WHITE).whenStarts(robot.launcher::isShooting);   // a 0.5 s flash
+robot.lights.show(LightColor.WHITE).whenCountGoesUp(() -> robot.launcher.part().getShotsFired());   // a 0.5 s flash per piece fired
 ```
 
 | Method | |
 | --- | --- |
 | `show(color).when(test)` | that color while `test` is true |
-| `show(color).blinking().when(test)` | blinks 2 times a second (`blinking(1)`: once; at most 5) |
+| `show(color).blinking().when(test)` | blinks 2 times a second; `blinking(1)`: once a second (any number above 0, at most 5) |
 | `show(color).whenStarts(test)` | a 0.5 s flash each time `test` turns from false to true (`.forSeconds(1)` first: longer) |
+| `show(color).whenCountGoesUp(count)` | a 0.5 s flash each time the number goes up: `() -> robot.launcher.part().getShotsFired()` flashes once per piece fired (`fire(3)`: three flashes; `whenStarts(robot.launcher::isShooting)` would flash once for all three) |
 | `show(color).inLastSeconds(20)` | in the last 20 s of TeleOp's 2:00, counted from START |
 | `otherwise(color)` | when no rule is true (default `OFF`) |
 | `flash(color)`, `flash(color, seconds)` | flash now, over every rule: from a button or an action step |
@@ -656,6 +661,9 @@ robot.lights.show(LightColor.WHITE).whenStarts(robot.launcher::isShooting);   //
   or your own (`() -> robot.lift.position() > 1000`). A rule that fails counts as false and the Driver
   Station warns.
 - It works from INIT (the drivers see it light up), goes dark at STOP, and is never "claimed" by an action.
+- **At most one change every 0.1 s** (`Lights.MIN_CHANGE_SEC`): a rule that turns on and off every loop,
+  or flash after flash, still switches the light at most 5 times on and off a second (R202 J below). A
+  change asked for sooner waits a loop or two; a flash shorter than 0.1 s may not show.
 - **Colors** (`LightColor`): `RED`, `ORANGE`, `YELLOW`, `GREEN`, `BLUE`, `PURPLE`, `WHITE`, `OFF`. Each
   light turns them into its own signal:
 
@@ -677,8 +685,9 @@ off below 1100 microseconds, red to violet up to 1900, white above, with the hub
 signal it shows its own rainbow "color waves".
 
 **Game rules (2026-27 manual):** lights that flash faster than about 5 times a second (R202 J) or very
-bright lights (R202 F) can be switched off by the referees, so `blinking` stops at 5. Your alliance
-color must be on the ROBOT SIGNS, never shown by a light (R402). Do not shine lights onto the field
+bright lights (R202 F) can be switched off by the referees, so `blinking` stops at 5 and the light never
+changes faster than every 0.1 s. Your alliance color goes on the ROBOT SIGNS (R402); our advice: show it
+on the signs, not with a light, so referees are not confused. Do not shine lights onto the field
 (G302 example). In the simulator, the light is a dot on the robot and on the 3D view.
 
 ## Action

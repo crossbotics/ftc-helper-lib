@@ -55,7 +55,7 @@ part. You never write it ([From Blocks to Java](../blocks-to-java.md#the-key-ide
 | | **The lessons your robot needs** | | |
 | 7 | [Odometry: where am I on the field?](start/07-odometry.md) | which device to buy, the odometry line, the Odometry Tuner, `driveTo` field points, TeleOp starting where autonomous ended | a mecanum drive, a Pinpoint (or OTOS, or dead wheels) |
 | 8 | [Paths with Pedro Pathing](start/08-paths-with-pedro.md) (optional) | what a path follower does and whether you need one, adding Pedro, lines and curves in your field numbers, Pedro's tuner, the first real run | a mecanum drive and odometry (lesson 7 done) |
-| 9 | [A shooter, a camera and a turret](start/09-shooter-and-camera.md) (for robots that shoot) | a flywheel and feeder, aiming with a camera | lesson 6 done, a shooter, a camera |
+| 9 | [A shooter, a camera and a turret](start/09-shooter-and-camera.md) (for robots that shoot) | a flywheel and feeder, aiming with a camera, a turret that follows the goal, the odometry as backup aim, two shot tables, whole-robot aim, a buzz on target, knowing which piece fires next, a light for the drivers | lesson 6 done, a shooter, a camera |
 
 Then: [the button menu](../guides/buttons.md) (every way a button can work),
 [the cookbook](../cookbook.md) (short "how do I...?" answers with code to copy),

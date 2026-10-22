@@ -6,15 +6,18 @@ import java.util.function.Predicate;
 
 /**
  * Something to start at a place ALONG a path, while the robot keeps driving: spin up the launcher
- * 12 in before the end, start the intake halfway, open a gate where part 2 of the path starts. Give
- * them to a {@code follow} (or {@code driveTo}) step after the path:
+ * 12 in before the end, start the intake halfway, stop it where part 2 of the path starts. Give
+ * them to a {@code follow} (or {@code driveTo}) step after the path (and its time limit, if any):
  *
  * <pre>{@code
- * s.follow("To the goal", TO_GOAL,
- *          PathAt.fraction(0.5, "Intake on", robot.intake::in),              // halfway
- *          PathAt.inchesLeft(12, "Spin up", () -> robot.launcher.spinUp()),   // 12 in before the end
- *          PathAt.part(2, Actions.openGate(robot)));                         // an action from Actions.java
+ * s.follow("To the goal", TO_GOAL, 15,
+ *          PathAt.fraction(0.5, "Intake on", robot.intake::in),         // halfway along the whole path
+ *          PathAt.part(2, "Intake off", robot.intake::stop),            // where part 2 starts
+ *          PathAt.inchesLeft(12, "Spin up", robot.launcher::spinUp),    // 12 in before the end
+ *          PathAt.inchesLeft(4, Actions.scoreHigh(robot)));             // an action from your Actions.java
  * }</pre>
+ *
+ * The part names ({@code robot.intake}, {@code robot.launcher}) and the action are your own.
  *
  * <ul>
  *   <li>Each one happens <b>once</b>, and the path goes on: like a {@code run} step, it STARTS things.
@@ -125,7 +128,8 @@ public final class PathAt {
     }
 
     /**
-     * When this much of the path is done: 0.5 = halfway, 0.25 = a quarter of the way.
+     * When this much of the WHOLE path is done (all its parts counted): 0.5 = halfway, 0.25 = a quarter
+     * of the way.
      *
      * @param fraction 0 (the start) to 1 (the end)
      * @param label    a name for the report

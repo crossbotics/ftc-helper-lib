@@ -1607,8 +1607,10 @@ s.start("Against our wall, in the left corner tile, facing the field", -56, -61,
  .waitSeconds("Score (the robot holds still)", 0.5);
 ```
 
-Also `PathAt.fraction(0.5, ...)` (halfway), `PathAt.inchesDone(10, ...)`, `PathAt.near(x, y, 6, ...)`, and an
-action from `Actions.java` instead of a name and a command: `PathAt.inchesLeft(12, Actions.spinUp(robot))`.
+Also `PathAt.fraction(0.5, ...)` (halfway along the whole path), `PathAt.inchesDone(10, ...)`,
+`PathAt.near(x, y, 6, ...)`, e.g. `PathAt.inchesLeft(12, "Spin up", robot.launcher::spinUp)`, or an action from
+your `Actions.java` instead of a name and a command (`PathAt.inchesLeft(12, Actions.scoreHigh(robot))`: any
+action you wrote).
 
 **Why:** the robot does not stop to start a mechanism, and Pedro has no "do this here" of its own. If the
 path ends early, the report says which did not start (`STALLED, not fired: Intake off`).
@@ -1668,7 +1670,8 @@ s.step("Spin up", ctx -> {
 ## Lights
 
 A colored light on the robot tells the drivers what the robot "knows" (full, ready, a mode on) without
-looking at the Driver Station. All of it: [Lights](modules/robot.md#lights).
+looking at the Driver Station. The color names need `import com.crossbotics.ftchelper.robot.LightColor;`
+at the top of `Controls.java` (Alt+Enter on a red `LightColor` adds it). All of it: [Lights](modules/robot.md#lights).
 
 ### How do I add a colored light for the drivers?
 
@@ -1698,8 +1701,10 @@ robot.lights.show(LightColor.BLUE).when(robot.intake::isRunning);            // 
 robot.lights.otherwise(LightColor.OFF);                                      // none true
 ```
 
-**Why:** any true/false works, so a mode is `() -> robot.turret.followMode().isOn()` and your own test is
-`() -> robot.lift.position() > 1000`. Blinking stops at 5 times a second (FTC rule R202 J).
+**Why:** any true/false works, so a mode is `() -> robot.turret.followMode().isOn()` (blue while
+whole-robot aim is on, on a robot without a turret: `() -> robot.aimMode().isOn()`) and your own test is
+`() -> robot.lift.position() > 1000` (if your robot has a lift). Blinking stops at 5 times a second, and the
+light never changes faster than every 0.1 s (FTC rule R202 J).
 **More:** [Lights](modules/robot.md#lights), [lambdas](tutorials/start/05-actions.md).
 
 ### How do I flash the light when something happens?
@@ -1708,13 +1713,15 @@ robot.lights.otherwise(LightColor.OFF);                                      // 
 
 <!-- recipe: light-flash -->
 ```java
-// A flash beats every rule for 0.5 s: each time a shot starts, and from a button.
-robot.lights.show(LightColor.WHITE).whenStarts(robot.launcher::isShooting);
+// A flash beats every rule for 0.5 s: each time a piece is fired (the launcher counts the
+// pieces it feeds, so fire(2) flashes twice), and from a button.
+robot.lights.show(LightColor.WHITE).whenCountGoesUp(() -> robot.launcher.part().getShotsFired());
 g2.a.press(() -> robot.lights.flash(LightColor.PURPLE)).says("flash the light (signal the partner)");
 ```
 
-**Why:** `whenStarts` flashes when the test turns from false to true, not all the time it is true.
-`.forSeconds(1)` before it makes the flash longer.
+**Why:** `whenCountGoesUp` flashes each time the number goes up, so each flash is a real shot.
+`whenStarts(test)` flashes when a true/false turns from false to true (`whenStarts(robot.intake::isRunning)`:
+the intake just started). `.forSeconds(1)` before either makes the flash longer.
 
 ### How do I flash the light when an action is done?
 

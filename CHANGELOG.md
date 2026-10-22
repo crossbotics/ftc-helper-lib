@@ -74,12 +74,32 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   (`light.NAME = gobilda` / `blinkin` in the robot file; `:sim:fromRobot`, `:sim:fromConfig` and
   `:sim:newRobot` write it). Cookbook recipes, a Lights section in docs/modules/robot.md, and the turret
   example robot uses one.
+- `Lights`: `show(color).whenCountGoesUp(count)` flashes each time a number goes up:
+  `() -> robot.launcher.part().getShotsFired()` gives one flash per piece really fired (`fire(3)`: three).
+  The cookbook, lesson 9 and the turret example use it instead of `whenStarts(robot.launcher::isShooting)`.
 
 ### Changed
 
 - `PedroFollower.remainingIn()` is now the distance left along the WHOLE path (all its parts), measured
   from the robot's closest point on the path. It was Pedro's distance for the part it steers along now,
   which Pedro may switch well before the join. The Driver Station's `Path: 18 in to go` uses it too.
+- `Lights` never changes color twice within 0.1 s (`Lights.MIN_CHANGE_SEC`), across rules, flashes and
+  blinking, so a rule that flips every loop or flash after flash stays at 5 on-offs a second at most
+  (FTC R202 J). `blinking(n)` takes any number above 0, at most 5 (its message said 0.5 to 5).
+- Docs: `PathAt` examples use parts the example robots have (`"Spin up", robot.launcher::spinUp`), not
+  `Actions.spinUp(robot)`, which no example defines; `fraction` is of the WHOLE path; lesson 8 shows a
+  time limit with `PathAt`. Lights docs: the `LightColor` import, a whole-robot aim rule, and R402 as advice
+  (the alliance colour goes on the ROBOT SIGNS).
+
+### Fixed
+
+- `PedroFollower`: on a path that comes back along the same line (out 24 in, then back), the progress
+  followed the outbound leg back to 0, so `PathAt` things on the return leg fired late or never. Where
+  two places on the path are equally close it now picks the one ahead of the last progress, and never
+  falls back more than 3 in.
+- `AutoRoutine.followPath`: the path's length was first read on the second loop, so a path done in its
+  first loop had length 0 at the end and `PathAt.inchesDone(1)` never fired. It is read after `start()`
+  and again before the end check.
 
 ## v0.16.0 - 2026-10-21
 

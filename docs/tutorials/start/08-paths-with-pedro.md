@@ -205,24 +205,29 @@ after each part that needs it; the robot slows down inside that part, so make it
 Each one starts once, at its place along the path, and the robot keeps driving:
 
 ```java
-.follow("To the goal", TO_GOAL,
-        PathAt.fraction(0.5, "Intake on", robot.intake::in),        // halfway
-        PathAt.part(2, "Arm up", () -> robot.arm.goTo("high")),     // where part 2 starts
-        PathAt.inchesLeft(12, Actions.spinUp(robot)))              // 12 in before the end
+.follow("To the goal", TO_GOAL, 15,                              // at most 15 s, then the things to do
+        PathAt.fraction(0.5, "Intake on", robot.intake::in),        // halfway along the whole path
+        PathAt.part(2, "Intake off", robot.intake::stop),           // where part 2 starts
+        PathAt.inchesLeft(12, "Spin up", robot.launcher::spinUp))   // 12 in before the end
 ```
+
+The `15` is the time limit (seconds), as in a `follow` without `PathAt`: write it before the `PathAt`
+things. `robot.intake` and `robot.launcher` are parts in your `Robot.java` (a launcher comes in lesson 9):
+use your own parts' names.
 
 | Write | It starts |
 | --- | --- |
 | `PathAt.inchesDone(10, ...)` | after 10 in of the path |
 | `PathAt.inchesLeft(12, ...)` | 12 in before the end |
-| `PathAt.fraction(0.5, ...)` | halfway (0.25 = a quarter of the way) |
+| `PathAt.fraction(0.5, ...)` | when that much of the WHOLE path is done (0.5 = halfway, all parts counted) |
 | `PathAt.part(2, ...)` | where part 2 starts (a path made with `then`) |
 | `PathAt.near(x, y, 6, ...)` | when the robot is within 6 in of a field point |
 
-Give each one a name and a command (`"Intake on", robot.intake::in`), or an action from
-`Actions.java` (it keeps running after the step). Android Studio shows `PathAt` in red: **Alt+Enter**
+Give each one a name and a command (`"Spin up", robot.launcher::spinUp`), or an action from your
+`Actions.java` (`PathAt.inchesLeft(12, Actions.scoreHigh(robot))`, or any action you wrote; it keeps
+running after the step). Android Studio shows `PathAt` in red: **Alt+Enter**
 adds the `import`. Write them in the order they come along the path. If the path ends early
-(`STALLED`, `timed out`), the report says which did not start: `To the goal: STALLED, not fired: Arm up`.
+(`STALLED`, `timed out`), the report says which did not start: `To the goal: STALLED, not fired: Spin up`.
 `.alongside(action)` before the `follow` still works too: it starts the action before the path.
 
 **Start each path where the robot is:** the first path at the start spot in `s.start(...)`, and each

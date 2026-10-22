@@ -277,6 +277,9 @@ public class AutoRoutine {
                 return;
             }
             job.start();
+            // The path's length, read now: if the first loop already finishes the path, the end check
+            // below still knows it ("1 in done" fires at the end of even a very short path).
+            along.total = lengthOf(job);
             long start = System.nanoTime();
             com.crossbotics.ftchelper.drive.StallDetector stall = new com.crossbotics.ftchelper.drive.StallDetector(0.25, 1.5);
             double notReadySince = Double.NaN;
@@ -309,7 +312,7 @@ public class AutoRoutine {
                     if (updated) {
                         double left = job.remainingIn();
                         // Things to do along the path: fire the ones the robot has got to.
-                        if (Double.isNaN(along.total)) along.total = job.totalIn();   // not set yet: ask the follower
+                        if (Double.isNaN(along.total)) along.total = lengthOf(job);   // not known yet: ask the follower
                         along.check(left, along.total, job.partNow());
                         if (left > lastRemaining + 1) stall.reset();
                         lastRemaining = left;
@@ -329,10 +332,21 @@ public class AutoRoutine {
                 if (job.isBusy()) job.cancel();
                 // At the end of the path: what is reached at the end fires now. Then the report
                 // lists what did not fire.
-                if (done) along.atEnd();
+                if (done) {
+                    // Read the length again: a follower may only know it once its path has started.
+                    double length = lengthOf(job);
+                    if (!Double.isNaN(length)) along.total = length;
+                    along.atEnd();
+                }
                 along.noteMissed(done);
             }
         });
+    }
+
+    // The length a path follower gives for its path, inches, or NaN when it does not know (NaN, 0 or less).
+    private static double lengthOf(PathJob job) {
+        double length = job.totalIn();
+        return length > 0 ? length : Double.NaN;
     }
 
     // The PathEvents of one running step: which have fired, and the length of the path.

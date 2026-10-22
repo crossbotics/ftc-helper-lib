@@ -78,8 +78,9 @@ public class LightRecipes {
             // end recipe
 
             // recipe: light-flash
-            // A flash beats every rule for 0.5 s: each time a shot starts, and from a button.
-            robot.lights.show(LightColor.WHITE).whenStarts(robot.launcher::isShooting);
+            // A flash beats every rule for 0.5 s: each time a piece is fired (the launcher counts the
+            // pieces it feeds, so fire(2) flashes twice), and from a button.
+            robot.lights.show(LightColor.WHITE).whenCountGoesUp(() -> robot.launcher.part().getShotsFired());
             g2.a.press(() -> robot.lights.flash(LightColor.PURPLE)).says("flash the light (signal the partner)");
             // end recipe
 

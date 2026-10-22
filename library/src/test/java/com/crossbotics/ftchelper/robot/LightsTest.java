@@ -60,9 +60,11 @@ public class LightsTest {
         assertEquals("no rule true: otherwise", LightColor.RED, l.showing());
         assertEquals(LightColor.RED.gobildaPosition(), servo().position, 1e-9);
         follow[0] = true;
+        at(0.2);   // (the light changes at most every 0.1 s)
         bot.all().update();
         assertEquals(LightColor.BLUE, l.showing());
         full[0] = true;
+        at(0.4);
         bot.all().update();
         assertEquals("both true: the one written first", LightColor.GREEN, l.showing());
         assertEquals(LightColor.GREEN.gobildaPosition(), servo().position, 1e-9);
@@ -113,20 +115,70 @@ public class LightsTest {
         l.show(LightColor.RED).blinking(5).when(() -> true);   // 5 is fine
     }
 
+    // Runs 20 ms loops from `from` to `to` seconds; returns the times (s) the light changed color.
+    private java.util.List<Double> changes(Lights l, double from, double to, Runnable eachLoop) {
+        java.util.List<Double> times = new java.util.ArrayList<>();
+        LightColor last = l.showing();
+        for (double t = from; t < to; t += 0.02) {
+            at(t);
+            eachLoop.run();
+            bot.all().update();
+            if (l.showing() != last) times.add(t);
+            last = l.showing();
+            assertEquals("the light shows what showing() says", last.gobildaPosition(), servo().position, 1e-9);
+        }
+        return times;
+    }
+
+    private static void assertNoFasterThanFiveHz(java.util.List<Double> times) {
+        for (int i = 1; i < times.size(); i++) {
+            assertTrue("changes at " + times.get(i - 1) + " and " + times.get(i) + " s: under 0.1 s apart",
+                    times.get(i) - times.get(i - 1) >= Lights.MIN_CHANGE_SEC - 1e-6);
+        }
+    }
+
+    // Codex (R202 J): a rule that turns on and off every loop must not flash the light 25 times a second.
+    @Test public void aRuleThatFlipsEveryLoopChangesTheLightAtMostEveryTenthOfASecond() {
+        Lights l = gobilda();
+        final boolean[] on = {false};
+        l.show(LightColor.GREEN).when(() -> on[0]);
+        java.util.List<Double> times = changes(l, 0, 2, () -> on[0] = !on[0]);
+        assertNoFasterThanFiveHz(times);
+        assertTrue("it still changes: " + times.size(), times.size() >= 10);
+        assertTrue("at most 5 on-off a second: " + times.size(), times.size() <= 21);
+    }
+
+    @Test public void flashAfterFlashChangesTheLightAtMostEveryTenthOfASecond() {
+        final Lights l = gobilda();
+        l.otherwise(LightColor.GREEN);
+        final int[] n = {0};
+        // A 0.04 s flash every 0.06 s: alone it would switch the light 33 times a second.
+        assertNoFasterThanFiveHz(changes(l, 0, 2, () -> {
+            if (n[0]++ % 3 == 0) l.flash(n[0] % 2 == 0 ? LightColor.WHITE : LightColor.PURPLE, 0.04);
+        }));
+        // Blinking at the most allowed (5 a second) still blinks, never faster.
+        final Lights b = gobilda();
+        b.show(LightColor.RED).blinking(5).when(() -> true);
+        java.util.List<Double> times = changes(b, 0, 2, () -> { });
+        assertNoFasterThanFiveHz(times);
+        assertTrue("it blinks: " + times.size(), times.size() >= 15);
+    }
+
     @Test public void aFlashBeatsEveryRuleThenEnds() {
         Lights l = gobilda();
         l.show(LightColor.GREEN).when(() -> true);
         at(1);
         bot.all().update();
         assertEquals(LightColor.GREEN, l.showing());
+        at(1.2);
         l.flash(LightColor.WHITE);                              // 0.5 s
         bot.all().update();
         assertEquals(LightColor.WHITE, l.showing());
         assertTrue(l.isFlashing());
-        at(1.45);
+        at(1.65);
         bot.all().update();
         assertEquals(LightColor.WHITE, l.showing());
-        at(1.55);
+        at(1.75);
         bot.all().update();
         assertEquals("back to the rules", LightColor.GREEN, l.showing());
         assertFalse(l.isFlashing());
@@ -156,6 +208,34 @@ public class LightsTest {
         at(0.55);
         bot.all().update();
         assertEquals("0.3 s later: over", LightColor.OFF, l.showing());
+    }
+
+    // Alex: one flash per piece really fired (fire(3) flashes three times), not one per burst.
+    @Test public void whenCountGoesUpFlashesForEachShot() {
+        Lights l = gobilda();
+        final int[] fired = {4};
+        l.show(LightColor.WHITE).forSeconds(0.2).whenCountGoesUp(() -> fired[0]);
+        at(0);
+        bot.all().update();
+        assertEquals("the count at the start: no flash", LightColor.OFF, l.showing());
+        int flashes = 0;
+        LightColor last = l.showing();
+        for (int shot = 0; shot < 3; shot++) {
+            fired[0]++;
+            for (int i = 0; i < 25; i++) {   // 0.5 s between shots, 20 ms loops
+                at(0.02 + shot * 0.5 + i * 0.02);
+                bot.all().update();
+                if (l.showing() == LightColor.WHITE && last != LightColor.WHITE) flashes++;
+                last = l.showing();
+            }
+        }
+        assertEquals(3, flashes);
+        try {
+            l.show(LightColor.WHITE).whenCountGoesUp(null);
+            fail("null is refused");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("getShotsFired"));
+        }
     }
 
     @Test public void lastSecondsCountFromStart() {

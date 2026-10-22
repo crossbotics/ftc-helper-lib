@@ -235,8 +235,8 @@ public final class Steps {
      *
      * <pre>{@code
      * s.follow("To the goal", TO_GOAL,
-     *          PathAt.fraction(0.5, "Intake on", robot.intake::in),     // halfway
-     *          PathAt.inchesLeft(12, Actions.spinUp(robot)));          // 12 in before the end
+     *          PathAt.fraction(0.5, "Intake on", robot.intake::in),     // halfway along the whole path
+     *          PathAt.inchesLeft(12, "Spin up", robot.launcher::spinUp));   // 12 in before the end
      * }</pre>
      *
      * If the path ends early, the report says which did not happen. See {@link PathAt}.

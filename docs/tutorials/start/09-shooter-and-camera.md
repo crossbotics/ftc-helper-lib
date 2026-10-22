@@ -380,12 +380,17 @@ robot.lights.show(LightColor.YELLOW).blinking().inLastSeconds(20);     // last 2
 robot.lights.show(LightColor.GREEN).when(() -> robot.launcher.isSpinning() && robot.launcher.isReady());  // fire now
 robot.lights.show(LightColor.BLUE).when(() -> robot.turret.followMode().isOn());   // following the goal
 robot.lights.otherwise(LightColor.PURPLE);                             // following is off (BACK)
-robot.lights.show(LightColor.WHITE).whenStarts(robot.launcher::isShooting);        // a 0.5 s flash per shot
+robot.lights.show(LightColor.WHITE).whenCountGoesUp(() -> robot.launcher.part().getShotsFired());   // a 0.5 s flash per piece fired
 ```
 
+`LightColor` needs `import com.crossbotics.ftchelper.robot.LightColor;` at the top of `Controls.java`
+(Alt+Enter on the red word adds it). No turret (section 10)? Blue while whole-robot aim is on:
+`robot.lights.show(LightColor.BLUE).when(() -> robot.aimMode().isOn());`.
+
 The first true rule wins, so the most important one is written first. A flash beats every rule for half a
-second. Blinking stops at 5 times a second: the game rules (R202 J) let the referees switch off faster
-lights. Every way to use it: [Lights](../../modules/robot.md#lights).
+second; the launcher counts each piece it feeds, so `fire(3)` gives three flashes. Blinking stops at 5
+times a second, and the light never changes faster than every 0.1 s: the game rules (R202 J) let the
+referees switch off faster lights. Every way to use it: [Lights](../../modules/robot.md#lights).
 
 ## Try it in the simulator
 

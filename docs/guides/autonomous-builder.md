@@ -253,10 +253,13 @@ default). Details, tuning and the report words: [pedro module](../modules/pedro.
 starts once, at its place:
 
 ```java
-.follow("To the goal", TO_GOAL,
-        PathAt.fraction(0.5, "Intake on", robot.intake::in),     // halfway
-        PathAt.inchesLeft(12, Actions.spinUp(robot)))           // 12 in before the end (an action)
+.follow("To the goal", TO_GOAL, 15,                           // at most 15 s
+        PathAt.fraction(0.5, "Intake on", robot.intake::in),     // halfway along the whole path
+        PathAt.inchesLeft(12, "Spin up", robot.launcher::spinUp))   // 12 in before the end
 ```
+
+Use your own parts' names. An action from your `Actions.java` works in place of a name and a command:
+`PathAt.inchesLeft(12, Actions.scoreHigh(robot))` (or any action you wrote).
 
 Also `PathAt.inchesDone(in, ...)`, `PathAt.part(n, ...)` (where part n of a `then` path starts) and
 `PathAt.near(x, y, withinIn, ...)`. `driveTo` takes them too (its "path" is the straight line to the

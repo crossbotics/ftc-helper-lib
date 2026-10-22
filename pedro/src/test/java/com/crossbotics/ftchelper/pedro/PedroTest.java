@@ -448,4 +448,80 @@ public class PedroTest {
         // Part 2 starts where the robot passes the join (24 in).
         assertEquals(24, firedAtY.get("part2"), 2.0);
     }
+
+    // Codex: a path that goes out 24 in and comes back along the same line. Both legs are equally
+    // close to the robot on the way back; the progress must follow the return leg (24 -> 48), not
+    // fall back to the outbound one (24 -> 0). The robot drives by script here: Pedro's own steering
+    // is not what is tested.
+    private static final PedroPath OUT_AND_BACK =
+            PedroPath.line(0, 0, 0, 24).keepHeading(0).then(PedroPath.line(0, 24, 0, 0)).keepHeading(0);
+
+    // Where the scripted robot is after `in` inches along the out-and-back path (0.8 in a loop, a
+    // little to the side, like a real robot).
+    private static FieldPose outAndBackAt(double in) {
+        double y = in <= 24 ? in : 48 - in;
+        return new FieldPose(0.5 * Math.sin(in), y, 0);
+    }
+
+    // Moves the robot to a pose and lets the follower measure its progress (no Pedro steering).
+    private void scriptTo(FieldPose p) {
+        nanos += 20_000_000L;   // one 20 ms loop
+        tracker.setPose(p);
+        tracker.update();
+        localizer.refresh();
+        follower.track(localizer.state().pose());
+    }
+
+    @Test public void aPathThatComesBackTheSameWayKeepsGoingForward() {
+        scriptTo(new FieldPose(0, 0, 0));
+        follower.follow(OUT_AND_BACK, false);
+        assertEquals(48, follower.totalIn(), 1e-6);
+        double most = 0, leftHalfwayBack = Double.NaN;
+        for (double in = 0; in <= 46; in += 0.8) {
+            scriptTo(outAndBackAt(in));
+            double done = follower.totalIn() - follower.remainingIn();
+            assertTrue("went back from " + most + " to " + done + " at " + in + " in", done >= most - 3);
+            assertEquals("progress at " + in + " in", in, done, 1.0);
+            most = Math.max(most, done);
+            if (Double.isNaN(leftHalfwayBack) && in >= 36) leftHalfwayBack = follower.remainingIn() - (in - 36);
+            if (Math.abs(in - 24) > 1) assertEquals(in < 24 ? 1 : 2, follower.partNow());
+        }
+        // Halfway back (y = 12 on the return leg): about 12 in left, not 36.
+        assertEquals(12, leftHalfwayBack, 1.0);
+        follower.cancel();
+    }
+
+    // The same path as a follow step: things on the return leg fire there, at the right place.
+    @Test public void eventsOnTheReturnLegFireOnTheReturnLeg() {
+        scriptTo(new FieldPose(0, 0, 0));
+        final double[] in = {0};
+        final java.util.Map<String, Double> firedAtIn = new java.util.LinkedHashMap<>();
+        com.crossbotics.ftchelper.auto.PathJob job = new com.crossbotics.ftchelper.auto.PathJob() {
+            @Override public void start() { follower.follow(OUT_AND_BACK, false); }
+            @Override public boolean isBusy() { return in[0] < 47; }
+            @Override public boolean isReady() { return follower.isReady(); }
+            @Override public double remainingIn() { return follower.remainingIn(); }
+            @Override public void cancel() { follower.cancel(); }
+            @Override public double totalIn() { return follower.totalIn(); }
+            @Override public int partNow() { return follower.partNow(); }
+        };
+        com.crossbotics.ftchelper.auto.AutoRoutine routine = new com.crossbotics.ftchelper.auto.AutoRoutine(
+                () -> true, () -> { }, quietTelemetry()).subsystems(() -> {
+                    in[0] += 0.8;
+                    scriptTo(outAndBackAt(in[0]));
+                });
+        java.util.List<com.crossbotics.ftchelper.auto.PathEvent> events = new java.util.ArrayList<>();
+        events.add(new com.crossbotics.ftchelper.auto.PathEvent("36 in done", p -> p.inchesDone() >= 36,
+                () -> firedAtIn.put("done36", in[0])));
+        events.add(new com.crossbotics.ftchelper.auto.PathEvent("6 in left", p -> p.inchesLeft() <= 6,
+                () -> firedAtIn.put("left6", in[0])));
+        routine.followPath("Out and back", job, 30, events);
+        routine.runAll();
+        follower.cancel();
+        assertEquals("[Out and back: done]", routine.getReport().toString());
+        assertEquals("[done36, left6]", firedAtIn.keySet().toString());
+        // On the return leg, within a loop or two of their places (36 and 42 in along the path).
+        assertEquals(36, firedAtIn.get("done36"), 2.0);
+        assertEquals(42, firedAtIn.get("left6"), 2.0);
+    }
 }

@@ -145,22 +145,24 @@ Pedro has no "do this at this point" of its own. `PathAt` adds it: put things af
 driving (like a `run` step in the middle of the path):
 
 ```java
-s.follow("To the goal", TO_GOAL,
-         PathAt.fraction(0.5, "Intake on", robot.intake::in),            // halfway
-         PathAt.part(2, "Open the gate", robot.gate::open),              // where part 2 starts
-         PathAt.inchesLeft(12, Actions.spinUp(robot)));                 // 12 in before the end
+s.follow("To the goal", TO_GOAL, 15,                                     // 15 s at most, then the things to do
+         PathAt.fraction(0.5, "Intake on", robot.intake::in),            // halfway along the whole path
+         PathAt.part(2, "Intake off", robot.intake::stop),               // where part 2 starts
+         PathAt.inchesLeft(12, "Spin up", robot.launcher::spinUp));      // 12 in before the end
 ```
+
+`robot.intake` and `robot.launcher` are the parts in your `Robot.java`: use your own part names.
 
 | Write | It starts |
 | --- | --- |
 | `PathAt.inchesDone(10, ...)` | after 10 in of the path |
 | `PathAt.inchesLeft(12, ...)` | when 12 in of the path are left (the whole path, all its parts) |
-| `PathAt.fraction(0.5, ...)` | when that part of the path is done: 0.5 = halfway, 0.25 = a quarter |
+| `PathAt.fraction(0.5, ...)` | when that much of the WHOLE path is done (0.5 = halfway, all parts counted; 0.25 = a quarter) |
 | `PathAt.part(2, ...)` | where part 2 of a `then` path starts (`part(1)` = at once) |
 | `PathAt.near(-40, -40, 6, ...)` | when the robot's centre is within 6 in of the field point (-40, -40) |
 
-**What to do:** a name and a command (`"Intake on", robot.intake::in`), or an action from
-`Actions.java` (`Actions.spinUp(robot)`: its name is used). An action keeps running after the step, like
+**What to do:** a name and a command (`"Intake on", robot.intake::in`), or an action from your
+`Actions.java` (`PathAt.inchesLeft(12, Actions.scoreHigh(robot))`, or any action you wrote: its name is used). An action keeps running after the step, like
 `alongside`. A command must not wait: start things (`spinUp`, `goTo`), as in a `run` step.
 
 **The rules:**
@@ -168,7 +170,10 @@ s.follow("To the goal", TO_GOAL,
 - **Once each.** Every loop the step checks them **in the order you wrote them**, so two reached in the
   same loop start in that order. Write them in the order they come along the path.
 - **At the end of the path**, the ones reached there start, even if Pedro called the path done a
-  little short of the end (it is done within 2.5 in). `near` starts only if the robot really came that
+  little short of the end (it is done within 2.5 in), or in its very first loop.
+- **A path that comes back the same way** (out 24 in, then back along the same line) counts on: halfway
+  back is 36 in done, never back to 12. The robot's place on the path only moves forward (it may slip back
+  a few inches, no more). `near` starts only if the robot really came that
   close.
 - **If the path ends early** (`timed out`, `STALLED`, `NO_ODOMETRY`, `cut short`), the rest do not
   start, and the report says which: `To the goal: STALLED, not fired: Spin up`. A path that got to its

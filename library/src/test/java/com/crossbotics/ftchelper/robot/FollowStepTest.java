@@ -220,6 +220,17 @@ public class FollowStepTest {
         assertEquals("[half@22, part2@8]", fired.toString());
     }
 
+    // Codex: the length was first read on the second loop. A path the first update finishes still
+    // knows its length at the end: "1 in done" fires there.
+    @Test public void aPathDoneInOneLoopStillKnowsItsLength() {
+        RobotDefinition r = robot(1, 48);
+        AutoRoutine routine = runWith(r, null, 5,
+                PathAt.inchesDone(1, "One in", mark("one")),
+                PathAt.inchesDone(47, "Almost all", mark("most")));
+        assertEquals("[Path: done]", routine.getReport().toString());
+        assertEquals("[one@0, most@0]", fired.toString());
+    }
+
     @Test public void anEarlyEndListsWhatDidNotFire() {
         RobotDefinition r = robot(1_000_000, 0.01);
         fake.floor = 30;   // it never gets closer than 30 in (a fast computer runs many loops in 0.1 s)

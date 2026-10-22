@@ -10,8 +10,8 @@ import java.util.function.BooleanSupplier;
 import java.util.function.LongSupplier;
 
 /**
- * A colored light the drivers can see: green when the robot is full, red blinking when it is
- * jammed, a white flash when a shot goes, yellow in the last 20 seconds. You write rules; every
+ * A colored light the drivers can see: green when the launcher is ready to fire, red blinking when
+ * it is jammed, a white flash when a shot goes, yellow in the last 20 seconds. You write rules; every
  * loop the light shows the first rule that is true.
  *
  * <pre>{@code
@@ -22,14 +22,14 @@ import java.util.function.LongSupplier;
  * robot.lights.show(LightColor.GREEN).when(robot.launcher::isReady);    // at speed: fire
  * robot.lights.show(LightColor.BLUE).when(() -> robot.turret.followMode().isOn());
  * robot.lights.otherwise(LightColor.OFF);                                // when no rule is true
- * robot.lights.show(LightColor.WHITE).whenStarts(robot.launcher::isShooting);   // a 0.5 s flash
+ * robot.lights.show(LightColor.WHITE).whenCountGoesUp(() -> robot.launcher.part().getShotsFired());   // a 0.5 s flash per shot
  * }</pre>
  *
  * <ul>
  *   <li><b>First true rule wins:</b> rules are checked in the order you wrote them. Put the most
  *       important one first.</li>
  *   <li><b>A flash beats every rule</b> while it lasts ({@link #flash(LightColor)} from a button or
- *       an action, or {@link Rule#whenStarts}).</li>
+ *       an action, or {@link Rule#whenStarts} or {@link Rule#whenCountGoesUp}).</li>
  *   <li><b>Never waits:</b> blinking and flashes are worked out from the clock each loop.</li>
  *   <li><b>Any true/false works</b> as a rule: a part's method ({@code robot.intake::isRunning}), a
  *       {@link Mode} ({@code () -> robot.turret.followMode().isOn()}), or your own
@@ -38,8 +38,11 @@ import java.util.function.LongSupplier;
  * </ul>
  *
  * <p>Game rules (FTC 2026-27 manual, R202 J and F): lights that flash faster than 5 times a second, or
- * very bright lights, can be turned off by the referees. So {@link Rule#blinking(double)} stops at 5.
- * Alliance color must be shown by the ROBOT SIGNS, never by lights (R402).
+ * very bright lights, can be turned off by the referees. So {@link Rule#blinking(double)} stops at 5,
+ * and the light never changes color twice within {@link #MIN_CHANGE_SEC} (0.1 s), whatever the rules,
+ * flashes and blinking ask: a rule that turns on and off every loop, or flash after flash, still
+ * switches the light at most 5 times on and off a second. The ROBOT SIGNS show the alliance color
+ * (R402); the library's advice: show it on the signs, not with a light, so referees are not confused.
  *
  * Docs: docs/modules/robot.md (section "Lights")
  */
@@ -50,6 +53,12 @@ public final class Lights extends Module<Lights> {
     public static final double BLINK_HZ = 2;
     /** The most blinks per second allowed (FTC R202 J: faster than 5 per second invites the referees). */
     public static final double MAX_BLINK_HZ = 5;
+    /**
+     * The shortest time between two color changes, seconds: 0.1 s, so the light switches on and off
+     * at most 5 times a second (FTC R202 J) even when a rule changes every loop. A change asked for
+     * sooner waits (a flash shorter than this may not show at all).
+     */
+    public static final double MIN_CHANGE_SEC = 0.1;
 
     private enum Kind { GOBILDA, BLINKIN }
 
@@ -80,6 +89,9 @@ public final class Lights extends Module<Lights> {
     // The last color written to the light (null = nothing yet), and the words for the Driver Station.
     private LightColor written = null;
     private LightColor showing = LightColor.OFF;
+    // When the light last changed color (nanoseconds; changedAtSet false = not yet, so the first one goes).
+    private long changedAt = 0;
+    private boolean changedAtSet = false;
     private String why = "";
     private String problem = "";
 
@@ -111,7 +123,7 @@ public final class Lights extends Module<Lights> {
     // ----------------------------- rules -----------------------------
 
     /**
-     * Starts a rule: the color to show. Finish it with {@link Rule#when}, {@link Rule#whenStarts} or
+     * Starts a rule: the color to show. Finish it with {@link Rule#when}, {@link Rule#whenStarts}, {@link Rule#whenCountGoesUp} or
      * {@link Rule#inLastSeconds}.
      *
      * @param color e.g. {@code LightColor.GREEN}
@@ -185,7 +197,7 @@ public final class Lights extends Module<Lights> {
 
     /**
      * One rule, started with {@link Lights#show(LightColor)}. Add {@code blinking()} or
-     * {@code forSeconds(...)} if you like, then finish it with when, whenStarts or inLastSeconds.
+     * {@code forSeconds(...)} if you like, then finish it with when, whenStarts, whenCountGoesUp or inLastSeconds.
      */
     public final class Rule {
         final LightColor color;
@@ -194,6 +206,8 @@ public final class Lights extends Module<Lights> {
         BooleanSupplier condition;
         String what;
         Boolean was = null;   // whenStarts: true/false last loop (null = not read yet)
+        java.util.function.IntSupplier count;   // whenCountGoesUp: the number watched (null for the others)
+        Integer lastCount = null;   // its value last loop (null = not read yet)
 
         private Rule(LightColor color) {
             this.color = color;
@@ -207,11 +221,12 @@ public final class Lights extends Module<Lights> {
         /**
          * Blinks on and off this many times a second.
          *
-         * @param timesPerSecond more than 0, at most 5 (FTC R202 J: faster blinking can be stopped by the referees)
+         * @param timesPerSecond more than 0 (e.g. 1 = once a second, 0.5 = every 2 s), at most 5 (FTC R202 J:
+         *                       faster blinking can be stopped by the referees)
          */
         public Rule blinking(double timesPerSecond) {
             if (!(timesPerSecond > 0) || timesPerSecond > MAX_BLINK_HZ) {
-                throw new IllegalArgumentException("Lights: blinking(" + timesPerSecond + "): give 0.5 to 5 times a second "
+                throw new IllegalArgumentException("Lights: blinking(" + timesPerSecond + "): give more than 0 and at most 5 times a second, e.g. 2 "
                         + "(FTC rule R202 J: lights that flash faster than 5 times a second can be stopped by the referees)");
             }
             hz = timesPerSecond;
@@ -219,7 +234,7 @@ public final class Lights extends Module<Lights> {
         }
 
         /**
-         * For {@link #whenStarts}: how long the flash lasts (default 0.5 s).
+         * For {@link #whenStarts} and {@link #whenCountGoesUp}: how long the flash lasts (default 0.5 s).
          *
          * @param seconds more than 0
          */
@@ -245,14 +260,32 @@ public final class Lights extends Module<Lights> {
 
         /**
          * Flashes the color (0.5 s, or {@link #forSeconds}) each time this turns from false to true:
-         * a shot fired, a piece picked up. Something already true at the start does not flash.
+         * a piece picked up, the launcher starting to shoot. Something already true at the start does not
+         * flash. For one flash per piece fired use {@link #whenCountGoesUp} with the launcher's shot count.
          *
-         * @param condition e.g. {@code robot.launcher::isShooting}
+         * @param condition e.g. {@code robot.intake::isRunning}
          * @return the light, for the next rule
          */
         public Lights whenStarts(BooleanSupplier condition) {
             if (condition == null) throw new IllegalArgumentException("Lights: whenStarts(null): give a true/false, e.g. robot.launcher::isShooting");
             this.condition = condition;
+            watches.add(this);
+            return Lights.this;
+        }
+
+        /**
+         * Flashes the color (0.5 s, or {@link #forSeconds}) each time this number goes up: one flash per
+         * piece really fired, even when {@code fire(3)} fires three in a row ({@link #whenStarts} with
+         * {@code isShooting} flashes once for all three). The number it has at the start does not flash.
+         *
+         * @param count e.g. {@code () -> robot.launcher.part().getShotsFired()} (pieces fed into the wheel)
+         * @return the light, for the next rule
+         */
+        public Lights whenCountGoesUp(java.util.function.IntSupplier count) {
+            if (count == null) {
+                throw new IllegalArgumentException("Lights: whenCountGoesUp(null): give a number, e.g. () -> robot.launcher.part().getShotsFired()");
+            }
+            this.count = count;
             watches.add(this);
             return Lights.this;
         }
@@ -315,8 +348,15 @@ public final class Lights extends Module<Lights> {
     public void update() {
         long now = clock.getAsLong();
         problem = "";
-        // 1. A whenStarts rule that just turned true starts a flash.
+        // 1. A whenStarts rule that just turned true, or a whenCountGoesUp number that went up, starts a flash.
         for (Rule w : watches) {
+            if (w.count != null) {
+                // whenCountGoesUp: a flash each time the number is higher than last loop.
+                Integer n = readCount(w);
+                if (n != null && w.lastCount != null && n > w.lastCount) startFlash(w.color, w.seconds, w.hz);
+                if (n != null) w.lastCount = n;
+                continue;
+            }
             boolean v = read(w);
             if (w.was != null && v && !w.was) startFlash(w.color, w.seconds, w.hz);
             w.was = v;
@@ -356,7 +396,17 @@ public final class Lights extends Module<Lights> {
             if (into >= periodSec / 2) c = LightColor.OFF;
             why += ", blinking";
         }
-        showing = c;
+        // At most one change every 0.1 s (FTC R202 J: no flashing faster than 5 times a second). A
+        // change asked for sooner keeps the color showing now; it comes on a later loop if still wanted.
+        if (c != showing) {
+            if (changedAtSet && now - changedAt < (long) (MIN_CHANGE_SEC * 1e9)) {
+                c = showing;
+            } else {
+                showing = c;
+                changedAt = now;
+                changedAtSet = true;
+            }
+        }
         // Only send a change (a Blinkin writes a log line for each command).
         if (output != null && c != written) {
             output.show(c);
@@ -375,12 +425,23 @@ public final class Lights extends Module<Lights> {
         }
     }
 
+    // A whenCountGoesUp number, or null (with a warning) if reading it fails.
+    private Integer readCount(Rule r) {
+        try {
+            return r.count.getAsInt();
+        } catch (RuntimeException e) {
+            problem = "a light rule failed (" + e + "): it is skipped this loop";
+            return null;
+        }
+    }
+
     // STOP: the light goes dark.
     @Override
     public void stop() {
         if (output != null) output.show(LightColor.OFF);
         written = LightColor.OFF;
         showing = LightColor.OFF;
+        changedAtSet = false;
     }
 
     @Override
