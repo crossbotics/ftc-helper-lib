@@ -182,6 +182,8 @@ final class SimJson {
                 b.append("]}");
             }
             b.append(']');
+            // The game (rules file): clock, score, FLOWER stacks, HIVE tips in progress, shot verdicts. See SimScore.json().
+            b.append(",\"game\":").append(r.pieces.score.json());
         }
         // The running path's plan and where the robot really went (field inches): see SimPaths.
         b.append(",\"plan\":[");

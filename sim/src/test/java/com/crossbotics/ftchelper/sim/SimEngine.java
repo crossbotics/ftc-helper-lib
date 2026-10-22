@@ -18,11 +18,34 @@ final class SimEngine {
     SimEngine(SimRobot robot) {
         this.robot = robot;
         this.ds = new SimDriverStation(robot);
+        matchClock();
     }
 
     SimEngine(SimRobot robot, SimDriverStation.Scope scope) {
         this.robot = robot;
         this.ds = new SimDriverStation(robot, scope);
+        matchClock();
+    }
+
+    // The game rules' match clock: a running autonomous is AUTO, a running TeleOp is TELEOP (with the rules
+    // file's lengths: 30 s and 2:00 for BIOBUZZ); nothing running is free play.
+    private void matchClock() {
+        if (robot.pieces == null) return;
+        final SimRules rules = robot.field.rules;
+        robot.pieces.clock = new SimPieces.MatchClock() {
+            @Override public String period() {
+                SimDriverStation.Entry e = ds.current();
+                if (ds.phase() != SimDriverStation.Phase.RUNNING || e == null) return "";
+                return "Autonomous".equals(e.kind) ? "AUTO" : "TELEOP";
+            }
+
+            @Override public double secondsLeft() {
+                String p = period();
+                if (p.isEmpty()) return Double.NaN;
+                double length = p.equals("AUTO") ? (rules == null ? 30 : rules.autoSec) : (rules == null ? 120 : rules.teleopSec);
+                return Math.max(0, length - ds.runSeconds());
+            }
+        };
     }
 
     /** Starts the physics thread. */
