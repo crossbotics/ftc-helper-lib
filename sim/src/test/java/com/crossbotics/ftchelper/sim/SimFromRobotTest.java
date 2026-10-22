@@ -512,6 +512,37 @@ public class SimFromRobotTest {
         }
     }
 
+    // TeleOp without autonomous: the drivers park on the reset spot and hold G1 START 1 s ("set pose
+    // here"); then they find the alliance was wrong and hold BACK + START 1.5 s to switch it.
+    @Test public void teleOpSetsThePoseHereAndSwitchesTheAlliance() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.odometrybot.Robot.class);
+        com.crossbotics.ftchelper.match.MatchMemory.clear();
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("Odometry Bot TeleOp");
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("hold G1 START 1 s at x -56, y -61 in, heading 0 (BLUE)"), 2));
+            s.start();
+            // A short press does nothing.
+            s.press(v -> s.g1().start = v);
+            assertFalse(s.screenHas("Pose set"));
+            s.g1().start = true;
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Pose set: x -56, y -61 in, heading 0 (BLUE)"), 3));
+            s.g1().start = false;
+            s.waitForLoops(2);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("x -56, y -61 in"), 2));
+            // Both held 1.5 s: the alliance switches (a quick press of both would be the debug lines).
+            s.g1().back = true;
+            s.g1().start = true;
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Alliance now RED"), 3));
+            s.g1().back = false;
+            s.g1().start = false;
+            s.waitForLoops(2);
+            assertEquals(com.crossbotics.ftchelper.match.Alliance.RED, com.crossbotics.ftchelper.match.MatchMemory.chosen());
+            assertTrue(String.join("\n", s.screen()), s.screenHas("RED (switched in TeleOp)"));
+            assertFalse("not paused: the pair took BACK's tap", s.screenHas("PAUSED"));
+            assertEquals("", s.error());
+        }
+    }
+
     @Test public void anUntunedAutoRunsInTheSimulatorButNotOnARobot() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.flywheelbot.Robot.class);
         try (SimRun s = new SimRun(file.toString())) {

@@ -276,7 +276,7 @@ public class GesturesTest {
             make((p1, p2) -> p1.lb.with(p1.back, log("x")));
             fail("expected an error");
         } catch (IllegalStateException e) {
-            assertTrue(e.getMessage(), e.getMessage().contains("G1 BACK is one of the library's driving buttons"));
+            assertTrue(e.getMessage(), e.getMessage().contains("G1 BACK is one of the library's own buttons"));
         }
         make((p1, p2) -> {
             p2.lb.with(p2.a, log("pair"));

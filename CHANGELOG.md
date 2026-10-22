@@ -6,6 +6,23 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
+- **Every library button can move or be freed.** `Controls.java` (and `EasyTeleOp`) get
+  `libraryButtons(LibraryButtons lib, Pad g1, Pad g2)`: `lib.pause(...)`, `resetForward`, `debug(key, with)`,
+  `slow` (a trigger or a button), `slowToggle`, `fieldCentric`, `buttonMap`, `tuningMenu`, `setPose`,
+  `switchAlliance(key, with)`, `allianceInInit(blue, red)`, `swapSticks(true)`; `null` frees a button.
+  The defaults are unchanged. Clashes stop INIT with the button's name. New classes
+  `teleop.LibraryButtons` and `teleop.Key` (a `Pad.Button` is a `Key`); `Pad.guide` (gamepad 2's GUIDE
+  is free for teams); `DriverControls.swapSticks(boolean)`; `EasyTeleOp.driveSpeed()`, `showNote(text)`,
+  `switchAlliance()`, `allianceChanged(now)`, `setPoseJob()`, `libraryKeys()`, `libraryJobs(...)`,
+  `keyWords(job)`, `standardLibraryButtons()`. With the library's slow freed, `slow()` works with two drivers.
+- **Set pose here:** on a robot with odometry, park on the reset spot and hold gamepad 1 START 1 s: the
+  pose becomes `Tunables.Odometry.resetX, resetY, resetHeading` (written for BLUE; RED mirrored like the
+  start spot, unless `Tunables.Odometry.mirrorForRed = false`). Two buzzes and `Pose set: ...`; INIT
+  shows the button and the spot. From code or an action: `robot.resetPose()`, `robot.resetPose(x, y, heading)`.
+- **Switch the alliance during TeleOp:** hold gamepad 1 BACK + START together 1.5 s. Both gamepads
+  buzz twice, the screen says `Alliance now RED (was BLUE)`, and the camera's goal, the aim's goal point,
+  `robot.alliance()` and `MatchMemory` (`changeAlliance(a)`) follow.
+
 - **Shot Tuner: tune the way teams do.** At each distance shoot 3-5 per speed and mark each shot
   A = HIT or B = MISS; the screen shows `Hits at 2550: 3/4` and every speed tried there, and X saves the
   speed with the best hit ratio. The distance is averaged over half a second of fresh readings; each
@@ -92,6 +109,10 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Changed
 
+- With the alliance switch on START + BACK, the debug lines toggle when the pair is let go (not at the
+  press). GUIDE is on the button map (`G1 GUIDE: button map; hold 1 s: tuning menu [library]`), and the
+  BACK and START lines list every library job on them.
+- `Aim odometry: the pose was never set` now says how to set it with the button.
 - `PedroFollower.remainingIn()` is now the distance left along the WHOLE path (all its parts), measured
   from the robot's closest point on the path. It was Pedro's distance for the part it steers along now,
   which Pedro may switch well before the join. The Driver Station's `Path: 18 in to go` uses it too.

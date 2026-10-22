@@ -105,6 +105,14 @@ public class OdometryRecipes {
                     robot.pose().x, robot.pose().y, robot.pose().headingDeg));
             // end recipe
             g2.y.press(Actions.intakeOnOurHalf(robot)).says("intake on until the centre line");
+
+            // recipe: reset-pose-button
+            // A second spot of your own: hold D-pad down 1 s with the robot in the right corner tile.
+            // (x, y, heading for BLUE; RED mirrors it like the start spot.)
+            g1.dpadDown.heldFor(1.0, () -> robot.resetPose(56, -61, 0)).says("hold 1 s: pose = right corner tile");
+            // An action can set it too (here: the Tunables.Odometry spot, then the intake runs).
+            g1.dpadUp.heldFor(1.0, Actions.poseHereThenIntake(robot)).says("hold 1 s: pose here, intake on");
+            // end recipe
         }
     }
 
@@ -119,5 +127,12 @@ public class OdometryRecipes {
                     .then(r.intake::stop);
         }
         // end recipe
+
+        /** The pose from Tunables.Odometry's reset spot (resetPose), then the intake on. */
+        public static Action poseHereThenIntake(Robot r) {
+            return Action.named("Pose here, intake on")
+                    .then(r::resetPose)
+                    .then(r.intake::in);
+        }
     }
 }

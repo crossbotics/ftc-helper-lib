@@ -385,6 +385,23 @@ You write nothing for this:
 - Field-centric "forward" comes from the odometry's heading. Holding BACK (with field-centric on)
   makes "forward" the way the robot faces now, and keeps x and y.
 
+**No autonomous, or it was stopped early?** Then TeleOp does not know where the robot is (the aim's
+odometry backup stays off and says why). Set the pose by hand: park the robot on a spot you know (the
+start tile against your wall is easiest), then hold gamepad 1 **START** for 1 second. Gamepad 1 buzzes
+twice and the Driver Station says `Pose set: x -56, y -61 in, heading 0 (BLUE)`. The spot goes in
+`Tunables.java`, written for BLUE like the start spot (RED mirrors it the same way):
+
+```java
+public static class Odometry {
+    public static boolean checked = false;
+    public static double resetX = -56, resetY = -61, resetHeading = 0;   // the "set pose here" spot
+}
+```
+
+INIT shows the button and the spot (`Set pose: hold G1 START 1 s at ...`). From code, or in an
+action: `robot.resetPose()` (this spot) or `robot.resetPose(x, y, heading)` (any spot). The button can
+move: `lib.setPose(...)` ([the button menu](../../guides/buttons.md#moving-the-librarys-buttons)).
+
 To show the pose your own way, add one line inside `buttons(...)` in `Controls.java`:
 
 ```java
@@ -482,6 +499,8 @@ button (Robot tab). **Left**: drive left with the left stick (there is no push b
 | INIT stops: `odometry .reversed("...")` | a name in `.reversed(...)` that is not a pod: a Pinpoint's pods are `"x"` and `"y"` |
 | It circles the point or stops just short | `Tunables.Drive.turnKp`/`turnKd`, or `moveMinPower` (lesson 6) |
 | TeleOp's field-centric is wrong after autonomous | the heading in `s.start(...)` is wrong |
+| `No reset spot: add resetX, resetY, resetHeading to Tunables.Odometry` when START is held | the "set pose here" spot is missing: section 7 |
+| After "set pose here" the pose is mirrored the wrong way on RED | on a field turned half a turn (BIOBUZZ) add `public static boolean mirrorForRed = false;` to `Tunables.Odometry` |
 
 ## Next
 

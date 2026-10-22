@@ -60,8 +60,11 @@ You get these on gamepad 1 without writing anything:
 | Y | field-centric on/off (starts off) |
 | BACK (alone, on release) | "the robot now faces away from me" (one buzz) |
 | GUIDE | tuning menu (PRACTICE profile) |
-| START + BACK together | debug telemetry on/off (does not reset "forward") |
+| START + BACK together | debug telemetry on/off when let go (does not reset "forward"); both held 1.5 s: switch the alliance |
 | X / B in INIT | choose BLUE / RED when no autonomous ran before (it remembers autonomous's choice) |
+
+Each of these can move to another button, or be freed, in `libraryButtons(LibraryButtons lib)`, e.g.
+`lib.fieldCentric(Key.g1(Btn.X));` ([the full list](../modules/teleop.md#moving-the-librarys-buttons)).
 
 Field-centric "forward" continues from where autonomous ended (also after INIT, STOP, INIT again),
 so the driver does not need BACK at the start of a match ([DriverHeading](../modules/drive.md#driverheading)).

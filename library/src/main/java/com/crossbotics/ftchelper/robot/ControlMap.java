@@ -7,11 +7,15 @@ import com.crossbotics.ftchelper.gamepad.ControllerBindings;
 import com.crossbotics.ftchelper.gamepad.StickShaping;
 import com.crossbotics.ftchelper.gamepad.ControllerBindings.Btn;
 import com.crossbotics.ftchelper.teleop.EasyTeleOp;
+import com.crossbotics.ftchelper.teleop.Key;
+import com.crossbotics.ftchelper.teleop.LibraryButtons;
 import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * The team's TeleOp and button map in one file, {@code Controls.java}. Every module on the robot
@@ -29,12 +33,14 @@ import java.util.List;
  * }
  * }</pre>
  *
- * <p><b>Driving</b> (gamepad 1, always): left stick drives (and strafes on mecanum), right stick X
- * turns, LT slow (the further it is pulled, the slower), Y field-centric on/off (mecanum), BACK pauses everything (motors on brake; again
- * to go on), holding BACK 1 s resets "forward", START + BACK debug
- * lines, GUIDE shows the button map (a tap) or opens the tuning menu (held 1 s, PRACTICE profile).
- * With {@code oneDriver = true}: left stick click
- * slow on/off, right stick click field-centric, and the operator's buttons move to gamepad 1.
+ * <p><b>The library's own buttons</b> (gamepad 1 by default): left stick drives (and strafes on
+ * mecanum), right stick X turns, LT slow (the further it is pulled, the slower), Y field-centric on/off
+ * (mecanum), BACK pauses everything (motors on brake; again to go on), holding BACK 1 s resets
+ * "forward", START + BACK debug lines, BACK + START held 1.5 s switches the alliance, START held 1 s
+ * sets the pose to the reset spot (robots with odometry), GUIDE shows the button map (a tap) or opens
+ * the tuning menu (held 1 s, PRACTICE profile). With {@code oneDriver = true}: left stick click slow
+ * on/off, right stick click field-centric, and the operator's buttons move to gamepad 1. Every one can
+ * be moved or freed in {@link #libraryButtons(LibraryButtons, Pad, Pad)}.
  *
  * <p><b>Checked at INIT:</b> a button with two jobs in this file, or a job on a driving button, stops
  * with the button's name. INIT shows the whole map, the Tunables notes and any tuned values that
@@ -49,7 +55,6 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
     private Boolean oneDriver = null;
     private ButtonPlan plan;
     private final List<ButtonPlan.StickJob> sticks = new ArrayList<>();
-    private boolean slowOn = false;
     private boolean pausedSticks = false;
     private boolean menuWasOpen = false;
 
@@ -62,6 +67,25 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
      * @param g2    the operator's gamepad (with {@code oneDriver = true}: gamepad 1, the same as g1)
      */
     protected abstract void buttons(R robot, Pad g1, Pad g2);
+
+    /**
+     * Moves or frees the library's own buttons (driving, pause, slow, field-centric, menus, "set pose
+     * here", "switch alliance"). Default: nothing changes. Two jobs on one button stop at INIT with the
+     * button's name; a job of yours on a library button too.
+     *
+     * <pre>{@code
+     * @Override protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
+     *     lib.fieldCentric(g1.x);              // Y is free for buttons(...) now
+     *     lib.setPose(g1.dpadDown);            // hold D-pad down 1 s: set pose here
+     *     lib.switchAlliance(null, null);      // no alliance switch in TeleOp
+     * }
+     * }</pre>
+     *
+     * @param lib the library's buttons, at their defaults (one driver: the one-driver ones)
+     * @param g1  gamepad 1's buttons, to name them
+     * @param g2  gamepad 2's (with {@code oneDriver = true}: gamepad 1, the same as g1)
+     */
+    protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) { }
 
     /** False to switch the modules' suggested buttons off (only Controls.java's jobs). Default true. */
     protected boolean useStandardButtons() {
@@ -129,14 +153,53 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
                 startsFromAuto());
     }
 
+    // The library's buttons: the one-driver defaults with oneDriver, then the team's moves.
+    @Override
+    protected final LibraryButtons standardLibraryButtons() {
+        return oneDriver() ? LibraryButtons.oneDriver() : LibraryButtons.twoDrivers();
+    }
+
+    @Override
+    protected final void libraryButtons(LibraryButtons lib) {
+        // Pads only to name the buttons (g1.x...); the jobs go on the real map in bindButtons.
+        ButtonPlan names = new ButtonPlan(oneDriver());
+        libraryButtons(lib, names.g1, oneDriver() ? names.g1 : names.g2);
+        // One driver: there is no gamepad 2, so a library job put there goes on gamepad 1.
+        if (oneDriver()) lib.moveAllToGamepad1();
+    }
+
+    // "Set pose here" (robots with odometry): the pose becomes Tunables.Odometry's reset spot.
+    @Override
+    protected final java.util.function.Supplier<String> setPoseJob() {
+        if (robot().odometrySpec() == null) return null;
+        return () -> {
+            if (robot().odometry() == null) return "No odometry running";
+            if (!robot().resetPose()) return "No reset spot: add resetX, resetY, resetHeading to Tunables.Odometry";
+            return "Pose set: " + robot().resetSpotWords();
+        };
+    }
+
+    // The alliance was switched in TeleOp (Camera.goal and the aim read robot.alliance(): they follow).
+    @Override
+    protected final void allianceChanged(com.crossbotics.ftchelper.match.Alliance now) {
+        robot().setAlliance(now);
+        Key pose = libraryKeys() == null ? null : libraryKeys().key(LibraryButtons.Job.SET_POSE);
+        if (robot().odometry() != null && robot().odometry().isPoseSet() && pose != null) {
+            showNote("Alliance now " + now + ". Pose from the wrong side? Park on the reset spot, hold " + pose + " 1 s");
+        }
+    }
+
     @Override
     protected final void bindButtons(ControllerBindings driver, ControllerBindings operator) {
-        plan = makePlan(robot(), oneDriver(), useStandardButtons(), (g1, g2) -> buttons(robot(), g1, g2));
+        Set<LibraryButtons.Job> jobs = libraryJobs(true);
+        plan = makePlan(robot(), oneDriver(), useStandardButtons(), libraryKeys(), jobs, (g1, g2) -> buttons(robot(), g1, g2));
         plan.compile(robot(), driver, operator, sticks, () -> gamepad1, () -> gamepad2);
         // Whole-robot aim (robot.aimMode()): while it is on, the robot's turn comes from the aim
         // unless the driver moves the turn stick.
         driving().turnAssist(robot().aim()::assistTurn);
-        if (oneDriver()) driver.bindPress(ControllerBindings.Pad.G1, Btn.L_STICK_BTN, () -> slowOn = !slowOn);
+        // The "pose was never set" warning says how to set it with the button.
+        Key pose = jobs.contains(LibraryButtons.Job.SET_POSE) ? libraryKeys().key(LibraryButtons.Job.SET_POSE) : null;
+        robot().resetPoseHint = pose == null ? null : "park on the reset spot and hold " + pose + " 1 s";
     }
 
     // GUIDE (a tap) shows the button map during the match.
@@ -157,15 +220,15 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
             driving().hold();      // paused: the wheels hold still too
             return;
         }
-        if (oneDriver()) driving().update(gamepad, oneDriverSpeed(gamepad));
-        else super.drive(gamepad);
+        // The slowest of the library's slow buttons and a button given slow() in buttons(...).
+        driving().update(gamepad, Math.min(driveSpeed(), teamSpeed(gamepad)));
     }
 
-    // One driver: the slow speed when slow is on (left stick click, or a button given slow()), and a
-    // trigger given slow() slows it the further it is pulled.
-    private double oneDriverSpeed(Gamepad gamepad) {
-        double slowest = slowSpeed();
-        double speed = slowOn || (plan != null && plan.slowHeld) ? slowest : 1;
+    // A button given slow() (slow while held), and a trigger given slow() (the further it is pulled,
+    // the slower). 1 = full speed.
+    private double teamSpeed(Gamepad gamepad) {
+        double slowest = Math.max(0, Math.min(1, slowSpeed()));
+        double speed = plan != null && plan.slowHeld ? slowest : 1;
         if (plan != null && plan.slowTrigger != null) {
             double pull = plan.slowTrigger == ControllerBindings.Trigger.LT ? gamepad.left_trigger : gamepad.right_trigger;
             speed = Math.min(speed, StickShaping.slowScale(pull, slowest));
@@ -181,7 +244,7 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
 
     @Override
     protected final void addTelemetry(RobotTelemetry t) {
-        if (robot().isPaused()) t.warn("PAUSED: everything stopped on brake. BACK to go on.");
+        if (robot().isPaused()) t.warn("PAUSED: everything stopped on brake. " + keyWords(LibraryButtons.Job.PAUSE) + " to go on.");
         if (plan != null && !plan.slowWarning().isEmpty()) t.warn(plan.slowWarning());
         if (robot().aim() != null) robot().aim().addTelemetry(t);
         for (Shown s : shown) {
@@ -256,6 +319,15 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
             robot().setAlliance(alliance());
             robot().aim().addInitTelemetry(t);
         }
+        // With odometry: where the pose comes from, and how to set it here.
+        if (robot().odometry() != null && plan != null && libraryKeys() != null) {
+            Key pose = libraryKeys().key(LibraryButtons.Job.SET_POSE);
+            String spot = robot().resetSpotWords();
+            if (pose != null) {
+                t.line("Set pose", spot == null ? "no reset spot (Tunables.Odometry resetX, resetY, resetHeading)"
+                        : "hold " + pose + " 1 s at " + spot);
+            }
+        }
         for (String n : robot().notes()) t.text(n);
         if (plan != null) for (String n : plan.notes()) t.text(n);
         List<String> changed = RobotDefinition.changedTunables();
@@ -277,26 +349,47 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
     }
 
     /**
-     * The whole map: driving (the library's), each module's suggestions, then the team's.
-     * Package-private and static so tests can check it without an OpMode.
+     * The whole map with the library's default buttons (tests): see the other makePlan.
      */
     static ButtonPlan makePlan(RobotDefinition robot, boolean oneDriver, boolean standard, TeamButtons team) {
+        LibraryButtons lib = oneDriver ? LibraryButtons.oneDriver() : LibraryButtons.twoDrivers();
+        return makePlan(robot, oneDriver, standard, lib, defaultJobs(robot), team);
+    }
+
+    // The library's jobs a robot has, without an OpMode (tests): field-centric on a mecanum with an IMU
+    // or odometry, "set pose" with odometry.
+    static Set<LibraryButtons.Job> defaultJobs(RobotDefinition robot) {
+        Set<LibraryButtons.Job> jobs = java.util.EnumSet.allOf(LibraryButtons.Job.class);
+        boolean heading = robot.drive().imuName != null || robot.odometrySpec() != null;
+        if (!(robot.drive().isMecanum() && heading)) jobs.remove(LibraryButtons.Job.FIELD_CENTRIC);
+        if (!heading) jobs.remove(LibraryButtons.Job.RESET_FORWARD);
+        if (robot.odometrySpec() == null) jobs.remove(LibraryButtons.Job.SET_POSE);
+        return jobs;
+    }
+
+    /**
+     * The whole map: the library's buttons ({@code lib}, only the jobs in {@code jobs}), each module's
+     * suggestions, then the team's. Package-private and static so tests can check it without an OpMode.
+     */
+    static ButtonPlan makePlan(RobotDefinition robot, boolean oneDriver, boolean standard, LibraryButtons lib,
+                               Set<LibraryButtons.Job> jobs, TeamButtons team) {
         ButtonPlan plan = new ButtonPlan(oneDriver);
         plan.robot = robot;
         Pad g1 = plan.g1;
-        boolean fieldCentric = robot.drive().isMecanum() && robot.drive().imuName != null;
-        plan.reserve(g1.leftStickX, robot.drive().isMecanum() ? "strafe" : "(drive)");
-        plan.reserve(g1.leftStickY, "drive");
-        plan.reserve(g1.rightStickX, "turn");
-        if (oneDriver) {
-            plan.reserve(g1.leftStickButton, "slow on/off");
-            if (fieldCentric) plan.reserve(g1.rightStickButton, "field-centric on/off");
+        // The driving sticks (swapSticks: the right stick drives, the left stick X turns).
+        boolean mecanum = robot.drive().isMecanum();
+        if (lib.sticksSwapped()) {
+            plan.reserve(g1.rightStickX, mecanum ? "strafe" : "(drive)");
+            plan.reserve(g1.rightStickY, "drive");
+            plan.reserve(g1.leftStickX, "turn");
         } else {
-            plan.reserve(g1.lt, "slow (squeeze: the further, the slower)");
-            if (fieldCentric) plan.reserve(g1.y, "field-centric on/off");
+            plan.reserve(g1.leftStickX, mecanum ? "strafe" : "(drive)");
+            plan.reserve(g1.leftStickY, "drive");
+            plan.reserve(g1.rightStickX, "turn");
         }
-        plan.reserve(g1.back, "pause / go on (hold: forward = away from you now)");
-        plan.reserve(g1.start, "debug lines (with BACK)");
+        // Every other library button, with its words (checked: two library jobs on one button stop here).
+        for (Map.Entry<Key, String> w : lib.words(jobs).entrySet()) plan.reserve(plan.button(w.getKey()), w.getValue());
+        plan.librarySlow = jobs.contains(LibraryButtons.Job.SLOW) ? lib.key(LibraryButtons.Job.SLOW) : null;
         if (standard) robot.suggestButtons(plan);
         plan.source = null;
         // One driver: the team's g2 lines go on gamepad 1 too, like the parts' buttons.

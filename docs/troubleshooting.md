@@ -32,6 +32,11 @@ See [A new FTC SDK version](02-keep-up-to-date.md#a-new-ftc-sdk-version).
 The name in code and the name in the Driver Station configuration differ. The message lists the
 names that do exist. Fix the spelling, or pick the right configuration on the Driver Station.
 
+**`libraryButtons: G1 BACK has two library jobs: ... Move or free one`**
+(also `has two long (held) library jobs`, `is the slow trigger and also ...`, `cannot open the tuning
+menu`.) In `libraryButtons(...)` a library job was moved onto a button that already has one. Pick
+another button, or free the other job with `null` ([the button menu](guides/buttons.md#moving-the-librarys-buttons)).
+
 **`Tunables.Lift has no max: write max (the top of the safe range, in counts: Motor Finder, B). A safety limit never comes from a library default.`**
 (also `has no min`, `Tunables.java has no Lift section`, or `Arm` in `deg`.) On purpose: a lift or arm
 must never use a library default for its safe range. Run the [Motor Finder](guides/finders.md), then
@@ -68,7 +73,9 @@ robot in five files: the Drive Tuner, then `Tunables.Drive.calibrated = true`.
 | `homing failed: switch not found` (turret) | the switch never closed: wire, magnet gap, or the wrong direction in `home(...)` |
 | `follower encoder not reading: follower switched off` (flywheel) | the second flywheel motor has no encoder cable: plug it in (or use one motor) |
 | `Launcher gave up: flywheel` (or `hood`, `Turret`...) | it was not ready in time: that part is the problem |
-| `Aim odometry: the pose was never set ...` | TeleOp ran without autonomous, so the robot does not know where it is: aiming uses the camera only. Run autonomous first, or `robot.odometry().setPose(...)` ([Aim](modules/robot.md#aim)) |
+| `Aim odometry: the pose was never set ...` | TeleOp ran without autonomous, so the robot does not know where it is: aiming uses the camera only. Run autonomous first, or park on the reset spot and hold gamepad 1 START 1 s ("set pose here", `Tunables.Odometry.resetX, resetY, resetHeading`; [lesson 7](tutorials/start/07-odometry.md#7-teleop-starts-where-autonomous-ended)) |
+| `No reset spot: add resetX, resetY, resetHeading to Tunables.Odometry` | START was held 1 s ("set pose here") but `Tunables.Odometry` has no spot: add the three numbers (inches and degrees from your wall, for BLUE) |
+| `Alliance now RED (was BLUE)` | someone held gamepad 1 BACK + START 1.5 s: the alliance switched. Hold them again to switch back ([ControlMap](modules/robot.md#controlmap)) |
 | `Aim odometry: ... more than the field allows` / `Aim: camera says ... odometry ...` | the pose is wrong or drifted, or `Tunables.Aim.goalX, goalY` are not where the camera measures to |
 | `goal out of turret range (behind the robot: holding)` | the goal is behind the robot: turn the robot toward it |
 | `PRACTICE profile` | set COMPETITION at events |

@@ -45,8 +45,9 @@ first.
 - [How do I control a part with a stick?](#how-do-i-control-a-part-with-a-stick)
 - [How do I move a part's button to another button?](#how-do-i-move-a-parts-button-to-another-button)
 - [How do I turn off all the standard buttons?](#how-do-i-turn-off-all-the-standard-buttons)
+- [How do I move the library's own buttons (slow, field-centric, pause)?](#how-do-i-move-the-librarys-own-buttons-slow-field-centric-pause)
 - [How do I change the double-tap and hold times?](#how-do-i-change-the-double-tap-and-hold-times)
-- [Buttons that are already built in](#buttons-that-are-already-built-in) (button map, pause)
+- [Buttons that are already built in](#buttons-that-are-already-built-in) (button map, pause, switch alliance, set pose)
 
 **Mechanisms**
 - [How do I add an intake on a motor?](#how-do-i-add-an-intake-on-a-motor)
@@ -106,6 +107,7 @@ first.
 - [How do I drive to a point on the field?](#how-do-i-drive-to-a-point-on-the-field)
 - [How do I show where the robot is?](#how-do-i-show-where-the-robot-is)
 - [How do I use the robot's position in an action?](#how-do-i-use-the-robots-position-in-an-action)
+- [How do I set the pose when autonomous did not run?](#how-do-i-set-the-pose-when-autonomous-did-not-run)
 
 **Pedro paths** (smooth curves, mecanum only)
 - [How do I add Pedro Pathing to Robot.java?](#how-do-i-add-pedro-pathing-to-robotjava)
@@ -549,6 +551,26 @@ protected boolean useStandardButtons() {
 **Why:** some teams want every button written in one place, with no surprises.
 **More:** [ControlMap](modules/robot.md#controlmap).
 
+### How do I move the library's own buttons (slow, field-centric, pause)?
+
+**Where:** `Controls.java`, inside the class (next to `buttons(...)`). Import
+`com.crossbotics.ftchelper.teleop.LibraryButtons`.
+
+<!-- recipe: move-library-buttons -->
+```java
+// The library's own buttons (driving, pause, menus...): move them here; null = no button.
+@Override
+protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
+    lib.fieldCentric(g1.x);                  // field-centric on/off: X instead of Y
+    lib.slow(g1.rt);                         // slow on the right trigger: LT is free now
+    lib.switchAlliance(g2.back, g2.start);   // switch alliance: the operator holds both 1.5 s
+}
+```
+
+**Why:** the old button is then free for your own jobs in `buttons(...)`. Two library jobs on one
+button stop INIT with the button's name.
+**More:** [The button menu: moving the library's buttons](guides/buttons.md#moving-the-librarys-buttons).
+
 ### How do I change the double-tap and hold times?
 
 **Where:** `Tunables.java` (optional: leave the section out for these defaults).
@@ -572,6 +594,8 @@ copy back into `Tunables.java` (the file is the record).
 - **The tuning menu:** hold **GUIDE** for 1 second (PRACTICE profile). A tap shows the map, a hold opens the menu.
 - **Two jobs on one button** stop INIT with the button's name, so a mistake is found before the match.
 - **Pause:** tap gamepad 1 **BACK**.
+- **Wrong alliance?** Hold gamepad 1 **BACK + START** together 1.5 s: it switches (both gamepads buzz twice).
+- **Set pose here** (robots with odometry): hold gamepad 1 **START** 1 s on the reset spot ([below](#how-do-i-set-the-pose-when-autonomous-did-not-run)).
 
 **More:** [Lesson 3: the button map](tutorials/start/03-buttons.md#6-the-button-map-init-and-guide).
 
@@ -1527,6 +1551,39 @@ public static Action intakeOnOurHalf(Robot r) {
 
 **Why:** `robot.pose()` is fresh every loop, so a wait can test where the robot is.
 **More:** [robot.pose()](modules/odometry.md#robotpose).
+
+### How do I set the pose when autonomous did not run?
+
+**Where:** `Tunables.java`, section `Odometry` (and `Controls.java` for more spots).
+
+Autonomous was stopped early, or did not run: TeleOp does not know where the robot is. Park it on the
+reset spot, then hold gamepad 1 **START** for 1 second ("set pose here"). The spot, written for BLUE
+like a start spot (RED mirrors it):
+
+<!-- recipe: tunables-reset-spot -->
+```java
+public static class Odometry {
+    public static boolean checked = false;   // true after the Odometry Tuner's Loop test passes
+    // "Set pose here" (TeleOp: hold gamepad 1 START 1 s with the robot on this spot). Inches and
+    // degrees seen from your wall, written for BLUE like a start spot: our left corner tile, facing the field.
+    public static double resetX = -56, resetY = -61, resetHeading = 0;
+}
+```
+
+More spots, or from an action (inside `buttons(...)`):
+
+<!-- recipe: reset-pose-button -->
+```java
+// A second spot of your own: hold D-pad down 1 s with the robot in the right corner tile.
+// (x, y, heading for BLUE; RED mirrors it like the start spot.)
+g1.dpadDown.heldFor(1.0, () -> robot.resetPose(56, -61, 0)).says("hold 1 s: pose = right corner tile");
+// An action can set it too (here: the Tunables.Odometry spot, then the intake runs).
+g1.dpadUp.heldFor(1.0, Actions.poseHereThenIntake(robot)).says("hold 1 s: pose here, intake on");
+```
+
+**Why:** with a pose, the aim's odometry backup and field-centric "forward" work again. Holding 1 s
+means a bump of the button does nothing.
+**More:** [Lesson 7: TeleOp starts where autonomous ended](tutorials/start/07-odometry.md#7-teleop-starts-where-autonomous-ended), [resetPose()](modules/robot.md#robotdefinition).
 
 ## Pedro paths
 

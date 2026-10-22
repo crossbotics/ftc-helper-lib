@@ -67,6 +67,21 @@ public class DriverControlsTest {
         assertEquals("robot  SLOW", d.status());
     }
 
+    @Test public void swappedSticksDriveWithTheRightStickAndTurnWithTheLeft() {
+        Wheels w = new Wheels(true);
+        DriverControls d = new DriverControls(w, null).swapSticks(true);
+        Gamepad g = new Gamepad();
+        g.right_stick_y = -1;                        // right stick fully UP: forward
+        g.right_stick_x = 1;                         // and right: strafe right
+        g.left_stick_x = -1;                         // left stick left: turn counterclockwise
+        g.left_stick_y = 1;                          // the left stick's Y does nothing now
+        d.update(g, 1.0);
+        assertEquals(1, w.forward, 1e-9);
+        assertEquals(1, w.side, 1e-9);
+        assertEquals(-1, w.turn, 1e-9);
+        assertTrue(d.sticksSwapped());
+    }
+
     @Test public void noFieldCentricOnTankOrWithoutHeading() {
         DriverControls tank = new DriverControls(new Wheels(false), heading(null));
         tank.setFieldCentric(true);

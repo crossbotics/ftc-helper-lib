@@ -108,6 +108,8 @@ part each loop. Nothing moves in INIT.
 | `modules()`, `drive()`, `all()` | the parts, the drivetrain, the update group |
 | `pose()` | where the robot is now, from the odometry: a [`FieldPose`](util.md#fieldpose) (x in right, y in away from your wall, heading 0 = away, counterclockwise +); a copy; null with no odometry line |
 | `odometry()`, `odometrySpec()`, `odometryChecked()` | the running [`PoseTracker`](odometry.md#posetracker) (null before `setup`), the odometry line as written, and `Tunables.Odometry.checked` |
+| `resetPose()` | "set pose here": the pose becomes the reset spot in `Tunables.Odometry` (`resetX`, `resetY` inches, `resetHeading` degrees, as seen from your wall, written for BLUE; RED mirrored like the start spot). False (nothing changed) with no odometry or no spot. TeleOp's G1 START held 1 s calls it |
+| `resetPose(x, y, headingDeg)` | the same with a spot of your own (for BLUE, mirrored for RED); stops with a message if there is no odometry |
 | `follower()`, `hasFollower()`, `makeOdometry(hardwareMap)` | the running path follower (null before `setup`), whether there is a follower line, and the odometry alone for a tool (Pedro's tuners) |
 | `robotConfig()` | the drive settings for `EasyTeleOp`/`EasyAuto` |
 | `simLines()` | the simulator robot file's lines from the code |
@@ -223,7 +225,9 @@ odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));   // in define(), 
 | `twoWheels(parallel, perp)` | two dead wheels and the drive's IMU: `parallelLeftIn(in)`, `perpForwardIn(in)` |
 
 `Tunables.Odometry`: `checked` (set true after the Odometry Tuner; until then `driveTo` steps are
-skipped on a real robot), and for an OTOS `linearScalar` and `angularScalar`. With it: `robot.pose()`
+skipped on a real robot), for an OTOS `linearScalar` and `angularScalar`, and optional
+`resetX, resetY, resetHeading`: the "set pose here" spot ([`resetPose()`](#robotdefinition); RED
+mirrors it unless `mirrorForRed = false`, as on a field turned half a turn). With it: `robot.pose()`
 every loop, `driveTo` steps in [autonomous](#auto), and TeleOp starting where autonomous ended. The
 odometry is updated first each loop, before every part. Everything, with sketches of the offsets:
 [odometry module](odometry.md); hands-on: [lesson 7](../tutorials/start/07-odometry.md).
@@ -801,7 +805,7 @@ public class Controls extends ControlMap<Robot> {
 
 `Controls.java` is the TeleOp ([`EasyTeleOp`](teleop.md) underneath). Every module on the robot already
 has its standard buttons; write only what differs. A [`Pad`](#controlmap) has every input by name:
-`a b x y lb rb lt rt back start dpadUp dpadDown dpadLeft dpadRight leftStickButton rightStickButton`
+`a b x y lb rb lt rt back start guide dpadUp dpadDown dpadLeft dpadRight leftStickButton rightStickButton`
 (buttons; a trigger counts as pressed past half way) and `leftStickX leftStickY rightStickX rightStickY`
 (sticks, up and right +).
 
@@ -819,7 +823,7 @@ has its standard buttons; write only what differs. A [`Pad`](#controlmap) has ev
 | `tapThenHold(whileHeld)`, `tapThenHold(whileHeld, onRelease)` | a quick tap, then press again and hold: every loop while held |
 | `with(other, job)` | a pair: hold this button (the shift key, no job of its own), press `other` (same gamepad): `job` once. `other` keeps its own job alone |
 | `rumble()`, `rumble(n)` | feedback: buzzes when the job (or the gesture just before) runs; a toggle buzzes 2 = on, 1 = off |
-| `slow()` | one driver only: on a trigger, drives slower the further it is pulled (down to `slowSpeed`); on a button, slow while held |
+| `slow()` | one driver (or two after `lib.slow(null)`): on a trigger, drives slower the further it is pulled (down to `slowSpeed`); on a button, slow while held |
 | `free()` | no job: the button stays free, even if a module suggested one for it |
 | `says(words)` | the words on the help page |
 | on a pad: `g2.rumbleWhen(test)`, `rumbleWhen(test, n)` | feedback from the robot: a buzz each time `test` becomes true |
@@ -837,7 +841,31 @@ a tuned value back into `Tunables.java`.
 Every option as a menu: [the button menu](../guides/buttons.md).
 
 In `Controls.java` you can also override `useStandardButtons()` (return false: only your own jobs, no
-module suggestions); `robot()` and `oneDriver()` read the robot and the one-driver switch.
+module suggestions) and `libraryButtons(LibraryButtons lib, Pad g1, Pad g2)` (move or free the
+library's own buttons, below); `robot()` and `oneDriver()` read the robot and the one-driver switch.
+
+**Moving the library's buttons:** every library job can go on another button, or none (`null`):
+
+```java
+@Override protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
+    lib.fieldCentric(g1.x).slow(g1.rt);       // Y and LT are free for buttons(...)
+    lib.setPose(g1.dpadDown);                 // hold D-pad down 1 s: set pose here
+    lib.switchAlliance(null, null);           // no alliance switch in TeleOp
+}
+```
+
+| [`LibraryButtons`](teleop.md#moving-the-librarys-buttons) | Default |
+| --- | --- |
+| `pause(key)`, `resetForward(key)` | G1 BACK (a tap pauses, held 1 s resets "forward") |
+| `debug(key, with)`, `switchAlliance(key, with)` | G1 START + BACK (together: debug lines; both held 1.5 s: switch alliance) |
+| `setPose(key)` | G1 START held 1 s (robots with odometry: [`resetPose()`](#robotdefinition)) |
+| `slow(key)`, `slowToggle(key)` | G1 LT (one driver: left stick click, on/off) |
+| `fieldCentric(key)` | G1 Y (one driver: right stick click) |
+| `buttonMap(key)`, `tuningMenu(key)` | G1 GUIDE (a tap: the map; held 1 s: the tuning menu) |
+| `allianceInInit(blue, red)` | G1 X = BLUE, G1 B = RED (INIT only) |
+| `swapSticks(true)` | false (the left stick drives, the right stick X turns) |
+
+The whole table, with how to move each: [the button menu](../guides/buttons.md#moving-the-librarys-buttons).
 
 **The standard map** (two drivers; with `oneDriver = true` the operator's buttons move to gamepad 1):
 
@@ -851,8 +879,9 @@ module suggestions); `robot()` and `oneDriver()` read the robot and the one-driv
 | D-pad up/down | free | lift next height, or launcher speed |
 | D-pad left/right | free | wrist |
 | BACK | tap: **pause** everything (stopped on brake), tap again: go on; hold 1 s: "forward" = away from you now (with odometry: its heading becomes 0, x and y stay) | turret following on/off (with a turret; else free) |
-| START + BACK | debug lines | |
-| GUIDE | tap: the button map, without the free buttons (during the match too); hold 1 s: the tuning menu (PRACTICE) | |
+| START | hold 1 s: **set pose here** (with odometry: the pose becomes `Tunables.Odometry`'s reset spot) | free |
+| START + BACK | together: debug lines; both held 1.5 s: **switch the alliance** (BLUE / RED) | |
+| GUIDE | tap: the button map, without the free buttons (during the match too); hold 1 s: the tuning menu (PRACTICE) | free |
 
 **One driver:** the left stick click switches slow on/off and the right stick click switches
 field-centric. To put slow on a trigger instead, give it `.slow()`: `g1.lt.slow();` slows the robot
@@ -860,9 +889,20 @@ the further LT is pulled (down to `slowSpeed` at a full squeeze, like the two-dr
 `.slow()` is slow while held. Write the switch exactly as `public static boolean oneDriver = true;`
 (INIT stops with a message if it is not static).
 
+**Switch the alliance** (the wrong one was chosen): hold gamepad 1 BACK and START together 1.5 s.
+Both gamepads buzz twice and the Driver Station says `Alliance now RED (was BLUE)`. Everything that
+reads `robot.alliance()` follows at once: the camera's goal tag (`Camera.goal()`), the aim's goal point
+(mirrored for RED), light rules you wrote with it, and `MatchMemory` (a TeleOp started again gets it).
+The pose does not change: if autonomous ran on the wrong side, set it again ("set pose here").
+
+**Set pose here** (robots with odometry; autonomous was stopped early or did not run): park the robot
+on the reset spot, hold gamepad 1 START 1 s. Gamepad 1 buzzes twice and the Driver Station says
+`Pose set: x -56, y -61 in, heading 0 (BLUE)`. INIT shows the button and the spot. The spot:
+`Tunables.Odometry.resetX, resetY, resetHeading` ([`resetPose()`](#robotdefinition)).
+
 **Checked at INIT:** a module whose button is taken gets none (INIT notes it). Two jobs on one button
-in Controls.java, or a job on a driving button, stop with the button's name. INIT shows the whole
-map and the free buttons.
+in Controls.java, or a job on one of the library's buttons, stop with the button's name. INIT shows
+the whole map and the free buttons.
 
 ---
 

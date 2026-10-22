@@ -35,13 +35,14 @@ Write the gamepad, a dot, then the button.
 | Triggers (count as pressed past half way) | `lt`, `rt` |
 | D-pad | `dpadUp`, `dpadDown`, `dpadLeft`, `dpadRight` |
 | Stick clicks (press the stick down) | `leftStickButton`, `rightStickButton` |
-| Small buttons | `back`, `start` |
+| Small buttons | `back`, `start`, `guide` (the middle button) |
 | Sticks (a number, not a button: see the end) | `leftStickX`, `leftStickY`, `rightStickX`, `rightStickY` |
 
-Gamepad 1's driving buttons are taken: the left stick, right stick X, BACK, START, LT (slow, with two
-drivers) and Y (field-centric, on a mecanum with an IMU, with two drivers). With `oneDriver = true`,
-also the left stick click (slow on/off) and the right stick click (field-centric on/off, on a mecanum
-with an IMU). INIT stops with a message if you use one.
+Some of gamepad 1's buttons are the library's own: the left stick, right stick X, BACK, START, GUIDE,
+LT (slow, with two drivers) and Y (field-centric, on a mecanum with an IMU or odometry, with two
+drivers). With `oneDriver = true`, the left stick click (slow on/off) and the right stick click
+(field-centric on/off) instead of LT and Y. INIT stops with a message if you use one. Every one of
+them can be moved or freed: [Moving the library's buttons](#moving-the-librarys-buttons).
 
 ## 2. How it starts
 
@@ -133,10 +134,10 @@ with other gestures.
 
 The first button (`lb` here) is the **shift key**: it gets no job of its own. One shift key can start
 several pairs (`g2.lb.with(g2.x, ...)`, `g2.lb.with(g2.y, ...)`). (Not gamepad 1's BACK:
-it is a driving button, and INIT refuses it.) The second button keeps its own
+it is one of the library's buttons, and INIT refuses it.) The second button keeps its own
 job when it is pressed alone. While the shift key is down, the second button's own job does not run
 (a hold it started stops), and the button does nothing more until it is let go. Neither button may be
-one of gamepad 1's driving buttons. **Why:** a pair is a safe place for rare, big jobs (like a climb) that must
+one of the library's buttons. **Why:** a pair is a safe place for rare, big jobs (like a climb) that must
 not run by accident.
 
 ## 3. What it does
@@ -198,6 +199,50 @@ A stick is a number from -1 to 1 (up and right are +), not a button:
 | --- | --- |
 | Its value every loop | `g2.leftStickY.use(robot.lift::manual).says("lift by hand")` |
 | No job (even if a part suggested one) | `g2.rightStickX.free()` |
+
+## Moving the library's buttons
+
+The library's own jobs (driving, pause, menus...) have default buttons. Every one can move to another
+button, or be freed (`null`: no button), in one method next to `buttons(...)` in `Controls.java`:
+
+```java
+@Override
+protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
+    lib.fieldCentric(g1.x);                  // field-centric on/off: X instead of Y
+    lib.slow(g1.rt);                         // slow on the right trigger: LT is free now
+    lib.switchAlliance(g2.back, g2.start);   // switch alliance: the operator holds both 1.5 s
+}
+```
+
+(Add `import com.crossbotics.ftchelper.teleop.LibraryButtons;` at the top. Your own `EasyTeleOp`
+writes `libraryButtons(LibraryButtons lib)` with `Key.g1(Btn.X)` instead of `g1.x`.)
+
+| Job | Default (two drivers) | One driver | How it works | Move it with |
+| --- | --- | --- | --- | --- |
+| Drive / strafe, turn | left stick, right stick X | same | every loop | `lib.swapSticks(true)`: right stick drives, left stick X turns |
+| Slow | G1 LT | none | the further it is pulled, the slower (a button: slow while held) | `lib.slow(key)` |
+| Slow on/off | none | G1 left stick click | a press | `lib.slowToggle(key)` |
+| Field-centric on/off | G1 Y | G1 right stick click | a press (mecanum with an IMU or odometry) | `lib.fieldCentric(key)` |
+| Pause / go on | G1 BACK | same | a tap | `lib.pause(key)` |
+| Reset "forward" | G1 BACK | same | held 1 s (a tap if its button has no other quick job) | `lib.resetForward(key)` |
+| Debug lines | G1 START + BACK | same | both pressed together | `lib.debug(key, with)` (`with` null: one button) |
+| Switch alliance | G1 BACK + START | same | both held 1.5 s | `lib.switchAlliance(key, with)` |
+| Set pose here | G1 START | same | held 1 s (robots with odometry) | `lib.setPose(key)` |
+| Button map | G1 GUIDE | same | a tap | `lib.buttonMap(key)` |
+| Tuning menu | G1 GUIDE | same | held 1 s (a tap if its button has no other quick job) | `lib.tuningMenu(key)` |
+| Choose the alliance (INIT only) | G1 X = BLUE, G1 B = RED | same | a press, before START | `lib.allianceInInit(blue, red)` |
+
+The debug lines and the alliance switch share START + BACK: a quick press of both is the debug lines
+(when you let go), both held 1.5 s switch the alliance. While both are down, BACK's pause and START's
+"set pose" do nothing. With one driver, a library job you put on `g2` goes on gamepad 1.
+
+**Checked at INIT** (the message names the button): two library jobs on one button (one quick job and
+one held job may share it, like BACK's pause and reset), the slow trigger with another job, a pair on
+two gamepads, the tuning menu on a button the menu itself uses (D-pad, A, B, X, Y, LB, RB), and a job
+of yours on a library button.
+
+**Why:** some drivers want slow on the right trigger, or need Y for a part. Moving the library's job
+frees the button for `buttons(...)`.
 
 ## The rules (checked at INIT)
 

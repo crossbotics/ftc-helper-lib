@@ -13,6 +13,7 @@ import com.crossbotics.ftchelper.drive.DriverHeading;
 import com.crossbotics.ftchelper.gamepad.ControllerBindings;
 import com.crossbotics.ftchelper.gamepad.ControllerBindings.Btn;
 import com.crossbotics.ftchelper.gamepad.ControllerBindings.Pad;
+import com.crossbotics.ftchelper.gamepad.StickShaping;
 import com.crossbotics.ftchelper.gamepad.ToggleRumble;
 import com.crossbotics.ftchelper.hardware.BulkReads;
 import com.crossbotics.ftchelper.match.Alliance;
@@ -31,9 +32,11 @@ import java.util.List;
  *   <li>Driving on gamepad 1 ({@link DriverControls}): left stick drive, right stick X turn, left
  *       trigger slow. Mecanum and tank. Robot-centric to start; Y = field-centric on/off (mecanum).</li>
  *   <li>Field-centric "forward" continues from autonomous ({@link DriverHeading}); BACK resets it.</li>
- *   <li>The alliance from autonomous ({@link #alliance()}), the 2:00 match timer with gamepad buzzes
- *       at 1:00 and 0:20, the tuning menu on GUIDE (PRACTICE profile only), debug telemetry on
- *       START + BACK, warnings for slow code, a tuned value or the PRACTICE profile.</li>
+ *   <li>The alliance from autonomous ({@link #alliance()}; BACK + START held 1.5 s switches it), the
+ *       2:00 match timer with gamepad buzzes at 1:00 and 0:20, the tuning menu on GUIDE (PRACTICE
+ *       profile only), debug telemetry on START + BACK, warnings for slow code, a tuned value or the
+ *       PRACTICE profile.</li>
+ *   <li>Every one of these buttons can move or be freed: {@link #libraryButtons(LibraryButtons)}.</li>
  *   <li>Every mechanism updated every loop, and EVERYTHING stopped at the end, even after an error.</li>
  * </ul>
  *
@@ -62,7 +65,7 @@ public abstract class EasyTeleOp extends LinearOpMode {
     private DriverControls driving;
     private DriverHeading heading;
     // Buzzes to confirm a toggle or a reset (two = on, one = off).
-    private ToggleRumble confirm;
+    private ToggleRumble confirm, confirm2;
     // How long each loop takes (shown in the debug lines).
     private final com.crossbotics.ftchelper.util.LoopTimer loopTimer = new com.crossbotics.ftchelper.util.LoopTimer();
     private MatchTimer timer;
@@ -92,10 +95,6 @@ public abstract class EasyTeleOp extends LinearOpMode {
     }
 
     /**
-     * The IMU, for field-centric driving and "forward" from autonomous. Default:
-     * {@code robotConfig().imu(...)}. Null = no IMU: robot-centric driving only.
-     */
-    /**
      * The driver's heading for field-centric driving: from the IMU (with autonomous's saved heading).
      * The robot in five files uses its odometry instead when it has one.
      *
@@ -105,6 +104,10 @@ public abstract class EasyTeleOp extends LinearOpMode {
         return imu != null ? new DriverHeading(imu) : null;
     }
 
+    /**
+     * The IMU, for field-centric driving and "forward" from autonomous. Default:
+     * {@code robotConfig().imu(...)}. Null = no IMU: robot-centric driving only.
+     */
     protected IMU createImu() {
         RobotConfig config = robotConfig();
         return config == null ? null : config.imu(hardwareMap);
@@ -118,8 +121,8 @@ public abstract class EasyTeleOp extends LinearOpMode {
     /**
      * Your buttons. Put gamepad 2 buttons on {@code operator}. Extra gamepad 1 buttons go on
      * {@code driver}: those pause while the tuning menu is open (it uses gamepad 1).
-     * Already taken on gamepad 1: Y (field-centric; see {@link #fieldCentricButton()}), BACK,
-     * START + BACK, GUIDE.
+     * Already taken on gamepad 1 (unless moved with {@link #libraryButtons(LibraryButtons)}): LT, Y
+     * (field-centric), BACK, START (with BACK: debug lines and switch alliance), GUIDE.
      */
     protected void bindButtons(ControllerBindings driver, ControllerBindings operator) { }
 
@@ -141,18 +144,26 @@ public abstract class EasyTeleOp extends LinearOpMode {
         return null;
     }
 
-    // When the "forward only in field-centric" note was last shown (System.nanoTime), for 3 s.
-    private long forwardNoteAt = 0;
-    private boolean forwardNoteShown = false;
+    // A short note shown for a few seconds at the top of the screen ("Pose set...", "Alliance now RED").
+    private String noteText = null;
+    private long noteAt = 0;
 
-    // BACK (held, or tapped without a pause job): "the robot now faces away from me", with one buzz.
+    /**
+     * Shows {@code text} as a warning at the top of the Driver Station for 3 seconds (e.g. to confirm
+     * a button's job). A new note replaces the old one. Never waits.
+     */
+    protected final void showNote(String text) {
+        noteText = text;
+        noteAt = System.nanoTime();
+    }
+
+    // Reset forward: "the robot now faces away from me", with one buzz.
     // Only in field-centric driving (mentor, 2026-10-21: only when the robot is relative to the driver);
     // in robot-centric driving "forward" means nothing, so it does nothing and says why.
     private void resetForward() {
         if (heading == null || driving == null) return;
         if (!driving.isFieldCentric()) {
-            forwardNoteAt = System.nanoTime();
-            forwardNoteShown = true;
+            showNote(keyWords(LibraryButtons.Job.RESET_FORWARD) + ": \"forward\" is only reset in field-centric driving (turn it on first).");
             return;
         }
         heading.reset();
@@ -160,20 +171,163 @@ public abstract class EasyTeleOp extends LinearOpMode {
     }
 
     /**
-     * What a tap of BACK does, or null (default): then BACK resets "forward". With a job here (a
-     * Controls.java TeleOp: pause everything), holding BACK {@link #BACK_HOLD_SEC} resets "forward".
+     * What a tap of the pause button (BACK) does, or null (default): then BACK resets "forward". With
+     * a job here (a Controls.java TeleOp: pause everything), holding BACK {@link #BACK_HOLD_SEC}
+     * resets "forward". The buttons can be moved: {@link #libraryButtons(LibraryButtons)}.
      */
     protected Runnable backTap() {
         return null;
     }
 
+    /**
+     * The "set pose here" job, or null (default: none). It sets the pose and returns the words for the
+     * Driver Station ("Pose set: ..."). Controls.java gives one on a robot with odometry.
+     */
+    protected java.util.function.Supplier<String> setPoseJob() {
+        return null;
+    }
+
+    /**
+     * Called when the alliance changes during TeleOp ({@link #switchAlliance()}), after
+     * {@link #alliance()} has the new one: update what uses it. Default: nothing. Must not wait.
+     */
+    protected void allianceChanged(Alliance now) { }
+
     /** How long BACK is held to reset "forward" when a tap of BACK has another job, seconds. */
-    public static final double BACK_HOLD_SEC = 1.0;
+    public static final double BACK_HOLD_SEC = LibraryButtons.HOLD_SEC;
 
     /** How long GUIDE is held to open the tuning menu when there is a button map, seconds. */
-    public static final double GUIDE_HOLD_SEC = 1.0;
+    public static final double GUIDE_HOLD_SEC = LibraryButtons.HOLD_SEC;
     private boolean helpOpen = false;
     private List<String> help = null;
+
+    // ----------------------------- the library's own buttons -----------------------------
+
+    // Where they are (after libraryButtons), and the thing that runs them every loop.
+    private LibraryButtons lib;
+    private LibraryKeys keys;
+    // Slow on/off (the slow toggle button), and "the alliance was switched in TeleOp".
+    private boolean slowOn = false;
+    private boolean allianceSwitched = false;
+
+    /**
+     * Moves or frees the library's own buttons (pause, slow, field-centric, menus...). Default: nothing
+     * changes. Example: {@code lib.fieldCentric(Key.g1(Btn.X)).slow(Key.g1(Trigger.RT));}. Two jobs on
+     * one button stop at INIT with the button's name. The table: docs/guides/buttons.md.
+     *
+     * @param lib the buttons, already at their defaults ({@link LibraryButtons#twoDrivers()})
+     */
+    protected void libraryButtons(LibraryButtons lib) { }
+
+    /**
+     * The defaults before {@link #libraryButtons(LibraryButtons)}: {@link LibraryButtons#twoDrivers()},
+     * with field-centric on {@link #fieldCentricButton()}. Controls.java gives the one-driver ones.
+     */
+    protected LibraryButtons standardLibraryButtons() {
+        Btn fc = fieldCentricButton();
+        return LibraryButtons.twoDrivers().fieldCentric(fc == null ? null : Key.g1(fc));
+    }
+
+    /** Where the library's buttons are (after {@link #libraryButtons(LibraryButtons)}); null before INIT. */
+    protected final LibraryButtons libraryKeys() {
+        return lib;
+    }
+
+    /**
+     * The library's jobs this TeleOp has: "pause" only with {@link #backTap()}, "field-centric" only
+     * where possible, "set pose" only with {@link #setPoseJob()}...
+     *
+     * @param withButtonMap true if there is a button map ({@link #buttonHelp()})
+     */
+    protected final java.util.Set<LibraryButtons.Job> libraryJobs(boolean withButtonMap) {
+        java.util.Set<LibraryButtons.Job> jobs = java.util.EnumSet.allOf(LibraryButtons.Job.class);
+        if (backTap() == null) jobs.remove(LibraryButtons.Job.PAUSE);
+        if (heading == null) jobs.remove(LibraryButtons.Job.RESET_FORWARD);
+        if (driving == null || !driving.canFieldCentric()) jobs.remove(LibraryButtons.Job.FIELD_CENTRIC);
+        if (!withButtonMap) jobs.remove(LibraryButtons.Job.BUTTON_MAP);
+        if (setPoseJob() == null) jobs.remove(LibraryButtons.Job.SET_POSE);
+        return jobs;
+    }
+
+    /** "G1 BACK" for a job's button ("BACK" alone on gamepad 1), or "(no button)". */
+    protected final String keyWords(LibraryButtons.Job job) {
+        Key k = lib == null ? null : lib.key(job);
+        if (k == null) return "(no button)";
+        String one = k.pad == Pad.G1 ? k.name() : k.toString();
+        Key w = lib.with(job);
+        return w == null ? one : one + " + " + w.name();
+    }
+
+    /**
+     * Switches the alliance now (BLUE to RED, or RED to BLUE), in case the wrong one was chosen: everything
+     * that reads {@link #alliance()} or {@code MatchMemory} gets the new one, both gamepads buzz twice
+     * and the Driver Station says so. The switch-alliance buttons call it (both held
+     * {@link LibraryButtons#SWITCH_ALLIANCE_SEC} s).
+     */
+    protected final void switchAlliance() {
+        Alliance was = alliance;
+        alliance = alliance.other();
+        allianceSwitched = true;
+        // A TeleOp started again in this match (or the simulator) sees the corrected one too.
+        MatchMemory.changeAlliance(alliance);
+        if (confirm != null) confirm.play(true);
+        if (confirm2 != null) confirm2.play(true);
+        showNote("Alliance now " + alliance + " (was " + was + ")");
+        // Last, so it may replace the note with a longer one.
+        allianceChanged(alliance);
+    }
+
+    /**
+     * The driving speed the library's slow buttons ask for now, 0 to 1 (1 = full speed): the slow
+     * trigger (the further, the slower), a slow button held, or slow on/off.
+     */
+    protected final double driveSpeed() {
+        double slowest = Math.max(0, Math.min(1, slowSpeed()));
+        double speed = slowOn ? slowest : 1;
+        Key k = lib == null ? null : lib.key(LibraryButtons.Job.SLOW);
+        if (k != null) {
+            double s = k.isTrigger() ? StickShaping.slowScale(k.pull(gamepad1, gamepad2), slowest)
+                    : k.isDown(gamepad1, gamepad2) ? slowest : 1;
+            speed = Math.min(speed, s);
+        }
+        return speed;
+    }
+
+    // The buzz for a job's button: on the gamepad it is on.
+    private ToggleRumble confirmFor(LibraryButtons.Job job) {
+        Key k = lib.key(job);
+        return k != null && k.pad == Pad.G2 && confirm2 != null ? confirm2 : confirm;
+    }
+
+    // The library's jobs (what each button does), for LibraryKeys.
+    private java.util.Map<LibraryButtons.Job, Runnable> libraryJobMap() {
+        java.util.Map<LibraryButtons.Job, Runnable> jobs = LibraryKeys.jobs();
+        final Runnable tap = backTap();
+        if (tap != null) jobs.put(LibraryButtons.Job.PAUSE, tap);
+        jobs.put(LibraryButtons.Job.RESET_FORWARD, this::resetForward);
+        jobs.put(LibraryButtons.Job.DEBUG, () -> t.toggleDebug());
+        jobs.put(LibraryButtons.Job.SLOW_TOGGLE, () -> slowOn = !slowOn);
+        jobs.put(LibraryButtons.Job.FIELD_CENTRIC, () -> confirmFor(LibraryButtons.Job.FIELD_CENTRIC).play(driving.toggleFieldCentric()));
+        jobs.put(LibraryButtons.Job.BUTTON_MAP, () -> {
+            // A tap shows the map (or closes the tuning menu).
+            if (tuning.isOpen()) tuning.toggle();
+            else helpOpen = !helpOpen;
+        });
+        jobs.put(LibraryButtons.Job.TUNING_MENU, () -> {
+            helpOpen = false;
+            tuning.toggle();
+        });
+        final java.util.function.Supplier<String> pose = setPoseJob();
+        if (pose != null) {
+            jobs.put(LibraryButtons.Job.SET_POSE, () -> {
+                String words = pose.get();
+                showNote(words);
+                if (words != null && words.startsWith("Pose set")) confirmFor(LibraryButtons.Job.SET_POSE).play(true);
+            });
+        }
+        jobs.put(LibraryButtons.Job.SWITCH_ALLIANCE, this::switchAlliance);
+        return jobs;
+    }
 
     /** Extra lines for the Driver Station during INIT (before START), every INIT loop. */
     protected void addInitTelemetry(RobotTelemetry t) { }
@@ -194,6 +348,7 @@ public abstract class EasyTeleOp extends LinearOpMode {
     /**
      * The gamepad 1 button that switches field-centric driving on and off (mecanum with an IMU only).
      * Default Y. Return null for none (then field-centric stays as {@link #startFieldCentric()} says).
+     * A shortcut: {@link #libraryButtons(LibraryButtons)} can put it on any button of either gamepad.
      */
     protected Btn fieldCentricButton() {
         return Btn.Y;
@@ -229,7 +384,8 @@ public abstract class EasyTeleOp extends LinearOpMode {
      * }</pre>
      */
     protected void drive(Gamepad gamepad) {
-        driving.update(gamepad);
+        // The speed from the slow trigger (or the slow button you moved it to).
+        driving.update(gamepad, driveSpeed());
     }
 
     // ----------------------------- for your code -----------------------------
@@ -264,6 +420,26 @@ public abstract class EasyTeleOp extends LinearOpMode {
         return tuning != null && tuning.isOpen();
     }
 
+    // "gamepad 1 X = BLUE, B = RED" from the INIT buttons ("" if there are none).
+    private String chooseWords() {
+        Key blue = lib.initBlue(), red = lib.initRed();
+        if (blue == null && red == null) return "";
+        boolean samePad = blue != null && red != null && blue.pad == red.pad;
+        StringBuilder b = new StringBuilder();
+        if (samePad) b.append(blue.pad == Pad.G1 ? "gamepad 1 " : "gamepad 2 ");
+        if (blue != null) b.append(samePad ? blue.name() : blue.toString()).append(" = BLUE");
+        if (red != null) b.append(blue != null ? ", " : "").append(samePad ? red.name() : red.toString()).append(" = RED");
+        return b.toString();
+    }
+
+    // An INIT alliance button is down (not while START is held on its gamepad: START + A/B pairs a
+    // gamepad on the Driver Station).
+    private boolean initPressed(Key k) {
+        if (k == null || !k.isDown(gamepad1, gamepad2)) return false;
+        com.qualcomm.robotcore.hardware.Gamepad g = k.pad == Pad.G1 ? gamepad1 : gamepad2;
+        return g != null && !g.start;
+    }
+
     // ----------------------------- the program -----------------------------
 
     /**
@@ -286,45 +462,11 @@ public abstract class EasyTeleOp extends LinearOpMode {
         for (double s : buzzAtSecondsLeft()) timer.rumbleAt(s, gamepad1, gamepad2);
         tuning = new TuningMenu(gamepad1);
         confirm = new ToggleRumble(gamepad1);
+        confirm2 = gamepad2 == null ? null : new ToggleRumble(gamepad2);
 
-        // Three groups of buttons, so the driver's can pause while the tuning menu uses gamepad 1.
-        ControllerBindings menuKey = new ControllerBindings();
-        // BACK alone (on its release): "the robot now faces away from me", with one buzz.
-        // START and BACK together, in either order: debug lines on/off, and "forward" is NOT reset.
-        boolean[] chord = {false};   // true once START was pressed during this BACK press
-        Runnable debugChord = () -> {
-            if (gamepad1.start && gamepad1.back && !chord[0]) {
-                chord[0] = true;
-                t.toggleDebug();
-            }
-        };
-        // With backTap() (a Controls.java TeleOp: pause everything): a tap of BACK runs it, and "forward"
-        // is reset by holding BACK for BACK_HOLD_SEC instead.
-        final Runnable tap = backTap();
-        final long[] backDownAt = {0};
-        ControllerBindings driver = new ControllerBindings()
-                .bindPress(Pad.G1, Btn.BACK, () -> { chord[0] = false; backDownAt[0] = System.nanoTime(); debugChord.run(); })
-                .bindPress(Pad.G1, Btn.START, debugChord)
-                .bindHold(Pad.G1, Btn.BACK, () -> {
-                    if (tap != null && !chord[0] && System.nanoTime() - backDownAt[0] > BACK_HOLD_SEC * 1e9) {
-                        chord[0] = true;     // done: the release does nothing more
-                        resetForward();
-                    }
-                })
-                .bindRelease(Pad.G1, Btn.BACK, () -> {
-                    if (chord[0]) return;
-                    if (tap != null) {
-                        tap.run();
-                    } else {
-                        resetForward();
-                    }
-                });
-        // Y (or your fieldCentricButton()): field-centric on/off (two buzzes = on, one = off).
-        // Only where it is possible.
-        Btn fieldCentricBtn = fieldCentricButton();
-        if (driving.canFieldCentric() && fieldCentricBtn != null) {
-            driver.bindPress(Pad.G1, fieldCentricBtn, () -> confirm.play(driving.toggleFieldCentric()));
-        }
+        // Two groups of the team's buttons, so the driver's can pause while the tuning menu uses
+        // gamepad 1. The library's own buttons (pause, field-centric, menus...) are run by LibraryKeys.
+        ControllerBindings driver = new ControllerBindings();
         ControllerBindings operator = new ControllerBindings();
 
         Subsystems robot = null;
@@ -334,30 +476,15 @@ public abstract class EasyTeleOp extends LinearOpMode {
             // Inside the "try": if making the mechanisms fails, the wheels are still stopped below.
             robot = createSubsystems();
             if (robot == null) robot = new Subsystems();
+            // The library's buttons: the defaults, then the team's moves (checked below).
+            lib = standardLibraryButtons();
+            libraryButtons(lib);
+            driving.swapSticks(lib.sticksSwapped());
             bindButtons(driver, operator);
-            // GUIDE: after bindButtons, so the button map is known.
+            // After bindButtons, so the button map is known.
             help = buttonHelp();
-            if (help == null) {
-                menuKey.bindPress(Pad.G1, Btn.GUIDE, tuning::toggle);
-            } else {
-                // With a button map: a tap shows it (or closes the tuning menu); holding 1 s opens the
-                // tuning menu (PRACTICE profile).
-                final long[] downAt = {0};
-                final boolean[] held = {false};
-                menuKey.bindPress(Pad.G1, Btn.GUIDE, () -> { downAt[0] = System.nanoTime(); held[0] = false; })
-                        .bindHold(Pad.G1, Btn.GUIDE, () -> {
-                            if (!held[0] && System.nanoTime() - downAt[0] > GUIDE_HOLD_SEC * 1e9) {
-                                held[0] = true;
-                                helpOpen = false;
-                                tuning.toggle();
-                            }
-                        })
-                        .bindRelease(Pad.G1, Btn.GUIDE, () -> {
-                            if (held[0]) return;
-                            if (tuning.isOpen()) tuning.toggle();
-                            else helpOpen = !helpOpen;
-                        });
-            }
+            // Checks the library's buttons (two jobs on one button stop here, with its name).
+            keys = new LibraryKeys(lib.slots(libraryJobs(help != null)), libraryJobMap(), System::nanoTime);
 
             // ---- INIT loop: warnings and what the drivers need to know. Never waits. ----
             boolean fromAuto = MatchMemory.hasAlliance();
@@ -365,21 +492,24 @@ public abstract class EasyTeleOp extends LinearOpMode {
             // The alliance in use: autonomous's, or none until the drivers choose one below.
             MatchMemory.setChosen(fromAuto ? alliance : null);
             boolean chosenHere = false;
+            String choose = chooseWords();
             while (opModeInInit()) {
-                // The alliance: from autonomous, or chosen here (gamepad 1: X = BLUE, B = RED).
+                // The alliance: from autonomous, or chosen here (default gamepad 1: X = BLUE, B = RED).
                 // (not while START is held: START+B pairs a gamepad on the Driver Station)
-                if (gamepad1.x && !gamepad1.start) { alliance = Alliance.BLUE; fromAuto = false; chosenHere = true; }
-                if (gamepad1.b && !gamepad1.start) { alliance = Alliance.RED; fromAuto = false; chosenHere = true; }
+                if (initPressed(lib.initBlue())) { alliance = Alliance.BLUE; fromAuto = false; chosenHere = true; }
+                if (initPressed(lib.initRed())) { alliance = Alliance.RED; fromAuto = false; chosenHere = true; }
                 if (fromAuto || chosenHere) MatchMemory.setChosen(alliance);
                 if (Profile.current().isPractice()) t.warn("PRACTICE profile");
                 int changed = Tunable.countChanged();
                 if (changed > 0) t.warn(changed + " tuned value(s) differ from the code");
-                if (fromAuto) {
-                    t.line("Alliance", alliance + " (from autonomous; X = BLUE, B = RED to change)");
+                if (choose.isEmpty()) {
+                    t.line("Alliance", alliance + (fromAuto ? " (from autonomous)" : " (no INIT buttons to choose it)"));
+                } else if (fromAuto) {
+                    t.line("Alliance", alliance + " (from autonomous; " + choose + " to change)");
                 } else if (chosenHere) {
                     t.line("Alliance", alliance + " (chosen here)");
                 } else {
-                    t.warn("Choose the alliance: gamepad 1 X = BLUE, B = RED");
+                    t.warn("Choose the alliance: " + choose);
                     t.line("Alliance", alliance + " until you choose");
                 }
                 if (heading != null) {
@@ -399,14 +529,15 @@ public abstract class EasyTeleOp extends LinearOpMode {
             // The saved heading belongs to this run now; a later TeleOp run must not use it.
             if (heading != null) heading.forgetSaved();
             // A button held through START must not count as a press.
-            menuKey.ignoreHeldButtons(gamepad1, gamepad2);
+            keys.ignoreHeld(gamepad1, gamepad2);
             driver.ignoreHeldButtons(gamepad1, gamepad2);
             operator.ignoreHeldButtons(gamepad1, gamepad2);
             onStart();
             boolean menuWasOpen = false;
 
             while (opModeIsActive()) {
-                menuKey.update(gamepad1, gamepad2);
+                // The library's buttons (pause, field-centric, menus...); only the menu's while it is open.
+                keys.update(gamepad1, gamepad2, tuning.isOpen());
                 operator.update(gamepad1, gamepad2);
                 timer.update();
                 tuning.update();
@@ -414,11 +545,8 @@ public abstract class EasyTeleOp extends LinearOpMode {
                     // Gamepad 1 runs the menu: no driver buttons, and the wheels hold still.
                     // Just opened: run the "release" actions of driver buttons still held, so
                     // nothing started by a held button keeps running while the menu is open.
-                    // (chord = true first, so letting go of BACK here does not reset "forward".)
-                    if (!menuWasOpen) {
-                        chord[0] = true;
-                        driver.releaseAll();
-                    }
+                    // (The library's own buttons wait until they are let go: LibraryKeys.)
+                    if (!menuWasOpen) driver.releaseAll();
                     menuWasOpen = true;
                     driving.hold();
                 } else {
@@ -436,11 +564,12 @@ public abstract class EasyTeleOp extends LinearOpMode {
                     tuning.addTelemetry(t);
                 } else if (helpOpen && help != null) {
                     // The button map (the robot still drives; GUIDE again closes it).
-                    t.section("Buttons (GUIDE: close)");
+                    t.section("Buttons (" + keyWords(LibraryButtons.Job.BUTTON_MAP) + ": close)");
                     for (String h : help) t.text(h);
                 } else {
                     if (!driver.getSlowActionWarning().isEmpty()) t.warn(driver.getSlowActionWarning());
-                    if (forwardNoteShown && System.nanoTime() - forwardNoteAt < 3e9) t.warn("BACK: \"forward\" is only reset in field-centric driving (turn it on first).");
+                    if (noteText != null && System.nanoTime() - noteAt < 3e9) t.warn(noteText);
+                    if (allianceSwitched) t.line("Alliance", alliance + " (switched in TeleOp)");
                     if (!operator.getSlowActionWarning().isEmpty()) t.warn(operator.getSlowActionWarning());
                     t.line("Time", timer.format());
                     t.line("Drive", driving.status());

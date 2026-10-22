@@ -337,6 +337,88 @@ public abstract class RobotDefinition {
         return tracker == null ? null : tracker.pose();
     }
 
+    // ----------------------------- "set pose here" -----------------------------
+
+    // How to set the pose from TeleOp, for the "pose was never set" warning (ControlMap fills it in:
+    // "hold G1 START 1 s at the reset spot"). Null = only from code.
+    String resetPoseHint = null;
+
+    /**
+     * Sets the odometry's pose to the reset spot in {@code Tunables.Odometry}: {@code resetX},
+     * {@code resetY} (inches, as seen from your drivers' wall: x to the right of the field's centre
+     * line, y from the centre toward the far wall) and {@code resetHeading} (degrees, 0 = facing away
+     * from you, counterclockwise +). Written for BLUE; RED uses it mirrored left-right (x and the
+     * heading flip), like autonomous's start spot, unless {@code Tunables.Odometry.mirrorForRed = false}
+     * (a field turned half a turn: the same numbers from the red wall).
+     *
+     * <p>Use it when autonomous was stopped early or did not run: park the robot on the spot (e.g. the
+     * start tile against your wall), then call it. TeleOp's "set pose here" button (hold G1 START 1 s)
+     * does it for you. Never waits.
+     *
+     * <pre>{@code
+     * public static class Odometry {
+     *     public static double resetX = -36, resetY = -63, resetHeading = 0;   // our start tile, facing the field
+     * }
+     * }</pre>
+     *
+     * @return true if it was set; false (nothing changed) with no odometry or no {@code resetX}/{@code resetY}
+     */
+    public final boolean resetPose() {
+        describe();
+        TunableSection t = TunableSection.of(tunablesClass, "Odometry");
+        if (tracker == null || !t.has("resetX") || !t.has("resetY")) return false;
+        resetPose(t.number("resetX", 0), t.number("resetY", 0), t.has("resetHeading") ? t.number("resetHeading", 0) : 0);
+        return true;
+    }
+
+    /**
+     * Sets the odometry's pose to this spot, written for BLUE (mirrored for RED as in {@link #resetPose()}).
+     * Never waits.
+     *
+     * @param xIn        inches to the right of the field's centre line, seen from your drivers' wall
+     * @param yIn        inches from the centre toward the far wall (negative = your half)
+     * @param headingDeg 0 = facing away from you, counterclockwise +
+     * @throws IllegalStateException if the robot has no odometry (or before setup)
+     */
+    public final void resetPose(double xIn, double yIn, double headingDeg) {
+        if (tracker == null) throw new IllegalStateException("resetPose: Robot.java has no odometry(...) line (or setup has not run)");
+        double[] p = resetSpotFor(alliance, xIn, yIn, headingDeg);
+        tracker.setPose(new com.crossbotics.ftchelper.util.FieldPose(p[0], p[1], p[2]));
+    }
+
+    // A spot written for BLUE, as used on this alliance: {x, y, heading}.
+    final double[] resetSpotFor(Alliance a, double x, double y, double h) {
+        if (a == Alliance.RED && resetMirrorsForRed()) {
+            x = -x;
+            h = -h;
+        }
+        // (+ 0.0 turns a "-0" from mirroring 0 into a plain 0 on the screen)
+        return new double[] {x + 0.0, y + 0.0, com.crossbotics.ftchelper.util.Angles.wrapDegrees(h) + 0.0};
+    }
+
+    // RED mirrors the spot unless Tunables.Odometry.mirrorForRed (or Tunables.Aim.mirrorForRed) is false.
+    final boolean resetMirrorsForRed() {
+        describe();
+        TunableSection o = TunableSection.of(tunablesClass, "Odometry");
+        if (o.has("mirrorForRed")) return o.flag("mirrorForRed", true);
+        TunableSection a = TunableSection.of(tunablesClass, "Aim");
+        return !a.has("mirrorForRed") || a.flag("mirrorForRed", true);
+    }
+
+    /**
+     * The reset spot for this alliance in words, e.g. "x 36, y -63 in, heading 0 (RED, mirrored)",
+     * or null when {@code Tunables.Odometry} has no {@code resetX}/{@code resetY}.
+     */
+    final String resetSpotWords() {
+        describe();
+        TunableSection t = TunableSection.of(tunablesClass, "Odometry");
+        if (!t.has("resetX") || !t.has("resetY")) return null;
+        double[] p = resetSpotFor(alliance, t.number("resetX", 0), t.number("resetY", 0),
+                t.has("resetHeading") ? t.number("resetHeading", 0) : 0);
+        String how = alliance == Alliance.RED ? (resetMirrorsForRed() ? ", mirrored" : ", same numbers") : "";
+        return Module.fmt("x %.0f, y %.0f in, heading %.0f (%s%s)", p[0], p[1], p[2], alliance, how);
+    }
+
     /**
      * True once {@code Tunables.Odometry.checked = true}: the odometry's directions and offsets were checked
      * with the Odometry Tuner. Until then, {@code driveTo} steps do not run on a real robot.

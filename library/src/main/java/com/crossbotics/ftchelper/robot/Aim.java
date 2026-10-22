@@ -189,7 +189,8 @@ public final class Aim {
         if (!tracker.isReady()) return "the odometry is not ready (" + tracker.status() + ")";
         if (!tracker.isPoseSet()) {
             return "the pose was never set (no autonomous before this TeleOp): camera only. "
-                    + "Run autonomous first, or set it: robot.odometry().setPose(...)";
+                    + "Run autonomous first, or set it: "
+                    + (robot.resetPoseHint != null ? robot.resetPoseHint : "robot.resetPose(...)");
         }
         TargetObservation o = odometryGoalUnchecked();
         if (o != null && o.distanceIn > maxGoalDistanceIn) {

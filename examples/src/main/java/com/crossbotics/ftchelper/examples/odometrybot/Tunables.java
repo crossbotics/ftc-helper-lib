@@ -8,9 +8,14 @@ public class Tunables {
         public static boolean calibrated = false;
     }
 
-    /** checked: set true after the Odometry Tuner (lesson 7); until then driveTo steps are skipped. */
+    /**
+     * checked: set true after the Odometry Tuner (lesson 7); until then driveTo steps are skipped.
+     * resetX, resetY, resetHeading: the "set pose here" spot for TeleOp (hold G1 START 1 s with the robot
+     * there), written for BLUE like the start spot: here the same corner tile, facing the field.
+     */
     public static class Odometry {
         public static boolean checked = false;
+        public static double resetX = -56, resetY = -61, resetHeading = 0;
     }
 
     public static class Intake {

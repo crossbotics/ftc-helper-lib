@@ -105,6 +105,23 @@ public final class DriverControls {
         return this;
     }
 
+    // True: the right stick drives and the left stick X turns (swapSticks).
+    private boolean swapped = false;
+
+    /**
+     * True: drive (and strafe) with the RIGHT stick and turn with the LEFT stick's X, for drivers who
+     * like it that way round. False (default): the left stick drives, the right stick X turns.
+     */
+    public DriverControls swapSticks(boolean swap) {
+        swapped = swap;
+        return this;
+    }
+
+    /** True when {@link #swapSticks(boolean)} is on. */
+    public boolean sticksSwapped() {
+        return swapped;
+    }
+
     // Turn assist (e.g. aim at a goal), or null: gets the driver's turn and gives the turn to use.
     private java.util.function.DoubleUnaryOperator turnAssist = null;
 
@@ -150,9 +167,10 @@ public final class DriverControls {
 
     private void driveSticks(Gamepad gamepad, double speed) {
         // Minus: the SDK reads stick UP as negative (docs/conventions.md).
-        double forward = StickShaping.shape(-gamepad.left_stick_y, deadband, exponent);
-        double strafe = StickShaping.shape(gamepad.left_stick_x, deadband, exponent);
-        double turn = StickShaping.shape(gamepad.right_stick_x, deadband, exponent);
+        // swapSticks: the right stick drives and the left stick X turns.
+        double forward = StickShaping.shape(-(swapped ? gamepad.right_stick_y : gamepad.left_stick_y), deadband, exponent);
+        double strafe = StickShaping.shape(swapped ? gamepad.right_stick_x : gamepad.left_stick_x, deadband, exponent);
+        double turn = StickShaping.shape(swapped ? gamepad.left_stick_x : gamepad.right_stick_x, deadband, exponent);
         if (turnAssist != null) turn = turnAssist.applyAsDouble(turn);
         lastSpeed = speed;
         if (isFieldCentric()) wheels.fieldCentric(forward, strafe, turn, heading.degrees(), lastSpeed);

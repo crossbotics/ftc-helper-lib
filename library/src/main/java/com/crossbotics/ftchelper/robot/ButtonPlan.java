@@ -30,6 +30,8 @@ final class ButtonPlan {
     boolean slowHeld = false;
     // A trigger given Button.slow(): the further it is pulled, the slower (one driver). Null if none.
     ControllerBindings.Trigger slowTrigger = null;
+    // The library's own slow key (LibraryButtons), or null: then Button.slow() works with two drivers too.
+    com.crossbotics.ftchelper.teleop.Key librarySlow = null;
     // Every input with a job, in the order they were given one.
     private final Map<Object, Entry> jobs = new LinkedHashMap<>();
     // Suggestions that found their button taken (for the INIT notes).
@@ -103,9 +105,22 @@ final class ButtonPlan {
 
     /** One of the library's own buttons (driving, menus): nobody else may use it. */
     void reserve(Object input, String says) {
+        Entry old = jobs.get(input);
+        // A second library job on the same button (BACK: pause, and with START: debug): one line.
+        if (old != null && old.kind == Kind.RESERVED) {
+            old.says = old.says + "; " + says;
+            return;
+        }
         Entry e = new Entry(Kind.RESERVED, null, null, says, null);
         e.source = LIBRARY;
         jobs.put(input, e);
+    }
+
+    /** The button on this map for a {@link com.crossbotics.ftchelper.teleop.Key} (G1/G2 and the button). */
+    Pad.Button button(com.crossbotics.ftchelper.teleop.Key k) {
+        Pad p = k.pad() == ControllerBindings.Pad.G1 ? g1 : g2;
+        for (Object o : inputs(p)) if (o instanceof Pad.Button && o.equals(k)) return (Pad.Button) o;
+        throw new IllegalArgumentException("libraryButtons: " + k + " is not a button Controls.java can use");
     }
 
     /** True if this input is one of the library's own (driving, menus). */
@@ -151,7 +166,7 @@ final class ButtonPlan {
         if (old != null && TEAM.equals(old.source) && old.kind == Kind.SHIFT && e.kind == Kind.SHIFT) return old;
         if (old != null && old.kind == Kind.RESERVED) {
             throw new IllegalStateException("Controls.java: " + input + " is the library's \"" + old.says
-                    + "\" button. Pick another button.");
+                    + "\" button. Pick another button, or move the library's job (libraryButtons, docs/guides/buttons.md).");
         }
         if (old != null && TEAM.equals(old.source) && old.kind != Kind.FREE && e.kind != Kind.FREE
                 && (old.kind == Kind.SHIFT || e.kind == Kind.SHIFT)) {
@@ -596,7 +611,7 @@ final class ButtonPlan {
         return new Object[] {p.leftStickX, p.leftStickY, p.rightStickX, p.rightStickY,
                 p.lt, p.rt, p.lb, p.rb, p.a, p.b, p.x, p.y,
                 p.dpadUp, p.dpadDown, p.dpadLeft, p.dpadRight,
-                p.leftStickButton, p.rightStickButton, p.back, p.start};
+                p.leftStickButton, p.rightStickButton, p.back, p.start, p.guide};
     }
 
     /** A stick job, run every loop with the stick's value (up and right +). */

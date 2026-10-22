@@ -19,9 +19,14 @@ public class Tunables {
     }
     // end recipe
 
+    // recipe: tunables-reset-spot
     public static class Odometry {
         public static boolean checked = false;   // true after the Odometry Tuner's Loop test passes
+        // "Set pose here" (TeleOp: hold gamepad 1 START 1 s with the robot on this spot). Inches and
+        // degrees seen from your wall, written for BLUE like a start spot: our left corner tile, facing the field.
+        public static double resetX = -56, resetY = -61, resetHeading = 0;
     }
+    // end recipe
 
     public static class Intake {
         public static double inPower = 1.0, outPower = 0.7;

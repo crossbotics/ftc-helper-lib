@@ -9,6 +9,7 @@ import com.crossbotics.ftchelper.robot.Launcher;
 import com.crossbotics.ftchelper.robot.Lift;
 import com.crossbotics.ftchelper.robot.Pad;
 import com.crossbotics.ftchelper.robot.RobotDefinition;
+import com.crossbotics.ftchelper.teleop.LibraryButtons;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -107,6 +108,29 @@ public class ButtonRecipes {
             g2.lb.hold(robot.intake::in, robot.intake::stop).says("intake in (hold)");
             g2.rb.hold(robot.intake::out, robot.intake::stop).says("intake out (hold)");
             // end recipe
+        }
+    }
+
+    /** The library's own buttons moved: field-centric, slow, and the alliance switch. */
+    @TeleOp(name = "Cookbook Library Buttons", group = "Cookbook")
+    @Disabled
+    public static class MovedLibraryButtons extends ControlMap<Robot> {
+        public static boolean oneDriver = false;
+
+        // recipe: move-library-buttons
+        // The library's own buttons (driving, pause, menus...): move them here; null = no button.
+        @Override
+        protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
+            lib.fieldCentric(g1.x);                  // field-centric on/off: X instead of Y
+            lib.slow(g1.rt);                         // slow on the right trigger: LT is free now
+            lib.switchAlliance(g2.back, g2.start);   // switch alliance: the operator holds both 1.5 s
+        }
+        // end recipe
+
+        @Override
+        protected void buttons(Robot robot, Pad g1, Pad g2) {
+            g1.y.press(robot.claw::open).says("open the claw");                  // Y is free now
+            g1.lt.hold(robot.intake::in, robot.intake::stop).says("intake in (hold)");
         }
     }
 

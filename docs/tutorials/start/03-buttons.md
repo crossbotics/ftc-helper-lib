@@ -71,6 +71,8 @@ gets this map (two drivers):
 | B | free | claw open / close |
 | D-pad up / down | free | lift next height up / down |
 | BACK | pause / go on (held 1 s, field-centric only: reset "forward") | free |
+| START + BACK | together: debug lines; both held 1.5 s: switch the alliance | free |
+| GUIDE | tap: the button map; held 1 s: the tuning menu | free |
 
 The lift's buttons come from its named heights in `Tunables.Lift` (`down = 0, low = 900, high = 2400`):
 A is the lowest, Y the highest, X the second. Every part's buttons are in
@@ -184,9 +186,10 @@ The rules, checked at INIT:
   button there; use `free()` to clear one without a new job.)
 - Two jobs of yours on one button stop at INIT: `Controls.java: G2 RB has two jobs. Give each button one
   job (put both commands in one lambda if you want both).`
-- A job on a driving button (gamepad 1's left stick, right stick X, LT with two drivers, Y on a mecanum
-  with an IMU, BACK, START) stops at INIT: `Controls.java: G1 LT is the library's "slow (squeeze: the further, the slower)" button.
-  Pick another button.`
+- A job on one of the library's buttons (gamepad 1's left stick, right stick X, LT with two drivers, Y on
+  a mecanum with an IMU, BACK, START, GUIDE) stops at INIT: `Controls.java: G1 LT is the library's "slow
+  (squeeze: the further, the slower)" button. Pick another button, or move the library's job ...`.
+  To use that button anyway, move the library's job first (section 7).
 
 Want two things on one button? Put them in one lambda:
 `g2.dpadLeft.press(() -> { robot.claw.open(); robot.intake.stop(); }).says("drop")`.
@@ -201,13 +204,34 @@ Want two things on one button? Put them in one lambda:
 - In TeleOp's INIT (before START), gamepad 1 X and B choose the alliance: X = BLUE, B = RED. After an
   autonomous, its alliance is already set.
 
-## 7. Pause with BACK
+## 7. Pause with BACK, and the other library buttons
 
 A tap of gamepad 1 BACK pauses the robot: every part stops on brake, the wheels hold still, actions
 wait, and no button or stick job runs. The Driver Station says PAUSED. Tap BACK again and every part
 goes on with what it was doing (a lift goes on to its height, the intake runs again). **Why:** a safe
 stop for a jam or a dropped piece, without ending the program. (With field-centric on, hold BACK 1 s instead to
 reset "forward", lesson 2; in robot-centric driving a held BACK does nothing.)
+
+**Wrong alliance?** If the drivers find out during the match that the wrong alliance was chosen, hold
+gamepad 1 BACK and START together for 1.5 s: the alliance switches (BLUE to RED or back), both gamepads
+buzz twice and the Driver Station says `Alliance now RED (was BLUE)`. The camera's goal and the aim
+follow at once. It takes 1.5 s on purpose, so it never happens by accident.
+
+**Move the library's buttons.** Every library button above (drive sticks, slow, field-centric, pause,
+debug, the alliance switch, GUIDE's map and menu, the INIT alliance buttons) can move to another button
+or be freed. One method next to `buttons(...)`:
+
+```java
+@Override
+protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
+    lib.fieldCentric(g1.x);   // field-centric on X: Y is free for your own job now
+    lib.slow(g1.rt);          // slow on the right trigger
+}
+```
+
+(Import `com.crossbotics.ftchelper.teleop.LibraryButtons`.) INIT checks it like your own buttons:
+two library jobs on one button stop with the button's name. Every job and how to move it:
+[the button menu](../../guides/buttons.md#moving-the-librarys-buttons).
 
 ## 8. The lesson robot's two actions, and a buzz
 
@@ -264,8 +288,9 @@ Driver Station. ([Simulator guide](../../guides/simulator.md).)
 | Problem | Fix |
 | --- | --- |
 | INIT stops: "has two jobs" | Two of your lines use one button. Pick another, or put both in one lambda. |
-| INIT stops: "is the library's ... button" | That button drives the robot. Pick a free one (INIT lists them). |
-| INIT stops: "slow() is for one driver" | With two drivers, G1 LT is slow already. Delete the line. |
+| INIT stops: "is the library's ... button" | That button is the library's (driving, pause, menus). Pick a free one (INIT lists them), or move the library's job with `libraryButtons` (section 7). |
+| INIT stops: "libraryButtons: ... has two library jobs" | You moved a library job onto a button that has one already. Pick another, or free the other job (`null`). |
+| INIT stops: "slow() is for one driver" | With two drivers, G1 LT is slow already. Delete the line, or free the library's slow first (`lib.slow(null)`). |
 | A part's button does nothing | Your job replaced its suggestion, or INIT says it has no button (one driver). |
 | No button does anything | The robot is paused: tap BACK. |
 | A button held at START does nothing | Let it go and press again: a button held through START does not count. |

@@ -3,6 +3,7 @@ package com.crossbotics.ftchelper.robot;
 import com.crossbotics.ftchelper.gamepad.ControllerBindings;
 import com.crossbotics.ftchelper.gamepad.ControllerBindings.Btn;
 import com.crossbotics.ftchelper.gamepad.ControllerBindings.Trigger;
+import com.crossbotics.ftchelper.teleop.Key;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleConsumer;
 
@@ -41,6 +42,8 @@ public final class Pad {
     public final Button lb, rb, lt, rt;
     /** BACK and START. */
     public final Button back, start;
+    /** The middle button (GUIDE, or PS / Home / Logitech). Gamepad 1's shows the button map and the tuning menu. */
+    public final Button guide;
     /** The D-pad. */
     public final Button dpadUp, dpadDown, dpadLeft, dpadRight;
     /** Pressing a stick down (a click). */
@@ -69,6 +72,7 @@ public final class Pad {
         rt = new Button(this, "RT", null, Trigger.RT);
         back = new Button(this, "BACK", Btn.BACK, null);
         start = new Button(this, "START", Btn.START, null);
+        guide = new Button(this, "GUIDE", Btn.GUIDE, null);
         dpadUp = new Button(this, "D-pad up", Btn.DPAD_UP, null);
         dpadDown = new Button(this, "D-pad down", Btn.DPAD_DOWN, null);
         dpadLeft = new Button(this, "D-pad left", Btn.DPAD_LEFT, null);
@@ -115,8 +119,11 @@ public final class Pad {
         plan.watches.add(new ButtonPlan.Watch(which, null, 0, true));
     }
 
-    /** One button or trigger. Each method gives it a job and hands the button back. */
-    public static final class Button {
+    /**
+     * One button or trigger. Each method gives it a job and hands the button back. It is a
+     * {@link Key} too, so {@code lib.pause(g1.a)} can move a library job onto it.
+     */
+    public static final class Button extends Key {
         final Pad pad;
         final String label;
         final Btn btn;            // null for a trigger
@@ -127,6 +134,7 @@ public final class Pad {
         private String lastGesture;
 
         Button(Pad pad, String label, Btn btn, Trigger trigger) {
+            super(pad.which, btn, trigger);
             this.pad = pad;
             this.label = label;
             this.btn = btn;
@@ -285,7 +293,8 @@ public final class Pad {
                 throw new IllegalArgumentException(this + ".with(...): pick another button on the same gamepad");
             }
             if (pad.plan.isReserved(other)) {
-                throw new IllegalStateException("Controls.java: " + other + " is one of the library's driving buttons. Pick another button for the pair.");
+                throw new IllegalStateException("Controls.java: " + other + " is one of the library's own buttons. "
+                        + "Pick another button for the pair (or move the library's job: libraryButtons).");
             }
             lastGesture = null;
             ButtonPlan.Entry shift = pad.plan.put(this, new ButtonPlan.Entry(ButtonPlan.Kind.SHIFT, null, null, "shift key (hold, then press the other button)", null));
@@ -386,13 +395,14 @@ public final class Pad {
          * Slow driving, for one driver ({@code Tunables.Drive.slowSpeed}). On a trigger, e.g.
          * {@code g1.lt.slow()}: the further it is pulled, the slower, down to {@code slowSpeed} at a
          * full squeeze (like the two-driver LT). On a button: slow while it is held.
-         * (With two drivers, G1 LT already does this.)
+         * (With two drivers, G1 LT already does this; after {@code lib.slow(null)} in
+         * {@code libraryButtons} you may use it with two drivers too.)
          */
         public Button slow() {
             final ButtonPlan p = pad.plan;
-            if (!p.oneDriver) {
+            if (!p.oneDriver && p.librarySlow != null) {
                 throw new IllegalStateException("Controls.java: " + this + ".slow() is for one driver (oneDriver = true); "
-                        + "with two drivers, G1 LT is slow already");
+                        + "with two drivers, G1 LT is slow already (to move it: lib.slow(...) in libraryButtons)");
             }
             if (trigger != null) {
                 put(ButtonPlan.Kind.HOLD, () -> { }, null, "slow (squeeze: the further, the slower)");
