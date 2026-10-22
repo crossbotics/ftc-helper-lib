@@ -39,9 +39,12 @@ public abstract class Auto<R extends RobotDefinition> extends EasyAuto {
     private R config;      // made once, for the drive settings (no hardware)
     private InitMenu menu;
     private Steps learned;
+    // The drivers' choices when "learned" was read (alliance and every menu line), to notice a change.
+    private String learnedFor;
 
     /**
-     * The steps. Read once in INIT (for the menu and start; nothing runs) and once after START.
+     * The steps. Read in INIT (for the menu, the start and the park time; nothing runs), again in INIT
+     * whenever the drivers change a menu choice, and once after START.
      *
      * @param s     the step list
      * @param robot the robot (set up: its modules can be named in steps)
@@ -82,26 +85,52 @@ public abstract class Auto<R extends RobotDefinition> extends EasyAuto {
         menu = initMenu;
         learned = new Steps(null, menu, robot);
         steps(learned, robot);
+        learnedFor = choicesNow();
+    }
+
+    // The steps as the drivers have chosen so far. When a menu choice changed since the last read, the
+    // list is read again (no step runs), so a start spot or park time inside an onlyIf follows the menu.
+    private Steps learned() {
+        if (learned == null || menu == null) return learned;
+        String now = choicesNow();
+        if (!now.equals(learnedFor)) {
+            Steps again = new Steps(null, menu, robot, false);
+            steps(again, robot);
+            learned = again;
+            learnedFor = now;
+        }
+        return learned;
+    }
+
+    // Every choice in one line of text, e.g. "BLUE|Near|YES".
+    private String choicesNow() {
+        StringBuilder b = new StringBuilder(menu.getAlliance().name());
+        for (String label : learned.menuLabels) b.append('|').append(menu.get(label));
+        return b.toString();
     }
 
     @Override
     protected final String startPosition() {
-        return learned == null ? null : learned.where;
+        Steps l = learned();
+        return l == null ? null : l.where;
     }
 
     @Override
     protected final double[] startSpotIn() {
-        return learned == null || Double.isNaN(learned.spotX) ? null : new double[] {learned.spotX, learned.spotY};
+        Steps l = learned();
+        return l == null || Double.isNaN(l.spotX) ? null : new double[] {l.spotX, l.spotY};
     }
 
     @Override
     protected final double startHeadingDeg() {
-        return learned == null ? 0 : learned.headingDeg;
+        Steps l = learned();
+        return l == null ? 0 : l.headingDeg;
     }
 
     @Override
     protected final double parkReserveSec() {
-        return learned == null ? 0 : learned.parkSec;
+        Steps l = learned();
+        return l == null ? 0 : l.parkSec;
     }
 
     @Override

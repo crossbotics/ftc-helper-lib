@@ -32,8 +32,10 @@ import java.util.function.BooleanSupplier;
  * 0 to 1. Each move or turn waits until it is done; {@code run} starts something and goes on at once
  * (the mechanisms keep moving during the next steps).
  *
- * <p>The list is read twice: once in INIT (to learn the menu and the start position: no step runs
- * then) and once after START. So write only steps here, no other code with side effects.
+ * <p>The list is read in INIT (to learn the menu, the start position and the park time: no step runs
+ * then), again in INIT each time the drivers change a menu line (so a {@code start(...)} or
+ * {@code parkWithSeconds(...)} inside an {@code onlyIf} follows the choice), and once after START.
+ * So write only steps here, no other code with side effects.
  *
  * Docs: docs/modules/robot.md (section "Autos")
  */
@@ -41,14 +43,28 @@ public final class Steps {
     private final AutoRoutine routine;   // null in INIT (only the menu and start are read)
     private final InitMenu menu;
     private final RobotDefinition robot;
+    // True on the first read in INIT: the menu lines are added then (later reads only look at them).
+    private final boolean addMenuLines;
     // The onlyIf blocks we are inside: true = add the steps, false = skip them.
     private final Deque<Boolean> blocks = new ArrayDeque<>();
+    // The same blocks, but true only when the drivers' CURRENT choice matches (also in INIT, where
+    // "blocks" says true for every block so that every menu line is learned). start(...) and
+    // parkWithSeconds(...) follow these, so a start spot can be a menu choice.
+    private final Deque<Boolean> chosen = new ArrayDeque<>();
+    // The labels of the menu lines this list adds, in order (Auto reads them to notice a change).
+    final java.util.List<String> menuLabels = new java.util.ArrayList<>();
     String where = null;
     double headingDeg = 0;
     double spotX = Double.NaN, spotY = Double.NaN;
     double parkSec = 0;
 
     Steps(AutoRoutine routine, InitMenu menu, RobotDefinition robot) {
+        this(routine, menu, robot, routine == null);
+    }
+
+    // addMenuLines false: a later read in INIT, when the menu already has its lines.
+    Steps(AutoRoutine routine, InitMenu menu, RobotDefinition robot, boolean addMenuLines) {
+        this.addMenuLines = addMenuLines;
         this.routine = routine;
         this.menu = menu;
         this.robot = robot;
@@ -72,6 +88,8 @@ public final class Steps {
      * from your driver", counterclockwise + (TeleOp's field-centric forward uses it).
      */
     public Steps start(String whereToPlace, double headingDeg) {
+        // Inside an onlyIf the drivers did not choose: not the start (a menu choice of start spot).
+        if (chosen.contains(false)) return this;
         where = whereToPlace;
         this.headingDeg = headingDeg;
         return this;
@@ -90,6 +108,7 @@ public final class Steps {
      * }</pre>
      */
     public Steps start(String whereToPlace, double xIn, double yIn, double headingDeg) {
+        if (chosen.contains(false)) return this;
         spotX = xIn;
         spotY = yIn;
         return start(whereToPlace, headingDeg);
@@ -99,13 +118,26 @@ public final class Steps {
 
     /** A yes/no choice in the INIT menu (D-pad), read with {@link #onlyIf} or {@link #isYes}. */
     public Steps menuYesNo(String label, boolean startYes) {
-        if (routine == null) menu.yesNo(label, startYes);
+        if (addMenuLines) menu.yesNo(label, startYes);
+        menuLabels.add(label);
         return this;
     }
 
-    /** A choice between options in the INIT menu, read with {@link #choice}. */
+    /**
+     * A choice between options in the INIT menu, read with {@link #onlyIf(String, String)} or
+     * {@link #choice}. The first option is chosen at the start. It can also choose the start spot: a
+     * {@code start(...)} inside an {@code onlyIf} is used only for its option, and the note (and the
+     * simulator's robot) changes as the drivers change the choice.
+     *
+     * <pre>{@code
+     * s.menuChoice("Start", "Near goal", "Far")
+     *  .onlyIf("Start", "Near goal").start("Back against our goal", -56, -61, 0).end()
+     *  .onlyIf("Start", "Far").start("Against our wall, far corner tile", 56, -61, 0).end()
+     * }</pre>
+     */
     public Steps menuChoice(String label, String... options) {
-        if (routine == null) menu.choice(label, options);
+        if (addMenuLines) menu.choice(label, options);
+        menuLabels.add(label);
         return this;
     }
 
@@ -121,20 +153,33 @@ public final class Steps {
 
     /** The steps up to {@link #end()} run only if the yes/no choice is "yes". */
     public Steps onlyIf(String yesNoLabel) {
-        blocks.push(routine == null || menu.isYes(yesNoLabel));
-        return this;
+        return onlyIf(yesNoLabel, "YES");
     }
 
     /** The steps up to {@link #end()} run only if this option was chosen. */
     public Steps onlyIf(String label, String option) {
-        blocks.push(routine == null || option.equals(menu.get(label)));
+        boolean now = option.equals(chosenNow(label));
+        blocks.push(routine == null || now);
+        chosen.push(now);
         return this;
+    }
+
+    // The option chosen now, or null when there is no such menu line (yet). After START a missing line
+    // stops with the menu's message, as before; in INIT it counts as "not chosen".
+    private String chosenNow(String label) {
+        if (routine != null) return menu.get(label);
+        try {
+            return menu.get(label);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     /** Ends the latest {@link #onlyIf}. */
     public Steps end() {
         if (blocks.isEmpty()) throw new IllegalStateException("Steps: end() without an onlyIf(...)");
         blocks.pop();
+        chosen.pop();
         return this;
     }
 
@@ -361,7 +406,8 @@ public final class Steps {
      * @param seconds how long the park steps take, plus a little (from a timed run)
      */
     public Steps parkWithSeconds(double seconds) {
-        parkSec = seconds;
+        // Only the park time of the branch the drivers chose (a park time can differ per route).
+        if (!chosen.contains(false)) parkSec = seconds;
         if (adding()) routine.thenPark();
         return this;
     }

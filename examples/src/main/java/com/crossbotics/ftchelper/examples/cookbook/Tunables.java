@@ -101,6 +101,7 @@ public class Tunables {
         public static double leaveInches = 24, toGoalInches = 30, parkInches = 20;
         public static double goalX = -30, goalY = -30, goalHeading = 45;
         public static double parkX = -56, parkY = -36;
+        public static double pickupInches = 20, farToNearInches = 72;   // several autos (guides/autos.md)
     }
     // end recipe
 
