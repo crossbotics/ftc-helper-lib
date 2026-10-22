@@ -74,6 +74,8 @@ Here each file answers ONE question:
 | `Actions.java` | Which steps use several parts together? |
 | `autos/` | What does the robot do on its own? |
 
+`autos/` is a folder: one file per autonomous.
+
 And each mechanism is a **module** (here: a ready-made part class from the library, like `Intake` or
 `Lift`; not a Gradle module, which is a part of the build) that already knows how to work: an `Intake` can run in and out,
 a `Launcher` spins up and feeds one piece when the wheel is at speed. A module brings its numbers,

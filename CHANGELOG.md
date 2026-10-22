@@ -2,12 +2,16 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
-## Unreleased
+## v0.17.2 - 2026-10-22
+
+Docs only: find a Tunables setting by what you see on the robot.
 
 ### Added
 
 - Tunables guide: "Find a setting by what you want" (what you see on the robot, the setting that fixes
   it, which way to change it) and "When you add a part" (steps from Robot.java to Tunables.java).
+- Lesson 1 says that `autos/` is a folder with one file per autonomous.
+- Possible later work: a guide for your own code at INIT, at START and every loop.
 
 ## v0.17.1 - 2026-10-22
 
