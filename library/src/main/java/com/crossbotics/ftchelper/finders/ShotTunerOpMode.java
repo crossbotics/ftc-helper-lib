@@ -177,7 +177,7 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
     /**
      * The hood angle it starts at, in the hood's scale. Default NaN = automatic: the robot's shot table at
      * the distance seen (a table with hood angles) until you change the hood yourself, else the robot
-     * hood's {@code homeAngle}, else 0. A number here: always start from it.
+     * hood's {@code startAngle}, else 0. A number here: always start from it.
      */
     protected double startHoodDeg() {
         return Double.NaN;
@@ -311,7 +311,7 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
             double givenHood = startHoodDeg();
             autoStartHood = Double.isNaN(givenHood);
             double now = hood.getTargetDegrees();
-            double home = robotHood != null ? robotHood.homeAngle() : Double.NaN;
+            double home = robotHood != null ? robotHood.startAngle() : Double.NaN;
             hoodDeg = !autoStartHood ? givenHood : !Double.isNaN(now) && !Double.isInfinite(now) ? now : !Double.isNaN(home) ? home : 0;
         }
     }

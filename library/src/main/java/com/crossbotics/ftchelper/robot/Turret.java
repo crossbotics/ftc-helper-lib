@@ -124,6 +124,8 @@ public final class Turret extends Module<Turret> {
     // Homing and the start angle.
     private boolean hasSwitch = false;
     private double startAngle = 0, homeAngle = 0, homeDirection = 1;
+    // The INIT note when startAngle was not written and 0 is outside the range ("" = none).
+    private String startNote = "";
     // Where the angle at INIT came from, for the INIT screen.
     private String angleFrom = "";
     private double toleranceDeg = 1;
@@ -369,20 +371,33 @@ public final class Turret extends Module<Turret> {
         if (!continuous && !(max > min)) {
             throw new IllegalStateException("Tunables." + name() + ": max (" + max + ") must be more than min (" + min + ")");
         }
+        startNote = "";
         if (!continuous && kind != Kind.SERVO && (startAngle < min || startAngle > max)) {
-            throw new IllegalStateException("Tunables." + name() + ".startAngle (" + startAngle + ") is outside its range " + min + " to " + max);
+            // A startAngle written outside the range is a mistake: stop. Not written (the default 0 is
+            // outside a range like 10 to 170): count from the middle of the range, and say so.
+            if (t.has("startAngle")) {
+                throw new IllegalStateException("Tunables." + name() + ".startAngle (" + startAngle + ") is outside its range " + min + " to " + max);
+            }
+            startAngle = (min + max) / 2;
+            startNote = fmt("%s: no startAngle and 0 is outside its range %s to %s: it counts from %s deg (the middle). "
+                    + "Point it there before INIT, or write startAngle", name(), Shape.n(min), Shape.n(max), Shape.n(startAngle));
         }
         toleranceDeg = t.number("tolerance", 1.0);
-        kP = t.tunable("kP", 0.02, 0.002).range(0, 1);
-        kI = t.tunable("kI", 0, 0.0005).range(0, 1);
-        kD = t.tunable("kD", 0.001, 0.0002).range(0, 1);
-        if (kind == Kind.SERVO) part = buildServo(devices, t);
-        else part = buildPowered(devices, t);
-        part.pid(kP.get(), kI.get(), kD.get(), 0)
-                .maxPower(t.number("maxPower", 0.8))
-                .tolerance(toleranceDeg)
-                .slowZone(t.number("slowZone", 10), t.number("slowZonePower", 0.25))
-                .cameraOffset(cameraOffsetDeg);
+        if (kind == Kind.SERVO) {
+            // A servo turns itself to an angle: no PID, power or slow zone numbers (none read, none noted).
+            part = buildServo(devices, t);
+            part.tolerance(toleranceDeg).cameraOffset(cameraOffsetDeg);
+        } else {
+            kP = t.tunable("kP", 0.02, 0.002).range(0, 1);
+            kI = t.tunable("kI", 0, 0.0005).range(0, 1);
+            kD = t.tunable("kD", 0.001, 0.0002).range(0, 1);
+            part = buildPowered(devices, t);
+            part.pid(kP.get(), kI.get(), kD.get(), 0)
+                    .maxPower(t.number("maxPower", 0.8))
+                    .tolerance(toleranceDeg)
+                    .slowZone(t.number("slowZone", 10), t.number("slowZonePower", 0.25))
+                    .cameraOffset(cameraOffsetDeg);
+        }
         if (continuous) part.continuous();
     }
 
@@ -450,8 +465,9 @@ public final class Turret extends Module<Turret> {
             angleFrom = Module.fmt("absolute encoder: %.0f deg (encoderOffset %.0f)", now, offset);
         } else if (kept != null) {
             p.startAngle(kept[0]);
-            angleFrom = Module.fmt("%.0f deg, carried from the last program (%.0f s ago; keepAngle = false to turn this off)",
-                    kept[0], (System.nanoTime() - kept[1]) / 1e9);
+            angleFrom = Module.fmt("%.0f deg, carried from the last program (%.0f s ago; keepAngle = false to turn this off). "
+                    + "If the turret was moved by hand since: turn it to startAngle %.0f deg, stop this OpMode and INIT again",
+                    kept[0], (System.nanoTime() - kept[1]) / 1e9, startAngle);
         } else {
             p.startAngle(startAngle);
             // A TeleOp with no angle from a program just before (the robot app restarted, more than 5
@@ -570,14 +586,25 @@ public final class Turret extends Module<Turret> {
         }
     }
 
+    // True once START came in this program (an INIT that is stopped before START forgets the angle).
+    private boolean started = false;
+
     @Override
     void start() {
+        started = true;
         // Homing at START (never in INIT: nothing moves before START).
         if (hasSwitch && !part.isHomed()) part.home(homeDirection);
         // A servo turret: sent to its start angle now, so its angle is known from the first loop (the
         // stick, following and interlock rules all need it). Not past a command it already has.
         if (kind == Kind.SERVO && Double.isNaN(part.getTargetAngle())) part.aimAt(part.servoStartAngle());
         if (follows()) follow.on();
+    }
+
+    @Override
+    List<String> notes() {
+        List<String> out = super.notes();
+        if (!startNote.isEmpty()) out.add(startNote);
+        return out;
     }
 
     @Override
@@ -707,7 +734,7 @@ public final class Turret extends Module<Turret> {
 
     @Override
     public void update() {
-        part.pid(kP.get(), kI.get(), kD.get(), 0);
+        if (kP != null) part.pid(kP.get(), kI.get(), kD.get(), 0);   // a servo turret has no PID
         if (!follow.isOn()) goalBehind = false;   // only following holds for a goal behind
         // Following waits until the angle is known (homed): a target from an unknown angle means nothing.
         if (follow.isOn() && follows() && !stickMoving && part.isHomed() && !part.isHoming()) {
@@ -734,7 +761,14 @@ public final class Turret extends Module<Turret> {
     public void stop() {
         if (part == null) return;
         touch();
-        rememberAngle();
+        if (started) rememberAngle();
+        else {
+            // Stopped in INIT (no START): the drivers may have stopped to put the turret back at its
+            // startAngle by hand (the INIT line says so). Forget the carried angle: the next INIT uses startAngle.
+            synchronized (REMEMBERED) {
+                REMEMBERED.remove(device);
+            }
+        }
         follow.off();
         goalBehind = false;
         part.stop();
@@ -772,7 +806,7 @@ public final class Turret extends Module<Turret> {
         if (follow.isOn() && isOutOfRange()) t.warn("goal out of turret range" + (goalBehind ? " (behind the robot: holding)" : ""));
         // One line: the angle, AIMED (this module's isAimed: while following, at the goal now) and what
         // it follows. The launcher.Turret inside adds only its warnings.
-        if (part.isHoming()) t.line(name(), "homing: looking for the switch");
+        if (part.isHoming()) t.line(name(), part.isWaitingUnknown() ? "homing waits for an interlock rule (see its line)" : "homing: looking for the switch");
         else if (Double.isNaN(angle())) t.line(name(), fmt("not sent anywhere yet (at START: %.0f deg)", part.servoStartAngle()));
         else t.line(name(), fmt("%.0f deg%s%s", angle(), isAimed() ? "  AIMED" : "", follow.isOn() ? "  following: " + source.words() : ""));
         part.addWarnings(t);
@@ -837,6 +871,13 @@ public final class Turret extends Module<Turret> {
         if (part != null) part.fence(lo, hi, upPower, downPower);
     }
 
+    @Override boolean zoneHoming() { return part != null && part.isHoming(); }
+
+    @Override
+    void zoneWait(boolean wait) {
+        if (part != null) part.waitWhileUnknown(wait);
+    }
+
     // A motor or CR servo turret coasts: the interlock measures its speed (its encoder) for the stop
     // distance. A servo turret goes where it is sent (never past the fence).
     @Override boolean zoneCoasts() { return kind != Kind.SERVO; }
@@ -866,6 +907,8 @@ public final class Turret extends Module<Turret> {
     @Override
     void simLines(List<String> out, TunableSection t) {
         double lo = t.number("min", -90), hi = t.number("max", 90), start = t.number("startAngle", 0);
+        // No startAngle and 0 outside the range: it counts from the middle (as at INIT, see build).
+        if (kind != Kind.SERVO && !continuous && !t.has("startAngle") && (start < lo || start > hi)) start = (lo + hi) / 2;
         if (kind == Kind.SERVO) {
             simServoLines(out, t, start);
             return;

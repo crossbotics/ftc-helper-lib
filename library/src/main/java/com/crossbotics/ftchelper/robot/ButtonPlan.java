@@ -41,6 +41,8 @@ final class ButtonPlan {
     private final Map<Object, Entry> jobs = new LinkedHashMap<>();
     // Suggestions that found their button taken (for the INIT notes).
     private final List<Entry> rejected = new ArrayList<>();
+    // A part's suggestion that Controls.java took the button from: {the part's job, the team's job}.
+    private final List<Entry[]> replaced = new ArrayList<>();
     // Two-button jobs ("hold LB, press Y"), in the order given.
     final List<Entry> pairs = new ArrayList<>();
     // "Buzz when this becomes true" (feedback from the robot), per gamepad.
@@ -197,6 +199,12 @@ final class ButtonPlan {
         if (old != null && old.kind == Kind.SHIFT && e.kind != Kind.SHIFT) {
             pairs.removeIf(p -> p.shift == input);
         }
+        // A part's suggested job loses its button to Controls.java: INIT says so (the part then has no
+        // button for that job, which is easy to miss when a later lesson adds the part).
+        if (old != null && !TEAM.equals(old.source) && !LIBRARY.equals(old.source) && old.kind != Kind.RESERVED) {
+            old.input = input;
+            replaced.add(new Entry[] {old, e});
+        }
         jobs.put(input, e);
         return e;
     }
@@ -205,6 +213,14 @@ final class ButtonPlan {
     List<String> notes() {
         List<String> out = new ArrayList<>();
         for (Entry e : rejected) out.add(e.source + " " + e.says + ": no button (" + e.input + " is taken by " + e.takenBy + ")");
+        for (Entry[] r : replaced) {
+            Entry part = r[0], team = r[1];
+            String mine = team.kind == Kind.GESTURES ? team.gestures.help() : team.says;
+            String yours = team.kind == Kind.FREE ? "freed in Controls.java"
+                    : "is your " + (mine == null || mine.isEmpty() ? "job" : "\"" + mine + "\"") + " in Controls.java";
+            out.add(part.source + " " + (part.kind == Kind.GESTURES ? part.gestures.help() : part.says)
+                    + ": no button (" + part.input + " " + yours + ")");
+        }
         return out;
     }
 

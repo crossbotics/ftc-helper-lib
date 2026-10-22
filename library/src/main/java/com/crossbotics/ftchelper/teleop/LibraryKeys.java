@@ -142,6 +142,9 @@ final class LibraryKeys {
      */
     void update(Gamepad g1, Gamepad g2, boolean menuOpen) {
         long now = clock.getAsLong();
+        // Paused: no job that changes how the robot drives (field-centric, slow on/off) runs; the pause
+        // button itself, "forward", the menus, debug, set pose and the alliance still work.
+        boolean pausedNow = paused != null && paused.getAsBoolean();
         // Pairs first, so a pair that forms this loop cancels its buttons' own jobs before they run.
         for (Group p : pairs) {
             boolean down = p.isDown(g1, g2);
@@ -170,7 +173,7 @@ final class LibraryKeys {
         }
         for (Group s : singles) {
             boolean down = s.isDown(g1, g2);
-            if (menuOpen && !s.menu) {
+            if ((menuOpen && !s.menu) || (pausedNow && drivingJob(s))) {
                 s.blocked = down;
                 s.wasDown = down;
                 continue;
@@ -208,6 +211,12 @@ final class LibraryKeys {
         }
         if (!down) g.blocked = false;
         g.wasDown = down;
+    }
+
+    // A job that changes how the robot drives: it waits while the robot is paused.
+    private static boolean drivingJob(Group g) {
+        return g.slot.tap == LibraryButtons.Job.FIELD_CENTRIC || g.slot.hold == LibraryButtons.Job.FIELD_CENTRIC
+                || g.slot.tap == LibraryButtons.Job.SLOW_TOGGLE || g.slot.hold == LibraryButtons.Job.SLOW_TOGGLE;
     }
 
     // True for the pause button when pause acts at the press (and it is not already a press job).

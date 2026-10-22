@@ -390,12 +390,11 @@ intake = add(Intake.motor("intake").withCrServos("left_wheel", "right_wheel").re
 | --- | --- |
 | `in()`, `out()`, `stop()`, `toggle()` | run in / out until stopped; on/off |
 | `reverse()`, `endReverse()` | push out while a button is held, then back to what it was doing |
-| `isRunning()`, `isPushingOut()` | running at all; pushing out now |
+| `isRunning()`, `isPushingOut()` | running at all; pushing out now (`out()`, or `reverse()` held) |
 | `onAtStart()` | runs in from START until stopped |
 | `holds(n)` | for the simulator: how many pieces it carries (default: a guess of 3) |
 | `stopsWhen(condition)`, `isHeldBack()`, `heldBackSec()` | never runs IN while the condition is true (pushing out still works), e.g. `stopsWhen(() -> pieces.isFull())` ([Pieces](#pieces-and-piecesensor)); how long it has been held back |
 | `inAnyway()` | runs in even though `stopsWhen` says no, until `stop()` or `out()` (the count was wrong) |
-| `isRunningOut()` | pushing out now (`out()`, or `reverse()` held) |
 
 `Tunables.Intake` ([all its numbers](../guides/tunables.md#intake)): `inPower` (1.0), `outPower` (0.7). Buttons: hold operator RT in, LT out; with
 `onAtStart()`: RT switches it on/off, hold LT pushes out. With `stopsWhen`: hold RT for 1 s to run in
@@ -660,7 +659,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer
 | `fire()`, `fire(n)` | spins up if needed, feeds as soon as it is at speed (gives up after 3 s, saying why) |
 | `fireWhileHeld()`, `ceaseFire()` | for a held button: one shot, then the next as soon as it is fed; on release no more (a tap still fires its one shot) |
 | `adjust(steps)` | speed +/- steps x `stepRpm` (not saved) |
-| `trimPercent(change)`, `setTrim(percent)`, `resetTrim()`, `speedTrim()` | the [speed trim](#speed-trim-and-battery-compensation): every shot speed (table or fixed) +/- that many percent, e.g. `trimPercent(+2)`; kept to +/- `trimMaxPercent` and to the motor's top speed; `resetTrim()` also clears `adjust` |
+| `trimBy(change)`, `setTrim(percent)`, `resetTrim()`, `trim()` | the [speed trim](#speed-trim-and-battery-compensation): every shot speed (table or fixed) +/- that many percent, e.g. `trimBy(+2)`; kept to +/- `trimMaxPercent` and to the motor's top speed; `resetTrim()` also clears `adjust` |
 | `atMotorLimit()` | true when the trimmed speed is cut to the motor's top speed ("(motor limit)"; more trim up does nothing) |
 | `lastTrimOffered()`, `useLastTrim()` | the trim used last time (since the robot app started), offered at INIT ("+3%", "" if none); use it (double-tap D-pad up does). Never applied by itself |
 | `speedMode()` | the [mode](#modes) that sets the speed from the distance to the goal |
@@ -703,7 +702,7 @@ goal is seen); with one table, `Shot distance: 48 in (camera)`.
 ### Speed trim and battery compensation
 
 **Speed trim**: a fix during a match, when every shot is a bit short or long (a worn wheel, softer
-balls). `trimPercent(+2)` makes every shot speed 2% faster than the table (or `speedRpm`) says. It
+balls). `trimBy(+2)` makes every shot speed 2% faster than the table (or `speedRpm`) says. It
 starts at 0 at every INIT, is the same for every shot table, stops at +/- `trimMaxPercent` (15) and at
 the motor's top speed (`(motor limit)`), and is the launcher's first line: `Speed trim: +3%  READY`. The
 trim used last time is remembered until the robot app restarts and offered at INIT
@@ -738,7 +737,7 @@ the launcher uses 12.8 V (`Flywheel.DEFAULT_NOMINAL_VOLTS`, a charged battery un
 ```java
 public static double kP = 1.17, kI = 0.117, kD = 0, kF = 11.70, nominalVolts = 12.6;   // Tunables.Launcher
 public static double trimStepPercent = 1, trimMaxPercent = 15;   // optional (the defaults)
-// a button: g2.y.press(() -> robot.launcher.trimPercent(+3));   an action: .then(() -> r.launcher.setTrim(+5))
+// a button: g2.y.press(() -> robot.launcher.trimBy(+3));   an action: .then(() -> r.launcher.setTrim(+5))
 ```
 
 ## Indexer
@@ -798,16 +797,16 @@ the rim, or worn balls launch flatter). Use the speed trim first.
 | `Hood.servo(name)`, `Hood.motor(name, motorId)`, `reversed()` | a standard servo; a motor with an encoder (its ticks count from where the hood is at INIT: start with the hood on stop A) |
 | `fullRange()`, `pulseRangeUs()` | a servo hood: the servo's whole turn ([full range](#claw)), at INIT and in the Hood Finder; find `posA`/`posB` after turning it on. `pulseRangeUs()`: `{500, 2500}`, or null without it |
 | `shotAngles(atA, atB)` | for the simulator: the launcher's shot angle with the hood at `angleA` and at `angleB` (the simulated shot follows the hood servo) |
-| `setAngle(a)`, `home()`, `step(n)`, `byHand(stick)` | go to an angle (kept inside the stops); to `homeAngle`; `n` x `stepAngle` (a trim while the table sets it); the stick, every loop |
+| `setAngle(a)`, `goToStart()`, `step(n)`, `byHand(stick)` | go to an angle (kept inside the stops); to `startAngle`; `n` x `stepAngle` (a trim while the table sets it); the stick, every loop |
 | `trimBy(a)`, `setTrim(a)`, `resetTrim()`, `trim()` | the hood trim (added to the table's angle) |
-| `angle()`, `currentAngle()`, `isArrived()`, `followsTable()` | where it is going; where it is (encoder, or the time estimate); arrived; the table sets it now |
-| `minAngle()`, `maxAngle()`, `homeAngle()`, `usesAngles()`, `isMotor()`, `isReversed()`, `part()` | `part()` is the [`AngleDevice`](mechanism.md#angledevice) the launcher drives |
+| `angle()`, `targetAngle()`, `isAtTarget()`, `followsTable()` | where it is now (encoder, or the time estimate; like `Turret.angle()`); where it is going; there (or, a servo, should be by now); the table sets it now |
+| `minAngle()`, `maxAngle()`, `startAngle()`, `usesAngles()`, `isMotor()`, `isReversed()`, `part()` | `part()` is the [`AngleDevice`](mechanism.md#angledevice) the launcher drives |
 
 `Tunables.Hood` ([all its numbers](../guides/tunables.md#hood)) (optional ones scale with the range, so they suit degrees, positions and ticks):
-`homeAngle` (where it goes at START; default angleA), `stepAngle` (1/25 of the range), `byHandPerSec`
+`startAngle` (where it goes at START; default angleA), `stepAngle` (1/25 of the range), `byHandPerSec`
 (the whole range in 2.5 s at full stick), `trimMax` (1/5 of the range), `travelSec` (servo, 0.5). A
 motor hood: `kP` (power per tick, 0.005), `maxPower` (0.5), `tolerance` (1/50 of the range); it never
-pushes further past a stop. Nothing moves in INIT: the hood goes to `homeAngle` at START. The Driver
+pushes further past a stop. Nothing moves in INIT: the hood goes to `startAngle` at START. The Driver
 Station shows `Hood: 12.5 deg (table, trim +1.0 deg)` (`moving` until it should be there).
 
 Not built yet: a CR servo with an absolute encoder. It fits the same way: anything that is an
@@ -873,7 +872,7 @@ distance, whole-robot aim and the aim buzz all use it.
 
 ```java
 public static class Aim {                                   // Tunables.java (every line optional; all: see below)
-    public static double goalX = -58, goalY = 55;           // the goal on the field, inches (odometry backup)
+    public static double goalX = 13, goalY = -13;           // the goal on the field, inches (odometry backup)
     public static boolean mirrorForRed = false;             // default true; BIOBUZZ's turned field: false
     public static double turnKp = 0.02, turnKd = 0.002, maxTurnPower = 0.5, minTurnPower = 0, toleranceDeg = 2;
     public static double cameraOffset = 0, rumbleDeg = 4;
@@ -891,7 +890,10 @@ The goal point uses `driveTo`'s numbers: seen from your drivers' wall, x inches 
 centre line, y from the centre toward the far wall, written for BLUE. `mirrorForRed` (default true,
 like autonomous): RED mirrors x; false for a field turned half a turn (the same numbers from the red
 wall). Put the point where the camera measures to (the goal's tags), so one shot table fits both
-distances. INIT shows the alliance and the choice: `Aim: RED, goal x -58, y 55 in (mirrorForRed = false: the same numbers from each wall)`.
+distances. INIT shows the alliance and the choice: `Aim: RED, goal x 13, y -13 in (the same numbers from each wall: Tunables.Aim.mirrorForRed = false)`.
+`mirrorForRed` is one setting for the whole robot (autonomous routes, the aim, TeleOp's reset spot):
+`Tunables.Aim.mirrorForRed`, else `Tunables.Odometry.mirrorForRed`, else your autonomous's
+`mirrorForRed()` (a TeleOp uses the last autonomous's), else true. INIT warns when two of them differ.
 
 **A wrong pose must not aim the robot.** The odometry is only as good as its pose: autonomous's start
 spot, carried into TeleOp. So the backup is OFF (camera only, and a warning on the Driver Station:
@@ -991,7 +993,7 @@ Driver Station warns when the intake has been held back for more than 2 s.
 | `nextIs(kind)`, `isFull()`, `isEmpty()` | true/false |
 | `held()` | the list, next to fire first |
 | `atIntake()`, `atReady()` | what each sensor sees now |
-| `added(kind)`, `removed()`, `clear()`, `set(kinds...)` | change the count by hand (a claw, a button) |
+| `pieceIn(kind)`, `pieceOut()`, `clear()`, `set(kinds...)` | change the count by hand (a claw, a button) |
 | `nextKind()` | `next` as a `Supplier<String>`: for a part that asks every loop |
 | `whenFull()`, `whenEmpty()`, `whenNextIs(kind)` | conditions (`BooleanSupplier`) for LEDs, `rumbleWhen`, `stopsWhen`, an action's wait |
 

@@ -37,9 +37,10 @@ public class AimRecipes {
         // recipe: tunables-aim
         /** Aiming (every line is optional; leave out what you do not use). */
         public static class Aim {
-            // The goal on the field, in inches, seen from the BLUE drivers' wall (the same numbers as
-            // driveTo): with odometry, aiming goes on when the camera loses the goal.
-            public static double goalX = -58, goalY = 55;
+            // The goal on the field, in inches, seen from your drivers' wall (the same numbers as
+            // driveTo): with odometry, aiming goes on when the camera loses the goal. BIOBUZZ: your
+            // HIVE's CELL that is up at the start (13 in right of the centre line, 13 in toward you).
+            public static double goalX = 13, goalY = -13;
             // Default true (RED mirrors x). BIOBUZZ's field is turned, not mirrored: false.
             public static boolean mirrorForRed = false;
             // Whole-robot aim: turn power per degree off, the most it turns by itself, "aimed" within.
@@ -72,7 +73,7 @@ public class AimRecipes {
         // recipe: tunables-moving-shot
         /** Shooting while the robot drives (Tunables.java). Needs odometry. Off until tuned. */
         public static class Aim {
-            public static double goalX = -58, goalY = 55;
+            public static double goalX = 13, goalY = -13;
             public static boolean mirrorForRed = false;
             // ON only after testing on the real robot (and a button can switch it off in a match).
             public static boolean shootOnMove = true;
@@ -139,7 +140,7 @@ public class AimRecipes {
             // (held: 4 steps a second), double-tap D-pad down = back to 0. The Driver Station shows
             // "Speed trim: +3%  READY" as the launcher's first line.
             // Your own: a bigger step on a button, and a far shot that sets the trim first.
-            g2.y.press(() -> robot.launcher.trimPercent(+3)).says("speed trim +3%");
+            g2.y.press(() -> robot.launcher.trimBy(+3)).says("speed trim +3%");
             g2.a.press(Action.named("Far shot +5%")
                     .then(() -> robot.launcher.setTrim(+5), robot.launcher::fire)
                     // The launcher fires or gives up within 3 s, so 4 s is always enough.

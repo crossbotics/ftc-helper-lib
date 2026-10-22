@@ -255,13 +255,11 @@ public final class Intake extends Module<Intake> implements Toggleable {
         reversing = false;
     }
 
-    /** True while it runs out (after {@link #out()}), until {@link #in()} or {@link #stop()}. */
+    /**
+     * True while it pushes pieces out: after {@link #out()} (until {@link #in()} or {@link #stop()}), or
+     * while {@link #reverse()} is held.
+     */
     public boolean isPushingOut() {
-        return out && !missing;
-    }
-
-    /** True while it pushes pieces out: after {@link #out()}, or while {@link #reverse()} is held. */
-    public boolean isRunningOut() {
         return (out || reversing) && !missing;
     }
 

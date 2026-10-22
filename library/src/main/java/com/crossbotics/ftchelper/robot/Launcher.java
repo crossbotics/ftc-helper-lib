@@ -28,7 +28,7 @@ import java.util.List;
  * }</pre>
  *
  * <p><b>Speed trim</b> (a fix during a match, when every shot is a little short or long: a worn
- * wheel, different balls): {@link #trimPercent(double)} makes every shot speed (the table's or the
+ * wheel, different balls): {@link #trimBy(double)} makes every shot speed (the table's or the
  * fixed one) that many percent faster or slower, kept to +/- {@code trimMaxPercent} (15) and to the
  * motor's top speed (then the Driver Station says "(motor limit)"). It starts at 0 at every INIT and is
  * the same for every table. The Driver Station shows {@code Speed trim: +3%  READY} as the launcher's
@@ -80,6 +80,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     private final java.util.Set<String> hoodTables = new java.util.HashSet<>();
     // A note for INIT: tables with hood angles but no hood (they are not used).
     private String hoodNote = "";
+    // INIT notes about numbers the launcher reads differently from what is written (or assumes).
+    private final java.util.List<String> numberNotes = new java.util.ArrayList<>();
     private Camera distanceCamera = null;
     // speedFromOdometry(): the distance from the odometry alone (no camera).
     private boolean distanceFromOdometry = false;
@@ -306,6 +308,11 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
                 .countsPerRev(kind.countsPerRev)
                 .maxRpm(kind.freeRpm)
                 .tolerance(t.number("readyBandRpm", 60));
+        numberNotes.clear();
+        if (!t.has("kF") && (t.has("kP") || t.has("kI") || t.has("kD"))) {
+            numberNotes.add("Tunables." + name() + ": kP/kI/kD are not used without kF (the motor's own speed control runs it). "
+                    + "Write all four from the Flywheel Finder, or delete them");
+        }
         if (t.has("kF")) {
             flywheel.pidf(t.number("kP", 0), t.number("kI", 0), t.number("kD", 0), t.number("kF", 0));
             // Battery compensation: on unless Tunables says batteryCompensation = false. Optional numbers
@@ -319,12 +326,21 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
             }
             // The reader never waits: the hubs are asked on the library's helper thread (not in the loop).
             if (compensate) flywheel.batteryCompensation(devices.batteryReader(), nominal);
+            if (compensate && !t.has("nominalVolts")) {
+                numberNotes.add(name() + ": battery compensation on, nominalVolts not written: assuming "
+                        + Shape.n(Flywheel.DEFAULT_NOMINAL_VOLTS) + " V (the Flywheel Finder shows yours; "
+                        + "batteryCompensation = false turns it off)");
+            }
         }
         if (t.has("trimStepPercent")) trimStepPct = Math.abs(t.number("trimStepPercent", 1));
         // Last time's trim (an earlier OpMode since the robot app started): offer it, never apply it.
         double[] last = lastTrim.get(name());
         offered = last != null && (last[0] != 0 || last[1] != 0) ? last.clone() : null;
-        if (t.has("trimMaxPercent")) trimMaxPct = Math.max(0, Math.min(50, Math.abs(t.number("trimMaxPercent", 15))));
+        if (t.has("trimMaxPercent")) {
+            double asked = Math.abs(t.number("trimMaxPercent", 15));
+            trimMaxPct = Math.max(0, Math.min(50, asked));
+            if (asked > 50) numberNotes.add("Tunables." + name() + ".trimMaxPercent = " + Shape.n(asked) + ": at most 50 is used");
+        }
         Feeder feed = indexer != null ? indexer.forLauncher() : new NoFeeder();
         part = new com.crossbotics.ftchelper.launcher.Launcher(flywheel, feed)
                 .idleRpm(t.number("idleRpm", 0))
@@ -448,6 +464,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     public void fire(int count) {
         needBuilt(part);
         touch();
+        askedToFire = true;
         spinning = true;
         part.shoot(count);
     }
@@ -460,6 +477,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     public void fireWhileHeld() {
         needBuilt(part);
         touch();
+        askedToFire = true;
         spinning = true;
         if (!holding) {
             holding = true;
@@ -496,15 +514,16 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     // ----------------------------- speed trim -----------------------------
 
     /**
-     * Trims the shot speed by this many percent more: {@code trimPercent(+2)} = every shot 2% faster
-     * than the table (or the fixed speed) says, {@code trimPercent(-1)} = 1% slower. Adds up, kept to
+     * Trims the shot speed by this many percent more: {@code trimBy(+2)} = every shot 2% faster
+     * than the table (or the fixed speed) says, {@code trimBy(-1)} = 1% slower. Adds up, kept to
      * +/- {@code Tunables.Launcher.trimMaxPercent} (15). From a button, an action
-     * ({@code .then(() -> r.launcher.trimPercent(+2))}) or code. Starts at 0 at every INIT; the
+     * ({@code .then(() -> r.launcher.trimBy(+2))}) or code. The same name as the hood's trim
+     * ({@link Hood#trimBy(double)}), which is in the hood's angle instead of percent. Starts at 0 at every INIT; the
      * Tunables numbers are not changed. A fix for this match: if you need it every match, tune the table again.
      *
      * @param change percent to add, e.g. +1 or -1
      */
-    public void trimPercent(double change) {
+    public void trimBy(double change) {
         // Not touch(): changing the speed is not taking the launcher away from an action.
         if (Double.isNaN(change)) return;
         if (change > 0 && atMotorLimit) return;   // already at the motor's top speed: no faster
@@ -564,7 +583,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
 
     // One D-pad step: the trim (speed from the distance) or the rpm step (a fixed speed).
     private void step(int direction) {
-        if (usesDistance()) trimPercent(direction * trimStepPct);
+        if (usesDistance()) trimBy(direction * trimStepPct);
         else adjust(direction);
     }
 
@@ -592,7 +611,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     }
 
     /** The speed trim now, percent (0 = none; +3 = 3% faster). */
-    public double speedTrim() {
+    public double trim() {
         return trimPct;
     }
 
@@ -808,10 +827,28 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         if (part != null) part.stopShooting();   // drop the shots still waiting; keep the speed
     }
 
+    // An action that fires: how many shots the launcher had fired when the action took it, and whether
+    // the action asked it to fire (only then does "done" say how many: "Fire all: done (0 fired)").
+    private int firedAtClaim = 0;
+    private boolean askedToFire = false;
+
+    @Override
+    void claimedBy(Action a) {
+        firedAtClaim = part == null ? 0 : part.getShotsFired();
+        askedToFire = false;
+    }
+
+    @Override
+    String doneWords() {
+        if (part == null || missing || !askedToFire) return "";
+        return (part.getShotsFired() - firedAtClaim) + " fired";
+    }
+
     @Override
     List<String> notes() {
         List<String> out = super.notes();
         if (!hoodNote.isEmpty()) out.add(hoodNote);
+        out.addAll(numberNotes);
         return out;
     }
 

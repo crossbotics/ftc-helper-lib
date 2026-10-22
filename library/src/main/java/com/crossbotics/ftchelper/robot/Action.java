@@ -65,6 +65,8 @@ public final class Action {
     private int index = -1;
     private double stepStart = 0;
     private String result = "";
+    // Words its parts add when it is done, e.g. "(0 fired)" from a launcher (see ActionRunner).
+    String detail = "";
     // The parts this run has commanded (see ActionRunner.touched), to halt them if it is stopped.
     final java.util.Set<Module<?>> claimed = new java.util.LinkedHashSet<>();
     // The parts this run skipped because they are not on the robot (Module.optional), by name.
@@ -162,7 +164,10 @@ public final class Action {
     /** E.g. "Score high: step 2 of 5 (lift at the top)", or its last result when not running. */
     public String status() {
         String skip = skippedWords();
-        if (!isRunning()) return name + ": " + (result.isEmpty() ? "not run" : result) + (skip.isEmpty() ? "" : "; " + skip);
+        if (!isRunning()) {
+            return name + ": " + (result.isEmpty() ? "not run" : result) + (detail.isEmpty() ? "" : " " + detail)
+                    + (skip.isEmpty() ? "" : "; " + skip);
+        }
         Step s = steps.get(index);
         return String.format(java.util.Locale.US, "%s: step %d of %d (%s)", name, index + 1, steps.size(), s.what);
     }
@@ -175,6 +180,7 @@ public final class Action {
         index = 0;
         stepStart = now;
         result = "";
+        detail = "";
         claimed.clear();
         skipped.clear();
         skipWaits = false;

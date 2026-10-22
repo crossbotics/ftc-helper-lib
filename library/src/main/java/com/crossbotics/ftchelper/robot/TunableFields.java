@@ -44,8 +44,8 @@ final class TunableFields {
         part("Buttons", "holdSec", "tapGapSec");
         part("Camera", "autoLighting", "exposureMs", "gain", "lightingAfterStartMs", "lightingMinPictures",
                 "lightingPictures", "lightingSettleMs", "pipeline");
-        part("Hood", "angleA", "angleB", "byHandPerSec", "calibration", "homeAngle", "kP", "maxPower", "posA", "posB",
-                "stepAngle", "tolerance", "travelSec", "trimMax");
+        part("Hood", "angleA", "angleB", "byHandPerSec", "calibration", "kP", "maxPower", "posA", "posB",
+                "startAngle", "stepAngle", "tolerance", "travelSec", "trimMax");
         part("Indexer", "feedSec", "power", "push", "pushSec", "rest", "returnSec");
         part("Intake", "inPower", "outPower");
         part("Interlock");   // only <part>From, <part>To, ... (see interlock below)
@@ -142,6 +142,9 @@ final class TunableFields {
      * @param t the section
      * @param a what it may hold
      */
+    // Settings renamed since the last release: old name -> new name (for the "did you mean").
+    private static final java.util.Map<String, String> RENAMED = java.util.Collections.singletonMap("homeAngle", "startAngle");
+
     static void check(TunableSection t, Allowed a) {
         for (String n : t.fieldNames()) {
             if (a.names.contains(n) || a.also.test(n)) continue;
@@ -151,6 +154,9 @@ final class TunableFields {
             // reads the part's section name ("liftLeftAbove", from the device "lift_left"): the one field
             // with the same ending.
             if (like == null && a.interlock) like = sameEnding(n, a.names);
+            // A setting renamed before v0.17 came out (the hood's homeAngle is now startAngle, like the turret's).
+            String renamed = RENAMED.get(n);
+            if (renamed != null && a.names.contains(renamed) && !a.names.contains(n)) like = renamed + ", its new name";
             StringBuilder known = new StringBuilder();
             for (String k : a.names) known.append(known.length() == 0 ? "" : ", ").append(k);
             throw new IllegalStateException("Tunables." + t.name + "." + n + " is not a setting of " + a.part
@@ -160,6 +166,7 @@ final class TunableFields {
                     + (a.positions ? ". Named positions are numbers (double)." : "")
                     + (a.interlock ? ". An interlock field starts with the part's section name, from its device name in"
                             + " camelCase (\"lift_left\" -> liftLeftAbove)" : "")
+                    + ". A number for your own code belongs in your own section (e.g. Tunables.Auto)"
                     + " (docs/guides/tunables.md)");
         }
     }

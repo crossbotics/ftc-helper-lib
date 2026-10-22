@@ -275,12 +275,16 @@ public class Launcher implements Subsystem {
         shotsLeft = 0;
         // This flag is what keeps it OFF: update() sends 0 RPM while it is true, instead of the idle speed.
         off = true;
-        // Safety: stop BOTH parts even if stopping the first one fails.
+        // Safety: stop EVERY part (feeder, flywheel, and a hood: a motor hood must not keep its power)
+        // even if stopping one of them fails.
         // "try { ... } catch (RuntimeException e) { ... }" means: run this, and if it fails with an
         // error, do not crash right away; keep the error (e) and go on. We report the first error at the end.
         RuntimeException first = null;
         try { feeder.stop(); } catch (RuntimeException e) { first = e; }
         try { flywheel.stop(); } catch (RuntimeException e) { if (first == null) first = e; }
+        if (hood != null) {
+            try { hood.stop(); } catch (RuntimeException e) { if (first == null) first = e; }
+        }
         if (first != null) throw first;
     }
 

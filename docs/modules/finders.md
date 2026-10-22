@@ -334,7 +334,7 @@ Without five files, fill in:
 | `robotConfig()` | no | drive with the sticks between distances |
 | `createSubsystems()` | no | other mechanisms to keep updated (an intake that loads it) |
 | `startRpm()` | no | the starting speed; default (NaN) = the table's speed at the distance seen, else `Tunables.Launcher.speedRpm`, else 3000 |
-| `startHoodDeg()` | no | the starting hood angle; default (NaN) = the table's hood at the distance seen (until you change it), else the robot hood's `homeAngle`, else 0 |
+| `startHoodDeg()` | no | the starting hood angle; default (NaN) = the table's hood at the distance seen (until you change it), else the robot hood's `startAngle`, else 0 |
 | `startSpotIn()` | no | where the robot is at INIT, for the odometry: {x, y, heading} from your drivers' wall; default {0, 0, 0} |
 | `tableNames()` | no | the tables to tune; default the launcher's (`pollen`, `nectar`...), or one table `main` |
 

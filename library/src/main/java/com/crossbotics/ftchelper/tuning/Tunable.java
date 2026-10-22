@@ -49,6 +49,8 @@ public final class Tunable {
     private double value;
     // True while its part is not on the robot (Module.optional, device missing): left out of the menu.
     private boolean hidden = false;
+    // The code value when it is outside range(...) (NaN = fine): the range's end is used instead.
+    private double codeOutside = Double.NaN;
 
     // Private: make one with Tunable.number(...), so the same name never gives two tunables.
     private Tunable(String name, double defaultValue, double step) {
@@ -75,9 +77,12 @@ public final class Tunable {
      */
     public static synchronized Tunable fromCode(String name, double defaultValue, double step) {
         Tunable t = number(name, defaultValue, step);
-        if (!t.isChanged() && Math.abs(t.defaultValue - defaultValue) > 1e-12) {
+        // The code value changed since (or was outside the range): start from it again.
+        double code = Double.isNaN(t.codeOutside) ? t.defaultValue : t.codeOutside;
+        if (!t.isChanged() && Math.abs(code - defaultValue) > 1e-12) {
             t.defaultValue = defaultValue;
             t.value = defaultValue;
+            t.codeOutside = Double.NaN;   // checked again by range(...)
         }
         return t;
     }
@@ -248,9 +253,38 @@ public final class Tunable {
         // Works even if min and max are typed the wrong way round.
         this.min = Math.min(min, max);
         this.max = Math.max(min, max);
+        // A code value outside the range (Claw.open = 1.2 for a servo, 0 to 1): the nearest end is used,
+        // and INIT says so plainly (outsideRangeNotes). It is not a "tuned value" to copy into the code.
+        if (defaultValue < this.min - 1e-12 || defaultValue > this.max + 1e-12) {
+            codeOutside = defaultValue;
+            defaultValue = MathUtil.clamp(defaultValue, this.min, this.max);
+        }
         // A saved value outside the new range is pulled back inside it.
         value = MathUtil.clamp(value, this.min, this.max);
         return this;
+    }
+
+    /**
+     * INIT notes for code values outside their allowed range, e.g. "Tunables.Claw.open = 1.2 is outside
+     * its allowed range 0 to 1: 1 is used. Fix it in Tunables.java". Only for these groups (a robot's
+     * Tunables sections); empty when all are fine.
+     *
+     * @param groups the sections to look at, e.g. ["Claw", "Lift"]
+     */
+    public static synchronized List<String> outsideRangeNotes(java.util.Collection<String> groups) {
+        List<String> out = new ArrayList<>();
+        for (Tunable t : ALL) {
+            if (Double.isNaN(t.codeOutside) || !groups.contains(t.group())) continue;
+            out.add("Tunables." + t.name.replace('/', '.') + " = " + plain(t.codeOutside) + " is outside its allowed range "
+                    + plain(t.min) + " to " + plain(t.max) + ": " + plain(t.defaultValue) + " is used. Fix it in Tunables.java");
+        }
+        return out;
+    }
+
+    // A number without trailing zeros: 1.2, 0.5, 3000.
+    private static String plain(double v) {
+        if (v == Math.rint(v) && Math.abs(v) < 1e15) return String.valueOf((long) v);
+        return String.valueOf(v);
     }
 
     /** The current value. Read it every loop. */

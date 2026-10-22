@@ -171,6 +171,33 @@ public class LibraryButtonsTest {
         return new LibraryKeys(lib.slots(all()), map, clock::get).pauseAtPress(() -> paused);
     }
 
+    // While paused, nothing that changes how the robot drives runs: G1 Y (field-centric) waits.
+    @Test public void whilePausedFieldCentricDoesNotToggle() {
+        LibraryKeys k = pausingKeys(LibraryButtons.twoDrivers());
+        g1.back = true;
+        loop(k, 0.02);
+        g1.back = false;
+        loop(k, 0.1);
+        assertTrue(paused);
+        ran.clear();
+        g1.y = true;
+        loop(k, 0.02);
+        g1.y = false;
+        loop(k, 0.1);
+        assertEquals("[]", ran.toString());
+        // Going on: Y works again.
+        g1.back = true;
+        loop(k, 0.02);
+        g1.back = false;
+        loop(k, 0.1);
+        ran.clear();
+        g1.y = true;
+        loop(k, 0.02);
+        g1.y = false;
+        loop(k, 0.1);
+        assertEquals("[FIELD_CENTRIC]", ran.toString());
+    }
+
     @Test public void aPressOfBackPausesAtOnceAndAHoldAlsoResetsForward() {
         LibraryKeys k = pausingKeys(LibraryButtons.twoDrivers());
         g1.back = true;

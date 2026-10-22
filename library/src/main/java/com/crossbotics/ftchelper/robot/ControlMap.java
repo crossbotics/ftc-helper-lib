@@ -233,6 +233,7 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
             return "Alliance now " + now + ": pose mirrored to " + now + "'s side (mirrorForRed = true)";
         }
         o.unsetPose();
+        robot.poseUnsetBy = now;
         String how = poseKey == null ? "robot.resetPose()" : "park on the reset spot, hold " + poseKey + " 1 s";
         return "Alliance now " + now + ": odometry aim OFF until the pose is set (" + how + ")";
     }

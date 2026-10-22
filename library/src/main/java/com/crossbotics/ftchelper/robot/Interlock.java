@@ -44,6 +44,10 @@ import java.util.Map;
  *   <li>A part whose position is not known (a turret not homed yet; a servo before its first command, or
  *       while it is still moving) counts as "maybe anywhere it could be": in its zone, if the zone is in
  *       reach. So the other part waits.</li>
+ *   <li>And the other way round: a part whose position is not known does not move at all (no homing,
+ *       no stick, no first servo move) while the other part is in its zone, since it could sweep through
+ *       it. The Driver Station says "Turret waits (not homed yet): Lift is above 620 counts; move Lift out
+ *       of its zone first". It goes as soon as the other part is out.</li>
  * </ul>
  *
  * <p><b>Stop distance</b> (motor parts: a turret, lift or arm): a moving motor does not stop at once. It
@@ -280,7 +284,8 @@ public final class Interlock {
         return false;
     }
 
-    // Wants to go in: a target inside it, or a stick pushing toward it.
+    // Wants to go in: a target inside it, a target on the far side of it (the way there crosses the zone:
+    // a lift at 0 going to 1000 through a zone from 400 to 600), or a stick pushing toward it.
     static boolean wants(Zone z) {
         if (z.kind == Zone.Kind.WHEN) return false;
         Module<?> p = z.part;
@@ -288,6 +293,8 @@ public final class Interlock {
         double[] s = p.zoneSweep();
         for (double[] iv : intervals(z)) {
             if (!Double.isNaN(target) && target >= iv[0] - z.margin && target <= iv[1] + z.margin) return true;
+            if (!Double.isNaN(target) && target > iv[1] && s[1] < iv[0]) return true;   // crosses it going up
+            if (!Double.isNaN(target) && target < iv[0] && s[0] > iv[1]) return true;   // crosses it going down
             if (manual > 0 && iv[0] > s[1] && iv[0] < p.zoneMax()) return true;
             if (manual < 0 && iv[1] < s[0] && iv[1] > p.zoneMin()) return true;
         }
@@ -343,8 +350,9 @@ public final class Interlock {
 
     /**
      * One loop: who may be in its zone, and each part's fence for this loop (added into {@code fences}).
+     * A part whose position is not known that must not move yet is added to {@code waiting}.
      */
-    void evaluate(Map<Module<?>, double[]> fences) {
+    void evaluate(Map<Module<?>, double[]> fences, java.util.Set<Module<?>> waiting) {
         if (!built) return;
         boolean inA = occupies(a), inB = occupies(b);
         // Coming in: in, or moving so fast toward its zone that it could not stop before it.
@@ -387,7 +395,23 @@ public final class Interlock {
                 msg = z.part.name() + " held at " + num(mid(z.part.zoneSweep()), z.part.zoneUnit()) + ": " + whyWords(other);
             }
         }
-        if (bothIn) {
+        // A part whose position is not known (a turret before homing, a servo before its first move) may
+        // be anywhere, so homing or a first move could sweep through the other part. It waits (does not
+        // move at all) while the other part is in its zone; it may go once the other part is out. Both
+        // unknown: the first part named in the rule goes first, the other waits.
+        Zone waits = null;
+        if (!known(a) && !known(b)) waits = b;
+        else if (!known(a) && really(b)) waits = a;
+        else if (!known(b) && really(a)) waits = b;
+        // A target that cannot take it into its zone from anywhere it may be (a wrist sent to "folded",
+        // below its zone that reaches the top of its range) needs no wait.
+        if (waits != null && !mayEnter(waits)) waits = null;
+        if (waits != null) waiting.add(waits.part);
+        if (waits != null && moving(waits)) {
+            Zone other = waits == a ? b : a;
+            msg = waits.part.name() + " waits (" + waits.part.zoneUnknownWords() + "): " + whyWords(other)
+                    + (other.kind == Zone.Kind.WHEN ? "" : "; move " + label(other) + " out of its zone first");
+        } else if (bothIn) {
             // One of them only counts as in because its position is not known: say that, not "move one out".
             Zone unknown = !known(a) ? a : !known(b) ? b : null;
             if (unknown != null) {
@@ -399,6 +423,34 @@ public final class Interlock {
             }
         }
         message = msg;
+    }
+
+    // A part whose position is not known: could its next move take it into its zone? Homing or a stick
+    // (no target): yes, it could go anywhere. A target: inside the zone, or the zone between the target
+    // and some place it may be now (its whole range).
+    private static boolean mayEnter(Zone z) {
+        if (z.kind == Zone.Kind.WHEN) return false;
+        double target = z.part.zoneTarget();
+        if (Double.isNaN(target)) return true;
+        double min = z.part.zoneMin(), max = z.part.zoneMax();
+        for (double[] iv : intervals(z)) {
+            double lo = iv[0] - z.margin, hi = iv[1] + z.margin;
+            if (target >= lo && target <= hi) return true;
+            if (target < lo && max > hi) return true;   // it may be above the zone and come down through it
+            if (target > hi && min < lo) return true;   // or below it and go up through it
+        }
+        return false;
+    }
+
+    // Trying to move now: homing, a stick, or a target.
+    private static boolean moving(Zone z) {
+        return z.part.zoneHoming() || z.part.zoneManual() != 0 || !Double.isNaN(z.part.zoneTarget());
+    }
+
+    // Really in its zone (or coming in): its position is known and it is there.
+    private static boolean really(Zone z) {
+        if (z.kind == Zone.Kind.WHEN) return z.condition.getAsBoolean();
+        return z.part.zoneKnown() && (occupies(z) || coming(z));
     }
 
     private static boolean known(Zone z) {
@@ -497,11 +549,13 @@ public final class Interlock {
                 }
             }
             Map<Module<?>, double[]> fences = new IdentityHashMap<>();
-            for (Interlock r : rules) r.evaluate(fences);
+            java.util.Set<Module<?>> waiting = java.util.Collections.newSetFromMap(new IdentityHashMap<Module<?>, Boolean>());
+            for (Interlock r : rules) r.evaluate(fences, waiting);
             for (Module<?> p : parts) {
                 double[] f = fences.get(p);
                 if (f == null) p.zoneFence(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, 1, 1);
                 else p.zoneFence(f[0], f[1], f[2], f[3]);
+                p.zoneWait(waiting.contains(p));
             }
         }
 

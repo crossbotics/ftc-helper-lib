@@ -72,10 +72,13 @@ public class Tunables {
     /**
      * Aiming. rumbleDeg: gamepad 2 buzzes when the turret is this close to the goal (Controls.java's
      * rumbleWhenAimed). With odometry you would add goalX and goalY here: then the turret and the
-     * speed keep working when the camera loses the goal (lesson 9).
+     * speed keep working when the camera loses the goal (lesson 9). mirrorForRed = false: BIOBUZZ's field
+     * is turned half a turn, so RED uses the same numbers from the red wall (the robot's one setting:
+     * the autonomous and the aim use it).
      */
     public static class Aim {
         public static double rumbleDeg = 4;
+        public static boolean mirrorForRed = false;
     }
 
     public static class Indexer {

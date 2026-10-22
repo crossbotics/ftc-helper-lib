@@ -310,6 +310,13 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
         if (part != null) part.fence(lo, hi, upPower, downPower);
     }
 
+    // Not homed yet (its position unknown) while the other part of a rule is in its zone: no power at all
+    // (the stick could otherwise move it from "anywhere" into the other part).
+    @Override
+    void zoneWait(boolean wait) {
+        if (part != null && wait) part.fence(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, 0, 0);
+    }
+
     // A motor coasts: the interlock measures its speed (its encoder) for the stop distance.
     @Override boolean zoneCoasts() { return true; }
 

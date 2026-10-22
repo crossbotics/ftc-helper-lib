@@ -63,7 +63,7 @@ public class HoodTest {
         public static class Hood {
             // Stop A (0 deg) at 0.70, stop B (25 deg) at 0.20: the servo turns "the other way".
             public static double posA = 0.70, posB = 0.20, angleA = 0, angleB = 25;
-            public static double homeAngle = 2, travelSec = 0.5, trimMax = 3;
+            public static double startAngle = 2, travelSec = 0.5, trimMax = 3;
         }
     }
 
@@ -220,11 +220,11 @@ public class HoodTest {
     @Test public void theHoodGoesHomeAtStartAndTheTableSetsItBlended() {
         HoodBot r = bot(Angles.class, false);
         Hood h = r.launcher.hood();
-        assertEquals("home at START", 2, h.angle(), 1e-9);
+        assertEquals("home at START", 2, h.targetAngle(), 1e-9);
         // 2 deg between 0 deg (0.70) and 25 deg (0.20): 0.70 - 2/25 x 0.5 = 0.66
         assertEquals(0.66, kit.servos.get("hood").position, 1e-9);
         at(r, 48);   // POLLEN table at 48 in: halfway between 4 and 20 deg
-        assertEquals(12, h.angle(), 1e-9);
+        assertEquals(12, h.targetAngle(), 1e-9);
         assertTrue(h.followsTable());
         assertEquals(0.70 - 12 / 25.0 * 0.5, kit.servos.get("hood").position, 1e-9);
         assertTrue(screen(r.launcher), screen(r.launcher).contains("12.0 deg (table)"));
@@ -244,25 +244,25 @@ public class HoodTest {
         assertFalse(r.launcher.part().whyNotReady(), r.launcher.part().whyNotReady().contains("hood"));
         // A small jitter in the distance (0.25 in = 0.08 deg) does not move the hood again.
         at(r, 24.25);
-        assertEquals(4, r.launcher.hood().angle(), 1e-9);
-        assertTrue(r.launcher.hood().isArrived());
+        assertEquals(4, r.launcher.hood().targetAngle(), 1e-9);
+        assertTrue(r.launcher.hood().isAtTarget());
     }
 
     @Test public void aTableWithoutHoodAnglesLeavesTheHoodByHand() {
         HoodBot r = bot(Angles.class, false);
         Hood h = r.launcher.hood();
         at(r, 48);
-        assertEquals(12, h.angle(), 1e-9);
+        assertEquals(12, h.targetAngle(), 1e-9);
         r.launcher.useTable("nectar");      // two numbers per row: the hood stays where it is
         at(r, 48);
         assertFalse(h.followsTable());
-        assertEquals(12, h.angle(), 1e-9);
+        assertEquals(12, h.targetAngle(), 1e-9);
         h.setAngle(30);                     // past the stop: kept to 25
         r.all().update();
-        assertEquals(25, h.angle(), 1e-9);
+        assertEquals(25, h.targetAngle(), 1e-9);
         h.setAngle(-5);
         r.all().update();
-        assertEquals(0, h.angle(), 1e-9);
+        assertEquals(0, h.targetAngle(), 1e-9);
         assertEquals("kept off stop A", 0.70, kit.servos.get("hood").position, 1e-9);
         assertTrue(screen(r.launcher), screen(r.launcher).contains("by hand) at its stop"));
     }
@@ -273,16 +273,16 @@ public class HoodTest {
         at(r, 48);
         h.step(+1);                     // with the table: a trim of stepAngle (25 / 25 = 1)
         at(r, 48);
-        assertEquals(13, h.angle(), 1e-9);
+        assertEquals(13, h.targetAngle(), 1e-9);
         h.trimBy(+10);                  // trimMax = 3
         at(r, 48);
         assertEquals(3, h.trim(), 1e-9);
-        assertEquals(15, h.angle(), 1e-9);
+        assertEquals(15, h.targetAngle(), 1e-9);
         assertTrue(screen(r.launcher), screen(r.launcher).contains("trim +3.0 deg"));
         r.launcher.resetTrim();         // the launcher's double-tap D-pad down
         at(r, 48);
         assertEquals(0, h.trim(), 1e-9);
-        assertEquals(12, h.angle(), 1e-9);
+        assertEquals(12, h.targetAngle(), 1e-9);
     }
 
     @Test public void theStickMovesTheHoodByHandAtItsSpeed() {
@@ -294,12 +294,12 @@ public class HoodTest {
         pass(0.1);
         h.byHand(1);                    // 0.1 s at 25 / 2.5 = 10 per second: +1
         r.all().update();
-        assertEquals(3, h.angle(), 1e-9);
+        assertEquals(3, h.targetAngle(), 1e-9);
         h.byHand(0);
         pass(1);
         h.byHand(-1);                   // a fresh push: no jump from the second it was let go
         r.all().update();
-        assertEquals(3, h.angle(), 1e-9);
+        assertEquals(3, h.targetAngle(), 1e-9);
     }
 
     @Test public void aLinkageCalibrationTableIsBlended() {
@@ -308,7 +308,7 @@ public class HoodTest {
         assertEquals(0, h.minAngle(), 1e-9);
         assertEquals(30, h.maxAngle(), 1e-9);
         at(r, 48);                      // 20 deg: halfway between the 10 and 30 deg rows -> 0.55
-        assertEquals(20, h.angle(), 1e-9);
+        assertEquals(20, h.targetAngle(), 1e-9);
         assertEquals(0.55, kit.servos.get("hood").position, 1e-9);
         at(r, 24);                      // 10 deg -> 0.5
         assertEquals(0.5, kit.servos.get("hood").position, 1e-9);
@@ -319,9 +319,9 @@ public class HoodTest {
         HoodBot r = bot(Positions.class, false);
         Hood h = r.launcher.hood();
         assertFalse(h.usesAngles());
-        assertEquals(0.25, h.angle(), 1e-9);   // home = posA
+        assertEquals(0.25, h.targetAngle(), 1e-9);   // home = posA
         at(r, 48);
-        assertEquals(0.40, h.angle(), 1e-9);
+        assertEquals(0.40, h.targetAngle(), 1e-9);
         assertEquals(0.40, kit.servos.get("hood").position, 1e-9);
         assertTrue(screen(r.launcher), screen(r.launcher).contains("0.400 (table)"));
     }
@@ -330,12 +330,12 @@ public class HoodTest {
         HoodBot r = bot(MotorTicks.class, true);
         Hood h = r.launcher.hood();
         at(r, 48);                       // 15 deg = 300 ticks
-        assertEquals(15, h.angle(), 1e-9);
+        assertEquals(15, h.targetAngle(), 1e-9);
         assertEquals("full power toward it (kept to maxPower)", 0.6, kit.motors.get("hood").power, 1e-9);
-        assertFalse(h.isArrived());
+        assertFalse(h.isAtTarget());
         kit.motors.get("hood").position = 292;    // 14.6 deg: within the tolerance of 0.5
         r.all().update();
-        assertTrue(h.isArrived());
+        assertTrue(h.isAtTarget());
         assertEquals(0.08, kit.motors.get("hood").power, 1e-9);
         kit.motors.get("hood").position = 299;    // close: it rests
         r.all().update();
@@ -343,6 +343,79 @@ public class HoodTest {
         kit.motors.get("hood").position = 520;    // past stop B (500): it only pulls back
         r.all().update();
         assertTrue(kit.motors.get("hood").power < 0);
+    }
+
+    // Codex 1: the launcher's stop() stops a motor hood too (it must not keep its power).
+    @Test public void stoppingTheLauncherStopsAMotorHood() {
+        HoodBot r = bot(MotorTicks.class, true);
+        at(r, 48);
+        assertEquals(0.6, kit.motors.get("hood").power, 1e-9);
+        r.launcher.part().stop();
+        assertEquals(0, kit.motors.get("hood").power, 1e-9);
+    }
+
+    // Codex 3: a servo hood's first move starts from nobody knows where: until the whole move's time
+    // has passed it may be anywhere in its range. A new target in the middle keeps that.
+    @Test public void aServoHoodsFirstMoveCountsAsAnywhereUntilItsTimeIsUp() {
+        HoodBot r = bot(Angles.class, false);   // START: to startAngle 2 (from anywhere: 23/25 x 0.5 s)
+        Hood h = r.launcher.hood();
+        double[] s = h.zoneSweep();
+        assertEquals(0, s[0], 1e-9);
+        assertEquals(25, s[1], 1e-9);
+        assertFalse(h.isAtTarget());
+        pass(0.2);
+        r.launcher.useTable("nectar");          // by hand from here
+        h.setAngle(10);                          // a new target in the middle of the first move
+        s = h.zoneSweep();
+        assertEquals("still anywhere", 0, s[0], 1e-9);
+        assertEquals(25, s[1], 1e-9);
+        pass(1);
+        s = h.zoneSweep();
+        assertEquals(10, s[0], 1e-9);
+        assertEquals(10, s[1], 1e-9);
+        assertTrue(h.isAtTarget());
+        assertEquals("now", 10, h.angle(), 1e-9);
+    }
+
+    // Codex 5: a motor hood keeps to an interlock rule's power caps (it brakes before its fence).
+    @Test public void aMotorHoodKeepsToTheInterlocksPowerCaps() {
+        HoodBot r = bot(MotorTicks.class, true);
+        Hood h = r.launcher.hood();
+        assertTrue(h.zoneCoasts());
+        h.zoneFence(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, 0.1, 1);   // at most 0.1 toward bigger angles
+        at(r, 48);
+        assertEquals(0.1, kit.motors.get("hood").power, 1e-9);
+        h.zoneFence(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, 0, 1);     // brake
+        at(r, 48);
+        assertEquals(0, kit.motors.get("hood").power, 1e-9);
+    }
+
+    // Codex 7: cancelling an action that moves a motor hood leaves it holding where it is.
+    @Test public void aCancelledActionLeavesAMotorHoodHoldingWhereItIs() {
+        HoodBot r = bot(MotorTicks.class, true);   // no pose yet: no distance, so the angle is by hand
+        Hood h = r.launcher.hood();
+        Action up = Action.named("Hood up").then(() -> h.setAngle(20)).waitSeconds(5);
+        r.run(up);
+        r.all().update();
+        assertEquals(20, h.targetAngle(), 1e-9);
+        kit.motors.get("hood").position = 100;   // on its way: 5 deg
+        r.cancel(up);
+        r.all().update();
+        assertEquals("holds where it is", 5, h.targetAngle(), 1e-9);
+        assertEquals(0, kit.motors.get("hood").power, 1e-9);
+    }
+
+    // With a table of hood angles but no goal seen yet, the stick moves the hood (a trim would change
+    // nothing you can see).
+    @Test public void withNoGoalYetTheStickMovesTheHood() {
+        HoodBot r = bot(Angles.class, false);
+        Hood h = r.launcher.hood();
+        r.all().update();                // no distance yet: the table does not set the angle
+        assertFalse(h.followsTable());
+        h.step(+1);
+        r.all().update();
+        assertEquals(3, h.targetAngle(), 1e-9);
+        assertEquals(0, h.trim(), 1e-9);
     }
 
     @Test public void initStopsWithClearMessages() {

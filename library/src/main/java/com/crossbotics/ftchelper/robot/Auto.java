@@ -76,10 +76,47 @@ public abstract class Auto<R extends RobotDefinition> extends EasyAuto {
         return config.robotConfig();
     }
 
+    /**
+     * True: the steps are written for BLUE and mirrored left-right for RED; false: RED uses the same
+     * numbers from the red wall (a field turned half a turn, like BIOBUZZ). Default: the robot's one
+     * setting ({@link RobotDefinition#mirrorForRed()}: {@code Tunables.Aim.mirrorForRed}, else
+     * {@code Tunables.Odometry.mirrorForRed}, else true). Overriding it here still works: the robot's aim
+     * and reset spot then use your answer too (and the TeleOp after this autonomous).
+     */
+    @Override
+    protected boolean mirrorForRed() {
+        R r = robot != null ? robot : config;
+        if (r == null) {
+            config = newRobot();
+            r = config;
+        }
+        return r.mirrorForRed();
+    }
+
+    // True when the team's class (or one between it and Auto) writes its own mirrorForRed().
+    private boolean ownMirror() {
+        for (Class<?> c = getClass(); c != null && c != Auto.class; c = c.getSuperclass()) {
+            try {
+                c.getDeclaredMethod("mirrorForRed");
+                return true;
+            } catch (NoSuchMethodException e) {
+                // not here: look at the class it extends
+            }
+        }
+        return false;
+    }
+
     @Override
     protected final Subsystems createSubsystems() {
         // A fresh robot each time: EasyAuto makes the mechanisms again if the profile changes in INIT.
         robot = newRobot();
+        // The autonomous's own mirrorForRed(): the whole robot uses it (aim, reset spot), and so does the
+        // TeleOp after it, unless Tunables says it (Tunables wins; INIT warns when the two differ).
+        if (ownMirror()) {
+            boolean own = mirrorForRed();
+            robot.autoMirror = own;
+            RobotDefinition.LAST_AUTO_MIRROR.put(robot.getClass().getName(), own);
+        }
         // Autonomous: the robot was placed by hand, so parts start from their start positions (a turret's
         // angle from the last program is not used).
         robot.autonomous = true;
@@ -152,6 +189,12 @@ public abstract class Auto<R extends RobotDefinition> extends EasyAuto {
             robot.odometry().update();
             if (!robot.odometry().isReady()) t.warn("Odometry (" + robot.odometry().kind() + "): " + robot.odometry().status());
             else t.line("Odometry", robot.odometry().kind() + " ready");
+            // Not checked with the Odometry Tuner yet: driveTo and path steps do not run on a real robot.
+            if (!robot.odometryChecked()) {
+                boolean sim = "true".equals(System.getProperty(SIMULATOR_PROPERTY));
+                t.warn("Odometry not checked (Tunables.Odometry.checked = false): driveTo and path steps "
+                        + (sim ? "run in the simulator only" : "are skipped (Odometry Tuner, then checked = true)"));
+            }
         }
         if (robot != null) {
             // The modules' INIT work (a camera's lighting test), with their lines.

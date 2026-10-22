@@ -611,13 +611,13 @@ public class AimTest {
         AimBot r = bot(GoalTunables.class, false);
         r.setAlliance(Alliance.RED);
         String s = screen(r.aim()::addInitTelemetry);
-        assertTrue(s, s.contains("RED, goal x 24, y 48 in (mirrorForRed = true: RED mirrors x)"));
+        assertTrue(s, s.contains("RED, goal x 24, y 48 in (RED mirrors x: mirrorForRed not written: default true)"));
         assertTrue(s, s.contains("the pose was never set"));
         AimBot turned = bot(TurnedField.class, false);
         turned.setAlliance(Alliance.RED);
         place(turned, 0, 0, 0);
         s = screen(turned.aim()::addInitTelemetry);
-        assertTrue(s, s.contains("RED, goal x -24, y 48 in (mirrorForRed = false: the same numbers from each wall)"));
+        assertTrue(s, s.contains("RED, goal x -24, y 48 in (the same numbers from each wall: Tunables.Aim.mirrorForRed = false)"));
         assertFalse(s, s.contains("never set"));
     }
 }

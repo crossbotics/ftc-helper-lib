@@ -86,8 +86,8 @@ public abstract class PieceTunerOpMode extends FinderOpMode {
             if (m instanceof PieceSensor) out.add((PieceSensor) m);
             if (m instanceof Pieces) {
                 Pieces p = (Pieces) m;
-                if (p.intakeSensor() != null) out.add(p.intakeSensor());
-                if (p.readySensor() != null) out.add(p.readySensor());
+                if (p.comingInSensor() != null) out.add(p.comingInSensor());
+                if (p.readyToFireSensor() != null) out.add(p.readyToFireSensor());
             }
         }
         return out;

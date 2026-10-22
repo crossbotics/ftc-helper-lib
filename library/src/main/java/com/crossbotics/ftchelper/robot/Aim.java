@@ -23,8 +23,8 @@ import java.util.function.LongSupplier;
  * g1.rumbleWhenAimed();                                                   // buzz: the closer, the stronger
  *
  * public static class Aim {                                   // Tunables.java (every line optional)
- *     public static double goalX = -58, goalY = 55;           // the goal on the field (odometry backup)
- *     public static boolean mirrorForRed = true;              // like your autonomous's mirrorForRed()
+ *     public static double goalX = 13, goalY = -13;           // the goal on the field (odometry backup)
+ *     public static boolean mirrorForRed = false;             // the robot's one setting (BIOBUZZ: false)
  *     public static double turnKp = 0.02, turnKd = 0.002, maxTurnPower = 0.5, minTurnPower = 0, toleranceDeg = 2;
  *     public static double cameraOffset = 0, rumbleDeg = 4;
  *     public static double maxGoalDistance = 170, cameraOdometryAgree = 6;   // inches: odometry sanity checks
@@ -51,7 +51,8 @@ import java.util.function.LongSupplier;
  * seen from your drivers' wall, x inches to the right of the field's centre line, y inches from the
  * centre toward the far wall, written for BLUE. For RED with {@code mirrorForRed = true} (the default,
  * like autonomous) x is mirrored; a field turned half a turn between the alliances (BIOBUZZ) uses
- * {@code mirrorForRed = false}: the same numbers from the red wall. Put the point where the camera
+ * {@code mirrorForRed = false}: the same numbers from the red wall. It is the robot's one setting
+ * ({@link RobotDefinition#mirrorForRed()}): the autonomous and TeleOp's reset spot use it too. Put the point where the camera
  * measures to (the goal's tags), so the two distances agree and one shot table works for both.
  *
  * <p><b>The odometry is only as good as its pose.</b> It must start right: autonomous's start spot,
@@ -100,7 +101,6 @@ public final class Aim {
     // Tunables.Aim: the goal point (only when both are written) and the mirroring rule.
     private final boolean hasGoalPoint;
     private final double goalX, goalY;
-    private final boolean mirrorForRed;
     private final double cameraMaxAgeMs;
     // Sanity checks for the odometry: the farthest the goal can be (inches), and how far apart the
     // camera's and the odometry's distances may be before the Driver Station warns.
@@ -130,7 +130,6 @@ public final class Aim {
         hasGoalPoint = t.has("goalX") && t.has("goalY");
         goalX = hasGoalPoint ? t.number("goalX", 0) : 0;
         goalY = hasGoalPoint ? t.number("goalY", 0) : 0;
-        mirrorForRed = !t.has("mirrorForRed") || t.flag("mirrorForRed", true);
         cameraMaxAgeMs = t.has("cameraMaxAgeMs") ? t.number("cameraMaxAgeMs", 150) : 150;
         maxGoalDistanceIn = t.has("maxGoalDistance") ? t.number("maxGoalDistance", 170) : 170;
         agreeIn = t.has("cameraOdometryAgree") ? t.number("cameraOdometryAgree", 6) : 6;
@@ -223,6 +222,12 @@ public final class Aim {
         PoseTracker tracker = robot.odometry();
         if (!hasGoalPoint || tracker == null) return "";
         if (!tracker.isReady()) return "the odometry is not ready (" + tracker.status() + ")";
+        if (tracker.isPoseSet()) robot.poseUnsetBy = null;
+        if (!tracker.isPoseSet() && robot.poseUnsetBy != null) {
+            // It was set, then the alliance was switched: say that, not "never set".
+            return "the pose is not set for " + robot.poseUnsetBy + " (the alliance was switched): camera only. Set it: "
+                    + (robot.resetPoseHint != null ? robot.resetPoseHint : "robot.resetPose(...)");
+        }
         if (!tracker.isPoseSet()) {
             return "the pose was never set (no autonomous before this TeleOp): camera only. "
                     + "Run autonomous first, or set it: "
@@ -269,7 +274,7 @@ public final class Aim {
 
     // The goal's x for this alliance: mirrored for RED when mirrorForRed.
     private double goalXNow() {
-        return robot.alliance() == Alliance.RED && mirrorForRed ? -goalX : goalX;
+        return robot.alliance() == Alliance.RED && robot.mirrorForRed() ? -goalX : goalX;
     }
 
     // The camera that aims the whole robot: the first one with a goal(...) in Robot.java, or null.
@@ -502,7 +507,7 @@ public final class Aim {
                     flightSecPerIn.getAsDouble(), maxLeadIn.getAsDouble()));
         }
         if (!hasGoalPoint || robot.odometry() == null) return;
-        String rule = mirrorForRed ? "mirrorForRed = true: RED mirrors x" : "mirrorForRed = false: the same numbers from each wall";
+        String rule = (robot.mirrorForRed() ? "RED mirrors x: " : "the same numbers from each wall: ") + robot.mirrorSource();
         t.line("Aim", Module.fmt("%s, goal x %.0f, y %.0f in (%s)", robot.alliance(), goalXNow(), goalY, rule));
         String problem = odometryProblem();
         if (!problem.isEmpty()) t.warn("Aim odometry: " + problem);

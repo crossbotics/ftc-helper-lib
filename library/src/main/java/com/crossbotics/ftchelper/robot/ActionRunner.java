@@ -115,6 +115,7 @@ final class ActionRunner implements Subsystem {
             if (previous != null && previous != current && previous.isRunning()) {
                 stop(previous, "stopped: " + part.name() + " taken by " + current.name());
             }
+            if (!current.claimed.contains(part)) part.claimedBy(current);
             part.owner = current;
             current.claimed.add(part);
             current.usedPresentPart = true;
@@ -144,7 +145,16 @@ final class ActionRunner implements Subsystem {
         for (Action a : new ArrayList<>(running)) {
             if (!a.isRunning()) {
                 running.remove(a);
-                if ("done".equals(a.result())) a.claimed.clear();
+                if ("done".equals(a.result())) {
+                    // Its parts may add a word: a launcher says how many it fired ("done (0 fired)").
+                    StringBuilder w = new StringBuilder();
+                    for (Module<?> p : a.claimed) {
+                        String d = p.doneWords();
+                        if (!d.isEmpty()) w.append(w.length() == 0 ? "" : ", ").append(d);
+                    }
+                    a.detail = w.length() == 0 ? "" : "(" + w + ")";
+                    a.claimed.clear();
+                }
                 else halt(a);   // timed out: stop what it started
                 remember(a);
             }

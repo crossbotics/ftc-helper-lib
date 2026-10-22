@@ -338,7 +338,7 @@ default that says "of the range" fits degrees, positions and counts. Module: [Ho
 | `posB` | the position a hair off the other hard stop | 0 to 1 / counts | REQUIRED, unless `calibration` | yes, at once | Hood Finder | the same |
 | `angleA`, `angleB` | the hood's angle at `posA` and `posB` (both, or neither) | your angle unit | none: the angle is the position | no | Hood Finder | you want the table in degrees |
 | `calibration` | instead of `posA`/`posB`: `{position, angle}` rows for a linkage; first and last rows are the stops | position, angle | none | no | Hood Finder | the hood is not a straight gear |
-| `homeAngle` | where it goes at START | angle | angle A | no | none | another start angle |
+| `startAngle` | where it goes at START | angle | angle A | no | none | another start angle |
 | `stepAngle` | one step of `step(n)` | angle | 1/25 of the range | no | none | the drivers want bigger steps |
 | `byHandPerSec` | speed with the stick at full | angle per second | the range in 2.5 s | no | test | the stick is too fast |
 | `trimMax` | the most hood trim | angle | 1/5 of the range | no | none | you need more trim |

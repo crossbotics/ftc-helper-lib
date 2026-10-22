@@ -175,8 +175,8 @@ public class PiecesTest {
     }
 
     private void clocks(Bot b) {
-        b.pieces.intakeSensor().clock = () -> now[0];
-        if (b.pieces.readySensor() != null) b.pieces.readySensor().clock = () -> now[0];
+        b.pieces.comingInSensor().clock = () -> now[0];
+        if (b.pieces.readyToFireSensor() != null) b.pieces.readyToFireSensor().clock = () -> now[0];
         b.indexer.clock = () -> now[0];
         b.intake.clock = () -> now[0];
         b.pieces.clock = () -> now[0];
@@ -194,7 +194,7 @@ public class PiecesTest {
         Kit kit = new Kit();
         Bot b = setup(kit, false);
         FakeColor in = kit.colors.get("intake_color");
-        PieceSensor s = b.pieces.intakeSensor();
+        PieceSensor s = b.pieces.comingInSensor();
         in.empty();
         run(b, 50);
         assertEquals(Pieces.NONE, s.kind());
@@ -269,7 +269,7 @@ public class PiecesTest {
         b.intake.in();
         run(b, 20);
         assertEquals(1.0, kit.kit.motors.get("intake").power, 1e-9);
-        b.pieces.added("POLLEN");
+        b.pieces.pieceIn("POLLEN");
         run(b, 20);
         assertTrue(b.intake.isHeldBack());
         assertEquals("full: it stops pulling in", 0.0, kit.kit.motors.get("intake").power, 1e-9);
@@ -277,7 +277,7 @@ public class PiecesTest {
         run(b, 20);
         assertTrue("out still works", kit.kit.motors.get("intake").power < 0);
         b.intake.in();
-        b.pieces.removed();
+        b.pieces.pieceOut();
         run(b, 20);
         assertEquals("room again: runs in by itself", 1.0, kit.kit.motors.get("intake").power, 1e-9);
     }
@@ -492,7 +492,7 @@ public class PiecesTest {
         assertTrue(notes, notes.contains("size_sensor: not found: no distance sensor called \"size_sensor\""));
         run(b, 100);
         assertEquals(Pieces.NONE, b.pieces.atIntake());
-        assertFalse(b.pieces.intakeSensor().isWorking());
+        assertFalse(b.pieces.comingInSensor().isWorking());
         assertEquals("the preload, nothing more", 1, b.pieces.count());
         Fakes.FakeTelemetry ft = new Fakes.FakeTelemetry();
         RobotTelemetry t = new RobotTelemetry(ft.telemetry, () -> 0L);
@@ -507,14 +507,14 @@ public class PiecesTest {
         Bot b = setup(kit, false);
         final boolean[] frozen = {false};
         final double[][] reading = {{48, 0.8, 15}};
-        b.pieces.intakeSensor().useReader(() -> frozen[0] ? null : reading[0].clone());
+        b.pieces.comingInSensor().useReader(() -> frozen[0] ? null : reading[0].clone());
         run(b, 60);
         assertEquals("one came in", 2, b.pieces.count());
         frozen[0] = true;                             // the camera stops (or is unplugged)
         run(b, 600);
-        assertFalse(b.pieces.intakeSensor().isWorking());
+        assertFalse(b.pieces.comingInSensor().isWorking());
         assertEquals("no stale answer", Pieces.NONE, b.pieces.atIntake());
-        assertTrue(b.pieces.intakeSensor().problem().contains("no new reading"));
+        assertTrue(b.pieces.comingInSensor().problem().contains("no new reading"));
         assertEquals(2, b.pieces.count());
         reading[0] = new double[] {48, 0.8, 15};      // back: the same piece still there, not counted twice
         frozen[0] = false;

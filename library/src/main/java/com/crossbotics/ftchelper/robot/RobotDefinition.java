@@ -365,6 +365,7 @@ public abstract class RobotDefinition {
         for (Interlock r : interlocks.rules) r.build(TunableSection.of(tunablesClass, r.name()), this);
         // Drive, Odometry (scales, "checked"), Buttons (gesture times), Aim (goal point), every part and rule.
         Set<String> used = usedSections();
+        usedAtSetup = used;
         otherSections = new OtherSections(tunablesClass, used);
         sectionWarnings.clear();
         sectionWarnings.addAll(sectionProblems(used));
@@ -601,6 +602,8 @@ public abstract class RobotDefinition {
     // How to set the pose from TeleOp, for the "pose was never set" warning (ControlMap fills it in:
     // "hold G1 START 1 s at the reset spot"). Null = only from code.
     String resetPoseHint = null;
+    // The alliance a TeleOp switch made the pose "not set" for (see ControlMap.poseAfterSwitch), null = none.
+    Alliance poseUnsetBy = null;
 
     /**
      * Sets the odometry's pose to the reset spot in {@code Tunables.Odometry}: {@code resetX},
@@ -655,24 +658,82 @@ public abstract class RobotDefinition {
         return new double[] {x + 0.0, y + 0.0, com.crossbotics.ftchelper.util.Angles.wrapDegrees(h) + 0.0};
     }
 
-    // RED mirrors the spot unless Tunables.Odometry.mirrorForRed (or Tunables.Aim.mirrorForRed) is false.
+    // RED mirrors the spot when mirrorForRed() says so (one setting for the whole robot).
     final boolean resetMirrorsForRed() {
-        describe();
-        TunableSection o = TunableSection.of(tunablesClass, "Odometry");
-        if (o.has("mirrorForRed")) return o.flag("mirrorForRed", true);
-        TunableSection a = TunableSection.of(tunablesClass, "Aim");
-        return !a.has("mirrorForRed") || a.flag("mirrorForRed", true);
+        return mirrorForRed();
     }
 
     // Which mirroring the reset spot uses for RED, and where that choice comes from, for INIT:
-    // "mirrored: x and heading flip (Tunables.Odometry.mirrorForRed = true)".
+    // "mirrored, x and heading flip (Tunables.Aim.mirrorForRed = true)".
     final String resetMirrorWords() {
+        return (mirrorForRed() ? "mirrored, x and heading flip (" : "the same numbers from the red wall (") + mirrorSource() + ")";
+    }
+
+    // ----------------------------- mirrorForRed: one setting -----------------------------
+
+    // The autonomous's own mirrorForRed() (when it overrides it), set by Auto at INIT; null = none.
+    Boolean autoMirror = null;
+    // The last autonomous's own mirrorForRed() per robot class, for the TeleOp after it.
+    static final Map<String, Boolean> LAST_AUTO_MIRROR = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /**
+     * True when RED uses BLUE's numbers mirrored left-right (x and headings flip: a mirrored field like
+     * DECODE 2025-26); false when RED uses the same numbers from the red wall (a field turned half a
+     * turn, like BIOBUZZ 2026-27). ONE setting for the whole robot: the autonomous's routes and start
+     * spot, the aim's goal point, and TeleOp's reset spot all use it. Where it comes from, first found:
+     * {@code Tunables.Aim.mirrorForRed}, {@code Tunables.Odometry.mirrorForRed}, your autonomous's
+     * {@code mirrorForRed()} (in a TeleOp: the last autonomous's), else true. INIT shows the choice.
+     */
+    public final boolean mirrorForRed() {
         describe();
-        String from = TunableSection.of(tunablesClass, "Odometry").has("mirrorForRed") ? "Tunables.Odometry.mirrorForRed"
-                : TunableSection.of(tunablesClass, "Aim").has("mirrorForRed") ? "Tunables.Aim.mirrorForRed (no Odometry one)"
-                : "mirrorForRed not set: default";
-        return resetMirrorsForRed() ? "mirrored, x and heading flip (" + from + " = true)"
-                : "the same numbers from the red wall (" + from + " = false)";
+        TunableSection a = TunableSection.of(tunablesClass, "Aim");
+        if (a.has("mirrorForRed")) return a.flag("mirrorForRed", true);
+        TunableSection o = TunableSection.of(tunablesClass, "Odometry");
+        if (o.has("mirrorForRed")) return o.flag("mirrorForRed", true);
+        if (autoMirror != null) return autoMirror;
+        Boolean last = LAST_AUTO_MIRROR.get(getClass().getName());
+        return last == null || last;
+    }
+
+    /** Where {@link #mirrorForRed()} comes from, with its value, e.g. "Tunables.Aim.mirrorForRed = false". */
+    final String mirrorSource() {
+        describe();
+        boolean v = mirrorForRed();
+        if (TunableSection.of(tunablesClass, "Aim").has("mirrorForRed")) return "Tunables.Aim.mirrorForRed = " + v;
+        if (TunableSection.of(tunablesClass, "Odometry").has("mirrorForRed")) return "Tunables.Odometry.mirrorForRed = " + v;
+        if (autoMirror != null) return "your autonomous's mirrorForRed() = " + v;
+        if (LAST_AUTO_MIRROR.containsKey(getClass().getName())) return "the last autonomous's mirrorForRed() = " + v;
+        return "mirrorForRed not written: default true";
+    }
+
+    // The Tunables sections this robot reads (set at INIT), for the out-of-range notes.
+    private Set<String> usedAtSetup = null;
+
+    // INIT warnings: two places that say different things, numbers that only work in pairs, and numbers
+    // outside their allowed range (Claw.open = 1.2 for a servo).
+    final List<String> settingProblems() {
+        describe();
+        List<String> out = new ArrayList<>();
+        if (usedAtSetup != null) out.addAll(com.crossbotics.ftchelper.tuning.Tunable.outsideRangeNotes(usedAtSetup));
+        TunableSection a = TunableSection.of(tunablesClass, "Aim"), o = TunableSection.of(tunablesClass, "Odometry");
+        if (a.has("goalX") != a.has("goalY")) {
+            out.add("Tunables.Aim: goalX and goalY go together; with only " + (a.has("goalX") ? "goalX" : "goalY")
+                    + " there is no goal point (the odometry backup is off)");
+        }
+        if (o.has("resetX") != o.has("resetY") || (o.has("resetHeading") && !(o.has("resetX") && o.has("resetY")))) {
+            out.add("Tunables.Odometry: the reset spot needs resetX and resetY (resetHeading is optional); "
+                    + "without both there is no reset spot, so set pose here does nothing");
+        }
+        if (a.has("mirrorForRed") && o.has("mirrorForRed") && a.flag("mirrorForRed", true) != o.flag("mirrorForRed", true)) {
+            out.add("Tunables.Aim.mirrorForRed and Tunables.Odometry.mirrorForRed differ: the Aim one is used for everything. "
+                    + "Write it once (delete the Odometry one)");
+        }
+        boolean tun = a.has("mirrorForRed") || o.has("mirrorForRed");
+        if (tun && autoMirror != null && autoMirror != mirrorForRed()) {
+            out.add("your autonomous's mirrorForRed() is " + autoMirror + " but " + mirrorSource() + ": the routes use "
+                    + autoMirror + ", the aim and reset spot " + mirrorForRed() + ". Write it in one place");
+        }
+        return out;
     }
 
     /**
@@ -905,6 +966,7 @@ public abstract class RobotDefinition {
             else t.text(n);
         }
         for (String w : sectionWarnings) t.warn(w);
+        for (String w : settingProblems()) t.warn(w);
     }
 
     /** INIT warnings about misnamed Tunables sections (empty when none); see {@link #checkTunables()}. */
@@ -934,6 +996,10 @@ public abstract class RobotDefinition {
 
     /** Right after START: the modules' start (an intake "on at the start") and the atStart actions. */
     final void started() {
+        // The interlock rules first: every part gets its fence (and "wait") from where the parts are now,
+        // BEFORE any START command is sent (a hood going to its startAngle, a turret homing, an atStart
+        // action). A command into a zone the other part is in then waits at the fence like any other.
+        interlocks.update();
         for (Module<?> m : modules) {
             if (m.missing) continue;   // not on the robot: nothing to start
             for (Module<?> c : m.children()) c.start();

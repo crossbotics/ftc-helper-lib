@@ -264,7 +264,7 @@ public class LibraryControlsTest {
     }
 
     @Test public void theInitLineSaysHowTheResetSpotIsUsedForRed() {
-        assertEquals("mirrored, x and heading flip (mirrorForRed not set: default = true)", odoBot(ResetSpot.class).resetMirrorWords());
+        assertEquals("mirrored, x and heading flip (mirrorForRed not written: default true)", odoBot(ResetSpot.class).resetMirrorWords());
         assertEquals("the same numbers from the red wall (Tunables.Odometry.mirrorForRed = false)",
                 odoBot(ResetSpotTurned.class).resetMirrorWords());
     }

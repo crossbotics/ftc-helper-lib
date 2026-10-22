@@ -208,7 +208,8 @@ public class AutoDrive {
 
     /**
      * Drives a distance in a straight line, robot-relative, without turning.
-     * Full speed until the last part, then slows down (see {@code taperStartFraction}).
+     * Full speed until the last part, then slows down (see {@code taperStartFraction}). At the distance
+     * the wheels brake and it waits (at most 0.3 s, mechanisms still updating) until the robot has stopped.
      *
      * <p><b>BLOCKS</b> (on purpose): returns when the move ends. Autonomous only; never in TeleOp.
      *
@@ -260,7 +261,9 @@ public class AutoDrive {
                 // distance from the forward and sideways parts (like the long side of a triangle).
                 double[] moved = displacementIn(start, getWheelTicks());
                 double traveled = Math.hypot(moved[0], moved[1]);
-                if (traveled >= distanceIn) return Result.DONE;
+                // There: brake, and wait (briefly) until the robot has really stopped, so the next step
+                // does not start while it still rolls on (see settle()).
+                if (traveled >= distanceIn) return settle(deadline);
 
                 // Slow down near the end so the robot does not overshoot or skid (see MotionMath).
                 double remaining = distanceIn - traveled;
@@ -377,6 +380,9 @@ public class AutoDrive {
             // Finish the turn, only after a finished move, inside the same deadline.
             if (Math.abs(Angles.shortestDiff(targetHeadingDeg, heading.getAsDouble())) > cfg.turnToleranceDeg) {
                 result = turnUntil(targetHeadingDeg, maxTurnPower, deadline);
+            } else if (distanceIn * cfg.ticksPerInch() >= 5.0) {
+                // No turn needed: wait until the robot has really stopped (like move()).
+                result = settle(deadline);
             }
             return result;
         } finally {
@@ -406,6 +412,11 @@ public class AutoDrive {
     // How long the odometry may be "not ready" before driveTo gives up (NO_ODOMETRY), seconds.
     static final double ODOMETRY_LOST_SEC = 0.2;
     static final double DRIVE_TO_NEAR_IN = 8, DRIVE_TO_KP = 0.04, DRIVE_TO_MIN_POWER = 0.12, DRIVE_TO_MIN_TURN = 0.08;
+    // driveTo's stuck checks count at most this much time per loop (seconds), see driveTo.
+    static final double STALL_STEP_SEC = 0.1;
+    // After move() reaches its distance: the wheels brake, and it waits until the robot is slower than
+    // SETTLED_IN_PER_SEC, at most SETTLE_MAX_SEC, so the next step starts from a robot that stands still.
+    static final double SETTLE_MAX_SEC = 0.3, SETTLED_IN_PER_SEC = 1.0, SETTLE_WINDOW_SEC = 0.05;
 
     public Result driveTo(java.util.function.Supplier<com.crossbotics.ftchelper.util.FieldPose> pose,
                           double xIn, double yIn, double headingDeg, double maxPower, double toleranceIn) {
@@ -438,11 +449,27 @@ public class AutoDrive {
             // The heading counts as there within 2 degrees (or the drive's own tolerance, if bigger).
             double headingTol = Math.max(cfg.turnToleranceDeg, 2.0);
             double minTurn = cfg.turnMinPower > 0 ? cfg.turnMinPower : DRIVE_TO_MIN_TURN;
+            // The smallest powers near the point are WHEEL powers: mix() scales every power by the drive's
+            // power limit (Tunables.Drive.practiceMaxPower 0.4 in the practice profile), and 0.12 x 0.4 is
+            // too weak to move a robot, so it would end STALLED a little short of the point. Asked for
+            // before that scaling, they are divided by the limit (at most 1).
+            double limit = Math.max(powerLimit, 1e-6);
+            double nearMin = Math.min(1, DRIVE_TO_MIN_POWER / limit);
+            minTurn = Math.min(1, minTurn / limit);
             // A single bad reading (a CRC glitch) is not a lost odometry: wait still for up to 0.2 s.
             double notReadySince = Double.NaN;
+            // The stuck checks' clock: real time, but at most STALL_STEP_SEC per loop. After one very slow
+            // loop (the hub or the phone busy) the pose may not have caught up yet; that wait must not
+            // count as "no progress for 2 s". The whole move's time limit still uses the real time.
+            double stallClock = 0, lastLoopSec = seconds();
             while (true) {
                 Result early = checkStop(deadline);
                 if (early != null) return early;
+                // Update the odometry (and the mechanisms) first, so the pose judged below is this loop's.
+                runLoopHook();
+                double loopNow = seconds();
+                stallClock += Math.max(0, Math.min(STALL_STEP_SEC, loopNow - lastLoopSec));
+                lastLoopSec = loopNow;
                 if (!ready.getAsBoolean()) {
                     double now = seconds();
                     if (Double.isNaN(notReadySince)) notReadySince = now;
@@ -451,7 +478,6 @@ public class AutoDrive {
                         return Result.NO_ODOMETRY;
                     }
                     setPowers(new double[]{0, 0, 0, 0});   // the pose cannot be trusted: hold still
-                    runLoopHook();
                     idle.run();
                     continue;
                 }
@@ -476,7 +502,7 @@ public class AutoDrive {
                 // of circling it.
                 double speed;
                 if (dist <= toleranceIn) speed = 0;
-                else if (dist < DRIVE_TO_NEAR_IN) speed = MathUtil.clamp(DRIVE_TO_KP * dist, DRIVE_TO_MIN_POWER, maxSpeed);
+                else if (dist < DRIVE_TO_NEAR_IN) speed = Math.max(nearMin, Math.min(DRIVE_TO_KP * dist, maxSpeed));
                 else speed = MotionMath.taperSpeed(dist / startDist, cfg.moveMinPower, maxSpeed, cfg.taperStartFraction);
                 double fwd = dist > 1e-6 ? speed * forwardErr / dist : 0;
                 double right = dist > 1e-6 ? speed * rightErr / dist : 0;
@@ -494,12 +520,11 @@ public class AutoDrive {
                     nearStall.reset();
                     wasNear = near;
                 }
-                boolean stuck = near ? dist > toleranceIn && nearStall.update(dist, seconds()) : stall.update(dist, seconds());
+                boolean stuck = near ? dist > toleranceIn && nearStall.update(dist, stallClock) : stall.update(dist, stallClock);
                 if (cfg.stallExitEnabled && stuck) {
                     log.accept("AutoDrive: driveTo stopped, robot stuck");
                     return Result.STALLED;
                 }
-                runLoopHook();
                 idle.run();
             }
         } finally {
@@ -575,6 +600,36 @@ public class AutoDrive {
             // Always stop the wheels, however the turn ended.
             stop();
         }
+    }
+
+    // The end of a move that reached its distance: brake (power 0) and keep the loop going (the loop
+    // hook keeps every mechanism working, STOP is still checked) until the wheels have stopped turning,
+    // at most SETTLE_MAX_SEC. Without it a fast move "ends" while the robot still rolls an inch or two
+    // and the next move starts from a moving robot. Always DONE (the distance was reached), except STOP.
+    private Result settle(long deadline) {
+        stop();
+        double start = seconds(), lastSec = start;
+        int[] last = getWheelTicks();
+        while (seconds() - start < SETTLE_MAX_SEC) {
+            if (!isActive.getAsBoolean()) return Result.STOPPED;
+            // The time limit or the stop condition: the distance was reached, so this is still DONE.
+            if ((stopCondition != null && stopCondition.getAsBoolean()) || clockNanos.getAsLong() - deadline >= 0) break;
+            runLoopHook();
+            idle.run();
+            double now = seconds();
+            double dt = now - lastSec;
+            // The speed over at least SETTLE_WINDOW_SEC: an encoder counts whole ticks, so over one fast
+            // loop a slowly rolling wheel may read 0 ticks.
+            if (dt < SETTLE_WINDOW_SEC) continue;
+            int[] ticks = getWheelTicks();
+            // The fastest wheel's speed, inches per second.
+            double fastest = 0;
+            for (int i = 0; i < 4; i++) fastest = Math.max(fastest, Math.abs(ticks[i] - last[i]) / cfg.ticksPerInch() / dt);
+            if (fastest < SETTLED_IN_PER_SEC) break;
+            last = ticks;
+            lastSec = now;
+        }
+        return Result.DONE;
     }
 
     // =========================================================================================

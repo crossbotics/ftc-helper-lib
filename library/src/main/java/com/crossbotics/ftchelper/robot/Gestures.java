@@ -27,6 +27,10 @@ final class Gestures {
 
     static final String TAP = "tap", HOLD = "hold", DOUBLE = "double-tap", TAP_HOLD = "tap, then hold";
 
+    // Words that start with a gesture of their own, e.g. "hold 1 s: ...", "held 2 s: ...", "double-tap: ...".
+    private static final java.util.regex.Pattern SAYS_GESTURE =
+            java.util.regex.Pattern.compile("(hold|held|tap|double-tap|\\d+ taps)\\b[^:;]{0,12}:");
+
     static String tapsKey(int n) {
         return n + " taps";
     }
@@ -40,7 +44,9 @@ final class Gestures {
         StringBuilder out = new StringBuilder();
         for (Map.Entry<String, String> e : says.entrySet()) {
             if (out.length() > 0) out.append("; ");
-            out.append(e.getKey()).append(": ").append(e.getValue());
+            // Words that already say the gesture ("hold 1 s: piece count = 0") are not given it twice.
+            if (!SAYS_GESTURE.matcher(e.getValue()).lookingAt()) out.append(e.getKey()).append(": ");
+            out.append(e.getValue());
             Integer buzz = rumble.get(e.getKey());
             if (buzz != null) out.append(buzz < 0 ? " (buzz: 2 on, 1 off)" : " (buzz)");
         }

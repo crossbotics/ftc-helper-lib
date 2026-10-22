@@ -72,9 +72,11 @@ public class PositionServo implements AngleDevice {
     private long lastNanos = -1;             // the time of the last update(), for slow moves; -1 = never
     // The interlock's fence (see fence()): the raw positions it may be sent to now (0..1 = none).
     private double fenceLo = Double.NEGATIVE_INFINITY, fenceHi = Double.POSITIVE_INFINITY;
-    // Where the servo may be: the last position SENT, where that move started and when it should end
-    // (for getSweep: a servo cannot say where it is). NaN = nothing sent yet.
-    private double sweepFrom = Double.NaN, sweepTo = Double.NaN, sweepStartSec = 0, sweepDoneSec = 0;
+    // Where the servo may be: the last position SENT, where that move may have started (lowest and
+    // highest: the same number from a known place; the whole range for the first move, which starts from
+    // nobody knows where) and when it should end (for getSweep: a servo cannot say where it is).
+    // NaN = nothing sent yet.
+    private double sweepFromLo = Double.NaN, sweepFromHi = Double.NaN, sweepTo = Double.NaN, sweepStartSec = 0, sweepDoneSec = 0;
 
     /** Gets the servo. Does not move it. */
     public static PositionServo create(HardwareMap hardwareMap, String name) {
@@ -319,9 +321,10 @@ public class PositionServo implements AngleDevice {
     public double getEstimatedPosition() {
         if (Double.isNaN(sweepTo)) return Double.NaN;
         double now = clockNanos.getAsLong() / 1e9;
-        if (Double.isNaN(sweepFrom) || now >= sweepDoneSec || sweepDoneSec <= sweepStartSec) return sweepTo;
+        // Arrived, or a move from an unknown place (no better guess than where it is going).
+        if (now >= sweepDoneSec || sweepDoneSec <= sweepStartSec || sweepFromLo != sweepFromHi) return sweepTo;
         double t = (now - sweepStartSec) / (sweepDoneSec - sweepStartSec);
-        return sweepFrom + (sweepTo - sweepFrom) * t;
+        return sweepFromLo + (sweepTo - sweepFromLo) * t;
     }
 
     /**
@@ -334,8 +337,7 @@ public class PositionServo implements AngleDevice {
         if (Double.isNaN(sweepTo)) return new double[] {min, max};
         double now = clockNanos.getAsLong() / 1e9;
         if (now >= sweepDoneSec) return new double[] {sweepTo, sweepTo};
-        if (Double.isNaN(sweepFrom)) return new double[] {min, max};
-        return new double[] {Math.min(sweepFrom, sweepTo), Math.max(sweepFrom, sweepTo)};
+        return new double[] {Math.min(sweepFromLo, sweepTo), Math.max(sweepFromHi, sweepTo)};
     }
 
     /** {@link #getSweep()} in degrees ({lowest, highest}; needs {@link #degrees}), or null before the first command. */
@@ -459,13 +461,31 @@ public class PositionServo implements AngleDevice {
     // Sends a position only when it changes: each hardware command costs loop time.
     private void write(double position) {
         if (position != commanded) {
-            // Where it may be from now on: from where it probably is to here, for the travel time.
+            // Where it may be from now on: from where it may be now to here, until it should be there.
+            // The first move starts from anywhere in its range (a full move's time). A new position in
+            // the middle of a move from "anywhere" keeps that: it may still be anywhere it could have been.
             double now = clockNanos.getAsLong() / 1e9;
-            double from = getEstimatedPosition();
-            sweepFrom = from;
+            double lo, hi, time;
+            if (Double.isNaN(sweepTo)) {
+                lo = min;
+                hi = max;
+                time = travelTimeSec;   // nobody knows where it was: a whole 0..1 move
+            } else if (now < sweepDoneSec && sweepFromLo != sweepFromHi) {
+                double[] may = getSweep();
+                lo = may[0];
+                hi = may[1];
+                time = Math.max(Math.abs(position - lo), Math.abs(position - hi)) * travelTimeSec;
+                // Never sooner than the move it interrupts would have ended (it may still be far away).
+                time = Math.max(time, sweepDoneSec - now);
+            } else {
+                lo = hi = getEstimatedPosition();
+                time = Math.abs(position - lo) * travelTimeSec;
+            }
+            sweepFromLo = lo;
+            sweepFromHi = hi;
             sweepTo = position;
             sweepStartSec = now;
-            sweepDoneSec = now + (Double.isNaN(from) ? 1 : Math.abs(position - from)) * travelTimeSec;
+            sweepDoneSec = now + time;
             servo.setPosition(position);
             commanded = position;
         }

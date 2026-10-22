@@ -439,6 +439,19 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
     }
 
     /**
+     * Set every loop by the interlock rules (after the fence): true while its position is not known (a
+     * turret not homed, a servo not sent anywhere yet) AND the other part of a rule is in its zone. It
+     * must then not move at all (no homing, no stick, no first servo move): moving from "anywhere" could
+     * sweep through the other part. Default: nothing (a part whose position is always known).
+     */
+    void zoneWait(boolean wait) { }
+
+    /** True while it is homing (looking for its switch: it may sweep its whole range). Default false. */
+    boolean zoneHoming() {
+        return false;
+    }
+
+    /**
      * Its top speed in zoneUnit per second at full power (a motor's free speed through its gears), or NaN
      * if not known (then the interlock uses the fastest speed it has measured).
      */
@@ -484,6 +497,17 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
         // A part that is not on the robot: the command goes nowhere, and a running action notes the skip.
         if (missing) robot.runner.skipped(this);
         else robot.runner.touched(this);
+    }
+
+    /** An action starts using this part (its first command in that action). Default: nothing. */
+    void claimedBy(Action a) { }
+
+    /**
+     * A few words for an action that used this part and is done, e.g. a launcher's "0 fired" (the
+     * Driver Station then says "Fire all: done (0 fired)"). Default: "" (nothing to add).
+     */
+    String doneWords() {
+        return "";
     }
 
     /** The part's telemetry line; each module adds its own. */

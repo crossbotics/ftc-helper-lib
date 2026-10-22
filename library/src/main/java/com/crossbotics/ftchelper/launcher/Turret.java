@@ -280,6 +280,29 @@ public class Turret implements Subsystem {
         return this;
     }
 
+    // An interlock rule says: do not move while the angle is not known (see waitUnknown).
+    private boolean waitUnknown = false;
+
+    /**
+     * Set every loop by an interlock rule: while true, a turret whose angle is not known yet (not homed,
+     * or a servo turret never sent anywhere) does not move at all: no homing (its time limit waits too),
+     * no stick, no first servo move. From "anywhere" it could sweep through another part that is in its
+     * zone. Once its angle is known this does nothing (the {@link #fence} keeps it out).
+     *
+     * @param wait true = hold still while the angle is unknown
+     * @return this turret
+     */
+    public Turret waitWhileUnknown(boolean wait) {
+        waitUnknown = wait;
+        return this;
+    }
+
+    /** True while {@link #waitWhileUnknown} holds it still (its angle not known, the rule says wait). */
+    public boolean isWaitingUnknown() {
+        if (!waitUnknown) return false;
+        return servo != null ? Double.isNaN(servo.getEstimatedDegrees()) : (!homed || homing);
+    }
+
     /** Removes the {@link #fence}. */
     public Turret clearFence() {
         return fence(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
@@ -537,6 +560,10 @@ public class Turret implements Subsystem {
             setHomedHere();
         }
         switchWas = switchNow;
+        // An interlock rule holds it still while its angle is unknown: homing waits, and its time limit
+        // starts again when it may go (waiting is not "the switch was not found").
+        boolean waitNow = isWaitingUnknown();
+        if (waitNow && homing) homingStartedSec = clockNanos.getAsLong() / 1e9;
         // Homing time limit: a broken or unplugged switch must not let the turret turn forever
         // and wind up its cables. Stop and show a fault instead.
         if (homing && clockNanos.getAsLong() / 1e9 - homingStartedSec > homingTimeoutSec) {
@@ -570,6 +597,7 @@ public class Turret implements Subsystem {
             // An interlock's caps: less power (or none: it brakes) while it turns fast toward its fence.
             power = MathUtil.clamp(power, -fenceDownPower, fenceUpPower);
         }
+        if (waitNow) power = 0;   // angle unknown and another part in its zone: no move at all
         write(power);
     }
 
@@ -620,7 +648,8 @@ public class Turret implements Subsystem {
             wantedDeg = targetDeg;
         }
         double aim = fencedTarget();
-        if (!Double.isNaN(aim)) servo.setDegrees(MathUtil.clamp(aim, minDeg, maxDeg));
+        // Never sent anywhere and an interlock rule says wait: the first move waits (it could sweep anywhere).
+        if (!Double.isNaN(aim) && !isWaitingUnknown()) servo.setDegrees(MathUtil.clamp(aim, minDeg, maxDeg));
         servo.update();
     }
 

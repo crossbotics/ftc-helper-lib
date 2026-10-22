@@ -35,7 +35,7 @@ public class HoodRecipes {
             // Optional: the hood's angle at each stop (any scale; here 0 = steep end, 30 = flat end).
             public static double angleA = 0, angleB = 30;
             // Stop to stop, seconds: the launcher waits this share of it before firing.
-            public static double travelSec = 0.5, homeAngle = 0;
+            public static double travelSec = 0.5, startAngle = 0;
         }
 
         public static class Launcher {
@@ -175,7 +175,7 @@ public class HoodRecipes {
             // while the table sets the angle, else the angle itself. Your own: steps and home.
             g2.y.press(() -> robot.launcher.hood().step(+1)).says("hood +1 step");
             g2.a.press(() -> robot.launcher.hood().step(-1)).says("hood -1 step");
-            g2.x.press(() -> robot.launcher.hood().home()).says("hood home");
+            g2.x.press(() -> robot.launcher.hood().goToStart()).says("hood to its start angle");
             // end recipe
         }
     }

@@ -62,16 +62,19 @@ public class Tunables {
      */
     public static class Hood {
         public static double posA = 0.20, posB = 0.65, angleA = 0, angleB = 25;
-        public static double travelSec = 0.45, homeAngle = 0;
+        public static double travelSec = 0.45, startAngle = 0;
     }
 
     /**
-     * Aiming. goalX, goalY: the goal on the field (inches, from the BLUE drivers' wall): example.
+     * Aiming. goalX, goalY: the goal on the field, inches, seen from our drivers' wall: our HIVE's CELL that
+     * is up at the start, 13 in right of the centre line and 13 in from the centre toward our wall
+     * (sim/fields/biobuzz-2026.json; it is the other CELL after the HIVE tips). mirrorForRed = false:
+     * BIOBUZZ's field is turned half a turn, so RED uses the same numbers from the red wall.
      * shooterForwardIn: the turret's axis is 1 in forward of the robot's centre (turret v8.1GB), which
      * matters when shooting on the move (off until tested on the real robot).
      */
     public static class Aim {
-        public static double goalX = -58, goalY = 55;
+        public static double goalX = 13, goalY = -13;
         public static boolean mirrorForRed = false;
         public static boolean shootOnMove = false;
         public static double shooterForwardIn = 1, shooterLeftIn = 0;

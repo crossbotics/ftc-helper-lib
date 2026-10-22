@@ -199,6 +199,27 @@ public class MechanismTest {
         assertTrue(s.isDone());
     }
 
+    // Codex 4: a new target during the FIRST move (from nobody knows where) keeps "anywhere": the
+    // servo may still be anywhere it could have started, until a whole move's time has passed.
+    @Test public void aNewTargetDuringTheFirstMoveKeepsItsWholeRange() {
+        Fakes.FakeServo fs = new Fakes.FakeServo();
+        Fakes.Clock c = new Fakes.Clock();
+        PositionServo s = new PositionServo("s", fs.servo).withClock(c::get).travelTime(1.0).limits(0.1, 0.9);
+        s.set(0.2);                                // the first move: anywhere from 0.1 to 0.9
+        c.addSec(0.1);
+        s.set(0.3);                                // changed mind at once
+        double[] sw = s.getSweep();
+        assertEquals("not just 0.2 to 0.3", 0.1, sw[0], 1e-9);
+        assertEquals(0.9, sw[1], 1e-9);
+        c.addSec(0.5);
+        assertFalse("the first move's whole time is not over", s.isDone());
+        assertEquals(0.9, s.getSweep()[1], 1e-9);
+        c.addSec(0.5);
+        assertTrue(s.isDone());
+        assertEquals(0.3, s.getSweep()[0], 1e-9);
+        assertEquals(0.3, s.getSweep()[1], 1e-9);
+    }
+
     @Test public void interruptedServoMoveStartsFromWhereItProbablyIs() {
         Fakes.FakeServo fs = new Fakes.FakeServo();
         Fakes.Clock c = new Fakes.Clock();

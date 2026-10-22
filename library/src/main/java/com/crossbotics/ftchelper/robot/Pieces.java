@@ -165,7 +165,7 @@ public final class Pieces extends Module<Pieces> {
 
     @Override
     void suggestButtons(ButtonPlan plan) {
-        plan.operator().leftStickButton.heldFor(1.0, this::clear).says("hold 1 s: piece count = 0");
+        plan.operator().leftStickButton.heldFor(1.0, this::clear).says("piece count = 0");
     }
 
     // ----------------------------- every loop -----------------------------
@@ -201,7 +201,7 @@ public final class Pieces extends Module<Pieces> {
             }
             inRecorded = NONE;
         } else {
-            for (int i = 0; i < newOnes; i++) added(now);
+            for (int i = 0; i < newOnes; i++) pieceIn(now);
             if (newOnes > 0) inRecorded = held.isEmpty() ? NONE : held.get(held.size() - 1);
             // The same piece, now told apart (or its colour after a dip counted it): write its kind down.
             else if (!now.equals(NONE) && !now.equals(UNKNOWN) && !now.equals(inRecorded) && !inRecorded.equals(NONE)
@@ -218,7 +218,7 @@ public final class Pieces extends Module<Pieces> {
     private boolean runningOut() {
         long now = clock.getAsLong();
         for (Intake i : intakes) {
-            if (i.isRunningOut()) {
+            if (i.isPushingOut()) {
                 lastOutAt = now;
                 return true;
             }
@@ -346,13 +346,13 @@ public final class Pieces extends Module<Pieces> {
         return ready == null ? NONE : ready.kind();
     }
 
-    /** The intake sensor, or null. */
-    public PieceSensor intakeSensor() {
+    /** The sensor given with {@link #comingIn(PieceSensor)}, or null. */
+    public PieceSensor comingInSensor() {
         return in;
     }
 
-    /** The ready-to-fire sensor, or null. */
-    public PieceSensor readySensor() {
+    /** The sensor given with {@link #readyToFire(PieceSensor)}, or null. */
+    public PieceSensor readyToFireSensor() {
         return ready;
     }
 
@@ -387,13 +387,13 @@ public final class Pieces extends Module<Pieces> {
     // ----------------------------- changing the count by hand -----------------------------
 
     /** One more piece of this kind came in (the intake sensor calls this; a claw can too). */
-    public void added(String kind) {
+    public void pieceIn(String kind) {
         held.add(kind == null || kind.equals(NONE) ? UNKNOWN : kind);
         totalIn++;
     }
 
     /** One piece went out, the next to fire (for a part that sends pieces out itself). Nothing if it holds none. */
-    public void removed() {
+    public void pieceOut() {
         takeFirst();
         totalOut++;
         markReadyStale();

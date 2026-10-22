@@ -52,14 +52,14 @@ import java.util.function.LongSupplier;
  * <p><b>By hand.</b> Suggested operator stick: left stick Y (up = a bigger angle). While the shot table
  * sets the angle it is a hood TRIM (added to the table, at most +/- {@code trimMax}; back to 0 with the
  * launcher's double-tap D-pad down); otherwise it moves the hood. Your own buttons: {@link #step(int)},
- * {@link #setAngle(double)}, {@link #home()}.
+ * {@link #setAngle(double)}, {@link #goToStart()}.
  *
  * <p>Optional Tunables (defaults scale with the range, so they suit degrees, positions and ticks):
- * {@code homeAngle} (where it goes at START; default angleA), {@code stepAngle} (1/25 of the range),
+ * {@code startAngle} (where it goes at START; default angleA), {@code stepAngle} (1/25 of the range),
  * {@code byHandPerSec} (the range in 2.5 s), {@code trimMax} (1/5 of the range). A motor hood:
  * {@code kP} (0.005 power per tick), {@code maxPower} (0.5), {@code tolerance} (1/50 of the range). Its
  * encoder counts from where it is at INIT: start the robot with the hood at the stop you call 0 ticks.
- * Nothing moves in INIT: the hood goes to {@code homeAngle} at START.
+ * Nothing moves in INIT: the hood goes to {@code startAngle} at START.
  *
  * Docs: docs/modules/robot.md (section "Hood"), lesson 9 (docs/tutorials/start/09-shooter-and-camera.md)
  */
@@ -77,14 +77,18 @@ public final class Hood extends Module<Hood> {
     boolean tableDriven = false;
 
     Actuator part;
-    // The interlock's fence, in the hood's scale (+/- infinity = none): see Interlock.
+    // The interlock's fence, in the hood's scale (+/- infinity = none), and the most power a motor hood
+    // may use toward a bigger / smaller angle now (1 = no limit, 0 = brake): see Interlock.
     private double fenceLo = Double.NEGATIVE_INFINITY, fenceHi = Double.POSITIVE_INFINITY;
+    private double upCap = 1, downCap = 1;
+    // An interlock rule says: do not start the first move yet (the other part is in its zone).
+    private boolean waitForRule = false;
     // posA, posB (live in the tuning menu), or null with a calibration table.
     private Tunable posA, posB;
     private double angleA = Double.NaN, angleB = Double.NaN;   // NaN, NaN = the angle is the position
     private double[][] calibration = null;                    // {position, angle} rows, or null
     private Tunable travelSec, kP, maxPower;
-    private double home, stepAngle, byHandPerSec, trimMax, tolerance;
+    private double startAt, stepAngle, byHandPerSec, trimMax, tolerance;
     // The angle by hand (NaN until START) and the trim added to the table's angle.
     private double manualAngle = Double.NaN;
     private double trimAmount = 0;
@@ -174,9 +178,9 @@ public final class Hood extends Module<Hood> {
         readCalibration(t, name());
         // Optional numbers: read only when written, so a section without them gets no "missing" note.
         double range = hi() - lo();
-        home = t.has("homeAngle") ? t.number("homeAngle", 0) : angleAt(firstPosition());
-        if (home < lo() - 1e-9 || home > hi() + 1e-9) {
-            throw new IllegalStateException("Tunables." + name() + ".homeAngle = " + home + " is outside the hood's range "
+        startAt = t.has("startAngle") ? t.number("startAngle", 0) : angleAt(firstPosition());
+        if (startAt < lo() - 1e-9 || startAt > hi() + 1e-9) {
+            throw new IllegalStateException("Tunables." + name() + ".startAngle = " + startAt + " is outside the hood's range "
                     + Shape.n(lo()) + " to " + Shape.n(hi()));
         }
         stepAngle = t.has("stepAngle") ? Math.abs(t.number("stepAngle", 0)) : range / 25;
@@ -318,7 +322,7 @@ public final class Hood extends Module<Hood> {
         return Math.max(r[0][1], r[r.length - 1][1]);
     }
 
-    // posA (or the calibration's first row): where angleA is, the default home.
+    // posA (or the calibration's first row): where angleA is, the default startAngle.
     private double firstPosition() {
         return calibration != null ? calibration[0][0] : posA.get();
     }
@@ -329,9 +333,9 @@ public final class Hood extends Module<Hood> {
 
     @Override
     void start() {
-        // START: to its home angle (never in INIT: nothing moves before START).
-        manualAngle = home;
-        part.setDegrees(home);
+        // START: to its startAngle (never in INIT: nothing moves before START).
+        manualAngle = startAt;
+        part.setDegrees(startAt);
     }
 
     // ----------------------------- commands -----------------------------
@@ -350,9 +354,9 @@ public final class Hood extends Module<Hood> {
         if (!following) part.setDegrees(manualAngle);
     }
 
-    /** Back to {@code homeAngle} (Tunables). */
-    public void home() {
-        setAngle(home);
+    /** Back to {@code startAngle} (Tunables): where it went at START. */
+    public void goToStart() {
+        setAngle(startAt);
     }
 
     /**
@@ -364,8 +368,10 @@ public final class Hood extends Module<Hood> {
      */
     public void step(int steps) {
         needBuilt(part);
-        if (tableDriven) trimBy(steps * stepAngle);
-        else setAngle((Double.isNaN(manualAngle) ? home : manualAngle) + steps * stepAngle);
+        // The trim only while the table sets the angle NOW (a goal seen): with no goal yet, a trim would
+        // change nothing you can see, so the hood itself moves.
+        if (following) trimBy(steps * stepAngle);
+        else setAngle((Double.isNaN(manualAngle) ? startAt : manualAngle) + steps * stepAngle);
     }
 
     /**
@@ -387,8 +393,8 @@ public final class Hood extends Module<Hood> {
         lastByHand = now;
         double change = Math.max(-1, Math.min(1, amount)) * byHandPerSec * dt;
         if (change == 0) return;
-        if (tableDriven) trimBy(change);
-        else setAngle((Double.isNaN(manualAngle) ? home : manualAngle) + change);
+        if (following) trimBy(change);   // see step(): the trim only while the table sets the angle now
+        else setAngle((Double.isNaN(manualAngle) ? startAt : manualAngle) + change);
     }
 
     /**
@@ -420,18 +426,21 @@ public final class Hood extends Module<Hood> {
         return trimAmount;
     }
 
-    /** The angle the hood is going to (or is at); NaN before its first move (START). */
+    /**
+     * Where the hood is now: measured (a motor) or estimated from the time (a servo), like
+     * {@code Turret.angle()}. NaN before its first move (START).
+     */
     public double angle() {
-        return part == null ? Double.NaN : part.getTargetDegrees();
-    }
-
-    /** Where the hood is now: measured (a motor) or estimated from the time (a servo). NaN before START. */
-    public double currentAngle() {
         return part == null ? Double.NaN : part.now();
     }
 
-    /** True when the hood is (a motor) or should be (a servo, by time) at its angle. */
-    public boolean isArrived() {
+    /** The angle the hood is going to (or is at); NaN before its first move (START). */
+    public double targetAngle() {
+        return part == null ? Double.NaN : part.getTargetDegrees();
+    }
+
+    /** True when the hood is (a motor) or should be (a servo, by time) at its target angle. */
+    public boolean isAtTarget() {
         return part != null && (missing || part.isDone());
     }
 
@@ -450,9 +459,9 @@ public final class Hood extends Module<Hood> {
         return part == null ? Double.NaN : hi();
     }
 
-    /** Tunables {@code homeAngle}: where it goes at START. NaN before INIT. */
-    public double homeAngle() {
-        return part == null ? Double.NaN : home;
+    /** Tunables {@code startAngle}: where it goes at START (default angleA). NaN before INIT. */
+    public double startAngle() {
+        return part == null ? Double.NaN : startAt;
     }
 
     /** True with angleA/angleB or a calibration table (real angles); false when the angle is the position. */
@@ -512,6 +521,17 @@ public final class Hood extends Module<Hood> {
     }
 
     @Override
+    void halt() {
+        // A cancelled action: a motor hood holds where it is now (it must not go on to the action's
+        // angle). A servo is already where it was sent. Not the driver's command, so no touch().
+        if (part == null || kind != Kind.MOTOR) return;
+        double now = part.now();
+        if (Double.isNaN(now)) return;
+        manualAngle = clamp(now);
+        part.setDegrees(manualAngle);
+    }
+
+    @Override
     public void addTelemetry(RobotTelemetry t) {
         // In a launcher, the launcher's telemetry shows it (through part()).
         if (part != null && !inLauncher) part.addTelemetry(t);
@@ -520,7 +540,7 @@ public final class Hood extends Module<Hood> {
     // "12.5 deg (table, trim +1.0)  moving", for the Driver Station.
     String words() {
         double a = part.getTargetDegrees();
-        if (Double.isNaN(a)) return "not moved yet (goes to " + num(home) + " at START)";
+        if (Double.isNaN(a)) return "not moved yet (goes to " + num(startAt) + " at START)";
         String how = following ? "table" + (trimAmount != 0 ? ", trim " + (trimAmount > 0 ? "+" : "") + num(trimAmount) : "") : "by hand";
         boolean atEnd = a <= lo() + 1e-9 || a >= hi() - 1e-9;
         return num(a) + " (" + how + ")" + (atEnd ? " at its stop" : "") + (part.isDone() ? "" : "  moving");
@@ -535,7 +555,8 @@ public final class Hood extends Module<Hood> {
     @Override
     void suggestButtons(ButtonPlan plan) {
         plan.operator().leftStickY.use(this::byHand)
-                .says(tableDriven ? "hood trim (up = bigger angle)" : "hood angle (up = bigger angle)");
+                .says(tableDriven ? "hood trim while it follows the table, else the hood (up = bigger angle)"
+                        : "hood angle (up = bigger angle)");
     }
 
     @Override
@@ -573,7 +594,7 @@ public final class Hood extends Module<Hood> {
             out.add(fmt("motor.%s = lift, part=%s, min=%.0f, max=%.0f, gravity=0", device, motorId, r[0][0], r[r.length - 1][0]));
             return;
         }
-        double h = !ok ? 0.5 : physical(positionAt(t.has("homeAngle") ? t.number("homeAngle", 0) : angleAt(firstPosition())));
+        double h = !ok ? 0.5 : physical(positionAt(t.has("startAngle") ? t.number("startAngle", 0) : angleAt(firstPosition())));
         h = Math.max(0, Math.min(1, h));
         if (partId != null) out.add(fmt("servo.%s = %.3f, part=%s", device, h, partId) + pulseWords());
         else out.add(fmt("servo.%s = %.3f, part=gobilda-2000-torque", device, h) + pulseWords() + "   # TODO the real servo");
@@ -598,11 +619,11 @@ public final class Hood extends Module<Hood> {
         return calibration != null ? calibration[calibration.length - 1][0] : posB.get();
     }
 
-    /** The shot angle with the hood at home (for the shoot. line's angle=), NaN without shotAngles. */
+    /** The shot angle with the hood at startAngle (for the shoot. line's angle=), NaN without shotAngles. */
     double homeShotAngle(TunableSection t) {
         if (Double.isNaN(shotAtA) || !simCalibration(t)) return Double.NaN;
         double a = angleAt(firstPosition()), b = angleAt(lastPosition());
-        double h = t.has("homeAngle") ? t.number("homeAngle", a) : a;
+        double h = t.has("startAngle") ? t.number("startAngle", a) : a;
         return shotAtA + (h - a) * (shotAtB - shotAtA) / (b - a);
     }
 
@@ -628,8 +649,28 @@ public final class Hood extends Module<Hood> {
 
     @Override
     void zoneFence(double lo, double hi) {
+        zoneFence(lo, hi, 1, 1);
+    }
+
+    @Override
+    void zoneFence(double lo, double hi, double upPower, double downPower) {
         fenceLo = lo;
         fenceHi = hi;
+        upCap = Double.isNaN(upPower) ? 1 : Math.max(0, Math.min(1, upPower));
+        downCap = Double.isNaN(downPower) ? 1 : Math.max(0, Math.min(1, downPower));
+    }
+
+    // A motor hood coasts a little after its power is cut: the interlock measures its speed (encoder).
+    @Override boolean zoneCoasts() { return kind == Kind.MOTOR; }
+
+    // A servo hood not sent anywhere yet may be anywhere: its first move waits while the rule says so.
+    @Override boolean zoneKnown() { return part == null || missing || !part.unknown(); }
+
+    @Override String zoneUnknownWords() { return "not sent anywhere yet: it goes to its startAngle at START"; }
+
+    @Override
+    void zoneWait(boolean wait) {
+        waitForRule = wait;
     }
 
     @Override
@@ -647,8 +688,10 @@ public final class Hood extends Module<Hood> {
         private final Servo servo;
         private final DcMotorEx motor;
         private double target = Double.NaN;
-        // A servo move: where it started (angle), when (s), and when it should be there (s).
-        private double moveFrom = Double.NaN, moveStart = 0, doneAt = 0;
+        // A servo move: where it may have been when the move started (lowest and highest angle: the same
+        // number when it was known, the whole range before the first move), when it started (s), and when
+        // it should be there (s). A servo cannot say where it is, so this is all we know.
+        private double fromLo = Double.NaN, fromHi = Double.NaN, moveStart = 0, doneAt = 0;
         private double sent = Double.NaN;    // the servo position sent last
         private double power = 0;            // the motor power sent last
 
@@ -674,14 +717,21 @@ public final class Hood extends Module<Hood> {
         // Starts a move to this angle (already inside the limits and the fence).
         void apply(double a) {
             if (a == target) return;   // the same angle again (called every loop): keep the move under way
+            // An interlock rule says wait: a servo hood not sent anywhere yet may be anywhere, so its first
+            // move could sweep through the other part. It starts when the rule lets it (update() tries again).
+            if (servo != null && Double.isNaN(target) && waitForRule) return;
             if (servo != null) {
                 double now = nowSec();
-                boolean unknown = Double.isNaN(target);
-                double from = unknown ? a : now();
-                // Time: the share of the whole range this move covers x travelSec (the first move: all of it,
-                // since nobody knows where a servo is before its first command).
-                double share = unknown ? 1 : Math.abs(a - from) / (hi() - lo());
-                moveFrom = from;
+                // Where it may be now: the whole range before the first move (nobody knows where a servo
+                // is before its first command); during a move from a known place, the estimate; during a
+                // move from "anywhere" (the first one), still anywhere between: a new target in the middle
+                // of the first move must not forget that.
+                double[] may = startedKnown() ? new double[] {now(), now()} : sweep();
+                // Time: the share of the whole range from the furthest place it may be x travelSec.
+                double far = Math.max(Math.abs(a - may[0]), Math.abs(a - may[1]));
+                double share = Math.min(1, far / (hi() - lo()));
+                fromLo = may[0];
+                fromHi = may[1];
                 moveStart = now;
                 doneAt = now + share * travelSec.get();
                 target = a;
@@ -710,8 +760,10 @@ public final class Hood extends Module<Hood> {
             if (motor != null) return angleAt(motor.getCurrentPosition());
             if (Double.isNaN(target)) return Double.NaN;
             double t = nowSec();
-            if (Double.isNaN(moveFrom) || t >= doneAt || doneAt <= moveStart) return target;
-            return moveFrom + (target - moveFrom) * (t - moveStart) / (doneAt - moveStart);
+            if (t >= doneAt || doneAt <= moveStart) return target;
+            // From an unknown place (the first move): no better guess than where it is going.
+            if (Double.isNaN(fromLo) || fromLo != fromHi) return target;
+            return fromLo + (target - fromLo) * (t - moveStart) / (doneAt - moveStart);
         }
 
         @Override
@@ -723,18 +775,34 @@ public final class Hood extends Module<Hood> {
             return nowSec() >= doneAt;
         }
 
-        /** Where it may be now, {lowest, highest}: a moving servo anywhere between where it was and where it goes. */
+        // True when the servo's place is known as one point: once a move is over, or during a move that
+        // started from a known place (then its estimate). False before the first move and during a move
+        // that started from "anywhere".
+        private boolean startedKnown() {
+            if (Double.isNaN(target)) return false;
+            if (nowSec() >= doneAt) return true;
+            return !Double.isNaN(fromLo) && fromLo == fromHi;
+        }
+
+        /** True while a servo hood has never been sent anywhere (it may be anywhere in its range). */
+        boolean unknown() {
+            return servo != null && Double.isNaN(target);
+        }
+
+        /**
+         * Where it may be now, {lowest, highest}: a motor where its encoder says; a servo anywhere between
+         * where its move may have started and where it goes, until it should be there (the whole range
+         * before its first move, and during it).
+         */
         double[] sweep() {
             if (Double.isNaN(target)) return new double[] {lo(), hi()};
             if (motor != null) {
                 double n = now();
                 return new double[] {n, n};
             }
-            if (nowSec() >= doneAt || Double.isNaN(moveFrom)) {
-                // The first move (from nobody knows where) counts as the whole range until it should be done.
-                return nowSec() < doneAt ? new double[] {lo(), hi()} : new double[] {target, target};
-            }
-            return new double[] {Math.min(moveFrom, target), Math.max(moveFrom, target)};
+            if (nowSec() >= doneAt) return new double[] {target, target};
+            double a = Double.isNaN(fromLo) ? lo() : fromLo, b = Double.isNaN(fromHi) ? hi() : fromHi;
+            return new double[] {Math.min(a, target), Math.max(b, target)};
         }
 
         @Override
@@ -753,6 +821,11 @@ public final class Hood extends Module<Hood> {
             double[][] r = rows();
             if ((ticks <= r[0][0] && p < 0) || (ticks >= r[r.length - 1][0] && p > 0)) p = 0;
             if (Math.abs(now() - target) <= tolerance / 2) p = 0;   // close enough: rest (no buzzing)
+            // An interlock rule's caps (see Interlock: it brakes in time near its fence). They are for
+            // the ANGLE going up or down; with angles that fall as the ticks grow, + power lowers the angle.
+            boolean anglesRise = r[r.length - 1][1] > r[0][1];
+            double capUp = anglesRise ? upCap : downCap, capDown = anglesRise ? downCap : upCap;
+            p = Math.max(-capDown, Math.min(capUp, p));
             setPower(p);
         }
 

@@ -102,7 +102,7 @@ public class LauncherTrimTest {
         l.spinUp();
         r.all().update();
         assertEquals(2600, l.targetRpm(), 1e-9);
-        l.trimPercent(+3);
+        l.trimBy(+3);
         r.all().update();
         assertEquals(2600 * 1.03, l.targetRpm(), 1e-6);
         assertTrue(screen(l), screen(l).contains("Speed trim : +3%"));
@@ -110,15 +110,15 @@ public class LauncherTrimTest {
         r.all().update();
         assertEquals(2700 * 1.03, l.targetRpm(), 1e-6);
         assertTrue(screen(l), screen(l).contains("Speed trim : +100 rpm, +3%"));
-        l.trimPercent(+50);                            // Tunables.Launcher.trimMaxPercent = 10
-        assertEquals(10, l.speedTrim(), 1e-9);
+        l.trimBy(+50);                            // Tunables.Launcher.trimMaxPercent = 10
+        assertEquals(10, l.trim(), 1e-9);
         assertTrue(screen(l), screen(l).contains("(limit)"));
         l.setTrim(-4);
-        assertEquals(-4, l.speedTrim(), 1e-9);
+        assertEquals(-4, l.trim(), 1e-9);
         l.resetTrim();
         r.all().update();
         assertEquals("reset: the trim AND the rpm steps", 2600, l.targetRpm(), 1e-9);
-        assertEquals(0, l.speedTrim(), 1e-9);
+        assertEquals(0, l.trim(), 1e-9);
     }
 
     @Test public void theTrimScalesTheShotTableAndTheDpadTrimsIt() {
@@ -131,7 +131,7 @@ public class LauncherTrimTest {
         r.all().update();
         double table = r.launcher.targetRpm();          // nectar at 48 in: 3000
         assertEquals(3000, table, 1e-6);
-        r.launcher.trimPercent(-2);
+        r.launcher.trimBy(-2);
         r.all().update();
         assertEquals(3000 * 0.98, r.launcher.targetRpm(), 1e-6);
         assertTrue(screen(r.launcher), screen(r.launcher).contains("Speed trim : -2%"));
@@ -156,18 +156,18 @@ public class LauncherTrimTest {
         r.setup(new RobotTestKit());
         Launcher l = launcherOf(r);
         l.spinUp();
-        l.trimPercent(+1);                             // 5959: still under the top
+        l.trimBy(+1);                             // 5959: still under the top
         r.all().update();
         assertEquals(5900 * 1.01, l.targetRpm(), 1e-6);
         assertTrue(!l.atMotorLimit());
-        l.trimPercent(+2);                             // 6077 asked: cut to the motor's 6000
+        l.trimBy(+2);                             // 6077 asked: cut to the motor's 6000
         r.all().update();
         assertEquals(6000, l.targetRpm(), 1e-6);
         assertTrue(l.atMotorLimit());
         assertTrue(screen(l), screen(l).contains("Speed trim : +3% (motor limit)"));
-        l.trimPercent(+1);                             // no faster: the trim stays where it is
-        assertEquals(3, l.speedTrim(), 1e-9);
-        l.trimPercent(-5);                             // slower still works
+        l.trimBy(+1);                             // no faster: the trim stays where it is
+        assertEquals(3, l.trim(), 1e-9);
+        l.trimBy(-5);                             // slower still works
         r.all().update();
         assertEquals(5900 * 0.98, l.targetRpm(), 1e-6);
         assertTrue(!l.atMotorLimit());
@@ -200,11 +200,11 @@ public class LauncherTrimTest {
     @Test public void lastTimesTrimIsOfferedAtInitAndNeverAppliedByItself() {
         AimTest.AimBot first = new AimTest.AimBot(AimTest.GoalTunables.class, false);
         first.setup(new RobotTestKit());
-        first.launcher.trimPercent(+3);
+        first.launcher.trimBy(+3);
         // The next OpMode (the robot app still running): a new robot, the same launcher name.
         AimTest.AimBot r = new AimTest.AimBot(AimTest.GoalTunables.class, false);
         r.setup(new RobotTestKit());
-        assertEquals("not applied by itself", 0, r.launcher.speedTrim(), 1e-9);
+        assertEquals("not applied by itself", 0, r.launcher.trim(), 1e-9);
         assertEquals("+3%", r.launcher.lastTrimOffered());
         Fakes.FakeTelemetry ft = new Fakes.FakeTelemetry();
         RobotTelemetry t = new RobotTelemetry(ft.telemetry, () -> 0L);
@@ -215,7 +215,7 @@ public class LauncherTrimTest {
         String up = line(plan.help(), "G2 D-pad up");
         assertTrue(up, up.contains("double-tap: use last time's trim (+3%)"));
         assertTrue(r.launcher.useLastTrim());
-        assertEquals(3, r.launcher.speedTrim(), 1e-9);
+        assertEquals(3, r.launcher.trim(), 1e-9);
         assertEquals("used: no longer offered", "", r.launcher.lastTrimOffered());
         r.launcher.resetTrim();
         AimTest.AimBot third = new AimTest.AimBot(AimTest.GoalTunables.class, false);
@@ -228,7 +228,7 @@ public class LauncherTrimTest {
         RobotDefinition r = fixedBot(Tuned.class);
         r.setup(new RobotTestKit());
         Launcher l = launcherOf(r);
-        l.trimPercent(+5);
+        l.trimBy(+5);
         l.spinUp();
         r.all().update();
         assertEquals(1.05, l.part().getSpeedScale(), 1e-9);

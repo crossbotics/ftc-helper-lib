@@ -311,7 +311,7 @@ operator can fix it on the spot: with the speed from the distance, **D-pad up / 
 0.25 s. **Double-tap D-pad down** goes back to 0. The launcher's first line on the Driver Station says
 `Speed trim: +3%  READY`. It stops at +/- 15% (`trimMaxPercent`; `trimStepPercent` is one press), and
 never asks for more than the motor's top speed (`Speed trim: +3% (motor limit)`: more trim up does
-nothing). Code and actions can trim too: `robot.launcher.trimPercent(+2)`. The Shot Tuner never uses
+nothing). Code and actions can trim too: `robot.launcher.trimBy(+2)`. The Shot Tuner never uses
 the trim, so the tables stay clean.
 
 The trim starts at 0 at every INIT. The one you used last time is remembered (until the robot app
@@ -366,7 +366,7 @@ the team's own turret design):
 ```java
 public static class Hood {
     public static double posA = 0.20, posB = 0.65, angleA = 0, angleB = 25;
-    public static double travelSec = 0.45, homeAngle = 0;
+    public static double travelSec = 0.45, startAngle = 0;
 }
 ```
 
@@ -386,7 +386,7 @@ public static class Hood {
   stop-to-stop move takes `travelSec`, a shorter move a share of it, and it does not fire until then
   (`Launcher waits for: hood`). A piece fired while the hood is still moving flies wrong. A hood on a
   motor with an encoder (`Hood.motor("hood", "gobilda-5203-117")`) knows instead.
-- **`homeAngle`:** where it goes at START (here the steep end, so the robot fits the start box).
+- **`startAngle`:** where it goes at START (here the steep end, so the robot fits the start box).
   Nothing moves in INIT.
 
 **From the table.** The launcher blends the hood between rows like the speed: at 60 in the POLLEN
@@ -411,7 +411,7 @@ for this section and the next two: **one class, add the lines you use** (every l
 ```java
 public static class Aim {
     // Section 9: the goal on the field, for the odometry backup.
-    public static double goalX = -58, goalY = 55;   // inches, seen from the BLUE drivers' wall
+    public static double goalX = 13, goalY = -13;   // inches, seen from your wall: your HIVE's up CELL
     public static boolean mirrorForRed = false;     // the default is true; BIOBUZZ needs false (below)
     // Section 10: whole-robot aim (no turret).
     public static double turnKp = 0.02, turnKd = 0.002, maxTurnPower = 0.5, toleranceDeg = 2;
@@ -677,7 +677,7 @@ give each a `looks(...)` shape in `Robot.java` ([Lesson 1: Draw your robot from 
 5. Only then turn following on, and fill `speedByDistance` at 4 to 6 distances on a charged battery
    (each table, with its game piece).
    A hood: the Hood Finder first (`posA`, `posB`), then check on the robot that START sends it to
-   `homeAngle` and the left stick (gamepad 2) never pushes it into a stop.
+   `startAngle` and the left stick (gamepad 2) never pushes it into a stop.
 6. Odometry backup: run your autonomous first (or set the pose), then TeleOp. Check INIT's `Aim:` line
    (the alliance and `mirrorForRed`). Cover the camera with your hand. The turret should keep pointing
    at the goal and the Driver Station say `following: odometry`. If it points elsewhere, check `goalX`,
