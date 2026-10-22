@@ -122,6 +122,37 @@ public class TunablesNamesTest {
         public static class WristClaw { public static double wristFrom = 0, wristTo = 0.3, clawFrom = 0, clawTo = 0.45; }
     }
 
+    // An optional() part that is not on the robot: its section may be unfinished (a typo there waits until
+    // the part is plugged in); its fullRange() sets nothing and adds no note.
+    static class OptionalBot extends RobotDefinition {
+        @Override protected void define() {
+            tunables(OptionalTypo.class);
+            drive(Drive.mecanum("fl", "fr", "bl", "br"));
+            add(Intake.motor("intake").optional());
+            add(Claw.servo("claw").fullRange().optional());
+        }
+    }
+
+    public static class OptionalTypo {
+        public static class Intake { public static double inPowr = 0.5; }
+    }
+
+    @Test public void aMissingOptionalPartsSectionIsNotChecked() {
+        RobotTestKit kit = new RobotTestKit();
+        kit.absent.add("intake");
+        kit.absent.add("claw");
+        OptionalBot r = new OptionalBot();
+        r.setup(kit);
+        assertTrue(r.notes().toString(), !r.notes().toString().contains("pulse"));
+        // Plugged in: the typo stops INIT.
+        try {
+            new OptionalBot().setup(new RobotTestKit());
+            fail("INIT should stop on inPowr");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("Tunables.Intake.inPowr is not a setting of Intake"));
+        }
+    }
+
     @Test public void aRobotWithEveryKindOfNameInitsCleanly() {
         new Bot(Good.class).setup(new PiecesTest.Kit());
     }
