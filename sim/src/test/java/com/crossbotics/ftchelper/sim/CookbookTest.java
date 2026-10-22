@@ -197,8 +197,9 @@ public class CookbookTest {
             s.init("Cookbook Not On The Robot Yet");
             String init = String.join("\n", s.screen());
             assertEquals(init, "", s.error());
-            assertTrue(init, s.screenHas("\"intake_deploy\" not in the configuration: IntakeDeploy is off (optional part)"));
-            assertTrue(init, s.screenHas("G2 X: deploy intake - off: IntakeDeploy not on the robot"));
+            // The simulator starts in COMPETITION (the safe default): the part that is off is a loud "!!" warning.
+            assertTrue(init, s.screenHas("!! COMPETITION: \"intake_deploy\" not in the configuration: IntakeDeploy is OFF (optional part)"));
+            assertTrue(init, s.screenHas("G2 X: deploy intake - !! OFF: IntakeDeploy not on the robot"));
             s.start();
             assertTrue("the action at START starts the intake\n" + String.join("\n", s.screen()),
                     SimRun.waitFor(() -> s.robot().motors.get("intake").userPower() > 0.5, 2));

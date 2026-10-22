@@ -387,7 +387,7 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
         // No slow at all (the library's freed and none of the team's): the drivers should know.
         String noSlow = noSlowWarning(libraryKeys(), plan);
         if (noSlow != null) t.warn(noSlow);
-        for (String n : robot().notes()) t.text(n);
+        robot().showNotes(t);   // a part that is off: a "!!" warning in COMPETITION
         if (plan != null) for (String n : plan.notes()) t.text(n);
         List<String> changed = RobotDefinition.changedTunables();
         if (!changed.isEmpty()) {

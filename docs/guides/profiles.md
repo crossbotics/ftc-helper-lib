@@ -16,6 +16,7 @@ A profile switches between the two without changing the code.
 | Debug telemetry | starts ON | starts OFF |
 | Tuning menu | can open | stays closed |
 | INIT screen | warns "PRACTICE profile" | normal |
+| A part that is off ([`optional()`](../modules/robot.md#parts-not-on-the-robot-yet), device not in the configuration) | a quiet note | a loud `!!` warning at the top, and `!! OFF` on the button map |
 | Your `Profile.pick(a, b)` values | `a` | `b` |
 
 **COMPETITION is the default**, so a robot that was never set up is in the safe mode.
@@ -57,6 +58,9 @@ At the event, before the first match:
 1. INIT any autonomous and set **Profile: COMPETITION** in its menu.
 2. Check the INIT screen has **no** "PRACTICE profile" warning.
 3. Check there is no "tuned value(s) differ from the code" warning (or that you meant it).
+4. Check there is no `!! COMPETITION: "..." not in the configuration: ... is OFF` warning for a part
+   that IS on the robot (a misspelled or lost configuration name). At the shop (PRACTICE) a part not
+   built yet is only a note; at an event it is loud on purpose.
 
 After the event, set PRACTICE again for the shop.
 

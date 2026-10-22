@@ -77,7 +77,7 @@ Run the **Hardware Check** OpMode ([starter kit](../starter-kit.md), or
 - [ ] Robot starts inside 18 in; everything folded; hard stops tight
 - [ ] Lift/turret at their start positions (home switches in reach)
 - [ ] Profile: COMPETITION, no "tuned values differ" warning
-- [ ] No `... is off (optional part)` note at INIT for a part that IS on the robot (a renamed or unplugged device)
+- [ ] No `!! COMPETITION: ... is OFF (optional part)` warning at INIT for a part that IS on the robot (a renamed or unplugged device)
 - [ ] Right autonomous selected, right alliance and delay in the menu
 - [ ] Robot placed exactly as the INIT screen's "Place robot" says
 - [ ] After autonomous, TeleOp's INIT screen says "Forward: from autonomous"

@@ -74,7 +74,8 @@ public class TuningMenu {
         boolean[] now = {gamepad.dpad_up, gamepad.dpad_down, gamepad.dpad_right, gamepad.dpad_left,
                 gamepad.a, gamepad.x, gamepad.y, gamepad.b};
         if (open) {
-            List<Tunable> all = Tunable.all();
+            // Not the numbers of a part that is not on the robot: changing them would do nothing.
+            List<Tunable> all = Tunable.shown();
             if (!all.isEmpty()) {
                 // Keep the choice inside the list (new tunables may have been made, or some forgotten).
                 selected = Math.max(0, Math.min(selected, all.size() - 1));
@@ -121,8 +122,14 @@ public class TuningMenu {
      */
     public void addTelemetry(RobotTelemetry t) {
         if (!open) return;
-        List<Tunable> all = Tunable.all();
+        List<Tunable> all = Tunable.shown();
         t.section("TUNING (practice)");
+        List<String> hidden = Tunable.hiddenGroups();
+        if (!hidden.isEmpty()) {
+            StringBuilder names = new StringBuilder();
+            for (String g : hidden) names.append(names.length() == 0 ? "" : ", ").append(g);
+            t.text("Not on the robot (hidden): " + names);
+        }
         if (all.isEmpty()) {
             t.text("No tunables. Make some with Tunable.number(...).");
             return;
