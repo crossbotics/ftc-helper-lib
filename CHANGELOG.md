@@ -2,6 +2,41 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Added
+
+- **Record a test in the simulator** (docs/guides/simulator.md#record-a-test): **Tests > Record a test** over
+  the 3D view writes down what you do on the page (the OpMode, INIT, the alliance, every button and stick from
+  any gamepad source, the waits, the robot or a piece moved by hand) as a scenario file. **Stop recording**
+  suggests the checks from what the simulator sees: goal checks ticked (the autonomous finishes, its steps are
+  done, pieces shot or scored, no error), details not (the exact end spot, screen lines), every number
+  editable. **Save** writes `simulator/scenarios/NAME.sim` in the robot project (Download with
+  `-PteamCode=none`); **Run it now** plays it back on the page: PASSED or FAILED with the failed line. After
+  a change made on purpose, **The change was on purpose: update the test** measures one more run and shows
+  the new numbers of the failed checks before saving.
+- **Start lesson 10: Test your robot code** (advanced, docs/tutorials/start/10-test-your-robot-code.md): why
+  tests, record one, read it line by line, tolerances, goals not details, a few good tests, update after a
+  planned change, run them all with one command; laptop JUnit tests for programmers.
+- `./gradlew :sim:scenario` with no `-Pfile` in a robot project runs every test in `simulator/scenarios`;
+  `-Pfile=` also takes a folder. Several files end with a list of which passed.
+- `RobotDefinition.freshRobotApp()`: for tests and the simulator, forgets what one program leaves for the
+  next (alliance, pose and report, turret angles, launcher trims, tuned numbers in memory).
+- Community test SIM-04 (record a test, break it, update it). Example: `sim/scenarios/recorded-gobilda-auto.sim`.
+
+### Changed
+
+- **Start lesson 5 no longer teaches scenario files** (`score-high.sim`, `my-test.sim`): simulator tests are now
+  their own advanced lesson (10). The simulator itself stays in every lesson ("Try it in the simulator").
+  The cookbook's "How do I test my code with a script?" starts with the recorder.
+
+### Fixed
+
+- **Several scenario files in one `:sim:scenario` run carried state from one to the next** (a TeleOp test
+  after an autonomous test used the turret angle the autonomous ended at, a launcher's trim, numbers tuned
+  in an earlier file, the saved settings file). Each file now starts like a robot just turned on, with the
+  Tunables numbers as the code wrote them and an empty settings file.
+
 ## v0.17.0 - 2026-10-22
 
 Some things work differently: INIT now stops on misspelled or leftover lines in Tunables.java, BACK

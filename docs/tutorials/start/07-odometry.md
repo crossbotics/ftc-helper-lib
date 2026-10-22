@@ -76,7 +76,7 @@ How to read it:
 
 > **One rule for field numbers.** In your code (start spots, `driveTo`, the reset spot, lesson 9's
 > goal point) always write the numbers **seen from your own drivers' wall**, as in the drawing above.
-> On BIOBUZZ they are then the same for BLUE and RED. Only the simulator's field map and its scenario
+> On BIOBUZZ they are then the same for BLUE and RED. Only the simulator's field map and its test
 > checks (`expect robot x ...`) use one fixed view for both alliances, from the **red** wall: on BLUE
 > their x and y have the other sign (section "Try it in the simulator").
 

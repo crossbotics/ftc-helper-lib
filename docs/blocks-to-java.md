@@ -191,7 +191,7 @@ show("Count", () -> count);       // the Driver Station shows "Count : 3"
 **Why a field, not a variable inside `buttons(...)`:** a variable made inside `buttons(...)` is gone
 when it ends (at INIT), and Java does not let a job change it. A field stays as long as the TeleOp runs.
 
-**Check it in a scenario** (lesson 5): a `show(...)` line is on the screen as `Label : value`, so
+**Check it in a simulator test** ([start lesson 10](tutorials/start/10-test-your-robot-code.md)): a `show(...)` line is on the screen as `Label : value`, so
 `expect screen has "Count : 1"` after one press of X. A `true`/`false` value is checked the same way:
 `expect screen has "Intake on : true"` ([Scenario files](guides/simulator.md#scenario-files-test-without-a-browser)).
 

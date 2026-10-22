@@ -125,6 +125,7 @@ part each loop. Nothing moves in INIT.
 | `sectionWarnings()` | after `setup`: INIT's warnings about Tunables sections no part reads that look meant for one |
 | `tunablesClass()` | the Tunables class found (null if none) |
 | `static changedTunables()` | values tuned on the robot that differ from Tunables.java, as lines to copy back |
+| `static freshRobotApp()` | tests and the simulator only: forget what one program leaves for the next (the last autonomous's alliance, pose and report, turret angles, launcher trims, tuned numbers in memory), as if the robot were just turned on. Never in robot code |
 | `static sectionName(device)` | the Tunables section a device reads: "intake_deploy" -> `IntakeDeploy` |
 
 Checked at INIT: a device name used twice, two parts (or a part and an interlock rule) reading the same

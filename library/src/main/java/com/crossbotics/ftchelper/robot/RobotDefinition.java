@@ -677,6 +677,29 @@ public abstract class RobotDefinition {
     static final Map<String, Boolean> LAST_AUTO_MIRROR = new java.util.concurrent.ConcurrentHashMap<>();
 
     /**
+     * Forgets everything the library keeps from one program to the next in one robot app, as if the
+     * robot had just been turned on: the alliance, pose and report from the last autonomous
+     * ({@link com.crossbotics.ftchelper.match.MatchMemory}), each turret's last angle ({@code keepAngle}),
+     * each launcher's last trim, the last autonomous's {@code mirrorForRed()}, and the numbers tuned in
+     * the tuning menu (in memory; a saved settings file stays). WHY: a test (a JUnit test, or the
+     * simulator running several scenario files) must start the same way each time, whatever ran before
+     * it. Never call it in robot code: the next program would lose what the last one left for it.
+     *
+     * <pre>
+     * RobotDefinition.freshRobotApp();   // in a test, before each robot
+     * </pre>
+     */
+    public static void freshRobotApp() {
+        com.crossbotics.ftchelper.match.MatchMemory.clear();
+        Turret.forgetAngles();
+        synchronized (Launcher.lastTrim) {
+            Launcher.lastTrim.clear();
+        }
+        LAST_AUTO_MIRROR.clear();
+        com.crossbotics.ftchelper.tuning.Tunable.forgetAllForTests();
+    }
+
+    /**
      * True when RED uses BLUE's numbers mirrored left-right (x and headings flip: a mirrored field like
      * DECODE 2025-26); false when RED uses the same numbers from the red wall (a field turned half a
      * turn, like BIOBUZZ 2026-27). ONE setting for the whole robot: the autonomous's routes and start

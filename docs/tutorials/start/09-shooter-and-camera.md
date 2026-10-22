@@ -784,7 +784,9 @@ give each a `looks(...)` shape in `Robot.java` ([Lesson 1: Draw your robot from 
 
 ## Where next
 
-- This is the last lesson. The main track is lessons 1 to 6, plus the lessons your robot needs. If you
+- When your robot works: [Lesson 10: Test your robot code](10-test-your-robot-code.md) (advanced): record
+  tests in the simulator that check your autonomous and TeleOp after every change.
+- The main track is lessons 1 to 6, plus the lessons your robot needs. If you
   skipped them: [Lesson 7: Odometry: where am I on the field?](07-odometry.md) (the robot knows its place
   on the field, and autonomous drives to field points), and
   [Lesson 8: Paths with Pedro Pathing](08-paths-with-pedro.md) (smooth curved paths in autonomous).

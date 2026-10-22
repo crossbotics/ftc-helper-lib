@@ -112,11 +112,14 @@ tasks.register('run', JavaExec) {
     args = [robot] + (project.hasProperty('lan') ? ['--lan'] : []) +
             (project.findProperty('port') ? ['--port', project.findProperty('port')] : [])
     systemProperty 'sim.teamOnly', useTeamCode
+    // the robot project: the page's test recorder saves tests in its simulator/scenarios folder
+    systemProperty 'sim.teamDir', useTeamCode ? robotProject.path : ''
     systemProperty 'ftchelper.dataDir', simDataDir
 }
 
-// ./gradlew :sim:scenario -Pfile=path/to/test.sim [-Probot=...]   (several: -Pfile=a.sim,b.sim)
+// ./gradlew :sim:scenario -Pfile=path/to/test.sim [-Probot=...]   (several: -Pfile=a.sim,b.sim; a folder: every .sim in it)
 // Runs scenario files without a browser and prints a report; fails if any "expect" fails.
+// In a robot project, with no -Pfile: every test in simulator/scenarios (start lesson 10).
 tasks.register('scenario', JavaExec) {
     group = 'verification'
     description = 'Runs simulator scenario files (see docs/guides/simulator.md).'
@@ -128,6 +131,9 @@ tasks.register('scenario', JavaExec) {
     def robot = project.findProperty('robot') ?:
             (teamRobotFile != null && teamRobotFile.isFile() ? teamRobotFile.path : 'sim/robots/starter.properties')
     def files = (project.findProperty('file') ?: '').split(',').findAll { it }
+    if (files.isEmpty() && robotProject != null && new File(robotProject, 'simulator/scenarios').isDirectory()) {
+        files = [new File(robotProject, 'simulator/scenarios').path]
+    }
     args = ['--robot', robot] + files
     systemProperty 'sim.teamOnly', useTeamCode
     systemProperty 'ftchelper.dataDir', simDataDir

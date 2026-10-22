@@ -36,6 +36,12 @@ import java.util.Map;
  * POST /auto        the auto builder's Run: {"program": {...}, "alliance": "RED"} (BuiltAuto.Program); INITs the
  *                   Built Auto with that plan and presses START once the robot is on its start spot
  * GET /builder/...  the auto builder's page code (ES modules: builder.js and the files it imports)
+ * GET /tests.js     the test recorder's page code
+ * GET /tests        the tests: where they are saved (the robot project's simulator/scenarios), their names
+ * GET /tests/read?name=N   one test's text (only from that folder, by a plain name)
+ * POST /tests/save  name, text, replace=0|1: writes simulator/scenarios/NAME.sim
+ * POST /tests/record  action=start&from=init|now, action=stop (answers the recording: steps, checks), action=cancel
+ * POST /tests/run   name, text, measure=0|1: runs a test on the page; GET /tests/status its report; POST /tests/stop
  */
 final class SimServer {
     private final SimEngine sim;
@@ -59,10 +65,18 @@ final class SimServer {
     // A kept-alive connection with nothing to say for this long is closed (frees its thread).
     private static final int IDLE_MS = 5000;
     final boolean lan;
+    /** The page's tests: the recorder, the team's scenario files, a test run on the page. */
+    final SimTests tests;
 
     SimServer(SimEngine sim, int port, boolean lan) throws IOException {
+        this(sim, port, lan, null);
+    }
+
+    /** robotFile: the robot file the simulator runs (tests saved in the robot project name it if it is not the usual one). */
+    SimServer(SimEngine sim, int port, boolean lan, java.nio.file.Path robotFile) throws IOException {
         this.sim = sim;
         this.lan = lan;
+        this.tests = new SimTests(sim, robotFile, SimTests.teamDirFromProperty());
         this.socket = lan ? new ServerSocket(port, 50) : new ServerSocket(port, 50, InetAddress.getLoopbackAddress());
     }
 
@@ -137,7 +151,7 @@ final class SimServer {
         for (String line : head.split("\r\n")) {
             if (line.toLowerCase(Locale.US).startsWith("content-length:")) length = Integer.parseInt(line.substring(15).trim());
         }
-        boolean plan = path.startsWith("/auto");
+        boolean plan = path.startsWith("/auto") || path.startsWith("/tests");
         if (length < 0 || length > (plan ? MAX_PLAN : MAX_BODY)) return false;   // far too big for a gamepad or a command
         byte[] body = new byte[length];
         int read = 0;
@@ -207,6 +221,13 @@ final class SimServer {
         } else if (method.equals("POST") && path.equals("/cmd")) {
             String reply = command(form(new String(body, StandardCharsets.UTF_8)));
             send(out, 200, "text/plain; charset=utf-8", reply.getBytes(StandardCharsets.UTF_8));
+        } else if (method.equals("GET") && path.equals("/tests.js")) {
+            send(out, 200, "text/javascript; charset=utf-8", resource("/sim/tests.js"));
+        } else if (path.equals("/tests") || path.startsWith("/tests/")) {
+            // Tests read and write files on this computer: only from this computer (not a phone on the WiFi).
+            String reply = client.getInetAddress().isLoopbackAddress() ? tests(method, path, query, body)
+                    : "{\"error\":\"tests only from the computer that runs the simulator\"}";
+            send(out, 200, "application/json", reply.getBytes(StandardCharsets.UTF_8));
         } else {
             send(out, 404, "text/plain", ("not found: " + path + " " + query).getBytes(StandardCharsets.UTF_8));
         }
@@ -278,9 +299,23 @@ final class SimServer {
         return true;
     }
 
-    // A Driver Station button or a panel control.
-    private String command(Map<String, String> f) {
+    // A Driver Station button or a panel control (recorded while the test recorder records).
+    String command(Map<String, String> f) {
         String action = f.getOrDefault("action", "");
+        // A test running on the page drives the robot: the page's buttons wait (STOP stops the test too).
+        if (tests.runningNow() && !action.equals("clearPaths")) {
+            if (action.equals("stop")) {
+                tests.stopRun();
+                return "ok";
+            }
+            return "a test is running: wait for it to finish, or stop it";
+        }
+        String reply = commandNow(f, action);
+        if (reply.equals("ok")) tests.recorder.command(f);
+        return reply;
+    }
+
+    private String commandNow(Map<String, String> f, String action) {
         try {
             switch (action) {
                 case "init": sim.ds.init(f.get("opmode")); return "ok";
@@ -306,6 +341,54 @@ final class SimServer {
             }
         } catch (RuntimeException e) {
             return "error: " + e.getMessage();
+        }
+    }
+
+    // ----------------------------- the page's tests (SimTests, SimRecorder) -----------------------------
+
+    // /tests...: answers JSON ({"error": "..."} when something is not right).
+    private String tests(String method, String path, String query, byte[] body) {
+        try {
+            Map<String, String> f = method.equals("POST") ? form(new String(body, StandardCharsets.UTF_8)) : form(query);
+            if (method.equals("GET") && path.equals("/tests")) return tests.info();
+            if (method.equals("GET") && path.equals("/tests/read")) {
+                StringBuilder b = new StringBuilder("{\"text\":");
+                return SimJson.string(b, tests.read(f.get("name"))).append('}').toString();
+            }
+            if (method.equals("GET") && path.equals("/tests/status")) return tests.status();
+            if (!method.equals("POST")) return "{\"error\":\"not found\"}";
+            switch (path) {
+                case "/tests/save": {
+                    boolean wrote = tests.write(f.get("name"), f.getOrDefault("text", ""), "1".equals(f.get("replace")));
+                    StringBuilder b = new StringBuilder("{\"ok\":").append(wrote).append(",\"exists\":").append(!wrote).append(",\"path\":");
+                    return SimJson.string(b, "simulator/scenarios/" + f.get("name") + ".sim").append('}').toString();
+                }
+                case "/tests/record": {
+                    String a = f.getOrDefault("action", "");
+                    if (a.equals("start")) {
+                        if (tests.runningNow()) throw new IllegalArgumentException("a test is running: wait for it to finish");
+                        tests.recorder.start(!"now".equals(f.get("from")));
+                        return "{\"ok\":true}";
+                    }
+                    if (a.equals("stop")) return SimRecorder.json(tests.recorder.stop());
+                    if (a.equals("cancel")) {
+                        tests.recorder.cancel();
+                        return "{\"ok\":true}";
+                    }
+                    throw new IllegalArgumentException("record: start, stop or cancel");
+                }
+                case "/tests/run":
+                    tests.startRun(f.getOrDefault("name", ""), f.getOrDefault("text", ""), "1".equals(f.get("measure")));
+                    return "{\"ok\":true}";
+                case "/tests/stop":
+                    tests.stopRun();
+                    return "{\"ok\":true}";
+                default:
+                    return "{\"error\":\"not found\"}";
+            }
+        } catch (IllegalArgumentException | IOException e) {
+            StringBuilder b = new StringBuilder("{\"error\":");
+            return SimJson.string(b, String.valueOf(e.getMessage())).append('}').toString();
         }
     }
 
@@ -371,6 +454,8 @@ final class SimServer {
             if (chosen == null) throw new IllegalArgumentException("no Robot class (a class that extends RobotDefinition) in the code");
             com.crossbotics.ftchelper.match.Alliance alliance = "BLUE".equals(m.get("alliance"))
                     ? com.crossbotics.ftchelper.match.Alliance.BLUE : com.crossbotics.ftchelper.match.Alliance.RED;
+            if (tests.runningNow()) throw new IllegalArgumentException("a test is running: wait for it to finish, or stop it");
+            tests.recorder.builderRun();
             BuiltAuto.program = p;
             BuiltAuto.robotClass = chosen;
             // Every Run starts a fresh match: the field's pieces back on their spots and the preload in the
