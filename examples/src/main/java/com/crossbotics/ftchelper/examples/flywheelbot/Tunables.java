@@ -30,7 +30,7 @@ public class Tunables {
      */
     public static class Launcher {
         public static double speedRpm = 2600, stepRpm = 100, readyBandRpm = 60, idleRpm = 0;
-        public static double kP = 40, kI = 0, kD = 0, kF = 12.5;
+        public static double kP = 40, kI = 0, kD = 0, kF = 12.5, nominalVolts = 12.8;
         public static double shotIntervalSec = 0.25;   // the least time between two pieces (seconds)
     }
 

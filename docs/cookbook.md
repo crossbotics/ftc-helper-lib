@@ -902,7 +902,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 ```java
 public static class Launcher {
     public static double speedRpm = 2600, stepRpm = 100, readyBandRpm = 60, idleRpm = 1500;
-    public static double kP = 40, kI = 0, kD = 0, kF = 12.5;   // from the Flywheel Finder
+    public static double kP = 40, kI = 0, kD = 0, kF = 12.5, nominalVolts = 12.8;   // from the Flywheel Finder
     public static double shotIntervalSec = 0.25;   // the least time between two pieces (seconds)
     // {inches to the goal, RPM}: blended between rows (from the Shot Tuner).
     public static double[][] speedByDistance = {{24, 2200}, {48, 2550}, {72, 2900}, {96, 3250}};
