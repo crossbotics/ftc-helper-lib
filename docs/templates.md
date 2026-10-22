@@ -63,13 +63,14 @@ in `Robot.java`:
    ```
 
    Do the same for `Actions` and `Tunables`. Android Studio marks every line it cannot find in red.
-4. **Delete the `@Disabled` line** in `Controls.java` and in each autonomous. **Why:** the examples
-   are hidden on the Driver Station with `@Disabled`, so they do not fill the list on a real robot.
+4. **Delete the `@Disabled` line** in `Controls.java` and in each autonomous, and also its
+   `import com.qualcomm.robotcore.eventloop.opmode.Disabled;` line. **Why:** the examples are hidden on
+   the Driver Station with `@Disabled`, so they do not fill the list on a real robot.
 5. Change the names in `@TeleOp(name = ...)` and `@Autonomous(name = ..., preselectTeleOp = ...)` to
    your own; `preselectTeleOp` must be the TeleOp's name exactly.
 6. Build. Then check the motor directions with the wheels off the ground
-   ([Lesson 2](tutorials/start/02-drive.md)), and every part with the Hardware Check
-   ([Lesson 2b](tutorials/19-testing-procedures.md)).
+   ([Lesson 2](tutorials/start/02-drive.md)), and every part with the Hardware Check:
+   [Check the hardware (lesson 2b)](tutorials/19-testing-procedures.md).
 
 **Numbers:** every number in `Tunables.java` is a starting value. Find the real ones with the
 [finders](guides/finders.md). If you change a number live on the robot (the tuning menu), copy the new

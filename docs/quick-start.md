@@ -44,7 +44,10 @@ an `ftc-helper-lib` folder next to `TeamCode`, and a test build passes.
 
 ## 2. Get the five files
 
-Pick **one** way.
+**A kit bot (goBILDA, REV, AndyMark, Studica), or a robot like one of our example robots?** Use
+[Pick your template](templates.md) instead of A or B.
+
+Otherwise, pick **one** way.
 
 ### A. From your robot configuration (best if it is already set up)
 
@@ -171,7 +174,7 @@ In `Controls.java` and `autos/FirstAuto.java`, also delete the `@Disabled` line 
 
 1. Build (the green hammer in Android Studio), then Run to install it on the Control Hub.
    **Why:** the robot runs the app that is on the hub, not the code on your laptop.
-2. Add the small **Hardware Check** OpMode from [tutorial 19](tutorials/19-testing-procedures.md#1-the-3-line-opmode)
+2. Add the small **Hardware Check** OpMode from [Check the hardware (lesson 2b)](tutorials/19-testing-procedures.md#1-the-3-line-opmode)
    (it is not one of the five files), build and install again, then run it: every device is found, and
    each motor turns and counts. **Why:** it tests each part alone, before your code moves them together.
 

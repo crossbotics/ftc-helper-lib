@@ -49,8 +49,9 @@ public class Robot extends RobotDefinition {
         launcher = add(Launcher.flywheel("flywheel", "rev-hd-hex")
                 .feeder(Indexer.crServo("crServo")));
 
-        // The poker: a servo with two named spots (Tunables.PollenServo). It starts folded, so the
-        // robot fits the 18 in start cube.
+        // The poker: a servo with two named spots (Tunables.PollenServo). Nothing moves at INIT, so
+        // this line does NOT fold it: fold the poker by hand before INIT, so the robot fits the 18 in
+        // start cube. It first moves when a button (A or B) or an action sends it somewhere.
         poker = add(Positioner.servo("pollenServo"));
     }
 }

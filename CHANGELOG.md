@@ -62,6 +62,12 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   is now `start/09-shooter-and-camera.md`.
 - Under-the-hood tutorial 09 is now called "Autonomous by hand with AutoDrive" (same file), so it is no
   longer a second "Your first autonomous".
+- Docs: the Quick start points kit bots to Pick your template first; the hardware check page is called
+  "Check the hardware (lesson 2b)" everywhere; the under-the-hood tutorials are marked optional; mentions
+  of tutorials 01 and 09 say "under-the-hood", so they are not read as lessons 1 and 9.
+- Kit bot templates: REV's poker must be folded by hand before INIT (the code does not move it at INIT);
+  the guessed servo positions (REV poker, Studica flap) say to find them with the Servo Finder before the
+  first TeleOp; REV and Studica `Tunables` have a commented `kP, kI, kD, kF` line for the Flywheel Finder.
 - `WebcamTags.exposure(ms, gain)`: a gain of -1 now means the camera's highest gain.
 
 ## v0.15.0 - 2026-10-21
