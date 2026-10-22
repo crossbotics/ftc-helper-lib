@@ -360,6 +360,24 @@ colour goes in Tunables, measured with the Piece Tuner. The whole story, other s
 (a shot table per kind, LEDs): [Pieces and PieceSensor](../../modules/robot.md#pieces-and-piecesensor),
 and the [cookbook](../../cookbook.md#game-pieces).
 
+## 13. A light for the drivers
+
+The drivers watch the robot, not the Driver Station. The turret robot has a goBILDA RGB Indicator Light
+on a servo port (`lights = add(Lights.gobilda("light"));` in Robot.java), and its colors are rules in
+[`Controls.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/Controls.java):
+
+```java
+robot.lights.show(LightColor.YELLOW).blinking().inLastSeconds(20);     // last 20 s: go park
+robot.lights.show(LightColor.GREEN).when(() -> robot.launcher.isSpinning() && robot.launcher.isReady());  // fire now
+robot.lights.show(LightColor.BLUE).when(() -> robot.turret.followMode().isOn());   // following the goal
+robot.lights.otherwise(LightColor.PURPLE);                             // following is off (BACK)
+robot.lights.show(LightColor.WHITE).whenStarts(robot.launcher::isShooting);        // a 0.5 s flash per shot
+```
+
+The first true rule wins, so the most important one is written first. A flash beats every rule for half a
+second. Blinking stops at 5 times a second: the game rules (R202 J) let the referees switch off faster
+lights. Every way to use it: [Lights](../../modules/robot.md#lights).
+
 ## Try it in the simulator
 
 The goBILDA bot has a measured simulator robot. From the `ftc-helper-lib` folder:

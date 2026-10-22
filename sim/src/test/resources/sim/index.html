@@ -174,6 +174,12 @@
     border: 1px solid var(--line); font-size: 12.5px; font-weight: 600; pointer-events: none; }
   #heldBadge i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--muted); }
   #heldBadge i.full { border-color: rgba(0,0,0,.35); }
+  /* The robot's colored lights (Lights module), on the 3D view: a dot per light in the color it shows now. */
+  #lightBadge { position: absolute; right: 8px; top: 8px; z-index: 2; display: none; align-items: center; gap: 6px;
+    padding: 4px 9px; border-radius: 14px; background: color-mix(in srgb, var(--panel) 88%, transparent);
+    border: 1px solid var(--line); font-size: 12.5px; font-weight: 600; pointer-events: none; }
+  .lightDot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid rgba(0,0,0,.45); vertical-align: middle; }
+  .lightDot.dark { background: #222; border-color: var(--muted); }
   #stageOff { display: none; color: var(--muted); padding: 24px; text-align: center; }
   #stage.off + #stageOff { display: block; }
 </style>
@@ -289,6 +295,8 @@
     <div class="tab" data-tab="servos">
     <h3 style="margin-top:0">Servos</h3>
     <table id="servos"><tbody></tbody></table>
+    <h3>Lights</h3>
+    <div id="lights"></div>
     <h3>Switches <span class="muted">(click to hold one pressed)</span></h3>
     <div id="touches"></div>
     </div>
@@ -703,6 +711,9 @@ function renderHub(s) {
     `<tr><td>${escapeHtml(v.name)}${v.part ? '<div class="muted">' + escapeHtml(v.part) + '</div>' : ""}</td><td><div class="bar" style="width:140px"><i style="left:0;width:${v.actual * 100}%"></i></div></td>
      <td class="num">${v.actual.toFixed(3)}</td><td class="muted">to ${v.target.toFixed(3)}</td></tr>`).join("")
     + s.crservos.map(c => `<tr><td>${escapeHtml(c.name)}</td><td>${bar(c.power)}</td><td class="num">${c.power.toFixed(2)}</td><td class="muted">CR servo</td></tr>`).join("");
+  $("#lights").innerHTML = (s.lights || []).map(l =>
+    `<div>${lightDot(l)} <b>${escapeHtml(l.name)}</b> ${escapeHtml(l.words)} <span class="muted">${escapeHtml(l.kind)}</span></div>`).join("")
+    || '<span class="muted">none (Robot.java: lights = add(Lights.gobilda("light")))</span>';
   $("#touches").innerHTML = s.touches.map(t =>
     `<span class="chip ${t.pressed ? "on" : ""}" data-touch="${escapeHtml(t.name)}">${escapeHtml(t.name)}: ${t.pressed ? "pressed" : "open"}${t.manual ? " (held)" : ""}</span>`).join("") || '<span class="muted">none</span>';
   $("#cameras").innerHTML = (s.cameras || []).map(c =>
@@ -731,6 +742,7 @@ function renderHub(s) {
   update3dPaths(s);
   update3dPieces(s.pieces || []);
   showHeld(s.stored || {}, s.holds || 0);
+  showLights(s.lights || []);
   updateHives(s.hives);
   if (document.activeElement !== $("#preloaded")) $("#preloaded").checked = s.preloaded !== false;
   const st = s.stored || {}, sc = s.scored || {};
@@ -876,6 +888,13 @@ function drawField(r) {
   ctx.fillRect(-Wd / 2 * s, -L / 2 * s, Wd * s, L * s);
   ctx.globalAlpha = 1; ctx.fillStyle = "#fff";
   ctx.beginPath(); ctx.moveTo(0, -L / 2 * s + 1); ctx.lineTo(-4 * s, -L / 2 * s + 6 * s); ctx.lineTo(4 * s, -L / 2 * s + 6 * s); ctx.closePath(); ctx.fill();
+  // The robot's first light, as a dot in the middle (dark when off).
+  const light = lastState && (lastState.lights || [])[0];
+  if (light) {
+    ctx.beginPath(); ctx.arc(0, 0, 3.5 * s, 0, 2 * Math.PI);
+    ctx.fillStyle = light.color || "#222"; ctx.fill();
+    ctx.lineWidth = 1.5; ctx.strokeStyle = "rgba(0,0,0,.5)"; ctx.stroke();
+  }
   ctx.restore();
 }
 // The planned path of a follow step (orange, dashed; faded once its step ended) and the robot's trail
@@ -1227,6 +1246,22 @@ function robotModel(i) {
     });
   }
   return v3.cadGeo[i];
+}
+
+// A light's dot: its color now, or dark.
+function lightDot(l) {
+  return l.color ? `<i class="lightDot" style="background:${escapeHtml(l.color)}" title="${escapeHtml(l.words)}"></i>`
+                 : `<i class="lightDot dark" title="${escapeHtml(l.words)}"></i>`;
+}
+
+// The lights badge on the 3D view (top right): what the drivers would see on the robot.
+function showLights(lights) {
+  const st = $("#stage");
+  let b = $("#lightBadge");
+  if (!b) { b = document.createElement("div"); b.id = "lightBadge"; b.setAttribute("role", "status"); st.appendChild(b); }
+  if (!lights.length) { b.style.display = "none"; return; }
+  b.innerHTML = lights.map(l => `${lightDot(l)} <span>${escapeHtml(l.name)}: ${escapeHtml(l.words)}</span>`).join(" ");
+  b.style.display = "flex";
 }
 
 // The held-pieces badge on the 3D view (and the same words for screen readers).

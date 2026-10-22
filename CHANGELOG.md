@@ -60,6 +60,16 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
     `Tunables.java`.
 - Examples: `turretbot` has a POLLEN and a NECTAR table and buzzes gamepad 2 when on target;
   `flywheelbot` has a webcam and whole-robot aim on G1 RB.
+- **Lights:** a colored light the drivers can see, in the five files. `lights = add(Lights.gobilda("light"))`
+  (goBILDA RGB Indicator Light 3118-0808-0002, on a servo port) or `Lights.blinkin("blinkin")` (REV Blinkin
+  LED Driver REV-11-1105 and its LED strip). Rules in `Controls.java`, the first true one wins:
+  `robot.lights.show(LightColor.GREEN).when(robot.launcher::isReady)`, `.blinking()`, `.whenStarts(...)`
+  (a 0.5 s flash each time something starts), `.inLastSeconds(20)`, `otherwise(color)`, and `flash(color)`
+  from a button or an action. Eight colors (`LightColor`), mapped per light from the sellers' tables.
+  Blinking stops at 5 times a second (FTC R202 J). Never waits. The simulator shows the light's color
+  (`light.NAME = gobilda` / `blinkin` in the robot file; `:sim:fromRobot`, `:sim:fromConfig` and
+  `:sim:newRobot` write it). Cookbook recipes, a Lights section in docs/modules/robot.md, and the turret
+  example robot uses one.
 
 ### Changed
 

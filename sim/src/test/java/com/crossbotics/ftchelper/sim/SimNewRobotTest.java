@@ -91,6 +91,23 @@ public class SimNewRobotTest {
         compileAndLoad(f);
     }
 
+    // A Blinkin and a servo port named like a light become Lights lines; the robot file gets light. lines.
+    @Test public void lightsBecomeLightsModules() throws Exception {
+        String xml = "<Robot><LynxUsbDevice name=\"p\"><LynxModule name=\"Control Hub\" port=\"173\">"
+                + "<goBILDA5202SeriesMotor name=\"left_drive\" port=\"0\"/><goBILDA5202SeriesMotor name=\"right_drive\" port=\"1\"/>"
+                + "<Servo name=\"status_led\" port=\"0\"/><RevBlinkinLedDriver name=\"blinkin\" port=\"1\"/>"
+                + "</LynxModule></LynxUsbDevice></Robot>";
+        List<SimConfigImport.Device> devices = SimConfigImport.read(xml);
+        Map<String, String> f = SimNewRobot.files(devices, "org.firstinspires.ftc.teamcode");
+        String robot = f.get("Robot.java");
+        assertTrue(robot, robot.contains("Lights.gobilda(\"status_led\")"));
+        assertTrue(robot, robot.contains("Lights.blinkin(\"blinkin\")"));
+        assertTrue(robot, robot.contains("import com.crossbotics.ftchelper.robot.Lights;"));
+        String draft = SimConfigImport.draft("lights", devices, "biobuzz-2026", new ArrayList<>());
+        assertTrue(draft, draft.contains("light.status_led = gobilda") && draft.contains("light.blinkin = blinkin"));
+        compileAndLoad(f);
+    }
+
     private void compileAndLoad(Map<String, String> f) throws Exception {
         File src = tmp.newFolder("src");
         File out = tmp.newFolder("classes");
