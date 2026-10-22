@@ -110,6 +110,9 @@ need hard stops), then make sure the shapes are right before blaming the robot.
     A hood on a servo that tilts the shot? -> `hood=SERVO, hoodAt0=A, hoodAt1=B` on the `shoot.` line: the
     shot angle (degrees up from forward) with that servo at position 0 and at 1 (measure the angle at the
     hood's two stops and draw the straight line through them); add its `servo.` line too.
+    Do its shots vary much (worn balls, a loose hood)? -> `scatter=realistic` (or `rough`) on the `shoot.`
+    line: each shot then differs a little, and the page's hit rate means something. Balls that differ a lot
+    from one to the next (soft NECTAR): `wear=red NECTAR:8+blue NECTAR:8` (extra speed spread, %).
 
 ## Odd answers
 

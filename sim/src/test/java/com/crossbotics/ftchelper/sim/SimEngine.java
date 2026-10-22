@@ -8,6 +8,11 @@ final class SimEngine {
     final SimRobot robot;
     final SimDriverStation ds;
     private volatile boolean running = false;
+    // The physics clock: seconds of simulated time so far, moved on with each step (read it while holding the
+    // robot's lock to get the time that goes with the positions). The page uses it to glide between updates.
+    private double simSeconds = 0;
+    // Counts jumps: the robot or the pieces put somewhere by hand or by a reset. The page does not glide across one.
+    final java.util.concurrent.atomic.AtomicInteger jumps = new java.util.concurrent.atomic.AtomicInteger();
     private Thread physics;
 
     static {
@@ -18,11 +23,34 @@ final class SimEngine {
     SimEngine(SimRobot robot) {
         this.robot = robot;
         this.ds = new SimDriverStation(robot);
+        matchClock();
     }
 
     SimEngine(SimRobot robot, SimDriverStation.Scope scope) {
         this.robot = robot;
         this.ds = new SimDriverStation(robot, scope);
+        matchClock();
+    }
+
+    // The game rules' match clock: a running autonomous is AUTO, a running TeleOp is TELEOP (with the rules
+    // file's lengths: 30 s and 2:00 for BIOBUZZ); nothing running is free play.
+    private void matchClock() {
+        if (robot.pieces == null) return;
+        final SimRules rules = robot.field.rules;
+        robot.pieces.clock = new SimPieces.MatchClock() {
+            @Override public String period() {
+                SimDriverStation.Entry e = ds.current();
+                if (ds.phase() != SimDriverStation.Phase.RUNNING || e == null) return "";
+                return "Autonomous".equals(e.kind) ? "AUTO" : "TELEOP";
+            }
+
+            @Override public double secondsLeft() {
+                String p = period();
+                if (p.isEmpty()) return Double.NaN;
+                double length = p.equals("AUTO") ? (rules == null ? 30 : rules.autoSec) : (rules == null ? 120 : rules.teleopSec);
+                return Math.max(0, length - ds.runSeconds());
+            }
+        };
     }
 
     /** Starts the physics thread. */
@@ -35,7 +63,10 @@ final class SimEngine {
                 double dt = Math.min(0.05, (now - last) / 1e9);
                 last = now;
                 try {
-                    robot.step(dt);
+                    synchronized (robot) {
+                        robot.step(dt);
+                        simSeconds += dt;
+                    }
                     ds.tick();
                     placeForInit();
                 } catch (RuntimeException e) {
@@ -50,6 +81,13 @@ final class SimEngine {
         }, "physics");
         physics.setDaemon(true);
         physics.start();
+    }
+
+    /** Seconds of physics so far (the time that goes with the positions read under the robot's lock). */
+    double simSeconds() {
+        synchronized (robot) {
+            return simSeconds;
+        }
     }
 
     // The spot the robot was last put on for INIT (null = none yet), and for which OpMode run.
@@ -87,6 +125,7 @@ final class SimEngine {
         placedAt = target;
         try {
             robot.setPose(target.x, target.y, target.headingDeg);
+            jumps.incrementAndGet();
         } catch (IllegalArgumentException e) {
             ds.physicsError("Start spot: " + e.getMessage() + " (" + target + ")");
         }

@@ -12,11 +12,24 @@ import java.util.Map;
 final class SimJson {
     private SimJson() { }
 
+    /** Everything, for GET /state: also the OpMode list and a fast update ("fast", see SimView.frame). */
     static String state(SimEngine sim, SimServer server) {
+        return state(sim, server, true);
+    }
+
+    /**
+     * The state as JSON. full = false (the /stream's state updates): without the OpMode list (only its key,
+     * "opmodesKey"; the page asks GET /opmodes when it changes) and without "fast" (the stream sends those
+     * on their own, more often). More fields can be added at any time: the page ignores ones it does not know.
+     */
+    static String state(SimEngine sim, SimServer server, boolean full) {
         SimDriverStation ds = sim.ds;
         SimRobot r = sim.robot;
         StringBuilder b = new StringBuilder(4096);
         b.append('{');
+        // The physics time (seconds) and the jump count: see SimView.frame.
+        b.append("\"t\":").append(fmt(sim.simSeconds())).append(',');
+        b.append("\"epoch\":").append(sim.jumps.get()).append(',');
         field(b, "phase", ds.phase().name()).append(',');
         SimDriverStation.Entry cur = ds.current();
         field(b, "opmode", cur == null ? "" : cur.name).append(',');
@@ -47,18 +60,10 @@ final class SimJson {
             b.append("\"buzz\":").append(g.rumbleJson()).append('}');
         }
         b.append("],");
-        b.append("\"opmodes\":[");
-        boolean firstItem = true;
-        for (SimDriverStation.Entry e : ds.opModes) {
-            if (!firstItem) b.append(',');
-            firstItem = false;
-            b.append('{');
-            field(b, "name", e.name).append(',');
-            field(b, "group", e.group).append(',');
-            field(b, "kind", e.kind).append(',');
-            b.append("\"disabled\":").append(e.disabled).append('}');
-        }
-        b.append("],\"screen\":");
+        field(b, "opmodesKey", SimView.opModesKey(ds)).append(',');
+        if (full) b.append("\"opmodes\":").append(SimView.opModes(ds)).append(',');
+        boolean firstItem;
+        b.append("\"screen\":");
         strings(b, ds.screen.screen());
         b.append(",\"motors\":[");
         firstItem = true;
@@ -138,7 +143,11 @@ final class SimJson {
             b.append("\"seen\":").append(c.seenIds().toString()).append(',');
             b.append("\"detections\":");
             strings(b, c.detections());
-            b.append('}');
+            // Why each tag is seen or not (the page's sight lines), at the decimation the OpMode uses
+            b.append(",\"decimation\":").append(fmt(c.decimationForPage())).append(",\"sight\":");
+            StringBuilder sb = new StringBuilder();
+            SimView.sight(sb, c, r.field);
+            b.append(sb).append('}');
         }
         // Game pieces: each on the field (or in a claw), what the robot holds, what has scored.
         b.append("],\"pieces\":[");
@@ -153,7 +162,19 @@ final class SimJson {
             b.append("\"d\":").append(fmt(t.diameterIn)).append(",\"x\":").append(fmt((Double) d[1]))
                     .append(",\"y\":").append(fmt((Double) d[2])).append(",\"z\":").append(fmt((Double) d[3])).append('}');
         }
-        b.append("],\"stored\":").append(counts(r.pieces.stored()));
+        b.append("],\"pieceTypes\":[");
+        int ti = 0;
+        for (SimField.PieceType t : r.field.pieceTypes.values()) {
+            b.append(ti++ > 0 ? ",{" : "{");
+            field(b, "name", t.name).append(',');
+            field(b, "color", t.color).append(",\"d\":").append(fmt(t.diameterIn)).append('}');
+        }
+        // Each launcher's shot if it fired now (the page's shot arc layer): see SimView.arcs.
+        b.append("],\"arcs\":");
+        StringBuilder ab = new StringBuilder();
+        SimView.arcs(ab, r);
+        b.append(ab);
+        b.append(",\"stored\":").append(counts(r.pieces.stored()));
         b.append(",\"scored\":").append(counts(r.pieces.scored()));
         b.append(",\"launched\":").append(r.pieces.launched());
         b.append(",\"preloaded\":").append(r.pieces.preloaded());
@@ -182,6 +203,9 @@ final class SimJson {
                 b.append("]}");
             }
             b.append(']');
+            // The game (rules file): clock, score, FLOWER stacks, HIVE tips in progress, shot verdicts. See SimScore.json().
+            // (the stream sends it on its own, "g", only when it changes: SimServer.startStream)
+            if (full) b.append(",\"game\":").append(r.pieces.score.json());
         }
         // The running path's plan and where the robot really went (field inches): see SimPaths.
         b.append(",\"plan\":[");
@@ -255,6 +279,7 @@ final class SimJson {
         b.append("\"poses\":").append(r.shapes.posesTried).append(',');
         b.append("\"hingeStep\":").append(fmt(r.shapes.hingeStepDeg)).append('}');
         b.append('}');
+        if (full) b.append(",\"fast\":").append(SimView.frame(sim));
         b.append('}');
         return b.toString();
     }

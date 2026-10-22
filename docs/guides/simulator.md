@@ -150,10 +150,22 @@ driving (the trail). The plan stays, faded, after its step ends, so you can comp
 lines** clears both; untick **Path lines** to hide them. More: [Pedro module](../modules/pedro.md#the-simulator).
 
 **Field in 3D** (middle, above the gamepads; at the bottom on a narrow screen): the field and the robot in 3D. Drag to turn the view, scroll to
-zoom, right-drag (or two fingers) to slide. View buttons: Drivers, Audience, From above, Follow robot
-(behind the robot; turning the view by hand ends it). Drivers and From above are from your alliance's
-wall: the alliance the running program uses (autonomous's INIT menu, or TeleOp's choice); red until a
-program says.
+zoom, right-drag (or two fingers) to slide. The **View** menu (keys 1 to 8; your choice is remembered in
+this browser) looks from:
+
+| Key | View | From where |
+|---|---|---|
+| 1 | Drivers | your alliance's wall: the alliance the running program uses (autonomous's INIT menu, or TeleOp's choice); red until a program says. The button says which wall it is now. |
+| 2 | Red wall | behind the red drivers (BIOBUZZ: the bottom of the field map, y = -72) |
+| 3 | Blue wall | behind the blue drivers (y = +72) |
+| 4 | Audience side | the side the audience sits on (BIOBUZZ: the red drivers' right, +x) |
+| 5 | Far side | across from the audience (-x) |
+| 6 | From above | straight down, your alliance's wall at the bottom |
+| 7 | Follow robot | behind the robot (turning the view by hand ends it) |
+| 8 | HIVE close-up | your alliance's HIVE up close (a field with no HIVEs: the goal nearest the robot) |
+
+The sides come from the field file's frame (its `frameNote` says which wall is which). **Layers** (next to
+View) adds lines and maps over the 3D view: see [Layers](#layers) below.
 
 **Where the robot starts.** In INIT the robot is put where the program says: an autonomous that names its
 start spot (`s.start(note, x, y, heading)`, or `startSpotIn()` in an EasyAuto) puts it there for the
@@ -172,8 +184,58 @@ passive part (moved by gravity or springs) **blinks yellow** while it moves. The
 parts) with each AprilTag as a square with its ID. If the robot file names a 3D model of the field
 (`field.model`), the page shows that model instead (with the tag squares on top); the "Field CAD model"
 box switches between them. Each camera shows as a cone (webcam yellow, Limelight green); "Camera
-view" shows a camera's picture in the corner (pick the camera when there are two). The 3D library (three.js, MIT license) comes with the simulator, so the page
+view" shows a camera's picture in the corner (pick the camera when there are two; it is redrawn 15 times
+a second, smaller than the screen, so it costs little). The game pieces are striped balls, so you can see
+them roll and spin. A tipping HIVE turns smoothly (with a rules file the simulator turns it over its
+`tipSeconds` and the page plays the same turn; without one the simulator tips it at once and the page
+still turns it over half a second). The 3D library (three.js, MIT license) comes with the simulator, so the page
 works without the internet. Untick "Show" on a slow computer.
+
+**Smooth motion.** The simulator moves everything 100 times a second and sends the page where everything
+is 50 times a second (a stream: `GET /stream`), with its own clock. The page draws the moment about
+1/20 s in the past, gliding between the two updates around it, so the robot and the balls move smoothly
+at any frame rate (they do not jump 10 times a second). Across a jump (Back to start, Reset field, the
+robot put somewhere by hand) it does not glide. If the stream cannot open (a very old browser, too many
+pages open), the page asks for `/state` 10 times a second instead and still glides, just further behind.
+
+### The Match panel and the score bar
+
+With a rules file (BIOBUZZ has one: [Game rules and the score](#game-rules-and-the-score)), the Control
+Hub's **Match** button shows the game, and a score bar sits over the 3D view (click it to open the panel):
+
+- **The score and the clock**: RED and BLUE totals, the period (AUTO, TELEOP or free play) and the time
+  left. Click a total to see where its points come from (LEAVE, PARK, TIPs, pieces in the up CELL, FLOWERs
+  owned and the pieces in them, the bottom NECTAR bonus, the GARDEN, the other side's fouls). A line says
+  whether a NECTAR into a FLOWER is allowed now (G410).
+- **FLOWERs**: each FLOWER's owner and its stack from the bottom up (a dot per piece in its colour; a hollow
+  dot is outside the scoring rings). In 3D, a ring over each FLOWER in its owner's colour (grey: none) with
+  how many pieces count.
+- **Shots**: the tally of verdicts (clean, rim, other HIVE, frame, miss), the last few shots, and in 3D the
+  verdict over the piece when it is judged; its trail (Layers: Ball trails) takes the verdict's colour.
+- **Scatter**: off (every shot the same), realistic, rough, or as the robot file says (`/cmd action=scatter`).
+- **Hit rate**: 400 pretend shots from the robot as it is now (`GET /hit-rate`), judged like real ones:
+  how many go in cleanly, with its plus-or-minus, Good (80 % or more), Risky (50-80 %) or Poor, and why the
+  others did not. Pick the piece, or the next one in the robot.
+- **Fouls**: each foul charged (G410), newest first; a new one shows over the 3D view for 5 s.
+
+### Layers
+
+The **Layers** button over the 3D view turns each of these on or off; your choice is remembered in this
+browser.
+
+| Layer | What it shows |
+|---|---|
+| Camera sight lines | A line from the chosen camera to each tag in front of it. **Green**: the camera sees it (with about how many pixels across). **Pink "blocked?"**: the camera model sees it, but a field part is in the way of the line (the simulator's camera sees through field parts; a real one does not, so do not count on that tag from there). **Orange**: too slanted (the tag's face is turned more than 60 degrees from the camera). **Red**: too small (fewer pixels across than the tag finder needs: 6.5 per step of decimation, so 20 at the SDK's decimation 3). **Grey, faint**: out of the picture (left, right, above or below). **Purple**: the pretend lighting does not work with the camera's setting now (`goodPipelines`, `goodExposureMs`). Not seen: only the nearest four lines of each kind. The words at the bottom left list every tag. "Not open" means the OpMode has no camera running, so it gets nothing even where the lines are green. |
+| Camera view cone | The camera's view, 36 in long (as before). |
+| Floor map | Where on the field the chosen camera can see tags: each 4 in square is shaded by how many tags the camera would see with the robot standing there (light: 1, darker: 2 or 3, darkest: 4 or more). The simulator works it out with the same camera rules the OpMode gets (field parts do not block in this map), with the robot facing the way it faces now, or, ticked "turned any way", the best of 24 headings. Turret and other parts stay as they are now. It updates once a second. |
+| Shot arc | Where each launcher would send its next piece if it fired now: a dashed yellow line from the launcher, with its peak height (check the venue's ceiling and lights). The simulator works it out from the flywheel's speed now, the shot angle (the hood's angle if it has one) and a shot table's average, with the same air drag and spin lift as a real shot, but it flies through everything (no goal, no walls, no other pieces). The words at the bottom left give the angle, speed and peak; a stopped flywheel says so. |
+| Ball trails | The last half second of each loose ball's path, in its color: how it flew and bounced. |
+| Path lines | The Pedro plan and the trail (the same as **Path lines** in the Robot tab). |
+| Robot size box | A box around everything the robot has out now (green while it fits 18 x 24 in and 29 in tall, red when not; worked out from the shapes' boxes, not the CAD models) and the 18 in start cube, dashed. |
+
+The page's helpers (gliding between updates, the striped ball, the labels) are in `sim/.../simview.js`,
+a small file with no other library in it, so another page (like a team's own shot simulator) can load it
+too.
 
 ## The robot file
 
@@ -457,7 +519,8 @@ A robot with a `collect.` or `shoot.` line starts with the field file's preload 
 POLLEN; `holds=4` is the game's rule: no more than 4 at a time); a robot with only a `grab.` line gets it
 on the tiles touching its back; a robot with none of the three gets none. With a
 `shoot.` line, a shot needs a piece: no piece, no shot. A piece that comes into a goal (a FLOWER top)
-scores and is taken off. "Back to start" puts the pieces back. The Control Hub panel shows what the
+scores: it drops onto that FLOWER's stack and stays there ([Game rules and the score](#game-rules-and-the-score)).
+"Back to start" puts the pieces back. The Control Hub panel shows what the
 robot holds, what it shot and what scored; the 3D view and the field from above draw the pieces.
 
 The match starts with every piece the manual stages on the field (10.3.1), placed from the official field
@@ -497,7 +560,9 @@ The 3 staged NECTAR rest in each up CELL. When the pieces that have come to rest
 (slow for 0.3 s) weigh 187 g or more (the team's field tests: no tip at about 175 g, a tip at about
 199-200 g; the 3 NECTAR are 123 g, so the 3rd POLLEN tips it), the HIVE turns 60 degrees: the other CELL
 comes up, the pieces in the CELL that went down fall out, and the 8 AprilTags on its CELLs move with it
-(cameras see them where they are now). In a match only LAUNCHED pieces may tip it (10.5.1, G417), and a
+(cameras see them where they are now). It turns over half a second (slow, fast, slow; the rules file's
+`tipSeconds`, an estimate until someone films a real tip): its CELLs carry their pieces and push what they
+meet, and it counts as TIPPED when it gets there (10.5.1). In a match only LAUNCHED pieces may tip it (10.5.1, G417), and a
 robot may not catch what falls out until it has touched something else (G409); the simulator does not
 referee either. The page
 shows the pieces in each up CELL (they score if they are still there at the end) and the tips. A piece
@@ -513,14 +578,88 @@ where the match starts it; **Reset field** puts the pieces back and leaves the r
 empty robot. In the robot file `preload = off` starts it empty; in a scenario `set preload on|off` and
 `set field start`.
 
-Scenario lines: `set piece POLLEN X Y [Z]`, `expect stored >= 1`, `expect launched >= 1`,
-`expect scored "FLOWER" >= 1` (goals whose name has the text; `"all"` = every goal), `expect cell "Red"
->= 1`, `expect tips "Red" >= 1`, `expect left >= 1`, `print pieces`.
+Scenario lines: `set piece POLLEN X Y [Z]`, `set scatter off|realistic|rough|file`, `expect stored >= 1`,
+`expect launched >= 1`, `expect scored "FLOWER" >= 1` (pieces that went into goals whose name has the text;
+`"all"` = every goal), `expect cell "Red" >= 1`, `expect tips "Red" >= 1`, `expect left >= 1`,
+`expect points "red" >= 20` (the alliance's match points now), `expect clean >= 1` (shots that went
+cleanly into an up CELL), `print pieces` (also the points and the shot verdicts).
 
 Not yet: the alliance areas' NECTAR (the human player's, and the one a tip lets them enter, G426); the
-HIVE's arm between its CELLs (a piece there passes through); a HIVE turning slowly (it tips at once,
-and the tip is not judged at the damper, 10.5.1); points and GARDEN scoring; a held piece's weight on the arm; robot parts that stop when they hit a piece. How far
-a ball rolls on the tiles is a guess (about 2 m from 1 m/s) until someone times a real one.
+HIVE's arm between its CELLs (a piece there passes through); the tip judged at the damper (10.5.1: the
+simulator calls it TIPPED when the turn ends); a held piece's weight on the arm; robot parts that stop when
+they hit a piece. How far a ball rolls on the tiles is a guess (about 2 m from 1 m/s) until someone times a
+real one. What the rules cover and what they do not: [Game rules and the score](#game-rules-and-the-score).
+
+### Game rules and the score
+
+A season's rules sit in a second file next to the field file: `sim/fields/biobuzz-2026.rules.json`, typed
+by hand from the game manual (each part says which section; the field file itself is made from the CAD by
+a script). With it, the simulator plays by the manual and keeps the score. Without one (an older or
+home-made field), a piece in a goal is counted and taken off, HIVEs tip at once, and there is no score.
+
+What it models (BIOBUZZ, Competition Manual TU01):
+
+| Rule | Manual | In the simulator |
+| --- | --- | --- |
+| Pieces stay in a FLOWER | 9.7 | A piece that falls into the top lands on the FLOWER's stack (each piece resting on the one below; the lowest in or on the lower ring). A full FLOWER (8 POLLEN) takes no more: the next one stays on top. |
+| FLOWER scoring volume | 10.5.2 | A piece at least partly between the middle ring's top (5.26 in, field CAD) and the top ring's top (21.4 in) counts. At the start, 3 of each FLOWER's 4 POLLEN are in it; the bottom one is not. |
+| FLOWER owner | 10.5.2 | The alliance with the top-most NECTAR in the volume owns the FLOWER: 2 points for every piece in it, whoever put them there. |
+| Bottom NECTAR bonus | 10.5.2 | 5 points to the alliance with the bottom-most NECTAR in the volume. |
+| NECTAR in the last minute | G410 | NECTAR into a FLOWER before the last 60 s of TELEOP (or in AUTO) is a MAJOR FOUL: 20 points to the other alliance. It still counts in the FLOWER. |
+| Only POLLEN from the bottom | 9.7, G418 | A NECTAR is too tall for the Retrieval Opening: once it is the lowest piece it stays in, and nothing above it can be taken out. |
+| HIVE TIP | 10.5.1 | 20 points to the HIVE's alliance, AUTO or TELEOP by when the turn ended. |
+| Pieces in the up CELL | 10.5.1 | 2 points each (the 3 staged NECTAR count too), for the HIVE's alliance. |
+| GARDEN | 10.5.3 | 1 point for each piece at least partly in a GARDEN (centre under 6 in: the manual gives no height), for that GARDEN's alliance. |
+| LEAVE, PARK | 10.5.4 | At the end of AUTO: LEAVE (3) if the robot no longer touches the wall, PARK (5) if it is at least partly in its LOADING ZONE. TELEOP PARK (5): where it is now. |
+
+The robot is the alliance its program chose (the INIT menu; red when none). The match clock comes from the
+Driver Station: a running autonomous is AUTO (30 s), a running TeleOp is TELEOP (2:00; "seconds left" counts
+down from its START, even with the TeleOp timer off). With no OpMode running it is free play: no fouls, and
+tips count as TELEOP. The score is live ("if the match ended now") and starts again at "Back to start",
+"Reset field" and when an autonomous starts.
+
+Not modelled: the other three robots; the human player and the alliance areas' NECTAR (one per tip, all of
+them in the last 60 s); the 8 s transition between AUTO and TELEOP; the ranking points (SWARM,
+POLLINATOR); every other foul (G408 opponent NECTAR, G409 catching what a tipped HIVE drops, G417 touching
+the HIVE, the 4-piece limit beyond `holds=`, and so on). FLOWER points scored before the last minute count,
+as the manual says ("still scored, but subject to penalties"); only the NECTAR foul (G410) is charged. The
+simulator is not a referee: it counts what it can see.
+
+### Clean shots, scatter and the hit rate
+
+**Each shot gets a verdict**, judged as the team's turret shot simulator does (a line-by-line port of its
+`judge()`): **clean** when it comes through an up CELL's opening going down at least 10 degrees, clears the
+rim by its own radius, and touched neither the frame, the outside of its own CELL nor the other HIVE first.
+Otherwise **rim** (it touched the rim going in: it may bounce out), **other HIVE** or **frame** (it would
+have gone in, but hit that first), or **miss**. The simulator keeps the last 20 shots' verdicts and a count
+of each, for the page and `print pieces`. The verdict is the judge's rule; whether the piece stays in (and tips the HIVE) is the physics.
+The CELLs count 1 in bigger for the judge (the frame tube, as in the turret simulator), the HIVE frame is the
+field file's blocks, and the arm between the CELLs is not there (it is not in the physics either). A test
+(`SimCellJudgeTest`) checks the port against the turret simulator's `judge()` on 600 shared shots, 120 of
+each verdict: they agree on every one.
+
+**Scatter.** Real shots differ: the ball's wear and size, the wheel speed, the hood's play. On the
+`shoot.` line, `scatter=realistic` makes each shot differ a little (one standard deviation: exit speed
+1.5 %, launch angle 0.35 degrees, aim 0.25 degrees left-right, spin 10 %; the first three are the turret
+simulator's "Realistic" for a launcher without a feed table, the spin share is a guess), `scatter=rough`
+about double, `scatter=off` (the default) none. Each part can be set on its own: `scatterSpeed=` (%),
+`scatterAngle=`, `scatterAim=` (degrees), `scatterSpin=` (%). Ball wear: `wear=red NECTAR:8+blue NECTAR:8`
+adds that much speed spread (%) for those pieces (the turret's feed model has a new NECTAR leaving about 30 %
+slower than a medium one at the same settings; balls a quarter of that apart give about 8 %). With a shot
+table, the table's spread replaces the speed, angle and spin parts; aim and wear still apply. The page can
+switch every launcher at once (`/cmd` `action=scatter`: off, realistic, rough, or `file` for the robot
+file's); in a scenario, `set scatter realistic`.
+
+**Hit rate.** `GET /hit-rate` (for the page) fires 400 pretend shots (not on the field: nothing moves) from
+where the robot is now, with its launcher as it is now (wheel speed, hood, the robot's own speed) and the
+scatter (realistic if scatter is off), and judges each: "57 % clean (plus or minus 5), Risky". **Good** is
+80 % or more, **Risky** 50 to 80 %, **Poor** under 50 % (the turret simulator's words). It assumes an empty
+CELL and single shots.
+
+For the page (and your own tools): `/state` has a `game` object (the clock, the score by alliance and by
+kind, each FLOWER's stack and owner, each HIVE's tip progress, the last shots' verdicts, the scatter and the
+fouls); `GET /hit-rate?n=400&piece=POLLEN` answers with the hit rate as JSON; `POST /cmd` with
+`action=scatter&mode=realistic` sets the scatter.
 
 ### How shots fly, and shot tables
 
@@ -737,6 +876,12 @@ Game pieces in the field file: `pieceTypes` (name, `diameterIn`, `massG`, `color
 (where each starts: type, x, y, z), `goals` (name, x, y, the opening's height `z`, `radiusIn`) and
 `preload` (how many of each type a robot starts with).
 
+A season's rules (points, match times, which pieces and zones are each alliance's, FLOWER heights, the HIVE's
+tip time, the clean-shot rules) go in `sim/fields/<season>.rules.json` next to it (see
+[Game rules and the score](#game-rules-and-the-score)). It is typed from the manual, section by section, so
+a re-made field file never loses it. For a field file given by path, the rules file is looked for in the
+same folder with the same name.
+
 Coordinates: inches from the field center, +x to the right and +y away from the drivers (drawn at the
 bottom), z up from the tiles; headings and tag facing in degrees, counterclockwise from +x for tags.
 
@@ -771,7 +916,9 @@ same as on the robot.
 
 On the page, the Control Hub panel lists each camera with the tags in its picture and what was found.
 The 3D view draws its view as a cone on the robot (webcam yellow, Limelight green), and "Camera view" shows the picture from the
-camera (the tags it sees turn green).
+camera (the tags it sees turn green). A camera on a turret (`on=turret`) moves with it in the 3D view
+too. The **Layers** menu draws its sight lines to the tags with the reason it cannot see each one, and
+a floor map of where it can see them ([Layers](#layers)).
 
 **Limelight 3A**: the same settings with `limelight.` (hfov default 54.5, its spec sheet).
 

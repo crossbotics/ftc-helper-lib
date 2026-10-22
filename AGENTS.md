@@ -28,7 +28,8 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
   from device names: teach it the new one.
 - `sim/` the simulator: a pretend Control Hub and Driver Hub on a laptop (`./gradlew :sim:run`, then
   http://localhost:8780). Its code is in `sim/src/test` (the SDK only runs on a laptop there); the
-  page is `sim/src/test/resources/sim/index.html`; robot files are in `sim/robots/`. Its scripted
+  page is `sim/src/test/resources/sim/index.html` (its drawing helpers in `simview.js` next to it; what it
+  reads: `SimJson` for the state, `SimView` for the 50-a-second stream and the Layers data); robot files are in `sim/robots/`. Its scripted
   tests (`FinderSafetyTest`) run whole OpModes: add one when an OpMode's behavior matters (safety,
   help, buttons). Not part of robot builds. Guide: docs/guides/simulator.md. Parts page:
   docs/guides/parts-catalog.md is made from sim/parts/parts.json by tools/parts_page.py (never edit it by hand).
@@ -38,7 +39,10 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
     `./gradlew :sim:scenario -Pfile=...` (report: each check ok/FAIL with the value seen).
   - `sim/parts/parts.json`: motors and servos with seller-page numbers and the date checked; add a
     part the same way (never from memory). `sim/fields/<season>.json`: one per season, made from the
-    official field CAD by a script, not typed by hand.
+    official field CAD by a script, not typed by hand. `sim/fields/<season>.rules.json` next to it: the game's rules
+    (points, match times, FLOWER heights, tip time, clean-shot rules), typed from the manual with section
+    numbers (SimRules; scoring in SimScore, the clean-shot judge in SimCellJudge, a port of the turret
+    simulator's judge() checked by SimCellJudgeTest).
 - `docs/` `modules/` (reference: every public class and method), `tutorials/` (hands-on lessons),
   `guides/` (how-to and checklists), `images/` (SVG diagrams), `starter-kit.md`, setup/update pages.
 - `tools/check_docs.py` checks links, heading links, class coverage, tutorial programs, and that every

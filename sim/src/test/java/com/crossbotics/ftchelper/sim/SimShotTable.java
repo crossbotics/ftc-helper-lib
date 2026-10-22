@@ -84,6 +84,11 @@ final class SimShotTable {
 
     /** A shot of this piece at this flywheel shaft speed, or null if the table does not have the piece. */
     Shot pick(String piece, double shaftRpm) {
+        return pick(piece, shaftRpm, random);
+    }
+
+    /** The same with other random numbers (the hit rate's, so the live shots stay the same). */
+    Shot pick(String piece, double shaftRpm, Random random) {
         List<Row> rows = pieces.get(piece);
         if (rows == null) return null;
         double rpm = Math.abs(shaftRpm);
@@ -107,18 +112,56 @@ final class SimShotTable {
         }
         Shot s = new Shot();
         s.shot = random.nextDouble() < mix(a.shot, b.shot, t);
-        s.speedIn = scale * draw(a.speed, b.speed, t);
+        s.speedIn = scale * draw(a.speed, b.speed, t, random);
         // angles blend the short way round (179 to -179 passes 180, not 0)
         double turn = ((b.angle[0] - a.angle[0]) % 360 + 540) % 360 - 180;
         s.angleMeanDeg = a.angle[0] + turn * t;
         s.angleDeg = s.angleMeanDeg + random.nextGaussian() * mix(a.angle[1], b.angle[1], t);
-        s.backspin = scale * draw(a.spin, b.spin, t);
+        s.backspin = scale * draw(a.spin, b.spin, t, random);
         s.exitForward = mix(a.exit[0], b.exit[0], t);
         s.exitUp = mix(a.exit[1], b.exit[1], t);
         return s;
     }
 
-    private double draw(double[] a, double[] b, double t) {
+    /**
+     * The average shot of this piece at this shaft speed (no scatter, and it does not use up a random pick, so
+     * the real shots stay the same), or null if the table does not have the piece. For the page's shot arc.
+     */
+    Shot mean(String piece, double shaftRpm) {
+        List<Row> rows = pieces.get(piece);
+        if (rows == null) return null;
+        double rpm = Math.abs(shaftRpm);
+        Row a = rows.get(0), b = rows.get(rows.size() - 1);
+        double t = 0, scale = 1;
+        if (rpm <= a.rpm) {
+            b = a;
+            scale = a.rpm > 0 ? rpm / a.rpm : 1;
+        } else if (rpm >= b.rpm) {
+            a = b;
+            scale = rpm / b.rpm;
+        } else {
+            for (int i = 0; i + 1 < rows.size(); i++) {
+                if (rpm <= rows.get(i + 1).rpm) {
+                    a = rows.get(i);
+                    b = rows.get(i + 1);
+                    t = (rpm - a.rpm) / (b.rpm - a.rpm);
+                    break;
+                }
+            }
+        }
+        Shot s = new Shot();
+        s.shot = true;
+        s.speedIn = scale * mix(a.speed[0], b.speed[0], t);
+        double turn = ((b.angle[0] - a.angle[0]) % 360 + 540) % 360 - 180;
+        s.angleMeanDeg = a.angle[0] + turn * t;
+        s.angleDeg = s.angleMeanDeg;
+        s.backspin = scale * mix(a.spin[0], b.spin[0], t);
+        s.exitForward = mix(a.exit[0], b.exit[0], t);
+        s.exitUp = mix(a.exit[1], b.exit[1], t);
+        return s;
+    }
+
+    private static double draw(double[] a, double[] b, double t, Random random) {
         return mix(a[0], b[0], t) + random.nextGaussian() * mix(a[1], b[1], t);
     }
 

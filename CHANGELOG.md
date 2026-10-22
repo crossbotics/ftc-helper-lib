@@ -6,6 +6,25 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
+- **Simulator: Layers over the 3D view** (docs/guides/simulator.md#layers): camera sight lines to the tags,
+  each with the reason it is not seen (out of view, too slanted, too small, lighting setting, and
+  "blocked?" when a field part is in the way of a tag the camera model sees); a floor map of where the
+  camera can see tags (the robot as it faces now, or turned any way; `GET /seemap`); the predicted shot
+  arc with its peak height (the launcher's speed and angle now, the same air as a real shot, no contacts);
+  ball trails; the path lines; a robot size box with the 18 in start cube. Each choice is remembered in the
+  browser. Also striped balls that show their spin.
+- **Simulator: a View menu with all four sides** (keys 1 to 8, remembered in the browser): Drivers (your
+  alliance's wall, and it says which), Red wall, Blue wall, Audience side, Far side, From above, Follow
+  robot, and a HIVE close-up.
+- **Simulator page: the Match panel** (Control Hub, "Match"; with a rules file): RED and BLUE totals with a
+  breakdown on click, the period clock and whether NECTAR is allowed (G410), each FLOWER's owner and stack
+  (and an owner ring over each FLOWER in 3D), the shot verdict tally and the last shots (the verdict shows
+  over the piece and colours its trail), a Scatter switch, a Hit rate button with its Good/Risky/Poor
+  verdict, and foul notices. A score bar over the 3D view. The stream sends the game on its own, only when
+  it changes (at most 5 a second); each verdict now names its piece (`shots[].ball`). A tipping HIVE
+  turns smoothly in step with the simulator's turn.
+- **Simulator: `sim/.../simview.js`**, the page's drawing helpers (gliding between updates, the striped
+  ball, labels) in a small file another page can load too.
 - **A servo's full range: `.fullRange()`** on `Claw`, `Wrist`, `Positioner`, `Hood.servo`, `Turret.servo` and
   `Indexer.servo` (and `ServoSetup.fullRange()` / `pulseRange(lowUs, highUs)` / `setPulseRange(...)`,
   `PositionServo.fullRange()` / `pulseRange(...)` / `isFullRange()` for the building blocks). The FTC SDK
@@ -33,7 +52,23 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   a misspelled configuration name would otherwise only be a quiet note. PRACTICE keeps the note. Its
   numbers are hidden from the tuning menu (`Not on the robot (hidden): IntakeDeploy`; saved values kept):
   `Tunable.shown()`, `Tunable.hideGroup(group, hidden)`, `Tunable.hiddenGroups()`, `isHidden()`.
-
+- **Simulator: the game's rules and score** (`sim/fields/biobuzz-2026.rules.json`, typed from the
+  manual next to the CAD-made field file; docs/guides/simulator.md "Game rules and the score"). Pieces that
+  fall into a FLOWER stay on its stack; the scoring volume between the middle and top rings, the FLOWER
+  owner (top-most NECTAR, 2 points a piece), the bottom NECTAR bonus, G410 (NECTAR before the last 60 s: a
+  MAJOR FOUL), NECTAR stuck at the bottom (9.7, G418), a full FLOWER, HIVE TIPs, pieces in up CELLs,
+  GARDENs, LEAVE and PARK, all from what the simulator sees, with a live score by alliance (AUTO and TELEOP
+  from the Driver Station's clock). Without a rules file nothing changes.
+- **Simulator: each shot's verdict** (clean, rim, other HIVE, frame, miss): a line-by-line port of the
+  turret shot simulator's `judge()` (`SimCellJudge`), checked against it on 600 shared shots
+  (`SimCellJudgeTest`: they agree on every one).
+- **Simulator: shot scatter and a hit rate.** `scatter=realistic|rough` on a `shoot.` line (or each part:
+  `scatterSpeed=`, `scatterAngle=`, `scatterAim=`, `scatterSpin=`; `wear=PIECE:%` for ball-to-ball wear), a
+  page switch for every launcher (`/cmd action=scatter`, scenario `set scatter`), and `GET /hit-rate`: 400
+  pretend shots from the robot as it is now, judged like real ones (Good 80 %+, Risky, Poor).
+- Scenario checks `expect points "red" >= 20` and `expect clean >= 1`; `print pieces` shows points and verdicts.
+- `/state` has a `game` object for the page: clock, score, FLOWER stacks and owners, HIVE tip progress,
+  the last 20 shot verdicts, the scatter and the fouls.
 - **Tunables reference** (`docs/guides/tunables.md`): every number the library reads from
   `Tunables.java`, one table per part (Drive, Odometry, Aim, Buttons, Intake, Lift and Arm, Claw/Wrist/
   Positioner, Turret, interlock rules, Launcher, Indexer, Hood, Camera, PieceSensor, Lights: 133 fields).
@@ -307,6 +342,15 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Changed
 
+- **Simulator: smooth motion.** The page now gets where everything is 50 times a second on one stream
+  (`GET /stream`, server-sent events; was: asking `/state` 10 times a second) with the simulator's own
+  clock, and draws between two updates, so the robot and the balls glide instead of jumping (a falling
+  ball now moves in every frame, not one in seven). The OpMode list is sent only when it changes
+  (`GET /opmodes`), so each update is about 11 KB instead of 16. Gamepad updates reuse their connection
+  (keep-alive) and get a short `200 ok` instead of `204` (no more "canceled" requests in the browser's
+  network panel). The camera picture is redrawn 15 times a second at a smaller size instead of doubling
+  every frame's work. A camera on a turret now moves with the turret in the 3D view. `/state` keeps
+  every field it had (plus `t`, `epoch`, `pieceTypes`, `arcs`, each camera's `sight`, `fast`).
 - **INIT now stops on a Tunables field that no part reads, in every part's section** (before: only a
   Lift, Arm, Claw, Wrist or Positioner name that looked like a setting). A typo like `inPowr` in
   `Tunables.Intake`, `goalx` in `Tunables.Aim` or `nominalVolt` in `Tunables.Launcher` used to be quietly
@@ -332,7 +376,10 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   only 145). Its actions: Grab turns the turret forward first (the wrist goes to pick-up inside its zone)
   and follows again after; Score no longer turns the turret. The interlocks guide's turret and lift
   example stays as a general example.
-
+- **Simulator: a HIVE takes 0.5 s to tip** (the rules file's `tipSeconds`, an estimate): its CELLs turn on a
+  moving body, carrying their pieces and pushing what they meet, instead of jumping; it counts as tipped
+  when the turn ends (10.5.1). `SimPiecesTest.aPieceDroppedIntoAFlowerScores` now checks the piece stays in
+  the FLOWER (it used to be taken off).
 - An autonomous's `steps(...)` is read in INIT again each time the drivers change a menu line (it was
   read once in INIT and once after START). No step runs in INIT, as before. Before, a `start(...)`
   inside an `onlyIf` was used whatever the choice (the last one written won).

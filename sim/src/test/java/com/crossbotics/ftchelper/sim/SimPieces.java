@@ -26,12 +26,19 @@ import java.util.Properties;
  *                                                          its motor a flywheel with feeder= itself);
  *                                                          hood=SERVO, hoodAt0=A, hoodAt1=B: the angle follows
  *                                                          a hood servo (A at position 0, B at 1)
+ *                                                          scatter=off|realistic|rough: each shot differs a little
+ *                                                          (scatterSpeed=%, scatterAngle=deg, scatterAim=deg,
+ *                                                          scatterSpin=%; one standard deviation each);
+ *                                                          wear=PIECE:%+PIECE:%: extra speed spread per piece type
  *   grab.NAME = shape=claw, servo=claw, closedBelow=0.3   a claw that holds a piece it touches while the servo
  *                                                          is below closedBelow (or above closedAbove=, for a
  *                                                          claw that closes toward 1), and lets it go when it opens
  *
  * The robot starts holding the field file's preload (BIOBUZZ: 4 POLLEN) when it can collect or shoot. A
- * piece whose centre comes into a goal (a FLOWER top) scores and is taken off the field.
+ * piece whose centre comes into a goal (a FLOWER top) scores. With the season's rules file (SimRules) it drops
+ * onto that FLOWER's stack and stays there (where SimScore counts it); without one it is taken off the field.
+ * With the rules, a HIVE takes tipSeconds to tip (its CELLs carry their pieces as they turn), and each launched
+ * shot gets a verdict from SimCellJudge (clean into an up CELL, or why not); hitRate() rates the robot's spot.
  *
  * Every method locks the robot (the physics step already holds it), so the page's thread and the
  * physics thread never wait for each other in the wrong order.
@@ -60,6 +67,11 @@ final class SimPieces {
         final String name, shape, flywheel, hood;
         final double angleDeg, share, spin, fixedSpeed, hoodAt0, hoodAt1;
         final SimShotTable table;      // table=: how this launcher really throws (null: angle/share/spin)
+        // scatter=off|realistic|rough and its parts (one standard deviation): how much each shot differs
+        final String scatter;
+        final double scatterSpeedPct, scatterAngleDeg, scatterAimDeg, scatterSpinPct;
+        // wear=POLLEN:0.5+NECTAR:8: each piece's extra exit-speed scatter (%) from ball-to-ball wear and size
+        final Map<String, Double> wearPct = new LinkedHashMap<>();
 
         Shoot(String name, Map<String, String> s, java.nio.file.Path dir) {
             this.name = name;
@@ -82,6 +94,39 @@ final class SimPieces {
             String t = s.get("table");
             table = t == null ? null : new SimShotTable(dir == null ? java.nio.file.Paths.get(t) : dir.resolve(t).normalize(),
                     "shoot." + name, name.hashCode());
+            scatter = s.getOrDefault("scatter", "off").trim().toLowerCase(java.util.Locale.US);
+            double[] preset = scatterPreset(scatter);
+            if (preset == null) throw new IllegalArgumentException("Robot file: shoot." + name + ": scatter= is off, realistic or rough");
+            scatterSpeedPct = num(s, "scatterSpeed", preset[0], "shoot." + name);
+            scatterAngleDeg = num(s, "scatterAngle", preset[1], "shoot." + name);
+            scatterAimDeg = num(s, "scatterAim", preset[2], "shoot." + name);
+            scatterSpinPct = num(s, "scatterSpin", preset[3], "shoot." + name);
+            String w = s.get("wear");
+            if (w != null && !w.trim().isEmpty()) {
+                for (String part : w.split("\\s*\\+\\s*")) {
+                    int c = part.lastIndexOf(':');
+                    try {
+                        wearPct.put(part.substring(0, c).trim(), Double.parseDouble(part.substring(c + 1).trim()));
+                    } catch (RuntimeException e) {
+                        throw new IllegalArgumentException("Robot file: shoot." + name + ": wear= is PIECE:PERCENT+PIECE:PERCENT (e.g. wear=POLLEN:0.5+red NECTAR:8)");
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Shot-to-shot scatter presets (one standard deviation each): exit speed %, launch angle degrees, aim
+     * (left-right) degrees, spin %. "realistic" is the turret shot simulator's Realistic for a launcher without a
+     * feed table (speed 1.5 %, angle 0.35 deg, aim 0.25 deg); "rough" about double. The spin share is a guess.
+     * Null for an unknown name.
+     */
+    static double[] scatterPreset(String name) {
+        switch (name) {
+            case "off": return new double[] {0, 0, 0, 0};
+            case "realistic": return new double[] {1.5, 0.35, 0.25, 10};
+            case "rough": return new double[] {3.0, 0.8, 0.6, 20};
+            default: return null;
         }
     }
 
@@ -146,11 +191,18 @@ final class SimPieces {
     // The real piece in each open stack's lowest slot (null: none there now), and where it rests.
     private final List<SimWorld.Ball> stackBall = new ArrayList<>();
     private final List<double[]> stackRest = new ArrayList<>();
+    // The season's rules (null: none; see SimRules). With them a FLOWER is a stack the pieces sit in.
+    final SimRules rules;
+    // Each goal's stack (the FLOWER it is the top of; -1: none), and each stack's goal (-1: none).
+    private int[] goalStack = new int[0], stackGoal = new int[0];
+    // The game's score, from what happens here (see SimScore).
+    final SimScore score;
 
     SimPieces(SimRobot robot, SimWorld world, Properties p, Map<String, Map<String, String>> collectLines,
               Map<String, Map<String, String>> shootLines, Map<String, Map<String, String>> grabLines) {
         this.robot = robot;
         this.world = world;
+        this.rules = robot.field.rules;
         for (Map.Entry<String, Map<String, String>> e : collectLines.entrySet()) collects.add(new Collect(e.getKey(), e.getValue()));
         for (Map.Entry<String, Map<String, String>> e : shootLines.entrySet()) shoots.add(new Shoot(e.getKey(), e.getValue(), robot.dir));
         for (Map.Entry<String, Map<String, String>> e : grabLines.entrySet()) grabs.add(new Grab(e.getKey(), e.getValue()));
@@ -198,6 +250,23 @@ final class SimPieces {
             stackBall.add(null);
             stackRest.add(null);
         }
+        // A goal right over a stack's lowest piece is that stack's top (a FLOWER: its top opening and its column).
+        goalStack = new int[robot.field.goals.size()];
+        stackGoal = new int[robot.field.stacks.size()];
+        java.util.Arrays.fill(stackGoal, -1);
+        for (int g = 0; g < goalStack.length; g++) {
+            SimField.Goal goal = robot.field.goals.get(g);
+            goalStack[g] = -1;
+            for (int i = 0; i < robot.field.stacks.size(); i++) {
+                SimField.Stack st = robot.field.stacks.get(i);
+                if (st.pieces.isEmpty() || inAHive(st)) continue;
+                if (Math.hypot(st.pieces.get(0).x - goal.x, st.pieces.get(0).y - goal.y) < goal.radiusIn + 1) {
+                    goalStack[g] = i;
+                    stackGoal[i] = g;
+                }
+            }
+        }
+        score = new SimScore(robot, this);
         reset();
     }
 
@@ -219,6 +288,12 @@ final class SimPieces {
             inCells.clear();
             slowFor.clear();
             leftField = 0;
+            tipStart.clear();
+            tracking.clear();
+            verdicts.clear();
+            java.util.Arrays.fill(verdictCounts, 0);
+            shotRandom = new java.util.Random(8938);
+            if (score != null) score.clear();
             for (SimField.StagedPiece sp : robot.field.pieces) {
                 world.addBall(robot.field.pieceTypes.get(sp.type), sp.x, sp.y, sp.z, 0, 0, 0);
             }
@@ -321,7 +396,7 @@ final class SimPieces {
     // The stack's next piece becomes a real piece in its lowest slot.
     private void dropIntoSlot(int i) {
         List<SimField.PieceType> now = stackNow.get(i);
-        if (now.isEmpty()) return;
+        if (now.isEmpty() || stuck(now.get(0))) return;     // a NECTAR at the bottom stays in (it cannot come out)
         SimField.StagedPiece slot = robot.field.stacks.get(i).pieces.get(0);
         SimField.PieceType type = now.remove(0);
         double[] at = restingSpot(new double[] {slot.x, slot.y, slot.z}, type.diameterIn / 2);
@@ -381,52 +456,131 @@ final class SimPieces {
     boolean shoot(SimMotor flywheel) {
         synchronized (robot) {
             if (!shootsPieces() || stored.isEmpty()) return false;
-            Shoot s = null;
-            for (Shoot x : shoots) if (flywheel.name.equals(x.flywheel)) s = x;
-            if (s == null && shoots.size() == 1) s = shoots.get(0);
-            if (s == null) return false;
-            SimShapes.Piece piece = pieceOf(s.shape);
-            if (piece == null) return false;
+            Shoot s = shootFor(flywheel);
+            if (s == null || pieceOf(s.shape) == null) return false;
             SimField.PieceType type = stored.remove(0);
-            double dia = Math.max(piece.sf, piece.su);
-            double rimSpeed = Math.abs(flywheel.shaftSpeed()) / Math.max(1, flywheel.ticksPerRev) * Math.PI * dia;   // in/s
-            double angle = s.angleDeg, speed = Double.isNaN(s.fixedSpeed) ? rimSpeed * s.share : s.fixedSpeed, backspin = s.spin * speed / (type.diameterIn / 2);
-            double gap = dia / 2 + type.diameterIn / 2 + 0.3;
-            double[] exit = null;
-            SimShotTable.Shot pick = s.table == null ? null
-                    : s.table.pick(type.name, flywheel.shaftSpeed() / Math.max(1, flywheel.ticksPerRev) * 60);
-            // A hood: the shot angle from where its servo really is now (not where it was sent).
-            double hoodAngle = s.hood == null ? Double.NaN
-                    : s.hoodAt0 + (s.hoodAt1 - s.hoodAt0) * robot.servos.get(s.hood).actual;
-            if (!Double.isNaN(hoodAngle)) angle = hoodAngle;
-            if (pick != null) {
-                // With a hood, the table's scatter goes around the hood's angle.
-                angle = Double.isNaN(hoodAngle) ? pick.angleDeg : hoodAngle + pick.angleDeg - pick.angleMeanDeg;
-                speed = pick.shot ? pick.speedIn : 0;          // a feed that did not become a shot drops out
-                backspin = pick.shot ? pick.backspin : 0;
-                exit = new double[3];
-                for (int k = 0; k < 3; k++) exit[k] = piece.center[k] + pick.exitForward * piece.ef[k] + pick.exitUp * piece.eu[k];
-            }
-            double a = Math.toRadians(angle);
-            double[] dir = new double[3];
-            for (int k = 0; k < 3; k++) dir[k] = Math.cos(a) * piece.ef[k] + Math.sin(a) * piece.eu[k];
-            double[] start = exit != null ? exit
-                    : new double[] {piece.center[0] + dir[0] * gap, piece.center[1] + dir[1] * gap, piece.center[2] + dir[2] * gap};
-            double[] at = toField(start), d = toFieldDir(dir), rv = world.robotVel();
-            SimWorld.Ball b = world.addBall(type, at[0], at[1], at[2], d[0] * speed + rv[0], d[1] * speed + rv[1], d[2] * speed);
-            if (backspin != 0) {
-                // backspin turns about (direction x up); its sign along the wheel's axle when the axle is square to the shot
-                double[] el = toFieldDir(piece.el);
-                double[] axle = {-el[0], -el[1], -el[2]};          // straight up: backspin turns about the shape's right
-                double[] back = {d[1], -d[0], 0};                                   // d x up
-                double n = Math.hypot(back[0], back[1]);
-                double[] ax = n > 1e-6 ? new double[] {back[0] / n, back[1] / n, 0} : axle;
-                world.spin(b, ax[0] * backspin, ax[1] * backspin, ax[2] * backspin);
-            }
+            Launch l = launch(s, flywheel, type, null, scatterOf(s));
+            SimWorld.Ball b = world.addBall(type, l.at[0], l.at[1], l.at[2], l.vel[0], l.vel[1], l.vel[2]);
+            if (l.spin != null) world.spin(b, l.spin[0], l.spin[1], l.spin[2]);
             b.ignoreRobotUntil = world.time() + 0.2;
-            if (pick == null || pick.shot) launched++;
+            if (l.shot) {
+                launched++;
+                track(b);
+            }
             return true;
         }
+    }
+
+    // The launcher a flywheel fires (its flywheel=, or the only one).
+    private Shoot shootFor(SimMotor flywheel) {
+        Shoot s = null;
+        for (Shoot x : shoots) if (flywheel.name.equals(x.flywheel)) s = x;
+        if (s == null && shoots.size() == 1) s = shoots.get(0);
+        return s;
+    }
+
+    /** Where and how a piece leaves the launcher (field inches, inches per second, spin in radians per second). */
+    static final class Launch {
+        double[] at, vel, spin;      // spin null: none
+        boolean shot = true;         // false: a feed that did not become a shot (it drops out)
+    }
+
+    // A shot's start: from the launcher's shape, at its angle (or hood's) and speed, with the shot table's numbers
+    // and the scatter (one standard deviation each: speed %, angle deg, aim deg, spin %). random: null = the live
+    // shots' own (the table's and this class's); the hit rate passes its own so live shots do not change.
+    private Launch launch(Shoot s, SimMotor flywheel, SimField.PieceType type, java.util.Random random, double[] scatter) {
+        java.util.Random rnd = random != null ? random : shotRandom;
+        SimShapes.Piece piece = pieceOf(s.shape);
+        double dia = Math.max(piece.sf, piece.su);
+        double rimSpeed = Math.abs(flywheel.shaftSpeed()) / Math.max(1, flywheel.ticksPerRev) * Math.PI * dia;   // in/s
+        double angle = s.angleDeg, speed = Double.isNaN(s.fixedSpeed) ? rimSpeed * s.share : s.fixedSpeed, backspin = s.spin * speed / (type.diameterIn / 2);
+        double gap = dia / 2 + type.diameterIn / 2 + 0.3;
+        double[] exit = null;
+        double rpm = flywheel.shaftSpeed() / Math.max(1, flywheel.ticksPerRev) * 60;
+        SimShotTable.Shot pick = s.table == null ? null
+                : random != null ? s.table.pick(type.name, rpm, random) : s.table.pick(type.name, rpm);
+        // A hood: the shot angle from where its servo really is now (not where it was sent).
+        double hoodAngle = s.hood == null ? Double.NaN
+                : s.hoodAt0 + (s.hoodAt1 - s.hoodAt0) * robot.servos.get(s.hood).actual;
+        if (!Double.isNaN(hoodAngle)) angle = hoodAngle;
+        Launch out = new Launch();
+        if (pick != null) {
+            // With a hood, the table's scatter goes around the hood's angle.
+            angle = Double.isNaN(hoodAngle) ? pick.angleDeg : hoodAngle + pick.angleDeg - pick.angleMeanDeg;
+            speed = pick.shot ? pick.speedIn : 0;          // a feed that did not become a shot drops out
+            backspin = pick.shot ? pick.backspin : 0;
+            out.shot = pick.shot;
+            exit = new double[3];
+            for (int k = 0; k < 3; k++) exit[k] = piece.center[k] + pick.exitForward * piece.ef[k] + pick.exitUp * piece.eu[k];
+        }
+        // Scatter: a shot table already scatters speed, angle and spin; the rest (aim, wear) comes on top.
+        double aim = 0;
+        if (scatter != null) {
+            if (pick == null) {
+                speed *= 1 + rnd.nextGaussian() * scatter[0] / 100;
+                angle += rnd.nextGaussian() * scatter[1];
+                backspin *= 1 + rnd.nextGaussian() * scatter[3] / 100;
+            }
+            aim = rnd.nextGaussian() * scatter[2];
+            Double wear = s.wearPct.get(type.name);
+            if (wear != null) speed *= 1 + rnd.nextGaussian() * wear / 100;
+        }
+        double a = Math.toRadians(angle);
+        double[] dir = new double[3];
+        for (int k = 0; k < 3; k++) dir[k] = Math.cos(a) * piece.ef[k] + Math.sin(a) * piece.eu[k];
+        double[] start = exit != null ? exit
+                : new double[] {piece.center[0] + dir[0] * gap, piece.center[1] + dir[1] * gap, piece.center[2] + dir[2] * gap};
+        double[] d = toFieldDir(dir), rv = world.robotVel();
+        if (aim != 0) {
+            // aim scatter: turned about the up line (left-right)
+            double y = Math.toRadians(aim), c = Math.cos(y), sn = Math.sin(y);
+            d = new double[] {d[0] * c - d[1] * sn, d[0] * sn + d[1] * c, d[2]};
+        }
+        out.at = toField(start);
+        out.vel = new double[] {d[0] * speed + rv[0], d[1] * speed + rv[1], d[2] * speed};
+        if (backspin != 0) {
+            // backspin turns about (direction x up); its sign along the wheel's axle when the axle is square to the shot
+            double[] el = toFieldDir(piece.el);
+            double[] axle = {-el[0], -el[1], -el[2]};          // straight up: backspin turns about the shape's right
+            double[] back = {d[1], -d[0], 0};                                   // d x up
+            double n = Math.hypot(back[0], back[1]);
+            double[] ax = n > 1e-6 ? new double[] {back[0] / n, back[1] / n, 0} : axle;
+            out.spin = new double[] {ax[0] * backspin, ax[1] * backspin, ax[2] * backspin};
+        }
+        return out;
+    }
+
+    // ---------------------------------------------------------------- shot scatter (the page's switch)
+
+    // The live shots' random numbers (seeded, so a run can be repeated; started again at each reset).
+    private java.util.Random shotRandom = new java.util.Random(8938);
+    // The page's scatter setting for every launcher: null = each launcher's scatter= from the robot file.
+    private String scatterMode = null;
+
+    /** Scatter for every launcher from now on: "off", "realistic", "rough", or "file" (each launcher's own). */
+    void setScatter(String mode) {
+        synchronized (robot) {
+            String m = mode == null ? "file" : mode.trim().toLowerCase(java.util.Locale.US);
+            if (!m.equals("file") && scatterPreset(m) == null) throw new IllegalArgumentException("scatter is off, realistic, rough or file");
+            scatterMode = m.equals("file") ? null : m;
+        }
+    }
+
+    /** The scatter now: the page's setting, or the first launcher's scatter= ("off" without one). */
+    String scatter() {
+        synchronized (robot) {
+            if (scatterMode != null) return scatterMode;
+            return shoots.isEmpty() ? "off" : shoots.get(0).scatter;
+        }
+    }
+
+    // A launcher's scatter numbers now (null: none).
+    private double[] scatterOf(Shoot s) {
+        if ("off".equals(scatterMode)) return null;
+        double[] v = scatterMode != null ? scatterPreset(scatterMode)
+                : new double[] {s.scatterSpeedPct, s.scatterAngleDeg, s.scatterAimDeg, s.scatterSpinPct};
+        boolean any = v[0] != 0 || v[1] != 0 || v[2] != 0 || v[3] != 0 || !s.wearPct.isEmpty();
+        return any ? v : null;
     }
 
     /** After each physics step: intakes take in pieces, claws hold and let go, goals score. */
@@ -460,7 +614,8 @@ final class SimPieces {
                 }
                 if (taken) continue;
                 double[] p = world.ballPos(b);
-                for (SimField.Goal goal : robot.field.goals) {
+                for (int gi = 0; gi < robot.field.goals.size(); gi++) {
+                    SimField.Goal goal = robot.field.goals.get(gi);
                     // In the opening: its centre over the opening, and low enough to be sitting in it or on
                     // its rim (the simulator's FLOWER is a solid block whose backstop stands 1.3 in above the
                     // opening; a piece there would drop in), not going up.
@@ -471,6 +626,10 @@ final class SimPieces {
                     double speed = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
                     if (Math.hypot(p[0] - goal.x, p[1] - goal.y) <= goal.radiusIn + r && p[2] <= goal.z + r + 1.3
                             && p[2] >= goal.z - 6 && v[2] <= 1 && speed <= 60) {
+                        // With the rules, it drops into the FLOWER's stack (if there is room: a full one leaves it on top).
+                        int si = stacking() ? goalStack[gi] : -1;
+                        if (si >= 0 && !roomFor(si, b.type)) continue;
+                        if (si >= 0) intoFlower(si, b.type);
                         scored.put(goal.name, scored.get(goal.name) + 1);
                         world.removeBall(b);
                         taken = true;
@@ -498,6 +657,12 @@ final class SimPieces {
                 }
             }
             for (SimField.Hive h : robot.field.hives) {
+                // tipping now (the rules' tipSeconds): it turns on, carrying its pieces, until it gets there
+                Double t0 = tipStart.get(h);
+                if (t0 != null) {
+                    turnOn(h, t0);
+                    continue;
+                }
                 double grams = 0;
                 int n = 0;
                 List<SimWorld.Ball> load = new ArrayList<>();
@@ -510,6 +675,10 @@ final class SimPieces {
                 }
                 inCells.put(h.name, n);
                 if (grams >= h.tipGrams) {
+                    if (rules != null && rules.tipSeconds > 0) {
+                        tipStart.put(h, world.time());       // it starts to turn (manual 10.5.1: TIPPED once it gets there)
+                        continue;
+                    }
                     List<double[]> to = new ArrayList<>();
                     for (SimWorld.Ball b : load) to.add(h.tipped(world.ballPos(b)));
                     robot.field.tip(h);
@@ -529,8 +698,10 @@ final class SimPieces {
                         }
                     }
                     inCells.put(h.name, 0);
+                    score.tipped(h);
                 }
             }
+            followShots();
             // A stack's lowest piece: an intake running inward (or a closed claw) at the opening takes it.
             // In an open slot it is a real piece: knocked out (or taken), the next one drops into the slot.
             List<SimWorld.Ball> loose = world.balls();
@@ -563,7 +734,7 @@ final class SimPieces {
                         inSlot = stackBall.get(i);
                     }
                     if (inSlot == null) continue;
-                } else if (now.isEmpty() || world.time() < stackReady.get(i)) {
+                } else if (now.isEmpty() || world.time() < stackReady.get(i) || stuck(now.get(0))) {
                     continue;
                 }
                 SimField.PieceType type = inSlot != null ? inSlot.type : now.get(0);
@@ -599,8 +770,334 @@ final class SimPieces {
                 b.ignoreRobotUntil = world.time() + 0.3;
                 g.heldType = null;
             }
+            score.step();
         }
     }
+
+
+    // ---------------------------------------------------------------- FLOWER stacks (with the rules)
+
+    // True when the rules make each FLOWER a stack the pieces sit in (manual 9.7, 10.5.2).
+    private boolean stacking() {
+        return rules != null && rules.flowerStack;
+    }
+
+    // A piece too tall for the Retrieval Opening (BIOBUZZ: NECTAR) cannot leave a FLOWER by the bottom (9.7, G418).
+    private boolean stuck(SimField.PieceType t) {
+        return rules != null && t.diameterIn > rules.retrievalHeight;
+    }
+
+    /**
+     * A FLOWER stack now, lowest first: {type, centre height (inches), real?}. The real piece in the lowest slot
+     * where it is; the others each resting on the one below (or, the lowest, in or on the lower ring).
+     */
+    private List<Object[]> column(int i) {
+        List<Object[]> out = new ArrayList<>();
+        SimWorld.Ball sb = stackBall.get(i);
+        double z = Double.NaN, rPrev = 0;
+        if (sb != null && world.balls().contains(sb)) {
+            z = world.ballPos(sb)[2];
+            rPrev = sb.type.diameterIn / 2;
+            out.add(new Object[] {sb.type, z, true});
+        }
+        for (SimField.PieceType t : stackNow.get(i)) {
+            double r = t.diameterIn / 2;
+            z = Double.isNaN(z) ? lowestZ(i, t) : z + rPrev + r + rules.gap;
+            rPrev = r;
+            out.add(new Object[] {t, z, false});
+        }
+        return out;
+    }
+
+    // Where a piece sits at the bottom of a FLOWER: on the tiles through the lower ring's hole, or on its rim when it
+    // is too wide to reach the tiles (the ring is lowerRingTop tall, its hole lowerRingHole across).
+    private double lowestZ(int i, SimField.PieceType t) {
+        double r = t.diameterIn / 2, hole = rules.lowerRingHole / 2;
+        double onRim = r > hole ? rules.lowerRingTop + Math.sqrt(r * r - hole * hole) : 0;
+        return Math.max(robot.field.stacks.get(i).pieces.get(0).z, Math.max(r, onRim));
+    }
+
+    // Room in this FLOWER for one more piece: it would sit at least partly below the top opening.
+    private boolean roomFor(int i, SimField.PieceType t) {
+        List<Object[]> col = column(i);
+        double r = t.diameterIn / 2, z;
+        if (col.isEmpty()) {
+            z = lowestZ(i, t);
+        } else {
+            Object[] top = col.get(col.size() - 1);
+            z = (Double) top[1] + ((SimField.PieceType) top[0]).diameterIn / 2 + r + rules.gap;
+        }
+        return z - r < robot.field.goals.get(stackGoal[i]).z;
+    }
+
+    // A piece came in through a FLOWER's top: it drops onto the stack. NECTAR before the last 60 s of the match
+    // is a MAJOR FOUL (G410).
+    private void intoFlower(int i, SimField.PieceType t) {
+        stackNow.get(i).add(t);
+        if (stackOpen.get(i) && stackBall.get(i) == null) {
+            // the lowest slot is empty: it falls the whole way first
+            double drop = Math.max(0, robot.field.goals.get(stackGoal[i]).z - robot.field.stacks.get(i).pieces.get(0).z);
+            stackReady.set(i, Math.max(stackReady.get(i), world.time() + Math.sqrt(2 * drop / 386.1)));
+        }
+        if (rules.nectarOf(t.name) != null) score.nectarIntoFlower(t, robot.field.goals.get(stackGoal[i]).name);
+    }
+
+    /**
+     * Each FLOWER now (with the rules): its name and the pieces in it, lowest first: {type name, centre height
+     * (inches), in the scoring volume?}. Empty without the rules.
+     */
+    Map<String, List<Object[]>> flowers() {
+        synchronized (robot) {
+            Map<String, List<Object[]>> m = new LinkedHashMap<>();
+            if (!stacking() || world == null) return m;
+            for (int i = 0; i < stackNow.size(); i++) {
+                if (stackGoal[i] < 0) continue;
+                List<Object[]> l = new ArrayList<>();
+                for (Object[] c : column(i)) {
+                    SimField.PieceType t = (SimField.PieceType) c[0];
+                    double z = (Double) c[1], r = t.diameterIn / 2;
+                    // 10.5.2: at least partly between the middle ring and the top ring
+                    l.add(new Object[] {t.name, z, z + r > rules.scoringZMin && z - r < rules.scoringZMax});
+                }
+                m.put(robot.field.goals.get(stackGoal[i]).name, l);
+            }
+            return m;
+        }
+    }
+
+    // ---------------------------------------------------------------- HIVE tips that take time
+
+    // HIVEs turning now, and when each started (physics time, s).
+    private final Map<SimField.Hive, Double> tipStart = new java.util.HashMap<>();
+
+    // A tipping HIVE turns on: smoothly (slow, fast, slow) over tipSeconds; at the end it is TIPPED (10.5.1).
+    private void turnOn(SimField.Hive h, double t0) {
+        double secs = rules.tipSeconds, x = Math.min(1, (world.time() - t0) / secs);
+        if (x >= 1) {
+            h.turnDeg = 0;
+            robot.field.tip(h);
+            world.placeHive(h);
+            tipStart.remove(h);
+            inCells.put(h.name, 0);
+            score.tipped(h);
+            return;
+        }
+        double deg = h.up * h.tipDeg * (1 - Math.cos(Math.PI * x)) / 2;
+        double rate = h.up * h.tipDeg * Math.PI / (2 * secs) * Math.sin(Math.PI * x);
+        h.turnDeg = deg;
+        world.turnHive(h, deg, rate);
+    }
+
+    /** How far each HIVE is through a tip now: 0 at rest, up to 1 (the page can draw it turning). */
+    Map<String, Double> tipProgress() {
+        synchronized (robot) {
+            Map<String, Double> m = new LinkedHashMap<>();
+            for (SimField.Hive h : robot.field.hives) {
+                Double t0 = tipStart.get(h);
+                m.put(h.name, t0 == null || world == null ? 0.0 : Math.min(1, (world.time() - t0) / rules.tipSeconds));
+            }
+            return m;
+        }
+    }
+
+    // ---------------------------------------------------------------- each shot's verdict (clean entry or not)
+
+    /** One shot's verdict: which HIVE (or "") and why (SimCellJudge.WORDS). */
+    static final class ShotVerdict {
+        final int id;
+        final double time;
+        final String piece, verdict, hive;
+        int ball = -1;      // which loose piece it was (SimWorld.Ball id), for the page
+
+        ShotVerdict(int id, double time, String piece, String verdict, String hive) {
+            this.id = id; this.time = time; this.piece = piece; this.verdict = verdict; this.hive = hive;
+        }
+    }
+
+    // A shot in the air: its judge for each HIVE's up CELL.
+    private static final class Tracked {
+        final int id;
+        final double t0;
+        final List<SimField.Hive> hives = new ArrayList<>();
+        final List<SimCellJudge.Flight> flights = new ArrayList<>();
+
+        Tracked(int id, double t0) {
+            this.id = id;
+            this.t0 = t0;
+        }
+    }
+
+    private final Map<SimWorld.Ball, Tracked> tracking = new LinkedHashMap<>();
+    private final java.util.ArrayDeque<ShotVerdict> verdicts = new java.util.ArrayDeque<>();
+    private final int[] verdictCounts = new int[SimCellJudge.WORDS.length];
+    private int shotIds = 0;
+    static final int VERDICTS_KEPT = 20;
+
+    /** Judges this piece's flight from now on (each launched shot; tests too): clean into an up CELL, or why not. */
+    void track(SimWorld.Ball b) {
+        synchronized (robot) {
+            if (rules == null || robot.field.hives.isEmpty() || world == null) return;
+            Tracked t = new Tracked(++shotIds, world.time());
+            double[] p = world.ballPos(b);
+            for (SimField.Hive h : robot.field.hives) {
+                SimCellJudge j = SimCellJudge.forField(robot.field, h, rules.cleanEntry);
+                t.hives.add(h);
+                t.flights.add(j.new Flight(new double[] {p[0] * SimCellJudge.IN, p[1] * SimCellJudge.IN, p[2] * SimCellJudge.IN},
+                        b.type.diameterIn / 2 * SimCellJudge.IN));
+            }
+            tracking.put(b, t);
+        }
+    }
+
+    // Each shot in the air: its judges see where it is now; once all have decided (or it is gone), its verdict.
+    private void followShots() {
+        if (tracking.isEmpty()) return;
+        java.util.Set<SimWorld.Ball> alive = new java.util.HashSet<>(world.balls());
+        java.util.Iterator<Map.Entry<SimWorld.Ball, Tracked>> it = tracking.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<SimWorld.Ball, Tracked> e = it.next();
+            Tracked t = e.getValue();
+            boolean live = false;
+            if (alive.contains(e.getKey()) && world.time() - t.t0 < 3) {
+                double[] p = world.ballPos(e.getKey()), v = world.ballVel(e.getKey());
+                double k = SimCellJudge.IN;
+                double[] pm = {p[0] * k, p[1] * k, p[2] * k}, vm = {v[0] * k, v[1] * k, v[2] * k};
+                for (SimCellJudge.Flight f : t.flights) if (f.step(pm, vm)) live = true;
+            }
+            if (live) continue;
+            // the verdict: clean into any HIVE; else any that it went into (rim, other HIVE, frame first); else a miss
+            int best = SimCellJudge.MISS;
+            String hive = "";
+            for (int i = 0; i < t.flights.size(); i++) {
+                int w = t.flights.get(i).verdict();
+                if (w != SimCellJudge.MISS && (best == SimCellJudge.MISS || w == SimCellJudge.CLEAN)) {
+                    best = w;
+                    hive = t.hives.get(i).name;
+                }
+            }
+            verdictCounts[best]++;
+            ShotVerdict v = new ShotVerdict(t.id, t.t0, e.getKey().type.name, SimCellJudge.WORDS[best], hive);
+            v.ball = e.getKey().id;          // the piece's key on the page (SimView.frame): its trail takes the verdict's colour
+            verdicts.addLast(v);
+            while (verdicts.size() > VERDICTS_KEPT) verdicts.removeFirst();
+            it.remove();
+        }
+    }
+
+    /** The last shots' verdicts (oldest first; up to 20). */
+    List<ShotVerdict> verdicts() {
+        synchronized (robot) {
+            return new ArrayList<>(verdicts);
+        }
+    }
+
+    /** How many shots got each verdict since the start (by SimCellJudge.WORDS). */
+    Map<String, Integer> verdictCounts() {
+        synchronized (robot) {
+            Map<String, Integer> m = new LinkedHashMap<>();
+            for (int i = 0; i < verdictCounts.length; i++) m.put(SimCellJudge.WORDS[i], verdictCounts[i]);
+            return m;
+        }
+    }
+
+    // ---------------------------------------------------------------- hit rate
+
+    /** N pretend shots from where the robot is now, and how many go cleanly into an up CELL. */
+    static final class HitRate {
+        String piece = "", hive = "", scatter = "", note = "";
+        int n, clean, notLaunched;
+        final int[] why = new int[SimCellJudge.WORDS.length];
+        double rate, plusMinus;      // the share that went in cleanly, and its 95 % range (+/-)
+        String verdict = "";         // Good (80 % or more), Risky (50-80 %), Poor (under 50 %), as the turret simulator
+    }
+
+    /**
+     * Fires n pretend shots (not on the field) from the robot's launcher as it is now (pose, wheel speed, hood,
+     * the robot's own speed), with the scatter (off: "realistic" is used, and the note says so), and judges
+     * each one like a real shot. piece: which piece type (null: the next one held, or the preload's).
+     * Seeded, so the same robot gives the same answer. Never moves anything.
+     */
+    HitRate hitRate(int n, String piece, long seed) {
+        HitRate out = new HitRate();
+        out.n = Math.max(1, Math.min(5000, n));
+        List<Launch> launches = new ArrayList<>();
+        List<SimCellJudge> judges = new ArrayList<>();
+        List<String> names = new ArrayList<>();
+        SimField.PieceType type;
+        synchronized (robot) {
+            if (world == null || shoots.isEmpty()) { out.note = "no launcher (a shoot. line) or no game pieces (physics = engine)"; return out; }
+            if (rules == null) { out.note = "no rules file for this field (sim/fields/<name>.rules.json)"; return out; }
+            Shoot s = shoots.get(0);
+            SimMotor fw = null;
+            for (SimMotor m : robot.motors.values()) if (m.kind == SimMotor.Kind.FLYWHEEL && (s.flywheel == null || s.flywheel.equals(m.name))) { fw = m; break; }
+            if (fw == null || pieceOf(s.shape) == null) { out.note = "no flywheel motor for the launcher"; return out; }
+            if (piece != null && !piece.isEmpty()) type = robot.field.pieceTypes.get(piece);
+            else if (!stored.isEmpty()) type = stored.get(0);
+            else type = robot.field.preload.isEmpty() ? null : robot.field.pieceTypes.get(robot.field.preload.keySet().iterator().next());
+            if (type == null) { out.note = "no such piece type: " + piece; return out; }
+            out.piece = type.name;
+            double[] sc = scatterOf(s);
+            out.scatter = scatter();
+            if (sc == null) {
+                sc = scatterPreset("realistic");
+                out.scatter = "realistic";
+                out.note = "scatter is off: rated with realistic scatter";
+            }
+            if (Double.isNaN(s.fixedSpeed) && Math.abs(fw.shaftSpeed()) < 100) out.note = (out.note.isEmpty() ? "" : out.note + "; ") + "the flywheel is not spinning";
+            java.util.Random rnd = new java.util.Random(seed);
+            for (int i = 0; i < out.n; i++) launches.add(launch(s, fw, type, rnd, sc));
+            for (SimField.Hive h : robot.field.hives) {
+                if (tipStart.containsKey(h)) continue;          // turning now: no up CELL to shoot at
+                judges.add(SimCellJudge.forField(robot.field, h, rules.cleanEntry));
+                names.add(h.name);
+            }
+        }
+        // the judging happens outside the lock (the physics goes on meanwhile)
+        double k = SimCellJudge.IN, m = type.massG / 1000, r = type.diameterIn / 2 * k;
+        int[][] byHive = new int[judges.size()][SimCellJudge.WORDS.length];
+        for (Launch l : launches) {
+            if (!l.shot) { out.notLaunched++; out.why[SimCellJudge.MISS]++; continue; }
+            double[] p0 = {l.at[0] * k, l.at[1] * k, l.at[2] * k}, v0 = {l.vel[0] * k, l.vel[1] * k, l.vel[2] * k};
+            int best = SimCellJudge.MISS;
+            for (int j = 0; j < judges.size(); j++) {
+                int w = judges.get(j).judge(p0, v0, m, r, l.spin, 1e-3, 2.0);
+                byHive[j][w]++;
+                if (w != SimCellJudge.MISS && (best == SimCellJudge.MISS || w == SimCellJudge.CLEAN)) best = w;
+            }
+            out.why[best]++;
+        }
+        out.clean = out.why[SimCellJudge.CLEAN];
+        // the HIVE the shots go to: the one most of them got into (clean or not)
+        int most = -1;
+        for (int j = 0; j < judges.size(); j++) {
+            int in = out.n - byHive[j][SimCellJudge.MISS];
+            if (in > 0 && (most < 0 || in > out.n - byHive[most][SimCellJudge.MISS])) most = j;
+        }
+        out.hive = most < 0 ? "" : names.get(most);
+        out.rate = (double) out.clean / out.n;
+        out.plusMinus = 1.96 * Math.sqrt(out.rate * (1 - out.rate) / out.n);
+        out.verdict = out.rate >= 0.8 ? "Good" : out.rate >= 0.5 ? "Risky" : "Poor";
+        return out;
+    }
+
+    // ---------------------------------------------------------------- the match clock
+
+    /** Where the match is, for the rules: the period ("AUTO", "TELEOP"; "" = no OpMode running) and the seconds left in it. */
+    interface MatchClock {
+        String period();
+
+        double secondsLeft();
+    }
+
+    /** No match: free play (no fouls, no AUTO). */
+    static final MatchClock FREE_PLAY = new MatchClock() {
+        @Override public String period() { return ""; }
+        @Override public double secondsLeft() { return Double.NaN; }
+    };
+
+    /** The match clock (SimEngine sets it from the Driver Station; tests may set their own). */
+    volatile MatchClock clock = FREE_PLAY;
+
 
     // True if a piece (centre at p, field inches; radius r) is within reach of one of the shape's boxes.
     // Takes a stack's lowest piece: the real one in its slot, or the first staged one.
@@ -835,6 +1332,12 @@ final class SimPieces {
             }
             for (int i = 0; i < stackNow.size(); i++) {
                 List<SimField.StagedPiece> slots = robot.field.stacks.get(i).pieces;
+                if (stacking() && stackGoal[i] >= 0) {
+                    // a FLOWER stack: each piece resting on the one below (the real lowest one is drawn above)
+                    SimField.StagedPiece low = slots.get(0);
+                    for (Object[] c : column(i)) if (!(Boolean) c[2]) out.add(new Object[] {c[0], low.x, low.y, c[1]});
+                    continue;
+                }
                 int up = stackOpen.get(i) ? 1 : 0;      // an open stack's lowest slot holds a real piece (or none yet)
                 for (int k = 0; k < stackNow.get(i).size() && k + up < slots.size(); k++) {
                     SimField.StagedPiece sp = slots.get(k + up);
@@ -898,6 +1401,113 @@ final class SimPieces {
             return Double.parseDouble(s.get(key));
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Robot file: " + line + ": " + key + "=" + s.get(key) + " needs a number");
+        }
+    }
+
+    // ---- For the page's smooth picture and its layers (SimView). Read only: nothing here changes the game. ----
+
+    /**
+     * Every piece to draw, with a key that stays the same while it is the same piece (so the page can glide it
+     * between updates): {key, type number (the field file's order), x, y, z (field inches), qw, qx, qy, qz (how it is
+     * turned; 1,0,0,0 for a piece in a claw or a stack)}. Keys: a loose piece its own number (1, 2, ...); a piece in
+     * claw g: -1 - g; a piece in stack i, slot k: 1000000 + 1000 i + k.
+     */
+    List<double[]> drawnForView() {
+        synchronized (robot) {
+            List<double[]> out = new ArrayList<>();
+            if (world == null) return out;
+            List<String> names = new ArrayList<>(robot.field.pieceTypes.keySet());
+            for (SimWorld.Ball b : world.balls()) {
+                double[] p = world.ballPos(b);
+                org.ode4j.math.DQuaternionC q = b.body.getQuaternion();
+                out.add(new double[] {b.id, names.indexOf(b.type.name), p[0], p[1], p[2], q.get0(), q.get1(), q.get2(), q.get3()});
+            }
+            for (int g = 0; g < grabs.size(); g++) {
+                Grab gr = grabs.get(g);
+                if (gr.heldType == null) continue;
+                double[] p = toField(heldAt(gr));
+                out.add(new double[] {-1 - g, names.indexOf(gr.heldType.name), p[0], p[1], p[2], 1, 0, 0, 0});
+            }
+            for (int i = 0; i < stackNow.size(); i++) {
+                List<SimField.StagedPiece> slots = robot.field.stacks.get(i).pieces;
+                int up = stackOpen.get(i) ? 1 : 0;
+                for (int k = 0; k < stackNow.get(i).size() && k + up < slots.size(); k++) {
+                    SimField.StagedPiece sp = slots.get(k + up);
+                    out.add(new double[] {1000000 + 1000 * i + k, names.indexOf(stackNow.get(i).get(k).name), sp.x, sp.y, sp.z, 1, 0, 0, 0});
+                }
+            }
+            return out;
+        }
+    }
+
+    /** One launcher's next shot as it would leave now, without the shot table's scatter (see shotsNow). */
+    static final class ShotNow {
+        String launcher, piece, why = "";   // why: empty when it would shoot, else why not ("flywheel stopped")
+        double[] at, vel, spin;             // field inches, inches per second, radians per second
+        double speedIn, angleDeg, diameterIn, massG, dragCd;
+    }
+
+    /**
+     * Where each launcher would send its next piece if it fired now (the same numbers shoot() uses, with a shot
+     * table's average instead of a random pick): for the page's "shot arc" layer. A launcher with nothing in the
+     * robot uses the first piece type its table has, or the field's first piece type.
+     */
+    List<ShotNow> shotsNow() {
+        synchronized (robot) {
+            List<ShotNow> out = new ArrayList<>();
+            if (world == null) return out;
+            for (Shoot s : shoots) {
+                ShotNow n = new ShotNow();
+                n.launcher = s.name;
+                SimMotor flywheel = s.flywheel != null ? robot.motors.get(s.flywheel) : null;
+                if (flywheel == null) {
+                    // one launcher and no flywheel= named: the robot's flywheel motor fires it (as in shoot())
+                    for (SimMotor m : robot.motors.values()) if (flywheel == null && "FLYWHEEL".equals(m.kind.name())) flywheel = m;
+                }
+                SimShapes.Piece piece = pieceOf(s.shape);
+                SimField.PieceType type = !stored.isEmpty() ? stored.get(0)
+                        : robot.field.pieceTypes.isEmpty() ? null : robot.field.pieceTypes.values().iterator().next();
+                if (piece == null || type == null) continue;
+                n.piece = type.name;
+                n.diameterIn = type.diameterIn;
+                n.massG = type.massG;
+                n.dragCd = type.dragCd;
+                double dia = Math.max(piece.sf, piece.su);
+                double shaft = flywheel == null ? 0 : flywheel.shaftSpeed(), perRev = flywheel == null ? 1 : Math.max(1, flywheel.ticksPerRev);
+                double rimSpeed = Math.abs(shaft) / perRev * Math.PI * dia;
+                double angle = s.angleDeg, speed = Double.isNaN(s.fixedSpeed) ? rimSpeed * s.share : s.fixedSpeed;
+                double backspin = s.spin * speed / (type.diameterIn / 2);
+                double[] exit = null;
+                SimShotTable.Shot mean = s.table == null ? null : s.table.mean(type.name, shaft / perRev * 60);
+                double hoodAngle = s.hood == null || !robot.servos.containsKey(s.hood) ? Double.NaN
+                        : s.hoodAt0 + (s.hoodAt1 - s.hoodAt0) * robot.servos.get(s.hood).actual;
+                if (!Double.isNaN(hoodAngle)) angle = hoodAngle;
+                if (mean != null) {
+                    angle = Double.isNaN(hoodAngle) ? mean.angleDeg : hoodAngle;
+                    speed = mean.speedIn;
+                    backspin = mean.backspin;
+                    exit = new double[3];
+                    for (int k = 0; k < 3; k++) exit[k] = piece.center[k] + mean.exitForward * piece.ef[k] + mean.exitUp * piece.eu[k];
+                }
+                double a = Math.toRadians(angle);
+                double[] dir = new double[3];
+                for (int k = 0; k < 3; k++) dir[k] = Math.cos(a) * piece.ef[k] + Math.sin(a) * piece.eu[k];
+                double gap = dia / 2 + type.diameterIn / 2 + 0.3;
+                double[] start = exit != null ? exit
+                        : new double[] {piece.center[0] + dir[0] * gap, piece.center[1] + dir[1] * gap, piece.center[2] + dir[2] * gap};
+                double[] d = toFieldDir(dir), rv = world.robotVel();
+                n.at = toField(start);
+                n.vel = new double[] {d[0] * speed + rv[0], d[1] * speed + rv[1], d[2] * speed};
+                n.speedIn = speed;
+                n.angleDeg = angle;
+                n.spin = new double[3];
+                double[] back = {d[1], -d[0], 0};
+                double len = Math.hypot(back[0], back[1]);
+                if (backspin != 0 && len > 1e-6) n.spin = new double[] {back[0] / len * backspin, back[1] / len * backspin, 0};
+                if (speed < 1) n.why = flywheel == null ? "no flywheel motor found" : "the flywheel is stopped";
+                out.add(n);
+            }
+            return out;
         }
     }
 }

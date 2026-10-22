@@ -217,15 +217,34 @@ final class SimWorld {
     // The plates of each HIVE's two CELLs, where the HIVE is now.
     private final java.util.Map<String, List<DGeom>> hivePlates = new java.util.HashMap<>();
 
-    /** Puts a HIVE's CELLs where the HIVE is now (after it tips). */
+    // Each HIVE's CELL plates ride on one body that the simulator turns (a "kinematic" body: it moves as told,
+    // nothing pushes it), so a tipping HIVE carries its pieces and pushes what it meets, instead of jumping.
+    private final java.util.Map<String, DBody> hiveBodies = new java.util.HashMap<>();
+    // The HIVE's turn (degrees) when its plates were last placed: turnHive() turns the body from there.
+    private final java.util.Map<String, Double> hiveBase = new java.util.HashMap<>();
+
+    /** Puts a HIVE's CELLs where the HIVE is now (at the start, and after it tips). */
     void placeHive(SimField.Hive h) {
         List<DGeom> old = hivePlates.remove(h.name);
         if (old != null) for (DGeom g : old) g.destroy();
+        DBody body = hiveBodies.get(h.name);
+        if (body == null) {
+            body = OdeHelper.createBody(world);
+            body.setKinematic();
+            hiveBodies.put(h.name, body);
+        }
+        double px = h.pivot[0] * M, py = h.pivot[1] * M, pz = zFloor + h.pivot[2] * M;
+        body.setPosition(px, py, pz);
+        body.setRotation(new DMatrix3(1, 0, 0, 0, 1, 0, 0, 0, 1));
+        body.setLinearVel(0, 0, 0);
+        body.setAngularVel(0, 0, 0);
+        hiveBase.put(h.name, h.turnDeg);
         List<DGeom> now = new ArrayList<>();
         for (int s : new int[] {1, -1}) {
             for (double[] p : h.plates(s)) {
                 DGeom g = OdeHelper.createBox(space, p[12] * M, p[13] * M, p[14] * M);
-                g.setPosition(p[0] * M, p[1] * M, zFloor + p[2] * M);
+                g.setBody(body);
+                g.setOffsetPosition(p[0] * M - px, p[1] * M - py, zFloor + p[2] * M - pz);
                 DMatrix3 r = new DMatrix3();
                 // a turn, not a mirror: the third direction is the first two's cross product (a box is the same
                 // whichever way its thickness points)
@@ -236,12 +255,25 @@ final class SimWorld {
                     r.set(k, 1, e2[k]);
                     r.set(k, 2, e3[k]);
                 }
-                g.setRotation(r);
+                g.setOffsetRotation(r);
                 g.setData(new Tag(h.name, false, 0.3));
                 now.add(g);
             }
         }
         hivePlates.put(h.name, now);
+    }
+
+    /**
+     * Turns a HIVE's CELLs (while it tips): to turnDeg about its pivot's line (along y; the same sense as
+     * SimField.Hive.turnY), turning on at degPerSec, so the pieces on its plates are carried along.
+     */
+    void turnHive(SimField.Hive h, double turnDeg, double degPerSec) {
+        DBody body = hiveBodies.get(h.name);
+        if (body == null) return;
+        double a = Math.toRadians(turnDeg - hiveBase.getOrDefault(h.name, 0.0)), c = Math.cos(a), sn = Math.sin(a);
+        // turnY: x' = x cos + z sin, z' = -x sin + z cos (a turn about +y by a)
+        body.setRotation(new DMatrix3(c, 0, sn, 0, 1, 0, -sn, 0, c));
+        body.setAngularVel(0, Math.toRadians(degPerSec), 0);
     }
 
     /** Moves a piece to a place (field inches), still. */
