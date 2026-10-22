@@ -31,13 +31,15 @@ public class Tunables {
      * counterclockwise +. Its range is -190 to +190: a bit more than one turn, so it can point
      * anywhere and picks the way round that stays inside the range (the wires allow it: v8.1GB's
      * checks turn it +/-190).
-     * homeAngle: the turret's angle where the magnetic switch closes. The switch arm is on the
-     * bearing housing's -45 deg side in the design: example, measure your own (turret-setup.md says how).
+     * homeAngle: the turret's angle where the magnetic switch closes. In v8.1GB the switch (REV-31-1462)
+     * sits at -45 deg on the bearing housing and its magnet at -45 deg on the turret, so they line up
+     * when the turret points straight forward: 0 (turret/v8.1GB/turret.py HOME_ANG). Measure your own
+     * (turret-setup.md says how).
      * homingPower, homingTimeout: at START it turns this slowly, for at most this many seconds.
      */
     public static class Turret {
         public static double min = -190, max = 190;
-        public static double homeAngle = -45, homingPower = 0.2, homingTimeout = 5;
+        public static double homeAngle = 0, homingPower = 0.2, homingTimeout = 5;
         public static double kP = 0.02, kI = 0, kD = 0.001;                // example: tune your own
         public static double maxPower = 0.8, tolerance = 1.5, cameraOffset = 0;
     }
@@ -125,8 +127,13 @@ public class Tunables {
      * THE INTERLOCK RULE (Robot.java: keepApart("TurretLift", ...)). The turret must stay out of the
      * back while the slide is up. Team 8938's lifter design: the lifter's parts are from -26 to +38 deg
      * of straight back (+ toward the slide's side) and the folded claw is clear of the turret until
-     * the slide is about 84 mm up. In turret angles that is 142 to 206 deg; 12 deg more on each side
-     * for the turret's own width (example: measure your own) gives 130 to 218. 84 mm = 270 counts.
+     * the slide is about 84 mm up. In turret angles that is 142 to 206 deg; 33 deg more on each side
+     * for the turret's own width (everything farther than 190 mm from its axis is within 33 deg of where
+     * it points: turret/v8.1GB reach measurements) gives 109 to 239. 84 mm = 270 counts.
+     * The slide is on the robot's left (+x), so "toward the slide" is toward 90 deg. These numbers come
+     * from the first lifter concept (2026-10-02) and are not yet re-checked for the pincer claw. With
+     * the turret axis 1 in forward of the centre, v8.1GB (201.1 mm reach) should clear the lifter at
+     * every angle: this rule is a backup until the built robot is measured with the lift up.
      * liftMargin: the lift is fast (about 2800 counts a second at full power), so it needs a bigger
      * safety distance than the default (1/50 of its range, 27 counts): in the simulator, stopped by hand at
      * full power, it went 54 counts past where it was told to stop. 80 counts = 25 mm: it waits at
@@ -134,7 +141,7 @@ public class Tunables {
      * These are read once at INIT (not in the tuning menu, on purpose: see docs/guides/interlocks.md).
      */
     public static class TurretLift {
-        public static double turretFrom = 130, turretTo = 218;   // degrees
+        public static double turretFrom = 109, turretTo = 239;   // degrees
         public static double liftAbove = 270;                    // counts
         public static double liftMargin = 80;                    // counts
     }

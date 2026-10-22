@@ -162,7 +162,7 @@ round). See [Two parts that must not collide](interlocks.md).
 keepApart("TurretLift", turret.zone(), lift.zoneAbove());          // Robot.java
 
 public static class TurretLift {                                    // Tunables.java
-    public static double turretFrom = 130, turretTo = 218;          // degrees: the turret's zone
+    public static double turretFrom = 109, turretTo = 239;          // degrees: the turret's zone
     public static double liftAbove = 270;                           // counts: the lift's zone
 }
 ```
@@ -199,7 +199,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer
 
 // Tunables.java
 public static class Turret {
-    public static double min = -190, max = 190, homeAngle = -45;   // homeAngle: example, measure your own
+    public static double min = -190, max = 190, homeAngle = 0;   // switch closes facing forward: measure your own
     public static double kP = 0.02, kI = 0, kD = 0.001, maxPower = 0.8, tolerance = 1.5;
 }
 public static class Hood {
@@ -271,7 +271,7 @@ g1.rb.toggle(robot.aimMode()).says("aim at the goal");
 - `Turret : -37 deg, carried from the last program (12 s ago; keepAngle = false to turn this off)`
 - `Turret : absolute encoder: 31 deg (encoderOffset 117)`
 - After START, while homing: `Turret : homing: looking for the switch`; then `Turret : 12 deg following: camera`.
-- With interlock rules: `Interlock TurretLift: Turret between 130 and 218 deg / Lift above 270 counts`.
+- With interlock rules: `Interlock TurretLift: Turret between 109 and 239 deg / Lift above 270 counts`.
 
 ## Common mistakes
 
