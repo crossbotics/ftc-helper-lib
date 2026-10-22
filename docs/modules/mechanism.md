@@ -97,6 +97,7 @@ Commands and reading:
 | `goToStep(name)` | autonomous: go and wait until there |
 | `startStep(name)` | autonomous: start going and continue at once (moves during the next steps) |
 | `getSafeMotor()`, `getPid()` | the layers inside |
+| `fence(lo, hi)`, `fence(lo, hi, upPower, downPower)`, `isHeld()` | set every loop by an [interlock rule](robot.md#interlock): a target past `lo`..`hi` waits at its edge; the caps (0 to 1) limit the power toward each side so it brakes in time |
 
 Telemetry: standard = target and position; debug = target value, power asked/sent, limits, homed.
 

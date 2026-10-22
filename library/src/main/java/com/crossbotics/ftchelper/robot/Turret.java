@@ -799,6 +799,22 @@ public final class Turret extends Module<Turret> {
     }
 
     @Override
+    void zoneFence(double lo, double hi, double upPower, double downPower) {
+        if (part != null) part.fence(lo, hi, upPower, downPower);
+    }
+
+    // A motor or CR servo turret coasts: the interlock measures its speed (its encoder) for the stop
+    // distance. A servo turret goes where it is sent (never past the fence).
+    @Override boolean zoneCoasts() { return kind != Kind.SERVO; }
+
+    // A motor turret's top speed (degrees a second at full power): the motor's free speed through its
+    // gears. A CR servo's is not known: the interlock uses the fastest it has measured.
+    @Override
+    double zoneTopSpeed() {
+        return kind == Kind.MOTOR ? Motors.get(motorId).freeRpm / 60.0 * 360.0 / gearRatio : Double.NaN;
+    }
+
+    @Override
     double zoneDefaultMargin() {
         return Math.max(3, 2 * toleranceDeg);
     }

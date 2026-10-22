@@ -233,6 +233,14 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
     }
 
     @Override
+    void zoneFence(double lo, double hi, double upPower, double downPower) {
+        if (part != null) part.fence(lo, hi, upPower, downPower);
+    }
+
+    // A motor coasts: the interlock measures its speed (its encoder) for the stop distance.
+    @Override boolean zoneCoasts() { return true; }
+
+    @Override
     double zoneDefaultMargin() {
         // Twice the tolerance, and at least 1/50 of the range.
         double tol = tunables == null ? 0 : tunables.number("tolerance", defaults()[9]);

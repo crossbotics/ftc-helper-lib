@@ -1414,15 +1414,16 @@ keepApart("TurretLift", turret.zone(), lift.zoneAbove());
 public static class TurretLift {
     public static double turretFrom = 130, turretTo = 218;   // degrees: the back of the robot
     public static double liftAbove = 270;                    // counts: the slide is up
-    public static double liftMargin = 80;                    // optional: a fast lift needs more room to stop
+    public static double liftStopSec = 0.2;                  // optional: a heavy slide takes longer to stop
 }
 ```
 
 **Why:** each part is safe inside its own limits, but a turret over the back and a lift at the back can
 still meet. The rule is kept every loop, whoever moves the parts (buttons, sticks, actions, a following
 turret, autonomous steps): the part that is in its zone first keeps it, the other waits at the edge of
-its own zone, and the Driver Station says so (`TurretLift : Lift held at 110 counts: Turret is between
-130 and 218 deg`). The zones are read at INIT only: change them in `Tunables.java`.
+its own zone, and the Driver Station says so (`TurretLift : Lift held at 216 counts: Turret is between
+130 and 218 deg`). A fast part is slowed down as it comes near and brakes in time, even with slow loops:
+the rule measures its speed every loop. The zones are read at INIT only: change them in `Tunables.java`.
 **More:** [Two parts that must not collide](guides/interlocks.md), [Interlock](modules/robot.md#interlock).
 
 ### How do I pick up and score with a lift, a wrist and a claw?

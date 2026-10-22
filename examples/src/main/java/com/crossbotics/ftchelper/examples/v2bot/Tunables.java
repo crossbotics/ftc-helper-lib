@@ -142,19 +142,19 @@ public class Tunables {
      *       cannot go below folded (its stop), so the zone simply starts at the bottom.</li>
      * </ul>
      * The lift needs no zone: the wrist's rule covers every lift height.
-     * turretMargin: the turret is fast (a 312 RPM motor, 2.75:1: about 680 deg a second), so it needs a
-     * bigger safety distance than the default 3 deg: in the simulator, pushed at full stick toward the
-     * zone, it coasted 19 deg past the point where it was told to stop. 12 deg: it waits at
-     * 147 - 2 x 12 = 123 (or -143 + 24 = -119). Measure your own: full stick toward the back, see how far
-     * past the "held" point it goes.
+     * No turretMargin or turretStopSec: the defaults fit. The turret is fast (a 312 RPM motor, 2.75:1:
+     * about 680 deg a second), but the rule measures its speed every loop and slows it down as it comes
+     * near the zone, braking in time even when loops are slow (docs/guides/interlocks.md, "Stop
+     * distance"). It waits two margins (2 x 3 deg) from the zone: at 147 - 6 = 141 (or -143 + 6 = -137).
+     * On the built robot: full stick toward the back; if it ever ends past its waiting point, raise
+     * turretStopSec (how long it takes to stop, default 0.15 s).
      * What it means on the field: while the wrist is folded or at pick-up, the turret aims anywhere
-     * from -119 to 123 degrees; once the wrist swings out to carry, it may point anywhere again (its
+     * from -137 to 141 degrees; once the wrist swings out to carry, it may point anywhere again (its
      * -190 to 190). Change folded? Change wristTo too (folded + 0.174).
      * These are read once at INIT (not in the tuning menu, on purpose: see docs/guides/interlocks.md).
      */
     public static class TurretClaw {
         public static double turretFrom = 147, turretTo = 217;   // degrees
         public static double wristFrom = 0, wristTo = 0.274;     // servo positions (0 to 47 degrees)
-        public static double turretMargin = 12;                  // degrees: the turret coasts (see above)
     }
 }

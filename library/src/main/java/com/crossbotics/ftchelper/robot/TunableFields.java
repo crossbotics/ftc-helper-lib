@@ -121,6 +121,7 @@ final class TunableFields {
             if (z.kind == Zone.Kind.WHEN) continue;
             a.names.addAll(Arrays.asList(z.fields()));
             a.names.add(z.prefix() + "Margin");
+            a.names.add(z.prefix() + "StopSec");
         }
         return a;
     }

@@ -71,6 +71,8 @@ DYNAMIC = {
     "Interlock.java: t.number(pre + \"To\"": ["<part>To"],
     "Interlock.java: t.has(pre + \"Margin\"": ["<part>Margin"],
     "Interlock.java: t.number(pre + \"Margin\"": ["<part>Margin"],
+    "Interlock.java: t.has(pre + \"StopSec\"": ["<part>StopSec"],
+    "Interlock.java: t.number(pre + \"StopSec\"": ["<part>StopSec"],
     "PieceSensor.java: t.has(k": ["<KIND>"],
     "PieceSensor.java: t.tunable(k": ["<KIND>"],
     "MotorPositions.java: t.others(KNOWN": ["<position>"],
@@ -398,7 +400,7 @@ def robot_sections(define):
         for var, kind in re.findall(r"\b(\w+)\.(zone|zoneAbove|zoneBelow)\(\)", m.group(2)):
             sec = var_section.get(var)
             pre = (sec[0].lower() + sec[1:]) if sec else None
-            words = {"zone": ["From", "To"], "zoneAbove": ["Above"], "zoneBelow": ["Below"]}[kind] + ["Margin"]
+            words = {"zone": ["From", "To"], "zoneAbove": ["Above"], "zoneBelow": ["Below"]}[kind] + ["Margin", "StopSec"]
             allowed |= {(pre or "*") + w for w in words}
         out[m.group(1)] = ("Interlock", allowed)
     return out
