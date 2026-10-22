@@ -1,0 +1,9 @@
+# Every issue goes through a form, so each report has the same fields (and the triage can read it).
+blank_issues_enabled: false
+contact_links:
+  - name: Help us test (the test list)
+    url: https://crossbotics.com/ftc-helper/testing/
+    about: Pick a test that fits your robot, run it, then press "Report result" on its page.
+  - name: The docs
+    url: https://crossbotics.com/ftc-helper/docs/
+    about: Every page has a "Something wrong on this page?" link at the bottom.

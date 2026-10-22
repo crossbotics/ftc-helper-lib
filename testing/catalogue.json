@@ -1,0 +1,4354 @@
+{
+ "_about": "Made by tools/check_tests.py --fix from testing/tests/*.md. Do not edit by hand.",
+ "vocabulary": {
+  "areas": {
+   "setup": "Setup and Hardware Check",
+   "drive": "Driving",
+   "odometry": "Odometry",
+   "paths": "Paths (Pedro)",
+   "autos": "Autonomous and the INIT menu",
+   "aim": "Aiming",
+   "turret": "Turret",
+   "shooter": "Shooter and shot tables",
+   "hood": "Hood",
+   "moving-shot": "Shooting on the move",
+   "pieces": "Game pieces and sensors",
+   "lights": "Lights",
+   "interlocks": "Interlock rules (two parts that must not collide)",
+   "mechanisms": "Lifts, arms, claws and servos",
+   "controls": "Buttons and controls",
+   "simulator": "Simulator",
+   "laptop-tests": "Laptop tests (JUnit and the test kit)",
+   "docs": "Docs and lessons"
+  },
+  "priorities": {
+   "high": "High: we need this tested most",
+   "medium": "Medium",
+   "low": "Low: nice to have"
+  },
+  "where": {
+   "sim": "Simulator only",
+   "real": "Real robot only",
+   "both": "Simulator or real robot"
+  },
+  "needs": {
+   "mecanum": {
+    "label": "Mecanum drive",
+    "group": "Drive",
+    "field": "drive",
+    "options": [
+     "Mecanum"
+    ]
+   },
+   "tank": {
+    "label": "Tank drive (2 or 4 motors)",
+    "group": "Drive",
+    "field": "drive",
+    "options": [
+     "Tank (2 or 4 motors)"
+    ]
+   },
+   "pinpoint": {
+    "label": "goBILDA Pinpoint",
+    "group": "Odometry",
+    "field": "odometry",
+    "options": [
+     "goBILDA Pinpoint"
+    ]
+   },
+   "otos": {
+    "label": "SparkFun OTOS",
+    "group": "Odometry",
+    "field": "odometry",
+    "options": [
+     "SparkFun OTOS"
+    ]
+   },
+   "dead-wheels": {
+    "label": "Dead wheels (2 or 3 pods)",
+    "group": "Odometry",
+    "field": "odometry",
+    "options": [
+     "Dead wheels (2 or 3 pods)"
+    ]
+   },
+   "pedro": {
+    "label": "Pedro Pathing in the project",
+    "group": "Odometry",
+    "field": "robot_has",
+    "options": [
+     "Pedro Pathing added to the project"
+    ]
+   },
+   "limelight": {
+    "label": "Limelight 3A",
+    "group": "Camera",
+    "field": "camera",
+    "options": [
+     "Limelight 3A"
+    ]
+   },
+   "webcam": {
+    "label": "Webcam",
+    "group": "Camera",
+    "field": "camera",
+    "options": [
+     "Webcam"
+    ]
+   },
+   "flywheel": {
+    "label": "Flywheel shooter",
+    "group": "Shooter",
+    "field": "shooter",
+    "options": [
+     "Flywheel (no turret)",
+     "Flywheel on a turret"
+    ]
+   },
+   "turret": {
+    "label": "Turret",
+    "group": "Shooter",
+    "field": "shooter",
+    "options": [
+     "Flywheel on a turret"
+    ]
+   },
+   "home-switch": {
+    "label": "Turret home switch (touch or magnetic)",
+    "group": "Shooter",
+    "field": "robot_has",
+    "options": [
+     "Turret home switch (touch or magnetic)"
+    ]
+   },
+   "hood-servo": {
+    "label": "Hood on a servo",
+    "group": "Shooter",
+    "field": "hood",
+    "options": [
+     "Servo hood"
+    ]
+   },
+   "hood-motor": {
+    "label": "Hood on a motor with an encoder",
+    "group": "Shooter",
+    "field": "hood",
+    "options": [
+     "Motor hood"
+    ]
+   },
+   "intake": {
+    "label": "Intake",
+    "group": "Other parts",
+    "field": "robot_has",
+    "options": [
+     "Intake"
+    ]
+   },
+   "lift": {
+    "label": "Lift or arm with an encoder",
+    "group": "Other parts",
+    "field": "robot_has",
+    "options": [
+     "Lift or arm with an encoder"
+    ]
+   },
+   "color-sensor": {
+    "label": "Colour sensor for game pieces",
+    "group": "Other parts",
+    "field": "robot_has",
+    "options": [
+     "Colour sensor for game pieces"
+    ]
+   },
+   "distance-sensor": {
+    "label": "Distance sensor for game pieces",
+    "group": "Other parts",
+    "field": "robot_has",
+    "options": [
+     "Distance sensor for game pieces"
+    ]
+   },
+   "lights": {
+    "label": "Light (goBILDA RGB or REV Blinkin)",
+    "group": "Other parts",
+    "field": "robot_has",
+    "options": [
+     "Light (goBILDA RGB or REV Blinkin)"
+    ]
+   },
+   "two-gamepads": {
+    "label": "Two gamepads (two drivers)",
+    "group": "Other parts",
+    "field": "robot_has",
+    "options": [
+     "Two gamepads (two drivers)"
+    ]
+   }
+  },
+  "kit_bots": {
+   "gobilda": {
+    "label": "goBILDA starter bot",
+    "option": "goBILDA starter bot",
+    "has": [
+     "tank",
+     "flywheel",
+     "intake"
+    ],
+    "robot_file": "sim/robots/starter-bot-gobilda.properties"
+   },
+   "rev": {
+    "label": "REV DUO starter bot",
+    "option": "REV DUO starter bot",
+    "has": [
+     "tank",
+     "flywheel",
+     "intake"
+    ],
+    "robot_file": "sim/robots/starter-bot-rev.properties"
+   },
+   "andymark": {
+    "label": "AndyMark Robits starter bot",
+    "option": "AndyMark Robits starter bot",
+    "has": [
+     "tank",
+     "intake"
+    ],
+    "robot_file": "sim/robots/starter-bot-andymark.properties"
+   },
+   "studica": {
+    "label": "Studica starter bot",
+    "option": "Studica starter bot",
+    "has": [
+     "tank",
+     "flywheel",
+     "intake"
+    ],
+    "robot_file": "sim/robots/starter-bot-studica.properties"
+   }
+  },
+  "results": [
+   "Pass",
+   "Fail",
+   "Partly (some steps passed)",
+   "Could not run"
+  ],
+  "where_options": {
+   "sim": "Simulator",
+   "real": "Real robot"
+  }
+ },
+ "form": {
+  "template": "test-report.yml",
+  "fields": {
+   "test_id": "Test ID",
+   "version": "Library version",
+   "where": "Where did you run it?",
+   "robot": "Which robot?",
+   "drive": "Drive",
+   "odometry": "Odometry",
+   "camera": "Camera",
+   "shooter": "Shooter",
+   "hood": "Hood",
+   "robot_has": "The robot also has",
+   "result": "Result",
+   "measurements": "What you measured",
+   "changed": "What did you change for your robot?",
+   "what_happened": "What happened (for a fail, a partial or could-not-run)",
+   "confusing": "Was anything confusing?",
+   "link": "Log or video link (optional)",
+   "team": "FTC team number (optional)",
+   "privacy": "Privacy"
+  }
+ },
+ "tests": [
+  {
+   "id": "AIM-01",
+   "title": "Turret follows the goal with the camera",
+   "area": "aim",
+   "priority": "high",
+   "where": "both",
+   "minutes": 40,
+   "needs": [
+    [
+     "turret"
+    ],
+    [
+     "limelight",
+     "webcam"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "v0.16.0",
+   "docs": [
+    {
+     "path": "docs/tutorials/start/09-shooter-and-camera.md",
+     "anchor": "6-a-turret-that-follows-it"
+    },
+    {
+     "path": "docs/tutorials/start/09-shooter-and-camera.md",
+     "anchor": "check-it-on-the-robot"
+    }
+   ],
+   "file": "testing/tests/AIM-01.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A turret that follows the goal takes the aiming off the drivers. It must turn the short way, never go past its limits, and say clearly when the goal is out of range. Every turret is built differently (gear ratio, range, where the camera is), so we need other turrets."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Hard stops on the turret just past `min` and `max`. Check them by hand first.",
+       "Cables slack over the whole range. The flywheel off (do not fire in this test).",
+       "Safety glasses if the launcher has pieces in it."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "`Turret.motor(...).gearRatio(...).follows(camera)` in `Robot.java`, `Tunables.Turret` with `min`, `max`.",
+       "A goal tag (AprilTag) you can see: the field, or a printed tag at the right height.",
+       "The turret at its `startAngle` before INIT (by default 0 = straight forward; a mark or a jig helps), unless it has a home switch ([TUR-01](repo:testing/tests/TUR-01.md)) or an absolute encoder. TeleOp started within 5 minutes of another program starts from the angle that program ended at.",
+       "Simulator: lesson 9's turret robot (`turretbot`) commands, then \"TurretBot TeleOp\"."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "INIT your TeleOp, START. Drive (or turn the robot) until the camera sees the goal.",
+       "Watch the turret turn to the goal. Read the turret line on the Driver Station.",
+       "Turn the robot slowly 90 degrees one way, then the other. The turret keeps on the goal.",
+       "Turn the robot until the goal is past a turret limit: the turret waits at the limit, and the Driver Station says \"goal out of turret range\".",
+       "Gamepad 2 right stick X: the turret turns by hand. Let go: following goes on.",
+       "Gamepad 2 BACK: following off. BACK again: on."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "In steps 2 and 3 the turret stays within its `tolerance` (1.5 degrees by default) of the goal while the robot turns slowly, it never goes past `min` or `max` (0 times), and step 4 shows the message."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "camera (Limelight or webcam), on the turret or on the body",
+       "gear ratio, `min`, `max`, `kP` you used",
+       "how far off it settled (degrees, from the Driver Station or by eye)",
+       "any shaking or overshoot, and when"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A camera on the robot's body needs `.cameraOnBody()`: say if you used it. A turret with a different range (say 0 to 270), a servo turret ([TUR-03](repo:testing/tests/TUR-03.md)) or a slip ring ([TUR-04](repo:testing/tests/TUR-04.md)) is very useful. If the turret turns away from the goal, `.reversed()` fixes it: say whether the docs made that clear."
+     }
+    ]
+   }
+  },
+  {
+   "id": "AIM-02",
+   "title": "Odometry backup aim when the camera is covered",
+   "area": "aim",
+   "priority": "high",
+   "where": "real",
+   "minutes": 40,
+   "needs": [
+    [
+     "turret"
+    ],
+    [
+     "limelight",
+     "webcam"
+    ],
+    [
+     "pinpoint",
+     "otos",
+     "dead-wheels"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/tutorials/start/09-shooter-and-camera.md",
+     "anchor": "9-when-the-camera-loses-the-goal-the-odometry"
+    }
+   ],
+   "file": "testing/tests/AIM-02.md",
+   "sections": {
+    "why": [
+     {
+      "p": "When a tag is hidden, the turret should keep aiming from the odometry. A wrong goal point, a wrong alliance or a pose that was never set would aim at the wrong place, so the library has checks. We need to see them work on other robots."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "As AIM-01: hard stops, slack cables, flywheel off."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "AIM-01 passed. ODO-01 passed.",
+       "`Tunables.Aim`: `goalX`, `goalY` (inches, seen from your own drivers' wall; BIOBUZZ: `goalX = 13, goalY = -13`, your HIVE's CELL that is up at the start), and for BIOBUZZ `mirrorForRed = false`.",
+       "An autonomous that ends near the goal, or the \"set pose here\" spot (ODO-02)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Run your autonomous (or set the pose with START held 1 s), then INIT TeleOp. Read INIT's `Aim:` line (alliance, goal, mirrorForRed).",
+       "START. Point the turret at the goal with the camera seeing it (`following: camera`).",
+       "Cover the camera with your hand. The turret keeps pointing at the goal, and the Driver Station says `following: odometry`.",
+       "With the camera still covered, drive about 3 ft sideways. The turret follows the goal.",
+       "Uncover the camera. Read any `Aim: camera says ... odometry ...` warning.",
+       "Run TeleOp with no autonomous and no pose set: it must say `Aim odometry: the pose was never set`, and covering the camera must stop following."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "With the camera covered, the turret points within 5 degrees of the goal (by eye or by the Driver Station) after the 3 ft drive, and in step 6 it does not follow from the odometry (0 times)."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "odometry kind, camera kind",
+       "`goalX`, `goalY` you used",
+       "how far off the odometry aim was after step 4 (degrees)",
+       "the camera/odometry disagreement it showed in step 5 (inches), if any"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Use your own goal point if you test on a different field or a practice goal. If your turret robot has no camera (only odometry), use `.followsOdometry()` and skip step 3; say so. On RED, check that the `Aim:` line matches the field."
+     }
+    ]
+   }
+  },
+  {
+   "id": "AIM-03",
+   "title": "Whole-robot aim - the robot turns to the goal while you drive",
+   "area": "aim",
+   "priority": "high",
+   "where": "both",
+   "minutes": 30,
+   "needs": [
+    [
+     "limelight",
+     "webcam",
+     "pinpoint",
+     "otos",
+     "dead-wheels"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/tutorials/start/09-shooter-and-camera.md",
+     "anchor": "10-no-turret-aim-the-whole-robot"
+    }
+   ],
+   "file": "testing/tests/AIM-03.md",
+   "sections": {
+    "why": [
+     {
+      "p": "Most robots have no turret: they aim by turning. Whole-robot aim turns the robot to the goal while the driver drives, and the turn stick always wins. Drive trains turn very differently, so the numbers (`turnKp`, `minTurnPower`) need testing on many robots."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Clear floor, PRACTICE profile. The robot turns by itself while aim is on.",
+       "Hand near STOP, and the driver ready to let go of the button."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A camera with `.goal(...)`, or odometry with `Tunables.Aim.goalX`, `goalY`.",
+       "In `Controls.java`: `g1.rb.toggle(robot.aimMode()).says(\"aim the robot at the goal on/off\").rumble();`",
+       "Simulator: lesson 9's `flywheelbot` commands, then \"FlywheelBot TeleOp\"."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "INIT your TeleOp, START. Drive until the goal is in view (or the pose is set, with odometry).",
+       "Turn the robot about 45 degrees away from the goal. Press RB: the robot turns to face the goal.",
+       "With aim on, drive forward and sideways (mecanum) or forward only (tank). The robot keeps facing the goal.",
+       "Push the turn stick: the robot turns as the stick says. Let go: the aim takes over again.",
+       "Hide the goal (cover the camera, no odometry): it must not turn by itself (`Aim: no goal`).",
+       "Press RB again: aim off."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "In step 2 the robot ends within `toleranceDeg` (2 degrees by default) of the goal within 2 seconds, and in step 5 it does not turn by itself (0 degrees)."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "drive type, camera or odometry",
+       "`turnKp`, `maxTurnPower`, `minTurnPower` you ended with",
+       "how far off it stopped (degrees) and how long it took (seconds)",
+       "any shaking, and when"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A tank drive can only drive forward while it aims: that is expected. If it stops a few degrees short, try `minTurnPower` and say what worked. If you put aim on another button, say which. A robot with a turret that follows the goal must NOT use this (INIT stops): that message is worth reporting if it was unclear."
+     }
+    ]
+   }
+  },
+  {
+   "id": "CTL-01",
+   "title": "Pause at BACK, and START-then-BACK pairs",
+   "area": "controls",
+   "priority": "high",
+   "where": "both",
+   "minutes": 15,
+   "needs": [],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/tutorials/start/03-buttons.md",
+     "anchor": "7-pause-with-back-and-the-other-library-buttons"
+    },
+    {
+     "path": "docs/guides/buttons.md",
+     "anchor": "moving-the-librarys-buttons"
+    }
+   ],
+   "file": "testing/tests/CTL-01.md",
+   "sections": {
+    "why": [
+     {
+      "p": "BACK is the panic button: it must pause the robot at the press, even if the driver holds it. START and BACK together (START first) are the debug lines. If BACK goes down first, it must stay a plain pause and never start the robot again by itself."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Real robot: low power, clear floor. You will stop the robot while it moves."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "Any robot in five files with its TeleOp. Simulator: any robot (a kit bot from SIM-01 is fine). In the simulator, BACK is the Backspace key and START is Enter."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "INIT, START. Drive forward and run a mechanism (an intake).",
+       "Press BACK: everything stops at once, the Driver Station says PAUSED. Keep holding BACK for 3 s: the robot stays stopped.",
+       "Let go, then tap BACK: everything goes on (the intake runs again).",
+       "On gamepad 1, hold the small START button, then press BACK. Let go of both: the debug lines show. The robot does not pause.",
+       "Press BACK first, then START: it is a plain pause. Let go of both: the robot stays paused. Tap BACK to go on.",
+       "Hold BACK for 1 s with field-centric on: it pauses and resets \"forward\". Robot-centric: a note says \"forward\" is only reset in field-centric."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "The robot stops within 0.2 s of the BACK press in steps 2 and 5, never starts again while BACK is held or after BACK-then-START (0 times), and step 4 shows the debug lines without a pause."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "robot, one driver or two",
+       "how fast it stopped (about)",
+       "what step 4 and step 5 did",
+       "anything that surprised the driver"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "If you moved pause or debug to other buttons (`libraryButtons`), use yours and say which. A Logitech or PS controller names the buttons differently (Share, Options): say which controller you used."
+     }
+    ]
+   }
+  },
+  {
+   "id": "DOC-01",
+   "title": "Quick start from a blank robot project",
+   "area": "docs",
+   "priority": "high",
+   "where": "both",
+   "minutes": 60,
+   "needs": [
+    [
+     "mecanum",
+     "tank"
+    ]
+   ],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "v0.16.0",
+   "docs": [
+    {
+     "path": "docs/quick-start.md",
+     "anchor": ""
+    },
+    {
+     "path": "docs/templates.md",
+     "anchor": ""
+    }
+   ],
+   "file": "testing/tests/DOC-01.md",
+   "sections": {
+    "why": [
+     {
+      "p": "The Quick start promises a driving robot in 30 minutes. A student who has never used the library should be able to follow it alone. Every place you get stuck is a docs fix for us."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Real robot: on a block for the first drive (the Quick start says when), low power."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A robot project in Android Studio that builds (the FTC SDK's FtcRobotController), with no ftc-helper-lib yet.",
+       "Best: a student who has not used the library before does it, and a second person writes notes without helping.",
+       "A timer."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Start the timer. Follow the [Quick start](repo:docs/quick-start.md) from the top, exactly as written.",
+       "Each time you are stuck for more than 2 minutes, write the step and the words that confused you.",
+       "Real robot: build, install, run the Hardware Check, drive. Simulator: the Quick start's simulator part.",
+       "Stop the timer when the robot drives (or the simulator robot drives)."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "The robot drives within 60 minutes, with no help from someone who knows the library (0 times asked)."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "time to a driving robot (minutes)",
+       "each place you got stuck (step and words), and what got you going again",
+       "Windows, Mac, Linux or Chromebook; real robot or simulator",
+       "which way you got the five files (from the configuration, a template, a kit bot)"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Any robot that drives is fine; a kit bot can use [Pick your template](repo:docs/templates.md). The simulator alone also counts (no robot): say so. A student with no Java at all is the most useful tester."
+     }
+    ]
+   }
+  },
+  {
+   "id": "DRV-01",
+   "title": "First drive with the five files - wheels, sticks, slow and pause",
+   "area": "drive",
+   "priority": "high",
+   "where": "real",
+   "minutes": 30,
+   "needs": [
+    [
+     "mecanum",
+     "tank"
+    ]
+   ],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "v0.16.0",
+   "docs": [
+    {
+     "path": "docs/tutorials/start/02-drive.md",
+     "anchor": "7-check-the-motor-directions"
+    },
+    {
+     "path": "docs/quick-start.md",
+     "anchor": "5-drive"
+    }
+   ],
+   "file": "testing/tests/DRV-01.md",
+   "sections": {
+    "why": [
+     {
+      "p": "Driving is the first thing a team sees work. We want to know that the drive line in `Robot.java` works on many drivetrains, and that the motor-direction steps in lesson 2 find a wrong wheel."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "First run with the robot on a block, wheels off the ground.",
+       "Keep `maxPower` and `practiceMaxPower` at 0.4 in `Tunables.java` for this test.",
+       "A clear floor and a hand near the Driver Station STOP button."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "The robot in five files with your drive line (from the Quick start or a template).",
+       "Your TeleOp built and installed."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Robot on a block. INIT your TeleOp, then START.",
+       "Push the left stick up. Every wheel must roll the way that moves the robot forward. Fix any wheel with lesson 2 section 7, and count how many fixes you needed.",
+       "Put the robot on the floor. Left stick up for about 2 seconds: it drives straight.",
+       "Right stick right: it turns clockwise. Mecanum only: left stick right strafes right.",
+       "Pull LT all the way while driving: the robot goes slower. (One driver, `oneDriver = true`: click the left stick for slow on and off.)",
+       "Press BACK on gamepad 1: the robot stops the moment the button goes down, and the Driver Station says PAUSED. Let go, then tap BACK again: it drives again.",
+       "Tap GUIDE: the button map shows. Tap GUIDE again to close it."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "The robot drives straight within about 6 in of drift over 5 ft, turns the right way, LT slows it, and BACK stops it within 0.5 s of the press."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "drive type and motors (for example \"mecanum, 4 x goBILDA 312\")",
+       "how many wheels needed a direction fix, and which steps you used",
+       "drift over 5 ft (inches, left or right)",
+       "how fast BACK stopped the robot (about)"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Any drivetrain the library can drive is in scope: 2-motor or 4-motor tank, mecanum, a kit bot's drive. If your robot has a drivetrain the library does not offer (swerve, H-drive), report that as \"could not run\" and say what it is. If your driver uses other buttons (`libraryButtons` in `Controls.java`), use those and say which."
+     }
+    ]
+   }
+  },
+  {
+   "id": "HOOD-01",
+   "title": "Hood Finder on a servo hood - stops and angles",
+   "area": "hood",
+   "priority": "high",
+   "where": "real",
+   "minutes": 30,
+   "needs": [
+    [
+     "hood-servo"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/guides/finders.md",
+     "anchor": "hood-finder"
+    },
+    {
+     "path": "docs/tutorials/start/09-shooter-and-camera.md",
+     "anchor": "a-hood-the-shot-angle"
+    }
+   ],
+   "file": "testing/tests/HOOD-01.md",
+   "sections": {
+    "why": [
+     {
+      "p": "The hood's two stops (`posA`, `posB`) are hard limits: the hood never goes past them. The Hood Finder finds them without code. A servo pushing on a stop gets hot and breaks, so this must be clear and safe on hoods built differently from ours."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Flywheel off. Fingers away from the hood while it moves.",
+       "Listen for a humming servo: back off at once."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "`.hood(Hood.servo(\"hood\"))` on the launcher in `Robot.java` (no `Tunables.Hood` numbers needed yet).",
+       "The Hood Finder OpMode ([recipe](repo:docs/cookbook.md#how-do-i-find-my-hoods-stops-and-angles)).",
+       "A phone angle app (optional, for angles)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Start the Hood Finder. Choose a START POINT near where the hood sits (D-pad; nothing moves), press A.",
+       "Nudge toward one stop (D-pad right/left 0.01, up/down 0.05, hold RB for finer). Stop when it JUST touches, back off a hair, press X.",
+       "Do the same at the other stop, press B. The screen shows `Tunables.Hood: posA = ..., posB = ...`.",
+       "Optional: lay the phone on the hood at each stop and type the angle (hold LB + D-pad) before X or B.",
+       "Copy the line(s) into `Tunables.java`. Time a stop-to-stop move for `travelSec`.",
+       "In your TeleOp: START sends the hood to `startAngle` (in `Tunables.Hood`). Gamepad 2 left stick moves it: push it hard both ways."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "In step 6 the hood never touches a stop (0 hums or stalls in 10 pushes each way), and it stays between `posA` and `posB`."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "hood design (servo, gears or linkage, range in degrees)",
+       "the `Tunables.Hood` line it printed",
+       "`travelSec` you measured",
+       "anything that hummed, and when"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A linkage (equal servo steps do not make equal angles): add points in between with A to get a `calibration` line. A hood that goes the other way round is fine: say so. A CR-servo hood is not supported yet: report \"could not run\" and what you have."
+     }
+    ]
+   }
+  },
+  {
+   "id": "HOOD-02",
+   "title": "Motor hood - stops by hand, and it arrives before firing",
+   "area": "hood",
+   "priority": "high",
+   "where": "real",
+   "minutes": 30,
+   "needs": [
+    [
+     "hood-motor"
+    ],
+    [
+     "flywheel"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/guides/finders.md",
+     "anchor": "hood-finder"
+    },
+    {
+     "path": "docs/modules/robot.md",
+     "anchor": "hood"
+    }
+   ],
+   "file": "testing/tests/HOOD-02.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A motor hood knows where it is (its encoder), so the launcher waits until it arrives. Its ticks count from where it is at INIT, so the start position matters. We have not tested a motor hood on a robot yet."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Flywheel off for steps 1-4. Low `maxPower` (0.3) at first. Fingers away from the hood.",
+       "Hard stops on the hood at both ends."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "`.hood(Hood.motor(\"hood\", \"motor-id\"))` on the launcher.",
+       "The Hood Finder OpMode."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Put the hood on the stop you want as 0 ticks (stop A). Start the Hood Finder: nothing is powered.",
+       "Move the hood by hand to near stop A (a hair off), press X. To near stop B, press B.",
+       "Copy `posA`, `posB` (ticks) into `Tunables.Hood`. Set `maxPower = 0.3`.",
+       "In your TeleOp (hood on stop A at INIT): START. Move the hood with gamepad 2 left stick to each end. It must stop before each stop.",
+       "With a shot table that has a hood column, spin up and fire one at two distances: the launcher waits for `hood` until the hood arrives (`Launcher waits for: hood`)."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "The hood stops within 2% of its range before each stop (never stalls on a stop), and in step 5 no piece is fed while the hood is more than `tolerance` away (0 of 2)."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "hood motor, gearing, range in ticks",
+       "the `posA`, `posB` you got, and `kP`, `maxPower`, `tolerance` you used",
+       "how long the hood took to arrive in step 5 (seconds)",
+       "what happened if the hood was NOT on stop A at INIT (try it once, carefully, at low power)"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A hood that is not near a stop at INIT will count from the wrong place: that is how it is built today. If your robot cannot start on a stop, tell us why: we may add homing."
+     }
+    ]
+   }
+  },
+  {
+   "id": "ILK-01",
+   "title": "Interlock rule - two parts are never in their zones at once",
+   "area": "interlocks",
+   "priority": "high",
+   "where": "both",
+   "minutes": 40,
+   "needs": [
+    [
+     "lift",
+     "turret"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/guides/interlocks.md",
+     "anchor": ""
+    },
+    {
+     "path": "docs/guides/interlocks.md",
+     "anchor": "who-waits"
+    },
+    {
+     "path": "docs/guides/interlocks.md",
+     "anchor": "checked-at-init"
+    }
+   ],
+   "file": "testing/tests/ILK-01.md",
+   "sections": {
+    "why": [
+     {
+      "p": "An interlock rule (`keepApart(...)` in `Robot.java`) keeps two parts that share space from crashing, whoever moves them: a button, a stick, an action, a turret that follows the goal. If it lets both in once, two parts can break. We test it on our turret and wrist; your two parts are different."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Simulator first. On the real robot, start with slow powers (`maxPower` 0.3 for both parts).",
+       "Measure the zones by moving the parts by hand, with the power off. Never let the test be the first time the two parts come near each other.",
+       "A hand on STOP. Hard stops still on the robot: the rule does not replace them."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "Two parts with a position (a turret, lift, arm, wrist, claw, positioner or hood) that can hit each other.",
+       "One line in `Robot.java` after the parts, for example `keepApart(\"TurretLift\", turret.zone(), lift.zoneAbove());`, and its section in `Tunables.java` with your measured zones (`turretFrom`, `turretTo`, `liftAbove`), as in the [interlocks guide](repo:docs/guides/interlocks.md#the-idea-with-a-turret-and-a-lift).",
+       "Simulator (no robot of your own yet): the V2 example robot. In the `ftc-helper-lib` folder: `./gradlew :sim:fromRobot -PteamCode=none -ProbotClass=com.crossbotics.ftchelper.examples.v2bot.Robot -Pout=build/v2bot.properties`, then `./gradlew :sim:run -PteamCode=none -Probot=build/v2bot.properties`, open http://localhost:8780 and choose \"V2 Bot TeleOp\". Its rule is `TurretClaw`: turret 147 to 217 degrees, wrist 0 to 47 degrees."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "INIT. Read the `Interlock ...` line: it names both parts and both zones, in each part's units (degrees, counts, servo position).",
+       "START. Put part A in its zone (V2: the wrist folded, as it starts).",
+       "Move part B toward its zone with its stick or button (V2: gamepad 2 right stick X turns the turret toward the back). Part B stops before its zone, and the Driver Station shows one line, for example `TurretClaw : Turret held at ... deg: Wrist is between ...`.",
+       "Keep asking part B to go in for 5 s. It stays out.",
+       "Move part A out of its zone (V2: gamepad 2 Y, score in a FLOWER: the wrist swings out). Part B now goes in: by itself if a button sent it to a target (the target is kept), or while you still push its stick.",
+       "Now B is in its zone. Ask A to go back in (V2: gamepad 2 X, stow). A waits outside its zone until B leaves.",
+       "Run an action or an autonomous step that moves both parts at once. Read which one waits.",
+       "Put a wrong number in the rule's Tunables section (say `liftAbove` larger than the lift's `max`). INIT must stop and say what is wrong. Put it back."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "The two parts are never both in their zones (0 times in steps 3 to 7), the waiting part goes on by itself once the other leaves (2 of 2, steps 5 and 6), and step 8 stops INIT with a message that names the rule."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "your two parts (kinds, motor or servo) and the zones you wrote, in their units",
+       "how far outside its zone each waiting part stopped (degrees, counts or position)",
+       "the Driver Station line while it held a part (copy it)",
+       "the INIT message from step 8",
+       "simulator or real robot"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Any two parts with a position work: an arm and an intake that folds out, a wrist and a low lift, a hood and a turret. A part with no position (an intake roller) needs `Zone.when(...)` with your own sensor: say if you used it. If your parts can only hit at some lift heights, a rule with a narrower zone may be enough: say what you chose and why."
+     }
+    ]
+   }
+  },
+  {
+   "id": "ILK-02",
+   "title": "Interlock stop distance - a fast part brakes before its zone",
+   "area": "interlocks",
+   "priority": "high",
+   "where": "both",
+   "minutes": 30,
+   "needs": [
+    [
+     "lift",
+     "turret"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/guides/interlocks.md",
+     "anchor": "stop-distance-a-fast-part-brakes-in-time"
+    },
+    {
+     "path": "docs/guides/tunables.md",
+     "anchor": ""
+    }
+   ],
+   "file": "testing/tests/ILK-02.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A motor does not stop the moment it is told to: the robot only decides once per loop, and a braking motor still coasts. The rule works out each part's stop distance from its speed and the slowest recent loops, and slows it down in time. We tested it in the simulator (a turret at about 680 degrees a second); real lifts and turrets are heavier and slower to stop."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "ILK-01 passed first, on this robot, with slow powers.",
+       "Real robot: raise the power in steps (0.3, 0.6, then full). Stop at once if a part ends inside its zone.",
+       "Fingers away from both parts. A hand on STOP."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "An interlock rule that works at low power (ILK-01).",
+       "The part that moves fast toward its zone (usually the turret or the lift) at its normal `maxPower`.",
+       "Simulator: the V2 example robot as in ILK-01 (its turret is fast).",
+       "Optional: `<part>StopSec` in the rule's Tunables section (for example `turretStopSec = 0.15`, the default)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "INIT, START. Put the other part in its zone (V2: wrist folded).",
+       "Push the fast part's stick fully toward its zone and hold it. Watch where it stops. Read its angle or counts on the Driver Station.",
+       "Write how far outside its zone it stopped. It should slow down near its waiting point, then stop there (two margins outside the zone).",
+       "Do it 5 times, from different starting places (near the zone and far from it).",
+       "Make the loops slow on purpose: turn on a camera, or run the simulator with other programs busy. Repeat step 2 three times.",
+       "If it ever ended inside the zone, or past its waiting point: raise `<part>StopSec` (say 0.25), INIT again, and repeat."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "In all 8 tries (steps 4 and 5) the part stops outside its zone (0 times inside), within about one margin of its waiting point."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "the fast part, its motor and gear ratio, its `maxPower`",
+       "the zone edge, its waiting point, and where it stopped each time",
+       "the `StopSec` you ended with (and the margin, if you set one)",
+       "simulator or real robot; slow loops: how you made them"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A servo part needs no stop distance (it is never sent past its fence): test a motor part. A lift that moves fast downward with gravity is a good test: say which way it moved. If your part has no motor id in `Robot.java` (`.part(...)` or a motor id), the rule learns its top speed from the fastest it has seen: say if the first runs stopped later than the later ones."
+     }
+    ]
+   }
+  },
+  {
+   "id": "MEC-01",
+   "title": "A lift or arm on two motors - same power, same moment",
+   "area": "mechanisms",
+   "priority": "high",
+   "where": "real",
+   "minutes": 30,
+   "needs": [
+    [
+     "lift"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/modules/robot.md",
+     "anchor": "two-motors-on-one-lift-or-arm"
+    }
+   ],
+   "file": "testing/tests/MEC-01.md",
+   "sections": {
+    "why": [
+     {
+      "p": "Many lifts have a motor on each side. If the two motors get different powers, or one turns the wrong way, they fight: they get hot and can break a gearbox or bend the slide. `alsoMotor` and `alsoMotorReversed` send every power to both motors in the same loop. We tested it in the simulator and with the test kit; real two-motor lifts are needed."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "**Chain or belt OFF for steps 1 and 2.** Two motors that fight can break a gearbox.",
+       "Low power first (`maxPower` 0.3 in the lift's Tunables section). Fingers out of the slide.",
+       "A hand on STOP. Hard stops at both ends."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "The lift's line in `Robot.java` with its second motor: `lift = add(Lift.slide(\"lift_left\").alsoMotorReversed(\"lift_right\"));` (or `alsoMotor` when both turn the same way). An arm: `Arm.motor(...).alsoMotorReversed(...)`.",
+       "The encoder cable in the FIRST motor (`lift_left`). The Tunables section is the first motor's name in CamelCase (`Tunables.LiftLeft`)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Chain or belt off. INIT: read `LiftLeft: two motors, \"lift_left\" (its encoder is read) and \"lift_right\" (...)`.",
+       "START. Push the lift's stick up a little. Both motor shafts must turn the way that lifts. One wrong? Use the other method (`alsoMotor` or `alsoMotorReversed`), rebuild, try again.",
+       "Chain or belt on. Run the lift to each named position (low, high...) 3 times.",
+       "Pause with gamepad 1 BACK while it moves up: both motors stop at once.",
+       "After 2 minutes of use, touch both motors: they should be about as warm as each other."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Both motors turn the lifting way (2 of 2) in step 2, the lift reaches each position within its `tolerance` in all runs of step 3, and neither motor is clearly hotter than the other in step 5."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "lift or arm, motors (model and gearbox), which method you used (`alsoMotor` or `alsoMotorReversed`)",
+       "how the motors face each other (mirror images, or the same way)",
+       "any position it missed, and by how much (counts or inches)",
+       "the motor temperatures by hand (cool, warm, hot)"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "An arm driven from both ends works the same way: test its positions in degrees. If your two motors drive separate slides that are only joined at the top, report how far apart the two sides got (inches), since only the first motor's encoder is read."
+     }
+    ]
+   }
+  },
+  {
+   "id": "ODO-01",
+   "title": "Odometry Tuner - directions, offsets and the loop check",
+   "area": "odometry",
+   "priority": "high",
+   "where": "real",
+   "minutes": 45,
+   "needs": [
+    [
+     "pinpoint",
+     "otos",
+     "dead-wheels"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "v0.16.0",
+   "docs": [
+    {
+     "path": "docs/guides/finders.md",
+     "anchor": "odometry-tuner-directions-offsets-and-a-loop-check"
+    },
+    {
+     "path": "docs/tutorials/start/07-odometry.md",
+     "anchor": "5-the-odometry-tuner"
+    }
+   ],
+   "file": "testing/tests/ODO-01.md",
+   "sections": {
+    "why": [
+     {
+      "p": "Everything that uses the robot's place on the field (driveTo, Pedro paths, odometry aim, shooting on the move) depends on this tuner. It is written for three kinds of odometry. We have tested it on a Pinpoint; OTOS and dead wheels need your help."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "The sticks drive at 30% in this tuner. Clear floor, about 6 x 6 ft.",
+       "Keep feet away from the wheels while you push or drive."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A robot with an `odometry(...)` line in `Robot.java` ([lesson 7](repo:docs/tutorials/start/07-odometry.md#4-one-line-in-robotjava)).",
+       "The small Odometry Tuner file next to `Robot.java`.",
+       "A 48 in strip of tape on the floor with a mark at its start, and a tape measure."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Start \"Odometry Tuner\". D-pad to \"Forward 48 in\", A. Drive or push the robot 48 in straight along the tape, B. Write what it says.",
+       "If it said \"counted BACKWARD\", add the fix it shows, rebuild, and run step 1 again.",
+       "\"Left 24 in\": A, move the robot 24 in to its left, B. Fix and repeat if it says \"counted RIGHT\".",
+       "\"Spin 3+ turns\": A, turn in place at least 3 times with the right stick, B. Copy the offsets it shows into your odometry line. Rebuild.",
+       "\"Loop and back\": start on the mark, drive anywhere for about 20 s, come back onto the mark facing the same way, B.",
+       "If it shows `Tunables.Odometry: checked = true`, set it in `Tunables.java`."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "The Forward test is within 2% (48 in counts as 47.0 to 49.0 in), and the Loop test passes: back within 1 in and 2 degrees of the mark."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "odometry kind (Pinpoint, OTOS, 2 or 3 dead wheels) and the pod type",
+       "Forward test: the % off it showed, before and after fixes",
+       "the offsets (or track width) it gave",
+       "Loop test: the distance and angle error it showed, and how many tries it took"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A tank robot cannot strafe: push it sideways by hand for the Left test. An OTOS has no offsets to measure (measure `mountIn` with a tape). Dead wheels with the IMU need `.imu(...)` in the drive line. Say which of these you did. Pods in odd places (far off centre, angled) are very useful to report."
+     }
+    ]
+   }
+  },
+  {
+   "id": "ODO-02",
+   "title": "Set pose here - hold START 1 s on the reset spot",
+   "area": "odometry",
+   "priority": "high",
+   "where": "both",
+   "minutes": 20,
+   "needs": [
+    [
+     "pinpoint",
+     "otos",
+     "dead-wheels"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/tutorials/start/07-odometry.md",
+     "anchor": "7-teleop-starts-where-autonomous-ended"
+    },
+    {
+     "path": "docs/guides/buttons.md",
+     "anchor": "moving-the-librarys-buttons"
+    }
+   ],
+   "file": "testing/tests/ODO-02.md",
+   "sections": {
+    "why": [
+     {
+      "p": "When TeleOp runs without an autonomous first, the robot does not know where it is. \"Set pose here\" fixes that with one held button. It must only work when the robot stands still, and never when a driver pairs a gamepad (START + A or START + B)."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Real robot: the robot does not move in this test, but keep the sticks let go when you hold START."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A robot with an odometry line, and the reset spot in `Tunables.Odometry` (`resetX`, `resetY`, `resetHeading`, seen from your own drivers' wall). BIOBUZZ: also `mirrorForRed = false`, written once for the whole robot in `Tunables.Aim` (or in `Tunables.Odometry` if you have no `Aim` section).",
+       "Simulator: your own robot from `Robot.java` (`./gradlew :sim:fromRobot -PteamCode=../TeamCode`), or the odometry robot from lesson 7.",
+       "A tape measure (real robot)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Put the robot on the reset spot (for example the start tile against your wall, facing the field). In the simulator, drag it there on the field map.",
+       "INIT your TeleOp (with no autonomous before it). Read INIT's `Set pose: hold G1 START 1 s at ...` line.",
+       "Hold gamepad 1's small START button for 1 second, sticks let go. Gamepad 1 buzzes twice and the Driver Station says `Pose set: ...`.",
+       "START the TeleOp. Drive about 4 ft away and back to the spot. Read the pose: it should be close to the reset spot.",
+       "Push the left stick a little and hold START at the same time: it must say `Pose NOT set: stop first`.",
+       "Hold START, then press A (as if pairing a gamepad): the pose must NOT be set.",
+       "Choose RED in INIT (X = BLUE, B = RED) and repeat step 3 on the red side: the pose should use the same numbers from the red wall (BIOBUZZ)."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Step 3 sets the pose within 1 in and 2 degrees of the spot you wrote; steps 5 and 6 do not set it (0 of 2); the RED pose in step 7 matches the reset spot for RED that INIT shows."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "the reset spot you used (x, y, heading)",
+       "the pose shown after step 3 and after step 4",
+       "what steps 5 and 6 showed",
+       "the INIT line `Reset spot for RED: ...`"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "If you moved \"set pose\" to another button (`lib.setPose(...)` in `libraryButtons`), use that one and say which. On a field that is a mirror image (not BIOBUZZ), leave `mirrorForRed` out and check that RED mirrors x and the heading. If INIT warns that two places give different `mirrorForRed` values, copy the warning into your report."
+     }
+    ]
+   }
+  },
+  {
+   "id": "PATH-02",
+   "title": "PathAt - start things along a path while it drives",
+   "area": "paths",
+   "priority": "high",
+   "where": "both",
+   "minutes": 40,
+   "needs": [
+    [
+     "mecanum"
+    ],
+    [
+     "pinpoint",
+     "otos",
+     "dead-wheels"
+    ],
+    [
+     "pedro"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/tutorials/start/08-paths-with-pedro.md",
+     "anchor": "5-write-your-first-path"
+    },
+    {
+     "path": "docs/modules/pedro.md",
+     "anchor": "do-things-along-the-path"
+    }
+   ],
+   "file": "testing/tests/PATH-02.md",
+   "sections": {
+    "why": [
+     {
+      "p": "`PathAt` starts a part (an intake, a spin-up) at a place along a Pedro path while the robot keeps driving. It is new. We need to know each kind fires once, at the right place, on robots that are not ours, and that the report says when one did not fire."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Real robot: the robot drives a path by itself. Clear floor, PRACTICE profile, hand on STOP.",
+       "Use a part that is safe to switch on while driving (an intake, a light). Not a flywheel with pieces in it."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "Lesson 8 done: Pedro added, `PedroConstants` tuned, `Tunables.Odometry.checked = true`.",
+       "A path with two parts (`PedroPath.line(...).then(PedroPath.curve(...))`), about 4-6 ft long.",
+       "Tape marks on the floor where you expect each thing to start (real robot)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Add three things to your `follow` step: `PathAt.fraction(0.5, \"Intake on\", robot.intake::in)`, `PathAt.part(2, \"Intake off\", robot.intake::stop)` and `PathAt.inchesLeft(12, ...)` with any part of yours.",
+       "Run it in the simulator first: does each start where you expected? (Watch the part, and the Driver Station.)",
+       "Run it on the robot (PRACTICE). Watch where the robot is when each one starts. Mark it on the floor.",
+       "Measure how far each mark is from where you expected it.",
+       "Put a box in the path so the robot stops early (it ends `STALLED` or timed out). Read the report: it should list the things that did not start (`not fired: ...`).",
+       "Try a mistake: `PathAt.fraction(2, ...)`. INIT must stop with a message."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Each `PathAt` starts once (3 of 3) within 3 in of where you expected on the robot; step 5's report names every thing that did not fire; step 6 stops at INIT with a message that names the mistake."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "your path (copy the `PedroPath` line)",
+       "for each `PathAt`: expected place, real place, distance off (inches)",
+       "the report line from step 5",
+       "the INIT message from step 6"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Use any parts you have; a light or a servo is fine. `PathAt.near(x, y, 6, ...)` and `PathAt.inchesDone(...)` are welcome as extra tries. `driveTo` steps take `PathAt` too: if you have no Pedro, try `PathAt.inchesLeft(...)` on a `driveTo` and say so."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SET-01",
+   "title": "Hardware Check finds every device and each motor counts up",
+   "area": "setup",
+   "priority": "high",
+   "where": "real",
+   "minutes": 20,
+   "needs": [],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "v0.16.0",
+   "docs": [
+    {
+     "path": "docs/tutorials/19-testing-procedures.md",
+     "anchor": ""
+    },
+    {
+     "path": "docs/modules/testing.md",
+     "anchor": "hardwarecheckopmode"
+    }
+   ],
+   "file": "testing/tests/SET-01.md",
+   "sections": {
+    "why": [
+     {
+      "p": "The Hardware Check is the first thing every team runs. It must find every device in your robot configuration, on any robot, with no code from you. If it misses a device or shows a wrong hint, every later lesson goes wrong."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Robot on a block: wheels off the ground. A drive motor can spin at 50% power in this test.",
+       "Keep fingers out of gears, chains and lifts while a motor runs."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A robot with its configuration made on the Driver Station (any robot: a kit bot is fine).",
+       "The 3-line Hardware Check OpMode in TeamCode ([how](repo:docs/tutorials/19-testing-procedures.md#1-the-3-line-opmode)).",
+       "A charged battery."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Build and install. On the Driver Station, choose the TeleOp \"Hardware Check\", INIT, then START.",
+       "Count the devices in your configuration. Count the devices the Hardware Check lists (D-pad up and down goes through them).",
+       "For each motor: choose it, push gamepad 1's right stick up a little. Watch which way it turns and whether its encoder count goes UP.",
+       "For each servo: choose it, press X (it goes to 0.5), then D-pad right and left. It moves a little each press.",
+       "Read the battery line and the IMU line. (The IMU is the turn sensor inside the Control Hub. \"Yaw\" is the way the robot faces, in degrees.) Turn the robot left by hand: the yaw goes up.",
+       "Read each hint the screen shows for a device. Is it right for your robot?"
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Every device in the configuration is in the list (the same count, for example 9 of 9), every motor moves when you push the stick, and the battery line shows a voltage within 0.3 V of a meter (or of the Driver Station's own battery number)."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "devices in the configuration, devices the Hardware Check listed",
+       "any device it did not find (its type in the configuration)",
+       "motors whose encoder counted DOWN with positive power",
+       "the battery voltage it showed",
+       "any hint that was wrong or confusing"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Any robot works: the point is that the check finds every kind of device. Unusual devices are the most useful to report: a second Limelight, an I2C sensor the library does not know (I2C: the small 4-pin ports on the hub, used by colour and distance sensors), or an Expansion Hub (a second hub, joined to the Control Hub by a cable, for more motors and servos). A part marked `optional()` in `Robot.java` that is not in the configuration should show as `optional, so the part is off (fine)`: say if it did not. If a device type is missing from the list, say its type exactly as the configuration names it."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SET-02",
+   "title": "A part that is not on the robot yet - optional() and the COMPETITION warning",
+   "area": "setup",
+   "priority": "high",
+   "where": "both",
+   "minutes": 25,
+   "needs": [],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/modules/robot.md",
+     "anchor": "parts-not-on-the-robot-yet"
+    },
+    {
+     "path": "docs/guides/simulator.md",
+     "anchor": "a-part-not-on-the-robot-yet"
+    }
+   ],
+   "file": "testing/tests/SET-02.md",
+   "sections": {
+    "why": [
+     {
+      "p": "Robots are built in steps. With `.optional()`, a part whose device is not in the configuration yet is simply off: INIT goes on, its buttons are off, and actions and autonomous skip it. At an event the same thing could hide a misspelled configuration name, so in the COMPETITION profile it is a loud warning."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Real robot: the other parts move as usual. Clear floor, a hand on STOP."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A part in `Robot.java` you can take out of the configuration (an intake, a servo). Add `.optional()` to its line, for example `intakeDeploy = add(Positioner.servo(\"intake_deploy\").optional());`.",
+       "An action or an autonomous step that uses it, and a button that uses it.",
+       "Simulator: your robot from `Robot.java` (`:sim:fromRobot`), then add `missing = intake_deploy` (your device's name) as a line in `simulator/robot.properties`.",
+       "Real robot: a copy of the configuration on the Driver Station without that device (or with its name changed)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "INIT your TeleOp (PRACTICE profile). Read the note: `\"intake_deploy\" not in the configuration: IntakeDeploy is off (optional part)`. INIT does not stop.",
+       "Open the button map (GUIDE): the part's buttons say `- off: IntakeDeploy not on the robot`.",
+       "START. Press the part's button: nothing moves, no error.",
+       "Run the action (or the autonomous): it goes on, and its report says `skipped IntakeDeploy (not on the robot)`.",
+       "Choose the COMPETITION profile (the last line of an autonomous's INIT menu; it is saved on the hub). INIT TeleOp again: the very first line is `!! COMPETITION: \"intake_deploy\" not in the configuration: IntakeDeploy is OFF ...`, and the button map says `!! OFF`.",
+       "Put the device back in the configuration (simulator: delete the `missing` line). INIT: the part works, with no code change.",
+       "Take `.optional()` off and remove the device again. INIT must stop and name the device. Put it back. Set the profile back to PRACTICE."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "INIT goes on with the part off (steps 1 to 4, no error), the COMPETITION warning is the first line of the screen (1 of 1), and without `optional()` a missing device stops INIT (1 of 1)."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "the part (kind and device name) and simulator or real robot",
+       "the INIT lines in PRACTICE and COMPETITION (copy them)",
+       "the action's report line from step 4",
+       "anything that moved, or an error, while the part was off"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Any part but the drive and the odometry can be optional. A part with several devices (a lift with a switch, a launcher with a feeder): only the first device decides. Try removing a second device too: INIT must stop and name it (half a part is a wiring mistake). Say what you tried."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SHOT-01",
+   "title": "Flywheel Finder - gains that hold the speed",
+   "area": "shooter",
+   "priority": "high",
+   "where": "real",
+   "minutes": 30,
+   "needs": [
+    [
+     "flywheel"
+    ]
+   ],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "studica"
+   ],
+   "since": "v0.16.0",
+   "docs": [
+    {
+     "path": "docs/guides/finders.md",
+     "anchor": "flywheel-finder-gains-and-recovery"
+    },
+    {
+     "path": "docs/tutorials/start/09-shooter-and-camera.md",
+     "anchor": "2-its-numbers"
+    }
+   ],
+   "file": "testing/tests/SHOT-01.md",
+   "sections": {
+    "why": [
+     {
+      "p": "The Flywheel Finder works out the speed-control numbers (the gains) from one full-power spin. Flywheels differ a lot (motor, gearing, wheel weight). We want to know its gains hold the speed on your flywheel, with no tuning by hand."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Safety glasses. Nobody in front of the launcher. No pieces loaded until step 5.",
+       "Robot on a block or held so it cannot move."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "`Launcher.flywheel(\"name\", \"motor-id\")` in `Robot.java` (or any flywheel motor with an encoder cable).",
+       "The \"Flywheel Finder\" OpMode (starter kit).",
+       "A charged battery (12.5 V or more)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Start \"Flywheel Finder\". Choose the flywheel motor.",
+       "Let go of A, then hold A: full power until the speed stops rising. Wrong way? Let go, press X (reverse), try again.",
+       "Press B: it holds a speed. Use the D-pad to set the speed you shoot at.",
+       "Watch the measured speed for 10 seconds. Use RB (more F) or LB (less F) only if it stays above or below.",
+       "Feed one piece by hand. Read the recovery time.",
+       "Copy the `Tunables.Launcher: kP = ..., kF = ..., nominalVolts = ...` line into `Tunables.java`. Spin up in your TeleOp with LB and read the speed."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "In step 4 the measured speed stays within 3% of the target, and in step 6 your TeleOp reaches the speed and shows READY within 1.5 s of pressing LB."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "flywheel motor (catalog id), gearing, wheel (size, weight if known)",
+       "the line it printed (gains and `nominalVolts`)",
+       "the speed error in step 4 (RPM), and whether you used RB or LB",
+       "recovery time after a piece (seconds)",
+       "time to READY in step 6"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Two motors on one flywheel, a geared flywheel or a belt: say how it is built. A catapult or a launcher with no encoder cannot use this test: report \"could not run\" with what you have."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SHOT-02",
+   "title": "Never feeds a slow flywheel, and gives up after 3 s",
+   "area": "shooter",
+   "priority": "high",
+   "where": "both",
+   "minutes": 20,
+   "needs": [
+    [
+     "flywheel"
+    ]
+   ],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "studica"
+   ],
+   "since": "v0.16.0",
+   "docs": [
+    {
+     "path": "docs/tutorials/start/09-shooter-and-camera.md",
+     "anchor": "4-the-two-safety-rules"
+    },
+    {
+     "path": "docs/tutorials/start/09-shooter-and-camera.md",
+     "anchor": "3-the-buttons-it-brings"
+    }
+   ],
+   "file": "testing/tests/SHOT-02.md",
+   "sections": {
+    "why": [
+     {
+      "p": "The launcher's two safety rules are the reason teams can trust the fire button: a piece is only fed when the wheel is at speed, and the launcher gives up after 3 s instead of firing late. Different feeders (a CR servo, a servo, a roller) must all follow them."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Safety glasses. Nobody in front of the launcher.",
+       "Real robot: a few pieces only, a clear space where shots land."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A launcher with a feeder in `Robot.java` and its gains (SHOT-01).",
+       "Simulator: lesson 9's goBILDA bot (`-Probot=sim/robots/starter-bot-gobilda.properties`, \"goBILDA Bot TeleOp\")."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "INIT your TeleOp, START. Load 3 pieces.",
+       "Without spinning up, tap RB (fire one). The wheel spins up and the piece waits; it is fed only when the speed is READY.",
+       "Hold RB: pieces fire one after another, each when the wheel is back at speed. Let go: no more are fed.",
+       "Make it unable to reach the speed. Real robot: STOP, power the robot off, unplug the flywheel motor's encoder cable, power on (the speed now reads 0, and the wheel may spin at full power: unload every piece first and watch the feeder instead). Simulator: lower the battery on the page (Robot tab) until the wheel cannot reach READY (if it still reaches READY, say so and skip step 5). INIT, START, tap RB.",
+       "After about 3 s the Driver Station says `Launcher gave up: flywheel` and the feeder does not move. Real robot: power off and plug the encoder cable back in."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "No piece is fed before READY (0 of 3), and in step 5 it gives up within 3.5 s and feeds nothing."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "feeder type (CR servo, servo, roller motor) and `feedSec` or `pushSec`",
+       "pieces fed per RB tap (should be 1)",
+       "time between shots while RB is held (seconds)",
+       "what the Driver Station said in step 5"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "If your feeder pushes two pieces at once, lower `feedSec` (or `pushSec`) and say what worked. A launcher with extra \"ready\" checks (`requireReady(...)`) should name them when it gives up: report the words you saw."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SHOT-03",
+   "title": "Shot Tuner - build a shot table with hits and misses",
+   "area": "shooter",
+   "priority": "high",
+   "where": "real",
+   "minutes": 60,
+   "needs": [
+    [
+     "flywheel"
+    ],
+    [
+     "limelight",
+     "webcam",
+     "pinpoint",
+     "otos",
+     "dead-wheels"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/guides/finders.md",
+     "anchor": "shot-tuner-the-shot-table"
+    },
+    {
+     "path": "docs/tutorials/start/09-shooter-and-camera.md",
+     "anchor": "8-two-game-pieces-two-shot-tables"
+    }
+   ],
+   "file": "testing/tests/SHOT-03.md",
+   "sections": {
+    "why": [
+     {
+      "p": "The Shot Tuner builds the speed-for-each-distance table the way experienced teams do: 3-5 shots per speed, each marked HIT or MISS, and the best hit ratio wins. We want to know a team that has never done it can fill a table that scores, in about an hour."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Safety glasses. Nobody between the robot and the goal. Collect pieces only when the flywheel is off (LB)."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "SHOT-01 done (gains). A camera that sees the goal, or odometry with `Tunables.Aim.goalX`, `goalY`.",
+       "A Shot Tuner file for your robot ([recipe](repo:docs/cookbook.md#how-do-i-build-a-shot-table-speed-for-each-distance)).",
+       "10 or more game pieces, a tape measure, a charged battery."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Start the Shot Tuner. Two tables (POLLEN and NECTAR)? Press Y until `> Table`, pick one with D-pad left or right, and load that piece.",
+       "Park at your nearest shooting distance. Check the distance line says where it came from (camera or odometry). LB starts the flywheel.",
+       "Fire 3-5 (RB). After each, press A = HIT or B = MISS. Change the speed with the D-pad and fire 3-5 again. Try 2-3 speeds.",
+       "Press X to save the best. Mark one wrong? Left stick click takes it back first.",
+       "Move back 1-2 ft and repeat, until `Points:` says 4 for this table.",
+       "Copy the line it shows into `Tunables.Launcher`. Rebuild. In your TeleOp, fire 5 from a distance between two points."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "The table has 4 or more points, and in step 6 at least 3 of 5 shots score from a distance between two points."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "camera or odometry for the distance",
+       "your table line(s), copied from the screen",
+       "hits out of 5 in step 6, and the distance",
+       "total time it took (minutes)",
+       "any \"sagged\" warning, and the battery voltage"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Fewer than 10 pieces? Fire 3 per speed. A robot without a camera can use the odometry for the distance: put the robot in the middle of the field facing away from you before INIT, or set `startSpotIn()`. A hood adds a HOOD choice under Y (see HOOD-03)."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SHOT-04",
+   "title": "Speed trim on the D-pad, and last match's trim",
+   "area": "shooter",
+   "priority": "high",
+   "where": "both",
+   "minutes": 20,
+   "needs": [
+    [
+     "flywheel"
+    ],
+    [
+     "limelight",
+     "webcam",
+     "pinpoint",
+     "otos",
+     "dead-wheels"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/tutorials/start/09-shooter-and-camera.md",
+     "anchor": "speed-trim-and-a-low-battery"
+    },
+    {
+     "path": "docs/cookbook.md",
+     "anchor": "every-shot-is-a-bit-short-today-how-do-i-trim-the-speed-a-low-battery"
+    }
+   ],
+   "file": "testing/tests/SHOT-04.md",
+   "sections": {
+    "why": [
+     {
+      "p": "Some days every shot is a bit short. The operator trims all speeds by 1% per D-pad press. The trim must stop at 15%, never ask for more than the motor can do, start at 0 every INIT, and only OFFER last time's trim (never put it back by itself)."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Safety glasses if you fire pieces. You can do this test without firing (watch the numbers)."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A launcher with speed from the distance (`.speedFromDistance(camera)` or `.speedFromOdometry()`) and a shot table.",
+       "Two drivers: the trim is on gamepad 2 (one driver: gamepad 1)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "INIT, START. Spin up (LB). Read the launcher's first line: `Speed trim: 0%`.",
+       "Press gamepad 2's D-pad up 3 times (each press counts when you let go): `Speed trim: +3%`. The target speed goes up about 3%.",
+       "Hold D-pad up: one more step every 0.25 s. Keep holding: it stops at +15% (or says `(motor limit)` first).",
+       "Double-tap D-pad down: back to 0%.",
+       "Trim to +3%. STOP. INIT again: the trim is 0% and the Driver Station says `Trim last time: +3% (double-tap D-pad up after START to use it)`.",
+       "START, double-tap D-pad up: the trim is +3%."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Each press changes the target by 1% of the table's speed (within 10 RPM), the trim never passes 15% or the motor's top speed, and after INIT the trim is 0 until you double-tap D-pad up (1 of 1)."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "the target speed at 0% and at +3% (RPM)",
+       "where it stopped in step 3 (+15% or motor limit, and the RPM)",
+       "the INIT line in step 5",
+       "one driver or two"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "With a fixed speed (no table) the D-pad changes `speedRpm` by `stepRpm` instead of trimming: report that it did so, if that is your robot. If you put the trim on other buttons in your own code, say how."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SHOT-05",
+   "title": "Battery compensation - 4 quick shots on a tired battery",
+   "area": "shooter",
+   "priority": "high",
+   "where": "real",
+   "minutes": 40,
+   "needs": [
+    [
+     "flywheel"
+    ]
+   ],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "studica"
+   ],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/tutorials/start/09-shooter-and-camera.md",
+     "anchor": "speed-trim-and-a-low-battery"
+    },
+    {
+     "path": "docs/modules/robot.md",
+     "anchor": "speed-trim-and-battery-compensation"
+    }
+   ],
+   "file": "testing/tests/SHOT-05.md",
+   "sections": {
+    "why": [
+     {
+      "p": "Battery compensation is off by default because it is not yet proven on a real robot. This test is how we find out. It should help the wheel get back to speed after each shot on a low battery. If it makes no difference, or the wheel overshoots, we want to know: then we will change the default."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Safety glasses. Nobody in front of the launcher. A clear space where shots land.",
+       "Do not run a battery below 11.0 V on purpose: stop when it reaches about 11.3 V."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "SHOT-01 done: `kF` and `nominalVolts` in `Tunables.Launcher`, and `public static boolean batteryCompensation = true;` there to turn it on. (Without `nominalVolts`, INIT says `battery compensation on, nominalVolts not written: assuming 12.8 V`: write yours from the Flywheel Finder.)",
+       "A battery at about 11.5 V under no load (run the robot for a while, or use an older battery). A full battery for step 6.",
+       "A phone to film the Driver Station screen (the speed numbers), or a second person to write them.",
+       "8 pieces."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "With the 11.5 V battery: INIT, START, spin up (LB). Wait for READY.",
+       "Fire 4 shots as fast as the launcher allows (hold RB). Film the launcher's measured RPM and target.",
+       "Write the lowest RPM after each shot, and how long it took to get back to READY.",
+       "Set `batteryCompensation = false` in `Tunables.Launcher`, rebuild, and repeat steps 1-3 on the same battery.",
+       "Compare: with compensation on, does the wheel come back to speed faster?",
+       "Put a full battery in, compensation back on (`true`). Spin up: watch for an overshoot (the speed going more than 3% over the target)."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "With compensation on, the time back to READY after each shot is at least 10% shorter than with it off, and in step 6 the speed never goes more than 3% over the target."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "battery voltage at the start of each run (on, off)",
+       "for each of the 4 shots, on and off: lowest RPM, time back to READY (seconds)",
+       "the biggest overshoot in step 6 (RPM)",
+       "your `kF`, `nominalVolts`, flywheel motor"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "If your launcher fires slower than the wheel recovers, film single shots instead and say so. If you see no difference, that is a real result: report it (then leaving it off is fine). If the wheel overshoots after a battery swap, turn compensation off and tell us."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SIM-01",
+   "title": "Drive a kit bot in the simulator",
+   "area": "simulator",
+   "priority": "high",
+   "where": "sim",
+   "minutes": 30,
+   "needs": [],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "v0.16.0",
+   "docs": [
+    {
+     "path": "docs/guides/simulator.md",
+     "anchor": "start-it"
+    },
+    {
+     "path": "docs/guides/starter-bots.md",
+     "anchor": ""
+    }
+   ],
+   "file": "testing/tests/SIM-01.md",
+   "sections": {
+    "why": [
+     {
+      "p": "The simulator is how most teams will try the library first. It must start on Windows, Mac, Linux and Chromebooks, with the laptop setup as written. This is the best first test for any team."
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A laptop with Android Studio (it brings Java). The library folder (in your robot project, or cloned on its own).",
+       "The [laptop setup](repo:docs/guides/simulator.md#laptop-setup-once) done once."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "In a terminal in the `ftc-helper-lib` folder, run `./gradlew :sim:run -Probot=sim/robots/starter-bot-gobilda.properties` (or the REV, AndyMark or Studica file). Windows: `gradlew.bat`.",
+       "Open http://localhost:8780.",
+       "Choose the kit bot's TeleOp (for example \"goBILDA Bot TeleOp\"), INIT, START.",
+       "Set gamepad 1 to \"Keyboard\". Drive with W A S D and the arrows for a minute.",
+       "Try a real controller if you have one (choose it in the list, press a button once).",
+       "Run the intake and (goBILDA) spin up with LB and fire with RB."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "The page opens within 5 minutes of the first command (after the first download), the robot drives with the keyboard, and nothing shows an error in red."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "computer and operating system, browser",
+       "which kit bot",
+       "how long the first `./gradlew` took (minutes)",
+       "any step in the laptop setup that did not work as written, and what fixed it",
+       "controller tried (and whether it worked)"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "This test uses a kit bot file, so your robot does not matter. If you build one of the kit bots, say whether the simulator's robot behaves like yours (speed, size, which button does what)."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SIM-02",
+   "title": "Your own robot in the simulator, from Robot.java",
+   "area": "simulator",
+   "priority": "high",
+   "where": "sim",
+   "minutes": 40,
+   "needs": [],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "v0.16.0",
+   "docs": [
+    {
+     "path": "docs/guides/simulator.md",
+     "anchor": "a-robot-file-from-robotjava"
+    },
+    {
+     "path": "docs/tutorials/start/01-robot-in-five-files.md",
+     "anchor": "try-it-in-the-simulator"
+    }
+   ],
+   "file": "testing/tests/SIM-02.md",
+   "sections": {
+    "why": [
+     {
+      "p": "`:sim:fromRobot` writes a simulator robot file from your own `Robot.java`. Robots are all different, so this is where we learn which parts the simulator gets wrong or cannot draw."
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "Your robot in five files in your TeamCode, with the library in the robot project.",
+       "SIM-01 works on this laptop."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "In the `ftc-helper-lib` folder: `./gradlew :sim:fromRobot -PteamCode=../TeamCode`.",
+       "Open `simulator/robot.properties` in your robot project. Read the `TODO` lines; fill in the robot's size if you know it.",
+       "`./gradlew :sim:run -PteamCode=../TeamCode`, open http://localhost:8780.",
+       "INIT your TeleOp, read the button map, START, drive, and use every part.",
+       "Run your autonomous. Read the report at the end.",
+       "Draw your parts with `looks(...)` shapes ([how](repo:docs/tutorials/start/01-robot-in-five-files.md#draw-your-robot-from-robotjava)) if you want pieces to be picked up and shot."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "`:sim:fromRobot` finishes with no error, and every part in `Robot.java` (all of them, for example 6 of 6) shows in the simulator's Motors or Servos panel and responds to its button."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "your parts (the `add(...)` lines, or a list)",
+       "any part that did not show or did not move",
+       "errors from `:sim:fromRobot` (copy them)",
+       "what was hard in step 2 or step 6"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "That is the point of this test: describe what is unusual (a part the library has no module for, a custom `Module`, odd device names). Things the simulator cannot do are listed in the [simulator guide](repo:docs/guides/simulator.md#not-simulated): say if you hit one."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SIM-03",
+   "title": "Build an autonomous in the simulator with the auto builder",
+   "area": "simulator",
+   "priority": "high",
+   "where": "sim",
+   "minutes": 45,
+   "needs": [],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/guides/simulator.md",
+     "anchor": "the-auto-builder"
+    },
+    {
+     "path": "docs/guides/autos.md",
+     "anchor": "test-each-one-in-the-simulator"
+    }
+   ],
+   "file": "testing/tests/SIM-03.md",
+   "sections": {
+    "why": [
+     {
+      "p": "The auto builder draws an autonomous on the field, runs it with your real robot code, shows where the robot left the plan, and writes the Java and a scenario file. It must read any team's robot and give Java that builds the first time."
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "SIM-01 works on this laptop.",
+       "Your robot from `Robot.java` (`./gradlew :sim:fromRobot -PteamCode=../TeamCode`, then `./gradlew :sim:run -PteamCode=../TeamCode`), or a kit bot's robot file.",
+       "A robot project where you can add one autonomous file."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Open http://localhost:8780 and press **Auto builder** over the 3D view. Check the Robot class it picked (\"Best fit\"), the drive, and **TeleOp next** (your robot's TeleOp).",
+       "Pick RED or BLUE. Pick a start spot from the list. Press **Write it for me** for the note.",
+       "Simple steps: add a drive, a turn, an action from your `Actions.java` and \"park from here\". Fix every warning the checks show.",
+       "Press **Run**. Watch the purple plan robot and your robot. Read the result table: each step's word (done, STALLED...) and how far off the plan it ended.",
+       "If it offers a fix with **Apply** (a 0.3 s wait before a turn), apply it and Run again.",
+       "**Copy the Java**. Paste it into a new file in your TeamCode. Build it.",
+       "**Save the scenario** and run it: `./gradlew :sim:scenario -Pfile=...` (each line prints ok or FAIL)."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "The copied Java builds the first time (0 errors), every step ends `done` in the run, and the saved scenario passes (every line ok)."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "the robot (your own or a kit bot) and its drive",
+       "whether \"Best fit\" and \"TeleOp next\" were right",
+       "the result table after the last run (copy it)",
+       "any build error in step 6, and any FAIL in step 7",
+       "what was hard to find on the page"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A mecanum robot with odometry can also try the **Pedro path** mode (needs a `follower(...)` line for \"follow\"). A tank robot cannot strafe: the checks should say so. The saved scenario's `expect step N done` lines need the v0.17.0 simulator or newer."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SOM-01",
+   "title": "Shooting on the move - standing still nothing changes",
+   "area": "moving-shot",
+   "priority": "high",
+   "where": "real",
+   "minutes": 30,
+   "needs": [
+    [
+     "flywheel"
+    ],
+    [
+     "pinpoint",
+     "otos",
+     "dead-wheels"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/tutorials/start/09-shooter-and-camera.md",
+     "anchor": "14-extra-shooting-while-moving"
+    }
+   ],
+   "file": "testing/tests/SOM-01.md",
+   "sections": {
+    "why": [
+     {
+      "p": "Shooting on the move is off by default until it is tested on a real robot. The first check is the safest one: turned on, with the robot standing still, it must change nothing. Then the measured flight time, which every later step needs."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Safety glasses. Nobody between the robot and the goal.",
+       "The robot stands still in this test."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "Odometry checked (ODO-01), aim working (AIM-01, AIM-02 or AIM-03), a shot table.",
+       "A phone that films slow motion (240 frames a second)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "With `shootOnMove = false`, fire 5 from a fixed spot. Count hits.",
+       "Measure `flightSec`: film a shot from the side in slow motion, count the frames from leaving the launcher to reaching the goal, divide by 240. Do it near and far.",
+       "Set `shootOnMove = true`, `flightSec` (and `flightSecPerIn` if far shots fly longer), and `shooterForwardIn`, `shooterLeftIn` (and `cameraForwardIn`, `cameraLeftIn` for a camera on the body).",
+       "From the same spot, standing still, fire 5 again. Count hits. The `Aim: moving shot` line should not show while still.",
+       "Push the robot sideways by hand (or drive slowly): the `Aim: moving shot: lead ... deg, ... in` line appears."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Standing still, the hits with it on are within 1 of the hits with it off (out of 5), and the lead shown in step 5 is in the direction opposite to the motion."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "hits out of 5, off and on",
+       "flight time near and far (frames and seconds), and the distances",
+       "your `flightSec`, `flightSecPerIn`, `shooterForwardIn`, `shooterLeftIn`",
+       "the lead line while moving (degrees, inches)"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Works with a turret or with whole-robot aim (no turret): say which. A camera on the turret is taken to sit at the pivot. If your camera is somewhere else, measure `cameraForwardIn`, `cameraLeftIn` and say where it is."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SOM-02",
+   "title": "Shooting on the move - strafe past the goal and score",
+   "area": "moving-shot",
+   "priority": "high",
+   "where": "real",
+   "minutes": 60,
+   "needs": [
+    [
+     "flywheel"
+    ],
+    [
+     "pinpoint",
+     "otos",
+     "dead-wheels"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/tutorials/start/09-shooter-and-camera.md",
+     "anchor": "14-extra-shooting-while-moving"
+    },
+    {
+     "path": "docs/modules/vision.md",
+     "anchor": "movingshot"
+    }
+   ],
+   "file": "testing/tests/SOM-02.md",
+   "sections": {
+    "why": [
+     {
+      "p": "This is the real test: does aiming at the \"virtual goal\" make shots score while the robot drives? Only real shots can tell. If it does not help, we will say so in the docs."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Safety glasses. Nobody on the field side where shots go, and nobody in the robot's path.",
+       "PRACTICE profile, slow speed first. A driver who keeps turning slow while firing."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "SOM-01 passed. A clear lane about 6 ft long, parallel to the goal, at a distance you shoot from often.",
+       "15 or more pieces. A friend to count hits."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "With `shootOnMove = false`, drive slowly sideways along the lane and fire 5 while moving. Count hits.",
+       "Set `shootOnMove = true`. Drive the same lane at the same speed, fire 5. Count hits.",
+       "Misses on the side the robot drives toward: `flightSec` is too short. On the other side: too long. Change it and repeat step 2.",
+       "Drive faster (about twice the speed) and fire 5.",
+       "Optional: put the on/off on a button (`g2.a.toggle(robot.aim().movingShotMode())`) and check it switches."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "At slow speed, at least 2 more hits out of 5 with it on than off, or 4 of 5 with it on."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "drive speed (about, in/s: lane length divided by time)",
+       "hits out of 5: off slow, on slow, on fast",
+       "the `flightSec` you ended with, and how many changes it took",
+       "which side the misses went before the fix"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A tank drive cannot strafe: drive past the goal along a curve and say so. A turret robot and a whole-robot-aim robot both count. If driving and turning at once makes shots go wide, say how fast you turned."
+     }
+    ]
+   }
+  },
+  {
+   "id": "TUR-01",
+   "title": "Turret home switch (touch or magnetic) - homes at START",
+   "area": "turret",
+   "priority": "high",
+   "where": "both",
+   "minutes": 40,
+   "needs": [
+    [
+     "turret"
+    ],
+    [
+     "home-switch"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/guides/turret-setup.md",
+     "anchor": "2-how-does-it-know-its-angle"
+    },
+    {
+     "path": "docs/guides/turret-setup.md",
+     "anchor": "what-the-init-screen-shows"
+    }
+   ],
+   "file": "testing/tests/TUR-01.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A turret's motor encoder counts from where it was at INIT. A home switch tells the turret where it really is: it turns slowly to the switch at START, and sets its angle again every time it passes it, so a slipping belt is fixed during the match. Two kinds of switch work (a touch sensor and a magnetic switch); we have tested the magnetic one."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "The turret moves by itself at START (slowly, at `homingPower`). Fingers and wires away from it.",
+       "Hard stops at the wire limits. Start with `homingPower = 0.2` and `homingTimeout = 5`."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "The switch on the robot and in the configuration: a touch sensor (e.g. REV Touch Sensor) as **REV Touch Sensor**, or a magnetic switch (e.g. REV Magnetic Limit Switch, a magnet on the turret) as a **Digital Device**.",
+       "`.homeSwitch(\"turret_home\")` on the turret's line in `Robot.java`, and `homeAngle` in `Tunables.Turret` ([how to find it](repo:docs/guides/turret-setup.md#2-how-does-it-know-its-angle)).",
+       "Simulator: the V2 example robot (a magnetic switch at 0 degrees; commands in [ILK-01](repo:testing/tests/ILK-01.md))."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Turn the turret by hand about 30 degrees away from the switch. INIT. Read the lines `Turret : home switch at ... deg: found at START` and `Turret homing : at START it turns ... slowly to find the switch`. Nothing moves in INIT.",
+       "START. The turret turns slowly toward the switch (`homing: looking for the switch`) and stops homing when it closes. Following and \"aimed\" wait until then.",
+       "Point the turret with the stick to a mark you know (straight forward). Read the angle on the Driver Station. Measure the real angle.",
+       "Turn the turret past the switch and back 5 times. The angle on the Driver Station stays right (the switch sets it again at each pass).",
+       "Unplug the switch (power off first), power on, INIT, START: after `homingTimeout` seconds the turret stops and the Driver Station says `homing failed: switch not found`. Plug it back in.",
+       "Rename the switch in the configuration (or leave it out): INIT says `NO home switch` and the start angle is used."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "After homing, the angle on the Driver Station is within 2 degrees of the real angle (step 3) and still within 2 degrees after 5 passes (step 4), and step 5 stops within `homingTimeout` + 1 s (1 of 1)."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "switch kind (touch or magnetic) and how it is configured",
+       "`homeAngle`, `homingPower`, `homingTimeout` you used",
+       "the angle error after homing and after 5 passes (degrees)",
+       "which way it turned to home, and whether you needed `homeDirection`",
+       "what step 5 and step 6 showed"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "If homing turns the long way round, set `homeDirection` (+1 = counterclockwise, -1 = clockwise) and say so. A turret that starts ON the switch has nothing to look for: say what the screen showed. A CR servo turret with an encoder on a motor port homes the same way: say which you have."
+     }
+    ]
+   }
+  },
+  {
+   "id": "TUR-02",
+   "title": "Turret with no switch - start angle and the angle carried to TeleOp",
+   "area": "turret",
+   "priority": "high",
+   "where": "both",
+   "minutes": 30,
+   "needs": [
+    [
+     "turret"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/guides/turret-setup.md",
+     "anchor": "2-how-does-it-know-its-angle"
+    },
+    {
+     "path": "docs/guides/turret-setup.md",
+     "anchor": "from-autonomous-to-teleop"
+    }
+   ],
+   "file": "testing/tests/TUR-02.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A motor turret with no home switch only knows its angle if it starts where `startAngle` says. After autonomous it is somewhere else, so TeleOp starts from the angle the last program ended at (for 5 minutes). If any of this goes wrong, every shot goes wide by the same angle."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "The turret moves by itself while it follows the goal. Fingers and wires away from it.",
+       "Hard stops at the wire limits."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A turret with no `.homeSwitch(...)` line, and `min`, `max` in `Tunables.Turret`.",
+       "A mark or a small jig that holds the turret at `startAngle` (0 = straight forward, the default).",
+       "An autonomous that turns the turret (it follows the goal, or a step turns it).",
+       "Simulator: lesson 9's turret robot ([the commands](repo:docs/tutorials/start/09-shooter-and-camera.md#try-it-in-the-simulator)): \"TurretBot Shoot from Start\", then \"TurretBot TeleOp\"."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Put the turret on its mark. INIT the autonomous: `Turret : startAngle 0 deg: put the turret there by hand before INIT, or every angle is off`.",
+       "Run the autonomous to the end. Write the turret's last angle.",
+       "Within 5 minutes, INIT TeleOp: `Turret : ... deg, carried from the last program (... s ago ...)`. The angle matches step 2.",
+       "START TeleOp, point the turret straight forward with the stick, and check the angle reads about 0.",
+       "Stop. Restart the robot app (or wait more than 5 minutes). Turn the turret 20 degrees by hand. INIT TeleOp: it must say `no angle from a program before: turn it to startAngle 0 deg by hand and INIT again`.",
+       "Write `min = 10, max = 170` (a range without 0) and no `startAngle`. INIT: no stop, and a note says it counts from the middle of the range (90). Put your numbers back."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "The carried angle in step 3 is within 2 degrees of where autonomous ended, step 4 reads within 3 degrees of the real angle, and step 5 shows the \"no angle from a program before\" line (1 of 1)."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "motor, gear ratio, `min`, `max`, `startAngle`",
+       "autonomous end angle and TeleOp's carried angle",
+       "the real angle vs the Driver Station in step 4",
+       "the lines shown in steps 5 and 6"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "With `keepAngle = false` in `Tunables.Turret`, TeleOp never carries the angle: say if you use it and why. A turret with an absolute encoder (`.analogEncoder(...)`) knows its angle at INIT: check that its `absolute encoder: ... deg` line is right instead of steps 1 and 5."
+     }
+    ]
+   }
+  },
+  {
+   "id": "AIM-04",
+   "title": "Aim Tuner - find the camera offset from real shots",
+   "area": "aim",
+   "priority": "medium",
+   "where": "real",
+   "minutes": 40,
+   "needs": [
+    [
+     "flywheel"
+    ],
+    [
+     "limelight",
+     "webcam"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "v0.16.0",
+   "docs": [
+    {
+     "path": "docs/guides/finders.md",
+     "anchor": "aim-tuner-camera-offset"
+    }
+   ],
+   "file": "testing/tests/AIM-04.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A camera that is not exactly on the launcher's line makes every shot go a little to one side. The Aim Tuner finds the offset with real shots. We want to know the steps are clear and the offset works at more than one distance."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Safety glasses for everyone. Nobody in front of the launcher.",
+       "Hard stops on the turret (if any)."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "Flywheel gains found (SHOT-01). A goal you can shoot at, and 10-15 game pieces.",
+       "The Aim Tuner OpMode for your robot ([finders guide](repo:docs/guides/finders.md#before-you-start))."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Park the robot 4-6 ft from the goal, facing it. A turret with a home switch: press X first.",
+       "Hold A: it aims. Fire with RB.",
+       "Shots go left of the middle: D-pad RIGHT. Shots go right: D-pad LEFT. Fire again.",
+       "Repeat until shots go in the middle. Write the offset.",
+       "Move to a second distance (about 2 ft farther). Fire 5 with the same offset.",
+       "Copy the line it prints into `Tunables.java`: `Tunables.Turret: cameraOffset = ...` with a turret, `Tunables.Aim: cameraOffset = ...` for whole-robot aim."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "At the first distance at least 4 of 5 shots go in after tuning, and at the second distance at least 3 of 5 go in with the same offset."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "camera place (on the turret, on the body, how far from the launcher's line)",
+       "the offset you ended with (degrees)",
+       "hits out of 5 at each distance, and the two distances",
+       "how many tries it took"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Without a turret the robot itself turns to aim: hold A the same way. If the offset that works changes with distance, your camera is to the side of the launcher: say how far, and which offset worked where."
+     }
+    ]
+   }
+  },
+  {
+   "id": "AUTO-01",
+   "title": "Choose the start spot in the INIT menu",
+   "area": "autos",
+   "priority": "medium",
+   "where": "both",
+   "minutes": 30,
+   "needs": [],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/guides/autos.md",
+     "anchor": "what-the-init-menu-can-choose"
+    },
+    {
+     "path": "docs/guides/autos.md",
+     "anchor": "example-2-one-opmode-the-drivers-choose-in-init"
+    }
+   ],
+   "file": "testing/tests/AUTO-01.md",
+   "sections": {
+    "why": [
+     {
+      "p": "One autonomous can start from two spots: a `Start` line in the INIT menu picks the steps AND the start (`start(...)` inside an `onlyIf`). The \"Place robot\" note, the simulator's robot and the odometry's start follow the choice while the drivers change it. If the note shows the wrong spot, the drive team puts the robot in the wrong place."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Real robot: the autonomous drives by itself. Clear floor, everyone out of its way, a hand on STOP, PRACTICE profile."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "An autonomous with a menu line and a `start(...)` for each option, like [example 2](repo:docs/guides/autos.md#example-2-one-opmode-the-drivers-choose-in-init): `s.menuChoice(\"Start\", \"Near\", \"Far\")`, then `s.onlyIf(\"Start\", \"Near\").start(\"NEAR: ...\", ...)...end()` and the same for \"Far\".",
+       "Simulator: your robot from `Robot.java` (`./gradlew :sim:fromRobot -PteamCode=../TeamCode`, then `./gradlew :sim:run -PteamCode=../TeamCode`)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "INIT the autonomous. Read `Place robot : NEAR: ...` (the first option is chosen at INIT).",
+       "With the D-pad, go down to the `Start` line and change it to Far. The note changes to `FAR: ...` at once. Simulator: the robot on the field map moves to the far spot.",
+       "Change it back to Near, then to Far again. The note follows every change.",
+       "Put the robot on the far spot. START. Read the report at the end: the far steps ran, the near ones did not.",
+       "With odometry: INIT a TeleOp right after and read the `Pose` line: it starts from where the far route ended.",
+       "Spell an option differently in `onlyIf` (say \"far\"). INIT, choose Far: nothing in that block runs. Say whether the screen helped you find it. Put it back."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "The \"Place robot\" note matches the chosen option every time it changes (at least 3 changes, 3 of 3), and the run in step 4 starts from the far spot and runs only the far steps."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "your two `start(...)` lines and notes",
+       "simulator or real robot; with or without odometry",
+       "the report lines from step 4",
+       "what step 6 showed"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Any drive works. Without odometry the start spot is only the note and the simulator's place: check the note. A `parkWithSeconds(...)` inside an `onlyIf` follows the menu the same way: try it if you use one."
+     }
+    ]
+   }
+  },
+  {
+   "id": "CTL-02",
+   "title": "Move or free the library's buttons",
+   "area": "controls",
+   "priority": "medium",
+   "where": "both",
+   "minutes": 25,
+   "needs": [],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/guides/buttons.md",
+     "anchor": "moving-the-librarys-buttons"
+    },
+    {
+     "path": "docs/tutorials/start/03-buttons.md",
+     "anchor": "7-pause-with-back-and-the-other-library-buttons"
+    }
+   ],
+   "file": "testing/tests/CTL-02.md",
+   "sections": {
+    "why": [
+     {
+      "p": "Every library button (slow, field-centric, pause, menus) can move to another button or be freed for your own job. INIT must catch two jobs on one button and say which button."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Real robot: low power. Check that SOME button still pauses the robot before you drive."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "Your `Controls.java`. Inside its class, just after the closing `}` of the `buttons(...)` method, add `@Override protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) { }` (the whole method is in the [buttons guide](repo:docs/guides/buttons.md#moving-the-librarys-buttons)), and `import com.crossbotics.ftchelper.teleop.LibraryButtons;` at the top of the file."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Move one library job your drivers want elsewhere, for example `lib.slow(g1.rt);` or `lib.fieldCentric(g1.x);`.",
+       "INIT: read the button map. The job is on its new button; the old one is listed as free.",
+       "START and check the job works on the new button and the old one does nothing.",
+       "Put one of your own jobs on the same button as a library job. INIT must stop and name the button.",
+       "Free the pause: `lib.pause(null);`. INIT must warn that nothing pauses the robot. Put it back."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "The moved job works on its new button (1 of 1), step 4 stops INIT with the button's name, and step 5 shows the warning."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "the lines you wrote in `libraryButtons`",
+       "the INIT messages from steps 4 and 5 (copy them)",
+       "whether the button map was easy to read"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Move whatever your drivers really want moved: that is the best test. One driver (`oneDriver = true`): library jobs you put on `g2` go on gamepad 1: check that."
+     }
+    ]
+   }
+  },
+  {
+   "id": "CTL-03",
+   "title": "Switch the alliance during TeleOp (turned on by you)",
+   "area": "controls",
+   "priority": "medium",
+   "where": "both",
+   "minutes": 20,
+   "needs": [],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/guides/buttons.md",
+     "anchor": "switching-the-alliance-in-teleop"
+    }
+   ],
+   "file": "testing/tests/CTL-03.md",
+   "sections": {
+    "why": [
+     {
+      "p": "If autonomous ran as the wrong alliance, the drivers can switch it in TeleOp, but only if the team turned it on. It takes 1.5 s on purpose, so it never happens by accident. With odometry on BIOBUZZ, the pose cannot be fixed, so the odometry aim must switch off until the pose is set again."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Real robot: the robot does not need to move. Sticks let go."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "`lib.switchAlliance(g1.start, g1.back);` in `libraryButtons(...)` in `Controls.java` (START first, then BACK; see [CTL-02](repo:testing/tests/CTL-02.md) for where the method goes).",
+       "A camera with `.goal(...)` or odometry aim makes the test better (optional)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "INIT. Read the `Switch alliance` line. Choose BLUE (X). START.",
+       "On gamepad 1, hold the small START button, then press BACK, and hold both for 1.5 s. Both gamepads buzz twice and the screen says `Alliance now RED (was BLUE)`.",
+       "Tap START, then BACK quickly: that is the debug lines, not a switch.",
+       "With a camera: the goal it looks for switched to RED's.",
+       "With odometry on BIOBUZZ (`mirrorForRed = false`): the note says the odometry aim is OFF until the pose is set. Hold START 1 s on the reset spot: it comes back.",
+       "Without the `switchAlliance` line: holding START, then BACK does not switch (the INIT line says it is off)."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "The switch happens only after the full 1.5 s hold (1 of 1), never on a quick press (0 of 3 tries), and never without the `switchAlliance` line (0 of 1)."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "what the screen said in steps 2 and 5",
+       "whether the goal (camera) followed",
+       "how many quick presses you tried in step 3"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "With no camera and no odometry, steps 4 and 5 do not apply: say so. If you put the switch on other buttons, use those."
+     }
+    ]
+   }
+  },
+  {
+   "id": "DOC-02",
+   "title": "Follow one main-track lesson from start to end",
+   "area": "docs",
+   "priority": "medium",
+   "where": "both",
+   "minutes": 90,
+   "needs": [],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "v0.16.0",
+   "docs": [
+    {
+     "path": "docs/tutorials/README.md",
+     "anchor": "start-here-the-main-track"
+    }
+   ],
+   "file": "testing/tests/DOC-02.md",
+   "sections": {
+    "why": [
+     {
+      "p": "Each lesson builds on your own robot, a few lines at a time. We check our lessons on our robots; yours will show where a lesson assumes something about the robot that is not true for you."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Follow the lesson's own safety notes (\"Check it on the robot\"). Low power for the first runs."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "Lessons before it done (the lesson says which).",
+       "Pick the lesson your team needs next (1 to 9)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Write the lesson number. Start a timer.",
+       "Read the lesson top to bottom once without changing code.",
+       "Do it: make each change in your own five files, as the lesson says.",
+       "Do its \"Try it in the simulator\" part, then its \"Check it on the robot\" part.",
+       "Each time you are stuck for more than 2 minutes, write the section and the words.",
+       "Stop the timer when its last check passes."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Every check in the lesson's \"Check it on the robot\" (or simulator) part passes (all of them, for example 5 of 5), and the time is within 2 times what the lessons page says."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "lesson number, time it took (minutes)",
+       "each place you got stuck (section and words)",
+       "any code in the lesson that did not build (copy the error)",
+       "what your robot has that the lesson robot does not (or the other way round)"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "The lessons explain with example robots (the lesson robot, the kit bots, the turret robot). Write what you had to change because your robot is different: that is the most useful part of the report."
+     }
+    ]
+   }
+  },
+  {
+   "id": "DOC-03",
+   "title": "Start from zero on a new laptop",
+   "area": "docs",
+   "priority": "medium",
+   "where": "sim",
+   "minutes": 75,
+   "needs": [],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "v0.16.0",
+   "docs": [
+    {
+     "path": "docs/start-from-zero.md",
+     "anchor": ""
+    }
+   ],
+   "file": "testing/tests/DOC-03.md",
+   "sections": {
+    "why": [
+     {
+      "p": "\"Start from zero\" installs Android Studio, gets the robot project and makes a first edit. Laptops differ a lot (school-managed Windows, old Macs, Chromebooks). We need to know where it breaks."
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A laptop that has never had Android Studio (a school laptop is the best test).",
+       "Internet. About 10 GB free disk."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Start a timer. Follow [Start from zero](repo:docs/start-from-zero.md) from the top, exactly as written.",
+       "Write each step that did not match your screen (a button with another name, a missing menu).",
+       "Go on until its last section: a first build and an edit that builds.",
+       "Then run the simulator once (SIM-01 step 1 to 3)."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "A first build passes within 75 minutes (not counting download time), and the simulator page opens."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "laptop, operating system and version, school-managed or not",
+       "Android Studio version",
+       "time (minutes), and download time if slow",
+       "each step that did not match your screen",
+       "any blocker (admin rights, firewall, disk space) and what fixed it"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "No robot needed. If your school blocks installs, say what was blocked: we can add a note for mentors."
+     }
+    ]
+   }
+  },
+  {
+   "id": "DRV-02",
+   "title": "Field-centric driving and resetting \"forward\"",
+   "area": "drive",
+   "priority": "medium",
+   "where": "real",
+   "minutes": 15,
+   "needs": [
+    [
+     "mecanum"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "v0.16.0",
+   "docs": [
+    {
+     "path": "docs/tutorials/start/02-drive.md",
+     "anchor": "6-the-driving-you-get-for-free"
+    },
+    {
+     "path": "docs/guides/buttons.md",
+     "anchor": "moving-the-librarys-buttons"
+    }
+   ],
+   "file": "testing/tests/DRV-02.md",
+   "sections": {
+    "why": [
+     {
+      "p": "Field-centric driving (stick up = away from the driver, whichever way the robot faces) depends on the IMU or the odometry heading. A wrong hub mounting (`.imu(...)` line) makes it drive the wrong way. We want to know it works on robots built differently from ours."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Clear floor, about 6 x 6 ft. Low power (`practiceMaxPower` 0.4, PRACTICE profile).",
+       "A hand near STOP."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A mecanum robot in five files, with the `.imu(...)` line set for how your hub is mounted.",
+       "Two drivers: gamepad 1 drives. One driver: the same buttons (see the button table in the buttons guide)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "INIT your TeleOp with the robot facing away from you, START.",
+       "Press Y on gamepad 1 (one driver: right stick click) to switch field-centric on. The Driver Station says it.",
+       "Turn the robot 90 degrees left with the right stick. Push the left stick up: the robot should drive away from you, not to its own front.",
+       "Turn the robot to face you. Push the left stick up: it still drives away from you.",
+       "Turn the robot 45 degrees. Hold gamepad 1 BACK for 1 second: the robot pauses at the press, and after 1 s \"forward\" becomes the way it faces now. Let go, then tap BACK to go on.",
+       "Push the left stick up: the robot now drives the way it faced when you held BACK."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "In steps 3 and 4 the robot drives away from the driver within about 10 degrees, and after the reset in step 5 \"forward\" is within about 10 degrees of the way the robot faced."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "how the Control Hub is mounted (logo and USB directions in your `.imu(...)` line)",
+       "the angle error you saw in steps 3, 4 and 6 (about, in degrees)",
+       "what the Driver Station said when you held BACK"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "With odometry, field-centric uses the odometry heading instead of the IMU: say which you have. If you moved field-centric or pause to other buttons (`libraryButtons`), use yours and say which. Tank drives cannot strafe, so this test is for mecanum only."
+     }
+    ]
+   }
+  },
+  {
+   "id": "HOOD-03",
+   "title": "Hood follows the shot table, and the hood trim",
+   "area": "hood",
+   "priority": "medium",
+   "where": "both",
+   "minutes": 40,
+   "needs": [
+    [
+     "flywheel"
+    ],
+    [
+     "hood-servo",
+     "hood-motor"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/tutorials/start/09-shooter-and-camera.md",
+     "anchor": "a-hood-the-shot-angle"
+    },
+    {
+     "path": "docs/guides/finders.md",
+     "anchor": "shot-tuner-the-shot-table"
+    }
+   ],
+   "file": "testing/tests/HOOD-03.md",
+   "sections": {
+    "why": [
+     {
+      "p": "With a hood, each table row has a third number: the hood. The launcher blends it between rows like the speed. The operator's left stick adds a hood trim. INIT must stop on a row outside the hood's stops."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Safety glasses if you fire. The hood moves at START (to `startAngle`)."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "HOOD-01 or HOOD-02 done. A table with three numbers per row, `{inches, rpm, hood}`.",
+       "Speed from distance (camera or odometry).",
+       "Simulator: your robot from `Robot.java` (`:sim:fromRobot` writes the hood), or `turretbot` from lesson 9."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "INIT, START. Drive to a distance halfway between two rows. Read `Hood: ... (table)`: it should be halfway between the two rows' hood numbers.",
+       "Gamepad 2 left stick up for a moment: `Hood: ... (table, trim +...)`.",
+       "Double-tap D-pad down: both trims (speed and hood) go back to 0.",
+       "Shot Tuner: Y until `> Hood`, change the hood with the D-pad, fire, mark HIT/MISS, X saves the speed and hood together.",
+       "Put a row with a hood number past a stop in `Tunables.java`. INIT: it must stop with a message naming the row."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "In step 1 the hood is within 1 degree (or 0.01 servo position) of halfway, step 3 clears both trims, and step 5 stops INIT (1 of 1) with the row's distance in the message."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "the two rows and the hood value shown in step 1",
+       "the trim step size you saw (degrees per moment of stick)",
+       "the INIT message in step 5",
+       "in the simulator: did the shot angle change with the hood?"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Without `angleA`, `angleB` the hood works in servo positions (or ticks): the table's third number is a position then. Say which you use. A linkage with a `calibration` table is a good extra test."
+     }
+    ]
+   }
+  },
+  {
+   "id": "HOOD-04",
+   "title": "Hood at START, and the stick with no goal in view",
+   "area": "hood",
+   "priority": "medium",
+   "where": "both",
+   "minutes": 20,
+   "needs": [
+    [
+     "hood-servo",
+     "hood-motor"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/modules/robot.md",
+     "anchor": "hood"
+    },
+    {
+     "path": "docs/guides/tunables.md",
+     "anchor": ""
+    }
+   ],
+   "file": "testing/tests/HOOD-04.md",
+   "sections": {
+    "why": [
+     {
+      "p": "At START the hood goes to its `startAngle`. While the shot table sets the angle, the operator's stick is a small trim; while no goal is seen (no distance yet), the same stick moves the hood itself, so the operator always sees the stick do something. A hood can also be part of an interlock rule. We want to know this is clear to drivers on robots with a servo hood and with a motor hood."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "The hood moves at START. Fingers away from it. Flywheel off for steps 1 to 4.",
+       "Hard stops at both ends (`posA`, `posB` measured with the Hood Finder: HOOD-01 or HOOD-02)."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A hood with its `Tunables.Hood` numbers (`posA`, `posB`, optional `angleA`, `angleB`) and `startAngle`.",
+       "A shot table with a hood column (`{inches, rpm, hood}`) and speed from the distance.",
+       "Simulator: the V2 example robot (a servo hood, commands in [ILK-01](repo:testing/tests/ILK-01.md)), or your robot from `Robot.java`."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "INIT: the hood does not move, and the launcher's hood line says it goes to its start angle at START.",
+       "START: the hood goes to `startAngle`. Read the hood's line (named after its device, e.g. `Hood : 0.0 deg (by hand)`, or `(table)` once a goal is seen).",
+       "With the goal out of view (camera covered, or the robot turned away): push gamepad 2 left stick up for 1 s. The hood itself moves (the angle changes, `by hand`), and stops at its stop.",
+       "Turn to the goal: the table takes over (`(table)`), and the same stick now adds a trim (`table, trim +...`).",
+       "Double-tap gamepad 2 D-pad down: the trim goes back to 0.",
+       "In your code, if you use the hood's methods: `angle()` is where it is now, `targetAngle()` where it is going, `isAtTarget()` whether it is there, `goToStart()` sends it to `startAngle`. Build: the old names (`home()`, `homeAngle`, `isArrived()`) must not be used anywhere."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "At START the hood ends within 1 degree (or 0.01 servo position) of `startAngle` (1 of 1), in step 3 the stick moves the hood with no goal in view (1 of 1), and in step 4 the table sets it again."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "servo or motor hood, and its range (degrees or positions)",
+       "`startAngle`, and where the hood really ended at START",
+       "the hood lines in steps 2, 3 and 4 (copy them)",
+       "whether the drivers understood \"by hand\" vs \"table\""
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A hood with no `angleA`, `angleB` works in servo positions (or ticks): the numbers on the screen are positions then. If your hood and another part can hit, put it in an interlock rule (for example `keepApart(\"HoodTurret\", launcher.hood().zone(), turret.zone());` in `Robot.java`, see the [interlocks guide](repo:docs/guides/interlocks.md)) and also run [ILK-01](repo:testing/tests/ILK-01.md)."
+     }
+    ]
+   }
+  },
+  {
+   "id": "LGT-02",
+   "title": "The alliance on the light at INIT",
+   "area": "lights",
+   "priority": "medium",
+   "where": "both",
+   "minutes": 15,
+   "needs": [
+    [
+     "lights"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/modules/robot.md",
+     "anchor": "the-alliance-at-init"
+    },
+    {
+     "path": "docs/tutorials/start/09-shooter-and-camera.md",
+     "anchor": "13-a-light-for-the-drivers"
+    }
+   ],
+   "file": "testing/tests/LGT-02.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A wrong alliance pick in INIT makes the robot aim at the other alliance's goal all match. The drive team sees the light from the field, not the Driver Station's small text, so before START the light shows the alliance. We want to know it is easy to read on real lights, from the drive team's place."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Nothing moves in this test until step 5. Then the usual: a clear floor and a hand on STOP."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A light in `Robot.java` (`Lights.gobilda(\"light\")` or `Lights.blinkin(\"blinkin\")`), with no `allianceAtInit` line in its Tunables section.",
+       "Your own rules in `Controls.java` (any, for example lesson 9 section 13's).",
+       "Simulator: the light is a dot on the robot (V2 example robot, or your own robot from `Robot.java`)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Restart the robot app (so no alliance is remembered). INIT your TeleOp. Before you pick: the light blinks white once a second.",
+       "Press X on gamepad 1 (BLUE): solid blue. Press B (RED): solid red.",
+       "Stand where the drive team stands (about 6 ft away, from the side of the robot). Can you tell red from blue? From the front and the back?",
+       "START: a 1 s flash of the alliance, then your rules.",
+       "Run an autonomous on RED to its end, then INIT TeleOp: the light is red at once (TeleOp took the alliance from autonomous).",
+       "Write `public static boolean allianceAtInit = false;` in the light's Tunables section (named after its device, e.g. `Tunables.Light`). INIT: now your rules show in INIT, and no flash at START."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Each state shows the right colour (4 of 4: blinking white, blue, red, the flash at START), and two people can tell red from blue from 6 ft away."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "light model, and where it sits on the robot",
+       "whether red and blue were easy to tell apart, and from where",
+       "any colour that looked wrong (and which `allianceColors(...)` fixed it, if you tried)",
+       "what step 6 showed"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "If your light shows red or blue badly, try `robot.lights.allianceColors(LightColor.PURPLE, LightColor.ORANGE);` in `Controls.java` (blue's colour first) and say whether it is better. A REV Blinkin with a strip of your own: say the strip and its length."
+     }
+    ]
+   }
+  },
+  {
+   "id": "MEC-02",
+   "title": "A servo's full range - 300 degrees instead of 270",
+   "area": "mechanisms",
+   "priority": "medium",
+   "where": "real",
+   "minutes": 25,
+   "needs": [],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/modules/hardware.md",
+     "anchor": "full-range"
+    },
+    {
+     "path": "docs/guides/finders.md",
+     "anchor": "servo-finder-ends-and-positions"
+    }
+   ],
+   "file": "testing/tests/MEC-02.md",
+   "sections": {
+    "why": [
+     {
+      "p": "The hub sends a servo a pulse from 600 to 2400 microseconds for positions 0 to 1. Most FTC servos take 500 to 2500, so part of their turn is never used: a goBILDA 2000 servo turns 270 of its 300 degrees. `.fullRange()` sends the whole range. The numbers come from the sellers' pages; we want them checked on real servos."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Take the servo off its part (or free its linkage) for steps 1 to 4: at full range it turns further and can push on a stop.",
+       "Listen for a humming servo: a servo pushing on something. Back off at once."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A servo on a REV hub (Control Hub, Expansion Hub or Servo Hub) with a horn and a mark on it.",
+       "The Servo Finder OpMode, and a phone angle app or a printed protractor.",
+       "The seller's range for your servo (goBILDA 2000: 300 degrees over 500-2500 us; REV Smart Robot Servo: 270; Axon MK2: up to 360)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Start the Servo Finder. Choose the servo (do NOT press Y). Go to 0, measure the angle. Go to 1, measure. Write the difference.",
+       "Stop. Start it again and press **Y** while choosing the servo (full range). Go to 0 and to 1 again. Measure.",
+       "Compare both with the [table](repo:docs/modules/hardware.md#full-range): normal range about 90% of the seller's, full range about all of it.",
+       "Put the servo back on its part. Add `.fullRange()` to the part's line in `Robot.java` (for example `Claw.servo(\"claw\").fullRange()`). Measure its positions again with the Servo Finder (Y on) and copy the new numbers into `Tunables.java`.",
+       "INIT your TeleOp: no note that the servo cannot change its pulse. Run the part to each position."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "The normal range and the full range are each within 5 degrees of the table's numbers for your servo (2 of 2), and with `.fullRange()` the part reaches every position it was measured at (all of them)."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "servo model and the hub it is on",
+       "the angle from 0 to 1: normal range, full range",
+       "the positions before and after (they change with the range)",
+       "any INIT note about the pulse range"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A servo on something other than a REV hub cannot change its range: INIT says so and nothing changes; report that. An Axon or REV servo programmed to a smaller range turns less: say how it was programmed. A servo turret or hood has `.fullRange()` too ([TUR-03](repo:testing/tests/TUR-03.md), [HOOD-01](repo:testing/tests/HOOD-01.md))."
+     }
+    ]
+   }
+  },
+  {
+   "id": "ODO-03",
+   "title": "driveTo a field point - how close does it stop?",
+   "area": "odometry",
+   "priority": "medium",
+   "where": "real",
+   "minutes": 30,
+   "needs": [
+    [
+     "mecanum"
+    ],
+    [
+     "pinpoint",
+     "otos",
+     "dead-wheels"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "v0.16.0",
+   "docs": [
+    {
+     "path": "docs/tutorials/start/07-odometry.md",
+     "anchor": "6-drive-to-field-points"
+    },
+    {
+     "path": "docs/tutorials/start/07-odometry.md",
+     "anchor": "check-it-on-the-robot"
+    }
+   ],
+   "file": "testing/tests/ODO-03.md",
+   "sections": {
+    "why": [
+     {
+      "p": "`driveTo` drives straight to a field point while it turns. How close it stops depends on your drive numbers and your odometry. We want real numbers from many robots, not only ours."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "PRACTICE profile and `Tunables.Drive.practiceMaxPower` 0.4 for the first runs.",
+       "The robot drives by itself: a clear path, everyone out of it, a hand on STOP."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "ODO-01 passed (`Tunables.Odometry.checked = true`).",
+       "An autonomous with one `driveTo` step, for example lesson 7's \"To the Goal\" (start at -56, -61; drive to -30, -30 facing 45).",
+       "Tape on the floor at the start spot and at the target point."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Put the robot exactly on the start spot. INIT the autonomous, check for the odometry \"ready\" line.",
+       "START. Let it drive to the point and stop.",
+       "Measure the robot's centre against the target point (x and y error), and its heading error.",
+       "Do it 3 times. Write each.",
+       "Run it once more and gently push the robot sideways during the drive: it should come back on course.",
+       "Read the report at the end of autonomous."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Each of the 3 runs ends within 1.5 in of the point and 3 degrees of the heading, and the push in step 5 does not stop it from arriving."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "start spot and target point you used",
+       "the 3 errors (x, y in inches; heading in degrees)",
+       "the report line for the `driveTo` step (done, STALLED, TIMED_OUT...)",
+       "the drive numbers you changed (`turnKp`, `moveMinPower`...), if any"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Use any start spot and point that fit your space; about 3-4 ft of driving is enough. A heavy robot or a robot with small wheels may need `moveMinPower`: say what you changed. Tank robots cannot use `driveTo` (INIT stops with a message): report \"could not run\" only if that message was unclear."
+     }
+    ]
+   }
+  },
+  {
+   "id": "ODO-04",
+   "title": "TeleOp starts where autonomous ended",
+   "area": "odometry",
+   "priority": "medium",
+   "where": "both",
+   "minutes": 15,
+   "needs": [
+    [
+     "pinpoint",
+     "otos",
+     "dead-wheels"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "v0.16.0",
+   "docs": [
+    {
+     "path": "docs/tutorials/start/07-odometry.md",
+     "anchor": "7-teleop-starts-where-autonomous-ended"
+    }
+   ],
+   "file": "testing/tests/ODO-04.md",
+   "sections": {
+    "why": [
+     {
+      "p": "The pose (where the robot is and which way it faces) should carry from autonomous into TeleOp, so field-centric driving and the odometry aim are right from the first second of TeleOp."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Real robot: the autonomous drives by itself. Clear floor, hand on STOP, PRACTICE profile."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A robot with odometry and any autonomous that drives and ends somewhere you can measure.",
+       "Simulator: lesson 7's commands (`odometrybot`, \"Odometry Bot To the Goal\", then \"Odometry Bot TeleOp\"), or your own robot."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Run your autonomous to the end.",
+       "Within 5 minutes, INIT your TeleOp. Read the `Pose` line.",
+       "Compare it with where the robot really is (tape measure, or the simulator's line under the field map).",
+       "START and push the left stick up with field-centric on: the robot drives away from the driver.",
+       "Wait more than 5 minutes after an autonomous, then INIT TeleOp again: the pose should NOT carry over."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "The TeleOp pose in step 2 is within 1 in and 2 degrees of where the autonomous ended, and after 5 minutes (step 5) it does not carry over (1 of 1)."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "the autonomous's end pose and TeleOp's first pose",
+       "what TeleOp showed in step 5",
+       "the odometry kind"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Any autonomous works, as long as it ends with the robot standing still. One rule for field numbers: your code (and the Driver Station's `Pose` line) uses the field seen from **your own** drivers' wall. Only the simulator's field map line and scenario checks use the field seen from the red wall, so on BLUE their signs flip and the heading differs by 180."
+     }
+    ]
+   }
+  },
+  {
+   "id": "PATH-01",
+   "title": "The Pedro example path in the simulator",
+   "area": "paths",
+   "priority": "medium",
+   "where": "sim",
+   "minutes": 20,
+   "needs": [],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "v0.16.0",
+   "docs": [
+    {
+     "path": "docs/tutorials/start/08-paths-with-pedro.md",
+     "anchor": "6-try-it-in-the-simulator-first"
+    }
+   ],
+   "file": "testing/tests/PATH-01.md",
+   "sections": {
+    "why": [
+     {
+      "p": "Lesson 8 says \"try it in the simulator first\". This checks that the commands and what the lesson says you will see are right on your laptop. No robot needed."
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A laptop with the library and the simulator set up ([laptop setup](repo:docs/guides/simulator.md#laptop-setup-once)).",
+       "A terminal in the `ftc-helper-lib` folder."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Run `./gradlew :sim:fromRobot -PteamCode=none -ProbotClass=com.crossbotics.ftchelper.examples.pedrobot.Robot -Pout=build/pedrobot.properties`.",
+       "Run `./gradlew :sim:run -PteamCode=none -Probot=build/pedrobot.properties` and open http://localhost:8780.",
+       "Choose \"Pedro Bot Curve to the Goal\", choose RED in the INIT menu, INIT, START.",
+       "Watch: a short line, then a curve to the goal without stopping, turning to 45 degrees. The intake starts about halfway.",
+       "Look at the field map (Control Hub, Robot tab): the orange dashed plan and the green trail.",
+       "Read the report at the end."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "The report says `done` for every step (all of them, for example 5 of 5), the green trail stays within about 2 in of the orange plan, and the intake starts within about 6 in of halfway."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "your computer (Windows, Mac, Linux, Chromebook) and browser",
+       "the report lines",
+       "how long the two Gradle commands took the first time (minutes)",
+       "anything on screen that did not match lesson 8"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "This test uses the library's example robot, so your robot does not matter. If you have Pedro in your own project, also try your own autonomous (lesson 8 section 6, \"Your own robot\") and say so."
+     }
+    ]
+   }
+  },
+  {
+   "id": "PATH-03",
+   "title": "Path Builder web page - draw a path, copy the code, run it",
+   "area": "paths",
+   "priority": "medium",
+   "where": "sim",
+   "minutes": 30,
+   "needs": [],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "v0.16.0",
+   "docs": [
+    {
+     "path": "docs/tutorials/start/08-paths-with-pedro.md",
+     "anchor": "5-write-your-first-path"
+    }
+   ],
+   "file": "testing/tests/PATH-03.md",
+   "sections": {
+    "why": [
+     {
+      "p": "The Pedro Path Builder (https://crossbotics.com/ftc-helper/path-builder/) draws the BIOBUZZ field, shows where the robot would hit things, and writes the `PedroPath` code. We want to know the code it writes drives the same path in the simulator, and that the page is easy to use."
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A browser (a laptop is best; also try a phone if you can).",
+       "For step 5: the Pedro example robot in the simulator (see PATH-01)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Open the Path Builder. Make a path with a line and a curve that goes around a field element.",
+       "Drag the points until the page shows no red (no hits).",
+       "Copy the code it writes.",
+       "Paste it into the Pedro example autonomous (`examples/.../pedrobot/autos/CurveToTheGoal.java`, the `TO_GOAL` line) in your library folder (put the old line back afterwards), or into your own autonomous.",
+       "Run it in the simulator (PATH-01's commands). Compare the orange plan on the simulator's map with the drawing in the Path Builder."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "The code builds the first time, and the simulator's orange plan matches the Path Builder's drawing within about 2 in at every point; no hit in the simulator where the builder showed none."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "browser and device",
+       "the code you copied",
+       "any place where the simulator and the builder disagreed (where, how much)",
+       "what was hard to do on the page"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Your robot's size matters for hits: if the builder lets you set the robot size, use yours. A robot bigger than 18 x 18 in that hits in the simulator but not in the builder is a good report."
+     }
+    ]
+   }
+  },
+  {
+   "id": "PCS-01",
+   "title": "Piece Tuner - can the sensor tell the pieces apart?",
+   "area": "pieces",
+   "priority": "medium",
+   "where": "real",
+   "minutes": 30,
+   "needs": [
+    [
+     "color-sensor",
+     "distance-sensor"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/guides/finders.md",
+     "anchor": "piece-tuner-what-each-sensor-sees"
+    },
+    {
+     "path": "docs/modules/robot.md",
+     "anchor": "pieces-and-piecesensor"
+    }
+   ],
+   "file": "testing/tests/PCS-01.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A colour sensor (or a distance sensor) tells the robot which piece it holds: POLLEN or NECTAR, red or blue. How well it works depends on where the sensor is mounted and the light. We want readings from many mounts."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Nothing moves in this test. Keep fingers out of the intake if it is powered."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A `Pieces` or `PieceSensor` line in `Robot.java` ([lesson 9 section 12](repo:docs/tutorials/start/09-shooter-and-camera.md#12-extra-know-which-piece-fires-next)).",
+       "The Piece Tuner file for your robot ([recipe](repo:docs/cookbook.md#how-do-i-tune-the-piece-sensors)).",
+       "One of each game piece."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Start the Piece Tuner. D-pad up/down chooses the sensor.",
+       "Put a POLLEN where it really sits (or passes). D-pad left/right to POLLEN, press A, hold still.",
+       "Do the same for each kind (RED_NECTAR, BLUE_NECTAR), then EMPTY with nothing there.",
+       "Read any warning (two kinds too close, EMPTY looks like a piece).",
+       "Copy the lines into `Tunables.java`, rebuild, run it again.",
+       "Hold up each piece 10 times, in slightly different spots: count how often \"It sees\" names it right."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Each kind is named right at least 9 of 10 times, and EMPTY reads NONE at least 9 of 10 times."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "sensor (REV Color Sensor V3, REV 2m Distance, a webcam) and how far it is from the piece (mm)",
+       "the lines it printed",
+       "right out of 10 for each kind and for EMPTY",
+       "the warnings it gave"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A distance sensor tells sizes apart, not colours: test POLLEN against NECTAR only. Different light (a gym, a window) changes colour readings: if you can, test in two places and say where."
+     }
+    ]
+   }
+  },
+  {
+   "id": "PCS-02",
+   "title": "Piece count and the next piece picks the shot table",
+   "area": "pieces",
+   "priority": "medium",
+   "where": "both",
+   "minutes": 30,
+   "needs": [
+    [
+     "intake"
+    ],
+    [
+     "color-sensor",
+     "distance-sensor"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/tutorials/start/09-shooter-and-camera.md",
+     "anchor": "12-extra-know-which-piece-fires-next"
+    },
+    {
+     "path": "docs/cookbook.md",
+     "anchor": "game-pieces"
+    }
+   ],
+   "file": "testing/tests/PCS-02.md",
+   "sections": {
+    "why": [
+     {
+      "p": "`Pieces` counts what comes in and what goes out, and says which piece fires next. With two shot tables, the next piece can pick the table. The count can be wrong in real life (two pieces touching, a bounce): we want to know how often."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Keep fingers out of the intake. Safety glasses if you fire."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "PCS-01 done (each kind tuned).",
+       "`pieces = add(Pieces.kinds(...).comingIn(...).max(4))` before the launcher line; for the table, `.tableFrom(pieces.nextKind())` on the launcher.",
+       "Simulator: sensor lines in your robot file (`color.NAME = at=intake`, see [game pieces](repo:docs/guides/simulator.md#game-pieces))."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "INIT, START. Run the intake. Feed 4 pieces in one at a time. Read the count after each.",
+       "At 4 the intake should stop taking more (if you used `stopsWhen(robot.pieces::isFull)`).",
+       "Read `next`: it should be the first piece that went in (or the one at the ready sensor).",
+       "With two tables: load a NECTAR next. The shot table line should switch to NECTAR.",
+       "Fire them one by one. The count goes down by 1 each time.",
+       "Feed 2 pieces that touch each other. Does it count 2?"
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "In 10 single pieces fed, the count is right at least 9 times, and the table follows the next piece (the right table for at least 4 of 5 shots)."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "sensors and where they are",
+       "count right out of 10",
+       "what happened with 2 touching pieces",
+       "shots where the wrong table was used"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A robot with no ready sensor counts only from the intake: say which sensors you have. A robot that holds fewer pieces: use your `max(...)`."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SOM-03",
+   "title": "Shooting on the move in the simulator - strafe and compare",
+   "area": "moving-shot",
+   "priority": "medium",
+   "where": "sim",
+   "minutes": 40,
+   "needs": [],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/tutorials/start/09-shooter-and-camera.md",
+     "anchor": "14-extra-shooting-while-moving"
+    },
+    {
+     "path": "docs/guides/simulator.md",
+     "anchor": "clean-shots-scatter-and-the-hit-rate"
+    }
+   ],
+   "file": "testing/tests/SOM-03.md",
+   "sections": {
+    "why": [
+     {
+      "p": "Before anyone tunes shooting on the move on a real robot (SOM-01, SOM-02), the simulator can show whether the lead goes the right way and how much it helps. Its shots fly with real air and its verdicts (clean, rim, miss) come from the same judge as the turret shot simulator."
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "SIM-01 works on this laptop.",
+       "The V2 example robot (a turret that follows the goal, odometry, a shot table, shooting on the move off). In the `ftc-helper-lib` folder: `./gradlew :sim:fromRobot -PteamCode=none -ProbotClass=com.crossbotics.ftchelper.examples.v2bot.Robot -Pout=build/v2bot.properties`, then `./gradlew :sim:run -PteamCode=none -Probot=build/v2bot.properties`. Open http://localhost:8780.",
+       "Or your own turret robot with odometry and a shot table (`:sim:fromRobot -PteamCode=../TeamCode`)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Choose \"V2 Bot TeleOp\", pick the alliance (gamepad 1 X = BLUE, B = RED), START. Open the Match panel (Control Hub, \"Match\"): it shows each shot's verdict.",
+       "Drive to a spot about 4 ft from your goal where the turret follows it (`following: camera`; lesson 9's [Try it in the simulator](repo:docs/tutorials/start/09-shooter-and-camera.md#try-it-in-the-simulator) says where the tags can be seen). Write the spot (the line under the field map).",
+       "Shooting on the move is off. Standing still, fire 4 (hold gamepad 2 RB). Count clean shots.",
+       "Load 4 pieces again (drive the intake over pieces on the field, or restart the simulator) and go back to the spot. Strafe slowly past the goal (keyboard A or D, or the left stick) and fire 4 while moving. Count clean shots.",
+       "Stop the simulator. In `examples/src/main/java/com/crossbotics/ftchelper/examples/v2bot/Tunables.java`, class `Aim`, change `shootOnMove = false` to `true` and add `public static double flightSec = 0.8;` (your own robot: the same two lines in its `Tunables.Aim`). Start the simulator again (the Setup commands).",
+       "Repeat step 3 (standing still: no `Aim: moving shot` line) and step 4 at the same speed. While moving, read `Aim: moving shot: lead ... deg, ... in`. Count clean shots.",
+       "Misses on the side the robot drives toward: raise `flightSec`; on the other side: lower it (it changes at once in the tuning menu, GUIDE held 1 s). Repeat the strafe.",
+       "Put the example's `Tunables.java` back as it was."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Standing still, the clean shots with it on are within 1 of what they were before (out of 4), and while strafing it gives at least 2 more clean shots out of 4 than with it off, or 3 of 4 with it on."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "the robot (V2 example or your own) and the alliance",
+       "clean shots out of 4: still, strafing off, strafing on (and after changing `flightSec`)",
+       "the lead the Driver Station showed while strafing (degrees, inches)",
+       "the `flightSec` that worked best in the simulator"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A robot with no turret aims the whole robot instead (`g1.rb.toggle(robot.aimMode())`): the same steps work, say so. The simulator's `flightSec` is a starting point only: measure the real one on the robot (SOM-01 step 2)."
+     }
+    ]
+   }
+  },
+  {
+   "id": "TEST-01",
+   "title": "Test kit - JUnit tests of your Robot.java on the laptop",
+   "area": "laptop-tests",
+   "priority": "medium",
+   "where": "sim",
+   "minutes": 40,
+   "needs": [],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/modules/testkit.md",
+     "anchor": ""
+    },
+    {
+     "path": "docs/guides/testing.md",
+     "anchor": "test-your-robotjava-with-pretend-devices"
+    },
+    {
+     "path": "docs/tutorials/13-testing.md",
+     "anchor": "7-test-your-robot-in-five-files"
+    }
+   ],
+   "file": "testing/tests/TEST-01.md",
+   "sections": {
+    "why": [
+     {
+      "p": "The test kit gives your robot in five files pretend motors and servos, so a JUnit test on the laptop can do INIT, START and a loop, and check what each motor was sent. A typo in `Tunables.java` then fails on the laptop in a second, not at INIT on the field. It must work in any team's project with no extra Gradle lines."
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "Your robot in five files in TeamCode, with the library in the robot project.",
+       "TeamCode set up for tests once ([tutorial 13, step 3](repo:docs/tutorials/13-testing.md#3-set-up-teamcode-for-tests-once): the JUnit line and `returnDefaultValues`).",
+       "No robot needed: this test runs on the laptop."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Make `TeamCode/src/test/java/org/firstinspires/ftc/teamcode/RobotTest.java`: copy the whole file from the [testing guide](repo:docs/guides/testing.md#test-your-robotjava-with-pretend-devices). Change the lift test to one of your parts and its configuration name.",
+       "Run `./gradlew :TeamCode:testDebugUnitTest` from the robot project folder (Windows: `gradlew.bat`). All tests pass.",
+       "Misspell a field in `Tunables.java` (say `inPowr` for `inPower`). Run again: `tunablesNamesAreRight` fails and names the field. Fix it.",
+       "Change a motor's name in `Robot.java` to one the test does not use. Run again: read the message. Put it back.",
+       "Write one test of your own: a command to one part, one loop (`robot.all().update()`), then check the power or position the pretend device was sent.",
+       "Time a full run of the tests."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "The tests run with no extra Gradle lines beyond tutorial 13's (0 added), step 3 fails with the field's name in the message, and the whole run takes under 60 s after the first build."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "your parts (kinds) and which one your own test checks",
+       "any Gradle line you had to add, and the error that made you add it",
+       "the failure message from step 3 and step 4 (copy them)",
+       "how long the tests took (seconds)"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Any robot in five files works. The test kit cannot show gravity, time passing (an action's `waitSeconds`) or cameras: use the simulator for those. A robot with odometry can use `PretendPinpoint` to put the robot where the test wants: say if you tried it."
+     }
+    ]
+   }
+  },
+  {
+   "id": "TUR-03",
+   "title": "Servo turret - two measured points and its start angle",
+   "area": "turret",
+   "priority": "medium",
+   "where": "real",
+   "minutes": 30,
+   "needs": [
+    [
+     "turret"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/guides/turret-setup.md",
+     "anchor": "1-what-turns-it"
+    },
+    {
+     "path": "docs/guides/finders.md",
+     "anchor": "servo-finder-ends-and-positions"
+    },
+    {
+     "path": "docs/modules/hardware.md",
+     "anchor": "full-range"
+    }
+   ],
+   "file": "testing/tests/TUR-03.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A turret on a standard servo has no encoder and no PID: the library turns an angle into a servo position from two measured points. A servo cannot say where it is, so at START it is sent to its start angle. A small, cheap turret is common on new teams' robots; we have only tried it in the simulator."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "The servo moves at START. Fingers and wires away from it.",
+       "Listen for a humming servo at the ends: that is a servo pushing on a stop. Back off at once."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "`Turret.servo(\"turret\")` in `Robot.java` (add `.follows(camera)` to test the aim too).",
+       "`Tunables.Turret`: `posA`, `angleA`, `posB`, `angleB` from the [Servo Finder](repo:docs/guides/finders.md#servo-finder-ends-and-positions) and a phone angle app, and `travelSec` (time a move from posA to posB).",
+       "Optional: `.fullRange()` on the line for the servo's whole turn ([MEC-02](repo:testing/tests/MEC-02.md)). Measure posA and posB after turning it on."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "INIT. Nothing moves. Read the turret's INIT lines.",
+       "START. The turret goes to its `startAngle` (or the middle of its range if you wrote none).",
+       "Turn it with the stick (gamepad 2 right stick X) to 0, then to each end. Measure the real angle each time with the phone app.",
+       "Turn it to 4 angles between the ends (by stick, or with `robot.turret.aimAt(degrees)` on a button). Measure each.",
+       "With `.follows(camera)`: let it follow the goal. It reads AIMED only after `travelSec` has passed since its last move."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "At each of the 6 angles in steps 3 and 4 the real angle is within 3 degrees of the Driver Station's, and the servo never hums at an end (0 times)."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "servo model, gears, and whether you used `.fullRange()`",
+       "`posA`, `angleA`, `posB`, `angleB`, `travelSec`",
+       "each angle: Driver Station vs measured",
+       "how long AIMED took after a move (about)"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A servo turret on a linkage (not straight gears) turns unevenly between the ends: say how far off the middle angles were. A continuous-rotation servo with an encoder is a different kind: `Turret.crServo(...)`, see the [turret setup guide](repo:docs/guides/turret-setup.md#1-what-turns-it)."
+     }
+    ]
+   }
+  },
+  {
+   "id": "LGT-01",
+   "title": "Lights - colour rules and a flash per shot",
+   "area": "lights",
+   "priority": "low",
+   "where": "both",
+   "minutes": 20,
+   "needs": [
+    [
+     "lights"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/tutorials/start/09-shooter-and-camera.md",
+     "anchor": "13-a-light-for-the-drivers"
+    },
+    {
+     "path": "docs/modules/robot.md",
+     "anchor": "lights"
+    }
+   ],
+   "file": "testing/tests/LGT-01.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A light lets the drivers see the robot's state without looking at the Driver Station. The rules must pick the first true one, and the light must never change faster than 5 times a second (game rule R202 J)."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Do not point bright lights at people's eyes or onto the field."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "`lights = add(Lights.gobilda(\"light\"));` or `Lights.blinkin(\"blinkin\")` in `Robot.java`.",
+       "Rules in `Controls.java`, for example the five lines in lesson 9 section 13.",
+       "Simulator: the light is a dot on the robot."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "INIT: the light shows the alliance, not your rules (solid red or blue once it is chosen; [LGT-02](repo:testing/tests/LGT-02.md) tests that part). START: a 1 s flash of the alliance, then your rules.",
+       "Make each rule true in turn (spin up, aim on, ...) and check the colour.",
+       "Make two rules true at once: the one written first wins.",
+       "Fire 3 pieces (`fire(3)` or hold RB): 3 white flashes.",
+       "Wait for the last 20 s of TeleOp (or use a short match timer): yellow blinking.",
+       "Film the blinking with a phone (slow motion): count changes per second."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Every colour matches its rule (all of them), 3 shots give 3 flashes, and the light changes at most 10 times a second (5 on and 5 off)."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "light type (goBILDA RGB, REV Blinkin)",
+       "your rules (copy the lines)",
+       "any colour that was wrong (which rule, what it showed)",
+       "changes per second from the video"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Use your own rules; any true/false works. If a goBILDA colour looks wrong on your light, say which LightColor and what you saw."
+     }
+    ]
+   }
+  },
+  {
+   "id": "TUR-04",
+   "title": "Slip-ring turret - round and round, always the short way",
+   "area": "turret",
+   "priority": "low",
+   "where": "real",
+   "minutes": 30,
+   "needs": [
+    [
+     "turret"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/guides/turret-setup.md",
+     "anchor": "3-how-far-can-it-turn"
+    }
+   ],
+   "file": "testing/tests/TUR-04.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A turret with a slip ring (a part that carries the wires through a turning joint) has no wire limits. With `.continuous()` the library drops `min` and `max`, always turns the shortest way, and is never \"out of range\". Few teams have one, so every report helps."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Check the slip ring by hand first: turn the turret 3 full turns each way with the robot on. No device may drop off.",
+       "The turret can now turn without end: fingers, cables and other parts away from it."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "`.continuous()` on the turret's line in `Robot.java`, and no `min`/`max` in `Tunables.Turret` (they are ignored; remove them).",
+       "A way to know its angle at START: a home switch ([TUR-01](repo:testing/tests/TUR-01.md)), an absolute encoder, or the start mark ([TUR-02](repo:testing/tests/TUR-02.md)).",
+       "A goal the camera can see (or odometry aim), to test following."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "INIT, START. Read the turret line: angles show from -180 to 180.",
+       "Point it at 170 with the stick, then ask for -170 (a button with `robot.turret.aimAt(-170)`, or follow a goal there). It turns 20 degrees through the back, not 340 the other way.",
+       "With following on, drive the robot in 3 full circles around the goal. The turret keeps on the goal and never says `goal out of turret range`.",
+       "Stop. Check the slip ring's wires and the turret's angle against a mark."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Every move in step 2 takes the short way (2 of 2 tries, each way once), and after 3 circles the angle is within 3 degrees of the real one with no device lost (0 drop-outs)."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "slip ring model, turret motor or servo, gear ratio",
+       "how it knows its angle (switch, absolute encoder, start mark)",
+       "the angle error after 3 circles (degrees)",
+       "any device that dropped out (the Driver Station or the hub's lights)"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A CR servo turret with an absolute encoder on a slip ring is a common build: say which you have. If your turret can turn more than one turn but not forever, do not use `.continuous()`: write `min` and `max` (for example -190 to 190) instead, and test that with [TUR-02](repo:testing/tests/TUR-02.md)."
+     }
+    ]
+   }
+  }
+ ]
+}

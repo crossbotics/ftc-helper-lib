@@ -1,0 +1,175 @@
+# A team ran one test from the test catalogue (testing/tests/) and tells us how it went.
+# The site's "Report result" button opens this form with test_id, version, title and measurements filled in:
+#   /issues/new?template=test-report.yml&title=[AIM-01]...&test_id=AIM-01&version=v0.17.0&measurements=...
+# Keep the field ids and the option words in step with testing/vocabulary.json:
+# tools/check_tests.py fails when they differ (the coverage table and the triage read them).
+name: Test report
+description: You ran a test from the test list. Tell us what happened (pass or fail, both help).
+title: "[TEST-ID] Test report"
+labels: ["test-report", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for testing! A fail is as useful as a pass.
+        **Please do not write student names**, and do not link videos that show faces.
+        The test list: https://crossbotics.com/ftc-helper/testing/
+  - type: input
+    id: test_id
+    attributes:
+      label: Test ID
+      description: From the test's page, like AIM-01. Also put it in the title, in [ ].
+      placeholder: AIM-01
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Library version
+      description: The release you used, like v0.17.0 (the top of CHANGELOG.md, or the tag you updated to). A branch? Write its name.
+      placeholder: v0.17.0
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where did you run it?
+      options:
+        - Simulator
+        - Real robot
+    validations:
+      required: true
+  - type: dropdown
+    id: robot
+    attributes:
+      label: Which robot?
+      description: A kit bot is a seller's starter bot (built from their guide, or close to it).
+      options:
+        - goBILDA starter bot
+        - REV DUO starter bot
+        - AndyMark Robits starter bot
+        - Studica starter bot
+        - Our own robot
+        - A library example robot (simulator)
+    validations:
+      required: true
+  - type: dropdown
+    id: drive
+    attributes:
+      label: Drive
+      options:
+        - Mecanum
+        - Tank (2 or 4 motors)
+        - Other (say below)
+    validations:
+      required: true
+  - type: dropdown
+    id: odometry
+    attributes:
+      label: Odometry
+      options:
+        - None
+        - goBILDA Pinpoint
+        - SparkFun OTOS
+        - Dead wheels (2 or 3 pods)
+    validations:
+      required: true
+  - type: dropdown
+    id: camera
+    attributes:
+      label: Camera
+      options:
+        - None
+        - Limelight 3A
+        - Webcam
+    validations:
+      required: true
+  - type: dropdown
+    id: shooter
+    attributes:
+      label: Shooter
+      options:
+        - None
+        - Flywheel (no turret)
+        - Flywheel on a turret
+        - Catapult or other launcher
+    validations:
+      required: true
+  - type: dropdown
+    id: hood
+    attributes:
+      label: Hood
+      options:
+        - None
+        - Servo hood
+        - Motor hood
+    validations:
+      required: true
+  - type: checkboxes
+    id: robot_has
+    attributes:
+      label: The robot also has
+      description: Tick all that are true.
+      options:
+        - label: Intake
+        - label: Lift or arm with an encoder
+        - label: Turret home switch (touch or magnetic)
+        - label: Colour sensor for game pieces
+        - label: Distance sensor for game pieces
+        - label: Light (goBILDA RGB or REV Blinkin)
+        - label: Pedro Pathing added to the project
+        - label: Two gamepads (two drivers)
+  - type: dropdown
+    id: result
+    attributes:
+      label: Result
+      description: Use the test's pass rule.
+      options:
+        - Pass
+        - Fail
+        - Partly (some steps passed)
+        - Could not run
+    validations:
+      required: true
+  - type: textarea
+    id: measurements
+    attributes:
+      label: What you measured
+      description: The numbers the test's "Record" list asks for. One per line.
+      placeholder: "- distance: 48 in\n- error: 0.6 in"
+    validations:
+      required: true
+  - type: textarea
+    id: changed
+    attributes:
+      label: What did you change for your robot?
+      description: Your robot is not ours. What did you do differently from the steps (other buttons, other numbers, a step you skipped)? "Nothing" is a fine answer.
+    validations:
+      required: true
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: What happened (for a fail, a partial or could-not-run)
+      description: What you did, what you expected, what you saw. Copy the Driver Station lines if you can.
+  - type: textarea
+    id: confusing
+    attributes:
+      label: Was anything confusing?
+      description: In the test's steps or in the docs. Which step, which words.
+  - type: input
+    id: link
+    attributes:
+      label: Log or video link (optional)
+      description: A public link. No faces, no names.
+  - type: input
+    id: team
+    attributes:
+      label: FTC team number (optional)
+      description: Only the number. We may ask you a question in a comment.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy
+      options:
+        - label: This report has no student names, and any video shows no faces.
+          required: true

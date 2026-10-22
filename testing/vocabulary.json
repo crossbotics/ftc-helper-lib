@@ -1,0 +1,62 @@
+{
+  "_about": "The words a test may use. tools/check_tests.py checks every test against this file, and checks that each 'option' below is really in .github/ISSUE_TEMPLATE/test-report.yml. Change both together.",
+  "areas": {
+    "setup": "Setup and Hardware Check",
+    "drive": "Driving",
+    "odometry": "Odometry",
+    "paths": "Paths (Pedro)",
+    "autos": "Autonomous and the INIT menu",
+    "aim": "Aiming",
+    "turret": "Turret",
+    "shooter": "Shooter and shot tables",
+    "hood": "Hood",
+    "moving-shot": "Shooting on the move",
+    "pieces": "Game pieces and sensors",
+    "lights": "Lights",
+    "interlocks": "Interlock rules (two parts that must not collide)",
+    "mechanisms": "Lifts, arms, claws and servos",
+    "controls": "Buttons and controls",
+    "simulator": "Simulator",
+    "laptop-tests": "Laptop tests (JUnit and the test kit)",
+    "docs": "Docs and lessons"
+  },
+  "priorities": {
+    "high": "High: we need this tested most",
+    "medium": "Medium",
+    "low": "Low: nice to have"
+  },
+  "where": {
+    "sim": "Simulator only",
+    "real": "Real robot only",
+    "both": "Simulator or real robot"
+  },
+  "needs": {
+    "mecanum": {"label": "Mecanum drive", "group": "Drive", "field": "drive", "options": ["Mecanum"]},
+    "tank": {"label": "Tank drive (2 or 4 motors)", "group": "Drive", "field": "drive", "options": ["Tank (2 or 4 motors)"]},
+    "pinpoint": {"label": "goBILDA Pinpoint", "group": "Odometry", "field": "odometry", "options": ["goBILDA Pinpoint"]},
+    "otos": {"label": "SparkFun OTOS", "group": "Odometry", "field": "odometry", "options": ["SparkFun OTOS"]},
+    "dead-wheels": {"label": "Dead wheels (2 or 3 pods)", "group": "Odometry", "field": "odometry", "options": ["Dead wheels (2 or 3 pods)"]},
+    "pedro": {"label": "Pedro Pathing in the project", "group": "Odometry", "field": "robot_has", "options": ["Pedro Pathing added to the project"]},
+    "limelight": {"label": "Limelight 3A", "group": "Camera", "field": "camera", "options": ["Limelight 3A"]},
+    "webcam": {"label": "Webcam", "group": "Camera", "field": "camera", "options": ["Webcam"]},
+    "flywheel": {"label": "Flywheel shooter", "group": "Shooter", "field": "shooter", "options": ["Flywheel (no turret)", "Flywheel on a turret"]},
+    "turret": {"label": "Turret", "group": "Shooter", "field": "shooter", "options": ["Flywheel on a turret"]},
+    "home-switch": {"label": "Turret home switch (touch or magnetic)", "group": "Shooter", "field": "robot_has", "options": ["Turret home switch (touch or magnetic)"]},
+    "hood-servo": {"label": "Hood on a servo", "group": "Shooter", "field": "hood", "options": ["Servo hood"]},
+    "hood-motor": {"label": "Hood on a motor with an encoder", "group": "Shooter", "field": "hood", "options": ["Motor hood"]},
+    "intake": {"label": "Intake", "group": "Other parts", "field": "robot_has", "options": ["Intake"]},
+    "lift": {"label": "Lift or arm with an encoder", "group": "Other parts", "field": "robot_has", "options": ["Lift or arm with an encoder"]},
+    "color-sensor": {"label": "Colour sensor for game pieces", "group": "Other parts", "field": "robot_has", "options": ["Colour sensor for game pieces"]},
+    "distance-sensor": {"label": "Distance sensor for game pieces", "group": "Other parts", "field": "robot_has", "options": ["Distance sensor for game pieces"]},
+    "lights": {"label": "Light (goBILDA RGB or REV Blinkin)", "group": "Other parts", "field": "robot_has", "options": ["Light (goBILDA RGB or REV Blinkin)"]},
+    "two-gamepads": {"label": "Two gamepads (two drivers)", "group": "Other parts", "field": "robot_has", "options": ["Two gamepads (two drivers)"]}
+  },
+  "kit_bots": {
+    "gobilda": {"label": "goBILDA starter bot", "option": "goBILDA starter bot", "has": ["tank", "flywheel", "intake"], "robot_file": "sim/robots/starter-bot-gobilda.properties"},
+    "rev": {"label": "REV DUO starter bot", "option": "REV DUO starter bot", "has": ["tank", "flywheel", "intake"], "robot_file": "sim/robots/starter-bot-rev.properties"},
+    "andymark": {"label": "AndyMark Robits starter bot", "option": "AndyMark Robits starter bot", "has": ["tank", "intake"], "robot_file": "sim/robots/starter-bot-andymark.properties"},
+    "studica": {"label": "Studica starter bot", "option": "Studica starter bot", "has": ["tank", "flywheel", "intake"], "robot_file": "sim/robots/starter-bot-studica.properties"}
+  },
+  "results": ["Pass", "Fail", "Partly (some steps passed)", "Could not run"],
+  "where_options": {"sim": "Simulator", "real": "Real robot"}
+}

@@ -1,0 +1,72 @@
+# Something in the library (or the simulator) does the wrong thing.
+name: Bug report
+description: The library or the simulator does something wrong (a crash, a wrong move, a wrong message).
+title: "[bug] "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you! **Safety first:** if a part moved in a dangerous way, say so at the top. **No student names.**
+        Found it while running a test from the test list? Use the "Test report" form instead.
+  - type: input
+    id: version
+    attributes:
+      label: Library version
+      placeholder: v0.17.0
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where did it happen?
+      options:
+        - Simulator
+        - Real robot
+        - Both
+        - Building the code (Android Studio or Gradle)
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: What did you do?
+      description: Numbered steps, so we can do the same.
+      placeholder: "1. INIT \"Main TeleOp\"\n2. START\n3. Hold RB"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: happened
+    attributes:
+      label: What happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: driver_station
+    attributes:
+      label: Driver Station text or error (optional)
+      description: Copy the lines, or the red error with its line number.
+      render: text
+  - type: textarea
+    id: code
+    attributes:
+      label: Your code (optional)
+      description: The lines that matter, for example the part's line in Robot.java and its Tunables section.
+      render: java
+  - type: textarea
+    id: robot
+    attributes:
+      label: Your robot
+      description: Drive, odometry, camera, shooter... A kit bot? Which one?
+    validations:
+      required: true
+  - type: input
+    id: team
+    attributes:
+      label: FTC team number (optional)

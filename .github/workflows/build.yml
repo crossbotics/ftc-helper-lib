@@ -27,3 +27,5 @@ jobs:
         run: python3 tools/check_tunables.py
       - name: Auto builder page code (same Java as the web builder, simulator-only logic)
         run: node tools/check_builder.mjs
+      - name: Test list (testing/tests) and its catalogue
+        run: python3 tools/check_tests.py

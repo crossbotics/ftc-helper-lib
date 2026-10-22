@@ -1,0 +1,68 @@
+# Something is wrong, unclear or missing on a docs page. Each docs page on crossbotics.com has a
+# "Something wrong on this page?" link that opens this form with page, doc_file and version filled in.
+name: Docs feedback
+description: A docs page is wrong, unclear, missing something, or has an example that does not work.
+title: "[docs] "
+labels: ["docs-feedback", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you! One problem per report, please. **No student names.**
+  - type: input
+    id: page
+    attributes:
+      label: Page
+      description: The page's address (filled in for you from the site).
+      placeholder: https://crossbotics.com/ftc-helper/docs/quick-start/
+    validations:
+      required: true
+  - type: input
+    id: doc_file
+    attributes:
+      label: Docs file
+      description: Filled in for you from the site. Leave it empty if you do not know.
+      placeholder: docs/quick-start.md
+  - type: input
+    id: version
+    attributes:
+      label: Library version
+      description: The release the page is for (the bottom of each page says it).
+      placeholder: v0.17.0
+    validations:
+      required: true
+  - type: dropdown
+    id: problem
+    attributes:
+      label: What kind of problem?
+      options:
+        - Wrong (does not match the code or the robot)
+        - Unclear (hard to follow)
+        - Missing (a step or a fact is not there)
+        - Broken example (the code does not build or run)
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: where_on_page
+    attributes:
+      label: Where on the page?
+      description: The heading, the step number, or a few words you can search for.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect, or what would help?
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Anything else? (optional)
+      description: An error message, what you tried.
+      render: text
+  - type: input
+    id: team
+    attributes:
+      label: FTC team number (optional)
