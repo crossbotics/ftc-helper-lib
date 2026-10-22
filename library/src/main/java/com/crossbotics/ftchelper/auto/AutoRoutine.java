@@ -211,7 +211,44 @@ public class AutoRoutine {
     /** {@link #driveTo(String, java.util.function.Supplier, double, double, double, double, double)}; stops if {@code ready} turns false. */
     public AutoRoutine driveTo(String label, java.util.function.Supplier<com.crossbotics.ftchelper.util.FieldPose> pose,
                                BooleanSupplier ready, double xIn, double yIn, double headingDeg, double maxPower, double toleranceIn) {
-        return add(label, ctx -> record(takeDrive().driveTo(pose, ready, m(xIn), yIn, m(headingDeg), maxPower, toleranceIn)));
+        return driveTo(label, pose, ready, xIn, yIn, headingDeg, maxPower, toleranceIn, Collections.<PathEvent>emptyList());
+    }
+
+    /**
+     * {@link #driveTo(String, java.util.function.Supplier, BooleanSupplier, double, double, double, double, double)}
+     * that also does things on the way ({@link PathEvent}): the "path" is the straight line from where
+     * the robot is at the start of the step to the point. Its distance left is the distance to the point.
+     */
+    public AutoRoutine driveTo(String label, final java.util.function.Supplier<com.crossbotics.ftchelper.util.FieldPose> pose,
+                               BooleanSupplier ready, double xIn, double yIn, double headingDeg, double maxPower,
+                               double toleranceIn, java.util.List<PathEvent> events) {
+        final List<PathEvent> evs = new ArrayList<>(events);
+        return add(label, ctx -> {
+            if (evs.isEmpty()) {
+                record(takeDrive().driveTo(pose, ready, m(xIn), yIn, m(headingDeg), maxPower, toleranceIn));
+                return;
+            }
+            final double tx = m(xIn), ty = yIn;
+            final Events along = new Events(evs);
+            com.crossbotics.ftchelper.util.FieldPose at = pose.get();
+            if (at != null) along.total = Math.hypot(tx - at.x, ty - at.y);
+            // The drive calls tick() every loop while it drives: check the events there.
+            duringStep = () -> {
+                com.crossbotics.ftchelper.util.FieldPose now = pose.get();
+                if (now != null) along.check(Math.hypot(tx - now.x, ty - now.y), Double.NaN, 1);
+            };
+            boolean done = false;
+            try {
+                AutoDrive.Result r = takeDrive().driveTo(pose, ready, tx, ty, m(headingDeg), maxPower, toleranceIn);
+                record(r);
+                done = r == AutoDrive.Result.DONE;
+            } finally {
+                duringStep = null;
+                if (done) along.atEnd();
+                else cutShortNote(along);
+                along.noteMissed(done);
+            }
+        });
     }
 
     /**
@@ -221,23 +258,41 @@ public class AutoRoutine {
      * not ready at the start, or for 0.2 s on the way). BLOCKS until then, keeping the mechanisms updated.
      */
     public AutoRoutine followPath(String label, final PathJob job, final double timeoutSec) {
+        return followPath(label, job, timeoutSec, Collections.<PathEvent>emptyList());
+    }
+
+    /**
+     * {@link #followPath(String, PathJob, double)} that also does things along the path: each
+     * {@link PathEvent} fires once, when the robot gets far enough along (checked every loop, in the
+     * order given). At the end of the path the ones reached there fire; if the path ends early, the
+     * report lists the ones that did not fire ({@code STALLED, not fired: Spin up}).
+     */
+    public AutoRoutine followPath(String label, final PathJob job, final double timeoutSec, java.util.List<PathEvent> events) {
+        final List<PathEvent> evs = new ArrayList<>(events);
         return add(label, ctx -> {
+            final Events along = new Events(evs);
             if (!job.isReady()) {
                 ctx.note("NO_ODOMETRY");
+                along.noteMissed(false);
                 return;
             }
             job.start();
             long start = System.nanoTime();
             com.crossbotics.ftchelper.drive.StallDetector stall = new com.crossbotics.ftchelper.drive.StallDetector(0.25, 1.5);
             double notReadySince = Double.NaN;
-            // The distance left means nothing before the follower's first update (Pedro says 0), and
-            // jumps up when a Pedro path chain starts its next part: the stuck check skips both.
+            // The distance left means nothing before the follower's first update (a follower may say 0), and
+            // may jump up when a path follower starts the next part of a chain: the stuck check skips both.
             boolean updated = false;
             double lastRemaining = Double.NaN;
+            boolean done = false;
             try {
                 while (job.isBusy()) {
                     double t = (System.nanoTime() - start) / 1e9;
-                    if (!ctx.isActive()) return;   // park time or STOP: the report says "cut short"
+                    if (!ctx.isActive()) {
+                        // park time or STOP: the report says "cut short"
+                        cutShortNote(along);
+                        return;
+                    }
                     if (t > timeoutSec) {
                         ctx.note("timed out");
                         return;
@@ -253,6 +308,9 @@ public class AutoRoutine {
                     }
                     if (updated) {
                         double left = job.remainingIn();
+                        // Things to do along the path: fire the ones the robot has got to.
+                        if (Double.isNaN(along.total)) along.total = job.totalIn();   // not set yet: ask the follower
+                        along.check(left, along.total, job.partNow());
                         if (left > lastRemaining + 1) stall.reset();
                         lastRemaining = left;
                         // The last 3 in: the follower may still be finishing its turn while the
@@ -266,11 +324,87 @@ public class AutoRoutine {
                     ctx.loop();
                     updated = true;
                 }
+                done = true;
             } finally {
                 if (job.isBusy()) job.cancel();
+                // At the end of the path: what is reached at the end fires now. Then the report
+                // lists what did not fire.
+                if (done) along.atEnd();
+                along.noteMissed(done);
             }
         });
     }
+
+    // The PathEvents of one running step: which have fired, and the length of the path.
+    private final class Events {
+        final List<PathEvent> list;
+        final boolean[] fired;
+        // The path's length, inches. NaN: not known yet (the first distance left is used then).
+        double total = Double.NaN;
+
+        Events(List<PathEvent> list) {
+            this.list = list;
+            this.fired = new boolean[list.size()];
+        }
+
+        // Fires every event reached now, in the order written. part: from 1, 0 = unknown.
+        void check(double left, double length, int part) {
+            if (list.isEmpty() || Double.isNaN(left)) return;   // nothing to do, or no distance
+            if (!(length > 0)) {
+                if (Double.isNaN(total) || total < left) total = left;   // a follower that does not know the length
+                length = total;
+            }
+            double doneIn = Math.max(0, length - left);
+            double fraction = length > 0 ? Math.min(1, doneIn / length) : 1;
+            fire(new PathEvent.Progress(doneIn, left, fraction, part));
+        }
+
+        // The path got to its end: everything along it has been passed.
+        void atEnd() {
+            double length = Double.isNaN(total) ? 0 : total;
+            fire(new PathEvent.Progress(length, 0, 1, Integer.MAX_VALUE));
+        }
+
+        private void fire(PathEvent.Progress p) {
+            for (int i = 0; i < fired.length; i++) {
+                if (!fired[i] && list.get(i).isReached(p)) {
+                    fired[i] = true;
+                    list.get(i).fire();
+                }
+            }
+        }
+
+        boolean anyLeft() {
+            for (boolean f : fired) if (!f) return true;
+            return false;
+        }
+
+        // e.g. "not fired: Spin up, Intake on" in the report. reachedEnd: the path got to its end
+        // (then "done" comes first, so the report still says it got there).
+        void noteMissed(boolean reachedEnd) {
+            if (!anyLeft()) return;
+            if (reachedEnd && stepNote.isEmpty()) note("done");
+            StringBuilder sb = new StringBuilder("not fired: ");
+            String sep = "";
+            for (int i = 0; i < fired.length; i++) {
+                if (fired[i]) continue;
+                sb.append(sep).append(list.get(i).name());
+                sep = ", ";
+            }
+            note(sb.toString());
+        }
+    }
+
+    // A step stopped by the park time leaves "not fired: ..." notes: say "cut short" first, as runAll
+    // would for a step with no notes.
+    private void cutShortNote(Events along) {
+        if (along.anyLeft() && stepNote.isEmpty() && active.getAsBoolean() && !inPark && mainTimeOver()) {
+            note("cut short (time for park)");
+        }
+    }
+
+    // Code the drive's loop hook runs for the step that is running now (driveTo's PathEvents), or null.
+    private Runnable duringStep = null;
 
     /** Remembers the heading now, for {@link #returnToHeading}. */
     public AutoRoutine rememberHeading(String label) {
@@ -463,6 +597,7 @@ public class AutoRoutine {
     // which step runs, the time left, and the mechanisms' telemetry. Must be quick: it runs every loop.
     private void tick() {
         if (robot != null) robot.update();
+        if (duringStep != null) duringStep.run();
         if (timer != null) timer.update();
         RobotTelemetry t = robotTelemetry();
         if (current >= 0 && current < entries.size()) {

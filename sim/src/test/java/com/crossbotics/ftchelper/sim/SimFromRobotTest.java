@@ -345,7 +345,18 @@ public class SimFromRobotTest {
             s.init("Pedro Bot Curve to the Goal");
             double startX = s.robot().x, startY = s.robot().y;
             boolean topWall = startY > 0;
+            assertEquals("the intake waits", 0, s.robot().motors.get("intake").userPower(), 1e-9);
             s.start();
+            // PathAt.fraction(0.5, "Intake on", ...): the intake starts halfway along the path, while it drives.
+            assertTrue("the intake starts on the way\n" + String.join("\n", s.screen()),
+                    SimRun.waitFor(() -> s.robot().motors.get("intake").userPower() > 0, 15));
+            com.crossbotics.ftchelper.pedro.PedroFollower f = com.crossbotics.ftchelper.pedro.PedroFollower.lastStarted();
+            double left = f.remainingIn(), total = f.totalIn();
+            assertTrue("still on the path", f.isBusy());
+            // Half of the path was left when it fired; the test looks a loop or two later.
+            assertTrue("left " + left + " of " + total, left <= 0.5 * total + 0.5 && left >= 0.3 * total);
+            double fromStart = Math.hypot(s.robot().x - startX, s.robot().y - startY);
+            assertTrue("moved " + fromStart + " in", fromStart > 0.3 * total);
             assertTrue("it finishes\n" + String.join("\n", s.screen()),
                     SimRun.waitFor(() -> s.screenHas("Autonomous finished"), 30));
             String report = String.join("\n", s.screen());

@@ -101,6 +101,7 @@ first.
 - [How do I follow a path in an autonomous?](#how-do-i-follow-a-path-in-an-autonomous)
 - [How do I drive two paths with no stop, slow down, or hold at the end?](#how-do-i-drive-two-paths-with-no-stop-slow-down-or-hold-at-the-end)
 - [How do I keep facing the goal along a path?](#how-do-i-keep-facing-the-goal-along-a-path)
+- [How do I start something partway along a path?](#how-do-i-start-something-partway-along-a-path)
 
 **Telemetry** (lines on the Driver Station)
 - [How do I show a value on the Driver Station screen?](#how-do-i-show-a-value-on-the-driver-station-screen)
@@ -1354,6 +1355,27 @@ static final PedroPath WATCH_GOAL = PedroPath.line(-30, -30, -56, -36).facePoint
 
 **Why:** the robot can slide along the path while it keeps the camera or launcher on the goal.
 **More:** [PedroPath: the heading](modules/pedro.md#pedropath-paths-in-our-field-numbers).
+
+### How do I start something partway along a path?
+
+**Where:** your autonomous, `steps(...)`. Android Studio shows `PathAt` in red: Alt+Enter adds the import.
+
+<!-- recipe: pedro-along -->
+```java
+s.start("Against our wall, in the left corner tile, facing the field", -56, -61, 0)
+ // PathAt: start things ALONG the path, once each, while the robot keeps driving.
+ .follow("To the goal", Paths.IN_ONE_GO,
+         PathAt.part(2, "Intake on", robot.intake::in),            // where part 2 starts
+         PathAt.inchesLeft(6, "Intake off", robot.intake::stop))   // 6 in before the end
+ .waitSeconds("Score (the robot holds still)", 0.5);
+```
+
+Also `PathAt.fraction(0.5, ...)` (halfway), `PathAt.inchesDone(10, ...)`, `PathAt.near(x, y, 6, ...)`, and an
+action from `Actions.java` instead of a name and a command: `PathAt.inchesLeft(12, Actions.spinUp(robot))`.
+
+**Why:** the robot does not stop to start a mechanism, and Pedro has no "do this here" of its own. If the
+path ends early, the report says which did not start (`STALLED, not fired: Intake off`).
+**More:** [Do things along the path](modules/pedro.md#do-things-along-the-path).
 
 ## Telemetry
 

@@ -240,8 +240,25 @@ then `follow(label, path)` steps in autonomous.
 | `isBusy()`, `cancel()`, `remainingIn()` | still going; stop now; inches left (for the "stuck" check) |
 | `isReady()` | false while its pose source is not ready (the step then ends `NO_ODOMETRY`) |
 | `check(path)` | at INIT: throws if it cannot follow this kind of path |
+| `totalIn()`, `partNow()`, `parts(path)` | optional (they have defaults): the path's length, the part it drives now (from 1), how many parts a path has. [`PathAt`](#pathat) uses them; without them it takes the distance left at the start as the length, and `PathAt.part(n)` fires at the end |
 
 It is updated every loop right after the odometry, and drives the wheels only while a path runs.
+`remainingIn()` is for the WHOLE path (all its parts), so `PathAt.inchesLeft` and `fraction` are right.
+
+### PathAt
+
+Things to start ALONG a `follow` (or `driveTo`) step while the robot keeps driving. Each fires once.
+Full page: [pedro module, Do things along the path](pedro.md#do-things-along-the-path).
+
+| Method | Fires |
+| --- | --- |
+| `PathAt.inchesDone(in, label, command)` | after `in` inches of the path |
+| `PathAt.inchesLeft(in, label, command)` | when `in` inches are left |
+| `PathAt.fraction(f, label, command)` | when `f` of the path is done (0.5 = halfway) |
+| `PathAt.part(n, label, command)` | where part `n` of a `then` path starts (INIT stops if the path has fewer parts) |
+| `PathAt.near(x, y, withinIn, label, command)` | when the robot is within `withinIn` of a field point (mirrored for RED) |
+
+Each also takes an [Action](#action) instead of a label and a command: `PathAt.inchesLeft(12, Actions.spinUp(robot))`.
 
 ## Intake
 
@@ -588,7 +605,8 @@ What [`Steps`](#auto) can do:
 | `isYes(label)`, `choice(label)` | read a choice |
 | `move(label, inches, directionDeg, power)` | drive (0 forward, 90 right) |
 | `turn`, `turnTo` | turn by an angle / to a heading |
-| `driveTo(label, xIn, yIn, headingDeg, power[, toleranceIn])` | drive to a field point and heading with the odometry, correcting all the way (mecanum; needs `Tunables.Odometry.checked` on a robot) ([driveTo](../guides/autonomous-builder.md#drive-to-a-field-point-driveto)) |
+| `driveTo(label, xIn, yIn, headingDeg, power[, toleranceIn][, PathAt...])` | drive to a field point and heading with the odometry, correcting all the way (mecanum; needs `Tunables.Odometry.checked` on a robot) ([driveTo](../guides/autonomous-builder.md#drive-to-a-field-point-driveto)); [`PathAt`](#pathat) starts things on the way |
+| `follow(label, path[, timeoutSec][, PathAt...])` | follow a path with the robot's [path follower](#pathfollower) ([pedro](pedro.md)); [`PathAt`](#pathat) starts things along it |
 | `run(label, command)` | start something and go on at once |
 | `waitSeconds`, `waitUntil` | wait (the robot keeps running) |
 | `action(action[, timeout])` | run an [Action](#action) and wait until it is done |

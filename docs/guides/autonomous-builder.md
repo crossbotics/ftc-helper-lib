@@ -248,6 +248,20 @@ A path can have several parts with no stop between them (`.then(...)`), a speed 
 `Tunables.Odometry.checked`" rule. It ends `done`, `timed out` (10 s, or your own limit), `STALLED`
 or `NO_ODOMETRY`, and the next steps still run. Pedro decides when it is close enough (2.5 in by
 default). Details, tuning and the report words: [pedro module](../modules/pedro.md#follow-the-autonomous-step).
+
+**Start things along the path** (the robot keeps driving): add `PathAt` things after the path. Each
+starts once, at its place:
+
+```java
+.follow("To the goal", TO_GOAL,
+        PathAt.fraction(0.5, "Intake on", robot.intake::in),     // halfway
+        PathAt.inchesLeft(12, Actions.spinUp(robot)))           // 12 in before the end (an action)
+```
+
+Also `PathAt.inchesDone(in, ...)`, `PathAt.part(n, ...)` (where part n of a `then` path starts) and
+`PathAt.near(x, y, withinIn, ...)`. `driveTo` takes them too (its "path" is the straight line to the
+point). If the step ends early, the report says which did not start: `STALLED, not fired: Intake on`.
+More: [pedro module](../modules/pedro.md#do-things-along-the-path).
 ## 3. Mechanisms: run and wait
 
 ```java
@@ -413,7 +427,8 @@ wait in the middle, add `.waitSeconds("Let our partner pass", 3)` inside an `onl
 | `move(label, inches, directionDeg, maxPower)` | drive (clockwise from forward) | yes |
 | `turn(label, degrees, maxPower)` | turn by (counterclockwise +) | yes |
 | `turnTo(label, headingDeg, maxPower)` | turn to a heading (0 = start) | yes |
-| `driveTo(label, xIn, yIn, headingDeg, maxPower[, toleranceIn])` | drive to a field point and heading with odometry (mecanum) | yes |
+| `driveTo(label, xIn, yIn, headingDeg, maxPower[, toleranceIn][, PathAt...])` | drive to a field point and heading with odometry (mecanum) | yes |
+| `follow(label, path[, timeoutSec][, PathAt...])` | follow a path (pedro module); `PathAt` starts things along it | yes |
 | `run(label, command)` | start something | no |
 | `waitSeconds(label, seconds)` | wait | yes |
 | `waitUntil(label, condition, timeoutSec)` | wait until true | yes |

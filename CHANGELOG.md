@@ -4,6 +4,25 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+### Added
+
+- **Start things along a path:** `PathAt` in a `follow` (or `driveTo`) step starts something once, at
+  a place along the path, while the robot keeps driving: `PathAt.inchesLeft(12, ...)`,
+  `PathAt.fraction(0.5, ...)`, `PathAt.inchesDone(...)`, `PathAt.part(2, ...)` (where part 2 of a
+  `then` path starts) and `PathAt.near(x, y, withinIn, ...)`. Each takes a name and a command, or an
+  action. If the path ends early, the report says which did not start (`STALLED, not fired: Spin up`).
+  Mistakes (a fraction of 2, a part the path does not have) stop INIT. The Pedro example starts its
+  intake halfway; lesson 8, the pedro module page and a cookbook recipe show it.
+- `PathFollower`: `totalIn()`, `partNow()` and `parts(path)`, with defaults, so an add-on written
+  before them still works. `PathJob`: `totalIn()`, `partNow()`. `AutoRoutine.followPath` and
+  `driveTo` take a list of `PathEvent`s.
+
+### Changed
+
+- `PedroFollower.remainingIn()` is now the distance left along the WHOLE path (all its parts), measured
+  from the robot's closest point on the path. It was Pedro's distance for the part it steers along now,
+  which Pedro may switch well before the join. The Driver Station's `Path: 18 in to go` uses it too.
+
 ## v0.16.0 - 2026-10-21
 
 Nothing old stops working. Some lesson pages have new names and numbers (listed under Changed): old

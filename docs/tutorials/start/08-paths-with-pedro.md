@@ -162,8 +162,7 @@ static final PedroPath TO_GOAL = PedroPath.line(-56, -61, -48, -50).keepHeading(
 @Override
 protected void steps(Steps s, Robot robot) {
     s.start("Against our wall, in the left corner tile, facing the field", -56, -61, 0)
-     .run("Intake on", robot.intake::in)
-     .follow("To the goal", TO_GOAL)
+     .follow("To the goal", TO_GOAL, PathAt.fraction(0.5, "Intake on", robot.intake::in))
      .waitSeconds("Score (the robot holds still)", 0.5)
      .run("Intake off", robot.intake::stop)
      .parkWithSeconds(4)
@@ -182,8 +181,10 @@ protected void steps(Steps s, Robot robot) {
 - **`.holdEnd()`**: at the end, Pedro keeps the robot on the point while it scores (at most 5 s;
   `.holdEnd(2)` for 2 s).
 - **`static final`**: the path is made once, when the program starts. It is the same every match.
-- **`.follow("To the goal", TO_GOAL)`**: the step that drives the path. It waits until the robot is
+- **`.follow("To the goal", TO_GOAL, ...)`**: the step that drives the path. It waits until the robot is
   at the end. Then the next step runs.
+- **`PathAt.fraction(0.5, "Intake on", robot.intake::in)`**: halfway along the path, the intake starts,
+  and the robot keeps driving (more just below).
 - **`.driveTo("Park", ...)`**: you can mix `driveTo` and `follow`. A driving step ends the hold first.
 
 **Headings must match at a join.** Part 1 ends facing 0, and part 2 starts at 0 (`turnTo(0, 45)`).
@@ -200,8 +201,29 @@ curve's heading. `.holdEnd()` is for the whole path.
 `.facePoint(x, y)` keeps facing a spot, `.maxSpeed(0.5)` drives that part at half speed (write it
 after each part that needs it; the robot slows down inside that part, so make it long enough).
 
-**Do something while the robot drives:** put `.alongside(action)` before the `follow` (for example,
-spin up the shooter on the way). It runs during the next steps.
+**Do something while the robot drives.** Put `PathAt` things after the path, in the `follow` step.
+Each one starts once, at its place along the path, and the robot keeps driving:
+
+```java
+.follow("To the goal", TO_GOAL,
+        PathAt.fraction(0.5, "Intake on", robot.intake::in),        // halfway
+        PathAt.part(2, "Arm up", () -> robot.arm.goTo("high")),     // where part 2 starts
+        PathAt.inchesLeft(12, Actions.spinUp(robot)))              // 12 in before the end
+```
+
+| Write | It starts |
+| --- | --- |
+| `PathAt.inchesDone(10, ...)` | after 10 in of the path |
+| `PathAt.inchesLeft(12, ...)` | 12 in before the end |
+| `PathAt.fraction(0.5, ...)` | halfway (0.25 = a quarter of the way) |
+| `PathAt.part(2, ...)` | where part 2 starts (a path made with `then`) |
+| `PathAt.near(x, y, 6, ...)` | when the robot is within 6 in of a field point |
+
+Give each one a name and a command (`"Intake on", robot.intake::in`), or an action from
+`Actions.java` (it keeps running after the step). Android Studio shows `PathAt` in red: **Alt+Enter**
+adds the `import`. Write them in the order they come along the path. If the path ends early
+(`STALLED`, `timed out`), the report says which did not start: `To the goal: STALLED, not fired: Arm up`.
+`.alongside(action)` before the `follow` still works too: it starts the action before the path.
 
 **Start each path where the robot is:** the first path at the start spot in `s.start(...)`, and each
 next path where the last one ended.
@@ -236,7 +258,7 @@ Open http://localhost:8780, choose **"Pedro Bot Curve to the Goal"**, choose **R
 INIT, START.
 
 **What you should see:** the robot drives a short straight line, then curves to the goal without
-stopping, turning to 45 degrees. It stays still there for half a second (the Driver Station shows
+stopping, turning to 45 degrees. Halfway, the intake starts. It stays still there for half a second (the Driver Station shows
 `Path: holding the end`), then drives to park. At the end the report says `done` for every step.
 
 **Look at the path lines** on the field map (Control Hub, Robot tab) or in the 3D view:

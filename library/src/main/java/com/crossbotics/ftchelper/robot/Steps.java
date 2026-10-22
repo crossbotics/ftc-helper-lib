@@ -159,8 +159,24 @@ public final class Steps {
         return driveTo(label, xIn, yIn, headingDeg, maxPower, 1.0);
     }
 
+    /**
+     * {@link #driveTo(String, double, double, double, double)} that also starts things on the way:
+     * {@code PathAt.inchesLeft(12, ...)}, {@code PathAt.fraction(0.5, ...)}, {@code PathAt.near(...)}.
+     * The "path" is the straight line from where the robot is when the step starts to the point.
+     * ({@code PathAt.part(n)} needs a path with parts: only {@code part(1)} works here.)
+     */
+    public Steps driveTo(String label, double xIn, double yIn, double headingDeg, double maxPower, PathAt... along) {
+        return driveTo(label, xIn, yIn, headingDeg, maxPower, 1.0, along);
+    }
+
     /** {@link #driveTo(String, double, double, double, double)} with your own "close enough", inches. */
     public Steps driveTo(String label, double xIn, double yIn, double headingDeg, double maxPower, double toleranceIn) {
+        return driveTo(label, xIn, yIn, headingDeg, maxPower, toleranceIn, new PathAt[0]);
+    }
+
+    /** {@link #driveTo(String, double, double, double, double, PathAt...)} with your own "close enough", inches. */
+    public Steps driveTo(String label, double xIn, double yIn, double headingDeg, double maxPower, double toleranceIn,
+                         PathAt... along) {
         if (robot.odometrySpec() == null) {
             throw new IllegalStateException("Steps: driveTo(\"" + label + "\") needs odometry: add an odometry(...) line "
                     + "to Robot.java (docs/modules/odometry.md)");
@@ -169,6 +185,7 @@ public final class Steps {
             throw new IllegalStateException("Steps: driveTo(\"" + label + "\") needs a mecanum drive (it drives sideways). "
                     + "On a tank drive, use turnTo(...) and then move(...).");
         }
+        checkAlong("driveTo", label, along, 1);
         if (!adding()) return this;
         boolean simulator = "true".equals(System.getProperty(com.crossbotics.ftchelper.auto.EasyAuto.SIMULATOR_PROPERTY));
         if (!robot.odometryChecked() && !simulator) {
@@ -176,8 +193,28 @@ public final class Steps {
             return this;
         }
         routine.driveTo(label, robot::pose, () -> robot.odometry() != null && robot.odometry().isReady(),
-                xIn, yIn, headingDeg, maxPower, toleranceIn);
+                xIn, yIn, headingDeg, maxPower, toleranceIn, events(along));
         return this;
+    }
+
+    // At INIT: no missing PathAt, and no part(n) past the path's last part (parts: 0 = unknown).
+    private void checkAlong(String step, String label, PathAt[] along, int parts) {
+        if (along == null) return;
+        for (PathAt a : along) {
+            if (a == null) throw new IllegalStateException("Steps: " + step + "(\"" + label + "\"): a PathAt is null");
+            if (parts > 0 && a.partNumber() > parts) {
+                throw new IllegalStateException("Steps: " + step + "(\"" + label + "\"): PathAt.part(" + a.partNumber()
+                        + "), but the path has " + parts + (parts == 1 ? " part" : " parts")
+                        + (step.equals("driveTo") ? " (driveTo is one straight line)" : ""));
+            }
+        }
+    }
+
+    // The PathAts as the routine's plain events (an action runs on the robot's action runner).
+    private java.util.List<com.crossbotics.ftchelper.auto.PathEvent> events(PathAt[] along) {
+        java.util.List<com.crossbotics.ftchelper.auto.PathEvent> out = new java.util.ArrayList<>();
+        if (along != null) for (PathAt a : along) out.add(a.event(robot, routine.mirrorsX()));
+        return out;
     }
 
     /**
@@ -192,8 +229,29 @@ public final class Steps {
         return follow(label, path, 10);
     }
 
+    /**
+     * {@link #follow(String, Object)} that also starts things ALONG the path, while the robot keeps
+     * driving. Each happens once:
+     *
+     * <pre>{@code
+     * s.follow("To the goal", TO_GOAL,
+     *          PathAt.fraction(0.5, "Intake on", robot.intake::in),     // halfway
+     *          PathAt.inchesLeft(12, Actions.spinUp(robot)));          // 12 in before the end
+     * }</pre>
+     *
+     * If the path ends early, the report says which did not happen. See {@link PathAt}.
+     */
+    public Steps follow(String label, Object path, PathAt... along) {
+        return follow(label, path, 10, along);
+    }
+
     /** {@link #follow(String, Object)} with your own time limit, seconds. */
     public Steps follow(String label, final Object path, final double timeoutSec) {
+        return follow(label, path, timeoutSec, new PathAt[0]);
+    }
+
+    /** {@link #follow(String, Object, PathAt...)} with your own time limit, seconds. */
+    public Steps follow(String label, final Object path, final double timeoutSec, PathAt... along) {
         if (!robot.hasFollower()) {
             throw new IllegalStateException("Steps: follow(\"" + label + "\") needs a path follower: add a "
                     + "follower(...) line to Robot.java (docs/modules/pedro.md)");
@@ -205,6 +263,9 @@ public final class Steps {
             } catch (IllegalArgumentException e) {
                 throw new IllegalStateException("Steps: follow(\"" + label + "\"): " + e.getMessage(), e);
             }
+            checkAlong("follow", label, along, robot.follower().parts(path));
+        } else {
+            checkAlong("follow", label, along, 0);
         }
         if (!adding()) return this;
         // Like driveTo: an odometry that was never checked could send the robot anywhere.
@@ -220,7 +281,9 @@ public final class Steps {
             @Override public boolean isReady() { return robot.follower().isReady(); }
             @Override public double remainingIn() { return robot.follower().remainingIn(); }
             @Override public void cancel() { robot.follower().cancel(); }
-        }, timeoutSec);
+            @Override public double totalIn() { return robot.follower().totalIn(); }
+            @Override public int partNow() { return robot.follower().partNow(); }
+        }, timeoutSec, events(along));
         return this;
     }
 

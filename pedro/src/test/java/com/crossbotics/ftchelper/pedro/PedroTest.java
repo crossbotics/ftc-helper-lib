@@ -368,4 +368,84 @@ public class PedroTest {
         assertTrue(longer.holdsEnd());
         assertEquals(PedroPath.DEFAULT_HOLD_SEC, longer.holdSeconds(), 1e-9);
     }
+
+    // ----------------------------- PathAt's numbers -----------------------------
+
+    // The whole path, not just the part Pedro drives now: its length, the distance left and the part.
+    @Test public void aChainGivesTheWholePathAndThePartNow() {
+        tracker.setPose(new FieldPose(0, 0, 0));
+        tracker.update();
+        PedroPath chain = PedroPath.line(0, 0, 0, 24).keepHeading(0).then(PedroPath.line(0, 24, 24, 24)).keepHeading(0);
+        assertEquals(2, follower.parts(chain));
+        assertEquals(2, follower.parts(chain.build(false)));   // Pedro's own path: its segments
+        follower.follow(chain, false);
+        assertEquals(48, follower.totalIn(), 1e-6);
+        loop();
+        assertEquals(1, follower.partNow());
+        assertTrue("left: " + follower.remainingIn(), follower.remainingIn() > 44);   // part 1 alone is 24
+        int lastPart = 1, n = 0;
+        while (follower.isBusy() && n++ < 800) {
+            loop();
+            if (follower.isBusy()) {
+                assertTrue("parts only go up", follower.partNow() >= lastPart);
+                lastPart = follower.partNow();
+                // On part 2, only part 2 is left.
+                if (lastPart == 2) assertTrue(follower.remainingIn() <= 24.01);
+            }
+        }
+        assertEquals(2, lastPart);
+        assertEquals(0, follower.partNow());   // no path runs
+        assertEquals(0, follower.remainingIn(), 1e-9);
+    }
+
+    // A pretend telemetry: the routine shows its steps on it (nothing to check here).
+    private static org.firstinspires.ftc.robotcore.external.Telemetry quietTelemetry() {
+        return (org.firstinspires.ftc.robotcore.external.Telemetry) java.lang.reflect.Proxy.newProxyInstance(
+                PedroTest.class.getClassLoader(), new Class<?>[]{org.firstinspires.ftc.robotcore.external.Telemetry.class},
+                (proxy, m, a) -> {
+                    Class<?> r = m.getReturnType();
+                    if (m.getName().equals("hashCode")) return System.identityHashCode(proxy);
+                    if (m.getName().equals("equals")) return proxy == a[0];
+                    if (r == boolean.class) return false;
+                    if (r == int.class) return 0;
+                    if (r == long.class) return 0L;
+                    if (r == double.class) return 0.0;
+                    return null;
+                });
+    }
+
+    // A follow step with things to do along the path, on the pretend robot: each fires near its place.
+    @Test public void thingsAlongThePathFireNearTheRightPlace() {
+        tracker.setPose(new FieldPose(0, 0, 0));
+        tracker.update();
+        final PedroPath path = PedroPath.line(0, 0, 0, 24).keepHeading(0).then(PedroPath.line(0, 24, 0, 48)).keepHeading(0);
+        final java.util.Map<String, Double> firedAtY = new java.util.LinkedHashMap<>();
+        com.crossbotics.ftchelper.auto.PathJob job = new com.crossbotics.ftchelper.auto.PathJob() {
+            @Override public void start() { follower.follow(path, false); }
+            @Override public boolean isBusy() { return follower.isBusy(); }
+            @Override public boolean isReady() { return follower.isReady(); }
+            @Override public double remainingIn() { return follower.remainingIn(); }
+            @Override public void cancel() { follower.cancel(); }
+            @Override public double totalIn() { return follower.totalIn(); }
+            @Override public int partNow() { return follower.partNow(); }
+        };
+        com.crossbotics.ftchelper.auto.AutoRoutine routine = new com.crossbotics.ftchelper.auto.AutoRoutine(
+                () -> true, () -> { }, quietTelemetry()).subsystems(this::loop);
+        java.util.List<com.crossbotics.ftchelper.auto.PathEvent> events = new java.util.ArrayList<>();
+        events.add(new com.crossbotics.ftchelper.auto.PathEvent("Quarter", p -> p.fraction() >= 0.25,
+                () -> firedAtY.put("quarter", tracker.pose().y)));
+        events.add(new com.crossbotics.ftchelper.auto.PathEvent("Part 2", p -> p.part() >= 2,
+                () -> firedAtY.put("part2", tracker.pose().y)));
+        events.add(new com.crossbotics.ftchelper.auto.PathEvent("12 in left", p -> p.inchesLeft() <= 12,
+                () -> firedAtY.put("left12", tracker.pose().y)));
+        routine.followPath("Along", job, 20, events);
+        routine.runAll();
+        assertEquals("[Along: done]", routine.getReport().toString());
+        assertEquals("[quarter, part2, left12]", firedAtY.keySet().toString());
+        // Within a loop or two of driving (up to 0.8 in a loop at full speed) of where they belong.
+        assertEquals(12, firedAtY.get("quarter"), 2.0);
+        assertEquals(36, firedAtY.get("left12"), 2.0);
+        // Part 2 starts where the robot passes the join (24 in).
+        assertEquals(24, firedAtY.get("part2"), 2.0);
+    }
 }

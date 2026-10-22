@@ -74,7 +74,8 @@ your TeleOp after autonomous.
 | `turnTo(label, heading, power)` | turn to a heading (0 = start direction) |
 | `moveWithTurn(label, inches, fieldDir, heading, power, turnPower)` | drive and turn together (mecanum) |
 | `driveTo(label, pose, ready, x, y, heading, power, tolerance)` | drive to a field point with odometry (mecanum); the five-files `Steps.driveTo` fills in the pose for you ([odometry](odometry.md#driveto)) |
-| `followPath(label, pathJob, timeoutSec)` | follow a path another library drives, e.g. Pedro; `PathJob` is its small plug (start, busy, ready, distance left, cancel). The five-files `Steps.follow` makes it for you ([pedro](pedro.md)) |
+| `followPath(label, pathJob, timeoutSec[, events])` | follow a path another library drives, e.g. Pedro; `PathJob` is its small plug (start, busy, ready, distance left, cancel; optional: `totalIn()`, `partNow()`). `events`: a list of `PathEvent`s, each fired once when the robot gets to its place; the report lists those that did not fire (`STALLED, not fired: Spin up`). The five-files `Steps.follow` makes both for you ([pedro](pedro.md#do-things-along-the-path)) |
+| `driveTo(label, pose, ready, x, y, heading, power, tolerance, events)` | `driveTo` with `PathEvent`s on the way: the "path" is the straight line from where the step starts |
 | `rememberHeading(label)` / `returnToHeading(label, power)` | come back to a saved heading |
 | `run(label, code)` | run code at once, continue (e.g. `claw::open`) |
 | `waitFor(label, seconds)` | wait; mechanisms keep working |

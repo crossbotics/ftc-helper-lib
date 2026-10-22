@@ -3,13 +3,14 @@ package com.crossbotics.ftchelper.examples.pedrobot.autos;
 import com.crossbotics.ftchelper.examples.pedrobot.Robot;
 import com.crossbotics.ftchelper.pedro.PedroPath;
 import com.crossbotics.ftchelper.robot.Auto;
+import com.crossbotics.ftchelper.robot.PathAt;
 import com.crossbotics.ftchelper.robot.Steps;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 /**
  * Pedro paths in the same field numbers as driveTo: a line then a curve to the goal (no stop between
- * them), holding still to score, then a driveTo to park.
+ * them), starting the intake halfway along it, holding still to score, then a driveTo to park.
  */
 @Autonomous(name = "Pedro Bot Curve to the Goal", group = "Examples")
 @Disabled
@@ -29,8 +30,10 @@ public class CurveToTheGoal extends Auto<Robot> {
     @Override
     protected void steps(Steps s, Robot robot) {
         s.start("Against our wall, in the left corner tile, facing the field", -56, -61, 0)
-         .run("Intake on", robot.intake::in)
-         .follow("To the goal", TO_GOAL)
+         // PathAt: start something ALONG the path while the robot keeps driving. Here the intake
+         // starts halfway (0.5 of the path). It happens once; if the path ends early, the report
+         // says "not fired: Intake on". Docs: docs/modules/pedro.md, "Do things along the path".
+         .follow("To the goal", TO_GOAL, PathAt.fraction(0.5, "Intake on", robot.intake::in))
          .waitSeconds("Score (the robot holds still)", 0.5)
          .run("Intake off", robot.intake::stop)
          .parkWithSeconds(4)
