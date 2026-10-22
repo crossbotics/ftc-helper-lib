@@ -14,6 +14,8 @@ final class SimEngine {
     // Counts jumps: the robot or the pieces put somewhere by hand or by a reset. The page does not glide across one.
     final java.util.concurrent.atomic.AtomicInteger jumps = new java.util.concurrent.atomic.AtomicInteger();
     private Thread physics;
+    /** The auto builder's run of the Built Auto (watched each physics step). */
+    final BuiltRun built = new BuiltRun(this);
 
     static {
         // OpModes can tell they run here: an untuned autonomous drive runs anyway (EasyAuto).
@@ -69,6 +71,7 @@ final class SimEngine {
                     }
                     ds.tick();
                     placeForInit();
+                    built.tick();
                 } catch (RuntimeException e) {
                     ds.physicsError("Simulator physics error: " + e);
                 }

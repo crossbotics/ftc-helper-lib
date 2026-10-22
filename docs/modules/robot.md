@@ -1343,6 +1343,10 @@ What [`Steps`](#auto) can do:
 
 The full guide, with every step and a tested example: [The autonomous builder](../guides/autonomous-builder.md).
 
+`newRobot()` makes the robot from `extends Auto<Robot>`. You never need it; it is `protected` so the
+simulator's [auto builder](../guides/simulator.md#the-auto-builder) (its "Built Auto") can run a plan with
+whichever Robot class your project has.
+
 ### Keep time to park
 
 Parking points come at the very end of autonomous, so the steps that park must never run out of time.

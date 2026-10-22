@@ -6,6 +6,21 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
+- **Simulator: the auto builder** (docs/guides/simulator.md#the-auto-builder), the "Auto builder" button over
+  the 3D view: build an autonomous on the field, as Simple steps (any drive) or a Pedro path (follow or
+  driveTo steps, with PathAt), edit it on a field map or in the 3D view, and press Run. The simulator runs it
+  with the team's real code (their Robot class, parts and Actions, the real `Auto`/`Steps` and Pedro follower)
+  through its own "Built Auto" OpMode (POST /auto), real time, as RED or BLUE. A purple plan robot drives the
+  plan in step with the real one; a table shows each step's report word and how far off the plan it ended, the
+  score, and fixes to apply (a 0.3 s wait after a drive before a turn, hold a path's end). Then Copy Java
+  (the same as the web path builder's for the same plan), Save scenario (optionally with the end the run really
+  reached), and the start note for the drive team ("Write it for me") with a printable setup card. It reads
+  only `robot.part::method`, `() -> robot.part.method(...)`, `Actions.name(robot, ...)` and similar, with plain
+  values (BuiltCode): nothing else can be called from the page. The plan, checks, Java and scenario come from
+  the web builder's files (pathcore.js, stepscore.js, mapdraw.js, setupcard.js), now kept in the library as
+  their source; `node tools/check_builder.mjs` (in CI) checks the output against the web builder's and the
+  site's copies when it finds them.
+
 - **Simulator: Layers over the 3D view** (docs/guides/simulator.md#layers): camera sight lines to the tags,
   each with the reason it is not seen (out of view, too slanted, too small, lighting setting, and
   "blocked?" when a field part is in the way of a tag the camera model sees); a floor map of where the
@@ -341,6 +356,9 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   (it was only on the debug lines).
 
 ### Changed
+
+- `Auto.newRobot()` is `protected` (it was private): the simulator's Built Auto gives its own robot. Teams never
+  need it.
 
 - **Simulator: smooth motion.** The page now gets where everything is 50 times a second on one stream
   (`GET /stream`, server-sent events; was: asking `/state` 10 times a second) with the simulator's own

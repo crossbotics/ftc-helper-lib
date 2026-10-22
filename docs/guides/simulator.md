@@ -165,7 +165,8 @@ this browser) looks from:
 | 8 | HIVE close-up | your alliance's HIVE up close (a field with no HIVEs: the goal nearest the robot) |
 
 The sides come from the field file's frame (its `frameNote` says which wall is which). **Layers** (next to
-View) adds lines and maps over the 3D view: see [Layers](#layers) below.
+View) adds lines and maps over the 3D view: see [Layers](#layers) below. **Auto builder** (next to Layers)
+builds an autonomous on the field and runs it with your code: see [The auto builder](#the-auto-builder).
 
 **Where the robot starts.** In INIT the robot is put where the program says: an autonomous that names its
 start spot (`s.start(note, x, y, heading)`, or `startSpotIn()` in an EasyAuto) puts it there for the
@@ -236,6 +237,85 @@ browser.
 The page's helpers (gliding between updates, the striped ball, the labels) are in `sim/.../simview.js`,
 a small file with no other library in it, so another page (like a team's own shot simulator) can load it
 too.
+
+## The auto builder
+
+Build an autonomous on the field, press **Run**, and the simulator runs it with **your real code**: your
+`Robot.java`, your parts' methods and your `Actions.java`, the library's real `Auto` and `Steps` (the INIT
+menu, the 30 s timer, the park time, the report) and, for a path, the real Pedro follower. Then copy the
+Java into your project. It is the [web path builder](https://crossbotics.com/ftc-helper/path-builder/)
+(a page that needs no install, for any team) with the run added: the same plan gives the same Java.
+
+**Open it:** the **Auto builder** button over the 3D view. It takes the Control Hub's place (close it with
+the x to get the hub back; on a narrow screen it sits under the 3D view).
+
+What a team does, step by step:
+
+1. **Robot and alliance.** The builder finds the Robot classes in the code the simulator runs (your
+   TeamCode, or the library's examples) and picks the one whose device names match the robot file
+   ("Best fit"); pick another in the list if it guessed wrong. Its drive (tank or mecanum) and the robot's
+   size come from your code and the robot file. **Run as** RED or BLUE, and say whether RED's routes are
+   mirrored (`mirrorForRed()`; BIOBUZZ's turned field: "uses the same numbers").
+2. **Choose the mode.**
+   - **Simple steps** (any drive): drive, strafe (mecanum), turn, turn to, wait, start something (a
+     command), an action from `Actions.java`, and "park from here" (`parkWithSeconds`). Tap the field map
+     to add a drive to that spot (a tank drive gets a turn first), drag the blue dot at the end of a drive to
+     change it, or use the list: each step has its numbers, arrows to move it, and its own warnings.
+   - **Pedro path** (mecanum with odometry): tap to add lines or curves, drag the ends and the control
+     points, choose each part's heading rule and speed limit, hold the end, and add things to start along the
+     path (`PathAt`: inches done or left, part of the path, start of a part, near a point). **follow** needs a
+     `follower(...)` line in Robot.java (the pedro module); **driveTo steps** need only odometry. The builder
+     says so when your robot cannot do the mode, and Run stays off.
+3. **Edit in 3D too:** with "Edit in the 3D view" ticked, the same points are balls in the 3D view: drag
+   them, or tap the field to add a step or a part (not near the robot). The purple dashed line is the plan.
+4. **The start spot and the note for the drive team.** Pick a ready-made spot (against your wall, each one
+   checked against the start rules) or drag the green dot. The **note** is what the Driver Station shows
+   at INIT as `Place robot : ...`, so the drive team reads it at match setup: about 50 characters fit one
+   line. **Write it for me** writes it from the spot ("Our wall, left corner tile, facing the field"); it
+   follows the robot until you type your own words. **Print setup card** opens one page for the drive
+   team: the note in big letters, the field with the robot's start footprint and heading, red and blue,
+   and the first step.
+5. **Checks** before a run: the field walls and parts along the way, the start rules (touching the wall, on
+   your half, not in the LOADING ZONE, inside the 18 in box), more than 30 s, the park time, a tank strafe,
+   names left empty. The time is a plan from simple speed numbers (an action counts its whole time limit).
+6. **Run in the simulator.** The simulator INITs the **Built Auto** (its own autonomous, listed in the
+   Driver Hub under "Builder") with your plan, chooses the alliance, puts the robot on the start spot and
+   presses START. The clock beside Run counts the autonomous's seconds (real time, like a match: no fast
+   forward). A **purple robot** drives the plan beside your robot; each of its steps starts when your
+   robot's step starts, so you see where they part. The green line is where your robot really went.
+7. **Read the result:** a table with each step's word from the report (done, STALLED, timed out, skipped
+   for park, not fired) and how far off the plan it ended, the match score, and **what to change**. Some
+   changes have an **Apply** button: a 0.3 s wait before a turn (or a new direction) that came right after a
+   drive (the robot still rolls when a drive ends, so it slides on a few inches), holding a Pedro path's
+   end, or slowing its last part. Press Run again to check.
+8. **Copy the Java** (the whole file for Simple steps, or only the steps; for a Pedro path the `PedroPath`
+   field and the steps to paste, the same as the web builder), **Save scenario** (a scenario file that
+   checks the note, the start spot, each step "done" and the end, within the inches and degrees you set;
+   [scenario files](#scenario-files-test-without-a-browser)), and tick **with the end from the last run** to
+   check the end your robot really reached (for a route that is right as it drives, so a later change that
+   moves the end is caught). The plan is kept in this browser.
+
+**What it can call in your code.** A command or an action is written as Java, and the simulator reads
+these shapes only: `robot.part::method`, `robot::method`, `() -> robot.part.method(...)`,
+`() -> robot.method(...)`, `Actions.name(robot, ...)` and `robot.part.method(...)` that gives an Action,
+with plain values (text in quotes, numbers, true/false, `robot`). It finds the public field (your part)
+and the public method by its name. **Why only these:** safety and plainness. Nothing else in your code or
+on the laptop can be reached from the page, and nothing is compiled or run as a script. Anything else
+(`Tunables.Lift.high`, two calls in one) is refused at INIT with a message, like a part that is not on the
+robot: write it as a method in Robot.java or Actions.java and name that method. A name that is not there
+stops INIT with the names there are (`Robot.java has no part called claw (its parts: intake, launcher)`).
+
+**Shared with the web builder.** The plan, its checks, the Java, the scenario, the start note and the
+setup card come from the same files as the web builder: `pathcore.js`, `stepscore.js`, `mapdraw.js` and
+`setupcard.js` in `sim/src/test/resources/sim/builder/`. **The library is their source**: change them here,
+then copy them to the web site (its `scripts/sync-path-builder.mjs` copies them with the field file).
+`node tools/check_builder.mjs` checks that the Java and the scenario for a set of plans are letter for letter
+what the web builder wrote (`sim/src/test/resources/builder/fixtures.json`), checks the simulator-only part
+(`simcore.js`), and, when it finds a checkout of the site, that the site's copies are the same.
+
+**Not covered:** the INIT menu (`menuChoice`, `onlyIf`), your own steps (`step(...)`), `waitUntil`, and
+reading Java back in (the web builder reads Java in). A Pedro plan is one path (one `follow`, or one
+`driveTo` per part); add the steps before and after it in your file. Commands take plain values only.
 
 ## The robot file
 
@@ -984,4 +1064,12 @@ stops with all motors off. Its first run found a real bug: every finder crashed 
 
 ```bash
 ./gradlew :sim:testDebugUnitTest
+```
+
+`BuiltAutoTest` runs the [auto builder](#the-auto-builder)'s plans with the example robots (a Simple steps
+plan on goBILDA's starter bot, a Pedro path on the Pedro robot) and checks that they end near the plan. The
+builder's page code has its own check (Node.js), also on every push:
+
+```bash
+node tools/check_builder.mjs
 ```

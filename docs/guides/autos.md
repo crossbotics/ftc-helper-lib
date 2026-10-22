@@ -324,6 +324,10 @@ few steps". Either way, **the start spot is in the note, in capitals, so the dri
 Run every autonomous, with every menu option, in the simulator before it goes on the robot. A route
 that drives into a wall in the simulator will do it on the field too.
 
+**Build one there.** The simulator's [auto builder](simulator.md#the-auto-builder) draws a route on the
+field (Simple steps, or a Pedro path), runs it with your own code, shows where the real robot left the
+plan, and writes the Java and a scenario file. Good for a new route; then put it in its own file here.
+
 **By hand.** Make the robot file and start the simulator (from the `ftc-helper-lib` folder):
 
 ```bash

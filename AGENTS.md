@@ -29,7 +29,11 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
 - `sim/` the simulator: a pretend Control Hub and Driver Hub on a laptop (`./gradlew :sim:run`, then
   http://localhost:8780). Its code is in `sim/src/test` (the SDK only runs on a laptop there); the
   page is `sim/src/test/resources/sim/index.html` (its drawing helpers in `simview.js` next to it; what it
-  reads: `SimJson` for the state, `SimView` for the 50-a-second stream and the Layers data); robot files are in `sim/robots/`. Its scripted
+  reads: `SimJson` for the state, `SimView` for the 50-a-second stream and the Layers data); robot files are in `sim/robots/`.
+  The page's auto builder is `sim/.../resources/sim/builder/` (ES modules: `builder.js` the panel, `simcore.js`
+  the simulator-only logic, and `pathcore.js`, `stepscore.js`, `mapdraw.js`, `setupcard.js` shared with the web
+  site's path builder: the LIBRARY is their source, the site copies them); it runs plans through `BuiltAuto`
+  (names resolved by `BuiltCode`, runs watched by `BuiltRun`). `node tools/check_builder.mjs` checks it. Its scripted
   tests (`FinderSafetyTest`) run whole OpModes: add one when an OpMode's behavior matters (safety,
   help, buttons). Not part of robot builds. Guide: docs/guides/simulator.md. Parts page:
   docs/guides/parts-catalog.md is made from sim/parts/parts.json by tools/parts_page.py (never edit it by hand).
@@ -106,6 +110,7 @@ an API changes, update the cookbook recipes that use it too; a new user-facing f
 python3 tools/check_docs.py
 python3 tools/check_blocking.py
 python3 tools/check_tunables.py
+node tools/check_builder.mjs       # the simulator's auto builder page code
 ```
 
 All must pass. Releases: follow `docs/contributing.md#releasing-a-version`. The mentor asks for an

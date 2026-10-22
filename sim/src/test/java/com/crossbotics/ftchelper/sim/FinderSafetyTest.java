@@ -149,6 +149,8 @@ public class FinderSafetyTest {
         EXPECTED.put("Cookbook Shot Tuner", "\"pinpoint\"");
         // The cookbook's Piece Tuner uses the game-pieces recipe robot (CookbookTest runs it on its own file).
         EXPECTED.put("Cookbook Piece Tuner", "\"indexer\"");
+        // The auto builder's Built Auto with no plan sent: it says where to make one.
+        EXPECTED.put(BuiltAuto.NAME, "auto builder");
     }
 
     @Test public void everyExampleStartsAndStopsCleanly() throws Exception {

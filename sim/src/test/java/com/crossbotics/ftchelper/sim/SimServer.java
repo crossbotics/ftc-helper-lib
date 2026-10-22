@@ -10,6 +10,7 @@ import java.net.Socket;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -31,6 +32,10 @@ import java.util.Map;
  * GET /simview.js   the page's drawing helpers (gliding between updates, ball texture, labels)
  * POST /pad/1, /pad/2   a gamepad's buttons and sticks ("a=1&lx=0.5...")
  * POST /cmd         a Driver Station or panel command ("action=init&opmode=...")
+ * GET /auto         the auto builder: the Robot classes it can run a plan with, and its best guess
+ * POST /auto        the auto builder's Run: {"program": {...}, "alliance": "RED"} (BuiltAuto.Program); INITs the
+ *                   Built Auto with that plan and presses START once the robot is on its start spot
+ * GET /builder/...  the auto builder's page code (ES modules: builder.js and the files it imports)
  */
 final class SimServer {
     private final SimEngine sim;
@@ -44,6 +49,8 @@ final class SimServer {
                 return t;
             });
     private static final int MAX_BODY = 16 * 1024;
+    // An auto builder plan can be longer than a gamepad update (a long list of steps).
+    private static final int MAX_PLAN = 128 * 1024;
     // Streams open now (each has its own thread); more are refused and that page reads /state instead.
     private final java.util.concurrent.atomic.AtomicInteger streams = new java.util.concurrent.atomic.AtomicInteger();
     static final int MAX_STREAMS = 8;
@@ -130,7 +137,8 @@ final class SimServer {
         for (String line : head.split("\r\n")) {
             if (line.toLowerCase(Locale.US).startsWith("content-length:")) length = Integer.parseInt(line.substring(15).trim());
         }
-        if (length < 0 || length > MAX_BODY) return false;   // far too big for a gamepad or a command
+        boolean plan = path.startsWith("/auto");
+        if (length < 0 || length > (plan ? MAX_PLAN : MAX_BODY)) return false;   // far too big for a gamepad or a command
         byte[] body = new byte[length];
         int read = 0;
         while (read < length) {
@@ -173,6 +181,12 @@ final class SimServer {
             int n = (int) Math.max(1, Math.min(5000, num(q, "n") > 0 ? num(q, "n") : 400));
             SimPieces.HitRate h = sim.robot.pieces.hitRate(n, q.get("piece"), 12345);
             send(out, 200, "application/json", SimScore.json(h).getBytes(StandardCharsets.UTF_8));
+        } else if (method.equals("GET") && BUILDER_FILES.contains(path)) {
+            send(out, 200, "text/javascript; charset=utf-8", resource("/sim" + path));
+        } else if (method.equals("GET") && path.equals("/auto")) {
+            send(out, 200, "application/json", builderInfo().getBytes(StandardCharsets.UTF_8));
+        } else if (method.equals("POST") && path.equals("/auto")) {
+            send(out, 200, "application/json", runPlan(new String(body, StandardCharsets.UTF_8)).getBytes(StandardCharsets.UTF_8));
         } else if (method.equals("GET") && path.equals("/simview.js")) {
             send(out, 200, "text/javascript; charset=utf-8", resource("/sim/simview.js"));
         } else if (method.equals("GET") && path.equals("/state")) {
@@ -312,6 +326,93 @@ final class SimServer {
         if (modelBytes == null) modelBytes = java.nio.file.Files.readAllBytes(sim.robot.fieldModel);
         return modelBytes;
     }
+
+    // ----------------------------- the auto builder -----------------------------
+
+    // The Robot classes the Built Auto can use (the code the simulator lists), found once.
+    private List<Class<? extends com.crossbotics.ftchelper.robot.RobotDefinition>> robots = null;
+
+    private synchronized List<Class<? extends com.crossbotics.ftchelper.robot.RobotDefinition>> robots() {
+        if (robots == null) robots = BuiltAuto.robotClasses(sim.ds.scope);
+        return robots;
+    }
+
+    // GET /auto: {"robots": [{name, short, drive, odometry, follower, score}], "guess": name}
+    private String builderInfo() {
+        List<Class<? extends com.crossbotics.ftchelper.robot.RobotDefinition>> list = robots();
+        StringBuilder b = new StringBuilder("{\"robots\":[");
+        for (int i = 0; i < list.size(); i++) {
+            // {name, short, drive, odometry, follower} plus how well it fits the robot file (the page picks among the best)
+            String d = BuiltAuto.describe(list.get(i));
+            b.append(i > 0 ? "," : "").append(d, 0, d.length() - 1).append(",\"score\":").append(BuiltAuto.score(list.get(i), sim.robot)).append('}');
+        }
+        Class<?> guess = BuiltAuto.guess(list, sim.robot);
+        b.append("],\"guess\":");
+        SimJson.string(b, guess == null ? "" : guess.getName());
+        return b.append('}').toString();
+    }
+
+    // POST /auto: run the plan. Answers {"ok":true,"robotClass":...} or {"error":"..."} at once; START comes
+    // from a thread of its own once INIT has put the robot on its spot.
+    private String runPlan(String text) {
+        try {
+            Map<String, Object> m = SimJsonReader.object(SimJsonReader.parse(text), "the request");
+            Object prog = m.get("program");
+            if (prog == null) throw new IllegalArgumentException("no program");
+            BuiltAuto.Program p = BuiltAuto.Program.from(SimJsonReader.object(prog, "the program"));
+            // Only a Robot class from the list (never any class the page names).
+            Class<? extends com.crossbotics.ftchelper.robot.RobotDefinition> chosen = null;
+            for (Class<? extends com.crossbotics.ftchelper.robot.RobotDefinition> c : robots()) {
+                if (c.getName().equals(p.robotClass)) chosen = c;
+            }
+            if (chosen == null && !p.robotClass.isEmpty()) throw new IllegalArgumentException("no Robot class " + p.robotClass + " in the code");
+            if (chosen == null) chosen = BuiltAuto.guess(robots(), sim.robot);
+            if (chosen == null) throw new IllegalArgumentException("no Robot class (a class that extends RobotDefinition) in the code");
+            com.crossbotics.ftchelper.match.Alliance alliance = "BLUE".equals(m.get("alliance"))
+                    ? com.crossbotics.ftchelper.match.Alliance.BLUE : com.crossbotics.ftchelper.match.Alliance.RED;
+            BuiltAuto.program = p;
+            BuiltAuto.robotClass = chosen;
+            final int screens = sim.ds.screen.updates();
+            sim.ds.init(BuiltAuto.NAME, alliance);
+            final int run = sim.ds.initCount;
+            Thread t = new Thread(() -> startWhenPlaced(run, screens), "built-auto-start");
+            t.setDaemon(true);
+            t.start();
+            StringBuilder b = new StringBuilder("{\"ok\":true,\"robotClass\":");
+            return SimJson.string(b, chosen.getName()).append('}').toString();
+        } catch (RuntimeException e) {
+            StringBuilder b = new StringBuilder("{\"error\":");
+            return SimJson.string(b, String.valueOf(e.getMessage())).append('}').toString();
+        }
+    }
+
+    // START once INIT has shown its screen and the robot stands on the start spot (at most 4 s), like a
+    // drive team that waits for the robot to be placed. Not if INIT stopped with an error, or someone
+    // pressed something else meanwhile.
+    private void startWhenPlaced(int run, int screensBefore) {
+        try {
+            long end = System.nanoTime() + 4_000_000_000L;
+            while (System.nanoTime() < end) {
+                if (sim.ds.initCount != run || sim.ds.phase() != SimDriverStation.Phase.INIT || !sim.ds.error().isEmpty()) return;
+                com.crossbotics.ftchelper.util.FieldPose at = com.crossbotics.ftchelper.match.MatchMemory.placement();
+                boolean shown = sim.ds.screen.updates() > screensBefore;
+                boolean placed = at == null || Math.hypot(at.x - sim.robot.x, at.y - sim.robot.y) < 0.5;
+                if (shown && placed) {
+                    Thread.sleep(300);   // a moment on the spot, so the page shows it there first
+                    if (sim.ds.initCount == run && sim.ds.phase() == SimDriverStation.Phase.INIT && sim.ds.error().isEmpty()) sim.ds.start();
+                    return;
+                }
+                Thread.sleep(20);
+            }
+        } catch (InterruptedException ignored) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    // The auto builder's page code: only these files (no other paths can be asked for).
+    private static final java.util.Set<String> BUILDER_FILES = new java.util.HashSet<>(java.util.Arrays.asList(
+            "/builder/builder.js", "/builder/simcore.js", "/builder/pathcore.js", "/builder/stepscore.js",
+            "/builder/mapdraw.js", "/builder/setupcard.js"));
 
     // The only files served from the 3D library folder (no other paths can be asked for).
     private static final java.util.Set<String> THREE_FILES = new java.util.HashSet<>(java.util.Arrays.asList(
