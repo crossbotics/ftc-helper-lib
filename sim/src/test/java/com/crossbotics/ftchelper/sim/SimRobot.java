@@ -33,6 +33,11 @@ final class SimRobot {
     final Map<String, SimServo> servos = new LinkedHashMap<>();
     final Map<String, double[]> crServos = new LinkedHashMap<>();   // name -> {power, reversed (1/0)}
     final Map<String, SimTouch> touches = new LinkedHashMap<>();
+    // motor name -> the CR servo that turns it (drivenBy=).
+    private final Map<String, String> drivenBy = new LinkedHashMap<>();
+    // Absolute encoders (analog.NAME): {unused, offset degrees}, and the motor whose shaft they read.
+    final Map<String, double[]> analogs = new LinkedHashMap<>();
+    private final Map<String, String> analogMotor = new LinkedHashMap<>();
     // Pretend piece sensors (color.NAME = at=ready, distance.NAME = at=intake, acrossMm=150): see SimPieceSensor.
     final Map<String, SimPieceSensor> pieceSensors = new LinkedHashMap<>();
     // Colored lights (light.NAME = gobilda or blinkin): the page shows their color.
@@ -180,6 +185,7 @@ final class SimRobot {
             m.gravity = dbl(s, "gravity", 0);
             m.feeder = s.get("feeder");
             m.shotDrop = dbl(s, "shotDrop", 0.15);
+            if (s.containsKey("drivenBy")) drivenBy.put(name, s.get("drivenBy"));
             motors.put(name, m);
         }
         for (String key : sortedKeys(p, "servo.")) {
@@ -208,6 +214,15 @@ final class SimRobot {
             servos.put(name, servo);
         }
         for (String key : sortedKeys(p, "crservo.")) crServos.put(key.substring("crservo.".length()), new double[] {0, 0});
+        // An encoder turned by a CR servo (motor.X = ..., drivenBy=SERVO): its power is the CR servo's.
+        for (Map.Entry<String, String> e : drivenBy.entrySet()) {
+            final double[] cr = crServos.get(e.getValue());
+            if (cr == null) {
+                throw new IllegalArgumentException("Robot file: motor." + e.getKey() + ": drivenBy=" + e.getValue() + " is not a crservo in the robot file");
+            }
+            // A reversed CR servo turns the other way for the same power.
+            motors.get(e.getKey()).drivenBy = () -> cr[0] * (cr[1] == 1 ? -1 : 1);
+        }
         for (String key : sortedKeys(p, "light.")) {
             String name = key.substring("light.".length());
             lights.put(name, new SimLight(name, p.getProperty(key)));
@@ -223,7 +238,26 @@ final class SimRobot {
         }
         for (String key : sortedKeys(p, "touch.")) {
             Map<String, String> s = settings(p.getProperty(key));
-            touches.put(key.substring("touch.".length()), new SimTouch(s.get(""), dbl(s, "below", 20)));
+            SimTouch t = new SimTouch(s.get(""), dbl(s, "below", 20));
+            // at= (and width=): a switch part way along, e.g. a turret's home switch: pressed within width
+            // counts of that shaft count (from where the motor starts).
+            if (s.containsKey("at")) {
+                t.at = dbl(s, "at", 0);
+                t.width = Math.abs(dbl(s, "width", 10));
+            }
+            if (t.motor != null && !t.motor.isEmpty() && !motors.containsKey(t.motor)) {
+                throw new IllegalArgumentException("Robot file: \"" + key + "\": no motor." + t.motor + " in the robot file");
+            }
+            touches.put(key.substring("touch.".length()), t);
+        }
+        // analog.NAME = MOTOR, offsetDeg=D: an absolute encoder on that motor's shaft (one turn = 0 V to
+        // 3.3 V), reading D degrees at the start.
+        for (String key : sortedKeys(p, "analog.")) {
+            Map<String, String> s = settings(p.getProperty(key));
+            String m = s.get("");
+            if (m == null || !motors.containsKey(m)) throw new IllegalArgumentException("Robot file: \"" + key + "\": the first value must be a motor in the robot file");
+            analogs.put(key.substring("analog.".length()), new double[] {0, dbl(s, "offsetDeg", 0)});
+            analogMotor.put(key.substring("analog.".length()), m);
         }
         for (String prefix : new String[] {"color.", "distance."}) {
             for (String key : sortedKeys(p, prefix)) {
@@ -330,6 +364,19 @@ final class SimRobot {
         for (Map.Entry<String, double[]> e : crServos.entrySet()) devices.put(e.getKey(), crServo(e.getValue()));
         for (Map.Entry<String, SimTouch> e : touches.entrySet()) {
             devices.put(e.getKey(), e.getValue().touchSensor());
+        }
+        for (Map.Entry<String, double[]> e : analogs.entrySet()) {
+            final SimMotor m = motors.get(analogMotor.get(e.getKey()));
+            final double offset = e.getValue()[1];
+            // AnalogInput is a class: one whose voltage is the shaft's angle (0 to 3.3 V per turn).
+            devices.put(e.getKey(), new com.qualcomm.robotcore.hardware.AnalogInput(null, 0) {
+                @Override public double getVoltage() {
+                    double deg = (m.shaft() / m.ticksPerRev * 360 + offset) % 360;
+                    return 3.3 * (deg < 0 ? deg + 360 : deg) / 360;
+                }
+                @Override public double getMaxVoltage() { return 3.3; }
+                @Override public String getDeviceName() { return "Simulated absolute encoder"; }
+            });
         }
         for (Map.Entry<String, SimPieceSensor> e : pieceSensors.entrySet()) devices.put(e.getKey(), e.getValue().device());
         if (!imuName.isEmpty()) devices.put(imuName, imu());
@@ -841,6 +888,8 @@ final class SimRobot {
     final class SimTouch {
         final String motor;
         final double below;
+        // A switch part way along (at=, width=): NaN = at the bottom (below=).
+        double at = Double.NaN, width = 10;
         boolean manual = false;
 
         SimTouch(String motor, double below) {
@@ -852,6 +901,7 @@ final class SimRobot {
             synchronized (SimRobot.this) {
                 if (manual) return true;
                 SimMotor m = motor == null ? null : motors.get(motor);
+                if (m != null && !Double.isNaN(at)) return Math.abs(m.shaft() - at) <= width;
                 return m != null && m.nearBottom(below);
             }
         }
