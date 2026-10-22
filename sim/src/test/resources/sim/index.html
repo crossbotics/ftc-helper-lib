@@ -35,6 +35,12 @@
     body:not(.phone) #screen { flex: 1; height: auto; min-height: 90px; }
     body:not(.phone) #view3dSection { grid-area: view; display: flex; flex-direction: column; min-height: 0; overflow: auto; }
     body:not(.phone) #stage { flex: 1; height: auto; min-height: 170px; }
+    /* Building an autonomous: the auto builder takes the Control Hub's column (closing it brings the hub back). */
+    body.building:not(.phone) main { grid-template-columns: minmax(260px, 320px) minmax(420px, 1fr) minmax(380px, 460px);
+      grid-template-areas: "ds view builder" "ds pads builder"; }
+    body.building:not(.phone) #hubSection { display: none; }
+    body.building:not(.phone) #builderSection { grid-area: builder; display: flex; flex-direction: column; min-height: 0; }
+    body.building:not(.phone) #builder { flex: 1; min-height: 0; max-height: none; }
     body:not(.phone) #padsSection { grid-area: pads; }
     body:not(.phone) #hubSection { grid-area: hub; display: flex; flex-direction: column; min-height: 0; }
     body:not(.phone) .tabbody { flex: 1; min-height: 0; overflow: auto; }
@@ -223,7 +229,80 @@
   /* A small 3D view: one line per layer (the whole text shows on hover). */
   #layerNote.compact { pointer-events: auto; max-width: 60%; }
   #layerNote.compact div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  #stage.off + #stageOff { display: block; }
+  /* The auto builder: its own column in place of the Control Hub (under the 3D view on a narrow screen). */
+  #builderSection { padding: 8px 10px; }
+  #builderSection[hidden] { display: none !important; }
+  #builder { overflow: auto; font-size: 13px; }
+  #builderBtn.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  #builder .b-head { display: flex; align-items: center; gap: 8px; position: sticky; top: 0; background: var(--panel); padding: 4px 0; z-index: 2; }
+  #builder .b-head b { font-size: 14px; }
+  #builder .b-tabs { display: inline-flex; gap: 0; margin-left: auto; }
+  #builder .b-tabs button { border-radius: 0; padding: 3px 9px; font-size: 12.5px; }
+  #builder .b-tabs button:first-child { border-radius: 6px 0 0 6px; } #builder .b-tabs button:last-child { border-radius: 0 6px 6px 0; }
+  #builder .b-tabs button[aria-selected="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+  #builder .b-x { padding: 0 8px; font-size: 18px; line-height: 1.2; }
+  #builder .b-intro { margin: 2px 0 6px; }
+  #builder .b-sec { border-top: 1px solid var(--line); padding: 6px 0; }
+  #builder details.b-sec > summary { cursor: pointer; font-weight: 600; margin-bottom: 4px; }
+  #builder .row { margin: 3px 0; gap: 6px; }
+  #builder label { display: inline-flex; gap: 4px; align-items: center; }
+  #builder label.grow { flex: 1; min-width: 0; } #builder label.grow input { flex: 1; min-width: 0; }
+  #builder input[type=text], #builder input[type=number], #builder select { font: inherit; font-size: 12.5px; padding: 3px 5px; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 5px; }
+  #builder input[type=number] { width: 64px; }
+  #builder input.code { font-family: ui-monospace, Menlo, monospace; }
+  #builder button { font-size: 12.5px; padding: 3px 8px; }
+  #builder button.small { padding: 1px 6px; font-size: 12px; }
+  #builder button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  #builder .b-red.on { background: #cf222e; border-color: #cf222e; color: #fff; } #builder .b-blue.on { background: #1f6feb; border-color: #1f6feb; color: #fff; }
+  #builder .b-go { background: var(--go); color: #fff; border-color: var(--go); font-weight: 600; }
+  #builder .b-note { display: flex; } #builder .b-note input { flex: 1; min-width: 0; font-weight: 600; }
+  #builder #bMap { width: 100%; max-width: 420px; display: block; margin: 4px auto; background: #fff; border: 1px solid var(--line); border-radius: 6px; touch-action: none; }
+  #builder #bTime { flex: 1; min-width: 80px; }
+  #builder .b-step { border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; margin: 4px 0; }
+  #builder .b-step.sel { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  #builder .b-step.mark { border-left: 3px solid #c2410c; }
+  #builder .b-top { display: flex; gap: 6px; align-items: baseline; }
+  #builder .b-top b { cursor: pointer; } #builder .b-btns { margin-left: auto; display: inline-flex; gap: 2px; }
+  #builder .b-num { display: inline-block; min-width: 18px; margin-right: 4px; padding: 0 4px; border-radius: 8px; background: var(--btn); text-align: center; font-size: 11.5px; }
+  #builder .b-step p.muted { margin: 2px 0; }
+  #builder h4 { margin: 8px 0 2px; font-size: 13px; }
+  #builder .b-checks { margin: 4px 0; padding-left: 18px; }
+  #builder .b-checks li { margin: 2px 0; }
+  #builder .b-checks li.bad { color: var(--stop); } #builder .b-checks li.warn { color: var(--warn); } #builder .b-checks li.good { color: var(--go); }
+  #builder .b-warn { color: var(--warn); font-weight: 600; }
+  #builder .b-clock { margin-left: auto; font: 700 15px/1 ui-monospace, Menlo, monospace; color: var(--muted); }
+  #builder .b-clock.on { color: var(--go); }
+  #builder .b-table { margin: 4px 0; } #builder .b-table tr.bad td { color: var(--stop); } #builder .b-table tr.warn td { color: var(--warn); }
+  #builder .b-table .sr, #builder .sr { color: #cf222e; } #builder .sb { color: #1f6feb; }
+  #builder .b-code { max-height: 260px; overflow: auto; font: 11.5px/1.35 ui-monospace, Menlo, monospace; background: var(--bg); padding: 6px; border-radius: 6px; white-space: pre; }
+  /* The setup card (setupcard.js, the web builder's): one page for the drive team, printable. */
+  #setupCard { position: fixed; inset: 0; z-index: 50; overflow: auto; background: rgba(16, 28, 69, .45); padding: 16px; }
+  #setupCard .sc-page { max-width: 760px; margin: 0 auto; background: #fff; color: #1d2330; border-radius: 10px; padding: 16px 20px 20px; }
+  #setupCard .sc-tools { display: flex; gap: 8px; justify-content: flex-end; }
+  #setupCard .sc-tools button { color: #1d2330; background: #eef1f5; border-color: #d9dde4; }
+  #setupCard .sc-tools button.primary { background: #1a7f37; color: #fff; border-color: #1a7f37; }
+  #setupCard .sc-kicker { margin: 0; font-weight: 600; font-size: .9rem; text-transform: uppercase; letter-spacing: .08em; color: #6a7282; }
+  #setupCard .sc-title { font-size: 1.6rem; line-height: 1.15; margin: 2px 0 10px; }
+  #setupCard .sc-label { margin: 0; font-weight: 700; color: #6a7282; }
+  #setupCard .sc-note { font-weight: 700; font-size: 1.9rem; line-height: 1.2; margin: 2px 0 10px; border: 3px solid #1d2330; border-radius: 8px; padding: 8px 12px; overflow-wrap: anywhere; }
+  #setupCard .sc-warn { color: #cf222e; font-weight: 700; }
+  #setupCard .sc-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  @media (max-width: 640px) { #setupCard { padding: 0; } #setupCard .sc-page { border-radius: 0; padding: 12px 16px; } #setupCard .sc-grid { grid-template-columns: minmax(0, 1fr); } #setupCard .sc-note { font-size: 1.5rem; } }
+  #setupCard .sc-map { width: 100%; height: auto; border: 1px solid #d9dde4; border-radius: 6px; }
+  #setupCard .sc-facts p { margin: 0 0 8px; }
+  #setupCard .sc-small { font-size: .85rem; color: #6a7282; }
+  #setupCard .sc-check { margin: 8px 0 0; padding-left: 1.2em; font-size: .95rem; }
+  body.carding { overflow: hidden; }
+  @media print {
+    @page { margin: 12mm; }
+    body.carding > *:not(#setupCard) { display: none !important; }
+    body.carding { overflow: visible; background: #fff; height: auto !important; display: block !important; }
+    #setupCard { position: static; background: none; padding: 0; overflow: visible; }
+    #setupCard .sc-page { max-width: none; padding: 0; }
+    #setupCard .sc-tools { display: none; }
+    #setupCard .sc-grid { grid-template-columns: 1.1fr 1fr; }
+    #setupCard .sc-note { font-size: 26pt; }
+  }
 </style>
 </head>
 <body>
@@ -413,6 +492,7 @@
           <label><input type="checkbox" data-layer="size"> Robot size box (and the 18 in start cube)</label>
           <div class="muted">What each line means: docs/guides/simulator.md, "Layers".</div>
         </div></span>
+      <button id="builderBtn" aria-pressed="false" title="Build an autonomous on the field and run it here with your code (it takes the Control Hub's place)">Auto builder</button>
       <span class="muted" id="v3note"></span>
     </div>
     <div id="stage" class="off" aria-label="Field and robot in 3D. Drag to turn, scroll to zoom, right-drag to slide."><div id="layerNote" role="status" hidden></div>
@@ -422,6 +502,7 @@
       While no program runs (or in INIT): double-click the robot, then drag it to move it or drag its ring to turn it
       (double-click again to stop).</div>
   </section>
+  <section id="builderSection" hidden aria-label="Auto builder"><div id="builder"></div></section>
 </main>
 
 <script src="/simview.js"></script>
@@ -431,6 +512,16 @@ const $ = (s, el = document) => el.querySelector(s);
 const params = new URLSearchParams(location.search);
 const phonePad = params.get("phone");          // "?phone=2": this page is one touch gamepad
 if (phonePad) document.body.classList.add("phone");
+// The auto builder (builder/builder.js, a module that loads after this script) hooks in here: the state 10
+// times a second, each 3D frame (with the moment it draws), the field map, and the 3D view once it is ready.
+const builderHooks = { state: null, frame: null, map2d: null, ready3d: null, lastState: null, game: null };
+window.simPage = {
+  hooks: builderHooks,
+  command: (data) => command(data),
+  resize3d: () => resize3d(),
+  get v3() { return v3; },
+  get game() { return builderHooks.game; },
+};
 
 // ---------------------------------------------------------------- gamepad state
 const BUTTONS = ["a","b","x","y","lb","rb","up","down","left","right","back","start","guide","ls","rs"];
@@ -671,6 +762,7 @@ function gotFrame(f) {
 }
 function gotState(s) {
   link.states++;
+  builderHooks.lastState = s;
   // The stream sends only the OpMode list's key: ask for the list itself when it changes.
   if (s.opmodes) { opmodeList = s.opmodes; opmodeKey = s.opmodesKey; }
   else if (s.opmodesKey !== opmodeKey) {
@@ -680,6 +772,7 @@ function gotState(s) {
   s.opmodes = opmodeList;
   lastState = s;
   render(s);
+  if (builderHooks.state) builderHooks.state(s);
   fillHitPieces(s);
   if (s.game) gotGame(s.game);          // /state has it; the stream sends it on its own
 }
@@ -1047,6 +1140,7 @@ function drawField(r) {
   ctx.fillStyle = css.getPropertyValue("--muted"); ctx.font = "11px system-ui";
   ctx.fillText((fieldData && fieldData.driversLabel) || "drivers", W / 2 - 26, W - 2);
   drawPaths(ctx, X, Y);
+  if (builderHooks.map2d) builderHooks.map2d(ctx, X, Y);
   if (r.drive === "none") return;
   const L = r.length || 18, Wd = r.width || 18;
   ctx.save();
@@ -1131,6 +1225,7 @@ function clockWords(c) {
 }
 function gotGame(g) {
   game = g;
+  builderHooks.game = g;
   const on = !!(g && g.rules);
   $("#matchOff").hidden = on; $("#matchOn").hidden = !on;
   $("#scoreBar").hidden = !on;
@@ -1279,6 +1374,7 @@ async function start3d() {
   } catch (e) { $("#v3note").textContent = "Could not load the 3D library (three.js)."; v3.loading = false; return; }
   build3d();
   v3.ready = true; v3.loading = false;
+  if (builderHooks.ready3d) builderHooks.ready3d();
   $("#v3note").textContent = "";
   if (lastState) update3d(lastState.robot, lastState.cameras || []);
 }
@@ -2208,6 +2304,7 @@ function frame3d() {
       v3.controls.target.set(p.x + fx * 20, p.y + fy * 20, 6);
     }
   }
+  if (builderHooks.frame) builderHooks.frame(smp);
   animateHives(now);
   drawSightFrame();
   v3.controls.update();
@@ -2228,6 +2325,7 @@ function set3d(on) {
   v3.on = on;
   $("#show3d").checked = on;
   $("#stage").classList.toggle("off", !on);
+  $("#stageOff").style.display = on ? "none" : "block";
   try { localStorage.setItem("sim3d", on ? "1" : "0"); } catch (e) {}
   if (on) { start3d(); resize3d(); }
 }
@@ -2273,5 +2371,6 @@ setInterval(() => document.querySelectorAll(".pad").forEach(div => drawPad($(".g
 if (phonePad) { document.querySelectorAll(".pad").forEach(div => { if (div.dataset.pad !== phonePad) div.style.display = "none"; }); }
 connect();
 </script>
+<script type="module" src="/builder/builder.js"></script>
 </body>
 </html>

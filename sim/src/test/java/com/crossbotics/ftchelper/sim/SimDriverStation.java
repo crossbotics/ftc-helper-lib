@@ -82,6 +82,8 @@ final class SimDriverStation {
         this.robot = robot;
         this.scope = scope;
         findOpModes();
+        // The auto builder's own autonomous (it runs the page's plan with the team's code): always listed.
+        opModes.add(new Entry(BuiltAuto.NAME, "Builder", "Autonomous", false, BuiltAuto.class));
     }
 
     // Loops run by an iterative OpMode (a LinearOpMode's loops are counted by its telemetry updates).
@@ -170,6 +172,8 @@ final class SimDriverStation {
 
     Phase phase() { return phase; }
     Entry current() { return current; }
+    /** The OpMode object running now (null before the first INIT). */
+    OpMode opMode() { return op; }
     String error() { return error; }
 
     /** Seconds since START (0 before). */
@@ -182,10 +186,20 @@ final class SimDriverStation {
     volatile int initCount = 0;
 
     synchronized void init(String name) {
+        init(name, null);
+    }
+
+    /**
+     * INIT with an alliance already chosen in its menu (the auto builder's Run): the menu starts on it, as
+     * if the drivers had pressed X or B. null: the menu's own start (BLUE, or this match's remembered one).
+     */
+    synchronized void init(String name, com.crossbotics.ftchelper.match.Alliance alliance) {
         initCount++;
         // A new program: its own alliance and start spot (not the last program's).
         com.crossbotics.ftchelper.match.MatchMemory.setChosen(null);
         com.crossbotics.ftchelper.match.MatchMemory.setPlacement(null, null);
+        // The INIT menu's alliance line starts on the remembered alliance (InitMenu.alliance()).
+        if (alliance != null) com.crossbotics.ftchelper.match.MatchMemory.remember(alliance, null);
         if (phase == Phase.INIT || phase == Phase.RUNNING) stop();
         Thread old = thread;
         if (old != null && old.isAlive()) {

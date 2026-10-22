@@ -249,6 +249,11 @@ install) shows the BIOBUZZ field like this map. Tap to add parts and drag the po
 18 x 18 in robot along the path and marks in red where it hits a field element or a wall. Then it
 writes the `PedroPath` code for you to copy. You can also paste your path into it to change it.
 
+**Or draw it in the simulator and run it:** the simulator's **Auto builder** (over the 3D view, "Pedro
+path") is the same builder with a Run button: it follows your path with the real Pedro follower on your
+robot, shows the plan and where the robot really went, and offers fixes ("hold the end"). The Java is the
+same. ([The auto builder](../../guides/simulator.md#the-auto-builder).)
+
 ---
 
 ## 6. Try it in the simulator first

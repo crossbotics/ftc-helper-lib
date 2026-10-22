@@ -279,6 +279,8 @@ final class SimJson {
         b.append("\"poses\":").append(r.shapes.posesTried).append(',');
         b.append("\"hingeStep\":").append(fmt(r.shapes.hingeStepDeg)).append('}');
         b.append('}');
+        // The auto builder's last run of the Built Auto (BuiltRun): START time, step ends, report, end pose.
+        b.append(",\"built\":").append(sim.built.json());
         if (full) b.append(",\"fast\":").append(SimView.frame(sim));
         b.append('}');
         return b.toString();
@@ -346,7 +348,7 @@ final class SimJson {
         b.append(']');
     }
 
-    private static StringBuilder string(StringBuilder b, String s) {
+    static StringBuilder string(StringBuilder b, String s) {
         b.append('"');
         if (s != null) {
             for (char c : s.toCharArray()) {

@@ -385,6 +385,10 @@ the match while they set up.
 
 ## Testing an autonomous
 
+**Or draw it first:** the simulator's [auto builder](simulator.md#the-auto-builder) builds the list on the
+field, runs it with your code, and writes this Java for you (the start note and a setup card for the drive
+team too).
+
 1. **In the simulator** ([guide](simulator.md)): INIT it, choose in the menu with the D-pad (on screen, or the
    keyboard after you set gamepad 1 to Keyboard), START, and watch. The report shows at the end. An untuned drive still runs there, with a
    warning, so you can try routes before tuning.

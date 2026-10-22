@@ -56,8 +56,15 @@ public abstract class Auto<R extends RobotDefinition> extends EasyAuto {
         return robot;
     }
 
+    /**
+     * Makes a new robot: the class named in {@code extends Auto<Robot>}. Teams never need to change
+     * this. The simulator's "Built Auto" (it runs a plan from the auto builder with whichever Robot
+     * class the team has) gives its own. Called once for the settings and again at each INIT read.
+     *
+     * @return a new robot, not set up yet (no hardware)
+     */
     @SuppressWarnings("unchecked")
-    private R newRobot() {
+    protected R newRobot() {
         return (R) RobotDefinition.newFromTypeOf(getClass(), Auto.class);
     }
 
