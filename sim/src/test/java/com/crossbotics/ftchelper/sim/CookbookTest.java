@@ -240,7 +240,10 @@ public class CookbookTest {
             assertTrue(String.join("\n", s.screen()), s.screenHas("Speed : 2900 RPM"));
             assertTrue(String.join("\n", s.screen()), s.screenHas("Points : NECTAR 0, POLLEN 0"));
             assertTrue(String.join("\n", s.screen()), s.screenHas("Table : POLLEN"));
-            s.press(v -> s.g1().x = v);                                   // save a point (POLLEN; no shots marked)
+            s.press(v -> s.g1().x = v);                                   // no shots marked: it only warns...
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Press X again to save the speed now anyway"), 1));
+            assertTrue(!s.screenHas("speedByDistancePollen"));
+            s.press(v -> s.g1().x = v);                                   // ...X again: saved (POLLEN)
             assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas(
                     "public static double[][] speedByDistancePollen = {{79.9, 2900}};   // in Tunables.Launcher"), 1));
             // Y until "> Table" (SPEED -> TABLE: no hood, no hand-set distance), then the other table.
@@ -250,6 +253,7 @@ public class CookbookTest {
             // The NECTAR table's own speed at that distance (3200), then save.
             assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Speed : 3200 RPM"), 1));
             s.press(v -> s.g1().x = v);
+            s.press(v -> s.g1().x = v);                                   // twice: no shots marked here either
             assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas(
                     "public static double[][] speedByDistanceNectar = {{79.9, 3200}};   // in Tunables.Launcher"), 1));
             assertTrue(String.join("\n", s.screen()), s.screenHas("Points : NECTAR 1, POLLEN 1"));

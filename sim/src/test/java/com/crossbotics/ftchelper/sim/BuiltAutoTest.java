@@ -209,6 +209,7 @@ public class BuiltAutoTest {
     // checked first, and every step of the plan is checked before the first is built.
     @Test public void aCommandNamedAsAnActionIsNeverCalled() throws Exception {
         CountingRobot robot = new CountingRobot();
+        robot.modules();   // reads define(): the parts are made (no hardware)
         CountingRobot.calls = 0;
         for (String code : new String[] {"robot.sideEffect()", "robot.notAnAction()"}) {
             try {
