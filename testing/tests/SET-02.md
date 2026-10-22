@@ -7,7 +7,7 @@ where: both
 minutes: 25
 needs: [any]
 kit_bots: [gobilda, rev, andymark, studica]
-since: unreleased
+since: v0.17.0
 docs: [modules/robot.md#parts-not-on-the-robot-yet, guides/simulator.md#a-part-not-on-the-robot-yet]
 ---
 

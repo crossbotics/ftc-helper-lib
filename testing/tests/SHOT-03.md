@@ -7,7 +7,7 @@ where: real
 minutes: 60
 needs: [flywheel, limelight|webcam|pinpoint|otos|dead-wheels]
 kit_bots: []
-since: unreleased
+since: v0.17.0
 docs: [guides/finders.md#shot-tuner-the-shot-table, tutorials/start/09-shooter-and-camera.md#8-two-game-pieces-two-shot-tables]
 ---
 

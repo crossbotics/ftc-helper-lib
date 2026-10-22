@@ -7,7 +7,7 @@ where: both
 minutes: 40
 needs: [lift|turret]
 kit_bots: []
-since: unreleased
+since: v0.17.0
 docs: [guides/interlocks.md, guides/interlocks.md#who-waits, guides/interlocks.md#checked-at-init]
 ---
 

@@ -372,7 +372,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/tutorials/start/09-shooter-and-camera.md",
@@ -453,7 +453,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/tutorials/start/09-shooter-and-camera.md",
@@ -532,7 +532,7 @@
     "andymark",
     "studica"
    ],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/tutorials/start/03-buttons.md",
@@ -785,7 +785,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/guides/finders.md",
@@ -870,7 +870,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/guides/finders.md",
@@ -951,7 +951,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/guides/interlocks.md",
@@ -1042,7 +1042,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/guides/interlocks.md",
@@ -1126,7 +1126,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/modules/robot.md",
@@ -1289,7 +1289,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/tutorials/start/07-odometry.md",
@@ -1379,7 +1379,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/tutorials/start/08-paths-with-pedro.md",
@@ -1546,7 +1546,7 @@
     "andymark",
     "studica"
    ],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/modules/robot.md",
@@ -1807,7 +1807,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/guides/finders.md",
@@ -1896,7 +1896,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/tutorials/start/09-shooter-and-camera.md",
@@ -1980,7 +1980,7 @@
     "rev",
     "studica"
    ],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/tutorials/start/09-shooter-and-camera.md",
@@ -2213,7 +2213,7 @@
     "andymark",
     "studica"
    ],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/guides/simulator.md",
@@ -2294,7 +2294,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/tutorials/start/09-shooter-and-camera.md",
@@ -2375,7 +2375,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/tutorials/start/09-shooter-and-camera.md",
@@ -2458,7 +2458,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/guides/turret-setup.md",
@@ -2541,7 +2541,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/guides/turret-setup.md",
@@ -2706,7 +2706,7 @@
     "andymark",
     "studica"
    ],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/guides/autos.md",
@@ -2787,7 +2787,7 @@
     "andymark",
     "studica"
    ],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/guides/buttons.md",
@@ -2865,7 +2865,7 @@
     "andymark",
     "studica"
    ],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/guides/buttons.md",
@@ -3170,7 +3170,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/tutorials/start/09-shooter-and-camera.md",
@@ -3251,7 +3251,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/modules/robot.md",
@@ -3333,7 +3333,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/modules/robot.md",
@@ -3415,7 +3415,7 @@
     "andymark",
     "studica"
    ],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/modules/hardware.md",
@@ -3799,7 +3799,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/guides/finders.md",
@@ -3884,7 +3884,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/tutorials/start/09-shooter-and-camera.md",
@@ -3966,7 +3966,7 @@
     "andymark",
     "studica"
    ],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/tutorials/start/09-shooter-and-camera.md",
@@ -4043,7 +4043,7 @@
     "andymark",
     "studica"
    ],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/modules/testkit.md",
@@ -4121,7 +4121,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/guides/turret-setup.md",
@@ -4206,7 +4206,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/tutorials/start/09-shooter-and-camera.md",
@@ -4287,7 +4287,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.17.0",
    "docs": [
     {
      "path": "docs/guides/turret-setup.md",

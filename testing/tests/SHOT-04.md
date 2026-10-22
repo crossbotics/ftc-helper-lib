@@ -7,7 +7,7 @@ where: both
 minutes: 20
 needs: [flywheel, limelight|webcam|pinpoint|otos|dead-wheels]
 kit_bots: []
-since: unreleased
+since: v0.17.0
 docs: [tutorials/start/09-shooter-and-camera.md#speed-trim-and-a-low-battery, cookbook.md#every-shot-is-a-bit-short-today-how-do-i-trim-the-speed-a-low-battery]
 ---
 

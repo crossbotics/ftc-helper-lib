@@ -7,7 +7,7 @@ where: both
 minutes: 30
 needs: [lift|turret]
 kit_bots: []
-since: unreleased
+since: v0.17.0
 docs: [guides/interlocks.md#stop-distance-a-fast-part-brakes-in-time, guides/tunables.md]
 ---
 

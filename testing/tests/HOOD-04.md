@@ -7,7 +7,7 @@ where: both
 minutes: 20
 needs: [hood-servo|hood-motor]
 kit_bots: []
-since: unreleased
+since: v0.17.0
 docs: [modules/robot.md#hood, guides/tunables.md]
 ---
 

@@ -7,7 +7,7 @@ where: both
 minutes: 40
 needs: [mecanum, pinpoint|otos|dead-wheels, pedro]
 kit_bots: []
-since: unreleased
+since: v0.17.0
 docs: [tutorials/start/08-paths-with-pedro.md#5-write-your-first-path, modules/pedro.md#do-things-along-the-path]
 ---
 

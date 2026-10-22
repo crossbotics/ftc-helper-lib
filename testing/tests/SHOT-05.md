@@ -7,7 +7,7 @@ where: real
 minutes: 40
 needs: [flywheel]
 kit_bots: [gobilda, rev, studica]
-since: unreleased
+since: v0.17.0
 docs: [tutorials/start/09-shooter-and-camera.md#speed-trim-and-a-low-battery, modules/robot.md#speed-trim-and-battery-compensation]
 ---
 

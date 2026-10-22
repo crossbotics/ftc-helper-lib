@@ -2,7 +2,12 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
-## Unreleased
+## v0.17.0 - 2026-10-22
+
+Some things work differently: INIT now stops on misspelled or leftover lines in Tunables.java, BACK
+pauses at the press, the launcher's D-pad changed, and a few names that are new in this version
+changed before the release. Read "Changed" below (each entry says what to do), or the release notes'
+"Before you update". Battery compensation is new and OFF by default.
 
 ### Added
 

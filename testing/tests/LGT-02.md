@@ -7,7 +7,7 @@ where: both
 minutes: 15
 needs: [lights]
 kit_bots: []
-since: unreleased
+since: v0.17.0
 docs: [modules/robot.md#the-alliance-at-init, tutorials/start/09-shooter-and-camera.md#13-a-light-for-the-drivers]
 ---
 

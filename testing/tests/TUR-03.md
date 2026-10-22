@@ -7,7 +7,7 @@ where: real
 minutes: 30
 needs: [turret]
 kit_bots: []
-since: unreleased
+since: v0.17.0
 docs: [guides/turret-setup.md#1-what-turns-it, guides/finders.md#servo-finder-ends-and-positions, modules/hardware.md#full-range]
 ---
 

@@ -7,7 +7,7 @@ where: both
 minutes: 30
 needs: [turret]
 kit_bots: []
-since: unreleased
+since: v0.17.0
 docs: [guides/turret-setup.md#2-how-does-it-know-its-angle, guides/turret-setup.md#from-autonomous-to-teleop]
 ---
 

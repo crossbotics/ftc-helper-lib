@@ -7,7 +7,7 @@ where: both
 minutes: 20
 needs: [pinpoint|otos|dead-wheels]
 kit_bots: []
-since: unreleased
+since: v0.17.0
 docs: [tutorials/start/07-odometry.md#7-teleop-starts-where-autonomous-ended, guides/buttons.md#moving-the-librarys-buttons]
 ---
 

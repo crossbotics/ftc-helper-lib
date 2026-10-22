@@ -7,7 +7,7 @@ where: both
 minutes: 30
 needs: [limelight|webcam|pinpoint|otos|dead-wheels]
 kit_bots: []
-since: unreleased
+since: v0.17.0
 docs: [tutorials/start/09-shooter-and-camera.md#10-no-turret-aim-the-whole-robot]
 ---
 

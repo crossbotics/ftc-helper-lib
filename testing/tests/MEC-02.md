@@ -7,7 +7,7 @@ where: real
 minutes: 25
 needs: [any]
 kit_bots: [gobilda, rev, andymark, studica]
-since: unreleased
+since: v0.17.0
 docs: [modules/hardware.md#full-range, guides/finders.md#servo-finder-ends-and-positions]
 ---
 

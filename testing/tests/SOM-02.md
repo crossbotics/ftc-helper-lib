@@ -7,7 +7,7 @@ where: real
 minutes: 60
 needs: [flywheel, pinpoint|otos|dead-wheels]
 kit_bots: []
-since: unreleased
+since: v0.17.0
 docs: [tutorials/start/09-shooter-and-camera.md#14-extra-shooting-while-moving, modules/vision.md#movingshot]
 ---
 

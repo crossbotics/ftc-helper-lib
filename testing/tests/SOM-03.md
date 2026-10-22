@@ -7,7 +7,7 @@ where: sim
 minutes: 40
 needs: [any]
 kit_bots: [gobilda, rev, andymark, studica]
-since: unreleased
+since: v0.17.0
 docs: [tutorials/start/09-shooter-and-camera.md#14-extra-shooting-while-moving, guides/simulator.md#clean-shots-scatter-and-the-hit-rate]
 ---
 

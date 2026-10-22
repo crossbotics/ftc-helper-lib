@@ -7,7 +7,7 @@ where: real
 minutes: 30
 needs: [color-sensor|distance-sensor]
 kit_bots: []
-since: unreleased
+since: v0.17.0
 docs: [guides/finders.md#piece-tuner-what-each-sensor-sees, modules/robot.md#pieces-and-piecesensor]
 ---
 
