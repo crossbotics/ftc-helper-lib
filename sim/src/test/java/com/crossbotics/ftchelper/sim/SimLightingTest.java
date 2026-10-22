@@ -66,11 +66,10 @@ public class SimLightingTest {
         cam.close();
     }
 
-    @Test public void noTagsAnywhereKeepsTheFirstSettingAfterStart() throws Exception {
+    @Test public void noTagsAnywhereKeepsTheFirstSettingAtStart() throws Exception {
         SimRobot r = robot("limelight.ll = name=limelight, forward=8, up=10, pitch=30");
         synchronized (r) { r.headingDeg = -90; }          // facing away from every tag
         LimelightTags cam = LimelightTags.create(r.hardwareMap(), "limelight").autoPipelines(1, 0);
-        cam.lighting().giveUpAfterStartMs(500);
         cam.start();
         for (int i = 0; i < 100; i++) {
             cam.update();
@@ -78,11 +77,33 @@ public class SimLightingTest {
         }
         assertFalse("still trying in INIT", cam.lighting().isDone());
         cam.matchStarted();
-        runUntilDone(cam, cam.lighting());
+        assertTrue("stops at START", cam.lighting().isDone());
         assertTrue(cam.lighting().gaveUp());
         assertEquals("pipeline 1", cam.lighting().chosenLabel());
         Thread.sleep(100);
         assertEquals("the Limelight is back on the first pipeline", 1, r.cameras.get("limelight").pipeline);
+        cam.close();
+    }
+
+    @Test public void trialPicturesAreNeverTargetsInTheMatch() throws Exception {
+        // Tags only on pipeline 2, and time after START: until the test finds pipeline 2, no targets.
+        SimRobot r = robot("limelight.ll = name=limelight, forward=8, up=10, pitch=30, goodPipelines=2");
+        LimelightTags cam = LimelightTags.create(r.hardwareMap(), "limelight").autoPipelines(0, 1, 2);
+        cam.lighting().giveUpAfterStartMs(10_000);
+        cam.start();
+        cam.matchStarted();
+        boolean sawTargetWhileTrying = false;
+        for (int i = 0; i < 600 && !cam.lighting().isDone(); i++) {
+            cam.update();
+            if (!cam.lighting().isDone() && !cam.targets().isEmpty()) sawTargetWhileTrying = true;
+            Thread.sleep(20);
+        }
+        assertTrue(cam.lighting().isDone());
+        assertFalse("no target while a pipeline was being tried", sawTargetWhileTrying);
+        assertEquals("pipeline 2", cam.lighting().chosenLabel());
+        Thread.sleep(100);
+        cam.update();
+        assertNotNull("targets again once done", cam.target(31));
         cam.close();
     }
 }

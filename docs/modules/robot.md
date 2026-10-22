@@ -406,8 +406,18 @@ camera = add(Camera.webcam("Webcam 1").autoExposure());          // auto, 3, 6, 
 ```
 
 At INIT the Driver Station shows `limelight lighting: pipeline 2 (9 of 10 pictures saw tags)` (a
-warning while no tag is seen), and the line that skips the test at this venue next time, e.g.
-`Tunables.Limelight.pipeline = 2, autoLighting = false`. `lighting()` gives the test itself.
+warning while no tag is seen), and the two lines that skip the test at this venue next time:
+
+```java
+public static double pipeline = 2;
+public static boolean autoLighting = false;
+```
+
+Put them in `Tunables.Limelight` (change the `pipeline` line; add `autoLighting` if it is not there).
+A webcam shows `public static double exposureMs = 6;` instead: a new line in its section.
+`lighting()` gives the test itself. At START the test stops and keeps the best setting so far, so
+have a tag in view at INIT. A camera missing from the robot configuration is a warning at INIT, not
+a stop: the OpMode runs and the camera sees nothing.
 
 Its optional Tunables (leave them out for the defaults):
 
@@ -417,7 +427,7 @@ Its optional Tunables (leave them out for the defaults):
 | `lightingSettleMs` | 300 | wait after a switch before counting pictures (ms) |
 | `lightingPictures` | 10 | pictures counted per setting |
 | `lightingMinPictures` | 3 | pictures with tags a setting needs to count as good |
-| `lightingAfterStartMs` | 3000 | after START, how long to keep trying before keeping the first setting (ms) |
+| `lightingAfterStartMs` | 0 | after START, how long to keep trying (ms); 0 = stop at START with the best so far. No targets while it tries |
 | `exposureMs` (webcam) | -1 | a fixed manual exposure (ms) when the test is off; -1 = the camera's own |
 | `gain` (webcam) | -1 | the gain for manual exposures; -1 = the camera's highest |
 

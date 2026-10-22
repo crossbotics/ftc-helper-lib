@@ -118,19 +118,33 @@ Every venue has different light: a bright gym, a dim practice room, spotlights a
 setting that finds tags well in one place can miss them in another. The lighting test picks the
 setting for the place you are in, by itself, during INIT:
 
-1. It switches to the first setting, waits a moment (300 ms) for the camera to settle, then counts
-   the next 10 pictures that see at least one AprilTag.
+1. It asks the camera to switch to the first setting. Once the camera has really switched, it waits
+   a moment (300 ms) for the picture to settle, then counts the next 10 pictures that see at least
+   one AprilTag. Pictures from before that do not count.
 2. It does the same with each setting in the list.
 3. The setting with the most pictures with tags wins. A tie goes to the one earlier in the list, so
    **put your usual setting first**.
 4. If no setting saw at least 3 pictures with tags (the robot is not facing a tag yet), it starts over
-   and keeps trying. After START it tries for 3 s more, then keeps the FIRST setting.
+   and keeps trying, all through INIT.
+5. **At START it stops at once** and keeps the best setting so far (the first one if none saw a tag).
+   So the robot never aims with a setting it is only trying. **Have a tag in view at INIT** (where the
+   robot starts the match is fine), or the test cannot help.
+
+A setting the camera refuses (a webcam without manual exposure), or a Limelight pipeline that sends
+no pictures (not set up), gets no score, is skipped from then on, and is shown on the Driver Station
+(`no pictures from pipeline 2 (missing?)`). A camera that is not in the robot configuration, or not
+working after 3 s, is a warning at INIT; the OpMode still runs.
 
 It never waits: each switch goes to a background helper, and the test is one quick step per loop.
-Face the robot toward a tag in INIT (where it starts in the match is fine) so the test can finish.
+
+**At an event:** in the queue, INIT once with the robot facing a tag. The Driver Station shows the
+result and two lines for `Tunables.java`, e.g. `public static double pipeline = 2;` and
+`public static boolean autoLighting = false;`. With them, every match there uses that setting with
+no test (set `autoLighting = true` again at home). A webcam shows `exposureMs` (a new line to add).
 
 **Limelight:** set up one AprilTag pipeline per kind of light on the Limelight's web page (for
-example 0 = normal, 1 = bright: lower exposure, 2 = dim: higher exposure and gain), then:
+example 0 = normal, 1 = bright: lower exposure, 2 = dim: higher exposure and gain; the Exposure
+slider is in the pipeline's Input tab at http://limelight.local:5801), then:
 
 ```java
 LimelightTags camera = LimelightTags.create(hardwareMap, "limelight").autoPipelines(0, 1, 2);
@@ -148,13 +162,14 @@ WebcamTags camera = WebcamTags.create(hardwareMap, "Webcam 1").autoExposure(6, 3
 
 `0` is the camera's own automatic exposure. A short exposure gives sharp tags while the robot moves,
 but a dark picture; the gain (a brightness boost) makes up for it. Manual exposures use the gain from
-`.gain(g)` or `.exposure(ms, gain)`, or the camera's highest. The same idea as the FTC SDK's sample
+`.gain(g)` or `.exposure(ms, gain)`, or the camera's highest; "auto" gets the camera's own gain back
+(read before the first manual setting). The same idea as the FTC SDK's sample
 `ConceptAprilTagOptimizeExposure`, done for you. Not every webcam allows manual exposure:
 `status()` says "exposure not supported".
 
 In the five-files robot it is one word on the camera's line:
 `Camera.limelight("limelight").autoPipelines(0, 1, 2)` or `Camera.webcam("Webcam 1").autoExposure()`
-(see [robot.md](robot.md#camera)). The result is on the Driver Station at INIT, with the line to copy
+(see [robot.md](robot.md#camera)). The result is on the Driver Station at INIT, with the lines to copy
 into `Tunables.java` if you want to skip the test at this venue next time.
 
 ## LightingSweep
@@ -166,16 +181,21 @@ pictures see the most tags. `LimelightTags` and `WebcamTags` make one for you; g
 | Method | What it does |
 | --- | --- |
 | `new LightingSweep(labels, apply, clock)` | one label per setting (usual first); `apply` switches to setting i (must not wait); `System::nanoTime` |
-| `update(tags)` | every loop: tags in a new picture, or `LightingSweep.NO_PICTURE` |
-| `.settleMs(ms)` | wait after a switch before counting (default 300) |
-| `.pictures(n)` | pictures counted per setting (default 10) |
-| `.trialMs(ms)` | most time per setting (default 2000) |
-| `.minPictures(n)` | pictures with tags needed to count as good (default 3) |
-| `.giveUpAfterStartMs(ms)` | after START, how long to keep trying before keeping the first setting (default 3000) |
-| `matchStarted()` | START happened |
-| `restart()` | try every setting again (for a button) |
-| `isDone()`, `gaveUp()`, `chosen()`, `chosenLabel()`, `current()` | the result |
-| `status()`, `scores()` | "dim (9 of 10 pictures saw tags)"; "normal 2/10, bright 0/10, dim 9/10" |
+| `update(tags)` | every loop: tags in a new picture from the setting tried, `LightingSweep.NO_PICTURE`, or `LightingSweep.OTHER_SETTING` (a picture from the setting before) |
+| `switched()` | the camera has the setting being tried (settling starts now) |
+| `switchFailed()` | the camera refused it: no score, skipped from now on |
+| `waitingForCamera()` | instead of `update` while the camera is not ready (only the time limits are checked) |
+| `.settleMs(ms)` | wait after the switch lands before counting (default 300; Tunables `lightingSettleMs`) |
+| `.pictures(n)` | pictures counted per setting (default 10; `lightingPictures`) |
+| `.trialMs(ms)` | most time per setting once switched (default 2000) |
+| `.switchTimeoutMs(ms)` | most time for the camera to switch (default 1500); pictures only from another setting then = "missing" |
+| `.minPictures(n)` | pictures with tags needed to count as good (default 3; `lightingMinPictures`) |
+| `.giveUpAfterStartMs(ms)` | after START, how long to keep trying (default 0 = stop at START with the best so far; Tunables `lightingAfterStartMs`). The cameras report no targets while it tries after START |
+| `matchStarted()`, `matchHasStarted()` | START happened |
+| `restart()` | try every setting again during the match (it gets `giveUpAfterStartMs` from now) |
+| `newSession()` | the camera was closed and started again: INIT again (the cameras call it in `close()`) |
+| `isDone()`, `gaveUp()`, `chosen()`, `chosenLabel()`, `current()`, `noTagsYet()`, `skipped(i)` | the result |
+| `status()`, `scores()`, `problems()` | "dim (9 of 10 pictures saw tags)"; "normal 2/10, bright 0/10, dim 9/10"; "no pictures from pipeline 2 (missing?)" |
 
 ## TagGroup
 

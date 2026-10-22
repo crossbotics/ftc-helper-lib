@@ -77,6 +77,12 @@ public class WebcamTags implements TargetSource {
     // camera has the setting being tried, so its pictures count. (volatile: shared with the worker)
     private int requested = 0;
     private volatile int applied = -1;
+    // Did the camera take the setting numbered "applied"? Written by the worker before "applied".
+    private volatile boolean appliedOk = false;
+    // The last switch the loop has told the sweep about (done or refused).
+    private int reported = -1;
+    // The camera's own gain, read before the first manual setting, so "auto exposure" gets it back.
+    private volatile int savedGain = Integer.MIN_VALUE;
 
     /** The exposures {@link #autoExposure()} tries: the camera's own (0), then 3, 6 and 12 ms. */
     public static final long[] DEFAULT_EXPOSURES_MS = {0, 3, 6, 12};
@@ -168,9 +174,10 @@ public class WebcamTags implements TargetSource {
     /**
      * Venue lighting: tries these exposures one after the other in INIT, counts the pictures that see
      * AprilTags with each, and keeps the best one. Put your usual one FIRST (it wins ties, and it is
-     * kept if no tag is seen at all). It keeps going after START if it is not done, for at most 3 s
-     * more. Each manual exposure uses the gain from {@link #exposure(long, int)}, or the camera's
-     * highest gain if none was given (a short exposure is dark; gain brightens it). Replaces
+     * kept if no tag is seen at all). Have a tag in view at INIT: at START the test stops and keeps
+     * the best exposure so far. A setting the camera refuses is skipped. Each manual exposure uses the
+     * gain from {@link #exposure(long, int)} or {@link #gain(int)}, or the camera's highest gain if none
+     * was given (a short exposure is dark; gain brightens it); "auto" gets the camera's own gain back. Replaces
      * {@link #exposure(long, int)}'s exposure. Never waits: camera settings are sent in the background.
      * {@link #lighting()} has the result. Not every webcam allows manual exposure ({@link #status()} says).
      *
@@ -200,8 +207,9 @@ public class WebcamTags implements TargetSource {
     }
 
     /**
-     * Tell the camera the match has started, so an unfinished {@link #autoExposure} test gives up in
-     * time (the five-files Camera module does this for you). Safe to call without autoExposure.
+     * Tell the camera the match has started, so an unfinished {@link #autoExposure} test stops and
+     * keeps the best exposure so far (the five-files Camera module does this for you). Safe to call
+     * without autoExposure.
      */
     public void matchStarted() {
         if (sweep != null) sweep.matchStarted();
@@ -214,8 +222,8 @@ public class WebcamTags implements TargetSource {
         if (worker == null) worker = new BackgroundWorker("webcam");
         // submitLatest: if the sweep moves on before this one ran, only the newest setting is sent
         worker.submitLatest("exposure", () -> {
-            applyExposure(ms, gain);
-            applied = number;        // even if it failed: the sweep must move on
+            appliedOk = applyExposure(ms, gain);
+            applied = number;        // done (taken or refused): the loop tells the sweep
         });
     }
 
@@ -260,10 +268,28 @@ public class WebcamTags implements TargetSource {
         List<AprilTagDetection> fresh = processor.getFreshDetections();
         // Venue lighting: camera settings can only be sent while streaming. A picture counts only once
         // the camera has the setting being tried (applied == requested).
-        if (sweep != null && !sweep.isDone() && streaming) {
-            boolean counts = fresh != null && applied == requested;
-            sweep.update(counts ? fresh.size() : LightingSweep.NO_PICTURE);
+        if (sweep != null && !sweep.isDone()) {
+            if (!streaming) {
+                sweep.waitingForCamera();          // no switching yet, but START still ends the test
+            } else {
+                int done = applied;
+                if (done == requested && done != reported) {
+                    reported = done;
+                    // appliedOk was written before applied, so it belongs to this switch
+                    if (appliedOk) sweep.switched();
+                    else sweep.switchFailed();     // refused: no score, the next setting is tried
+                }
+                boolean counts = fresh != null && done == requested && appliedOk;
+                sweep.update(counts ? fresh.size() : LightingSweep.NO_PICTURE);
+            }
         }
+        readFresh(fresh);
+        // A lighting test still running in the match: its trial pictures must not be aimed with.
+        if (sweep != null && !sweep.isDone() && sweep.matchHasStarted()) latest = Collections.emptyList();
+    }
+
+    // Turns the newest picture's detections into targets (see update()).
+    private void readFresh(List<AprilTagDetection> fresh) {
         if (fresh == null) {          // no new picture since last time: keep the last list, while it is recent
             // Forget targets that are too old, so a camera that stops sending never leaves an old
             // target behind for the robot to aim at.
@@ -339,9 +365,10 @@ public class WebcamTags implements TargetSource {
         portal = null;
         // a new start() must send the exposure and gain again to the new camera stream
         controlsApplied = false;
-        // the next start() tries the lighting settings again on the new stream
-        if (sweep != null) sweep.restart();
+        // the next start() is a new camera session: the lighting test starts over, as in INIT
+        if (sweep != null) sweep.newSession();
         applied = -1;
+        reported = -1;
         // nothing seen any more: an old target must never be used after the camera stopped
         latest = Collections.emptyList();
     }
@@ -361,12 +388,17 @@ public class WebcamTags implements TargetSource {
                 ExposureControl.Mode autoMode = exposure.isModeSupported(ExposureControl.Mode.AperturePriority)
                         ? ExposureControl.Mode.AperturePriority : ExposureControl.Mode.Auto;
                 ok = exposure.setMode(autoMode);
+                // Give back the camera's own gain (a manual setting before may have turned it up).
+                GainControl gainControl = portal.getCameraControl(GainControl.class);
+                if (ok && savedGain != Integer.MIN_VALUE && gainControl != null) ok = gainControl.setGain(savedGain);
             } else {
                 // Keep it inside what this camera can do.
                 long lo = exposure.getMinExposure(TimeUnit.MILLISECONDS), hi = exposure.getMaxExposure(TimeUnit.MILLISECONDS);
                 long use = hi > lo ? Math.max(lo, Math.min(hi, ms)) : ms;
-                ok = exposure.setMode(ExposureControl.Mode.Manual) && exposure.setExposure(use, TimeUnit.MILLISECONDS);
                 GainControl gainControl = portal.getCameraControl(GainControl.class);
+                // Before the first manual setting: remember the camera's own gain.
+                if (savedGain == Integer.MIN_VALUE && gainControl != null) savedGain = gainControl.getGain();
+                ok = exposure.setMode(ExposureControl.Mode.Manual) && exposure.setExposure(use, TimeUnit.MILLISECONDS);
                 ok = ok && gainControl != null && gainControl.setGain(wantGain >= 0 ? wantGain : gainControl.getMaxGain());
             }
             controlsNote = ok ? "" : "exposure not supported";
