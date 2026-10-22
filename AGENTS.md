@@ -39,7 +39,10 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
     `./gradlew :sim:scenario -Pfile=...` (report: each check ok/FAIL with the value seen).
   - `sim/parts/parts.json`: motors and servos with seller-page numbers and the date checked; add a
     part the same way (never from memory). `sim/fields/<season>.json`: one per season, made from the
-    official field CAD by a script, not typed by hand.
+    official field CAD by a script, not typed by hand. `sim/fields/<season>.rules.json` next to it: the game's rules
+    (points, match times, FLOWER heights, tip time, clean-shot rules), typed from the manual with section
+    numbers (SimRules; scoring in SimScore, the clean-shot judge in SimCellJudge, a port of the turret
+    simulator's judge() checked by SimCellJudgeTest).
 - `docs/` `modules/` (reference: every public class and method), `tutorials/` (hands-on lessons),
   `guides/` (how-to and checklists), `images/` (SVG diagrams), `starter-kit.md`, setup/update pages.
 - `tools/check_docs.py` checks links, heading links, class coverage, tutorial programs, and that every

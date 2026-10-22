@@ -166,6 +166,12 @@ final class SimServer {
             else send(out, 200, "application/octet-stream", cad.meshes.get(i).bytes());
         } else if (method.equals("GET") && THREE_FILES.contains(path)) {
             send(out, 200, "text/javascript; charset=utf-8", resource("/sim" + path));
+        } else if (method.equals("GET") && path.equals("/hit-rate")) {
+            // N pretend shots from the robot as it is now: how many go cleanly into an up CELL (SimPieces.hitRate)
+            Map<String, String> q = form(query);
+            int n = (int) Math.max(1, Math.min(5000, num(q, "n") > 0 ? num(q, "n") : 400));
+            SimPieces.HitRate h = sim.robot.pieces.hitRate(n, q.get("piece"), 12345);
+            send(out, 200, "application/json", SimScore.json(h).getBytes(StandardCharsets.UTF_8));
         } else if (method.equals("GET") && path.equals("/simview.js")) {
             send(out, 200, "text/javascript; charset=utf-8", resource("/sim/simview.js"));
         } else if (method.equals("GET") && path.equals("/state")) {
@@ -262,6 +268,8 @@ final class SimServer {
                 // a game piece put on the field by hand (like the scenario's set piece)
                 case "piece": sim.robot.pieces.place(f.getOrDefault("type", "POLLEN"), num(f, "x"), num(f, "y"), num(f, "z")); return "ok";
                 case "preload": sim.robot.pieces.setPreloaded("1".equals(f.get("on"))); sim.jumps.incrementAndGet(); return "ok";
+                // shot scatter for every launcher: off, realistic, rough, or file (each launcher's scatter=)
+                case "scatter": sim.robot.pieces.setScatter(f.get("mode")); return "ok";
                 case "pose": sim.robot.setPose(num(f, "x"), num(f, "y"), num(f, "heading")); sim.jumps.incrementAndGet(); return "ok";
                 case "touch": sim.robot.toggleTouch(f.get("name")); return "ok";
                 case "autoTimer": sim.ds.autoTimer = "1".equals(f.get("on")); return "ok";

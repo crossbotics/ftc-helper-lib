@@ -69,11 +69,16 @@ public class SimPiecesTest {
         assertTrue("it flies up and forward: highest " + maxZ + " in", maxZ > 15);
     }
 
+    // With the rules file (biobuzz-2026.rules.json) a piece that falls into a FLOWER's top stays there, on its
+    // stack (SimGameTest has the scoring); it counts as scored in that FLOWER.
     @Test public void aPieceDroppedIntoAFlowerScores() throws Exception {
         SimRobot r = robot("");
         r.pieces.place("POLLEN", 23.57, -68.04, 30);        // above the red-wall FLOWER's opening
         run(r, 1.0);
         assertEquals(1, (int) r.pieces.scored().get("FLOWER (red wall, audience half)"));
+        assertEquals("it is in the FLOWER now, on top of the 4 staged POLLEN", 17, r.pieces.inStacks());
+        assertEquals(5, r.pieces.flowers().get("FLOWER (red wall, audience half)").size());
+        assertEquals("still on the field (drawn in the FLOWER)", 31, r.pieces.drawn().size());
         // dropped 2.5 in off the centre: it lands on the rim and rolls in (it counts)
         SimRobot o = robot("");
         o.pieces.place("POLLEN", 23.57 + 2.5, -68.04, 30);
@@ -84,6 +89,23 @@ public class SimPiecesTest {
         q.pieces.place("POLLEN", 23.57, -68.04, 26);
         q.pieces.step();
         assertEquals(0, (int) q.pieces.scored().get("FLOWER (red wall, audience half)"));
+    }
+
+    // Without a rules file next to the field file, the simulator works as before: a piece in a goal is counted and
+    // taken off the field, and a HIVE tips at once.
+    @Test public void withoutARulesFileAGoalTakesThePieceOff() throws Exception {
+        File dir = tmp.newFolder("norules");
+        File field = new File(dir, "plain.json");
+        Files.copy(new File("fields/biobuzz-2026.json").toPath(), field.toPath());
+        SimRobot r = robot("field = " + field.getAbsolutePath() + "\n");
+        assertTrue(r.field.rules == null);
+        r.pieces.place("POLLEN", 23.57, -68.04, 30);
+        run(r, 1.0);
+        assertEquals(1, (int) r.pieces.scored().get("FLOWER (red wall, audience half)"));
+        assertEquals("taken off", 16, r.pieces.inStacks());
+        assertEquals(30, r.pieces.drawn().size());
+        assertTrue("no FLOWER stacks, no score", r.pieces.flowers().isEmpty());
+        synchronized (r) { assertEquals("{\"rules\":false}", r.pieces.score.json()); }
     }
 
     @Test public void theClawHoldsAPieceAndDropsItWhenItOpens() throws Exception {
@@ -267,8 +289,9 @@ public class SimPiecesTest {
     }
 
     // The red HIVE (pivot 0, -12.75, 43.95; the CELL toward +x up at the start, holding the 3 staged NECTAR,
-    // 123 g): 3 POLLEN dropped into it make 198 g, over the 187 g that tips it. It tips: the other CELL comes up,
-    // its pieces fall out, its tags move. A piece over a wall is counted. Back to start puts it all back.
+    // 123 g): 3 POLLEN dropped into it make 198 g, over the 187 g that tips it. It tips (turning for 0.5 s, the rules
+    // file's tipSeconds; SimGameTest watches it turn): the other CELL comes up, its pieces fall out, its tags move.
+    // A piece over a wall is counted. Back to start puts it all back.
     @Test public void aHiveTipsWhenItsUpCellIsHeavyEnough() throws Exception {
         SimRobot r = robot("");
         r.setPose(40, -55, 0);
