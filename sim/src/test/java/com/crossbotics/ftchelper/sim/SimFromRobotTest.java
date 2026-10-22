@@ -264,40 +264,54 @@ public class SimFromRobotTest {
         SimRobot.load(file);
     }
 
-    @Test public void theV2BotScoresInAFlowerAndTheInterlockHoldsTheLift() throws Exception {
+    @Test public void theV2BotScoresInAFlowerAndTheInterlockHoldsTheTurret() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.v2bot.Robot.class);
         com.crossbotics.ftchelper.robot.Turret.forgetAngles();
         try (SimRun s = new SimRun(file.toString())) {
-            s.init("V2 Bot TeleOp");
-            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Interlock TurretLift: Turret between 109 and 239 deg / Lift above 270 counts"), 2));
-            assertTrue(s.screenHas("G2 Y: score in a FLOWER"));
-            SimMotor lift = s.robot().motors.get("lift"), turret = s.robot().motors.get("turret");
-            s.start();
-            // The turret homes on its switch at START (Tunables.Turret.homeAngle 0): then it is known.
-            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> !s.screenHas("homing"), 8));
-            // Score: the turret turns forward, the wrist swings out, the lift goes up to the FLOWER and back.
-            s.press(v -> s.g2().y = v);
-            assertTrue("the lift goes up: " + lift.shaft(), SimRun.waitFor(() -> lift.shaft() > 1250, 5));
-            SimRobot.SimServo claw = s.robot().servos.get("claw");
-            assertTrue("it lets go over the FLOWER", SimRun.waitFor(() -> claw.actual > 0.53, 3));
-            assertTrue("and comes back down: " + lift.shaft(), SimRun.waitFor(() -> lift.shaft() < 100, 6));
-            // Now the interlock: following off (BACK), the turret by hand to the back (stick right =
-            // clockwise, toward -190: the zone is 109 to 239, the same as -251 to -121).
-            s.press(v -> s.g2().back = v);
-            double perDeg = 537.7 * 2.75 / 360;
-            s.g2().right_stick_x = 1;
-            assertTrue("turret to the back: " + turret.shaft() / perDeg,
-                    SimRun.waitFor(() -> turret.shaft() / perDeg < -150, 6));
-            s.g2().right_stick_x = 0;
-            // The lift by hand, up: it waits two margins below its line (270 - 2 x 80 counts) and never
-            // gets within one margin of it (where it would count as in its zone).
-            s.g2().right_stick_y = -1;
-            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("TurretLift : Lift held at"), 3));
-            SimRun.pause(1.0);
-            assertTrue("the lift waits below its line: " + lift.shaft(), lift.shaft() < 270 - 80);
-            s.g2().right_stick_y = 0;
-            assertEquals("", s.error());
+            v2Interlock(s);
+        } finally {
+            // The turret ends pointing back: another robot's turret must not start from that angle.
+            com.crossbotics.ftchelper.robot.Turret.forgetAngles();
         }
+    }
+
+    private void v2Interlock(SimRun s) throws Exception {
+        s.init("V2 Bot TeleOp");
+        assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Interlock TurretClaw: Turret between 147 and 217 deg / Wrist between 0.00 and 0.27"), 2));
+        assertTrue(s.screenHas("G2 Y: score in a FLOWER"));
+        SimMotor lift = s.robot().motors.get("lift"), turret = s.robot().motors.get("turret");
+        s.start();
+        // The turret homes on its switch at START (Tunables.Turret.homeAngle 0): then it is known.
+        assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> !s.screenHas("homing"), 8));
+        // The interlock: the wrist starts folded (in its zone, 0 to 47 degrees), so the turret must
+        // stay out of the back. Following off (BACK), the turret by hand toward the back (stick right
+        // = clockwise, toward -190: the zone 147 to 217 is the same as -213 to -143). It waits two
+        // margins (turretMargin 12) before it, at -119, and coasts a little: never into the zone.
+        s.press(v -> s.g2().back = v);
+        double perDeg = 537.7 * 2.75 / 360;
+        s.g2().right_stick_x = 1;
+        assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("TurretClaw : Turret held at"), 6));
+        SimRun.pause(1.0);
+        assertTrue("the turret waits at the edge of its zone: " + turret.shaft() / perDeg + "\n" + String.join("\n", s.screen()),
+                turret.shaft() / perDeg > -143 && turret.shaft() / perDeg < -105);
+        s.g2().right_stick_x = 0;
+        // Score (the turret still points back-ish, outside the zone): the wrist swings out, the lift
+        // goes up to the FLOWER and back.
+        s.press(v -> s.g2().y = v);
+        assertTrue("the lift goes up: " + lift.shaft(), SimRun.waitFor(() -> lift.shaft() > 1250, 5));
+        SimRobot.SimServo claw = s.robot().servos.get("claw"), wrist = s.robot().servos.get("wrist");
+        // With the wrist out (above 47 degrees) the turret may point anywhere: straight back now.
+        s.g2().right_stick_x = 1;
+        assertTrue("the turret goes past -143 with the wrist out: " + turret.shaft() / perDeg,
+                SimRun.waitFor(() -> turret.shaft() / perDeg < -160, 4));
+        s.g2().right_stick_x = 0;
+        assertTrue("it lets go over the FLOWER", SimRun.waitFor(() -> claw.actual > 0.53, 3));
+        assertTrue("and comes back down: " + lift.shaft(), SimRun.waitFor(() -> lift.shaft() < 100, 6));
+        // Folding would put the claw into the turret: the wrist waits above its zone.
+        SimRun.pause(1.0);
+        assertTrue(String.join("\n", s.screen()), s.screenHas("TurretClaw : Wrist held at"));
+        assertTrue("the wrist is still out: " + wrist.actual, wrist.actual > 0.274);
+        assertEquals("", s.error());
     }
 
     // The Hood Finder with robot(): a start point, then the two stops; it shows the Tunables line.

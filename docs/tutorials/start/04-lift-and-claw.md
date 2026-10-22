@@ -173,6 +173,12 @@ public class MotorFinder extends MotorFinderOpMode {
   4. Press A fully open without straining, and A again fully closed on a game piece.
 
   Details: [Servo Finder](../../guides/finders.md#servo-finder-ends-and-positions).
+
+  **Not enough turn?** On the hub's normal signal a goBILDA 2000 servo turns 270 degrees over 0 to 1,
+  not the 300 its seller lists (the hub sends a narrower pulse than the servo can take). If your claw or
+  wrist needs more, add `.fullRange()` in Robot.java (`Claw.servo("claw").fullRange()`) and press **Y**
+  in the Servo Finder before choosing the servo. Decide this BEFORE you measure: the numbers change with
+  the range. Most claws do not need it. ([Why](../../modules/hardware.md#full-range).)
 - **Motor Finder, for the lift:** put the lift at the bottom first (the count starts at 0 there).
   Move it slowly with the stick. Press X just before the bottom block and B just before the top
   block: those are `min` and `max`. Press A at each height you want.

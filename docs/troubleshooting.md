@@ -65,6 +65,13 @@ Without this stop it would quietly become a named position, and the real setting
 library's default. Fix the spelling. If it really is a position, give it a name that does not look
 like a setting. The known names: [Lift](modules/robot.md#lift).
 
+**`Tunables.Intake.inPowr is not a setting of Intake (did you mean inPower?): the robot would quietly ignore it. ...`**
+(any part: `Tunables.Aim.goalx`, `Tunables.Launcher.nominalVolt`, `Tunables.TurretLift.turetFrom`.) A field
+in that section is not a name the part reads: a typo, other capitals, or a leftover from an older robot.
+Before, the line was quietly skipped and the part used its default. Fix the name (the "did you mean" is
+the closest real one; `Known:` lists them all, and so does the [Tunables reference](guides/tunables.md)),
+or delete the line. A number you keep for your own code goes in your own section (`Tunables.Auto`).
+
 **`AutoDriveConfig.calibrationConfirmed is false`**, or **"AUTONOMOUS IS OFF: the drive is not tuned yet"** (EasyAuto, Auto)
 On purpose: a robot with untuned numbers can drive much too far. Tune `AutoDrive`, then set it to `true`: [Tune AutoDrive](modules/drive.md#tune-autodrive). With the
 robot in five files: the Drive Tuner, then `Tunables.Drive.calibrated = true`.
@@ -108,6 +115,17 @@ Add `robotConfig()` to the OpMode: `return new RobotSettings();` (starter kit) o
 `RobotSettings.imu()` returned null. Return `ImuSetup.get(...)` there: every Control Hub has an IMU.
 
 ## Robot behavior
+
+**A servo turns less than its seller says (a goBILDA 2000 servo: about 270 degrees, not 300)**
+The hub sends 600 to 2400 microseconds for positions 0 to 1 (the FTC SDK's normal range); the servo's
+full turn needs 500 to 2500. Add `.fullRange()` to the part in Robot.java (`ServoSetup...fullRange()`
+or `PositionServo...fullRange()` without the five files), then measure its positions again: they move
+once the range changes ([Full range](modules/hardware.md#full-range)). INIT says `cannot change its pulse
+range` for a servo that is not on a REV hub.
+
+**My servo positions are off after adding (or removing) `.fullRange()`**
+Positions are measured for one pulse range. Find them again with the Servo Finder (Y while choosing the
+servo = full range) or the Hood Finder, and copy the new numbers into `Tunables.java`.
 
 **Every shot is a little short (or long) today**
 The wheel is worn, the balls are softer, or the battery is lower than when you tuned. In the match: the

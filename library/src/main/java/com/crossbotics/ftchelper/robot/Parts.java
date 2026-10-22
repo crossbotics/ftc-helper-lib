@@ -1,14 +1,12 @@
 package com.crossbotics.ftchelper.robot;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * The wheels and rollers (and the servo ids) of the simulator's parts catalog ({@code sim/parts/parts.json},
+ * The wheels and rollers (and the servos' turn and pulse range) of the simulator's parts catalog ({@code sim/parts/parts.json},
  * docs/guides/parts-catalog.md), by the same ids: "gobilda-hogback-96", "offset-tubing-90"... A
  * {@link Shape} uses it to draw a part at its real size: Robot.java names the part, and the size
  * comes from here. Motors are in {@link Motors}.
@@ -42,14 +40,71 @@ public final class Parts {
         }
     }
 
+    /**
+     * One servo: how far it turns and over which pulse. The FTC SDK sends 600 to 2400 microseconds for
+     * positions 0 to 1 unless the code asks for its full range ({@code .fullRange()}), so a servo that
+     * turns 300 degrees over 500-2500 us turns 270 over 0 to 1 on a normal hub ({@link #sdkRangeDeg()}).
+     */
+    public static final class ServoPart {
+        /** The parts catalog id, e.g. "gobilda-2000-speed". */
+        public final String id;
+        /** The seller's full turn, degrees, over {@link #pulseMinUs} to {@link #pulseMaxUs}; NaN = not given. */
+        public final double rangeDeg;
+        /** The seller's pulse range, microseconds; NaN = not given (then 500 to 2500 is assumed). */
+        public final double pulseMinUs, pulseMaxUs;
+
+        ServoPart(String id, double rangeDeg, double pulseMinUs, double pulseMaxUs) {
+            this.id = id;
+            this.rangeDeg = rangeDeg;
+            this.pulseMinUs = pulseMinUs;
+            this.pulseMaxUs = pulseMaxUs;
+        }
+
+        /** The pulse for position 0 with full range: the seller's, or 500 us when it gives none. */
+        public double fullLowUs() {
+            return Double.isNaN(pulseMinUs) ? com.crossbotics.ftchelper.hardware.ServoSetup.FULL_PULSE_LOW_US : pulseMinUs;
+        }
+
+        /** The pulse for position 1 with full range: the seller's, or 2500 us when it gives none. */
+        public double fullHighUs() {
+            return Double.isNaN(pulseMaxUs) ? com.crossbotics.ftchelper.hardware.ServoSetup.FULL_PULSE_HIGH_US : pulseMaxUs;
+        }
+
+        /** Degrees per microsecond of pulse (goBILDA 2000: 0.15); NaN when the range is not given. */
+        public double degreesPerMicrosecond() {
+            return rangeDeg / (fullHighUs() - fullLowUs());
+        }
+
+        /**
+         * How far positions 0 to 1 turn it with this pulse range.
+         *
+         * @param lowUs  microseconds at position 0
+         * @param highUs microseconds at position 1
+         * @return degrees (NaN when the range is not given)
+         */
+        public double degreesOver(double lowUs, double highUs) {
+            return degreesPerMicrosecond() * (highUs - lowUs);
+        }
+
+        /** Degrees over 0 to 1 with the SDK's normal 600-2400 us (goBILDA 2000: 270). */
+        public double sdkRangeDeg() {
+            return degreesOver(com.crossbotics.ftchelper.hardware.ServoSetup.SDK_PULSE_LOW_US,
+                    com.crossbotics.ftchelper.hardware.ServoSetup.SDK_PULSE_HIGH_US);
+        }
+    }
+
     private static final Map<String, Wheel> WHEELS = new LinkedHashMap<>();
-    private static final Set<String> SERVOS = new LinkedHashSet<>();
+    private static final Map<String, ServoPart> SERVOS = new LinkedHashMap<>();
+
+    private static void servo(String id, double rangeDeg, double pulseMinUs, double pulseMaxUs) {
+        SERVOS.put(id, new ServoPart(id, rangeDeg, pulseMinUs, pulseMaxUs));
+    }
 
     private static void wheel(String id, double diameterMm, double widthMm) {
         WHEELS.put(id, new Wheel(id, diameterMm, widthMm));
     }
 
-    // Copied from sim/parts/parts.json ("wheels": diameterMm, widthMm; "servos": id). PartsCatalogTest checks they match.
+    // Copied from sim/parts/parts.json ("wheels": diameterMm, widthMm; "servos": id, rangeDeg, pulseMinUs, pulseMaxUs). PartsCatalogTest checks they match.
     static {
         wheel("gobilda-boot-72-rex", 72, Double.NaN);
         wheel("gobilda-gecko-48-rex", 48, Double.NaN);
@@ -57,10 +112,20 @@ public final class Parts {
         wheel("gobilda-hogback-96", 96, 24);
         wheel("offset-tubing-60", 60, Double.NaN);
         wheel("offset-tubing-90", 90, Double.NaN);
-        SERVOS.addAll(Arrays.asList("gobilda-2000-torque", "gobilda-2000-speed", "gobilda-2000-super-speed",
-                "gobilda-2000-5turn-torque", "gobilda-2000-5turn-speed", "gobilda-2000-5turn-super-speed",
-                "rev-smart-servo", "rev-smart-servo-v2-balanced", "rev-smart-servo-v2-ultraspeed",
-                "axon-max-mk2", "axon-max-plus", "axon-mini-mk2", "axon-mini-plus"));
+        // "servos": id, rangeDeg, pulseMinUs, pulseMaxUs (NaN = null in the catalog).
+        servo("gobilda-2000-torque", 300, 500, 2500);
+        servo("gobilda-2000-speed", 300, 500, 2500);
+        servo("gobilda-2000-super-speed", 300, 500, 2500);
+        servo("gobilda-2000-5turn-torque", 1800, 500, 2500);
+        servo("gobilda-2000-5turn-speed", 1800, 500, 2500);
+        servo("gobilda-2000-5turn-super-speed", 1800, 500, 2500);
+        servo("rev-smart-servo", 270, 500, 2500);
+        servo("rev-smart-servo-v2-balanced", 270, 500, 2500);
+        servo("rev-smart-servo-v2-ultraspeed", 270, 500, 2500);
+        servo("axon-max-mk2", 360, 500, 2500);
+        servo("axon-max-plus", Double.NaN, Double.NaN, Double.NaN);
+        servo("axon-mini-mk2", 360, 500, 2500);
+        servo("axon-mini-plus", Double.NaN, Double.NaN, Double.NaN);
     }
 
     /**
@@ -93,14 +158,30 @@ public final class Parts {
      * @throws IllegalArgumentException for an unknown id (the message lists the known ones)
      */
     public static String servo(String id) {
-        if (!SERVOS.contains(id)) {
-            throw new IllegalArgumentException("Robot.java: no servo \"" + id + "\" in the parts catalog. Known: " + SERVOS);
-        }
+        servoPart(id);
         return id;
+    }
+
+    /**
+     * A servo's numbers by its catalog id: its turn and pulse range.
+     *
+     * <pre>{@code
+     * double deg = Parts.servoPart("gobilda-2000-speed").sdkRangeDeg();   // 270
+     * }</pre>
+     *
+     * @param id e.g. "gobilda-2000-speed"
+     * @throws IllegalArgumentException for an unknown id (the message lists the known ones)
+     */
+    public static ServoPart servoPart(String id) {
+        ServoPart s = SERVOS.get(id);
+        if (s == null) {
+            throw new IllegalArgumentException("Robot.java: no servo \"" + id + "\" in the parts catalog. Known: " + SERVOS.keySet());
+        }
+        return s;
     }
 
     /** Every servo id, in catalog order (read only). */
     public static Set<String> servos() {
-        return Collections.unmodifiableSet(SERVOS);
+        return Collections.unmodifiableSet(SERVOS.keySet());
     }
 }

@@ -82,6 +82,19 @@ number means; a bare `0.0` does not.
 
 If the claw closes at 0 and opens at 1 and you want it the other way, add `.reversed()`.
 
+### The servo's whole turn
+
+The hub tells a servo where to go with a pulse: 600 microseconds for position 0, 2400 for 1. Most FTC
+servos take 500 to 2500, so 0 to 1 turns them a bit less than the box says: a goBILDA 2000 servo
+turns 270 degrees, not 300. If you need the rest, ask for the full pulse:
+
+```java
+Servo wrist = ServoSetup.get(hardwareMap, "wrist").fullRange().done();   // 0 to 1 = 300 degrees
+```
+
+Do it before you find your numbers: the same position points somewhere else after the change.
+[More](../modules/hardware.md#full-range).
+
 ## 3. A part that might not be there
 
 ```java

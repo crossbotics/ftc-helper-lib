@@ -55,6 +55,28 @@ final class TunableSection {
         return section != null;
     }
 
+    /**
+     * Every static field written in the section, in the order Java lists them (empty without a section).
+     * Used at INIT to stop on a name the part never reads (see TunableFields).
+     */
+    List<String> fieldNames() {
+        List<String> out = new ArrayList<>();
+        if (section == null) return out;
+        for (Field f : section.getDeclaredFields()) {
+            // Synthetic: made by the compiler or a test tool, not written by the team.
+            if (Modifier.isStatic(f.getModifiers()) && !f.isSynthetic()) out.add(f.getName());
+        }
+        return out;
+    }
+
+    /** True if the field is a plain number (double, int, float or long). */
+    boolean isNumber(String field) {
+        Field f = field(field);
+        if (f == null) return false;
+        Class<?> t = f.getType();
+        return t == double.class || t == int.class || t == float.class || t == long.class;
+    }
+
     /** True if the section has this field (for optional numbers). */
     boolean has(String field) {
         return field(field) != null;

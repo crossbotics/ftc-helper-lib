@@ -56,6 +56,9 @@ public class PositionServo implements AngleDevice {
     private double maxSpeed = 0;    // positions per second; 0 = full speed
 
     private String warning = "";
+    // A note when fullRange() could not change this servo's pulse (it is not on a REV hub). "" = fine.
+    private String pulseNote = "";
+    private boolean fullRange = false;
     // NaN ("not a number") means "none yet": no target was ever given / nothing sent yet.
     // A slow move never steps more than this much time at once (see update()).
     private static final double MAX_STEP_SEC = 0.1;
@@ -95,6 +98,37 @@ public class PositionServo implements AngleDevice {
     public PositionServo reversed() {
         servo.setDirection(Servo.Direction.REVERSE);
         return this;
+    }
+
+    /**
+     * Uses the servo's whole turn: positions 0 to 1 send 500 to 2500 microseconds instead of the SDK's
+     * normal 600 to 2400 (see {@link ServoSetup#fullRange()}). A goBILDA 2000 servo then turns 300
+     * degrees over 0 to 1 instead of 270. Set it BEFORE measuring positions and degrees: the same
+     * number points somewhere else after the change. Does not move the servo.
+     *
+     * @return this servo, for the next setting
+     */
+    public PositionServo fullRange() {
+        return pulseRange(ServoSetup.FULL_PULSE_LOW_US, ServoSetup.FULL_PULSE_HIGH_US);
+    }
+
+    /**
+     * Sets the pulse for positions 0 and 1 (microseconds), e.g. {@code pulseRange(500, 2500)}. A servo
+     * that cannot change its pulse keeps the normal range and shows a warning on the Driver Station.
+     *
+     * @param lowUs  microseconds for position 0 (100 to 3000)
+     * @param highUs microseconds for position 1 (more than lowUs, at most 3000)
+     * @return this servo, for the next setting
+     */
+    public PositionServo pulseRange(double lowUs, double highUs) {
+        fullRange = ServoSetup.setPulseRange(servo, lowUs, highUs);
+        pulseNote = fullRange ? "" : "cannot change its pulse range (not a REV hub servo): it uses the normal 600-2400 us";
+        return this;
+    }
+
+    /** True if {@link #fullRange()} or {@link #pulseRange} changed this servo's pulse range. */
+    public boolean isFullRange() {
+        return fullRange;
     }
 
     /** Never goes below {@code min} or above {@code max} (raw positions). Keeps it off the frame. */
@@ -367,6 +401,7 @@ public class PositionServo implements AngleDevice {
     @Override
     public void addTelemetry(RobotTelemetry t) {
         if (!warning.isEmpty()) t.warn(name + ": " + warning);
+        if (!pulseNote.isEmpty()) t.warn(name + ": " + pulseNote);
         t.line(name, getTargetName());
         // Nothing sent yet (before START): "-", not NaN.
         if (Double.isNaN(commanded)) t.debug(name + " pos", "-");

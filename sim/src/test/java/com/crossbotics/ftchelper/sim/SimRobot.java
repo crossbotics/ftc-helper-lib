@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareDevice;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.PwmControl;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
@@ -196,17 +197,34 @@ final class SimRobot {
         for (String key : sortedKeys(p, "servo.")) {
             if (key.equals("servo.speed")) continue;
             String name = key.substring("servo.".length());
-            // servo.NAME = start position [, part=catalog-id]
+            // servo.NAME = start position [, part=catalog-id] [, pwm=500-2500]
             Map<String, String> s = settings(p.getProperty(key));
-            SimServo servo = new SimServo(name, dbl(s, "", 0.5));
+            // pwm=: the pulse range the robot's code gives this servo (.fullRange() in Robot.java). The
+            // start position and every position the shapes use are in that range. Default: the SDK's 600-2400.
+            double lo = SimParts.SDK_LOW_US, hi = SimParts.SDK_HIGH_US;
+            if (s.containsKey("pwm")) {
+                String[] lh = s.get("pwm").split("-");
+                try {
+                    lo = Double.parseDouble(lh[0].trim());
+                    hi = Double.parseDouble(lh[1].trim());
+                } catch (RuntimeException e) {
+                    throw new IllegalArgumentException("Robot file: \"" + key + "\": pwm=" + s.get("pwm") + ": write it like pwm=500-2500 (microseconds)");
+                }
+                if (!(lo >= 100 && hi <= 3000 && lo < hi)) {
+                    throw new IllegalArgumentException("Robot file: \"" + key + "\": pwm=" + s.get("pwm") + ": 100 to 3000 microseconds, low first");
+                }
+            }
+            SimServo servo = new SimServo(name, dbl(s, "", 0.5), lo, hi);
             if (s.containsKey("part")) {
                 SimParts.Servo part = parts.servo(s.get("part"));
                 servo.partName = part.name;
                 servo.partId = part.id;
-                servo.rangeDeg = part.rangeDeg;
-                servo.speed = part.rawPerSecond();
+                // What positions 0..1 turn it with the file's pulse range (a goBILDA 2000: 270 deg at 600-2400).
+                servo.rangeDeg = part.degreesOver(lo, hi);
+                servo.speed = part.rawPerSecond(lo, hi);
             }
-            // A servo not in the catalog: its range (degrees) and seconds per 60 degrees (at about 5 V).
+            // A servo not in the catalog: its range (degrees over 0..1 with the file's pulse range) and
+            // seconds per 60 degrees (at about 5 V).
             if (s.containsKey("rangeDeg") || s.containsKey("secPer60")) {
                 if (!s.containsKey("rangeDeg") || !s.containsKey("secPer60")) {
                     throw new IllegalArgumentException("Robot file: \"" + key + "\": give both rangeDeg= and secPer60=");
@@ -863,36 +881,66 @@ final class SimRobot {
 
     // ---------------------------------------------------------------- servos and switches
 
-    /** A pretend servo: it moves toward where it was sent, at the servo speed. */
+    /**
+     * A pretend servo: it moves toward where it was sent, at the servo speed. Like a hub servo it also
+     * takes a pulse range (PwmControl.setPwmRange, what .fullRange() calls): the same position then
+     * means another pulse, so another angle. Inside, positions are kept in the robot file's pulse range
+     * (pwm=, default 600-2400 us): that is what the shapes and the robot file's numbers use.
+     */
     static final class SimServo {
         final String name;
         String partName = "";       // the catalog part, if the robot file names one
         String partId = "";         // its catalog id
-        double rangeDeg = Double.NaN;   // how far positions 0..1 turn it (part, or rangeDeg= in the robot file)
+        double rangeDeg = Double.NaN;   // how far positions 0..1 (in the file's pulse range) turn it
         double speed = Double.NaN;  // raw positions per second from the part (NaN = the file's servo.speed)
-        double actual;              // where it really is (raw 0..1)
-        private double target;      // where it is going (raw)
+        double actual;              // where it really is (raw 0..1 in the file's pulse range)
+        private double target;      // where it is going (raw, the file's pulse range)
         private double commanded = Double.NaN;   // the last position the OpMode set (its own scale)
         private double scaleMin = 0, scaleMax = 1;
         private Servo.Direction direction = Servo.Direction.FORWARD;
         final Servo device;
+        // The robot file's pulse range (pwm=) and the one the code set now (the SDK's 600-2400 after INIT).
+        final double fileLowUs, fileHighUs;
+        private double lowUs, highUs;
 
         final double start;         // where it starts (the robot file's number)
 
         SimServo(String name, double start) {
+            this(name, start, SimParts.SDK_LOW_US, SimParts.SDK_HIGH_US);
+        }
+
+        SimServo(String name, double start, double fileLowUs, double fileHighUs) {
             this.name = name;
             this.start = start;
             this.actual = start;
             this.target = start;
-            this.device = (Servo) Proxy.newProxyInstance(Servo.class.getClassLoader(), new Class<?>[] {Servo.class},
+            this.fileLowUs = fileLowUs;
+            this.fileHighUs = fileHighUs;
+            this.lowUs = fileLowUs;
+            this.highUs = fileHighUs;
+            // A Servo that is also a PwmControl, like the hub's ServoImplEx.
+            this.device = (Servo) Proxy.newProxyInstance(Servo.class.getClassLoader(), new Class<?>[] {Servo.class, PwmControl.class},
                     (proxy, m, a) -> handle(proxy, m.getName(), a, m.getReturnType()));
         }
 
-        /** Like the FTC app at INIT: direction and range back to normal (it stays where it is). */
+        /** Like the FTC app at INIT: direction, range and pulse range back to normal (it stays where it is). */
         synchronized void resetConfig() {
             direction = Servo.Direction.FORWARD;
             scaleMin = 0;
             scaleMax = 1;
+            lowUs = SimParts.SDK_LOW_US;
+            highUs = SimParts.SDK_HIGH_US;
+        }
+
+        /** The pulse range the code set (microseconds): {low, high}. */
+        synchronized double[] pulseRange() {
+            return new double[] {lowUs, highUs};
+        }
+
+        // A position in the code's pulse range -> the same pulse as a position in the file's range.
+        private double toFile(double raw) {
+            double us = lowUs + raw * (highUs - lowUs);
+            return (us - fileLowUs) / (fileHighUs - fileLowUs);
         }
 
         private synchronized Object handle(Object proxy, String method, Object[] a, Class<?> returns) {
@@ -901,9 +949,9 @@ final class SimRobot {
                 case "setPosition": {
                     double pos = Math.max(0, Math.min(1, ((Number) a[0]).doubleValue()));
                     commanded = pos;
-                    // Like the SDK: reverse first, then scale into the range.
+                    // Like the SDK: reverse first, then scale into the range, then the pulse.
                     double p = direction == Servo.Direction.REVERSE ? 1 - pos : pos;
-                    target = scaleMin + p * (scaleMax - scaleMin);
+                    target = toFile(scaleMin + p * (scaleMax - scaleMin));
                     return null;
                 }
                 // Like the SDK: the hub's last raw position (0 before any command) turned back through
@@ -919,6 +967,21 @@ final class SimRobot {
                     if (!(lo >= 0 && hi <= 1 && lo < hi)) throw new IllegalArgumentException("scaleRange(" + lo + ", " + hi + "): need 0 <= min < max <= 1");
                     scaleMin = lo;
                     scaleMax = hi;
+                    return null;
+                }
+                // PwmControl: the pulse range. It does not move the servo by itself (the hub sends the new
+                // pulse with the next position).
+                case "setPwmRange": {
+                    PwmControl.PwmRange r = (PwmControl.PwmRange) a[0];
+                    lowUs = r.usPulseLower;
+                    highUs = r.usPulseUpper;
+                    return null;
+                }
+                case "getPwmRange": return new PwmControl.PwmRange(lowUs, highUs);
+                case "isPwmEnabled": return true;
+                case "getPulseWidth": return fileLowUs + target * (fileHighUs - fileLowUs);
+                case "setPulseWidth": {
+                    target = (((Number) a[0]).doubleValue() - fileLowUs) / (fileHighUs - fileLowUs);
                     return null;
                 }
                 case "setDirection": direction = (Servo.Direction) a[0]; return null;

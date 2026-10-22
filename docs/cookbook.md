@@ -59,6 +59,7 @@ first.
 - [How do I add a claw?](#how-do-i-add-a-claw)
 - [How do I add a wrist?](#how-do-i-add-a-wrist)
 - [How do I add any servo with named positions (a gate, a fold-out)?](#how-do-i-add-any-servo-with-named-positions-a-gate-a-fold-out)
+- [How do I get my servo's full range?](#how-do-i-get-my-servos-full-range)
 - [How do I send a part to a position from a button?](#how-do-i-send-a-part-to-a-position-from-a-button)
 - [My robot doesn't have this part yet. How do I keep its code?](#my-robot-doesnt-have-this-part-yet-how-do-i-keep-its-code)
 - [How do I add a launcher (flywheel and feeder)?](#how-do-i-add-a-launcher-flywheel-and-feeder)
@@ -781,6 +782,25 @@ atStart(() -> Action.named("Deploy").then(() -> intakeDeploy.goTo("deployed")));
 
 **Why:** a `Positioner` has no standard buttons, so you choose when it moves (here: at START).
 **More:** [Positioner](modules/robot.md#positioner), [an action at START](#how-do-i-run-an-action-right-after-start).
+
+### How do I get my servo's full range?
+
+**Where:** `Robot.java`, inside `define()`: add `.fullRange()` to the servo part.
+
+<!-- recipe: servo-full-range -->
+```java
+// The hub normally sends 600-2400 us for positions 0 to 1: a goBILDA 2000 servo then turns
+// 270 of its 300 degrees. fullRange() sends its whole 500-2500 us: 0 to 1 = 300 degrees.
+// Turn it on FIRST, then find the positions (Servo Finder: press Y while choosing the servo).
+wrist = add(Wrist.servo("wrist").part("gobilda-2000-speed").fullRange());
+```
+
+**Why:** the FTC SDK's normal servo signal (600 to 2400 microseconds) is narrower than what most servos
+take (500 to 2500), so they turn less than the seller says: 270 degrees for a goBILDA 2000, 243 for a REV
+Smart Robot Servo. Only add it when you need the extra turn. It works the same on a Claw, a Positioner,
+`Hood.servo`, `Turret.servo` and `Indexer.servo`. Positions you measured before point somewhere else after
+the change: measure them again. Without `.fullRange()` nothing changes.
+**More:** [Full range](modules/hardware.md#full-range) (a table per servo), [Claw, Wrist, Positioner](modules/robot.md#claw).
 
 ### How do I send a part to a position from a button?
 
@@ -2374,7 +2394,8 @@ public class ServoFinder extends ServoFinderOpMode {
 A servo cannot say where it is, so choose a start number close to where it sits now (D-pad, A). Nudge it
 with the D-pad. At each end of its safe travel (just before it pushes on the frame) press X, then B. Then
 move it to each position you need and press A: for example fully open, A (that is P1); closed, A (P2). Copy the line it shows (`Tunables.Claw: P1 = 0.210, P2 = 0.770`)
-into `Tunables.java` and rename P1, P2 (`open`, `closed`).
+into `Tunables.java` and rename P1, P2 (`open`, `closed`). A part with
+[`.fullRange()`](#how-do-i-get-my-servos-full-range) in Robot.java: press Y while choosing the servo first.
 **Why:** a servo pushed past its end hums, gets hot and breaks; the finder finds the safe numbers.
 **More:** [Servo Finder](guides/finders.md#servo-finder-ends-and-positions), [the order](guides/finders.md#the-order).
 

@@ -42,7 +42,9 @@ A change is not done until all six are done.
   `t.flag`, `t.tunable`, ...) and fails if [the Tunables reference](guides/tunables.md) misses one, names
   one the code no longer reads, or has a wrong default, Live or REQUIRED cell. It also checks that the
   example robots' `Tunables.java` files (and the one `:sim:newRobot` writes) use only fields their parts
-  read. A new number in a module: add its row to the reference.
+  read, and that `TunableFields.java` (the lists INIT uses to stop on a misspelled field) lists exactly
+  the fields each part reads. A new number in a module: add its row to the reference and its name to
+  `TunableFields.java`.
 - Code snippets IN the tutorial pages are not compiled. When you change a program, search its
   tutorial page for the same lines and update them.
 - Before a release, read the changed tutorials once from top to bottom as a student would.

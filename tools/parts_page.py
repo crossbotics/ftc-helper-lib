@@ -26,6 +26,16 @@ def num(v, digits=1):
     return text.rstrip("0").rstrip(".") if digits > 0 else text
 
 
+def sdk_range(s):
+    """Degrees that positions 0..1 turn the servo on the SDK's normal 600-2400 us (None without a range)."""
+    r, lo, hi = s.get("rangeDeg"), s.get("pulseMinUs"), s.get("pulseMaxUs")
+    if r is None:
+        return None
+    if lo is None or hi is None:
+        return r
+    return r * 1800.0 / (hi - lo)
+
+
 def servo_5v(s):
     """The row the simulator uses: the byVoltage row closest to 5 V (same as SimParts.Servo)."""
     sec, volts = s.get("secPer60Deg"), s.get("voltage")
@@ -122,15 +132,24 @@ def page(cat):
         w("")
         w(f"### {f}")
         w("")
-        w("| id | Part | Part number | Range (°) | Speed used (s per 60°) | Headline speed (s per 60°) "
-          "| Torque (kg-cm) | Stall current (A) | Continuous |")
-        w("|---|---|---|---|---|---|---|---|---|")
+        w("| id | Part | Part number | Range on the hub (°) | Full range (°) | Pulse (us) | Speed used (s per 60°) "
+          "| Headline speed (s per 60°) | Torque (kg-cm) | Stall current (A) | Continuous |")
+        w("|---|---|---|---|---|---|---|---|---|---|---|")
         for s in ss:
             sec, volts = servo_5v(s)
             used = f"{num(sec, 3)} at {num(volts)} V" if sec is not None else "—"
-            w(f"| `{s['id']}` | [{s['name']}]({s['url']}) | {s.get('partNumber') or '—'} | {num(s.get('rangeDeg'))} "
+            lo, hi = s.get("pulseMinUs"), s.get("pulseMaxUs")
+            pulse = f"{num(lo)}-{num(hi)}" if lo is not None and hi is not None else "—"
+            w(f"| `{s['id']}` | [{s['name']}]({s['url']}) | {s.get('partNumber') or '—'} | {num(sdk_range(s))} "
+              f"| {num(s.get('rangeDeg'))} | {pulse} "
               f"| {used} | {num(s.get('secPer60Deg'), 3)} at {num(s.get('voltage'))} V | {num(s.get('torqueKgCm'))} "
               f"| {num(s.get('stallCurrentA'))} | {num(s.get('continuousCapable'))} |")
+    w("")
+    w("**Range on the hub** is what positions 0 to 1 turn the servo with the FTC SDK's normal pulse, "
+      "600-2400 microseconds (us). **Full range** is the seller's, over its **pulse** range; the robot "
+      "uses it with `.fullRange()` on the part ([why](../modules/hardware.md#full-range)), and the simulator "
+      "too (`pwm=500-2500` in the robot file, which `:sim:fromRobot` writes). Range on the hub = full range "
+      "x 1800 / (pulse high - pulse low).")
     w("")
     w("A servo with no range here (—) moves at the robot file's `servo.speed` (positions per second) in the "
       "simulator; its range is set by programming it.")
@@ -160,7 +179,7 @@ def page(cat):
     w("# The drivetrain: counts per turn and top speed (counts per second).")
     w("drive.ticksPerRev = 537.7")
     w("drive.maxTicksPerSec = 2796")
-    w("# A servo: its range (degrees) and seconds per 60 degrees (use the 4.8-5 V number).")
+    w("# A servo: how far 0 to 1 turns it on the hub (degrees) and seconds per 60 degrees (use the 4.8-5 V number).")
     w("servo.gate = 0.5, rangeDeg=180, secPer60=0.12")
     w("```")
     w("")
@@ -171,7 +190,7 @@ def page(cat):
     w("parts = parts.json")
     w("```")
     w("")
-    w("It has the same form as the library's catalog. Only `id` and the numbers the simulator uses are needed (a motor: `freeRpm` and `countsPerRev`; a servo: `rangeDeg` and `secPer60Deg`); "
+    w("It has the same form as the library's catalog. Only `id` and the numbers the simulator uses are needed (a motor: `freeRpm` and `countsPerRev`; a servo: `rangeDeg` and `secPer60Deg`, and `pulseMinUs`, `pulseMaxUs` when the seller gives its range over a pulse range; without them `rangeDeg` is what 0 to 1 turns it on the hub's normal 600-2400 us); "
       "the rest is for people. Give each part its own id: an id that is already in the library is refused, so "
       "a typo can't quietly replace a real part.")
     w("")
@@ -198,7 +217,8 @@ def page(cat):
     w("| `countsPerRev` | motors: encoder counts per turn of the output shaft (`getCurrentPosition()` steps) |")
     w("| `stallCurrentA`, `freeCurrentA` | motors: the current shown in the Control Hub panel |")
     w("| `stallTorqueKgCm` | motors: shown here; the simple physics does not use it yet |")
-    w("| `rangeDeg`, `secPer60Deg`, `byVoltage` | servos: how fast a position change takes |")
+    w("| `rangeDeg`, `pulseMinUs`, `pulseMaxUs` | servos: the seller's full turn over its pulse range; the turn for positions 0 to 1 is worked out from the pulse the robot uses (600-2400 us, or the full range with `.fullRange()`) |")
+    w("| `secPer60Deg`, `byVoltage` | servos: how fast a position change takes |")
     w("| `torqueKgCm`, `stallCurrentA`, `continuousCapable` | servos: shown here; not used by the physics |")
     w("| `name`, `partNumber`, `seller`, `url`, `checked`, `notes` | people: what it is and where the numbers came from |")
     w("")

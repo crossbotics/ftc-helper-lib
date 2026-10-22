@@ -119,6 +119,47 @@ public class SimFieldTest {
         }
     }
 
+    // The hub sends 600-2400 us for positions 0..1, so a 300 degree servo (over 500-2500 us) turns 270;
+    // pwm=500-2500 (the code's .fullRange()) gives all 300. A team part without pulse numbers is unchanged.
+    @Test public void aServoTurnsWhatItsPulseRangeGives() throws Exception {
+        String base = new String(Files.readAllBytes(new File("robots/starter.properties").toPath()), "UTF-8");
+        File dir = tmp.newFolder("pwm");
+        Files.write(new File(dir, "parts.json").toPath(), ("{\"servos\":[{\"id\":\"team-gate\",\"rangeDeg\":180,\"secPer60Deg\":0.1}]}").getBytes("UTF-8"));
+        File robotFile = new File(dir, "robot.properties");
+        Files.write(robotFile.toPath(), (base + "\nparts = parts.json\nservo.normal = 0.5, part=gobilda-2000-speed\n"
+                + "servo.full = 0.5, part=gobilda-2000-speed, pwm=500-2500\nservo.team = 0.5, part=team-gate\n").getBytes("UTF-8"));
+        SimRobot r = SimRobot.load(robotFile.toPath());
+        assertEquals(270, r.servos.get("normal").rangeDeg, 1e-9);
+        assertEquals(300, r.servos.get("full").rangeDeg, 1e-9);
+        assertEquals(180, r.servos.get("team").rangeDeg, 1e-9);
+        assertEquals((60 / 0.11) / 270, r.servos.get("normal").speed, 1e-9);
+        // The code widens the pulse: position 1 is now 2500 us, past where the normal range's 1 (2400) is.
+        SimRobot.SimServo normal = r.servos.get("normal");
+        com.qualcomm.robotcore.hardware.Servo dev = normal.device;
+        assertTrue(dev instanceof com.qualcomm.robotcore.hardware.PwmControl);
+        ((com.qualcomm.robotcore.hardware.PwmControl) dev).setPwmRange(new com.qualcomm.robotcore.hardware.PwmControl.PwmRange(500, 2500));
+        dev.setPosition(1);
+        assertEquals((2500 - 600) / 1800.0, normal.target(), 1e-9);
+        dev.setPosition(0.5);
+        assertEquals("the middle stays the middle", 0.5, normal.target(), 1e-9);
+        // INIT puts the hub's normal range back.
+        normal.resetConfig();
+        dev.setPosition(1);
+        assertEquals(1, normal.target(), 1e-9);
+        // A file servo with full range: the code's normal range lands inside it.
+        SimRobot.SimServo full = r.servos.get("full");
+        full.resetConfig();
+        full.device.setPosition(0);
+        assertEquals((600 - 500) / 2000.0, full.target(), 1e-9);
+        try {
+            Files.write(robotFile.toPath(), (base + "\nservo.bad = 0.5, pwm=2500-500\n").getBytes("UTF-8"));
+            SimRobot.load(robotFile.toPath());
+            org.junit.Assert.fail("a backwards pulse range is refused");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage(), expected.getMessage().contains("pwm=2500-500"));
+        }
+    }
+
     @Test public void servoSpeedIsTheFiveVoltRow() {
         SimParts.Servo torque = SimParts.catalog().servo("gobilda-2000-torque");
         assertEquals("the 4.8 V row (0.25 s per 60 deg), not the 6 V headline", 0.25, torque.secPer60Deg, 1e-9);

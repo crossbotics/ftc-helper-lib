@@ -23,17 +23,35 @@ public final class Fakes {
         public double position = Double.NaN;
         public int writes = 0;
         public Servo.Direction direction = Servo.Direction.FORWARD;
-        public final Servo servo = (Servo) Proxy.newProxyInstance(Servo.class.getClassLoader(),
-                new Class<?>[]{Servo.class}, (proxy, m, a) -> {
+        // The pulse range set through PwmControl (null = never set: the SDK's normal 600-2400 us).
+        public double[] pulseUs = null;
+        public final Servo servo;
+
+        /** A hub servo: a Servo that is also a PwmControl (like the SDK's ServoImplEx). */
+        public FakeServo() {
+            this(true);
+        }
+
+        /** {@code pwm} false: a plain Servo that cannot change its pulse range. */
+        public FakeServo(boolean pwm) {
+            Class<?>[] types = pwm ? new Class<?>[]{Servo.class, com.qualcomm.robotcore.hardware.PwmControl.class}
+                    : new Class<?>[]{Servo.class};
+            servo = (Servo) Proxy.newProxyInstance(Servo.class.getClassLoader(), types, (proxy, m, a) -> {
                     switch (m.getName()) {
                         case "setPosition": position = (Double) a[0]; writes++; return null;
                         case "getPosition": return position;
                         case "setDirection": direction = (Servo.Direction) a[0]; return null;
+                        case "setPwmRange": {
+                            com.qualcomm.robotcore.hardware.PwmControl.PwmRange r = (com.qualcomm.robotcore.hardware.PwmControl.PwmRange) a[0];
+                            pulseUs = new double[] {r.usPulseLower, r.usPulseUpper};
+                            return null;
+                        }
                         case "hashCode": return System.identityHashCode(proxy);
                         case "equals": return proxy == a[0];
                         default: return defaultFor(m.getReturnType());
                     }
                 });
+        }
     }
 
     /** A pretend continuous-rotation servo. */

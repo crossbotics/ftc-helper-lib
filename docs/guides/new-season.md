@@ -39,6 +39,9 @@ Also check the Team Updates during the season.
 In the robot project, follow FIRST's instructions (usually: update `build.dependencies.gradle`
 and the `FtcRobotController` folder). Read the SDK release notes for **breaking changes**
 (2026-27: AprilTag detections split into single tags and clusters).
+Also check the SDK's normal servo pulse (`PwmControl.PwmRange.defaultRange`: 600-2400 microseconds in
+SDK 12.0): the library's servo degrees and `.fullRange()` assume it (`ServoSetup.SDK_PULSE_LOW_US`,
+`SDK_PULSE_HIGH_US`, and `SimParts.SDK_LOW_US`/`SDK_HIGH_US` in the simulator).
 
 ## 3. The library
 
