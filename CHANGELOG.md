@@ -6,6 +6,40 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
+- **Interlock rules** (`robot.Interlock`, `robot.Zone`): `keepApart("TurretLift", turret.zone(),
+  lift.zoneAbove())` in Robot.java keeps two parts from ever being in their zones at the same time (a
+  turret over the back while a lift is up; an arm and an intake; a wrist and a low lift). Any number of
+  rules between any parts with a position (Turret, Lift, Arm, Claw, Wrist, Positioner, Hood), or
+  `Zone.when(words, condition)` for your own sensor. Zones in `Tunables.<rule>` (`<part>From/To`,
+  `<part>Above`, `<part>Below`, optional `<part>Margin`), read once at INIT (not live, on purpose) and
+  checked there (missing numbers, empty zones, zones outside or covering a part's range). Enforced every
+  loop for every command (buttons, sticks, actions, autos, a following turret, shooting on the move):
+  whoever is in its zone first keeps it, the other waits two margins outside its own (target kept); a
+  turret takes the other way round if its range allows; both in: each may only move out. Measured
+  position for motors, a time estimate for servos, an unhomed turret counts as anywhere. A held turret
+  is never `isAimed()`. One Driver Station line per rule while it holds something. Guide:
+  docs/guides/interlocks.md; four cookbook recipes.
+- **Every kind of turret in the five files:** `Turret.servo(name)` (a position servo, `posA/angleA/posB/angleB`),
+  `Turret.crServo(name).encoder(port, countsPerRev)` (a REV Through Bore on a motor port) or
+  `.analogEncoder(port)` (an absolute encoder, `encoderOffset`), `continuous()` (a slip ring: no limits,
+  the shortest way), `homeSwitch(name)` (a touch sensor or a magnetic switch as a Digital Device: homes at
+  START, slowly, with a timeout and a Driver Station line, and sets its angle again each time it passes
+  the switch; `homeAngle`, `homeDirection`, `homingPower`, `homingTimeout`), `startAngle` (no switch),
+  `isHomed()`, `isHeld()`. TeleOp starts from the angle the last program ended at (`keepAngle`, 5 minutes,
+  also a TeleOp started again); with nothing carried, TeleOp's INIT says to turn the turret to
+  `startAngle` and INIT again. Ranges +/-90, +/-180, +/-190 tested. The low-level `launcher.Turret` gained
+  power/encoder suppliers, a servo mode, continuous mode and a fence. New page: docs/guides/turret-setup.md
+  (questions, the lines for each answer, four worked examples, how to find each number).
+- **The V2 example robot** (`examples/.../v2bot`): a turret shooter (team 8938's turret v8.1GB: a
+  magnetic home switch, +/-190 degrees, a servo hood), odometry, a piece count, and a Viper-Slide lift with
+  a wrist and a claw, the lifter's steps as actions (grab, score in a FLOWER, stow) and the TurretLift
+  interlock. Simulator tests.
+- `Lift`, `Wrist` and `Claw` take `looks(...)`: a lift's `Shape.slide()...travelMm(mm)` (its counts per inch
+  from `min`..`max`), a wrist's arm `on(lift)`, `Shape.claw()` `on(wrist)`.
+- Simulator robot file: `touch.NAME = MOTOR, at=C, width=W` (a switch part way along, e.g. a turret's
+  home switch), `analog.NAME = MOTOR, offsetDeg=D` (an absolute encoder), `motor.NAME = ..., drivenBy=CRSERVO`
+  (an encoder turned by a CR servo).
+
 - **Shooting on the move (optional, off by default until tuned on a real robot):** `Tunables.Aim.shootOnMove = true`
   with `flightSec` (+ optional `flightSecPerIn`, `maxLeadIn` 24) aims at a virtual goal (the goal minus
   the shooter's speed x the flight time) and brings an old camera picture forward to now (the robot's

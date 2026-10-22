@@ -15,7 +15,7 @@ Reference: [Interlock in the robot module](../modules/robot.md#interlock). Quick
 
 ## The idea, with a turret and a lift
 
-Team 8938's robot has a turret in the middle and a lift at the back. When the lift's slide is up, the
+Team 8938's robot (the [V2 example](../../examples/src/main/java/com/crossbotics/ftchelper/examples/v2bot/Robot.java)) has a turret in the middle and a lift at the back. When the lift's slide is up, the
 turret must not point backward, or the shooter hits the slide. When the turret points backward, the lift
 must not rise.
 
@@ -23,8 +23,9 @@ must not rise.
 
 Each part gets a **zone**: the space it must stay out of while the other part is in its own zone.
 
-- The turret's zone: from 154 to 218 degrees (straight back is 180; counterclockwise is +).
-- The lift's zone: above 620 encoder counts (where the slide starts to be in the turret's way).
+- The turret's zone: from 130 to 218 degrees (straight back is 180; counterclockwise is +). The lifter's
+  parts are at 142 to 206; 12 degrees more each side for the turret's own width.
+- The lift's zone: above 270 encoder counts (84 mm: where the slide starts to be in the turret's way).
 
 ```java
 // Robot.java, after the parts:
@@ -34,8 +35,9 @@ keepApart("TurretLift", turret.zone(), lift.zoneAbove());
 ```java
 // Tunables.java: the numbers, in each part's own units
 public static class TurretLift {
-    public static double turretFrom = 154, turretTo = 218;   // degrees
-    public static double liftAbove = 620;                    // counts
+    public static double turretFrom = 130, turretTo = 218;   // degrees
+    public static double liftAbove = 270;                    // counts
+    public static double liftMargin = 80;                    // optional: see "How a waiting part waits"
 }
 ```
 
@@ -59,19 +61,22 @@ flowchart TD
 What the drivers see on the Driver Station, one line per rule, only while something is held:
 
 ```
-TurretLift : Lift held at 516 counts: Turret is between 154 and 218 deg
-TurretLift : Turret held at 148 deg: Lift is above 620 counts
+TurretLift : Lift held at 110 counts: Turret is between 130 and 218 deg
+TurretLift : Turret held at 124 deg: Lift is above 270 counts
 TurretLift : both in their zones (...): move one out (each may only move out)
 ```
 
 **How a waiting part waits.** It stops two **margins** before its zone (the margin is a safety distance in
 the part's units: by default 3 degrees for a turret, about 1/50 of a lift's range, 0.02 for a servo).
 Its target is kept, so it goes on by itself the moment the other part leaves. A part counts as "in its
-zone" within one margin of it. Set `<part>Margin` in the rule's section if your part coasts further
-(`liftMargin = 80`).
+zone" within one margin of it. Set `<part>Margin` in the rule's section if your part coasts further.
+**A fast lift needs more:** the V2 robot's lift (about 2800 counts a second) went 54 counts past where it
+was told to stop when pushed up at full power in the simulator, more than the default 27. With
+`liftMargin = 80` it waits at 270 - 2 x 80 = 110 counts. Measure yours: push the stick fully toward
+the line and see how far past the "held" point it goes.
 
-**A turret crossing its zone.** A turret at 140 degrees asked to go to 190 has to pass through the back.
-With the lift up it stops at 148 and waits. If its range lets it reach 190 the other way round (a turret
+**A turret crossing its zone.** A turret at 100 degrees asked to go to 190 has to pass through the back.
+With the lift up it stops at 124 (two margins of 3 before 130) and waits. If its range lets it reach 190 the other way round (a turret
 that turns -270 to 270, or a slip ring), it goes that way instead and never waits.
 
 **Both in their zones.** This should never happen, but it can: at START, after the robot was pushed, or
@@ -135,7 +140,7 @@ The OpMode stops at INIT with the reason if a rule has no Tunables section, a nu
 empty (from not below to), outside the part's range, or covers its whole range (the part could never be
 out of it), a margin is negative, or a part has no position (an intake roller: use `Zone.when`). The INIT
 screen lists each rule:
-`Interlock TurretLift: Turret between 154 and 218 deg / Lift above 620 counts`.
+`Interlock TurretLift: Turret between 130 and 218 deg / Lift above 270 counts`.
 
 ## Why the numbers are not live
 

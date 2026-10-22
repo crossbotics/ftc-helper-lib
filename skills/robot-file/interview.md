@@ -73,7 +73,10 @@ need hard stops), then make sure the shapes are right before blaming the robot.
 
 ## Switches and sensors
 
-18. Switch NAME: what presses it (a lift at its bottom?) -> `touch.NAME = <motor>, below=<counts>`.
+18. Switch NAME: what presses it (a lift at its bottom?) -> `touch.NAME = <motor>, below=<counts>`. A
+    switch part way along (a turret's home switch) -> `touch.NAME = <motor>, at=<counts>, width=<counts>`.
+    An absolute encoder on a turret (analog port) -> `analog.NAME = <motor>, offsetDeg=<deg>`; an encoder
+    turned by a CR servo -> `motor.NAME = lift, ..., drivenBy=<crservo>`.
 19. Colour or distance sensor that watches game pieces: does it see pieces come in (intake) or the piece
     ready to fire? -> `color.NAME = at=intake|ready` (a REV Color Sensor V3), or `distance.NAME = at=...,
     acrossMm=<mm from the sensor to the far wall>` (a REV 2m Distance Sensor across a channel). Other

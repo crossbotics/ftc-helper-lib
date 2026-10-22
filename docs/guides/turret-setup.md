@@ -158,8 +158,8 @@ round). See [Two parts that must not collide](interlocks.md).
 keepApart("TurretLift", turret.zone(), lift.zoneAbove());          // Robot.java
 
 public static class TurretLift {                                    // Tunables.java
-    public static double turretFrom = 154, turretTo = 218;          // degrees: the turret's zone
-    public static double liftAbove = 620;                           // counts: the lift's zone
+    public static double turretFrom = 130, turretTo = 218;          // degrees: the turret's zone
+    public static double liftAbove = 270;                           // counts: the lift's zone
 }
 ```
 
@@ -182,19 +182,20 @@ A turret that follows the odometry assumes it turns about the robot's centre.
 
 ## Four complete examples
 
-**A. Team 8938's turret (motor, magnetic home switch, servo hood).** A goBILDA motor turns the turret
-through gears; a magnetic switch marks one angle; the hood is a servo. (The [v2bot example](../../examples/src/main/java/com/crossbotics/ftchelper/examples/v2bot/Robot.java)
+**A. Team 8938's turret (motor, magnetic home switch, servo hood).** A 312 RPM goBILDA motor turns a
+goBILDA Gear-Driven Turret bearing (2.75 motor turns per turret turn); a REV Magnetic Limit Switch marks
+one angle; the hood is a servo. (The [v2bot example](../../examples/src/main/java/com/crossbotics/ftchelper/examples/v2bot/Robot.java)
 has the whole robot.)
 
 ```java
 // Robot.java
-turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).homeSwitch("turret_home").follows(camera));
+turret = add(Turret.motor("turret", "gobilda-5203-312").gearRatio(2.75).homeSwitch("turret_home").follows(camera));
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer"))
         .hood(Hood.servo("hood")).speedFromDistance(camera).requireReady("turret aimed", () -> turret.isAimed()));
 
 // Tunables.java
 public static class Turret {
-    public static double min = -190, max = 190, homeAngle = 0;     // example: measure your own
+    public static double min = -190, max = 190, homeAngle = -45;   // homeAngle: example, measure your own
     public static double kP = 0.02, kI = 0, kD = 0.001, maxPower = 0.8, tolerance = 1.5;
 }
 public static class Hood {
@@ -266,7 +267,7 @@ g1.rb.toggle(robot.aimMode()).says("aim at the goal");
 - `Turret : -37 deg, carried from the last program (12 s ago; keepAngle = false to turn this off)`
 - `Turret : absolute encoder: 31 deg (encoderOffset 117)`
 - After START, while homing: `Turret : homing: looking for the switch`; then `Turret : 12 deg following: camera`.
-- With interlock rules: `Interlock TurretLift: Turret between 154 and 218 deg / Lift above 620 counts`.
+- With interlock rules: `Interlock TurretLift: Turret between 130 and 218 deg / Lift above 270 counts`.
 
 ## Common mistakes
 
