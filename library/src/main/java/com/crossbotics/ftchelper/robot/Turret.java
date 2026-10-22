@@ -19,6 +19,7 @@ import java.util.List;
  *     public static double min = -90, max = 90;              // its range: it never turns past these
  *     public static double kP = 0.02, kI = 0, kD = 0.001;
  *     public static double maxPower = 0.8, tolerance = 1.0, cameraOffset = 0;
+ *     public static double outOfRangeHold = 10;               // odometry goal this far past a limit: hold
  * }
  * }</pre>
  *
@@ -26,8 +27,18 @@ import java.util.List;
  * {@link #followsOdometry} is used): every loop it turns toward the goal. The camera first; when the
  * camera does not see the goal and the robot has odometry and {@code Tunables.Aim.goalX, goalY}, toward
  * the goal worked out from where the robot is (see {@link Aim}). The Driver Station says which. A goal
- * past the range: it waits at the limit and the Driver Station says "goal out of turret range". The
- * stick takes over while it is moved, then following goes on.
+ * just past the range: it waits at the limit and the Driver Station says "goal out of turret range".
+ * A goal far past it (more than {@code outOfRangeHold}, 10 degrees, past a limit: behind the robot) from
+ * the odometry: it holds where it points, so it does not swing from one limit to the other as the
+ * heading wobbles, until the goal is back within 5 degrees of the range. The stick takes over while it
+ * is moved, then following goes on.
+ *
+ * <p><b>Aimed</b> ({@link #isAimed()}) while following means aimed at the goal NOW: the goal is seen
+ * this moment (camera or odometry), the turret is homed and in range, and it points within the
+ * tolerance. A launcher gated on it never fires after the goal is lost.
+ *
+ * <p>A following turret and whole-robot aim ({@code robot.aimMode()}) are separate modes: use one (see
+ * {@link Aim}).
  *
  * <p>Suggested buttons: operator right stick X turns it by hand; operator BACK switches following
  * on and off.
@@ -50,6 +61,9 @@ public final class Turret extends Module<Turret> {
     private Tunable kP, kI, kD;
     private boolean stickMoving = false;
     private double min, max;
+    // The odometry's goal is far past the range (behind the robot): hold, do not swing limit to limit.
+    private boolean goalBehind = false;
+    private double holdPastDeg = 10;
 
     private Turret(String motor, String motorId) {
         super(motor);
@@ -104,6 +118,11 @@ public final class Turret extends Module<Turret> {
         return camera != null || odometryOnly;
     }
 
+    // For Aim: true if Robot.java made it follow the goal (whole-robot aim must not be used with it).
+    boolean followsGoal() {
+        return follows();
+    }
+
     /** The camera is on the robot's body, not on the turret. */
     public Turret cameraOnBody() {
         cameraOnTurret = false;
@@ -128,6 +147,7 @@ public final class Turret extends Module<Turret> {
                     + "Tunables.Aim { public static double goalX = ..., goalY = ...; } (inches, see docs/modules/robot.md#aim)");
         }
         cameraOffsetDeg = t.number("cameraOffset", 0);
+        holdPastDeg = Math.max(0, t.number("outOfRangeHold", 10));
         min = t.number("min", -90);
         max = t.number("max", 90);
         kP = t.tunable("kP", 0.02, 0.002).range(0, 1);
@@ -166,6 +186,7 @@ public final class Turret extends Module<Turret> {
         needBuilt(part);
         touch();
         follow.off();
+        goalBehind = false;
         part.aimAt(deg);
     }
 
@@ -181,14 +202,25 @@ public final class Turret extends Module<Turret> {
         part.manual(power);
     }
 
-    /** True when it points where it should (within the tolerance). */
+    /**
+     * True when it points where it should, within the tolerance. While FOLLOWING, that means at the
+     * goal now: the goal is seen this moment (a fresh camera picture, or the odometry), the turret is
+     * homed and in range, it reached its target, and the goal is within the tolerance (the larger of
+     * Tunables.Turret.tolerance and Tunables.Aim.toleranceDeg). False the moment the goal is lost, so a
+     * launcher gated on it ({@code requireReady("aimed", turret::isAimed)}) never fires blind.
+     */
     public boolean isAimed() {
-        return part != null && part.isAimed();
+        if (part == null || !part.isAimed()) return false;
+        if (!follow.isOn() || !follows()) return true;   // by hand / aimAt(): where it was told
+        if (goalBehind || !part.isHomed() || part.isOutOfRange()) return false;
+        double e = aimErrorDeg();
+        double tol = Math.max(part.getTolerance(), robot == null ? 0 : robot.aim().toleranceDeg());
+        return !Double.isNaN(e) && Math.abs(e) <= tol;
     }
 
-    /** True when the goal is past its range (it waits at the limit). */
+    /** True when the goal is past its range (it waits at the limit, or holds while the goal is behind). */
     public boolean isOutOfRange() {
-        return part != null && part.isOutOfRange();
+        return part != null && (part.isOutOfRange() || goalBehind);
     }
 
     /** The angle now, degrees. */
@@ -212,6 +244,23 @@ public final class Turret extends Module<Turret> {
         return odo == null ? Double.NaN : com.crossbotics.ftchelper.util.Angles.wrapDegrees(odo.bearingDeg - part.getAngle());
     }
 
+    // The odometry's goal direction. Far past a limit (behind the robot) the nearest limit would flip
+    // from one side to the other as the heading wobbles around "straight behind", swinging the turret
+    // all the way across. So: more than holdPastDeg past a limit, hold where it points; go on only when
+    // the goal is back within half that (hysteresis: two thresholds, so it does not flicker at one).
+    private void followOdometry(double bearingDeg) {
+        double past = part.degreesOutOfRange(bearingDeg);
+        boolean wasBehind = goalBehind;
+        if (!goalBehind && past > holdPastDeg) goalBehind = true;
+        else if (goalBehind && past <= holdPastDeg / 2) goalBehind = false;
+        if (goalBehind) {
+            // Hold where it points now (once, as it starts holding).
+            if (!wasBehind && part.isHomed()) part.aimAt(part.getAngle());
+            return;
+        }
+        part.aimAt(bearingDeg);
+    }
+
     /** Where the following got the goal last loop: CAMERA, ODOMETRY or NONE. */
     public Aim.Source aimSource() {
         return source;
@@ -225,18 +274,21 @@ public final class Turret extends Module<Turret> {
     @Override
     public void update() {
         part.pid(kP.get(), kI.get(), kD.get(), 0);
+        if (!follow.isOn()) goalBehind = false;   // only following holds for a goal behind
         if (follow.isOn() && follows() && !stickMoving) {
             // The camera first (a fresh picture of the goal).
             TargetObservation seen = robot.aim().cameraGoal(camera);
             TargetObservation odo = seen == null ? robot.aim().fromOdometry() : null;
             if (seen != null) {
+                goalBehind = false;
                 part.aimAtTarget(seen, cameraOnTurret);
                 source = Aim.Source.CAMERA;
             } else if (odo != null) {
                 // The odometry's direction is from the robot's front: it IS the turret angle to go to.
-                part.aimAt(odo.bearingDeg);
+                followOdometry(odo.bearingDeg);
                 source = Aim.Source.ODOMETRY;
             } else {
+                goalBehind = false;
                 source = Aim.Source.NONE;   // nothing new: it holds where it points
             }
         }
@@ -248,6 +300,7 @@ public final class Turret extends Module<Turret> {
         if (part == null) return;
         touch();
         follow.off();
+        goalBehind = false;
         part.stop();
     }
 
@@ -278,7 +331,7 @@ public final class Turret extends Module<Turret> {
     @Override
     public void addTelemetry(RobotTelemetry t) {
         if (part == null) return;
-        if (follow.isOn() && part.isOutOfRange()) t.warn("goal out of turret range");
+        if (follow.isOn() && isOutOfRange()) t.warn("goal out of turret range" + (goalBehind ? " (behind the robot: holding)" : ""));
         t.line(name(), fmt("%.0f deg%s", part.getAngle(), follow.isOn() ? " following: " + source.words() : ""));
         part.addTelemetry(t);
     }

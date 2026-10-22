@@ -26,8 +26,15 @@ import java.util.function.LongSupplier;
  *     public static boolean mirrorForRed = true;              // like your autonomous's mirrorForRed()
  *     public static double turnKp = 0.02, turnKd = 0.002, maxTurnPower = 0.5, minTurnPower = 0, toleranceDeg = 2;
  *     public static double cameraOffset = 0, rumbleDeg = 4;
+ *     public static double maxGoalDistance = 170, cameraOdometryAgree = 6;   // inches: odometry sanity checks
  * }
  * }</pre>
+ *
+ * <p><b>Whole-robot aim and a following turret are separate modes.</b> Use one: a robot with a turret
+ * that follows the goal ({@code follows(camera)} or {@code followsOdometry()}) aims with the turret;
+ * {@code robot.aimMode()} is for a robot with no turret (or a turret that does not follow). Both at
+ * once would chase the same error with two motors and swing back and forth, so
+ * {@code robot.aimMode()} stops at INIT with a message on such a robot.
  *
  * <p><b>Camera first, odometry as a backup.</b> While the camera sees the goal (a picture newer than
  * {@code cameraMaxAgeMs}, 150 ms), that is used. When it does not (the tag is blocked, out of view, a
@@ -42,8 +49,14 @@ import java.util.function.LongSupplier;
  * {@code mirrorForRed = false}: the same numbers from the red wall. Put the point where the camera
  * measures to (the goal's tags), so the two distances agree and one shot table works for both.
  *
- * <p>The odometry is only as good as its pose: it must start right (autonomous's start spot, carried
- * into TeleOp). Without autonomous, TeleOp's pose starts at (0, 0).
+ * <p><b>The odometry is only as good as its pose.</b> It must start right: autonomous's start spot,
+ * carried into TeleOp. Without autonomous, TeleOp's pose would be (0, 0), the middle of the field, and
+ * the robot would aim at the wrong place, so the odometry backup stays OFF until the pose was set
+ * (autonomous ran in this match, or your code called {@code robot.odometry().setPose(...)}); the Driver
+ * Station says so. It also stays off while the odometry says the goal is farther than
+ * {@code maxGoalDistance} (170 in: more than the field allows, so the pose is wrong), and warns when the
+ * camera and the odometry disagree by more than {@code cameraOdometryAgree} (6 in). INIT shows the
+ * alliance and the {@code mirrorForRed} choice, so a wrong one is seen before the match.
  *
  * Docs: docs/modules/robot.md (section "Aim"). Tutorial: docs/tutorials/start/09-shooter-and-camera.md
  */
@@ -74,6 +87,9 @@ public final class Aim {
     private final double goalX, goalY;
     private final boolean mirrorForRed;
     private final double cameraMaxAgeMs;
+    // Sanity checks for the odometry: the farthest the goal can be (inches), and how far apart the
+    // camera's and the odometry's distances may be before the Driver Station warns.
+    private final double maxGoalDistanceIn, agreeIn;
     // Live numbers (in the tuning menu when the section exists).
     private final DoubleSupplier turnKp, turnKd, maxTurnPower, minTurnPower, toleranceDeg, cameraOffset, rumbleDeg;
     // The turn controller, made again if kP or kD is tuned.
@@ -90,6 +106,8 @@ public final class Aim {
         goalY = hasGoalPoint ? t.number("goalY", 0) : 0;
         mirrorForRed = !t.has("mirrorForRed") || t.flag("mirrorForRed", true);
         cameraMaxAgeMs = t.has("cameraMaxAgeMs") ? t.number("cameraMaxAgeMs", 150) : 150;
+        maxGoalDistanceIn = t.has("maxGoalDistance") ? t.number("maxGoalDistance", 170) : 170;
+        agreeIn = t.has("cameraOdometryAgree") ? t.number("cameraOdometryAgree", 6) : 6;
         turnKp = live(t, "turnKp", 0.02, 0.002);
         turnKd = live(t, "turnKd", 0.002, 0.0005);
         maxTurnPower = live(t, "maxTurnPower", 0.5, 0.05);
@@ -150,15 +168,58 @@ public final class Aim {
     /**
      * The goal worked out from the odometry: its direction from the robot's front (degrees,
      * counterclockwise + = to the LEFT, like a camera's bearing) and its distance from the robot's
-     * centre (inches). Null if the robot has no odometry, the odometry is not ready, or
-     * {@code Tunables.Aim} has no goal point.
+     * centre (inches). Null if the robot has no odometry, the odometry is not ready, {@code Tunables.Aim}
+     * has no goal point, the pose was never set (no autonomous, no {@code setPose}), or the goal would
+     * be farther than {@code maxGoalDistance} (a wrong pose). {@link #odometryProblem()} says which.
      */
     public TargetObservation fromOdometry() {
+        TargetObservation o = odometryGoalUnchecked();
+        // A goal farther than the field allows: the pose is wrong. Aiming there would be worse than not aiming.
+        if (o == null || o.distanceIn > maxGoalDistanceIn) return null;
+        return o;
+    }
+
+    /**
+     * Why the odometry backup is off now, in a few words for the Driver Station; "" when it works (or
+     * the robot has no odometry or no goal point: then there is nothing to warn about).
+     */
+    public String odometryProblem() {
         PoseTracker tracker = robot.odometry();
-        if (!hasGoalPoint || tracker == null || !tracker.isReady()) return null;
+        if (!hasGoalPoint || tracker == null) return "";
+        if (!tracker.isReady()) return "the odometry is not ready (" + tracker.status() + ")";
+        if (!tracker.isPoseSet()) {
+            return "the pose was never set (no autonomous before this TeleOp): camera only. "
+                    + "Run autonomous first, or set it: robot.odometry().setPose(...)";
+        }
+        TargetObservation o = odometryGoalUnchecked();
+        if (o != null && o.distanceIn > maxGoalDistanceIn) {
+            return Module.fmt("the odometry says the goal is %.0f in away, more than the field allows (%.0f): "
+                    + "the pose is wrong. Camera only", o.distanceIn, maxGoalDistanceIn);
+        }
+        return "";
+    }
+
+    /**
+     * When the camera and the odometry both see the goal and their distances differ by more than
+     * {@code Tunables.Aim.cameraOdometryAgree} (6 in): a warning (the pose drifted, or the goal point
+     * is not where the camera measures to). "" otherwise.
+     */
+    public String disagreement() {
+        TargetObservation seen = cameraGoal(aimingCamera());
+        if (seen == null || !seen.hasDistance()) return "";
+        TargetObservation odo = fromOdometry();
+        if (odo == null || Math.abs(seen.distanceIn - odo.distanceIn) <= agreeIn) return "";
+        return Module.fmt("camera says %.0f in, odometry %.0f in: check the pose (drifted?) or Tunables.Aim goalX, goalY",
+                seen.distanceIn, odo.distanceIn);
+    }
+
+    // The goal from the pose, without the "too far" check. Null if the odometry cannot be used at all.
+    private TargetObservation odometryGoalUnchecked() {
+        PoseTracker tracker = robot.odometry();
+        if (!hasGoalPoint || tracker == null || !tracker.isReady() || !tracker.isPoseSet()) return null;
         FieldPose p = tracker.pose();
         // Written for BLUE: on RED with mirroring, the field is a mirror image (x flips).
-        double gx = robot.alliance() == Alliance.RED && mirrorForRed ? -goalX : goalX;
+        double gx = goalXNow();
         double dx = gx - p.x, dy = goalY - p.y;
         // Which way the goal is on the field, as a heading: 0 = straight away from the drivers (+y),
         // counterclockwise +, so 90 = to the left (-x). atan2(-dx, dy) gives exactly that.
@@ -167,6 +228,11 @@ public final class Aim {
         double bearing = Angles.wrapDegrees(fieldDeg - p.headingDeg);
         return new TargetObservation(TargetObservation.ODOMETRY, "Goal (odometry)", bearing,
                 Math.hypot(dx, dy), clock.getAsLong());
+    }
+
+    // The goal's x for this alliance: mirrored for RED when mirrorForRed.
+    private double goalXNow() {
+        return robot.alliance() == Alliance.RED && mirrorForRed ? -goalX : goalX;
     }
 
     // The camera that aims the whole robot: the first one with a goal(...) in Robot.java, or null.
@@ -184,9 +250,26 @@ public final class Aim {
      * goal and the driver keeps forward and sideways. The driver's turn stick still wins: move it and
      * the robot turns as the stick says; let go and the aim takes over again. Off at START.
      * {@code g1.rb.toggle(robot.aimMode())}.
+     *
+     * @throws IllegalStateException if a turret follows the goal: whole-robot aim and turret-following
+     *         are separate modes (both would chase the same error and swing back and forth)
      */
     public Mode mode() {
+        Turret t = followingTurretInRobot();
+        if (t != null) {
+            throw new IllegalStateException("Controls.java: robot.aimMode() (whole-robot aim) and " + t.name()
+                    + " following the goal are separate modes: use one. With a following turret, the turret aims "
+                    + "(remove the aimMode() line); for whole-robot aim, remove follows(...)/followsOdometry() in Robot.java.");
+        }
         return mode;
+    }
+
+    // A turret that follows the goal (follows(camera) or followsOdometry() in Robot.java), or null.
+    private Turret followingTurretInRobot() {
+        for (Module<?> m : robot.modules()) {
+            if (m instanceof Turret && ((Turret) m).followsGoal()) return (Turret) m;
+        }
+        return null;
     }
 
     /**
@@ -256,7 +339,9 @@ public final class Aim {
 
     /**
      * True when aimed: whole-robot aim on and within {@code toleranceDeg}, or a following turret that
-     * is aimed. Use it as a launcher check: {@code .requireReady("aimed", () -> aim().isAimed())}.
+     * is aimed AT THE GOAL NOW (see {@link Turret#isAimed()}: a goal seen this moment, homed, in range).
+     * Losing the goal makes it false at once, so a launcher gated on it never fires blind. Use it as a
+     * launcher check: {@code .requireReady("aimed", () -> aim().isAimed())}.
      */
     public boolean isAimed() {
         if (mode.isOn()) {
@@ -282,8 +367,28 @@ public final class Aim {
 
     // ----------------------------- the Driver Station -----------------------------
 
-    // One line while whole-robot aim is on (ControlMap shows it).
+    /** The goal-point tolerance used by {@link Turret#isAimed()} for the goal error (Tunables.Aim.toleranceDeg, 2). */
+    double toleranceDeg() {
+        return toleranceDeg.getAsDouble();
+    }
+
+    // INIT: the alliance and how the goal point is used for it, so a wrong mirrorForRed is seen before
+    // the match; and a loud warning when the odometry backup cannot work (no pose).
+    void addInitTelemetry(RobotTelemetry t) {
+        if (!hasGoalPoint || robot.odometry() == null) return;
+        String rule = mirrorForRed ? "mirrorForRed = true: RED mirrors x" : "mirrorForRed = false: the same numbers from each wall";
+        t.line("Aim", Module.fmt("%s, goal x %.0f, y %.0f in (%s)", robot.alliance(), goalXNow(), goalY, rule));
+        String problem = odometryProblem();
+        if (!problem.isEmpty()) t.warn("Aim odometry: " + problem);
+    }
+
+    // Every loop in TeleOp (ControlMap shows it): the odometry warnings, and one line while whole-robot
+    // aim is on.
     void addTelemetry(RobotTelemetry t) {
+        String problem = odometryProblem();
+        if (!problem.isEmpty()) t.warn("Aim odometry: " + problem);
+        String apart = disagreement();
+        if (!apart.isEmpty()) t.warn("Aim: " + apart);
         if (!mode.isOn()) return;
         if (driverTurning) {
             t.line("Aim", "the driver is turning");

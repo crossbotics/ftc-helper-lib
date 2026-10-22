@@ -258,7 +258,8 @@ turns toward something it cannot see now. The D part only changes on a NEW pictu
 picture never fakes motion. `isAimed()`, `reset()` (call when the driver lets go of the aim button).
 
 In the robot in five files this is built in: `g1.rb.toggle(robot.aimMode())` turns the whole robot to
-the goal while the driver drives, with the odometry as a backup ([robot.md: Aim](robot.md#aim)).
+the goal while the driver drives, with the odometry as a backup ([robot.md: Aim](robot.md#aim)). It is
+for a robot with no turret: a turret that follows the goal is a separate mode (use one, not both).
 
 For a turret, use `turret.aimAtTarget(target, cameraOnTurret)`: it uses only fresh pictures, each
 picture once (an old bearing used again would push the turret further and further), and holds still

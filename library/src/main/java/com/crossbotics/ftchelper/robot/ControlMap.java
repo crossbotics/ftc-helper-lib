@@ -123,8 +123,8 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
                 () -> robot().odometry() == null ? 0 : robot().odometry().pose().headingDeg,
                 () -> {
                     if (robot().odometry() == null) return;
-                    com.crossbotics.ftchelper.util.FieldPose p = robot().odometry().pose();
-                    robot().odometry().setPose(new com.crossbotics.ftchelper.util.FieldPose(p.x, p.y, 0));
+                    // Only the heading: x and y stay (and a pose that was never set stays "not set").
+                    robot().odometry().setHeading(0);
                 },
                 startsFromAuto());
     }
@@ -250,6 +250,12 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
     protected final void addInitTelemetry(RobotTelemetry t) {
         // The modules' INIT work first (a camera's lighting test), with their lines.
         robot().initLoop(t);
+        // The alliance may be chosen in INIT: show how the aim's goal point is used for it (mirrorForRed),
+        // and a loud warning if the odometry backup cannot work (no pose from autonomous).
+        if (robot().aim() != null) {
+            robot().setAlliance(alliance());
+            robot().aim().addInitTelemetry(t);
+        }
         for (String n : robot().notes()) t.text(n);
         if (plan != null) for (String n : plan.notes()) t.text(n);
         List<String> changed = RobotDefinition.changedTunables();

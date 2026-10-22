@@ -424,6 +424,19 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         return name == null ? null : tableFields.get(name.trim().toLowerCase(java.util.Locale.US));
     }
 
+    /**
+     * A shot table by name, as Tunables.java has it ("pollen", "main"; case does not matter), or null if
+     * there is no such table. The Shot Tuner starts each table's speed from it.
+     */
+    public ShotTable table(String name) {
+        return name == null ? null : tables.get(name.trim().toLowerCase(java.util.Locale.US));
+    }
+
+    /** Tunables.Launcher.speedRpm: the speed with no shot table (RPM). NaN before INIT. */
+    public double speedRpm() {
+        return speedRpm == null ? Double.NaN : speedRpm.get();
+    }
+
     /** The distance to the goal last used for the speed (inches), NaN if none yet. */
     public double distanceIn() {
         return lastDistance;

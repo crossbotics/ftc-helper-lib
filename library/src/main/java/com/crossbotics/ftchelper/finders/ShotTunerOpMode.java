@@ -18,18 +18,24 @@ import com.crossbotics.ftchelper.vision.TargetSource;
 
 /**
  * Builds the shot table: the flywheel speed (and hood angle) for each distance. Park the robot at a
- * distance, run the launcher at the speed shown, fine-tune it until the shots go in, and save that
- * point. Do it at 4-6 distances; it writes the {@code ShotTable} code for you.
+ * distance and shoot 3-5 at a speed, marking each shot HIT or MISS; try the next speed; save: the
+ * tuner keeps the speed with the best hit ratio at that distance. Do it at 4-6 distances; it writes
+ * the {@code ShotTable} code and the {@code Tunables.java} line for you.
  *
- * <p>The distance comes from the camera (the same reading the launcher uses in a match). When the
- * camera does not see the goal (or there is none), from the odometry: where the robot is and
+ * <p>The distance comes from the camera (the same reading the launcher uses in a match), averaged
+ * over half a second of fresh pictures so one noisy frame does not go into the table. When the camera
+ * does not see the goal (or there is none), from the odometry: where the robot is and
  * {@code Tunables.Aim.goalX, goalY} (drive to spots on the field; the robot starts at
  * {@link #startSpotIn()}). With neither, you set it by hand. With your robot settings it can also
  * drive (sticks), so you can move between distances without picking the robot up.
  *
+ * <p>The speed starts from the table you already have at this distance (or {@code Tunables.Launcher.speedRpm}),
+ * so you only fine-tune. Each shot keeps the flywheel speed MEASURED as the piece was fed; a shot fed
+ * while the flywheel was well under the speed asked for is flagged (wait for Ready, charge the battery).
+ *
  * <p><b>One table per game piece.</b> With two or more tables in {@code Tunables.Launcher}
- * ({@code speedByDistancePollen}, {@code speedByDistanceNectar}), choose the one you are tuning (Y to
- * TABLE, then the D-pad): each keeps its own points and gets its own line to copy.
+ * ({@code speedByDistancePollen}, {@code speedByDistanceNectar}), choose the one you are tuning (Y until
+ * "> Table", then the D-pad): each keeps its own points and gets its own line to copy.
  *
  * <pre>
  * Gamepad 1:
@@ -37,9 +43,11 @@ import com.crossbotics.ftchelper.vision.TargetSource;
  *                    TABLE (two or more tables)
  *   D-pad up/down  = big step (100 RPM / 5 deg / 6 in), right/left = small step (10 RPM / 0.5 deg / 1 in)
  *                    (TABLE: left/right = the other table)
- *   LB             = flywheel on/off (off at START)
- *   RB             = shoot one         hold RT = keep shooting        B = stop shooting
- *   A              = save this point (replaces one within 1 in)       X = delete the point here
+ *   LB             = flywheel on/off (off at START; off also stops shooting)
+ *   RB             = shoot one         hold RT = keep shooting (let go to stop)
+ *   A              = the last shot was a HIT          B = it was a MISS
+ *   X              = save: the speed with the best hit ratio at this distance (replaces one within 1 in)
+ *   hold BACK 1 s  = delete the saved point here (held, so it is not pressed by mistake)
  *   sticks         = drive (with robotConfig()), left trigger = slow
  * Help: GUIDE (or hold START 1 s) = a help page with every button; everything pauses.
  * </pre>
@@ -75,6 +83,22 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
 
     /** Camera pictures older than this are not used for the distance (milliseconds). */
     public static final double MAX_TARGET_AGE_MS = 250;
+
+    /** The marked shots start again when the distance moves more than this from where they began (inches). */
+    public static final double SPOT_MOVE_IN = 4;
+
+    /** Hold BACK this long to delete the saved point here (seconds). */
+    public static final double DELETE_HOLD_SEC = 1.0;
+
+    /**
+     * How far under the speed asked for the flywheel may be at a shot before the tuner calls it
+     * "sagged" (RPM): the larger of 60 and 3% of the speed.
+     *
+     * @param setRpm the speed asked for
+     */
+    public static double sagLimitRpm(double setRpm) {
+        return Math.max(60, 0.03 * setRpm);
+    }
 
     // ----------------------------- you fill these in -----------------------------
 
@@ -127,9 +151,14 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         return new Subsystems();
     }
 
-    /** The speed it starts at, RPM. Default 3000. */
+    /**
+     * The speed it starts at, RPM. Default NaN = automatic: the speed the robot's shot table already
+     * gives at the distance seen (each table its own; again after you switch tables), or
+     * {@code Tunables.Launcher.speedRpm} before a distance is known, or 3000 without a robot. A number
+     * here: always start from it.
+     */
     protected double startRpm() {
-        return 3000;
+        return Double.NaN;
     }
 
     /** The hood angle it starts at (if the hood has not been moved yet), degrees. Default 0. */
@@ -183,6 +212,22 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
     private boolean spinning = false;   // off at START: LB turns it on
     private TargetObservation target;
     private int lastShots = 0;
+    // HIT / MISS: the shots fired and not marked yet, oldest first ({speed asked, speed measured}).
+    private final java.util.ArrayDeque<double[]> unmarked = new java.util.ArrayDeque<>();
+    private int lastFired = 0;
+    // The hits and shots at each speed at this spot (cleared on a new spot, a new table, or a save).
+    private final ShotPoints.Tally tally = new ShotPoints.Tally();
+    // The distance, averaged over half a second of fresh readings; the last camera picture used.
+    private final ShotPoints.DistanceAverage average = new ShotPoints.DistanceAverage();
+    private long lastPicture = Long.MIN_VALUE;
+    // True once the speed was changed by hand (then the table no longer sets it), and if startRpm() was given.
+    private boolean rpmTouched = false;
+    private boolean autoStartRpm = true;
+    // The last shot fed while the flywheel was too slow: how far under (RPM); NaN = none.
+    private double lastSagRpm = Double.NaN;
+    // Hold BACK to delete: when it was pressed (seconds), and whether this hold already deleted.
+    private double backSince = Double.NaN;
+    private boolean backUsed = false;
     private double shotAt = Double.NaN;
     private double recoverySec = Double.NaN;
     private String note = "";
@@ -226,7 +271,12 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
             odometry.setPose(new com.crossbotics.ftchelper.util.FieldPose(spot[0], spot[1], spot.length > 2 ? spot[2] : 0));
         }
         launcher.stop();   // off until LB
-        rpm = startRpm();
+        // The speed to start from: startRpm() if given; else the robot's speedRpm (the table at the
+        // distance takes over in step() once a distance is seen), else 3000.
+        double given = startRpm();
+        autoStartRpm = Double.isNaN(given);
+        double tunablesRpm = module != null ? module.speedRpm() : Double.NaN;
+        rpm = !autoStartRpm ? given : !Double.isNaN(tunablesRpm) ? tunablesRpm : 3000;
         if (hood != null) {
             // A hood that was never moved has no angle yet (NaN): start from startHoodDeg().
             double now = hood.getTargetDegrees();
@@ -245,9 +295,10 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
                     + " in, heading " + FinderResults.num(spot.length > 2 ? spot[2] : 0, 0) + " (seen from your wall), then INIT ("
                     + robotDef.alliance() + ")");
         }
-        if (names.size() > 1) t.line("Tables", FinderResults.commas(names) + " (Y to TABLE, D-pad to choose)");
-        t.text("Steps: 1 pick the table. 2 park at the nearest distance. 3 LB spin up, RB shoot,");
-        t.text("D-pad changes the speed until shots go in, A saves. 4 back 1-2 ft, again: 4-6 points.");
+        if (names.size() > 1) t.line("Tables", FinderResults.commas(names) + " (Y until > Table, D-pad to choose)");
+        t.text("Steps: 1 pick the table. 2 park at the nearest distance. 3 LB spin up, RB shoot 3-5,");
+        t.text("A = HIT, B = MISS for each; D-pad to the next speed, again. X saves the best speed.");
+        t.text("4 back 1-2 ft, again: 4-6 points per table.");
         t.text("5 copy the lines into Tunables.java (also saved on the hub at STOP).");
         t.text("The flywheel stays off until you press LB. Press START.");
     }
@@ -264,9 +315,24 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
                     if (!spinning) launcher.stop();   // fully off (it stays off until spinUp)
                 })
          .bindPress(Pad.G1, Btn.RB, () -> { if (spinning) launcher.shoot(1); })
-         .bindPress(Pad.G1, Btn.B, () -> { continuous = false; launcher.stopShooting(); })
-         .bindPress(Pad.G1, Btn.A, this::savePoint)
-         .bindPress(Pad.G1, Btn.X, this::deletePoint);
+         .bindPress(Pad.G1, Btn.A, () -> mark(true))
+         .bindPress(Pad.G1, Btn.B, () -> mark(false))
+         .bindPress(Pad.G1, Btn.X, this::savePoint);
+        // Delete (hold BACK 1 s) is watched in step(): a hold, so it is not pressed by mistake.
+    }
+
+    // A / B: the oldest shot not marked yet went in (or not), at the speed it was fired at.
+    private void mark(boolean hit) {
+        double[] shot = unmarked.pollFirst();
+        if (shot == null) {
+            note = "No shot to mark: shoot first (RB), then A = HIT or B = MISS.";
+            return;
+        }
+        double d = distance();
+        if (tally.isEmpty()) tally.setSpot(d);
+        tally.mark(shot[0], hit, shot[1]);
+        note = (hit ? "HIT" : "MISS") + " at " + FinderResults.num(shot[0], 0) + " RPM: "
+                + tally.hits(shot[0]) + "/" + tally.shots(shot[0]) + " in at this speed.";
     }
 
     // Y: the next thing the D-pad changes. HOOD only with a hood, DISTANCE only by hand (no camera,
@@ -288,36 +354,54 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
 
     private void change(int direction, boolean big) {
         switch (field) {
-            case SPEED: rpm = Math.max(0, rpm + direction * (big ? 100 : 10)); break;
+            case SPEED:
+                rpm = Math.max(0, rpm + direction * (big ? 100 : 10));
+                rpmTouched = true;   // yours now: the table no longer sets it
+                break;
             case HOOD: hoodDeg += direction * (big ? 5 : 0.5); break;
             case TABLE:
                 // The next (or previous) table; its points stay as they are.
                 int i = names.indexOf(tuning);
                 tuning = names.get(((i + direction) % names.size() + names.size()) % names.size());
+                // Another game piece: its own hits, and its own table's speed to start from.
+                tally.clear();
+                unmarked.clear();
+                rpmTouched = false;
                 note = "Now tuning the " + tuning.toUpperCase(java.util.Locale.US) + " table.";
                 break;
             default: manualDistance = Math.max(0, manualDistance + direction * (big ? 6 : 1)); break;
         }
     }
 
-    // The distance now: from the camera (fresh pictures only), else the odometry, else the hand-set
-    // one (only with neither). NaN = none. Sets distanceFrom.
+    // The distance now: the camera's (fresh pictures only), else the odometry's, averaged over the last
+    // half second (step() adds the readings); else the hand-set one (only with neither). NaN = none.
+    // Sets distanceFrom.
     private double distance() {
-        if (target != null && target.hasDistance()) {
-            distanceFrom = "camera";
-            return target.distanceIn;
-        }
-        TargetObservation odo = odometryGoal();
-        if (odo != null) {
-            distanceFrom = "odometry";
-            return odo.distanceIn;
-        }
         if (byHand()) {
             distanceFrom = "by hand";
             return manualDistance;
         }
-        distanceFrom = "";
-        return Double.NaN;
+        double d = average.average(nowSec());
+        distanceFrom = Double.isNaN(d) ? "" : average.source() + ", " + average.count(nowSec()) + " readings";
+        return d;
+    }
+
+    // Adds this loop's fresh reading to the average: a NEW camera picture, else the odometry.
+    private void readDistance() {
+        double now = nowSec();
+        if (target != null && target.hasDistance()) {
+            if (target.timeNanos != lastPicture) {   // each picture once
+                lastPicture = target.timeNanos;
+                average.add(now, target.distanceIn, "camera");
+            }
+            return;
+        }
+        TargetObservation odo = odometryGoal();
+        if (odo != null) average.add(now, odo.distanceIn, "odometry");
+    }
+
+    private static double nowSec() {
+        return System.nanoTime() / 1e9;
     }
 
     // The goal from the odometry, or null (no odometry or no goal point).
@@ -325,6 +409,7 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         return odometryDistance ? robotDef.aim().fromOdometry() : null;
     }
 
+    // X: save the speed with the best hit ratio at this distance (with no shots marked: the speed now).
     private void savePoint() {
         double d = distance();
         if (Double.isNaN(d)) {
@@ -336,12 +421,31 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
             note = "No hood angle yet: change it with the D-pad first.";
             return;
         }
-        points.save(d, rpm, hoodDeg);
-        note = "Saved " + FinderResults.num(d, 1) + " in -> " + FinderResults.num(rpm, 0) + " RPM"
-                + (names.size() > 1 ? " (" + tuning.toUpperCase(java.util.Locale.US) + ")" : "") + ".";
+        double speed = rpm, measured = Double.NaN;
+        int hits = 0, shots = 0;
+        if (!tally.isEmpty()) {
+            speed = tally.bestRpm();
+            if (Double.isNaN(speed)) {
+                note = "Nothing went in yet at this spot: not saved. Try another speed.";
+                return;
+            }
+            measured = tally.measuredRpm(speed);
+            hits = tally.hits(speed);
+            shots = tally.shots(speed);
+        }
+        points.save(d, speed, hoodDeg, measured, hits, shots);
+        note = "Saved " + FinderResults.num(d, 1) + " in -> " + FinderResults.num(speed, 0) + " RPM"
+                + (shots > 0 ? " (" + hits + "/" + shots + " in)" : " (no shots marked)")
+                + (names.size() > 1 ? " " + tuning.toUpperCase(java.util.Locale.US) : "") + "."
+                + (shots > 0 && shots < 3 ? " Only " + shots + " shots: 3-5 is surer." : "")
+                + (!Double.isNaN(measured) && speed - measured > sagLimitRpm(speed)
+                        ? " The flywheel sagged to " + FinderResults.num(measured, 0) + " at these shots." : "");
+        tally.clear();
+        unmarked.clear();
         writeResults();
     }
 
+    // Hold BACK 1 s: delete the saved point here.
     private void deletePoint() {
         double d = distance();
         if (!Double.isNaN(d) && tables.get(tuning).removeNear(d)) {
@@ -391,6 +495,31 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
             TargetObservation seen = findTarget(camera);
             target = seen != null && seen.isFresh(System.nanoTime(), MAX_TARGET_AGE_MS) ? seen : null;
         }
+        readDistance();
+        double d = distance();
+        // Moved to another spot: the hits marked at the old one do not count here.
+        if (!tally.isEmpty() && !Double.isNaN(tally.spotIn()) && !Double.isNaN(d) && Math.abs(d - tally.spotIn()) > SPOT_MOVE_IN) {
+            note = "Moved " + FinderResults.num(Math.abs(d - tally.spotIn()), 0) + " in: the hit counts start again here.";
+            tally.clear();
+            unmarked.clear();
+        }
+        // Start from the table's speed at this distance until you change the speed yourself.
+        if (autoStartRpm && !rpmTouched && !Double.isNaN(d)) {
+            com.crossbotics.ftchelper.robot.Launcher module = robotLauncher();
+            ShotTable table = module == null ? null : module.table(tuning);
+            if (table != null && !table.points().isEmpty()) rpm = Math.round(table.lookup(d).rpm / 10) * 10.0;
+        }
+        // Hold BACK 1 s: delete the saved point here (once per hold).
+        boolean back = gamepad1.back && inputsReady();
+        if (!back) {
+            backSince = Double.NaN;
+            backUsed = false;
+        } else if (Double.isNaN(backSince)) {
+            backSince = nowSec();
+        } else if (!backUsed && nowSec() - backSince >= DELETE_HOLD_SEC) {
+            backUsed = true;
+            deletePoint();
+        }
         // The sticks and RT only count once gamepad 1 was let go after START or help (inputsReady()).
         if (driving != null) {
             if (inputsReady()) driving.update(gamepad1);
@@ -425,6 +554,16 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         }
         launcher.update();
         others.update();
+        // A piece was fed this loop: keep the speed asked for and the speed MEASURED now (as it was fed,
+        // before the shot slows the wheel), for A / B to mark.
+        int fired = launcher.getShotsFired();
+        if (fired > lastFired) {
+            double measured = launcher.getFlywheel().getRpm();
+            for (int i = lastFired; i < fired; i++) unmarked.addLast(new double[] {rpm, measured});
+            while (unmarked.size() > 10) unmarked.pollFirst();   // nobody marks more than 10 behind
+            lastSagRpm = rpm - measured > sagLimitRpm(rpm) ? rpm - measured : Double.NaN;
+        }
+        lastFired = fired;
         // Recovery: from a shot (the flywheel's shot counter goes up) until it is ready again.
         int shots = launcher.getFlywheel().getShotCount();
         if (shots > lastShots) {
@@ -457,16 +596,31 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
             t.line("  Odometry says", FinderResults.num(odo.distanceIn, 1) + " in");
         }
         if (atLimit) t.warn("At the flywheel's maxRpm or the hood's limit");
+        if (!Double.isNaN(lastSagRpm)) {
+            t.warn("Last shot: the flywheel was " + FinderResults.num(lastSagRpm, 0)
+                    + " RPM under the speed (sagged). Wait for Ready; charge the battery.");
+        }
         t.line("Ready", launcher.isReady() ? "YES" : "no: " + launcher.whyNotReady());
-        t.line("Shots fired", launcher.getShotsFired());
+        t.line("Shots fired", launcher.getShotsFired() + (unmarked.isEmpty() ? "" : ", " + unmarked.size() + " to mark (A hit / B miss)"));
+        // The way teams tune: hits / shots at this speed, and every speed tried at this spot.
+        t.line("Hits at " + FinderResults.num(rpm, 0), tally.hits(rpm) + "/" + tally.shots(rpm)
+                + (tally.shots(rpm) < 3 ? "  (shoot 3-5)" : ""));
+        if (!tally.isEmpty()) t.line("Tried here", tally.summary());
+        // Every table's point count, so you know when you are done (4-6 each).
+        java.util.List<String> counts = new java.util.ArrayList<>();
+        for (String n : names) counts.add((names.size() > 1 ? n.toUpperCase(java.util.Locale.US) + " " : "") + tables.get(n).size());
+        t.line("Points", FinderResults.commas(counts) + "  (4-6 per table)");
         if (!Double.isNaN(recoverySec)) t.line("Recovery", FinderResults.num(recoverySec, 2) + " s");
         if (!launcher.getLastProblem().isEmpty()) t.warn(launcher.getLastProblem());
-        t.text("RB = shoot, hold RT = keep shooting, B = stop, A = save point, X = delete point");
+        t.text("RB shoot, hold RT keep shooting, A HIT, B MISS, X save best, hold BACK 1 s delete");
         t.text("Next: " + nextStep(d));
         if (!note.isEmpty()) t.text(note);
-        for (ShotTable.Shot p : tables.get(tuning).points()) {
+        for (ShotPoints.Saved s : tables.get(tuning).saved()) {
+            ShotTable.Shot p = s.shot;
+            String extra = ShotPoints.note(s);
             t.text("  " + FinderResults.num(p.distance, 1) + " in: " + FinderResults.num(p.rpm, 0) + " RPM"
-                    + (hood != null ? ", " + FinderResults.num(p.hoodDeg, 1) + " deg" : ""));
+                    + (hood != null ? ", " + FinderResults.num(p.hoodDeg, 1) + " deg" : "")
+                    + (extra.isEmpty() ? "" : " (" + extra + ")"));
         }
         if (!results.isEmpty()) {
             t.text("Copy each line below into Tunables.java (replace the line there): the robot uses the file, not this screen.");
@@ -479,8 +633,11 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         if (Double.isNaN(d)) {
             return odometryDistance ? "point the camera at the goal, or check the odometry." : "point the camera at the goal.";
         }
-        if (tables.get(tuning).points().isEmpty()) return "RB to shoot; D-pad changes the speed; A saves when shots go in.";
-        return "move 1-2 ft and do it again (4-6 points), then copy the lines into Tunables.java.";
+        if (!unmarked.isEmpty()) return "A = HIT or B = MISS for each shot.";
+        if (tally.shots(rpm) < 3) return "RB to shoot 3-5 at this speed, marking each A HIT / B MISS.";
+        if (tally.isEmpty() || tally.summary().split(",").length < 2) return "D-pad to another speed, shoot 3-5 again; X saves the best.";
+        if (tables.get(tuning).points().isEmpty()) return "X saves the best speed here.";
+        return "X saves; move 1-2 ft and do it again (4-6 points), then copy the lines into Tunables.java.";
     }
 
     @Override
@@ -488,16 +645,16 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         return new String[] {
             "Builds the shot table: distance -> speed (+ hood).",
             "Nobody in the line of fire. Eye protection on.",
-            "LB = flywheel on/off (off at START).",
-            "Y = what the D-pad changes: SPEED / HOOD /",
-            "  DISTANCE (by hand) / TABLE (pollen, nectar...).",
+            "LB = flywheel on/off. Y = what the D-pad changes:",
+            "  SPEED / HOOD / DISTANCE (by hand) / TABLE.",
             "D-pad up/down: 100 RPM / 5 deg / 6 in steps;",
             "  right/left: 10 RPM / 0.5 deg / 1 in steps.",
-            "RB = shoot one, hold RT = keep shooting, B = stop.",
-            "A = save this point, X = delete the point here.",
+            "RB = shoot one, hold RT = keep shooting.",
+            "A = last shot HIT, B = MISS. X = save the best",
+            "  speed here. Hold BACK 1 s = delete the point.",
             "Sticks = drive (if set up), left trigger = slow.",
-            "Park near. Change speed until shots go in: A.",
-            "Back 1-2 ft, again: 4-6 points. Charged battery.",
+            "Shoot 3-5 per speed, 2-3 speeds, X. Back 1-2 ft.",
+            "4-6 points per table. Charged battery.",
             "Copy the lines into Tunables.java at the end.",
         };
     }

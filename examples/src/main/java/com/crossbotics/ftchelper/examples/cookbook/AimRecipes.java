@@ -40,7 +40,8 @@ public class AimRecipes {
             // The goal on the field, in inches, seen from the BLUE drivers' wall (the same numbers as
             // driveTo): with odometry, aiming goes on when the camera loses the goal.
             public static double goalX = -58, goalY = 55;
-            public static boolean mirrorForRed = false;   // BIOBUZZ: the field is turned, not mirrored
+            // Default true (RED mirrors x). BIOBUZZ's field is turned, not mirrored: false.
+            public static boolean mirrorForRed = false;
             // Whole-robot aim: turn power per degree off, the most it turns by itself, "aimed" within.
             public static double turnKp = 0.02, turnKd = 0.002, maxTurnPower = 0.5, toleranceDeg = 2;
             public static double rumbleDeg = 4;           // rumbleWhenAimed(): buzz within 4 degrees
@@ -121,7 +122,7 @@ public class AimRecipes {
     // end recipe
 
     /**
-     * The Shot Tuner for this robot: with two tables, Y (to TABLE) and the D-pad choose the one you
+     * The Shot Tuner for this robot: with two tables, Y (until "> Table") and the D-pad choose the one you
      * tune; with odometry, the distance also comes from where the robot is.
      */
     @TeleOp(name = "Cookbook Aim Shot Tuner", group = "Finders")
@@ -156,6 +157,7 @@ public class AimRecipes {
             // recipe: aim-whole-robot
             // RB: the robot turns to face the goal by itself; the driver keeps forward and sideways.
             // Moving the turn stick still turns it by hand. Two buzzes = on, one = off.
+            // Not with a turret that follows the goal: separate modes (INIT stops with a message).
             g1.rb.toggle(robot.aimMode()).says("aim the robot at the goal on/off").rumble();
             // end recipe
             g2.rumbleWhenAimed();

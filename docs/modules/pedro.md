@@ -249,6 +249,10 @@ static final PedroPath TO_GOAL = PedroPath.line(-56, -61, -48, -50).keepHeading(
         .holdEnd();                                                               // the whole path
 ```
 
+**A path that comes straight back along itself:** in the pretend-robot tests Pedro's own steering
+took a shortcut onto the way back at once (our progress measure handles such a path, Pedro's steering
+does not). Use two `follow` steps, out and back, or a curve that turns around. Not yet checked on a robot.
+
 Without `then`, each `follow` brakes to a stop at its end: two `follow` steps in a row stop between them.
 
 ### Hold the end point

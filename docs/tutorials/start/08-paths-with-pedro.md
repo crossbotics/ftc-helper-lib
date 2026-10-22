@@ -230,6 +230,9 @@ adds the `import`. Write them in the order they come along the path. If the path
 (`STALLED`, `timed out`), the report says which did not start: `To the goal: STALLED, not fired: Spin up`.
 `.alongside(action)` before the `follow` still works too: it starts the action before the path.
 
+**Do not drive straight back along the same line in one path.** In tests, Pedro took a shortcut onto
+the way back at once. Use two `follow` steps (out, then back), or a curve that turns around.
+
 **Start each path where the robot is:** the first path at the start spot in `s.start(...)`, and each
 next path where the last one ended.
 

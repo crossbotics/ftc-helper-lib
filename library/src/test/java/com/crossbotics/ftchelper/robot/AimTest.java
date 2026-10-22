@@ -134,6 +134,7 @@ public class AimTest {
         final PlacedTracker tracker = new PlacedTracker();
         final Class<?> numbers;
         final boolean withCamera;
+        boolean withTurret = true;
         Camera camera;
         Turret turret;
         Launcher launcher;
@@ -147,7 +148,11 @@ public class AimTest {
             tunables(numbers);
             drive(Drive.mecanum("fl", "fr", "bl", "br"));
             odometry(Odometry.custom(d -> tracker));
-            if (withCamera) {
+            if (withCamera && !withTurret) {
+                // Whole-robot aim: a camera and a launcher, no turret.
+                camera = add(Camera.limelight("limelight").goal("BLUE SCORING", "RED SCORING"));
+                launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").speedFromDistance(camera));
+            } else if (withCamera) {
                 camera = add(Camera.limelight("limelight").goal("BLUE SCORING", "RED SCORING"));
                 turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).follows(camera));
                 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").speedFromDistance(camera));
@@ -161,7 +166,12 @@ public class AimTest {
     private FakeCamera cam;
 
     private AimBot bot(Class<?> numbers, boolean withCamera) {
+        return bot(numbers, withCamera, true);
+    }
+
+    private AimBot bot(Class<?> numbers, boolean withCamera, boolean withTurret) {
         AimBot r = new AimBot(numbers, withCamera);
+        r.withTurret = withTurret;
         r.setup(devices());
         if (withCamera) {
             cam = new FakeCamera();
@@ -404,7 +414,7 @@ public class AimTest {
     // ----------------------------- whole-robot aim -----------------------------
 
     @Test public void wholeRobotAimTurnsTowardTheGoalAndTheDriverWins() {
-        AimBot r = bot(GoalTunables.class, true);
+        AimBot r = bot(GoalTunables.class, true, false);
         Aim aim = r.aim();
         assertEquals("off: the driver's turn as it is", 0.3, aim.assistTurn(0.3), 1e-9);
         r.aimMode().on();
@@ -425,7 +435,7 @@ public class AimTest {
     }
 
     @Test public void wholeRobotAimWithNoGoalDoesNotTurn() {
-        AimBot r = bot(NoGoalPoint.class, true);
+        AimBot r = bot(NoGoalPoint.class, true, false);
         r.aimMode().on();
         assertEquals(0, r.aim().assistTurn(0), 1e-9);
         Fakes.FakeTelemetry ft = new Fakes.FakeTelemetry();
@@ -438,7 +448,7 @@ public class AimTest {
     // ----------------------------- the aim buzz -----------------------------
 
     @Test public void rumbleWhenAimedBuzzesOnlyCloseAndNotWhilePaused() {
-        AimBot r = bot(GoalTunables.class, true);
+        AimBot r = bot(GoalTunables.class, true, false);
         final int[] buzzes = {0};
         ButtonPlan.aimBuzzed = () -> buzzes[0]++;
         ButtonPlan plan = ControlMap.makePlan(r, false, false, (g1, g2) -> g1.rumbleWhenAimed());
@@ -476,5 +486,138 @@ public class AimTest {
         } catch (IllegalStateException e) {
             assertTrue(e.getMessage(), e.getMessage().contains("rumbleWhenAimed() is there twice"));
         }
+    }
+
+    // ----------------------------- review fixes: aiming safety -----------------------------
+
+    private static String screen(java.util.function.Consumer<RobotTelemetry> show) {
+        Fakes.FakeTelemetry ft = new Fakes.FakeTelemetry();
+        RobotTelemetry t = new RobotTelemetry(ft.telemetry, () -> 0L);
+        show.accept(t);
+        t.update();
+        return ft.lastScreen.toString();
+    }
+
+    // P1: a turret that reached its last target is NOT aimed once the goal is lost (no odometry backup),
+    // so a launcher gated on aim().isAimed() cannot fire while the chassis turns away.
+    @Test public void aFollowingTurretIsNotAimedOnceTheGoalIsLost() {
+        AimBot r = bot(NoGoalPoint.class, true);
+        r.started();
+        clock.nanos = System.nanoTime();                      // the turret part checks pictures on the real clock
+        cam.seen = seen(0, 48);                               // straight ahead of the turret's camera
+        r.all().update();
+        assertTrue("on the goal", r.turret.isAimed());
+        assertTrue(r.aim().isAimed());
+        clock.addSec(0.5);                                    // the picture is old: the goal is lost
+        r.all().update();
+        assertTrue("the motor still sits on its last target", r.turret.part().isAimed());
+        assertFalse("but that is not aimed at the goal", r.turret.isAimed());
+        assertFalse(r.aim().isAimed());
+        cam.seen = seen(8, 48);                               // seen again, 8 degrees off: not aimed yet
+        assertFalse(r.turret.isAimed());
+        r.turret.aimAt(0);                                    // by hand: aimed = where it was told
+        assertTrue(r.turret.isAimed());
+    }
+
+    // Fable #3: whole-robot aim with a following turret: both would chase the same error. Stop at INIT.
+    @Test public void wholeRobotAimWithAFollowingTurretStopsWithAMessage() {
+        AimBot r = bot(GoalTunables.class, true);
+        try {
+            r.aimMode();
+            fail("expected a stop");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("separate modes"));
+        }
+        AimBot odo = bot(GoalTunables.class, false);
+        try {
+            ControlMap.makePlan(odo, false, true, (g1, g2) -> g1.rb.toggle(odo.aimMode()));
+            fail("expected a stop");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("separate modes"));
+        }
+    }
+
+    // Fable #4: the odometry's goal behind the robot: hold, do not swing limit to limit; hysteresis.
+    @Test public void aGoalBehindTheRobotHoldsTheTurretInsteadOfSwingingLimitToLimit() {
+        AimBot r = bot(GoalTunables.class, false);            // follows the odometry, limits -90..90
+        r.started();
+        place(r, -24, 96, 0);                                 // the goal straight behind (bearing 180)
+        r.all().update();
+        assertEquals("holds where it points", 0, r.turret.part().getTargetAngle(), 1e-9);
+        assertTrue(r.turret.isOutOfRange());
+        assertFalse(r.turret.isAimed());
+        assertTrue(screen(r.turret::addTelemetry), screen(r.turret::addTelemetry).contains("goal out of turret range (behind the robot: holding)"));
+        for (double h : new double[] {3, -3, 2, -2}) {        // the heading wobbles around "behind"
+            place(r, -24, 96, h);
+            r.all().update();
+            assertEquals("still holding at heading " + h, 0, r.turret.part().getTargetAngle(), 1e-9);
+        }
+        place(r, -24, 96, 82);                                // bearing 98: 8 past the limit, still holding
+        r.all().update();
+        assertEquals(0, r.turret.part().getTargetAngle(), 1e-9);
+        place(r, -24, 96, 85);                                // bearing 95: back within 5: to the limit
+        r.all().update();
+        assertEquals(90, r.turret.part().getTargetAngle(), 1e-9);
+        place(r, -24, 96, 82);                                // 8 past again: below 10, it stays at the limit
+        r.all().update();
+        assertEquals(90, r.turret.part().getTargetAngle(), 1e-9);
+        place(r, -24, 96, 75);                                // 15 past: holds again
+        r.all().update();
+        assertTrue(r.turret.isOutOfRange());
+        place(r, -24, 96, 150);                               // bearing 30: in range, it follows
+        r.all().update();
+        assertEquals(30, r.turret.part().getTargetAngle(), 1e-6);
+        assertFalse(r.turret.isOutOfRange());
+    }
+
+    // Fable #5: TeleOp without autonomous starts at (0, 0): the odometry backup is off until the pose is set.
+    @Test public void theOdometryBackupWaitsUntilThePoseWasSet() {
+        AimBot r = bot(GoalTunables.class, false);
+        r.tracker.update();
+        assertFalse(r.tracker.isPoseSet());
+        assertNull(r.aim().fromOdometry());
+        assertTrue(r.aim().odometryProblem(), r.aim().odometryProblem().contains("never set"));
+        r.tracker.setHeading(0);                              // "forward = away from you": not a pose
+        assertNull(r.aim().fromOdometry());
+        String screen = screen(r.aim()::addTelemetry);
+        assertTrue(screen, screen.contains("Aim odometry: the pose was never set"));
+        place(r, -24, 0, 0);
+        assertTrue(r.tracker.isPoseSet());
+        assertEquals(48, r.aim().fromOdometry().distanceIn, 1e-9);
+        assertEquals("", r.aim().odometryProblem());
+    }
+
+    @Test public void aGoalFartherThanTheFieldAllowsMeansAWrongPose() {
+        AimBot r = bot(GoalTunables.class, false);
+        place(r, 200, 0, 0);                                  // 229 in from the goal: not on a field
+        assertNull(r.aim().fromOdometry());
+        assertTrue(r.aim().odometryProblem(), r.aim().odometryProblem().contains("more than the field allows (170)"));
+        r.started();
+        r.all().update();
+        assertEquals("the turret does not aim at a wrong pose", Aim.Source.NONE, r.turret.aimSource());
+    }
+
+    @Test public void cameraAndOdometryDisagreeingIsWarned() {
+        AimBot r = bot(GoalTunables.class, true);
+        place(r, -24, 0, 0);                                  // the odometry: 48 in
+        cam.seen = seen(0, 52);                               // 4 in apart: fine
+        assertEquals("", r.aim().disagreement());
+        cam.seen = seen(0, 60);                               // 12 in apart: warn
+        assertTrue(r.aim().disagreement(), r.aim().disagreement().contains("camera says 60 in, odometry 48 in"));
+        assertTrue(screen(r.aim()::addTelemetry).contains("Aim: camera says 60 in"));
+    }
+
+    @Test public void initShowsTheAllianceAndTheMirrorChoice() {
+        AimBot r = bot(GoalTunables.class, false);
+        r.setAlliance(Alliance.RED);
+        String s = screen(r.aim()::addInitTelemetry);
+        assertTrue(s, s.contains("RED, goal x 24, y 48 in (mirrorForRed = true: RED mirrors x)"));
+        assertTrue(s, s.contains("the pose was never set"));
+        AimBot turned = bot(TurnedField.class, false);
+        turned.setAlliance(Alliance.RED);
+        place(turned, 0, 0, 0);
+        s = screen(turned.aim()::addInitTelemetry);
+        assertTrue(s, s.contains("RED, goal x -24, y 48 in (mirrorForRed = false: the same numbers from each wall)"));
+        assertFalse(s, s.contains("never set"));
     }
 }

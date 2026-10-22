@@ -311,6 +311,8 @@ Every kind of odometry is a `PoseTracker`, so your code reads them all the same 
 | `update()` | reads the device once and works out the new pose. The robot calls it for you, once per loop, first |
 | `pose()` | this loop's pose (a copy) |
 | `setPose(FieldPose)` | says "the robot is here now" (autonomous does this from its start spot; TeleOp from where autonomous ended). Set while the device is not ready yet (a Pinpoint still calibrating in TeleOp's INIT), the pose is kept and written to the device as soon as it is ready |
+| `isPoseSet()` | true once `setPose` was called. Until then the pose is only "(0, 0) where it was turned on", not a place on the field: [aiming by odometry](robot.md#aim) stays off |
+| `setHeading(deg)` | the way the robot faces now becomes this heading, x and y kept (TeleOp's "forward = away from you now"); does not count as setting the pose |
 | `speedInPerSec()`, `turnDegPerSec()` | how fast it moves and turns, if the device says (Pinpoint, OTOS). **Always 0 for dead wheels**: do not use them for "has it stopped?" there (compare two poses a few loops apart instead) |
 | `isReady()` | true when the device works and gives a pose |
 | `status()` | words for the Driver Station (table below) |

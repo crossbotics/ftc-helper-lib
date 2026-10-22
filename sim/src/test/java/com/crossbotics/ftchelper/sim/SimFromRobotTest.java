@@ -460,7 +460,12 @@ public class SimFromRobotTest {
             SimRun.pause(1.5);
             s.press(v -> s.g1().right_bumper = v);                    // shoot one
             assertTrue("a shot goes\n" + String.join("\n", s.screen()), SimRun.waitFor(() -> s.robot().shots() > before, 5));
-            s.press(v -> s.g1().a = v);                               // try to save a point
+            s.press(v -> s.g1().a = v);                               // A: that shot was a HIT
+            assertTrue(String.join("\n", s.screen()), s.screenHas("in at this speed."));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Points"));
+            s.press(v -> s.g1().b = v);                               // B with no shot left to mark
+            assertTrue(String.join("\n", s.screen()), s.screenHas("No shot to mark"));
+            s.press(v -> s.g1().x = v);                               // X: try to save a point
             // The distance comes from the robot's camera (no goal in view from the start position;
             // without a camera it would be a distance set by hand). The table line: FindersTest.
             assertTrue(String.join("\n", s.screen()), s.screenHas("No distance: the camera does not see the target."));

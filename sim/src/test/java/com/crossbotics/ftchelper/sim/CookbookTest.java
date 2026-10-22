@@ -164,19 +164,25 @@ public class CookbookTest {
             s.init("Cookbook Aim Shot Tuner");
             assertTrue(String.join("\n", s.screen()), s.screenHas("Odometry : put the robot at x 0, y 0 in"));
             s.start();
-            // From (0, 0) to the goal at (-58, 55): 79.9 in.
-            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("79.9 in (odometry)"), 2));
+            // From (0, 0) to the goal at (-58, 55): 79.9 in (averaged over half a second of readings).
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("79.9 in (odometry, "), 2));
+            // The speed starts from the POLLEN table at that distance (past its last point: 2900).
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Speed : 2900 RPM"));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Points : NECTAR 0, POLLEN 0"));
             assertTrue(String.join("\n", s.screen()), s.screenHas("Table : POLLEN"));
-            s.press(v -> s.g1().a = v);                                   // save a point (POLLEN)
+            s.press(v -> s.g1().x = v);                                   // save a point (POLLEN; no shots marked)
             assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas(
-                    "public static double[][] speedByDistancePollen = {{79.9, 3000}};   // in Tunables.Launcher"), 1));
-            // Y until TABLE (SPEED -> TABLE: no hood, no hand-set distance), then the other table.
+                    "public static double[][] speedByDistancePollen = {{79.9, 2900}};   // in Tunables.Launcher"), 1));
+            // Y until "> Table" (SPEED -> TABLE: no hood, no hand-set distance), then the other table.
             s.press(v -> s.g1().y = v);
             s.press(v -> s.g1().dpad_right = v);
             assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Table : NECTAR"), 1));
-            s.press(v -> s.g1().a = v);
+            // The NECTAR table's own speed at that distance (3200), then save.
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Speed : 3200 RPM"), 1));
+            s.press(v -> s.g1().x = v);
             assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas(
-                    "public static double[][] speedByDistanceNectar = {{79.9, 3000}};   // in Tunables.Launcher"), 1));
+                    "public static double[][] speedByDistanceNectar = {{79.9, 3200}};   // in Tunables.Launcher"), 1));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Points : NECTAR 1, POLLEN 1"));
             assertTrue("the POLLEN line stays", s.screenHas("speedByDistancePollen"));
             assertEquals("", s.error());
         }

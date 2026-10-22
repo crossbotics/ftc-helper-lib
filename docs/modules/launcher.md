@@ -167,7 +167,8 @@ counterclockwise (else `.reversed()`).
 | `aimAtTarget(target, cameraOnTurret)` | aim at a camera target: fresh pictures only, each picture once; holds when there is none |
 | `manual(power)` | a stick; 0 holds where it is |
 | `home(direction)` | turn slowly toward the switch until it closes (at once if already on it; fault after the timeout) |
-| `getAngle()`, `getTargetAngle()`, `isAimed()`, `isOutOfRange()`, `isHomed()`, `isHoming()`, `getFault()` | read. `isAimed()` is false for an out-of-range target, so it is safe as a launcher check |
+| `getAngle()`, `getTargetAngle()`, `isAimed()`, `isOutOfRange()`, `isHomed()`, `isHoming()`, `getFault()` | read. `isAimed()` is false for an out-of-range target. It only says the turret reached its LAST target: if the goal can be lost (a camera), also check that the goal is seen now (the robot in five files' [`Turret.isAimed()`](robot.md#turret) does) |
+| `getTolerance()`, `degreesOutOfRange(deg)` | the aimed tolerance; how far past the limits a direction is (0 = it can point there) |
 | `aimStep(deg, timeout)` | autonomous step |
 
 **The safe way round:** with limits -190..190, 170 and -190 are the same direction. The turret

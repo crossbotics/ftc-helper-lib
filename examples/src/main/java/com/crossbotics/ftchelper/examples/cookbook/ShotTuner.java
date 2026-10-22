@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
  * "// recipe: name" and "// end recipe" are shown on the page; tools/check_docs.py keeps them the same.
  */
 // recipe: shot-tuner
-// The Shot Tuner: fills Tunables.Launcher.speedByDistance from shots you mark as good.
+// The Shot Tuner: fills Tunables.Launcher.speedByDistance from shots you mark HIT or MISS.
 @TeleOp(name = "Cookbook Shot Tuner", group = "Finders")
 @Disabled   // delete this line in your copy, or you will not see it
 public class ShotTuner extends ShotTunerOpMode {

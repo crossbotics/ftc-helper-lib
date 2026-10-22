@@ -68,6 +68,9 @@ robot in five files: the Drive Tuner, then `Tunables.Drive.calibrated = true`.
 | `homing failed: switch not found` (turret) | the switch never closed: wire, magnet gap, or the wrong direction in `home(...)` |
 | `follower encoder not reading: follower switched off` (flywheel) | the second flywheel motor has no encoder cable: plug it in (or use one motor) |
 | `Launcher gave up: flywheel` (or `hood`, `Turret`...) | it was not ready in time: that part is the problem |
+| `Aim odometry: the pose was never set ...` | TeleOp ran without autonomous, so the robot does not know where it is: aiming uses the camera only. Run autonomous first, or `robot.odometry().setPose(...)` ([Aim](modules/robot.md#aim)) |
+| `Aim odometry: ... more than the field allows` / `Aim: camera says ... odometry ...` | the pose is wrong or drifted, or `Tunables.Aim.goalX, goalY` are not where the camera measures to |
+| `goal out of turret range (behind the robot: holding)` | the goal is behind the robot: turn the robot toward it |
 | `PRACTICE profile` | set COMPETITION at events |
 | `N tuned value(s) differ from the code` | saved tuning values are in use: copy them into the code, then reset |
 | `... button job took N ms: the whole robot stopped that long. ...` or `a button job took N ms: ...` | a button job waited: see "A job took N ms" under [Robot behavior](#robot-behavior) |
