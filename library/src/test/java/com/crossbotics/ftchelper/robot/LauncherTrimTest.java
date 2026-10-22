@@ -70,7 +70,7 @@ public class LauncherTrimTest {
         }
     }
 
-    /** No kF: the hub's own gains, nothing to compensate. */
+    /** No kF: the starting gains from the parts catalog, nothing to compensate. */
     public static class NoGains {
         public static class Launcher {
             public static double speedRpm = 2600;
@@ -292,6 +292,30 @@ public class LauncherTrimTest {
         r2.setup(kit2);
         launcherOf(r2).spinUp();
         r2.all().update();
-        assertEquals("no kF: the hub's own gains are never sent", null, kit2.motors.get("launcher").pidf);
+        // No kF: the starting gains from the parts catalog (not the hub's own), never battery-compensated.
+        double[] sent = kit2.motors.get("launcher").pidf;
+        assertEquals("F from the catalog: 32767 / (6000 x 28 / 60)", 32767 / 2800.0, sent[3], 1e-9);
+        assertEquals("never read: nothing to compensate", 0, kit2.voltReads);
+    }
+
+    /** batteryCompensation written, but no kF: it stays off, and INIT says why. */
+    public static class CompensationNoKf {
+        public static class Launcher {
+            public static double speedRpm = 2600;
+            public static boolean batteryCompensation = true;
+        }
+    }
+
+    @Test public void compensationWithoutAWrittenKfStaysOffWithANote() {
+        RobotTestKit kit = new RobotTestKit();
+        kit.volts = 10.0;
+        RobotDefinition r = fixedBot(CompensationNoKf.class);
+        r.setup(kit);
+        launcherOf(r).spinUp();
+        r.all().update();
+        assertEquals(32767 / 2800.0, kit.motors.get("launcher").pidf[3], 1e-9);
+        assertEquals(0, kit.voltReads);
+        assertTrue(r.notes().toString(), r.notes().toString().contains(
+                "Tunables.Launcher: batteryCompensation needs your own kF (Flywheel Finder): off until then"));
     }
 }

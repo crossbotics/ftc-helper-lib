@@ -418,6 +418,9 @@ lift = add(Lift.slide("lift").bottomSwitch("lift_bottom"));
 
 `Tunables.Lift` (the section is the device's name in CamelCase: `lift_left` reads `Tunables.LiftLeft`; [all its numbers](../guides/tunables.md#lift-and-arm)) (encoder counts): `min`, `max`, `kP`, `kI`, `kD`, `kF` (the steady push that holds it
 up), `maxPower`, `slowZone`, `slowZonePower`, `tolerance`; every other number is a named height.
+With its motor named (`Lift.slide("lift").part("gobilda-5203-435")`), the unwritten `kP`, `kD`,
+`slowZone` and `tolerance` start from the parts catalog, scaled to the motor's counts per turn, and INIT
+says so ([First run](../guides/tunables.md#first-run-what-you-get-before-tuning)).
 Buttons (operator): A lowest, Y highest (2 or more heights), X second (3 or more), D-pad up/down next height, left stick by hand.
 With a bottom switch, the lift only goes down (slowly) until the switch has been pressed once, and the
 switch sets 0. **Without one, 0 is wherever the lift is at INIT** (the encoder starts from there):
@@ -473,6 +476,8 @@ when the program starts. Button: operator right stick Y by hand.
 have arrived: a guess from `travelSec`), `isAt(name)`, `positions()`, `part()` (the
 [`PositionServo`](mechanism.md#positionservo) inside), `reversed()`. In Tunables every number is a
 named position (0 to 1) except `travelSec` ([reference](../guides/tunables.md#claw-wrist-and-positioner)). A servo does not move until the first command after START.
+With `.part("gobilda-2000-torque")` an unwritten `travelSec` comes from the servo's catalog speed; with no
+positions written, INIT says the library's positions are guesses (find yours with the Servo Finder).
 
 ```java
 claw = add(Claw.servo("claw"));       // Tunables.Claw: open, closed (both needed)
@@ -684,9 +689,14 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer
 `Tunables.Launcher` (the section is the flywheel motor's name in CamelCase: a launcher on `shooter` reads `Tunables.Shooter`, its feeder on `feeder` reads `Tunables.Feeder`; [all its numbers](../guides/tunables.md#launcher)): `speedRpm`, `stepRpm`, `readyBandRpm`, `idleRpm`, `shotIntervalSec`,
 `speedByDistance` (`{{inches, rpm}, ...}`, blended between rows; with no goal in view the last speed
 stays), or one table per game piece: `speedByDistancePollen`, `speedByDistanceNectar` (any names after
-`speedByDistance`), and `kP`, `kI`, `kD`, `kF` (the hub's speed control; only used when `kF` is there: the
+`speedByDistance`), and `kP`, `kI`, `kD`, `kF` (the hub's speed control: the
 [Flywheel Finder](../guides/finders.md) finds them, and `nominalVolts`, the battery voltage they were found
-at). Buttons (operator): LB spin up/down, RB fire one (hold: keep firing, `fireWhileHeld()` / `ceaseFire()` on release),
+at). **First run:** the ones not written start from the parts catalog for the motor in
+`Launcher.flywheel(...)` (F = 32767 / its top speed in counts per second, P = F / 10, I = P / 10, D = 0: a
+6000 RPM motor gets kF 11.7, kP 1.17, kI 0.117), not the hub's own gains, and an unwritten `speedRpm` is 60%
+of the motor's top speed (3600). INIT says so once: `Launcher: starting values from the parts catalog (kF
+11.7, kP 1.17, kI 0.117, speed 3600 rpm): run the Flywheel Finder, then the Shot Tuner`. A written number
+always wins. Buttons (operator): LB spin up/down, RB fire one (hold: keep firing, `fireWhileHeld()` / `ceaseFire()` on release),
 D-pad up/down the speed trim +/- `trimStepPercent` with speed from distance, or +/- `stepRpm` with a fixed
 speed (held: one more step every 0.25 s); double-tap D-pad down = no trim; double-tap D-pad up = last
 time's trim (when offered); D-pad right the next shot table (two or more). Each only when free.
@@ -810,7 +820,8 @@ the rim, or worn balls launch flatter). Use the speed trim first.
 
 `Tunables.Hood` (the section is the hood device's name in CamelCase; [all its numbers](../guides/tunables.md#hood)) (optional ones scale with the range, so they suit degrees, positions and ticks):
 `startAngle` (where it goes at START; default angleA), `stepAngle` (1/25 of the range), `byHandPerSec`
-(the whole range in 2.5 s at full stick), `trimMax` (1/5 of the range), `travelSec` (servo, 0.5). A
+(the whole range in 2.5 s at full stick), `trimMax` (1/5 of the range), `travelSec` (servo, 0.5; with
+`.part(...)`, from the servo's catalog speed over posA to posB). A
 motor hood: `kP` (power per tick, 0.005), `maxPower` (0.5), `tolerance` (1/50 of the range); it never
 pushes further past a stop. Nothing moves in INIT: the hood goes to `startAngle` at START. The Driver
 Station shows `Hood : 12.5 deg (table, trim +1.0 deg)` (`moving` until it should be there).

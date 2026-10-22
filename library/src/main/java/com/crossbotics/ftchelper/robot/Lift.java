@@ -57,6 +57,39 @@ public final class Lift extends MotorPositions<Lift> {
         return new double[] {0, 2600, 0.004, 0, 0.0002, 0.05, 1.0, 250, 0.2, 20};
     }
 
+    /** The motor the plain defaults are for: a goBILDA 312 RPM (537.7 counts a turn), a common lift motor. */
+    static final double DEFAULTS_COUNTS_PER_REV = 537.7;
+
+    // With part(...): kP, kD, slowZone and tolerance scaled to the motor's counts per turn, so the lift acts
+    // the same per MOTOR TURN as the defaults do on a 312 RPM motor (full power about half a turn from its
+    // target, slows down within about half a turn of its ends, "arrived" within 1/27 of a turn). The plain
+    // defaults are in counts: on a 117 RPM motor (1425.1 counts a turn) 250 counts is only 1/6 of a turn,
+    // so it would slam into its ends; on a 1150 RPM motor (145.1) 20 counts is 1/7 of a turn.
+    @Override
+    double[] catalogDefaults() {
+        Motors.Kind m = partId == null ? null : Motors.all().get(partId);
+        if (m == null) return null;
+        double k = m.countsPerRev / DEFAULTS_COUNTS_PER_REV;   // counts per turn compared to the 312 RPM motor
+        double[] d = defaults();
+        double nan = Double.NaN;
+        return new double[] {nan, nan, sig(d[2] / k), nan, sig(d[4] / k), nan, nan, Math.round(d[7] * k), nan,
+                Math.max(1, Math.round(d[9] * k))};
+    }
+
+    // No part(...): the counts-based defaults are for a 312 RPM motor. Say so, once.
+    @Override
+    String unknownMotorNote() {
+        return name() + ": no motor named (.part(...) in Robot.java): kP, kD, slowZone, tolerance are for a goBILDA "
+                + "312 RPM motor; name yours for starting values that fit it";
+    }
+
+    // Two significant figures (0.0055907 -> 0.0056): a starting value, not a measured one.
+    private static double sig(double v) {
+        if (v == 0) return 0;
+        double scale = Math.pow(10, 1 - (int) Math.floor(Math.log10(Math.abs(v))));
+        return Math.round(v * scale) / scale;
+    }
+
     @Override
     Map<String, Double> defaultPositions() {
         return positions("down", 0, "low", 900, "high", 2400);

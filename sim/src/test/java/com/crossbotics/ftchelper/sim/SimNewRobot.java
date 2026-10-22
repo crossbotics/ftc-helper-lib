@@ -183,7 +183,7 @@ public final class SimNewRobot {
                         parts.add(p);
                     } else if (has(w, "launcher", "shooter", "flywheel", "fly", "outtake")) {
                         launcher = new Part("Launcher", field, "Launcher.flywheel(" + q(d.name) + ", " + q(part != null ? part : "gobilda-5203-6000") + ")" + ren, section)
-                                .num("speedRpm", "2600").num("stepRpm", "100").num("readyBandRpm", "60").num("idleRpm", "0");
+                                .num("stepRpm", "100").num("readyBandRpm", "60").num("idleRpm", "0");
                         if (part == null) launcher.note = "TODO the motor's catalog id";
                         parts.add(launcher);
                     } else if (has(w, "feeder", "indexer", "kicker", "transfer", "windmill", "feed", "index")) {

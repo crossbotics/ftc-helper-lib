@@ -300,6 +300,30 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
         return deviceNames().isEmpty() || devices.has(device);
     }
 
+    /**
+     * A servo part's whole move, position 0 to 1, in seconds, from the parts catalog's speed for its
+     * {@code part(...)} (at the hub's 5 V; over its whole turn with {@code .fullRange()}), to 2 decimals.
+     * NaN without a catalog servo or when the catalog lacks its turn. A starting value for {@code travelSec}.
+     */
+    final double catalogFullMoveSec() {
+        if (partId == null || !Parts.servos().contains(partId)) return Double.NaN;
+        double s = Parts.servoPart(partId).fullMoveSec(fullRange);
+        return Double.isNaN(s) ? s : Math.round(s * 100) / 100.0;
+    }
+
+    // "a, b, c" (not String.join: the blocking check reads every ".join(" as a thread wait).
+    static String listed(java.util.Collection<String> items) {
+        StringBuilder sb = new StringBuilder();
+        for (String n : items) sb.append(sb.length() == 0 ? "" : ", ").append(n);
+        return sb.toString();
+    }
+
+    // A starting value for an INIT note, already rounded: up to 6 decimals, no trailing zeros (0.0056, 11.7).
+    static String exact(double v) {
+        String s = String.format(java.util.Locale.US, "%.6f", v).replaceAll("0+$", "").replaceAll("\\.$", "");
+        return s.equals("-0") ? "0" : s;
+    }
+
     /** Notes for INIT (missing Tunables fields...). */
     List<String> notes() {
         List<String> out = new ArrayList<>();

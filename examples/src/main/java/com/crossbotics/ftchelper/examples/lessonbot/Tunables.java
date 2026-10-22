@@ -19,11 +19,12 @@ public class Tunables {
 
     /**
      * Lesson 4. Encoder counts from the bottom (the switch sets 0). min/max: the safe range (the Motor
-     * Finder measures it). kP..kF: how it holds a height. down, low, high: named heights (any names).
+     * Finder measures it). down, low, high: named heights (any names). No kP..kF yet: Robot.java names the
+     * motor (part "gobilda-5203-435"), so the library starts from numbers for it (INIT shows them); tune
+     * them live (lesson 4, step 6) and write them here.
      */
     public static class Lift {
         public static double min = 0, max = 2600;
-        public static double kP = 0.004, kI = 0, kD = 0.0002, kF = 0.05;
         public static double down = 0, low = 900, high = 2400;
     }
 

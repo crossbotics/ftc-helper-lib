@@ -27,6 +27,11 @@ import java.util.List;
  * }
  * }</pre>
  *
+ * <p><b>First run</b> (no kF, no speedRpm written): the hub's gains start from the parts catalog for the
+ * motor ({@link Flywheel#startingPidf}: kF 11.7, kP 1.17, kI 0.117 for a goBILDA 6000 RPM motor) and the
+ * speed at 60% of its top speed (3600). INIT says so once; the Flywheel Finder and the Shot Tuner find the
+ * real ones. A written number always wins.
+ *
  * <p><b>Speed trim</b> (a fix during a match, when every shot is a little short or long: a worn
  * wheel, different balls): {@link #trimBy(double)} makes every shot speed (the table's or the
  * fixed one) that many percent faster or slower, kept to +/- {@code trimMaxPercent} (15) and to the
@@ -82,6 +87,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     private String hoodNote = "";
     // INIT notes about numbers the launcher reads differently from what is written (or assumes).
     private final java.util.List<String> numberNotes = new java.util.ArrayList<>();
+    // "Launcher: starting values from the parts catalog (...)": "" when every number was written.
+    private String catalogNote = "";
     private Camera distanceCamera = null;
     // speedFromOdometry(): the distance from the odometry alone (no camera).
     private boolean distanceFromOdometry = false;
@@ -294,12 +301,16 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
                     + "added: write camera = add(Camera...) and speedFromDistance(camera)");
         }
         Motors.Kind kind = Motors.get(motorId);
-        double codeSpeed = t.number("speedRpm", 2600);
+        // No speedRpm written: a starting speed from the parts catalog, 60% of the motor's top speed
+        // (startingRpm explains why), never a fixed number that a slow motor could not reach.
+        boolean speedWritten = t.has("speedRpm");
+        double startRpm = startingRpm(kind);
+        double codeSpeed = t.number("speedRpm", startRpm);
         if (codeSpeed > kind.freeRpm) {
             throw new IllegalStateException("Tunables." + name() + ".speedRpm = " + codeSpeed + " is above the "
                     + motorId + "'s top speed (" + kind.freeRpm + " RPM)");
         }
-        speedRpm = t.tunable("speedRpm", 2600, 50).range(0, kind.freeRpm);
+        speedRpm = t.tunable("speedRpm", startRpm, 50).range(0, kind.freeRpm);
         stepRpm = t.tunable("stepRpm", 100, 10).range(0, 1000);
         DcMotorEx motor = MotorSetup.of(devices.get(DcMotorEx.class, device)).reversed(reversed)
                 .coast().runUsingEncoder().done();
@@ -309,28 +320,37 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
                 .maxRpm(kind.freeRpm)
                 .tolerance(t.number("readyBandRpm", 60));
         numberNotes.clear();
-        if (!t.has("kF") && (t.has("kP") || t.has("kI") || t.has("kD"))) {
-            numberNotes.add("Tunables." + name() + ": kP/kI/kD are not used without kF (the motor's own speed control runs it). "
-                    + "Write all four from the Flywheel Finder, or delete them");
+        catalogNote = "";
+        // The hub's speed control. A written number always wins. Without kF, the starting gains come
+        // from the parts catalog (Flywheel.startingPidf: F = 32767 / the motor's top speed in counts per
+        // second, P = F / 10, I = P / 10, D = 0, REV's formula and the Flywheel Finder's), NOT the hub's
+        // own defaults (P 10, I 3, F 0: no F, so the wheel only reaches its speed slowly, by I).
+        double[] start = startingGains(kind);
+        boolean gainsFromCatalog = !t.has("kF");
+        double kP = t.has("kP") ? t.number("kP", 0) : start[0];
+        double kI = t.has("kI") ? t.number("kI", 0) : start[1];
+        double kD = t.has("kD") ? t.number("kD", 0) : start[2];
+        double kF = t.has("kF") ? t.number("kF", 0) : start[3];
+        flywheel.pidf(kP, kI, kD, kF);
+        // Battery compensation: off unless Tunables says batteryCompensation = true (not yet proven
+        // on real robots). Optional numbers are read only when written, so no "missing" note.
+        // (Only with a written kF: starting values were not tuned at any battery voltage.)
+        if (gainsFromCatalog && t.has("batteryCompensation") && t.flag("batteryCompensation", false)) {
+            numberNotes.add("Tunables." + name() + ": batteryCompensation needs your own kF (Flywheel Finder): off until then");
         }
-        if (t.has("kF")) {
-            flywheel.pidf(t.number("kP", 0), t.number("kI", 0), t.number("kD", 0), t.number("kF", 0));
-            // Battery compensation: off unless Tunables says batteryCompensation = true (not yet proven
-            // on real robots). Optional numbers are read only when written, so no "missing" note.
-            boolean compensate = t.has("batteryCompensation") && t.flag("batteryCompensation", false);
-            double nominal = t.has("nominalVolts") ? t.number("nominalVolts", Flywheel.DEFAULT_NOMINAL_VOLTS)
-                    : Flywheel.DEFAULT_NOMINAL_VOLTS;
-            if (nominal < 9 || nominal > 14) {
-                throw new IllegalStateException("Tunables." + name() + ".nominalVolts = " + nominal
-                        + ": the battery voltage the gains were tuned at, 9 to 14 V (the Flywheel Finder shows it)");
-            }
-            // The reader never waits: the hubs are asked on the library's helper thread (not in the loop).
-            if (compensate) flywheel.batteryCompensation(devices.batteryReader(), nominal);
-            if (compensate && !t.has("nominalVolts")) {
-                numberNotes.add(name() + ": battery compensation on, nominalVolts not written: assuming "
-                        + Shape.n(Flywheel.DEFAULT_NOMINAL_VOLTS) + " V (the Flywheel Finder shows yours; "
-                        + "batteryCompensation = false turns it off)");
-            }
+        boolean compensate = !gainsFromCatalog && t.has("batteryCompensation") && t.flag("batteryCompensation", false);
+        double nominal = t.has("nominalVolts") ? t.number("nominalVolts", Flywheel.DEFAULT_NOMINAL_VOLTS)
+                : Flywheel.DEFAULT_NOMINAL_VOLTS;
+        if (nominal < 9 || nominal > 14) {
+            throw new IllegalStateException("Tunables." + name() + ".nominalVolts = " + nominal
+                    + ": the battery voltage the gains were tuned at, 9 to 14 V (the Flywheel Finder shows it)");
+        }
+        // The reader never waits: the hubs are asked on the library's helper thread (not in the loop).
+        if (compensate) flywheel.batteryCompensation(devices.batteryReader(), nominal);
+        if (compensate && !t.has("nominalVolts")) {
+            numberNotes.add(name() + ": battery compensation on, nominalVolts not written: assuming "
+                    + Shape.n(Flywheel.DEFAULT_NOMINAL_VOLTS) + " V (the Flywheel Finder shows yours; "
+                    + "batteryCompensation = false turns it off)");
         }
         if (t.has("trimStepPercent")) trimStepPct = Math.abs(t.number("trimStepPercent", 1));
         // Last time's trim (an earlier OpMode since the robot app started): offer it, never apply it.
@@ -414,6 +434,52 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
             select(first);
         }
         part.setRpm(speedRpm.get());
+        // One INIT note with every starting value from the parts catalog, and the tool that tunes it.
+        // The speed only when it is the shot speed (no shot table): with a table, the table gives it.
+        List<String> fromCatalog = new java.util.ArrayList<>();
+        if (gainsFromCatalog) {
+            fromCatalog.add("kF " + exact(round(kF, 1)));
+            if (!t.has("kP")) fromCatalog.add("kP " + exact(round(kP, 2)));
+            if (!t.has("kI")) fromCatalog.add("kI " + exact(round(kI, 3)));
+        }
+        boolean speedFromCatalog = !speedWritten && tables.isEmpty();
+        if (speedFromCatalog) fromCatalog.add("speed " + exact(startRpm) + " rpm");
+        if (!speedWritten) t.fromCatalog("speedRpm");
+        if (!fromCatalog.isEmpty()) {
+            String tools = gainsFromCatalog && speedFromCatalog ? "run the Flywheel Finder, then the Shot Tuner"
+                    : gainsFromCatalog ? "run the Flywheel Finder" : "find your shot speed with the Shot Tuner";
+            catalogNote = name() + ": starting values from the parts catalog (" + listed(fromCatalog)
+                    + "): " + tools;
+        }
+    }
+
+    /**
+     * The launcher's starting speed when Tunables gives none: 60% of the motor's top speed from the parts
+     * catalog, to 10 RPM (a goBILDA 6000 RPM motor: 3600). Why 60%: the speed control needs room above the
+     * speed to push harder after each shot and on a tired battery (the top speed is for a full 12 V with no
+     * load), and a middle speed is a gentle first shot. The Shot Tuner finds the real one.
+     *
+     * @param kind the flywheel's motor
+     * @return RPM
+     */
+    static double startingRpm(Motors.Kind kind) {
+        return Math.round(kind.freeRpm * STARTING_SPEED_SHARE / 10.0) * 10.0;
+    }
+
+    /** The share of the motor's top speed a launcher starts at with no speedRpm written (0.6). */
+    static final double STARTING_SPEED_SHARE = 0.6;
+
+    /**
+     * The hub's starting speed-control gains for this motor, {P, I, D, F}: {@link Flywheel#startingPidf} with
+     * the parts catalog's top speed (free RPM x counts per turn / 60). A goBILDA 6000 RPM motor: {1.17, 0.117, 0, 11.70}.
+     */
+    static double[] startingGains(Motors.Kind kind) {
+        return Flywheel.startingPidf(kind.freeRpm * kind.countsPerRev / 60.0);
+    }
+
+    private static double round(double v, int places) {
+        double s = Math.pow(10, places);
+        return Math.round(v * s) / s;
     }
 
     @Override
@@ -848,6 +914,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     List<String> notes() {
         List<String> out = super.notes();
         if (!hoodNote.isEmpty()) out.add(hoodNote);
+        if (!catalogNote.isEmpty()) out.add(catalogNote);
         out.addAll(numberNotes);
         return out;
     }

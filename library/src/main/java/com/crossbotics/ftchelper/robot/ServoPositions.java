@@ -21,6 +21,10 @@ import java.util.Map;
  */
 public abstract class ServoPositions<M extends ServoPositions<M>> extends Module<M> {
     static final List<String> KNOWN = Collections.singletonList("travelSec");
+    /** travelSec with no part(...) and none written: 0.3 s. */
+    static final double DEFAULT_TRAVEL_SEC = 0.3;
+    // INIT notes about starting values (from the parts catalog, or the library's guessed positions).
+    private final List<String> startNotes = new ArrayList<>();
 
     boolean reversed = false;
     PositionServo part;
@@ -75,8 +79,28 @@ public abstract class ServoPositions<M extends ServoPositions<M>> extends Module
         Servo servo = devices.get(Servo.class, device);
         if (reversed) servo.setDirection(Servo.Direction.REVERSE);
         applyPulse(servo);   // .fullRange(): the servo's whole turn (nothing changes without it)
-        part = new PositionServo(name(), servo).travelTime(t.number("travelSec", 0.3));
+        // travelSec not written: the parts catalog's speed for the servo from part(...) (a torque servo is
+        // much slower than the plain 0.3 s), else 0.3 s.
+        startNotes.clear();
+        double catalogTravel = catalogFullMoveSec();
+        boolean travelFromCatalog = !t.has("travelSec") && !Double.isNaN(catalogTravel);
+        part = new PositionServo(name(), servo).travelTime(t.number("travelSec", travelFromCatalog ? catalogTravel : DEFAULT_TRAVEL_SEC));
+        if (travelFromCatalog) {
+            t.fromCatalog("travelSec");
+            startNotes.add(name() + ": starting values from the parts catalog (" + partId + ": travelSec " + exact(catalogTravel)
+                    + " s for a full move): time a full move to check");
+        }
         Map<String, Double> positions = positionsFrom(t);
+        if (t.others(KNOWN).isEmpty()) {
+            // No position written: the library's guesses are used. Say so: they are not this servo's, and a
+            // wrong one can push the part into the robot's frame.
+            StringBuilder guess = new StringBuilder();
+            for (Map.Entry<String, Double> e : positions.entrySet()) {
+                guess.append(guess.length() == 0 ? "" : ", ").append(e.getKey()).append(' ').append(Shape.n(e.getValue()));
+            }
+            startNotes.add(name() + ": no positions written: " + guess + " are library guesses, not your servo's: "
+                    + "find yours with the Servo Finder before the first TeleOp");
+        }
         order.clear();
         order.addAll(positions.keySet());
         if (sortByValue()) {
@@ -86,6 +110,13 @@ public abstract class ServoPositions<M extends ServoPositions<M>> extends Module
         for (String n : order) part.position(n, positions.get(n));
         // Every position in the tuning menu ("Claw/open"), kept between 0 and 1.
         part.tunable(name());
+    }
+
+    @Override
+    List<String> notes() {
+        List<String> out = super.notes();
+        out.addAll(startNotes);
+        return out;
     }
 
     // ----------------------------- commands -----------------------------

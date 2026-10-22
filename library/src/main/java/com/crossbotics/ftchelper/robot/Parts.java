@@ -52,12 +52,32 @@ public final class Parts {
         public final double rangeDeg;
         /** The seller's pulse range, microseconds; NaN = not given (then 500 to 2500 is assumed). */
         public final double pulseMinUs, pulseMaxUs;
+        /**
+         * Seconds to turn 60 degrees with no load at about the hub's servo voltage (a REV hub gives its
+         * servos 5 V): the seller's 4.8 V number, or its 6 V one when it gives no 4.8 V number (then the
+         * real servo is a little slower).
+         */
+        public final double secPer60Deg;
 
-        ServoPart(String id, double rangeDeg, double pulseMinUs, double pulseMaxUs) {
+        ServoPart(String id, double rangeDeg, double pulseMinUs, double pulseMaxUs, double secPer60Deg) {
             this.id = id;
             this.rangeDeg = rangeDeg;
             this.pulseMinUs = pulseMinUs;
             this.pulseMaxUs = pulseMaxUs;
+            this.secPer60Deg = secPer60Deg;
+        }
+
+        /**
+         * About how long a move from position 0 to 1 takes on a hub, from the seller's speed: a starting
+         * value for a part's {@code travelSec} (goBILDA 2000 torque on the normal range: 270 degrees at 0.25 s
+         * per 60 = 1.13 s).
+         *
+         * @param fullRange true with {@code .fullRange()} (0 to 1 is the servo's whole turn)
+         * @return seconds, or NaN when the catalog lacks the servo's turn or speed
+         */
+        public double fullMoveSec(boolean fullRange) {
+            double deg = fullRange ? rangeDeg : sdkRangeDeg();
+            return deg / 60.0 * secPer60Deg;
         }
 
         /** The pulse for position 0 with full range: the seller's, or 500 us when it gives none. */
@@ -96,8 +116,8 @@ public final class Parts {
     private static final Map<String, Wheel> WHEELS = new LinkedHashMap<>();
     private static final Map<String, ServoPart> SERVOS = new LinkedHashMap<>();
 
-    private static void servo(String id, double rangeDeg, double pulseMinUs, double pulseMaxUs) {
-        SERVOS.put(id, new ServoPart(id, rangeDeg, pulseMinUs, pulseMaxUs));
+    private static void servo(String id, double rangeDeg, double pulseMinUs, double pulseMaxUs, double secPer60Deg) {
+        SERVOS.put(id, new ServoPart(id, rangeDeg, pulseMinUs, pulseMaxUs, secPer60Deg));
     }
 
     private static void wheel(String id, double diameterMm, double widthMm) {
@@ -112,20 +132,21 @@ public final class Parts {
         wheel("gobilda-hogback-96", 96, 24);
         wheel("offset-tubing-60", 60, Double.NaN);
         wheel("offset-tubing-90", 90, Double.NaN);
-        // "servos": id, rangeDeg, pulseMinUs, pulseMaxUs (NaN = null in the catalog).
-        servo("gobilda-2000-torque", 300, 500, 2500);
-        servo("gobilda-2000-speed", 300, 500, 2500);
-        servo("gobilda-2000-super-speed", 300, 500, 2500);
-        servo("gobilda-2000-5turn-torque", 1800, 500, 2500);
-        servo("gobilda-2000-5turn-speed", 1800, 500, 2500);
-        servo("gobilda-2000-5turn-super-speed", 1800, 500, 2500);
-        servo("rev-smart-servo", 270, 500, 2500);
-        servo("rev-smart-servo-v2-balanced", 270, 500, 2500);
-        servo("rev-smart-servo-v2-ultraspeed", 270, 500, 2500);
-        servo("axon-max-mk2", 360, 500, 2500);
-        servo("axon-max-plus", Double.NaN, Double.NaN, Double.NaN);
-        servo("axon-mini-mk2", 360, 500, 2500);
-        servo("axon-mini-plus", Double.NaN, Double.NaN, Double.NaN);
+        // "servos": id, rangeDeg, pulseMinUs, pulseMaxUs (NaN = null in the catalog), and seconds per 60 degrees:
+        // the byVoltage row at 4.8 V, else the 6.0 V secPer60Deg (a REV hub's servo ports give 5 V).
+        servo("gobilda-2000-torque", 300, 500, 2500, 0.25);
+        servo("gobilda-2000-speed", 300, 500, 2500, 0.11);
+        servo("gobilda-2000-super-speed", 300, 500, 2500, 0.055);
+        servo("gobilda-2000-5turn-torque", 1800, 500, 2500, 0.25);
+        servo("gobilda-2000-5turn-speed", 1800, 500, 2500, 0.11);
+        servo("gobilda-2000-5turn-super-speed", 1800, 500, 2500, 0.055);
+        servo("rev-smart-servo", 270, 500, 2500, 0.13);
+        servo("rev-smart-servo-v2-balanced", 270, 500, 2500, 0.14);
+        servo("rev-smart-servo-v2-ultraspeed", 270, 500, 2500, 0.043);
+        servo("axon-max-mk2", 360, 500, 2500, 0.14);
+        servo("axon-max-plus", Double.NaN, Double.NaN, Double.NaN, 0.14);
+        servo("axon-mini-mk2", 360, 500, 2500, 0.11);
+        servo("axon-mini-plus", Double.NaN, Double.NaN, Double.NaN, 0.11);
     }
 
     /**

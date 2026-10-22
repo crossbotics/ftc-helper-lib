@@ -970,7 +970,9 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 ```java
 public static class Launcher {
     public static double speedRpm = 2600, stepRpm = 100, readyBandRpm = 60, idleRpm = 1500;
-    public static double kP = 40, kI = 0, kD = 0, kF = 12.5, nominalVolts = 12.8;   // from the Flywheel Finder
+    // The hub's speed control: none written = starting values from the parts catalog (INIT shows them).
+    // After the Flywheel Finder, paste its line, like:
+    // public static double kP = 1.24, kI = 0.124, kD = 0, kF = 12.4, nominalVolts = 12.6;
     public static double shotIntervalSec = 0.25;   // the least time between two pieces (seconds)
     // {inches to the goal, RPM}: blended between rows (from the Shot Tuner).
     public static double[][] speedByDistance = {{24, 2200}, {48, 2550}, {72, 2900}, {96, 3250}};
@@ -2854,8 +2856,11 @@ public class DriveTuner extends DriveTunerOpMode {
 
 ### How do I set the flywheel numbers?
 
-Run the **Flywheel Finder** (in the [starter kit](starter-kit.md)), then copy its line into
-`Tunables.Launcher` (see [the launcher recipe](#how-do-i-add-a-launcher-flywheel-and-feeder)).
+Before you have them, write none: the launcher starts from the parts catalog's numbers for its motor
+(a goBILDA 6000 RPM motor: kF 11.7, kP 1.17, kI 0.117, and 60% of its top speed, 3600 RPM) and INIT
+says so. Then run the **Flywheel Finder** (in the [starter kit](starter-kit.md)) and copy its line into
+`Tunables.Launcher` (see [the launcher recipe](#how-do-i-add-a-launcher-flywheel-and-feeder)). Do not copy
+another robot's gains: they were found for its wheel.
 
 **Why:** the right `kP`..`kF` make the wheel get back to speed fast after each shot.
 **More:** [Flywheel Finder](guides/finders.md#flywheel-finder-gains-and-recovery).

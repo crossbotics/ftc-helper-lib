@@ -380,10 +380,10 @@ public class RobotModulesTest {
         Launcher l = (Launcher) r.modules().get(0);
         l.spinUp();
         r.all().update();
-        assertEquals(2600, l.targetRpm(), 1e-9);
+        assertEquals("no Tunables: 60% of the motor's 6000 RPM", 3600, l.targetRpm(), 1e-9);
         l.adjust(2);
         r.all().update();
-        assertEquals(2800, l.targetRpm(), 1e-9);
+        assertEquals(3800, l.targetRpm(), 1e-9);
         r.started();
         assertEquals(0.0, kit.servos.get("indexer").position, 1e-9);   // indexer at rest after START
     }

@@ -115,6 +115,17 @@ final class TunableSection {
         }
     }
 
+    /**
+     * These fields were not written, and the module used a starting value worked out from the parts
+     * catalog (not a plain library default): they leave the "not written: library defaults used" note,
+     * because the module shows its own note with the values and the tool that tunes them.
+     *
+     * @param fields the field names, e.g. "speedRpm"
+     */
+    void fromCatalog(String... fields) {
+        missing.removeAll(java.util.Arrays.asList(fields));
+    }
+
     /** A true/false setting from the section, {@code fallback} if it is missing. */
     boolean flag(String field, boolean fallback) {
         Field f = field(field);

@@ -16,7 +16,8 @@ import org.junit.rules.TemporaryFolder;
 /**
  * Every example robot INITs with no error: its Robot.java is set up (as at INIT) on the simulated robot
  * made from it. Most of all, INIT stops on a Tunables field that no part reads (a typo), so a leftover or
- * misspelled field in an example's Tunables.java fails here.
+ * misspelled field in an example's Tunables.java fails here. INIT must also be clean: no misnamed-section
+ * warning; the first-run notes (starting values from the parts catalog) are allowed.
  */
 public class ExampleRobotsInitTest {
     @Rule public TemporaryFolder tmp = new TemporaryFolder();
@@ -49,6 +50,14 @@ public class ExampleRobotsInitTest {
                 // INIT, as the OpMode does: a new definition, set up on the simulated hardware.
                 RobotDefinition fresh = c.getDeclaredConstructor().newInstance();
                 fresh.setup(robot.hardwareMap());
+                // INIT is clean: no warning about a misnamed Tunables section. Notes are fine, among them
+                // the intended first-run ones ("starting values from the parts catalog", positions that
+                // are library guesses): an example may leave numbers out to show the first run.
+                // (Not the cookbook: its Tunables.java holds a section for every recipe, also parts its
+                // Robot.java does not have.)
+                if (c != com.crossbotics.ftchelper.examples.cookbook.Robot.class) {
+                    assertTrue(c.getName() + ": " + fresh.sectionWarnings(), fresh.sectionWarnings().isEmpty());
+                }
                 fresh.all().stop();
             } catch (Throwable e) {
                 failed.append("\n").append(c.getName()).append(": ").append(e);

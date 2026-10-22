@@ -37,6 +37,8 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
     // The positions' names in Tunables.java, lowest first (for the buttons).
     final List<String> order = new ArrayList<>();
     double min, max;
+    // The tolerance in use (written, from the parts catalog or the default), for the interlock's margin.
+    double toleranceUsed;
 
     MotorPositions(String device) {
         super(device);
@@ -106,6 +108,7 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
     List<String> notes() {
         List<String> out = super.notes();
         // Without a switch, 0 is wherever the part is at INIT (the encoder is set to 0 then).
+        if (!catalogNote.isEmpty()) out.add(catalogNote);
         if (switchName == null) out.add(name() + ": 0 is where it is at INIT: start with it at its bottom stop");
         if (secondMotor != null) {
             out.add(name() + ": two motors, \"" + device + "\" (its encoder is read) and \"" + secondMotor + "\" ("
@@ -125,6 +128,28 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
 
     // The library's defaults, for a module whose Tunables section is missing some numbers.
     abstract double[] defaults();   // min, max, kP, kI, kD, kF, maxPower, slowZone, slowZonePower, tolerance
+
+    /**
+     * Starting values worked out from the motor in the parts catalog, used in place of {@link #defaults()}
+     * where they are not NaN (same order). null = none (the plain defaults are used).
+     */
+    double[] catalogDefaults() {
+        return null;
+    }
+
+    /** The INIT note when the motor is not known and kP is not written ("" = none). */
+    String unknownMotorNote() {
+        return "";
+    }
+
+    /** The parts catalog motor the starting values come from ("gobilda-5203-435"), for the INIT note. */
+    String catalogMotor() {
+        return partId;
+    }
+
+    // "Lift: starting values from the parts catalog (...)": "" when none were used.
+    private String catalogNote = "";
+    static final String[] FIELD_ORDER = {"min", "max", "kP", "kI", "kD", "kF", "maxPower", "slowZone", "slowZonePower", "tolerance"};
     abstract Map<String, Double> defaultPositions();
     /** Encoder counts per unit (1 for a lift in counts, counts per degree for an arm). */
     abstract double countsPerUnit();
@@ -136,7 +161,19 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
 
     @Override
     void build(Devices devices, TunableSection t) {
-        double[] d = defaults();
+        double[] d = defaults().clone();
+        // Starting values from the parts catalog, where the team wrote none (a written number always wins).
+        double[] cat = catalogDefaults();
+        List<String> fromCatalog = new ArrayList<>();
+        List<String> catalogFields = new ArrayList<>();
+        if (cat != null) {
+            for (int i = 0; i < d.length && i < cat.length; i++) {
+                if (Double.isNaN(cat[i]) || t.has(FIELD_ORDER[i])) continue;
+                d[i] = cat[i];
+                fromCatalog.add(FIELD_ORDER[i] + " " + exact(cat[i]));
+                catalogFields.add(FIELD_ORDER[i]);
+            }
+        }
         // The safe range must be the team's own numbers (from the Motor Finder), never a default.
         t.require("min", "the bottom of the safe range, in " + unit() + ": Motor Finder, X");
         t.require("max", "the top of the safe range, in " + unit() + ": Motor Finder, B");
@@ -158,7 +195,7 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
                 .pid(t.number("kP", d[2]), t.number("kI", d[3]), t.number("kD", d[4]), t.number("kF", d[5]))
                 .maxPower(t.number("maxPower", d[6]))
                 .slowZone(t.number("slowZone", d[7]), t.number("slowZonePower", d[8]))
-                .tolerance(t.number("tolerance", d[9]));
+                .tolerance(toleranceUsed = t.number("tolerance", d[9]));
         if (switchName != null) {
             final TouchSensor sw = devices.get(TouchSensor.class, switchName);
             part.lowerSwitch(sw::isPressed);
@@ -172,6 +209,10 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
             // A tuned position stays inside the safe range.
             Tunable.number(name() + "/" + p, positions.get(p), 1).range(min, max);
         }
+        t.fromCatalog(catalogFields.toArray(new String[0]));
+        catalogNote = fromCatalog.isEmpty() ? "" : name() + ": starting values from the parts catalog (" + catalogMotor() + ": "
+                + listed(fromCatalog) + "): tune them live in the tuning menu (PRACTICE, hold GUIDE)";
+        if (cat == null && !unknownMotorNote().isEmpty() && !t.has("kP")) catalogNote = unknownMotorNote();
         order.clear();
         order.addAll(positions.keySet());
         final Map<String, Double> values = positions;
@@ -323,7 +364,7 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
     @Override
     double zoneDefaultMargin() {
         // Twice the tolerance, and at least 1/50 of the range.
-        double tol = tunables == null ? 0 : tunables.number("tolerance", defaults()[9]);
+        double tol = tunables == null ? 0 : toleranceUsed;
         return Math.max(2 * tol, (max - min) / 50);
     }
 

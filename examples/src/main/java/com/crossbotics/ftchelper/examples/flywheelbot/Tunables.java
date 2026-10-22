@@ -25,12 +25,12 @@ public class Tunables {
 
     /**
      * The flywheel, in RPM. speedRpm is the shot speed; one D-pad press changes it by stepRpm.
-     * readyBandRpm: how close to the speed counts as "ready to feed". kP..kF: the hub's speed control
-     * (goBILDA's starter bot code uses P 40, F 12.5 for this motor; the Flywheel Finder finds your own).
+     * readyBandRpm: how close to the speed counts as "ready to feed". No kP..kF yet: the hub's speed
+     * control starts from the parts catalog's numbers for this motor (INIT shows them: kF 11.7, kP 1.17,
+     * kI 0.117). Run the Flywheel Finder and paste its line here.
      */
     public static class Launcher {
         public static double speedRpm = 2600, stepRpm = 100, readyBandRpm = 60, idleRpm = 0;
-        public static double kP = 40, kI = 0, kD = 0, kF = 12.5, nominalVolts = 12.8;
         public static double shotIntervalSec = 0.25;   // the least time between two pieces (seconds)
     }
 

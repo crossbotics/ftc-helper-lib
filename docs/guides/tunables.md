@@ -5,7 +5,8 @@
 **For:** anyone who writes or changes `Tunables.java` in a robot made in five files
 ([lesson 1](../tutorials/start/01-robot-in-five-files.md)). **Use it:** find your part below, read its
 table, and copy only the lines you want to change. Every number has a default, except the ones marked
-**REQUIRED**.
+**REQUIRED**. Where Robot.java names the part's motor or servo, the default comes from the
+[parts catalog](parts-catalog.md) ([First run](#first-run-what-you-get-before-tuning)).
 
 This page lists every number the library reads from `Tunables.java`. A script
 (`tools/check_tunables.py`) reads the library's code and checks this page against it, so the list is
@@ -54,6 +55,8 @@ When you press INIT, the library reads `Tunables.java` and tells you what it fou
 | --- | --- | --- |
 | no line for an optional number | uses the default, and shows a note: `Tunables.Lift: kD, kF not written: library defaults used (fine)` | a missing number is not a problem: the default works. Add the line to change it |
 | no section at all for a part | uses every default: `Tunables.Intake not written: library defaults used (fine)` | the same |
+| no line for a number that has a starting value from the parts catalog (a launcher's gains and speed, a lift's `kP` with `.part(...)`, a servo's `travelSec` with `.part(...)`) | uses it, and shows ONE note per part with the values and the tool that tunes them: `Launcher: starting values from the parts catalog (kF 11.7, kP 1.17, kI 0.117, speed 3600 rpm): run the Flywheel Finder, then the Shot Tuner` | a number worked out for YOUR motor works much better than a fixed one made for another motor. It is still a start: tune it, then write it ([First run](#first-run-what-you-get-before-tuning)) |
+| no positions for a Claw, Wrist, Positioner or servo Indexer | uses the library's guesses and says so: `Claw: no positions written: open 0.2, closed 0.75 are library guesses, not your servo's: find yours with the Servo Finder before the first TeleOp` | guessed positions can push a part into the frame |
 | no line for a REQUIRED number | **stops**: `Tunables.Lift has no max: write max (the top of the safe range, in counts: Motor Finder, B). A safety limit never comes from a library default.` | a wrong limit breaks the robot. A default could be wrong for your robot |
 | a name in Lift, Arm, Claw, Wrist or Positioner that looks like a setting (`Max`, `k_P`, `maxPowr`) | **stops**: `Tunables.Lift.Max looks like "max" (capitals and spelling count)` | in these parts every other name is a named position, so a typo would quietly become a position |
 | a name no part reads, in any part's section (`inPowr` in `Intake`, `goalx` in `Aim`, a leftover `spinPower`) | **stops**: `Tunables.Intake.inPowr is not a setting of Intake (did you mean inPower?): the robot would quietly ignore it. Fix the name (capitals count) or delete the line. Known: inPower, outPower` | a misspelled line is never read, so the part would quietly use its default (a safety number too). The "did you mean" appears when the name looks like a real one |
@@ -75,6 +78,28 @@ gives the same lines ([testing](testing.md)).
 `rest`/`push`, a hood's `calibration`) are measured for the pulse range the servo had then. Adding or
 removing `.fullRange()` on a part in Robot.java changes where each position points: measure them again
 ([Full range](../modules/hardware.md#full-range)).
+
+## First run: what you get before tuning
+
+A new robot runs before any number is tuned. Every number has a safe starting value, and where
+Robot.java names the motor or servo (`Launcher.flywheel("launcher", "gobilda-5203-6000")`,
+`.part("gobilda-5203-435")`), the starting value is worked out from that part's numbers in the
+[parts catalog](parts-catalog.md) (the seller's numbers, with the date they were checked). INIT shows one
+note per part with the values it used and the tool that tunes them. A number you write always wins.
+
+| Part | Not written | What it starts with | Tune it with |
+| --- | --- | --- | --- |
+| Launcher | `kF`, `kP`, `kI`, `kD` | REV's formula with the motor's top speed: F = 32767 / (top RPM x counts per turn / 60), P = F / 10, I = P / 10, D = 0. A goBILDA 6000 RPM motor: kF 11.7, kP 1.17, kI 0.117. Not the hub's own gains (P 10, I 3, F 0): with no F the wheel only creeps up to speed | [Flywheel Finder](finders.md#flywheel-finder-gains-and-recovery) |
+| Launcher | `speedRpm` | 60% of the motor's top speed, to 10 RPM (6000 RPM motor: 3600). Room above it for the speed control to recover after a shot and on a tired battery, and a gentle first shot | [Shot Tuner](finders.md#shot-tuner-the-shot-table) |
+| Lift with `.part(...)` | `kP`, `kD`, `slowZone`, `tolerance` | the plain defaults (made for a goBILDA 312 RPM motor, 537.7 counts a turn) scaled to your motor's counts per turn, so it acts the same per motor turn. A 435 RPM motor: kP 0.0056, kD 0.00028, slowZone 179, tolerance 14 | the tuning menu (lesson 4, step 6) |
+| Claw, Wrist, Positioner with `.part(...)` | `travelSec` | the servo's catalog speed at the hub's 5 V over its whole move (goBILDA 2000 torque: 270 degrees at 0.25 s per 60 = 1.13 s) | time a full move |
+| Hood, servo Turret with `.part(...)` | `travelSec` | the same, over the move from `posA` to `posB` | time it |
+| servo Indexer with `.part(...)` | `pushSec`, `returnSec` | the same, from `rest` to `push`, at least 0.25 s | watch a feed |
+| Claw, Wrist, Positioner, servo Indexer | every position | the library's guesses, with a note: they are NOT your servo's | [Servo Finder](finders.md#servo-finder-ends-and-positions) before the first TeleOp |
+
+**Never a starting value:** safety numbers stay REQUIRED (a lift's or arm's `min`/`max`, a hood's or servo
+turret's stops, interlock zones, a turret's `homeAngle` with a switch). Battery compensation stays off
+until you write your own `kF`.
 
 ## Units
 
@@ -219,14 +244,14 @@ Module: [Lift](../modules/robot.md#lift), [Arm](../modules/robot.md#arm).
 | --- | --- | --- | --- | --- | --- | --- |
 | `min` | the bottom of the safe range: it never goes below | counts / degrees | REQUIRED | no | Motor Finder (X) | the part touches its bottom stop |
 | `max` | the top of the safe range: it never goes above. Must be more than `min` | counts / degrees | REQUIRED | no | Motor Finder (B) | the part touches its top stop |
-| `kP` | how hard it pushes toward its target, per unit off | power per unit | Lift 0.004, Arm 0.02 | yes, at once | test | slow to arrive (more) or shakes (less) |
+| `kP` | how hard it pushes toward its target, per unit off | power per unit | Lift 0.004 (with `.part(...)`: scaled to the motor, [First run](#first-run-what-you-get-before-tuning)), Arm 0.02 | yes, at once | test | slow to arrive (more) or shakes (less) |
 | `kI` | a push that grows while it stays short | power | 0 | yes, at once | test | it stops a little short and stays there |
-| `kD` | brakes it as it gets close | power | Lift 0.0002, Arm 0.001 | yes, at once | test | it overshoots (more) |
+| `kD` | brakes it as it gets close | power | Lift 0.0002 (with `.part(...)`: scaled to the motor), Arm 0.001 | yes, at once | test | it overshoots (more) |
 | `kF` | a steady push that holds it up against gravity | power | Lift 0.05, Arm 0 | yes, at once | test | the lift sags (more) |
 | `maxPower` | the most power it ever gets | 0 to 1 | Lift 1.0, Arm 0.6 | no | test | it moves too violently |
-| `slowZone` | it slows down within this distance of `min` and `max` | counts / degrees | Lift 250, Arm 15 | no | test | it slams into its ends (more) |
+| `slowZone` | it slows down within this distance of `min` and `max` | counts / degrees | Lift 250 (with `.part(...)`: about half a motor turn), Arm 15 | no | test | it slams into its ends (more) |
 | `slowZonePower` | the power at the very end of the slow zone | 0 to 1 | 0.2 | no | test | it stalls near an end (more) |
-| `tolerance` | how close counts as "arrived" | counts / degrees | Lift 20, Arm 3 | no | test | actions wait too long (more) |
+| `tolerance` | how close counts as "arrived" | counts / degrees | Lift 20 (with `.part(...)`: 1/27 of a motor turn), Arm 3 | no | test | actions wait too long (more) |
 | `<position>` | every other number is a named position (`down`, `low`, `high`); any name | counts / degrees | Lift: down 0, low 900, high 2400. Arm: stowed 0, score 90 (only when none are written) | yes, at once | Motor Finder (positions P1, P2...) | a new scoring height |
 
 ## Claw, Wrist and Positioner
@@ -237,8 +262,8 @@ Section: the device's name in CamelCase (`claw` reads `Claw`, `intake_deploy` re
 
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
-| `travelSec` | how long the servo takes for a full move, from position 0 to 1 (a shorter move: its share): a servo cannot say when it has arrived, so this is the guess | seconds | 0.3 | no | test (time a full move) | actions go on before it arrives (more) |
-| `<position>` | every other number is a named position, 0 to 1. A Claw needs `open` and `closed` | servo position 0 to 1 | Claw: open 0.20, closed 0.75. Wrist: down 0.15, level 0.5, up 0.85. Positioner: stowed 0.0, deployed 0.5 (only when none are written) | yes, at once | Servo Finder (P1, P2...) | it does not open, close or reach far enough |
+| `travelSec` | how long the servo takes for a full move, from position 0 to 1 (a shorter move: its share): a servo cannot say when it has arrived, so this is the guess | seconds | 0.3 (with `.part(...)`: from the servo's catalog speed, [First run](#first-run-what-you-get-before-tuning)) | no | test (time a full move) | actions go on before it arrives (more) |
+| `<position>` | every other number is a named position, 0 to 1. A Claw needs `open` and `closed` | servo position 0 to 1 | Claw: open 0.20, closed 0.75. Wrist: down 0.15, level 0.5, up 0.85. Positioner: stowed 0.0, deployed 0.5 (only when none are written; INIT says they are guesses) | yes, at once | Servo Finder (P1, P2...) | it does not open, close or reach far enough |
 
 ## Turret
 
@@ -267,7 +292,7 @@ your turret needs: [Setting up a turret](turret-setup.md). Module: [Turret](../m
 | `encoderOffset` | an absolute encoder: its reading with the turret straight forward | degrees | 0 | no | read it at INIT ([how](turret-setup.md)) | the encoder was moved |
 | `posA`, `angleA` | a servo turret: one servo position and the turret's angle there | 0 to 1, degrees | REQUIRED for `Turret.servo` | no | Servo Finder | the servo or linkage changed |
 | `posB`, `angleB` | a servo turret: a second position and its angle | 0 to 1, degrees | REQUIRED for `Turret.servo` | no | Servo Finder | the same |
-| `travelSec` | a servo turret: time from `posA` to `posB` (not 0 to 1) | seconds | 0.6 | no | test (time it) | it fires before it arrives (more) |
+| `travelSec` | a servo turret: time from `posA` to `posB` (not 0 to 1) | seconds | 0.6 (with `.part(...)`: from the servo's catalog speed) | no | test (time it) | it fires before it arrives (more) |
 
 ## Interlock rules
 
@@ -294,19 +319,19 @@ Section: the device's name in CamelCase: a launcher on the motor `launcher` read
 
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
-| `speedRpm` | the shot speed when not set by a shot table. At most the motor's top speed | RPM | 2600 | yes, at once | Shot Tuner or test | shots land short or long |
+| `speedRpm` | the shot speed when not set by a shot table. At most the motor's top speed | RPM | from the parts catalog: 60% of the motor's top speed, to 10 RPM (6000 RPM motor: 3600) | yes, at once | Shot Tuner or test | shots land short or long |
 | `stepRpm` | one D-pad press changes a fixed speed by this | RPM | 100 | yes, at once | none | the drivers want bigger or smaller steps |
 | `readyBandRpm` | "at speed" means within this of the target | RPM | 60 | no | test | it waits too long to fire (more) or shots vary (less) |
 | `idleRpm` | the speed between shots (0 = stop) | RPM | 0 | no | test | the first shot takes too long to spin up |
 | `shotIntervalSec` | the least time between two shots | seconds | 0.25 | no | Flywheel Finder (the recovery) | quick shots land short (more) |
 | `speedByDistance` | the shot table: rows of `{inches, rpm}`, or `{inches, rpm, hood}` with a [hood](#hood); blended between rows | inches, RPM | none: `speedRpm` | no | Shot Tuner | the field, the balls or the wheel changed |
 | `speedByDistance<Name>` | one more table per game piece, e.g. `speedByDistancePollen` (used as "pollen") | inches, RPM | none | no | Shot Tuner | pieces fly differently |
-| `kP` | the hub's speed control: push per RPM off. Used only when `kF` is written | hub units | 0 | no | Flywheel Finder | after the Flywheel Finder |
-| `kI` | the hub's speed control: slow fix of a steady error | hub units | 0 | no | Flywheel Finder | the same |
+| `kP` | the hub's speed control: push per speed error | hub units | from the parts catalog: kF / 10 (6000 RPM motor: 1.17) | no | Flywheel Finder | after the Flywheel Finder |
+| `kI` | the hub's speed control: slow fix of a steady error | hub units | from the parts catalog: kP / 10 (6000 RPM motor: 0.117) | no | Flywheel Finder | the same |
 | `kD` | the hub's speed control: brakes changes | hub units | 0 | no | Flywheel Finder | the same |
-| `kF` | the hub's speed control: the steady power for a speed. Writing it turns the four gains on | hub units | 0 (not written: the SDK's own gains) | no | Flywheel Finder | the same |
+| `kF` | the hub's speed control: the steady power for a speed | hub units | from the parts catalog: 32767 / the motor's top speed in counts per second (6000 RPM motor: 11.7) | no | Flywheel Finder | the same |
 | `nominalVolts` | the battery voltage the gains were found at (battery compensation), 9 to 14 | volts | 12.8 (INIT notes that it assumes this) | no | Flywheel Finder | after the Flywheel Finder |
-| `batteryCompensation` | with `kF`: scale F by the battery voltage (not yet proven on a real robot) | true/false | false | no | none | to try it: `true`, then the 4-shot test (lesson 9) |
+| `batteryCompensation` | with a written `kF`: scale F by the battery voltage (not yet proven on a real robot). Without your own `kF` it stays off, with a note | true/false | false | no | none | to try it: `true`, then the 4-shot test (lesson 9) |
 | `trimStepPercent` | one speed trim step | percent | 1 | no | none | the drivers want bigger steps |
 | `trimMaxPercent` | the most speed trim, at most 50 | percent | 15 | no | none | you need more trim (better: fix the table) |
 
@@ -320,8 +345,8 @@ Section: the device's name in CamelCase: `Indexer.servo("feeder")` reads **`Feed
 | --- | --- | --- | --- | --- | --- | --- |
 | `rest` | a servo indexer: where it waits | 0 to 1 | 0.0 | yes, at once | Servo Finder | it blocks the pieces |
 | `push` | a servo indexer: where it pushes a piece into the wheel | 0 to 1 | 0.5 | yes, at once | Servo Finder | pieces are not pushed far enough |
-| `pushSec` | a servo indexer: time to push | seconds | 0.25 | yes, at once | test | it comes back before the piece is gone (more) |
-| `returnSec` | a servo indexer: time to come back | seconds | 0.25 | yes, at once | test | the next piece jams on it (more) |
+| `pushSec` | a servo indexer: time to push | seconds | 0.25 (with `.part(...)`: the servo's catalog time from `rest` to `push`, at least 0.25) | yes, at once | test | it comes back before the piece is gone (more) |
+| `returnSec` | a servo indexer: time to come back | seconds | 0.25 (with `.part(...)`: the same as `pushSec`) | yes, at once | test | the next piece jams on it (more) |
 | `power` | a motor or CR servo indexer: power while it feeds (- = the other way) | -1 to 1 | 1.0 | yes, at once | test | pieces are fed too hard or too softly |
 | `feedSec` | a motor or CR servo indexer: time for one piece | seconds | 0.4 | yes, at once | test | it feeds two (less) or none (more) |
 
@@ -344,7 +369,7 @@ default that says "of the range" fits degrees, positions and counts. Module: [Ho
 | `byHandPerSec` | speed with the stick at full | angle per second | the range in 2.5 s | no | test | the stick is too fast |
 | `trimMax` | the most hood trim | angle | 1/5 of the range | no | none | you need more trim |
 | `tolerance` | a motor hood: how close counts as arrived | angle | 1/50 of the range | no | test | the launcher waits too long (more) |
-| `travelSec` | a servo hood: time from stop to stop (`posA` to `posB`) | seconds | 0.5 | yes, at once | test (time it) | it fires before the hood arrives (more) |
+| `travelSec` | a servo hood: time from stop to stop (`posA` to `posB`) | seconds | 0.5 (with `.part(...)`: from the servo's catalog speed) | yes, at once | test (time it) | it fires before the hood arrives (more) |
 | `kP` | a motor hood: power per count off | power per count | 0.005 | yes, at once | test | slow (more) or shakes (less) |
 | `maxPower` | a motor hood: the most power | 0 to 1 | 0.5 | yes, at once | test | it hits its stops hard |
 

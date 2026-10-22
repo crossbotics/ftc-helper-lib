@@ -23,7 +23,8 @@ public class Tunables {
      */
     public static class FlyWheel {
         public static double speedRpm = 4000, stepRpm = 100, readyBandRpm = 150, idleRpm = 0;
-        // The hub's speed control. Run the Flywheel Finder, then remove the // and put its numbers here.
+        // The hub's speed control: none written = starting values from the parts catalog (INIT shows them).
+        // Run the Flywheel Finder, then remove the // and put its numbers here.
         // public static double kP = 0, kI = 0, kD = 0, kF = 0;
     }
 

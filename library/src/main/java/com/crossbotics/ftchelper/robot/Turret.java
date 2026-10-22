@@ -126,6 +126,8 @@ public final class Turret extends Module<Turret> {
     private double startAngle = 0, homeAngle = 0, homeDirection = 1;
     // The INIT note when startAngle was not written and 0 is outside the range ("" = none).
     private String startNote = "";
+    // "Turret: starting values from the parts catalog (travelSec ...)": a servo turret with part(...) and no travelSec.
+    private String travelNote = "";
     // Where the angle at INIT came from, for the INIT screen.
     private String angleFrom = "";
     private double toleranceDeg = 1;
@@ -411,8 +413,19 @@ public final class Turret extends Module<Turret> {
         Servo s = devices.get(Servo.class, device);
         if (reversed) s.setDirection(Servo.Direction.REVERSE);
         applyPulse(s);   // .fullRange(): the servo's whole turn (nothing changes without it)
-        // travelSec: from posA to posB; the PositionServo wants seconds for a full 0..1 move.
-        double travel = t.number("travelSec", 0.6) / Math.abs(posB - posA);
+        // travelSec: from posA to posB; the PositionServo wants seconds for a full 0..1 move. Not written:
+        // the parts catalog's speed for the servo from part(...) over posA..posB, else 0.6 s.
+        travelNote = "";
+        double full = catalogFullMoveSec();
+        boolean fromCatalog = !t.has("travelSec") && !Double.isNaN(full);
+        double catalogTravel = Math.max(0.05, Math.round(full * Math.abs(posB - posA) * 100) / 100.0);
+        double travelSec = t.number("travelSec", fromCatalog ? catalogTravel : 0.6);
+        if (fromCatalog) {
+            t.fromCatalog("travelSec");
+            travelNote = name() + ": starting values from the parts catalog (" + partId + ": travelSec " + exact(catalogTravel)
+                    + " s from posA to posB): time it to check";
+        }
+        double travel = travelSec / Math.abs(posB - posA);
         PositionServo ps = new PositionServo(name(), s).degrees(posA, angleA, posB, angleB).travelTime(travel)
                 .limits(Math.min(posA, posB), Math.max(posA, posB));
         // The range: the measured points' angles, or min/max if narrower.
@@ -434,7 +447,7 @@ public final class Turret extends Module<Turret> {
                 : t.has("startAngle") ? Module.fmt("servo: at START it goes to startAngle %.0f deg", first)
                 : Module.fmt("servo: at START it goes to %.0f deg (the middle of its range: no startAngle)", first);
         return com.crossbotics.ftchelper.launcher.Turret.servo(name(), ps).limits(min, max)
-                .servoStickSec(t.number("travelSec", 0.6)).startAngle(first);
+                .servoStickSec(travelSec).startAngle(first);
     }
 
     // A motor or a CR servo with an encoder.
@@ -604,6 +617,7 @@ public final class Turret extends Module<Turret> {
     List<String> notes() {
         List<String> out = super.notes();
         if (!startNote.isEmpty()) out.add(startNote);
+        if (!travelNote.isEmpty()) out.add(travelNote);
         return out;
     }
 

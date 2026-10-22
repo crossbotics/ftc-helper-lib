@@ -104,6 +104,47 @@ public class Flywheel implements Subsystem {
     /** The F scale is kept between these, so a wrong reading cannot make the wheel run away. */
     public static final double MIN_F_SCALE = 0.8, MAX_F_SCALE = 1.3;
 
+    /**
+     * Starting speed-control gains from a top speed, before anything is tuned: {P, I, D, F}.
+     * The hub's full power is 32767, so F = 32767 / (top speed in encoder counts per second) gives the
+     * right power for any speed by itself; P = F / 10 and I = P / 10 fix what is left; D = 0. This is
+     * REV's formula (docs.revrobotics.com/first-global/fgc-pid) and the Flywheel Finder's. With the parts
+     * catalog's top speed (a goBILDA 6000 RPM motor: 6000 RPM x 28 counts / 60 = 2800 counts/s) it gives
+     * F 11.70, P 1.17, I 0.117: the wheel spins close to the asked speed on the first run. The Flywheel
+     * Finder measures the real top speed of YOUR wheel, a little lower, and gives a slightly bigger F.
+     *
+     * <pre>{@code
+     * double[] g = Flywheel.startingPidf(6000 * 28 / 60.0);   // {1.17, 0.117, 0, 11.70}
+     * flywheel.pidf(g[0], g[1], g[2], g[3]);
+     * }</pre>
+     *
+     * @param topTicksPerSec the speed at full power, encoder counts per second (sign ignored)
+     * @return {P, I, D, F}, or all zeros if the top speed is under 1 count per second
+     */
+    public static double[] startingPidf(double topTicksPerSec) {
+        double top = Math.abs(topTicksPerSec);
+        if (top < 1) return new double[] {0, 0, 0, 0};
+        double f = 32767 / top;
+        double p = f / 10;
+        double i = p / 10;
+        return new double[] {p, i, 0, f};
+    }
+
+    /**
+     * Uses {@link #startingPidf} with this flywheel's {@link #maxRpm} and {@link #countsPerRev} (set those
+     * first): gains for a first run when you have no tuned ones yet. Your own {@link #pidf} replaces them.
+     *
+     * <pre>{@code
+     * Flywheel.create(hardwareMap, "flywheel").countsPerRev(28).maxRpm(6000).startingGains();
+     * }</pre>
+     *
+     * @return this flywheel
+     */
+    public Flywheel startingGains() {
+        double[] g = startingPidf(maxRpm * countsPerRev / 60.0);
+        return pidf(g[0], g[1], g[2], g[3]);
+    }
+
     /** Gets the motor: coast (a flywheel must spin down freely), speed control on. */
     public static Flywheel create(HardwareMap hardwareMap, String name) {
         return new Flywheel(name, MotorSetup.get(hardwareMap, name).coast().runUsingEncoder().done());

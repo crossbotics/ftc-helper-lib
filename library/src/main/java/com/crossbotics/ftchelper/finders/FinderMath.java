@@ -13,18 +13,15 @@ public final class FinderMath {
      * Starting speed-control gains for a flywheel from its top speed (the hub's velocity PIDF).
      * F makes the motor send the right power for a speed by itself: the hub's full power is 32767,
      * so F = 32767 / (top speed in counts per second). P = F / 10 and I = P / 10 fix what is left;
-     * D = 0. A common starting point for REV hubs; fine-tune F with the flywheel finder.
+     * D = 0. REV's PIDF guide gives this formula (docs.revrobotics.com/first-global/fgc-pid); the
+     * same math is {@link com.crossbotics.ftchelper.launcher.Flywheel#startingPidf}, which a launcher
+     * uses before the flywheel finder has run.
      *
      * @param topTicksPerSec the speed at full power, encoder counts per second (sign ignored)
      * @return {P, I, D, F}, or all zeros if the top speed is 0
      */
     public static double[] flywheelPidf(double topTicksPerSec) {
-        double top = Math.abs(topTicksPerSec);
-        if (top < 1) return new double[] {0, 0, 0, 0};
-        double f = 32767 / top;
-        double p = f / 10;
-        double i = p / 10;
-        return new double[] {p, i, 0, f};
+        return com.crossbotics.ftchelper.launcher.Flywheel.startingPidf(topTicksPerSec);
     }
 
     /** Counts per second to RPM (turns per minute), for this many counts per turn. */

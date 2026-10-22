@@ -68,6 +68,8 @@ public final class Hood extends Module<Hood> {
 
     private final Kind kind;
     private final String motorId;
+    // "Hood: starting values from the parts catalog (...)": "" when travelSec was written (or no part).
+    private String startNote = "";
     private boolean reversed = false;
     // For the simulator: the launcher's shot angle with the hood at angleA and at angleB (NaN = not given).
     double shotAtA = Double.NaN, shotAtB = Double.NaN;
@@ -188,7 +190,20 @@ public final class Hood extends Module<Hood> {
         trimMax = t.has("trimMax") ? Math.abs(t.number("trimMax", 0)) : range / 5;
         tolerance = t.has("tolerance") ? Math.abs(t.number("tolerance", 0)) : range / 50;
         if (kind == Kind.SERVO) {
-            travelSec = t.tunable("travelSec", 0.5, 0.02).range(0, 5);
+            // travelSec not written: the parts catalog's speed for the servo from part(...), for the move
+            // from stop to stop (a goBILDA torque servo turning 0.3 of its range: 0.34 s), else 0.5 s.
+            startNote = "";
+            double span = posA != null ? Math.abs(posB.get() - posA.get())
+                    : Math.abs(calibration[calibration.length - 1][0] - calibration[0][0]);
+            double full = catalogFullMoveSec();
+            boolean fromCatalog = !t.has("travelSec") && !Double.isNaN(full);
+            double catalogTravel = Math.max(0.05, Math.round(full * span * 100) / 100.0);
+            travelSec = t.tunable("travelSec", fromCatalog ? catalogTravel : 0.5, 0.02).range(0, 5);
+            if (fromCatalog) {
+                t.fromCatalog("travelSec");
+                startNote = name() + ": starting values from the parts catalog (" + partId + ": travelSec " + exact(catalogTravel)
+                        + " s from stop to stop): time it to check (Hood Finder, or by eye)";
+            }
             Servo servo = devices.get(Servo.class, device);
             if (reversed) servo.setDirection(Servo.Direction.REVERSE);
             applyPulse(servo);   // .fullRange(): the servo's whole turn (nothing changes without it)
@@ -557,6 +572,13 @@ public final class Hood extends Module<Hood> {
         plan.operator().leftStickY.use(this::byHand)
                 .says(tableDriven ? "hood trim while it follows the table, else the hood (up = bigger angle)"
                         : "hood angle (up = bigger angle)");
+    }
+
+    @Override
+    List<String> notes() {
+        List<String> out = super.notes();
+        if (!startNote.isEmpty()) out.add(startNote);
+        return out;
     }
 
     @Override

@@ -37,6 +37,8 @@ public final class Indexer extends Module<Indexer> implements Feeder {
 
     private final Kind kind;
     private boolean reversed = false;
+    // INIT notes about starting values (from the parts catalog, or the guessed rest/push positions).
+    private final List<String> startNotes = new java.util.ArrayList<>();
     boolean inLauncher = false;
     Feeder feeder;
     private ServoFeeder servoFeeder;
@@ -105,8 +107,28 @@ public final class Indexer extends Module<Indexer> implements Feeder {
             case SERVO:
                 rest = t.tunable("rest", 0.0, 0.01).range(0, 1);
                 push = t.tunable("push", 0.5, 0.01).range(0, 1);
-                pushSec = t.tunable("pushSec", 0.25, 0.01).range(0.02, 2);
-                returnSec = t.tunable("returnSec", 0.25, 0.01).range(0.02, 2);
+                // pushSec/returnSec not written, with a catalog servo (part(...)): its time from rest to push
+                // at the catalog's speed, never under 0.25 s (the piece needs time to leave). A slow torque
+                // servo needs more than 0.25 s just to get there.
+                startNotes.clear();
+                double full = catalogFullMoveSec();
+                double move = Double.isNaN(full) ? Double.NaN
+                        : Math.max(0.25, Math.round(full * Math.abs(push.get() - rest.get()) * 100) / 100.0);
+                boolean pushFromCatalog = !t.has("pushSec") && !Double.isNaN(move);
+                boolean returnFromCatalog = !t.has("returnSec") && !Double.isNaN(move);
+                pushSec = t.tunable("pushSec", pushFromCatalog ? move : 0.25, 0.01).range(0.02, 2);
+                returnSec = t.tunable("returnSec", returnFromCatalog ? move : 0.25, 0.01).range(0.02, 2);
+                List<String> cat = new java.util.ArrayList<>();
+                if (pushFromCatalog) { cat.add("pushSec " + exact(move)); t.fromCatalog("pushSec"); }
+                if (returnFromCatalog) { cat.add("returnSec " + exact(move)); t.fromCatalog("returnSec"); }
+                if (!cat.isEmpty()) {
+                    startNotes.add(name() + ": starting values from the parts catalog (" + partId + ": " + listed(cat)
+                            + "): watch a feed and change them by test");
+                }
+                if (!t.has("rest") && !t.has("push")) {
+                    startNotes.add(name() + ": no positions written: rest 0, push 0.5 are library guesses, not your servo's: "
+                            + "find yours with the Servo Finder before the first TeleOp");
+                }
                 Servo s = devices.get(Servo.class, device);
                 if (reversed) s.setDirection(Servo.Direction.REVERSE);
                 applyPulse(s);   // .fullRange(): the servo's whole turn (nothing changes without it)
@@ -249,6 +271,13 @@ public final class Indexer extends Module<Indexer> implements Feeder {
     @Override
     void suggestButtons(ButtonPlan plan) {
         if (!inLauncher) plan.operator().rb.press(this::feedOne).says("feed one");
+    }
+
+    @Override
+    List<String> notes() {
+        List<String> out = super.notes();
+        out.addAll(startNotes);
+        return out;
     }
 
     @Override
