@@ -5,6 +5,10 @@ The triage helper is an AI agent that takes a first look at each new issue
 issue after it; the helper only sorts and asks for missing facts. Mentors can follow the same steps
 by hand.
 
+**Manual triage (no API key):** in Claude Code, run `/triage` in this repository. It follows this
+page, shows the mentor the labels and comments it would add, and changes nothing until the mentor
+approves. The same scripts run from your computer through `tools/triage_local.sh`.
+
 ## What the helper may do, and what never
 
 - **May:** read the repository (the test list, the docs, the code), read issues with
