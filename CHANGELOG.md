@@ -4,6 +4,11 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+## v0.16.0 - 2026-10-21
+
+Nothing old stops working. Some lesson pages have new names and numbers (listed under Changed): old
+links to them on the website change. A camera missing from the configuration no longer stops INIT.
+
 ### Added
 
 - Simulator: the field map and the 3D view draw the running `follow` step's path (orange, dashed) and
@@ -82,6 +87,13 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   the guessed servo positions (REV poker, Studica flap) say to find them with the Servo Finder before the
   first TeleOp; REV and Studica `Tunables` have a commented `kP, kI, kD, kF` line for the Flywheel Finder.
 - `WebcamTags.exposure(ms, gain)`: a gain of -1 now means the camera's highest gain.
+- `Steps.follow(...)` runs through the new `AutoRoutine.followPath(label, PathJob, seconds)` (the
+  same behavior; `PathJob` is the small plug a path-following module fills in).
+- Docs: FTC Dashboard, FTControl Panels and Pedro's tuner are for practice only: rule R704.D bans them
+  at events, with the steps to take them out. The Pedro lesson and module page list odometry next to
+  the mecanum drive as a requirement, and link the new Pedro Path Builder web page.
+- Docs: `docs/design/swerve.md` (a study: swerve support is deferred) and `docs/design/possible-work.md`
+  (ideas put off on purpose).
 
 ## v0.15.0 - 2026-10-21
 
