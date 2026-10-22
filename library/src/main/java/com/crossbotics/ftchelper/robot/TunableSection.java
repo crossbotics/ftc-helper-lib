@@ -25,8 +25,19 @@ final class TunableSection {
     private final Class<?> section;
     // The fields this module asked for that were not in the section (for the INIT note).
     private final List<String> missing = new ArrayList<>();
-    // True for a part that is not on the robot (Module.optional): require() does not stop INIT.
+    // True for a part that is not on the robot (Module.optional): require() does not stop INIT, and a
+    // MEASURE does not either (it counts as not written).
     boolean lenient = false;
+    // True when read for the simulator's robot file (:sim:fromRobot), not at INIT: a MEASURE counts as not
+    // written (the file is made before the numbers are found), never a stop.
+    boolean forFile = false;
+    // The fields written as DEFAULT_FROM_CATALOG that a module read: the value it used (NaN = the module worked it
+    // out itself), for the INIT note. A module that names them in its own note takes them out (fromCatalog).
+    private final Map<String, Double> marked = new LinkedHashMap<>();
+    // The fields written DEFAULT_FROM_CATALOG whose value the module worked out from the part (fromCatalog).
+    private final java.util.Set<String> catalogMarked = new java.util.LinkedHashSet<>();
+    // Which tool finds a field, for the message when it says MEASURE (the module's; null = the general words).
+    java.util.function.Function<String, String> tools = null;
 
     private TunableSection(String name, Class<?> section) {
         this.name = name;
@@ -50,6 +61,16 @@ final class TunableSection {
         return new TunableSection(name, found);
     }
 
+    /**
+     * {@link #of}, for the simulator's robot file: a MEASURE counts as not written (the file is made before
+     * the numbers are found).
+     */
+    static TunableSection forFile(Class<?> tunables, String name) {
+        TunableSection t = of(tunables, name);
+        t.forFile = true;
+        return t;
+    }
+
     /** True if Tunables.java has this section. */
     boolean exists() {
         return section != null;
@@ -69,9 +90,9 @@ final class TunableSection {
         return out;
     }
 
-    /** True if the field is a plain number (double, int, float or long). */
+    /** True if the field is a plain number (double, int, float or long), DEFAULT_FROM_CATALOG and MEASURE too. */
     boolean isNumber(String field) {
-        Field f = field(field);
+        Field f = raw(field);
         if (f == null) return false;
         Class<?> t = f.getType();
         return t == double.class || t == int.class || t == float.class || t == long.class;
@@ -103,7 +124,9 @@ final class TunableSection {
     double number(String field, double fallback) {
         Field f = field(field);
         if (f == null) {
-            missing.add(field);
+            // Written as DEFAULT_FROM_CATALOG: not a missing number, a chosen one; the note lists it with its value.
+            if (marked.containsKey(field)) marked.put(field, fallback);
+            else missing.add(field);
             return fallback;
         }
         try {
@@ -113,6 +136,41 @@ final class TunableSection {
             missing.add(field);
             return fallback;
         }
+    }
+
+    /**
+     * These fields were not written, and the module used a starting value worked out from the parts
+     * catalog (not a plain library default): they leave the "not written: library defaults used" note,
+     * because the module shows its own note with the values and the tool that tunes them.
+     *
+     * @param fields the field names, e.g. "speedRpm"
+     */
+    void fromCatalog(String... fields) {
+        missing.removeAll(java.util.Arrays.asList(fields));
+        for (String f : fields) {
+            if (marked.remove(f) != null) catalogMarked.add(f);
+        }
+    }
+
+    /**
+     * After the module is built: every tuning-menu number of this section written DEFAULT_FROM_CATALOG says
+     * where its value came from (the part's source for the ones the module worked out, "library default"
+     * for the rest).
+     *
+     * @param partSource e.g. "default from the catalog (gobilda-5203-435)"
+     */
+    void markSources(String partSource) {
+        for (Tunable t : Tunable.all()) {
+            if (!t.group().equals(name)) continue;
+            String field = t.name().substring(name.length() + 1);
+            // (Also clears a source from an earlier INIT whose Tunables.java was different.)
+            t.source(catalogMarked.contains(field) ? partSource : marked.containsKey(field) ? "library default" : "");
+        }
+    }
+
+    /** True if Tunables.java writes this field as DEFAULT_FROM_CATALOG (and a module read it). */
+    boolean isMarked(String field) {
+        return marked.containsKey(field);
     }
 
     /** A true/false setting from the section, {@code fallback} if it is missing. */
@@ -189,6 +247,18 @@ final class TunableSection {
             if (!Modifier.isStatic(f.getModifiers()) || known.contains(f.getName())) continue;
             Class<?> t = f.getType();
             if (t != double.class && t != int.class && t != float.class && t != long.class) continue;
+            if (t == double.class) {
+                double v = rawValue(f);
+                // A position written as DEFAULT_FROM_CATALOG has no catalog value: it is left out, like a missing line.
+                if (Starting.isDefaultFromCatalog(v)) {
+                    marked.put(f.getName(), Double.NaN);
+                    continue;
+                }
+                if (Starting.isMeasure(v)) {
+                    if (lenient || forFile) continue;
+                    throw measureStop(f.getName());
+                }
+            }
             String typo = lookalike(f.getName(), known, this::has);
             if (typo != null) {
                 // "Max" would quietly become a position named Max, and max would stay the library's
@@ -212,7 +282,20 @@ final class TunableSection {
     void require(String field, String why) {
         // A part that is not on the robot: its section may be unfinished (the library's default is used).
         if (lenient) return;
-        Field f = field(field);
+        Field f = raw(field);
+        if (f != null && f.getType() == double.class) {
+            double v = rawValue(f);
+            if (Starting.isMeasure(v) && !forFile) {
+                throw new IllegalStateException("Tunables." + name + "." + field + " = MEASURE: find it on the robot: " + why
+                        + ". Write the number in place of MEASURE.");
+            }
+            if (Starting.isDefaultFromCatalog(v) && !forFile) {
+                throw new IllegalStateException("Tunables." + name + "." + field + " = DEFAULT_FROM_CATALOG, but it is a safety number: "
+                        + "a safety limit never comes from the parts catalog or a library default. Write MEASURE until you "
+                        + "know it, then the number (" + why + ")");
+            }
+            if (forFile && (Starting.isMeasure(v) || Starting.isDefaultFromCatalog(v))) return;
+        }
         if (f != null) {
             Class<?> t = f.getType();
             boolean numeric = t == double.class || t == int.class || t == float.class || t == long.class;
@@ -267,13 +350,69 @@ final class TunableSection {
      * harmless: a missing number is not a problem, the library's default is used (add the line to change it).
      */
     String note() {
+        String fromCatalog = markedNote();
+        String plain = missingNote();
+        if (fromCatalog.isEmpty()) return plain;
+        return plain.isEmpty() ? fromCatalog : plain + "; " + fromCatalog;
+    }
+
+    // "Tunables.Launcher: DEFAULT_FROM_CATALOG, library defaults: stepRpm 100, readyBandRpm 60" ("" = none left).
+    String markedNote() {
+        if (marked.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, Double> e : marked.entrySet()) {
+            sb.append(sb.length() == 0 ? "" : ", ").append(e.getKey());
+            if (!Double.isNaN(e.getValue())) sb.append(' ').append(Module.exact(e.getValue()));
+        }
+        return "Tunables." + name + ": DEFAULT_FROM_CATALOG, library defaults: " + sb;
+    }
+
+    private String missingNote() {
         // Nothing asked for, nothing missing (a webcam reads no numbers).
         if (missing.isEmpty()) return "";
         if (section == null) return "Tunables." + name + " not written: library defaults used (fine)";
         return String.format(Locale.US, "Tunables.%s: %s not written: library defaults used (fine)", name, join(missing));
     }
 
+    // The field as a number the module may use: null when it is not written, or written as DEFAULT_FROM_CATALOG
+    // (then remembered for the note). A MEASURE stops INIT here, with the tool that finds it.
     private Field field(String field) {
+        Field f = raw(field);
+        if (f == null || f.getType() != double.class) return f;
+        double v = rawValue(f);
+        if (Starting.isDefaultFromCatalog(v)) {
+            if (!marked.containsKey(field)) marked.put(field, Double.NaN);
+            return null;
+        }
+        if (Starting.isMeasure(v)) {
+            if (lenient || forFile) return null;
+            throw measureStop(field);
+        }
+        return f;
+    }
+
+    // "Tunables.Lift.kP = MEASURE: ..." with the tool that finds it.
+    private IllegalStateException measureStop(String field) {
+        String tool = tools == null ? null : tools.apply(field);
+        if (tool == null || tool.isEmpty()) {
+            tool = "see its \"Found by\" column in docs/guides/tunables.md";
+        }
+        return new IllegalStateException("Tunables." + name + "." + field + " = MEASURE: a number you find on the robot: "
+                + tool + ". Write the number in place of MEASURE (or DEFAULT_FROM_CATALOG for the library's starting value)");
+    }
+
+    // The value of a static double field, NaN when it cannot be read (bits kept: the markers are NaNs).
+    private static double rawValue(Field f) {
+        try {
+            f.setAccessible(true);
+            return f.getDouble(null);
+        } catch (IllegalAccessException | RuntimeException e) {
+            return Double.NaN;
+        }
+    }
+
+    // The field as written (markers included), or null.
+    private Field raw(String field) {
         if (section == null) return null;
         try {
             Field f = section.getDeclaredField(field);

@@ -484,10 +484,12 @@ public abstract class RobotDefinition {
     private void buildOne(Module<?> m, Devices devices, boolean parentOff) {
         m.robot = this;
         m.tunables = TunableSection.of(tunablesClass, m.name());
+        m.tunables.tools = m::toolFor;   // a MEASURE names the tool that finds it
         m.missing = parentOff || (m.optional && !m.deviceIn(devices));
         if (!m.missing) {
             try {
                 m.build(devices, m.tunables);
+                m.tunables.markSources(Module.defaultSource(m.defaultSourceId()));
             } catch (IllegalArgumentException e) {
                 // Its first device is not in the configuration: the usual message, and how to leave it off.
                 if (m.deviceIn(devices)) throw e;
@@ -948,10 +950,20 @@ public abstract class RobotDefinition {
         List<String> out = new ArrayList<>();
         if (tunablesClass == null) {
             out.add("No Tunables class next to Robot.java: every module uses the library's defaults");
+            // Each part's own notes still show (the defaults it worked out from its part, positions that are
+            // guesses...), but not its "Tunables.X not written" line: the line above says that for all.
             for (Module<?> m : modules) {
-                if (m.missing) out.add(missingNote(m));
-                else for (Module<?> c : m.children()) if (c.missing) out.add(missingNote(c));
+                if (m.missing) {
+                    out.add(missingNote(m));
+                    continue;
+                }
+                for (Module<?> c : m.children()) {
+                    if (c.missing) out.add(missingNote(c));
+                    else out.addAll(partNotesOnly(c));
+                }
+                out.addAll(partNotesOnly(m));
             }
+            if (built) for (Interlock r : interlocks.rules) out.add(r.initLine());
             return out;
         }
         if (driveSection != null && !driveSection.note().isEmpty()) out.add(driveSection.note());
@@ -968,6 +980,13 @@ public abstract class RobotDefinition {
             out.addAll(m.notes());
         }
         if (built) for (Interlock r : interlocks.rules) out.add(r.initLine());
+        return out;
+    }
+
+    // A part's notes without its Tunables "not written" line.
+    private static List<String> partNotesOnly(Module<?> m) {
+        List<String> out = new ArrayList<>(m.notes());
+        if (m.tunables != null) out.remove(m.tunables.note());
         return out;
     }
 
@@ -1097,8 +1116,8 @@ public abstract class RobotDefinition {
             out.add("robot.tallestIn = " + Shape.n(heightIn));
         }
         for (Module<?> m : modules) {
-            for (Module<?> c : m.children()) c.simSection = TunableSection.of(tunablesClass, c.name());
-            m.simSection = TunableSection.of(tunablesClass, m.name());
+            for (Module<?> c : m.children()) c.simSection = TunableSection.forFile(tunablesClass, c.name());
+            m.simSection = TunableSection.forFile(tunablesClass, m.name());
         }
         // A camera on a turret turns with it in the simulator too (Camera's line gets on=TURRET), and on
         // a robot with one turret the launcher's flywheel rides it (the shots go where it points).
@@ -1115,8 +1134,8 @@ public abstract class RobotDefinition {
         if (odometrySpec != null) odometrySpec.simLines(out);
         for (Shape s : fixed) out.add(s.line(s.name, s.parentName(s.name), null));
         for (Module<?> m : modules) {
-            for (Module<?> c : m.children()) c.simLines(out, TunableSection.of(tunablesClass, c.name()));
-            m.simLines(out, TunableSection.of(tunablesClass, m.name()));
+            for (Module<?> c : m.children()) c.simLines(out, TunableSection.forFile(tunablesClass, c.name()));
+            m.simLines(out, TunableSection.forFile(tunablesClass, m.name()));
         }
         // Two lines with one name (a shape named like another part's): the simulator would keep only
         // the last, and a part could vanish from the size checks. Stop with the name instead.

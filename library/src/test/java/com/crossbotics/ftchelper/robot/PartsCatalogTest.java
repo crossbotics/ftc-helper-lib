@@ -69,6 +69,31 @@ public class PartsCatalogTest {
         assertEquals(Parts.servos().size(), seen);
     }
 
+    // Each servo's speed is the catalog's 4.8 V byVoltage row (the closest to a hub's 5 V), else its 6.0 V secPer60Deg.
+    @Test public void everyServoSpeedMatchesThePartsCatalog() throws Exception {
+        String json = catalog();
+        String servos = json.substring(json.indexOf("\"servos\""), json.indexOf("\"wheels\""));
+        Matcher m = Pattern.compile("\"id\"\\s*:\\s*\"([^\"]+)\"(.*?)\"byVoltage\"\\s*:\\s*\\[(.*?)\\]", Pattern.DOTALL).matcher(servos);
+        int seen = 0;
+        while (m.find()) {
+            Parts.ServoPart s = Parts.servoPart(m.group(1));
+            Matcher low = Pattern.compile("\"voltage\"\\s*:\\s*4\\.8\\s*,\\s*\"secPer60Deg\"\\s*:\\s*([0-9.]+)").matcher(m.group(3));
+            double want;
+            if (low.find()) {
+                want = Double.parseDouble(low.group(1));
+            } else {
+                want = number(m.group(2), "secPer60Deg");
+            }
+            assertEquals(s.id + " secPer60Deg", want, s.secPer60Deg, 1e-9);
+            seen++;
+        }
+        assertEquals(Parts.servos().size(), seen);
+        // A full move on the SDK's normal range: goBILDA 2000 torque, 270 degrees at 0.25 s per 60 = 1.125 s.
+        assertEquals(1.125, Parts.servoPart("gobilda-2000-torque").fullMoveSec(false), 1e-9);
+        assertEquals(1.25, Parts.servoPart("gobilda-2000-torque").fullMoveSec(true), 1e-9);
+        assertTrue(Double.isNaN(Parts.servoPart("axon-max-plus").fullMoveSec(false)));
+    }
+
     // The FTC SDK's normal 600-2400 us is 1800 of a servo's 2000 us: a 300 degree servo turns 270.
     @Test public void aServoTurnsLessOnTheSdksNormalRange() {
         assertEquals(270, Parts.servoPart("gobilda-2000-speed").sdkRangeDeg(), 1e-9);

@@ -73,7 +73,7 @@ public static class Intake {
 
 public static class Lift {
     public static double min = 0, max = 2600;
-    public static double kP = 0.004, kI = 0, kD = 0.0002, kF = 0.05;
+    public static double kP = DEFAULT_FROM_CATALOG, kI = DEFAULT_FROM_CATALOG, kD = DEFAULT_FROM_CATALOG, kF = DEFAULT_FROM_CATALOG;
     public static double down = 0, low = 900, high = 2400;
 }
 
@@ -81,6 +81,9 @@ public static class Claw {
     public static double open = 0.20, closed = 0.75;
 }
 ```
+
+(`DEFAULT_FROM_CATALOG` comes from the line `import static com.crossbotics.ftchelper.robot.Starting.*;` at
+the top of the lesson robot's `Tunables.java`: copy it too.)
 
 What each number means:
 
@@ -91,14 +94,21 @@ What each number means:
     tuning menu, so tuning can never push the lift past a stop.
   - `kP`, `kI`, `kD`, `kF`: how hard it pushes to reach and hold a height (step 6). These are the
     **PID** numbers (P = push harder the further away it is, D = brake as it gets close, I = fix a
-    small error that stays). `kF` is the steady push that keeps the lift from sagging.
+    small error that stays). `kF` is the steady push that keeps the lift from sagging. **For the first
+    run they say `DEFAULT_FROM_CATALOG`**: "not set yet, use the library's default". Robot.java names
+    the lift's motor (`.part("gobilda-5203-435")`), so the library works them out for that motor from
+    the parts catalog, and INIT says so: `Lift: defaults from the catalog (gobilda-5203-435): kP
+    0.0056, kD 0.00028, slowZone 179, tolerance 14. Tune them live in the tuning menu`. Step 6 tunes
+    them; then you write the numbers in their place. (Without `.part(...)` INIT says it uses general
+    defaults, made for a goBILDA 312 RPM motor.)
   - `down`, `low`, `high`: **named heights**. Every other number in the section is a height, and you
     can pick any names. Your code then says `robot.lift.goTo("high")`.
 - **Claw:** servo positions, 0 to 1. A claw needs both `open` and `closed` (INIT stops without them).
 
 A number you leave out uses the library's default, and INIT tells you which. The lift has a few
-more you can add: `maxPower` (1.0), `slowZone` (250 counts from an end where it slows down),
-`slowZonePower` (0.2) and `tolerance` (20 counts: "close enough" to a height).
+more you can add: `maxPower` (1.0), `slowZone` (where it slows down near an end: about half a motor
+turn, 179 counts on the 435 RPM motor), `slowZonePower` (0.2) and `tolerance` ("close enough" to a
+height: 14 counts on the 435 RPM motor).
 
 ## 3. The buttons they bring
 
@@ -201,7 +211,7 @@ public static class Claw {
 
 public static class Lift {
     public static double min = 0, max = 2580;
-    public static double kP = 0.004, kI = 0, kD = 0.0002, kF = 0.05;
+    public static double kP = DEFAULT_FROM_CATALOG, kI = DEFAULT_FROM_CATALOG, kD = DEFAULT_FROM_CATALOG, kF = DEFAULT_FROM_CATALOG;
     public static double down = 0, low = 900, high = 2400;
 }
 ```
@@ -225,7 +235,8 @@ try.
    (hold a bumper for 10 times bigger steps). Use gamepad 2 to send the lift between heights and watch.
 4. A saves on the Control Hub. **B shows the changed values as code**, like `Lift: kP = 0.005`
    (that is `kP = 0.005` in `Tunables.Lift`).
-5. **Copy them into `Tunables.java`.** The code is the record: a value saved only on the hub is lost
+5. **Copy them into `Tunables.java`** (`kP = 0.005` in place of `kP = DEFAULT_FROM_CATALOG` in `Lift`: a
+   written number replaces the default). The code is the record: a value saved only on the hub is lost
    with a new Control Hub and invisible to your teammates. Until you copy them, INIT lists them under
    "Tuned on this robot (copy into Tunables.java)".
 

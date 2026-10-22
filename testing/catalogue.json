@@ -2051,6 +2051,94 @@
    }
   },
   {
+   "id": "SHOT-06",
+   "title": "First spin-up with no flywheel numbers",
+   "area": "shooter",
+   "priority": "high",
+   "where": "both",
+   "minutes": 10,
+   "needs": [
+    [
+     "flywheel"
+    ]
+   ],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "studica"
+   ],
+   "since": "v0.17.1",
+   "docs": [
+    {
+     "path": "docs/guides/tunables.md",
+     "anchor": "default_from_catalog-and-measure"
+    },
+    {
+     "path": "docs/guides/tunables.md",
+     "anchor": "first-run-what-you-get-before-tuning"
+    },
+    {
+     "path": "docs/tutorials/start/09-shooter-and-camera.md",
+     "anchor": "the-first-spin-up-with-no-numbers"
+    }
+   ],
+   "file": "testing/tests/SHOT-06.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A new launcher should work before anyone has run the Flywheel Finder. With `kP` to `kF` and `speedRpm` written as `DEFAULT_FROM_CATALOG` in `Tunables.java`, the library starts from numbers worked out from the motor in the parts catalog (kF 11.7, kP 1.17, kI 0.117 and 3600 RPM for a goBILDA 6000 RPM motor). We want to know these starting values spin YOUR wheel to its speed."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Safety glasses. Nobody in front of the launcher. No pieces loaded.",
+       "Robot on a block or held so it cannot move."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "`Launcher.flywheel(\"name\", \"motor-id\")` in `Robot.java`, with the real motor's catalog id.",
+       "In `Tunables.java`, the launcher's `kP`, `kI`, `kD`, `kF` and `speedRpm` written as `DEFAULT_FROM_CATALOG` (`import static com.crossbotics.ftchelper.robot.Starting.*;` at the top). Note your own numbers first, to put them back after.",
+       "A charged battery (12.5 V or more)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "INIT your TeleOp. Read the note `Launcher: defaults from the catalog (...)` and write it down.",
+       "START. Press LB to spin up. Watch the speed on the Driver Station for 10 seconds.",
+       "Note how long it takes to show READY, and the speed it settles at.",
+       "Spin down. Put your own lines back in `Tunables.java`."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "INIT shows the defaults note, and in step 2 the speed reaches READY within 3 s and stays within 3% of the target."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "flywheel motor (catalog id), gearing, wheel (size, weight if known)",
+       "the INIT note (its part, kF, kP, kI and speed)",
+       "time to READY (seconds), and the speed it settled at (RPM)",
+       "the battery voltage"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A geared flywheel or a belt: the catalog speed is the motor's, so say how it is built. A flywheel with no encoder cable cannot use this test: report \"could not run\"."
+     }
+    ]
+   }
+  },
+  {
    "id": "SIM-01",
    "title": "Drive a kit bot in the simulator",
    "area": "simulator",
@@ -4026,6 +4114,84 @@
     "different": [
      {
       "p": "A robot with no ready sensor counts only from the intake: say which sensors you have. A robot that holds fewer pieces: use your `max(...)`."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SET-03",
+   "title": "DEFAULT_FROM_CATALOG, MEASURE and a part not in the catalog",
+   "area": "setup",
+   "priority": "medium",
+   "where": "sim",
+   "minutes": 20,
+   "needs": [],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "v0.17.1",
+   "docs": [
+    {
+     "path": "docs/guides/tunables.md",
+     "anchor": "default_from_catalog-and-measure"
+    },
+    {
+     "path": "docs/modules/robot.md",
+     "anchor": "parts-not-in-the-catalog"
+    }
+   ],
+   "file": "testing/tests/SET-03.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A new robot's `Tunables.java` can name every setting from day one: `DEFAULT_FROM_CATALOG` for \"use the library's default\" and `MEASURE` for \"a number to find on the robot\". A motor or servo the catalog does not have can be described in Robot.java (`Motors.custom`, `Parts.customServo`). We want to know the INIT messages make clear what was used, where it came from and what to do next."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Simulator only: nothing moves on a real robot."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "Your robot's five files, or `./gradlew :sim:newRobot` from your configuration (it writes the words).",
+       "`import static com.crossbotics.ftchelper.robot.Starting.*;` at the top of `Tunables.java`."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Write `DEFAULT_FROM_CATALOG` for a few numbers (a launcher's `kF`, a lift's `kP`, a claw's `travelSec`). `./gradlew :sim:fromRobot`, start the simulator, INIT. Write down each \"defaults from ...\" note.",
+       "Write `MEASURE` for one number (a lift's `max`, or a claw position). INIT: write down the message.",
+       "Write `DEFAULT_FROM_CATALOG` for a lift's `max`. INIT: write down the message. Put your number back.",
+       "In Robot.java, give one part a motor of your own: `Motors.custom(\"my-motor\", 28, 5000)` (or a servo: `Parts.customServo(\"my-servo\", 270, 0.16)`). `:sim:fromRobot` again: find its numbers in the robot file. INIT: write down its note.",
+       "Change it to `Motors.unknown(\"my-motor\")` on a lift's `.part(...)`. INIT: write down the note."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Step 1 lists each value and where it came from; steps 2 and 3 stop INIT with a message that names the number and what to do (the tool for MEASURE, \"a safety number\" for step 3); step 4 shows the custom numbers in the robot file and \"(custom)\" in the note; step 5 says \"general defaults\" and how to do better."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "each message, as shown",
+       "anything in a message that was unclear, and what you did next"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "No lift or launcher: use the parts you have (any Claw, Wrist, Hood, servo Turret or Indexer reads a `travelSec`-like time)."
      }
     ]
    }

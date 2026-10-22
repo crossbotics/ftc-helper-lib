@@ -29,7 +29,7 @@ public final class Arm extends MotorPositions<Arm> {
 
     private Arm(String motor, String motorId) {
         super(motor);
-        Motors.get(motorId);   // stops here, with the list, on a typo
+        Motors.withCounts(motorId, "Arm.motor(\"" + motor + "\", ...)");   // stops here, with the list, on a typo
         this.motorId = motorId;
     }
 
@@ -92,7 +92,8 @@ public final class Arm extends MotorPositions<Arm> {
         double[] d = defaults();
         double min = t.number("min", d[0]), max = t.number("max", d[1]);
         double cpd = countsPerUnit();
-        out.add(fmt("motor.%s = lift, part=%s, min=%.0f, max=%.0f, gravity=0.1", device, motorId, min * cpd, max * cpd));
+        out.add(fmt("motor.%s = lift, %s, min=%.0f, max=%.0f, gravity=0.1", device, motorWords(motorId, "gobilda-5203-117"), min * cpd, max * cpd)
+                + simTodo(motorId));
         secondMotorLine(out, motorId);   // a second motor (alsoMotor): tied to the same arm
         if (switchName != null) out.add(fmt("touch.%s = %s, below=20", switchName, device));
         out.add(fmt("shape.%s = arm, at=0,0,8, size=9x1.5x1.5, axis=left, motor=%s, ticksPerDeg=%.3f, start=%.0f   # TODO measure",

@@ -204,6 +204,11 @@ public final class PieceSensor extends Module<PieceSensor> {
     }
 
     @Override
+    String toolFor(String field) {
+        return "the Piece Tuner, docs/guides/finders.md#piece-tuner-what-each-sensor-sees";
+    }
+
+    @Override
     List<String> notes() {
         List<String> out = super.notes();
         if (reader != null && !reader.problem().isEmpty()) out.add(device + ": " + reader.problem() + ": it sees nothing");

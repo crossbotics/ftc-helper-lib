@@ -77,6 +77,8 @@ Flywheel flywheel = Flywheel.create(hardwareMap, "flywheel")
 | `.follower(hardwareMap, name, reversed)` | a second motor on the same wheel (same speed command). **It needs its own encoder cable.** If its encoder reads nothing while the wheel spins, it is switched off with a warning. It gets the `pidf` gains whether you call `pidf` before or after it |
 | `.countsPerRev(c)` | counts per FLYWHEEL turn: bare motor 1:1 = 28; with gears multiply by motor turns per wheel turn; a shaft encoder on this motor's port = its counts (REV Through Bore 8192) |
 | `.pidf(p, i, d, f)` | the hub's speed gains (PID plus F, a push that grows with the speed; see [PID](control.md#pidcontroller)). Start 10, 3, 0, 12; tune F first (with a charged battery) |
+| `.startingGains()` | no tuned gains yet: `pidf` from this wheel's `maxRpm` and `countsPerRev` (set them first) with REV's formula, F = 32767 / top counts per second, P = F / 10, I = P / 10, D = 0 (a goBILDA 6000 RPM motor, 28 counts: 1.17, 0.117, 0, 11.70). The Flywheel Finder then finds yours |
+| `Flywheel.startingPidf(topTicksPerSec)` | that formula: `{P, I, D, F}` (the Flywheel Finder and the robot `Launcher` use it too) |
 | `.batteryCompensation(volts, nominalVolts)`, `.noBatteryCompensation()` | F follows the battery ([below](#battery-compensation)); off (the default) |
 | `getBatteryVolts()`, `getFScale()`, `hasBatteryCompensation()` | the battery F is scaled for (the highest reading of the last second; NaN if none), what F is multiplied by now (1 = as tuned) |
 | `.tolerance(rpm)`, `.settleTime(s)` | when "ready" |

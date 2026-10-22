@@ -20,6 +20,8 @@ public class Tunables {
 
     public static class Launcher {
         public static double speedRpm = 2679, stepRpm = 50, readyBandRpm = 107, idleRpm = 0;
+        // goBILDA's own tested numbers for this kit bot (its starter code: P 40, F 12.5), so kept here.
+        // Without this line the library would start from the parts catalog's (kF 11.7, kP 1.17, kI 0.117).
         public static double kP = 40, kI = 0, kD = 0, kF = 12.5, nominalVolts = 12.8;
         public static double shotIntervalSec = 0.25;   // the least time between two pieces (seconds)
     }

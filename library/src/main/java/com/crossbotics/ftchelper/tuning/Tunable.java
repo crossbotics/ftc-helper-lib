@@ -49,6 +49,8 @@ public final class Tunable {
     private double value;
     // True while its part is not on the robot (Module.optional, device missing): left out of the menu.
     private boolean hidden = false;
+    // Where the code value came from when Tunables.java says DEFAULT_FROM_CATALOG ("from the catalog (gobilda-5203-435)"); "" = written.
+    private String source = "";
     // The code value when it is outside range(...) (NaN = fine): the range's end is used instead.
     private double codeOutside = Double.NaN;
 
@@ -335,6 +337,24 @@ public final class Tunable {
         // indexOf gives the position of the first "/", or -1 if there is none.
         int slash = name.indexOf('/');
         return slash < 0 ? "" : name.substring(0, slash);
+    }
+
+    /**
+     * Says where the code value came from, shown next to it in the tuning menu while it is not changed:
+     * Tunables.java wrote DEFAULT_FROM_CATALOG, so the library worked it out ("from the catalog (gobilda-5203-435)",
+     * "general starting value (no part in Robot.java)"). The "copy into Tunables.java" lines stay real numbers.
+     *
+     * @param words the words, "" for none
+     * @return this tunable
+     */
+    public synchronized Tunable source(String words) {
+        source = words == null ? "" : words;
+        return this;
+    }
+
+    /** Where the code value came from (see {@link #source(String)}), "" when it was written as a number. */
+    public synchronized String source() {
+        return source;
     }
 
     /** The value as short text, e.g. "0.0040". */

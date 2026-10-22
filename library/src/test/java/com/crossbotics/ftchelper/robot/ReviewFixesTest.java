@@ -340,7 +340,9 @@ public class ReviewFixesTest {
         assertTrue(notes, notes.contains("Tunables.Launcher.trimMaxPercent = 80: at most 50 is used"));
         LauncherBot noKf = new LauncherBot(LauncherNoKf.class);
         noKf.setup(new RobotTestKit());
-        assertTrue(noKf.notes().toString(), noKf.notes().toString().contains("kP/kI/kD are not used without kF"));
+        // kP written, no kF: the written kP is used, kF and kI are the parts catalog's starting values.
+        assertTrue(noKf.notes().toString(), noKf.notes().toString().contains(
+                "Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, kI 0.117. Run the Flywheel Finder"));
     }
 
     // "Fire all: done" when nothing was fired is misleading: the action says how many it fired.

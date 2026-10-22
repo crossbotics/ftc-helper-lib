@@ -68,6 +68,8 @@ public final class Hood extends Module<Hood> {
 
     private final Kind kind;
     private final String motorId;
+    // "Hood: defaults from the catalog (...)": "" when travelSec was written (or no part).
+    private String startNote = "";
     private boolean reversed = false;
     // For the simulator: the launcher's shot angle with the hood at angleA and at angleB (NaN = not given).
     double shotAtA = Double.NaN, shotAtB = Double.NaN;
@@ -188,7 +190,23 @@ public final class Hood extends Module<Hood> {
         trimMax = t.has("trimMax") ? Math.abs(t.number("trimMax", 0)) : range / 5;
         tolerance = t.has("tolerance") ? Math.abs(t.number("tolerance", 0)) : range / 50;
         if (kind == Kind.SERVO) {
-            travelSec = t.tunable("travelSec", 0.5, 0.02).range(0, 5);
+            // travelSec not written: the parts catalog's speed for the servo from part(...), for the move
+            // from stop to stop (a goBILDA torque servo turning 0.3 of its range: 0.34 s), else 0.5 s.
+            startNote = "";
+            double span = posA != null ? Math.abs(posB.get() - posA.get())
+                    : Math.abs(calibration[calibration.length - 1][0] - calibration[0][0]);
+            double full = catalogFullMoveSec();
+            boolean fromCatalog = !t.has("travelSec") && !Double.isNaN(full);
+            double catalogTravel = Math.max(0.05, Math.round(full * span * 100) / 100.0);
+            travelSec = t.tunable("travelSec", fromCatalog ? catalogTravel : 0.5, 0.02).range(0, 5);
+            if (fromCatalog) {
+                t.fromCatalog("travelSec");
+                startNote = defaultsNote(partId, java.util.Collections.singletonList("travelSec " + exact(catalogTravel) + " s from stop to stop"),
+                        "Time it to check (Hood Finder, or by eye)");
+            } else if (Double.isNaN(full) && t.isMarked("travelSec")) {
+                startNote = generalServoNote("travelSec", 0.5);
+                t.fromCatalog("travelSec");
+            }
             Servo servo = devices.get(Servo.class, device);
             if (reversed) servo.setDirection(Servo.Direction.REVERSE);
             applyPulse(servo);   // .fullRange(): the servo's whole turn (nothing changes without it)
@@ -560,6 +578,19 @@ public final class Hood extends Module<Hood> {
     }
 
     @Override
+    String toolFor(String field) {
+        if (field.startsWith("pos") || field.startsWith("angle")) return "the Hood Finder, docs/guides/finders.md#hood-finder";
+        return null;
+    }
+
+    @Override
+    List<String> notes() {
+        List<String> out = super.notes();
+        if (!startNote.isEmpty()) out.add(startNote);
+        return out;
+    }
+
+    @Override
     String checkPart(String id) {
         return kind == Kind.MOTOR ? super.checkPart(id) : Parts.servo(id);
     }
@@ -591,12 +622,13 @@ public final class Hood extends Module<Hood> {
         boolean ok = simCalibration(t);
         if (kind == Kind.MOTOR) {
             double[][] r = ok ? rows() : new double[][] {{0, 0}, {500, 1}};
-            out.add(fmt("motor.%s = lift, part=%s, min=%.0f, max=%.0f, gravity=0", device, motorId, r[0][0], r[r.length - 1][0]));
+            out.add(fmt("motor.%s = lift, %s, min=%.0f, max=%.0f, gravity=0", device, motorWords(motorId, "gobilda-5203-117"), r[0][0], r[r.length - 1][0])
+                    + simTodo(motorId));
             return;
         }
         double h = !ok ? 0.5 : physical(positionAt(t.has("startAngle") ? t.number("startAngle", 0) : angleAt(firstPosition())));
         h = Math.max(0, Math.min(1, h));
-        if (partId != null) out.add(fmt("servo.%s = %.3f, part=%s", device, h, partId) + pulseWords());
+        if (partId != null) out.add(fmt("servo.%s = %.3f, %s", device, h, servoWords(partId, "gobilda-2000-torque")) + pulseWords() + simTodo(partId));
         else out.add(fmt("servo.%s = %.3f, part=gobilda-2000-torque", device, h) + pulseWords() + "   # TODO the real servo");
     }
 

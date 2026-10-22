@@ -76,6 +76,7 @@ DYNAMIC = {
     "PieceSensor.java: t.has(k": ["<KIND>"],
     "PieceSensor.java: t.tunable(k": ["<KIND>"],
     "MotorPositions.java: t.others(KNOWN": ["<position>"],
+    "MotorPositions.java: t.has(FIELD_ORDER[i]": [],          # starting values from the parts catalog: the fields read just below
     "ServoPositions.java: t.others(KNOWN": ["<position>"],
 }
 # In the tuning menu although not read through tunable(...): PositionMotor/PositionServo make them

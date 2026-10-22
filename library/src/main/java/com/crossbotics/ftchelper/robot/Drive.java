@@ -76,7 +76,8 @@ public final class Drive {
      * @param id e.g. "gobilda-5203-312", "rev-hd-hex-20"
      */
     public Drive motor(String id) {
-        Motors.get(id);   // stops here, with the list, on a typo
+        // (A motor not in the catalog: Drive...motor(Motors.custom("my-motor", countsPerRev, freeRpm)).)
+        Motors.withCounts(id, "Drive...motor(\"" + id + "\")");   // stops here, with the list, on a typo
         motorId = id;
         return this;
     }
@@ -217,7 +218,14 @@ public final class Drive {
     /** The simulator robot file's drive lines. */
     void simLines(List<String> out) {
         out.add("drive.type = " + (isMecanum() ? "mecanum" : "tank"));
-        out.add("drive.part = " + motorId);
+        Motors.Kind dk = Motors.get(motorId);
+        if (!dk.custom) {
+            out.add("drive.part = " + motorId);
+        } else {
+            // A custom motor: its own numbers (the simulator works out the top speed from them).
+            out.add("drive.ticksPerRev = " + Module.exact(dk.countsPerRev));
+            if (!Double.isNaN(dk.freeRpm)) out.add("drive.maxTicksPerSec = " + Module.exact(Math.round(dk.freeRpm * dk.countsPerRev / 60.0 * 10) / 10.0));
+        }
         out.add(Module.fmt("drive.wheelDiameterIn = %.3f", wheelMm / 25.4) + (wheelId != null ? "   # " + wheelId : ""));
         if (!Double.isNaN(trackMm)) {
             out.add("drive.trackWidthIn = " + Shape.n(trackMm / 25.4));

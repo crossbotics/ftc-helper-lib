@@ -1,5 +1,7 @@
 package com.crossbotics.ftchelper.examples.turretbot;
 
+import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT_FROM_CATALOG and MEASURE (docs/guides/tunables.md)
+
 /**
  * Example robot 2, file 2 of 5: every number, one section per part (see example robot 1's
  * Tunables for how tuning works).
@@ -51,7 +53,8 @@ public class Tunables {
      */
     public static class Launcher {
         public static double speedRpm = 2600, stepRpm = 100, readyBandRpm = 60, idleRpm = 1500;
-        public static double kP = 40, kI = 0, kD = 0, kF = 12.5, nominalVolts = 12.8;   // the hub's speed control (Flywheel Finder)
+        // The hub's speed control: the defaults for this motor until the Flywheel Finder (INIT shows them).
+        public static double kP = DEFAULT_FROM_CATALOG, kI = DEFAULT_FROM_CATALOG, kD = DEFAULT_FROM_CATALOG, kF = DEFAULT_FROM_CATALOG;
         public static double shotIntervalSec = 0.25;   // the least time between two pieces (seconds)
         public static double[][] speedByDistancePollen = {{24, 2200, 2}, {48, 2550, 11}, {72, 2900, 19}, {96, 3250, 23}};
         public static double[][] speedByDistanceNectar = {{24, 2400, 0}, {48, 2800, 6}, {72, 3200, 14}, {96, 3600, 18}};

@@ -1,5 +1,7 @@
 package com.crossbotics.ftchelper.examples.revbot;
 
+import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT_FROM_CATALOG and MEASURE (docs/guides/tunables.md)
+
 /**
  * REV starter bot, file 2 of 5: the numbers. REV's pages do not give the flywheel's speed or the
  * poker's positions, so those numbers are starting guesses: find the real ones on the robot with the
@@ -24,8 +26,9 @@ public class Tunables {
      */
     public static class Flywheel {
         public static double speedRpm = 3000, stepRpm = 100, readyBandRpm = 100, idleRpm = 0;
-        // The hub's speed control. Run the Flywheel Finder, then remove the // and put its numbers here.
-        // public static double kP = 0, kI = 0, kD = 0, kF = 0;
+        // The hub's speed control: the defaults for the motor until the Flywheel Finder (INIT shows them).
+        // Then write its numbers in their place.
+        public static double kP = DEFAULT_FROM_CATALOG, kI = DEFAULT_FROM_CATALOG, kD = DEFAULT_FROM_CATALOG, kF = DEFAULT_FROM_CATALOG;
     }
 
     /** The feeder roller (CR servo): full power for feedSec per piece. 0.4 s is a guess: watch it and tune it. */

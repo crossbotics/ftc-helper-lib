@@ -37,6 +37,8 @@ public final class Indexer extends Module<Indexer> implements Feeder {
 
     private final Kind kind;
     private boolean reversed = false;
+    // INIT notes about starting values (from the parts catalog, or the guessed rest/push positions).
+    private final List<String> startNotes = new java.util.ArrayList<>();
     boolean inLauncher = false;
     Feeder feeder;
     private ServoFeeder servoFeeder;
@@ -105,8 +107,31 @@ public final class Indexer extends Module<Indexer> implements Feeder {
             case SERVO:
                 rest = t.tunable("rest", 0.0, 0.01).range(0, 1);
                 push = t.tunable("push", 0.5, 0.01).range(0, 1);
-                pushSec = t.tunable("pushSec", 0.25, 0.01).range(0.02, 2);
-                returnSec = t.tunable("returnSec", 0.25, 0.01).range(0.02, 2);
+                // pushSec/returnSec not written, with a catalog servo (part(...)): its time from rest to push
+                // at the catalog's speed, never under 0.25 s (the piece needs time to leave). A slow torque
+                // servo needs more than 0.25 s just to get there.
+                startNotes.clear();
+                double full = catalogFullMoveSec();
+                double move = Double.isNaN(full) ? Double.NaN
+                        : Math.max(0.25, Math.round(full * Math.abs(push.get() - rest.get()) * 100) / 100.0);
+                boolean pushFromCatalog = !t.has("pushSec") && !Double.isNaN(move);
+                boolean returnFromCatalog = !t.has("returnSec") && !Double.isNaN(move);
+                pushSec = t.tunable("pushSec", pushFromCatalog ? move : 0.25, 0.01).range(0.02, 2);
+                returnSec = t.tunable("returnSec", returnFromCatalog ? move : 0.25, 0.01).range(0.02, 2);
+                List<String> cat = new java.util.ArrayList<>();
+                if (pushFromCatalog) { cat.add("pushSec " + exact(move)); t.fromCatalog("pushSec"); }
+                if (returnFromCatalog) { cat.add("returnSec " + exact(move)); t.fromCatalog("returnSec"); }
+                if (!cat.isEmpty()) {
+                    startNotes.add(defaultsNote(partId, cat, "Watch a feed and change them by test"));
+                }
+                if (Double.isNaN(move) && (t.isMarked("pushSec") || t.isMarked("returnSec"))) {
+                    startNotes.add(generalServoNote(t.isMarked("pushSec") ? "pushSec" : "returnSec", 0.25));
+                    t.fromCatalog("pushSec", "returnSec");
+                }
+                if (!t.has("rest") && !t.has("push")) {
+                    startNotes.add(name() + ": no positions written: rest 0, push 0.5 are library guesses, not your servo's: "
+                            + "find yours with the Servo Finder before the first TeleOp");
+                }
                 Servo s = devices.get(Servo.class, device);
                 if (reversed) s.setDirection(Servo.Direction.REVERSE);
                 applyPulse(s);   // .fullRange(): the servo's whole turn (nothing changes without it)
@@ -252,6 +277,19 @@ public final class Indexer extends Module<Indexer> implements Feeder {
     }
 
     @Override
+    String toolFor(String field) {
+        if (field.equals("rest") || field.equals("push")) return "the Servo Finder, docs/guides/finders.md#servo-finder-ends-and-positions";
+        return "test it: watch a feed";
+    }
+
+    @Override
+    List<String> notes() {
+        List<String> out = super.notes();
+        out.addAll(startNotes);
+        return out;
+    }
+
+    @Override
     String checkPart(String id) {
         return kind == Kind.MOTOR ? super.checkPart(id) : Parts.servo(id);
     }
@@ -273,11 +311,12 @@ public final class Indexer extends Module<Indexer> implements Feeder {
         if (kind == Kind.SERVO) {
             // Where it rests, as the simulated servo sees it (a reversed servo's 0.15 is really 0.85).
             double rest = t.number("rest", 0);
-            out.add(partId != null ? fmt("servo.%s = %.2f, part=%s", device, reversed ? 1 - rest : rest, partId) + pulseWords()
+            out.add(partId != null ? fmt("servo.%s = %.2f, %s", device, reversed ? 1 - rest : rest, servoWords(partId, "gobilda-2000-speed"))
+                    + pulseWords() + simTodo(partId)
                     : fmt("servo.%s = %.2f, part=gobilda-2000-speed", device, reversed ? 1 - rest : rest) + pulseWords() + "   # TODO the real servo");
         }
         else if (kind == Kind.CR_SERVO) out.add("crservo." + device + " =" + (partId != null ? "   # " + partId : ""));
-        else if (partId != null) out.add("motor." + device + " = free, part=" + partId);
+        else if (partId != null) out.add("motor." + device + " = free, " + motorWords(partId, "gobilda-5203-1150") + simTodo(partId));
         else out.add("motor." + device + " = free, part=gobilda-5203-1150   # TODO the real motor");
         lookLines(out, t);
     }

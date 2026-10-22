@@ -1,5 +1,7 @@
 package com.crossbotics.ftchelper.examples.cookbook;
 
+import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT_FROM_CATALOG and MEASURE (docs/guides/tunables.md)
+
 /**
  * The cookbook's numbers (docs/cookbook.md). Every robot in this folder reads its sections from here:
  * one section per part, named after the part's configuration name in CamelCase ("intake_deploy" reads
@@ -98,7 +100,9 @@ public class Tunables {
     // recipe: tunables-launcher
     public static class Launcher {
         public static double speedRpm = 2600, stepRpm = 100, readyBandRpm = 60, idleRpm = 1500;
-        public static double kP = 40, kI = 0, kD = 0, kF = 12.5, nominalVolts = 12.8;   // from the Flywheel Finder
+        // The hub's speed control: the defaults for the motor until the Flywheel Finder (INIT shows them).
+        // Then write its numbers in their place (kP = 1.24, kI = 0.124, kD = 0, kF = 12.4, nominalVolts = 12.6).
+        public static double kP = DEFAULT_FROM_CATALOG, kI = DEFAULT_FROM_CATALOG, kD = DEFAULT_FROM_CATALOG, kF = DEFAULT_FROM_CATALOG;
         public static double shotIntervalSec = 0.25;   // the least time between two pieces (seconds)
         // {inches to the goal, RPM}: blended between rows (from the Shot Tuner).
         public static double[][] speedByDistance = {{24, 2200}, {48, 2550}, {72, 2900}, {96, 3250}};

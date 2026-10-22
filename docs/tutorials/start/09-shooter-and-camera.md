@@ -81,12 +81,46 @@ public static class Windmill {
 | `stepRpm` | how much one D-pad press changes the speed |
 | `readyBandRpm` | how close to `speedRpm` counts as "at speed" (it must stay there 0.15 s) |
 | `idleRpm` | the speed it drops back to when the driver spins it down (0 = coast to a stop) |
-| `kP`, `kI`, `kD`, `kF` | the **gains**: how hard the hub pushes to hold the speed. Used only when `kF` is there. |
+| `kP`, `kI`, `kD`, `kF` | the **gains**: how hard the hub pushes to hold the speed. goBILDA published tested ones for this kit bot. Your own robot can leave them out at first ([below](#the-first-spin-up-with-no-numbers)). |
 | `nominalVolts` | the battery voltage when the gains were measured. Used only by battery compensation, which is off unless you turn it on ([section 8](#speed-trim-and-a-low-battery)). |
 | `power`, `feedSec` (Windmill) | the feeder's power, and how long it runs per piece |
 
 A servo feeder (`Indexer.servo`) has `rest`, `push`, `pushSec`, `returnSec` instead. It goes to `rest`
 at START, never in INIT.
+
+### The first spin-up with no numbers
+
+A new launcher can run before you know any of its numbers. Write `DEFAULT_FROM_CATALOG` for `kP` to
+`kF` and `speedRpm` (or leave the lines out):
+
+```java
+public static class Launcher {
+    public static double speedRpm = DEFAULT_FROM_CATALOG, stepRpm = 100, readyBandRpm = 60, idleRpm = 0;
+    public static double kP = DEFAULT_FROM_CATALOG, kI = DEFAULT_FROM_CATALOG, kD = DEFAULT_FROM_CATALOG, kF = DEFAULT_FROM_CATALOG;
+}
+```
+
+The library works out starting ones from the motor named in Robot.java
+(`Launcher.flywheel("launcher", "gobilda-5203-6000")`) and its numbers in the parts catalog, and INIT says
+so:
+
+```text
+Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, kP 1.17, kI 0.117, speed 3600 rpm. Run the Flywheel Finder, then the Shot Tuner
+```
+
+- **kF** is the power for a speed: the hub's full power is 32767, and the motor's top speed is 6000 RPM x
+  28 counts / 60 = 2800 counts a second, so F = 32767 / 2800 = 11.7. With it the wheel gets close to
+  any speed by itself. kP (F / 10) and kI (kP / 10) fix the rest. This is REV's starting formula, and the
+  same math the Flywheel Finder uses with the speed it measures on YOUR wheel.
+- **speed 3600** is 60% of the motor's top speed: the speed control needs room above the speed to push
+  harder after each shot and on a tired battery, and a middle speed is a gentle first shot.
+
+A motor that is not in the catalog: describe it in Robot.java, `Launcher.flywheel("launcher",
+Motors.custom("my-motor", 28, 5800))` (counts per turn, free RPM), and the defaults come from its numbers
+([Parts not in the catalog](../../modules/robot.md#parts-not-in-the-catalog)).
+
+Without these, the hub would use its own gains (P 10, I 3, F 0): no F, so the wheel would only creep up
+to its speed. Spin up with LB and check that it reaches the speed (Driver Station). Then:
 
 **Find the gains with the Flywheel Finder** ([how](../../guides/finders.md#flywheel-finder-gains-and-recovery)).
 It needs no code. Choose the `launcher` motor; it shows a line to copy into `Tunables.Launcher`:
@@ -735,8 +769,8 @@ give each a `looks(...)` shape in `Robot.java` ([Lesson 1: Draw your robot from 
 ## Check it on the robot
 
 1. Safety glasses, and nobody in front of the launcher.
-2. Flywheel Finder first: gains in `Tunables.Launcher`. Then spin up with LB and read the speed on the
-   Driver Station: does it reach `speedRpm` and stay there?
+2. Spin up with LB (the starting values work for this) and read the speed on the Driver Station: does
+   it reach the speed and stay there? Then the Flywheel Finder: its gains in `Tunables.Launcher`.
 3. Feed by hand at low speed, then fire with RB. Watch the feeder push ONE piece per shot; tune
    `feedSec` (or `push`, `pushSec`) until it does.
 4. Turret: point it forward, INIT, and turn it by hand to each end. It must stop before the hard stops.

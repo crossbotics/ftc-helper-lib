@@ -52,12 +52,54 @@ public final class Parts {
         public final double rangeDeg;
         /** The seller's pulse range, microseconds; NaN = not given (then 500 to 2500 is assumed). */
         public final double pulseMinUs, pulseMaxUs;
+        /**
+         * Seconds to turn 60 degrees with no load at about the hub's servo voltage (a REV hub gives its
+         * servos 5 V): the seller's 4.8 V number, or its 6 V one when it gives no 4.8 V number (then the
+         * real servo is a little slower).
+         */
+        public final double secPer60Deg;
+        /** True for a servo described in Robot.java ({@link Parts#customServo}), not from the catalog. */
+        public final boolean custom;
 
-        ServoPart(String id, double rangeDeg, double pulseMinUs, double pulseMaxUs) {
+        ServoPart(String id, double rangeDeg, double pulseMinUs, double pulseMaxUs, double secPer60Deg) {
+            this(id, rangeDeg, pulseMinUs, pulseMaxUs, secPer60Deg, false);
+        }
+
+        ServoPart(String id, double rangeDeg, double pulseMinUs, double pulseMaxUs, double secPer60Deg, boolean custom) {
+            this.custom = custom;
             this.id = id;
             this.rangeDeg = rangeDeg;
             this.pulseMinUs = pulseMinUs;
             this.pulseMaxUs = pulseMaxUs;
+            this.secPer60Deg = secPer60Deg;
+        }
+
+        /**
+         * About how long a move from position 0 to 1 takes on a hub, from the seller's speed: a starting
+         * value for a part's {@code travelSec} (goBILDA 2000 torque on the normal range: 270 degrees at 0.25 s
+         * per 60 = 1.13 s).
+         *
+         * @param fullRange true with {@code .fullRange()} (0 to 1 is the servo's whole turn)
+         * @return seconds, or NaN when the catalog lacks the servo's turn or speed
+         */
+        public double fullMoveSec(boolean fullRange) {
+            double deg = fullRange ? rangeDeg : sdkRangeDeg();
+            return deg / 60.0 * secPer60Deg;
+        }
+
+        /**
+         * The words for the simulator's robot file: {@code part=ID} for a catalog servo; for a custom one
+         * its turn over the file's pulse range and its speed ({@code rangeDeg=270, secPer60=0.2}), "" when
+         * those are not known.
+         *
+         * @param lowUs  the pulse at position 0 in the robot file (600 normally, 500 with full range)
+         * @param highUs the pulse at position 1
+         */
+        public String simWords(double lowUs, double highUs) {
+            if (!custom) return "part=" + id;
+            double deg = degreesOver(lowUs, highUs);
+            if (Double.isNaN(deg) || Double.isNaN(secPer60Deg)) return "";
+            return "rangeDeg=" + Module.exact(Math.round(deg * 10) / 10.0) + ", secPer60=" + Module.exact(secPer60Deg);
         }
 
         /** The pulse for position 0 with full range: the seller's, or 500 us when it gives none. */
@@ -95,9 +137,11 @@ public final class Parts {
 
     private static final Map<String, Wheel> WHEELS = new LinkedHashMap<>();
     private static final Map<String, ServoPart> SERVOS = new LinkedHashMap<>();
+    // Servos described in Robot.java (customServo, unknownServo), by id.
+    private static final Map<String, ServoPart> CUSTOM_SERVOS = new LinkedHashMap<>();
 
-    private static void servo(String id, double rangeDeg, double pulseMinUs, double pulseMaxUs) {
-        SERVOS.put(id, new ServoPart(id, rangeDeg, pulseMinUs, pulseMaxUs));
+    private static void servo(String id, double rangeDeg, double pulseMinUs, double pulseMaxUs, double secPer60Deg) {
+        SERVOS.put(id, new ServoPart(id, rangeDeg, pulseMinUs, pulseMaxUs, secPer60Deg));
     }
 
     private static void wheel(String id, double diameterMm, double widthMm) {
@@ -112,20 +156,21 @@ public final class Parts {
         wheel("gobilda-hogback-96", 96, 24);
         wheel("offset-tubing-60", 60, Double.NaN);
         wheel("offset-tubing-90", 90, Double.NaN);
-        // "servos": id, rangeDeg, pulseMinUs, pulseMaxUs (NaN = null in the catalog).
-        servo("gobilda-2000-torque", 300, 500, 2500);
-        servo("gobilda-2000-speed", 300, 500, 2500);
-        servo("gobilda-2000-super-speed", 300, 500, 2500);
-        servo("gobilda-2000-5turn-torque", 1800, 500, 2500);
-        servo("gobilda-2000-5turn-speed", 1800, 500, 2500);
-        servo("gobilda-2000-5turn-super-speed", 1800, 500, 2500);
-        servo("rev-smart-servo", 270, 500, 2500);
-        servo("rev-smart-servo-v2-balanced", 270, 500, 2500);
-        servo("rev-smart-servo-v2-ultraspeed", 270, 500, 2500);
-        servo("axon-max-mk2", 360, 500, 2500);
-        servo("axon-max-plus", Double.NaN, Double.NaN, Double.NaN);
-        servo("axon-mini-mk2", 360, 500, 2500);
-        servo("axon-mini-plus", Double.NaN, Double.NaN, Double.NaN);
+        // "servos": id, rangeDeg, pulseMinUs, pulseMaxUs (NaN = null in the catalog), and seconds per 60 degrees:
+        // the byVoltage row at 4.8 V, else the 6.0 V secPer60Deg (a REV hub's servo ports give 5 V).
+        servo("gobilda-2000-torque", 300, 500, 2500, 0.25);
+        servo("gobilda-2000-speed", 300, 500, 2500, 0.11);
+        servo("gobilda-2000-super-speed", 300, 500, 2500, 0.055);
+        servo("gobilda-2000-5turn-torque", 1800, 500, 2500, 0.25);
+        servo("gobilda-2000-5turn-speed", 1800, 500, 2500, 0.11);
+        servo("gobilda-2000-5turn-super-speed", 1800, 500, 2500, 0.055);
+        servo("rev-smart-servo", 270, 500, 2500, 0.13);
+        servo("rev-smart-servo-v2-balanced", 270, 500, 2500, 0.14);
+        servo("rev-smart-servo-v2-ultraspeed", 270, 500, 2500, 0.043);
+        servo("axon-max-mk2", 360, 500, 2500, 0.14);
+        servo("axon-max-plus", Double.NaN, Double.NaN, Double.NaN, 0.14);
+        servo("axon-mini-mk2", 360, 500, 2500, 0.11);
+        servo("axon-mini-plus", Double.NaN, Double.NaN, Double.NaN, 0.11);
     }
 
     /**
@@ -162,6 +207,11 @@ public final class Parts {
         return id;
     }
 
+    /** Every servo id, the catalog's and the ones described with {@link #customServo} (for checks). */
+    static boolean isServo(String id) {
+        return findServo(id) != null;
+    }
+
     /**
      * A servo's numbers by its catalog id: its turn and pulse range.
      *
@@ -173,14 +223,78 @@ public final class Parts {
      * @throws IllegalArgumentException for an unknown id (the message lists the known ones)
      */
     public static ServoPart servoPart(String id) {
-        ServoPart s = SERVOS.get(id);
+        ServoPart s = findServo(id);
         if (s == null) {
-            throw new IllegalArgumentException("Robot.java: no servo \"" + id + "\" in the parts catalog. Known: " + SERVOS.keySet());
+            throw new IllegalArgumentException("Robot.java: no servo \"" + id + "\" in the parts catalog. Known: " + SERVOS.keySet()
+                    + ". A servo that is not in the catalog: Parts.customServo(\"" + id + "\", rangeDeg, secPer60Deg) "
+                    + "(docs/modules/robot.md#parts-not-in-the-catalog)");
         }
         return s;
     }
 
-    /** Every servo id, in catalog order (read only). */
+    /**
+     * A servo from the catalog or described with {@link #customServo}; null if there is none.
+     *
+     * @param id the servo's id
+     */
+    public static ServoPart findServo(String id) {
+        if (id == null) return null;
+        ServoPart s = SERVOS.get(id);
+        return s != null ? s : CUSTOM_SERVOS.get(id);
+    }
+
+    /**
+     * Describes a servo that is not in the parts catalog, so its id works in {@code .part(...)}: its move
+     * times (travelSec...) then start from its numbers, and the simulator turns it like the real one.
+     * It takes 500 to 2500 microseconds (what goBILDA, REV and Axon servos take).
+     *
+     * <pre>{@code
+     * claw = add(Claw.servo("claw").part(Parts.customServo("my-servo", 270, 0.16)));
+     * }</pre>
+     *
+     * @param id          a name of your own, not a catalog id
+     * @param rangeDeg    how far it turns over its whole pulse range, degrees (the seller's page); NaN if not known
+     * @param secPer60Deg seconds to turn 60 degrees with no load, at about 5 V (the seller's slowest voltage
+     *                    under 6 V); NaN if not known
+     * @return the id, to use in {@code .part(...)}
+     */
+    public static String customServo(String id, double rangeDeg, double secPer60Deg) {
+        return customServo(id, rangeDeg, secPer60Deg, com.crossbotics.ftchelper.hardware.ServoSetup.FULL_PULSE_LOW_US,
+                com.crossbotics.ftchelper.hardware.ServoSetup.FULL_PULSE_HIGH_US);
+    }
+
+    /**
+     * {@link #customServo(String, double, double)} with the seller's pulse range.
+     *
+     * @param pulseMinUs the pulse for one end of {@code rangeDeg}, microseconds (e.g. 500)
+     * @param pulseMaxUs the pulse for the other end (e.g. 2500)
+     */
+    public static String customServo(String id, double rangeDeg, double secPer60Deg, double pulseMinUs, double pulseMaxUs) {
+        if (id == null || id.trim().isEmpty()) throw new IllegalArgumentException("Robot.java: Parts.customServo needs a name for the servo");
+        if (SERVOS.containsKey(id)) {
+            throw new IllegalArgumentException("Robot.java: Parts.customServo(\"" + id + "\", ...): that servo is in the parts catalog: "
+                    + "use its id alone, or give yours another name");
+        }
+        if (!(rangeDeg > 0) && !Double.isNaN(rangeDeg) || !(secPer60Deg > 0) && !Double.isNaN(secPer60Deg) || !(pulseMaxUs > pulseMinUs)) {
+            throw new IllegalArgumentException("Robot.java: Parts.customServo(\"" + id + "\", ...): its turn and speed must be more "
+                    + "than 0 (Double.NaN for one you do not know), and the pulse range low first");
+        }
+        CUSTOM_SERVOS.put(id, new ServoPart(id, rangeDeg, pulseMinUs, pulseMaxUs, secPer60Deg, true));
+        return id;
+    }
+
+    /**
+     * A servo whose numbers you do not know yet: its move times use the library's general starting
+     * values, and INIT says so.
+     *
+     * @param id a name of your own
+     * @return the id
+     */
+    public static String unknownServo(String id) {
+        return customServo(id, Double.NaN, Double.NaN);
+    }
+
+    /** Every catalog servo id, in catalog order (read only; not the {@link #customServo} ones). */
     public static Set<String> servos() {
         return Collections.unmodifiableSet(SERVOS.keySet());
     }

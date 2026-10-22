@@ -59,6 +59,7 @@ first.
 - [How do I add a lift with set heights?](#how-do-i-add-a-lift-with-set-heights)
 - [My lift goes down when it should go up. How do I fix it?](#my-lift-goes-down-when-it-should-go-up-how-do-i-fix-it)
 - [How do I run one lift on two motors?](#how-do-i-run-one-lift-on-two-motors)
+- [My motor isn't in the catalog](#my-motor-isnt-in-the-catalog)
 - [How do I add an arm that moves in degrees?](#how-do-i-add-an-arm-that-moves-in-degrees)
 - [How do I add a claw?](#how-do-i-add-a-claw)
 - [How do I add a wrist?](#how-do-i-add-a-wrist)
@@ -756,6 +757,30 @@ add(Lift.slide("lift").reversed());
 **Why:** the lift's limits and heights count up as it goes up, so positive power must move it up.
 **More:** [Motor Finder](guides/finders.md#motor-finder-limits-positions-top-speed), [Troubleshooting](troubleshooting.md#robot-behavior).
 
+### My motor isn't in the catalog
+
+**Where:** `Robot.java`, inside `define()`.
+
+<!-- recipe: own-parts -->
+```java
+// A motor that is not in the catalog: its encoder counts per output turn and its free speed (RPM),
+// from the seller's page. Its name then works like a catalog id, here and in .part(...).
+launcher = add(Launcher.flywheel("launcher", Motors.custom("my-flywheel-motor", 28, 5800)));
+// A servo: how far it turns (degrees) and seconds per 60 degrees at about 5 V.
+claw = add(Claw.servo("claw").part(Parts.customServo("my-claw-servo", 270, 0.16)));
+// Numbers not known yet: general defaults, and INIT says so (a launcher or an arm needs
+// the counts per turn: Motors.custom("...", countsPerRev, Double.NaN) at least).
+lift = add(Lift.slide("lift").part(Motors.unknown("old-lift-motor")));
+```
+
+**Why:** the library works out a part's defaults (a launcher's gains and speed, a lift's kP, a servo's
+move time) from its motor's or servo's numbers. Describe yours with the seller's numbers and it works like
+a catalog part: INIT says `defaults from my-flywheel-motor (custom)`, and `:sim:fromRobot` writes its
+numbers into the simulator's robot file. Numbers you do not know: `Double.NaN`, or `Motors.unknown` /
+`Parts.unknownServo`: general defaults, and INIT says so. Do not use a catalog motor that is "close": its
+numbers would be quietly wrong.
+**More:** [Parts not in the catalog](modules/robot.md#parts-not-in-the-catalog), [Parts catalog](guides/parts-catalog.md).
+
 ### How do I run one lift on two motors?
 
 **Where:** `Robot.java`, inside `define()`, and `Tunables.java`.
@@ -970,7 +995,9 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 ```java
 public static class Launcher {
     public static double speedRpm = 2600, stepRpm = 100, readyBandRpm = 60, idleRpm = 1500;
-    public static double kP = 40, kI = 0, kD = 0, kF = 12.5, nominalVolts = 12.8;   // from the Flywheel Finder
+    // The hub's speed control: the defaults for the motor until the Flywheel Finder (INIT shows them).
+    // Then write its numbers in their place (kP = 1.24, kI = 0.124, kD = 0, kF = 12.4, nominalVolts = 12.6).
+    public static double kP = DEFAULT_FROM_CATALOG, kI = DEFAULT_FROM_CATALOG, kD = DEFAULT_FROM_CATALOG, kF = DEFAULT_FROM_CATALOG;
     public static double shotIntervalSec = 0.25;   // the least time between two pieces (seconds)
     // {inches to the goal, RPM}: blended between rows (from the Shot Tuner).
     public static double[][] speedByDistance = {{24, 2200}, {48, 2550}, {72, 2900}, {96, 3250}};
@@ -2854,8 +2881,12 @@ public class DriveTuner extends DriveTunerOpMode {
 
 ### How do I set the flywheel numbers?
 
-Run the **Flywheel Finder** (in the [starter kit](starter-kit.md)), then copy its line into
-`Tunables.Launcher` (see [the launcher recipe](#how-do-i-add-a-launcher-flywheel-and-feeder)).
+Before you have them, write `DEFAULT_FROM_CATALOG` in their place (or leave the lines out): the launcher
+starts from the parts catalog's numbers for its motor
+(a goBILDA 6000 RPM motor: kF 11.7, kP 1.17, kI 0.117, and 60% of its top speed, 3600 RPM) and INIT
+says so. Then run the **Flywheel Finder** (in the [starter kit](starter-kit.md)) and copy its line into
+`Tunables.Launcher` (see [the launcher recipe](#how-do-i-add-a-launcher-flywheel-and-feeder)). Do not copy
+another robot's gains: they were found for its wheel.
 
 **Why:** the right `kP`..`kF` make the wheel get back to speed fast after each shot.
 **More:** [Flywheel Finder](guides/finders.md#flywheel-finder-gains-and-recovery).

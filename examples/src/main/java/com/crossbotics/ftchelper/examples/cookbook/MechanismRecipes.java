@@ -11,6 +11,8 @@ import com.crossbotics.ftchelper.robot.Indexer;
 import com.crossbotics.ftchelper.robot.Intake;
 import com.crossbotics.ftchelper.robot.Launcher;
 import com.crossbotics.ftchelper.robot.Lift;
+import com.crossbotics.ftchelper.robot.Motors;
+import com.crossbotics.ftchelper.robot.Parts;
 import com.crossbotics.ftchelper.robot.Pad;
 import com.crossbotics.ftchelper.robot.Positioner;
 import com.crossbotics.ftchelper.robot.RobotDefinition;
@@ -181,6 +183,28 @@ public class MechanismRecipes {
 
         @Override
         protected void buttons(TwoMotorLift robot, Pad g1, Pad g2) { }
+    }
+
+    /** Parts that are not in the parts catalog: described in Robot.java with their own numbers. */
+    public static class OwnParts extends RobotDefinition {
+        public Launcher launcher;
+        public Claw claw;
+        public Lift lift;
+
+        @Override
+        protected void define() {
+            drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
+            // recipe: own-parts
+            // A motor that is not in the catalog: its encoder counts per output turn and its free speed (RPM),
+            // from the seller's page. Its name then works like a catalog id, here and in .part(...).
+            launcher = add(Launcher.flywheel("launcher", Motors.custom("my-flywheel-motor", 28, 5800)));
+            // A servo: how far it turns (degrees) and seconds per 60 degrees at about 5 V.
+            claw = add(Claw.servo("claw").part(Parts.customServo("my-claw-servo", 270, 0.16)));
+            // Numbers not known yet: general defaults, and INIT says so (a launcher or an arm needs
+            // the counts per turn: Motors.custom("...", countsPerRev, Double.NaN) at least).
+            lift = add(Lift.slide("lift").part(Motors.unknown("old-lift-motor")));
+            // end recipe
+        }
     }
 
     /** A flywheel with a feeder. */

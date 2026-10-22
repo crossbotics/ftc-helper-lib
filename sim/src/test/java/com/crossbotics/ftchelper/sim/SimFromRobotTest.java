@@ -232,12 +232,14 @@ public class SimFromRobotTest {
             int before = s.robot().pieces.launched();
             int inBefore = s.robot().pieces.inCells().get("Red HIVE");
             int tipsBefore = s.robot().pieces.tips().get("Red HIVE");
+            // 2 s per shot: the example has no flywheel gains yet, so it runs on the parts catalog's
+            // starting gains (a gentle P): spin-up from idle and recovery take longer than when tuned.
             for (int i = 0; i < 3; i++) {
                 s.press(v -> s.g2().right_bumper = v);
-                SimRun.pause(1.0);
+                SimRun.pause(2.0);
             }
             SimRun.pause(2.0);
-            assertTrue("it fired", s.robot().pieces.launched() - before >= 2);
+            assertTrue("it fired\n" + String.join("\n", s.screen()), s.robot().pieces.launched() - before >= 2);
             // In the red up CELL: there now, or they tipped the HIVE (3 NECTAR start in it; a few more tip it).
             boolean scored = s.robot().pieces.tips().get("Red HIVE") > tipsBefore || s.robot().pieces.inCells().get("Red HIVE") >= inBefore + 2;
             assertTrue("the shots went into the red up CELL: " + s.robot().pieces.inCells() + ", tips " + s.robot().pieces.tips(), scored);

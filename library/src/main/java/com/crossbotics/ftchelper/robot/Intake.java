@@ -336,7 +336,7 @@ public final class Intake extends Module<Intake> implements Toggleable {
     void simLines(List<String> out, TunableSection t) {
         for (String n : names) {
             if (servos) out.add("crservo." + n + " =" + (partId != null ? "   # " + partId : ""));
-            else if (partId != null) out.add("motor." + n + " = free, part=" + partId);
+            else if (partId != null) out.add("motor." + n + " = free, " + motorWords(partId, "gobilda-5203-1150") + simTodo(partId));
             else out.add("motor." + n + " = free, part=gobilda-5203-1150   # TODO the real motor");
         }
         if (looks.isEmpty()) {
