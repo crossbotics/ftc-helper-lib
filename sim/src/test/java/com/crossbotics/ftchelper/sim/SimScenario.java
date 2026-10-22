@@ -229,6 +229,14 @@ public final class SimScenario {
                         sim.robot.pieces.place(t.get(2), Double.parseDouble(t.get(3)), Double.parseDouble(t.get(4)),
                                 t.size() > 5 ? Double.parseDouble(t.get(5)) : 0);
                         break;
+                    // set device NAME missing|present: take a device out of the configuration (a part not
+                    // built yet) or put it back; used from the next INIT
+                    case "device":
+                        if (t.size() < 4 || !(t.get(3).equals("missing") || t.get(3).equals("present"))) {
+                            throw new IllegalArgumentException("set device NAME missing|present");
+                        }
+                        sim.robot.setMissing(t.get(2), t.get(3).equals("missing"));
+                        break;
                     // set preload on|off: the robot holds the preload (now and after each reset) or starts empty
                     case "preload": sim.robot.pieces.setPreloaded(onOff(t.get(2))); break;
                     // set field start: every game piece back where the match starts it (the robot stays)
@@ -236,7 +244,7 @@ public final class SimScenario {
                         if (!t.get(2).equals("start")) throw new IllegalArgumentException("set field start");
                         sim.robot.pieces.reset();
                         break;
-                    default: throw new IllegalArgumentException("set battery | touch NAME on|off | pose X Y HEADING | autotimer on|off | piece TYPE X Y [Z] | preload on|off | field start");
+                    default: throw new IllegalArgumentException("set battery | touch NAME on|off | pose X Y HEADING | autotimer on|off | piece TYPE X Y [Z] | preload on|off | field start | device NAME missing|present");
                 }
                 ok(n, line, "");
                 return;

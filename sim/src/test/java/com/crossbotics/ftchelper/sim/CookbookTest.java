@@ -160,6 +160,44 @@ public class CookbookTest {
         }
     }
 
+    // A part written in Robot.java but not on the robot yet (optional, left out of the configuration):
+    // TeleOp INITs with one note, its button is off, the action at START skips it and starts the
+    // intake; an autonomous using it keeps going and its report says what it skipped.
+    @Test public void aPartNotOnTheRobotYetKeepsTeleOpAndAutoRunning() throws Exception {
+        Path file = robotFile(MechanismRecipes.NotOnTheRobotYet.class);
+        Files.write(file, ("missing = intake_deploy\n").getBytes(StandardCharsets.UTF_8), java.nio.file.StandardOpenOption.APPEND);
+        try (SimRun s = new SimRun(file.toString())) {
+            s.sim.ds.register("Cookbook Not On The Robot Yet", "TeleOp", MechanismRecipes.NotOnTheRobotYetControls.class);
+            s.init("Cookbook Not On The Robot Yet");
+            String init = String.join("\n", s.screen());
+            assertEquals(init, "", s.error());
+            assertTrue(init, s.screenHas("\"intake_deploy\" not in the configuration: IntakeDeploy is off (optional part)"));
+            assertTrue(init, s.screenHas("G2 X: deploy intake - off: IntakeDeploy not on the robot"));
+            s.start();
+            assertTrue("the action at START starts the intake\n" + String.join("\n", s.screen()),
+                    SimRun.waitFor(() -> s.robot().motors.get("intake").userPower() > 0.5, 2));
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("IntakeDeploy : - (not on the robot)"), 1));
+            s.press(v -> s.g2().x = v);   // off: nothing happens
+            SimRun.pause(0.3);
+            assertEquals("", s.error());
+            assertTrue("the intake still runs", s.robot().motors.get("intake").userPower() > 0.5);
+        }
+        // The same robot file without the line, and the device taken out from the test instead (like a
+        // scenario's "set device intake_deploy missing"): the autonomous.
+        Path full = robotFile(MechanismRecipes.NotOnTheRobotYet.class);
+        try (SimRun s = new SimRun(full.toString())) {
+            s.robot().setMissing("intake_deploy", true);
+            s.sim.ds.register("Cookbook Not On The Robot Yet Auto", "Autonomous", MechanismRecipes.NotOnTheRobotYetAuto.class);
+            s.init("Cookbook Not On The Robot Yet Auto");
+            assertEquals(String.join("\n", s.screen()), "", s.error());
+            s.start();
+            assertTrue("the report says what was skipped\n" + String.join("\n", s.screen()),
+                    SimRun.waitFor(() -> s.screenHas("skipped IntakeDeploy (not on the robot)"), 8));
+            assertTrue("and the intake runs", s.robot().motors.get("intake").userPower() > 0.5);
+            assertEquals("", s.error());
+        }
+    }
+
     // The Shot Tuner with two tables and odometry: the distance comes from the odometry (no goal in
     // the camera's view), it starts on the launcher's start table, Y and the D-pad pick the other, and
     // each table gets its own line for Tunables.java.

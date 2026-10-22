@@ -330,6 +330,8 @@ public final class Steps {
                 } else if (!"done".equals(action.result())) {
                     ctx.note(action.result());   // e.g. "timed out waiting for lift at the top"
                 }
+                // A part that is not on the robot yet (optional in Robot.java): the action went on without it.
+                if (!action.skippedWords().isEmpty()) ctx.note(action.skippedWords());
             });
         }
         return this;

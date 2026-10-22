@@ -1,0 +1,10 @@
+# A part that is in Robot.java but not in the robot configuration (docs/modules/robot.md, "Parts not on
+# the robot yet"). The quick start robot's intake is NOT marked optional(), so INIT stops, and the
+# message says how to mark it. (With .optional() it would be off instead: see the cookbook's recipe.)
+set device intake missing             # take "intake" out of the configuration (from the next INIT)
+init "Quick Start TeleOp"
+expect error has "No DcMotorEx named"
+expect error has "Add .optional() to Intake's line in Robot.java"
+set device intake present             # back in the configuration: INIT works again
+init "Quick Start TeleOp"
+expect error none

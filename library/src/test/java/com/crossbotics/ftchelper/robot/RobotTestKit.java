@@ -22,6 +22,9 @@ final class RobotTestKit implements Devices {
     final Map<String, double[]> analog = new HashMap<>();
     // Names that are NOT in the configuration (tryGet gives null), e.g. a missing switch.
     final java.util.Set<String> missing = new java.util.HashSet<>();
+    // Names that are not in the configuration at all: get stops (like the real hardwareMap), tryGet
+    // gives null and has() is false. For parts marked optional().
+    final java.util.Set<String> absent = new java.util.HashSet<>();
     // Names configured as a digital device (so tryGet(TouchSensor) gives null for them).
     final java.util.Set<String> digitalNames = new java.util.HashSet<>();
     // Blinkin LED drivers: the last servo position each was sent (NaN = none yet).
@@ -39,6 +42,9 @@ final class RobotTestKit implements Devices {
     @Override
     @SuppressWarnings("unchecked")
     public <T> T get(Class<? extends T> type, String name) {
+        if (absent.contains(name)) {
+            throw new IllegalArgumentException("No " + type.getSimpleName() + " named \"" + name + "\" in the active robot configuration.");
+        }
         if (type == DcMotorEx.class) {
             if (!motors.containsKey(name)) motors.put(name, new FakeMotor());
             return (T) motors.get(name).motor;
@@ -92,8 +98,13 @@ final class RobotTestKit implements Devices {
     }
 
     @Override
+    public boolean has(String name) {
+        return !absent.contains(name);
+    }
+
+    @Override
     public <T> T tryGet(Class<? extends T> type, String name) {
-        if (missing.contains(name)) return null;
+        if (missing.contains(name) || absent.contains(name)) return null;
         if (type == TouchSensor.class && digitalNames.contains(name)) return null;
         return get(type, name);
     }

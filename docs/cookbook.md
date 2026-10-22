@@ -60,6 +60,7 @@ first.
 - [How do I add a wrist?](#how-do-i-add-a-wrist)
 - [How do I add any servo with named positions (a gate, a fold-out)?](#how-do-i-add-any-servo-with-named-positions-a-gate-a-fold-out)
 - [How do I send a part to a position from a button?](#how-do-i-send-a-part-to-a-position-from-a-button)
+- [My robot doesn't have this part yet. How do I keep its code?](#my-robot-doesnt-have-this-part-yet-how-do-i-keep-its-code)
 - [How do I add a launcher (flywheel and feeder)?](#how-do-i-add-a-launcher-flywheel-and-feeder)
 - [How do I add a turret that follows the goal?](#how-do-i-add-a-turret-that-follows-the-goal)
 - [How do I fire only when aimed, at the right speed?](#how-do-i-fire-only-when-aimed-at-the-right-speed)
@@ -794,6 +795,37 @@ g2.back.press(() -> robot.intakeDeploy.goTo("stowed")).says("fold the intake in"
 These lines take Y, A, X and B from the lift and the claw (their standard buttons), on purpose; see
 [pick a free button](#buttons-and-gestures).
 **More:** [Lift](modules/robot.md#lift), [Claw](modules/robot.md#claw).
+
+### My robot doesn't have this part yet. How do I keep its code?
+
+**Where:** `Robot.java`, on the part's `add` line (and `Controls.java` for its buttons).
+
+<!-- recipe: optional-part -->
+```java
+// The deploy servo is not on the robot yet. optional(): while "intake_deploy" is not in
+// the robot configuration, INIT goes on (with a note) and the part is off.
+intakeDeploy = add(Positioner.servo("intake_deploy").optional());
+intake = add(Intake.motor("intake"));
+// At START: fold the intake out, then run it. With no deploy servo the action skips
+// the servo (and the wait for it) and just starts the intake. No other change needed.
+atStart(() -> deployIntake(this));
+```
+
+<!-- recipe: optional-part-button -->
+```java
+// needs(...): while the deploy servo is not on the robot, X does nothing and the
+// button map at INIT says "off: IntakeDeploy not on the robot".
+g2.x.press(NotOnTheRobotYet.deployIntake(robot)).says("deploy intake").needs(robot.intakeDeploy);
+```
+
+**Why:** robots are built in steps. Without `optional()`, a part whose device is not in the
+configuration stops INIT (`No Servo named "intake_deploy" ...`). With it, INIT says
+`"intake_deploy" not in the configuration: IntakeDeploy is off (optional part)`, and everything that
+uses the part skips it: its commands, its buttons, the action steps (an autonomous keeps going and its
+report says `skipped IntakeDeploy`). The day the servo is wired and in the configuration, it just works,
+with no code to change. No `if (HAS_DEPLOY_SERVO)` switches. To try it in the simulator without the
+part: `missing = intake_deploy` in the robot file.
+**More:** [Parts not on the robot yet](modules/robot.md#parts-not-on-the-robot-yet).
 
 ### How do I add a launcher (flywheel and feeder)?
 

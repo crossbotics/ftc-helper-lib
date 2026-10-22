@@ -408,7 +408,7 @@ public final class Hood extends Module<Hood> {
 
     /** True when the hood is (a motor) or should be (a servo, by time) at its angle. */
     public boolean isArrived() {
-        return part != null && part.isDone();
+        return part != null && (missing || part.isDone());
     }
 
     /** True while the angle comes from the shot table (the launcher's distance), false when it is set by hand. */

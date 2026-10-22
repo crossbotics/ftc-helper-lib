@@ -152,15 +152,16 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
         part.hold();
     }
 
-    /** True when it is at its target. */
+    /** True when it is at its target (always, for a part that is not on the robot: see {@link #optional()}). */
     public boolean isAtTarget() {
-        return part != null && part.isAtTarget();
+        return part != null && (missing || part.isAtTarget());
     }
 
-    /** True when it is at this named position. */
+    /** True when it is at this named position (not on the robot: when it was last sent there). */
     public boolean isAt(String position) {
         if (part == null) return false;
         String n = findName(order, position);
+        if (missing) return n != null && n.equals(part.getTargetName());
         return n != null && part.isAt(n);
     }
 

@@ -269,11 +269,11 @@ public class SimFromRobotTest {
         com.crossbotics.ftchelper.robot.Turret.forgetAngles();
         try (SimRun s = new SimRun(file.toString())) {
             s.init("V2 Bot TeleOp");
-            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Interlock TurretLift: Turret between 130 and 218 deg / Lift above 270 counts"), 2));
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Interlock TurretLift: Turret between 109 and 239 deg / Lift above 270 counts"), 2));
             assertTrue(s.screenHas("G2 Y: score in a FLOWER"));
             SimMotor lift = s.robot().motors.get("lift"), turret = s.robot().motors.get("turret");
             s.start();
-            // The turret homes on its switch at START (Tunables.Turret.homeAngle -45): then it is known.
+            // The turret homes on its switch at START (Tunables.Turret.homeAngle 0): then it is known.
             assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> !s.screenHas("homing"), 8));
             // Score: the turret turns forward, the wrist swings out, the lift goes up to the FLOWER and back.
             s.press(v -> s.g2().y = v);
@@ -282,7 +282,7 @@ public class SimFromRobotTest {
             assertTrue("it lets go over the FLOWER", SimRun.waitFor(() -> claw.actual > 0.53, 3));
             assertTrue("and comes back down: " + lift.shaft(), SimRun.waitFor(() -> lift.shaft() < 100, 6));
             // Now the interlock: following off (BACK), the turret by hand to the back (stick right =
-            // clockwise, toward -190: the zone is 130 to 218, the same as -230 to -142).
+            // clockwise, toward -190: the zone is 109 to 239, the same as -251 to -121).
             s.press(v -> s.g2().back = v);
             double perDeg = 537.7 * 2.75 / 360;
             s.g2().right_stick_x = 1;

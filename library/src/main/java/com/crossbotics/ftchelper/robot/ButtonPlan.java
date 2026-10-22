@@ -24,6 +24,8 @@ import java.util.function.Supplier;
 final class ButtonPlan {
     /** Who made the jobs being added now: a module's name, or null for Controls.java. */
     String source = null;
+    /** The module making suggestions now (its buttons need it), or null. */
+    Module<?> sourcePart = null;
     final boolean oneDriver;
     final Pad g1, g2;
     // True while a button given Button.slow() is held (one driver).
@@ -75,6 +77,15 @@ final class ButtonPlan {
         Gestures gestures;
         // PAIR: the shift key held down, and the button pressed with it.
         Pad.Button shift, with;
+        // The parts this job needs (a module's suggestion, toggle(part), needs(...)): off if one is not on the robot.
+        final List<Module<?>> needs = new ArrayList<>();
+
+        // The needed parts that are not on the robot, e.g. "IntakeDeploy" ("" when all are there).
+        String missingParts() {
+            StringBuilder sb = new StringBuilder();
+            for (Module<?> m : needs) if (!m.isPresent()) sb.append(sb.length() == 0 ? "" : ", ").append(m.name());
+            return sb.toString();
+        }
 
         Entry(Kind kind, Runnable a, Runnable b, String says, Action action) {
             this.kind = kind;
@@ -142,6 +153,7 @@ final class ButtonPlan {
     /** Puts {@code e} in place of the input's job from the same source (a hold that gains gestures). */
     Entry replace(Object input, Entry e) {
         e.source = jobs.get(input).source;
+        for (Module<?> m : jobs.get(input).needs) if (!e.needs.contains(m)) e.needs.add(m);
         jobs.put(input, e);
         return e;
     }
@@ -152,6 +164,7 @@ final class ButtonPlan {
      */
     Entry put(Object input, Entry e) {
         Entry old = jobs.get(input);
+        if (sourcePart != null && !e.needs.contains(sourcePart)) e.needs.add(sourcePart);
         if (source != null) {
             // A module's suggestion: only on a free input.
             e.source = source;
@@ -216,14 +229,20 @@ final class ButtonPlan {
                     continue;
                 }
                 String who = e.source.equals(TEAM) ? "" : " [" + e.source + "]";
-                out.add(p + " " + name + ": " + words(e) + who);
+                out.add(p + " " + name + ": " + words(e) + who + offWords(e));
             }
             for (Entry pair : pairs) {
-                if (pair.shift.pad == p) out.add(p + " " + pair.shift.label + " + " + pair.with.label + ": " + words(pair));
+                if (pair.shift.pad == p) out.add(p + " " + pair.shift.label + " + " + pair.with.label + ": " + words(pair) + offWords(pair));
             }
             if (withFree && free.length() > 0) out.add(p + " free: " + free);
         }
         return out;
+    }
+
+    // " - off: IntakeDeploy not on the robot" for a job whose part is missing (see Module.optional), else "".
+    private static String offWords(Entry e) {
+        String missing = e.missingParts();
+        return missing.isEmpty() ? "" : " - off: " + missing + " not on the robot";
     }
 
     // A job's words on the help page, with "(buzz)" when it buzzes.
@@ -242,6 +261,8 @@ final class ButtonPlan {
         for (Map.Entry<Object, Entry> j : jobs.entrySet()) {
             Entry e = j.getValue();
             if (e.kind == Kind.RESERVED || e.kind == Kind.FREE) continue;
+            // A job for a part that is not on the robot: the button stays off (the map says so).
+            if (!e.missingParts().isEmpty()) continue;
             if (j.getKey() instanceof Pad.Stick) {
                 Pad.Stick s = (Pad.Stick) j.getKey();
                 sticks.add(new StickJob(s, e.axis, s.pad.which == ControllerBindings.Pad.G1 ? pad1 : pad2));
@@ -264,6 +285,7 @@ final class ButtonPlan {
         }
         // Pairs: pressing the second button while the shift key is down.
         for (Entry pair : pairs) {
+            if (!pair.missingParts().isEmpty()) continue;   // its part is not on the robot: off
             final Pad.Button shift = pair.shift;
             final Supplier<Gamepad> gp = shift.pad.which == ControllerBindings.Pad.G1 ? pad1 : pad2;
             ControllerBindings into = shift.pad.which == ControllerBindings.Pad.G1 ? driver : operator;

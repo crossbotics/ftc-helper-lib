@@ -32,6 +32,10 @@ import java.util.function.BooleanSupplier;
  *   <li>A stopped action (cancelled, taken over, timed out) stops what it started, safely: a lift or
  *       arm holds its height, a turret its angle, waiting shots are dropped, an intake stops. An
  *       action that finishes keeps its last commands.</li>
+ *   <li><b>A part that is not on the robot yet</b> ({@code optional()} in Robot.java, not in the
+ *       configuration) is skipped: its commands do nothing, the waits right after a step that only
+ *       used missing parts are skipped too, and the action goes on with the other parts. Its status
+ *       says "skipped IntakeDeploy (not on the robot)"; an autonomous's report says it too.</li>
  * </ul>
  *
  * <p>{@code () -> r.lift.goTo("high")} is a small piece of code (a "lambda") that the action runs
@@ -63,6 +67,13 @@ public final class Action {
     private String result = "";
     // The parts this run has commanded (see ActionRunner.touched), to halt them if it is stopped.
     final java.util.Set<Module<?>> claimed = new java.util.LinkedHashSet<>();
+    // The parts this run skipped because they are not on the robot (Module.optional), by name.
+    private final java.util.Set<String> skipped = new java.util.LinkedHashSet<>();
+    // While a "then" step runs: did it command a part that is there, or one that is not?
+    boolean usedPresentPart = false;
+    private boolean usedMissingPart = false;
+    // True after a "then" step that only commanded missing parts: the waits right after it are skipped.
+    private boolean skipWaits = false;
 
     private Action(String name) {
         this.name = name;
@@ -131,9 +142,27 @@ public final class Action {
         return result;
     }
 
+    /**
+     * The parts this run (or the last one) skipped because they are not on the robot (marked
+     * {@code optional()} in Robot.java and missing from the configuration), e.g. ["IntakeDeploy"].
+     * Empty when every part was there.
+     */
+    public java.util.List<String> skipped() {
+        return java.util.Collections.unmodifiableList(new ArrayList<>(skipped));
+    }
+
+    /** "" or the words for the skipped parts: "skipped IntakeDeploy (not on the robot)". */
+    String skippedWords() {
+        if (skipped.isEmpty()) return "";
+        StringBuilder names = new StringBuilder();
+        for (String n : skipped) names.append(names.length() == 0 ? "" : ", ").append(n);
+        return "skipped " + names + " (not on the robot)";
+    }
+
     /** E.g. "Score high: step 2 of 5 (lift at the top)", or its last result when not running. */
     public String status() {
-        if (!isRunning()) return name + ": " + (result.isEmpty() ? "not run" : result);
+        String skip = skippedWords();
+        if (!isRunning()) return name + ": " + (result.isEmpty() ? "not run" : result) + (skip.isEmpty() ? "" : "; " + skip);
         Step s = steps.get(index);
         return String.format(java.util.Locale.US, "%s: step %d of %d (%s)", name, index + 1, steps.size(), s.what);
     }
@@ -147,6 +176,8 @@ public final class Action {
         stepStart = now;
         result = "";
         claimed.clear();
+        skipped.clear();
+        skipWaits = false;
         advance(runner, now);
     }
 
@@ -164,8 +195,16 @@ public final class Action {
         result = why;
     }
 
+    // A part that is not on the robot was commanded by this action (see ActionRunner.skipped).
+    void skipped(Module<?> part) {
+        skipped.add(part.name());
+        usedMissingPart = true;
+    }
+
     // Goes through the steps that can finish now: all "then" steps and every wait that is over.
     // Stops at the first wait that is still waiting. Never waits for time: at most one pass per step.
+    // A wait right after a step that only commanded parts that are not on the robot is skipped: there
+    // is nothing to wait for (a deploy servo that is not there never "arrives").
     private void advance(ActionRunner runner, double now) {
         for (int pass = 0; pass <= steps.size() && isRunning(); pass++) {
             if (index >= steps.size()) {
@@ -175,8 +214,13 @@ public final class Action {
             Step s = steps.get(index);
             if (s.doNow != null) {
                 // The commands claim their parts for this action (see Module.touch).
+                usedPresentPart = false;
+                usedMissingPart = false;
                 runner.runAs(this, s.doNow);
                 if (!isRunning()) return;   // a command stopped this action (for example its own cancel)
+                skipWaits = usedMissingPart && !usedPresentPart;
+            } else if (skipWaits) {
+                // Nothing to wait for: the step before only told missing parts what to do.
             } else if (s.until != null) {
                 if (!s.until.getAsBoolean()) {
                     if (now - stepStart >= s.seconds) finish("timed out waiting for " + s.what);

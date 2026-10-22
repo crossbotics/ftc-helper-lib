@@ -234,6 +234,7 @@ default):
 | `drive.strafeEfficiency` | 0.85 | how much of a strafe really happens (mecanum) |
 | `drive.kS`, `drive.accelSec`, `drive.turnDegPerCount` | 0, 0.15, worked out | from the Characterizer ([below](#real-numbers-the-characterizer)) |
 | `imu = NAME` | none | the IMU's name |
+| `missing = a, b` | none | devices described in this file but NOT in the configuration: a part not on the robot yet ([below](#a-part-not-on-the-robot-yet)) |
 | `odometry = KIND NAMES` | none | pretend odometry from the robot's true motion: `pinpoint NAME`, `otos NAME`, `threeWheels L, R, P` or `twoWheels PAR, PERP` ([odometry](../modules/odometry.md#the-simulator)) |
 | `odometry.offsetsMm = X, Y` | 0, 0 | Pinpoint: where the pods sit (X pod mm left, Y pod mm forward); sets the raw pod counts the Odometry Tuner's Spin test reads |
 | `odometry.mountIn = F, L, H` | | OTOS: where it sits (written from Robot.java); the pretend OTOS reports the centre's pose, so it does not change the simulation |
@@ -287,6 +288,22 @@ marked `TODO` until someone measures them (or the [robot-file skill](robot-file-
 
 `./gradlew :sim:newRobot -Pconfig=config.xml -PteamCode=../TeamCode` writes the five files themselves
 from the robot configuration ([robot module](../modules/robot.md#making-the-files)).
+
+### A part not on the robot yet
+
+A part marked `optional()` in Robot.java ([parts not on the robot yet](../modules/robot.md#parts-not-on-the-robot-yet))
+is off while its device is not in the configuration. `:sim:fromRobot` still writes it (the day it is
+built, nothing changes). To try the robot WITHOUT it, as it is today, add a line of your own:
+
+```properties
+missing = intake_deploy
+```
+
+The device stays in the file (drawn, simulated), but the code cannot find it, exactly like a robot
+whose configuration does not have it yet: INIT says `IntakeDeploy is off`, its buttons are off, and
+actions skip it. A part that falls over when that servo pushes it (`Shape.dropsWhen`) starts down, as
+if the team put it down by hand before the match. A scenario can do the same for one run:
+`set device intake_deploy missing` (and `present` to put it back), before `init`.
 
 ## Robot shapes
 
@@ -628,6 +645,8 @@ set touch lift_bottom on               # hold a switch pressed (off = let go)
 set pose -56 -61.55 0                  # put the robot somewhere (x y heading)
 set autotimer off                      # no 30 s autonomous stop
 set teletimer off                      # no 2:00 TeleOp stop
+set device intake_deploy missing       # take a device out of the configuration from the next INIT
+                                       # (a part not on the robot yet); present = put it back
 expect screen has "Ready"              # or: screen not "..."
 expect value "Lift" > 500              # the number on the screen line that starts with Lift
 expect time < 25                       # seconds since START (e.g. how long an autonomous took)

@@ -257,12 +257,12 @@ public final class Intake extends Module<Intake> implements Toggleable {
 
     /** True while it runs out (after {@link #out()}), until {@link #in()} or {@link #stop()}. */
     public boolean isPushingOut() {
-        return out;
+        return out && !missing;
     }
 
     /** True while it pushes pieces out: after {@link #out()}, or while {@link #reverse()} is held. */
     public boolean isRunningOut() {
-        return out || reversing;
+        return (out || reversing) && !missing;
     }
 
     /** Seconds it has been held back by {@link #stopsWhen} without a break (0 when it is not). */
@@ -272,7 +272,7 @@ public final class Intake extends Module<Intake> implements Toggleable {
 
     /** True while it runs in or out. */
     public boolean isRunning() {
-        return on || out || reversing;
+        return (on || out || reversing) && !missing;
     }
 
     @Override

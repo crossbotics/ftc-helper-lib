@@ -115,6 +115,10 @@ public class Robot extends RobotDefinition {
   belongs to the class, like `public Intake intake;` at the top). Controls, Actions and the autos
   reach it as `robot.intake`.
 - `define()` only DESCRIBES the robot. Nothing moves in INIT; the modules move only after START.
+- **A part that is not built yet?** Write its line anyway and add `.optional()`:
+  `intakeDeploy = add(Positioner.servo("intake_deploy").optional());`. Until "intake_deploy" is in the
+  configuration, INIT says the part is off instead of stopping, and its buttons and actions skip it.
+  The day it is wired and configured, it just works ([parts not on the robot yet](../../modules/robot.md#parts-not-on-the-robot-yet)).
 
 ## 2. Tunables.java: the numbers
 
