@@ -306,7 +306,7 @@ Section: the device's name in CamelCase: a launcher on the motor `launcher` read
 | `kD` | the hub's speed control: brakes changes | hub units | 0 | no | Flywheel Finder | the same |
 | `kF` | the hub's speed control: the steady power for a speed. Writing it turns the four gains on | hub units | 0 (not written: the SDK's own gains) | no | Flywheel Finder | the same |
 | `nominalVolts` | the battery voltage the gains were found at (battery compensation), 9 to 14 | volts | 12.8 (INIT notes that it assumes this) | no | Flywheel Finder | after the Flywheel Finder |
-| `batteryCompensation` | with `kF`: scale F by the battery voltage | true/false | true | no | none | it overshoots after a battery swap: `false` |
+| `batteryCompensation` | with `kF`: scale F by the battery voltage (not yet proven on a real robot) | true/false | false | no | none | to try it: `true`, then the 4-shot test (lesson 9) |
 | `trimStepPercent` | one speed trim step | percent | 1 | no | none | the drivers want bigger steps |
 | `trimMaxPercent` | the most speed trim, at most 50 | percent | 15 | no | none | you need more trim (better: fix the table) |
 

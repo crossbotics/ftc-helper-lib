@@ -306,6 +306,7 @@ public class ReviewFixesTest {
     public static class LauncherNumbers {
         public static class Launcher {
             public static double speedRpm = 2600, kF = 11.7, kP = 1.0, trimMaxPercent = 80;
+            public static boolean batteryCompensation = true;
         }
     }
 

@@ -37,8 +37,8 @@ import java.util.List;
  * itself. The Shot Tuner never uses it (tables are recorded clean). If you trim the same way match
  * after match, the table is off: tune it again (or fold the trim into Tunables.java) instead.
  *
- * <p><b>Battery compensation</b> (on when {@code kF} is set; {@code batteryCompensation = false} turns
- * it off): the hub's F gain is scaled by {@code nominalVolts} / the battery now, so a low battery gets
+ * <p><b>Battery compensation</b> (OFF by default; {@code batteryCompensation = true} with {@code kF}
+ * turns it on — not yet proven on a real robot): the hub's F gain is scaled by {@code nominalVolts} / the battery now, so a low battery gets
  * the wheel back to speed after a shot as fast as a full one (see {@link Flywheel#batteryCompensation}).
  *
  * <p>{@link #fire()} spins up if needed and feeds one piece as soon as the wheel is at speed (it gives
@@ -315,9 +315,9 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         }
         if (t.has("kF")) {
             flywheel.pidf(t.number("kP", 0), t.number("kI", 0), t.number("kD", 0), t.number("kF", 0));
-            // Battery compensation: on unless Tunables says batteryCompensation = false. Optional numbers
-            // are read only when written, so a section without them gets no "missing" note.
-            boolean compensate = !t.has("batteryCompensation") || t.flag("batteryCompensation", true);
+            // Battery compensation: off unless Tunables says batteryCompensation = true (not yet proven
+            // on real robots). Optional numbers are read only when written, so no "missing" note.
+            boolean compensate = t.has("batteryCompensation") && t.flag("batteryCompensation", false);
             double nominal = t.has("nominalVolts") ? t.number("nominalVolts", Flywheel.DEFAULT_NOMINAL_VOLTS)
                     : Flywheel.DEFAULT_NOMINAL_VOLTS;
             if (nominal < 9 || nominal > 14) {
