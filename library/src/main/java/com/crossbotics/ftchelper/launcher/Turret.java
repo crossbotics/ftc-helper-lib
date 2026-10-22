@@ -388,6 +388,26 @@ public class Turret implements Subsystem {
                 && Math.abs(targetDeg - getAngle()) <= toleranceDeg;
     }
 
+    /** The tolerance, degrees: {@link #isAimed()} is true within this of the target. */
+    public double getTolerance() { return toleranceDeg; }
+
+    /**
+     * How far past its limits a direction is, degrees: 0 if the turret can point there (some equal
+     * angle, + or - 360, is inside the limits), otherwise how far it is from the nearest limit,
+     * measured around the circle. Used to tell "just past the limit" from "behind the robot".
+     *
+     * @param robotDeg the direction, robot-relative, counterclockwise +
+     */
+    public double degreesOutOfRange(double robotDeg) {
+        // The same test as legalTarget(): any of these equal directions inside the limits?
+        double base = robotDeg;
+        for (int k = -3; k <= 3; k++) {
+            double candidate = base + 360.0 * k;
+            if (candidate >= minDeg - 1e-9 && candidate <= maxDeg + 1e-9) return 0;
+        }
+        return Math.min(Math.abs(Angles.shortestDiff(robotDeg, minDeg)), Math.abs(Angles.shortestDiff(robotDeg, maxDeg)));
+    }
+
     /** "" or a problem, e.g. "homing failed: switch not found". */
     public String getFault() { return fault; }
 

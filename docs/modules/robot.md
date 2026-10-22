@@ -364,13 +364,17 @@ turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).follows(cam
 | `followsOdometry()` | follows the goal with no camera: from the odometry and `Tunables.Aim`'s goal point |
 | `aimAt(deg)` | turn to an angle (stops following) |
 | `manual(power)` | by hand; following pauses while the stick moves |
-| `isAimed()`, `isOutOfRange()`, `angle()`, `part()` | |
+| `isAimed()` | at the target within the tolerance; while FOLLOWING: at the goal NOW (a goal seen this moment, homed, in range, error within the larger of `tolerance` and `Tunables.Aim.toleranceDeg`), so a launcher gated on it never fires after the goal is lost |
+| `isOutOfRange()`, `angle()`, `part()` | the goal is past its range (at a limit, or holding while it is behind); the angle; the `launcher.Turret` inside |
 | `aimErrorDeg()`, `aimSource()` | degrees from the goal now (NaN = unknown); where the goal came from (CAMERA, ODOMETRY, NONE) |
 | `cameraOnBody()` | the camera is on the robot, not on the turret |
 
 `Tunables.Turret`: `min`, `max` (degrees, counterclockwise +, 0 = forward: it never turns past them; a
 goal outside waits at the limit and the Driver Station says "goal out of turret range"), `kP`, `kI`,
-`kD`, `maxPower`, `tolerance`, `slowZone`, `slowZonePower`, `cameraOffset`. Buttons: operator right
+`kD`, `maxPower`, `tolerance`, `slowZone`, `slowZonePower`, `cameraOffset`, `outOfRangeHold` (default
+10: an odometry goal this many degrees past a limit, behind the robot, makes it HOLD where it points
+instead of swinging limit to limit as the heading wobbles; it follows again once the goal is back
+within half of that). A following turret and whole-robot aim are separate modes: see [Aim](#aim). Buttons: operator right
 stick X by hand, BACK following on/off. The Driver Station shows `turret: 12 deg following: camera`
 (or `odometry`, or `no goal`: it holds where it points).
 
@@ -398,6 +402,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer
 | `tableFor(table, kinds...)` | which table some game-piece kinds use, e.g. `.tableFor("nectar", "RED_NECTAR", "BLUE_NECTAR")`; a kind named like a table ("POLLEN") needs no line |
 | `startTable(name)` | the table at the start (default: `speedByDistance` if there is one, else the first by name) |
 | `tableName()`, `tableNames()`, `tableField(name)`, `distanceIn()`, `distanceSource()` | |
+| `table(name)`, `speedRpm()` | a shot table as Tunables.java has it (null if none); `Tunables.Launcher.speedRpm` (the Shot Tuner starts from them) |
 | `isReady()`, `isShooting()`, `targetRpm()`, `part()` | |
 | `requireReady(what, check)` | another check before each feed (e.g. the turret is aimed) |
 | `spinAtStart()` | spins up at START (autonomous and TeleOp), ready for the first shot |
@@ -488,9 +493,10 @@ distance, whole-robot aim and the aim buzz all use it.
 ```java
 public static class Aim {                                   // Tunables.java (every line optional)
     public static double goalX = -58, goalY = 55;           // the goal on the field, inches (odometry backup)
-    public static boolean mirrorForRed = false;             // BIOBUZZ: the field is turned, not mirrored
+    public static boolean mirrorForRed = false;             // default true; BIOBUZZ's turned field: false
     public static double turnKp = 0.02, turnKd = 0.002, maxTurnPower = 0.5, minTurnPower = 0, toleranceDeg = 2;
     public static double cameraOffset = 0, rumbleDeg = 4;
+    public static double maxGoalDistance = 170, cameraOdometryAgree = 6;   // inches: odometry checks
 }
 ```
 
@@ -498,7 +504,21 @@ The goal point uses `driveTo`'s numbers: seen from your drivers' wall, x inches 
 centre line, y from the centre toward the far wall, written for BLUE. `mirrorForRed` (default true,
 like autonomous): RED mirrors x; false for a field turned half a turn (the same numbers from the red
 wall). Put the point where the camera measures to (the goal's tags), so one shot table fits both
-distances. The odometry is only as good as its pose: autonomous's start spot, carried into TeleOp.
+distances. INIT shows the alliance and the choice: `Aim: RED, goal x -58, y 55 in (mirrorForRed = false: the same numbers from each wall)`.
+
+**A wrong pose must not aim the robot.** The odometry is only as good as its pose: autonomous's start
+spot, carried into TeleOp. So the backup is OFF (camera only, and a warning on the Driver Station:
+`Aim odometry: the pose was never set ...`) until the pose was set: autonomous ran in this match, or
+your code called `robot.odometry().setPose(...)` (holding BACK to reset "forward" changes only the
+heading and does not count). It is also off while it says the goal is farther than `maxGoalDistance`
+(170 in: more than the field allows). While the camera and the odometry both see the goal and their
+distances differ by more than `cameraOdometryAgree` (6 in), the Driver Station warns
+(`Aim: camera says 60 in, odometry 48 in: ...`).
+
+**Turret-following and whole-robot aim are separate modes: use one.** A turret that follows the goal
+(`follows(camera)`, `followsOdometry()`) aims by itself; `robot.aimMode()` is for a robot with no turret
+(or one that does not follow). Both at once would chase the same error with two motors and swing back
+and forth, so `robot.aimMode()` stops at INIT with a message on a robot whose turret follows the goal.
 
 **Whole-robot aim** (no turret): one line in `Controls.java`. While it is on, the robot turns to face
 the goal and the driver keeps forward and sideways; moving the turn stick still turns it by hand. Off
@@ -516,10 +536,11 @@ whole-robot aim; nothing while neither aims, or while paused.
 | Method | |
 | --- | --- |
 | `goal()`, `source()` | the goal now (null if neither), and CAMERA, ODOMETRY or NONE |
-| `fromOdometry()` | the goal from the odometry alone (a [TargetObservation](vision.md) with id `ODOMETRY`), or null |
+| `fromOdometry()` | the goal from the odometry alone (a [TargetObservation](vision.md) with id `ODOMETRY`), or null (no pose set, or farther than `maxGoalDistance`) |
+| `odometryProblem()`, `disagreement()` | why the odometry backup is off now, ""  if it works; the camera/odometry distance warning, "" if they agree |
 | `hasGoalPoint()` | `Tunables.Aim` has `goalX` and `goalY` |
-| `mode()` (= `robot.aimMode()`) | whole-robot aim |
-| `errorDeg()`, `isAimed()`, `rumbleDeg()` | degrees off now (NaN = unknown); aimed (whole robot within `toleranceDeg`, or the following turret's `isAimed()`) |
+| `mode()` (= `robot.aimMode()`) | whole-robot aim (stops with a message on a robot whose turret follows the goal) |
+| `errorDeg()`, `isAimed()`, `rumbleDeg()` | degrees off now (NaN = unknown); aimed (whole robot within `toleranceDeg`, or the following turret's `isAimed()`: on the goal now) |
 
 ---
 

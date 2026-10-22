@@ -6,6 +6,18 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
+- **Shot Tuner: tune the way teams do.** At each distance shoot 3-5 per speed and mark each shot
+  A = HIT or B = MISS; the screen shows `Hits at 2550: 3/4` and every speed tried there, and X saves the
+  speed with the best hit ratio. The distance is averaged over half a second of fresh readings; each
+  shot keeps the flywheel speed measured as it was fed (a "sagged" shot is flagged, and the saved
+  `ShotTable` lines carry `// 4/5 in, measured 2531 RPM`); the speed starts from the table you already
+  have at that distance; `Points: POLLEN 3, NECTAR 0  (4-6 per table)` says when you are done.
+  `ShotPoints.Tally`, `ShotPoints.DistanceAverage`, `ShotPoints.save(..., measuredRpm, hits, shots)`,
+  `saved()`, `size()`, `ShotTunerOpMode.sagLimitRpm(rpm)`.
+- Aim safety checks: `Aim.odometryProblem()`, `Aim.disagreement()`, `Tunables.Aim.maxGoalDistance` (170)
+  and `cameraOdometryAgree` (6); INIT shows the alliance and the `mirrorForRed` choice.
+  `PoseTracker.isPoseSet()` and `setHeading(deg)`. `Tunables.Turret.outOfRangeHold` (10).
+  `launcher.Turret.getTolerance()`, `degreesOutOfRange(deg)`. `Launcher.table(name)`, `speedRpm()`.
 - `Launcher.tableFor(table, kinds...)`: game-piece kinds that share a shot table, so
   `.tableFrom(pieces.nextKind()).tableFor("nectar", "RED_NECTAR", "BLUE_NECTAR")` lets the next piece pick
   its table; "NONE" and "UNKNOWN" keep the table in use.
@@ -80,6 +92,29 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - `PedroFollower.remainingIn()` is now the distance left along the WHOLE path (all its parts), measured
   from the robot's closest point on the path. It was Pedro's distance for the part it steers along now,
   which Pedro may switch well before the join. The Driver Station's `Path: 18 in to go` uses it too.
+- Shot Tuner buttons: A = HIT, B = MISS, X = save (the best speed here), hold BACK 1 s = delete the point
+  here (was A = save, X = delete, B = stop shooting: let go of RT, or LB, to stop). `startRpm()` now
+  defaults to automatic (the table's speed at the distance, else `speedRpm`, else 3000).
+- `robot.aimMode()` on a robot whose turret follows the goal stops at INIT: turret-following and
+  whole-robot aim are separate modes (both chased the same error and swung back and forth).
+- TeleOp's "hold BACK: forward = away from you now" changes only the odometry's heading
+  (`setHeading`), so it does not count as setting the pose.
+
+### Fixed
+
+- `Aim.isAimed()` and `Turret.isAimed()` for a following turret: true only while the goal is seen NOW
+  (a fresh picture or the odometry), the turret is homed and in range and the goal error is within the
+  tolerance. Before, a turret that had reached its last target stayed "aimed" after the goal was lost,
+  so a launcher gated on it could fire while the chassis turned away (Codex review, P1).
+- A turret following the odometry with the goal behind the robot no longer swings from one limit to
+  the other as the heading wobbles: more than `outOfRangeHold` (10) degrees past a limit it holds where
+  it points and says "goal out of turret range (behind the robot: holding)"; it follows again within 5.
+- A wrong or unset pose no longer aims the robot: the odometry backup is off until the pose was set
+  (autonomous, or `setPose`), with a Driver Station warning; also off while it puts the goal farther
+  than the field allows (170 in); and a warning when the camera's and the odometry's distances differ
+  by more than 6 in.
+- Lesson 9: one `Tunables.Aim` block (sections 9-11) and the `mirrorForRed` default explained (true;
+  BIOBUZZ needs false); links to the Shot Tuner file; one spelling for the `> Table` menu.
 
 ## v0.16.0 - 2026-10-21
 

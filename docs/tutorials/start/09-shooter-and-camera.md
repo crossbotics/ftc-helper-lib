@@ -202,7 +202,9 @@ public static class Turret {
 ```
 
 - `min`, `max`: the range in degrees (0 = straight forward, counterclockwise +). It never turns past
-  them. A goal outside waits at the limit, and the Driver Station says "goal out of turret range".
+  them. A goal outside waits at the limit, and the Driver Station says "goal out of turret range". A
+  goal far outside (behind the robot, more than 10 degrees past a limit, from the odometry of section 9)
+  makes it hold where it points instead of swinging from one limit to the other.
 - `kP`, `kI`, `kD`: how hard it turns toward the target. Tune `kP` live in the tuning menu: too low and
   it lags, too high and it shakes.
 - `tolerance`: how many degrees off still counts as "aimed". `cameraOffset`: if shots land to one side,
@@ -233,16 +235,21 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
   `double[][]` is a table of numbers: a list of rows, each row in `{ }`. Each row is `{inches, rpm}`.
   Between rows the speed is blended. With no goal in view, it keeps the last
   speed (a sudden change would spoil the next shot); before the goal is first seen, it uses `speedRpm`.
-  Fill the rows from real shots with the [Shot Tuner](../../guides/finders.md#shot-tuner-the-shot-table).
-  It shows the whole line to copy: `public static double[][] speedByDistance = {{24, 2200}, {48, 2550}};   // in Tunables.Launcher`.
-  Its file needs one method that names your robot (the turret robot's
+  Fill the rows from real shots with the [Shot Tuner](../../guides/finders.md#shot-tuner-the-shot-table):
+  at each distance shoot 3-5 at a speed, mark each A = HIT or B = MISS, try another speed, and X keeps
+  the speed with the best hit ratio. It shows the whole line to copy: `public static double[][] speedByDistance = {{24, 2200}, {48, 2550}};   // in Tunables.Launcher`.
+  Its file ([the cookbook recipe](../../cookbook.md#how-do-i-build-a-shot-table-speed-for-each-distance))
+  needs one method that names your robot (the turret robot's
   [ShotTuner.java](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/ShotTuner.java)):
   `@Override protected RobotDefinition robot() { return new Robot(); }`. It uses your launcher, camera
   and drive. The turret stays still and the "turret aimed" check is off: point the robot with the sticks.
 - `.startTable("pollen")`: which table to start with (section 8).
 - `.requireReady("turret aimed", () -> turret.isAimed())`: one more check before each piece is fed.
   `() -> turret.isAimed()` is a lambda (lesson 5): the launcher asks it again before every piece. The
-  words are what the Driver Station shows if it gives up: `Launcher gave up: turret aimed`.
+  words are what the Driver Station shows if it gives up: `Launcher gave up: turret aimed`. For a
+  turret that follows the goal, "aimed" means **at the goal now**: the goal is seen this moment (camera,
+  or the odometry of section 9), the turret is in range and on it. Lose the goal and it is not aimed,
+  even though the motor is still where it last turned to, so the robot never fires blind.
 
 ## 8. Two game pieces, two shot tables
 
@@ -269,8 +276,10 @@ The tables are called `pollen` and `nectar`. The robot starts on the one in `.st
 The Driver Station shows `Shot table: POLLEN, 48 in (camera)`. A name with no table (a typo) keeps the
 table in use and warns: `Launcher: no shot table "nectr" (Tunables.Launcher has: nectar, pollen)`.
 
-**Fill each table with the Shot Tuner.** Press **Y** until `> Table`, choose with the D-pad, load
-that piece, and tune as before. Each table gets its own line to copy, e.g.
+**Fill each table with the Shot Tuner** ([its file](../../cookbook.md#how-do-i-build-a-shot-table-speed-for-each-distance)).
+Press **Y** until `> Table`, choose with the D-pad, load that piece, and tune as before (3-5 shots per
+speed, A = HIT, B = MISS, X saves the best). The screen counts each table's points
+(`Points: POLLEN 4, NECTAR 2  (4-6 per table)`), so you know when you are done. Each table gets its own line to copy, e.g.
 `public static double[][] speedByDistanceNectar = {{24, 2400}, {48, 2800}};   // in Tunables.Launcher`.
 **Copy the lines into `Tunables.java`** (replace the line with the same name): the robot uses the file,
 not the tuner's screen. They are also saved on the Control Hub when you press STOP.
@@ -279,20 +288,30 @@ not the tuner's screen. They are also saved on the Control Hub when you press ST
 
 A robot arm, another robot or a bad angle hides the tag, and the turret stops following. If your robot
 has odometry ([lesson 7](07-odometry.md)), it knows where it is on the field, so it can work out where
-the goal is too. Tell it where the goal is, in `Tunables.java`:
+the goal is too. Tell it where the goal is, in `Tunables.java`. This is the whole `Tunables.Aim` class,
+for this section and the next two: **one class, add the lines you use** (every line is optional).
 
 ```java
 public static class Aim {
+    // Section 9: the goal on the field, for the odometry backup.
     public static double goalX = -58, goalY = 55;   // inches, seen from the BLUE drivers' wall
-    public static boolean mirrorForRed = false;     // BIOBUZZ: the field is turned, not mirrored
+    public static boolean mirrorForRed = false;     // the default is true; BIOBUZZ needs false (below)
+    // Section 10: whole-robot aim (no turret).
+    public static double turnKp = 0.02, turnKd = 0.002, maxTurnPower = 0.5, toleranceDeg = 2;
+    public static double cameraOffset = 0;
+    // Section 11: the buzz.
+    public static double rumbleDeg = 4;
 }
 ```
 
 - `goalX`, `goalY`: the same numbers as `driveTo` (x right of the field's centre line, y from the centre
   toward the far wall). Put the point where the camera measures to (the goal's tags), so the camera's
   distance and the odometry's agree and one shot table fits both.
-- `mirrorForRed`: like your autonomous's. `true` (the default) mirrors x for RED; `false` for a field
-  that is turned half a turn between the alliances, like BIOBUZZ.
+- `mirrorForRed`: which one to pick depends on how the field changes between the alliances, like your
+  autonomous's. **Leave it out (the default, `true`)** for a field that is a mirror image (RED's goal
+  is at `-goalX`). **Write `false` for BIOBUZZ**: its field is turned half a turn, so RED uses the same
+  numbers from the red wall. INIT shows the choice, e.g. `Aim: RED, goal x -58, y 55 in (mirrorForRed = false: ...)`:
+  check it before the match.
 
 That is all. The turret (`follows(camera)`) and the speed (`speedFromDistance(camera)`) use the camera
 while it sees the goal, and the odometry while it does not. The Driver Station says which:
@@ -301,8 +320,14 @@ while it sees the goal, and the odometry while it does not. The Driver Station s
 
 **Why camera first?** The camera sees the real goal; the odometry only knows where it thinks the robot
 is, and drifts a little over a match (bumps, wheel slip). It is a backup, good enough until the tag is
-back. It needs a good start: the autonomous's start spot, carried into TeleOp. Without autonomous,
-TeleOp's pose starts at (0, 0), and the odometry aim is wrong.
+back. It needs a good start: the autonomous's start spot, carried into TeleOp. **Without autonomous**,
+TeleOp's pose would be (0, 0), the middle of the field, and the aim would be wrong: so the odometry
+backup stays **off** until the pose was set (autonomous ran, or your code called
+`robot.odometry().setPose(...)`), and the Driver Station says `Aim odometry: the pose was never set`.
+Two more checks keep a wrong pose from aiming the robot: the odometry is not used while it says the
+goal is farther than the field allows (`maxGoalDistance`, 170 in), and the Driver Station warns when
+the camera and the odometry disagree by more than 6 in (`cameraOdometryAgree`): the pose drifted, or
+the goal point is not where the camera measures to.
 
 ## 10. No turret? Aim the whole robot
 
@@ -315,14 +340,13 @@ g1.rb.toggle(robot.aimMode()).says("aim the robot at the goal on/off").rumble();
 
 While it is on, the robot turns to face the goal (the camera's, or the odometry's) and the driver keeps
 forward and sideways. **The driver still wins:** move the turn stick and the robot turns as the stick
-says; let go and the aim takes over again. No goal: it does not turn by itself. Its numbers:
+says; let go and the aim takes over again. No goal: it does not turn by itself. Its numbers are the
+"Section 10" lines of the `Tunables.Aim` class in section 9 (the same class: add them there).
 
-```java
-public static class Aim {
-    public static double turnKp = 0.02, turnKd = 0.002, maxTurnPower = 0.5, toleranceDeg = 2;
-    public static double cameraOffset = 0, rumbleDeg = 4;
-}
-```
+**Turret-following and whole-robot aim are separate modes: use one.** With a turret that follows the
+goal (section 6), the turret aims; the robot does not need to turn. Both at once would chase the same
+error with two motors and swing back and forth, so `robot.aimMode()` on a robot whose turret follows
+the goal stops at INIT with a message.
 
 `turnKp`: turn power per degree off (too low: slow; too high: it shakes). `maxTurnPower`: the most it
 turns by itself. `toleranceDeg`: this close is "aimed". `minTurnPower` (optional): the least power that
@@ -433,9 +457,10 @@ give each a `looks(...)` shape in `Robot.java` ([Lesson 1: Draw your robot from 
 4. Turret: point it forward, INIT, and turn it by hand to each end. It must stop before the hard stops.
 5. Only then turn following on, and fill `speedByDistance` at 4 to 6 distances on a charged battery
    (each table, with its game piece).
-6. Odometry backup: cover the camera with your hand. The turret should keep pointing at the goal and
-   the Driver Station say `following: odometry`. If it points elsewhere, check `goalX`, `goalY`, the
-   alliance, and that the pose started right.
+6. Odometry backup: run your autonomous first (or set the pose), then TeleOp. Check INIT's `Aim:` line
+   (the alliance and `mirrorForRed`). Cover the camera with your hand. The turret should keep pointing
+   at the goal and the Driver Station say `following: odometry`. If it points elsewhere, check `goalX`,
+   `goalY`, the alliance, and that the pose started right.
 
 ## If something goes wrong
 
@@ -452,6 +477,11 @@ give each a `looks(...)` shape in `Robot.java` ([Lesson 1: Draw your robot from 
 | `Launcher: no shot table "..."` | the name in `useTable(...)` has no `speedByDistance...` line; the warning lists the names there. |
 | `following: odometry` points the wrong way | `Tunables.Aim.goalX`, `goalY` (from the BLUE wall), `mirrorForRed`, or the pose did not start right (no autonomous before TeleOp). |
 | `Aim: no goal` | whole-robot aim on, but the camera does not see the goal and there is no odometry backup. |
+| `Aim odometry: the pose was never set` | TeleOp ran without autonomous: the odometry backup is off (camera only). Run autonomous first, or set the pose with `robot.odometry().setPose(...)`. |
+| `Aim odometry: ... more than the field allows` | the pose is wrong (it did not start right): the odometry backup is off until it is right. |
+| `Aim: camera says 60 in, odometry 48 in` | the pose drifted, or `goalX`, `goalY` are not where the camera measures to. |
+| INIT stops: `robot.aimMode() ... separate modes` | the turret follows the goal: remove the `aimMode()` line (the turret aims), or `follows(...)` for whole-robot aim. |
+| "goal out of turret range (behind the robot: holding)" | the odometry says the goal is behind: turn the robot toward it. |
 | Whole-robot aim stops a few degrees off | raise `turnKp`, or set `minTurnPower` (the least power that turns the robot). |
 | `limelight lighting: trying 1 of 3: pipeline 0 (no tags yet: face a tag)` (INIT) | the test has tried every pipeline and none saw a tag. Turn the robot toward a tag; the test keeps going until START. |
 | `limelight lighting: NO TAGS SEEN` (after START) | no pipeline saw a tag in INIT, so the first one is kept. Next time have a tag in view at INIT; check each pipeline on the Limelight's web page. |

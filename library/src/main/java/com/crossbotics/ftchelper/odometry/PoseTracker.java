@@ -81,6 +81,30 @@ public abstract class PoseTracker implements Subsystem {
      * autonomous ended. Our frame (see the class).
      */
     public final void setPose(FieldPose p) {
+        place(p);
+        poseSet = true;
+    }
+
+    /**
+     * Makes the way the robot faces now this heading, keeping x and y (TeleOp's "forward = away from
+     * you now"). It does NOT count as setting the pose ({@link #isPoseSet()} stays as it was): x and y
+     * are still only as good as before.
+     */
+    public final void setHeading(double headingDeg) {
+        place(new FieldPose(pose.x, pose.y, headingDeg));
+    }
+
+    /**
+     * True once {@link #setPose} was called: autonomous's start spot, the pose autonomous left for
+     * TeleOp, or your own {@code setPose}. False means the pose is only "where the robot was turned
+     * on = (0, 0)", which is NOT a place on the field: aiming by odometry stays off until then.
+     */
+    public final boolean isPoseSet() {
+        return poseSet;
+    }
+
+    // Writes a pose to the device (or later, while it calibrates) and to this loop's pose.
+    private void place(FieldPose p) {
         // Not ready yet (calibrating after INIT): written as soon as it is (see update()).
         if (!isReady()) pending = p.copy();
         // Back to the device's frame: X = our y, Y = -our x.
@@ -89,6 +113,9 @@ public abstract class PoseTracker implements Subsystem {
         pose.y = p.y;
         pose.headingDeg = Angles.wrapDegrees(p.headingDeg);
     }
+
+    // True once setPose was called (see isPoseSet()).
+    private boolean poseSet = false;
 
     /** True when the device works and gives a pose (not calibrating, no fault). */
     public abstract boolean isReady();

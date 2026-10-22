@@ -814,7 +814,8 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
         .requireReady("turret aimed", () -> turret.isAimed()));
 ```
 
-**Why:** a shot fired before the turret is on target, or at the wrong speed, is a lost piece.
+**Why:** a shot fired before the turret is on target, or at the wrong speed, is a lost piece. For a
+turret that follows the goal, `isAimed()` means on the goal NOW: losing the goal makes it false.
 **More:** [Lesson 9](tutorials/start/09-shooter-and-camera.md#7-speed-from-distance-and-fire-only-when-aimed).
 
 ## Game pieces
@@ -937,12 +938,15 @@ Things the robot does for the drivers, so they can focus on driving and firing. 
 ### How do I make the whole robot aim at the goal (no turret)?
 
 **Where:** `Controls.java`, inside `buttons(...)` (and `Tunables.java` for the numbers, below). The
-robot needs a camera with a `goal(...)` (or odometry with a goal point).
+robot needs a camera with a [`goal(...)`](tutorials/start/09-shooter-and-camera.md#5-a-camera-that-knows-the-goal)
+(or odometry with a goal point). Not with a turret that follows the goal: turret-following and
+whole-robot aim are separate modes, so INIT stops with a message if both are there.
 
 <!-- recipe: aim-whole-robot -->
 ```java
 // RB: the robot turns to face the goal by itself; the driver keeps forward and sideways.
 // Moving the turn stick still turns it by hand. Two buzzes = on, one = off.
+// Not with a turret that follows the goal: separate modes (INIT stops with a message).
 g1.rb.toggle(robot.aimMode()).says("aim the robot at the goal on/off").rumble();
 ```
 
@@ -987,7 +991,8 @@ public static class Aim {
     // The goal on the field, in inches, seen from the BLUE drivers' wall (the same numbers as
     // driveTo): with odometry, aiming goes on when the camera loses the goal.
     public static double goalX = -58, goalY = 55;
-    public static boolean mirrorForRed = false;   // BIOBUZZ: the field is turned, not mirrored
+    // Default true (RED mirrors x). BIOBUZZ's field is turned, not mirrored: false.
+    public static boolean mirrorForRed = false;
     // Whole-robot aim: turn power per degree off, the most it turns by itself, "aimed" within.
     public static double turnKp = 0.02, turnKd = 0.002, maxTurnPower = 0.5, toleranceDeg = 2;
     public static double rumbleDeg = 4;           // rumbleWhenAimed(): buzz within 4 degrees
@@ -995,7 +1000,10 @@ public static class Aim {
 ```
 
 **Why:** a tag gets blocked by a robot or a game piece; the odometry still knows where the goal is. The
-Driver Station says which one aims (`following: camera` or `following: odometry`). The numbers in
+Driver Station says which one aims (`following: camera` or `following: odometry`). It needs the pose
+from autonomous (or your `setPose`): without it, the backup stays off and the Driver Station says so.
+`mirrorForRed`: leave it out (default `true`) for a mirrored field; BIOBUZZ's turned field needs `false`.
+INIT shows the alliance and this choice. The numbers in
 `Tunables.Aim` are in the tuning menu too: copy tuned values back into `Tunables.java`.
 **More:** [Lesson 9: when the camera loses the goal](tutorials/start/09-shooter-and-camera.md#9-when-the-camera-loses-the-goal-the-odometry), [Lesson 7: odometry](tutorials/start/07-odometry.md).
 
@@ -1032,7 +1040,8 @@ public static Action fireNectar(Robot r) {
 ```
 
 **Why:** POLLEN (2.8 in) and NECTAR (3.6 in) fly differently, so each needs its own speeds. Fill each
-table with the [Shot Tuner](guides/finders.md#shot-tuner-the-shot-table) (Y to `TABLE` picks the one you tune), then copy its line into `Tunables.java`.
+table with the [Shot Tuner](guides/finders.md#shot-tuner-the-shot-table) ([its file](#how-do-i-build-a-shot-table-speed-for-each-distance);
+Y until `> Table`, then the D-pad picks the one you tune), then copy its line into `Tunables.java`.
 **More:** [Lesson 9: two shot tables](tutorials/start/09-shooter-and-camera.md#8-two-game-pieces-two-shot-tables), [Launcher](modules/robot.md#launcher).
 
 ## Actions
@@ -1845,7 +1854,7 @@ Run the **Flywheel Finder** (in the [starter kit](starter-kit.md)), then copy it
 
 <!-- recipe: shot-tuner -->
 ```java
-// The Shot Tuner: fills Tunables.Launcher.speedByDistance from shots you mark as good.
+// The Shot Tuner: fills Tunables.Launcher.speedByDistance from shots you mark HIT or MISS.
 @TeleOp(name = "Cookbook Shot Tuner", group = "Finders")
 @Disabled   // delete this line in your copy, or you will not see it
 public class ShotTuner extends ShotTunerOpMode {
@@ -1856,7 +1865,9 @@ public class ShotTuner extends ShotTunerOpMode {
 }
 ```
 
-**Why:** it fills `Tunables.Launcher.speedByDistance` from shots you mark as good, so the launcher picks the speed for each distance.
+**Why:** at each distance you shoot 3-5 per speed and mark each HIT (A) or MISS (B); X keeps the speed
+with the best hit ratio. It fills `Tunables.Launcher.speedByDistance` (one line per table to copy), so the
+launcher picks the speed for each distance.
 **More:** [Shot Tuner](guides/finders.md#shot-tuner-the-shot-table).
 
 ## Simulator

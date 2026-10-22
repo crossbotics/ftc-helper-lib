@@ -168,4 +168,70 @@ public class FindersTest {
         m.invoke(f);                                    // START just pressed: not held long enough yet
         assertFalse(f.helpKeyDown() == false);
     }
+
+    // The Shot Tuner, the way teams tune: 3-5 shots per speed, HIT or MISS, keep the best hit ratio.
+    @Test public void theTallyKeepsTheSpeedWithTheBestHitRatio() {
+        ShotPoints.Tally t = new ShotPoints.Tally();
+        assertTrue(Double.isNaN(t.bestRpm()));
+        t.mark(2500, false, 2490);
+        t.mark(2500, false, 2480);
+        assertTrue("nothing went in: no best", Double.isNaN(t.bestRpm()));
+        t.mark(2500, true, 2500);                              // 1/3
+        t.mark(2600, true, 2590);
+        t.mark(2600, true, 2600);
+        t.mark(2600, false, 2580);
+        t.mark(2600, true, Double.NaN);                        // 3/4, one not measured
+        t.mark(2700, true, 2690);                              // 1/1: a better ratio, but one shot
+        t.mark(2700, false, 2690);                             // 1/2
+        assertEquals(2600, t.bestRpm(), 1e-9);
+        assertEquals(3, t.hits(2600));
+        assertEquals(4, t.shots(2600));
+        assertEquals(9, t.totalShots());
+        assertEquals((2590 + 2600 + 2580) / 3.0, t.measuredRpm(2600), 1e-9);
+        assertEquals("2500: 1/3, 2600: 3/4 (best), 2700: 1/2", t.summary());
+        ShotPoints.Tally tie = new ShotPoints.Tally();
+        tie.mark(2400, true, 2400);
+        tie.mark(2400, false, 2400);                           // 1/2
+        tie.mark(2300, true, 2300);
+        tie.mark(2300, true, 2300);
+        tie.mark(2300, false, 2300);
+        tie.mark(2300, false, 2300);                           // 2/4: the same ratio, more shots
+        assertEquals(2300, tie.bestRpm(), 1e-9);
+        tie.setSpot(48);
+        assertEquals(48, tie.spotIn(), 1e-9);
+        tie.clear();
+        assertTrue(tie.isEmpty());
+        assertTrue(Double.isNaN(tie.spotIn()));
+    }
+
+    @Test public void savedPointsCarryTheirHitsAndMeasuredSpeed() {
+        ShotPoints p = new ShotPoints(false);
+        p.save(48, 2550, 0, 2531, 4, 5);
+        assertEquals(Arrays.asList("new ShotTable()", "    .add(48.0, 2550)   // 4/5 in, measured 2531 RPM"), p.codeLines());
+        assertEquals("the Tunables line keeps the speed asked for",
+                "public static double[][] speedByDistance = {{48, 2550}};   // in Tunables.Launcher", p.tunablesLine("Launcher"));
+        assertEquals(1, p.size());
+        assertEquals(4, p.saved().get(0).hits);
+    }
+
+    @Test public void theDistanceIsAveragedOverHalfASecondOfFreshReadings() {
+        ShotPoints.DistanceAverage a = new ShotPoints.DistanceAverage();
+        assertTrue(Double.isNaN(a.average(10)));
+        a.add(10.0, 47, "camera");
+        a.add(10.1, 49, "camera");
+        a.add(10.2, 54, "camera");                             // one noisy frame
+        assertEquals(50, a.average(10.2), 1e-9);
+        assertEquals(3, a.count(10.2));
+        assertEquals(51.5, a.average(10.55), 1e-9);            // the 10.0 reading is too old now
+        assertTrue("no fresh readings: no distance", Double.isNaN(a.average(11.5)));
+        a.add(12.0, 60, "camera");
+        a.add(12.1, 70, "odometry");                           // another source: starts again
+        assertEquals(70, a.average(12.1), 1e-9);
+        assertEquals("odometry", a.source());
+    }
+
+    @Test public void aSaggedShotIsMoreThanThreePercentOrSixtyRpmUnder() {
+        assertEquals(60, ShotTunerOpMode.sagLimitRpm(1000), 1e-9);
+        assertEquals(90, ShotTunerOpMode.sagLimitRpm(3000), 1e-9);
+    }
 }

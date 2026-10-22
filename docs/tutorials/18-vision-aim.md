@@ -94,7 +94,7 @@ shot from the table (tutorial 17); check `target.hasDistance()` first.
 
 **In the robot in five files** all of this is built in: `g1.rb.toggle(robot.aimMode())` aims the whole
 robot (the driver's turn stick still wins), `g2.rumbleWhenAimed()` buzzes, a turret's `follows(camera)`
-follows, and with odometry and `Tunables.Aim.goalX, goalY` they keep working from the odometry when the
+follows (whole-robot aim and a following turret are separate modes: use one), and with odometry and `Tunables.Aim.goalX, goalY` they keep working from the odometry when the
 camera loses the goal. See [Lesson 9](start/09-shooter-and-camera.md#9-when-the-camera-loses-the-goal-the-odometry)
 and [robot.md: Aim](../modules/robot.md#aim).
 

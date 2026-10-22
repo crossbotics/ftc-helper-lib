@@ -98,6 +98,8 @@ holds its speed and a camera that aims straight): the [guide](../guides/finders.
 | "Speed test" does nothing | mark both ends first (X and B) |
 | Drive Tuner: "counts went DOWN" | a wheel motor direction is wrong: fix it in `RobotSettings` (Hardware Check) |
 | Shot Tuner: "no target" | the camera does not see the target: check its status in INIT, light, and the tag in view |
+| Shot Tuner: "No shot to mark" | A (HIT) and B (MISS) mark shots already fired: shoot first (RB) |
+| Shot Tuner: "the flywheel ... sagged" | the piece was fed while the flywheel was slow: wait for Ready, charge the battery, check the Flywheel Finder gains |
 
 ## Try this
 

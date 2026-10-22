@@ -8,7 +8,7 @@ import com.crossbotics.ftchelper.robot.RobotDefinition;
 /**
  * The turret robot's Shot Tuner (lesson 9, docs/tutorials/start/09-shooter-and-camera.md). It uses
  * the robot's launcher, camera and drive. This robot has two tables (POLLEN and NECTAR): choose the one
- * you tune with Y (to TABLE) and the D-pad. It shows each table's line to copy into Tunables.java:
+ * you tune with Y (until "> Table") and the D-pad. It shows each table's line to copy into Tunables.java:
  * {@code public static double[][] speedByDistancePollen = {{48, 2550}, {72, 2900}};   // in Tunables.Launcher}. The turret stays still and
  * the "turret aimed" check is off: you point the robot at the goal with the sticks.
  * How to use it: docs/guides/finders.md. KEEP PEOPLE OUT OF THE LINE OF FIRE.

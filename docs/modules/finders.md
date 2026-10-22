@@ -273,12 +273,14 @@ public class ShotTuner extends ShotTunerOpMode {
 ```
 
 It sets the robot up at INIT and uses its first `Launcher` (with its numbers from `Tunables.java`),
-its first `Camera`, its odometry and its drive. **The distance**: the camera's, or, when it does not
+its first `Camera`, its odometry and its drive. **The way it tunes**: at each distance, shoot 3-5 at a
+speed and mark each shot HIT (A) or MISS (B); try another speed; X saves the speed with the best hit
+ratio there. **The distance** (averaged over the last half second of fresh readings): the camera's, or, when it does not
 see the goal, the odometry's (with an `odometry(...)` line and `Tunables.Aim.goalX, goalY`; the robot
 starts at `startSpotIn()`, default the middle of the field facing away from you; see
 [robot.md: Aim](robot.md#aim)), or set by hand with neither. The screen says which, and shows both when
 both are there (far apart: move the goal point). **Several tables** (`speedByDistancePollen`,
-`speedByDistanceNectar`): Y to `TABLE`, the D-pad picks the one you tune; it starts on the launcher's
+`speedByDistanceNectar`): Y until `> Table`, the D-pad picks the one you tune; it starts on the launcher's
 start table. Each table keeps its own points and gets its own line. Its other parts are set up but not moved: a turret stays still, and
 the launcher's `requireReady(...)` checks (like "turret aimed") are off, because you aim by hand here.
 
@@ -292,7 +294,7 @@ Without five files, fill in:
 | `findTarget(camera)` | no | which target; default: the first with a distance |
 | `robotConfig()` | no | drive with the sticks between distances |
 | `createSubsystems()` | no | other mechanisms to keep updated (an intake that loads it) |
-| `startRpm()` | no | the starting speed, default 3000 |
+| `startRpm()` | no | the starting speed; default (NaN) = the table's speed at the distance seen, else `Tunables.Launcher.speedRpm`, else 3000 |
 | `startHoodDeg()` | no | the starting hood angle if the hood was never moved, default 0 |
 | `startSpotIn()` | no | where the robot is at INIT, for the odometry: {x, y, heading} from your drivers' wall; default {0, 0, 0} |
 | `tableNames()` | no | the tables to tune; default the launcher's (`pollen`, `nectar`...), or one table `main` |
@@ -302,19 +304,25 @@ Without five files, fill in:
 | **Y** | what the D-pad changes: SPEED, HOOD (with a hood), DISTANCE (no camera, no odometry), TABLE (two or more tables) |
 | D-pad up/down, right/left | big / small step (100 / 10 RPM, 5 / 0.5 deg, 6 / 1 in) |
 | **LB** | flywheel on/off (it is OFF at START) |
-| **RB** / hold **RT** / **B** | shoot one / keep shooting / stop shooting. Keep shooting stops after B, a jam or a "gave up": press RT again to go on |
-| **A** / **X** | save this point (replaces one within 1 in) / delete the point here |
+| **RB** / hold **RT** | shoot one / keep shooting (let go to stop). Keep shooting also stops after a jam or a "gave up": press RT again to go on |
+| **A** / **B** | the oldest shot not marked yet was a HIT / a MISS (at the speed it was fired at) |
+| **X** | save: the speed with the best hit ratio at this distance (replaces one within 1 in); with no shots marked, the speed now |
+| hold **BACK** 1 s | delete the saved point here (a hold, so it is not pressed by mistake) |
 | sticks, left trigger | drive, slow (with `robotConfig()`) |
 
 The speed stays at or below the flywheel's `maxRpm`, and the hood inside its limits (a warning shows
-when the D-pad reaches one), so a saved point is what was really tested. The screen shows the target and measured speed, ready (or why not), shots fired, the recovery
-time, the distance and bearing, and the saved points. Output:
+when the D-pad reaches one), so a saved point is what was really tested. The screen shows the target and measured speed, ready (or why not), shots fired (and how many
+are still to mark), `Hits at 2550: 3/4`, every speed tried at this spot, every table's point count
+(`Points: POLLEN 3, NECTAR 0  (4-6 per table)`), the recovery time, the distance and bearing, and the
+saved points. Each shot keeps the flywheel speed **measured** as the piece was fed; one fed more than
+`sagLimitRpm` (60 RPM or 3%) under the speed asked for is flagged "sagged". The hit counts start again
+when the distance moves more than `SPOT_MOVE_IN` (4 in), after a save, and on another table. Output:
 
 ```java
 new ShotTable()
-    .add(24.0, 2600, 6.0)
-    .add(48.5, 3100, 14.0)
-    .add(72.0, 3700, 21.0)
+    .add(24.0, 2600, 6.0)   // 4/5 in, measured 2588 RPM
+    .add(48.5, 3100, 14.0)   // 3/4 in, measured 3079 RPM
+    .add(72.0, 3700, 21.0)   // 4/4 in, measured 3672 RPM
 ```
 
 Without a hood it also shows the line for five files (the section is the launcher's), one per table:
@@ -485,3 +493,14 @@ one within `SAME_DISTANCE` = 1), `removeNear(distance)`, `points()` (nearest fir
 `codeLines()` (the `ShotTable` code), `tunablesLine(section)` (the five-files line,
 `public static double[][] speedByDistance = {{48, 2550}, ...};   // in Tunables.Launcher`, empty if nothing is saved),
 `tunablesLine(section, field)` (the same for a named table, e.g. `speedByDistanceNectar`).
+`save(distance, rpm, hoodDeg, measuredRpm, hits, shots)` keeps how many went in and the measured speed
+(`saved()`, `size()`, `note(saved)`; `codeLines()` writes them as a comment).
+
+`ShotPoints.Tally`: hits and shots per speed at one spot. `mark(rpm, hit, measuredRpm)`, `hits(rpm)`,
+`shots(rpm)`, `totalShots()`, `measuredRpm(rpm)`, `bestRpm()` (best hit ratio; a tie: more shots,
+then the lower speed; NaN with no hit), `summary()` (`2450: 1/3, 2550: 3/4 (best)`), `spotIn()`,
+`setSpot(in)`, `isEmpty()`, `clear()`.
+
+`ShotPoints.DistanceAverage`: the distance over the last `WINDOW_SEC` (0.5 s) of fresh readings.
+`add(nowSec, distance, from)` (another `from` starts again), `average(nowSec)` (NaN with none),
+`count(nowSec)`, `source()`.
