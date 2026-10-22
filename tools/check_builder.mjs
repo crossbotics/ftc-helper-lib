@@ -276,6 +276,67 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 	ok(pj.all.includes('import com.crossbotics.ftchelper.pedro.PedroPath;') && pj.all.includes('import com.crossbotics.ftchelper.robot.PathAt;'), 'Pedro Java: the imports it needs');
 }
 
+// A tank drive never gets a strafe: "drive there", a dragged end, the drive switch (tankSteps, which the
+// pages run on every change), and pasted Java (fromJava with drive 'tank'). Mecanum is unchanged.
+{
+	const strafes = (steps) => steps.filter((s) => s.kind === 'move' && S.sideways(+s.dir));
+	let tapsOk = true, dragsOk = true, endsOk = true;
+	for (const h of [0, 30, 90, -135, 180]) {
+		const p = { x: -20, y: -30, h };
+		for (const [x, y] of [[-20, 0], [10, -30], [-50, -30], [-20, -60], [5, -5], [-45, -55], [-19, -30]]) {
+			const add = S.stepsToPoint('tank', p, x, y);
+			if (strafes(add).length || add.some((s) => s.kind === 'move' && !S.TANK_DIRS.includes(s.dir))) tapsOk = false;
+			const e = S.simulate({ start: p, steps: add }).end;
+			if (add.length && Math.hypot(e.x - x, e.y - y) > 0.6) endsOk = false;
+			const d = S.dragMove('tank', p, x, y);
+			if (!d || S.sideways(d.dir) || !S.TANK_DIRS.includes(d.dir)) dragsOk = false;
+		}
+	}
+	ok(tapsOk, 'tank: "drive there" adds a turn and a move forward or back, never a strafe');
+	ok(endsOk, 'tank: "drive there" ends on the point tapped');
+	ok(dragsOk, 'tank: a dragged end stays on the line through the robot\'s front (0 or 180)');
+	const mec = S.stepsToPoint('mecanum', { x: 0, y: 0, h: 0 }, 20, 0);
+	ok(mec.length === 1 && mec[0].dir === 90, 'mecanum: "drive there" is still one move (a strafe here)');
+	ok(S.dragMove('mecanum', { x: 0, y: 0, h: 0 }, 0, -10).dir === 180 && S.dragMove('mecanum', { x: 0, y: 0, h: 0 }, -10, 0).dir === 270, 'mecanum: a dragged end goes any way');
+	// The drive switch: every fixture plan as a tank plan has no strafe and drives the same route.
+	for (const f of STEP_PLANS) {
+		const r = S.tankSteps(f.plan.steps);
+		const before = S.simulate(f.plan).ends.filter((_, i) => f.plan.steps[i].kind === 'move');
+		const after = S.simulate({ ...f.plan, steps: r.steps }).ends.filter((_, i) => r.steps[i].kind === 'move');
+		ok(strafes(r.steps).length === 0 && r.steps.every((s) => s.kind !== 'move' || S.TANK_DIRS.includes(s.dir)), `tankSteps "${f.name}": no strafe left, every move 0 or 180`);
+		ok(r.changes.length === strafes(f.plan.steps).length && r.changes.every((t) => /not possible on a tank drive/.test(t)), `tankSteps "${f.name}": one line per strafe`);
+		ok(before.length === after.length && before.every((e, k) => near(e.x, after[k].x, 1e-6) && near(e.y, after[k].y, 1e-6)), `tankSteps "${f.name}": every drive ends where it did`);
+		ok(S.tankSteps(r.steps).changes.length === 0, `tankSteps "${f.name}": a second time changes nothing`);
+		const tankPlan = { ...f.plan, drive: 'tank', steps: r.steps };
+		ok(!S.checkPlan(tankPlan).list.some((c) => /tank drive/.test(c.text)), `tankSteps "${f.name}": the checks find no tank problem`);
+	}
+	ok(S.tankSteps(STEP_PLANS[1].plan.steps).steps.every((s, i) => s === STEP_PLANS[1].plan.steps[i]), 'tankSteps: a plan with no strafe stays as it is');
+	// A strafe in the middle turns back (the next drive counts from the heading); a turnTo next makes it unneeded.
+	const mid = S.tankSteps([{ kind: 'move', label: 'Over', inches: 10, dir: 270, power: 0.6 }, { kind: 'move', label: 'On', inches: 5, dir: 0, power: 0.6 }]);
+	ok(mid.steps.map((s) => s.kind).join() === 'turn,move,turn,move' && mid.steps[0].deg === 90 && mid.steps[2].deg === -90, 'tankSteps: turn left, drive, turn back, then the next drive');
+	const tt = S.tankSteps([{ kind: 'move', label: 'Over', inches: 10, dir: 90, power: 0.6 }, { kind: 'turnTo', label: 'Square', heading: 0, power: 0.5 }]);
+	ok(tt.steps.map((s) => s.kind).join() === 'turn,move,turnTo', 'tankSteps: no turn back before a turnTo');
+	ok(S.checkPlan({ ...STEP_PLANS[0].plan, drive: 'tank' }).list.some((c) => c.level === 'bad' && /not possible on a tank drive/.test(c.text)), 'checkPlan: a tank strafe is still bad (a last guard)');
+	// Pasted Java on a tank drive: each strafe listed and turned into a turn and a drive; moveWithTurn left out, said so.
+	const javaIn = S.toJava(STEP_PLANS[0].plan).file.replace('.parkWithSeconds(3)', '.parkWithSeconds(3)\n        .moveWithTurn("Swing", 10, 0, 90, 0.5, 0.5)');
+	const tin = S.fromJava(javaIn, { drive: 'tank' });
+	ok(tin.plan && strafes(tin.plan.steps).length === 0 && tin.drive === null, 'fromJava, tank: no strafe read in, the drive stays tank');
+	ok(tin.tank.length === 1 && /Park.*not possible on a tank drive/.test(tin.tank[0]), 'fromJava, tank: the strafe is listed');
+	ok(tin.problems.some((t) => /moveWithTurn.*not possible on a tank drive/.test(t)), 'fromJava, tank: moveWithTurn is left out and listed');
+	const min = S.fromJava(javaIn);
+	ok(min.drive === 'mecanum' && min.tank.length === 0 && strafes(min.plan.steps).length === 1 && min.problems.some((t) => /moveWithTurn/.test(t)), 'fromJava, mecanum: the strafe stays; moveWithTurn is still never read silently');
+	// Both pages use these (no copy of their own) and run tankSteps on every render.
+	const page = fs.readFileSync(path.join(dir, 'builder.js'), 'utf8');
+	ok(/S\.stepsToPoint\(/.test(page) && /S\.dragMove\(/.test(page) && /S\.tankSteps\(/.test(page) && /syncRobot\(\);\s*enforceTank\(\);/.test(page), 'builder.js: drive there, drag and every render use the shared tank rules');
+	const sitePage = siteDir() && path.join(siteDir(), 'steps.js');
+	if (sitePage && fs.existsSync(sitePage)) {
+		const sp = fs.readFileSync(sitePage, 'utf8');
+		const good = /S\.stepsToPoint\(/.test(sp) && /S\.dragMove\(/.test(sp) && /S\.tankSteps\(/.test(sp) && /fromJava\(.*\{ drive: state\.plan\.drive \}/.test(sp);
+		if (process.env.SITE_STRICT === '1') ok(good, 'the site\'s steps.js: drive there, drag, every render and Java in use the shared tank rules');
+		else if (!good) console.log('WARN the site\'s steps.js does not use the shared tank rules yet');
+	}
+}
+
 // ------------------------------------------------------------------ 3. the site's copies
 
 function siteDir() {

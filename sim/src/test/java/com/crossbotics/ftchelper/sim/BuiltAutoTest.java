@@ -232,6 +232,39 @@ public class BuiltAutoTest {
         assertEquals("still never called", 0, CountingRobot.calls);
     }
 
+    // A tank drive cannot strafe: a plan with a sideways move is refused at INIT with a plain message and
+    // never runs (the page turns a strafe into a turn and a drive for a tank robot); mecanum takes it.
+    @Test public void aStrafeOnATankDriveIsRefused() throws Exception {
+        String json = "{\"name\":\"x\",\"start\":{\"x\":-56,\"y\":-60,\"h\":0},\"steps\":["
+                + "{\"kind\":\"move\",\"label\":\"Out\",\"inches\":12,\"dir\":0,\"power\":0.6},"
+                + "{\"kind\":\"move\",\"label\":\"Over\",\"inches\":10,\"dir\":45,\"power\":0.6}]}";
+        RobotDefinition tank = new com.crossbotics.ftchelper.examples.gobildabot.Robot();
+        assertTrue("the starter bot is a tank drive", !tank.drive().isMecanum());
+        try {
+            BuiltAuto.Program.parse(json).check(tank);
+            fail("a tank strafe was accepted");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("step 2 (\"Over\")") && e.getMessage().contains("not possible on a tank drive")
+                    && e.getMessage().contains("Turn first, then move"));
+        }
+        // Forward and back are fine on a tank drive; a strafe is fine on mecanum.
+        BuiltAuto.Program.parse(json.replace("\"dir\":45", "\"dir\":180")).check(tank);
+        RobotDefinition mecanum = new com.crossbotics.ftchelper.examples.pedrobot.Robot();
+        assertTrue(mecanum.drive().isMecanum());
+        BuiltAuto.Program.parse(json).check(mecanum);
+        // In the simulator: INIT stops and says which step; the robot does not move.
+        BuiltAuto.program = BuiltAuto.Program.parse(json);
+        BuiltAuto.robotClass = com.crossbotics.ftchelper.examples.gobildabot.Robot.class;
+        try (SimRun s = new SimRun("robots/starter-bot-gobilda.properties")) {
+            double x0 = s.robot().x, y0 = s.robot().y;
+            s.sim.ds.init(BuiltAuto.NAME, Alliance.RED);
+            assertTrue(SimRun.waitFor(() -> !s.error().isEmpty(), 5));
+            assertTrue(s.error(), s.error().contains("Built Auto, step 2 (\"Over\"): a strafe") && s.error().contains("not possible on a tank drive"));
+            assertEquals(x0, s.robot().x, 0.5);
+            assertEquals(y0, s.robot().y, 0.5);
+        }
+    }
+
     // The builder's suggestions come from the chosen Robot class: its parts' commands, its Actions, its TeleOp.
     @Test public void theSuggestionsComeFromTheRobotClass() throws Exception {
         try (SimRun s = new SimRun("robots/starter-bot-gobilda.properties")) {
