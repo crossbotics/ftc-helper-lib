@@ -22,7 +22,8 @@ import java.util.Map;
  * public static class TurretLift {
  *     public static double turretFrom = 154, turretTo = 218;   // degrees: the turret's zone
  *     public static double liftAbove = 620;                    // counts: the lift's zone
- *     public static double turretMargin = 4, liftMargin = 60;  // optional safety distances
+ *     public static double turretMargin = 4, liftMargin = 60;  // optional: extra safety distances
+ *     public static double turretStopSec = 0.2;                // optional: seconds to stop (default 0.15)
  * }
  * }</pre>
  *
@@ -45,10 +46,20 @@ import java.util.Map;
  *       reach. So the other part waits.</li>
  * </ul>
  *
+ * <p><b>Stop distance</b> (motor parts: a turret, lift or arm): a moving motor does not stop at once. It
+ * goes on until the next loop (which may be slow: a camera, a busy hub; and its position is from the last
+ * loop, so count that one too), then it coasts while it brakes. So every loop the rule measures the part's
+ * speed (from its encoder) and works out how far it would still go if told to stop now: speed x (2 x the
+ * slowest of the last 25 loops + half its {@code <part>StopSec}, default 0.15 s). A part that is kept out
+ * may only use the power that lets it stop in time: it slows down near its waiting point and brakes as
+ * soon as that distance would take it past it. A part that could not stop before its zone counts as
+ * already in it (the other part waits). A servo needs none: it is never sent past the fence.
+ *
  * <p><b>Margins</b> ({@code <part>Margin}, in its units; defaults: 3 degrees or twice the turret's
  * tolerance, twice a lift's or arm's tolerance (at least 1/50 of its range), 0.02 for a servo, 1/50 of a
  * hood's range): a part counts as in its zone within one margin of it, and a held part waits two margins
- * away. Make it at least how far the part moves in one loop plus how far it coasts when stopped.
+ * away. The stop distance already covers coasting: the margin is extra safety (an encoder that slips, a
+ * part that bends).
  *
  * <p><b>Measured, not guessed:</b> motors use their encoders every loop. A servo cannot say where it is,
  * so it counts as anywhere between where it was and where it was sent, until its {@code travelSec}
@@ -57,7 +68,7 @@ import java.util.Map;
  * <p><b>Checked at INIT</b> (the OpMode stops with the reason): the rule's Tunables section and every
  * number it needs; a zone that is empty (from is not below to), outside the part's range, or covering
  * its whole range (the part could never be out of it); a negative margin; a part that is not on the
- * robot, or one with no position (an intake roller: use {@link Zone#when}).
+ * robot, or one with no position (an intake roller: use {@link Zone#when}); a stop time outside 0 to 2 s.
  *
  * <p><b>Not changeable live.</b> The numbers are read once at INIT and are not in the tuning menu: a zone
  * that moves while the parts move could suddenly put both in their zones. Change them in
@@ -69,6 +80,9 @@ import java.util.Map;
  * Docs: docs/modules/robot.md (section "Interlock"), docs/guides/interlocks.md
  */
 public final class Interlock {
+    /** The default {@code <part>StopSec}: a motor part in BRAKE stops in about this long (seconds). */
+    public static final double DEFAULT_STOP_SEC = 0.15;
+
     private final String name;
     final Zone a, b;
     // Who may be in its zone now (a, b or null = nobody yet).
@@ -181,6 +195,12 @@ public final class Interlock {
         double margin = t.has(pre + "Margin") ? t.number(pre + "Margin", 0) : p.zoneDefaultMargin();
         if (!(margin >= 0)) throw new IllegalStateException("Tunables." + name + "." + pre + "Margin must be 0 or more (it is " + margin + ")");
         z.margin = margin;
+        // How long it takes to stop once its power is cut (a motor part; servos never coast past the fence).
+        double stopSec = t.has(pre + "StopSec") ? t.number(pre + "StopSec", DEFAULT_STOP_SEC) : DEFAULT_STOP_SEC;
+        if (!(stopSec >= 0) || stopSec > 2) {
+            throw new IllegalStateException("Tunables." + name + "." + pre + "StopSec must be 0 to 2 seconds (it is " + stopSec + ")");
+        }
+        z.stopSec = stopSec;
         // In reach at all? And not the whole range (then the part could never be out of it)?
         boolean reach = false, everywhere = false;
         for (double[] iv : intervals(z)) {
@@ -247,6 +267,19 @@ public final class Interlock {
         return false;
     }
 
+    // Coming in: where it is, plus how far it would still go if told to stop now (its stop distance),
+    // reaches its zone (within one margin). A fast part that cannot stop before its zone counts as in it
+    // for "who goes first", so the other part does not start into its own zone meanwhile.
+    static boolean coming(Zone z) {
+        if (z.kind == Zone.Kind.WHEN) return occupies(z);
+        double[] s = z.part.zoneSweep();
+        double lo = s[0] - z.stopDown, hi = s[1] + z.stopUp;
+        for (double[] iv : intervals(z)) {
+            if (hi >= iv[0] - z.margin && lo <= iv[1] + z.margin) return true;
+        }
+        return false;
+    }
+
     // Wants to go in: a target inside it, or a stick pushing toward it.
     static boolean wants(Zone z) {
         if (z.kind == Zone.Kind.WHEN) return false;
@@ -261,16 +294,36 @@ public final class Interlock {
         return false;
     }
 
-    // Kept out of its zone: the range it may move in now (two margins from the zone, never past where it is).
+    // Kept out of its zone: {lo, hi, upPower, downPower}. lo..hi: where it may go (it waits two margins
+    // from the zone, never past where it is). upPower, downPower: the most power it may use toward the zone
+    // now, so a part moving fast brakes in time (see powerCap).
     static double[] blockedFence(Zone z) {
         double[] s = z.part.zoneSweep();
-        double lo = Double.NEGATIVE_INFINITY, hi = Double.POSITIVE_INFINITY;
+        double lo = Double.NEGATIVE_INFINITY, hi = Double.POSITIVE_INFINITY, up = 1, down = 1;
         double m = z.margin;
         for (double[] iv : intervals(z)) {
-            if (iv[0] > s[1]) hi = Math.min(hi, Math.max(iv[0] - 2 * m, s[1]));
-            else if (iv[1] < s[0]) lo = Math.max(lo, Math.min(iv[1] + 2 * m, s[0]));
+            if (iv[0] > s[1]) {
+                double wait = iv[0] - 2 * m;
+                hi = Math.min(hi, Math.max(wait, s[1]));
+                up = Math.min(up, powerCap(wait - s[1] - z.stopUp, z));
+            } else if (iv[1] < s[0]) {
+                double wait = iv[1] + 2 * m;
+                lo = Math.max(lo, Math.min(wait, s[0]));
+                down = Math.min(down, powerCap(s[0] - wait - z.stopDown, z));
+            }
         }
-        return new double[] {lo, hi};
+        return new double[] {lo, hi, up, down};
+    }
+
+    // The most power (0 to 1) a part may use toward its waiting point. room: how far it is from it AFTER
+    // its stop distance (how far it would go if told to stop now). No room: 0 (it brakes now). Else the
+    // share of a stop from full speed that still fits, so it slows down as it comes near and never gets
+    // too fast to stop in time (a part whose top speed is not known yet: full power while there is room).
+    static double powerCap(double room, Zone z) {
+        if (!(room > 0)) return 0;
+        double full = z.topSpeed * z.stopAfterSec;
+        if (!(full > 0) || Double.isInfinite(full)) return 1;
+        return Math.min(1, room / full);
     }
 
     // In its zone while it must not be: it may only move out (by the nearest way out within its range).
@@ -281,10 +334,11 @@ public final class Interlock {
             if (!(s[1] >= iv[0] - m && s[0] <= iv[1] + m)) continue;
             boolean down = iv[0] - m > min, up = iv[1] + m < max;
             double dDown = s[1] - (iv[0] - m), dUp = (iv[1] + m) - s[0];
-            if (down && (!up || dDown <= dUp)) return new double[] {Double.NEGATIVE_INFINITY, s[1]};
-            if (up) return new double[] {s[0], Double.POSITIVE_INFINITY};
+            // {lo, hi, upPower, downPower}: no power deeper in.
+            if (down && (!up || dDown <= dUp)) return new double[] {Double.NEGATIVE_INFINITY, s[1], 0, 1};
+            if (up) return new double[] {s[0], Double.POSITIVE_INFINITY, 1, 0};
         }
-        return new double[] {Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY};
+        return new double[] {Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, 1, 1};
     }
 
     /**
@@ -293,20 +347,27 @@ public final class Interlock {
     void evaluate(Map<Module<?>, double[]> fences) {
         if (!built) return;
         boolean inA = occupies(a), inB = occupies(b);
+        // Coming in: in, or moving so fast toward its zone that it could not stop before it.
+        boolean comingA = coming(a), comingB = coming(b);
         boolean wantA = wants(a), wantB = wants(b);
-        // The holder lets go once it is out and no longer wants in; it loses its turn if the other part is
-        // really in its zone and it is not (yet).
+        // The holder lets go once it is out (and not coming in) and no longer wants in; it loses its turn if
+        // the other part is really in its zone and it is not (yet).
         if (holder != null) {
             boolean in = holder == a ? inA : inB, want = holder == a ? wantA : wantB;
-            boolean otherIn = holder == a ? inB : inA;
-            if (!in && (!want || otherIn)) holder = null;
+            boolean come = holder == a ? comingA : comingB, otherIn = holder == a ? inB : inA;
+            if ((!come && !want) || (!in && otherIn)) holder = null;
         }
         // Both in their zones (pushed there, or found so at START): nobody keeps a zone; each may only move out.
         if (inA && inB) holder = null;
         if (holder == null) {
             if (inA && !inB) holder = a;
             else if (inB && !inA) holder = b;
-            else if (!inA && !inB) holder = wantA ? a : wantB ? b : null;
+            else if (!inA && !inB) {
+                // A part that cannot stop before its zone goes first; else the one that wants in.
+                if (comingA && !comingB) holder = a;
+                else if (comingB && !comingA) holder = b;
+                else holder = wantA ? a : wantB ? b : null;
+            }
         }
         boolean bothIn = inA && inB;
         String msg = "";
@@ -320,7 +381,8 @@ public final class Interlock {
             else fence = blockedFence(z);                                 // kept out
             double[] f = fences.get(z.part);
             if (f == null) fences.put(z.part, fence);
-            else fences.put(z.part, new double[] {Math.max(f[0], fence[0]), Math.min(f[1], fence[1])});
+            else fences.put(z.part, new double[] {Math.max(f[0], fence[0]), Math.min(f[1], fence[1]),
+                    Math.min(f[2], fence[2]), Math.min(f[3], fence[3])});
             if (msg.isEmpty() && !bothIn && z.part.zoneHeld(fence[0], fence[1], z.margin)) {
                 msg = z.part.name() + " held at " + num(mid(z.part.zoneSweep()), z.part.zoneUnit()) + ": " + whyWords(other);
             }
@@ -363,9 +425,24 @@ public final class Interlock {
      * part's fence and hands it over. A part in no rule is never touched.
      */
     static final class Rules implements Subsystem {
+        // How many loop times to remember (the slowest of them is "how long until we can act again").
+        static final int LOOPS_KEPT = 25;
+        // The longest loop time counted (seconds): one long pause (INIT to START) must not count for ever.
+        static final double LONGEST_LOOP_SEC = 0.5;
+        // A part's speed is measured over at least this long (seconds), so very fast loops (a count or
+        // two of encoder noise over 3 ms) do not make up a big speed.
+        static final double SPEED_OVER_SEC = 0.02;
+
         final List<Interlock> rules = new ArrayList<>();
         // Every part in a rule (its fence is set every loop: free if no rule holds it).
         private final List<Module<?>> parts = new ArrayList<>();
+        // Where we get the time (nanoseconds). Tests swap in a pretend clock.
+        java.util.function.LongSupplier clock = System::nanoTime;
+        private long lastNanos = Long.MIN_VALUE;
+        private final double[] loopSecs = new double[LOOPS_KEPT];
+        private int loopCount = 0;
+        // Each part's recent positions, for its speed.
+        private final Map<Module<?>, Track> tracks = new IdentityHashMap<>();
 
         void add(Interlock r) {
             rules.add(r);
@@ -375,13 +452,66 @@ public final class Interlock {
         @Override
         public void update() {
             if (rules.isEmpty()) return;
+            long now = clock.getAsLong();
+            if (lastNanos != Long.MIN_VALUE && now > lastNanos) {
+                loopSecs[loopCount % LOOPS_KEPT] = Math.min(LONGEST_LOOP_SEC, (now - lastNanos) / 1e9);
+                loopCount++;
+            }
+            lastNanos = now;
+            double loop = slowestLoopSec();
+            // Each part's speed (its units per second, + = toward zoneMax), then each zone's stop distance:
+            // how far it would still go if told to stop now. It is only told at the next loop (wait up to
+            // the slowest recent loop at this speed), then it brakes (about half its stopSec at this speed,
+            // slowing evenly).
+            Map<Module<?>, Double> speeds = new IdentityHashMap<>();
+            for (Module<?> p : parts) speeds.put(p, speedOf(p, now));
+            for (Interlock r : rules) {
+                for (Zone z : new Zone[] {r.a, r.b}) {
+                    if (z.part == null || Double.isNaN(z.stopSec)) continue;
+                    double v = speeds.get(z.part);
+                    // Its position is from the last loop's reading: it has gone on since (one more loop).
+                    z.stopAfterSec = 2 * loop + z.stopSec / 2;
+                    z.stopUp = Math.max(0, v) * z.stopAfterSec;
+                    z.stopDown = Math.max(0, -v) * z.stopAfterSec;
+                    // Its top speed: the motor's (a full battery gives about 15% more), or the fastest seen.
+                    double top = z.part.zoneTopSpeed();
+                    Track t = tracks.get(z.part);
+                    double seen = t == null ? 0 : t.fastest;
+                    z.topSpeed = Double.isNaN(top) ? seen : Math.max(top * 1.15, seen);
+                }
+            }
             Map<Module<?>, double[]> fences = new IdentityHashMap<>();
             for (Interlock r : rules) r.evaluate(fences);
             for (Module<?> p : parts) {
                 double[] f = fences.get(p);
-                if (f == null) p.zoneFence(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
-                else p.zoneFence(f[0], f[1]);
+                if (f == null) p.zoneFence(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, 1, 1);
+                else p.zoneFence(f[0], f[1], f[2], f[3]);
             }
+        }
+
+        /** The slowest of the recent loops, seconds (0 before two loops). */
+        double slowestLoopSec() {
+            double max = 0;
+            for (int i = 0; i < Math.min(loopCount, LOOPS_KEPT); i++) max = Math.max(max, loopSecs[i]);
+            return max;
+        }
+
+        // A part's speed now, from its encoder: (where it is - where it was) / the time between, over at
+        // least SPEED_OVER_SEC. 0 for a part that does not coast (a servo) or whose position is not known.
+        private double speedOf(Module<?> p, long now) {
+            Track t = tracks.get(p);
+            if (t == null) tracks.put(p, t = new Track());
+            if (!p.zoneCoasts() || !p.zoneKnown()) {
+                t.count = 0;
+                return 0;
+            }
+            double[] s = p.zoneSweep();
+            double pos = (s[0] + s[1]) / 2;
+            if (Double.isNaN(pos) || Double.isInfinite(pos)) {
+                t.count = 0;
+                return 0;
+            }
+            return t.add(now, pos);
         }
 
         @Override
@@ -395,6 +525,35 @@ public final class Interlock {
         @Override
         public String name() {
             return "Interlocks";
+        }
+    }
+
+    // One part's recent positions and their times, for its speed.
+    static final class Track {
+        private static final int KEPT = 16;
+        private final long[] nanos = new long[KEPT];
+        private final double[] pos = new double[KEPT];
+        int count = 0;
+        // The fastest it has been measured (units per second, either way).
+        double fastest = 0;
+
+        // Adds this loop's position; gives the speed (units per second) since the newest earlier position
+        // that is at least SPEED_OVER_SEC old (or the oldest one kept), 0 if there is none yet.
+        double add(long now, double p) {
+            nanos[count % KEPT] = now;
+            pos[count % KEPT] = p;
+            count++;
+            int kept = Math.min(count, KEPT);
+            for (int back = 1; back < kept; back++) {
+                int i = (count - 1 - back) % KEPT;
+                double secs = (now - nanos[i]) / 1e9;
+                if (secs >= Rules.SPEED_OVER_SEC || back == kept - 1) {
+                    double v = secs > 0 ? (p - pos[i]) / secs : 0;
+                    fastest = Math.max(fastest, Math.abs(v));
+                    return v;
+                }
+            }
+            return 0;
         }
     }
 }

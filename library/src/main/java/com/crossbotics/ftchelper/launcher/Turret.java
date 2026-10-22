@@ -80,6 +80,9 @@ public class Turret implements Subsystem {
     private boolean continuous = false;
     // The interlock's fence (see fence()): +/- infinity = none.
     private double fenceLo = Double.NEGATIVE_INFINITY, fenceHi = Double.POSITIVE_INFINITY;
+    // The most power it may use counterclockwise / clockwise now (an interlock's caps, so it brakes in
+    // time near the fence; 1 = none): see fence(lo, hi, upPower, downPower).
+    private double fenceUpPower = 1, fenceDownPower = 1;
     private boolean held = false;
     // The direction last asked for (robot-relative), so a fenced target can go the other way round.
     private double wantedDeg = Double.NaN;
@@ -256,8 +259,24 @@ public class Turret implements Subsystem {
      * @param hi highest allowed angle now, degrees
      */
     public Turret fence(double lo, double hi) {
+        return fence(lo, hi, 1, 1);
+    }
+
+    /**
+     * {@link #fence(double, double)}, and the most power it may use toward each side now. An interlock
+     * rule lowers these as the turret comes near its fence fast (and sets 0 to brake), so it stops before
+     * the edge instead of coasting past it.
+     *
+     * @param lo        lowest allowed angle now, degrees
+     * @param hi        highest allowed angle now, degrees
+     * @param upPower   the most power counterclockwise (toward higher angles) now, 0 to 1 (1 = no cap)
+     * @param downPower the most power clockwise now, 0 to 1
+     */
+    public Turret fence(double lo, double hi, double upPower, double downPower) {
         fenceLo = Math.min(lo, hi);
         fenceHi = Math.max(lo, hi);
+        fenceUpPower = Double.isNaN(upPower) ? 1 : MathUtil.clamp(upPower, 0, 1);
+        fenceDownPower = Double.isNaN(downPower) ? 1 : MathUtil.clamp(downPower, 0, 1);
         return this;
     }
 
@@ -523,6 +542,8 @@ public class Turret implements Subsystem {
         // manual control.
         if (homed && !homing) {
             power = SoftLimits.limit(power, getAngle(), effLo(), effHi(), slowZoneDeg, slowZonePower, false, false);
+            // An interlock's caps: less power (or none: it brakes) while it turns fast toward its fence.
+            power = MathUtil.clamp(power, -fenceDownPower, fenceUpPower);
         }
         write(power);
     }

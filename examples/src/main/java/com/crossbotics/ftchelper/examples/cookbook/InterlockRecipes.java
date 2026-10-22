@@ -53,7 +53,7 @@ public class InterlockRecipes {
         public static class TurretLift {
             public static double turretFrom = 130, turretTo = 218;   // degrees: the back of the robot
             public static double liftAbove = 270;                    // counts: the slide is up
-            public static double liftMargin = 80;                    // optional: a fast lift needs more room to stop
+            public static double liftStopSec = 0.2;                  // optional: a heavy slide takes longer to stop
         }
         // end recipe
     }

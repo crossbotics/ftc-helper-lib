@@ -276,41 +276,54 @@ public class SimFromRobotTest {
     }
 
     private void v2Interlock(SimRun s) throws Exception {
+        // Waits on conditions with generous time limits (the machine may be busy running other tests in
+        // parallel: slow loops), and checks the zone at every look, not only at the end.
         s.init("V2 Bot TeleOp");
-        assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Interlock TurretClaw: Turret between 147 and 217 deg / Wrist between 0.00 and 0.27"), 2));
+        assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Interlock TurretClaw: Turret between 147 and 217 deg / Wrist between 0.00 and 0.27"), 5));
         assertTrue(s.screenHas("G2 Y: score in a FLOWER"));
         SimMotor lift = s.robot().motors.get("lift"), turret = s.robot().motors.get("turret");
         s.start();
         // The turret homes on its switch at START (Tunables.Turret.homeAngle 0): then it is known.
-        assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> !s.screenHas("homing"), 8));
+        assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> !s.screenHas("homing"), 15));
         // The interlock: the wrist starts folded (in its zone, 0 to 47 degrees), so the turret must
         // stay out of the back. Following off (BACK), the turret by hand toward the back (stick right
-        // = clockwise, toward -190: the zone 147 to 217 is the same as -213 to -143). It waits two
-        // margins (turretMargin 12) before it, at -119, and coasts a little: never into the zone.
+        // = clockwise, toward -190: the zone 147 to 217 is the same as -213 to -143). It slows down as it
+        // comes near (the rule measures its speed) and waits two margins (2 x 3) before it, at -137:
+        // never into the zone, however slow the loops are (the machine may be busy with other tests).
         s.press(v -> s.g2().back = v);
         double perDeg = 537.7 * 2.75 / 360;
+        double[] lowest = {0};
         s.g2().right_stick_x = 1;
-        assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("TurretClaw : Turret held at"), 6));
-        SimRun.pause(1.0);
-        assertTrue("the turret waits at the edge of its zone: " + turret.shaft() / perDeg + "\n" + String.join("\n", s.screen()),
-                turret.shaft() / perDeg > -143 && turret.shaft() / perDeg < -105);
+        assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> {
+            lowest[0] = Math.min(lowest[0], turret.shaft() / perDeg);
+            return s.screenHas("TurretClaw : Turret held at");
+        }, 15));
+        // Pushed on for a second more: it never goes into the zone (checked at every look).
+        SimRun.waitFor(() -> {
+            lowest[0] = Math.min(lowest[0], turret.shaft() / perDeg);
+            return false;
+        }, 1.0);
+        assertTrue("the turret never went into its zone (-143): lowest " + lowest[0], lowest[0] > -143);
+        assertTrue("the turret waits near the edge of its zone: " + turret.shaft() / perDeg + "\n" + String.join("\n", s.screen()),
+                turret.shaft() / perDeg < -105);
         s.g2().right_stick_x = 0;
         // Score (the turret still points back-ish, outside the zone): the wrist swings out, the lift
         // goes up to the FLOWER and back.
         s.press(v -> s.g2().y = v);
-        assertTrue("the lift goes up: " + lift.shaft(), SimRun.waitFor(() -> lift.shaft() > 1250, 5));
+        assertTrue("the lift goes up: " + lift.shaft(), SimRun.waitFor(() -> lift.shaft() > 1250, 15));
         SimRobot.SimServo claw = s.robot().servos.get("claw"), wrist = s.robot().servos.get("wrist");
         // With the wrist out (above 47 degrees) the turret may point anywhere: straight back now.
         s.g2().right_stick_x = 1;
         assertTrue("the turret goes past -143 with the wrist out: " + turret.shaft() / perDeg,
-                SimRun.waitFor(() -> turret.shaft() / perDeg < -160, 4));
+                SimRun.waitFor(() -> turret.shaft() / perDeg < -160, 10));
         s.g2().right_stick_x = 0;
-        assertTrue("it lets go over the FLOWER", SimRun.waitFor(() -> claw.actual > 0.53, 3));
-        assertTrue("and comes back down: " + lift.shaft(), SimRun.waitFor(() -> lift.shaft() < 100, 6));
+        assertTrue("it lets go over the FLOWER", SimRun.waitFor(() -> claw.actual > 0.53, 10));
+        assertTrue("and comes back down: " + lift.shaft(), SimRun.waitFor(() -> lift.shaft() < 100, 15));
         // Folding would put the claw into the turret: the wrist waits above its zone.
-        SimRun.pause(1.0);
-        assertTrue(String.join("\n", s.screen()), s.screenHas("TurretClaw : Wrist held at"));
+        assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("TurretClaw : Wrist held at"), 10));
+        SimRun.pause(0.5);
         assertTrue("the wrist is still out: " + wrist.actual, wrist.actual > 0.274);
+        assertTrue(String.join("\n", s.screen()), s.screenHas("TurretClaw : Wrist held at"));
         assertEquals("", s.error());
     }
 

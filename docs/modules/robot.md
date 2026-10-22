@@ -186,7 +186,7 @@ public class Tunables {
   It checks the sections of Drive, Odometry, Aim, Buttons, every part on the robot and every interlock
   rule. Names you pick are fine: a Lift's, Arm's or servo part's named positions (any number), a piece
   sensor's kinds (`POLLEN`), a launcher's `speedByDistance...` tables, and an interlock rule's
-  `<part>From`, `<part>To`, `<part>Above`, `<part>Below` and `<part>Margin` for its own two parts. A field
+  `<part>From`, `<part>To`, `<part>Above`, `<part>Below`, `<part>Margin` and `<part>StopSec` for its own two parts. A field
   of the part that this robot does not use (a servo turret's `posA` on a motor turret) is fine too.
   Sections no part reads (your own `Tunables.Auto`) are never checked, and neither is the section of an
   [`optional()`](#parts-not-on-the-robot-yet) part that is not on the robot (it may be unfinished).
@@ -536,7 +536,7 @@ turretLift = keepApart("TurretLift", turret.zone(), lift.zoneAbove());
 public static class TurretLift {
     public static double turretFrom = 130, turretTo = 218;   // degrees
     public static double liftAbove = 270;                    // counts
-    public static double liftMargin = 80;                    // optional safety distance
+    public static double liftStopSec = 0.2;                  // optional: seconds to stop (default 0.15)
 }
 ```
 
@@ -549,9 +549,10 @@ public static class TurretLift {
 
 `<part>` is the part's Tunables name with a small first letter (`Turret` -> `turretFrom`). Units: degrees
 (turret, arm), counts (lift), servo position 0 to 1 (claw, wrist, positioner). Parts with a zone: Turret,
-Lift, Arm, Claw, Wrist, Positioner, Hood. Optional `<part>Margin` (default: the larger of 3 degrees and
-twice the turret's tolerance; twice a lift's or arm's tolerance and at least 1/50 of its range; 1/50 of a
-hood's range; 0.02 for a servo).
+Lift, Arm, Claw, Wrist, Positioner, Hood. Optional `<part>Margin`, an extra safety distance (default: the
+larger of 3 degrees and twice the turret's tolerance; twice a lift's or arm's tolerance and at least 1/50
+of its range; 1/50 of a hood's range; 0.02 for a servo), and `<part>StopSec` for a turret, lift or arm:
+how long it takes to stop once its power is cut (default 0.15 s, 0 to 2).
 
 | `Interlock` | |
 | --- | --- |
@@ -563,7 +564,12 @@ hood's range; 0.02 for a servo).
 
 Who yields: **whoever is in its zone first keeps it; the other part waits outside its own zone**, two
 margins away, with its target kept (it goes on when the first one leaves). Both want in at once: the
-first zone in `keepApart` goes first. A turret whose way to its target crosses its zone goes the other way
+first zone in `keepApart` goes first, unless one is moving too fast to stop before its zone (then that
+one goes first). **Stop distance:** every loop the rule measures each motor part's speed (its encoder)
+and works out how far it would still go if told to stop now: speed x (2 x the slowest of the last 25
+loops + half its `StopSec`). A part kept out may only use the power that lets it stop in time, so it
+slows down as it comes near its waiting point and brakes when it must, even with slow loops (a camera, a
+busy hub). The margin is extra safety on top. A servo needs none: it is never sent past the fence. A turret whose way to its target crosses its zone goes the other way
 round if its range allows (a slip ring, or -270 to 270), else waits at the edge. Both in their zones (pushed
 there, or found so at START): each may only move out. A part whose position is not known (a turret not
 homed yet, a servo still moving: it counts as anywhere between where it was and where it was sent until its
@@ -572,8 +578,8 @@ autonomous steps, a following turret, shooting on the move. A held turret is nev
 
 The Driver Station shows one line per rule while it holds something: `TurretLift : Lift held at 110 counts:
 Turret is between 130 and 218 deg`. INIT lists each rule, and stops with the reason for: a missing section
-or number, an empty zone, a zone outside the part's range or covering all of it, a negative margin, a part
-with no position. The zones are read once at INIT and are **not** in the tuning menu: a zone moving while
+or number, an empty zone, a zone outside the part's range or covering all of it, a negative margin, a
+`StopSec` outside 0 to 2 s, a part with no position. The zones are read once at INIT and are **not** in the tuning menu: a zone moving while
 the parts move could put both in their zones at once. A rule with a part that is not on the robot yet
 ([`optional()`](#parts-not-on-the-robot-yet)) is off: `Interlock TurretLift: off (Lift is not on the robot)`.
 

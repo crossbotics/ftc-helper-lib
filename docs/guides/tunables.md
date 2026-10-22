@@ -61,7 +61,7 @@ When you press INIT, the library reads `Tunables.java` and tells you what it fou
 The name check covers `Drive`, `Odometry`, `Aim`, `Buttons`, every part on the robot and every
 interlock rule. These names are yours to pick and always pass: named positions (any number in Lift, Arm,
 Claw, Wrist, Positioner), a piece sensor's kinds (`POLLEN`), a launcher's `speedByDistance...` tables, and
-an interlock rule's `<part>From`, `<part>To`, `<part>Above`, `<part>Below`, `<part>Margin` for its two
+an interlock rule's `<part>From`, `<part>To`, `<part>Above`, `<part>Below`, `<part>Margin`, `<part>StopSec` for its two
 parts. A field of the part that your robot does not use (a servo turret's `posA` on a motor turret) passes
 too. Your own sections (`Auto`) are never checked, and neither is the section of an `optional()` part
 that is not on the robot. Every name in the tables below is the full list.
@@ -276,7 +276,8 @@ let them hit. Guide: [interlocks](interlocks.md). Module: [Interlock](../modules
 | `<part>From`, `<part>To` | `part.zone()`: the zone between two numbers | the part's units | REQUIRED with `zone()` | no | measure: move the part by hand to the edges | the parts or their places changed |
 | `<part>Above` | `part.zoneAbove()`: the zone from there to the top | the part's units | REQUIRED with `zoneAbove()` | no | measure | the same |
 | `<part>Below` | `part.zoneBelow()`: the zone from there to the bottom | the part's units | REQUIRED with `zoneBelow()` | no | measure | the same |
-| `<part>Margin` | the extra safety distance around the zone | the part's units | turret: the larger of 3 deg and 2 x its `tolerance`; lift, arm: the larger of 2 x its `tolerance` and 1/50 of its range; hood: 1/50 of its range; claw, wrist, positioner: 0.02 | no | test | the parts come too close (more) |
+| `<part>Margin` | the extra safety distance around the zone (coasting is already covered by the stop distance) | the part's units | turret: the larger of 3 deg and 2 x its `tolerance`; lift, arm: the larger of 2 x its `tolerance` and 1/50 of its range; hood: 1/50 of its range; claw, wrist, positioner: 0.02 | no | test | the parts come too close (more) |
+| `<part>StopSec` | a turret, lift or arm: how long it takes to stop from full speed once its power is cut. Its stop distance is its speed x (the slowest recent loop + half this) | seconds, 0 to 2 | 0.15 | no | test: full stick toward the zone, see where it stops | it still ends up past its waiting point (more), or it waits too far out (less) |
 
 ## Launcher
 

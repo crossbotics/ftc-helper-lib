@@ -429,6 +429,32 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
     /** The range it may move in this loop (an interlock's fence); +/- infinity = free. */
     void zoneFence(double lo, double hi) { }
 
+    /**
+     * The fence, and the most power it may use toward higher / lower positions now (0 to 1): while it
+     * moves fast toward the fence, the interlock lowers them (0 = brake) so it stops in time (see
+     * Interlock's stop distance). Parts with no power of their own (servos) use lo..hi only.
+     */
+    void zoneFence(double lo, double hi, double upPower, double downPower) {
+        zoneFence(lo, hi);
+    }
+
+    /**
+     * Its top speed in zoneUnit per second at full power (a motor's free speed through its gears), or NaN
+     * if not known (then the interlock uses the fastest speed it has measured).
+     */
+    double zoneTopSpeed() {
+        return Double.NaN;
+    }
+
+    /**
+     * True if it keeps moving for a moment after it is told to stop (a motor: it coasts). Its speed is
+     * then measured every loop for the stop distance. A servo does not (it is never sent past the fence,
+     * and its zoneSweep already covers its whole move).
+     */
+    boolean zoneCoasts() {
+        return false;
+    }
+
     /** The default safety margin, in zoneUnit. */
     double zoneDefaultMargin() {
         return 0;

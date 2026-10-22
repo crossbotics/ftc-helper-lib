@@ -218,6 +218,7 @@ counterclockwise (else `.reversed()`).
 | `getAngle()`, `getTargetAngle()`, `isAimed()`, `isOutOfRange()`, `isHomed()`, `isHoming()`, `getFault()` | read. `isAimed()` is false for an out-of-range target. It only says the turret reached its LAST target: if the goal can be lost (a camera), also check that the goal is seen now (the robot in five files' [`Turret.isAimed()`](robot.md#turret) does) |
 | `getTolerance()`, `degreesOutOfRange(deg)` | the aimed tolerance; how far past the limits a direction is (0 = it can point there) |
 | `aimStep(deg, timeout)` | autonomous step |
+| `fence(lo, hi)`, `fence(lo, hi, upPower, downPower)`, `clearFence()`, `isHeld()` | set every loop by an [interlock rule](robot.md#interlock): a target past `lo`..`hi` goes the other way round or waits at its edge; the caps (0 to 1) limit the power toward each side so it brakes in time |
 
 **The safe way round:** with limits -190..190, 170 and -190 are the same direction. The turret
 picks the one inside the limits closest to where it is, and turns there without passing a limit,

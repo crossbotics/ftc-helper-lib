@@ -455,6 +455,21 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Fixed
 
+- **Interlock rules: a fast part no longer coasts into its zone when loops are slow.** A held part waited
+  a fixed two margins from its zone, so how far it coasted past depended on the loop time: the v2bot's
+  turret (about 680 degrees a second) needed `turretMargin = 12`, and in a busy test run it still ended
+  inside its zone ("both in their zones"). Now the rule measures each motor part's speed every loop (its
+  encoder) and works out its **stop distance**: speed x (2 x the slowest of the last 25 loops + half of
+  the new optional `<part>StopSec`, default 0.15 s). A part kept out may only use the power that lets it
+  stop in time (it slows down near its waiting point, and brakes when it must), and a part that could not
+  stop before its zone any more counts as in it (the other part waits). Top speeds come from the motor
+  (`Turret.motor`, `Arm.motor`, `Lift.slide(...).part(...)`) or the fastest measured. The margin is now
+  extra safety, not room to coast: the v2bot uses the default (3 degrees) and waits at -137, 6 degrees
+  outside its zone, also with the computer under full load; the cookbook shows `liftStopSec` instead of `liftMargin = 80`.
+  New for the building blocks: `PositionMotor.fence(lo, hi, upPower, downPower)` and
+  `Turret.fence(lo, hi, upPower, downPower)` (launcher). Who yields is unchanged. Tests: slow uneven
+  loops (60 to 120 ms) with heavy pretend motors never end in the zone; the v2bot simulator test waits on
+  conditions with generous time limits and checks the zone at every look.
 - Docs: `docs/modules/robot.md` said only a Lift or Arm has numbers INIT requires; also a Hood's
   `posA`/`posB`, a servo Turret's `posA`/`angleA`/`posB`/`angleB`, a Turret's `homeAngle` with a home
   switch, and an interlock rule's zones. Its tuning-menu table missed Aim, Buttons, Hood, PieceSensor,

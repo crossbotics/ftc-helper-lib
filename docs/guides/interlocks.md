@@ -39,7 +39,7 @@ keepApart("TurretLift", turret.zone(), lift.zoneAbove());
 public static class TurretLift {
     public static double turretFrom = 109, turretTo = 239;   // degrees
     public static double liftAbove = 270;                    // counts
-    public static double liftMargin = 80;                    // optional: see "How a waiting part waits"
+    public static double liftStopSec = 0.2;                  // optional: see "Stop distance"
 }
 ```
 
@@ -55,7 +55,7 @@ flowchart TD
     A{"Is one part in its zone?"} -->|"the turret is"| B["The lift waits below its line.<br/>Its target is kept: it goes on<br/>when the turret leaves."]
     A -->|"the lift is"| C["The turret waits at the edge of its zone<br/>(or goes the other way round,<br/>if its range allows)."]
     A -->|"neither"| D{"Does one want in?"}
-    D -->|"yes"| E["That one goes in.<br/>(Both at once: the first one<br/>named in the rule.)"]
+    D -->|"yes"| E["That one goes in.<br/>(Both at once: one too fast to stop<br/>before its zone, else the first one<br/>named in the rule.)"]
     D -->|"no"| F["Nothing to do."]
     A -->|"both!"| G["Neither may go deeper.<br/>Each may only move OUT.<br/>The first one out lets the other keep its zone."]
 ```
@@ -71,11 +71,40 @@ TurretLift : both in their zones (...): move one out (each may only move out)
 **How a waiting part waits.** It stops two **margins** before its zone (the margin is a safety distance in
 the part's units: by default 3 degrees for a turret, about 1/50 of a lift's range, 0.02 for a servo).
 Its target is kept, so it goes on by itself the moment the other part leaves. A part counts as "in its
-zone" within one margin of it. Set `<part>Margin` in the rule's section if your part coasts further.
-**A fast lift needs more:** a goBILDA Viper-Slide on a 435 RPM motor (about 2800 counts a second) went 54 counts past where it
-was told to stop when pushed up at full power in the simulator, more than the default 27. With
-`liftMargin = 80` it waits at 270 - 2 x 80 = 110 counts. Measure yours: push the stick fully toward
-the line and see how far past the "held" point it goes.
+zone" within one margin of it.
+
+### Stop distance: a fast part brakes in time
+
+A motor does not stop the moment it is told to. Two things carry it on:
+
+1. **The loop.** The robot only looks and decides once per loop. A loop is usually 10 to 30 ms, but a
+   camera, a busy hub or a slow sensor can make some loops 100 ms or more. Until the next loop, the part
+   keeps going at full speed. (And the position it reads is from the last loop, so count that loop too.)
+2. **Braking.** With its power cut (BRAKE), a motor still coasts a little while it slows down.
+
+So every loop the rule measures each motor part's **speed** (from its encoder) and works out its **stop
+distance**: how far it would still go if it were told to stop now.
+
+```
+stop distance = speed x (2 x the slowest of the last 25 loops + half of <part>StopSec)
+```
+
+A part that must wait may only use the power that lets it stop in time: it slows down as it comes near
+its waiting point, and brakes (power 0) as soon as its stop distance would take it past it. Its top speed
+comes from its motor (`Turret.motor(..., "gobilda-5203-312")`, `Arm.motor`, `Lift.slide(...).part(...)`),
+or from the fastest the rule has seen it move. Example: the v2bot's turret turns about 680 degrees a
+second; in the simulator, at full stick toward the back with the wrist folded, it slows down and stops at
+its waiting point (-137), 6 degrees outside its zone, even with the computer so busy that loops get slow.
+
+A part moving so fast that it **could not stop before its zone** counts as already in it: the other part
+waits, so the two never both start into their zones.
+
+`<part>StopSec` (optional, default 0.15 s): how long the part takes to stop from full speed once its
+power is cut. A heavy slide or a big turret may take longer: test it with the stick fully toward the zone;
+if it ever ends past its waiting point, raise it. The margin is now extra safety on top (an encoder that
+slips, a part that bends), not the room to coast. A servo needs no stop distance: it is never sent past
+its fence, and until its `travelSec` is over it counts as anywhere between where it was and where it was
+sent.
 
 **A turret crossing its zone.** A turret at 80 degrees asked to go to 190 has to pass through the back.
 With the lift up it stops at 103 (two margins of 3 before 109) and waits. If its range lets it reach 190 the other way round (a turret
@@ -140,7 +169,7 @@ A robot with no rules works exactly as before.
 
 The OpMode stops at INIT with the reason if a rule has no Tunables section, a number is missing, a zone is
 empty (from not below to), outside the part's range, or covers its whole range (the part could never be
-out of it), a margin is negative, or a part has no position (an intake roller: use `Zone.when`). The INIT
+out of it), a margin is negative, a `StopSec` is outside 0 to 2 seconds, or a part has no position (an intake roller: use `Zone.when`). The INIT
 screen lists each rule:
 `Interlock TurretLift: Turret between 109 and 239 deg / Lift above 270 counts`.
 

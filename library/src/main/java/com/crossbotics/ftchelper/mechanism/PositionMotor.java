@@ -92,6 +92,8 @@ public class PositionMotor implements Subsystem {
     private boolean wasManual = false;  // true while the stick was moving it last loop
     // The interlock's fence, in units (+/- infinity = none): see fence().
     private double fenceLo = Double.NEGATIVE_INFINITY, fenceHi = Double.POSITIVE_INFINITY;
+    // The most power it may use up / down now (the interlock's caps, so it brakes in time; 1 = none).
+    private double fenceUpPower = 1, fenceDownPower = 1;
 
     /** Gets the motor (brake, encoder reset, plain power) and wraps it. Wrong name = clear error. */
     public static PositionMotor create(HardwareMap hardwareMap, String name) {
@@ -344,11 +346,32 @@ public class PositionMotor implements Subsystem {
      * edge ({@link #isHeld()}) and goes on when the fence moves. {@code fence(-inf, +inf)} removes it.
      */
     public PositionMotor fence(double lo, double hi) {
+        return fence(lo, hi, 1, 1);
+    }
+
+    /**
+     * {@link #fence(double, double)}, and the most power it may use toward each side now. An interlock
+     * rule lowers these as the part comes near its fence fast (and sets 0 to brake), so it stops before
+     * the edge instead of coasting past it.
+     *
+     * @param lo        lowest target allowed (units; -infinity = none)
+     * @param hi        highest target allowed (units; +infinity = none)
+     * @param upPower   the most power toward higher positions now, 0 to 1 (1 = no cap)
+     * @param downPower the most power toward lower positions now, 0 to 1
+     */
+    public PositionMotor fence(double lo, double hi, double upPower, double downPower) {
         fenceLo = Math.min(lo, hi);
         fenceHi = Math.max(lo, hi);
+        fenceUpPower = Double.isNaN(upPower) ? 1 : MathUtil.clamp(upPower, 0, 1);
+        fenceDownPower = Double.isNaN(downPower) ? 1 : MathUtil.clamp(downPower, 0, 1);
         double a = fenceLo * ticksPerUnit, b = fenceHi * ticksPerUnit;
         safe.setFence(Double.isNaN(a) ? Double.NEGATIVE_INFINITY : a, Double.isNaN(b) ? Double.POSITIVE_INFINITY : b);
         return this;
+    }
+
+    // A power kept under the fence's caps (see fence(lo, hi, upPower, downPower)).
+    private double capped(double power) {
+        return MathUtil.clamp(power, -fenceDownPower, fenceUpPower);
     }
 
     /** True while the fence keeps it from its target (it waits at the fence's edge). */
@@ -402,7 +425,7 @@ public class PositionMotor implements Subsystem {
             targetTicks = null;
             targetName = null;
             wasManual = true;
-            safe.setPower(manualPower);
+            safe.setPower(capped(manualPower));
             return;
         }
         // The stick was just let go (it moved last loop, it is 0 now): hold right here,
@@ -427,7 +450,7 @@ public class PositionMotor implements Subsystem {
         double goal = MathUtil.clamp(targetTicks / ticksPerUnit, fenceLo, fenceHi);
         double power = pid.calculate(goal, motorTicks() / ticksPerUnit);
         // Through the safety layer, so limits, the slow zone and maxPower still apply.
-        safe.setPower(power);
+        safe.setPower(capped(power));
     }
 
     // ---------------------------------------------------------------------------------------

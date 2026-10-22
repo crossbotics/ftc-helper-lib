@@ -75,6 +75,12 @@ public final class Arm extends MotorPositions<Arm> {
         return "deg";
     }
 
+    // Its top speed (degrees a second at full power): the motor's free speed through its gears.
+    @Override
+    double zoneTopSpeed() {
+        return Motors.get(motorId).freeRpm / 60.0 * 360.0 / gearRatio;
+    }
+
     @Override
     void suggestButtons(ButtonPlan plan) {
         plan.operator().rightStickY.use(this::manual).says("by hand");

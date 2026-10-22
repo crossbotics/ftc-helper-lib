@@ -30,7 +30,8 @@ import java.util.function.BooleanSupplier;
  * wrist or positioner, the hood's scale for a hood. A turret's zone repeats every 360 degrees (a zone
  * from 154 to 218 is also -206 to -142).
  *
- * <p>Optional: {@code <part>Margin}, the safety distance (see {@link Interlock}).
+ * <p>Optional: {@code <part>Margin}, the extra safety distance, and {@code <part>StopSec}, how long a
+ * motor part takes to stop (see {@link Interlock}).
  *
  * Docs: docs/modules/robot.md (section "Interlock")
  */
@@ -43,6 +44,12 @@ public final class Zone {
     final String words;            // a condition's words, e.g. "the intake is out"
     // Read from Tunables at INIT (the part's units): the zone from lo to hi, and the safety margin.
     double lo = Double.NaN, hi = Double.NaN, margin = Double.NaN;
+    // Read at INIT: seconds the part takes to stop once its power is cut (<part>StopSec; see Interlock).
+    double stopSec = Double.NaN;
+    // Set every loop (the part's units, 0 or more): how far it would still go up (toward zoneMax) or
+    // down if it were told to stop now: its speed x stopAfterSec (2 x the slowest recent loop + half its
+    // stopSec). And its top speed (units per second; 0 = not known yet).
+    double stopUp = 0, stopDown = 0, stopAfterSec = 0, topSpeed = 0;
 
     private Zone(Kind kind, Module<?> part, BooleanSupplier condition, String words) {
         this.kind = kind;

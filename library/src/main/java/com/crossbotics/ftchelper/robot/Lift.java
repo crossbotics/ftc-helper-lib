@@ -71,6 +71,14 @@ public final class Lift extends MotorPositions<Lift> {
         return "counts";
     }
 
+    // Its top speed (counts a second at full power) when its motor is named with part(...): the motor's
+    // free speed. Else not known (the interlock uses the fastest it has measured).
+    @Override
+    double zoneTopSpeed() {
+        Motors.Kind m = partId == null ? null : Motors.all().get(partId);
+        return m == null ? Double.NaN : m.freeRpm / 60.0 * m.countsPerRev;
+    }
+
     @Override
     void suggestButtons(ButtonPlan plan) {
         Pad op = plan.operator();
