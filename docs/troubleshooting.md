@@ -75,7 +75,7 @@ robot in five files: the Drive Tuner, then `Tunables.Drive.calibrated = true`.
 | `Launcher gave up: flywheel` (or `hood`, `Turret`...) | it was not ready in time: that part is the problem |
 | `Aim odometry: the pose was never set ...` | TeleOp ran without autonomous, so the robot does not know where it is: aiming uses the camera only. Run autonomous first, or park on the reset spot and hold gamepad 1 START 1 s ("set pose here", `Tunables.Odometry.resetX, resetY, resetHeading`; [lesson 7](tutorials/start/07-odometry.md#7-teleop-starts-where-autonomous-ended)) |
 | `No reset spot: add resetX, resetY, resetHeading to Tunables.Odometry` | START was held 1 s ("set pose here") but `Tunables.Odometry` has no spot: add the three numbers (inches and degrees from your wall, for BLUE) |
-| `Alliance now RED (was BLUE)` | the alliance switch is on (`lib.switchAlliance(...)`) and someone held BACK + START 1.5 s: the alliance switched. Hold them again to switch back ([ControlMap](modules/robot.md#controlmap)) |
+| `Alliance now RED (was BLUE)` | the alliance switch is on (`lib.switchAlliance(...)`) and someone held START, then BACK, 1.5 s: the alliance switched. Hold them again to switch back ([ControlMap](modules/robot.md#controlmap)) |
 | `Alliance now RED: odometry aim OFF until the pose is set (...)` | the alliance was switched on a turned field (`mirrorForRed = false`): the pose from autonomous cannot be fixed. Park on the reset spot and hold START 1 s ([buttons guide](guides/buttons.md#switching-the-alliance-in-teleop)) |
 | `Pose NOT set: stop first ...` | "set pose here" was held while the robot drove (a drive stick pushed) or whole-robot aim was on. Stop, then hold START 1 s again |
 | `No pause button (libraryButtons freed it): ...` | `lib.pause(null)` in `libraryButtons`: nothing pauses the robot. Put it on a button: `lib.pause(g1.back)` |
@@ -108,6 +108,11 @@ speeds by the trim (or tune it again with the Shot Tuner) and copy the new line 
 ([Lesson 9](tutorials/start/09-shooter-and-camera.md#speed-trim-and-a-low-battery)).
 Check that `kF` and `nominalVolts` (from the Flywheel Finder) are in `Tunables.Launcher`: they turn on the
 battery compensation.
+
+**The robot paused when I used START + BACK** (the debug lines, or the alliance switch)
+BACK was pressed first. BACK is the pause button, and it pauses the moment it goes down; START joining
+later does not undo that, so you get a plain pause (and no debug lines or switch). Tap BACK to go on.
+Next time **hold START first, then press BACK** ([the button menu](guides/buttons.md#moving-the-librarys-buttons)).
 
 **Y does nothing (no field-centric) in an EasyTeleOp**
 Field-centric needs mecanum wheels and the IMU. A tank drivetrain, or `imu()` returning null, keeps

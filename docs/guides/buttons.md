@@ -210,7 +210,7 @@ protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
     lib.fieldCentric(g1.a);                  // field-centric on/off: A instead of Y
     lib.slow(g1.rt);                         // slow on the right trigger: LT is free now
     lib.pause(g1.x);                         // pause on X (BACK still resets forward; lib.resetForward(null) frees it)
-    lib.switchAlliance(g1.back, g1.start);   // turn ON the alliance switch: hold BACK + START 1.5 s
+    lib.switchAlliance(g1.back, g1.start);   // turn ON the alliance switch: hold START, then BACK, 1.5 s
 }
 ```
 
@@ -225,8 +225,8 @@ writes `libraryButtons(LibraryButtons lib)` with `Key.g1(Btn.X)` instead of `g1.
 | Field-centric on/off | G1 Y | G1 right stick click | a press (mecanum with an IMU or odometry) | `lib.fieldCentric(key)` |
 | Pause / go on | G1 BACK | same | pauses at the press; a tap goes on | `lib.pause(key)` |
 | Reset "forward" | G1 BACK | same | held 1 s, field-centric only (a tap if its button has no other quick job) | `lib.resetForward(key)` |
-| Debug lines | G1 BACK + START | same | both pressed, runs when let go | `lib.debug(key, with)` (`with` null: one button) |
-| Switch alliance | **off** | off | both held 1.5 s, once turned on | `lib.switchAlliance(g1.back, g1.start)` turns it on |
+| Debug lines | G1 START + BACK | same | hold START, then press BACK; runs when let go | `lib.debug(key, with)` (`with` null: one button) |
+| Switch alliance | **off** | off | START, then BACK, both held 1.5 s, once turned on | `lib.switchAlliance(g1.back, g1.start)` turns it on |
 | Set pose here | G1 START | same | held 1 s with the drive sticks let go (robots with odometry); also in INIT | `lib.setPose(key)` |
 | Button map | G1 GUIDE | same | a tap | `lib.buttonMap(key)` |
 | Tuning menu | G1 GUIDE | same | held 1 s (a tap if its button has no other quick job) | `lib.tuningMenu(key)` |
@@ -238,9 +238,14 @@ Held 1 s: it also resets "forward" (only with field-centric on; robot-centric sh
 stays paused until the next tap. Going on is always a tap, at the release, so holding BACK never
 starts the robot.
 
-**BACK + START** (either order) is the debug lines, when you let go. Pressing BACK a moment first
-pauses the robot until START joins, then the pause is taken back. While both are down, BACK's pause
-and START's "set pose" do nothing.
+**START + BACK: press START first.** Hold START, then press BACK: that is the debug lines, when you
+let go (held 1.5 s: the alliance switch, if it is on). The robot does not pause. **BACK first is
+always a plain pause:** BACK stops the robot the moment it goes down, and START joining a moment
+later does nothing, so the robot stays paused (a tap of BACK goes on). Why: the pause has to act at
+the press, and a pair that came later would have to un-pause the robot, so it would stop for a moment
+and then drive on, which is a surprise. While the pair is down, START's "set pose" does nothing.
+Pressing both in the very same instant counts as START first. (This only applies to pairs with the
+pause button in them; any other pair works in either order.)
 
 **START + A or START + B** pairs a gamepad on the Driver Station: START's own job ("set pose here") is
 cancelled for that press, so pairing a gamepad never moves the pose.
@@ -255,10 +260,10 @@ Off unless you turn it on (the alliance is chosen in INIT with X = BLUE, B = RED
 `libraryButtons(...)`:
 
 ```java
-lib.switchAlliance(g1.back, g1.start);   // hold BACK + START 1.5 s: BLUE <-> RED
+lib.switchAlliance(g1.back, g1.start);   // hold START, then BACK, 1.5 s: BLUE <-> RED
 ```
 
-A quick press of both is still the debug lines. When the alliance switches, the goal flips, and so
+A quick press of both (START first) is still the debug lines. When the alliance switches, the goal flips, and so
 does the odometry's pose (autonomous ran as the wrong alliance):
 
 - On a mirrored field (the reset spot's `mirrorForRed` true), the pose is mirrored in place (x and

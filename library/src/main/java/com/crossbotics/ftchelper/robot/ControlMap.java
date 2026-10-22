@@ -36,7 +36,8 @@ import java.util.Set;
  * <p><b>The library's own buttons</b> (gamepad 1 by default): left stick drives (and strafes on
  * mecanum), right stick X turns, LT slow (the further it is pulled, the slower), Y field-centric on/off
  * (mecanum), BACK pauses everything at the press (motors on brake; a tap again to go on), holding BACK
- * 1 s also resets "forward" (field-centric), BACK + START debug lines, START held 1 s sets the pose to
+ * 1 s also resets "forward" (field-centric), hold START then press BACK: debug lines (BACK first is
+ * just a pause), START held 1 s sets the pose to
  * the reset spot (robots with odometry; sticks let go; also in INIT), GUIDE shows the button map (a
  * tap) or opens the tuning menu (held 1 s, PRACTICE profile). Switching the alliance during TeleOp is
  * off unless you turn it on: {@code lib.switchAlliance(g1.back, g1.start)}. With {@code oneDriver = true}: left stick click slow
@@ -78,7 +79,7 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
      * @Override protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
      *     lib.fieldCentric(g1.x);              // Y is free for buttons(...) now
      *     lib.setPose(g1.dpadDown);            // hold D-pad down 1 s: set pose here
-     *     lib.switchAlliance(g1.back, g1.start);   // turn on the alliance switch (hold both 1.5 s)
+     *     lib.switchAlliance(g1.back, g1.start);   // turn on the alliance switch (hold START, then BACK, 1.5 s)
      * }
      * }</pre>
      *

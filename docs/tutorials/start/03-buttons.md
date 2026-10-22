@@ -71,7 +71,7 @@ gets this map (two drivers):
 | B | free | claw open / close |
 | D-pad up / down | free | lift next height up / down |
 | BACK | pause at the press / a tap: go on (held 1 s, field-centric only: also reset "forward") | free |
-| BACK + START | together: debug lines (when let go) | free |
+| START + BACK | hold START, then press BACK: debug lines (when let go) | free |
 | GUIDE | tap: the button map; held 1 s: the tuning menu | free |
 
 The lift's buttons come from its named heights in `Tunables.Lift` (`down = 0, low = 900, high = 2400`):
@@ -214,9 +214,13 @@ so a driver who grabs BACK in a panic and holds it gets the stop. Holding BACK 1
 "forward" with field-centric on (lesson 2) and the robot stays paused; in robot-centric driving a held
 BACK shows a note ("forward" is only reset in field-centric driving). Going on is always a tap.
 
+**START + BACK: START first.** The debug lines (and the alliance switch below) use START and BACK
+together. Hold START, then press BACK. If BACK goes down first, it is just a pause (it acts at the
+press, and START joining later does not undo it): tap BACK to go on.
+
 **Wrong alliance?** Choose it in INIT (gamepad 1 X = BLUE, B = RED, section 6). Switching during the
 match is off unless you turn it on with one line, `lib.switchAlliance(g1.back, g1.start);` in
-`libraryButtons` (below). Then holding BACK + START 1.5 s switches it (BLUE to RED or back), both
+`libraryButtons` (below). Then holding START, then BACK, 1.5 s switches it (BLUE to RED or back), both
 gamepads buzz twice and the Driver Station says `Alliance now RED (was BLUE)`. The camera's goal and
 the aim follow at once. It takes 1.5 s on purpose, so it never happens by accident.
 
@@ -229,7 +233,7 @@ alliance switch can be turned on. One method next to `buttons(...)`:
 protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
     lib.fieldCentric(g1.x);                  // field-centric on X: Y is free for your own job now
     lib.slow(g1.rt);                         // slow on the right trigger
-    lib.switchAlliance(g1.back, g1.start);   // optional: hold BACK + START 1.5 s to switch the alliance
+    lib.switchAlliance(g1.back, g1.start);   // optional: hold START, then BACK, 1.5 s to switch the alliance
 }
 ```
 

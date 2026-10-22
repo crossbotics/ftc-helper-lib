@@ -26,7 +26,7 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   shows the button, the spot and the mirroring used (`Reset spot for RED: ...`). From code or an
   action: `robot.resetPose()`, `robot.resetPose(x, y, heading)`. `PoseTracker.unsetPose()`.
 - **Switch the alliance during TeleOp (optional, off by default):** `lib.switchAlliance(g1.back, g1.start)`
-  in `libraryButtons` turns it on; then holding BACK + START together 1.5 s switches. Both gamepads
+  in `libraryButtons` turns it on; then holding START, then BACK, 1.5 s switches. Both gamepads
   buzz twice, the screen says `Alliance now RED (was BLUE)`, and the camera's goal, the aim's goal point,
   `robot.alliance()` and `MatchMemory` (`changeAlliance(a)`) follow. The odometry pose follows too: on a
   mirrored field it is mirrored in place (x and heading flip); on a turned field (`mirrorForRed = false`,
@@ -147,8 +147,14 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - **Pause acts at the press of BACK** (it was at the release, because BACK also has "hold: reset
   forward"): a panicking driver holding BACK gets the stop at once. Held 1 s it also resets "forward"
   (field-centric) and stays paused; a tap goes on (going on is always at the release, so holding BACK
-  never starts the robot). If START joins (BACK + START, the debug lines), the pause is taken back.
-  `EasyTeleOp.pauseState()` (Controls.java gives it) turns this on.
+  never starts the robot). `EasyTeleOp.pauseState()` (Controls.java gives it) turns this on.
+- **START + BACK: press START first.** A pair with the pause button in it (the debug lines; the alliance
+  switch when it is on) now forms only when the other button (START) went down first, or in the same
+  loop. BACK pressed first is always a plain pause (held 1 s it still resets "forward"); START joining
+  later does nothing that press (no debug lines, no switch, no "set pose"). Before, BACK first paused
+  the robot and START joining took the pause back, so the robot stopped for the gap (often 0.1-0.3 s)
+  and drove on. The button map says `START: then BACK: debug lines` and `BACK: after START: ...`;
+  INIT says `hold START, then BACK, 1.5 s to switch`. Other pairs work in either order, as before.
 - A pair's quick job (BACK + START: debug lines) always runs when the buttons are let go.
 - The examples' `Tunables.Odometry` say `mirrorForRed = false` (BIOBUZZ's turned field); the whole-robot
   aim recipe holds to aim (`g1.rb.hold(robot.aimMode()::on, robot.aimMode()::off)`), with the toggle second.

@@ -21,12 +21,17 @@ import java.util.function.LongSupplier;
  *   <li>A pair (two buttons together): when both are down, each button's own job is cancelled for
  *       that press (it waits until let go). A pair's quick job runs when the buttons are let go
  *       (always, so it works the same with or without a long job on the pair).</li>
+ *   <li>A pair with the pause button in it (START + BACK: debug lines, the alliance switch) only
+ *       forms when the OTHER button went down first (or in the same loop): hold START, then press
+ *       BACK. BACK pressed first is always a plain pause (its hold still resets "forward"); the other
+ *       button joining later does nothing that press. So a pair never un-does a pause (a robot that
+ *       paused and went on again for 0.1-0.3 s was a surprise).</li>
  *   <li>START held: cancelled while A or B is down on the same gamepad (START + A/B pairs a gamepad on
  *       the Driver Station).</li>
  *   <li>Pause (when {@link #pauseAtPress} is given): a press of the pause button stops the robot AT
  *       ONCE, even when the button also has a long job or is in a pair (a panicking driver holding it
  *       must get the stop). Held on to the long job's time, the long job runs too and the robot stays
- *       paused. If the press turns into a pair (the second button joins), the pause is taken back.
+ *       paused (a pair cannot form after the pause, see above).
  *       Going on again (already paused) is a tap, at the release, so holding the button never
  *       starts the robot.</li>
  *   <li>While the tuning menu is open, only the menu's own buttons work; the others wait until let go.</li>
@@ -50,6 +55,9 @@ final class LibraryKeys {
         private boolean blocked = false;
         // This press paused the robot at once (see pauseAtPress): nothing more on the release.
         private boolean pausedHere = false;
+        // A pair only: the pause button's own group when the pair includes it (then the other button
+        // must go down first), else null.
+        Group pauseIn = null;
 
         Group(LibraryButtons.Slot slot, Runnable tap, Runnable hold, boolean menu) {
             this.slot = slot;
@@ -96,6 +104,9 @@ final class LibraryKeys {
         // A pair's quick job (debug) always runs when let go: the same whether or not the pair also
         // has a long job (switch alliance, when the team turns it on).
         for (Group p : pairs) p.tapAtPress = false;
+        // A pair that includes the pause button forms only when the other button was down first.
+        for (Group p : pairs)
+            for (Group g : singles) if (g.slot.tap == LibraryButtons.Job.PAUSE && p.uses(g.slot.key)) p.pauseIn = g;
     }
 
     /**
@@ -139,6 +150,12 @@ final class LibraryKeys {
                 p.blocked = down;
                 p.wasDown = down;
                 continue;
+            }
+            if (down && !p.wasDown && !p.blocked && p.pauseIn != null && p.pauseIn.wasDown) {
+                // The pause button went down first: it stays a plain pause (it may already have
+                // paused the robot). No pair this press, and the other button's own job waits too.
+                p.blocked = true;
+                for (Group s : singles) if (s != p.pauseIn && p.uses(s.slot.key)) block(s);
             }
             if (down && !p.wasDown && !p.blocked) {
                 p.downAt = now;
@@ -198,13 +215,9 @@ final class LibraryKeys {
         return paused != null && g.slot.tap == LibraryButtons.Job.PAUSE && !g.tapAtPress;
     }
 
-    // Cancels a button's own job for this press. If the press already paused the robot (the first
-    // button of a pair, pressed a moment before the second), the pause is taken back.
-    private void block(Group g) {
-        if (g.pausedHere) {
-            g.pausedHere = false;
-            if (paused.getAsBoolean()) g.tap.run();
-        }
+    // Cancels a button's own job for this press. (Never the pause button after it paused: a pair with
+    // the pause button only forms when the other button went down first, see update.)
+    private static void block(Group g) {
         g.blocked = true;
     }
 

@@ -179,7 +179,7 @@ the ground.**
    add its name to the list, or take it out. Remember the list replaces the default (the left side). For
    example, if the lesson robot's back right wheel rolls backward, it needs
    `.reversed("front_left", "back_left", "back_right")`.
-4. **The IMU:** run your TeleOp, press START and BACK together (this turns on the extra **debug lines**
+4. **The IMU:** run your TeleOp, hold START, then press BACK (this turns on the extra **debug lines**
    on the Driver Station: more numbers for checking, like powers and the `Heading`; it does
    not pause),
    and turn the robot LEFT by hand. The `Heading` line must go UP. If it goes down or barely moves, fix

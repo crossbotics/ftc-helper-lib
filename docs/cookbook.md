@@ -564,7 +564,7 @@ protected boolean useStandardButtons() {
 protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
     lib.fieldCentric(g1.x);                  // field-centric on/off: X instead of Y
     lib.slow(g1.rt);                         // slow on the right trigger: LT is free now
-    lib.switchAlliance(g1.back, g1.start);   // optional, off by default: hold BACK + START 1.5 s
+    lib.switchAlliance(g1.back, g1.start);   // optional, off by default: hold START, then BACK, 1.5 s
 }
 ```
 
@@ -596,7 +596,7 @@ copy back into `Tunables.java` (the file is the record).
 - **Two jobs on one button** stop INIT with the button's name, so a mistake is found before the match.
 - **Pause:** press gamepad 1 **BACK**: everything stops at once. A tap again goes on.
 - **Wrong alliance?** Choose it in INIT (X = BLUE, B = RED). Switching during TeleOp is optional: turn it
-  on with `lib.switchAlliance(g1.back, g1.start)` ([above](#how-do-i-move-the-librarys-own-buttons-slow-field-centric-pause)), then hold **BACK + START** 1.5 s.
+  on with `lib.switchAlliance(g1.back, g1.start)` ([above](#how-do-i-move-the-librarys-own-buttons-slow-field-centric-pause)), then hold **START, then BACK** (START first) 1.5 s.
 - **Set pose here** (robots with odometry): hold gamepad 1 **START** 1 s on the reset spot, sticks let go, in INIT or in the match ([below](#how-do-i-set-the-pose-when-autonomous-did-not-run)).
 
 **More:** [Lesson 3: the button map](tutorials/start/03-buttons.md#6-the-button-map-init-and-guide).
@@ -1768,7 +1768,7 @@ show("Flywheel ready", () -> robot.launcher.isReady());
 ```
 
 **Why:** you see what the robot "thinks" while you drive. The value must be quick to read (no waiting).
-**More:** [The button menu: feedback](guides/buttons.md#4-feedback). Debug lines (loop time and more): press gamepad 1 BACK + START.
+**More:** [The button menu: feedback](guides/buttons.md#4-feedback). Debug lines (loop time and more): hold gamepad 1 START, then press BACK (BACK first is just a pause).
 
 ### How do I round a number on the Driver Station?
 
