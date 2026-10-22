@@ -16,6 +16,8 @@ final class SimEngine {
     private Thread physics;
     /** The auto builder's run of the Built Auto (watched each physics step). */
     final BuiltRun built = new BuiltRun(this);
+    /** Run after each physics step (the test recorder watches for an OpMode that stops by itself). */
+    volatile Runnable onStep = null;
 
     static {
         // OpModes can tell they run here: an untuned autonomous drive runs anyway (EasyAuto).
@@ -73,6 +75,8 @@ final class SimEngine {
                     ds.tick();
                     placeForInit();
                     built.tick();
+                    Runnable watch = onStep;
+                    if (watch != null) watch.run();
                 } catch (RuntimeException e) {
                     ds.physicsError("Simulator physics error: " + e);
                 }

@@ -40,7 +40,7 @@ devices.press("lift_bottom", true);              // a pretend switch pressed
 
 | Method | What it does |
 | --- | --- |
-| `new PretendDevices()` | a pretend configuration where every name asked for exists. It also forgets what the library keeps between programs (tuned numbers in memory, a turret's last angle, autonomous's alliance), uses an empty temporary settings file, and makes motors read their pretend encoder every time (no 3 ms reuse): each test starts like a robot just turned on |
+| `new PretendDevices()` | a pretend configuration where every name asked for exists. It also forgets what the library keeps between programs (tuned numbers in memory, a turret's last angle, a launcher's last trim, autonomous's alliance: `RobotDefinition.freshRobotApp()`), uses an empty temporary settings file, and makes motors read their pretend encoder every time (no 3 ms reuse): each test starts like a robot just turned on |
 | `motor(name)`, `servo(name)`, `crServo(name)`, `pinpoint(name)` | the pretend device with that name (made now if needed) |
 | `press(name, pressed)` | press or let go of a pretend switch (a touch sensor, or a magnetic switch on a digital port) |
 | `analog(name, volts, maxVolts)` | a pretend analog input (an absolute encoder) |

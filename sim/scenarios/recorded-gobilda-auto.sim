@@ -1,0 +1,20 @@
+# recorded-gobilda-auto.sim: made by the simulator's test recorder on 2026-10-22, from "goBILDA Bot Launch and Back Up".
+# The steps replay what was done on the page; the "expect" lines at the end are the checks.
+# Change a check's number or tolerance to make it looser or stricter (start lesson 10).
+# Run it: ./gradlew :sim:scenario -Pfile=sim/scenarios/recorded-gobilda-auto.sim   (from the ftc-helper-lib folder)
+# Start lesson 10 reads this file line by line. (The robot line was added by hand: in the library's
+# folder a test names its robot file; a team's test uses simulator/robot.properties.)
+robot ../robots/starter-bot-gobilda.properties
+init "goBILDA Bot Launch and Back Up"
+wait 1
+press g1.b
+wait 0.92
+start
+# The checks
+expect within 6 phase STOPPED          # the recorder wrote 3.3 (1.5 x the 2.2 s it took); loosened by hand
+expect within 3 launched >= 3
+expect within 3 points "red" >= 13
+expect step 1 done
+expect step 2 done
+expect error none
+expect bumped none

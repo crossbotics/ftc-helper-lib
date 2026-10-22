@@ -53,15 +53,14 @@ public class PretendDevices implements Devices {
 
     /**
      * A fresh pretend configuration. It also forgets what the library keeps between programs in one
-     * robot app (tuned numbers in memory, a turret's last angle, autonomous's alliance and pose), and
+     * robot app (tuned numbers in memory, a turret's last angle, a launcher's last trim, autonomous's alliance and pose), and
      * points the settings file at an empty temporary file: so every test starts like a robot just
      * turned on, whatever ran before it. And motors read their pretend encoder every time it is asked
      * (on a robot a reading is reused for 3 ms), so a test can move it and update at once.
      */
     public PretendDevices() {
-        com.crossbotics.ftchelper.tuning.Tunable.forgetAllForTests();
-        com.crossbotics.ftchelper.robot.Turret.forgetAngles();
-        com.crossbotics.ftchelper.match.MatchMemory.clear();
+        // tuned numbers in memory, turret angles, launcher trims, the last autonomous's alliance and pose
+        com.crossbotics.ftchelper.robot.RobotDefinition.freshRobotApp();
         // A test moves a pretend encoder and updates at once: read it every time (no 3 ms reuse).
         com.crossbotics.ftchelper.safety.SafeMotor.freshReadingsForTests(true);
         try {

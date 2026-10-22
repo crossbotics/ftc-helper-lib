@@ -2949,8 +2949,10 @@ Then open **http://localhost:8780** in a browser. Choose an OpMode, press INIT, 
 
 ### How do I test my code with a script?
 
-Write a scenario file in your robot project, for example `simulator/scenarios/intake.sim` (the library
-runs this same file as a test: `sim/scenarios/cookbook-intake.sim`):
+The easy way: **record** it. In the simulator, **Tests > Record a test**, drive, **Stop recording**,
+keep the ticked checks, **Save**: the simulator writes `simulator/scenarios/NAME.sim` for you
+([start lesson 10](tutorials/start/10-test-your-robot-code.md)). Or write one by hand, for example
+`simulator/scenarios/intake.sim` (the library runs this same file as a test: `sim/scenarios/cookbook-intake.sim`):
 
 ```text
 init "Quick Start TeleOp"            # your TeleOp's name
@@ -2962,7 +2964,7 @@ expect within 1 motor intake power = 0 0.01
 expect error none
 ```
 
-Run it:
+Run it (or every test in the folder: leave out `-Pfile`):
 
 ```bash
 ./gradlew :sim:scenario -Pfile=../simulator/scenarios/intake.sim -PteamCode=../TeamCode
@@ -2973,7 +2975,7 @@ Run it:
 Button names in a scenario are the FTC names, not the Java ones: `g2.rt`, `g2.lb`, `g2.a` are the same,
 but `g2.dpadUp` is `g2.dpad_up` and `g2.leftStickY` is `g2.left_stick_y`.
 
-**More:** [Scenario files](guides/simulator.md#scenario-files-test-without-a-browser) (every command and button name).
+**More:** [Start lesson 10: Test your robot code](tutorials/start/10-test-your-robot-code.md), [Scenario files](guides/simulator.md#scenario-files-test-without-a-browser) (every command and button name).
 
 ## Not here?
 

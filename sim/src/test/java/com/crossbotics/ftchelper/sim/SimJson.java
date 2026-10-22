@@ -48,6 +48,8 @@ final class SimJson {
         b.append("\"battery\":").append(fmt(r.batteryVolts)).append(',');
         b.append("\"lan\":").append(server.lan).append(',');
         b.append("\"port\":").append(server.port()).append(',');
+        // the test recorder and a test run on the page (the page shows the recording bar)
+        b.append("\"tests\":").append(server.tests.brief()).append(',');
         b.append("\"addresses\":");
         strings(b, server.lan ? addresses() : Collections.<String>emptyList());
         b.append(',');

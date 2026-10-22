@@ -2277,6 +2277,84 @@
    }
   },
   {
+   "id": "SIM-04",
+   "title": "Record a test in the simulator, break it, update it",
+   "area": "simulator",
+   "priority": "high",
+   "where": "sim",
+   "minutes": 40,
+   "needs": [],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/tutorials/start/10-test-your-robot-code.md",
+     "anchor": ""
+    },
+    {
+     "path": "docs/guides/simulator.md",
+     "anchor": "record-a-test"
+    }
+   ],
+   "file": "testing/tests/SIM-04.md",
+   "sections": {
+    "why": [
+     {
+      "p": "The simulator's recorder writes a test from what a driver does on the page. We need to know if students can record a test of their own robot, if the suggested checks make sense, and if a recorded test passes when it is run again (a test that fails for no reason is worse than none)."
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "Your robot project with the simulator running your code: `./gradlew :sim:run -PteamCode=../TeamCode`.",
+       "Your robot drives in the simulator, and has an autonomous."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Follow [start lesson 10](repo:docs/tutorials/start/10-test-your-robot-code.md), section 2: record a test of your autonomous (INIT, choose the alliance, START, wait for its end, Stop recording).",
+       "Read the suggested checks. Write down any check that looks wrong or missing. Save it.",
+       "Press **Run it now**. Then run it 4 more times (**Run it again**).",
+       "Record a TeleOp test: drive forward 2 seconds, turn, let go, Stop recording, Save, Run it now (5 times).",
+       "Change one number on purpose (for example `Tunables.Drive.maxPower` to 0.6), restart the simulator, and run both tests.",
+       "For a test that fails: **The change was on purpose: update the test**, **Save the update**, **Run it again**.",
+       "Run all tests with one command: `./gradlew :sim:scenario` (from the `ftc-helper-lib` folder).",
+       "Put the number back."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Each recorded test passes 5 runs out of 5 before the change, the change makes at least one fail, and after the update it passes again."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "robot (drive kind, parts), OpMode names",
+       "how many of the 5 runs passed, for each test, before the change",
+       "each suggested check that looked wrong or was missing",
+       "which test failed after the change, and the lines the update changed",
+       "the result of `./gradlew :sim:scenario`",
+       "anything in the window that was hard to understand"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Any robot that runs in the simulator works. No autonomous yet? Record two TeleOp tests (driving, and your intake or main mechanism). What matters: a recorded test passes again and again, and fails only when the robot really changed."
+     }
+    ]
+   }
+  },
+  {
    "id": "SOM-01",
    "title": "Shooting on the move - standing still nothing changes",
    "area": "moving-shot",

@@ -96,7 +96,7 @@ TeamCode; with none, it finds `../TeamCode` when the library sits in a robot pro
 | Command | Does | Options |
 | --- | --- | --- |
 | `./gradlew :sim:run` | the simulator page | `-Probot=FILE` (default: your `simulator/robot.properties`, else the library's example), `-Plan` (phones on the WiFi), `-Pport=8781` (another port, to run two at once; default 8780), `-PteamCode=DIR` |
-| `./gradlew :sim:scenario -Pfile=a.sim` | runs test scripts ([below](#scenario-files-test-without-a-browser)) | `-Pfile=a.sim,b.sim` (a comma list), `-Probot=`, `-PteamCode=` |
+| `./gradlew :sim:scenario -Pfile=a.sim` | runs test scripts ([below](#scenario-files-test-without-a-browser)); with no `-Pfile` in a robot project: every test in `simulator/scenarios` | `-Pfile=a.sim,b.sim` (a comma list) or a folder (every `.sim` in it), `-Probot=`, `-PteamCode=` |
 | `./gradlew :sim:fromRobot` | writes the robot file from your `Robot.java` | `-ProbotClass=` (which class), `-Pout=FILE`, `-Pfield=NAME` (default `biobuzz-2026`) |
 | `./gradlew :sim:fromConfig -Pconfig=FILE.xml` | a first robot file from a robot configuration | `-Pout=FILE`, `-Pfield=NAME` |
 | `./gradlew :sim:newRobot -Pconfig=FILE.xml` | the five files (Robot.java, ...) from a configuration | `-PteamCode=DIR`, `-Ppackage=` (default `org.firstinspires.ftc.teamcode`) |
@@ -166,7 +166,8 @@ this browser) looks from:
 | 8 | HIVE close-up | your alliance's HIVE up close (a field with no HIVEs: the goal nearest the robot) |
 
 The sides come from the field file's frame (its `frameNote` says which wall is which). **Layers** (next to
-View) adds lines and maps over the 3D view: see [Layers](#layers) below. **Auto builder** (next to Layers)
+View) adds lines and maps over the 3D view: see [Layers](#layers) below. **Tests** records a test of your
+code, runs it and updates it: see [Record a test](#record-a-test). **Auto builder** (next to Tests)
 builds an autonomous on the field and runs it with your code: see [The auto builder](#the-auto-builder).
 
 **Where the robot starts.** In INIT the robot is put where the program says: an autonomous that names its
@@ -872,15 +873,67 @@ repositories { maven { url = 'https://maven.brott.dev/' } }
 dependencies { testImplementation 'com.acmerobotics.dashboard:dashboard:0.4.16' }
 ```
 
+## Record a test
+
+The page writes a test for you (lesson: [start lesson 10, Test your robot code](../tutorials/start/10-test-your-robot-code.md)).
+Over the 3D view, **Tests**:
+
+- **Record a test**: the field starts fresh (the OpMode running stops, the robot to its start spot, every
+  piece back, the Tunables numbers as the code wrote them: a test runs with the code, not with numbers
+  tuned on the page). A red bar shows the time. Choose an OpMode, INIT, choose the alliance, START, and
+  do the job; then **Stop recording**. **Record from now** starts with the robot where it is (a `set pose`
+  line): quicker, but less reliable.
+- What it writes: `init`, `start`, `stop`; every gamepad change from any source (keyboard, controller,
+  on-screen, phone) as `press` (a tap shorter than 0.35 s), `hold` and `release` (a stick in steps of
+  0.25; a sweep counts where it ended; three or more let go at once: `release g1.all`); the time between
+  them as `wait` (before START at most 1 s: it changes nothing); the robot or a piece moved by hand
+  (`set pose`, `set piece`, `push`, `set field start`); the page's settings that differ from a fresh
+  simulator (`set battery`, `set preload off`, `set scatter`, `set autotimer off`). An autonomous that
+  ends by itself in the middle of the recording becomes `expect within T phase STOPPED`. Only commands
+  of the [scenario language](#scenario-files-test-without-a-browser); the auto builder's Run is not one
+  (record your own autonomous instead).
+- **Stop recording** opens the checks, suggested from what the simulator sees now. **Goal checks**
+  (ticked): the autonomous finishes (`phase STOPPED`, within 1.5 times the time it took), each step of its
+  report that is `done`, pieces shot, scored or picked up and the points (`>=`), no error, not bumping into
+  anything, a TeleOp still running; for a driving test with no pieces, where the robot ends. **Details**
+  (not ticked): where the robot ends (x and y give or take 3 in, the heading 5 degrees), the time since
+  START (`<` 1.5 times), Driver Station lines (only their steady part: from the first number on, the
+  line is cut off, because numbers change from run to run). Every check's numbers, operator and
+  `within` time can be changed before saving. The checks that wait come first, then the others.
+- **Save** writes `simulator/scenarios/NAME.sim` in the robot project (letters, digits, `-` and `_`;
+  it asks before replacing a file), with a header: made by the recorder, the date, the OpMode, how to run
+  it. If the page runs another robot file than `simulator/robot.properties`, the test gets a `robot` line.
+  Started with `-PteamCode=none` (no robot project): **Download** instead.
+- **Run it now** runs the test on the page, from a fresh start like `:sim:scenario`, while you watch (the
+  page's gamepads and buttons wait; **Stop the test** ends it). The result: PASSED, or FAILED with each
+  failed line and the value it saw.
+- **Open a test** lists the tests in `simulator/scenarios` (or opens a file from the computer) and runs one.
+  If it fails after a change you made **on purpose**, **The change was on purpose: update the test** runs
+  it once more and measures (a `within` may then wait up to 3 times as long, to see how long it takes
+  now), then shows each failed check with its new number: `=` takes the value seen, `>=`/`>` and
+  `<=`/`<` the value seen as the new limit, `time <` and a late `within` 1.5 times what it took. The steps,
+  the tolerances and the checks that passed stay. A word check (`phase`, `step`, `screen`, `error`)
+  cannot take a number: it is listed to change by hand. **Save the update**, then run it again.
+
+The page reads and writes only `.sim` files in `simulator/scenarios`, by a plain name (no folders), and only
+for a page on the computer that runs the simulator (a phone joined with `-Plan` cannot).
+
 ## Scenario files: test without a browser
 
 A scenario file (`.sim`) is a short script: it drives the simulator like a person and checks what happens. Anyone can run
 one, and every scenario also runs as an automatic test (the library's in `sim/scenarios/`, a team's in
-`simulator/scenarios/`):
+`simulator/scenarios/`). The [recorder](#record-a-test) writes one for you; this is the language, to read
+and change them:
 
 ```bash
 ./gradlew :sim:scenario -Pfile=../simulator/scenarios/main-teleop.sim
+./gradlew :sim:scenario                      # in a robot project: every test in simulator/scenarios
 ```
+
+**Each file starts like a robot just turned on**: a fresh simulator, the field at the match start, and
+nothing kept from the file before (the alliance and the autonomous report, a turret's angle, a
+launcher's trim, numbers tuned in the tuning menu or saved on the pretend Control Hub). The Tunables
+numbers are the ones in your code. Several files end with a list of which passed.
 
 ```text
 # lines starting with # are notes
@@ -1106,6 +1159,9 @@ stops with all motors off. Its first run found a real bug: every finder crashed 
 ```bash
 ./gradlew :sim:testDebugUnitTest
 ```
+
+`SimRecorderTest` plays a recording session the way the page sends it, saves the test, replays it
+(PASSED), changes the robot (FAILED), updates the test from a measuring run, and replays it (PASSED).
 
 `BuiltAutoTest` runs the [auto builder](#the-auto-builder)'s plans with the example robots (a Simple steps
 plan on goBILDA's starter bot, a Pedro path on the Pedro robot) and checks that they end near the plan. The

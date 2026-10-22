@@ -22,6 +22,7 @@ then come back here. Not sure which robot code to start from? [Pick your templat
 
 The shortest way to a whole robot program. **Lessons 1 to 6 are for every robot:** do them in order.
 **Lessons 7 to 9 are for some robots:** do only the ones your robot needs (odometry, paths, a shooter).
+**Lesson 10 is advanced:** automatic tests of your code, when your robot works.
 
 **Which robot you build:** your own. You change **your robot's five files** (the ones the Quick start
 put in your TeamCode), a few lines per lesson. Each lesson explains with a worked example, the
@@ -36,7 +37,7 @@ finished lesson robot, so the code here always works.
 library's examples). Your own robot's use `-PteamCode=../TeamCode`:
 `./gradlew :sim:fromRobot -PteamCode=../TeamCode`, then `./gradlew :sim:run -PteamCode=../TeamCode`.
 Run them from the `ftc-helper-lib` folder ([the Terminal tab](../start-from-zero.md#6-the-terminal-tab)).
-Scenario files (test scripts, lesson 5) for your own robot go in your robot project's
+Simulator tests (lesson 10) for your own robot go in your robot project's
 `simulator/scenarios/` folder, so they are saved with your code.
 
 **"Every loop":** the lessons often say a job runs "every loop". The **loop** is the library's loop: it
@@ -56,6 +57,8 @@ part. You never write it ([From Blocks to Java](../blocks-to-java.md#the-key-ide
 | 7 | [Odometry: where am I on the field?](start/07-odometry.md) | which device to buy, the odometry line, the Odometry Tuner, `driveTo` field points, TeleOp starting where autonomous ended | a mecanum drive, a Pinpoint (or OTOS, or dead wheels) |
 | 8 | [Paths with Pedro Pathing](start/08-paths-with-pedro.md) (optional) | what a path follower does and whether you need one, adding Pedro, lines and curves in your field numbers, Pedro's tuner, the first real run | a mecanum drive and odometry (lesson 7 done) |
 | 9 | [A shooter, a camera and a turret](start/09-shooter-and-camera.md) (for robots that shoot) | a flywheel and feeder, aiming with a camera, a turret that follows the goal, the odometry as backup aim, two shot tables, whole-robot aim, a buzz on target, knowing which piece fires next, a light for the drivers | lesson 6 done, a shooter, a camera |
+| | **Advanced** | | |
+| 10 | [Test your robot code](start/10-test-your-robot-code.md) (advanced) | record a test in the simulator, read it line by line, tolerances, goals not details, a few good tests, update a test after a planned change, run them all with one command | lesson 6 done; the simulator |
 
 Then: [the button menu](../guides/buttons.md) (every way a button can work),
 [the cookbook](../cookbook.md) (short "how do I...?" answers with code to copy),

@@ -307,6 +307,53 @@
   #builder .b-table { margin: 4px 0; } #builder .b-table tr.bad td { color: var(--stop); } #builder .b-table tr.warn td { color: var(--warn); }
   #builder .b-table .sr, #builder .sr { color: #cf222e; } #builder .sb { color: #1f6feb; }
   #builder .b-code { max-height: 260px; overflow: auto; font: 11.5px/1.35 ui-monospace, Menlo, monospace; background: var(--bg); padding: 6px; border-radius: 6px; white-space: pre; }
+  /* The tests (tests.js): the recording bar under the 3D view's buttons, and the dialog to choose checks and see results. */
+  #recBar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; padding: 5px 10px; border: 1px solid var(--stop);
+    border-radius: 8px; background: color-mix(in srgb, var(--stop) 9%, var(--panel)); font-size: 13px; }
+  #recBar[hidden] { display: none; }
+  #recBar .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--stop); flex: none; animation: recBlink 1s steps(2) infinite; }
+  #recBar.run { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 9%, var(--panel)); }
+  #recBar.run .dot { background: var(--accent); }
+  #recBar .muted { flex: 1; min-width: 12em; }
+  @keyframes recBlink { 50% { opacity: .25; } }
+  @media (prefers-reduced-motion: reduce) { #recBar .dot { animation: none; } }
+  #testDlg { position: fixed; inset: 0; z-index: 50; overflow: auto; background: rgba(16, 28, 69, .45); padding: 16px; }
+  #testDlg[hidden] { display: none; }
+  body.td-open { overflow: hidden; }
+  #testDlg .td-page { max-width: 760px; margin: 0 auto; background: var(--panel); color: var(--ink); border: 1px solid var(--line);
+    border-radius: 10px; padding: 12px 18px 16px; }
+  #testDlg .td-head { display: flex; align-items: center; gap: 8px; }
+  #testDlg .td-head h2 { flex: 1; margin: 0; font-size: 16px; text-transform: none; letter-spacing: 0; color: var(--ink); }
+  #testDlg h3 { margin: 12px 0 2px; }
+  #testDlg p { margin: 6px 0; }
+  #testDlg code { font: 12px ui-monospace, Menlo, monospace; background: var(--bg); padding: 0 4px; border-radius: 4px; }
+  #testDlg .td-check { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 8px; align-items: baseline; padding: 6px 0; border-top: 1px solid var(--line); }
+  #testDlg .td-check > label { font-weight: 600; cursor: pointer; }
+  #testDlg .td-check.off > label { font-weight: 400; color: var(--muted); }
+  #testDlg .td-check .edit { grid-column: 2; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12.5px; color: var(--muted); }
+  #testDlg input[type=text], #testDlg input[type=number] { font: inherit; font-size: 12.5px; padding: 3px 5px; background: var(--bg); color: var(--ink);
+    border: 1px solid var(--line); border-radius: 5px; }
+  #testDlg input[type=number], #testDlg input.num { width: 72px; }
+  #testDlg input.wide { width: min(320px, 60vw); }
+  #testDlg .td-name { margin-top: 10px; }
+  #testDlg .td-name input { width: 16em; max-width: 60vw; font-family: ui-monospace, Menlo, monospace; }
+  #testDlg .td-code { max-height: 280px; overflow: auto; font: 12px/1.4 ui-monospace, Menlo, monospace; background: var(--bg); padding: 8px;
+    border-radius: 6px; white-space: pre; margin: 6px 0; }
+  #testDlg details { margin-top: 8px; } #testDlg summary { cursor: pointer; }
+  #testDlg .td-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  #testDlg .primary { background: var(--go); color: #fff; border-color: var(--go); font-weight: 600; }
+  #testDlg .td-say { min-height: 1.4em; color: var(--go); }
+  #testDlg .td-say.bad { color: var(--stop); }
+  #testDlg .td-inline { margin-left: 8px; }
+  #testDlg .td-note { border-left: 3px solid var(--warn); padding-left: 8px; color: var(--ink); }
+  #testDlg .td-pass, #testDlg .td-fail { font-size: 20px; font-weight: 800; margin: 8px 0; }
+  #testDlg .td-head2 { font-size: 16px; font-weight: 700; margin: 8px 0; }
+  #testDlg .td-pass { color: var(--go); } #testDlg .td-fail { color: var(--stop); }
+  #testDlg .td-failline { color: var(--stop); font-weight: 700; }
+  #testDlg .td-diff > div { padding: 5px 0; border-top: 1px solid var(--line); font: 12px/1.45 ui-monospace, Menlo, monospace; overflow-wrap: anywhere; }
+  #testDlg .td-diff .old { color: var(--stop); text-decoration: line-through; } #testDlg .td-diff .new { color: var(--go); font-weight: 700; }
+  #testDlg .td-list { display: flex; flex-wrap: wrap; gap: 6px; }
+  #testDlg .td-pick { font-family: ui-monospace, Menlo, monospace; }
   /* The setup card (setupcard.js, the web builder's): one page for the drive team, printable. */
   #setupCard { position: fixed; inset: 0; z-index: 50; overflow: auto; background: rgba(16, 28, 69, .45); padding: 16px; }
   #setupCard .sc-page { max-width: 760px; margin: 0 auto; background: #fff; color: #1d2330; border-radius: 10px; padding: 16px 20px 20px; }
@@ -527,9 +574,18 @@
           <label><input type="checkbox" data-layer="size"> Robot size box (and the 18 in start cube)</label>
           <div class="muted">What each line means: <a href="https://github.com/crossbotics/ftc-helper-lib/blob/main/docs/guides/simulator.md#layers" target="_blank" rel="noopener">the simulator guide, "Layers"</a>.</div>
         </div></span>
+      <span class="dropdown"><button id="testsBtn" aria-haspopup="true" aria-expanded="false" title="Record a test of your code, run it, and update it after a planned change">Tests<span class="caret" aria-hidden="true">&#9662;</span></button>
+        <div id="testsMenu" class="menu" hidden>
+          <button data-tests="record"><b>Record a test</b> <span class="muted">from a fresh field: choose, INIT, drive, then Stop</span></button>
+          <button data-tests="recordNow">Record from now <span class="muted">the robot stays where it is</span></button>
+          <button data-tests="open">Open a test <span class="muted">run it; update it after a planned change</span></button>
+          <div class="muted">How: <a href="https://github.com/crossbotics/ftc-helper-lib/blob/main/docs/tutorials/start/10-test-your-robot-code.md" target="_blank" rel="noopener">start lesson 10, "Test your robot code"</a>.</div>
+        </div></span>
       <button id="builderBtn" aria-pressed="false" title="Build an autonomous on the field and run it here with your code (it takes the Control Hub's place)">Auto builder</button>
       <span class="muted" id="v3note"></span>
     </div>
+    <div id="recBar" role="status" hidden><span class="dot" aria-hidden="true"></span><b id="recText">Recording</b>
+      <span class="muted" id="recHint"></span><button id="recStop">Stop recording</button><button id="recCancel">Cancel</button></div>
     <div id="stage" class="off" aria-label="Field and robot in 3D. Drag to turn, scroll to zoom, right-drag to slide."><div id="layerNote" role="status" hidden></div>
       <button id="scoreBar" hidden title="The score: click for where the points come from (Match panel)"></button><div id="toast" role="alert" hidden></div></div>
     <div id="stageOff">The 3D view is off (tick "Show"). The field from above is in the Control Hub's Robot tab.</div>
@@ -538,6 +594,7 @@
   </section>
   <section id="builderSection" hidden aria-label="Auto builder"><div id="builder"></div></section>
 </main>
+<div id="testDlg" role="dialog" aria-modal="true" aria-labelledby="testDlgTitle" hidden></div>
 
 <script src="/simview.js"></script>
 <script>
@@ -696,6 +753,7 @@ function applyKeys() {
 }
 window.addEventListener("keydown", e => {
   if (e.target.matches("input, select") && e.target.type !== "range" && e.target.type !== "checkbox") return;
+  if (document.body.classList.contains("td-open")) return;   // the tests dialog is open: keys are for it
   const k = e.key.toLowerCase();
   if (!(k in KEYMAP) || !keyboardPads().length) return;
   e.preventDefault(); keysDown.add(k); applyKeys(); sendPads();
@@ -807,6 +865,7 @@ function gotState(s) {
   lastState = s;
   render(s);
   if (builderHooks.state) builderHooks.state(s);
+  if (window.simTests) window.simTests.state(s);
   fillHitPieces(s);
   if (s.game) gotGame(s.game);          // /state has it; the stream sends it on its own
 }
@@ -2052,12 +2111,12 @@ $("#showPaths").checked = layers.paths;
 $("#mapLegend").hidden = !layers.seemap;
 // The View and Layers menus: a button opens its menu; a click elsewhere or Escape closes it.
 function closeMenus(except) {
-  for (const [b, m] of [["#viewsBtn", "#viewsMenu"], ["#layersBtn", "#layersMenu"]]) {
+  for (const [b, m] of [["#viewsBtn", "#viewsMenu"], ["#layersBtn", "#layersMenu"], ["#testsBtn", "#testsMenu"]]) {
     if (m === except) continue;
     $(m).hidden = true; $(b).setAttribute("aria-expanded", "false");
   }
 }
-for (const [b, m] of [["#viewsBtn", "#viewsMenu"], ["#layersBtn", "#layersMenu"]]) {
+for (const [b, m] of [["#viewsBtn", "#viewsMenu"], ["#layersBtn", "#layersMenu"], ["#testsBtn", "#testsMenu"]]) {
   $(b).onclick = () => {
     closeMenus(m);
     const menu = $(m);
@@ -2365,6 +2424,7 @@ document.querySelectorAll("[data-view]").forEach(b => b.onclick = () => { setVie
 // Keys 1-8 pick a view (the order of the View menu), unless you are typing in a box.
 window.addEventListener("keydown", e => {
   if (e.ctrlKey || e.metaKey || e.altKey || (e.target.matches && e.target.matches("input:not([type=checkbox]):not([type=range]), select, textarea"))) return;
+  if (document.body.classList.contains("td-open")) return;
   const b = document.querySelectorAll("#viewsMenu [data-view]")[+e.key - 1];
   if (b && /^[1-8]$/.test(e.key) && !b.hidden) { setView(b.dataset.view); e.preventDefault(); }
 });
@@ -2425,6 +2485,7 @@ setInterval(() => document.querySelectorAll(".pad").forEach(div => drawPad($(".g
 if (phonePad) { document.querySelectorAll(".pad").forEach(div => { if (div.dataset.pad !== phonePad) div.style.display = "none"; }); }
 connect();
 </script>
+<script src="/tests.js"></script>
 <script type="module" src="/builder/builder.js"></script>
 </body>
 </html>

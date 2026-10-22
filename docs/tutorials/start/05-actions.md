@@ -163,29 +163,8 @@ Open http://localhost:8780, pick "Lesson Bot TeleOp", INIT, START. Then try each
 2. RB, then RB again while it rises: `cancelled`, and the lift holds where it was.
 3. RB, then A while it rises: `stopped: Lift moved by hand`.
 
-To check it without a browser, save this as `build/score-high.sim`:
-
-```text
-init "Lesson Bot TeleOp"
-start
-press g2.b                                   # the claw: the first B opens it (in the simulator it starts open)
-press g2.b                                   # the second B closes it, as if it held a piece
-expect within 1 servo claw target = 0.75 0.01  # closed (Tunables.Claw.closed)
-press g2.rb                                  # score high
-expect within 5 motor lift ticks > 1500      # the lift rises
-expect within 5 servo claw target = 0.20 0.01  # the claw opens at the top (Tunables.Claw.open)
-expect within 5 motor lift ticks < 100       # and the lift comes back down
-expect error none
-stop
-```
-
-**Why close the claw first?** In the simulator the claw starts open. Without the two B presses, the
-"claw opens" line would pass even if the action never opened it: a check must start from the other
-state to prove anything.
-
-and run `./gradlew :sim:scenario -PteamCode=none -Probot=build/lessonbot.properties -Pfile=build/score-high.sim`.
-If the claw line fails and the screen says `timed out waiting for lift at the top`, the lift is too
-slow for the 2 s limit (see the table below). ([Scenario files](../../guides/simulator.md#scenario-files-test-without-a-browser).)
+If the claw does not open at the top and the screen says `timed out waiting for lift at the top`, the
+lift is too slow for the 2 s limit (see the table below).
 
 **Your own robot.** From the `ftc-helper-lib` folder, write your simulator file and start it:
 
@@ -194,53 +173,11 @@ slow for the 2 s limit (see the table below). ([Scenario files](../../guides/sim
 ./gradlew :sim:run -PteamCode=../TeamCode
 ```
 
-Then try your own action's button, as in steps 1 to 3 above. To test it without a browser, write a
-scenario file **in your robot project**, in a folder `simulator/scenarios/` (next to `TeamCode`), for
-example `simulator/scenarios/my-test.sim`. **Why there:** it is saved and committed with your code, and
-the simulator's automatic tests run every scenario in that folder. (The library's `build/` folder is
-wiped by a clean build.)
+Then try your own action's button, as in steps 1 to 3 above.
 
-**Make the folder and the file** ([how](../../start-from-zero.md#make-a-new-file-or-folder)):
-
-1. Right-click the top project folder (the one with `TeamCode` in it), **New > Directory**, type
-   `simulator/scenarios`, press Enter. (Already there? `:sim:fromRobot` may have made `simulator/`.)
-2. Right-click `scenarios`, **New > File**, type `my-test.sim` (the full name; no `.txt`). If Android
-   Studio asks what kind of file it is, pick **Text**.
-3. Type the lines below into it. It saves by itself.
-
-This one checks the Quick start robot's intake (G2 RT) and its `spitOut` action
-(G2 D-pad left):
-
-```text
-init "Quick Start TeleOp"                    # your TeleOp's name, exactly as in Controls.java
-start
-hold g2.rt 1                                 # hold RT: the intake runs in
-expect within 1 motor intake power > 0.5
-release g2.rt                                # let go: it stops
-expect within 1 motor intake power = 0
-press g2.dpad_left                           # spit out: out for 0.5 s, then stop
-expect within 1 motor intake power < -0.5
-expect within 2 motor intake power = 0
-expect error none
-stop
-```
-
-Run it from the `ftc-helper-lib` folder (the path is from that folder):
-
-```bash
-./gradlew :sim:scenario -PteamCode=../TeamCode -Pfile=../simulator/scenarios/my-test.sim
-```
-
-The report shows each line as `ok` or `FAIL`, and ends with `PASSED` or `FAILED`. Change the names to
-your own (`intake` is the motor's name in the configuration), then add lines for your action.
-
-- **Button names are the FTC names here, not the Java names.** `g2.dpadLeft` in `Controls.java` is
-  `g2.dpad_left` in a scenario; `leftStickButton` is `g1.left_stick_button`. The full list:
-  [Scenario files](../../guides/simulator.md#scenario-files-test-without-a-browser).
-- **Check a `show(...)` line by its words.** A `show("Intake on", ...)` line is on the screen as
-  `Intake on : true` (label, space, colon, space, value). Check it with
-  `expect screen has "Intake on : true"`. (`expect value` compares numbers only: with `true` it stops
-  and tells you to use `expect screen has`.)
+**Later: make it a test.** Once your robot works, the simulator can record you pressing the button and
+check the result every time you change the code. That is an advanced topic:
+[lesson 10, Test your robot code](10-test-your-robot-code.md).
 
 ## Check it on the robot
 

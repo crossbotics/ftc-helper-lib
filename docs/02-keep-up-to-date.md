@@ -143,17 +143,17 @@ Do these in order. Each one catches a different kind of problem.
    ./gradlew :sim:fromRobot -PteamCode=../TeamCode
    ```
 
-4. **Run your scenarios** (your saved simulator tests in `simulator/scenarios/`). They run the same
+4. **Run your tests** (your saved simulator tests in `simulator/scenarios/`). They run the same
    checks as last time, so they show what changed. Run them **from the `ftc-helper-lib` folder** (like
    step 3: `cd ftc-helper-lib` first if the Terminal is in the robot project folder):
 
    ```bash
-   ./gradlew :sim:testDebugUnitTest --tests "*SimScenarioTest"
+   ./gradlew :sim:scenario
    ```
 
    Or one file: `./gradlew :sim:scenario -Pfile=../simulator/scenarios/main-teleop.sim`.
-   No scenarios yet? Run each autonomous in the simulator by hand (`./gradlew :sim:run`) and read its
-   report. ([Scenario files](guides/simulator.md#scenario-files-test-without-a-browser).)
+   No tests yet? Run each autonomous in the simulator by hand (`./gradlew :sim:run`) and read its
+   report, or record a test ([start lesson 10](tutorials/start/10-test-your-robot-code.md)).
 5. **Install the app on the robot** (the green Run button, with the Control Hub connected).
 6. **Test on the robot**, on blocks first: every button of TeleOp, then each autonomous at low power
    (PRACTICE profile), then at match power. Test the parts on your list from the CHANGELOG first.

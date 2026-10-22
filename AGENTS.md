@@ -42,7 +42,11 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
 - `skills/robot-file/` the robot-file skill (for teams' agents): builds a team's simulator robot file. When
   the robot file format or `:sim:fromConfig` changes, update SKILL.md, interview.md and photos.md too.
   - To check a change to an OpMode yourself, write a scenario file and run
-    `./gradlew :sim:scenario -Pfile=...` (report: each check ok/FAIL with the value seen).
+    `./gradlew :sim:scenario -Pfile=...` (report: each check ok/FAIL with the value seen; each file starts
+    fresh: SimFresh). The page's test recorder (`SimRecorder`, `SimTests`, page code `tests.js`) writes
+    scenario files from what a person does; it must only write commands `SimScenario` reads (`SimRecorderTest`).
+  - Lessons: the simulator itself is taught from the start ("Try it in the simulator" in every lesson);
+    simulator TESTS (scenario files, the recorder) only in start lesson 10 (advanced). Early lessons point to it.
   - `sim/parts/parts.json`: motors and servos with seller-page numbers and the date checked; add a
     part the same way (never from memory). `sim/fields/<season>.json`: one per season, made from the
     official field CAD by a script, not typed by hand. `sim/fields/<season>.rules.json` next to it: the game's rules

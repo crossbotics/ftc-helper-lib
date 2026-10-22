@@ -572,6 +572,13 @@ final class SimPieces {
         }
     }
 
+    /** The page's scatter setting (off, realistic, rough), or null: each launcher's scatter= (the test recorder). */
+    String scatterSetting() {
+        synchronized (robot) {
+            return scatterMode;
+        }
+    }
+
     /** The scatter now: the page's setting, or the first launcher's scatter= ("off" without one). */
     String scatter() {
         synchronized (robot) {

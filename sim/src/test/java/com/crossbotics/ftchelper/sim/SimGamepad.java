@@ -11,6 +11,10 @@ final class SimGamepad {
     final Gamepad gamepad = new Gamepad();
     // When the page last sent this gamepad (System.nanoTime). Silence = let go of everything.
     private long lastSeen = 0;
+    /** True while a test runs on the page: the test holds the gamepad, the page's updates are ignored. */
+    volatile boolean pageLocked = false;
+    /** Told about each update from the page that was used (the test recorder): the buttons and sticks. */
+    volatile java.util.function.Consumer<Map<String, String>> onPage = null;
 
     /** Sets every button and axis from "name -> value" (buttons: 0/1; sticks and triggers: numbers). */
     synchronized void apply(Map<String, String> s) {
@@ -22,6 +26,7 @@ final class SimGamepad {
      * false for a scenario or a test (what it holds stays held until it lets go).
      */
     synchronized void apply(Map<String, String> s, boolean fromPage) {
+        if (fromPage && pageLocked) return;
         // Updates from the page arrive on several threads: an older one must not undo a newer one.
         String session = s.getOrDefault("session", "");
         if (session.length() > 64) session = session.substring(0, 64);
@@ -69,6 +74,8 @@ final class SimGamepad {
         g.right_trigger = Math.max(0, axis(s, "rt"));
         gamepad.copy(g);
         lastSeen = fromPage ? System.nanoTime() : 0;
+        java.util.function.Consumer<Map<String, String>> tell = onPage;
+        if (fromPage && tell != null) tell.accept(s);
     }
 
     // the newest numbers of the last 32 pages (a page makes one session; older ones are forgotten, so a
@@ -143,6 +150,8 @@ final class SimGamepad {
         if (lastSeen != 0 && (System.nanoTime() - lastSeen) / 1e9 > seconds) {
             gamepad.copy(new Gamepad());
             lastSeen = 0;
+            java.util.function.Consumer<Map<String, String>> tell = onPage;
+            if (tell != null) tell.accept(new java.util.HashMap<String, String>());
         }
     }
 

@@ -42,7 +42,7 @@ public final class SimMain {
         }
         SimEngine sim = new SimEngine(SimRobot.load(robotFile));
         sim.start();
-        SimServer server = new SimServer(sim, port, lan);
+        SimServer server = new SimServer(sim, port, lan, robotFile);
         System.out.println();
         System.out.println("FTC simulator running with robot file " + robotFile);
         System.out.println("Open http://localhost:" + server.port() + " in a browser. Ctrl+C stops it.");

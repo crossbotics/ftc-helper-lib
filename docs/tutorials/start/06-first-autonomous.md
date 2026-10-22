@@ -295,6 +295,9 @@ The main track ends here: lessons 1 to 6. After that, do only the lessons your r
   and lines.
 - [Lesson 9: A shooter, a camera and a turret](09-shooter-and-camera.md): for robots that shoot.
 
+When your robot works: [Lesson 10: Test your robot code](10-test-your-robot-code.md) (advanced). The
+simulator records a test of this autonomous and checks it after every change.
+
 **Everything else the builder can do** (menu choices, branches, your own steps, recipes):
 [The autonomous builder](../../guides/autonomous-builder.md).
 

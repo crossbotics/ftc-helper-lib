@@ -28,14 +28,48 @@ import java.util.Map;
  * expect motor lift power = 0
  * </pre>
  *
- * Command line: SimScenario --robot robot.properties file.sim [file2.sim ...]  (exit code 1 on a failure)
+ * Command line: SimScenario --robot robot.properties file.sim [file2.sim | folder ...]  (exit code 1 on a failure;
+ * a folder runs every .sim file in it, in name order)
  * A line "robot PATH" in the file (from the file's folder) runs that scenario with that robot file instead.
+ * Each file starts like a robot just turned on (SimFresh): nothing carries over from the file before.
  */
 public final class SimScenario {
     private final SimEngine sim;
-    private final List<String> report = new ArrayList<>();
+    // read by the page while a test runs (SimTests.status): a list safe to read from another thread
+    private final List<String> report = java.util.Collections.synchronizedList(new ArrayList<String>());
     private int failures = 0;
     private final Map<String, String> pad1 = new HashMap<>(), pad2 = new HashMap<>();
+    /**
+     * Measuring (the recorder's "update the test"): each "expect within T" may wait longer (3 T, at
+     * least T + 10 s, at most 60 s), so a check that now takes longer still says how long it took.
+     * It still counts as failed if it took more than T.
+     */
+    boolean measure = false;
+    /** What each expect line saw, in file order (the recorder updates a test from these). */
+    final List<Seen> seen = java.util.Collections.synchronizedList(new ArrayList<Seen>());
+    // set false to stop a run early (the page's Stop): the lines left are not run
+    volatile boolean go = true;
+
+    /** One expect line's result: passed or not, the number it saw, and how long a "within" took. */
+    static final class Seen {
+        final int n;
+        final String line;
+        boolean passed;
+        /** The number compared (NaN for words: screen, phase, step ...). */
+        double value = Double.NaN;
+        /** Seconds until it became true (NaN: never, within the time it waited). */
+        double took = Double.NaN;
+        /** The line's "within" seconds (0 without). */
+        double within;
+        /** The line itself was wrong (an unknown motor ...): it cannot be updated by measuring. */
+        boolean broken;
+        String why = "";
+
+        Seen(int n, String line) {
+            this.n = n;
+            this.line = line;
+        }
+    }
 
     SimScenario(SimEngine sim) {
         this.sim = sim;
@@ -67,13 +101,17 @@ public final class SimScenario {
         List<Path> files = new ArrayList<>();
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--robot") && i + 1 < args.length) robot = Paths.get(args[++i]);
-            else files.add(Paths.get(args[i]));
+            else files.addAll(expand(Paths.get(args[i])));
         }
         if (files.isEmpty()) {
-            System.out.println("No scenario file. Use: ./gradlew :sim:scenario -Pfile=path/to/test.sim");
+            System.out.println("No scenario file. Use: ./gradlew :sim:scenario -Pfile=path/to/test.sim "
+                    + "(or a folder: every .sim file in it)");
             System.exit(2);
         }
+        // the Tunables numbers as the code wrote them, before any OpMode can change them
+        SimFresh.readCodeValues();
         int failed = 0;
+        List<String> summary = new ArrayList<>();
         for (Path f : files) {
             Path useRobot = robotFor(f, robot);
             freshMatch();
@@ -90,18 +128,39 @@ public final class SimScenario {
             System.out.println(s.failures == 0 ? "PASSED" : "FAILED: " + s.failures + " check(s)");
             System.out.println();
             if (s.failures > 0) failed++;
+            summary.add((s.failures == 0 ? "  PASSED  " : "  FAILED  ") + f);
+        }
+        if (files.size() > 1) {
+            // several files: one line each at the end, so a failure is easy to find
+            System.out.println("== " + (files.size() - failed) + " of " + files.size() + " passed");
+            for (String l : summary) System.out.println(l);
         }
         System.exit(failed == 0 ? 0 : 1);
     }
 
+    // A folder: every .sim file in it, in name order; a file: itself.
+    static List<Path> expand(Path p) throws IOException {
+        List<Path> out = new ArrayList<>();
+        if (!Files.isDirectory(p)) {
+            out.add(p);
+            return out;
+        }
+        try (java.util.stream.Stream<Path> list = Files.list(p)) {
+            list.filter(f -> f.getFileName().toString().endsWith(".sim")).sorted().forEach(out::add);
+        }
+        if (out.isEmpty()) throw new IllegalArgumentException("no .sim files in the folder " + p);
+        return out;
+    }
+
     /**
-     * Forgets what an earlier scenario file left behind for "the next OpMode" (the alliance, the pose
-     * and the autonomous report kept by MatchMemory), so each file starts like a fresh robot.
-     * Without this, a TeleOp in the second file said "Forward : from autonomous" after the first
-     * file's autonomous.
+     * Forgets what an earlier scenario file left behind for "the next OpMode", so each file starts
+     * like a robot just turned on: the alliance, pose and report kept by MatchMemory, turret angles
+     * (keepAngle), launcher trims, tuned numbers (back to the code's Tunables values) and the
+     * settings file (an empty one). Without this, a TeleOp in the second file said "Forward : from
+     * autonomous" after the first file's autonomous, and used the turret angle the autonomous ended at.
      */
     static void freshMatch() {
-        com.crossbotics.ftchelper.match.MatchMemory.clear();
+        SimFresh.robotApp();
     }
 
     /**
@@ -122,13 +181,23 @@ public final class SimScenario {
 
     /** Runs every line of the file. */
     void run(Path file) throws IOException, InterruptedException {
-        List<String> lines = Files.readAllLines(file, StandardCharsets.UTF_8);
-        for (int n = 0; n < lines.size(); n++) {
+        run(Files.readAllLines(file, StandardCharsets.UTF_8));
+    }
+
+    /** Runs every line (a file's text, line by line). */
+    void run(List<String> lines) throws InterruptedException {
+        for (int n = 0; n < lines.size() && go; n++) {
             String line = lines.get(n).trim();
             if (line.isEmpty() || line.startsWith("#")) continue;
             try {
                 step(n + 1, line);
             } catch (RuntimeException e) {
+                if (line.toLowerCase(Locale.US).startsWith("expect")) {
+                    Seen x = new Seen(n + 1, line);
+                    x.broken = true;
+                    x.why = String.valueOf(e.getMessage());
+                    seen.add(x);
+                }
                 fail(n + 1, line, e.getMessage());
             }
         }
@@ -139,8 +208,11 @@ public final class SimScenario {
         return failures;
     }
 
+    /** The report so far (a copy: a test may still be adding to it). */
     List<String> report() {
-        return report;
+        synchronized (report) {
+            return new ArrayList<>(report);
+        }
     }
 
     private void ok(int n, String line, String why) {
@@ -347,10 +419,28 @@ public final class SimScenario {
         final List<String> check = t;
         validate(check);
         String[] why = {""};
-        boolean pass = SimRun.waitFor(() -> holds(check, why), within);
+        Seen x = new Seen(n, line);
+        x.within = within;
+        // Measuring: wait longer, to learn how long it takes now (see "measure").
+        double limit = measure && within > 0 ? Math.min(60, Math.max(within * 3, within + 10)) : within;
+        long t0 = System.nanoTime();
+        boolean became = SimRun.waitFor(() -> {
+            lastValue = Double.NaN;
+            return holds(check, why);
+        }, limit);
+        x.value = lastValue;
+        x.took = became ? (System.nanoTime() - t0) / 1e9 : Double.NaN;
+        // in time? (a measuring run waits longer, but a late check still fails)
+        boolean pass = became && (within == 0 || x.took <= within + 0.25);
+        x.passed = pass;
+        x.why = why[0];
+        seen.add(x);
         if (pass) ok(n, line, why[0]);
-        else fail(n, line, why[0]);
+        else fail(n, line, became ? why[0] + "; true only after " + String.format(Locale.US, "%.1f", x.took) + " s" : why[0]);
     }
+
+    // The number the last compare() saw (NaN when the check compares words).
+    private volatile double lastValue = Double.NaN;
 
     // Checks the words of an expect line before running it, so a typo fails instead of passing.
     private static void validate(List<String> t) {
@@ -673,11 +763,12 @@ public final class SimScenario {
     }
 
     // OP VALUE [TOLERANCE]: > < >= <= = (exact within 1e-6, or within TOLERANCE)
-    private static boolean compare(double v, List<String> t, String[] why) {
+    private boolean compare(double v, List<String> t, String[] why) {
         String op = t.get(0);
         double want = Double.parseDouble(t.get(1));
         double tol = t.size() > 2 ? Double.parseDouble(t.get(2)) : 1e-6;
         why[0] = "was " + String.format(Locale.US, "%.4g", v);
+        lastValue = v;
         switch (op) {
             case ">": return v > want;
             case "<": return v < want;
