@@ -1,6 +1,6 @@
 # The button menu: every way a button can work
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **For:** anyone writing `Controls.java` (the robot in five files).
 **You need:** [Lesson 3: Buttons](../tutorials/start/03-buttons.md) first, so you know where these lines go.

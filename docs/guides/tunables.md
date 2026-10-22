@@ -1,6 +1,6 @@
 # Tunables.java: every number, part by part
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **For:** anyone who writes or changes `Tunables.java` in a robot made in five files
 ([lesson 1](../tutorials/start/01-robot-in-five-files.md)). **Use it:** find your part below, read its

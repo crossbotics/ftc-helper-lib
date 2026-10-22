@@ -1,6 +1,6 @@
 # Setting up a turret
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 Turrets are built in many ways. This page asks you seven questions about yours. Each answer gives
 you the exact line for `Robot.java` and the lines for `Tunables.java`. At the end: a summary table,

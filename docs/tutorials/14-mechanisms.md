@@ -1,6 +1,6 @@
 # Tutorial 14: Mechanism helpers
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** one program that runs a lift, a wrist, an intake and a spinner with the library's ready-made helpers.
 The main track's parts are made from these helpers: [An intake, a lift and a claw](start/04-lift-and-claw.md).

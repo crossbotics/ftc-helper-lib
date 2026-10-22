@@ -1,6 +1,6 @@
 # Several autonomous modes, and choosing the right one
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **For:** teams with the [robot in five files](../tutorials/start/01-robot-in-five-files.md) that need
 more than one autonomous. **You need:** one autonomous that works

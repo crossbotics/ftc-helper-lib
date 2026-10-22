@@ -1,6 +1,6 @@
 # Testing procedures
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **For:** the whole team: programmers, builders and drivers. **You need:** a robot that runs, and the
 [Hardware Check](../modules/testing.md) OpMode on it.

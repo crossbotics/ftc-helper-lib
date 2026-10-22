@@ -1,6 +1,6 @@
 # Easy autonomous modes
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **For:** teams that use `EasyAuto` and the [starter kit](../starter-kit.md). With a `Robot.java` (the
 robot in five files), use [the autonomous builder](autonomous-builder.md) instead. **You need:** a

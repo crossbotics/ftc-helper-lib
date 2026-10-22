@@ -1,6 +1,6 @@
 # Cookbook: "How do I...?"
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 Short answers to the questions students ask most. Each recipe is one question, a few lines of code
 to copy, one sentence on **why**, and links to the lesson that explains more.
@@ -2980,4 +2980,4 @@ but `g2.dpadUp` is `g2.dpad_up` and `g2.leftStickY` is `g2.left_stick_y`.
 - Every class and method: the [reference](reference.md) and the [module pages](../README.md#what-is-inside).
 - Something goes wrong: [Troubleshooting](troubleshooting.md).
 - Learn it step by step: the [lessons](tutorials/README.md).
-- A question this page should answer? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+- A question this page should answer? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).

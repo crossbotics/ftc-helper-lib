@@ -1,6 +1,6 @@
 # Check the hardware (lesson 2b, also tutorial 19)
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** a 3-line OpMode that lets you test every motor, servo and sensor on the robot by hand.
 This is also lesson 2b of the main track (after lesson 2, Drive).

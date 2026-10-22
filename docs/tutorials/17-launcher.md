@@ -1,6 +1,6 @@
 # Tutorial 17: Launcher
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** a shooter that spins a flywheel, sets the hood angle from the distance, and feeds a piece only when everything is ready.
 The main track builds a shooter with less code: [A shooter, a camera and a turret](start/09-shooter-and-camera.md).

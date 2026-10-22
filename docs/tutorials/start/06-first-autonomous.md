@@ -1,6 +1,6 @@
 # Lesson 6: Your first autonomous
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **Goal:** your robot holds its piece, drives to the goal, scores, and always parks, on its own. The
 lesson robot's autonomous is the worked example: read its lines, then write your own in your `autos`

@@ -1,6 +1,6 @@
 # Tuning while the robot runs
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **For:** students who adjust numbers on a running robot. **You need:** a robot whose mechanisms work,
 and the PRACTICE [profile](profiles.md) (the menu stays closed in COMPETITION).

@@ -1,6 +1,6 @@
 # What runs every loop
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **For:** programmers who want to know exactly what the library does on the hub before they trust
 it. **You need:** to know a `LinearOpMode` loop and what a bulk read is.
@@ -10,7 +10,7 @@ can check it.
 
 **No measured loop time yet.** We have not measured how long one EasyTeleOp or ControlMap loop takes
 on a real Control Hub. Measure yours with [`LoopTimer`](#show-the-loop-time) and
-[tell us](https://github.com/crossbotics/ftc-helper-lib/issues) the number, with the parts on your robot.
+[tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose) the number, with the parts on your robot.
 
 ## TeleOp: EasyTeleOp and ControlMap
 

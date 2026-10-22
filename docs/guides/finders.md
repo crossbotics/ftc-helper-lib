@@ -1,6 +1,6 @@
 # Finding your numbers (the finders)
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **For:** anyone setting up a robot's numbers for the first time. **You need:** a robot with its
 configuration done, the [Hardware Check](testing.md) passed, and a block to lift it.

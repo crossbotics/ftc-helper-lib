@@ -1,6 +1,6 @@
 # Tutorial 11: Driver assists
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** a mecanum TeleOp where a D-pad press turns the robot to face an exact direction, the gamepad buzzes when it is lined up, and starts are smooth.
 

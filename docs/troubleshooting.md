@@ -1,6 +1,6 @@
 # Troubleshooting
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 Find your problem below. Each answer says what is wrong and what to do. Tip: copy the exact error
 text and search this page for it (Ctrl+F, or Cmd+F on a Mac).

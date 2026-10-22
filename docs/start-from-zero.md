@@ -1,6 +1,6 @@
 # Start from zero: the tools, the robot project and your first edit
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 This page is for you if you have never built an FTC robot program in Java. It needs no Java. At the end
 you have Android Studio, the robot project, a first program on the robot, and one safe edit. Then the

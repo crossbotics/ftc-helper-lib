@@ -1,6 +1,6 @@
 # Quick start: a driving robot in 30 minutes
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 The shortest hands-on path: get five files into your robot project, change the few lines marked
 **STEP**, build, and drive. Then the [main track lessons](tutorials/README.md#start-here-the-main-track)

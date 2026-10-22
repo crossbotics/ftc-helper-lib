@@ -1,6 +1,6 @@
 # Two parts that must not collide (interlocks)
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 Some robots have two parts that share space. A turret that swings over the back, and a lift that rises
 at the back. An arm that swings down where the intake folds out. A wrist that sticks out past the slide.

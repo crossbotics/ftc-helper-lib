@@ -1,6 +1,6 @@
 # Add the library to a robot project
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 This page adds ftc-helper-lib to an FTC robot project in Android Studio. It takes about 10 minutes.
 You do it **once per robot project**. After that, everyone who clones the project (copies it from

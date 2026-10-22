@@ -1,6 +1,6 @@
 # Lesson 4: An intake, a lift and a claw
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **Goal:** add three mechanisms to your robot (the lesson robot is the worked example), give them safe
 numbers, and tune them on the robot.

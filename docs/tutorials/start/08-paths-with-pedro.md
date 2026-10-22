@@ -1,6 +1,6 @@
 # Lesson 8: Paths with Pedro Pathing (optional)
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **Goal:** your autonomous drives along **paths**: smooth curves and lines, one after another, fast, and
 correcting all the way. Pedro Pathing does the driving; you write the path in the same field numbers

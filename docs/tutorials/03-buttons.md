@@ -1,6 +1,6 @@
 # Tutorial 03: Buttons
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** a test program that shows every kind of button job on telemetry.
 The main track puts buttons in one file for you: [Buttons](start/03-buttons.md).

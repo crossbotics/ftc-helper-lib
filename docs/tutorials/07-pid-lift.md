@@ -1,6 +1,6 @@
 # Tutorial 07: PID: hold a lift at a height
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** a lift that goes to three heights on buttons and holds there, with gains you can change from the gamepad.
 In the main track, the lift part has its PID built in: [An intake, a lift and a claw](start/04-lift-and-claw.md).

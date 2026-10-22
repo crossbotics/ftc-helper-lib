@@ -1,6 +1,6 @@
 # Coming from last season's code
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 The library started from the 2025-26 (DECODE) robot code, branch `codex/biobuzz-base` of the
 team's FtcRobotController repository. This page is for programmers who know that code. New to it?

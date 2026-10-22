@@ -1,6 +1,6 @@
 # Tutorial 02: Motors and servos
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** a program that moves an arm with the stick and opens and closes a claw with buttons.
 The main track sets up motors and servos for you: [An intake, a lift and a claw](start/04-lift-and-claw.md).

@@ -1,6 +1,6 @@
 # The autonomous builder: the complete guide
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **For:** teams with the [robot in five files](../tutorials/start/01-robot-in-five-files.md) who write
 autonomous modes. **You need:** a tuned drive (the Drive Tuner, [finders](finders.md#drive-tuner-wheel-size-and-strafe-correction));

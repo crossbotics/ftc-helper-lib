@@ -1,6 +1,6 @@
 # Tutorial 04: Drive a mecanum robot
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** a TeleOp that drives a mecanum robot, with slow mode, field-centric driving and reverse drive.
 The main track gives you all of this in one line: [Drive](start/02-drive.md).

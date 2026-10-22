@@ -1,6 +1,6 @@
 # From Blocks to Java: where each block went
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 This page is for you if you have made programs with blocks (Scratch, FTC Blocks, or similar) but not
 with Java. It shows where each block you know went in the robot's five files. Come back to it with

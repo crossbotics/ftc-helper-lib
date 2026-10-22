@@ -1,6 +1,6 @@
 # Lesson 9: A shooter, a camera and a turret (for robots that shoot)
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **Goal:** add a flywheel shooter with a feeder, then a camera that aims a turret and picks the shot speed.
 Then the helpers that let the drivers focus on driving and firing: one shot table per game piece, the
