@@ -40,7 +40,7 @@ import java.util.Set;
  * just a pause), START held 1 s sets the pose to
  * the reset spot (robots with odometry; sticks let go; also in INIT), GUIDE shows the button map (a
  * tap) or opens the tuning menu (held 1 s, PRACTICE profile). Switching the alliance during TeleOp is
- * off unless you turn it on: {@code lib.switchAlliance(g1.back, g1.start)}. With {@code oneDriver = true}: left stick click slow
+ * off unless you turn it on: {@code lib.switchAlliance(g1.start, g1.back)}. With {@code oneDriver = true}: left stick click slow
  * on/off, right stick click field-centric, and the operator's buttons move to gamepad 1. Every one can
  * be moved or freed in {@link #libraryButtons(LibraryButtons, Pad, Pad)}.
  *
@@ -79,7 +79,7 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
      * @Override protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
      *     lib.fieldCentric(g1.x);              // Y is free for buttons(...) now
      *     lib.setPose(g1.dpadDown);            // hold D-pad down 1 s: set pose here
-     *     lib.switchAlliance(g1.back, g1.start);   // turn on the alliance switch (hold START, then BACK, 1.5 s)
+     *     lib.switchAlliance(g1.start, g1.back);   // turn on the alliance switch (hold START, then BACK, 1.5 s)
      * }
      * }</pre>
      *

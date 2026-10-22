@@ -440,6 +440,19 @@ public class ReviewFixesTest {
         assertTrue(p, p.contains("Tunables.Odometry: the reset spot needs resetX and resetY"));
     }
 
+    public static class AimOffsetOnly {
+        public static class Turret { public static double min = -90, max = 90, kD = 0; }
+        public static class Aim { public static double cameraOffset = 2; }
+    }
+
+    // Two cameraOffsets: the turret does not read Tunables.Aim's, and INIT says where its own goes.
+    @Test public void anAimCameraOffsetOnATurretRobotIsExplained() {
+        TurretOnly r = new TurretOnly(AimOffsetOnly.class, false);
+        r.setup(new RobotTestKit());
+        assertTrue(r.settingProblems().toString(), r.settingProblems().toString().contains(
+                "Tunables.Aim.cameraOffset is for whole-robot aim; the turret reads Tunables.Turret.cameraOffset"));
+    }
+
     // ----------------------------- the button map -----------------------------
 
     // A job in Controls.java on a button a part suggested: the part has no button for it, and INIT says so.

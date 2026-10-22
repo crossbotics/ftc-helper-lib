@@ -243,9 +243,9 @@ public class LaunchAndBackUp extends Auto<Robot> {
 
     @Override
     protected void steps(Steps s, Robot robot) {
-        s.start("Against the goal, facing it", 0)
+        s.start("Back against our wall, left of centre, facing the field", -56, -63, 0)
          .action(Actions.fireAllWithIntake(robot), 12)
-         .move("Back up", Tunables.Auto.backInches, 180, Tunables.Auto.backPower);
+         .move("Away from the wall", Tunables.Auto.backInches, 0, Tunables.Auto.backPower);
     }
 }
 ```

@@ -20,7 +20,7 @@ import java.util.Set;
  * @Override protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
  *     lib.fieldCentric(g1.x);           // field-centric on/off on X instead of Y
  *     lib.slow(g1.rt);                  // slow on the right trigger (LT is free now)
- *     lib.switchAlliance(g1.back, g1.start);   // turn on the alliance switch: hold START, then BACK, 1.5 s
+ *     lib.switchAlliance(g1.start, g1.back);   // turn on the alliance switch: hold START, then BACK, 1.5 s
  * }
  *
  * // EasyTeleOp (your own TeleOp):
@@ -198,7 +198,7 @@ public final class LibraryButtons {
     /**
      * Turns on switching the alliance (BLUE / RED) during TeleOp: hold {@code key} and {@code with}
      * together {@link #SWITCH_ALLIANCE_SEC} seconds. Off by default (the alliance is chosen in INIT);
-     * {@code lib.switchAlliance(g1.back, g1.start)} is the usual pair (it shares START + BACK with the
+     * {@code lib.switchAlliance(g1.start, g1.back)} is the usual pair (it shares START + BACK with the
      * debug lines: a quick press of both = debug). BACK is the pause button, so hold START first, then
      * BACK (BACK first is just a pause). {@code with} null: {@code key} alone, held. Both null = off again.
      */

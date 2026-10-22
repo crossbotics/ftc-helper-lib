@@ -248,7 +248,7 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   whole-robot aim on: `Pose NOT set: stop first`. START + A/B (pairing a gamepad) never sets it. INIT
   shows the button, the spot and the mirroring used (`Reset spot for RED: ...`). From code or an
   action: `robot.resetPose()`, `robot.resetPose(x, y, heading)`. `PoseTracker.unsetPose()`.
-- **Switch the alliance during TeleOp (optional, off by default):** `lib.switchAlliance(g1.back, g1.start)`
+- **Switch the alliance during TeleOp (optional, off by default):** `lib.switchAlliance(g1.start, g1.back)`
   in `libraryButtons` turns it on; then holding START, then BACK, 1.5 s switches. Both gamepads
   buzz twice, the screen says `Alliance now RED (was BLUE)`, and the camera's goal, the aim's goal point,
   `robot.alliance()` and `MatchMemory` (`changeAlliance(a)`) follow. The odometry pose follows too: on a

@@ -720,6 +720,15 @@ public abstract class RobotDefinition {
             out.add("Tunables.Aim: goalX and goalY go together; with only " + (a.has("goalX") ? "goalX" : "goalY")
                     + " there is no goal point (the odometry backup is off)");
         }
+        // Two cameraOffsets: Tunables.Aim's turns the whole robot; a turret reads its own section's.
+        if (a.has("cameraOffset")) {
+            for (Module<?> m : modules) {
+                if (m instanceof Turret && !TunableSection.of(tunablesClass, m.name()).has("cameraOffset")) {
+                    out.add("Tunables.Aim.cameraOffset is for whole-robot aim; the turret reads Tunables." + m.name()
+                            + ".cameraOffset (not written: 0). Write it there if the turret needs it");
+                }
+            }
+        }
         if (o.has("resetX") != o.has("resetY") || (o.has("resetHeading") && !(o.has("resetX") && o.has("resetY")))) {
             out.add("Tunables.Odometry: the reset spot needs resetX and resetY (resetHeading is optional); "
                     + "without both there is no reset spot, so set pose here does nothing");

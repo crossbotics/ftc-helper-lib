@@ -10,19 +10,20 @@ import java.util.function.BooleanSupplier;
 import java.util.function.LongSupplier;
 
 /**
- * A colored light the drivers can see: green when the launcher is ready to fire, red blinking when
+ * A colored light the drivers can see: green when the launcher is ready to fire, orange blinking when
  * it is jammed, a white flash when a shot goes, yellow in the last 20 seconds. You write rules; every
  * loop the light shows the first rule that is true.
  *
  * <pre>{@code
  * lights = add(Lights.gobilda("light"));          // Robot.java: a goBILDA RGB Indicator Light (a servo port)
  *
- * // Controls.java, in buttons(...): the most important rule first
+ * // Controls.java, in buttons(...): a flash first (it beats every rule while it lasts), then the most
+ * // important rule first
+ * robot.lights.show(LightColor.WHITE).whenCountGoesUp(() -> robot.launcher.part().getShotsFired());   // a 0.5 s flash per shot
  * robot.lights.show(LightColor.YELLOW).blinking().inLastSeconds(20);    // time to park
  * robot.lights.show(LightColor.GREEN).when(robot.launcher::isReady);    // at speed: fire
- * robot.lights.show(LightColor.BLUE).when(() -> robot.turret.followMode().isOn());
+ * robot.lights.show(LightColor.PURPLE).when(() -> robot.turret.followMode().isOn());
  * robot.lights.otherwise(LightColor.OFF);                                // when no rule is true
- * robot.lights.show(LightColor.WHITE).whenCountGoesUp(() -> robot.launcher.part().getShotsFired());   // a 0.5 s flash per shot
  * }</pre>
  *
  * <ul>
@@ -172,7 +173,8 @@ public final class Lights extends Module<Lights> {
 
     /**
      * The alliance at INIT on or off (on by default; see the class comment). {@code allianceAtInit} in
-     * this light's Tunables section wins over this.
+     * this light's Tunables section is read at INIT: a call in Controls.java (made after that) wins over
+     * it; a call in Robot.java's define() (made before) does not.
      *
      * @param on false = the light shows your rules in INIT too, and no alliance flashes
      */

@@ -219,7 +219,7 @@ together. Hold START, then press BACK. If BACK goes down first, it is just a pau
 press, and START joining later does not undo it): tap BACK to go on.
 
 **Wrong alliance?** Choose it in INIT (gamepad 1 X = BLUE, B = RED, section 6). Switching during the
-match is off unless you turn it on with one line, `lib.switchAlliance(g1.back, g1.start);` in
+match is off unless you turn it on with one line, `lib.switchAlliance(g1.start, g1.back);` in
 `libraryButtons` (below). Then holding START, then BACK, 1.5 s switches it (BLUE to RED or back), both
 gamepads buzz twice and the Driver Station says `Alliance now RED (was BLUE)`. The camera's goal and
 the aim follow at once. It takes 1.5 s on purpose, so it never happens by accident.
@@ -233,7 +233,7 @@ alliance switch can be turned on. One method next to `buttons(...)`:
 protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
     lib.fieldCentric(g1.x);                  // field-centric on X: Y is free for your own job now
     lib.slow(g1.rt);                         // slow on the right trigger
-    lib.switchAlliance(g1.back, g1.start);   // optional: hold START, then BACK, 1.5 s to switch the alliance
+    lib.switchAlliance(g1.start, g1.back);   // optional: hold START, then BACK, 1.5 s to switch the alliance
 }
 ```
 

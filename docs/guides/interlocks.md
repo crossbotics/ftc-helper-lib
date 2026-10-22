@@ -106,6 +106,10 @@ slips, a part that bends), not the room to coast. A servo needs no stop distance
 its fence, and until its `travelSec` is over it counts as anywhere between where it was and where it was
 sent.
 
+**A part whose way crosses its zone.** A lift at 0 asked to go to 1000 through a zone from 400 to 600
+asks for the zone just like a target inside it: it goes when the other part is out (which is then held
+out), instead of waiting below the zone for ever.
+
 **A turret crossing its zone.** A turret at 80 degrees asked to go to 190 has to pass through the back.
 With the lift up it stops at 103 (two margins of 3 before 109) and waits. If its range lets it reach 190 the other way round (a turret
 that turns -270 to 270, or a slip ring), it goes that way instead and never waits.
@@ -127,6 +131,20 @@ TurretLift : LiftLeft held at 268 counts: Turret angle unknown (not sent anywher
 
 A servo turret is sent to its `startAngle` (or the middle of its range) at START, so this lasts only until
 the first loop after START.
+
+**And the other way round:** a part whose position is not known does not move at all (no homing, no
+stick, no first servo move) while the other part is in its zone: from "anywhere" it could sweep through
+it. A turret waits to home while the lift is up, and homes as soon as the lift is down (its homing time
+limit waits too). A first move that cannot go into the zone from anywhere (a wrist sent to "folded",
+below a zone at the top of its range) does not wait.
+
+```text
+TurretLift : Turret waits (not homed yet): Lift is above 620 counts; move Lift out of its zone first
+```
+
+**At START** the rules look first, before any START command is sent (a hood going to its `startAngle`, a
+turret homing, an `atStart` action): a START command into a zone the other part is in waits at the fence
+like any other command.
 
 ## More examples
 

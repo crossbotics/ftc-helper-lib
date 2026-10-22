@@ -367,8 +367,10 @@ if (auto.move(30, 0, 0.7) == AutoDrive.Result.STALLED) {
 The distance is measured from the four wheel encoders: forward travel plus sideways travel
 (divided by `strafeCorrection`), so straight, sideways and diagonal moves all go the real distance.
 The robot drives at `maxPower` until the last 10% (`taperStartFraction`) of the distance, then
-slows in a straight line down to `moveMinPower`. This makes stops more accurate. The motors
-always stop at the end, whatever happens (even if your code throws an error).
+slows in a straight line down to `moveMinPower`. This makes stops more accurate. At the distance the
+wheels brake and the move waits (at most 0.3 s, mechanisms still updating) until the robot has stopped
+rolling, so the next move starts from a robot that stands still. The motors always stop at the end,
+whatever happens (even if your code throws an error).
 
 ---
 

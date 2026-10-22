@@ -564,7 +564,9 @@ turret = add(Turret.crServo("turret").analogEncoder("turret_pos").continuous());
 `Tunables.Turret` ([all its numbers](../guides/tunables.md#turret)): `min`, `max` (degrees, counterclockwise +, 0 = forward: it never turns past them; a
 goal outside waits at the limit and the Driver Station says "goal out of turret range"; past +/-180 it
 picks the way round that stays inside them), `startAngle` (where it points at INIT with no switch,
-default 0), `kP`, `kI`, `kD`, `maxPower`, `tolerance`, `slowZone`, `slowZonePower`, `cameraOffset`,
+default 0; when 0 is outside `min` to `max`, the middle of the range, with an INIT note), `kP`, `kI`, `kD`,
+`maxPower`, `tolerance`, `slowZone`, `slowZonePower` (a motor or CR servo turret; a servo turret reads
+none of these five), `cameraOffset`,
 `outOfRangeHold` (default 10: an odometry goal this many degrees past a limit, behind the robot, makes it
 HOLD where it points instead of swinging limit to limit as the heading wobbles; it follows again once the
 goal is back within half of that). With a switch: `homeAngle` (needed), `homeDirection`, `homingPower`,
@@ -572,7 +574,8 @@ goal is back within half of that). With a switch: `homeAngle` (needed), `homeDir
 `travelSec`, and `startAngle` (optional: where it goes at START, inside its range; default the middle of
 the range). `keepAngle` (default true): TeleOp starts from the angle the last program ended at (within
 5 minutes, same robot app run), so it does not home again after autonomous (a servo turret: it is sent
-there at START instead of `startAngle`).
+there at START instead of `startAngle`). Turret moved by hand since? Turn it to `startAngle`, stop the
+OpMode in INIT (before START) and INIT again: an INIT stopped before START forgets the carried angle.
 
 A following turret and whole-robot aim are separate modes: see [Aim](#aim). Buttons: operator right
 stick X by hand, BACK following on/off. The Driver Station shows one line, `Turret : 12 deg  AIMED  following: camera`
@@ -787,8 +790,8 @@ a share of it for a shorter move. A distance that jitters a little does not move
 
 **By hand and the trim.** Suggested operator stick: left stick Y (up = a bigger angle). While the shot
 table sets the angle it is a **hood trim**: added to the table, at most +/- `trimMax`, back to 0 with the
-launcher's double-tap D-pad down (and at every INIT). With a fixed speed (or a table without hood
-angles) the stick moves the hood itself. Why a hood trim next to the speed trim: the speed trim fixes
+launcher's double-tap D-pad down (and at every INIT). With a fixed speed, a table without hood angles,
+or no goal seen yet (the table does not set the angle then) the stick moves the hood itself. Why a hood trim next to the speed trim: the speed trim fixes
 shots that land short or long; the hood trim fixes shots that arrive at the wrong slope (they bounce off
 the rim, or worn balls launch flatter). Use the speed trim first.
 
@@ -1283,7 +1286,7 @@ library's own buttons, below); `robot()` and `oneDriver()` read the robot and th
 @Override protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
     lib.fieldCentric(g1.x).slow(g1.rt);       // Y and LT are free for buttons(...)
     lib.setPose(g1.dpadDown);                 // hold D-pad down 1 s: set pose here
-    lib.switchAlliance(g1.back, g1.start);    // optional: turn on the alliance switch in TeleOp
+    lib.switchAlliance(g1.start, g1.back);    // optional: turn on the alliance switch in TeleOp
 }
 ```
 
@@ -1291,7 +1294,7 @@ library's own buttons, below); `robot()` and `oneDriver()` read the robot and th
 | --- | --- |
 | `pause(key)`, `resetForward(key)` | G1 BACK (a press pauses at once, a tap goes on; held 1 s also resets "forward", field-centric only) |
 | `debug(key, with)` | G1 START + BACK (hold START, then press BACK: debug lines, when let go; BACK first is just a pause) |
-| `switchAlliance(key, with)` | **off**; `switchAlliance(g1.back, g1.start)` turns it on (START, then BACK, both held 1.5 s) |
+| `switchAlliance(key, with)` | **off**; `switchAlliance(g1.start, g1.back)` turns it on (START, then BACK, both held 1.5 s) |
 | `setPose(key)` | G1 START held 1 s, drive sticks let go, in INIT or the match (robots with odometry: [`resetPose()`](#robotdefinition)); START + A/B (pairing a gamepad) cancels it |
 | `slow(key)`, `slowToggle(key)` | G1 LT (one driver: left stick click, on/off) |
 | `fieldCentric(key)` | G1 Y (one driver: right stick click) |
@@ -1314,7 +1317,7 @@ The whole table, with how to move each: [the button menu](../guides/buttons.md#m
 | D-pad left/right | free | wrist |
 | BACK | press: **pause** everything at once (stopped on brake), a tap again: go on; held 1 s (field-centric on): also "forward" = away from you now (with odometry: its heading becomes 0, x and y stay), still paused | turret following on/off (with a turret; else free) |
 | START | hold 1 s: **set pose here** (with odometry: the pose becomes `Tunables.Odometry`'s reset spot) | free |
-| START + BACK | hold START, then press BACK: debug lines (when let go); with `lib.switchAlliance(g1.back, g1.start)`, both held 1.5 s: **switch the alliance**. BACK first is only a pause | |
+| START + BACK | hold START, then press BACK: debug lines (when let go); with `lib.switchAlliance(g1.start, g1.back)`, both held 1.5 s: **switch the alliance**. BACK first is only a pause | |
 | GUIDE | tap: the button map, without the free buttons (during the match too); hold 1 s: the tuning menu (PRACTICE) | free |
 
 **One driver:** the left stick click switches slow on/off and the right stick click switches
@@ -1326,7 +1329,7 @@ the further LT is pulled (down to `slowSpeed` at a full squeeze, like the two-dr
 **Reset "forward"** works only with field-centric on; in robot-centric driving the held BACK shows a
 note instead ("forward" means nothing there).
 
-**Switch the alliance** (optional, off by default: turn it on with `lib.switchAlliance(g1.back, g1.start)`):
+**Switch the alliance** (optional, off by default: turn it on with `lib.switchAlliance(g1.start, g1.back)`):
 hold START, then BACK, both 1.5 s (BACK first is just a pause). Both gamepads buzz twice and the Driver Station says
 `Alliance now RED (was BLUE)`. Everything that reads `robot.alliance()` follows at once: the camera's
 goal tag (`Camera.goal()`), the aim's goal point (mirrored for RED), light rules you wrote with it, and

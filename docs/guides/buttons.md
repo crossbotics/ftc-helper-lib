@@ -160,7 +160,8 @@ on the button.
 While the robot is paused (a tap of gamepad 1 BACK), no button job runs, with one exception: a hold's
 stop job (the second job in `hold(job, stopJob)`) still runs when the button is let go, or when the
 pause starts in the middle of a gesture's hold. **Why:** so a part a hold started is told to stop, and
-stays stopped when the pause ends.
+stays stopped when the pause ends. Of the library's own buttons, field-centric on/off and slow on/off wait
+too; pause, "forward", the menus, the debug lines, set pose and the alliance switch still work.
 
 ## 4. Feedback
 
@@ -210,7 +211,7 @@ protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
     lib.fieldCentric(g1.a);                  // field-centric on/off: A instead of Y
     lib.slow(g1.rt);                         // slow on the right trigger: LT is free now
     lib.pause(g1.x);                         // pause on X (BACK still resets forward; lib.resetForward(null) frees it)
-    lib.switchAlliance(g1.back, g1.start);   // turn ON the alliance switch: hold START, then BACK, 1.5 s
+    lib.switchAlliance(g1.start, g1.back);   // turn ON the alliance switch: hold START, then BACK, 1.5 s
 }
 ```
 
@@ -226,7 +227,7 @@ writes `libraryButtons(LibraryButtons lib)` with `Key.g1(Btn.X)` instead of `g1.
 | Pause / go on | G1 BACK | same | pauses at the press; a tap goes on | `lib.pause(key)` |
 | Reset "forward" | G1 BACK | same | held 1 s, field-centric only (a tap if its button has no other quick job) | `lib.resetForward(key)` |
 | Debug lines | G1 START + BACK | same | hold START, then press BACK; runs when let go | `lib.debug(key, with)` (`with` null: one button) |
-| Switch alliance | **off** | off | START, then BACK, both held 1.5 s, once turned on | `lib.switchAlliance(g1.back, g1.start)` turns it on |
+| Switch alliance | **off** | off | START, then BACK, both held 1.5 s, once turned on | `lib.switchAlliance(g1.start, g1.back)` turns it on |
 | Set pose here | G1 START | same | held 1 s with the drive sticks let go (robots with odometry); also in INIT | `lib.setPose(key)` |
 | Button map | G1 GUIDE | same | a tap | `lib.buttonMap(key)` |
 | Tuning menu | G1 GUIDE | same | held 1 s (a tap if its button has no other quick job) | `lib.tuningMenu(key)` |
@@ -260,7 +261,7 @@ Off unless you turn it on (the alliance is chosen in INIT with X = BLUE, B = RED
 `libraryButtons(...)`:
 
 ```java
-lib.switchAlliance(g1.back, g1.start);   // hold START, then BACK, 1.5 s: BLUE <-> RED
+lib.switchAlliance(g1.start, g1.back);   // hold START, then BACK, 1.5 s: BLUE <-> RED
 ```
 
 A quick press of both (START first) is still the debug lines. When the alliance switches, the goal flips, and so
@@ -290,7 +291,9 @@ frees the button for `buttons(...)`.
 
 - One job per button, or several gestures. A button with `press(...)` and `tap(...)` stops INIT:
   `Controls.java: G2 B has two jobs`. The same gesture twice stops too: `G2 A has two "tap" jobs`.
-- Your job on a button a part suggested replaces the suggestion. `.free()` clears a button.
+- Your job on a button a part suggested replaces the suggestion, and INIT says so, e.g.
+  `Launcher fire one; hold: keep firing: no button (G2 RB is your "score high" in Controls.java)`: that
+  job of the part has no button now (give it another one if you need it). `.free()` clears a button.
 - A shift key has no job of its own. `.free()` on a shift key removes its pairs too.
 - A button held when START is pressed (or when the tuning menu closes) does nothing until it is let go.
 

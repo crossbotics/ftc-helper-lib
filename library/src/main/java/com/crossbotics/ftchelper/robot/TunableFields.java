@@ -20,8 +20,8 @@ import java.util.function.Predicate;
  *
  * <p>Names the team picks are allowed too: a Lift's or a Claw's named positions (any number), a
  * piece sensor's kinds ({@code POLLEN}), a launcher's {@code speedByDistance...} tables, and an
- * interlock rule's {@code <part>From}, {@code <part>To}, {@code <part>Above}, {@code <part>Below} and
- * {@code <part>Margin} for its own two parts.
+ * interlock rule's {@code <part>From}, {@code <part>To}, {@code <part>Above}, {@code <part>Below},
+ * {@code <part>Margin} and {@code <part>StopSec} for its own two parts.
  */
 final class TunableFields {
     private TunableFields() { }

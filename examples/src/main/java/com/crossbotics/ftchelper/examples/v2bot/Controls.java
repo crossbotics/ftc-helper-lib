@@ -36,12 +36,13 @@ public class Controls extends ControlMap<Robot> {
 
         g2.rumbleWhenAimed();
 
-        // The light: the first true rule wins, so the most important comes first.
-        robot.lights.show(LightColor.YELLOW).blinking().inLastSeconds(20);     // last 20 s: go park
-        robot.lights.show(LightColor.RED).when(() -> robot.turretClaw.isHolding());   // the interlock holds a part back
-        robot.lights.show(LightColor.GREEN).when(() -> robot.launcher.isSpinning() && robot.launcher.isReady());
-        robot.lights.show(LightColor.BLUE).when(() -> robot.turret.followMode().isOn());
-        robot.lights.otherwise(LightColor.PURPLE);
+        // The light: a flash (a white one per shot) beats every rule while it lasts; then the first true
+        // rule wins, so the most important comes first. No red or blue: those mean the alliance.
         robot.lights.show(LightColor.WHITE).whenCountGoesUp(() -> robot.launcher.part().getShotsFired());
+        robot.lights.show(LightColor.YELLOW).blinking().inLastSeconds(20);     // last 20 s: go park
+        robot.lights.show(LightColor.ORANGE).when(() -> robot.turretClaw.isHolding());   // the interlock holds a part back
+        robot.lights.show(LightColor.GREEN).when(() -> robot.launcher.isSpinning() && robot.launcher.isReady());
+        robot.lights.show(LightColor.PURPLE).when(() -> robot.turret.followMode().isOn());
+        robot.lights.otherwise(LightColor.OFF);                                 // when no rule is true
     }
 }

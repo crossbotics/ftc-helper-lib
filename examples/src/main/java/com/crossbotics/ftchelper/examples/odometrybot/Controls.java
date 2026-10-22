@@ -22,6 +22,6 @@ public class Controls extends ControlMap<Robot> {
     // the wrong one. Off unless this line is here.
     @Override
     protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
-        lib.switchAlliance(g1.back, g1.start);
+        lib.switchAlliance(g1.start, g1.back);
     }
 }

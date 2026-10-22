@@ -416,7 +416,7 @@ From code, or in an action: `robot.resetPose()` (this spot) or `robot.resetPose(
 spot). The button can move: `lib.setPose(...)` ([the button menu](../../guides/buttons.md#moving-the-librarys-buttons)).
 
 **Wrong alliance in autonomous?** This robot's `Controls.java` turns on the TeleOp alliance switch
-(`lib.switchAlliance(g1.back, g1.start)`; off unless you write it): hold START, then BACK, 1.5 s. On BIOBUZZ's
+(`lib.switchAlliance(g1.start, g1.back)`; off unless you write it): hold START, then BACK, 1.5 s. On BIOBUZZ's
 turned field the pose from that autonomous cannot be fixed, so the odometry aim goes off until you set
 the pose here again; on a mirrored field the pose is mirrored for you
 ([the buttons guide](../../guides/buttons.md#switching-the-alliance-in-teleop)).

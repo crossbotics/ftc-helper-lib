@@ -447,10 +447,13 @@ public final class Interlock {
         return z.part.zoneHoming() || z.part.zoneManual() != 0 || !Double.isNaN(z.part.zoneTarget());
     }
 
-    // Really in its zone (or coming in): its position is known and it is there.
+    // Really in its zone (or coming in): its position is known and it is there. A servo never sent
+    // anywhere (it "may be anywhere": its whole range) does not count: else neither part could ever move.
     private static boolean really(Zone z) {
         if (z.kind == Zone.Kind.WHEN) return z.condition.getAsBoolean();
-        return z.part.zoneKnown() && (occupies(z) || coming(z));
+        double[] s = z.part.zoneSweep();
+        boolean anywhere = s[0] <= z.part.zoneMin() + 1e-9 && s[1] >= z.part.zoneMax() - 1e-9;
+        return z.part.zoneKnown() && !anywhere && (occupies(z) || coming(z));
     }
 
     private static boolean known(Zone z) {

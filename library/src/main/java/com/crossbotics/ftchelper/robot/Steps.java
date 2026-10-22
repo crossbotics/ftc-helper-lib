@@ -374,6 +374,8 @@ public final class Steps {
                     if (ctx.isActive()) ctx.note("timed out");
                 } else if (!"done".equals(action.result())) {
                     ctx.note(action.result());   // e.g. "timed out waiting for lift at the top"
+                } else if (!action.detail.isEmpty()) {
+                    ctx.note("done " + action.detail);   // e.g. "done (0 fired)": a launcher says how many
                 }
                 // A part that is not on the robot yet (optional in Robot.java): the action went on without it.
                 if (!action.skippedWords().isEmpty()) ctx.note(action.skippedWords());

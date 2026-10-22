@@ -249,7 +249,7 @@ your turret needs: [Setting up a turret](turret-setup.md). Module: [Turret](../m
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
 | `min`, `max` | the range: it never turns past them (not used with `continuous()`) | degrees | min -90, max 90 | no | measure (turn by hand, read the angle) | the wires or the robot allow more or less |
-| `startAngle` | where it points at INIT with no switch and no angle from the program before | degrees | 0 | no | put it there by hand | your start mark is not straight forward |
+| `startAngle` | where it points at INIT with no switch and no angle from the program before | degrees | 0 (the middle of `min` to `max` when 0 is outside it, with an INIT note) | no | put it there by hand | your start mark is not straight forward |
 | `kP` | how hard it turns toward the goal, per degree off | power per degree | 0.02 | yes, at once | test | slow to aim (more) or shakes (less) |
 | `kI` | a push that grows while it stays short | power | 0 | yes, at once | test | it stops a degree short |
 | `kD` | brakes it as it gets close | power | 0.001 | yes, at once | test | it overshoots (more) |
@@ -305,7 +305,7 @@ Section: the device's name in CamelCase: a launcher on the motor `launcher` read
 | `kI` | the hub's speed control: slow fix of a steady error | hub units | 0 | no | Flywheel Finder | the same |
 | `kD` | the hub's speed control: brakes changes | hub units | 0 | no | Flywheel Finder | the same |
 | `kF` | the hub's speed control: the steady power for a speed. Writing it turns the four gains on | hub units | 0 (not written: the SDK's own gains) | no | Flywheel Finder | the same |
-| `nominalVolts` | the battery voltage the gains were found at (battery compensation), 9 to 14 | volts | 12.8 | no | Flywheel Finder | after the Flywheel Finder |
+| `nominalVolts` | the battery voltage the gains were found at (battery compensation), 9 to 14 | volts | 12.8 (INIT notes that it assumes this) | no | Flywheel Finder | after the Flywheel Finder |
 | `batteryCompensation` | with `kF`: scale F by the battery voltage | true/false | true | no | none | it overshoots after a battery swap: `false` |
 | `trimStepPercent` | one speed trim step | percent | 1 | no | none | the drivers want bigger steps |
 | `trimMaxPercent` | the most speed trim, at most 50 | percent | 15 | no | none | you need more trim (better: fix the table) |

@@ -24,7 +24,9 @@ public class ShootAndStow extends Auto<Robot> {
 
     @Override
     protected void steps(Steps s, Robot robot) {
-        s.start("Back wall, 2nd tile from the left, facing the field", 0)
+        // The spot: x -36 = the middle of the 2nd tile from the left; y -61.6 = an 18 in robot with its
+        // back against our wall (inside face at -70.6). Inches, seen from our wall (lesson 7).
+        s.start("Back against our wall, 2nd tile from the left, facing the field", -36, -61.6, 0)
          .move("Into range", 18, 0, 0.6)
          .waitUntil("Turret homed", () -> robot.turret.isHomed(), 6.0)
          .run("Fire the preload", () -> robot.launcher.fire(4))

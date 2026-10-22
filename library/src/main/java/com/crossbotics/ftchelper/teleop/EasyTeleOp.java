@@ -659,26 +659,12 @@ public abstract class EasyTeleOp extends LinearOpMode {
             operator.ignoreHeldButtons(gamepad1, gamepad2);
             onStart();
             boolean menuWasOpen = false;
-            java.util.function.BooleanSupplier pausedNow = pauseState();
-            boolean wasPaused = false;
 
             while (opModeIsActive()) {
                 // The library's buttons (pause, field-centric, menus...); only the menu's while it is open.
                 keys.update(gamepad1, gamepad2, tuning.isOpen());
                 if (!tuning.isOpen()) watchMissingSetPose();
-                // Paused (BACK): no button job of the team's or a part's runs. As the pause begins, a held
-                // button's "let go" job runs once (a held intake stops); going on, a button still held
-                // from the pause does not count as a press.
-                boolean paused = pausedNow != null && pausedNow.getAsBoolean();
-                if (paused && !wasPaused) {
-                    driver.releaseAll();
-                    operator.releaseAll();
-                } else if (!paused && wasPaused) {
-                    driver.ignoreHeldButtons(gamepad1, gamepad2);
-                    operator.ignoreHeldButtons(gamepad1, gamepad2);
-                }
-                wasPaused = paused;
-                if (!paused) operator.update(gamepad1, gamepad2);
+                operator.update(gamepad1, gamepad2);
                 timer.update();
                 tuning.update();
                 if (tuning.isOpen()) {
@@ -693,7 +679,7 @@ public abstract class EasyTeleOp extends LinearOpMode {
                     // Just closed: a button still held from the menu must not act.
                     if (menuWasOpen) driver.ignoreHeldButtons(gamepad1, gamepad2);
                     menuWasOpen = false;
-                    if (!paused) driver.update(gamepad1, gamepad2);
+                    driver.update(gamepad1, gamepad2);
                     drive(gamepad1);
                 }
                 loopTimer.update();
