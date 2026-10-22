@@ -530,14 +530,23 @@ on a servo port (`lights = add(Lights.gobilda("light"));` in Robot.java), and it
 ```java
 robot.lights.show(LightColor.YELLOW).blinking().inLastSeconds(20);     // last 20 s: go park
 robot.lights.show(LightColor.GREEN).when(() -> robot.launcher.isSpinning() && robot.launcher.isReady());  // fire now
-robot.lights.show(LightColor.BLUE).when(() -> robot.turret.followMode().isOn());   // following the goal
-robot.lights.otherwise(LightColor.PURPLE);                             // following is off (BACK)
+// Purple and orange, not blue or red: at INIT the light shows the alliance in red or blue, so the
+// other rules keep away from those colors (nobody reads "following" as "BLUE alliance").
+robot.lights.show(LightColor.PURPLE).when(() -> robot.turret.followMode().isOn());   // following the goal
+robot.lights.otherwise(LightColor.ORANGE);                             // following is off (BACK)
 robot.lights.show(LightColor.WHITE).whenCountGoesUp(() -> robot.launcher.part().getShotsFired());   // a 0.5 s flash per piece fired
 ```
 
 `LightColor` needs `import com.crossbotics.ftchelper.robot.LightColor;` at the top of `Controls.java`
-(Alt+Enter on the red word adds it). No turret (section 10)? Blue while whole-robot aim is on:
-`robot.lights.show(LightColor.BLUE).when(() -> robot.aimMode().isOn());`.
+(Alt+Enter on the red word adds it). No turret (section 10)? Purple while whole-robot aim is on:
+`robot.lights.show(LightColor.PURPLE).when(() -> robot.aimMode().isOn());`.
+
+**Before START the light shows the alliance** (the library does it, no line needed): solid red or blue
+once it is picked in INIT, white blinking once a second until then, and a 1 s flash of it at START. A
+wrong pick is then seen from the field before the match. That is why the rules above use purple and
+orange. The game manual has no rule against an alliance-colored light; the ROBOT SIGNS are still
+required. To turn it off: `public static boolean allianceAtInit = false;` in `Tunables.Light`
+([Lights](../../modules/robot.md#the-alliance-at-init)).
 
 The first true rule wins, so the most important one is written first. A flash beats every rule for half a
 second; the launcher counts each piece it feeds, so `fire(3)` gives three flashes. Blinking stops at 5
@@ -624,8 +633,15 @@ The turret robot: write its robot file from `Robot.java`, then run it:
 ./gradlew :sim:run -PteamCode=none -Probot=build/turretbot.properties
 ```
 
-Choose "TurretBot TeleOp". Drive until the goal is in view and watch the turret follow it and the
-speed change with the distance. Press BACK on gamepad 2 to stop following, D-pad right to switch
+Choose "TurretBot TeleOp", pick the alliance in INIT (gamepad 1 X = BLUE, B = RED) and START. Drive until
+the goal is in view and watch the turret follow it and the speed change with the distance. Where to
+look: each alliance's goal is its "SCORING" CELL on the HIVE in the middle of the field, and the tags
+are on the CELL's underside, so the camera must be **below and in front of** them, looking up. RED: the
+red CELL on the far side from the audience starts tipped down (low tags, facing the audience side), so
+stand on the audience side, e.g. x 44, y -14 facing the HIVE (heading 90). BLUE: the blue CELL on that side starts tipped UP
+(tags about 50 in high, facing away from the audience), so stand on the far side, e.g. x -50, y 14
+facing the HIVE (heading -90), not too close (the tags must fit in the picture). Drag the robot there on
+the map, or drive. The turret robot's camera is tilted 30 degrees up for that. Press BACK on gamepad 2 to stop following, D-pad right to switch
 between the POLLEN and NECTAR tables.
 
 The whole-robot aim: do the same with `flywheelbot` (`-ProbotClass=com.crossbotics.ftchelper.examples.flywheelbot.Robot -Pout=build/flywheelbot.properties`),

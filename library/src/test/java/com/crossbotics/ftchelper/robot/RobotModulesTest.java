@@ -214,7 +214,7 @@ public class RobotModulesTest {
         assertEquals(0.8, Tunable.number("Intake/inPower", 99, 1).get(), 1e-12);
         assertEquals(0.7, Tunable.number("Intake/outPower", 99, 1).get(), 1e-12);   // the library's default
         String notes = r.notes().toString();
-        assertTrue(notes, notes.contains("Tunables.Intake: outPower missing"));
+        assertTrue(notes, notes.contains("Tunables.Intake: outPower not written: library defaults used (fine)"));
         assertEquals(java.util.Arrays.asList("down", "low", "high"), r.lift.positions());
     }
 

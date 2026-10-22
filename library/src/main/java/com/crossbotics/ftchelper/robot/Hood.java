@@ -694,6 +694,7 @@ public final class Hood extends Module<Hood> {
         public void addTelemetry(RobotTelemetry t) {
             t.line(name(), words());
             if (motor != null) t.debug(name() + " ticks", "%d", motor.getCurrentPosition());
+            else if (Double.isNaN(sent)) t.debug(name() + " pos", "-");   // nothing sent yet
             else t.debug(name() + " pos", "%.3f", sent);
         }
     }

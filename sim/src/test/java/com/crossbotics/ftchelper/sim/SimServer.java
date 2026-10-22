@@ -158,6 +158,7 @@ final class SimServer {
                 case "pose": sim.robot.setPose(num(f, "x"), num(f, "y"), num(f, "heading")); return "ok";
                 case "touch": sim.robot.toggleTouch(f.get("name")); return "ok";
                 case "autoTimer": sim.ds.autoTimer = "1".equals(f.get("on")); return "ok";
+                case "teleTimer": sim.ds.teleTimer = "1".equals(f.get("on")); return "ok";
                 case "battery": sim.robot.setBattery(num(f, "volts")); return "ok";
                 default: return "unknown action";
             }

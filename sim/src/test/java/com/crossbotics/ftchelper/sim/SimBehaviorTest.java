@@ -131,6 +131,27 @@ public class SimBehaviorTest {
         assertTrue("about 3-4 pieces in a second, not 1: " + robot.shots(), robot.shots() >= 3);
     }
 
+    // A servo pusher (an indexer) sends one piece per push, however long it stays out. (A push plus a
+    // slow return once lasted longer than 0.3 s and sent a second piece: "one tap fired two".)
+    @Test public void aServoPusherSendsOnePiecePerPush() throws Exception {
+        String base = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("robots/starter.properties")), "UTF-8");
+        java.nio.file.Path f = java.nio.file.Files.createTempFile("pusher", ".properties");
+        java.nio.file.Files.write(f, base.replace("feeder=feeder", "feeder=hood").getBytes("UTF-8"));
+        SimRobot robot = SimRobot.load(f);
+        robot.motors.get("flywheel").device.setPower(1);
+        for (int i = 0; i < 200; i++) robot.step(0.01);            // 2 s: the wheel spins up
+        com.qualcomm.robotcore.hardware.Servo pusher = (com.qualcomm.robotcore.hardware.Servo) robot.servos.get("hood").device;
+        pusher.setPosition(0.9);                                   // out, and held out for 1 s
+        for (int i = 0; i < 100; i++) robot.step(0.01);
+        assertEquals("one push, one piece", 1, robot.shots());
+        pusher.setPosition(0.1);                                   // back
+        for (int i = 0; i < 100; i++) robot.step(0.01);
+        pusher.setPosition(0.9);                                   // a second push
+        for (int i = 0; i < 100; i++) robot.step(0.01);
+        assertEquals("two pushes, two pieces", 2, robot.shots());
+        java.nio.file.Files.delete(f);
+    }
+
     @Test public void partsComeFromTheCatalog() throws Exception {
         SimParts.Motor m312 = SimParts.catalog().motor("gobilda-5203-312");
         assertEquals(537.7, m312.countsPerRev, 1e-9);

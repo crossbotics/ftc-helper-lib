@@ -28,20 +28,28 @@ public class SimLightsTest {
         return file;
     }
 
-    @Test public void theRecipeLightFollowsTheIntakeAndFlashes() throws Exception {
+    @Test public void theRecipeLightShowsTheAllianceFollowsTheIntakeAndFlashes() throws Exception {
+        com.crossbotics.ftchelper.match.MatchMemory.clear();
         try (SimRun s = new SimRun(robotFile().toString())) {
             s.sim.ds.register("Cookbook Lights", "TeleOp", LightRecipes.Controls.class);
             s.init("Cookbook Lights");
             SimLight light = s.robot().lights.get("light");
-            assertTrue("INIT: the light is set (dark: no rule true)", SimRun.waitFor(() -> light.position() == 0.0, 2));
-            assertEquals("off", light.words());
+            // INIT, no alliance chosen yet: white blinking, once a second ("choose the alliance").
+            assertTrue("INIT: white until chosen: " + light.words(), SimRun.waitFor(() -> light.words().equals("WHITE"), 2));
+            assertTrue("and dark half the time", SimRun.waitFor(() -> light.words().equals("off"), 1.5));
+            s.press(v -> s.g1().b = v);                                // RED
+            assertTrue("INIT: solid RED once chosen: " + light.words(), SimRun.waitFor(() -> light.words().equals("RED"), 2));
+            SimRun.pause(1.2);
+            assertEquals("solid: no blinking", "RED", light.words());
             s.start();
-            s.g2().right_trigger = 1;                                  // intake in (hold): BLUE
-            assertTrue(light.words(), SimRun.waitFor(() -> light.words().equals("BLUE"), 2));
-            assertEquals(LightColor.BLUE.webColor(), light.webColor());
-            s.press(v -> s.g2().a = v);                                // a 0.5 s purple flash
-            assertTrue(light.words(), SimRun.waitFor(() -> light.words().equals("PURPLE"), 1));
-            assertTrue("then back to the rules", SimRun.waitFor(() -> light.words().equals("BLUE"), 2));
+            assertEquals("START: the alliance flashes 1 s", "RED", light.words());
+            assertTrue("then the rules (none true: dark)", SimRun.waitFor(() -> light.words().equals("off"), 2));
+            s.g2().right_trigger = 1;                                  // intake in (hold): PURPLE
+            assertTrue(light.words(), SimRun.waitFor(() -> light.words().equals("PURPLE"), 2));
+            assertEquals(LightColor.PURPLE.webColor(), light.webColor());
+            s.press(v -> s.g2().a = v);                                // a 0.5 s yellow flash
+            assertTrue(light.words(), SimRun.waitFor(() -> light.words().equals("YELLOW"), 1));
+            assertTrue("then back to the rules", SimRun.waitFor(() -> light.words().equals("PURPLE"), 2));
             s.g2().right_trigger = 0;
             assertTrue(SimRun.waitFor(() -> light.words().equals("off"), 2));
             assertTrue(String.join("\n", s.screen()), s.screenHas("Light : OFF (otherwise)"));

@@ -185,6 +185,13 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
         };
     }
 
+    // No odometry: holding the "set pose here" button says why nothing happens (instead of nothing).
+    @Override
+    protected final String setPoseMissingNote() {
+        if (robot().odometrySpec() != null) return null;
+        return "Set pose here needs odometry: this robot has no odometry(...) line in Robot.java (lesson 7)";
+    }
+
     // The drive sticks are pushed (past a small dead zone), or whole-robot aim is on (it turns the robot).
     private boolean moving() {
         if (gamepad1 != null) {

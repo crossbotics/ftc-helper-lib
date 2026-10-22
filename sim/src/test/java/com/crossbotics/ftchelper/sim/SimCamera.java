@@ -15,12 +15,16 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
  *
  * Where it sits: forward/left/up (inches) from the robot's center on the floor, yaw (degrees, + = turned
  * left) and pitch (degrees, + = tilted up). What it sees: hfov degrees across, width x height pixels.
+ * on=SHAPE: it rides a moving shape (a camera on a turret: on=turret); then forward/left/up/yaw are
+ * measured with that part at 0 (the turret pointing straight forward), and it turns with the part.
  */
 final class SimCamera implements InvocationHandler {
     final String name;
     final String kind;          // "webcam" or "limelight"
     final double forwardIn, leftIn, upIn, yawDeg, pitchDeg, hfovDeg;
     final int width, height;
+    // on=SHAPE: the shape it rides (a turret), or null for a camera fixed to the chassis.
+    final String on;
     final WebcamName device;     // null for a Limelight (SimLimelight is its device)
     final SimRobot robot;
     private final java.util.Set<Integer> goodPipelines;
@@ -44,6 +48,7 @@ final class SimCamera implements InvocationHandler {
         upIn = num(s, "up", 10);
         yawDeg = num(s, "yaw", 0);
         pitchDeg = num(s, "pitch", 0);
+        on = s.containsKey("on") && !s.get("on").trim().isEmpty() && !s.get("on").trim().equals("chassis") ? s.get("on").trim() : null;
         // Logitech C920 at 640x480: about 70 degrees across; Limelight 3A: 54.5 (its spec sheet)
         hfovDeg = num(s, "hfov", kind.equals("limelight") ? 54.5 : 70.4);
         width = (int) num(s, "width", 640);
@@ -173,19 +178,42 @@ final class SimCamera implements InvocationHandler {
      */
     double[][] pose() {
         double rx, ry, h;
+        // In the robot frame (forward, left, up): where the lens is, and its three axes. Yaw 0 looks
+        // forward; the picture's x is to the right.
+        double yaw = Math.toRadians(yawDeg), p = Math.toRadians(pitchDeg);
+        double[] pos = {forwardIn, leftIn, upIn};
+        double[] z = {Math.cos(yaw) * Math.cos(p), Math.sin(yaw) * Math.cos(p), Math.sin(p)};
+        double[] x = {Math.sin(yaw), -Math.cos(yaw), 0};
         synchronized (robot) {
             rx = robot.x;
             ry = robot.y;
             h = Math.toRadians(robot.headingDeg);
+            if (on != null) {
+                // On a turret: turned (and moved) with it, from where it was measured (the turret at 0).
+                double[][] r = robot.shapes.ridingNow(on);
+                pos = SimShapes.apply(r, pos);
+                z = turn(r, z);
+                x = turn(r, x);
+            }
         }
+        double[] y = cross(z, x);
+        // Robot frame to field: forward and left on the field now.
         double fx = -Math.sin(h), fy = Math.cos(h);            // robot forward
         double lx = -Math.cos(h), ly = -Math.sin(h);           // robot left
-        double[] pos = {rx + fx * forwardIn + lx * leftIn, ry + fy * forwardIn + ly * leftIn, upIn};
-        double look = h + Math.toRadians(yawDeg), p = Math.toRadians(pitchDeg);
-        double[] z = {-Math.sin(look) * Math.cos(p), Math.cos(look) * Math.cos(p), Math.sin(p)};
-        double[] x = {Math.cos(look), Math.sin(look), 0};
-        double[] y = cross(z, x);
-        return new double[][] {pos, x, y, z};
+        double[] fieldPos = {rx + fx * pos[0] + lx * pos[1], ry + fy * pos[0] + ly * pos[1], pos[2]};
+        return new double[][] {fieldPos, toField(x, fx, fy, lx, ly), toField(y, fx, fy, lx, ly), toField(z, fx, fy, lx, ly)};
+    }
+
+    // A direction turned by a frame's rotation only (no move).
+    private static double[] turn(double[][] f, double[] v) {
+        return new double[] {f[0][0] * v[0] + f[0][1] * v[1] + f[0][2] * v[2],
+                f[1][0] * v[0] + f[1][1] * v[1] + f[1][2] * v[2],
+                f[2][0] * v[0] + f[2][1] * v[1] + f[2][2] * v[2]};
+    }
+
+    // A robot-frame direction (forward, left, up) on the field.
+    private static double[] toField(double[] v, double fx, double fy, double lx, double ly) {
+        return new double[] {fx * v[0] + lx * v[1], fy * v[0] + ly * v[1], v[2]};
     }
 
     /** Pixels per unit of x/z (the lens's focal length in pixels). */

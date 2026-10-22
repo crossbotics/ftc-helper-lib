@@ -246,12 +246,15 @@ final class TunableSection {
         return prev[b.length()];
     }
 
-    /** "" or a note for INIT, e.g. "Tunables.Lift: kD, kF missing (library defaults used)". */
+    /**
+     * "" or a note for INIT, e.g. "Tunables.Lift: kD, kF not written: library defaults used (fine)". Worded as
+     * harmless: a missing number is not a problem, the library's default is used (add the line to change it).
+     */
     String note() {
         // Nothing asked for, nothing missing (a webcam reads no numbers).
         if (missing.isEmpty()) return "";
-        if (section == null) return "Tunables." + name + " is missing: library defaults used";
-        return String.format(Locale.US, "Tunables.%s: %s missing (library defaults used)", name, join(missing));
+        if (section == null) return "Tunables." + name + " not written: library defaults used (fine)";
+        return String.format(Locale.US, "Tunables.%s: %s not written: library defaults used (fine)", name, join(missing));
     }
 
     private Field field(String field) {

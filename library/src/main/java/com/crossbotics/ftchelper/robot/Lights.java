@@ -37,12 +37,21 @@ import java.util.function.LongSupplier;
  *   <li>Actions do not "claim" the light (see {@link Action}): anything may flash it at any time.</li>
  * </ul>
  *
+ * <p><b>The alliance at INIT</b> (on by default): before START the light shows the alliance the drivers
+ * chose, solid {@code RED} or {@code BLUE}, so a wrong pick is seen before the match; until one is
+ * chosen it blinks white once a second ("choose the alliance"). At START it flashes the alliance for
+ * 1 s (TeleOp after autonomous: the alliance it got), and again when the alliance is switched during
+ * TeleOp. Then your rules take over. Off: {@code allianceAtInit = false} in this light's Tunables
+ * section, or {@link #allianceAtInit(boolean)}. Other colors: {@link #allianceColors}; a Blinkin
+ * pattern of your own for a color: {@link #blinkinPattern}.
+ *
  * <p>Game rules (FTC 2026-27 manual, R202 J and F): lights that flash faster than 5 times a second, or
  * very bright lights, can be turned off by the referees. So {@link Rule#blinking(double)} stops at 5,
  * and the light never changes color twice within {@link #MIN_CHANGE_SEC} (0.1 s), whatever the rules,
  * flashes and blinking ask: a rule that turns on and off every loop, or flash after flash, still
- * switches the light at most 5 times on and off a second. The ROBOT SIGNS show the alliance color
- * (R402); the library's advice: show it on the signs, not with a light, so referees are not confused.
+ * switches the light at most 5 times on and off a second. A light in the alliance's color is allowed
+ * (no rule against it); the ROBOT SIGNS must still show the alliance color (R402). Keep your other
+ * rules' colors away from red and blue, so nobody reads them as the alliance.
  *
  * Docs: docs/modules/robot.md (section "Lights")
  */
@@ -59,6 +68,10 @@ public final class Lights extends Module<Lights> {
      * sooner waits (a flash shorter than this may not show at all).
      */
     public static final double MIN_CHANGE_SEC = 0.1;
+    /** How long the alliance color flashes at START and when the alliance is switched, seconds. */
+    public static final double ALLIANCE_FLASH_SEC = 1.0;
+    /** Blinks per second of "choose the alliance" in INIT (slow: well under the 5 per second limit). */
+    public static final double CHOOSE_HZ = 1;
 
     private enum Kind { GOBILDA, BLINKIN }
 
@@ -94,6 +107,17 @@ public final class Lights extends Module<Lights> {
     private boolean changedAtSet = false;
     private String why = "";
     private String problem = "";
+    // The alliance at INIT (see the class comment): on unless turned off, its colors, and the alliance
+    // shown last after START (to flash a switch). chooseSince: when "choose" blinking started.
+    private boolean allianceAtInit = true;
+    private LightColor blueColor = LightColor.BLUE, redColor = LightColor.RED;
+    private final java.util.Map<LightColor, RevBlinkinLedDriver.BlinkinPattern> patterns = new java.util.EnumMap<>(LightColor.class);
+    private com.crossbotics.ftchelper.match.Alliance shownAlliance = null;
+    private long chooseSince = -1;
+    // In INIT: the alliance color (or the "choose" white) shown instead of the rules; null otherwise.
+    private LightColor initPick = null;
+    // True between the first INIT loop and START (the alliance at INIT shows only then).
+    private boolean inInit = false;
 
     private Lights(String device, Kind kind) {
         super(device);
@@ -146,6 +170,48 @@ public final class Lights extends Module<Lights> {
         return this;
     }
 
+    /**
+     * The alliance at INIT on or off (on by default; see the class comment). {@code allianceAtInit} in
+     * this light's Tunables section wins over this.
+     *
+     * @param on false = the light shows your rules in INIT too, and no alliance flashes
+     */
+    public Lights allianceAtInit(boolean on) {
+        allianceAtInit = on;
+        return this;
+    }
+
+    /**
+     * The colors for the alliance at INIT, if your light shows red or blue badly.
+     *
+     * @param blue e.g. {@code LightColor.BLUE}
+     * @param red  e.g. {@code LightColor.RED}
+     */
+    public Lights allianceColors(LightColor blue, LightColor red) {
+        if (blue == null || red == null) throw new IllegalArgumentException("Lights: allianceColors(null): pick two LightColors");
+        blueColor = blue;
+        redColor = red;
+        return this;
+    }
+
+    /**
+     * A REV Blinkin only: show this pattern for this color (e.g. a strip whose plain blue is too dark:
+     * {@code blinkinPattern(LightColor.BLUE, BlinkinPattern.BLUE_VIOLET)}). Other lights ignore it.
+     *
+     * @param color   the LightColor your rules use
+     * @param pattern the Blinkin pattern to show for it (its names are on REV's Blinkin page)
+     */
+    public Lights blinkinPattern(LightColor color, RevBlinkinLedDriver.BlinkinPattern pattern) {
+        if (color == null || pattern == null) throw new IllegalArgumentException("Lights: blinkinPattern(null, ...): give a LightColor and a pattern");
+        patterns.put(color, pattern);
+        return this;
+    }
+
+    /** True while the light shows the alliance in INIT (not turned off). */
+    public boolean showsAllianceAtInit() {
+        return allianceAtInit;
+    }
+
     /** Takes away every rule (the "otherwise" color stays). */
     public void clearRules() {
         rules.clear();
@@ -184,6 +250,7 @@ public final class Lights extends Module<Lights> {
      * really shows this instant is {@link #showing()}.
      */
     public LightColor color() {
+        if (initPick != null) return initPick;
         if (isFlashing()) return flashColor;
         return winner != null ? winner.color : otherwise;
     }
@@ -324,8 +391,10 @@ public final class Lights extends Module<Lights> {
             output = c -> servo.setPosition(c.gobildaPosition());
         } else {
             final RevBlinkinLedDriver blinkin = devices.get(RevBlinkinLedDriver.class, device);
-            output = c -> blinkin.setPattern(c.blinkinPattern());
+            output = c -> blinkin.setPattern(patterns.containsKey(c) ? patterns.get(c) : c.blinkinPattern());
         }
+        // Optional: no "missing" note when Tunables does not have it.
+        if (t != null && t.has("allianceAtInit")) allianceAtInit = t.flag("allianceAtInit", true);
     }
 
     /** For tests: a pretend clock (nanoseconds). */
@@ -335,12 +404,27 @@ public final class Lights extends Module<Lights> {
 
     @Override
     void start() {
+        inInit = false;
         startedAt = clock.getAsLong();
+        // The alliance in use, flashed at START: TeleOp after autonomous shows the one it got.
+        shownAlliance = allianceNow();
+        if (allianceAtInit && shownAlliance != null) startFlash(allianceColor(shownAlliance), ALLIANCE_FLASH_SEC, 0);
+    }
+
+    // The alliance in use: chosen in INIT (null = not yet) before START; the robot's after START.
+    private com.crossbotics.ftchelper.match.Alliance allianceNow() {
+        if (inInit) return com.crossbotics.ftchelper.match.MatchMemory.chosen();
+        return robot != null ? robot.alliance() : com.crossbotics.ftchelper.match.MatchMemory.chosen();
+    }
+
+    private LightColor allianceColor(com.crossbotics.ftchelper.match.Alliance a) {
+        return a == com.crossbotics.ftchelper.match.Alliance.RED ? redColor : blueColor;
     }
 
     // In INIT too: the drivers see the light work (and a "preloaded" rule) before START.
     @Override
     void initLoop(RobotTelemetry t) {
+        inInit = true;
         update();
     }
 
@@ -373,11 +457,36 @@ public final class Lights extends Module<Lights> {
             winner = first;
             winnerSince = now;
         }
-        // 3. A flash beats the rules while it lasts.
+        // The alliance switched during TeleOp: flash the new one.
+        if (allianceAtInit && startedAt >= 0) {
+            com.crossbotics.ftchelper.match.Alliance a = allianceNow();
+            if (a != null && shownAlliance != null && a != shownAlliance) startFlash(allianceColor(a), ALLIANCE_FLASH_SEC, 0);
+            if (a != null) shownAlliance = a;
+        }
+        // 3. A flash beats the rules while it lasts. In INIT (alliance at INIT on): the alliance instead
+        // of the rules, or a slow blink until it is chosen.
         LightColor c;
         double hz;
         long since;
-        if (flashColor != null && now < flashEnd) {
+        com.crossbotics.ftchelper.match.Alliance initAlliance = allianceAtInit && inInit ? allianceNow() : null;
+        initPick = null;
+        if (allianceAtInit && inInit && !(flashColor != null && now < flashEnd)) {
+            if (initAlliance == null) {
+                if (chooseSince < 0) chooseSince = now;
+                c = LightColor.WHITE;
+                hz = CHOOSE_HZ;
+                since = chooseSince;
+                why = "choose the alliance";
+                initPick = c;
+            } else {
+                chooseSince = -1;
+                c = allianceColor(initAlliance);
+                hz = 0;
+                since = now;
+                why = "alliance " + initAlliance;
+                initPick = c;
+            }
+        } else if (flashColor != null && now < flashEnd) {
             c = flashColor;
             hz = flashHz;
             since = flashStart;

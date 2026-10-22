@@ -30,6 +30,7 @@ final class SimJson {
         b.append("\"nextCount\":").append(ds.nextCount).append(',');
         b.append("\"runSeconds\":").append(fmt(ds.runSeconds())).append(',');
         b.append("\"autoTimer\":").append(ds.autoTimer).append(',');
+        b.append("\"teleTimer\":").append(ds.teleTimer).append(',');
         b.append("\"battery\":").append(fmt(r.batteryVolts)).append(',');
         b.append("\"lan\":").append(server.lan).append(',');
         b.append("\"port\":").append(server.port()).append(',');

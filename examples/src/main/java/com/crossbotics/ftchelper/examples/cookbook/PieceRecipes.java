@@ -96,10 +96,10 @@ public class PieceRecipes {
             g2.rumbleWhen(robot.pieces::isFull);
             // Two buzzes when a NECTAR is next to fire.
             g2.rumbleWhen(robot.pieces.whenNextIs("RED_NECTAR"), 2);
-            // A light the drivers see: green = full, red = empty (needs a Lights line in Robot.java, and
+            // A light the drivers see: green = full, orange = empty (needs a Lights line in Robot.java, and
             // import com.crossbotics.ftchelper.robot.LightColor; at the top of this file).
             robot.lights.show(LightColor.GREEN).when(robot.pieces.whenFull());
-            robot.lights.show(LightColor.RED).when(robot.pieces.whenEmpty());
+            robot.lights.show(LightColor.ORANGE).when(robot.pieces.whenEmpty());
             // Pieces shows "3/4, next POLLEN" by itself; this adds what the intake sees now.
             show("At the intake", robot.pieces::atIntake);
             // The count went wrong? Already on the buttons: hold G2's left stick button 1 s = count 0,

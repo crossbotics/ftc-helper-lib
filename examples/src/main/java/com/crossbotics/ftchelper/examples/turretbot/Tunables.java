@@ -33,6 +33,9 @@ public class Tunables {
         public static double min = -90, max = 90;
         public static double kP = 0.02, kI = 0, kD = 0.001;
         public static double maxPower = 0.8, tolerance = 1.5, cameraOffset = 0;
+        // Slows down within slowZone degrees of a limit, to slowZonePower; a goal (from the odometry) more
+        // than outOfRangeHold degrees past a limit: it holds where it points (the library's numbers).
+        public static double slowZone = 10, slowZonePower = 0.25, outOfRangeHold = 10;
     }
 
     /**
@@ -45,6 +48,7 @@ public class Tunables {
     public static class Launcher {
         public static double speedRpm = 2600, stepRpm = 100, readyBandRpm = 60, idleRpm = 1500;
         public static double kP = 40, kI = 0, kD = 0, kF = 12.5;   // the hub's speed control (Flywheel Finder)
+        public static double shotIntervalSec = 0.25;   // the least time between two pieces (seconds)
         public static double[][] speedByDistancePollen = {{24, 2200, 2}, {48, 2550, 11}, {72, 2900, 19}, {96, 3250, 23}};
         public static double[][] speedByDistanceNectar = {{24, 2400, 0}, {48, 2800, 6}, {72, 3200, 14}, {96, 3600, 18}};
     }

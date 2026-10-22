@@ -73,17 +73,26 @@ public class LightRecipes {
 
             // recipe: light-rules
             // One rule per line. The first true rule wins: put the most important first.
-            robot.lights.show(LightColor.RED).blinking().when(robot.intake::isPushingOut);  // pushing out
-            robot.lights.show(LightColor.GREEN).when(robot.launcher::isReady);           // at speed: fire
-            robot.lights.show(LightColor.BLUE).when(robot.intake::isRunning);            // intake on
-            robot.lights.otherwise(LightColor.OFF);                                      // none true
+            // Red and blue are left for the alliance (shown at INIT), so no rule looks like one.
+            robot.lights.show(LightColor.ORANGE).blinking().when(robot.intake::isPushingOut);  // pushing out
+            robot.lights.show(LightColor.GREEN).when(robot.launcher::isReady);              // at speed: fire
+            robot.lights.show(LightColor.PURPLE).when(robot.intake::isRunning);             // intake on
+            robot.lights.otherwise(LightColor.OFF);                                         // none true
+            // end recipe
+
+            // recipe: light-alliance
+            // At INIT the light shows the alliance chosen (solid RED or BLUE; white blinking until one is
+            // chosen) and flashes it for 1 s at START: on by default. To turn it off, in Tunables.java:
+            //     public static class Light { public static boolean allianceAtInit = false; }
+            // A light that shows red or blue badly: other colors for it.
+            robot.lights.allianceColors(LightColor.BLUE, LightColor.RED);
             // end recipe
 
             // recipe: light-flash
             // A flash beats every rule for 0.5 s: each time a piece is fired (the launcher counts the
             // pieces it feeds, so fire(2) flashes twice), and from a button.
             robot.lights.show(LightColor.WHITE).whenCountGoesUp(() -> robot.launcher.part().getShotsFired());
-            g2.a.press(() -> robot.lights.flash(LightColor.PURPLE)).says("flash the light (signal the partner)");
+            g2.a.press(() -> robot.lights.flash(LightColor.YELLOW)).says("flash the light (signal the partner)");
             // end recipe
 
             g2.x.press(Actions.shootTwo(robot)).says("shoot two");

@@ -76,12 +76,16 @@ public class Tunables {
         public static double min = -90, max = 90;               // degrees, counterclockwise +, 0 = forward
         public static double kP = 0.02, kI = 0, kD = 0.001;
         public static double maxPower = 0.8, tolerance = 1.5, cameraOffset = 0;
+        // Slows down within slowZone degrees of a limit, to slowZonePower; a goal (from the odometry) more
+        // than outOfRangeHold degrees past a limit: it holds where it points (the library's numbers).
+        public static double slowZone = 10, slowZonePower = 0.25, outOfRangeHold = 10;
     }
 
     // recipe: tunables-launcher
     public static class Launcher {
         public static double speedRpm = 2600, stepRpm = 100, readyBandRpm = 60, idleRpm = 1500;
         public static double kP = 40, kI = 0, kD = 0, kF = 12.5;   // from the Flywheel Finder
+        public static double shotIntervalSec = 0.25;   // the least time between two pieces (seconds)
         // {inches to the goal, RPM}: blended between rows (from the Shot Tuner).
         public static double[][] speedByDistance = {{24, 2200}, {48, 2550}, {72, 2900}, {96, 3250}};
     }

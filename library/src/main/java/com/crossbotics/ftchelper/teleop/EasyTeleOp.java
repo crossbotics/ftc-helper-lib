@@ -198,6 +198,39 @@ public abstract class EasyTeleOp extends LinearOpMode {
     }
 
     /**
+     * With no {@link #setPoseJob()}: a short note shown when the drivers hold the "set pose here" button
+     * anyway (alone, 1 s, then let go), so it does not silently do nothing; null (default) = no note.
+     * Controls.java says the robot needs odometry for it.
+     */
+    protected String setPoseMissingNote() {
+        return null;
+    }
+
+    // Watching the "set pose here" button on a robot without the job (see setPoseMissingNote).
+    private Key noPoseKey = null;
+    private String noPoseNote = null;
+    private long noPoseDownAt = -1;
+    private boolean noPosePaired = false;
+
+    // Every loop (INIT and the match): held alone 1 s and let go = show the note. Part of a pair (START,
+    // then BACK: debug lines) or START + A/B = not this.
+    private void watchMissingSetPose() {
+        if (noPoseKey == null) return;
+        if (noPoseKey.isDown(gamepad1, gamepad2)) {
+            if (noPoseDownAt < 0) {
+                noPoseDownAt = System.nanoTime();
+                noPosePaired = false;
+            }
+            if (pairedNow(noPoseKey)) noPosePaired = true;
+            return;
+        }
+        if (noPoseDownAt >= 0 && !noPosePaired && (System.nanoTime() - noPoseDownAt) / 1e9 >= LibraryButtons.HOLD_SEC) {
+            showNote(noPoseNote);
+        }
+        noPoseDownAt = -1;
+    }
+
+    /**
      * Called when the alliance changes during TeleOp ({@link #switchAlliance()}), after
      * {@link #alliance()} has the new one: update what uses it. Default: nothing. Must not wait.
      */
@@ -534,6 +567,9 @@ public abstract class EasyTeleOp extends LinearOpMode {
             keys = new LibraryKeys(lib.slots(jobsHere), jobMap, System::nanoTime).pauseAtPress(pauseState());
             // "Set pose here" works in INIT too (held 1 s before START): done before the buzzer.
             Runnable poseJob = jobsHere.contains(LibraryButtons.Job.SET_POSE) ? jobMap.get(LibraryButtons.Job.SET_POSE) : null;
+            // No "set pose here" on this robot: a note when its button is held anyway.
+            noPoseNote = poseJob == null ? setPoseMissingNote() : null;
+            noPoseKey = noPoseNote == null ? null : lib.key(LibraryButtons.Job.SET_POSE);
             Key poseKey = poseJob == null ? null : lib.key(LibraryButtons.Job.SET_POSE);
             long poseDownAt = -1;
             boolean poseBlocked = false, poseSetHere = false;
@@ -583,6 +619,7 @@ public abstract class EasyTeleOp extends LinearOpMode {
                         }
                     }
                 }
+                watchMissingSetPose();
                 if (Profile.current().isPractice()) t.warn("PRACTICE profile");
                 if (noPause != null) t.warn(noPause);
                 if (noteText != null && System.nanoTime() - noteAt < 3e9) t.warn(noteText);
@@ -626,6 +663,7 @@ public abstract class EasyTeleOp extends LinearOpMode {
             while (opModeIsActive()) {
                 // The library's buttons (pause, field-centric, menus...); only the menu's while it is open.
                 keys.update(gamepad1, gamepad2, tuning.isOpen());
+                if (!tuning.isOpen()) watchMissingSetPose();
                 operator.update(gamepad1, gamepad2);
                 timer.update();
                 tuning.update();

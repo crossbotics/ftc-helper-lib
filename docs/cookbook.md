@@ -127,6 +127,7 @@ first.
 **Lights** (a color the drivers can see)
 - [How do I add a colored light for the drivers?](#how-do-i-add-a-colored-light-for-the-drivers)
 - [How do I show a color when something is true?](#how-do-i-show-a-color-when-something-is-true)
+- [How do I show the alliance on the light before the match?](#how-do-i-show-the-alliance-on-the-light-before-the-match)
 - [How do I flash the light when something happens?](#how-do-i-flash-the-light-when-something-happens)
 - [How do I flash the light when an action is done?](#how-do-i-flash-the-light-when-an-action-is-done)
 - [How do I blink the light in the last 20 seconds?](#how-do-i-blink-the-light-in-the-last-20-seconds)
@@ -804,6 +805,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 public static class Launcher {
     public static double speedRpm = 2600, stepRpm = 100, readyBandRpm = 60, idleRpm = 1500;
     public static double kP = 40, kI = 0, kD = 0, kF = 12.5;   // from the Flywheel Finder
+    public static double shotIntervalSec = 0.25;   // the least time between two pieces (seconds)
     // {inches to the goal, RPM}: blended between rows (from the Shot Tuner).
     public static double[][] speedByDistance = {{24, 2200}, {48, 2550}, {72, 2900}, {96, 3250}};
 }
@@ -932,10 +934,10 @@ away, but not how far the piece is.
 g2.rumbleWhen(robot.pieces::isFull);
 // Two buzzes when a NECTAR is next to fire.
 g2.rumbleWhen(robot.pieces.whenNextIs("RED_NECTAR"), 2);
-// A light the drivers see: green = full, red = empty (needs a Lights line in Robot.java, and
+// A light the drivers see: green = full, orange = empty (needs a Lights line in Robot.java, and
 // import com.crossbotics.ftchelper.robot.LightColor; at the top of this file).
 robot.lights.show(LightColor.GREEN).when(robot.pieces.whenFull());
-robot.lights.show(LightColor.RED).when(robot.pieces.whenEmpty());
+robot.lights.show(LightColor.ORANGE).when(robot.pieces.whenEmpty());
 // Pieces shows "3/4, next POLLEN" by itself; this adds what the intake sees now.
 show("At the intake", robot.pieces::atIntake);
 // The count went wrong? Already on the buttons: hold G2's left stick button 1 s = count 0,
@@ -1971,17 +1973,37 @@ lights = add(Lights.gobilda("light"));
 <!-- recipe: light-rules -->
 ```java
 // One rule per line. The first true rule wins: put the most important first.
-robot.lights.show(LightColor.RED).blinking().when(robot.intake::isPushingOut);  // pushing out
-robot.lights.show(LightColor.GREEN).when(robot.launcher::isReady);           // at speed: fire
-robot.lights.show(LightColor.BLUE).when(robot.intake::isRunning);            // intake on
-robot.lights.otherwise(LightColor.OFF);                                      // none true
+// Red and blue are left for the alliance (shown at INIT), so no rule looks like one.
+robot.lights.show(LightColor.ORANGE).blinking().when(robot.intake::isPushingOut);  // pushing out
+robot.lights.show(LightColor.GREEN).when(robot.launcher::isReady);              // at speed: fire
+robot.lights.show(LightColor.PURPLE).when(robot.intake::isRunning);             // intake on
+robot.lights.otherwise(LightColor.OFF);                                         // none true
 ```
 
-**Why:** any true/false works, so a mode is `() -> robot.turret.followMode().isOn()` (blue while
+**Why:** any true/false works, so a mode is `() -> robot.turret.followMode().isOn()` (purple while
 whole-robot aim is on, on a robot without a turret: `() -> robot.aimMode().isOn()`) and your own test is
 `() -> robot.lift.position() > 1000` (if your robot has a lift). Blinking stops at 5 times a second, and the
 light never changes faster than every 0.1 s (FTC rule R202 J).
 **More:** [Lights](modules/robot.md#lights), [lambdas](tutorials/start/05-actions.md).
+
+### How do I show the alliance on the light before the match?
+
+**Where:** nothing to add: it is on by default. To change it, `Controls.java`, inside `buttons(...)`.
+
+<!-- recipe: light-alliance -->
+```java
+// At INIT the light shows the alliance chosen (solid RED or BLUE; white blinking until one is
+// chosen) and flashes it for 1 s at START: on by default. To turn it off, in Tunables.java:
+//     public static class Light { public static boolean allianceAtInit = false; }
+// A light that shows red or blue badly: other colors for it.
+robot.lights.allianceColors(LightColor.BLUE, LightColor.RED);
+```
+
+**Why:** a wrong alliance pick in INIT aims at the other alliance's goal all match. With the light solid
+RED or BLUE before START (white blinking once a second until the drivers pick), the drive team sees a wrong
+pick from the field. The game manual has no rule against a light in your alliance color; the ROBOT SIGNS
+are still required (R401, R402). Keep your own rules' colors away from red and blue.
+**More:** [Lights](modules/robot.md#the-alliance-at-init).
 
 ### How do I flash the light when something happens?
 
@@ -1992,7 +2014,7 @@ light never changes faster than every 0.1 s (FTC rule R202 J).
 // A flash beats every rule for 0.5 s: each time a piece is fired (the launcher counts the
 // pieces it feeds, so fire(2) flashes twice), and from a button.
 robot.lights.show(LightColor.WHITE).whenCountGoesUp(() -> robot.launcher.part().getShotsFired());
-g2.a.press(() -> robot.lights.flash(LightColor.PURPLE)).says("flash the light (signal the partner)");
+g2.a.press(() -> robot.lights.flash(LightColor.YELLOW)).says("flash the light (signal the partner)");
 ```
 
 **Why:** `whenCountGoesUp` flashes each time the number goes up, so each flash is a real shot.

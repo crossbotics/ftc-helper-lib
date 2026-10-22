@@ -826,7 +826,7 @@ sensors, not the camera.
 
 ## Lights
 
-A colored light the drivers can see: green when the robot is ready to fire, red blinking when it is
+A colored light the drivers can see: green when the robot is ready to fire, orange blinking when it is
 jammed, a white flash for each piece fired, yellow in the last 20 seconds. **Why:** the drivers watch the robot,
 not the Driver Station.
 
@@ -841,8 +841,8 @@ needs `import com.crossbotics.ftchelper.robot.LightColor;` at the top for the co
 ```java
 robot.lights.show(LightColor.YELLOW).blinking().inLastSeconds(20);     // the most important first
 robot.lights.show(LightColor.GREEN).when(robot.launcher::isReady);     // ready to fire
-robot.lights.show(LightColor.BLUE).when(() -> robot.turret.followMode().isOn());   // a turret robot
-robot.lights.show(LightColor.BLUE).when(() -> robot.aimMode().isOn()); // or: whole-robot aim on (no turret)
+robot.lights.show(LightColor.PURPLE).when(() -> robot.turret.followMode().isOn());   // a turret robot
+robot.lights.show(LightColor.PURPLE).when(() -> robot.aimMode().isOn()); // or: whole-robot aim on (no turret)
 robot.lights.otherwise(LightColor.OFF);                                 // when no rule is true
 robot.lights.show(LightColor.WHITE).whenCountGoesUp(() -> robot.launcher.part().getShotsFired());   // a 0.5 s flash per piece fired
 ```
@@ -857,6 +857,9 @@ robot.lights.show(LightColor.WHITE).whenCountGoesUp(() -> robot.launcher.part().
 | `otherwise(color)` | when no rule is true (default `OFF`) |
 | `flash(color)`, `flash(color, seconds)` | flash now, over every rule: from a button or an action step |
 | `color()`, `showing()`, `isFlashing()`, `clearRules()` | the color the rules pick; what is lit this instant (OFF in a blink's dark half) |
+| `allianceAtInit(false)`, `showsAllianceAtInit()` | turn off the alliance at INIT ([below](#the-alliance-at-init)); is it on |
+| `allianceColors(blue, red)` | the colors for the alliance at INIT, for a light that shows red or blue badly |
+| `blinkinPattern(color, pattern)` | a Blinkin only: your own pattern for a color, e.g. `blinkinPattern(LightColor.BLUE, BlinkinPattern.BLUE_VIOLET)` |
 
 - **The first true rule wins**, in the order written. A flash beats every rule while it lasts.
 - **Any true/false works:** `robot.intake::isRunning`, a mode (`() -> robot.turret.followMode().isOn()`),
@@ -888,9 +891,37 @@ signal it shows its own rainbow "color waves".
 
 **Game rules (2026-27 manual):** lights that flash faster than about 5 times a second (R202 J) or very
 bright lights (R202 F) can be switched off by the referees, so `blinking` stops at 5 and the light never
-changes faster than every 0.1 s. Your alliance color goes on the ROBOT SIGNS (R402); our advice: show it
-on the signs, not with a light, so referees are not confused. Do not shine lights onto the field
-(G302 example). In the simulator, the light is a dot on the robot and on the 3D view.
+changes faster than every 0.1 s. A light in your alliance's color is allowed (the manual has no rule
+against it: R202 F and J, R401, R402 checked); the ROBOT SIGNS must still show it (R401, R402). Do not
+shine lights onto the field (G302 example). In the simulator, the light is a dot on the robot and on the
+3D view.
+
+### The alliance at INIT
+
+On by default, on every robot with a light. **Why:** a wrong alliance pick in INIT makes the robot aim
+at the other alliance's goal all match; the drive team sees the light from the field, not the Driver
+Station's small text.
+
+- **INIT:** solid `RED` or `BLUE` once the alliance is picked (TeleOp: gamepad 1 X or B, or the one
+  autonomous left; autonomous: its INIT menu). Not picked yet: **white blinking once a second**
+  ("choose the alliance"). Your rules wait until START.
+- **START:** a 1 s flash of the alliance (TeleOp after autonomous: the one it got), then your rules.
+- **Alliance switched in TeleOp** (the opt-in `lib.switchAlliance(...)`): a 1 s flash of the new one.
+- Keep your rules' colors away from red and blue (the examples use purple and orange), so nobody reads
+  "intake on" as "BLUE alliance".
+
+Off, in `Tunables.java` (the light's section, named after its device, e.g. `Tunables.Light`):
+
+```java
+public static class Light {
+    public static boolean allianceAtInit = false;   // the rules show in INIT too, and no alliance flashes
+}
+```
+
+Or in `Controls.java`: `robot.lights.allianceAtInit(false);`. A light that shows red or blue badly:
+`robot.lights.allianceColors(LightColor.PURPLE, LightColor.ORANGE);` (blue's color first), or for a
+Blinkin a pattern of your own: `robot.lights.blinkinPattern(LightColor.BLUE, BlinkinPattern.BLUE_VIOLET);`
+(`import com.qualcomm.hardware.rev.RevBlinkinLedDriver.BlinkinPattern;`).
 
 ## Action
 

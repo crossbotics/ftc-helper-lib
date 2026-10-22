@@ -85,6 +85,7 @@ public class Turret implements Subsystem {
 
     private double targetDeg = Double.NaN;  // where it should point; NaN = no target (no power)
     private boolean outOfRange = false;
+    private long outOfRangeAskedAt = 0;     // when a target past the limits was last asked for (nanoseconds)
     private double manualPower = 0;
     private double sentPower = Double.NaN;  // the power sent last; NaN = nothing sent yet
 
@@ -281,6 +282,8 @@ public class Turret implements Subsystem {
         // The stick was just let go: hold the angle it is at now (if the angle is known; if not,
         // no target, so no power). "a ? b : c" means: if a use b, otherwise c.
         if (power == 0 && manualPower != 0) targetDeg = homed ? getAngle() : Double.NaN;
+        // The stick took over: no target past the limits any more (it holds where the stick left it).
+        if (power != 0 || manualPower != 0) outOfRange = false;
         manualPower = power;
     }
 
@@ -434,14 +437,21 @@ public class Turret implements Subsystem {
     public void addTelemetry(RobotTelemetry t) {
         if (!fault.isEmpty()) t.warn(name + " " + fault);
         if (!homed) t.warn(name + " not homed");
-        if (outOfRange) t.warn(name + ": target out of range");
+        // Only while something still asks for a target past the limits (within the last second): once
+        // following stops asking, or the stick takes over, the warning goes.
+        if (outOfRange && clockNanos.getAsLong() - outOfRangeAskedAt < 1_000_000_000L) t.warn(name + ": target out of range");
         t.line(name, "%.1f deg%s", getAngle(), isAimed() ? "  AIMED" : "");
-        t.debug(name + " target", "%.1f deg", targetDeg);
+        t.debug(name + " target", Double.isNaN(targetDeg) ? "-" : fmt1(targetDeg) + " deg");
     }
 
     // ---------------------------------------------------------------------------------------
     // Helpers. (No "public" or "private" word = usable only inside this package, e.g. by tests.)
     // ---------------------------------------------------------------------------------------
+
+    // A number with one decimal ("12.5").
+    private static String fmt1(double v) {
+        return String.format(java.util.Locale.US, "%.1f", v);
+    }
 
     /** The equal direction (angle + k*360) inside the limits closest to the current angle. */
     double legalTarget(double wantedDeg) {
@@ -465,6 +475,7 @@ public class Turret implements Subsystem {
         }
         // No way to point there inside the limits: go as close as allowed and say so.
         outOfRange = true;
+        outOfRangeAskedAt = clockNanos.getAsLong();
         // Nearest limit, measured around the circle.
         double toMin = Math.abs(Angles.shortestDiff(wantedDeg, minDeg));
         double toMax = Math.abs(Angles.shortestDiff(wantedDeg, maxDeg));
