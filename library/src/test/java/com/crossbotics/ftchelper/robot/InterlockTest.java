@@ -71,6 +71,35 @@ public class InterlockTest {
         }
     }
 
+    /** A slip-ring turret (no limits) with a zone on its left. */
+    public static class SlipRing {
+        public static class Turret {
+            public static double kD = 0;
+        }
+        public static class Lift {
+            public static double min = 0, max = 2600, kD = 0;
+            public static double down = 0, high = 2400;
+        }
+        public static class TurretLift {
+            public static double turretFrom = 30, turretTo = 60;
+            public static double liftAbove = 600;
+        }
+    }
+
+    static class SlipRingBot extends TurretLiftBot {
+        SlipRingBot() {
+            super(SlipRing.class);
+        }
+
+        @Override protected void define() {
+            tunables(numbers);
+            drive(Drive.mecanum("fl", "fr", "bl", "br"));
+            turret = add(Turret.motor("turret", "gobilda-5203-117").continuous());
+            lift = add(Lift.slide("lift"));
+            rule = keepApart("TurretLift", turret.zone(), lift.zoneAbove());
+        }
+    }
+
     static class TurretLiftBot extends RobotDefinition {
         final Class<?> numbers;
         Turret turret;
@@ -179,6 +208,28 @@ public class InterlockTest {
         loops(r, 300);
         assertEquals(-270, r.turret.angle(), 3);
         assertFalse(r.turret.isHeld());
+    }
+
+    @Test public void aSlipRingTurretGoesRoundTheOtherWayAndItsZoneRepeatsEveryTurn() {
+        kit = new RobotTestKit();
+        SlipRingBot r = new SlipRingBot();
+        r.setup(kit);
+        r.started();
+        r.lift.goTo("high");
+        loops(r, 200);
+        assertTrue(r.lift.position() > 2000);
+        // 0 -> 90 the short way passes 30..60: with the lift up it goes clockwise, the long way round.
+        r.turret.aimAt(90);
+        loops(r, 400);
+        assertEquals("it points at 90 (shown -180 to 180)", 90, r.turret.angle(), 3);
+        assertFalse(r.turret.isHeld());
+        // A target inside the zone, one turn later (45 = 405 = -315): it waits outside the zone.
+        r.turret.aimAt(45);
+        loops(r, 400);
+        double a = r.turret.angle();
+        assertTrue("held outside 30..60: " + a, a < 30 - 3 || a > 60 + 3);
+        assertTrue(r.turret.isHeld());
+        assertTrue(screen(r), screen(r).contains("Turret held at"));
     }
 
     @Test public void bothInTheirZonesMayOnlyMoveOut() {
