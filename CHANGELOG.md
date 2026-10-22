@@ -50,6 +50,12 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Changed
 
+- Cookbook (review fixes): what `.part(...)` is and when it is needed; the tank drive's `reversed`;
+  pick a free button (the parts' standard buttons, `free()`); `-PteamCode` in the scenario command;
+  CR servo, operator, CamelCase and GUIDE (tap: button map, hold: tuning menu) explained; Blocks table
+  rows for a sensor `if`, a driver choice, `repeat`, servo positions and `waitForStart`; a new
+  "repeat steps" recipe (a `for` loop in an action, as in andymarkbot); why the Odometry Tuner is its
+  own file. From Blocks to Java: `repeat 3 times` now says the same.
 - The simulated Pinpoint and OTOS give a fresh pose at every read (moved on by the speed since the last
   physics step), like the real ones, which update much faster than the physics. Before, a fast loop (Pedro's
   tuners) saw the robot stand still between the physics steps (100 a second).
