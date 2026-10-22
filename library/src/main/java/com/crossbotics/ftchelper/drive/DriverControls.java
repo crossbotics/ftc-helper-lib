@@ -105,6 +105,24 @@ public final class DriverControls {
         return this;
     }
 
+    // Turn assist (e.g. aim at a goal), or null: gets the driver's turn and gives the turn to use.
+    private java.util.function.DoubleUnaryOperator turnAssist = null;
+
+    /**
+     * A helper that may change the turn, e.g. aiming at a goal while the driver drives: every loop it
+     * gets the driver's turn (after the stick shaping, clockwise +) and gives back the turn to use.
+     * Forward and sideways stay the driver's. Null = none (the default). The five-files TeleOp uses
+     * it for {@code robot.aimMode()}.
+     *
+     * <pre>{@code
+     * driving.turnAssist(turn -> aimOn && turn == 0 ? aim.turnPower(camera.target("RED SCORING")) : turn);
+     * }</pre>
+     */
+    public DriverControls turnAssist(java.util.function.DoubleUnaryOperator assist) {
+        turnAssist = assist;
+        return this;
+    }
+
     /** Drives from the gamepad's sticks. Call once every loop. Never waits. */
     public void update(Gamepad gamepad) {
         // The left trigger slows it down: the further it is pulled, the slower.
@@ -135,6 +153,7 @@ public final class DriverControls {
         double forward = StickShaping.shape(-gamepad.left_stick_y, deadband, exponent);
         double strafe = StickShaping.shape(gamepad.left_stick_x, deadband, exponent);
         double turn = StickShaping.shape(gamepad.right_stick_x, deadband, exponent);
+        if (turnAssist != null) turn = turnAssist.applyAsDouble(turn);
         lastSpeed = speed;
         if (isFieldCentric()) wheels.fieldCentric(forward, strafe, turn, heading.degrees(), lastSpeed);
         else wheels.robotCentric(forward, strafe, turn, lastSpeed);

@@ -146,6 +146,7 @@ driving.stop();
 | `update(gamepad, speed)` | the same, at a speed your own code works out (0 to 1, e.g. a slow trigger that is not LT) |
 | `drive(forward, strafeRight, turnClockwise, speed)` | drive with your own numbers (robot-centric), for custom controls |
 | `tank(left, right, speed)` | two-stick tank style: one value per side. Works on tank and mecanum robots. |
+| `turnAssist(turn -> ...)` | a helper that may change the turn every loop (it gets the driver's shaped turn, clockwise +, and gives the turn to use); forward and sideways stay the driver's. Null = none. The five-files TeleOp uses it for [whole-robot aim](robot.md#aim). |
 | `hold()` | wheels still this loop (e.g. while a menu uses the gamepad) |
 | `stop()` | all wheels to 0 |
 | `slowSpeed(s)` | speed at full slow trigger, default 0.3 |

@@ -97,8 +97,12 @@ ShotTable.Shot s = pollen.lookup(36);     // 2850 rpm, 10 deg (halfway between 2
 ```
 
 Straight lines between your points; outside them, the nearest end (it never guesses beyond what you
-tested). `covers(distance)` says if you are inside. One table per game piece if they fly differently.
-How to fill it: [tutorial 17](../tutorials/17-launcher.md#4-fill-the-shot-table).
+tested). `covers(distance)` says if you are inside. One table per game piece if they fly differently
+(BIOBUZZ: POLLEN is a 2.8 in ball, NECTAR a 3.6 in ball); swap them with `launcher.table(other)`.
+How to fill it: [tutorial 17](../tutorials/17-launcher.md#4-fill-the-shot-table). In the robot in five
+files, each `speedByDistance...` line in `Tunables.Launcher` is one table, picked by name with
+`robot.launcher.useTable("nectar")` ([robot.md: Launcher](robot.md#launcher)); the
+[Shot Tuner](finders.md) tunes one at a time.
 
 ## Feeder
 

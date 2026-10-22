@@ -255,6 +255,11 @@ final class ButtonPlan {
             else into.bindTriggerPress(pair.with.pad.which, pair.with.trigger, run);
         }
         for (Watch w : watches) {
+            final Supplier<Gamepad> pad = w.pad == ControllerBindings.Pad.G1 ? pad1 : pad2;
+            if (w.aim) {
+                loopJobs.add(aimJob(robot, w.pad == ControllerBindings.Pad.G1, pad));
+                continue;
+            }
             loopJobs.add(new LoopJob(w.pad == ControllerBindings.Pad.G1) {
                 private boolean was = true;   // true at first: something already true at START does not buzz
                 @Override void run(boolean paused) {
@@ -311,17 +316,50 @@ final class ButtonPlan {
         abstract void reset();
     }
 
-    /** A "buzz when this becomes true" from {@link Pad#rumbleWhen}. */
+    /** A "buzz when this becomes true" from {@link Pad#rumbleWhen}, or the aim buzz ({@link Pad#rumbleWhenAimed}). */
     static final class Watch {
         final ControllerBindings.Pad pad;
         final BooleanSupplier when;
         final int buzzes;
+        // True for rumbleWhenAimed(): a graded buzz from robot.aim().errorDeg().
+        final boolean aim;
 
         Watch(ControllerBindings.Pad pad, BooleanSupplier when, int buzzes) {
+            this(pad, when, buzzes, false);
+        }
+
+        Watch(ControllerBindings.Pad pad, BooleanSupplier when, int buzzes, boolean aim) {
             this.pad = pad;
             this.when = when;
             this.buzzes = buzzes;
+            this.aim = aim;
         }
+    }
+
+    /** Tests: told each time the aim buzz starts a buzz (null = nobody listens). */
+    static Runnable aimBuzzed = null;
+
+    // The aim buzz: every loop, the aim's error goes to an AimRumble (the closer, the stronger). Not
+    // while paused. A new gamepad object (a reconnect) gets a new AimRumble.
+    private static LoopJob aimJob(final RobotDefinition robot, boolean driverPad, final Supplier<Gamepad> pad) {
+        return new LoopJob(driverPad) {
+            private Gamepad gamepad = null;
+            private com.crossbotics.ftchelper.gamepad.AimRumble rumble = null;
+
+            @Override void run(boolean paused) {
+                if (paused || robot.aim() == null) return;
+                Gamepad now = pad.get();
+                if (now == null) return;
+                if (now != gamepad) {
+                    gamepad = now;
+                    rumble = new com.crossbotics.ftchelper.gamepad.AimRumble(now, () -> Pad.clock.getAsLong());
+                }
+                rumble.setThreshold(robot.aim().rumbleDeg());
+                if (rumble.update(robot.aim().errorDeg()) && aimBuzzed != null) aimBuzzed.run();
+            }
+
+            @Override void reset() { }
+        };
     }
 
     // The gesture machine of one button, with each job paused-safe and buzzing as asked.

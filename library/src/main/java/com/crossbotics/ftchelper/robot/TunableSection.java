@@ -121,6 +121,37 @@ final class TunableSection {
     }
 
     /**
+     * Every table whose field name starts with {@code prefix}, by name: the rest of the field name in
+     * lower case ({@code speedByDistancePollen} -> "pollen"), or "main" for the field called just
+     * {@code prefix}. In a fixed order on every phone and laptop: "main" first, then by name (Java
+     * does not promise the order fields are written in). The value is the field's name and its rows.
+     *
+     * @param prefix e.g. "speedByDistance"
+     */
+    Map<String, Map.Entry<String, double[][]>> tables(String prefix) {
+        java.util.TreeMap<String, Map.Entry<String, double[][]>> sorted = new java.util.TreeMap<>();
+        if (section != null) {
+            for (Field f : section.getDeclaredFields()) {
+                if (!Modifier.isStatic(f.getModifiers()) || f.getType() != double[][].class) continue;
+                if (!f.getName().startsWith(prefix)) continue;
+                String rest = f.getName().substring(prefix.length());
+                String key = rest.isEmpty() ? "main" : rest.toLowerCase(Locale.US);
+                try {
+                    f.setAccessible(true);
+                    double[][] rows = (double[][]) f.get(null);
+                    if (rows != null) sorted.put(key, new java.util.AbstractMap.SimpleImmutableEntry<>(f.getName(), rows));
+                } catch (IllegalAccessException e) {
+                    // a field the library cannot read is left out
+                }
+            }
+        }
+        Map<String, Map.Entry<String, double[][]>> out = new LinkedHashMap<>();
+        if (sorted.containsKey("main")) out.put("main", sorted.remove("main"));
+        out.putAll(sorted);
+        return out;
+    }
+
+    /**
      * Every number in the section that is not in {@code known}, in the order they are written. A
      * module uses these as its named positions: in {@code Lift { down = 0, low = 900, high = 2400 }}
      * the three names are positions.

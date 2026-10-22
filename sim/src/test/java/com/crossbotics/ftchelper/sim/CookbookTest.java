@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.crossbotics.ftchelper.examples.cookbook.ActionRecipes;
+import com.crossbotics.ftchelper.examples.cookbook.AimRecipes;
 import com.crossbotics.ftchelper.examples.cookbook.AutonomousRecipes;
 import com.crossbotics.ftchelper.examples.cookbook.ButtonRecipes;
 import com.crossbotics.ftchelper.examples.cookbook.DrivingRecipes;
@@ -39,7 +40,7 @@ public class CookbookTest {
 
     private static final List<Class<?>> GROUPS = Arrays.asList(DrivingRecipes.class, ButtonRecipes.class,
             MechanismRecipes.class, ActionRecipes.class, AutonomousRecipes.class, OdometryRecipes.class,
-            PedroRecipes.class, TelemetryRecipes.class);
+            PedroRecipes.class, TelemetryRecipes.class, AimRecipes.class);
 
     // The whole files (one class per file, as in TeamCode): the robot, its TeleOp, an autonomous, the finders.
     private static final List<Class<?>> FILES = Arrays.asList(
@@ -148,6 +149,33 @@ public class CookbookTest {
             s.press(v -> s.g2().y = v);                            // score high
             assertTrue("the lift rises\n" + String.join("\n", s.screen()),
                     SimRun.waitFor(() -> s.robot().motors.get("lift").shaft() > 1000, 5));
+            assertEquals("", s.error());
+        }
+    }
+
+    // The Shot Tuner with two tables and odometry: the distance comes from the odometry (no goal in
+    // the camera's view), it starts on the launcher's start table, Y and the D-pad pick the other, and
+    // each table gets its own line for Tunables.java.
+    @Test public void theShotTunerTunesEachTableWithTheOdometrysDistance() throws Exception {
+        try (SimRun s = new SimRun(robotFile(AimRecipes.Robot.class).toString())) {
+            s.sim.ds.register("Cookbook Aim Shot Tuner", "TeleOp", AimRecipes.ShotTuner.class);
+            s.init("Cookbook Aim Shot Tuner");
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Odometry : put the robot at x 0, y 0 in"));
+            s.start();
+            // From (0, 0) to the goal at (-58, 55): 79.9 in.
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("79.9 in (odometry)"), 2));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Table : POLLEN"));
+            s.press(v -> s.g1().a = v);                                   // save a point (POLLEN)
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas(
+                    "public static double[][] speedByDistancePollen = {{79.9, 3000}};   // in Tunables.Launcher"), 1));
+            // Y until TABLE (SPEED -> TABLE: no hood, no hand-set distance), then the other table.
+            s.press(v -> s.g1().y = v);
+            s.press(v -> s.g1().dpad_right = v);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Table : NECTAR"), 1));
+            s.press(v -> s.g1().a = v);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas(
+                    "public static double[][] speedByDistanceNectar = {{79.9, 3000}};   // in Tunables.Launcher"), 1));
+            assertTrue("the POLLEN line stays", s.screenHas("speedByDistancePollen"));
             assertEquals("", s.error());
         }
     }

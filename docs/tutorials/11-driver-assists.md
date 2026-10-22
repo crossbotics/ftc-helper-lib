@@ -73,6 +73,10 @@ aimFeel.update(Angles.shortestDiff(targetHeading, heading));
 Inside 3 degrees it buzzes; the closer, the stronger. `Angles.shortestDiff` gives the error the
 short way around. (Use it for any "how far off am I" with headings.)
 
+**In the robot in five files:** `g2.rumbleWhenAimed();` in `Controls.java` does this for a turret or
+for whole-robot aim (`g1.rb.toggle(robot.aimMode())`, which turns the robot to face the goal while the
+driver drives). See [Lesson 9, sections 10 and 11](start/09-shooter-and-camera.md#10-no-turret-aim-the-whole-robot).
+
 ## 4. Smooth starts
 
 A tall robot that goes from 0 to full speed in one loop can tip, and wheels slip. A

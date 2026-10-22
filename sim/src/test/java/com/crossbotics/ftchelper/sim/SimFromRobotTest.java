@@ -152,6 +152,36 @@ public class SimFromRobotTest {
             s.g2().right_stick_x = 1;                                 // turret by hand
             assertTrue(SimRun.waitFor(() -> Math.abs(s.robot().motors.get("turret").userPower()) > 0.1, 1));
             s.g2().right_stick_x = 0;
+            // Two shot tables: it starts on POLLEN; D-pad right picks NECTAR.
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Shot table : POLLEN"), 1));
+            s.press(v -> s.g2().dpad_right = v);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Shot table : NECTAR"), 1));
+            assertEquals("", s.error());
+        }
+    }
+
+    // Whole-robot aim (flywheelbot, no turret): G1 RB on, and the robot turns itself to face the goal
+    // its webcam sees; the turn stick still wins.
+    @Test public void flywheelBotTurnsItselfToFaceTheGoal() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.flywheelbot.Robot.class);
+        com.crossbotics.ftchelper.match.MatchMemory.clear();
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("FlywheelBot TeleOp");
+            s.press(v -> s.g1().b = v);                              // RED: it aims at RED SCORING
+            assertTrue(SimRun.waitFor(() -> s.screenHas("RED (chosen here)"), 2));
+            s.start();
+            // Level with the RED SCORING tags, facing them, then turned 15 degrees left.
+            s.sim.robot.setPose(32, -12.74, 105);
+            SimRun.pause(0.5);
+            assertEquals("nothing turns it before aim is on", 105, s.robot().headingDeg, 1.0);
+            s.press(v -> s.g1().right_bumper = v);                   // aim on
+            assertTrue("it turns to face the goal: " + s.robot().headingDeg + "\n" + String.join("\n", s.screen()),
+                    SimRun.waitFor(() -> Math.abs(s.robot().headingDeg - 90) < 3, 6));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Aim : camera"));
+            s.g1().right_stick_x = 1;                                // the driver turns: the driver wins
+            assertTrue("the stick turns it away", SimRun.waitFor(() -> Math.abs(s.robot().headingDeg - 90) > 10, 3));
+            s.g1().right_stick_x = 0;
+            assertTrue("and the aim brings it back", SimRun.waitFor(() -> Math.abs(s.robot().headingDeg - 90) < 3, 6));
             assertEquals("", s.error());
         }
     }

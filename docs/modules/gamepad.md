@@ -196,3 +196,6 @@ if (!confirm.isPlaying()) aimFeel.update(headingErrorDeg);
 | `setFeel(minStrength, maxStrength, minPulseMs, maxPulseMs, minCooldownMs, maxCooldownMs)` | "min" values are used at the edge of the threshold, "max" values at zero error. Defaults: 0.10, 0.65, 120, 200, 120, 350. The cooldown is the time from the START of one buzz to the start of the next, so at the edge (120 ms buzz, 120 ms cooldown) the buzzes run together. |
 | `setEnabled(on)` / `isEnabled()` | turn buzzing on or off (for a driver who does not want it) |
 | `update(error)` | call every loop. Returns true if it started a buzz. `NaN` (no target) does nothing. |
+
+In the robot in five files it is one line in `Controls.java`: `g2.rumbleWhenAimed();` (the error is
+the turret's or the whole robot's aim; see [Aim](robot.md#aim)).

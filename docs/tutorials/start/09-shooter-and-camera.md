@@ -3,6 +3,9 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
 **Goal:** add a flywheel shooter with a feeder, then a camera that aims a turret and picks the shot speed.
+Then the helpers that let the drivers focus on driving and firing: one shot table per game piece, the
+odometry as a backup when the camera loses the goal, aiming the whole robot (no turret), and a buzz
+when the aim is on target.
 
 **You need:** lessons 1 to 6 (the last one: [Your first autonomous](06-first-autonomous.md)); lessons 7 and 8
 are not needed. Skip this lesson if your robot does not shoot. A flywheel
@@ -15,10 +18,13 @@ The lesson robot has no shooter, so this lesson reads two other example robots b
 - [`gobildabot`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildabot): goBILDA's
   BIOBUZZ starter bot. A flywheel fed by a "windmill" on a CR servo.
 - [`turretbot`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot): a turret with a
-  Limelight on it that follows the goal, and a flywheel whose speed comes from the distance.
+  Limelight on it that follows the goal, and a flywheel whose speed comes from the distance (one table
+  per game piece).
+- [`flywheelbot`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot): no turret;
+  a webcam, and the whole robot turns to face the goal (section 10).
 
 **Reference:** [Launcher](../../modules/robot.md#launcher), [Indexer](../../modules/robot.md#indexer),
-[Camera](../../modules/robot.md#camera), [Turret](../../modules/robot.md#turret).
+[Camera](../../modules/robot.md#camera), [Turret](../../modules/robot.md#turret), [Aim](../../modules/robot.md#aim).
 
 ---
 
@@ -213,10 +219,12 @@ The software limits do not replace hard stops: give the turret a mechanical stop
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
         .feeder(Indexer.servo("indexer"))
         .speedFromDistance(camera)
+        .startTable("pollen")
         .requireReady("turret aimed", () -> turret.isAimed()));
 ```
 
-- `.speedFromDistance(camera)`: the speed comes from the camera's distance to the goal, from this table:
+- `.speedFromDistance(camera)`: the speed comes from the camera's distance to the goal, from this table
+  (one table; section 8 has two, as the turret robot does):
 
   ```java
   public static double[][] speedByDistance = {{24, 2200}, {48, 2550}, {72, 2900}, {96, 3250}};
@@ -231,9 +239,107 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
   [ShotTuner.java](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/ShotTuner.java)):
   `@Override protected RobotDefinition robot() { return new Robot(); }`. It uses your launcher, camera
   and drive. The turret stays still and the "turret aimed" check is off: point the robot with the sticks.
+- `.startTable("pollen")`: which table to start with (section 8).
 - `.requireReady("turret aimed", () -> turret.isAimed())`: one more check before each piece is fed.
   `() -> turret.isAimed()` is a lambda (lesson 5): the launcher asks it again before every piece. The
   words are what the Driver Station shows if it gives up: `Launcher gave up: turret aimed`.
+
+## 8. Two game pieces, two shot tables
+
+BIOBUZZ has two game pieces: POLLEN, a 2.8 in ball, and NECTAR, a 3.6 in ball (game manual, section
+9.8). They fly differently, so one speed table cannot fit both. Give each its own table: every
+`speedByDistance...` line in `Tunables.Launcher` is a table, named by what comes after
+`speedByDistance`. From [`turretbot/Tunables.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/Tunables.java):
+
+```java
+public static double[][] speedByDistancePollen = {{24, 2200}, {48, 2550}, {72, 2900}, {96, 3250}};
+public static double[][] speedByDistanceNectar = {{24, 2400}, {48, 2800}, {72, 3200}, {96, 3600}};
+```
+
+The tables are called `pollen` and `nectar`. The robot starts on the one in `.startTable("pollen")`
+(without it: `speedByDistance` if there is one, else the first by name). Switch:
+
+- **A button.** The launcher brings one: gamepad 2's **D-pad right** picks the next table. Or one button
+  per piece: `g2.x.press(() -> robot.launcher.useTable("pollen"));`
+- **An action.** `.then(() -> r.launcher.useTable("nectar"))` before the shot.
+- **Code** (an autonomous, or a sensor that tells which piece is loaded):
+  `robot.launcher.useTable("nectar");`, or `robot.launcher.tableFrom(() -> ...)` to let code choose every
+  time its answer changes.
+
+The Driver Station shows `Shot table: POLLEN, 48 in (camera)`. A name with no table (a typo) keeps the
+table in use and warns: `Launcher: no shot table "nectr" (Tunables.Launcher has: nectar, pollen)`.
+
+**Fill each table with the Shot Tuner.** Press **Y** until `> Table`, choose with the D-pad, load
+that piece, and tune as before. Each table gets its own line to copy, e.g.
+`public static double[][] speedByDistanceNectar = {{24, 2400}, {48, 2800}};   // in Tunables.Launcher`.
+**Copy the lines into `Tunables.java`** (replace the line with the same name): the robot uses the file,
+not the tuner's screen. They are also saved on the Control Hub when you press STOP.
+
+## 9. When the camera loses the goal: the odometry
+
+A robot arm, another robot or a bad angle hides the tag, and the turret stops following. If your robot
+has odometry ([lesson 7](07-odometry.md)), it knows where it is on the field, so it can work out where
+the goal is too. Tell it where the goal is, in `Tunables.java`:
+
+```java
+public static class Aim {
+    public static double goalX = -58, goalY = 55;   // inches, seen from the BLUE drivers' wall
+    public static boolean mirrorForRed = false;     // BIOBUZZ: the field is turned, not mirrored
+}
+```
+
+- `goalX`, `goalY`: the same numbers as `driveTo` (x right of the field's centre line, y from the centre
+  toward the far wall). Put the point where the camera measures to (the goal's tags), so the camera's
+  distance and the odometry's agree and one shot table fits both.
+- `mirrorForRed`: like your autonomous's. `true` (the default) mirrors x for RED; `false` for a field
+  that is turned half a turn between the alliances, like BIOBUZZ.
+
+That is all. The turret (`follows(camera)`) and the speed (`speedFromDistance(camera)`) use the camera
+while it sees the goal, and the odometry while it does not. The Driver Station says which:
+`turret: 12 deg following: odometry`, `Shot table: POLLEN, 52 in (odometry)`. No camera at all? Use
+`.followsOdometry()` and `.speedFromOdometry()`.
+
+**Why camera first?** The camera sees the real goal; the odometry only knows where it thinks the robot
+is, and drifts a little over a match (bumps, wheel slip). It is a backup, good enough until the tag is
+back. It needs a good start: the autonomous's start spot, carried into TeleOp. Without autonomous,
+TeleOp's pose starts at (0, 0), and the odometry aim is wrong.
+
+## 10. No turret? Aim the whole robot
+
+A robot without a turret aims by turning. Let it turn by itself while the driver drives: one line in
+`Controls.java`. From [`flywheelbot/Controls.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot/Controls.java):
+
+```java
+g1.rb.toggle(robot.aimMode()).says("aim the robot at the goal on/off").rumble();
+```
+
+While it is on, the robot turns to face the goal (the camera's, or the odometry's) and the driver keeps
+forward and sideways. **The driver still wins:** move the turn stick and the robot turns as the stick
+says; let go and the aim takes over again. No goal: it does not turn by itself. Its numbers:
+
+```java
+public static class Aim {
+    public static double turnKp = 0.02, turnKd = 0.002, maxTurnPower = 0.5, toleranceDeg = 2;
+    public static double cameraOffset = 0, rumbleDeg = 4;
+}
+```
+
+`turnKp`: turn power per degree off (too low: slow; too high: it shakes). `maxTurnPower`: the most it
+turns by itself. `toleranceDeg`: this close is "aimed". `minTurnPower` (optional): the least power that
+really turns your robot, if it stops a few degrees short. Tune them live in the tuning menu, then **copy
+the values back into `Tunables.java`** (INIT lists every tuned value that differs from the file).
+To fire only when aimed: `.requireReady("aimed", () -> aim().isAimed())` on the launcher in `Robot.java`.
+
+## 11. Feel the aim: a buzz when on target
+
+The driver who fires watches the field, not the screen. One line in `Controls.java`:
+
+```java
+g2.rumbleWhenAimed();
+```
+
+Gamepad 2 buzzes while the aim is within `Tunables.Aim.rumbleDeg` (4 degrees), and the closer, the
+stronger and longer each buzz. It works for a turret that follows the goal and for whole-robot aim.
 
 ## Try it in the simulator
 
@@ -254,7 +360,11 @@ The turret robot: write its robot file from `Robot.java`, then run it:
 ```
 
 Choose "TurretBot TeleOp". Drive until the goal is in view and watch the turret follow it and the
-speed change with the distance. Press BACK on gamepad 2 to stop following. ([Simulator guide](../../guides/simulator.md).)
+speed change with the distance. Press BACK on gamepad 2 to stop following, D-pad right to switch
+between the POLLEN and NECTAR tables.
+
+The whole-robot aim: do the same with `flywheelbot` (`-ProbotClass=com.crossbotics.ftchelper.examples.flywheelbot.Robot -Pout=build/flywheelbot.properties`),
+choose "FlywheelBot TeleOp", drive until the goal is in view, and press RB on gamepad 1. ([Simulator guide](../../guides/simulator.md).)
 
 **Your own robot** with its shooter (and camera), from the `ftc-helper-lib` folder:
 
@@ -275,7 +385,11 @@ give each a `looks(...)` shape in `Robot.java` ([Lesson 1: Draw your robot from 
 3. Feed by hand at low speed, then fire with RB. Watch the feeder push ONE piece per shot; tune
    `feedSec` (or `push`, `pushSec`) until it does.
 4. Turret: point it forward, INIT, and turn it by hand to each end. It must stop before the hard stops.
-5. Only then turn following on, and fill `speedByDistance` at 4 to 6 distances on a charged battery.
+5. Only then turn following on, and fill `speedByDistance` at 4 to 6 distances on a charged battery
+   (each table, with its game piece).
+6. Odometry backup: cover the camera with your hand. The turret should keep pointing at the goal and
+   the Driver Station say `following: odometry`. If it points elsewhere, check `goalX`, `goalY`, the
+   alliance, and that the pose started right.
 
 ## If something goes wrong
 
@@ -289,6 +403,10 @@ give each a `looks(...)` shape in `Robot.java` ([Lesson 1: Draw your robot from 
 | The turret's angles are wrong | `.gearRatio(...)`, or it did not point forward at INIT. |
 | "goal out of turret range" | the goal is past `min` or `max`: turn the robot. |
 | The speed never changes with distance | no goal in view; check `Tunables.Limelight.pipeline` and the `goal(...)` names. |
+| `Launcher: no shot table "..."` | the name in `useTable(...)` has no `speedByDistance...` line; the warning lists the names there. |
+| `following: odometry` points the wrong way | `Tunables.Aim.goalX`, `goalY` (from the BLUE wall), `mirrorForRed`, or the pose did not start right (no autonomous before TeleOp). |
+| `Aim: no goal` | whole-robot aim on, but the camera does not see the goal and there is no odometry backup. |
+| Whole-robot aim stops a few degrees off | raise `turnKp`, or set `minTurnPower` (the least power that turns the robot). |
 | `limelight lighting: trying 1 of 3: pipeline 0 (no tags yet: face a tag)` (INIT) | the test has tried every pipeline and none saw a tag. Turn the robot toward a tag; the test keeps going until START. |
 | `limelight lighting: NO TAGS SEEN` (after START) | no pipeline saw a tag in INIT, so the first one is kept. Next time have a tag in view at INIT; check each pipeline on the Limelight's web page. |
 | `limelight lighting: no pictures from pipeline 2 (missing?)` | that pipeline is not set up on the Limelight: make it (see above), or take it out of `autoPipelines(...)`. |

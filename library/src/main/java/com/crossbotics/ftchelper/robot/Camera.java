@@ -213,6 +213,11 @@ public final class Camera extends Module<Camera> {
         return source.target(a.pick(blueGoal, redGoal));
     }
 
+    // True if goal(...) was given in Robot.java (robot.aim() aims with the first such camera).
+    boolean hasGoal() {
+        return blueGoal != null;
+    }
+
     /** The target with this name (a tag group or a tag's name), or null if not seen now. */
     public TargetObservation target(String name) {
         return source == null ? null : source.target(name);

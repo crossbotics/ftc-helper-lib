@@ -63,6 +63,12 @@ first.
 - [How do I add a turret that follows the goal?](#how-do-i-add-a-turret-that-follows-the-goal)
 - [How do I fire only when aimed, at the right speed?](#how-do-i-fire-only-when-aimed-at-the-right-speed)
 
+**Aiming and shooting** (the robot helps the drivers)
+- [How do I make the whole robot aim at the goal (no turret)?](#how-do-i-make-the-whole-robot-aim-at-the-goal-no-turret)
+- [How do I make the gamepad buzz when the aim is on target?](#how-do-i-make-the-gamepad-buzz-when-the-aim-is-on-target)
+- [How do I keep aiming when the camera loses the goal?](#how-do-i-keep-aiming-when-the-camera-loses-the-goal)
+- [How do I use one shot table per game piece?](#how-do-i-use-one-shot-table-per-game-piece)
+
 **Actions** (several steps or parts together)
 - [How do I do several things one after the other?](#how-do-i-do-several-things-one-after-the-other)
 - [How do I repeat steps several times?](#how-do-i-repeat-steps-several-times)
@@ -796,6 +802,112 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 
 **Why:** a shot fired before the turret is on target, or at the wrong speed, is a lost piece.
 **More:** [Lesson 9](tutorials/start/09-shooter-and-camera.md#7-speed-from-distance-and-fire-only-when-aimed).
+
+## Aiming and shooting
+
+Things the robot does for the drivers, so they can focus on driving and firing. They all use one idea:
+**the camera first, the odometry as a backup** ([Aim](modules/robot.md#aim)).
+
+### How do I make the whole robot aim at the goal (no turret)?
+
+**Where:** `Controls.java`, inside `buttons(...)` (and `Tunables.java` for the numbers, below). The
+robot needs a camera with a `goal(...)` (or odometry with a goal point).
+
+<!-- recipe: aim-whole-robot -->
+```java
+// RB: the robot turns to face the goal by itself; the driver keeps forward and sideways.
+// Moving the turn stick still turns it by hand. Two buzzes = on, one = off.
+g1.rb.toggle(robot.aimMode()).says("aim the robot at the goal on/off").rumble();
+```
+
+**Why:** the driver drives; the robot keeps itself pointed at the goal. The stick always wins, so the
+driver can take over at once.
+**More:** [Lesson 9: aim the whole robot](tutorials/start/09-shooter-and-camera.md#10-no-turret-aim-the-whole-robot).
+
+### How do I make the gamepad buzz when the aim is on target?
+
+**Where:** `Controls.java`, inside `buttons(...)`.
+
+<!-- recipe: aim-rumble -->
+```java
+// Gamepad 2 buzzes while the aim is close: the closer, the stronger (Tunables.Aim.rumbleDeg).
+// It works for a turret that follows the goal and for whole-robot aim.
+g2.rumbleWhenAimed();
+```
+
+**Why:** the driver who fires watches the field, not the screen: the buzz says "now".
+**More:** [Lesson 9: feel the aim](tutorials/start/09-shooter-and-camera.md#11-feel-the-aim-a-buzz-when-on-target).
+
+### How do I keep aiming when the camera loses the goal?
+
+**Where:** `Robot.java`, inside `define()`, and the goal's place in `Tunables.java`.
+
+<!-- recipe: aim-odometry-backup -->
+```java
+// With an odometry line and Tunables.Aim goalX, goalY, the turret and the speed keep
+// working when the camera loses the goal: from where the robot is on the field.
+odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
+camera = add(Camera.limelight("limelight").goal("BLUE SCORING", "RED SCORING"));
+turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).follows(camera));
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer"))
+        .speedFromDistance(camera)
+        .startTable("pollen"));                  // the table to start with
+```
+
+<!-- recipe: tunables-aim -->
+```java
+/** Aiming (every line is optional; leave out what you do not use). */
+public static class Aim {
+    // The goal on the field, in inches, seen from the BLUE drivers' wall (the same numbers as
+    // driveTo): with odometry, aiming goes on when the camera loses the goal.
+    public static double goalX = -58, goalY = 55;
+    public static boolean mirrorForRed = false;   // BIOBUZZ: the field is turned, not mirrored
+    // Whole-robot aim: turn power per degree off, the most it turns by itself, "aimed" within.
+    public static double turnKp = 0.02, turnKd = 0.002, maxTurnPower = 0.5, toleranceDeg = 2;
+    public static double rumbleDeg = 4;           // rumbleWhenAimed(): buzz within 4 degrees
+}
+```
+
+**Why:** a tag gets blocked by a robot or a game piece; the odometry still knows where the goal is. The
+Driver Station says which one aims (`following: camera` or `following: odometry`). The numbers in
+`Tunables.Aim` are in the tuning menu too: copy tuned values back into `Tunables.java`.
+**More:** [Lesson 9: when the camera loses the goal](tutorials/start/09-shooter-and-camera.md#9-when-the-camera-loses-the-goal-the-odometry), [Lesson 7: odometry](tutorials/start/07-odometry.md).
+
+### How do I use one shot table per game piece?
+
+**Where:** `Tunables.java` (the tables), then `Controls.java` or `Actions.java` to switch.
+
+<!-- recipe: tunables-shot-tables -->
+```java
+public static class Launcher {
+    public static double speedRpm = 2600, stepRpm = 100, readyBandRpm = 60, idleRpm = 1500;
+    // One table per game piece ({inches to the goal, RPM}), from the Shot Tuner. The name
+    // after "speedByDistance" is the table's name: "pollen" and "nectar".
+    public static double[][] speedByDistancePollen = {{24, 2200}, {48, 2550}, {72, 2900}};
+    public static double[][] speedByDistanceNectar = {{24, 2400}, {48, 2800}, {72, 3200}};
+}
+```
+
+<!-- recipe: shot-table-buttons -->
+```java
+// One button per game piece (the launcher's D-pad right already picks the next table).
+g2.x.press(() -> robot.launcher.useTable("pollen")).says("POLLEN shot table");
+g2.b.press(() -> robot.launcher.useTable("nectar")).says("NECTAR shot table");
+```
+
+<!-- recipe: shot-table-action -->
+```java
+/** An action that picks the NECTAR table, then fires one (Actions.java). */
+public static Action fireNectar(Robot r) {
+    return Action.named("Fire NECTAR")
+            .then(() -> r.launcher.useTable("nectar"))
+            .then(r.launcher::fire);
+}
+```
+
+**Why:** POLLEN (2.8 in) and NECTAR (3.6 in) fly differently, so each needs its own speeds. Fill each
+table with the [Shot Tuner](guides/finders.md#shot-tuner-the-shot-table) (Y to `TABLE` picks the one you tune), then copy its line into `Tunables.java`.
+**More:** [Lesson 9: two shot tables](tutorials/start/09-shooter-and-camera.md#8-two-game-pieces-two-shot-tables), [Launcher](modules/robot.md#launcher).
 
 ## Actions
 
