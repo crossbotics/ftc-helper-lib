@@ -19,7 +19,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
  * the drivers, so they can focus on driving and firing: aim the whole robot, buzz when on target, keep
  * aiming from the odometry when the camera loses the goal, and one shot table per game piece.
  *
- * <p>The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
  */
 public class AimRecipes {

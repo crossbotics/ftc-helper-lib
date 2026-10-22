@@ -89,12 +89,10 @@ public class Tunables {
      * The lift, in encoder counts from the bottom stop (0 = where it is at INIT: start with the slide
      * down). The Viper-Slide's top stage moves 120 mm per motor turn and the 435 RPM motor counts
      * 384.5 per turn, so 3.2 counts per mm (lifter design log).
-     * <ul>
-     *   <li>pickup 0: slide down; with the wrist at 20 deg the claw reaches a ball on the tiles.</li>
-     *   <li>stowed 44 (13.7 mm): the folded claw clears the tiles.</li>
-     *   <li>flower 1330 (415.1 mm): the ball over the FLOWER's top opening (wrist at 122.8 deg).</li>
-     *   <li>max 1350: just under the hard stop at 425.1 mm (1362). min 0: the bottom stop.</li>
-     * </ul>
+     * - pickup 0: slide down; with the wrist at 20 deg the claw reaches a ball on the tiles.
+     * - stowed 44 (13.7 mm): the folded claw clears the tiles.
+     * - flower 1330 (415.1 mm): the ball over the FLOWER's top opening (wrist at 122.8 deg).
+     * - max 1350: just under the hard stop at 425.1 mm (1362). min 0: the bottom stop.
      * kP...tolerance: example, tune your own (tutorial 07).
      */
     public static class Lift {
@@ -135,15 +133,13 @@ public class Tunables {
      * (201.1 mm from its axis), but with the wrist between 3 and 44.5 degrees the claw body comes within
      * 2 mm of it, at +/-4 degrees of straight back, at EVERY lift height. With the wrist above 47 degrees
      * (carry 90, flower 122.8) every lifter part is at least 206.7 mm away: clear.
-     * <ul>
-     *   <li>The turret's zone: its parts farther than 190 mm from the axis sit from -32.3 to +28.8
-     *       degrees of where it points (turret/v8.1GB reach measurements). The claw is 176 to 184 deg, so
-     *       they meet when the turret points 176 - 28.8 = 147 to 184 + 32.3 = 217 degrees (turret
-     *       angles: 0 forward, counterclockwise +, back = 180). turretFrom = 147, turretTo = 217.</li>
-     *   <li>The wrist's zone: 0 to 47 degrees (the measured 3 to 44.5, with a margin). In servo
-     *       positions: wristTo = folded + 47 / 270 = 0.10 + 0.174 = 0.274. wristFrom = 0: the wrist
-     *       cannot go below folded (its stop), so the zone simply starts at the bottom.</li>
-     * </ul>
+     * - The turret's zone: its parts farther than 190 mm from the axis sit from -32.3 to +28.8
+     *   degrees of where it points (turret/v8.1GB reach measurements). The claw is 176 to 184 deg, so
+     *   they meet when the turret points 176 - 28.8 = 147 to 184 + 32.3 = 217 degrees (turret
+     *   angles: 0 forward, counterclockwise +, back = 180). turretFrom = 147, turretTo = 217.
+     * - The wrist's zone: 0 to 47 degrees (the measured 3 to 44.5, with a margin). In servo
+     *   positions: wristTo = folded + 47 / 270 = 0.10 + 0.174 = 0.274. wristFrom = 0: the wrist
+     *   cannot go below folded (its stop), so the zone simply starts at the bottom.
      * The lift needs no zone: the wrist's rule covers every lift height.
      * No turretMargin or turretStopSec: the defaults fit. The turret is fast (a 312 RPM motor, 2.75:1:
      * about 680 deg a second), but the rule measures its speed every loop and slows it down as it comes

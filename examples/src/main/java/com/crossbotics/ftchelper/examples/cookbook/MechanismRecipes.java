@@ -26,7 +26,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
  * {@code define()}, plus a field for it ({@code public Lift lift;}) and its numbers in Tunables.java.
  * Its standard buttons come with it.
  *
- * <p>The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
  */
 public class MechanismRecipes {

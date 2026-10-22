@@ -17,20 +17,18 @@ import com.crossbotics.ftchelper.robot.Turret;
 /**
  * Example robot 2, file 1 of 5: a mecanum robot with a turret that follows the goal.
  *
- * <ul>
- *   <li>The same intake as example robot 1 (on from the start).</li>
- *   <li>A turret with a Limelight on it that follows the goal, but never turns past its range
- *       (Tunables.Turret: -90 to +90 degrees, 180 in all).</li>
- *   <li>A flywheel whose speed comes from the distance to the goal, fed by an indexer servo. It only
- *       fires when the turret is aimed. Two shot tables, because the two game pieces fly differently:
- *       POLLEN (2.8 in balls) and NECTAR (3.6 in balls), in Tunables.Launcher.</li>
- *   <li>A hood on a servo that tilts to make the shot steeper or flatter: its angle comes from the
- *       shot table's third column too (Tunables.Hood has its two stops).</li>
- *   <li>A claw on a fold-out pivot: positions to grab a piece and to let it go into a FLOWER.</li>
- *   <li>A goBILDA RGB Indicator Light the drivers can see: its colors are set in Controls.java.</li>
- * </ul>
+ * - The same intake as example robot 1 (on from the start).
+ * - A turret with a Limelight on it that follows the goal, but never turns past its range
+ *   (Tunables.Turret: -90 to +90 degrees, 180 in all).
+ * - A flywheel whose speed comes from the distance to the goal, fed by an indexer servo. It only
+ *   fires when the turret is aimed. Two shot tables, because the two game pieces fly differently:
+ *   POLLEN (2.8 in balls) and NECTAR (3.6 in balls), in Tunables.Launcher.
+ * - A hood on a servo that tilts to make the shot steeper or flatter: its angle comes from the
+ *   shot table's third column too (Tunables.Hood has its two stops).
+ * - A claw on a fold-out pivot: positions to grab a piece and to let it go into a FLOWER.
+ * - A goBILDA RGB Indicator Light the drivers can see: its colors are set in Controls.java.
  *
- * <p>Modes do the always-on work (the turret following, the speed from distance); actions do the
+ * Modes do the always-on work (the turret following, the speed from distance); actions do the
  * claw's steps (Actions.java).
  */
 public class Robot extends RobotDefinition {

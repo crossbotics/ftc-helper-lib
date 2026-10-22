@@ -12,27 +12,23 @@ import com.crossbotics.ftchelper.robot.RobotDefinition;
  * Studica's FTC Starter Bot for BIOBUZZ, file 1 of 5, with the same configuration names as Studica's
  * own Blocks code, so it runs on that robot as it is.
  *
- * <ul>
- *   <li>A tank drive: two driven 100 mm wheels at the front (Maverick 50.9:1 motors, bevel gears 1:1)
- *       and two free omni wheels at the back; the left motor runs reversed (Studica's code sets it so).</li>
- *   <li>The intake: four wheels on a Maverick 3.7:1 motor.</li>
- *   <li>The launcher: three 100 mm wheels on a Maverick 1:1 motor, through 13T to 26T bevel gears (the
- *       wheels turn at half the motor's speed), fed by a polycarbonate flap on a servo.</li>
- * </ul>
+ * - A tank drive: two driven 100 mm wheels at the front (Maverick 50.9:1 motors, bevel gears 1:1)
+ *   and two free omni wheels at the back; the left motor runs reversed (Studica's code sets it so).
+ * - The intake: four wheels on a Maverick 3.7:1 motor.
+ * - The launcher: three 100 mm wheels on a Maverick 1:1 motor, through 13T to 26T bevel gears (the
+ *   wheels turn at half the motor's speed), fed by a polycarbonate flap on a servo.
  *
- * <p><b>What the library cannot do here:</b>
- * <ul>
- *   <li>The Maverick motors are not in the library's motor list ({@code Motors}). The closest goBILDA
- *       motors stand in for them (see the notes below). Studica's numbers: 50.9:1 = 119.84 RPM and
- *       1221.6 encoder counts per turn; 1:1 = 6100 RPM and 24 counts per turn.</li>
- *   <li>The launcher cannot take a gear between the motor and the wheel. Its speed numbers are the
- *       motor's, as the library counts them, not the wheel's. Tune them by watching shots.</li>
- * </ul>
+ * What the library cannot do here:
+ * - The Maverick motors are not in the library's motor list ({@code Motors}). The closest goBILDA
+ *   motors stand in for them (see the notes below). Studica's numbers: 50.9:1 = 119.84 RPM and
+ *   1221.6 encoder counts per turn; 1:1 = 6100 RPM and 24 counts per turn.
+ * - The launcher cannot take a gear between the motor and the wheel. Its speed numbers are the
+ *   motor's, as the library counts them, not the wheel's. Tune them by watching shots.
  *
- * <p>Where the facts come from: docs/guides/starter-bots.md and the simulator's robot file
+ * Where the facts come from: docs/guides/starter-bots.md and the simulator's robot file
  * sim/robots/starter-bot-studica.properties.
  *
- * <p>Tutorial: docs/tutorials/start/01-robot-in-five-files.md walks through all five files.
+ * Tutorial: docs/tutorials/start/01-robot-in-five-files.md walks through all five files.
  */
 public class Robot extends RobotDefinition {
     public Intake intake;

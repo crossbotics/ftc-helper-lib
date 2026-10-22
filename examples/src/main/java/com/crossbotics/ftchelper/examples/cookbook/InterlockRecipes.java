@@ -21,7 +21,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
  * switch, a slip-ring turret, an interlock rule that keeps a turret and a lift apart, and the lifter's
  * steps (wrist, claw, lift) in a safe order.
  *
- * <p>The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
  */
 public class InterlockRecipes {

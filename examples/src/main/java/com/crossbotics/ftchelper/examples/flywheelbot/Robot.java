@@ -13,16 +13,16 @@ import com.crossbotics.ftchelper.robot.Shape;
  * Example robot 1, file 1 of 5: WHAT is on the robot, and each part's name in the robot
  * configuration (the names you typed on the Driver Station).
  *
- * <p>The robot: a standard (tank) drive; an intake that runs from the start of the match (the driver
+ * The robot: a standard (tank) drive; an intake that runs from the start of the match (the driver
  * can stop it, restart it, and push pieces back out); one flywheel launcher whose speed the driver can
  * change; an indexer servo that pushes one piece at a time into the flywheel; and a servo that pushes
  * the intake down into its working position at the start of the match. A webcam finds the goal, so the
  * driver can let the whole robot turn to face it (no turret: see Controls.java).
  *
- * <p>The other four files: {@link Tunables} (the numbers), {@link Controls} (the buttons and the
+ * The other four files: {@link Tunables} (the numbers), {@link Controls} (the buttons and the
  * TeleOp), {@link Actions} (steps that use several parts) and {@code autos/} (the autonomous programs).
  *
- * <p>Guide: docs/modules/robot.md. Tutorial: docs/tutorials/start/01-robot-in-five-files.md
+ * Guide: docs/modules/robot.md. Tutorial: docs/tutorials/start/01-robot-in-five-files.md
  */
 public class Robot extends RobotDefinition {
     // One field per mechanism, so Controls, Actions and the autos can reach it by name: robot.intake.

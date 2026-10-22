@@ -18,7 +18,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
  * {@code buttons(...)} in Controls.java. That method runs ONCE, at INIT: each line plugs a job into a
  * button, and the library runs the job when the button is pressed. So no if, while or sleep() there.
  *
- * <p>The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
  */
 public class ButtonRecipes {

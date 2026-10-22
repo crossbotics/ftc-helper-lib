@@ -12,7 +12,7 @@ import com.crossbotics.ftchelper.robot.Steps;
  * Example robot 1, file 5 of 5 (one per autonomous): shoot the preloaded pieces, then leave the
  * starting area. A new autonomous: copy this file, change the name and the steps.
  *
- * <p>The INIT menu (alliance, start delay, the "Shoot" choice below, profile) comes for free. Moves
+ * The INIT menu (alliance, start delay, the "Shoot" choice below, profile) comes for free. Moves
  * and turns are written for BLUE and mirrored for RED. The intake deploy and the intake running are
  * done at START by Robot.java.
  */

@@ -213,6 +213,19 @@ def fix_cookbook():
         page.write_text(re.sub(r"<!-- recipe: ([a-z0-9-]+) -->\n```java\n.*?```", fill, page.read_text(), flags=re.S))
 
 
+# Students read the example files (examples/), not the generated reference: their comments use plain
+# "-" and "1." lists, not HTML. The library's own code keeps HTML (it makes the reference's lists).
+HTML_IN_COMMENT = re.compile(r"^\s*\*.*</?(ul|ol|li|p|b)>", re.I)
+
+
+def check_example_comments():
+    for f in sorted((ROOT / "examples" / "src" / "main" / "java").rglob("*.java")):
+        for n, line in enumerate(f.read_text().splitlines(), 1):
+            if HTML_IN_COMMENT.match(line):
+                problems.append(f"{f.relative_to(ROOT)}:{n}: HTML in a comment ({line.strip()[:40]}...): "
+                                "use plain '-' or '1.' lists and blank comment lines (students read these files)")
+
+
 if "--fix-cookbook" in sys.argv:
     fix_cookbook()
     problems.clear()
@@ -221,6 +234,7 @@ check_classes_documented()
 check_tutorials()
 check_cookbook()
 check_marked_pages()
+check_example_comments()
 
 if problems:
     print("Docs check FAILED:")

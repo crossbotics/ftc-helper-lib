@@ -8,14 +8,12 @@ import com.crossbotics.ftchelper.robot.Pad;
 /**
  * Example robot 1, file 3 of 5: the buttons, and the TeleOp itself.
  *
- * <p>Each part already brings its standard buttons, so this robot needs almost nothing here:
- * <ul>
- *   <li>Gamepad 1 drives: left stick, right stick X turns, LT slow. Added here: RB switches
- *       whole-robot aim on and off: the robot turns to face the goal by itself while the driver
- *       drives forward and back (moving the turn stick still turns it by hand).</li>
- *   <li>Gamepad 2, from the modules: RT intake on/off (it is on from the start), LT push pieces out
- *       while held, LB flywheel spin up/down, RB fire one (hold: keep firing), D-pad up/down launcher speed +/- 100 RPM.</li>
- * </ul>
+ * Each part already brings its standard buttons, so this robot needs almost nothing here:
+ * - Gamepad 1 drives: left stick, right stick X turns, LT slow. Added here: RB switches
+ *   whole-robot aim on and off: the robot turns to face the goal by itself while the driver
+ *   drives forward and back (moving the turn stick still turns it by hand).
+ * - Gamepad 2, from the modules: RT intake on/off (it is on from the start), LT push pieces out
+ *   while held, LB flywheel spin up/down, RB fire one (hold: keep firing), D-pad up/down launcher speed +/- 100 RPM.
  * The Driver Station shows the whole map during INIT.
  */
 @TeleOp(name = "FlywheelBot TeleOp", group = "Examples")

@@ -5,7 +5,7 @@ package com.crossbotics.ftchelper.examples.cookbook;
  * one section per part, named after the part's configuration name in CamelCase ("intake_deploy" reads
  * IntakeDeploy).
  *
- * <p>The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
  * tools/check_docs.py checks that the page and this file say the same thing, so change both together.
  */
 public class Tunables {

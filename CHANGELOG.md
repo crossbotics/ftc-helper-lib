@@ -2,6 +2,13 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Changed
+- The example robots' and Cookbook files' comments use plain `-` and `1.` lists instead of HTML tags
+  (`<ul>`, `<li>`, `<p>`, `<b>`), so they read naturally in the editor. `tools/check_docs.py` keeps it
+  that way. The library's own javadoc is unchanged.
+
 ## v0.17.0 - 2026-10-22
 
 Some things work differently: INIT now stops on misspelled or leftover lines in Tunables.java, BACK

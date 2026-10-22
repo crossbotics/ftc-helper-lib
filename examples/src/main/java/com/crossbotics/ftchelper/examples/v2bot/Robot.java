@@ -26,23 +26,21 @@ import com.crossbotics.ftchelper.robot.Wrist;
  * (turret v8.1GB and the "pincer" lifter); every number we have not measured on a built robot says
  * "example".
  *
- * <ul>
- *   <li>A mecanum drive with a goBILDA Pinpoint (odometry): the turret keeps aiming from the robot's
- *       position when the camera loses the goal.</li>
- *   <li>An intake, a color sensor that counts the pieces, and an indexer servo that feeds the launcher.</li>
- *   <li>A turret on a goBILDA Gear-Driven Turret bearing, turned by a 312 RPM motor (2.75 motor turns
- *       per turret turn). It turns -190 to +190 degrees (the "safe way round" picks the side that does
- *       not wind up the wires) and finds its angle on a magnetic home switch at START.</li>
- *   <li>A flywheel launcher with a hood on a servo, speed and hood angle from the distance to the goal.</li>
- *   <li>A lift at the back: a goBILDA Viper-Slide on a 435 RPM motor. On its top stage: a wrist (a servo
- *       that swings the claw out the back, 0 to 145 degrees between hard stops) and a two-finger claw.</li>
- *   <li><b>The interlock:</b> while the wrist is folded or at pick-up (0 to 47 degrees), the claw sits
- *       right behind the robot, inside the turret's swing: the turret stays out of the back. While the
- *       turret points back, the wrist stays out of 0 to 47 degrees. One line below; the numbers are in
- *       Tunables.TurretClaw. docs/guides/interlocks.md explains it.</li>
- * </ul>
+ * - A mecanum drive with a goBILDA Pinpoint (odometry): the turret keeps aiming from the robot's
+ *   position when the camera loses the goal.
+ * - An intake, a color sensor that counts the pieces, and an indexer servo that feeds the launcher.
+ * - A turret on a goBILDA Gear-Driven Turret bearing, turned by a 312 RPM motor (2.75 motor turns
+ *   per turret turn). It turns -190 to +190 degrees (the "safe way round" picks the side that does
+ *   not wind up the wires) and finds its angle on a magnetic home switch at START.
+ * - A flywheel launcher with a hood on a servo, speed and hood angle from the distance to the goal.
+ * - A lift at the back: a goBILDA Viper-Slide on a 435 RPM motor. On its top stage: a wrist (a servo
+ *   that swings the claw out the back, 0 to 145 degrees between hard stops) and a two-finger claw.
+ * - The interlock: while the wrist is folded or at pick-up (0 to 47 degrees), the claw sits
+ *   right behind the robot, inside the turret's swing: the turret stays out of the back. While the
+ *   turret points back, the wrist stays out of 0 to 47 degrees. One line below; the numbers are in
+ *   Tunables.TurretClaw. docs/guides/interlocks.md explains it.
  *
- * <p>Docs: the turret's options are on docs/guides/turret-setup.md; the lifter's steps are in Actions.java.
+ * Docs: the turret's options are on docs/guides/turret-setup.md; the lifter's steps are in Actions.java.
  */
 public class Robot extends RobotDefinition {
     public Camera camera;

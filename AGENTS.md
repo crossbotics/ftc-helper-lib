@@ -71,6 +71,9 @@ Every change follows the six steps in `docs/contributing.md`. A change is NOT do
 
 1. Code, **commented for novice programmers** per `docs/commenting-style.md` (plain everyday words, the WHY,
    pointers to the docs that explain more; examples and tutorial programs get the most comments).
+   In `examples/` (files students copy and read), comments use plain `-` and `1.` lists and blank comment
+   lines, never HTML (`<ul>`, `<li>`, `<p>`, `<b>`): `tools/check_docs.py` checks it. The library's own
+   javadoc keeps HTML (it builds the reference's lists).
 2. Javadoc on every public class/method (what, parameters with units and ranges, returns, a short example).
 3. Tests (pretend hardware and an injected clock; simulations for anything that moves).
 4. The module page in `docs/modules/` (method tables + an example). New package = new page + README table row.

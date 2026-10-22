@@ -20,7 +20,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
  * with waits between them. It never makes the robot wait: it does a little every loop. The action
  * methods go in Actions.java; the same action works on a button and in an autonomous.
  *
- * <p>The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
  */
 public class ActionRecipes {

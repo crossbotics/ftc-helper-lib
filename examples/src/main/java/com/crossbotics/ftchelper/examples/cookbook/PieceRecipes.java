@@ -19,9 +19,9 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
  * Cookbook: game pieces (docs/cookbook.md#game-pieces). Which piece is in the robot, how many it holds,
  * and which one fires next, from a colour sensor, a distance sensor or a second camera.
  *
- * <p>The Piece Tuner is its own file: PieceTuner.java.
+ * The Piece Tuner is its own file: PieceTuner.java.
  *
- * <p>The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
  */
 public class PieceRecipes {

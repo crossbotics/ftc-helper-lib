@@ -13,10 +13,10 @@ import com.crossbotics.ftchelper.robot.Pad;
  * stick X turret by hand, BACK turret following on/off, B claw open/close, D-pad left the wrist's
  * previous position, left stick button held 1 s piece count = 0.
  *
- * <p>Added here: A grab, Y score in a FLOWER, X stow the lifter (Actions.java), the lift by hand on the
+ * Added here: A grab, Y score in a FLOWER, X stow the lifter (Actions.java), the lift by hand on the
  * right stick Y, a buzz when the turret is on target, and the light's colors.
  *
- * <p>Some module suggestions find their button taken by a part added earlier in Robot.java (the INIT
+ * Some module suggestions find their button taken by a part added earlier in Robot.java (the INIT
  * screen lists them, e.g. "Lift by hand: no button (G2 left stick Y is taken by Hood)"). That is the
  * library's check doing its job: one job per button. The jobs below give the lift its own stick.
  */

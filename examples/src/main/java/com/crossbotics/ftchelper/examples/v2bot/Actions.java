@@ -8,14 +8,12 @@ import com.crossbotics.ftchelper.robot.Action;
  * time limit, so a stuck part never stops the robot for good: the action ends and says which step
  * timed out.
  *
- * <p>The order matters (team 8938's lifter design):
- * <ol>
- *   <li>Pick up with the slide down and the wrist 20 deg out, so the ball is not under the robot.</li>
- *   <li>Swing the wrist out to 90 deg BEFORE lifting, then lift, then tip the wrist over the FLOWER.</li>
- *   <li>Coming back: wrist to 90, lift down, then fold.</li>
- * </ol>
+ * The order matters (team 8938's lifter design):
+ * 1. Pick up with the slide down and the wrist 20 deg out, so the ball is not under the robot.
+ * 2. Swing the wrist out to 90 deg BEFORE lifting, then lift, then tip the wrist over the FLOWER.
+ * 3. Coming back: wrist to 90, lift down, then fold.
  *
- * <p>The interlock rule (Robot.java) is always on: while the turret points back, the wrist waits above
+ * The interlock rule (Robot.java) is always on: while the turret points back, the wrist waits above
  * 47 degrees by itself (the claw would hit the turret lower down). To not wait, {@link #grab} first
  * turns the turret forward; scoring needs nothing (the wrist is out at 90 and more, where the turret
  * may point anywhere). {@link #stow} folds the wrist last: it waits there if the turret points back.
