@@ -107,6 +107,11 @@ first.
 - [How do I change a distance without building the code again?](#how-do-i-change-a-distance-without-building-the-code-again)
 - [How do I share the same first steps in several autos?](#how-do-i-share-the-same-first-steps-in-several-autos)
 
+**Several autos and choosing one** (more: [the guide](guides/autos.md))
+- [How do I build several autos from the same pieces?](#how-do-i-build-several-autos-from-the-same-pieces)
+- [How do I make two autos that differ by one piece?](#how-do-i-make-two-autos-that-differ-by-one-piece)
+- [How do I let the drivers choose the start spot and the plan in INIT?](#how-do-i-let-the-drivers-choose-the-start-spot-and-the-plan-in-init)
+
 **Odometry and driveTo** (where is the robot on the field?)
 - [How do I add a goBILDA Pinpoint?](#how-do-i-add-a-gobilda-pinpoint)
 - [How do I add a SparkFun OTOS?](#how-do-i-add-a-sparkfun-otos)
@@ -1727,6 +1732,7 @@ public static class Auto {
     public static double leaveInches = 24, toGoalInches = 30, parkInches = 20;
     public static double goalX = -30, goalY = -30, goalHeading = 45;
     public static double parkX = -56, parkY = -36;
+    public static double pickupInches = 20, farToNearInches = 72;   // several autos (guides/autos.md)
 }
 ```
 
@@ -1751,6 +1757,135 @@ static Steps scorePreload(Steps s, Robot robot) {
 
 **Why:** fix the opening once and every autonomous gets the fix.
 **More:** [The autonomous builder: recipes](guides/autonomous-builder.md#recipes).
+
+## Several autos and choosing one
+
+One autonomous per plan, or one autonomous with an INIT menu? Both, built from the same pieces. The
+decision table, naming, simulator tests and a match-day checklist: [the guide](guides/autos.md).
+
+### How do I build several autos from the same pieces?
+
+**Where:** a new file `Routes.java` in `autos/` (in your copy: `public class Routes`, no `static`).
+
+<!-- recipe: autos-routes -->
+```java
+/** The pieces every autonomous is made from (Routes.java). Write each piece once. */
+public static class Routes {
+    /** Score the piece the robot starts with: hold it, drive to the goal, score. */
+    public static Steps scorePreload(Steps s, Robot robot) {
+        return s.run("Hold the preload", robot.claw::close)
+                .move("To the goal", Tunables.Auto.toGoalInches, 0, 0.6)
+                .action(Actions.scoreHigh(robot), 5);
+    }
+
+    /** One more piece: to the pieces, grab one, back to the goal, score. */
+    public static Steps cycle(Steps s, Robot robot) {
+        return s.move("To the pieces", Tunables.Auto.pickupInches, 270, 0.6)   // 270 = left
+                .run("Grab", robot.claw::close)
+                .waitSeconds("Let the claw close", 0.3)
+                .move("Back to the goal", Tunables.Auto.pickupInches, 90, 0.6)
+                .action(Actions.scoreHigh(robot), 5);
+    }
+
+    /** The park. It keeps the last 3 seconds for itself, so it always runs. */
+    public static Steps park(Steps s) {
+        return s.parkWithSeconds(3)
+                .move("Park", Tunables.Auto.parkInches, 90, 0.7);
+    }
+}
+```
+
+**Why:** each piece is written once, so a fix (or a new number in `Tunables.Auto`) reaches every autonomous.
+**More:** [Build them from shared steps](guides/autos.md#build-them-from-shared-steps).
+
+### How do I make two autos that differ by one piece?
+
+**Where:** two files in `autos/`, one class each (in your copy: `public class`, no `static`, no `@Disabled`).
+
+<!-- recipe: autos-two-opmodes -->
+```java
+/** NearPreloadPark.java: score the preload, then park. */
+@Autonomous(name = "Near: Preload + Park", group = "Autos", preselectTeleOp = "Cookbook TeleOp")
+@Disabled   // delete this line in your copy
+public static class NearPreloadPark extends Auto<Robot> {
+    @Override
+    protected boolean mirrorForRed() {
+        return false;   // BIOBUZZ: the field is turned half a turn, one route for both alliances
+    }
+
+    @Override
+    protected void steps(Steps s, Robot robot) {
+        s.start("NEAR: against our wall, 2nd tile left of centre, facing the field", -36, -61, 0);
+        Routes.scorePreload(s, robot);
+        Routes.park(s);
+    }
+}
+
+/** NearCycle.java: score the preload, one more piece, then park. Only one line is new. */
+@Autonomous(name = "Near: Preload + Cycle + Park", group = "Autos", preselectTeleOp = "Cookbook TeleOp")
+@Disabled   // delete this line in your copy
+public static class NearCycle extends Auto<Robot> {
+    @Override
+    protected boolean mirrorForRed() {
+        return false;
+    }
+
+    @Override
+    protected void steps(Steps s, Robot robot) {
+        s.start("NEAR: against our wall, 2nd tile left of centre, facing the field", -36, -61, 0);
+        Routes.scorePreload(s, robot);
+        Routes.cycle(s, robot);
+        Routes.park(s);
+    }
+}
+```
+
+**Why:** two lines on the Driver Station, named after the start spot and the plan, so the drivers pick fast.
+**More:** [Example 1](guides/autos.md#example-1-two-opmodes-from-the-same-pieces), [names and groups](guides/autos.md#names-and-groups).
+
+### How do I let the drivers choose the start spot and the plan in INIT?
+
+**Where:** one file in `autos/`.
+
+<!-- recipe: autos-choose-in-init -->
+```java
+/** ChooseInInit.java: ONE autonomous; the drivers choose the start and the plan in INIT. */
+@Autonomous(name = "Choose in INIT", group = "Autos", preselectTeleOp = "Cookbook TeleOp")
+@Disabled   // delete this line in your copy
+public static class ChooseInInit extends Auto<Robot> {
+    @Override
+    protected boolean mirrorForRed() {
+        return false;
+    }
+
+    @Override
+    protected void steps(Steps s, Robot robot) {
+        // The menu lines. The FIRST option of each is chosen at INIT: make it your safest plan.
+        s.menuChoice("Start", "Near", "Far")
+         .menuChoice("Plan", "Preload + Park", "Preload + Cycle + Park", "Park only");
+
+        // The start spot follows the "Start" line: the note and the simulator's robot change with it.
+        s.onlyIf("Start", "Near")
+             .start("NEAR: against our wall, 2nd tile left of centre, facing the field", -36, -61, 0)
+         .end()
+         .onlyIf("Start", "Far")
+             .start("FAR: against our wall, 2nd tile right of centre, facing the field", 36, -61, 0)
+             .move("Across to the near side", Tunables.Auto.farToNearInches, 270, 0.7)
+         .end();
+
+        // The plan: plain Java "if", because the pieces are methods. choice(...) is the option chosen.
+        String plan = s.choice("Plan");
+        if (!plan.equals("Park only")) Routes.scorePreload(s, robot);
+        if (plan.equals("Preload + Cycle + Park")) Routes.cycle(s, robot);
+        Routes.park(s);
+    }
+}
+```
+
+**Why:** a `start(...)` inside an `onlyIf` is used only for its option, so the "Place robot" note (and
+the simulator's robot) changes as the drivers change the menu. The first option of each line is the
+default: make it your safest plan.
+**More:** [Example 2](guides/autos.md#example-2-one-opmode-the-drivers-choose-in-init), [what the menu can choose](guides/autos.md#what-the-init-menu-can-choose).
 
 ## Odometry and driveTo
 

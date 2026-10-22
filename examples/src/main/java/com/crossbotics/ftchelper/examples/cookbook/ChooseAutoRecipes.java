@@ -90,7 +90,7 @@ public class ChooseAutoRecipes {
 
         @Override
         protected void steps(Steps s, Robot robot) {
-            s.start("NEAR: against our wall, 2nd tile left of centre, facing the field", -36, -63, 0);
+            s.start("NEAR: against our wall, 2nd tile left of centre, facing the field", -36, -61, 0);
             Routes.scorePreload(s, robot);
             Routes.park(s);
         }
@@ -107,7 +107,7 @@ public class ChooseAutoRecipes {
 
         @Override
         protected void steps(Steps s, Robot robot) {
-            s.start("NEAR: against our wall, 2nd tile left of centre, facing the field", -36, -63, 0);
+            s.start("NEAR: against our wall, 2nd tile left of centre, facing the field", -36, -61, 0);
             Routes.scorePreload(s, robot);
             Routes.cycle(s, robot);
             Routes.park(s);
@@ -133,10 +133,10 @@ public class ChooseAutoRecipes {
 
             // The start spot follows the "Start" line: the note and the simulator's robot change with it.
             s.onlyIf("Start", "Near")
-                 .start("NEAR: against our wall, 2nd tile left of centre, facing the field", -36, -63, 0)
+                 .start("NEAR: against our wall, 2nd tile left of centre, facing the field", -36, -61, 0)
              .end()
              .onlyIf("Start", "Far")
-                 .start("FAR: against our wall, 2nd tile right of centre, facing the field", 36, -63, 0)
+                 .start("FAR: against our wall, 2nd tile right of centre, facing the field", 36, -61, 0)
                  .move("Across to the near side", Tunables.Auto.farToNearInches, 270, 0.7)
              .end();
 

@@ -6,6 +6,21 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
+- **Docs: several autonomous modes, and choosing one** (docs/guides/autos.md): one OpMode per plan or
+  one OpMode with an INIT menu, a decision table, shared steps in a `Routes.java`, names and groups for
+  the Driver Station, three worked examples (tested in the simulator), scenario files that choose in the
+  menu, and a match-day checklist. Cookbook: three recipes (`ChooseAutoRecipes`), tested by `CookbookTest`.
+- **Docs: Git and GitHub for FTC teams** (docs/guides/github.md): the words, a team workflow, and every
+  step for the command line and GitHub Desktop (clone with submodules, commit, push, pull, branch, merge,
+  a conflict, undo), what never to commit, student privacy, and backups before an event.
+- **Docs: keeping the library up to date** (docs/02-keep-up-to-date.md): why, how to hear about a release
+  (Watch > Releases), how to read the CHANGELOG, updating with the command line or GitHub Desktop, the
+  checks after an update (robot file, scenarios, robot), when not to update, and going back.
+- **The start spot can be an INIT menu choice:** a `start(...)` (or `parkWithSeconds(...)`) inside an
+  `onlyIf(...)` is used only when that option is chosen. The steps are read again in INIT whenever a menu
+  line changes, so the "Place robot" note, the simulator's robot and the odometry's start follow the menu.
+- `tools/check_docs.py` also checks a cookbook recipe shown in a guide (the same `<!-- recipe: name -->` marker).
+
 - **Interlock rules** (`robot.Interlock`, `robot.Zone`): `keepApart("TurretLift", turret.zone(),
   lift.zoneAbove())` in Robot.java keeps two parts from ever being in their zones at the same time (a
   turret over the back while a lift is up; an arm and an intake; a wrist and a low lift). Any number of
@@ -236,6 +251,10 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Changed
 
+- An autonomous's `steps(...)` is read in INIT again each time the drivers change a menu line (it was
+  read once in INIT and once after START). No step runs in INIT, as before. Before, a `start(...)`
+  inside an `onlyIf` was used whatever the choice (the last one written won).
+- docs/contributing.md: each release also gets a GitHub release (so "Watch > Releases" sends an email).
 - Dead-wheel odometry now gives `speedInPerSec()` and `turnDegPerSec()` (worked out from how far the
   robot moved between loops, smoothed); they were always 0.
 - `launcher.Launcher.setDistance` moves the hood only when the table has hood angles (a table made with

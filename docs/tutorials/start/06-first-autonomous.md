@@ -272,6 +272,10 @@ The main track ends here: lessons 1 to 6. After that, do only the lessons your r
 **Everything else the builder can do** (menu choices, branches, your own steps, recipes):
 [The autonomous builder](../../guides/autonomous-builder.md).
 
+**More than one autonomous** (near and far starts, a safe plan and a risky one, choosing in INIT, a
+match-day checklist): [Several autonomous modes](../../guides/autos.md). Save your work with git after
+each run that works: [Git and GitHub for FTC teams](../../guides/github.md).
+
 **Under the hood:** [09 Autonomous by hand with AutoDrive](../09-first-auto.md) (`AutoDrive` and tuning by hand),
 [10 Autonomous with mechanisms](../10-auto-with-mechanisms.md) (the loop hook, mirroring, handing over),
 [16 Easy autonomous](../16-easy-autos.md) (`EasyAuto`, the layer under `Auto`).

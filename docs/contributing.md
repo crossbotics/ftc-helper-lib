@@ -101,6 +101,16 @@ git tag v0.2.0
 git push origin main --tags
 ```
 
+3. Make a **GitHub release** from the tag, with that version's CHANGELOG part as its notes. On GitHub:
+   **Releases** > **Draft a new release**, choose the tag, paste the notes, **Publish release**. Or:
+
+```bash
+gh release create v0.2.0 --verify-tag --title "v0.2.0" --notes-file notes.md
+```
+
+**Why:** a tag alone sends no message. Teams that click **Watch > Custom > Releases** on GitHub get an
+email for each release, and that is how they learn to update ([Keep it up to date](02-keep-up-to-date.md#find-out-about-a-new-version)).
+
 Version numbers: change the middle number (0.**2**.0) for new features, the last number
 (0.2.**1**) for bug fixes, and the first number when something old stops working the same way.
 

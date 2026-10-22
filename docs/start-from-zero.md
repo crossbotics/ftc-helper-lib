@@ -269,6 +269,7 @@ A **commit** saves a snapshot of your changes on your laptop, with a short note 
 (**Git > Commit** in Android Studio), and a **push** sends your commits to the team's GitHub so
 everyone gets them (**Git > Push**). Commit after each thing that works; ask your code lead before you
 push to the team's **main branch** (the team's shared copy of the code, the one everyone builds from).
+More, step by step for the command line and GitHub Desktop: [Git and GitHub for FTC teams](guides/github.md).
 
 **The library itself:** a mentor or code lead usually adds it to the robot project once, for the
 whole team ([Add it to a project](01-add-to-project.md), about 10 minutes). After that, everyone who

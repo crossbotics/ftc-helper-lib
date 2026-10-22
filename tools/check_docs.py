@@ -10,6 +10,7 @@ It fails (exit 1) when:
   4. a tutorial page has no link to its full program;
   5. a java code block in docs/cookbook.md is not the same as its marked region in the cookbook's Java
      files (examples/.../cookbook: "// recipe: name" ... "// end recipe"), or a region is not shown;
+     a guide that shows a recipe (the same "<!-- recipe: name -->" marker) is checked the same way;
   6. a cookbook recipe that mentions the tuning menu does not say to copy the value into Tunables.java.
 
 After changing a cookbook Java file, copy its regions into docs/cookbook.md with:
@@ -175,16 +176,41 @@ def check_cookbook():
                             "but not copying the value into Tunables.java")
 
 
-def fix_cookbook():
-    """Rewrites each marked java block of docs/cookbook.md from its Java region."""
+MARKED_BLOCK = re.compile(r"<!-- recipe: ([a-z0-9-]+) -->\n```java\n(.*?)\n?```", re.S)
+
+
+def marked_pages():
+    """Other pages (guides) that show a cookbook recipe: the same '<!-- recipe: name -->' marker."""
+    return [p for p in sorted((ROOT / "docs").rglob("*.md")) if p != COOKBOOK_MD and "<!-- recipe: " in p.read_text()]
+
+
+def check_marked_pages():
+    """A recipe shown on another page must be the same as its Java region too (it is not compiled there)."""
     regions = cookbook_regions()
-    text = COOKBOOK_MD.read_text()
+    for page in marked_pages():
+        rel = page.relative_to(ROOT)
+        text = page.read_text()
+        for m in MARKED_BLOCK.finditer(text):
+            line = text[:m.start()].count("\n") + 1
+            if m.group(1) not in regions:
+                problems.append(f"{rel}:{line}: no recipe {m.group(1)} in {COOKBOOK_CODE.relative_to(ROOT)}")
+            elif regions[m.group(1)][2] != m.group(2).strip("\n"):
+                problems.append(f"{rel}:{line}: recipe {m.group(1)} differs from {regions[m.group(1)][0]} "
+                                "(python3 tools/check_docs.py --fix-cookbook)")
+        if text.count("<!-- recipe: ") != len(MARKED_BLOCK.findall(text)):
+            problems.append(f"{rel}: a '<!-- recipe: name -->' marker is not right before a java block")
+
+
+def fix_cookbook():
+    """Rewrites each marked java block of docs/cookbook.md (and of the guides that show one) from its Java region."""
+    regions = cookbook_regions()
 
     def fill(m):
         name = m.group(1)
         return f"<!-- recipe: {name} -->\n```java\n{regions[name][2]}\n```" if name in regions else m.group(0)
 
-    COOKBOOK_MD.write_text(re.sub(r"<!-- recipe: ([a-z0-9-]+) -->\n```java\n.*?```", fill, text, flags=re.S))
+    for page in [COOKBOOK_MD] + marked_pages():
+        page.write_text(re.sub(r"<!-- recipe: ([a-z0-9-]+) -->\n```java\n.*?```", fill, page.read_text(), flags=re.S))
 
 
 if "--fix-cookbook" in sys.argv:
@@ -194,6 +220,7 @@ check_links()
 check_classes_documented()
 check_tutorials()
 check_cookbook()
+check_marked_pages()
 
 if problems:
     print("Docs check FAILED:")

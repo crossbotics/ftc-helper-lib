@@ -169,7 +169,7 @@ public class CookbookTest {
             s.init("Choose in INIT");
             s.press(v -> s.g1().x = v);                                   // BLUE
             assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Place robot : NEAR:"), 1));
-            // BLUE's spot (-36, -63) seen from the blue wall: x +36 in the simulator's field frame.
+            // BLUE's spot (-36, -61) seen from the blue wall: x +36 in the simulator's field frame.
             assertTrue("near spot, x " + s.robot().x, SimRun.waitFor(() -> Math.abs(s.robot().x - 36) < 0.5, 2));
             s.press(v -> s.g1().dpad_down = v);                           // Start delay
             s.press(v -> s.g1().dpad_down = v);                           // Start
