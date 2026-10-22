@@ -2,6 +2,13 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Added
+
+- Tunables guide: "Find a setting by what you want" (what you see on the robot, the setting that fixes
+  it, which way to change it) and "When you add a part" (steps from Robot.java to Tunables.java).
+
 ## v0.17.1 - 2026-10-22
 
 Starting values from the parts catalog, the DEFAULT_FROM_CATALOG and MEASURE words, parts not in the

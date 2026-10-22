@@ -12,6 +12,70 @@ This page lists every number the library reads from `Tunables.java`. A script
 (`tools/check_tunables.py`) reads the library's code and checks this page against it, so the list is
 complete: if a part reads a new number, the check fails until the number is here.
 
+## Find a setting by what you want
+
+Start here when something on the robot is not right. Find what you see, then change the setting in the
+middle column, in the direction it says. Change one number at a time, test, and copy the good value
+back into `Tunables.java`. The tables further down list every setting, part by part.
+
+| What you see or want | Setting | Which way |
+| --- | --- | --- |
+| **Driving** | | |
+| The robot is too fast for the drivers | [`Drive.maxPower`](#drive) | less |
+| New drivers need a slower robot in practice | [`Drive.practiceMaxPower`](#drive) | less |
+| Fine moves with the slow trigger are too slow or too jumpy | [`Drive.slowSpeed`](#drive) | more / less |
+| Double taps are missed, or single taps wait too long | [`Buttons.tapGapSec`](#buttons) | more / less |
+| **Autonomous moves** | | |
+| Autonomous does not run ("AUTONOMOUS IS OFF") | [`Drive.calibrated`](#drive) | `true`, after the Drive Tuner |
+| Sideways moves are short or long (mecanum) | [`Drive.strafeCorrection`](#drive) | Drive Tuner |
+| Turns stop short | [`Drive.turnKp`](#drive) | more |
+| Turns wobble or overshoot | [`Drive.turnKp`](#drive) / [`Drive.turnKd`](#drive) | less / more |
+| The robot stops just before the end of a move | [`Drive.moveMinPower`](#drive) | more |
+| Path steps do not run on the real robot | [`Odometry.checked`](#odometry) | `true`, after the Odometry Tuner |
+| The odometry's distances are off (OTOS) | [`Odometry.linearScalar`](#odometry) | Odometry Tuner |
+| **Intake** | | |
+| Pieces are thrown or jam on the way in | [`Intake.inPower`](#intake) | less |
+| Pieces do not come out | [`Intake.outPower`](#intake) | more |
+| **Lift, arm, servos** | | |
+| A lift or arm is slow to arrive, or shakes | [`kP`](#lift-and-arm) | more / less |
+| A lift sags | [`kF`](#lift-and-arm) | more |
+| A lift or arm slams into its ends | [`slowZone`](#lift-and-arm) | more |
+| A claw does not open or close far enough | [positions](#claw-wrist-and-positioner) | Servo Finder |
+| Actions go on before a servo arrives | [`travelSec`](#claw-wrist-and-positioner) | more |
+| **Launcher** | | |
+| Shots land short or long | [`speedRpm`](#launcher) (or the shot table) | Shot Tuner, or more / less |
+| The flywheel is slow to reach speed, or its speed swings | [`kP`, `kF`](#launcher) | Flywheel Finder |
+| It waits too long before it fires | [`readyBandRpm`](#launcher) | more |
+| Shots land at different distances | [`readyBandRpm`](#launcher) | less |
+| The second of two quick shots lands short | [`shotIntervalSec`](#launcher) | more |
+| The first shot takes too long to spin up | [`idleRpm`](#launcher) | more (uses more battery) |
+| One D-pad press changes the speed too much or too little | [`stepRpm`](#launcher) | less / more |
+| **Feeding** | | |
+| It feeds two pieces at once | [`feedSec`](#indexer) | less |
+| It feeds no piece | [`feedSec`](#indexer) | more |
+| A pusher comes back before the piece is gone | [`pushSec`](#indexer) | more |
+| **Aiming** | | |
+| Aim is slow, or swings past the goal | [`Aim.turnKp`](#aim) | more / less |
+| Shots miss although it says "AIMED" | [`Aim.toleranceDeg`](#aim) | less |
+| The robot or turret aims a little to one side | [`cameraOffset`](#aim) | Aim Tuner |
+| A turret swings too hard | [`Turret.maxPower`](#turret) | less |
+| The wires allow a turret to turn more or less | [`Turret.min`, `max`](#turret) | Motor Finder |
+| **Camera and sensors** | | |
+| The camera pictures are too dark or noisy | [`Camera.gain`](#camera) | more / less |
+| A color sensor sees pieces that are not there | [`nearMm`](#piecesensor) | less |
+| A color sensor mixes up kinds of piece | [`hueTolerance`](#piecesensor) | less |
+
+## When you add a part
+
+1. Add the part to `Robot.java` (one line, with its part number: `.part("gobilda-5203-435")`).
+2. Press INIT. The part works with the library's starting values. INIT shows one note per part with
+   the values it used.
+3. If INIT stops and asks for a number (a lift's `min` and `max`, a turret's stops), add the part's
+   section to `Tunables.java` with that number. The message names the tool that finds it.
+4. Optional: write a line for each setting in the part's table below, set to `DEFAULT_FROM_CATALOG`,
+   with a short comment. Then the file shows every setting the part has, and you can change one when
+   you need to. Leaving a line out does the same as `DEFAULT_FROM_CATALOG`.
+
 ## What Tunables.java is
 
 `Tunables.java` is the file with your robot's **numbers**: how far the lift goes, how fast the launcher
