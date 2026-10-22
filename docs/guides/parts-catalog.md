@@ -140,7 +140,17 @@ For `Robot.java` (not the robot file): a `Shape` names one of these and takes it
 
 ## A part that is not in the list
 
-Three ways, from quickest to most shared:
+**In Robot.java (the robot code)**: describe it where you use it, with the seller's numbers. Its id then works wherever a catalog id goes, its numbers give the starting values (`DEFAULT_FROM_CATALOG`), and `:sim:fromRobot` writes them into the robot file for you:
+
+```java
+launcher = add(Launcher.flywheel("launcher", Motors.custom("my-flywheel-motor", 28, 5800)));   // counts per turn, free RPM
+claw = add(Claw.servo("claw").part(Parts.customServo("my-servo", 270, 0.16)));          // turn (deg), s per 60 deg at ~5 V
+lift = add(Lift.slide("lift").part(Motors.unknown("old-lift-motor")));                    // numbers not known yet
+```
+
+A number you do not know is `Double.NaN` (or the whole part `Motors.unknown` / `Parts.unknownServo`): the parts that need it use general defaults and INIT says so. A launcher, an arm, a motor turret and the drive need the counts per turn. More: [Parts not in the catalog](../modules/robot.md#parts-not-in-the-catalog).
+
+**In the simulator only**, three ways, from quickest to most shared:
 
 **1. Write its numbers in the robot file.** Use the seller's page.
 

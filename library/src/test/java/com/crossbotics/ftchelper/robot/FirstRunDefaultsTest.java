@@ -99,12 +99,12 @@ public class FirstRunDefaultsTest {
         assertEquals(11.7025, sent[3], 1e-4);
         assertEquals(3600, launcherOf(r).speedRpm(), 0);
         String notes = r.notes().toString();
-        assertTrue(notes, notes.contains("Launcher: starting values from the parts catalog (kF 11.7, kP 1.17, kI 0.117, "
-                + "speed 3600 rpm): run the Flywheel Finder, then the Shot Tuner"));
+        assertTrue(notes, notes.contains("Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, kP 1.17, kI 0.117, "
+                + "speed 3600 rpm. Run the Flywheel Finder, then the Shot Tuner"));
         // speedRpm is in that note, not in the "library defaults used" one.
         assertFalse(notes, notes.contains("speedRpm"));
         // One note about it, not one per number.
-        assertEquals(notes, 1, notes.split("starting values").length - 1);
+        assertEquals(notes, 1, notes.split("defaults from the catalog").length - 1);
     }
 
     @Test public void writtenNumbersAlwaysWin() {
@@ -113,7 +113,7 @@ public class FirstRunDefaultsTest {
         r.setup(kit);
         assertTrue(Arrays.equals(new double[] {40, 0, 0, 12.5}, kit.motors.get("launcher").pidf));
         assertEquals(2679, launcherOf(r).speedRpm(), 0);
-        assertFalse(r.notes().toString(), r.notes().toString().contains("starting values"));
+        assertFalse(r.notes().toString(), r.notes().toString().contains("defaults from"));
     }
 
     // A slow motor and no speedRpm: before, the fixed 2600 RPM default was above its top speed and INIT stopped.
@@ -130,8 +130,8 @@ public class FirstRunDefaultsTest {
         RobotDefinition r = launcherBot(TableNoGains.class, "gobilda-5203-6000");
         r.setup(new RobotTestKit());
         String notes = r.notes().toString();
-        assertTrue(notes, notes.contains("Launcher: starting values from the parts catalog (kF 11.7, kP 1.17, kI 0.117): "
-                + "run the Flywheel Finder"));
+        assertTrue(notes, notes.contains("Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, kP 1.17, kI 0.117. "
+                + "Run the Flywheel Finder"));
         assertFalse(notes, notes.contains("rpm)"));
     }
 
@@ -174,8 +174,8 @@ public class FirstRunDefaultsTest {
         assertEquals(0.05, l.part().getPid().getKF(), 1e-12);       // a power: the same for every motor
         assertEquals(14, l.toleranceUsed, 0);                       // 20 x 384.5 / 537.7 = 14.3
         String notes = r.notes().toString();
-        assertTrue(notes, notes.contains("Lift: starting values from the parts catalog (gobilda-5203-435: kP 0.0056, kD 0.00028, "
-                + "slowZone 179, tolerance 14): tune them live in the tuning menu (PRACTICE, hold GUIDE)"));
+        assertTrue(notes, notes.contains("Lift: defaults from the catalog (gobilda-5203-435): kP 0.0056, kD 0.00028, "
+                + "slowZone 179, tolerance 14. Tune them live in the tuning menu (PRACTICE, hold GUIDE)"));
     }
 
     @Test public void aLiftsWrittenNumbersWinAndASlowMotorSlowsDownSooner() {
@@ -186,7 +186,7 @@ public class FirstRunDefaultsTest {
         assertEquals(30, l.toleranceUsed, 0);
         String notes = r.notes().toString();
         // 250 counts on a 312 RPM motor = 0.46 turn = 663 counts on a 117 RPM motor (1425.1 a turn).
-        assertTrue(notes, notes.contains("(gobilda-5203-117: kD 0.000075, slowZone 663): tune them"));
+        assertTrue(notes, notes.contains("(gobilda-5203-117): kD 0.000075, slowZone 663. Tune them"));
     }
 
     // No part(...): the motor is not known, so the plain defaults (and no catalog note).
@@ -195,9 +195,10 @@ public class FirstRunDefaultsTest {
         r.setup(new RobotTestKit());
         assertEquals(0.004, liftOf(r).part().getPid().getKP(), 0);
         assertEquals(20, liftOf(r).toleranceUsed, 0);
-        assertFalse(r.notes().toString(), r.notes().toString().contains("starting values from the parts catalog"));
-        assertTrue(r.notes().toString(), r.notes().toString().contains("Lift: no motor named (.part(...) in Robot.java): "
-                + "kP, kD, slowZone, tolerance are for a goBILDA 312 RPM motor; name yours for starting values that fit it"));
+        assertFalse(r.notes().toString(), r.notes().toString().contains("defaults from the catalog"));
+        assertTrue(r.notes().toString(), r.notes().toString().contains("Lift: no part in Robot.java, so general defaults (kP, kD, "
+                + "slowZone, tolerance made for a goBILDA 312 RPM motor). Add .part(...) (or Motors.custom(...)), or tune them in "
+                + "the tuning menu"));
     }
 
     // ----------------------------- servos -----------------------------
@@ -220,8 +221,8 @@ public class FirstRunDefaultsTest {
         // 270 degrees (the SDK's normal range) at 0.25 s per 60 degrees (4.8 V): 1.125 s.
         assertEquals(1.13, ((Claw) r.modules().get(0)).part().getTravelTime(), 1e-9);
         String notes = r.notes().toString();
-        assertTrue(notes, notes.contains("Claw: starting values from the parts catalog (gobilda-2000-torque: travelSec 1.13 s "
-                + "for a full move): time a full move to check"));
+        assertTrue(notes, notes.contains("Claw: defaults from the catalog (gobilda-2000-torque): travelSec 1.13 s "
+                + "for a full move. Time a full move to check"));
         assertFalse("its positions are written: no guess note", notes.contains("library guesses"));
     }
 
@@ -272,10 +273,10 @@ public class FirstRunDefaultsTest {
         r.setup(new RobotTestKit());
         String notes = r.notes().toString();
         // Hood: 0.4 of 270 degrees at 0.25 s per 60 degrees = 0.45 s.
-        assertTrue(notes, notes.contains("Hood: starting values from the parts catalog (gobilda-2000-torque: travelSec 0.45 s "
-                + "from stop to stop)"));
+        assertTrue(notes, notes.contains("Hood: defaults from the catalog (gobilda-2000-torque): travelSec 0.45 s "
+                + "from stop to stop"));
         // Indexer: 0.5 of 270 degrees = 0.5625 s, to 2 decimals.
-        assertTrue(notes, notes.contains("Indexer: starting values from the parts catalog (gobilda-2000-torque: pushSec 0.56, "
-                + "returnSec 0.56): watch a feed and change them by test"));
+        assertTrue(notes, notes.contains("Indexer: defaults from the catalog (gobilda-2000-torque): pushSec 0.56, "
+                + "returnSec 0.56. Watch a feed and change them by test"));
     }
 }

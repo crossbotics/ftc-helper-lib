@@ -1,5 +1,7 @@
 package com.crossbotics.ftchelper.examples.studicabot;
 
+import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT_FROM_CATALOG and MEASURE (docs/guides/tunables.md)
+
 /**
  * Studica starter bot, file 2 of 5: the numbers. If you tune a number live on the robot, copy the new
  * value back into this file, or it is lost at the next build.
@@ -23,9 +25,9 @@ public class Tunables {
      */
     public static class FlyWheel {
         public static double speedRpm = 4000, stepRpm = 100, readyBandRpm = 150, idleRpm = 0;
-        // The hub's speed control: none written = starting values from the parts catalog (INIT shows them).
-        // Run the Flywheel Finder, then remove the // and put its numbers here.
-        // public static double kP = 0, kI = 0, kD = 0, kF = 0;
+        // The hub's speed control: the defaults for the motor until the Flywheel Finder (INIT shows them).
+        // Then write its numbers in their place.
+        public static double kP = DEFAULT_FROM_CATALOG, kI = DEFAULT_FROM_CATALOG, kD = DEFAULT_FROM_CATALOG, kF = DEFAULT_FROM_CATALOG;
     }
 
     /**

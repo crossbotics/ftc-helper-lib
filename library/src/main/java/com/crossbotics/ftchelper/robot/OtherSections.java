@@ -53,6 +53,8 @@ final class OtherSections {
                 try {
                     f.setAccessible(true);
                     double code = ((Number) f.get(null)).doubleValue();
+                    // DEFAULT_FROM_CATALOG / MEASURE in your own section: no library value to show, so not in the menu.
+                    if (Starting.isDefaultFromCatalog(code) || Starting.isMeasure(code)) continue;
                     boolean whole = f.getType() == int.class || f.getType() == long.class;
                     // The code value is the default. (Made once per app run; a second robot with
                     // another code value gets it, unless the value was tuned.)

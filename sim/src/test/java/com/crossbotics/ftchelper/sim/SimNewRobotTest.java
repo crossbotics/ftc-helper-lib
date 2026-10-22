@@ -120,13 +120,35 @@ public class SimNewRobotTest {
         assertTrue(robot, robot.contains(".hood(Hood.servo(\"hood\"))"));
         assertTrue(robot, robot.contains("Hood Finder"));
         assertTrue(f.get("Tunables.java"), f.get("Tunables.java").contains("public static class Hood {"));
-        assertTrue(f.get("Tunables.java"), f.get("Tunables.java").contains("posA = 0.2, posB = 0.7"));
+        assertTrue(f.get("Tunables.java"), f.get("Tunables.java").contains("posA = MEASURE, posB = MEASURE"));
         compileAndLoad(f);
     }
 
+    // The written files, and (when Tunables.java has MEASURE lines) a second time with numbers in their place:
+    // the files as written INIT until the first MEASURE and stop there, naming it; with the numbers written
+    // in (as a team does after the finders), INIT works.
     private void compileAndLoad(Map<String, String> f) throws Exception {
-        File src = tmp.newFolder("src");
-        File out = tmp.newFolder("classes");
+        String tunables = f.get("Tunables.java");
+        if (tunables == null || !tunables.contains("= MEASURE")) {
+            compileAndLoad(f, null);
+            return;
+        }
+        compileAndLoad(f, "= MEASURE:");
+        Map<String, String> measured = new java.util.LinkedHashMap<>(f);
+        measured.put("Tunables.java", measured(tunables));
+        compileAndLoad(measured, null);
+    }
+
+    // Numbers in place of MEASURE, as the finders would give: a range's ends (max above min) and positions.
+    private static String measured(String tunables) {
+        return tunables.replaceAll("\\bmin = MEASURE", "min = 0").replaceAll("\\bmax = MEASURE", "max = 1000")
+                .replaceAll("\\bposA = MEASURE", "posA = 0.2").replaceAll("\\bposB = MEASURE", "posB = 0.7")
+                .replace("= MEASURE", "= 0.5");
+    }
+
+    private void compileAndLoad(Map<String, String> f, String initStops) throws Exception {
+        File src = tmp.newFolder();
+        File out = tmp.newFolder();
         List<String> args = new ArrayList<>();
         args.add("-d");
         args.add(out.getPath());
@@ -151,13 +173,19 @@ public class SimNewRobotTest {
                     .getDeclaredConstructor().newInstance();
             assertFalse(robot.notes().toString(), robot.notes().toString().contains("not written"));   // every section is in Tunables.java
             SimFromRobot.Result r = SimFromRobot.merge(null, robot.simLines(), "Robot", "biobuzz-2026");
-            Path file = tmp.newFile("robot.properties").toPath();
+            Path file = tmp.newFile().toPath();
             Files.write(file, r.text.getBytes(StandardCharsets.UTF_8));
             SimRobot sim = SimRobot.load(file);
             // INIT on the simulated hardware: no error (INIT stops on a Tunables field no part reads).
             RobotDefinition fresh = (RobotDefinition) loader.loadClass("org.firstinspires.ftc.teamcode.Robot")
                     .getDeclaredConstructor().newInstance();
-            fresh.setup(sim.hardwareMap());
+            try {
+                fresh.setup(sim.hardwareMap());
+            } catch (IllegalStateException e) {
+                if (initStops == null || !e.getMessage().contains(initStops)) throw e;
+                return;   // stopped on a MEASURE, as it should
+            }
+            if (initStops != null) org.junit.Assert.fail("INIT should stop on a MEASURE line");
             fresh.all().stop();
         }
     }

@@ -149,7 +149,9 @@ public class TuningMenu {
             Tunable tu = all.get(i);
             // "> " marks the chosen line. A changed value also shows the code value next to it.
             String mark = i == selected ? "> " : "  ";
-            String changed = tu.isChanged() ? "  (code " + tu.defaultValue() + ")" : "";
+            // Not changed and written DEFAULT_FROM_CATALOG in Tunables.java: where the value came from.
+            String changed = tu.isChanged() ? "  (code " + tu.defaultValue() + ")"
+                    : tu.source().isEmpty() ? "" : "  (" + tu.source() + ")";
             t.text(mark + tu.name() + " = " + tu.display() + changed);
         }
         t.text(String.format(java.util.Locale.US, "%d/%d  D-pad: choose/change  bumper: x10", selected + 1, all.size()));

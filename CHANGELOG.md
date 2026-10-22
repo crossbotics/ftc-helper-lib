@@ -5,41 +5,60 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 ## Unreleased
 
 A robot works sensibly on its first run, before anything is tuned: where Robot.java names a part's motor
-or servo, the numbers you have not written start from the parts catalog, and INIT says which, with the
-tool that tunes them. A number you write always wins.
+or servo, the numbers you have not written start from the parts catalog, and INIT says which, where they
+came from and the tool that tunes them. A number you write always wins.
 
 ### Added
 
-- **Starting values from the parts catalog** (docs/guides/tunables.md#first-run-what-you-get-before-tuning):
-  a lift with `.part(...)` scales its unwritten `kP`, `kD`, `slowZone` and `tolerance` to the motor's
-  counts per turn (the plain defaults are for a goBILDA 312 RPM motor); a Claw, Wrist, Positioner, Hood,
-  servo Turret or servo Indexer with `.part(...)` times its moves from the servo's catalog speed at the
-  hub's 5 V (`travelSec`, `pushSec`, `returnSec`; a goBILDA torque servo needs 1.13 s for 0 to 1, not
-  0.3). INIT: `Lift: starting values from the parts catalog (gobilda-5203-435: kP 0.0056, ...)`.
-- INIT says when a Claw, Wrist, Positioner or servo Indexer uses the library's guessed positions (none
-  written): find yours with the Servo Finder before the first TeleOp.
+- **`DEFAULT_FROM_CATALOG` and `MEASURE`** (docs/guides/tunables.md#default_from_catalog-and-measure): two
+  words to write in `Tunables.java` in place of a number you do not have yet (`import static
+  com.crossbotics.ftchelper.robot.Starting.*;`), so every setting is in the file from day one.
+  `DEFAULT_FROM_CATALOG` = the library's default, from the part's numbers where it can (the same as no line,
+  but visible); INIT lists each value and its source (`Launcher: defaults from the catalog
+  (gobilda-5203-6000): kF 11.7, ...`), and the tuning menu shows the source next to the value. On a safety
+  number (a lift's `min`/`max`, a hood's stops...) INIT stops. `MEASURE` = a number to find on the robot:
+  INIT stops and names the tool (`Tunables.Lift.min = MEASURE: find it on the robot: ... Motor Finder, X`).
+  `:sim:newRobot` and the templates write every part's settings this way.
+- **Parts not in the catalog** (docs/modules/robot.md#parts-not-in-the-catalog): `Motors.custom(id,
+  countsPerRev, freeRpm)`, `Motors.unknown(id)`, `Parts.customServo(id, rangeDeg, secPer60Deg[, pulse
+  range])`, `Parts.unknownServo(id)`. The id works wherever a catalog id goes; the defaults come from its
+  numbers; `:sim:fromRobot` writes them (`ticksPerRev=`, `rpm=`, `rangeDeg=`, `secPer60=`). Numbers not
+  known (or no `.part(...)`): general defaults, and INIT says so and how to do better. Cookbook: "My motor
+  isn't in the catalog".
+- **Defaults from the parts catalog** (docs/guides/tunables.md#first-run-what-you-get-before-tuning): a lift
+  with `.part(...)` scales its unwritten `kP`, `kD`, `slowZone` and `tolerance` to the motor's counts per
+  turn (the plain defaults are for a goBILDA 312 RPM motor); a Claw, Wrist, Positioner, Hood, servo Turret
+  or servo Indexer with `.part(...)` times its moves from the servo's catalog speed at the hub's 5 V
+  (`travelSec`, `pushSec`, `returnSec`; a goBILDA torque servo needs 1.13 s for 0 to 1, not 0.3).
+- INIT notes: a Claw, Wrist, Positioner or servo Indexer on the library's guessed positions; a motor turret
+  on the default range (`using the default range -90 to 90 deg: write your own min and max`); with no
+  Tunables class at all, each part's own notes (its defaults) still show.
 - `Flywheel.startingPidf(topTicksPerSec)` and `flywheel.startingGains()`: REV's starting gains (F =
   32767 / top counts per second, P = F / 10, I = P / 10), the Flywheel Finder's math.
 - The parts catalog's servo speed in the library: `Parts.ServoPart.secPer60Deg` (at 4.8 V when the seller
-  gives it) and `fullMoveSec(fullRange)`.
+  gives it) and `fullMoveSec(fullRange)`; `Tunable.source(words)`.
+- Community tests SHOT-06 (first spin-up with the defaults) and SET-03 (the two words, own parts).
 
 ### Changed
 
-- **A flywheel with no `kF` now uses starting values from the parts catalog, not the hub's defaults**
+- **A flywheel with no `kF` now uses defaults from the parts catalog, not the hub's own gains**
   (P 10, I 3, F 0: with no F the wheel only crept up to speed). F = 32767 / the motor's top speed in
   counts per second, P = F / 10, I = P / 10: a goBILDA 6000 RPM motor gets kF 11.7, kP 1.17, kI 0.117. A
-  written `kP`/`kI`/`kD` is now used even without `kF` (before, it was ignored). INIT: `Launcher: starting
-  values from the parts catalog (kF 11.7, kP 1.17, kI 0.117, speed 3600 rpm): run the Flywheel Finder,
-  then the Shot Tuner`. **What to do:** nothing to keep working; run the Flywheel Finder and write its
-  line. Battery compensation stays OFF by default, and stays off without your own `kF` (with a note).
+  written `kP`/`kI`/`kD` is now used even without `kF` (before, it was ignored). **What to do:** nothing to
+  keep working; run the Flywheel Finder and write its numbers. Battery compensation stays OFF by default,
+  and stays off without your own `kF` (with a note).
 - **An unwritten `speedRpm` is 60% of the motor's top speed** (3600 for a 6000 RPM motor), not 2600: room
   for the speed control to recover after a shot, and a slow motor (1620 RPM) no longer stops INIT with
   "speedRpm = 2600 is above the motor's top speed". **What to do:** if you relied on 2600, write
   `speedRpm = 2600`; better, find your speed with the Shot Tuner.
-- The example robots without a seller's tested numbers (flywheelbot, turretbot, v2bot, the cookbook, the
-  lesson robot's lift) no longer copy goBILDA's flywheel gains or the lift's default gains: they show the
-  first run. The goBILDA starter bot keeps goBILDA's own (P 40, F 12.5), with a comment.
-- `:sim:newRobot` no longer writes `speedRpm = 2600` for a launcher: the starting speed comes from the motor.
+- A launcher, an arm, a motor turret and the drive need their motor's counts per turn: a custom motor
+  without them stops in Robot.java with how to give them.
+- The example robots without a seller's tested numbers (flywheelbot, turretbot, v2bot, revbot, studicabot,
+  quickstart, the cookbook, the lesson robot's lift) write `DEFAULT_FROM_CATALOG` instead of copied numbers
+  (goBILDA's flywheel gains, the lift's defaults). The goBILDA starter bot keeps goBILDA's own (P 40,
+  F 12.5), with a comment.
+- `:sim:newRobot` writes `DEFAULT_FROM_CATALOG` and `MEASURE` lines (its robot stops at INIT until the
+  `MEASURE` numbers are found with the finders), and no `speedRpm = 2600`.
 
 ## v0.17.0 - 2026-10-22
 

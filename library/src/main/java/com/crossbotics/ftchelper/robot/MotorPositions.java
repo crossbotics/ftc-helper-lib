@@ -147,7 +147,7 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
         return partId;
     }
 
-    // "Lift: starting values from the parts catalog (...)": "" when none were used.
+    // "Lift: defaults from the catalog (...)": "" when none were used.
     private String catalogNote = "";
     static final String[] FIELD_ORDER = {"min", "max", "kP", "kI", "kD", "kF", "maxPower", "slowZone", "slowZonePower", "tolerance"};
     abstract Map<String, Double> defaultPositions();
@@ -210,13 +210,25 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
             Tunable.number(name() + "/" + p, positions.get(p), 1).range(min, max);
         }
         t.fromCatalog(catalogFields.toArray(new String[0]));
-        catalogNote = fromCatalog.isEmpty() ? "" : name() + ": starting values from the parts catalog (" + catalogMotor() + ": "
-                + listed(fromCatalog) + "): tune them live in the tuning menu (PRACTICE, hold GUIDE)";
-        if (cat == null && !unknownMotorNote().isEmpty() && !t.has("kP")) catalogNote = unknownMotorNote();
+        catalogNote = fromCatalog.isEmpty() ? "" : defaultsNote(catalogMotor(), fromCatalog,
+                "Tune them live in the tuning menu (PRACTICE, hold GUIDE)");
+        if (cat == null && !unknownMotorNote().isEmpty() && !t.has("kP")) {
+            catalogNote = unknownMotorNote();
+            // Their values are the general ones that note names: not listed again as library defaults.
+            t.fromCatalog("kP", "kD", "slowZone", "tolerance");
+        }
         order.clear();
         order.addAll(positions.keySet());
         final Map<String, Double> values = positions;
         Collections.sort(order, (a, b) -> Double.compare(values.get(a), values.get(b)));
+    }
+
+    @Override
+    String toolFor(String field) {
+        if (field.equals("min")) return "the Motor Finder (X at the bottom stop), docs/guides/finders.md#motor-finder-limits-positions-top-speed";
+        if (field.equals("max")) return "the Motor Finder (B at the top stop), docs/guides/finders.md#motor-finder-limits-positions-top-speed";
+        if (KNOWN.contains(field)) return "test it, live in the tuning menu (PRACTICE, hold GUIDE)";
+        return "the Motor Finder (a position: P1, P2...), docs/guides/finders.md#motor-finder-limits-positions-top-speed";
     }
 
     // ----------------------------- commands -----------------------------
@@ -372,7 +384,8 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
     // slide or arm ("with="); "mirrored" = its shaft turns the other way. Nothing without a second motor.
     final void secondMotorLine(List<String> out, String part) {
         if (secondMotor == null) return;
-        out.add(fmt("motor.%s = lift, part=%s, with=%s%s", secondMotor, part, device, secondReversed ? ", mirrored=true" : ""));
+        out.add(fmt("motor.%s = lift, %s, with=%s%s", secondMotor, motorWords(part, "gobilda-5203-312"), device,
+                secondReversed ? ", mirrored=true" : ""));
     }
 
     static Map<String, Double> positions(Object... nameValue) {

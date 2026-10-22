@@ -1,5 +1,7 @@
 package com.crossbotics.ftchelper.examples.lessonbot;
 
+import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT_FROM_CATALOG and MEASURE (docs/guides/tunables.md)
+
 /**
  * The lesson robot, file 2 of 5: every number, one section per part. The section's name is the
  * device's name in CamelCase ("lift" reads Lift). Tune the numbers live in the PRACTICE profile (hold
@@ -19,12 +21,13 @@ public class Tunables {
 
     /**
      * Lesson 4. Encoder counts from the bottom (the switch sets 0). min/max: the safe range (the Motor
-     * Finder measures it). down, low, high: named heights (any names). No kP..kF yet: Robot.java names the
-     * motor (part "gobilda-5203-435"), so the library starts from numbers for it (INIT shows them); tune
-     * them live (lesson 4, step 6) and write them here.
+     * Finder measures it). down, low, high: named heights (any names). kP..kF: DEFAULT_FROM_CATALOG, the
+     * defaults for the motor Robot.java names (part "gobilda-5203-435"; INIT shows them). Tune them live
+     * (lesson 4, step 6) and write the numbers in their place.
      */
     public static class Lift {
         public static double min = 0, max = 2600;
+        public static double kP = DEFAULT_FROM_CATALOG, kI = DEFAULT_FROM_CATALOG, kD = DEFAULT_FROM_CATALOG, kF = DEFAULT_FROM_CATALOG;
         public static double down = 0, low = 900, high = 2400;
     }
 

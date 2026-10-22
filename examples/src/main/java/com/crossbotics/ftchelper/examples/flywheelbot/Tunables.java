@@ -1,5 +1,7 @@
 package com.crossbotics.ftchelper.examples.flywheelbot;
 
+import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT_FROM_CATALOG and MEASURE (docs/guides/tunables.md)
+
 /**
  * Example robot 1, file 2 of 5: every NUMBER, one section per part. The section's name is the part's
  * configuration name in CamelCase ("intake_deploy" reads {@code IntakeDeploy}).
@@ -25,12 +27,13 @@ public class Tunables {
 
     /**
      * The flywheel, in RPM. speedRpm is the shot speed; one D-pad press changes it by stepRpm.
-     * readyBandRpm: how close to the speed counts as "ready to feed". No kP..kF yet: the hub's speed
-     * control starts from the parts catalog's numbers for this motor (INIT shows them: kF 11.7, kP 1.17,
-     * kI 0.117). Run the Flywheel Finder and paste its line here.
+     * readyBandRpm: how close to the speed counts as "ready to feed". kP..kF: the hub's speed control,
+     * DEFAULT_FROM_CATALOG until the Flywheel Finder (INIT shows the defaults for this motor: kF 11.7,
+     * kP 1.17, kI 0.117). Then write its numbers in their place.
      */
     public static class Launcher {
         public static double speedRpm = 2600, stepRpm = 100, readyBandRpm = 60, idleRpm = 0;
+        public static double kP = DEFAULT_FROM_CATALOG, kI = DEFAULT_FROM_CATALOG, kD = DEFAULT_FROM_CATALOG, kF = DEFAULT_FROM_CATALOG;
         public static double shotIntervalSec = 0.25;   // the least time between two pieces (seconds)
     }
 

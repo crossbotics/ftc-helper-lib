@@ -47,7 +47,7 @@ public class SimFirstRunLauncherTest {
         Bot bot = new Bot();
         bot.setup(robot.hardwareMap());
         assertTrue(bot.notes().toString(), bot.notes().toString().contains(
-                "Launcher: starting values from the parts catalog (kF 11.7, kP 1.17, kI 0.117, speed 3600 rpm)"));
+                "Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, kP 1.17, kI 0.117, speed 3600 rpm"));
         bot.launcher.spinUp();
         // Simulated time (10 ms loops). "Ready" itself waits real time (the flywheel's settle time), so
         // the test watches the speed: within the 60 RPM ready band.
@@ -61,6 +61,39 @@ public class SimFirstRunLauncherTest {
         assertEquals(3600, bot.launcher.targetRpm(), 1e-9);
         assertTrue("near its speed within 3 s: " + inBandAt, inBandAt < 3);
         assertEquals("and stays there", 3600, bot.launcher.part().getFlywheel().getRpm(), 60);
+        bot.all().stop();
+    }
+
+    /** A flywheel motor of the team's own, described in Robot.java. */
+    public static class CustomBot extends RobotDefinition {
+        public Launcher launcher;
+
+        @Override protected void define() {
+            tunables(NoLauncherNumbers.class);
+            drive(Drive.tank("left", "right"));
+            launcher = add(Launcher.flywheel("launcher",
+                    com.crossbotics.ftchelper.robot.Motors.custom("my-flywheel-motor", 28, 5000)));
+        }
+    }
+
+    // :sim:fromRobot writes the custom motor's own numbers; the simulator spins it at its own top speed,
+    // and the launcher's defaults (from those numbers) get it to its starting speed (3000 rpm).
+    @Test public void aCustomMotorGoesIntoTheRobotFileAndReachesItsSpeed() throws Exception {
+        SimFromRobot.Result res = SimFromRobot.merge(null, new CustomBot().simLines(), CustomBot.class.getName(), "biobuzz-2026");
+        assertTrue(res.problems.toString(), res.problems.isEmpty());
+        assertTrue(res.text, res.text.contains("motor.launcher = flywheel, ticksPerRev=28, rpm=5000"));
+        Path file = tmp.newFile("custom.properties").toPath();
+        Files.write(file, res.text.getBytes(StandardCharsets.UTF_8));
+        SimRobot robot = SimRobot.load(file);
+        assertEquals(5000 * 28 / 60.0, robot.motors.get("launcher").maxTicksPerSec, 1e-6);
+        CustomBot bot = new CustomBot();
+        bot.setup(robot.hardwareMap());
+        bot.launcher.spinUp();
+        for (int i = 0; i < 400; i++) {
+            bot.all().update();
+            robot.step(0.01);
+        }
+        assertEquals(3000, bot.launcher.part().getFlywheel().getRpm(), 60);
         bot.all().stop();
     }
 }

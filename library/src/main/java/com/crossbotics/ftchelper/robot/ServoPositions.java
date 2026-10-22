@@ -87,8 +87,11 @@ public abstract class ServoPositions<M extends ServoPositions<M>> extends Module
         part = new PositionServo(name(), servo).travelTime(t.number("travelSec", travelFromCatalog ? catalogTravel : DEFAULT_TRAVEL_SEC));
         if (travelFromCatalog) {
             t.fromCatalog("travelSec");
-            startNotes.add(name() + ": starting values from the parts catalog (" + partId + ": travelSec " + exact(catalogTravel)
-                    + " s for a full move): time a full move to check");
+            startNotes.add(defaultsNote(partId, java.util.Collections.singletonList("travelSec " + exact(catalogTravel) + " s for a full move"),
+                    "Time a full move to check"));
+        } else if (Double.isNaN(catalogTravel) && t.isMarked("travelSec")) {
+            startNotes.add(generalServoNote("travelSec", DEFAULT_TRAVEL_SEC));
+            t.fromCatalog("travelSec");
         }
         Map<String, Double> positions = positionsFrom(t);
         if (t.others(KNOWN).isEmpty()) {
@@ -117,6 +120,12 @@ public abstract class ServoPositions<M extends ServoPositions<M>> extends Module
         List<String> out = super.notes();
         out.addAll(startNotes);
         return out;
+    }
+
+    @Override
+    String toolFor(String field) {
+        if (field.equals("travelSec")) return "time a full move (0 to 1)";
+        return "the Servo Finder (a position: P1, P2...), docs/guides/finders.md#servo-finder-ends-and-positions";
     }
 
     // ----------------------------- commands -----------------------------
@@ -213,7 +222,7 @@ public abstract class ServoPositions<M extends ServoPositions<M>> extends Module
     String simServoLine(TunableSection t, String part) {
         Map<String, Double> p = positionsFrom(t);
         double first = physical(p.isEmpty() ? 0.5 : p.values().iterator().next());
-        if (partId != null) return fmt("servo.%s = %.2f, part=%s", device, first, partId) + pulseWords();
+        if (partId != null) return fmt("servo.%s = %.2f, %s", device, first, servoWords(partId, part)) + pulseWords() + simTodo(partId);
         return fmt("servo.%s = %.2f, part=%s", device, first, part) + pulseWords() + "   # TODO the real servo";
     }
 

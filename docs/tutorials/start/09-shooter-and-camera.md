@@ -90,13 +90,22 @@ at START, never in INIT.
 
 ### The first spin-up with no numbers
 
-A new launcher can run before you know any of its numbers. Leave out `kP` to `kF` and `speedRpm`:
-the library works out starting ones from the motor named in Robot.java
+A new launcher can run before you know any of its numbers. Write `DEFAULT_FROM_CATALOG` for `kP` to
+`kF` and `speedRpm` (or leave the lines out):
+
+```java
+public static class Launcher {
+    public static double speedRpm = DEFAULT_FROM_CATALOG, stepRpm = 100, readyBandRpm = 60, idleRpm = 0;
+    public static double kP = DEFAULT_FROM_CATALOG, kI = DEFAULT_FROM_CATALOG, kD = DEFAULT_FROM_CATALOG, kF = DEFAULT_FROM_CATALOG;
+}
+```
+
+The library works out starting ones from the motor named in Robot.java
 (`Launcher.flywheel("launcher", "gobilda-5203-6000")`) and its numbers in the parts catalog, and INIT says
 so:
 
 ```text
-Launcher: starting values from the parts catalog (kF 11.7, kP 1.17, kI 0.117, speed 3600 rpm): run the Flywheel Finder, then the Shot Tuner
+Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, kP 1.17, kI 0.117, speed 3600 rpm. Run the Flywheel Finder, then the Shot Tuner
 ```
 
 - **kF** is the power for a speed: the hub's full power is 32767, and the motor's top speed is 6000 RPM x
@@ -105,6 +114,10 @@ Launcher: starting values from the parts catalog (kF 11.7, kP 1.17, kI 0.117, sp
   same math the Flywheel Finder uses with the speed it measures on YOUR wheel.
 - **speed 3600** is 60% of the motor's top speed: the speed control needs room above the speed to push
   harder after each shot and on a tired battery, and a middle speed is a gentle first shot.
+
+A motor that is not in the catalog: describe it in Robot.java, `Launcher.flywheel("launcher",
+Motors.custom("my-motor", 28, 5800))` (counts per turn, free RPM), and the defaults come from its numbers
+([Parts not in the catalog](../../modules/robot.md#parts-not-in-the-catalog)).
 
 Without these, the hub would use its own gains (P 10, I 3, F 0): no F, so the wheel would only creep up
 to its speed. Spin up with LB and check that it reaches the speed (Driver Station). Then:

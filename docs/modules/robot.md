@@ -212,6 +212,33 @@ autonomous reads it when it builds its steps, at INIT); `final` numbers, true/fa
 
 ---
 
+### DEFAULT_FROM_CATALOG and MEASURE
+
+[`Starting`](#default_from_catalog-and-measure) has two words to write in `Tunables.java` in place of a number
+you do not have yet, so every setting is in the file from day one and the file shows what is left to do
+([reference](../guides/tunables.md#default_from_catalog-and-measure)):
+
+```java
+import static com.crossbotics.ftchelper.robot.Starting.*;    // at the top of Tunables.java
+
+public static class Launcher {
+    public static double kP = DEFAULT_FROM_CATALOG, kI = DEFAULT_FROM_CATALOG, kD = DEFAULT_FROM_CATALOG, kF = DEFAULT_FROM_CATALOG;
+}
+public static class Lift {
+    public static double min = MEASURE, max = MEASURE;          // INIT stops until you write them
+}
+```
+
+| Word | Means | INIT |
+| --- | --- | --- |
+| `DEFAULT_FROM_CATALOG` | not set yet: the library's starting value, worked out from the part Robot.java names where it can (else the library's default). The same as leaving the line out, but visible | one note per part with each value and where it came from: `Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, ...`; `default from my-motor (custom)`; `general default (no part in Robot.java)`. The tuning menu shows the same words next to the value. **On a safety number** (a lift's `min`/`max`, a hood's stops...) INIT stops: a safety limit never comes from the catalog |
+| `MEASURE` | a number you find on the robot | stops and names the tool: `Tunables.Lift.min = MEASURE: find it on the robot: the bottom of the safe range, in counts: Motor Finder, X` |
+
+Only for `double` fields (an `int` cannot hold them; a `boolean` or a table has no such word: leave the
+line out). `Starting.isDefaultFromCatalog(v)` and `Starting.isMeasure(v)` tell them apart from a number
+(each is its own "not a number" bit pattern). A part that is `optional()` and not on the robot does not
+stop on `MEASURE`, and `:sim:fromRobot` writes the robot file with `MEASURE` lines still in it.
+
 ### Your own code every loop
 
 Code the library has no part for (a bucket of your own, a value to log) runs with the robot's loop:
@@ -229,6 +256,38 @@ robot.everyLoop(() -> lastHeight = robot.lift.position());  // a small piece of 
 
 Pause stops every part in `all()` that is not the library's own, also one added the old way with
 `robot.all().add(...)`. A second motor on a lift or arm needs none of this: `alsoMotor` (see [Lift](#lift)).
+
+## Parts not in the catalog
+
+A motor or servo that is not in the [parts catalog](../guides/parts-catalog.md) (another seller, a custom
+gearbox): describe it in Robot.java with the seller's numbers. The call gives back its id, which works
+wherever a catalog id goes (`Launcher.flywheel`, `Arm.motor`, `Turret.motor`, `Hood.motor`,
+`Drive...motor(...)`, `.part(...)`):
+
+```java
+launcher = add(Launcher.flywheel("launcher", Motors.custom("my-flywheel-motor", 28, 5800)));  // counts per turn, free RPM
+claw = add(Claw.servo("claw").part(Parts.customServo("my-servo", 270, 0.16)));                  // turn in degrees, s per 60 deg (~5 V)
+lift = add(Lift.slide("lift").part(Motors.unknown("old-lift-motor")));                           // numbers not known yet
+```
+
+| Method | What it does |
+| --- | --- |
+| `Motors.custom(id, countsPerRev, freeRpm)` | a motor of your own: encoder counts per output turn (as the SDK reports them) and free speed at 12 V. Either may be `Double.NaN` (not known). A catalog id is refused |
+| `Motors.unknown(id)` | both not known |
+| `Motors.find(id)`, `Motors.get(id)` | a catalog or custom motor (`find`: null if none; `get`: stops with the list) |
+| `Parts.customServo(id, rangeDeg, secPer60Deg)` | a servo of your own: its whole turn over 500-2500 us, seconds per 60 degrees at about 5 V; `customServo(id, rangeDeg, secPer60Deg, pulseMinUs, pulseMaxUs)` with the seller's pulse range |
+| `Parts.unknownServo(id)` | a servo whose numbers are not known |
+| `Parts.findServo(id)` | a catalog or custom servo, or null |
+
+Its numbers work like a catalog part's: starting values (`DEFAULT_FROM_CATALOG`, or no line), INIT says
+`defaults from my-flywheel-motor (custom)`, and `:sim:fromRobot` writes them into the robot file
+(`motor.launcher = flywheel, ticksPerRev=28, rpm=5800`; `servo.claw = 0.30, rangeDeg=243, secPer60=0.16`).
+**Numbers not known:** the starting values are the general ones, and INIT says so and how to do better:
+`Lift: the counts per turn of old-lift-motor are not known, so general defaults (kP, kD, slowZone, tolerance made for a goBILDA 312 RPM motor). Give them with Motors.custom(...), or tune them in the tuning menu`.
+The same words show for a part with no `.part(...)` at all (`no part in Robot.java`). A launcher, an arm, a
+motor turret and the drive need the counts per turn (they turn counts into RPM or degrees): with none,
+Robot.java stops and says so. A launcher whose top speed is not known uses general defaults made for a
+6000 RPM motor. Safety numbers (`min`, `max`, stops) stay yours whatever the part.
 
 ## Parts not on the robot yet
 
@@ -694,9 +753,11 @@ stays), or one table per game piece: `speedByDistancePollen`, `speedByDistanceNe
 at). **First run:** the ones not written start from the parts catalog for the motor in
 `Launcher.flywheel(...)` (F = 32767 / its top speed in counts per second, P = F / 10, I = P / 10, D = 0: a
 6000 RPM motor gets kF 11.7, kP 1.17, kI 0.117), not the hub's own gains, and an unwritten `speedRpm` is 60%
-of the motor's top speed (3600). INIT says so once: `Launcher: starting values from the parts catalog (kF
-11.7, kP 1.17, kI 0.117, speed 3600 rpm): run the Flywheel Finder, then the Shot Tuner`. A written number
-always wins. Buttons (operator): LB spin up/down, RB fire one (hold: keep firing, `fireWhileHeld()` / `ceaseFire()` on release),
+of the motor's top speed (3600). INIT says so once: `Launcher: defaults from the catalog (gobilda-5203-6000):
+kF 11.7, kP 1.17, kI 0.117, speed 3600 rpm. Run the Flywheel Finder, then the Shot Tuner`. A written number
+always wins; `DEFAULT_FROM_CATALOG` in place of a number is the same as no line
+([DEFAULT_FROM_CATALOG and MEASURE](#default_from_catalog-and-measure)). A motor not in the catalog:
+`Motors.custom(...)` ([Parts not in the catalog](#parts-not-in-the-catalog)). Buttons (operator): LB spin up/down, RB fire one (hold: keep firing, `fireWhileHeld()` / `ceaseFire()` on release),
 D-pad up/down the speed trim +/- `trimStepPercent` with speed from distance, or +/- `stepRpm` with a fixed
 speed (held: one more step every 0.25 s); double-tap D-pad down = no trim; double-tap D-pad up = last
 time's trim (when offered); D-pad right the next shot table (two or more). Each only when free.

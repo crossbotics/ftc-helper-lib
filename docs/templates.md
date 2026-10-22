@@ -20,7 +20,7 @@ robot: you delete less and type less. Most of them (all but the last row) are a 
 
 | Your robot looks like... | Start from | What it has |
 | --- | --- | --- |
-| **anything, and its configuration is on the Driver Station** | `./gradlew :sim:newRobot` ([Quick start, way A](quick-start.md#a-from-your-robot-configuration-best-if-it-is-already-set-up)) | five files made for you from your configuration, with each part's line and TODO marks |
+| **anything, and its configuration is on the Driver Station** | `./gradlew :sim:newRobot` ([Quick start, way A](quick-start.md#a-from-your-robot-configuration-best-if-it-is-already-set-up)) | five files made for you from your configuration, with each part's line and TODO marks, and every setting in `Tunables.java` as `DEFAULT_FROM_CATALOG` or `MEASURE` ([the two words](guides/tunables.md#default_from_catalog-and-measure)) |
 | a mecanum drive and an intake, no configuration yet | [`quickstart`](../examples/src/main/java/com/crossbotics/ftchelper/examples/quickstart) ([Quick start, way B](quick-start.md#b-copy-the-template-no-configuration-yet-or-you-want-to-see-every-line)) | the smallest robot, with STEP marks on every line to change |
 | a mecanum drive, an intake, a lift and a claw | [`lessonbot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot) | the lesson robot of lessons 2 to 6, and its Drive Tuner |
 | **goBILDA's FTC StarterBot** (BIOBUZZ) | [`gobildabot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildabot) | tank drive, intake with two corner wheels, flywheel and "windmill" feeder; goBILDA's own names |
@@ -46,7 +46,8 @@ in `Robot.java`:
   that runs for a set time per press. Tune that time so one press is one throw. The library cannot
   tell when the catapult is wound, so it cannot wait for "ready" as a flywheel does.
 - **Studica's flywheel:** the Maverick motors are not in the library's motor list, so goBILDA motors
-  stand in for them, and the launcher cannot take the 2:1 gear between the motor and the wheels. The
+  stand in for them (a team can describe the real ones with `Motors.custom(...)`, from Studica's page:
+  [Parts not in the catalog](modules/robot.md#parts-not-in-the-catalog)), and the launcher cannot take the 2:1 gear between the motor and the wheels. The
   flywheel speed in `Tunables.java` is the motor's, as the library counts it. Tune it by watching shots.
 
 ## Copy a template into TeamCode

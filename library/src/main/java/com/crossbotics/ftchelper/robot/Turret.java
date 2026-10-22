@@ -126,8 +126,10 @@ public final class Turret extends Module<Turret> {
     private double startAngle = 0, homeAngle = 0, homeDirection = 1;
     // The INIT note when startAngle was not written and 0 is outside the range ("" = none).
     private String startNote = "";
-    // "Turret: starting values from the parts catalog (travelSec ...)": a servo turret with part(...) and no travelSec.
+    // "Turret: defaults from the catalog (travelSec ...)": a servo turret with part(...) and no travelSec.
     private String travelNote = "";
+    // "Turret: using the default range -90 to 90 deg ...": min and max not written ("" = written).
+    private String rangeNote = "";
     // Where the angle at INIT came from, for the INIT screen.
     private String angleFrom = "";
     private double toleranceDeg = 1;
@@ -138,7 +140,7 @@ public final class Turret extends Module<Turret> {
 
     private Turret(String device, Kind kind, String motorId) {
         super(device);
-        if (motorId != null) Motors.get(motorId);
+        if (motorId != null) Motors.withCounts(motorId, "Turret.motor(\"" + device + "\", ...)");
         this.kind = kind;
         this.motorId = motorId;
     }
@@ -374,6 +376,11 @@ public final class Turret extends Module<Turret> {
             throw new IllegalStateException("Tunables." + name() + ": max (" + max + ") must be more than min (" + min + ")");
         }
         startNote = "";
+        // The range is not a REQUIRED number (a turret has hard stops of its own or none), but +/-90 is a guess:
+        // say so, so nobody runs a turret on it without knowing (not for a servo turret: posA/posB give its range).
+        rangeNote = !continuous && kind != Kind.SERVO && !t.has("min") && !t.has("max")
+                ? name() + ": using the default range -90 to 90 deg: write your own min and max (turn it by hand to each "
+                        + "end and read the angle, docs/guides/turret-setup.md)" : "";
         if (!continuous && kind != Kind.SERVO && (startAngle < min || startAngle > max)) {
             // A startAngle written outside the range is a mistake: stop. Not written (the default 0 is
             // outside a range like 10 to 170): count from the middle of the range, and say so.
@@ -422,8 +429,11 @@ public final class Turret extends Module<Turret> {
         double travelSec = t.number("travelSec", fromCatalog ? catalogTravel : 0.6);
         if (fromCatalog) {
             t.fromCatalog("travelSec");
-            travelNote = name() + ": starting values from the parts catalog (" + partId + ": travelSec " + exact(catalogTravel)
-                    + " s from posA to posB): time it to check";
+            travelNote = defaultsNote(partId, java.util.Collections.singletonList("travelSec " + exact(catalogTravel) + " s from posA to posB"),
+                    "Time it to check");
+        } else if (Double.isNaN(full) && t.isMarked("travelSec")) {
+            travelNote = generalServoNote("travelSec", 0.6);
+            t.fromCatalog("travelSec");
         }
         double travel = travelSec / Math.abs(posB - posA);
         PositionServo ps = new PositionServo(name(), s).degrees(posA, angleA, posB, angleB).travelTime(travel)
@@ -614,10 +624,21 @@ public final class Turret extends Module<Turret> {
     }
 
     @Override
+    String toolFor(String field) {
+        if (field.equals("cameraOffset")) return "the Aim Tuner, docs/guides/finders.md#aim-tuner-camera-offset";
+        if (field.startsWith("pos") || field.startsWith("angle")) return "the Servo Finder and a protractor, docs/guides/turret-setup.md";
+        if (field.equals("min") || field.equals("max") || field.equals("homeAngle") || field.equals("encoderOffset")) {
+            return "measure it: turn the turret by hand and read the angle, docs/guides/turret-setup.md";
+        }
+        return null;
+    }
+
+    @Override
     List<String> notes() {
         List<String> out = super.notes();
         if (!startNote.isEmpty()) out.add(startNote);
         if (!travelNote.isEmpty()) out.add(travelNote);
+        if (!rangeNote.isEmpty()) out.add(rangeNote);
         return out;
     }
 
@@ -931,8 +952,9 @@ public final class Turret extends Module<Turret> {
         String driven;   // the motor whose shaft is the turret's angle in the simulator
         if (kind == Kind.MOTOR) {
             driven = device;
-            if (continuous) out.add(fmt("motor.%s = free, part=%s", device, motorId));
-            else out.add(fmt("motor.%s = lift, part=%s, min=%.0f, max=%.0f, gravity=0", device, motorId, (lo - start) * cpd, (hi - start) * cpd));
+            if (continuous) out.add(fmt("motor.%s = free, %s", device, motorWords(motorId, "gobilda-5203-117")) + simTodo(motorId));
+            else out.add(fmt("motor.%s = lift, %s, min=%.0f, max=%.0f, gravity=0", device, motorWords(motorId, "gobilda-5203-117"),
+                    (lo - start) * cpd, (hi - start) * cpd) + simTodo(motorId));
         } else {
             out.add(partId != null ? fmt("crservo.%s =   # %s", device, partId) : fmt("crservo.%s =", device));
             // The simulator turns the encoder's "motor" with the CR servo's power (drivenBy=).
@@ -974,7 +996,7 @@ public final class Turret extends Module<Turret> {
             at0 = at1;
             at1 = swap;
         }
-        out.add(partId != null ? fmt("servo.%s = 0.5, part=%s", device, partId) + pulseWords()
+        out.add(partId != null ? fmt("servo.%s = 0.5, %s", device, servoWords(partId, "gobilda-2000-torque")) + pulseWords() + simTodo(partId)
                 : fmt("servo.%s = 0.5, part=gobilda-2000-torque", device) + pulseWords() + "   # TODO the real servo");
         out.add(fmt("shape.%s = turret, at=0,0,8, size=6x6x2, servo=%s, pos0=%s, pos1=%s   # TODO measure",
                 device, device, Shape.n(at0), Shape.n(at1)));

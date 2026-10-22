@@ -157,6 +157,13 @@ public class Tunables {
 - A number you leave out uses the library's default, and INIT tells you which
   (`Tunables.Intake: outPower not written: library defaults used (fine)`). A few safety numbers, like a
   lift's `min` and `max`, have no default: INIT stops and says which line to write.
+- **Numbers you do not have yet:** write a word in their place, so every setting is in the file from day
+  one. `DEFAULT_FROM_CATALOG` = "use the library's default", worked out from the motor or servo Robot.java
+  names where it can (INIT lists each one and where it came from: `Launcher: defaults from the catalog
+  (gobilda-5203-6000): kF 11.7, ...`). `MEASURE` = "a number to find on the robot": INIT stops on it and
+  names the finder. They need `import static com.crossbotics.ftchelper.robot.Starting.*;` at the top of
+  the file ([the two words](../../guides/tunables.md#default_from_catalog-and-measure)). The goBILDA bot's
+  numbers are all known (goBILDA published them), so its file has none.
 - **Every number each part reads**, with its units, its default and the finder that measures it:
   [the Tunables reference](../../guides/tunables.md). **A misspelled name stops INIT** (capitals
   count), with the closest real name, for example

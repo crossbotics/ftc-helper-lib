@@ -306,8 +306,9 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
      * NaN without a catalog servo or when the catalog lacks its turn. A starting value for {@code travelSec}.
      */
     final double catalogFullMoveSec() {
-        if (partId == null || !Parts.servos().contains(partId)) return Double.NaN;
-        double s = Parts.servoPart(partId).fullMoveSec(fullRange);
+        Parts.ServoPart p = Parts.findServo(partId);
+        if (p == null) return Double.NaN;
+        double s = p.fullMoveSec(fullRange);
         return Double.isNaN(s) ? s : Math.round(s * 100) / 100.0;
     }
 
@@ -316,6 +317,57 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
         StringBuilder sb = new StringBuilder();
         for (String n : items) sb.append(sb.length() == 0 ? "" : ", ").append(n);
         return sb.toString();
+    }
+
+    /**
+     * Where a starting value came from, for INIT and the tuning menu: "default from the catalog
+     * (gobilda-5203-6000)", "default from my-motor (custom)", or "general default (no part in Robot.java)".
+     *
+     * @param id the part's catalog or custom id, or null when Robot.java names none
+     */
+    static String defaultSource(String id) {
+        if (id == null) return "general default (no part in Robot.java)";
+        Motors.Kind k = Motors.find(id);
+        Parts.ServoPart s = Parts.findServo(id);
+        boolean custom = (k != null && k.custom) || (s != null && s.custom);
+        boolean unknown = (k != null && k.custom && !k.known())
+                || (s != null && s.custom && (Double.isNaN(s.rangeDeg) || Double.isNaN(s.secPer60Deg)));
+        if (unknown) return "general default (the numbers of " + id + " are not known)";
+        return custom ? "default from " + id + " (custom)" : "default from the catalog (" + id + ")";
+    }
+
+    /** The id this part's starting values come from (its part(...)); a launcher's motor. Null = none. */
+    String defaultSourceId() {
+        return partId;
+    }
+
+    // "Lift: defaults from the catalog (gobilda-5203-435): kP 0.0056, kD 0.00028. Tune them ..." for INIT.
+    final String defaultsNote(String id, java.util.Collection<String> values, String next) {
+        return name() + ": " + defaultSource(id).replaceFirst("^default ", "defaults ") + ": " + listed(values) + ". " + next;
+    }
+
+    /**
+     * Which tool finds this field, for the message when Tunables.java says MEASURE (null = the general
+     * words). Modules name theirs: a lift's min is the Motor Finder's.
+     *
+     * @param field the field name, e.g. "min"
+     */
+    String toolFor(String field) {
+        return null;
+    }
+
+    /**
+     * The INIT note when a servo part's move time was asked for DEFAULT_FROM_CATALOG but no catalog numbers are
+     * known (no part, or an unknown one): the general value is used, and how to do better.
+     *
+     * @param field   e.g. "travelSec"
+     * @param general the value used, seconds
+     */
+    final String generalServoNote(String field, double general) {
+        String why = partId == null ? "no part in Robot.java" : "the numbers of " + partId + " are not known";
+        String fix = partId == null ? "Add .part(...) (or Parts.customServo(...))" : "Give them with Parts.customServo(...)";
+        return name() + ": " + why + ", so general defaults (" + field + " " + exact(general) + " s). " + fix
+                + ", or time the move";
     }
 
     // A starting value for an INIT note, already rounded: up to 6 decimals, no trailing zeros (0.0056, 11.7).
@@ -339,7 +391,7 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
     // The pulse (microseconds) for positions 0 and 1 with fullRange(): the catalog part's own range, or
     // 500-2500 (what goBILDA, REV and Axon servos take) without a part.
     double[] fullPulse() {
-        if (partId != null && Parts.servos().contains(partId)) {
+        if (Parts.findServo(partId) != null) {
             Parts.ServoPart s = Parts.servoPart(partId);
             return new double[] {s.fullLowUs(), s.fullHighUs()};
         }
@@ -358,6 +410,40 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
             pulseNote = name() + ": the servo \"" + device + "\" cannot change its pulse range (not on a REV hub): "
                     + "fullRange() does nothing, it turns its normal range (600-2400 us)";
         }
+    }
+
+    // The simulator robot file's words for a motor: "part=ID" (catalog), its own numbers (Motors.custom), or,
+    // for one whose numbers are not known, the fallback catalog motor (simTodo then says so).
+    static String motorWords(String id, String fallbackId) {
+        Motors.Kind k = Motors.find(id);
+        String w = k == null ? "" : k.simWords();
+        if (k != null && k.custom && (Double.isNaN(k.countsPerRev) || Double.isNaN(k.freeRpm))) {
+            // A custom motor with a number missing: the fallback's numbers fill the gap (its own win).
+            w = "part=" + fallbackId + (w.isEmpty() ? "" : ", " + w);
+        }
+        return w.isEmpty() ? "part=" + fallbackId : w;
+    }
+
+    // "   # TODO ..." for a motor or servo whose numbers the robot file had to guess ("" otherwise).
+    static String simTodo(String id) {
+        Motors.Kind k = Motors.find(id);
+        if (k != null && k.custom && !k.known()) return "   # TODO " + id + "'s numbers (Motors.custom in Robot.java)";
+        Parts.ServoPart s = Parts.findServo(id);
+        if (s != null && s.custom && (Double.isNaN(s.rangeDeg) || Double.isNaN(s.secPer60Deg))) {
+            return "   # TODO " + id + "'s numbers (Parts.customServo in Robot.java)";
+        }
+        return "";
+    }
+
+    // The robot file's words for this part's servo: "part=ID", a custom servo's own numbers over the file's
+    // pulse range, or the fallback catalog servo for one whose numbers are not known.
+    final String servoWords(String id, String fallbackId) {
+        Parts.ServoPart s = Parts.findServo(id);
+        if (s == null) return "part=" + fallbackId;
+        double[] p = fullRange ? fullPulse() : new double[] {com.crossbotics.ftchelper.hardware.ServoSetup.SDK_PULSE_LOW_US,
+                com.crossbotics.ftchelper.hardware.ServoSetup.SDK_PULSE_HIGH_US};
+        String w = s.simWords(p[0], p[1]);
+        return w.isEmpty() ? "part=" + fallbackId : w;
     }
 
     // ", pwm=500-2500" for the simulator robot file when fullRange() is on ("" otherwise).

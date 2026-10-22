@@ -67,8 +67,8 @@ public final class Lift extends MotorPositions<Lift> {
     // so it would slam into its ends; on a 1150 RPM motor (145.1) 20 counts is 1/7 of a turn.
     @Override
     double[] catalogDefaults() {
-        Motors.Kind m = partId == null ? null : Motors.all().get(partId);
-        if (m == null) return null;
+        Motors.Kind m = Motors.find(partId);
+        if (m == null || Double.isNaN(m.countsPerRev)) return null;
         double k = m.countsPerRev / DEFAULTS_COUNTS_PER_REV;   // counts per turn compared to the 312 RPM motor
         double[] d = defaults();
         double nan = Double.NaN;
@@ -79,8 +79,10 @@ public final class Lift extends MotorPositions<Lift> {
     // No part(...): the counts-based defaults are for a 312 RPM motor. Say so, once.
     @Override
     String unknownMotorNote() {
-        return name() + ": no motor named (.part(...) in Robot.java): kP, kD, slowZone, tolerance are for a goBILDA "
-                + "312 RPM motor; name yours for starting values that fit it";
+        String why = partId == null ? "no part in Robot.java" : "the counts per turn of " + partId + " are not known";
+        String fix = partId == null ? "Add .part(...) (or Motors.custom(...))" : "Give them with Motors.custom(...)";
+        return name() + ": " + why + ", so general defaults (kP, kD, slowZone, tolerance made for a goBILDA 312 RPM "
+                + "motor). " + fix + ", or tune them in the tuning menu";
     }
 
     // Two significant figures (0.0055907 -> 0.0056): a starting value, not a measured one.
@@ -109,8 +111,8 @@ public final class Lift extends MotorPositions<Lift> {
     // free speed. Else not known (the interlock uses the fastest it has measured).
     @Override
     double zoneTopSpeed() {
-        Motors.Kind m = partId == null ? null : Motors.all().get(partId);
-        return m == null ? Double.NaN : m.freeRpm / 60.0 * m.countsPerRev;
+        Motors.Kind m = Motors.find(partId);
+        return m == null ? Double.NaN : m.freeRpm / 60.0 * m.countsPerRev;   // NaN for an unknown custom motor
     }
 
     @Override
@@ -159,7 +161,8 @@ public final class Lift extends MotorPositions<Lift> {
         double min = t.number("min", d[0]), max = t.number("max", d[1]);
         // The motor from .part(...); without one, a common lift motor, marked to check.
         out.add(partId != null
-                ? fmt("motor.%s = lift, part=%s, min=%.0f, max=%.0f, gravity=0.06", device, partId, min, max)
+                ? fmt("motor.%s = lift, %s, min=%.0f, max=%.0f, gravity=0.06", device, motorWords(partId, "gobilda-5203-312"), min, max)
+                        + simTodo(partId)
                 : fmt("motor.%s = lift, part=gobilda-5203-312, min=%.0f, max=%.0f, gravity=0.06   # TODO the real motor",
                         device, min, max));
         // A second motor (alsoMotor): tied to the same slide in the simulator.

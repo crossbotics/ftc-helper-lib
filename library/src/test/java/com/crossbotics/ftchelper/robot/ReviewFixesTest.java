@@ -342,7 +342,7 @@ public class ReviewFixesTest {
         noKf.setup(new RobotTestKit());
         // kP written, no kF: the written kP is used, kF and kI are the parts catalog's starting values.
         assertTrue(noKf.notes().toString(), noKf.notes().toString().contains(
-                "Launcher: starting values from the parts catalog (kF 11.7, kI 0.117): run the Flywheel Finder"));
+                "Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, kI 0.117. Run the Flywheel Finder"));
     }
 
     // "Fire all: done" when nothing was fired is misleading: the action says how many it fired.

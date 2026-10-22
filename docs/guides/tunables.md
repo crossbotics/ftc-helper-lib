@@ -55,7 +55,7 @@ When you press INIT, the library reads `Tunables.java` and tells you what it fou
 | --- | --- | --- |
 | no line for an optional number | uses the default, and shows a note: `Tunables.Lift: kD, kF not written: library defaults used (fine)` | a missing number is not a problem: the default works. Add the line to change it |
 | no section at all for a part | uses every default: `Tunables.Intake not written: library defaults used (fine)` | the same |
-| no line for a number that has a starting value from the parts catalog (a launcher's gains and speed, a lift's `kP` with `.part(...)`, a servo's `travelSec` with `.part(...)`) | uses it, and shows ONE note per part with the values and the tool that tunes them: `Launcher: starting values from the parts catalog (kF 11.7, kP 1.17, kI 0.117, speed 3600 rpm): run the Flywheel Finder, then the Shot Tuner` | a number worked out for YOUR motor works much better than a fixed one made for another motor. It is still a start: tune it, then write it ([First run](#first-run-what-you-get-before-tuning)) |
+| no line for a number that has a starting value from the parts catalog (a launcher's gains and speed, a lift's `kP` with `.part(...)`, a servo's `travelSec` with `.part(...)`) | uses it, and shows ONE note per part with the values, where they came from and the tool that tunes them: `Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, kP 1.17, kI 0.117, speed 3600 rpm. Run the Flywheel Finder, then the Shot Tuner` | a number worked out for YOUR motor works much better than a fixed one made for another motor. It is still a start: tune it, then write it ([First run](#first-run-what-you-get-before-tuning)) |
 | no positions for a Claw, Wrist, Positioner or servo Indexer | uses the library's guesses and says so: `Claw: no positions written: open 0.2, closed 0.75 are library guesses, not your servo's: find yours with the Servo Finder before the first TeleOp` | guessed positions can push a part into the frame |
 | no line for a REQUIRED number | **stops**: `Tunables.Lift has no max: write max (the top of the safe range, in counts: Motor Finder, B). A safety limit never comes from a library default.` | a wrong limit breaks the robot. A default could be wrong for your robot |
 | a name in Lift, Arm, Claw, Wrist or Positioner that looks like a setting (`Max`, `k_P`, `maxPowr`) | **stops**: `Tunables.Lift.Max looks like "max" (capitals and spelling count)` | in these parts every other name is a named position, so a typo would quietly become a position |
@@ -79,13 +79,49 @@ gives the same lines ([testing](testing.md)).
 removing `.fullRange()` on a part in Robot.java changes where each position points: measure them again
 ([Full range](../modules/hardware.md#full-range)).
 
+## DEFAULT_FROM_CATALOG and MEASURE
+
+Two words you can write in place of a number you do not have yet. Every setting is then in the file from
+day one, and the file shows what is still to do. Add this line at the top of `Tunables.java` (after the
+`package` line):
+
+```java
+import static com.crossbotics.ftchelper.robot.Starting.*;
+
+public static class Launcher {
+    public static double kP = DEFAULT_FROM_CATALOG, kI = DEFAULT_FROM_CATALOG, kD = DEFAULT_FROM_CATALOG, kF = DEFAULT_FROM_CATALOG;
+    public static double speedRpm = DEFAULT_FROM_CATALOG;
+}
+public static class Lift {
+    public static double min = MEASURE, max = MEASURE;   // INIT stops until you write them
+    public static double kP = DEFAULT_FROM_CATALOG;
+    public static double down = 0, high = MEASURE;
+}
+```
+
+| You write | INIT does |
+| --- | --- |
+| `DEFAULT_FROM_CATALOG` | uses the library's starting value, the same as leaving the line out: worked out from the part Robot.java names (the parts catalog, or your own part's numbers) where it can, else the library's default. INIT lists each value and where it came from: `Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, kP 1.17, kI 0.117, speed 3600 rpm. Run the Flywheel Finder, then the Shot Tuner`, and for a number with no part value: `Tunables.Launcher: DEFAULT_FROM_CATALOG, library defaults: stepRpm 100`. The tuning menu shows the same source next to the value; its "copy into Tunables.java" lines are real numbers |
+| `DEFAULT_FROM_CATALOG` and no part in Robot.java (or a part whose numbers are not known) | the general default, and a note that says so and how to do better: `Lift: no part in Robot.java, so general defaults (kP, kD, slowZone, tolerance made for a goBILDA 312 RPM motor). Add .part(...) (or Motors.custom(...)), or tune them in the tuning menu` |
+| `DEFAULT_FROM_CATALOG` on a REQUIRED (safety) number | **stops**: `Tunables.Lift.max = DEFAULT_FROM_CATALOG, but it is a safety number: a safety limit never comes from the parts catalog or a library default. Write MEASURE until you know it, then the number (...)` |
+| `MEASURE` | **stops** and names the tool that finds it: `Tunables.Lift.min = MEASURE: find it on the robot: the bottom of the safe range, in counts: Motor Finder, X. Write the number in place of MEASURE.` |
+
+Only for `double` numbers (an `int` cannot hold them: Java says so when it builds). An on/off setting or
+a table has no such word: leave its line out. A part that is `optional()` and not on the robot does not
+stop on `MEASURE`, and `./gradlew :sim:fromRobot` writes the simulator's robot file with `MEASURE` lines
+still in it (so you can run the finders in the simulator). `:sim:newRobot` writes every part's settings
+this way. A part not in the catalog: [describe it in Robot.java](../modules/robot.md#parts-not-in-the-catalog).
+
 ## First run: what you get before tuning
 
 A new robot runs before any number is tuned. Every number has a safe starting value, and where
 Robot.java names the motor or servo (`Launcher.flywheel("launcher", "gobilda-5203-6000")`,
 `.part("gobilda-5203-435")`), the starting value is worked out from that part's numbers in the
 [parts catalog](parts-catalog.md) (the seller's numbers, with the date they were checked). INIT shows one
-note per part with the values it used and the tool that tunes them. A number you write always wins.
+note per part with the values it used, where they came from and the tool that tunes them. A number you
+write always wins. Writing [`DEFAULT_FROM_CATALOG`](#default_from_catalog-and-measure) does the same as
+leaving the line out. **No part named, or a part whose numbers are not known** (`Motors.unknown`, a
+custom part with `Double.NaN`): the general default (the plain one in the tables below), and INIT says so.
 
 | Part | Not written | What it starts with | Tune it with |
 | --- | --- | --- | --- |

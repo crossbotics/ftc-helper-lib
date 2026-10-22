@@ -122,8 +122,11 @@ public final class Indexer extends Module<Indexer> implements Feeder {
                 if (pushFromCatalog) { cat.add("pushSec " + exact(move)); t.fromCatalog("pushSec"); }
                 if (returnFromCatalog) { cat.add("returnSec " + exact(move)); t.fromCatalog("returnSec"); }
                 if (!cat.isEmpty()) {
-                    startNotes.add(name() + ": starting values from the parts catalog (" + partId + ": " + listed(cat)
-                            + "): watch a feed and change them by test");
+                    startNotes.add(defaultsNote(partId, cat, "Watch a feed and change them by test"));
+                }
+                if (Double.isNaN(move) && (t.isMarked("pushSec") || t.isMarked("returnSec"))) {
+                    startNotes.add(generalServoNote(t.isMarked("pushSec") ? "pushSec" : "returnSec", 0.25));
+                    t.fromCatalog("pushSec", "returnSec");
                 }
                 if (!t.has("rest") && !t.has("push")) {
                     startNotes.add(name() + ": no positions written: rest 0, push 0.5 are library guesses, not your servo's: "
@@ -274,6 +277,12 @@ public final class Indexer extends Module<Indexer> implements Feeder {
     }
 
     @Override
+    String toolFor(String field) {
+        if (field.equals("rest") || field.equals("push")) return "the Servo Finder, docs/guides/finders.md#servo-finder-ends-and-positions";
+        return "test it: watch a feed";
+    }
+
+    @Override
     List<String> notes() {
         List<String> out = super.notes();
         out.addAll(startNotes);
@@ -302,11 +311,12 @@ public final class Indexer extends Module<Indexer> implements Feeder {
         if (kind == Kind.SERVO) {
             // Where it rests, as the simulated servo sees it (a reversed servo's 0.15 is really 0.85).
             double rest = t.number("rest", 0);
-            out.add(partId != null ? fmt("servo.%s = %.2f, part=%s", device, reversed ? 1 - rest : rest, partId) + pulseWords()
+            out.add(partId != null ? fmt("servo.%s = %.2f, %s", device, reversed ? 1 - rest : rest, servoWords(partId, "gobilda-2000-speed"))
+                    + pulseWords() + simTodo(partId)
                     : fmt("servo.%s = %.2f, part=gobilda-2000-speed", device, reversed ? 1 - rest : rest) + pulseWords() + "   # TODO the real servo");
         }
         else if (kind == Kind.CR_SERVO) out.add("crservo." + device + " =" + (partId != null ? "   # " + partId : ""));
-        else if (partId != null) out.add("motor." + device + " = free, part=" + partId);
+        else if (partId != null) out.add("motor." + device + " = free, " + motorWords(partId, "gobilda-5203-1150") + simTodo(partId));
         else out.add("motor." + device + " = free, part=gobilda-5203-1150   # TODO the real motor");
         lookLines(out, t);
     }

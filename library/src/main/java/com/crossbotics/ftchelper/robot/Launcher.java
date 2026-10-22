@@ -87,7 +87,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     private String hoodNote = "";
     // INIT notes about numbers the launcher reads differently from what is written (or assumes).
     private final java.util.List<String> numberNotes = new java.util.ArrayList<>();
-    // "Launcher: starting values from the parts catalog (...)": "" when every number was written.
+    // "Launcher: defaults from the catalog (...)": "" when every number was written.
     private String catalogNote = "";
     private Camera distanceCamera = null;
     // speedFromOdometry(): the distance from the odometry alone (no camera).
@@ -143,7 +143,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
 
     private Launcher(String motor, String motorId) {
         super(motor);
-        Motors.get(motorId);
+        Motors.withCounts(motorId, "Launcher.flywheel(\"" + motor + "\", ...)");
         this.motorId = motorId;
     }
 
@@ -301,23 +301,26 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
                     + "added: write camera = add(Camera...) and speedFromDistance(camera)");
         }
         Motors.Kind kind = Motors.get(motorId);
+        // A custom motor whose top speed is not known: general starting values, made for a 6000 RPM motor.
+        boolean general = Double.isNaN(kind.freeRpm);
+        double topRpm = general ? GENERAL_TOP_RPM : kind.freeRpm;
         // No speedRpm written: a starting speed from the parts catalog, 60% of the motor's top speed
         // (startingRpm explains why), never a fixed number that a slow motor could not reach.
         boolean speedWritten = t.has("speedRpm");
-        double startRpm = startingRpm(kind);
+        double startRpm = startingRpm(topRpm);
         double codeSpeed = t.number("speedRpm", startRpm);
-        if (codeSpeed > kind.freeRpm) {
+        if (codeSpeed > topRpm) {
             throw new IllegalStateException("Tunables." + name() + ".speedRpm = " + codeSpeed + " is above the "
-                    + motorId + "'s top speed (" + kind.freeRpm + " RPM)");
+                    + motorId + "'s top speed (" + topRpm + " RPM" + (general ? ", the general one: give yours with Motors.custom" : "") + ")");
         }
-        speedRpm = t.tunable("speedRpm", startRpm, 50).range(0, kind.freeRpm);
+        speedRpm = t.tunable("speedRpm", startRpm, 50).range(0, topRpm);
         stepRpm = t.tunable("stepRpm", 100, 10).range(0, 1000);
         DcMotorEx motor = MotorSetup.of(devices.get(DcMotorEx.class, device)).reversed(reversed)
                 .coast().runUsingEncoder().done();
         flywheelMotor = motor;
         flywheel = new Flywheel(name(), motor)
                 .countsPerRev(kind.countsPerRev)
-                .maxRpm(kind.freeRpm)
+                .maxRpm(topRpm)
                 .tolerance(t.number("readyBandRpm", 60));
         numberNotes.clear();
         catalogNote = "";
@@ -325,7 +328,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         // from the parts catalog (Flywheel.startingPidf: F = 32767 / the motor's top speed in counts per
         // second, P = F / 10, I = P / 10, D = 0, REV's formula and the Flywheel Finder's), NOT the hub's
         // own defaults (P 10, I 3, F 0: no F, so the wheel only reaches its speed slowly, by I).
-        double[] start = startingGains(kind);
+        double[] start = startingGains(kind.countsPerRev, topRpm);
         boolean gainsFromCatalog = !t.has("kF");
         double kP = t.has("kP") ? t.number("kP", 0) : start[0];
         double kI = t.has("kI") ? t.number("kI", 0) : start[1];
@@ -445,12 +448,30 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         boolean speedFromCatalog = !speedWritten && tables.isEmpty();
         if (speedFromCatalog) fromCatalog.add("speed " + exact(startRpm) + " rpm");
         if (!speedWritten) t.fromCatalog("speedRpm");
+        if (gainsFromCatalog) t.fromCatalog("kP", "kI", "kD", "kF");
         if (!fromCatalog.isEmpty()) {
             String tools = gainsFromCatalog && speedFromCatalog ? "run the Flywheel Finder, then the Shot Tuner"
                     : gainsFromCatalog ? "run the Flywheel Finder" : "find your shot speed with the Shot Tuner";
-            catalogNote = name() + ": starting values from the parts catalog (" + listed(fromCatalog)
-                    + "): " + tools;
+            catalogNote = general
+                    ? name() + ": the top speed of " + motorId + " is not known, so general defaults (made for a "
+                            + exact(GENERAL_TOP_RPM) + " RPM motor: " + listed(fromCatalog) + "). Give it with Motors.custom(...), or "
+                            + tools
+                    : defaultsNote(motorId, fromCatalog, Character.toUpperCase(tools.charAt(0)) + tools.substring(1));
         }
+    }
+
+    @Override
+    String defaultSourceId() {
+        return motorId;
+    }
+
+    @Override
+    String toolFor(String field) {
+        if (field.equals("speedRpm") || field.startsWith("speedByDistance")) return "the Shot Tuner, docs/guides/finders.md#shot-tuner-the-shot-table";
+        if (field.startsWith("k") || field.equals("nominalVolts") || field.equals("shotIntervalSec")) {
+            return "the Flywheel Finder, docs/guides/finders.md#flywheel-finder-gains-and-recovery";
+        }
+        return null;
     }
 
     /**
@@ -463,8 +484,15 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
      * @return RPM
      */
     static double startingRpm(Motors.Kind kind) {
-        return Math.round(kind.freeRpm * STARTING_SPEED_SHARE / 10.0) * 10.0;
+        return startingRpm(kind.freeRpm);
     }
+
+    static double startingRpm(double topRpm) {
+        return Math.round(topRpm * STARTING_SPEED_SHARE / 10.0) * 10.0;
+    }
+
+    /** The top speed assumed for a custom motor whose speed is not known (a bare FTC motor): 6000 RPM. */
+    static final double GENERAL_TOP_RPM = 6000;
 
     /** The share of the motor's top speed a launcher starts at with no speedRpm written (0.6). */
     static final double STARTING_SPEED_SHARE = 0.6;
@@ -474,7 +502,11 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
      * the parts catalog's top speed (free RPM x counts per turn / 60). A goBILDA 6000 RPM motor: {1.17, 0.117, 0, 11.70}.
      */
     static double[] startingGains(Motors.Kind kind) {
-        return Flywheel.startingPidf(kind.freeRpm * kind.countsPerRev / 60.0);
+        return startingGains(kind.countsPerRev, kind.freeRpm);
+    }
+
+    static double[] startingGains(double countsPerRev, double topRpm) {
+        return Flywheel.startingPidf(topRpm * countsPerRev / 60.0);
     }
 
     private static double round(double v, int places) {
@@ -1012,7 +1044,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     @Override
     void simLines(List<String> out, TunableSection t) {
         String feederLine = indexer != null ? ", feeder=" + indexer.device : "";
-        out.add(fmt("motor.%s = flywheel, part=%s%s, shotDrop=0.15", device, motorId, feederLine));
+        out.add(fmt("motor.%s = flywheel, %s%s, shotDrop=0.15", device, motorWords(motorId, "gobilda-5203-6000"), feederLine)
+                + simTodo(motorId));
         // On a turret robot the flywheel turns with the turret (the shots go where the turret points).
         if (looks.isEmpty() && simOnTurret != null) {
             out.add(fmt("shape.%s = flywheel, on=%s, at=-1,0,2, size=4x2x4, motor=%s   # TODO measure", device, simOnTurret, device));
@@ -1022,7 +1055,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         if (!looks.isEmpty()) lookLines(out, t);
         // A hood with shotAngles(...): the simulated shot angle follows the hood servo.
         TunableSection hoodSection = hood == null ? null : hood.simSection != null ? hood.simSection
-                : TunableSection.of(robot == null ? null : robot.tunablesClass(), hood.name());
+                : TunableSection.forFile(robot == null ? null : robot.tunablesClass(), hood.name());
         String hoodWords = hood == null ? "" : hood.shootWords(hoodSection);
         double angle = !hoodWords.isEmpty() ? hood.homeShotAngle(hoodSection) : shotAngleDeg;
         String hoodTodo = hood != null && hoodWords.isEmpty()
