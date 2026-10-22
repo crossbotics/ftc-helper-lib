@@ -67,6 +67,28 @@ public class AimRecipes {
         }
     }
 
+    /** The numbers for the shoot-on-the-move recipe (its own set: it is off until tuned on a real robot). */
+    public static class MovingShotNumbers {
+        // recipe: tunables-moving-shot
+        /** Shooting while the robot drives (Tunables.java). Needs odometry. Off until tuned. */
+        public static class Aim {
+            public static double goalX = -58, goalY = 55;
+            public static boolean mirrorForRed = false;
+            // ON only after testing on the real robot (and a button can switch it off in a match).
+            public static boolean shootOnMove = true;
+            // Seconds a piece is in the air, measured with a slow-motion video: count the frames from
+            // leaving the launcher to reaching the goal, divide by the video's frames per second.
+            // Longer shots fly longer: flightSecPerIn adds that much per inch (0 = the same everywhere).
+            public static double flightSec = 0.8, flightSecPerIn = 0;
+            public static double maxLeadIn = 24;       // never lead more than this (a bad speed reading)
+            // Where the shooter is from the robot's centre (a turret's pivot), and a camera on the body:
+            // inches forward (+) and left (+). A camera on the turret sits at the turret's pivot.
+            public static double shooterForwardIn = -4, shooterLeftIn = 0;
+            public static double cameraForwardIn = 7, cameraLeftIn = 0;
+        }
+        // end recipe
+    }
+
     /** The numbers for the speed-trim recipe (its own set, so the other recipes stay short). */
     public static class TrimNumbers {
         public static class Drive {
@@ -166,6 +188,12 @@ public class AimRecipes {
             // Gamepad 2 buzzes while the aim is close: the closer, the stronger (Tunables.Aim.rumbleDeg).
             // It works for a turret that follows the goal and for whole-robot aim.
             g2.rumbleWhenAimed();
+            // end recipe
+
+            // recipe: moving-shot-button
+            // Shooting on the move on/off (on from START when Tunables.Aim.shootOnMove = true): if
+            // the shots go wide while driving, switch it off and shoot standing still.
+            g2.a.toggle(robot.aim().movingShotMode()).says("shoot on the move on/off").rumble();
             // end recipe
 
             g2.y.press(fireNectar(robot));

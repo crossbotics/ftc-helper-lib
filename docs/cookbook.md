@@ -1055,6 +1055,47 @@ INIT shows the alliance and this choice. The numbers in
 `Tunables.Aim` are in the tuning menu too: copy tuned values back into `Tunables.java`.
 **More:** [Lesson 9: when the camera loses the goal](tutorials/start/09-shooter-and-camera.md#9-when-the-camera-loses-the-goal-the-odometry), [Lesson 7: odometry](tutorials/start/07-odometry.md).
 
+### How do I shoot while the robot is driving?
+
+**Where:** `Tunables.java` (the numbers), and a button in `Controls.java` to switch it off. The robot
+needs [odometry](modules/robot.md#odometry): it gives the robot's speed. **Off until you tune it on the
+real robot**: measure `flightSec` with a slow-motion video, then test shots while driving.
+
+<!-- recipe: tunables-moving-shot -->
+```java
+/** Shooting while the robot drives (Tunables.java). Needs odometry. Off until tuned. */
+public static class Aim {
+    public static double goalX = -58, goalY = 55;
+    public static boolean mirrorForRed = false;
+    // ON only after testing on the real robot (and a button can switch it off in a match).
+    public static boolean shootOnMove = true;
+    // Seconds a piece is in the air, measured with a slow-motion video: count the frames from
+    // leaving the launcher to reaching the goal, divide by the video's frames per second.
+    // Longer shots fly longer: flightSecPerIn adds that much per inch (0 = the same everywhere).
+    public static double flightSec = 0.8, flightSecPerIn = 0;
+    public static double maxLeadIn = 24;       // never lead more than this (a bad speed reading)
+    // Where the shooter is from the robot's centre (a turret's pivot), and a camera on the body:
+    // inches forward (+) and left (+). A camera on the turret sits at the turret's pivot.
+    public static double shooterForwardIn = -4, shooterLeftIn = 0;
+    public static double cameraForwardIn = 7, cameraLeftIn = 0;
+}
+```
+
+<!-- recipe: moving-shot-button -->
+```java
+// Shooting on the move on/off (on from START when Tunables.Aim.shootOnMove = true): if
+// the shots go wide while driving, switch it off and shoot standing still.
+g2.a.toggle(robot.aim().movingShotMode()).says("shoot on the move on/off").rumble();
+```
+
+**Why:** a piece shot from a moving robot keeps the robot's speed, so it lands to the side (30 in/s for
+0.8 s: 24 in). With `shootOnMove` the turret (or the whole robot) aims at a point that far the other way,
+and the launcher's speed comes from that point's distance. It also brings the camera's picture forward
+to now (the robot turned and moved since it was taken). It works with a turret or whole-robot aim, a
+camera on the turret or on the body, or the odometry alone; tell it where the shooter and the camera
+are. The Driver Station says `Aim: moving shot: lead 12.3 deg, 18 in` while it leads.
+**More:** [Lesson 9: shooting while moving](tutorials/start/09-shooter-and-camera.md#14-extra-shooting-while-moving), [Aim](modules/robot.md#aim).
+
 ### How do I use one shot table per game piece?
 
 **Where:** `Tunables.java` (the tables), then `Controls.java` or `Actions.java` to switch.

@@ -4,8 +4,8 @@
 
 **Goal:** add a flywheel shooter with a feeder, then a camera that aims a turret and picks the shot speed.
 Then the helpers that let the drivers focus on driving and firing: one shot table per game piece, the
-odometry as a backup when the camera loses the goal, aiming the whole robot (no turret), and a buzz
-when the aim is on target.
+odometry as a backup when the camera loses the goal, aiming the whole robot (no turret), a buzz
+when the aim is on target, and shooting while the robot drives.
 
 **You need:** lessons 1 to 6 (the last one: [Your first autonomous](06-first-autonomous.md)); lessons 7 and 8
 are not needed. Skip this lesson if your robot does not shoot. A flywheel
@@ -487,6 +487,68 @@ The first true rule wins, so the most important one is written first. A flash be
 second; the launcher counts each piece it feeds, so `fire(3)` gives three flashes. Blinking stops at 5
 times a second, and the light never changes faster than every 0.1 s: the game rules (R202 J) let the
 referees switch off faster lights. Every way to use it: [Lights](../../modules/robot.md#lights).
+
+## 14. Extra: shooting while moving
+
+Stopping to shoot costs time. But a piece shot from a moving robot **keeps the robot's speed**: driving
+sideways at 30 in/s, a piece that is in the air for 0.8 s lands 30 x 0.8 = 24 in to the side. The fix is
+to aim that far the OTHER way: at a "virtual goal". And a second, smaller fix: the camera's picture is
+a few hundredths of a second old, and the robot has turned since it was taken.
+
+```mermaid
+flowchart LR
+    A["the goal<br>(camera or odometry)"] --> B["bring the picture<br>forward to now"]
+    B --> C["virtual goal = goal<br>- robot speed x flight time"]
+    C --> D["turret (or whole robot)<br>aims at it"]
+    C --> E["launcher speed from<br>its distance"]
+```
+
+The robot needs odometry (lesson 7): it gives the robot's speed and which way it moves. Add these lines
+to the same `Tunables.Aim` class as section 9:
+
+```java
+public static class Aim {
+    // ... goalX, goalY, mirrorForRed as in section 9 ...
+    // Section 14: shooting while moving. OFF until you tested it on the real robot.
+    public static boolean shootOnMove = true;
+    public static double flightSec = 0.8;        // seconds in the air: measure it (below)
+    public static double flightSecPerIn = 0;     // extra seconds per inch (longer shots fly longer)
+    public static double maxLeadIn = 24;         // never aim more than this far off the goal
+    // Where the shooter is from the robot's centre (a turret's pivot): inches forward and left.
+    public static double shooterForwardIn = -4, shooterLeftIn = 0;
+    // A camera on the robot's body (not on the turret): where it is, inches forward and left.
+    public static double cameraForwardIn = 7, cameraLeftIn = 0;
+}
+```
+
+That is all: the turret (or whole-robot aim, section 10), `isAimed()` and the launcher's speed all use
+the virtual goal. The Driver Station shows `Aim: moving shot: lead 12.3 deg, 18 in` while the robot
+moves; standing still, nothing changes. A button can switch it off in a match (`Controls.java`):
+
+```java
+g2.a.toggle(robot.aim().movingShotMode()).says("shoot on the move on/off").rumble();
+```
+
+**Measure `flightSec`** with a phone's slow-motion video (240 frames a second): film a shot from the
+side, count the frames from the piece leaving the launcher to reaching the goal, and divide by 240
+(192 frames = 0.8 s). Do it at a near and a far spot. About the same time: use one `flightSec`. Longer
+far away: `flightSecPerIn` = (far time - near time) / (far inches - near inches), and `flightSec` = near
+time - `flightSecPerIn` x near inches.
+
+**Where things are matters.** Measure from the robot's centre (the odometry's centre) to the turret's
+pivot (or, with no turret, to where the piece leaves the launcher): `shooterForwardIn` (+ = in front),
+`shooterLeftIn` (+ = left). A camera on the turret is taken to sit at the pivot; a camera on the body at
+`cameraForwardIn`, `cameraLeftIn`. A launcher to one side of a robot with no turret makes the robot turn
+a little more, so the launcher's own line passes through the goal. While shooting on the move is on,
+these numbers do the job of `cameraOffset`: leave `cameraOffset` at 0 unless shots still go to one side
+standing still.
+
+**It must be tuned on the real robot.** Start with `shootOnMove = true` and the robot standing still:
+the shots must land as before. Then drive slowly sideways past the goal and shoot: misses on the side
+the robot drives toward mean `flightSec` is too short; on the other side, too long. Then faster. If the
+robot drives and turns at once and the shots go wide, keep turning slow while firing. Off
+(`shootOnMove = false`, the default) changes nothing. The math, for your own code:
+[MovingShot](../../modules/vision.md#movingshot).
 
 ## Try it in the simulator
 

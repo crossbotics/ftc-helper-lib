@@ -6,6 +6,7 @@ import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
 import com.crossbotics.ftchelper.util.Angles;
 import com.crossbotics.ftchelper.util.FieldPose;
 import com.crossbotics.ftchelper.vision.AimController;
+import com.crossbotics.ftchelper.vision.MovingShot;
 import com.crossbotics.ftchelper.vision.TargetObservation;
 import java.util.function.DoubleSupplier;
 import java.util.function.LongSupplier;
@@ -27,6 +28,10 @@ import java.util.function.LongSupplier;
  *     public static double turnKp = 0.02, turnKd = 0.002, maxTurnPower = 0.5, minTurnPower = 0, toleranceDeg = 2;
  *     public static double cameraOffset = 0, rumbleDeg = 4;
  *     public static double maxGoalDistance = 170, cameraOdometryAgree = 6;   // inches: odometry sanity checks
+ *     public static boolean shootOnMove = false;              // shooting while driving: off until tuned
+ *     public static double flightSec = 0.8, flightSecPerIn = 0, maxLeadIn = 24;
+ *     public static double shooterForwardIn = 0, shooterLeftIn = 0;   // the shooter (turret pivot) from the centre
+ *     public static double cameraForwardIn = 0, cameraLeftIn = 0;     // a camera on the body, from the centre
  * }
  * }</pre>
  *
@@ -57,6 +62,16 @@ import java.util.function.LongSupplier;
  * {@code maxGoalDistance} (170 in: more than the field allows, so the pose is wrong), and warns when the
  * camera and the odometry disagree by more than {@code cameraOdometryAgree} (6 in). INIT shows the
  * alliance and the {@code mirrorForRed} choice, so a wrong one is seen before the match.
+ *
+ * <p><b>Shooting on the move</b> ({@code shootOnMove = true}, off by default: tune it on a real robot
+ * first). The goal every part gets ({@link #goal()}, the turret's, the launcher's distance) is then
+ * corrected for the robot's motion: a camera picture is brought forward to now (the robot turned and
+ * moved since it was taken), and the aim leads the shot by the robot's speed x the flight time, because
+ * the piece keeps the robot's speed (see {@link MovingShot}). Needs odometry (the speed comes from it).
+ * It works for a turret that follows the goal (camera on the turret or on the body, or odometry only)
+ * and for whole-robot aim with a fixed shooter; the shooter and the camera need not be at the robot's
+ * centre ({@code shooterForwardIn, shooterLeftIn, cameraForwardIn, cameraLeftIn}).
+ * {@link #movingShotMode()} switches it with a button.
  *
  * Docs: docs/modules/robot.md (section "Aim"). Tutorial: docs/tutorials/start/09-shooter-and-camera.md
  */
@@ -98,6 +113,17 @@ public final class Aim {
     // For the Driver Station: what the whole-robot aim used this loop.
     private Source lastSource = Source.NONE;
     private boolean driverTurning = false;
+    // Shooting on the move: on from START when Tunables.Aim.shootOnMove = true; a button may switch it.
+    private final Mode movingShot;
+    // The flight time (seconds, and extra seconds per inch), the largest lead (inches), and the camera's
+    // picture age when the team writes one (NaN: the camera's own timestamp, the normal case).
+    private final DoubleSupplier flightSec, flightSecPerIn, maxLeadIn, cameraLatencyMs;
+    // Where the shooter (a turret's pivot, or a fixed launcher's exit) and a camera on the body are,
+    // from the robot's centre: inches forward and left. Used while shooting on the move.
+    private final double shooterForwardIn, shooterLeftIn, cameraForwardIn, cameraLeftIn;
+    // The last lead worked out (for the Driver Station), and when (nanoseconds).
+    private MovingShot.Result lastLead = null;
+    private long lastLeadNanos = 0;
 
     Aim(RobotDefinition robot, TunableSection t) {
         this.robot = robot;
@@ -115,6 +141,15 @@ public final class Aim {
         toleranceDeg = live(t, "toleranceDeg", 2, 0.5);
         cameraOffset = live(t, "cameraOffset", 0, 0.5);
         rumbleDeg = live(t, "rumbleDeg", 4, 0.5);
+        movingShot = new Mode("Shoot on the move", t.has("shootOnMove") && t.flag("shootOnMove", false));
+        flightSec = live(t, "flightSec", 0, 0.05);
+        flightSecPerIn = live(t, "flightSecPerIn", 0, 0.001);
+        maxLeadIn = live(t, "maxLeadIn", 24, 2);
+        cameraLatencyMs = t.has("cameraLatencyMs") ? live(t, "cameraLatencyMs", 0, 5) : () -> Double.NaN;
+        shooterForwardIn = t.has("shooterForwardIn") ? t.number("shooterForwardIn", 0) : 0;
+        shooterLeftIn = t.has("shooterLeftIn") ? t.number("shooterLeftIn", 0) : 0;
+        cameraForwardIn = t.has("cameraForwardIn") ? t.number("cameraForwardIn", 0) : 0;
+        cameraLeftIn = t.has("cameraLeftIn") ? t.number("cameraLeftIn", 0) : 0;
     }
 
     // A number from Tunables.Aim that the tuning menu can change. No section: the library's default
@@ -157,12 +192,13 @@ public final class Aim {
         return seen != null ? seen : fromOdometry();
     }
 
-    // This camera's goal, only if the picture is fresh and has a direction; else null.
+    // This camera's goal, only if the picture is fresh and has a direction; else null. While shooting
+    // on the move: brought forward to now and led for the flight (see moving()).
     TargetObservation cameraGoal(Camera camera) {
         if (camera == null) return null;
         TargetObservation g = camera.goal();
         if (g == null || !g.hasBearing() || !g.isFresh(clock.getAsLong(), cameraMaxAgeMs)) return null;
-        return g;
+        return moving(g, camera);
     }
 
     /**
@@ -176,7 +212,7 @@ public final class Aim {
         TargetObservation o = odometryGoalUnchecked();
         // A goal farther than the field allows: the pose is wrong. Aiming there would be worse than not aiming.
         if (o == null || o.distanceIn > maxGoalDistanceIn) return null;
-        return o;
+        return moving(o, null);
     }
 
     /**
@@ -242,6 +278,80 @@ public final class Aim {
             if (m instanceof Camera && ((Camera) m).hasGoal()) return (Camera) m;
         }
         return null;
+    }
+
+    // ----------------------------- shooting on the move -----------------------------
+
+    /**
+     * Shooting on the move: while it is on, the goal every part gets is corrected for the robot's
+     * motion (the camera picture's age, and the lead for the flight time; see {@link MovingShot}). On
+     * from START when {@code Tunables.Aim.shootOnMove = true}; off (and nothing changes) otherwise. A
+     * button can switch it: {@code g1.y.toggle(robot.aim().movingShotMode())}. Needs odometry.
+     */
+    public Mode movingShotMode() {
+        return movingShot;
+    }
+
+    /**
+     * The lead worked out last (degrees and inches, see {@link MovingShot.Result}), or null if none in
+     * the last {@code cameraMaxAgeMs} (shooting on the move off, no goal, no odometry).
+     */
+    public MovingShot.Result lead() {
+        if (lastLead == null || (clock.getAsLong() - lastLeadNanos) / 1e6 > cameraMaxAgeMs) return null;
+        return lastLead;
+    }
+
+    /**
+     * True while shooting on the move is on and the robot moves (faster than 2 in/s, or turning faster
+     * than 5 degrees per second): the aim is being led now.
+     */
+    public boolean isMovingShot() {
+        PoseTracker tr = robot.odometry();
+        return movingShot.isOn() && tr != null && tr.isReady()
+                && (tr.speedInPerSec() > 2 || Math.abs(tr.turnDegPerSec()) > 5);
+    }
+
+    // The goal corrected for the robot's motion while shooting on the move (else unchanged), in the
+    // form its users expect (see Turret.update, aimErrorDeg, and assistTurn here):
+    // - a robot with a turret that follows the goal: the bearing is the turret angle to go to (the
+    //   odometry's, a camera on the body's), or how far to turn the turret (a camera ON that turret);
+    // - no following turret (whole-robot aim, a fixed shooter): how far to turn the whole robot.
+    // The distance is from the shooter (Tunables.Aim.shooterForwardIn, shooterLeftIn) to the virtual goal.
+    // camera: the camera that saw it (null: the odometry's goal, measured from the robot's centre).
+    private TargetObservation moving(TargetObservation g, Camera camera) {
+        if (!movingShot.isOn()) return g;
+        PoseTracker tr = robot.odometry();
+        if (tr == null || !tr.isReady()) return g;
+        Turret turret = followingTurretInRobot();
+        boolean onTurret = turret != null && camera != null && turret.carries(camera);
+        double turretDeg = onTurret ? turret.angle() : 0;
+        // How old the goal is: the odometry's is worked out now; a camera's is as old as its picture
+        // (its own timestamp), unless Tunables.Aim.cameraLatencyMs says otherwise.
+        double latencyMs = g.fromOdometry() ? 0
+                : !Double.isNaN(cameraLatencyMs.getAsDouble()) ? cameraLatencyMs.getAsDouble()
+                : Math.max(0, g.ageMs(clock.getAsLong()));
+        double turn = tr.turnDegPerSec();
+        if (!g.hasDistance()) {
+            // No distance: only the direction can be corrected (the robot's turn since the picture).
+            return new TargetObservation(g.id, g.name, g.bearingDeg - turn * latencyMs / 1000.0, g.distanceIn, g.timeNanos);
+        }
+        // Where the goal was from the robot's centre: the odometry's from the centre; a camera on the
+        // turret sits at the turret's pivot (the shooter) and faces where the turret points; a camera
+        // on the body at Tunables.Aim.cameraForwardIn, cameraLeftIn, facing forward.
+        double[] at = g.fromOdometry() ? MovingShot.seenFrom(g.bearingDeg, g.distanceIn, 0, 0, 0)
+                : onTurret ? MovingShot.seenFrom(g.bearingDeg, g.distanceIn, shooterForwardIn, shooterLeftIn, turretDeg)
+                : MovingShot.seenFrom(g.bearingDeg, g.distanceIn, cameraForwardIn, cameraLeftIn, 0);
+        double[] v = MovingShot.toRobotFrame(tr.velocityX(), tr.velocityY(), tr.pose().headingDeg);
+        MovingShot shot = new MovingShot().shooterAt(shooterForwardIn, shooterLeftIn)
+                .flightSec(flightSec.getAsDouble(), flightSecPerIn.getAsDouble()).maxLeadIn(maxLeadIn.getAsDouble());
+        if (turret != null) shot.onTurret();
+        MovingShot.Result r = shot.solve(at[0], at[1], v[0], v[1], turn, latencyMs / 1000.0);
+        lastLead = r;
+        lastLeadNanos = clock.getAsLong();
+        // A camera on the turret: how far to turn it from where it points now.
+        double bearing = onTurret ? Angles.wrapDegrees(r.aimDeg - turretDeg) : r.aimDeg;
+        // Same picture time: a turret uses each picture once, and the picture's age stays honest.
+        return new TargetObservation(g.id, g.name, bearing, r.distanceIn, g.timeNanos);
     }
 
     // ----------------------------- the whole robot aims -----------------------------
@@ -381,6 +491,15 @@ public final class Aim {
     // INIT: the alliance and how the goal point is used for it, so a wrong mirrorForRed is seen before
     // the match; and a loud warning when the odometry backup cannot work (no pose).
     void addInitTelemetry(RobotTelemetry t) {
+        if (movingShot.isOn()) {
+            // Shooting on the move: say it is on and with which numbers, so a wrong one is seen.
+            if (robot.odometry() == null) t.warn("Aim: shootOnMove needs an odometry(...) line (the robot's speed): it does nothing");
+            else if (flightSec.getAsDouble() <= 0 && flightSecPerIn.getAsDouble() <= 0) {
+                t.warn("Aim: shootOnMove with flightSec = 0: only the camera picture's age is corrected, no lead");
+            }
+            t.line("Moving shot", Module.fmt("ON: flight %.2f s + %.4f s/in, lead at most %.0f in", flightSec.getAsDouble(),
+                    flightSecPerIn.getAsDouble(), maxLeadIn.getAsDouble()));
+        }
         if (!hasGoalPoint || robot.odometry() == null) return;
         String rule = mirrorForRed ? "mirrorForRed = true: RED mirrors x" : "mirrorForRed = false: the same numbers from each wall";
         t.line("Aim", Module.fmt("%s, goal x %.0f, y %.0f in (%s)", robot.alliance(), goalXNow(), goalY, rule));
@@ -395,6 +514,15 @@ public final class Aim {
         if (!problem.isEmpty()) t.warn("Aim odometry: " + problem);
         String apart = disagreement();
         if (!apart.isEmpty()) t.warn("Aim: " + apart);
+        if (movingShot.isOn()) {
+            // Works the lead out for this loop (goal() leads it), then says it.
+            goal();
+            MovingShot.Result r = lead();
+            if (isMovingShot() && r != null) {
+                t.line("Aim", Module.fmt("moving shot: lead %.1f deg, %.0f in", r.leadDeg, r.leadIn));
+            }
+            t.debug("Aim lead", r == null ? "no goal" : r.toString());
+        }
         if (!mode.isOn()) return;
         if (driverTurning) {
             t.line("Aim", "the driver is turning");

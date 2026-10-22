@@ -146,6 +146,14 @@ final class SimOdometry {
         stepNanos = System.nanoTime();
     }
 
+    // The device's speed in ITS FIELD frame (X, Y inches per second), like a real Pinpoint and OTOS: they
+    // give the speed over the field, not turned with the robot (Road Runner's localizers turn it back by
+    // the heading). vX, vY are forward and left, so turn them by the heading.
+    private synchronized double[] worldVel() {
+        double h = Math.toRadians(devH);
+        return new double[] {vX * Math.cos(h) - vY * Math.sin(h), vX * Math.sin(h) + vY * Math.cos(h)};
+    }
+
     // The device pose now: X, Y (inches), heading (deg), moved on from the last step by its speed.
     private synchronized double[] devNow() {
         double age = stepNanos == 0 ? 0 : Math.max(0, Math.min(MAX_AHEAD_SEC, (System.nanoTime() - stepNanos) / 1e9));
@@ -242,8 +250,8 @@ final class SimOdometry {
         @Override public double getPosX(DistanceUnit unit) { return unit.fromInches(devNow()[0]); }
         @Override public double getPosY(DistanceUnit unit) { return unit.fromInches(devNow()[1]); }
         @Override public double getHeading(AngleUnit unit) { return unit.fromDegrees(devNow()[2]); }
-        @Override public double getVelX(DistanceUnit unit) { synchronized (SimOdometry.this) { return unit.fromInches(vX); } }
-        @Override public double getVelY(DistanceUnit unit) { synchronized (SimOdometry.this) { return unit.fromInches(vY); } }
+        @Override public double getVelX(DistanceUnit unit) { return unit.fromInches(worldVel()[0]); }
+        @Override public double getVelY(DistanceUnit unit) { return unit.fromInches(worldVel()[1]); }
         @Override public double getHeadingVelocity(UnnormalizedAngleUnit unit) { synchronized (SimOdometry.this) { return unit.fromDegrees(vH); } }
         @Override public DeviceStatus getDeviceStatus() { return DeviceStatus.READY; }
         // A pod the code reverses is wired to count backward (like the dead wheels).
@@ -279,7 +287,7 @@ final class SimOdometry {
         @Override public void resetTracking() { setDevice(0, 0, 0); }
         // The OTOS's own axes: x = right, y = forward (the device pose here is X forward, Y left).
         @Override public Pose2D getPosition() { double[] d = devNow(); return new Pose2D(-d[1], d[0], d[2]); }
-        @Override public Pose2D getVelocity() { synchronized (SimOdometry.this) { return new Pose2D(-vY, vX, vH); } }
+        @Override public Pose2D getVelocity() { double[] w = worldVel(); synchronized (SimOdometry.this) { return new Pose2D(-w[1], w[0], vH); } }
         @Override public void setPosition(Pose2D pose) { setDevice(pose.y, -pose.x, pose.h); }
         @Override public String getDeviceName() { return "Simulated SparkFun OTOS"; }
         @Override public Manufacturer getManufacturer() { return Manufacturer.Other; }

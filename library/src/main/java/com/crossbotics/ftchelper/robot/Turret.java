@@ -123,6 +123,12 @@ public final class Turret extends Module<Turret> {
         return follows();
     }
 
+    // For Aim (shooting on the move): true if this camera turns with this turret, so its pictures are
+    // seen from where the turret points.
+    boolean carries(Camera c) {
+        return c != null && camera == c && cameraOnTurret;
+    }
+
     /** The camera is on the robot's body, not on the turret. */
     public Turret cameraOnBody() {
         cameraOnTurret = false;
