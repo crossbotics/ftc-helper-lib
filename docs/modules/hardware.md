@@ -70,8 +70,21 @@ Gives the error text that `get` uses. You rarely need it.
 ### `Hw.batteryVolts(hardwareMap)`
 
 The battery's voltage now (the lowest hub reading; NaN with no voltage sensor). Each call asks the hubs
-(a few milliseconds), so read it a few times a second, not every loop. The flywheel's
+and **waits** for them (a few milliseconds): fine in INIT, not in the loop. In the loop use
+`Hw.batteryReader` (below).
+
+### `Hw.batteryReader(hardwareMap)`
+
+The battery for code that runs every loop: a `DoubleSupplier` that answers at once with the latest
+reading and asks the hubs again (at most every `BATTERY_READ_SEC`, 0.25 s) on the library's helper
+thread ([non-blocking](../guides/non-blocking.md)). NaN before the first answer, with no voltage sensor,
+or when the last answer is older than `BATTERY_STALE_SEC` (2 s). The flywheel's
 [battery compensation](launcher.md#battery-compensation) uses it.
+
+```java
+DoubleSupplier battery = Hw.batteryReader(hardwareMap);   // once, in INIT
+double volts = battery.getAsDouble();                      // every loop: never waits
+```
 
 ---
 

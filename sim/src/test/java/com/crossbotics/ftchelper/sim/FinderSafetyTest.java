@@ -145,6 +145,8 @@ public class FinderSafetyTest {
         EXPECTED.put("Cookbook Leave the Start", "\"pinpoint\"");
         EXPECTED.put("Cookbook Odometry Tuner", "\"pinpoint\"");
         EXPECTED.put("Cookbook Shot Tuner", "\"pinpoint\"");
+        // The cookbook's Piece Tuner uses the game-pieces recipe robot (CookbookTest runs it on its own file).
+        EXPECTED.put("Cookbook Piece Tuner", "\"indexer\"");
     }
 
     @Test public void everyExampleStartsAndStopsCleanly() throws Exception {

@@ -109,7 +109,9 @@ gamepad 1 with `oneDriver = true`, as in the goBILDA bot:
 | RB | fire one: spins up if needed, feeds as soon as it is at speed |
 | RB held | keeps firing, one piece after another; let go and no more are fed |
 | D-pad up / down | speed + / - `stepRpm`; with speed from distance (below), the speed trim + / - 1% |
-| D-pad down held 1 s | back to `speedRpm` (no trim) |
+| D-pad up / down held | one more step every 0.25 s (after half a second), for a big change |
+| D-pad down double-tap | back to `speedRpm` (no trim) |
+| D-pad up double-tap | use last time's trim (only when the Driver Station offers it at INIT) |
 
 Spinning up early with LB saves time: the wheel is ready when the shot is lined up. The goBILDA bot adds
 one job of its own, Y to fire all three: `g1.y.press(Actions.fireAll(robot)).says("fire all");`
@@ -237,11 +239,14 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
   ```
 
   `double[][]` is a table of numbers: a list of rows, each row in `{ }`. Each row is `{inches, rpm}`.
-  Between rows the speed is blended. With no goal in view, it keeps the last
+  Between rows the speed is blended: at 36 in, halfway between the 24 and 48 rows, it is halfway
+  between their speeds (2375). With no goal in view, it keeps the last
   speed (a sudden change would spoil the next shot); before the goal is first seen, it uses `speedRpm`.
-  Fill the rows from real shots with the [Shot Tuner](../../guides/finders.md#shot-tuner-the-shot-table):
-  at each distance shoot 3-5 at a speed, mark each A = HIT or B = MISS, try another speed, and X keeps
-  the speed with the best hit ratio. It shows the whole line to copy: `public static double[][] speedByDistance = {{24, 2200}, {48, 2550}};   // in Tunables.Launcher`.
+  Fill the rows from real shots with the [Shot Tuner](../../guides/finders.md#shot-tuner-the-shot-table).
+  Its buttons are all on **gamepad 1**: at each distance shoot 3-5 at a speed (RB), mark each A = HIT or
+  B = MISS, try another speed (D-pad), and X keeps the speed with the best **hit ratio** (hits out of
+  shots: 4 in out of 5 beats 2 out of 3). Marked one wrong? Left stick click takes the last mark back.
+  **Hold BACK 1 s** deletes the saved point where the robot is. It shows the whole line to copy: `public static double[][] speedByDistance = {{24, 2200}, {48, 2550}};   // in Tunables.Launcher`.
   Its file ([the cookbook recipe](../../cookbook.md#how-do-i-build-a-shot-table-speed-for-each-distance))
   needs one method that names your robot (the turret robot's
   [ShotTuner.java](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/ShotTuner.java)):
@@ -281,8 +286,9 @@ The Driver Station shows `Shot table: POLLEN, 48 in (camera)`. A name with no ta
 table in use and warns: `Launcher: no shot table "nectr" (Tunables.Launcher has: nectar, pollen)`.
 
 **Fill each table with the Shot Tuner** ([its file](../../cookbook.md#how-do-i-build-a-shot-table-speed-for-each-distance)).
-Press **Y** until `> Table`, choose with the D-pad, load that piece, and tune as before (3-5 shots per
-speed, A = HIT, B = MISS, X saves the best). The screen counts each table's points
+Press **Y** (gamepad 1) until `> Table`, pick the table with **D-pad left / right**, load that piece,
+and tune as before (3-5 shots per speed, A = HIT, B = MISS, X saves the best, hold BACK 1 s deletes a
+point). The screen counts each table's points
 (`Points: POLLEN 4, NECTAR 2  (4-6 per table)`), so you know when you are done. Each table gets its own line to copy, e.g.
 `public static double[][] speedByDistanceNectar = {{24, 2400}, {48, 2800}};   // in Tunables.Launcher`.
 **Copy the lines into `Tunables.java`** (replace the line with the same name): the robot uses the file,
@@ -290,24 +296,36 @@ not the tuner's screen. They are also saved on the Control Hub when you press ST
 
 ### Speed trim and a low battery
 
-Some matches every shot lands a bit short: the battery is lower than when you tuned, or the wheel is
-worn. The operator can fix it on the spot: with the speed from the distance, **D-pad up / down** makes
-every shot 1% faster / slower than the table says (all tables alike), and **holding D-pad down 1 s**
-goes back to 0. The Driver Station shows `Speed trim: +3%`. It stops at +/- 15%
-(`trimMaxPercent`; `trimStepPercent` is one press) and starts at 0 at every INIT. Code and actions can
-trim too: `robot.launcher.trimPercent(+2)`. The Shot Tuner never uses the trim, so the tables stay clean.
+Some matches every shot lands a bit short (or long): the wheel is worn, the balls are softer. The
+operator can fix it on the spot: with the speed from the distance, **D-pad up / down** makes every shot
+1% faster / slower than the table says (all tables alike); hold it and it keeps going, one step every
+0.25 s. **Double-tap D-pad down** goes back to 0. The launcher's first line on the Driver Station says
+`Speed trim: +3%  READY`. It stops at +/- 15% (`trimMaxPercent`; `trimStepPercent` is one press), and
+never asks for more than the motor's top speed (`Speed trim: +3% (motor limit)`: more trim up does
+nothing). Code and actions can trim too: `robot.launcher.trimPercent(+2)`. The Shot Tuner never uses
+the trim, so the tables stay clean.
 
-The trim is a fix for one match. If you trim the same way match after match, the table is off: tune it
-again with the Shot Tuner (or multiply its speeds by the trim) and **copy the new line into
-`Tunables.java`**.
+The trim starts at 0 at every INIT. The one you used last time is remembered (until the robot app
+restarts) and offered, never put back by itself: at INIT the Driver Station says
+`Trim last time: +3% (double-tap D-pad up after START to use it)`.
 
-The launcher also helps the battery by itself. The hub's F gain gives the same **power** for a speed,
-and the same power on a weaker battery spins the wheel slower; the I gain catches up, but slowly, so
-the wheel takes longer to get back to speed after a shot. With `kF` set, every 0.25 s the launcher
-reads the battery and scales F by `nominalVolts` / the battery now (tuned at 12.6 V, at 11.5 V: F x
-1.10), so the wheel gets the same push as when you tuned it. Under 11.5 V the Driver Station warns
-`battery 11.2 V: low`: swap the battery. To switch it off: `public static boolean batteryCompensation = false;`
-in `Tunables.Launcher`.
+**With `kF` set, the battery is already taken care of** (below). So a trim you need again and again
+points at the wheel or the balls, not the battery: the table is off. Make the trim part of the table
+and go back to no trim. Say it was +3% all season: every speed in the table times 1.03, so the row
+`{48, 2550}` becomes `{48, 2627}` (2550 x 1.03 = 2626.5), and the same for every row (and every
+table). **Copy the new lines into `Tunables.java`**, then trim back to 0. (Or tune the table again with
+the Shot Tuner.)
+
+The launcher helps the battery by itself. The hub's F gain gives the same **power** for a speed, and
+the same power on a weaker battery spins the wheel slower; the I gain catches up, but slowly, so the
+wheel takes longer to get back to speed after a shot. With `kF` set, every 0.25 s the launcher reads
+the battery and scales F by `nominalVolts` / the battery: tuned at 12.6 V, at 11.5 V it is F x 1.10
+(12.6 / 11.5), so the wheel gets the same push as when you tuned it. Without a `nominalVolts` line it
+uses 12.8 V (a charged battery under load). The battery it uses is the highest reading of the last
+second: while the drive pulls hard the battery dips for a moment, and a dip is not a weaker battery
+(F jumping up would push the wheel past its speed). The reading is made on the library's helper thread,
+so the loop never waits for the hubs. Under 11.5 V the Driver Station warns `battery 11.2 V: low`: swap
+the battery. To switch it off: `public static boolean batteryCompensation = false;` in `Tunables.Launcher`.
 
 ## 9. When the camera loses the goal: the odometry
 
@@ -541,8 +559,8 @@ give each a `looks(...)` shape in `Robot.java` ([Lesson 1: Draw your robot from 
 
 ## Where next
 
-- This is the last lesson. The main track is lessons 1 to 6, plus the lessons your robot needs. Not
-  done yet: [Lesson 7: Odometry: where am I on the field?](07-odometry.md) (the robot knows its place
+- This is the last lesson. The main track is lessons 1 to 6, plus the lessons your robot needs. If you
+  skipped them: [Lesson 7: Odometry: where am I on the field?](07-odometry.md) (the robot knows its place
   on the field, and autonomous drives to field points), and
   [Lesson 8: Paths with Pedro Pathing](08-paths-with-pedro.md) (smooth curved paths in autonomous).
 - [The autonomous builder](../../guides/autonomous-builder.md): everything an autonomous can do (fire

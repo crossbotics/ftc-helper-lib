@@ -1,6 +1,5 @@
 package com.crossbotics.ftchelper.examples.cookbook;
 
-import com.crossbotics.ftchelper.finders.PieceTunerOpMode;
 import com.crossbotics.ftchelper.robot.ControlMap;
 import com.crossbotics.ftchelper.robot.Drive;
 import com.crossbotics.ftchelper.robot.Indexer;
@@ -19,6 +18,8 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
  * Cookbook: game pieces (docs/cookbook.md#game-pieces). Which piece is in the robot, how many it holds,
  * and which one fires next, from a colour sensor, a distance sensor or a second camera.
  *
+ * <p>The Piece Tuner is its own file: PieceTuner.java.
+ *
  * <p>The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
  */
@@ -36,7 +37,8 @@ public class PieceRecipes {
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
 
             // recipe: pieces-count
-            // At the top of the class: public Pieces pieces;   Here in define():
+            // At the top of the class: public Pieces pieces;   Here in define(), ABOVE the intake line
+            // (each loop the count is then up to date before the intake asks "full?"):
             // the kinds of piece (BIOBUZZ: yellow POLLEN, red and blue NECTAR), a sensor where they
             // come in, one at the "ready to fire" slot (optional), the most the rules allow, the preload.
             pieces = add(Pieces.kinds("POLLEN", "RED_NECTAR", "BLUE_NECTAR")
@@ -47,8 +49,9 @@ public class PieceRecipes {
             // end recipe
 
             // recipe: intake-stops-when-full
-            // ADD .stopsWhen(...) to the intake line you already have (do not write a second intake line).
-            // It does not pull in a 5th piece ("() ->": asked every loop). Pushing out still works.
+            // ADD .stopsWhen(...) to the intake line you already have (do not write a second intake line),
+            // and put the Pieces line above the intake line. It does not pull in a 5th piece
+            // ("() ->": asked every loop). Pushing out still works.
             intake = add(Intake.motor("intake").stopsWhen(() -> pieces.isFull()));
             // end recipe
 
@@ -104,16 +107,4 @@ public class PieceRecipes {
             // end recipe
         }
     }
-
-    // recipe: piece-tuner
-    // The Piece Tuner: each sensor's readings, and the numbers for Tunables.java.
-    @TeleOp(name = "Cookbook Piece Tuner", group = "Finders")
-    @Disabled   // delete this line in your copy, or you will not see it
-    public static class PieceTuner extends PieceTunerOpMode {
-        @Override
-        protected RobotDefinition robot() {
-            return new Robot();     // your Robot.java: the tuner finds its piece sensors
-        }
-    }
-    // end recipe
 }

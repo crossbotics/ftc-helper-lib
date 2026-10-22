@@ -113,8 +113,9 @@ public class AimRecipes {
         @Override
         protected void buttons(TrimRobot robot, Pad g1, Pad g2) {
             // recipe: speed-trim
-            // The launcher's own buttons already do it: gamepad 2 D-pad up/down = speed trim +/- 1%,
-            // hold D-pad down 1 s = back to 0. The Driver Station shows "Speed trim: +3%".
+            // The launcher's own buttons already do it: gamepad 2 D-pad up/down = speed trim +/- 1%
+            // (held: 4 steps a second), double-tap D-pad down = back to 0. The Driver Station shows
+            // "Speed trim: +3%  READY" as the launcher's first line.
             // Your own: a bigger step on a button, and a far shot that sets the trim first.
             g2.y.press(() -> robot.launcher.trimPercent(+3)).says("speed trim +3%");
             g2.a.press(Action.named("Far shot +5%")

@@ -266,7 +266,7 @@ public class ActionsAndControlsTest {
         r.setup(new RobotTestKit());
         ButtonPlan plan = ControlMap.makePlan(r, false, true, (g1, g2) -> { });
         String notes = plan.notes().toString();
-        assertTrue(notes, notes.contains("Launcher speed up: no button (G2 D-pad up is taken by Lift)"));
+        assertTrue(notes, notes.contains("Launcher speed up, 4 a second: no button (G2 D-pad up is taken by Lift)"));
     }
 
     @Test public void standardButtonsCanBeSwitchedOff() {

@@ -33,6 +33,8 @@ public class LightRecipes {
             intake = add(Intake.motor("intake"));
             launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer")));
             // recipe: light-add
+            // At the top of Robot.java: import com.crossbotics.ftchelper.robot.Lights;  (and in
+            // Controls.java, for the colors: import com.crossbotics.ftchelper.robot.LightColor;)
             // A goBILDA RGB Indicator Light on a servo port ("Servo" in the robot configuration):
             lights = add(Lights.gobilda("light"));
             // Or a REV Blinkin LED Driver with an LED strip ("REV Blinkin LED Driver" in the configuration):

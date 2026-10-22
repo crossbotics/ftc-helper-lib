@@ -855,7 +855,8 @@ size) goes in `Tunables.java`, measured with the Piece Tuner. All of it: [Pieces
 
 <!-- recipe: pieces-count -->
 ```java
-// At the top of the class: public Pieces pieces;   Here in define():
+// At the top of the class: public Pieces pieces;   Here in define(), ABOVE the intake line
+// (each loop the count is then up to date before the intake asks "full?"):
 // the kinds of piece (BIOBUZZ: yellow POLLEN, red and blue NECTAR), a sensor where they
 // come in, one at the "ready to fire" slot (optional), the most the rules allow, the preload.
 pieces = add(Pieces.kinds("POLLEN", "RED_NECTAR", "BLUE_NECTAR")
@@ -877,8 +878,9 @@ Piece Tuner it reads `"UNKNOWN"`. `robot.pieces.count()`, `robot.pieces.next()` 
 
 <!-- recipe: intake-stops-when-full -->
 ```java
-// ADD .stopsWhen(...) to the intake line you already have (do not write a second intake line).
-// It does not pull in a 5th piece ("() ->": asked every loop). Pushing out still works.
+// ADD .stopsWhen(...) to the intake line you already have (do not write a second intake line),
+// and put the Pieces line above the intake line. It does not pull in a 5th piece
+// ("() ->": asked every loop). Pushing out still works.
 intake = add(Intake.motor("intake").stopsWhen(() -> pieces.isFull()));
 ```
 
@@ -946,14 +948,20 @@ piece picks its table, and both NECTAR colours use the `nectar` table.
 
 ### How do I tune the piece sensors?
 
-**Where:** a new file next to `Robot.java`, e.g. `PieceTuner.java`.
+**Where:** a new file next to `Robot.java`, `PieceTuner.java`. The whole file: its first line is
+`package org.firstinspires.ftc.teamcode;` (Android Studio writes it when you make the file), then:
 
 <!-- recipe: piece-tuner -->
 ```java
+import com.crossbotics.ftchelper.finders.PieceTunerOpMode;
+import com.crossbotics.ftchelper.robot.RobotDefinition;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+
 // The Piece Tuner: each sensor's readings, and the numbers for Tunables.java.
 @TeleOp(name = "Cookbook Piece Tuner", group = "Finders")
 @Disabled   // delete this line in your copy, or you will not see it
-public static class PieceTuner extends PieceTunerOpMode {
+public class PieceTuner extends PieceTunerOpMode {
     @Override
     protected RobotDefinition robot() {
         return new Robot();     // your Robot.java: the tuner finds its piece sensors
@@ -1099,8 +1107,9 @@ public static class Launcher {
 
 <!-- recipe: speed-trim -->
 ```java
-// The launcher's own buttons already do it: gamepad 2 D-pad up/down = speed trim +/- 1%,
-// hold D-pad down 1 s = back to 0. The Driver Station shows "Speed trim: +3%".
+// The launcher's own buttons already do it: gamepad 2 D-pad up/down = speed trim +/- 1%
+// (held: 4 steps a second), double-tap D-pad down = back to 0. The Driver Station shows
+// "Speed trim: +3%  READY" as the launcher's first line.
 // Your own: a bigger step on a button, and a far shot that sets the trim first.
 g2.y.press(() -> robot.launcher.trimPercent(+3)).says("speed trim +3%");
 g2.a.press(Action.named("Far shot +5%")
@@ -1110,11 +1119,13 @@ g2.a.press(Action.named("Far shot +5%")
         .then(robot.launcher::resetTrim));
 ```
 
-**Why:** a battery lower than when you tuned, or a worn wheel, makes every shot a little short. The
-trim (+/- 1% a press, at most 15%, back to 0 at every INIT) fixes it for this match, for every table.
-Trimming the same way every match means the table is off: tune it again with the Shot Tuner and copy the
-new line into `Tunables.java`. Battery compensation (on with `kF`) scales the F gain by `nominalVolts` /
-the battery now, so the wheel gets back to speed after a shot as fast on a low battery.
+**Why:** a worn wheel or softer balls make every shot a little short. The trim (+/- 1% a press, at most
+15% and never past the motor's top speed, back to 0 at every INIT) fixes it for this match, for every
+table. At INIT the Driver Station offers last time's trim (`Trim last time: +3%`): double-tap D-pad up
+after START to use it; it is never applied by itself. Battery compensation (on with `kF`) already scales
+the F gain by `nominalVolts` / the battery (tuned at 12.6 V, at 11.5 V: F x 1.10), so a trim you need
+every match points at the wheel or the balls: the table is off. Make the trim part of it (+3%: every
+speed x 1.03, `{48, 2550}` becomes `{48, 2627}`), copy the lines into `Tunables.java`, and trim back to 0.
 **More:** [Lesson 9: speed trim and a low battery](tutorials/start/09-shooter-and-camera.md#speed-trim-and-a-low-battery), [Launcher](modules/robot.md#speed-trim-and-battery-compensation).
 
 ## Actions
@@ -1794,6 +1805,8 @@ at the top of `Controls.java` (Alt+Enter on a red `LightColor` adds it). All of 
 
 <!-- recipe: light-add -->
 ```java
+// At the top of Robot.java: import com.crossbotics.ftchelper.robot.Lights;  (and in
+// Controls.java, for the colors: import com.crossbotics.ftchelper.robot.LightColor;)
 // A goBILDA RGB Indicator Light on a servo port ("Servo" in the robot configuration):
 lights = add(Lights.gobilda("light"));
 // Or a REV Blinkin LED Driver with an LED strip ("REV Blinkin LED Driver" in the configuration):
@@ -1963,10 +1976,17 @@ Run the **Flywheel Finder** (in the [starter kit](starter-kit.md)), then copy it
 
 ### How do I build a shot table (speed for each distance)?
 
-**Where:** a new file in TeamCode. Run the [Aim Tuner](guides/finders.md#aim-tuner-camera-offset) first. The whole file:
+**Where:** a new file in TeamCode, `ShotTuner.java`. Run the [Aim Tuner](guides/finders.md#aim-tuner-camera-offset) first.
+The whole file: its first line is `package org.firstinspires.ftc.teamcode;` (Android Studio writes it
+when you make the file), then:
 
 <!-- recipe: shot-tuner -->
 ```java
+import com.crossbotics.ftchelper.finders.ShotTunerOpMode;
+import com.crossbotics.ftchelper.robot.RobotDefinition;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+
 // The Shot Tuner: fills Tunables.Launcher.speedByDistance from shots you mark HIT or MISS.
 @TeleOp(name = "Cookbook Shot Tuner", group = "Finders")
 @Disabled   // delete this line in your copy, or you will not see it
@@ -1978,8 +1998,9 @@ public class ShotTuner extends ShotTunerOpMode {
 }
 ```
 
-**Why:** at each distance you shoot 3-5 per speed and mark each HIT (A) or MISS (B); X keeps the speed
-with the best hit ratio. It fills `Tunables.Launcher.speedByDistance` (one line per table to copy), so the
+**Why:** at each distance you shoot 3-5 per speed and mark each HIT (A) or MISS (B), all on gamepad 1
+(left stick click takes the last mark back); X keeps the speed with the best hit ratio (hits out of
+shots). It fills `Tunables.Launcher.speedByDistance` (one line per table to copy), so the
 launcher picks the speed for each distance.
 **More:** [Shot Tuner](guides/finders.md#shot-tuner-the-shot-table).
 

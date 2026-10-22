@@ -53,7 +53,8 @@ public class CookbookTest {
             com.crossbotics.ftchelper.examples.cookbook.MotorFinder.class,
             com.crossbotics.ftchelper.examples.cookbook.DriveTuner.class,
             com.crossbotics.ftchelper.examples.cookbook.OdometryTuner.class,
-            com.crossbotics.ftchelper.examples.cookbook.ShotTuner.class);
+            com.crossbotics.ftchelper.examples.cookbook.ShotTuner.class,
+            com.crossbotics.ftchelper.examples.cookbook.PieceTuner.class);
 
     // Every recipe class: the nested ones in the topic files, and the whole files.
     private static List<Class<?>> recipeClasses() {

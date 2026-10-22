@@ -105,11 +105,12 @@ public final class Hw {
      * The battery's voltage now, from the hubs' voltage sensors (the lowest reading, as the Characterizer
      * does: every hub is on the same battery). NaN if there is no voltage sensor (or none reads).
      *
-     * <p>Each call asks every hub once (a few milliseconds): call it a few times a second at most, not
-     * every loop. The flywheel's battery compensation reads it every 0.25 s.
+     * <p>Each call asks every hub once and WAITS for the answers (a few milliseconds): never call it in
+     * the loop. For a reading in the loop use {@link #batteryReader(HardwareMap)}, which asks on the
+     * library's helper thread.
      *
      * <pre>{@code
-     * flywheel.batteryCompensation(() -> Hw.batteryVolts(hardwareMap), 12.6);
+     * telemetry.addData("Battery", Hw.batteryVolts(hardwareMap));   // in INIT, once
      * }</pre>
      *
      * @param hardwareMap the OpMode's {@code hardwareMap}
@@ -123,5 +124,86 @@ public final class Hw {
             if (v > 1 && (Double.isNaN(lowest) || v < lowest)) lowest = v;
         }
         return lowest;
+    }
+
+    /**
+     * The battery's voltage for code that runs every loop: a reader that never waits. Each time you ask
+     * it ({@code getAsDouble()}) it answers at once with the latest reading, and at most every
+     * {@link #BATTERY_READ_SEC} s it asks the hubs again on the library's helper thread
+     * ({@link com.crossbotics.ftchelper.util.BackgroundWorker}), so the slow hub question never holds up
+     * the loop. NaN before the first answer, with no voltage sensor, or when the last answer is older
+     * than {@link #BATTERY_STALE_SEC} s (the helper thread is stuck): then use nothing.
+     *
+     * <pre>{@code
+     * flywheel.batteryCompensation(Hw.batteryReader(hardwareMap), 12.6);   // 12.6 V: from the Flywheel Finder
+     * }</pre>
+     *
+     * @param hardwareMap the OpMode's {@code hardwareMap}
+     * @return a reader to ask every loop: volts, or NaN (no reading yet, or too old)
+     */
+    public static java.util.function.DoubleSupplier batteryReader(final HardwareMap hardwareMap) {
+        return new BatteryReader(() -> batteryVolts(hardwareMap), System::nanoTime, batteryWorker()::submitLatest);
+    }
+
+    /** How often {@link #batteryReader} asks the hubs again, seconds. */
+    public static final double BATTERY_READ_SEC = 0.25;
+    /** A {@link #batteryReader} answer older than this (seconds) is not used (NaN). */
+    public static final double BATTERY_STALE_SEC = 2.0;
+
+    // One helper thread for every battery reader in the app (made the first time one is needed). It is a
+    // daemon thread that sleeps while there is nothing to read, so it is never shut down.
+    private static com.crossbotics.ftchelper.util.BackgroundWorker batteryWorker;
+
+    private static synchronized com.crossbotics.ftchelper.util.BackgroundWorker batteryWorker() {
+        if (batteryWorker == null || !batteryWorker.isRunning()) {
+            batteryWorker = new com.crossbotics.ftchelper.util.BackgroundWorker("battery");
+        }
+        return batteryWorker;
+    }
+
+    /**
+     * The reader behind {@link #batteryReader}: answers from its last reading and asks for a new one on
+     * another thread. Package-private so tests can give it a pretend clock and run the job at once.
+     */
+    static final class BatteryReader implements java.util.function.DoubleSupplier {
+        private final java.util.function.DoubleSupplier source;
+        private final java.util.function.LongSupplier clock;
+        private final java.util.function.BiConsumer<String, Runnable> submit;
+        // Each reader its own job name, so two readers do not replace each other's jobs.
+        private final String key = "battery#" + System.identityHashCode(this);
+        // The latest answer: {volts, when it was asked for (ns)}. Written by the helper thread, read by
+        // the loop: "volatile" makes the new one show up at once on the other thread, and one array
+        // keeps the volts and their time together.
+        private volatile double[] latest = null;
+        // A question is on its way (do not ask again until it is answered), and when the last one was asked.
+        private volatile boolean asking = false;
+        private long askedAt = Long.MIN_VALUE;
+
+        BatteryReader(java.util.function.DoubleSupplier source, java.util.function.LongSupplier clock,
+                      java.util.function.BiConsumer<String, Runnable> submit) {
+            this.source = source;
+            this.clock = clock;
+            this.submit = submit;
+        }
+
+        @Override
+        public double getAsDouble() {
+            final long now = clock.getAsLong();
+            if (!asking && (askedAt == Long.MIN_VALUE || now - askedAt >= (long) (BATTERY_READ_SEC * 1e9))) {
+                asking = true;
+                askedAt = now;
+                // On the helper thread: ask the hubs (the slow part), keep the answer with its time.
+                submit.accept(key, () -> {
+                    try {
+                        latest = new double[] {source.getAsDouble(), now};
+                    } finally {
+                        asking = false;
+                    }
+                });
+            }
+            double[] l = latest;
+            if (l == null || now - (long) l[1] > (long) (BATTERY_STALE_SEC * 1e9)) return Double.NaN;
+            return l[0];
+        }
     }
 }

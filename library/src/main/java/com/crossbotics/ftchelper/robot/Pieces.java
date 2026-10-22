@@ -55,7 +55,8 @@ public final class Pieces extends Module<Pieces> {
     private String lastIn = NONE;
     private int totalIn = 0, totalOut = 0;
     // Just fired: the ready sensor may still see the piece that left, so it is not trusted until it sees
-    // the slot empty, or a new steady reading that began after (the next piece), or the feed ends.
+    // the slot empty, or a new steady reading that began after (the next piece). A feed that ends with
+    // nothing counted (a jam) trusts it again at once.
     private boolean readyStale = false;
     private long staleFrom = 0;
     // A feed started and not yet counted: did the ready sensor see a piece in it, and did it see it leave?
@@ -270,15 +271,21 @@ public final class Pieces extends Module<Pieces> {
     void feedEnded(boolean fired) {
         if (feeding == 0) return;
         feeding--;
+        boolean counted = feedLeft;
         if (!feedLeft && fired && (!readyWorks() || feedSawPiece)) {
             takeFirst();
-            totalOut++;
+            counted = true;
+            // The ready sensor may still show the piece that just went (its steady answer lags by
+            // steadyMs): not trusted until it reads empty or a new piece, or that old answer would put
+            // the piece just counted out back in.
+            markReadyStale();
         }
-        if (feedLeft) totalOut++;
+        if (counted) totalOut++;
         feedLeft = false;
         feedSawPiece = false;
-        // Whatever the ready sensor sees now is the next piece (or the one that did not go).
-        readyStale = false;
+        // Nothing went out (a jam, a stop part way): what the ready sensor sees is the piece still there.
+        // A counted feed keeps the stale guard until the sensor confirms (see watchReady).
+        if (!counted) readyStale = false;
     }
 
     private void takeFirst() {
