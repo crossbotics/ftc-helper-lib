@@ -18,6 +18,33 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   cookbook recipe.
 - `PoseTracker.velocityX()`, `velocityY()`: which way the robot moves over the field (in/s);
   `useClock(...)` for tests.
+- **A launcher hood** (`robot.Hood`): `Launcher.flywheel(...).hood(Hood.servo("hood"))` (or
+  `Hood.motor("hood", motorId)`, a motor with an encoder). The shot tables get a third number,
+  `{inches, rpm, hood}`, blended between rows like the speed, per table (two-number rows still work: the
+  hood is then set by hand). The launcher waits for the hood before it feeds (a servo hood: a time
+  estimate from `travelSec`; a motor hood: its encoder within `tolerance`). `Tunables.Hood`: `posA`, `posB`
+  (the two hard stops, needed: every angle is kept between them), optional `angleA`, `angleB` (without
+  them the hood works in servo positions or ticks, and the table holds positions), or a `calibration`
+  table of {position, angle} rows for a linkage; `homeAngle` (at START), `stepAngle`, `byHandPerSec`,
+  `trimMax`; a motor: `kP`, `maxPower`, `tolerance`. Suggested operator stick: left stick Y, a hood trim
+  while the table sets the angle (double-tap D-pad down clears it with the speed trim), else the angle by
+  hand. `setAngle`, `home`, `step`, `byHand`, `trimBy`, `setTrim`, `resetTrim`, `angle`, `currentAngle`,
+  `isArrived`, `followsTable`, `shotAngles(atA, atB)` (simulator). INIT stops on a row outside the hood's
+  range or a table that mixes two- and three-number rows; a hood column with no hood is an INIT note.
+- **Hood Finder** (`finders.HoodFinderOpMode`): the hood's two stops (servo nudge, or a motor moved by
+  hand), the angles you measured (hold LB + D-pad), points for a calibration table; prints the
+  `Tunables.Hood` lines. Examples: `turretbot/HoodFinder.java`, cookbook `HoodFinder.java`.
+- `mechanism.AngleDevice`: anything that goes to an angle and says when it is there; `PositionServo`
+  is one, and any one can be the plain launcher's hood. `launcher.Launcher.hoodOffset(a)`,
+  `getHoodOffset()`, `hoodDeadband(a)`, `getTable()`; `ShotTable.hasHood()`.
+- Shot Tuner: with a five-files hood, Y has HOOD (steps of 1/5 and 1/50 of its range), it starts from the
+  table's hood at the distance, and the `Tunables.java` line has the hood column. `ShotPoints(hasHood, hoodDecimals)`.
+- Simulator: `shoot.NAME = ..., hood=SERVO, hoodAt0=A, hoodAt1=B` (the shot angle follows the hood
+  servo); `:sim:fromRobot` writes it from `Hood.shotAngles(...)`. `:sim:newRobot` puts a servo called
+  "hood" on the launcher.
+- The turret robot example has a hood (team 8938's turret: a Torque servo through 5.4:1, 0-25 deg),
+  three-number shot tables, a Hood Finder, and lesson 9 a section on the hood; cookbook: "How do I add a
+  hood to my launcher?" and "How do I find my hood's stops and angles?".
 
 - Docs: a box in lesson 9, robot.md and launcher.md says battery compensation is on by default, how to
   turn it off (`batteryCompensation = false`), and a 4-shot test to check it on your robot.
@@ -159,6 +186,13 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 - Dead-wheel odometry now gives `speedInPerSec()` and `turnDegPerSec()` (worked out from how far the
   robot moved between loops, smoothed); they were always 0.
+- `launcher.Launcher.setDistance` moves the hood only when the table has hood angles (a table made with
+  `add(distance, rpm)` used to send the hood to 0), and only for a change over `hoodDeadband` (0.25), so
+  a jittery camera distance no longer keeps the hood "moving". `hood(...)` takes any `AngleDevice` and
+  `getHood()` returns one (was `PositionServo`).
+- `ShotPoints.Tally.summary()` and the Shot Tuner's marks show the hood as
+  "2550 @ hood 10" (any scale, not only degrees); tries are told apart to 0.001 (was 0.1).
+- `Launcher.resetTrim()` (double-tap D-pad down) also clears the hood trim.
 - **Pause acts at the press of BACK** (it was at the release, because BACK also has "hold: reset
   forward"): a panicking driver holding BACK gets the stop at once. Held 1 s it also resets "forward"
   (field-centric) and stays paused; a tap goes on (going on is always at the release, so holding BACK

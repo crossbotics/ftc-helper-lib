@@ -5,6 +5,7 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.UsbFacingDirection;
 import com.crossbotics.ftchelper.robot.Camera;
 import com.crossbotics.ftchelper.robot.Claw;
 import com.crossbotics.ftchelper.robot.Drive;
+import com.crossbotics.ftchelper.robot.Hood;
 import com.crossbotics.ftchelper.robot.Indexer;
 import com.crossbotics.ftchelper.robot.Intake;
 import com.crossbotics.ftchelper.robot.Launcher;
@@ -23,6 +24,8 @@ import com.crossbotics.ftchelper.robot.Turret;
  *   <li>A flywheel whose speed comes from the distance to the goal, fed by an indexer servo. It only
  *       fires when the turret is aimed. Two shot tables, because the two game pieces fly differently:
  *       POLLEN (2.8 in balls) and NECTAR (3.6 in balls), in Tunables.Launcher.</li>
+ *   <li>A hood on a servo that tilts to make the shot steeper or flatter: its angle comes from the
+ *       shot table's third column too (Tunables.Hood has its two stops).</li>
  *   <li>A claw on a fold-out pivot: positions to grab a piece and to let it go into a FLOWER.</li>
  *   <li>A goBILDA RGB Indicator Light the drivers can see: its colors are set in Controls.java.</li>
  * </ul>
@@ -59,8 +62,12 @@ public class Robot extends RobotDefinition {
         // Two shot tables (Tunables.Launcher.speedByDistancePollen and ...Nectar): it starts on
         // POLLEN (most pieces in a match are POLLEN); gamepad 2's D-pad right switches. Code can switch
         // too: robot.launcher.useTable("nectar").
+        // The hood: a goBILDA Torque servo that tilts it through gears. Its two stops and angles are in
+        // Tunables.Hood; each shot table row gives the hood angle for that distance. shotAngles: for the
+        // simulator, how steep the shot leaves at each stop (80 deg up at the steep end, 55 at the flat).
         launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
                 .feeder(Indexer.servo("indexer"))
+                .hood(Hood.servo("hood").part("gobilda-2000-torque").shotAngles(80, 55))
                 .speedFromDistance(camera)
                 .startTable("pollen")
                 .requireReady("turret aimed", () -> turret.isAimed()));

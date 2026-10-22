@@ -23,7 +23,9 @@ import java.util.Properties;
  *                                                          (-1 topspin); table=FILE: how the launcher really
  *                                                          throws, with scatter (SimShotTable; tools/launcher);
  *                                                          speed=IN/S: a fixed exit speed (a catapult: make
- *                                                          its motor a flywheel with feeder= itself)
+ *                                                          its motor a flywheel with feeder= itself);
+ *                                                          hood=SERVO, hoodAt0=A, hoodAt1=B: the angle follows
+ *                                                          a hood servo (A at position 0, B at 1)
  *   grab.NAME = shape=claw, servo=claw, closedBelow=0.3   a claw that holds a piece it touches while the servo
  *                                                          is below closedBelow (or above closedAbove=, for a
  *                                                          claw that closes toward 1), and lets it go when it opens
@@ -55,8 +57,8 @@ final class SimPieces {
     }
 
     private static final class Shoot {
-        final String name, shape, flywheel;
-        final double angleDeg, share, spin, fixedSpeed;
+        final String name, shape, flywheel, hood;
+        final double angleDeg, share, spin, fixedSpeed, hoodAt0, hoodAt1;
         final SimShotTable table;      // table=: how this launcher really throws (null: angle/share/spin)
 
         Shoot(String name, Map<String, String> s, java.nio.file.Path dir) {
@@ -70,6 +72,13 @@ final class SimPieces {
             spin = num(s, "spin", 0, "shoot." + name);
             // speed=: a fixed exit speed (in/s) instead of share x rim speed: a catapult or a spring launcher
             fixedSpeed = num(s, "speed", Double.NaN, "shoot." + name);
+            // hood=SERVO: the shot angle follows that servo, hoodAt0 at position 0 and hoodAt1 at 1 (a straight line)
+            hood = s.get("hood");
+            hoodAt0 = num(s, "hoodAt0", Double.NaN, "shoot." + name);
+            hoodAt1 = num(s, "hoodAt1", Double.NaN, "shoot." + name);
+            if (hood != null && (Double.isNaN(hoodAt0) || Double.isNaN(hoodAt1))) {
+                throw new IllegalArgumentException("Robot file: shoot." + name + ": hood= needs hoodAt0= and hoodAt1= (the shot angle with the servo at 0 and at 1)");
+            }
             String t = s.get("table");
             table = t == null ? null : new SimShotTable(dir == null ? java.nio.file.Paths.get(t) : dir.resolve(t).normalize(),
                     "shoot." + name, name.hashCode());
@@ -156,6 +165,7 @@ final class SimPieces {
         for (Shoot s : shoots) {
             check(s.shape, "shoot." + s.name);
             if (s.flywheel != null && !robot.motors.containsKey(s.flywheel)) throw new IllegalArgumentException("Robot file: shoot." + s.name + ": no motor." + s.flywheel);
+            if (s.hood != null && !robot.servos.containsKey(s.hood)) throw new IllegalArgumentException("Robot file: shoot." + s.name + ": no servo." + s.hood + " (hood=)");
             if (s.flywheel == null && shoots.size() > 1) throw new IllegalArgumentException("Robot file: shoot." + s.name + ": with two launchers, say which flywheel fires each (flywheel=NAME)");
         }
         for (Grab g : grabs) {
@@ -385,8 +395,13 @@ final class SimPieces {
             double[] exit = null;
             SimShotTable.Shot pick = s.table == null ? null
                     : s.table.pick(type.name, flywheel.shaftSpeed() / Math.max(1, flywheel.ticksPerRev) * 60);
+            // A hood: the shot angle from where its servo really is now (not where it was sent).
+            double hoodAngle = s.hood == null ? Double.NaN
+                    : s.hoodAt0 + (s.hoodAt1 - s.hoodAt0) * robot.servos.get(s.hood).actual;
+            if (!Double.isNaN(hoodAngle)) angle = hoodAngle;
             if (pick != null) {
-                angle = pick.angleDeg;
+                // With a hood, the table's scatter goes around the hood's angle.
+                angle = Double.isNaN(hoodAngle) ? pick.angleDeg : hoodAngle + pick.angleDeg - pick.angleMeanDeg;
                 speed = pick.shot ? pick.speedIn : 0;          // a feed that did not become a shot drops out
                 backspin = pick.shot ? pick.backspin : 0;
                 exit = new double[3];

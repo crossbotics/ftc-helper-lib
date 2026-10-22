@@ -52,6 +52,7 @@ flowchart LR
 | [`Turret`](#turret) | a turret inside its limits, by hand or following the camera's goal |
 | [`Launcher`](#launcher) | a flywheel and its [`Indexer`](#indexer): spin up, fire, speed from distance |
 | [`Indexer`](#indexer) | feeds one piece at a time (servo, CR servo or motor) |
+| [`Hood`](#hood) | a launcher's hood (servo or motor): its angle from the shot table, by hand, a trim |
 | [`Camera`](#camera) | a Limelight or webcam; the alliance's goal |
 | [`Pieces`](#pieces-and-piecesensor), [`PieceSensor`](#pieces-and-piecesensor) | which game piece is at a spot (colour sensor, distance sensor, second webcam); how many the robot holds and which fires next |
 | [`Lights`](#lights), [`LightColor`](#lights) | a colored light for the drivers (goBILDA RGB Indicator Light or REV Blinkin): which color when |
@@ -426,6 +427,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer
 | `isReady()`, `isShooting()`, `targetRpm()`, `part()` | |
 | `requireReady(what, check)` | another check before each feed (e.g. the turret is aimed) |
 | `spinAtStart()` | spins up at START (autonomous and TeleOp), ready for the first shot |
+| `hood(Hood)`, `hood()` | the launcher's [hood](#hood): its angle from the table's third column; the launcher waits for it before feeding |
 | `shotAngle(deg)` | for the simulator: which way a piece leaves, degrees up from the wheel shape's forward (the robot's forward for a wheel mounted level; 135 = up and out of the back) |
 
 `Tunables.Launcher`: `speedRpm`, `stepRpm`, `readyBandRpm`, `idleRpm`, `shotIntervalSec`,
@@ -437,6 +439,9 @@ at). Buttons (operator): LB spin up/down, RB fire one (hold: keep firing, `fireW
 D-pad up/down the speed trim +/- `trimStepPercent` with speed from distance, or +/- `stepRpm` with a fixed
 speed (held: one more step every 0.25 s); double-tap D-pad down = no trim; double-tap D-pad up = last
 time's trim (when offered); D-pad right the next shot table (two or more). Each only when free.
+With a [hood](#hood), a row is `{inches, rpm, hood}`: the hood is blended between rows like the speed
+(two-number rows still work: the hood is then set by hand). Double-tap D-pad down also sets the hood
+trim back to 0.
 
 ```java
 public static double[][] speedByDistancePollen = {{24, 2200}, {48, 2550}, {72, 2900}};   // Tunables.Launcher
@@ -497,6 +502,67 @@ at START. Commands: `feedOne()`, `isBusy()`, `isFeeding()`, `isJammed()`, `clear
 runs your code each time a feed really starts. A [Pieces](#pieces-and-piecesensor) counter counts the
 piece out only once it has gone: its ready sensor sees it leave, or the feed ends without a jam (a feed
 stopped part way, or jammed, leaves the count as it was).
+
+## Hood
+
+A launcher's hood: the part that tilts to make the shot leave steeper or flatter. Any design fits: a
+servo or a motor with an encoder, a straight gear or a linkage, any range, either direction.
+
+```java
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer"))
+        .hood(Hood.servo("hood"))                            // or Hood.motor("hood", "gobilda-5203-117")
+        .speedFromDistance(camera));
+
+public static class Hood {                                   // Tunables.java
+    public static double posA = 0.20, posB = 0.65;           // a hair off its two stops (Hood Finder)
+    public static double angleA = 0, angleB = 25;            // optional: its angle there
+    public static double travelSec = 0.5;                    // stop to stop (a servo cannot say where it is)
+}
+public static double[][] speedByDistance = {{24, 2200, 4}, {48, 2550, 12}, {72, 2900, 18}};   // Tunables.Launcher
+```
+
+**Calibration.** `posA` and `posB` are the servo positions (encoder ticks for `Hood.motor`) a hair off the
+hood's two hard stops. They are the hood's **hard limits**: every angle (a table row, a trim, a stick) is
+kept between them. Both must be in Tunables.java (INIT stops without them); the
+[Hood Finder](../guides/finders.md#hood-finder) finds them. Then pick one:
+
+| You write | The hood's "angle" is | The table's third column holds |
+| --- | --- | --- |
+| `posA`, `posB` only | the servo position (or ticks) itself: no measuring needed | servo positions, `{48, 2550, 0.42}` |
+| `posA`, `posB`, `angleA`, `angleB` | your angle, on a straight line between the two stops (any scale, either way round) | angles, `{48, 2550, 12}` |
+| `calibration = {{0.20, 0}, {0.32, 8}, {0.45, 18}, {0.65, 30}}` | a linkage or cam: {position, angle} rows blended between them; the first and last rows are the stops | angles |
+
+**Ready.** The launcher feeds only when the hood has arrived ("hood" in its why-not-ready). A motor hood
+knows (its encoder, within `tolerance`); a servo hood is a time estimate: `travelSec` for the whole range,
+a share of it for a shorter move. A distance that jitters a little does not move the hood (changes under
+1/100 of its range are not sent), so it never stays "moving".
+
+**By hand and the trim.** Suggested operator stick: left stick Y (up = a bigger angle). While the shot
+table sets the angle it is a **hood trim**: added to the table, at most +/- `trimMax`, back to 0 with the
+launcher's double-tap D-pad down (and at every INIT). With a fixed speed (or a table without hood
+angles) the stick moves the hood itself. Why a hood trim next to the speed trim: the speed trim fixes
+shots that land short or long; the hood trim fixes shots that arrive at the wrong slope (they bounce off
+the rim, or worn balls launch flatter). Use the speed trim first.
+
+| Method | |
+| --- | --- |
+| `Hood.servo(name)`, `Hood.motor(name, motorId)`, `reversed()` | a standard servo; a motor with an encoder (its ticks count from where the hood is at INIT: start with the hood on stop A) |
+| `shotAngles(atA, atB)` | for the simulator: the launcher's shot angle with the hood at `angleA` and at `angleB` (the simulated shot follows the hood servo) |
+| `setAngle(a)`, `home()`, `step(n)`, `byHand(stick)` | go to an angle (kept inside the stops); to `homeAngle`; `n` x `stepAngle` (a trim while the table sets it); the stick, every loop |
+| `trimBy(a)`, `setTrim(a)`, `resetTrim()`, `trim()` | the hood trim (added to the table's angle) |
+| `angle()`, `currentAngle()`, `isArrived()`, `followsTable()` | where it is going; where it is (encoder, or the time estimate); arrived; the table sets it now |
+| `minAngle()`, `maxAngle()`, `homeAngle()`, `usesAngles()`, `isMotor()`, `isReversed()`, `part()` | `part()` is the [`AngleDevice`](mechanism.md#angledevice) the launcher drives |
+
+`Tunables.Hood` (optional ones scale with the range, so they suit degrees, positions and ticks):
+`homeAngle` (where it goes at START; default angleA), `stepAngle` (1/25 of the range), `byHandPerSec`
+(the whole range in 2.5 s at full stick), `trimMax` (1/5 of the range), `travelSec` (servo, 0.5). A
+motor hood: `kP` (power per tick, 0.005), `maxPower` (0.5), `tolerance` (1/50 of the range); it never
+pushes further past a stop. Nothing moves in INIT: the hood goes to `homeAngle` at START. The Driver
+Station shows `Hood: 12.5 deg (table, trim +1.0 deg)` (`moving` until it should be there).
+
+Not built yet: a CR servo with an absolute encoder. It fits the same way: anything that is an
+[`AngleDevice`](mechanism.md#angledevice) can be a hood of the [plain launcher](launcher.md#launcher)
+(`new Launcher(...).hood(myHood)`).
 
 ---
 
@@ -1180,7 +1246,8 @@ it ready, use `idle()`.
 Writes `Robot.java`, `Tunables.java`, `Controls.java`, `Actions.java` and `autos/LeaveStart.java` from
 the robot configuration (the XML file the Driver Station keeps on the Control Hub). Each device gets
 its module from its name and type ("lift" is a Lift, a servo called "claw" a Claw, one called "light" or
-"led" and a REV Blinkin are Lights); a goBILDA Pinpoint
+"led" and a REV Blinkin are Lights; a servo called "hood" goes on the launcher, `.hood(Hood.servo("hood"))`,
+with a `TODO` for the Hood Finder); a goBILDA Pinpoint
 or SparkFun OTOS becomes the `odometry(...)` line (offsets 0 and a `TODO` for the Odometry Tuner) with a
 `Tunables.Odometry` section; every guess it is not sure of is a `TODO` in Robot.java. It never overwrites a file.
 

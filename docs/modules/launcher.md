@@ -23,7 +23,8 @@ page to build a shooter by hand (tutorial 17). Speeds are in **RPM** (turns per 
 | [`Turret`](#turret) | aim in degrees, never past its limits, hold a field direction |
 | [`Launcher`](#launcher) | spin up, wait until EVERYTHING is ready, feed, repeat |
 
-A hood is a [`PositionServo`](mechanism.md#positionservo) with `degrees(...)`.
+A hood is any [`AngleDevice`](mechanism.md#angledevice): a [`PositionServo`](mechanism.md#positionservo)
+with `degrees(...)`, the five-files [`Hood`](robot.md#hood) (servo or motor, a linkage table), or your own.
 
 ```mermaid
 flowchart LR
@@ -141,8 +142,10 @@ ShotTable pollen = new ShotTable()
 ShotTable.Shot s = pollen.lookup(36);     // 2850 rpm, 10 deg (halfway between 24 and 48)
 ```
 
-Straight lines between your points; outside them, the nearest end (it never guesses beyond what you
-tested). `covers(distance)` says if you are inside. One table per game piece if they fly differently
+Straight lines between your points (the speed AND the hood); outside them, the nearest end (it never
+guesses beyond what you tested). `add(distance, rpm)` (no hood angle) makes a table that never moves the
+hood: `hasHood()` is true only once a point has a hood angle. The hood number is in the hood's own scale
+(degrees, or a servo position if your hood works in positions). `covers(distance)` says if you are inside. One table per game piece if they fly differently
 (BIOBUZZ: POLLEN is a 2.8 in ball, NECTAR a 3.6 in ball); swap them with `launcher.table(other)`.
 How to fill it: [tutorial 17](../tutorials/17-launcher.md#4-fill-the-shot-table). In the robot in five
 files, each `speedByDistance...` line in `Tunables.Launcher` is one table, picked by name with
@@ -239,16 +242,18 @@ Launcher launcher = new Launcher(flywheel, feeder)
 
 | Method | What it does |
 | --- | --- |
-| `.hood(servo)`, `.table(t)` | optional parts |
+| `.hood(device)`, `.table(t)` | optional parts: a hood is any [`AngleDevice`](mechanism.md#angledevice) |
+| `.hoodDeadband(a)` | the hood is sent a new angle only when the table's changes by more than this (default 0.25): a jittery distance must not keep it "moving" |
+| `hoodOffset(a)`, `getHoodOffset()` | added to the table's hood angle by `setDistance` (a hood trim) |
 | `.requireReady(name, check)` | another condition before each piece (aim, sensor, anything) |
 | `.clearReadyChecks()` | removes every `requireReady` check (the Shot Tuner does this: you aim by hand there) |
 | `.shotInterval(s)` | least time between pieces |
 | `.readyTimeout(s)` | give up the remaining shots after this long not ready |
 | `.idleRpm(r)` | speed when not shooting (a low idle makes spin-up faster) |
-| `setRpm(r)` / `setDistance(d)` | the shot by hand / from the table (sets the hood too) |
+| `setRpm(r)` / `setDistance(d)` | the shot by hand / from the table (sets the hood too, when the table has hood angles) |
 | `speedScale(s)`, `getSpeedScale()` | the shot speed x `s` (1.03 = +3%), a live trim for a match; not the idle speed. 1 = as set |
 | `getShotRpm()` | the shot speed before `speedScale` (from `setRpm` or the table) |
-| `getHood()`, `hasTable()` | the hood servo (or null); true if a table was given |
+| `getHood()`, `getTable()`, `hasTable()` | the hood (or null); the table (or null); true if a table was given |
 | `spinUp()`, `shoot(n)`, `stopShooting()` | commands |
 | `idle()` | back to the idle speed |
 | `stop()` | fully OFF, even the idle speed, until `spinUp()`, `shoot()` or `idle()` |

@@ -253,7 +253,7 @@ default):
 | `camera.NAME = ...` | | a webcam or Limelight ([cameras](#cameras)) |
 | `shape.NAME = TYPE, ...` | | a part to draw and check ([robot shapes](#robot-shapes)). Sizes when `size=` is left out: slide 2x2x12, arm 10x2x2, turret 8x8x2, claw 3x1x3, roller 2x12x2, flywheel 4x2x4 |
 | `collect.NAME = shape=a+b, motor=M, holds=N` | `reach=0.75`, `holds=4` | takes pieces in ([game pieces](#game-pieces)); `crservo=` instead of `motor=`, `inward=-` |
-| `shoot.NAME = shape=S, ...` | `angle=40`, `share=0.5` | shoots pieces: `spin=`, `speed=` (a fixed speed, in/s), `table=` (a shot table, path from the robot file), `flywheel=` (which flywheel, when there are two) |
+| `shoot.NAME = shape=S, ...` | `angle=40`, `share=0.5` | shoots pieces: `spin=`, `speed=` (a fixed speed, in/s), `table=` (a shot table, path from the robot file), `flywheel=` (which flywheel, when there are two), `hood=SERVO, hoodAt0=A, hoodAt1=B` (the angle follows a hood servo: A with the servo at 0, B at 1) |
 | `grab.NAME = shape=S, servo=V, closedBelow=X` | `reach=0.5` | a claw that holds a piece (`closedAbove=` for one that closes toward 1) |
 | `start.x`, `start.y`, `start.heading` | | where the robot starts |
 | `preload = on/off` | on | the field file's preload in the robot at the start |
@@ -509,6 +509,12 @@ A shot leaves the launcher shape at `angle=` (degrees up from its forward; defau
 In flight the air slows it (drag, Cd 0.5: assumed, not measured for POLLEN or NECTAR; a piece type can set
 `dragCd` in the field file) and spin lifts or drops it (the Magnus force, lift coefficient = radius x spin / speed,
 at most 0.5).
+
+**A hood.** `hood=SERVO, hoodAt0=80, hoodAt1=30`: the shot angle follows where that servo really is (80 at
+position 0, 30 at 1, a straight line between), instead of `angle=`. With a shot table, the table's scatter
+goes around the hood's angle. `:sim:fromRobot` writes it for a launcher whose `Hood.servo(...)` has
+`shotAngles(atA, atB)` (the shot angle at the hood's two stops). A motor hood does not move the shot angle
+in the simulator yet.
 
 **Shot tables** replace the guesses with how the launcher really throws: `shoot.NAME = shape=flywheel,
 table=launcher-table.json`. For each piece and wheel speed the table gives the likely exit speed, angle, spin and

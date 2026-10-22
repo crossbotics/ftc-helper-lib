@@ -2,7 +2,7 @@ package com.crossbotics.ftchelper.launcher;
 
 import com.crossbotics.ftchelper.auto.AutoStep;
 import com.crossbotics.ftchelper.core.Subsystem;
-import com.crossbotics.ftchelper.mechanism.PositionServo;
+import com.crossbotics.ftchelper.mechanism.AngleDevice;
 import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,7 +50,7 @@ public class Launcher implements Subsystem {
 
     private final Flywheel flywheel;
     private final Feeder feeder;
-    private PositionServo hood = null;   // null = no hood
+    private AngleDevice hood = null;   // null = no hood
     private ShotTable table = null;      // null = no table (use setRpm)
     // The extra "ready" checks: a name for telemetry, and a yes/no question asked every loop.
     // The two lists go together: checkNames.get(i) is the name of checks.get(i).
@@ -64,6 +64,8 @@ public class Launcher implements Subsystem {
     private double idleRpm = 0;
 
     private double shotRpm = 0;
+    private double hoodOffsetDeg = 0;    // hoodOffset(): degrees added to the table's hood angle
+    private double hoodDeadbandDeg = 0.25;   // hoodDeadband(): smaller hood changes are not sent
     private double speedScale = 1;       // speedScale(): the shot speed x this (1 = as set)
     private boolean spinning = false;    // true = at shot speed; false = idle speed (or off)
     private boolean off = true;          // stop() keeps it fully off (even the idle speed) until started again
@@ -88,8 +90,13 @@ public class Launcher implements Subsystem {
         return this;
     }
 
-    /** A hood servo that has {@code degrees(...)} set. The table's hood angle goes to it. */
-    public Launcher hood(PositionServo hoodServo) {
+    /**
+     * A hood: a {@link com.crossbotics.ftchelper.mechanism.PositionServo} with {@code degrees(...)} set,
+     * or any {@link AngleDevice} (the five-files {@code Hood}, a motor, your own). The table's hood angle goes to it (only from a table
+     * with hood angles, see {@link ShotTable#hasHood()}), and the launcher waits for it to arrive before
+     * feeding ("hood" in {@link #whyNotReady()}).
+     */
+    public Launcher hood(AngleDevice hoodServo) {
         hood = hoodServo;
         return this;
     }
@@ -134,6 +141,18 @@ public class Launcher implements Subsystem {
         return this;
     }
 
+    /**
+     * The hood moves only when the table's angle changes by more than this (degrees, default 0.25). A
+     * camera's distance jitters a little every picture; without this the hood would be sent a new angle
+     * every loop, and a servo that is always "moving" never lets the launcher feed.
+     *
+     * @param degrees 0 or more, in the hood's scale (a hood in servo positions: e.g. 0.005); 0 = send every change
+     */
+    public Launcher hoodDeadband(double degrees) {
+        hoodDeadbandDeg = Double.isNaN(degrees) ? 0.25 : Math.abs(degrees);
+        return this;
+    }
+
     /** Speed to keep when not shooting, in RPM (0 = stop). A low idle speed makes spin-up faster. */
     public Launcher idleRpm(double rpm) {
         idleRpm = rpm;
@@ -150,14 +169,42 @@ public class Launcher implements Subsystem {
     }
 
     /**
-     * Sets the shot from the table (speed, and hood angle if there is a hood). Distance in the table's
-     * unit (inches in the examples). Safe to call every loop, e.g. with the camera's distance.
+     * Sets the shot from the table: the speed, and the hood angle (plus {@link #hoodOffset}) when there is
+     * a hood and the table has hood angles. Distance in the table's unit (inches in the examples). Safe to
+     * call every loop, e.g. with the camera's distance: the hood is only sent a new angle when it changes
+     * by more than {@link #hoodDeadband} (0.25 deg).
      */
     public void setDistance(double distance) {
         if (table == null) throw new IllegalStateException("Launcher.setDistance needs a table(...)");
         ShotTable.Shot shot = table.lookup(distance);
         shotRpm = shot.rpm;
-        if (hood != null) hood.setDegrees(shot.hoodDeg);
+        // A table with no hood column leaves the hood where it is (it would otherwise go to 0 degrees).
+        if (hood != null && table.hasHood()) {
+            double want = shot.hoodDeg + hoodOffsetDeg;
+            // Where the hood is going now (after its limits), NaN if it was never sent anywhere.
+            double going = hood.getTargetDegrees();
+            if (Double.isNaN(going) || Math.abs(want - going) > hoodDeadbandDeg) hood.setDegrees(want);
+        }
+    }
+
+    /**
+     * Degrees added to the table's hood angle by {@link #setDistance} (a hood trim: +1 = every shot 1
+     * degree more). 0 = as the table says (the default). Takes effect at the next setDistance.
+     *
+     * @param degrees e.g. +1 or -0.5
+     */
+    public void hoodOffset(double degrees) {
+        hoodOffsetDeg = Double.isNaN(degrees) ? 0 : degrees;
+    }
+
+    /** The degrees added to the table's hood angle ({@link #hoodOffset}); 0 = none. */
+    public double getHoodOffset() {
+        return hoodOffsetDeg;
+    }
+
+    /** The shot table given with {@link #table}, or null. */
+    public ShotTable getTable() {
+        return table;
     }
 
     /**
@@ -323,8 +370,8 @@ public class Launcher implements Subsystem {
     public String getLastProblem() { return lastProblem; }
     /** The flywheel inside. */
     public Flywheel getFlywheel() { return flywheel; }
-    /** The hood servo, or null if there is none. */
-    public PositionServo getHood() { return hood; }
+    /** The hood, or null if there is none. */
+    public AngleDevice getHood() { return hood; }
     /** True if a shot table was given ({@link #setDistance} works). */
     public boolean hasTable() { return table != null; }
 

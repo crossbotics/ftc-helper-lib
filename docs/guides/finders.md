@@ -39,7 +39,7 @@ flowchart LR
 2. **Servo Finder** for each servo, **Motor Finder** for each lift, arm or turret: put the limits
    and positions in your code (five files: `min`, `max` and the named heights in `Tunables.Lift`,
    `open` and `closed` in `Tunables.Claw`). Do this BEFORE you drive a mechanism with code: a wrong
-   limit breaks parts.
+   limit breaks parts. A launcher's hood: the **Hood Finder** ([below](#hood-finder)) instead.
 3. **Flywheel Finder**: the gains for your `Flywheel` (five files: `kP` to `kF` in `Tunables.Launcher`).
 4. **Drive Tuner**: the wheel size and strafe correction (five files: `.wheelMm(...)` in `Robot.java`
    and `strafeCorrection` in `Tunables.Drive`, then `Tunables.Drive.calibrated = true`; older helpers:
@@ -90,6 +90,28 @@ Check once on your own Driver Hub and controllers that the help page fits and is
    Five files: the line `Tunables.Claw: P1 = 0.210, P2 = 0.770` becomes
    `public static double open = 0.210, closed = 0.770;` in `Tunables.Claw`. Keep every position
    between the ends the finder shows.
+
+## Hood Finder
+
+For a launcher's [hood](../modules/robot.md#hood) (`Tunables.Hood`). It reads the hood from Robot.java,
+so it works before Tunables.Hood has numbers.
+
+1. **A servo hood:** choose a START POINT near where the hood sits (D-pad; nothing moves), press **A**.
+   Then nudge with the D-pad (right/left 0.01, up/down 0.05, hold RB for 10 times finer). **A motor
+   hood:** nothing is powered; start the OpMode with the hood on the stop you want as 0 ticks (the same
+   as before a match), then move the hood by hand and watch the encoder.
+2. Go to one stop until it JUST touches (a servo hums when it strains), back off a hair, press **X**
+   (stop A). The other stop: **B** (stop B). The screen shows `Tunables.Hood: posA = 0.205, posB = 0.648`.
+   That is all you need: the hood then works in servo positions, and the Shot Tuner writes positions
+   into the table.
+3. **Angles (optional).** Measure the hood's angle (an angle app on a phone laid on the hood) at each
+   stop: **hold LB + D-pad** to type it in BEFORE you press X / B. You get `angleA = 0, angleB = 25` too.
+4. **A linkage** (the angle is not a straight line of the servo position): add points in between: move
+   there, type in the angle (LB + D-pad), press **A**. With 3 or more points you get a `calibration`
+   line; it replaces posA / posB. **Y** undoes the last point.
+5. Copy the lines into `Tunables.java` (the robot uses the file, not this screen). Then time a
+   stop-to-stop move for `travelSec` (servo hood): the launcher waits that long (a share of it for a
+   shorter move) before firing.
 
 ## Motor Finder: limits, positions, top speed
 
@@ -213,7 +235,8 @@ of shots: 3 in out of 4 beats 2 out of 3). Every button is on **gamepad 1**.
    dropped. `Points: POLLEN 3, NECTAR 0  (4-6 per table)` says how far
    you are: 4-6 points per table cover the field. Then the next table (step 1).
 6. **Copy the tables into `Tunables.java`**: the robot uses the file, not the tuner's screen. There is
-   one line per table, like `public static double[][] speedByDistancePollen = {{24, 2600}, {48, 3100}};   // in Tunables.Launcher`:
+   one line per table, like `public static double[][] speedByDistancePollen = {{24, 2600}, {48, 3100}};   // in Tunables.Launcher`
+   (with a hood: `{{24, 2600, 4}, {48, 3100, 12.5}}`, the third number the hood):
    it replaces the line with the same name in `Tunables.Launcher`. The lines are also saved on the
    Control Hub when you press STOP (`/sdcard/FIRST/ftc-helper/finder-results.txt`). Older helpers: the
    `new ShotTable()` lines go into your Robot class (each with a comment like `// 4/5 in, measured 2531 RPM`).
@@ -221,9 +244,12 @@ of shots: 3 in out of 4 beats 2 out of 3). Every button is on **gamepad 1**.
    their speeds); outside them it uses the nearest point.
 
 With `robot()`, the Shot Tuner uses your robot's launcher, camera and drive. A turret stays still and
-the "fire only when aimed" checks are off: point the robot at the goal with the sticks. (The robot in
-five files' launcher has no hood. With the older helpers and a hood, each speed and hood angle is its
-own try in the hit counts: `Tried here: 2550 @ 10.0 deg: 3/4 (best), 2550 @ 12.5 deg: 1/3`.)
+the "fire only when aimed" checks are off: point the robot at the goal with the sticks. **With a hood**
+(`.hood(...)` in Robot.java, or the older helpers' `.hood(servo)`), **Y** also chooses HOOD: the D-pad
+then steps it (a fifth / a fiftieth of its range: 5 / 0.5 deg for a 0-25 deg hood). It starts at the
+table's hood for this distance, like the speed. Each speed and hood angle is its own try in the hit
+counts (`Tried here: 2550 @ hood 10: 3/4 (best), 2550 @ hood 12.5: 1/3`), and X saves the hood the
+winning shots were fired with.
 
 Charge the battery before tuning speeds: a weak battery changes how far the shots go. The launcher's
 speed trim (the D-pad in a match) is not used in the tuner, so the table holds the real speeds.

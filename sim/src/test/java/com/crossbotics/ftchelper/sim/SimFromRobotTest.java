@@ -158,6 +158,29 @@ public class SimFromRobotTest {
             assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Shot table : POLLEN"), 1));
             s.press(v -> s.g2().dpad_right = v);
             assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Shot table : NECTAR"), 1));
+            // The hood went home at START (0 deg: Tunables.Hood posA 0.20) and shows on the Driver Station.
+            SimRobot.SimServo hood = s.robot().servos.get("hood");
+            assertTrue("hood home: " + hood.actual, SimRun.waitFor(() -> Math.abs(hood.actual - 0.20) < 0.01, 2));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Hood : 0.0 deg"));
+            assertEquals("", s.error());
+        }
+    }
+
+    // The Hood Finder with robot(): a start point, then the two stops; it shows the Tunables line.
+    @Test public void theTurretBotHoodFinderWritesTheStops() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.turretbot.Robot.class);
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("TurretBot Hood Finder");
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Tunables.Hood"));
+            s.start();
+            s.press(v -> s.g1().dpad_down = v);                       // start point 0.45
+            s.press(v -> s.g1().a = v);                               // move there
+            s.press(v -> s.g1().dpad_down = v);                       // 0.40
+            s.press(v -> s.g1().x = v);                               // stop A
+            for (int i = 0; i < 3; i++) s.press(v -> s.g1().dpad_up = v);   // 0.55
+            s.press(v -> s.g1().b = v);                               // stop B
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("posA = 0.400, posB = 0.550"), 1));
+            assertTrue("the servo was moved", Math.abs(s.robot().servos.get("hood").target() - 0.55) < 1e-9);
             assertEquals("", s.error());
         }
     }

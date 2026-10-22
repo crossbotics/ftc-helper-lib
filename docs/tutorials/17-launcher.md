@@ -54,7 +54,10 @@ MotorFeeder feeder = MotorFeeder.create(hardwareMap, "feeder").power(1.0).feedTi
 ```
 
 Measure the hood: move the servo with the Hardware Check, write down the raw position at the lowest
-and the highest angle, and measure those angles (a phone level app works).
+and the highest angle, and measure those angles (a phone level app works). Any part that goes to an
+angle can be the hood (an [`AngleDevice`](../modules/mechanism.md#angledevice)); in the robot in five
+files the [`Hood`](../modules/robot.md#hood) module does all this from `Tunables.Hood`, servo or motor,
+with a Hood Finder ([lesson 9](start/09-shooter-and-camera.md#a-hood-the-shot-angle)).
 
 ## 4. Fill the shot table
 

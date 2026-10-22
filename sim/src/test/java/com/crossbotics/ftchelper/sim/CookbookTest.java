@@ -8,6 +8,7 @@ import com.crossbotics.ftchelper.examples.cookbook.AimRecipes;
 import com.crossbotics.ftchelper.examples.cookbook.AutonomousRecipes;
 import com.crossbotics.ftchelper.examples.cookbook.ButtonRecipes;
 import com.crossbotics.ftchelper.examples.cookbook.DrivingRecipes;
+import com.crossbotics.ftchelper.examples.cookbook.HoodRecipes;
 import com.crossbotics.ftchelper.examples.cookbook.LightRecipes;
 import com.crossbotics.ftchelper.examples.cookbook.MechanismRecipes;
 import com.crossbotics.ftchelper.examples.cookbook.OdometryRecipes;
@@ -42,7 +43,8 @@ public class CookbookTest {
 
     private static final List<Class<?>> GROUPS = Arrays.asList(DrivingRecipes.class, ButtonRecipes.class,
             MechanismRecipes.class, ActionRecipes.class, AutonomousRecipes.class, OdometryRecipes.class,
-            PedroRecipes.class, TelemetryRecipes.class, PieceRecipes.class, AimRecipes.class, LightRecipes.class);
+            PedroRecipes.class, TelemetryRecipes.class, PieceRecipes.class, AimRecipes.class, LightRecipes.class,
+            HoodRecipes.class);
 
     // The whole files (one class per file, as in TeamCode): the robot, its TeleOp, an autonomous, the finders.
     private static final List<Class<?>> FILES = Arrays.asList(
@@ -50,6 +52,7 @@ public class CookbookTest {
             com.crossbotics.ftchelper.examples.cookbook.Controls.class,
             com.crossbotics.ftchelper.examples.cookbook.LeaveTheStart.class,
             com.crossbotics.ftchelper.examples.cookbook.ServoFinder.class,
+            com.crossbotics.ftchelper.examples.cookbook.HoodFinder.class,
             com.crossbotics.ftchelper.examples.cookbook.MotorFinder.class,
             com.crossbotics.ftchelper.examples.cookbook.DriveTuner.class,
             com.crossbotics.ftchelper.examples.cookbook.OdometryTuner.class,

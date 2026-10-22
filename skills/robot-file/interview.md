@@ -103,6 +103,9 @@ need hard stops), then make sure the shapes are right before blaming the robot.
     centre). What feeds it? -> `feeder=` on the flywheel motor (a motor, a CR servo, or a servo that pushes: it feeds while it is more than 0.15 from where it starts). With CAD, make a
     shot table (`cad.md` step 6). A catapult or spring launcher: make its motor a `flywheel` with
     `feeder=` itself and give the shot a fixed `speed=` (in/s, from a filmed shot).
+    A hood on a servo that tilts the shot? -> `hood=SERVO, hoodAt0=A, hoodAt1=B` on the `shoot.` line: the
+    shot angle (degrees up from forward) with that servo at position 0 and at 1 (measure the angle at the
+    hood's two stops and draw the straight line through them); add its `servo.` line too.
 
 ## Odd answers
 

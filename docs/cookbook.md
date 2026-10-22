@@ -76,6 +76,7 @@ first.
 - [How do I keep aiming when the camera loses the goal?](#how-do-i-keep-aiming-when-the-camera-loses-the-goal)
 - [How do I use one shot table per game piece?](#how-do-i-use-one-shot-table-per-game-piece)
 - [Every shot is a bit short today. How do I trim the speed (a low battery)?](#every-shot-is-a-bit-short-today-how-do-i-trim-the-speed-a-low-battery)
+- [How do I add a hood to my launcher?](#how-do-i-add-a-hood-to-my-launcher)
 
 **Actions** (several steps or parts together)
 - [How do I do several things one after the other?](#how-do-i-do-several-things-one-after-the-other)
@@ -138,6 +139,7 @@ first.
 - [How do I tune the drive for autonomous?](#how-do-i-tune-the-drive-for-autonomous)
 - [How do I set the flywheel numbers?](#how-do-i-set-the-flywheel-numbers)
 - [How do I build a shot table (speed for each distance)?](#how-do-i-build-a-shot-table-speed-for-each-distance)
+- [How do I find my hood's stops and angles?](#how-do-i-find-my-hoods-stops-and-angles)
 
 **Simulator** (try your code with no robot)
 - [How do I start the simulator?](#how-do-i-start-the-simulator)
@@ -1175,6 +1177,100 @@ every match points at the wheel or the balls: the table is off. Make the trim pa
 speed x 1.03, `{48, 2550}` becomes `{48, 2627}`), copy the lines into `Tunables.java`, and trim back to 0.
 **More:** [Lesson 9: speed trim and a low battery](tutorials/start/09-shooter-and-camera.md#speed-trim-and-a-low-battery), [Launcher](modules/robot.md#speed-trim-and-battery-compensation).
 
+### How do I add a hood to my launcher?
+
+**Where:** `Robot.java` (the hood line), `Tunables.java` (its stops, and a third number in each shot
+table row).
+
+<!-- recipe: robot-hood -->
+```java
+// The hood goes on the launcher; its numbers are in Tunables.Hood.
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+        .feeder(Indexer.servo("indexer"))
+        .hood(Hood.servo("hood"))
+        .speedFromDistance(camera));
+```
+
+<!-- recipe: tunables-hood -->
+```java
+public static class Hood {
+    // The servo positions a hair off the hood's two hard stops (Hood Finder). Never past them.
+    public static double posA = 0.20, posB = 0.65;
+    // Optional: the hood's angle at each stop (any scale; here 0 = steep end, 30 = flat end).
+    public static double angleA = 0, angleB = 30;
+    // Stop to stop, seconds: the launcher waits this share of it before firing.
+    public static double travelSec = 0.5, homeAngle = 0;
+}
+
+public static class Launcher {
+    public static double speedRpm = 2600, readyBandRpm = 60, idleRpm = 1500;
+    // {inches to the goal, RPM, hood angle}: the hood is blended between rows like the speed.
+    public static double[][] speedByDistance = {{24, 2200, 3}, {48, 2550, 12}, {72, 2900, 20}};
+}
+```
+
+Never measured an angle? Leave out `angleA`, `angleB`: the hood works in servo positions, and the table's
+third number is a servo position.
+
+<!-- recipe: tunables-hood-positions -->
+```java
+public static class Hood {
+    public static double posA = 0.20, posB = 0.65;   // no angleA / angleB: the "angle" IS the position
+}
+
+public static class Launcher {
+    // {inches, RPM, servo position}: the Shot Tuner writes these for you.
+    public static double[][] speedByDistance = {{24, 2200, 0.24}, {48, 2550, 0.38}, {72, 2900, 0.50}};
+}
+```
+
+A hood on a linkage or cam (equal servo steps do not make equal angles): a calibration table instead.
+
+<!-- recipe: tunables-hood-linkage -->
+```java
+public static class Hood {
+    // {servo position, hood angle} rows, blended between them. The first and last rows are the
+    // stops (no posA / posB then). The angles must keep going one way.
+    public static double[][] calibration = {{0.20, 0}, {0.32, 8}, {0.45, 18}, {0.65, 30}};
+}
+```
+
+A hood on a motor with an encoder (it knows where it is):
+
+<!-- recipe: robot-hood-motor -->
+```java
+add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+        .hood(Hood.motor("hood", "gobilda-5203-117"))   // a motor with an encoder
+        .speedFromDistance(camera));
+```
+
+<!-- recipe: tunables-hood-motor -->
+```java
+public static class Hood {
+    // Encoder ticks at the two stops, counted from where the hood sits at INIT (start the robot
+    // with the hood on stop A), and the angles there.
+    public static double posA = 0, posB = 420, angleA = 0, angleB = 30;
+    public static double kP = 0.005, maxPower = 0.5, tolerance = 0.5;   // power per tick, ready within 0.5 deg
+}
+```
+
+<!-- recipe: hood-buttons -->
+```java
+// The launcher's hood already has gamepad 2's left stick Y (up = a bigger angle): a trim
+// while the table sets the angle, else the angle itself. Your own: steps and home.
+g2.y.press(() -> robot.launcher.hood().step(+1)).says("hood +1 step");
+g2.a.press(() -> robot.launcher.hood().step(-1)).says("hood -1 step");
+g2.x.press(() -> robot.launcher.hood().home()).says("hood home");
+```
+
+**Why:** close shots need a steep angle, far ones a flatter one, so each distance gets a speed AND a
+hood angle, blended between rows. `posA`, `posB` are hard limits: nothing sends the hood past a stop.
+The launcher waits for the hood before it fires (a servo hood: a share of `travelSec`; a motor hood: its
+encoder). The stick (gamepad 2 left Y) is a hood trim while the table sets the angle; double-tap D-pad
+down clears both trims. Find the stops with the [Hood Finder](#how-do-i-find-my-hoods-stops-and-angles),
+then fill the table with the [Shot Tuner](#how-do-i-build-a-shot-table-speed-for-each-distance) (Y until `> Hood`).
+**More:** [Lesson 9: a hood](tutorials/start/09-shooter-and-camera.md#a-hood-the-shot-angle), [Hood](modules/robot.md#hood).
+
 ## Actions
 
 An action is a list of steps that use several parts, with waits between them. It never makes the robot
@@ -2055,6 +2151,29 @@ public class ShotTuner extends ShotTunerOpMode {
 shots). It fills `Tunables.Launcher.speedByDistance` (one line per table to copy), so the
 launcher picks the speed for each distance.
 **More:** [Shot Tuner](guides/finders.md#shot-tuner-the-shot-table).
+
+### How do I find my hood's stops and angles?
+
+**Where:** a new file in TeamCode, `HoodFinder.java` (first line `package org.firstinspires.ftc.teamcode;`):
+
+<!-- recipe: hood-finder -->
+```java
+// The Hood Finder: the hood's two stops (and its angles) for Tunables.Hood. It reads the hood
+// from Robot.java (servo or motor), so it works before Tunables.Hood has numbers.
+@TeleOp(name = "Cookbook Hood Finder", group = "Finders")
+@Disabled   // delete this line in your copy, or you will not see it
+public class HoodFinder extends HoodFinderOpMode {
+    @Override
+    protected RobotDefinition robot() {
+        return new HoodRecipes.Robot();   // in your TeamCode: return new Robot();
+    }
+}
+```
+
+**Why:** nudge the hood to each stop, back off a hair, X and B: it writes `Tunables.Hood: posA = ..., posB = ...`.
+Hold LB + D-pad to type in the angle you measured before X / B (or A for a point in between, for a
+linkage). Copy the lines into `Tunables.java`.
+**More:** [Hood Finder](guides/finders.md#hood-finder).
 
 ## Simulator
 

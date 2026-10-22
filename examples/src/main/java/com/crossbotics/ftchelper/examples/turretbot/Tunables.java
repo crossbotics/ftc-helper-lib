@@ -36,17 +36,29 @@ public class Tunables {
     }
 
     /**
-     * Distance to the goal (inches) and flywheel speed (RPM) that scores from there, measured on the
-     * field (the Shot Tuner helps; it tunes one table at a time). Between rows the speed is blended.
-     * One table per game piece, because they fly differently: POLLEN is a 2.8 in ball, NECTAR a
-     * 3.6 in ball (game manual, section 9.8). Example numbers: measure your own. speedRpm: the speed
-     * until the goal is first seen.
+     * Distance to the goal (inches), flywheel speed (RPM) and hood angle (degrees, see Hood below) that
+     * score from there, measured on the field (the Shot Tuner helps; it tunes one table at a time).
+     * Between rows the speed and the hood are blended. One table per game piece, because they fly
+     * differently: POLLEN is a 2.8 in ball, NECTAR a 3.6 in ball (game manual, section 9.8). Example
+     * numbers: measure your own. speedRpm: the speed until the goal is first seen.
      */
     public static class Launcher {
         public static double speedRpm = 2600, stepRpm = 100, readyBandRpm = 60, idleRpm = 1500;
         public static double kP = 40, kI = 0, kD = 0, kF = 12.5;   // the hub's speed control (Flywheel Finder)
-        public static double[][] speedByDistancePollen = {{24, 2200}, {48, 2550}, {72, 2900}, {96, 3250}};
-        public static double[][] speedByDistanceNectar = {{24, 2400}, {48, 2800}, {72, 3200}, {96, 3600}};
+        public static double[][] speedByDistancePollen = {{24, 2200, 2}, {48, 2550, 11}, {72, 2900, 19}, {96, 3250, 23}};
+        public static double[][] speedByDistanceNectar = {{24, 2400, 0}, {48, 2800, 6}, {72, 3200, 14}, {96, 3600, 18}};
+    }
+
+    /**
+     * The hood (team 8938's turret v8.1GB): 0 deg = its steep end, 25 deg = its flat end, between two stop
+     * cams. A goBILDA Torque servo (300 deg mode) turns it through a 20T pinion and a 108T gear (5.4:1),
+     * so the 25 deg take 135 deg of the servo: about 0.45 of its 0 to 1 range. posA, posB: the servo
+     * positions a hair off each stop (Hood Finder: example numbers here). travelSec: stop to stop
+     * (the servo's 0.2 s per 60 deg x 5.4 x 25 deg = 0.45 s). homeAngle 0: parked at the steep end.
+     */
+    public static class Hood {
+        public static double posA = 0.20, posB = 0.65, angleA = 0, angleB = 25;
+        public static double travelSec = 0.45, homeAngle = 0;
     }
 
     /**
