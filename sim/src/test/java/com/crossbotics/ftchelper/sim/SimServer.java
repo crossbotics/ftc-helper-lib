@@ -337,14 +337,15 @@ final class SimServer {
         return robots;
     }
 
-    // GET /auto: {"robots": [{name, short, drive, odometry, follower, score}], "guess": name}
+    // GET /auto: {"robots": [{name, short, drive, odometry, follower, score, commands, actions, teleop}], "guess": name}
     private String builderInfo() {
         List<Class<? extends com.crossbotics.ftchelper.robot.RobotDefinition>> list = robots();
         StringBuilder b = new StringBuilder("{\"robots\":[");
         for (int i = 0; i < list.size(); i++) {
             // {name, short, drive, odometry, follower} plus how well it fits the robot file (the page picks among the best)
             String d = BuiltAuto.describe(list.get(i));
-            b.append(i > 0 ? "," : "").append(d, 0, d.length() - 1).append(",\"score\":").append(BuiltAuto.score(list.get(i), sim.robot)).append('}');
+            b.append(i > 0 ? "," : "").append(d, 0, d.length() - 1).append(",\"score\":").append(BuiltAuto.score(list.get(i), sim.robot))
+                    .append(',').append(BuiltAuto.codeInfo(list.get(i), sim.ds.opModes)).append('}');
         }
         Class<?> guess = BuiltAuto.guess(list, sim.robot);
         b.append("],\"guess\":");
@@ -372,6 +373,12 @@ final class SimServer {
                     ? com.crossbotics.ftchelper.match.Alliance.BLUE : com.crossbotics.ftchelper.match.Alliance.RED;
             BuiltAuto.program = p;
             BuiltAuto.robotClass = chosen;
+            // Every Run starts a fresh match: the field's pieces back on their spots and the preload in the
+            // robot (unless "Preloaded" is off), whatever an earlier TeleOp or run did with them.
+            if (sim.robot.pieces != null) {
+                sim.robot.pieces.reset();
+                sim.jumps.incrementAndGet();
+            }
             final int screens = sim.ds.screen.updates();
             sim.ds.init(BuiltAuto.NAME, alliance);
             final int run = sim.ds.initCount;

@@ -210,6 +210,8 @@ public final class ShotPoints {
         // Sorted by speed, then hood angle.
         private final List<Row> rows = new ArrayList<>();
         private double spotIn = Double.NaN;
+        // Decimals for the hood on the screen: 1 for degrees (the default), 3 for a servo position, 0 ticks.
+        int hoodDecimals = 1;
 
         /**
          * One shot marked at this speed (no hood).
@@ -331,7 +333,7 @@ public final class ShotPoints {
             List<String> parts = new ArrayList<>();
             for (Row r : rows) {
                 boolean isBest = best != null && r.rpm == (long) best[0] && sameHood(r.hood, best[1]);
-                parts.add(r.rpm + (Double.isNaN(r.hood) ? "" : " @ hood " + hoodText(r.hood))
+                parts.add(r.rpm + (Double.isNaN(r.hood) ? "" : " @ hood " + trim(FinderResults.num(r.hood, hoodDecimals)))
                         + ": " + r.hits + "/" + r.shots + (isBest ? " (best)" : ""));
             }
             return FinderResults.commas(parts);
@@ -411,6 +413,11 @@ public final class ShotPoints {
         private final ArrayDeque<double[]> marks = new ArrayDeque<>();
         private final Tally tally = new Tally();
 
+        // How many decimals the hood gets on the screen (the Shot Tuner sets it from its hood).
+        void hoodDecimals(int decimals) {
+            tally.hoodDecimals = decimals;
+        }
+
         /**
          * A piece was fed: it waits to be marked.
          *
@@ -481,7 +488,9 @@ public final class ShotPoints {
             double spot = tally.spotIn();
             if (!tally.isEmpty() && !Double.isNaN(spot) && Math.abs(distanceIn - spot) > SPOT_MOVE_IN) {
                 clear();
-                return "Moved " + FinderResults.num(Math.abs(distanceIn - spot), 0) + " in: the hit counts start again here.";
+                // (it says the limit, not the distance now: the robot may still be moving)
+                return "Moved more than " + FinderResults.num(SPOT_MOVE_IN, 0) + " in from where the shots were marked: "
+                        + "the hit counts start again here.";
             }
             int dropped = 0;
             for (Iterator<double[]> it = unmarked.iterator(); it.hasNext(); ) {
@@ -513,8 +522,8 @@ public final class ShotPoints {
         }
 
         // "2550 RPM" or "2550 RPM, hood 12.5".
-        private static String what(double[] shot) {
-            return FinderResults.num(shot[0], 0) + " RPM" + (Double.isNaN(shot[1]) ? "" : ", hood " + hoodText(shot[1]));
+        private String what(double[] shot) {
+            return FinderResults.num(shot[0], 0) + " RPM" + (Double.isNaN(shot[1]) ? "" : ", hood " + trim(FinderResults.num(shot[1], tally.hoodDecimals)));
         }
     }
 

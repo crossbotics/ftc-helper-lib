@@ -23,8 +23,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
  * <pre>
  * Choose:  D-pad up/down = motor, A = use it (its count starts at 0 HERE: start at the bottom)
  * Move:    right stick Y = move (at most "max power"), D-pad up/down = max power +/- 0.05 (0.1 to 0.6)
- *          X = mark the LOW end, B = mark the HIGH end. Once both are marked, it will not move past
- *          them (hold LB to move past anyway, e.g. to mark again)
+ *          X = mark the LOW end, B = mark the HIGH end. Once both are marked, the power goes off at
+ *          them (it coasts a little past, more at a higher max power; hold LB to move past anyway, e.g.
+ *          to mark again). A position saved outside the ends gets a warning.
  *          A = save this as a position (P1, P2, ...), Y = undo the last one
  *          hold RT = speed test: full power toward the HIGH end, stops before it (needs both ends)
  *          BACK = choose another motor
@@ -49,6 +50,8 @@ public abstract class MotorFinderOpMode extends FinderOpMode {
     private final Map<String, Integer> positions = new LinkedHashMap<>();
     private double topSpeed = 0;   // counts per second, the fastest seen in a speed test
     private String note = "";
+    // Saved positions outside the two ends (the robot never goes there: positions stay inside min..max).
+    private String outside = "";
 
     @Override protected String finderName() { return "Motor finder"; }
 
@@ -160,6 +163,18 @@ public abstract class MotorFinderOpMode extends FinderOpMode {
     private void writeResults() {
         String key = "motor:" + motorName;
         results.removeStartingWith(key + ":");
+        outside = "";
+        if (bothEnds()) {
+            double lo = Math.min(lowEnd, highEnd), hi = Math.max(lowEnd, highEnd);
+            List<String> past = new ArrayList<>();
+            for (Map.Entry<String, Integer> p : positions.entrySet()) {
+                if (p.getValue() < lo || p.getValue() > hi) past.add(p.getKey() + " = " + p.getValue());
+            }
+            if (!past.isEmpty()) {
+                outside = FinderResults.commas(past) + ": outside the ends (" + FinderResults.num(lo, 0) + " to " + FinderResults.num(hi, 0)
+                        + "). The robot stops at min/max, so it never gets there: Y undoes the last point, or mark the end again.";
+            }
+        }
         String line = "PositionMotor.create(hardwareMap, \"" + motorName + "\")";
         boolean reversed = false;
         if (bothEnds()) {
@@ -209,6 +224,7 @@ public abstract class MotorFinderOpMode extends FinderOpMode {
         t.line("HIGH end (B)", Double.isNaN(highEnd) ? "-" : FinderResults.num(highEnd, 0));
         if (topSpeed > 0) t.line("Top speed", FinderResults.num(topSpeed, 0) + " counts/s");
         if (!note.isEmpty()) t.text(note);
+        if (!outside.isEmpty()) t.warn(outside);
         t.text("Stick = move, A = save position, Y = undo, hold RT = speed test");
     }
 
@@ -222,8 +238,8 @@ public abstract class MotorFinderOpMode extends FinderOpMode {
             "2. Right stick = move slowly. D-pad up/down =",
             "   max power (0.1 to 0.6, starts at 0.3).",
             "3. Just above the bottom: X = LOW end. Just below",
-            "   the top: B = HIGH end. Then it stops at them",
-            "   (hold LB to go past).",
+            "   the top: B = HIGH end. Then the power goes off",
+            "   at them; it coasts a bit past (LB = go past).",
             "4. Each height you need: A (P1, P2...). Y = undo.",
             "5. After X and B: hold RT = speed test (full power",
             "   up, stops before the top).",

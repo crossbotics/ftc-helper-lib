@@ -50,6 +50,26 @@ public class SimPiecesTest {
         assertEquals(30, r.pieces.drawn().size());
     }
 
+    @Test public void thePreloadIsNoMoreThanTheIntakeHolds() throws Exception {
+        SimRobot r = robot("collect.intake = shape=intake, motor=intake, holds=3\n");
+        assertEquals("3 of the 4 POLLEN fit", 3, r.pieces.storedCount());
+    }
+
+    @Test public void anIntakeRunningOutPushesTheHeldPiecesOut() throws Exception {
+        SimRobot r = robot("");
+        r.setPose(30, -30, 0);
+        int before = r.pieces.drawn().size();
+        r.motors.get("intake").device.setPower(-1);        // out
+        run(r, 0.5);
+        assertTrue("some came out: " + r.pieces.storedCount(), r.pieces.storedCount() < 4);
+        run(r, 1.5);
+        assertEquals("all 4 out", 0, r.pieces.storedCount());
+        assertEquals("on the field now", before + 4, r.pieces.drawn().size());
+        r.motors.get("intake").device.setPower(0);
+        run(r, 0.5);
+        assertEquals("a stopped intake takes nothing back", 0, r.pieces.storedCount());
+    }
+
     @Test public void theLauncherShootsAHeldPieceThatFlies() throws Exception {
         SimRobot r = robot("");
         r.setPose(0, -40, 0);

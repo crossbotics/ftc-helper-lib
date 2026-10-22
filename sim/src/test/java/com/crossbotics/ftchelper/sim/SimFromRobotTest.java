@@ -24,7 +24,7 @@ public class SimFromRobotTest {
     private Path generate(Class<?> robotClass) throws Exception {
         com.crossbotics.ftchelper.robot.RobotDefinition r =
                 (com.crossbotics.ftchelper.robot.RobotDefinition) robotClass.getDeclaredConstructor().newInstance();
-        SimFromRobot.Result res = SimFromRobot.merge(null, r.simLines(), robotClass.getName(), "biobuzz-2026");
+        SimFromRobot.Result res = SimFromRobot.merge(null, SimFromRobot.holdsFromPieces(r.simLines(), r), robotClass.getName(), "biobuzz-2026");
         assertTrue(res.problems.toString(), res.problems.isEmpty());
         Path file = tmp.newFile(robotClass.getPackage().getName() + ".properties").toPath();
         Files.write(file, res.text.getBytes(StandardCharsets.UTF_8));
@@ -61,6 +61,40 @@ public class SimFromRobotTest {
         assertFalse(r.text, r.text.contains("old_gate"));
         assertTrue(r.text, r.text.contains("servo.claw = 0.20, part=gobilda-2000-torque   # from Robot.java"));
         assertEquals(Collections.singletonList("shape.intake"), r.kept);
+    }
+
+    @Test public void guessesAreReplacedWhenTheCodeGivesTheSize() {
+        String first = SimFromRobot.merge(null, Arrays.asList("drive.type = tank"), "Robot", "x").text;
+        assertTrue(first, first.contains("robot.lengthIn = 18\n"));
+        // the team adds chassisMm(...) and measures the width by hand
+        String edited = first.replace("robot.widthIn = 18", "robot.widthIn = 17.5");
+        SimFromRobot.Result r = SimFromRobot.merge(edited, Arrays.asList("drive.type = tank",
+                "robot.lengthIn = 16.2", "robot.widthIn = 15"), "Robot", "x");
+        assertTrue(r.text, r.text.contains("robot.lengthIn = 16.2   " + SimFromRobot.MARK));
+        assertFalse(r.text, r.text.contains("robot.lengthIn = 18"));
+        assertTrue("the measured one is kept: " + r.text, r.text.contains("robot.widthIn = 17.5\n"));
+        assertEquals(Collections.singletonList("robot.widthIn"), r.kept);
+    }
+
+    @Test public void runningItAgainNeverAddsAnotherBlock() {
+        String first = SimFromRobot.merge(null, Arrays.asList("drive.type = tank"), "Robot", "x").text;
+        String second = SimFromRobot.merge(first, Arrays.asList("drive.type = tank", "motor.lift = lift"), "Robot", "x").text;
+        String third = SimFromRobot.merge(second, Arrays.asList("drive.type = tank", "motor.lift = lift", "servo.claw = 0.2"), "Robot", "x").text;
+        assertFalse(third, third.contains("added from Robot.java"));
+        assertEquals(third, 1, third.split("---- from Robot.java ----", -1).length - 1);
+        assertTrue(third, third.contains("drive.type = tank   " + SimFromRobot.MARK + "\nmotor.lift = lift   "
+                + SimFromRobot.MARK + "\nservo.claw = 0.2   " + SimFromRobot.MARK + "\n"));
+        assertEquals("the same again: no change", third, SimFromRobot.merge(third,
+                Arrays.asList("drive.type = tank", "motor.lift = lift", "servo.claw = 0.2"), "Robot", "x").text);
+    }
+
+    @Test public void theIntakeHoldsWhatPiecesMaxAllows() {
+        com.crossbotics.ftchelper.robot.RobotDefinition r = new com.crossbotics.ftchelper.examples.v2bot.Robot();
+        java.util.List<String> lines = SimFromRobot.holdsFromPieces(r.simLines(), r);
+        String collect = null;
+        for (String l : lines) if (l.startsWith("collect.")) collect = l;
+        assertTrue(lines.toString(), collect != null);
+        assertTrue(collect, collect.contains("holds=4"));   // v2bot: Pieces.max(4)
     }
 
     @Test public void teamLinesWrittenWithAColonOrASpaceAreTheTeams() {
@@ -346,6 +380,55 @@ public class SimFromRobotTest {
         }
     }
 
+    // Hood Finder: an angle is used once (stop B never gets stop A's), a table needs both stops' angles and
+    // angles that keep going one way, and the screen shows posA/posB OR the table, never both.
+    @Test public void theHoodFinderShowsTheStopsOrATableThatInitTakes() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.turretbot.Robot.class);
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("TurretBot Hood Finder").start();
+            s.press(v -> s.g1().a = v);                               // move to the start point 0.50
+            s.press(v -> s.g1().dpad_down = v);                       // 0.45
+            s.press(v -> s.g1().x = v);                               // stop A, no angle
+            s.press(v -> s.g1().dpad_up = v);
+            s.press(v -> s.g1().dpad_up = v);                         // 0.55
+            hoodAngle(s, 20);
+            s.press(v -> s.g1().b = v);                               // stop B at 20
+            String all = String.join("\n", s.screen());
+            assertTrue(all, SimRun.waitFor(() -> s.screenHas("posA = 0.450, posB = 0.550") && s.screenHas("Angle at stop A missing"), 1));
+            assertFalse("no half pair of angles\n" + all, s.screenHas("angleB ="));
+            s.press(v -> s.g1().dpad_down = v);
+            s.press(v -> s.g1().dpad_down = v);                       // 0.45
+            hoodAngle(s, -20);                                        // 0 here
+            s.press(v -> s.g1().x = v);                               // stop A at 0
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("angleA = 0, angleB = 20"), 1));
+            s.press(v -> s.g1().dpad_up = v);                         // 0.50
+            s.press(v -> s.g1().a = v);                               // no angle measured here yet
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Measure the hood's angle here first"), 1));
+            hoodAngle(s, 25);                                         // 25: more than at stop B, the wrong way
+            s.press(v -> s.g1().a = v);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("keep going one way"), 1));
+            assertFalse(s.screenHas("calibration ="));
+            s.press(v -> s.g1().y = v);                               // undo
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Point 1 removed: 0 left."), 1));
+            assertFalse("no stale point", s.screenHas("Point 1: 0.500"));
+            hoodAngle(s, -15);                                        // 10
+            s.press(v -> s.g1().a = v);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("calibration = {{0.450, 0}, {0.500, 10}, {0.550, 20}}"), 1));
+            assertFalse("the table OR the stops, never both\n" + String.join("\n", s.screen()), s.screenHas("posA ="));
+            assertEquals("", s.error());
+        }
+    }
+
+    // Hold LB and press the D-pad up (+1) or down (-1) this many times: the hood's angle typed in.
+    private static void hoodAngle(SimRun s, int steps) throws InterruptedException {
+        s.g1().left_bumper = true;
+        for (int i = 0; i < Math.abs(steps); i++) {
+            if (steps > 0) s.press(v -> s.g1().dpad_up = v);
+            else s.press(v -> s.g1().dpad_down = v);
+        }
+        s.g1().left_bumper = false;
+    }
+
     // Whole-robot aim (flywheelbot, no turret): G1 RB on, and the robot turns itself to face the goal
     // its webcam sees; the turn stick still wins.
     @Test public void flywheelBotTurnsItselfToFaceTheGoal() throws Exception {
@@ -612,6 +695,39 @@ public class SimFromRobotTest {
         }
     }
 
+    // A pod wired backward that Robot.java does not reverse: the Forward test says so (as on a real robot);
+    // too few turns and a Loop that never left the mark are refused.
+    @Test public void theOdometryTunerCatchesABackwardPodFewTurnsAndNoLoop() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.odometrybot.Robot.class);
+        Files.write(file, "odometry.reversed = x   # measured: this pod counts backward\n".getBytes(StandardCharsets.UTF_8),
+                java.nio.file.StandardOpenOption.APPEND);
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("Odometry Bot Odometry Tuner").start();
+            s.press(v -> s.g1().a = v);                              // 1 Forward 48 in
+            s.robot().push(24, 0, 2);
+            SimRun.pause(2.4);
+            s.press(v -> s.g1().b = v);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Forward counted BACKWARD"), 2));
+            s.press(v -> s.g1().dpad_down = v);
+            s.press(v -> s.g1().dpad_down = v);
+            s.press(v -> s.g1().dpad_down = v);                     // 4 Loop and back
+            s.press(v -> s.g1().a = v);
+            SimRun.pause(0.3);
+            s.press(v -> s.g1().b = v);                              // never moved
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("It went only"), 2));
+            assertFalse(s.screenHas("checked = true"));
+            s.press(v -> s.g1().dpad_up = v);                       // 3 Spin 3+ turns
+            s.press(v -> s.g1().a = v);
+            s.g1().right_stick_x = 1;
+            assertTrue(SimRun.waitFor(() -> Math.abs(s.robot().odometry.turnTotalDeg()) > 1.3 * 360, 20));
+            s.g1().right_stick_x = 0;
+            SimRun.pause(0.3);
+            s.press(v -> s.g1().b = v);                              // only about 1.5 turns
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("spin at least 3"), 2));
+            assertEquals("", s.error());
+        }
+    }
+
     // The finders' hookup for the robot in five files (lesson 6): robot() { return new Robot(); }, and
     // lines for Robot.java and Tunables.java.
     @Test public void theLessonBotDriveTunerShowsFiveFilesLines() throws Exception {
@@ -840,14 +956,29 @@ public class SimFromRobotTest {
         }
     }
 
+    @Test public void aStartRightAfterTheAllianceChangeStartsFromTheNewSpot() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.flywheelbot.Robot.class);
+        com.crossbotics.ftchelper.match.MatchMemory.clear();
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("FlywheelBot Shoot and Leave");
+            s.press(v -> s.g1().b = v);                          // RED, then START at once
+            s.sim.ds.start();
+            double x, y;
+            synchronized (s.robot()) { x = s.robot().x; y = s.robot().y; }
+            assertTrue("on the red spot at START: " + x + ", " + y, Math.hypot(x + 56, y + 61.55) < 1);
+        }
+    }
+
     @Test public void teleOpWithoutAutoStartsOnItsAlliancesSide() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.flywheelbot.Robot.class);
         com.crossbotics.ftchelper.match.MatchMemory.clear();
         try (SimRun s = new SimRun(file.toString())) {
             s.init("FlywheelBot TeleOp");                          // no autonomous: nothing chosen yet
-            SimRun.pause(0.5);
-            assertEquals("it stays at the robot file's start until the alliance is chosen", -61.55, s.robot().y, 0.01);
-            s.press(v -> s.g1().x = v);                          // BLUE: the same spot from the blue wall
+            // "Alliance : BLUE until you choose": the robot stands on BLUE's spot, and the page looks from there
+            assertTrue("on BLUE's spot until the alliance is chosen", SimRun.waitFor(() -> Math.abs(s.robot().y - 61.55) < 0.01
+                    && Math.abs(s.robot().x - 56) < 0.01, 2));
+            assertEquals(com.crossbotics.ftchelper.match.Alliance.BLUE, SimEngine.allianceUntilChosen(s.sim.ds));   // what the page shows
+            s.press(v -> s.g1().x = v);                          // BLUE chosen: it stays
             assertTrue(SimRun.waitFor(() -> Math.abs(s.robot().y - 61.55) < 0.01 && Math.abs(s.robot().x - 56) < 0.01, 2));
             s.press(v -> s.g1().b = v);                          // RED: the robot file's start
             assertTrue(SimRun.waitFor(() -> Math.abs(s.robot().y + 61.55) < 0.01, 2));

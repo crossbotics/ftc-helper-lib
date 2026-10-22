@@ -172,12 +172,14 @@ builds an autonomous on the field and runs it with your code: see [The auto buil
 **Where the robot starts.** In INIT the robot is put where the program says: an autonomous that names its
 start spot (`s.start(note, x, y, heading)`, or `startSpotIn()` in an EasyAuto) puts it there for the
 alliance chosen in its menu; a TeleOp with no autonomous before it puts it at the robot file's start for
-RED, or that spot's mirror image for BLUE, once the drivers choose the alliance (X / B). After an
+RED, or that spot's mirror image for BLUE, as the drivers choose the alliance (X / B); until they choose,
+it stands on BLUE's spot and the page looks from the blue wall, because the TeleOp says
+`Alliance : BLUE until you choose` (and aims and drives for BLUE). After an
 autonomous, TeleOp leaves it where autonomous ended. **Move it by hand:** while no program runs (or in
 INIT), drag the robot on the field map (Control Hub, Robot tab) and turn it with the mouse wheel over it,
 or in the 3D view: double-click the robot, then drag it to move it or drag its yellow ring to turn it
 (double-click again to stop). Under the map, the spot is shown as an autonomous start spot from your
-alliance's wall, ready for `s.start("...", x, y, heading)`. The robot is a box from the robot file
+alliance's wall, ready for `s.start("...", x, y, heading)`. The robot is a gray box from the robot file
 (`robot.lengthIn` x `widthIn` x `chassisHeightIn`) with a white arrow at the front; it turns red when it bumps into
 something. Its shapes (below) move with their motors and servos. Rollers and wheels have dark
 stripes, so you see them turn and which way; a roller glows **green** while it takes pieces in and
@@ -230,7 +232,7 @@ browser.
 | Camera sight lines | A line from the chosen camera to each tag in front of it. **Green**: the camera sees it (with about how many pixels across). **Pink "blocked?"**: the camera model sees it, but a field part is in the way of the line (the simulator's camera sees through field parts; a real one does not, so do not count on that tag from there). **Orange**: too slanted (the tag's face is turned more than 60 degrees from the camera). **Red**: too small (fewer pixels across than the tag finder needs: 6.5 per step of decimation, so 20 at the SDK's decimation 3). **Grey, faint**: out of the picture (left, right, above or below). **Purple**: the pretend lighting does not work with the camera's setting now (`goodPipelines`, `goodExposureMs`). Not seen: only the nearest four lines of each kind. The words at the bottom left list every tag. "Not open" means the OpMode has no camera running, so it gets nothing even where the lines are green. |
 | Camera view cone | The camera's view, 36 in long (as before). |
 | Floor map | Where on the field the chosen camera can see tags: each 4 in square is shaded by how many tags the camera would see with the robot standing there (light: 1, darker: 2 or 3, darkest: 4 or more). The simulator works it out with the same camera rules the OpMode gets (field parts do not block in this map), with the robot facing the way it faces now, or, ticked "turned any way", the best of 24 headings. Turret and other parts stay as they are now. It updates once a second. |
-| Shot arc | Where each launcher would send its next piece if it fired now: a dashed yellow line from the launcher, with its peak height (check the venue's ceiling and lights). The simulator works it out from the flywheel's speed now, the shot angle (the hood's angle if it has one) and a shot table's average, with the same air drag and spin lift as a real shot, but it flies through everything (no goal, no walls, no other pieces). The words at the bottom left give the angle, speed and peak; a stopped flywheel says so. |
+| Shot arc | Where each launcher would send its next piece if it fired now: a dashed yellow line from the launcher, with its peak height (check the venue's ceiling and lights). The simulator works it out from the flywheel's speed now, the shot angle (the hood's angle if it has one) and a shot table's average, with the same air drag and spin lift as a real shot, but it flies through everything (no goal, no walls, no other pieces). The words at the bottom left give the angle, speed and peak ("shoots backward, 33° up" for a launcher that throws over the robot's back); a stopped flywheel says so. |
 | Ball trails | The last half second of each loose ball's path, in its color: how it flew and bounced. |
 | Path lines | The Pedro plan and the trail (the same as **Path lines** in the Robot tab). |
 | Robot size box | A box around everything the robot has out now (green while it fits 18 x 24 in and 29 in tall, red when not; worked out from the shapes' boxes, not the CAD models) and the 18 in start cube, dashed. |
@@ -255,12 +257,16 @@ What a team does, step by step:
 1. **Robot and alliance.** The builder finds the Robot classes in the code the simulator runs (your
    TeamCode, or the library's examples) and picks the one whose device names match the robot file
    ("Best fit"); pick another in the list if it guessed wrong. Its drive (tank or mecanum) and the robot's
-   size come from your code and the robot file. **Run as** RED or BLUE, and say whether RED's routes are
-   mirrored (`mirrorForRed()`; BIOBUZZ's turned field: "false (turned field)").
+   size come from your code and the robot file. So do the suggestions in the command and action boxes
+   (your parts' methods, the named positions in Tunables, your `Actions.java`), a new step's first guess,
+   and **TeleOp next** (the TeleOp written for that Robot class) and the package, until you type your own.
+   A new plan has no steps ("Load the lesson's example" puts lesson 6's in). **Run as** RED or BLUE, and
+   say whether RED's routes are mirrored (`mirrorForRed()`; BIOBUZZ's turned field: "false (turned field)").
 2. **Choose the mode.**
    - **Simple steps** (any drive): drive, strafe (mecanum), turn, turn to, wait, start something (a
-     command), an action from `Actions.java`, and "park from here" (`parkWithSeconds`). Tap the field map
-     to add a drive to that spot (a tank drive gets a turn first), drag the blue dot at the end of a drive to
+     command), an action from `Actions.java` (its time limit starts at 10 s), and "park from here"
+     (`parkWithSeconds`). A button adds its step at the end (tick "add after the selected step" to put it
+     after the one you picked). Tap the field map to add a drive to that spot (a tank drive gets a turn first), drag the blue dot at the end of a drive to
      change it, or use the list: each step has its numbers, arrows to move it, and its own warnings.
    - **Pedro path** (mecanum with odometry): tap to add lines or curves, drag the ends and the control
      points, choose each part's heading rule and speed limit, hold the end, and add things to start along the
@@ -280,8 +286,9 @@ What a team does, step by step:
    your half, not in the LOADING ZONE, inside the 18 in box), more than 30 s, the park time, a tank strafe,
    names left empty. The time is a plan from simple speed numbers (an action counts its whole time limit).
 6. **Run in the simulator.** The simulator INITs the **Built Auto** (its own autonomous, listed in the
-   Driver Hub under "Builder") with your plan, chooses the alliance, puts the robot on the start spot and
-   presses START. The clock beside Run counts the autonomous's seconds (real time, like a match: no fast
+   Driver Hub under "Builder") with your plan, puts the field's pieces back and the preload in the robot (a
+   fresh match, whatever a TeleOp did before), chooses the alliance, puts the robot on the start spot and
+   presses START. The last run's results go away when a new run starts. The clock beside Run counts the autonomous's seconds (real time, like a match: no fast
    forward). A **purple robot** drives the plan beside your robot; each of its steps starts when your
    robot's step starts, so you see where they part. The green line is where your robot really went.
 7. **Read the result:** a table with each step's word from the report (done, STALLED, timed out, skipped
@@ -289,12 +296,16 @@ What a team does, step by step:
    changes have an **Apply** button: a 0.3 s wait before a turn (or a new direction) that came right after a
    drive (the robot still rolls when a drive ends, so it slides on a few inches), holding a Pedro path's
    end, or slowing its last part. Press Run again to check.
-8. **Copy the Java** (the whole file for Simple steps, or only the steps; for a Pedro path the `PedroPath`
-   field and the steps to paste, the same as the web builder), **Save the scenario** (a scenario file that
-   checks the note, the start spot, each step "done" and the end, within the inches and degrees you set;
-   [scenario files](#scenario-files-test-without-a-browser)), and tick **with the end from the last run** to
-   check the end your robot really reached (for a route that is right as it drives, so a later change that
-   moves the end is caught). The plan is kept in this browser.
+8. **Copy the Java** (the whole file for Simple steps, or only the steps; for a Pedro path the imports, the
+   `PedroPath` field and the steps to paste, the same as the web builder), **Save the scenario** (a scenario
+   file that checks the note, the start spot, that every step is "done" by its number in the report
+   (`expect step 3 done`: actions too, and two steps with one name each get their own check), and the end,
+   within the inches and degrees you set; a plan that drives off the field gets no end check, only a
+   comment; [scenario files](#scenario-files-test-without-a-browser)), and tick **with the end from the
+   last run** to check the end your robot really reached (for a route that is right as it drives, so a
+   later change that moves the end is caught). That box works only after a run of this plan where every
+   step was done (not after a STALLED step), and a run is forgotten when the page reloads. The plan is
+   kept in this browser.
 
 **What it can call in your code.** A command or an action is written as Java, and the simulator reads
 these shapes only: `robot.part::method`, `robot::method`, `() -> robot.part.method(...)`,
@@ -304,15 +315,19 @@ and the public method by its name. **Why only these:** safety and plainness. Not
 on the laptop can be reached from the page, and nothing is compiled or run as a script. Anything else
 (`Tunables.Lift.high`, two calls in one) is refused at INIT with a message, like a part that is not on the
 robot: write it as a method in Robot.java or Actions.java and name that method. A name that is not there
-stops INIT with the names there are (`Robot.java has no part called claw (its parts: intake, launcher)`).
+stops INIT with the names there are (`Robot.java has no part called claw (its parts: intake, launcher)`). Every name in the plan is found and checked before INIT builds the first step, and an action must be a
+method that gives an `Action`: a command named where an action goes (`robot.intake.in()`) is refused
+without being run.
 
 **Shared with the web builder.** The plan, its checks, the Java, the scenario, the start note and the
 setup card come from the same files as the web builder: `pathcore.js`, `stepscore.js`, `mapdraw.js` and
 `setupcard.js` in `sim/src/test/resources/sim/builder/`. **The library is their source**: change them here,
 then copy them to the web site (its `scripts/sync-path-builder.mjs` copies them with the field file).
 `node tools/check_builder.mjs` checks that the Java and the scenario for a set of plans are letter for letter
-what the web builder wrote (`sim/src/test/resources/builder/fixtures.json`), checks the simulator-only part
-(`simcore.js`), and, when it finds a checkout of the site, that the site's copies are the same.
+what the shared files wrote when the fixtures were made (`sim/src/test/resources/builder/fixtures.json`;
+`--write-fixtures sim/src/test/resources/sim/builder` makes them again after an intended change), checks the
+simulator-only part (`simcore.js`), and, when it finds a checkout of the site, warns when the site's copies
+differ (`SITE_STRICT=1` makes that a failure, before publishing the site).
 
 **Not covered:** the INIT menu (`menuChoice`, `onlyIf`), your own steps (`step(...)`), `waitUntil`, and
 reading Java back in (the web builder reads Java in). A Pedro plan is one path (one `follow`, or one
@@ -839,8 +854,10 @@ OpModes, and uses `simulator/robot.properties` from the robot project. Iterative
 
 - Another TeamCode folder: `-PteamCode=<folder>` (the TeamCode module: it must have `src/main/java`); the
   library's own examples instead: `-PteamCode=none`.
-- TeamCode uses other libraries (Road Runner, Pedro Pathing, FTC Dashboard...)? Put their Gradle lines in
-  `simulator/sim-dependencies.gradle` in the robot project, for example:
+- TeamCode uses other libraries (Road Runner, FTC Dashboard...)? Put their Gradle lines in
+  `simulator/sim-dependencies.gradle` in the robot project, for example (Pedro Pathing comes with the
+  library's `pedro` module, and Pedro's tuning library from start lesson 8 is added by itself when
+  `build.dependencies.gradle` or `TeamCode/build.gradle` has it):
 
 ```groovy
 repositories { maven { url = 'https://maven.brott.dev/' } }
@@ -882,8 +899,10 @@ expect time < 25                       # seconds since START (e.g. how long an a
 expect touch lift_bottom pressed       # or: open
 expect error none                      # or: error has "..."
 expect phase RUNNING                   # IDLE | INIT | RUNNING | STOPPED
+expect step 3 done                     # the autonomous report's 3rd step (after "Start"): done, STALLED ...
 expect motor lift power > 0.1          # power | ticks | velocity | amps; > < >= <= =  (= VALUE TOLERANCE)
 expect servo claw target = 0.53 0.01   # target | actual
+expect light status = GREEN            # what a light (light.NAME = gobilda or blinkin) shows: GREEN, RED, off ...
 expect shape intake_arm < 0            # a shape's angle (arm, turret), inches (slide) or gap (claw)
 expect robot y > -30                   # x | y | heading | imu | shots
 expect bumped none                     # or: bumped "Red HIVE"

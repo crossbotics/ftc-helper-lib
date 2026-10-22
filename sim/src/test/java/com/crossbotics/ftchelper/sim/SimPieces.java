@@ -315,8 +315,14 @@ final class SimPieces {
             if (!preloaded) {
                 // no preload: the robot starts empty
             } else if (!collects.isEmpty() || !shoots.isEmpty()) {
+                // never more than the intake holds (collect.NAME = ..., holds=3 takes 3 of a 4-piece preload)
+                int room = Integer.MAX_VALUE;
+                if (!collects.isEmpty()) {
+                    room = 0;
+                    for (Collect c : collects) room = Math.max(room, c.holds);
+                }
                 for (Map.Entry<String, Integer> e : robot.field.preload.entrySet()) {
-                    for (int i = 0; i < e.getValue(); i++) stored.add(robot.field.pieceTypes.get(e.getKey()));
+                    for (int i = 0; i < e.getValue() && stored.size() < room; i++) stored.add(robot.field.pieceTypes.get(e.getKey()));
                 }
             } else if (!grabs.isEmpty()) {
                 int k = 0;
@@ -770,10 +776,41 @@ final class SimPieces {
                 b.ignoreRobotUntil = world.time() + 0.3;
                 g.heldType = null;
             }
+            spitOut();
             score.step();
         }
     }
 
+
+    // An intake running OUT (its motor or CR servo turning the other way past the threshold) pushes the held
+    // pieces back out, the newest first (it is nearest the rollers), one every SPIT_EVERY_SEC.
+    static final double SPIT_EVERY_SEC = 0.3;
+    private double nextSpit = 0;
+
+    private void spitOut() {
+        if (stored.isEmpty()) return;
+        for (Collect c : collects) {
+            double power = c.motor != null ? robot.motors.get(c.motor).appliedPower
+                    : robot.crServos.get(c.crservo)[0] * (robot.crServos.get(c.crservo)[1] == 1 ? -1 : 1);
+            boolean out = c.threshold > 0 ? power <= -c.threshold : power >= -c.threshold;
+            if (!out || world.time() < nextSpit) continue;
+            SimShapes.Piece piece = pieceOf(c.shapes[0]);
+            double[] at = piece == null ? new double[] {robot.lengthIn / 2, 0, 0} : piece.center.clone();
+            // straight out from the robot's middle, past the rollers
+            double len = Math.max(1e-6, Math.hypot(at[0], at[1]));
+            double ox = at[0] / len, oy = at[1] / len;
+            SimField.PieceType t = stored.remove(stored.size() - 1);
+            double r = t.diameterIn / 2;
+            double reach = piece == null ? 1 : Math.max(piece.sf, 1) / 2;
+            double[] f = toField(new double[] {at[0] + ox * (r + reach + 0.5), at[1] + oy * (r + reach + 0.5), Math.max(at[2], r)});
+            double[] push = toFieldDir(new double[] {ox * 20, oy * 20, 0});
+            double[] rv = world.robotVel();
+            SimWorld.Ball b = world.addBall(t, f[0], f[1], f[2], rv[0] + push[0], rv[1] + push[1], 0);
+            b.ignoreRobotUntil = world.time() + 0.3;
+            nextSpit = world.time() + SPIT_EVERY_SEC;
+            return;
+        }
+    }
 
     // ---------------------------------------------------------------- FLOWER stacks (with the rules)
 

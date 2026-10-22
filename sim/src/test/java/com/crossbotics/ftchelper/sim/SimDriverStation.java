@@ -329,8 +329,19 @@ final class SimDriverStation {
         }
     }
 
+    // Run just before START (set by SimEngine): puts the robot on the INIT start spot, so a START pressed
+    // right after INIT (a scenario, a quick click) never starts from the spot before. Run WITHOUT this
+    // object's lock: it takes the robot's lock, and the physics takes the robot's lock before this one.
+    volatile Runnable beforeStart = null;
+
     /** START. */
-    synchronized void start() {
+    void start() {
+        Runnable r = beforeStart;
+        if (r != null) r.run();
+        startNow();
+    }
+
+    private synchronized void startNow() {
         if (phase != Phase.INIT || op == null) return;
         startedAt = System.nanoTime();
         op.resetRuntime();

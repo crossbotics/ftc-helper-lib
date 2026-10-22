@@ -60,6 +60,12 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
     private double[] podsAtStart, podsNow;
     // The turn since the test began, from the odometry's own heading (added up loop by loop).
     private double odoTurnDeg, lastOdoH;
+    // The Loop test: how far the robot got from the mark (inches), so standing still is not "back on the mark".
+    private double farthestIn;
+    /** The Spin test needs this many turns: more turns, a smaller error from where it starts and stops. */
+    static final double SPIN_TURNS = 3;
+    /** The Loop test counts only when the robot went at least this far from the mark (inches). */
+    static final double LOOP_MIN_IN = 24;
     private final List<DcMotorEx> pods = new ArrayList<>();
 
     @Override
@@ -101,6 +107,7 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
         lastImu = imuDeg();
         odoTurnDeg = 0;
         lastOdoH = 0;
+        farthestIn = 0;
         podsAtStart = null;   // taken in the next loop, after the device has read fresh counts
         lastResult = "";
     }
@@ -116,6 +123,10 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
         double oh = odo.pose().headingDeg;
         odoTurnDeg += Angles.shortestDiff(oh, lastOdoH);
         lastOdoH = oh;
+        if (running >= 0) {
+            FieldPose p = odo.pose();
+            farthestIn = Math.max(farthestIn, Math.hypot(p.x, p.y));
+        }
         driving.update(gamepad1, 0.3);
     }
 
@@ -172,8 +183,9 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
         double turnRad = Math.toRadians(imuTurnDeg);
         if (spec.kindName().equals("pinpoint")) turnRad = Math.toRadians(odoTurnDeg);
         if (podsAtStart == null) podsAtStart = podsNow;
-        if (Math.abs(turnRad) < 2 * Math.PI) {
-            lastResult = "Only " + FinderResults.num(Math.toDegrees(Math.abs(turnRad)) / 360, 1) + " turns: spin at least 3 (right stick).";
+        // (a hair less than 3 counts: nobody stops exactly on the mark)
+        if (Math.abs(turnRad) < (SPIN_TURNS - 0.1) * 2 * Math.PI) {
+            lastResult = "Only " + FinderResults.num(Math.toDegrees(Math.abs(turnRad)) / 360, 1) + " turns: spin at least 3 (right stick), then B.";
             return;
         }
         double perMm = spec.podTicksPerMm();
@@ -222,6 +234,11 @@ public abstract class OdometryTunerOpMode extends FinderOpMode {
 
     private void loop(FieldPose p) {
         double err = Math.hypot(p.x, p.y), turn = Math.abs(Angles.wrapDegrees(p.headingDeg));
+        if (farthestIn < LOOP_MIN_IN) {
+            lastResult = "It went only " + FinderResults.num(farthestIn, 1) + " in from the mark: drive at least "
+                    + FinderResults.num(LOOP_MIN_IN, 0) + " in away (around the field is best), then back to the mark, then B.";
+            return;
+        }
         if (err <= 1.0 && turn <= 2.0) {
             results.set("odo:checked", "Tunables.Odometry: checked = true");
             lastResult = "Back on the mark within " + FinderResults.num(err, 2) + " in and " + FinderResults.num(turn, 1)

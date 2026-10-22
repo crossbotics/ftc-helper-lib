@@ -28,6 +28,26 @@ public class SimLightsTest {
         return file;
     }
 
+    @Test public void aScenarioCanCheckWhatALightShows() throws Exception {
+        com.crossbotics.ftchelper.match.MatchMemory.clear();
+        Path scenario = tmp.newFile("light.sim").toPath();
+        Files.write(scenario, java.util.Arrays.asList(
+                "init \"Cookbook Lights\"",
+                "press g1.b                          # RED",
+                "expect within 2 light light = RED",
+                "expect light light = GREEN          # fails: it is RED",
+                "expect servo light target = 0.5    # a light is not a servo: fails with a hint"), StandardCharsets.UTF_8);
+        try (SimRun s = new SimRun(robotFile().toString())) {
+            s.sim.ds.register("Cookbook Lights", "TeleOp", LightRecipes.Controls.class);
+            SimScenario sc = new SimScenario(s.sim);
+            sc.run(scenario);
+            String report = String.join("\n", sc.report());
+            assertEquals(report, 2, sc.failures());
+            assertTrue(report, report.contains("shows RED"));
+            assertTrue(report, report.contains("is a light: expect light light = GREEN"));
+        }
+    }
+
     @Test public void theRecipeLightShowsTheAllianceFollowsTheIntakeAndFlashes() throws Exception {
         com.crossbotics.ftchelper.match.MatchMemory.clear();
         try (SimRun s = new SimRun(robotFile().toString())) {

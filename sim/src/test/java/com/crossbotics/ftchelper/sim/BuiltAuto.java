@@ -105,8 +105,13 @@ public class BuiltAuto extends Auto<RobotDefinition> {
             return p;
         }
 
-        /** Adds the plan's steps to the list, the same calls the Java file makes. */
+        /**
+         * Adds the plan's steps to the list, the same calls the Java file makes. First every name in the plan
+         * is found and checked (an action must be a method that gives an Action) WITHOUT calling anything, so
+         * a wrong plan stops INIT before any of the team's code runs.
+         */
         void addTo(Steps s, RobotDefinition robot) {
+            check(robot);
             if (spot) s.start(note, x, y, h);
             else s.start(note, h);
             for (int i = 0; i < steps.size(); i++) {
@@ -118,6 +123,32 @@ public class BuiltAuto extends Auto<RobotDefinition> {
                     addStep(s, robot, st, kind, label, where);
                 } catch (IllegalArgumentException e) {
                     // Like a part that is not on the robot: INIT stops with the message.
+                    throw new IllegalStateException(NAME + ", " + where + ": " + e.getMessage(), e);
+                }
+            }
+        }
+
+        // Every command and action name in the plan, found and checked; nothing is called.
+        void check(RobotDefinition robot) {
+            for (int i = 0; i < steps.size(); i++) {
+                Map<String, Object> st = steps.get(i);
+                String kind = SimJsonReader.string(st, "kind", "");
+                String label = SimJsonReader.string(st, "label", "");
+                String where = "step " + (i + 1) + (label.isEmpty() ? "" : " (\"" + label + "\")");
+                try {
+                    String code = SimJsonReader.string(st, "code", "");
+                    if (kind.equals("run")) BuiltCode.checkCommand(code, robot);
+                    if (kind.equals("action") || kind.equals("alongside")) BuiltCode.checkAction(code, robot);
+                    Object list = st.get("along");
+                    if (list != null) {
+                        for (Object o : SimJsonReader.array(list, where + ": the things along the path")) {
+                            Map<String, Object> a = SimJsonReader.object(o, where + ": a PathAt");
+                            String c = SimJsonReader.string(a, "code", "");
+                            if ("action".equals(SimJsonReader.string(a, "what", "command"))) BuiltCode.checkAction(c, robot);
+                            else BuiltCode.checkCommand(c, robot);
+                        }
+                    }
+                } catch (IllegalArgumentException e) {
                     throw new IllegalStateException(NAME + ", " + where + ": " + e.getMessage(), e);
                 }
             }
@@ -337,6 +368,107 @@ public class BuiltAuto extends Auto<RobotDefinition> {
         } catch (Throwable e) {
             return "{\"name\":\"" + c.getName() + "\",\"short\":\"" + shortName(c) + "\",\"drive\":\"\",\"odometry\":false,\"follower\":false}";
         }
+    }
+
+    /**
+     * What the auto builder offers for a Robot class, as JSON fields (no braces): the commands its parts
+     * have ({@code robot.intake::in}: each part's public methods with no inputs that give nothing, and
+     * {@code () -> robot.lift.goTo("high")} for each named position in Tunables), its Actions
+     * ({@code Actions.fireAll(robot)}: public static methods of the Actions class next to it that take the
+     * robot and give an Action), and the TeleOp that drives it (for "TeleOp next"). Found by reflection:
+     * nothing is called but define() (no hardware) and nothing moves.
+     */
+    static String codeInfo(Class<? extends RobotDefinition> c, List<SimDriverStation.Entry> opModes) {
+        Set<String> commands = new LinkedHashSet<>(), actions = new LinkedHashSet<>();
+        try {
+            RobotDefinition r = c.getDeclaredConstructor().newInstance();
+            r.modules();   // reads define(): the parts are made (no hardware)
+            for (java.lang.reflect.Field f : c.getFields()) {
+                if (Modifier.isStatic(f.getModifiers())) continue;
+                Object part = f.get(r);
+                if (!(part instanceof com.crossbotics.ftchelper.robot.Module)) continue;
+                for (Class<?> k = part.getClass(); k != null && k != com.crossbotics.ftchelper.robot.Module.class && k != Object.class; k = k.getSuperclass()) {
+                    for (java.lang.reflect.Method m : k.getDeclaredMethods()) {
+                        if (!Modifier.isPublic(m.getModifiers()) || Modifier.isStatic(m.getModifiers()) || m.isSynthetic()) continue;
+                        if (m.getParameterCount() != 0 || m.getReturnType() != void.class || m.getName().equals("update")) continue;
+                        commands.add("robot." + f.getName() + "::" + m.getName());
+                    }
+                }
+                if (part instanceof com.crossbotics.ftchelper.robot.MotorPositions || part instanceof com.crossbotics.ftchelper.robot.ServoPositions) {
+                    for (String pos : namedPositions(c, ((com.crossbotics.ftchelper.robot.Module<?>) part).name())) {
+                        commands.add("() -> robot." + f.getName() + ".goTo(\"" + pos + "\")");
+                    }
+                }
+            }
+            for (java.lang.reflect.Method m : c.getDeclaredMethods()) {
+                if (Modifier.isPublic(m.getModifiers()) && !Modifier.isStatic(m.getModifiers()) && m.getParameterCount() == 0
+                        && m.getReturnType() == void.class) commands.add("robot::" + m.getName());
+            }
+        } catch (Throwable ignored) {
+            // a Robot that cannot be made here: no commands
+        }
+        try {
+            Class<?> a = BuiltCode.actionsClass(c.getDeclaredConstructor().newInstance(), "");
+            for (java.lang.reflect.Method m : a.getMethods()) {
+                if (!Modifier.isStatic(m.getModifiers()) || !Action.class.isAssignableFrom(m.getReturnType())) continue;
+                if (m.getParameterCount() == 1 && m.getParameterTypes()[0].isAssignableFrom(c)) actions.add("Actions." + m.getName() + "(robot)");
+            }
+        } catch (Throwable ignored) {
+            // no Actions class: no actions
+        }
+        StringBuilder b = new StringBuilder("\"commands\":[");
+        int i = 0;
+        for (String s : commands) SimJson.string(b.append(i++ > 0 ? "," : ""), s);
+        b.append("],\"actions\":[");
+        i = 0;
+        for (String s : actions) SimJson.string(b.append(i++ > 0 ? "," : ""), s);
+        b.append("],\"teleop\":");
+        return SimJson.string(b, teleOpFor(c, opModes)).toString();
+    }
+
+    // Named positions in Tunables.<Part> (the numbers that are not settings): a lift's "high", a claw's "open".
+    private static final Set<String> SETTINGS = new java.util.HashSet<>(java.util.Arrays.asList(
+            "min", "max", "kP", "kI", "kD", "kF", "maxPower", "slowZone", "slowZonePower", "tolerance", "speed", "rest", "start"));
+
+    private static List<String> namedPositions(Class<?> robotClass, String partName) {
+        List<String> out = new ArrayList<>();
+        String pkg = robotClass.getPackage() == null ? "" : robotClass.getPackage().getName() + ".";
+        try {
+            Class<?> t = Class.forName(pkg + "Tunables$" + partName, false, robotClass.getClassLoader());
+            for (java.lang.reflect.Field f : t.getFields()) {
+                boolean number = f.getType() == double.class || f.getType() == Double.class;
+                if (Modifier.isStatic(f.getModifiers()) && number && !SETTINGS.contains(f.getName())) out.add(f.getName());
+            }
+        } catch (Throwable ignored) {
+            // no such section: none
+        }
+        return out;
+    }
+
+    /**
+     * The TeleOp that drives this Robot class: one whose class is {@code ControlMap<Robot>} (or any OpMode
+     * whose generic type is the Robot); else one in the same package; "" if none.
+     */
+    static String teleOpFor(Class<? extends RobotDefinition> c, List<SimDriverStation.Entry> opModes) {
+        String samePackage = "";
+        for (SimDriverStation.Entry e : opModes) {
+            if (!"TeleOp".equals(e.kind)) continue;
+            if (robotOf(e.type) == c) return e.name;
+            if (samePackage.isEmpty() && e.type.getPackage() == c.getPackage()) samePackage = e.name;
+        }
+        return samePackage;
+    }
+
+    /** The Robot class an OpMode is written for (its {@code Auto<Robot>} or {@code ControlMap<Robot>}), or null. */
+    static Class<?> robotOf(Class<?> opMode) {
+        for (Class<?> k = opMode; k != null && k != Object.class; k = k.getSuperclass()) {
+            java.lang.reflect.Type t = k.getGenericSuperclass();
+            if (!(t instanceof java.lang.reflect.ParameterizedType)) continue;
+            for (java.lang.reflect.Type arg : ((java.lang.reflect.ParameterizedType) t).getActualTypeArguments()) {
+                if (arg instanceof Class && RobotDefinition.class.isAssignableFrom((Class<?>) arg)) return (Class<?>) arg;
+            }
+        }
+        return null;
     }
 
     // examples.gobildabot.Robot -> gobildabot.Robot (the package's last word tells them apart)

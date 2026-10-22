@@ -55,7 +55,8 @@ import com.crossbotics.ftchelper.vision.TargetSource;
  *   left stick click  = undo the last HIT / MISS (that shot waits to be marked again)
  *   right stick click = drop the last shot not marked (a "shot" that never was: the wheel dipped)
  *   X              = save: the speed with the best hit ratio (hits / shots) at this distance
- *                    (replaces one within 1 in)
+ *                    (replaces one within 1 in; shots not marked yet: mark them first; none marked
+ *                    at all: X again within 3 s saves the speed now)
  *   hold BACK 1 s  = delete the saved point here (held, so it is not pressed by mistake)
  *   sticks         = drive (with robotConfig()), left trigger = slow
  * Help: GUIDE (or hold START 1 s) = a help page with every button; everything pauses.
@@ -254,6 +255,9 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
     private double shotAt = Double.NaN;
     private double recoverySec = Double.NaN;
     private String note = "";
+    // X with no shots marked: the first press only warns, a second one within this time saves the speed now.
+    private double noShotsAskedAt = Double.NaN;
+    static final double CONFIRM_SEC = 3;
     // Hold-RT shooting: on only after a fresh RT press; off after B, a jam or a "gave up".
     private boolean continuous = false;
     private boolean rtWasDown = false;
@@ -286,6 +290,7 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         names = new java.util.ArrayList<>(tableNames());
         if (names.isEmpty()) names.add("main");
         robotHood = module != null ? module.hood() : null;
+        trials.hoodDecimals(hoodDecimals());
         for (String n : names) tables.put(n, new ShotPoints(hood != null, hoodDecimals()));
         // Start on the table the launcher starts with (its startTable), else the first.
         tuning = module != null && names.contains(module.tableName()) ? module.tableName() : names.get(0);
@@ -452,7 +457,8 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         return odometryDistance ? robotDef.aim().fromOdometry() : null;
     }
 
-    // X: save the speed with the best hit ratio at this distance (with no shots marked: the speed now).
+    // X: save the speed with the best hit ratio at this distance. With no shots marked, it warns first;
+    // X again within CONFIRM_SEC saves the speed now. Shots waiting to be marked must be marked first.
     private void savePoint() {
         double d = distance();
         if (Double.isNaN(d)) {
@@ -464,6 +470,20 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
             note = "No hood angle yet: change it with the D-pad first.";
             return;
         }
+        if (trials.unmarkedCount() > 0) {
+            note = "Mark the " + trials.unmarkedCount() + " shot(s) first (A = HIT, B = MISS), then X.";
+            return;
+        }
+        if (tally.isEmpty()) {
+            // Nothing proves this speed goes in: only save it when asked twice.
+            double now = nowSec();
+            if (Double.isNaN(noShotsAskedAt) || now - noShotsAskedAt > CONFIRM_SEC) {
+                noShotsAskedAt = now;
+                note = "No shots marked here: shoot and mark 3-5 first (A / B). Press X again to save the speed now anyway.";
+                return;
+            }
+        }
+        noShotsAskedAt = Double.NaN;
         double speed = rpm, hoodSaved = hoodDeg, measured = Double.NaN;
         int hits = 0, shots = 0;
         if (!tally.isEmpty()) {

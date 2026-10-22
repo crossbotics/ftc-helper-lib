@@ -25,7 +25,11 @@ import java.util.Set;
  * the team's (measured, from photos or CAD) and is kept, even for the same setting: a measured
  * {@code shape.lift} wins over the generated guess. Generated lines whose part is gone from the code
  * are removed. It stops (exit 1, nothing written) when the file describes a device differently from
- * the code: a motor in the file that the code uses as a servo, or other drive motors.
+ * the code: a motor in the file that the code uses as a servo, or other drive motors. A size or start
+ * guess a new file got (for example {@code robot.lengthIn = 18}, left as it was) is replaced once the code
+ * gives that number ({@code chassisMm}). New parts go right after the last generated line, so running it
+ * again and again never adds another block. An intake's {@code holds=} comes from {@code Pieces.max(n)}
+ * when the intake does not say.
  *
  * <p>It is a starting point: the code does not know the robot's sizes, so the generated shapes are
  * guesses marked TODO until someone measures them.
@@ -72,7 +76,7 @@ public final class SimFromRobot {
         }
         Path file = Paths.get(out);
         String existing = Files.isRegularFile(file) ? new String(Files.readAllBytes(file), StandardCharsets.UTF_8) : null;
-        Result r = merge(existing, robot.simLines(), robotClass, field);
+        Result r = merge(existing, holdsFromPieces(robot.simLines(), robot), robotClass, field);
         if (!r.problems.isEmpty()) {
             System.err.println("fromRobot: the robot file and Robot.java disagree (nothing written):");
             for (String p : r.problems) System.err.println("  " + p);
@@ -94,6 +98,43 @@ public final class SimFromRobot {
             System.out.println("Tunables.java: names checked like INIT does (INIT stops on a field no part reads, and warns about a section):");
             for (String p : tunables) System.out.println("  " + p);
         }
+    }
+
+    /**
+     * An intake without {@code .holds(n)} gets "holds=3   # TODO" from the code; when the robot counts its
+     * pieces ({@code Pieces.max(n)}), that limit is how many it holds, so use it instead of the guess.
+     */
+    static List<String> holdsFromPieces(List<String> lines, RobotDefinition robot) {
+        int max = 0;
+        for (com.crossbotics.ftchelper.robot.Module<?> m : robot.modules()) {
+            if (m instanceof com.crossbotics.ftchelper.robot.Pieces) max = Math.max(max, ((com.crossbotics.ftchelper.robot.Pieces) m).maxPieces());
+        }
+        if (max <= 0) return lines;
+        List<String> out = new ArrayList<>();
+        for (String l : lines) {
+            if (l.startsWith("collect.") && l.contains(", holds=3   # TODO how many it holds")) {
+                l = l.replace(", holds=3   # TODO how many it holds", ", holds=" + max + "   # Pieces.max");
+            }
+            out.add(l);
+        }
+        return out;
+    }
+
+    // The size and start lines a new file gets when the code does not give them: guesses. A later run
+    // replaces a guess (the exact same text, unmarked) when the code gives that number (chassisMm, heightMm).
+    private static final String[][] GUESSES = {
+        {"# TODO measure: the robot's size in inches, and a legal start (inches from the field centre).", null},
+        {"robot.lengthIn = 18", "robot.lengthIn"}, {"robot.widthIn = 18", "robot.widthIn"},
+        {"robot.heightIn = 18", "robot.heightIn"}, {"robot.chassisHeightIn = 4", "robot.chassisHeightIn"},
+        {"start.x = -56", null}, {"start.y = -61.55", null}, {"start.heading = 0", null},
+        {"# TODO measure: wheel centres side to side, and front to back.", "drive.trackWidthIn"},
+        {"drive.trackWidthIn = 15", "drive.trackWidthIn"}, {"drive.wheelBaseIn = 13", "drive.wheelBaseIn"}};
+
+    // True for an unmarked line that is still exactly a guess a new file got, now given by the code.
+    private static boolean isGuess(String line, Map<String, String> gen) {
+        String t = line.trim();
+        for (String[] g : GUESSES) if (g[1] != null && !g[0].startsWith("#") && g[0].equals(t) && gen.containsKey(g[1])) return true;
+        return false;
     }
 
     /**
@@ -120,14 +161,7 @@ public final class SimFromRobot {
             sb.append("battery = 12.8\n");
             sb.append("field = ").append(field).append("\n");
             // The size and start lines, unless the code gives them (then they come with the code's lines).
-            String[][] defaults = {
-                {"# TODO measure: the robot's size in inches, and a legal start (inches from the field centre).", null},
-                {"robot.lengthIn = 18", "robot.lengthIn"}, {"robot.widthIn = 18", "robot.widthIn"},
-                {"robot.heightIn = 18", "robot.heightIn"}, {"robot.chassisHeightIn = 4", "robot.chassisHeightIn"},
-                {"start.x = -56", null}, {"start.y = -61.55", null}, {"start.heading = 0", null},
-                {"# TODO measure: wheel centres side to side, and front to back.", "drive.trackWidthIn"},
-                {"drive.trackWidthIn = 15", "drive.trackWidthIn"}, {"drive.wheelBaseIn = 13", "drive.wheelBaseIn"}};
-            for (String[] d : defaults) if (d[1] == null || !gen.containsKey(d[1])) sb.append(d[0]).append('\n');
+            for (String[] d : GUESSES) if (d[1] == null || !gen.containsKey(d[1])) sb.append(d[0]).append('\n');
             sb.append('\n');
             sb.append("# ---- from Robot.java ----\n");
             for (String line : gen.values()) sb.append(line).append('\n');
@@ -139,35 +173,45 @@ public final class SimFromRobot {
         Map<String, Integer> teamKeys = new LinkedHashMap<>();   // the team's own (unmarked) settings
         for (int i = 0; i < lines.length; i++) {
             String k = key(lines[i]);
-            if (k != null && !lines[i].contains(MARK)) teamKeys.put(k, i);
+            if (k != null && !lines[i].contains(MARK) && !isGuess(lines[i], gen)) teamKeys.put(k, i);
         }
         check(gen, teamKeys, lines, problems);
 
         Set<String> written = new LinkedHashSet<>();
-        StringBuilder sb = new StringBuilder();
+        List<String> outLines = new ArrayList<>();
+        int lastOurs = -1;   // where our last line went: new parts go right after it (no new block each run)
         for (String line : lines) {
             String k = key(line);
-            if (k != null && line.contains(MARK)) {
-                // One of ours: the new version, or nothing if the part is gone from the code.
-                if (gen.containsKey(k) && !teamKeys.containsKey(k) && written.add(k)) sb.append(gen.get(k)).append('\n');
+            boolean guess = k != null && !line.contains(MARK) && isGuess(line, gen);
+            if (k != null && (line.contains(MARK) || guess)) {
+                // One of ours (or a guess the code now gives): the new version, or nothing if the part is gone.
+                if (gen.containsKey(k) && !teamKeys.containsKey(k) && written.add(k)) {
+                    outLines.add(gen.get(k));
+                    if (!guess) lastOurs = outLines.size() - 1;
+                }
                 continue;
             }
             if (k != null && gen.containsKey(k)) {
                 kept.add(k);
                 written.add(k);
             }
-            sb.append(line).append('\n');
+            outLines.add(line);
         }
-        // New parts: added at the end.
-        boolean header = false;
-        for (Map.Entry<String, String> e : gen.entrySet()) {
-            if (written.contains(e.getKey())) continue;
-            if (!header) {
-                sb.append("\n# ---- added from Robot.java ----\n");
-                header = true;
+        // New parts: after our last line, or in a new block at the end when the file has none of ours.
+        List<String> added = new ArrayList<>();
+        for (Map.Entry<String, String> e : gen.entrySet()) if (!written.contains(e.getKey())) added.add(e.getValue());
+        if (!added.isEmpty()) {
+            if (lastOurs >= 0) {
+                outLines.addAll(lastOurs + 1, added);
+            } else {
+                while (!outLines.isEmpty() && outLines.get(outLines.size() - 1).trim().isEmpty()) outLines.remove(outLines.size() - 1);
+                outLines.add("");
+                outLines.add("# ---- added from Robot.java ----");
+                outLines.addAll(added);
             }
-            sb.append(e.getValue()).append('\n');
         }
+        StringBuilder sb = new StringBuilder();
+        for (String l : outLines) sb.append(l).append('\n');
         // One newline at the end, however many there were.
         String text = sb.toString().replaceAll("\n+$", "\n");
         return new Result(text, problems, kept);

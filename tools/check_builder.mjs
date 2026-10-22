@@ -10,14 +10,16 @@
 //      plan <-> field numbers for both alliances, the field's neutral names, plan versus real, the fixes,
 //      the Pedro scenario, the recorded scenario;
 //   3. a copy of the shared files on the web site differs from the library's (only checked when a site
-//      checkout is found: SITE_BUILDER_DIR, or ../crossbotics*/public/ftc-helper/path-builder).
+//      checkout is found: SITE_BUILDER_DIR, or ../crossbotics*/public/ftc-helper/path-builder; a warning
+//      unless SITE_STRICT=1, since the site copies the library's files after a change).
 //
 // Which way the files go: the LIBRARY is the source of pathcore.js, stepscore.js, mapdraw.js and
 // setupcard.js. Change them here, run this check, then copy them to the site (its
 // scripts/sync-path-builder.mjs copies them, like the field file).
 //
-// To make the fixtures again from the web builder's own files (only when its output changes on purpose):
-//   node tools/check_builder.mjs --write-fixtures /path/to/site/public/ftc-helper/path-builder
+// To make the fixtures again (only when the output changes on purpose), from the library's own files
+// (sim/src/test/resources/sim/builder: the source) or from the site's once it has copied them:
+//   node tools/check_builder.mjs --write-fixtures sim/src/test/resources/sim/builder
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -95,7 +97,7 @@ if (process.argv[2] === '--write-fixtures') {
 	if (!site || !fs.existsSync(path.join(site, 'stepscore.js'))) { console.log('Give the web builder\'s folder (with stepscore.js).'); process.exit(2); }
 	const S = await importFrom(site, 'stepscore.js'), P = await importFrom(site, 'pathcore.js');
 	const C = await importFrom(dir, 'simcore.js');
-	const out = { from: 'the crossbotics.com web path builder (the site repo, public/ftc-helper/path-builder)', made: new Date().toISOString().slice(0, 10), ...outputs(S, P),
+	const out = { from: 'the shared path builder files (' + path.relative(root, path.resolve(site)) + ')', made: new Date().toISOString().slice(0, 10), ...outputs(S, P),
 		// The plans as the Built Auto reads them (simcore.toProgram): BuiltAutoTest parses each.
 		programs: [...STEP_PLANS.map((f) => C.toProgram({ mode: 'steps', steps: { plan: f.plan } })), ...PEDRO_PLANS.map((f) => C.toProgram({ mode: 'pedro', pedro: f.st }))] };
 	fs.mkdirSync(path.dirname(fixturesFile), { recursive: true });
@@ -242,7 +244,7 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 // The scenarios: a Pedro one, and one with the recorded end.
 {
 	const text = C.pedroScenario(PEDRO_PLANS[0].st, { fileName: 'p.sim' });
-	ok(text.includes('init "Built Pedro Auto"') && text.includes('press g1.b') && text.includes('expect screen has "To the goal: done"')
+	ok(text.includes('init "Built Pedro Auto"') && text.includes('press g1.b') && /expect within 2 step 1 done +# To the goal/.test(text)
 		&& text.includes('expect robot x = -30 4') && text.includes('expect robot y = -30 4') && text.includes('expect robot heading = 45 10')
 		&& text.includes('expect robot x = -56 0.5'), 'pedroScenario: INIT as RED, the start, each step done, the end');
 	const mirrored = C.pedroScenario(PEDRO_PLANS[1].st);
@@ -252,6 +254,26 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 	ok(rec.includes('expect robot x = -50 4') && rec.includes('expect robot y = -40.5 4') && rec.includes('expect robot heading = 3 10')
 		&& rec.includes('Recorded from a simulator run on 2026-10-22') && rec.includes('expect robot x = -56 0.5') && rec.includes('expect robot y = -61.1 0.5'), 'recordedScenario: the end replaced, the start kept');
 	ok(rec.split('\n').length === steps.split('\n').length + 1, 'recordedScenario: one line more (the note)');
+}
+
+// The shared files' own rules: every step checked by its number (duplicate names and actions too), no
+// end checks for a plan that leaves the field, who made it, Pedro's imports, no preselectTeleOp guess.
+{
+	const plan = structuredClone(STEP_PLANS[1].plan);
+	plan.steps.splice(2, 0, { kind: 'move', label: 'Out from the wall', inches: 2, dir: 0, power: 0.6 });
+	const text = S.toScenario(plan, { madeBy: 'the simulator\'s auto builder' });
+	const nonPark = plan.steps.filter((x) => x.kind !== 'park').length;
+	ok((text.match(/^expect (within 2 )?step \d+ done/gm) || []).length === nonPark && /^expect step 6 done +# Actions\.fireAll\(robot\)$/m.test(text),
+		'toScenario: one check per step by number, actions included');
+	ok(/^# Made by the simulator's auto builder/m.test(text) && !/crossbotics\.com/.test(text), 'toScenario: says who made it');
+	const off = structuredClone(STEP_PLANS[1].plan);
+	off.steps = [{ kind: 'move', label: 'Too far', inches: 200, dir: 0, power: 0.6 }];
+	const offText = S.toScenario(off);
+	ok(!/expect robot x = (?!-56 0\.5)/.test(offText) && /No end checks/.test(offText), 'toScenario: no end checks for a plan off the field');
+	const noTele = S.toJava({ ...STEP_PLANS[0].plan, teleop: '' }).file;
+	ok(!/preselectTeleOp =/.test(noTele.split('\n').find((l) => l.startsWith('@Autonomous'))), 'toJava: no TeleOp guessed when none is given');
+	const pj = P.toJava(PEDRO_PLANS[0].st.path, pedroOpts(PEDRO_PLANS[0].st));
+	ok(pj.all.includes('import com.crossbotics.ftchelper.pedro.PedroPath;') && pj.all.includes('import com.crossbotics.ftchelper.robot.PathAt;'), 'Pedro Java: the imports it needs');
 }
 
 // ------------------------------------------------------------------ 3. the site's copies
@@ -269,9 +291,14 @@ function siteDir() {
 }
 const site = siteDir();
 if (site) {
+	// The library changes first and the site copies it later, so a site that is behind is a warning
+	// (SITE_STRICT=1 makes it a failure, e.g. right before publishing the site).
+	const strict = process.env.SITE_STRICT === '1';
 	for (const f of SHARED) {
 		const a = fs.readFileSync(path.join(dir, f), 'utf8'), b = fs.readFileSync(path.join(site, f), 'utf8');
-		ok(a === b, `${f}: the site's copy (${site}) differs from the library's. The library is the source: copy it to the site (scripts/sync-path-builder.mjs there)`);
+		const what = `${f}: the site's copy (${site}) differs from the library's. The library is the source: copy it to the site (scripts/sync-path-builder.mjs there)`;
+		if (strict) ok(a === b, what);
+		else if (a !== b) console.log('WARN ' + what);
 	}
 } else {
 	console.log('No site checkout found (SITE_BUILDER_DIR): the shared files were not compared with the site\'s.');

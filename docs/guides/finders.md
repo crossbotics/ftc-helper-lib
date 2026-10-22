@@ -109,9 +109,14 @@ so it works before Tunables.Hood has numbers. A hood with `.fullRange()` gets th
    into the table.
 3. **Angles (optional).** Measure the hood's angle (an angle app on a phone laid on the hood) at each
    stop: **hold LB + D-pad** to type it in BEFORE you press X / B. You get `angleA = 0, angleB = 25` too.
+   Each angle you type is used for ONE place (a stop or a point), so measure again at the next place. An
+   angle at only one stop is not written: the screen says which stop still needs its angle.
 4. **A linkage** (the angle is not a straight line of the servo position): add points in between: move
-   there, type in the angle (LB + D-pad), press **A**. With 3 or more points you get a `calibration`
-   line; it replaces posA / posB. **Y** undoes the last point.
+   there, type in the angle (LB + D-pad), press **A**. With points and the angles at both stops you get
+   a `calibration` line INSTEAD of the posA / posB line (the hood reads one or the other: both stop INIT;
+   its first and last rows are the stops). The angles must keep going one way along the hood, as INIT
+   checks: a point that breaks that is shown as a warning and no table is written. **Y** undoes the last
+   point.
 5. Copy the lines into `Tunables.java` (the robot uses the file, not this screen). Then time a
    stop-to-stop move for `travelSec` (servo hood): the launcher waits that long (a share of it for a
    shorter move) before firing.
@@ -120,8 +125,10 @@ so it works before Tunables.Hood has numbers. A hood with `.fullRange()` gets th
 
 1. **Put the mechanism at its bottom**, then choose the motor (D-pad, A): its count starts at 0 there.
 2. Move it slowly with the right stick (max power starts at 0.3). Stop just before the bottom and
-   press **X**; just before the top and press **B**. From now on it stops at those marks.
-3. Press **A** at each height you need.
+   press **X**; just before the top and press **B**. From now on the power goes off at those marks; the
+   mechanism coasts a little past them (more at a higher max power), so mark them with some room.
+3. Press **A** at each height you need. A height outside the two marks gets a warning (the robot stops
+   at min and max, so it could never get there): **Y** undoes it.
 4. Hold **RT** for a speed test: full power up, stopping before the top. The top speed helps you
    choose a max power and PID gains.
 5. Five files: the line `Tunables.Lift: min = 0, max = 2580, P1 = 1200` becomes `min = 0, max = 2580`
@@ -153,12 +160,16 @@ Watch the current (amps): a high number while not moving means it is pushing on 
    same amount; if one does not, fix its direction or encoder cable first.
 2. **Drive test:** A; it drives 48 in. Measure, set the real distance with the D-pad, A. The new
    wheel size is used at once: run it again until it measures 48 (wheels slip a little on tiles, so
-   this is the final word). A move that got stuck is not measured.
+   this is the final word). A move that got stuck is not measured. The screen keeps showing the heading
+   and the wheel counts while it drives.
 3. **Strafe test** (mecanum): the same, for `c.strafeCorrection`.
-4. Copy the lines, then switch autonomous on:
+4. **Turn 90 left** (a check, nothing to copy): it turns 90 degrees left; put a square against the
+   robot to see it, and the screen shows the IMU's heading (it should say 90).
+5. Copy the lines, then switch autonomous on:
    - five files: `Robot.java: .wheelMm(96.8)` goes in the drive line (it replaces `.wheel(...)` if you
-     used a catalog wheel), `Tunables.Drive: strafeCorrection = 1.180` in `Tunables.Drive`. Then
-     `Tunables.Drive.calibrated = true`.
+     used a catalog wheel), `Tunables.Drive: strafeCorrection = 1.180` in `Tunables.Drive`. Once the
+     Drive test (and on a mecanum the Strafe test) measures 48 within 0.5 in, the tuner also shows
+     `Tunables.Drive: calibrated = true`: copy that too.
    - older helpers: the `c.` lines go in `RobotSettings.auto()`, then `c.calibrationConfirmed = true`.
 
 ## Odometry Tuner: directions, offsets and a loop check
@@ -172,12 +183,15 @@ can also push the robot by hand. D-pad chooses, **A** starts, **B** ends the tes
 
 1. **Forward 48 in:** drive or push it 48 in straight forward along the tape, B. "Forward OK" (and how
    many % off), or "counted BACKWARD": add `"x"` to `.reversed(...)` (dead wheels: that pod's port
-   name). An OTOS gets `Tunables.Odometry: linearScalar = ...` to copy (multiply it with the one in use).
+   name). The simulator's Pinpoint works the same way: `odometry.reversed = x` in the robot file is a pod
+   wired backward, and the code's `.reversed(...)` (and `.offsetsMm(...)`) is what the Pinpoint is told, so
+   a robot file that differs from Robot.java shows the same mistakes as a real robot. An OTOS gets `Tunables.Odometry: linearScalar = ...` to copy (multiply it with the one in use).
    More than 2% off: check the pod type (Pinpoint) or `ticksPerMm(...)` (dead wheels), and the tape.
    More than 10% off: "was it really 48 in?" (a mistake in the test: measure and run it again).
 2. **Left 24 in:** drive or push it 24 in to its LEFT, B. "Left OK", or "counted RIGHT": add `"y"` to
    `.reversed(...)` (dead wheels: the sideways pod's name). A tank robot: push it.
-3. **Spin 3+ turns:** turn it in place at least 3 times with the right stick, B. It measures the turn
+3. **Spin 3+ turns:** turn it in place at least 3 times with the right stick, B (fewer: it says how many
+   and asks for more). It measures the turn
    from the Pinpoint's own heading, or from the Control Hub's IMU for dead wheels and the OTOS (so they
    need `.imu(...)` in `drive(...)`, or the tuner stops at INIT and says so). It shows the offsets
    as the numbers to change: `Robot.java: in the odometry(...) line, .offsetsMm(-84.2, -167.5)`
@@ -186,17 +200,25 @@ can also push the robot by hand. D-pad chooses, **A** starts, **B** ends the tes
    An OTOS has no offsets to measure: measure `mountIn` with a tape, and its turn scale
    [by hand](../modules/odometry.md#otos-turn-scale-by-hand).
 4. Copy the numbers into your odometry line, rebuild.
-5. **Loop and back:** start on the mark, drive anywhere, come back onto the mark facing the same way, B.
+5. **Loop and back:** start on the mark, drive anywhere (at least 24 in away: a robot that never left the
+   mark proves nothing, and the tuner says so), come back onto the mark facing the same way, B.
    Within 1 in and 2 degrees it shows `Tunables.Odometry: checked = true`: set it in `Tunables.java`.
    Until then, autonomous `driveTo` steps are skipped on the robot.
 
 ## Aim Tuner: camera offset
 
+**Before you start:** the Aim Tuner is set up with the older helpers' pieces, not with `robot()`: your
+`createCamera()`, and `createTurret()` or `robotConfig()` (to aim by turning the robot), and
+`createLauncher()` for test shots ([reference](../modules/finders.md#aimtuneropmode)). For a robot in five
+files, `robotConfig()` is `return new Robot().robotConfig();`. The Characterizer is the same: it needs
+`robotConfig()`.
+
 1. Park the robot 4-6 ft from the target, facing it. A turret with a home switch: press **X** first.
 2. Hold **A**: it aims. Shoot (**RB**). LB stops the flywheel.
 3. Shots go LEFT of the middle: press D-pad RIGHT (aim more to the right). Shots go right: LEFT.
 4. Repeat until shots go in the middle, at two or three distances. Copy the offset line
-   (five files, with a turret: `Tunables.Turret: cameraOffset = -1.5`).
+   (five files, with a turret: `Tunables.Turret: cameraOffset = -1.5`; aiming by turning the whole robot:
+   `Tunables.Aim: cameraOffset = -1.5`).
    If the offset that works changes with distance, the camera is off to the side of the launcher:
    move it onto the launcher's line (or as close as you can), or tune at the distance you shoot from most.
 
@@ -227,7 +249,8 @@ of shots: 3 in out of 4 beats 2 out of 3). Every button is on **gamepad 1**.
    - **A "shot" with no piece** (the wheel slowed down by itself, so `Shots fired` went up):
      **right stick click** drops the last shot that is not marked yet.
 4. Press **X** to save: it keeps the speed with the **best hit ratio** at this distance (a tie: the one
-   with more shots), and with a hood the hood angle those shots were fired with. Each point also keeps
+   with more shots). Shots not marked yet must be marked first. With no shots marked at all, X only
+   warns; X again within 3 s saves the speed now anyway (a guess, not a tested speed), and with a hood the hood angle those shots were fired with. Each point also keeps
    the flywheel speed **measured** as the pieces were fed. If the flywheel was well under the speed
    asked for, it **sagged** (the last shot or a low battery slowed it, and it was not back yet): the
    screen warns. Wait for `Ready: YES` between shots and charge the battery, or the table will not match

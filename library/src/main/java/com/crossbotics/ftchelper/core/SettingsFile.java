@@ -14,7 +14,8 @@ import java.util.function.Consumer;
  * Used by {@link Profile} and {@code Tunable}. You rarely need it directly.
  *
  * <p>The file is {@code /sdcard/FIRST/ftc-helper/settings.properties} on the Control Hub.
- * You can see it with the REV Hardware Client or Android Studio's Device Explorer.
+ * You can see it with the REV Hardware Client or Android Studio's Device Explorer. In the simulator
+ * it is in the simulator's data folder instead (see {@link #folder()}).
  *
  * <p>Inside, each line is {@code key=value}, for example {@code profile=PRACTICE}. Every value is
  * stored as text; {@link #getDouble} turns it back into a number.
@@ -25,8 +26,6 @@ import java.util.function.Consumer;
  * Docs: docs/modules/core.md
  */
 public final class SettingsFile {
-    // Where the robot's settings file lives on the Control Hub.
-    private static final File DEFAULT_FOLDER = new File("/sdcard/FIRST/ftc-helper");
     // The one shared settings file for the whole app ("static": one copy, not one per object).
     private static SettingsFile shared;
 
@@ -54,10 +53,21 @@ public final class SettingsFile {
         this.file = file;
     }
 
-    /** The robot's settings file. */
+    /**
+     * The folder for the helper's files (settings, finder results, logs): {@code /sdcard/FIRST/ftc-helper}
+     * on the robot. The simulator sets the Java setting {@code ftchelper.dataDir} to keep them on the
+     * laptop instead (a laptop has no /sdcard, so saving there would fail).
+     *
+     * @return the folder (it may not exist yet; savers make it)
+     */
+    public static File folder() {
+        return new File(System.getProperty("ftchelper.dataDir", "/sdcard/FIRST/ftc-helper"));
+    }
+
+    /** The robot's settings file ({@code settings.properties} in {@link #folder()}). */
     public static synchronized SettingsFile shared() {
         // Made the first time someone asks, then the same one is handed out every time.
-        if (shared == null) shared = new SettingsFile(new File(DEFAULT_FOLDER, "settings.properties"));
+        if (shared == null) shared = new SettingsFile(new File(folder(), "settings.properties"));
         return shared;
     }
 

@@ -30,7 +30,8 @@ import java.util.List;
  * </pre>
  *
  * Each new number is used at once in this tuner (no rebuild): run the Drive and Strafe tests again
- * until they measure 48, then copy the lines into your code. Leave 5 ft of space in front of and to
+ * until they measure 48 (within 0.5 in: then it also shows {@code Tunables.Drive: calibrated = true}),
+ * then copy the lines into your code. The screen keeps updating while a test moves. Leave 5 ft of space in front of and to
  * the right of the robot. It shows each number twice: for {@code RobotSettings.auto()}
  * ({@code c.wheelDiameterIn = 3.937;}) and for the robot in five files ({@code Robot.java: .wheelMm(100.0)},
  * {@code Tunables.Drive: strafeCorrection = 1.120}).
@@ -94,6 +95,12 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
     // The wheels' settings before the push test, given back after it.
     private final List<DcMotor.RunMode> savedModes = new ArrayList<>();
     private final List<DcMotor.ZeroPowerBehavior> savedZero = new ArrayList<>();
+    // The Drive (and, mecanum, Strafe) test measured the test distance (within CLOSE_ENOUGH_IN): calibrated.
+    private boolean driveRight = false, strafeRight = false;
+    /** A test that measures this close to the test distance (inches) is right: no change needed. */
+    static final double CLOSE_ENOUGH_IN = 0.5;
+    // While a test moves: the last screen update (System.nanoTime), so the screen is not sent every loop.
+    private long movingShownAt = 0;
 
     @Override protected String finderName() { return "Drive tuner"; }
 
@@ -153,6 +160,16 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
         if (waiting == Wait.MEASURE) {
             // The new number is used at once (AutoDrive reads these settings on every move), so the
             // next test already uses it.
+            boolean right = Math.abs(measured - testDistanceIn()) <= CLOSE_ENOUGH_IN;
+            if (test == 1) driveRight = right;
+            if (test == 2) strafeRight = right;
+            if (right) {
+                lastResult = (test == 1 ? "Drive" : "Strafe") + " measures " + FinderResults.num(testDistanceIn(), 0)
+                        + " in: right." + (test == 1 && canStrafe() && !strafeRight ? " Next: the Strafe test." : "");
+                waiting = Wait.CHOOSE;
+                writeCalibrated();
+                return;
+            }
             if (test == 1) {
                 double d = FinderMath.correctedDiameter(autoConfig.wheelDiameterIn, testDistanceIn(), measured);
                 autoConfig.wheelDiameterIn = d;
@@ -166,6 +183,7 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
                 lastResult = "Strafe correction now " + FinderResults.num(s, 3) + ". Run the Strafe test again.";
             }
             waiting = Wait.CHOOSE;
+            writeCalibrated();
             return;
         }
         if (waiting != Wait.CHOOSE) return;
@@ -187,14 +205,27 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
         }
     }
 
+    // Once the Drive test (and on a mecanum the Strafe test) measures right: the line that lets autonomous run.
+    private void writeCalibrated() {
+        if (driveRight && (strafeRight || !canStrafe())) {
+            results.set("drive:calibrated", "Tunables.Drive: calibrated = true   // the moves measure right: autonomous may run");
+        } else {
+            results.removeStartingWith("drive:calibrated");
+        }
+    }
+
     // Runs a test that moves the robot. BLOCKS on purpose until the move is done. STOP and GUIDE
-    // both end it at once (GUIDE then opens the help page; the test is not measured).
+    // both end it at once (GUIDE then opens the help page; the test is not measured). The screen keeps
+    // updating while it moves (the move's loop calls showMoving).
     private void runTest(int which) {
         auto.setStopCondition(this::helpKeyDown);
+        final String name = TESTS[which];
+        auto.setLoopHook(() -> showMoving(name));
         try {
             runMove(which);
         } finally {
             auto.setStopCondition(null);
+            auto.setLoopHook(null);
         }
         if (helpKeyDown() && opModeIsActive()) {
             lastResult = "Stopped by GUIDE/START: not measured.";
@@ -217,6 +248,18 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
                         + FinderResults.num(auto.headingDeg(), 1) + " deg (should be 90)";
                 break;
         }
+    }
+
+    // The screen while a test moves (about 10 times a second): what it does, the heading, the wheel counts.
+    private void showMoving(String name) {
+        long now = System.nanoTime();
+        if (now - movingShownAt < 100_000_000L) return;
+        movingShownAt = now;
+        t.section("Drive tuner");
+        t.text(name + ": moving... (GUIDE or START stops it)");
+        t.line("Heading", FinderResults.num(auto.headingDeg(), 1) + " deg");
+        t.line("Wheel counts", java.util.Arrays.toString(auto.getWheelTicks()));
+        t.update();
     }
 
     // Only a move that finished normally can be measured: a stuck or timed-out move did not try to

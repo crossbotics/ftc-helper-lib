@@ -53,6 +53,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
  *   <li>Sensors: just read the values.</li>
  * </ul>
  * Changing the chosen device stops the last one. Put the robot on a block first.
+ * Help: GUIDE (or hold START 1 s) = a help page with every button, like the finders; while it is open,
+ * every motor and CR servo is stopped and the buttons do nothing.
  * (A CR servo is a "continuous rotation" servo: it spins like a small motor instead of going to a position.)
  *
  * Steps: docs/guides/testing.md. Docs: docs/modules/testing.md
@@ -95,21 +97,96 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
         t.text("Found " + devices.size() + " devices. Robot on a block! Press START.");
         // Robot.java against this configuration (only if robot() gives the robot).
         robotLines = robotCheck();
-        for (String line : robotLines) t.text(line);
-        t.update();
-        waitForStart();
+        // INIT: the screen until START (GUIDE shows the help here too).
+        while (opModeInInit()) {
+            updateHelp();
+            if (helpOpen) {
+                showHelp(t);
+                t.text("Press START on the Driver Station to begin.");
+            } else {
+                t.text("Found " + devices.size() + " devices. Robot on a block! Press START.");
+                for (String line : robotLines) t.text(line);
+                t.text("GUIDE (center button), or hold START 1 s = help.");
+            }
+            t.update();
+        }
         // ---- Running ----
         // try/finally: the "finally" part runs however the loop ends (STOP pressed, or an error),
         // so every motor and CR servo is always stopped at the end.
         try {
             while (opModeIsActive()) {
+                updateHelp();
+                if (helpOpen) {
+                    // Help open: nothing moves while the driver reads, and no button acts.
+                    stopAll();
+                    showHelp(t);
+                    t.text("Help open: motors stopped. GUIDE (or hold START) = back.");
+                    t.update();
+                    // the buttons held now must not act when help closes
+                    rememberButtons();
+                    continue;
+                }
                 handleInput();
                 show(t);
+                t.text("GUIDE (or hold START 1 s) = help");
                 t.update();
             }
         } finally {
             stopAll();
         }
+    }
+
+    // ---- Help (the same keys as the finders) ----
+    private boolean helpOpen = false;
+    private boolean guideWas = false;
+    private double startHeldSince = Double.NaN;
+    private boolean startHoldUsed = false;
+
+    // GUIDE pressed, or START held 1 s: open or close the help page.
+    private void updateHelp() {
+        if (gamepad1.guide && !guideWas) helpOpen = !helpOpen;
+        guideWas = gamepad1.guide;
+        if (!gamepad1.start) {
+            startHeldSince = Double.NaN;
+            startHoldUsed = false;
+            return;
+        }
+        double now = System.nanoTime() / 1e9;
+        if (Double.isNaN(startHeldSince)) startHeldSince = now;
+        if (!startHoldUsed && now - startHeldSince >= 1.0) {
+            helpOpen = !helpOpen;
+            startHoldUsed = true;
+        }
+    }
+
+    private void showHelp(RobotTelemetry t) {
+        t.section("Hardware Check help  (GUIDE = back)");
+        for (String line : helpLines()) t.text(line);
+    }
+
+    /** The help page's lines (GUIDE, or hold START 1 s). */
+    protected String[] helpLines() {
+        return new String[] {
+            "Tests each device in the configuration.",
+            "Robot on a block first!",
+            "D-pad up/down = choose a device (stops the last).",
+            "Motor / CR servo: right stick = power (50%;",
+            "  hold RB = full). A = zero the encoder.",
+            "  Check: + power turns the way you expect and",
+            "  the encoder counts UP.",
+            "Servo: D-pad right/left = +/- 0.01, bumpers =",
+            "  +/- 0.1, X = 0.5 (moves only when you press).",
+            "IMU: turn the robot left, yaw must go UP.",
+            "Sensors: just read the values.",
+            "Steps: docs/guides/testing.md",
+        };
+    }
+
+    // The buttons as they are now count as "held": closing help does not press them.
+    private void rememberButtons() {
+        boolean[] now = {gamepad1.dpad_up, gamepad1.dpad_down, gamepad1.dpad_right, gamepad1.dpad_left,
+                gamepad1.right_bumper, gamepad1.left_bumper, gamepad1.a, gamepad1.x, false, false};
+        System.arraycopy(now, 0, was, 0, was.length);
     }
 
     // The lines about Robot.java's devices (empty without robot()), shown in INIT and above the list.

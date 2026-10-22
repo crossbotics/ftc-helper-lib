@@ -604,6 +604,70 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - Docs: the stop-distance wording is the same in robot.md, interlocks.md and tunables.md; robot.md's Steps
   table shows `waitSeconds(label, seconds)` (an Action's has no label); FTC Dashboard is banned at events
   (R704.D); docs/guides/use-only-what-you-need.md no longer suggests overriding ControlMap's `everyLoop`.
+- **Simulator: the tuning menu saves.** `SettingsFile` always wrote `/sdcard/FIRST/ftc-helper` (no such
+  folder on a laptop: "SAVE FAILED.", and the profile and tuned values were lost at each restart). It now uses
+  the same data folder as the finder results (`SettingsFile.folder()`, the `ftchelper.dataDir` setting the
+  simulator sets; `/sdcard/FIRST/ftc-helper` on a robot).
+- **Simulator: `:sim:scenario` with several files** started each file with the last one's match memory (its
+  autonomous report, "Forward : from autonomous", the alliance). Each file now starts a fresh match.
+- **Simulator: `:sim:fromRobot`** writes an intake's `holds=` from `Pieces.max(n)` when the intake does not
+  say (it wrote the guess 3), replaces a size guess it wrote before (`robot.lengthIn = 18`) once the code gives
+  `chassisMm(...)` (a measured line is kept), and puts new parts after its last line instead of adding another
+  "added from Robot.java" block each run.
+- **Simulator: game pieces.** The preload is never more than the intake holds (`holds=3` started with 4), and
+  an intake running out (`spitOut`, reversed) pushes the held pieces back onto the field, newest first.
+- **Simulator: the Pinpoint works its pose out like the real one**: from its pods as wired (`odometry.reversed`)
+  and the directions and offsets the code gives it. A pod wired backward that Robot.java does not reverse now
+  counts the robot's forward move backward (the Odometry Tuner's "counted BACKWARD"), and wrong offsets move
+  the pose in a spin. Before, the pose ignored both.
+- **Simulator: a short stop is a stop.** `setPower(0)` then a new power before the next physics step was no
+  stop at all (the next move kept the old speed and the hub's old speed-control state). The motor now brakes
+  (or coasts) for as long as it was stopped, and the speed control starts again from nothing.
+- **Simulator: START right after INIT starts from the INIT spot**: the start spot is put in place before START
+  is taken (it was done by the physics thread a moment later, so a quick START could start from the old spot).
+- **Auto builder: an action is checked before anything is called.** A plan naming a command where an action
+  goes (`robot.intake.in()`) ran it during INIT before saying it was not an Action. Now every name in the plan
+  is found and type-checked first (an action must give an `Action`), and nothing runs if one is wrong.
+- **Auto builder (simulator):** the command and action suggestions, a new step's first guess and "TeleOp next"
+  come from the chosen Robot class (its parts, named positions, Actions and TeleOp; `GET /auto` lists them),
+  not lesson 6's claw and `Actions.scoreHigh`; a new plan has no steps; an action's time limit starts at 10 s
+  (5 s was too short for an 8 s "fire all"). "+ Drive" and the other buttons add at the end ("add after the
+  selected step" to insert). Run resets the field and the preload and clears the last run's results. "With the
+  end from the last run" works only after a run where every step was done (not STALLED), and says why when it
+  is off. The Pedro "Copy the Java" has the imports it needs (`PedroPath`, `PathAt`). The steps scenario checks
+  every step by its number in the report (`expect step 3 done`: actions and repeated names too), skips the end
+  checks with a comment for a plan that leaves the field, and says it was made by the simulator's builder. The
+  default Pedro note fits one line (44 characters). The Java has no `preselectTeleOp` guess when no TeleOp is
+  known.
+- **Simulator page:** choosing "Keyboard" for a gamepad lets go of the list, so the keys drive at once. The
+  OpMode list starts on the OpMode running now (after a reload) or the TeleOp whose Robot class fits the robot
+  file, not the first name. A TeleOp in INIT before the alliance is chosen stands on BLUE's spot and the view
+  looks from the blue wall, as the TeleOp says ("Alliance : BLUE until you choose"); it was on RED's spot with
+  the red view. The plain robot box is gray (it was blue for both alliances; red still means a bump). The
+  score bar says it can be clicked, the Layers menu links to the guide, and a launcher that throws over the
+  robot's back shows "shoots backward, 33 deg up" (not "147 deg up").
+- **Hood Finder:** an angle is used for one place only (stop B no longer gets stop A's angle when none was
+  measured there); an angle at only one stop is not written (the screen says which stop needs one); the
+  screen shows posA/posB OR a calibration table, never both (both stop INIT), and the table needs both stops'
+  angles; a table whose angles do not keep going one way is not shown (INIT would stop) and the screen says
+  so; undo says what it removed (no stale "Point 2").
+- **Odometry Tuner:** the Spin test needs 3 turns, as it says (it took 1); the Loop test needs the robot to
+  have gone at least 24 in from the mark (standing still passed).
+- **Motor Finder:** a position saved outside the two ends gets a warning; the help and guide say the power goes
+  off at the ends and the mechanism coasts a little past (not "stops at them").
+- **Shot Tuner:** X with shots not marked yet asks to mark them; with none marked it warns and saves the speed
+  now only on a second X within 3 s; "Moved more than 4 in" (it said "Moved 4 in" after 6.7 in); a hood angle
+  shows 1 decimal in the marks and "Tried here" (22.7, not 22.674).
+- **Drive Tuner:** once the Drive (and on a mecanum the Strafe) test measures 48 within 0.5 in it shows
+  `Tunables.Drive: calibrated = true`; the screen keeps updating while a test drives (it froze).
+- **Hardware Check:** GUIDE (or hold START 1 s) opens a help page like the finders' (motors stop while open).
+- **Aim Tuner:** whole-robot aim also shows `Tunables.Aim: cameraOffset = ...`; the guide says it (and the
+  Characterizer) is set up with `robotConfig()` (`new Robot().robotConfig()` for the robot in five files).
+- **Lesson 8 / simulator:** Pedro's tuning library (`com.pedropathing:tuning`) is added to the simulator's
+  build by itself when `build.dependencies.gradle` (or `TeamCode/build.gradle`) has it, so `:sim:run` builds a
+  TeamCode with Pedro's tuner files.
+- **Scenarios:** `expect light NAME = COLOR` reads what a light shows (`expect servo` on a light says so), and
+  `expect step N done` reads the autonomous report.
 
 - **Interlock rules: a fast part no longer coasts into its zone when loops are slow.** A held part waited
   a fixed two margins from its zone, so how far it coasted past depended on the loop time: the v2bot's

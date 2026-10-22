@@ -327,7 +327,8 @@ clear floor and a person ready at the Driver Station to stop it.
    }
    ```
 
-   Sync again.
+   Sync again. The simulator sees this line too and adds Pedro's tuning library to its own build, so
+   `:sim:run` still builds your TeamCode with the tuner files in it (nothing to add in `simulator/`).
 
 2. **Copy Pedro's tuner files.** From [Pedro's Quickstart](https://github.com/Pedro-Pathing/Quickstart),
    folder `TeamCode/src/main/java/org/firstinspires/ftc/teamcode/pedro`, copy the `procedures` folder
