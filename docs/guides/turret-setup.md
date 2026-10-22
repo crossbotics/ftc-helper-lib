@@ -76,8 +76,10 @@ there by hand before INIT, or every angle is off`.
   **Digital Device**. It reads LOW near the magnet; the library knows.
 
 At **START** (never in INIT: the game rules want a robot standing still after INIT, and the library never
-moves anything before START) the turret turns slowly (`homingPower`) toward the switch: from
-`startAngle` toward `homeAngle`, or the way `homeDirection` says (+1 = counterclockwise, -1 = clockwise).
+moves anything before START), if the switch is not closed already, the turret turns slowly
+(`homingPower`) toward it and the Driver Station says `homing: looking for the switch`. (A turret that
+starts ON the switch is homed at once: no turning, no "looking" line.) It turns from `startAngle` toward
+`homeAngle`, or the way `homeDirection` says (+1 = counterclockwise, -1 = clockwise).
 When the switch closes, the turret is at `homeAngle`. Following the goal and "aimed" wait until then.
 If the switch is not found within `homingTimeout` seconds it stops and the Driver Station says
 `homing failed: switch not found` (a broken switch must not wind up the wires). After homing, **every time
@@ -178,14 +180,19 @@ A turret that follows the odometry assumes it turns about the robot's centre.
 
 ## Summary
 
-| You have | `Robot.java` | `Tunables.Turret` must have | Homing |
-| --- | --- | --- | --- |
-| Motor, no switch | `Turret.motor(name, motorId).gearRatio(r)` | `min`, `max`, (`startAngle`) | none: start it at `startAngle` |
-| Motor + touch or magnetic switch | `... .homeSwitch("turret_home")` | `min`, `max`, `homeAngle` | at START |
-| Motor, slip ring | `... .continuous()` | (`startAngle`) | none, or a switch |
-| Servo | `Turret.servo(name)` | `posA`, `angleA`, `posB`, `angleB`, `travelSec`, (`startAngle`) | none: sent to `startAngle` (or its middle) at START |
-| CR servo + Through Bore | `Turret.crServo(name).encoder(port, 8192)` | `min`, `max`, (`startAngle`) | none, or a switch |
-| CR servo + absolute encoder | `Turret.crServo(name).analogEncoder(port)` | `min`, `max`, `encoderOffset` | none |
+**Required** means INIT stops without it. Every other number has a default, which INIT lists as
+`not written: library defaults used`. The defaults are safe for a first test, not for your robot: write
+`min` and `max` for your wires and hard stops (default -90 to 90), and `encoderOffset` for an absolute
+encoder (default 0, so the turret would think it starts straight forward).
+
+| You have | `Robot.java` | `Tunables.Turret`: required | Write too (defaults) | Homing |
+| --- | --- | --- | --- | --- |
+| Motor, no switch | `Turret.motor(name, motorId).gearRatio(r)` | nothing | `min`, `max` (-90, 90), `startAngle` (0, or the middle when 0 is outside `min` to `max`) | none: start it at `startAngle` |
+| Motor + touch or magnetic switch | `... .homeSwitch("turret_home")` | `homeAngle` | `min`, `max` (-90, 90) | at START |
+| Motor, slip ring | `... .continuous()` | nothing | `startAngle` (0) | none, or a switch |
+| Servo | `Turret.servo(name)` | `posA`, `angleA`, `posB`, `angleB` | `travelSec` (0.6), `startAngle` (the middle of its range) | none: sent to `startAngle` (or its middle) at START |
+| CR servo + Through Bore | `Turret.crServo(name).encoder(port, 8192)` | nothing | `min`, `max` (-90, 90), `startAngle` (0) | none, or a switch |
+| CR servo + absolute encoder | `Turret.crServo(name).analogEncoder(port)` | nothing | `min`, `max` (-90, 90), `encoderOffset` (0) | none |
 
 ## Four complete examples
 

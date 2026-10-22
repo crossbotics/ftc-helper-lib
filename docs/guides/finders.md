@@ -72,7 +72,8 @@ Any time, with no order: the **Piece Tuner** for a robot with game-piece sensors
 
 ## Help on the robot
 
-Press **GUIDE** (the center button) in any finder, in INIT or while it runs: a page shows every
+Press **GUIDE** (the center button) in any finder (not the Hardware Check, which has no help page), in
+INIT or while it runs: a page shows every
 button and the steps. No GUIDE button (or it does nothing)? Hold **START** for 1 second instead.
 While help is open, the finder's buttons pause and its motors stop. GUIDE again goes back.
 Then let go of every stick, trigger and button once: until then the finder ignores them.
@@ -87,12 +88,15 @@ Check once on your own Driver Hub and controllers that the help page fits and is
    where it sits now (D-pad; nothing moves), then press A: it moves there. Then nudge it with the
    D-pad: right/left = 0.01, up/down = 0.05, hold RB for 10 times finer.
 2. Move it toward one end until it JUST stops pushing on the frame (listen: a straining servo hums).
-   Back off 0.01. Press **X**. Do the same at the other end and press **B**. These are the limits:
-   the code will never send the servo past them.
+   Back off 0.01. Press **X**. Do the same at the other end and press **B**. From then on the finder
+   keeps the servo between them (hold **LB** while nudging to go past, e.g. to mark an end again). The ends
+   are for you: keep every position you save between them (five files have no end lines to copy; the
+   older helpers get them as the servo's limits).
 3. Move to each position you need (open, closed...) and press **A**. Rename P1, P2 in your code.
    Five files: the line `Tunables.Claw: P1 = 0.210, P2 = 0.770` becomes
    `public static double open = 0.210, closed = 0.770;` in `Tunables.Claw`. Keep every position
-   between the ends the finder shows.
+   between the ends the finder shows. **Y** undoes the last saved position; **BACK** chooses another
+   servo (the lines found so far stay on the screen).
 
 ## Hood Finder
 
@@ -145,7 +149,8 @@ Watch the current (amps): a high number while not moving means it is pushing on 
    **X** (reverse), try again.
 2. Press **B**: it holds a speed (60% of the top). Change it with the D-pad to the speed you shoot at.
 3. If the measured speed stays below the target at every speed, press **RB** (more F); above, **LB**.
-4. Feed a piece by hand: the screen shows the recovery time. Use it for the launcher's
+4. Feed a piece by hand: the screen shows the recovery time (on the robot only: the simulator has no
+   hand to feed with). Use it for the launcher's
    `shotInterval(...)` (a little longer than the recovery time).
 5. Five files: copy the `Tunables.Launcher: kP = ..., kI = ..., kD = 0, kF = ..., nominalVolts = ...` line
    into `Tunables.Launcher` (the section is the motor's name). A slow recovery adds `shotIntervalSec`.
@@ -242,8 +247,9 @@ of shots: 3 in out of 4 beats 2 out of 3). Every button is on **gamepad 1**.
    **A** = HIT or **B** = MISS (the marks go to the shots in the order they were fired). Each shot keeps
    the speed, hood angle and distance it was **fired** with, so changing the speed or the hood before you
    mark does not move the mark. The screen shows `Hits at 2550: 3/4` and every speed tried here
-   (`Tried here: 2450: 1/3, 2550: 3/4 (best)`). Change the speed with the D-pad (**Y** chooses SPEED or
-   HOOD) and shoot 3-5 again. 2-3 speeds is usually enough.
+   (`Tried here: 2450: 1/3, 2550: 3/4 (best)`). Change the speed with the D-pad (**Y** steps through what
+   the D-pad changes: SPEED, HOOD with a hood, TABLE with two tables, and DISTANCE: a distance you type in
+   when neither the camera nor the odometry gives one) and shoot 3-5 again. 2-3 speeds is usually enough.
    - **Pressed the wrong one?** **Left stick click** takes back the last HIT / MISS; that shot waits to be
      marked again.
    - **A "shot" with no piece** (the wheel slowed down by itself, so `Shots fired` went up):

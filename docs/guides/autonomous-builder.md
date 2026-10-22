@@ -144,6 +144,11 @@ for a route that shares nothing. The decision table, naming, and worked examples
 
 ## Driving: move, turn, turnTo
 
+> **Two different 90s.** A **move's direction** is measured clockwise, like a compass: 0 = forward,
+> **90 = right**, 180 = backward, 270 = left. A **turn or a heading** (`turn`, `turnTo`, the heading in
+> `start(...)` and `driveTo(...)`) is counterclockwise, like math class: **90 = left**, -90 = right.
+> So `.move("Right", 12, 90, 0.5)` slides right, and `.turn("Left", 90, 0.4)` turns left. Read every 90 twice.
+
 ```java
 .move("To the pieces", 24, 0, 0.5)      // 24 in forward, at most half power
 .move("Back to the goal", 24, 180, 0.5) // 180 = backward

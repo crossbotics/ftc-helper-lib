@@ -5,6 +5,9 @@ import com.crossbotics.ftchelper.robot.Camera;
 import com.crossbotics.ftchelper.robot.Claw;
 import com.crossbotics.ftchelper.robot.ControlMap;
 import com.crossbotics.ftchelper.robot.Drive;
+import com.crossbotics.ftchelper.robot.Indexer;
+import com.crossbotics.ftchelper.robot.Launcher;
+import com.crossbotics.ftchelper.robot.Odometry;
 import com.crossbotics.ftchelper.robot.Lift;
 import com.crossbotics.ftchelper.robot.Pad;
 import com.crossbotics.ftchelper.robot.RobotDefinition;
@@ -116,6 +119,89 @@ public class InterlockRecipes {
             // A CR servo turns it, an absolute encoder on an analog port says where it points (no
             // homing), and continuous(): a slip ring carries the wires, so no limits, the shortest way.
             turret = add(Turret.crServo("turret").analogEncoder("turret_pos").continuous().follows(camera));
+            // end recipe
+        }
+    }
+
+    /** The numbers for the servo turret recipe. */
+    public static class ServoTurretNumbers {
+        // recipe: tunables-turret-servo
+        public static class Turret {
+            // Two servo positions (Servo Finder) and the turret's angle at each (a phone angle app):
+            // 0 = straight forward, counterclockwise (left) +. Its range is between the two angles.
+            public static double posA = 0.10, angleA = -135;
+            public static double posB = 0.90, angleB = 135;
+            public static double travelSec = 0.6;     // seconds from posA to posB ("aimed" waits for it)
+            public static double startAngle = 0;      // a servo cannot say where it is: sent here at START
+        }
+        // end recipe
+    }
+
+    /** A turret on a standard servo, with its full range. */
+    public static class ServoTurretRobot extends RobotDefinition {
+        public Camera camera;
+        public Turret turret;
+
+        @Override
+        protected void define() {
+            tunables(ServoTurretNumbers.class);
+            drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
+            camera = add(Camera.limelight("limelight").goal("BLUE SCORING", "RED SCORING"));
+            // recipe: turret-servo
+            // A standard servo turns the turret to an angle by itself: no encoder, no PID, no homing.
+            // fullRange(): the servo's whole turn (a goBILDA 2000: 300 degrees, not 270). Turn it on
+            // BEFORE you measure posA and posB (Servo Finder: press Y while choosing the servo).
+            turret = add(Turret.servo("turret").part("gobilda-2000-speed").fullRange().follows(camera));
+            // end recipe
+        }
+    }
+
+    /** The numbers for the odometry-only aim recipe. */
+    public static class OdometryAimNumbers {
+        public static class Odometry {
+            public static boolean checked = false;
+        }
+
+        public static class Turret {
+            public static double min = -90, max = 90;
+        }
+
+        public static class Launcher {
+            public static double speedRpm = 2600, readyBandRpm = 60, idleRpm = 1500;
+            public static double[][] speedByDistance = {{24, 2200}, {48, 2550}, {72, 2900}};
+        }
+
+        public static class Indexer {
+            public static double rest = 0.15, push = 0.55;
+        }
+
+        // recipe: tunables-aim-odometry-only
+        public static class Aim {
+            // Where the goal is, seen from YOUR drivers' wall (inches; the same numbers as driveTo).
+            // BIOBUZZ: your HIVE's CELL that is up at the start.
+            public static double goalX = 13, goalY = -13;
+            public static boolean mirrorForRed = false;   // BIOBUZZ's field is turned, not mirrored
+        }
+        // end recipe
+    }
+
+    /** A turret and a speed from the odometry alone: no camera on the robot. */
+    public static class OdometryAimRobot extends RobotDefinition {
+        public Turret turret;
+        public Launcher launcher;
+
+        @Override
+        protected void define() {
+            tunables(OdometryAimNumbers.class);
+            drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
+            // recipe: aim-odometry-only
+            // No camera: the odometry says where the robot is, Tunables.Aim where the goal is. The
+            // turret follows that direction and the launcher's speed comes from that distance.
+            odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
+            turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).followsOdometry());
+            launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer"))
+                    .speedFromOdometry()
+                    .requireReady("turret aimed", () -> turret.isAimed()));
             // end recipe
         }
     }

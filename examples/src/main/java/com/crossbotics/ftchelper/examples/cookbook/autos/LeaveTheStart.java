@@ -1,15 +1,14 @@
-package com.crossbotics.ftchelper.examples.cookbook;
+// recipe: auto-first
+package com.crossbotics.ftchelper.examples.cookbook.autos;
+// In your TeamCode, change the line above to exactly:  package org.firstinspires.ftc.teamcode.autos;
+// and the first import below to:  import org.firstinspires.ftc.teamcode.Robot;
 
+import com.crossbotics.ftchelper.examples.cookbook.Robot;
 import com.crossbotics.ftchelper.robot.Auto;
 import com.crossbotics.ftchelper.robot.Steps;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
-/*
- * Cookbook (docs/cookbook.md): a whole file, as it looks in your TeamCode. The lines between
- * "// recipe: name" and "// end recipe" are shown on the page; tools/check_docs.py keeps them the same.
- */
-// recipe: auto-first
 // The name on the Driver Station, and the TeleOp it picks next (use YOUR TeleOp's name).
 @Autonomous(name = "Cookbook Leave the Start", group = "Cookbook", preselectTeleOp = "Cookbook TeleOp")
 @Disabled   // delete this line in your copy, or the Driver Station will not list it

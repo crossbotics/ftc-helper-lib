@@ -127,7 +127,8 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - **Docs: several autonomous modes, and choosing one** (docs/guides/autos.md): one OpMode per plan or
   one OpMode with an INIT menu, a decision table, shared steps in a `Routes.java`, names and groups for
   the Driver Station, three worked examples (tested in the simulator), scenario files that choose in the
-  menu, and a match-day checklist. Cookbook: three recipes (`ChooseAutoRecipes`), tested by `CookbookTest`.
+  menu, and a match-day checklist. Cookbook: the whole files in `cookbook/autos` (`Routes`,
+  `NearPreloadPark`, `NearCycle`, `ChooseInInit`), tested by `CookbookTest`.
 - **Docs: Git and GitHub for FTC teams** (docs/guides/github.md): the words, a team workflow, and every
   step for the command line and GitHub Desktop (clone with submodules, commit, push, pull, branch, merge,
   a conflict, undo), what never to commit, student privacy, and backups before an event.
@@ -582,6 +583,26 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   Station's `Shot table: POLLEN`.
 - Simulator: the pose line says it is in the field frame (seen from the red wall), and the start-spot line
   says it is the alliance's own frame (as `s.start` takes it).
+- **goBILDA starter bot's autonomous** (`goBILDA Bot Launch and Back Up`) has a start spot: its back
+  against our wall, left of centre (`-56, -63, 0`; the simulator puts it there), and its last step is
+  `Away from the wall` (forward), not `Back up` (backward from the goal). **What to do:** a scenario or
+  a note that says `Back up` needs the new step name; put the robot with its back to your wall.
+- Cookbook, several autos: the recipes are whole files with their `package` and `import` lines
+  (`cookbook/autos/`: `Routes.java`, `NearPreloadPark.java`, `NearCycle.java`, `ChooseInInit.java`,
+  `LeaveTheStart.java`), so the simulator lists them too. The FAR start drives off the wall first
+  (`Tunables.Auto.offWallInches`): sliding along the wall it drove into the FLOWER. The cycle and the park
+  go backward (the old park drove toward the HIVE frame). The autos guide's scenario checks `expect bumped none`
+  and `expect robot x`, `y`.
+- Cookbook: the optional part's action is `Actions.deployIntake` (shown); every Tunables recipe that adds
+  to a section you already have (shoot on the move, shot tables, speed trim, the hood's table) shows only
+  the lines, and says which section; shoot on the move is `false` until tuned; one shot table per piece
+  says which table starts (`main`, else the first by name) and the next-piece recipe is tested; the
+  "two buzzes for a NECTAR" recipe watches both colours; light flashes are short enough to count two
+  quick shots, and an action's "done" flash is not the colour of the rule under it. New recipes: switch
+  the alliance in TeleOp, a servo turret, aim with the odometry only, venue lighting
+  (`autoPipelines`), a Blinkin pattern, a shorter start delay (`maxStartDelaySec()`), one number per
+  alliance (`alliance().pick`), last match's trim from a button (`useLastTrim`), the pose action, the
+  deploy action. The Hood Finder recipe shows its imports.
 
 ### Fixed
 

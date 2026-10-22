@@ -493,7 +493,7 @@ export function toJava(path, opts = {}) {
 	if (actions.length) imp.push('import com.crossbotics.ftchelper.robot.PathAt;');
 	const imports = imp.join('\n');
 	const all = (imports ? '// With the other imports, at the top of the file:\n' + imports + '\n\n' : '')
-		+ (constant ? '// With your other fields, at the top of the class:\n' + constant + '\n\n' : '')
+		+ (constant ? '// In your autonomous file, inside the class, above steps(...):\n' + constant + '\n\n' : '')
 		+ '// In steps(Steps s, Robot robot):\n' + steps;
 	return { constant, imports, steps, all };
 }

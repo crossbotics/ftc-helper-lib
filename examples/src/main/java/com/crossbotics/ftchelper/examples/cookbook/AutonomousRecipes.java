@@ -75,6 +75,37 @@ public class AutonomousRecipes {
         }
     }
 
+    /** A shorter start delay in the INIT menu, and one number that differs on RED. */
+    @Autonomous(name = "Cookbook Delay and Alliance", group = "Cookbook")
+    @Disabled
+    public static class DelayAndAlliance extends Auto<Robot> {
+        // recipe: auto-max-start-delay
+        // Inside your autonomous class, next to steps(...): the INIT menu's "Start delay" line
+        // offers 0 to 5 s (the default is 0 to 10 s).
+        @Override
+        protected double maxStartDelaySec() {
+            return 5;
+        }
+        // end recipe
+
+        @Override
+        protected boolean mirrorForRed() {
+            return false;
+        }
+
+        @Override
+        protected void steps(Steps s, Robot robot) {
+            // recipe: auto-alliance-pick
+            // Inside steps(...): alliance() is the alliance chosen in INIT. pick(blue, red) gives the
+            // first value on BLUE and the second on RED (here: RED waits 2 s for its partner).
+            double waitSec = alliance().pick(0.0, 2.0);
+            s.start("Against our wall, facing the field", 0)
+             .waitSeconds("Let our partner go first", waitSec)
+             .move("Leave the start", 24, 0, 0.4);
+            // end recipe
+        }
+    }
+
     /** A choice in INIT, mechanisms while driving, and time to park. */
     @Autonomous(name = "Cookbook Score and Park", group = "Cookbook")
     @Disabled

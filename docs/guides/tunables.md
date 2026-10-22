@@ -140,12 +140,12 @@ Section `Drive` (fixed name). Read once at INIT. Module: [Drive](../modules/robo
 | --- | --- | --- | --- | --- | --- | --- |
 | `maxPower` | the most power the wheels get (COMPETITION profile) | 0 to 1 | 1.0 | yes, next INIT | test | the robot is too fast for the drivers |
 | `practiceMaxPower` | the most power in the PRACTICE profile | 0 to 1 | 0.6 | yes, next INIT | test | new drivers need it slower |
-| `slowSpeed` | the speed while the slow trigger is held | 0 to 1 | 0.3 | yes, next INIT | test | fine moves are too slow or too fast |
+| `slowSpeed` | a power: the most power while the slow trigger is pulled all the way (a little squeeze is a little slower) | 0 to 1 | 0.3 | yes, next INIT | test | fine moves are too slow or too fast |
 | `strafeCorrection` | makes a sideways move in autonomous as long as asked (mecanum wheels slip sideways) | times | 1.15 | yes, next INIT | Drive Tuner | sideways moves are short or long |
 | `turnKp` | autonomous turn: how hard it turns per degree off | power per degree | 0.012 | yes, next INIT | test | turns stop short (more) or wobble (less) |
 | `turnKd` | autonomous turn: brakes the turn as it gets close | power per degree/s | 0.003 | yes, next INIT | test | turns overshoot (more) |
 | `moveMinPower` | the least power that still moves the robot (autonomous) | 0 to 1 | 0.30 | yes, next INIT | test | the robot stops just before the end of a move |
-| `calibrated` | autonomous runs only when this is `true` | true/false | false | no | Drive Tuner, then set it | after the Drive Tuner, once moves are right |
+| `calibrated` | autonomous drives the robot only when this is `true`. Until then INIT says `AUTONOMOUS IS OFF` (the simulator runs it anyway, and says so) | true/false | false | no | Drive Tuner, then set it | after the Drive Tuner, once moves are right |
 
 ## Odometry
 
@@ -154,12 +154,12 @@ Section `Odometry` (fixed name). Read once at INIT. Module: [Odometry](../module
 
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
-| `checked` | `driveTo` steps run on a real robot only when this is `true` | true/false | false | no | Odometry Tuner | after the Odometry Tuner's loop check passes |
+| `checked` | like `Drive.calibrated`, for the odometry: `driveTo` and path steps run on a real robot only when this is `true`. Until then INIT warns `Odometry not checked` (the simulator runs them anyway) | true/false | false | no | Odometry Tuner | after the Odometry Tuner's loop check passes |
 | `linearScalar` | OTOS only: corrects its distances | times | 1.0 | no | Odometry Tuner | the OTOS says 48 in when the robot drove 50 |
 | `angularScalar` | OTOS only: corrects its turns | times | 1.0 | no | test (turn 10 times, compare) | the heading drifts after many turns |
-| `resetX`, `resetY` | the "set pose here" spot for `resetPose()`: x, y written for BLUE | inches | none: no reset spot | no | measure on the field | you want a button that resets the pose at a known spot |
+| `resetX`, `resetY` | the "set pose here" spot for `resetPose()`: x, y seen from your wall, written for BLUE. Write both: one alone is not used (no reset spot) | inches | none: no reset spot | no | measure on the field | you want a button that resets the pose at a known spot |
 | `resetHeading` | the heading at the reset spot | degrees | 0 | no | measure on the field | the robot faces another way at that spot |
-| `mirrorForRed` | the reset spot for RED is BLUE's mirrored (true) or the same numbers from the red wall (false) | true/false | `Tunables.Aim.mirrorForRed`, else true | no | the game's field | BIOBUZZ's field is turned half a turn: `false` |
+| `mirrorForRed` | ONE setting for the whole robot (routes, start and reset spots, the aim's goal point): RED uses BLUE's numbers mirrored (true) or the same numbers from the red wall (false). Write it once, in `Aim` or here: `Aim`'s wins, then this one, then your autonomous's `mirrorForRed()`. INIT shows the choice and where it came from | true/false | `Tunables.Aim.mirrorForRed`, else true | no | the game's field | BIOBUZZ's field is turned half a turn: `false` |
 
 ## Aim
 
@@ -168,8 +168,8 @@ Section `Aim` (fixed name). Every line is optional. Module: [Aim](../modules/rob
 
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
-| `goalX`, `goalY` | the goal on the field, written for BLUE: the odometry backup aims at it when the camera does not see the goal | inches | none: camera only | no | the field map | once per season (both, or neither) |
-| `mirrorForRed` | RED's goal is BLUE's mirrored (true) or the same numbers from the red wall (false) | true/false | true | no | the game's field | BIOBUZZ: `false` |
+| `goalX`, `goalY` | the goal on the field, seen from YOUR drivers' wall like every field number in your code (x right of the centre line, y from the centre toward the far wall), written for BLUE: the odometry backup aims at it when the camera does not see the goal. Write both: one alone is not used (no odometry backup). BIOBUZZ: 13, -13 | inches | none: camera only | no | the field map | once per season (both, or neither) |
+| `mirrorForRed` | ONE setting for the whole robot: RED's numbers (the goal point, the routes, the start and reset spots) are BLUE's mirrored (true) or the same numbers from the red wall (false). The first one written wins: this one, `Tunables.Odometry.mirrorForRed`, your autonomous's `mirrorForRed()` | true/false | true | no | the game's field | BIOBUZZ: `false` |
 | `cameraMaxAgeMs` | a camera picture older than this does not count as "sees the goal" | ms | 150 | no | test | the camera is slow and the goal flickers to "odometry" |
 | `maxGoalDistance` | the odometry backup is off while it says the goal is farther than this (a wrong pose) | inches | 170 | no | the field size | another field size |
 | `cameraOdometryAgree` | warn when the camera and the odometry differ by more than this | inches | 6 | no | test | too many warnings with a good pose |
@@ -178,7 +178,7 @@ Section `Aim` (fixed name). Every line is optional. Module: [Aim](../modules/rob
 | `maxTurnPower` | whole-robot aim: the most turn power | 0 to 1 | 0.5 | yes, at once | test | aim is too fast or too slow |
 | `minTurnPower` | whole-robot aim: the least power that still turns the robot | 0 to 1 | 0 | yes, at once | test | aim stops a few degrees short |
 | `toleranceDeg` | whole-robot aim counts as aimed within this | degrees | 2 | yes, at once | test | shots miss although "AIMED" (less) |
-| `cameraOffset` | whole-robot aim: a camera that is not on the robot's centre line | degrees | 0 | yes, at once | test | the robot aims a little to one side |
+| `cameraOffset` | whole-robot aim (no turret): a camera that is not on the robot's centre line. A turret has its own, `Tunables.Turret.cameraOffset`; the Aim Tuner prints the line for the one your robot uses | degrees | 0 | yes, at once | test | the robot aims a little to one side |
 | `rumbleDeg` | the aim buzz starts this close to the goal | degrees | 4 | yes, at once | test | the drivers want it earlier or later |
 | `shootOnMove` | shooting while driving: on at START | true/false | false | no | test | only after tuning it on the real robot |
 | `flightSec` | shooting on the move: the piece's time in the air | seconds | 0 | yes, at once | test (film a shot) | moving shots land behind (more) or ahead |
@@ -237,7 +237,7 @@ Section: the device's name in CamelCase (`claw` reads `Claw`, `intake_deploy` re
 
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
-| `travelSec` | how long the servo takes for a full move (0 to 1): a servo cannot say when it has arrived, so this is the guess | seconds | 0.3 | no | test (time a full move) | actions go on before it arrives (more) |
+| `travelSec` | how long the servo takes for a full move, from position 0 to 1 (a shorter move: its share): a servo cannot say when it has arrived, so this is the guess | seconds | 0.3 | no | test (time a full move) | actions go on before it arrives (more) |
 | `<position>` | every other number is a named position, 0 to 1. A Claw needs `open` and `closed` | servo position 0 to 1 | Claw: open 0.20, closed 0.75. Wrist: down 0.15, level 0.5, up 0.85. Positioner: stowed 0.0, deployed 0.5 (only when none are written) | yes, at once | Servo Finder (P1, P2...) | it does not open, close or reach far enough |
 
 ## Turret
@@ -257,7 +257,7 @@ your turret needs: [Setting up a turret](turret-setup.md). Module: [Turret](../m
 | `tolerance` | how close counts as aimed | degrees | 1.0 | no | test | the launcher waits too long (more) |
 | `slowZone` | it slows down within this of `min` and `max` | degrees | 10 | no | test | it hits its ends hard (more) |
 | `slowZonePower` | the power at the very end of the slow zone | 0 to 1 | 0.25 | no | test | it stalls near an end (more) |
-| `cameraOffset` | the camera is turned this much from the turret's forward | degrees | 0 | no | Aim Tuner | shots go a little to one side |
+| `cameraOffset` | the camera is turned this much from the turret's forward (the turret's own; whole-robot aim uses `Tunables.Aim.cameraOffset`) | degrees | 0 | no | Aim Tuner | shots go a little to one side |
 | `outOfRangeHold` | an odometry goal this far past a limit, behind the robot, makes it hold where it points | degrees | 10 | no | test | it swings limit to limit when the goal is behind |
 | `keepAngle` | TeleOp starts from the angle the last program ended at (within 5 minutes) | true/false | true | no | none | you turn the turret by hand between programs: `false` |
 | `homeAngle` | with a home switch: the turret's angle where the switch closes | degrees | REQUIRED with `homeSwitch(...)` | no | measure ([how](turret-setup.md)) | the switch moved |
@@ -267,7 +267,7 @@ your turret needs: [Setting up a turret](turret-setup.md). Module: [Turret](../m
 | `encoderOffset` | an absolute encoder: its reading with the turret straight forward | degrees | 0 | no | read it at INIT ([how](turret-setup.md)) | the encoder was moved |
 | `posA`, `angleA` | a servo turret: one servo position and the turret's angle there | 0 to 1, degrees | REQUIRED for `Turret.servo` | no | Servo Finder | the servo or linkage changed |
 | `posB`, `angleB` | a servo turret: a second position and its angle | 0 to 1, degrees | REQUIRED for `Turret.servo` | no | Servo Finder | the same |
-| `travelSec` | a servo turret: time from `posA` to `posB` | seconds | 0.6 | no | test (time it) | it fires before it arrives (more) |
+| `travelSec` | a servo turret: time from `posA` to `posB` (not 0 to 1) | seconds | 0.6 | no | test (time it) | it fires before it arrives (more) |
 
 ## Interlock rules
 
@@ -329,7 +329,8 @@ Section: the device's name in CamelCase: `Indexer.servo("feeder")` reads **`Feed
 
 <!-- tunables: Hood -->
 Section: the device's name in CamelCase (`hood` reads `Hood`, `shooter_hood` reads `ShooterHood`). A servo hood is in servo positions; a motor hood in
-encoder counts. "Angle" below is your angle (with `angleA`, `angleB`), or the position itself. Every
+encoder counts. "Angle" below is your angle, in degrees or any scale you chose, when `angleA`, `angleB`
+(or a `calibration`) are written; without them it is the position itself. Every
 default that says "of the range" fits degrees, positions and counts. Module: [Hood](../modules/robot.md#hood).
 
 | Field | What it does | Units | Default | Live | Found by | When to change |
@@ -343,7 +344,7 @@ default that says "of the range" fits degrees, positions and counts. Module: [Ho
 | `byHandPerSec` | speed with the stick at full | angle per second | the range in 2.5 s | no | test | the stick is too fast |
 | `trimMax` | the most hood trim | angle | 1/5 of the range | no | none | you need more trim |
 | `tolerance` | a motor hood: how close counts as arrived | angle | 1/50 of the range | no | test | the launcher waits too long (more) |
-| `travelSec` | a servo hood: time from stop to stop | seconds | 0.5 | yes, at once | test (time it) | it fires before the hood arrives (more) |
+| `travelSec` | a servo hood: time from stop to stop (`posA` to `posB`) | seconds | 0.5 | yes, at once | test (time it) | it fires before the hood arrives (more) |
 | `kP` | a motor hood: power per count off | power per count | 0.005 | yes, at once | test | slow (more) or shakes (less) |
 | `maxPower` | a motor hood: the most power | 0 to 1 | 0.5 | yes, at once | test | it hits its stops hard |
 
@@ -388,7 +389,7 @@ Section: the device's name in CamelCase (`light` reads `Light`, `blinkin` reads 
 
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
-| `allianceAtInit` | shows the alliance (red or blue) during INIT and flashes it at START | true/false | true | no | none | `false`: your rules show in INIT too |
+| `allianceAtInit` | shows the alliance (red or blue) during INIT and flashes it at START. A `robot.lights.allianceAtInit(...)` line in Controls.java wins over this one | true/false | true | no | none | `false`: your rules show in INIT too |
 
 ---
 

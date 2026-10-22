@@ -37,13 +37,16 @@ public class HoodRecipes {
             // Stop to stop, seconds: the launcher waits this share of it before firing.
             public static double travelSec = 0.5, startAngle = 0;
         }
+        // end recipe
 
         public static class Launcher {
             public static double speedRpm = 2600, readyBandRpm = 60, idleRpm = 1500;
-            // {inches to the goal, RPM, hood angle}: the hood is blended between rows like the speed.
+            // recipe: tunables-hood-table
+            // In your Tunables.Launcher section, IN PLACE OF your speedByDistance line: a third number
+            // in each row, {inches to the goal, RPM, hood angle}. The hood is blended between rows like the speed.
             public static double[][] speedByDistance = {{24, 2200, 3}, {48, 2550, 12}, {72, 2900, 20}};
+            // end recipe
         }
-        // end recipe
 
         public static class Indexer {
             public static double rest = 0.15, push = 0.55;
@@ -75,16 +78,17 @@ public class HoodRecipes {
             public static double maxPower = 0.6;
         }
 
-        // recipe: tunables-hood-positions
         public static class Hood {
             public static double posA = 0.20, posB = 0.65;   // no angleA / angleB: the "angle" IS the position
         }
 
         public static class Launcher {
-            // {inches, RPM, servo position}: the Shot Tuner writes these for you.
+            // recipe: tunables-hood-positions
+            // Tunables.Hood: only posA and posB (delete angleA, angleB). Tunables.Launcher, IN PLACE OF
+            // your speedByDistance line, {inches, RPM, servo position}: the Shot Tuner writes these for you.
             public static double[][] speedByDistance = {{24, 2200, 0.24}, {48, 2550, 0.38}, {72, 2900, 0.50}};
+            // end recipe
         }
-        // end recipe
     }
 
     /** A hood on a motor with an encoder. */
@@ -172,7 +176,7 @@ public class HoodRecipes {
         protected void buttons(Robot robot, Pad g1, Pad g2) {
             // recipe: hood-buttons
             // The launcher's hood already has gamepad 2's left stick Y (up = a bigger angle): a trim
-            // while the table sets the angle, else the angle itself. Your own: steps and home.
+            // while the table sets the angle, else the angle itself. Your own: steps and the start angle.
             g2.y.press(() -> robot.launcher.hood().step(+1)).says("hood +1 step");
             g2.a.press(() -> robot.launcher.hood().step(-1)).says("hood -1 step");
             g2.x.press(() -> robot.launcher.hood().goToStart()).says("hood to its start angle");

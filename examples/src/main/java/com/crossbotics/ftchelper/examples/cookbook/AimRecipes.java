@@ -53,15 +53,16 @@ public class AimRecipes {
             public static double min = -90, max = 90;
         }
 
-        // recipe: tunables-shot-tables
         public static class Launcher {
             public static double speedRpm = 2600, stepRpm = 100, readyBandRpm = 60, idleRpm = 1500;
-            // One table per game piece ({inches to the goal, RPM}), from the Shot Tuner. The name
-            // after "speedByDistance" is the table's name: "pollen" and "nectar".
+            // recipe: tunables-shot-tables
+            // In your Tunables.Launcher section, IN PLACE OF the one speedByDistance line: one table
+            // per game piece ({inches to the goal, RPM}), from the Shot Tuner. The name after
+            // "speedByDistance" is the table's name: "pollen" and "nectar".
             public static double[][] speedByDistancePollen = {{24, 2200}, {48, 2550}, {72, 2900}};
             public static double[][] speedByDistanceNectar = {{24, 2400}, {48, 2800}, {72, 3200}};
+            // end recipe
         }
-        // end recipe
 
         public static class Indexer {
             public static double rest = 0.15, push = 0.55;
@@ -70,13 +71,15 @@ public class AimRecipes {
 
     /** The numbers for the shoot-on-the-move recipe (its own set: it is off until tuned on a real robot). */
     public static class MovingShotNumbers {
-        // recipe: tunables-moving-shot
-        /** Shooting while the robot drives (Tunables.java). Needs odometry. Off until tuned. */
+        /** Shooting while the robot drives. Needs odometry. Off until tuned. */
         public static class Aim {
             public static double goalX = 13, goalY = -13;
             public static boolean mirrorForRed = false;
-            // ON only after testing on the real robot (and a button can switch it off in a match).
-            public static boolean shootOnMove = true;
+            // recipe: tunables-moving-shot
+            // ADD these lines to your Tunables.Aim section (keep goalX, goalY and the others).
+            // false = off. Make it true only after testing on the real robot (a button can switch it
+            // off in a match).
+            public static boolean shootOnMove = false;
             // Seconds a piece is in the air, measured with a slow-motion video: count the frames from
             // leaving the launcher to reaching the goal, divide by the video's frames per second.
             // Longer shots fly longer: flightSecPerIn adds that much per inch (0 = the same everywhere).
@@ -86,8 +89,8 @@ public class AimRecipes {
             // inches forward (+) and left (+). A camera on the turret sits at the turret's pivot.
             public static double shooterForwardIn = -4, shooterLeftIn = 0;
             public static double cameraForwardIn = 7, cameraLeftIn = 0;
+            // end recipe
         }
-        // end recipe
     }
 
     /** The numbers for the speed-trim recipe (its own set, so the other recipes stay short). */
@@ -96,18 +99,19 @@ public class AimRecipes {
             public static double maxPower = 0.6, slowSpeed = 0.3;
         }
 
-        // recipe: tunables-speed-trim
         public static class Launcher {
             public static double speedRpm = 2600, readyBandRpm = 60, idleRpm = 1500;
             public static double[][] speedByDistance = {{24, 2200}, {48, 2550}, {72, 2900}};
+            // recipe: tunables-speed-trim
+            // In your Tunables.Launcher section (change the lines you already have, add the others).
             // From the Flywheel Finder: the gains, and the battery voltage they were found at.
             public static double kP = 1.17, kI = 0.117, kD = 0, kF = 11.70, nominalVolts = 12.6;
             // Optional (these are the defaults): one D-pad press = 1%, never more than 15% each way.
             public static double trimStepPercent = 1, trimMaxPercent = 15;
             // Optional: true (the default) = F follows the battery; false = F exactly as tuned.
             public static boolean batteryCompensation = true;
+            // end recipe
         }
-        // end recipe
 
         public static class Indexer {
             public static double rest = 0.15, push = 0.55;
@@ -138,7 +142,7 @@ public class AimRecipes {
             // recipe: speed-trim
             // The launcher's own buttons already do it: gamepad 2 D-pad up/down = speed trim +/- 1%
             // (held: 4 steps a second), double-tap D-pad down = back to 0. The Driver Station shows
-            // "Speed trim: +3%  READY" as the launcher's first line.
+            // "Speed trim : +3%  READY" as the launcher's first line.
             // Your own: a bigger step on a button, and a far shot that sets the trim first.
             g2.y.press(() -> robot.launcher.trimBy(+3)).says("speed trim +3%");
             g2.a.press(Action.named("Far shot +5%")
@@ -146,6 +150,8 @@ public class AimRecipes {
                     // The launcher fires or gives up within 3 s, so 4 s is always enough.
                     .waitUntil("fired", () -> !robot.launcher.isShooting(), 4.0)
                     .then(robot.launcher::resetTrim));
+            // Last match's trim (INIT offers it as "Trim last time"): from your own button too.
+            g2.x.press(robot.launcher::useLastTrim).says("use last match's trim");
             // end recipe
         }
     }
@@ -220,6 +226,25 @@ public class AimRecipes {
         @Override
         protected RobotDefinition robot() {
             return new Robot();
+        }
+    }
+
+    /** Venue lighting: the camera tries a few settings in INIT and keeps the best. */
+    public static class LightingRobot extends RobotDefinition {
+        public Camera camera;
+
+        @Override
+        protected void define() {
+            tunables(Numbers.class);
+            drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
+            // recipe: camera-lighting
+            // Each venue's lights are different. In INIT the Limelight tries these pipelines (set each
+            // one up on the Limelight's web page for a kind of light; your usual one FIRST) and keeps
+            // the one that sees the most AprilTags. The Driver Station says which one it kept.
+            camera = add(Camera.limelight("limelight").autoPipelines(0, 1, 2).goal("BLUE SCORING", "RED SCORING"));
+            // A webcam: Camera.webcam("Webcam 1").autoExposure().goal(...) tries the camera's own
+            // exposure, then 3, 6 and 12 ms.
+            // end recipe
         }
     }
 

@@ -110,9 +110,11 @@ sent.
 asks for the zone just like a target inside it: it goes when the other part is out (which is then held
 out), instead of waiting below the zone for ever.
 
-**A turret crossing its zone.** A turret at 80 degrees asked to go to 190 has to pass through the back.
-With the lift up it stops at 103 (two margins of 3 before 109) and waits. If its range lets it reach 190 the other way round (a turret
-that turns -270 to 270, or a slip ring), it goes that way instead and never waits.
+**A turret crossing its zone.** A turret at 80 degrees asked to go to 250 degrees (the same direction as
+-110) would pass through the back (109 to 239) turning counterclockwise. If its range lets it reach -110
+the other way round (a range like -190 to 190, or a slip ring), it turns clockwise instead and never
+waits. If not (a range of -90 to 90 cannot reach either), it stops at 103 (two margins of 3 before 109)
+and waits while the lift is up.
 
 **Both in their zones.** This should never happen, but it can: at START, after the robot was pushed, or
 when a part was moved by hand. Then nobody keeps a zone: neither part may go deeper, each may only move
@@ -225,4 +227,6 @@ is folded or at pick-up (0 to 47 degrees), at any lift height, so the rule is be
 the **wrist**, not the lift: the turret stays out of 147 to 217 degrees while the wrist is low. The
 reasons and the numbers are in its `Tunables.TurretClaw`. Run its TeleOp in the
 [simulator](simulator.md): with the wrist folded, turn the turret toward the back with the stick (it
-stops at the edge), then score in a FLOWER (G2 Y: the wrist swings out, and the turret is free).
+stops at the edge), then score in a FLOWER (G2 Y): while the wrist is out, the turret is free to turn to
+the back. When the action folds the wrist again at the end, the rule is back on: a turret at the back
+then holds the wrist out (it waits until the turret turns away).

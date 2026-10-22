@@ -128,7 +128,7 @@ An error in the OpMode shows in red, with the line where it happened.
 
 | Source | How |
 | --- | --- |
-| On-screen | click or touch the buttons; drag the sticks; slide the triggers. **Sticky** (the box under the gamepads): a click holds a button until the next click and sticks stay where you leave them, so you can hold two things at once with one mouse. |
+| On-screen | click or touch the buttons; drag the sticks; slide the triggers. **Sticky buttons** (the box under the gamepads): a click holds a button until the next click and sticks stay where you leave them, so you can hold two things at once with one mouse. |
 | Keyboard | left stick W A S D, right stick arrows, D-pad T F G H, A/B/X/Y K L J I, LB/RB Q E, LT/RT Z C, BACK Backspace, START Enter, GUIDE M |
 | Controller | plug in a USB or Bluetooth controller, choose it, press any of its buttons once (a browser rule). Xbox, PS4, PS5 everywhere; Logitech F310 on Windows (on a Mac set its back switch to "D"). Chrome and Edge work best. |
 | Phone / other page | start with `-Plan`, open `http://<computer address>:8780/?phone=2` on the phone (the page shows the address): the phone becomes gamepad 2 (`?phone=1`: gamepad 1). Set that gamepad here to "Phone / other page"; if you forget, the page says another page is using it. |
@@ -230,7 +230,7 @@ browser.
 | Layer | What it shows |
 |---|---|
 | Camera sight lines | A line from the chosen camera to each tag in front of it. **Green**: the camera sees it (with about how many pixels across). **Pink "blocked?"**: the camera model sees it, but a field part is in the way of the line (the simulator's camera sees through field parts; a real one does not, so do not count on that tag from there). **Orange**: too slanted (the tag's face is turned more than 60 degrees from the camera). **Red**: too small (fewer pixels across than the tag finder needs: 6.5 per step of decimation, so 20 at the SDK's decimation 3). **Grey, faint**: out of the picture (left, right, above or below). **Purple**: the pretend lighting does not work with the camera's setting now (`goodPipelines`, `goodExposureMs`). Not seen: only the nearest four lines of each kind. The words at the bottom left list every tag. "Not open" means the OpMode has no camera running, so it gets nothing even where the lines are green. |
-| Camera view cone | The camera's view, 36 in long (as before). |
+| Camera view cone | The camera's view, 36 in long. |
 | Floor map | Where on the field the chosen camera can see tags: each 4 in square is shaded by how many tags the camera would see with the robot standing there (light: 1, darker: 2 or 3, darkest: 4 or more). The simulator works it out with the same camera rules the OpMode gets (field parts do not block in this map), with the robot facing the way it faces now, or, ticked "turned any way", the best of 24 headings. Turret and other parts stay as they are now. It updates once a second. |
 | Shot arc | Where each launcher would send its next piece if it fired now: a dashed yellow line from the launcher, with its peak height (check the venue's ceiling and lights). The simulator works it out from the flywheel's speed now, the shot angle (the hood's angle if it has one) and a shot table's average, with the same air drag and spin lift as a real shot, but it flies through everything (no goal, no walls, no other pieces). The words at the bottom left give the angle, speed and peak ("shoots backward, 33° up" for a launcher that throws over the robot's back); a stopped flywheel says so. |
 | Ball trails | The last half second of each loose ball's path, in its color: how it flew and bounced. |
@@ -279,8 +279,8 @@ What a team does, step by step:
    checked against the start rules) or drag the green dot. The **note** is what the Driver Station shows
    at INIT as `Place robot : ...`, so the drive team reads it at match setup: about 50 characters fit one
    line. **Write it for me** writes it from the spot ("Our wall, left corner tile, facing the field"); it
-   follows the robot until you type your own words. **Print setup card** opens one page for the drive
-   team: the note in big letters, the field with the robot's start footprint and heading, red and blue,
+   follows the robot until you type your own words. **Print setup card** shows the card for the drive
+   team in the page (print it from there): the note in big letters, the field with the robot's start footprint and heading, red and blue,
    and the first step.
 5. **Checks** before a run: the field walls and parts along the way, the start rules (touching the wall, on
    your half, not in the LOADING ZONE, inside the 18 in box), more than 30 s, the park time, a tank strafe,
@@ -891,6 +891,8 @@ set touch lift_bottom on               # hold a switch pressed (off = let go)
 set pose -56 -61.55 0                  # put the robot somewhere (x y heading)
 set autotimer off                      # no 30 s autonomous stop
 set teletimer off                      # no 2:00 TeleOp stop
+set preload off                        # the robot holds no preload (now and after each reset); on: it does
+set field start                        # every game piece back where the match starts it (the robot stays)
 set device intake_deploy missing       # take a device out of the configuration from the next INIT
                                        # (a part not on the robot yet); present = put it back
 expect screen has "Ready"              # or: screen not "..."
@@ -910,6 +912,8 @@ expect camera "Webcam 1" sees 31       # a tag id in the picture; or: sees none 
                                        # a Limelight reports single tags; LimelightTags makes the groups)
 expect size most ok                    # size start|match|most ok|fail (see "Robot shapes")
 expect stored >= 1                     # game pieces in the robot; also: launched, scored, cell, tips, left (see "Game pieces")
+expect points "red" >= 20              # the alliance's match points now ("blue" too)
+expect clean >= 1                      # shots that went cleanly into an up CELL (see "Game pieces")
 set piece POLLEN 30 -20                # put a game piece on the field (x y [z])
 expect within 2 motor lift ticks > 500 # wait up to 2 s for it to become true
 expect within 30 phase STOPPED         # e.g. wait for an autonomous to finish

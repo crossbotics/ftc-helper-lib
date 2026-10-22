@@ -252,7 +252,7 @@ What "off" means, everywhere:
 | Where | A part that is off |
 | --- | --- |
 | Commands | ignored (`goTo`, `in`, `spinUp`...): no error, nothing moves |
-| Questions | never hold anything up: "done" questions are true (`isDone`, `isAtTarget`, `isAt` the position it was last sent to, `isArrived`, `isHomed`, a turret's `isAimed`); "busy" ones are false (`isRunning`, `isSpinning`, `isReady`, `isShooting`, `isBusy`, `isJammed`); sensors see nothing. `isPresent()` is false |
+| Questions | never hold anything up: "done" questions are true (`isDone`, `isAtTarget`, `isAt` the position it was last sent to, `isHomed`, a turret's `isAimed`); "busy" ones are false (`isRunning`, `isSpinning`, `isReady`, `isShooting`, `isBusy`, `isJammed`); sensors see nothing. `isPresent()` is false |
 | Telemetry | its line is `- (not on the robot)` (a servo part that is on the robot but has had no command yet says `not sent yet`) |
 | INIT | PRACTICE: a note. **COMPETITION: a loud warning at the very top** (above every other warning), `!! COMPETITION: "intake_deploy" not in the configuration: IntakeDeploy is OFF (optional part). On the robot? Check its name in the configuration, then INIT again`: at an event, a part that is off is most likely a misspelled or lost name |
 | [Actions](#action) | the step's command to it is skipped and the action goes on. A wait right after a step that only used parts that are off is skipped too (nothing to wait for). `status()` ends with `skipped IntakeDeploy (not on the robot)`, `skipped()` lists them; an autonomous's report says it on the step |
@@ -396,7 +396,7 @@ intake = add(Intake.motor("intake").withCrServos("left_wheel", "right_wheel").re
 | `stopsWhen(condition)`, `isHeldBack()`, `heldBackSec()` | never runs IN while the condition is true (pushing out still works), e.g. `stopsWhen(() -> pieces.isFull())` ([Pieces](#pieces-and-piecesensor)); how long it has been held back |
 | `inAnyway()` | runs in even though `stopsWhen` says no, until `stop()` or `out()` (the count was wrong) |
 
-`Tunables.Intake` ([all its numbers](../guides/tunables.md#intake)): `inPower` (1.0), `outPower` (0.7). Buttons: hold operator RT in, LT out; with
+`Tunables.Intake` (the section is the device's name in CamelCase: `front_roller` reads `Tunables.FrontRoller`; [all its numbers](../guides/tunables.md#intake)): `inPower` (1.0), `outPower` (0.7). Buttons: hold operator RT in, LT out; with
 `onAtStart()`: RT switches it on/off, hold LT pushes out. With `stopsWhen`: hold RT for 1 s to run in
 anyway (with `onAtStart()`: tap RT switches, hold it 1 s runs in anyway), and the Driver Station warns
 when it has been held back for more than 2 s, so the drivers notice a count that says "full" too soon.
@@ -561,12 +561,13 @@ turret = add(Turret.crServo("turret").analogEncoder("turret_pos").continuous());
 | `zone()` | its zone for an [interlock rule](#interlock) (degrees, repeats every 360) |
 | `static forgetAngles()` | forget the angle carried from the last program (tests; turning it by hand between programs) |
 
-`Tunables.Turret` ([all its numbers](../guides/tunables.md#turret)): `min`, `max` (degrees, counterclockwise +, 0 = forward: it never turns past them; a
+`Tunables.Turret` (the section is the device's name in CamelCase; [all its numbers](../guides/tunables.md#turret)): `min`, `max` (degrees, counterclockwise +, 0 = forward: it never turns past them; a
 goal outside waits at the limit and the Driver Station says "goal out of turret range"; past +/-180 it
 picks the way round that stays inside them), `startAngle` (where it points at INIT with no switch,
 default 0; when 0 is outside `min` to `max`, the middle of the range, with an INIT note), `kP`, `kI`, `kD`,
 `maxPower`, `tolerance`, `slowZone`, `slowZonePower` (a motor or CR servo turret; a servo turret reads
-none of these five), `cameraOffset`,
+none of these five), `cameraOffset` (the turret's own: degrees added to where the turret points; whole-robot
+aim has its own `Tunables.Aim.cameraOffset`, see [Aim](#aim)),
 `outOfRangeHold` (default 10: an odometry goal this many degrees past a limit, behind the robot, makes it
 HOLD where it points instead of swinging limit to limit as the heading wobbles; it follows again once the
 goal is back within half of that). With a switch: `homeAngle` (needed), `homeDirection`, `homingPower`,
@@ -671,7 +672,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer
 | `useTable(name)`, `nextTable()` | the shot table to use ("pollen" for `speedByDistancePollen`, case does not matter); the next one. A name with no table warns and keeps the one in use |
 | `tableFrom(() -> name)` | let code (a game-piece sensor) choose: each time its answer changes to a table's name, that table is used; null, "NONE" and "UNKNOWN" change nothing |
 | `tableFor(table, kinds...)` | which table some game-piece kinds use, e.g. `.tableFor("nectar", "RED_NECTAR", "BLUE_NECTAR")`; a kind named like a table ("POLLEN") needs no line |
-| `startTable(name)` | the table at the start (default: `speedByDistance` if there is one, else the first by name) |
+| `startTable(name)` | the table at the start (default: the plain `speedByDistance`, named `main` and shown as `MAIN`, if there is one; else the first by name: `nectar` before `pollen`) |
 | `tableName()`, `tableNames()`, `tableField(name)`, `distanceIn()`, `distanceSource()` | |
 | `table(name)`, `speedRpm()` | a shot table as Tunables.java has it (null if none); `Tunables.Launcher.speedRpm` (the Shot Tuner starts from them) |
 | `isReady()`, `isShooting()`, `targetRpm()`, `part()` | |
@@ -680,7 +681,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer
 | `hood(Hood)`, `hood()` | the launcher's [hood](#hood): its angle from the table's third column; the launcher waits for it before feeding |
 | `shotAngle(deg)` | for the simulator: which way a piece leaves, degrees up from the wheel shape's forward (the robot's forward for a wheel mounted level; 135 = up and out of the back) |
 
-`Tunables.Launcher` ([all its numbers](../guides/tunables.md#launcher)): `speedRpm`, `stepRpm`, `readyBandRpm`, `idleRpm`, `shotIntervalSec`,
+`Tunables.Launcher` (the section is the flywheel motor's name in CamelCase: a launcher on `shooter` reads `Tunables.Shooter`, its feeder on `feeder` reads `Tunables.Feeder`; [all its numbers](../guides/tunables.md#launcher)): `speedRpm`, `stepRpm`, `readyBandRpm`, `idleRpm`, `shotIntervalSec`,
 `speedByDistance` (`{{inches, rpm}, ...}`, blended between rows; with no goal in view the last speed
 stays), or one table per game piece: `speedByDistancePollen`, `speedByDistanceNectar` (any names after
 `speedByDistance`), and `kP`, `kI`, `kD`, `kF` (the hub's speed control; only used when `kF` is there: the
@@ -805,12 +806,12 @@ the rim, or worn balls launch flatter). Use the speed trim first.
 | `angle()`, `targetAngle()`, `isAtTarget()`, `followsTable()` | where it is now (encoder, or the time estimate; like `Turret.angle()`); where it is going; there (or, a servo, should be by now); the table sets it now |
 | `minAngle()`, `maxAngle()`, `startAngle()`, `usesAngles()`, `isMotor()`, `isReversed()`, `part()` | `part()` is the [`AngleDevice`](mechanism.md#angledevice) the launcher drives |
 
-`Tunables.Hood` ([all its numbers](../guides/tunables.md#hood)) (optional ones scale with the range, so they suit degrees, positions and ticks):
+`Tunables.Hood` (the section is the hood device's name in CamelCase; [all its numbers](../guides/tunables.md#hood)) (optional ones scale with the range, so they suit degrees, positions and ticks):
 `startAngle` (where it goes at START; default angleA), `stepAngle` (1/25 of the range), `byHandPerSec`
 (the whole range in 2.5 s at full stick), `trimMax` (1/5 of the range), `travelSec` (servo, 0.5). A
 motor hood: `kP` (power per tick, 0.005), `maxPower` (0.5), `tolerance` (1/50 of the range); it never
 pushes further past a stop. Nothing moves in INIT: the hood goes to `startAngle` at START. The Driver
-Station shows `Hood: 12.5 deg (table, trim +1.0 deg)` (`moving` until it should be there).
+Station shows `Hood : 12.5 deg (table, trim +1.0 deg)` (`moving` until it should be there).
 
 Not built yet: a CR servo with an absolute encoder. It fits the same way: anything that is an
 [`AngleDevice`](mechanism.md#angledevice) can be a hood of the [plain launcher](launcher.md#launcher)
@@ -881,7 +882,7 @@ public static class Aim {                                   // Tunables.java (ev
     public static double cameraOffset = 0, rumbleDeg = 4;
     public static double maxGoalDistance = 170, cameraOdometryAgree = 6;   // inches: odometry checks
     public static boolean shootOnMove = false;              // shooting while driving (below): off until tuned
-    public static double flightSec = 0.8, flightSecPerIn = 0, maxLeadIn = 24;
+    public static double flightSec = 0.8, flightSecPerIn = 0, maxLeadIn = 24;   // flightSec default 0: no lead until written
     public static double shooterForwardIn = 0, shooterLeftIn = 0, cameraForwardIn = 0, cameraLeftIn = 0;
 }
 ```
@@ -915,7 +916,9 @@ and forth, so `robot.aimMode()` stops at INIT with a message on a robot whose tu
 **Whole-robot aim** (no turret): one line in `Controls.java`. While it is on, the robot turns to face
 the goal and the driver keeps forward and sideways; moving the turn stick still turns it by hand. Off
 at START. `turnKp`, `turnKd`, `maxTurnPower`, `minTurnPower` (the least power that turns the robot),
-`toleranceDeg` and `cameraOffset` are its numbers. The Driver Station shows `Aim: camera, 1.5 deg off  AIMED`.
+`toleranceDeg` and `cameraOffset` are its numbers (this `cameraOffset` is `Tunables.Aim`'s, for the whole
+robot; a turret has its own in `Tunables.Turret`; the Aim Tuner prints the line for the one your robot
+uses). The Driver Station shows `Aim : camera, 1.5 deg off  AIMED`.
 
 ```java
 g1.rb.toggle(robot.aimMode()).says("aim the robot at the goal on/off").rumble();   // Controls.java
@@ -1012,7 +1015,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer
 "POLLEN" uses the `pollen` table by its name; "NONE" and "UNKNOWN" keep the table in use, and a driver's
 button still works until the next piece changes. Lights (`import com.crossbotics.ftchelper.robot.LightColor;`
 in Controls.java): `robot.lights.show(LightColor.GREEN).when(robot.pieces.whenFull());` and
-`robot.lights.show(LightColor.RED).when(robot.pieces.whenEmpty());` ([Lights](#lights)).
+`robot.lights.show(LightColor.ORANGE).when(robot.pieces.whenEmpty());` ([Lights](#lights)).
 No feed with nothing in: `Launcher...requireReady("a piece to fire", () -> !pieces.isEmpty())`.
 
 **The sensors** (`PieceSensor`, one spot each; also alone: `add(PieceSensor.color("x").kinds("POLLEN"))`):
@@ -1094,16 +1097,18 @@ lights = add(Lights.gobilda("light"));      // Robot.java: a goBILDA RGB Indicat
 lights = add(Lights.blinkin("blinkin"));    // or a REV Blinkin LED Driver and its LED strip ("REV Blinkin LED Driver")
 ```
 
-Which color when goes in `Controls.java`, inside `buttons(...)`: one line per rule. `Controls.java`
-needs `import com.crossbotics.ftchelper.robot.LightColor;` at the top for the color names.
+Which color when goes in `Controls.java`, inside `buttons(...)`: one line per rule. Every file that
+names a color (`Controls.java`, and `Actions.java` if an action flashes the light) needs
+`import com.crossbotics.ftchelper.robot.LightColor;` at the top.
 
 ```java
-robot.lights.show(LightColor.YELLOW).blinking().inLastSeconds(20);     // the most important first
+robot.lights.show(LightColor.WHITE).forSeconds(0.2)                    // a flash first (it beats every rule):
+        .whenCountGoesUp(() -> robot.launcher.part().getShotsFired()); // one short flash per piece fired
+robot.lights.show(LightColor.YELLOW).blinking().inLastSeconds(20);     // then the most important rule
 robot.lights.show(LightColor.GREEN).when(robot.launcher::isReady);     // ready to fire
 robot.lights.show(LightColor.PURPLE).when(() -> robot.turret.followMode().isOn());   // a turret robot
 robot.lights.show(LightColor.PURPLE).when(() -> robot.aimMode().isOn()); // or: whole-robot aim on (no turret)
 robot.lights.otherwise(LightColor.OFF);                                 // when no rule is true
-robot.lights.show(LightColor.WHITE).whenCountGoesUp(() -> robot.launcher.part().getShotsFired());   // a 0.5 s flash per piece fired
 ```
 
 | Method | |
@@ -1111,7 +1116,7 @@ robot.lights.show(LightColor.WHITE).whenCountGoesUp(() -> robot.launcher.part().
 | `show(color).when(test)` | that color while `test` is true |
 | `show(color).blinking().when(test)` | blinks 2 times a second; `blinking(1)`: once a second (any number above 0, at most 5) |
 | `show(color).whenStarts(test)` | a 0.5 s flash each time `test` turns from false to true (`.forSeconds(1)` first: longer) |
-| `show(color).whenCountGoesUp(count)` | a 0.5 s flash each time the number goes up: `() -> robot.launcher.part().getShotsFired()` flashes once per piece fired (`fire(3)`: three flashes; `whenStarts(robot.launcher::isShooting)` would flash once for all three) |
+| `show(color).whenCountGoesUp(count)` | a 0.5 s flash each time the number goes up: `() -> robot.launcher.part().getShotsFired()` flashes once per piece fired (`whenStarts(robot.launcher::isShooting)` would flash once for all of a `fire(3)`). Shots closer together than the flash run into one long flash: `.forSeconds(0.2)` first keeps them apart |
 | `show(color).inLastSeconds(20)` | in the last 20 s of TeleOp's 2:00, counted from START |
 | `otherwise(color)` | when no rule is true (default `OFF`) |
 | `flash(color)`, `flash(color, seconds)` | flash now, over every rule: from a button or an action step |
@@ -1120,7 +1125,9 @@ robot.lights.show(LightColor.WHITE).whenCountGoesUp(() -> robot.launcher.part().
 | `allianceColors(blue, red)` | the colors for the alliance at INIT, for a light that shows red or blue badly |
 | `blinkinPattern(color, pattern)` | a Blinkin only: your own pattern for a color, e.g. `blinkinPattern(LightColor.BLUE, BlinkinPattern.BLUE_VIOLET)` |
 
-- **The first true rule wins**, in the order written. A flash beats every rule while it lasts.
+- **The first true rule wins**, in the order written. A flash beats every rule while it lasts, wherever
+  it is written (write it first: it reads that way). A flash in the color of the rule under it cannot be
+  seen: give it another color.
 - **Any true/false works:** `robot.intake::isRunning`, a mode (`() -> robot.turret.followMode().isOn()`),
   or your own (`() -> robot.lift.position() > 1000`). A rule that fails counts as false and the Driver
   Station warns.
@@ -1308,7 +1315,7 @@ The whole table, with how to move each: [the button menu](../guides/buttons.md#m
 
 | Input | Gamepad 1 (driver) | Gamepad 2 (operator) |
 | --- | --- | --- |
-| Left stick | drive (and strafe) | lift by hand (Y) |
+| Left stick | drive (and strafe) | lift by hand (Y), or a hood by hand (Y): see below |
 | Right stick | turn (X) | arm by hand (Y), turret by hand (X) |
 | LT / RT | slow (the further, the slower) / free | intake out (hold) / intake in (hold, or on/off) |
 | LB / RB | free | launcher spin up/down / fire one (hold: keep firing) |
@@ -1320,6 +1327,11 @@ The whole table, with how to move each: [the button menu](../guides/buttons.md#m
 | START + BACK | hold START, then press BACK: debug lines (when let go); with `lib.switchAlliance(g1.start, g1.back)`, both held 1.5 s: **switch the alliance**. BACK first is only a pause | |
 | GUIDE | tap: the button map, without the free buttons (during the match too); hold 1 s: the tuning menu (PRACTICE) | free |
 
+**Two parts, one stick:** a lift and a launcher's hood both suggest gamepad 2's left stick Y. With both,
+only one of them gets it: INIT's button map says which, and that the other has `no button` (`... is taken
+by Hood`). Want the other one on a stick too? Give it another one in `buttons(...)`, e.g.
+`g2.rightStickY.use(robot.lift::manual).says("lift by hand");` (a job you write takes the stick from the part that had it).
+
 **One driver:** the left stick click switches slow on/off and the right stick click switches
 field-centric. To put slow on a trigger instead, give it `.slow()`: `g1.lt.slow();` slows the robot
 the further LT is pulled (down to `slowSpeed` at a full squeeze, like the two-driver LT). On a button,
@@ -1330,7 +1342,7 @@ the further LT is pulled (down to `slowSpeed` at a full squeeze, like the two-dr
 note instead ("forward" means nothing there).
 
 **Switch the alliance** (optional, off by default: turn it on with `lib.switchAlliance(g1.start, g1.back)`):
-hold START, then BACK, both 1.5 s (BACK first is just a pause). Both gamepads buzz twice and the Driver Station says
+on gamepad 1 hold the small START button, then press and hold BACK too, both 1.5 s (BACK first is just a pause). Both gamepads buzz twice and the Driver Station says
 `Alliance now RED (was BLUE)`. Everything that reads `robot.alliance()` follows at once: the camera's
 goal tag (`Camera.goal()`), the aim's goal point (mirrored for RED), light rules you wrote with it, and
 `MatchMemory` (a TeleOp started again gets it). The pose follows too (autonomous ran as the wrong
@@ -1387,8 +1399,8 @@ What [`Steps`](#auto) can do:
 | `menuYesNo(label, yes)`, `menuChoice(label, options...)` | a choice for the drivers in INIT |
 | `onlyIf(label)` / `onlyIf(label, option)` ... `end()` | the steps in between run only for that choice; a `start(...)` or `parkWithSeconds(...)` in between is used only for that choice, and the INIT note follows the menu ([choose the start in INIT](../guides/autos.md#example-2-one-opmode-the-drivers-choose-in-init)) |
 | `isYes(label)`, `choice(label)` | read a choice |
-| `move(label, inches, directionDeg, power)` | drive (0 forward, 90 right) |
-| `turn`, `turnTo` | turn by an angle / to a heading |
+| `move(label, inches, directionDeg, power)` | drive (0 forward, 90 right: clockwise, like a compass) |
+| `turn(label, degrees, power)`, `turnTo(label, headingDeg, power)` | turn by an angle / to a heading (90 = left: counterclockwise, the other way from a move's direction) |
 | `driveTo(label, xIn, yIn, headingDeg, power[, toleranceIn][, PathAt...])` | drive to a field point and heading with the odometry, correcting all the way (mecanum; needs `Tunables.Odometry.checked` on a robot) ([driveTo](../guides/autonomous-builder.md#drive-to-a-field-point-driveto)); [`PathAt`](#pathat) starts things on the way |
 | `follow(label, path[, timeoutSec][, PathAt...])` | follow a path with the robot's [path follower](#pathfollower) ([pedro](pedro.md)); [`PathAt`](#pathat) starts things along it |
 | `run(label, command)` | start something and go on at once |
