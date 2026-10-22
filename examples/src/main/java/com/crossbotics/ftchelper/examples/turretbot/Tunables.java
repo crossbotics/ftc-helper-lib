@@ -62,11 +62,11 @@ public class Tunables {
      * cams. A goBILDA Torque servo (300 deg mode) turns it through a 20T pinion and a 108T gear (5.4:1),
      * so the 25 deg take 135 deg of the servo: about 0.45 of its 0 to 1 range. posA, posB: the servo
      * positions a hair off each stop (Hood Finder: example numbers here). travelSec: stop to stop
-     * (the servo's 0.2 s per 60 deg x 5.4 x 25 deg = 0.45 s). homeAngle 0: parked at the steep end.
+     * (the servo's 0.2 s per 60 deg x 5.4 x 25 deg = 0.45 s). startAngle 0: parked at the steep end.
      */
     public static class Hood {
         public static double posA = 0.20, posB = 0.65, angleA = 0, angleB = 25;
-        public static double travelSec = 0.45, homeAngle = 0;
+        public static double travelSec = 0.45, startAngle = 0;
     }
 
     /**

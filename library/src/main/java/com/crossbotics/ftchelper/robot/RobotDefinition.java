@@ -715,7 +715,8 @@ public abstract class RobotDefinition {
         describe();
         List<String> out = new ArrayList<>();
         if (usedAtSetup != null) out.addAll(com.crossbotics.ftchelper.tuning.Tunable.outsideRangeNotes(usedAtSetup));
-        TunableSection a = TunableSection.of(tunablesClass, "Aim"), o = TunableSection.of(tunablesClass, "Odometry");
+        TunableSection a = TunableSection.of(tunablesClass, "Aim");
+        TunableSection o = TunableSection.of(tunablesClass, "Odometry");
         if (a.has("goalX") != a.has("goalY")) {
             out.add("Tunables.Aim: goalX and goalY go together; with only " + (a.has("goalX") ? "goalX" : "goalY")
                     + " there is no goal point (the odometry backup is off)");
