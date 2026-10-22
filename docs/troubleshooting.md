@@ -76,6 +76,7 @@ robot in five files: the Drive Tuner, then `Tunables.Drive.calibrated = true`.
 | `Aim odometry: the pose was never set ...` | TeleOp ran without autonomous, so the robot does not know where it is: aiming uses the camera only. Run autonomous first, or park on the reset spot and hold gamepad 1 START 1 s ("set pose here", `Tunables.Odometry.resetX, resetY, resetHeading`; [lesson 7](tutorials/start/07-odometry.md#7-teleop-starts-where-autonomous-ended)) |
 | `No reset spot: add resetX, resetY, resetHeading to Tunables.Odometry` | START was held 1 s ("set pose here") but `Tunables.Odometry` has no spot: add the three numbers (inches and degrees from your wall, for BLUE) |
 | `Alliance now RED (was BLUE)` | someone held gamepad 1 BACK + START 1.5 s: the alliance switched. Hold them again to switch back ([ControlMap](modules/robot.md#controlmap)) |
+| `Launcher: battery 11.2 V: low. The flywheel gets back to speed slower: charge or swap it` | swap in a charged battery. The launcher's battery compensation helps, but shots still wait longer |
 | `Aim odometry: ... more than the field allows` / `Aim: camera says ... odometry ...` | the pose is wrong or drifted, or `Tunables.Aim.goalX, goalY` are not where the camera measures to |
 | `goal out of turret range (behind the robot: holding)` | the goal is behind the robot: turn the robot toward it |
 | `PRACTICE profile` | set COMPETITION at events |
@@ -94,6 +95,14 @@ Add `robotConfig()` to the OpMode: `return new RobotSettings();` (starter kit) o
 `RobotSettings.imu()` returned null. Return `ImuSetup.get(...)` there: every Control Hub has an IMU.
 
 ## Robot behavior
+
+**Every shot is a little short (or long) today**
+The battery is lower than when you tuned, or the wheel is worn. In the match: the operator's D-pad
+up/down trims every shot speed by 1% (`Speed trim: +3%` on the Driver Station; hold D-pad down 1 s = 0).
+If it happens every match, the table is off: tune it again with the Shot Tuner and copy the new line into
+`Tunables.java` ([Lesson 9](tutorials/start/09-shooter-and-camera.md#speed-trim-and-a-low-battery)).
+Check that `kF` and `nominalVolts` (from the Flywheel Finder) are in `Tunables.Launcher`: they turn on the
+battery compensation.
 
 **Y does nothing (no field-centric) in an EasyTeleOp**
 Field-centric needs mecanum wheels and the IMU. A tank drivetrain, or `imu()` returning null, keeps

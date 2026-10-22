@@ -335,6 +335,79 @@ public class LauncherTest {
         assertFalse("still travelling", hood.isDone());
     }
 
+    // Battery compensation: F x (tuned volts / volts now), read every 0.25 s, sent only on a real change.
+    @Test public void aWeakBatteryGetsAScaledF() {
+        FakeMotor m = new FakeMotor();
+        Fakes.Clock c = new Fakes.Clock();
+        double[] volts = {11.6};
+        int[] reads = {0};
+        Flywheel fw = new Flywheel("fly", m.motor).withClock(c::get).pidf(1, 0.1, 0, 12)
+                .batteryCompensation(() -> { reads[0]++; return volts[0]; }, 12.8);
+        fw.setRpm(3000);
+        fw.update();
+        assertEquals(12 * 12.8 / 11.6, m.pidf[3], 1e-9);
+        assertEquals("P, I, D as tuned", 1, m.pidf[0], E);
+        assertEquals(12.8 / 11.6, fw.getFScale(), 1e-9);
+        c.addSec(0.1); fw.update();
+        assertEquals("not read again before 0.25 s", 1, reads[0]);
+        volts[0] = 11.5;                                       // under 2% change: nothing sent
+        c.addSec(0.2); fw.update();
+        assertEquals(2, reads[0]);
+        assertEquals(12 * 12.8 / 11.6, m.pidf[3], 1e-9);
+        volts[0] = 0;                                          // no reading: keep the last scale
+        c.addSec(0.3); fw.update();
+        assertEquals(12 * 12.8 / 11.6, m.pidf[3], 1e-9);
+        volts[0] = 8;                                          // a very weak battery: kept to x1.3
+        c.addSec(0.3); fw.update();
+        assertEquals(12 * Flywheel.MAX_F_SCALE, m.pidf[3], 1e-9);
+        volts[0] = 12.8;                                       // a charged battery: back to F as tuned
+        c.addSec(0.3); fw.update();
+        assertEquals(12, m.pidf[3], 1e-9);
+        fw.noBatteryCompensation();
+        assertTrue(!fw.hasBatteryCompensation());
+    }
+
+    @Test public void aLowBatteryWarnsAfterTwoReadings() {
+        FakeMotor m = new FakeMotor();
+        Fakes.Clock c = new Fakes.Clock();
+        Flywheel fw = new Flywheel("fly", m.motor).withClock(c::get).pidf(1, 0.1, 0, 12)
+                .batteryCompensation(() -> 11.0, 12.6);
+        fw.update();
+        assertFalse("one dip is not a warning", screen(fw).contains("battery 11.0 V: low"));
+        c.addSec(0.3); fw.update();
+        assertTrue(screen(fw), screen(fw).contains("battery 11.0 V: low"));
+        try {
+            new Flywheel("fly", m.motor).batteryCompensation(() -> 12, 120);
+            org.junit.Assert.fail("120 V is a typo");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("9 to 14 V"));
+        }
+    }
+
+    @Test public void theSpeedScaleTrimsTheShotSpeedNotTheIdle() {
+        FakeMotor fm = new FakeMotor();
+        Flywheel fw = new Flywheel("fly", fm.motor).withClock(() -> 0L);
+        Launcher l = new Launcher(fw, new MotorFeeder("f", new FakeMotor().motor)).withClock(() -> 0L).idleRpm(1000);
+        l.setRpm(3000);
+        l.speedScale(1.05);
+        l.spinUp();
+        l.update();
+        assertEquals(3150, fw.getTargetRpm(), 1e-9);
+        l.idle();
+        l.update();
+        assertEquals("the idle speed is not trimmed", 1000, fw.getTargetRpm(), 1e-9);
+        l.speedScale(9);
+        assertEquals("kept to 1.5", 1.5, l.getSpeedScale(), E);
+    }
+
+    private static String screen(Flywheel fw) {
+        Fakes.FakeTelemetry ft = new Fakes.FakeTelemetry();
+        com.crossbotics.ftchelper.telemetry.RobotTelemetry t = new com.crossbotics.ftchelper.telemetry.RobotTelemetry(ft.telemetry, () -> 0L);
+        fw.addTelemetry(t);
+        t.update();
+        return ft.lastScreen.toString();
+    }
+
     @Test public void followerWithoutAnEncoderIsSwitchedOff() {
         FakeMotor lead = new FakeMotor(), follow = new FakeMotor();
         Fakes.Clock c = new Fakes.Clock();

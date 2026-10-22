@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.crossbotics.ftchelper.gamepad.ControllerBindings;
 import com.crossbotics.ftchelper.gamepad.ControllerBindings.Btn;
 import com.crossbotics.ftchelper.gamepad.ControllerBindings.Pad;
+import com.crossbotics.ftchelper.hardware.Hw;
 import com.crossbotics.ftchelper.launcher.Flywheel;
 import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
 import java.util.ArrayList;
@@ -18,7 +19,10 @@ import java.util.List;
  * No code to write: it lists every motor in the robot configuration.
  *
  * <p>It shows the code for {@code Flywheel} and, for the robot in five files, the line for
- * {@code Tunables.java}: {@code Tunables.Launcher: kP = 1.17, kI = 0.117, kD = 0, kF = 11.70}.
+ * {@code Tunables.java}: {@code Tunables.Launcher: kP = 1.17, kI = 0.117, kD = 0, kF = 11.70, nominalVolts = 12.6}.
+ * {@code nominalVolts} is the battery voltage while the top speed was measured: the gains are right
+ * for that voltage, and the launcher's battery compensation scales F from it. In step 2 the
+ * compensation is on too (from that voltage), so F changes are for the same voltage.
  *
  * <pre>
  * Choose:  D-pad up/down = motor, A = use it
@@ -60,6 +64,11 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
     private int lastShots = 0;
     private double shotAt = Double.NaN;
     private double recoverySec = Double.NaN;
+    // The battery: the last reading, when to read again (each read asks the hub), and the voltage when
+    // the top speed (so the gains) was measured. NaN = none.
+    private double volts = Double.NaN;
+    private double nextVoltsAt = 0;
+    private double tuneVolts = Double.NaN;
 
     /**
      * Encoder counts per ONE turn of the flywheel. Default 28: a goBILDA or REV motor's own encoder,
@@ -111,6 +120,7 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
         topTicks = 0;
         gains = null;
         recoverySec = Double.NaN;
+        tuneVolts = Double.NaN;
     }
 
     private void release() {
@@ -143,6 +153,8 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             flywheel = new Flywheel(motorName, motor).countsPerRev(countsPerRev())
                     .maxRpm(topRpm()).pidf(gains[0], gains[1], gains[2], gains[3]);
+            // From the voltage the gains were found at: an F you fine-tune now is for that voltage too.
+            if (tuneVolts >= 9 && tuneVolts <= 14) flywheel.batteryCompensation(() -> Hw.batteryVolts(hardwareMap), tuneVolts);
             if (targetRpm == 0) targetRpm = Math.round(topRpm() * 0.6 / 25) * 25.0;
             lastShots = 0;
         } else {
@@ -170,9 +182,18 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
         return Math.abs(FinderMath.ticksPerSecToRpm(topTicks, countsPerRev()));
     }
 
+    // The battery, at most every 0.25 s (each reading asks the hub, a few milliseconds).
+    private void readVolts() {
+        if (now() < nextVoltsAt) return;
+        nextVoltsAt = now() + 0.25;
+        double v = Hw.batteryVolts(hardwareMap);
+        if (v >= 7 && v <= 16) volts = v;
+    }
+
     @Override
     protected void step() {
         if (motor == null) return;
+        readVolts();
         if (holding) {
             flywheel.setRpm(targetRpm);
             flywheel.update();
@@ -215,6 +236,7 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
         double avg = sum / recent.length;
         if (Math.abs(avg) > Math.abs(topTicks)) {
             topTicks = avg;
+            tuneVolts = volts;   // the gains below are right for the battery as it is now
             gains = FinderMath.flywheelPidf(topTicks);
             writeResults();
         }
@@ -236,6 +258,11 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
             results.set(key + ":2", "    // recovery after a shot at " + FinderResults.num(targetRpm, 0) + " RPM: "
                     + FinderResults.num(recoverySec, 2) + " s");
         }
+        boolean knowVolts = tuneVolts >= 9 && tuneVolts <= 14;
+        if (knowVolts) {
+            results.set(key + ":3", "    // tuned at " + FinderResults.num(tuneVolts, 1) + " V: add .batteryCompensation(() -> Hw.batteryVolts(hardwareMap), "
+                    + FinderResults.num(tuneVolts, 1) + ")");
+        }
         // The same gains for the robot in five files (Tunables.java). A slow recovery also needs a
         // longer time between two shots (shotIntervalSec, default 0.25 s): a little above the recovery.
         List<String> fields = new ArrayList<>();
@@ -243,6 +270,8 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
         fields.add("kI = " + FinderResults.num(gains[1], 3));
         fields.add("kD = 0");
         fields.add("kF = " + FinderResults.num(gains[3], 2));
+        // The voltage the gains are for: the launcher's battery compensation scales F from it.
+        if (knowVolts) fields.add("nominalVolts = " + FinderResults.num(tuneVolts, 1));
         if (!Double.isNaN(recoverySec) && recoverySec > 0.25) {
             fields.add("shotIntervalSec = " + FinderResults.num(Math.ceil(recoverySec * 20) / 20 + 0.05, 2));
         }
@@ -260,6 +289,10 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
         t.section("Flywheel \"" + motorName + "\"  (BACK = another)");
         double rpm = FinderMath.ticksPerSecToRpm(motor.getVelocity(), countsPerRev());
         t.line("Speed", FinderResults.num(rpm, 0) + " RPM");
+        if (!Double.isNaN(volts)) {
+            t.line("Battery", FinderResults.num(volts, 2) + " V" + (tuneVolts >= 9 ? " (gains for " + FinderResults.num(tuneVolts, 1) + " V)" : ""));
+            if (volts < Flywheel.LOW_BATTERY_VOLTS) t.warn("Battery low: charge it before measuring (the gains are for this voltage).");
+        }
         if (gains == null) {
             t.line("Direction", reversed ? "reversed (X)" : "normal (X = reverse)");
             t.text("Step 1: hold A for full power until the speed stops rising.");
@@ -298,7 +331,7 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
             "   Too fast: LB (F -2%).",
             "5. Feed a piece by hand: the recovery time shows.",
             "   B again = stop. BACK = another motor.",
-            "STOP saves the code lines.",
+            "STOP saves the lines (gains + the battery volts).",
         };
     }
 
