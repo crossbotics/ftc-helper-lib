@@ -1,6 +1,6 @@
 # Git and GitHub for FTC teams
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **For:** every student who changes the robot code, and the mentor. **You need:** a GitHub account
 (free; GitHub's rules say you must be 13 or older), and the robot project on GitHub. **Time:** 30

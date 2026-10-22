@@ -1,6 +1,6 @@
 # Contributing: add or change something in the library
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 Anyone on the team can improve the library. Because every robot project uses it, each change
 follows the same six steps, so nothing breaks and the docs and tutorials stay true.

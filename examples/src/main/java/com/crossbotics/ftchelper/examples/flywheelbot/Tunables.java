@@ -4,11 +4,11 @@ package com.crossbotics.ftchelper.examples.flywheelbot;
  * Example robot 1, file 2 of 5: every NUMBER, one section per part. The section's name is the part's
  * configuration name in CamelCase ("intake_deploy" reads {@code IntakeDeploy}).
  *
- * <p>Tune on the robot with the tuning menu (GUIDE on gamepad 1, PRACTICE profile only): a changed value
+ * Tune on the robot with the tuning menu (GUIDE on gamepad 1, PRACTICE profile only): a changed value
  * is saved on the Control Hub, and INIT lists every value that differs from this file, ready to copy
  * back. This file stays the record; the saved values are only for tuning.
  *
- * <p>A number you delete here falls back to the library's default (INIT says which).
+ * A number you delete here falls back to the library's default (INIT says which).
  */
 public class Tunables {
     /** The drivetrain. calibrated: set true after the Drive Tuner (autonomous refuses to run before). */

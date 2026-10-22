@@ -1,7 +1,7 @@
 # ftc-helper-lib
 
 > **Work in progress.** This library is new and still changing, and some parts are not yet tested on a
-> real robot. Please try it and [tell us what works and what does not](https://github.com/crossbotics/ftc-helper-lib/issues) (a GitHub issue). Every
+> real robot. Please try it and [tell us what works and what does not](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose) (a GitHub issue). Every
 > report helps.
 
 Shortcuts for programming an FTC robot in Java, made by Indianola Robotics (FTC team 8938).
@@ -95,7 +95,7 @@ learned in nearly 30 years of hands-on coding with the power of agentic coding a
   on a docs page, every link works) and a check that nothing stops the robot's loop.
 
 What this means for you: the code is checked, but it is new, and people and AI both make mistakes. Test it
-on your robot, read the code you rely on, and [tell us](https://github.com/crossbotics/ftc-helper-lib/issues) when something is wrong or unclear. For
+on your robot, read the code you rely on, and [tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose) when something is wrong or unclear. For
 students: use AI the same way, as a strong helper whose work you check and understand, not as a
 replacement for learning.
 

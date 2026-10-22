@@ -1,6 +1,6 @@
 # Keep the library up to date
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **Before this:** [Add it to a project](01-add-to-project.md). New to git? Read
 [Git and GitHub for FTC teams](guides/github.md) first: it explains commit, push, pull and submodule.
@@ -229,7 +229,7 @@ git push
 list). In GitHub Desktop: **History** tab, right-click the update commit > **Revert Changes in
 Commit**, then **Push origin**.
 
-Then tell the library's authors what broke ([an issue](https://github.com/crossbotics/ftc-helper-lib/issues)):
+Then tell the library's authors what broke ([an issue](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose)):
 the version, what you did, and what you saw.
 
 ## A new FTC SDK version

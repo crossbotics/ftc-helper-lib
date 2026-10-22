@@ -1,6 +1,6 @@
 # Tutorial 09: Autonomous by hand with AutoDrive
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** a settings file, a tuner that measures your drivetrain, and an autonomous that drives a square.
 The main track does this with less code: [Your first autonomous](start/06-first-autonomous.md).

@@ -6,7 +6,7 @@ import com.crossbotics.ftchelper.robot.Action;
  * Example robot 1, file 4 of 5: steps that use parts together, written once and used by a button,
  * an autonomous, or at START.
  *
- * <p>An action never waits: it does a little every loop, so the robot keeps driving while it runs.
+ * An action never waits: it does a little every loop, so the robot keeps driving while it runs.
  * Moving one of its parts by hand stops it (the driver always wins).
  */
 public class Actions {

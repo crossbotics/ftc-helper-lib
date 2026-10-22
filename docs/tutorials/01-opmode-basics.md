@@ -1,6 +1,6 @@
 # Tutorial 01: OpMode basics with the library
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** a small program that counts A presses and shows the loop speed on the Driver Station.
 It is the base of every other tutorial. The main track skips these details: [The robot in five files](start/01-robot-in-five-files.md).

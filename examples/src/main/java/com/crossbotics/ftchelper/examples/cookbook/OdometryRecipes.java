@@ -21,7 +21,7 @@ import java.util.Locale;
  * where it is on the field. Field numbers: x inches right of the centre line, y inches away from your
  * wall (negative = your half), heading 0 = facing away from you, counterclockwise +.
  *
- * <p>The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
  */
 public class OdometryRecipes {

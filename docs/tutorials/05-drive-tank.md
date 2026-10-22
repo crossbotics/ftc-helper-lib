@@ -1,6 +1,6 @@
 # Tutorial 05: Drive a standard (tank) robot
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** a TeleOp that drives a standard (tank) robot, with a button to switch between two driving styles.
 The main track sets up a tank drive in one line: [Drive](start/02-drive.md).

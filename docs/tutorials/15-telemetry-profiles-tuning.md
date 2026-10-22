@@ -1,6 +1,6 @@
 # Tutorial 15: Telemetry, profiles and tuning
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** a lift program with a hideable debug screen, a practice/competition switch, a tuning menu and a match timer.
 The main track uses the same tuning menu: [An intake, a lift and a claw](start/04-lift-and-claw.md).

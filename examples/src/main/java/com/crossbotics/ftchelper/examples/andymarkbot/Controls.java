@@ -7,12 +7,10 @@ import com.crossbotics.ftchelper.robot.Pad;
 
 /**
  * AndyMark starter bot, file 3 of 5: one driver does everything on gamepad 1 ({@code oneDriver = true}).
- * <ul>
- *   <li>left stick forward/back drives, right stick X turns (left stick click: slow on/off)</li>
- *   <li>RT intake in, LT intake out, while held (from the intake)</li>
- *   <li>RB throws one piece (from the catapult's Indexer: one turn per press), Y throws everything
- *       (Actions.java)</li>
- * </ul>
+ * - left stick forward/back drives, right stick X turns (left stick click: slow on/off)
+ * - RT intake in, LT intake out, while held (from the intake)
+ * - RB throws one piece (from the catapult's Indexer: one turn per press), Y throws everything
+ *   (Actions.java)
  * AndyMark's code puts the intake on the bumpers (LB in, RB out) and runs the catapult while RT is
  * held. Here the library's standard buttons are used, so this robot drives like the other examples;
  * change a button here if your drivers want AndyMark's layout.

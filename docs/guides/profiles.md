@@ -1,6 +1,6 @@
 # Profiles: practice vs competition
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **For:** teams getting ready for practice and events. **You need:** a TeleOp or autonomous that
 runs (any [lesson](../tutorials/README.md#start-here-the-main-track) robot).

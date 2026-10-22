@@ -1,6 +1,6 @@
 # Lesson 7: Odometry: where am I on the field?
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **Goal:** your robot knows where it is on the field. Its autonomous drives to field points ("go to
 x -30, y -30, facing 45 degrees") instead of distances, and keeps correcting on the way. TeleOp starts

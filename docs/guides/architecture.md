@@ -1,6 +1,6 @@
 # How it all fits together
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **For:** students who have written a TeleOp and want the big picture. **You need:** nothing to
 install; the first [lessons](../tutorials/README.md#start-here-the-main-track) help.

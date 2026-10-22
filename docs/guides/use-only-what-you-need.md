@@ -1,6 +1,6 @@
 # Use only what you need
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **For:** teams with their own code who do not want a framework. **You need:** your own
 `LinearOpMode` and the library [added to the project](../01-add-to-project.md).
@@ -168,7 +168,7 @@ while (opModeIsActive()) {
 }
 ```
 
-Please [send us](https://github.com/crossbotics/ftc-helper-lib/issues) your numbers: there is no
+Please [send us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose) your numbers: there is no
 measured Control Hub loop time for the library yet.
 
 ## MatchTimer

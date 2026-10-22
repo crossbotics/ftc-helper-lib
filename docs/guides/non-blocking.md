@@ -1,6 +1,6 @@
 # Non-blocking code: keep the loop running
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **For:** anyone writing TeleOp or autonomous code. **You need:** a first OpMode
 ([lesson 2](../tutorials/start/02-drive.md) or [tutorial 01](../tutorials/01-opmode-basics.md)).

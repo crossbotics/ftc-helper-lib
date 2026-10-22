@@ -1,6 +1,6 @@
 # Your robot in the simulator: the robot-file skill
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **For:** teams that want the [simulator](simulator.md) to act like their own robot. **You need:** an AI
 coding agent (Claude Code, Codex or similar), your robot project with ftc-helper-lib in it, and a tape

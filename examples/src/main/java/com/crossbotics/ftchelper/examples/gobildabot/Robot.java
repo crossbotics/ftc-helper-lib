@@ -12,14 +12,12 @@ import com.crossbotics.ftchelper.robot.RobotDefinition;
  * goBILDA's BIOBUZZ starter bot, file 1 of 5, with the same configuration names as goBILDA's own code
  * (BioBuzzStarterbotTeleop), so it runs on that robot as it is.
  *
- * <ul>
- *   <li>A tank drive: one motor per side; the right one runs reversed (goBILDA's code sets it so).</li>
- *   <li>The intake: a roller on a motor, and two corner wheels on CR servos that run with it.</li>
- *   <li>The launcher: a flywheel on a 312 RPM motor with its gearbox taken off (1:1, 28 counts per
- *       turn, so the 6000 RPM motor's numbers), fed by the "windmill", a CR servo.</li>
- * </ul>
+ * - A tank drive: one motor per side; the right one runs reversed (goBILDA's code sets it so).
+ * - The intake: a roller on a motor, and two corner wheels on CR servos that run with it.
+ * - The launcher: a flywheel on a 312 RPM motor with its gearbox taken off (1:1, 28 counts per
+ *   turn, so the 6000 RPM motor's numbers), fed by the "windmill", a CR servo.
  *
- * <p>Tutorial: docs/tutorials/start/01-robot-in-five-files.md walks through all five files.
+ * Tutorial: docs/tutorials/start/01-robot-in-five-files.md walks through all five files.
  */
 public class Robot extends RobotDefinition {
     public Intake intake;

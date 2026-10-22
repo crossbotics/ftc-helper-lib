@@ -1,6 +1,6 @@
 # Tutorials
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 Hands-on lessons that teach the library by building real robot programs, one idea at a time. There are
 two tracks: the **main track** (start here) and **under the hood**.

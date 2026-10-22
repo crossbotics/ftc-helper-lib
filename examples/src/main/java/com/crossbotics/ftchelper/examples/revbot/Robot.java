@@ -13,19 +13,17 @@ import com.crossbotics.ftchelper.robot.RobotDefinition;
  * REV's DUO FTC Starter Bot for BIOBUZZ, file 1 of 5, with the same configuration names as REV's own
  * code (its TeleOp page), so it runs on that robot as it is.
  *
- * <ul>
- *   <li>A tank drive: one 20:1 UltraPlanetary HD Hex motor per side, 90 mm wheels, chain 1:1.</li>
- *   <li>The intake: flap wheels on a Core Hex motor.</li>
- *   <li>The launcher: two grip wheels on an HD Hex motor at 1:1 (no gearbox), fed by a roller on a
- *       Smart Robot Servo in continuous (CR) mode.</li>
- *   <li>The pollen pusher ("poker"): an arm on a servo at the left side. It combs POLLEN out of a FLOWER.</li>
- * </ul>
+ * - A tank drive: one 20:1 UltraPlanetary HD Hex motor per side, 90 mm wheels, chain 1:1.
+ * - The intake: flap wheels on a Core Hex motor.
+ * - The launcher: two grip wheels on an HD Hex motor at 1:1 (no gearbox), fed by a roller on a
+ *   Smart Robot Servo in continuous (CR) mode.
+ * - The pollen pusher ("poker"): an arm on a servo at the left side. It combs POLLEN out of a FLOWER.
  *
- * <p>Where the facts come from: docs/guides/starter-bots.md and the simulator's robot file
+ * Where the facts come from: docs/guides/starter-bots.md and the simulator's robot file
  * sim/robots/starter-bot-rev.properties. REV does not say which way each motor turns, so check them
  * on your robot (lesson 2, docs/tutorials/start/02-drive.md).
  *
- * <p>Tutorial: docs/tutorials/start/01-robot-in-five-files.md walks through all five files.
+ * Tutorial: docs/tutorials/start/01-robot-in-five-files.md walks through all five files.
  */
 public class Robot extends RobotDefinition {
     public Intake intake;

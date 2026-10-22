@@ -11,24 +11,22 @@ import com.crossbotics.ftchelper.robot.RobotDefinition;
  * AndyMark's Robits BIOBUZZ StarterBot, file 1 of 5, with the same configuration names as AndyMark's
  * own code (RobitsStarterBotTeleop), so it runs on that robot as it is.
  *
- * <ul>
- *   <li>A tank (skid-steer) drive: one NeveRest 19.2:1 per side, 3 in wheels, belts; the right motor
- *       runs reversed (AndyMark's code sets it so).</li>
- *   <li>The intake: rubber-band rollers on a CR servo ("rollerI"), and the flower roller ("rollerF",
- *       a CR servo) that runs with it.</li>
- *   <li>The catapult: a NeveRest 50.9:1 winds rubber bands and lets go once per turn.</li>
- * </ul>
+ * - A tank (skid-steer) drive: one NeveRest 19.2:1 per side, 3 in wheels, belts; the right motor
+ *   runs reversed (AndyMark's code sets it so).
+ * - The intake: rubber-band rollers on a CR servo ("rollerI"), and the flower roller ("rollerF",
+ *   a CR servo) that runs with it.
+ * - The catapult: a NeveRest 50.9:1 winds rubber bands and lets go once per turn.
  *
- * <p><b>What the library cannot do here:</b> it has no catapult part. The closest real part is an
+ * What the library cannot do here: it has no catapult part. The closest real part is an
  * {@link Indexer} on a motor: it runs the motor at a set power for a set time per press. Tune that time
  * so one press is one turn of the catapult, which is one throw. The library does not know when the
  * catapult is wound or when it lets go (there is no sensor on it), so it cannot wait for "ready" the
  * way a flywheel launcher does. AndyMark's own code runs the motor for as long as the trigger is held.
  *
- * <p>Where the facts come from: docs/guides/starter-bots.md and the simulator's robot file
+ * Where the facts come from: docs/guides/starter-bots.md and the simulator's robot file
  * sim/robots/starter-bot-andymark.properties.
  *
- * <p>Tutorial: docs/tutorials/start/01-robot-in-five-files.md walks through all five files.
+ * Tutorial: docs/tutorials/start/01-robot-in-five-files.md walks through all five files.
  */
 public class Robot extends RobotDefinition {
     public Intake intake;

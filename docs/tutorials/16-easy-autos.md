@@ -1,6 +1,6 @@
 # Tutorial 16: Easy autonomous
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** an autonomous written as a list of named steps: grab, drive, lift, drop, park.
 The main track's autonomous is built on `EasyAuto` and is shorter still: [Your first autonomous](start/06-first-autonomous.md).

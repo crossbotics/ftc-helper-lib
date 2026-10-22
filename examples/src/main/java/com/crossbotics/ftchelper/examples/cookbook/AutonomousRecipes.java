@@ -18,7 +18,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
  * The robot only drives after the Drive Tuner (Tunables.Drive.calibrated = true); the simulator runs
  * it anyway.
  *
- * <p>The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
  */
 public class AutonomousRecipes {

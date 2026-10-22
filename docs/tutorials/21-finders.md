@@ -1,6 +1,6 @@
 # Tutorial 21: Find your numbers
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** only small OpModes that start the library's ready-made finders, which measure your robot and print the code lines to copy.
 The main track uses the same finders: [An intake, a lift and a claw](start/04-lift-and-claw.md).

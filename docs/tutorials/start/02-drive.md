@@ -1,6 +1,6 @@
 # Lesson 2: Drive
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **Goal:** write the one `drive(...)` line in `Robot.java`, drive the robot with gamepad 1, and check that
 every wheel turns the right way.

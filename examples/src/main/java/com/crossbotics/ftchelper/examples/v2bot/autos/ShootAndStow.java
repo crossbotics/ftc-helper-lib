@@ -12,10 +12,10 @@ import com.crossbotics.ftchelper.robot.Steps;
  * follows the goal. The steps drive into range, fire the preload (each shot waits for the speed and for
  * the turret to be aimed), make sure the lifter is stowed, and leave.
  *
- * <p>The interlock rule works here too: had a step raised the lift while the turret pointed back,
+ * The interlock rule works here too: had a step raised the lift while the turret pointed back,
  * the lift would wait below its line until the turret turned away.
  *
- * <p>The turret's angle at the end is carried into TeleOp (if TeleOp starts within 5 minutes and the
+ * The turret's angle at the end is carried into TeleOp (if TeleOp starts within 5 minutes and the
  * robot app was not restarted), so TeleOp does not need to home it again.
  */
 @Autonomous(name = "V2 Bot Shoot and Stow", group = "Examples", preselectTeleOp = "V2 Bot TeleOp")

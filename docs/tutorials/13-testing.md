@@ -1,6 +1,6 @@
 # Tutorial 13: Test your code without a robot
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** six small tests, most of them for the `LiftHeights` class from Tutorial 12, which run on a laptop.
 

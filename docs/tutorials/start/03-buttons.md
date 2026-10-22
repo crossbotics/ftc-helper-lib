@@ -1,6 +1,6 @@
 # Lesson 3: Buttons (Controls.java)
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **Goal:** know which buttons your robot already has, and give the buttons that are left your own jobs
 in `Controls.java`.

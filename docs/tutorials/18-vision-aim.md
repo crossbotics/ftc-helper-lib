@@ -1,6 +1,6 @@
 # Tutorial 18: Vision aiming (webcam or Limelight 3A)
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **You will build:** a drive program that turns the robot toward an AprilTag (a printed square code on the field) while the driver holds a button.
 The main track adds a camera with less code: [A shooter, a camera and a turret](start/09-shooter-and-camera.md).

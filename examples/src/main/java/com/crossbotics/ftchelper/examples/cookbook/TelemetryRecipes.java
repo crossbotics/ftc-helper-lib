@@ -18,7 +18,7 @@ import java.util.Locale;
 /**
  * Cookbook: telemetry, the lines on the Driver Station (docs/cookbook.md#telemetry).
  *
- * <p>The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
  */
 public class TelemetryRecipes {
