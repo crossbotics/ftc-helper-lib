@@ -913,8 +913,8 @@ library's own buttons, below); `robot()` and `oneDriver()` read the robot and th
 | [`LibraryButtons`](teleop.md#moving-the-librarys-buttons) | Default |
 | --- | --- |
 | `pause(key)`, `resetForward(key)` | G1 BACK (a press pauses at once, a tap goes on; held 1 s also resets "forward", field-centric only) |
-| `debug(key, with)` | G1 BACK + START (both pressed: debug lines, when let go) |
-| `switchAlliance(key, with)` | **off**; `switchAlliance(g1.back, g1.start)` turns it on (both held 1.5 s) |
+| `debug(key, with)` | G1 START + BACK (hold START, then press BACK: debug lines, when let go; BACK first is just a pause) |
+| `switchAlliance(key, with)` | **off**; `switchAlliance(g1.back, g1.start)` turns it on (START, then BACK, both held 1.5 s) |
 | `setPose(key)` | G1 START held 1 s, drive sticks let go, in INIT or the match (robots with odometry: [`resetPose()`](#robotdefinition)); START + A/B (pairing a gamepad) cancels it |
 | `slow(key)`, `slowToggle(key)` | G1 LT (one driver: left stick click, on/off) |
 | `fieldCentric(key)` | G1 Y (one driver: right stick click) |
@@ -937,7 +937,7 @@ The whole table, with how to move each: [the button menu](../guides/buttons.md#m
 | D-pad left/right | free | wrist |
 | BACK | press: **pause** everything at once (stopped on brake), a tap again: go on; held 1 s (field-centric on): also "forward" = away from you now (with odometry: its heading becomes 0, x and y stay), still paused | turret following on/off (with a turret; else free) |
 | START | hold 1 s: **set pose here** (with odometry: the pose becomes `Tunables.Odometry`'s reset spot) | free |
-| BACK + START | together: debug lines (when let go); with `lib.switchAlliance(g1.back, g1.start)`, both held 1.5 s: **switch the alliance** | |
+| START + BACK | hold START, then press BACK: debug lines (when let go); with `lib.switchAlliance(g1.back, g1.start)`, both held 1.5 s: **switch the alliance**. BACK first is only a pause | |
 | GUIDE | tap: the button map, without the free buttons (during the match too); hold 1 s: the tuning menu (PRACTICE) | free |
 
 **One driver:** the left stick click switches slow on/off and the right stick click switches
@@ -950,7 +950,7 @@ the further LT is pulled (down to `slowSpeed` at a full squeeze, like the two-dr
 note instead ("forward" means nothing there).
 
 **Switch the alliance** (optional, off by default: turn it on with `lib.switchAlliance(g1.back, g1.start)`):
-hold BACK + START together 1.5 s. Both gamepads buzz twice and the Driver Station says
+hold START, then BACK, both 1.5 s (BACK first is just a pause). Both gamepads buzz twice and the Driver Station says
 `Alliance now RED (was BLUE)`. Everything that reads `robot.alliance()` follows at once: the camera's
 goal tag (`Camera.goal()`), the aim's goal point (mirrored for RED), light rules you wrote with it, and
 `MatchMemory` (a TeleOp started again gets it). The pose follows too (autonomous ran as the wrong

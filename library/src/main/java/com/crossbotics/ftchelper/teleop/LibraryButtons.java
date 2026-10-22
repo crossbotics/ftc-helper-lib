@@ -20,7 +20,7 @@ import java.util.Set;
  * @Override protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
  *     lib.fieldCentric(g1.x);           // field-centric on/off on X instead of Y
  *     lib.slow(g1.rt);                  // slow on the right trigger (LT is free now)
- *     lib.switchAlliance(g1.back, g1.start);   // turn on the alliance switch: hold BACK + START 1.5 s
+ *     lib.switchAlliance(g1.back, g1.start);   // turn on the alliance switch: hold START, then BACK, 1.5 s
  * }
  *
  * // EasyTeleOp (your own TeleOp):
@@ -35,7 +35,7 @@ import java.util.Set;
  *   <tr><td>drive / strafe, turn</td><td>G1 left stick, G1 right stick X ({@link #swapSticks})</td></tr>
  *   <tr><td>pause (at the press) / go on (a tap)</td><td>G1 BACK</td></tr>
  *   <tr><td>reset "forward" (hold 1 s, field-centric)</td><td>G1 BACK</td></tr>
- *   <tr><td>debug lines (both pressed, runs when let go)</td><td>G1 BACK + START</td></tr>
+ *   <tr><td>debug lines (hold START, then press BACK; runs when let go)</td><td>G1 START + BACK</td></tr>
  *   <tr><td>switch alliance (both held 1.5 s)</td><td>none: off until {@link #switchAlliance} turns it on</td></tr>
  *   <tr><td>set pose here (hold 1 s, robots with odometry; also in INIT)</td><td>G1 START</td></tr>
  *   <tr><td>slow (squeeze)</td><td>G1 LT (one driver: none)</td></tr>
@@ -128,7 +128,9 @@ public final class LibraryButtons {
 
     /**
      * Pause / go on. A press pauses at once (even when the button also has a long job, like BACK's
-     * "reset forward"); a tap goes on again. Null = no button (INIT then warns: nothing can pause).
+     * "reset forward"); a tap goes on again. A pair with this button in it (debug lines, the alliance
+     * switch) needs the other button down first: this button pressed first is always a plain pause.
+     * Null = no button (INIT then warns: nothing can pause).
      */
     public LibraryButtons pause(Key key) {
         return put(Job.PAUSE, key);
@@ -143,8 +145,9 @@ public final class LibraryButtons {
     }
 
     /**
-     * Debug lines on/off: press {@code key} and {@code with} together (either order). {@code with}
-     * null: {@code key} alone, a tap. Both null = no button.
+     * Debug lines on/off: press {@code key} and {@code with} together (either order, except that when
+     * one of them is the pause button, the other must go down first: hold START, then press BACK).
+     * {@code with} null: {@code key} alone, a tap. Both null = no button.
      */
     public LibraryButtons debug(Key key, Key with) {
         put(Job.DEBUG, key);
@@ -195,9 +198,9 @@ public final class LibraryButtons {
     /**
      * Turns on switching the alliance (BLUE / RED) during TeleOp: hold {@code key} and {@code with}
      * together {@link #SWITCH_ALLIANCE_SEC} seconds. Off by default (the alliance is chosen in INIT);
-     * {@code lib.switchAlliance(g1.back, g1.start)} is the usual pair (it shares BACK + START with the
-     * debug lines: a quick press of both = debug). {@code with} null: {@code key} alone, held. Both null
-     * = off again.
+     * {@code lib.switchAlliance(g1.back, g1.start)} is the usual pair (it shares START + BACK with the
+     * debug lines: a quick press of both = debug). BACK is the pause button, so hold START first, then
+     * BACK (BACK first is just a pause). {@code with} null: {@code key} alone, held. Both null = off again.
      */
     public LibraryButtons switchAlliance(Key key, Key with) {
         put(Job.SWITCH_ALLIANCE, key);
@@ -411,7 +414,9 @@ public final class LibraryButtons {
 
     /**
      * Each button's words for the button map: "pause / go on; hold 1 s: forward = away from you now".
-     * A pair's words are on both of its buttons ("with START: debug lines"). The slow key is included.
+     * A pair's words are on both of its buttons ("with A: ..."); a pair with the pause button says
+     * which goes first ("START: then BACK: debug lines", "BACK: after START: debug lines"). The slow
+     * key is included.
      * Checks the buttons first (two jobs on one button stop with the button's name).
      *
      * @param jobs the jobs this TeleOp has (a robot without odometry has no "set pose")
@@ -421,8 +426,16 @@ public final class LibraryButtons {
         List<Slot> slots = slots(jobs);
         // Each button's own jobs first, then the pairs it is in.
         for (Slot s : slots) if (!s.isPair()) join(out, s.key, s.words());
+        Key pause = jobs.contains(Job.PAUSE) ? keys.get(Job.PAUSE) : null;
         for (Slot s : slots) {
             if (!s.isPair()) continue;
+            if (pause != null && (pause.equals(s.key) || pause.equals(s.with))) {
+                // With the pause button: the other button first ("START: then BACK: debug lines").
+                Key other = pause.equals(s.key) ? s.with : s.key;
+                join(out, s.key, (s.key == other ? "then " + pause.name() : "after " + other.name()) + ": " + s.words());
+                join(out, s.with, (s.with == other ? "then " + pause.name() : "after " + other.name()) + ": " + s.words());
+                continue;
+            }
             join(out, s.key, "with " + s.with.name() + ": " + s.words());
             join(out, s.with, "with " + s.key.name() + ": " + s.words());
         }

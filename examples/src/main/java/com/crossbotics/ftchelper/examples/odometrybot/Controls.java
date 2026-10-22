@@ -18,7 +18,7 @@ public class Controls extends ControlMap<Robot> {
         show("Where", () -> String.format(Locale.US, "x %.0f, y %.0f in", robot.pose().x, robot.pose().y));
     }
 
-    // Optional: switch the alliance during TeleOp (hold BACK + START 1.5 s) in case autonomous ran as
+    // Optional: switch the alliance during TeleOp (hold START, then BACK, 1.5 s) in case autonomous ran as
     // the wrong one. Off unless this line is here.
     @Override
     protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {

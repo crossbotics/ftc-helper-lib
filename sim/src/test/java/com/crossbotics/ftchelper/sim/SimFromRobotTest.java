@@ -513,7 +513,7 @@ public class SimFromRobotTest {
     }
 
     // TeleOp without autonomous: the drivers park on the reset spot and hold G1 START 1 s ("set pose
-    // here"); then they find the alliance was wrong and hold BACK + START 1.5 s to switch it (the
+    // here"); then they find the alliance was wrong and hold START, then BACK, 1.5 s to switch it (the
     // odometry robot's Controls.java turns the switch on). Its field is turned (mirrorForRed = false),
     // so the pose cannot be mirrored: the odometry aim is off until the pose is set again.
     @Test public void teleOpSetsThePoseHereAndSwitchesTheAlliance() throws Exception {
@@ -523,7 +523,7 @@ public class SimFromRobotTest {
             s.init("Odometry Bot TeleOp");
             assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("hold G1 START 1 s at x -56, y -61 in, heading 0 (BLUE), now or in the match"), 2));
             assertTrue(String.join("\n", s.screen()), s.screenHas("the same numbers from the red wall (Tunables.Odometry.mirrorForRed = false)"));
-            assertTrue(String.join("\n", s.screen()), s.screenHas("in TeleOp: hold BACK + START 1.5 s to switch"));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("in TeleOp: hold START, then BACK, 1.5 s to switch"));
             s.start();
             // A short press does nothing.
             s.press(v -> s.g1().start = v);
@@ -533,9 +533,24 @@ public class SimFromRobotTest {
             s.g1().start = false;
             s.waitForLoops(2);
             assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("x -56, y -61 in"), 2));
-            // Both held 1.5 s: the alliance switches (a quick press of both would be the debug lines).
+            // BACK first, then START: only a pause (BACK first is never the pair). A tap goes on again.
             s.g1().back = true;
+            s.waitForLoops(2);
             s.g1().start = true;
+            s.waitForLoops(3);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("PAUSED"), 2));
+            s.g1().start = false;
+            s.g1().back = false;
+            s.waitForLoops(2);
+            assertTrue("still paused: START joining later took nothing back", s.screenHas("PAUSED"));
+            s.press(v -> s.g1().back = v);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> !s.screenHas("PAUSED"), 2));
+            assertFalse("BACK first: no alliance switch", s.screenHas("Alliance now"));
+            // START first, then BACK, both held 1.5 s: the alliance switches (a quick press would be
+            // the debug lines). No pause.
+            s.g1().start = true;
+            s.waitForLoops(2);
+            s.g1().back = true;
             assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Alliance now RED: odometry aim OFF until the pose is set"), 3));
             s.g1().back = false;
             s.g1().start = false;

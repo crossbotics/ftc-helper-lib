@@ -265,7 +265,14 @@ public abstract class EasyTeleOp extends LinearOpMode {
         if (k == null) return "(no button)";
         String one = k.pad == Pad.G1 ? k.name() : k.toString();
         Key w = lib.with(job);
-        return w == null ? one : one + " + " + w.name();
+        if (w == null) return one;
+        // A pair with the pause button: the other button goes first ("START, then BACK").
+        Key pause = lib.key(LibraryButtons.Job.PAUSE);
+        if (pause != null && libraryJobs(true).contains(LibraryButtons.Job.PAUSE)) {
+            if (pause.equals(k)) return w.name() + ", then " + k.name();
+            if (pause.equals(w)) return one + ", then " + w.name();
+        }
+        return one + " + " + w.name();
     }
 
     /**
@@ -537,7 +544,9 @@ public abstract class EasyTeleOp extends LinearOpMode {
             // The alliance switch in TeleOp is opt-in (lib.switchAlliance(...)): say whether it is on.
             String switchWords = lib.key(LibraryButtons.Job.SWITCH_ALLIANCE) == null
                     ? "off in TeleOp (lib.switchAlliance(...) turns it on)"
-                    : "in TeleOp: hold " + keyWords(LibraryButtons.Job.SWITCH_ALLIANCE) + " " + LibraryButtons.SWITCH_ALLIANCE_SEC + " s to switch";
+                    : "in TeleOp: hold " + keyWords(LibraryButtons.Job.SWITCH_ALLIANCE)
+                            + (keyWords(LibraryButtons.Job.SWITCH_ALLIANCE).contains(", then") ? ", " : " ")
+                            + LibraryButtons.SWITCH_ALLIANCE_SEC + " s to switch";
 
             // ---- INIT loop: warnings and what the drivers need to know. Never waits. ----
             boolean fromAuto = MatchMemory.hasAlliance();

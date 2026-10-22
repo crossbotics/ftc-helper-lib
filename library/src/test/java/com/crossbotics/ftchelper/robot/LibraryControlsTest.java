@@ -62,11 +62,11 @@ public class LibraryControlsTest {
 
     @Test public void theDefaultMapShowsEveryLibraryButton() {
         List<String> help = ControlMap.makePlan(robot, false, true, (g1, g2) -> { }).help();
-        assertEquals("G1 BACK: pause / go on; hold 1 s: forward = away from you now; with START: debug lines [library]",
+        assertEquals("G1 BACK: pause / go on; hold 1 s: forward = away from you now; after START: debug lines [library]",
                 line(help, "G1 BACK"));
         assertEquals("G1 GUIDE: button map; hold 1 s: tuning menu [library]", line(help, "G1 GUIDE"));
         assertEquals("no odometry: START has no \"set pose\"",
-                "G1 START: with BACK: debug lines [library]", line(help, "G1 START"));
+                "G1 START: then BACK: debug lines [library]", line(help, "G1 START"));
         assertTrue("gamepad 2's GUIDE is free", line(help, "G2 free").contains("GUIDE"));
     }
 
@@ -249,7 +249,7 @@ public class LibraryControlsTest {
         Set<LibraryButtons.Job> jobs = ControlMap.defaultJobs(r);
         assertTrue(jobs.contains(LibraryButtons.Job.SET_POSE));
         ButtonPlan p = ControlMap.makePlan(r, false, true, (g1, g2) -> { });
-        assertTrue(line(p.help(), "G1 START"), line(p.help(), "G1 START").startsWith("G1 START: hold 1 s: set pose here; with BACK"));
+        assertTrue(line(p.help(), "G1 START"), line(p.help(), "G1 START").startsWith("G1 START: hold 1 s: set pose here; then BACK"));
         assertFalse(ControlMap.defaultJobs(robot).contains(LibraryButtons.Job.SET_POSE));
     }
 

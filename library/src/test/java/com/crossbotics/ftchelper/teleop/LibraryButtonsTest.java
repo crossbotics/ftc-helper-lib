@@ -45,8 +45,8 @@ public class LibraryButtonsTest {
 
     @Test public void theDefaultsAreTheOldButtonsPlusPose() {
         Map<Key, String> w = LibraryButtons.twoDrivers().words(all());
-        assertEquals("pause / go on; hold 1 s: forward = away from you now; with START: debug lines", w.get(Key.g1(Btn.BACK)));
-        assertEquals("hold 1 s: set pose here; with BACK: debug lines", w.get(Key.g1(Btn.START)));
+        assertEquals("pause / go on; hold 1 s: forward = away from you now; after START: debug lines", w.get(Key.g1(Btn.BACK)));
+        assertEquals("hold 1 s: set pose here; then BACK: debug lines", w.get(Key.g1(Btn.START)));
         assertNull("switching the alliance in TeleOp is off until the team turns it on",
                 LibraryButtons.twoDrivers().key(Job.SWITCH_ALLIANCE));
         assertEquals("field-centric on/off", w.get(Key.g1(Btn.Y)));
@@ -151,7 +151,7 @@ public class LibraryButtonsTest {
 
     @Test public void theAllianceSwitchIsOneLineToTurnOn() {
         LibraryButtons lib = LibraryButtons.twoDrivers().switchAlliance(Key.g1(Btn.BACK), Key.g1(Btn.START));
-        assertEquals("pause / go on; hold 1 s: forward = away from you now; with START: debug lines; "
+        assertEquals("pause / go on; hold 1 s: forward = away from you now; after START: debug lines; "
                 + "hold both 1.5 s: switch alliance (BLUE / RED)", lib.words(all()).get(Key.g1(Btn.BACK)));
         assertEquals(Key.g1(Btn.START), lib.with(Job.SWITCH_ALLIANCE));
     }
@@ -210,21 +210,69 @@ public class LibraryButtonsTest {
         assertEquals("[RESET_FORWARD]", ran.toString());
     }
 
-    @Test public void backThenStartTakesThePauseBackForTheDebugLines() {
-        LibraryKeys k = pausingKeys(LibraryButtons.twoDrivers());
+    @Test public void backThenStartStaysAPauseAndIsNeverThePair() {
+        LibraryKeys k = pausingKeys(LibraryButtons.twoDrivers().switchAlliance(Key.g1(Btn.BACK), Key.g1(Btn.START)));
         g1.back = true;
         loop(k, 0.02);
-        assertTrue("BACK alone so far: paused", paused);
+        assertTrue("BACK first: paused at once", paused);
         g1.start = true;
         loop(k, 0.05);
-        assertFalse("START joined: it is the pair, the pause is taken back", paused);
+        assertTrue("START joined later: still paused (nothing is taken back)", paused);
         g1.back = false;
         g1.start = false;
         loop(k, 0.02);
-        assertEquals("[PAUSE, GO_ON, DEBUG]", ran.toString());
+        assertEquals("a plain pause: no debug lines", "[PAUSE]", ran.toString());
+        assertTrue(paused);
+        ran.clear();
+        // Go on again (a tap), then BACK first and START held with it 2 s: no alliance switch, no pose;
+        // BACK's own hold still resets "forward".
+        g1.back = true;
+        loop(k, 0.02);
+        g1.back = false;
+        loop(k, 0.02);
         assertFalse(paused);
         ran.clear();
-        // Both in the same loop: no pause at all.
+        g1.back = true;
+        loop(k, 0.02);
+        g1.start = true;
+        loop(k, 0.1);
+        loop(k, 1.0);
+        loop(k, 1.0);
+        g1.start = false;
+        loop(k, 0.02);
+        g1.back = false;
+        loop(k, 0.02);
+        assertEquals("[PAUSE, RESET_FORWARD]", ran.toString());
+        assertTrue("stays paused", paused);
+    }
+
+    @Test public void startThenBackIsThePairAndNeverPauses() {
+        LibraryKeys k = pausingKeys(LibraryButtons.twoDrivers().switchAlliance(Key.g1(Btn.BACK), Key.g1(Btn.START)));
+        g1.start = true;
+        loop(k, 0.02);
+        g1.back = true;
+        loop(k, 0.05);
+        assertFalse("START first: BACK joining is the pair, not a pause", paused);
+        g1.back = false;
+        g1.start = false;
+        loop(k, 0.02);
+        assertEquals("[DEBUG]", ran.toString());
+        ran.clear();
+        // Held 1.5 s: the alliance switch, still no pause.
+        g1.start = true;
+        loop(k, 0.02);
+        g1.back = true;
+        loop(k, 0.02);
+        loop(k, 1.0);
+        loop(k, 0.6);
+        assertEquals("[SWITCH_ALLIANCE]", ran.toString());
+        g1.back = false;
+        g1.start = false;
+        loop(k, 0.02);
+        assertEquals("[SWITCH_ALLIANCE]", ran.toString());
+        assertFalse(paused);
+        ran.clear();
+        // Both in the same loop: the pair too (BACK had not paused yet).
         g1.back = true;
         g1.start = true;
         loop(k, 0.02);
@@ -232,13 +280,39 @@ public class LibraryButtonsTest {
         g1.start = false;
         loop(k, 0.02);
         assertEquals("[DEBUG]", ran.toString());
+        assertFalse(paused);
+        ran.clear();
+        // START let go, BACK still held, START again: BACK was first this time, so no pair.
+        g1.start = true;
+        loop(k, 0.02);
+        g1.back = true;
+        loop(k, 0.02);
+        g1.start = false;
+        loop(k, 0.02);
+        g1.start = true;
+        loop(k, 0.02);
+        g1.start = false;
+        g1.back = false;
+        loop(k, 0.02);
+        assertEquals("one pair (the first START), no pause", "[DEBUG]", ran.toString());
+        assertFalse(paused);
+    }
+
+    @Test public void aTapOfBackAloneStillPauses() {
+        LibraryKeys k = pausingKeys(LibraryButtons.twoDrivers());
+        g1.back = true;
+        loop(k, 0.02);
+        g1.back = false;
+        loop(k, 0.02);
+        assertTrue(paused);
+        assertEquals("[PAUSE]", ran.toString());
     }
 
     @Test public void startAndBackTogetherAreDebugAndHeldTheySwitchTheAlliance() {
         LibraryKeys k = keys(LibraryButtons.twoDrivers().switchAlliance(Key.g1(Btn.BACK), Key.g1(Btn.START)), all());
-        g1.back = true;
-        loop(k, 0.02);
         g1.start = true;
+        loop(k, 0.02);
+        g1.back = true;
         loop(k, 0.1);
         g1.start = false;
         g1.back = false;
@@ -386,7 +460,7 @@ public class LibraryButtonsTest {
         Set<Job> jobs = all();
         jobs.remove(Job.SET_POSE);
         Map<Key, String> w = LibraryButtons.twoDrivers().words(jobs);
-        assertEquals("with BACK: debug lines", w.get(Key.g1(Btn.START)));
+        assertEquals("then BACK: debug lines", w.get(Key.g1(Btn.START)));
         LibraryKeys k = keys(LibraryButtons.twoDrivers(), jobs);
         g1.start = true;
         loop(k, 0.02);
