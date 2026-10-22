@@ -144,6 +144,8 @@ public class SimFromRobotTest {
             assertTrue(SimRun.waitFor(() -> s.screenHas("limelight lighting"), 2));
             assertTrue(s.screenHas("G2 BACK: follow the goal on/off [Turret]"));
             s.start();
+            SimLight light = s.robot().lights.get("light");          // the light: blue while following the goal
+            assertTrue(light.words(), SimRun.waitFor(() -> light.words().equals("BLUE"), 2));
             s.press(v -> s.g2().x = v);                               // grab
             SimRobot.SimServo fold = s.robot().servos.get("claw_fold");
             assertTrue("folds out to grab", SimRun.waitFor(() -> Math.abs(fold.actual - 0.62) < 0.02, 2));

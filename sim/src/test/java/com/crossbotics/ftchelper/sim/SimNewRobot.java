@@ -49,6 +49,12 @@ public final class SimNewRobot {
         }
     }
 
+    // A light: its rules go in Controls.java (which color, when).
+    private static Part lightPart(Part p) {
+        p.note = "TODO its rules in Controls.java, e.g. robot." + p.field + ".show(LightColor.GREEN).when(...) (docs/modules/robot.md#lights)";
+        return p;
+    }
+
     public static void main(String[] args) throws Exception {
         String config = "", teamCode = "", pkg = "org.firstinspires.ftc.teamcode";
         for (int i = 0; i + 1 < args.length; i += 2) {
@@ -186,8 +192,13 @@ public final class SimNewRobot {
                         todo.add("motor " + q(d.name) + ": which module? (Intake, Lift, Arm, Turret, Launcher)");
                     }
                     break;
+                case "blinkin":
+                    parts.add(lightPart(new Part("Lights", field, "Lights.blinkin(" + q(d.name) + ")" + ren, section)));
+                    break;
                 case "servo":
-                    if (has(w, "claw", "grab", "grabber", "gripper", "grip", "pincer")) {
+                    if (SimConfigImport.isLightName(d.name)) {
+                        parts.add(lightPart(new Part("Lights", field, "Lights.gobilda(" + q(d.name) + ")" + ren, section)));
+                    } else if (has(w, "claw", "grab", "grabber", "gripper", "grip", "pincer")) {
                         parts.add(new Part("Claw", field, "Claw.servo(" + q(d.name) + ")" + ren, section)
                                 .num("open", "0.20").num("closed", "0.75").num("travelSec", "0.3"));
                     } else if (has(w, "wrist")) {

@@ -16,6 +16,8 @@ final class RobotTestKit implements Devices {
     final Map<String, Fakes.FakeServo> servos = new HashMap<>();
     final Map<String, Fakes.FakeCRServo> crServos = new HashMap<>();
     final Map<String, boolean[]> switches = new HashMap<>();
+    // Blinkin LED drivers: the last servo position each was sent (NaN = none yet).
+    final Map<String, double[]> blinkins = new HashMap<>();
 
     @Override
     @SuppressWarnings("unchecked")
@@ -38,6 +40,20 @@ final class RobotTestKit implements Devices {
             return (T) Proxy.newProxyInstance(TouchSensor.class.getClassLoader(), new Class<?>[]{TouchSensor.class},
                     (proxy, m, a) -> m.getName().equals("isPressed") ? (Object) pressed[0]
                             : m.getReturnType() == boolean.class ? (Object) false : null);
+        }
+        if (type == com.qualcomm.hardware.rev.RevBlinkinLedDriver.class) {
+            // The SDK's own class, on a pretend servo controller that remembers the position sent.
+            final double[] pos = {Double.NaN};
+            blinkins.put(name, pos);
+            com.qualcomm.robotcore.hardware.ServoControllerEx c = (com.qualcomm.robotcore.hardware.ServoControllerEx)
+                    Proxy.newProxyInstance(TouchSensor.class.getClassLoader(),
+                            new Class<?>[]{com.qualcomm.robotcore.hardware.ServoControllerEx.class}, (proxy, m, a) -> {
+                                if (m.getName().equals("setServoPosition")) pos[0] = (Double) a[1];
+                                return m.getReturnType() == boolean.class ? (Object) false
+                                        : m.getReturnType() == double.class ? (Object) 0.0
+                                        : m.getReturnType() == int.class ? (Object) 0 : null;
+                            });
+            return (T) new com.qualcomm.hardware.rev.RevBlinkinLedDriver(c, 0);
         }
         throw new IllegalArgumentException("no pretend " + type.getSimpleName() + " " + name);
     }

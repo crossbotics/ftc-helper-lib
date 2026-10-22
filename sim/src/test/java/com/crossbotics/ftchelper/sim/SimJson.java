@@ -96,6 +96,17 @@ final class SimJson {
             field(b, "name", e.getKey()).append(',');
             b.append("\"power\":").append(fmt(e.getValue()[0])).append('}');
         }
+        b.append("],\"lights\":[");
+        firstItem = true;
+        for (SimLight l : r.lights.values()) {
+            if (!firstItem) b.append(',');
+            firstItem = false;
+            b.append('{');
+            field(b, "name", l.name).append(',');
+            field(b, "kind", l.blinkin ? "REV Blinkin" : "goBILDA RGB light").append(',');
+            field(b, "color", l.webColor()).append(',');
+            field(b, "words", l.words()).append('}');
+        }
         b.append("],\"touches\":[");
         firstItem = true;
         for (Map.Entry<String, SimRobot.SimTouch> e : r.touches.entrySet()) {

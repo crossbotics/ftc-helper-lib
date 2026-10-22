@@ -246,6 +246,7 @@ default):
 | `servo.NAME = START, ...` | start 0.5 | a servo: `part=` (catalog), or `rangeDeg=` and `secPer60=` for one not in the catalog |
 | `servo.speed` | 1.0 | positions per second for a servo with no part |
 | `crservo.NAME =` | | a continuous servo (the value is not used) |
+| `light.NAME = gobilda` or `blinkin` | | a colored light ([`Lights`](../modules/robot.md#lights)): a goBILDA RGB Indicator Light (a servo) or a REV Blinkin; the page shows its color on the robot, on the 3D view and in the Servos tab |
 | `touch.NAME = MOTOR, below=N` | below 20 | a switch pressed while that motor is within N counts of its `min` (reads `getState()` false when pressed) |
 | `camera.NAME = ...` | | a webcam or Limelight ([cameras](#cameras)) |
 | `shape.NAME = TYPE, ...` | | a part to draw and check ([robot shapes](#robot-shapes)). Sizes when `size=` is left out: slide 2x2x12, arm 10x2x2, turret 8x8x2, claw 3x1x3, roller 2x12x2, flywheel 4x2x4 |

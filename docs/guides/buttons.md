@@ -171,6 +171,7 @@ stays stopped when the pause ends.
 | More buzzes | `.rumble(2)` (1 to 3) | that many short buzzes |
 | On / off you can feel | `.toggle(part).rumble()` | two buzzes = on, one buzz = off (a claw: two = closed) |
 | A buzz from the robot | `g2.rumbleWhen(robot.launcher::isReady);` | a buzz each time it becomes true (`rumbleWhen(test, 2)`: two buzzes) |
+| A color on the robot | `robot.lights.show(LightColor.GREEN).when(robot.launcher::isReady);` | a light the drivers see while it is true ([Lights](../modules/robot.md#lights)) |
 
 `rumbleWhen` is not tied to a button: it is a line of its own inside `buttons(...)`, like the others
 (it ends with `;`, nothing chains after it), and it is not on the button map. With the Quick start

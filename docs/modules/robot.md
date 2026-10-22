@@ -53,6 +53,7 @@ flowchart LR
 | [`Launcher`](#launcher) | a flywheel and its [`Indexer`](#indexer): spin up, fire, speed from distance |
 | [`Indexer`](#indexer) | feeds one piece at a time (servo, CR servo or motor) |
 | [`Camera`](#camera) | a Limelight or webcam; the alliance's goal |
+| [`Lights`](#lights), [`LightColor`](#lights) | a colored light for the drivers (goBILDA RGB Indicator Light or REV Blinkin): which color when |
 | [`Action`](#action) | steps across several parts that never block (never make the loop wait) |
 | [`Mode`](#modes) | a rule a module follows every loop while the mode is on |
 | [`ControlMap`](#controlmap), [`Pad`](#controlmap) | `Controls.java`: the TeleOp and the button map |
@@ -436,6 +437,67 @@ These are read once, in INIT. Changed one with the tuning menu? Copy the value b
 
 ---
 
+## Lights
+
+A colored light the drivers can see: green when the robot is ready to fire, red blinking when it is
+jammed, a white flash for each shot, yellow in the last 20 seconds. **Why:** the drivers watch the robot,
+not the Driver Station.
+
+```java
+lights = add(Lights.gobilda("light"));      // Robot.java: a goBILDA RGB Indicator Light ("Servo" in the configuration)
+lights = add(Lights.blinkin("blinkin"));    // or a REV Blinkin LED Driver and its LED strip ("REV Blinkin LED Driver")
+```
+
+Which color when goes in `Controls.java`, inside `buttons(...)`: one line per rule.
+
+```java
+robot.lights.show(LightColor.YELLOW).blinking().inLastSeconds(20);     // the most important first
+robot.lights.show(LightColor.GREEN).when(robot.launcher::isReady);
+robot.lights.show(LightColor.BLUE).when(() -> robot.turret.followMode().isOn());
+robot.lights.otherwise(LightColor.OFF);                                 // when no rule is true
+robot.lights.show(LightColor.WHITE).whenStarts(robot.launcher::isShooting);   // a 0.5 s flash
+```
+
+| Method | |
+| --- | --- |
+| `show(color).when(test)` | that color while `test` is true |
+| `show(color).blinking().when(test)` | blinks 2 times a second (`blinking(1)`: once; at most 5) |
+| `show(color).whenStarts(test)` | a 0.5 s flash each time `test` turns from false to true (`.forSeconds(1)` first: longer) |
+| `show(color).inLastSeconds(20)` | in the last 20 s of TeleOp's 2:00, counted from START |
+| `otherwise(color)` | when no rule is true (default `OFF`) |
+| `flash(color)`, `flash(color, seconds)` | flash now, over every rule: from a button or an action step |
+| `color()`, `showing()`, `isFlashing()`, `clearRules()` | the color the rules pick; what is lit this instant (OFF in a blink's dark half) |
+
+- **The first true rule wins**, in the order written. A flash beats every rule while it lasts.
+- **Any true/false works:** `robot.intake::isRunning`, a mode (`() -> robot.turret.followMode().isOn()`),
+  or your own (`() -> robot.lift.position() > 1000`). A rule that fails counts as false and the Driver
+  Station warns.
+- It works from INIT (the drivers see it light up), goes dark at STOP, and is never "claimed" by an action.
+- **Colors** (`LightColor`): `RED`, `ORANGE`, `YELLOW`, `GREEN`, `BLUE`, `PURPLE`, `WHITE`, `OFF`. Each
+  light turns them into its own signal:
+
+| LightColor | goBILDA position | Blinkin pattern |
+| --- | --- | --- |
+| RED | 0.280 | RED |
+| ORANGE | 0.333 | ORANGE |
+| YELLOW | 0.388 | YELLOW |
+| GREEN | 0.500 | GREEN |
+| BLUE | 0.611 | BLUE |
+| PURPLE | 0.700 | VIOLET |
+| WHITE | 1.0 | WHITE |
+| OFF | 0.0 | BLACK |
+
+The goBILDA numbers are from the seller's chart (3118-0808-0002, Product Insight #4, checked 2026-10-21):
+off below 1100 microseconds, red to violet up to 1900, white above, with the hub's normal servo signal
+(0 = 600, 1 = 2400 microseconds). RED and PURPLE sit a little inside that window (the chart's 0.277 and
+0.722 are right on its edges). The Blinkin (REV-11-1105) uses the SDK's `RevBlinkinLedDriver`; with no
+signal it shows its own rainbow "color waves".
+
+**Game rules (2026-27 manual):** lights that flash faster than about 5 times a second (R202 J) or very
+bright lights (R202 F) can be switched off by the referees, so `blinking` stops at 5. Your alliance
+color must be on the ROBOT SIGNS, never shown by a light (R402). Do not shine lights onto the field
+(G302 example). In the simulator, the light is a dot on the robot and on the 3D view.
+
 ## Action
 
 ```java
@@ -736,7 +798,8 @@ it ready, use `idle()`.
 
 Writes `Robot.java`, `Tunables.java`, `Controls.java`, `Actions.java` and `autos/LeaveStart.java` from
 the robot configuration (the XML file the Driver Station keeps on the Control Hub). Each device gets
-its module from its name and type ("lift" is a Lift, a servo called "claw" a Claw); a goBILDA Pinpoint
+its module from its name and type ("lift" is a Lift, a servo called "claw" a Claw, one called "light" or
+"led" and a REV Blinkin are Lights); a goBILDA Pinpoint
 or SparkFun OTOS becomes the `odometry(...)` line (offsets 0 and a `TODO` for the Odometry Tuner) with a
 `Tunables.Odometry` section; every guess it is not sure of is a `TODO` in Robot.java. It never overwrites a file.
 

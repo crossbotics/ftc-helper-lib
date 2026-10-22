@@ -57,7 +57,8 @@ Ask for these, and use whatever the team has:
 With CAD, do `cad.md` steps 1-3 now: its numbers and clues answer most of the interview.
 
 No configuration file? Write the robot file by hand: one device line for each `hardwareMap.get(...)` name
-in TeamCode (copy the layout of `sim/robots/starter.properties`), and skip step 2.
+in TeamCode (copy the layout of `sim/robots/starter.properties`), and skip step 2. A colored light is
+`light.NAME = gobilda` (goBILDA RGB Indicator Light, a servo port) or `light.NAME = blinkin` (REV Blinkin).
 
 ## 2. Make the draft
 

@@ -33,6 +33,8 @@ final class SimRobot {
     final Map<String, SimServo> servos = new LinkedHashMap<>();
     final Map<String, double[]> crServos = new LinkedHashMap<>();   // name -> {power, reversed (1/0)}
     final Map<String, SimTouch> touches = new LinkedHashMap<>();
+    // Colored lights (light.NAME = gobilda or blinkin): the page shows their color.
+    final Map<String, SimLight> lights = new LinkedHashMap<>();
     // Webcams (camera.KEY = name=Webcam 1, forward=..., see SimCamera), by their configuration name.
     final Map<String, SimCamera> cameras = new LinkedHashMap<>();
     // Limelights (limelight.KEY = name=limelight, ...): their pretend camera is in cameras too.
@@ -204,6 +206,10 @@ final class SimRobot {
             servos.put(name, servo);
         }
         for (String key : sortedKeys(p, "crservo.")) crServos.put(key.substring("crservo.".length()), new double[] {0, 0});
+        for (String key : sortedKeys(p, "light.")) {
+            String name = key.substring("light.".length());
+            lights.put(name, new SimLight(name, p.getProperty(key)));
+        }
         // A flywheel's feeder is a motor or a CR servo (a windmill, a feed roller), or a servo that
         // pushes each piece in (an indexer: it feeds while it is away from where it starts).
         for (SimMotor m : motors.values()) {
@@ -311,6 +317,7 @@ final class SimRobot {
     private void buildDevices() {
         for (SimMotor m : motors.values()) devices.put(m.name, m.device);
         for (SimServo s : servos.values()) devices.put(s.name, s.device);
+        for (SimLight l : lights.values()) devices.put(l.name, l.device);
         for (Map.Entry<String, double[]> e : crServos.entrySet()) devices.put(e.getKey(), crServo(e.getValue()));
         for (Map.Entry<String, SimTouch> e : touches.entrySet()) {
             devices.put(e.getKey(), e.getValue().touchSensor());

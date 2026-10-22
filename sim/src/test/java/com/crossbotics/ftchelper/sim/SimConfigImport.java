@@ -99,6 +99,7 @@ public final class SimConfigImport {
         if (isMotor(tag)) return "motor";
         if (tag.equals("Servo") || tag.equals("ServoFullRange")) return "servo";
         if (tag.equals("ContinuousRotationServo")) return "crservo";
+        if (tag.equals("RevBlinkinLedDriver")) return "blinkin";
         if (tag.toLowerCase(Locale.US).contains("imu")) return "imu";              // any hub or external IMU type
         if (tag.equals("RevSPARKMini")) return "crservo";                           // a motor controller on a servo port: power -1..1
         if (tag.equals("RevTouchSensor") || tag.equals("DigitalDevice") || tag.equals("ModernRoboticsAnalogTouchSensor")) return "touch";
@@ -107,6 +108,15 @@ public final class SimConfigImport {
         if (tag.equals("SparkFunOTOS")) return "otos";
         if (tag.equals("EthernetDevice") || tag.contains("Limelight")) return "limelight";
         return "other";
+    }
+
+    /** True for a name like "light", "status_led", "rgbIndicator": a colored light on a servo port. */
+    static boolean isLightName(String name) {
+        for (String w : words(name)) {
+            if (w.equals("light") || w.equals("lights") || w.equals("led") || w.equals("leds") || w.equals("indicator")
+                    || w.equals("rgb") || w.equals("blinkin")) return true;
+        }
+        return false;
     }
 
     // A name's words, lower case: "leftFront" -> left, front; "drive_fl" -> drive, fl; "FLMotor" -> fl, motor.
@@ -231,8 +241,16 @@ public final class SimConfigImport {
                 questions.add("Servo \"speed\": please rename it in the Driver Station configuration (the simulator uses servo.speed for a setting).");
                 continue;
             }
+            if (isLightName(d.name)) {
+                // A servo port named like a light: most likely a goBILDA RGB Indicator Light (driven like a servo).
+                b.append("light.").append(key(d.name)).append(" = gobilda   # a goBILDA RGB Indicator Light? (servo. if it is a servo)\n");
+                continue;
+            }
             b.append("servo.").append(key(d.name)).append(" = 0.5   # TODO: start position and part= (which servo?)\n");
             questions.add("Servo \"" + d.name + "\": what does it move, which servo (part), where does it start?");
+        }
+        for (Device d : devices) {
+            if (kindOf(d.tag).equals("blinkin")) b.append("light.").append(key(d.name)).append(" = blinkin\n");
         }
         for (Device d : devices) {
             if (!kindOf(d.tag).equals("crservo")) continue;

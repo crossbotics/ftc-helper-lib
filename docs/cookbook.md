@@ -107,6 +107,13 @@ first.
 - [How do I round a number on the Driver Station?](#how-do-i-round-a-number-on-the-driver-station)
 - [How do I show lines from my own autonomous step?](#how-do-i-show-lines-from-my-own-autonomous-step)
 
+**Lights** (a color the drivers can see)
+- [How do I add a colored light for the drivers?](#how-do-i-add-a-colored-light-for-the-drivers)
+- [How do I show a color when something is true?](#how-do-i-show-a-color-when-something-is-true)
+- [How do I flash the light when something happens?](#how-do-i-flash-the-light-when-something-happens)
+- [How do I flash the light when an action is done?](#how-do-i-flash-the-light-when-an-action-is-done)
+- [How do I blink the light in the last 20 seconds?](#how-do-i-blink-the-light-in-the-last-20-seconds)
+
 **Tuning and finders** (getting the numbers right)
 - [Where do the numbers go?](#where-do-the-numbers-go)
 - [How do I find a servo's open and closed numbers?](#how-do-i-find-a-servos-open-and-closed-numbers)
@@ -1405,6 +1412,90 @@ s.step("Spin up", ctx -> {
 
 **Why:** `ctx.loop()` keeps the robot running inside your loop, and the time limit makes sure the loop ends.
 **More:** [Your own steps](guides/autonomous-builder.md#6-your-own-steps), [The report](guides/autonomous-builder.md#the-report).
+
+## Lights
+
+A colored light on the robot tells the drivers what the robot "knows" (full, ready, a mode on) without
+looking at the Driver Station. All of it: [Lights](modules/robot.md#lights).
+
+### How do I add a colored light for the drivers?
+
+**Where:** `Robot.java`, inside `define()` (and a field `public Lights lights;`).
+
+<!-- recipe: light-add -->
+```java
+// A goBILDA RGB Indicator Light on a servo port ("Servo" in the robot configuration):
+lights = add(Lights.gobilda("light"));
+// Or a REV Blinkin LED Driver with an LED strip ("REV Blinkin LED Driver" in the configuration):
+//   lights = add(Lights.blinkin("blinkin"));
+```
+
+**Why:** one line, like any part. It has no numbers and no buttons of its own: the colors come from your rules.
+**More:** [Lights](modules/robot.md#lights) (the parts and their color tables).
+
+### How do I show a color when something is true?
+
+**Where:** `Controls.java`, inside `buttons(...)`.
+
+<!-- recipe: light-rules -->
+```java
+// One rule per line. The first true rule wins: put the most important first.
+robot.lights.show(LightColor.RED).blinking().when(robot.intake::isPushingOut);  // pushing out
+robot.lights.show(LightColor.GREEN).when(robot.launcher::isReady);           // at speed: fire
+robot.lights.show(LightColor.BLUE).when(robot.intake::isRunning);            // intake on
+robot.lights.otherwise(LightColor.OFF);                                      // none true
+```
+
+**Why:** any true/false works, so a mode is `() -> robot.turret.followMode().isOn()` and your own test is
+`() -> robot.lift.position() > 1000`. Blinking stops at 5 times a second (FTC rule R202 J).
+**More:** [Lights](modules/robot.md#lights), [lambdas](tutorials/start/05-actions.md).
+
+### How do I flash the light when something happens?
+
+**Where:** `Controls.java`, inside `buttons(...)`.
+
+<!-- recipe: light-flash -->
+```java
+// A flash beats every rule for 0.5 s: each time a shot starts, and from a button.
+robot.lights.show(LightColor.WHITE).whenStarts(robot.launcher::isShooting);
+g2.a.press(() -> robot.lights.flash(LightColor.PURPLE)).says("flash the light (signal the partner)");
+```
+
+**Why:** `whenStarts` flashes when the test turns from false to true, not all the time it is true.
+`.forSeconds(1)` before it makes the flash longer.
+
+### How do I flash the light when an action is done?
+
+**Where:** `Actions.java`.
+
+<!-- recipe: light-action -->
+```java
+// The last step of an action: a green flash says "done" to the drivers.
+public static Action shootTwo(Robot r) {
+    return Action.named("Shoot two")
+            .then(r.launcher::spinUp)
+            .waitUntil("at speed", r.launcher::isReady, 3.0)
+            .then(() -> r.launcher.fire(2))
+            .waitUntil("both gone", () -> !r.launcher.isShooting(), 3.0)
+            .then(() -> r.lights.flash(LightColor.GREEN));
+}
+```
+
+**Why:** the light is never "claimed" by an action, so any action (or button) may flash it.
+
+### How do I blink the light in the last 20 seconds?
+
+**Where:** `Controls.java`, inside `buttons(...)`, before the other rules.
+
+<!-- recipe: light-endgame -->
+```java
+// Yellow, blinking, in the last 20 seconds of TeleOp: time to park. Written first, so it beats
+// every other rule.
+robot.lights.show(LightColor.YELLOW).blinking().inLastSeconds(20);
+```
+
+**Why:** the time counts from START (TeleOp's 2:00), like the gamepad buzzes: about a second off from
+the field clock, fine for a reminder.
 
 ## Tuning and finders
 

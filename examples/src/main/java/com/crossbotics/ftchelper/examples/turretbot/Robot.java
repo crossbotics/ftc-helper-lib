@@ -8,6 +8,7 @@ import com.crossbotics.ftchelper.robot.Drive;
 import com.crossbotics.ftchelper.robot.Indexer;
 import com.crossbotics.ftchelper.robot.Intake;
 import com.crossbotics.ftchelper.robot.Launcher;
+import com.crossbotics.ftchelper.robot.Lights;
 import com.crossbotics.ftchelper.robot.Positioner;
 import com.crossbotics.ftchelper.robot.RobotDefinition;
 import com.crossbotics.ftchelper.robot.Turret;
@@ -22,6 +23,7 @@ import com.crossbotics.ftchelper.robot.Turret;
  *   <li>A flywheel whose speed comes from the distance to the goal (Tunables.Launcher.speedByDistance),
  *       fed by an indexer servo. It only fires when the turret is aimed.</li>
  *   <li>A claw on a fold-out pivot: positions to grab a piece and to let it go into a FLOWER.</li>
+ *   <li>A goBILDA RGB Indicator Light the drivers can see: its colors are set in Controls.java.</li>
  * </ul>
  *
  * <p>Modes do the always-on work (the turret following, the speed from distance); actions do the
@@ -34,6 +36,7 @@ public class Robot extends RobotDefinition {
     public Launcher launcher;
     public Positioner clawFold;
     public Claw claw;
+    public Lights lights;
 
     @Override
     protected void define() {
@@ -59,5 +62,9 @@ public class Robot extends RobotDefinition {
 
         clawFold = add(Positioner.servo("claw_fold"));   // Tunables.ClawFold: stowed, grab, flower
         claw = add(Claw.servo("claw"));                  // Tunables.Claw: open, closed
+
+        // A goBILDA RGB Indicator Light on a servo port ("Servo" in the configuration). Which color when:
+        // Controls.java.
+        lights = add(Lights.gobilda("light"));
     }
 }
