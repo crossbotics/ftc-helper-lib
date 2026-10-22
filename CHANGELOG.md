@@ -6,6 +6,18 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
+- **Tunables reference** (`docs/guides/tunables.md`): every number the library reads from
+  `Tunables.java`, one table per part (Drive, Odometry, Aim, Buttons, Intake, Lift and Arm, Claw/Wrist/
+  Positioner, Turret, interlock rules, Launcher, Indexer, Hood, Camera, PieceSensor, Lights: 133 fields).
+  Each row: what it does, units, default (or REQUIRED: INIT stops without it), whether it is in the
+  tuning menu (at once, or from the next INIT), which finder measures it, and when to change it. The top
+  explains section names, what INIT checks (and what it does not: a misspelled field outside the
+  position parts is quietly not read), units, and how to copy a finder's lines. Linked from each part in
+  `docs/modules/robot.md`, lesson 1 and the README.
+- **`tools/check_tunables.py`** (in CI): reads the robot package's code, lists every field it reads
+  (`--list`), and fails when the reference misses a field, names one the code no longer reads, or has a
+  wrong default, Live or REQUIRED cell; also when an example robot's `Tunables.java` (or the one
+  `:sim:newRobot` writes) has a field its part never reads.
 - **Interlock rules** (`robot.Interlock`, `robot.Zone`): `keepApart("TurretLift", turret.zone(),
   lift.zoneAbove())` in Robot.java keeps two parts from ever being in their zones at the same time (a
   turret over the back while a lift is up; an arm and an intake; a wrist and a low lift). Any number of
@@ -307,6 +319,13 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Fixed
 
+- Docs: `docs/modules/robot.md` said only a Lift or Arm has numbers INIT requires; also a Hood's
+  `posA`/`posB`, a servo Turret's `posA`/`angleA`/`posB`/`angleB`, a Turret's `homeAngle` with a home
+  switch, and an interlock rule's zones. Its tuning-menu table missed Aim, Buttons, Hood, PieceSensor,
+  Lights and most Turret fields: replaced by the reference's Live column. The Camera section said its
+  numbers could be changed in the tuning menu (they cannot); Camera and PieceSensor said an untouched
+  `Tunables.java` value wins at the next INIT (a value saved on the hub wins: copy it back because the
+  file is the record). `Tunables.Aim.cameraMaxAgeMs` (150 ms) was not documented.
 - Simulator: a camera on a turret stayed fixed to the chassis, so a turret that follows the goal turned
   to its limit, or stopped 55 degrees off while saying AIMED, and the shots missed.
 - Simulator: moving the robot by hand (the alliance's start spot at INIT, a drag on the map, `set pose`)

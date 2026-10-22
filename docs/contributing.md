@@ -37,6 +37,11 @@ A change is not done until all six are done.
   (`// recipe: name` ... `// end recipe`) in `examples/.../cookbook/`, and `tools/check_docs.py` fails
   if they differ. Change the Java file, then run `python3 tools/check_docs.py --fix-cookbook` to copy
   the regions into the page. The simulator test `CookbookTest` INITs and runs every cookbook OpMode.
+- `tools/check_tunables.py` reads every `Tunables.java` field the robot package reads (`t.number`,
+  `t.flag`, `t.tunable`, ...) and fails if [the Tunables reference](guides/tunables.md) misses one, names
+  one the code no longer reads, or has a wrong default, Live or REQUIRED cell. It also checks that the
+  example robots' `Tunables.java` files (and the one `:sim:newRobot` writes) use only fields their parts
+  read. A new number in a module: add its row to the reference.
 - Code snippets IN the tutorial pages are not compiled. When you change a program, search its
   tutorial page for the same lines and update them.
 - Before a release, read the changed tutorials once from top to bottom as a student would.
@@ -63,6 +68,7 @@ You need JDK 17 or newer and the Android SDK. Android Studio installs both. From
 python3 tools/check_docs.py
 python3 tools/check_blocking.py
 python3 tools/parts_page.py --check
+python3 tools/check_tunables.py
 ```
 
 This runs every test (the library's, the examples' and the simulator's), builds the examples and every

@@ -23,3 +23,5 @@ jobs:
         run: python3 tools/parts_page.py --check
       - name: Non-blocking check
         run: python3 tools/check_blocking.py
+      - name: Tunables reference check (every field the code reads is documented)
+        run: python3 tools/check_tunables.py

@@ -138,6 +138,8 @@ public class Tunables {
 }
 ```
 
+- **Every number of every part**, with its units, default, whether it is in the tuning menu and which
+  finder measures it: [the Tunables reference](../guides/tunables.md). `tools/check_tunables.py` keeps it complete.
 - **One section per part**, named after its configuration name in CamelCase: `intake_deploy` reads
   `IntakeDeploy`. Pick another with `.tunables("Name")` on the module.
 - **Sections for your own code** (no part reads them, like `Tunables.Auto` with the autonomous's
@@ -150,9 +152,12 @@ public class Tunables {
 - **The code is the record.** The numbers you tune most become [`Tunable`](tuning.md)s ("Lift/kP"):
   the tuning menu (PRACTICE profile, after START hold GUIDE 1 s) changes them and saves them on the Control Hub. INIT then
   shows "Tuned on this robot (copy into Tunables.java)" with the lines to copy back.
-- **Missing numbers are not errors**, with one exception: the library's default is used and INIT
-  says which. **The exception: a Lift or Arm must write `min` and `max`** (a safety limit never comes
-  from a library default), and `max` must be more than `min`. Otherwise INIT stops:
+- **Missing numbers are not errors**, with a few exceptions: the library's default is used and INIT
+  says which (`Tunables.Lift: kD, kF not written: library defaults used (fine)`). **The exceptions are
+  safety numbers** (a safety limit never comes from a library default): a Lift's or Arm's `min` and
+  `max`, a Hood's `posA` and `posB` (or its `calibration`), a servo Turret's `posA`, `angleA`, `posB`,
+  `angleB`, a Turret's `homeAngle` with a home switch, and an interlock rule's zone numbers. For a
+  Lift or Arm, `max` must also be more than `min`. Otherwise INIT stops:
   `Tunables.Lift has no max: write max (the top of the safe range, in counts: Motor Finder, B). A safety limit never comes from a library default.`
   (no section at all: `Tunables.java has no Lift section: ...`; an Arm's are in `deg`; `min` points
   to Motor Finder X). With `max` not above `min`: `Tunables.Lift: max (...) must be more than min (...)`.
@@ -173,18 +178,10 @@ public class Tunables {
 - `public static` fields: FTC Dashboard can show them too.
 - The menu's names ("Lift/kP") are shared by the whole robot app: keep one Robot class per app.
 
-| | In the tuning menu, used at once | In the tuning menu, used from the next INIT | Code only (read at INIT) |
-| --- | --- | --- | --- |
-| Drive | | every number | `calibrated` |
-| Intake | `inPower`, `outPower` | | |
-| Lift, Arm | `kP`, `kI`, `kD`, `kF`, every named position | | `min`, `max`, `maxPower`, `slowZone`, `slowZonePower`, `tolerance` |
-| Claw, Wrist, Positioner | every named position | | `travelSec` |
-| Turret | `kP`, `kI`, `kD` | | `min`, `max`, `maxPower`, `tolerance`, `slowZone`, `slowZonePower`, `cameraOffset` |
-| Launcher | `speedRpm`, `stepRpm` | | `readyBandRpm`, `idleRpm`, `shotIntervalSec`, `speedByDistance`, `kP`..`kF`, `nominalVolts`, `batteryCompensation`, `trimStepPercent`, `trimMaxPercent` |
-| Indexer | every number | | |
-| Camera | | | `pipeline`, `autoLighting`, `lightingSettleMs`, `lightingPictures`, `lightingMinPictures`, `lightingAfterStartMs`; webcam `exposureMs`, `gain` |
-| Odometry | | | `checked`, `linearScalar`, `angularScalar` (OTOS), `resetX`, `resetY`, `resetHeading` (the "set pose here" spot), `mirrorForRed` (the spot for RED) |
-| Your own sections (`Auto`...) | every number (a TeleOp reads the field each time) | an autonomous reads them when it builds its steps (INIT) | `final` numbers, true/false, tables |
+Which numbers are in the tuning menu (used at once, or from the next INIT) and which are read only
+from the code: the **Live** column of [the Tunables reference](../guides/tunables.md#the-live-column-the-tuning-menu).
+Your own sections (`Auto`...): every number is in the menu (a TeleOp reads the field each time; an
+autonomous reads it when it builds its steps, at INIT); `final` numbers, true/false and tables are not.
 
 ---
 
@@ -206,7 +203,7 @@ drive(Drive.tank("left_drive", "right_drive").reversed("right_drive"));
 | `reversed(names...)` | exactly these motors run reversed (default: the left side) |
 | `imu(name, logo, usb)`, `noImu()` | the IMU and how the hub is mounted (default "imu", UP, FORWARD) |
 
-`Tunables.Drive`: `maxPower`, `practiceMaxPower` (PRACTICE profile), `slowSpeed` (the slow trigger),
+`Tunables.Drive` ([all its numbers](../guides/tunables.md#drive)): `maxPower`, `practiceMaxPower` (PRACTICE profile), `slowSpeed` (the slow trigger),
 `strafeCorrection`, `turnKp`, `turnKd`, `moveMinPower`, and `calibrated` (autonomous refuses to run
 until it is `true`: tune with the Drive Tuner first, [lesson 6](../tutorials/start/06-first-autonomous.md)).
 The Drive Tuner and the Shot Tuner take the whole robot: `@Override protected RobotDefinition robot() { return new Robot(); }`;
@@ -227,7 +224,7 @@ odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));   // in define(), 
 | `threeWheels(left, right, perp)` | three dead wheels on encoder ports: `trackWidthIn(in)` (required), `perpForwardIn(in)` |
 | `twoWheels(parallel, perp)` | two dead wheels and the drive's IMU: `parallelLeftIn(in)`, `perpForwardIn(in)` |
 
-`Tunables.Odometry`: `checked` (set true after the Odometry Tuner; until then `driveTo` steps are
+`Tunables.Odometry` ([all its numbers](../guides/tunables.md#odometry)): `checked` (set true after the Odometry Tuner; until then `driveTo` steps are
 skipped on a real robot), for an OTOS `linearScalar` and `angularScalar`, and optional
 `resetX, resetY, resetHeading`: the "set pose here" spot ([`resetPose()`](#robotdefinition); RED
 mirrors it unless `mirrorForRed = false`, as on a field turned half a turn: BIOBUZZ needs `false`). With it: `robot.pose()`
@@ -298,7 +295,7 @@ intake = add(Intake.motor("intake").withCrServos("left_wheel", "right_wheel").re
 | `inAnyway()` | runs in even though `stopsWhen` says no, until `stop()` or `out()` (the count was wrong) |
 | `isRunningOut()` | pushing out now (`out()`, or `reverse()` held) |
 
-`Tunables.Intake`: `inPower` (1.0), `outPower` (0.7). Buttons: hold operator RT in, LT out; with
+`Tunables.Intake` ([all its numbers](../guides/tunables.md#intake)): `inPower` (1.0), `outPower` (0.7). Buttons: hold operator RT in, LT out; with
 `onAtStart()`: RT switches it on/off, hold LT pushes out. With `stopsWhen`: hold RT for 1 s to run in
 anyway (with `onAtStart()`: tap RT switches, hold it 1 s runs in anyway), and the Driver Station warns
 when it has been held back for more than 2 s, so the drivers notice a count that says "full" too soon.
@@ -318,7 +315,7 @@ and `max` must be in `Tunables.java` (from the [Motor Finder](../guides/finders.
 lift = add(Lift.slide("lift").bottomSwitch("lift_bottom"));
 ```
 
-`Tunables.Lift` (encoder counts): `min`, `max`, `kP`, `kI`, `kD`, `kF` (the steady push that holds it
+`Tunables.Lift` ([all its numbers](../guides/tunables.md#lift-and-arm)) (encoder counts): `min`, `max`, `kP`, `kI`, `kD`, `kF` (the steady push that holds it
 up), `maxPower`, `slowZone`, `slowZonePower`, `tolerance`; every other number is a named height.
 Buttons (operator): A lowest, Y highest (2 or more heights), X second (3 or more), D-pad up/down next height, left stick by hand.
 With a bottom switch, the lift only goes down (slowly) until the switch has been pressed once, and the
@@ -347,7 +344,7 @@ when the program starts. Button: operator right stick Y by hand.
 [`ServoPositions`](#claw) is what Claw, Wrist and Positioner share: `goTo(name)`, `isDone()` (it should
 have arrived: a guess from `travelSec`), `isAt(name)`, `positions()`, `part()` (the
 [`PositionServo`](mechanism.md#positionservo) inside), `reversed()`. In Tunables every number is a
-named position (0 to 1) except `travelSec`. A servo does not move until the first command after START.
+named position (0 to 1) except `travelSec` ([reference](../guides/tunables.md#claw-wrist-and-positioner)). A servo does not move until the first command after START.
 
 ```java
 claw = add(Claw.servo("claw"));       // Tunables.Claw: open, closed (both needed)
@@ -420,7 +417,7 @@ turret = add(Turret.crServo("turret").analogEncoder("turret_pos").continuous());
 | `zone()` | its zone for an [interlock rule](#interlock) (degrees, repeats every 360) |
 | `static forgetAngles()` | forget the angle carried from the last program (tests; turning it by hand between programs) |
 
-`Tunables.Turret`: `min`, `max` (degrees, counterclockwise +, 0 = forward: it never turns past them; a
+`Tunables.Turret` ([all its numbers](../guides/tunables.md#turret)): `min`, `max` (degrees, counterclockwise +, 0 = forward: it never turns past them; a
 goal outside waits at the limit and the Driver Station says "goal out of turret range"; past +/-180 it
 picks the way round that stays inside them), `startAngle` (where it points at INIT with no switch,
 default 0), `kP`, `kI`, `kD`, `maxPower`, `tolerance`, `slowZone`, `slowZonePower`, `cameraOffset`,
@@ -454,7 +451,7 @@ public static class TurretLift {
 }
 ```
 
-| Zone | Tunables fields (in the rule's section) |
+| Zone | Tunables fields (in the rule's section; [all of them](../guides/tunables.md#interlock-rules)) |
 | --- | --- |
 | `part.zone()` | `<part>From`, `<part>To`: between two numbers (a turret's repeats every 360 degrees) |
 | `part.zoneAbove()` | `<part>Above`: from there to the top |
@@ -463,8 +460,9 @@ public static class TurretLift {
 
 `<part>` is the part's Tunables name with a small first letter (`Turret` -> `turretFrom`). Units: degrees
 (turret, arm), counts (lift), servo position 0 to 1 (claw, wrist, positioner). Parts with a zone: Turret,
-Lift, Arm, Claw, Wrist, Positioner, Hood. Optional `<part>Margin` (default: 3 degrees or twice the
-turret's tolerance; twice a lift's or arm's tolerance and at least 1/50 of its range; 0.02 for a servo).
+Lift, Arm, Claw, Wrist, Positioner, Hood. Optional `<part>Margin` (default: the larger of 3 degrees and
+twice the turret's tolerance; twice a lift's or arm's tolerance and at least 1/50 of its range; 1/50 of a
+hood's range; 0.02 for a servo).
 
 | `Interlock` | |
 | --- | --- |
@@ -522,7 +520,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer
 | `hood(Hood)`, `hood()` | the launcher's [hood](#hood): its angle from the table's third column; the launcher waits for it before feeding |
 | `shotAngle(deg)` | for the simulator: which way a piece leaves, degrees up from the wheel shape's forward (the robot's forward for a wheel mounted level; 135 = up and out of the back) |
 
-`Tunables.Launcher`: `speedRpm`, `stepRpm`, `readyBandRpm`, `idleRpm`, `shotIntervalSec`,
+`Tunables.Launcher` ([all its numbers](../guides/tunables.md#launcher)): `speedRpm`, `stepRpm`, `readyBandRpm`, `idleRpm`, `shotIntervalSec`,
 `speedByDistance` (`{{inches, rpm}, ...}`, blended between rows; with no goal in view the last speed
 stays), or one table per game piece: `speedByDistancePollen`, `speedByDistanceNectar` (any names after
 `speedByDistance`), and `kP`, `kI`, `kD`, `kF` (the hub's speed control; only used when `kF` is there: the
@@ -645,7 +643,7 @@ the rim, or worn balls launch flatter). Use the speed trim first.
 | `angle()`, `currentAngle()`, `isArrived()`, `followsTable()` | where it is going; where it is (encoder, or the time estimate); arrived; the table sets it now |
 | `minAngle()`, `maxAngle()`, `homeAngle()`, `usesAngles()`, `isMotor()`, `isReversed()`, `part()` | `part()` is the [`AngleDevice`](mechanism.md#angledevice) the launcher drives |
 
-`Tunables.Hood` (optional ones scale with the range, so they suit degrees, positions and ticks):
+`Tunables.Hood` ([all its numbers](../guides/tunables.md#hood)) (optional ones scale with the range, so they suit degrees, positions and ticks):
 `homeAngle` (where it goes at START; default angleA), `stepAngle` (1/25 of the range), `byHandPerSec`
 (the whole range in 2.5 s at full stick), `trimMax` (1/5 of the range), `travelSec` (servo, 0.5). A
 motor hood: `kP` (power per tick, 0.005), `maxPower` (0.5), `tolerance` (1/50 of the range); it never
@@ -666,7 +664,7 @@ camera = add(Camera.webcam("Webcam 1"));
 ```
 
 `goal()` (the alliance's goal, or null), `target(name)`, `target(id)`, `source()` (the
-[`TargetSource`](vision.md) inside). Tunables (Limelight): `pipeline`. It starts in INIT.
+[`TargetSource`](vision.md) inside). Tunables (Limelight): `pipeline` ([all its numbers](../guides/tunables.md#camera)). It starts in INIT.
 
 Venue lighting ([vision.md](vision.md#venue-lighting)): the camera tries a few settings in INIT and
 keeps the one that sees the most AprilTags.
@@ -702,19 +700,19 @@ Its optional Tunables (leave them out for the defaults):
 | `exposureMs` (webcam) | -1 | a fixed manual exposure (ms) when the test is off; -1 = the camera's own |
 | `gain` (webcam) | -1 | the gain for manual exposures; -1 = the camera's highest |
 
-These are read once, in INIT. Changed one with the tuning menu? Copy the value back into
-`Tunables.java`, or the robot uses the old one at the next INIT.
+These are read once, in INIT, and are not in the tuning menu: change them in `Tunables.java` and
+install again.
 
 ## Aim
 
 Where the goal is, for everything that aims: `robot.aim()`. **The camera first; the odometry as a
-backup.** While the camera sees the goal (a picture newer than 150 ms), that is used. When it does not,
+backup.** While the camera sees the goal (a picture newer than 150 ms, `cameraMaxAgeMs`), that is used. When it does not,
 and the robot has an [`odometry(...)`](#odometry) line and `Tunables.Aim.goalX, goalY`, the goal's
 direction and distance come from where the robot is. A following turret, a launcher's speed from
 distance, whole-robot aim and the aim buzz all use it.
 
 ```java
-public static class Aim {                                   // Tunables.java (every line optional)
+public static class Aim {                                   // Tunables.java (every line optional; all: see below)
     public static double goalX = -58, goalY = 55;           // the goal on the field, inches (odometry backup)
     public static boolean mirrorForRed = false;             // default true; BIOBUZZ's turned field: false
     public static double turnKp = 0.02, turnKd = 0.002, maxTurnPower = 0.5, minTurnPower = 0, toleranceDeg = 2;
@@ -725,6 +723,9 @@ public static class Aim {                                   // Tunables.java (ev
     public static double shooterForwardIn = 0, shooterLeftIn = 0, cameraForwardIn = 0, cameraLeftIn = 0;
 }
 ```
+
+Every `Tunables.Aim` number, with its default and whether it is in the tuning menu:
+[the Tunables reference](../guides/tunables.md#aim).
 
 The goal point uses `driveTo`'s numbers: seen from your drivers' wall, x inches right of the field's
 centre line, y from the centre toward the far wall, written for BLUE. `mirrorForRed` (default true,
@@ -862,7 +863,7 @@ am-5851_yellow), NECTAR about 3.6 in (9.1 cm) red or blue balls (am-5852_red, am
 perfectly spherical and may vary in size". G407: a robot may not CONTROL more than 4 at a time. G408:
 never control the OPPONENT's NECTAR, so a team that picks up NECTAR needs colour, not only size.
 
-**Tunables** (one section per sensor, named after its device: `intake_color` reads `Tunables.IntakeColor`):
+**Tunables** (one section per sensor, named after its device: `intake_color` reads `Tunables.IntakeColor`; [reference](../guides/tunables.md#piecesensor)):
 
 ```java
 public static class IntakeColor {
@@ -888,7 +889,8 @@ A piece "is there" when the distance is below `nearMm`. A colour sensor with no 
 
 Find them with the **Piece Tuner** ([`PieceTunerOpMode`](finders.md#piecetuneropmode)): it shows each
 sensor's readings and writes the lines to copy into `Tunables.java`. Changed one with the tuning
-menu? Copy it back into `Tunables.java`, or the robot uses the old one at the next INIT.
+menu (and saved it)? Copy it back into `Tunables.java`: the saved value is only on this Control Hub, and
+the file is the record.
 
 **A second webcam** with an AprilTag webcam: each camera gets its own VisionPortal; the colour camera
 uses 320x240 pictures and no live view (the Driver Station can show one portal unless the code splits
@@ -1002,7 +1004,7 @@ Station's small text.
 - Keep your rules' colors away from red and blue (the examples use purple and orange), so nobody reads
   "intake on" as "BLUE alliance".
 
-Off, in `Tunables.java` (the light's section, named after its device, e.g. `Tunables.Light`):
+Off, in `Tunables.java` (the light's section, named after its device, e.g. `Tunables.Light`; [reference](../guides/tunables.md#lights)):
 
 ```java
 public static class Light {
@@ -1101,7 +1103,7 @@ While the robot is paused (BACK), no button or stick job runs, with one exceptio
 (the second job of `hold(job, stopJob)`) still runs when the button is let go, or when the pause starts
 during a gesture's hold, so the part stays stopped. A gesture's job runs at once unless the
 button has a longer gesture that starts the same way; then it waits until it knows (let go, or
-`Tunables.Buttons.tapGapSec`, 0.35 s). Both times are in `Tunables.Buttons` (optional: leave it out for the defaults) and the tuning menu; copy
+`Tunables.Buttons.tapGapSec`, 0.35 s). Both times are in `Tunables.Buttons` (optional: leave it out for the defaults; [reference](../guides/tunables.md#buttons)) and the tuning menu; copy
 a tuned value back into `Tunables.java`.
 Every option as a menu: [the button menu](../guides/buttons.md).
 

@@ -148,7 +148,12 @@ public class Tunables {
   would read `IntakeDeploy`.
 - Where these came from: goBILDA's code spins the launcher to 1250 counts per second (1250 / 28 counts
   per turn x 60 = 2679 RPM) and feeds above 1200 (that is 107 RPM less): `readyBandRpm = 107`.
-- A number you leave out uses the library's default, and INIT tells you which.
+- A number you leave out uses the library's default, and INIT tells you which
+  (`Tunables.Intake: outPower not written: library defaults used (fine)`). A few safety numbers, like a
+  lift's `min` and `max`, have no default: INIT stops and says which line to write.
+- **Every number each part reads**, with its units, its default and the finder that measures it:
+  [the Tunables reference](../../guides/tunables.md). A misspelled name is not read (capitals count),
+  so after a change, check that INIT's "not written" note does not name a number you wrote.
 - **Tune on the robot:** in the PRACTICE profile, after START, holding GUIDE for a second opens the tuning menu (D-pad to choose and
   change, A to save on the hub). At the next INIT the Driver Station lists every value that differs
   from this file, for example `Tunables.Launcher.speedRpm = 2750 (code 2679)`. Copy the good ones
