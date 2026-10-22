@@ -144,7 +144,25 @@ public class TurretOptionsTest {
         RobotTelemetry t = new RobotTelemetry(ft.telemetry, () -> 0L);
         r.initLoop(t);
         t.update();
-        assertTrue(ft.lastScreen.toString(), ft.lastScreen.toString().contains("startAngle 30 deg: put the turret there by hand"));
+        assertTrue(ft.lastScreen.toString(), ft.lastScreen.toString().contains("no angle from a program before: turn it to startAngle 30 deg by hand and INIT again"));
+    }
+
+    // A TeleOp started again (no autonomous between): it keeps the angle of the TeleOp before. A program
+    // whose turret never finished homing leaves no angle behind (an older one would be stale).
+    @Test public void aTeleOpRestartKeepsTheAngleAndAnUnhomedTurretLeavesNone() {
+        OneTurret first = bot(Start30.class, TurretOptionsTest::motorTurret, new RobotTestKit(), false);
+        first.started();
+        first.turret.aimAt(-12);
+        loops(first, "turret", 200);
+        first.all().stop();
+        OneTurret second = bot(Start30.class, TurretOptionsTest::motorTurret, new RobotTestKit(), false);
+        assertEquals("kept from the TeleOp before", -12, second.turret.angle(), 1);
+        // A turret with a switch that never homed: nothing is carried to the next program.
+        OneTurret unhomed = bot(Switch45.class, () -> motorTurret().homeSwitch("turret_home"), new RobotTestKit(), true);
+        unhomed.started();
+        unhomed.all().stop();
+        OneTurret next = bot(Start30.class, TurretOptionsTest::motorTurret, new RobotTestKit(), false);
+        assertEquals("startAngle again", 30, next.turret.angle(), 1e-9);
     }
 
     public static class Switch45 {

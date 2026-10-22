@@ -418,7 +418,11 @@ public final class Turret extends Module<Turret> {
                     kept[0], (System.nanoTime() - kept[1]) / 1e9);
         } else {
             p.startAngle(startAngle);
-            angleFrom = Module.fmt("startAngle %.0f deg: put the turret there by hand before INIT, or every angle is off", startAngle);
+            // A TeleOp with no angle from a program just before (the robot app restarted, more than 5
+            // minutes, keepAngle false): the turret may be anywhere, so say it plainly.
+            angleFrom = robot.autonomous
+                    ? Module.fmt("startAngle %.0f deg: put the turret there by hand before INIT, or every angle is off", startAngle)
+                    : Module.fmt("no angle from a program before: turn it to startAngle %.0f deg by hand and INIT again, or every angle is off", startAngle);
         }
         if (switchName != null) {
             t.require("homeAngle", "the turret's angle where the home switch closes (turn it there by hand and read the angle)");
@@ -500,7 +504,14 @@ public final class Turret extends Module<Turret> {
 
     // Remembers the angle for the next program (end of autonomous, end of TeleOp).
     private void rememberAngle() {
-        if (part == null || kind == Kind.SERVO || analog || !part.isHomed() || part.isHoming()) return;
+        if (part == null || kind == Kind.SERVO || analog) return;
+        if (!part.isHomed() || part.isHoming()) {
+            // Its angle is not known now (homing did not finish): an older remembered angle is stale too.
+            synchronized (REMEMBERED) {
+                REMEMBERED.remove(device);
+            }
+            return;
+        }
         synchronized (REMEMBERED) {
             REMEMBERED.put(device, new double[] {part.getAngle(), System.nanoTime()});
         }

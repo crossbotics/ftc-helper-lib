@@ -21,12 +21,14 @@ This lesson explains with a worked example: goBILDA's BIOBUZZ starter bot, rewri
 same way: read its lines, make the same change in your own files, and use its files as the answer key.
 The simulator commands with `-PteamCode=none` run the library's examples; for your own robot use
 `-PteamCode=../TeamCode`.
-Two more complete robots are next to it:
+Three more complete robots are next to it:
 [`flywheelbot`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot)
 (an intake that runs from the start, a flywheel the driver speeds up and down, an indexer servo, a
 deploy servo at START) and
 [`turretbot`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot)
-(a turret with a Limelight that follows the goal inside its range, speed from distance, a folding claw).
+(a turret with a Limelight that follows the goal inside its range, speed from distance, a folding claw),
+and [`v2bot`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/v2bot) (a turret shooter
+plus a lift with a wrist and a claw, kept apart by an interlock rule).
 The other BIOBUZZ kit bots (REV, AndyMark, Studica) are there too, and more example robots: to pick
 the one most like your robot, see [Pick your template](../../templates.md).
 The reference for every method: [the robot module](../../modules/robot.md).
