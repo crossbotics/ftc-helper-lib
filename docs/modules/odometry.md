@@ -314,7 +314,9 @@ Every kind of odometry is a `PoseTracker`, so your code reads them all the same 
 | `isPoseSet()` | true once `setPose` was called. Until then the pose is only "(0, 0) where it was turned on", not a place on the field: [aiming by odometry](robot.md#aim) stays off |
 | `unsetPose()` | says "the pose is not known any more": `isPoseSet()` becomes false (the numbers stay), so aiming by odometry stays off until the pose is set again. TeleOp does this when the alliance is switched on a field that is not mirrored ([buttons guide](../guides/buttons.md#switching-the-alliance-in-teleop)) |
 | `setHeading(deg)` | the way the robot faces now becomes this heading, x and y kept (TeleOp's "forward = away from you now"); does not count as setting the pose |
-| `speedInPerSec()`, `turnDegPerSec()` | how fast it moves and turns, if the device says (Pinpoint, OTOS). **Always 0 for dead wheels**: do not use them for "has it stopped?" there (compare two poses a few loops apart instead) |
+| `speedInPerSec()`, `turnDegPerSec()` | how fast it moves (in/s) and turns (deg/s, counterclockwise +): from the device (Pinpoint, OTOS), or for dead wheels worked out from how far the robot moved between loops (smoothed over about 0.06 s, so a little behind) |
+| `velocityX()`, `velocityY()` | which way it moves over the field, in/s: toward +x (right, seen from your drivers' wall) and +y (away), whichever way the robot faces. A Pinpoint and an OTOS give it over the field directly; dead wheels as above. [Shooting on the move](robot.md#aim) uses it |
+| `useClock(nanos)` | tests: a pretend clock for the dead-wheel speed |
 | `isReady()` | true when the device works and gives a pose |
 | `status()` | words for the Driver Station (table below) |
 | `kind()` | "Pinpoint", "OTOS", "three dead wheels" or "two dead wheels + IMU" |

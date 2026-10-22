@@ -22,6 +22,7 @@ The **bearing** is how far the robot must turn to face a target, in degrees (+ =
 | [`TagGroup`](#taggroup) | report a row of tags as one target with a Limelight |
 | [`TargetObservation`](#targetobservation) | read one target: id, name, bearing, distance, picture time |
 | [`AimController`](#aimcontroller) | turn the bearing into a turn power, safely |
+| [`MovingShot`](#movingshot) | the math of shooting while moving: an old picture brought to now, the lead for the flight time |
 
 ```mermaid
 flowchart LR
@@ -264,3 +265,37 @@ for a robot with no turret: a turret that follows the goal is a separate mode (u
 For a turret, use `turret.aimAtTarget(target, cameraOnTurret)`: it uses only fresh pictures, each
 picture once (an old bearing used again would push the turret further and further), and holds still
 when there is no target. See [launcher.md: Turret](launcher.md#turret).
+
+## MovingShot
+
+The math behind `Tunables.Aim.shootOnMove` ([robot.md: Aim](robot.md#aim)), for your own code and
+tests. A piece keeps the shooter's speed, so aim at the **virtual goal** = the goal - the shooter's
+speed x the flight time; and a camera picture is old, so the goal is first turned back by the robot's
+turn and moved by its motion since. One frame: the robot's, x forward, y left, from the robot's centre,
+angles counterclockwise +.
+
+```java
+MovingShot shot = new MovingShot()
+        .shooterAt(-4, 0)        // the shooter (a turret's pivot) 4 in behind the robot's centre
+        .onTurret()              // a turret aims (leave out: the whole robot turns, a fixed shooter)
+        .flightSec(0.8, 0)       // seconds in the air (+ seconds per inch)
+        .maxLeadIn(24);          // never lead more than this
+double[] goal = MovingShot.seenFrom(bearing, distance, 7, 0, 0);       // a camera 7 in in front, facing forward
+double[] v = MovingShot.toRobotFrame(odo.velocityX(), odo.velocityY(), odo.pose().headingDeg);
+MovingShot.Result r = shot.solve(goal[0], goal[1], v[0], v[1], odo.turnDegPerSec(), pictureAgeSec);
+// r.aimDeg: the turret angle (or how far to turn the robot); r.distanceIn: for the launcher's speed
+```
+
+| Method / field | |
+| --- | --- |
+| `shooterAt(forwardIn, leftIn)` | where the shooter is from the robot's centre (default 0, 0). A turning robot swings an off-centre shooter sideways: that speed is in the lead too |
+| `onTurret()` | `aimDeg` is a turret angle from the turret's pivot. Without it: how far to turn the whole robot so a fixed shooter's line (parallel to the robot's front, `leftIn` to the side) passes through the goal |
+| `flightSec(sec, perIn)`, `maxLeadIn(in)` | the flight time (`sec + perIn x distance`; the distance is the virtual goal's, worked out a few times), the largest lead (0 = no cap) |
+| `solve(goalForward, goalLeft, vForward, vLeft, turnDegPerSec, latencySec)` | where to aim now: a `Result` |
+| `Result`: `aimDeg`, `distanceIn`, `leadDeg`, `leadIn`, `flightSec` | the aim; inches from the shooter to the virtual goal; how much the motion moved the aim (deg) and the aim point (in); the flight time used |
+| `seenFrom(bearing, distance, camForward, camLeft, camYaw)` | a camera's target as {forward, left} from the robot's centre (camYaw: a turret's angle for a camera on it) |
+| `toRobotFrame(fieldVx, fieldVy, headingDeg)` | the robot's field speed as {forward, left} |
+
+It leaves out the turret's own turn during the picture's age, air drag (it slows the piece's sideways
+speed a little: in the simulator a 30 in/s strafe missed by 21 in without the lead and 3.5 in with
+it), and a change of speed during the flight.

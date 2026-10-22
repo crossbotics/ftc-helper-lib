@@ -562,6 +562,9 @@ public static class Aim {                                   // Tunables.java (ev
     public static double turnKp = 0.02, turnKd = 0.002, maxTurnPower = 0.5, minTurnPower = 0, toleranceDeg = 2;
     public static double cameraOffset = 0, rumbleDeg = 4;
     public static double maxGoalDistance = 170, cameraOdometryAgree = 6;   // inches: odometry checks
+    public static boolean shootOnMove = false;              // shooting while driving (below): off until tuned
+    public static double flightSec = 0.8, flightSecPerIn = 0, maxLeadIn = 24;
+    public static double shooterForwardIn = 0, shooterLeftIn = 0, cameraForwardIn = 0, cameraLeftIn = 0;
 }
 ```
 
@@ -594,6 +597,21 @@ at START. `turnKp`, `turnKd`, `maxTurnPower`, `minTurnPower` (the least power th
 g1.rb.toggle(robot.aimMode()).says("aim the robot at the goal on/off").rumble();   // Controls.java
 ```
 
+**Shooting on the move** (`shootOnMove = true`; **off by default: tune it on the real robot first**,
+[lesson 9, section 14](../tutorials/start/09-shooter-and-camera.md#14-extra-shooting-while-moving)).
+A piece keeps the robot's speed, so the goal every part gets (`goal()`, the turret, `isAimed()`, the
+launcher's distance) becomes the **virtual goal**: the goal - the shooter's speed x `flightSec` (+
+`flightSecPerIn` x the distance), at most `maxLeadIn` (24 in) away. A camera's picture is first brought
+forward to now: the robot's turn and move since it was taken (its age from the camera's own timestamp;
+`cameraLatencyMs` replaces it if written). Needs odometry (the robot's speed). It works with a turret
+that follows the goal (camera on the turret, `cameraOnBody()`, or `followsOdometry()`) and with
+whole-robot aim (a fixed shooter). `shooterForwardIn, shooterLeftIn`: the turret's pivot (or a fixed
+launcher's exit) from the robot's centre, inches; the distance is from there, and a turning robot swings
+it sideways. `cameraForwardIn, cameraLeftIn`: a camera on the body (a camera on the turret is taken to
+sit at the pivot). INIT shows `Moving shot: ON: flight 0.80 s ...`; TeleOp shows
+`Aim: moving shot: lead 12.3 deg, 18 in` while the robot moves, and a debug line with every number.
+Off: nothing changes. The math: [MovingShot](vision.md#movingshot).
+
 **The aim buzz**: `g2.rumbleWhenAimed();` buzzes that gamepad while the aim is within `rumbleDeg`, the
 closer the stronger and longer (an [AimRumble](gamepad.md)). It follows a turret that is following, or
 whole-robot aim; nothing while neither aims, or while paused.
@@ -605,7 +623,9 @@ whole-robot aim; nothing while neither aims, or while paused.
 | `odometryProblem()`, `disagreement()` | why the odometry backup is off now, ""  if it works; the camera/odometry distance warning, "" if they agree |
 | `hasGoalPoint()` | `Tunables.Aim` has `goalX` and `goalY` |
 | `mode()` (= `robot.aimMode()`) | whole-robot aim (stops with a message on a robot whose turret follows the goal) |
-| `errorDeg()`, `isAimed()`, `rumbleDeg()` | degrees off now (NaN = unknown); aimed (whole robot within `toleranceDeg`, or the following turret's `isAimed()`: on the goal now) |
+| `errorDeg()`, `isAimed()`, `rumbleDeg()` | degrees off now (NaN = unknown); aimed (whole robot within `toleranceDeg`, or the following turret's `isAimed()`: on the goal now). While shooting on the move: off the virtual goal |
+| `movingShotMode()` | shooting on the move on/off (on from START with `shootOnMove = true`): `g2.a.toggle(robot.aim().movingShotMode())` |
+| `isMovingShot()`, `lead()` | it is on and the robot moves (over 2 in/s or 5 deg/s); the last lead (a [MovingShot](vision.md#movingshot) `Result`: `leadDeg`, `leadIn`, `distanceIn`), null if none |
 
 ---
 

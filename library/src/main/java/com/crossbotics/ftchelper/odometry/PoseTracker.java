@@ -5,6 +5,7 @@ import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
 import com.crossbotics.ftchelper.util.Angles;
 import com.crossbotics.ftchelper.util.FieldPose;
 import java.util.Locale;
+import java.util.function.LongSupplier;
 
 /**
  * Where the robot is on the field, from odometry: small wheels ("pods") or a sensor that measure how
@@ -26,6 +27,19 @@ public abstract class PoseTracker implements Subsystem {
     private final FieldPose pose = new FieldPose();
     // Inches per second and degrees per second, this loop (for telemetry and "has it stopped?").
     private double speedInPerSec = 0, turnDegPerSec = 0;
+    // The robot's speed over the field, inches per second, in our frame (x right, y away): which WAY it
+    // moves, not only how fast. Shooting on the move needs it (the piece keeps the robot's speed).
+    private double velX = 0, velY = 0;
+    // For devices that do not tell their speed (dead wheels): the last pose and when it was read, to
+    // work the speed out from how far the robot moved. haveLast = false: no last pose yet.
+    private boolean haveLast = false;
+    private long lastNanos = 0;
+    private double lastX, lastY, lastH;
+    // The time, in nanoseconds. Tests use a pretend clock (useClock).
+    private LongSupplier clock = System::nanoTime;
+    // How much one new finite-difference speed counts (a short smoothing time, seconds): encoder counts
+    // between two loops are few, so a raw difference jumps around.
+    private static final double SMOOTH_SEC = 0.06;
     private final String name;
     // A pose set while the device was not ready yet (a Pinpoint calibrating): written once it is.
     private FieldPose pending = null;
@@ -55,10 +69,34 @@ public abstract class PoseTracker implements Subsystem {
         pose.x = -p[1];
         pose.y = p[0];
         pose.headingDeg = Angles.wrapDegrees(p[2]);
+        long now = clock.getAsLong();
         if (p.length >= 5) {
-            speedInPerSec = Math.hypot(p[3], p[4]);
+            // A Pinpoint and an OTOS give their speed over the FIELD (not turned with the robot), in
+            // their own frame like the pose: our x = -their Y, our y = their X.
+            velX = -p[4];
+            velY = p[3];
+        } else {
+            // Dead wheels: the speed from how far the robot moved since the last loop, smoothed.
+            double dt = !haveLast ? 0 : (now - lastNanos) / 1e9;
+            if (dt > 1e-4 && dt < 0.5) {
+                double k = dt / (SMOOTH_SEC + dt);
+                velX += k * ((pose.x - lastX) / dt - velX);
+                velY += k * ((pose.y - lastY) / dt - velY);
+                if (p.length < 6) {
+                    turnDegPerSec += k * (Angles.wrapDegrees(pose.headingDeg - lastH) / dt - turnDegPerSec);
+                }
+            } else if (dt >= 0.5) {
+                velX = velY = 0;   // a long pause: start again rather than average over it
+                if (p.length < 6) turnDegPerSec = 0;
+            }
         }
+        speedInPerSec = Math.hypot(velX, velY);
         if (p.length >= 6) turnDegPerSec = p[5];
+        haveLast = true;
+        lastNanos = now;
+        lastX = pose.x;
+        lastY = pose.y;
+        lastH = pose.headingDeg;
     }
 
     /** This loop's pose (a copy: changing it does not move the robot). */
@@ -66,14 +104,44 @@ public abstract class PoseTracker implements Subsystem {
         return pose.copy();
     }
 
-    /** Inches per second (how fast the robot moves), if the device tells; 0 if not. */
+    /**
+     * Inches per second (how fast the robot moves). A Pinpoint or OTOS tells it; with dead wheels it is
+     * worked out from how far the robot moved between loops (smoothed).
+     */
     public final double speedInPerSec() {
         return speedInPerSec;
     }
 
-    /** Degrees per second (how fast it turns), if the device tells; 0 if not. */
+    /**
+     * Degrees per second (how fast it turns, counterclockwise +). From the device when it tells,
+     * otherwise worked out from the heading change between loops (smoothed).
+     */
     public final double turnDegPerSec() {
         return turnDegPerSec;
+    }
+
+    /**
+     * The robot's speed toward +x (to the RIGHT, seen from your drivers' wall), inches per second. With
+     * {@link #velocityY()} it says which way the robot moves over the field, whichever way it faces.
+     * From a Pinpoint or an OTOS directly; with dead wheels, from how far it moved between loops.
+     * Shooting on the move uses it ({@code Tunables.Aim.shootOnMove}, docs/modules/robot.md#aim).
+     */
+    public final double velocityX() {
+        return velX;
+    }
+
+    /** The robot's speed toward +y (AWAY from your drivers' wall), inches per second. See {@link #velocityX()}. */
+    public final double velocityY() {
+        return velY;
+    }
+
+    /**
+     * Uses this clock instead of {@code System.nanoTime()} for the dead-wheel speed (tests: a pretend
+     * clock). Nanoseconds.
+     */
+    public final void useClock(LongSupplier nanos) {
+        clock = nanos;
+        haveLast = false;
     }
 
     /**
@@ -122,6 +190,10 @@ public abstract class PoseTracker implements Subsystem {
         pose.x = p.x;
         pose.y = p.y;
         pose.headingDeg = Angles.wrapDegrees(p.headingDeg);
+        // A jump to a new pose is not a speed: start the dead-wheel difference again.
+        haveLast = false;
+        velX = velY = 0;
+        speedInPerSec = 0;
     }
 
     // True once setPose was called (see isPoseSet()).

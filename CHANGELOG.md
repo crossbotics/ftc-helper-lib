@@ -6,6 +6,19 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
+- **Shooting on the move (optional, off by default until tuned on a real robot):** `Tunables.Aim.shootOnMove = true`
+  with `flightSec` (+ optional `flightSecPerIn`, `maxLeadIn` 24) aims at a virtual goal (the goal minus
+  the shooter's speed x the flight time) and brings an old camera picture forward to now (the robot's
+  turn and move since; its age from the camera's timestamp, or `cameraLatencyMs`). The turret, whole-robot
+  aim, `isAimed()` and the launcher's distance all use it. Works with a turret (camera on it or on the
+  body, or odometry only) and with a fixed shooter; `shooterForwardIn, shooterLeftIn` and
+  `cameraForwardIn, cameraLeftIn` say where they are from the robot's centre. `Aim.movingShotMode()`
+  (a button can switch it), `isMovingShot()`, `lead()`; the Driver Station says
+  `Aim: moving shot: lead 12.3 deg, 18 in`. The math: `vision.MovingShot`. Lesson 9 section 14, a
+  cookbook recipe.
+- `PoseTracker.velocityX()`, `velocityY()`: which way the robot moves over the field (in/s);
+  `useClock(...)` for tests.
+
 - Docs: a box in lesson 9, robot.md and launcher.md says battery compensation is on by default, how to
   turn it off (`batteryCompensation = false`), and a 4-shot test to check it on your robot.
 
@@ -144,6 +157,8 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Changed
 
+- Dead-wheel odometry now gives `speedInPerSec()` and `turnDegPerSec()` (worked out from how far the
+  robot moved between loops, smoothed); they were always 0.
 - **Pause acts at the press of BACK** (it was at the release, because BACK also has "hold: reset
   forward"): a panicking driver holding BACK gets the stop at once. Held 1 s it also resets "forward"
   (field-centric) and stays paused; a tap goes on (going on is always at the release, so holding BACK
@@ -187,6 +202,8 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Fixed
 
+- Simulator: the pretend Pinpoint and OTOS gave their speed turned with the robot; like the real ones
+  they now give it over the field.
 - After an alliance switch in TeleOp, the odometry pose stayed in the old alliance's numbers, so the
   odometry aim pointed at a mirrored spot and field-centric "forward" was wrong (see Added).
 - With two drivers, `lib.slow(null)` then `g2.rt.slow()` read gamepad 1's RT: it reads gamepad 2's now.
