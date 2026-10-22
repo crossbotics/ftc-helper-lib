@@ -25,6 +25,8 @@ final class TunableSection {
     private final Class<?> section;
     // The fields this module asked for that were not in the section (for the INIT note).
     private final List<String> missing = new ArrayList<>();
+    // True for a part that is not on the robot (Module.optional): require() does not stop INIT.
+    boolean lenient = false;
 
     private TunableSection(String name, Class<?> section) {
         this.name = name;
@@ -51,6 +53,28 @@ final class TunableSection {
     /** True if Tunables.java has this section. */
     boolean exists() {
         return section != null;
+    }
+
+    /**
+     * Every static field written in the section, in the order Java lists them (empty without a section).
+     * Used at INIT to stop on a name the part never reads (see TunableFields).
+     */
+    List<String> fieldNames() {
+        List<String> out = new ArrayList<>();
+        if (section == null) return out;
+        for (Field f : section.getDeclaredFields()) {
+            // Synthetic: made by the compiler or a test tool, not written by the team.
+            if (Modifier.isStatic(f.getModifiers()) && !f.isSynthetic()) out.add(f.getName());
+        }
+        return out;
+    }
+
+    /** True if the field is a plain number (double, int, float or long). */
+    boolean isNumber(String field) {
+        Field f = field(field);
+        if (f == null) return false;
+        Class<?> t = f.getType();
+        return t == double.class || t == int.class || t == float.class || t == long.class;
     }
 
     /** True if the section has this field (for optional numbers). */
@@ -186,6 +210,8 @@ final class TunableSection {
      * @param why   the end of the message, e.g. "the top of the safe range (Motor Finder: B)"
      */
     void require(String field, String why) {
+        // A part that is not on the robot: its section may be unfinished (the library's default is used).
+        if (lenient) return;
         Field f = field(field);
         if (f != null) {
             Class<?> t = f.getType();

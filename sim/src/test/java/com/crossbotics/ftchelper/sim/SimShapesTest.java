@@ -179,6 +179,24 @@ public class SimShapesTest {
         assertEquals("a new match: folded again", 90, fold.value, 1e-9);
     }
 
+    // The servo that pushes it over is not in the configuration (a part not built yet, "missing = kick"):
+    // the team puts the part down by hand, so it starts down; with the servo back, it starts folded.
+    @Test public void aPassiveArmWhoseServoIsMissingStartsDown() throws Exception {
+        SimRobot r = robot("servo.kick = 0, part=gobilda-2000-speed",
+                "missing = kick",
+                "shape.fold = arm, at=4,0,4, size=6x8x1, start=90, minDeg=-10, maxDeg=90, passive=yes, drop=kick>0.6, fallsTo=-10");
+        SimShapes.Shape fold = r.shapes.shapes.get("fold");
+        assertTrue(r.isMissing("kick"));
+        r.shapes.update(0.02);
+        assertEquals("down at once", -10, fold.value, 1e-9);
+        assertEquals("the code cannot find it", null, r.hardwareMap().tryGet(com.qualcomm.robotcore.hardware.Servo.class, "kick"));
+        r.setMissing("kick", false);
+        r.resetPose();
+        r.shapes.update(0.02);
+        assertEquals("servo back: folded until it pushes", 90, fold.value, 1e-9);
+        expectError("missing = ... names \"nothing\"", "missing = nothing");
+    }
+
     @Test public void aPassivePartNeedsARangeAndNoDriver() throws Exception {
         expectError("needs motor= or servo=", "shape.a = arm, size=2x2x2, minDeg=0, maxDeg=90");
         expectError("no range of motion", "shape.a = arm, size=2x2x2, passive=yes");

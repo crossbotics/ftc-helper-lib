@@ -163,6 +163,8 @@ hood.setDegrees(18);                      // moves the servo at once (servos do)
 | --- | --- |
 | `create(hardwareMap, name)` | gets the servo; does NOT move it |
 | `.reversed()` | 0 and 1 swap ends |
+| `.fullRange()`, `.pulseRange(lowUs, highUs)` | the servo's whole turn: 0 to 1 sends 500-2500 us instead of the SDK's 600-2400 (a goBILDA 2000 servo turns 300 degrees, not 270). Set it before measuring positions and degrees ([full range](hardware.md#full-range)). A servo that cannot change its pulse warns on the Driver Station |
+| `isFullRange()` | true if `fullRange()`/`pulseRange` changed the pulse |
 | `.limits(min, max)` | never past these raw positions (keeps it off the frame) |
 | `.position(name, raw)` | a named raw position (0..1) |
 | `.degrees(posA, degA, posB, degB)` | use degrees, from two measured points |

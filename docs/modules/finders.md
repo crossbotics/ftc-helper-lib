@@ -70,6 +70,7 @@ Lists every servo in the configuration. Nudge the chosen one and mark what you f
 | Button | Does |
 | --- | --- |
 | D-pad up/down (list) | choose a servo; **A** = use it |
+| **Y** (list) | full range on/off: 500-2500 us instead of the SDK's normal 600-2400 (a goBILDA 2000 servo turns 300 degrees, not 270). Turn it on when the part has [`.fullRange()`](robot.md#claw) in Robot.java, so the numbers fit. The lines then say `.fullRange()` |
 | D-pad, then **A** (first) | choose a START POINT near where the servo sits now (it does not move), then **A** moves it there |
 | D-pad right/left | +/- 0.01 (hold **RB**: 10 times finer) |
 | D-pad up/down | +/- 0.05 |
@@ -270,7 +271,7 @@ menu is lost at the next INIT.
 ## HoodFinderOpMode
 
 Finds `Tunables.Hood`'s numbers for a launcher's [hood](robot.md#hood). With the robot in five files it
-reads the hood from Robot.java (its name, servo or motor, `reversed()`), so it works before
+reads the hood from Robot.java (its name, servo or motor, `reversed()`, `fullRange()`), so it works before
 `Tunables.Hood` has any numbers (the turret robot's
 [HoodFinder.java](../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/HoodFinder.java)):
 

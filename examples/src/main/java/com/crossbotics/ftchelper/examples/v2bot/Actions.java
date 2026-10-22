@@ -15,19 +15,33 @@ import com.crossbotics.ftchelper.robot.Action;
  *   <li>Coming back: wrist to 90, lift down, then fold.</li>
  * </ol>
  *
- * <p>The interlock rule (Robot.java) is always on: if the turret points back, the lift waits below its
- * line by itself. To not wait, {@link #scoreInFlower} first turns the turret forward.
+ * <p>The interlock rule (Robot.java) is always on: while the turret points back, the wrist waits above
+ * 47 degrees by itself (the claw would hit the turret lower down). To not wait, {@link #grab} first
+ * turns the turret forward; scoring needs nothing (the wrist is out at 90 and more, where the turret
+ * may point anywhere). {@link #stow} folds the wrist last: it waits there if the turret points back.
  */
 public class Actions {
 
-    /** Reaches down, opens, grabs a ball from the tiles and holds it, ready to carry. */
+    /**
+     * Reaches down, opens, grabs a ball from the tiles and holds it, ready to carry. The wrist at pick-up
+     * (20 deg) is in its interlock zone, so the turret turns forward first; it follows the goal again
+     * once the wrist is back out at carry.
+     */
     public static Action grab(Robot r) {
+        // Was the turret following the goal? Then it follows again at the end.
+        final boolean[] wasFollowing = {false};
         return Action.named("Grab")
-                .then(r.claw::open, () -> r.lift.goTo("pickup"), () -> r.wrist.goTo("pickup"))   // all at once
-                .waitUntil("down and open", () -> r.lift.isAtTarget() && r.wrist.isDone() && r.claw.isDone(), 2.0)
+                .then(() -> wasFollowing[0] = r.turret.followMode().isOn(),
+                      () -> r.turret.aimAt(0),                           // forward: out of the claw's way
+                      r.claw::open, () -> r.lift.goTo("pickup"), () -> r.wrist.goTo("pickup"))   // all at once
+                // The wrist waits above 47 deg until the turret is out of the back (Driver Station:
+                // "TurretClaw : Wrist held at ...").
+                .waitUntil("down and open", () -> r.lift.isAtTarget() && r.wrist.isDone() && r.claw.isDone(), 3.0)
                 .then(r.claw::close)
                 .waitUntil("claw closed", r.claw::isDone, 1.0)          // hold it before moving
-                .then(() -> r.wrist.goTo("carry"), () -> r.lift.goTo("stowed"));
+                .then(() -> r.wrist.goTo("carry"), () -> r.lift.goTo("stowed"))
+                .waitUntil("wrist out", r.wrist::isDone, 1.0)
+                .then(() -> { if (wasFollowing[0]) r.turret.followMode().on(); });
     }
 
     /**
@@ -35,20 +49,12 @@ public class Actions {
      * FLOWER first (back to it, about 28 mm away: the lifter design's release point).
      */
     public static Action scoreInFlower(Robot r) {
-        // Was the turret following the goal? Then it follows again once the lift is up (the interlock
-        // keeps it out of the back while the lift is up, so following is safe).
-        final boolean[] wasFollowing = {false};
         return Action.named("Score in FLOWER")
-                .then(() -> wasFollowing[0] = r.turret.followMode().isOn(),
-                      () -> r.turret.aimAt(0),                           // forward: out of the lift's way
-                      () -> r.wrist.goTo("carry"))                       // swing out first
+                .then(() -> r.wrist.goTo("carry"))                       // swing out first
                 .waitUntil("wrist out", r.wrist::isDone, 1.0)
                 .then(() -> r.lift.goTo("flower"))
-                // The lift is held below its line until the turret is out of the back (Driver Station:
-                // "TurretLift : Lift held at ...").
                 .waitUntil("lift up", r.lift::isAtTarget, 4.0)
-                .then(() -> { if (wasFollowing[0]) r.turret.followMode().on(); },
-                      () -> r.wrist.goTo("flower"))
+                .then(() -> r.wrist.goTo("flower"))
                 .waitUntil("over the FLOWER", r.wrist::isDone, 1.0)
                 .then(r.claw::open)
                 .waitUntil("let go", r.claw::isDone, 1.0)
@@ -57,6 +63,8 @@ public class Actions {
                 .waitUntil("wrist back", r.wrist::isDone, 1.0)
                 .then(() -> r.lift.goTo("stowed"))
                 .waitUntil("lift down", r.lift::isAtTarget, 3.0)
+                // Folding goes into the wrist's interlock zone: if the turret points back, the wrist
+                // waits at carry until it turns away.
                 .then(() -> r.wrist.goTo("folded"), r.claw::close);
     }
 

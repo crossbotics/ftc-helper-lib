@@ -59,7 +59,9 @@ first.
 - [How do I add a claw?](#how-do-i-add-a-claw)
 - [How do I add a wrist?](#how-do-i-add-a-wrist)
 - [How do I add any servo with named positions (a gate, a fold-out)?](#how-do-i-add-any-servo-with-named-positions-a-gate-a-fold-out)
+- [How do I get my servo's full range?](#how-do-i-get-my-servos-full-range)
 - [How do I send a part to a position from a button?](#how-do-i-send-a-part-to-a-position-from-a-button)
+- [My robot doesn't have this part yet. How do I keep its code?](#my-robot-doesnt-have-this-part-yet-how-do-i-keep-its-code)
 - [How do I add a launcher (flywheel and feeder)?](#how-do-i-add-a-launcher-flywheel-and-feeder)
 - [How do I add a turret that follows the goal?](#how-do-i-add-a-turret-that-follows-the-goal)
 - [How do I fire only when aimed, at the right speed?](#how-do-i-fire-only-when-aimed-at-the-right-speed)
@@ -781,6 +783,25 @@ atStart(() -> Action.named("Deploy").then(() -> intakeDeploy.goTo("deployed")));
 **Why:** a `Positioner` has no standard buttons, so you choose when it moves (here: at START).
 **More:** [Positioner](modules/robot.md#positioner), [an action at START](#how-do-i-run-an-action-right-after-start).
 
+### How do I get my servo's full range?
+
+**Where:** `Robot.java`, inside `define()`: add `.fullRange()` to the servo part.
+
+<!-- recipe: servo-full-range -->
+```java
+// The hub normally sends 600-2400 us for positions 0 to 1: a goBILDA 2000 servo then turns
+// 270 of its 300 degrees. fullRange() sends its whole 500-2500 us: 0 to 1 = 300 degrees.
+// Turn it on FIRST, then find the positions (Servo Finder: press Y while choosing the servo).
+wrist = add(Wrist.servo("wrist").part("gobilda-2000-speed").fullRange());
+```
+
+**Why:** the FTC SDK's normal servo signal (600 to 2400 microseconds) is narrower than what most servos
+take (500 to 2500), so they turn less than the seller says: 270 degrees for a goBILDA 2000, 243 for a REV
+Smart Robot Servo. Only add it when you need the extra turn. It works the same on a Claw, a Positioner,
+`Hood.servo`, `Turret.servo` and `Indexer.servo`. Positions you measured before point somewhere else after
+the change: measure them again. Without `.fullRange()` nothing changes.
+**More:** [Full range](modules/hardware.md#full-range) (a table per servo), [Claw, Wrist, Positioner](modules/robot.md#claw).
+
 ### How do I send a part to a position from a button?
 
 **Where:** `Controls.java`, inside `buttons(...)`.
@@ -799,6 +820,37 @@ g2.back.press(() -> robot.intakeDeploy.goTo("stowed")).says("fold the intake in"
 These lines take Y, A, X and B from the lift and the claw (their standard buttons), on purpose; see
 [pick a free button](#buttons-and-gestures).
 **More:** [Lift](modules/robot.md#lift), [Claw](modules/robot.md#claw).
+
+### My robot doesn't have this part yet. How do I keep its code?
+
+**Where:** `Robot.java`, on the part's `add` line (and `Controls.java` for its buttons).
+
+<!-- recipe: optional-part -->
+```java
+// The deploy servo is not on the robot yet. optional(): while "intake_deploy" is not in
+// the robot configuration, INIT goes on (with a note) and the part is off.
+intakeDeploy = add(Positioner.servo("intake_deploy").optional());
+intake = add(Intake.motor("intake"));
+// At START: fold the intake out, then run it. With no deploy servo the action skips
+// the servo (and the wait for it) and just starts the intake. No other change needed.
+atStart(() -> deployIntake(this));
+```
+
+<!-- recipe: optional-part-button -->
+```java
+// needs(...): while the deploy servo is not on the robot, X does nothing and the
+// button map at INIT says "off: IntakeDeploy not on the robot".
+g2.x.press(NotOnTheRobotYet.deployIntake(robot)).says("deploy intake").needs(robot.intakeDeploy);
+```
+
+**Why:** robots are built in steps. Without `optional()`, a part whose device is not in the
+configuration stops INIT (`No Servo named "intake_deploy" ...`). With it, INIT says
+`"intake_deploy" not in the configuration: IntakeDeploy is off (optional part)`, and everything that
+uses the part skips it: its commands, its buttons, the action steps (an autonomous keeps going and its
+report says `skipped IntakeDeploy`). The day the servo is wired and in the configuration, it just works,
+with no code to change. No `if (HAS_DEPLOY_SERVO)` switches. To try it in the simulator without the
+part: `missing = intake_deploy` in the robot file.
+**More:** [Parts not on the robot yet](modules/robot.md#parts-not-on-the-robot-yet).
 
 ### How do I add a launcher (flywheel and feeder)?
 
@@ -2342,7 +2394,8 @@ public class ServoFinder extends ServoFinderOpMode {
 A servo cannot say where it is, so choose a start number close to where it sits now (D-pad, A). Nudge it
 with the D-pad. At each end of its safe travel (just before it pushes on the frame) press X, then B. Then
 move it to each position you need and press A: for example fully open, A (that is P1); closed, A (P2). Copy the line it shows (`Tunables.Claw: P1 = 0.210, P2 = 0.770`)
-into `Tunables.java` and rename P1, P2 (`open`, `closed`).
+into `Tunables.java` and rename P1, P2 (`open`, `closed`). A part with
+[`.fullRange()`](#how-do-i-get-my-servos-full-range) in Robot.java: press Y while choosing the servo first.
 **Why:** a servo pushed past its end hums, gets hot and breaks; the finder finds the safe numbers.
 **More:** [Servo Finder](guides/finders.md#servo-finder-ends-and-positions), [the order](guides/finders.md#the-order).
 

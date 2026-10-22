@@ -2,6 +2,7 @@ package com.crossbotics.ftchelper.examples.cookbook;
 
 import com.crossbotics.ftchelper.robot.Action;
 import com.crossbotics.ftchelper.robot.Arm;
+import com.crossbotics.ftchelper.robot.Auto;
 import com.crossbotics.ftchelper.robot.Camera;
 import com.crossbotics.ftchelper.robot.Claw;
 import com.crossbotics.ftchelper.robot.ControlMap;
@@ -13,8 +14,10 @@ import com.crossbotics.ftchelper.robot.Lift;
 import com.crossbotics.ftchelper.robot.Pad;
 import com.crossbotics.ftchelper.robot.Positioner;
 import com.crossbotics.ftchelper.robot.RobotDefinition;
+import com.crossbotics.ftchelper.robot.Steps;
 import com.crossbotics.ftchelper.robot.Turret;
 import com.crossbotics.ftchelper.robot.Wrist;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -114,6 +117,22 @@ public class MechanismRecipes {
         }
     }
 
+    /** A wrist that uses its servo's whole turn (500-2500 us instead of the SDK's 600-2400). */
+    public static class WristFullRange extends RobotDefinition {
+        public Wrist wrist;
+
+        @Override
+        protected void define() {
+            drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
+            // recipe: servo-full-range
+            // The hub normally sends 600-2400 us for positions 0 to 1: a goBILDA 2000 servo then turns
+            // 270 of its 300 degrees. fullRange() sends its whole 500-2500 us: 0 to 1 = 300 degrees.
+            // Turn it on FIRST, then find the positions (Servo Finder: press Y while choosing the servo).
+            wrist = add(Wrist.servo("wrist").part("gobilda-2000-speed").fullRange());
+            // end recipe
+        }
+    }
+
     public static class IntakeOnAtStart extends RobotDefinition {
         @Override
         protected void define() {
@@ -175,6 +194,65 @@ public class MechanismRecipes {
                     .speedFromDistance(camera)
                     .requireReady("turret aimed", () -> turret.isAimed()));
             // end recipe
+        }
+    }
+
+    /**
+     * A robot built in steps: the deploy servo is written in Robot.java but not on the robot yet.
+     * The simulator test runs it with "intake_deploy" left out of the configuration.
+     */
+    public static class NotOnTheRobotYet extends RobotDefinition {
+        public Positioner intakeDeploy;
+        public Intake intake;
+
+        @Override
+        protected void define() {
+            drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
+            // recipe: optional-part
+            // The deploy servo is not on the robot yet. optional(): while "intake_deploy" is not in
+            // the robot configuration, INIT goes on (with a note) and the part is off.
+            intakeDeploy = add(Positioner.servo("intake_deploy").optional());
+            intake = add(Intake.motor("intake"));
+            // At START: fold the intake out, then run it. With no deploy servo the action skips
+            // the servo (and the wait for it) and just starts the intake. No other change needed.
+            atStart(() -> deployIntake(this));
+            // end recipe
+        }
+
+        /** Pushes the intake out with the servo, then starts the intake (Actions.java in your code). */
+        public static Action deployIntake(NotOnTheRobotYet r) {
+            return Action.named("Deploy intake")
+                    .then(() -> r.intakeDeploy.goTo("deployed"))
+                    .waitUntil("the deploy servo", r.intakeDeploy::isDone, 2.0)
+                    .then(r.intake::in, () -> r.intakeDeploy.goTo("stowed"));
+        }
+    }
+
+    /** Its buttons: the deploy button is off while the servo is not on the robot. */
+    @TeleOp(name = "Cookbook Not On The Robot Yet", group = "Cookbook")
+    @Disabled
+    public static class NotOnTheRobotYetControls extends ControlMap<NotOnTheRobotYet> {
+        public static boolean oneDriver = false;
+
+        @Override
+        protected void buttons(NotOnTheRobotYet robot, Pad g1, Pad g2) {
+            // recipe: optional-part-button
+            // needs(...): while the deploy servo is not on the robot, X does nothing and the
+            // button map at INIT says "off: IntakeDeploy not on the robot".
+            g2.x.press(NotOnTheRobotYet.deployIntake(robot)).says("deploy intake").needs(robot.intakeDeploy);
+            // end recipe
+        }
+    }
+
+    /** An autonomous that uses the part: it keeps going without it (the report says what was skipped). */
+    @Autonomous(name = "Cookbook Not On The Robot Yet Auto", group = "Cookbook")
+    @Disabled
+    public static class NotOnTheRobotYetAuto extends Auto<NotOnTheRobotYet> {
+        @Override
+        protected void steps(Steps s, NotOnTheRobotYet robot) {
+            s.start("Against our wall, facing the field", 0)
+             .action(NotOnTheRobotYet.deployIntake(robot))
+             .move("Forward", 12, 0, 0.5);
         }
     }
 }

@@ -18,14 +18,33 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   robot, and a HIVE close-up.
 - **Simulator: `sim/.../simview.js`**, the page's drawing helpers (gliding between updates, the striped
   ball, labels) in a small file another page can load too.
-
+- **A servo's full range: `.fullRange()`** on `Claw`, `Wrist`, `Positioner`, `Hood.servo`, `Turret.servo` and
+  `Indexer.servo` (and `ServoSetup.fullRange()` / `pulseRange(lowUs, highUs)` / `setPulseRange(...)`,
+  `PositionServo.fullRange()` / `pulseRange(...)` / `isFullRange()` for the building blocks). The FTC SDK
+  sends 600-2400 microseconds for positions 0 to 1 (`PwmControl.PwmRange.defaultRange`); most FTC servos
+  take 500-2500, so a goBILDA 2000 servo turns 270 of its 300 degrees. With `.fullRange()` the part sends
+  the servo's whole pulse range at INIT (the catalog part's, else 500-2500 us) and 0 to 1 turns all 300.
+  Nothing changes without it. A servo that cannot change its pulse (not a REV hub servo) keeps its range
+  and INIT says so. Measure positions after turning it on (they point elsewhere with the new range).
+  The Servo Finder has the same switch (Y while choosing a servo; its lines then say `.fullRange()`), and
+  the Hood Finder uses the hood's. Docs: [Full range](docs/modules/hardware.md#full-range), the cookbook's
+  "How do I get my servo's full range?", tutorial 02, lesson 4, troubleshooting.
+- **Parts catalog: servo pulse ranges** (`pulseMinUs`, `pulseMaxUs` in `sim/parts/parts.json`, checked
+  against the sellers' pages; `Parts.servoPart(id)` with `rangeDeg`, `sdkRangeDeg()`,
+  `degreesOver(lowUs, highUs)`). The parts page shows each servo's range on the hub and its full range.
+- **Simulator: servo pulse range.** A simulated servo is a `PwmControl` like the hub's: the code's
+  `setPwmRange` changes how far 0 to 1 turns it, and each INIT sets it back to 600-2400 us. A robot file's
+  `servo.NAME = ..., pwm=500-2500` says the code uses the full range (`:sim:fromRobot` writes it).
+- **Tests:** every example robot INITs on its simulated robot with no error (`ExampleRobotsInitTest`), the
+  `Tunables.java` that `:sim:newRobot` writes INITs too, and the field check and full range have their own
+  library tests.
 - **Tunables reference** (`docs/guides/tunables.md`): every number the library reads from
   `Tunables.java`, one table per part (Drive, Odometry, Aim, Buttons, Intake, Lift and Arm, Claw/Wrist/
   Positioner, Turret, interlock rules, Launcher, Indexer, Hood, Camera, PieceSensor, Lights: 133 fields).
   Each row: what it does, units, default (or REQUIRED: INIT stops without it), whether it is in the
   tuning menu (at once, or from the next INIT), which finder measures it, and when to change it. The top
-  explains section names, what INIT checks (and what it does not: a misspelled field outside the
-  position parts is quietly not read), units, and how to copy a finder's lines. Linked from each part in
+  explains section names, what INIT checks (including the misspelled-field stop below), units, and how
+  to copy a finder's lines. Linked from each part in
   `docs/modules/robot.md`, lesson 1 and the README.
 - **`tools/check_tunables.py`** (in CI): reads the robot package's code, lists every field it reads
   (`--list`), and fails when the reference misses a field, names one the code no longer reads, or has a
@@ -45,6 +64,23 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   `onlyIf(...)` is used only when that option is chosen. The steps are read again in INIT whenever a menu
   line changes, so the "Place robot" note, the simulator's robot and the odometry's start follow the menu.
 - `tools/check_docs.py` also checks a cookbook recipe shown in a guide (the same `<!-- recipe: name -->` marker).
+- **Parts not on the robot yet** (`Module.optional()`): `add(Positioner.servo("intake_deploy").optional())`
+  in Robot.java. While its first device is not in the robot configuration, INIT goes on with one note
+  (`"intake_deploy" not in the configuration: IntakeDeploy is off (optional part)`) instead of stopping,
+  and the part is off: commands ignored, `isPresent()` false, telemetry `-`, "done" questions true and
+  "busy" ones false. Actions skip it (and the waits right after a step that only used missing parts) and
+  go on; `Action.skipped()`, and an autonomous's report says `skipped IntakeDeploy (not on the robot)`.
+  Its suggested buttons, `toggle(part)` and a new `Button.needs(part...)` / `Stick.needs(part...)` are
+  off, shown on the button map as `- off: IntakeDeploy not on the robot`. An interlock rule with it is
+  off and needs no Tunables (`Interlock.isOff()`); its Tunables section may be missing or unfinished; a
+  missing following turret leaves whole-robot aim free. A launcher that is off takes its feeder and hood
+  with it; a part that is there must have all its devices (half a part still stops). Not for the drive.
+  A non-optional missing device's message now ends with how to mark it optional.
+  `RobotDefinition.checkConfiguration(hardwareMap)` lists Robot.java's devices missing from the
+  configuration; the Hardware Check shows it with `robot()`. Finders explain a missing optional part.
+  Simulator: `missing = a, b` in the robot file and `set device NAME missing|present` in a scenario; a
+  part that a missing servo would push over starts down. Guide: docs/modules/robot.md, "Parts not on the
+  robot yet"; cookbook recipe; scenario `part-not-in-configuration.sim`.
 - **Interlock rules** (`robot.Interlock`, `robot.Zone`): `keepApart("TurretLift", turret.zone(),
   lift.zoneAbove())` in Robot.java keeps two parts from ever being in their zones at the same time (a
   turret over the back while a lift is up; an arm and an intake; a wrist and a low lift). Any number of
@@ -284,6 +320,32 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   network panel). The camera picture is redrawn 15 times a second at a smaller size instead of doubling
   every frame's work. A camera on a turret now moves with the turret in the 3D view. `/state` keeps
   every field it had (plus `t`, `epoch`, `pieceTypes`, `arcs`, each camera's `sight`, `fast`).
+- **INIT now stops on a Tunables field that no part reads, in every part's section** (before: only a
+  Lift, Arm, Claw, Wrist or Positioner name that looked like a setting). A typo like `inPowr` in
+  `Tunables.Intake`, `goalx` in `Tunables.Aim` or `nominalVolt` in `Tunables.Launcher` used to be quietly
+  ignored (the part used its default). Now: `Tunables.Intake.inPowr is not a setting of Intake (did you
+  mean inPower?): the robot would quietly ignore it. Fix the name (capitals count) or delete the line.
+  Known: inPower, outPower`. It checks Drive, Odometry, Aim, Buttons, every part and every interlock
+  rule; named positions, piece kinds, `speedByDistance...` tables and a rule's `<part>From`... still pass.
+  **If your robot stops at INIT after updating:** fix the field it names, or delete it (a number for your
+  own code belongs in your own section, like `Tunables.Auto`, which is never checked). The lists live in
+  `robot/TunableFields.java`; `tools/check_tunables.py` checks them against the code.
+- **Servo degrees in the parts catalog and the simulator** now match what the hub really sends: positions
+  0 to 1 turn a catalog servo over the SDK's 600-2400 us, so a goBILDA 2000 servo turns 270 degrees in
+  the simulator (was 300), a REV Smart Robot Servo 243 (was 270), an Axon MK2 324 (was 360), unless the
+  code uses `.fullRange()`. Simulated servo speeds in positions per second change to match, and so does
+  an arm shape's default angle at position 1. On the real robot nothing changes. Measured numbers
+  (positions, `posA`/`posB`, `angleA`/`angleB`, calibration tables, a shape's two `angle(...)`s) are
+  not affected. A team parts file without `pulseMinUs`/`pulseMaxUs` keeps its `rangeDeg` as before.
+- **v2bot example: its interlock is now turret and wrist** (`keepApart("TurretClaw", turret.zone(),
+  wrist.zone())`, `Tunables.TurretClaw`: turret 147 to 217 degrees with a 12 degree margin, wrist 0 to 47 degrees as servo
+  positions 0 to 0.274). Team 8938's pincer model (2026-10-22) found the claw within 2 mm of the
+  v8.1GB turret only while the wrist is between 3 and 44.5 degrees, at any lift height, so the lift needs
+  no zone. The wrist's positions now use 270 degrees over 0 to 1 (the hub's normal range; the wrist needs
+  only 145). Its actions: Grab turns the turret forward first (the wrist goes to pick-up inside its zone)
+  and follows again after; Score no longer turns the turret. The interlocks guide's turret and lift
+  example stays as a general example.
+
 - An autonomous's `steps(...)` is read in INIT again each time the drivers change a menu line (it was
   read once in INIT and once after START). No step runs in INIT, as before. Before, a `start(...)`
   inside an `onlyIf` was used whatever the choice (the last one written won).

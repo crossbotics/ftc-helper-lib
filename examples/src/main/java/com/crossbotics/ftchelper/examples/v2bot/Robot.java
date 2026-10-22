@@ -22,8 +22,9 @@ import com.crossbotics.ftchelper.robot.Wrist;
 
 /**
  * The V2 robot, file 1 of 5: a turret shooter AND a lift with a wrist and a claw, with an interlock
- * rule so the two never hit each other. It is modelled on team 8938's 2026-27 designs (turret v8.1GB
- * and the "pincer" lifter); every number we have not measured on a built robot says "example".
+ * rule so the turret and the claw never hit each other. It is modelled on team 8938's 2026-27 designs
+ * (turret v8.1GB and the "pincer" lifter); every number we have not measured on a built robot says
+ * "example".
  *
  * <ul>
  *   <li>A mecanum drive with a goBILDA Pinpoint (odometry): the turret keeps aiming from the robot's
@@ -35,9 +36,10 @@ import com.crossbotics.ftchelper.robot.Wrist;
  *   <li>A flywheel launcher with a hood on a servo, speed and hood angle from the distance to the goal.</li>
  *   <li>A lift at the back: a goBILDA Viper-Slide on a 435 RPM motor. On its top stage: a wrist (a servo
  *       that swings the claw out the back, 0 to 145 degrees between hard stops) and a two-finger claw.</li>
- *   <li><b>The interlock:</b> while the lift's slide is up, the turret stays out of the back (where the
- *       slide and the claw are); while the turret points back, the lift stays down. One line below;
- *       the numbers are in Tunables.TurretLift. docs/guides/interlocks.md explains it.</li>
+ *   <li><b>The interlock:</b> while the wrist is folded or at pick-up (0 to 47 degrees), the claw sits
+ *       right behind the robot, inside the turret's swing: the turret stays out of the back. While the
+ *       turret points back, the wrist stays out of 0 to 47 degrees. One line below; the numbers are in
+ *       Tunables.TurretClaw. docs/guides/interlocks.md explains it.</li>
  * </ul>
  *
  * <p>Docs: the turret's options are on docs/guides/turret-setup.md; the lifter's steps are in Actions.java.
@@ -52,7 +54,7 @@ public class Robot extends RobotDefinition {
     public Wrist wrist;
     public Claw claw;
     public Lights lights;
-    public Interlock turretLift;
+    public Interlock turretClaw;
 
     @Override
     protected void define() {
@@ -107,10 +109,12 @@ public class Robot extends RobotDefinition {
         claw = add(Claw.servo("claw").part("gobilda-2000-torque")
                 .looks(Shape.claw().on(wrist).atMm(115, 0, 0).sizeMm(60, 120, 50)));
 
-        // THE INTERLOCK: the turret and the lift are never both in their zones. Whoever is in its zone
-        // first keeps it; the other one waits outside its own. The zones are in Tunables.TurretLift.
-        // turretLift.isHolding() is true while it holds a part back (Controls.java shows it on the light).
-        turretLift = keepApart("TurretLift", turret.zone(), lift.zoneAbove());
+        // THE INTERLOCK: the turret and the claw (on the wrist) are never both in their zones. Whoever is
+        // in its zone first keeps it; the other one waits outside its own. The zones are in
+        // Tunables.TurretClaw. The lift needs no rule: with the wrist above 47 degrees no lifter part comes
+        // near the turret at any lift height (team 8938's pincer model, 2026-10-22).
+        // turretClaw.isHolding() is true while it holds a part back (Controls.java shows it on the light).
+        turretClaw = keepApart("TurretClaw", turret.zone(), wrist.zone());
 
         // A goBILDA RGB Indicator Light (a "Servo" in the configuration). Its colors: Controls.java.
         lights = add(Lights.gobilda("light"));

@@ -18,7 +18,9 @@ list of fields per part. It then fails (exit 1) when:
   5. a read uses a field name that is not written in the code ("t.number(name, 0)") and is not in the
      DYNAMIC list below (then this script cannot tell which field it is: add it there);
   6. an example robot's Tunables (examples/), or the Tunables.java that SimNewRobot writes for a team,
-     has a field in a part's section that the part never reads (a typo there would be quietly ignored).
+     has a field in a part's section that the part never reads (INIT would stop on it);
+  7. TunableFields.java (the lists INIT uses to stop on a misspelled field) does not list exactly the
+     fields the code reads, for every part (the team-picked names like <position> are handled there apart).
 
 The reference marks each part with an HTML comment, <!-- tunables: Key -->, followed by tables whose
 first column holds the field names in backticks. Fields that are names the team picks are written as
@@ -470,6 +472,29 @@ def check_new_robot(code):
                 problems.append("SimNewRobot.java writes Tunables field %s for a %s, which never reads it" % (name, m.group(1)))
 
 
+FIELDS_JAVA = ROBOT / "TunableFields.java"
+
+
+def check_field_lists(code):
+    """TunableFields.java: one part("Key", "field", ...) per part, the same fields the code reads."""
+    text = FIELDS_JAVA.read_text()
+    lists = {}
+    for m in re.finditer(r"\bpart\(\s*\"(\w+)\"((?:\s*,\s*\"\w+\")*)\s*\)\s*;", text):
+        lists[m.group(1)] = set(re.findall(r"\"(\w+)\"", m.group(2)))
+    for key in sorted(set(code) | set(lists)):
+        if key == "Pieces":
+            continue                       # reads nothing (its sensors have their own sections)
+        want = {n for n in code.get(key, {}) if "<" not in n}
+        have = lists.get(key)
+        if have is None:
+            problems.append("TunableFields.java has no part(\"%s\", ...) list (INIT checks every part's names)" % key)
+            continue
+        for n in sorted(want - have):
+            problems.append("TunableFields.java part(\"%s\"): add \"%s\" (the code reads it; without it INIT stops on it)" % (key, n))
+        for n in sorted(have - want):
+            problems.append("TunableFields.java part(\"%s\"): \"%s\" is not read by the code (remove it)" % (key, n))
+
+
 def main():
     code = extract()
     if "--list" in sys.argv:
@@ -483,6 +508,7 @@ def main():
         print("%d parts, %d fields" % (len(code), total))
         return 0
     check_reference(code, read_reference())
+    check_field_lists(code)
     check_examples(code)
     check_new_robot(code)
     if problems:

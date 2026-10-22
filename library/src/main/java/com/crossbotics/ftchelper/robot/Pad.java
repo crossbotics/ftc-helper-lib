@@ -383,6 +383,8 @@ public final class Pad {
             if (part == null) throw new IllegalArgumentException(this + ": the part is null (a module that is not on the robot?)");
             put(ButtonPlan.Kind.PRESS, part::toggle, null, "toggle");
             if (last != null) last.part = part;
+            // A part that may not be on the robot (optional): the button is off while it is missing.
+            if (part instanceof Module) needs((Module<?>) part);
             return this;
         }
 
@@ -418,6 +420,28 @@ public final class Pad {
         public Button free() {
             lastGesture = null;
             last = pad.plan.put(this, new ButtonPlan.Entry(ButtonPlan.Kind.FREE, null, null, "free", null));
+            return this;
+        }
+
+        /**
+         * This button's job needs these parts: while one of them is not on the robot (marked
+         * {@code optional()} in Robot.java and not in the configuration), the button does nothing and
+         * the button map shows "off: IntakeDeploy not on the robot". The whole button (all its gestures).
+         * A part's own buttons and {@link #toggle(Toggleable)} know their part already.
+         *
+         * <pre>{@code
+         * g1.x.press(Actions.deployIntake(robot)).says("deploy intake").needs(robot.intakeDeploy);
+         * }</pre>
+         *
+         * @param parts one or more parts from Robot.java
+         * @return this button
+         */
+        public Button needs(Module<?>... parts) {
+            if (last == null) throw new IllegalStateException("Controls.java: " + this + ".needs(...) goes after the button's job");
+            for (Module<?> m : parts) {
+                if (m == null) throw new IllegalArgumentException(this + ".needs(...): the part is null (a module that is not in Robot.java?)");
+                if (!last.needs.contains(m)) last.needs.add(m);
+            }
             return this;
         }
 
@@ -477,6 +501,22 @@ public final class Pad {
         /** Words for the help page. */
         public Stick says(String words) {
             if (last != null) last.says = words;
+            return this;
+        }
+
+        /**
+         * This stick's job needs these parts: while one is not on the robot ({@code optional()} in
+         * Robot.java, not in the configuration) the stick does nothing and the map says "off".
+         *
+         * @param parts one or more parts from Robot.java
+         * @return this stick
+         */
+        public Stick needs(Module<?>... parts) {
+            if (last == null) throw new IllegalStateException("Controls.java: " + this + ".needs(...) goes after the stick's job");
+            for (Module<?> m : parts) {
+                if (m == null) throw new IllegalArgumentException(this + ".needs(...): the part is null (a module that is not in Robot.java?)");
+                if (!last.needs.contains(m)) last.needs.add(m);
+            }
             return this;
         }
     }

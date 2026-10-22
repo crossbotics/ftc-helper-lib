@@ -59,6 +59,9 @@ With CAD, do `cad.md` steps 1-3 now: its numbers and clues answer most of the in
 No configuration file? Write the robot file by hand: one device line for each `hardwareMap.get(...)` name
 in TeamCode (copy the layout of `sim/robots/starter.properties`), and skip step 2. A colored light is
 `light.NAME = gobilda` (goBILDA RGB Indicator Light, a servo port) or `light.NAME = blinkin` (REV Blinkin).
+A servo whose code widens its pulse (`.fullRange()`, `ServoSetup...fullRange()`, or `setPwmRange(...)` in
+TeamCode) gets `, pwm=500-2500` on its `servo.NAME` line (the pulse the code sets): then the start position
+and the shapes' positions are in that range, and a goBILDA 2000 servo turns 300 degrees instead of 270.
 
 ## 2. Make the draft
 
@@ -73,6 +76,10 @@ positions.
 Its lines end with `# from Robot.java` and are rewritten each run. When you measure a value, write it on
 a line WITHOUT that mark (or remove the mark): your line is then kept on every later run. Then go on
 with step 3 for the TODO lines (sizes, places, the shot).
+
+A part marked `.optional()` in Robot.java that is NOT built yet (its device is not in the team's
+configuration): keep its lines, and add one line of your own, `missing = <device>, ...`. The simulator
+then runs the robot as it is today (the part is off); delete the name the day the part is built.
 
 Otherwise, from the configuration file:
 

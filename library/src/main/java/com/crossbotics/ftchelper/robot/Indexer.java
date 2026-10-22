@@ -69,6 +69,20 @@ public final class Indexer extends Module<Indexer> implements Feeder {
         return new Indexer(Kind.SERVO, name);
     }
 
+    /**
+     * A servo indexer uses its servo's whole turn: positions 0 to 1 send the servo's full pulse range (the
+     * part's, else 500-2500 us) instead of the FTC SDK's normal 600-2400 us. Set {@code rest} and
+     * {@code push} again after turning it on: the same position points somewhere else.
+     *
+     * @return this indexer
+     * @throws IllegalStateException on a CR servo or motor indexer
+     */
+    public Indexer fullRange() {
+        if (kind != Kind.SERVO) throw new IllegalStateException("Robot.java: " + name() + ": fullRange() is for Indexer.servo(...)");
+        fullRange = true;
+        return this;
+    }
+
     /** A continuous-rotation servo that runs for a moment per piece. */
     public static Indexer crServo(String name) {
         return new Indexer(Kind.CR_SERVO, name);
@@ -95,6 +109,7 @@ public final class Indexer extends Module<Indexer> implements Feeder {
                 returnSec = t.tunable("returnSec", 0.25, 0.01).range(0.02, 2);
                 Servo s = devices.get(Servo.class, device);
                 if (reversed) s.setDirection(Servo.Direction.REVERSE);
+                applyPulse(s);   // .fullRange(): the servo's whole turn (nothing changes without it)
                 servoFeeder = new ServoFeeder(name(), s);
                 feeder = servoFeeder;
                 break;
@@ -156,11 +171,12 @@ public final class Indexer extends Module<Indexer> implements Feeder {
 
     /** True from the start of a feed until it ends (normally, jammed or stopped). */
     public boolean isFeeding() {
-        return feeding;
+        return feeding && !missing;
     }
 
     // Feeds, and tells the listeners if a feed really started (a call while busy is ignored).
     private void feedCounted() {
+        if (missing) return;   // not on the robot (optional): no piece goes anywhere, so nothing is counted
         boolean wasBusy = feeder.isBusy();
         feeder.feedOne();
         if (!wasBusy && feeder.isBusy()) {
@@ -193,12 +209,12 @@ public final class Indexer extends Module<Indexer> implements Feeder {
 
     @Override
     public boolean isBusy() {
-        return feeder != null && feeder.isBusy();
+        return feeder != null && !missing && feeder.isBusy();
     }
 
     @Override
     public boolean isJammed() {
-        return feeder != null && feeder.isJammed();
+        return feeder != null && !missing && feeder.isJammed();
     }
 
     @Override
@@ -257,8 +273,8 @@ public final class Indexer extends Module<Indexer> implements Feeder {
         if (kind == Kind.SERVO) {
             // Where it rests, as the simulated servo sees it (a reversed servo's 0.15 is really 0.85).
             double rest = t.number("rest", 0);
-            out.add(partId != null ? fmt("servo.%s = %.2f, part=%s", device, reversed ? 1 - rest : rest, partId)
-                    : fmt("servo.%s = %.2f, part=gobilda-2000-speed   # TODO the real servo", device, reversed ? 1 - rest : rest));
+            out.add(partId != null ? fmt("servo.%s = %.2f, part=%s", device, reversed ? 1 - rest : rest, partId) + pulseWords()
+                    : fmt("servo.%s = %.2f, part=gobilda-2000-speed", device, reversed ? 1 - rest : rest) + pulseWords() + "   # TODO the real servo");
         }
         else if (kind == Kind.CR_SERVO) out.add("crservo." + device + " =" + (partId != null ? "   # " + partId : ""));
         else if (partId != null) out.add("motor." + device + " = free, part=" + partId);

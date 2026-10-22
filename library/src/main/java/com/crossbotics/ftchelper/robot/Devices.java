@@ -25,6 +25,18 @@ public interface Devices {
     /** The device with this name and type, or null if there is none (for optional parts). */
     <T> T tryGet(Class<? extends T> type, String name);
 
+    /**
+     * True if the configuration has a device with this name, of any type. Used for parts marked
+     * {@link Module#optional()}: one whose device is not there is left off instead of stopping INIT.
+     * Default: asks the hardwareMap; with no hardwareMap (pretend devices in tests) every name is there.
+     *
+     * @param name the configuration name (exact, case matters)
+     */
+    default boolean has(String name) {
+        HardwareMap hm = hardwareMap();
+        return hm == null || hm.tryGet(com.qualcomm.robotcore.hardware.HardwareDevice.class, name) != null;
+    }
+
     /** The OpMode's hardwareMap, for code that needs it whole (a path follower); null in tests. */
     default com.qualcomm.robotcore.hardware.HardwareMap hardwareMap() {
         return null;

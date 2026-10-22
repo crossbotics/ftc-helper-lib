@@ -39,6 +39,15 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
     final List<Shape> looks = new ArrayList<>();
     // While writing the simulator file: this module's Tunables section (another part's shape may need it).
     TunableSection simSection;
+    // A servo part's .fullRange(): its servo gets the seller's whole pulse range (see applyPulse).
+    boolean fullRange = false;
+    // The INIT note when the servo could not change its pulse range ("" = none).
+    private String pulseNote = "";
+    // optional(): it may be missing from the configuration. missing: it was, at setup (see MissingPart).
+    boolean optional = false;
+    boolean missing = false;
+    // A missing part whose Tunables section stopped its setup: the problem, for the INIT note ("" = none).
+    String missingProblem = "";
 
     /**
      * @param device the main device's configuration name
@@ -100,6 +109,45 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
             looks.add(s);
         }
         return self();
+    }
+
+    /**
+     * This part may not be on the robot yet. If its device (the name in {@code add(...)}, e.g.
+     * "intake_deploy") is not in the robot configuration, INIT does not stop: it shows one note, and
+     * the part is "off" until it is added. Robots are built in steps: write the whole robot in
+     * Robot.java now, and each part starts working the day its device is in the configuration.
+     *
+     * <pre>{@code
+     * intakeDeploy = add(Positioner.servo("intake_deploy").optional());   // Robot.java
+     * }</pre>
+     *
+     * <p>While it is off: every command to it is ignored ({@link #isPresent()} is false), its
+     * telemetry line is "-", an {@link Action} skips it (and the waits right after it) and goes on,
+     * its buttons show "off" on the button map, and an interlock rule with it is off. Its question
+     * methods never hold anything up: it counts as done and at its target, and never as running,
+     * ready or full. Only its FIRST device decides: if "intake_deploy" is there, every other device
+     * of the part must be too (half a part is a wiring mistake: INIT stops and says which).
+     * Not for the drive (a robot always drives).
+     *
+     * @return this module
+     */
+    public M optional() {
+        optional = true;
+        return self();
+    }
+
+    /** True if it was marked {@link #optional()} in Robot.java. */
+    public boolean isOptional() {
+        return optional;
+    }
+
+    /**
+     * True if the part is on the robot: false only for an {@link #optional()} part whose device was
+     * not in the configuration at INIT (true before INIT). Use it for code the library cannot see,
+     * e.g. {@code if (robot.intakeDeploy.isPresent()) ...}; buttons can use {@code .needs(part)}.
+     */
+    public boolean isPresent() {
+        return !missing;
     }
 
     /** The name shown on the Driver Station and the Tunables section: "Lift", "IntakeDeploy". */
@@ -239,11 +287,60 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
         }
     }
 
+    /**
+     * True if the part works (with a warning) when this one of its devices is not in the configuration:
+     * a camera, a piece sensor, a turret's home switch. Default: false (INIT stops without it).
+     */
+    boolean canDoWithout(String deviceName) {
+        return false;
+    }
+
+    /** True if its first device is in the configuration (a part with no device of its own always is). */
+    final boolean deviceIn(Devices devices) {
+        return deviceNames().isEmpty() || devices.has(device);
+    }
+
     /** Notes for INIT (missing Tunables fields...). */
     List<String> notes() {
         List<String> out = new ArrayList<>();
         if (tunables != null && !tunables.note().isEmpty()) out.add(tunables.note());
+        if (!pulseNote.isEmpty()) out.add(pulseNote);
         return out;
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // A servo's full range (.fullRange() on Claw, Wrist, Positioner, Hood.servo, Turret.servo, Indexer.servo)
+    // ---------------------------------------------------------------------------------------
+
+    // The pulse (microseconds) for positions 0 and 1 with fullRange(): the catalog part's own range, or
+    // 500-2500 (what goBILDA, REV and Axon servos take) without a part.
+    double[] fullPulse() {
+        if (partId != null && Parts.servos().contains(partId)) {
+            Parts.ServoPart s = Parts.servoPart(partId);
+            return new double[] {s.fullLowUs(), s.fullHighUs()};
+        }
+        return new double[] {com.crossbotics.ftchelper.hardware.ServoSetup.FULL_PULSE_LOW_US,
+                com.crossbotics.ftchelper.hardware.ServoSetup.FULL_PULSE_HIGH_US};
+    }
+
+    // INIT: with fullRange(), widens the servo's pulse. A servo that cannot (not on a REV hub) keeps the
+    // SDK's 600-2400 us and INIT says so. Without fullRange() nothing is changed (the SDK's normal range).
+    final void applyPulse(com.qualcomm.robotcore.hardware.Servo servo) {
+        pulseNote = "";
+        // Off (an optional part not on the robot): its stand-in servo needs no pulse range, and no note.
+        if (!fullRange || missing) return;
+        double[] p = fullPulse();
+        if (!com.crossbotics.ftchelper.hardware.ServoSetup.setPulseRange(servo, p[0], p[1])) {
+            pulseNote = name() + ": the servo \"" + device + "\" cannot change its pulse range (not on a REV hub): "
+                    + "fullRange() does nothing, it turns its normal range (600-2400 us)";
+        }
+    }
+
+    // ", pwm=500-2500" for the simulator robot file when fullRange() is on ("" otherwise).
+    final String pulseWords() {
+        if (!fullRange) return "";
+        double[] p = fullPulse();
+        return fmt(", pwm=%.0f-%.0f", p[0], p[1]);
     }
 
     // ---------------------------------------------------------------------------------------
@@ -353,10 +450,14 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
     /**
      * Every command a team can call goes through here. Inside a running {@link Action} the action
      * claims this part (another action using it stops). Outside one, a command is the driver's (a
-     * button or stick): the driver always wins, so an action using this part stops.
+     * button or stick): the driver always wins, so an action using this part stops. A part that is not
+     * on the robot ({@link #optional()}) is never claimed: the action notes that it skipped it.
      */
     final void touch() {
-        if (robot != null) robot.runner.touched(this);
+        if (robot == null) return;
+        // A part that is not on the robot: the command goes nowhere, and a running action notes the skip.
+        if (missing) robot.runner.skipped(this);
+        else robot.runner.touched(this);
     }
 
     /** The part's telemetry line; each module adds its own. */

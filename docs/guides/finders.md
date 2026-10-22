@@ -80,6 +80,9 @@ Check once on your own Driver Hub and controllers that the help page fits and is
 
 ## Servo Finder: ends and positions
 
+0. **Full range?** If the part has `.fullRange()` in Robot.java (the servo's whole turn: a goBILDA 2000
+   servo 300 degrees instead of 270, [why](../modules/hardware.md#full-range)), press **Y** while choosing
+   the servo, so the finder uses the same range. Positions found with one range are wrong with the other.
 1. Choose the servo (D-pad, A). A servo cannot tell where it is, so first choose a START POINT near
    where it sits now (D-pad; nothing moves), then press A: it moves there. Then nudge it with the
    D-pad: right/left = 0.01, up/down = 0.05, hold RB for 10 times finer.
@@ -94,7 +97,7 @@ Check once on your own Driver Hub and controllers that the help page fits and is
 ## Hood Finder
 
 For a launcher's [hood](../modules/robot.md#hood) (`Tunables.Hood`). It reads the hood from Robot.java,
-so it works before Tunables.Hood has numbers.
+so it works before Tunables.Hood has numbers. A hood with `.fullRange()` gets the same full range here.
 
 1. **A servo hood:** choose a START POINT near where the hood sits (D-pad; nothing moves), press **A**.
    Then nudge with the D-pad (right/left 0.01, up/down 0.05, hold RB for 10 times finer). **A motor

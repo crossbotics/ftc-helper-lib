@@ -117,11 +117,18 @@ final class ActionRunner implements Subsystem {
             }
             part.owner = current;
             current.claimed.add(part);
+            current.usedPresentPart = true;
         } else {
             // The driver (a button or stick): the driver wins.
             if (previous != null && previous.isRunning()) stop(previous, "stopped: " + part.name() + " moved by hand");
             part.owner = null;
         }
+    }
+
+    // A part that is not on the robot (Module.optional) was commanded: nothing is claimed. Inside an
+    // action, the action notes it (its waits right after this step are skipped, see Action).
+    void skipped(Module<?> part) {
+        if (current != null) current.skipped(part);
     }
 
     @Override

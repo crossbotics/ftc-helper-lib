@@ -65,6 +65,7 @@ public abstract class HoodFinderOpMode extends FinderOpMode {
 
     private String device, section;
     private boolean reversed = false;
+    private double[] pulseUs = null;   // the hood's .fullRange() pulse, or null (the SDK's normal range)
     private Servo servo;        // a servo hood, or null
     private DcMotorEx motor;    // a motor hood, or null
     private double position = Double.NaN;   // servo: NaN = not moved yet
@@ -88,6 +89,11 @@ public abstract class HoodFinderOpMode extends FinderOpMode {
                 if (m instanceof Launcher && ((Launcher) m).hood() != null) hood = ((Launcher) m).hood();
             }
             if (hood == null) throw new IllegalStateException("Hood finder: Robot.java has no hood (Launcher...hood(Hood.servo(\"hood\")))");
+            // A hood marked optional() that is not in the configuration yet: say so (not "no Servo named ...").
+            if (hood.isOptional() && hardwareMap.tryGet(com.qualcomm.robotcore.hardware.HardwareDevice.class, hood.deviceName()) == null) {
+                throw new IllegalStateException("Hood finder: \"" + hood.deviceName() + "\" is not in the robot configuration ("
+                        + hood.name() + " is optional in Robot.java, so it is off). Add it to the configuration first.");
+            }
         }
         boolean isMotor;
         if (hood != null) {
@@ -95,6 +101,7 @@ public abstract class HoodFinderOpMode extends FinderOpMode {
             section = hood.name();
             reversed = hood.isReversed();
             isMotor = hood.isMotor();
+            pulseUs = isMotor ? null : hood.pulseRangeUs();
         } else {
             device = hoodName();
             section = RobotDefinition.sectionName(device);
@@ -111,6 +118,8 @@ public abstract class HoodFinderOpMode extends FinderOpMode {
         } else {
             servo = hardwareMap.get(Servo.class, device);
             if (reversed) servo.setDirection(Servo.Direction.REVERSE);
+            // The same pulse range as in a match (Hood.servo(...).fullRange()), so the stops it finds fit.
+            if (pulseUs != null) com.crossbotics.ftchelper.hardware.ServoSetup.setPulseRange(servo, pulseUs[0], pulseUs[1]);
         }
     }
 
@@ -119,6 +128,7 @@ public abstract class HoodFinderOpMode extends FinderOpMode {
         t.text("Hood finder: the hood's two stops (and its angles) for Tunables." + section + ".");
         t.text(motor != null ? "Motor hood: nothing is powered; move the hood by hand. Start it on the stop you call 0."
                 : "Servo hood: nothing moves until you choose a start point and press A.");
+        if (pulseUs != null) t.text(String.format(java.util.Locale.US, "Full range (Robot.java .fullRange()): %.0f-%.0f us, as in a match.", pulseUs[0], pulseUs[1]));
         t.text("Press START.");
     }
 

@@ -97,6 +97,7 @@ part each loop. Nothing moves in INIT.
 | `odometry(Odometry o)` | optional: what tells the robot where it is on the field ([Odometry](#odometry)) |
 | `follower(PathFollower.Maker m)` | optional: a path follower, e.g. `follower(Pedro.follower(...))` ([PathFollower](#pathfollower)); needs an `odometry(...)` line |
 | `T add(T module)` | a mechanism; hands it back, so you can keep it in a field (`lift = add(...)`) |
+| `add(...optional())` | a part that may not be on the robot yet: off (not a stop) while its device is not in the configuration ([Parts not on the robot yet](#parts-not-on-the-robot-yet)) |
 | `atStart(Supplier<Action>)` | an action that runs once right after START, in autonomous and TeleOp |
 | `Interlock keepApart(name, zoneA, zoneB)` | an interlock rule: two parts never in their zones at the same time (after the parts' `add` lines; numbers in `Tunables.<name>`) ([Interlock](#interlock)) |
 | `tunables(Class)` | the Tunables class if it is not `Tunables` in the same folder |
@@ -107,7 +108,8 @@ part each loop. Nothing moves in INIT.
 | `run(Action)`, `cancel(Action)`, `cancelAll()` | start or stop actions |
 | `interlocks()` | the interlock rules from `define()` (read only) |
 | `alliance()` | this match's alliance (from autonomous's menu; TeleOp remembers it) |
-| `notes()` | INIT notes: missing Tunables sections or fields (the library's defaults are used) |
+| `notes()` | INIT notes: missing Tunables sections or fields (the library's defaults are used), parts that are off (not in the configuration) |
+| `checkConfiguration(hardwareMap)` | one line per device Robot.java names that is NOT in the configuration, and what that means ("INIT will stop", or "optional, so the part is off"). The [Hardware Check](testing.md#hardwarecheckopmode) shows it |
 | `modules()`, `drive()`, `all()` | the parts, the drivetrain, the update group |
 | `pose()` | where the robot is now, from the odometry: a [`FieldPose`](util.md#fieldpose) (x in right, y in away from your wall, heading 0 = away, counterclockwise +); a copy; null with no odometry line |
 | `odometry()`, `odometrySpec()`, `odometryChecked()` | the running [`PoseTracker`](odometry.md#posetracker) (null before `setup`), the odometry line as written, and `Tunables.Odometry.checked` |
@@ -152,11 +154,14 @@ public class Tunables {
 - **The code is the record.** The numbers you tune most become [`Tunable`](tuning.md)s ("Lift/kP"):
   the tuning menu (PRACTICE profile, after START hold GUIDE 1 s) changes them and saves them on the Control Hub. INIT then
   shows "Tuned on this robot (copy into Tunables.java)" with the lines to copy back.
+- **A part that is not on the robot** ([`optional()`](#parts-not-on-the-robot-yet), device not in the
+  configuration) needs no section: nothing about its numbers stops INIT, not even a Lift's `min`/`max`.
 - **Missing numbers are not errors**, with a few exceptions: the library's default is used and INIT
   says which (`Tunables.Lift: kD, kF not written: library defaults used (fine)`). **The exceptions are
   safety numbers** (a safety limit never comes from a library default): a Lift's or Arm's `min` and
   `max`, a Hood's `posA` and `posB` (or its `calibration`), a servo Turret's `posA`, `angleA`, `posB`,
-  `angleB`, a Turret's `homeAngle` with a home switch, and an interlock rule's zone numbers. For a
+  `angleB`, a Turret's `homeAngle` with a home switch, and an interlock rule's zone numbers (none of these for a
+  part that is `optional()` and not on the robot). For a
   Lift or Arm, `max` must also be more than `min`. Otherwise INIT stops:
   `Tunables.Lift has no max: write max (the top of the safe range, in counts: Motor Finder, B). A safety limit never comes from a library default.`
   (no section at all: `Tunables.java has no Lift section: ...`; an Arm's are in `deg`; `min` points
@@ -174,6 +179,17 @@ public class Tunables {
   The message: `Tunables.Lift.Max looks like "max" (capitals and spelling count). Fix the name in Tunables.java; a position must not look like a setting.`
   Before, it quietly became a position called `Max`, and `max` stayed the library default. The same
   check runs for Claw, Wrist and Positioner (their setting: `travelSec`).
+- **A field no part reads stops INIT, in every part's section.** A typo like `inPowr` in
+  `Tunables.Intake` (or `goalx` in `Tunables.Aim`, `nominalVolt` in `Tunables.Launcher`) would be
+  quietly ignored, and the part would use the library's default. Now INIT stops before anything is set up:
+  `Tunables.Intake.inPowr is not a setting of Intake (did you mean inPower?): the robot would quietly ignore it. Fix the name (capitals count) or delete the line. Known: inPower, outPower (docs/guides/tunables.md)`.
+  It checks the sections of Drive, Odometry, Aim, Buttons, every part on the robot and every interlock
+  rule. Names you pick are fine: a Lift's, Arm's or servo part's named positions (any number), a piece
+  sensor's kinds (`POLLEN`), a launcher's `speedByDistance...` tables, and an interlock rule's
+  `<part>From`, `<part>To`, `<part>Above`, `<part>Below` and `<part>Margin` for its own two parts. A field
+  of the part that this robot does not use (a servo turret's `posA` on a motor turret) is fine too.
+  Sections no part reads (your own `Tunables.Auto`) are never checked, and neither is the section of an
+  [`optional()`](#parts-not-on-the-robot-yet) part that is not on the robot (it may be unfinished).
 - **Safety:** a tuned position stays inside `min`..`max`; limits are read once and cannot be tuned.
 - `public static` fields: FTC Dashboard can show them too.
 - The menu's names ("Lift/kP") are shared by the whole robot app: keep one Robot class per app.
@@ -182,6 +198,61 @@ Which numbers are in the tuning menu (used at once, or from the next INIT) and w
 from the code: the **Live** column of [the Tunables reference](../guides/tunables.md#the-live-column-the-tuning-menu).
 Your own sections (`Auto`...): every number is in the menu (a TeleOp reads the field each time; an
 autonomous reads it when it builds its steps, at INIT); `final` numbers, true/false and tables are not.
+
+---
+
+## Parts not on the robot yet
+
+Robots are built in steps: the drive first, then the intake, the deploy servo when it arrives. Write
+the whole robot in Robot.java now and mark the parts that are not built yet with `optional()`:
+
+```java
+intakeDeploy = add(Positioner.servo("intake_deploy").optional());   // Robot.java
+```
+
+Without `optional()`, a device missing from the robot configuration stops INIT:
+`No Servo named "intake_deploy" in the active robot configuration. ... Not on the robot yet? Add .optional() to IntakeDeploy's line in Robot.java ...`.
+With it, INIT goes on, says once `"intake_deploy" not in the configuration: IntakeDeploy is off (optional part)`,
+and the part is **off** until its device is in the configuration. Then it simply works: no code to change.
+(Why not just leave the line out? Then every action, button and autonomous that uses the part must
+change too, and change back later. Team 8938 kept a `HAS_DEPLOY_SERVO` switch for this; `optional()`
+does it for every part.)
+
+What "off" means, everywhere:
+
+| Where | A part that is off |
+| --- | --- |
+| Commands | ignored (`goTo`, `in`, `spinUp`...): no error, nothing moves |
+| Questions | never hold anything up: "done" questions are true (`isDone`, `isAtTarget`, `isAt` the position it was last sent to, `isArrived`, `isHomed`, a turret's `isAimed`); "busy" ones are false (`isRunning`, `isSpinning`, `isReady`, `isShooting`, `isBusy`, `isJammed`); sensors see nothing. `isPresent()` is false |
+| Telemetry | its line is `-` (not on the robot) |
+| [Actions](#action) | the step's command to it is skipped and the action goes on. A wait right after a step that only used parts that are off is skipped too (nothing to wait for). `status()` ends with `skipped IntakeDeploy (not on the robot)`, `skipped()` lists them; an autonomous's report says it on the step |
+| Buttons | the part's own suggested buttons, `toggle(part)` and any button given `.needs(part)` do nothing; the button map says `- off: IntakeDeploy not on the robot` |
+| [Interlock](#interlock) rules | a rule with it is off (nothing to hit), and needs no Tunables section: INIT says `Interlock TurretLift: off (Lift is not on the robot)` |
+| [Aim](#aim) | a following turret that is off does not aim: whole-robot aim (`robot.aimMode()`) may be used |
+| Tunables | its section may be missing or unfinished: no stop. Wrong numbers (max below min) are a note: `Fix its Tunables before adding it: ...` |
+| Simulator | `:sim:fromRobot` still writes it; leave it out of the simulated configuration with `missing = intake_deploy` in the robot file, or `set device intake_deploy missing` in a scenario ([simulator guide](../guides/simulator.md#a-part-not-on-the-robot-yet)) |
+| [Hardware Check](testing.md#hardwarecheckopmode), finders | the check lists it as `optional, so the part is off (fine)`; the Hood Finder and Shot Tuner say it is not in the configuration; the Piece Tuner leaves its sensors out |
+
+- **Several devices** (a lift with a switch, a two-servo intake, a launcher with its feeder and hood):
+  only the **first** device, the one named in the `add` line, decides. Not there: the whole part is off,
+  with everything inside it. There: every other device must be there too, as always (half a part is a
+  wiring mistake: INIT stops and names the device). A feeder or hood can be `optional()` on its own.
+- **Not for the drive** (a robot always drives) or the odometry (leave the `odometry(...)` line out
+  until it is on the robot: `driveTo` needs it).
+- **Your own code**: `if (robot.intakeDeploy.isPresent()) ...` for anything the library cannot see.
+- **Off at INIT, for the whole program.** Plug it in and add it to the configuration, then INIT again.
+- **Careful at events:** with `optional()`, a misspelled or lost configuration name does not stop
+  INIT; the part is just off, with the INIT note. Read the INIT notes before each match, or take
+  `.optional()` off once the part is built (then a missing device stops INIT, loudly).
+
+| Method | |
+| --- | --- |
+| `optional()` | on any part's `add` line: it may not be on the robot yet |
+| `isOptional()` | true if marked `optional()` |
+| `isPresent()` | false only for an optional part whose device was not in the configuration at INIT |
+| `Button.needs(part...)`, `Stick.needs(part...)` | in Controls.java, after the job: the button is off while one of these parts is |
+| `Action.skipped()` | the parts this run skipped (empty when all were there) |
+| `Interlock.isOff()` | true if the rule is off because one of its parts is |
 
 ---
 
@@ -350,6 +421,21 @@ named position (0 to 1) except `travelSec` ([reference](../guides/tunables.md#cl
 claw = add(Claw.servo("claw"));       // Tunables.Claw: open, closed (both needed)
 ```
 
+**A servo's full range: `.fullRange()`.** The hub sends a servo a pulse: 600 microseconds (us) for
+position 0 and 2400 us for 1. That is the FTC SDK's normal range, and the library keeps it. Most FTC
+servos take 500 to 2500 us, so on the normal range they turn a bit less than the seller says: a goBILDA
+2000 servo turns 270 degrees over 0 to 1, not 300. `.fullRange()` on a Claw, Wrist or Positioner (and on
+`Hood.servo`, `Turret.servo`, `Indexer.servo`) sends the servo's whole pulse range (the catalog part's from
+`part(...)`, else 500 to 2500 us) at INIT, so 0 to 1 turns all 300 degrees. **Measure your positions after
+turning it on** (the Servo Finder has the same switch: Y while choosing): the same number points
+somewhere else once the range changes. A servo that cannot change its pulse (not on a REV hub) keeps
+its range and INIT says so. The hub keeps a pulse range until the next INIT. Recipe:
+[How do I get my servo's full range?](../cookbook.md#how-do-i-get-my-servos-full-range)
+
+```java
+wrist = add(Wrist.servo("wrist").part("gobilda-2000-speed").fullRange());   // 0 to 1 = 300 degrees
+```
+
 `open()`, `close()`, `toggle()`, `isClosed()`. Button: operator B opens/closes.
 
 ## Wrist
@@ -403,6 +489,7 @@ turret = add(Turret.crServo("turret").analogEncoder("turret_pos").continuous());
 | `follows(camera)` | follows the camera's goal; with odometry and `Tunables.Aim.goalX, goalY` the odometry takes over while the camera does not see it ([Aim](#aim)) |
 | `followsOdometry()` | follows the goal with no camera: from the odometry and `Tunables.Aim`'s goal point |
 | `cameraOnBody()` | the camera is on the robot, not on the turret |
+| `fullRange()` | a servo turret: the servo's whole turn (500-2500 us, a goBILDA 2000 servo 300 degrees instead of 270); measure `posA`/`posB` after turning it on ([full range](#claw)) |
 
 | Method | |
 | --- | --- |
@@ -469,6 +556,7 @@ hood's range; 0.02 for a servo).
 | `name()` | the rule's name (its Tunables section) |
 | `isHolding()`, `status()` | a part is held back now; the Driver Station line ("" when nothing is held) |
 | `words()` | the rule in words: `Turret between 130 and 218 deg / Lift above 270 counts` |
+| `isOff()` | true if one of its parts is not on the robot ([`optional()`](#parts-not-on-the-robot-yet)): the rule then does nothing and needs no Tunables |
 | `Zone.part()`, `Zone.words()` | the part (null for a condition); the zone in words |
 
 Who yields: **whoever is in its zone first keeps it; the other part waits outside its own zone**, two
@@ -484,7 +572,8 @@ The Driver Station shows one line per rule while it holds something: `TurretLift
 Turret is between 130 and 218 deg`. INIT lists each rule, and stops with the reason for: a missing section
 or number, an empty zone, a zone outside the part's range or covering all of it, a negative margin, a part
 with no position. The zones are read once at INIT and are **not** in the tuning menu: a zone moving while
-the parts move could put both in their zones at once.
+the parts move could put both in their zones at once. A rule with a part that is not on the robot yet
+([`optional()`](#parts-not-on-the-robot-yet)) is off: `Interlock TurretLift: off (Lift is not on the robot)`.
 
 ---
 
@@ -586,7 +675,8 @@ public static double trimStepPercent = 1, trimMaxPercent = 15;   // optional (th
 ## Indexer
 
 `Indexer.servo(name)` (Tunables: `rest`, `push`, `pushSec`, `returnSec`), `Indexer.crServo(name)` and
-`Indexer.motor(name)` (`power`, `feedSec` per piece), `.reversed()`. Usually given to a launcher with
+`Indexer.motor(name)` (`power`, `feedSec` per piece), `.reversed()`, and for a servo indexer
+`.fullRange()` (the servo's whole turn: [full range](#claw); set `rest` and `push` again after). Usually given to a launcher with
 `.feeder(...)`; added on its own its button is operator RB (feed one). A servo indexer goes to `rest`
 at START. Commands: `feedOne()`, `isBusy()`, `isFeeding()`, `isJammed()`, `clearJam()`. `onFeed(runnable)`
 runs your code each time a feed really starts. A [Pieces](#pieces-and-piecesensor) counter counts the
@@ -637,6 +727,7 @@ the rim, or worn balls launch flatter). Use the speed trim first.
 | Method | |
 | --- | --- |
 | `Hood.servo(name)`, `Hood.motor(name, motorId)`, `reversed()` | a standard servo; a motor with an encoder (its ticks count from where the hood is at INIT: start with the hood on stop A) |
+| `fullRange()`, `pulseRangeUs()` | a servo hood: the servo's whole turn ([full range](#claw)), at INIT and in the Hood Finder; find `posA`/`posB` after turning it on. `pulseRangeUs()`: `{500, 2500}`, or null without it |
 | `shotAngles(atA, atB)` | for the simulator: the launcher's shot angle with the hood at `angleA` and at `angleB` (the simulated shot follows the hood servo) |
 | `setAngle(a)`, `home()`, `step(n)`, `byHand(stick)` | go to an angle (kept inside the stops); to `homeAngle`; `n` x `stepAngle` (a trim while the table sets it); the stick, every loop |
 | `trimBy(a)`, `setTrim(a)`, `resetTrim()`, `trim()` | the hood trim (added to the table's angle) |
@@ -1039,6 +1130,7 @@ public static Action scoreHigh(Robot r) {
 | `waitUntil(what, condition, timeoutSec)` | wait until true; if it times out the action STOPS and says why |
 | `waitUntil(condition, timeoutSec)` | the same, with "the condition" as its words |
 | `name()`, `isRunning()`, `status()`, `result()` | "Score high: step 2 of 5 (lift at the top)"; "done", "cancelled", "stopped: Lift moved by hand" |
+| `skipped()` | the parts this run skipped because they are not on the robot ([Parts not on the robot yet](#parts-not-on-the-robot-yet)) |
 
 - **Never blocks:** an action does a little every loop.
 - **Parts are claimed:** an action owns the parts it commands while it runs. Another action that
@@ -1048,6 +1140,8 @@ public static Action scoreHigh(Robot r) {
   over, timed out) stops what it started, safely: a lift or arm holds its height, a turret its angle,
   shots still waiting are dropped, an intake stops. An action that finishes keeps its last commands.
   A failed action in an autonomous says why in the report.
+- **A part that is not on the robot yet** (`optional()`): its commands are skipped, and so are the
+  waits right after a step that only used such parts. The action goes on with the other parts.
 
 ## Modes
 
@@ -1093,10 +1187,11 @@ has its standard buttons; write only what differs. A [`Pad`](#controlmap) has ev
 | `slow()` | one driver (or two after `lib.slow(null)`): on a trigger, drives slower the further it is pulled (down to `slowSpeed`); on a button, slow while held |
 | `free()` | no job: the button stays free, even if a module suggested one for it |
 | `says(words)` | the words on the help page |
+| `needs(part...)` | the job needs these parts: while one is not on the robot ([`optional()`](#parts-not-on-the-robot-yet), not in the configuration) the button does nothing and the map says `- off: IntakeDeploy not on the robot`. A part's own buttons and `toggle(part)` know their part already |
 | on a pad: `g2.rumbleWhen(test)`, `rumbleWhen(test, n)` | feedback from the robot: a buzz each time `test` becomes true |
 | on a pad: `g2.rumbleWhenAimed()` | buzzes while the aim is close, the closer the stronger ([Aim](#aim)) |
 | on a stick: `use(DoubleConsumer)` | its value every loop (small dead zone, gentle curve) |
-| on a stick: `free()`, `says(words)` | as on a button |
+| on a stick: `free()`, `says(words)`, `needs(part...)` | as on a button |
 | in `buttons(...)`: `show(label, value)` | your own value on the Driver Station, read again every loop, e.g. `show("Lift ticks", robot.lift::position);` or `show("Ready", () -> robot.launcher.isReady());`. Not shown while the tuning menu or the button map is open. `value` must not wait; an error in it shows as `error: ...` instead of stopping |
 
 While the robot is paused (BACK), no button or stick job runs, with one exception: a hold's stop job
@@ -1277,7 +1372,10 @@ a lift with a wrist and a claw riding on it: [`v2bot/Robot.java`](../../examples
 
 **Name the part, give only what is not known.** A part in the [parts catalog](../guides/parts-catalog.md)
 brings its numbers: a motor its speed and encoder counts, a servo its speed and range, a wheel or roller
-its diameter (and width, when the seller gives it). Places are always the robot's own.
+its diameter (and width, when the seller gives it). Places are always the robot's own. A servo's range is
+what positions 0 to 1 really turn it: on the hub's normal 600-2400 us a goBILDA 2000 servo turns 270
+degrees (its seller's 300 needs [`.fullRange()`](#claw)). In code: `Parts.servoPart(id)` gives `rangeDeg`
+(the seller's), `pulseMinUs`/`pulseMaxUs`, `sdkRangeDeg()` (270) and `degreesOver(lowUs, highUs)`.
 
 ```java
 drive(Drive.tank("left_drive", "right_drive").motor("gobilda-5203-312").wheel("gobilda-hogback-96")
@@ -1347,7 +1445,8 @@ are the simulator's [parts catalog](../guides/parts-catalog.md) (a test keeps th
 ## Module
 
 [`Module`](#module) is what every mechanism shares: `name()` (its Tunables section), `deviceName()`,
-`tunables(section)`. [`Devices`](#module) is where modules find their hardware: `Devices.of(hardwareMap)`
+`tunables(section)`, `optional()`, `isOptional()`, `isPresent()` ([Parts not on the robot yet](#parts-not-on-the-robot-yet)).
+`Devices.has(name)` says if the configuration has a device with that name. [`Devices`](#module) is where modules find their hardware: `Devices.of(hardwareMap)`
 on the robot; tests give pretend devices. `Devices.batteryVolts()` is the battery now (NaN in tests; it waits for the hubs, so not in the loop);
 `Devices.batteryReader()` is the same for code in the loop (asked on the library's helper thread). A new kind of module is a change to the library (its parts are
 package-private, see AGENTS.md); in team code, use the plain parts ([mechanism](mechanism.md)) in

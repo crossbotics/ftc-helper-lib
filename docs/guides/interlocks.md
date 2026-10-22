@@ -15,16 +15,18 @@ Reference: [Interlock in the robot module](../modules/robot.md#interlock). Quick
 
 ## The idea, with a turret and a lift
 
-Team 8938's robot (the [V2 example](../../examples/src/main/java/com/crossbotics/ftchelper/examples/v2bot/Robot.java)) has a turret in the middle and a lift at the back. When the lift's slide is up, the
+Take a robot with a turret in the middle and a lift at the back. When the lift's slide is up, the
 turret must not point backward, or the shooter hits the slide. When the turret points backward, the lift
-must not rise.
+must not rise. (The numbers below are an example. The [V2 robot](#try-it) uses a turret and wrist rule
+instead.)
 
 ![The turret's zone and the lift's zone, seen from above and from the side](../images/interlock-zones.svg)
 
 Each part gets a **zone**: the space it must stay out of while the other part is in its own zone.
 
-- The turret's zone: from 109 to 239 degrees (straight back is 180; counterclockwise is +). The lifter's
-  parts are at 142 to 206; 33 degrees more each side for the turret's own width (its parts farther than 190 mm from the axis are within 33 degrees of where it points).
+- The turret's zone: from 109 to 239 degrees (straight back is 180; counterclockwise is +). Say the
+  lifter's parts are at 142 to 206, and the turret's own parts reach 33 degrees to each side of where it
+  points: 33 degrees more on each side gives 109 to 239.
 - The lift's zone: above 270 encoder counts (84 mm: where the slide starts to be in the turret's way).
 
 ```java
@@ -70,7 +72,7 @@ TurretLift : both in their zones (...): move one out (each may only move out)
 the part's units: by default 3 degrees for a turret, about 1/50 of a lift's range, 0.02 for a servo).
 Its target is kept, so it goes on by itself the moment the other part leaves. A part counts as "in its
 zone" within one margin of it. Set `<part>Margin` in the rule's section if your part coasts further.
-**A fast lift needs more:** the V2 robot's lift (about 2800 counts a second) went 54 counts past where it
+**A fast lift needs more:** a goBILDA Viper-Slide on a 435 RPM motor (about 2800 counts a second) went 54 counts past where it
 was told to stop when pushed up at full power in the simulator, more than the default 27. With
 `liftMargin = 80` it waits at 270 - 2 x 80 = 110 counts. Measure yours: push the stick fully toward
 the line and see how far past the "held" point it goes.
@@ -142,6 +144,10 @@ out of it), a margin is negative, or a part has no position (an intake roller: u
 screen lists each rule:
 `Interlock TurretLift: Turret between 109 and 239 deg / Lift above 270 counts`.
 
+A rule with a part that is not on the robot yet ([`optional()`](../modules/robot.md#parts-not-on-the-robot-yet),
+its device not in the configuration) is off: there is nothing to hit, so it needs no Tunables section and
+holds nothing back. INIT says `Interlock TurretLift: off (Lift is not on the robot)`.
+
 ## Why the numbers are not live
 
 The zones are read once at INIT and are not in the tuning menu. A zone that moved while the parts were
@@ -158,5 +164,10 @@ moving could suddenly put both in their zones. Change the numbers in `Tunables.j
 ## Try it
 
 The [v2bot example](../../examples/src/main/java/com/crossbotics/ftchelper/examples/v2bot/Robot.java) has a
-turret, a lift with a wrist and a claw, and the rule above. Run its TeleOp in the
-[simulator](simulator.md): raise the lift, then turn the turret toward the back with the stick.
+turret, a lift with a wrist and a claw, and a rule from team 8938's measured designs:
+`keepApart("TurretClaw", turret.zone(), wrist.zone())`. Its claw only reaches the turret while the wrist
+is folded or at pick-up (0 to 47 degrees), at any lift height, so the rule is between the turret and
+the **wrist**, not the lift: the turret stays out of 147 to 217 degrees while the wrist is low. The
+reasons and the numbers are in its `Tunables.TurretClaw`. Run its TeleOp in the
+[simulator](simulator.md): with the wrist folded, turn the turret toward the back with the stick (it
+stops at the edge), then score in a FLOWER (G2 Y: the wrist swings out, and the turret is free).

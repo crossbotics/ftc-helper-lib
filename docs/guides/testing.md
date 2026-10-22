@@ -42,6 +42,7 @@ Run the **Hardware Check** OpMode ([starter kit](../starter-kit.md), or
 | distance / color | sensible numbers | wiring, I2C port, configuration type |
 | camera | listed; Limelight "connected" | USB / Ethernet cable, configuration name |
 | battery | 12.5 V or more when charged | charge or replace; under 12.0 V never play a match |
+| Robot.java's devices (with `robot()`) | `Robot.java: every device is in the configuration`, or only the parts you know are not built yet (`optional, so the part is off`) | add the device to the configuration, or fix its name ([parts not on the robot yet](../modules/robot.md#parts-not-on-the-robot-yet)) |
 
 ## 3. Mechanism checks (after building or changing a mechanism)
 
@@ -76,6 +77,7 @@ Run the **Hardware Check** OpMode ([starter kit](../starter-kit.md), or
 - [ ] Robot starts inside 18 in; everything folded; hard stops tight
 - [ ] Lift/turret at their start positions (home switches in reach)
 - [ ] Profile: COMPETITION, no "tuned values differ" warning
+- [ ] No `... is off (optional part)` note at INIT for a part that IS on the robot (a renamed or unplugged device)
 - [ ] Right autonomous selected, right alliance and delay in the menu
 - [ ] Robot placed exactly as the INIT screen's "Place robot" says
 - [ ] After autonomous, TeleOp's INIT screen says "Forward: from autonomous"

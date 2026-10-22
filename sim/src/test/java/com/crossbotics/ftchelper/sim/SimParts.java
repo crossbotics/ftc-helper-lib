@@ -35,15 +35,30 @@ final class SimParts {
         }
     }
 
-    /** A servo from the catalog. */
+    /** The FTC SDK's normal pulse for servo positions 0 and 1, microseconds (PwmControl.PwmRange.defaultRange). */
+    static final double SDK_LOW_US = 600, SDK_HIGH_US = 2400;
+
+    /**
+     * A servo from the catalog. rangeDeg is the seller's full turn over pulseMinUs..pulseMaxUs; the hub
+     * normally sends only 600..2400 us, so positions 0..1 turn it less (a goBILDA 2000 servo: 270 of its
+     * 300 degrees) unless the code widens the pulse (.fullRange()). A team part without pulse numbers:
+     * its rangeDeg is what 0..1 turns it on the normal 600..2400 us.
+     */
     static final class Servo {
         final String id, name;
-        final double rangeDeg, secPer60Deg, torqueKgCm;
+        final double rangeDeg, pulseMinUs, pulseMaxUs, secPer60Deg, torqueKgCm;
 
         Servo(Map<String, Object> m) {
             id = SimJsonReader.string(m, "id", "");
             name = SimJsonReader.string(m, "name", id);
             rangeDeg = SimJsonReader.number(m, "rangeDeg", Double.NaN);
+            pulseMinUs = SimJsonReader.number(m, "pulseMinUs", Double.NaN);
+            pulseMaxUs = SimJsonReader.number(m, "pulseMaxUs", Double.NaN);
+            if (!Double.isNaN(pulseMinUs) || !Double.isNaN(pulseMaxUs)) {
+                if (!(pulseMinUs >= 100 && pulseMaxUs <= 3000 && pulseMinUs < pulseMaxUs)) {
+                    throw new IllegalArgumentException("servo " + id + ": pulseMinUs and pulseMaxUs: give both, 100 to 3000 us, min first");
+                }
+            }
             // A Control Hub servo port gives about 5 V, so use the seller's row closest to 5 V when there
             // is a table by voltage (the headline number is usually at 6 V).
             double sec = SimJsonReader.number(m, "secPer60Deg", Double.NaN);
@@ -64,10 +79,22 @@ final class SimParts {
             torqueKgCm = SimJsonReader.number(m, "torqueKgCm", Double.NaN);
         }
 
-        /** How fast it moves in raw positions (0..1) per second: (60 deg / time) / range. */
-        double rawPerSecond() {
-            if (Double.isNaN(rangeDeg) || Double.isNaN(secPer60Deg) || secPer60Deg <= 0) return Double.NaN;
-            return (60.0 / secPer60Deg) / rangeDeg;
+        /** Degrees per microsecond of pulse (goBILDA 2000: 300 / 2000 = 0.15); NaN without a range. */
+        double degPerUs() {
+            if (Double.isNaN(pulseMinUs)) return rangeDeg / (SDK_HIGH_US - SDK_LOW_US);
+            return rangeDeg / (pulseMaxUs - pulseMinUs);
+        }
+
+        /** Degrees that positions 0..1 turn it with this pulse range (goBILDA 2000 at 600..2400: 270). */
+        double degreesOver(double lowUs, double highUs) {
+            return degPerUs() * (highUs - lowUs);
+        }
+
+        /** How fast it moves in raw positions (0..1, over this pulse range) per second: (60 deg / time) / range. */
+        double rawPerSecond(double lowUs, double highUs) {
+            double range = degreesOver(lowUs, highUs);
+            if (Double.isNaN(range) || Double.isNaN(secPer60Deg) || secPer60Deg <= 0) return Double.NaN;
+            return (60.0 / secPer60Deg) / range;
         }
     }
 
