@@ -229,8 +229,8 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   three-number shot tables, a Hood Finder, and lesson 9 a section on the hood; cookbook: "How do I add a
   hood to my launcher?" and "How do I find my hood's stops and angles?".
 
-- Docs: a box in lesson 9, robot.md and launcher.md says battery compensation is on by default, how to
-  turn it off (`batteryCompensation = false`), and a 4-shot test to check it on your robot.
+- Docs: a box in lesson 9, robot.md and launcher.md says battery compensation is OFF by default (not yet
+  proven on a real robot), how to turn it on (`batteryCompensation = true`), and a 4-shot test to check it.
 
 - **Every library button can move or be freed.** `Controls.java` (and `EasyTeleOp`) get
   `libraryButtons(LibraryButtons lib, Pad g1, Pad g2)`: `lib.pause(...)`, `resetForward`, `debug(key, with)`,
@@ -270,9 +270,9 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - **Flywheel battery compensation.** `Flywheel.batteryCompensation(volts, nominalVolts)` scales the hub's
   F gain by nominalVolts / the battery (read every 0.25 s, the highest reading of the last second
   (`BATTERY_FILTER_SEC`) so a dip under load does not raise F, sent only on a 2% change, kept to x0.8..x1.3),
-  so a low battery gets back to speed after a shot as fast as a full one; warns under 11.5 V. On in the
-  robot in five files when `kF` is set (`Tunables.Launcher.nominalVolts`, default 12.8;
-  `batteryCompensation = false` turns it off). The Flywheel Finder now records the battery voltage
+  so a low battery gets back to speed after a shot as fast as a full one; warns under 11.5 V. OFF by
+  default in the robot in five files: `batteryCompensation = true` with `kF` turns it on
+  (`Tunables.Launcher.nominalVolts`, default 12.8). Off until teams have tested it on real robots. The Flywheel Finder now records the battery voltage
   (`nominalVolts = 12.6` in its line) and runs step 2 with the compensation. `Hw.batteryVolts(hardwareMap)`,
   `Hw.batteryReader(hardwareMap)` (never waits: the hubs are asked on the library's helper thread; the
   launcher and the Flywheel Finder use it), `Devices.batteryVolts()`, `Devices.batteryReader()`,
@@ -425,7 +425,7 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 **INIT and the Driver Station:**
 - `Launcher: battery compensation on, nominalVolts not written: assuming 12.8 V (the Flywheel Finder shows
-  yours; batteryCompensation = false turns it off)`. Compensation stays on by default.
+  yours; batteryCompensation = false turns it off)`, shown only when you turned compensation on.
 - INIT notes for numbers that were used differently from what is written: `kP`/`kI`/`kD` without `kF`
   (not used), `trimMaxPercent` over 50 (50 is used), `goalX` without `goalY` (no goal point), `resetX`
   without `resetY` (no reset spot), and a number outside its allowed range (`Tunables.Claw.open = 1.2 is

@@ -1,6 +1,7 @@
 package com.crossbotics.ftchelper.robot;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.crossbotics.ftchelper.Fakes;
@@ -48,6 +49,15 @@ public class LauncherTrimTest {
             public static double speedRpm = 2600, stepRpm = 100;
             public static double kP = 1, kI = 0.1, kD = 0, kF = 12, nominalVolts = 12.0;
             public static double trimStepPercent = 2, trimMaxPercent = 10;
+            public static boolean batteryCompensation = true;
+        }
+    }
+
+    /** The Flywheel Finder's gains but nothing about the battery: compensation stays off (the default). */
+    public static class DefaultOff {
+        public static class Launcher {
+            public static double speedRpm = 2600;
+            public static double kP = 1, kI = 0.1, kD = 0, kF = 12;
         }
     }
 
@@ -253,6 +263,18 @@ public class LauncherTrimTest {
         int reads = kit.voltReads;
         r.all().update();
         assertEquals("not read again within 0.25 s", reads, kit.voltReads);
+    }
+
+    @Test public void compensationIsOffByDefault() {
+        RobotTestKit kit = new RobotTestKit();
+        kit.volts = 10.0;
+        RobotDefinition r = fixedBot(DefaultOff.class);
+        r.setup(kit);
+        launcherOf(r).spinUp();
+        r.all().update();
+        assertEquals("F as tuned: no compensation unless batteryCompensation = true", 12, kit.motors.get("launcher").pidf[3], 1e-9);
+        assertEquals("never read", 0, kit.voltReads);
+        assertFalse(r.notes().toString(), r.notes().toString().contains("battery compensation on"));
     }
 
     @Test public void compensationCanBeSwitchedOffAndNeedsAnF() {
