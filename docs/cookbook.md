@@ -840,7 +840,8 @@ pieces = add(Pieces.kinds("POLLEN", "RED_NECTAR", "BLUE_NECTAR")
 ```
 
 **Why:** each piece the intake sensor sees counts one in; each feed of the indexer counts one out, the
-oldest first. `robot.pieces.count()`, `robot.pieces.next()` ("POLLEN", "UNKNOWN" or "NONE") and
+oldest first, once the piece has gone (a jammed feed counts nothing). Until a kind is tuned with the
+Piece Tuner it reads `"UNKNOWN"`. `robot.pieces.count()`, `robot.pieces.next()` ("POLLEN", "UNKNOWN" or "NONE") and
 `robot.pieces.isFull()` work anywhere in your code.
 **More:** [Pieces and PieceSensor](modules/robot.md#pieces-and-piecesensor).
 
@@ -850,7 +851,8 @@ oldest first. `robot.pieces.count()`, `robot.pieces.next()` ("POLLEN", "UNKNOWN"
 
 <!-- recipe: intake-stops-when-full -->
 ```java
-// The intake does not pull in a 5th piece ("() ->": asked every loop). Pushing out still works.
+// ADD .stopsWhen(...) to the intake line you already have (do not write a second intake line).
+// It does not pull in a 5th piece ("() ->": asked every loop). Pushing out still works.
 intake = add(Intake.motor("intake").stopsWhen(() -> pieces.isFull()));
 ```
 
@@ -864,7 +866,9 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 
 **Why:** BIOBUZZ rule G407: a robot may not control more than 4 pieces. The rules ask for "systems to
 prevent active pickup" of a 5th: this is one. Put the intake sensor where a piece is already held, so
-the intake does not stop with a piece half in.
+the intake does not stop with a piece half in. The count can be wrong (two pieces read as one), so the
+drivers, not the count, are responsible for G407: when it says full and the robot is not, holding RT
+for 1 s pulls in anyway, and the Driver Station warns when the intake is held back for more than 2 s.
 **More:** [Intake](modules/robot.md#intake).
 
 ### How do I tell pieces apart by size, or with a second camera?
@@ -897,14 +901,19 @@ away, but not how far the piece is.
 g2.rumbleWhen(robot.pieces::isFull);
 // Two buzzes when a NECTAR is next to fire.
 g2.rumbleWhen(robot.pieces.whenNextIs("RED_NECTAR"), 2);
-// The count went wrong (pieces taken out by hand)? Hold D-pad down 1 s: count = 0.
-g2.dpadDown.heldFor(1.0, robot.pieces::clear).says("hold 1 s: pieces = 0");
+// A light the drivers see: green = full, red = empty (needs a Lights line in Robot.java, and
+// import com.crossbotics.ftchelper.robot.LightColor; at the top of this file).
+robot.lights.show(LightColor.GREEN).when(robot.pieces.whenFull());
+robot.lights.show(LightColor.RED).when(robot.pieces.whenEmpty());
 // Pieces shows "3/4, next POLLEN" by itself; this adds what the intake sees now.
 show("At the intake", robot.pieces::atIntake);
+// The count went wrong? Already on the buttons: hold G2's left stick button 1 s = count 0,
+// and hold the intake's RT 1 s to pull in although the count says full.
 ```
 
 **Why:** `whenFull()`, `whenEmpty()` and `whenNextIs("POLLEN")` are conditions any part can watch: a
-buzz, an LED colour, an action that waits. For a shot table per kind, give the launcher
+buzz, a light (the [Lights](#lights) recipes), an action that waits. Pieces brings a button too: hold
+G2's left stick button 1 s to set the count to 0 when it went wrong (pieces taken out by hand). For a shot table per kind, give the launcher
 `.tableFrom(pieces.nextKind()).tableFor("nectar", "RED_NECTAR", "BLUE_NECTAR")` in `Robot.java`: the next
 piece picks its table, and both NECTAR colours use the `nectar` table.
 **More:** [hooks for other parts](modules/robot.md#pieces-and-piecesensor).

@@ -110,6 +110,8 @@ public class SimPieceSensorTest {
             b.feeder.feedOne();
             // The feeder's timer runs on the real clock, and this test runs faster than real time: end
             // each feed after 0.1 s of simulator time (one piece; the simulator sends one every 0.3 s).
+            // A feed stopped part way does not count by itself: the ready sensor seeing the slot empty
+            // after the shot (the next piece rolling in) is what counts the piece out.
             loop(r, b, 0.1);
             b.feeder.stop();
             loop(r, b, 0.3);

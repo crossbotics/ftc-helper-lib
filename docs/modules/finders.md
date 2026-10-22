@@ -244,9 +244,10 @@ public class PieceTuner extends PieceTunerOpMode {
 ```
 
 Nothing moves. **D-pad up/down** chooses the sensor, **D-pad left/right** what is in front of it (each
-kind, then EMPTY), **A** measures it (20 readings: hold the piece still, where it really sits on the
-robot), **B** forgets that sensor's measurements. The screen shows the live reading (hue and
-saturation, distance) and the kind it sees now. Measure every kind and EMPTY; the lines to copy:
+kind, then EMPTY), **A** measures it (20 readings, about half a second: hold the piece still, where it really sits on
+the robot), **B** forgets that sensor's measurements. The screen shows the live reading (hue and
+saturation, distance) and the kind it sees now. Until a kind's line is in `Tunables.java`, the
+sensor reads that kind as `UNKNOWN`. Measure every kind and EMPTY; the lines to copy:
 
 ```java
 Tunables.IntakeColor: POLLEN = 74   // its colour (hue, degrees)

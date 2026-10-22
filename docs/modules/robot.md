@@ -278,10 +278,14 @@ intake = add(Intake.motor("intake").withCrServos("left_wheel", "right_wheel").re
 | `isRunning()`, `isPushingOut()` | running at all; pushing out now |
 | `onAtStart()` | runs in from START until stopped |
 | `holds(n)` | for the simulator: how many pieces it carries (default: a guess of 3) |
-| `stopsWhen(condition)`, `isHeldBack()` | never runs IN while the condition is true (pushing out still works), e.g. `stopsWhen(() -> pieces.isFull())` ([Pieces](#pieces-and-piecesensor)) |
+| `stopsWhen(condition)`, `isHeldBack()`, `heldBackSec()` | never runs IN while the condition is true (pushing out still works), e.g. `stopsWhen(() -> pieces.isFull())` ([Pieces](#pieces-and-piecesensor)); how long it has been held back |
+| `inAnyway()` | runs in even though `stopsWhen` says no, until `stop()` or `out()` (the count was wrong) |
+| `isRunningOut()` | pushing out now (`out()`, or `reverse()` held) |
 
 `Tunables.Intake`: `inPower` (1.0), `outPower` (0.7). Buttons: hold operator RT in, LT out; with
-`onAtStart()`: RT switches it on/off, hold LT pushes out.
+`onAtStart()`: RT switches it on/off, hold LT pushes out. With `stopsWhen`: hold RT for 1 s to run in
+anyway (with `onAtStart()`: tap RT switches, hold it 1 s runs in anyway), and the Driver Station warns
+when it has been held back for more than 2 s, so the drivers notice a count that says "full" too soon.
 
 ---
 
@@ -424,9 +428,10 @@ goal is seen); with one table, `Shot distance: 48 in (camera)`.
 `Indexer.servo(name)` (Tunables: `rest`, `push`, `pushSec`, `returnSec`), `Indexer.crServo(name)` and
 `Indexer.motor(name)` (`power`, `feedSec` per piece), `.reversed()`. Usually given to a launcher with
 `.feeder(...)`; added on its own its button is operator RB (feed one). A servo indexer goes to `rest`
-at START. Commands: `feedOne()`, `isBusy()`, `isJammed()`, `clearJam()`. `onFeed(runnable)` runs
-your code each time a feed really starts (a [Pieces](#pieces-and-piecesensor) counter uses it to count
-one piece out).
+at START. Commands: `feedOne()`, `isBusy()`, `isFeeding()`, `isJammed()`, `clearJam()`. `onFeed(runnable)`
+runs your code each time a feed really starts. A [Pieces](#pieces-and-piecesensor) counter counts the
+piece out only once it has gone: its ready sensor sees it leave, or the feed ends without a jam (a feed
+stopped part way, or jammed, leaves the count as it was).
 
 ---
 
@@ -537,15 +542,30 @@ pieces = add(Pieces.kinds("POLLEN", "RED_NECTAR", "BLUE_NECTAR")  // your kinds:
 intake = add(Intake.motor("intake").stopsWhen(() -> pieces.isFull()));   // no 5th piece
 ```
 
-**How it counts.** Each new piece the intake sensor sees counts one IN, with its kind. Each feed of
-an [`Indexer`](#indexer) (alone or in a launcher) counts one OUT, the oldest first (the robot fires in
-the order the pieces came in). The ready sensor, if there is one, has the last word on the next
-piece: it corrects the kind, and a piece it sees that was never counted is added.
+**How it counts.** Each new piece the intake sensor sees counts one IN, with its kind: the spot was
+empty, or a different kind is right behind, or (colour and distance sensors) the distance went up and
+down again by `gapMm`: two touching pieces of the same kind. Each feed of an
+[`Indexer`](#indexer) (alone or in a launcher) counts one OUT, the oldest first (the robot fires in the
+order the pieces came in), once the piece has really gone: the ready sensor sees it leave the slot, or,
+without a ready sensor, the feed ends without a jam. A jammed feed, or one stopped part way, counts
+nothing; with a ready sensor, a feed while the slot is empty counts nothing either. While the intake
+pushes out (`out()` or a held `reverse()`), each piece that leaves past the intake sensor counts one
+OUT (the newest) and nothing counts in, so backing a jam out and taking it in again counts right. The
+ready sensor, if there is one, has the last word on the next piece: it corrects the kind, and a piece
+it sees that was never counted is added. After a shot it is trusted again once the slot reads empty,
+or the next piece's reading is steady, or the feed ends.
+
+**The count is a helper, not a guarantee.** A piece that bounces out, or two pieces read as one, make it
+wrong. The drivers, not the count, are responsible for G407 (at most 4) until the robot has a hardware
+stop. When it is wrong: hold the operator's **left stick button** for 1 s (count = 0; Pieces suggests
+it; with one driver that button is the library's slow switch, so give `clear` a button in
+Controls.java), and hold the intake's in-button (RT) for 1 s to pull in although it says full. The
+Driver Station warns when the intake has been held back for more than 2 s.
 
 | Method | |
 | --- | --- |
-| `count()`, `count(kind)` | how many it holds; of one kind |
-| `next()` | the next to fire: a kind, `Pieces.UNKNOWN`, or `Pieces.NONE` (empty) |
+| `count()`, `count(kind)` | how many it holds (a piece being fed counts until it has gone); of one kind |
+| `next()` | the next to fire: a kind, `Pieces.UNKNOWN`, or `Pieces.NONE` (empty); during a feed, the one after it |
 | `nextIs(kind)`, `isFull()`, `isEmpty()` | true/false |
 | `held()` | the list, next to fire first |
 | `atIntake()`, `atReady()` | what each sensor sees now |
@@ -563,7 +583,9 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer
 ```
 
 "POLLEN" uses the `pollen` table by its name; "NONE" and "UNKNOWN" keep the table in use, and a driver's
-button still works until the next piece changes. LEDs: `robot.pieces.whenNextIs("POLLEN")` lights yellow, `whenFull()` lights "full".
+button still works until the next piece changes. Lights (`import com.crossbotics.ftchelper.robot.LightColor;`
+in Controls.java): `robot.lights.show(LightColor.GREEN).when(robot.pieces.whenFull());` and
+`robot.lights.show(LightColor.RED).when(robot.pieces.whenEmpty());` ([Lights](#lights)).
 No feed with nothing in: `Launcher...requireReady("a piece to fire", () -> !pieces.isEmpty())`.
 
 **The sensors** (`PieceSensor`, one spot each; also alone: `add(PieceSensor.color("x").kinds("POLLEN"))`):
@@ -590,12 +612,18 @@ public static class IntakeColor {
 
 | Number | Default | What it does |
 | --- | --- | --- |
-| one per kind (`POLLEN`) | none: that kind reads `UNKNOWN` until tuned (INIT says so) | colour sensor and camera: the kind's hue, 0-360 degrees; distance sensor: the mm it reads with that piece |
+| one per kind (`POLLEN`) | none: that kind reads `UNKNOWN` until tuned (INIT says so): run the Piece Tuner | colour sensor and camera: the kind's hue, 0-360 degrees; distance sensor: the mm it reads with that piece |
 | `nearMm` | 40 (colour), 100 (distance) | a piece is there when the distance is below this |
 | `hueTolerance` / `sizeToleranceMm` | 30 deg / 8 mm | how far from a kind's number still counts as that kind |
 | `minSaturation` | 0.35 (camera), 0 (colour) | how colourful (0-1) it must be; a camera's "is a piece there" |
 | `steadyMs` | 30 | a reading must stay this long before it counts (no flicker counts) |
+| `gapMm` | 8 | colour and distance sensors: the distance going up, then down again, by this much while a piece is there is a second piece touching the first (0 = off) |
 | `gain` | the sensor's own | colour sensor only, optional: its gain |
+
+A piece "is there" when the distance is below `nearMm`. A colour sensor with no distance reading
+(not a REV Color Sensor V3) uses its colour instead: there when the saturation is at least
+`minSaturation`, and never below 0.2 (grey is "empty"). A camera: there when the box is at least
+`minSaturation` colourful. A piece that is there but matches no kind's number reads `UNKNOWN`.
 
 Find them with the **Piece Tuner** ([`PieceTunerOpMode`](finders.md#piecetuneropmode)): it shows each
 sensor's readings and writes the lines to copy into `Tunables.java`. Changed one with the tuning
@@ -607,11 +635,18 @@ the view with `VisionPortal.makeMultiPortalView`). Two webcams share the Control
 into different USB ports (one is USB 3.0), or use a Limelight for the AprilTags. A camera that is
 missing or fails to start warns and sees nothing; the OpMode goes on.
 
+**A sensor that is missing or stops answering** never stops the OpMode: a colour or distance sensor
+missing from the robot configuration warns at INIT and sees nothing; a sensor (or camera) with no new
+reading for 0.5 s warns ("no new reading") and sees nothing until readings come back
+(`isWorking()` is false). Meanwhile Pieces counts nothing with it. The loop never waits for a sensor:
+a REV 2m Distance Sensor reading can take up to 0.2 s, so it is read on a helper thread, and a reading
+older than 0.25 s is thrown away.
+
 **Where to put the sensors.** The intake sensor where each piece passes once and is already held (past
 the rollers), so a piece that bounces out is not counted, and the intake does not stop with a piece
-half in. Pieces that touch each other pass as ONE piece unless they are different kinds: leave a gap
-(a spacer, or a short indexer step). The ready sensor where the next piece waits; after each feed it
-is trusted again once it has seen the slot empty.
+half in. Pieces that touch each other pass as one piece unless they are different kinds, or the
+distance dips between them (`gapMm`; check it with two touching pieces): a gap (a spacer, or a short
+indexer step) is safer. The ready sensor where the next piece waits, so it sees each one leave.
 
 Not done yet: the count does not carry over from the autonomous into the TeleOp (the TeleOp starts
 with `startsWith(...)`; a ready sensor corrects an empty count). The simulator ([robot file](../guides/simulator.md#game-pieces):

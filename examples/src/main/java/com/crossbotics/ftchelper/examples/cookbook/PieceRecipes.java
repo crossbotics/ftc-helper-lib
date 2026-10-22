@@ -6,6 +6,8 @@ import com.crossbotics.ftchelper.robot.Drive;
 import com.crossbotics.ftchelper.robot.Indexer;
 import com.crossbotics.ftchelper.robot.Intake;
 import com.crossbotics.ftchelper.robot.Launcher;
+import com.crossbotics.ftchelper.robot.LightColor;
+import com.crossbotics.ftchelper.robot.Lights;
 import com.crossbotics.ftchelper.robot.Pad;
 import com.crossbotics.ftchelper.robot.PieceSensor;
 import com.crossbotics.ftchelper.robot.Pieces;
@@ -22,11 +24,12 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
  */
 public class PieceRecipes {
 
-    /** A robot that counts its pieces: an intake, a launcher, two colour sensors. */
+    /** A robot that counts its pieces: an intake, a launcher, two colour sensors, a light. */
     public static class Robot extends RobotDefinition {
         public Intake intake;
         public Launcher launcher;
         public Pieces pieces;
+        public Lights lights;
 
         @Override
         protected void define() {
@@ -44,7 +47,8 @@ public class PieceRecipes {
             // end recipe
 
             // recipe: intake-stops-when-full
-            // The intake does not pull in a 5th piece ("() ->": asked every loop). Pushing out still works.
+            // ADD .stopsWhen(...) to the intake line you already have (do not write a second intake line).
+            // It does not pull in a 5th piece ("() ->": asked every loop). Pushing out still works.
             intake = add(Intake.motor("intake").stopsWhen(() -> pieces.isFull()));
             // end recipe
 
@@ -54,6 +58,8 @@ public class PieceRecipes {
                     .feeder(Indexer.servo("indexer"))
                     .requireReady("a piece to fire", () -> !pieces.isEmpty()));
             // end recipe
+
+            lights = add(Lights.gobilda("light"));
         }
     }
 
@@ -76,7 +82,7 @@ public class PieceRecipes {
         }
     }
 
-    /** Using the count: a buzz when full, a button to fix the count, a line on the screen. */
+    /** Using the count: a buzz when full, lights, a line on the screen. */
     @TeleOp(name = "Cookbook Pieces", group = "Cookbook")
     @Disabled
     public static class Controls extends ControlMap<Robot> {
@@ -87,10 +93,14 @@ public class PieceRecipes {
             g2.rumbleWhen(robot.pieces::isFull);
             // Two buzzes when a NECTAR is next to fire.
             g2.rumbleWhen(robot.pieces.whenNextIs("RED_NECTAR"), 2);
-            // The count went wrong (pieces taken out by hand)? Hold D-pad down 1 s: count = 0.
-            g2.dpadDown.heldFor(1.0, robot.pieces::clear).says("hold 1 s: pieces = 0");
+            // A light the drivers see: green = full, red = empty (needs a Lights line in Robot.java, and
+            // import com.crossbotics.ftchelper.robot.LightColor; at the top of this file).
+            robot.lights.show(LightColor.GREEN).when(robot.pieces.whenFull());
+            robot.lights.show(LightColor.RED).when(robot.pieces.whenEmpty());
             // Pieces shows "3/4, next POLLEN" by itself; this adds what the intake sees now.
             show("At the intake", robot.pieces::atIntake);
+            // The count went wrong? Already on the buttons: hold G2's left stick button 1 s = count 0,
+            // and hold the intake's RT 1 s to pull in although the count says full.
             // end recipe
         }
     }

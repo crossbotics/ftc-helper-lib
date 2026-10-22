@@ -345,7 +345,15 @@ stronger and longer each buzz. It works for a turret that follows the goal and f
 
 Two kinds of piece that fly differently (BIOBUZZ: a 2.8 in POLLEN and a 3.6 in NECTAR) need two
 speeds (section 8). A colour sensor where the pieces come in (and one at the "ready to fire" slot) lets the robot
-count what it holds and know the next one:
+count what it holds and know the next one. In `Robot.java`, two more imports at the top, with the others:
+
+```java
+import com.crossbotics.ftchelper.robot.PieceSensor;
+import com.crossbotics.ftchelper.robot.Pieces;
+```
+
+a field next to the others (`public Pieces pieces;`), and in `define()`, BEFORE the launcher line (the
+launcher uses `pieces`):
 
 ```java
 pieces = add(Pieces.kinds("POLLEN", "RED_NECTAR", "BLUE_NECTAR")
@@ -354,19 +362,30 @@ pieces = add(Pieces.kinds("POLLEN", "RED_NECTAR", "BLUE_NECTAR")
         .max(4));
 ```
 
-Each piece the intake sensor sees counts one in, each feed one out. `robot.pieces.next()` says
-`"POLLEN"`, `"UNKNOWN"` or `"NONE"`; `robot.pieces.isFull()` is true at 4 (rule G407). Each kind's
-colour goes in Tunables, measured with the Piece Tuner.
+Each piece the intake sensor sees counts one in, each feed one out once the piece has gone.
+`robot.pieces.next()` says `"POLLEN"`, `"UNKNOWN"` or `"NONE"`; `robot.pieces.isFull()` is true at 4
+(rule G407). Each kind's colour goes in Tunables, measured with the Piece Tuner
+([finders guide](../../guides/finders.md#piece-tuner-what-each-sensor-sees)): until a kind is tuned,
+the sensor reads it as `"UNKNOWN"` (INIT says which kinds are missing), and an UNKNOWN piece keeps the
+shot table in use.
 
-**Let the next piece pick the shot table** (section 8): add two lines to the launcher in `Robot.java`:
+**Let the next piece pick the shot table** (section 8): two more lines in the launcher line. The whole
+launcher line becomes:
 
 ```java
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+        .feeder(Indexer.servo("indexer"))
+        .speedFromDistance(camera)
+        .startTable("pollen")
         .tableFrom(pieces.nextKind())                         // the next piece picks the table
         .tableFor("nectar", "RED_NECTAR", "BLUE_NECTAR")      // both NECTAR colours use "nectar"
+        .requireReady("turret aimed", () -> turret.isAimed()));
 ```
 
-Now the speed is right for whatever is loaded, and the drivers do not switch tables by hand. The whole story, other sensors and the hooks
-(a shot table per kind, LEDs): [Pieces and PieceSensor](../../modules/robot.md#pieces-and-piecesensor),
+Now the speed is right for whatever is loaded, and the drivers do not switch tables by hand. The count
+can be wrong (two pieces that touch, a piece that bounces out): the drivers, not the count, keep the
+robot to 4 pieces. The whole story, other sensors and the hooks (a shot table per kind, lights, the
+buttons that fix a wrong count): [Pieces and PieceSensor](../../modules/robot.md#pieces-and-piecesensor),
 and the [cookbook](../../cookbook.md#game-pieces).
 
 ## 13. A light for the drivers
