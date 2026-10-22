@@ -284,7 +284,8 @@ final class SimScore {
         for (SimPieces.ShotVerdict v : pieces.verdicts()) {
             if (i++ > 0) b.append(',');
             b.append("{\"id\":").append(v.id).append(",\"t\":").append(num(v.time)).append(",\"piece\":").append(q(v.piece))
-                    .append(",\"verdict\":").append(q(v.verdict)).append(",\"hive\":").append(q(v.hive)).append('}');
+                    .append(",\"verdict\":").append(q(v.verdict)).append(",\"hive\":").append(q(v.hive))
+                    .append(",\"ball\":").append(v.ball).append('}');
         }
         b.append("],\"verdictCounts\":{");
         i = 0;

@@ -907,6 +907,7 @@ final class SimPieces {
         final int id;
         final double time;
         final String piece, verdict, hive;
+        int ball = -1;      // which loose piece it was (SimWorld.Ball id), for the page
 
         ShotVerdict(int id, double time, String piece, String verdict, String hive) {
             this.id = id; this.time = time; this.piece = piece; this.verdict = verdict; this.hive = hive;
@@ -975,7 +976,9 @@ final class SimPieces {
                 }
             }
             verdictCounts[best]++;
-            verdicts.addLast(new ShotVerdict(t.id, t.t0, e.getKey().type.name, SimCellJudge.WORDS[best], hive));
+            ShotVerdict v = new ShotVerdict(t.id, t.t0, e.getKey().type.name, SimCellJudge.WORDS[best], hive);
+            v.ball = e.getKey().id;          // the piece's key on the page (SimView.frame): its trail takes the verdict's colour
+            verdicts.addLast(v);
             while (verdicts.size() > VERDICTS_KEPT) verdicts.removeFirst();
             it.remove();
         }

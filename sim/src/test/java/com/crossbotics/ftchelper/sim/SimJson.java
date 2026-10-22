@@ -204,7 +204,8 @@ final class SimJson {
             }
             b.append(']');
             // The game (rules file): clock, score, FLOWER stacks, HIVE tips in progress, shot verdicts. See SimScore.json().
-            b.append(",\"game\":").append(r.pieces.score.json());
+            // (the stream sends it on its own, "g", only when it changes: SimServer.startStream)
+            if (full) b.append(",\"game\":").append(r.pieces.score.json());
         }
         // The running path's plan and where the robot really went (field inches): see SimPaths.
         b.append(",\"plan\":[");

@@ -16,6 +16,13 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - **Simulator: a View menu with all four sides** (keys 1 to 8, remembered in the browser): Drivers (your
   alliance's wall, and it says which), Red wall, Blue wall, Audience side, Far side, From above, Follow
   robot, and a HIVE close-up.
+- **Simulator page: the Match panel** (Control Hub, "Match"; with a rules file): RED and BLUE totals with a
+  breakdown on click, the period clock and whether NECTAR is allowed (G410), each FLOWER's owner and stack
+  (and an owner ring over each FLOWER in 3D), the shot verdict tally and the last shots (the verdict shows
+  over the piece and colours its trail), a Scatter switch, a Hit rate button with its Good/Risky/Poor
+  verdict, and foul notices. A score bar over the 3D view. The stream sends the game on its own, only when
+  it changes (at most 5 a second); each verdict now names its piece (`shots[].ball`). A tipping HIVE
+  turns smoothly in step with the simulator's turn.
 - **Simulator: `sim/.../simview.js`**, the page's drawing helpers (gliding between updates, the striped
   ball, labels) in a small file another page can load too.
 - **A servo's full range: `.fullRange()`** on `Claw`, `Wrist`, `Positioner`, `Hood.servo`, `Turret.servo` and

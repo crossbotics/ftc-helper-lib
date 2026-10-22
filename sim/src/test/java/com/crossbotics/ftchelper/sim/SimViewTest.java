@@ -82,6 +82,8 @@ public class SimViewTest {
             assertTrue(full.containsKey("fast"));
             assertFalse(lite.containsKey("opmodes"));
             assertFalse(lite.containsKey("fast"));
+            assertTrue("BIOBUZZ has a rules file", full.containsKey("game"));
+            assertFalse("the stream sends the game on its own", lite.containsKey("game"));
             assertEquals(full.get("opmodesKey"), lite.get("opmodesKey"));
             assertTrue(lite.containsKey("t"));
             assertTrue(lite.containsKey("pieceTypes"));
@@ -218,6 +220,7 @@ public class SimViewTest {
                         if (events.contains("s") && events.stream().filter("f"::equals).count() >= 5) break;
                     }
                     assertTrue(events.toString(), events.contains("s"));
+                    assertTrue("the game, once at the start", events.contains("g"));
                     assertTrue(events.toString(), events.stream().filter("f"::equals).count() >= 5);
                 }
             } finally {

@@ -20,7 +20,8 @@ import java.util.Map;
  * GET /             the page
  * GET /state        everything the page shows, as JSON
  * GET /stream       the same, kept coming (server-sent events): "f" where everything is, 50 a second
- *                   (SimView.frame); "s" the state without the OpMode list, 10 a second
+ *                   (SimView.frame); "s" the state without the OpMode list and the game, 10 a second;
+ *                   "g" the game (score, clock, FLOWERs, shot verdicts, fouls) when it changes, at most 5 a second
  * GET /opmodes      the OpMode list (the stream sends only its key)
  * GET /seemap?cam=N&any=0|1&step=4  where camera N can see tags (SimView.seeMap)
  * GET /field        the season's field file
@@ -47,7 +48,7 @@ final class SimServer {
     private final java.util.concurrent.atomic.AtomicInteger streams = new java.util.concurrent.atomic.AtomicInteger();
     static final int MAX_STREAMS = 8;
     // How often the stream sends where everything is, and the whole state (milliseconds).
-    static final int FRAME_MS = 20, STATE_MS = 100;
+    static final int FRAME_MS = 20, STATE_MS = 100, GAME_MS = 200;
     // A kept-alive connection with nothing to say for this long is closed (frees its thread).
     private static final int IDLE_MS = 5000;
     final boolean lan;
@@ -219,7 +220,8 @@ final class SimServer {
         Thread t = new Thread(() -> {
             try {
                 c.setSoTimeout(0);
-                long nextState = 0, next = System.nanoTime();
+                long nextState = 0, nextGame = 0, next = System.nanoTime();
+                String lastGame = "";
                 while (!c.isClosed() && !socket.isClosed()) {
                     long now = System.nanoTime();
                     // on a fixed beat (not "wait 20 ms after each send"), so it stays at 50 a second
@@ -229,6 +231,17 @@ final class SimServer {
                     if (now >= nextState) {
                         nextState = now + STATE_MS * 1_000_000L;
                         b.append("event: s\ndata: ").append(SimJson.state(sim, this, false)).append("\n\n");
+                    }
+                    if (now >= nextGame) {
+                        nextGame = now + GAME_MS * 1_000_000L;
+                        String game;
+                        synchronized (sim.robot) {
+                            game = sim.robot.pieces.score.json();
+                        }
+                        if (!game.equals(lastGame)) {
+                            lastGame = game;
+                            b.append("event: g\ndata: ").append(game).append("\n\n");
+                        }
                     }
                     out.write(b.toString().getBytes(StandardCharsets.UTF_8));
                     out.flush();

@@ -186,8 +186,9 @@ parts) with each AprilTag as a square with its ID. If the robot file names a 3D 
 box switches between them. Each camera shows as a cone (webcam yellow, Limelight green); "Camera
 view" shows a camera's picture in the corner (pick the camera when there are two; it is redrawn 15 times
 a second, smaller than the screen, so it costs little). The game pieces are striped balls, so you can see
-them roll and spin. When a HIVE tips, the page turns it over half a second (the simulator tips it at
-once; the pieces in it are already where they land). The 3D library (three.js, MIT license) comes with the simulator, so the page
+them roll and spin. A tipping HIVE turns smoothly (with a rules file the simulator turns it over its
+`tipSeconds` and the page plays the same turn; without one the simulator tips it at once and the page
+still turns it over half a second). The 3D library (three.js, MIT license) comes with the simulator, so the page
 works without the internet. Untick "Show" on a slow computer.
 
 **Smooth motion.** The simulator moves everything 100 times a second and sends the page where everything
@@ -196,6 +197,26 @@ is 50 times a second (a stream: `GET /stream`), with its own clock. The page dra
 at any frame rate (they do not jump 10 times a second). Across a jump (Back to start, Reset field, the
 robot put somewhere by hand) it does not glide. If the stream cannot open (a very old browser, too many
 pages open), the page asks for `/state` 10 times a second instead and still glides, just further behind.
+
+### The Match panel and the score bar
+
+With a rules file (BIOBUZZ has one: [Game rules and the score](#game-rules-and-the-score)), the Control
+Hub's **Match** button shows the game, and a score bar sits over the 3D view (click it to open the panel):
+
+- **The score and the clock**: RED and BLUE totals, the period (AUTO, TELEOP or free play) and the time
+  left. Click a total to see where its points come from (LEAVE, PARK, TIPs, pieces in the up CELL, FLOWERs
+  owned and the pieces in them, the bottom NECTAR bonus, the GARDEN, the other side's fouls). A line says
+  whether a NECTAR into a FLOWER is allowed now (G410).
+- **FLOWERs**: each FLOWER's owner and its stack from the bottom up (a dot per piece in its colour; a hollow
+  dot is outside the scoring rings). In 3D, a ring over each FLOWER in its owner's colour (grey: none) with
+  how many pieces count.
+- **Shots**: the tally of verdicts (clean, rim, other HIVE, frame, miss), the last few shots, and in 3D the
+  verdict over the piece when it is judged; its trail (Layers: Ball trails) takes the verdict's colour.
+- **Scatter**: off (every shot the same), realistic, rough, or as the robot file says (`/cmd action=scatter`).
+- **Hit rate**: 400 pretend shots from the robot as it is now (`GET /hit-rate`), judged like real ones:
+  how many go in cleanly, with its plus-or-minus, Good (80 % or more), Risky (50-80 %) or Poor, and why the
+  others did not. Pick the piece, or the next one in the robot.
+- **Fouls**: each foul charged (G410), newest first; a new one shows over the 3D view for 5 s.
 
 ### Layers
 

@@ -33,8 +33,8 @@
     body:not(.phone) #dsSection { grid-area: ds; display: flex; flex-direction: column; min-height: 0; }
     body:not(.phone) .dh, body:not(.phone) .dh-screen, body:not(.phone) .dh-tele { flex: 1; min-height: 0; display: flex; flex-direction: column; }
     body:not(.phone) #screen { flex: 1; height: auto; min-height: 90px; }
-    body:not(.phone) #view3dSection { grid-area: view; display: flex; flex-direction: column; min-height: 0; }
-    body:not(.phone) #stage { flex: 1; height: auto; min-height: 200px; }
+    body:not(.phone) #view3dSection { grid-area: view; display: flex; flex-direction: column; min-height: 0; overflow: auto; }
+    body:not(.phone) #stage { flex: 1; height: auto; min-height: 170px; }
     body:not(.phone) #padsSection { grid-area: pads; }
     body:not(.phone) #hubSection { grid-area: hub; display: flex; flex-direction: column; min-height: 0; }
     body:not(.phone) .tabbody { flex: 1; min-height: 0; overflow: auto; }
@@ -201,6 +201,25 @@
     background: color-mix(in srgb, var(--panel) 85%, transparent); border: 1px solid var(--line); font-size: 11.5px; line-height: 1.35;
     pointer-events: none; }
   #layerNote[hidden] { display: none; }
+  /* The match: the score bar over the 3D view, foul notices, and the Match panel. */
+  #scoreBar { position: absolute; top: 40px; left: 8px; z-index: 3; padding: 3px 10px; border-radius: 14px;
+    background: color-mix(in srgb, var(--panel) 90%, transparent); font-size: 12.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  #scoreBar[hidden], #toast[hidden] { display: none; }
+  #scoreBar .sr, .scoreRow .red b { color: #cf222e; font-weight: 700; } #scoreBar .sb, .scoreRow .blue b { color: #1f6feb; font-weight: 700; }
+  #toast { position: absolute; top: 72px; left: 50%; transform: translateX(-50%); z-index: 4; max-width: 80%; padding: 6px 12px; border-radius: 8px;
+    background: var(--stop); color: #fff; font-size: 12.5px; font-weight: 600; pointer-events: none; }
+  .scoreRow { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .scoreRow .side { min-width: 92px; font-weight: 700; }
+  .scoreRow .side b { font-size: 18px; margin-left: 4px; }
+  .scoreRow .clock { font: 700 15px/1 ui-monospace, Menlo, monospace; }
+  #scoreDetail { margin-top: 6px; }
+  .flower { display: flex; align-items: center; gap: 6px; margin: 3px 0; font-size: 12.5px; }
+  .flower .stack { display: inline-flex; gap: 2px; flex: none; }
+  .flower .chip { white-space: nowrap; flex: none; }
+  .flower .stack i { width: 11px; height: 11px; border-radius: 50%; border: 1.5px solid rgba(0,0,0,.35); display: inline-block; }
+  .flower .stack i.out { background: transparent !important; }
+  .shots { margin: 4px 0 6px 18px; padding: 0; font-size: 12.5px; }
+  .verdict { display: inline-block; padding: 0 6px; border-radius: 8px; color: #fff; font-size: 11.5px; font-weight: 600; }
   /* A small 3D view: one line per layer (the whole text shows on hover). */
   #layerNote.compact { pointer-events: auto; max-width: 60%; }
   #layerNote.compact div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -284,6 +303,7 @@
     <div class="tabs" role="toolbar" aria-label="Show or hide each panel">
       <button data-tab="robot" class="on" aria-pressed="true">Robot</button><button data-tab="motors" aria-pressed="false">Motors</button>
       <button data-tab="servos" aria-pressed="false">Servos &amp; switches</button><button data-tab="cams" aria-pressed="false">Cameras</button>
+      <button data-tab="match" aria-pressed="false">Match</button>
     </div>
     <div id="noPanels" class="muted">All panels are hidden: click a button above to show one.</div>
     <div class="tabbody">
@@ -323,6 +343,36 @@
     <div id="lights"></div>
     <h3>Switches <span class="muted">(click to hold one pressed)</span></h3>
     <div id="touches"></div>
+    </div>
+    <div class="tab" data-tab="match">
+    <h3 style="margin-top:0">Match</h3>
+    <div id="matchOff" class="muted">No rules file for this field: no score or clock (docs/guides/simulator.md, "Game rules and the score").</div>
+    <div id="matchOn" hidden>
+      <div class="scoreRow">
+        <button class="side red" id="scoreRed" aria-expanded="false" title="Where red's points come from">RED <b>0</b></button>
+        <span class="clock" id="clockText">free play</span>
+        <button class="side blue" id="scoreBlue" aria-expanded="false" title="Where blue's points come from">BLUE <b>0</b></button>
+      </div>
+      <div class="muted" id="nectarNote"></div>
+      <table id="scoreDetail" hidden></table>
+      <h3>FLOWERs <span class="muted">(bottom to top; a hollow dot is below or above the scoring rings)</span></h3>
+      <div id="flowerList"></div>
+      <h3>Shots</h3>
+      <div id="verdictTally" class="muted">No shots yet.</div>
+      <ol id="shotList" class="shots"></ol>
+      <div class="row">
+        <label class="muted">Scatter <select id="scatterSel" aria-label="Shot scatter">
+          <option value="off">off: every shot the same</option><option value="realistic">realistic</option>
+          <option value="rough">rough</option><option value="file">as the robot file says</option></select></label>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <button id="hitRateBtn" title="400 pretend shots from the robot as it is now, judged like real ones">Hit rate</button>
+        <select id="hitPiece" aria-label="Piece for the hit rate"></select>
+      </div>
+      <div id="hitRateOut" class="muted"></div>
+      <h3>Fouls</h3>
+      <div id="foulList" class="muted">None.</div>
+    </div>
     </div>
     <div class="tab" data-tab="cams">
     <h3 style="margin-top:0">Cameras</h3>
@@ -365,7 +415,8 @@
         </div></span>
       <span class="muted" id="v3note"></span>
     </div>
-    <div id="stage" class="off" aria-label="Field and robot in 3D. Drag to turn, scroll to zoom, right-drag to slide."><div id="layerNote" role="status" hidden></div></div>
+    <div id="stage" class="off" aria-label="Field and robot in 3D. Drag to turn, scroll to zoom, right-drag to slide."><div id="layerNote" role="status" hidden></div>
+      <button id="scoreBar" hidden title="The score (Match panel)"></button><div id="toast" role="alert" hidden></div></div>
     <div id="stageOff">The 3D view is off (tick "Show"). The field from above is in the Control Hub's Robot tab.</div>
     <div class="muted" style="margin-top:4px">Drag to turn the view, scroll to zoom, right-drag (or two fingers) to slide.
       While no program runs (or in INIT): double-click the robot, then drag it to move it or drag its ring to turn it
@@ -629,6 +680,8 @@ function gotState(s) {
   s.opmodes = opmodeList;
   lastState = s;
   render(s);
+  fillHitPieces(s);
+  if (s.game) gotGame(s.game);          // /state has it; the stream sends it on its own
 }
 function connect() {
   if (!window.EventSource) return startPolling();
@@ -637,6 +690,7 @@ function connect() {
   es.addEventListener("open", () => { link.opened = true; link.errors = 0; link.mode = "stream"; });
   es.addEventListener("f", e => { link.bytes += e.data.length; gotFrame(JSON.parse(e.data)); });
   es.addEventListener("s", e => { link.bytes += e.data.length; gotState(JSON.parse(e.data)); });
+  es.addEventListener("g", e => { link.bytes += e.data.length; gotGame(JSON.parse(e.data)); });
   es.addEventListener("error", () => {
     // The browser tries again by itself (the simulator restarting); a stream that never opened, or keeps
     // failing, is given up for asking /state.
@@ -1061,6 +1115,152 @@ function update3dPaths(s) {
     line(plan, 0.6, new THREE.LineDashedMaterial({ color: PLAN_COLOR, dashSize: 3, gapSize: 2, transparent: true, opacity: s.planRunning ? 1 : 0.5 }));
   }
 }
+// ---------------------------------------------------------------- Match: score, clock, FLOWERs, shots, fouls
+// From the field's rules file (docs/guides/simulator.md, "Game rules and the score"). The stream sends the game
+// on its own ("g") only when it changes; /state carries it as "game".
+let game = null;
+const seenShot = { id: 0, first: true }, seenFoul = { t: -1, first: true };
+const ballVerdict = new Map();          // a piece's key -> its shot's verdict (its trail takes the colour)
+const VERDICT_COLOR = { clean: "#2ecc71", rim: "#f08c00", "other HIVE": "#b07ce8", frame: "#e5534b", miss: "#9aa3ab" };
+const verdictChip = v => `<span class="verdict" style="background:${VERDICT_COLOR[v] || "#6a7282"}">${escapeHtml(v)}</span>`;
+let scoreOpen = "";                     // the side whose breakdown is shown ("" none)
+function clockWords(c) {
+  if (!c || (c.period !== "AUTO" && c.period !== "TELEOP")) return "free play";
+  const t = Math.max(0, Math.ceil(c.secondsLeft || 0));
+  return `${c.period} ${Math.floor(t / 60)}:${String(t % 60).padStart(2, "0")}`;
+}
+function gotGame(g) {
+  game = g;
+  const on = !!(g && g.rules);
+  $("#matchOff").hidden = on; $("#matchOn").hidden = !on;
+  $("#scoreBar").hidden = !on;
+  if (!on) return;
+  const sc = g.score || {}, red = sc.red || { total: 0 }, blue = sc.blue || { total: 0 };
+  const pts = v => Math.round(v || 0);
+  $("#scoreRed b").textContent = pts(red.total);
+  $("#scoreBlue b").textContent = pts(blue.total);
+  $("#clockText").textContent = clockWords(g.clock);
+  $("#scoreBar").innerHTML = `<span class="sr">RED ${pts(red.total)}</span> &middot; ${escapeHtml(clockWords(g.clock))} &middot; <span class="sb">BLUE ${pts(blue.total)}</span>`;
+  $("#nectarNote").textContent = g.clock && g.clock.period === "TELEOP" || g.clock && g.clock.period === "AUTO"
+    ? (g.clock.nectarAllowed ? "NECTAR into a FLOWER: allowed now (last 60 s)." : "NECTAR into a FLOWER now is a MAJOR FOUL (G410) until the last 60 s.") : "";
+  showScoreDetail();
+  // FLOWERs: owner and the stack, bottom to top
+  const types = (lastState && lastState.pieceTypes) || [];
+  const color = n => (types.find(t => t.name === n) || {}).color || "#999";
+  $("#flowerList").innerHTML = (g.flowers || []).map(f => {
+    const stack = [...f.pieces].sort((a, b) => a.z - b.z).map(p => `<i class="${p.scoring ? "" : "out"}" style="background:${color(p.type)};border-color:${color(p.type)}" title="${escapeHtml(p.type)}, ${p.z.toFixed(1)} in up${p.scoring ? "" : ": not in the scoring volume"}"></i>`).join("");
+    return `<div class="flower"><span class="chip ${f.owner ? "" : ""}" style="${f.owner ? `background:${f.owner === "red" ? "#cf222e" : "#1f6feb"};color:#fff;border-color:transparent` : ""}">${f.owner ? escapeHtml(f.owner.toUpperCase()) : "no owner"}</span>
+      <span>${escapeHtml(f.name)}</span> <span class="stack">${stack || '<span class="muted">empty</span>'}</span></div>`;
+  }).join("") || '<span class="muted">none</span>';
+  drawFlowerMarkers(g.flowers || []);
+  // Shots: the tally and the last few; a new verdict colours that piece's trail and shows over the 3D view
+  const counts = g.verdictCounts || {};
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
+  $("#verdictTally").innerHTML = total ? Object.entries(counts).filter(([, n]) => n > 0).map(([v, n]) => `${verdictChip(v)} ${n}`).join(" ") +
+    ` <span class="muted">of ${total} shots${counts.clean !== undefined ? `: ${Math.round(100 * (counts.clean || 0) / total)}% clean` : ""}</span>` : "No shots yet.";
+  const shots = g.shots || [];
+  $("#shotList").innerHTML = shots.slice(-6).reverse().map(x => `<li>${escapeHtml(x.piece)}: ${verdictChip(x.verdict)}${x.hive ? " " + escapeHtml(x.hive) : ""}</li>`).join("");
+  for (const x of shots) {
+    if (x.id <= seenShot.id) continue;
+    seenShot.id = x.id;
+    if (x.ball >= 0) ballVerdict.set(x.ball, x.verdict);
+    if (!seenShot.first) showVerdict(x);
+  }
+  seenShot.first = false;
+  if (document.activeElement !== $("#scatterSel") && g.scatter) $("#scatterSel").value = g.scatter;
+  // Fouls: newest first; a new one is shown on the 3D view for a few seconds
+  const fouls = g.fouls || [];
+  $("#foulList").innerHTML = fouls.length ? fouls.slice().reverse().map(f => `<div><b>${escapeHtml((f.against || "").toUpperCase())}</b> ${escapeHtml(f.rule)}: ${escapeHtml(f.what)}</div>`).join("") : "None.";
+  for (const f of fouls) {
+    if (f.t <= seenFoul.t) continue;
+    seenFoul.t = f.t;
+    if (!seenFoul.first) toast(`FOUL against ${(f.against || "").toUpperCase()}: ${f.rule} ${f.what}`);
+  }
+  seenFoul.first = false;
+}
+// The breakdown of one side's points (click its score).
+function showScoreDetail() {
+  const t = $("#scoreDetail");
+  const s = scoreOpen && game && game.score && game.score[scoreOpen];
+  t.hidden = !s;
+  $("#scoreRed").setAttribute("aria-expanded", scoreOpen === "red" ? "true" : "false");
+  $("#scoreBlue").setAttribute("aria-expanded", scoreOpen === "blue" ? "true" : "false");
+  if (!s) return;
+  const a = s.auto || {}, o = s.teleop || {}, n = v => Math.round(v || 0);
+  const rows = [["AUTO: LEAVE", "", a.leave], ["AUTO: PARK", "", a.park], ["AUTO: HIVE TIPs", a.tips, a.tipPoints],
+    ["TELEOP: HIVE TIPs", o.tips, o.tipPoints], ["Pieces in the up CELL", o.inCells, o.cellPoints],
+    ["FLOWERs owned / pieces in them", `${o.flowersOwned || 0} / ${o.inFlowers || 0}`, o.flowerPoints], ["Bottom NECTAR bonus", "", o.bottomNectar],
+    ["In the GARDEN", o.inGarden, o.gardenPoints], ["TELEOP: PARK", "", o.park], ["From the other side's fouls", "", s.foulPoints]];
+  t.innerHTML = `<tr><th>${scoreOpen.toUpperCase()}</th><th class="num">count</th><th class="num">points</th></tr>` +
+    rows.map(([k, c, p]) => `<tr><td>${k}</td><td class="num">${c === "" || c === undefined ? "" : c}</td><td class="num">${n(p)}</td></tr>`).join("") +
+    `<tr><th>Total</th><th></th><th class="num">${n(s.total)}</th></tr>`;
+}
+for (const side of ["red", "blue"]) {
+  $("#score" + side[0].toUpperCase() + side.slice(1)).onclick = () => { scoreOpen = scoreOpen === side ? "" : side; showScoreDetail(); };
+}
+$("#scoreBar").onclick = () => { const now = shownPanels(); if (!now.includes("match")) showPanels([...now, "match"]); $("#hubSection").scrollIntoView({ block: "nearest" }); };
+$("#scatterSel").onchange = e => command({ action: "scatter", mode: e.target.value });
+$("#hitRateBtn").onclick = async () => {
+  const out = $("#hitRateOut"), piece = $("#hitPiece").value;
+  out.textContent = "Trying 400 shots...";
+  try {
+    const h = await (await fetch(`/hit-rate?n=400${piece ? "&piece=" + encodeURIComponent(piece) : ""}`, { cache: "no-store" })).json();
+    const why = Object.entries(h.why || {}).filter(([k, n]) => n > 0 && k !== "clean").map(([k, n]) => `${n} ${escapeHtml(k)}`).join(", ");
+    const col = h.verdict === "Good" ? "#2ecc71" : h.verdict === "Risky" ? "#f08c00" : "#e5534b";
+    out.innerHTML = h.n ? `<span class="verdict" style="background:${col}">${escapeHtml(h.verdict || "")}</span> <b>${Math.round(100 * h.rate)}% clean</b> ` +
+      `(&plusmn;${Math.round(100 * h.plusMinus)}) of ${h.n} ${escapeHtml(h.piece)} shots${h.hive ? " at the " + escapeHtml(h.hive) : ""}, scatter ${escapeHtml(h.scatter)}.` +
+      (why ? ` Not clean: ${why}.` : "") + (h.notLaunched ? ` ${h.notLaunched} did not leave the launcher.` : "") + (h.note ? `<br>${escapeHtml(h.note)}` : "")
+      : escapeHtml(h.note || "No shot to try.");
+  } catch (e) { out.textContent = "Could not ask the simulator for a hit rate."; }
+};
+function fillHitPieces(s) {
+  const sel = $("#hitPiece"), names = (s.pieceTypes || []).map(t => t.name);
+  const html = `<option value="">next piece in the robot</option>` + names.map(n => `<option>${escapeHtml(n)}</option>`).join("");
+  if (sel.dataset.html !== html) { const keep = sel.value; sel.innerHTML = html; sel.dataset.html = html; sel.value = keep; }
+}
+// A short notice over the 3D view (fouls), for a few seconds.
+function toast(text) {
+  const t = $("#toast");
+  t.textContent = text; t.hidden = false;
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => { t.hidden = true; }, 5000);
+}
+// A new shot's verdict over the 3D view, where the piece is now, for 2.5 s.
+function showVerdict(x) {
+  if (!v3.ready || !v3.pieceByKey) return;
+  const m = v3.pieceByKey.get(x.ball);
+  const at = m ? m.position.clone() : null;
+  if (!at) return;
+  const label = SimView.label(THREE, x.verdict, { heightIn: 2.4, background: VERDICT_COLOR[x.verdict] || "#6a7282" });
+  label.position.copy(at).add(new THREE.Vector3(0, 0, 4)); label.layers.set(1);
+  v3.scene.add(label);
+  setTimeout(() => { v3.scene.remove(label); label.material.map.dispose(); label.material.dispose(); }, 2500);
+}
+// FLOWER markers in 3D: a ring over each FLOWER in its owner's colour (grey: none), with how many pieces count.
+function drawFlowerMarkers(flowers) {
+  if (!v3.ready) return;
+  if (!v3.flowerGroup) { v3.flowerGroup = new THREE.Group(); v3.scene.add(v3.flowerGroup); }
+  const key = JSON.stringify(flowers.map(f => [f.name, f.owner, f.pieces.filter(p => p.scoring).length]));
+  if (key === v3.flowerKey) return;
+  v3.flowerKey = key;
+  disposeAll(v3.flowerGroup);
+  const goals = (fieldData && fieldData.goals) || [];
+  for (const f of flowers) {
+    const g = goals.find(x => x.name === f.name);
+    if (!g) continue;
+    const col = f.owner === "red" ? 0xcf222e : f.owner === "blue" ? 0x1f6feb : 0x9aa3ab;
+    const ring = new THREE.Mesh(new THREE.TorusGeometry((g.radiusIn || 2) + 0.8, 0.35, 8, 32), new THREE.MeshBasicMaterial({ color: col }));
+    ring.position.set(g.x, g.y, (g.z || 0) + 1.5); ring.layers.set(1);
+    v3.flowerGroup.add(ring);
+    const n = f.pieces.filter(p => p.scoring).length;
+    if (f.owner || n) {
+      const label = SimView.label(THREE, `${f.owner ? f.owner.toUpperCase() : "no owner"} · ${n}`, { heightIn: 2, background: f.owner === "red" ? "rgba(207,34,46,.85)" : f.owner === "blue" ? "rgba(31,111,235,.85)" : undefined });
+      label.position.set(g.x, g.y, (g.z || 0) + 5); label.layers.set(1);
+      v3.flowerGroup.add(label);
+    }
+  }
+}
+
 // ---------------------------------------------------------------- Field in 3D
 // three.js (the same 3D library as the turret page) comes from this simulator, so it works offline.
 // Units are inches in the simulator frame: x to the red drivers' right, y away from them, z up.
@@ -1272,12 +1472,15 @@ function buildTags(fd) {
 }
 // The HIVEs as they are now: in the field model each HIVE's parts (hive_metal_red, hive_skin_red...) turn about
 // their pivot; without it, each CELL is drawn as its plates. Tags on a tipped HIVE move to their other place.
-// The simulator tips a HIVE at once; the page turns it over half a second, so you can see it happen.
+// With a rules file the simulator turns a tipping HIVE over its tipSeconds (game.hives: how far through it is);
+// the page plays that turn smoothly from the same start. Without one the simulator tips it at once, and the page
+// still turns it over half a second, so you can see it happen.
 const TIP_SECONDS = 0.5;
 function updateHives(hives) {
   if (!v3.ready || !hives) return;
+  const serverTips = !!(game && game.rules && game.hives);
   const key = hives.map(h => h.name + h.up).join("|");
-  if (key === v3.hiveKey) return;
+  if (key === v3.hiveKey) { if (serverTips) startServerTips(hives); return; }
   const first = v3.hiveKey === undefined || v3.hiveKey === null;
   v3.hiveKey = key;
   v3.hivePrev = v3.hivePrev || {};
@@ -1302,7 +1505,9 @@ function updateHives(hives) {
     const prev = v3.hivePrev[h.name];
     const cad = [];
     v3.cadGroup.traverse(o => { if (o.name && o.name.startsWith("hive_") && o.name.endsWith("_" + h.alliance)) cad.push(o); });
-    if (!first && prev && prev.up !== h.up && h.plates.length) {
+    v3.hivePlates = v3.hivePlates || {};
+    v3.hivePlates[h.name] = { plates, ids, cad };
+    if (!first && prev && prev.up !== h.up && h.plates.length && !serverTips) {
       // It just tipped: find the turn (about the pivot, across or along the field) that takes the old CELL
       // plates to the new ones, then play it.
       const piv = new THREE.Vector3(...h.pivot), old = prev.plates[0], now = h.plates[0];
@@ -1313,7 +1518,8 @@ function updateHives(hives) {
         const d = v.distanceTo(new THREE.Vector3(now[0], now[1], now[2]));
         if (!best || d < best.d) best = { d, axis, turn };
       }
-      turning.push({ name: h.name, ids, plates, pivot: piv, axis: best.axis, turn: best.turn, cad, from: prev.ang, to: ang });
+      turning.push({ name: h.name, ids, plates, pivot: piv, axis: best.axis, from: -best.turn, to: 0, dur: TIP_SECONDS, cos: false,
+        cad, cadFrom: prev.ang, cadTo: ang });
     } else {
       cad.forEach(o => { o.rotation.x = ang; });
     }
@@ -1328,20 +1534,41 @@ function updateHives(hives) {
     t.parts = meshes.map(m => ({ m, base: m.matrix.clone() }));
     t.t0 = t0;
   }
-  v3.hiveTurns = (v3.hiveTurns || []).filter(x => !turning.some(t => t.name === x.name)).concat(turning);
+  // the plates and tags were all made again: turns still playing on the old ones stop (a server turn starts again below)
+  v3.hiveTurns = turning;
+  if (serverTips) startServerTips(hives);
+}
+// A HIVE the simulator is turning now (game.hives[].tipping): play the same turn (slow, fast, slow) about its pivot,
+// across the field's y axis, from where it started, until the simulator says it has tipped.
+function startServerTips(hives) {
+  const now = performance.now() / 1000;
+  for (const g of game.hives) {
+    if (!g.tipping || g.progress >= 1 || (v3.hiveTurns || []).some(t => t.name === g.name)) continue;
+    const h = hives.find(x => x.name === g.name), mine = v3.hivePlates && v3.hivePlates[g.name];
+    if (!h || !mine) continue;
+    const meshes = [...mine.plates];
+    for (const id of mine.ids) { const m = v3.tagGroup.getObjectByName("tag " + id); if (m) { m.updateMatrix(); m.matrixAutoUpdate = false; meshes.push(m); } }
+    const cadFrom = h.up !== h.startUp ? h.startUp * h.tipDeg * Math.PI / 180 : 0;
+    const cadTo = -h.up !== h.startUp ? h.startUp * h.tipDeg * Math.PI / 180 : 0;
+    const dur = g.tipSeconds || TIP_SECONDS;
+    v3.hiveTurns = (v3.hiveTurns || []).concat([{ name: g.name, parts: meshes.map(m => ({ m, base: m.matrix.clone() })),
+      pivot: new THREE.Vector3(...h.pivot), axis: new THREE.Vector3(0, 1, 0), from: 0, to: h.up * h.tipDeg * Math.PI / 180,
+      t0: now - g.progress * dur, dur, cos: true, hold: true, cad: mine.cad, cadFrom, cadTo }]);
+  }
 }
 // Every frame while a HIVE turns: each of its parts turned back from where it ends by the share still to go.
 function animateHives(now) {
   if (!v3.hiveTurns || !v3.hiveTurns.length) return;
   const rot = new THREE.Matrix4(), toP = new THREE.Matrix4(), back = new THREE.Matrix4();
   v3.hiveTurns = v3.hiveTurns.filter(t => {
-    const k = Math.min(1, (now - t.t0) / TIP_SECONDS), ease = k * k * (3 - 2 * k), left = 1 - ease;
-    rot.makeRotationAxis(t.axis, -t.turn * left);
+    const k = Math.min(1, Math.max(0, (now - t.t0) / t.dur));
+    const ease = t.cos ? (1 - Math.cos(Math.PI * k)) / 2 : k * k * (3 - 2 * k);
+    rot.makeRotationAxis(t.axis, t.from + (t.to - t.from) * ease);
     toP.makeTranslation(t.pivot.x, t.pivot.y, t.pivot.z); back.makeTranslation(-t.pivot.x, -t.pivot.y, -t.pivot.z);
     const M = toP.clone().multiply(rot).multiply(back);
     for (const p of t.parts) { p.m.matrix.copy(M).multiply(p.base); p.m.matrixWorldNeedsUpdate = true; }
-    for (const o of t.cad) o.rotation.x = t.from + (t.to - t.from) * ease;
-    return k < 1;
+    for (const o of t.cad) o.rotation.x = t.cadFrom + (t.cadTo - t.cadFrom) * ease;
+    return k < 1 || t.hold;          // a server turn holds its end until the simulator says it has tipped
   });
 }
 // The field CAD model (field.model in the robot file), shaded flat like the turret page.
@@ -1418,6 +1645,8 @@ function drawTrails(rows) {
       v3.trailGroup.add(tr.line); v3.trails.set(r[0], tr);
     }
     live.add(r[0]);
+    const verdict = ballVerdict.get(r[0]);
+    if (verdict && tr.verdict !== verdict) { tr.verdict = verdict; tr.line.material.color.set(VERDICT_COLOR[verdict] || "#ffffff"); tr.line.material.opacity = 1; }
     const last = tr.pts[tr.pts.length - 1];
     if (!last || Math.hypot(r[2] - last[1], r[3] - last[2], r[4] - last[3]) > 0.3) tr.pts.push([now, r[2], r[3], r[4]]);
     while (tr.pts.length && (tr.pts[0][0] < now - keep || tr.pts.length > N)) tr.pts.shift();
