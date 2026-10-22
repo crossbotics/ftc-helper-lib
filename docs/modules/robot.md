@@ -394,7 +394,8 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer
 | `speedFromDistance(camera)` | speed from the camera's distance; with odometry and `Tunables.Aim.goalX, goalY`, from the odometry's while the camera does not see the goal ([Aim](#aim)) |
 | `speedFromOdometry()` | speed from the odometry's distance only (no camera) |
 | `useTable(name)`, `nextTable()` | the shot table to use ("pollen" for `speedByDistancePollen`, case does not matter); the next one. A name with no table warns and keeps the one in use |
-| `tableFrom(() -> name)` | let code (a game-piece sensor) choose: each time its answer changes to a table's name, that table is used; null changes nothing |
+| `tableFrom(() -> name)` | let code (a game-piece sensor) choose: each time its answer changes to a table's name, that table is used; null, "NONE" and "UNKNOWN" change nothing |
+| `tableFor(table, kinds...)` | which table some game-piece kinds use, e.g. `.tableFor("nectar", "RED_NECTAR", "BLUE_NECTAR")`; a kind named like a table ("POLLEN") needs no line |
 | `startTable(name)` | the table at the start (default: `speedByDistance` if there is one, else the first by name) |
 | `tableName()`, `tableNames()`, `tableField(name)`, `distanceIn()`, `distanceSource()` | |
 | `isReady()`, `isShooting()`, `targetRpm()`, `part()` | |
@@ -552,10 +553,17 @@ piece: it corrects the kind, and a piece it sees that was never counted is added
 | `nextKind()` | `next` as a `Supplier<String>`: for a part that asks every loop |
 | `whenFull()`, `whenEmpty()`, `whenNextIs(kind)` | conditions (`BooleanSupplier`) for LEDs, `rumbleWhen`, `stopsWhen`, an action's wait |
 
-**Hooks for other parts.** A shot table per kind: name the tables like the kinds and, in the TeleOp
-loop or an action, ask the launcher for the table of `robot.pieces.next()` (with the launcher's table
-supplier, give it `robot.pieces.nextKind()`; check the [Launcher](#launcher) section for its exact
-method). LEDs: `robot.pieces.whenNextIs("POLLEN")` lights yellow, `whenFull()` lights "full".
+**Hooks for other parts.** A shot table per kind, chosen by the next piece:
+
+```java
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer"))
+        .speedFromDistance(camera)
+        .tableFrom(pieces.nextKind())                          // the next piece picks the table...
+        .tableFor("nectar", "RED_NECTAR", "BLUE_NECTAR"));     // ...both NECTAR colours use "nectar"
+```
+
+"POLLEN" uses the `pollen` table by its name; "NONE" and "UNKNOWN" keep the table in use, and a driver's
+button still works until the next piece changes. LEDs: `robot.pieces.whenNextIs("POLLEN")` lights yellow, `whenFull()` lights "full".
 No feed with nothing in: `Launcher...requireReady("a piece to fire", () -> !pieces.isEmpty())`.
 
 **The sensors** (`PieceSensor`, one spot each; also alone: `add(PieceSensor.color("x").kinds("POLLEN"))`):

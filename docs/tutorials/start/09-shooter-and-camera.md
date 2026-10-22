@@ -356,7 +356,16 @@ pieces = add(Pieces.kinds("POLLEN", "RED_NECTAR", "BLUE_NECTAR")
 
 Each piece the intake sensor sees counts one in, each feed one out. `robot.pieces.next()` says
 `"POLLEN"`, `"UNKNOWN"` or `"NONE"`; `robot.pieces.isFull()` is true at 4 (rule G407). Each kind's
-colour goes in Tunables, measured with the Piece Tuner. The whole story, other sensors and the hooks
+colour goes in Tunables, measured with the Piece Tuner.
+
+**Let the next piece pick the shot table** (section 8): add two lines to the launcher in `Robot.java`:
+
+```java
+        .tableFrom(pieces.nextKind())                         // the next piece picks the table
+        .tableFor("nectar", "RED_NECTAR", "BLUE_NECTAR")      // both NECTAR colours use "nectar"
+```
+
+Now the speed is right for whatever is loaded, and the drivers do not switch tables by hand. The whole story, other sensors and the hooks
 (a shot table per kind, LEDs): [Pieces and PieceSensor](../../modules/robot.md#pieces-and-piecesensor),
 and the [cookbook](../../cookbook.md#game-pieces).
 

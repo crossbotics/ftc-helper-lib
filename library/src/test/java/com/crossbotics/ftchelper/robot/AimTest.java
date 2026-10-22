@@ -329,6 +329,36 @@ public class AimTest {
         assertEquals("pollen", r.launcher.tableName());
     }
 
+    // Game pieces pick the table: both NECTAR colours use "nectar"; NONE and UNKNOWN keep the table.
+    @Test public void pieceKindsPickTheirShotTable() {
+        AimBot r = bot(GoalTunables.class, false);
+        r.started();
+        final String[] next = {"POLLEN"};
+        r.launcher.tableFrom(() -> next[0]).tableFor("nectar", "RED_NECTAR", "BLUE_NECTAR");
+        r.all().update();
+        assertEquals("pollen", r.launcher.tableName());
+        next[0] = "RED_NECTAR";
+        r.all().update();
+        assertEquals("nectar", r.launcher.tableName());
+        next[0] = Pieces.UNKNOWN;
+        r.all().update();
+        assertEquals("nectar", r.launcher.tableName());
+        next[0] = Pieces.NONE;
+        r.all().update();
+        assertEquals("nectar", r.launcher.tableName());
+        next[0] = "POLLEN";
+        r.all().update();
+        assertEquals("pollen", r.launcher.tableName());
+        next[0] = "BLUE_NECTAR";
+        r.all().update();
+        assertEquals("nectar", r.launcher.tableName());
+        Fakes.FakeTelemetry ft = new Fakes.FakeTelemetry();
+        RobotTelemetry t = new RobotTelemetry(ft.telemetry, () -> 0L);
+        r.launcher.addTelemetry(t);
+        t.update();
+        assertFalse(ft.lastScreen.toString(), ft.lastScreen.toString().contains("no shot table"));
+    }
+
     @Test public void startTableAndTheButtonForTheNextTable() {
         RobotDefinition r = new RobotDefinition() {
             @Override protected void define() {

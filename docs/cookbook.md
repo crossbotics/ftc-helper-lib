@@ -904,8 +904,9 @@ show("At the intake", robot.pieces::atIntake);
 ```
 
 **Why:** `whenFull()`, `whenEmpty()` and `whenNextIs("POLLEN")` are conditions any part can watch: a
-buzz, an LED colour, an action that waits. For a shot table per kind, name the tables like the kinds
-and hand the launcher `robot.pieces.nextKind()` (it says the next kind every loop).
+buzz, an LED colour, an action that waits. For a shot table per kind, give the launcher
+`.tableFrom(pieces.nextKind()).tableFor("nectar", "RED_NECTAR", "BLUE_NECTAR")` in `Robot.java`: the next
+piece picks its table, and both NECTAR colours use the `nectar` table.
 **More:** [hooks for other parts](modules/robot.md#pieces-and-piecesensor).
 
 ### How do I tune the piece sensors?

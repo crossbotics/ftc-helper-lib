@@ -6,6 +6,10 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
+- `Launcher.tableFor(table, kinds...)`: game-piece kinds that share a shot table, so
+  `.tableFrom(pieces.nextKind()).tableFor("nectar", "RED_NECTAR", "BLUE_NECTAR")` lets the next piece pick
+  its table; "NONE" and "UNKNOWN" keep the table in use.
+
 - **Start things along a path:** `PathAt` in a `follow` (or `driveTo`) step starts something once, at
   a place along the path, while the robot keeps driving: `PathAt.inchesLeft(12, ...)`,
   `PathAt.fraction(0.5, ...)`, `PathAt.inchesDone(...)`, `PathAt.part(2, ...)` (where part 2 of a

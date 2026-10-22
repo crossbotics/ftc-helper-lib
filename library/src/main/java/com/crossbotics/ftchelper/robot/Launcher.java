@@ -63,6 +63,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     private String tableName = null;
     private String startTable = null;
     // tableFrom(...): asked every loop; a new answer picks that table.
+    // tableFor(...): game-piece kinds and the table each uses ("red_nectar" -> "nectar").
+    private final java.util.Map<String, String> kindTables = new java.util.HashMap<>();
     private java.util.function.Supplier<String> tableSupplier = null;
     private String lastSupplied = null;
     private String tableProblem = "";
@@ -191,6 +193,23 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     public Launcher tableFrom(java.util.function.Supplier<String> tableName) {
         tableSupplier = tableName;
         lastSupplied = null;
+        return this;
+    }
+
+    /**
+     * Says which shot table some game-piece kinds use, for {@link #tableFrom}: e.g. with
+     * {@code .tableFrom(pieces.nextKind()).tableFor("nectar", "RED_NECTAR", "BLUE_NECTAR")} both NECTAR
+     * colours use {@code speedByDistanceNectar}. A kind with the same name as a table needs no line
+     * ("POLLEN" uses "pollen"). "NONE" and "UNKNOWN" (from {@code Pieces}) never change the table.
+     *
+     * @param table the table's name ("nectar")
+     * @param kinds the kinds that use it ("RED_NECTAR", "BLUE_NECTAR")
+     */
+    public Launcher tableFor(String table, String... kinds) {
+        if (table == null || table.trim().isEmpty() || kinds.length == 0) {
+            throw new IllegalArgumentException("Robot.java: " + name() + ".tableFor(table, kinds...): give a table name and at least one kind");
+        }
+        for (String k : kinds) kindTables.put(k.trim().toLowerCase(java.util.Locale.US), table.trim().toLowerCase(java.util.Locale.US));
         return this;
     }
 
@@ -459,7 +478,11 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
             String now = tableSupplier.get();
             if (now == null ? lastSupplied != null : !now.equals(lastSupplied)) {
                 lastSupplied = now;
-                if (now != null && !now.trim().isEmpty()) useTable(now);
+                if (now != null && !now.trim().isEmpty()) {
+                    String key = now.trim().toLowerCase(java.util.Locale.US);
+                    // "NONE" (nothing held) and "UNKNOWN" (a piece the sensor cannot name) keep the table.
+                    if (!key.equals("none") && !key.equals("unknown")) useTable(kindTables.containsKey(key) ? kindTables.get(key) : key);
+                }
             }
         }
         if (speedMode.isOn() && !tables.isEmpty() && usesDistance()) {
