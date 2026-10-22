@@ -2378,7 +2378,7 @@
     "andymark",
     "studica"
    ],
-   "since": "unreleased",
+   "since": "v0.17.1",
    "docs": [
     {
      "path": "docs/tutorials/start/10-test-your-robot-code.md",

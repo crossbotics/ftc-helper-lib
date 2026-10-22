@@ -7,7 +7,7 @@ where: sim
 minutes: 40
 needs: [any]
 kit_bots: [gobilda, rev, andymark, studica]
-since: unreleased
+since: v0.17.1
 docs: [tutorials/start/10-test-your-robot-code.md, guides/simulator.md#record-a-test]
 ---
 
