@@ -387,6 +387,16 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Changed
 
+- **The auto builder cannot make a strafe for a tank drive** (before, it only warned). No Strafe button, a
+  drive's direction is forward or back only, a tap on the map adds a turn and a drive, and a dragged end
+  stays on the robot's front line. A strafe already in the steps when the Robot code has a tank drive (a
+  mecanum plan, the lesson's example, a saved plan) becomes a turn, the drive and a turn back, listed in a
+  box above the steps. The Built Auto refuses a strafe on a tank robot at INIT ("a strafe ..., not possible
+  on a tank drive") and runs nothing. The shared `stepscore.js` has the rules for both builders
+  (`tankSteps`, `stepsToPoint`, `dragMove`), and `fromJava(src, { drive: 'tank' })` turns pasted strafes into
+  a turn and a drive and lists them; `moveWithTurn` in pasted code is now listed as left out, never skipped
+  silently. docs/guides/simulator.md, "The auto builder".
+
 **Names changed before release (new in this version, so only code written from `main` needs it):**
 - Hood: `angle()` is now where the hood IS (measured, or the servo's time estimate, like `Turret.angle()`);
   where it is going is `targetAngle()`; `currentAngle()` is gone; `isArrived()` is `isAtTarget()`;

@@ -170,6 +170,7 @@ panel.innerHTML = `
     <button data-add="turnTo">+ Turn to</button><button data-add="wait">+ Wait</button><button data-add="run">+ Start something</button>
     <button data-add="action">+ Action</button><button data-add="park">+ Park from here</button>
     <label class="muted" title="Off: new steps go at the end"><input type="checkbox" id="bInsert"> add after the selected step</label></div>
+  <div id="bTankNote" class="b-tanknote" hidden></div>
   <div id="bList"></div>
   <div class="row"><button id="bClear" title="Remove every step">Remove all steps</button><button id="bExample" title="The steps from lesson 6">Load the lesson's example</button></div>
 </div>
@@ -231,6 +232,7 @@ function render() {
 	$('bStepsPane').hidden = pedro;
 	$('bPedroPane').hidden = !pedro;
 	syncRobot();
+	enforceTank();
 	syncNote();
 	view = work();
 	renderRobot();
@@ -253,6 +255,27 @@ function syncRobot() {
 	// "TeleOp next" and the package follow the Robot code until the team types their own.
 	if (info && plan.teleopAuto !== false && info.teleop != null) plan.teleop = info.teleop;
 	if (info && plan.pkgAuto !== false && info.name.includes('.')) plan.pkg = info.name.slice(0, info.name.lastIndexOf('.'));
+}
+
+// A tank drive cannot strafe: every strafe becomes a turn, a drive and a turn back (stepscore.tankSteps),
+// and the list above the steps says what changed. On every render, so no way in (a tank Robot code
+// chosen, the example, undo, a saved plan) leaves a strafe in a tank plan.
+let tankNotice = [];
+function enforceTank() {
+	const plan = B.steps.plan;
+	if (plan.drive !== 'tank') return;
+	const r = S.tankSteps(plan.steps);
+	plan.steps = r.steps;
+	if (r.changes.length) { tankNotice = r.changes; B.sel = null; }
+}
+function renderTankNotice() {
+	const box = $('bTankNote');
+	box.hidden = !tankNotice.length;
+	if (!tankNotice.length) return;
+	box.innerHTML = `<p><b>A tank drive cannot strafe</b>, so ${tankNotice.length === 1 ? 'this strafe became' : 'these strafes became'} a turn and a drive (the robot drives the same route; step numbers from before the change):</p>`
+		+ `<ul class="b-checks">${tankNotice.map((t) => `<li class="warn">${esc(t)}</li>`).join('')}</ul>`
+		+ '<button class="small" id="bTankOk">OK</button>';
+	$('bTankOk').onclick = () => { tankNotice = []; renderTankNotice(); };
 }
 
 // A note the builder wrote follows the spot; a note the team wrote stays as it is.
@@ -405,31 +428,14 @@ function moveHandle(id, x, y) {
 	if (id === 's') { plan.start.x = snap(x); plan.start.y = snap(y, 0.1); return; }
 	const i = +id.slice(1), s = plan.steps[i];
 	if (!s || s.kind !== 'move') return;
-	const p = poseBefore(i);
-	if (plan.drive === 'mecanum') {
-		const [n] = stepsTo(p, x, y);
-		if (n) { s.inches = n.inches; s.dir = n.dir; }
-	} else {
-		// Tank: along the robot's front only (forward or back).
-		const f = [-Math.sin(p.h * Math.PI / 180), Math.cos(p.h * Math.PI / 180)];
-		const along = snap((x - p.x) * f[0] + (y - p.y) * f[1]);
-		s.inches = Math.abs(along); s.dir = along < 0 ? 180 : 0;
-	}
+	// Mecanum: straight there; tank: along the robot's front only (forward or back, never sideways).
+	const n = S.dragMove(plan.drive, poseBefore(i), x, y);
+	if (n) { s.inches = n.inches; s.dir = n.dir; }
 }
 
-// The steps that drive the robot from pose p to (x, y): mecanum one move in any direction; tank a turn
-// (unless it is straight ahead or behind), then a move forward or back. (The web builder's rule.)
-function stepsTo(p, x, y) {
-	const dx = x - p.x, dy = y - p.y, dist = snap(Math.hypot(dx, dy));
-	if (dist < 0.5) return [];
-	const a = P.wrap(P.headingOf(dx, dy) - p.h);
-	const name = `To (${fmt(x)}, ${fmt(y)})`;
-	if (B.steps.plan.drive === 'mecanum') return [{ kind: 'move', label: name, inches: dist, dir: ((Math.round(-a) % 360) + 360) % 360, power: 0.6 }];
-	if (Math.abs(a) <= 1) return [{ kind: 'move', label: name, inches: dist, dir: 0, power: 0.6 }];
-	if (Math.abs(a) >= 179) return [{ kind: 'move', label: name, inches: dist, dir: 180, power: 0.6 }];
-	return [{ kind: 'turn', label: `Face (${fmt(x)}, ${fmt(y)})`, deg: Math.round(a), power: 0.5 },
-		{ kind: 'move', label: name, inches: dist, dir: 0, power: 0.6 }];
-}
+// The steps that drive the robot from pose p to (x, y): mecanum one move in any direction; tank a turn,
+// then a move forward or back (stepscore.stepsToPoint, the web builder's rule).
+const stepsTo = (p, x, y) => S.stepsToPoint(B.steps.plan.drive, p, x, y);
 
 // Where a new curve's control points go: off to the side of the straight line, so the bend shows.
 function curveControls(a, b, n) {
@@ -712,10 +718,12 @@ function stepForm(s, i) {
 	const code = (ph) => `<label class="grow">${s.kind === 'run' ? 'Command' : 'Action'} <input type="text" class="code" data-k="code" spellcheck="false" autocapitalize="off" value="${esc(s.code ?? '')}" placeholder="${ph}" list="${s.kind === 'run' ? 'bCommands' : 'bActionList'}"></label>`;
 	switch (s.kind) {
 		case 'move': {
-			const known = DIRS.some(([d]) => d === +s.dir);
-			const opts = DIRS.filter(([d]) => B.steps.plan.drive !== 'tank' || d === 0 || d === 180 || d === +s.dir)
+			// A tank drive: forward or back only (no strafe, no other angle).
+			const tank = B.steps.plan.drive === 'tank';
+			const known = tank || DIRS.some(([d]) => d === +s.dir);
+			const opts = DIRS.filter(([d]) => !tank || S.TANK_DIRS.includes(d))
 				.map(([d, t]) => `<option value="${d}"${d === +s.dir ? ' selected' : ''}>${t}</option>`).join('')
-				+ (B.steps.plan.drive !== 'tank' || !known ? `<option value="other"${known ? '' : ' selected'}>another angle</option>` : '');
+				+ (tank ? '' : `<option value="other"${known ? '' : ' selected'}>another angle</option>`);
 			return `<div class="row">${name('To the goal')}</div><div class="row"><label><input type="number" step="0.5" data-k="inches" value="${fmt(+s.inches)}"> in</label>
 				<select data-k="dirSel" aria-label="Direction">${opts}</select>${known ? '' : `<label><input type="number" step="5" data-k="dir" value="${fmt(+s.dir)}"> deg</label>`}${power}</div>`;
 		}
@@ -740,6 +748,7 @@ function renderSteps() {
 	box.innerHTML = steps.length ? '' : '<p class="muted">No steps yet. Tap the map, or press a button above.</p>';
 	const tank = B.steps.plan.drive === 'tank';
 	$('bAddStrafe').hidden = tank;
+	renderTankNotice();
 	$('bInsert').checked = !!B.insert;
 	steps.forEach((s, i) => {
 		const e = view.sim.ends[i];
@@ -780,6 +789,7 @@ function stepInput(i, t) {
 		const s = B.steps.plan.steps[i];
 		B.sel = i;
 		if (k === 'dirSel') { if (t.value !== 'other') s.dir = +t.value; else if (DIRS.some(([d]) => d === +s.dir)) s.dir = 45; }
+		else if (k === 'dir' && B.steps.plan.drive === 'tank' && S.sideways(v)) return;   // a tank drive: forward or back only
 		else if (k === 'wait') { if (t.checked) { s.kind = 'action'; s.timeout = s.timeout ?? ACTION_LIMIT_SEC; } else s.kind = 'alongside'; }
 		else if (k === 'label' || k === 'code') s[k] = t.value;
 		else if (Number.isFinite(v)) s[k] = v;   // out of range stays: the checks say what is wrong

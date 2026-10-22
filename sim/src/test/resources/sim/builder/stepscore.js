@@ -20,7 +20,7 @@
 //          { kind: 'action', code, timeout }                 runs an action from Actions.java and waits
 //          { kind: 'alongside', code }                       starts an action, goes on at once
 //          { kind: 'park', sec }                             parkWithSeconds: the steps after it get the last sec
-import { wrap, num, headingOf, footprint, checkHits, otherAlliance, pointInPoly, polysOverlap,
+import { wrap, num, round1, headingOf, footprint, checkHits, otherAlliance, pointInPoly, polysOverlap,
 	javaString, tokenize, readArgs, evalNum } from './pathcore.js';
 
 export const KINDS = ['move', 'turn', 'turnTo', 'wait', 'run', 'action', 'alongside', 'park'];
@@ -49,6 +49,83 @@ function moveVector(h, dir) {
 
 /** True if a move direction has a sideways part (a tank drive cannot do it). Like AutoDrive.move. */
 export const sideways = (dir) => Math.abs(Math.sin(dir * Math.PI / 180)) > 1e-6;
+
+/** The move directions a drive can do, for the page's picker: a tank drive only forward (0) and back (180). */
+export const TANK_DIRS = [0, 180];
+
+const MOVING_KINDS = ['move', 'turn', 'turnTo'];
+
+/**
+ * The steps for a tank drive: a tank drive cannot strafe, so every move with a sideways part becomes a
+ * turn to face the way it went, the same move straight forward (or back, when that turns less), and a
+ * turn back to the heading it had (left out when the next driving step is a turnTo, which sets the
+ * heading anyway, or when no driving step follows). The robot drives the same route. A direction with no
+ * sideways part is written 0 or 180 (360 -> 0, -180 -> 180). The steps given are not changed.
+ * Returns { steps, changes: [text: what changed, step numbers as they were] }.
+ */
+export function tankSteps(steps) {
+	const out = [], changes = [];
+	(steps || []).forEach((s, i) => {
+		if (s.kind !== 'move' || !Number.isFinite(+s.dir) || !Number.isFinite(+s.inches)) { out.push(s); return; }
+		if (!sideways(+s.dir)) {
+			const back = Math.cos(+s.dir * Math.PI / 180) < 0;
+			out.push(+s.dir === (back ? 180 : 0) ? s : { ...s, dir: back ? 180 : 0 });
+			return;
+		}
+		const inches = Math.abs(+s.inches);
+		const way = +s.dir + (+s.inches < 0 ? 180 : 0);      // clockwise from the front
+		let a = wrap(-way), dir = 0;                         // the turn: counterclockwise +
+		if (Math.abs(a) > 90 + 1e-9) { a = wrap(a + 180); dir = 180; }
+		a = Math.round(a * 10) / 10;
+		const name = String(s.label ?? '').trim() || 'Drive';
+		const power = 0.5;
+		const turnWords = (d) => `turn ${num(Math.abs(d))}° ${d >= 0 ? 'left' : 'right'}`;
+		out.push({ kind: 'turn', label: `${name} (turn)`, deg: a, power },
+			{ kind: 'move', label: s.label, inches, dir, power: s.power });
+		const next = (steps || []).slice(i + 1).find((x) => MOVING_KINDS.includes(x.kind));
+		const turnBack = next && next.kind !== 'turnTo';
+		if (turnBack) out.push({ kind: 'turn', label: `${name} (turn back)`, deg: -a, power });
+		changes.push(`Step ${i + 1} (${name}): ${num(inches)} in at ${num(((way % 360) + 360) % 360)}° is a strafe, not possible on a tank drive. `
+			+ `Now: ${turnWords(a)}, drive ${num(inches)} in ${dir ? 'back' : 'forward'}`
+			+ (turnBack ? `, ${turnWords(-a)} back.` : next ? ' (the turnTo after it sets the heading).' : ' (it ends facing the way it drove).'));
+	});
+	return { steps: out, changes };
+}
+
+// ------------------------------------------------------------------ the map: drive there, drag a drive's end
+
+const snapIn = (v) => Math.round(v / 0.5) * 0.5;   // the map's half inch
+
+/**
+ * The steps that drive the robot from pose p ({ x, y, h }) to (x, y) ("drive there" on the map): mecanum
+ * one move in any direction; tank a turn (unless it is straight ahead or behind), then a move forward or
+ * back, never a strafe. Both pages use it.
+ */
+export function stepsToPoint(drive, p, x, y) {
+	const dx = x - p.x, dy = y - p.y, dist = snapIn(Math.hypot(dx, dy));
+	if (dist < 0.5) return [];
+	const a = wrap(headingOf(dx, dy) - p.h);   // counterclockwise from the robot's front
+	const name = `To (${num(round1(x))}, ${num(round1(y))})`;
+	if (drive === 'mecanum') return [{ kind: 'move', label: name, inches: dist, dir: ((Math.round(-a) % 360) + 360) % 360, power: 0.6 }];
+	if (Math.abs(a) <= 1) return [{ kind: 'move', label: name, inches: dist, dir: 0, power: 0.6 }];
+	if (Math.abs(a) >= 179) return [{ kind: 'move', label: name, inches: dist, dir: 180, power: 0.6 }];
+	return [{ kind: 'turn', label: `Face (${num(round1(x))}, ${num(round1(y))})`, deg: Math.round(a), power: 0.5 },
+		{ kind: 'move', label: name, inches: dist, dir: 0, power: 0.6 }];
+}
+
+/**
+ * A drive's end dragged to (x, y), from pose p: its new { inches, dir }. Mecanum goes straight there (any
+ * direction); a tank drive stays on the line through its front (forward or back only, never sideways).
+ */
+export function dragMove(drive, p, x, y) {
+	if (drive === 'mecanum') {
+		const [n] = stepsToPoint(drive, p, x, y);
+		return n ? { inches: n.inches, dir: n.dir } : null;
+	}
+	const f = [-Math.sin(p.h * Math.PI / 180), Math.cos(p.h * Math.PI / 180)];
+	const along = snapIn((x - p.x) * f[0] + (y - p.y) * f[1]);
+	return { inches: Math.abs(along), dir: along < 0 ? 180 : 0 };
+}
 
 /** The heading a turn or turnTo ends at, and the signed degrees it turns (the short way, like AutoDrive). */
 export function turnEnd(step, h, startH) {
@@ -302,7 +379,7 @@ export function checkPlan(plan, opts = {}) {
 			if (!Number.isFinite(+s.inches) || !Number.isFinite(+s.dir)) add(i, 'bad', `${n}: give the inches and the direction as numbers.`);
 			else {
 				if (plan.drive === 'tank' && sideways(+s.dir)) {
-					add(i, 'bad', `${n} (${stepName(s)}): a tank drive can only move at 0 (forward) or 180 (back), not ${num(+s.dir)}. Turn first, then move (the robot stops with "Turn first, then move").`);
+					add(i, 'bad', `${n} (${stepName(s)}): a strafe, not possible on a tank drive: it can only move at 0 (forward) or 180 (back), not ${num(+s.dir)}. Turn first, then move (the robot stops with "Turn first, then move").`);
 				}
 				if (Math.abs(+s.inches) < 0.05) add(i, 'warn', `${n} (${stepName(s)}): 0 inches, so it does nothing.`);
 			}
@@ -521,16 +598,18 @@ export function toScenario(plan, opts = {}) {
 // ------------------------------------------------------------------ Java in
 
 const STEP_METHODS = { move: 4, turn: 3, turnTo: 3, waitSeconds: 2, run: 2, action: null, alongside: 1, parkWithSeconds: 1 };
-const OTHER_METHODS = ['menuChoice', 'menuYesNo', 'onlyIf', 'end', 'driveTo', 'follow', 'step', 'waitUntil'];
+const OTHER_METHODS = ['menuChoice', 'menuYesNo', 'onlyIf', 'end', 'driveTo', 'follow', 'step', 'waitUntil', 'moveWithTurn'];
 
 /**
  * Reads an Auto file, or only its steps, and gives back what it could:
  * { plan: { start, steps, mirror?, opmode?, teleop?, className?, group?, pkg? } | null,
- *   drive: 'mecanum' | null (mecanum if a move goes sideways), problems: [text], notes: [text] }.
+ *   drive: 'mecanum' | null (mecanum if a move goes sideways), problems: [text], notes: [text],
+ *   tank: [text] (opts.drive 'tank' only: each strafe, not possible on a tank drive, and the turn and
+ *   drive it became, from tankSteps; drive is then null) }.
  * Plain numbers only, like the Pedro importer: a step with a name in place of a number
  * (Tunables.Auto.parkInches) is left out, and the problem says so.
  */
-export function fromJava(src) {
+export function fromJava(src, opts = {}) {
 	const tk = tokenize(src);
 	const problems = [], notes = [];
 	const steps = [];
@@ -578,6 +657,8 @@ export function fromJava(src) {
 		if (t.p !== '.' || !tk[i + 1]?.id || tk[i + 2]?.p !== '(') continue;
 		const m = tk[i + 1].id;
 		const before = tk[i - 1];
+		// moveWithTurn (AutoRoutine's, on any list): never read silently.
+		if (m === 'moveWithTurn') { others.add(m); i = readArgs(tk, i + 2).next - 1; continue; }
 		// Only the step list's own calls: s.x(...), steps.x(...), or chained after one: ...).x(...)
 		const onList = before && (before.p === ')' || /^(s|steps)$/.test(before.id ?? '')) && tk[i - 2]?.p !== '.';
 		if (!onList) {
@@ -634,6 +715,8 @@ export function fromJava(src) {
 			onlyIf: 'every step inside an onlyIf was read as if it always runs', end: 'it closes an onlyIf',
 			driveTo: 'use the Pedro / driveTo builder for it', follow: 'use the Pedro / driveTo builder for it',
 			step: 'your own steps are not in this builder', waitUntil: 'a wait for a condition is not in this builder',
+			moveWithTurn: opts.drive === 'tank' ? 'not possible on a tank drive (it drives sideways while it turns). Use turnTo, then move'
+				: 'Steps has no moveWithTurn (it is AutoRoutine\'s). Use turnTo, then move',
 		}[m];
 		problems.push(`${m}(...) was left out: ${why}.`);
 	}
@@ -641,6 +724,13 @@ export function fromJava(src) {
 	if (!anything) problems.push('No s.start(...) or steps (move, turn, turnTo, waitSeconds, run, action, alongside, parkWithSeconds) found.');
 	if (anything && !start) notes.push('No s.start(...) line: the start spot stays as it was.');
 	else if (start && start.spot === false) notes.push('s.start(note, heading) gives no spot: the robot stays where it was on the map. Drag it to the real spot (the simulator needs the spot too).');
+	// A tank drive cannot strafe: each strafe becomes a turn and a drive, and the page lists them.
+	let tank = [];
+	if (opts.drive === 'tank') {
+		const t = tankSteps(steps);
+		steps.splice(0, steps.length, ...t.steps);
+		tank = t.changes;
+	}
 	const plan = anything ? { start, steps } : null;
 	if (plan) {
 		if (mirror !== undefined) plan.mirror = mirror;
@@ -651,7 +741,7 @@ export function fromJava(src) {
 		if (pkg !== undefined) plan.pkg = pkg.replace(/\.autos$/, '');
 	}
 	const drive = steps.some((s) => s.kind === 'move' && sideways(s.dir)) ? 'mecanum' : null;
-	return { plan, drive, problems, notes };
+	return { plan, drive, problems, notes, tank };
 }
 
 export { pointInPoly, headingOf };

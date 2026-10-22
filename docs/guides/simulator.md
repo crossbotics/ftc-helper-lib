@@ -268,6 +268,14 @@ What a team does, step by step:
      (`parkWithSeconds`). A button adds its step at the end (tick "add after the selected step" to put it
      after the one you picked). Tap the field map to add a drive to that spot (a tank drive gets a turn first), drag the blue dot at the end of a drive to
      change it, or use the list: each step has its numbers, arrows to move it, and its own warnings.
+     **A tank drive cannot strafe, so the builder never makes one for it:** no Strafe button, a drive's
+     direction is only forward or back, a tap adds a turn and a drive, and a dragged end stays on the line
+     through the robot's front. When the Robot code chosen has a tank drive, any strafe already in the
+     steps (from a mecanum plan, the lesson's example or a saved plan) becomes a turn, the drive forward
+     (or back, when that turns less) and a turn back to the heading it had (left out when a turnTo comes
+     next), so the robot drives the same route; a box above the steps lists each one. If a strafe still
+     reaches the Built Auto on a tank robot, INIT stops with "a strafe ..., not possible on a tank drive"
+     and nothing runs.
    - **Pedro path** (mecanum with odometry): tap to add lines or curves, drag the ends and the control
      points, choose each part's heading rule and speed limit, hold the end, and add things to start along the
      path (`PathAt`: inches done or left, part of the path, start of a part, near a point). **follow** needs a
@@ -283,7 +291,7 @@ What a team does, step by step:
    team in the page (print it from there): the note in big letters, the field with the robot's start footprint and heading, red and blue,
    and the first step.
 5. **Checks** before a run: the field walls and parts along the way, the start rules (touching the wall, on
-   your half, not in the LOADING ZONE, inside the 18 in box), more than 30 s, the park time, a tank strafe,
+   your half, not in the LOADING ZONE, inside the 18 in box), more than 30 s, the park time,
    names left empty. The time is a plan from simple speed numbers (an action counts its whole time limit).
 6. **Run in the simulator.** The simulator INITs the **Built Auto** (its own autonomous, listed in the
    Driver Hub under "Builder") with your plan, puts the field's pieces back and the preload in the robot (a

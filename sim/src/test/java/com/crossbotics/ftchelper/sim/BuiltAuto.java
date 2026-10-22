@@ -128,14 +128,23 @@ public class BuiltAuto extends Auto<RobotDefinition> {
             }
         }
 
-        // Every command and action name in the plan, found and checked; nothing is called.
+        // Every command and action name in the plan, found and checked; nothing is called. A strafe on a
+        // tank drive is refused here too, so it never runs (the page turns strafes into a turn and a drive).
         void check(RobotDefinition robot) {
+            boolean tank = robot.drive() != null && !robot.drive().isMecanum();
             for (int i = 0; i < steps.size(); i++) {
                 Map<String, Object> st = steps.get(i);
                 String kind = SimJsonReader.string(st, "kind", "");
                 String label = SimJsonReader.string(st, "label", "");
                 String where = "step " + (i + 1) + (label.isEmpty() ? "" : " (\"" + label + "\")");
                 try {
+                    double dir = SimJsonReader.number(st, "dir", 0);
+                    if (tank && kind.equals("move") && Math.abs(Math.sin(Math.toRadians(dir))) > 1e-6) {
+                        throw new IllegalArgumentException("a strafe (a move at " + (dir == Math.rint(dir) ? String.valueOf((long) dir) : String.valueOf(dir))
+                                + " degrees), not possible on a tank drive: " + robot.getClass().getSimpleName()
+                                + " has a tank drive, which only moves at 0 (forward) or 180 (back). Turn first, then move "
+                                + "(the auto builder does this for a tank drive)");
+                    }
                     String code = SimJsonReader.string(st, "code", "");
                     if (kind.equals("run")) BuiltCode.checkCommand(code, robot);
                     if (kind.equals("action") || kind.equals("alongside")) BuiltCode.checkAction(code, robot);
