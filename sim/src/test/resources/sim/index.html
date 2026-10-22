@@ -181,6 +181,29 @@
   .lightDot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid rgba(0,0,0,.45); vertical-align: middle; }
   .lightDot.dark { background: #222; border-color: var(--muted); }
   #stageOff { display: none; color: var(--muted); padding: 24px; text-align: center; }
+  /* The View and Layers menus over the 3D view (the same look), and the words for the layers' lines (bottom left). */
+  .dropdown { position: relative; }
+  .menu { position: absolute; z-index: 8; top: calc(100% + 4px); left: 0; width: min(320px, 86vw); padding: 8px 10px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,.22);
+    display: grid; gap: 5px; font-size: 13px; }
+  .menu[hidden] { display: none; }
+  .menu > button { text-align: left; display: flex; gap: 8px; align-items: baseline; }
+  .menu > button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .menu > button.on .muted { color: inherit; }
+  .menu kbd { font: 11px ui-monospace, Menlo, monospace; padding: 0 4px; border: 1px solid var(--line); border-radius: 3px; background: var(--bg); color: var(--ink); }
+  .menu label { display: flex; gap: 6px; align-items: baseline; cursor: pointer; }
+  .menu label.sub { margin-left: 22px; color: var(--muted); font-size: 12px; }
+  .menu .legend { margin: -2px 0 2px 22px; font-size: 11.5px; color: var(--muted); line-height: 1.7; }
+  .menu .legend i { display: inline-block; width: 14px; height: 4px; border-radius: 2px; margin: 0 3px 2px 6px; vertical-align: middle; }
+  .menu .legend span { white-space: nowrap; margin-right: 6px; }
+  .menu .legend i { margin-left: 0 !important; }
+  #layerNote { position: absolute; left: 8px; bottom: 8px; z-index: 2; max-width: min(50%, 480px); padding: 4px 8px; border-radius: 8px;
+    background: color-mix(in srgb, var(--panel) 85%, transparent); border: 1px solid var(--line); font-size: 11.5px; line-height: 1.35;
+    pointer-events: none; }
+  #layerNote[hidden] { display: none; }
+  /* A small 3D view: one line per layer (the whole text shows on hover). */
+  #layerNote.compact { pointer-events: auto; max-width: 60%; }
+  #layerNote.compact div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   #stage.off + #stageOff { display: block; }
 </style>
 </head>
@@ -311,15 +334,38 @@
     <div class="row">
       <h2 style="margin:0">Field in 3D</h2>
       <label class="muted"><input type="checkbox" id="show3d"> Show</label>
-      <span class="muted">View:</span>
-      <button data-view="drivers" class="on">Drivers</button><button data-view="audience">Audience</button>
-      <button data-view="top">From above</button><button data-view="follow">Follow robot</button>
+      <span class="dropdown"><button id="viewsBtn" aria-haspopup="true" aria-expanded="false" title="Where the 3D view looks from (keys 1-8)">View: <b id="viewName">Drivers (red wall)</b></button>
+        <div id="viewsMenu" class="menu" hidden>
+          <button data-view="drivers"><kbd>1</kbd> Drivers: your alliance's wall <span class="muted" id="driversWall">(red)</span></button>
+          <button data-view="red"><kbd>2</kbd> Red wall (red drivers)</button>
+          <button data-view="blue"><kbd>3</kbd> Blue wall (blue drivers)</button>
+          <button data-view="audience"><kbd>4</kbd> Audience side</button>
+          <button data-view="far"><kbd>5</kbd> Far side (across from the audience)</button>
+          <button data-view="top"><kbd>6</kbd> From above</button>
+          <button data-view="follow"><kbd>7</kbd> Follow robot</button>
+          <button data-view="close" id="closeBtn"><kbd>8</kbd> <span id="closeName">HIVE close-up</span></button>
+          <div class="muted">Keys 1-8 pick a view (not while typing). Remembered in this browser.</div>
+        </div></span>
       <label class="muted" id="camViewLabel" style="display:none"><input type="checkbox" id="camView" checked> Camera view</label>
       <select id="camPick" aria-label="Which camera" style="display:none"></select>
       <label class="muted" id="cadLabel" style="display:none"><input type="checkbox" id="useCad" checked> Field CAD model</label>
+      <span class="dropdown"><button id="layersBtn" aria-haspopup="true" aria-expanded="false" title="Lines and maps over the 3D view">Layers</button>
+        <div id="layersMenu" class="menu" hidden>
+          <label><input type="checkbox" data-layer="sight"> Camera sight lines to the tags</label>
+          <div class="legend"><span><i style="background:#2ecc71"></i>seen</span> <span><i style="background:#d63384"></i>blocked?</span> <span><i style="background:#f08c00"></i>too slanted</span> <span><i style="background:#e5534b"></i>too small</span> <span><i style="background:#9aa3ab"></i>out of view</span> <span><i style="background:#b07ce8"></i>lighting</span> </div>
+          <label><input type="checkbox" data-layer="cone"> Camera view cone</label>
+          <label><input type="checkbox" data-layer="seemap"> Floor map: where the camera sees tags</label>
+          <label class="sub"><input type="checkbox" data-layer="seemapAny"> with the robot turned any way (else: as it faces now)</label>
+          <div class="legend" id="mapLegend"><span><i style="background:rgba(30,190,90,.3)"></i>1 tag</span> <span><i style="background:rgba(30,190,90,.5)"></i>2-3</span> <span><i style="background:rgba(30,190,90,.7)"></i>4 or more</span> </div>
+          <label><input type="checkbox" data-layer="arc"> Shot arc if it fired now, with its peak</label>
+          <label><input type="checkbox" data-layer="trails"> Ball trails</label>
+          <label><input type="checkbox" data-layer="paths"> Path lines (plan and where it went)</label>
+          <label><input type="checkbox" data-layer="size"> Robot size box (and the 18 in start cube)</label>
+          <div class="muted">What each line means: docs/guides/simulator.md, "Layers".</div>
+        </div></span>
       <span class="muted" id="v3note"></span>
     </div>
-    <div id="stage" class="off" aria-label="Field and robot in 3D. Drag to turn, scroll to zoom, right-drag to slide."></div>
+    <div id="stage" class="off" aria-label="Field and robot in 3D. Drag to turn, scroll to zoom, right-drag to slide."><div id="layerNote" role="status" hidden></div></div>
     <div id="stageOff">The 3D view is off (tick "Show"). The field from above is in the Control Hub's Robot tab.</div>
     <div class="muted" style="margin-top:4px">Drag to turn the view, scroll to zoom, right-drag (or two fingers) to slide.
       While no program runs (or in INIT): double-click the robot, then drag it to move it or drag its ring to turn it
@@ -327,6 +373,7 @@
   </section>
 </main>
 
+<script src="/simview.js"></script>
 <script>
 "use strict";
 const $ = (s, el = document) => el.querySelector(s);
@@ -555,18 +602,65 @@ function sendPads() {
 }
 setInterval(sendPads, 40);
 
+// Updates from the simulator. Best: a stream (GET /stream, server-sent events) that sends where everything is
+// 50 times a second ("f") and the rest of the state 10 times a second ("s"). If the stream cannot be opened
+// (an old simulator, too many pages), the page asks for /state 10 times a second instead. Either way the
+// positions go into a buffer and the 3D view glides between them (SimView.Buffer in simview.js).
 let lastState = null;
-async function poll() {
-  try {
-    const r = await fetch("/state", { cache: "no-store" });
-    lastState = await r.json();
-    render(lastState);
-  } catch (e) {
-    $("#status").textContent = "The simulator is not running. Start it with ./gradlew :sim:run";
-    $("#dhLink").classList.remove("ok");
-  }
+const frames = new SimView.Buffer();
+const link = { mode: "connecting", opened: false, errors: 0, es: null, pollTimer: 0, frames: 0, states: 0, bytes: 0, since: performance.now() };
+let opmodeList = [], opmodeKey = null;
+function notRunning() {
+  $("#status").textContent = "The simulator is not running. Start it with ./gradlew :sim:run";
+  $("#dhLink").classList.remove("ok");
 }
-setInterval(poll, 100);
+function gotFrame(f) {
+  link.frames++;
+  frames.push(f, performance.now() / 1000);
+}
+function gotState(s) {
+  link.states++;
+  // The stream sends only the OpMode list's key: ask for the list itself when it changes.
+  if (s.opmodes) { opmodeList = s.opmodes; opmodeKey = s.opmodesKey; }
+  else if (s.opmodesKey !== opmodeKey) {
+    opmodeKey = s.opmodesKey;
+    fetch("/opmodes", { cache: "no-store" }).then(r => r.json()).then(l => { opmodeList = l; if (lastState) render(lastState); }).catch(() => { opmodeKey = null; });
+  }
+  s.opmodes = opmodeList;
+  lastState = s;
+  render(s);
+}
+function connect() {
+  if (!window.EventSource) return startPolling();
+  const es = new EventSource("/stream");
+  link.es = es;
+  es.addEventListener("open", () => { link.opened = true; link.errors = 0; link.mode = "stream"; });
+  es.addEventListener("f", e => { link.bytes += e.data.length; gotFrame(JSON.parse(e.data)); });
+  es.addEventListener("s", e => { link.bytes += e.data.length; gotState(JSON.parse(e.data)); });
+  es.addEventListener("error", () => {
+    // The browser tries again by itself (the simulator restarting); a stream that never opened, or keeps
+    // failing, is given up for asking /state.
+    link.errors++;
+    if (!link.opened || link.errors > 5) { es.close(); link.es = null; startPolling(); }
+    else notRunning();
+  });
+}
+function startPolling() {
+  if (link.pollTimer) return;
+  link.mode = "polling";
+  link.pollTimer = setInterval(async () => {
+    try {
+      const r = await fetch("/state", { cache: "no-store" });
+      const text = await r.text();
+      link.bytes += text.length;
+      const s = JSON.parse(text);
+      if (s.fast) gotFrame(s.fast);
+      gotState(s);
+    } catch (e) { notRunning(); }
+  }, 100);
+  // Every 30 s, try the stream again (the simulator may have been restarted with it).
+  setTimeout(() => { clearInterval(link.pollTimer); link.pollTimer = 0; link.opened = false; link.errors = 0; connect(); }, 30000);
+}
 
 // ---------------------------------------------------------------- Driver Hub
 // The latest buzz pattern seen per gamepad (the first one seen at page load is not played).
@@ -623,7 +717,8 @@ function render(s) {
   const side = s.alliance === "BLUE" ? "BLUE" : "RED";
   if (side !== viewAlliance) {
     viewAlliance = side;
-    if (v3.view === "drivers" || v3.view === "top") setView(v3.view);
+    if (["drivers", "top", "close"].includes(v3.view)) setView(v3.view);
+    else $("#driversWall").textContent = side === "BLUE" ? "(blue now)" : "(red now)";
   }
   // An autonomous ended: like the real Driver Station, its TeleOp is chosen next.
   if (s.nextCount !== window.lastNextCount) {
@@ -756,7 +851,9 @@ function renderHub(s) {
   }
   update3d(s.robot, s.cameras || []);
   update3dPaths(s);
-  update3dPieces(s.pieces || []);
+  updateSight(s);
+  updateArcs(s);
+  updateSeeMap();
   showHeld(s.stored || {}, s.holds || 0);
   showLights(s.lights || []);
   updateHives(s.hives);
@@ -942,7 +1039,7 @@ function drawPaths(ctx, X, Y) {
   }
 }
 $("#clearPaths").onclick = () => command({ action: "clearPaths" });
-$("#showPaths").onchange = () => { if (lastState) { drawField(lastState.robot); update3dPaths(lastState); } };
+$("#showPaths").onchange = e => setLayer("paths", e.target.checked);
 // The same two lines in 3D, just above the tiles. Rebuilt only when they change.
 function update3dPaths(s) {
   if (!v3.ready) return;
@@ -983,7 +1080,7 @@ async function start3d() {
   build3d();
   v3.ready = true; v3.loading = false;
   $("#v3note").textContent = "";
-  if (lastState) update3d(lastState.robot);
+  if (lastState) update3d(lastState.robot, lastState.cameras || []);
 }
 function build3d() {
   const stage = $("#stage");
@@ -1056,7 +1153,7 @@ function setupHandles(stage) {
   const hits = obj => ray.intersectObject(obj, true).length > 0;
   const g = { mode: null, dx: 0, dy: 0, a0: 0, h0: 0, sentAt: 0 };
   const send = (x, y, h, now) => {
-    v3.target = { x, y, h: h * Math.PI / 180 };      // the view follows at once
+    v3.dragPose = { x, y, h: h * Math.PI / 180 };   // the view follows the hand at once
     if (now || performance.now() - g.sentAt > 60) { g.sentAt = performance.now(); placeRobot(x, y, h); }
   };
   stage.addEventListener("dblclick", ev => {
@@ -1097,6 +1194,7 @@ function setupHandles(stage) {
       else send(r.x, r.y, g.h0 + (Math.atan2(p.y - r.y, p.x - r.x) - g.a0) * 180 / Math.PI, true);
     }
     g.mode = null; v3.controls.enabled = true;
+    setTimeout(() => { if (!g.mode) v3.dragPose = null; }, 300);   // then the simulator's own updates again
     ev.stopPropagation();
   };
   stage.addEventListener("pointerup", end, true);
@@ -1174,31 +1272,77 @@ function buildTags(fd) {
 }
 // The HIVEs as they are now: in the field model each HIVE's parts (hive_metal_red, hive_skin_red...) turn about
 // their pivot; without it, each CELL is drawn as its plates. Tags on a tipped HIVE move to their other place.
+// The simulator tips a HIVE at once; the page turns it over half a second, so you can see it happen.
+const TIP_SECONDS = 0.5;
 function updateHives(hives) {
   if (!v3.ready || !hives) return;
   const key = hives.map(h => h.name + h.up).join("|");
   if (key === v3.hiveKey) return;
+  const first = v3.hiveKey === undefined || v3.hiveKey === null;
   v3.hiveKey = key;
+  v3.hivePrev = v3.hivePrev || {};
   disposeAll(v3.cellGroup);
-  const flipped = new Set();
+  const flipped = new Set(), turning = [];
   for (const h of hives) {
     const mat = new THREE.MeshPhongMaterial({ color: h.alliance === "blue" ? 0x2a62c4 : 0xc8322a, transparent: true, opacity: 0.55,
       side: THREE.DoubleSide, depthWrite: false, shininess: 12 });
+    const plates = [];
     for (const p of h.plates) {
       const m = new THREE.Mesh(new THREE.BoxGeometry(p[12], p[13], p[14]), mat);
       m.matrixAutoUpdate = false;
       const e1 = new THREE.Vector3(p[3], p[4], p[5]), e2 = new THREE.Vector3(p[6], p[7], p[8]), e3 = new THREE.Vector3().crossVectors(e1, e2);
       m.matrix.makeBasis(e1, e2, e3).setPosition(p[0], p[1], p[2]);
-      v3.cellGroup.add(m);
+      v3.cellGroup.add(m); plates.push(m);
     }
     const fh = ((fieldData && fieldData.hives) || []).find(x => x.name === h.name);
-    if (fh && h.up !== h.startUp) for (const id of [...(fh.tags["+x"] || []), ...(fh.tags["-x"] || [])]) flipped.add(id);
+    const ids = fh ? [...(fh.tags["+x"] || []), ...(fh.tags["-x"] || [])] : [];
+    if (fh && h.up !== h.startUp) ids.forEach(id => flipped.add(id));
     // the field model's parts of this HIVE turn about its pivot (they are placed at the pivot)
     const ang = h.up !== h.startUp ? h.startUp * h.tipDeg * Math.PI / 180 : 0;
-    v3.cadGroup.traverse(o => { if (o.name && o.name.startsWith("hive_") && o.name.endsWith("_" + h.alliance)) o.rotation.x = ang; });
+    const prev = v3.hivePrev[h.name];
+    const cad = [];
+    v3.cadGroup.traverse(o => { if (o.name && o.name.startsWith("hive_") && o.name.endsWith("_" + h.alliance)) cad.push(o); });
+    if (!first && prev && prev.up !== h.up && h.plates.length) {
+      // It just tipped: find the turn (about the pivot, across or along the field) that takes the old CELL
+      // plates to the new ones, then play it.
+      const piv = new THREE.Vector3(...h.pivot), old = prev.plates[0], now = h.plates[0];
+      let best = null;
+      for (const axis of [new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 1, 0)]) for (const sgn of [1, -1]) {
+        const turn = sgn * h.tipDeg * Math.PI / 180;
+        const v = new THREE.Vector3(old[0], old[1], old[2]).sub(piv).applyAxisAngle(axis, turn).add(piv);
+        const d = v.distanceTo(new THREE.Vector3(now[0], now[1], now[2]));
+        if (!best || d < best.d) best = { d, axis, turn };
+      }
+      turning.push({ name: h.name, ids, plates, pivot: piv, axis: best.axis, turn: best.turn, cad, from: prev.ang, to: ang });
+    } else {
+      cad.forEach(o => { o.rotation.x = ang; });
+    }
+    v3.hivePrev[h.name] = { up: h.up, plates: h.plates.map(p => p.slice(0, 3)), ang };
   }
   v3.flippedTags = flipped;
   buildTags(fieldData);
+  const t0 = performance.now() / 1000;
+  for (const t of turning) {
+    const meshes = [...t.plates];
+    for (const id of t.ids) { const m = v3.tagGroup.getObjectByName("tag " + id); if (m) { m.updateMatrix(); m.matrixAutoUpdate = false; meshes.push(m); } }
+    t.parts = meshes.map(m => ({ m, base: m.matrix.clone() }));
+    t.t0 = t0;
+  }
+  v3.hiveTurns = (v3.hiveTurns || []).filter(x => !turning.some(t => t.name === x.name)).concat(turning);
+}
+// Every frame while a HIVE turns: each of its parts turned back from where it ends by the share still to go.
+function animateHives(now) {
+  if (!v3.hiveTurns || !v3.hiveTurns.length) return;
+  const rot = new THREE.Matrix4(), toP = new THREE.Matrix4(), back = new THREE.Matrix4();
+  v3.hiveTurns = v3.hiveTurns.filter(t => {
+    const k = Math.min(1, (now - t.t0) / TIP_SECONDS), ease = k * k * (3 - 2 * k), left = 1 - ease;
+    rot.makeRotationAxis(t.axis, -t.turn * left);
+    toP.makeTranslation(t.pivot.x, t.pivot.y, t.pivot.z); back.makeTranslation(-t.pivot.x, -t.pivot.y, -t.pivot.z);
+    const M = toP.clone().multiply(rot).multiply(back);
+    for (const p of t.parts) { p.m.matrix.copy(M).multiply(p.base); p.m.matrixWorldNeedsUpdate = true; }
+    for (const o of t.cad) o.rotation.x = t.from + (t.to - t.from) * ease;
+    return k < 1;
+  });
 }
 // The field CAD model (field.model in the robot file), shaded flat like the turret page.
 function loadCadModel() {
@@ -1228,22 +1372,63 @@ function showCad() {
   // (the model has none); the tag squares stay, to show the IDs.
   v3.simpleGroup.children.forEach(o => o.visible = !cad || o.name === "tiles");
 }
-// Game pieces: a ball each, in field inches (the scene's own frame).
-function update3dPieces(list) {
-  if (!v3.ready) return;
-  if (!v3.pieceGroup) { v3.pieceGroup = new THREE.Group(); v3.scene.add(v3.pieceGroup); v3.pieceMeshes = []; }
-  while (v3.pieceMeshes.length < list.length) {
-    const m = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), new THREE.MeshPhongMaterial({ shininess: 30 }));
-    v3.pieceGroup.add(m); v3.pieceMeshes.push(m);
+// Game pieces: a striped ball each (so you can see it roll and spin), in field inches (the scene's own frame).
+// Drawn every frame from the glided positions (see frame3d); a piece keeps its mesh while it keeps its key.
+function drawPieces(rows) {
+  if (!v3.pieceGroup) {
+    v3.pieceGroup = new THREE.Group(); v3.scene.add(v3.pieceGroup);
+    v3.pieceByKey = new Map(); v3.ballGeo = new THREE.SphereGeometry(1, 24, 16);
   }
-  v3.pieceMeshes.forEach((m, i) => {
-    const p = list[i];
-    m.visible = !!p;
-    if (!p) return;
-    m.scale.setScalar(p.d / 2);
-    m.position.set(p.x, p.y, p.z);
-    m.material.color.set(p.color);
-  });
+  const types = (lastState && lastState.pieceTypes) || [];
+  const seen = new Set();
+  for (const r of rows) {
+    const t = types[r[1]] || { color: "#999999", d: 3 };
+    let m = v3.pieceByKey.get(r[0]);
+    if (m && m.userData.color !== t.color) { removePiece(r[0], m); m = null; }
+    if (!m) {
+      m = new THREE.Mesh(v3.ballGeo, new THREE.MeshLambertMaterial({ map: SimView.ballTexture(THREE, t.color) }));
+      m.userData.color = t.color;
+      v3.pieceGroup.add(m); v3.pieceByKey.set(r[0], m);
+    }
+    m.scale.setScalar(t.d / 2);
+    m.position.set(r[2], r[3], r[4]);
+    m.quaternion.set(r[6], r[7], r[8], r[5]);          // the simulator sends w first; three.js wants it last
+    seen.add(r[0]);
+  }
+  for (const [k, m] of v3.pieceByKey) if (!seen.has(k)) removePiece(k, m);
+  drawTrails(rows);
+}
+function removePiece(k, m) {
+  v3.pieceGroup.remove(m); m.material.dispose(); v3.pieceByKey.delete(k);
+}
+// Ball trails (a layer): the last half second of each moving ball, so you can see how it flew or bounced.
+function drawTrails(rows) {
+  if (!v3.trailGroup) { v3.trailGroup = new THREE.Group(); v3.scene.add(v3.trailGroup); v3.trails = new Map(); }
+  const on = layers.trails, now = performance.now() / 1000, keep = 0.5, N = 64;
+  const live = new Set();
+  for (const r of (on ? rows : [])) {
+    if (r[0] < 0 || r[0] >= 1000000) continue;          // held in a claw or sitting in a stack: no trail
+    let tr = v3.trails.get(r[0]);
+    if (!tr) {
+      const g = new THREE.BufferGeometry();
+      g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(N * 3), 3));
+      const types = (lastState && lastState.pieceTypes) || [];
+      tr = { pts: [], line: new THREE.Line(g, new THREE.LineBasicMaterial({ color: (types[r[1]] || {}).color || "#ffffff", transparent: true, opacity: 0.7 })) };
+      tr.line.frustumCulled = false; tr.line.layers.set(1);
+      v3.trailGroup.add(tr.line); v3.trails.set(r[0], tr);
+    }
+    live.add(r[0]);
+    const last = tr.pts[tr.pts.length - 1];
+    if (!last || Math.hypot(r[2] - last[1], r[3] - last[2], r[4] - last[3]) > 0.3) tr.pts.push([now, r[2], r[3], r[4]]);
+    while (tr.pts.length && (tr.pts[0][0] < now - keep || tr.pts.length > N)) tr.pts.shift();
+    const a = tr.line.geometry.attributes.position;
+    tr.pts.forEach((p, i) => a.setXYZ(i, p[1], p[2], p[3]));
+    a.setXYZ(tr.pts.length, r[2], r[3], r[4]);
+    a.needsUpdate = true;
+    tr.line.geometry.setDrawRange(0, Math.min(N, tr.pts.length + 1));
+    tr.line.visible = tr.pts.length > 2;
+  }
+  for (const [k, tr] of v3.trails) if (!live.has(k)) { v3.trailGroup.remove(tr.line); tr.line.geometry.dispose(); tr.line.material.dispose(); v3.trails.delete(k); }
 }
 
 // The robot's shapes (shape.NAME lines in the robot file), sent in the robot frame: f forward, l left,
@@ -1301,6 +1486,7 @@ function showHeld(stored, holds) {
 
 function updateShapes(r) {
   const list = r.shapes || [];
+  v3.shapeList = list;
   const key = list.map(p => [p.name, p.kind, p.color, p.model ?? "", ...p.size].join(",")).join("|");
   if (v3.shapeKey !== key) {
     v3.shapeKey = key;
@@ -1338,16 +1524,7 @@ function updateShapes(r) {
     });
   }
   list.forEach((p, i) => {
-    const m = v3.shapeMeshes[i], basis = new THREE.Matrix4().makeBasis(RF(p.ef), RF(p.el), RF(p.eu));
-    if (p.kind === "cyl") basis.multiply(new THREE.Matrix4().makeRotationY(p.spin * Math.PI / 180));
-    basis.setPosition(RF(p.c));
-    m.matrix.copy(basis); m.matrixWorldNeedsUpdate = true;
-    if (m.cad && p.m) {
-      // robot frame (forward, left, up) -> the page's (x = -left, y = forward, z = up)
-      const M = new THREE.Matrix4().set(...p.m, 0, 0, 0, 1);
-      const RFm = new THREE.Matrix4().set(0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
-      m.cad.matrix.copy(RFm.clone().multiply(M).multiply(RFm.clone().invert())); m.cad.matrixWorldNeedsUpdate = true;
-    }
+    const m = v3.shapeMeshes[i];
     if (p.name === "chassis") m.material.color.set(r.bumped ? 0xcf222e : p.color);
     // How it moves now: a roller glows green while it takes pieces in and orange while it pushes them
     // out (a flywheel or other spinner: yellow); a passive part (gravity, springs) blinks while it moves.
@@ -1358,21 +1535,73 @@ function updateShapes(r) {
     if (m.cad && m.cad.material.emissive) m.cad.material.emissive.setHex(glow);
   });
 }
+// Places the shapes every frame from the glided update: per shape [center f,l,u, ef, el, eu, spin (, CAD frame)]
+// in the robot frame (SimView.frame in the simulator). Robot frame -> the page's: x = -left, y = forward, z = up.
+function poseShapes(rows) {
+  const list = v3.shapeList || [];
+  if (!rows || !v3.shapeMeshes || rows.length !== list.length || v3.shapeMeshes.length !== list.length) return;
+  const T = v3.tmp || (v3.tmp = { m: new THREE.Matrix4(), r: new THREE.Matrix4(), M: new THREE.Matrix4(),
+    RF: new THREE.Matrix4().set(0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1), a: new THREE.Vector3(), b: new THREE.Vector3(), c: new THREE.Vector3(), o: new THREE.Vector3() });
+  if (!T.RFi) T.RFi = T.RF.clone().invert();
+  const box = [Infinity, -Infinity, Infinity, -Infinity, Infinity, -Infinity];     // f, l, u: smallest and largest
+  rows.forEach((q, i) => {
+    const p = list[i], m = v3.shapeMeshes[i];
+    T.a.set(-q[4], q[3], q[5]); T.b.set(-q[7], q[6], q[8]); T.c.set(-q[10], q[9], q[11]); T.o.set(-q[1], q[0], q[2]);
+    T.m.makeBasis(T.a, T.b, T.c);
+    if (p.kind === "cyl") T.m.multiply(T.r.makeRotationY(q[12] * Math.PI / 180));
+    T.m.setPosition(T.o);
+    m.matrix.copy(T.m); m.matrixWorldNeedsUpdate = true;
+    if (m.cad && q.length >= 25) {
+      T.M.set(...q.slice(13, 25), 0, 0, 0, 1);
+      m.cad.matrix.copy(T.RF).multiply(T.M).multiply(T.RFi); m.cad.matrixWorldNeedsUpdate = true;
+    }
+    // the robot's size now: every corner of every shape's box (robot frame)
+    if (layers.size) {
+      const h = [p.size[0] / 2, p.size[1] / 2, p.size[2] / 2];
+      for (const sf of [-1, 1]) for (const sl of [-1, 1]) for (const su of [-1, 1]) {
+        for (let k = 0; k < 3; k++) {
+          const v = q[k] + sf * h[0] * q[3 + k] + sl * h[1] * q[6 + k] + su * h[2] * q[9 + k];
+          box[2 * k] = Math.min(box[2 * k], v); box[2 * k + 1] = Math.max(box[2 * k + 1], v);
+        }
+      }
+    }
+  });
+  drawSizeBox(layers.size && rows.length ? box : null);
+}
+// The robot size layer: a box around everything the robot has out now (green while it fits 18 x 24 in and 29 in
+// tall, red when not), and the faint 18 in start cube.
+function drawSizeBox(box) {
+  if (!v3.sizeGroup) {
+    v3.sizeGroup = new THREE.Group(); v3.robot.add(v3.sizeGroup);
+    const edges = new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1));
+    v3.sizeNow = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x2ecc71 }));
+    v3.sizeCube = new THREE.LineSegments(edges, new THREE.LineDashedMaterial({ color: 0x8a96a3, dashSize: 1, gapSize: 1 }));
+    v3.sizeCube.scale.set(18, 18, 18); v3.sizeCube.position.set(0, 0, 9); v3.sizeCube.computeLineDistances();
+    [v3.sizeNow, v3.sizeCube].forEach(o => o.layers.set(1));
+    v3.sizeGroup.add(v3.sizeNow, v3.sizeCube);
+  }
+  v3.sizeGroup.visible = !!box && isFinite(box[0]);
+  if (!v3.sizeGroup.visible) return;
+  const [f0, f1, l0, l1, u0, u1] = box;
+  v3.sizeNow.scale.set(Math.max(0.1, l1 - l0), Math.max(0.1, f1 - f0), Math.max(0.1, u1 - Math.min(0, u0)));
+  v3.sizeNow.position.set(-(l0 + l1) / 2, (f0 + f1) / 2, (u1 + Math.min(0, u0)) / 2);
+  const z = lastState && lastState.robot.size;
+  v3.sizeNow.material.color.set(z && !z.matchOk ? 0xe5534b : 0x2ecc71);
+}
 
-// The robot's cameras: a yellow view cone on the robot, and a three.js camera at the same place for the
-// "Camera view" picture. Mount: forward/left/up from the robot's center, yaw (+ = left), pitch (+ = up).
+// The robot's cameras: each a yellow (Limelight: green) view cone, and a three.js camera at the same place for the
+// "Camera view" picture. The simulator sends where each camera is on the field every update (it may ride a
+// turret), so they live in the field's frame, not on the robot.
 function buildCameras(cams) {
-  disposeAll(v3.camMounts);
+  if (!v3.camGroup) { v3.camGroup = new THREE.Group(); v3.scene.add(v3.camGroup); }
+  disposeAll(v3.camGroup);
   v3.simCams = [];
   for (const c of cams) {
-    const mount = new THREE.Group(), tilt = new THREE.Group();
-    mount.position.set(-c.left, c.forward, c.up);
-    mount.rotation.z = c.yaw * Math.PI / 180;
-    tilt.rotation.x = Math.PI / 2 + c.pitch * Math.PI / 180;      // a three.js camera looks down its -z
-    mount.add(tilt); v3.camMounts.add(mount);
+    const holder = new THREE.Group();
+    holder.matrixAutoUpdate = false; holder.visible = false;     // until its first update places it
     const vfov = 2 * Math.atan(Math.tan(c.hfov * Math.PI / 360) * c.height / c.width) * 180 / Math.PI;
     const cam = new THREE.PerspectiveCamera(vfov, c.width / c.height, 1, 400);
-    cam.up.set(0, 1, 0); tilt.add(cam);
+    holder.add(cam);                               // a three.js camera looks down its -z with +y up: the holder's frame
     // the cone: 4 edges and the far rectangle, 36 in long
     const L = 36, hx = Math.tan(c.hfov * Math.PI / 360) * L, hy = hx * c.height / c.width;
     const far = [[-hx, -hy], [hx, -hy], [hx, hy], [-hx, hy]].map(([x, y]) => new THREE.Vector3(x, y, -L));
@@ -1380,17 +1609,33 @@ function buildCameras(cams) {
     far.forEach((p, i) => { pts.push(new THREE.Vector3(0, 0, 0), p, p, far[(i + 1) % 4]); });
     const color = c.kind === "limelight" ? 0x39d353 : 0xffc400;     // Limelight green, webcam yellow
     const cone = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color }));
-    cone.layers.set(1); tilt.add(cone);
-    v3.simCams.push({ name: c.name, cam, cone, color, dim: c.kind === "limelight" ? 0x2a6b35 : 0x7a6a33 });
+    cone.layers.set(1); holder.add(cone);
+    v3.camGroup.add(holder);
+    v3.simCams.push({ name: c.name, cam, cone, holder, color, dim: c.kind === "limelight" ? 0x2a6b35 : 0x7a6a33, pos: null });
   }
   $("#camViewLabel").style.display = cams.length ? "" : "none";
   const pick = $("#camPick");
   pick.innerHTML = cams.map((c, i) => `<option value="${i}">${escapeHtml(c.name)}</option>`).join("");
   pick.style.display = cams.length > 1 ? "" : "none";
 }
+// rows: per camera [x, y, z, picture-right (3), picture-down (3), lens (3)] on the field (OpenCV's axes).
+function poseCameras(rows) {
+  (v3.simCams || []).forEach((sc, i) => {
+    const q = rows && rows[i];
+    if (!q || q.length < 12) return;
+    const z = new THREE.Vector3(q[9], q[10], q[11]).normalize();
+    const x = new THREE.Vector3(q[3], q[4], q[5]); x.addScaledVector(z, -x.dot(z)).normalize();
+    const down = new THREE.Vector3().crossVectors(z, x);            // OpenCV: z x x = y (down the picture)
+    sc.holder.matrix.makeBasis(x, down.negate(), z.clone().negate()).setPosition(q[0], q[1], q[2]);
+    sc.holder.matrixWorldNeedsUpdate = true;
+    sc.holder.visible = v3.robot.visible;
+    sc.cone.visible = layers.cone;
+    sc.pos = (sc.pos || new THREE.Vector3()).set(q[0], q[1], q[2]);
+  });
+}
 function update3d(r, cams) {
   if (!v3.ready) return;
-  const camKey = JSON.stringify((cams || []).map(c => [c.name, c.forward, c.left, c.up, c.yaw, c.pitch, c.hfov, c.width, c.height]));
+  const camKey = JSON.stringify((cams || []).map(c => [c.name, c.kind, c.hfov, c.width, c.height]));
   if (v3.camKey !== camKey) { v3.camKey = camKey; buildCameras(cams || []); }
   // Tags in a camera's picture turn green; the cone is bright while the camera is open.
   const seen = new Set();
@@ -1404,6 +1649,8 @@ function update3d(r, cams) {
     v3.cadLoaded = false; disposeAll(v3.cadGroup);
     if (r.fieldModel) loadCadModel();
     showCad();
+    $("#closeBtn").hidden = !closeUpSpot();
+    $("#closeName").textContent = (fieldData.hives || []).length ? "HIVE close-up (your alliance's)" : "Goal close-up (nearest)";
   }
   v3.robot.visible = r.drive !== "none" || (r.shapes || []).length > 1;   // a test rig with no drivetrain still shows its parts
   const L = r.length || 18, W = r.width || 18;
@@ -1415,20 +1662,285 @@ function update3d(r, cams) {
   v3.arrow.scale.set(Math.min(W, L), L, 1); v3.arrow.position.z = H + 0.1;
   v3.bodyMat.color.set(r.bumped ? 0xcf222e : 0x1f6feb);
   updateShapes(r);
-  v3.target = { x: r.x, y: r.y, h: r.heading * Math.PI / 180 };
-  if (!v3.pose) v3.pose = { ...v3.target };
 }
+
+// ---------------------------------------------------------------- Layers (the menu over the 3D view)
+// Each is a choice remembered in this browser. What each line means is in docs/guides/simulator.md, "Layers".
+const layers = SimView.prefs("simLayers", { sight: true, cone: true, seemap: false, seemapAny: false, arc: true, trails: true, paths: true, size: false });
+function setLayer(name, on) {
+  layers[name] = on; layers.save();
+  document.querySelectorAll(`[data-layer="${name}"]`).forEach(b => { b.checked = on; });
+  if (name === "paths") { $("#showPaths").checked = on; if (lastState) { drawField(lastState.robot); update3dPaths(lastState); } }
+  if (name === "seemap" || name === "seemapAny") { v3.mapAt = 0; if (v3.mapMesh) v3.mapMesh.visible = false; }
+  if (lastState) { updateSight(lastState); v3.arcKey = null; updateArcs(lastState); updateSeeMap(); }
+  $("#mapLegend").hidden = !layers.seemap;
+}
+document.querySelectorAll("[data-layer]").forEach(b => { b.checked = !!layers[b.dataset.layer]; b.onchange = () => setLayer(b.dataset.layer, b.checked); });
+$("#showPaths").checked = layers.paths;
+$("#mapLegend").hidden = !layers.seemap;
+// The View and Layers menus: a button opens its menu; a click elsewhere or Escape closes it.
+function closeMenus(except) {
+  for (const [b, m] of [["#viewsBtn", "#viewsMenu"], ["#layersBtn", "#layersMenu"]]) {
+    if (m === except) continue;
+    $(m).hidden = true; $(b).setAttribute("aria-expanded", "false");
+  }
+}
+for (const [b, m] of [["#viewsBtn", "#viewsMenu"], ["#layersBtn", "#layersMenu"]]) {
+  $(b).onclick = () => {
+    closeMenus(m);
+    const menu = $(m);
+    menu.hidden = !menu.hidden;
+    $(b).setAttribute("aria-expanded", menu.hidden ? "false" : "true");
+    // Keep it on the screen (a phone): slide it left as far as it sticks out on the right.
+    menu.style.left = "0px";
+    const r = menu.getBoundingClientRect(), over = r.right - (document.documentElement.clientWidth - 8);
+    if (!menu.hidden && over > 0) menu.style.left = -Math.min(over, r.left - 8) + "px";
+  };
+}
+document.addEventListener("pointerdown", e => { if (!e.target.closest(".dropdown")) closeMenus(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeMenus(); });
+
+// Words for the note at the bottom left of the 3D view (the sight lines and the shot arc, in words).
+function setLayerNote(part, html) {
+  v3.notes = v3.notes || {};
+  v3.notes[part] = html;
+  const el = $("#layerNote");
+  const parts = ["sight", "arc"].map(k => v3.notes[k]).filter(Boolean);
+  el.innerHTML = parts.map(t => `<div>${t}</div>`).join("");
+  el.hidden = !parts.length;
+  el.classList.toggle("compact", $("#stage").clientHeight < 320);
+  el.title = el.textContent;
+}
+
+// Camera sight lines: from the chosen camera to every tag in front of it, each with the reason the simulator
+// gives (SimCamera.sight: the same rules the OpMode's camera follows). The page adds one check of its own: a
+// line that passes through a field element is marked "blocked?" (the simulator's camera still sees through).
+function updateSight(s) {
+  if (!v3.ready) return;
+  if (!v3.sightGroup) { v3.sightGroup = new THREE.Group(); v3.scene.add(v3.sightGroup); }
+  const idx = +$("#camPick").value || 0, c = (s.cameras || [])[idx], sc = v3.simCams && v3.simCams[idx];
+  if (!layers.sight || !c || !c.sight || !sc || !sc.pos || !v3.robot.visible) {
+    disposeAll(v3.sightGroup); v3.sightLines = []; v3.sightKey = null; setLayerNote("sight", ""); return;
+  }
+  const blockers = [];
+  v3.simpleGroup.traverse(o => { if (o.isMesh && o.name !== "tiles" && o.visible !== false) blockers.push(o); });
+  if (v3.cellGroup.visible) v3.cellGroup.traverse(o => { if (o.isMesh) blockers.push(o); });
+  const ray = new THREE.Raycaster();
+  const list = c.sight.filter(t => t[1] !== "behind" && t[4] < 170).sort((a, b) => a[4] - b[4]);
+  const need = Math.round(6.5 * Math.max(1, c.decimation || 3));
+  const groups = {};          // one label per reason, over its tags (one per tag piles up on a tag cluster)
+  const drawn = [];
+  for (const [id, why, px, ang] of list) {
+    const tm = v3.tagGroup.getObjectByName("tag " + id);
+    if (!tm) continue;
+    let w = ["left", "right", "above", "below"].includes(why) ? "out" : why, by = "";
+    if (why === "seen") {
+      const dir = tm.position.clone().sub(sc.pos), len = dir.length();
+      ray.set(sc.pos, dir.normalize()); ray.near = 0; ray.far = Math.max(0, len - 1.5);
+      const hit = ray.intersectObjects(blockers, false)[0];
+      if (hit) { w = "blocked"; by = hit.object.name || "a HIVE's CELL"; }
+    }
+    const g = groups[w] || (groups[w] = { ids: [], px: [], ang: [], by: new Set(), at: new THREE.Vector3(), n: 0 });
+    g.ids.push(id); g.px.push(px); g.ang.push(ang); if (by) g.by.add(by);
+    // Seen (or blocked): every line. Not seen: only the nearest four of each reason (out of the picture: faint),
+    // so the ones that matter stand out.
+    if (w !== "seen" && w !== "blocked" && (g.drawn = (g.drawn || 0) + 1) > 4) continue;
+    g.at.add(tm.position); g.n++;
+    drawn.push({ w, why, tag: tm.position.clone(), id });
+  }
+  const avg = l => l.reduce((x, y) => x + y, 0) / Math.max(1, l.length);
+  const say = {
+    seen: g => `seen, about ${Math.round(avg(g.px))} px across`,
+    blocked: g => `the model sees it, but ${[...g.by].join(", ")} is in the way`,
+    slanted: g => `too slanted (${Math.round(Math.min(...g.ang))}°, more than 60°)`,
+    small: g => `too small (${Math.round(Math.max(...g.px))} px, needs ${need})`,
+    light: () => "the lighting setting does not work here",
+    out: () => "out of view",
+  };
+  const bits = [], order = ["seen", "blocked", "slanted", "small", "light", "out"];
+  for (const w of order) {
+    const g = groups[w];
+    if (!g) continue;
+    const ids = w === "out" && g.ids.length > 4 ? g.ids.length + " tags" : g.ids.join(", ");
+    bits.push(`${ids}: ${say[w](g)}`);
+  }
+  // Rebuilt only when what it says changes (labels are small pictures: not 10 new ones a second).
+  const key = JSON.stringify([c.name, bits, drawn.map(d => [d.id, d.w, d.tag.x.toFixed(1), d.tag.z.toFixed(1)])]);
+  if (key !== v3.sightKey) {
+    v3.sightKey = key;
+    disposeAll(v3.sightGroup);
+    v3.sightLines = [];
+    for (const d of drawn) {
+      const k = SimView.SIGHT[d.w === "out" ? d.why : d.w] || SimView.SIGHT.left;
+      const mat = k.solid ? new THREE.LineBasicMaterial({ color: k.color })
+                          : new THREE.LineDashedMaterial({ color: k.color, dashSize: 1.5, gapSize: 1.2, transparent: d.w === "out", opacity: d.w === "out" ? 0.45 : 1 });
+      const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([sc.pos, d.tag]), mat);
+      line.layers.set(1); line.frustumCulled = false;
+      v3.sightGroup.add(line);
+      v3.sightLines.push({ line, tag: d.tag });
+    }
+  }
+  for (const w of order) {
+    const g = groups[w];
+    if (!g) continue;
+    if (w !== "out" && g.n && !v3.sightGroup.getObjectByName("label " + w)) {
+      const label = SimView.label(THREE, `${g.ids.join(", ")}: ${w === "blocked" ? "blocked?" : say[w](g).split(" (")[0]}`, { heightIn: 1.8 });
+      label.layers.set(1); label.name = "label " + w;
+      label.position.copy(g.at.divideScalar(g.n)).add(new THREE.Vector3(0, 0, 3 + 2.4 * Object.keys(groups).indexOf(w)));
+      v3.sightGroup.add(label);
+    }
+  }
+  setLayerNote("sight", `<b>${escapeHtml(c.name)}</b>${c.open ? "" : " (not open: the OpMode gets nothing)"}: ` +
+    (bits.map(escapeHtml).join(" · ") || "no tags in front of it"));
+}
+// Every frame: the lines start at the camera where it is drawn now.
+function drawSightFrame() {
+  const idx = +$("#camPick").value || 0, sc = v3.simCams && v3.simCams[idx];
+  if (!v3.sightLines || !sc || !sc.pos) return;
+  for (const s of v3.sightLines) {
+    const a = s.line.geometry.attributes.position;
+    a.setXYZ(0, sc.pos.x, sc.pos.y, sc.pos.z); a.setXYZ(1, s.tag.x, s.tag.y, s.tag.z); a.needsUpdate = true;
+    if (s.line.material.isLineDashedMaterial) s.line.computeLineDistances();
+  }
+}
+
+// The shot arc: where each launcher would send a piece if it fired now (the simulator works it out: the same
+// speed, angle and air as a real shot, but it flies through everything). Drawn on the robot, with its peak.
+function updateArcs(s) {
+  if (!v3.ready) return;
+  if (!v3.arcGroup) { v3.arcGroup = new THREE.Group(); v3.robot.add(v3.arcGroup); }
+  const arcs = layers.arc ? (s.arcs || []) : [];
+  const key = JSON.stringify(arcs);
+  if (key === v3.arcKey) return;
+  v3.arcKey = key;
+  disposeAll(v3.arcGroup);
+  const notes = [];
+  for (const a of arcs) {
+    if (a.why) { notes.push(`Shot arc (${escapeHtml(a.name)}): ${escapeHtml(a.why)}`); continue; }
+    if (a.pts.length < 2) continue;
+    const pts = a.pts.map(RF);
+    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
+      new THREE.LineDashedMaterial({ color: 0xffd33d, dashSize: 2, gapSize: 1.2 }));
+    line.computeLineDistances(); line.layers.set(1); line.frustumCulled = false;
+    v3.arcGroup.add(line);
+    let top = pts[0];
+    for (const p of pts) if (p.z > top.z) top = p;
+    const text = `peak ${Math.round(a.peak)} in`;
+    const label = SimView.label(THREE, text, { heightIn: 2 });
+    label.position.copy(top).add(new THREE.Vector3(0, 0, 2.5)); label.layers.set(1);
+    v3.arcGroup.add(label);
+    notes.push(`Shot arc (${escapeHtml(a.name)}, ${escapeHtml(a.piece)}): ${Math.round(a.angle)}° up, ${Math.round(a.speed)} in/s, peak ${Math.round(a.peak)} in (no bumps)`);
+  }
+  setLayerNote("arc", notes.join("<br>"));
+}
+
+// The floor map: where on the field the chosen camera can see tags (the simulator works it out with the camera's
+// own rules, the robot put on each 4 in square: GET /seemap). Asked again every second while it is on.
+function updateSeeMap() {
+  if (!v3.ready || !layers.seemap || !lastState || !(lastState.cameras || []).length) { if (v3.mapMesh) v3.mapMesh.visible = false; return; }
+  const now = performance.now();
+  if (v3.mapBusy || now - (v3.mapAt || 0) < 1000) return;
+  v3.mapBusy = true; v3.mapAt = now;
+  const cam = +$("#camPick").value || 0;
+  fetch(`/seemap?cam=${cam}&any=${layers.seemapAny ? 1 : 0}&step=4`, { cache: "no-store" })
+    .then(r => r.json()).then(drawSeeMap).catch(() => {}).finally(() => { v3.mapBusy = false; });
+}
+function drawSeeMap(m) {
+  if (!layers.seemap) return;
+  const n = m.n;
+  if (!v3.mapMesh || v3.mapCanvas.width !== n) {
+    if (v3.mapMesh) { v3.scene.remove(v3.mapMesh); v3.mapMesh.geometry.dispose(); v3.mapMesh.material.map.dispose(); v3.mapMesh.material.dispose(); }
+    v3.mapCanvas = document.createElement("canvas"); v3.mapCanvas.width = v3.mapCanvas.height = n;
+    const tex = new THREE.CanvasTexture(v3.mapCanvas);
+    tex.magFilter = THREE.NearestFilter; tex.minFilter = THREE.NearestFilter;
+    v3.mapMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
+    v3.mapMesh.layers.set(1); v3.mapMesh.renderOrder = 1;
+    v3.scene.add(v3.mapMesh);
+  }
+  v3.mapMesh.scale.set(n * m.step, n * m.step, 1);
+  v3.mapMesh.position.set(-m.half + n * m.step / 2, -m.half + n * m.step / 2, 0.25);
+  const g = v3.mapCanvas.getContext("2d"), img = g.createImageData(n, n);
+  for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+    const c = m.counts[j * n + i], o = ((n - 1 - j) * n + i) * 4;      // canvas rows go down; the field's y goes up
+    const a = c <= 0 ? 0 : c === 1 ? 70 : c <= 3 ? 120 : 170;
+    img.data[o] = 30; img.data[o + 1] = 190; img.data[o + 2] = 90; img.data[o + 3] = a;
+  }
+  g.putImageData(img, 0, 0);
+  v3.mapMesh.material.map.needsUpdate = true;
+  v3.mapMesh.visible = true;
+}
+
+// The camera picture (bottom right): what the chosen camera sees, drawn into a small picture of its own 15
+// times a second (not every frame, and smaller than the screen), then shown on top of the view every frame.
+function drawCamPicture(R) {
+  const on = v3.simCams && v3.simCams.length && $("#camView").checked;
+  if (!on) return;
+  const st = $("#stage"), W = st.clientWidth, H = st.clientHeight;
+  const sc = v3.simCams[+$("#camPick").value || 0] || v3.simCams[0];
+  if (!sc.holder.visible) return;
+  const w = Math.round(Math.min(W * 0.36, 360)), h = Math.round(w / sc.cam.aspect), m = 8;
+  if (!v3.hud) {
+    v3.hud = { scene: new THREE.Scene(), cam: new THREE.OrthographicCamera(0, 1, 1, 0, -1, 1) };
+    v3.hud.quad = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+    v3.hud.frame = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(1, 1)), new THREE.LineBasicMaterial({ color: 0x1b1f24 }));
+    v3.hud.scene.add(v3.hud.quad, v3.hud.frame);
+  }
+  if (!v3.camRT || v3.camRT.width !== w || v3.camRT.height !== h) {
+    if (v3.camRT) v3.camRT.dispose();
+    v3.camRT = new THREE.WebGLRenderTarget(w, h);
+    v3.hud.quad.material.map = v3.camRT.texture; v3.hud.quad.material.needsUpdate = true;
+    v3.camAt = 0;
+  }
+  const now = performance.now();
+  if (now - (v3.camAt || 0) > 66) {
+    v3.camAt = now;
+    R.setRenderTarget(v3.camRT); R.render(v3.scene, sc.cam); R.setRenderTarget(null);
+  }
+  const hc = v3.hud.cam;
+  hc.right = W; hc.top = H; hc.updateProjectionMatrix();
+  for (const o of [v3.hud.quad, v3.hud.frame]) { o.scale.set(w, h, 1); o.position.set(W - m - w / 2, m + h / 2, 0); }
+  R.autoClear = false; R.clearDepth(); R.render(v3.hud.scene, hc); R.autoClear = true;
+}
+
 // The drivers' view and the view from above are from the alliance's own wall: red at the bottom
 // (y < 0), blue at the top. The alliance comes from the running program (its INIT menu or TeleOp).
 let viewAlliance = "RED";
+// The close-up: the alliance's HIVE (a field file with hives), else the goal nearest the robot.
+function closeUpSpot() {
+  const hs = (fieldData && fieldData.hives) || [];
+  const h = hs.find(x => (x.alliance || "").toUpperCase() === viewAlliance) || hs[0];
+  if (h && h.pivot) return { x: h.pivot[0], y: h.pivot[1], z: h.pivot[2] };
+  const gs = (fieldData && fieldData.goals) || [], r = drag.robot || { x: 0, y: 0 };
+  let best = null;
+  for (const g of gs) if (!best || Math.hypot(g.x - r.x, g.y - r.y) < Math.hypot(best.x - r.x, best.y - r.y)) best = g;
+  return best ? { x: best.x, y: best.y, z: best.z || 0 } : null;
+}
+// The four sides, from the field file's frame (BIOBUZZ: the red wall at y = -72, the blue wall at +72, the
+// audience at +x, the far side at -x; see its frameNote). Each: [camera place, where it looks].
 const VIEWS = {
-  drivers: (w) => viewAlliance === "BLUE" ? [[0, w + 120, 110], [0, 10, 0]] : [[0, -w - 120, 110], [0, -10, 0]],
+  drivers: (w) => VIEWS[viewAlliance === "BLUE" ? "blue" : "red"](w),
+  red: (w) => [[0, -w - 120, 110], [0, -10, 0]],
+  blue: (w) => [[0, w + 120, 110], [0, 10, 0]],
   audience: (w) => [[w + 120, 0, 110], [10, 0, 0]],
+  far: (w) => [[-w - 120, 0, 110], [-10, 0, 0]],
   top: (w) => [[0, viewAlliance === "BLUE" ? 1 : -1, 2.6 * w], [0, 0, 0]],
+  close: () => {
+    const g = closeUpSpot() || { x: 0, y: 0, z: 0 }, s = viewAlliance === "BLUE" ? 1 : -1;
+    return [[g.x + 10, g.y + s * 32, g.z + 10], [g.x, g.y, Math.max(0, g.z - 6)]];
+  },
 };
+// The view's name on the View button (Drivers says which wall it is now).
+function viewName(v) {
+  const wall = viewAlliance === "BLUE" ? "blue" : "red";
+  return { drivers: `Drivers (${wall} wall)`, red: "Red wall", blue: "Blue wall", audience: "Audience side", far: "Far side",
+    top: "From above", follow: "Follow robot", close: $("#closeName").textContent, free: "Turned by hand" }[v] || v;
+}
 function setView(v) {
   v3.view = v;
   document.querySelectorAll("[data-view]").forEach(b => b.classList.toggle("on", b.dataset.view === v));
+  $("#viewName").textContent = viewName(v);
+  $("#driversWall").textContent = viewAlliance === "BLUE" ? "(blue now)" : "(red now)";
+  if (v !== "free") { try { localStorage.setItem("simView", v); } catch (e) { /* not kept: fine */ } }
   if (!v3.ready && !v3.camera) return;
   const w = (fieldData && fieldData.field && (fieldData.field.insideWallSize || fieldData.field.size) / 2) || 72;
   if (VIEWS[v]) {
@@ -1439,12 +1951,23 @@ function setView(v) {
 function frame3d() {
   requestAnimationFrame(frame3d);
   if (!v3.on || document.hidden) return;
-  // Glide to the newest pose (the page reads it 10 times a second).
-  if (v3.pose && v3.target) {
-    const k = 0.35, p = v3.pose, t = v3.target;
-    let dh = t.h - p.h; dh = Math.atan2(Math.sin(dh), Math.cos(dh));
-    p.x += (t.x - p.x) * k; p.y += (t.y - p.y) * k; p.h += dh * k;
+  // Draw the moment a little in the past, between the two updates around it (SimView.Buffer): smooth motion
+  // at any frame rate. Across a jump (a reset, the robot put somewhere by hand) it does not glide.
+  const now = performance.now() / 1000, smp = frames.sample(now);
+  if (smp) {
+    const { a, b, u } = smp, dt = b.t - a.t, near = u < 0.5 ? a : b;
+    const jumped = a.e !== b.e;
+    let [x, y, h] = near.r;
+    if (!jumped && Math.hypot(b.r[0] - a.r[0], b.r[1] - a.r[1]) <= 200 * dt + 3) {
+      x = SimView.lerp(a.r[0], b.r[0], u); y = SimView.lerp(a.r[1], b.r[1], u); h = SimView.lerpDeg(a.r[2], b.r[2], u);
+    }
+    const p = v3.dragPose || { x, y, h: h * Math.PI / 180 };      // while dragging it by hand: where the hand is
+    v3.pose = p;
     v3.robot.position.set(p.x, p.y, 0); v3.robot.rotation.z = p.h;
+    drawPieces(jumped ? near.p : SimView.lerpKeyed(a.p, b.p, u, dt, 900));
+    poseShapes(SimView.lerpRows(a.s, b.s, u, [12]));
+    v3.robot.updateMatrixWorld();
+    poseCameras(SimView.lerpRows(a.c, b.c, u));
     if (v3.handles.visible) {
       const r = drag.robot, rad = Math.hypot((r && r.length) || 18, (r && r.width) || 18) / 2 + 2;
       v3.handles.position.set(p.x, p.y, 0.3); v3.handles.rotation.z = p.h; v3.handles.scale.set(rad, rad, rad);
@@ -1456,20 +1979,21 @@ function frame3d() {
       v3.controls.target.set(p.x + fx * 20, p.y + fy * 20, 6);
     }
   }
+  animateHives(now);
+  drawSightFrame();
   v3.controls.update();
   const R = v3.renderer;
   R.render(v3.scene, v3.camera);
-  // What the first camera sees, in the bottom-right corner (the same shapes; no robot).
-  if (v3.simCams && v3.simCams.length && $("#camView").checked) {
-    const st = $("#stage"), W = st.clientWidth, H = st.clientHeight, sc = (v3.simCams[+$("#camPick").value || 0] || v3.simCams[0]).cam;
-    const w = Math.round(Math.min(W * 0.36, 360)), h = Math.round(w / sc.aspect), m = 8;
-    R.setScissorTest(true);
-    R.setViewport(W - w - m, m, w, h); R.setScissor(W - w - m, m, w, h);
-    R.render(v3.scene, sc);
-    R.setScissorTest(false); R.setViewport(0, 0, W, H);
-  }
+  drawCamPicture(R);
 }
-document.querySelectorAll("[data-view]").forEach(b => b.onclick = () => setView(b.dataset.view));
+document.querySelectorAll("[data-view]").forEach(b => b.onclick = () => { setView(b.dataset.view); closeMenus(); });
+// Keys 1-8 pick a view (the order of the View menu), unless you are typing in a box.
+window.addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.altKey || (e.target.matches && e.target.matches("input:not([type=checkbox]):not([type=range]), select, textarea"))) return;
+  const b = document.querySelectorAll("#viewsMenu [data-view]")[+e.key - 1];
+  if (b && /^[1-8]$/.test(e.key) && !b.hidden) { setView(b.dataset.view); e.preventDefault(); }
+});
+{ let v = null; try { v = localStorage.getItem("simView"); } catch (e) { /* none */ } if (v && VIEWS[v] || v === "follow") v3.view = v; setView(v3.view); }
 $("#useCad").onchange = () => showCad();
 function set3d(on) {
   v3.on = on;
@@ -1518,7 +2042,7 @@ fillSources();
 setInterval(fillSources, 2000);
 setInterval(() => document.querySelectorAll(".pad").forEach(div => drawPad($(".gp", div), +div.dataset.pad)), 50);
 if (phonePad) { document.querySelectorAll(".pad").forEach(div => { if (div.dataset.pad !== phonePad) div.style.display = "none"; }); }
-poll();
+connect();
 </script>
 </body>
 </html>

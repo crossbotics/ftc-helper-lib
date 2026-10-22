@@ -150,10 +150,22 @@ driving (the trail). The plan stays, faded, after its step ends, so you can comp
 lines** clears both; untick **Path lines** to hide them. More: [Pedro module](../modules/pedro.md#the-simulator).
 
 **Field in 3D** (middle, above the gamepads; at the bottom on a narrow screen): the field and the robot in 3D. Drag to turn the view, scroll to
-zoom, right-drag (or two fingers) to slide. View buttons: Drivers, Audience, From above, Follow robot
-(behind the robot; turning the view by hand ends it). Drivers and From above are from your alliance's
-wall: the alliance the running program uses (autonomous's INIT menu, or TeleOp's choice); red until a
-program says.
+zoom, right-drag (or two fingers) to slide. The **View** menu (keys 1 to 8; your choice is remembered in
+this browser) looks from:
+
+| Key | View | From where |
+|---|---|---|
+| 1 | Drivers | your alliance's wall: the alliance the running program uses (autonomous's INIT menu, or TeleOp's choice); red until a program says. The button says which wall it is now. |
+| 2 | Red wall | behind the red drivers (BIOBUZZ: the bottom of the field map, y = -72) |
+| 3 | Blue wall | behind the blue drivers (y = +72) |
+| 4 | Audience side | the side the audience sits on (BIOBUZZ: the red drivers' right, +x) |
+| 5 | Far side | across from the audience (-x) |
+| 6 | From above | straight down, your alliance's wall at the bottom |
+| 7 | Follow robot | behind the robot (turning the view by hand ends it) |
+| 8 | HIVE close-up | your alliance's HIVE up close (a field with no HIVEs: the goal nearest the robot) |
+
+The sides come from the field file's frame (its `frameNote` says which wall is which). **Layers** (next to
+View) adds lines and maps over the 3D view: see [Layers](#layers) below.
 
 **Where the robot starts.** In INIT the robot is put where the program says: an autonomous that names its
 start spot (`s.start(note, x, y, heading)`, or `startSpotIn()` in an EasyAuto) puts it there for the
@@ -172,8 +184,37 @@ passive part (moved by gravity or springs) **blinks yellow** while it moves. The
 parts) with each AprilTag as a square with its ID. If the robot file names a 3D model of the field
 (`field.model`), the page shows that model instead (with the tag squares on top); the "Field CAD model"
 box switches between them. Each camera shows as a cone (webcam yellow, Limelight green); "Camera
-view" shows a camera's picture in the corner (pick the camera when there are two). The 3D library (three.js, MIT license) comes with the simulator, so the page
+view" shows a camera's picture in the corner (pick the camera when there are two; it is redrawn 15 times
+a second, smaller than the screen, so it costs little). The game pieces are striped balls, so you can see
+them roll and spin. When a HIVE tips, the page turns it over half a second (the simulator tips it at
+once; the pieces in it are already where they land). The 3D library (three.js, MIT license) comes with the simulator, so the page
 works without the internet. Untick "Show" on a slow computer.
+
+**Smooth motion.** The simulator moves everything 100 times a second and sends the page where everything
+is 50 times a second (a stream: `GET /stream`), with its own clock. The page draws the moment about
+1/20 s in the past, gliding between the two updates around it, so the robot and the balls move smoothly
+at any frame rate (they do not jump 10 times a second). Across a jump (Back to start, Reset field, the
+robot put somewhere by hand) it does not glide. If the stream cannot open (a very old browser, too many
+pages open), the page asks for `/state` 10 times a second instead and still glides, just further behind.
+
+### Layers
+
+The **Layers** button over the 3D view turns each of these on or off; your choice is remembered in this
+browser.
+
+| Layer | What it shows |
+|---|---|
+| Camera sight lines | A line from the chosen camera to each tag in front of it. **Green**: the camera sees it (with about how many pixels across). **Pink "blocked?"**: the camera model sees it, but a field part is in the way of the line (the simulator's camera sees through field parts; a real one does not, so do not count on that tag from there). **Orange**: too slanted (the tag's face is turned more than 60 degrees from the camera). **Red**: too small (fewer pixels across than the tag finder needs: 6.5 per step of decimation, so 20 at the SDK's decimation 3). **Grey, faint**: out of the picture (left, right, above or below). **Purple**: the pretend lighting does not work with the camera's setting now (`goodPipelines`, `goodExposureMs`). Not seen: only the nearest four lines of each kind. The words at the bottom left list every tag. "Not open" means the OpMode has no camera running, so it gets nothing even where the lines are green. |
+| Camera view cone | The camera's view, 36 in long (as before). |
+| Floor map | Where on the field the chosen camera can see tags: each 4 in square is shaded by how many tags the camera would see with the robot standing there (light: 1, darker: 2 or 3, darkest: 4 or more). The simulator works it out with the same camera rules the OpMode gets (field parts do not block in this map), with the robot facing the way it faces now, or, ticked "turned any way", the best of 24 headings. Turret and other parts stay as they are now. It updates once a second. |
+| Shot arc | Where each launcher would send its next piece if it fired now: a dashed yellow line from the launcher, with its peak height (check the venue's ceiling and lights). The simulator works it out from the flywheel's speed now, the shot angle (the hood's angle if it has one) and a shot table's average, with the same air drag and spin lift as a real shot, but it flies through everything (no goal, no walls, no other pieces). The words at the bottom left give the angle, speed and peak; a stopped flywheel says so. |
+| Ball trails | The last half second of each loose ball's path, in its color: how it flew and bounced. |
+| Path lines | The Pedro plan and the trail (the same as **Path lines** in the Robot tab). |
+| Robot size box | A box around everything the robot has out now (green while it fits 18 x 24 in and 29 in tall, red when not; worked out from the shapes' boxes, not the CAD models) and the 18 in start cube, dashed. |
+
+The page's helpers (gliding between updates, the striped ball, the labels) are in `sim/.../simview.js`,
+a small file with no other library in it, so another page (like a team's own shot simulator) can load it
+too.
 
 ## The robot file
 
@@ -752,7 +793,9 @@ same as on the robot.
 
 On the page, the Control Hub panel lists each camera with the tags in its picture and what was found.
 The 3D view draws its view as a cone on the robot (webcam yellow, Limelight green), and "Camera view" shows the picture from the
-camera (the tags it sees turn green).
+camera (the tags it sees turn green). A camera on a turret (`on=turret`) moves with it in the 3D view
+too. The **Layers** menu draws its sight lines to the tags with the reason it cannot see each one, and
+a floor map of where it can see them ([Layers](#layers)).
 
 **Limelight 3A**: the same settings with `limelight.` (hfov default 54.5, its spec sheet).
 

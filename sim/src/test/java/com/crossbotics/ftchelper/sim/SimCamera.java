@@ -177,18 +177,25 @@ final class SimCamera implements InvocationHandler {
      * right of the picture, y down the picture, z straight out of the lens. Rows: position, x, y, z.
      */
     double[][] pose() {
-        double rx, ry, h;
+        synchronized (robot) {
+            return poseAt(robot.x, robot.y, robot.headingDeg);
+        }
+    }
+
+    /**
+     * The same as pose(), with the robot put at (rx, ry) facing headingDeg instead of where it is (its turret and
+     * other moving parts as they are now). The page's "where the camera sees tags" map uses it.
+     */
+    double[][] poseAt(double rx, double ry, double headingDeg) {
+        double h = Math.toRadians(headingDeg);
         // In the robot frame (forward, left, up): where the lens is, and its three axes. Yaw 0 looks
         // forward; the picture's x is to the right.
         double yaw = Math.toRadians(yawDeg), p = Math.toRadians(pitchDeg);
         double[] pos = {forwardIn, leftIn, upIn};
         double[] z = {Math.cos(yaw) * Math.cos(p), Math.sin(yaw) * Math.cos(p), Math.sin(p)};
         double[] x = {Math.sin(yaw), -Math.cos(yaw), 0};
-        synchronized (robot) {
-            rx = robot.x;
-            ry = robot.y;
-            h = Math.toRadians(robot.headingDeg);
-            if (on != null) {
+        if (on != null) {
+            synchronized (robot) {
                 // On a turret: turned (and moved) with it, from where it was measured (the turret at 0).
                 double[][] r = robot.shapes.ridingNow(on);
                 pos = SimShapes.apply(r, pos);
@@ -267,6 +274,63 @@ final class SimCamera implements InvocationHandler {
             double pixels = t.sizeIn * f / cam[2] * Math.sqrt(facing);
             if (pixels < minPx) continue;                                      // too small to find
             out.add(new Seen(t, tp, cam, pixels, width / 2.0 + f * cam[0] / cam[2], height / 2.0 + f * cam[1] / cam[2]));
+        }
+        return out;
+    }
+
+    // The decimation the OpMode's AprilTag finder used last (NaN: none yet). The page's reasons use it.
+    volatile double decimationNow = Double.NaN;
+
+    /** The decimation for the page: the one used last, or the usual default (the SDK's 3; a Limelight 2). */
+    double decimationForPage() {
+        double d = decimationNow;
+        return Double.isNaN(d) ? (kind.equals("limelight") ? 2 : 3) : d;
+    }
+
+    /** Why the camera does or does not see one tag (the page's sight lines). */
+    static final class Sight {
+        final int id;
+        final String why;      // seen, behind, left, right, above, below, slanted, small, light
+        final double pixels;   // about how many pixels across (0 when not in the picture)
+        final double angleDeg; // how far the tag's face is turned from the camera (0 = straight on)
+        final double distIn;
+
+        Sight(int id, String why, double pixels, double angleDeg, double distIn) {
+            this.id = id;
+            this.why = why;
+            this.pixels = pixels;
+            this.angleDeg = angleDeg;
+            this.distIn = distIn;
+        }
+    }
+
+    /**
+     * Every tag of the field with the reason the camera sees it or not, checked in the same order and with the
+     * same numbers as visibleTags (so the page never says "seen" for a tag the OpMode does not get).
+     */
+    List<Sight> sight(SimField field, double decimation, double[][] c) {
+        double f = focalPx(), tanH = Math.tan(Math.toRadians(hfovDeg) / 2), tanV = tanH * height / width;
+        double minPx = 6.5 * Math.max(1, decimation);
+        boolean light = lightingOk();
+        List<Sight> out = new ArrayList<>();
+        for (SimField.Tag t : field.tags) {
+            double[] tp = t.pose();
+            double[] d = {tp[0] - c[0][0], tp[1] - c[0][1], tp[2] - c[0][2]};
+            double[] cam = {dot(d, c[1]), dot(d, c[2]), dot(d, c[3])};
+            double dist = Math.sqrt(dot(d, d));
+            double facing = dist < 1e-9 ? 0 : -dot(tagNormal(tp), d) / dist;
+            double ang = Math.toDegrees(Math.acos(Math.max(-1, Math.min(1, facing))));
+            String why;
+            double pixels = 0;
+            if (cam[2] < 1) why = "behind";
+            else if (Math.abs(cam[0] / cam[2]) > tanH) why = cam[0] > 0 ? "right" : "left";
+            else if (Math.abs(cam[1] / cam[2]) > tanV) why = cam[1] > 0 ? "below" : "above";
+            else if (facing < Math.cos(Math.toRadians(60))) why = "slanted";
+            else {
+                pixels = t.sizeIn * f / cam[2] * Math.sqrt(facing);
+                why = pixels < minPx ? "small" : light ? "seen" : "light";
+            }
+            out.add(new Sight(t.id, why, pixels, ang, dist));
         }
         return out;
     }

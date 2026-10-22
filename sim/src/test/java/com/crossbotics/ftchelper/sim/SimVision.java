@@ -40,6 +40,7 @@ public final class SimVision {
     /** The tags the camera sees now: {id, pixels across, picture x, picture y} each. Also kept for the page. */
     public static List<double[]> visible(Object camera, double decimation) {
         SimCamera c = (SimCamera) camera;
+        c.decimationNow = decimation;           // the page's sight lines use the same one
         List<double[]> out = new ArrayList<>();
         for (SimCamera.Seen s : c.visibleTags(c.robot.field, decimation)) {
             out.add(new double[] {s.tag.id, s.pixels, s.cx, s.cy});

@@ -6,6 +6,19 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
+- **Simulator: Layers over the 3D view** (docs/guides/simulator.md#layers): camera sight lines to the tags,
+  each with the reason it is not seen (out of view, too slanted, too small, lighting setting, and
+  "blocked?" when a field part is in the way of a tag the camera model sees); a floor map of where the
+  camera can see tags (the robot as it faces now, or turned any way; `GET /seemap`); the predicted shot
+  arc with its peak height (the launcher's speed and angle now, the same air as a real shot, no contacts);
+  ball trails; the path lines; a robot size box with the 18 in start cube. Each choice is remembered in the
+  browser. Also striped balls that show their spin, and a HIVE that turns over half a second when it tips.
+- **Simulator: a View menu with all four sides** (keys 1 to 8, remembered in the browser): Drivers (your
+  alliance's wall, and it says which), Red wall, Blue wall, Audience side, Far side, From above, Follow
+  robot, and a HIVE close-up.
+- **Simulator: `sim/.../simview.js`**, the page's drawing helpers (gliding between updates, the striped
+  ball, labels) in a small file another page can load too.
+
 - **Tunables reference** (`docs/guides/tunables.md`): every number the library reads from
   `Tunables.java`, one table per part (Drive, Odometry, Aim, Buttons, Intake, Lift and Arm, Claw/Wrist/
   Positioner, Turret, interlock rules, Launcher, Indexer, Hood, Camera, PieceSensor, Lights: 133 fields).
@@ -262,6 +275,15 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Changed
 
+- **Simulator: smooth motion.** The page now gets where everything is 50 times a second on one stream
+  (`GET /stream`, server-sent events; was: asking `/state` 10 times a second) with the simulator's own
+  clock, and draws between two updates, so the robot and the balls glide instead of jumping (a falling
+  ball now moves in every frame, not one in seven). The OpMode list is sent only when it changes
+  (`GET /opmodes`), so each update is about 11 KB instead of 16. Gamepad updates reuse their connection
+  (keep-alive) and get a short `200 ok` instead of `204` (no more "canceled" requests in the browser's
+  network panel). The camera picture is redrawn 15 times a second at a smaller size instead of doubling
+  every frame's work. A camera on a turret now moves with the turret in the 3D view. `/state` keeps
+  every field it had (plus `t`, `epoch`, `pieceTypes`, `arcs`, each camera's `sight`, `fast`).
 - An autonomous's `steps(...)` is read in INIT again each time the drivers change a menu line (it was
   read once in INIT and once after START). No step runs in INIT, as before. Before, a `start(...)`
   inside an `onlyIf` was used whatever the choice (the last one written won).

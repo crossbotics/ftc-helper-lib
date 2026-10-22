@@ -118,6 +118,44 @@ final class SimShotTable {
         return s;
     }
 
+    /**
+     * The average shot of this piece at this shaft speed (no scatter, and it does not use up a random pick, so
+     * the real shots stay the same), or null if the table does not have the piece. For the page's shot arc.
+     */
+    Shot mean(String piece, double shaftRpm) {
+        List<Row> rows = pieces.get(piece);
+        if (rows == null) return null;
+        double rpm = Math.abs(shaftRpm);
+        Row a = rows.get(0), b = rows.get(rows.size() - 1);
+        double t = 0, scale = 1;
+        if (rpm <= a.rpm) {
+            b = a;
+            scale = a.rpm > 0 ? rpm / a.rpm : 1;
+        } else if (rpm >= b.rpm) {
+            a = b;
+            scale = rpm / b.rpm;
+        } else {
+            for (int i = 0; i + 1 < rows.size(); i++) {
+                if (rpm <= rows.get(i + 1).rpm) {
+                    a = rows.get(i);
+                    b = rows.get(i + 1);
+                    t = (rpm - a.rpm) / (b.rpm - a.rpm);
+                    break;
+                }
+            }
+        }
+        Shot s = new Shot();
+        s.shot = true;
+        s.speedIn = scale * mix(a.speed[0], b.speed[0], t);
+        double turn = ((b.angle[0] - a.angle[0]) % 360 + 540) % 360 - 180;
+        s.angleMeanDeg = a.angle[0] + turn * t;
+        s.angleDeg = s.angleMeanDeg;
+        s.backspin = scale * mix(a.spin[0], b.spin[0], t);
+        s.exitForward = mix(a.exit[0], b.exit[0], t);
+        s.exitUp = mix(a.exit[1], b.exit[1], t);
+        return s;
+    }
+
     private double draw(double[] a, double[] b, double t) {
         return mix(a[0], b[0], t) + random.nextGaussian() * mix(a[1], b[1], t);
     }

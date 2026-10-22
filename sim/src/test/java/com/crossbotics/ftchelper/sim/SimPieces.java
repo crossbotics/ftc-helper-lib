@@ -900,4 +900,111 @@ final class SimPieces {
             throw new IllegalArgumentException("Robot file: " + line + ": " + key + "=" + s.get(key) + " needs a number");
         }
     }
+
+    // ---- For the page's smooth picture and its layers (SimView). Read only: nothing here changes the game. ----
+
+    /**
+     * Every piece to draw, with a key that stays the same while it is the same piece (so the page can glide it
+     * between updates): {key, type number (the field file's order), x, y, z (field inches), qw, qx, qy, qz (how it is
+     * turned; 1,0,0,0 for a piece in a claw or a stack)}. Keys: a loose piece its own number (1, 2, ...); a piece in
+     * claw g: -1 - g; a piece in stack i, slot k: 1000000 + 1000 i + k.
+     */
+    List<double[]> drawnForView() {
+        synchronized (robot) {
+            List<double[]> out = new ArrayList<>();
+            if (world == null) return out;
+            List<String> names = new ArrayList<>(robot.field.pieceTypes.keySet());
+            for (SimWorld.Ball b : world.balls()) {
+                double[] p = world.ballPos(b);
+                org.ode4j.math.DQuaternionC q = b.body.getQuaternion();
+                out.add(new double[] {b.id, names.indexOf(b.type.name), p[0], p[1], p[2], q.get0(), q.get1(), q.get2(), q.get3()});
+            }
+            for (int g = 0; g < grabs.size(); g++) {
+                Grab gr = grabs.get(g);
+                if (gr.heldType == null) continue;
+                double[] p = toField(heldAt(gr));
+                out.add(new double[] {-1 - g, names.indexOf(gr.heldType.name), p[0], p[1], p[2], 1, 0, 0, 0});
+            }
+            for (int i = 0; i < stackNow.size(); i++) {
+                List<SimField.StagedPiece> slots = robot.field.stacks.get(i).pieces;
+                int up = stackOpen.get(i) ? 1 : 0;
+                for (int k = 0; k < stackNow.get(i).size() && k + up < slots.size(); k++) {
+                    SimField.StagedPiece sp = slots.get(k + up);
+                    out.add(new double[] {1000000 + 1000 * i + k, names.indexOf(stackNow.get(i).get(k).name), sp.x, sp.y, sp.z, 1, 0, 0, 0});
+                }
+            }
+            return out;
+        }
+    }
+
+    /** One launcher's next shot as it would leave now, without the shot table's scatter (see shotsNow). */
+    static final class ShotNow {
+        String launcher, piece, why = "";   // why: empty when it would shoot, else why not ("flywheel stopped")
+        double[] at, vel, spin;             // field inches, inches per second, radians per second
+        double speedIn, angleDeg, diameterIn, massG, dragCd;
+    }
+
+    /**
+     * Where each launcher would send its next piece if it fired now (the same numbers shoot() uses, with a shot
+     * table's average instead of a random pick): for the page's "shot arc" layer. A launcher with nothing in the
+     * robot uses the first piece type its table has, or the field's first piece type.
+     */
+    List<ShotNow> shotsNow() {
+        synchronized (robot) {
+            List<ShotNow> out = new ArrayList<>();
+            if (world == null) return out;
+            for (Shoot s : shoots) {
+                ShotNow n = new ShotNow();
+                n.launcher = s.name;
+                SimMotor flywheel = s.flywheel != null ? robot.motors.get(s.flywheel) : null;
+                if (flywheel == null) {
+                    // one launcher and no flywheel= named: the robot's flywheel motor fires it (as in shoot())
+                    for (SimMotor m : robot.motors.values()) if (flywheel == null && "FLYWHEEL".equals(m.kind.name())) flywheel = m;
+                }
+                SimShapes.Piece piece = pieceOf(s.shape);
+                SimField.PieceType type = !stored.isEmpty() ? stored.get(0)
+                        : robot.field.pieceTypes.isEmpty() ? null : robot.field.pieceTypes.values().iterator().next();
+                if (piece == null || type == null) continue;
+                n.piece = type.name;
+                n.diameterIn = type.diameterIn;
+                n.massG = type.massG;
+                n.dragCd = type.dragCd;
+                double dia = Math.max(piece.sf, piece.su);
+                double shaft = flywheel == null ? 0 : flywheel.shaftSpeed(), perRev = flywheel == null ? 1 : Math.max(1, flywheel.ticksPerRev);
+                double rimSpeed = Math.abs(shaft) / perRev * Math.PI * dia;
+                double angle = s.angleDeg, speed = Double.isNaN(s.fixedSpeed) ? rimSpeed * s.share : s.fixedSpeed;
+                double backspin = s.spin * speed / (type.diameterIn / 2);
+                double[] exit = null;
+                SimShotTable.Shot mean = s.table == null ? null : s.table.mean(type.name, shaft / perRev * 60);
+                double hoodAngle = s.hood == null || !robot.servos.containsKey(s.hood) ? Double.NaN
+                        : s.hoodAt0 + (s.hoodAt1 - s.hoodAt0) * robot.servos.get(s.hood).actual;
+                if (!Double.isNaN(hoodAngle)) angle = hoodAngle;
+                if (mean != null) {
+                    angle = Double.isNaN(hoodAngle) ? mean.angleDeg : hoodAngle;
+                    speed = mean.speedIn;
+                    backspin = mean.backspin;
+                    exit = new double[3];
+                    for (int k = 0; k < 3; k++) exit[k] = piece.center[k] + mean.exitForward * piece.ef[k] + mean.exitUp * piece.eu[k];
+                }
+                double a = Math.toRadians(angle);
+                double[] dir = new double[3];
+                for (int k = 0; k < 3; k++) dir[k] = Math.cos(a) * piece.ef[k] + Math.sin(a) * piece.eu[k];
+                double gap = dia / 2 + type.diameterIn / 2 + 0.3;
+                double[] start = exit != null ? exit
+                        : new double[] {piece.center[0] + dir[0] * gap, piece.center[1] + dir[1] * gap, piece.center[2] + dir[2] * gap};
+                double[] d = toFieldDir(dir), rv = world.robotVel();
+                n.at = toField(start);
+                n.vel = new double[] {d[0] * speed + rv[0], d[1] * speed + rv[1], d[2] * speed};
+                n.speedIn = speed;
+                n.angleDeg = angle;
+                n.spin = new double[3];
+                double[] back = {d[1], -d[0], 0};
+                double len = Math.hypot(back[0], back[1]);
+                if (backspin != 0 && len > 1e-6) n.spin = new double[] {back[0] / len * backspin, back[1] / len * backspin, 0};
+                if (speed < 1) n.why = flywheel == null ? "no flywheel motor found" : "the flywheel is stopped";
+                out.add(n);
+            }
+            return out;
+        }
+    }
 }
