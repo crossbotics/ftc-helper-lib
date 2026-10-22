@@ -53,6 +53,7 @@ flowchart LR
 | [`Launcher`](#launcher) | a flywheel and its [`Indexer`](#indexer): spin up, fire, speed from distance |
 | [`Indexer`](#indexer) | feeds one piece at a time (servo, CR servo or motor) |
 | [`Camera`](#camera) | a Limelight or webcam; the alliance's goal |
+| [`Pieces`](#pieces-and-piecesensor), [`PieceSensor`](#pieces-and-piecesensor) | which game piece is at a spot (colour sensor, distance sensor, second webcam); how many the robot holds and which fires next |
 | [`Action`](#action) | steps across several parts that never block (never make the loop wait) |
 | [`Mode`](#modes) | a rule a module follows every loop while the mode is on |
 | [`ControlMap`](#controlmap), [`Pad`](#controlmap) | `Controls.java`: the TeleOp and the button map |
@@ -276,6 +277,7 @@ intake = add(Intake.motor("intake").withCrServos("left_wheel", "right_wheel").re
 | `isRunning()`, `isPushingOut()` | running at all; pushing out now |
 | `onAtStart()` | runs in from START until stopped |
 | `holds(n)` | for the simulator: how many pieces it carries (default: a guess of 3) |
+| `stopsWhen(condition)`, `isHeldBack()` | never runs IN while the condition is true (pushing out still works), e.g. `stopsWhen(() -> pieces.isFull())` ([Pieces](#pieces-and-piecesensor)) |
 
 `Tunables.Intake`: `inPower` (1.0), `outPower` (0.7). Buttons: hold operator RT in, LT out; with
 `onAtStart()`: RT switches it on/off, hold LT pushes out.
@@ -400,7 +402,9 @@ D-pad up/down speed (when free and no speed-from-distance).
 `Indexer.servo(name)` (Tunables: `rest`, `push`, `pushSec`, `returnSec`), `Indexer.crServo(name)` and
 `Indexer.motor(name)` (`power`, `feedSec` per piece), `.reversed()`. Usually given to a launcher with
 `.feeder(...)`; added on its own its button is operator RB (feed one). A servo indexer goes to `rest`
-at START. Commands: `feedOne()`, `isBusy()`, `isJammed()`, `clearJam()`.
+at START. Commands: `feedOne()`, `isBusy()`, `isJammed()`, `clearJam()`. `onFeed(runnable)` runs
+your code each time a feed really starts (a [Pieces](#pieces-and-piecesensor) counter uses it to count
+one piece out).
 
 ---
 
@@ -450,6 +454,96 @@ Its optional Tunables (leave them out for the defaults):
 
 These are read once, in INIT. Changed one with the tuning menu? Copy the value back into
 `Tunables.java`, or the robot uses the old one at the next INIT.
+
+---
+
+## Pieces and PieceSensor
+
+Which game piece is at a spot, how many the robot holds, and which one fires next.
+
+```java
+public Pieces pieces;                                             // at the top of Robot.java
+pieces = add(Pieces.kinds("POLLEN", "RED_NECTAR", "BLUE_NECTAR")  // your kinds: also Tunables names
+        .comingIn(PieceSensor.color("intake_color"))              // sees each piece come in
+        .readyToFire(PieceSensor.color("ready_color"))            // optional: the next to fire
+        .max(4)                                                   // BIOBUZZ G407: at most 4
+        .startsWith(4, "POLLEN"));                                // the preload
+intake = add(Intake.motor("intake").stopsWhen(() -> pieces.isFull()));   // no 5th piece
+```
+
+**How it counts.** Each new piece the intake sensor sees counts one IN, with its kind. Each feed of
+an [`Indexer`](#indexer) (alone or in a launcher) counts one OUT, the oldest first (the robot fires in
+the order the pieces came in). The ready sensor, if there is one, has the last word on the next
+piece: it corrects the kind, and a piece it sees that was never counted is added.
+
+| Method | |
+| --- | --- |
+| `count()`, `count(kind)` | how many it holds; of one kind |
+| `next()` | the next to fire: a kind, `Pieces.UNKNOWN`, or `Pieces.NONE` (empty) |
+| `nextIs(kind)`, `isFull()`, `isEmpty()` | true/false |
+| `held()` | the list, next to fire first |
+| `atIntake()`, `atReady()` | what each sensor sees now |
+| `added(kind)`, `removed()`, `clear()`, `set(kinds...)` | change the count by hand (a claw, a button) |
+| `nextKind()` | `next` as a `Supplier<String>`: for a part that asks every loop |
+| `whenFull()`, `whenEmpty()`, `whenNextIs(kind)` | conditions (`BooleanSupplier`) for LEDs, `rumbleWhen`, `stopsWhen`, an action's wait |
+
+**Hooks for other parts.** A shot table per kind: name the tables like the kinds and, in the TeleOp
+loop or an action, ask the launcher for the table of `robot.pieces.next()` (with the launcher's table
+supplier, give it `robot.pieces.nextKind()`; check the [Launcher](#launcher) section for its exact
+method). LEDs: `robot.pieces.whenNextIs("POLLEN")` lights yellow, `whenFull()` lights "full".
+No feed with nothing in: `Launcher...requireReady("a piece to fire", () -> !pieces.isEmpty())`.
+
+**The sensors** (`PieceSensor`, one spot each; also alone: `add(PieceSensor.color("x").kinds("POLLEN"))`):
+
+| Sensor | Part (checked 2026-10-21) | Tells apart | Cannot |
+| --- | --- | --- | --- |
+| `PieceSensor.color(name)` | REV Color Sensor V3, REV-31-1557 ($20.75): colour + distance 1-10 cm (Broadcom APDS-9151) | every colour: yellow POLLEN, red and blue NECTAR | see a piece more than ~5 cm away; mount it 1-2 cm from the piece |
+| `PieceSensor.distance(name)` | REV 2m Distance Sensor, REV-31-1505 ($31.50): 5-200 cm, 1 mm resolution, 25° cone (VL53L0X) | sizes: a 3.6 in NECTAR is 20 mm bigger than a 2.8 in POLLEN | colours (red from blue NECTAR); read closer than 5 cm |
+| `PieceSensor.camera(webcamName)` | a second UVC webcam, SDK `PredominantColorProcessor` | colours, from farther away | distance: "is one there" means "the box is colourful" (`minSaturation`); a grey background helps |
+
+BIOBUZZ numbers (game manual TU01, section 9.8): POLLEN about 2.8 in (7.1 cm) yellow balls (AndyMark
+am-5851_yellow), NECTAR about 3.6 in (9.1 cm) red or blue balls (am-5852_red, am-5852_blue); "not
+perfectly spherical and may vary in size". G407: a robot may not CONTROL more than 4 at a time. G408:
+never control the OPPONENT's NECTAR, so a team that picks up NECTAR needs colour, not only size.
+
+**Tunables** (one section per sensor, named after its device: `intake_color` reads `Tunables.IntakeColor`):
+
+```java
+public static class IntakeColor {
+    public static double POLLEN = 75, RED_NECTAR = 8, BLUE_NECTAR = 215;   // hues (degrees), from the Piece Tuner
+    public static double nearMm = 40;                                      // a piece is there below this
+}
+```
+
+| Number | Default | What it does |
+| --- | --- | --- |
+| one per kind (`POLLEN`) | none: that kind reads `UNKNOWN` until tuned (INIT says so) | colour sensor and camera: the kind's hue, 0-360 degrees; distance sensor: the mm it reads with that piece |
+| `nearMm` | 40 (colour), 100 (distance) | a piece is there when the distance is below this |
+| `hueTolerance` / `sizeToleranceMm` | 30 deg / 8 mm | how far from a kind's number still counts as that kind |
+| `minSaturation` | 0.35 (camera), 0 (colour) | how colourful (0-1) it must be; a camera's "is a piece there" |
+| `steadyMs` | 30 | a reading must stay this long before it counts (no flicker counts) |
+| `gain` | the sensor's own | colour sensor only, optional: its gain |
+
+Find them with the **Piece Tuner** ([`PieceTunerOpMode`](finders.md#piecetuneropmode)): it shows each
+sensor's readings and writes the lines to copy into `Tunables.java`. Changed one with the tuning
+menu? Copy it back into `Tunables.java`, or the robot uses the old one at the next INIT.
+
+**A second webcam** with an AprilTag webcam: each camera gets its own VisionPortal; the colour camera
+uses 320x240 pictures and no live view (the Driver Station can show one portal unless the code splits
+the view with `VisionPortal.makeMultiPortalView`). Two webcams share the Control Hub's USB: plug them
+into different USB ports (one is USB 3.0), or use a Limelight for the AprilTags. A camera that is
+missing or fails to start warns and sees nothing; the OpMode goes on.
+
+**Where to put the sensors.** The intake sensor where each piece passes once and is already held (past
+the rollers), so a piece that bounces out is not counted, and the intake does not stop with a piece
+half in. Pieces that touch each other pass as ONE piece unless they are different kinds: leave a gap
+(a spacer, or a short indexer step). The ready sensor where the next piece waits; after each feed it
+is trusted again once it has seen the slot empty.
+
+Not done yet: the count does not carry over from the autonomous into the TeleOp (the TeleOp starts
+with `startsWith(...)`; a ready sensor corrects an empty count). The simulator ([robot file](../guides/simulator.md#game-pieces):
+`color.NAME = at=ready`, `distance.NAME = at=intake, acrossMm=150`) simulates colour and distance
+sensors, not the camera.
 
 ---
 

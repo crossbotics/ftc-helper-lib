@@ -28,6 +28,7 @@ device's name in CamelCase (`lift` -> `Lift`, `intake_deploy` -> `IntakeDeploy`,
 | [`FlywheelFinderOpMode`](#flywheelfinderopmode) | find a flywheel's top speed, speed-control gains (the tuning numbers) and recovery time | no |
 | [`DriveTunerOpMode`](#drivetuneropmode) | find the wheel size and strafe correction for autonomous | `robot()` (five files) or `robotConfig()` |
 | [`OdometryTunerOpMode`](#odometrytuneropmode) | check which way each odometry pod counts and measure where it sits (the offsets); a loop check sets `checked` | `robot()` (five files, with an `odometry(...)` line) |
+| [`PieceTunerOpMode`](#piecetuneropmode) | see what each game-piece sensor reads, and measure each kind's colour (or size) and the "empty" line | `robot()` (five files, with a `Pieces` or `PieceSensor` line) |
 | [`ShotTunerOpMode`](#shottuneropmode) | build the shot table: distance -> speed (and hood angle) | `robot()` (five files), or your launcher (+ camera) |
 | [`AimTunerOpMode`](#aimtuneropmode) | find the camera offset so shots go in the middle | your camera (+ turret or drive) |
 | [`CharacterizerOpMode`](#characterizeropmode) | measure how the drive, lifts and flywheels really move (feedforward numbers, and the simulator's robot file) | `robotConfig()`, `mechanisms()` |
@@ -229,6 +230,35 @@ Tunables.Odometry: checked = true
 A reversed pod: the result says which name to add to (or take out of) `.reversed(...)`. While a test
 runs, the screen shows the pose and the raw pod counts since it began. Walk-through:
 [finders guide](../guides/finders.md#odometry-tuner-directions-offsets-and-a-loop-check).
+
+## PieceTunerOpMode
+
+Needs your robot in five files with a [`Pieces` or `PieceSensor`](robot.md#pieces-and-piecesensor)
+line. Next to `Robot.java`:
+
+```java
+@TeleOp(name = "Piece Tuner", group = "Finders")
+public class PieceTuner extends PieceTunerOpMode {
+    @Override protected RobotDefinition robot() { return new Robot(); }
+}
+```
+
+Nothing moves. **D-pad up/down** chooses the sensor, **D-pad left/right** what is in front of it (each
+kind, then EMPTY), **A** measures it (20 readings: hold the piece still, where it really sits on the
+robot), **B** forgets that sensor's measurements. The screen shows the live reading (hue and
+saturation, distance) and the kind it sees now. Measure every kind and EMPTY; the lines to copy:
+
+```java
+Tunables.IntakeColor: POLLEN = 74   // its colour (hue, degrees)
+Tunables.IntakeColor: RED_NECTAR = 6   // its colour (hue, degrees)
+Tunables.IntakeColor: hueTolerance = 34
+Tunables.IntakeColor: nearMm = 52   // a piece is there below this
+```
+
+It warns when two kinds read too close together (under 15 degrees, or 10 mm for a distance sensor),
+or when EMPTY looks like a piece (aim a distance sensor at a far wall; put a grey background behind a
+camera's spot). Copy the lines into `Tunables.java` and rebuild: a value changed only in the tuning
+menu is lost at the next INIT.
 
 ## ShotTunerOpMode
 

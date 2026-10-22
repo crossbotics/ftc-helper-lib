@@ -102,6 +102,8 @@ public final class SimConfigImport {
         if (tag.toLowerCase(Locale.US).contains("imu")) return "imu";              // any hub or external IMU type
         if (tag.equals("RevSPARKMini")) return "crservo";                           // a motor controller on a servo port: power -1..1
         if (tag.equals("RevTouchSensor") || tag.equals("DigitalDevice") || tag.equals("ModernRoboticsAnalogTouchSensor")) return "touch";
+        if (tag.equals("RevColorSensorV3")) return "color";
+        if (tag.equals("REV_VL53L0X_RANGE_SENSOR")) return "distance";                // the REV 2m Distance Sensor
         if (tag.equals("Webcam")) return "webcam";
         if (tag.equals("goBILDAPinpoint")) return "pinpoint";
         if (tag.equals("SparkFunOTOS")) return "otos";
@@ -251,6 +253,13 @@ public final class SimConfigImport {
             if (k.equals("touch")) {
                 b.append("touch.").append(key(d.name)).append(" =    # TODO: the motor it watches and how near its bottom: touch.").append(d.name).append(" = lift, below=20\n");
                 questions.add("Switch \"" + d.name + "\": what presses it (a lift at its bottom? which motor)?");
+            }
+            if (k.equals("color") || k.equals("distance")) {
+                b.append(k).append('.').append(key(d.name)).append(" = at=ready").append(k.equals("distance") ? ", acrossMm=150" : "")
+                        .append("   # TODO: at=intake (sees each piece come in) or at=ready (the next to fire)")
+                        .append(k.equals("distance") ? "; acrossMm = from the sensor to the far wall" : "").append('\n');
+                questions.add((k.equals("color") ? "Colour sensor \"" : "Distance sensor \"") + d.name
+                        + "\": does it watch pieces come in (intake) or the piece ready to fire?");
             }
             if ((k.equals("pinpoint") || k.equals("otos")) && !keys.contains("odometry")) {
                 keys.add("odometry");

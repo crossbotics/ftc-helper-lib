@@ -16,6 +16,22 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - `PathFollower`: `totalIn()`, `partNow()` and `parts(path)`, with defaults, so an add-on written
   before them still works. `PathJob`: `totalIn()`, `partNow()`. `AutoRoutine.followPath` and
   `driveTo` take a list of `PathEvent`s.
+- **Game pieces: which piece is where, how many, which fires next.** `Pieces` (robot in five files):
+  `Pieces.kinds("POLLEN", "RED_NECTAR", "BLUE_NECTAR").comingIn(sensor).readyToFire(sensor).max(4)
+  .startsWith(4, "POLLEN")`. Each new piece the intake sensor sees counts one in (with its kind), each
+  indexer feed one out; `count()`, `next()`, `isFull()`, `isEmpty()`, `nextIs(kind)`, `held()`, and hooks
+  `nextKind()` (a `Supplier<String>`, e.g. for a shot table per kind), `whenFull()`, `whenEmpty()`,
+  `whenNextIs(kind)` (conditions for LEDs, buzzes, waits). `PieceSensor.color(...)` (REV Color Sensor V3:
+  colour + distance), `PieceSensor.distance(...)` (REV 2m Distance Sensor: tells sizes apart, not
+  colours), `PieceSensor.camera(...)` (a second webcam with the SDK's PredominantColorProcessor); also
+  usable alone. Their numbers (each kind's hue or mm, `nearMm`, tolerances, `steadyMs`) in Tunables.
+- **Piece Tuner** (`PieceTunerOpMode`): each piece sensor's live readings; measures each kind and EMPTY
+  and writes the Tunables lines to copy.
+- `Intake.stopsWhen(condition)`: never runs in while it is true (e.g. full), pushing out still works.
+  `Indexer.onFeed(runnable)`: your code runs at each feed.
+- Simulator: pretend piece sensors, `color.NAME = at=ready|intake` and `distance.NAME = at=..., acrossMm=150`;
+  `:sim:fromRobot` writes them, `:sim:newRobot` turns a REV Color Sensor V3 or 2m Distance Sensor in the
+  configuration into a `PieceSensor` line. Cookbook: a "Game pieces" section.
 
 ### Changed
 

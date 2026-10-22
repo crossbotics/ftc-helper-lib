@@ -103,7 +103,7 @@ unmarked line, so a hand-written `shape.intake` would win over Robot.java's for 
 your shape.intake" each run); if one exists from before, delete it once Robot.java draws that part.
 
 Otherwise, use `photos.md` to turn the mechanisms into robot shapes (`shape.NAME = box|slide|arm|turret|claw|roller|flywheel`),
-then the game-piece lines (`collect.`, `shoot.`, `grab.`) and the cameras. Mount points (`at=`) and sizes
+then the game-piece lines (`collect.`, `shoot.`, `grab.`, and piece sensors `color.`/`distance.`) and the cameras. Mount points (`at=`) and sizes
 (`size=`) in inches from the robot's centre on the floor: forward, left, up.
 
 ## 5. Check it

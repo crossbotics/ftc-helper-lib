@@ -18,6 +18,7 @@ import java.util.List;
  * intake = add(Intake.motor("intake"));                              // Robot.java
  * intake = add(Intake.crServos("left_intake", "right_intake").reversed("right_intake"));
  * intake = add(Intake.motor("intake").onAtStart());                  // runs from START until stopped
+ * intake = add(Intake.motor("intake").stopsWhen(() -> pieces.isFull()));   // no 5th piece (see Pieces)
  * }</pre>
  *
  * <p>{@code Tunables.Intake}: {@code inPower} (default 1.0) and {@code outPower} (default 0.7).
@@ -41,6 +42,8 @@ public final class Intake extends Module<Intake> implements Toggleable {
     private boolean out = false;          // running out (until stop or in)
     private boolean reversing = false;    // pushing out while a button is held
     private double lastPower = Double.NaN;
+    // While this is true it does not run IN (out still works): e.g. pieces.whenFull(). null = never.
+    private java.util.function.BooleanSupplier stopIn = null;
 
     private Intake(boolean servos, String... names) {
         super(names[0]);
@@ -91,6 +94,23 @@ public final class Intake extends Module<Intake> implements Toggleable {
         if (pieces < 1) throw new IllegalArgumentException("Intake.holds: at least 1");
         holds = pieces;
         return this;
+    }
+
+    /**
+     * Never runs IN while {@code condition} is true (pushing out still works), e.g.
+     * {@code Intake.motor("intake").stopsWhen(() -> pieces.isFull())}: it will not pull in one piece
+     * too many. It runs in again by itself once the condition is false (if it is still switched on).
+     *
+     * @param condition checked every loop; must be quick
+     */
+    public Intake stopsWhen(java.util.function.BooleanSupplier condition) {
+        stopIn = condition;
+        return this;
+    }
+
+    /** True while the {@link #stopsWhen} condition holds it back from running in. */
+    public boolean isHeldBack() {
+        return on && !reversing && !out && stopIn != null && stopIn.getAsBoolean();
     }
 
     /** Starts running in at START (in autonomous and TeleOp), until stopped. */
@@ -214,7 +234,7 @@ public final class Intake extends Module<Intake> implements Toggleable {
 
     @Override
     public void update() {
-        double power = reversing || out ? -outPower.get() : on ? inPower.get() : 0;
+        double power = reversing || out ? -outPower.get() : on && !isHeldBack() ? inPower.get() : 0;
         write(power);
     }
 
@@ -228,7 +248,7 @@ public final class Intake extends Module<Intake> implements Toggleable {
 
     @Override
     public void addTelemetry(RobotTelemetry t) {
-        t.line(name(), reversing || out ? "OUT" : on ? "IN" : "stopped");
+        t.line(name(), reversing || out ? "OUT" : isHeldBack() ? "IN (held back by stopsWhen)" : on ? "IN" : "stopped");
     }
 
     @Override

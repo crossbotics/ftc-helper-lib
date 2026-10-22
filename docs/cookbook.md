@@ -63,6 +63,13 @@ first.
 - [How do I add a turret that follows the goal?](#how-do-i-add-a-turret-that-follows-the-goal)
 - [How do I fire only when aimed, at the right speed?](#how-do-i-fire-only-when-aimed-at-the-right-speed)
 
+**Game pieces** (what is in the robot, and what fires next)
+- [How do I know which piece is in the robot, and how many?](#how-do-i-know-which-piece-is-in-the-robot-and-how-many)
+- [How do I stop the intake when the robot is full?](#how-do-i-stop-the-intake-when-the-robot-is-full)
+- [How do I tell pieces apart by size, or with a second camera?](#how-do-i-tell-pieces-apart-by-size-or-with-a-second-camera)
+- [How do I use the count (buzz, LEDs, the shot table)?](#how-do-i-use-the-count-buzz-leds-the-shot-table)
+- [How do I tune the piece sensors?](#how-do-i-tune-the-piece-sensors)
+
 **Actions** (several steps or parts together)
 - [How do I do several things one after the other?](#how-do-i-do-several-things-one-after-the-other)
 - [How do I repeat steps several times?](#how-do-i-repeat-steps-several-times)
@@ -797,6 +804,118 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 
 **Why:** a shot fired before the turret is on target, or at the wrong speed, is a lost piece.
 **More:** [Lesson 9](tutorials/start/09-shooter-and-camera.md#7-speed-from-distance-and-fire-only-when-aimed).
+
+## Game pieces
+
+A `Pieces` line in `Robot.java` counts the pieces the robot holds and knows which kind fires next,
+from a sensor at the intake and (optional) one at the "ready to fire" slot. Each kind's colour (or
+size) goes in `Tunables.java`, measured with the Piece Tuner. All of it: [Pieces and PieceSensor](modules/robot.md#pieces-and-piecesensor).
+
+### How do I know which piece is in the robot, and how many?
+
+**Where:** `Robot.java`, inside `define()`.
+
+<!-- recipe: pieces-count -->
+```java
+// At the top of the class: public Pieces pieces;   Here in define():
+// the kinds of piece (BIOBUZZ: yellow POLLEN, red and blue NECTAR), a sensor where they
+// come in, one at the "ready to fire" slot (optional), the most the rules allow, the preload.
+pieces = add(Pieces.kinds("POLLEN", "RED_NECTAR", "BLUE_NECTAR")
+        .comingIn(PieceSensor.color("intake_color"))    // a REV Color Sensor V3
+        .readyToFire(PieceSensor.color("ready_color"))  // another one
+        .max(4)                                         // BIOBUZZ G407: no more than 4
+        .startsWith(4, "POLLEN"));                      // the 4 POLLEN preload
+```
+
+**Why:** each piece the intake sensor sees counts one in; each feed of the indexer counts one out, the
+oldest first. `robot.pieces.count()`, `robot.pieces.next()` ("POLLEN", "UNKNOWN" or "NONE") and
+`robot.pieces.isFull()` work anywhere in your code.
+**More:** [Pieces and PieceSensor](modules/robot.md#pieces-and-piecesensor).
+
+### How do I stop the intake when the robot is full?
+
+**Where:** `Robot.java`, inside `define()`.
+
+<!-- recipe: intake-stops-when-full -->
+```java
+// The intake does not pull in a 5th piece ("() ->": asked every loop). Pushing out still works.
+intake = add(Intake.motor("intake").stopsWhen(() -> pieces.isFull()));
+```
+
+<!-- recipe: launcher-needs-a-piece -->
+```java
+// Each feed counts one piece out. requireReady: no feed with nothing to fire.
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+        .feeder(Indexer.servo("indexer"))
+        .requireReady("a piece to fire", () -> !pieces.isEmpty()));
+```
+
+**Why:** BIOBUZZ rule G407: a robot may not control more than 4 pieces. The rules ask for "systems to
+prevent active pickup" of a 5th: this is one. Put the intake sensor where a piece is already held, so
+the intake does not stop with a piece half in.
+**More:** [Intake](modules/robot.md#intake).
+
+### How do I tell pieces apart by size, or with a second camera?
+
+**Where:** `Robot.java`, inside `define()`.
+
+<!-- recipe: pieces-other-sensors -->
+```java
+// A REV 2m Distance Sensor across the intake: a NECTAR (3.6 in) comes closer than a
+// POLLEN (2.8 in). Size only: it cannot tell a red NECTAR from a blue one.
+// A second webcam on the ready slot: colours (the main colour in a box of its picture).
+pieces = add(Pieces.kinds("POLLEN", "NECTAR")
+        .comingIn(PieceSensor.distance("intake_distance"))
+        .readyToFire(PieceSensor.camera("Webcam 2"))
+        .max(4));
+```
+
+**Why:** a distance sensor reads 20 mm closer with a NECTAR than with a POLLEN, but it sees no colour,
+and rule G408 forbids controlling the other alliance's NECTAR. A webcam sees colours from farther
+away, but not how far the piece is.
+**More:** [the sensors compared](modules/robot.md#pieces-and-piecesensor).
+
+### How do I use the count (buzz, LEDs, the shot table)?
+
+**Where:** `Controls.java`, inside `buttons(...)`.
+
+<!-- recipe: pieces-use -->
+```java
+// A buzz on gamepad 2 when the robot holds the most it may.
+g2.rumbleWhen(robot.pieces::isFull);
+// Two buzzes when a NECTAR is next to fire.
+g2.rumbleWhen(robot.pieces.whenNextIs("RED_NECTAR"), 2);
+// The count went wrong (pieces taken out by hand)? Hold D-pad down 1 s: count = 0.
+g2.dpadDown.heldFor(1.0, robot.pieces::clear).says("hold 1 s: pieces = 0");
+// Pieces shows "3/4, next POLLEN" by itself; this adds what the intake sees now.
+show("At the intake", robot.pieces::atIntake);
+```
+
+**Why:** `whenFull()`, `whenEmpty()` and `whenNextIs("POLLEN")` are conditions any part can watch: a
+buzz, an LED colour, an action that waits. For a shot table per kind, name the tables like the kinds
+and hand the launcher `robot.pieces.nextKind()` (it says the next kind every loop).
+**More:** [hooks for other parts](modules/robot.md#pieces-and-piecesensor).
+
+### How do I tune the piece sensors?
+
+**Where:** a new file next to `Robot.java`, e.g. `PieceTuner.java`.
+
+<!-- recipe: piece-tuner -->
+```java
+// The Piece Tuner: each sensor's readings, and the numbers for Tunables.java.
+@TeleOp(name = "Cookbook Piece Tuner", group = "Finders")
+@Disabled   // delete this line in your copy, or you will not see it
+public static class PieceTuner extends PieceTunerOpMode {
+    @Override
+    protected RobotDefinition robot() {
+        return new Robot();     // your Robot.java: the tuner finds its piece sensors
+    }
+}
+```
+
+**Why:** each sensor and each robot reads colours a little differently. Hold each kind in front of the
+sensor, press A, then copy the lines it shows into `Tunables.java`.
+**More:** [Piece Tuner](modules/finders.md#piecetuneropmode).
 
 ## Actions
 

@@ -43,6 +43,8 @@ public final class Indexer extends Module<Indexer> implements Feeder {
     private MotorFeeder motorFeeder;
     private Tunable rest, push, pushSec, returnSec, power, feedSec;
     LongSupplier clock = System::nanoTime;
+    // Told each time a feed really starts (a Pieces counter counts one piece out).
+    private final List<Runnable> feedListeners = new java.util.ArrayList<>();
 
     private Indexer(Kind kind, String device) {
         super(device);
@@ -123,7 +125,22 @@ public final class Indexer extends Module<Indexer> implements Feeder {
     public void feedOne() {
         needBuilt(feeder);
         touch();
+        feedCounted();
+    }
+
+    /**
+     * Runs {@code listener} each time a feed starts (one piece goes out). {@link Pieces} uses it to
+     * count; a team's code can too.
+     */
+    public void onFeed(Runnable listener) {
+        feedListeners.add(listener);
+    }
+
+    // Feeds, and tells the listeners if a feed really started (a call while busy is ignored).
+    private void feedCounted() {
+        boolean wasBusy = feeder.isBusy();
         feeder.feedOne();
+        if (!wasBusy && feeder.isBusy()) for (Runnable r : feedListeners) r.run();
     }
 
     @Override
@@ -212,7 +229,7 @@ public final class Indexer extends Module<Indexer> implements Feeder {
     Feeder forLauncher() {
         needBuilt(feeder);
         return new Feeder() {
-            @Override public void feedOne() { feeder.feedOne(); }
+            @Override public void feedOne() { feedCounted(); }
             @Override public boolean isBusy() { return feeder.isBusy(); }
             @Override public boolean isJammed() { return feeder.isJammed(); }
             @Override public void clearJam() { feeder.clearJam(); }
