@@ -42,11 +42,21 @@ public final class ShotPoints {
     }
 
     private final boolean hasHood;
+    private final int hoodDecimals;
     private final List<Saved> points = new ArrayList<>();
 
-    /** @param hasHood true if the launcher has a hood (then each line has a hood angle too) */
+    /** @param hasHood true if the launcher has a hood (then each line has a hood angle too, 1 decimal) */
     public ShotPoints(boolean hasHood) {
+        this(hasHood, 1);
+    }
+
+    /**
+     * @param hasHood      true if the launcher has a hood (then each line has a hood angle too)
+     * @param hoodDecimals decimals for the hood: 1 for degrees, 3 for servo positions, 0 for encoder ticks
+     */
+    public ShotPoints(boolean hasHood, int hoodDecimals) {
         this.hasHood = hasHood;
+        this.hoodDecimals = Math.max(0, Math.min(4, hoodDecimals));
     }
 
     /** Saves a shot (replaces one within {@link #SAME_DISTANCE} of this distance). */
@@ -104,7 +114,7 @@ public final class ShotPoints {
         for (Saved s : points) {
             ShotTable.Shot p = s.shot;
             String line = "    .add(" + FinderResults.num(p.distance, 1) + ", " + FinderResults.num(p.rpm, 0);
-            if (hasHood) line += ", " + FinderResults.num(p.hoodDeg, 1);
+            if (hasHood) line += ", " + FinderResults.num(p.hoodDeg, hoodDecimals);
             line += ")";
             String note = note(s);
             out.add(note.isEmpty() ? line : line + "   // " + note);
@@ -121,7 +131,8 @@ public final class ShotPoints {
     }
 
     /**
-     * The table for the robot in five files, one line for {@code Tunables.java} (inches, rpm; no hood):
+     * The table for the robot in five files, one line for {@code Tunables.java} ({inches, rpm}, or
+     * {inches, rpm, hood} with a hood):
      * {@code public static double[][] speedByDistance = {{48, 2550}, {72, 2900}};   // in Tunables.Launcher}
      * (the line that replaces the one in that section). Empty if nothing is saved.
      *
@@ -141,8 +152,23 @@ public final class ShotPoints {
     public String tunablesLine(String section, String field) {
         if (points.isEmpty()) return "";
         List<String> rows = new ArrayList<>();
-        for (Saved s : points) rows.add("{" + shortNum(s.shot.distance) + ", " + FinderResults.num(s.shot.rpm, 0) + "}");
+        for (Saved s : points) {
+            rows.add("{" + shortNum(s.shot.distance) + ", " + FinderResults.num(s.shot.rpm, 0)
+                    + (hasHood ? ", " + trim(FinderResults.num(s.shot.hoodDeg, hoodDecimals)) : "") + "}");
+        }
         return "public static double[][] " + field + " = {" + FinderResults.commas(rows) + "};   // in Tunables." + section;
+    }
+
+    /** A hood number with no zeros that mean nothing: 12.5 -> "12.5", 0.42 -> "0.42", 350 -> "350". */
+    static String hoodText(double v) {
+        return trim(FinderResults.num(v, 3));
+    }
+
+    // "12.50" -> "12.5", "12.0" -> "12", "350" -> "350": no zeros that mean nothing.
+    private static String trim(String n) {
+        if (!n.contains(".")) return n;
+        n = n.replaceAll("0+$", "");
+        return n.endsWith(".") ? n.substring(0, n.length() - 1) : n;
     }
 
     // 48.0 -> "48", 48.5 -> "48.5"
@@ -167,7 +193,7 @@ public final class ShotPoints {
      * }</pre>
      */
     public static final class Tally {
-        // One try: a speed (RPM, rounded to a whole number) and a hood angle (0.1 deg; NaN = no hood),
+        // One try: a speed (RPM, rounded to a whole number) and a hood angle (to 0.001; NaN = no hood),
         // with its hits, shots, and the measured speeds.
         private static final class Row {
             final long rpm;
@@ -305,7 +331,7 @@ public final class ShotPoints {
             List<String> parts = new ArrayList<>();
             for (Row r : rows) {
                 boolean isBest = best != null && r.rpm == (long) best[0] && sameHood(r.hood, best[1]);
-                parts.add(r.rpm + (Double.isNaN(r.hood) ? "" : " @ " + FinderResults.num(r.hood, 1) + " deg")
+                parts.add(r.rpm + (Double.isNaN(r.hood) ? "" : " @ hood " + hoodText(r.hood))
                         + ": " + r.hits + "/" + r.shots + (isBest ? " (best)" : ""));
             }
             return FinderResults.commas(parts);
@@ -340,7 +366,8 @@ public final class ShotPoints {
         // The row for this speed and hood (made if asked and missing), or null.
         private Row row(double rpm, double hoodDeg, boolean make) {
             long key = Math.round(rpm);
-            double hood = Double.isNaN(hoodDeg) ? Double.NaN : Math.round(hoodDeg * 10) / 10.0;
+            // Rounded to 0.001 (a hood in servo positions moves in steps of 0.005), so float dust does not split a try.
+            double hood = Double.isNaN(hoodDeg) ? Double.NaN : Math.round(hoodDeg * 1000) / 1000.0;
             for (Row r : rows) if (r.rpm == key && sameHood(r.hood, hood)) return r;
             if (!make) return null;
             Row r = new Row(key, hood);
@@ -485,9 +512,9 @@ public final class ShotPoints {
             return tally;
         }
 
-        // "2550 RPM" or "2550 RPM, 12.5 deg".
+        // "2550 RPM" or "2550 RPM, hood 12.5".
         private static String what(double[] shot) {
-            return FinderResults.num(shot[0], 0) + " RPM" + (Double.isNaN(shot[1]) ? "" : ", " + FinderResults.num(shot[1], 1) + " deg");
+            return FinderResults.num(shot[0], 0) + " RPM" + (Double.isNaN(shot[1]) ? "" : ", hood " + hoodText(shot[1]));
         }
     }
 

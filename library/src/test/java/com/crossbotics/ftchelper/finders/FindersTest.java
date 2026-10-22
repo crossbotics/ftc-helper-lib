@@ -217,7 +217,7 @@ public class FindersTest {
         assertEquals(0, t.shots(2500));                        // no shot without a hood
         assertEquals(2500, t.best()[0], 1e-9);
         assertEquals("the hood the hits were shot with", 10, t.best()[1], 1e-9);
-        assertEquals("2500 @ 10.0 deg: 2/2 (best), 2500 @ 15.0 deg: 1/2", t.summary());
+        assertEquals("2500 @ hood 10: 2/2 (best), 2500 @ hood 15: 1/2", t.summary());
         t.unmark(2500, 10, true, 2500);
         t.unmark(2500, 10, true, 2500);
         assertEquals("undone: the 15 deg try is the best now", 15, t.best()[1], 1e-9);
@@ -232,7 +232,7 @@ public class FindersTest {
         tr.fired(2500, 10, 2480, 48.5);
         // The speed and hood are changed now, before marking: the marks still go to 2500 / 10 deg.
         String note = tr.mark(true);
-        assertTrue(note, note.startsWith("HIT at 2500 RPM, 10.0 deg: 1/1"));
+        assertTrue(note, note.startsWith("HIT at 2500 RPM, hood 10: 1/1"));
         tr.mark(false);
         assertEquals(1, tr.tally().hits(2500, 10));
         assertEquals(2, tr.tally().shots(2500, 10));
@@ -246,7 +246,7 @@ public class FindersTest {
         // A phantom: the wheel dipped with no piece. Drop the newest unmarked one.
         tr.fired(2600, 10, 2590, 48);
         tr.fired(2600, 10, 2590, 48);
-        assertTrue(tr.dropLast().startsWith("Dropped the last shot (2600 RPM, 10.0 deg)"));
+        assertTrue(tr.dropLast().startsWith("Dropped the last shot (2600 RPM, hood 10)"));
         assertEquals(1, tr.unmarkedCount());
         assertEquals("No shot waiting to be marked.", new ShotPoints.Trials().dropLast());
         // Undo everything: the spot is forgotten with the last mark.

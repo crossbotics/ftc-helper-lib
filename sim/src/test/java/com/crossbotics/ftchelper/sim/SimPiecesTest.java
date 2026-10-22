@@ -195,6 +195,35 @@ public class SimPiecesTest {
         assertEquals(1, r.pieces.launched());
     }
 
+    // hood=: the shot angle follows where the hood servo really is (hoodAt0 at position 0, hoodAt1 at 1).
+    @Test public void aHoodServoSetsTheShotAngle() throws Exception {
+        String hood = "servo.hood = 0, part=gobilda-2000-torque\n"
+                + "shoot.launcher = shape=flywheel, angle=45, speed=200, hood=hood, hoodAt0=80, hoodAt1=30\n";
+        double[] steep = shotDirection(robot(hood), 0);
+        double[] flat = shotDirection(robot(hood), 1);
+        assertEquals("80 deg up at servo 0", 80, steep[0], 3);
+        assertEquals("30 deg up at servo 1", 30, flat[0], 3);
+        try {
+            robot("shoot.launcher = shape=flywheel, angle=45, hood=nothing, hoodAt0=80, hoodAt1=30\n");
+            assertTrue("a hood that is not a servo is refused", false);
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("servo.nothing"));
+        }
+    }
+
+    // Moves the hood servo to a position, waits until it is there, shoots one: {degrees up, speed}.
+    private static double[] shotDirection(SimRobot r, double hoodPosition) {
+        r.setPose(0, -40, 0);
+        r.servos.get("hood").device.setPosition(hoodPosition);
+        r.motors.get("flywheel").device.setPower(1);
+        run(r, 2.0);
+        r.pieces.shoot(r.motors.get("flywheel"));
+        SimWorld.Ball last = r.world.balls().get(r.world.balls().size() - 1);
+        double[] v = r.world.ballVel(last);
+        double flatSpeed = Math.hypot(v[0], v[1]);
+        return new double[] {Math.toDegrees(Math.atan2(v[2], flatSpeed)), Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2])};
+    }
+
     // A CR servo can feed a flywheel (a windmill); speed= gives a fixed exit speed (a catapult).
     @Test public void aCrServoFeedsAndSpeedFixesTheShot() throws Exception {
         SimRobot r = robot("motor.flywheel = flywheel, part=gobilda-5203-6000, feeder=spinner\n"

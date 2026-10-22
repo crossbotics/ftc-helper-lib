@@ -203,6 +203,29 @@ public class LauncherTest {
                 .hood(hood).table(new ShotTable().add(24, 2600, 5).add(72, 3600, 20));
         l.setDistance(48);
         assertEquals(12.5, hood.getDegrees(), 1e-9);
+        // The hood trim adds to the table; a change under the deadband (0.25 deg) is not sent.
+        l.hoodOffset(1);
+        l.setDistance(48);
+        assertEquals(13.5, hood.getDegrees(), 1e-9);
+        l.setDistance(48.5);                                    // 13.66 deg: 0.16 deg away, under 0.25
+        assertEquals(13.5, hood.getDegrees(), 1e-9);
+        l.hoodDeadband(0);
+        l.setDistance(48.5);
+        assertEquals(12.5 + 0.5 * 15 / 48 + 1, hood.getDegrees(), 1e-9);
+    }
+
+    @Test public void aTableWithoutHoodAnglesLeavesTheHoodAlone() {
+        Fakes.FakeServo s = new Fakes.FakeServo();
+        PositionServo hood = new PositionServo("hood", s.servo).degrees(0.1, 0, 0.9, 25);
+        hood.setDegrees(10);
+        ShotTable noHood = new ShotTable().add(24, 2600).add(72, 3600);
+        assertFalse(noHood.hasHood());
+        assertTrue(new ShotTable().add(24, 2600, 5).hasHood());
+        Launcher l = new Launcher(new Flywheel("fly", new FakeMotor().motor), new MotorFeeder("f", new FakeMotor().motor))
+                .hood(hood).table(noHood);
+        l.setDistance(48);
+        assertEquals(3100, l.getShotRpm(), 1e-9);
+        assertEquals("not sent to 0 deg", 10, hood.getDegrees(), 1e-9);
     }
 
     // ---------------- review regressions ----------------

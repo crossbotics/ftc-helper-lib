@@ -18,6 +18,7 @@ class, or for a part five files has no module for. Start with tutorial 14.
 | [`SpinMotor`](#spinmotor) | intakes, rollers, conveyors: in / out / stop, jam back-out | motor |
 | [`PositionServo`](#positionservo) | claws, wrists, hoods, gates: named positions or degrees | servo |
 | [`SpinServo`](#spinservo) | small rollers and spinners | continuous-rotation servo |
+| [`AngleDevice`](#angledevice) | anything that goes to an angle and says when it is there (a launcher's hood) | an interface |
 
 ```mermaid
 flowchart LR
@@ -175,6 +176,27 @@ hood.setDegrees(18);                      // moves the servo at once (servos do)
 | `getTargetDegrees()` | the angle it is going to (after its limits); differs from `getDegrees()` only during a slow move |
 | `goToStep(name)` | autonomous: move and wait until it should have arrived |
 | `update()` | every loop (needed for slow moves and "done") |
+
+`PositionServo` is an [`AngleDevice`](#angledevice), so it can be a launcher's hood.
+
+## AngleDevice
+
+An interface: `setDegrees(angle)` (start moving, never wait), `getTargetDegrees()` (NaN before the first
+command), `isDone()`, plus `update()`, `stop()`, `addTelemetry(t)` like any [`Subsystem`](core.md#subsystem).
+A [launcher](launcher.md#launcher)'s hood is one, so the launcher does not care what moves it: a
+`PositionServo` with `degrees(...)`, the five-files [`Hood`](robot.md#hood) (a servo or a motor with an
+encoder, a linkage table), or your own class (a CR servo with an absolute encoder). "Angle" is the part's
+own scale: degrees, or plain servo positions if you never measured angles.
+
+```java
+public class MyHood implements AngleDevice {
+    public void setDegrees(double deg) { target = deg; }                // never wait here
+    public double getTargetDegrees() { return target; }
+    public boolean isDone() { return Math.abs(encoderDeg() - target) < 0.5; }
+    public void update() { crServo.setPower(0.02 * (target - encoderDeg())); }
+}
+launcher.hood(new MyHood(...));
+```
 
 ## SpinServo
 

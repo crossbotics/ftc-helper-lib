@@ -29,6 +29,7 @@ device's name in CamelCase (`lift` -> `Lift`, `intake_deploy` -> `IntakeDeploy`,
 | [`DriveTunerOpMode`](#drivetuneropmode) | find the wheel size and strafe correction for autonomous | `robot()` (five files) or `robotConfig()` |
 | [`OdometryTunerOpMode`](#odometrytuneropmode) | check which way each odometry pod counts and measure where it sits (the offsets); a loop check sets `checked` | `robot()` (five files, with an `odometry(...)` line) |
 | [`PieceTunerOpMode`](#piecetuneropmode) | see what each game-piece sensor reads, and measure each kind's colour (or size) and the "empty" line | `robot()` (five files, with a `Pieces` or `PieceSensor` line) |
+| [`HoodFinderOpMode`](#hoodfinderopmode) | find a launcher hood's two stops (`posA`, `posB`) and, if you measure them, its angles (a linkage's calibration table) | `robot()` (five files) or `hoodName()` |
 | [`ShotTunerOpMode`](#shottuneropmode) | build the shot table: distance -> speed (and hood angle) | `robot()` (five files), or your launcher (+ camera) |
 | [`AimTunerOpMode`](#aimtuneropmode) | find the camera offset so shots go in the middle | your camera (+ turret or drive) |
 | [`CharacterizerOpMode`](#characterizeropmode) | measure how the drive, lifts and flywheels really move (feedforward numbers, and the simulator's robot file) | `robotConfig()`, `mechanisms()` |
@@ -266,6 +267,37 @@ or when EMPTY looks like a piece (aim a distance sensor at a far wall; put a gre
 camera's spot). Copy the lines into `Tunables.java` and rebuild: a value changed only in the tuning
 menu is lost at the next INIT.
 
+## HoodFinderOpMode
+
+Finds `Tunables.Hood`'s numbers for a launcher's [hood](robot.md#hood). With the robot in five files it
+reads the hood from Robot.java (its name, servo or motor, `reversed()`), so it works before
+`Tunables.Hood` has any numbers (the turret robot's
+[HoodFinder.java](../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/HoodFinder.java)):
+
+```java
+@TeleOp(name = "Hood Finder", group = "Finders")
+public class HoodFinder extends HoodFinderOpMode {
+    @Override protected RobotDefinition robot() { return new Robot(); }
+}
+```
+
+Without five files it uses the servo (or motor) called `hoodName()` ("hood").
+
+| Button | Does |
+| --- | --- |
+| D-pad (servo) | before the first move: a start point (nothing moves), **A** moves there. Then right/left +/- 0.01, up/down +/- 0.05, hold RB 10x finer |
+| (motor) | nothing is powered: move the hood by hand and watch the encoder (0 = where it was at INIT, as in a match) |
+| **X** / **B** | this is stop A / stop B (a hair off it: a straining servo hums) |
+| hold **LB** + D-pad | the angle you measured here (up/down +/- 1, right/left +/- 0.1), before X, B or A |
+| **A** | save a calibration point here {position, angle} |
+| **Y** | undo the last point |
+
+Output: `Tunables.Hood: posA = 0.205, posB = 0.648` (and `angleA = 0, angleB = 25` when you gave the
+angle at both stops); with 3 or more points, `public static double[][] calibration = {{0.205, 0}, {0.33, 9}, ...};`
+for a linkage (it replaces posA/posB). Copy them into `Tunables.java`: the robot uses the file, not this
+screen. A number changed in the tuning menu (`Hood/posA`) is also lost at the next restart unless you
+copy it back into `Tunables.java`.
+
 ## ShotTunerOpMode
 
 Builds the shot table. The robot in five files needs one method (the turret robot's
@@ -301,14 +333,14 @@ Without five files, fill in:
 | `robotConfig()` | no | drive with the sticks between distances |
 | `createSubsystems()` | no | other mechanisms to keep updated (an intake that loads it) |
 | `startRpm()` | no | the starting speed; default (NaN) = the table's speed at the distance seen, else `Tunables.Launcher.speedRpm`, else 3000 |
-| `startHoodDeg()` | no | the starting hood angle if the hood was never moved, default 0 |
+| `startHoodDeg()` | no | the starting hood angle; default (NaN) = the table's hood at the distance seen (until you change it), else the robot hood's `homeAngle`, else 0 |
 | `startSpotIn()` | no | where the robot is at INIT, for the odometry: {x, y, heading} from your drivers' wall; default {0, 0, 0} |
 | `tableNames()` | no | the tables to tune; default the launcher's (`pollen`, `nectar`...), or one table `main` |
 
 | Button | Does |
 | --- | --- |
 | **Y** | what the D-pad changes: SPEED, HOOD (with a hood), DISTANCE (no camera, no odometry), TABLE (two or more tables) |
-| D-pad up/down, right/left | big / small step (100 / 10 RPM, 5 / 0.5 deg, 6 / 1 in) |
+| D-pad up/down, right/left | big / small step (100 / 10 RPM; the hood: a fifth / a fiftieth of its range, 5 / 0.5 deg for 0-25 deg; 6 / 1 in) |
 | **LB** | flywheel on/off (it is OFF at START) |
 | **RB** / hold **RT** | shoot one / keep shooting (let go to stop). Keep shooting also stops after a jam or a "gave up": press RT again to go on |
 | **A** / **B** | the oldest shot not marked yet was a HIT / a MISS (at the speed, hood angle and distance it was fired with) |
@@ -337,11 +369,12 @@ new ShotTable()
     .add(72.0, 3700, 21.0)   // 4/4 in, measured 3672 RPM
 ```
 
-Without a hood it also shows the line for five files (the section is the launcher's), one per table:
+It also shows the line for five files (the section is the launcher's), one per table; with a hood
+each row has the hood as its third number (in the hood's scale: degrees, or a servo position):
 
 ```java
 public static double[][] speedByDistance = {{24, 2600}, {48.5, 3100}, {72, 3700}};   // in Tunables.Launcher
-public static double[][] speedByDistanceNectar = {{24, 2800}, {48.5, 3300}};          // a named table
+public static double[][] speedByDistanceNectar = {{24, 2800, 4}, {48.5, 3300, 12.5}};   // a named table, with a hood
 ```
 
 Copy each line into `Tunables.java` (replace the line with the same name): the robot uses the file,
@@ -500,10 +533,12 @@ A D-pad list: `new Chooser(names)` (sorted A to Z), `next()`, `previous()`, `cur
 
 ## ShotPoints
 
-The shot tuner's saved points: `new ShotPoints(hasHood)`, `save(distance, rpm, hoodDeg)` (replaces
+The shot tuner's saved points: `new ShotPoints(hasHood)` (or `new ShotPoints(hasHood, hoodDecimals)`: 1
+for degrees, 3 for servo positions, 0 for ticks), `save(distance, rpm, hoodDeg)` (replaces
 one within `SAME_DISTANCE` = 1), `removeNear(distance)`, `points()` (nearest first),
 `codeLines()` (the `ShotTable` code), `tunablesLine(section)` (the five-files line,
-`public static double[][] speedByDistance = {{48, 2550}, ...};   // in Tunables.Launcher`, empty if nothing is saved),
+`public static double[][] speedByDistance = {{48, 2550}, ...};   // in Tunables.Launcher`, with a hood
+`{{48, 2550, 12.5}, ...}`; empty if nothing is saved),
 `tunablesLine(section, field)` (the same for a named table, e.g. `speedByDistanceNectar`).
 `save(distance, rpm, hoodDeg, measuredRpm, hits, shots)` keeps how many went in and the measured speed
 (`saved()`, `size()`, `note(saved)`; `codeLines()` writes them as a comment).
@@ -513,7 +548,7 @@ one within `SAME_DISTANCE` = 1), `removeNear(distance)`, `points()` (nearest fir
 `hits(rpm)` / `hits(rpm, hoodDeg)`, `shots(...)`, `totalShots()`, `measuredRpm(...)`, `best()`
 ({rpm, hood}, null with no hit), `bestRpm()` (best hit ratio; a tie: more shots, then the lower speed;
 NaN with no hit), `tries()`, `summary()` (`2450: 1/3, 2550: 3/4 (best)`; with a hood
-`2550 @ 10.0 deg: 3/4`), `spotIn()`, `setSpot(in)`, `isEmpty()`, `clear()`.
+`2550 @ hood 10: 3/4`), `spotIn()`, `setSpot(in)`, `isEmpty()`, `clear()`.
 
 `ShotPoints.Trials`: the shots of one spot waiting to be marked, each with the speed, hood and distance
 it was fired with. `fired(rpm, hoodDeg, measuredRpm, distanceIn)`, `mark(hit)` (the oldest waiting

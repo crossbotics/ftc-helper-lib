@@ -8,7 +8,7 @@ import com.crossbotics.ftchelper.gamepad.ControllerBindings.Btn;
 import com.crossbotics.ftchelper.gamepad.ControllerBindings.Pad;
 import com.crossbotics.ftchelper.launcher.Launcher;
 import com.crossbotics.ftchelper.launcher.ShotTable;
-import com.crossbotics.ftchelper.mechanism.PositionServo;
+import com.crossbotics.ftchelper.mechanism.AngleDevice;
 import com.crossbotics.ftchelper.robot.Camera;
 import com.crossbotics.ftchelper.robot.Module;
 import com.crossbotics.ftchelper.robot.RobotDefinition;
@@ -46,7 +46,8 @@ import com.crossbotics.ftchelper.vision.TargetSource;
  * Gamepad 1:
  *   Y              = what the D-pad changes: SPEED, HOOD (if any), DISTANCE (no camera, no odometry),
  *                    TABLE (two or more tables)
- *   D-pad up/down  = big step (100 RPM / 5 deg / 6 in), right/left = small step (10 RPM / 0.5 deg / 1 in)
+ *   D-pad up/down  = big step (100 RPM / a fifth of the hood's range, 5 deg for 25 / 6 in),
+ *                    right/left = small step (10 RPM / a fiftieth of the hood's range, 0.5 deg / 1 in)
  *                    (TABLE: left/right = the other table)
  *   LB             = flywheel on/off (off at START; off also stops shooting)
  *   RB             = shoot one         hold RT = keep shooting (let go to stop)
@@ -169,9 +170,13 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         return Double.NaN;
     }
 
-    /** The hood angle it starts at (if the hood has not been moved yet), degrees. Default 0. */
+    /**
+     * The hood angle it starts at, in the hood's scale. Default NaN = automatic: the robot's shot table at
+     * the distance seen (a table with hood angles) until you change the hood yourself, else the robot
+     * hood's {@code homeAngle}, else 0. A number here: always start from it.
+     */
     protected double startHoodDeg() {
-        return 0;
+        return Double.NaN;
     }
 
     /**
@@ -200,7 +205,12 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
 
     private RobotDefinition robotDef;   // the robot in five files, or null
     private Launcher launcher;
-    private PositionServo hood;
+    private AngleDevice hood;
+    // The robot's Hood module (five files), or null: its range sets the D-pad steps.
+    private com.crossbotics.ftchelper.robot.Hood robotHood;
+    // True once the hood was changed by hand (then the table no longer sets it), and if startHoodDeg() was given.
+    private boolean hoodTouched = false;
+    private boolean autoStartHood = true;
     private TargetSource camera;
     private DriverControls driving;
     private Subsystems others;
@@ -268,11 +278,12 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         if (config != null) driving = DriverControls.create(hardwareMap, config.drive(), null);
         others = createSubsystems();
         if (others == null) others = new Subsystems();
+        com.crossbotics.ftchelper.robot.Launcher module = robotLauncher();
         names = new java.util.ArrayList<>(tableNames());
         if (names.isEmpty()) names.add("main");
-        for (String n : names) tables.put(n, new ShotPoints(hood != null));
+        robotHood = module != null ? module.hood() : null;
+        for (String n : names) tables.put(n, new ShotPoints(hood != null, hoodDecimals()));
         // Start on the table the launcher starts with (its startTable), else the first.
-        com.crossbotics.ftchelper.robot.Launcher module = robotLauncher();
         tuning = module != null && names.contains(module.tableName()) ? module.tableName() : names.get(0);
         // Odometry: the distance from where the robot is to Tunables.Aim's goal point. The robot starts
         // at startSpotIn(); the alliance is the last one chosen (BLUE if none), for a mirrored goal.
@@ -291,9 +302,13 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         double tunablesRpm = module != null ? module.speedRpm() : Double.NaN;
         rpm = !autoStartRpm ? given : !Double.isNaN(tunablesRpm) ? tunablesRpm : 3000;
         if (hood != null) {
-            // A hood that was never moved has no angle yet (NaN): start from startHoodDeg().
+            // startHoodDeg() if given; else where the hood is going (a hood never moved has no angle yet:
+            // NaN), else the robot hood's home, else 0. The table at the distance takes over in step().
+            double givenHood = startHoodDeg();
+            autoStartHood = Double.isNaN(givenHood);
             double now = hood.getTargetDegrees();
-            hoodDeg = Double.isNaN(now) || Double.isInfinite(now) ? startHoodDeg() : now;
+            double home = robotHood != null ? robotHood.homeAngle() : Double.NaN;
+            hoodDeg = !autoStartHood ? givenHood : !Double.isNaN(now) && !Double.isInfinite(now) ? now : !Double.isNaN(home) ? home : 0;
         }
     }
 
@@ -359,7 +374,10 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
                 rpm = Math.max(0, rpm + direction * (big ? 100 : 10));
                 rpmTouched = true;   // yours now: the table no longer sets it
                 break;
-            case HOOD: hoodDeg += direction * (big ? 5 : 0.5); break;
+            case HOOD:
+                hoodDeg += direction * hoodStep(big);
+                hoodTouched = true;   // yours now: the table no longer sets it
+                break;
             case TABLE:
                 // The next (or previous) table; its points stay as they are.
                 int i = names.indexOf(tuning);
@@ -367,10 +385,31 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
                 // Another game piece: its own hits, and its own table's speed to start from.
                 trials.clear();
                 rpmTouched = false;
+                hoodTouched = false;
                 note = "Now tuning the " + tuning.toUpperCase(java.util.Locale.US) + " table.";
                 break;
             default: manualDistance = Math.max(0, manualDistance + direction * (big ? 6 : 1)); break;
         }
+    }
+
+    // The hood's D-pad step: a fifth (big) or a fiftieth (small) of the robot hood's range (5 and 0.5
+    // for 0-25 deg, 0.009 for a servo-position hood over 0.45); 5 and 0.5 without a robot hood.
+    private double hoodStep(boolean big) {
+        if (robotHood == null || Double.isNaN(robotHood.minAngle())) return big ? 5 : 0.5;
+        double range = robotHood.maxAngle() - robotHood.minAngle();
+        return range * (big ? 0.2 : 0.02);
+    }
+
+    // Decimals for the hood: 1 (degrees), 3 (a servo position), 0 (encoder ticks).
+    private int hoodDecimals() {
+        if (robotHood == null || robotHood.usesAngles()) return 1;
+        return robotHood.isMotor() ? 0 : 3;
+    }
+
+    // A hood number for the screen: "12.5 deg", or the position "0.420" / "350 ticks".
+    private String hoodText(double v) {
+        if (robotHood == null || robotHood.usesAngles()) return FinderResults.num(v, 1) + " deg";
+        return robotHood.isMotor() ? FinderResults.num(v, 0) + " ticks" : FinderResults.num(v, 3);
     }
 
     // The distance now: the camera's (fresh pictures only), else the odometry's, averaged over the last
@@ -438,7 +477,7 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         }
         points.save(d, speed, hoodSaved, measured, hits, shots);
         note = "Saved " + FinderResults.num(d, 1) + " in -> " + FinderResults.num(speed, 0) + " RPM"
-                + (hood != null ? ", " + FinderResults.num(hoodSaved, 1) + " deg" : "")
+                + (hood != null ? ", hood " + hoodText(hoodSaved) : "")
                 + (shots > 0 ? " (" + hits + "/" + shots + " in)" : " (no shots marked)")
                 + (names.size() > 1 ? " " + tuning.toUpperCase(java.util.Locale.US) : "") + "."
                 + (shots > 0 && shots < 3 ? " Only " + shots + " shots: 3-5 is surer." : "")
@@ -467,8 +506,8 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
             int n = 0;
             if (names.size() > 1) results.set("shots:" + name + ":label", "// " + name.toUpperCase(java.util.Locale.US) + " table");
             for (String line : points.codeLines()) results.set("shots:" + name + ":" + n++, line);
-            // The same table for the robot in five files. Its launcher has no hood, so only without one.
-            if (hood == null) results.set("shots:" + name + ":t", points.tunablesLine(section, fieldFor(module, name)));
+            // The same table for the robot in five files ({inches, rpm} or, with a hood, {inches, rpm, hood}).
+            results.set("shots:" + name + ":t", points.tunablesLine(section, fieldFor(module, name)));
         }
     }
 
@@ -509,6 +548,12 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
             com.crossbotics.ftchelper.robot.Launcher module = robotLauncher();
             ShotTable table = module == null ? null : module.table(tuning);
             if (table != null && !table.points().isEmpty()) rpm = Math.round(table.lookup(d).rpm / 10) * 10.0;
+        }
+        // The hood the same way: from the table's hood column at this distance until you change it.
+        if (hood != null && autoStartHood && !hoodTouched && !Double.isNaN(d)) {
+            com.crossbotics.ftchelper.robot.Launcher module = robotLauncher();
+            ShotTable table = module == null ? null : module.table(tuning);
+            if (table != null && table.hasHood() && !table.points().isEmpty()) hoodDeg = table.lookup(d).hoodDeg;
         }
         // Hold BACK 1 s: delete the saved point here (once per hold).
         boolean back = gamepad1.back && inputsReady();
@@ -586,7 +631,7 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         t.section("Shot tuner  (Y = what the D-pad changes)");
         t.line((field == Field.SPEED ? "> " : "  ") + "Speed", FinderResults.num(rpm, 0) + " RPM, measured "
                 + FinderResults.num(launcher.getFlywheel().getRpm(), 0) + (spinning ? "" : "  (OFF: LB)"));
-        if (hood != null) t.line((field == Field.HOOD ? "> " : "  ") + "Hood", FinderResults.num(hoodDeg, 1) + " deg");
+        if (hood != null) t.line((field == Field.HOOD ? "> " : "  ") + "Hood", hoodText(hoodDeg));
         if (names.size() > 1) t.line((field == Field.TABLE ? "> " : "  ") + "Table", tuning.toUpperCase(java.util.Locale.US)
                 + "  (" + FinderResults.commas(names) + ")");
         double d = distance();
@@ -609,7 +654,7 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         int waiting = trials.unmarkedCount();
         t.line("Shots fired", launcher.getShotsFired() + (waiting == 0 ? "" : ", " + waiting + " to mark (A hit / B miss)"));
         // The way teams tune: hits / shots at this speed (and hood), and every one tried at this spot.
-        t.line("Hits at " + FinderResults.num(rpm, 0) + (hood != null ? ", " + FinderResults.num(hoodDeg, 1) + " deg" : ""),
+        t.line("Hits at " + FinderResults.num(rpm, 0) + (hood != null ? ", hood " + hoodText(hoodDeg) : ""),
                 tally.hits(rpm, hoodNow()) + "/" + tally.shots(rpm, hoodNow()) + (tally.shots(rpm, hoodNow()) < 3 ? "  (shoot 3-5)" : ""));
         if (!tally.isEmpty()) t.line("Tried here", tally.summary());
         // Every table's point count, so you know when you are done (4-6 each).
@@ -626,7 +671,7 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
             ShotTable.Shot p = s.shot;
             String extra = ShotPoints.note(s);
             t.text("  " + FinderResults.num(p.distance, 1) + " in: " + FinderResults.num(p.rpm, 0) + " RPM"
-                    + (hood != null ? ", " + FinderResults.num(p.hoodDeg, 1) + " deg" : "")
+                    + (hood != null ? ", hood " + hoodText(p.hoodDeg) : "")
                     + (extra.isEmpty() ? "" : " (" + extra + ")"));
         }
         if (!results.isEmpty()) {
@@ -654,8 +699,8 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
             "Nobody in the line of fire. Eye protection on.",
             "LB = flywheel on/off. Y = what the D-pad changes:",
             "  SPEED / HOOD / DISTANCE (by hand) / TABLE.",
-            "D-pad up/down: 100 RPM / 5 deg / 6 in steps;",
-            "  right/left: 10 RPM / 0.5 deg / 1 in steps.",
+            "D-pad up/down: 100 RPM / 1/5 of the hood /",
+            "  6 in; right/left: 10 RPM / 1/50 / 1 in.",
             "RB = shoot one, hold RT = keep shooting.",
             "A = HIT, B = MISS (the oldest shot not marked).",
             "L stick click = undo mark, R = drop last shot.",

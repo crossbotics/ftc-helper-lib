@@ -23,7 +23,7 @@ The lesson robot has no shooter, so this lesson reads two other example robots b
 - [`flywheelbot`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot): no turret;
   a webcam, and the whole robot turns to face the goal (section 10).
 
-**Reference:** [Launcher](../../modules/robot.md#launcher), [Indexer](../../modules/robot.md#indexer),
+**Reference:** [Launcher](../../modules/robot.md#launcher), [Indexer](../../modules/robot.md#indexer), [Hood](../../modules/robot.md#hood),
 [Camera](../../modules/robot.md#camera), [Turret](../../modules/robot.md#turret), [Aim](../../modules/robot.md#aim).
 
 ---
@@ -268,11 +268,12 @@ BIOBUZZ has two game pieces: POLLEN, a 2.8 in ball, and NECTAR, a 3.6 in ball (g
 `speedByDistance`. From [`turretbot/Tunables.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/Tunables.java):
 
 ```java
-public static double[][] speedByDistancePollen = {{24, 2200}, {48, 2550}, {72, 2900}, {96, 3250}};
-public static double[][] speedByDistanceNectar = {{24, 2400}, {48, 2800}, {72, 3200}, {96, 3600}};
+public static double[][] speedByDistancePollen = {{24, 2200, 2}, {48, 2550, 11}, {72, 2900, 19}, {96, 3250, 23}};
+public static double[][] speedByDistanceNectar = {{24, 2400, 0}, {48, 2800, 6}, {72, 3200, 14}, {96, 3600, 18}};
 ```
 
-The tables are called `pollen` and `nectar`. The robot starts on the one in `.startTable("pollen")`
+Each row is {inches, RPM, hood angle}: the turret robot has a hood ([below](#a-hood-the-shot-angle)).
+Without a hood a row is just {inches, RPM}. The tables are called `pollen` and `nectar`. The robot starts on the one in `.startTable("pollen")`
 (without it: `speedByDistance` if there is one, else the first by name). Switch:
 
 - **A button.** The launcher brings one: gamepad 2's **D-pad right** picks the next table. Or one button
@@ -336,6 +337,61 @@ the battery. To switch it off: `public static boolean batteryCompensation = fals
 >   launcher's measured RPM against its target on the Driver Station. Do it with compensation on, then
 >   off. If you see no difference, leave it off; if the wheel overshoots after a battery swap, turn it
 >   off and tell us.
+
+### A hood: the shot angle
+
+A **hood** is the curved plate (or second wheel) over the flywheel that the ball rolls along. Tilt it
+and the ball leaves steeper or flatter. Close to the goal you want a steep shot that drops in; far away,
+a flatter one. So a hood gives each distance two numbers: a speed AND an angle. The turret robot's hood
+is on a servo (from [`turretbot/Robot.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/Robot.java)):
+
+```java
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+        .feeder(Indexer.servo("indexer"))
+        .hood(Hood.servo("hood").part("gobilda-2000-torque").shotAngles(80, 55))
+        .speedFromDistance(camera)
+```
+
+Its numbers (from [`turretbot/Tunables.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/Tunables.java),
+the team's own turret design):
+
+```java
+public static class Hood {
+    public static double posA = 0.20, posB = 0.65, angleA = 0, angleB = 25;
+    public static double travelSec = 0.45, homeAngle = 0;
+}
+```
+
+- **`posA`, `posB`: the two hard stops.** The servo positions where the hood (almost) touches each of
+  its stops. The hood NEVER goes past them, whatever a table, a trim or a stick asks: a servo pushing on
+  a stop gets hot and breaks things. Find them with the **Hood Finder** (gamepad 1: nudge to a stop,
+  back off a hair, X; the other stop, B). INIT stops if they are missing: a safety number never comes
+  from the library.
+- **`angleA`, `angleB`: optional.** The hood's angle at each stop, in any scale you like (here 0 = its
+  steep end, 25 = its flat end). Leave them out and the hood works in servo positions: the table's third
+  number is then a servo position (`{48, 2550, 0.42}`). The Shot Tuner writes whichever you use, so you
+  never have to measure an angle.
+- **A linkage?** If the hood is moved by a linkage, equal servo steps do not make equal angle steps.
+  Then write `calibration = {{0.20, 0}, {0.32, 8}, {0.45, 18}, {0.65, 30}}` instead ({servo position,
+  angle} rows; the Hood Finder makes them: type in the angle you measured with LB + D-pad, press A).
+- **`travelSec`: why the launcher waits.** A servo cannot say where it is. So the launcher guesses: a
+  stop-to-stop move takes `travelSec`, a shorter move a share of it, and it does not fire until then
+  (`Launcher waits for: hood`). A piece fired while the hood is still moving flies wrong. A hood on a
+  motor with an encoder (`Hood.motor("hood", "gobilda-5203-117")`) knows instead.
+- **`homeAngle`:** where it goes at START (here the steep end, so the robot fits the start box).
+  Nothing moves in INIT.
+
+**From the table.** The launcher blends the hood between rows like the speed: at 60 in the POLLEN
+hood is halfway between 11 and 19 = 15. The Driver Station shows `Hood: 15.0 deg (table)`.
+
+**By hand.** Gamepad 2's **left stick up / down**. With the hood from the table it is a **hood trim**:
+`Hood: 16.0 deg (table, trim +1.0 deg)`; double-tap D-pad down sets both trims back to 0. Without a
+table (a fixed speed) it moves the hood itself. Which trim? Shots short or long: the speed trim. Shots
+that arrive at the wrong slope (they bounce off the rim, worn balls leave flatter): the hood trim. Try
+the speed trim first; one change at a time.
+
+**Tune it** with the Shot Tuner: **Y** until `> Hood`, the D-pad steps it. Each speed and hood is its
+own try, and X saves the winning pair. Copy the line (`{48, 2550, 11}` rows) into `Tunables.java`.
 
 ## 9. When the camera loses the goal: the odometry
 
@@ -534,6 +590,8 @@ give each a `looks(...)` shape in `Robot.java` ([Lesson 1: Draw your robot from 
 4. Turret: point it forward, INIT, and turn it by hand to each end. It must stop before the hard stops.
 5. Only then turn following on, and fill `speedByDistance` at 4 to 6 distances on a charged battery
    (each table, with its game piece).
+   A hood: the Hood Finder first (`posA`, `posB`), then check on the robot that START sends it to
+   `homeAngle` and the left stick (gamepad 2) never pushes it into a stop.
 6. Odometry backup: run your autonomous first (or set the pose), then TeleOp. Check INIT's `Aim:` line
    (the alliance and `mirrorForRed`). Cover the camera with your hand. The turret should keep pointing
    at the goal and the Driver Station say `following: odometry`. If it points elsewhere, check `goalX`,
@@ -553,6 +611,9 @@ give each a `looks(...)` shape in `Robot.java` ([Lesson 1: Draw your robot from 
 | The speed never changes with distance | no goal in view; check `Tunables.Limelight.pipeline` and the `goal(...)` names. |
 | `Launcher: no shot table "..."` | the name in `useTable(...)` has no `speedByDistance...` line; the warning lists the names there. |
 | Shots short (or long) all match | the operator trims with the D-pad ([section 8](#speed-trim-and-a-low-battery)); every match: tune the table again. |
+| INIT stops: `Tunables.Hood has no posA` | the hood's stops are needed: run the Hood Finder and copy its line. |
+| `Launcher waits for: hood` and never fires | `travelSec` is very long, or (a motor hood) it cannot reach the angle: raise `maxPower`, check `tolerance`. |
+| INIT stops: `the row at 48 in has hood 30, outside the hood's range` | a table row asks past a stop: fix the row (or the stops). |
 | `battery 11.2 V: low` | swap the battery. Battery compensation helps, but a low battery is still slower. |
 | `following: odometry` points the wrong way | `Tunables.Aim.goalX`, `goalY` (from the BLUE wall), `mirrorForRed`, or the pose did not start right (no autonomous before TeleOp). |
 | `Aim: no goal` | whole-robot aim on, but the camera does not see the goal and there is no odometry backup. |

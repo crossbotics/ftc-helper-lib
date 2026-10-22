@@ -55,6 +55,7 @@ final class SimShotTable {
     static final class Shot {
         boolean shot;
         double speedIn, angleDeg, backspin, exitForward, exitUp;
+        double angleMeanDeg;   // the angle before the scatter (a hood moves this)
     }
 
     final String file;
@@ -109,7 +110,8 @@ final class SimShotTable {
         s.speedIn = scale * draw(a.speed, b.speed, t);
         // angles blend the short way round (179 to -179 passes 180, not 0)
         double turn = ((b.angle[0] - a.angle[0]) % 360 + 540) % 360 - 180;
-        s.angleDeg = a.angle[0] + turn * t + random.nextGaussian() * mix(a.angle[1], b.angle[1], t);
+        s.angleMeanDeg = a.angle[0] + turn * t;
+        s.angleDeg = s.angleMeanDeg + random.nextGaussian() * mix(a.angle[1], b.angle[1], t);
         s.backspin = scale * draw(a.spin, b.spin, t);
         s.exitForward = mix(a.exit[0], b.exit[0], t);
         s.exitUp = mix(a.exit[1], b.exit[1], t);

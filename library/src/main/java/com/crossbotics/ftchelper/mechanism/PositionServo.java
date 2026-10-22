@@ -3,7 +3,6 @@ package com.crossbotics.ftchelper.mechanism;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.crossbotics.ftchelper.auto.AutoStep;
-import com.crossbotics.ftchelper.core.Subsystem;
 import com.crossbotics.ftchelper.hardware.ServoSetup;
 import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
 import com.crossbotics.ftchelper.tuning.Tunable;
@@ -36,8 +35,8 @@ import java.util.function.LongSupplier;
  * "arrived" is an estimate from {@link #travelTime}. Docs: docs/modules/mechanism.md
  * (docs/images/servo-range.svg shows the 0 to 1 range).
  */
-public class PositionServo implements Subsystem {
-    // "implements Subsystem": this class has update/stop/addTelemetry/name like every mechanism,
+public class PositionServo implements AngleDevice {
+    // "implements AngleDevice" (a Subsystem that goes to an angle): this class has update/stop/addTelemetry/name like every mechanism,
     // so it can go in a Subsystems group. "final" below means set once and never replaced.
     private final String name;
     private final Servo servo;
@@ -171,6 +170,7 @@ public class PositionServo implements Subsystem {
     }
 
     /** Goes to an angle in degrees (needs {@link #degrees}). */
+    @Override
     public void setDegrees(double deg) {
         if (!hasDegrees) throw new IllegalStateException(name + ": call degrees(...) in the setup first");
         // Straight line through the two measured points: how far deg is from degA, scaled to raw positions.
@@ -231,6 +231,7 @@ public class PositionServo implements Subsystem {
      * True when the servo should have arrived (an estimate: a servo cannot tell us where it is).
      * We guess from the time since the move started and {@link #travelTime}.
      */
+    @Override
     public boolean isDone() {
         // All three must be true: there is a target, the slow move has sent the final position,
         // and enough time has gone by for the servo to get there.
@@ -262,6 +263,7 @@ public class PositionServo implements Subsystem {
      * The angle it is GOING to, in degrees (after the limits), or NaN before the first command.
      * Differs from {@link #getDegrees()} only during a slow move ({@link #maxSpeed}).
      */
+    @Override
     public double getTargetDegrees() {
         if (!hasDegrees || Double.isNaN(target)) return Double.NaN;
         return degA + (target - posA) * (degB - degA) / (posB - posA);

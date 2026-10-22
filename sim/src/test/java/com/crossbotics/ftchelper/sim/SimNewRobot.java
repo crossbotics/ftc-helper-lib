@@ -34,7 +34,7 @@ public final class SimNewRobot {
         final String type, field, line, section;
         final Map<String, String> numbers = new LinkedHashMap<>();   // Tunables: name -> value text
         String note = "";
-        Part inner = null;   // a launcher's indexer (its own Tunables section)
+        final List<Part> inner = new ArrayList<>();   // a launcher's indexer and hood (each its own Tunables section)
 
         Part(String type, String field, String line, String section) {
             this.type = type;
@@ -141,6 +141,7 @@ public final class SimNewRobot {
         String[] intakeId = null;   // the first intake CR servo's names (the module's)
         Part launcher = null;
         List<Part> indexers = new ArrayList<>();
+        List<Part> hoods = new ArrayList<>();
         List<SimConfigImport.Device> switches = new ArrayList<>();
 
         for (SimConfigImport.Device d : devices) {
@@ -201,6 +202,10 @@ public final class SimNewRobot {
                     } else if (has(w, "claw", "grab", "grabber", "gripper", "grip", "pincer")) {
                         parts.add(new Part("Claw", field, "Claw.servo(" + q(d.name) + ")" + ren, section)
                                 .num("open", "0.20").num("closed", "0.75").num("travelSec", "0.3"));
+                    } else if (has(w, "hood")) {
+                        // The stops are a guess: the Hood Finder finds them (and the angles, if you measure them).
+                        hoods.add(new Part("Hood", field, "Hood.servo(" + q(d.name) + ")" + ren, section)
+                                .num("posA", "0.2").num("posB", "0.7").num("travelSec", "0.5"));
                     } else if (has(w, "wrist")) {
                         parts.add(new Part("Wrist", field, "Wrist.servo(" + q(d.name) + ")" + ren, section)
                                 .num("down", "0.15").num("level", "0.5").num("up", "0.85"));
@@ -269,16 +274,26 @@ public final class SimNewRobot {
                         .num("inPower", "1.0").num("outPower", "0.7"));
             }
         }
-        // A launcher takes the indexer; any other indexer stands alone.
-        if (launcher != null && !indexers.isEmpty()) {
-            Part ix = indexers.remove(0);
-            Part merged = new Part("Launcher", launcher.field, launcher.line + "\n                .feeder(" + ix.line + ")", launcher.section);
+        // A launcher takes the indexer and the hood; any other indexer or hood stands alone.
+        if (launcher != null && (!indexers.isEmpty() || !hoods.isEmpty())) {
+            Part ix = indexers.isEmpty() ? null : indexers.remove(0);
+            Part hd = hoods.isEmpty() ? null : hoods.remove(0);
+            String line = launcher.line + (ix != null ? "\n                .feeder(" + ix.line + ")" : "")
+                    + (hd != null ? "\n                .hood(" + hd.line + ")" : "");
+            Part merged = new Part("Launcher", launcher.field, line, launcher.section);
             merged.numbers.putAll(launcher.numbers);
             merged.note = launcher.note;
-            merged.inner = ix;
+            if (hd != null) merged.note = (merged.note.isEmpty() ? "TODO" : merged.note + ";")
+                    + " the hood's stops (posA, posB) with the Hood Finder";
+            if (ix != null) merged.inner.add(ix);
+            if (hd != null) merged.inner.add(hd);
             parts.set(parts.indexOf(launcher), merged);
         }
         parts.addAll(indexers);
+        for (Part h : hoods) {
+            h.note = "TODO the hood's stops (posA, posB) with the Hood Finder";
+            parts.add(h);
+        }
         // A switch goes on the first lift (or arm): its bottom stop.
         for (SimConfigImport.Device sw : switches) {
             boolean placed = false;
@@ -288,7 +303,7 @@ public final class SimNewRobot {
                     Part withSwitch = new Part(p.type, p.field, p.line + ".bottomSwitch(" + q(sw.name) + ")", p.section);
                     withSwitch.numbers.putAll(p.numbers);
                     withSwitch.note = p.note;
-                    withSwitch.inner = p.inner;
+                    withSwitch.inner.addAll(p.inner);
                     parts.set(i, withSwitch);
                     placed = true;
                 }
@@ -327,6 +342,7 @@ public final class SimNewRobot {
         for (Part p : parts) {
             types.add(p.type);
             if (p.line.contains("Indexer.")) types.add("Indexer");
+            if (p.line.contains("Hood.")) types.add("Hood");
         }
         if (imu != null) {
             sb.append("import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.LogoFacingDirection;\n");
@@ -406,7 +422,7 @@ public final class SimNewRobot {
         Map<String, Map<String, String>> sections = new LinkedHashMap<>();
         for (Part p : parts) {
             if (!p.numbers.isEmpty()) sections.put(p.section, p.numbers);
-            if (p.inner != null) sections.put(p.inner.section, p.inner.numbers);
+            for (Part in : p.inner) sections.put(in.section, in.numbers);
         }
         for (Map.Entry<String, Map<String, String>> s : sections.entrySet()) {
             sb.append("\n    public static class ").append(s.getKey()).append(" {\n");

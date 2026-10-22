@@ -8,7 +8,6 @@ import com.crossbotics.ftchelper.launcher.ShotTable;
 import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
 import com.crossbotics.ftchelper.tuning.Tunable;
 import com.crossbotics.ftchelper.vision.TargetObservation;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -60,6 +59,10 @@ import java.util.List;
  * {@code speedByDistance} if there is one, else the first by name, or the one given to
  * {@link #startTable(String)}. The Driver Station shows the table in use.
  *
+ * <p><b>A hood</b> ({@link #hood(Hood)}): the shot table's rows get a third number, the hood angle
+ * ({@code {48, 2550, 12}}), blended between rows like the speed; the launcher waits for the hood to
+ * arrive before it feeds. Two-number rows still work (then the hood is set by hand). See {@link Hood}.
+ *
  * <p>Suggested buttons (operator): LB spins up / down, RB fires one (hold it: keeps firing). D-pad
  * up/down: with the speed from the distance, the speed trim +/- {@code trimStepPercent} (1%); with a
  * fixed speed, +/- {@code stepRpm}; held, one more step every 0.25 s. Double-tap D-pad down: back to no
@@ -72,6 +75,11 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     private final String motorId;
     private boolean reversed = false;
     private Indexer indexer = null;
+    private Hood hood = null;
+    // Shot tables whose rows have a third column (the hood angle), by name.
+    private final java.util.Set<String> hoodTables = new java.util.HashSet<>();
+    // A note for INIT: tables with hood angles but no hood (they are not used).
+    private String hoodNote = "";
     private Camera distanceCamera = null;
     // speedFromOdometry(): the distance from the odometry alone (no camera).
     private boolean distanceFromOdometry = false;
@@ -138,6 +146,24 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
      */
     public static Launcher flywheel(String motor, String motorId) {
         return new Launcher(motor, motorId);
+    }
+
+    /**
+     * The hood that sets how steep the shot leaves ({@link Hood}): its angle comes from the shot table's
+     * third column ({@code {inches, rpm, hood}}), and the launcher waits for it before feeding.
+     *
+     * @param hood e.g. {@code Hood.servo("hood")}
+     */
+    public Launcher hood(Hood hood) {
+        if (hood == null) throw new IllegalArgumentException("Robot.java: " + name() + ".hood(null)");
+        this.hood = hood;
+        hood.inLauncher = true;
+        return this;
+    }
+
+    /** The hood given with {@link #hood(Hood)}, or null. */
+    public Hood hood() {
+        return hood;
     }
 
     /** The indexer that feeds it. Without one, {@link #fire()} only spins up. */
@@ -253,7 +279,10 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
 
     @Override
     List<Module<?>> children() {
-        return indexer == null ? Collections.<Module<?>>emptyList() : Collections.<Module<?>>singletonList(indexer);
+        List<Module<?>> out = new java.util.ArrayList<>();
+        if (indexer != null) out.add(indexer);
+        if (hood != null) out.add(hood);
+        return out;
     }
 
     @Override
@@ -301,14 +330,50 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
                 .idleRpm(t.number("idleRpm", 0))
                 .shotInterval(t.number("shotIntervalSec", 0.25));
         for (int i = 0; i < checks.size(); i++) part.requireReady(checkNames.get(i), checks.get(i));
-        // Every speedByDistance... table (one per game piece, if they fly differently).
+        // The hood (built before this module): the launcher sends it the table's angle and waits for it.
+        // The hood moves for changes over 1/100 of its range (0.25 deg for 25 deg), so camera jitter
+        // does not keep it "moving" (degrees, servo positions or ticks alike).
+        if (hood != null) part.hood(hood.part()).hoodDeadband((hood.maxAngle() - hood.minAngle()) / 100);
+        // Every speedByDistance... table (one per game piece, if they fly differently). Rows are
+        // {inches, rpm} or, with a hood, {inches, rpm, hood angle}: all rows of a table the same.
+        java.util.List<String> unusedHood = new java.util.ArrayList<>();
         for (java.util.Map.Entry<String, java.util.Map.Entry<String, double[][]>> e : t.tables("speedByDistance").entrySet()) {
+            String field = e.getValue().getKey();
             ShotTable table = new ShotTable();
-            for (double[] r : e.getValue().getValue()) if (r.length >= 2) table.add(r[0], r[1]);
+            int columns = -1;
+            for (double[] r : e.getValue().getValue()) {
+                if (r == null || r.length < 2) continue;
+                if (r.length > 3) {
+                    throw new IllegalStateException("Tunables." + name() + "." + field + ": a row has " + r.length
+                            + " numbers; each row is {inches, rpm} or {inches, rpm, hood angle}");
+                }
+                if (columns >= 0 && r.length != columns) {
+                    throw new IllegalStateException("Tunables." + name() + "." + field + ": some rows have a hood angle and "
+                            + "some do not; give every row the same columns ({inches, rpm} or {inches, rpm, hood})");
+                }
+                columns = r.length;
+                if (r.length == 3 && hood != null) {
+                    if (r[2] < hood.minAngle() - 1e-9 || r[2] > hood.maxAngle() + 1e-9) {
+                        throw new IllegalStateException("Tunables." + name() + "." + field + ": the row at " + Shape.n(r[0])
+                                + " in has hood " + Shape.n(r[2]) + ", outside the hood's range " + Shape.n(hood.minAngle())
+                                + " to " + Shape.n(hood.maxAngle()) + " (Tunables." + hood.name() + ")");
+                    }
+                    table.add(r[0], r[1], r[2]);
+                } else {
+                    table.add(r[0], r[1]);
+                }
+            }
             if (table.points().isEmpty()) continue;   // an empty table cannot give a speed
             tables.put(e.getKey(), table);
-            tableFields.put(e.getKey(), e.getValue().getKey());
+            tableFields.put(e.getKey(), field);
+            if (columns == 3) {
+                if (hood != null) hoodTables.add(e.getKey());
+                else unusedHood.add(field);
+            }
         }
+        hoodNote = unusedHood.isEmpty() ? "" : "Tunables." + name() + "." + commas(unusedHood)
+                + " has hood angles but Robot.java gives the launcher no .hood(...): they are not used";
+        if (hood != null) hood.tableDriven = usesDistance() && !hoodTables.isEmpty();
         if (tables.isEmpty() && usesDistance()) {
             throw new IllegalStateException(name() + (distanceFromOdometry ? ".speedFromOdometry" : ".speedFromDistance")
                     + " needs Tunables." + name() + ".speedByDistance = {{inches, rpm}, ...} (or one table per game piece, "
@@ -457,10 +522,11 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         remember();
     }
 
-    /** Back to the Tunables speed: the trim to 0, and the {@link #adjust(int)} steps to 0. */
+    /** Back to the Tunables speed: the trim to 0, the {@link #adjust(int)} steps to 0, and the hood trim to 0. */
     public void resetTrim() {
         trimPct = 0;
         adjustSteps = 0;
+        if (hood != null) hood.resetTrim();
         remember();
     }
 
@@ -610,7 +676,17 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         tableName = key;
         tableProblem = "";
         part.table(tables.get(key));
-        if (!Double.isNaN(lastDistance) && speedMode.isOn()) part.setDistance(lastDistance);
+        if (!Double.isNaN(lastDistance) && speedMode.isOn()) {
+            if (hood != null) part.hoodOffset(hood.trim());
+            part.setDistance(lastDistance);
+        }
+    }
+
+    // True when the shot table in use sets the hood now: a hood, a table with hood angles, the speed from
+    // the distance, and a distance known.
+    private boolean hoodFromTable() {
+        return hood != null && speedMode.isOn() && usesDistance() && tableName != null
+                && hoodTables.contains(tableName) && !Double.isNaN(lastDistance);
     }
 
     private String tableList() {
@@ -664,8 +740,23 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
             if (seen != null && seen.hasDistance()) lastDistance = seen.distanceIn;
             // No goal at all: keep the last distance, so the last speed (a sudden change would spoil
             // the next shot). Before the first one: speedRpm.
-            if (!Double.isNaN(lastDistance)) part.setDistance(lastDistance);
+            boolean hoodTable = hoodFromTable();
+            if (hood != null) {
+                // The stick and step() trim while the table in use has hood angles; else they move the hood.
+                hood.tableDriven = hoodTables.contains(tableName);
+                hood.loop(hoodTable);
+            }
+            if (!Double.isNaN(lastDistance)) {
+                // The hood trim is added to the table's angle (setDistance moves the hood).
+                if (hood != null) part.hoodOffset(hood.trim());
+                part.setDistance(lastDistance);
+                if (hoodTable) hood.afterTable();
+            }
         } else {
+            if (hood != null) {
+                hood.tableDriven = false;
+                hood.loop(false);
+            }
             part.setRpm(speedRpm.get() + adjustSteps * stepRpm.get());
         }
         // The trim multiplies whichever speed was chosen: +3% = x 1.03. Never past the motor's top speed:
@@ -715,6 +806,13 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     void halt() {
         shotsAtPause = 0;                         // a cancel while paused drops them too
         if (part != null) part.stopShooting();   // drop the shots still waiting; keep the speed
+    }
+
+    @Override
+    List<String> notes() {
+        List<String> out = super.notes();
+        if (!hoodNote.isEmpty()) out.add(hoodNote);
+        return out;
     }
 
     @Override
@@ -808,10 +906,19 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         out.add(fmt("motor.%s = flywheel, part=%s%s, shotDrop=0.15", device, motorId, feederLine));
         if (looks.isEmpty()) out.add(fmt("shape.%s = flywheel, at=-1,0,6, size=4x2x4, motor=%s   # TODO measure", device, device));
         else lookLines(out, t);
-        if (Double.isNaN(shotAngleDeg)) {
+        // A hood with shotAngles(...): the simulated shot angle follows the hood servo.
+        TunableSection hoodSection = hood == null ? null : hood.simSection != null ? hood.simSection
+                : TunableSection.of(robot == null ? null : robot.tunablesClass(), hood.name());
+        String hoodWords = hood == null ? "" : hood.shootWords(hoodSection);
+        double angle = !hoodWords.isEmpty() ? hood.homeShotAngle(hoodSection) : shotAngleDeg;
+        String hoodTodo = hood != null && hoodWords.isEmpty()
+                ? "   # TODO the hood: " + (hood.isMotor() ? "the simulator's shot angle does not follow a motor hood yet"
+                        : "Hood...shotAngles(atA, atB) in Robot.java, so the shot angle follows it") : "";
+        if (Double.isNaN(angle)) {
             out.add(fmt("shoot.%s = shape=%s, angle=45, share=0.5   # TODO the shot angle (or a shot table: tools/launcher)", device, spinningShapeName()));
         } else {
-            out.add(fmt("shoot.%s = shape=%s, angle=%s, share=0.5", device, spinningShapeName(), Shape.n(shotAngleDeg)));
+            out.add(fmt("shoot.%s = shape=%s, angle=%s, share=0.5%s%s", device, spinningShapeName(), Shape.n(Math.round(angle * 100) / 100.0),
+                    hoodWords, hoodTodo));
         }
     }
 

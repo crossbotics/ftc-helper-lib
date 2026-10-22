@@ -47,19 +47,40 @@ public final class ShotTable {
 
     // The measured points, always kept sorted from the shortest distance to the longest.
     private final List<Shot> points = new ArrayList<>();
+    // True once a point was added WITH a hood angle: then a launcher with a hood moves it from this table.
+    private boolean hasHood = false;
 
-    /** Adds a measured point (distance in inches, RPM, hood in degrees). Order does not matter. Hood angle may be 0 if you have no hood. */
+    /**
+     * Adds a measured point (distance in inches, RPM, hood in degrees). Order does not matter. A table
+     * with hood angles moves the launcher's hood ({@link #hasHood()}).
+     */
     public ShotTable add(double distance, double rpm, double hoodDeg) {
-        points.add(new Shot(distance, rpm, hoodDeg));
+        hasHood = true;
+        return addPoint(new Shot(distance, rpm, hoodDeg));
+    }
+
+    /**
+     * Adds a point with no hood angle (its hood number is 0 and means nothing). A table made only of
+     * these never moves a hood: the hood stays where you put it.
+     */
+    public ShotTable add(double distance, double rpm) {
+        return addPoint(new Shot(distance, rpm, 0));
+    }
+
+    /**
+     * True if any point was added with a hood angle ({@code add(distance, rpm, hoodDeg)}). Only then does
+     * {@link Launcher#setDistance} move the hood.
+     */
+    public boolean hasHood() {
+        return hasHood;
+    }
+
+    private ShotTable addPoint(Shot shot) {
+        points.add(shot);
         // Sort again after each add, so lookup() can walk the list from short to long.
         // "(a, b) -> ..." tells the sort how to compare two points: by distance.
         Collections.sort(points, (a, b) -> Double.compare(a.distance, b.distance));
         return this;
-    }
-
-    /** Adds a point with no hood. */
-    public ShotTable add(double distance, double rpm) {
-        return add(distance, rpm, 0);
     }
 
     /**

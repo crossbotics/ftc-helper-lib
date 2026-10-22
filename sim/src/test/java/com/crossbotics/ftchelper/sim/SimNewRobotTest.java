@@ -108,6 +108,22 @@ public class SimNewRobotTest {
         compileAndLoad(f);
     }
 
+    @Test public void aHoodServoGoesOnTheLauncher() throws Exception {
+        String xml = "<Robot><LynxUsbDevice name=\"p\"><LynxModule name=\"Control Hub\" port=\"173\">"
+                + "<goBILDA5202SeriesMotor name=\"left_drive\" port=\"0\"/><goBILDA5202SeriesMotor name=\"right_drive\" port=\"1\"/>"
+                + "<goBILDA5202SeriesMotor name=\"flywheel\" port=\"2\"/>"
+                + "<Servo name=\"indexer\" port=\"0\"/><Servo name=\"hood\" port=\"1\"/>"
+                + "</LynxModule></LynxUsbDevice></Robot>";
+        Map<String, String> f = SimNewRobot.files(SimConfigImport.read(xml), "org.firstinspires.ftc.teamcode");
+        String robot = f.get("Robot.java");
+        assertTrue(robot, robot.contains(".feeder(Indexer.servo(\"indexer\"))"));
+        assertTrue(robot, robot.contains(".hood(Hood.servo(\"hood\"))"));
+        assertTrue(robot, robot.contains("Hood Finder"));
+        assertTrue(f.get("Tunables.java"), f.get("Tunables.java").contains("public static class Hood {"));
+        assertTrue(f.get("Tunables.java"), f.get("Tunables.java").contains("posA = 0.2, posB = 0.7"));
+        compileAndLoad(f);
+    }
+
     private void compileAndLoad(Map<String, String> f) throws Exception {
         File src = tmp.newFolder("src");
         File out = tmp.newFolder("classes");
