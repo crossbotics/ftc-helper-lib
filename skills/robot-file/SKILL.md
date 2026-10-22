@@ -74,6 +74,10 @@ Its lines end with `# from Robot.java` and are rewritten each run. When you meas
 a line WITHOUT that mark (or remove the mark): your line is then kept on every later run. Then go on
 with step 3 for the TODO lines (sizes, places, the shot).
 
+A part marked `.optional()` in Robot.java that is NOT built yet (its device is not in the team's
+configuration): keep its lines, and add one line of your own, `missing = <device>, ...`. The simulator
+then runs the robot as it is today (the part is off); delete the name the day the part is built.
+
 Otherwise, from the configuration file:
 
 ```bash

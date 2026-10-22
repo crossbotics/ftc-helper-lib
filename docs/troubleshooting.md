@@ -28,9 +28,15 @@ See [A new FTC SDK version](02-keep-up-to-date.md#a-new-ftc-sdk-version).
 
 ## Driver Station errors
 
-**`No DcMotorEx named "..." in the active robot configuration`**
+**`No DcMotorEx named "..." in the active robot configuration`** (or `No Servo named "intake_deploy" ...`)
 The name in code and the name in the Driver Station configuration differ. The message lists the
 names that do exist. Fix the spelling, or pick the right configuration on the Driver Station.
+**The part is not on the robot yet?** (The message then ends `Not on the robot yet? Add .optional() ...`.)
+Add `.optional()` to its line in Robot.java: INIT then goes on, says the part is off, and its
+buttons and actions skip it until it is in the configuration
+([parts not on the robot yet](modules/robot.md#parts-not-on-the-robot-yet)). The
+[Hardware Check](modules/testing.md#hardwarecheckopmode) with `robot()` lists every Robot.java device
+the configuration is missing.
 
 **`libraryButtons: G1 BACK has two library jobs: ... Move or free one`**
 (also `has two long (held) library jobs`, `is the slow trigger and also ...`, `cannot open the tuning
@@ -82,6 +88,7 @@ robot in five files: the Drive Tuner, then `Tunables.Drive.calibrated = true`.
 | `Pose NOT set: stop first ...` | "set pose here" was held while the robot drove (a drive stick pushed) or whole-robot aim was on. Stop, then hold START 1 s again |
 | `No pause button (libraryButtons freed it): ...` | `lib.pause(null)` in `libraryButtons`: nothing pauses the robot. Put it on a button: `lib.pause(g1.back)` |
 | `No slow button (libraryButtons freed it): ...` | `lib.slow(null)` with no `slow()` of your own: add one, e.g. `g1.rt.slow()` |
+| `"intake_deploy" not in the configuration: IntakeDeploy is off (optional part)` | a note, not a problem: the part is marked `optional()` and not on the robot yet. Its commands, buttons (`- off: ... not on the robot` on the map) and action steps are skipped. Plugged in now? Add it to the configuration and INIT again ([parts not on the robot yet](modules/robot.md#parts-not-on-the-robot-yet)) |
 | `Launcher: battery 11.2 V: low. The flywheel gets back to speed slower: charge or swap it` | swap in a charged battery. The launcher's battery compensation helps, but shots still wait longer |
 | `Aim odometry: ... more than the field allows` / `Aim: camera says ... odometry ...` | the pose is wrong or drifted, or `Tunables.Aim.goalX, goalY` are not where the camera measures to |
 | `goal out of turret range (behind the robot: holding)` | the goal is behind the robot: turn the robot toward it |

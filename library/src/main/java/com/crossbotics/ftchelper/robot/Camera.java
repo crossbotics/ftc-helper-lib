@@ -114,6 +114,12 @@ public final class Camera extends Module<Camera> {
         return this;
     }
 
+    // A camera missing from the configuration warns and sees nothing; INIT goes on.
+    @Override
+    boolean canDoWithout(String deviceName) {
+        return true;
+    }
+
     @Override
     void build(Devices devices, TunableSection t) {
         // Optional numbers: read only when written, so a team that does not use them gets no INIT note.

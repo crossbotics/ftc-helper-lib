@@ -70,8 +70,12 @@ public abstract class PieceTunerOpMode extends FinderOpMode {
         RobotDefinition robot = robot();
         if (robot == null) throw new IllegalStateException("The Piece Tuner needs your robot: robot() { return new Robot(); }");
         robot.setup(hardwareMap);
-        sensors.addAll(sensorsOf(robot));
-        if (sensors.isEmpty()) throw new IllegalStateException("Robot.java has no Pieces or PieceSensor line (docs/modules/robot.md)");
+        // Sensors of parts that are not on the robot yet (optional in Robot.java) are left out.
+        for (PieceSensor s : sensorsOf(robot)) if (s.isPresent()) sensors.add(s);
+        if (sensors.isEmpty()) {
+            throw new IllegalStateException(sensorsOf(robot).isEmpty() ? "Robot.java has no Pieces or PieceSensor line (docs/modules/robot.md)"
+                    : "Every piece sensor in Robot.java is optional and not in the robot configuration yet: add one to the configuration");
+        }
         for (PieceSensor s : sensors) measured.put(s, new LinkedHashMap<>());
     }
 

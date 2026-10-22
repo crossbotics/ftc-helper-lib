@@ -311,6 +311,12 @@ public final class Turret extends Module<Turret> {
         return Parts.servo(id);
     }
 
+    // A home switch missing from the configuration is an INIT note (the start angle is trusted).
+    @Override
+    boolean canDoWithout(String deviceName) {
+        return deviceName.equals(switchName);
+    }
+
     @Override
     List<String> deviceNames() {
         List<String> out = new ArrayList<>();
@@ -584,6 +590,7 @@ public final class Turret extends Module<Turret> {
      * never fires blind.
      */
     public boolean isAimed() {
+        if (part != null && missing) return true;   // not on the robot (optional): never holds a shot back
         if (part == null || !part.isAimed()) return false;
         if (!follow.isOn() || !follows()) return true;   // by hand / aimAt(): where it was told
         if (goalBehind || !part.isHomed() || part.isOutOfRange()) return false;
@@ -594,17 +601,17 @@ public final class Turret extends Module<Turret> {
 
     /** True when the goal is past its range (it waits at the limit, or holds while the goal is behind). */
     public boolean isOutOfRange() {
-        return part != null && (part.isOutOfRange() || goalBehind);
+        return part != null && !missing && (part.isOutOfRange() || goalBehind);
     }
 
     /** True while an interlock rule holds it back from where it should point ({@link Interlock}). */
     public boolean isHeld() {
-        return part != null && part.isHeld();
+        return part != null && !missing && part.isHeld();
     }
 
     /** True once its angle is known (homed on its switch, or no switch). */
     public boolean isHomed() {
-        return part != null && part.isHomed() && !part.isHoming();
+        return part != null && (missing || (part.isHomed() && !part.isHoming()));
     }
 
     /** The angle now, degrees (-180 to 180 for a {@link #continuous()} turret). */

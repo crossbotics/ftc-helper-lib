@@ -142,6 +142,10 @@ out of it), a margin is negative, or a part has no position (an intake roller: u
 screen lists each rule:
 `Interlock TurretLift: Turret between 109 and 239 deg / Lift above 270 counts`.
 
+A rule with a part that is not on the robot yet ([`optional()`](../modules/robot.md#parts-not-on-the-robot-yet),
+its device not in the configuration) is off: there is nothing to hit, so it needs no Tunables section and
+holds nothing back. INIT says `Interlock TurretLift: off (Lift is not on the robot)`.
+
 ## Why the numbers are not live
 
 The zones are read once at INIT and are not in the tuning menu. A zone that moved while the parts were

@@ -131,6 +131,10 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
                     ? "The shot tuner needs your robot: add \"@Override protected RobotDefinition robot() { return new Robot(); }\" (or createLauncher())."
                     : "The shot tuner found no Launcher in Robot.java.");
         }
+        if (!module.isPresent()) {
+            throw new IllegalStateException("The shot tuner: \"" + module.deviceName() + "\" is not in the robot configuration ("
+                    + module.name() + " is optional in Robot.java, so it is off). Add it to the configuration first.");
+        }
         return module.part();
     }
 

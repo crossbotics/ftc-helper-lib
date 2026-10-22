@@ -25,6 +25,24 @@ It finds: motors, continuous-rotation (CR) servos that spin like a motor, servos
 (magnetic switches, beam breaks), color and distance sensors, analog inputs, webcams and Limelights.
 It also shows the battery voltage and warns below 12.0 V.
 
+**With your robot in five files**, give it the robot, and INIT also checks Robot.java against the
+configuration: one line for each device Robot.java names that is NOT there, and what that means.
+
+```java
+public class HardwareCheck extends HardwareCheckOpMode {
+    @Override protected RobotDefinition robot() { return new Robot(); }
+}
+```
+
+```
+Robot.java devices not in this configuration:
+"lift" (Lift): NOT in the configuration: INIT will stop. Add it, or add .optional() to Lift in Robot.java
+"intake_deploy" (IntakeDeploy): not in the configuration: optional, so the part is off (fine)
+```
+
+A part marked `optional()` ([parts not on the robot yet](robot.md#parts-not-on-the-robot-yet)) is
+listed, not an error. With every device there: `Robot.java: every device is in the configuration`.
+
 | Gamepad 1 | Does |
 | --- | --- |
 | D-pad up / down | choose a device (changing stops the last one) |

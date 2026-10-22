@@ -47,6 +47,9 @@ final class SimRobot {
     // Limelights (limelight.KEY = name=limelight, ...): their pretend camera is in cameras too.
     final Map<String, SimLimelight> limelights = new LinkedHashMap<>();
     private final Map<String, HardwareDevice> devices = new LinkedHashMap<>();
+    // Devices described in the robot file but NOT in the configuration ("missing = a, b", or a
+    // scenario's "set device NAME missing"): a part not built yet. Used at the next INIT.
+    private final java.util.Set<String> missingDevices = new java.util.LinkedHashSet<>();
     final String imuName;
     // Pretend odometry (a Pinpoint, an OTOS or dead wheels), or null.
     final SimOdometry odometry;
@@ -286,6 +289,8 @@ final class SimRobot {
             limelights.put(llName, new SimLimelight(c));
         }
         imuName = p.getProperty("imu", "").trim();
+        // missing = intake_deploy, lift: in the robot file (drawn, simulated) but not in the configuration.
+        missingDevices.addAll(list(p.getProperty("missing", "")));
         odometry = p.getProperty("odometry", "").trim().isEmpty() ? null : new SimOdometry(p);
         lengthIn = above0(p, "robot.lengthIn", 18);
         widthIn = above0(p, "robot.widthIn", 18);
@@ -337,6 +342,12 @@ final class SimRobot {
         pieces = new SimPieces(this, world, p, lines(p, "collect."), lines(p, "shoot."), lines(p, "grab."));
         if (world != null) world.surfaceSpeed = pieces::surfaceSpeed;
         buildDevices();
+        for (String n : missingDevices) {
+            if (!devices.containsKey(n)) {
+                throw new IllegalArgumentException("Robot file: missing = ... names \"" + n + "\", which is not a device in this file "
+                        + "(it lists devices that ARE described here but not in the configuration yet)");
+            }
+        }
     }
 
     /** Reads a robot file (see sim/robots/starter.properties). */
@@ -397,9 +408,31 @@ final class SimRobot {
         devices.put("Control Hub battery", voltageSensor());
     }
 
-    /** A new hardware map with every device, for one OpMode run (like the FTC app makes at INIT). */
+    /**
+     * A new hardware map with every device, for one OpMode run (like the FTC app makes at INIT). The
+     * missing devices ({@link #setMissing}) are left out, like a part not in the configuration yet.
+     */
     synchronized HardwareMap hardwareMap() {
-        return new SimHardwareMap(devices);
+        Map<String, HardwareDevice> configured = new LinkedHashMap<>(devices);
+        configured.keySet().removeAll(missingDevices);
+        return new SimHardwareMap(configured);
+    }
+
+    /**
+     * Takes a device out of the configuration (missing = true) or puts it back, from the next INIT on.
+     * The robot file still describes it: it is drawn and moves as before, but the code cannot find it.
+     */
+    synchronized void setMissing(String name, boolean missing) {
+        if (!devices.containsKey(name)) {
+            throw new IllegalArgumentException("set device: no device \"" + name + "\" in the robot file (devices: " + devices.keySet() + ")");
+        }
+        if (missing) missingDevices.add(name);
+        else missingDevices.remove(name);
+    }
+
+    /** True if this device is left out of the configuration (see {@link #setMissing}). */
+    synchronized boolean isMissing(String name) {
+        return missingDevices.contains(name);
     }
 
     /** Like the FTC app at INIT: every device's settings back to their defaults (not its position). */

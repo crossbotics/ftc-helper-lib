@@ -32,6 +32,23 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   `onlyIf(...)` is used only when that option is chosen. The steps are read again in INIT whenever a menu
   line changes, so the "Place robot" note, the simulator's robot and the odometry's start follow the menu.
 - `tools/check_docs.py` also checks a cookbook recipe shown in a guide (the same `<!-- recipe: name -->` marker).
+- **Parts not on the robot yet** (`Module.optional()`): `add(Positioner.servo("intake_deploy").optional())`
+  in Robot.java. While its first device is not in the robot configuration, INIT goes on with one note
+  (`"intake_deploy" not in the configuration: IntakeDeploy is off (optional part)`) instead of stopping,
+  and the part is off: commands ignored, `isPresent()` false, telemetry `-`, "done" questions true and
+  "busy" ones false. Actions skip it (and the waits right after a step that only used missing parts) and
+  go on; `Action.skipped()`, and an autonomous's report says `skipped IntakeDeploy (not on the robot)`.
+  Its suggested buttons, `toggle(part)` and a new `Button.needs(part...)` / `Stick.needs(part...)` are
+  off, shown on the button map as `- off: IntakeDeploy not on the robot`. An interlock rule with it is
+  off and needs no Tunables (`Interlock.isOff()`); its Tunables section may be missing or unfinished; a
+  missing following turret leaves whole-robot aim free. A launcher that is off takes its feeder and hood
+  with it; a part that is there must have all its devices (half a part still stops). Not for the drive.
+  A non-optional missing device's message now ends with how to mark it optional.
+  `RobotDefinition.checkConfiguration(hardwareMap)` lists Robot.java's devices missing from the
+  configuration; the Hardware Check shows it with `robot()`. Finders explain a missing optional part.
+  Simulator: `missing = a, b` in the robot file and `set device NAME missing|present` in a scenario; a
+  part that a missing servo would push over starts down. Guide: docs/modules/robot.md, "Parts not on the
+  robot yet"; cookbook recipe; scenario `part-not-in-configuration.sim`.
 - **Interlock rules** (`robot.Interlock`, `robot.Zone`): `keepApart("TurretLift", turret.zone(),
   lift.zoneAbove())` in Robot.java keeps two parts from ever being in their zones at the same time (a
   turret over the back while a lift is up; an arm and an intake; a wrist and a low lift). Any number of

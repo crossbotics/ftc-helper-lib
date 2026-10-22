@@ -156,11 +156,12 @@ public final class Indexer extends Module<Indexer> implements Feeder {
 
     /** True from the start of a feed until it ends (normally, jammed or stopped). */
     public boolean isFeeding() {
-        return feeding;
+        return feeding && !missing;
     }
 
     // Feeds, and tells the listeners if a feed really started (a call while busy is ignored).
     private void feedCounted() {
+        if (missing) return;   // not on the robot (optional): no piece goes anywhere, so nothing is counted
         boolean wasBusy = feeder.isBusy();
         feeder.feedOne();
         if (!wasBusy && feeder.isBusy()) {
@@ -193,12 +194,12 @@ public final class Indexer extends Module<Indexer> implements Feeder {
 
     @Override
     public boolean isBusy() {
-        return feeder != null && feeder.isBusy();
+        return feeder != null && !missing && feeder.isBusy();
     }
 
     @Override
     public boolean isJammed() {
-        return feeder != null && feeder.isJammed();
+        return feeder != null && !missing && feeder.isJammed();
     }
 
     @Override
