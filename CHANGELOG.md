@@ -188,9 +188,11 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - Simulator robot file: `touch.NAME = MOTOR, at=C, width=W` (a switch part way along, e.g. a turret's
   home switch), `analog.NAME = MOTOR, offsetDeg=D` (an absolute encoder), `motor.NAME = ..., drivenBy=CRSERVO`
   (an encoder turned by a CR servo).
-- **Community testing:** a test list in `testing/` (35 tests: setup, driving, odometry, Pedro paths and
-  `PathAt`, aiming, shot tables, speed trim, battery compensation, the hood, shooting on the move, game
-  pieces, lights, buttons, the simulator, the docs). Each test says what the robot needs, which starter
+- **Community testing:** a test list in `testing/` (50 tests: setup, driving, odometry, Pedro paths and
+  `PathAt`, the INIT-menu start spot, aiming, every kind of turret, shot tables, speed trim, battery
+  compensation, the hood, shooting on the move, game pieces, lights and the alliance at INIT, interlock
+  rules and their stop distance, a two-motor lift, a servo's full range, optional parts, buttons, the
+  simulator and its auto builder, the test kit, the docs). Each test says what the robot needs, which starter
   bots fit, safety, setup, numbered steps, a pass rule with numbers, what to write down, and what to do if
   your robot is different. `tools/check_tests.py` checks it (in CI) and writes `testing/catalogue.json`
   for crossbotics.com, where teams pick tests that fit their robot. GitHub issue forms: Test report, Docs

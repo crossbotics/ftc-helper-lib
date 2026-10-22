@@ -34,7 +34,7 @@ more than one distance.
 3. Shots go left of the middle: D-pad RIGHT. Shots go right: D-pad LEFT. Fire again.
 4. Repeat until shots go in the middle. Write the offset.
 5. Move to a second distance (about 2 ft farther). Fire 5 with the same offset.
-6. Copy the offset line into `Tunables.java`.
+6. Copy the line it prints into `Tunables.java`: `Tunables.Turret: cameraOffset = ...` with a turret, `Tunables.Aim: cameraOffset = ...` for whole-robot aim.
 
 ## Pass rule
 

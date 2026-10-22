@@ -33,7 +33,7 @@ way. We want to know it works on robots built differently from ours.
 2. Press Y on gamepad 1 (one driver: right stick click) to switch field-centric on. The Driver Station says it.
 3. Turn the robot 90 degrees left with the right stick. Push the left stick up: the robot should drive away from you, not to its own front.
 4. Turn the robot to face you. Push the left stick up: it still drives away from you.
-5. Turn the robot 45 degrees. Hold BACK for 1 second: the robot pauses and "forward" becomes the way it faces now. Tap BACK to go on.
+5. Turn the robot 45 degrees. Hold gamepad 1 BACK for 1 second: the robot pauses at the press, and after 1 s "forward" becomes the way it faces now. Let go, then tap BACK to go on.
 6. Push the left stick up: the robot now drives the way it faced when you held BACK.
 
 ## Pass rule

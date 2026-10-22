@@ -28,7 +28,7 @@ body:
     attributes:
       label: Library version
       description: The release the page is for (the bottom of each page says it).
-      placeholder: v0.16.0
+      placeholder: v0.17.0
     validations:
       required: true
   - type: dropdown

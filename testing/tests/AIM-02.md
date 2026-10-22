@@ -24,7 +24,7 @@ need to see them work on other robots.
 ## Setup
 
 - AIM-01 passed. ODO-01 passed.
-- `Tunables.Aim`: `goalX`, `goalY` (from the BLUE drivers' wall), and for BIOBUZZ `mirrorForRed = false`.
+- `Tunables.Aim`: `goalX`, `goalY` (inches, seen from your own drivers' wall; BIOBUZZ: `goalX = 13, goalY = -13`, your HIVE's CELL that is up at the start), and for BIOBUZZ `mirrorForRed = false`.
 - An autonomous that ends near the goal, or the "set pose here" spot (ODO-02).
 
 ## Steps

@@ -23,13 +23,13 @@ the pose cannot be fixed, so the odometry aim must switch off until the pose is 
 
 ## Setup
 
-- `lib.switchAlliance(g1.back, g1.start);` in `libraryButtons(...)` in `Controls.java`.
+- `lib.switchAlliance(g1.start, g1.back);` in `libraryButtons(...)` in `Controls.java` (START first, then BACK; see [CTL-02](CTL-02.md) for where the method goes).
 - A camera with `.goal(...)` or odometry aim makes the test better (optional).
 
 ## Steps
 
 1. INIT. Read the `Switch alliance` line. Choose BLUE (X). START.
-2. Hold START, then BACK, for 1.5 s. Both gamepads buzz twice and the screen says `Alliance now RED (was BLUE)`.
+2. On gamepad 1, hold the small START button, then press BACK, and hold both for 1.5 s. Both gamepads buzz twice and the screen says `Alliance now RED (was BLUE)`.
 3. Tap START, then BACK quickly: that is the debug lines, not a switch.
 4. With a camera: the goal it looks for switched to RED's.
 5. With odometry on BIOBUZZ (`mirrorForRed = false`): the note says the odometry aim is OFF until the pose is set. Hold START 1 s on the reset spot: it comes back.

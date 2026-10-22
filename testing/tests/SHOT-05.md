@@ -24,7 +24,7 @@ we want to know: then we will change the default.
 
 ## Setup
 
-- SHOT-01 done: `kF` and `nominalVolts` in `Tunables.Launcher`.
+- SHOT-01 done: `kF` and `nominalVolts` in `Tunables.Launcher`. (Without `nominalVolts`, INIT says `battery compensation on, nominalVolts not written: assuming 12.8 V`: write yours from the Flywheel Finder.)
 - A battery at about 11.5 V under no load (run the robot for a while, or use an older battery). A full battery for step 6.
 - A phone to film the Driver Station screen (the speed numbers), or a second person to write them.
 - 8 pieces.

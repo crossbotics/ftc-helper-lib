@@ -18,7 +18,7 @@ speed. The operator's left stick adds a hood trim. INIT must stop on a row outsi
 
 ## Safety
 
-- Safety glasses if you fire. The hood moves at START (to `homeAngle`).
+- Safety glasses if you fire. The hood moves at START (to `startAngle`).
 
 ## Setup
 

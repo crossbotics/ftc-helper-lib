@@ -1,6 +1,6 @@
 # A team ran one test from the test catalogue (testing/tests/) and tells us how it went.
 # The site's "Report result" button opens this form with test_id, version, title and measurements filled in:
-#   /issues/new?template=test-report.yml&title=[AIM-01]...&test_id=AIM-01&version=v0.16.0&measurements=...
+#   /issues/new?template=test-report.yml&title=[AIM-01]...&test_id=AIM-01&version=v0.17.0&measurements=...
 # Keep the field ids and the option words in step with testing/vocabulary.json:
 # tools/check_tests.py fails when they differ (the coverage table and the triage read them).
 name: Test report
@@ -26,8 +26,8 @@ body:
     id: version
     attributes:
       label: Library version
-      description: The release you used, like v0.16.0 (the top of CHANGELOG.md, or the tag you updated to). A branch? Write its name.
-      placeholder: v0.16.0
+      description: The release you used, like v0.17.0 (the top of CHANGELOG.md, or the tag you updated to). A branch? Write its name.
+      placeholder: v0.17.0
     validations:
       required: true
   - type: dropdown
@@ -113,6 +113,7 @@ body:
       options:
         - label: Intake
         - label: Lift or arm with an encoder
+        - label: Turret home switch (touch or magnetic)
         - label: Colour sensor for game pieces
         - label: Distance sensor for game pieces
         - label: Light (goBILDA RGB or REV Blinkin)

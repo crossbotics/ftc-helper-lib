@@ -27,7 +27,7 @@ past its limits, and say clearly when the goal is out of range. Every turret is 
 
 - `Turret.motor(...).gearRatio(...).follows(camera)` in `Robot.java`, `Tunables.Turret` with `min`, `max`.
 - A goal tag (AprilTag) you can see: the field, or a printed tag at the right height.
-- The turret pointed straight forward before INIT (0 degrees is where it points at INIT).
+- The turret at its `startAngle` before INIT (by default 0 = straight forward; a mark or a jig helps), unless it has a home switch ([TUR-01](TUR-01.md)) or an absolute encoder. TeleOp started within 5 minutes of another program starts from the angle that program ended at.
 - Simulator: lesson 9's turret robot (`turretbot`) commands, then "TurretBot TeleOp".
 
 ## Steps
@@ -54,5 +54,5 @@ the robot turns slowly, it never goes past `min` or `max` (0 times), and step 4 
 ## If your robot is different
 
 A camera on the robot's body needs `.cameraOnBody()`: say if you used it. A turret with a different
-range (say 0 to 270) is very useful. If the turret turns away from the goal, `.reversed()` fixes it:
+range (say 0 to 270), a servo turret ([TUR-03](TUR-03.md)) or a slip ring ([TUR-04](TUR-04.md)) is very useful. If the turret turns away from the goal, `.reversed()` fixes it:
 say whether the docs made that clear.

@@ -34,7 +34,7 @@ later lesson goes wrong.
 2. Count the devices in your configuration. Count the devices the Hardware Check lists (D-pad up and down goes through them).
 3. For each motor: choose it, push gamepad 1's right stick up a little. Watch which way it turns and whether its encoder count goes UP.
 4. For each servo: choose it, press X (it goes to 0.5), then D-pad right and left. It moves a little each press.
-5. Read the battery line and the IMU line (turn the robot left by hand: the yaw goes up).
+5. Read the battery line and the IMU line. (The IMU is the turn sensor inside the Control Hub. "Yaw" is the way the robot faces, in degrees.) Turn the robot left by hand: the yaw goes up.
 6. Read each hint the screen shows for a device. Is it right for your robot?
 
 ## Pass rule
@@ -53,6 +53,9 @@ the Driver Station's own battery number).
 
 ## If your robot is different
 
-Any robot works: the point is that the check finds every kind of device. Unusual devices (a second
-Limelight, an I2C sensor the library does not know, an expansion hub) are the most useful to report.
+Any robot works: the point is that the check finds every kind of device. Unusual devices are the most
+useful to report: a second Limelight, an I2C sensor the library does not know (I2C: the small 4-pin
+ports on the hub, used by colour and distance sensors), or an Expansion Hub (a second hub, joined to
+the Control Hub by a cable, for more motors and servos). A part marked `optional()` in `Robot.java` that
+is not in the configuration should show as `optional, so the part is off (fine)`: say if it did not.
 If a device type is missing from the list, say its type exactly as the configuration names it.

@@ -30,7 +30,7 @@ and never start the robot again by itself.
 1. INIT, START. Drive forward and run a mechanism (an intake).
 2. Press BACK: everything stops at once, the Driver Station says PAUSED. Keep holding BACK for 3 s: the robot stays stopped.
 3. Let go, then tap BACK: everything goes on (the intake runs again).
-4. Hold START, then press BACK, let go of both: the debug lines show. The robot does not pause.
+4. On gamepad 1, hold the small START button, then press BACK. Let go of both: the debug lines show. The robot does not pause.
 5. Press BACK first, then START: it is a plain pause. Let go of both: the robot stays paused. Tap BACK to go on.
 6. Hold BACK for 1 s with field-centric on: it pauses and resets "forward". Robot-centric: a note says "forward" is only reset in field-centric.
 

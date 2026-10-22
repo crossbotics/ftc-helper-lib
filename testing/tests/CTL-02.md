@@ -22,7 +22,7 @@ your own job. INIT must catch two jobs on one button and say which button.
 
 ## Setup
 
-- Your `Controls.java`. Add a `libraryButtons(LibraryButtons lib, Pad g1, Pad g2)` method next to `buttons(...)` (and its import).
+- Your `Controls.java`. Inside its class, just after the closing `}` of the `buttons(...)` method, add `@Override protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) { }` (the whole method is in the [buttons guide](../../docs/guides/buttons.md#moving-the-librarys-buttons)), and `import com.crossbotics.ftchelper.teleop.LibraryButtons;` at the top of the file.
 
 ## Steps
 

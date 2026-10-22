@@ -29,7 +29,7 @@ time's trim (never put it back by itself).
 ## Steps
 
 1. INIT, START. Spin up (LB). Read the launcher's first line: `Speed trim: 0%`.
-2. Press D-pad up 3 times: `Speed trim: +3%`. The target speed goes up about 3%.
+2. Press gamepad 2's D-pad up 3 times (each press counts when you let go): `Speed trim: +3%`. The target speed goes up about 3%.
 3. Hold D-pad up: one more step every 0.25 s. Keep holding: it stops at +15% (or says `(motor limit)` first).
 4. Double-tap D-pad down: back to 0%.
 5. Trim to +3%. STOP. INIT again: the trim is 0% and the Driver Station says `Trim last time: +3% (double-tap D-pad up after START to use it)`.

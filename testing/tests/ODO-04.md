@@ -46,6 +46,7 @@ minutes (step 5) it does not carry over (1 of 1).
 
 ## If your robot is different
 
-Any autonomous works, as long as it ends with the robot standing still. In the simulator, remember
-the page's line uses the field seen from the red wall: on BLUE the signs flip and the heading differs
-by 180.
+Any autonomous works, as long as it ends with the robot standing still. One rule for field numbers:
+your code (and the Driver Station's `Pose` line) uses the field seen from **your own** drivers' wall.
+Only the simulator's field map line and scenario checks use the field seen from the red wall, so on
+BLUE their signs flip and the heading differs by 180.

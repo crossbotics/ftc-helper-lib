@@ -29,8 +29,8 @@ rule R202 J).
 
 ## Steps
 
-1. INIT: the light shows a colour already (the rules work from INIT).
-2. START. Make each rule true in turn (spin up, aim on, ...) and check the colour.
+1. INIT: the light shows the alliance, not your rules (solid red or blue once it is chosen; [LGT-02](LGT-02.md) tests that part). START: a 1 s flash of the alliance, then your rules.
+2. Make each rule true in turn (spin up, aim on, ...) and check the colour.
 3. Make two rules true at once: the one written first wins.
 4. Fire 3 pieces (`fire(3)` or hold RB): 3 white flashes.
 5. Wait for the last 20 s of TeleOp (or use a short match timer): yellow blinking.

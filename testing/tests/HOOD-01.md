@@ -35,7 +35,7 @@ safe on hoods built differently from ours.
 3. Do the same at the other stop, press B. The screen shows `Tunables.Hood: posA = ..., posB = ...`.
 4. Optional: lay the phone on the hood at each stop and type the angle (hold LB + D-pad) before X or B.
 5. Copy the line(s) into `Tunables.java`. Time a stop-to-stop move for `travelSec`.
-6. In your TeleOp: START sends the hood to `homeAngle`. Gamepad 2 left stick moves it: push it hard both ways.
+6. In your TeleOp: START sends the hood to `startAngle` (in `Tunables.Hood`). Gamepad 2 left stick moves it: push it hard both ways.
 
 ## Pass rule
 

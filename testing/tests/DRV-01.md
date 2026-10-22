@@ -34,7 +34,7 @@ works on many drivetrains, and that the motor-direction steps in lesson 2 find a
 3. Put the robot on the floor. Left stick up for about 2 seconds: it drives straight.
 4. Right stick right: it turns clockwise. Mecanum only: left stick right strafes right.
 5. Pull LT all the way while driving: the robot goes slower. (One driver, `oneDriver = true`: click the left stick for slow on and off.)
-6. Press BACK: the robot stops at once and the Driver Station says PAUSED. Tap BACK again: it drives again.
+6. Press BACK on gamepad 1: the robot stops the moment the button goes down, and the Driver Station says PAUSED. Let go, then tap BACK again: it drives again.
 7. Tap GUIDE: the button map shows. Tap GUIDE again to close it.
 
 ## Pass rule
