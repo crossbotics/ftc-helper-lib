@@ -84,6 +84,11 @@ final class SimShotTable {
 
     /** A shot of this piece at this flywheel shaft speed, or null if the table does not have the piece. */
     Shot pick(String piece, double shaftRpm) {
+        return pick(piece, shaftRpm, random);
+    }
+
+    /** The same with other random numbers (the hit rate's, so the live shots stay the same). */
+    Shot pick(String piece, double shaftRpm, Random random) {
         List<Row> rows = pieces.get(piece);
         if (rows == null) return null;
         double rpm = Math.abs(shaftRpm);
@@ -107,18 +112,18 @@ final class SimShotTable {
         }
         Shot s = new Shot();
         s.shot = random.nextDouble() < mix(a.shot, b.shot, t);
-        s.speedIn = scale * draw(a.speed, b.speed, t);
+        s.speedIn = scale * draw(a.speed, b.speed, t, random);
         // angles blend the short way round (179 to -179 passes 180, not 0)
         double turn = ((b.angle[0] - a.angle[0]) % 360 + 540) % 360 - 180;
         s.angleMeanDeg = a.angle[0] + turn * t;
         s.angleDeg = s.angleMeanDeg + random.nextGaussian() * mix(a.angle[1], b.angle[1], t);
-        s.backspin = scale * draw(a.spin, b.spin, t);
+        s.backspin = scale * draw(a.spin, b.spin, t, random);
         s.exitForward = mix(a.exit[0], b.exit[0], t);
         s.exitUp = mix(a.exit[1], b.exit[1], t);
         return s;
     }
 
-    private double draw(double[] a, double[] b, double t) {
+    private static double draw(double[] a, double[] b, double t, Random random) {
         return mix(a[0], b[0], t) + random.nextGaussian() * mix(a[1], b[1], t);
     }
 

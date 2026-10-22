@@ -136,6 +136,9 @@ final class SimField {
         final List<Integer> tagsPlus = new ArrayList<>(), tagsMinus = new ArrayList<>();
         volatile int up;         // +1 or -1: which CELL is up now
         volatile int tips;       // how many times it has tipped since the start
+        // While it tips (the rules file's tipSeconds), how far it has turned so far, degrees (0 at rest): both
+        // CELLs, their plates and "inside" turn with it. It counts as tipped (up changes) once it gets there.
+        volatile double turnDeg = 0;
 
         Hive(Map<String, Object> m) {
             name = SimJsonReader.string(m, "name", "HIVE");
@@ -174,6 +177,11 @@ final class SimField {
                 double psi = Math.toRadians(-up * tipDeg);
                 a = turnY(a, psi);
                 h = turnY(h, psi);
+            }
+            if (turnDeg != 0) {
+                double t = Math.toRadians(turnDeg);
+                a = turnY(a, t);
+                h = turnY(h, t);
             }
             return new double[][] {a, {0, 1, 0}, h};
         }
@@ -284,7 +292,7 @@ final class SimField {
      * Pieces staged INSIDE a field element (BIOBUZZ: 4 POLLEN in each FLOWER, 3 NECTAR in each up CELL). The
      * element is a solid block in the physics, so these are not loose pieces: they hold their places. take =
      * "bottom": an intake (or claw) at the element's opening takes the lowest one and the rest drop down one
-     * place; "none": they stay (the simulator does not tip HIVEs).
+     * place; "none": they stay (the 3 NECTAR in each up CELL are loose pieces instead: they fall out when it tips).
      */
     static final class Stack {
         final String where, take;
@@ -330,6 +338,8 @@ final class SimField {
     final List<Element> elements = new ArrayList<>();
     final List<Tag> tags = new ArrayList<>();
     final String json;   // the file as read, for the page
+    // The season's rules (sim/fields/<name>.rules.json next to the field file), or null: none (see SimRules).
+    SimRules rules = null;
 
     private SimField(String name, String text) {
         this.name = name;
@@ -393,7 +403,7 @@ final class SimField {
 
     /** Every HIVE and tag back to the start of a match. */
     void resetHives() {
-        for (Hive h : hives) { h.up = h.startUp; h.tips = 0; }
+        for (Hive h : hives) { h.up = h.startUp; h.tips = 0; h.turnDeg = 0; }
         for (Tag t : tags) t.reset();
     }
 
@@ -405,14 +415,30 @@ final class SimField {
     /** A field by name (sim/fields/<name>.json on the classpath) or by file path. */
     static SimField load(String nameOrPath) throws IOException {
         Path p = Paths.get(nameOrPath);
-        if (Files.isRegularFile(p)) return new SimField(p.getFileName().toString().replace(".json", ""), new String(Files.readAllBytes(p), "UTF-8"));
-        try (InputStream in = SimField.class.getResourceAsStream("/" + nameOrPath + ".json")) {
-            if (in == null) throw new IllegalArgumentException("Robot file: no field \"" + nameOrPath + "\" (sim/fields/" + nameOrPath + ".json)");
+        if (Files.isRegularFile(p)) {
+            SimField f = new SimField(p.getFileName().toString().replace(".json", ""), new String(Files.readAllBytes(p), "UTF-8"));
+            // its rules, if any: the same name with .rules.json, in the same folder
+            Path r = p.resolveSibling(p.getFileName().toString().replaceFirst("\\.json$", "") + ".rules.json");
+            if (Files.isRegularFile(r)) f.rules = new SimRules(new String(Files.readAllBytes(r), "UTF-8"), r.getFileName().toString());
+            return f;
+        }
+        String text = resource("/" + nameOrPath + ".json");
+        if (text == null) throw new IllegalArgumentException("Robot file: no field \"" + nameOrPath + "\" (sim/fields/" + nameOrPath + ".json)");
+        SimField f = new SimField(nameOrPath, text);
+        String rules = resource("/" + nameOrPath + ".rules.json");
+        if (rules != null) f.rules = new SimRules(rules, nameOrPath + ".rules.json");
+        return f;
+    }
+
+    // A text file on the classpath, or null.
+    private static String resource(String name) throws IOException {
+        try (InputStream in = SimField.class.getResourceAsStream(name)) {
+            if (in == null) return null;
             ByteArrayOutputStream b = new ByteArrayOutputStream();
             byte[] buf = new byte[8192];
             int n;
             while ((n = in.read(buf)) > 0) b.write(buf, 0, n);
-            return new SimField(nameOrPath, b.toString("UTF-8"));
+            return b.toString("UTF-8");
         }
     }
 

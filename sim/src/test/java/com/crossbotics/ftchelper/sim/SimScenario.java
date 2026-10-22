@@ -231,12 +231,14 @@ public final class SimScenario {
                         break;
                     // set preload on|off: the robot holds the preload (now and after each reset) or starts empty
                     case "preload": sim.robot.pieces.setPreloaded(onOff(t.get(2))); break;
+                    // set scatter off|realistic|rough|file: shot-to-shot scatter for every launcher
+                    case "scatter": sim.robot.pieces.setScatter(t.get(2)); break;
                     // set field start: every game piece back where the match starts it (the robot stays)
                     case "field":
                         if (!t.get(2).equals("start")) throw new IllegalArgumentException("set field start");
                         sim.robot.pieces.reset();
                         break;
-                    default: throw new IllegalArgumentException("set battery | touch NAME on|off | pose X Y HEADING | autotimer on|off | piece TYPE X Y [Z] | preload on|off | field start");
+                    default: throw new IllegalArgumentException("set battery | touch NAME on|off | pose X Y HEADING | autotimer on|off | piece TYPE X Y [Z] | preload on|off | scatter off|realistic|rough|file | field start");
                 }
                 ok(n, line, "");
                 return;
@@ -383,6 +385,14 @@ public final class SimScenario {
                 need(t, 3, "expect left >= 1   (pieces that went over a wall)");
                 op(t, 1);
                 return;
+            case "points":
+                need(t, 4, "expect points \"red\" >= 20   (the alliance's match points now, from the rules file)");
+                op(t, 2);
+                return;
+            case "clean":
+                need(t, 3, "expect clean >= 1   (shots that went cleanly into an up CELL)");
+                op(t, 1);
+                return;
             case "size":
                 need(t, 3, "expect size start|match|most|floor ok|fail");
                 if (!java.util.Arrays.asList("start", "match", "most", "floor").contains(t.get(1))) {
@@ -423,7 +433,7 @@ public final class SimScenario {
                 op(t, 2);
                 return;
             default:
-                throw new IllegalArgumentException("expect what? (screen, value, time, error, phase, motor, servo, shape, robot, bumped, touch, camera, size, stored, launched, scored)");
+                throw new IllegalArgumentException("expect what? (screen, value, time, error, phase, motor, servo, shape, robot, bumped, touch, camera, size, stored, launched, scored, cell, tips, left, points, clean)");
         }
     }
 
@@ -506,6 +516,14 @@ public final class SimScenario {
             }
             case "left":
                 return compare(sim.robot.pieces.leftField(), t.subList(1, t.size()), why);
+            case "points": {
+                SimScore.Side side;
+                synchronized (sim.robot) { side = sim.robot.pieces.score.sides().get(t.get(1).toLowerCase(Locale.US)); }
+                if (side == null) throw new IllegalArgumentException("no alliance \"" + t.get(1) + "\" (or no rules file for this field)");
+                return compare(side.total(), t.subList(2, t.size()), why);
+            }
+            case "clean":
+                return compare(sim.robot.pieces.verdictCounts().get("clean"), t.subList(1, t.size()), why);
             case "scored": {
                 int n = 0;
                 for (java.util.Map.Entry<String, Integer> e : sim.robot.pieces.scored().entrySet()) {
@@ -632,6 +650,12 @@ public final class SimScenario {
                         + ", HIVE tips " + sim.robot.pieces.tips() + ", left the field " + sim.robot.pieces.leftField()
                         + ", on the field " + sim.robot.pieces.drawn().size()
                         + " (" + sim.robot.pieces.inStacks() + " of them in FLOWERs)");
+                synchronized (sim.robot) {
+                    for (java.util.Map.Entry<String, SimScore.Side> e : sim.robot.pieces.score.sides().entrySet()) {
+                        report.add(String.format(Locale.US, "          points %s: %.0f", e.getKey(), e.getValue().total()));
+                    }
+                }
+                report.add("          shots: " + sim.robot.pieces.verdictCounts());
                 return;
             case "size":
                 report.add("          size now: " + sim.robot.shapes.now() + "; at full reach: "

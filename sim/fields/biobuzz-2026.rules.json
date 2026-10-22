@@ -1,0 +1,52 @@
+{
+ "season": "BIOBUZZ 2026-27",
+ "source": "Competition Manual TU01 (sections 9.6-9.8, 10.1-10.5, G410, G418); FLOWER heights from the official field CAD (Octobots lifter/flower_cad.py -> out/flower.json); clean-entry rules from the Octobots turret shot simulator (turret/v7/sim/sim_core.js judge()). Typed by hand from those: the field file next to it is made from the CAD by a script.",
+ "match": {
+  "autoSec": 30,
+  "teleopSec": 120,
+  "notes": "10.1 / 10.4: 30 s AUTO, an 8 s transition (not simulated), 2:00 TELEOP. Table 9-1: FLOWER ownership unlocked at 1:00 left."
+ },
+ "points": {
+  "leave": 3,
+  "parkAuto": 5,
+  "parkTeleop": 5,
+  "tipAuto": 20,
+  "tipTeleop": 20,
+  "inCell": 2,
+  "bottomNectar": 5,
+  "inOwnedFlower": 2,
+  "inGarden": 1,
+  "majorFoul": 20,
+  "notes": "Table 10-2 (10.5.5). majorFoul: the glossary (a credit of 20 points to the opponent)."
+ },
+ "alliances": {
+  "red": {"nectar": "red NECTAR", "loadingZone": "Red LOADING ZONE", "garden": "Red GARDEN"},
+  "blue": {"nectar": "blue NECTAR", "loadingZone": "Blue LOADING ZONE", "garden": "Blue GARDEN"},
+  "notes": "Which NECTAR, LOADING ZONE and GARDEN are each ALLIANCE's (names in the field file). A HIVE's ALLIANCE is in the field file."
+ },
+ "flowers": {
+  "stack": true,
+  "scoringZMinIn": 5.256,
+  "scoringZMaxIn": 21.406,
+  "lowerRingTopIn": 0.35,
+  "lowerRingHoleIn": 2.79,
+  "retrievalHeightIn": 3.55,
+  "gapIn": 0.09,
+  "nectarLastSec": 60,
+  "notes": "10.5.2: a piece scores when at least partly in the scoring volume between the top ring and the middle ring: from the middle ring's top (133.5 mm, CAD Flower_Layer_B) to the top ring's top (543.7 mm, CAD). Lower ring: its top 0.35 in (the field file's lip), hole 2.79 in (9.7): a piece narrower than the hole sits in it, a wider one (NECTAR) rests on its rim. retrievalHeightIn (9.7): a piece taller than the Retrieval Opening cannot leave by the bottom (G418: only POLLEN may be taken out of the bottom). gapIn: the space between stacked pieces in the CAD's staging (4.29 - 1.4 - 2.8). nectarLastSec (G410): NECTAR into the scoring volume before the last 60 s is a MAJOR FOUL."
+ },
+ "hives": {
+  "tipSeconds": 0.5,
+  "notes": "How long a HIVE takes to turn from one stable state to the other. An estimate (the manual gives no time): film a real tip and change it. 0 = it tips at once."
+ },
+ "cleanEntry": {
+  "minDescentDeg": 10,
+  "frameAllowanceIn": 1.0,
+  "frameElements": ["HIVE frame base (red side)", "HIVE frame base (blue side)", "HIVE frame top"],
+  "notes": "From the turret shot simulator's judge(): a clean shot comes through the up CELL's opening going down at least 10 degrees, clears the rim by its radius, and touches neither the frame, our own CELL from outside nor the other HIVE first (the CELLs are grown by the frame tube, 1 in)."
+ },
+ "garden": {
+  "maxZIn": 6,
+  "notes": "10.5.3: at least partly in the GARDEN zone. The manual gives no height: a piece counts when its centre is under 6 in (on the tiles or on another piece)."
+ }
+}

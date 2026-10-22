@@ -6,6 +6,24 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
+- **Simulator: the game's rules and score** (`sim/fields/biobuzz-2026.rules.json`, typed from the
+  manual next to the CAD-made field file; docs/guides/simulator.md "Game rules and the score"). Pieces that
+  fall into a FLOWER stay on its stack; the scoring volume between the middle and top rings, the FLOWER
+  owner (top-most NECTAR, 2 points a piece), the bottom NECTAR bonus, G410 (NECTAR before the last 60 s: a
+  MAJOR FOUL), NECTAR stuck at the bottom (9.7, G418), a full FLOWER, HIVE TIPs, pieces in up CELLs,
+  GARDENs, LEAVE and PARK, all from what the simulator sees, with a live score by alliance (AUTO and TELEOP
+  from the Driver Station's clock). Without a rules file nothing changes.
+- **Simulator: each shot's verdict** (clean, rim, other HIVE, frame, miss): a line-by-line port of the
+  turret shot simulator's `judge()` (`SimCellJudge`), checked against it on 600 shared shots
+  (`SimCellJudgeTest`: they agree on every one).
+- **Simulator: shot scatter and a hit rate.** `scatter=realistic|rough` on a `shoot.` line (or each part:
+  `scatterSpeed=`, `scatterAngle=`, `scatterAim=`, `scatterSpin=`; `wear=PIECE:%` for ball-to-ball wear), a
+  page switch for every launcher (`/cmd action=scatter`, scenario `set scatter`), and `GET /hit-rate`: 400
+  pretend shots from the robot as it is now, judged like real ones (Good 80 %+, Risky, Poor).
+- Scenario checks `expect points "red" >= 20` and `expect clean >= 1`; `print pieces` shows points and verdicts.
+- `/state` has a `game` object for the page: clock, score, FLOWER stacks and owners, HIVE tip progress,
+  the last 20 shot verdicts, the scatter and the fouls.
+
 - **Tunables reference** (`docs/guides/tunables.md`): every number the library reads from
   `Tunables.java`, one table per part (Drive, Odometry, Aim, Buttons, Intake, Lift and Arm, Claw/Wrist/
   Positioner, Turret, interlock rules, Launcher, Indexer, Hood, Camera, PieceSensor, Lights: 133 fields).
@@ -262,6 +280,10 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Changed
 
+- **Simulator: a HIVE takes 0.5 s to tip** (the rules file's `tipSeconds`, an estimate): its CELLs turn on a
+  moving body, carrying their pieces and pushing what they meet, instead of jumping; it counts as tipped
+  when the turn ends (10.5.1). `SimPiecesTest.aPieceDroppedIntoAFlowerScores` now checks the piece stays in
+  the FLOWER (it used to be taken off).
 - An autonomous's `steps(...)` is read in INIT again each time the drivers change a menu line (it was
   read once in INIT and once after START). No step runs in INIT, as before. Before, a `start(...)`
   inside an `onlyIf` was used whatever the choice (the last one written won).
