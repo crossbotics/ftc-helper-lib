@@ -49,12 +49,15 @@ public class MechanismRecipes {
             // recipe: lift
             // At the top of the class: public Lift lift;   Here in define():
             // a slide on a motor with a switch at the bottom (the switch sets 0 each time it is pressed).
-            // part(...): the motor's name in the parts catalog. No switch? Delete .bottomSwitch(...).
+            // .part(...) is optional: the motor's catalog id, so the simulator moves it like the real
+            // motor (without it the robot works the same). No switch? Delete .bottomSwitch(...).
             lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom"));
             // end recipe
 
             // recipe: arm
-            // An arm in degrees. gearRatio: motor turns per arm turn. 0 degrees = where it is at INIT.
+            // An arm in degrees. Its motor's catalog id is in the brackets (not optional, like a turret's
+            // or launcher's): it needs the motor's counts per turn to work in degrees.
+            // gearRatio: motor turns per arm turn. 0 degrees = where it is at INIT.
             arm = add(Arm.motor("arm", "gobilda-5203-117").gearRatio(2));
             // end recipe
 

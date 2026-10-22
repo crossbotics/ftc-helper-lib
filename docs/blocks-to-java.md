@@ -64,7 +64,7 @@ and in **autonomous steps** ([lesson 6](tutorials/start/06-first-autonomous.md))
 | `go to x: y:` | `s.driveTo("To the goal", -30, -30, 45, 0.6)` (x, y, heading, power), with odometry | `autos/` |
 | `if <sensor> then ...` | not an `if`. Pick one: `g2.rumbleWhen(...)` (a buzz when it becomes true), `.waitUntil(...)` in an Action (wait for it, then go on), or a `hold(...)` (runs while a button is held) | `Controls.java`, `Actions.java` |
 | `if ... else` inside an action | **not yet** in an Action. Use two actions on two buttons, one for each case | `Actions.java`, `Controls.java` |
-| `repeat 3 times` | write the steps 3 times in the Action, or press the button again (it runs the action again) | `Actions.java` |
+| `repeat 3 times` | a `for` loop that adds the steps to the Action 3 times, when the action is made ([cookbook: repeat](cookbook.md#how-do-i-repeat-steps-several-times)); or press the button again (it runs the action again) | `Actions.java` |
 | `change [count] by 1` | a variable (a **field**) in `Controls.java`, changed by a button job: see [Count with a button](#count-with-a-button) | `Controls.java` |
 | `broadcast` / `when I receive` | not needed: a button job or an Action calls the part's method itself (`robot.intake.in()`) | |
 | `stop all` | Tap gamepad 1 **BACK** (pause; tap again to go on), or **STOP** on the Driver Station. | the drive team |

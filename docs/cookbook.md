@@ -65,6 +65,7 @@ first.
 
 **Actions** (several steps or parts together)
 - [How do I do several things one after the other?](#how-do-i-do-several-things-one-after-the-other)
+- [How do I repeat steps several times?](#how-do-i-repeat-steps-several-times)
 - [How do I move two parts at the same time?](#how-do-i-move-two-parts-at-the-same-time)
 - [How do I wait half a second (like sleep in Blocks)?](#how-do-i-wait-half-a-second-like-sleep-in-blocks)
 - [How do I wait until something is true?](#how-do-i-wait-until-something-is-true)
@@ -126,7 +127,11 @@ first.
 | --- | --- | --- |
 | a `repeat while opModeIsActive` loop | nothing: the library runs the loop for you, many times a second | |
 | drive forward, turn (in autonomous) | `.move("Forward", 24, 0, 0.5)`, `.turn("Left", 90, 0.4)` ([moves](#how-do-i-drive-forward-sideways-and-turn)) | a file in `autos/` |
-| `if` something is true (not a button), then ... | in an action or autonomous: `.waitUntil(...)` waits until it is true; in an autonomous, a choice: `onlyIf(...)` ([choices](#how-do-i-let-the-drivers-choose-before-the-match)) | `Actions.java` or an autonomous |
+| `if` a sensor or part says something, then ... | `.waitUntil(...)`: wait until it is true, then go on ([wait until](#how-do-i-wait-until-something-is-true)) | `Actions.java` or an autonomous |
+| `if` the drivers chose something before the match | `onlyIf(...)` with a menu choice ([choices](#how-do-i-let-the-drivers-choose-before-the-match)) | an autonomous |
+| `repeat 3 times` | a `for` loop that adds the steps 3 times to an action ([repeat](#how-do-i-repeat-steps-several-times)) | `Actions.java` |
+| set servo position | a named position: `robot.claw.open()`, `robot.intakeDeploy.goTo("deployed")` ([servo positions](#how-do-i-add-any-servo-with-named-positions-a-gate-a-fold-out)) | `Controls.java`, `Actions.java` |
+| `waitForStart` | nothing: the library waits for START. For something right after START: `atStart(...)` ([at START](#how-do-i-run-an-action-right-after-start)) | `Robot.java` |
 | `if gamepad2.y then ...` inside the loop | one line, once: `g2.y.press(...)` ([buttons](#how-do-i-make-a-button-do-something-once)) | `Controls.java` |
 | `if` the button is held | `g1.a.hold(...)` ([hold](#how-do-i-run-something-only-while-a-button-is-held)) | `Controls.java` |
 | `sleep 500` | `.waitSeconds(0.5)` ([wait](#how-do-i-wait-half-a-second-like-sleep-in-blocks)) | `Actions.java` or an autonomous |
@@ -226,6 +231,8 @@ The numbers file: see [Tunables.java](#where-do-the-numbers-go).
 | `robot.lift::position` | `::` hands over a method without running it. The library runs it later (when the button is pressed) |
 | `() -> robot.lift.goTo("high")` | a **lambda**: a small piece of code the library runs later. Use `::` when the job is one method with nothing in its brackets (`robot.claw::open`); use `() ->` when the brackets hold something (`goTo("high")`) or for several commands |
 | `g1`, `g2` | gamepad 1 (the driver) and gamepad 2 (the operator) |
+| operator | the second driver, on gamepad 2: runs the mechanisms while the driver drives |
+| GUIDE | the centre button of the gamepad. **Tap:** the button map (what each button does). **Hold 1 s** (PRACTICE profile): the tuning menu |
 | "every loop" | the library's loop runs many times a second: it reads the gamepads, runs the jobs and updates every part. You never write it |
 | power | from 0 (stopped) to 1 (full); a negative power runs the other way |
 | `robot`, `g1`, `g2`, `s` | names the library hands you: `buttons(Robot robot, Pad g1, Pad g2)` and `steps(Steps s, Robot robot)` (see [the files, whole](#where-does-each-line-go-the-files-whole)) |
@@ -277,7 +284,8 @@ drive(Drive.tank("left_drive", "right_drive")
         .imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD));
 ```
 
-**Why:** a tank drive has one motor (or two) per side; `Drive.tank(fl, fr, bl, br)` takes four.
+**Why:** the motors on the two sides face opposite ways, so one side runs backward: list that side's
+motors in `.reversed(...)`. Two motors per side? Name all four: `Drive.tank("front_left", "front_right", "back_left", "back_right")`.
 **More:** [Lesson 2](tutorials/start/02-drive.md#1-pick-the-drive-type-and-name-the-motors), [Drive](modules/robot.md#drive).
 
 ### A wheel turns the wrong way. How do I fix it?
@@ -370,6 +378,12 @@ No code needed. With `Controls.java` (two drivers):
 
 All button recipes go in `Controls.java`, inside `buttons(...)`. That method runs once, at INIT: each
 line plugs a job into a button. Every line ends with `;`. `.says("...")` is the text on the button map.
+
+**Pick a free button.** Each part already has standard buttons ([the standard map](modules/robot.md#controlmap)):
+for example the claw uses operator **B**, the lift **A**, **X**, **Y**. A job you write on one of them
+takes that button from the part (INIT says so). Two jobs that YOU write on one button stop INIT with the
+button's name. INIT lists the free buttons. To empty a button first: `g2.b.free();`
+([move a button](#how-do-i-move-a-parts-button-to-another-button)).
 
 ### How do I make a button do something once?
 
@@ -535,6 +549,7 @@ copy back into `Tunables.java` (the file is the record).
 ### Buttons that are already built in
 
 - **The button map:** INIT shows every button and what it does. During the match, tap **GUIDE**.
+- **The tuning menu:** hold **GUIDE** for 1 second (PRACTICE profile). A tap shows the map, a hold opens the menu.
 - **Two jobs on one button** stop INIT with the button's name, so a mistake is found before the match.
 - **Pause:** tap gamepad 1 **BACK**.
 
@@ -544,7 +559,7 @@ copy back into `Tunables.java` (the file is the record).
 
 Each part is one line in `Robot.java`'s `define()`, plus a field for it at the top of the class (for
 example `public Lift lift;`) and a section with its numbers in `Tunables.java`. The section's name is
-the configuration name in CamelCase: `intake_deploy` reads `IntakeDeploy`. Its standard buttons come with it.
+the configuration name in CamelCase (each word starts with a capital letter, no spaces or `_`): `intake_deploy` reads `IntakeDeploy`. Its standard buttons come with it.
 
 ### How do I add an intake on a motor?
 
@@ -560,6 +575,8 @@ intake = add(Intake.motor("intake"));                  // Tunables.Intake: inPow
 **More:** [Lesson 4](tutorials/start/04-lift-and-claw.md#1-three-lines-in-robotjava), [Intake](modules/robot.md#intake).
 
 ### How do I add an intake on CR servos?
+
+A CR (continuous rotation) servo spins all the way round, like a small motor, instead of going to a position.
 
 **Where:** `Robot.java`, inside `define()` (and `Tunables.java` for the numbers).
 
@@ -594,7 +611,8 @@ add(Intake.motor("intake").onAtStart());
 ```java
 // At the top of the class: public Lift lift;   Here in define():
 // a slide on a motor with a switch at the bottom (the switch sets 0 each time it is pressed).
-// part(...): the motor's name in the parts catalog. No switch? Delete .bottomSwitch(...).
+// .part(...) is optional: the motor's catalog id, so the simulator moves it like the real
+// motor (without it the robot works the same). No switch? Delete .bottomSwitch(...).
 lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom"));
 ```
 
@@ -608,6 +626,8 @@ public static class Lift {
 ```
 
 **Why:** the lift never goes past `min` and `max`, so it cannot break itself; INIT stops if they are missing.
+`.part(...)` is optional on a lift, intake, claw or wrist: it tells the simulator which motor or servo
+it is. An arm, a turret and a launcher take the motor's id in their brackets instead, and need it.
 The numbers here are examples: find yours with the [Motor Finder](#how-do-i-find-a-lifts-limits-and-heights).
 `"lift"` must be the motor's name in your configuration. In `.part("gobilda-5203-435")`, 5203 is the
 goBILDA motor series and 435 its RPM (on the motor's label); the [parts catalog](guides/parts-catalog.md) lists them. To send it to a height: [from a button](#how-do-i-send-a-part-to-a-position-from-a-button).
@@ -633,7 +653,9 @@ add(Lift.slide("lift").reversed());
 
 <!-- recipe: arm -->
 ```java
-// An arm in degrees. gearRatio: motor turns per arm turn. 0 degrees = where it is at INIT.
+// An arm in degrees. Its motor's catalog id is in the brackets (not optional, like a turret's
+// or launcher's): it needs the motor's counts per turn to work in degrees.
+// gearRatio: motor turns per arm turn. 0 degrees = where it is at INIT.
 arm = add(Arm.motor("arm", "gobilda-5203-117").gearRatio(2));
 ```
 
@@ -714,6 +736,8 @@ g2.back.press(() -> robot.intakeDeploy.goTo("stowed")).says("fold the intake in"
 ```
 
 **Why:** `goTo("name")` uses the position by its name, so the number lives only in `Tunables.java`.
+These lines take Y, A, X and B from the lift and the claw (their standard buttons), on purpose; see
+[pick a free button](#buttons-and-gestures).
 **More:** [Lift](modules/robot.md#lift), [Claw](modules/robot.md#claw).
 
 ### How do I add a launcher (flywheel and feeder)?
@@ -798,6 +822,28 @@ public static Action scoreHigh(Robot r) {
 
 **Why:** each step starts when the one before it is done, and the driver can still drive the whole time.
 **More:** [Lesson 5: scoreHigh](tutorials/start/05-actions.md#2-scorehigh-line-by-line), [Action](modules/robot.md#action).
+
+### How do I repeat steps several times?
+
+**Where:** `Actions.java`, inside the class.
+
+<!-- recipe: action-repeat -->
+```java
+/** Pulses the intake 3 times: the for loop adds the same steps 3 times to the action. */
+public static Action pulseThree(Robot r) {
+    Action a = Action.named("Pulse three");
+    for (int i = 0; i < 3; i++) {   // runs once, when the action is made: it never waits
+        a.then(r.intake::in)
+         .waitSeconds(0.4)
+         .then(r.intake::stop)
+         .waitSeconds(0.3);
+    }
+    return a;
+}
+```
+
+**Why:** the `for` loop runs once, while the action is made, and writes the steps 3 times; the action then does them one after the other without making the robot wait.
+**More:** [Action](modules/robot.md#action).
 
 ### How do I move two parts at the same time?
 
@@ -1172,6 +1218,8 @@ public class OdometryTuner extends OdometryTunerOpMode {
 ```
 
 **Why:** it checks which way each pod counts and measures the offsets; then set `Tunables.Odometry.checked = true`, or `driveTo` does nothing on the robot.
+It is its own small file because each program in the Driver Station's list is one class; `robot()` makes
+it use your `Robot.java`, so it measures the same odometry line that autonomous uses.
 **More:** [Lesson 7: the Odometry Tuner](tutorials/start/07-odometry.md#5-the-odometry-tuner), [Finders](guides/finders.md#odometry-tuner-directions-offsets-and-a-loop-check).
 
 ### How do I drive to a point on the field?
@@ -1515,9 +1563,10 @@ expect error none
 Run it:
 
 ```bash
-./gradlew :sim:scenario -Pfile=../simulator/scenarios/intake.sim
+./gradlew :sim:scenario -Pfile=../simulator/scenarios/intake.sim -PteamCode=../TeamCode
 ```
 
+`-PteamCode=../TeamCode` runs your own code (it is also the default when the library sits in your robot project).
 **Why:** a script checks the same things every time, with no clicking, and catches a mistake before a meeting.
 Button names in a scenario are the FTC names, not the Java ones: `g2.rt`, `g2.lb`, `g2.a` are the same,
 but `g2.dpadUp` is `g2.dpad_up` and `g2.leftStickY` is `g2.left_stick_y`.

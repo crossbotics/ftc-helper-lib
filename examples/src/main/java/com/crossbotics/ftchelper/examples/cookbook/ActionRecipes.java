@@ -70,6 +70,20 @@ public class ActionRecipes {
         }
         // end recipe
 
+        // recipe: action-repeat
+        /** Pulses the intake 3 times: the for loop adds the same steps 3 times to the action. */
+        public static Action pulseThree(Robot r) {
+            Action a = Action.named("Pulse three");
+            for (int i = 0; i < 3; i++) {   // runs once, when the action is made: it never waits
+                a.then(r.intake::in)
+                 .waitSeconds(0.4)
+                 .then(r.intake::stop)
+                 .waitSeconds(0.3);
+            }
+            return a;
+        }
+        // end recipe
+
         // recipe: action-together
         /** Two parts at once: then(a, b) starts both in the same loop. */
         public static Action grabAndLift(Robot r) {
