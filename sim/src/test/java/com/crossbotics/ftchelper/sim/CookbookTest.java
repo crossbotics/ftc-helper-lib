@@ -7,6 +7,7 @@ import com.crossbotics.ftchelper.examples.cookbook.ActionRecipes;
 import com.crossbotics.ftchelper.examples.cookbook.AimRecipes;
 import com.crossbotics.ftchelper.examples.cookbook.AutonomousRecipes;
 import com.crossbotics.ftchelper.examples.cookbook.ButtonRecipes;
+import com.crossbotics.ftchelper.examples.cookbook.ChooseAutoRecipes;
 import com.crossbotics.ftchelper.examples.cookbook.DrivingRecipes;
 import com.crossbotics.ftchelper.examples.cookbook.HoodRecipes;
 import com.crossbotics.ftchelper.examples.cookbook.InterlockRecipes;
@@ -45,7 +46,7 @@ public class CookbookTest {
     private static final List<Class<?>> GROUPS = Arrays.asList(DrivingRecipes.class, ButtonRecipes.class,
             MechanismRecipes.class, ActionRecipes.class, AutonomousRecipes.class, OdometryRecipes.class,
             PedroRecipes.class, TelemetryRecipes.class, PieceRecipes.class, AimRecipes.class, LightRecipes.class,
-            HoodRecipes.class, InterlockRecipes.class);
+            HoodRecipes.class, InterlockRecipes.class, ChooseAutoRecipes.class);
 
     // The whole files (one class per file, as in TeamCode): the robot, its TeleOp, an autonomous, the finders.
     private static final List<Class<?>> FILES = Arrays.asList(
@@ -156,6 +157,31 @@ public class CookbookTest {
             s.press(v -> s.g2().y = v);                            // score high
             assertTrue("the lift rises\n" + String.join("\n", s.screen()),
                     SimRun.waitFor(() -> s.robot().motors.get("lift").shaft() > 1000, 5));
+            assertEquals("", s.error());
+        }
+    }
+
+    // One autonomous with a menu: the "Start" line moves the note and the robot in INIT, and the "Plan"
+    // line chooses the steps (Far + cycle: 11 steps, the 2nd crosses to the near side).
+    @Test public void theInitMenuChoosesTheStartAndThePlan() throws Exception {
+        try (SimRun s = new SimRun(robotFile(ChooseAutoRecipes.Robot.class).toString())) {
+            s.sim.ds.register("Choose in INIT", "Autonomous", ChooseAutoRecipes.ChooseInInit.class);
+            s.init("Choose in INIT");
+            s.press(v -> s.g1().x = v);                                   // BLUE
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Place robot : NEAR:"), 1));
+            // BLUE's spot (-36, -61) seen from the blue wall: x +36 in the simulator's field frame.
+            assertTrue("near spot, x " + s.robot().x, SimRun.waitFor(() -> Math.abs(s.robot().x - 36) < 0.5, 2));
+            s.press(v -> s.g1().dpad_down = v);                           // Start delay
+            s.press(v -> s.g1().dpad_down = v);                           // Start
+            s.press(v -> s.g1().dpad_right = v);                          // Far
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Place robot : FAR:"), 1));
+            assertTrue("far spot, x " + s.robot().x, SimRun.waitFor(() -> Math.abs(s.robot().x + 36) < 0.5, 2));
+            s.press(v -> s.g1().dpad_down = v);                           // Plan
+            s.press(v -> s.g1().dpad_right = v);                          // Preload + Cycle + Park
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Plan: Preload + Cycle + Park"));
+            s.start();
+            assertTrue(String.join("\n", s.screen()),
+                    SimRun.waitFor(() -> s.screenHas("Step : 2/11 Across to the near side"), 3));
             assertEquals("", s.error());
         }
     }

@@ -130,7 +130,7 @@ If they already cloned it without that, the `ftc-helper-lib` folder is empty. Fi
 git submodule update --init
 ```
 
-Android Studio's **Git > Clone** does not always get submodules. If the build says
+GitHub Desktop (**File > Clone Repository…**) gets submodules by itself. Android Studio's **Git > Clone** does not always get submodules. If the build says
 `Project directory '.../ftc-helper-lib/library' does not exist`, run the command above.
 
 ## Next
@@ -139,3 +139,5 @@ Android Studio's **Git > Clone** does not always get submodules. If the build sa
 - [Tutorials](tutorials/README.md): start with the main track, lesson 1: [the robot in five files](tutorials/start/01-robot-in-five-files.md)
   (`./gradlew :sim:newRobot` writes the five files from your robot configuration)
 - [Keep it up to date](02-keep-up-to-date.md)
+- New to git? [Git and GitHub for FTC teams](guides/github.md): clone, commit, push, pull, with the
+  command line or GitHub Desktop

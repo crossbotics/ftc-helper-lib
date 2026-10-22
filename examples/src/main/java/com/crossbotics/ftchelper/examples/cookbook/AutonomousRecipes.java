@@ -13,8 +13,8 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 /**
  * Cookbook: autonomous (docs/cookbook.md#autonomous). An autonomous is one file in autos/: a list of
- * named steps. The list is read twice: in INIT (for the menu and the start note; nothing runs) and
- * after START. Distances are in inches, directions in degrees (0 forward, 90 right), power 0 to 1.
+ * named steps. The list is read in INIT (for the menu and the start note; nothing runs; again when a
+ * menu choice changes) and after START. Distances are in inches, directions in degrees (0 forward, 90 right), power 0 to 1.
  * The robot only drives after the Drive Tuner (Tunables.Drive.calibrated = true); the simulator runs
  * it anyway.
  *

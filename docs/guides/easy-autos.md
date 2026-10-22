@@ -93,7 +93,8 @@ r.step("Lift starts up", lift.startStep("HIGH"))      // does not wait
 ```
 
 One OpMode with choices is often better than many OpModes: fewer files, and the drive team picks
-at the field.
+at the field. When to use which, naming, and a match-day checklist:
+[Several autonomous modes](autos.md) (written for the five-files `Auto`; the ideas are the same).
 
 ## Red and blue
 

@@ -354,3 +354,6 @@ of written instructions an AI coding agent, like Claude Code, follows). Run it a
 This is lesson 1 of the [main track](../README.md#start-here-the-main-track). Next:
 [Lesson 2: Drive](02-drive.md). From there on you build **your own robot** in your five files,
 one part at a time; the lesson robot is the worked example (and the answer key).
+
+Commit your five files after each lesson that works, so you can always go back:
+[Git and GitHub for FTC teams](../../guides/github.md).

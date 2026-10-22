@@ -41,7 +41,8 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
   `guides/` (how-to and checklists), `images/` (SVG diagrams), `starter-kit.md`, setup/update pages.
 - `tools/check_docs.py` checks links, heading links, class coverage, tutorial programs, and that every
   java block in `docs/cookbook.md` matches its `// recipe: name` region in `examples/.../cookbook/`
-  (after changing one: `python3 tools/check_docs.py --fix-cookbook`).
+  (after changing one: `python3 tools/check_docs.py --fix-cookbook`). A guide may show a recipe too, with the
+  same `<!-- recipe: name -->` marker (docs/guides/autos.md does): it is checked and fixed the same way.
 - `tools/check_tunables.py` finds every Tunables field the robot package reads and checks it against
   `docs/guides/tunables.md` (the reference: one table per part) and the example robots' Tunables files.
   A module that reads a new field (or reads one through a name that is not a string literal: add it to

@@ -18,7 +18,7 @@ one real, tested program:
 A simulator test runs it with each menu choice, so the code here always works.
 
 Contents: [the whole example](#the-whole-example) · [what you get for free](#what-you-get-for-free) ·
-[how the list is read](#how-the-list-is-read-twice) · [placing the robot](#1-placing-the-robot) ·
+[how the list is read](#how-the-list-is-read) · [placing the robot](#1-placing-the-robot) ·
 [the INIT menu](#2-the-init-menu) · [driving](#driving-move-turn-turnto) ·
 [mechanisms](#3-mechanisms-run-and-wait) · [actions](#4-actions-several-parts-together) ·
 [branches](#5-branches-onlyif) · [your own steps](#6-your-own-steps) · [parking](#7-parking) ·
@@ -85,15 +85,19 @@ Every autonomous built this way gets, with no code:
 | **The report** | what happened to each step, on the Driver Station, in the robot log, and again in TeleOp's INIT |
 | **To TeleOp** | the alliance and the robot's heading go to TeleOp; `preselectTeleOp` makes the Driver Station choose your TeleOp next; autonomous ends as soon as its steps are done |
 
-## How the list is read (twice)
+## How the list is read
 
-`steps(...)` is called **twice**:
+`steps(...)` is called more than once:
 
 1. **In INIT**, to learn the menu, the start note and spot, and the park time. **No step runs then.**
-2. **After START**, with the drivers' choices, to build the real list. Then it runs.
+2. **In INIT again, each time the drivers change a menu line.** So a `start(...)` or a
+   `parkWithSeconds(...)` inside an `onlyIf` follows the menu: the "Place robot" note changes with the
+   choice ([choose the start in INIT](autos.md#example-2-one-opmode-the-drivers-choose-in-init)).
+   Still no step runs.
+3. **After START**, with the drivers' choices, to build the real list. Then it runs.
 
 So put only steps in `steps(...)`. Code with side effects (moving a servo, printing, counting) placed
-between the steps would run twice, once in INIT. Put such code inside a step instead
+between the steps would run several times, already in INIT. Put such code inside a step instead
 ([`run`](#3-mechanisms-run-and-wait) or [`step`](#6-your-own-steps)).
 
 ## 1. Placing the robot
@@ -134,8 +138,9 @@ Read them with [`onlyIf`](#5-branches-onlyif) (most of the time), or in your own
 
 **One autonomous with choices, or many files?** Choices keep one route that the team tests. Separate
 files are clearer when the routes have nothing in common. A good rule: a choice for anything a driver
-decides at the field (which pieces, leave or stay, a partner in the way); a new file for a different
-start position.
+decides at the field (which pieces, leave or stay, a partner in the way, near or far start); a new file
+for a route that shares nothing. The decision table, naming, and worked examples:
+[Several autonomous modes](autos.md).
 
 ## Driving: move, turn, turnTo
 
@@ -413,7 +418,9 @@ wait in the middle, add `.waitSeconds("Let our partner pass", 3)` inside an `onl
 
 **Shoot while driving:** `.alongside(Actions.fireAll(robot))`, then the move.
 
-**A choice of start position:** use a separate file per start position (each has its own note and spot).
+**A choice of start position:** a `menuChoice("Start", "Near", "Far")` and one `start(...)` inside each
+`onlyIf("Start", ...)`: the note and the spot follow the menu. Or a separate file per start position.
+Both ways: [Several autonomous modes](autos.md#example-3-near-and-far-starts).
 
 ## Every method
 
@@ -452,7 +459,7 @@ Every class and method of the library: the [reference](../reference.md).
 
 ## Common mistakes
 
-- **Code between steps runs twice** (once in INIT). Put it in `run(...)` or `step(...)`.
+- **Code between steps runs several times** (already in INIT). Put it in `run(...)` or `step(...)`.
 - **`sleep()` in a step** freezes every part and the timer. Use `ctx.waitFor`.
 - **Forgetting `end()`**: everything after the `onlyIf` becomes part of the branch.
 - **Wrong turn direction**: turns are counterclockwise + (left), moves are clockwise from forward.

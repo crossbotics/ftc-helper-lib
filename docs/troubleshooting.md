@@ -190,6 +190,28 @@ It was blocked, or it moved too slowly. If it was not blocked, raise `moveMinPow
 **The loop is slow (telemetry shows under ~30 Hz, that is, under 30 loops per second)**
 Turn on [bulk reads](modules/hardware.md#bulkreads), send fewer telemetry lines, and remove any `sleep()`.
 
+## Autonomous choice and git problems
+
+**The robot ran the wrong autonomous plan, or started in the wrong place**
+The first option of each INIT menu line runs when nobody changes it, and the "Place robot" note says
+where the robot must stand. Read the menu and the note out loud before START:
+[match day checklist](guides/autos.md#match-day).
+
+**An INIT menu option does nothing**
+The option is spelled differently in `menuChoice(...)` and in `onlyIf(...)` (capitals count). Test each
+option in the simulator: [Several autonomous modes](guides/autos.md#test-each-one-in-the-simulator).
+
+**`modified: ftc-helper-lib (new commits)` in `git status`**
+Your library folder is at another version than the project expects. If you did not mean to update it:
+`git submodule update`. See [Keep it up to date](02-keep-up-to-date.md#after-a-teammate-updates-it).
+
+**The build broke after a library update**
+Read the CHANGELOG's **Changed** list, or go back to the old version:
+[Go back to the old version](02-keep-up-to-date.md#go-back-to-the-old-version).
+
+**`rejected`, `CONFLICT`, `divergent branches` or another git message**
+See [Git and GitHub: problems](guides/github.md#problems).
+
 ## Still stuck?
 
 Write down what you did, what you expected and what happened, and ask the programming lead.

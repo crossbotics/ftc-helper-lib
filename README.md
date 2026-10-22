@@ -115,6 +115,7 @@ Everything else, by what you want to do:
 | **Every way a button can work: tap, hold, double-tap, tap then hold, pairs, buzzes** | [The button menu](docs/guides/buttons.md) |
 | See how it all fits together | [Architecture](docs/guides/architecture.md) |
 | **Write autonomous modes with the builder (every feature, with a tested example)** | [The autonomous builder](docs/guides/autonomous-builder.md) |
+| **Several autos, and choosing one at the field (INIT menu, names, match-day checklist)** | [Several autonomous modes](docs/guides/autos.md) |
 | **Know where the robot is on the field** (odometry: goBILDA Pinpoint, SparkFun OTOS, dead wheels) and drive to field points | [Lesson 7](docs/tutorials/start/07-odometry.md), [odometry module](docs/modules/odometry.md) |
 | **Smooth paths with Pedro Pathing support**, in the same field numbers (mecanum drives) | [Lesson 8](docs/tutorials/start/08-paths-with-pedro.md), [pedro module](docs/modules/pedro.md) |
 | Make autonomous modes the older way (EasyAuto) | [Easy autonomous modes](docs/guides/easy-autos.md) |
@@ -137,7 +138,8 @@ Everything else, by what you want to do:
 | From your robot's CAD to the simulator (parts, which motor drives what, shot tables) | [CAD tools](tools/cad/README.md), [Launcher program](tools/launcher/README.md) |
 | Get ready for a new season | [New season](docs/guides/new-season.md) |
 | Add something new to the library | [Extending](docs/guides/extending.md), [Contributing](docs/contributing.md) |
-| Get the newest version, or an older one | [Keep it up to date](docs/02-keep-up-to-date.md) |
+| **Get the newest version (why, when, how), or go back to an older one** | [Keep it up to date](docs/02-keep-up-to-date.md) |
+| **Git and GitHub for the team: clone, commit, push, pull, branches, conflicts, undo (command line and GitHub Desktop)** | [Git and GitHub for FTC teams](docs/guides/github.md) |
 | Know which way is "positive" | [Signs and units](docs/conventions.md) |
 | Fix a problem | [Troubleshooting](docs/troubleshooting.md) |
 | Find last season's class | [Coming from last season's code](docs/from-last-season.md) |

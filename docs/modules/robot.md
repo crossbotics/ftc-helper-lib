@@ -1216,7 +1216,7 @@ What [`Steps`](#auto) can do:
 | `start(where, headingDeg)` | where to place the robot (shown in INIT) and which way it faces |
 | `start(where, xIn, yIn, headingDeg)` | the same, plus the spot in inches. The simulator puts the robot there in INIT (see below) |
 | `menuYesNo(label, yes)`, `menuChoice(label, options...)` | a choice for the drivers in INIT |
-| `onlyIf(label)` / `onlyIf(label, option)` ... `end()` | the steps in between run only for that choice |
+| `onlyIf(label)` / `onlyIf(label, option)` ... `end()` | the steps in between run only for that choice; a `start(...)` or `parkWithSeconds(...)` in between is used only for that choice, and the INIT note follows the menu ([choose the start in INIT](../guides/autos.md#example-2-one-opmode-the-drivers-choose-in-init)) |
 | `isYes(label)`, `choice(label)` | read a choice |
 | `move(label, inches, directionDeg, power)` | drive (0 forward, 90 right) |
 | `turn`, `turnTo` | turn by an angle / to a heading |
@@ -1256,8 +1256,9 @@ take, plus about a second. Without `parkWithSeconds`, every step is a main step 
 for the end. It is [`EasyAuto`](../guides/easy-autos.md#time-for-parking)'s `thenPark()` and
 `parkReserveSec()` in one call.
 
-The steps are read twice: in INIT (for the menu and the start position; nothing runs) and after
-START. Everything else is [`EasyAuto`](auto.md#easyauto): alliance and delay menu, mirroring for RED,
+The steps are read in INIT (for the menu, the start position and the park time; nothing runs), again
+in INIT whenever a menu choice changes (so a `start(...)` inside an `onlyIf` follows the menu:
+[several autos](../guides/autos.md)), and after START. Everything else is [`EasyAuto`](auto.md#easyauto): alliance and delay menu, mirroring for RED,
 the timer, stopping everything, the report. When its steps are done it ends at once (even with time
 left), so the Driver Station moves to its TeleOp; TeleOp's INIT shows the report and the alliance (or
 lets the drivers choose it: X = BLUE, B = RED). Until `Tunables.Drive.calibrated` is true it says
