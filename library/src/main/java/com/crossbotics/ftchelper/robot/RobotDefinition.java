@@ -63,6 +63,8 @@ public abstract class RobotDefinition {
     private TunableSection driveSection = null;
     // Tunables sections no part reads (Tunables.Auto): live in the tuning menu. Null before setup.
     private OtherSections otherSections = null;
+    // Where the goal is (camera first, odometry backup) and whole-robot aim. Made at setup.
+    private Aim aim = null;
     // For the simulator: the chassis box and the whole robot's height (inches; NaN = not given), fixed shapes.
     private double[] chassisIn = null;
     private double heightIn = Double.NaN;
@@ -226,6 +228,8 @@ public abstract class RobotDefinition {
             all.add(follower);
         }
         all.add(runner);
+        // Tunables.Aim (optional): made before the parts, which ask it where the goal is.
+        aim = new Aim(this, TunableSection.of(tunablesClass, "Aim"));
         // Cameras first, so the parts that use them see this loop's picture.
         List<Module<?>> ordered = new ArrayList<>();
         for (Module<?> m : modules) if (m instanceof Camera) ordered.add(m);
@@ -241,6 +245,7 @@ public abstract class RobotDefinition {
         used.add("Drive");
         used.add("Odometry");   // Tunables.Odometry: the odometry's scales and "checked", read here
         used.add("Buttons");   // Tunables.Buttons: the gesture times, read by Controls.java's buttons
+        used.add("Aim");       // Tunables.Aim: the goal point and whole-robot aim, read by aim()
         for (Module<?> m : modules) {
             for (Module<?> c : m.children()) used.add(c.name());
             used.add(m.name());
@@ -271,6 +276,24 @@ public abstract class RobotDefinition {
     /** The odometry as running (null before setup, or with no odometry(...) line). */
     public final com.crossbotics.ftchelper.odometry.PoseTracker odometry() {
         return tracker;
+    }
+
+    /**
+     * Where the goal is (the camera first, the odometry as a backup), whole-robot aim and how far off
+     * the aim is. Null before setup. See {@link Aim}.
+     */
+    public final Aim aim() {
+        return aim;
+    }
+
+    /**
+     * Whole-robot aim (for a robot with no turret): while on, TeleOp turns the robot toward the goal and
+     * the driver keeps forward and sideways (the turn stick still wins). One line in Controls.java:
+     * {@code g1.rb.toggle(robot.aimMode());}. Off at START. Numbers: {@code Tunables.Aim} (see {@link Aim}).
+     */
+    public final Mode aimMode() {
+        if (aim == null) throw new IllegalStateException("robot.aimMode() is ready after setup (use it in Controls.java's buttons(...))");
+        return aim.mode();
     }
 
     /** The path follower as running (null before setup, or with no follower(...) line). */
@@ -575,6 +598,7 @@ public abstract class RobotDefinition {
         }
         Set<String> sections = new LinkedHashSet<>();
         sections.add("Drive");
+        sections.add("Aim");   // read by aim(): a part must not use that name
         for (Module<?> m : modules) {
             List<Module<?>> group = new ArrayList<>(m.children());
             group.add(m);

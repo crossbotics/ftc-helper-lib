@@ -174,13 +174,21 @@ can also push the robot by hand. D-pad chooses, **A** starts, **B** ends the tes
 
 ## Shot Tuner: the shot table
 
-1. Park at the nearest distance you will shoot from. The screen shows the camera's distance.
-   Press **LB** to start the flywheel (it is off at START).
-2. Change the speed (and hood) with the D-pad (**Y** chooses which) and shoot (**RB**, or hold **RT**)
+1. **Pick the table.** With one table per game piece (`speedByDistancePollen`, `speedByDistanceNectar`),
+   press **Y** until `> Table`, then the D-pad: you tune one table at a time, each with its own points.
+   Load that game piece.
+2. Park at the nearest distance you will shoot from. The screen shows the distance and where it came
+   from: `(camera)`, or `(odometry)` when the camera does not see the goal (with an `odometry(...)` line
+   and `Tunables.Aim.goalX, goalY`; put the robot in the middle of the field facing away from you
+   before INIT, or override `startSpotIn()`). Press **LB** to start the flywheel (it is off at START).
+3. Change the speed (and hood) with the D-pad (**Y** chooses which) and shoot (**RB**, or hold **RT**)
    until the shots go in, several in a row. Press **A** to save the point.
-3. Move back 1-2 ft (drive with the sticks) and do it again. 4-6 points cover the field.
-4. Copy the table. Five files: the line `public static double[][] speedByDistance = {{24, 2600}, {48, 3100}};   // in Tunables.Launcher`
-   replaces the `speedByDistance` line in `Tunables.Launcher`. Older helpers: the
+4. Move back 1-2 ft (drive with the sticks) and do it again. 4-6 points cover the field. Then the
+   next table (step 1).
+5. **Copy the tables into `Tunables.java`**: the robot uses the file, not the tuner's screen. Five
+   files: each line, like `public static double[][] speedByDistancePollen = {{24, 2600}, {48, 3100}};   // in Tunables.Launcher`,
+   replaces the line with the same name in `Tunables.Launcher`. The lines are also saved on the Control
+   Hub when you press STOP (`/sdcard/FIRST/ftc-helper/finder-results.txt`). Older helpers: the
    `new ShotTable()` lines go into your Robot class. Between the points the launcher fills in the
    speed; outside them it uses the nearest point.
 

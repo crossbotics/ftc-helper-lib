@@ -48,6 +48,17 @@ public class Tunables {
     }
 
     /**
+     * Whole-robot aim (Controls.java: G1 RB). turnKp: turn power per degree off; maxTurnPower: the
+     * most it turns by itself; toleranceDeg: this close counts as aimed. rumbleDeg: gamepad 2 buzzes
+     * within this many degrees (the closer, the stronger). cameraOffset: the camera's bearing to the
+     * goal when the launcher points at it (0 if the camera points the same way as the launcher).
+     */
+    public static class Aim {
+        public static double turnKp = 0.02, turnKd = 0.002, maxTurnPower = 0.5, toleranceDeg = 2;
+        public static double cameraOffset = 0, rumbleDeg = 4;
+    }
+
+    /**
      * Distances and speeds for the autonomous programs, tuned like the rest: they are in the tuning
      * menu too ("Auto/leaveInches"), and the autonomous uses a saved value at its next INIT. Copy a
      * good value back here: the code is the record.

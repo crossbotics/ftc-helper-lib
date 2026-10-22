@@ -19,8 +19,9 @@ import com.crossbotics.ftchelper.robot.Turret;
  *   <li>The same intake as example robot 1 (on from the start).</li>
  *   <li>A turret with a Limelight on it that follows the goal, but never turns past its range
  *       (Tunables.Turret: -90 to +90 degrees, 180 in all).</li>
- *   <li>A flywheel whose speed comes from the distance to the goal (Tunables.Launcher.speedByDistance),
- *       fed by an indexer servo. It only fires when the turret is aimed.</li>
+ *   <li>A flywheel whose speed comes from the distance to the goal, fed by an indexer servo. It only
+ *       fires when the turret is aimed. Two shot tables, because the two game pieces fly differently:
+ *       POLLEN (2.8 in balls) and NECTAR (3.6 in balls), in Tunables.Launcher.</li>
  *   <li>A claw on a fold-out pivot: positions to grab a piece and to let it go into a FLOWER.</li>
  * </ul>
  *
@@ -52,9 +53,13 @@ public class Robot extends RobotDefinition {
         turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).follows(camera));
 
         // Speed from the camera's distance; and a piece is only fed when the turret points at the goal.
+        // Two shot tables (Tunables.Launcher.speedByDistancePollen and ...Nectar): it starts on
+        // POLLEN (most pieces in a match are POLLEN); gamepad 2's D-pad right switches. Code can switch
+        // too: robot.launcher.useTable("nectar").
         launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
                 .feeder(Indexer.servo("indexer"))
                 .speedFromDistance(camera)
+                .startTable("pollen")
                 .requireReady("turret aimed", () -> turret.isAimed()));
 
         clawFold = add(Positioner.servo("claw_fold"));   // Tunables.ClawFold: stowed, grab, flower

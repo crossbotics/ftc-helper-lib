@@ -92,6 +92,12 @@ bearing" with the same old picture again and again would push the turret further
 fresh target: the turret holds where it is. And `launcher.setDistance(target.distanceIn)` picks the
 shot from the table (tutorial 17); check `target.hasDistance()` first.
 
+**In the robot in five files** all of this is built in: `g1.rb.toggle(robot.aimMode())` aims the whole
+robot (the driver's turn stick still wins), `g2.rumbleWhenAimed()` buzzes, a turret's `follows(camera)`
+follows, and with odometry and `Tunables.Aim.goalX, goalY` they keep working from the odometry when the
+camera loses the goal. See [Lesson 9](start/09-shooter-and-camera.md#9-when-the-camera-loses-the-goal-the-odometry)
+and [robot.md: Aim](../modules/robot.md#aim).
+
 ## 2026-27 notes
 
 - BIOBUZZ tags are on the HIVE cells, and the cells move: good for aiming, not for working out

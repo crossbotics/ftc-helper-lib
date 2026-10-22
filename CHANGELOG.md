@@ -32,6 +32,34 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - Simulator: pretend piece sensors, `color.NAME = at=ready|intake` and `distance.NAME = at=..., acrossMm=150`;
   `:sim:fromRobot` writes them, `:sim:newRobot` turns a REV Color Sensor V3 or 2m Distance Sensor in the
   configuration into a `PieceSensor` line. Cookbook: a "Game pieces" section.
+- **Aiming helpers** (so the drivers can focus on driving and firing), in the robot in five files;
+  [robot.md: Aim](docs/modules/robot.md#aim), [lesson 9](docs/tutorials/start/09-shooter-and-camera.md)
+  sections 8-11, and four cookbook recipes ("Aiming and shooting"):
+  - **The odometry as a backup for the camera:** with an `odometry(...)` line and the goal's place in
+    the new `Tunables.Aim` (`goalX`, `goalY`, in `driveTo`'s numbers; `mirrorForRed` like autonomous),
+    a turret that `follows(camera)` and a launcher's `speedFromDistance(camera)` use the odometry's
+    direction and distance while the camera does not see the goal. The Driver Station says which
+    (`following: camera` / `odometry`). No camera: `Turret.followsOdometry()`,
+    `Launcher.speedFromOdometry()`. `robot.aim()` gives the goal (`goal()`, `source()`,
+    `fromOdometry()`); `TargetObservation.ODOMETRY` marks a goal worked out from the odometry.
+  - **Whole-robot aim** (no turret): `g1.rb.toggle(robot.aimMode())` in `Controls.java`. While on, the
+    robot turns to face the goal and the driver keeps forward and sideways; the turn stick still wins.
+    Numbers in `Tunables.Aim` (`turnKp`, `turnKd`, `maxTurnPower`, `minTurnPower`, `toleranceDeg`,
+    `cameraOffset`). `DriverControls.turnAssist(...)` is the hook under it.
+  - **The aim buzz:** `g2.rumbleWhenAimed();` buzzes while the aim (a following turret, or whole-robot
+    aim) is within `Tunables.Aim.rumbleDeg`, the closer the stronger (last season's on-target buzz).
+  - **One shot table per game piece:** every `speedByDistance...` table in `Tunables.Launcher` is a
+    table named by the rest of its name (`speedByDistancePollen` = "pollen"). Switch with
+    `robot.launcher.useTable("nectar")` (a button, an action, an autonomous), `nextTable()` (the
+    launcher's new suggested button, operator D-pad right, with two or more tables), or let code choose:
+    `tableFrom(() -> name)` (ready for a game-piece sensor). `startTable(name)` picks the first. The
+    Driver Station shows the table and where the distance came from. A wrong name warns, never stops.
+  - **Shot Tuner:** tunes one table at a time (Y to `TABLE`, then the D-pad) and prints each table's
+    line for `Tunables.java`; takes the distance from the odometry when the camera does not see the
+    goal (the robot starts at `startSpotIn()`); says the next step on screen and to copy the lines into
+    `Tunables.java`.
+- Examples: `turretbot` has a POLLEN and a NECTAR table and buzzes gamepad 2 when on target;
+  `flywheelbot` has a webcam and whole-robot aim on G1 RB.
 
 ### Changed
 

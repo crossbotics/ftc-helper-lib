@@ -22,10 +22,12 @@ import java.util.List;
  * }
  * }</pre>
  *
- * <p><b>Follow mode</b> ({@link #followMode()}, on from START when {@link #follows} is used): every
- * loop it turns toward the camera's goal. A goal past the range: it waits at the limit and the
- * Driver Station says "goal out of turret range". The stick takes over while it is moved, then
- * following goes on.
+ * <p><b>Follow mode</b> ({@link #followMode()}, on from START when {@link #follows} or
+ * {@link #followsOdometry} is used): every loop it turns toward the goal. The camera first; when the
+ * camera does not see the goal and the robot has odometry and {@code Tunables.Aim.goalX, goalY}, toward
+ * the goal worked out from where the robot is (see {@link Aim}). The Driver Station says which. A goal
+ * past the range: it waits at the limit and the Driver Station says "goal out of turret range". The
+ * stick takes over while it is moved, then following goes on.
  *
  * <p>Suggested buttons: operator right stick X turns it by hand; operator BACK switches following
  * on and off.
@@ -38,6 +40,11 @@ public final class Turret extends Module<Turret> {
     private boolean reversed = false;
     private Camera camera = null;
     private boolean cameraOnTurret = true;
+    // followsOdometry(): follow the goal from the odometry alone (no camera).
+    private boolean odometryOnly = false;
+    // What the following used last loop (for the Driver Station).
+    private Aim.Source source = Aim.Source.NONE;
+    private double cameraOffsetDeg = 0;
     private final Mode follow = new Mode("Turret follow", false);
     com.crossbotics.ftchelper.launcher.Turret part;
     private Tunable kP, kI, kD;
@@ -72,10 +79,29 @@ public final class Turret extends Module<Turret> {
         return this;
     }
 
-    /** Follows this camera's goal (follow mode on from START). The camera turns with the turret. */
+    /**
+     * Follows this camera's goal (follow mode on from START). The camera turns with the turret. With
+     * an {@code odometry(...)} line and {@code Tunables.Aim.goalX, goalY}, the odometry takes over while
+     * the camera does not see the goal.
+     */
     public Turret follows(Camera c) {
         camera = c;
         return this;
+    }
+
+    /**
+     * Follows the goal with NO camera: its direction comes from the odometry (where the robot is) and
+     * {@code Tunables.Aim.goalX, goalY} (see {@link Aim}). Needs an {@code odometry(...)} line. Follow
+     * mode on from START. Assumes the turret turns about the robot's centre.
+     */
+    public Turret followsOdometry() {
+        odometryOnly = true;
+        return this;
+    }
+
+    // True if it follows anything (a camera, or the odometry).
+    private boolean follows() {
+        return camera != null || odometryOnly;
     }
 
     /** The camera is on the robot's body, not on the turret. */
@@ -94,6 +120,14 @@ public final class Turret extends Module<Turret> {
             throw new IllegalStateException("Robot.java: " + name() + " follows a camera that is not added: "
                     + "write camera = add(Camera...) and follows(camera)");
         }
+        if (odometryOnly && robot.odometrySpec() == null) {
+            throw new IllegalStateException("Robot.java: " + name() + ".followsOdometry() needs an odometry(...) line");
+        }
+        if (odometryOnly && !robot.aim().hasGoalPoint()) {
+            throw new IllegalStateException(name() + ".followsOdometry() needs the goal on the field: "
+                    + "Tunables.Aim { public static double goalX = ..., goalY = ...; } (inches, see docs/modules/robot.md#aim)");
+        }
+        cameraOffsetDeg = t.number("cameraOffset", 0);
         min = t.number("min", -90);
         max = t.number("max", 90);
         kP = t.tunable("kP", 0.02, 0.002).range(0, 1);
@@ -108,12 +142,12 @@ public final class Turret extends Module<Turret> {
                 .maxPower(t.number("maxPower", 0.8))
                 .tolerance(t.number("tolerance", 1.0))
                 .slowZone(t.number("slowZone", 10), t.number("slowZonePower", 0.25))
-                .cameraOffset(t.number("cameraOffset", 0));
+                .cameraOffset(cameraOffsetDeg);
     }
 
     @Override
     void start() {
-        if (camera != null) follow.on();
+        if (follows()) follow.on();
     }
 
     // ----------------------------- commands -----------------------------
@@ -162,6 +196,27 @@ public final class Turret extends Module<Turret> {
         return part == null ? 0 : part.getAngle();
     }
 
+    /**
+     * How many degrees the turret points away from the goal now (any sign), NaN if the goal is not
+     * known (no fresh picture and no odometry). For the gamepad buzz ({@code rumbleWhenAimed()}).
+     */
+    public double aimErrorDeg() {
+        if (part == null) return Double.NaN;
+        TargetObservation seen = robot == null ? null : robot.aim().cameraGoal(camera);
+        if (seen != null) {
+            double error = seen.bearingDeg - cameraOffsetDeg;
+            // On the turret: the bearing is from where the turret points. On the body: from the robot's front.
+            return cameraOnTurret ? error : error - part.getAngle();
+        }
+        TargetObservation odo = robot == null || !follows() ? null : robot.aim().fromOdometry();
+        return odo == null ? Double.NaN : com.crossbotics.ftchelper.util.Angles.wrapDegrees(odo.bearingDeg - part.getAngle());
+    }
+
+    /** Where the following got the goal last loop: CAMERA, ODOMETRY or NONE. */
+    public Aim.Source aimSource() {
+        return source;
+    }
+
     /** The launcher.Turret inside, for anything this module does not offer. */
     public com.crossbotics.ftchelper.launcher.Turret part() {
         return part;
@@ -170,9 +225,20 @@ public final class Turret extends Module<Turret> {
     @Override
     public void update() {
         part.pid(kP.get(), kI.get(), kD.get(), 0);
-        if (follow.isOn() && camera != null && !stickMoving) {
-            TargetObservation goal = camera.goal();
-            part.aimAtTarget(goal, cameraOnTurret);
+        if (follow.isOn() && follows() && !stickMoving) {
+            // The camera first (a fresh picture of the goal).
+            TargetObservation seen = robot.aim().cameraGoal(camera);
+            TargetObservation odo = seen == null ? robot.aim().fromOdometry() : null;
+            if (seen != null) {
+                part.aimAtTarget(seen, cameraOnTurret);
+                source = Aim.Source.CAMERA;
+            } else if (odo != null) {
+                // The odometry's direction is from the robot's front: it IS the turret angle to go to.
+                part.aimAt(odo.bearingDeg);
+                source = Aim.Source.ODOMETRY;
+            } else {
+                source = Aim.Source.NONE;   // nothing new: it holds where it points
+            }
         }
         part.update();
     }
@@ -213,7 +279,7 @@ public final class Turret extends Module<Turret> {
     public void addTelemetry(RobotTelemetry t) {
         if (part == null) return;
         if (follow.isOn() && part.isOutOfRange()) t.warn("goal out of turret range");
-        t.line(name(), fmt("%.0f deg%s", part.getAngle(), follow.isOn() ? " following" : ""));
+        t.line(name(), fmt("%.0f deg%s", part.getAngle(), follow.isOn() ? " following: " + source.words() : ""));
         part.addTelemetry(t);
     }
 
@@ -221,7 +287,7 @@ public final class Turret extends Module<Turret> {
     void suggestButtons(ButtonPlan plan) {
         Pad op = plan.operator();
         op.rightStickX.use(v -> manual(-v)).says("by hand (right = clockwise)");
-        if (camera != null) op.back.toggle(follow).says("follow the goal on/off");
+        if (follows()) op.back.toggle(follow).says("follow the goal on/off");
     }
 
     @Override

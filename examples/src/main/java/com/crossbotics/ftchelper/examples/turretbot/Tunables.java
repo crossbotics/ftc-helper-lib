@@ -37,13 +37,25 @@ public class Tunables {
 
     /**
      * Distance to the goal (inches) and flywheel speed (RPM) that scores from there, measured on the
-     * field (the Shot Tuner helps). Between rows the speed is blended. speedRpm: the speed until the
-     * goal is first seen.
+     * field (the Shot Tuner helps; it tunes one table at a time). Between rows the speed is blended.
+     * One table per game piece, because they fly differently: POLLEN is a 2.8 in ball, NECTAR a
+     * 3.6 in ball (game manual, section 9.8). Example numbers: measure your own. speedRpm: the speed
+     * until the goal is first seen.
      */
     public static class Launcher {
         public static double speedRpm = 2600, stepRpm = 100, readyBandRpm = 60, idleRpm = 1500;
         public static double kP = 40, kI = 0, kD = 0, kF = 12.5;   // the hub's speed control (Flywheel Finder)
-        public static double[][] speedByDistance = {{24, 2200}, {48, 2550}, {72, 2900}, {96, 3250}};
+        public static double[][] speedByDistancePollen = {{24, 2200}, {48, 2550}, {72, 2900}, {96, 3250}};
+        public static double[][] speedByDistanceNectar = {{24, 2400}, {48, 2800}, {72, 3200}, {96, 3600}};
+    }
+
+    /**
+     * Aiming. rumbleDeg: gamepad 2 buzzes when the turret is this close to the goal (Controls.java's
+     * rumbleWhenAimed). With odometry you would add goalX and goalY here: then the turret and the
+     * speed keep working when the camera loses the goal (lesson 9).
+     */
+    public static class Aim {
+        public static double rumbleDeg = 4;
     }
 
     public static class Indexer {

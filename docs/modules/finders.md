@@ -273,7 +273,13 @@ public class ShotTuner extends ShotTunerOpMode {
 ```
 
 It sets the robot up at INIT and uses its first `Launcher` (with its numbers from `Tunables.java`),
-its first `Camera` and its drive. Its other parts are set up but not moved: a turret stays still, and
+its first `Camera`, its odometry and its drive. **The distance**: the camera's, or, when it does not
+see the goal, the odometry's (with an `odometry(...)` line and `Tunables.Aim.goalX, goalY`; the robot
+starts at `startSpotIn()`, default the middle of the field facing away from you; see
+[robot.md: Aim](robot.md#aim)), or set by hand with neither. The screen says which, and shows both when
+both are there (far apart: move the goal point). **Several tables** (`speedByDistancePollen`,
+`speedByDistanceNectar`): Y to `TABLE`, the D-pad picks the one you tune; it starts on the launcher's
+start table. Each table keeps its own points and gets its own line. Its other parts are set up but not moved: a turret stays still, and
 the launcher's `requireReady(...)` checks (like "turret aimed") are off, because you aim by hand here.
 
 Without five files, fill in:
@@ -288,10 +294,12 @@ Without five files, fill in:
 | `createSubsystems()` | no | other mechanisms to keep updated (an intake that loads it) |
 | `startRpm()` | no | the starting speed, default 3000 |
 | `startHoodDeg()` | no | the starting hood angle if the hood was never moved, default 0 |
+| `startSpotIn()` | no | where the robot is at INIT, for the odometry: {x, y, heading} from your drivers' wall; default {0, 0, 0} |
+| `tableNames()` | no | the tables to tune; default the launcher's (`pollen`, `nectar`...), or one table `main` |
 
 | Button | Does |
 | --- | --- |
-| **Y** | what the D-pad changes: SPEED, HOOD (with a hood), DISTANCE (no camera) |
+| **Y** | what the D-pad changes: SPEED, HOOD (with a hood), DISTANCE (no camera, no odometry), TABLE (two or more tables) |
 | D-pad up/down, right/left | big / small step (100 / 10 RPM, 5 / 0.5 deg, 6 / 1 in) |
 | **LB** | flywheel on/off (it is OFF at START) |
 | **RB** / hold **RT** / **B** | shoot one / keep shooting / stop shooting. Keep shooting stops after B, a jam or a "gave up": press RT again to go on |
@@ -309,11 +317,16 @@ new ShotTable()
     .add(72.0, 3700, 21.0)
 ```
 
-Without a hood it also shows the line for five files (the section is the launcher's):
+Without a hood it also shows the line for five files (the section is the launcher's), one per table:
 
 ```java
 public static double[][] speedByDistance = {{24, 2600}, {48.5, 3100}, {72, 3700}};   // in Tunables.Launcher
+public static double[][] speedByDistanceNectar = {{24, 2800}, {48.5, 3300}};          // a named table
 ```
+
+Copy each line into `Tunables.java` (replace the line with the same name): the robot uses the file,
+not this screen. The lines are also saved on the Control Hub at STOP. The screen says what to do next
+(`Next: LB to spin up the flywheel.`).
 
 ## AimTunerOpMode
 
@@ -470,4 +483,5 @@ A D-pad list: `new Chooser(names)` (sorted A to Z), `next()`, `previous()`, `cur
 The shot tuner's saved points: `new ShotPoints(hasHood)`, `save(distance, rpm, hoodDeg)` (replaces
 one within `SAME_DISTANCE` = 1), `removeNear(distance)`, `points()` (nearest first),
 `codeLines()` (the `ShotTable` code), `tunablesLine(section)` (the five-files line,
-`public static double[][] speedByDistance = {{48, 2550}, ...};   // in Tunables.Launcher`, empty if nothing is saved).
+`public static double[][] speedByDistance = {{48, 2550}, ...};   // in Tunables.Launcher`, empty if nothing is saved),
+`tunablesLine(section, field)` (the same for a named table, e.g. `speedByDistanceNectar`).

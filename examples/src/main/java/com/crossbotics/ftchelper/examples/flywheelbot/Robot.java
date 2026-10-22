@@ -1,5 +1,6 @@
 package com.crossbotics.ftchelper.examples.flywheelbot;
 
+import com.crossbotics.ftchelper.robot.Camera;
 import com.crossbotics.ftchelper.robot.Drive;
 import com.crossbotics.ftchelper.robot.Indexer;
 import com.crossbotics.ftchelper.robot.Intake;
@@ -15,7 +16,8 @@ import com.crossbotics.ftchelper.robot.Shape;
  * <p>The robot: a standard (tank) drive; an intake that runs from the start of the match (the driver
  * can stop it, restart it, and push pieces back out); one flywheel launcher whose speed the driver can
  * change; an indexer servo that pushes one piece at a time into the flywheel; and a servo that pushes
- * the intake down into its working position at the start of the match.
+ * the intake down into its working position at the start of the match. A webcam finds the goal, so the
+ * driver can let the whole robot turn to face it (no turret: see Controls.java).
  *
  * <p>The other four files: {@link Tunables} (the numbers), {@link Controls} (the buttons and the
  * TeleOp), {@link Actions} (steps that use several parts) and {@code autos/} (the autonomous programs).
@@ -28,6 +30,7 @@ public class Robot extends RobotDefinition {
     public Intake intake;
     public Launcher launcher;
     public Positioner intakeDeploy;
+    public Camera camera;
 
     @Override
     protected void define() {
@@ -66,6 +69,10 @@ public class Robot extends RobotDefinition {
                 .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
                 .looks(Shape.flywheel("gobilda-hogback-96").atMm(-40, 0, 170))
                 .shotAngle(50));
+
+        // A webcam that knows this season's goal for each alliance (the AprilTag group's name). With
+        // robot.aimMode() on (a button in Controls.java), the robot turns itself to face that goal.
+        camera = add(Camera.webcam("Webcam 1").goal("BLUE SCORING", "RED SCORING"));
 
         // Right after START (never in INIT: nothing may move before START), push the intake down.
         // "() -> ..." is a small piece of code that runs later, at START.

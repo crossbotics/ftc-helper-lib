@@ -100,4 +100,26 @@ public class DriverControlsTest {
         assertEquals("robot", w.mode);
         assertFalse(d.isSlow());
     }
+
+    // A turn assist (whole-robot aim) gets the driver's turn and gives the turn to use; forward and
+    // sideways stay the driver's.
+    @Test public void aTurnAssistReplacesOnlyTheTurn() {
+        Wheels w = new Wheels(true);
+        DriverControls d = new DriverControls(w, heading(null));
+        d.turnAssist(turn -> turn == 0 ? 0.25 : turn);   // aims while the turn stick rests
+        Gamepad g = new Gamepad();
+        g.left_stick_y = -1;
+        g.left_stick_x = 0.5f;
+        d.update(g);
+        assertEquals(0.25, w.turn, 1e-9);
+        assertEquals(1, w.forward, 1e-9);
+        assertTrue(w.side > 0);
+        g.right_stick_x = 1;                         // the driver turns: the driver wins
+        d.update(g);
+        assertEquals(1, w.turn, 1e-9);
+        d.turnAssist(null);
+        g.right_stick_x = 0;
+        d.update(g);
+        assertEquals(0, w.turn, 1e-9);
+    }
 }

@@ -358,16 +358,20 @@ turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).follows(cam
 
 | Method | |
 | --- | --- |
-| `followMode()` | the [mode](#modes) that follows the camera's goal (on from START with `follows`) |
+| `followMode()` | the [mode](#modes) that follows the goal (on from START with `follows` or `followsOdometry`) |
+| `follows(camera)` | follows the camera's goal; with odometry and `Tunables.Aim.goalX, goalY` the odometry takes over while the camera does not see it ([Aim](#aim)) |
+| `followsOdometry()` | follows the goal with no camera: from the odometry and `Tunables.Aim`'s goal point |
 | `aimAt(deg)` | turn to an angle (stops following) |
 | `manual(power)` | by hand; following pauses while the stick moves |
 | `isAimed()`, `isOutOfRange()`, `angle()`, `part()` | |
+| `aimErrorDeg()`, `aimSource()` | degrees from the goal now (NaN = unknown); where the goal came from (CAMERA, ODOMETRY, NONE) |
 | `cameraOnBody()` | the camera is on the robot, not on the turret |
 
 `Tunables.Turret`: `min`, `max` (degrees, counterclockwise +, 0 = forward: it never turns past them; a
 goal outside waits at the limit and the Driver Station says "goal out of turret range"), `kP`, `kI`,
 `kD`, `maxPower`, `tolerance`, `slowZone`, `slowZonePower`, `cameraOffset`. Buttons: operator right
-stick X by hand, BACK following on/off.
+stick X by hand, BACK following on/off. The Driver Station shows `turret: 12 deg following: camera`
+(or `odometry`, or `no goal`: it holds where it points).
 
 ---
 
@@ -385,7 +389,13 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer
 | `fire()`, `fire(n)` | spins up if needed, feeds as soon as it is at speed (gives up after 3 s, saying why) |
 | `fireWhileHeld()`, `ceaseFire()` | for a held button: one shot, then the next as soon as it is fed; on release no more (a tap still fires its one shot) |
 | `adjust(steps)` | speed +/- steps x `stepRpm` (not saved) |
-| `speedMode()` | the [mode](#modes) that sets the speed from the camera's distance |
+| `speedMode()` | the [mode](#modes) that sets the speed from the distance to the goal |
+| `speedFromDistance(camera)` | speed from the camera's distance; with odometry and `Tunables.Aim.goalX, goalY`, from the odometry's while the camera does not see the goal ([Aim](#aim)) |
+| `speedFromOdometry()` | speed from the odometry's distance only (no camera) |
+| `useTable(name)`, `nextTable()` | the shot table to use ("pollen" for `speedByDistancePollen`, case does not matter); the next one. A name with no table warns and keeps the one in use |
+| `tableFrom(() -> name)` | let code (a game-piece sensor) choose: each time its answer changes to a table's name, that table is used; null changes nothing |
+| `startTable(name)` | the table at the start (default: `speedByDistance` if there is one, else the first by name) |
+| `tableName()`, `tableNames()`, `tableField(name)`, `distanceIn()`, `distanceSource()` | |
 | `isReady()`, `isShooting()`, `targetRpm()`, `part()` | |
 | `requireReady(what, check)` | another check before each feed (e.g. the turret is aimed) |
 | `spinAtStart()` | spins up at START (autonomous and TeleOp), ready for the first shot |
@@ -393,9 +403,19 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer
 
 `Tunables.Launcher`: `speedRpm`, `stepRpm`, `readyBandRpm`, `idleRpm`, `shotIntervalSec`,
 `speedByDistance` (`{{inches, rpm}, ...}`, blended between rows; with no goal in view the last speed
-stays), and `kP`, `kI`, `kD`, `kF` (the hub's speed control; only used when `kF` is there: the
+stays), or one table per game piece: `speedByDistancePollen`, `speedByDistanceNectar` (any names after
+`speedByDistance`), and `kP`, `kI`, `kD`, `kF` (the hub's speed control; only used when `kF` is there: the
 [Flywheel Finder](../guides/finders.md) finds them). Buttons (operator): LB spin up/down, RB fire one (hold: keep firing, `fireWhileHeld()` / `ceaseFire()` on release),
-D-pad up/down speed (when free and no speed-from-distance).
+D-pad up/down speed (when free and no speed-from-distance), D-pad right the next shot table (two or more).
+
+```java
+public static double[][] speedByDistancePollen = {{24, 2200}, {48, 2550}, {72, 2900}};   // Tunables.Launcher
+public static double[][] speedByDistanceNectar = {{24, 2400}, {48, 2800}, {72, 3200}};
+// a button: g2.x.press(() -> robot.launcher.useTable("nectar"));   an action: .then(() -> r.launcher.useTable("nectar"))
+```
+
+The Driver Station shows `Shot table: POLLEN, 48 in (camera)` (`odometry`, or `last seen` while no
+goal is seen); with one table, `Shot distance: 48 in (camera)`.
 
 ## Indexer
 
@@ -454,6 +474,50 @@ Its optional Tunables (leave them out for the defaults):
 
 These are read once, in INIT. Changed one with the tuning menu? Copy the value back into
 `Tunables.java`, or the robot uses the old one at the next INIT.
+
+## Aim
+
+Where the goal is, for everything that aims: `robot.aim()`. **The camera first; the odometry as a
+backup.** While the camera sees the goal (a picture newer than 150 ms), that is used. When it does not,
+and the robot has an [`odometry(...)`](#odometry) line and `Tunables.Aim.goalX, goalY`, the goal's
+direction and distance come from where the robot is. A following turret, a launcher's speed from
+distance, whole-robot aim and the aim buzz all use it.
+
+```java
+public static class Aim {                                   // Tunables.java (every line optional)
+    public static double goalX = -58, goalY = 55;           // the goal on the field, inches (odometry backup)
+    public static boolean mirrorForRed = false;             // BIOBUZZ: the field is turned, not mirrored
+    public static double turnKp = 0.02, turnKd = 0.002, maxTurnPower = 0.5, minTurnPower = 0, toleranceDeg = 2;
+    public static double cameraOffset = 0, rumbleDeg = 4;
+}
+```
+
+The goal point uses `driveTo`'s numbers: seen from your drivers' wall, x inches right of the field's
+centre line, y from the centre toward the far wall, written for BLUE. `mirrorForRed` (default true,
+like autonomous): RED mirrors x; false for a field turned half a turn (the same numbers from the red
+wall). Put the point where the camera measures to (the goal's tags), so one shot table fits both
+distances. The odometry is only as good as its pose: autonomous's start spot, carried into TeleOp.
+
+**Whole-robot aim** (no turret): one line in `Controls.java`. While it is on, the robot turns to face
+the goal and the driver keeps forward and sideways; moving the turn stick still turns it by hand. Off
+at START. `turnKp`, `turnKd`, `maxTurnPower`, `minTurnPower` (the least power that turns the robot),
+`toleranceDeg` and `cameraOffset` are its numbers. The Driver Station shows `Aim: camera, 1.5 deg off  AIMED`.
+
+```java
+g1.rb.toggle(robot.aimMode()).says("aim the robot at the goal on/off").rumble();   // Controls.java
+```
+
+**The aim buzz**: `g2.rumbleWhenAimed();` buzzes that gamepad while the aim is within `rumbleDeg`, the
+closer the stronger and longer (an [AimRumble](gamepad.md)). It follows a turret that is following, or
+whole-robot aim; nothing while neither aims, or while paused.
+
+| Method | |
+| --- | --- |
+| `goal()`, `source()` | the goal now (null if neither), and CAMERA, ODOMETRY or NONE |
+| `fromOdometry()` | the goal from the odometry alone (a [TargetObservation](vision.md) with id `ODOMETRY`), or null |
+| `hasGoalPoint()` | `Tunables.Aim` has `goalX` and `goalY` |
+| `mode()` (= `robot.aimMode()`) | whole-robot aim |
+| `errorDeg()`, `isAimed()`, `rumbleDeg()` | degrees off now (NaN = unknown); aimed (whole robot within `toleranceDeg`, or the following turret's `isAimed()`) |
 
 ---
 
@@ -582,7 +646,7 @@ public static Action scoreHigh(Robot r) {
 ## Modes
 
 A [`Mode`](#modes) is a rule a module follows every loop while it is on: `Turret.followMode()`,
-`Launcher.speedMode()`. `on()`, `off()`, `toggle()`, `isOn()`; a button switches it with
+`Launcher.speedMode()`, `robot.aimMode()` ([whole-robot aim](#aim)). `on()`, `off()`, `toggle()`, `isOn()`; a button switches it with
 `g2.back.toggle(robot.turret.followMode())`. Modes are for "always" rules, actions for steps that end.
 
 ---
@@ -624,6 +688,7 @@ has its standard buttons; write only what differs. A [`Pad`](#controlmap) has ev
 | `free()` | no job: the button stays free, even if a module suggested one for it |
 | `says(words)` | the words on the help page |
 | on a pad: `g2.rumbleWhen(test)`, `rumbleWhen(test, n)` | feedback from the robot: a buzz each time `test` becomes true |
+| on a pad: `g2.rumbleWhenAimed()` | buzzes while the aim is close, the closer the stronger ([Aim](#aim)) |
 | on a stick: `use(DoubleConsumer)` | its value every loop (small dead zone, gentle curve) |
 | on a stick: `free()`, `says(words)` | as on a button |
 | in `buttons(...)`: `show(label, value)` | your own value on the Driver Station, read again every loop, e.g. `show("Lift ticks", robot.lift::position);` or `show("Ready", () -> robot.launcher.isReady());`. Not shown while the tuning menu or the button map is open. `value` must not wait; an error in it shows as `error: ...` instead of stopping |

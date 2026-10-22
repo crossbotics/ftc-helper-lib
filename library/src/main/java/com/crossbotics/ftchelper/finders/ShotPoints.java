@@ -62,10 +62,21 @@ public final class ShotPoints {
      * @param section the launcher's Tunables section, e.g. "Launcher"
      */
     public String tunablesLine(String section) {
+        return tunablesLine(section, "speedByDistance");
+    }
+
+    /**
+     * {@link #tunablesLine(String)} for a named table, e.g. field "speedByDistanceNectar":
+     * {@code public static double[][] speedByDistanceNectar = {{48, 2800}};   // in Tunables.Launcher}.
+     *
+     * @param section the launcher's Tunables section, e.g. "Launcher"
+     * @param field   the table's field name, e.g. "speedByDistancePollen"
+     */
+    public String tunablesLine(String section, String field) {
         if (points.isEmpty()) return "";
         List<String> rows = new ArrayList<>();
         for (ShotTable.Shot p : points) rows.add("{" + shortNum(p.distance) + ", " + FinderResults.num(p.rpm, 0) + "}");
-        return "public static double[][] speedByDistance = {" + FinderResults.commas(rows) + "};   // in Tunables." + section;
+        return "public static double[][] " + field + " = {" + FinderResults.commas(rows) + "};   // in Tunables." + section;
     }
 
     // 48.0 -> "48", 48.5 -> "48.5"

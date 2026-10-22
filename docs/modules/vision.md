@@ -230,7 +230,8 @@ camera.groups(java.util.Arrays.asList(goal));
 
 | Field / method | Meaning |
 | --- | --- |
-| `id`, `name` | tag id (`CLUSTER` = -1 for clusters) and name |
+| `id`, `name` | tag id (`CLUSTER` = -1 for clusters; `ODOMETRY` = -2 for a goal worked out from the odometry, not seen) and name |
+| `fromOdometry()` | true for a goal from the odometry ([robot.md: Aim](robot.md#aim)): its bearing is from the robot's front, its distance from the robot's centre |
 | `bearingDeg` | how far to turn to face it; **+ = it is to the left** |
 | `distanceIn` | inches from the camera, flat in the camera's own view (its up/down left out), or NaN if unknown. It is the floor distance only for a level camera; a camera tilted up reads more. Same meaning for both cameras, but make the shot table with the camera mounted as on the robot |
 | `timeNanos` | when the picture was taken |
@@ -255,6 +256,9 @@ in. `ccwPower` gives the same power counterclockwise positive, for your own head
 Gives **0** when there is no target, the picture is old, or there is no bearing: the robot never
 turns toward something it cannot see now. The D part only changes on a NEW picture, so a repeated
 picture never fakes motion. `isAimed()`, `reset()` (call when the driver lets go of the aim button).
+
+In the robot in five files this is built in: `g1.rb.toggle(robot.aimMode())` turns the whole robot to
+the goal while the driver drives, with the odometry as a backup ([robot.md: Aim](robot.md#aim)).
 
 For a turret, use `turret.aimAtTarget(target, cameraOnTurret)`: it uses only fresh pictures, each
 picture once (an old bearing used again would push the turret further and further), and holds still

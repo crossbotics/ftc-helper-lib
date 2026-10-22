@@ -133,6 +133,9 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
     protected final void bindButtons(ControllerBindings driver, ControllerBindings operator) {
         plan = makePlan(robot(), oneDriver(), useStandardButtons(), (g1, g2) -> buttons(robot(), g1, g2));
         plan.compile(robot(), driver, operator, sticks, () -> gamepad1, () -> gamepad2);
+        // Whole-robot aim (robot.aimMode()): while it is on, the robot's turn comes from the aim
+        // unless the driver moves the turn stick.
+        driving().turnAssist(robot().aim()::assistTurn);
         if (oneDriver()) driver.bindPress(ControllerBindings.Pad.G1, Btn.L_STICK_BTN, () -> slowOn = !slowOn);
     }
 
@@ -180,6 +183,7 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
     protected final void addTelemetry(RobotTelemetry t) {
         if (robot().isPaused()) t.warn("PAUSED: everything stopped on brake. BACK to go on.");
         if (plan != null && !plan.slowWarning().isEmpty()) t.warn(plan.slowWarning());
+        if (robot().aim() != null) robot().aim().addTelemetry(t);
         for (Shown s : shown) {
             Object v;
             try {

@@ -32,7 +32,14 @@ public final class TargetObservation {
      */
     public static final int CLUSTER = -1;
 
-    /** The AprilTag's number, or {@link #CLUSTER} for a group of tags. */
+    /**
+     * The id of a target worked out from the ODOMETRY (where the robot is and where the goal is on the
+     * field), not seen by a camera. The five-files robot uses it when the camera loses the goal
+     * (see docs/modules/robot.md, section "Aim").
+     */
+    public static final int ODOMETRY = -2;
+
+    /** The AprilTag's number, {@link #CLUSTER} for a group of tags, or {@link #ODOMETRY}. */
     public final int id;
     /** A name to show on the screen, e.g. "Tag 20" or a cluster's name. */
     public final String name;
@@ -84,6 +91,11 @@ public final class TargetObservation {
     /** True if the camera worked out a bearing (some detections have only an id). */
     public boolean hasBearing() {
         return !Double.isNaN(bearingDeg);
+    }
+
+    /** True if this target came from the odometry ({@link #ODOMETRY}), not from a camera. */
+    public boolean fromOdometry() {
+        return id == ODOMETRY;
     }
 
     /** True if the camera worked out a distance. */

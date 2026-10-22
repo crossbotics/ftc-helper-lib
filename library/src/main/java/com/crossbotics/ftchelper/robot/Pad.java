@@ -102,6 +102,19 @@ public final class Pad {
         plan.watches.add(new ButtonPlan.Watch(which, when, buzzes));
     }
 
+    /**
+     * Feedback for aiming by hand: this gamepad buzzes while the aim is close, the closer the stronger
+     * and longer (last season's "on target" buzz). Works for a turret that follows the goal and for
+     * whole-robot aim ({@code robot.aimMode()}); nothing while neither is aiming. It starts within
+     * {@code Tunables.Aim.rumbleDeg} (default 4 degrees). One line: {@code g1.rumbleWhenAimed();}
+     */
+    public void rumbleWhenAimed() {
+        for (ButtonPlan.Watch w : plan.watches) {
+            if (w.pad == which && w.aim) throw new IllegalStateException("Controls.java: " + this + ".rumbleWhenAimed() is there twice");
+        }
+        plan.watches.add(new ButtonPlan.Watch(which, null, 0, true));
+    }
+
     /** One button or trigger. Each method gives it a job and hands the button back. */
     public static final class Button {
         final Pad pad;

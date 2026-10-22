@@ -29,10 +29,24 @@ import java.util.List;
  * <p>{@link #fire()} spins up if needed and feeds one piece as soon as the wheel is at speed (it gives
  * up after 3 s and says why). The driver can step the speed up and down ({@link #adjust(int)}).
  * With {@link #speedFromDistance}, the speed comes from {@code speedByDistance} (blended between rows)
- * while the goal is seen; with no goal in view it keeps the last speed.
+ * while the goal is seen; when the camera does not see it, from the odometry's distance (with an
+ * {@code odometry(...)} line and {@code Tunables.Aim.goalX, goalY}, see {@link Aim}); with neither it
+ * keeps the last speed. {@link #speedFromOdometry()}: the odometry's distance only (no camera).
+ *
+ * <p><b>Several shot tables</b>, one per game piece (they fly differently): every
+ * {@code speedByDistance...} table in the section is one, named by the rest of its name.
+ * <pre>{@code
+ * public static double[][] speedByDistancePollen = {{24, 2100}, {48, 2450}, {72, 2800}};   // "pollen"
+ * public static double[][] speedByDistanceNectar = {{24, 2400}, {48, 2800}, {72, 3200}};   // "nectar"
+ * }</pre>
+ * Switch with {@link #useTable(String)} (a button, an action, an autonomous), {@link #nextTable()},
+ * or let a sensor choose: {@link #tableFrom(java.util.function.Supplier)}. It starts on the plain
+ * {@code speedByDistance} if there is one, else the first by name, or the one given to
+ * {@link #startTable(String)}. The Driver Station shows the table in use.
  *
  * <p>Suggested buttons (operator): LB spins up / down, RB fires one (hold it: keeps firing), D-pad up/down change the speed
- * by {@code stepRpm} (when the D-pad is free).
+ * by {@code stepRpm} (when the D-pad is free and the speed does not come from the distance), D-pad
+ * right picks the next shot table (with two or more).
  *
  * Docs: docs/modules/robot.md (section "Launcher"), docs/modules/launcher.md
  */
@@ -41,13 +55,26 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     private boolean reversed = false;
     private Indexer indexer = null;
     private Camera distanceCamera = null;
+    // speedFromOdometry(): the distance from the odometry alone (no camera).
+    private boolean distanceFromOdometry = false;
+    // The shot tables by name ("main", "pollen"...), the Tunables field each came from, the one in use.
+    private final java.util.Map<String, ShotTable> tables = new java.util.LinkedHashMap<>();
+    private final java.util.Map<String, String> tableFields = new java.util.LinkedHashMap<>();
+    private String tableName = null;
+    private String startTable = null;
+    // tableFrom(...): asked every loop; a new answer picks that table.
+    private java.util.function.Supplier<String> tableSupplier = null;
+    private String lastSupplied = null;
+    private String tableProblem = "";
+    // The last distance to the goal (inches; NaN = none yet) and where it came from.
+    private double lastDistance = Double.NaN;
+    private Aim.Source distanceSource = Aim.Source.NONE;
     private final Mode speedMode = new Mode("Speed from distance", false);
     private final List<String> checkNames = new java.util.ArrayList<>();
     private final List<java.util.function.BooleanSupplier> checks = new java.util.ArrayList<>();
 
     com.crossbotics.ftchelper.launcher.Launcher part;
     private Flywheel flywheel;
-    private ShotTable table = null;
     private Tunable speedRpm, stepRpm;
     private int adjustSteps = 0;
     private boolean spinning = false;
@@ -124,9 +151,46 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         return this;
     }
 
-    /** Sets the speed from this camera's distance to the goal ({@code Tunables...speedByDistance}). */
+    /**
+     * Sets the speed from this camera's distance to the goal ({@code Tunables...speedByDistance}). With
+     * an {@code odometry(...)} line and {@code Tunables.Aim.goalX, goalY}, the odometry's distance is
+     * used while the camera does not see the goal.
+     */
     public Launcher speedFromDistance(Camera camera) {
         distanceCamera = camera;
+        return this;
+    }
+
+    /**
+     * Sets the speed from the odometry's distance to the goal, with NO camera: where the robot is
+     * ({@code robot.pose()}) and {@code Tunables.Aim.goalX, goalY} (see {@link Aim}). Needs an
+     * {@code odometry(...)} line.
+     */
+    public Launcher speedFromOdometry() {
+        distanceFromOdometry = true;
+        return this;
+    }
+
+    /**
+     * The shot table to start with, by name ("pollen" for {@code speedByDistancePollen}). Default: the
+     * plain {@code speedByDistance} if there is one, else the first by name.
+     */
+    public Launcher startTable(String name) {
+        startTable = name == null ? null : name.trim().toLowerCase(java.util.Locale.US);
+        return this;
+    }
+
+    /**
+     * Picks the shot table from your own code every loop, e.g. a sensor that tells which game piece is
+     * loaded: {@code .tableFrom(() -> robot.indexer.pieceName())}. Each time its answer CHANGES to a
+     * table's name, that table is used (case does not matter); null or "" changes nothing. A button can
+     * still pick another table until the answer changes again. Call it in Robot.java (chained) or later.
+     *
+     * @param tableName gives a table's name ("pollen"), or null when it does not know
+     */
+    public Launcher tableFrom(java.util.function.Supplier<String> tableName) {
+        tableSupplier = tableName;
+        lastSupplied = null;
         return this;
     }
 
@@ -164,21 +228,43 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
                 .idleRpm(t.number("idleRpm", 0))
                 .shotInterval(t.number("shotIntervalSec", 0.25));
         for (int i = 0; i < checks.size(); i++) part.requireReady(checkNames.get(i), checks.get(i));
-        double[][] rows = t.table("speedByDistance");
-        if (rows != null && rows.length > 0) {
-            table = new ShotTable();
-            for (double[] r : rows) if (r.length >= 2) table.add(r[0], r[1]);
-            part.table(table);
-        } else if (distanceCamera != null) {
-            throw new IllegalStateException(name() + ".speedFromDistance needs Tunables." + name()
-                    + ".speedByDistance = {{inches, rpm}, ...}");
+        // Every speedByDistance... table (one per game piece, if they fly differently).
+        for (java.util.Map.Entry<String, java.util.Map.Entry<String, double[][]>> e : t.tables("speedByDistance").entrySet()) {
+            ShotTable table = new ShotTable();
+            for (double[] r : e.getValue().getValue()) if (r.length >= 2) table.add(r[0], r[1]);
+            if (table.points().isEmpty()) continue;   // an empty table cannot give a speed
+            tables.put(e.getKey(), table);
+            tableFields.put(e.getKey(), e.getValue().getKey());
+        }
+        if (tables.isEmpty() && usesDistance()) {
+            throw new IllegalStateException(name() + (distanceFromOdometry ? ".speedFromOdometry" : ".speedFromDistance")
+                    + " needs Tunables." + name() + ".speedByDistance = {{inches, rpm}, ...} (or one table per game piece, "
+                    + "like speedByDistancePollen)");
+        }
+        if (distanceFromOdometry && robot.odometrySpec() == null) {
+            throw new IllegalStateException("Robot.java: " + name() + ".speedFromOdometry() needs an odometry(...) line");
+        }
+        if (distanceFromOdometry && !robot.aim().hasGoalPoint()) {
+            throw new IllegalStateException(name() + ".speedFromOdometry() needs the goal on the field: "
+                    + "Tunables.Aim { public static double goalX = ..., goalY = ...; } (inches, see docs/modules/robot.md#aim)");
+        }
+        if (!tables.isEmpty()) {
+            String first = tables.containsKey("main") ? "main" : tables.keySet().iterator().next();
+            if (startTable != null) {
+                if (!tables.containsKey(startTable)) {
+                    throw new IllegalStateException("Robot.java: " + name() + ".startTable(\"" + startTable + "\"): Tunables."
+                            + name() + " has no such table (it has: " + tableList() + ")");
+                }
+                first = startTable;
+            }
+            select(first);
         }
         part.setRpm(speedRpm.get());
     }
 
     @Override
     void start() {
-        if (distanceCamera != null) speedMode.on();
+        if (usesDistance()) speedMode.on();
         if (spinAtStart) {
             spinning = true;
             part.spinUp();
@@ -267,9 +353,83 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         adjustSteps += steps;
     }
 
-    /** Speed from the camera's distance: on from START when {@link #speedFromDistance} is used. */
+    /**
+     * Speed from the distance to the goal: on from START when {@link #speedFromDistance} or
+     * {@link #speedFromOdometry} is used.
+     */
     public Mode speedMode() {
         return speedMode;
+    }
+
+    // ----------------------------- shot tables -----------------------------
+
+    /**
+     * Uses this shot table from now on, e.g. {@code robot.launcher.useTable("nectar")} for
+     * {@code speedByDistanceNectar} (case does not matter). From a button, an action
+     * ({@code .then(() -> r.launcher.useTable("nectar"))}) or another part's code. A name with no table
+     * keeps the table in use and warns on the Driver Station (it never stops the robot in a match).
+     *
+     * @param name the table's name: the end of its Tunables name ("pollen"), or "main" for {@code speedByDistance}
+     */
+    public void useTable(String name) {
+        needBuilt(part);
+        if (name == null || name.trim().isEmpty()) return;
+        String key = name.trim().toLowerCase(java.util.Locale.US);
+        if (!tables.containsKey(key)) {
+            tableProblem = "no shot table \"" + name.trim() + "\" (Tunables." + name() + " has: " + tableList() + ")";
+            return;
+        }
+        select(key);
+    }
+
+    /** The next shot table (after the last, the first again), for a button. */
+    public void nextTable() {
+        needBuilt(part);
+        if (tables.isEmpty()) return;
+        java.util.List<String> names = tableNames();
+        select(names.get((names.indexOf(tableName) + 1) % names.size()));
+    }
+
+    /** The shot table in use ("pollen", "main"), or null if there is none. */
+    public String tableName() {
+        return tableName;
+    }
+
+    /** Every shot table's name, in order ("main" first, then by name). Empty before INIT or with none. */
+    public java.util.List<String> tableNames() {
+        return new java.util.ArrayList<>(tables.keySet());
+    }
+
+    /** The Tunables field a table came from ("speedByDistancePollen"), or null if there is no such table. */
+    public String tableField(String name) {
+        return name == null ? null : tableFields.get(name.trim().toLowerCase(java.util.Locale.US));
+    }
+
+    /** The distance to the goal last used for the speed (inches), NaN if none yet. */
+    public double distanceIn() {
+        return lastDistance;
+    }
+
+    /** Where that distance came from last loop: CAMERA, ODOMETRY or NONE (keeps the last speed). */
+    public Aim.Source distanceSource() {
+        return distanceSource;
+    }
+
+    // Switches to a table that exists, and works out the speed again at once from the last distance.
+    private void select(String key) {
+        tableName = key;
+        tableProblem = "";
+        part.table(tables.get(key));
+        if (!Double.isNaN(lastDistance) && speedMode.isOn()) part.setDistance(lastDistance);
+    }
+
+    private String tableList() {
+        return tables.isEmpty() ? "none" : commas(tables.keySet());
+    }
+
+    // True if the speed comes from the distance (camera, odometry, or both).
+    private boolean usesDistance() {
+        return distanceCamera != null || distanceFromOdometry;
     }
 
     /** True when the wheel is at speed (and every other check passes). */
@@ -294,10 +454,23 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
 
     @Override
     public void update() {
-        if (speedMode.isOn() && table != null && distanceCamera != null) {
-            TargetObservation goal = distanceCamera.goal();
-            // No goal in view: keep the last speed (a sudden change would spoil the next shot).
-            if (goal != null && goal.hasDistance()) part.setDistance(goal.distanceIn);
+        // A sensor (or other code) that picks the table: a NEW answer picks it.
+        if (tableSupplier != null) {
+            String now = tableSupplier.get();
+            if (now == null ? lastSupplied != null : !now.equals(lastSupplied)) {
+                lastSupplied = now;
+                if (now != null && !now.trim().isEmpty()) useTable(now);
+            }
+        }
+        if (speedMode.isOn() && !tables.isEmpty() && usesDistance()) {
+            // The camera first (a fresh picture with a distance), then the odometry.
+            TargetObservation seen = robot.aim().cameraGoal(distanceCamera);
+            if (seen == null || !seen.hasDistance()) seen = robot.aim().fromOdometry();
+            distanceSource = Aim.sourceOf(seen);
+            if (seen != null && seen.hasDistance()) lastDistance = seen.distanceIn;
+            // No goal at all: keep the last distance, so the last speed (a sudden change would spoil
+            // the next shot). Before the first one: speedRpm.
+            if (!Double.isNaN(lastDistance)) part.setDistance(lastDistance);
         } else {
             part.setRpm(speedRpm.get() + adjustSteps * stepRpm.get());
         }
@@ -345,7 +518,17 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
 
     @Override
     public void addTelemetry(RobotTelemetry t) {
-        if (part != null) part.addTelemetry(t);
+        if (part == null) return;
+        if (!tableProblem.isEmpty()) t.warn(name() + ": " + tableProblem);
+        // The distance and where it came from, e.g. "48 in (camera)"; "(last seen)" while no goal is seen.
+        String where = !speedMode.isOn() || tableName == null ? "" : Double.isNaN(lastDistance) ? "no goal yet"
+                : fmt("%.0f in (%s)", lastDistance, distanceSource == Aim.Source.NONE ? "last seen" : distanceSource.words());
+        if (tables.size() > 1) {
+            t.line("Shot table", tableName.toUpperCase(java.util.Locale.US) + (where.isEmpty() ? "" : ", " + where));
+        } else if (!where.isEmpty()) {
+            t.line("Shot distance", where);
+        }
+        part.addTelemetry(t);
     }
 
     @Override
@@ -353,10 +536,11 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         Pad op = plan.operator();
         op.lb.toggle(this).says("spin up / down");
         op.rb.hold(this::fireWhileHeld, this::ceaseFire).says("fire one; hold: keep firing");
-        if (distanceCamera == null) {
+        if (!usesDistance()) {
             op.dpadUp.press(() -> adjust(1)).says("speed up");
             op.dpadDown.press(() -> adjust(-1)).says("speed down");
         }
+        if (tables.size() > 1) op.dpadRight.press(this::nextTable).says("next shot table (" + tableList() + ")");
     }
 
     // Its motor is named in Launcher.flywheel(name, id).
@@ -381,6 +565,13 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         } else {
             out.add(fmt("shoot.%s = shape=%s, angle=%s, share=0.5", device, spinningShapeName(), Shape.n(shotAngleDeg)));
         }
+    }
+
+    // "a, b, c" (not String.join: the blocking check reads every ".join(" as a thread wait).
+    private static String commas(java.util.Collection<String> names) {
+        StringBuilder sb = new StringBuilder();
+        for (String n : names) sb.append(sb.length() == 0 ? "" : ", ").append(n);
+        return sb.toString();
     }
 
     // No indexer: shots only spin the wheel.

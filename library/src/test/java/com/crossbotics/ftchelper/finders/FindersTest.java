@@ -112,6 +112,9 @@ public class FindersTest {
         p.save(72, 2900, 0);
         p.save(48.5, 2550, 0);
         assertEquals("public static double[][] speedByDistance = {{48.5, 2550}, {72, 2900}};   // in Tunables.Launcher", p.tunablesLine("Launcher"));
+        // One table per game piece: its own field name.
+        assertEquals("public static double[][] speedByDistanceNectar = {{48.5, 2550}, {72, 2900}};   // in Tunables.Launcher",
+                p.tunablesLine("Launcher", "speedByDistanceNectar"));
     }
 
     @Test public void removingOneDevicesLinesKeepsADeviceWithALongerName() {
