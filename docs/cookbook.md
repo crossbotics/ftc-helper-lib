@@ -1402,7 +1402,8 @@ the numbers; `Controls.java` (inside `buttons(...)`) for your own buttons.
 public static double kP = 1.17, kI = 0.117, kD = 0, kF = 11.70, nominalVolts = 12.6;
 // Optional (these are the defaults): one D-pad press = 1%, never more than 15% each way.
 public static double trimStepPercent = 1, trimMaxPercent = 15;
-// Optional: true (the default) = F follows the battery; false = F exactly as tuned.
+// Optional: battery compensation, OFF by default (not yet proven on a real robot: try it and
+// tell us). true = F follows the battery; false (or no line) = F exactly as tuned.
 public static boolean batteryCompensation = true;
 ```
 
@@ -1425,9 +1426,10 @@ g2.x.press(robot.launcher::useLastTrim).says("use last match's trim");
 **Why:** a worn wheel or softer balls make every shot a little short. The trim (+/- 1% a press, at most
 15% and never past the motor's top speed, back to 0 at every INIT) fixes it for this match, for every
 table. At INIT the Driver Station offers last time's trim (`Trim last time : +3%`): double-tap D-pad up
-after START to use it (or your own button: `useLastTrim`, in the recipe); it is never applied by itself. Battery compensation (on with `kF`) already scales
-the F gain by `nominalVolts` / the battery (tuned at 12.6 V, at 11.5 V: F x 1.10), so a trim you need
-every match points at the wheel or the balls: the table is off. Make the trim part of it (+3%: every
+after START to use it (or your own button: `useLastTrim`, in the recipe); it is never applied by itself. Battery compensation (off by default; `batteryCompensation = true`
+turns it on, not yet proven on a real robot) scales the F gain by `nominalVolts` / the battery (tuned at
+12.6 V, at 11.5 V: F x 1.10). A trim you need every match, with a charged battery, points at the wheel
+or the balls: the table is off. Make the trim part of it (+3%: every
 speed x 1.03, `{48, 2550}` becomes `{48, 2627}`), copy the lines into `Tunables.java`, and trim back to 0.
 **More:** [Lesson 9: speed trim and a low battery](tutorials/start/09-shooter-and-camera.md#speed-trim-and-a-low-battery), [Launcher](modules/robot.md#speed-trim-and-battery-compensation).
 

@@ -713,12 +713,12 @@ trim used last time is remembered until the robot app restarts and offered at IN
 (`Trim last time: +3% (double-tap D-pad up after START to use it)`), never applied by itself. The Shot
 Tuner never uses it, so tables are recorded clean.
 
-With `kF` set the battery is already compensated (below), so a trim you need match after match points
+With `kF` set (and battery compensation on, below, or a charged battery), a trim you need match after match points
 at the wheel or the balls: the table is off. Make it part of the table, then trim back to 0. A +3% trim
 all season: every speed times 1.03, so `{48, 2550}` becomes `{48, 2627}` (2550 x 1.03 = 2626.5), in
 every row of every table. Or tune the table again with the Shot Tuner.
 
-**Battery compensation** (on when `kF` is set): every 0.25 s the launcher reads the battery and gives the
+**Battery compensation** (OFF by default; `batteryCompensation = true` with `kF` set turns it on): every 0.25 s the launcher reads the battery and gives the
 hub F x (`nominalVolts` / volts): tuned at 12.6 V, at 11.5 V F x 1.10. The F gain gives the same POWER
 for a speed, and the same power spins the wheel slower on a weaker battery; the hub's I gain only makes
 it up slowly. Scaled, the wheel gets back to speed after a shot as fast at 11.5 V as on a full battery.
@@ -726,16 +726,18 @@ it up slowly. Scaled, the wheel gets back to speed after a shot as fast at 11.5 
 F; the hubs are asked on the library's helper thread (`Devices.batteryReader()`), so the loop never
 waits. Under 11.5 V the Driver Station warns. `nominalVolts` comes from the Flywheel Finder; without it
 the launcher uses 12.8 V (`Flywheel.DEFAULT_NOMINAL_VOLTS`, a charged battery under load).
-`batteryCompensation = false` turns it off. Details: [Flywheel](launcher.md#battery-compensation).
+It is off unless `batteryCompensation = true` is written. Details: [Flywheel](launcher.md#battery-compensation).
 
-> **Battery compensation: on by default, easy to turn off, not yet proven on a robot.**
+> **Battery compensation: OFF by default, not yet proven on a real robot.** Testing teams: please try it
+> and tell us what you see.
 > The RPM control already fixes a low battery by itself, but slowly (the small I gain). Compensation
 > only makes that faster: it helps the first shot after spin-up and quick shots in a row. It cannot help
 > when the battery is too low for the speed you ask (the motor is already at full power).
-> - **Turn it off:** `public static boolean batteryCompensation = false;` in `Tunables.Launcher`.
+> - **Turn it on:** `public static boolean batteryCompensation = true;` in `Tunables.Launcher` (with `kF`
+>   set, and `nominalVolts` from the Flywheel Finder; without it INIT says it assumes 12.8 V).
 > - **Test it on your robot:** with a battery at about 11.5 V, fire 4 shots quickly and watch the
->   launcher's measured RPM against its target on the Driver Station. Do it with compensation on, then
->   off. If you see no difference, leave it off; if the wheel overshoots after a battery swap, turn it
+>   launcher's measured RPM against its target on the Driver Station. Do it with compensation off, then
+>   on. If you see no difference, leave it off; if the wheel overshoots after a battery swap, turn it
 >   off and tell us.
 
 ```java

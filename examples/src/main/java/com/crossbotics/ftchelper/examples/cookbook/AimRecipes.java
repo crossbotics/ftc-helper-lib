@@ -108,7 +108,8 @@ public class AimRecipes {
             public static double kP = 1.17, kI = 0.117, kD = 0, kF = 11.70, nominalVolts = 12.6;
             // Optional (these are the defaults): one D-pad press = 1%, never more than 15% each way.
             public static double trimStepPercent = 1, trimMaxPercent = 15;
-            // Optional: true (the default) = F follows the battery; false = F exactly as tuned.
+            // Optional: battery compensation, OFF by default (not yet proven on a real robot: try it and
+            // tell us). true = F follows the battery; false (or no line) = F exactly as tuned.
             public static boolean batteryCompensation = true;
             // end recipe
         }

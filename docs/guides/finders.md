@@ -155,7 +155,7 @@ Watch the current (amps): a high number while not moving means it is pushing on 
 5. Five files: copy the `Tunables.Launcher: kP = ..., kI = ..., kD = 0, kF = ..., nominalVolts = ...` line
    into `Tunables.Launcher` (the section is the motor's name). A slow recovery adds `shotIntervalSec`.
    `nominalVolts` is the battery voltage the gains were found at: the launcher's battery compensation
-   uses it, so a low battery spins the wheel back up as fast. The RB/LB F changes are only on the
+   (off unless you write `batteryCompensation = true`) uses it, so a low battery spins the wheel back up as fast. The RB/LB F changes are only on the
    screen: copy the line (with the F you ended on) into `Tunables.java`.
 
 ## Drive Tuner: wheel size and strafe correction

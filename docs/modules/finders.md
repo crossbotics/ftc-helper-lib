@@ -156,7 +156,7 @@ The `Tunables` line is for a [`Launcher`](robot.md) module on that motor (here a
 `flywheel`; the lessons call it `launcher`, so `Tunables.Launcher`). `shotIntervalSec` is only there
 when the recovery is longer than the default 0.25 s. `nominalVolts` is the battery voltage while the
 top speed was measured (the screen shows `Battery: 12.61 V (gains for 12.6 V)`): the gains are right for
-that voltage, and the launcher's [battery compensation](launcher.md#battery-compensation) scales F from
+that voltage, and the launcher's [battery compensation](launcher.md#battery-compensation) (off unless turned on) scales F from
 it. Step 2 runs with that compensation, so an F you fine-tune there is for the same voltage. Under
 11.5 V it warns: charge the battery first.
 
