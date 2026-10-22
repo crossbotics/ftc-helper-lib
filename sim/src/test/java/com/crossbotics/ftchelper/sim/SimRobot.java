@@ -33,6 +33,8 @@ final class SimRobot {
     final Map<String, SimServo> servos = new LinkedHashMap<>();
     final Map<String, double[]> crServos = new LinkedHashMap<>();   // name -> {power, reversed (1/0)}
     final Map<String, SimTouch> touches = new LinkedHashMap<>();
+    // Pretend piece sensors (color.NAME = at=ready, distance.NAME = at=intake, acrossMm=150): see SimPieceSensor.
+    final Map<String, SimPieceSensor> pieceSensors = new LinkedHashMap<>();
     // Webcams (camera.KEY = name=Webcam 1, forward=..., see SimCamera), by their configuration name.
     final Map<String, SimCamera> cameras = new LinkedHashMap<>();
     // Limelights (limelight.KEY = name=limelight, ...): their pretend camera is in cameras too.
@@ -217,6 +219,13 @@ final class SimRobot {
             Map<String, String> s = settings(p.getProperty(key));
             touches.put(key.substring("touch.".length()), new SimTouch(s.get(""), dbl(s, "below", 20)));
         }
+        for (String prefix : new String[] {"color.", "distance."}) {
+            for (String key : sortedKeys(p, prefix)) {
+                String n = key.substring(prefix.length());
+                if (pieceSensors.containsKey(n)) throw new IllegalArgumentException("Robot file: two piece sensors are called \"" + n + "\"");
+                pieceSensors.put(n, new SimPieceSensor(this, key, prefix.equals("color."), settings(p.getProperty(key))));
+            }
+        }
         for (String key : sortedKeys(p, "camera.")) {
             Map<String, String> s = settings(p.getProperty(key));
             // The name in the robot configuration: name=Webcam 1 (a name with a space can't be a key),
@@ -315,6 +324,7 @@ final class SimRobot {
         for (Map.Entry<String, SimTouch> e : touches.entrySet()) {
             devices.put(e.getKey(), e.getValue().touchSensor());
         }
+        for (Map.Entry<String, SimPieceSensor> e : pieceSensors.entrySet()) devices.put(e.getKey(), e.getValue().device());
         if (!imuName.isEmpty()) devices.put(imuName, imu());
         if (odometry != null) odometry.addDevices(devices, motors);
         for (SimCamera c : cameras.values()) if (c.device != null) devices.put(c.name, c.device);

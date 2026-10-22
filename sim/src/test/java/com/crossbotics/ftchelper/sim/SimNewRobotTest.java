@@ -40,7 +40,7 @@ public class SimNewRobotTest {
         assertTrue(robot, robot.contains("claw = add(Claw.servo(\"claw\"));"));
         assertTrue(robot, robot.contains("intake = add(Intake.crServos(\"intake\"));"));
         assertTrue(robot, robot.contains("Camera.limelight(\"limelight\").goal(\"BLUE SCORING\", \"RED SCORING\")"));
-        assertTrue(robot, robot.contains("// TODO RevColorSensorV3 \"color\": no module for it yet"));
+        assertTrue(robot, robot.contains("add(PieceSensor.color(\"color\").kinds(\"PIECE\"));"));
         String tunables = f.get("Tunables.java");
         assertTrue(tunables, tunables.contains("public static class Feeder {"));
         assertTrue(tunables, tunables.contains("public static class Webcam1 {") || !tunables.contains("Webcam1"));

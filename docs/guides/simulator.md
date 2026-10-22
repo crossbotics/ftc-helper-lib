@@ -247,6 +247,8 @@ default):
 | `servo.speed` | 1.0 | positions per second for a servo with no part |
 | `crservo.NAME =` | | a continuous servo (the value is not used) |
 | `touch.NAME = MOTOR, below=N` | below 20 | a switch pressed while that motor is within N counts of its `min` (reads `getState()` false when pressed) |
+| `color.NAME = at=ready` | | a colour sensor with distance (REV Color Sensor V3) that sees the piece at one spot: `at=ready` (next to fire) or `at=intake` ([game pieces](#game-pieces)) |
+| `distance.NAME = at=intake, acrossMm=150` | `acrossMm=150` | a distance sensor across a channel: `acrossMm` minus the piece's size when one is there ([game pieces](#game-pieces)) |
 | `camera.NAME = ...` | | a webcam or Limelight ([cameras](#cameras)) |
 | `shape.NAME = TYPE, ...` | | a part to draw and check ([robot shapes](#robot-shapes)). Sizes when `size=` is left out: slide 2x2x12, arm 10x2x2, turret 8x8x2, claw 3x1x3, roller 2x12x2, flywheel 4x2x4 |
 | `collect.NAME = shape=a+b, motor=M, holds=N` | `reach=0.75`, `holds=4` | takes pieces in ([game pieces](#game-pieces)); `crservo=` instead of `motor=`, `inward=-` |
@@ -445,6 +447,24 @@ The bottom POLLEN sits in the opening as a real piece: it stays still until the 
 comes near, and a part that reaches in can knock it out. An intake running inward (or a closed claw) at
 the opening takes it. Either way, the next one drops into its place about 0.12 s later. The robot rolls
 over the FLOWER's thin floor plate (0.35 in); pieces rest on it.
+
+**Pretend piece sensors** (for [`Pieces` and `PieceSensor`](../modules/robot.md#pieces-and-piecesensor);
+`:sim:fromRobot` writes these lines from Robot.java):
+
+```properties
+# a colour sensor at the "ready to fire" slot: it sees the next piece to fire (the oldest held) in the
+# field file's colour, 15 mm away; nothing there: dark grey, 120 mm
+color.ready_color = at=ready
+# at=intake: it sees each piece the intake takes in, for 0.25 s
+color.intake_color = at=intake
+# a distance sensor across a 150 mm channel: 150 minus the piece's size (POLLEN 79 mm, NECTAR 59 mm)
+distance.intake_distance = at=intake, acrossMm=150
+```
+
+The colours are the screen colours of the field file, not a real sensor's: measure the real ones with
+the Piece Tuner (it also runs here). A motor feeder sends a piece every 0.3 s while it runs: keep a
+motor indexer's `feedSec` under 0.3 s, or one feed fires two pieces here and the count is off by one.
+A second webcam's colours are not simulated (it says "not found" and sees nothing).
 
 **Rollers turn the pieces they touch.** A roller or spinner (any `roller` or `flywheel` shape) drags a
 piece along with its surface, at its real surface speed, as far as the grip allows. So spinners can pull
@@ -756,7 +776,8 @@ nothing more); phone cameras are not simulated; the resolution comes from the ro
 
 ## Not simulated
 
-Phone cameras, and colour and distance sensors. The Shot and Aim tuners work without a
+Phone cameras, and a webcam's colours (`PieceSensor.camera`). Colour and distance sensors are simulated
+only as [piece sensors](#game-pieces). The Shot and Aim tuners work without a
 camera when `createCamera()` returns null. The physics is a model: real numbers (gains, speeds, shot
 tables) must still be found on the robot.
 

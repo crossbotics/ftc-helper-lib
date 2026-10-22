@@ -202,6 +202,7 @@ final class SimPieces {
             for (SimWorld.Ball b : world.balls()) world.removeBall(b);
             for (Grab g : grabs) g.heldType = null;
             stored.clear();
+            lastIn = null;
             // the HIVEs back as the match starts them
             robot.field.resetHives();
             for (SimField.Hive h : robot.field.hives) world.placeHive(h);
@@ -426,7 +427,7 @@ final class SimPieces {
                     double power = c.motor != null ? robot.motors.get(c.motor).appliedPower
                             : robot.crServos.get(c.crservo)[0] * (robot.crServos.get(c.crservo)[1] == 1 ? -1 : 1);
                     if (c.threshold > 0 ? power >= c.threshold : power <= c.threshold) {
-                        stored.add(b.type);
+                        collected(b.type);
                         world.removeBall(b);
                         taken = true;
                         break;
@@ -558,7 +559,7 @@ final class SimPieces {
                     double power = c.motor != null ? robot.motors.get(c.motor).appliedPower
                             : robot.crServos.get(c.crservo)[0] * (robot.crServos.get(c.crservo)[1] == 1 ? -1 : 1);
                     if (c.threshold > 0 ? power >= c.threshold : power <= c.threshold) {
-                        stored.add(takeFromStack(i, inSlot));
+                        collected(takeFromStack(i, inSlot));
                         stackReady.set(i, world.time() + fall);
                         taken = true;
                         break;
@@ -711,6 +712,31 @@ final class SimPieces {
     private static double[] dir(double h, double[] r) {
         // forward = (-sin h, cos h); left = (-cos h, -sin h)
         return new double[] {-Math.sin(h) * r[0] - Math.cos(h) * r[1], Math.cos(h) * r[0] - Math.sin(h) * r[1], r[2]};
+    }
+
+    // The last piece an intake took in, and when (physics time): a pretend sensor at the intake sees it a moment.
+    private SimField.PieceType lastIn = null;
+    private double lastInTime = -1;
+    /** How long (s) a pretend sensor at the intake sees each piece that comes in. */
+    static final double SEEN_AT_INTAKE_SEC = 0.25;
+
+    // An intake took a piece in: it is held, and the intake's pretend sensor sees it for a moment.
+    private void collected(SimField.PieceType type) {
+        stored.add(type);
+        lastIn = type;
+        lastInTime = world == null ? 0 : world.time();
+    }
+
+    /**
+     * The piece a pretend sensor sees at a spot, or null: "ready" = the next to fire (the oldest held),
+     * "intake" = a piece that came in during the last {@link #SEEN_AT_INTAKE_SEC} seconds.
+     */
+    SimField.PieceType atSpot(String spot) {
+        synchronized (robot) {
+            if (spot.equals("ready")) return stored.isEmpty() ? null : stored.get(0);
+            if (world == null || lastIn == null) return null;
+            return world.time() - lastInTime <= SEEN_AT_INTAKE_SEC ? lastIn : null;
+        }
     }
 
     // ---------------------------------------------------------------- for the page and scenarios

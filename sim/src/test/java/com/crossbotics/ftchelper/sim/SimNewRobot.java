@@ -218,6 +218,15 @@ public final class SimNewRobot {
                 case "touch":
                     switches.add(d);
                     break;
+                case "color":
+                case "distance": {
+                    // A piece sensor alone; with your kinds, it can go into a Pieces line (docs/modules/robot.md).
+                    Part p = new Part("PieceSensor", field, "PieceSensor." + kind + "(" + q(d.name) + ").kinds(\"PIECE\")" + ren, section)
+                            .num("nearMm", kind.equals("color") ? "40" : "100");
+                    p.note = "TODO your kinds of piece (e.g. \"POLLEN\", \"NECTAR\"), then the Piece Tuner";
+                    parts.add(p);
+                    break;
+                }
                 case "webcam":
                     parts.add(0, new Part("Camera", field, "Camera.webcam(" + q(d.name) + ")" + goal() + ren, section));
                     break;

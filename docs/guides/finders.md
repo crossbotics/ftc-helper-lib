@@ -51,6 +51,8 @@ flowchart LR
 7. **Characterizer** (any time after the Motor Finder): how the motors really move, for feedforward
    and the simulator.
 
+Any time, with no order: the **Piece Tuner** for a robot with game-piece sensors ([below](#piece-tuner-what-each-sensor-sees)).
+
 ## Before you start
 
 - Put the robot on a block for the Servo, Motor and Flywheel finders (wheels off the floor).
@@ -186,6 +188,23 @@ With `robot()`, the Shot Tuner uses your robot's launcher, camera and drive. A t
 the "fire only when aimed" checks are off: point the robot at the goal with the sticks.
 
 Charge the battery before tuning speeds: a weak battery changes how far the shots go.
+
+## Piece Tuner: what each sensor sees
+
+For a robot with a [`Pieces` or `PieceSensor`](../modules/robot.md#pieces-and-piecesensor) line. Its
+file names your robot, like the Odometry Tuner (the cookbook's [piece-tuner recipe](../cookbook.md#how-do-i-tune-the-piece-sensors)).
+Nothing moves, so no block is needed.
+
+1. Mount the sensor where it will stay. Put a piece where it really sits or passes (at the intake: the
+   spot where the sensor sees it go by).
+2. D-pad up/down: the sensor. D-pad left/right: which kind is in front of it. **A**: measure (hold
+   still for half a second). Do every kind, then EMPTY (nothing there).
+3. Copy the lines into `Tunables.java` (e.g. `Tunables.IntakeColor: POLLEN = 74`), rebuild, and run it
+   again: "It sees" should name each piece you hold up, and NONE with nothing there.
+
+Problems it warns about: two kinds that read nearly the same (a colour sensor too far away, a
+distance sensor that does not look straight across), and EMPTY that looks like a piece (aim the sensor
+at a far wall or a grey or black background).
 
 ## Characterizer: how the robot really moves
 

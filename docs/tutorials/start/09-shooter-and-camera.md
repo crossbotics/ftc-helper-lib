@@ -235,6 +235,25 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
   `() -> turret.isAimed()` is a lambda (lesson 5): the launcher asks it again before every piece. The
   words are what the Driver Station shows if it gives up: `Launcher gave up: turret aimed`.
 
+## 8. Extra: know which piece fires next
+
+Two kinds of piece that fly differently (BIOBUZZ: a 2.8 in POLLEN and a 3.6 in NECTAR) need two
+speeds. A colour sensor where the pieces come in (and one at the "ready to fire" slot) lets the robot
+count what it holds and know the next one:
+
+```java
+pieces = add(Pieces.kinds("POLLEN", "RED_NECTAR", "BLUE_NECTAR")
+        .comingIn(PieceSensor.color("intake_color"))
+        .readyToFire(PieceSensor.color("ready_color"))
+        .max(4));
+```
+
+Each piece the intake sensor sees counts one in, each feed one out. `robot.pieces.next()` says
+`"POLLEN"`, `"UNKNOWN"` or `"NONE"`; `robot.pieces.isFull()` is true at 4 (rule G407). Each kind's
+colour goes in Tunables, measured with the Piece Tuner. The whole story, other sensors and the hooks
+(a shot table per kind, LEDs): [Pieces and PieceSensor](../../modules/robot.md#pieces-and-piecesensor),
+and the [cookbook](../../cookbook.md#game-pieces).
+
 ## Try it in the simulator
 
 The goBILDA bot has a measured simulator robot. From the `ftc-helper-lib` folder:
