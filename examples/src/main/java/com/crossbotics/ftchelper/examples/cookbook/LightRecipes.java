@@ -79,6 +79,27 @@ public class LightRecipes {
         // end recipe
     }
 
+    /** Other colors for the alliance at INIT (its own TeleOp: the main one keeps the defaults). */
+    @TeleOp(name = "Cookbook Alliance Colors", group = "Cookbook")
+    @Disabled
+    public static class AllianceColors extends ControlMap<Robot> {
+        public static boolean oneDriver = false;
+
+        @Override
+        protected void buttons(Robot robot, Pad g1, Pad g2) {
+            // recipe: light-alliance
+            // At INIT the light shows the alliance chosen (solid RED or BLUE; white blinking until one is
+            // chosen) and flashes it for 1 s at START: on by default, nothing to write.
+            // Your light shows red badly? Other colors for the alliance at INIT (BLUE, and PURPLE for RED):
+            robot.lights.allianceColors(LightColor.BLUE, LightColor.PURPLE);
+            // No alliance color at INIT at all (your rules from INIT on): delete the line above and write
+            //     robot.lights.allianceAtInit(false);
+            // or, in Tunables.java, the light's section: public static class Light {
+            //     public static boolean allianceAtInit = false; }   (the line in Controls.java wins)
+            // end recipe
+        }
+    }
+
     @TeleOp(name = "Cookbook Lights", group = "Cookbook")
     @Disabled
     public static class Controls extends ControlMap<Robot> {
@@ -110,16 +131,6 @@ public class LightRecipes {
             robot.lights.otherwise(LightColor.OFF);                                         // none true
             // end recipe
 
-            // recipe: light-alliance
-            // At INIT the light shows the alliance chosen (solid RED or BLUE; white blinking until one is
-            // chosen) and flashes it for 1 s at START: on by default, nothing to write.
-            // Your light shows red badly? Other colors for the alliance at INIT (BLUE, and PURPLE for RED):
-            robot.lights.allianceColors(LightColor.BLUE, LightColor.PURPLE);
-            // No alliance color at INIT at all (your rules from INIT on): delete the line above and write
-            //     robot.lights.allianceAtInit(false);
-            // or, in Tunables.java, the light's section: public static class Light {
-            //     public static boolean allianceAtInit = false; }   (the line in Controls.java wins)
-            // end recipe
 
             g2.x.press(Actions.shootTwo(robot)).says("shoot two");
         }

@@ -167,6 +167,9 @@ public class FinderSafetyTest {
         // The cookbook's robot has a Pinpoint (CookbookTest runs its files on their own robot file).
         EXPECTED.put("Cookbook TeleOp", "\"pinpoint\"");
         EXPECTED.put("Cookbook Leave the Start", "\"pinpoint\"");
+        EXPECTED.put("Near: Preload + Park", "\"pinpoint\"");
+        EXPECTED.put("Near: Preload + Cycle + Park", "\"pinpoint\"");
+        EXPECTED.put("Choose in INIT", "\"pinpoint\"");
         EXPECTED.put("Cookbook Odometry Tuner", "\"pinpoint\"");
         EXPECTED.put("Cookbook Shot Tuner", "\"pinpoint\"");
         // The cookbook's Piece Tuner uses the game-pieces recipe robot (CookbookTest runs it on its own file).
