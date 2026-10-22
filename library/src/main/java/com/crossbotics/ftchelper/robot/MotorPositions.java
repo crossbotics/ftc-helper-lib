@@ -207,6 +207,37 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
         if (part != null) part.addTelemetry(t);
     }
 
+    // ----------------------------- interlock rules -----------------------------
+
+    @Override boolean zoneCapable() { return true; }
+    @Override String zoneUnit() { return unit(); }
+    @Override double zoneMin() { return min; }
+    @Override double zoneMax() { return max; }
+    @Override boolean zoneKnown() { return part != null && !part.isWaitingForHoming(); }
+    @Override String zoneUnknownWords() { return "not homed on its switch yet"; }
+
+    @Override
+    double[] zoneSweep() {
+        if (!zoneKnown()) return new double[] {min, max};
+        double p = part.getPosition();
+        return new double[] {p, p};
+    }
+
+    @Override double zoneTarget() { return part == null ? Double.NaN : part.getTarget(); }
+    @Override double zoneManual() { return part == null ? 0 : part.getManualPower(); }
+
+    @Override
+    void zoneFence(double lo, double hi) {
+        if (part != null) part.fence(lo, hi);
+    }
+
+    @Override
+    double zoneDefaultMargin() {
+        // Twice the tolerance, and at least 1/50 of the range.
+        double tol = tunables == null ? 0 : tunables.number("tolerance", defaults()[9]);
+        return Math.max(2 * tol, (max - min) / 50);
+    }
+
     static Map<String, Double> positions(Object... nameValue) {
         Map<String, Double> m = new LinkedHashMap<>();
         for (int i = 0; i < nameValue.length; i += 2) m.put((String) nameValue[i], ((Number) nameValue[i + 1]).doubleValue());

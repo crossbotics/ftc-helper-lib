@@ -71,6 +71,10 @@ public abstract class RobotDefinition {
     private final List<Shape> fixed = new ArrayList<>();
     /** Runs the actions; one per robot. */
     final ActionRunner runner = new ActionRunner();
+    // The interlock rules (keepApart lines), run every loop after the actions, before the parts.
+    final Interlock.Rules interlocks = new Interlock.Rules();
+    // True in an autonomous (Auto sets it before setup): a turret's angle is not carried over then.
+    boolean autonomous = false;
 
     /**
      * Describe the robot here: one {@link #drive} line and one {@link #add} line per mechanism.
@@ -121,6 +125,46 @@ public abstract class RobotDefinition {
         if (modules.contains(module)) throw new IllegalStateException("Robot.java: " + module.name() + " is added twice");
         modules.add(module);
         return module;
+    }
+
+    /**
+     * An interlock rule: these two parts are never in their zones at the same time (see {@link Interlock}).
+     * Write it after the parts' {@code add} lines; the numbers go in {@code Tunables.<ruleName>}. Any
+     * number of rules, between any parts; a robot with none works as before.
+     *
+     * <pre>{@code
+     * keepApart("TurretLift", turret.zone(), lift.zoneAbove());   // turret out of the back while the lift is up
+     * keepApart("WristLift", wrist.zone(), lift.zoneBelow());     // wrist folded before the lift goes low
+     * keepApart("ClawLift", claw.zone(), lift.zoneAbove());       // claw closed above a height
+     * }</pre>
+     *
+     * @param ruleName the rule's name, and its Tunables section (e.g. "TurretLift")
+     * @param first    one part's zone, e.g. {@code turret.zone()}; it goes first if both want in at once
+     * @param second   the other part's zone, e.g. {@code lift.zoneAbove()}, or {@link Zone#when}
+     * @return the rule ({@link Interlock#status()} says what it holds)
+     */
+    protected final Interlock keepApart(String ruleName, Zone first, Zone second) {
+        if (ruleName == null || ruleName.trim().isEmpty()) throw new IllegalArgumentException("Robot.java: keepApart needs a rule name");
+        if (first == null || second == null) throw new IllegalArgumentException("Robot.java: keepApart(\"" + ruleName + "\", ...) needs two zones");
+        if (first.part != null && first.part == second.part) {
+            throw new IllegalArgumentException("Robot.java: keepApart(\"" + ruleName + "\"): both zones are " + first.part.name()
+                    + "'s; a rule keeps two different parts apart");
+        }
+        if (first.part == null && second.part == null) {
+            throw new IllegalArgumentException("Robot.java: keepApart(\"" + ruleName + "\"): two conditions; at least one zone must be a part's");
+        }
+        for (Interlock r : interlocks.rules) {
+            if (r.name().equals(ruleName)) throw new IllegalArgumentException("Robot.java: two interlock rules are called \"" + ruleName + "\"");
+        }
+        Interlock rule = new Interlock(ruleName, first, second);
+        interlocks.add(rule);
+        return rule;
+    }
+
+    /** The interlock rules from Robot.java (read only). */
+    public final List<Interlock> interlocks() {
+        describe();
+        return Collections.unmodifiableList(interlocks.rules);
     }
 
     /**
@@ -228,6 +272,9 @@ public abstract class RobotDefinition {
             all.add(follower);
         }
         all.add(runner);
+        // The interlock rules right after the actions: they see this loop's commands and set each part's
+        // fence before the parts move.
+        all.add(interlocks);
         // Tunables.Aim (optional): made before the parts, which ask it where the goal is.
         aim = new Aim(this, TunableSection.of(tunablesClass, "Aim"));
         // Cameras first, so the parts that use them see this loop's picture.
@@ -241,7 +288,10 @@ public abstract class RobotDefinition {
         }
         // The other sections (Tunables.Auto...): in the tuning menu, and their saved values used now,
         // before the autonomous reads them to build its steps.
+        // The interlock rules' numbers (read once: not changeable live, see Interlock).
+        for (Interlock r : interlocks.rules) r.build(TunableSection.of(tunablesClass, r.name()), this);
         Set<String> used = new LinkedHashSet<>();
+        for (Interlock r : interlocks.rules) used.add(r.name());
         used.add("Drive");
         used.add("Odometry");   // Tunables.Odometry: the odometry's scales and "checked", read here
         used.add("Buttons");   // Tunables.Buttons: the gesture times, read by Controls.java's buttons
@@ -530,6 +580,7 @@ public abstract class RobotDefinition {
             for (Module<?> c : m.children()) out.addAll(c.notes());
             out.addAll(m.notes());
         }
+        if (built) for (Interlock r : interlocks.rules) out.add(r.initLine());
         return out;
     }
 
@@ -703,6 +754,7 @@ public abstract class RobotDefinition {
         Set<String> sections = new LinkedHashSet<>();
         sections.add("Drive");
         sections.add("Aim");   // read by aim(): a part must not use that name
+        for (Interlock r : interlocks.rules) sections.add(r.name());
         for (Module<?> m : modules) {
             List<Module<?>> group = new ArrayList<>(m.children());
             group.add(m);
@@ -711,8 +763,8 @@ public abstract class RobotDefinition {
                     if (!devices.add(d)) throw new IllegalStateException("Robot.java: the device \"" + d + "\" is used twice");
                 }
                 if (!sections.add(g.name())) {
-                    throw new IllegalStateException("Robot.java: two parts read Tunables." + g.name()
-                            + ": give one of them .tunables(\"OtherName\")");
+                    throw new IllegalStateException("Robot.java: two parts (or a part and an interlock rule) read Tunables." + g.name()
+                            + ": give one of them another name");
                 }
             }
         }

@@ -50,6 +50,8 @@ public class SafeMotor {
     // The safe range, in ticks. Infinity at both ends means "no limits" until setLimits() is called.
     private double min = Double.NEGATIVE_INFINITY;
     private double max = Double.POSITIVE_INFINITY;
+    // A temporary range inside the limits (an interlock rule's fence), in ticks: +/- infinity = none.
+    private double fenceMin = Double.NEGATIVE_INFINITY, fenceMax = Double.POSITIVE_INFINITY;
     private double slowZone = 0;
     private double slowZonePower = 0.25;
     private double maxPower = 1.0;
@@ -107,6 +109,31 @@ public class SafeMotor {
         this.min = Math.min(min, max);
         this.max = Math.max(min, max);
         return this;
+    }
+
+    /**
+     * A second, temporary range inside the limits, in ticks, that can change every loop: an interlock
+     * rule's fence (two parts that must not be in the same space). It works like the limits (no power
+     * past it, slowing near it) and is used only after homing. {@code setFence(-inf, +inf)} removes it.
+     *
+     * @param min lowest allowed position now, ticks
+     * @param max highest allowed position now, ticks
+     * @return this SafeMotor
+     */
+    public SafeMotor setFence(double min, double max) {
+        fenceMin = Math.min(min, max);
+        fenceMax = Math.max(min, max);
+        return this;
+    }
+
+    /** The lowest position allowed now: the lower limit or the fence, whichever is higher (ticks). */
+    public double lowNow() {
+        return Math.max(min, fenceMin);
+    }
+
+    /** The highest position allowed now: the upper limit or the fence, whichever is lower (ticks). */
+    public double highNow() {
+        return Math.min(max, fenceMax);
     }
 
     /**
@@ -214,7 +241,7 @@ public class SafeMotor {
      */
     public double moveTo(double target, PidController pid) {
         // A target outside the safe range is moved to the nearest limit, so PID never aims past it.
-        double safeTarget = MathUtil.clamp(target, min, max);
+        double safeTarget = MathUtil.clamp(target, lowNow(), highNow());
         return setPower(pid.calculate(safeTarget, getPosition()));
     }
 
@@ -305,7 +332,7 @@ public class SafeMotor {
     // on its bottom switch, does not send every loop: that would cost a hub write each loop for nothing.)
     private boolean atALimit() {
         double p = getPosition();
-        return p < min || p > max;
+        return p < lowNow() || p > highNow();
     }
 
     private boolean isAtLowerSwitch() {
@@ -338,7 +365,7 @@ public class SafeMotor {
             limited = (power < 0 && !isAtLowerSwitch()) ? Math.max(power, -homingPower) : 0;
         } else {
             // Homed (or no switch): soft limits, switches and slow zone. See SoftLimits.java.
-            limited = SoftLimits.limit(power, getPosition(), min, max, slowZone, slowZonePower,
+            limited = SoftLimits.limit(power, getPosition(), lowNow(), highNow(), slowZone, slowZonePower,
                     isAtLowerSwitch(), isAtUpperSwitch());
         }
         // Last, never more than the overall power cap.

@@ -107,6 +107,14 @@ public final class Shape {
     }
 
     /**
+     * Two fingers that a servo opens and closes (a {@link Claw}'s). {@code atMm} is the middle of its
+     * palm; {@code sizeMm} its box. The simulator lets it hold a game piece while it is closed.
+     */
+    public static Shape claw() {
+        return new Shape("claw");
+    }
+
+    /**
      * A part that does not move (a ramp, a tower, a hood). {@code atMm} is the middle of its bottom.
      *
      * @param name its name in the robot file, e.g. "ramp"
@@ -221,7 +229,10 @@ public final class Shape {
         return this;
     }
 
-    /** How far a passive slide can move, mm (from where it rests). */
+    /**
+     * How far a slide can move, mm: a passive slide's travel from where it rests, or a {@link Lift}'s
+     * stage from its {@code min} to its {@code max} (Tunables), so the simulator knows the counts per inch.
+     */
     public Shape travelMm(double mm) {
         travelIn = mm / 25.4;
         return this;
@@ -288,6 +299,11 @@ public final class Shape {
 
     // ----------------------------- the library's -----------------------------
 
+    /** The travel from {@link #travelMm}, inches (NaN = not given). */
+    double travelIn() {
+        return travelIn;
+    }
+
     /** True for a part that spins (roller, flywheel); false for one that swings or does not move. */
     boolean spins() {
         return type.equals("roller") || type.equals("flywheel");
@@ -348,8 +364,9 @@ public final class Shape {
         if ((!Double.isNaN(rangeMin) || !Double.isNaN(startAt)) && !passiveArm) {
             throw new IllegalStateException(what + ".range(...) and .startAt(...) are for a passive arm only");
         }
-        if (!Double.isNaN(travelIn) && !(type.equals("slide") && passive)) {
-            throw new IllegalStateException(what + ".travelMm(...) is for a passive slide only");
+        boolean motorSlide = type.equals("slide") && !passive && driver != null && driver.startsWith("motor=");
+        if (!Double.isNaN(travelIn) && !(type.equals("slide") && passive) && !motorSlide) {
+            throw new IllegalStateException(what + ".travelMm(...) is for a slide only (a passive one, or a Lift's)");
         }
         if (reversed && !spins()) throw new IllegalStateException(what + ".reversed() is for a roller or flywheel");
         if ((!Double.isNaN(lengthIn) || !Double.isNaN(diameterIn)) && !spins()) {

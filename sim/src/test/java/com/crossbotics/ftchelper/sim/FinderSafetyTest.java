@@ -127,6 +127,8 @@ public class FinderSafetyTest {
         EXPECTED.put("TurretBot TeleOp", "\"turret\"");
         EXPECTED.put("TurretBot Shoot from Start", "\"turret\"");
         EXPECTED.put("TurretBot Shot Tuner", "\"turret\"");
+        EXPECTED.put("V2 Bot TeleOp", "\"pinpoint\"");
+        EXPECTED.put("V2 Bot Shoot and Stow", "\"pinpoint\"");
         EXPECTED.put("goBILDA Bot TeleOp", "\"left_drive\"");
         EXPECTED.put("goBILDA Bot Launch and Back Up", "\"left_drive\"");
         EXPECTED.put("goBILDA Bot Auto Cookbook", "\"left_drive\"");

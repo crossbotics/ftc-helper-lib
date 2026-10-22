@@ -77,6 +77,8 @@ public final class Hood extends Module<Hood> {
     boolean tableDriven = false;
 
     Actuator part;
+    // The interlock's fence, in the hood's scale (+/- infinity = none): see Interlock.
+    private double fenceLo = Double.NEGATIVE_INFINITY, fenceHi = Double.POSITIVE_INFINITY;
     // posA, posB (live in the tuning menu), or null with a calibration table.
     private Tunable posA, posB;
     private double angleA = Double.NaN, angleB = Double.NaN;   // NaN, NaN = the angle is the position
@@ -580,6 +582,37 @@ public final class Hood extends Module<Hood> {
         return shotAtA + (h - a) * (shotAtB - shotAtA) / (b - a);
     }
 
+    // ----------------------------- interlock rules -----------------------------
+
+    @Override boolean zoneCapable() { return true; }
+
+    @Override
+    String zoneUnit() {
+        if (usesAngles()) return "deg";
+        return kind == Kind.MOTOR ? "ticks" : "";
+    }
+
+    @Override double zoneMin() { return part == null ? Double.NEGATIVE_INFINITY : lo(); }
+    @Override double zoneMax() { return part == null ? Double.POSITIVE_INFINITY : hi(); }
+
+    @Override
+    double[] zoneSweep() {
+        return part == null ? new double[] {zoneMin(), zoneMax()} : part.sweep();
+    }
+
+    @Override double zoneTarget() { return part == null ? Double.NaN : part.asked; }
+
+    @Override
+    void zoneFence(double lo, double hi) {
+        fenceLo = lo;
+        fenceHi = hi;
+    }
+
+    @Override
+    double zoneDefaultMargin() {
+        return part == null ? 0 : (hi() - lo()) / 50;
+    }
+
     // ----------------------------- the device -----------------------------
 
     /**
@@ -604,10 +637,18 @@ public final class Hood extends Module<Hood> {
             return clock.getAsLong() / 1e9;
         }
 
+        // The angle asked for (inside the hard limits); the interlock's fence may hold it short (see apply).
+        private double asked = Double.NaN;
+
         @Override
         public void setDegrees(double angle) {
             if (Double.isNaN(angle)) return;
-            double a = clamp(angle);
+            asked = clamp(angle);
+            apply(Math.max(fenceLo, Math.min(fenceHi, asked)));
+        }
+
+        // Starts a move to this angle (already inside the limits and the fence).
+        void apply(double a) {
             if (a == target) return;   // the same angle again (called every loop): keep the move under way
             if (servo != null) {
                 double now = nowSec();
@@ -652,12 +693,30 @@ public final class Hood extends Module<Hood> {
         @Override
         public boolean isDone() {
             if (Double.isNaN(target)) return false;
+            // Held short by an interlock's fence: not where it was asked to be.
+            if (!Double.isNaN(asked) && Math.abs(asked - target) > 1e-9) return false;
             if (motor != null) return Math.abs(now() - target) <= tolerance;
             return nowSec() >= doneAt;
         }
 
+        /** Where it may be now, {lowest, highest}: a moving servo anywhere between where it was and where it goes. */
+        double[] sweep() {
+            if (Double.isNaN(target)) return new double[] {lo(), hi()};
+            if (motor != null) {
+                double n = now();
+                return new double[] {n, n};
+            }
+            if (nowSec() >= doneAt || Double.isNaN(moveFrom)) {
+                // The first move (from nobody knows where) counts as the whole range until it should be done.
+                return nowSec() < doneAt ? new double[] {lo(), hi()} : new double[] {target, target};
+            }
+            return new double[] {Math.min(moveFrom, target), Math.max(moveFrom, target)};
+        }
+
         @Override
         public void update() {
+            // The interlock's fence may have moved: go on toward the angle asked for, as far as it allows.
+            if (!Double.isNaN(asked)) apply(Math.max(fenceLo, Math.min(fenceHi, asked)));
             if (Double.isNaN(target)) return;
             if (servo != null) {
                 write();

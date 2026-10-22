@@ -74,6 +74,19 @@ public final class Claw extends ServoPositions<Claw> implements Toggleable {
     }
 
     @Override
+    boolean drawsLooks() {
+        return true;
+    }
+
+    // Its claw shape opens with the servo (the gap is a guess: measure it in the robot file); an arm
+    // shape swings like a positioner's.
+    @Override
+    String driverFor(Shape s, TunableSection t) {
+        if (s.type.equals("claw")) return "servo=" + device + ", pos0=0, pos1=3";
+        return super.driverFor(s, t);
+    }
+
+    @Override
     void simLines(List<String> out, TunableSection t) {
         Map<String, Double> p = positionsFrom(t);
         Double closed = p.get("closed"), open = p.get("open");
@@ -82,11 +95,15 @@ public final class Claw extends ServoPositions<Claw> implements Toggleable {
             open = physical(open);
         }
         out.add(simServoLine(t, "gobilda-2000-torque"));
-        out.add(fmt("shape.%s = claw, at=8,0,4, size=2x0.5x2, servo=%s, pos0=0, pos1=3   # TODO measure", device, device));
+        if (looks.isEmpty()) {
+            out.add(fmt("shape.%s = claw, at=8,0,4, size=2x0.5x2, servo=%s, pos0=0, pos1=3   # TODO measure", device, device));
+        } else {
+            lookLines(out, t);   // e.g. on a wrist: .looks(Shape.claw().on(wrist)...)
+        }
         if (closed != null && open != null) {
             // The claw holds a piece while the servo is on the "closed" side of half way.
             double mid = (closed + open) / 2;
-            out.add(fmt("grab.%s = shape=%s, servo=%s, %s=%.2f", device, device, device,
+            out.add(fmt("grab.%s = shape=%s, servo=%s, %s=%.2f", device, firstShapeName(), device,
                     closed < open ? "closedBelow" : "closedAbove", mid));
         }
     }

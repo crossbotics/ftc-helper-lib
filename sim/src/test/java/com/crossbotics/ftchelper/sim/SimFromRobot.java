@@ -34,7 +34,7 @@ public final class SimFromRobot {
     private SimFromRobot() { }
 
     static final String MARK = "# from Robot.java";
-    private static final String[] DEVICE_KINDS = {"motor.", "servo.", "crservo.", "touch.", "color.", "distance.", "light."};
+    private static final String[] DEVICE_KINDS = {"motor.", "servo.", "crservo.", "touch.", "color.", "distance.", "light.", "analog."};
 
     /** The result of a merge: the new file, or the problems that stopped it. */
     static final class Result {

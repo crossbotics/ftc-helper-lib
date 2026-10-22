@@ -119,6 +119,29 @@ public abstract class ServoPositions<M extends ServoPositions<M>> extends Module
         if (part != null) part.addTelemetry(t);
     }
 
+    // ----------------------------- interlock rules -----------------------------
+
+    @Override boolean zoneCapable() { return true; }
+    @Override String zoneUnit() { return ""; }
+    @Override double zoneMin() { return 0; }
+    @Override double zoneMax() { return 1; }
+
+    // A servo cannot say where it is: anywhere between where it was and where it was sent, until its
+    // travelSec has passed (its whole range before its first command).
+    @Override
+    double[] zoneSweep() {
+        return part == null ? new double[] {0, 1} : part.getSweep();
+    }
+
+    @Override double zoneTarget() { return part == null ? Double.NaN : part.getTarget(); }
+
+    @Override
+    void zoneFence(double lo, double hi) {
+        if (part != null) part.fence(lo, hi);
+    }
+
+    @Override double zoneDefaultMargin() { return 0.02; }
+
     static Map<String, Double> positions(Object... nameValue) {
         Map<String, Double> m = new LinkedHashMap<>();
         for (int i = 0; i < nameValue.length; i += 2) m.put((String) nameValue[i], ((Number) nameValue[i + 1]).doubleValue());

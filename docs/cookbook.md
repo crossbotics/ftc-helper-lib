@@ -78,6 +78,12 @@ first.
 - [Every shot is a bit short today. How do I trim the speed (a low battery)?](#every-shot-is-a-bit-short-today-how-do-i-trim-the-speed-a-low-battery)
 - [How do I add a hood to my launcher?](#how-do-i-add-a-hood-to-my-launcher)
 
+**Turrets and interlocks** (any turret; parts that share space)
+- [How do I home my turret with a switch?](#how-do-i-home-my-turret-with-a-switch)
+- [How do I set up a slip-ring turret (round and round)?](#how-do-i-set-up-a-slip-ring-turret-round-and-round)
+- [How do I stop two parts from hitting each other?](#how-do-i-stop-two-parts-from-hitting-each-other)
+- [How do I pick up and score with a lift, a wrist and a claw?](#how-do-i-pick-up-and-score-with-a-lift-a-wrist-and-a-claw)
+
 **Actions** (several steps or parts together)
 - [How do I do several things one after the other?](#how-do-i-do-several-things-one-after-the-other)
 - [How do I repeat steps several times?](#how-do-i-repeat-steps-several-times)
@@ -1272,6 +1278,125 @@ encoder). The stick (gamepad 2 left Y) is a hood trim while the table sets the a
 down clears both trims. Find the stops with the [Hood Finder](#how-do-i-find-my-hoods-stops-and-angles),
 then fill the table with the [Shot Tuner](#how-do-i-build-a-shot-table-speed-for-each-distance) (Y until `> Hood`).
 **More:** [Lesson 9: a hood](tutorials/start/09-shooter-and-camera.md#a-hood-the-shot-angle), [Hood](modules/robot.md#hood).
+
+## Turrets and interlocks
+
+Every kind of turret (motor, servo, CR servo; switch or not; any range) has its own lines: see
+[Setting up a turret](guides/turret-setup.md). Code: [`InterlockRecipes.java`](../examples/src/main/java/com/crossbotics/ftchelper/examples/cookbook/InterlockRecipes.java).
+
+### How do I home my turret with a switch?
+
+**Where:** `Robot.java` (the turret line), `Tunables.java` (where the switch is).
+
+<!-- recipe: turret-home-switch -->
+```java
+// A home switch: a touch sensor ("REV Touch Sensor") or a magnetic switch ("Digital
+// Device", e.g. the REV Magnetic Limit Switch). At START the turret turns slowly until it
+// finds it; after that, every time it passes the switch its angle is set right again.
+turret = add(Turret.motor("turret", "gobilda-5203-312").gearRatio(2.75)
+        .homeSwitch("turret_home")
+        .follows(camera));
+```
+
+<!-- recipe: tunables-turret-switch -->
+```java
+public static class Turret {
+    public static double min = -190, max = 190;   // its range, degrees (0 = forward, counterclockwise +)
+    // Where the switch closes, in the turret's degrees (measure it: docs/guides/turret-setup.md).
+    public static double homeAngle = -45;
+    // Optional: how slowly it looks for the switch at START, and for how long at most.
+    public static double homingPower = 0.2, homingTimeout = 5;
+}
+```
+
+**Why:** a motor's encoder counts from where the turret was at INIT. With a switch the turret finds its
+real angle at START by itself (never during INIT: nothing moves before START), and a slipping belt is
+fixed every time it passes the switch. Until it is homed it does not follow the goal and is never "aimed".
+No switch? Put the turret at `startAngle` (default 0, straight forward) by hand before INIT.
+**More:** [Setting up a turret: how it knows its angle](guides/turret-setup.md#2-how-does-it-know-its-angle).
+
+### How do I set up a slip-ring turret (round and round)?
+
+**Where:** `Robot.java` (the turret line), `Tunables.java`.
+
+<!-- recipe: turret-slip-ring -->
+```java
+// A CR servo turns it, an absolute encoder on an analog port says where it points (no
+// homing), and continuous(): a slip ring carries the wires, so no limits, the shortest way.
+turret = add(Turret.crServo("turret").analogEncoder("turret_pos").continuous().follows(camera));
+```
+
+<!-- recipe: tunables-turret-slip-ring -->
+```java
+public static class Turret {
+    // No min and max: it turns round and round. The PID and "aimed within" as usual.
+    public static double kP = 0.015, kI = 0, kD = 0, maxPower = 1.0, tolerance = 2;
+    // The absolute encoder's reading (0 to 360) with the turret pointing straight forward.
+    public static double encoderOffset = 117;
+}
+```
+
+**Why:** with a slip ring the wires never wind up, so the turret can always take the shortest way to the
+goal and is never "out of range". A motor turret can be `continuous()` too.
+**More:** [Setting up a turret: how far can it turn?](guides/turret-setup.md#3-how-far-can-it-turn).
+
+### How do I stop two parts from hitting each other?
+
+**Where:** `Robot.java` (one line, after the parts), `Tunables.java` (the zones).
+
+<!-- recipe: interlock-rule -->
+```java
+// AFTER the parts' add lines: the turret stays out of its zone while the lift is in its
+// zone, and the other way round. Whoever is in its zone first keeps it.
+keepApart("TurretLift", turret.zone(), lift.zoneAbove());
+```
+
+<!-- recipe: tunables-interlock -->
+```java
+// The rule's own section, named like the rule in Robot.java. Each zone in its part's units.
+public static class TurretLift {
+    public static double turretFrom = 130, turretTo = 218;   // degrees: the back of the robot
+    public static double liftAbove = 270;                    // counts: the slide is up
+    public static double liftMargin = 80;                    // optional: a fast lift needs more room to stop
+}
+```
+
+**Why:** each part is safe inside its own limits, but a turret over the back and a lift at the back can
+still meet. The rule is kept every loop, whoever moves the parts (buttons, sticks, actions, a following
+turret, autonomous steps): the part that is in its zone first keeps it, the other waits at the edge of
+its own zone, and the Driver Station says so (`TurretLift : Lift held at 110 counts: Turret is between
+130 and 218 deg`). The zones are read at INIT only: change them in `Tunables.java`.
+**More:** [Two parts that must not collide](guides/interlocks.md), [Interlock](modules/robot.md#interlock).
+
+### How do I pick up and score with a lift, a wrist and a claw?
+
+**Where:** `Actions.java`, then a button in `Controls.java` (`g2.y.press(Actions.scoreInFlower(robot))`).
+
+<!-- recipe: lifter-sequence -->
+```java
+/** Lifts a held ball over a FLOWER, lets it go and comes back folded (Actions.java). */
+public static Action scoreInFlower(Robot r) {
+    return Action.named("Score in FLOWER")
+            .then(() -> r.wrist.goTo("carry"))                  // 1. swing the claw out first
+            .waitUntil("wrist out", r.wrist::isDone, 1.0)
+            .then(() -> r.lift.goTo("flower"))                  // 2. lift (the interlock may make it wait)
+            .waitUntil("lift up", r.lift::isAtTarget, 4.0)
+            .then(() -> r.wrist.goTo("flower"))                 // 3. tip it over the FLOWER
+            .waitUntil("over the FLOWER", r.wrist::isDone, 1.0)
+            .then(r.claw::open)                                 // 4. let go
+            .waitUntil("let go", r.claw::isDone, 1.0)
+            .then(() -> r.wrist.goTo("carry"))                  // 5. back the same way
+            .waitUntil("wrist back", r.wrist::isDone, 1.0)
+            .then(() -> r.lift.goTo("stowed"))
+            .waitUntil("lift down", r.lift::isAtTarget, 3.0)
+            .then(() -> r.wrist.goTo("folded"), r.claw::close);
+}
+```
+
+**Why:** the order keeps the parts out of each other's way: the claw swings out before the lift rises and
+folds only after it is down. Each wait has a time limit, so a stuck part ends the action instead of
+stopping the robot. With an interlock rule the lift waits by itself while the turret is in the way.
+**More:** the whole robot: [`v2bot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/v2bot/Actions.java).
 
 ## Actions
 

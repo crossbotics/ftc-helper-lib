@@ -16,6 +16,14 @@ final class RobotTestKit implements Devices {
     final Map<String, Fakes.FakeServo> servos = new HashMap<>();
     final Map<String, Fakes.FakeCRServo> crServos = new HashMap<>();
     final Map<String, boolean[]> switches = new HashMap<>();
+    // Magnetic switches (digital channels): true = closed (the channel then reads LOW, like the REV switch).
+    final Map<String, boolean[]> digital = new HashMap<>();
+    // Analog inputs (absolute encoders): the voltage now, and the top voltage.
+    final Map<String, double[]> analog = new HashMap<>();
+    // Names that are NOT in the configuration (tryGet gives null), e.g. a missing switch.
+    final java.util.Set<String> missing = new java.util.HashSet<>();
+    // Names configured as a digital device (so tryGet(TouchSensor) gives null for them).
+    final java.util.Set<String> digitalNames = new java.util.HashSet<>();
     // Blinkin LED drivers: the last servo position each was sent (NaN = none yet).
     final Map<String, double[]> blinkins = new HashMap<>();
     // The battery the hubs read (volts); NaN = no voltage sensor, like the default.
@@ -43,8 +51,24 @@ final class RobotTestKit implements Devices {
             if (!crServos.containsKey(name)) crServos.put(name, new Fakes.FakeCRServo());
             return (T) crServos.get(name).servo;
         }
+        if (type == com.qualcomm.robotcore.hardware.DigitalChannel.class) {
+            final boolean[] closed = digital.containsKey(name) ? digital.get(name) : new boolean[1];
+            digital.put(name, closed);
+            return (T) Proxy.newProxyInstance(TouchSensor.class.getClassLoader(), new Class<?>[]{com.qualcomm.robotcore.hardware.DigitalChannel.class},
+                    (proxy, m, a) -> m.getName().equals("getState") ? (Object) !closed[0]
+                            : m.getReturnType() == boolean.class ? (Object) false : null);
+        }
+        if (type == com.qualcomm.robotcore.hardware.AnalogInput.class) {
+            final double[] v = analog.containsKey(name) ? analog.get(name) : new double[] {0, 3.3};
+            analog.put(name, v);
+            // AnalogInput is a class: a subclass with a pretend controller that answers our numbers.
+            return (T) new com.qualcomm.robotcore.hardware.AnalogInput(null, 0) {
+                @Override public double getVoltage() { return v[0]; }
+                @Override public double getMaxVoltage() { return v[1]; }
+            };
+        }
         if (type == TouchSensor.class) {
-            final boolean[] pressed = new boolean[1];
+            final boolean[] pressed = switches.containsKey(name) ? switches.get(name) : new boolean[1];
             switches.put(name, pressed);
             return (T) Proxy.newProxyInstance(TouchSensor.class.getClassLoader(), new Class<?>[]{TouchSensor.class},
                     (proxy, m, a) -> m.getName().equals("isPressed") ? (Object) pressed[0]
@@ -69,6 +93,8 @@ final class RobotTestKit implements Devices {
 
     @Override
     public <T> T tryGet(Class<? extends T> type, String name) {
+        if (missing.contains(name)) return null;
+        if (type == TouchSensor.class && digitalNames.contains(name)) return null;
         return get(type, name);
     }
 }

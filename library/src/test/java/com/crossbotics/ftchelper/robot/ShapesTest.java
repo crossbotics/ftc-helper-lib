@@ -120,13 +120,51 @@ public class ShapesTest {
         expect(wrong, "no position \"down\"");
     }
 
+    // A lift draws its slide (counts per inch from travelMm and its range) with a wrist and a claw on it.
+    @Test public void aLiftCarriesAWristAndAClaw() {
+        RobotDefinition r = new RobotDefinition() {
+            @Override protected void define() {
+                tunables(LifterNumbers.class);
+                drive(Drive.mecanum("fl", "fr", "bl", "br"));
+                Lift lift = add(Lift.slide("lift").looks(Shape.slide().atMm(-188, 188, 12).sizeMm(27, 27, 288).travelMm(254)));
+                Wrist wrist = add(Wrist.servo("wrist").looks(Shape.arm().on(lift).atMm(0, -188, 142).sizeMm(115, 30, 20)
+                        .angle("folded", -90).angle("flower", -210)));
+                add(Claw.servo("claw").looks(Shape.claw().on(wrist).atMm(115, 0, 0).sizeMm(60, 120, 50)));
+            }
+        };
+        String all = String.join("\n", r.simLines());
+        assertTrue(all, all.contains("shape.lift = slide, at="));
+        assertTrue(all, all.contains("motor=lift, ticksPerIn=100.0"));          // 1000 counts over 10 in
+        assertTrue(all, all.contains("shape.wrist = arm, on=lift"));
+        assertTrue(all, all.contains("shape.claw = claw, on=wrist"));
+        assertTrue(all, all.contains("grab.claw = shape=claw"));
+        try {
+            new RobotDefinition() {
+                @Override protected void define() {
+                    tunables(LifterNumbers.class);
+                    drive(Drive.mecanum("fl", "fr", "bl", "br"));
+                    add(Lift.slide("lift").looks(Shape.slide().atMm(0, 0, 0)));
+                }
+            }.simLines();
+            fail("expected an error");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("needs .travelMm"));
+        }
+    }
+
+    public static class LifterNumbers {
+        public static class Lift { public static double min = 0, max = 1000; }
+        public static class Wrist { public static double folded = 0.1, flower = 0.6; }
+        public static class Claw { public static double open = 0.5, closed = 0.3; }
+    }
+
     @Test public void typosAndUnsupportedPartsStopWithAClearMessage() {
         expectArg(() -> Shape.roller("offset-tubing-80"), "offset-tubing-90");
         expectArg(() -> Positioner.servo("s").part("gobilda-2000-fast"), "gobilda-2000-speed");
         expectArg(() -> Intake.motor("i").part("gobilda-5203-118"), "gobilda-5203-117");
         expectArg(() -> Shape.arm().axis("sideways"), "axis");
         try {
-            Lift.slide("lift").looks(Shape.box("x"));
+            Arm.motor("arm", "gobilda-5203-117").looks(Shape.box("x"));
             fail("expected an error");
         } catch (UnsupportedOperationException e) {
             assertTrue(e.getMessage(), e.getMessage().contains("cannot take shapes"));
@@ -220,7 +258,7 @@ public class ShapesTest {
                 fixed(Shape.arm().name("flap").atMm(0, 0, 50).sizeMm(50, 50, 10).passive().range(0, 90).angle("up", 90));
             }
         });
-        stops(".travelMm(...) is for a passive slide only", new RobotDefinition() {
+        stops(".travelMm(...) is for a slide only", new RobotDefinition() {
             @Override protected void define() {
                 drive(Drive.tank("l", "r"));
                 fixed(Shape.box("ramp").atMm(0, 0, 0).sizeMm(10, 10, 10).travelMm(20));

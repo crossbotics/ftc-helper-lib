@@ -215,11 +215,19 @@ public static class Turret {
   it lags, too high and it shakes.
 - `tolerance`: how many degrees off still counts as "aimed". `cameraOffset`: if shots land to one side,
   the [Aim Tuner](../../guides/finders.md#aim-tuner-camera-offset) finds it.
-- **0 degrees is where the turret points when you press INIT.** Point it straight forward first.
+- **0 degrees is where the turret points when you press INIT** (`startAngle`, default 0). Point it
+  straight forward first, or add a home switch so it finds its angle by itself at START.
 - Its buttons: operator right stick X turns it by hand (following pauses while you move it), BACK
   switches following on and off.
 
 The software limits do not replace hard stops: give the turret a mechanical stop just past each limit.
+
+**Your turret is built differently?** A servo turret, a CR servo with an encoder, a slip ring that turns
+round and round, a home switch (touch or magnetic), a range of +/-90, +/-180 or +/-190: the page
+[Setting up a turret](../../guides/turret-setup.md) asks you seven questions about yours and gives the
+exact lines for each answer. A turret that can hit another part (a lift at the back) needs an
+[interlock rule](../../guides/interlocks.md): the [V2 robot](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/v2bot/Robot.java)
+has a turret, a lift with a wrist and a claw, and the rule that keeps them apart.
 
 ## 7. Speed from distance, and fire only when aimed
 

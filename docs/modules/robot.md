@@ -98,12 +98,14 @@ part each loop. Nothing moves in INIT.
 | `follower(PathFollower.Maker m)` | optional: a path follower, e.g. `follower(Pedro.follower(...))` ([PathFollower](#pathfollower)); needs an `odometry(...)` line |
 | `T add(T module)` | a mechanism; hands it back, so you can keep it in a field (`lift = add(...)`) |
 | `atStart(Supplier<Action>)` | an action that runs once right after START, in autonomous and TeleOp |
+| `Interlock keepApart(name, zoneA, zoneB)` | an interlock rule: two parts never in their zones at the same time (after the parts' `add` lines; numbers in `Tunables.<name>`) ([Interlock](#interlock)) |
 | `tunables(Class)` | the Tunables class if it is not `Tunables` in the same folder |
 | `chassisMm(l, w, h)`, `heightMm(h)`, `fixed(Shape...)` | for the simulator: the chassis box, the whole robot's height, parts the code does not move ([Shapes](#shapes-and-parts)) |
 
 | For your code | |
 | --- | --- |
 | `run(Action)`, `cancel(Action)`, `cancelAll()` | start or stop actions |
+| `interlocks()` | the interlock rules from `define()` (read only) |
 | `alliance()` | this match's alliance (from autonomous's menu; TeleOp remembers it) |
 | `notes()` | INIT notes: missing Tunables sections or fields (the library's defaults are used) |
 | `modules()`, `drive()`, `all()` | the parts, the drivetrain, the update group |
@@ -119,8 +121,8 @@ part each loop. Nothing moves in INIT.
 | `static changedTunables()` | values tuned on the robot that differ from Tunables.java, as lines to copy back |
 | `static sectionName(device)` | the Tunables section a device reads: "intake_deploy" -> `IntakeDeploy` |
 
-Checked at INIT: a device name used twice, two parts reading the same Tunables section, an indexer
-added twice. Each stops with the name.
+Checked at INIT: a device name used twice, two parts (or a part and an interlock rule) reading the same
+Tunables section, an indexer added twice. Each stops with the name.
 
 ### Tunables.java
 
@@ -324,6 +326,10 @@ switch sets 0. **Without one, 0 is wherever the lift is at INIT** (the encoder s
 press INIT with the lift all the way down, also for TeleOp after an autonomous that left it up, or
 `max` will be too high by that much. INIT reminds you.
 
+For the simulator: `.looks(Shape.slide().atMm(...).sizeMm(...).travelMm(421))` (the stage's travel from
+`min` to `max`); a wrist or claw rides on it with `Shape.arm().on(lift)` ([Shapes](#shapes-and-parts)). A
+lift's zone for an [interlock rule](#interlock): `lift.zoneAbove()` or `lift.zoneBelow()`.
+
 ## Arm
 
 ```java
@@ -355,7 +361,9 @@ claw = add(Claw.servo("claw"));       // Tunables.Claw: open, closed (both neede
 wrist = add(Wrist.servo("wrist"));    // Tunables.Wrist: any positions, e.g. down, level, up
 ```
 
-`next()`, `previous()` (by value). Buttons: operator D-pad left/right.
+`next()`, `previous()` (by value). Buttons: operator D-pad left/right. For the simulator, a wrist
+swings an arm shape (`.looks(Shape.arm().on(lift)...angle("folded", -90).angle("flower", -213))`) and a
+claw can ride on it (`Claw ... .looks(Shape.claw().on(wrist)...)`).
 
 ## Positioner
 
@@ -371,30 +379,114 @@ passive part over (`Shape.dropsWhen`, [Shapes](#shapes-and-parts)).
 
 ## Turret
 
+Every way to build a turret (what turns it, how it knows its angle, its range, homing, a hood, a camera)
+is on one page, with the exact lines for each: [Setting up a turret](../guides/turret-setup.md).
+
 ```java
-turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).follows(camera));
+turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).follows(camera));     // a motor
+turret = add(Turret.motor("turret", "gobilda-5203-312").gearRatio(2.75).homeSwitch("turret_home"));
+turret = add(Turret.servo("turret").follows(camera));                                     // a servo
+turret = add(Turret.crServo("turret").encoder("turret_enc", 8192));                       // CR servo + Through Bore
+turret = add(Turret.crServo("turret").analogEncoder("turret_pos").continuous());          // slip ring + absolute encoder
 ```
+
+| Made with | |
+| --- | --- |
+| `Turret.motor(name, motorId)` | a motor; its encoder counts the angle |
+| `Turret.servo(name)` | a standard servo (it goes to an angle by itself): `posA`, `angleA`, `posB`, `angleB`, `travelSec` in Tunables; no PID, no homing |
+| `Turret.crServo(name)` + `encoder(port, countsPerRev)` | a CR servo with an encoder on a motor port (REV Through Bore: 8192); the port may also run another part's motor (only its count is read) |
+| `Turret.crServo(name)` + `analogEncoder(port)` | a CR servo with an absolute encoder on an analog port: it knows its angle at once (`encoderOffset`) |
+
+| Option | |
+| --- | --- |
+| `gearRatio(r)` | turns per turret turn of what counts: the motor (a motor turret), the encoder (a CR servo turret) |
+| `reversed()`, `encoderReversed()` | + power turns it clockwise: flip it; a CR servo's encoder counts the wrong way |
+| `homeSwitch(name)` | a touch sensor or a magnetic switch (a "Digital Device", active low): it homes at START, slowly (`homeAngle`, `homeDirection`, `homingPower`, `homingTimeout`), and sets its angle again each time it passes the switch. Missing from the configuration: an INIT note and `startAngle` is used |
+| `continuous()` | a slip ring: no limits, always the shortest way, never "out of range"; the angle shows -180 to 180 |
+| `follows(camera)` | follows the camera's goal; with odometry and `Tunables.Aim.goalX, goalY` the odometry takes over while the camera does not see it ([Aim](#aim)) |
+| `followsOdometry()` | follows the goal with no camera: from the odometry and `Tunables.Aim`'s goal point |
+| `cameraOnBody()` | the camera is on the robot, not on the turret |
 
 | Method | |
 | --- | --- |
 | `followMode()` | the [mode](#modes) that follows the goal (on from START with `follows` or `followsOdometry`) |
-| `follows(camera)` | follows the camera's goal; with odometry and `Tunables.Aim.goalX, goalY` the odometry takes over while the camera does not see it ([Aim](#aim)) |
-| `followsOdometry()` | follows the goal with no camera: from the odometry and `Tunables.Aim`'s goal point |
 | `aimAt(deg)` | turn to an angle (stops following) |
 | `manual(power)` | by hand; following pauses while the stick moves |
-| `isAimed()` | at the target within the tolerance; while FOLLOWING: at the goal NOW (a goal seen this moment, homed, in range, error within the larger of `tolerance` and `Tunables.Aim.toleranceDeg`), so a launcher gated on it never fires after the goal is lost |
+| `isAimed()` | at the target within the tolerance; while FOLLOWING: at the goal NOW (a goal seen this moment, homed, in range, not held by an interlock, error within the larger of `tolerance` and `Tunables.Aim.toleranceDeg`), so a launcher gated on it never fires after the goal is lost |
+| `isHomed()` | its angle is known (homed on its switch, or no switch) |
+| `isHeld()` | an [interlock rule](#interlock) holds it back from where it should point |
 | `isOutOfRange()`, `angle()`, `part()` | the goal is past its range (at a limit, or holding while it is behind); the angle; the `launcher.Turret` inside |
 | `aimErrorDeg()`, `aimSource()` | degrees from the goal now (NaN = unknown); where the goal came from (CAMERA, ODOMETRY, NONE) |
-| `cameraOnBody()` | the camera is on the robot, not on the turret |
+| `zone()` | its zone for an [interlock rule](#interlock) (degrees, repeats every 360) |
+| `static forgetAngles()` | forget the angle carried from the last program (tests; turning it by hand between programs) |
 
 `Tunables.Turret`: `min`, `max` (degrees, counterclockwise +, 0 = forward: it never turns past them; a
-goal outside waits at the limit and the Driver Station says "goal out of turret range"), `kP`, `kI`,
-`kD`, `maxPower`, `tolerance`, `slowZone`, `slowZonePower`, `cameraOffset`, `outOfRangeHold` (default
-10: an odometry goal this many degrees past a limit, behind the robot, makes it HOLD where it points
-instead of swinging limit to limit as the heading wobbles; it follows again once the goal is back
-within half of that). A following turret and whole-robot aim are separate modes: see [Aim](#aim). Buttons: operator right
+goal outside waits at the limit and the Driver Station says "goal out of turret range"; past +/-180 it
+picks the way round that stays inside them), `startAngle` (where it points at INIT with no switch,
+default 0), `kP`, `kI`, `kD`, `maxPower`, `tolerance`, `slowZone`, `slowZonePower`, `cameraOffset`,
+`outOfRangeHold` (default 10: an odometry goal this many degrees past a limit, behind the robot, makes it
+HOLD where it points instead of swinging limit to limit as the heading wobbles; it follows again once the
+goal is back within half of that). With a switch: `homeAngle` (needed), `homeDirection`, `homingPower`,
+`homingTimeout`. Absolute encoder: `encoderOffset`. Servo: `posA`, `angleA`, `posB`, `angleB`,
+`travelSec`. `keepAngle` (default true): TeleOp starts from the angle the last program ended at (within
+5 minutes, same robot app run), so it does not home again after autonomous.
+
+A following turret and whole-robot aim are separate modes: see [Aim](#aim). Buttons: operator right
 stick X by hand, BACK following on/off. The Driver Station shows `turret: 12 deg following: camera`
-(or `odometry`, or `no goal`: it holds where it points).
+(or `odometry`, or `no goal`: it holds where it points), and `homing: looking for the switch` after START.
+
+## Interlock
+
+Two parts that share space (a turret over the back and a lift at the back; an arm and an intake) must
+never be in their zones at the same time. One line in `Robot.java`, the numbers in `Tunables.java`, and
+the library keeps to it every loop, whoever moves the parts. Guide with examples:
+[Two parts that must not collide](../guides/interlocks.md).
+
+```java
+// Robot.java, after the parts:
+turretLift = keepApart("TurretLift", turret.zone(), lift.zoneAbove());
+
+// Tunables.java: the zones, in each part's units
+public static class TurretLift {
+    public static double turretFrom = 130, turretTo = 218;   // degrees
+    public static double liftAbove = 270;                    // counts
+    public static double liftMargin = 80;                    // optional safety distance
+}
+```
+
+| Zone | Tunables fields (in the rule's section) |
+| --- | --- |
+| `part.zone()` | `<part>From`, `<part>To`: between two numbers (a turret's repeats every 360 degrees) |
+| `part.zoneAbove()` | `<part>Above`: from there to the top |
+| `part.zoneBelow()` | `<part>Below`: from there to the bottom |
+| `Zone.when(words, condition)` | none: a condition for something the library cannot move (your own sensor) |
+
+`<part>` is the part's Tunables name with a small first letter (`Turret` -> `turretFrom`). Units: degrees
+(turret, arm), counts (lift), servo position 0 to 1 (claw, wrist, positioner). Parts with a zone: Turret,
+Lift, Arm, Claw, Wrist, Positioner, Hood. Optional `<part>Margin` (default: 3 degrees or twice the
+turret's tolerance; twice a lift's or arm's tolerance and at least 1/50 of its range; 0.02 for a servo).
+
+| `Interlock` | |
+| --- | --- |
+| `name()` | the rule's name (its Tunables section) |
+| `isHolding()`, `status()` | a part is held back now; the Driver Station line ("" when nothing is held) |
+| `words()` | the rule in words: `Turret between 130 and 218 deg / Lift above 270 counts` |
+| `Zone.part()`, `Zone.words()` | the part (null for a condition); the zone in words |
+
+Who yields: **whoever is in its zone first keeps it; the other part waits outside its own zone**, two
+margins away, with its target kept (it goes on when the first one leaves). Both want in at once: the
+first zone in `keepApart` goes first. A turret whose way to its target crosses its zone goes the other way
+round if its range allows (a slip ring, or -270 to 270), else waits at the edge. Both in their zones (pushed
+there, or found so at START): each may only move out. A part whose position is not known (a turret not
+homed yet, a servo still moving: it counts as anywhere between where it was and where it was sent until its
+`travelSec` is over) counts as in its zone. Every command goes through it: buttons, sticks, actions,
+autonomous steps, a following turret, shooting on the move. A held turret is never `isAimed()`.
+
+The Driver Station shows one line per rule while it holds something: `TurretLift : Lift held at 110 counts:
+Turret is between 130 and 218 deg`. INIT lists each rule, and stops with the reason for: a missing section
+or number, an empty zone, a zone outside the part's range or covering all of it, a negative margin, a part
+with no position. The zones are read once at INIT and are **not** in the tuning menu: a zone moving while
+the parts move could put both in their zones at once.
 
 ---
 
@@ -1177,7 +1269,8 @@ lets the drivers choose it: X = BLUE, B = RED). Until `Tunables.Drive.calibrated
 `./gradlew :sim:fromRobot` writes the simulator robot file with no TODO shape guesses: the 3D view draws the robot,
 the size rules are checked on it, and each shape moves with its part, so the simulator shows whether the
 controls do what they should (the intake drops, the rollers spin, a piece is fired). Worked example:
-[`flywheelbot/Robot.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot/Robot.java).
+[`flywheelbot/Robot.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot/Robot.java);
+a lift with a wrist and a claw riding on it: [`v2bot/Robot.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/v2bot/Robot.java).
 
 **Name the part, give only what is not known.** A part in the [parts catalog](../guides/parts-catalog.md)
 brings its numbers: a motor its speed and encoder counts, a servo its speed and range, a wheel or roller
@@ -1204,14 +1297,15 @@ fixed(Shape.box("tower").atMm(-90, 0, 40).sizeMm(50, 180, 260));
 | On a part | |
 | --- | --- |
 | `part(id)` | the main motor's or servo's catalog id (a typo stops with the list of ids). A launcher's motor is in `Launcher.flywheel(name, id)`, the drive's in [`Drive.motor(id)`](#drive). On a CR servo the id is only a note (the simulator turns every CR servo at one speed) |
-| `looks(Shape...)` | how it looks. Intake, Positioner, Launcher and Indexer take shapes; the others are drawn in the robot file ([simulator guide](../guides/simulator.md#robot-shapes)) |
+| `looks(Shape...)` | how it looks. Intake, Positioner, Launcher, Indexer, Lift, Wrist and Claw take shapes; the others are drawn in the robot file ([simulator guide](../guides/simulator.md#robot-shapes)) |
 
 | `Shape` | What it is | Moved by |
 | --- | --- | --- |
 | `roller(ids...)` | a cylinder; several ids (90 mm and 60 mm rollers taking turns) draw one as big as the biggest. In the simulator every roller of an Intake takes pieces in, and any roller drags the pieces it touches | spins with its part's motor or CR servo |
 | `flywheel(id)`, `flywheel()` | a launcher wheel (no id: give `diameterMm` and `lengthMm`) | spins with the launcher's motor |
-| `arm()` | swings about a hinge: `atMm` is the hinge, `sizeMm(length, width, thickness)` reaches forward at 0 degrees | a Positioner's servo (`angle(position, deg)` twice), or nothing (`passive`) |
-| `slide()` | moves in a straight line along its axis (default up): `sizeMm` is one stage | nothing (`passive`, `travelMm`) |
+| `arm()` | swings about a hinge: `atMm` is the hinge, `sizeMm(length, width, thickness)` reaches forward at 0 degrees | a Positioner's, Wrist's or Claw's servo (`angle(position, deg)` twice), or nothing (`passive`) |
+| `slide()` | moves in a straight line along its axis (default up): `sizeMm` is one stage | a Lift's motor (`travelMm`: how far the stage moves from its `min` to its `max`), or nothing (`passive`, `travelMm`) |
+| `claw()` | two fingers that open and close; it can hold a game piece in the simulator | a Claw's servo |
 | `box(name)` | does not move: `atMm` is the middle of its bottom | nothing |
 
 | Setting | |
@@ -1234,7 +1328,7 @@ fixed(Shape.box("tower").atMm(-90, 0, 40).sizeMm(50, 180, 260));
 Mistakes stop with the part's name: a typo in an id (with the known ids), a roller with no length, an
 arm with fewer than two angles or an unknown position name (the names in `angle(...)` must be positions in
 that part's Tunables section), shapes on a part that cannot take them, a setting that does not fit the
-shape (`angle` on a passive arm, `range` on a servo arm, `travelMm` on anything but a passive slide,
+shape (`angle` on a passive arm, `range` on a servo arm, `travelMm` on anything but a slide,
 `lengthMm` on a box or arm), riding `on` a part that has no shape, an intake whose looks have no roller,
 one `Shape` given to two parts, two parts with one name in the robot file, and a `shotAngle` outside
 0 to 180.

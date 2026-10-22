@@ -126,6 +126,8 @@ Everything else, by what you want to do:
 | Use just the parts you want in your own LinearOpMode (no framework) | [Use only what you need](docs/guides/use-only-what-you-need.md) |
 | Practice vs competition behavior | [Profiles](docs/guides/profiles.md) |
 | Change numbers while the robot runs | [Tuning](docs/guides/tuning.md) |
+| **Set up any turret: motor, servo or CR servo; home switch or not; +/-90 to a slip ring; hood; camera** | [Setting up a turret](docs/guides/turret-setup.md) |
+| Keep two parts from hitting each other (a turret and a lift) | [Interlocks](docs/guides/interlocks.md) |
 | Test the robot (checklists) | [Testing procedures](docs/guides/testing.md) |
 | **Try OpModes without a robot (pretend Control Hub + Driver Hub, field in 3D)** | [Simulator](docs/guides/simulator.md) |
 | Motors and servos the simulator knows (and how to add your own) | [Parts catalog](docs/guides/parts-catalog.md) |

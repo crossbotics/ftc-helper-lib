@@ -93,6 +93,25 @@ public final class Lift extends MotorPositions<Lift> {
     }
 
     @Override
+    boolean drawsLooks() {
+        return true;
+    }
+
+    // A slide shape: moved by this motor. Its counts per inch from the travel between min and max.
+    @Override
+    String driverFor(Shape s, TunableSection t) {
+        if (!s.type.equals("slide")) {
+            throw new IllegalStateException("Robot.java: " + name() + " is a lift: it moves a slide shape, not a " + s.type);
+        }
+        if (Double.isNaN(s.travelIn()) || s.travelIn() <= 0) {
+            throw new IllegalStateException("Robot.java: " + name() + "'s slide needs .travelMm(...): how far its stage moves from min to max");
+        }
+        double[] d = defaults();
+        double span = t.number("max", d[1]) - t.number("min", d[0]);
+        return fmt("motor=%s, ticksPerIn=%.1f", device, span / s.travelIn());
+    }
+
+    @Override
     void simLines(List<String> out, TunableSection t) {
         double[] d = defaults();
         double min = t.number("min", d[0]), max = t.number("max", d[1]);
@@ -102,6 +121,10 @@ public final class Lift extends MotorPositions<Lift> {
                 : fmt("motor.%s = lift, part=gobilda-5203-312, min=%.0f, max=%.0f, gravity=0.06   # TODO the real motor",
                         device, min, max));
         if (switchName != null) out.add(fmt("touch.%s = %s, below=20", switchName, device));
+        if (!looks.isEmpty()) {
+            lookLines(out, t);   // its slide from looks(...), with what rides on it
+            return;
+        }
         out.add(fmt("shape.%s = slide, at=-7,0,4, size=2x8x8, axis=up, motor=%s, ticksPerIn=%.0f   # TODO measure",
                 device, device, Math.max(1, max / 8)));
     }

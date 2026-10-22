@@ -28,6 +28,9 @@ final class SimMotor {
     double coastSec = Double.NaN;     // FLOAT at zero power: seconds to lose about 63% of its speed (NaN = by kind)
     // LIFT: hard stops (shaft counts from the start position) and how hard gravity pulls (power units).
     double minTicks = -Double.MAX_VALUE, maxTicks = Double.MAX_VALUE, gravity = 0;
+    // drivenBy=: this "motor" is really an encoder on a shaft that a CR servo turns (a CR servo turret's
+    // Through Bore): its power comes from that CR servo (null = from its own setPower).
+    volatile java.util.function.DoubleSupplier drivenBy = null;
     // FLYWHEEL: the motor that feeds it, and how much a shot slows it (share of the speed).
     String feeder = null;
     double shotDrop = 0.15;
@@ -236,7 +239,10 @@ final class SimMotor {
     /** The power the shaft gets now, in its own direction (the hub's speed control included). */
     synchronized double shaftPower(double dt) {
         double user;
-        if (mode == DcMotor.RunMode.STOP_AND_RESET_ENCODER || !enabled) {
+        if (drivenBy != null) {
+            // Turned by a CR servo: its power, whatever this port's mode (only its count is read).
+            return Math.max(-1, Math.min(1, drivenBy.getAsDouble()));
+        } else if (mode == DcMotor.RunMode.STOP_AND_RESET_ENCODER || !enabled) {
             // reset, or switched off with setMotorDisable(): no drive at all (speed control included)
             user = 0;
         } else if (mode == DcMotor.RunMode.RUN_TO_POSITION) {
