@@ -10,6 +10,7 @@ import com.crossbotics.ftchelper.hardware.Hw;
 import com.crossbotics.ftchelper.hardware.MotorSetup;
 import com.crossbotics.ftchelper.safety.SafeMotor;
 import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
+import com.crossbotics.ftchelper.util.MathUtil;
 import com.crossbotics.ftchelper.tuning.PidTunables;
 import com.crossbotics.ftchelper.tuning.Tunable;
 import java.util.ArrayList;
@@ -89,6 +90,8 @@ public class PositionMotor implements Subsystem {
     private String targetName = null;   // e.g. "HIGH"; null when the target is a plain number or "hold"
     private double manualPower = 0;     // the stick's value from the last manual(...) call
     private boolean wasManual = false;  // true while the stick was moving it last loop
+    // The interlock's fence, in units (+/- infinity = none): see fence().
+    private double fenceLo = Double.NEGATIVE_INFINITY, fenceHi = Double.POSITIVE_INFINITY;
 
     /** Gets the motor (brake, encoder reset, plain power) and wraps it. Wrong name = clear error. */
     public static PositionMotor create(HardwareMap hardwareMap, String name) {
@@ -335,6 +338,40 @@ public class PositionMotor implements Subsystem {
         safe.stop();
     }
 
+    /**
+     * A second, temporary range inside the limits, in units, set every loop by an interlock rule (two
+     * parts that must not be in the same space). It does not move past it: a target beyond it waits at its
+     * edge ({@link #isHeld()}) and goes on when the fence moves. {@code fence(-inf, +inf)} removes it.
+     */
+    public PositionMotor fence(double lo, double hi) {
+        fenceLo = Math.min(lo, hi);
+        fenceHi = Math.max(lo, hi);
+        double a = fenceLo * ticksPerUnit, b = fenceHi * ticksPerUnit;
+        safe.setFence(Double.isNaN(a) ? Double.NEGATIVE_INFINITY : a, Double.isNaN(b) ? Double.POSITIVE_INFINITY : b);
+        return this;
+    }
+
+    /** True while the fence keeps it from its target (it waits at the fence's edge). */
+    public boolean isHeld() {
+        if (targetTicks == null) return false;
+        double t = targetTicks / ticksPerUnit;
+        return t < fenceLo - toleranceUnits || t > fenceHi + toleranceUnits;
+    }
+
+    /**
+     * The target, in units (NaN = none: no target, or the stick is moving it). For interlock rules.
+     */
+    public double getTarget() {
+        if (targetTicks == null || manualPower != 0) return Double.NaN;
+        if (targetName != null && positionTunables.containsKey(targetName)) return positionTunables.get(targetName).get();
+        return targetTicks / ticksPerUnit;
+    }
+
+    /** The stick's power from the last {@link #manual} call (0 = not moving it by hand). */
+    public double getManualPower() {
+        return manualPower;
+    }
+
     /** Makes the current position zero (home by hand). */
     public void zeroHere() {
         safe.zeroHere();
@@ -386,7 +423,9 @@ public class PositionMotor implements Subsystem {
         // The PID works in units, so its gains do not depend on the encoder.
         // It returns a power: big when far away, small when close. Sending it every loop is what
         // HOLDS a lift at a height: if it sags a little, the error grows and the power pushes it back up.
-        double power = pid.calculate(targetTicks / ticksPerUnit, motorTicks() / ticksPerUnit);
+        // Kept inside the interlock's fence: it waits (and holds, with kF) at the fence's edge.
+        double goal = MathUtil.clamp(targetTicks / ticksPerUnit, fenceLo, fenceHi);
+        double power = pid.calculate(goal, motorTicks() / ticksPerUnit);
         // Through the safety layer, so limits, the slow zone and maxPower still apply.
         safe.setPower(power);
     }

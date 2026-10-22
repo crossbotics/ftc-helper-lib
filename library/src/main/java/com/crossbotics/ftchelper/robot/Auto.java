@@ -70,6 +70,9 @@ public abstract class Auto<R extends RobotDefinition> extends EasyAuto {
     protected final Subsystems createSubsystems() {
         // A fresh robot each time: EasyAuto makes the mechanisms again if the profile changes in INIT.
         robot = newRobot();
+        // Autonomous: the robot was placed by hand, so parts start from their start positions (a turret's
+        // angle from the last program is not used).
+        robot.autonomous = true;
         robot.setup(hardwareMap);
         return robot.all();
     }

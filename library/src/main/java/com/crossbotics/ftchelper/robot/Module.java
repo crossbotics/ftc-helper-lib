@@ -247,6 +247,106 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
     }
 
     // ---------------------------------------------------------------------------------------
+    // Interlock rules (see Interlock): the zone this part must keep out of while another part is in its own
+    // ---------------------------------------------------------------------------------------
+
+    /**
+     * This part's zone for an interlock rule ({@link Interlock}): between two numbers, read from the rule's
+     * Tunables section as {@code <part>From} and {@code <part>To} (in the part's own units).
+     *
+     * <pre>{@code
+     * keepApart("TurretLift", turret.zone(), lift.zoneAbove());   // Robot.java
+     * }</pre>
+     */
+    public Zone zone() {
+        return zoneOf(Zone.Kind.BETWEEN);
+    }
+
+    /** This part's zone from {@code <part>Above} up (to the top of its range). See {@link #zone()}. */
+    public Zone zoneAbove() {
+        return zoneOf(Zone.Kind.ABOVE);
+    }
+
+    /** This part's zone from {@code <part>Below} down. See {@link #zone()}. */
+    public Zone zoneBelow() {
+        return zoneOf(Zone.Kind.BELOW);
+    }
+
+    private Zone zoneOf(Zone.Kind kind) {
+        if (!zoneCapable()) {
+            throw new IllegalStateException("Robot.java: " + name() + " has no position an interlock can watch (a turret, lift, "
+                    + "arm, claw, wrist, positioner or hood has). Use Zone.when(\"words\", () -> ...) for it instead");
+        }
+        return Zone.of(kind, this);
+    }
+
+    /** True for the parts an interlock can watch and hold back. */
+    boolean zoneCapable() {
+        return false;
+    }
+
+    /** The unit of its zone numbers: "deg", "counts", or "" for a servo position (0 to 1). */
+    String zoneUnit() {
+        return "";
+    }
+
+    /** Its range (in zoneUnit), after INIT: the lowest and highest it can be. */
+    double zoneMin() {
+        return Double.NEGATIVE_INFINITY;
+    }
+
+    double zoneMax() {
+        return Double.POSITIVE_INFINITY;
+    }
+
+    /** True for an angle that repeats every 360 degrees (a turret). */
+    boolean zoneWraps() {
+        return false;
+    }
+
+    /** False while its position is not known (a turret not homed): it then counts as anywhere in its range. */
+    boolean zoneKnown() {
+        return true;
+    }
+
+    /** Why the position is not known, for the Driver Station ("homing"). */
+    String zoneUnknownWords() {
+        return "not homed";
+    }
+
+    /** Where it may be now, {lowest, highest} (a moving servo: anywhere between where it was and where it goes). */
+    double[] zoneSweep() {
+        return new double[] {zoneMin(), zoneMax()};
+    }
+
+    /** Where it was told to go (NaN = nowhere: no target, or moved by hand now). */
+    double zoneTarget() {
+        return Double.NaN;
+    }
+
+    /** The stick's power now (+ = toward zoneMax), 0 when not moved by hand. */
+    double zoneManual() {
+        return 0;
+    }
+
+    /** The range it may move in this loop (an interlock's fence); +/- infinity = free. */
+    void zoneFence(double lo, double hi) { }
+
+    /** The default safety margin, in zoneUnit. */
+    double zoneDefaultMargin() {
+        return 0;
+    }
+
+    /** True if it is being kept from going further: a target past the fence, or a stick pushing at its edge. */
+    boolean zoneHeld(double fenceLo, double fenceHi, double margin) {
+        double target = zoneTarget(), manual = zoneManual();
+        double[] s = zoneSweep();
+        double eps = Math.max(1e-6, margin / 4);
+        if (!Double.isNaN(target) && (target > fenceHi + eps || target < fenceLo - eps)) return true;
+        return (manual > 0 && s[1] >= fenceHi - margin) || (manual < 0 && s[0] <= fenceLo + margin);
+    }
+
+    // ---------------------------------------------------------------------------------------
     // Actions and the driver
     // ---------------------------------------------------------------------------------------
 

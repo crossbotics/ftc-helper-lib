@@ -67,6 +67,11 @@ public class PositionServo implements AngleDevice {
     private double moveFrom = Double.NaN;
     private double moveStartSec = 0;
     private long lastNanos = -1;             // the time of the last update(), for slow moves; -1 = never
+    // The interlock's fence (see fence()): the raw positions it may be sent to now (0..1 = none).
+    private double fenceLo = Double.NEGATIVE_INFINITY, fenceHi = Double.POSITIVE_INFINITY;
+    // Where the servo may be: the last position SENT, where that move started and when it should end
+    // (for getSweep: a servo cannot say where it is). NaN = nothing sent yet.
+    private double sweepFrom = Double.NaN, sweepTo = Double.NaN, sweepStartSec = 0, sweepDoneSec = 0;
 
     /** Gets the servo. Does not move it. */
     public static PositionServo create(HardwareMap hardwareMap, String name) {
@@ -213,11 +218,13 @@ public class PositionServo implements AngleDevice {
         lastNanos = nowN;
         // No target yet: leave the servo alone.
         if (Double.isNaN(target)) return;
-        double next = target;
+        // The interlock's fence: never sent past it (it waits at its edge).
+        double goal = fenced(target);
+        double next = goal;
         if (maxSpeed > 0 && !Double.isNaN(commanded)) {
             // Slow move: step at most (speed x time) toward the target this loop.
             double step = maxSpeed * dt;
-            next = commanded + MathUtil.clamp(target - commanded, -step, step);
+            next = commanded + MathUtil.clamp(goal - commanded, -step, step);
         }
         write(next);
     }
@@ -235,7 +242,8 @@ public class PositionServo implements AngleDevice {
     public boolean isDone() {
         // All three must be true: there is a target, the slow move has sent the final position,
         // and enough time has gone by for the servo to get there.
-        return !Double.isNaN(target) && commanded == target && clockNanos.getAsLong() / 1e9 >= doneAtSec;
+        double now = clockNanos.getAsLong() / 1e9;
+        return !Double.isNaN(target) && commanded == target && now >= doneAtSec && now >= sweepDoneSec;
     }
 
     /** A step (autonomous): go to a named position and wait until it should have arrived. */
@@ -250,13 +258,92 @@ public class PositionServo implements AngleDevice {
         };
     }
 
+    /**
+     * A second, temporary range (raw positions) set every loop by an interlock rule: the servo is not
+     * sent past it. A target outside it waits at its edge ({@link #isHeld()}) and goes on when the fence
+     * moves. {@code fence(-inf, +inf)} removes it.
+     */
+    public PositionServo fence(double lo, double hi) {
+        fenceLo = Math.min(lo, hi);
+        fenceHi = Math.max(lo, hi);
+        // A held target goes on as soon as the fence allows it (and a new fence takes effect now).
+        if (!Double.isNaN(target) && maxSpeed == 0) write(fenced(target));
+        return this;
+    }
+
+    /** True while the fence keeps it from its target. */
+    public boolean isHeld() {
+        return !Double.isNaN(target) && fenced(target) != target;
+    }
+
+    /**
+     * Where the servo probably is now (raw), from the last position sent and the travel time; NaN before
+     * the first command.
+     */
+    public double getEstimatedPosition() {
+        if (Double.isNaN(sweepTo)) return Double.NaN;
+        double now = clockNanos.getAsLong() / 1e9;
+        if (Double.isNaN(sweepFrom) || now >= sweepDoneSec || sweepDoneSec <= sweepStartSec) return sweepTo;
+        double t = (now - sweepStartSec) / (sweepDoneSec - sweepStartSec);
+        return sweepFrom + (sweepTo - sweepFrom) * t;
+    }
+
+    /**
+     * The raw positions the servo may be at now, {lowest, highest}: everything between where its last
+     * move started and where it was sent, until it should have arrived; then just that position. Its
+     * whole range (the limits) before the first command, and during the first move (it could have been
+     * anywhere). Used by interlock rules.
+     */
+    public double[] getSweep() {
+        if (Double.isNaN(sweepTo)) return new double[] {min, max};
+        double now = clockNanos.getAsLong() / 1e9;
+        if (now >= sweepDoneSec) return new double[] {sweepTo, sweepTo};
+        if (Double.isNaN(sweepFrom)) return new double[] {min, max};
+        return new double[] {Math.min(sweepFrom, sweepTo), Math.max(sweepFrom, sweepTo)};
+    }
+
+    /** {@link #getSweep()} in degrees ({lowest, highest}; needs {@link #degrees}), or null before the first command. */
+    public double[] getSweepDegrees() {
+        if (Double.isNaN(sweepTo) || !hasDegrees) return null;
+        double[] raw = getSweep();
+        double a = toDegrees(raw[0]), b = toDegrees(raw[1]);
+        return new double[] {Math.min(a, b), Math.max(a, b)};
+    }
+
+    /** {@link #getEstimatedPosition()} in degrees (needs {@link #degrees}); NaN before the first command. */
+    public double getEstimatedDegrees() {
+        return toDegrees(getEstimatedPosition());
+    }
+
+    /** A raw position in degrees (needs {@link #degrees}). */
+    public double toDegrees(double position) {
+        return degA + (position - posA) * (degB - degA) / (posB - posA);
+    }
+
+    /** An angle in degrees as a raw position (needs {@link #degrees}). */
+    public double toPosition(double deg) {
+        return posA + (deg - degA) * (posB - posA) / (degB - degA);
+    }
+
+    /** The lowest raw position it is ever sent ({@link #limits}). */
+    public double getMin() { return min; }
+
+    /** The highest raw position it is ever sent ({@link #limits}). */
+    public double getMax() { return max; }
+
+    /** Seconds for a full 0..1 move ({@link #travelTime}). */
+    public double getTravelTime() { return travelTimeSec; }
+
+    /** Where it was told to go, raw (NaN before the first command): it may still be on its way, or held by a fence. */
+    public double getTarget() { return target; }
+
     /** The raw position sent last (NaN before the first move). */
     public double getPosition() { return commanded; }
 
     /** The angle sent last, in degrees (needs {@link #degrees}; without it the number means nothing). */
     public double getDegrees() {
         // The same straight line as setDegrees, the other way round: raw position to degrees.
-        return degA + (commanded - posA) * (degB - degA) / (posB - posA);
+        return toDegrees(commanded);
     }
 
     /**
@@ -310,7 +397,12 @@ public class PositionServo implements AngleDevice {
         // Done after the slow move or the servo's own travel time, whichever is longer.
         doneAtSec = now + Math.max(moveTime, distance * travelTimeSec);
         // At full speed (or the first time) send it straight away; a slow move is sent bit by bit in update().
-        if (maxSpeed == 0 || unknown) write(clamped);
+        if (maxSpeed == 0 || unknown) write(fenced(clamped));
+    }
+
+    // A position kept inside the interlock's fence.
+    private double fenced(double position) {
+        return MathUtil.clamp(position, fenceLo, fenceHi);
     }
 
     /** Where the servo probably is now, between where the move started and the target. */
@@ -325,6 +417,13 @@ public class PositionServo implements AngleDevice {
     // Sends a position only when it changes: each hardware command costs loop time.
     private void write(double position) {
         if (position != commanded) {
+            // Where it may be from now on: from where it probably is to here, for the travel time.
+            double now = clockNanos.getAsLong() / 1e9;
+            double from = getEstimatedPosition();
+            sweepFrom = from;
+            sweepTo = position;
+            sweepStartSec = now;
+            sweepDoneSec = now + (Double.isNaN(from) ? 1 : Math.abs(position - from)) * travelTimeSec;
             servo.setPosition(position);
             commanded = position;
         }

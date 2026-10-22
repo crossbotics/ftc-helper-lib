@@ -12,7 +12,10 @@ import com.crossbotics.ftchelper.safety.SoftLimits;
 import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
 import com.crossbotics.ftchelper.util.Angles;
 import com.crossbotics.ftchelper.util.MathUtil;
+import com.crossbotics.ftchelper.mechanism.PositionServo;
 import java.util.function.BooleanSupplier;
+import java.util.function.DoubleConsumer;
+import java.util.function.DoubleSupplier;
 import java.util.function.LongSupplier;
 
 /**
@@ -46,6 +49,17 @@ import java.util.function.LongSupplier;
  * seen once. Call {@link #home(double)} (it turns slowly until the switch). Without a switch, it
  * trusts {@link #startAngle} (the angle when the robot was turned on).
  *
+ * <p><b>What turns it.</b> A motor with its encoder ({@link #Turret(String, DcMotorEx)}); a
+ * continuous-rotation (CR) servo with any encoder ({@link #Turret(String, DoubleConsumer, DoubleSupplier)}:
+ * a REV Through Bore on a motor port, or an absolute encoder read in degrees); or a standard servo that
+ * goes to an angle by itself ({@link #servo(String, PositionServo)}: its angle is where it was sent, and
+ * "arrived" is a time estimate). A slip ring lets it turn for ever: {@link #continuous()}.
+ *
+ * <p><b>Fence</b> ({@link #fence(double, double)}): a second, temporary range set every loop by the
+ * robot's interlock rules (two parts that must not be in the same space). The turret never turns past
+ * it; a target on the other side waits at its edge ({@link #isHeld()}), or goes the other way round if
+ * the range allows.
+ *
  * <p>Like every helper, the aim commands only set a target; {@link #update()} turns the motor, a little
  * every loop, using a PID controller (tutorial 07 explains PID). Tutorial 18 aims a turret with a camera.
  *
@@ -54,7 +68,22 @@ import java.util.function.LongSupplier;
 public class Turret implements Subsystem {
     // "implements Subsystem": it has update/stop/addTelemetry/name like every mechanism helper.
     private final String name;
+    // The motor (null for a CR servo or a servo turret): reversed() sets its direction.
     private final DcMotorEx motor;
+    // Where the power goes and where the encoder count comes from (a motor's own, or a CR servo and
+    // a separate encoder). Null for a servo turret.
+    private final DoubleConsumer powerOut;
+    private final DoubleSupplier countsIn;
+    // A servo turret: it goes to an angle by itself (null for a motor or CR servo turret).
+    private final PositionServo servo;
+    private double powerSign = 1, encoderSign = 1;
+    private boolean continuous = false;
+    // The interlock's fence (see fence()): +/- infinity = none.
+    private double fenceLo = Double.NEGATIVE_INFINITY, fenceHi = Double.POSITIVE_INFINITY;
+    private boolean held = false;
+    // The direction last asked for (robot-relative), so a fenced target can go the other way round.
+    private double wantedDeg = Double.NaN;
+    private long lastUpdateNanos = -1;
     private final PidController pid = new PidController(0.02, 0, 0.001, 0);
 
     private double countsPerDegree = 1;
@@ -99,9 +128,61 @@ public class Turret implements Subsystem {
     public Turret(String name, DcMotorEx motor) {
         this.name = name;
         this.motor = motor;
+        this.powerOut = motor::setPower;
+        this.countsIn = motor::getCurrentPosition;
+        this.servo = null;
         // The PID could take "the short way round" by itself, but that might cross a limit.
         // We pick the safe target in legalTarget(), so the PID should just use the plain difference.
         pid.setAngleMode(false);   // we pick the legal target ourselves; plain error is correct
+    }
+
+    /**
+     * A turret turned by something that takes a power (a CR servo) with its angle from any encoder.
+     *
+     * <pre>{@code
+     * DcMotorEx encoderPort = hardwareMap.get(DcMotorEx.class, "turret_enc");   // a Through Bore on a motor port
+     * Turret t = new Turret("turret", crServo::setPower, encoderPort::getCurrentPosition)
+     *         .countsPerDegree(8192 / 360.0).limits(-90, 90);
+     * }</pre>
+     *
+     * @param name   shown on the Driver Station
+     * @param power  where the power goes, -1 to 1 (+ = counterclockwise; see {@link #reversed()})
+     * @param counts the encoder now, in counts (any start: {@link #startAngle} sets which angle it is)
+     */
+    public Turret(String name, DoubleConsumer power, DoubleSupplier counts) {
+        this.name = name;
+        this.motor = null;
+        this.powerOut = power;
+        this.countsIn = counts;
+        this.servo = null;
+        pid.setAngleMode(false);
+    }
+
+    // A servo turret (see servo()).
+    private Turret(String name, PositionServo servo) {
+        this.name = name;
+        this.motor = null;
+        this.powerOut = null;
+        this.countsIn = null;
+        this.servo = servo;
+    }
+
+    /**
+     * A turret on a standard servo that goes to an angle by itself (no encoder, no PID, no homing). The
+     * servo needs its angles set up ({@link PositionServo#degrees}) and its travel time (for "arrived").
+     *
+     * <pre>{@code
+     * PositionServo s = PositionServo.create(hardwareMap, "turret").degrees(0.1, -90, 0.9, 90).travelTime(0.6);
+     * Turret t = Turret.servo("turret", s).limits(-90, 90);
+     * }</pre>
+     */
+    public static Turret servo(String name, PositionServo servo) {
+        return new Turret(name, servo);
+    }
+
+    /** True for a servo turret ({@link #servo}): its angle is where it was sent (an estimate while it moves). */
+    public boolean isServo() {
+        return servo != null;
     }
 
     /** For tests: use a pretend clock so tests do not wait for real time. */
@@ -112,8 +193,35 @@ public class Turret implements Subsystem {
 
     /** Positive power turns the other way. Use it if positive power turns the turret clockwise. */
     public Turret reversed() {
-        MotorSetup.of(motor).reversed().brake().resetEncoder().runWithoutEncoder().done();
+        if (motor != null) MotorSetup.of(motor).reversed().brake().resetEncoder().runWithoutEncoder().done();
+        else powerSign = -powerSign;
         return this;
+    }
+
+    /**
+     * The encoder counts the other way (a separate encoder whose count goes down while the turret turns
+     * counterclockwise). Not needed for a motor's own encoder ({@link #reversed()} flips both).
+     */
+    public Turret encoderReversed() {
+        encoderSign = -encoderSign;
+        return this;
+    }
+
+    /**
+     * No limits: the turret can turn round and round (a slip ring carries its wires). It always takes the
+     * shortest way, and a direction is never "out of range". The angle keeps counting past 360
+     * ({@link #getAngle()}); {@link #getWrappedAngle()} gives it as -180..180.
+     */
+    public Turret continuous() {
+        continuous = true;
+        minDeg = Double.NEGATIVE_INFINITY;
+        maxDeg = Double.POSITIVE_INFINITY;
+        return this;
+    }
+
+    /** True after {@link #continuous()}. */
+    public boolean isContinuous() {
+        return continuous;
     }
 
     /** Encoder counts per degree of TURRET rotation (motor counts x gear ratio / 360). */
@@ -122,11 +230,50 @@ public class Turret implements Subsystem {
         return this;
     }
 
-    /** The allowed range, degrees. May be wider than 360 total (e.g. -190..190). */
+    /** The allowed range, degrees. May be wider than 360 total (e.g. -190..190). Ends {@link #continuous()}. */
     public Turret limits(double min, double max) {
         // Math.min/max: works even if the two numbers are given the wrong way round.
+        continuous = false;
         minDeg = Math.min(min, max);
         maxDeg = Math.max(min, max);
+        return this;
+    }
+
+    /** The lower limit, degrees (minus infinity when {@link #continuous()}). */
+    public double getMin() { return minDeg; }
+
+    /** The upper limit, degrees (infinity when {@link #continuous()}). */
+    public double getMax() { return maxDeg; }
+
+    /**
+     * A temporary range inside the limits, set every loop by an interlock rule (see the robot module's
+     * Interlock): the turret does not turn past it. A target outside it goes the other way round if an
+     * equal direction (+ or - 360) is inside both the limits and the fence, else it waits at the fence's
+     * edge ({@link #isHeld()}). {@code fence(-inf, +inf)} or {@link #clearFence()} removes it.
+     *
+     * @param lo lowest allowed angle now, degrees
+     * @param hi highest allowed angle now, degrees
+     */
+    public Turret fence(double lo, double hi) {
+        fenceLo = Math.min(lo, hi);
+        fenceHi = Math.max(lo, hi);
+        return this;
+    }
+
+    /** Removes the {@link #fence}. */
+    public Turret clearFence() {
+        return fence(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
+    }
+
+    /** True while the fence keeps it from its target (it waits at the fence's edge). */
+    public boolean isHeld() {
+        return held;
+    }
+
+    /** Marks the angle as known now (homed), e.g. after {@link #startAngle} from a remembered angle. */
+    public Turret markHomed() {
+        homed = true;
+        homing = false;
         return this;
     }
 
@@ -135,6 +282,8 @@ public class Turret implements Subsystem {
      * Call it after {@link #countsPerDegree} and {@link #reversed()}, since it uses the encoder reading.
      */
     public Turret startAngle(double deg) {
+        // A servo turret's angle is where it was sent: nothing to set.
+        if (servo != null) return this;
         // Choose the offset so that "encoder angle + offset" = deg right now.
         offsetDeg = deg - rawDeg();
         return this;
@@ -155,6 +304,7 @@ public class Turret implements Subsystem {
      * {@code () -> ...} is a small piece of code handed over to run later (here: every loop).
      */
     public Turret homeSwitch(BooleanSupplier isClosed, double angleDeg) {
+        if (servo != null) throw new IllegalStateException(name + ": a servo turret needs no home switch (its angle is where it was sent)");
         homeSwitch = isClosed;
         homeAngle = angleDeg;
         // With a switch, the angle is not trusted until the switch has been seen.
@@ -227,6 +377,7 @@ public class Turret implements Subsystem {
     public void aimAt(double robotDeg) {
         // An aim command takes over from the stick.
         manualPower = 0;
+        wantedDeg = robotDeg;
         targetDeg = legalTarget(robotDeg);
     }
 
@@ -244,7 +395,10 @@ public class Turret implements Subsystem {
 
     /** Turns BY an amount from where it is now. For camera targets use {@link #aimAtTarget} instead. */
     public void aimBy(double deltaDeg) {
-        aimAt(getAngle() + deltaDeg);
+        double now = getAngle();
+        // A servo turret before its first command: count from the middle of its range.
+        if (Double.isNaN(now)) now = Double.isInfinite(maxDeg - minDeg) ? 0 : (minDeg + maxDeg) / 2;
+        aimAt(now + deltaDeg);
     }
 
     /**
@@ -280,7 +434,12 @@ public class Turret implements Subsystem {
     public void manual(double power) {
         // The stick was just let go: hold the angle it is at now (if the angle is known; if not,
         // no target, so no power). "a ? b : c" means: if a use b, otherwise c.
-        if (power == 0 && manualPower != 0) targetDeg = homed ? getAngle() : Double.NaN;
+        if (power == 0 && manualPower != 0) {
+            targetDeg = homed ? Math.max(effLo(), Math.min(effHi(), getAngle())) : Double.NaN;
+            wantedDeg = targetDeg;
+        }
+        // A servo turret moves its target with the stick (from where it is, the first time).
+        if (servo != null && power != 0 && Double.isNaN(targetDeg)) targetDeg = getAngle();
         manualPower = power;
     }
 
@@ -291,7 +450,7 @@ public class Turret implements Subsystem {
      */
     public void home(double direction) {
         // No switch: nothing to home on (the start angle is trusted).
-        if (homeSwitch == null) return;
+        if (homeSwitch == null || servo != null) return;
         fault = "";
         if (homeSwitch.getAsBoolean()) {        // already on the switch: home at once, no motion
             setHomedHere();
@@ -313,8 +472,15 @@ public class Turret implements Subsystem {
     /** Once per loop: checks the home switch, picks the power (homing, stick or PID), applies the limits. */
     @Override
     public void update() {
+        long nowNanos = clockNanos.getAsLong();
+        double dt = lastUpdateNanos < 0 ? 0 : Math.min(0.1, (nowNanos - lastUpdateNanos) / 1e9);
+        lastUpdateNanos = nowNanos;
+        if (servo != null) {
+            updateServo(dt);
+            return;
+        }
         // A fresh encoder reading at the start of every loop (homing below uses it).
-        encoderNow = motor.getCurrentPosition();
+        encoderNow = encoderSign * countsIn.getAsDouble();
         readAt = System.nanoTime();
         boolean switchNow = homeSwitch != null && homeSwitch.getAsBoolean();
         // The moment the switch closes (or any time it is closed while homing), reset the angle.
@@ -330,6 +496,7 @@ public class Turret implements Subsystem {
             homing = false;
             fault = "homing failed: switch not found";
         }
+        double aimDeg = fencedTarget();
 
         // Pick the power, in order of priority.
         double power;
@@ -340,20 +507,85 @@ public class Turret implements Subsystem {
             // The stick: full range once homed; only homing power before (the limits cannot be
             // trusted while the angle is unknown, so keep it slow).
             power = manualPower * (homed ? maxPower : homingPower);
-        } else if (!homed || Double.isNaN(targetDeg)) {
+        } else if (!homed || Double.isNaN(aimDeg)) {
             // Angle unknown, or nothing to aim at: no power.
             power = 0;
         } else {
             // Aiming: the PID gives more power the further off it points.
-            power = pid.calculate(targetDeg, getAngle());
+            power = pid.calculate(aimDeg, getAngle());
         }
         power = MathUtil.clamp(power, -maxPower, maxPower);
-        // Once the angle is known: never drive past a limit, and slow down near one (SoftLimits does
-        // both). This is what keeps the cables from winding up, even under manual control.
+        // Once the angle is known: never drive past a limit (or the interlock's fence), and slow down
+        // near one (SoftLimits does both). This is what keeps the cables from winding up, even under
+        // manual control.
         if (homed && !homing) {
-            power = SoftLimits.limit(power, getAngle(), minDeg, maxDeg, slowZoneDeg, slowZonePower, false, false);
+            power = SoftLimits.limit(power, getAngle(), effLo(), effHi(), slowZoneDeg, slowZonePower, false, false);
         }
         write(power);
+    }
+
+    // The target kept inside the fence. Outside it: first try the other way round (an equal direction
+    // inside the limits and the fence), else wait at the fence's edge (held).
+    private double fencedTarget() {
+        if (Double.isNaN(targetDeg)) {
+            held = false;
+            return targetDeg;
+        }
+        // (More than the tolerance past it: a target right at the fence's edge stays where it is.)
+        if (manualPower == 0 && (targetDeg < fenceLo - toleranceDeg || targetDeg > fenceHi + toleranceDeg) && !Double.isNaN(wantedDeg)) {
+            double other = equalInside(wantedDeg, effLo(), effHi());
+            if (!Double.isNaN(other)) targetDeg = other;
+        }
+        double aim = MathUtil.clamp(targetDeg, fenceLo, fenceHi);
+        held = Math.abs(aim - targetDeg) > 1e-9;
+        return aim;
+    }
+
+    // The equal direction (deg + k*360) inside lo..hi closest to where it points now; NaN if none.
+    private double equalInside(double deg, double lo, double hi) {
+        double reference = getAngle();
+        double base = reference + Angles.shortestDiff(deg, reference);
+        double best = Double.NaN;
+        for (int k = -3; k <= 3; k++) {
+            double c = base + 360.0 * k;
+            if (c >= lo - 1e-9 && c <= hi + 1e-9 && (Double.isNaN(best) || Math.abs(c - reference) < Math.abs(best - reference))) best = c;
+        }
+        return best;
+    }
+
+    // The range now: the limits and the fence together.
+    private double effLo() {
+        return Math.max(minDeg, fenceLo);
+    }
+
+    private double effHi() {
+        return Math.min(maxDeg, fenceHi);
+    }
+
+    // A servo turret: the stick moves the target at about the servo's speed; the target (kept inside the
+    // limits and the fence) is sent to the servo.
+    private void updateServo(double dt) {
+        if (manualPower != 0 && !Double.isNaN(targetDeg)) {
+            double degPerSec = servoSpanDeg() / Math.max(0.05, servoTravelSec);
+            targetDeg = MathUtil.clamp(targetDeg + manualPower * maxPower * degPerSec * dt, effLo(), effHi());
+            wantedDeg = targetDeg;
+        }
+        double aim = fencedTarget();
+        if (!Double.isNaN(aim)) servo.setDegrees(MathUtil.clamp(aim, minDeg, maxDeg));
+        servo.update();
+    }
+
+    private double servoTravelSec = 0.5;
+
+    /** A servo turret: seconds for the stick to turn it across its whole range at full stick (default 0.5). */
+    public Turret servoStickSec(double seconds) {
+        servoTravelSec = Math.abs(seconds);
+        return this;
+    }
+
+    private double servoSpanDeg() {
+        double span = maxDeg - minDeg;
+        return Double.isInfinite(span) ? 360 : span;
     }
 
     /** Stops: no homing, no target, no power. It stays stopped until a new command. */
@@ -362,16 +594,43 @@ public class Turret implements Subsystem {
         homing = false;
         manualPower = 0;
         targetDeg = Double.NaN;
-        write(0);
+        wantedDeg = Double.NaN;
+        held = false;
+        if (servo == null) write(0);
     }
 
     // ---------------------------------------------------------------------------------------
     // Questions
     // ---------------------------------------------------------------------------------------
 
-    /** The angle now (degrees, counterclockwise +). Meaningless until homed. */
+    /**
+     * The angle now (degrees, counterclockwise +). Meaningless until homed. A servo turret: where it
+     * was sent, or part way there while it moves (an estimate); NaN before its first command.
+     */
     public double getAngle() {
+        if (servo != null) return servo.getEstimatedDegrees();
         return rawDeg() + offsetDeg;
+    }
+
+    /** {@link #getAngle()} as -180..180 (for a {@link #continuous()} turret, whose angle keeps counting). */
+    public double getWrappedAngle() {
+        return Angles.wrapDegrees(getAngle());
+    }
+
+    /**
+     * The angles the turret may be at now, {lowest, highest}: for a motor or CR servo turret its angle
+     * (both the same), for a servo turret everything between where it was and where it is going until it
+     * should have arrived (it cannot say where it is). Before a servo turret's first command: its whole
+     * range. Used by interlock rules.
+     */
+    public double[] getSweep() {
+        if (servo == null) {
+            double a = getAngle();
+            return new double[] {a, a};
+        }
+        double[] raw = servo.getSweepDegrees();
+        if (raw == null) return new double[] {minDeg, maxDeg};
+        return raw;
     }
 
     /** The angle it is going to (NaN if none). */
@@ -384,7 +643,11 @@ public class Turret implements Subsystem {
      * Safe to use as a launcher ready check.
      */
     public boolean isAimed() {
-        return homed && !homing && !outOfRange && !Double.isNaN(targetDeg)
+        if (servo != null) {
+            return !held && !outOfRange && !Double.isNaN(targetDeg) && servo.isDone()
+                    && Math.abs(targetDeg - getAngle()) <= toleranceDeg;
+        }
+        return homed && !homing && !outOfRange && !held && !Double.isNaN(targetDeg)
                 && Math.abs(targetDeg - getAngle()) <= toleranceDeg;
     }
 
@@ -435,7 +698,7 @@ public class Turret implements Subsystem {
         if (!fault.isEmpty()) t.warn(name + " " + fault);
         if (!homed) t.warn(name + " not homed");
         if (outOfRange) t.warn(name + ": target out of range");
-        t.line(name, "%.1f deg%s", getAngle(), isAimed() ? "  AIMED" : "");
+        t.line(name, "%.1f deg%s", continuous ? getWrappedAngle() : getAngle(), isAimed() ? "  AIMED" : "");
         t.debug(name + " target", "%.1f deg", targetDeg);
     }
 
@@ -446,6 +709,8 @@ public class Turret implements Subsystem {
     /** The equal direction (angle + k*360) inside the limits closest to the current angle. */
     double legalTarget(double wantedDeg) {
         double reference = getAngle();
+        // A servo turret before its first command: reckon from the middle of its range.
+        if (Double.isNaN(reference)) reference = Double.isInfinite(maxDeg - minDeg) ? 0 : (minDeg + maxDeg) / 2;
         double best = Double.NaN;
         // The wanted direction, written as the angle nearest to where we are now (e.g. wanted -170
         // while at 175 becomes 190). Then also try one and two full turns either way.
@@ -455,8 +720,12 @@ public class Turret implements Subsystem {
             // Inside the limits? (1e-9 = a tiny allowance for rounding, so exactly on a limit counts.)
             if (candidate >= minDeg - 1e-9 && candidate <= maxDeg + 1e-9) {
                 // Keep the one that needs the least turning from here. Since both the start and the
-                // target are inside the limits, turning straight there never passes a limit.
-                if (Double.isNaN(best) || Math.abs(candidate - reference) < Math.abs(best - reference)) best = candidate;
+                // target are inside the limits, turning straight there never passes a limit. One inside
+                // the interlock's fence wins over one outside it (it can be reached now).
+                boolean inFence = candidate >= fenceLo - 1e-9 && candidate <= fenceHi + 1e-9;
+                boolean bestInFence = !Double.isNaN(best) && best >= fenceLo - 1e-9 && best <= fenceHi + 1e-9;
+                if (Double.isNaN(best) || (inFence && !bestInFence)
+                        || (inFence == bestInFence && Math.abs(candidate - reference) < Math.abs(best - reference))) best = candidate;
             }
         }
         if (!Double.isNaN(best)) {
@@ -488,20 +757,20 @@ public class Turret implements Subsystem {
     private double rawDeg() {
         long now = System.nanoTime();
         if (readAt == Long.MIN_VALUE || now - readAt >= READ_KEEP_NANOS) {
-            encoderNow = motor.getCurrentPosition();
+            encoderNow = encoderSign * countsIn.getAsDouble();
             readAt = now;
         }
         return encoderNow / countsPerDegree;
     }
 
-    private int encoderNow = 0;
+    private double encoderNow = 0;
     private long readAt = Long.MIN_VALUE;
     static long READ_KEEP_NANOS = 3_000_000L;
 
     // Sends a power only when it changes: each hardware command costs loop time.
     private void write(double power) {
         if (power != sentPower) {
-            motor.setPower(power);
+            powerOut.accept(powerSign * power);
             sentPower = power;
         }
     }
