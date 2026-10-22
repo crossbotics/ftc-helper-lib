@@ -91,14 +91,16 @@ tool that measures spin speed) or a slow-motion video. Very high count rates (a 
 
 ### Battery compensation
 
-> **Battery compensation: on by default, easy to turn off, not yet proven on a robot.**
+> **Battery compensation: OFF by default, not yet proven on a real robot.** Testing teams: please try it
+> and tell us what you see.
 > The RPM control already fixes a low battery by itself, but slowly (the small I gain). Compensation
 > only makes that faster: it helps the first shot after spin-up and quick shots in a row. It cannot help
 > when the battery is too low for the speed you ask (the motor is already at full power).
-> - **Turn it off:** `batteryCompensation = false` in `Tunables.Launcher` (five files), or leave out `.batteryCompensation(...)` here.
+> - **Turn it on:** in the robot in five files, `public static boolean batteryCompensation = true;` in
+>   `Tunables.Launcher` (with `kF` set); here, add `.batteryCompensation(...)` as below.
 > - **Test it on your robot:** with a battery at about 11.5 V, fire 4 shots quickly and watch the
->   launcher's measured RPM against its target on the Driver Station. Do it with compensation on, then
->   off. If you see no difference, leave it off; if the wheel overshoots after a battery swap, turn it
+>   launcher's measured RPM against its target on the Driver Station. Do it with compensation off, then
+>   on. If you see no difference, leave it off; if the wheel overshoots after a battery swap, turn it
 >   off and tell us.
 
 
@@ -130,7 +132,7 @@ Driver Station warns: `battery 11.2 V: low`. Debug mode shows `flywheel battery:
 reading and asks the hubs again (at most every 0.25 s) on the library's helper thread, so the loop never
 waits for them ([non-blocking](../guides/non-blocking.md)). `() -> Hw.batteryVolts(hardwareMap)` works
 too, but each reading then holds up the loop a few milliseconds.
-The robot in five files turns it on for you when `kF` is set ([robot.md](robot.md#speed-trim-and-battery-compensation)).
+The robot in five files turns it on when `batteryCompensation = true` is written in `Tunables.Launcher` and `kF` is set ([robot.md](robot.md#speed-trim-and-battery-compensation)).
 
 ## ShotTable
 

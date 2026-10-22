@@ -22,10 +22,13 @@ Contents: [how autos show up](#how-autos-show-up-on-the-driver-station) ·
 [example 3: near and far](#example-3-near-and-far-starts) ·
 [test in the simulator](#test-each-one-in-the-simulator) · [match day](#match-day)
 
-The examples are one tested file:
-[`ChooseAutoRecipes.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/cookbook/ChooseAutoRecipes.java).
-A simulator test INITs every autonomous in it, and checks that the INIT menu moves the robot and picks
-the steps.
+The examples are whole, tested files in
+[`examples/.../cookbook/autos`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/cookbook/autos),
+for the cookbook's robot (a mecanum drive, a lift and a claw). A simulator test INITs and runs every one,
+and checks that the INIT menu moves the robot and picks the steps. Each file starts with a `package` line
+and `import` lines for the example's folder: in your TeamCode, change them as the comment in the file says.
+In every `@Autonomous(...)` line, write **your** TeleOp's name in `preselectTeleOp` (the examples use the
+cookbook's `"Cookbook TeleOp"`).
 
 ## How autos show up on the Driver Station
 
@@ -97,40 +100,61 @@ and you cannot test them all.
 Never copy a route into a second file. When you fix a number in one copy, the other copy keeps the bug.
 Instead, write each **piece** of a route once, as a method, and build every autonomous from the pieces.
 
-Make a new file `Routes.java` in your `autos` folder. Each method takes the step list `s` and your
+First, the numbers: your own lines in `Tunables.java`, in a section `Auto` that no part reads (add the
+lines you do not have yet; every number in it is also in the tuning menu):
+
+<!-- recipe: tunables-auto -->
+```java
+/** Your own numbers: a section no part reads. Every number here is in the tuning menu too. */
+public static class Auto {
+    public static double leaveInches = 24, toGoalInches = 30, parkInches = 20;
+    public static double goalX = -30, goalY = -30, goalHeading = 45;
+    public static double parkX = -56, parkY = -36;
+    // Several autos (guides/autos.md): the cycle, and the FAR start's way to the near side.
+    public static double pickupInches = 20, offWallInches = 12, farToNearInches = 72;
+}
+```
+
+Then make a new file `Routes.java` in your `autos` folder. Each method takes the step list `s` and your
 `robot`, adds its steps, and hands the list back:
 
 <!-- recipe: autos-routes -->
 ```java
-/** The pieces every autonomous is made from (Routes.java). Write each piece once. */
-public static class Routes {
+package com.crossbotics.ftchelper.examples.cookbook.autos;
+// In your TeamCode, change the line above to exactly:  package org.firstinspires.ftc.teamcode.autos;
+// and the first three imports below to:  import org.firstinspires.ftc.teamcode.Actions;
+//   import org.firstinspires.ftc.teamcode.Robot;   import org.firstinspires.ftc.teamcode.Tunables;
+
+import com.crossbotics.ftchelper.examples.cookbook.Actions;
+import com.crossbotics.ftchelper.examples.cookbook.Robot;
+import com.crossbotics.ftchelper.examples.cookbook.Tunables;
+import com.crossbotics.ftchelper.robot.Steps;
+
+/** The pieces every autonomous is made from. Write each piece once. No @Autonomous: not an OpMode. */
+public class Routes {
     /** Score the piece the robot starts with: hold it, drive to the goal, score. */
     public static Steps scorePreload(Steps s, Robot robot) {
         return s.run("Hold the preload", robot.claw::close)
-                .move("To the goal", Tunables.Auto.toGoalInches, 0, 0.6)
+                .move("To the goal", Tunables.Auto.toGoalInches, 0, 0.6)          // 0 = forward
                 .action(Actions.scoreHigh(robot), 5);
     }
 
-    /** One more piece: to the pieces, grab one, back to the goal, score. */
+    /** One more piece: back to the pieces, grab one, forward to the goal, score. */
     public static Steps cycle(Steps s, Robot robot) {
-        return s.move("To the pieces", Tunables.Auto.pickupInches, 270, 0.6)   // 270 = left
+        return s.move("To the pieces", Tunables.Auto.pickupInches, 180, 0.6)    // 180 = backward
                 .run("Grab", robot.claw::close)
                 .waitSeconds("Let the claw close", 0.3)
-                .move("Back to the goal", Tunables.Auto.pickupInches, 90, 0.6)
+                .move("Back to the goal", Tunables.Auto.pickupInches, 0, 0.6)
                 .action(Actions.scoreHigh(robot), 5);
     }
 
-    /** The park. It keeps the last 3 seconds for itself, so it always runs. */
+    /** The park: back toward our wall. It keeps the last 3 seconds for itself, so it always runs. */
     public static Steps park(Steps s) {
         return s.parkWithSeconds(3)
-                .move("Park", Tunables.Auto.parkInches, 90, 0.7);
+                .move("Park", Tunables.Auto.parkInches, 180, 0.7);
     }
 }
 ```
-
-In your own `Routes.java`, write `public class Routes {` (no `static`: that word is only there because
-the example lives inside another class), and add the `package` and `import` lines like in
-`ScoreAndPark.java` ([lesson 6](../tutorials/start/06-first-autonomous.md#2-the-file-line-by-line)).
 
 - `public static Steps scorePreload(Steps s, Robot robot)`: a method anyone can call (`public`), with no
   object needed (`static`). It returns the list, so you could chain more steps after it.
@@ -188,12 +212,23 @@ Two plans from the same start: "score the preload and park" (safe), and "score t
 piece, and park" (more points, more risk). Two files, each only a few lines, because the pieces are in
 `Routes.java`:
 
-<!-- recipe: autos-two-opmodes -->
+<!-- recipe: autos-near-preload-park -->
 ```java
-/** NearPreloadPark.java: score the preload, then park. */
+package com.crossbotics.ftchelper.examples.cookbook.autos;
+// In your TeamCode, change the line above to exactly:  package org.firstinspires.ftc.teamcode.autos;
+// and the first import below to:  import org.firstinspires.ftc.teamcode.Robot;
+// (Routes is in the same autos folder: no import needed for it.)
+
+import com.crossbotics.ftchelper.examples.cookbook.Robot;
+import com.crossbotics.ftchelper.robot.Auto;
+import com.crossbotics.ftchelper.robot.Steps;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+
+/** Score the preload, then park. preselectTeleOp: YOUR TeleOp's name. */
 @Autonomous(name = "Near: Preload + Park", group = "Autos", preselectTeleOp = "Cookbook TeleOp")
 @Disabled   // delete this line in your copy
-public static class NearPreloadPark extends Auto<Robot> {
+public class NearPreloadPark extends Auto<Robot> {
     @Override
     protected boolean mirrorForRed() {
         return false;   // BIOBUZZ: the field is turned half a turn, one route for both alliances
@@ -206,11 +241,24 @@ public static class NearPreloadPark extends Auto<Robot> {
         Routes.park(s);
     }
 }
+```
 
-/** NearCycle.java: score the preload, one more piece, then park. Only one line is new. */
+<!-- recipe: autos-near-cycle -->
+```java
+package com.crossbotics.ftchelper.examples.cookbook.autos;
+// In your TeamCode, change the line above to exactly:  package org.firstinspires.ftc.teamcode.autos;
+// and the first import below to:  import org.firstinspires.ftc.teamcode.Robot;
+
+import com.crossbotics.ftchelper.examples.cookbook.Robot;
+import com.crossbotics.ftchelper.robot.Auto;
+import com.crossbotics.ftchelper.robot.Steps;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+
+/** Score the preload, one more piece, then park. Only the Routes.cycle line is new. */
 @Autonomous(name = "Near: Preload + Cycle + Park", group = "Autos", preselectTeleOp = "Cookbook TeleOp")
 @Disabled   // delete this line in your copy
-public static class NearCycle extends Auto<Robot> {
+public class NearCycle extends Auto<Robot> {
     @Override
     protected boolean mirrorForRed() {
         return false;
@@ -226,8 +274,8 @@ public static class NearCycle extends Auto<Robot> {
 }
 ```
 
-In your code each class is its own file (`NearPreloadPark.java`, `NearCycle.java`) in `autos/`, with
-`public class` (no `static`) and no `@Disabled`.
+Each class is its own file in `autos/`. Delete `@Disabled` in your copies, or the Driver Station does not
+list them.
 
 - The steps are not chained with dots here. Each line calls a piece, and the piece adds its steps to the
   same list `s`. The result is the same list as one long chain.
@@ -241,10 +289,22 @@ OpMode:
 
 <!-- recipe: autos-choose-in-init -->
 ```java
-/** ChooseInInit.java: ONE autonomous; the drivers choose the start and the plan in INIT. */
+package com.crossbotics.ftchelper.examples.cookbook.autos;
+// In your TeamCode, change the line above to exactly:  package org.firstinspires.ftc.teamcode.autos;
+// and the first two imports below to:  import org.firstinspires.ftc.teamcode.Robot;
+//   import org.firstinspires.ftc.teamcode.Tunables;
+
+import com.crossbotics.ftchelper.examples.cookbook.Robot;
+import com.crossbotics.ftchelper.examples.cookbook.Tunables;
+import com.crossbotics.ftchelper.robot.Auto;
+import com.crossbotics.ftchelper.robot.Steps;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+
+/** ONE autonomous: the drivers choose the start and the plan in INIT. */
 @Autonomous(name = "Choose in INIT", group = "Autos", preselectTeleOp = "Cookbook TeleOp")
 @Disabled   // delete this line in your copy
-public static class ChooseInInit extends Auto<Robot> {
+public class ChooseInInit extends Auto<Robot> {
     @Override
     protected boolean mirrorForRed() {
         return false;
@@ -252,7 +312,8 @@ public static class ChooseInInit extends Auto<Robot> {
 
     @Override
     protected void steps(Steps s, Robot robot) {
-        // The menu lines. The FIRST option of each is chosen at INIT: make it your safest plan.
+        // Your menu lines (under the library's Alliance and Start delay lines). The FIRST option of
+        // each is chosen at INIT: make it your safest plan.
         s.menuChoice("Start", "Near", "Far")
          .menuChoice("Plan", "Preload + Park", "Preload + Cycle + Park", "Park only");
 
@@ -262,10 +323,13 @@ public static class ChooseInInit extends Auto<Robot> {
          .end()
          .onlyIf("Start", "Far")
              .start("FAR: against our wall, 2nd tile right of centre, facing the field", 36, -61, 0)
-             .move("Across to the near side", Tunables.Auto.farToNearInches, 270, 0.7)
+             // Off the wall first: the FLOWER on our wall stands between the two start spots.
+             .move("Off the wall", Tunables.Auto.offWallInches, 0, 0.5)
+             .move("Across to the near side", Tunables.Auto.farToNearInches, 270, 0.7)   // 270 = left
          .end();
 
-        // The plan: plain Java "if", because the pieces are methods. choice(...) is the option chosen.
+        // The plan: plain Java "if", because the pieces are methods. choice(...) gives the option
+        // chosen, as text (a String). equals(...): the same text. "!" means "not".
         String plan = s.choice("Plan");
         if (!plan.equals("Park only")) Routes.scorePreload(s, robot);
         if (plan.equals("Preload + Cycle + Park")) Routes.cycle(s, robot);
@@ -287,7 +351,14 @@ Place robot : NEAR: against our wall, 2nd tile left of centre, facing the field
 X = BLUE   B = RED
 ```
 
-D-pad down twice, then right: `Start: Far`, and the first line at once says `Place robot : FAR: ...`.
+D-pad down twice (past the library's `Alliance` and `Start delay` lines), then right: `Start: Far`, and
+the first line at once says `Place robot : FAR: ...`.
+
+- **The FAR route drives off the wall first.** On BIOBUZZ's field a FLOWER stands against your wall
+  between the two start spots (about 20 to 27 in right of the centre line). A robot that slides straight
+  along the wall from the far spot drives into it. So the far route goes 12 in forward first
+  (`offWallInches`), then left across to the near side, then runs the near pieces. Check every new route
+  against the field map in the simulator, and with `expect bumped none` in its scenario (below).
 
 - `onlyIf("Start", "Far") ... end()`: the steps between run only when "Far" is chosen. A `start(...)`
   in there is the start only for "Far".
@@ -307,7 +378,9 @@ matches where the robot is. Each file has its own `start(...)`. The far one adds
 calls the same pieces:
 
 ```java
+// FarPreloadPark.java, inside steps(...): the same pieces, after its own first moves.
 s.start("FAR: against our wall, 2nd tile right of centre, facing the field", 36, -61, 0)
+ .move("Off the wall", Tunables.Auto.offWallInches, 0, 0.5)              // clear of the FLOWER
  .move("Across to the near side", Tunables.Auto.farToNearInches, 270, 0.7);
 Routes.scorePreload(s, robot);
 Routes.park(s);
@@ -343,7 +416,7 @@ Press START and read the report at the end. ([Simulator guide](simulator.md).)
 `simulator/scenarios/choose-far-cycle.sim` in your robot project:
 
 ```text
-# "Choose in INIT" with Start: Far and Plan: Preload + Cycle + Park
+# "Choose in INIT" with Start: Far and Plan: Preload + Cycle + Park, as BLUE
 init "Choose in INIT"
 press g1.x                             # BLUE
 press g1.dpad_down                     # to "Start delay"
@@ -357,8 +430,18 @@ start
 expect within 30 screen has "Autonomous finished"
 expect screen has "To the pieces: done"
 expect screen has "Park: done"
+expect bumped none                     # it touched no wall or field part at the end
+expect robot x = 36 3                  # and ended where the plan says (the simulator's map numbers:
+expect robot y = 39 3                  # seen from the red wall, so BLUE's -36, -39 is 36, 39 here)
 expect error none
 ```
+
+**Why the last checks:** "done" only says each step finished. A route that drives into a FLOWER can
+still say "done" (the robot pushed, slid along, and stopped). `expect bumped none` checks that it touches
+nothing at the end, and `expect robot x`, `y` that it ended where you planned, within 3 in. Your code's
+numbers are seen from your own wall; the simulator's map, and `expect robot`, always from the red wall.
+For BLUE the signs flip (your x -36, y -39 is 36, 39 on the map); for RED on BIOBUZZ's turned field they
+are the same. Write the same scenario with `press g1.b` (RED) and the RED numbers: both must pass.
 
 Run it:
 

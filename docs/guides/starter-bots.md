@@ -26,6 +26,11 @@ your TeamCode: [Pick your template](../templates.md). The library has no catapul
 Maverick motors and no gear between a flywheel motor and its wheel (Studica): those two files use the
 closest part and say so.
 
+**Shooting in the simulator:** only the goBILDA bot shoots. The REV, AndyMark and Studica files have no
+`shoot.` line (their sellers do not publish the launch direction and angle), so their launchers spin but
+no piece flies. Their flywheels may also not reach "ready" in the simulator: the stand-in motor numbers
+are guesses (see each robot below).
+
 All four fit the 18 in start cube and 18 x 24 x 29 in at full reach. Each has a scenario in
 `sim/scenarios/starter-bot-*.sim` (it loads the robot with a `robot ../robots/...` line, checks the size
 rules, rolls the robot forward by hand and checks for no error), so they run in the automatic tests.
@@ -85,7 +90,12 @@ Modelled: drop-center 6-wheel tank drive (`left_drive`, `right_drive`: 19.2:1 Ye
 wheels at the front corners (`left_intake_servo`, `right_intake_servo`, CR servos); the launcher (`launcher`,
 a 19.2:1 converted to 1:1, one 96 mm Hogback wheel) under the hood gridplate; the `windmill` feeder CR servo.
 Collects POLLEN and **shoots**: the launcher's `feeder=windmill` (the CR servo), and the shot leaves up and
-backward at 147 degrees from forward (the hood rises 33 degrees toward the back in the CAD).
+backward at 147 degrees from forward (the hood rises 33 degrees toward the back in the CAD). That is why
+the simulator's shot arc says "shoots backward, 33° up" for it.
+
+Its autonomous, **goBILDA Bot Launch and Back Up**, starts with the robot's back against your wall, left
+of centre (x -56, y -63, facing the field: the simulator puts it there at INIT), fires the preload up and
+back over the robot, then drives `Away from the wall` (forward, `Tunables.Auto.backInches`).
 
 Not modelled or not published:
 - The exit angle and speed of a shot are not published (estimated from the hood; `share=0.5` is the default).

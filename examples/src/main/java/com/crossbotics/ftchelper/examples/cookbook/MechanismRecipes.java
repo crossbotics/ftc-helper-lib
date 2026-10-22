@@ -241,19 +241,24 @@ public class MechanismRecipes {
             // the robot configuration, INIT goes on (with a note) and the part is off.
             intakeDeploy = add(Positioner.servo("intake_deploy").optional());
             intake = add(Intake.motor("intake"));
-            // At START: fold the intake out, then run it. With no deploy servo the action skips
-            // the servo (and the wait for it) and just starts the intake. No other change needed.
-            atStart(() -> deployIntake(this));
+            // At START: fold the intake out, then run it (the action is in Actions.java, below). With
+            // no deploy servo the action skips the servo (and the wait for it) and just starts the intake.
+            atStart(() -> Actions.deployIntake(this));
             // end recipe
         }
+    }
 
-        /** Pushes the intake out with the servo, then starts the intake (Actions.java in your code). */
-        public static Action deployIntake(NotOnTheRobotYet r) {
+    /** What goes in Actions.java for the optional part (in your code: the class Actions in Actions.java). */
+    public static class Actions {
+        // recipe: optional-part-action
+        /** Folds the intake out with the deploy servo, then runs the intake. */
+        public static Action deployIntake(NotOnTheRobotYet r) {   // in your Actions.java: (Robot r)
             return Action.named("Deploy intake")
                     .then(() -> r.intakeDeploy.goTo("deployed"))
                     .waitUntil("the deploy servo", r.intakeDeploy::isDone, 2.0)
                     .then(r.intake::in, () -> r.intakeDeploy.goTo("stowed"));
         }
+        // end recipe
     }
 
     /** Its buttons: the deploy button is off while the servo is not on the robot. */
@@ -267,7 +272,7 @@ public class MechanismRecipes {
             // recipe: optional-part-button
             // needs(...): while the deploy servo is not on the robot, X does nothing and the
             // button map at INIT says "off: IntakeDeploy not on the robot".
-            g2.x.press(NotOnTheRobotYet.deployIntake(robot)).says("deploy intake").needs(robot.intakeDeploy);
+            g2.x.press(Actions.deployIntake(robot)).says("deploy intake").needs(robot.intakeDeploy);
             // end recipe
         }
     }
@@ -279,7 +284,7 @@ public class MechanismRecipes {
         @Override
         protected void steps(Steps s, NotOnTheRobotYet robot) {
             s.start("Against our wall, facing the field", 0)
-             .action(NotOnTheRobotYet.deployIntake(robot))
+             .action(Actions.deployIntake(robot))
              .move("Forward", 12, 0, 0.5);
         }
     }

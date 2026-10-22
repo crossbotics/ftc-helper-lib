@@ -1,5 +1,6 @@
 package com.crossbotics.ftchelper.examples.cookbook;
 
+import com.crossbotics.ftchelper.robot.Camera;
 import com.crossbotics.ftchelper.robot.ControlMap;
 import com.crossbotics.ftchelper.robot.Drive;
 import com.crossbotics.ftchelper.robot.Indexer;
@@ -85,6 +86,48 @@ public class PieceRecipes {
         }
     }
 
+    /** The numbers of the robot below: one shot table per kind of piece. In your TeamCode: Tunables.java. */
+    public static class TableNumbers {
+        public static class Launcher {
+            public static double speedRpm = 2600, readyBandRpm = 60, idleRpm = 1500;
+            public static double[][] speedByDistancePollen = {{24, 2200}, {48, 2550}, {72, 2900}};
+            public static double[][] speedByDistanceNectar = {{24, 2400}, {48, 2800}, {72, 3200}};
+        }
+
+        public static class Indexer {
+            public static double rest = 0.15, push = 0.55;
+        }
+    }
+
+    /** The next piece picks the shot table: Pieces + a launcher with a table per kind. */
+    public static class TableFromPiece extends RobotDefinition {
+        public Pieces pieces;
+        public Camera camera;
+        public Launcher launcher;
+
+        @Override
+        protected void define() {
+            tunables(TableNumbers.class);
+            drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
+            pieces = add(Pieces.kinds("POLLEN", "RED_NECTAR", "BLUE_NECTAR")
+                    .comingIn(PieceSensor.color("intake_color"))
+                    .readyToFire(PieceSensor.color("ready_color"))
+                    .max(4)
+                    .startsWith(4, "POLLEN"));
+            camera = add(Camera.limelight("limelight").goal("BLUE SCORING", "RED SCORING"));
+            // recipe: pieces-shot-tables
+            // In define(), BELOW the Pieces line: your launcher line with three more lines. The tables
+            // are Tunables.Launcher.speedByDistancePollen and speedByDistanceNectar.
+            launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+                    .feeder(Indexer.servo("indexer"))
+                    .speedFromDistance(camera)
+                    .startTable("pollen")                                 // before a piece is known
+                    .tableFrom(pieces.nextKind())                         // the next piece picks the table
+                    .tableFor("nectar", "RED_NECTAR", "BLUE_NECTAR"));    // both NECTAR colours use "nectar"
+            // end recipe
+        }
+    }
+
     /** Using the count: a buzz when full, lights, a line on the screen. */
     @TeleOp(name = "Cookbook Pieces", group = "Cookbook")
     @Disabled
@@ -94,8 +137,9 @@ public class PieceRecipes {
             // recipe: pieces-use
             // A buzz on gamepad 2 when the robot holds the most it may.
             g2.rumbleWhen(robot.pieces::isFull);
-            // Two buzzes when a NECTAR is next to fire.
-            g2.rumbleWhen(robot.pieces.whenNextIs("RED_NECTAR"), 2);
+            // Two buzzes when a NECTAR (red or blue) is next to fire. For one kind only:
+            // robot.pieces.whenNextIs("RED_NECTAR").
+            g2.rumbleWhen(() -> robot.pieces.next().endsWith("NECTAR"), 2);
             // A light the drivers see: green = full, orange = empty (needs a Lights line in Robot.java, and
             // import com.crossbotics.ftchelper.robot.LightColor; at the top of this file).
             robot.lights.show(LightColor.GREEN).when(robot.pieces.whenFull());

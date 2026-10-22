@@ -94,10 +94,12 @@ public class ActionRecipes {
         }
         // end recipe
 
-        /** Folds the intake out (used by atStart above). */
+        // recipe: action-deploy-intake
+        /** Folds the intake out (the atStart line in Robot.java runs it). */
         public static Action deployIntake(Robot r) {
             return Action.named("Deploy intake").then(() -> r.intakeDeploy.goTo("deployed"));
         }
+        // end recipe
 
         // recipe: action-wait-until
         /** Lowers the lift, and opens the claw only once the lift is down. */

@@ -102,7 +102,7 @@ def check_tutorials():
 def cookbook_regions():
     """The marked regions of the cookbook's Java files: name -> (file, line, code without the common indent)."""
     regions = {}
-    for java in sorted(COOKBOOK_CODE.glob("*.java")):
+    for java in sorted(COOKBOOK_CODE.rglob("*.java")):   # with autos/
         rel = java.relative_to(ROOT)
         name, start, body = None, 0, []
         for n, line in enumerate(java.read_text().splitlines(), 1):

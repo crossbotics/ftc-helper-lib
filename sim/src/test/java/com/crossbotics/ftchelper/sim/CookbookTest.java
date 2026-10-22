@@ -7,7 +7,6 @@ import com.crossbotics.ftchelper.examples.cookbook.ActionRecipes;
 import com.crossbotics.ftchelper.examples.cookbook.AimRecipes;
 import com.crossbotics.ftchelper.examples.cookbook.AutonomousRecipes;
 import com.crossbotics.ftchelper.examples.cookbook.ButtonRecipes;
-import com.crossbotics.ftchelper.examples.cookbook.ChooseAutoRecipes;
 import com.crossbotics.ftchelper.examples.cookbook.DrivingRecipes;
 import com.crossbotics.ftchelper.examples.cookbook.HoodRecipes;
 import com.crossbotics.ftchelper.examples.cookbook.InterlockRecipes;
@@ -46,13 +45,16 @@ public class CookbookTest {
     private static final List<Class<?>> GROUPS = Arrays.asList(DrivingRecipes.class, ButtonRecipes.class,
             MechanismRecipes.class, ActionRecipes.class, AutonomousRecipes.class, OdometryRecipes.class,
             PedroRecipes.class, TelemetryRecipes.class, PieceRecipes.class, AimRecipes.class, LightRecipes.class,
-            HoodRecipes.class, InterlockRecipes.class, ChooseAutoRecipes.class);
+            HoodRecipes.class, InterlockRecipes.class);
 
     // The whole files (one class per file, as in TeamCode): the robot, its TeleOp, an autonomous, the finders.
     private static final List<Class<?>> FILES = Arrays.asList(
             com.crossbotics.ftchelper.examples.cookbook.Robot.class,
             com.crossbotics.ftchelper.examples.cookbook.Controls.class,
-            com.crossbotics.ftchelper.examples.cookbook.LeaveTheStart.class,
+            com.crossbotics.ftchelper.examples.cookbook.autos.LeaveTheStart.class,
+            com.crossbotics.ftchelper.examples.cookbook.autos.NearPreloadPark.class,
+            com.crossbotics.ftchelper.examples.cookbook.autos.NearCycle.class,
+            com.crossbotics.ftchelper.examples.cookbook.autos.ChooseInInit.class,
             com.crossbotics.ftchelper.examples.cookbook.ServoFinder.class,
             com.crossbotics.ftchelper.examples.cookbook.HoodFinder.class,
             com.crossbotics.ftchelper.examples.cookbook.MotorFinder.class,
@@ -180,10 +182,9 @@ public class CookbookTest {
     }
 
     // One autonomous with a menu: the "Start" line moves the note and the robot in INIT, and the "Plan"
-    // line chooses the steps (Far + cycle: 11 steps, the 2nd crosses to the near side).
+    // line chooses the steps (Far + cycle: 12 steps, the 3rd crosses to the near side).
     @Test public void theInitMenuChoosesTheStartAndThePlan() throws Exception {
-        try (SimRun s = new SimRun(robotFile(ChooseAutoRecipes.Robot.class).toString())) {
-            s.sim.ds.register("Choose in INIT", "Autonomous", ChooseAutoRecipes.ChooseInInit.class);
+        try (SimRun s = new SimRun(robotFile(com.crossbotics.ftchelper.examples.cookbook.Robot.class).toString())) {
             s.init("Choose in INIT");
             s.press(v -> s.g1().x = v);                                   // BLUE
             assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Place robot : NEAR:"), 1));
@@ -199,7 +200,7 @@ public class CookbookTest {
             assertTrue(String.join("\n", s.screen()), s.screenHas("Plan: Preload + Cycle + Park"));
             s.start();
             assertTrue(String.join("\n", s.screen()),
-                    SimRun.waitFor(() -> s.screenHas("Step : 2/11 Across to the near side"), 3));
+                    SimRun.waitFor(() -> s.screenHas("Step : 3/12 Across to the near side"), 3));
             assertEquals("", s.error());
         }
     }

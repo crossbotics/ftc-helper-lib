@@ -134,6 +134,27 @@ public class ButtonRecipes {
         }
     }
 
+    /** The alliance switch in TeleOp, on its own. */
+    @TeleOp(name = "Cookbook Switch Alliance", group = "Cookbook")
+    @Disabled
+    public static class SwitchAlliance extends ControlMap<Robot> {
+        public static boolean oneDriver = false;
+
+        // recipe: switch-alliance
+        // Controls.java, inside the class, next to buttons(...) (import
+        // com.crossbotics.ftchelper.teleop.LibraryButtons at the top). Off by default.
+        @Override
+        protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
+            // Gamepad 1: hold START, then press and hold BACK too, for 1.5 s: BLUE <-> RED.
+            lib.switchAlliance(g1.start, g1.back);
+        }
+        // end recipe
+
+        @Override
+        protected void buttons(Robot robot, Pad g1, Pad g2) {
+        }
+    }
+
     /** No standard buttons: only the jobs written here. */
     @TeleOp(name = "Cookbook Only My Buttons", group = "Cookbook")
     @Disabled
