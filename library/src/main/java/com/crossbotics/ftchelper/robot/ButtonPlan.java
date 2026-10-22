@@ -240,9 +240,12 @@ final class ButtonPlan {
     }
 
     // " - off: IntakeDeploy not on the robot" for a job whose part is missing (see Module.optional), else "".
+    // In COMPETITION it is loud ("!! OFF"): at an event a part that is off is most likely a mistake.
     private static String offWords(Entry e) {
         String missing = e.missingParts();
-        return missing.isEmpty() ? "" : " - off: " + missing + " not on the robot";
+        if (missing.isEmpty()) return "";
+        boolean loud = !com.crossbotics.ftchelper.core.Profile.current().isPractice();
+        return (loud ? " - !! OFF: " : " - off: ") + missing + " not on the robot";
     }
 
     // A job's words on the help page, with "(buzz)" when it buzzes.

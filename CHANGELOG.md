@@ -38,6 +38,13 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - **Tests:** every example robot INITs on its simulated robot with no error (`ExampleRobotsInitTest`), the
   `Tunables.java` that `:sim:newRobot` writes INITs too, and the field check and full range have their own
   library tests.
+- **Parts not on the robot yet, at events:** in the COMPETITION profile a part that is off (marked
+  `optional()`, device not in the configuration) is a loud `!!` warning at the top of INIT
+  (`COMPETITION: "intake_deploy" not in the configuration: IntakeDeploy is OFF (optional part). On the
+  robot? Check its name in the configuration, then INIT again`) and `!! OFF` on the button map, because
+  a misspelled configuration name would otherwise only be a quiet note. PRACTICE keeps the note. Its
+  numbers are hidden from the tuning menu (`Not on the robot (hidden): IntakeDeploy`; saved values kept):
+  `Tunable.shown()`, `Tunable.hideGroup(group, hidden)`, `Tunable.hiddenGroups()`, `isHidden()`.
 - **Tunables reference** (`docs/guides/tunables.md`): every number the library reads from
   `Tunables.java`, one table per part (Drive, Odometry, Aim, Buttons, Intake, Lift and Arm, Claw/Wrist/
   Positioner, Turret, interlock rules, Launcher, Indexer, Hood, Camera, PieceSensor, Lights: 133 fields).
