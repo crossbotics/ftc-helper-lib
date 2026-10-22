@@ -10,32 +10,48 @@ A **library** is code someone else wrote that your program can use, so you do no
 It takes the jobs every robot needs and makes each one a line or two of clear code: motors and
 servos, buttons, mecanum and standard (tank) drive, lifts and arms that cannot hurt themselves,
 intakes with jam back-out, a full shooter kit (flywheel, hood, turret, feeder), AprilTag aiming with a
-webcam or Limelight 3A, autonomous modes written as a list of steps, live tuning, practice and
+webcam or Limelight 3A, odometry and paths, a piece count, lights for the drivers, rules that keep two
+parts from hitting each other, autonomous modes written as a list of steps, live tuning, practice and
 competition profiles, a hardware check, and a **simulator** that runs your real code on a laptop with
 the field in 3D (see below). It started from our 2025-26 (DECODE) robot code, and is
 built to be extended every season.
 
+A whole robot is **five files**. Three of them, for a robot with a lift, a claw and an intake
+(the [lesson robot](examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot)):
+
 ```java
-PositionMotor lift = PositionMotor.create(hardwareMap, "lift")
-        .limits(0, 2600).pid(0.004, 0, 0.0002, 0.05)
-        .position("DOWN", 0).position("HIGH", 2400);
-SpinMotor intake = SpinMotor.create(hardwareMap, "intake").powers(1.0, -0.7);
+// Robot.java: what is on the robot (names as in the robot configuration)
+drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
+        .motor("gobilda-5203-312").wheelMm(96));
+intake = add(Intake.motor("intake"));
+lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom"));
+claw = add(Claw.servo("claw"));
 
-ControllerBindings controls = new ControllerBindings()
-        .bindPress(Pad.G2, Btn.Y, () -> lift.goTo("HIGH"))
-        .bindToggle(Pad.G2, Btn.A, intake::in, intake::stop);
+// Tunables.java: its numbers
+public static class Lift {
+    public static double min = 0, max = 2600;
+    public static double kP = 0.004, kI = 0, kD = 0.0002, kF = 0.05;
+    public static double down = 0, low = 900, high = 2400;   // named heights, in encoder counts
+}
 
-// An autonomous is a list of steps:
-routine.step("Lift up", lift.startStep("HIGH"))
-       .move("To the goal", 24, 0, 0.6)
-       .turn("Face it", 45, 0.5)            // mirrored for RED (unless the field is turned, like BIOBUZZ)
-       .step("Score", claw.goToStep("OPEN"))
-       .thenPark()
-       .move("Park", 20, 90, 0.8);
+// Controls.java: the TeleOp. Driving and each part's buttons come with the parts; add your own:
+g2.rb.press(Actions.scoreHigh(robot)).says("score high");
+```
+
+`Actions.java` holds moves that use several parts (`scoreHigh`: lift up, open the claw, lift down),
+and the `autos` folder the autonomous programs, each a list of steps:
+
+```java
+s.start("Against our wall, facing the field", 0)
+ .move("To the goal", 24, 0, 0.6)
+ .action(Actions.scoreHigh(robot), 5)
+ .parkWithSeconds(3)
+ .move("Park", 20, 90, 0.7);
 ```
 
 New to Java? Do not worry if this looks strange. The [lessons](docs/tutorials/README.md) explain each
-line, one at a time.
+line, one at a time. (Want only some pieces in your own OpMode, without the five files? That works
+too: [Use only what you need](docs/guides/use-only-what-you-need.md).)
 
 ## Try your robot without a robot: the simulator
 
@@ -97,8 +113,8 @@ replacement for learning.
 5. Lessons 2 to 6 of the [main track](docs/tutorials/README.md#start-here-the-main-track): drive,
    buttons, mechanisms, actions, autonomous. Then the lessons your robot needs: odometry, paths, a shooter.
 
-**Have a question like "how do I add a lift?"** The [Cookbook](docs/cookbook.md) has about 70 short
-answers, each with code to copy (the code is built and tested with every change).
+**Have a question like "how do I add a lift?"** The [Cookbook](docs/cookbook.md) has more than 100
+short answers, each with code to copy (the code is built and tested with every change).
 
 Everything else, by what you want to do:
 
@@ -161,7 +177,7 @@ the library, with its own docs page. (In the lessons, a module is also a ready-m
 | Mechanism | `com.crossbotics.ftchelper.mechanism` | Lifts/arms to named positions, intakes with jam back-out, servos with positions or degrees, continuous servos. | [mechanism.md](docs/modules/mechanism.md) |
 | Launcher | `com.crossbotics.ftchelper.launcher` | Flywheel in RPM, shot table, feeders, turret with safe limits, and a Launcher that only feeds when ready. | [launcher.md](docs/modules/launcher.md) |
 | Vision | `com.crossbotics.ftchelper.vision` | AprilTags with a webcam (SDK 12 clusters too) or a Limelight 3A, one interface, safe aiming. | [vision.md](docs/modules/vision.md) |
-| Robot | `com.crossbotics.ftchelper.robot` | The robot in five files: Robot.java (what is on it), Tunables.java (its numbers), Controls.java (the buttons and the TeleOp), Actions.java (moves that use several parts) and autos. Ready-made modules: intake, lift, arm, claw, wrist, turret, launcher, indexer, camera; and the odometry line. | [robot.md](docs/modules/robot.md) |
+| Robot | `com.crossbotics.ftchelper.robot` | The robot in five files: Robot.java (what is on it), Tunables.java (its numbers), Controls.java (the buttons and the TeleOp), Actions.java (moves that use several parts) and autos. Ready-made modules: drive, intake, lift (one or two motors), arm, claw, wrist, positioner (any servo with named positions), turret, launcher with a hood and a feeder (indexer), camera, aim (whole-robot aim, the odometry backup, shooting on the move), pieces (a piece count from color sensors), lights; interlock rules that keep two parts apart; the odometry and Pedro lines; parts not on the robot yet (`.optional()`). | [robot.md](docs/modules/robot.md) |
 | TeleOp | `com.crossbotics.ftchelper.teleop` | EasyTeleOp: a whole TeleOp where you add only your mechanisms and buttons; driving, timer, tuning menu and safety come with it. | [teleop.md](docs/modules/teleop.md) |
 | Auto | `com.crossbotics.ftchelper.auto` | Autonomous as a list of named steps; EasyAuto does menu, timer, mirroring, park time, report. | [auto.md](docs/modules/auto.md) |
 | Match | `com.crossbotics.ftchelper.match` | Alliance and mirroring, match timer with buzz cues, INIT menu, auto-to-TeleOp memory. | [match.md](docs/modules/match.md) |
@@ -171,7 +187,7 @@ the library, with its own docs page. (In the lessons, a module is also a ready-m
 | Safety | `com.crossbotics.ftchelper.safety` | Soft limits, limit switches, homing, slow zones, jam detection. | [safety.md](docs/modules/safety.md) |
 | Core | `com.crossbotics.ftchelper.core` | The Subsystem pattern, practice/competition profiles, settings file, RobotConfig (the robot described once). | [core.md](docs/modules/core.md) |
 | Testing | `com.crossbotics.ftchelper.testing` | A ready-made Hardware Check OpMode. | [testing.md](docs/modules/testing.md) |
-| Test kit | `com.crossbotics.ftchelper.testkit` | Pretend motors, servos and switches: JUnit tests of your robot in five files on a laptop. | [testkit.md](docs/modules/testkit.md) |
+| Test kit | `com.crossbotics.ftchelper.testkit` | Pretend motors, servos and switches: JUnit tests of your robot in five files on a laptop, with no Gradle lines to add. | [testkit.md](docs/modules/testkit.md) |
 | Finders | `com.crossbotics.ftchelper.finders` | Ready-made OpModes that measure servo ends, lift limits, flywheel gains, wheel size, odometry offsets, camera offset and the shot table, and show the code to copy. | [finders.md](docs/modules/finders.md) |
 | Util | `com.crossbotics.ftchelper.util` | Math and angle helpers, loop timer, Auto-to-TeleOp pose handoff. | [util.md](docs/modules/util.md) |
 
@@ -187,16 +203,21 @@ Example OpModes you can copy (including the [starter kit](docs/starter-kit.md)) 
 
 ## Build and test the library by itself
 
-You only need this if you change the library. From this folder:
+You only need this if you change the library. From this folder, run every check (the automatic build
+on GitHub, `.github/workflows/build.yml`, runs them on every change too):
 
 ```bash
-./gradlew :library:testDebugUnitTest :examples:assembleDebug :examples:testDebugUnitTest :sim:testDebugUnitTest
-python3 tools/check_docs.py
-python3 tools/check_blocking.py
-python3 tools/parts_page.py --check
+./gradlew :library:testDebugUnitTest :examples:assembleDebug :examples:testDebugUnitTest
+./gradlew :sim:testDebugUnitTest :pedro:testDebugUnitTest
+python3 tools/check_docs.py           # links, docs for every class, the Cookbook's code
+python3 tools/parts_page.py --check   # the parts page matches sim/parts/parts.json
+python3 tools/check_blocking.py       # nothing in the loop waits
+python3 tools/check_tunables.py       # every Tunables field the code reads is documented
+node tools/check_builder.mjs          # the simulator's auto builder page code
 ```
 
-You need JDK 17 or newer and the Android SDK (Android Studio installs both). Details: [Contributing](docs/contributing.md).
+You need JDK 17 or newer and the Android SDK (Android Studio installs both), and Node.js for the last
+line. Details: [Contributing](docs/contributing.md).
 
 ## Rules check (2026-27 BIOBUZZ manual, TU01)
 

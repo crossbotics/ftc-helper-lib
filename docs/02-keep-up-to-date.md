@@ -68,8 +68,10 @@ Command line (the **Terminal** tab of Android Studio, in the robot project folde
 git submodule status
 ```
 
-It prints the commit and, if there is one, the version tag (a name like `v0.16.0` given to one
-release), for example ` 3f2c1a9 ftc-helper-lib (v0.16.0)`.
+It prints the commit (a long code of 40 letters and digits) and, if there is one, the version tag (a
+name like `v0.16.0` given to one release), for example
+` 3f2c1a9e5b7d40c18a6f2e9b0d4c7a1f8e3b5c62 ftc-helper-lib (v0.16.0)`. The tag in brackets is the part
+to read.
 
 ## Update: the command line
 
@@ -134,15 +136,16 @@ Do these in order. Each one catches a different kind of problem.
 1. **Sync Gradle:** **Sync Now** in the yellow bar, or **File > Sync Project with Gradle Files**.
 2. **Build:** **Build > Make Project** (the hammer icon). A red error that names a library method:
    look for it in the CHANGELOG's **Changed** list; it says the new name or the new way.
-3. **Remake the simulator robot file** (from the `ftc-helper-lib` folder). The robot file format can
-   change with the library:
+3. **Remake the simulator robot file** (from the `ftc-helper-lib` folder: `cd ftc-helper-lib` in the
+   Terminal). The robot file format can change with the library:
 
    ```bash
    ./gradlew :sim:fromRobot -PteamCode=../TeamCode
    ```
 
 4. **Run your scenarios** (your saved simulator tests in `simulator/scenarios/`). They run the same
-   checks as last time, so they show what changed:
+   checks as last time, so they show what changed. Run them **from the `ftc-helper-lib` folder** (like
+   step 3: `cd ftc-helper-lib` first if the Terminal is in the robot project folder):
 
    ```bash
    ./gradlew :sim:testDebugUnitTest --tests "*SimScenarioTest"

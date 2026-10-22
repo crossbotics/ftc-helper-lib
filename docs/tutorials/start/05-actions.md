@@ -77,7 +77,8 @@ To move two parts **at the same time**, give `then` several commands:
 
 ## 4. Start it from a button
 
-In `Controls.java`:
+In `Controls.java`, inside `buttons(...)`. This is the lesson robot's whole method. **In yours, add
+only the lines for your own actions** (one line each, like the RB line), next to the lines you have:
 
 ```java
 @Override
@@ -92,7 +93,8 @@ protected void buttons(Robot robot, Pad g1, Pad g2) {
 - `press(action)` starts the action. **Pressing again while it runs cancels it.** The same goes for a
   gesture: `tap(action)` starts it, another tap cancels it.
 - `.says(...)` is the words on the button map.
-- RB and LB on gamepad 2 are free on this robot, so nothing is replaced.
+- RB and LB on gamepad 2 are free on this robot, so nothing is replaced. (A launcher, in lesson 9,
+  wants them: then INIT says the launcher has `no button`, and you move these two jobs.)
 
 ## 5. The rules every action follows
 
@@ -166,13 +168,20 @@ To check it without a browser, save this as `build/score-high.sim`:
 ```text
 init "Lesson Bot TeleOp"
 start
+press g2.b                                   # the claw: the first B opens it (in the simulator it starts open)
+press g2.b                                   # the second B closes it, as if it held a piece
+expect within 1 servo claw target = 0.75 0.01  # closed (Tunables.Claw.closed)
 press g2.rb                                  # score high
 expect within 5 motor lift ticks > 1500      # the lift rises
-expect within 5 servo claw target = 0.20 0.01  # the claw opens (Tunables.Claw.open)
+expect within 5 servo claw target = 0.20 0.01  # the claw opens at the top (Tunables.Claw.open)
 expect within 5 motor lift ticks < 100       # and the lift comes back down
 expect error none
 stop
 ```
+
+**Why close the claw first?** In the simulator the claw starts open. Without the two B presses, the
+"claw opens" line would pass even if the action never opened it: a check must start from the other
+state to prove anything.
 
 and run `./gradlew :sim:scenario -PteamCode=none -Probot=build/lessonbot.properties -Pfile=build/score-high.sim`.
 If the claw line fails and the screen says `timed out waiting for lift at the top`, the lift is too

@@ -74,6 +74,12 @@ How to read it:
 - **This map is drawn from the RED wall.** From the BLUE wall the numbers are the same: BIOBUZZ's field
   is turned half a turn between the alliances, so each team's own wall is y -72.
 
+> **One rule for field numbers.** In your code (start spots, `driveTo`, the reset spot, lesson 9's
+> goal point) always write the numbers **seen from your own drivers' wall**, as in the drawing above.
+> On BIOBUZZ they are then the same for BLUE and RED. Only the simulator's field map and its scenario
+> checks (`expect robot x ...`) use one fixed view for both alliances, from the **red** wall: on BLUE
+> their x and y have the other sign (section "Try it in the simulator").
+
 **The heading** is which way the robot's front points, in degrees:
 
 | Heading | The robot faces |
@@ -83,6 +89,12 @@ How to read it:
 | 90 | left |
 | 180 | toward you |
 | -90 | right |
+
+> **Two different 90s.** A **heading** (here, and in `start(...)`, `driveTo`, `turnTo`) goes
+> counterclockwise: heading 90 = facing **left**. A `move`'s **direction** (lesson 6) goes clockwise
+> from the robot's front: direction 90 = moving to the robot's **right**. **Why two rules?** A move's
+> direction is like the stick (pushed right = go right); a heading is the IMU's own rule (turning left
+> counts up). The word tells you which ([signs and units](../../conventions.md)).
 
 **Two new words.** A **field point** is a place on the field written as x and y (and, for `driveTo`,
 a heading). The **start spot** is the field point where you put the robot before START. You write it
@@ -405,10 +417,12 @@ public static class Odometry {
 `mirrorForRed = false` because BIOBUZZ's field is turned half a turn, like your autos'
 `mirrorForRed()`; leave the line out (default true: RED mirrors x and the heading) on a mirrored field.
 
-**Three `mirrorForRed`s, one answer.** Your autos' `mirrorForRed()` (routes and start spots),
-`Tunables.Aim.mirrorForRed` (the goal point, lesson 9) and `Tunables.Odometry.mirrorForRed` (this spot)
-all answer "is RED a mirror image of BLUE?". The reset spot uses `Tunables.Aim`'s when `Tunables.Odometry`
-has none, then true; the others have no fallback. On BIOBUZZ, write `false` in all three.
+**One setting for the whole robot.** "Is RED a mirror image of BLUE?" has one answer for the whole
+robot: the autonomous's routes and start spot, this reset spot and lesson 9's goal point all use it.
+The robot takes the first one it finds: `Tunables.Aim.mirrorForRed`, then `Tunables.Odometry.mirrorForRed`,
+then your autonomous's `mirrorForRed()` (in TeleOp: the last autonomous's), else `true`. Write it in
+`Tunables.Odometry` (as above) so a TeleOp with no autonomous before it gets it right too. On BIOBUZZ,
+`false` wherever you write it.
 
 INIT shows the button and the spot (`Set pose: hold G1 START 1 s at ...`) and the mirroring it uses
 (`Reset spot for RED: the same numbers from the red wall (Tunables.Odometry.mirrorForRed = false)`).
@@ -441,10 +455,12 @@ then start the simulator with the library's examples:
 ./gradlew :sim:run -PteamCode=none -Probot=build/odometrybot.properties
 ```
 
-Open http://localhost:8780, choose **"Odometry Bot To the Goal"**, choose **RED** in the INIT menu,
-INIT, START. Watch it drive diagonally to the goal while it turns to 45 degrees, then park.
-(The simulator runs `driveTo` even with `checked = false`.) When it ends, choose "Odometry Bot TeleOp":
-the pose carries on from where autonomous stopped.
+Open http://localhost:8780, choose **"Odometry Bot To the Goal"**, press INIT, choose **RED** in the
+INIT menu (gamepad 1 B), then START. Watch it drive diagonally to the goal while it turns to 45
+degrees, then park. (The simulator runs `driveTo` even with `checked = false`, and INIT says
+`!! Odometry not checked (Tunables.Odometry.checked = false): driveTo and path steps run in the simulator only`;
+on the robot those steps are skipped until you set it.) When it ends, choose "Odometry Bot
+TeleOp": the pose carries on from where autonomous stopped.
 
 **Two places show where the robot is:**
 
@@ -484,6 +500,9 @@ line in `Robot.java`. Choose "To the Goal", INIT, START, and read the report at 
 You can also run your "Odometry Tuner" in the simulator, to learn the tests before you try them on the
 robot. **Spin** and **Loop** work with the sticks. **Forward**: use the page's "48 in forward" push
 button (Robot tab). **Left**: drive left with the left stick (there is no push button to the left).
+The simulator puts the pods exactly where your odometry line says, so **Spin** always finds your own
+numbers back: it cannot show you that an offset is wrong. Use it to learn the buttons; the real
+offsets come from the real robot.
 
 ## Check it on the robot
 

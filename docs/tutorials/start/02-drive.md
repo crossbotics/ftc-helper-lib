@@ -127,7 +127,7 @@ new value is used from the next INIT.
 | Slow | LT: the further you pull it, the slower (down to `slowSpeed`) | left stick click: slow on/off |
 | Field-centric on/off (mecanum with an IMU) | Y | right stick click |
 | BACK | tap: pause everything; tap again: go on | the same |
-| BACK held 1 s | field-centric on: "forward" = the way the robot faces now (one buzz). Robot-centric: nothing | the same |
+| BACK held 1 s | field-centric on: "forward" = the way the robot faces now (one buzz). Robot-centric: nothing. Either way the robot is paused (BACK pauses at the press): tap BACK to go on | the same |
 
 - **Robot-centric** (the start): stick up = the way the robot faces. **Field-centric**: stick up = away
   from the driver, whichever way the robot faces. Two buzzes = field-centric on, one buzz = off.
@@ -179,7 +179,8 @@ the ground.**
    add its name to the list, or take it out. Remember the list replaces the default (the left side). For
    example, if the lesson robot's back right wheel rolls backward, it needs
    `.reversed("front_left", "back_left", "back_right")`.
-4. **The IMU:** run your TeleOp, hold START, then press BACK (this turns on the extra **debug lines**
+4. **The IMU:** run your TeleOp, hold gamepad 1's small **START** button, then press **BACK** while you
+   still hold START (this turns on the extra **debug lines**
    on the Driver Station: more numbers for checking, like powers and the `Heading`; it does
    not pause),
    and turn the robot LEFT by hand. The `Heading` line must go UP. If it goes down or barely moves, fix
@@ -235,4 +236,5 @@ and [Tutorial 05: Drive a standard (tank) robot](../05-drive-tank.md).
 ## Next
 
 On your robot: [Lesson 2b: Check the hardware](../19-testing-procedures.md) (every motor, servo and sensor,
-by hand). Then [Lesson 3: Buttons (Controls.java)](03-buttons.md)
+by hand; its page is also tutorial 19 of the under-the-hood track, so its file is called
+`19-testing-procedures.md`). Then [Lesson 3: Buttons (Controls.java)](03-buttons.md).

@@ -8,7 +8,9 @@ This is also lesson 2b of the main track (after lesson 2, Drive).
 **You will learn:** how to use the Hardware Check OpMode, a fixed order for testing a robot (laptop,
 bench, floor, autonomous, event), and how to turn a problem into a fix that stays fixed.
 
-**You need:** any robot. Tutorials 01-03.
+**You need:** any robot. On the main track: [lesson 1](start/01-robot-in-five-files.md) and
+[lesson 2](start/02-drive.md) (on the under-the-hood track: tutorials 01-03). The page's file is
+`19-...` because it is also tutorial 19 of that track.
 
 **Full program:** [`Tut19HardwareCheck.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/tutorials/Tut19HardwareCheck.java) (yes, it is 3 lines)
 **Reference:** [testing.md](../modules/testing.md). Guide with all checklists: [Testing procedures](../guides/testing.md).
@@ -48,11 +50,14 @@ class does. The library wrote the OpMode; you only give it a name. (The tutorial
 Put the robot on a block, so the wheels are off the ground. Run it. It lists every device in the active configuration and the battery voltage.
 
 - **D-pad up/down**: choose a device. Changing device stops the last motor.
-- **Motor**: right stick = power (50% max; hold RB for 100%). Watch: does positive power turn it the
-  way you expect? Does the encoder count UP? A = zero the encoder.
+- **Motor**: right stick = power (50% max; hold RB for 100%). **Stick up = positive power** (the SDK
+  reads a stick pushed up as a negative number; the Hardware Check flips it for you, like the
+  library's driving). Watch: does positive power turn it the way you expect? Does the encoder count
+  UP? A = zero the encoder.
 - **Servo**: D-pad right/left = +/- 0.01, bumpers +/- 0.1, X = 0.5. Write down the positions you need.
 - **Sensors**: live values. Press the switch, wave a hand at the distance sensor.
-- **IMU**: turn the robot left by hand: yaw goes UP (if your hub is mounted logo up, USB forward).
+- **IMU**: turn the robot left by hand: **yaw** (the heading: which way the robot faces, in degrees)
+  goes UP (if your hub is mounted logo up, USB forward).
 
 ## 3. A fixed order
 
@@ -75,6 +80,21 @@ The full checklists, including the 2-minute pre-match check, are in
 3. **Find the layer** (where the problem lives): hardware (Hardware Check shows it)? configuration (names)? your code? the library?
 4. **Fix it and add a test** if it was logic (tutorial 13), so it can never come back silently.
 5. **Note it** in the team's log: the next driver or programmer will meet it again.
+
+## Try it in the simulator
+
+The simulator lists the Hardware Check with the library's examples. From the `ftc-helper-lib` folder:
+
+```bash
+./gradlew :sim:fromRobot -PteamCode=none -ProbotClass=com.crossbotics.ftchelper.examples.lessonbot.Robot -Pout=build/lessonbot.properties
+./gradlew :sim:run -PteamCode=none -Probot=build/lessonbot.properties
+```
+
+Open http://localhost:8780, choose "Tutorial 19: Hardware Check", INIT, START. Pick `lift` with the
+D-pad, push gamepad 1's right stick up: the lift rises and its count goes up. Pick `claw` and step it
+with the D-pad. Your own robot: `./gradlew :sim:run -PteamCode=../TeamCode` with your `HardwareCheck.java`
+in TeamCode (lesson 1 shows how to make its robot file). The simulator builds its robot from your code,
+so it cannot find a wrong wire or a motor that turns the wrong way: only the real robot can.
 
 ## Run it
 

@@ -177,7 +177,8 @@ protected void steps(Steps s, Robot robot) {
 - **`.then(PedroPath.curve(-48, -50,  -44, -36,  -30, -30))`**: a second part, a curve. Read the
   numbers in pairs: start (-48, -50), control point (-44, -36), end (-30, -30). **Start each part where the last one ended** (here, -48, -50). The robot does not stop
   between the parts.
-- **`.turnTo(0, 45)`**: on this part, it turns evenly from heading 0 to heading 45.
+- **`.turnTo(0, 45)`**: on this part, it turns evenly from heading 0 to heading 45 (headings go
+  counterclockwise, as in lesson 7: 45 = turned to the left. Only a `move`'s direction goes clockwise.)
 - **`.holdEnd()`**: at the end, Pedro keeps the robot on the point while it scores (at most 5 s;
   `.holdEnd(2)` for 2 s).
 - **`static final`**: the path is made once, when the program starts. It is the same every match.
@@ -192,6 +193,49 @@ If part 2 started at another heading, the robot would turn fast at the join.
 
 Like lesson 7, the example also has `mirrorForRed()` returning `false` (BIOBUZZ's field is turned, not
 mirrored). Keep yours.
+
+**Your own file, whole.** Make a new Java file `CurveToTheGoal.java` in your `autos` folder (right-click
+`autos`, **New > Java Class**), and replace everything in it with this. It is the example with your own
+`package` and `import` lines, and no `@Disabled`. No intake? Delete the `PathAt.fraction(...)` part
+(keep `.follow("To the goal", TO_GOAL)`) and the `run("Intake off", ...)` line.
+
+```java
+package org.firstinspires.ftc.teamcode.autos;
+
+import org.firstinspires.ftc.teamcode.Robot;
+import com.crossbotics.ftchelper.pedro.PedroPath;
+import com.crossbotics.ftchelper.robot.Auto;
+import com.crossbotics.ftchelper.robot.PathAt;
+import com.crossbotics.ftchelper.robot.Steps;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+
+// preselectTeleOp: your TeleOp's name, exactly as in @TeleOp(name = ...) in Controls.java
+@Autonomous(name = "Curve to the Goal", group = "Autos", preselectTeleOp = "Quick Start TeleOp")
+public class CurveToTheGoal extends Auto<Robot> {
+    // Two parts with no stop between them, then hold the end point.
+    static final PedroPath TO_GOAL = PedroPath.line(-56, -61, -48, -50).keepHeading(0)   // part 1
+            .then(PedroPath.curve(-48, -50,  -44, -36,  -30, -30)).turnTo(0, 45)        // part 2
+            .holdEnd();
+
+    @Override
+    protected boolean mirrorForRed() {
+        return false;   // BIOBUZZ's field is turned half a turn between the alliances
+    }
+
+    @Override
+    protected void steps(Steps s, Robot robot) {
+        s.start("Against our wall, in the left corner tile, facing the field", -56, -61, 0)
+         .follow("To the goal", TO_GOAL, PathAt.fraction(0.5, "Intake on", robot.intake::in))
+         .waitSeconds("Score (the robot holds still)", 0.5)
+         .run("Intake off", robot.intake::stop)
+         .parkWithSeconds(4)
+         .driveTo("Park", -56, -36, 0, 0.7);
+    }
+}
+```
+
+The path (`static final PedroPath TO_GOAL = ...`) is a field of the class: it goes inside the class,
+above `steps(...)`. `PedroPath` comes from the Pedro add-on (section 3), `PathAt` from the library.
 
 **Settings after a part apply to that part.** `.turnTo(0, 45)` comes after the curve, so it is the
 curve's heading. `.holdEnd()` is for the whole path.
@@ -252,7 +296,10 @@ writes the `PedroPath` code for you to copy. You can also paste your path into i
 **Or draw it in the simulator and run it:** the simulator's **Auto builder** (over the 3D view, "Pedro
 path") is the same builder with a Run button: it follows your path with the real Pedro follower on your
 robot, shows the plan and where the robot really went, and offers fixes ("hold the end"). The Java is the
-same. ([The auto builder](../../guides/simulator.md#the-auto-builder).)
+same. Its **Copy the Java** gives three pieces, each with a note that says where it goes, in your
+autonomous's file (like `CurveToTheGoal.java` above): the `import` lines at the top of the file, the
+`static final PedroPath ...` field inside the class above `steps(...)`, and the steps inside
+`steps(...)`. ([The auto builder](../../guides/simulator.md#the-auto-builder).)
 
 ---
 
@@ -267,8 +314,8 @@ The simulator runs Pedro like the real robot. It is the safe place to find a pat
 ./gradlew :sim:run -PteamCode=none -Probot=build/pedrobot.properties
 ```
 
-Open http://localhost:8780, choose **"Pedro Bot Curve to the Goal"**, choose **RED** in the INIT menu,
-INIT, START.
+Open http://localhost:8780, choose **"Pedro Bot Curve to the Goal"**, press INIT, choose **RED** in the
+INIT menu (gamepad 1 B), then START.
 
 **What you should see:** the robot drives a short straight line, then curves to the goal without
 stopping, turning to 45 degrees. Halfway, the intake starts. It stays still there for half a second (the Driver Station shows
@@ -327,6 +374,11 @@ clear floor and a person ready at the Driver Station to stop it.
    }
    ```
 
+   **What these words mean:** a **repository** (here a **maven** repository) is a website that keeps
+   Java libraries, so Gradle can download them; `repositories { }` lists where Gradle looks, and
+   `dependencies { }` lists what to download. Pedro's tuning library is kept on its own site
+   (`repo.dairy.foundation`), so Gradle needs both lines.
+
    Sync again. The simulator sees this line too and adds Pedro's tuning library to its own build, so
    `:sim:run` still builds your TeamCode with the tuner files in it (nothing to add in `simulator/`).
 
@@ -380,7 +432,7 @@ not work here). Keep clear of the robot, and keep a hand on STOP.
 6. Send the code again.
 
 7. **Before an event, take the tuner out.** Pedro's tuner runs a web page on the robot, and this
-   season's rule R704.D bans tools like that at events (like FTC Dashboard). Comment out the
+   season's rule R704.D bans tools like that at events (like FTC Dashboard, a web page that shows and changes robot numbers from a laptop). Comment out the
    `tuning` line in `build.dependencies.gradle` (put `//` in front of it), move `Tuning.java` and the
    `procedures` folder out of TeamCode, then build and install again. Your paths still work: they
    only need `PedroConstants`. Put them back after the event to tune again.

@@ -6,9 +6,15 @@
 ([Add it to a project](01-add-to-project.md)).
 
 A **template** is robot code you copy and then change. Start from the one that looks most like your
-robot: you delete less and type less. Each one (except the last row) is a robot in five files:
+robot: you delete less and type less. Most of them (all but the last row) are a robot in five files:
 `Robot.java`, `Tunables.java`, `Controls.java`, `Actions.java` and an `autos` folder
-([Lesson 1](tutorials/start/01-robot-in-five-files.md) explains them).
+([Lesson 1](tutorials/start/01-robot-in-five-files.md) explains them). The exceptions:
+
+- `odometrybot` has no `Actions.java` (it needs none), and `pedrobot` has no `Controls.java` (so no
+  TeleOp of its own) and no `Actions.java`. Use `odometrybot`'s `Controls.java`, or your own, with it.
+- Some have extra files: a finder that knows the robot (`lessonbot/DriveTuner.java`,
+  `odometrybot/OdometryTuner.java`, `turretbot/HoodFinder.java` and `ShotTuner.java`), or Pedro's
+  numbers (`pedrobot/PedroConstants.java`). Copy them with the rest.
 
 ## Your robot looks like this: start from that
 
@@ -64,8 +70,9 @@ in `Robot.java`:
    ```
 
    Do the same for `Actions` and `Tunables`. Android Studio marks every line it cannot find in red.
-4. **Delete the `@Disabled` line** in `Controls.java` and in each autonomous, and also its
-   `import com.qualcomm.robotcore.eventloop.opmode.Disabled;` line. **Why:** the examples are hidden on
+4. **Delete the `@Disabled` line** in every OpMode file you copied: `Controls.java`, each autonomous,
+   and the finder files (`DriveTuner.java`, `OdometryTuner.java`, `HoodFinder.java`, `ShotTuner.java`).
+   Delete its `import com.qualcomm.robotcore.eventloop.opmode.Disabled;` line too. **Why:** the examples are hidden on
    the Driver Station with `@Disabled`, so they do not fill the list on a real robot.
 5. Change the names in `@TeleOp(name = ...)` and `@Autonomous(name = ..., preselectTeleOp = ...)` to
    your own; `preselectTeleOp` must be the TeleOp's name exactly.
@@ -79,7 +86,26 @@ value back into `Tunables.java`: INIT lists the values that differ. If you do no
 
 **Try it first in the simulator.** The kit bots have robot files: for example
 `./gradlew :sim:run -Probot=sim/robots/starter-bot-rev.properties -PteamCode=none`, then pick
-"REV Bot TeleOp" ([Simulator guide](guides/simulator.md)).
+"REV Bot TeleOp" ([Simulator guide](guides/simulator.md)). `-PteamCode=none` runs the **library's**
+example, not your copy.
+
+**Your copy in the simulator.** Run your TeamCode with the kit's measured robot file:
+`./gradlew :sim:run -Probot=sim/robots/starter-bot-rev.properties -PteamCode=../TeamCode` (or copy
+that file to `simulator/robot.properties` in your robot project, and then `-Probot` is not needed).
+Use the kit's file, not one from `:sim:fromRobot`: that one guesses an 18 x 18 in robot, and the
+REV, AndyMark and Studica bots then start "overlapping the field wall" on BLUE.
+
+**What the simulator cannot show yet** (so you know it is not your copy):
+
+- The REV, AndyMark and Studica bots do not shoot in the simulator: their robot files have no shot
+  line. Their flywheels may also never say `READY`, because the example speeds are higher than the
+  simulated motor reaches. Tune the speed on the real robot.
+- An autonomous whose `start(...)` gives no spot (only a note and a heading) starts where the last
+  program left the robot. Press **Back to start** (Control Hub panel, Robot tab) before you run it.
+- Some INIT lines are normal in the simulator: `!! Drive not tuned: runs in the simulator only`
+  (on the robot, the autonomous waits for the Drive Tuner), a turret's
+  `Turret : no angle from a program before: ...` (turn it to its start angle on the robot), and a
+  camera's `limelight lighting : trying ...` until it sees a tag.
 
 ## Next
 

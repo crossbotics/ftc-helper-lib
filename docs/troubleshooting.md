@@ -108,7 +108,7 @@ robot in five files: the Drive Tuner, then `Tunables.Drive.calibrated = true`.
 | `No slow button (libraryButtons freed it): ...` | `lib.slow(null)` with no `slow()` of your own: add one, e.g. `g1.rt.slow()` |
 | `COMPETITION: "intake_deploy" not in the configuration: IntakeDeploy is OFF (optional part). On the robot? ...` | the same as the note below, loud because the COMPETITION profile is on: at an event a part that is off is most likely a misspelled or lost configuration name. Fix the name (or plug it in) and INIT again; if the part really is not built, it is safe to play |
 | `"intake_deploy" not in the configuration: IntakeDeploy is off (optional part)` | a note, not a problem: the part is marked `optional()` and not on the robot yet. Its commands, buttons (`- off: ... not on the robot` on the map) and action steps are skipped. Plugged in now? Add it to the configuration and INIT again ([parts not on the robot yet](modules/robot.md#parts-not-on-the-robot-yet)) |
-| `Launcher: battery 11.2 V: low. The flywheel gets back to speed slower: charge or swap it` | swap in a charged battery. The launcher's battery compensation helps, but shots still wait longer |
+| `Launcher: battery 11.2 V: low. The flywheel gets back to speed slower: charge or swap it` | swap in a charged battery: the wheel gets back to speed slower, so shots wait longer |
 | `Aim odometry: ... more than the field allows` / `Aim: camera says ... odometry ...` | the pose is wrong or drifted, or `Tunables.Aim.goalX, goalY` are not where the camera measures to |
 | `goal out of turret range (behind the robot: holding)` | the goal is behind the robot: turn the robot toward it |
 | `PRACTICE profile` | set COMPETITION at events |
@@ -128,6 +128,12 @@ Add `robotConfig()` to the OpMode: `return new RobotSettings();` (starter kit) o
 
 ## Robot behavior
 
+**A part's button does nothing, and INIT says `... no button (G2 RB is your "score high" in Controls.java)`**
+A job of yours in `Controls.java` is on a button that part suggested, so yours won and the part has no
+button for that job. It often happens when a later lesson adds a part (a launcher wants gamepad 2's LB
+and RB). Move your job to a free button (INIT lists them: `G2 free: ...`), or free the part's job and
+give it another button ([lesson 3](tutorials/start/03-buttons.md#5-one-job-per-button-or-several-gestures)).
+
 **A servo turns less than its seller says (a goBILDA 2000 servo: about 270 degrees, not 300)**
 The hub sends 600 to 2400 microseconds for positions 0 to 1 (the FTC SDK's normal range); the servo's
 full turn needs 500 to 2500. Add `.fullRange()` to the part in Robot.java (`ServoSetup...fullRange()`
@@ -141,12 +147,12 @@ servo = full range) or the Hood Finder, and copy the new numbers into `Tunables.
 
 **Every shot is a little short (or long) today**
 The wheel is worn, the balls are softer, or the battery is lower than when you tuned. In the match: the
-operator's D-pad up/down trims every shot speed by 1% (`Speed trim: +3%` on the Driver Station; held:
+operator's D-pad up/down trims every shot speed by 1% (`Speed trim : +3%` on the Driver Station; held:
 4 steps a second; double-tap D-pad down = 0). If it happens every match, the table is off: multiply its
 speeds by the trim (or tune it again with the Shot Tuner) and copy the new line into `Tunables.java`
 ([Lesson 9](tutorials/start/09-shooter-and-camera.md#speed-trim-and-a-low-battery)).
-Check that `kF` and `nominalVolts` (from the Flywheel Finder) are in `Tunables.Launcher`: they turn on the
-battery compensation.
+Battery compensation is off by default (not yet proven on a robot); to try it, see
+[lesson 9's battery box](tutorials/start/09-shooter-and-camera.md#speed-trim-and-a-low-battery).
 
 **The robot paused when I used START + BACK** (the debug lines, or the alliance switch)
 BACK was pressed first. BACK is the pause button, and it pauses the moment it goes down; START joining

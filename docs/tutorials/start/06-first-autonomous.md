@@ -174,11 +174,23 @@ public class ScoreAndPark extends Auto<Robot> {
   it always run.
 - `move("Park", Tunables.Auto.parkInches, 90, 0.7)`: 90 = to the right (a mecanum robot strafes).
 
+> **Two different 90s.** A **move's direction** goes clockwise from the robot's front: 90 = to the
+> robot's **right**. A **heading** (`start(note, 0)`, `turnTo(...)`, and lesson 7's field points) goes
+> counterclockwise: heading 90 = turned to the **left**. **Why two rules?** A move's direction is like
+> the stick (pushed right = go right); a heading is the IMU's own rule (turning left counts up). The
+> word tells you which: *direction* in a move, *heading* everywhere else
+> ([signs and units](../../conventions.md)).
+
 ## 3. Route numbers live in Tunables.Auto
+
+Add the two numbers to the `Auto` section of your `Tunables.java`. **Keep the lines that are already
+there** (the Quick start's `leaveInches` is read by its `FirstAuto`: delete it and that file no longer
+builds):
 
 ```java
 public static class Auto {
-    public static double toGoalInches = 24, parkInches = 20;
+    public static double leaveInches = 12;                   // already there: FirstAuto uses it
+    public static double toGoalInches = 24, parkInches = 20; // new: ScoreAndPark uses them
 }
 ```
 
@@ -222,9 +234,11 @@ start the simulator with the library's examples:
 
 Open http://localhost:8780, choose "Lesson Bot Score and Park", and press INIT. Read the note and the
 menu; you will see "Drive not tuned: runs in the simulator only". Press START and watch it drive, lift,
-drop and strafe. Read the report at the end. Then change `parkWithSeconds(3)` to `parkWithSeconds(28)`
-and run it again: the score steps are "cut short" or "skipped", and the park still runs.
-([Simulator guide](../../guides/simulator.md).)
+drop and strafe. Read the report at the end. ([Simulator guide](../../guides/simulator.md).)
+
+**Run it again? Press "Back to start" first** (on the page: Control Hub panel, Robot tab). This autonomous's
+`start(note, 0)` gives no spot on the field (lesson 7 adds one), so the simulator leaves the robot
+where the last program stopped it. "Back to start" puts the robot and the game pieces back.
 
 **Your own robot.** From the `ftc-helper-lib` folder:
 
@@ -236,6 +250,11 @@ and run it again: the score steps are "cut short" or "skipped", and the park sti
 Choose your own autonomous, INIT, START, and read its report at the end. The simulator runs it even
 before the Drive Tuner (`calibrated = false`); a real robot does not. Changed a step? Stop the
 simulator (**Ctrl+C** in the Terminal) and run both lines again.
+
+**See the park rule work.** In **your own** `autos/ScoreAndPark.java`, change `parkWithSeconds(3)` to
+`parkWithSeconds(28)`, and run it again: the score steps are "cut short" or "skipped", and the park
+still runs. Then change it back. (Do it in your file, not the lesson robot's: that one is inside the
+library folder, and the next library update would undo it.)
 
 **Or build the steps on the field.** Press **Auto builder** over the 3D view. Tap the field to add drives,
 add the other steps from the list, write the note for the drive team ("Write it for me"), and press
