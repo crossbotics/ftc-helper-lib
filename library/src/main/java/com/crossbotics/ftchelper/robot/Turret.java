@@ -404,7 +404,8 @@ public final class Turret extends Module<Turret> {
         }
         p.countsPerDegree(countsPerDegree());
         if (!continuous) p.limits(min, max);
-        p.homingPower(t.number("homingPower", 0.2)).homingTimeout(t.number("homingTimeout", 5));
+        // Homing numbers only with a switch (no "not written" note for a turret that never homes).
+        if (switchName != null) p.homingPower(t.number("homingPower", 0.2)).homingTimeout(t.number("homingTimeout", 5));
         // Where it points now: an absolute encoder knows; else remembered from the last program, or startAngle.
         double[] kept = analog ? null : remembered(t);
         if (analog) {

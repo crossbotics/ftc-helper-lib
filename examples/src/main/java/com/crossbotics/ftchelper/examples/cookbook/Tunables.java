@@ -79,6 +79,10 @@ public class Tunables {
         // Slows down within slowZone degrees of a limit, to slowZonePower; a goal (from the odometry) more
         // than outOfRangeHold degrees past a limit: it holds where it points (the library's numbers).
         public static double slowZone = 10, slowZonePower = 0.25, outOfRangeHold = 10;
+        // No home switch: set the turret straight forward by hand before INIT (startAngle 0). TeleOp keeps
+        // the angle the last program ended at (keepAngle; the library's numbers).
+        public static double startAngle = 0;
+        public static boolean keepAngle = true;
     }
 
     // recipe: tunables-launcher

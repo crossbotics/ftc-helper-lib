@@ -113,7 +113,11 @@ while the turret pointed at -12). A home switch avoids this: it finds the real a
 
 ## 3. How far can it turn?
 
-| Range | `Robot.java` | `Tunables.Turret` | What it does |
+**Any range works.** Write your own `min` and `max` in degrees: the only rule is that `max` is more
+than `min`. They do not have to match: `min = -30, max = 250` is fine, and so is a range of more than
+one turn. The rows below are only examples.
+
+| Example range | `Robot.java` | `Tunables.Turret` | What it does |
 | --- | --- | --- | --- |
 | A quarter turn each way | nothing extra | `min = -90, max = 90` | a goal past a limit: it waits at the limit and the Driver Station says `goal out of turret range` |
 | Half a turn each way | nothing extra | `min = -180, max = 180` | every direction once; it never turns through the back to get there |
