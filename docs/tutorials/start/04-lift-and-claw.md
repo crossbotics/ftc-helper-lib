@@ -238,6 +238,26 @@ the lift between `down`, `low` and `high`:
 
 Good: it reaches each height in under a second, goes past by very little, and holds still.
 
+### A lift with two motors
+
+Many slides have a motor on each side. Name the second one on the same line:
+
+```java
+lift = add(Lift.slide("lift_left").alsoMotorReversed("lift_right"));
+```
+
+Both motors now get the very same power, in the same loop, every time: buttons, the stick, stop, pause
+and the limits. **Why one line, not your own code?** Two motors on one slide must never fight; code
+that copies the power every loop misses the moments the library stops the lift (pause, STOP).
+
+- Only `lift_left`'s encoder is read: plug the encoder cable into that motor.
+- Its numbers are in `Tunables.LiftLeft` (the FIRST motor's name in CamelCase), not `Tunables.Lift`. If
+  you write `Tunables.Lift` by mistake, INIT warns: `Tunables.Lift is not read by any part: your lift's
+  section is Tunables.LiftLeft`.
+- **Reversed or not?** Motors that face each other (mirror images, the usual way) turn opposite ways
+  for "up": `alsoMotorReversed`. Check with the chain or belt OFF: push the stick up and watch both
+  motors; each must turn the way that lifts. One wrong: use `alsoMotor` instead.
+
 ## Try it in the simulator
 
 From the `ftc-helper-lib` folder, write a simulator robot file (the text file that describes the robot

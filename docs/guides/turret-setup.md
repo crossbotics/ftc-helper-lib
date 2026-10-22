@@ -62,7 +62,7 @@ A motor's encoder counts from where it was at INIT, so the turret must learn whe
 | **Start position** (no switch): you put it there by hand before INIT | nothing extra | `startAngle = 0` (the default: straight forward) | no |
 | **Home switch**: a touch sensor or a magnetic switch | `.homeSwitch("turret_home")` | `homeAngle = 45` (needed), optional `homeDirection = 1`, `homingPower = 0.2`, `homingTimeout = 5` | yes, slowly |
 | **Absolute encoder** (CR servo turret) | `.analogEncoder("turret_pos")` | `encoderOffset = 117` (its reading, 0 to 360, with the turret at 0) | no |
-| **Servo** | `Turret.servo(...)` | `posA`, `angleA`, `posB`, `angleB` | no |
+| **Servo** | `Turret.servo(...)` | `posA`, `angleA`, `posB`, `angleB`; optional `startAngle`: at START it is sent there (default: the middle of its range), since a servo cannot say where it is | no |
 
 **Start position.** Make a mark (or a small printed jig) that holds the turret at `startAngle` and put it
 there before every INIT. If it was somewhere else, every angle is off by the difference, and the
@@ -183,7 +183,7 @@ A turret that follows the odometry assumes it turns about the robot's centre.
 | Motor, no switch | `Turret.motor(name, motorId).gearRatio(r)` | `min`, `max`, (`startAngle`) | none: start it at `startAngle` |
 | Motor + touch or magnetic switch | `... .homeSwitch("turret_home")` | `min`, `max`, `homeAngle` | at START |
 | Motor, slip ring | `... .continuous()` | (`startAngle`) | none, or a switch |
-| Servo | `Turret.servo(name)` | `posA`, `angleA`, `posB`, `angleB`, `travelSec` | none |
+| Servo | `Turret.servo(name)` | `posA`, `angleA`, `posB`, `angleB`, `travelSec`, (`startAngle`) | none: sent to `startAngle` (or its middle) at START |
 | CR servo + Through Bore | `Turret.crServo(name).encoder(port, 8192)` | `min`, `max`, (`startAngle`) | none, or a switch |
 | CR servo + absolute encoder | `Turret.crServo(name).analogEncoder(port)` | `min`, `max`, `encoderOffset` | none |
 

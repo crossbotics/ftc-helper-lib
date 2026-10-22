@@ -31,6 +31,12 @@ final class SimMotor {
     // drivenBy=: this "motor" is really an encoder on a shaft that a CR servo turns (a CR servo turret's
     // Through Bore): its power comes from that CR servo (null = from its own setPower).
     volatile java.util.function.DoubleSupplier drivenBy = null;
+    // A second motor on the same slide or arm (with= in the robot file): the slide's own motor (null = it
+    // is one itself), and whether its shaft turns the other way (mirrored=). The slide's own motor keeps
+    // the list of its partners: their pushes add to its own.
+    SimMotor leader = null;
+    boolean mirrored = false;
+    final java.util.List<SimMotor> partners = new java.util.ArrayList<>();
     // FLYWHEEL: the motor that feeds it, and how much a shot slows it (share of the speed).
     String feeder = null;
     double shotDrop = 0.15;
@@ -270,14 +276,47 @@ final class SimMotor {
         return zeroPower == DcMotor.ZeroPowerBehavior.BRAKE;
     }
 
+    /** A second motor on a slide (with=): only works out its power this step; the slide's own motor moves both. */
+    synchronized void pushOnly(double dt) {
+        appliedPower = shaftPower(dt);
+    }
+
+    /** A second motor on a slide: its shaft goes where the slide's own motor's shaft went (turned round if mirrored). */
+    void follow() {
+        double pos, vel;
+        synchronized (leader) {
+            pos = leader.shaftPos;
+            vel = leader.shaftVel;
+        }
+        synchronized (this) {
+            double sign = mirrored ? -1 : 1;
+            shaftPos = sign * pos;
+            shaftVel = sign * vel;
+            atStop = leader.atStop;
+            double p = Math.abs(appliedPower);
+            double speedShare = Math.min(1, Math.abs(shaftVel) / Math.max(1, p * maxTicksPerSec));
+            amps = p < 0.01 ? 0 : p * (freeAmps + (stallAmps - freeAmps) * (1 - speedShare));
+        }
+    }
+
+    // This motor's power and its partners' (in this shaft's direction), shared: two motors on one slide
+    // each carry half the load, so the slide moves as if one motor got the average power with half the gravity.
+    private double sharedPower(double own) {
+        if (partners.isEmpty()) return own;
+        double sum = own;
+        for (SimMotor m : partners) sum += (m.mirrored ? -1 : 1) * m.appliedPower;
+        return sum / (partners.size() + 1);
+    }
+
     /** Moves the shaft for dt seconds. battery: 1 = full, less = a weaker battery. */
     synchronized void step(double dt, double battery) {
-        appliedPower = shaftPower(dt);
+        appliedPower = sharedPower(shaftPower(dt));
         if (forcedVel != null) {
             shaftVel = forcedVel;
         } else {
-            // The push left after gravity (a lift), and the speed it would settle at with friction (kS).
-            double push = appliedPower * battery - (kind == Kind.LIFT ? gravity : 0);
+            // The push left after gravity (a lift; shared by its motors), and the speed it would settle at
+            // with friction (kS).
+            double push = appliedPower * battery - (kind == Kind.LIFT ? gravity / (partners.size() + 1) : 0);
             double target;
             double lag = lagSec;
             if (Math.abs(appliedPower) < 1e-6 && braking()) {

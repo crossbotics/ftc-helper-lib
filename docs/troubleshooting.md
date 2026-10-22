@@ -72,6 +72,17 @@ Before, the line was quietly skipped and the part used its default. Fix the name
 the closest real one; `Known:` lists them all, and so does the [Tunables reference](guides/tunables.md)),
 or delete the line. A number you keep for your own code goes in your own section (`Tunables.Auto`).
 
+**`!! Tunables.Launcher is not read by any part: your launcher's section is Tunables.Shooter (its device name "shooter" in CamelCase). Move the numbers there`**
+A part reads the section named after its DEVICE (its configuration name in CamelCase), not after its
+kind: `Launcher.flywheel("shooter", ...)` reads `Tunables.Shooter`, `Indexer.servo("feeder")` reads
+`Tunables.Feeder`, `Lift.slide("lift_left")` reads `Tunables.LiftLeft`. Until you move the numbers, the part
+uses the library's defaults. (Also `did you mean Tunables.LiftLeft?` for a section spelled almost like a
+part's.) An interlock rule's fields follow the same name: `liftLeftAbove`, not `liftAbove`.
+
+**The interlock line says `... held ...: Turret angle unknown (...)`.** The other part's position is not
+known yet (a turret looking for its home switch, a servo turret before START), so it counts as maybe in
+its zone and this part waits. It goes on by itself once the angle is known.
+
 **`AutoDriveConfig.calibrationConfirmed is false`**, or **"AUTONOMOUS IS OFF: the drive is not tuned yet"** (EasyAuto, Auto)
 On purpose: a robot with untuned numbers can drive much too far. Tune `AutoDrive`, then set it to `true`: [Tune AutoDrive](modules/drive.md#tune-autodrive). With the
 robot in five files: the Drive Tuner, then `Tunables.Drive.calibrated = true`.

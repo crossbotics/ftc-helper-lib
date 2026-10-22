@@ -37,6 +37,8 @@ public class RobotTelemetry {
     private final LongSupplier clockNanos;
     // This loop's warnings, and this loop's other lines, waiting for update().
     private final List<String> warnings = new ArrayList<>();
+    // How many of the warnings were put at the very top with warnFirst (they stay above the others).
+    private int firstCount = 0;
     // Each line is a pair of texts: {label, value}. A null value means "plain text line".
     private final List<String[]> lines = new ArrayList<>();
     // True = show the programmer (debug) lines too.
@@ -139,6 +141,20 @@ public class RobotTelemetry {
         return this;
     }
 
+    /**
+     * A warning above every other warning, even ones added before it: for the one thing the drivers must
+     * see first (the library uses it for a part that is OFF in the COMPETITION profile). Several stay in
+     * the order they were added. Same text twice in one loop shows once.
+     */
+    public RobotTelemetry warnFirst(String text) {
+        String line = "!! " + text;
+        int had = warnings.indexOf(line);
+        if (had >= 0 && had < firstCount) return this;   // already at the top
+        if (had >= 0) warnings.remove(had);
+        warnings.add(firstCount++, line);
+        return this;
+    }
+
     /** Turns debug lines on or off. */
     public void setDebug(boolean on) {
         debug = on;
@@ -190,7 +206,10 @@ public class RobotTelemetry {
         // Always start the next loop with no lines, even when we skipped sending, so old lines never
         // pile up. Warnings are only cleared once they were sent: a warning raised in a skipped loop
         // still reaches the screen on the next send. (Repeats are skipped, so they cannot pile up.)
-        if (send) warnings.clear();
+        if (send) {
+            warnings.clear();
+            firstCount = 0;
+        }
         lines.clear();
         return send;
     }

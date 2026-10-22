@@ -12,8 +12,10 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
 ## Layout
 
 - `library/` the library (packages: hardware, gamepad, drive, mechanism, launcher, vision, teleop, auto, robot, finders,
-  match, control, telemetry, tuning, safety, core, testing, util). Tests in `library/src/test`
-  (pretend motors/servos/telemetry in `FakeMotor.java`, `Fakes.java`).
+  match, control, telemetry, tuning, safety, core, testing, testkit, util). Tests in `library/src/test`
+  (pretend motors/servos/telemetry in `FakeMotor.java`, `Fakes.java`). `testkit` is the PUBLIC test kit for
+  teams' JUnit tests (`PretendDevices` & co., in the library so TeamCode needs no extra Gradle lines; the
+  library's own tests keep their older fakes; `examples/src/test/.../v2bot/V2botTest.java` shows it).
 - `examples/` compiled example OpModes: `ExampleXxx`, the starter kit (`starter/`), one program per
   tutorial (`tutorials/`, tutorial 13's tests in `examples/src/test`), and robots in five files (the four kit bots
   `gobildabot/`, `revbot/`, `andymarkbot/`, `studicabot/`, and `lessonbot/`, `flywheelbot/`, `turretbot/`,

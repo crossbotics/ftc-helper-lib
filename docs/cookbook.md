@@ -55,6 +55,7 @@ first.
 - [How do I make the intake run from the start?](#how-do-i-make-the-intake-run-from-the-start)
 - [How do I add a lift with set heights?](#how-do-i-add-a-lift-with-set-heights)
 - [My lift goes down when it should go up. How do I fix it?](#my-lift-goes-down-when-it-should-go-up-how-do-i-fix-it)
+- [How do I run one lift on two motors?](#how-do-i-run-one-lift-on-two-motors)
 - [How do I add an arm that moves in degrees?](#how-do-i-add-an-arm-that-moves-in-degrees)
 - [How do I add a claw?](#how-do-i-add-a-claw)
 - [How do I add a wrist?](#how-do-i-add-a-wrist)
@@ -708,6 +709,40 @@ add(Lift.slide("lift").reversed());
 
 **Why:** the lift's limits and heights count up as it goes up, so positive power must move it up.
 **More:** [Motor Finder](guides/finders.md#motor-finder-limits-positions-top-speed), [Troubleshooting](troubleshooting.md#robot-behavior).
+
+### How do I run one lift on two motors?
+
+**Where:** `Robot.java`, inside `define()`, and `Tunables.java`.
+
+<!-- recipe: lift-two-motors -->
+```java
+// A slide with a motor on each side. Both get the same power, always (stop and pause too).
+// Only the FIRST motor's encoder is read: plug the encoder cable into it. The numbers are in
+// Tunables.LiftLeft (the first motor's name in CamelCase), not Tunables.Lift.
+// The motors face each other, so the second turns the other way: alsoMotorReversed.
+// (Both turn the same way for "up"? Use .alsoMotor("lift_right") instead.)
+lift = add(Lift.slide("lift_left").part("gobilda-5203-435").alsoMotorReversed("lift_right"));
+```
+
+<!-- recipe: tunables-lift-two-motors -->
+```java
+// A lift on two motors, Lift.slide("lift_left").alsoMotorReversed("lift_right"): its section is the
+// FIRST motor's name in CamelCase.
+public static class LiftLeft {
+    public static double min = 0, max = 2900;              // counts, from the first motor's encoder
+    public static double kP = 0.004, kI = 0, kD = 0.0002, kF = 0.06;
+    public static double down = 0, low = 1000, high = 2700;
+}
+```
+
+**Why:** two motors on one slide must never fight. The library sends both the very same power in the same
+loop, also when it stops, pauses (BACK) or an interlock rule holds the lift; your own code copying the
+power every loop would miss pause and STOP. **Check the directions before the chain goes on**: with the
+chain or belt off, each motor must turn the way that lifts; if one is wrong, swap `alsoMotorReversed`
+and `alsoMotor`. Two motors pushing against each other get hot and can break a gearbox. An arm works the
+same: `Arm.motor("arm_left", "gobilda-5203-117").alsoMotorReversed("arm_right")`. The simulator ties both
+motors to one slide (`:sim:fromRobot` writes the second motor's line).
+**More:** [Two motors on one lift or arm](modules/robot.md#two-motors-on-one-lift-or-arm), [Tunables names](guides/tunables.md#lift-and-arm).
 
 ### How do I add an arm that moves in degrees?
 

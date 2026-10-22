@@ -85,6 +85,15 @@ public final class SimFromRobot {
         System.out.println("Wrote " + file + (existing == null ? " (new)" : "") + ".");
         for (String k : r.kept) System.out.println("  kept your " + k + " (it is not marked " + MARK + ")");
         if (r.text.contains("TODO")) System.out.println("  Lines with TODO are guesses: measure them (docs/guides/simulator.md).");
+        // The same Tunables name checks as INIT (a field no part reads, a section meant for a part that no
+        // part reads), so a misnamed number is found now, not at the robot. The file is written anyway.
+        List<String> tunables = robot.checkTunables();
+        if (tunables.isEmpty()) {
+            System.out.println("Tunables.java: names checked like INIT does: fine.");
+        } else {
+            System.out.println("Tunables.java: names checked like INIT does (INIT stops on a field no part reads, and warns about a section):");
+            for (String p : tunables) System.out.println("  " + p);
+        }
     }
 
     /**

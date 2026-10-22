@@ -257,19 +257,9 @@ final class TunableSection {
         return s.replace("_", "").toLowerCase(Locale.US);
     }
 
-    // How many letters must be added, removed or changed to turn a into b (no loops that wait: short names).
+    // How many letters must be added, removed or changed to turn a into b.
     private static int editDistance(String a, String b) {
-        int[] prev = new int[b.length() + 1], cur = new int[b.length() + 1];
-        for (int j = 0; j <= b.length(); j++) prev[j] = j;
-        for (int i = 1; i <= a.length(); i++) {
-            cur[0] = i;
-            for (int j = 1; j <= b.length(); j++) {
-                int change = prev[j - 1] + (a.charAt(i - 1) == b.charAt(j - 1) ? 0 : 1);
-                cur[j] = Math.min(change, Math.min(prev[j] + 1, cur[j - 1] + 1));
-            }
-            int[] t = prev; prev = cur; cur = t;
-        }
-        return prev[b.length()];
+        return com.crossbotics.ftchelper.util.Spelling.distance(a, b);
     }
 
     /**

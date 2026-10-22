@@ -118,7 +118,15 @@ out. As soon as one is out, the other keeps its zone.
 anywhere; a servo cannot say where it is. Until they are known, they count as "maybe in the zone", so the
 other part waits. A servo counts as anywhere between where it was and where it was sent, until its
 `travelSec` says it has arrived. A wrist that must be folded before the lift goes down is really folded
-before the lift moves.
+before the lift moves. The Driver Station says why the other part waits:
+
+```text
+TurretLift : Lift held at 110 counts: Turret angle unknown (not homed yet)
+TurretLift : LiftLeft held at 268 counts: Turret angle unknown (not sent anywhere yet: it goes to its start angle at START)
+```
+
+A servo turret is sent to its `startAngle` (or the middle of its range) at START, so this lasts only until
+the first loop after START.
 
 ## More examples
 

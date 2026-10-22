@@ -228,6 +228,15 @@ public final class Tunable {
     }
 
     /**
+     * For JUnit tests only: forgets every tunable in memory (they are shared by the whole app, so one
+     * test's robot would otherwise see another's numbers). {@code new PretendDevices()} calls it. Never in
+     * robot code: the tuning menu would lose its numbers.
+     */
+    public static void forgetAllForTests() {
+        clearForTests();
+    }
+
+    /**
      * Limits the value to a range (the menu will not go past it).
      * Use it so tuning can never reach a dangerous number, for example a negative gain.
      *

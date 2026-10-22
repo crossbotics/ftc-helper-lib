@@ -29,6 +29,10 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
 
     private boolean reversed = false;
     String switchName = null;
+    // A second motor on the same slide or arm (alsoMotor): its name (null = none) and whether it turns the
+    // other way from the first for the same power.
+    String secondMotor = null;
+    boolean secondReversed = false;
     PositionMotor part;
     // The positions' names in Tunables.java, lowest first (for the buttons).
     final List<String> order = new ArrayList<>();
@@ -38,10 +42,64 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
         super(device);
     }
 
-    /** Positive power turns the other way (if it moves down when it should go up). */
+    /**
+     * Positive power turns the other way (if it moves down when it should go up). With a second motor
+     * ({@link #alsoMotor}) both turn the other way.
+     */
     public M reversed() {
         reversed = true;
         return self();
+    }
+
+    /**
+     * A second motor on the same lift or arm (a slide with a motor on each side, an arm driven from both
+     * ends). It gets exactly the same power as the first, at the same moment: in every command, stop,
+     * pause, limit and interlock rule. Only the FIRST motor's encoder is read, so plug the encoder cable
+     * into the first motor. Its Tunables section stays the first motor's name ({@code lift_left} reads
+     * {@code Tunables.LiftLeft}).
+     *
+     * <pre>{@code
+     * lift = add(Lift.slide("lift_left").alsoMotor("lift_right"));          // both turn the same way
+     * lift = add(Lift.slide("lift_left").alsoMotorReversed("lift_right"));  // they face each other
+     * }</pre>
+     *
+     * <p>Which one? Take the chain or belt off, then push the lift up with the stick (Motor Finder): both
+     * motors must turn so the lift would go up. If one turns the wrong way, use the other method. Two
+     * motors pushing against each other get hot and can break a gearbox.
+     *
+     * @param motor the second motor's configuration name, e.g. "lift_right"
+     * @return this part
+     */
+    public M alsoMotor(String motor) {
+        return second(motor, false);
+    }
+
+    /**
+     * {@link #alsoMotor}, with the second motor turning the other way from the first for the same power
+     * (two motors that face each other, mirror images: the usual way on a two-sided slide).
+     *
+     * @param motor the second motor's configuration name, e.g. "lift_right"
+     * @return this part
+     */
+    public M alsoMotorReversed(String motor) {
+        return second(motor, true);
+    }
+
+    private M second(String motor, boolean otherWay) {
+        if (motor == null || motor.trim().isEmpty()) throw new IllegalArgumentException("Robot.java: " + name() + ".alsoMotor needs the motor's name");
+        if (motor.equals(device)) throw new IllegalArgumentException("Robot.java: " + name() + ".alsoMotor(\"" + motor + "\") is its first motor");
+        if (secondMotor != null) {
+            throw new IllegalStateException("Robot.java: " + name() + " already has a second motor (\"" + secondMotor
+                    + "\"); a lift or arm takes two motors at most");
+        }
+        secondMotor = motor;
+        secondReversed = otherWay;
+        return self();
+    }
+
+    /** The second motor's configuration name ({@link #alsoMotor}), or null if it has one motor. */
+    public String secondMotorName() {
+        return secondMotor;
     }
 
     @Override
@@ -49,12 +107,20 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
         List<String> out = super.notes();
         // Without a switch, 0 is wherever the part is at INIT (the encoder is set to 0 then).
         if (switchName == null) out.add(name() + ": 0 is where it is at INIT: start with it at its bottom stop");
+        if (secondMotor != null) {
+            out.add(name() + ": two motors, \"" + device + "\" (its encoder is read) and \"" + secondMotor + "\" ("
+                    + (secondReversed ? "turns the other way" : "turns the same way") + ", same power)");
+        }
         return out;
     }
 
     @Override
     List<String> deviceNames() {
-        return switchName == null ? Collections.singletonList(device) : Arrays.asList(device, switchName);
+        List<String> out = new ArrayList<>();
+        out.add(device);
+        if (secondMotor != null) out.add(secondMotor);
+        if (switchName != null) out.add(switchName);
+        return out;
     }
 
     // The library's defaults, for a module whose Tunables section is missing some numbers.
@@ -80,6 +146,13 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
         DcMotorEx motor = MotorSetup.of(devices.get(DcMotorEx.class, device)).reversed(reversed)
                 .brake().resetEncoder().runWithoutEncoder().done();
         part = new PositionMotor(name(), motor);
+        if (secondMotor != null) {
+            // The second motor: the same power as the first, always (SafeMotor sends both together). Same
+            // direction setting as the first, flipped for alsoMotorReversed. Brake too, so both hold the lift.
+            DcMotorEx other = MotorSetup.of(devices.get(DcMotorEx.class, secondMotor)).reversed(reversed != secondReversed)
+                    .brake().runWithoutEncoder().done();
+            part.getSafeMotor().alsoPowers(other);
+        }
         if (countsPerUnit() != 1) part.units(countsPerUnit(), unit());
         part.limits(min, max)
                 .pid(t.number("kP", d[2]), t.number("kI", d[3]), t.number("kD", d[4]), t.number("kF", d[5]))
@@ -245,6 +318,13 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
         // Twice the tolerance, and at least 1/50 of the range.
         double tol = tunables == null ? 0 : tunables.number("tolerance", defaults()[9]);
         return Math.max(2 * tol, (max - min) / 50);
+    }
+
+    // The simulator line for the second motor (alsoMotor): the same motor kind, tied to the first motor's
+    // slide or arm ("with="); "mirrored" = its shaft turns the other way. Nothing without a second motor.
+    final void secondMotorLine(List<String> out, String part) {
+        if (secondMotor == null) return;
+        out.add(fmt("motor.%s = lift, part=%s, with=%s%s", secondMotor, part, device, secondReversed ? ", mirrored=true" : ""));
     }
 
     static Map<String, Double> positions(Object... nameValue) {

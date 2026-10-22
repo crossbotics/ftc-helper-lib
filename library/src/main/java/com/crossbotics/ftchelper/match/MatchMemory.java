@@ -42,6 +42,7 @@ public final class MatchMemory {
     // Where the running autonomous wants the robot (null = not said), and its note.
     private static FieldPose placement = null;
     private static String placementNote = "";
+    private static String placementWritten = "";
     // The alliance the running program uses now (null = none said).
     private static Alliance chosen = null;
     // Autonomous's last report, and when it was saved.
@@ -95,8 +96,23 @@ public final class MatchMemory {
 
     /** Sets {@link #placement()} (null = none) and its note (EasyAuto does it for you). */
     public static synchronized void setPlacement(FieldPose pose, String note) {
+        setPlacement(pose, note, "");
+    }
+
+    /**
+     * {@link #setPlacement(FieldPose, String)}, and the spot as the team wrote it, in words (e.g.
+     * "x -36, y -63 in, heading 0 (as written in start(...), BLUE)"), so a message about the spot can
+     * show the team's own numbers, not the field frame's.
+     */
+    public static synchronized void setPlacement(FieldPose pose, String note, String asWritten) {
         placement = pose == null ? null : pose.copy();
         placementNote = note == null ? "" : note;
+        placementWritten = pose == null || asWritten == null ? "" : asWritten;
+    }
+
+    /** The start spot as the team wrote it, in words ("" if not given); see {@link #setPlacement(FieldPose, String, String)}. */
+    public static synchronized String placementAsWritten() {
+        return placementWritten;
     }
 
     /**
@@ -154,6 +170,7 @@ public final class MatchMemory {
         chosen = null;
         placement = null;
         placementNote = "";
+        placementWritten = "";
         report = new ArrayList<>();
         reportAtNanos = 0;
         PoseStore.clear();

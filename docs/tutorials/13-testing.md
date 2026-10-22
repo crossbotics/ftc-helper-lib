@@ -124,6 +124,37 @@ behaves.
 
 Run them before every commit (each time you save a version of the code in git), and always before an event.
 
+## 7. Test your robot in five files
+
+With the robot in five files (`Robot.java`, `Tunables.java`, ...), the library's **test kit** gives your
+robot pretend devices: motors whose encoder you set, servos that remember where they were sent. The
+test does INIT, START and a loop, then checks what each motor got:
+
+```java
+import com.crossbotics.ftchelper.testkit.PretendDevices;
+
+@Test public void liftGoesUpWhenSentHigh() {
+    PretendDevices devices = new PretendDevices();   // a fresh pretend robot
+    Robot robot = new Robot();
+    robot.setup(devices);                            // INIT: Tunables.java is checked like on the robot
+    robot.startForTests();                           // START
+    robot.lift.goTo("high");
+    robot.all().update();                            // one loop
+    assertTrue(devices.motor("lift").power > 0);     // "lift" = the motor's configuration name
+}
+
+@Test public void tunablesNamesAreRight() {
+    // The same name checks as INIT: a misspelled field, a section named after the wrong thing.
+    assertEquals("[]", new Robot().checkTunables().toString());
+}
+```
+
+**Why:** a typo in `Tunables.java` stops INIT on the robot; here it fails on the laptop first. And a
+change to `Robot.java` (a second lift motor, a new interlock rule) is checked in a second. The test
+cannot see how the real robot moves (gravity, time passing): that is what the
+[simulator](../guides/simulator.md) is for. A whole example: `examples/src/test/.../v2bot/V2botTest.java`.
+More: [test kit](../modules/testkit.md).
+
 ## Run it
 
 1. Set up section 3, copy `LiftHeights` and the test (fix the package names).

@@ -203,7 +203,8 @@ counterclockwise (else `.reversed()`).
 | --- | --- |
 | `.countsPerDegree(c)` | encoder counts per turret degree (motor counts x gear ratio / 360) |
 | `.limits(min, max)` | allowed range; may be more than 360 in total (e.g. -190..190) |
-| `.startAngle(deg)` | the angle at power-on (no switch). It reads the encoder when called: call it after `countsPerDegree` and `reversed` |
+| `.startAngle(deg)` | the angle at power-on (no switch). It reads the encoder when called: call it after `countsPerDegree` and `reversed`. A servo turret: where it counts from before its first command (a servo cannot say where it is): send it there at START with `aimAt(servoStartAngle())` |
+| `servoStartAngle()` | a servo turret: `startAngle`, or the middle of its range when none was given (0 with no limits); others: `getAngle()`. The stick and `aimBy` start from it before the first command |
 | `.homeSwitch(hardwareMap, name, angle)` / `.homeSwitch(reader, angle)` | a switch that closes at a known angle |
 | `.homingPower(p)`, `.pid(...)`, `.tolerance(deg)`, `.maxPower(p)`, `.slowZone(deg, power)` | tuning. Before homing, manual power is kept to the homing power |
 | `.homingTimeout(s)` | homing stops with a fault if the switch is not found in time (default 5 s) |
@@ -215,6 +216,7 @@ counterclockwise (else `.reversed()`).
 | `aimAtTarget(target, cameraOnTurret)` | aim at a camera target: fresh pictures only, each picture once; holds when there is none |
 | `manual(power)` | a stick; 0 holds where it is |
 | `home(direction)` | turn slowly toward the switch until it closes (at once if already on it; fault after the timeout) |
+| `addWarnings(t)` | only the warnings of `addTelemetry` (a fault, not homed, out of range), for code that writes its own line (the five files' [Turret](robot.md#turret) does) |
 | `getAngle()`, `getTargetAngle()`, `isAimed()`, `isOutOfRange()`, `isHomed()`, `isHoming()`, `getFault()` | read. `isAimed()` is false for an out-of-range target. It only says the turret reached its LAST target: if the goal can be lost (a camera), also check that the goal is seen now (the robot in five files' [`Turret.isAimed()`](robot.md#turret) does) |
 | `getTolerance()`, `degreesOutOfRange(deg)` | the aimed tolerance; how far past the limits a direction is (0 = it can point there) |
 | `aimStep(deg, timeout)` | autonomous step |

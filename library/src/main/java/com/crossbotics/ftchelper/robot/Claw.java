@@ -64,7 +64,18 @@ public final class Claw extends ServoPositions<Claw> implements Toggleable {
     void build(Devices devices, TunableSection t) {
         super.build(devices, t);
         if (findName(order, "open") == null || findName(order, "closed") == null) {
-            throw new IllegalStateException("Tunables." + name() + " needs \"open\" and \"closed\" (it has " + order + ")");
+            // A typo ("closd") gets a "did you mean": the claw's two names are fixed, so the fix is clear.
+            StringBuilder hint = new StringBuilder();
+            for (String want : new String[] {"open", "closed"}) {
+                if (findName(order, want) != null) continue;
+                for (String have : order) {
+                    if (want.equals(com.crossbotics.ftchelper.util.Spelling.closest(have, java.util.Collections.singletonList(want)))) {
+                        hint.append(hint.length() == 0 ? " (" : ", ").append(have).append(" -> ").append(want).append("?");
+                    }
+                }
+            }
+            if (hint.length() > 0) hint.append(")");
+            throw new IllegalStateException("Tunables." + name() + " needs \"open\" and \"closed\" (it has " + order + ")" + hint);
         }
     }
 

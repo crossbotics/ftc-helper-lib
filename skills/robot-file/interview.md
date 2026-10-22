@@ -43,6 +43,10 @@ Check: a starting robot must fit an 18 in cube. A frame longer than 18 in is a m
 12. Lift/arm: its encoder counts at the bottom and top hard stops? The Motor Finder shows them (or
     `finder-results.txt`). -> `min=`, `max=`. How much power holds it still (0.05-0.2 typical, the
     Characterizer measures it; that tool finds the power a part needs at each speed)? -> `gravity=`.
+    **Two motors on one slide or arm?** The second gets `motor.SECOND = lift, part=..., with=FIRST`
+    (`mirrored=true` if its shaft turns the other way for "up": two motors facing each other). Only the
+    first gets `min=`, `max=`, `gravity=` (the whole slide's) and the shape's `motor=`. In five files this
+    is `Lift.slide("FIRST").alsoMotorReversed("SECOND")` (or `alsoMotor`) and `:sim:fromRobot` writes it.
 13. **Lift: how tall is the robot with the lift all the way up, floor to the top?** This one number
     decides the 29 in rule. The shape's travel = that height - the lift's folded top. Then
     `ticksPerIn=` = (top count - bottom count) / travel (negative if the counts go down as it rises). Use `spoolIn=` only for a one-stage lift

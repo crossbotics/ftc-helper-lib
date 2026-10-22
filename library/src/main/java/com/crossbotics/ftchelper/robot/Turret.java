@@ -406,9 +406,20 @@ public final class Turret extends Module<Turret> {
         if (t.has("max")) hi = Math.min(hi, max);
         min = lo;
         max = hi;
-        angleFrom = "servo: its angle is where it was sent (nothing moves until START)";
+        // Where it goes at START, so its angle is known from then on (a servo cannot say where it is):
+        // the angle the last program left it at (TeleOp after autonomous: no jump), else startAngle,
+        // else the middle of its range.
+        if (t.has("startAngle") && (startAngle < min || startAngle > max)) {
+            throw new IllegalStateException("Tunables." + name() + ".startAngle (" + startAngle + ") is outside its range " + min + " to " + max);
+        }
+        double[] kept = remembered(t);
+        double first = kept != null ? Math.max(min, Math.min(max, kept[0])) : t.has("startAngle") ? startAngle : (min + max) / 2;
+        angleFrom = kept != null
+                ? Module.fmt("servo: at START it goes to %.0f deg, where the last program left it", first)
+                : t.has("startAngle") ? Module.fmt("servo: at START it goes to startAngle %.0f deg", first)
+                : Module.fmt("servo: at START it goes to %.0f deg (the middle of its range: no startAngle)", first);
         return com.crossbotics.ftchelper.launcher.Turret.servo(name(), ps).limits(min, max)
-                .servoStickSec(t.number("travelSec", 0.6));
+                .servoStickSec(t.number("travelSec", 0.6)).startAngle(first);
     }
 
     // A motor or a CR servo with an encoder.
@@ -529,7 +540,17 @@ public final class Turret extends Module<Turret> {
 
     // Remembers the angle for the next program (end of autonomous, end of TeleOp).
     private void rememberAngle() {
-        if (part == null || kind == Kind.SERVO || analog) return;
+        if (part == null || analog) return;
+        if (kind == Kind.SERVO) {
+            // A servo: where it was sent last (its target, or where it was going), so the next program
+            // sends it there at START and it does not jump.
+            double a = Double.isNaN(part.getTargetAngle()) ? part.getAngle() : part.getTargetAngle();
+            if (Double.isNaN(a)) return;
+            synchronized (REMEMBERED) {
+                REMEMBERED.put(device, new double[] {a, System.nanoTime()});
+            }
+            return;
+        }
         if (!part.isHomed() || part.isHoming()) {
             // Its angle is not known now (homing did not finish): an older remembered angle is stale too.
             synchronized (REMEMBERED) {
@@ -553,6 +574,9 @@ public final class Turret extends Module<Turret> {
     void start() {
         // Homing at START (never in INIT: nothing moves before START).
         if (hasSwitch && !part.isHomed()) part.home(homeDirection);
+        // A servo turret: sent to its start angle now, so its angle is known from the first loop (the
+        // stick, following and interlock rules all need it). Not past a command it already has.
+        if (kind == Kind.SERVO && Double.isNaN(part.getTargetAngle())) part.aimAt(part.servoStartAngle());
         if (follows()) follow.on();
     }
 
@@ -746,9 +770,13 @@ public final class Turret extends Module<Turret> {
     public void addTelemetry(RobotTelemetry t) {
         if (part == null) return;
         if (follow.isOn() && isOutOfRange()) t.warn("goal out of turret range" + (goalBehind ? " (behind the robot: holding)" : ""));
+        // One line: the angle, AIMED (this module's isAimed: while following, at the goal now) and what
+        // it follows. The launcher.Turret inside adds only its warnings.
         if (part.isHoming()) t.line(name(), "homing: looking for the switch");
-        else t.line(name(), fmt("%.0f deg%s", angle(), follow.isOn() ? " following: " + source.words() : ""));
-        part.addTelemetry(t);
+        else if (Double.isNaN(angle())) t.line(name(), fmt("not sent anywhere yet (at START: %.0f deg)", part.servoStartAngle()));
+        else t.line(name(), fmt("%.0f deg%s%s", angle(), isAimed() ? "  AIMED" : "", follow.isOn() ? "  following: " + source.words() : ""));
+        part.addWarnings(t);
+        t.debug(name() + " target", Double.isNaN(part.getTargetAngle()) ? "-" : fmt("%.1f deg", part.getTargetAngle()));
     }
 
     @Override
@@ -776,8 +804,14 @@ public final class Turret extends Module<Turret> {
     }
 
     @Override boolean zoneWraps() { return true; }
-    @Override boolean zoneKnown() { return isHomed(); }
-    @Override String zoneUnknownWords() { return hasSwitch ? "homing" : "no angle yet"; }
+    // A servo turret is known once it was sent somewhere (at START); before that it may be anywhere.
+    @Override boolean zoneKnown() { return isHomed() && (missing || kind != Kind.SERVO || !Double.isNaN(part.getAngle())); }
+
+    @Override
+    String zoneUnknownWords() {
+        if (kind == Kind.SERVO) return "not sent anywhere yet: it goes to its start angle at START";
+        return hasSwitch ? "not homed yet" : "no angle yet";
+    }
 
     @Override
     double[] zoneSweep() {

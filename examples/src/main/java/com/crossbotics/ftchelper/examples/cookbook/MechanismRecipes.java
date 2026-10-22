@@ -155,6 +155,34 @@ public class MechanismRecipes {
         }
     }
 
+    /** A lift with a motor on each side of the slide. */
+    public static class TwoMotorLift extends RobotDefinition {
+        public Lift lift;
+
+        @Override
+        protected void define() {
+            drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
+            // recipe: lift-two-motors
+            // A slide with a motor on each side. Both get the same power, always (stop and pause too).
+            // Only the FIRST motor's encoder is read: plug the encoder cable into it. The numbers are in
+            // Tunables.LiftLeft (the first motor's name in CamelCase), not Tunables.Lift.
+            // The motors face each other, so the second turns the other way: alsoMotorReversed.
+            // (Both turn the same way for "up"? Use .alsoMotor("lift_right") instead.)
+            lift = add(Lift.slide("lift_left").part("gobilda-5203-435").alsoMotorReversed("lift_right"));
+            // end recipe
+        }
+    }
+
+    /** Its TeleOp: the lift's standard buttons (operator A, X, Y, D-pad, left stick) move both motors. */
+    @TeleOp(name = "Cookbook Two Motor Lift", group = "Cookbook")
+    @Disabled
+    public static class TwoMotorLiftControls extends ControlMap<TwoMotorLift> {
+        public static boolean oneDriver = false;
+
+        @Override
+        protected void buttons(TwoMotorLift robot, Pad g1, Pad g2) { }
+    }
+
     /** A flywheel with a feeder. */
     public static class ShooterRobot extends RobotDefinition {
         public Launcher launcher;

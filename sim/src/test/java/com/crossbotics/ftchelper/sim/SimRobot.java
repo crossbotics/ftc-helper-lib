@@ -36,6 +36,9 @@ final class SimRobot {
     final Map<String, SimTouch> touches = new LinkedHashMap<>();
     // motor name -> the CR servo that turns it (drivenBy=).
     private final Map<String, String> drivenBy = new LinkedHashMap<>();
+    // motor name -> the motor whose slide or arm it also turns (with=: a two-motor lift), and mirrored=.
+    private final Map<String, String> tiedTo = new LinkedHashMap<>();
+    private final Map<String, Boolean> tiedMirrored = new LinkedHashMap<>();
     // Absolute encoders (analog.NAME): {unused, offset degrees}, and the motor whose shaft they read.
     final Map<String, double[]> analogs = new LinkedHashMap<>();
     private final Map<String, String> analogMotor = new LinkedHashMap<>();
@@ -192,6 +195,10 @@ final class SimRobot {
             m.feeder = s.get("feeder");
             m.shotDrop = dbl(s, "shotDrop", 0.15);
             if (s.containsKey("drivenBy")) drivenBy.put(name, s.get("drivenBy"));
+            if (s.containsKey("with")) {
+                tiedTo.put(name, s.get("with"));
+                tiedMirrored.put(name, Boolean.parseBoolean(s.getOrDefault("mirrored", "false")));
+            }
             motors.put(name, m);
         }
         for (String key : sortedKeys(p, "servo.")) {
@@ -245,6 +252,22 @@ final class SimRobot {
             }
             // A reversed CR servo turns the other way for the same power.
             motors.get(e.getKey()).drivenBy = () -> cr[0] * (cr[1] == 1 ? -1 : 1);
+        }
+        // A second motor on one slide or arm (motor.X = lift, with=FIRST [, mirrored=true]): its shaft is
+        // geared to the first one's, so both turn together and both push (see SimMotor.step).
+        for (Map.Entry<String, String> e : tiedTo.entrySet()) {
+            SimMotor second = motors.get(e.getKey()), first = motors.get(e.getValue());
+            if (first == null || first == second) {
+                throw new IllegalArgumentException("Robot file: motor." + e.getKey() + ": with=" + e.getValue()
+                        + " is not another motor in the robot file");
+            }
+            if (first.leader != null || tiedTo.containsKey(e.getValue()) || wheels.contains(first)) {
+                throw new IllegalArgumentException("Robot file: motor." + e.getKey() + ": with=" + e.getValue()
+                        + " must be the slide's own motor (not a drive motor, not one that is itself with= another)");
+            }
+            second.leader = first;
+            second.mirrored = tiedMirrored.get(e.getKey());
+            first.partners.add(second);
         }
         for (String key : sortedKeys(p, "light.")) {
             String name = key.substring("light.".length());
@@ -661,7 +684,11 @@ final class SimRobot {
             // The hand stops: the robot (and so its wheels) stops with it, it does not coast on.
             for (SimMotor w : wheels) w.stopForcedSpin();
         }
-        for (SimMotor m : motors.values()) m.step(dt, battery);
+        // A second motor on a slide (with=) first says how hard it pushes, then the slide's own motor moves
+        // the slide with both pushes, then the second motor's shaft follows it.
+        for (SimMotor m : motors.values()) if (m.leader != null) m.pushOnly(dt);
+        for (SimMotor m : motors.values()) if (m.leader == null) m.step(dt, battery);
+        for (SimMotor m : motors.values()) if (m.leader != null) m.follow();
         if (!wheels.isEmpty()) moveChassis(dt);
         paths.record(x, y, dt);
         if (odometry != null) odometry.step(x, y, headingDeg, dt);

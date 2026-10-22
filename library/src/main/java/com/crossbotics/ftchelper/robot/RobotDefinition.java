@@ -55,6 +55,14 @@ public abstract class RobotDefinition {
     private PathFollower follower = null;
     private final List<Module<?>> modules = new ArrayList<>();
     private final List<Supplier<Action>> atStart = new ArrayList<>();
+    // The team's own parts and per-loop code (addOwn, everyLoop), updated after the library's parts.
+    private final List<com.crossbotics.ftchelper.core.Subsystem> own = new ArrayList<>();
+    // Everything the library itself put in all() at setup. Anything else in all() (addOwn, everyLoop, or
+    // all().add(...)) is the team's: pause stops it too (see pauseAll).
+    private final Set<com.crossbotics.ftchelper.core.Subsystem> libraryParts =
+            Collections.newSetFromMap(new java.util.IdentityHashMap<com.crossbotics.ftchelper.core.Subsystem, Boolean>());
+    // INIT warnings about Tunables sections no part reads that look meant for a part (see sectionWarnings).
+    private final List<String> sectionWarnings = new ArrayList<>();
     private Class<?> tunablesClass = null;
     private boolean tunablesGiven = false;
     private boolean defined = false;
@@ -190,6 +198,60 @@ public abstract class RobotDefinition {
     }
 
     /**
+     * Your own part, run with the library's parts: its {@code update()} every loop after START (after
+     * the library's parts, so it sees this loop's commands), and its {@code stop()} at STOP and whenever
+     * the robot pauses (BACK, see {@link #pauseAll()}): so a motor in it stops with the rest. Nothing runs
+     * in INIT (make its hardware in its constructor, never move anything there). While paused its
+     * {@code update()} does not run; after {@link #resume()} it runs again.
+     *
+     * <p>Call it in {@code define()} for a part that needs no hardware, or after INIT has set the robot up
+     * (in {@code Controls.java}'s {@code buttons(...)} or an autonomous's {@code steps(...)}, which have
+     * the {@code hardwareMap}).
+     *
+     * <pre>{@code
+     * // Controls.java, in buttons(robot, g1, g2):
+     * robot.addOwn(new Bucket(hardwareMap));   // class Bucket implements Subsystem { update(), stop() }
+     * }</pre>
+     *
+     * <p>A second motor on a lift or an arm needs none of this: {@code Lift.slide("lift_left").alsoMotor("lift_right")}.
+     *
+     * @param part your part (a class that {@code implements Subsystem}); not null, added once
+     * @return the same part
+     */
+    public final <T extends com.crossbotics.ftchelper.core.Subsystem> T addOwn(T part) {
+        if (part == null) throw new IllegalArgumentException("addOwn(null): give it your part");
+        if (part instanceof Module) throw new IllegalArgumentException("addOwn: " + part.name() + " is a library part: write add(...) in Robot.java's define()");
+        if (own.contains(part)) throw new IllegalStateException("addOwn: " + part.name() + " is added twice");
+        own.add(part);
+        if (all != null) all.add(part);   // after setup: in the loop from now on
+        return part;
+    }
+
+    /**
+     * Code of your own that runs once every loop after START, after the library's parts (not in INIT, not
+     * while paused). It must be quick and never wait (docs/guides/non-blocking.md). For code that moves a
+     * motor use {@link #addOwn} instead: pause and STOP call its {@code stop()}, and a Runnable has none.
+     *
+     * <pre>{@code
+     * robot.everyLoop(() -> lastLiftHeight = robot.lift.position());
+     * }</pre>
+     *
+     * @param code what to run, e.g. a lambda {@code () -> ...}
+     */
+    public final void everyLoop(final Runnable code) {
+        if (code == null) throw new IllegalArgumentException("everyLoop(null): give it the code to run");
+        addOwn(new com.crossbotics.ftchelper.core.Subsystem() {
+            @Override public void update() {
+                code.run();
+            }
+
+            @Override public String name() {
+                return "everyLoop";
+            }
+        });
+    }
+
+    /**
      * The chassis box for the simulator (it bumps into the field and the game pieces): length front
      * to back, width side to side, height from the tiles to its top, in mm.
      */
@@ -301,18 +363,92 @@ public abstract class RobotDefinition {
         // before the autonomous reads them to build its steps.
         // The interlock rules' numbers (read once: not changeable live, see Interlock).
         for (Interlock r : interlocks.rules) r.build(TunableSection.of(tunablesClass, r.name()), this);
+        // Drive, Odometry (scales, "checked"), Buttons (gesture times), Aim (goal point), every part and rule.
+        Set<String> used = usedSections();
+        otherSections = new OtherSections(tunablesClass, used);
+        sectionWarnings.clear();
+        sectionWarnings.addAll(sectionProblems(used));
+        // Everything so far is the library's; the team's own parts come last (they see this loop's commands).
+        libraryParts.addAll(all.all());
+        for (com.crossbotics.ftchelper.core.Subsystem s : own) all.add(s);
+        return this;
+    }
+
+    // Tunables sections no part reads that look meant for one: named like a part's kind (Tunables.Launcher
+    // while the launcher's device is "shooter", so it reads Tunables.Shooter), or spelled almost like a
+    // section a part reads (Tunables.Liftleft). Their numbers would be quietly ignored. A warning, not a
+    // stop: a section no part reads may be the team's own (Tunables.Auto); the part's own required numbers
+    // (a lift's min and max, a claw's positions) already stop INIT when its real section is missing.
+    private List<String> sectionProblems(Set<String> used) {
+        List<String> out = new ArrayList<>();
+        if (tunablesClass == null) return out;
+        Map<String, Module<?>> byKind = new LinkedHashMap<>();
+        for (Module<?> m : modules) {
+            for (Module<?> c : m.children()) byKind.put(c.getClass().getSimpleName(), c);
+            byKind.put(m.getClass().getSimpleName(), m);
+        }
+        for (Class<?> section : tunablesClass.getDeclaredClasses()) {
+            String n = section.getSimpleName();
+            if (used.contains(n)) continue;
+            Module<?> kind = byKind.get(n);
+            if (kind != null) {
+                out.add("Tunables." + n + " is not read by any part: your " + n.toLowerCase(java.util.Locale.US) + "'s section is Tunables."
+                        + kind.name() + " (its device name \"" + kind.device + "\" in CamelCase). Move the numbers there");
+                continue;
+            }
+            String like = com.crossbotics.ftchelper.util.Spelling.closest(n, used);
+            if (like != null) {
+                out.add("Tunables." + n + " is not read by any part: did you mean Tunables." + like + "? (capitals count)");
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Checks {@code Tunables.java} the way INIT does, without a robot (the simulator's {@code :sim:fromRobot}
+     * runs it): a field no part reads (INIT stops on it) and a section that looks meant for a part but is
+     * read by none (INIT warns). Every part counts as on the robot. Empty when all is fine.
+     *
+     * @return one line per problem, e.g. "Tunables.Launcher is not read by any part: ..."
+     */
+    public final List<String> checkTunables() {
+        describe();
+        List<String> out = new ArrayList<>();
+        Devices all = new Devices() {
+            @Override public <T> T get(Class<? extends T> type, String name) {
+                throw new UnsupportedOperationException("no devices");
+            }
+
+            @Override public <T> T tryGet(Class<? extends T> type, String name) {
+                return null;
+            }
+
+            @Override public boolean has(String name) {
+                return true;
+            }
+        };
+        try {
+            checkTunablesNames(all);
+        } catch (IllegalStateException e) {
+            out.add(e.getMessage());
+        }
+        out.addAll(sectionProblems(usedSections()));
+        return out;
+    }
+
+    // Every section a part reads (the same set setup builds).
+    private Set<String> usedSections() {
         Set<String> used = new LinkedHashSet<>();
         for (Interlock r : interlocks.rules) used.add(r.name());
         used.add("Drive");
-        used.add("Odometry");   // Tunables.Odometry: the odometry's scales and "checked", read here
-        used.add("Buttons");   // Tunables.Buttons: the gesture times, read by Controls.java's buttons
-        used.add("Aim");       // Tunables.Aim: the goal point and whole-robot aim, read by aim()
+        used.add("Odometry");
+        used.add("Buttons");
+        used.add("Aim");
         for (Module<?> m : modules) {
             for (Module<?> c : m.children()) used.add(c.name());
             used.add(m.name());
         }
-        otherSections = new OtherSections(tunablesClass, used);
-        return this;
+        return used;
     }
 
     // Every section the robot reads: a field that no part reads is a typo (or a leftover): stop with its name
@@ -655,6 +791,12 @@ public abstract class RobotDefinition {
             }
             try { m.pause(); } catch (RuntimeException e) { if (first == null) first = e; }
         }
+        // The team's own parts (addOwn, everyLoop, or all().add(...)): they are not updated while paused,
+        // so a power they sent would stay on. Stop each one now (its stop() puts its motors to 0).
+        for (com.crossbotics.ftchelper.core.Subsystem s : all.all()) {
+            if (libraryParts.contains(s)) continue;
+            try { s.stop(); } catch (RuntimeException e) { if (first == null) first = e; }
+        }
         if (first != null) throw first;
     }
 
@@ -758,9 +900,16 @@ public abstract class RobotDefinition {
         boolean loud = !com.crossbotics.ftchelper.core.Profile.current().isPractice();
         List<String> off = offNotes();
         for (String n : notes()) {
-            if (loud && off.contains(n)) t.warn(offWarning(n));
+            // At the very top of the screen, above every other warning: at an event this is the one to see.
+            if (loud && off.contains(n)) t.warnFirst(offWarning(n));
             else t.text(n);
         }
+        for (String w : sectionWarnings) t.warn(w);
+    }
+
+    /** INIT warnings about misnamed Tunables sections (empty when none); see {@link #checkTunables()}. */
+    public final List<String> sectionWarnings() {
+        return Collections.unmodifiableList(sectionWarnings);
     }
 
     // "COMPETITION: IntakeDeploy is OFF ..." from the note "\"intake_deploy\" not in the configuration: IntakeDeploy is off ...".
@@ -791,6 +940,22 @@ public abstract class RobotDefinition {
             m.start();
         }
         for (Supplier<Action> a : atStart) runner.start(a.get());
+    }
+
+    /**
+     * For JUnit tests only (with {@link com.crossbotics.ftchelper.testkit.PretendDevices}): what START does
+     * in an OpMode (each part's start, like a servo turret going to its start angle, and the
+     * {@link #atStart} actions). The OpMode classes do this themselves: never call it in robot code.
+     *
+     * <pre>{@code
+     * robot.setup(devices);     // INIT
+     * robot.startForTests();    // START
+     * robot.all().update();     // one loop
+     * }</pre>
+     */
+    public final void startForTests() {
+        if (!built) throw new IllegalStateException("startForTests(): call setup(devices) first (that is INIT)");
+        started();
     }
 
     /** Tunables.Drive.slowSpeed. */

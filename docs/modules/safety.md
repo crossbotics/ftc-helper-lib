@@ -86,6 +86,7 @@ Setup (each returns the `SafeMotor`, so you can chain them):
 | `setUpperSwitch(reader)` | an upper limit switch |
 | `setRequireHoming(boolean)` | with a lower switch: `true` (default) = only slow downward power until homed |
 | `setHomingPower(power)` | the most downward power before homing, default 0.3 |
+| `alsoPowers(otherMotor)` | a second motor on the same mechanism (a lift with a motor on each side): it gets exactly the same power as this one, every time (limits and `stop()` too). Only this motor's encoder is read. Set its direction first so + power moves the mechanism the same way on both; check with the chain off. `getPartners()` lists them. In the five files: [`alsoMotor`](robot.md#two-motors-on-one-lift-or-arm) |
 
 Every loop:
 

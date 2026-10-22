@@ -26,6 +26,64 @@ flowchart LR
 This runs your team's tests on the laptop, with Gradle (the tool that builds the code). Fast, no robot.
 Write tests for your own logic ([tutorial 13](../tutorials/13-testing.md)).
 
+### Test your Robot.java with pretend devices
+
+The library comes with a **test kit** ([`com.crossbotics.ftchelper.testkit`](../modules/testkit.md)):
+pretend motors, servos and switches that your robot in five files can use instead of the real ones.
+Your test sets up the robot (that is INIT), presses START, runs a few loops, and checks what the motors
+and servos were sent. Put it in `TeamCode/src/test/java/org/firstinspires/ftc/teamcode/RobotTest.java`:
+
+```java
+package org.firstinspires.ftc.teamcode;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import com.crossbotics.ftchelper.testkit.PretendDevices;
+import org.junit.Test;
+
+public class RobotTest {
+    // Tunables.java has no misnamed field or section (INIT would stop or warn).
+    @Test public void tunablesNamesAreRight() {
+        assertEquals("[]", new Robot().checkTunables().toString());
+    }
+
+    // Robot.java and Tunables.java set up without an error (the same checks as INIT).
+    @Test public void initWorks() {
+        new Robot().setup(new PretendDevices());
+    }
+
+    // The lift goes up, and both of its motors get the same power.
+    @Test public void liftGoesUpOnBothMotors() {
+        PretendDevices devices = new PretendDevices();   // a fresh pretend robot each test
+        Robot robot = new Robot();
+        robot.setup(devices);                            // INIT
+        robot.startForTests();                           // START
+        robot.lift.goTo("high");
+        robot.all().update();                            // one loop
+        assertTrue(devices.motor("lift_left").power > 0);
+        assertEquals(devices.motor("lift_left").power, devices.motor("lift_right").power, 1e-9);
+        devices.motor("lift_left").position = 2700;      // the pretend encoder: at the top
+        robot.all().update();
+        assertTrue(robot.lift.isAt("high"));
+    }
+}
+```
+
+What it can and cannot check:
+
+- **Can:** INIT's checks (a misspelled Tunables field, a missing safety number, a device used twice), which
+  power or position each command sends, limits, interlock rules, pause (`robot.pauseAll()`) and STOP
+  (`robot.all().stop()`), your own `Actions.java` steps that do not wait.
+- **Cannot:** how the real robot moves (gravity, a heavy lift, a slipping belt), anything that waits
+  for time to pass (an action's `waitSeconds`), cameras. Use the [simulator](simulator.md) for those,
+  and the checks below on the real robot.
+
+Set TeamCode up for tests once ([tutorial 13, step 3](../tutorials/13-testing.md#3-set-up-teamcode-for-tests-once):
+the JUnit line and `returnDefaultValues`). The test kit comes with the library, and the FTC SDK with the
+FtcRobotController project: nothing else to add. A complete example:
+[`V2botTest.java`](../../examples/src/test/java/com/crossbotics/ftchelper/examples/v2bot/V2botTest.java).
+
 ## 2. Hardware check (after any wiring or configuration change)
 
 Run the **Hardware Check** OpMode ([starter kit](../starter-kit.md), or
@@ -33,12 +91,13 @@ Run the **Hardware Check** OpMode ([starter kit](../starter-kit.md), or
 
 | Device | Check | If wrong |
 | --- | --- | --- |
-| every motor | moves with positive power the way you expect; encoder counts UP | `.reversed()`; check the encoder cable port |
-| drive motors | each wheel rolls FORWARD with positive power | flip its `...Reversed` in `DriveConfig` |
-| servos | find and write down each position you need | use them in `position(...)` / `range(...)` |
+| every motor | moves with positive power the way you expect; encoder counts UP | `.reversed()` on its part in `Robot.java`; check the encoder cable port |
+| drive motors | each wheel rolls FORWARD with positive power | `Drive.mecanum(...).reversed("front_left", ...)` in `Robot.java` |
+| a lift or arm on two motors | with the chain or belt OFF, both turn the way that lifts | `alsoMotor` / `alsoMotorReversed` ([two motors](../modules/robot.md#two-motors-on-one-lift-or-arm)) |
+| servos | find and write down each position you need (Servo Finder) | the named positions in `Tunables.java` |
 | CR servos | spin both ways | configuration must say "Continuous Rotation Servo" |
 | touch / magnetic switches | change when pressed / magnet near | wiring; magnetic: false = near |
-| IMU | yaw goes UP when the robot turns LEFT | logo/USB directions in `RobotSettings.imu` |
+| IMU | yaw goes UP when the robot turns LEFT | the logo/USB directions in the drive's `.imu("imu", LogoFacingDirection..., UsbFacingDirection...)` in `Robot.java` |
 | distance / color | sensible numbers | wiring, I2C port, configuration type |
 | camera | listed; Limelight "connected" | USB / Ethernet cable, configuration name |
 | battery | 12.5 V or more when charged | charge or replace; under 12.0 V never play a match |
@@ -48,8 +107,8 @@ Run the **Hardware Check** OpMode ([starter kit](../starter-kit.md), or
 
 | Mechanism | Procedure | Pass |
 | --- | --- | --- |
-| Lift / arm (`PositionMotor`) | 1. Hard stops in place. 2. Low `maxPower`. 3. Home it (push down to the switch). 4. Drive by hand to each end: it slows and stops before the hard stop. 5. Each named position. | stops before hard stops; reaches each position in ~1 s; holds |
-| Intake (`SpinMotor`) | in, out, stop; block it by hand (with jam detection) | backs out and goes on; jam count goes up |
+| Lift / arm | 1. Hard stops in place. 2. Low `maxPower` in `Tunables`. 3. Home it (push down to the switch). 4. Drive by hand to each end: it slows and stops before the hard stop. 5. Each named position. 6. Pause (G1 BACK) while it moves: it stops (both motors, with two). | stops before hard stops; reaches each position in ~1 s; holds |
+| Intake | in, out, stop; block it by hand (with jam detection) | backs out and goes on; jam count goes up |
 | Servo parts | each named position; toggle; slow move | no buzzing at the ends (if it buzzes, the range is too wide) |
 | Flywheel | spin to 3 speeds; compare telemetry RPM with a tachometer or slow-motion video | readings match within ~3%; READY within ~1 s |
 | Launcher | shoot 1, then 3; block the turret check | each piece only when READY; `whyNotReady` names what is missing |
@@ -58,7 +117,7 @@ Run the **Hardware Check** OpMode ([starter kit](../starter-kit.md), or
 
 ## 4. Floor check (before practice runs)
 
-1. `powerLimit` 0.4 (or the PRACTICE profile).
+1. The PRACTICE profile (`Tunables.Drive.practiceMaxPower`, e.g. 0.4).
 2. Drive: forward, strafe, turn, field-centric.
 3. Every button on the driver's sheet does what it says.
 4. The match timer buzzes (test with a short `new MatchTimer(30)`).

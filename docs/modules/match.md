@@ -109,6 +109,9 @@ MatchMemory.rememberReport(lines);                   // end of autonomous: its r
 List<String> report = MatchMemory.lastReport();      // TeleOp INIT shows it
 MatchMemory.setPlacement(pose, "Against our wall"); // autonomous's start spot (EasyAuto does it); the
 FieldPose spot = MatchMemory.placement();            //   simulator puts the robot there in INIT
+MatchMemory.setPlacement(pose, "Against our wall", "x -36, y -63 in, heading 0 (as written)");
+String written = MatchMemory.placementAsWritten();   // the team's own numbers, for messages (the
+                                                     //   simulator's "Start spot ... overlaps the field wall")
 FieldPose p = MatchMemory.fieldPose(Alliance.BLUE, 56, -61.55, 0);   // a spot seen from that alliance's wall
 MatchMemory.setChosen(Alliance.RED);                 // the alliance in use now (EasyAuto/EasyTeleOp do it);
 Alliance now = MatchMemory.chosen();                 //   the simulator turns its drivers' view to it

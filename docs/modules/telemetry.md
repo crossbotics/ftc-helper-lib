@@ -38,6 +38,7 @@ t.update();                                             // ONCE, at the end of t
 | `text(text)` | a plain driver line |
 | `debug(label, value)` / `debug(label, format, args...)` | a programmer line (only in debug) |
 | `warn(text)` | `!! text` at the top, always; the same warning once per loop |
+| `warnFirst(text)` | a warning above every other one, even those added before it (the library: a part that is OFF in COMPETITION). Several keep their order |
 | `setDebug(on)`, `toggleDebug()`, `isDebug()` | debug level |
 | `setMinIntervalMs(ms)` | send at most every N ms (100 = 10/s is plenty) for a faster loop. Warnings from skipped loops are kept for the next send |
 | `update()` | send (warnings first) and start a fresh screen |

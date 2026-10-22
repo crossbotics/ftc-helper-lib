@@ -18,6 +18,7 @@ code you write. Reach for them when you need one; there is nothing to set up.
 | [`FieldPose`](#fieldpose) | hold a pose: x, y and heading |
 | [`PoseStore`](#posestore) | pass the robot's pose from Autonomous to TeleOp |
 | [`BackgroundWorker`](#backgroundworker) | run slow jobs (network, camera settings) without stopping the loop |
+| [`Spelling`](#spelling) | "did you mean ...?" for a name typed by hand |
 
 ---
 
@@ -122,4 +123,19 @@ worker.shutdown();                                                // in stop()
 | `shutdown()` | stop; waiting jobs are dropped |
 
 Never move motors or servos from a background job: only the loop does that.
+
+## Spelling
+
+"Did you mean ...?" for names typed by hand. The library's messages use it: a position name with a
+typo (`no position called "lvel" (did you mean level?)`), a claw's `closd`, a misnamed Tunables section.
+
+```java
+String like = Spelling.closest("closd", Arrays.asList("open", "closed"));   // "closed" (null if none is close)
+int d = Spelling.distance("closd", "closed");                                  // 1 letter off
+```
+
+| Method | What it does |
+| --- | --- |
+| `closest(name, known)` | the known name that `name` is most likely a typo of, or null. Capitals and `_` never matter; a name of 5 letters or more may be 2 letters off, a shorter one (3 or 4) 1 |
+| `distance(a, b)` | how many letters must be added, removed or changed to turn `a` into `b` |
 

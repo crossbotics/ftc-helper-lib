@@ -273,7 +273,9 @@ public class PositionMotor implements Subsystem {
     public void goTo(String positionName) {
         Double value = positionValue(positionName);
         if (value == null) {
-            warning = "no position called \"" + positionName + "\" (known: " + positions.keySet() + ")";
+            String like = com.crossbotics.ftchelper.util.Spelling.closest(positionName, positions.keySet());
+            warning = "no position called \"" + positionName + "\"" + (like != null ? " (did you mean " + like + "?)" : "")
+                    + " (known: " + positions.keySet() + ")";
             return;
         }
         // We keep the name too, so a value changed in the tuning menu is picked up while it moves.

@@ -1,6 +1,7 @@
 package com.crossbotics.ftchelper.safety;
 
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import java.util.function.BooleanSupplier;
 import com.crossbotics.ftchelper.control.PidController;
 import com.crossbotics.ftchelper.util.MathUtil;
@@ -46,6 +47,9 @@ import com.crossbotics.ftchelper.util.MathUtil;
  */
 public class SafeMotor {
     private final DcMotorEx motor;
+    // Other motors on the same mechanism (a lift with a motor on each side): they get exactly the power
+    // this motor gets, at the same moment. Only this motor's encoder is read.
+    private final java.util.List<DcMotorSimple> partners = new java.util.ArrayList<>();
     // ---- Settings (see the setters) ----
     // The safe range, in ticks. Infinity at both ends means "no limits" until setLimits() is called.
     private double min = Double.NEGATIVE_INFINITY;
@@ -95,6 +99,41 @@ public class SafeMotor {
     /** @param motor the motor. Set its direction so positive power moves toward {@code max}. */
     public SafeMotor(DcMotorEx motor) {
         this.motor = motor;
+    }
+
+    /**
+     * A second motor on the same mechanism (two motors on one lift, one on each side): from now on it gets
+     * the very same power as this one, every time, limits and stops included. Only this motor's encoder is
+     * read. Set the second motor's direction first, so + power moves the mechanism the same way on both
+     * (two motors facing each other usually need one of them reversed). Check it with the chain or belt
+     * off: two motors pushing against each other get hot and can break a gearbox.
+     *
+     * <pre>{@code
+     * DcMotorEx right = MotorSetup.get(hardwareMap, "lift_right").reversed().brake().runWithoutEncoder().done();
+     * lift.alsoPowers(right);
+     * }</pre>
+     *
+     * @param other the second motor (already set up: direction, brake)
+     * @return this SafeMotor
+     */
+    public SafeMotor alsoPowers(DcMotorSimple other) {
+        if (other == null) throw new IllegalArgumentException("SafeMotor.alsoPowers: the second motor is null");
+        if (other == motor || partners.contains(other)) throw new IllegalArgumentException("SafeMotor.alsoPowers: that motor is already on it");
+        partners.add(other);
+        // It starts the same as this motor now: stopped, or with the power last sent.
+        other.setPower(lastApplied);
+        return this;
+    }
+
+    /** The other motors added with {@link #alsoPowers} (read only). */
+    public java.util.List<DcMotorSimple> getPartners() {
+        return java.util.Collections.unmodifiableList(partners);
+    }
+
+    // The one place a power is written: this motor and every partner, together.
+    private void send(double power) {
+        motor.setPower(power);
+        for (DcMotorSimple m : partners) m.setPower(power);
     }
 
     /**
@@ -250,7 +289,7 @@ public class SafeMotor {
         // Forget the last request too, so update() does not start the motor again.
         lastRequested = 0;
         lastApplied = 0;
-        motor.setPower(0);
+        send(0);
     }
 
     /** Position in ticks, measured from the home (zero) position. */
@@ -373,7 +412,7 @@ public class SafeMotor {
         // Only send when it changes (each send to the hub takes time), and again every RESEND_LOOPS
         // loops (and every time at a limit), so a power someone wrote straight to the motor cannot stay.
         if (limited != lastApplied || !sentOnce || loopsSinceSend >= RESEND_LOOPS || atALimit()) {
-            motor.setPower(limited);
+            send(limited);
             loopsSinceSend = 0;
         }
         sentOnce = true;

@@ -43,6 +43,16 @@ public class Tunables {
     }
     // end recipe
 
+    // recipe: tunables-lift-two-motors
+    // A lift on two motors, Lift.slide("lift_left").alsoMotorReversed("lift_right"): its section is the
+    // FIRST motor's name in CamelCase.
+    public static class LiftLeft {
+        public static double min = 0, max = 2900;              // counts, from the first motor's encoder
+        public static double kP = 0.004, kI = 0, kD = 0.0002, kF = 0.06;
+        public static double down = 0, low = 1000, high = 2700;
+    }
+    // end recipe
+
     // recipe: tunables-arm
     public static class Arm {
         public static double min = -10, max = 120;              // degrees, 0 = where it is at INIT

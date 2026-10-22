@@ -79,6 +79,8 @@ final class TunableFields {
         final Set<String> names = new LinkedHashSet<>();
         Predicate<String> also = n -> false;
         boolean positions = false;
+        // An interlock rule's section: its fields are <part>From, <part>Above... (see sameEnding).
+        boolean interlock = false;
 
         Allowed(String part) {
             this.part = part;
@@ -117,6 +119,7 @@ final class TunableFields {
     /** What an interlock rule's section may hold: its two parts' zone fields and margins. */
     static Allowed forInterlock(Interlock r) {
         Allowed a = new Allowed("the interlock rule \"" + r.name() + "\"");
+        a.interlock = true;
         for (Zone z : new Zone[] {r.a, r.b}) {
             if (z.kind == Zone.Kind.WHEN) continue;
             a.names.addAll(Arrays.asList(z.fields()));
@@ -144,6 +147,10 @@ final class TunableFields {
             if (a.names.contains(n) || a.also.test(n)) continue;
             if (a.positions && t.isNumber(n)) continue;   // a named position (others(...) checks look-alikes)
             String like = TunableSection.lookalike(n, a.names);
+            // An interlock field named after the part's kind or another name ("liftAbove") where the rule
+            // reads the part's section name ("liftLeftAbove", from the device "lift_left"): the one field
+            // with the same ending.
+            if (like == null && a.interlock) like = sameEnding(n, a.names);
             StringBuilder known = new StringBuilder();
             for (String k : a.names) known.append(known.length() == 0 ? "" : ", ").append(k);
             throw new IllegalStateException("Tunables." + t.name + "." + n + " is not a setting of " + a.part
@@ -151,7 +158,24 @@ final class TunableFields {
                     + ": the robot would quietly ignore it. Fix the name (capitals count) or delete the line."
                     + (known.length() == 0 ? "" : " Known: " + known)
                     + (a.positions ? ". Named positions are numbers (double)." : "")
+                    + (a.interlock ? ". An interlock field starts with the part's section name, from its device name in"
+                            + " camelCase (\"lift_left\" -> liftLeftAbove)" : "")
                     + " (docs/guides/tunables.md)");
         }
+    }
+
+    // The one known name with the same zone ending (From, To, Above, Below, Margin, StopSec), or null.
+    private static String sameEnding(String n, Set<String> known) {
+        for (String end : new String[] {"StopSec", "Margin", "Above", "Below", "From", "To"}) {
+            if (!n.endsWith(end) || n.length() == end.length()) continue;
+            String found = null;
+            for (String k : known) {
+                if (!k.endsWith(end)) continue;
+                if (found != null) return null;   // two parts with that ending: no single guess
+                found = k;
+            }
+            return found;
+        }
+        return null;
     }
 }

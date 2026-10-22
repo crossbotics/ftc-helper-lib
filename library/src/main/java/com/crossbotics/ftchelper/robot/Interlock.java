@@ -388,15 +388,31 @@ public final class Interlock {
             }
         }
         if (bothIn) {
-            msg = "both in their zones (" + label(a) + " " + a.words() + ", " + label(b) + " " + b.words()
-                    + "): move one out (each may only move out)";
+            // One of them only counts as in because its position is not known: say that, not "move one out".
+            Zone unknown = !known(a) ? a : !known(b) ? b : null;
+            if (unknown != null) {
+                Zone other = unknown == a ? b : a;
+                msg = label(other) + " held: " + whyWords(unknown);
+            } else {
+                msg = "both in their zones (" + label(a) + " " + a.words() + ", " + label(b) + " " + b.words()
+                        + "): move one out (each may only move out)";
+            }
         }
         message = msg;
     }
 
+    private static boolean known(Zone z) {
+        return z.kind == Zone.Kind.WHEN || z.part.zoneKnown();
+    }
+
     private static String whyWords(Zone other) {
         if (other.kind == Zone.Kind.WHEN) return other.words;
-        if (!other.part.zoneKnown()) return other.part.name() + "'s position is not known yet (" + other.part.zoneUnknownWords() + ")";
+        // Not known (a turret not homed, a servo not sent anywhere yet): it counts as anywhere in its range,
+        // so the other part waits. Say why, so nobody thinks the robot is stuck.
+        if (!other.part.zoneKnown()) {
+            return other.part.name() + (other.part.zoneUnit().equals("deg") ? " angle" : " position") + " unknown ("
+                    + other.part.zoneUnknownWords() + ")";
+        }
         return other.part.name() + " is " + other.words();
     }
 

@@ -215,7 +215,15 @@ You can also start big and step down:
 - **The robot in five files, your own code for one part:** a module's `part()` gives the plain part
   inside (`lift.part()` is its `PositionMotor`; `part().getSafeMotor()` and `part().getPid()` go one
   layer deeper).
-- **`EasyTeleOp.everyLoop()`:** your own code every loop, before the parts update.
+- **Your own code every loop with the five files:** `robot.addOwn(part)` (a class that `implements
+  Subsystem`: updated every loop after the library's parts, and its `stop()` at STOP and at pause) or
+  `robot.everyLoop(() -> ...)` (a small piece of code; no `stop()`). Call them in `define()` or in
+  `Controls.java`'s `buttons(...)` ([Your own code every loop](../modules/robot.md#your-own-code-every-loop)).
+  A ControlMap's own `everyLoop()` is the library's (it runs the buttons), so it cannot be overridden there.
+- **`EasyTeleOp.everyLoop()`:** with a plain [EasyTeleOp](../modules/teleop.md) (not the five files):
+  your own code every loop, before the parts update.
+- **A second motor on a lift or arm:** no code of your own: `Lift.slide("lift_left").alsoMotorReversed("lift_right")`
+  ([two motors](../modules/robot.md#two-motors-on-one-lift-or-arm)).
 
 ## When not to use it
 

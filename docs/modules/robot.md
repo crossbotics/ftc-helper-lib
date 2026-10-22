@@ -101,6 +101,7 @@ part each loop. Nothing moves in INIT.
 | `atStart(Supplier<Action>)` | an action that runs once right after START, in autonomous and TeleOp |
 | `Interlock keepApart(name, zoneA, zoneB)` | an interlock rule: two parts never in their zones at the same time (after the parts' `add` lines; numbers in `Tunables.<name>`) ([Interlock](#interlock)) |
 | `tunables(Class)` | the Tunables class if it is not `Tunables` in the same folder |
+| `addOwn(Subsystem)`, `everyLoop(Runnable)` | your own code with the robot's loop (also after INIT, from `Controls.java`): see [Your own code every loop](#your-own-code-every-loop) |
 | `chassisMm(l, w, h)`, `heightMm(h)`, `fixed(Shape...)` | for the simulator: the chassis box, the whole robot's height, parts the code does not move ([Shapes](#shapes-and-parts)) |
 
 | For your code | |
@@ -118,7 +119,10 @@ part each loop. Nothing moves in INIT.
 | `follower()`, `hasFollower()`, `makeOdometry(hardwareMap)` | the running path follower (null before `setup`), whether there is a follower line, and the odometry alone for a tool (Pedro's tuners) |
 | `robotConfig()` | the drive settings for `EasyTeleOp`/`EasyAuto` |
 | `simLines()` | the simulator robot file's lines from the code |
-| `setup(hardwareMap)` | makes every module's hardware (the OpMode classes call it in INIT) |
+| `setup(hardwareMap)` | makes every module's hardware (the OpMode classes call it in INIT); `setup(devices)` with [pretend devices](testkit.md) in a test |
+| `startForTests()` | in a JUnit test only: what START does (each part's start, the `atStart` actions); the OpMode classes do it themselves ([testkit](testkit.md)) |
+| `checkTunables()` | the Tunables name checks of INIT, without a robot: one line per problem (a field no part reads, a section that looks meant for a part). `:sim:fromRobot` prints them |
+| `sectionWarnings()` | after `setup`: INIT's warnings about Tunables sections no part reads that look meant for one |
 | `tunablesClass()` | the Tunables class found (null if none) |
 | `static changedTunables()` | values tuned on the robot that differ from Tunables.java, as lines to copy back |
 | `static sectionName(device)` | the Tunables section a device reads: "intake_deploy" -> `IntakeDeploy` |
@@ -142,8 +146,13 @@ public class Tunables {
 
 - **Every number of every part**, with its units, default, whether it is in the tuning menu and which
   finder measures it: [the Tunables reference](../guides/tunables.md). `tools/check_tunables.py` keeps it complete.
-- **One section per part**, named after its configuration name in CamelCase: `intake_deploy` reads
-  `IntakeDeploy`. Pick another with `.tunables("Name")` on the module.
+- **One section per part**, named after its device's configuration name in CamelCase: `intake_deploy` reads
+  `IntakeDeploy`, a launcher on the motor `shooter` reads `Shooter`, `Indexer.servo("feeder")` reads `Feeder`.
+  Never the module's kind (`Launcher`, `Indexer`), unless that is the device's name. Pick another with
+  `.tunables("Name")` on the module. **A misnamed section is a warning at INIT** (every profile):
+  `!! Tunables.Launcher is not read by any part: your launcher's section is Tunables.Shooter (its device name "shooter" in CamelCase). Move the numbers there`
+  (also for a section spelled almost like a part's: `did you mean Tunables.LiftLeft?`). A warning, not a
+  stop: a section no part reads may be your own, like `Tunables.Auto`.
 - **Sections for your own code** (no part reads them, like `Tunables.Auto` with the autonomous's
   distances): every `public static` number that is not `final` is in the tuning menu too
   ("Auto/parkInches"). The menu's value is written into the field, so your code reads
@@ -191,7 +200,9 @@ public class Tunables {
   Sections no part reads (your own `Tunables.Auto`) are never checked, and neither is the section of an
   [`optional()`](#parts-not-on-the-robot-yet) part that is not on the robot (it may be unfinished).
 - **Safety:** a tuned position stays inside `min`..`max`; limits are read once and cannot be tuned.
-- `public static` fields: FTC Dashboard can show them too.
+- `public static` fields: FTC Dashboard can show them too, **at home and in practice only**: rule R704.D
+  (2026-27) bans tools like FTC Dashboard at events, so take it out of the robot project before one
+  ([tuning guide](../guides/tuning.md#optional-ftc-dashboard-practice-only)). The library's tuning menu is allowed.
 - The menu's names ("Lift/kP") are shared by the whole robot app: keep one Robot class per app.
 
 Which numbers are in the tuning menu (used at once, or from the next INIT) and which are read only
@@ -200,6 +211,24 @@ Your own sections (`Auto`...): every number is in the menu (a TeleOp reads the f
 autonomous reads it when it builds its steps, at INIT); `final` numbers, true/false and tables are not.
 
 ---
+
+### Your own code every loop
+
+Code the library has no part for (a bucket of your own, a value to log) runs with the robot's loop:
+
+```java
+// Controls.java, in buttons(robot, g1, g2) (it has the hardwareMap; an autonomous: in steps(...))
+robot.addOwn(new Bucket(hardwareMap));                     // class Bucket implements Subsystem
+robot.everyLoop(() -> lastHeight = robot.lift.position());  // a small piece of code
+```
+
+| | |
+| --- | --- |
+| `addOwn(part)` | your part (a class that `implements Subsystem`): its `update()` every loop after START, after the library's parts; its `stop()` at STOP **and when the robot pauses** (BACK), so a motor in it stops with the rest. Not updated while paused; nothing runs in INIT (make its hardware in its constructor, never move anything there). In `define()` for a part with no hardware, or after INIT |
+| `everyLoop(code)` | a `Runnable` every loop after START (not while paused). It has no `stop()`: for code that moves a motor use `addOwn` |
+
+Pause stops every part in `all()` that is not the library's own, also one added the old way with
+`robot.all().add(...)`. A second motor on a lift or arm needs none of this: `alsoMotor` (see [Lift](#lift)).
 
 ## Parts not on the robot yet
 
@@ -224,8 +253,8 @@ What "off" means, everywhere:
 | --- | --- |
 | Commands | ignored (`goTo`, `in`, `spinUp`...): no error, nothing moves |
 | Questions | never hold anything up: "done" questions are true (`isDone`, `isAtTarget`, `isAt` the position it was last sent to, `isArrived`, `isHomed`, a turret's `isAimed`); "busy" ones are false (`isRunning`, `isSpinning`, `isReady`, `isShooting`, `isBusy`, `isJammed`); sensors see nothing. `isPresent()` is false |
-| Telemetry | its line is `-` (not on the robot) |
-| INIT | PRACTICE: a note. **COMPETITION: a loud warning at the top**, `!! COMPETITION: "intake_deploy" not in the configuration: IntakeDeploy is OFF (optional part). On the robot? Check its name in the configuration, then INIT again`: at an event, a part that is off is most likely a misspelled or lost name |
+| Telemetry | its line is `- (not on the robot)` (a servo part that is on the robot but has had no command yet says `not sent yet`) |
+| INIT | PRACTICE: a note. **COMPETITION: a loud warning at the very top** (above every other warning), `!! COMPETITION: "intake_deploy" not in the configuration: IntakeDeploy is OFF (optional part). On the robot? Check its name in the configuration, then INIT again`: at an event, a part that is off is most likely a misspelled or lost name |
 | [Actions](#action) | the step's command to it is skipped and the action goes on. A wait right after a step that only used parts that are off is skipped too (nothing to wait for). `status()` ends with `skipped IntakeDeploy (not on the robot)`, `skipped()` lists them; an autonomous's report says it on the step |
 | Buttons | the part's own suggested buttons, `toggle(part)` and any button given `.needs(part)` do nothing; the button map says `- off: IntakeDeploy not on the robot` (COMPETITION: `- !! OFF: ...`) |
 | [Interlock](#interlock) rules | a rule with it is off (nothing to hit), and needs no Tunables section: INIT says `Interlock TurretLift: off (Lift is not on the robot)` |
@@ -388,7 +417,7 @@ and `max` must be in `Tunables.java` (from the [Motor Finder](../guides/finders.
 lift = add(Lift.slide("lift").bottomSwitch("lift_bottom"));
 ```
 
-`Tunables.Lift` ([all its numbers](../guides/tunables.md#lift-and-arm)) (encoder counts): `min`, `max`, `kP`, `kI`, `kD`, `kF` (the steady push that holds it
+`Tunables.Lift` (the section is the device's name in CamelCase: `lift_left` reads `Tunables.LiftLeft`; [all its numbers](../guides/tunables.md#lift-and-arm)) (encoder counts): `min`, `max`, `kP`, `kI`, `kD`, `kF` (the steady push that holds it
 up), `maxPower`, `slowZone`, `slowZonePower`, `tolerance`; every other number is a named height.
 Buttons (operator): A lowest, Y highest (2 or more heights), X second (3 or more), D-pad up/down next height, left stick by hand.
 With a bottom switch, the lift only goes down (slowly) until the switch has been pressed once, and the
@@ -400,14 +429,41 @@ For the simulator: `.looks(Shape.slide().atMm(...).sizeMm(...).travelMm(421))` (
 `min` to `max`); a wrist or claw rides on it with `Shape.arm().on(lift)` ([Shapes](#shapes-and-parts)). A
 lift's zone for an [interlock rule](#interlock): `lift.zoneAbove()` or `lift.zoneBelow()`.
 
+### Two motors on one lift or arm
+
+A slide with a motor on each side (or an arm driven from both ends): name the second motor on the same
+line. Both get exactly the same power at the same moment: every command, the stick, `stop()`, pause
+(BACK), the limits, interlock rules and actions. Only the **first** motor's encoder is read, so plug the
+encoder cable into it; the Tunables section is the first motor's name.
+
+```java
+lift = add(Lift.slide("lift_left").alsoMotorReversed("lift_right"));   // they face each other (usual)
+lift = add(Lift.slide("lift_left").alsoMotor("lift_right"));           // both turn the same way
+arm = add(Arm.motor("arm_left", "gobilda-5203-117").alsoMotorReversed("arm_right"));
+```
+
+| | |
+| --- | --- |
+| `alsoMotor(name)` | a second motor, turning the same way as the first for the same power |
+| `alsoMotorReversed(name)` | a second motor turning the other way (two motors that face each other, mirror images) |
+| `secondMotorName()` | its name, or null |
+
+**Which one?** With the chain or belt OFF, push the lift up a little by hand-stick (or with the
+Motor Finder, one motor at a time): both motors must turn the way that lifts. If one turns the wrong way,
+use the other method. Two motors pushing against each other get hot and can break a gearbox.
+`.reversed()` turns both. INIT shows `LiftLeft: two motors, "lift_left" (its encoder is read) and
+"lift_right" (turns the other way, same power)`. `:sim:fromRobot` writes
+`motor.lift_right = lift, part=..., with=lift_left, mirrored=true`: in the simulator both turn one slide.
+Inside, the lift's [`SafeMotor`](safety.md#safemotor) sends every power to both (`alsoPowers`).
+
 ## Arm
 
 ```java
 arm = add(Arm.motor("arm", "gobilda-5203-117").gearRatio(2));
 ```
 
-The same as Lift, in degrees (`gearRatio`: motor turns per arm turn; `bottomSwitch(name)` like the
-lift's). 0 degrees is where the arm is
+The same as Lift, in degrees (`gearRatio`: motor turns per arm turn; `bottomSwitch(name)` and
+[`alsoMotor`](#two-motors-on-one-lift-or-arm) like the lift's; section: the device's name in CamelCase, `arm` reads `Tunables.Arm`). 0 degrees is where the arm is
 when the program starts. Button: operator right stick Y by hand.
 
 ---
@@ -478,7 +534,7 @@ turret = add(Turret.crServo("turret").analogEncoder("turret_pos").continuous());
 | Made with | |
 | --- | --- |
 | `Turret.motor(name, motorId)` | a motor; its encoder counts the angle |
-| `Turret.servo(name)` | a standard servo (it goes to an angle by itself): `posA`, `angleA`, `posB`, `angleB`, `travelSec` in Tunables; no PID, no homing |
+| `Turret.servo(name)` | a standard servo (it goes to an angle by itself): `posA`, `angleA`, `posB`, `angleB`, `travelSec` in Tunables; no PID, no homing. A servo cannot say where it is, so **at START it is sent to `startAngle`** (or the middle of its range when there is none; in TeleOp after autonomous: where autonomous left it, so it does not jump). From then on its angle is known: the stick, following and interlock rules work from the first loop |
 | `Turret.crServo(name)` + `encoder(port, countsPerRev)` | a CR servo with an encoder on a motor port (REV Through Bore: 8192); the port may also run another part's motor (only its count is read) |
 | `Turret.crServo(name)` + `analogEncoder(port)` | a CR servo with an absolute encoder on an analog port: it knows its angle at once (`encoderOffset`) |
 
@@ -514,12 +570,16 @@ default 0), `kP`, `kI`, `kD`, `maxPower`, `tolerance`, `slowZone`, `slowZonePowe
 HOLD where it points instead of swinging limit to limit as the heading wobbles; it follows again once the
 goal is back within half of that). With a switch: `homeAngle` (needed), `homeDirection`, `homingPower`,
 `homingTimeout`. Absolute encoder: `encoderOffset`. Servo: `posA`, `angleA`, `posB`, `angleB`,
-`travelSec`. `keepAngle` (default true): TeleOp starts from the angle the last program ended at (within
-5 minutes, same robot app run), so it does not home again after autonomous.
+`travelSec`, and `startAngle` (optional: where it goes at START, inside its range; default the middle of
+the range). `keepAngle` (default true): TeleOp starts from the angle the last program ended at (within
+5 minutes, same robot app run), so it does not home again after autonomous (a servo turret: it is sent
+there at START instead of `startAngle`).
 
 A following turret and whole-robot aim are separate modes: see [Aim](#aim). Buttons: operator right
-stick X by hand, BACK following on/off. The Driver Station shows `turret: 12 deg following: camera`
-(or `odometry`, or `no goal`: it holds where it points), and `homing: looking for the switch` after START.
+stick X by hand, BACK following on/off. The Driver Station shows one line, `Turret : 12 deg  AIMED  following: camera`
+(`AIMED` only when `isAimed()`: while following, at a goal seen now; `odometry`, or `no goal`: it holds where
+it points), `homing: looking for the switch` after START, and for a servo turret before START
+`not sent anywhere yet (at START: 0 deg)`.
 
 ## Interlock
 
@@ -577,7 +637,8 @@ homed yet, a servo still moving: it counts as anywhere between where it was and 
 autonomous steps, a following turret, shooting on the move. A held turret is never `isAimed()`.
 
 The Driver Station shows one line per rule while it holds something: `TurretLift : Lift held at 110 counts:
-Turret is between 130 and 218 deg`. INIT lists each rule, and stops with the reason for: a missing section
+Turret is between 130 and 218 deg`; held because the other part's position is not known:
+`TurretLift : Lift held at 110 counts: Turret angle unknown (not homed yet)`. INIT lists each rule, and stops with the reason for: a missing section
 or number, an empty zone, a zone outside the part's range or covering all of it, a negative margin, a
 `StopSec` outside 0 to 2 s, a part with no position. The zones are read once at INIT and are **not** in the tuning menu: a zone moving while
 the parts move could put both in their zones at once. A rule with a part that is not on the robot yet
@@ -1326,7 +1387,7 @@ What [`Steps`](#auto) can do:
 | `driveTo(label, xIn, yIn, headingDeg, power[, toleranceIn][, PathAt...])` | drive to a field point and heading with the odometry, correcting all the way (mecanum; needs `Tunables.Odometry.checked` on a robot) ([driveTo](../guides/autonomous-builder.md#drive-to-a-field-point-driveto)); [`PathAt`](#pathat) starts things on the way |
 | `follow(label, path[, timeoutSec][, PathAt...])` | follow a path with the robot's [path follower](#pathfollower) ([pedro](pedro.md)); [`PathAt`](#pathat) starts things along it |
 | `run(label, command)` | start something and go on at once |
-| `waitSeconds`, `waitUntil` | wait (the robot keeps running) |
+| `waitSeconds(label, seconds)`, `waitUntil(label, condition, timeoutSec)` | wait (the robot keeps running). A step always has a label (it shows in INIT and the report); an [Action](#action)'s `waitSeconds(seconds)` has none |
 | `action(action[, timeout])` | run an [Action](#action) and wait until it is done |
 | `alongside(action)` | run an action during the next steps |
 | `step(label, AutoStep)` | your own step |

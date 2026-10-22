@@ -105,7 +105,9 @@ team the lines you changed.
 **TeamCode in five files (a `Robot.java` that `extends RobotDefinition`)?** Put the answers in Robot.java,
 not in the robot file: each part's catalog id (`part(...)`, `Drive.wheel(...)`), its shapes
 (`looks(Shape...)`), `chassisMm`, `heightMm`, `fixed(...)` (docs/modules/robot.md "Shapes and parts"),
-then run `./gradlew :sim:fromRobot`. Write a `shape.` line by hand in the robot file only for a part
+then run `./gradlew :sim:fromRobot` (it also prints the Tunables name checks INIT runs: pass any problem on
+to the team). A lift or arm on two motors is `alsoMotor`/`alsoMotorReversed` in Robot.java; the
+generator writes the second motor's `with=` line. Write a `shape.` line by hand in the robot file only for a part
 Robot.java cannot draw yet (Lift, Arm, Turret, Claw, Wrist, cameras). Why: the generator keeps every
 unmarked line, so a hand-written `shape.intake` would win over Robot.java's for good (it prints "kept
 your shape.intake" each run); if one exists from before, delete it once Robot.java draws that part.

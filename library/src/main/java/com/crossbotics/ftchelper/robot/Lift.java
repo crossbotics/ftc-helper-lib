@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A lift (a slide that goes up and down) on one motor, with named heights and an optional bottom
- * switch. Heights are in encoder counts.
+ * A lift (a slide that goes up and down) on one motor (or two: {@link #alsoMotor}), with named heights
+ * and an optional bottom switch. Heights are in encoder counts.
  *
  * <pre>{@code
  * lift = add(Lift.slide("lift").bottomSwitch("lift_bottom"));   // Robot.java
@@ -32,7 +32,8 @@ public final class Lift extends MotorPositions<Lift> {
     }
 
     /**
-     * A lift on this motor.
+     * A lift on this motor. Its encoder gives the height. A second motor on the same slide:
+     * {@code Lift.slide("lift_left").alsoMotorReversed("lift_right")} (see {@link #alsoMotor}).
      *
      * @param motor the motor's configuration name
      */
@@ -128,6 +129,8 @@ public final class Lift extends MotorPositions<Lift> {
                 ? fmt("motor.%s = lift, part=%s, min=%.0f, max=%.0f, gravity=0.06", device, partId, min, max)
                 : fmt("motor.%s = lift, part=gobilda-5203-312, min=%.0f, max=%.0f, gravity=0.06   # TODO the real motor",
                         device, min, max));
+        // A second motor (alsoMotor): tied to the same slide in the simulator.
+        secondMotorLine(out, partId != null ? partId : "gobilda-5203-312");
         if (switchName != null) out.add(fmt("touch.%s = %s, below=20", switchName, device));
         if (!looks.isEmpty()) {
             lookLines(out, t);   // its slide from looks(...), with what rides on it

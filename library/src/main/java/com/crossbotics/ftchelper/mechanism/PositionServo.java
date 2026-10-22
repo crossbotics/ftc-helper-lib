@@ -192,7 +192,9 @@ public class PositionServo implements AngleDevice {
         Double v = valueOf(positionName);
         // A typo must not stop the OpMode in a match: just warn and do nothing.
         if (v == null) {
-            warning = "no position called \"" + positionName + "\" (known: " + positions.keySet() + ")";
+            String like = com.crossbotics.ftchelper.util.Spelling.closest(positionName, positions.keySet());
+            warning = "no position called \"" + positionName + "\"" + (like != null ? " (did you mean " + like + "?)" : "")
+                    + " (known: " + positions.keySet() + ")";
             return;
         }
         moveTo(v, positionName);
@@ -402,7 +404,10 @@ public class PositionServo implements AngleDevice {
     public void addTelemetry(RobotTelemetry t) {
         if (!warning.isEmpty()) t.warn(name + ": " + warning);
         if (!pulseNote.isEmpty()) t.warn(name + ": " + pulseNote);
-        t.line(name, getTargetName());
+        // Its position's name; before its first command "not sent yet" (a "-" line means a part that is
+        // not on the robot); sent a raw position: that number.
+        t.line(name, targetName != null ? targetName
+                : Double.isNaN(commanded) ? "not sent yet" : String.format(java.util.Locale.US, "%.2f", commanded));
         // Nothing sent yet (before START): "-", not NaN.
         if (Double.isNaN(commanded)) t.debug(name + " pos", "-");
         else t.debug(name + " pos", "%.3f%s", commanded, hasDegrees ? String.format(java.util.Locale.US, " (%.1f deg)", getDegrees()) : "");

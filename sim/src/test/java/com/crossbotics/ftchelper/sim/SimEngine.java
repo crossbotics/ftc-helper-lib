@@ -130,7 +130,10 @@ final class SimEngine {
             robot.setPose(target.x, target.y, target.headingDeg);
             jumps.incrementAndGet();
         } catch (IllegalArgumentException e) {
-            ds.physicsError("Start spot: " + e.getMessage() + " (" + target + ")");
+            // The team's own numbers (as written in start(...)), not the field frame's, which may be turned.
+            String written = com.crossbotics.ftchelper.match.MatchMemory.placementAsWritten();
+            ds.physicsError("Start spot " + (auto && !written.isEmpty() ? written : target.toString()) + ": " + e.getMessage()
+                    + (auto ? ". Change the spot in the autonomous's start(...)" : ""));
         }
     }
 

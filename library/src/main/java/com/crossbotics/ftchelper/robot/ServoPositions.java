@@ -235,8 +235,9 @@ public abstract class ServoPositions<M extends ServoPositions<M>> extends Module
     private double positionOf(Map<String, Double> p, String position) {
         String n = findName(p.keySet(), position);
         if (n == null) {
-            throw new IllegalStateException("Robot.java: " + name() + " has no position \"" + position + "\" (Tunables."
-                    + name() + " has " + p.keySet() + ")");
+            String like = com.crossbotics.ftchelper.util.Spelling.closest(position, p.keySet());
+            throw new IllegalStateException("Robot.java: " + name() + " has no position \"" + position + "\""
+                    + (like != null ? " (did you mean " + like + "?)" : "") + " (Tunables." + name() + " has " + p.keySet() + ")");
         }
         return p.get(n);
     }

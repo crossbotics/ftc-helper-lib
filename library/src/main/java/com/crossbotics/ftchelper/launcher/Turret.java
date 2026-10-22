@@ -300,10 +300,17 @@ public class Turret implements Subsystem {
     /**
      * The turret's angle when the robot is turned on (used when there is no home switch). Default 0.
      * Call it after {@link #countsPerDegree} and {@link #reversed()}, since it uses the encoder reading.
+     *
+     * <p>A servo turret: where it counts from before its first command (a stick, {@link #aimBy}). A servo
+     * says nothing about where it is, so send it there at START ({@code aimAt(startAngle)}) to make it
+     * true; without startAngle it counts from the middle of its range.
      */
     public Turret startAngle(double deg) {
-        // A servo turret's angle is where it was sent: nothing to set.
-        if (servo != null) return this;
+        // A servo turret's angle is where it was sent: this is only where it counts from until then.
+        if (servo != null) {
+            servoStartDeg = deg;
+            return this;
+        }
         // Choose the offset so that "encoder angle + offset" = deg right now.
         offsetDeg = deg - rawDeg();
         return this;
@@ -415,10 +422,27 @@ public class Turret implements Subsystem {
 
     /** Turns BY an amount from where it is now. For camera targets use {@link #aimAtTarget} instead. */
     public void aimBy(double deltaDeg) {
+        aimAt(angleOrStart() + deltaDeg);
+    }
+
+    // The angle now; a servo turret before its first command: its start angle (see startAngle).
+    private double angleOrStart() {
         double now = getAngle();
-        // A servo turret before its first command: count from the middle of its range.
-        if (Double.isNaN(now)) now = Double.isInfinite(maxDeg - minDeg) ? 0 : (minDeg + maxDeg) / 2;
-        aimAt(now + deltaDeg);
+        return Double.isNaN(now) ? servoStartAngle() : now;
+    }
+
+    // A servo turret's angle until its first command: startAngle(...), else the middle of its range (0
+    // for a turret that turns round and round). It is only where the turret counts from: send it there.
+    private double servoStartDeg = Double.NaN;
+
+    /**
+     * A servo turret: the angle it counts from before its first command ({@link #startAngle}, or the
+     * middle of its range when none was given). Motor turrets: the same as {@link #getAngle()}.
+     */
+    public double servoStartAngle() {
+        if (servo == null) return getAngle();
+        if (!Double.isNaN(servoStartDeg)) return MathUtil.clamp(servoStartDeg, minDeg, maxDeg);
+        return Double.isInfinite(maxDeg - minDeg) ? 0 : (minDeg + maxDeg) / 2;
     }
 
     /**
@@ -460,8 +484,9 @@ public class Turret implements Subsystem {
         }
         // The stick took over: no target past the limits any more (it holds where the stick left it).
         if (power != 0 || manualPower != 0) outOfRange = false;
-        // A servo turret moves its target with the stick (from where it is, the first time).
-        if (servo != null && power != 0 && Double.isNaN(targetDeg)) targetDeg = getAngle();
+        // A servo turret moves its target with the stick (from where it is, the first time; before its
+        // first command from its start angle, since a servo cannot say where it is).
+        if (servo != null && power != 0 && Double.isNaN(targetDeg)) targetDeg = angleOrStart();
         manualPower = power;
     }
 
@@ -719,13 +744,24 @@ public class Turret implements Subsystem {
     /** Shows the angle and AIMED; warnings for faults, not homed, and out of range; the target in debug mode. */
     @Override
     public void addTelemetry(RobotTelemetry t) {
+        addWarnings(t);
+        double a = continuous ? getWrappedAngle() : getAngle();
+        // A servo turret before its first command: a servo cannot say where it is.
+        if (Double.isNaN(a)) t.line(name, "not sent anywhere yet");
+        else t.line(name, "%.1f deg%s", a, isAimed() ? "  AIMED" : "");
+        t.debug(name + " target", Double.isNaN(targetDeg) ? "-" : fmt1(targetDeg) + " deg");
+    }
+
+    /**
+     * Only the warnings of {@link #addTelemetry} (a fault, not homed, a target out of range), for code
+     * that writes its own line for the turret (the robot module's Turret does).
+     */
+    public void addWarnings(RobotTelemetry t) {
         if (!fault.isEmpty()) t.warn(name + " " + fault);
         if (!homed) t.warn(name + " not homed");
         // Only while something still asks for a target past the limits (within the last second): once
         // following stops asking, or the stick takes over, the warning goes.
         if (outOfRange && clockNanos.getAsLong() - outOfRangeAskedAt < 1_000_000_000L) t.warn(name + ": target out of range");
-        t.line(name, "%.1f deg%s", continuous ? getWrappedAngle() : getAngle(), isAimed() ? "  AIMED" : "");
-        t.debug(name + " target", Double.isNaN(targetDeg) ? "-" : fmt1(targetDeg) + " deg");
     }
 
     // ---------------------------------------------------------------------------------------
@@ -739,9 +775,8 @@ public class Turret implements Subsystem {
 
     /** The equal direction (angle + k*360) inside the limits closest to the current angle. */
     double legalTarget(double wantedDeg) {
-        double reference = getAngle();
-        // A servo turret before its first command: reckon from the middle of its range.
-        if (Double.isNaN(reference)) reference = Double.isInfinite(maxDeg - minDeg) ? 0 : (minDeg + maxDeg) / 2;
+        // (A servo turret before its first command: reckon from its start angle.)
+        double reference = angleOrStart();
         double best = Double.NaN;
         // The wanted direction, written as the angle nearest to where we are now (e.g. wanted -170
         // while at 175 becomes 190). Then also try one and two full turns either way.

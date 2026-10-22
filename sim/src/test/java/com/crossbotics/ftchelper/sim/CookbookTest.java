@@ -161,6 +161,24 @@ public class CookbookTest {
         }
     }
 
+    // The two-motor lift recipe: both motors turn one slide (the second mirrored), and pause stops both.
+    @Test public void theTwoMotorLiftMovesOnBothMotorsAndPausesBoth() throws Exception {
+        try (SimRun s = new SimRun(robotFile(MechanismRecipes.TwoMotorLift.class).toString())) {
+            s.sim.ds.register("Cookbook Two Motor Lift", "TeleOp", MechanismRecipes.TwoMotorLiftControls.class);
+            s.init("Cookbook Two Motor Lift");
+            s.start();
+            s.press(v -> s.g2().y = v);                            // the highest height
+            assertTrue("the slide rises\n" + String.join("\n", s.screen()),
+                    SimRun.waitFor(() -> s.robot().motors.get("lift_left").shaft() > 1000, 5));
+            SimMotor left = s.robot().motors.get("lift_left"), right = s.robot().motors.get("lift_right");
+            assertEquals("one slide: the second shaft turns with it, mirrored", -left.shaft(), right.shaft(), 1e-6);
+            assertEquals("the same power", left.userPower(), right.userPower(), 1e-9);
+            s.press(v -> s.g1().back = v);                         // pause
+            assertTrue("pause stops both", SimRun.waitFor(() -> left.userPower() == 0 && right.userPower() == 0, 1));
+            assertEquals("", s.error());
+        }
+    }
+
     // One autonomous with a menu: the "Start" line moves the note and the robot in INIT, and the "Plan"
     // line chooses the steps (Far + cycle: 11 steps, the 2nd crosses to the near side).
     @Test public void theInitMenuChoosesTheStartAndThePlan() throws Exception {

@@ -171,6 +171,7 @@ the library, with its own docs page. (In the lessons, a module is also a ready-m
 | Safety | `com.crossbotics.ftchelper.safety` | Soft limits, limit switches, homing, slow zones, jam detection. | [safety.md](docs/modules/safety.md) |
 | Core | `com.crossbotics.ftchelper.core` | The Subsystem pattern, practice/competition profiles, settings file, RobotConfig (the robot described once). | [core.md](docs/modules/core.md) |
 | Testing | `com.crossbotics.ftchelper.testing` | A ready-made Hardware Check OpMode. | [testing.md](docs/modules/testing.md) |
+| Test kit | `com.crossbotics.ftchelper.testkit` | Pretend motors, servos and switches: JUnit tests of your robot in five files on a laptop. | [testkit.md](docs/modules/testkit.md) |
 | Finders | `com.crossbotics.ftchelper.finders` | Ready-made OpModes that measure servo ends, lift limits, flywheel gains, wheel size, odometry offsets, camera offset and the shot table, and show the code to copy. | [finders.md](docs/modules/finders.md) |
 | Util | `com.crossbotics.ftchelper.util` | Math and angle helpers, loop timer, Auto-to-TeleOp pose handoff. | [util.md](docs/modules/util.md) |
 

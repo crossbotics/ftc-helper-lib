@@ -57,6 +57,7 @@ When you press INIT, the library reads `Tunables.java` and tells you what it fou
 | no line for a REQUIRED number | **stops**: `Tunables.Lift has no max: write max (the top of the safe range, in counts: Motor Finder, B). A safety limit never comes from a library default.` | a wrong limit breaks the robot. A default could be wrong for your robot |
 | a name in Lift, Arm, Claw, Wrist or Positioner that looks like a setting (`Max`, `k_P`, `maxPowr`) | **stops**: `Tunables.Lift.Max looks like "max" (capitals and spelling count)` | in these parts every other name is a named position, so a typo would quietly become a position |
 | a name no part reads, in any part's section (`inPowr` in `Intake`, `goalx` in `Aim`, a leftover `spinPower`) | **stops**: `Tunables.Intake.inPowr is not a setting of Intake (did you mean inPower?): the robot would quietly ignore it. Fix the name (capitals count) or delete the line. Known: inPower, outPower` | a misspelled line is never read, so the part would quietly use its default (a safety number too). The "did you mean" appears when the name looks like a real one |
+| a section no part reads that is named like a part's kind (`Tunables.Launcher` for the launcher on `shooter`), or spelled almost like a part's section (`Tunables.Liftleft`) | **warns** (`!!`, every profile): `Tunables.Launcher is not read by any part: your launcher's section is Tunables.Shooter (its device name "shooter" in CamelCase). Move the numbers there` | every number in it would be quietly ignored. A warning, not a stop: a section no part reads may be your own (`Tunables.Auto`), and a part's required numbers (a lift's `min`/`max`, a servo turret's `posA`...) already stop INIT when its real section is missing |
 
 The name check covers `Drive`, `Odometry`, `Aim`, `Buttons`, every part on the robot and every
 interlock rule. These names are yours to pick and always pass: named positions (any number in Lift, Arm,
@@ -65,6 +66,10 @@ an interlock rule's `<part>From`, `<part>To`, `<part>Above`, `<part>Below`, `<pa
 parts. A field of the part that your robot does not use (a servo turret's `posA` on a motor turret) passes
 too. Your own sections (`Auto`) are never checked, and neither is the section of an `optional()` part
 that is not on the robot. Every name in the tables below is the full list.
+
+**Check on the laptop:** `./gradlew :sim:fromRobot` (it writes the simulator's robot file) runs the same
+name checks and prints what INIT would stop on or warn about. In a JUnit test, `robot.checkTunables()`
+gives the same lines ([testing](testing.md)).
 
 **Measured servo numbers and the servo's range.** Servo positions (named positions, `posA`/`posB`,
 `rest`/`push`, a hood's `calibration`) are measured for the pulse range the servo had then. Adding or
@@ -196,7 +201,7 @@ Section `Buttons` (fixed name). For button gestures (double tap, hold). Module: 
 ## Intake
 
 <!-- tunables: Intake -->
-Section: the intake's device name, e.g. `Intake`. Module: [Intake](../modules/robot.md#intake).
+Section: the device's name in CamelCase (`intake` reads `Intake`, `front_roller` reads `FrontRoller`). Module: [Intake](../modules/robot.md#intake).
 
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -206,7 +211,8 @@ Section: the intake's device name, e.g. `Intake`. Module: [Intake](../modules/ro
 ## Lift and Arm
 
 <!-- tunables: LiftArm -->
-Section: the device name, e.g. `Lift`, `Arm`. A Lift is in encoder **counts**, an Arm in **degrees**.
+Section: the device's name in CamelCase (`lift` reads `Lift`, `lift_left` reads `LiftLeft`, not `Lift`). With
+two motors ([`alsoMotor`](../modules/robot.md#two-motors-on-one-lift-or-arm)) it is the FIRST motor's name. A Lift is in encoder **counts**, an Arm in **degrees**.
 Module: [Lift](../modules/robot.md#lift), [Arm](../modules/robot.md#arm).
 
 | Field | What it does | Units | Default | Live | Found by | When to change |
@@ -226,7 +232,7 @@ Module: [Lift](../modules/robot.md#lift), [Arm](../modules/robot.md#arm).
 ## Claw, Wrist and Positioner
 
 <!-- tunables: ServoPositions -->
-Section: the device name, e.g. `Claw`, `Wrist`, `IntakeDeploy`. Module: [Claw](../modules/robot.md#claw),
+Section: the device's name in CamelCase (`claw` reads `Claw`, `intake_deploy` reads `IntakeDeploy`). Module: [Claw](../modules/robot.md#claw),
 [Wrist](../modules/robot.md#wrist), [Positioner](../modules/robot.md#positioner).
 
 | Field | What it does | Units | Default | Live | Found by | When to change |
@@ -237,7 +243,7 @@ Section: the device name, e.g. `Claw`, `Wrist`, `IntakeDeploy`. Module: [Claw](.
 ## Turret
 
 <!-- tunables: Turret -->
-Section: the device name, e.g. `Turret`. Degrees, 0 = straight forward, counterclockwise +. Which lines
+Section: the device's name in CamelCase (`turret` reads `Turret`). Degrees, 0 = straight forward, counterclockwise +. Which lines
 your turret needs: [Setting up a turret](turret-setup.md). Module: [Turret](../modules/robot.md#turret).
 
 | Field | What it does | Units | Default | Live | Found by | When to change |
@@ -267,7 +273,8 @@ your turret needs: [Setting up a turret](turret-setup.md). Module: [Turret](../m
 
 <!-- tunables: Interlock -->
 Section: the rule's name, `keepApart("TurretLift", turret.zone(), lift.zoneAbove())` reads `TurretLift`.
-`<part>` is the part's section name with a small first letter: `Turret` -> `turretFrom`. Each part's
+`<part>` is the part's section name (its device's name in CamelCase) with a small first letter: `Turret` -> `turretFrom`,
+`LiftLeft` (device `lift_left`) -> `liftLeftAbove`, not `liftAbove` (INIT stops on it and says "did you mean liftLeftAbove?"). Each part's
 own units. Read once at INIT, never in the tuning menu: a zone that moved while the parts move could
 let them hit. Guide: [interlocks](interlocks.md). Module: [Interlock](../modules/robot.md#interlock).
 
@@ -277,12 +284,13 @@ let them hit. Guide: [interlocks](interlocks.md). Module: [Interlock](../modules
 | `<part>Above` | `part.zoneAbove()`: the zone from there to the top | the part's units | REQUIRED with `zoneAbove()` | no | measure | the same |
 | `<part>Below` | `part.zoneBelow()`: the zone from there to the bottom | the part's units | REQUIRED with `zoneBelow()` | no | measure | the same |
 | `<part>Margin` | the extra safety distance around the zone (coasting is already covered by the stop distance) | the part's units | turret: the larger of 3 deg and 2 x its `tolerance`; lift, arm: the larger of 2 x its `tolerance` and 1/50 of its range; hood: 1/50 of its range; claw, wrist, positioner: 0.02 | no | test | the parts come too close (more) |
-| `<part>StopSec` | a turret, lift or arm: how long it takes to stop from full speed once its power is cut. Its stop distance is its speed x (the slowest recent loop + half this) | seconds, 0 to 2 | 0.15 | no | test: full stick toward the zone, see where it stops | it still ends up past its waiting point (more), or it waits too far out (less) |
+| `<part>StopSec` | a turret, lift or arm: how long it takes to stop from full speed once its power is cut. Its stop distance is its speed x (2 x the slowest of the last 25 loops + half this), see [interlocks](interlocks.md) | seconds, 0 to 2 | 0.15 | no | test: full stick toward the zone, see where it stops | it still ends up past its waiting point (more), or it waits too far out (less) |
 
 ## Launcher
 
 <!-- tunables: Launcher -->
-Section: the device name, e.g. `Launcher`. Module: [Launcher](../modules/robot.md#launcher).
+Section: the device's name in CamelCase: a launcher on the motor `launcher` reads `Launcher`, one on
+`shooter` reads **`Shooter`** (not `Launcher`). Module: [Launcher](../modules/robot.md#launcher).
 
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -305,7 +313,8 @@ Section: the device name, e.g. `Launcher`. Module: [Launcher](../modules/robot.m
 ## Indexer
 
 <!-- tunables: Indexer -->
-Section: the device name, e.g. `Indexer`, `Windmill`. Module: [Indexer](../modules/robot.md#indexer).
+Section: the device's name in CamelCase: `Indexer.servo("feeder")` reads **`Feeder`**, `windmill` reads `Windmill`
+(not `Indexer`). Module: [Indexer](../modules/robot.md#indexer).
 
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -319,7 +328,7 @@ Section: the device name, e.g. `Indexer`, `Windmill`. Module: [Indexer](../modul
 ## Hood
 
 <!-- tunables: Hood -->
-Section: the hood's device name, e.g. `Hood`. A servo hood is in servo positions; a motor hood in
+Section: the device's name in CamelCase (`hood` reads `Hood`, `shooter_hood` reads `ShooterHood`). A servo hood is in servo positions; a motor hood in
 encoder counts. "Angle" below is your angle (with `angleA`, `angleB`), or the position itself. Every
 default that says "of the range" fits degrees, positions and counts. Module: [Hood](../modules/robot.md#hood).
 
@@ -341,7 +350,7 @@ default that says "of the range" fits degrees, positions and counts. Module: [Ho
 ## Camera
 
 <!-- tunables: Camera -->
-Section: the camera's device name, e.g. `Limelight`, `Webcam1`. Read once at INIT; not in the tuning
+Section: the device's name in CamelCase (`limelight` reads `Limelight`, `Webcam 1` reads `Webcam1`). Read once at INIT; not in the tuning
 menu. Module: [Camera](../modules/robot.md#camera).
 
 | Field | What it does | Units | Default | Live | Found by | When to change |
@@ -358,7 +367,7 @@ menu. Module: [Camera](../modules/robot.md#camera).
 ## PieceSensor
 
 <!-- tunables: PieceSensor -->
-Section: each sensor's device name, e.g. `intake_color` reads `IntakeColor`. Module:
+Section: each sensor's device name in CamelCase (`intake_color` reads `IntakeColor`). Module:
 [Pieces and PieceSensor](../modules/robot.md#pieces-and-piecesensor). (`Pieces` itself reads no numbers.)
 
 | Field | What it does | Units | Default | Live | Found by | When to change |
@@ -375,7 +384,7 @@ Section: each sensor's device name, e.g. `intake_color` reads `IntakeColor`. Mod
 ## Lights
 
 <!-- tunables: Lights -->
-Section: the light's device name, e.g. `Light`, `Blinkin`. Module: [Lights](../modules/robot.md#lights).
+Section: the device's name in CamelCase (`light` reads `Light`, `blinkin` reads `Blinkin`). Module: [Lights](../modules/robot.md#lights).
 
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |

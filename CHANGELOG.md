@@ -6,6 +6,34 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
+- **A lift or arm on two motors** (docs/modules/robot.md#two-motors-on-one-lift-or-arm):
+  `Lift.slide("lift_left").alsoMotorReversed("lift_right")` (or `alsoMotor` when both turn the same way;
+  `Arm` too). Both motors get the same power in the same loop: every command, the stick, stop, pause,
+  limits, interlock rules and actions. Only the first motor's encoder is read; the Tunables section is the
+  first motor's name. Underneath: `SafeMotor.alsoPowers(motor)`. `:sim:fromRobot` writes
+  `motor.lift_right = lift, ..., with=lift_left, mirrored=true` and the simulator turns one slide with both
+  motors (each carries half the gravity). Cookbook: "How do I run one lift on two motors?".
+- **Your own code with the robot's loop:** `robot.addOwn(part)` (a `Subsystem`: updated after the library's
+  parts, stopped at STOP and at pause) and `robot.everyLoop(() -> ...)`
+  (docs/modules/robot.md#your-own-code-every-loop).
+- **A test kit for teams' JUnit tests** (docs/modules/testkit.md): `com.crossbotics.ftchelper.testkit` with
+  `PretendDevices` (give it to `robot.setup(...)`), `PretendMotor`, `PretendServo`, `PretendCRServo`,
+  `PretendPinpoint`, `PretendTelemetry`; `robot.startForTests()` (START in a test) and `robot.checkTunables()`
+  (INIT's Tunables name checks without a robot). In the library, so TeamCode needs no extra Gradle lines.
+  Example: `examples/src/test/.../v2bot/V2botTest.java`; tutorial 13 section 7; docs/guides/testing.md rewritten
+  for the five files.
+- **A warning for a misnamed Tunables section:** a section no part reads that is named like a part's kind
+  (`Tunables.Launcher` for a launcher on `shooter`) or spelled almost like a part's section shows at INIT:
+  `!! Tunables.Launcher is not read by any part: your launcher's section is Tunables.Shooter (its device name
+  "shooter" in CamelCase). Move the numbers there`. A warning, not a stop (a section no part reads may be the
+  team's own). `:sim:fromRobot` prints the same checks as INIT. Every module's "Section:" line in
+  docs/guides/tunables.md now says "the device's name in CamelCase".
+- **"Did you mean" in more places:** an interlock field named after the part's kind (`liftAbove` for the
+  device `lift_left`: "did you mean liftLeftAbove?"), a claw's `closd` ("closd -> closed?"), an unknown
+  position name in `goTo` ("did you mean level?"). `util.Spelling` does it.
+- `RobotTelemetry.warnFirst(text)`; `launcher.Turret.servoStartAngle()`, `addWarnings(t)`;
+  `MatchMemory.setPlacement(pose, note, asWritten)`, `placementAsWritten()`; `Tunable.forgetAllForTests()`.
+
 - **Simulator: the auto builder** (docs/guides/simulator.md#the-auto-builder), the "Auto builder" button over
   the 3D view: build an autonomous on the field, as Simple steps (any drive) or a Pedro path (follow or
   driveTo steps, with PathAt), edit it on a field map or in the 3D view, and press Run. The simulator runs it
@@ -472,6 +500,26 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   says it is the alliance's own frame (as `s.start` takes it).
 
 ### Fixed
+
+- **A servo turret now moves before its first target.** Its angle was unknown (NaN) until a command, so the
+  stick did nothing, the Driver Station showed "NaN deg", and an interlock rule counted it as "in its zone"
+  and held the other part for ever. Now it is sent to `startAngle` at START (the middle of its range when
+  there is none; in TeleOp after autonomous, where autonomous left it), the stick starts from there, and
+  `startAngle` is checked against its range.
+- **An interlock held by a part whose position is unknown says so:** `TurretLift : Lift held at 110 counts:
+  Turret angle unknown (not homed yet)` (also when that part only counts as in its zone because it is unknown).
+- **Pause stops every part, also the team's own:** a `Subsystem` added with `robot.all().add(...)` was not
+  stopped at pause (and not updated), so a power it sent stayed on (a second lift motor at 0.06 power while
+  paused). Pause now calls `stop()` on everything in `all()` that is not the library's.
+- **The turret shows one line:** the module's line with `AIMED` only when it is aimed (while following: at a
+  goal seen now); before, a second line from the turret inside said "0.0 deg AIMED" with no goal.
+- A servo part with no command yet shows `not sent yet`, not `-` (that means a part not on the robot).
+- COMPETITION's "part is OFF" warning is at the very top of INIT, above every other warning.
+- The simulator's "Start spot ... overlaps" message shows the team's own numbers from `start(...)`, not
+  the turned field frame's.
+- Docs: the stop-distance wording is the same in robot.md, interlocks.md and tunables.md; robot.md's Steps
+  table shows `waitSeconds(label, seconds)` (an Action's has no label); FTC Dashboard is banned at events
+  (R704.D); docs/guides/use-only-what-you-need.md no longer suggests overriding ControlMap's `everyLoop`.
 
 - **Interlock rules: a fast part no longer coasts into its zone when loops are slow.** A held part waited
   a fixed two margins from its zone, so how far it coasted past depended on the loop time: the v2bot's

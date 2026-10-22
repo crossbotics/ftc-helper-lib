@@ -284,6 +284,17 @@ public abstract class EasyAuto extends LinearOpMode {
         return MatchMemory.fieldPose(alliancesOnOneWall() ? Alliance.RED : a, x, y, h);
     }
 
+    // The start spot as written in the code (BLUE's numbers), for messages: "x -36, y -63 in, heading 0
+    // (as written, BLUE; used mirrored for RED)". Null without a spot.
+    private String startSpotWords() {
+        double[] spot = startSpotIn();
+        if (spot == null) return null;
+        Alliance a = alliance();
+        String how = a == Alliance.RED ? (mirrorForRed() ? ", used mirrored for RED" : ", used from the red wall") : "";
+        return String.format(java.util.Locale.US, "x %.0f, y %.0f in, heading %.0f (as written%s)", spot[0], spot[1],
+                startHeadingDeg(), how);
+    }
+
     // The autonomous settings, or null if the drive is not tuned (calibrationConfirmed false). In the
     // simulator an untuned drive runs anyway (a pretend robot cannot get hurt), with a warning in INIT.
     private AutoDriveConfig tunedConfig() {
@@ -335,7 +346,7 @@ public abstract class EasyAuto extends LinearOpMode {
             // read the gamepad and move through the menu
             menu.update();
             MatchMemory.setChosen(menu.getAlliance());
-            MatchMemory.setPlacement(startPose(), startPosition());
+            MatchMemory.setPlacement(startPose(), startPosition(), startSpotWords());
             // Warnings that stay on top of the screen, so nobody plays a real match by mistake with
             // the practice settings or with test values changed in the tuning menu.
             if (Profile.current().isPractice()) t.warn("PRACTICE profile (change to COMPETITION at events)");
