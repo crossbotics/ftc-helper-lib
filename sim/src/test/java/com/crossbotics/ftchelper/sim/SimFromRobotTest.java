@@ -24,7 +24,7 @@ public class SimFromRobotTest {
     private Path generate(Class<?> robotClass) throws Exception {
         com.crossbotics.ftchelper.robot.RobotDefinition r =
                 (com.crossbotics.ftchelper.robot.RobotDefinition) robotClass.getDeclaredConstructor().newInstance();
-        SimFromRobot.Result res = SimFromRobot.merge(null, r.simLines(), robotClass.getName(), "biobuzz-2026");
+        SimFromRobot.Result res = SimFromRobot.merge(null, SimFromRobot.holdsFromPieces(r.simLines(), r), robotClass.getName(), "biobuzz-2026");
         assertTrue(res.problems.toString(), res.problems.isEmpty());
         Path file = tmp.newFile(robotClass.getPackage().getName() + ".properties").toPath();
         Files.write(file, res.text.getBytes(StandardCharsets.UTF_8));
@@ -61,6 +61,40 @@ public class SimFromRobotTest {
         assertFalse(r.text, r.text.contains("old_gate"));
         assertTrue(r.text, r.text.contains("servo.claw = 0.20, part=gobilda-2000-torque   # from Robot.java"));
         assertEquals(Collections.singletonList("shape.intake"), r.kept);
+    }
+
+    @Test public void guessesAreReplacedWhenTheCodeGivesTheSize() {
+        String first = SimFromRobot.merge(null, Arrays.asList("drive.type = tank"), "Robot", "x").text;
+        assertTrue(first, first.contains("robot.lengthIn = 18\n"));
+        // the team adds chassisMm(...) and measures the width by hand
+        String edited = first.replace("robot.widthIn = 18", "robot.widthIn = 17.5");
+        SimFromRobot.Result r = SimFromRobot.merge(edited, Arrays.asList("drive.type = tank",
+                "robot.lengthIn = 16.2", "robot.widthIn = 15"), "Robot", "x");
+        assertTrue(r.text, r.text.contains("robot.lengthIn = 16.2   " + SimFromRobot.MARK));
+        assertFalse(r.text, r.text.contains("robot.lengthIn = 18"));
+        assertTrue("the measured one is kept: " + r.text, r.text.contains("robot.widthIn = 17.5\n"));
+        assertEquals(Collections.singletonList("robot.widthIn"), r.kept);
+    }
+
+    @Test public void runningItAgainNeverAddsAnotherBlock() {
+        String first = SimFromRobot.merge(null, Arrays.asList("drive.type = tank"), "Robot", "x").text;
+        String second = SimFromRobot.merge(first, Arrays.asList("drive.type = tank", "motor.lift = lift"), "Robot", "x").text;
+        String third = SimFromRobot.merge(second, Arrays.asList("drive.type = tank", "motor.lift = lift", "servo.claw = 0.2"), "Robot", "x").text;
+        assertFalse(third, third.contains("added from Robot.java"));
+        assertEquals(third, 1, third.split("---- from Robot.java ----", -1).length - 1);
+        assertTrue(third, third.contains("drive.type = tank   " + SimFromRobot.MARK + "\nmotor.lift = lift   "
+                + SimFromRobot.MARK + "\nservo.claw = 0.2   " + SimFromRobot.MARK + "\n"));
+        assertEquals("the same again: no change", third, SimFromRobot.merge(third,
+                Arrays.asList("drive.type = tank", "motor.lift = lift", "servo.claw = 0.2"), "Robot", "x").text);
+    }
+
+    @Test public void theIntakeHoldsWhatPiecesMaxAllows() {
+        com.crossbotics.ftchelper.robot.RobotDefinition r = new com.crossbotics.ftchelper.examples.v2bot.Robot();
+        java.util.List<String> lines = SimFromRobot.holdsFromPieces(r.simLines(), r);
+        String collect = null;
+        for (String l : lines) if (l.startsWith("collect.")) collect = l;
+        assertTrue(lines.toString(), collect != null);
+        assertTrue(collect, collect.contains("holds=4"));   // v2bot: Pieces.max(4)
     }
 
     @Test public void teamLinesWrittenWithAColonOrASpaceAreTheTeams() {
@@ -835,6 +869,19 @@ public class SimFromRobotTest {
             assertTrue("red: turned half a turn", SimRun.waitFor(() -> Math.abs(s.robot().x + 56) < 0.01
                     && Math.abs(s.robot().y + 61.55) < 0.01 && Math.abs(s.robot().headingDeg) < 0.01, 2));
             assertEquals("", s.error());
+        }
+    }
+
+    @Test public void aStartRightAfterTheAllianceChangeStartsFromTheNewSpot() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.flywheelbot.Robot.class);
+        com.crossbotics.ftchelper.match.MatchMemory.clear();
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("FlywheelBot Shoot and Leave");
+            s.press(v -> s.g1().b = v);                          // RED, then START at once
+            s.sim.ds.start();
+            double x, y;
+            synchronized (s.robot()) { x = s.robot().x; y = s.robot().y; }
+            assertTrue("on the red spot at START: " + x + ", " + y, Math.hypot(x + 56, y + 61.55) < 1);
         }
     }
 

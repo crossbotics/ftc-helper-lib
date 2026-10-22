@@ -160,10 +160,13 @@ final class SimMotor {
         // A stuck OpMode that ignored STOP may not move anything any more.
         if (SimRobot.isBlocked() && method.startsWith("set")) return null;
         switch (method) {
-            case "setPower":
+            case "setPower": {
+                double was = Double.isNaN(targetVelocity) ? power : targetVelocity;
                 power = Math.max(-1, Math.min(1, ((Number) a[0]).doubleValue()));
                 targetVelocity = Double.NaN;
+                commanded(was, power);
                 return null;
+            }
             case "getPower": return power;
             case "setDirection": direction = (DcMotorSimple.Direction) a[0]; return null;
             case "getDirection": return direction;
@@ -194,7 +197,9 @@ final class SimMotor {
                     double turns = a[1] == AngleUnit.RADIANS ? v / (2 * Math.PI) : v / 360.0;
                     v = turns * ticksPerRev;
                 }
+                double was = Double.isNaN(targetVelocity) ? power : targetVelocity;
                 targetVelocity = v;
+                commanded(was, v);
                 // Like the REV hub: a speed command switches plain power to speed control.
                 if (mode == DcMotor.RunMode.RUN_WITHOUT_ENCODER) mode = DcMotor.RunMode.RUN_USING_ENCODER;
                 return null;
@@ -236,6 +241,29 @@ final class SimMotor {
         }
     }
 
+    // A stop that the next command undid before a physics step saw it. A real hub gets the stop at once and
+    // holds it until the next command, however short that is: the robot brakes for that long, and the hub's
+    // speed control starts again from nothing. Without this, setPower(0) then setPower(x) inside one physics
+    // step was never a stop (the next move started with the old speed and the old controller state).
+    private long zeroSinceNanos = 0;          // when power went to 0 (0 = it is not stopped now)
+    private double zeroPendingSec = 0;        // how long it was stopped before the next command, not yet stepped
+
+    // For tests: the hub speed control's built-up error.
+    synchronized double integralForTests() {
+        return integral;
+    }
+
+    private void commanded(double was, double now) {
+        boolean stopNow = now == 0, stoppedBefore = was == 0;
+        if (stopNow) {
+            integral = 0;                     // the hub's speed control: a stop forgets what it had built up
+            if (!stoppedBefore) zeroSinceNanos = System.nanoTime();
+        } else if (stoppedBefore && zeroSinceNanos != 0) {
+            zeroPendingSec += (System.nanoTime() - zeroSinceNanos) / 1e9;
+            zeroSinceNanos = 0;
+        }
+    }
+
     /** The power the shaft gets now, in its own direction (the hub's speed control included). */
     synchronized double shaftPower(double dt) {
         double user;
@@ -272,7 +300,22 @@ final class SimMotor {
 
     /** Moves the shaft for dt seconds. battery: 1 = full, less = a weaker battery. */
     synchronized void step(double dt, double battery) {
-        appliedPower = shaftPower(dt);
+        // A stop the OpMode undid before this step: first that stop (brake or coast), then the new command.
+        double stopped = Math.min(dt, zeroPendingSec);
+        zeroPendingSec = 0;
+        // still stopped: count from now (the time before this step has been stepped already)
+        boolean stoppedNow = Double.isNaN(targetVelocity) ? power == 0 : targetVelocity == 0;
+        zeroSinceNanos = stoppedNow ? System.nanoTime() : 0;
+        if (stopped > 1e-6 && forcedVel == null && drivenBy == null) {
+            stepFor(stopped, battery, true);
+            dt -= stopped;
+            if (dt <= 1e-9) return;
+        }
+        stepFor(dt, battery, false);
+    }
+
+    private void stepFor(double dt, double battery, boolean stopping) {
+        appliedPower = stopping ? 0 : shaftPower(dt);
         if (forcedVel != null) {
             shaftVel = forcedVel;
         } else {

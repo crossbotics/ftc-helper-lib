@@ -78,6 +78,22 @@ if (useTeamCode && new File(robotProject, 'simulator/sim-dependencies.gradle').i
     apply from: new File(robotProject, 'simulator/sim-dependencies.gradle')
 }
 
+// Pedro's tuning library (start lesson 8, "Tune Pedro on the robot"): when the robot project uses it, TeamCode's
+// tuner files need it here too, so the simulator adds it by itself (same version, from the same place).
+if (useTeamCode) {
+    def pedroTuning = null
+    [new File(robotProject, 'build.dependencies.gradle'), new File(teamCodeDir, 'build.gradle')].each { f ->
+        if (pedroTuning == null && f.isFile()) {
+            def m = (f.text =~ /['"]com\.pedropathing:tuning:([^'"\s]+)['"]/)
+            if (m.find()) pedroTuning = m.group(1)
+        }
+    }
+    if (pedroTuning != null) {
+        repositories { maven { url = 'https://repo.dairy.foundation/releases/' } }
+        dependencies { testImplementation "com.pedropathing:tuning:$pedroTuning" }
+    }
+}
+
 // Finder results and Characterizer logs from simulator runs go here (on a robot: /sdcard/FIRST/ftc-helper).
 def simDataDir = new File(buildDir, 'sim-data').path
 

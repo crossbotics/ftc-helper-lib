@@ -39,7 +39,8 @@ public final class FinderResults {
      * Java setting "ftchelper.dataDir" to keep them on the laptop instead.
      */
     public static File folder() {
-        return new File(System.getProperty("ftchelper.dataDir", "/sdcard/FIRST/ftc-helper"));
+        // The same folder as the settings file, so the robot and the simulator keep everything together.
+        return com.crossbotics.ftchelper.core.SettingsFile.folder();
     }
     // One background thread for every save, so the robot loop never waits for the storage.
     private static BackgroundWorker saver;

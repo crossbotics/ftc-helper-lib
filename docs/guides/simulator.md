@@ -830,8 +830,10 @@ OpModes, and uses `simulator/robot.properties` from the robot project. Iterative
 
 - Another TeamCode folder: `-PteamCode=<folder>` (the TeamCode module: it must have `src/main/java`); the
   library's own examples instead: `-PteamCode=none`.
-- TeamCode uses other libraries (Road Runner, Pedro Pathing, FTC Dashboard...)? Put their Gradle lines in
-  `simulator/sim-dependencies.gradle` in the robot project, for example:
+- TeamCode uses other libraries (Road Runner, FTC Dashboard...)? Put their Gradle lines in
+  `simulator/sim-dependencies.gradle` in the robot project, for example (Pedro Pathing comes with the
+  library's `pedro` module, and Pedro's tuning library from start lesson 8 is added by itself when
+  `build.dependencies.gradle` or `TeamCode/build.gradle` has it):
 
 ```groovy
 repositories { maven { url = 'https://maven.brott.dev/' } }
@@ -875,6 +877,7 @@ expect error none                      # or: error has "..."
 expect phase RUNNING                   # IDLE | INIT | RUNNING | STOPPED
 expect motor lift power > 0.1          # power | ticks | velocity | amps; > < >= <= =  (= VALUE TOLERANCE)
 expect servo claw target = 0.53 0.01   # target | actual
+expect light status = GREEN            # what a light (light.NAME = gobilda or blinkin) shows: GREEN, RED, off ...
 expect shape intake_arm < 0            # a shape's angle (arm, turret), inches (slide) or gap (claw)
 expect robot y > -30                   # x | y | heading | imu | shots
 expect bumped none                     # or: bumped "Red HIVE"

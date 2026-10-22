@@ -31,6 +31,7 @@ final class SimEngine {
     SimEngine(SimRobot robot, SimDriverStation.Scope scope) {
         this.robot = robot;
         this.ds = new SimDriverStation(robot, scope);
+        ds.beforeStart = this::placeForInit;
         matchClock();
     }
 
@@ -103,6 +104,15 @@ final class SimEngine {
      * when that spot changes, so a robot dragged on the field map stays where it was dropped.
      */
     private void placeForInit() {
+        // from the physics thread and from START: one at a time
+        synchronized (placeLock) {
+            placeForInitNow();
+        }
+    }
+
+    private final Object placeLock = new Object();
+
+    private void placeForInitNow() {
         if (ds.phase() != SimDriverStation.Phase.INIT || ds.current() == null) return;
         String run = ds.current().name + "#" + ds.initCount;
         if (!run.equals(placedFor)) {

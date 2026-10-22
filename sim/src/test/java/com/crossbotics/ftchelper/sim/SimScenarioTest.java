@@ -1,5 +1,6 @@
 package com.crossbotics.ftchelper.sim;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -27,10 +28,22 @@ public class SimScenarioTest {
         assertTrue(String.join("\n", failed), failed.isEmpty());
     }
 
+    @Test public void eachScenarioFileStartsWithAFreshMatch() {
+        // One file's autonomous must not carry over to the next file's TeleOp (alliance, pose, report).
+        com.crossbotics.ftchelper.match.MatchMemory.remember(com.crossbotics.ftchelper.match.Alliance.RED,
+                com.crossbotics.ftchelper.match.MatchMemory.fieldPose(com.crossbotics.ftchelper.match.Alliance.RED, 10, 20, 90));
+        com.crossbotics.ftchelper.match.MatchMemory.rememberReport(java.util.Arrays.asList("Back up: done"));
+        SimScenario.freshMatch();
+        assertFalse(com.crossbotics.ftchelper.match.MatchMemory.hasAlliance());
+        assertTrue(com.crossbotics.ftchelper.match.MatchMemory.lastReport().isEmpty());
+        assertFalse(com.crossbotics.ftchelper.util.PoseStore.has());
+    }
+
     private static void run(File dir, String robot, SimDriverStation.Scope scope, List<String> failed) throws Exception {
         File[] list = dir.listFiles((d, n) -> n.endsWith(".sim"));
         if (list == null) return;
         for (File f : list) {
+            SimScenario.freshMatch();
             SimEngine sim = new SimEngine(SimRobot.load(SimScenario.robotFor(f.toPath(), Paths.get(robot))), scope);
             sim.start();
             SimScenario s = new SimScenario(sim);
