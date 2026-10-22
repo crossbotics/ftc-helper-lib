@@ -31,6 +31,7 @@ public class LauncherTrimTest {
         clock.nanos = 10_000_000_000L;
         Aim.clock = clock::get;
         Pad.clock = clock::get;
+        Launcher.lastTrim.clear();
     }
 
     @After public void back() {
@@ -38,6 +39,7 @@ public class LauncherTrimTest {
         Pad.clock = padClockBefore;
         SettingsFile.useForTests(null);
         TuningReset.clear();
+        Launcher.lastTrim.clear();
     }
 
     /** A fixed speed, the Flywheel Finder's gains and the voltage they were found at. */
@@ -137,7 +139,89 @@ public class LauncherTrimTest {
         ButtonPlan plan = ControlMap.makePlan(r, false, true, (g1, g2) -> { });
         assertTrue(line(plan.help(), "G2 D-pad up"), line(plan.help(), "G2 D-pad up").contains("speed trim +1%"));
         String down = line(plan.help(), "G2 D-pad down");
-        assertTrue(down, down.contains("speed trim -1%") && down.contains("hold 1 s: speed trim 0"));
+        assertTrue(down, down.contains("speed trim -1%") && down.contains("double-tap: speed trim 0"));
+        assertTrue(line(plan.help(), "G2 D-pad up"), line(plan.help(), "G2 D-pad up").contains("hold: speed trim +1%, 4 a second"));
+        assertTrue(screen(r.launcher), screen(r.launcher).startsWith("[Speed trim : -2%"));
+    }
+
+    /** A fixed speed near the motor's top speed (gobilda-5203-6000: 6000 RPM). */
+    public static class NearTop {
+        public static class Launcher {
+            public static double speedRpm = 5900;
+        }
+    }
+
+    @Test public void theTrimNeverAsksForMoreThanTheMotorCanDo() {
+        RobotDefinition r = fixedBot(NearTop.class);
+        r.setup(new RobotTestKit());
+        Launcher l = launcherOf(r);
+        l.spinUp();
+        l.trimPercent(+1);                             // 5959: still under the top
+        r.all().update();
+        assertEquals(5900 * 1.01, l.targetRpm(), 1e-6);
+        assertTrue(!l.atMotorLimit());
+        l.trimPercent(+2);                             // 6077 asked: cut to the motor's 6000
+        r.all().update();
+        assertEquals(6000, l.targetRpm(), 1e-6);
+        assertTrue(l.atMotorLimit());
+        assertTrue(screen(l), screen(l).contains("Speed trim : +3% (motor limit)"));
+        l.trimPercent(+1);                             // no faster: the trim stays where it is
+        assertEquals(3, l.speedTrim(), 1e-9);
+        l.trimPercent(-5);                             // slower still works
+        r.all().update();
+        assertEquals(5900 * 0.98, l.targetRpm(), 1e-6);
+        assertTrue(!l.atMotorLimit());
+    }
+
+    @Test public void aHeldDpadStepsFourTimesASecond() {
+        RobotDefinition r = fixedBot(Tuned.class);     // fixed speed: the D-pad steps 100 rpm
+        r.setup(new RobotTestKit());
+        Launcher l = launcherOf(r);
+        l.clock = clock::get;
+        l.spinUp();
+        // The hold starts 0.3 s after the press (Tunables.Buttons.holdSec); its first step 0.2 s later.
+        l.repeatStep(1);
+        clock.addSec(0.1);
+        l.repeatStep(1);
+        r.all().update();
+        assertEquals("not yet", 2600, l.targetRpm(), 1e-9);
+        clock.addSec(0.1);
+        l.repeatStep(1);                               // 0.5 s after the press: one step
+        clock.addSec(0.25);
+        l.repeatStep(1);                               // and one every 0.25 s
+        r.all().update();
+        assertEquals(2800, l.targetRpm(), 1e-9);
+        l.repeatEnd();
+        l.repeatStep(-1);                              // a new hold waits again
+        r.all().update();
+        assertEquals(2800, l.targetRpm(), 1e-9);
+    }
+
+    @Test public void lastTimesTrimIsOfferedAtInitAndNeverAppliedByItself() {
+        AimTest.AimBot first = new AimTest.AimBot(AimTest.GoalTunables.class, false);
+        first.setup(new RobotTestKit());
+        first.launcher.trimPercent(+3);
+        // The next OpMode (the robot app still running): a new robot, the same launcher name.
+        AimTest.AimBot r = new AimTest.AimBot(AimTest.GoalTunables.class, false);
+        r.setup(new RobotTestKit());
+        assertEquals("not applied by itself", 0, r.launcher.speedTrim(), 1e-9);
+        assertEquals("+3%", r.launcher.lastTrimOffered());
+        Fakes.FakeTelemetry ft = new Fakes.FakeTelemetry();
+        RobotTelemetry t = new RobotTelemetry(ft.telemetry, () -> 0L);
+        r.launcher.initLoop(t);
+        t.update();
+        assertTrue(ft.lastScreen.toString(), ft.lastScreen.toString().contains("Trim last time : +3% (double-tap D-pad up after START to use it)"));
+        ButtonPlan plan = ControlMap.makePlan(r, false, true, (g1, g2) -> { });
+        String up = line(plan.help(), "G2 D-pad up");
+        assertTrue(up, up.contains("double-tap: use last time's trim (+3%)"));
+        assertTrue(r.launcher.useLastTrim());
+        assertEquals(3, r.launcher.speedTrim(), 1e-9);
+        assertEquals("used: no longer offered", "", r.launcher.lastTrimOffered());
+        r.launcher.resetTrim();
+        AimTest.AimBot third = new AimTest.AimBot(AimTest.GoalTunables.class, false);
+        third.setup(new RobotTestKit());
+        assertEquals("trimmed back to 0 last time: nothing to offer", "", third.launcher.lastTrimOffered());
+        assertTrue(!third.launcher.useLastTrim());
     }
 
     @Test public void aTrimIsNeverTheTableTheShotTunerRecords() {

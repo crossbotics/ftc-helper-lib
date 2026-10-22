@@ -32,11 +32,20 @@ public interface Devices {
 
     /**
      * The battery's voltage now (volts), from the hubs ({@link Hw#batteryVolts}); NaN with no voltage
-     * sensor (tests). Each call asks the hubs (a few milliseconds): the launcher reads it every 0.25 s
-     * for its battery compensation.
+     * sensor (tests). Each call asks the hubs and waits (a few milliseconds): not for the loop. The
+     * launcher uses {@link #batteryReader()} instead.
      */
     default double batteryVolts() {
         return hardwareMap() == null ? Double.NaN : Hw.batteryVolts(hardwareMap());
+    }
+
+    /**
+     * The battery's voltage for code that runs every loop (the launcher's battery compensation): on the
+     * robot {@link Hw#batteryReader}, which asks the hubs on the library's helper thread and never waits;
+     * in tests (no hardwareMap) it asks {@link #batteryVolts()} directly.
+     */
+    default java.util.function.DoubleSupplier batteryReader() {
+        return hardwareMap() == null ? this::batteryVolts : Hw.batteryReader(hardwareMap());
     }
 
     /**

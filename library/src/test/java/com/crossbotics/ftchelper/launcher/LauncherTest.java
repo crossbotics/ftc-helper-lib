@@ -335,7 +335,8 @@ public class LauncherTest {
         assertFalse("still travelling", hood.isDone());
     }
 
-    // Battery compensation: F x (tuned volts / volts now), read every 0.25 s, sent only on a real change.
+    // Battery compensation: F x (tuned volts / volts), read every 0.25 s, the highest reading of the last
+    // second, sent only on a real change.
     @Test public void aWeakBatteryGetsAScaledF() {
         FakeMotor m = new FakeMotor();
         Fakes.Clock c = new Fakes.Clock();
@@ -344,27 +345,49 @@ public class LauncherTest {
         Flywheel fw = new Flywheel("fly", m.motor).withClock(c::get).pidf(1, 0.1, 0, 12)
                 .batteryCompensation(() -> { reads[0]++; return volts[0]; }, 12.8);
         fw.setRpm(3000);
-        fw.update();
+        fw.update();                                           // t = 0
         assertEquals(12 * 12.8 / 11.6, m.pidf[3], 1e-9);
         assertEquals("P, I, D as tuned", 1, m.pidf[0], E);
         assertEquals(12.8 / 11.6, fw.getFScale(), 1e-9);
         c.addSec(0.1); fw.update();
         assertEquals("not read again before 0.25 s", 1, reads[0]);
-        volts[0] = 11.5;                                       // under 2% change: nothing sent
+        volts[0] = 11.5;                                       // t = 0.3: under 2% change: nothing sent
         c.addSec(0.2); fw.update();
         assertEquals(2, reads[0]);
         assertEquals(12 * 12.8 / 11.6, m.pidf[3], 1e-9);
-        volts[0] = 0;                                          // no reading: keep the last scale
+        volts[0] = 0;                                          // t = 0.6: no reading: keep the last scale
         c.addSec(0.3); fw.update();
         assertEquals(12 * 12.8 / 11.6, m.pidf[3], 1e-9);
-        volts[0] = 8;                                          // a very weak battery: kept to x1.3
+        volts[0] = 8;                                          // t = 0.9: 11.6 V is still in the last second
         c.addSec(0.3); fw.update();
+        assertEquals("one low reading is a dip, not a weaker battery", 12 * 12.8 / 11.6, m.pidf[3], 1e-9);
+        assertEquals(11.6, fw.getBatteryVolts(), 1e-9);
+        c.addSec(0.3); fw.update();                            // t = 1.2: highest of the last second 11.5 (< 2%)
+        c.addSec(0.3); fw.update();                            // t = 1.5: low for a whole second: kept to x1.3
         assertEquals(12 * Flywheel.MAX_F_SCALE, m.pidf[3], 1e-9);
-        volts[0] = 12.8;                                       // a charged battery: back to F as tuned
+        volts[0] = 12.8;                                       // a charged battery: back to F as tuned at once
         c.addSec(0.3); fw.update();
         assertEquals(12, m.pidf[3], 1e-9);
         fw.noBatteryCompensation();
         assertTrue(!fw.hasBatteryCompensation());
+    }
+
+    // Fable's case: the drive and the flywheel pull the battery down for a moment, every few hundred ms.
+    // F must not jump up for those dips (it would push the wheel past its speed as the load ends).
+    @Test public void shortDipsUnderLoadDoNotRaiseF() {
+        FakeMotor m = new FakeMotor();
+        Fakes.Clock c = new Fakes.Clock();
+        double[] volts = {12.6};
+        Flywheel fw = new Flywheel("fly", m.motor).withClock(c::get).pidf(1, 0.1, 0, 12)
+                .batteryCompensation(() -> volts[0], 12.6);
+        fw.setRpm(3000);
+        for (int i = 0; i < 40; i++) {                         // 10 s: every third reading dips to 10.8 V
+            volts[0] = i % 3 == 2 ? 10.8 : 12.6;
+            fw.update();
+            assertEquals("loop " + i + ": F as tuned", 12, m.pidf[3], 1e-9);
+            c.addSec(Flywheel.BATTERY_READ_SEC);
+        }
+        assertEquals(1, fw.getFScale(), 1e-9);
     }
 
     @Test public void aLowBatteryWarnsAfterTwoReadings() {

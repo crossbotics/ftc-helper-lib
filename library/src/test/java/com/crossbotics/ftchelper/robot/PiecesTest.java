@@ -584,6 +584,35 @@ public class PiecesTest {
         assertEquals("[POLLEN, BLUE_NECTAR]", b.pieces.held().toString());
     }
 
+    // Codex: a feed that ends (counted out) while the ready sensor's steady answer still shows the piece
+    // that just went must not put that piece back in the count.
+    @Test public void aFinishedFeedDoesNotBringBackThePieceItSentOut() {
+        Kit kit = new Kit();
+        Bot b = setup(kit, true, SlowReady.class);    // the ready sensor waits 30 ms (steadyMs)
+        FakeColor ready = kit.colors.get("ready_color");
+        ready.yellow();
+        run(b, 60);
+        assertEquals("[POLLEN]", b.pieces.held().toString());
+        b.pieces.feedStarted();                       // the indexer feeds it...
+        b.pieces.feedEnded(true);                     // ...and its feed ends before the sensor saw it go
+        assertEquals(0, b.pieces.count());
+        run(b, 20);                                   // the sensor still shows the old reading
+        assertEquals("not counted in again", 0, b.pieces.count());
+        assertEquals(Pieces.NONE, b.pieces.next());
+        ready.empty();
+        run(b, 60);                                   // the slot reads empty: the sensor is trusted again
+        assertEquals(0, b.pieces.count());
+        ready.yellow();                               // a new piece, loaded by hand
+        run(b, 60);
+        assertEquals("a NEW piece in the slot counts", 1, b.pieces.count());
+        // A jam (nothing fired): the piece is still in, and the sensor is trusted at once.
+        b.pieces.feedStarted();
+        b.pieces.feedEnded(false);
+        run(b, 20);
+        assertEquals(1, b.pieces.count());
+        assertEquals("POLLEN", b.pieces.next());
+    }
+
     @Test public void piecesPushedOutThroughTheIntakeCountOutAndAreNotCountedInAgain() {
         Kit kit = new Kit();
         Bot b = setup(kit, false);

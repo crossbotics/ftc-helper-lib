@@ -178,11 +178,12 @@ can also push the robot by hand. D-pad chooses, **A** starts, **B** ends the tes
 ## Shot Tuner: the shot table
 
 It tunes the way experienced teams do: at each distance, shoot 3-5 pieces at a speed and mark each
-one **HIT** or **MISS**, try the next speed, and keep the speed with the best hit ratio.
+one **HIT** or **MISS**, try the next speed, and keep the speed with the best **hit ratio** (hits out
+of shots: 3 in out of 4 beats 2 out of 3). Every button is on **gamepad 1**.
 
 1. **Pick the table.** With one table per game piece (`speedByDistancePollen`, `speedByDistanceNectar`),
-   press **Y** until `> Table`, then the D-pad: you tune one table at a time, each with its own points.
-   Load that game piece.
+   press **Y** until `> Table`, then **D-pad left / right** picks the table: you tune one table at a
+   time, each with its own points. Load that game piece.
 2. Park at the nearest distance you will shoot from. The screen shows the distance and where it came
    from: `(camera, 12 readings)`, or `(odometry, ...)` when the camera does not see the goal (with an
    `odometry(...)` line and `Tunables.Aim.goalX, goalY`; put the robot in the middle of the field
@@ -191,28 +192,38 @@ one **HIT** or **MISS**, try the next speed, and keep the speed with the best hi
    to start the flywheel (it is off at START).
 3. The speed starts at what your table already gives at this distance (or `Tunables.Launcher.speedRpm`),
    so you only fine-tune. Shoot 3-5 (**RB** one at a time, or hold **RT**) and after each shot press
-   **A** = HIT or **B** = MISS. The screen shows `Hits at 2550: 3/4` and every speed tried here
+   **A** = HIT or **B** = MISS (the marks go to the shots in the order they were fired). Each shot keeps
+   the speed, hood angle and distance it was **fired** with, so changing the speed or the hood before you
+   mark does not move the mark. The screen shows `Hits at 2550: 3/4` and every speed tried here
    (`Tried here: 2450: 1/3, 2550: 3/4 (best)`). Change the speed with the D-pad (**Y** chooses SPEED or
    HOOD) and shoot 3-5 again. 2-3 speeds is usually enough.
+   - **Pressed the wrong one?** **Left stick click** takes back the last HIT / MISS; that shot waits to be
+     marked again.
+   - **A "shot" with no piece** (the wheel slowed down by itself, so `Shots fired` went up):
+     **right stick click** drops the last shot that is not marked yet.
 4. Press **X** to save: it keeps the speed with the **best hit ratio** at this distance (a tie: the one
-   with more shots). Each point also keeps the flywheel speed **measured** as the pieces were fed. If
-   the flywheel was well under the speed asked for (`sagged`), the screen warns: wait for `Ready: YES`
-   between shots and charge the battery, or the table will not match a match. A wrong point: stand
-   there and **hold BACK 1 s** to delete it (a hold, so it is not pressed by mistake).
+   with more shots), and with a hood the hood angle those shots were fired with. Each point also keeps
+   the flywheel speed **measured** as the pieces were fed. If the flywheel was well under the speed
+   asked for, it **sagged** (the last shot or a low battery slowed it, and it was not back yet): the
+   screen warns. Wait for `Ready: YES` between shots and charge the battery, or the table will not match
+   a match. A wrong point: stand there and **hold BACK 1 s** to delete it (a hold, so it is not pressed
+   by mistake).
 5. Move back 1-2 ft (drive with the sticks) and do it again; the hit counts start again by themselves
-   when the distance moves more than 4 in. `Points: POLLEN 3, NECTAR 0  (4-6 per table)` says how far
+   when the distance moves more than 4 in, and shots fired at the old spot that were never marked are
+   dropped. `Points: POLLEN 3, NECTAR 0  (4-6 per table)` says how far
    you are: 4-6 points per table cover the field. Then the next table (step 1).
 6. **Copy the tables into `Tunables.java`**: the robot uses the file, not the tuner's screen. There is
    one line per table, like `public static double[][] speedByDistancePollen = {{24, 2600}, {48, 3100}};   // in Tunables.Launcher`:
    it replaces the line with the same name in `Tunables.Launcher`. The lines are also saved on the
    Control Hub when you press STOP (`/sdcard/FIRST/ftc-helper/finder-results.txt`). Older helpers: the
    `new ShotTable()` lines go into your Robot class (each with a comment like `// 4/5 in, measured 2531 RPM`).
-   Between the points the launcher fills in the speed; outside them it uses the nearest point.
+   Between the points the launcher **blends** the speed (halfway between two points: halfway between
+   their speeds); outside them it uses the nearest point.
 
 With `robot()`, the Shot Tuner uses your robot's launcher, camera and drive. A turret stays still and
 the "fire only when aimed" checks are off: point the robot at the goal with the sticks. (The robot in
-five files' launcher has no hood. With the older helpers and a hood, keep the hood angle the same while
-you compare speeds: the hit counts are per speed.)
+five files' launcher has no hood. With the older helpers and a hood, each speed and hood angle is its
+own try in the hit counts: `Tried here: 2550 @ 10.0 deg: 3/4 (best), 2550 @ 12.5 deg: 1/3`.)
 
 Charge the battery before tuning speeds: a weak battery changes how far the shots go. The launcher's
 speed trim (the D-pad in a match) is not used in the tuner, so the table holds the real speeds.

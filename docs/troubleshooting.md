@@ -101,10 +101,11 @@ Add `robotConfig()` to the OpMode: `return new RobotSettings();` (starter kit) o
 ## Robot behavior
 
 **Every shot is a little short (or long) today**
-The battery is lower than when you tuned, or the wheel is worn. In the match: the operator's D-pad
-up/down trims every shot speed by 1% (`Speed trim: +3%` on the Driver Station; hold D-pad down 1 s = 0).
-If it happens every match, the table is off: tune it again with the Shot Tuner and copy the new line into
-`Tunables.java` ([Lesson 9](tutorials/start/09-shooter-and-camera.md#speed-trim-and-a-low-battery)).
+The wheel is worn, the balls are softer, or the battery is lower than when you tuned. In the match: the
+operator's D-pad up/down trims every shot speed by 1% (`Speed trim: +3%` on the Driver Station; held:
+4 steps a second; double-tap D-pad down = 0). If it happens every match, the table is off: multiply its
+speeds by the trim (or tune it again with the Shot Tuner) and copy the new line into `Tunables.java`
+([Lesson 9](tutorials/start/09-shooter-and-camera.md#speed-trim-and-a-low-battery)).
 Check that `kF` and `nominalVolts` (from the Flywheel Finder) are in `Tunables.Launcher`: they turn on the
 battery compensation.
 

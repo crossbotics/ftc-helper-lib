@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * The good shots saved in the shot tuner: distance, speed and (if there is a hood) hood angle, with
@@ -15,9 +13,10 @@ import java.util.TreeMap;
  * already saved (within {@link #SAME_DISTANCE}) replaces it, so a better shot at the same spot wins.
  * Turns into {@code ShotTable} code and the line for {@code Tunables.java}.
  *
- * <p>Two helpers for the tuner live here too: {@link Tally} (hits and shots at each speed tried at one
- * spot, to keep the speed with the best hit ratio) and {@link DistanceAverage} (the distance averaged
- * over half a second, so one noisy camera frame does not go into the table).
+ * <p>Helpers for the tuner live here too: {@link Tally} (hits and shots at each speed tried at one
+ * spot, to keep the speed with the best hit ratio), {@link Trials} (the shots waiting to be marked, with
+ * undo) and {@link DistanceAverage} (the distance averaged over half a second, so one noisy camera frame
+ * does not go into the table).
  *
  * Docs: docs/modules/finders.md
  */
@@ -155,8 +154,10 @@ public final class ShotPoints {
     // ----------------------------- hits at each speed -----------------------------
 
     /**
-     * Hits and shots at each speed tried at ONE spot, the way teams tune: shoot 3-5 at a speed, mark
-     * each HIT or MISS, try the next speed, and keep the speed with the best hit ratio.
+     * Hits and shots at each speed (and hood angle) tried at ONE spot, the way teams tune: shoot 3-5 at
+     * a speed, mark each HIT or MISS, try the next speed, and keep the speed with the best hit ratio
+     * (hits / shots: 3 in out of 4 = 3/4). With a hood, each speed AND hood angle is its own try, so the
+     * winner is saved with the hood it was really shot with.
      *
      * <pre>{@code
      * ShotPoints.Tally tally = new ShotPoints.Tally();
@@ -166,28 +167,45 @@ public final class ShotPoints {
      * }</pre>
      */
     public static final class Tally {
-        // Per speed (RPM, rounded to a whole number): hits, shots, and the measured speeds.
+        // One try: a speed (RPM, rounded to a whole number) and a hood angle (0.1 deg; NaN = no hood),
+        // with its hits, shots, and the measured speeds.
         private static final class Row {
+            final long rpm;
+            final double hood;
             int hits, shots, measuredCount;
             double measuredSum;
+
+            Row(long rpm, double hood) {
+                this.rpm = rpm;
+                this.hood = hood;
+            }
         }
 
-        private final TreeMap<Long, Row> rows = new TreeMap<>();
+        // Sorted by speed, then hood angle.
+        private final List<Row> rows = new ArrayList<>();
         private double spotIn = Double.NaN;
 
         /**
-         * One shot marked at this speed.
+         * One shot marked at this speed (no hood).
          *
          * @param rpm         the speed asked for (setpoint), RPM
          * @param hit         true if it went in
          * @param measuredRpm the flywheel speed measured at that shot, NaN if not known
          */
         public void mark(double rpm, boolean hit, double measuredRpm) {
-            Row r = rows.get(Math.round(rpm));
-            if (r == null) {
-                r = new Row();
-                rows.put(Math.round(rpm), r);
-            }
+            mark(rpm, Double.NaN, hit, measuredRpm);
+        }
+
+        /**
+         * One shot marked at this speed and hood angle.
+         *
+         * @param rpm         the speed asked for (setpoint), RPM
+         * @param hoodDeg     the hood angle it was shot with, degrees (NaN = no hood)
+         * @param hit         true if it went in
+         * @param measuredRpm the flywheel speed measured at that shot, NaN if not known
+         */
+        public void mark(double rpm, double hoodDeg, boolean hit, double measuredRpm) {
+            Row r = row(rpm, hoodDeg, true);
             r.shots++;
             if (hit) r.hits++;
             if (!Double.isNaN(measuredRpm)) {
@@ -196,65 +214,106 @@ public final class ShotPoints {
             }
         }
 
-        /** Hits at this speed. */
+        /**
+         * Takes back one mark (an undo): the same numbers as the {@link #mark} it undoes. A try left
+         * with no shots is forgotten; with nothing marked at all, the spot is too.
+         */
+        public void unmark(double rpm, double hoodDeg, boolean hit, double measuredRpm) {
+            Row r = row(rpm, hoodDeg, false);
+            if (r == null || r.shots == 0) return;
+            r.shots--;
+            if (hit && r.hits > 0) r.hits--;
+            if (!Double.isNaN(measuredRpm) && r.measuredCount > 0) {
+                r.measuredSum -= measuredRpm;
+                r.measuredCount--;
+            }
+            if (r.shots == 0) rows.remove(r);
+            if (rows.isEmpty()) spotIn = Double.NaN;
+        }
+
+        /** Hits at this speed (no hood). */
         public int hits(double rpm) {
-            Row r = rows.get(Math.round(rpm));
+            return hits(rpm, Double.NaN);
+        }
+
+        /** Hits at this speed and hood angle. */
+        public int hits(double rpm, double hoodDeg) {
+            Row r = row(rpm, hoodDeg, false);
             return r == null ? 0 : r.hits;
         }
 
-        /** Shots marked at this speed. */
+        /** Shots marked at this speed (no hood). */
         public int shots(double rpm) {
-            Row r = rows.get(Math.round(rpm));
+            return shots(rpm, Double.NaN);
+        }
+
+        /** Shots marked at this speed and hood angle. */
+        public int shots(double rpm, double hoodDeg) {
+            Row r = row(rpm, hoodDeg, false);
             return r == null ? 0 : r.shots;
         }
 
         /** Shots marked at every speed. */
         public int totalShots() {
             int n = 0;
-            for (Row r : rows.values()) n += r.shots;
+            for (Row r : rows) n += r.shots;
             return n;
         }
 
-        /** The average measured flywheel speed at this speed's shots, NaN if none was measured. */
+        /** The average measured flywheel speed at this speed's shots (no hood), NaN if none was measured. */
         public double measuredRpm(double rpm) {
-            Row r = rows.get(Math.round(rpm));
+            return measuredRpm(rpm, Double.NaN);
+        }
+
+        /** The average measured flywheel speed at this speed and hood angle, NaN if none was measured. */
+        public double measuredRpm(double rpm, double hoodDeg) {
+            Row r = row(rpm, hoodDeg, false);
             return r == null || r.measuredCount == 0 ? Double.NaN : r.measuredSum / r.measuredCount;
         }
 
         /**
-         * The speed with the best hit ratio (hits / shots). A tie: the one with more shots (surer),
-         * then the lower speed. NaN if nothing went in yet.
+         * The try with the best hit ratio: {speed RPM, hood degrees (NaN = no hood)}. A tie: the one
+         * with more shots (surer), then the lower speed. null if nothing went in yet.
          */
-        public double bestRpm() {
-            long best = 0;
+        public double[] best() {
             Row bestRow = null;
-            for (Map.Entry<Long, Row> e : rows.entrySet()) {
-                Row r = e.getValue();
+            for (Row r : rows) {
                 if (r.hits == 0) continue;
                 if (bestRow == null) {
-                    best = e.getKey();
                     bestRow = r;
                     continue;
                 }
                 // Compare hits/shots without dividing: a/b > c/d  is the same as  a*d > c*b.
                 long better = (long) r.hits * bestRow.shots - (long) bestRow.hits * r.shots;
-                if (better > 0 || (better == 0 && r.shots > bestRow.shots)) {
-                    best = e.getKey();
-                    bestRow = r;
-                }
+                if (better > 0 || (better == 0 && r.shots > bestRow.shots)) bestRow = r;
             }
-            return bestRow == null ? Double.NaN : best;
+            return bestRow == null ? null : new double[] {bestRow.rpm, bestRow.hood};
         }
 
-        /** Every speed tried here with its hits, e.g. "2450: 1/3, 2550: 3/4 (best)"; "" if none. */
+        /** The speed of {@link #best()}, NaN if nothing went in yet. */
+        public double bestRpm() {
+            double[] b = best();
+            return b == null ? Double.NaN : b[0];
+        }
+
+        /**
+         * Every try here with its hits, e.g. "2450: 1/3, 2550: 3/4 (best)", with a hood
+         * "2550 @ 12.5 deg: 3/4 (best)"; "" if none.
+         */
         public String summary() {
-            double best = bestRpm();
+            double[] best = best();
             List<String> parts = new ArrayList<>();
-            for (Map.Entry<Long, Row> e : rows.entrySet()) {
-                parts.add(e.getKey() + ": " + e.getValue().hits + "/" + e.getValue().shots
-                        + (!Double.isNaN(best) && e.getKey() == (long) best ? " (best)" : ""));
+            for (Row r : rows) {
+                boolean isBest = best != null && r.rpm == (long) best[0] && sameHood(r.hood, best[1]);
+                parts.add(r.rpm + (Double.isNaN(r.hood) ? "" : " @ " + FinderResults.num(r.hood, 1) + " deg")
+                        + ": " + r.hits + "/" + r.shots + (isBest ? " (best)" : ""));
             }
             return FinderResults.commas(parts);
+        }
+
+        /** How many different tries (speed, hood) are marked here. */
+        public int tries() {
+            return rows.size();
         }
 
         /** The distance where these shots were marked (inches), NaN before the first mark. */
@@ -276,6 +335,159 @@ public final class ShotPoints {
         public void clear() {
             rows.clear();
             spotIn = Double.NaN;
+        }
+
+        // The row for this speed and hood (made if asked and missing), or null.
+        private Row row(double rpm, double hoodDeg, boolean make) {
+            long key = Math.round(rpm);
+            double hood = Double.isNaN(hoodDeg) ? Double.NaN : Math.round(hoodDeg * 10) / 10.0;
+            for (Row r : rows) if (r.rpm == key && sameHood(r.hood, hood)) return r;
+            if (!make) return null;
+            Row r = new Row(key, hood);
+            rows.add(r);
+            // Keep them in order: speed, then hood (NaN first).
+            Collections.sort(rows, (a, b) -> a.rpm != b.rpm ? Long.compare(a.rpm, b.rpm) : Double.compare(
+                    Double.isNaN(a.hood) ? Double.NEGATIVE_INFINITY : a.hood, Double.isNaN(b.hood) ? Double.NEGATIVE_INFINITY : b.hood));
+            return r;
+        }
+
+        private static boolean sameHood(double a, double b) {
+            return (Double.isNaN(a) && Double.isNaN(b)) || Math.abs(a - b) < 1e-9;
+        }
+    }
+
+    // ----------------------------- the shots of one spot -----------------------------
+
+    /**
+     * The Shot Tuner's shots at one spot: each shot fired waits to be marked HIT or MISS, and keeps the
+     * speed, hood angle and distance it was FIRED with (not what the screen says when you mark it).
+     * Marks go into a {@link Tally}. It also undoes the last mark, drops a shot that never was (the
+     * flywheel dipped without a piece), and forgets shots from a spot the robot has left.
+     *
+     * <pre>{@code
+     * ShotPoints.Trials trials = new ShotPoints.Trials();
+     * trials.fired(2550, Double.NaN, 2540, 48);   // a shot: 2550 asked, 2540 measured, 48 in away
+     * trials.mark(true);                          // it went in
+     * trials.undo();                              // oops, it was a miss: mark it again
+     * trials.mark(false);
+     * }</pre>
+     */
+    public static final class Trials {
+        /** The marks start again when the distance moves more than this from where they began (inches). */
+        public static final double SPOT_MOVE_IN = 4;
+        /** At most this many shots wait to be marked (nobody marks more than 10 behind). */
+        public static final int MAX_UNMARKED = 10;
+
+        // Shots fired, not marked yet, oldest first: {speed asked, hood (NaN = none), speed measured, distance}.
+        private final ArrayDeque<double[]> unmarked = new ArrayDeque<>();
+        // The marks given, newest last, for undo: the shot's four numbers and 1 = HIT, 0 = MISS.
+        private final ArrayDeque<double[]> marks = new ArrayDeque<>();
+        private final Tally tally = new Tally();
+
+        /**
+         * A piece was fed: it waits to be marked.
+         *
+         * @param rpm         the speed asked for, RPM
+         * @param hoodDeg     the hood angle, degrees (NaN = no hood)
+         * @param measuredRpm the flywheel speed measured as it was fed, RPM (NaN = not known)
+         * @param distanceIn  the distance it was fired from, inches (NaN = not known)
+         */
+        public void fired(double rpm, double hoodDeg, double measuredRpm, double distanceIn) {
+            unmarked.addLast(new double[] {rpm, hoodDeg, measuredRpm, distanceIn});
+            if (unmarked.size() > MAX_UNMARKED) unmarked.pollFirst();   // one added: at most one too many
+        }
+
+        /**
+         * Marks the OLDEST shot not marked yet (A = HIT, B = MISS), at the speed, hood and spot it was
+         * fired with.
+         *
+         * @return a few words for the Driver Station
+         */
+        public String mark(boolean hit) {
+            double[] shot = unmarked.pollFirst();
+            if (shot == null) return "No shot to mark: shoot first (RB), then A = HIT or B = MISS.";
+            if (tally.isEmpty()) tally.setSpot(shot[3]);
+            else if (Double.isNaN(tally.spotIn())) tally.setSpot(shot[3]);
+            tally.mark(shot[0], shot[1], hit, shot[2]);
+            marks.addLast(new double[] {shot[0], shot[1], shot[2], shot[3], hit ? 1 : 0});
+            if (marks.size() > 50) marks.pollFirst();   // undo goes back 50 marks at most
+            return (hit ? "HIT" : "MISS") + " at " + what(shot) + ": " + tally.hits(shot[0], shot[1]) + "/"
+                    + tally.shots(shot[0], shot[1]) + " in at this speed. (Wrong? left stick click = undo.)";
+        }
+
+        /**
+         * Takes back the last HIT or MISS: that shot waits to be marked again (first in line).
+         *
+         * @return a few words for the Driver Station
+         */
+        public String undo() {
+            double[] m = marks.pollLast();
+            if (m == null) return "Nothing to undo.";
+            boolean hit = m[4] == 1;
+            tally.unmark(m[0], m[1], hit, m[2]);
+            unmarked.addFirst(new double[] {m[0], m[1], m[2], m[3]});
+            return "Took back the " + (hit ? "HIT" : "MISS") + " at " + what(m) + ": mark that shot again (A / B).";
+        }
+
+        /**
+         * Forgets the NEWEST shot not marked yet: a "shot" that never was (the flywheel dipped without a
+         * piece going through), so the marks stay in line with the real shots.
+         *
+         * @return a few words for the Driver Station
+         */
+        public String dropLast() {
+            double[] s = unmarked.pollLast();
+            if (s == null) return "No shot waiting to be marked.";
+            return "Dropped the last shot (" + what(s) + "): it will not be marked.";
+        }
+
+        /**
+         * Every loop, with the distance now: when the robot has moved more than {@link #SPOT_MOVE_IN}
+         * from where the marks began, they start again; shots fired at another spot and not marked yet
+         * are dropped (they belong to the old spot).
+         *
+         * @param distanceIn the distance now, inches (NaN = not known: nothing happens)
+         * @return "" or a few words for the Driver Station
+         */
+        public String check(double distanceIn) {
+            if (Double.isNaN(distanceIn)) return "";
+            double spot = tally.spotIn();
+            if (!tally.isEmpty() && !Double.isNaN(spot) && Math.abs(distanceIn - spot) > SPOT_MOVE_IN) {
+                clear();
+                return "Moved " + FinderResults.num(Math.abs(distanceIn - spot), 0) + " in: the hit counts start again here.";
+            }
+            int dropped = 0;
+            for (Iterator<double[]> it = unmarked.iterator(); it.hasNext(); ) {
+                double d = it.next()[3];
+                if (!Double.isNaN(d) && Math.abs(distanceIn - d) > SPOT_MOVE_IN) {
+                    it.remove();
+                    dropped++;
+                }
+            }
+            if (dropped == 0) return "";
+            return "Moved: " + dropped + (dropped == 1 ? " shot" : " shots") + " fired at the old spot dropped (not marked).";
+        }
+
+        /** Forgets every shot and mark (a new table, after a save). */
+        public void clear() {
+            unmarked.clear();
+            marks.clear();
+            tally.clear();
+        }
+
+        /** Shots waiting to be marked. */
+        public int unmarkedCount() {
+            return unmarked.size();
+        }
+
+        /** The hits and shots marked here. */
+        public Tally tally() {
+            return tally;
+        }
+
+        // "2550 RPM" or "2550 RPM, 12.5 deg".
+        private static String what(double[] shot) {
+            return FinderResults.num(shot[0], 0) + " RPM" + (Double.isNaN(shot[1]) ? "" : ", " + FinderResults.num(shot[1], 1) + " deg");
         }
     }
 

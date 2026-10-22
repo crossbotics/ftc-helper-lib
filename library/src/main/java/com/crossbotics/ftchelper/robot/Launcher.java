@@ -28,13 +28,15 @@ import java.util.List;
  * }
  * }</pre>
  *
- * <p><b>Speed trim</b> (a fix during a match, when every shot is a little short or long: a tired
- * battery, a worn wheel): {@link #trimPercent(double)} makes every shot speed (the table's or the fixed
- * one) that many percent faster or slower, kept to +/- {@code trimMaxPercent} (15). It starts at 0 at
- * every INIT and is the same for every table (a battery or a wheel changes them all alike). The
- * Driver Station shows {@code Speed trim: +3%}. The Shot Tuner never uses it (tables are recorded
- * clean). If you trim the same way match after match, the table is off: tune it again (or fold the
- * trim into Tunables.java) instead.
+ * <p><b>Speed trim</b> (a fix during a match, when every shot is a little short or long: a worn
+ * wheel, different balls): {@link #trimPercent(double)} makes every shot speed (the table's or the
+ * fixed one) that many percent faster or slower, kept to +/- {@code trimMaxPercent} (15) and to the
+ * motor's top speed (then the Driver Station says "(motor limit)"). It starts at 0 at every INIT and is
+ * the same for every table. The Driver Station shows {@code Speed trim: +3%  READY} as the launcher's
+ * first line. The trim used last time is remembered (until the robot app restarts) and offered at
+ * INIT: "Trim last time: +3% (double-tap D-pad up after START to use it)"; it is never applied by
+ * itself. The Shot Tuner never uses it (tables are recorded clean). If you trim the same way match
+ * after match, the table is off: tune it again (or fold the trim into Tunables.java) instead.
  *
  * <p><b>Battery compensation</b> (on when {@code kF} is set; {@code batteryCompensation = false} turns
  * it off): the hub's F gain is scaled by {@code nominalVolts} / the battery now, so a low battery gets
@@ -60,7 +62,8 @@ import java.util.List;
  *
  * <p>Suggested buttons (operator): LB spins up / down, RB fires one (hold it: keeps firing). D-pad
  * up/down: with the speed from the distance, the speed trim +/- {@code trimStepPercent} (1%); with a
- * fixed speed, +/- {@code stepRpm}. Hold D-pad down 1 s: back to no trim. D-pad right picks the next
+ * fixed speed, +/- {@code stepRpm}; held, one more step every 0.25 s. Double-tap D-pad down: back to no
+ * trim. Double-tap D-pad up: use last time's trim (only when there is one). D-pad right picks the next
  * shot table (with two or more). Each only when that button is free.
  *
  * Docs: docs/modules/robot.md (section "Launcher"), docs/modules/launcher.md
@@ -99,6 +102,23 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     private double trimStepPct = 1, trimMaxPct = 15;
     private boolean spinning = false;
     private boolean spinAtStart = false;
+    // True when the trimmed speed is cut to the motor's top speed (shown as "(motor limit)").
+    private boolean atMotorLimit = false;
+    // Last time's trim {percent, rpm steps}, offered at INIT until it is used or the trim is changed; null = none.
+    private double[] offered = null;
+    // A held D-pad: when the next step is due (seconds); NaN = not held.
+    private double repeatAt = Double.NaN;
+    // The time (nanoseconds); tests use a pretend clock.
+    java.util.function.LongSupplier clock = System::nanoTime;
+
+    /**
+     * The trim each launcher (by name) had when it was last changed: {percent, rpm steps}. "static": it
+     * outlives the OpMode (until the robot app restarts), so the next INIT can offer it. Never applied
+     * by itself.
+     */
+    static final java.util.Map<String, double[]> lastTrim = new java.util.HashMap<>();
+    /** A held D-pad steps again every this many seconds (the first repeat 0.5 s after the press). */
+    static final double REPEAT_SEC = 0.25;
     // fireWhileHeld: true while the button is held, and how many shots this press has asked for.
     private boolean holding = false;
     private int heldShots = 0;
@@ -268,9 +288,13 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
                 throw new IllegalStateException("Tunables." + name() + ".nominalVolts = " + nominal
                         + ": the battery voltage the gains were tuned at, 9 to 14 V (the Flywheel Finder shows it)");
             }
-            if (compensate) flywheel.batteryCompensation(devices::batteryVolts, nominal);
+            // The reader never waits: the hubs are asked on the library's helper thread (not in the loop).
+            if (compensate) flywheel.batteryCompensation(devices.batteryReader(), nominal);
         }
         if (t.has("trimStepPercent")) trimStepPct = Math.abs(t.number("trimStepPercent", 1));
+        // Last time's trim (an earlier OpMode since the robot app started): offer it, never apply it.
+        double[] last = lastTrim.get(name());
+        offered = last != null && (last[0] != 0 || last[1] != 0) ? last.clone() : null;
         if (t.has("trimMaxPercent")) trimMaxPct = Math.max(0, Math.min(50, Math.abs(t.number("trimMaxPercent", 15))));
         Feeder feed = indexer != null ? indexer.forLauncher() : new NoFeeder();
         part = new com.crossbotics.ftchelper.launcher.Launcher(flywheel, feed)
@@ -399,7 +423,9 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
      */
     public void adjust(int steps) {
         // Not touch(): changing the speed is not taking the launcher away from an action.
+        if (steps > 0 && atMotorLimit) return;   // already at the motor's top speed: no faster
         adjustSteps += steps;
+        remember();
     }
 
     // ----------------------------- speed trim -----------------------------
@@ -416,6 +442,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     public void trimPercent(double change) {
         // Not touch(): changing the speed is not taking the launcher away from an action.
         if (Double.isNaN(change)) return;
+        if (change > 0 && atMotorLimit) return;   // already at the motor's top speed: no faster
         setTrim(trimPct + change);
     }
 
@@ -427,12 +454,75 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     public void setTrim(double percent) {
         if (Double.isNaN(percent)) return;
         trimPct = Math.max(-trimMaxPct, Math.min(trimMaxPct, percent));
+        remember();
     }
 
     /** Back to the Tunables speed: the trim to 0, and the {@link #adjust(int)} steps to 0. */
     public void resetTrim() {
         trimPct = 0;
         adjustSteps = 0;
+        remember();
+    }
+
+    /**
+     * Uses the trim from last time (an earlier OpMode since the robot app started), if there is one: the
+     * Driver Station offers it at INIT ("Trim last time: +3%"); double-tap D-pad up uses it. Never runs
+     * by itself.
+     *
+     * @return true if there was one to use
+     */
+    public boolean useLastTrim() {
+        if (offered == null) return false;
+        double[] o = offered;
+        trimPct = Math.max(-trimMaxPct, Math.min(trimMaxPct, o[0]));
+        adjustSteps = (int) o[1];
+        remember();
+        return true;
+    }
+
+    /** Last time's trim in words ("+3%"), while it is offered and not used yet; "" when there is none. */
+    public String lastTrimOffered() {
+        return offered == null ? "" : trimWords(offered[0], (int) offered[1]);
+    }
+
+    /** True when the trimmed shot speed is cut to the motor's top speed (more trim up does nothing). */
+    public boolean atMotorLimit() {
+        return atMotorLimit;
+    }
+
+    // A trim change: remember it for the next INIT; the offer from last time is gone (the operator chose).
+    private void remember() {
+        offered = null;
+        lastTrim.put(name(), new double[] {trimPct, adjustSteps});
+    }
+
+    // One D-pad step: the trim (speed from the distance) or the rpm step (a fixed speed).
+    private void step(int direction) {
+        if (usesDistance()) trimPercent(direction * trimStepPct);
+        else adjust(direction);
+    }
+
+    // A held D-pad, every loop: one step 0.5 s after the press (the hold starts after the tap time,
+    // Tunables.Buttons.holdSec 0.3 s), then one every REPEAT_SEC.
+    void repeatStep(int direction) {
+        double now = clock.getAsLong() / 1e9;
+        if (Double.isNaN(repeatAt)) repeatAt = now + 0.2;
+        if (now >= repeatAt) {
+            step(direction);
+            repeatAt = now + REPEAT_SEC;
+        }
+    }
+
+    void repeatEnd() {
+        repeatAt = Double.NaN;
+    }
+
+    // Double-tap D-pad up: last time's trim if it is offered, else two steps up (what two taps would do).
+    private void upTwice() {
+        if (!useLastTrim()) {
+            step(1);
+            step(1);
+        }
     }
 
     /** The speed trim now, percent (0 = none; +3 = 3% faster). */
@@ -578,8 +668,13 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         } else {
             part.setRpm(speedRpm.get() + adjustSteps * stepRpm.get());
         }
-        // The trim multiplies whichever speed was chosen: +3% = x 1.03.
-        part.speedScale(1 + trimPct / 100.0);
+        // The trim multiplies whichever speed was chosen: +3% = x 1.03. Never past the motor's top speed:
+        // the flywheel would cut it anyway, silently, and the trim on the screen would be a lie.
+        double scale = 1 + trimPct / 100.0;
+        double base = part.getShotRpm(), top = flywheel.getMaxRpm();
+        atMotorLimit = base > 0 && base * scale >= top - 1e-6;
+        if (base > 0 && base * scale > top) scale = top / base;
+        part.speedScale(scale);
         part.update();
     }
 
@@ -623,9 +718,22 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     }
 
     @Override
+    void initLoop(RobotTelemetry t) {
+        if (offered != null) {
+            t.line("Trim last time", lastTrimOffered() + " (double-tap D-pad up after START to use it)");
+        }
+    }
+
+    @Override
     public void addTelemetry(RobotTelemetry t) {
         if (part == null) return;
         if (!tableProblem.isEmpty()) t.warn(name() + ": " + tableProblem);
+        // First: the trim and READY, the two things the operator glances at. Always with the speed from
+        // the distance (the operator sees it is 0), else when used.
+        if (usesDistance() || trimPct != 0 || adjustSteps != 0 || atMotorLimit) {
+            t.line("Speed trim", trimWords() + (part.isReady() ? "  READY" : ""));
+        }
+        if (offered != null) t.line("Trim last time", lastTrimOffered() + " (double-tap D-pad up to use it)");
         // The distance and where it came from, e.g. "48 in (camera)"; "(last seen)" while no goal is seen.
         String where = !speedMode.isOn() || tableName == null ? "" : Double.isNaN(lastDistance) ? "no goal yet"
                 : fmt("%.0f in (%s)", lastDistance, distanceSource == Aim.Source.NONE ? "last seen" : distanceSource.words());
@@ -634,17 +742,22 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         } else if (!where.isEmpty()) {
             t.line("Shot distance", where);
         }
-        // The trim: always with the speed from the distance (the operator sees it is 0), else when used.
-        if (usesDistance() || trimPct != 0 || adjustSteps != 0) t.line("Speed trim", trimWords());
         part.addTelemetry(t);
     }
 
-    // "+3%", "+200 rpm", "+200 rpm, -2%", "0%"; "(limit)" at trimMaxPercent.
+    // "+3%", "+200 rpm", "+200 rpm, -2%", "0%"; "(limit)" at trimMaxPercent, "(motor limit)" at the
+    // motor's top speed.
     private String trimWords() {
+        String w = trimWords(trimPct, adjustSteps);
+        if (atMotorLimit) return w + " (motor limit)";
+        if (trimPct != 0 && Math.abs(trimPct) >= trimMaxPct) return w + " (limit)";
+        return w;
+    }
+
+    private String trimWords(double pct, int steps) {
         StringBuilder sb = new StringBuilder();
-        if (adjustSteps != 0) sb.append(fmt("%+.0f rpm", adjustSteps * stepRpm.get()));
-        if (trimPct != 0 || sb.length() == 0) sb.append(sb.length() == 0 ? "" : ", ").append(percent(trimPct, true));
-        if (trimPct != 0 && Math.abs(trimPct) >= trimMaxPct) sb.append(" (limit)");
+        if (steps != 0) sb.append(fmt("%+.0f rpm", steps * (stepRpm == null ? 0 : stepRpm.get())));
+        if (pct != 0 || sb.length() == 0) sb.append(sb.length() == 0 ? "" : ", ").append(percent(pct, true));
         return sb.toString();
     }
 
@@ -659,16 +772,21 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         Pad op = plan.operator();
         op.lb.toggle(this).says("spin up / down");
         op.rb.hold(this::fireWhileHeld, this::ceaseFire).says("fire one; hold: keep firing");
-        if (usesDistance()) {
-            // The speed comes from the table: the D-pad trims it by a percentage.
-            String step = percent(trimStepPct, false);
-            op.dpadUp.press(() -> trimPercent(trimStepPct)).says("speed trim +" + step);
-            op.dpadDown.tap(() -> trimPercent(-trimStepPct)).says("speed trim -" + step)
-                    .heldFor(1.0, this::resetTrim).says("hold 1 s: speed trim 0");
-        } else {
-            op.dpadUp.press(() -> adjust(1)).says("speed up");
-            op.dpadDown.tap(() -> adjust(-1)).says("speed down")
-                    .heldFor(1.0, this::resetTrim).says("hold 1 s: back to speedRpm");
+        // With the speed from the table the D-pad trims it by a percentage; with a fixed speed it steps
+        // the rpm. Held: one more step every 0.25 s. Double-tap down: back to none.
+        String up = usesDistance() ? "speed trim +" + percent(trimStepPct, false) : "speed up";
+        String down = usesDistance() ? "speed trim -" + percent(trimStepPct, false) : "speed down";
+        // The hold goes first: if another part already has the button, that gives one clear INIT note
+        // and the other gestures are not tried.
+        op.dpadUp.hold(() -> repeatStep(1), this::repeatEnd).says(up + ", 4 a second");
+        if (plan.mine(op.dpadUp) != null) {
+            op.dpadUp.tap(() -> step(1)).says(up);
+            if (offered != null) op.dpadUp.doubleTap(this::upTwice).says("use last time's trim (" + lastTrimOffered() + ")");
+        }
+        op.dpadDown.hold(() -> repeatStep(-1), this::repeatEnd).says(down + ", 4 a second");
+        if (plan.mine(op.dpadDown) != null) {
+            op.dpadDown.tap(() -> step(-1)).says(down)
+                    .doubleTap(this::resetTrim).says(usesDistance() ? "speed trim 0" : "back to speedRpm");
         }
         if (tables.size() > 1) op.dpadRight.press(this::nextTable).says("next shot table (" + tableList() + ")");
     }

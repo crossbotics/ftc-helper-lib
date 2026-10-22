@@ -77,7 +77,7 @@ Flywheel flywheel = Flywheel.create(hardwareMap, "flywheel")
 | `.countsPerRev(c)` | counts per FLYWHEEL turn: bare motor 1:1 = 28; with gears multiply by motor turns per wheel turn; a shaft encoder on this motor's port = its counts (REV Through Bore 8192) |
 | `.pidf(p, i, d, f)` | the hub's speed gains (PID plus F, a push that grows with the speed; see [PID](control.md#pidcontroller)). Start 10, 3, 0, 12; tune F first (with a charged battery) |
 | `.batteryCompensation(volts, nominalVolts)`, `.noBatteryCompensation()` | F follows the battery ([below](#battery-compensation)); off (the default) |
-| `getBatteryVolts()`, `getFScale()`, `hasBatteryCompensation()` | the last battery reading (NaN if none), what F is multiplied by now (1 = as tuned) |
+| `getBatteryVolts()`, `getFScale()`, `hasBatteryCompensation()` | the battery F is scaled for (the highest reading of the last second; NaN if none), what F is multiplied by now (1 = as tuned) |
 | `.tolerance(rpm)`, `.settleTime(s)` | when "ready" |
 | `.maxRpm(r)` | highest speed allowed |
 | `.shotDrop(rpm)` | a drop this big after ready = a shot was seen |
@@ -92,7 +92,7 @@ tool that measures spin speed) or a slow-motion video. Very high count rates (a 
 
 ```java
 Flywheel flywheel = Flywheel.create(hardwareMap, "flywheel").pidf(1.17, 0.117, 0, 11.70)
-        .batteryCompensation(() -> Hw.batteryVolts(hardwareMap), 12.6);   // 12.6 V: from the Flywheel Finder
+        .batteryCompensation(Hw.batteryReader(hardwareMap), 12.6);   // 12.6 V: from the Flywheel Finder
 ```
 
 **Why.** The hub's speed control works in power: F is "this much power for each count per second of
@@ -102,13 +102,22 @@ and the wheel runs slower. The P and I gains notice the missing speed and add po
 slowly, so a low battery means a slow spin-up and a slow recovery after each shot (shots fired before it
 is back go short).
 
-**What it does.** Every 0.25 s it reads the battery and sends F x (`nominalVolts` / volts now): tuned at
-12.8 V, at 11.6 V F is x 1.10. Then the wheel gets the same push as when it was tuned. The scale stays
-between 0.8 and 1.3 (a bad reading cannot run the wheel away), a reading outside 7 to 16 V is ignored,
+**What it does.** Every 0.25 s it reads the battery and sends F x (`nominalVolts` / volts): tuned at
+12.6 V, at 11.5 V F is x 1.10 (12.6 / 11.5). Then the wheel gets the same push as when it was tuned.
+"volts" is the **highest reading of the last second** (`BATTERY_FILTER_SEC`): while the drive or the
+flywheel pulls hard, the battery dips for a moment and comes back; a dip is not a weaker battery, and
+raising F for it would push the wheel past its speed as the load ends. A battery that is really lower
+reads low the whole second, and then F is scaled. The scale stays between 0.8 and 1.3 (a bad reading
+cannot run the wheel away), a reading outside 7 to 16 V (or NaN: no reading yet, or too old) is skipped,
 and a new F is sent only when it changes by more than 2% (each send costs loop time). P and I stay as
 tuned. `nominalVolts` is the battery voltage when you found the gains: the Flywheel Finder shows it.
-Without it, 12.8 V (a charged battery under load). Below 11.5 V the Driver Station warns:
-`battery 11.2 V: low`. Debug mode shows `flywheel battery: 11.62 V (tuned at 12.6 V), F x1.08`.
+Without it, 12.8 V (`Flywheel.DEFAULT_NOMINAL_VOLTS`, a charged battery under load). Below 11.5 V the
+Driver Station warns: `battery 11.2 V: low`. Debug mode shows `flywheel battery: 11.50 V (tuned at 12.6 V), F x1.10`.
+
+**Where the volts come from.** `Hw.batteryReader(hardwareMap)` never waits: it answers with the latest
+reading and asks the hubs again (at most every 0.25 s) on the library's helper thread, so the loop never
+waits for them ([non-blocking](../guides/non-blocking.md)). `() -> Hw.batteryVolts(hardwareMap)` works
+too, but each reading then holds up the loop a few milliseconds.
 The robot in five files turns it on for you when `kF` is set ([robot.md](robot.md#speed-trim-and-battery-compensation)).
 
 ## ShotTable
@@ -227,6 +236,7 @@ Launcher launcher = new Launcher(flywheel, feeder)
 | `.idleRpm(r)` | speed when not shooting (a low idle makes spin-up faster) |
 | `setRpm(r)` / `setDistance(d)` | the shot by hand / from the table (sets the hood too) |
 | `speedScale(s)`, `getSpeedScale()` | the shot speed x `s` (1.03 = +3%), a live trim for a match; not the idle speed. 1 = as set |
+| `getShotRpm()` | the shot speed before `speedScale` (from `setRpm` or the table) |
 | `getHood()`, `hasTable()` | the hood servo (or null); true if a table was given |
 | `spinUp()`, `shoot(n)`, `stopShooting()` | commands |
 | `idle()` | back to the idle speed |

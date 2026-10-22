@@ -146,7 +146,7 @@ override it for a geared wheel. Output:
 Flywheel.create(hardwareMap, "flywheel").countsPerRev(28.0).pidf(1.17, 0.117, 0, 11.70).maxRpm(5400)
     // top speed 6000 RPM; maxRpm = 90% of it
     // recovery after a shot at 3600 RPM: 0.38 s
-    // tuned at 12.6 V: add .batteryCompensation(() -> Hw.batteryVolts(hardwareMap), 12.6)
+    // tuned at 12.6 V: add .batteryCompensation(Hw.batteryReader(hardwareMap), 12.6)
 Tunables.Flywheel: kP = 1.17, kI = 0.117, kD = 0, kF = 11.70, nominalVolts = 12.6, shotIntervalSec = 0.45
 ```
 
@@ -281,12 +281,12 @@ public class ShotTuner extends ShotTunerOpMode {
 It sets the robot up at INIT and uses its first `Launcher` (with its numbers from `Tunables.java`),
 its first `Camera`, its odometry and its drive. **The way it tunes**: at each distance, shoot 3-5 at a
 speed and mark each shot HIT (A) or MISS (B); try another speed; X saves the speed with the best hit
-ratio there. **The distance** (averaged over the last half second of fresh readings): the camera's, or, when it does not
+ratio (hits out of shots) there. Every button is on gamepad 1. **The distance** (averaged over the last half second of fresh readings): the camera's, or, when it does not
 see the goal, the odometry's (with an `odometry(...)` line and `Tunables.Aim.goalX, goalY`; the robot
 starts at `startSpotIn()`, default the middle of the field facing away from you; see
 [robot.md: Aim](robot.md#aim)), or set by hand with neither. The screen says which, and shows both when
 both are there (far apart: move the goal point). **Several tables** (`speedByDistancePollen`,
-`speedByDistanceNectar`): Y until `> Table`, the D-pad picks the one you tune; it starts on the launcher's
+`speedByDistanceNectar`): Y until `> Table`, D-pad left/right picks the one you tune; it starts on the launcher's
 start table. Each table keeps its own points and gets its own line. Its other parts are set up but not moved: a turret stays still, and
 the launcher's `requireReady(...)` checks (like "turret aimed") are off, because you aim by hand here.
 
@@ -311,7 +311,9 @@ Without five files, fill in:
 | D-pad up/down, right/left | big / small step (100 / 10 RPM, 5 / 0.5 deg, 6 / 1 in) |
 | **LB** | flywheel on/off (it is OFF at START) |
 | **RB** / hold **RT** | shoot one / keep shooting (let go to stop). Keep shooting also stops after a jam or a "gave up": press RT again to go on |
-| **A** / **B** | the oldest shot not marked yet was a HIT / a MISS (at the speed it was fired at) |
+| **A** / **B** | the oldest shot not marked yet was a HIT / a MISS (at the speed, hood angle and distance it was fired with) |
+| left stick click | undo the last HIT / MISS: that shot waits to be marked again |
+| right stick click | drop the last shot not marked yet (a "shot" with no piece: the wheel dipped by itself) |
 | **X** | save: the speed with the best hit ratio at this distance (replaces one within 1 in); with no shots marked, the speed now |
 | hold **BACK** 1 s | delete the saved point here (a hold, so it is not pressed by mistake) |
 | sticks, left trigger | drive, slow (with `robotConfig()`) |
@@ -322,8 +324,11 @@ are still to mark), `Hits at 2550: 3/4`, every speed tried at this spot, every t
 (`Points: POLLEN 3, NECTAR 0  (4-6 per table)`), the recovery time, the distance and bearing, and the
 saved points. The launcher's speed trim is never used here (the table holds the real speeds); its battery
 compensation stays on. Each shot keeps the flywheel speed **measured** as the piece was fed; one fed more than
-`sagLimitRpm` (60 RPM or 3%) under the speed asked for is flagged "sagged". The hit counts start again
-when the distance moves more than `SPOT_MOVE_IN` (4 in), after a save, and on another table. Output:
+`sagLimitRpm` (60 RPM or 3%) under the speed asked for is flagged "sagged" (it had not got back to
+speed after the last shot, or the battery is low). With a hood, each speed and hood angle is its own
+try, and X saves the winner with the hood angle it was fired with. The hit counts start again when the
+distance moves more than `SPOT_MOVE_IN` (4 in), after a save, and on another table; shots fired at the
+old spot and not marked are dropped. Output:
 
 ```java
 new ShotTable()
@@ -503,10 +508,18 @@ one within `SAME_DISTANCE` = 1), `removeNear(distance)`, `points()` (nearest fir
 `save(distance, rpm, hoodDeg, measuredRpm, hits, shots)` keeps how many went in and the measured speed
 (`saved()`, `size()`, `note(saved)`; `codeLines()` writes them as a comment).
 
-`ShotPoints.Tally`: hits and shots per speed at one spot. `mark(rpm, hit, measuredRpm)`, `hits(rpm)`,
-`shots(rpm)`, `totalShots()`, `measuredRpm(rpm)`, `bestRpm()` (best hit ratio; a tie: more shots,
-then the lower speed; NaN with no hit), `summary()` (`2450: 1/3, 2550: 3/4 (best)`), `spotIn()`,
-`setSpot(in)`, `isEmpty()`, `clear()`.
+`ShotPoints.Tally`: hits and shots per try (a speed, and a hood angle with a hood) at one spot.
+`mark(rpm, hit, measuredRpm)`, `mark(rpm, hoodDeg, hit, measuredRpm)`, `unmark(...)` (an undo),
+`hits(rpm)` / `hits(rpm, hoodDeg)`, `shots(...)`, `totalShots()`, `measuredRpm(...)`, `best()`
+({rpm, hood}, null with no hit), `bestRpm()` (best hit ratio; a tie: more shots, then the lower speed;
+NaN with no hit), `tries()`, `summary()` (`2450: 1/3, 2550: 3/4 (best)`; with a hood
+`2550 @ 10.0 deg: 3/4`), `spotIn()`, `setSpot(in)`, `isEmpty()`, `clear()`.
+
+`ShotPoints.Trials`: the shots of one spot waiting to be marked, each with the speed, hood and distance
+it was fired with. `fired(rpm, hoodDeg, measuredRpm, distanceIn)`, `mark(hit)` (the oldest waiting
+shot), `undo()` (the last mark; that shot waits again), `dropLast()` (the newest waiting shot),
+`check(distanceIn)` (moved more than `SPOT_MOVE_IN`: marks start again, old shots dropped),
+`unmarkedCount()`, `tally()`, `clear()`. Each returns the words the tuner shows.
 
 `ShotPoints.DistanceAverage`: the distance over the last `WINDOW_SEC` (0.5 s) of fresh readings.
 `add(nowSec, distance, from)` (another `from` starts again), `average(nowSec)` (NaN with none),

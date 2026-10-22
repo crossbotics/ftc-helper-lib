@@ -25,7 +25,7 @@ flowchart LR
 | Kind of code | Blocks? |
 | --- | --- |
 | Everything you call in TeleOp: mechanism commands, `update()`, `ControllerBindings`, telemetry, timers, menus, cameras, the launcher | **Never.** Each call does a little work and returns. |
-| Slow hardware requests (Limelight pipeline switch and heading, webcam exposure, a REV 2m Distance Sensor in `PieceSensor.distance`) | Never: the library sends them on a background thread (`BackgroundWorker`). |
+| Slow hardware requests (Limelight pipeline switch and heading, webcam exposure, a REV 2m Distance Sensor in `PieceSensor.distance`, the battery voltage for the launcher: `Hw.batteryReader`) | Never: the library sends them on a background thread (`BackgroundWorker`). |
 | Setup in INIT (`create(...)`, `ImuSetup.get`, camera `start()`) | A short moment, once, in INIT. Not in the loop. |
 | `AutoDrive.move/turn/turnTo/moveWithTurn`, `AutoRoutine.runAll`, `AutoStep`s, `EasyAuto` | **Yes, on purpose**, and only in autonomous. While they wait they keep updating your mechanisms, check STOP, and have time limits. |
 

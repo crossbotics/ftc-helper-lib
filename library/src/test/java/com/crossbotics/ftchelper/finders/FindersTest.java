@@ -204,6 +204,75 @@ public class FindersTest {
         assertTrue(Double.isNaN(tie.spotIn()));
     }
 
+    // Codex: with a hood, each speed AND hood angle is its own try (the winner keeps its hood).
+    @Test public void theTallyKeepsEachHoodAngleApart() {
+        ShotPoints.Tally t = new ShotPoints.Tally();
+        t.mark(2500, 10, true, 2500);
+        t.mark(2500, 10, true, 2500);                          // 2/2 at 10 deg
+        t.mark(2500, 15, false, 2500);
+        t.mark(2500, 15, true, 2500);                          // 1/2 at 15 deg
+        assertEquals(2, t.tries());
+        assertEquals(2, t.hits(2500, 10));
+        assertEquals(1, t.hits(2500, 15));
+        assertEquals(0, t.shots(2500));                        // no shot without a hood
+        assertEquals(2500, t.best()[0], 1e-9);
+        assertEquals("the hood the hits were shot with", 10, t.best()[1], 1e-9);
+        assertEquals("2500 @ 10.0 deg: 2/2 (best), 2500 @ 15.0 deg: 1/2", t.summary());
+        t.unmark(2500, 10, true, 2500);
+        t.unmark(2500, 10, true, 2500);
+        assertEquals("undone: the 15 deg try is the best now", 15, t.best()[1], 1e-9);
+        assertEquals(1, t.tries());
+    }
+
+    // Codex + Alex: each shot keeps the speed, hood and distance it was FIRED with; undo; drop a phantom.
+    @Test public void trialsMarkTheShotAsFiredUndoAndDrop() {
+        ShotPoints.Trials tr = new ShotPoints.Trials();
+        assertTrue(tr.mark(true).startsWith("No shot to mark"));
+        tr.fired(2500, 10, 2490, 48);
+        tr.fired(2500, 10, 2480, 48.5);
+        // The speed and hood are changed now, before marking: the marks still go to 2500 / 10 deg.
+        String note = tr.mark(true);
+        assertTrue(note, note.startsWith("HIT at 2500 RPM, 10.0 deg: 1/1"));
+        tr.mark(false);
+        assertEquals(1, tr.tally().hits(2500, 10));
+        assertEquals(2, tr.tally().shots(2500, 10));
+        assertEquals("the spot is where the first marked shot was fired", 48, tr.tally().spotIn(), 1e-9);
+        assertTrue(tr.undo().startsWith("Took back the MISS"));
+        assertEquals(1, tr.tally().shots(2500, 10));
+        assertEquals("the shot waits to be marked again", 1, tr.unmarkedCount());
+        tr.mark(true);
+        assertEquals(2, tr.tally().hits(2500, 10));
+        assertEquals("Nothing to undo.", new ShotPoints.Trials().undo());
+        // A phantom: the wheel dipped with no piece. Drop the newest unmarked one.
+        tr.fired(2600, 10, 2590, 48);
+        tr.fired(2600, 10, 2590, 48);
+        assertTrue(tr.dropLast().startsWith("Dropped the last shot (2600 RPM, 10.0 deg)"));
+        assertEquals(1, tr.unmarkedCount());
+        assertEquals("No shot waiting to be marked.", new ShotPoints.Trials().dropLast());
+        // Undo everything: the spot is forgotten with the last mark.
+        ShotPoints.Trials one = new ShotPoints.Trials();
+        one.fired(2500, Double.NaN, 2500, 30);
+        one.mark(true);
+        one.undo();
+        assertTrue(one.tally().isEmpty());
+        assertTrue(Double.isNaN(one.tally().spotIn()));
+    }
+
+    @Test public void movingAwayDropsTheOldSpotsShots() {
+        ShotPoints.Trials tr = new ShotPoints.Trials();
+        tr.fired(2500, Double.NaN, 2500, 48);
+        assertEquals("still here", "", tr.check(50));
+        assertEquals("no distance: nothing changes", "", tr.check(Double.NaN));
+        assertTrue(tr.check(60).startsWith("Moved: 1 shot fired at the old spot dropped"));
+        assertEquals(0, tr.unmarkedCount());
+        tr.fired(2500, Double.NaN, 2500, 60);
+        tr.mark(true);
+        tr.fired(2500, Double.NaN, 2500, 60);
+        assertTrue(tr.check(72).startsWith("Moved 12 in: the hit counts start again"));
+        assertTrue(tr.tally().isEmpty());
+        assertEquals(0, tr.unmarkedCount());
+    }
+
     @Test public void savedPointsCarryTheirHitsAndMeasuredSpeed() {
         ShotPoints p = new ShotPoints(false);
         p.save(48, 2550, 0, 2531, 4, 5);

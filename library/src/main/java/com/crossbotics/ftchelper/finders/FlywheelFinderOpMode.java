@@ -64,10 +64,11 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
     private int lastShots = 0;
     private double shotAt = Double.NaN;
     private double recoverySec = Double.NaN;
-    // The battery: the last reading, when to read again (each read asks the hub), and the voltage when
-    // the top speed (so the gains) was measured. NaN = none.
+    // The battery: the last reading, and the voltage when the top speed (so the gains) was measured.
+    // NaN = none.
     private double volts = Double.NaN;
-    private double nextVoltsAt = 0;
+    // The battery, read on the library's helper thread (never waits in the loop); made at the first step.
+    private java.util.function.DoubleSupplier battery = null;
     private double tuneVolts = Double.NaN;
 
     /**
@@ -154,7 +155,7 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
             flywheel = new Flywheel(motorName, motor).countsPerRev(countsPerRev())
                     .maxRpm(topRpm()).pidf(gains[0], gains[1], gains[2], gains[3]);
             // From the voltage the gains were found at: an F you fine-tune now is for that voltage too.
-            if (tuneVolts >= 9 && tuneVolts <= 14) flywheel.batteryCompensation(() -> Hw.batteryVolts(hardwareMap), tuneVolts);
+            if (tuneVolts >= 9 && tuneVolts <= 14) flywheel.batteryCompensation(batteryReader(), tuneVolts);
             if (targetRpm == 0) targetRpm = Math.round(topRpm() * 0.6 / 25) * 25.0;
             lastShots = 0;
         } else {
@@ -182,11 +183,15 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
         return Math.abs(FinderMath.ticksPerSecToRpm(topTicks, countsPerRev()));
     }
 
-    // The battery, at most every 0.25 s (each reading asks the hub, a few milliseconds).
+    // One battery reader for the whole run (Hw.batteryReader: the hubs are asked off the loop).
+    private java.util.function.DoubleSupplier batteryReader() {
+        if (battery == null) battery = Hw.batteryReader(hardwareMap);
+        return battery;
+    }
+
+    // The reader asks the hubs on a helper thread at most every 0.25 s: this never waits.
     private void readVolts() {
-        if (now() < nextVoltsAt) return;
-        nextVoltsAt = now() + 0.25;
-        double v = Hw.batteryVolts(hardwareMap);
+        double v = batteryReader().getAsDouble();
         if (v >= 7 && v <= 16) volts = v;
     }
 
@@ -260,7 +265,7 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
         }
         boolean knowVolts = tuneVolts >= 9 && tuneVolts <= 14;
         if (knowVolts) {
-            results.set(key + ":3", "    // tuned at " + FinderResults.num(tuneVolts, 1) + " V: add .batteryCompensation(() -> Hw.batteryVolts(hardwareMap), "
+            results.set(key + ":3", "    // tuned at " + FinderResults.num(tuneVolts, 1) + " V: add .batteryCompensation(Hw.batteryReader(hardwareMap), "
                     + FinderResults.num(tuneVolts, 1) + ")");
         }
         // The same gains for the robot in five files (Tunables.java). A slow recovery also needs a

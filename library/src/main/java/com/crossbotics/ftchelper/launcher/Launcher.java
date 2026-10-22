@@ -171,6 +171,11 @@ public class Launcher implements Subsystem {
         speedScale = Double.isNaN(scale) ? 1 : Math.max(0.5, Math.min(1.5, scale));
     }
 
+    /** The shot speed before {@link #speedScale}: from {@link #setRpm} or the table (RPM; 0 = none yet). */
+    public double getShotRpm() {
+        return shotRpm;
+    }
+
     /** The shot speed's multiplier ({@link #speedScale}): 1 = as set. */
     public double getSpeedScale() {
         return speedScale;

@@ -39,7 +39,7 @@ import java.util.function.LongSupplier;
  * {@link #batteryCompensation} the F gain is scaled by (tuned volts / volts now), so the wheel gets
  * the same push at any battery level:
  * <pre>{@code
- * flywheel.batteryCompensation(() -> Hw.batteryVolts(hardwareMap), 12.6);   // 12.6 V: from the Flywheel Finder
+ * flywheel.batteryCompensation(Hw.batteryReader(hardwareMap), 12.6);   // 12.6 V: from the Flywheel Finder
  * }</pre>
  *
  * <p>RPM = revolutions (turns) per minute. The hub works in encoder counts per second, so this class
@@ -75,21 +75,30 @@ public class Flywheel implements Subsystem {
     private String fault = "";
 
     // Battery compensation (batteryCompensation()): where the volts come from (null = off), the volts the
-    // gains were tuned at, the last good reading, when to read next, the F scale sent to the hub, and how
-    // many readings in a row were low (for the warning).
+    // gains were tuned at, the battery after the filter (see BATTERY_FILTER_SEC), when to read next, the F
+    // scale sent to the hub, and how many readings in a row were low (for the warning).
     private DoubleSupplier batteryVolts = null;
     private double nominalVolts = DEFAULT_NOMINAL_VOLTS;
     private double volts = Double.NaN;
     private double nextVoltsAt = Double.NaN;
     private double fScale = 1;
     private int lowReadings = 0;
+    // The good readings of the last BATTERY_FILTER_SEC: {time s, volts}, oldest first.
+    private final java.util.ArrayDeque<double[]> recentVolts = new java.util.ArrayDeque<>();
 
     /** The volts the gains are for when nothing else is said: a charged battery under load (as {@code Feedforward}). */
     public static final double DEFAULT_NOMINAL_VOLTS = 12.8;
     /** Below this many volts the Driver Station warns that the battery is low. */
     public static final double LOW_BATTERY_VOLTS = 11.5;
-    /** How often the battery is read, seconds (each reading asks the hub: a few milliseconds). */
+    /** How often the battery is read, seconds. */
     public static final double BATTERY_READ_SEC = 0.25;
+    /**
+     * The battery used is the HIGHEST reading of the last this-many seconds. Why: while the drive or the
+     * flywheel itself pulls hard, the battery dips for a moment and comes back. A dip is not a weaker
+     * battery: scaling F up for it would push the wheel past its speed just as the load ends. A battery
+     * that is really lower reads low for the whole second, and then F is scaled.
+     */
+    public static final double BATTERY_FILTER_SEC = 1.0;
     /** The F gain is changed only when the new scale differs by more than this share (2%). */
     public static final double RESEND_SHARE = 0.02;
     /** The F scale is kept between these, so a wrong reading cannot make the wheel run away. */
@@ -161,19 +170,27 @@ public class Flywheel implements Subsystem {
 
     /**
      * Battery compensation: every {@link #BATTERY_READ_SEC} s it reads the battery and gives the hub
-     * F x (nominalVolts / volts now), kept to {@link #MIN_F_SCALE}..{@link #MAX_F_SCALE}, sent again only
-     * when that changes by more than 2%. Why: F is a POWER per speed, and the same power spins the wheel
-     * slower on a weaker battery; scaled, the wheel gets the same push at 11.5 V as at 12.8 V, so it
-     * reaches its speed and gets back to it after a shot as fast as when it was tuned. P and I stay as
-     * tuned. Needs {@link #pidf} (nothing to scale without an F). A reading outside 7..16 V (no sensor,
-     * a bad reading) keeps the last scale. Below {@link #LOW_BATTERY_VOLTS} the Driver Station warns.
+     * F x (nominalVolts / volts), kept to {@link #MIN_F_SCALE}..{@link #MAX_F_SCALE}, sent again only
+     * when that changes by more than 2%. "volts" is the highest reading of the last
+     * {@link #BATTERY_FILTER_SEC} s, so a short dip while the robot pulls hard does not raise F. Why: F
+     * is a POWER per speed, and the same power spins the wheel slower on a weaker battery; scaled, the
+     * wheel gets the same push at 11.5 V as at 12.6 V, so it reaches its speed and gets back to it after
+     * a shot as fast as when it was tuned. P and I stay as tuned. Needs {@link #pidf} (nothing to scale
+     * without an F). A reading outside 7..16 V (no sensor, a bad or too old reading) is skipped and the
+     * last scale kept. Below {@link #LOW_BATTERY_VOLTS} the Driver Station warns.
+     *
+     * <p>Give it {@link com.crossbotics.ftchelper.hardware.Hw#batteryReader Hw.batteryReader(hardwareMap)}:
+     * it asks the hubs on the library's helper thread, so the loop never waits for them. (Asking the hubs
+     * yourself, {@code () -> Hw.batteryVolts(hardwareMap)}, holds up the loop a few milliseconds
+     * every 0.25 s.)
      *
      * <pre>{@code
      * Flywheel.create(hardwareMap, "flywheel").pidf(1.17, 0.117, 0, 11.70)
-     *         .batteryCompensation(() -> Hw.batteryVolts(hardwareMap), 12.6);
+     *         .batteryCompensation(Hw.batteryReader(hardwareMap), 12.6);
      * }</pre>
      *
-     * @param batteryVolts where the volts come from, e.g. {@code () -> Hw.batteryVolts(hardwareMap)}
+     * @param batteryVolts where the volts come from, e.g. {@code Hw.batteryReader(hardwareMap)}; asked every
+     *                     {@link #BATTERY_READ_SEC} s in {@link #update()}, so it must answer at once
      * @param nominalVolts the battery voltage the gains were tuned at (the Flywheel Finder shows it),
      *                     9 to 14 V; {@link #DEFAULT_NOMINAL_VOLTS} if you do not know it
      */
@@ -185,6 +202,7 @@ public class Flywheel implements Subsystem {
         this.batteryVolts = batteryVolts;
         this.nominalVolts = nominalVolts;
         nextVoltsAt = Double.NaN;   // read at the next update()
+        recentVolts.clear();
         return this;
     }
 
@@ -315,7 +333,10 @@ public class Flywheel implements Subsystem {
     /** How many shots were noticed (speed drops) since the OpMode started. */
     public int getShotCount() { return shots; }
 
-    /** The last battery reading (volts), NaN before the first or without {@link #batteryCompensation}. */
+    /**
+     * The battery the F scale uses (volts): the highest reading of the last {@link #BATTERY_FILTER_SEC} s.
+     * NaN before the first reading or without {@link #batteryCompensation}.
+     */
     public double getBatteryVolts() { return volts; }
 
     /** What F is multiplied by for the battery now (1 = as tuned, or compensation off). */
@@ -345,7 +366,7 @@ public class Flywheel implements Subsystem {
     @Override
     public void addTelemetry(RobotTelemetry t) {
         if (!fault.isEmpty()) t.warn(name + ": " + fault);
-        // Two low readings in a row (half a second): not one dip while the drive pushes hard.
+        // Two low readings in a row (after the filter: the battery was low for over a second).
         if (lowReadings >= 2) {
             t.warn(name + String.format(java.util.Locale.US, ": battery %.1f V: low. The flywheel gets back to speed slower: charge or swap it", volts));
         }
@@ -368,19 +389,26 @@ public class Flywheel implements Subsystem {
         if (follower != null) applyGainsToFollower();
     }
 
-    // Battery compensation: reads the volts at most every BATTERY_READ_SEC (each reading costs loop
-    // time), and sends a new F only when it really changed (sending costs loop time too).
+    // Battery compensation: reads the volts at most every BATTERY_READ_SEC, keeps the highest of the last
+    // BATTERY_FILTER_SEC (a dip under load is not a weaker battery), and sends a new F only when it really
+    // changed (sending costs loop time).
     private void checkBattery(double now) {
         if (batteryVolts == null) return;
         if (!Double.isNaN(nextVoltsAt) && now < nextVoltsAt) return;
         nextVoltsAt = now + BATTERY_READ_SEC;
-        double v = batteryVolts.getAsDouble();
-        // No sensor (NaN) or a reading no 12 V battery gives: keep what we have.
-        if (!(v >= 7 && v <= 16)) return;
+        double reading = batteryVolts.getAsDouble();
+        // Forget readings older than the filter's time.
+        recentVolts.removeIf(r -> now - r[0] > BATTERY_FILTER_SEC + 1e-9);
+        // No sensor (NaN), a reading too old, or one no 12 V battery gives: keep what we have.
+        if (!(reading >= 7 && reading <= 16)) return;
+        recentVolts.addLast(new double[] {now, reading});
+        // The highest reading of the last second: a short dip under load does not count.
+        double v = 0;
+        for (double[] r : recentVolts) v = Math.max(v, r[1]);
         volts = v;
         lowReadings = v < LOW_BATTERY_VOLTS ? lowReadings + 1 : 0;
         if (gains == null) return;   // no F to scale (pidf() was not called)
-        // A weaker battery: more power for the same push. 12.8 V tuned, 11.6 V now: F x 1.10.
+        // A weaker battery: more power for the same push. 12.6 V tuned, 11.5 V now: F x 1.10.
         double want = MathUtil.clamp(nominalVolts / v, MIN_F_SCALE, MAX_F_SCALE);
         if (Math.abs(want - fScale) > RESEND_SHARE * fScale) {
             fScale = want;

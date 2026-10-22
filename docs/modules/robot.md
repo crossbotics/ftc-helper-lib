@@ -411,7 +411,9 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer
 | `fire()`, `fire(n)` | spins up if needed, feeds as soon as it is at speed (gives up after 3 s, saying why) |
 | `fireWhileHeld()`, `ceaseFire()` | for a held button: one shot, then the next as soon as it is fed; on release no more (a tap still fires its one shot) |
 | `adjust(steps)` | speed +/- steps x `stepRpm` (not saved) |
-| `trimPercent(change)`, `setTrim(percent)`, `resetTrim()`, `speedTrim()` | the [speed trim](#speed-trim-and-battery-compensation): every shot speed (table or fixed) +/- that many percent, e.g. `trimPercent(+2)`; kept to +/- `trimMaxPercent`; `resetTrim()` also clears `adjust` |
+| `trimPercent(change)`, `setTrim(percent)`, `resetTrim()`, `speedTrim()` | the [speed trim](#speed-trim-and-battery-compensation): every shot speed (table or fixed) +/- that many percent, e.g. `trimPercent(+2)`; kept to +/- `trimMaxPercent` and to the motor's top speed; `resetTrim()` also clears `adjust` |
+| `atMotorLimit()` | true when the trimmed speed is cut to the motor's top speed ("(motor limit)"; more trim up does nothing) |
+| `lastTrimOffered()`, `useLastTrim()` | the trim used last time (since the robot app started), offered at INIT ("+3%", "" if none); use it (double-tap D-pad up does). Never applied by itself |
 | `speedMode()` | the [mode](#modes) that sets the speed from the distance to the goal |
 | `speedFromDistance(camera)` | speed from the camera's distance; with odometry and `Tunables.Aim.goalX, goalY`, from the odometry's while the camera does not see the goal ([Aim](#aim)) |
 | `speedFromOdometry()` | speed from the odometry's distance only (no camera) |
@@ -433,7 +435,8 @@ stays), or one table per game piece: `speedByDistancePollen`, `speedByDistanceNe
 [Flywheel Finder](../guides/finders.md) finds them, and `nominalVolts`, the battery voltage they were found
 at). Buttons (operator): LB spin up/down, RB fire one (hold: keep firing, `fireWhileHeld()` / `ceaseFire()` on release),
 D-pad up/down the speed trim +/- `trimStepPercent` with speed from distance, or +/- `stepRpm` with a fixed
-speed; hold D-pad down 1 s = no trim; D-pad right the next shot table (two or more). Each only when free.
+speed (held: one more step every 0.25 s); double-tap D-pad down = no trim; double-tap D-pad up = last
+time's trim (when offered); D-pad right the next shot table (two or more). Each only when free.
 
 ```java
 public static double[][] speedByDistancePollen = {{24, 2200}, {48, 2550}, {72, 2900}};   // Tunables.Launcher
@@ -446,19 +449,28 @@ goal is seen); with one table, `Shot distance: 48 in (camera)`.
 
 ### Speed trim and battery compensation
 
-**Speed trim**: a fix during a match, when every shot is a bit short or long (a tired battery, a worn
-wheel). `trimPercent(+2)` makes every shot speed 2% faster than the table (or `speedRpm`) says. It
-starts at 0 at every INIT, is the same for every shot table (a battery or a wheel changes them all
-alike), stops at +/- `trimMaxPercent` (15), and shows as `Speed trim: +3%`. The Shot Tuner never uses
-it, so tables are recorded clean. Needing the same trim match after match means the table is off:
-tune it again with the Shot Tuner, or multiply its speeds by the trim in `Tunables.java`.
+**Speed trim**: a fix during a match, when every shot is a bit short or long (a worn wheel, softer
+balls). `trimPercent(+2)` makes every shot speed 2% faster than the table (or `speedRpm`) says. It
+starts at 0 at every INIT, is the same for every shot table, stops at +/- `trimMaxPercent` (15) and at
+the motor's top speed (`(motor limit)`), and is the launcher's first line: `Speed trim: +3%  READY`. The
+trim used last time is remembered until the robot app restarts and offered at INIT
+(`Trim last time: +3% (double-tap D-pad up after START to use it)`), never applied by itself. The Shot
+Tuner never uses it, so tables are recorded clean.
+
+With `kF` set the battery is already compensated (below), so a trim you need match after match points
+at the wheel or the balls: the table is off. Make it part of the table, then trim back to 0. A +3% trim
+all season: every speed times 1.03, so `{48, 2550}` becomes `{48, 2627}` (2550 x 1.03 = 2626.5), in
+every row of every table. Or tune the table again with the Shot Tuner.
 
 **Battery compensation** (on when `kF` is set): every 0.25 s the launcher reads the battery and gives the
-hub F x (`nominalVolts` / volts now). The F gain gives the same POWER for a speed, and the same power
-spins the wheel slower on a weaker battery; the hub's I gain only makes it up slowly. Scaled, the
-wheel gets back to speed after a shot as fast at 11.5 V as on a full battery. Under 11.5 V the Driver
-Station warns. `nominalVolts` (default 12.8) comes from the Flywheel Finder; `batteryCompensation =
-false` turns it off. Details: [Flywheel](launcher.md#battery-compensation).
+hub F x (`nominalVolts` / volts): tuned at 12.6 V, at 11.5 V F x 1.10. The F gain gives the same POWER
+for a speed, and the same power spins the wheel slower on a weaker battery; the hub's I gain only makes
+it up slowly. Scaled, the wheel gets back to speed after a shot as fast at 11.5 V as on a full battery.
+"volts" is the highest reading of the last second, so a dip while the drive pulls hard does not raise
+F; the hubs are asked on the library's helper thread (`Devices.batteryReader()`), so the loop never
+waits. Under 11.5 V the Driver Station warns. `nominalVolts` comes from the Flywheel Finder; without it
+the launcher uses 12.8 V (`Flywheel.DEFAULT_NOMINAL_VOLTS`, a charged battery under load).
+`batteryCompensation = false` turns it off. Details: [Flywheel](launcher.md#battery-compensation).
 
 ```java
 public static double kP = 1.17, kI = 0.117, kD = 0, kF = 11.70, nominalVolts = 12.6;   // Tunables.Launcher
@@ -612,7 +624,9 @@ pushes out (`out()` or a held `reverse()`), each piece that leaves past the inta
 OUT (the newest) and nothing counts in, so backing a jam out and taking it in again counts right. The
 ready sensor, if there is one, has the last word on the next piece: it corrects the kind, and a piece
 it sees that was never counted is added. After a shot it is trusted again once the slot reads empty,
-or the next piece's reading is steady, or the feed ends.
+or a new steady reading begins (the next piece). Not when the feed ends: the sensor's answer lags a
+little (`steadyMs`), and its old reading would put the piece just fired back in the count. A jammed
+feed (nothing went) trusts it again at once.
 
 **The count is a helper, not a guarantee.** A piece that bounces out, or two pieces read as one, make it
 wrong. The drivers, not the count, are responsible for G407 (at most 4) until the robot has a hardware
@@ -1110,7 +1124,8 @@ are the simulator's [parts catalog](../guides/parts-catalog.md) (a test keeps th
 
 [`Module`](#module) is what every mechanism shares: `name()` (its Tunables section), `deviceName()`,
 `tunables(section)`. [`Devices`](#module) is where modules find their hardware: `Devices.of(hardwareMap)`
-on the robot; tests give pretend devices. `Devices.batteryVolts()` is the battery now (NaN in tests). A new kind of module is a change to the library (its parts are
+on the robot; tests give pretend devices. `Devices.batteryVolts()` is the battery now (NaN in tests; it waits for the hubs, so not in the loop);
+`Devices.batteryReader()` is the same for code in the loop (asked on the library's helper thread). A new kind of module is a change to the library (its parts are
 package-private, see AGENTS.md); in team code, use the plain parts ([mechanism](mechanism.md)) in
 your own class and call it from Controls.java and your autos.
 

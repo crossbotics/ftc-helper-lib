@@ -34,24 +34,34 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - **Launcher speed trim that works with shot tables.** `robot.launcher.trimPercent(+2)` makes every shot
   speed (the table's or `speedRpm`) 2% faster; `setTrim(percent)`, `resetTrim()`, `speedTrim()`. Kept to
   +/- `Tunables.Launcher.trimMaxPercent` (15), the same for every table, 0 at every INIT, shown as
-  `Speed trim: +3%`. With speed from the distance, the operator's D-pad up/down trims by
-  `trimStepPercent` (1%); hold D-pad down 1 s = no trim (with a fixed speed: back to `speedRpm`). The
-  Shot Tuner never uses it. `launcher.Launcher.speedScale(s)` / `getSpeedScale()` underneath.
+  `Speed trim: +3%  READY` (the launcher's first line). With speed from the distance, the operator's
+  D-pad up/down trims by `trimStepPercent` (1%), held: one more step every 0.25 s (after 0.5 s);
+  double-tap D-pad down = no trim (with a fixed speed: back to `speedRpm`). Never past the motor's top
+  speed (`(motor limit)`, `atMotorLimit()`). Last time's trim is remembered until the robot app restarts
+  and offered at INIT (`Trim last time: +3% (double-tap D-pad up after START to use it)`,
+  `lastTrimOffered()`, `useLastTrim()`), never applied by itself. The Shot Tuner never uses it.
+  `launcher.Launcher.speedScale(s)` / `getSpeedScale()` / `getShotRpm()` underneath.
 - **Flywheel battery compensation.** `Flywheel.batteryCompensation(volts, nominalVolts)` scales the hub's
-  F gain by nominalVolts / the battery now (read every 0.25 s, sent only on a 2% change, kept to x0.8..x1.3),
+  F gain by nominalVolts / the battery (read every 0.25 s, the highest reading of the last second
+  (`BATTERY_FILTER_SEC`) so a dip under load does not raise F, sent only on a 2% change, kept to x0.8..x1.3),
   so a low battery gets back to speed after a shot as fast as a full one; warns under 11.5 V. On in the
   robot in five files when `kF` is set (`Tunables.Launcher.nominalVolts`, default 12.8;
   `batteryCompensation = false` turns it off). The Flywheel Finder now records the battery voltage
   (`nominalVolts = 12.6` in its line) and runs step 2 with the compensation. `Hw.batteryVolts(hardwareMap)`,
-  `Devices.batteryVolts()`, `Flywheel.getBatteryVolts()`, `getFScale()`, `hasBatteryCompensation()`,
-  `noBatteryCompensation()`.
+  `Hw.batteryReader(hardwareMap)` (never waits: the hubs are asked on the library's helper thread; the
+  launcher and the Flywheel Finder use it), `Devices.batteryVolts()`, `Devices.batteryReader()`,
+  `Flywheel.getBatteryVolts()`, `getFScale()`, `hasBatteryCompensation()`, `noBatteryCompensation()`.
 - **Shot Tuner: tune the way teams do.** At each distance shoot 3-5 per speed and mark each shot
   A = HIT or B = MISS; the screen shows `Hits at 2550: 3/4` and every speed tried there, and X saves the
   speed with the best hit ratio. The distance is averaged over half a second of fresh readings; each
   shot keeps the flywheel speed measured as it was fed (a "sagged" shot is flagged, and the saved
   `ShotTable` lines carry `// 4/5 in, measured 2531 RPM`); the speed starts from the table you already
-  have at that distance; `Points: POLLEN 3, NECTAR 0  (4-6 per table)` says when you are done.
-  `ShotPoints.Tally`, `ShotPoints.DistanceAverage`, `ShotPoints.save(..., measuredRpm, hits, shots)`,
+  have at that distance; `Points: POLLEN 3, NECTAR 0  (4-6 per table)` says when you are done. Each
+  shot keeps the speed, hood angle and distance it was fired with; with a hood each speed and hood
+  angle is its own try (the winner is saved with its hood). Left stick click undoes the last HIT / MISS,
+  right stick click drops the last unmarked shot (a dip with no piece); unmarked shots from a spot the
+  robot left are dropped. `ShotPoints.Tally` (`mark(rpm, hoodDeg, ...)`, `unmark`, `best()`, `tries()`),
+  `ShotPoints.Trials`, `ShotPoints.DistanceAverage`, `ShotPoints.save(..., measuredRpm, hits, shots)`,
   `saved()`, `size()`, `ShotTunerOpMode.sagLimitRpm(rpm)`.
 - Aim safety checks: `Aim.odometryProblem()`, `Aim.disagreement()`, `Tunables.Aim.maxGoalDistance` (170)
   and `cameraOdometryAgree` (6); INIT shows the alliance and the `mirrorForRed` choice.
@@ -196,7 +206,18 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - A piece backed out through the intake and taken in again was counted twice, and one pushed out
   never counted out (the intake could stay held back by `stopsWhen` for the whole match).
 - The ready sensor was not trusted again when the next piece arrived sooner than `steadyMs` after the
-  last one left; now a new steady reading (or the end of the feed) is enough.
+  last one left; now a new steady reading is enough.
+- A feed that ended (and counted its piece out) while the ready sensor's answer still showed that piece
+  put it back in the count: after a counted feed the sensor is trusted again only when it reads empty or
+  a new steady reading begins (Codex review). A jammed feed trusts it at once.
+- The launcher's battery compensation asked the hubs for the voltage in the loop (a few ms every
+  0.25 s): it now uses `Hw.batteryReader` (Codex review).
+- Cookbook: the Shot Tuner and Piece Tuner recipes are whole files with their imports (the Piece Tuner
+  is its own file, `cookbook/PieceTuner.java`, no `static`); "stop the intake when full" says to put
+  the Pieces line above the intake line; the light recipe names the `Lights` / `LightColor` imports.
+- Lesson 9 and robot.md: a worked example to fold a trim into the table, one battery example
+  (12.6 V tuned, 11.5 V: F x 1.10), the 12.8 V default, the Shot Tuner on gamepad 1 (D-pad left/right
+  picks the table, hold BACK 1 s deletes a point), "hit ratio", "sagged" and "blended" explained.
 - Piece Tuner: measures only new readings (20 readings, about half a second, in both finders pages).
 - `Aim.isAimed()` and `Turret.isAimed()` for a following turret: true only while the goal is seen NOW
   (a fresh picture or the odometry), the turret is homed and in range and the goal error is within the
