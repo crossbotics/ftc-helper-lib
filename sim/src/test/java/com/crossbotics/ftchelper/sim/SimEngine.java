@@ -31,6 +31,7 @@ final class SimEngine {
     SimEngine(SimRobot robot, SimDriverStation.Scope scope) {
         this.robot = robot;
         this.ds = new SimDriverStation(robot, scope);
+        ds.beforeStart = this::placeForInit;
         matchClock();
     }
 
@@ -103,6 +104,15 @@ final class SimEngine {
      * when that spot changes, so a robot dragged on the field map stays where it was dropped.
      */
     private void placeForInit() {
+        // from the physics thread and from START: one at a time
+        synchronized (placeLock) {
+            placeForInitNow();
+        }
+    }
+
+    private final Object placeLock = new Object();
+
+    private void placeForInitNow() {
         if (ds.phase() != SimDriverStation.Phase.INIT || ds.current() == null) return;
         String run = ds.current().name + "#" + ds.initCount;
         if (!run.equals(placedFor)) {
@@ -120,6 +130,7 @@ final class SimEngine {
             // drivers choose the alliance in INIT, that alliance's default spot.
             if (com.crossbotics.ftchelper.match.MatchMemory.hasAlliance()) return;
             com.crossbotics.ftchelper.match.Alliance a = com.crossbotics.ftchelper.match.MatchMemory.chosen();
+            if (a == null) a = allianceUntilChosen(ds);
             if (a == null) return;
             target = defaultSpot(a);
         }
@@ -135,6 +146,19 @@ final class SimEngine {
             ds.physicsError("Start spot " + (auto && !written.isEmpty() ? written : target.toString()) + ": " + e.getMessage()
                     + (auto ? ". Change the spot in the autonomous's start(...)" : ""));
         }
+    }
+
+    /**
+     * The alliance a TeleOp works with in INIT before the drivers choose one: the library's TeleOp says
+     * "Alliance : BLUE until you choose", so the robot stands on BLUE's spot and the page looks from the
+     * blue wall until then (all three agree). Null when an alliance is known or it is not such a TeleOp.
+     */
+    static com.crossbotics.ftchelper.match.Alliance allianceUntilChosen(SimDriverStation ds) {
+        SimDriverStation.Entry e = ds.current();
+        if (e == null || ds.phase() != SimDriverStation.Phase.INIT || !"TeleOp".equals(e.kind)) return null;
+        if (!com.crossbotics.ftchelper.teleop.EasyTeleOp.class.isAssignableFrom(e.type)) return null;
+        if (com.crossbotics.ftchelper.match.MatchMemory.hasAlliance() || com.crossbotics.ftchelper.match.MatchMemory.chosen() != null) return null;
+        return com.crossbotics.ftchelper.match.Alliance.BLUE;
     }
 
     /**

@@ -34,8 +34,11 @@ import java.util.List;
  * </pre>
  *
  * <p>It shows the lines for {@code Tunables.java}: {@code Tunables.Hood: posA = 0.205, posB = 0.648},
- * then {@code angleA = 0, angleB = 25} once you gave the angles at both stops, and a
- * {@code calibration} line with 3 or more points. Copy them into {@code Tunables.java} (the robot uses
+ * then {@code angleA = 0, angleB = 25} once you gave the angles at both stops; OR, once you saved points
+ * between the stops (and gave the angles at both stops), a {@code calibration} line INSTEAD (the Hood
+ * reads one or the other). Each angle you give is used for one place (a stop or a point): measure the
+ * next place before marking it. A table whose angles do not keep going one way is not shown (the Hood
+ * would stop INIT): the screen says which point to measure again. Copy them into {@code Tunables.java} (the robot uses
  * the file, not this screen; a change made in the tuning menu is also lost at the next restart unless
  * you copy it back). The lines are saved on the Control Hub at STOP.
  *
@@ -180,6 +183,8 @@ public abstract class HoodFinderOpMode extends FinderOpMode {
 
     private void markStop(boolean a) {
         if (!known()) return;
+        // Each angle belongs to the place it was measured: it is used once, then must be given again
+        // (else stop B would get stop A's angle when nobody measured it there).
         if (a) {
             posA = here();
             angleA = angleGiven ? angle : Double.NaN;
@@ -187,7 +192,8 @@ public abstract class HoodFinderOpMode extends FinderOpMode {
             posB = here();
             angleB = angleGiven ? angle : Double.NaN;
         }
-        note = "Stop " + (a ? "A" : "B") + " = " + text(here()) + (angleGiven ? " at " + FinderResults.num(angle, 1) : "");
+        note = "Stop " + (a ? "A" : "B") + " = " + text(here()) + (angleGiven ? " at " + FinderResults.num(angle, 1) : " (no angle)");
+        angleGiven = false;
         writeResults();
     }
 
@@ -199,12 +205,17 @@ public abstract class HoodFinderOpMode extends FinderOpMode {
         }
         points.add(new double[] {here(), angle});
         note = "Point " + points.size() + ": " + text(here()) + " = " + FinderResults.num(angle, 1);
+        angleGiven = false;   // the next place needs its own measured angle
         writeResults();
     }
 
     private void undo() {
-        if (points.isEmpty()) return;
+        if (points.isEmpty()) {
+            note = "No points to undo.";
+            return;
+        }
         points.remove(points.size() - 1);
+        note = "Point " + (points.size() + 1) + " removed: " + points.size() + " left.";
         writeResults();
     }
 
@@ -213,36 +224,74 @@ public abstract class HoodFinderOpMode extends FinderOpMode {
         return motor != null ? FinderResults.num(v, 0) : FinderResults.num(v, 3);
     }
 
-    // The lines for Tunables.java.
+    // What the lines say now, for the screen (why a line is missing).
+    private String problem = "";
+
+    // The lines for Tunables.java: posA/posB (+ angleA/angleB), OR a calibration table (the Hood reads one or
+    // the other: both stop INIT). The table needs both stops with their angles (its first and last rows are
+    // the stops) and its angles must keep going one way along the positions, as the Hood checks at INIT.
     private void writeResults() {
         results.removeStartingWith("hood:");
+        problem = "";
         boolean stops = !Double.isNaN(posA) && !Double.isNaN(posB);
-        if (stops) {
+        boolean angles = !Double.isNaN(angleA) && !Double.isNaN(angleB);
+        if (stops && Double.compare(posA, posB) == 0) {
+            problem = "Stop A and stop B are at the same place: go to the other stop and mark it again.";
+            return;
+        }
+        String table = null;
+        if (!points.isEmpty()) {
+            if (!stops || !angles) {
+                problem = "For a calibration table, give the angle at BOTH stops (hold LB + D-pad there, then X or B again).";
+            } else {
+                List<double[]> rows = new ArrayList<>(points);
+                rows.add(new double[] {posA, angleA});
+                rows.add(new double[] {posB, angleB});
+                java.util.Collections.sort(rows, (x, y) -> Double.compare(x[0], y[0]));
+                problem = tableProblem(rows);
+                if (problem.isEmpty()) {
+                    List<String> r = new ArrayList<>();
+                    for (double[] p : rows) r.add("{" + text(p[0]) + ", " + ShotPoints.hoodText(p[1]) + "}");
+                    table = "public static double[][] calibration = {" + FinderResults.commas(r) + "};   // in Tunables."
+                            + section + ", INSTEAD of posA/posB (its first and last rows are the stops)";
+                }
+            }
+        } else if (stops && (Double.isNaN(angleA) != Double.isNaN(angleB))) {
+            problem = "Angle at " + (Double.isNaN(angleA) ? "stop A" : "stop B") + " missing: hold LB + D-pad there, then "
+                    + (Double.isNaN(angleA) ? "X" : "B") + " again (or leave both out: the hood then works in positions).";
+        }
+        if (table != null) {
+            results.set("hood:1", table);
+        } else if (stops) {
             List<String> f = new ArrayList<>();
             f.add("posA = " + text(posA));
             f.add("posB = " + text(posB));
-            if (!Double.isNaN(angleA) && !Double.isNaN(angleB)) {
+            if (angles) {
                 f.add("angleA = " + ShotPoints.hoodText(angleA));
                 f.add("angleB = " + ShotPoints.hoodText(angleB));
             }
             results.set("hood:0", "Tunables." + section + ": " + FinderResults.commas(f));
         }
-        // A calibration table: the stops (with their angles) and the points, by position.
-        List<double[]> rows = new ArrayList<>(points);
-        if (stops && !Double.isNaN(angleA) && !Double.isNaN(angleB)) {
-            rows.add(new double[] {posA, angleA});
-            rows.add(new double[] {posB, angleB});
-        }
-        if (rows.size() >= 3) {
-            java.util.Collections.sort(rows, (x, y) -> Double.compare(x[0], y[0]));
-            List<String> r = new ArrayList<>();
-            for (double[] p : rows) r.add("{" + text(p[0]) + ", " + ShotPoints.hoodText(p[1]) + "}");
-            results.set("hood:1", "public static double[][] calibration = {" + FinderResults.commas(r) + "};   // in Tunables."
-                    + section + " (instead of posA/posB: for a linkage)");
-        }
-        if (stops || rows.size() >= 3) {
+        if (stops || table != null) {
             results.set("hood:2", "// Copy into Tunables.java: the robot uses the file, not this screen.");
         }
+    }
+
+    // A calibration table the Hood would refuse at INIT (sorted by position): two rows at one place, or
+    // angles that do not keep going the same way. "" = fine.
+    static String tableProblem(List<double[]> sorted) {
+        int dir = 0;
+        for (int i = 1; i < sorted.size(); i++) {
+            if (sorted.get(i)[0] == sorted.get(i - 1)[0]) return "Two points at the same place: Y undoes the last one.";
+            double d = sorted.get(i)[1] - sorted.get(i - 1)[1];
+            int now = d > 0 ? 1 : d < 0 ? -1 : 0;
+            if (now == 0 || (dir != 0 && now != dir)) {
+                return "The angles must keep going one way along the hood (" + FinderResults.num(sorted.get(i - 1)[1], 1) + " then "
+                        + FinderResults.num(sorted.get(i)[1], 1) + "): measure again, Y undoes the last point.";
+            }
+            dir = now;
+        }
+        return "";
     }
 
     @Override
@@ -257,12 +306,14 @@ public abstract class HoodFinderOpMode extends FinderOpMode {
             return;
         }
         t.line("Position", text(here()) + (motor != null ? " ticks (move the hood by hand)" : ""));
-        t.line("Angle here", angleGiven ? FinderResults.num(angle, 1) + " (hold LB + D-pad)" : "- (hold LB + D-pad to give one)");
+        t.line("Angle here", angleGiven ? FinderResults.num(angle, 1) + " (hold LB + D-pad)"
+                : "- (hold LB + D-pad to give one" + (angle != 0 ? "; it starts from " + FinderResults.num(angle, 1) : "") + ")");
         t.line("Stop A", Double.isNaN(posA) ? "- (X)" : text(posA) + (Double.isNaN(angleA) ? "" : " at " + FinderResults.num(angleA, 1)));
         t.line("Stop B", Double.isNaN(posB) ? "- (B)" : text(posB) + (Double.isNaN(angleB) ? "" : " at " + FinderResults.num(angleB, 1)));
         t.line("Points", points.size() + " (A saves one, Y undoes)");
         if (servo != null) t.text("A straining servo hums: back off a little from each stop before X / B.");
         if (!note.isEmpty()) t.text(note);
+        if (!problem.isEmpty()) t.warn(problem);
     }
 
     @Override

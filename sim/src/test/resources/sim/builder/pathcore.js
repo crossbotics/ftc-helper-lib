@@ -455,7 +455,7 @@ function partCode(path, i) {
 /**
  * The Java for the path. opts: { label, name, start: { on, note, h }, mode: 'follow' | 'driveTo',
  * power (driveTo's maxPower), actions (PathAt, see KINDS), timeoutSec (follow's time limit, or null) }.
- * Returns { constant, steps, all }.
+ * Returns { constant, imports (the import lines it needs), steps, all }.
  */
 export function toJava(path, opts = {}) {
 	const label = opts.label || 'My path';
@@ -487,9 +487,15 @@ export function toJava(path, opts = {}) {
 	let steps = lines.map((l, i) => (i === 0 && l.startsWith('.') ? 's' + l : (i === 0 ? l : ' ' + l)))
 		.map((l) => l.replace(/\u0001/g, ' '.repeat(l.indexOf('(') + 1))).join('\n');
 	if (steps) steps += ';';
-	const all = (constant ? '// With your other fields, at the top of the class:\n' + constant + '\n\n' : '')
+	// The imports the lines need (without them the file does not compile).
+	const imp = [];
+	if (constant) imp.push('import com.crossbotics.ftchelper.pedro.PedroPath;');
+	if (actions.length) imp.push('import com.crossbotics.ftchelper.robot.PathAt;');
+	const imports = imp.join('\n');
+	const all = (imports ? '// With the other imports, at the top of the file:\n' + imports + '\n\n' : '')
+		+ (constant ? '// With your other fields, at the top of the class:\n' + constant + '\n\n' : '')
 		+ '// In steps(Steps s, Robot robot):\n' + steps;
-	return { constant, steps, all };
+	return { constant, imports, steps, all };
 }
 
 // ------------------------------------------------------------------ Java in

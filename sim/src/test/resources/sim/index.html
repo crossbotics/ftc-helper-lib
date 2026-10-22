@@ -231,6 +231,7 @@
   #scoreBar { position: absolute; top: 40px; left: 8px; z-index: 3; padding: 3px 10px; border-radius: 14px;
     background: color-mix(in srgb, var(--panel) 90%, transparent); font-size: 12.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
   #scoreBar[hidden], #toast[hidden] { display: none; }
+  #scoreBar .hint { font-size: 11px; opacity: .7; }
   #scoreBar .sr, .scoreRow .red b { color: #cf222e; font-weight: 700; } #scoreBar .sb, .scoreRow .blue b { color: #1f6feb; font-weight: 700; }
   #toast { position: absolute; top: 72px; left: 50%; transform: translateX(-50%); z-index: 4; max-width: 80%; padding: 6px 12px; border-radius: 8px;
     background: var(--stop); color: #fff; font-size: 12.5px; font-weight: 600; pointer-events: none; }
@@ -522,13 +523,13 @@
           <label><input type="checkbox" data-layer="trails"> Ball trails</label>
           <label><input type="checkbox" data-layer="paths"> Path lines (plan and where it went)</label>
           <label><input type="checkbox" data-layer="size"> Robot size box (and the 18 in start cube)</label>
-          <div class="muted">What each line means: docs/guides/simulator.md, "Layers".</div>
+          <div class="muted">What each line means: <a href="https://github.com/crossbotics/ftc-helper-lib/blob/main/docs/guides/simulator.md#layers" target="_blank" rel="noopener">the simulator guide, "Layers"</a>.</div>
         </div></span>
       <button id="builderBtn" aria-pressed="false" title="Build an autonomous on the field and run it here with your code (it takes the Control Hub's place)">Auto builder</button>
       <span class="muted" id="v3note"></span>
     </div>
     <div id="stage" class="off" aria-label="Field and robot in 3D. Drag to turn, scroll to zoom, right-drag to slide."><div id="layerNote" role="status" hidden></div>
-      <button id="scoreBar" hidden title="The score (Match panel)"></button><div id="toast" role="alert" hidden></div></div>
+      <button id="scoreBar" hidden title="The score: click for where the points come from (Match panel)"></button><div id="toast" role="alert" hidden></div></div>
     <div id="stageOff">The 3D view is off (tick "Show"). The field from above is in the Control Hub's Robot tab.</div>
     <div class="muted v3help" title="While no program runs (or in INIT): double-click the robot, then drag it to move it or drag its ring to turn it (double-click again to stop).">
       Drag: turn &middot; scroll: zoom &middot; right-drag or two fingers: slide &middot; double-click the robot to move it (no program running, or in INIT)</div>
@@ -889,7 +890,15 @@ function render(s) {
       html += "</optgroup>";
     }
     sel.innerHTML = html; sel.dataset.key = key;
+    // Keep the choice; else the OpMode running now (after a reload); else the TeleOp whose Robot class fits
+    // the robot file best (its device names are in it), not just the first name in the list.
     if (keep) sel.value = keep;
+    else if (s.opmode && s.opmodes.some(o => o.name === s.opmode)) sel.value = s.opmode;
+    else {
+      const fit = o => (o.fit == null ? -1e9 : o.fit) - (o.kind === "TeleOp" ? 0 : 0.5) - (o.disabled ? 0.25 : 0);
+      const best = s.opmodes.reduce((a, o) => (a == null || fit(o) > fit(a) ? o : a), null);
+      if (best && best.fit != null && best.fit > 0) sel.value = best.name;
+    }
   }
   // The alliance changed (an INIT menu, TeleOp's choice): turn the drivers' view to that side.
   const side = s.alliance === "BLUE" ? "BLUE" : "RED";
@@ -982,7 +991,11 @@ $("#sticky").onchange = e => { sticky = e.target.checked; if (!sticky) for (cons
 document.querySelectorAll(".pad").forEach(div => {
   const n = +div.dataset.pad;
   buildPad($(".gp", div), n);
-  $(".src", div).onchange = e => { source[n] = e.target.value; pads[n] = blankPad(); screenPads[n] = blankPad(); keysDown.clear(); };
+  $(".src", div).onchange = e => {
+    source[n] = e.target.value; pads[n] = blankPad(); screenPads[n] = blankPad(); keysDown.clear();
+    // Keys typed while a list has focus go to the list, not the robot: let go of it after choosing Keyboard.
+    if (source[n] === "keyboard") e.target.blur();
+  };
 });
 
 // ---------------------------------------------------------------- Control Hub panel
@@ -1266,7 +1279,7 @@ function gotGame(g) {
   $("#scoreRed b").textContent = pts(red.total);
   $("#scoreBlue b").textContent = pts(blue.total);
   $("#clockText").textContent = clockWords(g.clock);
-  $("#scoreBar").innerHTML = `<span class="sr">RED ${pts(red.total)}</span> &middot; ${escapeHtml(clockWords(g.clock))} &middot; <span class="sb">BLUE ${pts(blue.total)}</span>`;
+  $("#scoreBar").innerHTML = `<span class="sr">RED ${pts(red.total)}</span> &middot; ${escapeHtml(clockWords(g.clock))} &middot; <span class="sb">BLUE ${pts(blue.total)}</span> <span class="hint">(click: where the points come from)</span>`;
   $("#nectarNote").textContent = g.clock && g.clock.period === "TELEOP" || g.clock && g.clock.period === "AUTO"
     ? (g.clock.nectarAllowed ? "NECTAR into a FLOWER: allowed now (last 60 s)." : "NECTAR into a FLOWER now is a MAJOR FOUL (G410) until the last 60 s.") : "";
   showScoreDetail();
@@ -1438,7 +1451,8 @@ function build3d() {
 
   // The robot: a box its size from the robot file, with a white arrow on top at the front.
   const robot = new THREE.Group();
-  const bodyMat = new THREE.MeshPhongMaterial({ color: 0x1f6feb, transparent: true, opacity: 0.8, shininess: 20 });
+  // gray: the plain box is no alliance's color (it turns red when it bumps into something)
+  const bodyMat = new THREE.MeshPhongMaterial({ color: 0x8b949e, transparent: true, opacity: 0.8, shininess: 20 });
   const body = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), bodyMat);
   const edges = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1, 1, 1)), new THREE.LineBasicMaterial({ color: 0x0b2a5c }));
   const arrowShape = new THREE.Shape([new THREE.Vector2(0, 0.5), new THREE.Vector2(-0.22, 0.2), new THREE.Vector2(0.22, 0.2)]);
@@ -2016,7 +2030,7 @@ function update3d(r, cams) {
   v3.body.scale.set(W, L, H); v3.body.position.z = H / 2;
   v3.edges.scale.set(W, L, H); v3.edges.position.z = H / 2;
   v3.arrow.scale.set(Math.min(W, L), L, 1); v3.arrow.position.z = H + 0.1;
-  v3.bodyMat.color.set(r.bumped ? 0xcf222e : 0x1f6feb);
+  v3.bodyMat.color.set(r.bumped ? 0xcf222e : 0x8b949e);
   updateShapes(r);
 }
 
@@ -2185,7 +2199,9 @@ function updateArcs(s) {
     const label = SimView.label(THREE, text, { heightIn: 2 });
     label.position.copy(top).add(new THREE.Vector3(0, 0, 2.5)); label.layers.set(1);
     v3.arcGroup.add(label);
-    notes.push(`Shot arc (${escapeHtml(a.name)}, ${escapeHtml(a.piece)}): ${Math.round(a.angle)}° up, ${Math.round(a.speed)} in/s, peak ${Math.round(a.peak)} in (no bumps)`);
+    // An angle past 90° means the launcher throws over the robot's back: say so (147° up = backward, 33° up).
+    const up = a.angle > 90 ? `shoots backward, ${Math.round(180 - a.angle)}° up` : `${Math.round(a.angle)}° up`;
+    notes.push(`Shot arc (${escapeHtml(a.name)}, ${escapeHtml(a.piece)}): ${up}, ${Math.round(a.speed)} in/s, peak ${Math.round(a.peak)} in (no bumps)`);
   }
   setLayerNote("arc", notes.join("<br>"));
 }

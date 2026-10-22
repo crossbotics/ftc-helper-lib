@@ -207,13 +207,24 @@ final class SimView {
     static String opModes(SimDriverStation ds) {
         StringBuilder b = new StringBuilder(4096).append('[');
         boolean first = true;
+        // How well each OpMode's Robot class fits the robot file (BuiltAuto.score; null = no Robot class):
+        // the page starts on the best fit, not the first name in the list.
+        java.util.Map<Class<?>, Integer> fits = new java.util.HashMap<>();
         for (SimDriverStation.Entry e : ds.opModes) {
             if (!first) b.append(',');
             first = false;
             b.append("{\"name\":");
             str(b, e.name).append(",\"group\":");
             str(b, e.group).append(",\"kind\":");
-            str(b, e.kind).append(",\"disabled\":").append(e.disabled).append('}');
+            str(b, e.kind).append(",\"disabled\":").append(e.disabled);
+            Class<?> robot = BuiltAuto.robotOf(e.type);
+            if (robot != null && ds.robot != null) {
+                @SuppressWarnings("unchecked")
+                Class<? extends com.crossbotics.ftchelper.robot.RobotDefinition> rc = (Class<? extends com.crossbotics.ftchelper.robot.RobotDefinition>) robot;
+                Integer fit = fits.computeIfAbsent(robot, k -> BuiltAuto.score(rc, ds.robot));
+                b.append(",\"fit\":").append(fit);
+            }
+            b.append('}');
         }
         return b.append(']').toString();
     }

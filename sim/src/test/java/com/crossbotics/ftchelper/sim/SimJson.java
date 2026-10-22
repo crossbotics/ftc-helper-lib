@@ -39,6 +39,7 @@ final class SimJson {
         // The alliance the program uses now (its INIT menu or TeleOp's choice): the page turns the
         // drivers' view to that side. "" = none said.
         com.crossbotics.ftchelper.match.Alliance chosen = com.crossbotics.ftchelper.match.MatchMemory.chosen();
+        if (chosen == null) chosen = SimEngine.allianceUntilChosen(ds);   // a TeleOp's "BLUE until you choose"
         field(b, "alliance", chosen == null ? "" : chosen.name()).append(',');
         b.append("\"nextCount\":").append(ds.nextCount).append(',');
         b.append("\"runSeconds\":").append(fmt(ds.runSeconds())).append(',');

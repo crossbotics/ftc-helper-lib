@@ -258,6 +258,32 @@ public class FindersTest {
         assertTrue(Double.isNaN(one.tally().spotIn()));
     }
 
+    // The screen shows a hood ANGLE with 1 decimal (22.7), not 22.674.
+    @Test public void theHoodOnTheScreenHasTheHoodsDecimals() {
+        ShotPoints.Trials tr = new ShotPoints.Trials();
+        tr.hoodDecimals(1);
+        tr.fired(3220, 22.674, 3210, 48);
+        String note = tr.mark(true);
+        assertTrue(note, note.startsWith("HIT at 3220 RPM, hood 22.7: 1/1"));
+        assertEquals("3220 @ hood 22.7: 1/1 (best)", tr.tally().summary());
+        ShotPoints.Trials servo = new ShotPoints.Trials();
+        servo.hoodDecimals(3);
+        servo.fired(3220, 0.4215, 3210, 48);
+        assertTrue(servo.mark(true).startsWith("HIT at 3220 RPM, hood 0.422"));
+    }
+
+    // Hood Finder: a calibration table the Hood would refuse at INIT is not shown.
+    @Test public void theHoodFinderRefusesATableTheHoodWouldRefuse() {
+        java.util.List<double[]> up = java.util.Arrays.asList(new double[] {0.2, 0}, new double[] {0.4, 10}, new double[] {0.6, 25});
+        assertEquals("", HoodFinderOpMode.tableProblem(up));
+        java.util.List<double[]> down = java.util.Arrays.asList(new double[] {0.2, 25}, new double[] {0.4, 10}, new double[] {0.6, 0});
+        assertEquals("either way is fine, if it keeps going", "", HoodFinderOpMode.tableProblem(down));
+        java.util.List<double[]> bent = java.util.Arrays.asList(new double[] {0.2, 0}, new double[] {0.4, 30}, new double[] {0.6, 25});
+        assertTrue(HoodFinderOpMode.tableProblem(bent).contains("keep going one way"));
+        java.util.List<double[]> same = java.util.Arrays.asList(new double[] {0.2, 0}, new double[] {0.2, 10}, new double[] {0.6, 25});
+        assertTrue(HoodFinderOpMode.tableProblem(same).contains("same place"));
+    }
+
     @Test public void movingAwayDropsTheOldSpotsShots() {
         ShotPoints.Trials tr = new ShotPoints.Trials();
         tr.fired(2500, Double.NaN, 2500, 48);
@@ -268,7 +294,7 @@ public class FindersTest {
         tr.fired(2500, Double.NaN, 2500, 60);
         tr.mark(true);
         tr.fired(2500, Double.NaN, 2500, 60);
-        assertTrue(tr.check(72).startsWith("Moved 12 in: the hit counts start again"));
+        assertTrue(tr.check(72).startsWith("Moved more than 4 in from where the shots were marked: the hit counts start again"));
         assertTrue(tr.tally().isEmpty());
         assertEquals(0, tr.unmarkedCount());
     }

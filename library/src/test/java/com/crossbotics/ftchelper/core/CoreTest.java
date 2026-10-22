@@ -67,6 +67,24 @@ public class CoreTest {
         assertEquals(3, again.getDouble("n", 3), 1e-12);
     }
 
+    @Test public void theSharedSettingsFileUsesTheDataDirSetting() {
+        // The simulator sets ftchelper.dataDir (a laptop has no /sdcard): saving must work there.
+        String old = System.getProperty("ftchelper.dataDir");
+        try {
+            System.setProperty("ftchelper.dataDir", tmp.getRoot().getPath());
+            SettingsFile.useForTests(null);
+            SettingsFile s = SettingsFile.shared();
+            s.put("profile", "PRACTICE");
+            assertTrue(s.save());
+            assertTrue(new File(tmp.getRoot(), "settings.properties").isFile());
+            assertEquals(SettingsFile.folder(), com.crossbotics.ftchelper.finders.FinderResults.folder());
+        } finally {
+            if (old == null) System.clearProperty("ftchelper.dataDir");
+            else System.setProperty("ftchelper.dataDir", old);
+            SettingsFile.useForTests(null);
+        }
+    }
+
     @Test public void profileDefaultsToCompetitionAndIsSaved() {
         assertEquals(Profile.COMPETITION, Profile.current());
         assertEquals(2.0, Profile.pick(1.0, 2.0), 1e-12);

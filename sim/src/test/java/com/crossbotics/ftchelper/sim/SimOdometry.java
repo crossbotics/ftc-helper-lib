@@ -51,6 +51,12 @@ final class SimOdometry {
     // A Pinpoint's raw pod counts and its heading not wrapped to -180..180 (the tuner's spin test).
     private double encX, encY, turnTotalDeg;
     private final double xPodLeftMm, yPodForwardMm;
+    // What the CODE told the Pinpoint (setOffsets, setEncoderDirections). A real Pinpoint works out its pose
+    // from its pods with these: when they do not match the robot (the pods above, odometry.reversed), the
+    // pose is wrong the same way a real one is (forward counted backward, a loop that does not close).
+    // Until the code says, they match the robot.
+    private double codeXLeftMm, codeYForwardMm;
+    private int codeXSign = 1, codeYSign = 1;
     private boolean started = false;
     private double lastX, lastY, lastH;
 
@@ -74,6 +80,10 @@ final class SimOdometry {
         xPodLeftMm = o.length > 0 && !o[0].isEmpty() ? Double.parseDouble(o[0]) : 0;
         yPodForwardMm = o.length > 1 ? Double.parseDouble(o[1]) : 0;
         driftDegPerMin = num(p, "odometry.driftDegPerMin", 0);
+        codeXLeftMm = xPodLeftMm;
+        codeYForwardMm = yPodForwardMm;
+        codeXSign = reversed.contains("x") ? -1 : 1;
+        codeYSign = reversed.contains("y") ? -1 : 1;
     }
 
     private static double num(Properties p, String key, double fallback) {
@@ -130,9 +140,18 @@ final class SimOdometry {
             pods[2] += (left + perpForwardIn * turn) * ticksPerIn;
         }
         // A Pinpoint's pods, where the robot file says they sit (4-bar pods, 19.894 counts per mm).
-        encX += (forward - xPodLeftMm / 25.4 * turn) * 25.4 * 19.89436789;
-        encY += (left + yPodForwardMm / 25.4 * turn) * 25.4 * 19.89436789;
+        double podX = forward - xPodLeftMm / 25.4 * turn, podY = left + yPodForwardMm / 25.4 * turn;
+        encX += podX * 25.4 * 19.89436789;
+        encY += podY * 25.4 * 19.89436789;
         turnTotalDeg += Math.toDegrees(turn);
+        if (kind.equals("pinpoint")) {
+            // What the Pinpoint itself works out from its pods: each pod's counts as wired
+            // (odometry.reversed) times the direction the code set, less the turn's share at the offsets
+            // the code set. With the code matching the robot this is the true move.
+            int xs = (reversed.contains("x") ? -1 : 1) * codeXSign, ys = (reversed.contains("y") ? -1 : 1) * codeYSign;
+            forward = podX * xs + codeXLeftMm / 25.4 * turn;
+            left = podY * ys - codeYForwardMm / 25.4 * turn;
+        }
         // A Pinpoint or OTOS: its own pose, turned with the robot (the middle of the turn).
         double mid = Math.toRadians(devH) + turn / 2;
         devX += forward * Math.cos(mid) - left * Math.sin(mid);
@@ -241,10 +260,20 @@ final class SimOdometry {
 
         @Override public void update() { }
         @Override public void update(ReadData data) { }
-        @Override public void setOffsets(double xOffset, double yOffset, DistanceUnit unit) { }
+        @Override public void setOffsets(double xOffset, double yOffset, DistanceUnit unit) {
+            synchronized (SimOdometry.this) {
+                codeXLeftMm = unit.toMm(xOffset);
+                codeYForwardMm = unit.toMm(yOffset);
+            }
+        }
         @Override public void setEncoderResolution(GoBildaOdometryPods pods) { }
         @Override public void setEncoderResolution(double ticksPerUnit, DistanceUnit unit) { }
-        @Override public void setEncoderDirections(EncoderDirection xEncoder, EncoderDirection yEncoder) { }
+        @Override public void setEncoderDirections(EncoderDirection xEncoder, EncoderDirection yEncoder) {
+            synchronized (SimOdometry.this) {
+                codeXSign = xEncoder == EncoderDirection.REVERSED ? -1 : 1;
+                codeYSign = yEncoder == EncoderDirection.REVERSED ? -1 : 1;
+            }
+        }
         @Override public void resetPosAndIMU() { setDevice(0, 0, 0); }
         @Override public void recalibrateIMU() { }
         @Override public double getPosX(DistanceUnit unit) { return unit.fromInches(devNow()[0]); }
@@ -254,7 +283,8 @@ final class SimOdometry {
         @Override public double getVelY(DistanceUnit unit) { return unit.fromInches(worldVel()[1]); }
         @Override public double getHeadingVelocity(UnnormalizedAngleUnit unit) { synchronized (SimOdometry.this) { return unit.fromDegrees(vH); } }
         @Override public DeviceStatus getDeviceStatus() { return DeviceStatus.READY; }
-        // A pod the code reverses is wired to count backward (like the dead wheels).
+        // odometry.reversed: that pod is wired to count backward (like the dead wheels); the code's
+        // setEncoderDirections turns it back for the pose.
         @Override public int getEncoderX() { synchronized (SimOdometry.this) { return (int) Math.round(reversed.contains("x") ? -encX : encX); } }
         @Override public int getEncoderY() { synchronized (SimOdometry.this) { return (int) Math.round(reversed.contains("y") ? -encY : encY); } }
         @Override public double getHeading(UnnormalizedAngleUnit unit) { synchronized (SimOdometry.this) { return unit.fromDegrees(turnTotalDeg); } }
