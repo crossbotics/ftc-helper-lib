@@ -63,6 +63,7 @@ You need JDK 17 or newer and the Android SDK. Android Studio installs both. From
 python3 tools/check_docs.py
 python3 tools/check_blocking.py
 python3 tools/parts_page.py --check
+python3 tools/check_tests.py
 ```
 
 This runs every test (the library's, the examples' and the simulator's), builds the examples and every
@@ -89,11 +90,20 @@ git push -u origin my-change
 Then open a pull request on GitHub for the library, and ask the programming lead to review it.
 After it is merged, update the robot project to the new version ([Keep it up to date](02-keep-up-to-date.md)).
 
+## Help us test, and add a test
+
+Not changing code? Testing helps as much. The test list is in [`testing/`](../testing/README.md): small
+tests with steps, a pass rule and what to write down. Teams pick the ones that fit their robot on
+https://crossbotics.com/ftc-helper/testing/ and send the result with the "Test report" form. To add a
+test: copy a file in `testing/tests/`, change it, and run `python3 tools/check_tests.py --fix`
+([how](../testing/README.md#add-a-test)).
+
 ## Releasing a version
 
 The programming lead does this after merging changes:
 
 1. In `CHANGELOG.md`, rename "Unreleased" to the new version and date, e.g. `## v0.2.0 - 2026-11-01`.
+   Then `python3 tools/check_tests.py --set-since v0.2.0` (the tests that said `since: unreleased`).
 2. Commit, then tag and push:
 
 ```bash

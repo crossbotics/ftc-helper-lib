@@ -23,3 +23,5 @@ jobs:
         run: python3 tools/parts_page.py --check
       - name: Non-blocking check
         run: python3 tools/check_blocking.py
+      - name: Test list (testing/tests) and its catalogue
+        run: python3 tools/check_tests.py
