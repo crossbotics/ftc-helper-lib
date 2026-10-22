@@ -273,10 +273,10 @@ lift = add(Lift.slide("lift").part(Motors.unknown("old-lift-motor")));          
 
 | Method | What it does |
 | --- | --- |
-| `Motors.custom(id, countsPerRev, freeRpm)` | a motor of your own: encoder counts per output turn (as the SDK reports them) and free speed at 12 V. Either may be `Double.NaN` (not known). A catalog id is refused |
+| `Motors.custom(id, countsPerRev, freeRpm)` | a motor of your own: encoder counts per output turn (as the SDK reports them; goBILDA's "Encoder Resolution" at the output shaft, REV's "Encoder Counts per Revolution") and free speed at 12 V (goBILDA's "No-Load Speed", REV's "Free Speed"). Either may be `Double.NaN` ("I don't know this one"). A catalog id is refused |
 | `Motors.unknown(id)` | both not known |
 | `Motors.find(id)`, `Motors.get(id)` | a catalog or custom motor (`find`: null if none; `get`: stops with the list) |
-| `Parts.customServo(id, rangeDeg, secPer60Deg)` | a servo of your own: its whole turn over 500-2500 us, seconds per 60 degrees at about 5 V; `customServo(id, rangeDeg, secPer60Deg, pulseMinUs, pulseMaxUs)` with the seller's pulse range |
+| `Parts.customServo(id, rangeDeg, secPer60Deg)` | a servo of your own: its whole turn, and seconds per 60 degrees at about 5 V (if the seller lists 4.8 V and 6 V, use 4.8 V). **Reference level** (most teams never need it): the turn is taken over 500-2500 us; `customServo(id, rangeDeg, secPer60Deg, pulseMinUs, pulseMaxUs)` gives the seller's own pulse range |
 | `Parts.unknownServo(id)` | a servo whose numbers are not known |
 | `Parts.findServo(id)` | a catalog or custom servo, or null |
 
@@ -286,7 +286,7 @@ Its numbers work like a catalog part's: starting values (`DEFAULT_FROM_CATALOG`,
 **Numbers not known:** the starting values are the general ones, and INIT says so and how to do better:
 `Lift: the counts per turn of old-lift-motor are not known, so general defaults (kP, kD, slowZone, tolerance made for a goBILDA 312 RPM motor). Give them with Motors.custom(...), or tune them in the tuning menu`.
 The same words show for a part with no `.part(...)` at all (`no part in Robot.java`). A launcher, an arm, a
-motor turret and the drive need the counts per turn (they turn counts into RPM or degrees): with none,
+motor turret and the drive must at least have the counts per turn (they turn counts into RPM or degrees): with none,
 Robot.java stops and says so. A launcher whose top speed is not known uses general defaults made for a
 6000 RPM motor. Safety numbers (`min`, `max`, stops) stay yours whatever the part.
 

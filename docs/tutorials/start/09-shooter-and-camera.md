@@ -100,27 +100,13 @@ public static class Launcher {
 }
 ```
 
-The library works out starting ones from the motor named in Robot.java
-(`Launcher.flywheel("launcher", "gobilda-5203-6000")`) and its numbers in the parts catalog, and INIT says
-so:
+The library picks safe starting numbers for your motor; INIT shows them:
 
 ```text
 Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, kP 1.17, kI 0.117, speed 3600 rpm. Run the Flywheel Finder, then the Shot Tuner
 ```
 
-- **kF** is the power for a speed: the hub's full power is 32767, and the motor's top speed is 6000 RPM x
-  28 counts / 60 = 2800 counts a second, so F = 32767 / 2800 = 11.7. With it the wheel gets close to
-  any speed by itself. kP (F / 10) and kI (kP / 10) fix the rest. This is REV's starting formula, and the
-  same math the Flywheel Finder uses with the speed it measures on YOUR wheel.
-- **speed 3600** is 60% of the motor's top speed: the speed control needs room above the speed to push
-  harder after each shot and on a tired battery, and a middle speed is a gentle first shot.
-
-A motor that is not in the catalog: describe it in Robot.java, `Launcher.flywheel("launcher",
-Motors.custom("my-motor", 28, 5800))` (counts per turn, free RPM), and the defaults come from its numbers
-([Parts not in the catalog](../../modules/robot.md#parts-not-in-the-catalog)).
-
-Without these, the hub would use its own gains (P 10, I 3, F 0): no F, so the wheel would only creep up
-to its speed. Spin up with LB and check that it reaches the speed (Driver Station). Then:
+Spin up with LB and check that it reaches the speed (Driver Station). Then:
 
 **Find the gains with the Flywheel Finder** ([how](../../guides/finders.md#flywheel-finder-gains-and-recovery)).
 It needs no code. Choose the `launcher` motor; it shows a line to copy into `Tunables.Launcher`:
@@ -135,6 +121,21 @@ it too: only battery compensation uses it, which is off unless you turn it on
 
 If the wheel needs longer than 0.25 s to get back to speed after a shot, the line also has
 `shotIntervalSec` (the time between two feeds), a little above that time.
+
+**Why these numbers (you can skip this).** The library takes the motor named in Robot.java
+(`Launcher.flywheel("launcher", "gobilda-5203-6000")`) and its numbers in the parts catalog.
+
+- **kF** is the power for a speed: the hub's full power is 32767, and the motor's top speed is 6000 RPM x
+  28 counts / 60 = 2800 counts a second, so F = 32767 / 2800 = 11.7. With it the wheel gets close to
+  any speed by itself. kP (F / 10) and kI (kP / 10) fix the rest. This is REV's starting formula, and the
+  same math the Flywheel Finder uses with the speed it measures on YOUR wheel.
+- **speed 3600** is 60% of the motor's top speed: the speed control needs room above the speed to push
+  harder after each shot and on a tired battery, and a middle speed is a gentle first shot.
+- **Without these numbers** the Control Hub would use its own factory gains, the ones it uses when the
+  code gives none (P 10, I 3, F 0). With no F, the wheel only creeps up to its speed.
+- **A motor that is not in the catalog:** describe it in Robot.java, `Launcher.flywheel("launcher",
+  Motors.custom("my-motor", 28, 5800))` (counts per turn, free RPM), and the starting numbers come from
+  its numbers ([Parts not in the catalog](../../modules/robot.md#parts-not-in-the-catalog)).
 
 You can change `speedRpm` and `stepRpm` with the tuning menu (PRACTICE profile, hold GUIDE 1 s). The
 others are read once at INIT: change them in the file.

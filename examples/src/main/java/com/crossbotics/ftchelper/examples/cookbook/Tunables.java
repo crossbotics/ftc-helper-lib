@@ -101,7 +101,8 @@ public class Tunables {
     public static class Launcher {
         public static double speedRpm = 2600, stepRpm = 100, readyBandRpm = 60, idleRpm = 1500;
         // The hub's speed control: the defaults for the motor until the Flywheel Finder (INIT shows them).
-        // Then write its numbers in their place (kP = 1.24, kI = 0.124, kD = 0, kF = 12.4, nominalVolts = 12.6).
+        // Then write the Finder's numbers in their place. It prints a line like
+        // kP = 1.24, kI = 0.124, kD = 0, kF = 12.4, nominalVolts = 12.6: that is an example, not yours.
         public static double kP = DEFAULT_FROM_CATALOG, kI = DEFAULT_FROM_CATALOG, kD = DEFAULT_FROM_CATALOG, kF = DEFAULT_FROM_CATALOG;
         public static double shotIntervalSec = 0.25;   // the least time between two pieces (seconds)
         // {inches to the goal, RPM}: blended between rows (from the Shot Tuner).

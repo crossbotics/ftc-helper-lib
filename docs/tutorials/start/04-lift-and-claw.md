@@ -72,7 +72,7 @@ public static class Intake {
 }
 
 public static class Lift {
-    public static double min = 0, max = 2600;
+    public static double min = 0, max = MEASURE;
     public static double kP = DEFAULT_FROM_CATALOG, kI = DEFAULT_FROM_CATALOG, kD = DEFAULT_FROM_CATALOG, kF = DEFAULT_FROM_CATALOG;
     public static double down = 0, low = 900, high = 2400;
 }
@@ -82,8 +82,26 @@ public static class Claw {
 }
 ```
 
-(`DEFAULT_FROM_CATALOG` comes from the line `import static com.crossbotics.ftchelper.robot.Starting.*;` at
-the top of the lesson robot's `Tunables.java`: copy it too.)
+(`MEASURE` and `DEFAULT_FROM_CATALOG` come from the line
+`import static com.crossbotics.ftchelper.robot.Starting.*;` under the `package` line of the lesson
+robot's `Tunables.java`: copy it too.)
+
+Which word to write:
+
+| The number | Write |
+| --- | --- |
+| You know it | the number |
+| A safety limit (`min`, `max`) you do not know yet | `MEASURE` |
+| A tuning number (`kP`...) you do not know yet | `DEFAULT_FROM_CATALOG` |
+
+`max` is a safety limit you do not know yet, so it says `MEASURE`. INIT of your TeleOp then stops with:
+
+```text
+Tunables.Lift.max = MEASURE: find it on the robot: the top of the safe range, in counts: Motor Finder, B. Write the number in place of MEASURE.
+```
+
+That is on purpose: a guessed `max` can pull the lift off its rails. Step 5 finds it. (The lesson robot's
+own file already has the measured number, `max = 2600`.)
 
 What each number means:
 
@@ -100,7 +118,8 @@ What each number means:
     the parts catalog, and INIT says so: `Lift: defaults from the catalog (gobilda-5203-435): kP
     0.0056, kD 0.00028, slowZone 179, tolerance 14. Tune them live in the tuning menu`. Step 6 tunes
     them; then you write the numbers in their place. (Without `.part(...)` INIT says it uses general
-    defaults, made for a goBILDA 312 RPM motor.)
+    defaults, made for a goBILDA 312 RPM motor.) `kI` and `kF` are not worked out from the motor: they
+    start at the library's 0 and 0.05.
   - `down`, `low`, `high`: **named heights**. Every other number in the section is a height, and you
     can pick any names. Your code then says `robot.lift.goTo("high")`.
 - **Claw:** servo positions, 0 to 1. A claw needs both `open` and `closed` (INIT stops without them).
@@ -148,8 +167,9 @@ the software stops the lift before the block, and the block holds if the softwar
 
 ## 5. Find the real numbers with the finders
 
-The numbers above are safe guesses. Measure the real ones before you drive the lift up with code:
-a wrong `max` can pull the lift off its rails. Add the two finders to TeamCode, each in its own file
+The numbers above are safe guesses, and `max` is still `MEASURE`. Measure the real ones before you drive
+the lift up with code: a wrong `max` can pull the lift off its rails. **INIT stopped on `MEASURE`?** Only
+your TeleOp and your autos stop. The finders still run: they do not read `Tunables.java`. Add the two finders to TeamCode, each in its own file
 next to `Robot.java`. `ServoFinder.java`, the whole file:
 
 ```java
@@ -190,9 +210,15 @@ public class MotorFinder extends MotorFinderOpMode {
   wrist needs more, add `.fullRange()` in Robot.java (`Claw.servo("claw").fullRange()`) and press **Y**
   in the Servo Finder before choosing the servo. Decide this BEFORE you measure: the numbers change with
   the range. Most claws do not need it. ([Why](../../modules/hardware.md#full-range).)
-- **Motor Finder, for the lift:** put the lift at the bottom first (the count starts at 0 there).
-  Move it slowly with gamepad 1's **right** stick (up and down; the left stick does nothing here). Press X just before the bottom block and B just before the top
-  block: those are `min` and `max`. Press A at each height you want.
+- **Motor Finder, for the lift:**
+  1. On the Driver Station, choose **Motor Finder**, press INIT, then START.
+  2. Put the lift at the bottom (the count starts at 0 there). Choose `lift` (D-pad, then A).
+  3. Move it slowly with gamepad 1's **right** stick (up and down; the left stick does nothing here).
+  4. Press **X** just before the bottom block (`min`) and **B** just before the top block (`max`).
+  5. Press A at each height you want.
+
+  It shows the numbers (below). Write the `max` number in place of `MEASURE`, build, and INIT the TeleOp
+  again.
 
 Each finder shows a line that starts with `Tunables.`. It says which section of `Tunables.java` the
 numbers go in:

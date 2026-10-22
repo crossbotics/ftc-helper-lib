@@ -82,8 +82,15 @@ removing `.fullRange()` on a part in Robot.java changes where each position poin
 ## DEFAULT_FROM_CATALOG and MEASURE
 
 Two words you can write in place of a number you do not have yet. Every setting is then in the file from
-day one, and the file shows what is still to do. Add this line at the top of `Tunables.java` (after the
-`package` line):
+day one, and the file shows what is still to do. Which one to write:
+
+| The number | Write |
+| --- | --- |
+| You know it | the number |
+| A safety limit (a lift's `min`/`max`, a stop) you do not know yet | `MEASURE` |
+| A tuning number (`kP`, a speed...) you do not know yet | `DEFAULT_FROM_CATALOG` |
+
+Add this line at the top of `Tunables.java`, under the `package` line and above `public class Tunables`:
 
 ```java
 import static com.crossbotics.ftchelper.robot.Starting.*;
@@ -106,8 +113,25 @@ public static class Lift {
 | `DEFAULT_FROM_CATALOG` on a REQUIRED (safety) number | **stops**: `Tunables.Lift.max = DEFAULT_FROM_CATALOG, but it is a safety number: a safety limit never comes from the parts catalog or a library default. Write MEASURE until you know it, then the number (...)` |
 | `MEASURE` | **stops** and names the tool that finds it: `Tunables.Lift.min = MEASURE: find it on the robot: the bottom of the safe range, in counts: Motor Finder, X. Write the number in place of MEASURE.` |
 
-Only for `double` numbers (an `int` cannot hold them: Java says so when it builds). An on/off setting or
-a table has no such word: leave its line out. A part that is `optional()` and not on the robot does not
+Without the import line, the build fails with `cannot find symbol` and `symbol: variable DEFAULT_FROM_CATALOG` (or `MEASURE`).
+
+**Write the word, or leave the line out?** Both give the same starting value. Write the word: then the
+file shows what is still to tune.
+
+**Only on number lines.** Use these words only on lines that start `public static double`. On `int`,
+`boolean` or `{ }` (table) lines, leave the line out instead.
+
+**INIT stopped on `MEASURE`: what now?** Only your TeleOp and your autos stop. The Motor Finder and the
+Servo Finder still run: they do not read `Tunables.java`. For a lift's `min` and `max`:
+
+1. On the Driver Station, choose **Motor Finder**, press INIT, then START.
+2. Put the lift at the bottom. Choose `lift` (D-pad, then A): its count starts at 0 there.
+3. Move it with gamepad 1's right stick. Press **X** just above the bottom block (`min`) and **B** just
+   below the top block (`max`).
+4. It shows the numbers: `Tunables.Lift: min = 0, max = 2580`.
+5. Write each number in place of `MEASURE`, build, and INIT your TeleOp again.
+
+A part that is `optional()` and not on the robot does not
 stop on `MEASURE`, and `./gradlew :sim:fromRobot` writes the simulator's robot file with `MEASURE` lines
 still in it (so you can run the finders in the simulator). `:sim:newRobot` writes every part's settings
 this way. A part not in the catalog: [describe it in Robot.java](../modules/robot.md#parts-not-in-the-catalog).
@@ -125,7 +149,7 @@ custom part with `Double.NaN`): the general default (the plain one in the tables
 
 | Part | Not written | What it starts with | Tune it with |
 | --- | --- | --- | --- |
-| Launcher | `kF`, `kP`, `kI`, `kD` | REV's formula with the motor's top speed: F = 32767 / (top RPM x counts per turn / 60), P = F / 10, I = P / 10, D = 0. A goBILDA 6000 RPM motor: kF 11.7, kP 1.17, kI 0.117. Not the hub's own gains (P 10, I 3, F 0): with no F the wheel only creeps up to speed | [Flywheel Finder](finders.md#flywheel-finder-gains-and-recovery) |
+| Launcher | `kF`, `kP`, `kI`, `kD` | REV's formula with the motor's top speed: F = 32767 / (top RPM x counts per turn / 60), P = F / 10, I = P / 10, D = 0. A goBILDA 6000 RPM motor: kF 11.7, kP 1.17, kI 0.117. Not the hub's own gains (the numbers the Control Hub uses when the code gives none: P 10, I 3, F 0): with no F the wheel only creeps up to speed | [Flywheel Finder](finders.md#flywheel-finder-gains-and-recovery) |
 | Launcher | `speedRpm` | 60% of the motor's top speed, to 10 RPM (6000 RPM motor: 3600). Room above it for the speed control to recover after a shot and on a tired battery, and a gentle first shot | [Shot Tuner](finders.md#shot-tuner-the-shot-table) |
 | Lift with `.part(...)` | `kP`, `kD`, `slowZone`, `tolerance` | the plain defaults (made for a goBILDA 312 RPM motor, 537.7 counts a turn) scaled to your motor's counts per turn, so it acts the same per motor turn. A 435 RPM motor: kP 0.0056, kD 0.00028, slowZone 179, tolerance 14 | the tuning menu (lesson 4, step 6) |
 | Claw, Wrist, Positioner with `.part(...)` | `travelSec` | the servo's catalog speed at the hub's 5 V over its whole move (goBILDA 2000 torque: 270 degrees at 0.25 s per 60 = 1.13 s) | time a full move |

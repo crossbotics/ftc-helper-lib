@@ -763,21 +763,27 @@ add(Lift.slide("lift").reversed());
 
 <!-- recipe: own-parts -->
 ```java
-// A motor that is not in the catalog: its encoder counts per output turn and its free speed (RPM),
-// from the seller's page. Its name then works like a catalog id, here and in .part(...).
+// A motor that is not in the catalog: its encoder counts per output turn, then its free speed (RPM).
+// On the seller's page:
+// - goBILDA: "Encoder Resolution" (the number "at the Output Shaft") and "No-Load Speed".
+// - REV: "Encoder Counts per Revolution" (at the output) and "Free Speed".
+// Its name then works like a catalog id, here and in .part(...).
 launcher = add(Launcher.flywheel("launcher", Motors.custom("my-flywheel-motor", 28, 5800)));
-// A servo: how far it turns (degrees) and seconds per 60 degrees at about 5 V.
+// A servo: how far it turns (degrees), then its speed (seconds per 60 degrees).
+// If the seller lists 4.8 V and 6 V, use 4.8 V (the hub gives a servo about 5 V).
 claw = add(Claw.servo("claw").part(Parts.customServo("my-claw-servo", 270, 0.16)));
-// Numbers not known yet: general defaults, and INIT says so (a launcher or an arm needs
-// the counts per turn: Motors.custom("...", countsPerRev, Double.NaN) at least).
+// Double.NaN means "I don't know this one". Motors.unknown(...) means "I know neither number".
+// The part then uses general defaults, and INIT says so.
+// A launcher or an arm must at least have the counts per turn: Motors.custom("...", 28, Double.NaN).
 lift = add(Lift.slide("lift").part(Motors.unknown("old-lift-motor")));
 ```
 
 **Why:** the library works out a part's defaults (a launcher's gains and speed, a lift's kP, a servo's
 move time) from its motor's or servo's numbers. Describe yours with the seller's numbers and it works like
 a catalog part: INIT says `defaults from my-flywheel-motor (custom)`, and `:sim:fromRobot` writes its
-numbers into the simulator's robot file. Numbers you do not know: `Double.NaN`, or `Motors.unknown` /
-`Parts.unknownServo`: general defaults, and INIT says so. Do not use a catalog motor that is "close": its
+numbers into the simulator's robot file. A number you do not know: write `Double.NaN` ("I don't know
+this one"), or the whole part as `Motors.unknown` / `Parts.unknownServo`. The part then uses general
+defaults, and INIT says so. Do not use a catalog motor that is "close": its
 numbers would be quietly wrong.
 **More:** [Parts not in the catalog](modules/robot.md#parts-not-in-the-catalog), [Parts catalog](guides/parts-catalog.md).
 
@@ -996,7 +1002,8 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 public static class Launcher {
     public static double speedRpm = 2600, stepRpm = 100, readyBandRpm = 60, idleRpm = 1500;
     // The hub's speed control: the defaults for the motor until the Flywheel Finder (INIT shows them).
-    // Then write its numbers in their place (kP = 1.24, kI = 0.124, kD = 0, kF = 12.4, nominalVolts = 12.6).
+    // Then write the Finder's numbers in their place. It prints a line like
+    // kP = 1.24, kI = 0.124, kD = 0, kF = 12.4, nominalVolts = 12.6: that is an example, not yours.
     public static double kP = DEFAULT_FROM_CATALOG, kI = DEFAULT_FROM_CATALOG, kD = DEFAULT_FROM_CATALOG, kF = DEFAULT_FROM_CATALOG;
     public static double shotIntervalSec = 0.25;   // the least time between two pieces (seconds)
     // {inches to the goal, RPM}: blended between rows (from the Shot Tuner).

@@ -875,7 +875,10 @@ dependencies { testImplementation 'com.acmerobotics.dashboard:dashboard:0.4.16' 
 
 ## Record a test
 
-The page writes a test for you (lesson: [start lesson 10, Test your robot code](../tutorials/start/10-test-your-robot-code.md)).
+**Students: read [lesson 10, Test your robot code](../tutorials/start/10-test-your-robot-code.md) first;
+this section lists every detail.**
+
+The page writes a test for you.
 Over the 3D view, **Tests**:
 
 - **Record a test**: the field starts fresh (the OpMode running stops, the robot to its start spot, every

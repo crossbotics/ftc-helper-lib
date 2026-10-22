@@ -13,6 +13,7 @@ needs it.
 
 **You need:** your robot project with the simulator running your code
 (`./gradlew :sim:run -PteamCode=../TeamCode`, [lesson 1](01-robot-in-five-files.md)). About 45 minutes.
+No project yet? Do [Try it with goBILDA's starter bot](#try-it-with-gobildas-starter-bot) at the end first.
 
 **Reference:** [Scenario files](../../guides/simulator.md#scenario-files-test-without-a-browser) (every
 command and check), [Record a test](../../guides/simulator.md#record-a-test) (the recorder).
@@ -32,17 +33,21 @@ section. The test catches it before the robot does.
 ## 2. Record a test
 
 1. Start the simulator with your code and open http://localhost:8780.
-2. Over the 3D view, open **Tests** and choose **Record a test**. A red bar says `Recording`. The
+2. Open **Tests** (in the row of buttons above the 3D field, next to **View** and **Layers**) and choose
+   **Record a test**. A red bar says `Recording`. The
    field starts fresh: the robot on its start spot, every game piece back, your numbers as in
    `Tunables.java`. **Why fresh:** the test always starts this way, so it must be recorded this way too.
 3. Choose your OpMode and press **INIT**. In the INIT menu, choose the alliance (gamepad 1 **B** for RED,
-   **X** for BLUE).
+   **X** for BLUE). On the keyboard (set gamepad 1's list to "Keyboard") B is the **L** key and X is
+   the **J** key; or click B or X on the on-screen gamepad 1.
 4. Press **START** and do the job, as in a match: drive to a piece, pick it up, shoot. For an
    autonomous: do nothing, let it run to its end.
 5. Press **Stop recording** in the red bar. A window opens: **Your test: choose the checks**.
 6. Leave the ticked checks ticked (section 5 says why). Type a name, e.g. `main-teleop`, and press
-   **Save**. The test is now `simulator/scenarios/main-teleop.sim` in your robot project, next to
-   `TeamCode`. Commit it with your code.
+   **Save**. The test is now `simulator/scenarios/main-teleop.sim` in your robot project. To find it in
+   Android Studio's Project panel: open the top folder (the one that holds `TeamCode`), then
+   `simulator`, then `scenarios`. Commit it with your code (save it to git:
+   [Git and GitHub](../../guides/github.md#every-practice-pull-commit-push)).
 7. Press **Run it now**. The simulator plays your test back from a fresh field (hands off: the test
    drives) and shows **PASSED**, or **FAILED** with the line that failed.
 
@@ -83,10 +88,10 @@ expect bumped none
 | `wait 1` | wait 1 second (waits before START are cut to 1 s: they change nothing) |
 | `press g1.b` | press and let go of gamepad 1's B: RED in the INIT menu |
 | `start` | START |
-| `expect within 6 phase STOPPED` | **a check:** within 6 s, the OpMode stops by itself (the autonomous ends) |
+| `expect within 6 phase STOPPED` | **a check:** within 6 s, the OpMode stops by itself (the autonomous ends). The **phase** is where the OpMode is: `INIT`, `RUNNING` (after START) or `STOPPED` (`IDLE` before INIT) |
 | `expect within 3 launched >= 3` | within 3 s, at least 3 pieces were shot |
 | `expect within 3 points "red" >= 13` | RED has at least 13 points |
-| `expect step 1 done` | the autonomous report's first step says `done` |
+| `expect step 1 done` | the autonomous report's first step says `done` (the **report** is the list of steps the Driver Station shows when the autonomous ends: [lesson 6](06-first-autonomous.md#4-what-you-get-for-free)) |
 | `expect error none` | no error on the Driver Station |
 | `expect bumped none` | the robot does not push against a wall or a field element at the end |
 
@@ -206,13 +211,14 @@ No robot project yet? Try the recorder with goBILDA's starter bot, from the `ftc
 ```
 
 1. Open http://localhost:8780. **Tests > Record a test**.
-2. Choose "goBILDA Bot Launch and Back Up", INIT, press gamepad 1 **B** (RED), START. Wait until the
-   Driver Station says `Autonomous finished`.
+2. Choose "goBILDA Bot Launch and Back Up", INIT, press gamepad 1 **B** (RED; the **L** key on the
+   keyboard), START. Wait until the Driver Station says `Autonomous finished`.
 3. **Stop recording.** Look at the goal checks: it finishes, steps 1 and 2 are done, 3 pieces shot.
 4. With `-PteamCode=none` there is no robot project, so **Download** saves the file in your browser's
    downloads. Press **Run it now**: PASSED.
 5. Run the same test without the page:
    `./gradlew :sim:scenario -PteamCode=none -Pfile=sim/scenarios/recorded-gobilda-auto.sim`.
+   This runs the library's own copy of the same test (in `sim/scenarios`), not the file you downloaded.
 6. Record a TeleOp test the same way: "goBILDA Bot TeleOp", B, START, hold the left stick forward for
    a second, let go, **Stop recording**. The goal is where the robot ends.
 

@@ -195,13 +195,18 @@ public class MechanismRecipes {
         protected void define() {
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
             // recipe: own-parts
-            // A motor that is not in the catalog: its encoder counts per output turn and its free speed (RPM),
-            // from the seller's page. Its name then works like a catalog id, here and in .part(...).
+            // A motor that is not in the catalog: its encoder counts per output turn, then its free speed (RPM).
+            // On the seller's page:
+            // - goBILDA: "Encoder Resolution" (the number "at the Output Shaft") and "No-Load Speed".
+            // - REV: "Encoder Counts per Revolution" (at the output) and "Free Speed".
+            // Its name then works like a catalog id, here and in .part(...).
             launcher = add(Launcher.flywheel("launcher", Motors.custom("my-flywheel-motor", 28, 5800)));
-            // A servo: how far it turns (degrees) and seconds per 60 degrees at about 5 V.
+            // A servo: how far it turns (degrees), then its speed (seconds per 60 degrees).
+            // If the seller lists 4.8 V and 6 V, use 4.8 V (the hub gives a servo about 5 V).
             claw = add(Claw.servo("claw").part(Parts.customServo("my-claw-servo", 270, 0.16)));
-            // Numbers not known yet: general defaults, and INIT says so (a launcher or an arm needs
-            // the counts per turn: Motors.custom("...", countsPerRev, Double.NaN) at least).
+            // Double.NaN means "I don't know this one". Motors.unknown(...) means "I know neither number".
+            // The part then uses general defaults, and INIT says so.
+            // A launcher or an arm must at least have the counts per turn: Motors.custom("...", 28, Double.NaN).
             lift = add(Lift.slide("lift").part(Motors.unknown("old-lift-motor")));
             // end recipe
         }

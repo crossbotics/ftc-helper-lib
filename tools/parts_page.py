@@ -179,9 +179,22 @@ def page(cat):
     w("lift = add(Lift.slide(\"lift\").part(Motors.unknown(\"old-lift-motor\")));                    // numbers not known yet")
     w("```")
     w("")
-    w("A number you do not know is `Double.NaN` (or the whole part `Motors.unknown` / `Parts.unknownServo`): the "
-      "parts that need it use general defaults and INIT says so. A launcher, an arm, a motor turret and the "
-      "drive need the counts per turn. More: [Parts not in the catalog](../modules/robot.md#parts-not-in-the-catalog).")
+    w("**Where the numbers are on the seller's page** (checked 2026-10-22 on goBILDA's 5203 312 RPM motor, "
+      "REV's HD Hex motor REV-41-1291 and goBILDA's 2000 Series servo):")
+    w("")
+    w("| Number | goBILDA calls it | REV calls it |")
+    w("| --- | --- | --- |")
+    w("| counts per turn | \"Encoder Resolution\" (use the number \"at the Output Shaft\") "
+      "| \"Encoder Counts per Revolution\" (with a gearbox, the number at the output) |")
+    w("| free RPM | \"No-Load Speed\" | \"Free Speed\" |")
+    w("| servo: seconds per 60 degrees | \"No-Load Speed (4.8V)\" | the servo's speed |")
+    w("")
+    w("A servo's speed: if the seller lists 4.8 V and 6 V, use 4.8 V (the hub gives a servo about 5 V).")
+    w("")
+    w("A number you do not know: write `Double.NaN`. It means \"I don't know this one\". "
+      "(`Motors.unknown` / `Parts.unknownServo` = \"I know none of its numbers\".) The parts that need it use "
+      "general defaults, and INIT says so. A launcher, an arm, a motor turret and the drive must at least have "
+      "the counts per turn. More: [Parts not in the catalog](../modules/robot.md#parts-not-in-the-catalog).")
     w("")
     w("**In the simulator only**, three ways, from quickest to most shared:")
     w("")

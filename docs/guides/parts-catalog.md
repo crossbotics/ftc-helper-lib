@@ -1,6 +1,6 @@
 # Parts catalog: motors, servos, wheels and rollers
 
-> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
+> **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 
 <!-- Made by tools/parts_page.py from sim/parts/parts.json. Edit parts.json, then run the script. -->
 
@@ -148,7 +148,17 @@ claw = add(Claw.servo("claw").part(Parts.customServo("my-servo", 270, 0.16)));  
 lift = add(Lift.slide("lift").part(Motors.unknown("old-lift-motor")));                    // numbers not known yet
 ```
 
-A number you do not know is `Double.NaN` (or the whole part `Motors.unknown` / `Parts.unknownServo`): the parts that need it use general defaults and INIT says so. A launcher, an arm, a motor turret and the drive need the counts per turn. More: [Parts not in the catalog](../modules/robot.md#parts-not-in-the-catalog).
+**Where the numbers are on the seller's page** (checked 2026-10-22 on goBILDA's 5203 312 RPM motor, REV's HD Hex motor REV-41-1291 and goBILDA's 2000 Series servo):
+
+| Number | goBILDA calls it | REV calls it |
+| --- | --- | --- |
+| counts per turn | "Encoder Resolution" (use the number "at the Output Shaft") | "Encoder Counts per Revolution" (with a gearbox, the number at the output) |
+| free RPM | "No-Load Speed" | "Free Speed" |
+| servo: seconds per 60 degrees | "No-Load Speed (4.8V)" | the servo's speed |
+
+A servo's speed: if the seller lists 4.8 V and 6 V, use 4.8 V (the hub gives a servo about 5 V).
+
+A number you do not know: write `Double.NaN`. It means "I don't know this one". (`Motors.unknown` / `Parts.unknownServo` = "I know none of its numbers".) The parts that need it use general defaults, and INIT says so. A launcher, an arm, a motor turret and the drive must at least have the counts per turn. More: [Parts not in the catalog](../modules/robot.md#parts-not-in-the-catalog).
 
 **In the simulator only**, three ways, from quickest to most shared:
 
