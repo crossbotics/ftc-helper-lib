@@ -240,7 +240,7 @@ simulator (**Ctrl+C** in the Terminal) and run both lines again.
 **Or build the steps on the field.** Press **Auto builder** over the 3D view. Tap the field to add drives,
 add the other steps from the list, write the note for the drive team ("Write it for me"), and press
 **Run**: the simulator runs the steps with your `Robot.java` and `Actions.java` and shows where your robot
-left the plan, with fixes to apply. When it works, **Copy Java** gives you this lesson's file with your
+left the plan, with fixes to apply. When it works, **Copy the Java** gives you this lesson's file with your
 steps in it. Why still learn the file? You change it at events, and the builder does not do everything
 (menus, your own steps). ([The auto builder](../../guides/simulator.md#the-auto-builder).)
 

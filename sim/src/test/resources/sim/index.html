@@ -8,12 +8,12 @@
   :root {
     --bg: #f4f5f7; --panel: #ffffff; --ink: #1d2330; --muted: #6a7282; --line: #d9dde4;
     --accent: #1f6feb; --go: #1a7f37; --stop: #cf222e; --warn: #9a6700; --screen: #0f1720; --screen-ink: #d6f5d6;
-    --btn: #eef1f5; --btn-down: #1f6feb; --btn-ink-down: #fff; --bar: #1f6feb; --bar-neg: #cf222e;
+    --btn: #eef1f5; --btn-down: #1f6feb; --btn-ink-down: #fff; --bar: #1f6feb; --bar-neg: #cf222e; --link: #0b5cd5;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --bg: #0d1117; --panel: #161b22; --ink: #e6edf3; --muted: #8b949e; --line: #30363d;
-      --btn: #21262d; --screen: #010409;
+      --btn: #21262d; --screen: #010409; --link: #58a6ff;
     }
   }
   * { box-sizing: border-box; }
@@ -56,6 +56,7 @@
   h3 { font-size: 13px; margin: 12px 0 6px; color: var(--muted); }
   select, button, input[type=number] { font: inherit; color: var(--ink); background: var(--btn); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }
   button { cursor: pointer; }
+  a { color: var(--link); }
   button:disabled { opacity: .45; cursor: default; }
   .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   /* The Driver Hub: a black handheld with the Driver Station app on its screen. */
@@ -173,7 +174,26 @@
   .tab { display: none; }
   .tab.on { display: block; }
   details.keys summary { cursor: pointer; }
-  #padsSection.small .gp, #padsSection.small .owner { display: none; }
+  #padsSection.small .gp, #padsSection.small .owner, #padsSection.small .stickyLbl { display: none; }
+  .padhead { justify-content: space-between; }
+  .padhead .padsHint { display: none; flex: 1; min-width: 0; }
+  #padsSection.small .padhead .padsHint { display: inline; }
+  #padsSection.small .pad { margin-bottom: 2px; }
+  #padsSection.small .pad > .row { flex-wrap: nowrap; }
+  #padsSection.small .pad > .row .muted { display: none; }
+  #padsSection.small .pad .src { min-width: 0; width: 0; flex: 1 1 auto; max-width: 170px; }
+  #padsSection.small .pad > .row b { white-space: nowrap; }
+  .pads > .pad { min-width: 0; }
+  .padhead .padsHint { font-size: 12px; }
+  /* Keyboard focus: a clear ring on every control. */
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .caret { font-size: 10px; margin-left: 5px; opacity: .7; }
+  #builderBtn { margin-left: auto; font-weight: 600; border-color: var(--accent); color: var(--accent); }
+  .v3help { margin-top: 4px; }
+  #hubSection h3 { border-top: 1px solid var(--line); padding-top: 8px; }
+  #hubSection .tab > h3:first-child { border-top: 0; padding-top: 0; }
+  /* Narrow screens, one column: the Driver Hub, then the field, the builder, the gamepads, the Control Hub. */
+  #dsSection { order: 1; } #view3dSection { order: 2; } #builderSection { order: 3; } #padsSection { order: 4; } #hubSection { order: 5; }
   /* What the robot holds, on the 3D view: a dot per piece in its colour, empty dots for the free places. */
   #heldBadge { position: absolute; left: 8px; top: 8px; z-index: 2; display: none; align-items: center; gap: 6px;
     padding: 4px 9px; border-radius: 14px; background: color-mix(in srgb, var(--panel) 88%, transparent);
@@ -240,6 +260,15 @@
   #builder .b-tabs button { border-radius: 0; padding: 3px 9px; font-size: 12.5px; }
   #builder .b-tabs button:first-child { border-radius: 6px 0 0 6px; } #builder .b-tabs button:last-child { border-radius: 0 6px 6px 0; }
   #builder .b-tabs button[aria-selected="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+  #builder .b-seg { display: inline-flex; }
+  #builder .b-seg button { border-radius: 0; margin-left: -1px; }
+  #builder .b-seg button:first-child { border-radius: 6px 0 0 6px; margin-left: 0; } #builder .b-seg button:last-child { border-radius: 0 6px 6px 0; }
+  #builder .b-tools { gap: 6px; }
+  #builder .b-h { margin: 0 0 2px; font-size: 13px; }
+  #builder code { font: 11.5px ui-monospace, Menlo, monospace; }
+  #builder .b-note { flex-wrap: wrap; gap: 4px; }
+  #builder select { max-width: 100%; }
+  #builder label { flex-wrap: wrap; max-width: 100%; }
   #builder .b-x { padding: 0 8px; font-size: 18px; line-height: 1.2; }
   #builder .b-intro { margin: 2px 0 6px; }
   #builder .b-sec { border-top: 1px solid var(--line); padding: 6px 0; }
@@ -255,7 +284,7 @@
   #builder button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
   #builder .b-red.on { background: #cf222e; border-color: #cf222e; color: #fff; } #builder .b-blue.on { background: #1f6feb; border-color: #1f6feb; color: #fff; }
   #builder .b-go { background: var(--go); color: #fff; border-color: var(--go); font-weight: 600; }
-  #builder .b-note { display: flex; } #builder .b-note input { flex: 1; min-width: 0; font-weight: 600; }
+  #builder .b-note { display: flex; } #builder .b-note input { flex: 1; min-width: 12em; font-weight: 600; }
   #builder #bMap { width: 100%; max-width: 420px; display: block; margin: 4px auto; background: #fff; border: 1px solid var(--line); border-radius: 6px; touch-action: none; }
   #builder #bTime { flex: 1; min-width: 80px; }
   #builder .b-step { border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; margin: 4px 0; }
@@ -348,8 +377,9 @@
   </section>
 
   <section id="padsSection">
-    <div class="row" style="justify-content:space-between"><h2 style="margin:0">Gamepads</h2>
-      <button id="padsToggle" title="Hide the on-screen gamepads (the keyboard, a real controller or a phone still work): more room for the 3D field">Hide</button></div>
+    <div class="row padhead"><h2 style="margin:0">Gamepads</h2>
+      <span class="muted padsHint">Pictures hidden: keys, controllers and phones still work.</span>
+      <button id="padsToggle" aria-expanded="true" title="Show or hide the on-screen gamepads (the keyboard, a real controller or a phone still work): more room for the 3D field">Hide gamepads</button></div>
     <div class="pads">
     <div class="pad" data-pad="1">
       <div class="row"><b>Gamepad 1</b> <span class="muted">(driver)</span>
@@ -365,7 +395,7 @@
     </div>
     </div>
     <div class="padfoot">
-    <label class="muted" title="A click holds a button until clicked again; sticks stay where you leave them: to hold two things at once with a mouse."><input type="checkbox" id="sticky"> Sticky buttons</label>
+    <label class="muted stickyLbl" title="A click holds a button until clicked again; sticks stay where you leave them: to hold two things at once with a mouse."><input type="checkbox" id="sticky"> Sticky buttons</label>
     <details class="keys" id="keyHelp"><summary>Keys and controllers</summary>
       Keyboard: left stick <code>W A S D</code>, right stick <code>arrows</code>, D-pad <code>T F G H</code>,
       A/B/X/Y <code>K L J I</code>, LB/RB <code>Q E</code>, LT/RT <code>Z C</code>, BACK <code>Backspace</code>,
@@ -390,8 +420,9 @@
     <canvas id="field" width="380" height="380" aria-label="Field, seen from above"></canvas>
     <div class="muted" style="text-align:center">While no program runs (or in INIT): drag the robot to move it, mouse wheel over it to turn it.</div>
     <div id="spotText" class="muted" style="text-align:center"></div>
-    <div class="row" style="margin-top:6px">
-      <span class="muted">Push by hand:</span>
+    <h3>Move by hand</h3>
+    <div class="row">
+      <span class="muted">Push:</span>
       <button data-push="24,0,2">48 in forward</button><button data-push="-24,0,0.5">12 in back</button>
       <button data-push="0,24,2">48 in right</button>
     </div>
@@ -401,10 +432,11 @@
       <label class="muted" title="The robot holds the preload (BIOBUZZ: 4 POLLEN) at the start; untick for an empty robot"><input type="checkbox" id="preloaded" checked> Preloaded</label>
     </div>
     <div class="row" style="margin-top:6px">
-      <label class="muted" title="Draw the planned path of a follow step and the robot's trail, on this map and in 3D"><input type="checkbox" id="showPaths" checked> Path lines:</label>
+      <label class="muted" title="Draw the planned path of a follow step and the robot's trail, on this map and in 3D"><input type="checkbox" id="showPaths" checked> Path lines</label>
       <span class="muted"><span style="color:#f08c00">- - plan</span>, <span style="color:#2da44e">&mdash; where it went</span> (last 30 s)</span>
       <button id="clearPaths" title="Clears the trail and the last plan (a path still running comes back)">Clear lines</button>
     </div>
+    <h3>Robot now</h3>
     <div class="muted" id="poseText"></div>
     <div class="muted" id="sizeText" style="margin-top:4px"></div>
     <div class="muted" id="piecesText" style="margin-top:4px"></div>
@@ -463,13 +495,13 @@
     <div class="row">
       <h2 style="margin:0">Field in 3D</h2>
       <label class="muted"><input type="checkbox" id="show3d"> Show</label>
-      <span class="dropdown"><button id="viewsBtn" aria-haspopup="true" aria-expanded="false" title="Where the 3D view looks from (keys 1-8)">View: <b id="viewName">Drivers (red wall)</b></button>
+      <span class="dropdown"><button id="viewsBtn" aria-haspopup="true" aria-expanded="false" title="Where the 3D view looks from (keys 1-8)">View: <b id="viewName">Drivers (red wall)</b><span class="caret" aria-hidden="true">&#9662;</span></button>
         <div id="viewsMenu" class="menu" hidden>
-          <button data-view="drivers"><kbd>1</kbd> Drivers: your alliance's wall <span class="muted" id="driversWall">(red)</span></button>
-          <button data-view="red"><kbd>2</kbd> Red wall (red drivers)</button>
-          <button data-view="blue"><kbd>3</kbd> Blue wall (blue drivers)</button>
+          <button data-view="drivers"><kbd>1</kbd> Drivers <span class="muted">your alliance's wall, <span id="driversWall">red now</span></span></button>
+          <button data-view="red"><kbd>2</kbd> Red wall <span class="muted">behind the red drivers</span></button>
+          <button data-view="blue"><kbd>3</kbd> Blue wall <span class="muted">behind the blue drivers</span></button>
           <button data-view="audience"><kbd>4</kbd> Audience side</button>
-          <button data-view="far"><kbd>5</kbd> Far side (across from the audience)</button>
+          <button data-view="far"><kbd>5</kbd> Far side <span class="muted">across from the audience</span></button>
           <button data-view="top"><kbd>6</kbd> From above</button>
           <button data-view="follow"><kbd>7</kbd> Follow robot</button>
           <button data-view="close" id="closeBtn"><kbd>8</kbd> <span id="closeName">HIVE close-up</span></button>
@@ -478,7 +510,7 @@
       <label class="muted" id="camViewLabel" style="display:none"><input type="checkbox" id="camView" checked> Camera view</label>
       <select id="camPick" aria-label="Which camera" style="display:none"></select>
       <label class="muted" id="cadLabel" style="display:none"><input type="checkbox" id="useCad" checked> Field CAD model</label>
-      <span class="dropdown"><button id="layersBtn" aria-haspopup="true" aria-expanded="false" title="Lines and maps over the 3D view">Layers</button>
+      <span class="dropdown"><button id="layersBtn" aria-haspopup="true" aria-expanded="false" title="Lines and maps over the 3D view">Layers<span class="caret" aria-hidden="true">&#9662;</span></button>
         <div id="layersMenu" class="menu" hidden>
           <label><input type="checkbox" data-layer="sight"> Camera sight lines to the tags</label>
           <div class="legend"><span><i style="background:#2ecc71"></i>seen</span> <span><i style="background:#d63384"></i>blocked?</span> <span><i style="background:#f08c00"></i>too slanted</span> <span><i style="background:#e5534b"></i>too small</span> <span><i style="background:#9aa3ab"></i>out of view</span> <span><i style="background:#b07ce8"></i>lighting</span> </div>
@@ -498,9 +530,8 @@
     <div id="stage" class="off" aria-label="Field and robot in 3D. Drag to turn, scroll to zoom, right-drag to slide."><div id="layerNote" role="status" hidden></div>
       <button id="scoreBar" hidden title="The score (Match panel)"></button><div id="toast" role="alert" hidden></div></div>
     <div id="stageOff">The 3D view is off (tick "Show"). The field from above is in the Control Hub's Robot tab.</div>
-    <div class="muted" style="margin-top:4px">Drag to turn the view, scroll to zoom, right-drag (or two fingers) to slide.
-      While no program runs (or in INIT): double-click the robot, then drag it to move it or drag its ring to turn it
-      (double-click again to stop).</div>
+    <div class="muted v3help" title="While no program runs (or in INIT): double-click the robot, then drag it to move it or drag its ring to turn it (double-click again to stop).">
+      Drag: turn &middot; scroll: zoom &middot; right-drag or two fingers: slide &middot; double-click the robot to move it (no program running, or in INIT)</div>
   </section>
   <section id="builderSection" hidden aria-label="Auto builder"><div id="builder"></div></section>
 </main>
@@ -2264,7 +2295,7 @@ function setView(v) {
   v3.view = v;
   document.querySelectorAll("[data-view]").forEach(b => b.classList.toggle("on", b.dataset.view === v));
   $("#viewName").textContent = viewName(v);
-  $("#driversWall").textContent = viewAlliance === "BLUE" ? "(blue now)" : "(red now)";
+  $("#driversWall").textContent = viewAlliance === "BLUE" ? "blue now" : "red now";
   if (v !== "free") { try { localStorage.setItem("simView", v); } catch (e) { /* not kept: fine */ } }
   if (!v3.ready && !v3.camera) return;
   const w = (fieldData && fieldData.field && (fieldData.field.insideWallSize || fieldData.field.size) / 2) || 72;
@@ -2331,13 +2362,18 @@ function set3d(on) {
 }
 $("#show3d").onchange = e => set3d(e.target.checked);
 // The on-screen gamepads can be hidden (remembered in this browser): the sources and keys still work.
-function setPadsSmall(small) {
+function setPadsSmall(small, keep) {
   $("#padsSection").classList.toggle("small", small);
-  $("#padsToggle").textContent = small ? "Show" : "Hide";
-  try { localStorage.setItem("simPadsSmall", small ? "1" : "0"); } catch (e) {}
+  $("#padsToggle").textContent = small ? "Show gamepads" : "Hide gamepads";
+  $("#padsToggle").setAttribute("aria-expanded", small ? "false" : "true");
+  if (keep) { try { localStorage.setItem("simPadsSmall", small ? "1" : "0"); } catch (e) {} }
 }
-$("#padsToggle").onclick = () => setPadsSmall(!$("#padsSection").classList.contains("small"));
-{ let v = null; try { v = localStorage.getItem("simPadsSmall"); } catch (e) {} setPadsSmall(v === "1" && !phonePad); }
+$("#padsToggle").onclick = () => setPadsSmall(!$("#padsSection").classList.contains("small"), true);
+// No choice saved yet: on a short laptop screen (one-screen layout, under 820 px tall) the on-screen gamepads
+// start hidden, so the 3D field gets the room; "Show gamepads" brings them back (and that choice is kept).
+{ let v = null; try { v = localStorage.getItem("simPadsSmall"); } catch (e) {}
+  const short = matchMedia("(min-width: 1100px) and (min-height: 640px) and (max-height: 819px)").matches;
+  setPadsSmall(!phonePad && (v === "1" || (v === null && short)), false); }
 // Control Hub panels: each button shows or hides its panel, the shown ones stack in order, and the
 // choice is remembered in this browser for the next run.
 function showPanels(names) {

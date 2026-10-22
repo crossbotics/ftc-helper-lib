@@ -115,7 +115,7 @@ panel.innerHTML = `
 <div class="b-head">
   <b>Auto builder</b>
   <span class="b-tabs" role="tablist">
-    <button role="tab" id="bTabSteps">Simple steps</button><button role="tab" id="bTabPedro">Pedro path</button>
+    <button role="tab" id="bTabSteps" title="Any robot, tank or mecanum">Simple steps</button><button role="tab" id="bTabPedro" title="Mecanum with odometry">Pedro path</button>
   </span>
   <button id="bClose" class="b-x" title="Close the auto builder" aria-label="Close">&times;</button>
 </div>
@@ -125,8 +125,8 @@ panel.innerHTML = `
   <div class="row"><label>Robot code <select id="bRobot" aria-label="Robot class"></select></label></div>
   <div class="muted" id="bRobotText"></div>
   <div class="row"><span class="muted">Run as</span>
-    <button id="bRed" class="b-red">RED</button><button id="bBlue" class="b-blue">BLUE</button>
-    <label title="mirrorForRed() in the Java: false on a field turned half a turn between the alliances (BIOBUZZ)">Red <select id="bMirror"><option value="false">uses the same numbers (turned field)</option><option value="true">is mirrored</option></select></label></div>
+    <span class="b-seg" role="group" aria-label="Alliance"><button id="bRed" class="b-red">RED</button><button id="bBlue" class="b-blue">BLUE</button></span></div>
+  <div class="row"><label title="mirrorForRed() in the Java: false on a field turned half a turn between the alliances (BIOBUZZ)">Your auto's <code>mirrorForRed()</code> <select id="bMirror"><option value="false">false (turned field, like BIOBUZZ)</option><option value="true">true (mirrored field)</option></select></label></div>
 </details>
 <div class="b-sec">
   <div class="row b-tools" id="bTools"></div>
@@ -135,46 +135,48 @@ panel.innerHTML = `
     <input type="range" id="bTime" min="0" max="1000" value="0" aria-label="Time along the plan"><span class="muted" id="bTimeText"></span></div>
   <label class="muted"><input type="checkbox" id="bEdit3d"> Edit in the 3D view too (drag the points; a tap adds)</label>
 </div>
-<details class="b-sec" open><summary>Start spot and the note for the drive team</summary>
+<details class="b-sec" open><summary>Start spot</summary>
   <div class="row" id="bPresetRow"><label>Spot <select id="bPreset"></select></label></div>
   <div class="row"><label>x <input type="number" step="0.5" id="bSx"></label><label>y <input type="number" step="0.5" id="bSy"></label><label>heading <input type="number" step="5" id="bSh"></label></div>
-  <label class="b-note">Note <input type="text" id="bNote" maxlength="120" placeholder="Our wall, left corner tile, facing the field"></label>
+  <label class="b-note">Note for the drive team <input type="text" id="bNote" maxlength="120" placeholder="Our wall, left corner tile, facing the field"></label>
   <div class="row"><button id="bWrite" title="Write the note from the spot: the wall, the tile, the way it faces">Write it for me</button>
     <button id="bCard" title="One page for the drive team: the note, the spot on the field, red and blue">Print setup card</button></div>
   <div class="muted" id="bNoteHelp"></div>
   <label class="muted" id="bStartOnRow"><input type="checkbox" id="bStartOn"> s.start(...) line in the Java (the note and the spot)</label>
 </details>
 <div class="b-sec" id="bStepsPane">
+  <h4 class="b-h">Steps</h4>
   <div class="row b-addrow" id="bAdd">
     <button data-add="move">+ Drive</button><button data-add="strafe" id="bAddStrafe">+ Strafe</button><button data-add="turn">+ Turn</button>
     <button data-add="turnTo">+ Turn to</button><button data-add="wait">+ Wait</button><button data-add="run">+ Start something</button>
-    <button data-add="action">+ Action</button><button data-add="park">+ Park from here</button>
-    <button id="bClear" title="Remove every step">Clear</button><button id="bExample" title="The lesson's example">Example</button></div>
+    <button data-add="action">+ Action</button><button data-add="park">+ Park from here</button></div>
   <div id="bList"></div>
+  <div class="row"><button id="bClear" title="Remove every step">Remove all steps</button><button id="bExample" title="The steps from lesson 6">Load the lesson's example</button></div>
 </div>
 <div class="b-sec" id="bPedroPane">
+  <h4 class="b-h">Path</h4>
   <div class="row"><label><input type="radio" name="bPMode" value="follow"> follow (Pedro)</label><label><input type="radio" name="bPMode" value="driveTo"> driveTo steps</label>
-    <label id="bPowerBox">max power <input type="number" step="0.05" min="0.05" max="1" id="bPower"></label></div>
-  <div class="row"><label>Step name <input type="text" id="bLabel"></label><label>Java name <input type="text" id="bName"></label></div>
-  <div class="row"><label><input type="checkbox" id="bHold"> hold the end</label><label id="bLimitBox">time limit <input type="number" step="1" min="1" id="bTimeout" placeholder="10"> s</label></div>
+    <label id="bPowerBox">power <input type="number" step="0.05" min="0.05" max="1" id="bPower"></label></div>
+  <div class="row"><label>Step label <input type="text" id="bLabel"></label><label>Path name <input type="text" id="bName"></label></div>
+  <div class="row"><label><input type="checkbox" id="bHold"> Hold the end</label><label id="bLimitBox">Time limit <input type="number" step="1" min="1" id="bTimeout" placeholder="10"> s</label></div>
   <div id="bParts"></div>
-  <div class="row"><button id="bPClear" title="Remove every part">Clear the path</button><button id="bPExample" title="The Pedro example robot's path">Example</button></div>
-  <h4>Along the path (PathAt) <button id="bAddAct" class="small">+ Add</button></h4>
+  <div class="row"><button id="bPClear" title="Remove every part">Remove all parts</button><button id="bPExample" title="The Pedro example robot's path">Load the Pedro lesson's example</button></div>
+  <h4 title="PathAt in the Java">Actions along the path <button id="bAddAct" class="small">+ Add one</button></h4>
   <div id="bActions"></div>
 </div>
-<div class="b-sec"><b>Checks</b><ul id="bChecks" class="b-checks"></ul></div>
+<div class="b-sec"><h4 class="b-h">Checks</h4><ul id="bChecks" class="b-checks"></ul></div>
 <div class="b-sec b-run">
   <div class="row"><button id="bRun" class="b-go">Run in the simulator</button><button id="bStop">Stop</button>
     <span class="b-clock" id="bClock">0.0 s</span></div>
   <div class="muted" id="bRunText"></div>
   <div id="bResult"></div>
 </div>
-<details class="b-sec" open><summary>Java, scenario, setup card</summary>
+<details class="b-sec" open><summary>Java and scenario</summary>
   <div class="row" id="bNames"></div>
-  <div class="row"><button id="bCopy" class="b-go">Copy Java</button><span class="muted" id="bCopied"></span>
+  <div class="row"><button id="bCopy" class="b-go">Copy the Java</button><span class="muted" id="bCopied"></span>
     <label class="muted" id="bViewRow"><select id="bView"><option value="file">the whole file</option><option value="steps">only the steps</option></select></label></div>
-  <div class="row"><button id="bSaveSim">Save scenario</button><label class="muted"><input type="checkbox" id="bRecorded"> with the end from the last run</label></div>
-  <div class="row"><label>near enough <input type="number" step="0.5" min="0.5" id="bTolIn"> in</label><label><input type="number" step="1" min="1" id="bTolDeg"> degrees</label></div>
+  <div class="row"><button id="bSaveSim">Save the scenario</button><label class="muted"><input type="checkbox" id="bRecorded"> with the end from the last run</label></div>
+  <div class="row"><label>Close enough <input type="number" step="0.5" min="0.5" id="bTolIn"> in</label><label><input type="number" step="1" min="1" id="bTolDeg"> degrees</label></div>
   <details><summary class="muted">Show the Java</summary><pre id="bCode" class="b-code"></pre></details>
   <details><summary class="muted">Show the scenario</summary><pre id="bSim" class="b-code"></pre></details>
 </details>`;
@@ -312,14 +314,15 @@ function cannotRun() {
 // ------------------------------------------------------------------ the map (the panel's SVG)
 
 const svg = $('bMap');
-const TOOLS_STEPS = [['drive', 'Tap adds a drive'], ['face', 'a turn to face'], ['none', 'nothing']];
-const TOOLS_PEDRO = [['line', 'Tap adds a line'], ['curve', 'a curve'], ['action', 'an action'], ['none', 'nothing']];
+const TOOLS_STEPS = [['drive', 'drive there'], ['face', 'turn to face'], ['none', 'nothing']];
+const TOOLS_PEDRO = [['line', 'a line'], ['curve', 'a curve'], ['action', 'an action'], ['none', 'nothing']];
 
 function renderTools() {
 	const list = B.mode === 'pedro' ? TOOLS_PEDRO : TOOLS_STEPS;
 	const now = B.mode === 'pedro' ? B.addPedro : B.add;
-	$('bTools').innerHTML = list.map(([v, t]) => `<button data-tool="${v}" aria-pressed="${v === now}" class="${v === now ? 'on' : ''}">${t}</button>`).join('')
-		+ '<button id="bUndo" title="Undo the last change">Undo</button>';
+	$('bTools').innerHTML = '<span class="muted">Tap adds:</span><span class="b-seg" role="group" aria-label="What a tap on the map adds">'
+		+ list.map(([v, t]) => `<button data-tool="${v}" aria-pressed="${v === now}" class="${v === now ? 'on' : ''}">${t}</button>`).join('')
+		+ '</span><button id="bUndo" title="Undo the last change">Undo</button>';
 	for (const b of $('bTools').querySelectorAll('[data-tool]')) {
 		b.onclick = () => { if (B.mode === 'pedro') B.addPedro = b.dataset.tool; else B.add = b.dataset.tool; render(); };
 	}

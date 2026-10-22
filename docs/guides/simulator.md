@@ -111,8 +111,9 @@ The page fits one laptop screen. On a narrow screen the parts stack and the page
   button that is INIT, then START (play), then STOP, the match time, and the telemetry.
 - **Middle: the field in 3D**, with the gamepads under it. The on-screen gamepads look like a real
   controller (Xbox 360 / Logitech layout, with the button names the SDK uses). A pressed button gets a
-  white ring. "Hide" on the gamepads gives the field more room when you drive with the keyboard, a
-  real controller or a phone.
+  white ring. **Hide gamepads** gives the field more room when you drive with the keyboard, a
+  real controller or a phone (on a short laptop screen they start hidden; **Show gamepads** brings
+  them back, and this browser remembers your choice).
 - **Right: the Control Hub**, in panels: Robot (the field from above, pushing the robot, size and
   pieces, battery), Motors, Servos & switches, Cameras. Each of its buttons shows or hides a panel.
   The panels stack in that order, and this browser remembers your choice for the next run.
@@ -255,7 +256,7 @@ What a team does, step by step:
    TeamCode, or the library's examples) and picks the one whose device names match the robot file
    ("Best fit"); pick another in the list if it guessed wrong. Its drive (tank or mecanum) and the robot's
    size come from your code and the robot file. **Run as** RED or BLUE, and say whether RED's routes are
-   mirrored (`mirrorForRed()`; BIOBUZZ's turned field: "uses the same numbers").
+   mirrored (`mirrorForRed()`; BIOBUZZ's turned field: "false (turned field)").
 2. **Choose the mode.**
    - **Simple steps** (any drive): drive, strafe (mecanum), turn, turn to, wait, start something (a
      command), an action from `Actions.java`, and "park from here" (`parkWithSeconds`). Tap the field map
@@ -289,7 +290,7 @@ What a team does, step by step:
    drive (the robot still rolls when a drive ends, so it slides on a few inches), holding a Pedro path's
    end, or slowing its last part. Press Run again to check.
 8. **Copy the Java** (the whole file for Simple steps, or only the steps; for a Pedro path the `PedroPath`
-   field and the steps to paste, the same as the web builder), **Save scenario** (a scenario file that
+   field and the steps to paste, the same as the web builder), **Save the scenario** (a scenario file that
    checks the note, the start spot, each step "done" and the end, within the inches and degrees you set;
    [scenario files](#scenario-files-test-without-a-browser)), and tick **with the end from the last run** to
    check the end your robot really reached (for a route that is right as it drives, so a later change that
