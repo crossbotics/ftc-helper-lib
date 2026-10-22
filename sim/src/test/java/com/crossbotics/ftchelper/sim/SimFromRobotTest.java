@@ -380,6 +380,55 @@ public class SimFromRobotTest {
         }
     }
 
+    // Hood Finder: an angle is used once (stop B never gets stop A's), a table needs both stops' angles and
+    // angles that keep going one way, and the screen shows posA/posB OR the table, never both.
+    @Test public void theHoodFinderShowsTheStopsOrATableThatInitTakes() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.turretbot.Robot.class);
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("TurretBot Hood Finder").start();
+            s.press(v -> s.g1().a = v);                               // move to the start point 0.50
+            s.press(v -> s.g1().dpad_down = v);                       // 0.45
+            s.press(v -> s.g1().x = v);                               // stop A, no angle
+            s.press(v -> s.g1().dpad_up = v);
+            s.press(v -> s.g1().dpad_up = v);                         // 0.55
+            hoodAngle(s, 20);
+            s.press(v -> s.g1().b = v);                               // stop B at 20
+            String all = String.join("\n", s.screen());
+            assertTrue(all, SimRun.waitFor(() -> s.screenHas("posA = 0.450, posB = 0.550") && s.screenHas("Angle at stop A missing"), 1));
+            assertFalse("no half pair of angles\n" + all, s.screenHas("angleB ="));
+            s.press(v -> s.g1().dpad_down = v);
+            s.press(v -> s.g1().dpad_down = v);                       // 0.45
+            hoodAngle(s, -20);                                        // 0 here
+            s.press(v -> s.g1().x = v);                               // stop A at 0
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("angleA = 0, angleB = 20"), 1));
+            s.press(v -> s.g1().dpad_up = v);                         // 0.50
+            s.press(v -> s.g1().a = v);                               // no angle measured here yet
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Measure the hood's angle here first"), 1));
+            hoodAngle(s, 25);                                         // 25: more than at stop B, the wrong way
+            s.press(v -> s.g1().a = v);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("keep going one way"), 1));
+            assertFalse(s.screenHas("calibration ="));
+            s.press(v -> s.g1().y = v);                               // undo
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Point 1 removed: 0 left."), 1));
+            assertFalse("no stale point", s.screenHas("Point 1: 0.500"));
+            hoodAngle(s, -15);                                        // 10
+            s.press(v -> s.g1().a = v);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("calibration = {{0.450, 0}, {0.500, 10}, {0.550, 20}}"), 1));
+            assertFalse("the table OR the stops, never both\n" + String.join("\n", s.screen()), s.screenHas("posA ="));
+            assertEquals("", s.error());
+        }
+    }
+
+    // Hold LB and press the D-pad up (+1) or down (-1) this many times: the hood's angle typed in.
+    private static void hoodAngle(SimRun s, int steps) throws InterruptedException {
+        s.g1().left_bumper = true;
+        for (int i = 0; i < Math.abs(steps); i++) {
+            if (steps > 0) s.press(v -> s.g1().dpad_up = v);
+            else s.press(v -> s.g1().dpad_down = v);
+        }
+        s.g1().left_bumper = false;
+    }
+
     // Whole-robot aim (flywheelbot, no turret): G1 RB on, and the robot turns itself to face the goal
     // its webcam sees; the turn stick still wins.
     @Test public void flywheelBotTurnsItselfToFaceTheGoal() throws Exception {
@@ -643,6 +692,39 @@ public class SimFromRobotTest {
             // Within 6 mm: the robot drifts a little while it spins, as a real one does.
             assertEquals(-84, Double.parseDouble(m.group(1)), 6);
             assertEquals(-168, Double.parseDouble(m.group(2)), 6);
+            assertEquals("", s.error());
+        }
+    }
+
+    // A pod wired backward that Robot.java does not reverse: the Forward test says so (as on a real robot);
+    // too few turns and a Loop that never left the mark are refused.
+    @Test public void theOdometryTunerCatchesABackwardPodFewTurnsAndNoLoop() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.odometrybot.Robot.class);
+        Files.write(file, "odometry.reversed = x   # measured: this pod counts backward\n".getBytes(StandardCharsets.UTF_8),
+                java.nio.file.StandardOpenOption.APPEND);
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("Odometry Bot Odometry Tuner").start();
+            s.press(v -> s.g1().a = v);                              // 1 Forward 48 in
+            s.robot().push(24, 0, 2);
+            SimRun.pause(2.4);
+            s.press(v -> s.g1().b = v);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Forward counted BACKWARD"), 2));
+            s.press(v -> s.g1().dpad_down = v);
+            s.press(v -> s.g1().dpad_down = v);
+            s.press(v -> s.g1().dpad_down = v);                     // 4 Loop and back
+            s.press(v -> s.g1().a = v);
+            SimRun.pause(0.3);
+            s.press(v -> s.g1().b = v);                              // never moved
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("It went only"), 2));
+            assertFalse(s.screenHas("checked = true"));
+            s.press(v -> s.g1().dpad_up = v);                       // 3 Spin 3+ turns
+            s.press(v -> s.g1().a = v);
+            s.g1().right_stick_x = 1;
+            assertTrue(SimRun.waitFor(() -> Math.abs(s.robot().odometry.turnTotalDeg()) > 1.3 * 360, 20));
+            s.g1().right_stick_x = 0;
+            SimRun.pause(0.3);
+            s.press(v -> s.g1().b = v);                              // only about 1.5 turns
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("spin at least 3"), 2));
             assertEquals("", s.error());
         }
     }

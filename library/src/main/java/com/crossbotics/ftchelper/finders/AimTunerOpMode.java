@@ -20,7 +20,11 @@ import com.crossbotics.ftchelper.vision.TargetSource;
  * the offset until the shots go in the middle.
  *
  * <p>It aims with a turret ({@link #createTurret()}) or, without one, by turning the robot
- * ({@link #robotConfig()} needed).
+ * ({@link #robotConfig()} needed). It is set up with these pieces, not with {@code robot()}: for the
+ * robot in five files, give {@code robotConfig()} as {@code return new Robot().robotConfig();} (and the
+ * camera, turret and launcher from your Robot's parts' devices). It shows the offset for the older
+ * helpers and the {@code Tunables} line: {@code Tunables.Turret: cameraOffset = ...} with a turret,
+ * {@code Tunables.Aim: cameraOffset = ...} for whole-robot aim.
  *
  * <pre>
  * Gamepad 1:
@@ -184,6 +188,8 @@ public abstract class AimTunerOpMode extends FinderOpMode {
                     java.util.Collections.singletonList("cameraOffset = " + FinderResults.num(offset, 1))));
         } else {
             results.set("aim", "new AimController(...).offset(" + FinderResults.num(offset, 1) + ")   // with your aim gains");
+            // The robot in five files aims the whole robot with Tunables.Aim's cameraOffset.
+            results.set("aim:t0", "Tunables.Aim: cameraOffset = " + FinderResults.num(offset, 1) + "   // whole-robot aim (no turret)");
         }
     }
 

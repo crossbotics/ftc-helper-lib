@@ -96,8 +96,30 @@ public class FinderSafetyTest {
         }
     }
 
+    // The Hardware Check has a help page like the finders: GUIDE opens it, and the motor stops while it is open.
+    @Test public void hardwareCheckHasAHelpPageAndStopsForIt() throws Exception {
+        try (SimRun s = new SimRun()) {
+            s.init("Hardware Check").start();
+            assertTrue(String.join("\n", s.screen()), s.screenHas("GUIDE (or hold START 1 s) = help"));
+            String first = null;
+            for (String l : s.screen()) if (l.startsWith("> ")) first = l;
+            assertTrue(String.join("\n", s.screen()), first != null && first.contains("(motor)"));
+            String name = first.substring(2, first.indexOf("  ("));
+            SimMotor m = s.robot().motors.get(name);
+            s.g1().right_stick_y = -1;
+            assertTrue("it runs", SimRun.waitFor(() -> m.userPower() > 0.4, 1));
+            s.press(v -> s.g1().guide = v);
+            assertTrue(SimRun.waitFor(() -> s.screenHas("Hardware Check help"), 1));
+            assertEquals("help stops the motor", 0, m.userPower(), 1e-9);
+            s.g1().right_stick_y = 0;
+            s.press(v -> s.g1().guide = v);
+            assertTrue(SimRun.waitFor(() -> s.screenHas("Devices"), 1));
+            assertEquals("", s.error());
+        }
+    }
+
     @Test public void everyHelpPageFitsTheScreen() throws Exception {
-        String[] finders = {"Servo Finder", "Motor Finder", "Flywheel Finder", "Drive Tuner"};
+        String[] finders = {"Servo Finder", "Motor Finder", "Flywheel Finder", "Drive Tuner", "Hardware Check"};
         try (SimRun s = new SimRun()) {
             for (String f : finders) {
                 s.init(f);

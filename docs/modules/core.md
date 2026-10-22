@@ -118,6 +118,7 @@ A tiny file on the Control Hub that keeps settings as name = value pairs:
 | Method | What it does |
 | --- | --- |
 | `SettingsFile.shared()` | the robot's settings file |
+| `SettingsFile.folder()` | the helper's folder: `/sdcard/FIRST/ftc-helper` on the robot, the simulator's data folder on a laptop (the `ftchelper.dataDir` setting) |
 | `get(key, fallback)`, `getDouble(key, fallback)`, `has(key)` | read |
 | `put(key, value)`, `remove(key)` | change in memory |
 | `save()` | write the file; returns false if it could not (the robot keeps working). It waits until the file is written: use it in INIT or tests |
