@@ -23,9 +23,15 @@ public class Tunables {
      */
     public static class FlyWheel {
         public static double speedRpm = 4000, stepRpm = 100, readyBandRpm = 150, idleRpm = 0;
+        // The hub's speed control. Run the Flywheel Finder, then remove the // and put its numbers here.
+        // public static double kP = 0, kI = 0, kD = 0, kF = 0;
     }
 
-    /** The flap: rest = 0 and push = 0.2, from Studica's code (X and A). The times are guesses. */
+    /**
+     * The flap: rest = 0 and push = 0.2, from Studica's code (X and A). The flap goes to rest at START,
+     * and your servo's horn may sit differently from Studica's: find these with the Servo Finder BEFORE
+     * the first TeleOp. The times are guesses.
+     */
     public static class FwActuator {
         public static double rest = 0.0, push = 0.2;
         public static double pushSec = 0.3, returnSec = 0.3;

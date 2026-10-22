@@ -4,7 +4,7 @@
 
 **For:** teams that use `EasyAuto` and the [starter kit](../starter-kit.md). With a `Robot.java` (the
 robot in five files), use [the autonomous builder](autonomous-builder.md) instead. **You need:** a
-drive that works in TeleOp and has been tuned ([tutorial 09](../tutorials/09-first-auto.md)).
+drive that works in TeleOp and has been tuned ([under-the-hood tutorial 09: Autonomous by hand with AutoDrive](../tutorials/09-first-auto.md)).
 
 How to make an autonomous in a few minutes, and how to make MANY of them without copying code.
 `EasyAuto` is the layer under the robot-in-five-files autonomous.

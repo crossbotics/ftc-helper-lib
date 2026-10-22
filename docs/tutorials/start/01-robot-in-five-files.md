@@ -11,7 +11,7 @@ in the simulator.
 
 This is **lesson 1** of the [main track](../README.md#start-here-the-main-track). **Before this:** the
 [Quick start](../../quick-start.md), or at least [Add it to a project](../../01-add-to-project.md). New to
-Java? [Tutorial 01](../01-opmode-basics.md) explains imports, fields and lambdas.
+Java? [Under-the-hood tutorial 01](../01-opmode-basics.md) (not this lesson) explains imports, fields and lambdas.
 
 **Which robot:** you build your own robot, in the five files the Quick start put in your TeamCode.
 This lesson explains with a worked example: goBILDA's BIOBUZZ starter bot, rewritten in this style, in

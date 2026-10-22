@@ -12,7 +12,7 @@ import com.crossbotics.ftchelper.robot.Pad;
  *   <li>RT intake in, LT intake out, while held (from the intake)</li>
  *   <li>LB spins the flywheel up / down, RB fires one piece (hold RB to keep firing), Y fires all
  *       (from the launcher and Actions.java)</li>
- *   <li>D-pad up/down: flywheel speed +/- 100</li>
+ *   <li>D-pad up/down: flywheel speed +/- 100, in motor units (not the wheel's RPM: see Tunables.FlyWheel)</li>
  * </ul>
  * Studica's code drives "tank style" (each stick runs one side), puts the intake on the bumpers, the
  * flywheel on RT and the flap on X and A. The library drives with one stick and its standard

@@ -47,7 +47,7 @@ part. You never write it ([From Blocks to Java](../blocks-to-java.md#the-key-ide
 | --- | --- | --- | --- |
 | 1 | [The robot in five files](start/01-robot-in-five-files.md) | what each of the five files is for; make them from your robot configuration; try it in the simulator | none |
 | 2 | [Drive](start/02-drive.md) | the drive line: mecanum or tank, motors, wheels, the IMU; the driving you get for free; check the directions | a drivetrain (or the simulator) |
-| 2b | [Check the hardware](19-testing-procedures.md) | the Hardware Check, and a testing order that finds problems early | your robot |
+| 2b | [Check the hardware (lesson 2b)](19-testing-procedures.md) | the Hardware Check, and a testing order that finds problems early | your robot |
 | 3 | [Buttons](start/03-buttons.md) | `Controls.java`: the buttons the parts bring, your own jobs, one or two drivers | a gamepad |
 | 4 | [An intake, a lift and a claw](start/04-lift-and-claw.md) | parts, their numbers in `Tunables.java`, homing, finding and tuning the numbers | the mechanisms |
 | 5 | [Actions](start/05-actions.md) | several parts together, from a button or in an autonomous | the mechanisms |
@@ -64,7 +64,8 @@ Then: [the button menu](../guides/buttons.md) (every way a button can work),
 
 ## Under the hood: how it works
 
-These tutorials build the same things by hand, with the library's building blocks. Do them to learn
+**These tutorials are optional: you can skip them all.** The main track is enough to build and run a
+robot. They build the same things by hand, with the library's building blocks. Do them to learn
 how a robot program works inside (what a PID is, what a bulk read is, why software limits do not
 replace hard stops), or when you need a part that has no five-files module. Each has a complete
 program.
@@ -89,7 +90,7 @@ program.
 | 16 | [Easy autonomous](16-easy-autos.md) | `EasyAuto`, the layer under the five-files autonomous | tuned drivetrain + lift + claw |
 | 17 | [Launcher](17-launcher.md) | flywheel, hood, feeder, shot table, by hand | a shooter |
 | 18 | [Vision aiming](18-vision-aim.md) | webcam or Limelight 3A through one interface, safe aiming | camera + drivetrain |
-| 19 | [Testing procedures](19-testing-procedures.md) | the Hardware Check and a testing order (also in the main track) | any robot |
+| 19 | [Check the hardware (lesson 2b)](19-testing-procedures.md) | the Hardware Check and a testing order (it is lesson 2b of the main track) | any robot |
 | 20 | [Easy TeleOp](20-easy-teleop.md) | `EasyTeleOp`, the layer under `Controls.java` (also used by the [starter kit](../starter-kit.md)) | drivetrain + lift + claw |
 | 21 | [Find your numbers](21-finders.md) | the finders: servo ends, lift limits, flywheel gains, wheel size, camera offset, shot table | the parts to measure |
 

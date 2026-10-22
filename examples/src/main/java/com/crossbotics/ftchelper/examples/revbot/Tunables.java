@@ -24,6 +24,8 @@ public class Tunables {
      */
     public static class Flywheel {
         public static double speedRpm = 3000, stepRpm = 100, readyBandRpm = 100, idleRpm = 0;
+        // The hub's speed control. Run the Flywheel Finder, then remove the // and put its numbers here.
+        // public static double kP = 0, kI = 0, kD = 0, kF = 0;
     }
 
     /** The feeder roller (CR servo): full power for feedSec per piece. 0.4 s is a guess: watch it and tune it. */
@@ -33,8 +35,8 @@ public class Tunables {
 
     /**
      * The poker. REV's code has two preset spots (A = down, B = up); the numbers are not on the page.
-     * up = folded along the side (the start); down = out over a FLOWER (a guess). Find them with the
-     * Servo Finder.
+     * up = folded along the side (the start); down = out over a FLOWER. Both are guesses: find these
+     * with the Servo Finder BEFORE the first TeleOp, so the poker does not swing into the frame.
      */
     public static class PollenServo {
         public static double up = 0.0, down = 0.5;

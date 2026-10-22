@@ -155,7 +155,8 @@ start position.
 Each waits until it is done. A move slows down near its end so it does not overshoot. It does not
 correct the heading on the way: after a bump or a long drive, add a `turnTo` to square up. A move that
 cannot finish (pushed into a wall, stuck) ends by itself, and the report says `STALLED` or
-`TIMED_OUT`. **Tune the drive first** with the Drive Tuner ([tutorial 09](../tutorials/09-first-auto.md)):
+`TIMED_OUT`. **Tune the drive first** with the Drive Tuner ([lesson 6](../tutorials/start/06-first-autonomous.md#1-tune-the-drive-first); by hand:
+[under-the-hood tutorial 09](../tutorials/09-first-auto.md)):
 the inches are only right on a tuned robot.
 
 **Put route numbers in `Tunables.java`** (`Tunables.Auto.collectInches`): every number is in one place,
