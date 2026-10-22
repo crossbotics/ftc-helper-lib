@@ -291,8 +291,11 @@ public abstract class RobotDefinition {
             boolean off = m.optional && !m.deviceIn(devices);
             for (Module<?> child : m.children()) buildOne(child, devices, off);
             buildOne(m, devices, off);
-            // Off: in the list for its "-" telemetry line only; never updated or stopped.
+            // Off: in the list for its "-" telemetry line only; never updated or stopped. Its numbers
+            // are left out of the tuning menu (changing them would do nothing); shown again when it is there.
             all.add(m.missing ? new MissingPart.Absent(m) : m);
+            for (Module<?> child : m.children()) Tunable.hideGroup(child.name(), child.missing);
+            Tunable.hideGroup(m.name(), m.missing);
         }
         // The other sections (Tunables.Auto...): in the tuning menu, and their saved values used now,
         // before the autonomous reads them to build its steps.
@@ -730,6 +733,40 @@ public abstract class RobotDefinition {
         }
         if (built) for (Interlock r : interlocks.rules) out.add(r.initLine());
         return out;
+    }
+
+    /** The INIT notes of the parts that are off (not on the robot), see {@link #missingNote}. */
+    final List<String> offNotes() {
+        List<String> out = new ArrayList<>();
+        for (Module<?> m : modules) {
+            if (m.missing) {
+                out.add(missingNote(m));
+                continue;
+            }
+            for (Module<?> c : m.children()) if (c.missing) out.add(missingNote(c));
+        }
+        return out;
+    }
+
+    /**
+     * Shows {@link #notes()} at INIT (TeleOp and autonomous). In the COMPETITION profile a part that is
+     * off is a loud warning at the top ("!!"), not a quiet note: at an event a misspelled or lost
+     * configuration name would otherwise only show as a note, and the part would not work in the match.
+     * PRACTICE keeps the note (a part not built yet is normal there).
+     */
+    final void showNotes(com.crossbotics.ftchelper.telemetry.RobotTelemetry t) {
+        boolean loud = !com.crossbotics.ftchelper.core.Profile.current().isPractice();
+        List<String> off = offNotes();
+        for (String n : notes()) {
+            if (loud && off.contains(n)) t.warn(offWarning(n));
+            else t.text(n);
+        }
+    }
+
+    // "COMPETITION: IntakeDeploy is OFF ..." from the note "\"intake_deploy\" not in the configuration: IntakeDeploy is off ...".
+    static String offWarning(String note) {
+        return "COMPETITION: " + note.replace(" is off (optional part)", " is OFF (optional part)")
+                + ". On the robot? Check its name in the configuration, then INIT again";
     }
 
     /** The Tunables class in use, or null if there is none. */

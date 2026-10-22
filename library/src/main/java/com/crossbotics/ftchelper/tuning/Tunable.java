@@ -47,6 +47,8 @@ public final class Tunable {
     private double max = Double.POSITIVE_INFINITY;
     // The value in use right now.
     private double value;
+    // True while its part is not on the robot (Module.optional, device missing): left out of the menu.
+    private boolean hidden = false;
 
     // Private: make one with Tunable.number(...), so the same name never gives two tunables.
     private Tunable(String name, double defaultValue, double step) {
@@ -101,6 +103,41 @@ public final class Tunable {
     public static synchronized List<Tunable> all() {
         // A read-only copy: the caller cannot change the real list, and it does not change under them.
         return Collections.unmodifiableList(new ArrayList<>(ALL));
+    }
+
+    /**
+     * The tunables the tuning menu shows: every one but those of parts that are not on the robot
+     * (see {@link #hideGroup}).
+     */
+    public static synchronized List<Tunable> shown() {
+        List<Tunable> out = new ArrayList<>();
+        for (Tunable t : ALL) if (!t.hidden) out.add(t);
+        return Collections.unmodifiableList(out);
+    }
+
+    /**
+     * Hides (or shows again) every tunable of one group, e.g. "IntakeDeploy" for "IntakeDeploy/deployed".
+     * The robot in five files hides the numbers of a part that is not on the robot (marked
+     * {@code optional()}, its device not in the configuration): changing them would do nothing. Their
+     * saved values are kept, for the day the part is there. Set again at every INIT.
+     *
+     * @param group  the group (a part's Tunables section)
+     * @param hidden true = left out of the menu
+     */
+    public static synchronized void hideGroup(String group, boolean hidden) {
+        for (Tunable t : ALL) if (t.group().equals(group)) t.hidden = hidden;
+    }
+
+    /** The groups hidden now (parts not on the robot), in order, e.g. ["IntakeDeploy"]. */
+    public static synchronized List<String> hiddenGroups() {
+        List<String> out = new ArrayList<>();
+        for (Tunable t : ALL) if (t.hidden && !out.contains(t.group())) out.add(t.group());
+        return out;
+    }
+
+    /** True while it is hidden from the menu (its part is not on the robot). */
+    public synchronized boolean isHidden() {
+        return hidden;
     }
 
     /** How many tunables use a saved value that is different from the code. Show it in INIT. */

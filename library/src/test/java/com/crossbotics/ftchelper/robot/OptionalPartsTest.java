@@ -39,10 +39,13 @@ public class OptionalPartsTest {
         com.crossbotics.ftchelper.safety.SafeMotor.freshReadingsForTests(true);
         SettingsFile.useForTests(new SettingsFile(new File(tmp.getRoot(), "settings.properties")));
         TuningReset.clear();
+        // PRACTICE: a part that is off is a quiet note (COMPETITION makes it loud: its own tests).
+        com.crossbotics.ftchelper.core.Profile.set(com.crossbotics.ftchelper.core.Profile.PRACTICE);
     }
 
     @After public void back() {
         com.crossbotics.ftchelper.safety.SafeMotor.freshReadingsForTests(false);
+        com.crossbotics.ftchelper.core.Profile.resetForTests();
         SettingsFile.useForTests(null);
         TuningReset.clear();
     }
@@ -455,6 +458,52 @@ public class OptionalPartsTest {
         assertFalse(turret[0].isPresent());
         assertTrue(turret[0].isAimed());
         assertFalse(r.aimMode().isOn());   // no "separate modes" stop
+    }
+
+    // ----------------------------- COMPETITION: loud; the tuning menu: hidden -----------------------------
+
+    // At an event a part that is off is most likely a mistake (a misspelled configuration name): in
+    // COMPETITION it is a "!!" warning at INIT and "!! OFF" on the button map; PRACTICE keeps the note.
+    @Test public void inCompetitionAMissingPartIsALoudWarning() {
+        StepBot r = bot(new RobotTestKit(), "intake_deploy");
+        String note = "\"intake_deploy\" not in the configuration: IntakeDeploy is off (optional part)";
+        Fakes.FakeTelemetry ft = new Fakes.FakeTelemetry();
+        RobotTelemetry t = new RobotTelemetry(ft.telemetry, () -> 0L);
+        r.showNotes(t);
+        t.update();
+        assertTrue(ft.lastScreen.toString(), ft.lastScreen.contains(note));
+        for (String line : ft.lastScreen) assertFalse(line, line.startsWith("!!"));
+        ButtonPlan practice = ControlMap.makePlan(r, false, false, (g1, g2) -> g2.x.press(r.intakeDeploy::next).says("deploy").needs(r.intakeDeploy));
+        assertTrue(practice.help().toString(), practice.help().contains("G2 X: deploy - off: IntakeDeploy not on the robot"));
+
+        com.crossbotics.ftchelper.core.Profile.set(com.crossbotics.ftchelper.core.Profile.COMPETITION);
+        ft = new Fakes.FakeTelemetry();
+        t = new RobotTelemetry(ft.telemetry, () -> 0L);
+        r.showNotes(t);
+        t.update();
+        assertEquals("!! COMPETITION: \"intake_deploy\" not in the configuration: IntakeDeploy is OFF (optional part). "
+                + "On the robot? Check its name in the configuration, then INIT again", ft.lastScreen.get(0));
+        assertFalse("not twice: the warning replaces the note", ft.lastScreen.contains(note));
+        ButtonPlan competition = ControlMap.makePlan(r, false, false, (g1, g2) -> g2.x.press(r.intakeDeploy::next).says("deploy").needs(r.intakeDeploy));
+        assertTrue(competition.help().toString(), competition.help().contains("G2 X: deploy - !! OFF: IntakeDeploy not on the robot"));
+    }
+
+    // Its numbers are left out of the tuning menu (changing them would do nothing); its saved value is
+    // kept, and the next INIT with the part there shows them again.
+    @Test public void theTuningMenuHidesTheNumbersOfAMissingPart() {
+        StepBot r = bot(new RobotTestKit(), "intake_deploy");
+        com.crossbotics.ftchelper.tuning.Tunable deployed = com.crossbotics.ftchelper.tuning.Tunable.number("IntakeDeploy/deployed", 0, 1);
+        assertTrue(deployed.isHidden());
+        assertFalse(com.crossbotics.ftchelper.tuning.Tunable.shown().contains(deployed));
+        assertTrue(com.crossbotics.ftchelper.tuning.Tunable.all().contains(deployed));
+        assertEquals(Collections.singletonList("IntakeDeploy"), com.crossbotics.ftchelper.tuning.Tunable.hiddenGroups());
+        for (com.crossbotics.ftchelper.tuning.Tunable t : com.crossbotics.ftchelper.tuning.Tunable.shown()) {
+            assertFalse(t.name(), t.name().startsWith("IntakeDeploy/"));
+        }
+        assertTrue(r.claw.isPresent());
+        bot(new RobotTestKit());   // INIT again, the servo there
+        assertFalse(deployed.isHidden());
+        assertTrue(com.crossbotics.ftchelper.tuning.Tunable.shown().contains(deployed));
     }
 
     // ----------------------------- the Hardware Check's list -----------------------------

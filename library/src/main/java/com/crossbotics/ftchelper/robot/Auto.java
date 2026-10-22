@@ -149,7 +149,7 @@ public abstract class Auto<R extends RobotDefinition> extends EasyAuto {
         if (robot != null) {
             // The modules' INIT work (a camera's lighting test), with their lines.
             robot.initLoop(t);
-            for (String n : robot.notes()) t.text(n);
+            robot.showNotes(t);   // a part that is off: a "!!" warning in COMPETITION
         }
         List<String> changed = RobotDefinition.changedTunables();
         if (!changed.isEmpty()) {

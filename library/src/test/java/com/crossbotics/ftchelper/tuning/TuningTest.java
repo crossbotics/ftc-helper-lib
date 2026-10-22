@@ -106,6 +106,36 @@ public class TuningTest {
         Profile.resetForTests();
     }
 
+    // A hidden group (a part not on the robot): the menu skips it and says so; its value stays saved.
+    @Test public void theMenuSkipsHiddenGroups() {
+        Profile.set(Profile.PRACTICE);
+        try {
+            Gamepad g = new Gamepad();
+            Tunable deploy = Tunable.number("IntakeDeploy/deployed", 0.8, 0.05);
+            Tunable kp = Tunable.number("Lift/kP", 0.004, 0.001);
+            deploy.increase();
+            Tunable.hideGroup("IntakeDeploy", true);
+            TuningMenu menu = new TuningMenu(g);
+            menu.toggle();
+            g.dpad_right = true; menu.update();          // changes the first SHOWN one: Lift/kP
+            g.dpad_right = false; menu.update();
+            assertEquals(0.005, kp.get(), 1e-12);
+            assertEquals(0.85, deploy.get(), 1e-12);
+            com.crossbotics.ftchelper.Fakes.FakeTelemetry ft = new com.crossbotics.ftchelper.Fakes.FakeTelemetry();
+            com.crossbotics.ftchelper.telemetry.RobotTelemetry t = new com.crossbotics.ftchelper.telemetry.RobotTelemetry(ft.telemetry, () -> 0L);
+            menu.addTelemetry(t);
+            t.update();
+            String screen = ft.lastScreen.toString();
+            assertTrue(screen, screen.contains("Not on the robot (hidden): IntakeDeploy"));
+            assertFalse(screen, screen.contains("IntakeDeploy/deployed"));
+            assertTrue("still saved and listed as changed", Tunable.changedAsCode().contains("IntakeDeploy: deployed = 0.85"));
+            Tunable.hideGroup("IntakeDeploy", false);
+            assertTrue(Tunable.shown().contains(deploy));
+        } finally {
+            Profile.resetForTests();
+        }
+    }
+
     @Test public void changedValuesAsCodeLines() {
         Tunable a = Tunable.number("Lift/kP", 0.004, 0.0005);
         Tunable.number("Lift/kD", 0.0002, 0.0001);

@@ -225,11 +225,12 @@ What "off" means, everywhere:
 | Commands | ignored (`goTo`, `in`, `spinUp`...): no error, nothing moves |
 | Questions | never hold anything up: "done" questions are true (`isDone`, `isAtTarget`, `isAt` the position it was last sent to, `isArrived`, `isHomed`, a turret's `isAimed`); "busy" ones are false (`isRunning`, `isSpinning`, `isReady`, `isShooting`, `isBusy`, `isJammed`); sensors see nothing. `isPresent()` is false |
 | Telemetry | its line is `-` (not on the robot) |
+| INIT | PRACTICE: a note. **COMPETITION: a loud warning at the top**, `!! COMPETITION: "intake_deploy" not in the configuration: IntakeDeploy is OFF (optional part). On the robot? Check its name in the configuration, then INIT again`: at an event, a part that is off is most likely a misspelled or lost name |
 | [Actions](#action) | the step's command to it is skipped and the action goes on. A wait right after a step that only used parts that are off is skipped too (nothing to wait for). `status()` ends with `skipped IntakeDeploy (not on the robot)`, `skipped()` lists them; an autonomous's report says it on the step |
-| Buttons | the part's own suggested buttons, `toggle(part)` and any button given `.needs(part)` do nothing; the button map says `- off: IntakeDeploy not on the robot` |
+| Buttons | the part's own suggested buttons, `toggle(part)` and any button given `.needs(part)` do nothing; the button map says `- off: IntakeDeploy not on the robot` (COMPETITION: `- !! OFF: ...`) |
 | [Interlock](#interlock) rules | a rule with it is off (nothing to hit), and needs no Tunables section: INIT says `Interlock TurretLift: off (Lift is not on the robot)` |
 | [Aim](#aim) | a following turret that is off does not aim: whole-robot aim (`robot.aimMode()`) may be used |
-| Tunables | its section may be missing or unfinished: no stop. Wrong numbers (max below min) are a note: `Fix its Tunables before adding it: ...` |
+| Tunables | its section may be missing or unfinished: no stop. Wrong numbers (max below min) are a note: `Fix its Tunables before adding it: ...`. Its numbers are **hidden from the tuning menu** (it says `Not on the robot (hidden): IntakeDeploy`): changing them would do nothing. Saved values are kept, and they come back the day the part is there |
 | Simulator | `:sim:fromRobot` still writes it; leave it out of the simulated configuration with `missing = intake_deploy` in the robot file, or `set device intake_deploy missing` in a scenario ([simulator guide](../guides/simulator.md#a-part-not-on-the-robot-yet)) |
 | [Hardware Check](testing.md#hardwarecheckopmode), finders | the check lists it as `optional, so the part is off (fine)`; the Hood Finder and Shot Tuner say it is not in the configuration; the Piece Tuner leaves its sensors out |
 
@@ -242,8 +243,9 @@ What "off" means, everywhere:
 - **Your own code**: `if (robot.intakeDeploy.isPresent()) ...` for anything the library cannot see.
 - **Off at INIT, for the whole program.** Plug it in and add it to the configuration, then INIT again.
 - **Careful at events:** with `optional()`, a misspelled or lost configuration name does not stop
-  INIT; the part is just off, with the INIT note. Read the INIT notes before each match, or take
-  `.optional()` off once the part is built (then a missing device stops INIT, loudly).
+  INIT; the part is just off. So in the COMPETITION profile it is a loud `!!` warning (PRACTICE: a
+  note). Read the INIT screen before each match, or take `.optional()` off once the part is built
+  (then a missing device stops INIT).
 
 | Method | |
 | --- | --- |
