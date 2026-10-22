@@ -107,8 +107,16 @@ git tag v0.2.0
 git push origin main --tags
 ```
 
-3. Make a **GitHub release** from the tag, with that version's CHANGELOG part as its notes. On GitHub:
-   **Releases** > **Draft a new release**, choose the tag, paste the notes, **Publish release**. Or:
+3. Make a **GitHub release** from the tag. Its notes have three parts, in this order:
+   - **What's new:** 3 to 6 lines in plain words, one per new feature, for a student who will not read
+     the rest. Say what it does for the team, not how it is built.
+   - **Before you update:** anything that works differently now (a button, a default, a renamed page or
+     setting), and what to do about it. If nothing changes, say "Nothing old stops working."
+     Then a link to [Keep it up to date](https://crossbotics.com/ftc-helper/docs/02-keep-up-to-date/).
+   - **Full change list:** that version's CHANGELOG part, pasted as it is.
+
+   On GitHub: **Releases** > **Draft a new release**, choose the tag, paste the notes, **Publish
+   release**. Or:
 
 ```bash
 gh release create v0.2.0 --verify-tag --title "v0.2.0" --notes-file notes.md
