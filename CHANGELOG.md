@@ -208,11 +208,11 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   estimate from `travelSec`; a motor hood: its encoder within `tolerance`). `Tunables.Hood`: `posA`, `posB`
   (the two hard stops, needed: every angle is kept between them), optional `angleA`, `angleB` (without
   them the hood works in servo positions or ticks, and the table holds positions), or a `calibration`
-  table of {position, angle} rows for a linkage; `homeAngle` (at START), `stepAngle`, `byHandPerSec`,
+  table of {position, angle} rows for a linkage; `startAngle` (at START), `stepAngle`, `byHandPerSec`,
   `trimMax`; a motor: `kP`, `maxPower`, `tolerance`. Suggested operator stick: left stick Y, a hood trim
   while the table sets the angle (double-tap D-pad down clears it with the speed trim), else the angle by
-  hand. `setAngle`, `home`, `step`, `byHand`, `trimBy`, `setTrim`, `resetTrim`, `angle`, `currentAngle`,
-  `isArrived`, `followsTable`, `shotAngles(atA, atB)` (simulator). INIT stops on a row outside the hood's
+  hand. `setAngle`, `goToStart`, `step`, `byHand`, `trimBy`, `setTrim`, `resetTrim`, `trim`, `angle` (now),
+  `targetAngle`, `isAtTarget`, `followsTable`, `shotAngles(atA, atB)` (simulator). INIT stops on a row outside the hood's
   range or a table that mixes two- and three-number rows; a hood column with no hood is an INIT note.
 - **Hood Finder** (`finders.HoodFinderOpMode`): the hood's two stops (servo nudge, or a motor moved by
   hand), the angles you measured (hold LB + D-pad), points for a calibration table; prints the
@@ -257,8 +257,8 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   INIT's `Switch alliance` line says whether it is on.
 - **INIT says when a library job has no button:** `No pause button` (warning), `No slow button`
   (warning, `Controls.java`), `No field-centric button` (a line).
-- **Launcher speed trim that works with shot tables.** `robot.launcher.trimPercent(+2)` makes every shot
-  speed (the table's or `speedRpm`) 2% faster; `setTrim(percent)`, `resetTrim()`, `speedTrim()`. Kept to
+- **Launcher speed trim that works with shot tables.** `robot.launcher.trimBy(+2)` makes every shot
+  speed (the table's or `speedRpm`) 2% faster; `setTrim(percent)`, `resetTrim()`, `trim()`. Kept to
   +/- `Tunables.Launcher.trimMaxPercent` (15), the same for every table, 0 at every INIT, shown as
   `Speed trim: +3%  READY` (the launcher's first line). With speed from the distance, the operator's
   D-pad up/down trims by `trimStepPercent` (1%), held: one more step every 0.25 s (after 0.5 s);
@@ -312,7 +312,8 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   .startsWith(4, "POLLEN")`. Each new piece the intake sensor sees counts one in (with its kind), each
   indexer feed one out; `count()`, `next()`, `isFull()`, `isEmpty()`, `nextIs(kind)`, `held()`, and hooks
   `nextKind()` (a `Supplier<String>`, e.g. for a shot table per kind), `whenFull()`, `whenEmpty()`,
-  `whenNextIs(kind)` (conditions for LEDs, buzzes, waits). `PieceSensor.color(...)` (REV Color Sensor V3:
+  `whenNextIs(kind)` (conditions for LEDs, buzzes, waits); by hand `pieceIn(kind)`, `pieceOut()`, `clear()`,
+  `set(kinds...)`; the sensors: `comingInSensor()`, `readyToFireSensor()`. `PieceSensor.color(...)` (REV Color Sensor V3:
   colour + distance), `PieceSensor.distance(...)` (REV 2m Distance Sensor: tells sizes apart, not
   colours), `PieceSensor.camera(...)` (a second webcam with the SDK's PredominantColorProcessor); also
   usable alone. Their numbers (each kind's hue or mm, `nearMm`, tolerances, `steadyMs`) in Tunables.
@@ -384,6 +385,88 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   (it was only on the debug lines).
 
 ### Changed
+
+**Names changed before release (new in this version, so only code written from `main` needs it):**
+- Hood: `angle()` is now where the hood IS (measured, or the servo's time estimate, like `Turret.angle()`);
+  where it is going is `targetAngle()`; `currentAngle()` is gone; `isArrived()` is `isAtTarget()`;
+  `Tunables.Hood.homeAngle` is `startAngle` (INIT says "did you mean startAngle") and `home()` is
+  `goToStart()`, `homeAngle()` is `startAngle()`. **What to do:** rename them in your code and Tunables.
+- Launcher speed trim: `trimPercent(x)` is `trimBy(x)` and `speedTrim()` is `trim()`, the same names as the
+  hood's trim. **What to do:** rename them.
+- Pieces: `added(kind)` is `pieceIn(kind)`, `removed()` is `pieceOut()`, `intakeSensor()` is
+  `comingInSensor()`, `readySensor()` is `readyToFireSensor()` (like `comingIn(...)`, `readyToFire(...)`).
+- Intake: one question, `isPushingOut()`, now also true while `reverse()` is held; `isRunningOut()` is
+  gone. **What to do:** use `isPushingOut()`.
+- `mirrorForRed` is one setting for the whole robot (autonomous routes and start spot, the aim's goal
+  point, TeleOp's reset spot): `Tunables.Aim.mirrorForRed`, else `Tunables.Odometry.mirrorForRed`, else
+  your autonomous's `mirrorForRed()` (a TeleOp uses the last autonomous's), else true.
+  `RobotDefinition.mirrorForRed()`. INIT shows where the choice comes from and warns when two places
+  differ. An `Auto` without its own `mirrorForRed()` now reads the robot's setting. **What to do:** on a
+  turned field (BIOBUZZ) write `mirrorForRed = false` once, in `Tunables.Aim` (the turret example does).
+
+**Safety (from the outside review):**
+- The interlock rules look before any START command is sent (a hood going to its `startAngle`, a turret
+  homing, an `atStart` action): a START command into a zone the other part is in waits at the fence.
+- A part whose position is not known (a turret before homing, a servo hood never sent anywhere) does not
+  move at all while the other part of a rule is in its zone: a turret waits to home while the lift is up
+  (`TurretLift : Turret waits (not homed yet): Lift is above 620 counts; move Lift out of its zone
+  first`), and homes once the lift is out (its homing time limit waits too).
+- A target on the far side of a zone (the way there crosses it) asks for the zone like a target inside it
+  (before, the part waited below the zone for ever).
+- A servo hood's first move, and a `PositionServo`'s, counts as "anywhere in its range" until the whole
+  move's time is over, also after a new target in the middle of it.
+- A motor hood keeps to the interlock's power caps (it brakes before its fence) and holds where it is when
+  the action moving it is cancelled; the launcher's `stop()` stops a motor hood too.
+- `AutoDrive.move()` (and `moveWithTurn` without a final turn) brakes at the distance and waits until the
+  robot has stopped rolling, at most 0.3 s (mechanisms keep updating, STOP still works).
+- `driveTo`: the stuck check counts at most 0.1 s per loop, so one very slow loop is not "stuck" (the
+  time limit is unchanged); the smallest powers near the point are wheel powers, so it no longer ends
+  STALLED a little short at the practice power limit (`practiceMaxPower` 0.4).
+
+**INIT and the Driver Station:**
+- `Launcher: battery compensation on, nominalVolts not written: assuming 12.8 V (the Flywheel Finder shows
+  yours; batteryCompensation = false turns it off)`. Compensation stays on by default.
+- INIT notes for numbers that were used differently from what is written: `kP`/`kI`/`kD` without `kF`
+  (not used), `trimMaxPercent` over 50 (50 is used), `goalX` without `goalY` (no goal point), `resetX`
+  without `resetY` (no reset spot), and a number outside its allowed range (`Tunables.Claw.open = 1.2 is
+  outside its allowed range 0 to 1: 1 is used`; it is no longer listed as a "tuned value to copy").
+  `Tunables.Aim.cameraOffset` on a robot with a turret: INIT says the turret reads its own.
+- A turret with no `startAngle` whose range does not include 0 (min 10, max 170) no longer stops INIT: it
+  counts from the middle of its range, with a note. A `startAngle` written outside the range still stops.
+- A servo turret no longer reads `kP`, `kI`, `kD`, `maxPower`, `slowZone`, `slowZonePower` (no menu
+  entries, no notes).
+- The carried turret angle's INIT line says what to do if the turret was moved by hand: turn it to
+  `startAngle`, stop the OpMode in INIT and INIT again (an INIT stopped before START forgets the carried angle).
+- A job in Controls.java on a button a part suggested: INIT says the part's job has no button
+  (`Launcher fire one; hold: keep firing: no button (G2 RB is your "score high" in Controls.java)`).
+- While paused, field-centric on/off and slow on/off wait too (G1 Y toggled field-centric while paused).
+- An action that fires says how many: `Fire all: done (0 fired)` (also in the autonomous report).
+- `Odometry not checked (Tunables.Odometry.checked = false): driveTo and path steps ...` at an autonomous's INIT.
+- After the alliance is switched in TeleOp on a turned field: "the pose is not set for RED (the alliance
+  was switched)", not "the pose was never set".
+- The button map no longer doubles a gesture's words (`held 1 s: piece count = 0`).
+- The hood stick (and `step`) moves the hood itself while the table does not set the angle (no goal seen
+  yet); before, it changed a trim you could not see.
+- The INIT stop for an unknown Tunables field adds "A number for your own code belongs in your own
+  section (e.g. Tunables.Auto)".
+
+**Changed since v0.16 and not listed before:**
+- A launcher with `speedFromDistance`: operator D-pad up/down are the speed trim (they were free), D-pad
+  right is "next shot table" with two or more tables, and a fixed speed's tap fires at the release.
+- INIT stops on `nominalVolts` outside 9 to 14 V, and on a `speedByDistance` row with more than 3 numbers
+  (it was ignored).
+- Every `speedByDistance...` field is a shot table: a leftover copy becomes a table ("old", "2") and adds
+  D-pad right. **What to do:** delete old copies.
+- New Driver Station lines: `Speed trim`, `Shot table` / `Shot distance`, "waits for:" on the Launcher line,
+  `Turret : 12 deg following: camera`. Scenarios that check exact launcher text may need the new words.
+- Turret: INIT stops when `max` is not more than `min`; a motor turret without a switch shows "no angle
+  from a program before ..." in TeleOp; `gearRatio(x)` with x 0 or less throws.
+- New INIT lines on every Controls.java robot: the alliance switch, the set-pose button and spot, RED
+  mirroring, "no field-centric button".
+- Mecanum with odometry and no IMU: G1 Y is field-centric (a team job on `g1.y` now stops INIT).
+- Simulator: TeleOp stops at 2:00 by default (`set teletimer off` in a scenario for longer runs).
+- Robot file: a `touch.X` line naming a missing motor stops with a message.
+- A non-number field (boolean, String) inside a Lift or Claw section stops INIT (it is not a named position).
 
 - `Auto.newRobot()` is `protected` (it was private): the simulator's Built Auto gives its own robot. Teams never
   need it.
@@ -458,8 +541,9 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   press). GUIDE is on the button map (`G1 GUIDE: button map; hold 1 s: tuning menu [library]`), and the
   BACK and START lines list every library job on them.
 - `Aim odometry: the pose was never set` now says how to set it with the button.
-- The launcher's D-pad down (fixed speed) is now a tap (speed down) and a 1 s hold (back to `speedRpm`), so
-  the tap runs when the button is let go.
+- The launcher's operator D-pad: a tap is one step (fixed speed: `stepRpm` up or down; speed from a table:
+  the speed trim), held it repeats 4 times a second, and a double-tap of D-pad down goes back (trim 0, or
+  `speedRpm`). A tap runs when the button is let go (it may still become a hold or a double-tap).
 - `PedroFollower.remainingIn()` is now the distance left along the WHOLE path (all its parts), measured
   from the robot's closest point on the path. It was Pedro's distance for the part it steers along now,
   which Pedro may switch well before the join. The Driver Station's `Path: 18 in to go` uses it too.
@@ -475,7 +559,7 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   `Indexer.isFeeding()`. While the intake pushes out, pieces leaving past the intake sensor count out
   and nothing counts in. Two touching pieces of the same kind count as two when the distance dips
   between them (`gapMm`, default 8). Pieces suggests a button: hold G2's left stick button 1 s = count
-  0. `Intake.inAnyway()`, `isRunningOut()`, `heldBackSec()`; with `stopsWhen`, holding the in-button
+  0. `Intake.inAnyway()`, `heldBackSec()`; `isPushingOut()` is also true while `reverse()` is held; with `stopsWhen`, holding the in-button
   (RT) 1 s runs in anyway, and the Driver Station warns after 2 s held back. `PieceSensor.isWorking()`,
   `arrivals()`, `readings()`. Docs: the drivers, not the count, are responsible for G407.
 - Shot Tuner buttons: A = HIT, B = MISS, X = save (the best speed here), hold BACK 1 s = delete the point
