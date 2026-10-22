@@ -174,6 +174,16 @@ public class Tunables {
   The message: `Tunables.Lift.Max looks like "max" (capitals and spelling count). Fix the name in Tunables.java; a position must not look like a setting.`
   Before, it quietly became a position called `Max`, and `max` stayed the library default. The same
   check runs for Claw, Wrist and Positioner (their setting: `travelSec`).
+- **A field no part reads stops INIT, in every part's section.** A typo like `inPowr` in
+  `Tunables.Intake` (or `goalx` in `Tunables.Aim`, `nominalVolt` in `Tunables.Launcher`) would be
+  quietly ignored, and the part would use the library's default. Now INIT stops before anything is set up:
+  `Tunables.Intake.inPowr is not a setting of Intake (did you mean inPower?): the robot would quietly ignore it. Fix the name (capitals count) or delete the line. Known: inPower, outPower (docs/guides/tunables.md)`.
+  It checks the sections of Drive, Odometry, Aim, Buttons, every part on the robot and every interlock
+  rule. Names you pick are fine: a Lift's, Arm's or servo part's named positions (any number), a piece
+  sensor's kinds (`POLLEN`), a launcher's `speedByDistance...` tables, and an interlock rule's
+  `<part>From`, `<part>To`, `<part>Above`, `<part>Below` and `<part>Margin` for its own two parts. A field
+  of the part that this robot does not use (a servo turret's `posA` on a motor turret) is fine too.
+  Sections no part reads (your own `Tunables.Auto`) are never checked.
 - **Safety:** a tuned position stays inside `min`..`max`; limits are read once and cannot be tuned.
 - `public static` fields: FTC Dashboard can show them too.
 - The menu's names ("Lift/kP") are shared by the whole robot app: keep one Robot class per app.
@@ -350,6 +360,21 @@ named position (0 to 1) except `travelSec` ([reference](../guides/tunables.md#cl
 claw = add(Claw.servo("claw"));       // Tunables.Claw: open, closed (both needed)
 ```
 
+**A servo's full range: `.fullRange()`.** The hub sends a servo a pulse: 600 microseconds (us) for
+position 0 and 2400 us for 1. That is the FTC SDK's normal range, and the library keeps it. Most FTC
+servos take 500 to 2500 us, so on the normal range they turn a bit less than the seller says: a goBILDA
+2000 servo turns 270 degrees over 0 to 1, not 300. `.fullRange()` on a Claw, Wrist or Positioner (and on
+`Hood.servo`, `Turret.servo`, `Indexer.servo`) sends the servo's whole pulse range (the catalog part's from
+`part(...)`, else 500 to 2500 us) at INIT, so 0 to 1 turns all 300 degrees. **Measure your positions after
+turning it on** (the Servo Finder has the same switch: Y while choosing): the same number points
+somewhere else once the range changes. A servo that cannot change its pulse (not on a REV hub) keeps
+its range and INIT says so. The hub keeps a pulse range until the next INIT. Recipe:
+[How do I get my servo's full range?](../cookbook.md#how-do-i-get-my-servos-full-range)
+
+```java
+wrist = add(Wrist.servo("wrist").part("gobilda-2000-speed").fullRange());   // 0 to 1 = 300 degrees
+```
+
 `open()`, `close()`, `toggle()`, `isClosed()`. Button: operator B opens/closes.
 
 ## Wrist
@@ -403,6 +428,7 @@ turret = add(Turret.crServo("turret").analogEncoder("turret_pos").continuous());
 | `follows(camera)` | follows the camera's goal; with odometry and `Tunables.Aim.goalX, goalY` the odometry takes over while the camera does not see it ([Aim](#aim)) |
 | `followsOdometry()` | follows the goal with no camera: from the odometry and `Tunables.Aim`'s goal point |
 | `cameraOnBody()` | the camera is on the robot, not on the turret |
+| `fullRange()` | a servo turret: the servo's whole turn (500-2500 us, a goBILDA 2000 servo 300 degrees instead of 270); measure `posA`/`posB` after turning it on ([full range](#claw)) |
 
 | Method | |
 | --- | --- |
@@ -586,7 +612,8 @@ public static double trimStepPercent = 1, trimMaxPercent = 15;   // optional (th
 ## Indexer
 
 `Indexer.servo(name)` (Tunables: `rest`, `push`, `pushSec`, `returnSec`), `Indexer.crServo(name)` and
-`Indexer.motor(name)` (`power`, `feedSec` per piece), `.reversed()`. Usually given to a launcher with
+`Indexer.motor(name)` (`power`, `feedSec` per piece), `.reversed()`, and for a servo indexer
+`.fullRange()` (the servo's whole turn: [full range](#claw); set `rest` and `push` again after). Usually given to a launcher with
 `.feeder(...)`; added on its own its button is operator RB (feed one). A servo indexer goes to `rest`
 at START. Commands: `feedOne()`, `isBusy()`, `isFeeding()`, `isJammed()`, `clearJam()`. `onFeed(runnable)`
 runs your code each time a feed really starts. A [Pieces](#pieces-and-piecesensor) counter counts the
@@ -637,6 +664,7 @@ the rim, or worn balls launch flatter). Use the speed trim first.
 | Method | |
 | --- | --- |
 | `Hood.servo(name)`, `Hood.motor(name, motorId)`, `reversed()` | a standard servo; a motor with an encoder (its ticks count from where the hood is at INIT: start with the hood on stop A) |
+| `fullRange()`, `pulseRangeUs()` | a servo hood: the servo's whole turn ([full range](#claw)), at INIT and in the Hood Finder; find `posA`/`posB` after turning it on. `pulseRangeUs()`: `{500, 2500}`, or null without it |
 | `shotAngles(atA, atB)` | for the simulator: the launcher's shot angle with the hood at `angleA` and at `angleB` (the simulated shot follows the hood servo) |
 | `setAngle(a)`, `home()`, `step(n)`, `byHand(stick)` | go to an angle (kept inside the stops); to `homeAngle`; `n` x `stepAngle` (a trim while the table sets it); the stick, every loop |
 | `trimBy(a)`, `setTrim(a)`, `resetTrim()`, `trim()` | the hood trim (added to the table's angle) |
@@ -1277,7 +1305,10 @@ a lift with a wrist and a claw riding on it: [`v2bot/Robot.java`](../../examples
 
 **Name the part, give only what is not known.** A part in the [parts catalog](../guides/parts-catalog.md)
 brings its numbers: a motor its speed and encoder counts, a servo its speed and range, a wheel or roller
-its diameter (and width, when the seller gives it). Places are always the robot's own.
+its diameter (and width, when the seller gives it). Places are always the robot's own. A servo's range is
+what positions 0 to 1 really turn it: on the hub's normal 600-2400 us a goBILDA 2000 servo turns 270
+degrees (its seller's 300 needs [`.fullRange()`](#claw)). In code: `Parts.servoPart(id)` gives `rangeDeg`
+(the seller's), `pulseMinUs`/`pulseMaxUs`, `sdkRangeDeg()` (270) and `degreesOver(lowUs, highUs)`.
 
 ```java
 drive(Drive.tank("left_drive", "right_drive").motor("gobilda-5203-312").wheel("gobilda-hogback-96")

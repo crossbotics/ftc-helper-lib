@@ -31,14 +31,14 @@ public class Controls extends ControlMap<Robot> {
         g2.a.press(Actions.grab(robot)).says("grab a ball from the tiles");
         g2.y.press(Actions.scoreInFlower(robot)).says("score in a FLOWER");
         g2.x.press(Actions.stow(robot)).says("stow the lifter");
-        // The lift by hand. The interlock still holds it below its line while the turret points back.
+        // The lift by hand (no interlock on the lift: the wrist's rule keeps the claw clear of the turret).
         g2.rightStickY.use(robot.lift::manual).says("lift by hand");
 
         g2.rumbleWhenAimed();
 
         // The light: the first true rule wins, so the most important comes first.
         robot.lights.show(LightColor.YELLOW).blinking().inLastSeconds(20);     // last 20 s: go park
-        robot.lights.show(LightColor.RED).when(() -> robot.turretLift.isHolding());   // the interlock holds a part back
+        robot.lights.show(LightColor.RED).when(() -> robot.turretClaw.isHolding());   // the interlock holds a part back
         robot.lights.show(LightColor.GREEN).when(() -> robot.launcher.isSpinning() && robot.launcher.isReady());
         robot.lights.show(LightColor.BLUE).when(() -> robot.turret.followMode().isOn());
         robot.lights.otherwise(LightColor.PURPLE);

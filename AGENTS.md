@@ -22,7 +22,7 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
 - `library/.../robot/` the five-files layer: `RobotDefinition` + modules built on the plain parts. A new
   module: extend `Module` (or `MotorPositions`/`ServoPositions`), read numbers through `TunableSection`,
   route every command through `touch()` (actions and the driver rely on it), add `suggestButtons` and
-  `simLines`, a row in docs/modules/robot.md, and its fields in docs/guides/tunables.md. `./gradlew :sim:newRobot` (SimNewRobot) guesses modules
+  `simLines`, a row in docs/modules/robot.md, and its fields in docs/guides/tunables.md and `TunableFields.java`. `./gradlew :sim:newRobot` (SimNewRobot) guesses modules
   from device names: teach it the new one.
 - `sim/` the simulator: a pretend Control Hub and Driver Hub on a laptop (`./gradlew :sim:run`, then
   http://localhost:8780). Its code is in `sim/src/test` (the SDK only runs on a laptop there); the
@@ -46,7 +46,8 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
 - `tools/check_tunables.py` finds every Tunables field the robot package reads and checks it against
   `docs/guides/tunables.md` (the reference: one table per part) and the example robots' Tunables files.
   A module that reads a new field (or reads one through a name that is not a string literal: add it to
-  the script's DYNAMIC list) needs a row there.
+  the script's DYNAMIC list) needs a row there, and its name in `robot/TunableFields.java` (INIT stops on
+  any field a part does not list there; the script checks the lists match the code).
 
 ## Rules: documentation is part of every change
 

@@ -56,11 +56,19 @@ When you press INIT, the library reads `Tunables.java` and tells you what it fou
 | no section at all for a part | uses every default: `Tunables.Intake not written: library defaults used (fine)` | the same |
 | no line for a REQUIRED number | **stops**: `Tunables.Lift has no max: write max (the top of the safe range, in counts: Motor Finder, B). A safety limit never comes from a library default.` | a wrong limit breaks the robot. A default could be wrong for your robot |
 | a name in Lift, Arm, Claw, Wrist or Positioner that looks like a setting (`Max`, `k_P`, `maxPowr`) | **stops**: `Tunables.Lift.Max looks like "max" (capitals and spelling count)` | in these parts every other name is a named position, so a typo would quietly become a position |
-| a misspelled name in any other part (`inPowr`) | **nothing stops.** The misspelled line is not read; the real number uses its default, and the "not written" note names it (`Tunables.Intake: inPower not written`) | **read the "not written" note after each change.** If it names a number you wrote, check the spelling |
+| a name no part reads, in any part's section (`inPowr` in `Intake`, `goalx` in `Aim`, a leftover `spinPower`) | **stops**: `Tunables.Intake.inPowr is not a setting of Intake (did you mean inPower?): the robot would quietly ignore it. Fix the name (capitals count) or delete the line. Known: inPower, outPower` | a misspelled line is never read, so the part would quietly use its default (a safety number too). The "did you mean" appears when the name looks like a real one |
 
-Some optional numbers are read only when they are written (for example `Tunables.Aim.goalX`). They
-give no "not written" note, so a misspelled one is quiet. The example robots' files are checked by
-`tools/check_tunables.py`; check your own against the tables below.
+The name check covers `Drive`, `Odometry`, `Aim`, `Buttons`, every part on the robot and every
+interlock rule. These names are yours to pick and always pass: named positions (any number in Lift, Arm,
+Claw, Wrist, Positioner), a piece sensor's kinds (`POLLEN`), a launcher's `speedByDistance...` tables, and
+an interlock rule's `<part>From`, `<part>To`, `<part>Above`, `<part>Below`, `<part>Margin` for its two
+parts. A field of the part that your robot does not use (a servo turret's `posA` on a motor turret) passes
+too. Your own sections (`Auto`) are never checked. Every name in the tables below is the full list.
+
+**Measured servo numbers and the servo's range.** Servo positions (named positions, `posA`/`posB`,
+`rest`/`push`, a hood's `calibration`) are measured for the pulse range the servo had then. Adding or
+removing `.fullRange()` on a part in Robot.java changes where each position points: measure them again
+([Full range](../modules/hardware.md#full-range)).
 
 ## Units
 

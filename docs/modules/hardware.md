@@ -142,13 +142,49 @@ Servo claw = ServoSetup.get(hardwareMap, "claw")
 | `ServoSetup.of(servo)` | Starts the chain for a servo you already have. |
 | `.reversed()` | Positions 0 and 1 swap ends. |
 | `.range(min, max)` | Uses only part of the travel. After this, 0 means `min` and 1 means `max`. |
+| `.fullRange()` | Uses the servo's whole turn: 0 to 1 sends 500 to 2500 microseconds instead of 600 to 2400 ([below](#full-range)). |
+| `.pulseRange(lowUs, highUs)` | The same with your own pulse numbers (100 to 3000 us, low first). |
 | `.done()` | Returns the `Servo`. |
+| `ServoSetup.setPulseRange(servo, lowUs, highUs)` | The same for any servo; returns false when it cannot change its pulse (not a REV hub servo). |
+| `ServoSetup.checkPulse(lowUs, highUs)` | Stops with a clear message for numbers outside 100 to 3000 us or low not below high. |
+| `SDK_PULSE_LOW_US`, `SDK_PULSE_HIGH_US`, `FULL_PULSE_LOW_US`, `FULL_PULSE_HIGH_US` | 600, 2400 (the SDK's normal pulse) and 500, 2500 (full range), microseconds. |
 
 **Why use `range`?** Find the positions where the claw is fully open and fully closed (for
 example 0.20 and 0.75) and put them in `range`. Now `setPosition(0)` is "open",
 `setPosition(1)` is "closed", and no code can ever push the servo into the frame.
 
 **Note:** setup does not move the servo. It moves the first time you call `setPosition`.
+
+### Full range
+
+A servo goes where the hub's **pulse** tells it: a signal that lasts 600 microseconds (us) means position 0,
+2400 us means position 1. That is the FTC SDK's normal range (`PwmControl.PwmRange.defaultRange`).
+Most FTC servos take a wider pulse, 500 to 2500 us, so on the normal range part of their turn is never used:
+
+| Servo | Seller's range | 0 to 1 on the normal 600-2400 us | with `.fullRange()` |
+| --- | --- | --- | --- |
+| goBILDA 2000 Series (Torque, Speed, Super Speed) | 300 deg over 500-2500 us | 270 deg | 300 deg |
+| goBILDA 2000 Series 5-Turn | 1800 deg over 500-2500 us | 1620 deg | 1800 deg |
+| REV Smart Robot Servo (V1, V2) | 270 deg over 500-2500 us | 243 deg | 270 deg |
+| Axon MAX MK2, MINI MK2 | 360 deg max over 500-2500 us | 324 deg | 360 deg |
+
+```java
+Servo wrist = ServoSetup.get(hardwareMap, "wrist").fullRange().done();   // 0 to 1 = 300 degrees
+```
+
+- **Nothing changes unless you ask.** Without `.fullRange()` the library never touches the pulse range.
+- **Measure positions after switching.** Position 0.5 is still the middle, but every other number points
+  somewhere else. Measured numbers (positions, `posA`/`posB`, `angleA`/`angleB`, a calibration table)
+  are right only for the range they were measured with. The Servo Finder has the same switch (Y while
+  choosing a servo); the Hood Finder uses the hood's own.
+- **Only REV hub servos** (Control Hub, Expansion Hub, Servo Hub: the SDK's `ServoImplEx`) can change
+  it. On another servo `setPulseRange` returns false and nothing changes.
+- **It lasts until the next INIT:** the hub goes back to its normal range when an OpMode starts.
+- **Check your servo's own numbers:** a servo programmed to a smaller range (an Axon's left and right
+  limits, a REV servo in its Servo Limit Mode) turns less. Past 500 or 2500 us most servos stop short or
+  buzz: stay inside what the seller gives.
+
+The [parts catalog](../guides/parts-catalog.md) lists each servo's pulse range and both degrees.
 
 ---
 

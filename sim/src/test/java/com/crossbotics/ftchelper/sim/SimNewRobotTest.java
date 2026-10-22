@@ -153,7 +153,12 @@ public class SimNewRobotTest {
             SimFromRobot.Result r = SimFromRobot.merge(null, robot.simLines(), "Robot", "biobuzz-2026");
             Path file = tmp.newFile("robot.properties").toPath();
             Files.write(file, r.text.getBytes(StandardCharsets.UTF_8));
-            SimRobot.load(file);
+            SimRobot sim = SimRobot.load(file);
+            // INIT on the simulated hardware: no error (INIT stops on a Tunables field no part reads).
+            RobotDefinition fresh = (RobotDefinition) loader.loadClass("org.firstinspires.ftc.teamcode.Robot")
+                    .getDeclaredConstructor().newInstance();
+            fresh.setup(sim.hardwareMap());
+            fresh.all().stop();
         }
     }
 }

@@ -162,6 +162,23 @@ public final class Turret extends Module<Turret> {
     }
 
     /**
+     * A servo turret uses its servo's whole turn: positions 0 to 1 send the servo's full pulse range (the
+     * part's, else 500-2500 us) instead of the FTC SDK's normal 600-2400 us. A goBILDA 2000 servo then
+     * turns 300 degrees instead of 270 (more turret angle). Turn it on BEFORE measuring posA/posB with
+     * the Servo Finder (Y = full range there too): the same position points somewhere else after the change.
+     *
+     * @return this turret
+     * @throws IllegalStateException on a motor or CR servo turret
+     */
+    public Turret fullRange() {
+        if (kind != Kind.SERVO) {
+            throw new IllegalStateException("Robot.java: " + name() + ": fullRange() is for Turret.servo(...) (a positional servo)");
+        }
+        fullRange = true;
+        return this;
+    }
+
+    /**
      * A turret on a continuous-rotation (CR) servo. It needs an encoder for its angle:
      * {@link #encoder(String, double)} or {@link #analogEncoder(String)}.
      *
@@ -372,6 +389,7 @@ public final class Turret extends Module<Turret> {
         if (posA == posB || angleA == angleB) throw new IllegalStateException("Tunables." + name() + ": posA/posB and angleA/angleB must differ");
         Servo s = devices.get(Servo.class, device);
         if (reversed) s.setDirection(Servo.Direction.REVERSE);
+        applyPulse(s);   // .fullRange(): the servo's whole turn (nothing changes without it)
         // travelSec: from posA to posB; the PositionServo wants seconds for a full 0..1 move.
         double travel = t.number("travelSec", 0.6) / Math.abs(posB - posA);
         PositionServo ps = new PositionServo(name(), s).degrees(posA, angleA, posB, angleB).travelTime(travel)
@@ -842,8 +860,8 @@ public final class Turret extends Module<Turret> {
             at0 = at1;
             at1 = swap;
         }
-        out.add(partId != null ? fmt("servo.%s = 0.5, part=%s", device, partId)
-                : fmt("servo.%s = 0.5, part=gobilda-2000-torque   # TODO the real servo", device));
+        out.add(partId != null ? fmt("servo.%s = 0.5, part=%s", device, partId) + pulseWords()
+                : fmt("servo.%s = 0.5, part=gobilda-2000-torque", device) + pulseWords() + "   # TODO the real servo");
         out.add(fmt("shape.%s = turret, at=0,0,8, size=6x6x2, servo=%s, pos0=%s, pos1=%s   # TODO measure",
                 device, device, Shape.n(at0), Shape.n(at1)));
     }

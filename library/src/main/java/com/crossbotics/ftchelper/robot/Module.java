@@ -39,6 +39,10 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
     final List<Shape> looks = new ArrayList<>();
     // While writing the simulator file: this module's Tunables section (another part's shape may need it).
     TunableSection simSection;
+    // A servo part's .fullRange(): its servo gets the seller's whole pulse range (see applyPulse).
+    boolean fullRange = false;
+    // The INIT note when the servo could not change its pulse range ("" = none).
+    private String pulseNote = "";
 
     /**
      * @param device the main device's configuration name
@@ -243,7 +247,42 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
     List<String> notes() {
         List<String> out = new ArrayList<>();
         if (tunables != null && !tunables.note().isEmpty()) out.add(tunables.note());
+        if (!pulseNote.isEmpty()) out.add(pulseNote);
         return out;
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // A servo's full range (.fullRange() on Claw, Wrist, Positioner, Hood.servo, Turret.servo, Indexer.servo)
+    // ---------------------------------------------------------------------------------------
+
+    // The pulse (microseconds) for positions 0 and 1 with fullRange(): the catalog part's own range, or
+    // 500-2500 (what goBILDA, REV and Axon servos take) without a part.
+    double[] fullPulse() {
+        if (partId != null && Parts.servos().contains(partId)) {
+            Parts.ServoPart s = Parts.servoPart(partId);
+            return new double[] {s.fullLowUs(), s.fullHighUs()};
+        }
+        return new double[] {com.crossbotics.ftchelper.hardware.ServoSetup.FULL_PULSE_LOW_US,
+                com.crossbotics.ftchelper.hardware.ServoSetup.FULL_PULSE_HIGH_US};
+    }
+
+    // INIT: with fullRange(), widens the servo's pulse. A servo that cannot (not on a REV hub) keeps the
+    // SDK's 600-2400 us and INIT says so. Without fullRange() nothing is changed (the SDK's normal range).
+    final void applyPulse(com.qualcomm.robotcore.hardware.Servo servo) {
+        pulseNote = "";
+        if (!fullRange) return;
+        double[] p = fullPulse();
+        if (!com.crossbotics.ftchelper.hardware.ServoSetup.setPulseRange(servo, p[0], p[1])) {
+            pulseNote = name() + ": the servo \"" + device + "\" cannot change its pulse range (not on a REV hub): "
+                    + "fullRange() does nothing, it turns its normal range (600-2400 us)";
+        }
+    }
+
+    // ", pwm=500-2500" for the simulator robot file when fullRange() is on ("" otherwise).
+    final String pulseWords() {
+        if (!fullRange) return "";
+        double[] p = fullPulse();
+        return fmt(", pwm=%.0f-%.0f", p[0], p[1]);
     }
 
     // ---------------------------------------------------------------------------------------

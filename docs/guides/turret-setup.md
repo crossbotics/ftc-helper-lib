@@ -25,7 +25,7 @@ flowchart TD
 | What turns it | `Robot.java` | Notes |
 | --- | --- | --- |
 | A motor (its own encoder counts the angle) | `Turret.motor("turret", "gobilda-5203-117").gearRatio(5)` | `gearRatio` = motor turns per turret turn (gears or belt). The motor id is from the [parts catalog](parts-catalog.md). |
-| A standard servo (goes to an angle by itself) | `Turret.servo("turret")` | No encoder, no PID, no homing. A servo turns about 300 degrees at most: gear it for a smaller turret range. |
+| A standard servo (goes to an angle by itself) | `Turret.servo("turret")` | No encoder, no PID, no homing. A goBILDA 2000 servo turns 270 degrees on the hub's normal signal, 300 with `.fullRange()`: gear it for a smaller turret range. |
 | A continuous-rotation (CR) servo + an encoder on a motor port (e.g. REV Through Bore) | `Turret.crServo("turret").encoder("turret_enc", 8192)` | 8192 = the Through Bore's counts per turn. The port may also run another part's motor: its count is only read, never reset. `gearRatio` = ENCODER turns per turret turn (1 = on the turret's axis). |
 | A CR servo + an absolute encoder on an analog port (e.g. an Axon's feedback wire) | `Turret.crServo("turret").analogEncoder("turret_pos")` | It knows its angle at once, at INIT. |
 
@@ -156,7 +156,10 @@ its stops. The hood belongs to the launcher, not to the turret: it works the sam
 
 A lift, an arm or a climber in the turret's path: write an **interlock rule** in `Robot.java`, with the
 zones in `Tunables.java`. While the lift is up, the turret stays out of the back (and the other way
-round). See [Two parts that must not collide](interlocks.md).
+round). See [Two parts that must not collide](interlocks.md). The rule pairs the turret with whichever
+part really reaches it: the [v2bot example](../../examples/src/main/java/com/crossbotics/ftchelper/examples/v2bot/Robot.java)
+uses `keepApart("TurretClaw", turret.zone(), wrist.zone())`, because its claw is in the turret's way only
+while the wrist is low, at any lift height.
 
 ```java
 keepApart("TurretLift", turret.zone(), lift.zoneAbove());          // Robot.java

@@ -9,8 +9,10 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -243,6 +245,8 @@ public abstract class RobotDefinition {
         if (built) throw new IllegalStateException("This robot is already set up: make a new one per OpMode");
         describe();
         built = true;
+        // A misspelled Tunables field stops INIT here, before anything is made (see TunableFields).
+        checkTunablesNames();
         // Paused: nothing is updated (so nothing moves). At the end (STOP, or an error) everything is
         // paused first, so every motor stops on brake, then stopped.
         all = new Subsystems() {
@@ -302,6 +306,28 @@ public abstract class RobotDefinition {
         }
         otherSections = new OtherSections(tunablesClass, used);
         return this;
+    }
+
+    // Every section the robot reads: a field that no part reads is a typo (or a leftover): stop with its name
+    // and a "did you mean". Two parts sharing a section may hold each other's fields.
+    private void checkTunablesNames() {
+        Map<String, TunableFields.Allowed> sections = new LinkedHashMap<>();
+        for (String key : new String[] {"Drive", "Odometry", "Aim", "Buttons"}) sections.put(key, TunableFields.forSection(key));
+        for (Module<?> m : modules) {
+            List<Module<?>> group = new ArrayList<>(m.children());
+            group.add(m);
+            for (Module<?> g : group) allow(sections, g.name(), TunableFields.forModule(g));
+        }
+        for (Interlock r : interlocks.rules) allow(sections, r.name(), TunableFields.forInterlock(r));
+        for (Map.Entry<String, TunableFields.Allowed> e : sections.entrySet()) {
+            TunableFields.check(TunableSection.of(tunablesClass, e.getKey()), e.getValue());
+        }
+    }
+
+    private static void allow(Map<String, TunableFields.Allowed> sections, String name, TunableFields.Allowed a) {
+        TunableFields.Allowed had = sections.get(name);
+        if (had == null) sections.put(name, a);
+        else had.add(a);
     }
 
     private void buildOne(Module<?> m, Devices devices) {

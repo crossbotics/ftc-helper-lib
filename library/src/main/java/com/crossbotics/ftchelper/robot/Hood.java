@@ -123,6 +123,29 @@ public final class Hood extends Module<Hood> {
         return new Hood(Kind.MOTOR, motor, motorId);
     }
 
+    /**
+     * A servo hood uses its servo's whole turn: positions 0 to 1 send the servo's full pulse range
+     * (the part's, else 500-2500 us) instead of the FTC SDK's normal 600-2400 us. A goBILDA 2000 servo
+     * then turns 300 degrees instead of 270. Turn it on BEFORE the Hood Finder (it uses the same range),
+     * or find posA and posB again: the same position points somewhere else after the change.
+     *
+     * @return this hood
+     * @throws IllegalStateException on a motor hood (it has no servo)
+     */
+    public Hood fullRange() {
+        if (kind == Kind.MOTOR) throw new IllegalStateException("Robot.java: Hood.motor(\"" + device + "\") has no servo: fullRange() is for Hood.servo(...)");
+        fullRange = true;
+        return this;
+    }
+
+    /**
+     * The pulse range (microseconds, {low, high}) its servo gets at INIT with {@link #fullRange()}, or
+     * null for the SDK's normal range. The Hood Finder uses the same one.
+     */
+    public double[] pulseRangeUs() {
+        return fullRange ? fullPulse() : null;
+    }
+
     /** It turns the other way. The Hood Finder's numbers are for the hood as set up here. */
     public Hood reversed() {
         reversed = true;
@@ -164,6 +187,7 @@ public final class Hood extends Module<Hood> {
             travelSec = t.tunable("travelSec", 0.5, 0.02).range(0, 5);
             Servo servo = devices.get(Servo.class, device);
             if (reversed) servo.setDirection(Servo.Direction.REVERSE);
+            applyPulse(servo);   // .fullRange(): the servo's whole turn (nothing changes without it)
             part = new Actuator(servo, null);
         } else {
             kP = t.tunable("kP", 0.005, 0.001).range(0, 1);
@@ -551,8 +575,8 @@ public final class Hood extends Module<Hood> {
         }
         double h = !ok ? 0.5 : physical(positionAt(t.has("homeAngle") ? t.number("homeAngle", 0) : angleAt(firstPosition())));
         h = Math.max(0, Math.min(1, h));
-        if (partId != null) out.add(fmt("servo.%s = %.3f, part=%s", device, h, partId));
-        else out.add(fmt("servo.%s = %.3f, part=gobilda-2000-torque   # TODO the real servo", device, h));
+        if (partId != null) out.add(fmt("servo.%s = %.3f, part=%s", device, h, partId) + pulseWords());
+        else out.add(fmt("servo.%s = %.3f, part=gobilda-2000-torque", device, h) + pulseWords() + "   # TODO the real servo");
     }
 
     /**

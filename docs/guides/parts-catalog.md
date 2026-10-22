@@ -95,31 +95,33 @@ A Control Hub servo port gives about 5 V, so the simulator uses the seller's spe
 
 ### goBILDA 2000 Series servos
 
-| id | Part | Part number | Range (°) | Speed used (s per 60°) | Headline speed (s per 60°) | Torque (kg-cm) | Stall current (A) | Continuous |
-|---|---|---|---|---|---|---|---|---|
-| `gobilda-2000-torque` | [goBILDA 2000 Series Dual Mode Servo (Torque)](https://www.gobilda.com/2000-series-dual-mode-servo-25-2-torque/) | 2000-0025-0002 | 300 | 0.25 at 4.8 V | 0.2 at 6 V | 21.6 | 2.5 | yes |
-| `gobilda-2000-speed` | [goBILDA 2000 Series Dual Mode Servo (Speed)](https://www.gobilda.com/2000-series-dual-mode-servo-25-3-speed/) | 2000-0025-0003 | 300 | 0.11 at 4.8 V | 0.09 at 6 V | 9.3 | 2.5 | yes |
-| `gobilda-2000-super-speed` | [goBILDA 2000 Series Dual Mode Servo (Super Speed)](https://www.gobilda.com/2000-series-dual-mode-servo-25-4-super-speed/) | 2000-0025-0004 | 300 | 0.055 at 4.8 V | 0.043 at 6 V | 4.7 | 2.5 | yes |
-| `gobilda-2000-5turn-torque` | [goBILDA 2000 Series 5-Turn Dual Mode Servo (Torque)](https://www.gobilda.com/2000-series-5-turn-dual-mode-servo-25-2-torque/) | 2000-0025-0502 | 1800 | 0.25 at 4.8 V | 0.2 at 6 V | 21.6 | 2.5 | yes |
-| `gobilda-2000-5turn-speed` | [goBILDA 2000 Series 5-Turn Dual Mode Servo (Speed)](https://www.gobilda.com/2000-series-5-turn-dual-mode-servo-25-3-speed/) | 2000-0025-0503 | 1800 | 0.11 at 4.8 V | 0.09 at 6 V | 9.3 | 2.5 | yes |
-| `gobilda-2000-5turn-super-speed` | [goBILDA 2000 Series 5-Turn Dual Mode Servo (Super Speed)](https://www.gobilda.com/2000-series-5-turn-dual-mode-servo-25-4-super-speed/) | 2000-0025-0504 | 1800 | 0.055 at 4.8 V | 0.043 at 6 V | 4.7 | 2.5 | yes |
+| id | Part | Part number | Range on the hub (°) | Full range (°) | Pulse (us) | Speed used (s per 60°) | Headline speed (s per 60°) | Torque (kg-cm) | Stall current (A) | Continuous |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `gobilda-2000-torque` | [goBILDA 2000 Series Dual Mode Servo (Torque)](https://www.gobilda.com/2000-series-dual-mode-servo-25-2-torque/) | 2000-0025-0002 | 270 | 300 | 500-2500 | 0.25 at 4.8 V | 0.2 at 6 V | 21.6 | 2.5 | yes |
+| `gobilda-2000-speed` | [goBILDA 2000 Series Dual Mode Servo (Speed)](https://www.gobilda.com/2000-series-dual-mode-servo-25-3-speed/) | 2000-0025-0003 | 270 | 300 | 500-2500 | 0.11 at 4.8 V | 0.09 at 6 V | 9.3 | 2.5 | yes |
+| `gobilda-2000-super-speed` | [goBILDA 2000 Series Dual Mode Servo (Super Speed)](https://www.gobilda.com/2000-series-dual-mode-servo-25-4-super-speed/) | 2000-0025-0004 | 270 | 300 | 500-2500 | 0.055 at 4.8 V | 0.043 at 6 V | 4.7 | 2.5 | yes |
+| `gobilda-2000-5turn-torque` | [goBILDA 2000 Series 5-Turn Dual Mode Servo (Torque)](https://www.gobilda.com/2000-series-5-turn-dual-mode-servo-25-2-torque/) | 2000-0025-0502 | 1620 | 1800 | 500-2500 | 0.25 at 4.8 V | 0.2 at 6 V | 21.6 | 2.5 | yes |
+| `gobilda-2000-5turn-speed` | [goBILDA 2000 Series 5-Turn Dual Mode Servo (Speed)](https://www.gobilda.com/2000-series-5-turn-dual-mode-servo-25-3-speed/) | 2000-0025-0503 | 1620 | 1800 | 500-2500 | 0.11 at 4.8 V | 0.09 at 6 V | 9.3 | 2.5 | yes |
+| `gobilda-2000-5turn-super-speed` | [goBILDA 2000 Series 5-Turn Dual Mode Servo (Super Speed)](https://www.gobilda.com/2000-series-5-turn-dual-mode-servo-25-4-super-speed/) | 2000-0025-0504 | 1620 | 1800 | 500-2500 | 0.055 at 4.8 V | 0.043 at 6 V | 4.7 | 2.5 | yes |
 
 ### REV Smart Robot Servos
 
-| id | Part | Part number | Range (°) | Speed used (s per 60°) | Headline speed (s per 60°) | Torque (kg-cm) | Stall current (A) | Continuous |
-|---|---|---|---|---|---|---|---|---|
-| `rev-smart-servo` | [REV Smart Robot Servo (V1)](https://docs.revrobotics.com/rev-crossover-products/servo/srs) | REV-41-1097 | 270 | 0.13 at 6 V | 0.13 at 6 V | 13.5 | 2 | yes |
-| `rev-smart-servo-v2-balanced` | [REV Smart Robot Servo V2 - Balanced](https://www.revrobotics.com/Smart-servo-v2/) | REV-41-3334 | 270 | 0.14 at 6 V | 0.14 at 6 V | 13.5 | 2.1 | yes |
-| `rev-smart-servo-v2-ultraspeed` | [REV Smart Robot Servo V2 - UltraSpeed](https://www.revrobotics.com/Smart-servo-v2/) | REV-41-3336 | 270 | 0.043 at 6 V | 0.043 at 6 V | 5.6 | 2.9 | yes |
+| id | Part | Part number | Range on the hub (°) | Full range (°) | Pulse (us) | Speed used (s per 60°) | Headline speed (s per 60°) | Torque (kg-cm) | Stall current (A) | Continuous |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `rev-smart-servo` | [REV Smart Robot Servo (V1)](https://docs.revrobotics.com/rev-crossover-products/servo/srs) | REV-41-1097 | 243 | 270 | 500-2500 | 0.13 at 6 V | 0.13 at 6 V | 13.5 | 2 | yes |
+| `rev-smart-servo-v2-balanced` | [REV Smart Robot Servo V2 - Balanced](https://www.revrobotics.com/Smart-servo-v2/) | REV-41-3334 | 243 | 270 | 500-2500 | 0.14 at 6 V | 0.14 at 6 V | 13.5 | 2.1 | yes |
+| `rev-smart-servo-v2-ultraspeed` | [REV Smart Robot Servo V2 - UltraSpeed](https://www.revrobotics.com/Smart-servo-v2/) | REV-41-3336 | 243 | 270 | 500-2500 | 0.043 at 6 V | 0.043 at 6 V | 5.6 | 2.9 | yes |
 
 ### Axon servos
 
-| id | Part | Part number | Range (°) | Speed used (s per 60°) | Headline speed (s per 60°) | Torque (kg-cm) | Stall current (A) | Continuous |
-|---|---|---|---|---|---|---|---|---|
-| `axon-max-mk2` | [Axon MAX MK2](https://docs.axon-robotics.com/servos/max) | — | 360 | 0.14 at 4.8 V | 0.115 at 6 V | 34 | 4 | yes |
-| `axon-max-plus` | [Axon MAX+](https://docs.axon-robotics.com/archive/max) | — | — | 0.14 at 4.8 V | 0.115 at 6 V | 34 | 4 | yes |
-| `axon-mini-mk2` | [Axon MINI MK2](https://docs.axon-robotics.com/servos/mini) | — | 360 | 0.11 at 4.8 V | 0.09 at 6 V | 25 | 3.8 | yes |
-| `axon-mini-plus` | [Axon MINI+](https://docs.axon-robotics.com/archive/mini) | — | — | 0.11 at 4.8 V | 0.09 at 6 V | 25 | 3.8 | yes |
+| id | Part | Part number | Range on the hub (°) | Full range (°) | Pulse (us) | Speed used (s per 60°) | Headline speed (s per 60°) | Torque (kg-cm) | Stall current (A) | Continuous |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `axon-max-mk2` | [Axon MAX MK2](https://docs.axon-robotics.com/servos/max) | — | 324 | 360 | 500-2500 | 0.14 at 4.8 V | 0.115 at 6 V | 34 | 4 | yes |
+| `axon-max-plus` | [Axon MAX+](https://docs.axon-robotics.com/archive/max) | — | — | — | — | 0.14 at 4.8 V | 0.115 at 6 V | 34 | 4 | yes |
+| `axon-mini-mk2` | [Axon MINI MK2](https://docs.axon-robotics.com/servos/mini) | — | 324 | 360 | 500-2500 | 0.11 at 4.8 V | 0.09 at 6 V | 25 | 3.8 | yes |
+| `axon-mini-plus` | [Axon MINI+](https://docs.axon-robotics.com/archive/mini) | — | — | — | — | 0.11 at 4.8 V | 0.09 at 6 V | 25 | 3.8 | yes |
+
+**Range on the hub** is what positions 0 to 1 turn the servo with the FTC SDK's normal pulse, 600-2400 microseconds (us). **Full range** is the seller's, over its **pulse** range; the robot uses it with `.fullRange()` on the part ([why](../modules/hardware.md#full-range)), and the simulator too (`pwm=500-2500` in the robot file, which `:sim:fromRobot` writes). Range on the hub = full range x 1800 / (pulse high - pulse low).
 
 A servo with no range here (—) moves at the robot file's `servo.speed` (positions per second) in the simulator; its range is set by programming it.
 
@@ -148,7 +150,7 @@ motor.arm = lift, rpm=90, ticksPerRev=1993.6, min=0, max=1200
 # The drivetrain: counts per turn and top speed (counts per second).
 drive.ticksPerRev = 537.7
 drive.maxTicksPerSec = 2796
-# A servo: its range (degrees) and seconds per 60 degrees (use the 4.8-5 V number).
+# A servo: how far 0 to 1 turns it on the hub (degrees) and seconds per 60 degrees (use the 4.8-5 V number).
 servo.gate = 0.5, rangeDeg=180, secPer60=0.12
 ```
 
@@ -158,7 +160,7 @@ servo.gate = 0.5, rangeDeg=180, secPer60=0.12
 parts = parts.json
 ```
 
-It has the same form as the library's catalog. Only `id` and the numbers the simulator uses are needed (a motor: `freeRpm` and `countsPerRev`; a servo: `rangeDeg` and `secPer60Deg`); the rest is for people. Give each part its own id: an id that is already in the library is refused, so a typo can't quietly replace a real part.
+It has the same form as the library's catalog. Only `id` and the numbers the simulator uses are needed (a motor: `freeRpm` and `countsPerRev`; a servo: `rangeDeg` and `secPer60Deg`, and `pulseMinUs`, `pulseMaxUs` when the seller gives its range over a pulse range; without them `rangeDeg` is what 0 to 1 turns it on the hub's normal 600-2400 us); the rest is for people. Give each part its own id: an id that is already in the library is refused, so a typo can't quietly replace a real part.
 
 ```json
 {
@@ -198,7 +200,8 @@ Then `motor.arm = lift, part=team-arm-motor` works like a library part.
 | `countsPerRev` | motors: encoder counts per turn of the output shaft (`getCurrentPosition()` steps) |
 | `stallCurrentA`, `freeCurrentA` | motors: the current shown in the Control Hub panel |
 | `stallTorqueKgCm` | motors: shown here; the simple physics does not use it yet |
-| `rangeDeg`, `secPer60Deg`, `byVoltage` | servos: how fast a position change takes |
+| `rangeDeg`, `pulseMinUs`, `pulseMaxUs` | servos: the seller's full turn over its pulse range; the turn for positions 0 to 1 is worked out from the pulse the robot uses (600-2400 us, or the full range with `.fullRange()`) |
+| `secPer60Deg`, `byVoltage` | servos: how fast a position change takes |
 | `torqueKgCm`, `stallCurrentA`, `continuousCapable` | servos: shown here; not used by the physics |
 | `name`, `partNumber`, `seller`, `url`, `checked`, `notes` | people: what it is and where the numbers came from |
 
@@ -254,9 +257,9 @@ From the catalog, for checking a number against the seller's page.
 - `rev-smart-servo`: Product page www.revrobotics.com/rev-41-1097/ returns Not Found on 2026-10-16 (replaced by Smart Robot Servo V2); values from REV's SRS docs page. Default 270 deg over the full pulse range; modes: Servo Limit Mode (custom angular limits) and Continuous Mode, set with the SRS Programmer (sold separately). Voltage 4.8-7.4 V (6 V typical); only 6 V performance given. Docs list gears as brass in the table but 'metal gears' in the features; a search summary of the old product page said 0.14 s/60 deg - NOT verified (page gone).
 - `rev-smart-servo-v2-balanced`: Steel gears, 62 g, 4.8-7.4 V (6 V nominal), 500-2500 us. Default 270 deg; up to 280 deg programmable in angular mode; continuous mode. Modes set with the SRS Programmer (sold separately). No 4.8 V figures and no free current on the page.
 - `rev-smart-servo-v2-ultraspeed`: Steel gears, 60 g, 4.8-7.4 V (6 V nominal), 500-2500 us. Default 270 deg; up to 280 deg programmable in angular mode; continuous mode. Modes set with the SRS Programmer (sold separately). No 4.8 V figures and no free current on the page.
-- `axon-max-mk2`: Specs from Axon's docs (https://docs.axon-robotics.com/servos/max; product page https://axon-robotics.com/products/max has no spec table). 85 g, H25T spline, 4.8-8.4 V, 500-2500 us, 360 deg max range; modes: servo, continuous rotation (swerve 'coming soon'), set with Programmer MK2. Axon lists 4.8 V as the REV Control/Expansion Hub servo voltage and 6.0 V as the REV Servo Power Module/Servo Hub. No part number published (sold only through distributors) -> null. 'Idle' current is in freeCurrentA.
+- `axon-max-mk2`: Specs from Axon's docs (https://docs.axon-robotics.com/servos/max; product page https://axon-robotics.com/products/max has no spec table). 85 g, H25T spline, 4.8-8.4 V, 500-2500 us, 360 deg max range; modes: servo, continuous rotation (swerve 'coming soon'), set with Programmer MK2. Axon lists 4.8 V as the REV Control/Expansion Hub servo voltage and 6.0 V as the REV Servo Power Module/Servo Hub. No part number published (sold only through distributors) -> null. 'Idle' current is in freeCurrentA. goBILDA's resale page (gobilda.com/axon-max-servo-mk2, checked 2026-10-22) lists 350 deg max rotation and 0.175 deg/us over 500-2500 us; rangeDeg keeps Axon's own 360.
 - `axon-max-plus`: Axon's archive page says the MAX+ is discontinued and replaced by the MAX MK2; its spec table is identical to the MK2's. Dual mode (servo/continuous) if bought after 25 Sep 2022. Range of motion NOT given on the archive page -> null. No part number published -> null.
-- `axon-mini-mk2`: Specs from Axon's docs (https://docs.axon-robotics.com/servos/mini; product page https://axon-robotics.com/products/mini has no spec table). 65 g, H25T spline, 4.8-8.4 V, 500-2500 us, 360 deg max range; modes: servo, continuous rotation (swerve 'coming soon'), set with Programmer MK2. Axon lists 4.8 V as the REV Control/Expansion Hub servo voltage and 6.0 V as the REV Servo Power Module/Servo Hub. No part number published (sold only through distributors) -> null. 'Idle' current is in freeCurrentA.
+- `axon-mini-mk2`: Specs from Axon's docs (https://docs.axon-robotics.com/servos/mini; product page https://axon-robotics.com/products/mini has no spec table). 65 g, H25T spline, 4.8-8.4 V, 500-2500 us, 360 deg max range; modes: servo, continuous rotation (swerve 'coming soon'), set with Programmer MK2. Axon lists 4.8 V as the REV Control/Expansion Hub servo voltage and 6.0 V as the REV Servo Power Module/Servo Hub. No part number published (sold only through distributors) -> null. 'Idle' current is in freeCurrentA. goBILDA's resale page (gobilda.com/axon-mini-servo-mk2, checked 2026-10-22) lists 350 deg max rotation and 0.175 deg/us over 500-2500 us; rangeDeg keeps Axon's own 360.
 - `axon-mini-plus`: Axon's archive page says the MINI+ is discontinued and replaced by the MINI MK2; its spec table is identical to the MK2's. Dual mode (servo/continuous). Range of motion NOT given on the archive page -> null. No part number published -> null.
 
-Catalog notes: Every number was read from the seller's product page or the seller's own documentation on the 'checked' date (URL per part). Values marked COMPUTED/DERIVED in a part's notes are worked out from the seller's numbers. null = the seller does not publish it. Motor values at 12 V; servo headline values at 6.0 V with the full table in byVoltage. countsPerRev = encoder counts per output-shaft revolution as the FTC SDK reports them (x4 quadrature). Torque converted to kg-cm with 1 N-m = 10.197 kg-cm where the seller gives N-m. A part added here is also added to library/.../robot/Parts.java (wheels, servos) or Motors.java (motors); PartsCatalogTest and MotorsCatalogTest check they match.
+Catalog notes: Every number was read from the seller's product page or the seller's own documentation on the 'checked' date (URL per part). Values marked COMPUTED/DERIVED in a part's notes are worked out from the seller's numbers. null = the seller does not publish it. Motor values at 12 V; servo headline values at 6.0 V with the full table in byVoltage. countsPerRev = encoder counts per output-shaft revolution as the FTC SDK reports them (x4 quadrature). Torque converted to kg-cm with 1 N-m = 10.197 kg-cm where the seller gives N-m. A part added here is also added to library/.../robot/Parts.java (wheels, servos) or Motors.java (motors); PartsCatalogTest and MotorsCatalogTest check they match. Servos: rangeDeg is the seller's full turn over pulseMinUs-pulseMaxUs (the pulse range the seller gives; null = not given). The FTC SDK sends 600-2400 us for positions 0-1 unless the code widens it (.fullRange()), so on a normal hub a servo turns rangeDeg x 1800 / (pulseMaxUs - pulseMinUs): a goBILDA 2000 servo 270 deg, not 300 (SDK 12.0 PwmControl.PwmRange.defaultRange, checked 2026-10-22).

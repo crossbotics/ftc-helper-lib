@@ -114,6 +114,22 @@ public class MechanismRecipes {
         }
     }
 
+    /** A wrist that uses its servo's whole turn (500-2500 us instead of the SDK's 600-2400). */
+    public static class WristFullRange extends RobotDefinition {
+        public Wrist wrist;
+
+        @Override
+        protected void define() {
+            drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
+            // recipe: servo-full-range
+            // The hub normally sends 600-2400 us for positions 0 to 1: a goBILDA 2000 servo then turns
+            // 270 of its 300 degrees. fullRange() sends its whole 500-2500 us: 0 to 1 = 300 degrees.
+            // Turn it on FIRST, then find the positions (Servo Finder: press Y while choosing the servo).
+            wrist = add(Wrist.servo("wrist").part("gobilda-2000-speed").fullRange());
+            // end recipe
+        }
+    }
+
     public static class IntakeOnAtStart extends RobotDefinition {
         @Override
         protected void define() {

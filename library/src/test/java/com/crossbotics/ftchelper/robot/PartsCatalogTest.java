@@ -49,6 +49,38 @@ public class PartsCatalogTest {
         assertEquals(ids, new ArrayList<>(Parts.servos()));
     }
 
+    @Test public void everyServoRangeAndPulseMatchesThePartsCatalog() throws Exception {
+        String json = catalog();
+        String servos = json.substring(json.indexOf("\"servos\""), json.indexOf("\"wheels\""));
+        // Each servo object from its id to its "byVoltage" table (the numbers before it are its own).
+        Matcher m = Pattern.compile("\"id\"\\s*:\\s*\"([^\"]+)\"(.*?)\"byVoltage\"", Pattern.DOTALL).matcher(servos);
+        int seen = 0;
+        while (m.find()) {
+            Parts.ServoPart s = Parts.servoPart(m.group(1));
+            for (String key : new String[] {"rangeDeg", "pulseMinUs", "pulseMaxUs"}) {
+                Matcher v = Pattern.compile("\"" + key + "\"\\s*:\\s*(null|[-0-9.eE]+)").matcher(m.group(2));
+                assertTrue(s.id + " " + key + " missing", v.find());
+                double mine = key.equals("rangeDeg") ? s.rangeDeg : key.equals("pulseMinUs") ? s.pulseMinUs : s.pulseMaxUs;
+                if (v.group(1).equals("null")) assertTrue(s.id + " " + key + " is null in the catalog", Double.isNaN(mine));
+                else assertEquals(s.id + " " + key, Double.parseDouble(v.group(1)), mine, 1e-9);
+            }
+            seen++;
+        }
+        assertEquals(Parts.servos().size(), seen);
+    }
+
+    // The FTC SDK's normal 600-2400 us is 1800 of a servo's 2000 us: a 300 degree servo turns 270.
+    @Test public void aServoTurnsLessOnTheSdksNormalRange() {
+        assertEquals(270, Parts.servoPart("gobilda-2000-speed").sdkRangeDeg(), 1e-9);
+        assertEquals(0.15, Parts.servoPart("gobilda-2000-speed").degreesPerMicrosecond(), 1e-12);
+        assertEquals(1620, Parts.servoPart("gobilda-2000-5turn-torque").sdkRangeDeg(), 1e-9);
+        assertEquals(243, Parts.servoPart("rev-smart-servo-v2-balanced").sdkRangeDeg(), 1e-9);
+        assertEquals(324, Parts.servoPart("axon-max-mk2").sdkRangeDeg(), 1e-9);
+        assertEquals(300, Parts.servoPart("gobilda-2000-speed").degreesOver(500, 2500), 1e-9);
+        assertTrue(Double.isNaN(Parts.servoPart("axon-max-plus").sdkRangeDeg()));
+        assertEquals("no pulse given: 500-2500 is used", 2500, Parts.servoPart("axon-max-plus").fullHighUs(), 1e-9);
+    }
+
     @Test public void aTypoListsTheKnownParts() {
         try {
             Parts.wheel("offset-tubing-80");

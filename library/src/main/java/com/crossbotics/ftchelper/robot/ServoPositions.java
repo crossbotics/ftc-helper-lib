@@ -37,6 +37,26 @@ public abstract class ServoPositions<M extends ServoPositions<M>> extends Module
         return self();
     }
 
+    /**
+     * Uses the servo's whole turn. The FTC SDK normally sends 600 to 2400 microseconds for positions 0
+     * to 1, which is only part of what most servos take (500 to 2500): a goBILDA 2000 servo turns 270
+     * degrees, not its full 300. With this, positions 0 to 1 send the servo's whole pulse range (the
+     * catalog part's from {@code part(...)}, else 500-2500 us), so it turns all 300.
+     * <b>Measure the positions after turning this on</b> (Servo Finder: Y = full range): the same number
+     * points somewhere else once the range changes. A servo that is not on a REV hub keeps its normal
+     * range (INIT says so).
+     *
+     * <pre>{@code
+     * wrist = add(Wrist.servo("wrist").part("gobilda-2000-speed").fullRange());   // 0..1 = 300 degrees
+     * }</pre>
+     *
+     * @return this part
+     */
+    public M fullRange() {
+        fullRange = true;
+        return self();
+    }
+
     abstract Map<String, Double> defaultPositions();
 
     /** True to cycle through the positions lowest first (a wrist); false = as written. */
@@ -54,6 +74,7 @@ public abstract class ServoPositions<M extends ServoPositions<M>> extends Module
     void build(Devices devices, TunableSection t) {
         Servo servo = devices.get(Servo.class, device);
         if (reversed) servo.setDirection(Servo.Direction.REVERSE);
+        applyPulse(servo);   // .fullRange(): the servo's whole turn (nothing changes without it)
         part = new PositionServo(name(), servo).travelTime(t.number("travelSec", 0.3));
         Map<String, Double> positions = positionsFrom(t);
         order.clear();
@@ -158,8 +179,8 @@ public abstract class ServoPositions<M extends ServoPositions<M>> extends Module
     String simServoLine(TunableSection t, String part) {
         Map<String, Double> p = positionsFrom(t);
         double first = physical(p.isEmpty() ? 0.5 : p.values().iterator().next());
-        if (partId != null) return fmt("servo.%s = %.2f, part=%s", device, first, partId);
-        return fmt("servo.%s = %.2f, part=%s   # TODO the real servo", device, first, part);
+        if (partId != null) return fmt("servo.%s = %.2f, part=%s", device, first, partId) + pulseWords();
+        return fmt("servo.%s = %.2f, part=%s", device, first, part) + pulseWords() + "   # TODO the real servo";
     }
 
     @Override

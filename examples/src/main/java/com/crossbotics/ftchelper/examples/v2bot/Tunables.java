@@ -102,14 +102,17 @@ public class Tunables {
     }
 
     /**
-     * The wrist: servo positions (0 to 1). The goBILDA servo turns 300 degrees over 0 to 1, so one
-     * degree is 1/300. Angles from straight down (lifter design): folded 0, pickup 20 (the claw a
-     * little out, so the ball is not under the robot), carry 90 (swing out before lifting), flower
-     * 122.8. Its hard stop is at 145 (0.583). folded = 0.10 is an example: find yours with the Servo
-     * Finder, then add the degrees / 300. travelSec: 0.09 s per 60 deg x 145 deg = 0.22 s, plus a bit.
+     * The wrist: servo positions (0 to 1). The goBILDA 2000 servo turns 0.15 degrees per microsecond of
+     * signal (goBILDA's page: 300 degrees over 500-2500 us). The control hub's normal signal is
+     * 600-2400 us, so positions 0 to 1 turn it 270 degrees: one degree is 1/270. That is plenty: the
+     * wrist only needs 145 degrees (its hard stop), so it keeps the normal range (no .fullRange()).
+     * Angles from straight down (lifter design): folded 0, pickup 20 (the claw a little out, so the
+     * ball is not under the robot), carry 90 (swing out before lifting), flower 122.8. Its hard stop
+     * is at 145 (0.637). folded = 0.10 is an example: find yours with the Servo Finder, then add the
+     * degrees / 270. travelSec: 0.09 s per 60 deg x 145 deg = 0.22 s, plus a bit.
      */
     public static class Wrist {
-        public static double folded = 0.10, pickup = 0.167, carry = 0.40, flower = 0.509;
+        public static double folded = 0.10, pickup = 0.174, carry = 0.433, flower = 0.555;
         public static double travelSec = 0.3;
     }
 
@@ -124,25 +127,34 @@ public class Tunables {
     }
 
     /**
-     * THE INTERLOCK RULE (Robot.java: keepApart("TurretLift", ...)). The turret must stay out of the
-     * back while the slide is up. Team 8938's lifter design: the lifter's parts are from -26 to +38 deg
-     * of straight back (+ toward the slide's side) and the folded claw is clear of the turret until
-     * the slide is about 84 mm up. In turret angles that is 142 to 206 deg; 33 deg more on each side
-     * for the turret's own width (everything farther than 190 mm from its axis is within 33 deg of where
-     * it points: turret/v8.1GB reach measurements) gives 109 to 239. 84 mm = 270 counts.
-     * The slide is on the robot's left (+x), so "toward the slide" is toward 90 deg. These numbers come
-     * from the first lifter concept (2026-10-02) and are not yet re-checked for the pincer claw. With
-     * the turret axis 1 in forward of the centre, v8.1GB (201.1 mm reach) should clear the lifter at
-     * every angle: this rule is a backup until the built robot is measured with the lift up.
-     * liftMargin: the lift is fast (about 2800 counts a second at full power), so it needs a bigger
-     * safety distance than the default (1/50 of its range, 27 counts): in the simulator, stopped by hand at
-     * full power, it went 54 counts past where it was told to stop. 80 counts = 25 mm: it waits at
-     * 270 - 2 x 80 = 110. Measure your own: push the stick fully up toward the line and see how far it goes.
+     * THE INTERLOCK RULE (Robot.java: keepApart("TurretClaw", ...)). Team 8938's pincer model run
+     * (2026-10-22) against turret v8.1GB: no lifter part ever comes inside the turret's reach
+     * (201.1 mm from its axis), but with the wrist between 3 and 44.5 degrees the claw body comes within
+     * 2 mm of it, at +/-4 degrees of straight back, at EVERY lift height. With the wrist above 47 degrees
+     * (carry 90, flower 122.8) every lifter part is at least 206.7 mm away: clear.
+     * <ul>
+     *   <li>The turret's zone: its parts farther than 190 mm from the axis sit from -32.3 to +28.8
+     *       degrees of where it points (turret/v8.1GB reach measurements). The claw is 176 to 184 deg, so
+     *       they meet when the turret points 176 - 28.8 = 147 to 184 + 32.3 = 217 degrees (turret
+     *       angles: 0 forward, counterclockwise +, back = 180). turretFrom = 147, turretTo = 217.</li>
+     *   <li>The wrist's zone: 0 to 47 degrees (the measured 3 to 44.5, with a margin). In servo
+     *       positions: wristTo = folded + 47 / 270 = 0.10 + 0.174 = 0.274. wristFrom = 0: the wrist
+     *       cannot go below folded (its stop), so the zone simply starts at the bottom.</li>
+     * </ul>
+     * The lift needs no zone: the wrist's rule covers every lift height.
+     * turretMargin: the turret is fast (a 312 RPM motor, 2.75:1: about 680 deg a second), so it needs a
+     * bigger safety distance than the default 3 deg: in the simulator, pushed at full stick toward the
+     * zone, it coasted 19 deg past the point where it was told to stop. 12 deg: it waits at
+     * 147 - 2 x 12 = 123 (or -143 + 24 = -119). Measure your own: full stick toward the back, see how far
+     * past the "held" point it goes.
+     * What it means on the field: while the wrist is folded or at pick-up, the turret aims anywhere
+     * from -119 to 123 degrees; once the wrist swings out to carry, it may point anywhere again (its
+     * -190 to 190). Change folded? Change wristTo too (folded + 0.174).
      * These are read once at INIT (not in the tuning menu, on purpose: see docs/guides/interlocks.md).
      */
-    public static class TurretLift {
-        public static double turretFrom = 109, turretTo = 239;   // degrees
-        public static double liftAbove = 270;                    // counts
-        public static double liftMargin = 80;                    // counts
+    public static class TurretClaw {
+        public static double turretFrom = 147, turretTo = 217;   // degrees
+        public static double wristFrom = 0, wristTo = 0.274;     // servo positions (0 to 47 degrees)
+        public static double turretMargin = 12;                  // degrees: the turret coasts (see above)
     }
 }

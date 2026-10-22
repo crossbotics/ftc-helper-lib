@@ -1,6 +1,7 @@
 package com.crossbotics.ftchelper.finders;
 
 import com.qualcomm.robotcore.hardware.Servo;
+import com.crossbotics.ftchelper.hardware.ServoSetup;
 import com.crossbotics.ftchelper.gamepad.ControllerBindings;
 import com.crossbotics.ftchelper.gamepad.ControllerBindings.Btn;
 import com.crossbotics.ftchelper.gamepad.ControllerBindings.Pad;
@@ -19,7 +20,9 @@ import java.util.Map;
  * {@code Tunables.java}: {@code Tunables.Claw: P1 = 0.210, P2 = 0.770} (rename P1, P2 to open, closed).
  *
  * <pre>
- * Choose:  D-pad up/down = servo, A = use it
+ * Choose:  D-pad up/down = servo, A = use it, Y = full range on/off (500-2500 us instead of the
+ *          SDK's normal 600-2400: a goBILDA 2000 servo turns 300 degrees instead of 270; use it when
+ *          the part has .fullRange() in Robot.java, so the numbers fit)
  * Start:   D-pad = choose a start point (the servo does NOT move yet), A = move it there.
  *          Pick a value near where it sits now: a servo cannot tell where it is.
  * Nudge:   D-pad right/left = +/- 0.01   D-pad up/down = +/- 0.05   hold RB = 10 times finer
@@ -45,6 +48,9 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
     private double startAt = 0.5;           // the start point chosen before the first move
     private double endA = Double.NaN, endB = Double.NaN;
     private final Map<String, Double> positions = new LinkedHashMap<>();
+    private boolean fullRange = false;      // Y while choosing: the servo's whole pulse range
+    private String pulseNote = "";          // set when the servo cannot change its pulse range
+    private final java.util.Set<String> widened = new java.util.HashSet<>();   // servos widened in this run
 
     @Override protected String finderName() { return "Servo finder"; }
 
@@ -72,7 +78,7 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
                 })
          .bindPress(Pad.G1, Btn.X, () -> { if (moved()) { endA = position; writeResults(); } })
          .bindPress(Pad.G1, Btn.B, () -> { if (moved()) { endB = position; writeResults(); } })
-         .bindPress(Pad.G1, Btn.Y, () -> { if (servo != null) undoPosition(); })
+         .bindPress(Pad.G1, Btn.Y, () -> { if (servo != null) undoPosition(); else fullRange = !fullRange; })
          .bindPress(Pad.G1, Btn.BACK, () -> servo = null);
     }
 
@@ -81,6 +87,16 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
         if (chooser.isEmpty()) return;
         servoName = chooser.current();
         servo = hardwareMap.get(Servo.class, servoName);
+        // The pulse range as chosen with Y. Off: back to the SDK's normal one only if this run widened it
+        // (otherwise it is left as the robot configuration made it).
+        boolean set = true;
+        if (fullRange) {
+            set = ServoSetup.setPulseRange(servo, ServoSetup.FULL_PULSE_LOW_US, ServoSetup.FULL_PULSE_HIGH_US);
+            if (set) widened.add(servoName);
+        } else if (widened.remove(servoName)) {
+            ServoSetup.setPulseRange(servo, ServoSetup.SDK_PULSE_LOW_US, ServoSetup.SDK_PULSE_HIGH_US);
+        }
+        pulseNote = set ? "" : "This servo cannot change its pulse range: it uses the normal 600-2400 us";
         position = Double.NaN;
         startAt = 0.5;
         endA = endB = Double.NaN;
@@ -132,7 +148,7 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
     private void writeResults() {
         String key = "servo:" + servoName;
         results.removeStartingWith(key + ":");
-        String line = "PositionServo.create(hardwareMap, \"" + servoName + "\")";
+        String line = "PositionServo.create(hardwareMap, \"" + servoName + "\")" + (fullRange ? ".fullRange()" : "");
         if (!Double.isNaN(endA) && !Double.isNaN(endB)) {
             line += ".limits(" + FinderResults.num(Math.min(endA, endB), 3) + ", "
                     + FinderResults.num(Math.max(endA, endB), 3) + ")";
@@ -156,7 +172,8 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
             results.set(key + ":t0", FinderResults.tunablesLine(servoName, fields));
             results.set(key + ":t1", "    // rename P1, P2... (open, closed)"
                     + (ends ? "; keep them between " + FinderResults.num(Math.min(endA, endB), 3)
-                            + " and " + FinderResults.num(Math.max(endA, endB), 3) : ""));
+                            + " and " + FinderResults.num(Math.max(endA, endB), 3) : "")
+                    + (fullRange ? "; FULL RANGE: add .fullRange() to it in Robot.java" : ""));
         }
     }
 
@@ -167,9 +184,11 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
         if (servo == null) {
             t.section("Choose a servo (D-pad, then A)");
             chooser.addTelemetry(t, "No servos in the robot configuration.");
+            t.line("Full range (Y)", fullRange ? "ON: 500-2500 us (goBILDA 2000: 300 deg)" : "off: 600-2400 us, the SDK's normal (goBILDA 2000: 270 deg)");
             return;
         }
-        t.section("Servo \"" + servoName + "\"  (BACK = another)");
+        t.section("Servo \"" + servoName + "\"  (BACK = another)" + (fullRange ? "  FULL RANGE" : ""));
+        if (!pulseNote.isEmpty()) t.warn(pulseNote);
         if (Double.isNaN(position)) {
             t.line("Start point", FinderResults.num(startAt, 3) + "  (D-pad; A = move the servo there)");
             t.text("Choose a start point near where the servo sits now. Nothing moves until A.");
@@ -190,6 +209,7 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
         return new String[] {
             "Finds a servo's safe ends and positions.",
             "1. D-pad up/down = choose a servo, A = use it.",
+            "   Y = full range (if Robot.java has .fullRange()).",
             "2. D-pad = a START POINT near where it sits now",
             "   (nothing moves), A = move it there.",
             "3. D-pad right/left = +/-0.01, up/down = +/-0.05,",
