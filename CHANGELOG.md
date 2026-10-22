@@ -6,6 +6,9 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
+- Docs: a box in lesson 9, robot.md and launcher.md says battery compensation is on by default, how to
+  turn it off (`batteryCompensation = false`), and a 4-shot test to check it on your robot.
+
 - **Every library button can move or be freed.** `Controls.java` (and `EasyTeleOp`) get
   `libraryButtons(LibraryButtons lib, Pad g1, Pad g2)`: `lib.pause(...)`, `resetForward`, `debug(key, with)`,
   `slow` (a trigger or a button), `slowToggle`, `fieldCentric`, `buttonMap`, `tuningMenu`, `setPose`,

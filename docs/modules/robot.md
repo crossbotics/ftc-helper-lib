@@ -472,6 +472,16 @@ waits. Under 11.5 V the Driver Station warns. `nominalVolts` comes from the Flyw
 the launcher uses 12.8 V (`Flywheel.DEFAULT_NOMINAL_VOLTS`, a charged battery under load).
 `batteryCompensation = false` turns it off. Details: [Flywheel](launcher.md#battery-compensation).
 
+> **Battery compensation: on by default, easy to turn off, not yet proven on a robot.**
+> The RPM control already fixes a low battery by itself, but slowly (the small I gain). Compensation
+> only makes that faster: it helps the first shot after spin-up and quick shots in a row. It cannot help
+> when the battery is too low for the speed you ask (the motor is already at full power).
+> - **Turn it off:** `public static boolean batteryCompensation = false;` in `Tunables.Launcher`.
+> - **Test it on your robot:** with a battery at about 11.5 V, fire 4 shots quickly and watch the
+>   launcher's measured RPM against its target on the Driver Station. Do it with compensation on, then
+>   off. If you see no difference, leave it off; if the wheel overshoots after a battery swap, turn it
+>   off and tell us.
+
 ```java
 public static double kP = 1.17, kI = 0.117, kD = 0, kF = 11.70, nominalVolts = 12.6;   // Tunables.Launcher
 public static double trimStepPercent = 1, trimMaxPercent = 15;   // optional (the defaults)

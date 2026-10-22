@@ -327,6 +327,16 @@ second: while the drive pulls hard the battery dips for a moment, and a dip is n
 so the loop never waits for the hubs. Under 11.5 V the Driver Station warns `battery 11.2 V: low`: swap
 the battery. To switch it off: `public static boolean batteryCompensation = false;` in `Tunables.Launcher`.
 
+> **Battery compensation: on by default, easy to turn off, not yet proven on a robot.**
+> The RPM control already fixes a low battery by itself, but slowly (the small I gain). Compensation
+> only makes that faster: it helps the first shot after spin-up and quick shots in a row. It cannot help
+> when the battery is too low for the speed you ask (the motor is already at full power).
+> - **Turn it off:** `public static boolean batteryCompensation = false;` in `Tunables.Launcher`.
+> - **Test it on your robot:** with a battery at about 11.5 V, fire 4 shots quickly and watch the
+>   launcher's measured RPM against its target on the Driver Station. Do it with compensation on, then
+>   off. If you see no difference, leave it off; if the wheel overshoots after a battery swap, turn it
+>   off and tell us.
+
 ## 9. When the camera loses the goal: the odometry
 
 A robot arm, another robot or a bad angle hides the tag, and the turret stops following. If your robot
