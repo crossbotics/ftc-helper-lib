@@ -440,6 +440,15 @@ public final class SimScenario {
                 if (!t.get(2).equals("target") && !t.get(2).equals("actual")) throw new IllegalArgumentException("servo field: target or actual");
                 op(t, 3);
                 return;
+            case "step":
+                need(t, 3, "expect step N done  (the autonomous report's Nth step, after Start: done, STALLED ...)");
+                try {
+                    if (Integer.parseInt(t.get(1)) < 1) throw new NumberFormatException();
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("expect step N WORD: N is a step number from 1");
+                }
+                if (t.size() > 3) throw new IllegalArgumentException("too many words at the end (expect step 2 done)");
+                return;
             case "light":
                 need(t, 4, "expect light NAME = COLOR  (GREEN, RED, off ...: what the page shows for it)");
                 if (!t.get(2).equals("=")) throw new IllegalArgumentException("expect light NAME = COLOR");
@@ -457,7 +466,7 @@ public final class SimScenario {
                 op(t, 2);
                 return;
             default:
-                throw new IllegalArgumentException("expect what? (screen, value, time, error, phase, motor, servo, light, shape, robot, bumped, touch, camera, size, stored, launched, scored, cell, tips, left, points, clean)");
+                throw new IllegalArgumentException("expect what? (screen, value, time, error, phase, step, motor, servo, light, shape, robot, bumped, touch, camera, size, stored, launched, scored, cell, tips, left, points, clean)");
         }
     }
 
@@ -608,6 +617,21 @@ public final class SimScenario {
                 if (s == null) throw new IllegalArgumentException("no servo \"" + t.get(1) + "\" in the robot file");
                 double v = t.get(2).equals("target") ? s.target() : s.actual;
                 return compare(v, t.subList(3, t.size()), why);
+            }
+            case "step": {
+                // expect step 3 done: the autonomous report's 3rd step (after "Start" and "Start delay") says done
+                List<String> rep = com.crossbotics.ftchelper.match.MatchMemory.lastReport();
+                int lead = 0;
+                while (lead < rep.size() && (rep.get(lead).startsWith("Start:") || rep.get(lead).startsWith("Start delay:"))) lead++;
+                int n = Integer.parseInt(t.get(1));
+                if (lead + n - 1 >= rep.size()) {
+                    why[0] = rep.isEmpty() ? "no autonomous report yet (it is kept when the autonomous ends)" : "the report has " + (rep.size() - lead) + " step(s)";
+                    return false;
+                }
+                String line = rep.get(lead + n - 1);
+                why[0] = line;
+                String word = line.contains(": ") ? line.substring(line.indexOf(": ") + 2) : line;
+                return word.toLowerCase(Locale.US).startsWith(t.get(2).toLowerCase(Locale.US));
             }
             case "light": {
                 // expect light status = GREEN: the color it shows, in the page's words (GREEN, off, violet ...)

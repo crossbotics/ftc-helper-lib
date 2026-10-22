@@ -1,5 +1,6 @@
 # The starter TeleOp drives forward and turns right on the field.
 init "Main TeleOp"
+press g1.b                             # RED (until chosen, a TeleOp stands on BLUE's spot)
 start
 hold g1.left_stick_y -1
 wait 0.5

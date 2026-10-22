@@ -385,13 +385,10 @@ export function pedroScenario(st, opts = {}) {
 		out.push(`set pose ${r1(s0.x)} ${r1(s0.y)} ${r1(s0.h)}   # the code gives no spot: put the robot there`);
 	}
 	out.push('start', `expect within ${S.AUTO_SEC + 2} screen has "Autonomous finished"`);
-	const seen = new Set();
-	for (const s of prog.steps) {
-		const label = String(s.label ?? '').trim();
-		if (!label || /["#]/.test(label) || seen.has(label)) continue;
-		seen.add(label);
-		out.push(`expect screen has ${simString(label + ': done')}`);
-	}
+	// Each step by its number in the report (a follow is one, driveTo one per part).
+	prog.steps.forEach((s, k) => {
+		out.push(`expect ${k === 0 ? 'within 2 ' : ''}step ${k + 1} done`.padEnd(39) + '# ' + String(s.label ?? '').replace(/[\r\n#]/g, ' ').trim());
+	});
 	out.push(`expect robot x = ${r1(e.x)} ${P.num(tolIn)}`, `expect robot y = ${r1(e.y)} ${P.num(tolIn)}`);
 	if (Math.abs(e.h) <= 180 - tolDeg - 5) out.push(`expect robot heading = ${r1(e.h)} ${P.num(tolDeg)}`);
 	else out.push(`# heading: about ${r1(e.h)} (near 180, where the number jumps to -180): check it on the map`);

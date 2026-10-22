@@ -41,17 +41,24 @@ const PEDRO_EXAMPLE = {
 	path: { start: [-56, -61], parts: [
 		{ ctrl: [], end: [-48, -50], heading: { mode: 'keep', a: 0 }, maxSpeed: null },
 		{ ctrl: [[-44, -36]], end: [-30, -30], heading: { mode: 'turn', a: 0, b: 45 }, maxSpeed: null }], holdSec: 5 },
-	start: { on: true, note: 'Against our wall, in the left corner tile, facing the field', h: 0, noteAuto: false },
+	start: { on: true, note: 'Our wall, left corner tile, facing the field', h: 0, noteAuto: false },
 	label: 'To the goal', name: 'TO_GOAL',
 	actions: [{ kind: 'fraction', value: 0.5, what: 'command', label: 'Intake on', code: 'robot.intake::in' }],
 	timeoutSec: null, mode: 'follow', power: 0.7, mirror: false, opmode: 'My Auto',
 };
-const NEW_ACTION = { what: 'command', label: 'Intake on', code: 'robot.intake::in' };
+// A new Simple steps plan: no steps; "TeleOp next" and the package come from the Robot code chosen
+// (teleopAuto/pkgAuto: until the team types their own).
+const STEPS_EMPTY = {
+	drive: 'mecanum', mirror: false, start: structuredClone(STEPS_EXAMPLE.start), steps: [],
+	opmode: 'My Auto', className: '', teleop: '', teleopAuto: true, pkg: 'org.firstinspires.ftc.teamcode', pkgAuto: true, group: 'Autos',
+};
+// An action's time limit when the team has not set one: long enough for most (a "fire all" waits 8 s).
+const ACTION_LIMIT_SEC = 10;
 
 let B = {
 	open: false, mode: 'steps', alliance: 'RED', robotClass: '', edit3d: true,
-	add: 'drive', addPedro: 'line', sel: null, selPart: 0, selAction: null, view: 'file',
-	steps: { plan: structuredClone(STEPS_EXAMPLE), speeds: { ...S.DEFAULT_SPEEDS }, tolIn: 4, tolDeg: 10, recorded: false },
+	add: 'drive', addPedro: 'line', sel: null, selPart: 0, selAction: null, view: 'file', insert: false,
+	steps: { plan: structuredClone(STEPS_EMPTY), speeds: { ...S.DEFAULT_SPEEDS }, tolIn: 4, tolDeg: 10, recorded: false },
 	pedro: { ...structuredClone(PEDRO_EXAMPLE), tolIn: 4, tolDeg: 10, recorded: false },
 };
 try {
@@ -101,6 +108,18 @@ function bestFit() {
 	return (tied.find((r) => !!r.follower === want) || tied.find((r) => r.name === guess) || tied[0]).name;
 }
 const robotInfo = () => robots.find((r) => r.name === (B.robotClass || bestFit())) || null;
+// The chosen Robot code's commands (robot.intake::in) and actions (Actions.fireAll(robot)), found by the
+// simulator in the code; the common names only while it has not answered.
+const commandsNow = () => robotInfo()?.commands ?? (robots.length ? [] : S.COMMON_COMMANDS);
+const actionsNow = () => robotInfo()?.actions ?? (robots.length ? [] : S.COMMON_ACTIONS);
+// "robot.intake::in" -> "Intake in"; "() -> robot.lift.goTo(\"high\")" -> "Lift high"
+function labelFor(code) {
+	const m = /robot\.(\w+)::(\w+)/.exec(code || '') || /robot\.(\w+)\.goTo\("([^"]*)"\)/.exec(code || '') || /robot::(\w+)/.exec(code || '');
+	if (!m) return 'Start something';
+	const words = m.slice(1).filter(Boolean).join(' ').replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
+	return words.charAt(0).toUpperCase() + words.slice(1);
+}
+const newAlong = () => { const code = commandsNow()[0] || ''; return { what: 'command', label: code ? labelFor(code) : '', code }; };
 /** The robot's size from the simulator's robot file: [front to back, side to side], inches. */
 function robotLW() {
 	const r = sim && sim.robot;
@@ -149,7 +168,8 @@ panel.innerHTML = `
   <div class="row b-addrow" id="bAdd">
     <button data-add="move">+ Drive</button><button data-add="strafe" id="bAddStrafe">+ Strafe</button><button data-add="turn">+ Turn</button>
     <button data-add="turnTo">+ Turn to</button><button data-add="wait">+ Wait</button><button data-add="run">+ Start something</button>
-    <button data-add="action">+ Action</button><button data-add="park">+ Park from here</button></div>
+    <button data-add="action">+ Action</button><button data-add="park">+ Park from here</button>
+    <label class="muted" title="Off: new steps go at the end"><input type="checkbox" id="bInsert"> add after the selected step</label></div>
   <div id="bList"></div>
   <div class="row"><button id="bClear" title="Remove every step">Remove all steps</button><button id="bExample" title="The steps from lesson 6">Load the lesson's example</button></div>
 </div>
@@ -175,7 +195,7 @@ panel.innerHTML = `
   <div class="row" id="bNames"></div>
   <div class="row"><button id="bCopy" class="b-go">Copy the Java</button><span class="muted" id="bCopied"></span>
     <label class="muted" id="bViewRow"><select id="bView"><option value="file">the whole file</option><option value="steps">only the steps</option></select></label></div>
-  <div class="row"><button id="bSaveSim">Save the scenario</button><label class="muted"><input type="checkbox" id="bRecorded"> with the end from the last run</label></div>
+  <div class="row"><button id="bSaveSim">Save the scenario</button><label class="muted"><input type="checkbox" id="bRecorded"> with the end from the last run<span id="bRecWhy"></span></label></div>
   <div class="row"><label>Close enough <input type="number" step="0.5" min="0.5" id="bTolIn"> in</label><label><input type="number" step="1" min="1" id="bTolDeg"> degrees</label></div>
   <details><summary class="muted">Show the Java</summary><pre id="bCode" class="b-code"></pre></details>
   <details><summary class="muted">Show the scenario</summary><pre id="bSim" class="b-code"></pre></details>
@@ -229,6 +249,10 @@ function render() {
 function syncRobot() {
 	const info = robotInfo();
 	if (info && info.drive) B.steps.plan.drive = info.drive;
+	const plan = B.steps.plan;
+	// "TeleOp next" and the package follow the Robot code until the team types their own.
+	if (info && plan.teleopAuto !== false && info.teleop != null) plan.teleop = info.teleop;
+	if (info && plan.pkgAuto !== false && info.name.includes('.')) plan.pkg = info.name.slice(0, info.name.lastIndexOf('.'));
 }
 
 // A note the builder wrote follows the spot; a note the team wrote stays as it is.
@@ -277,6 +301,7 @@ function renderRobot() {
 			: '<option value="">(none found)</option>';
 	}
 	if (document.activeElement !== sel) sel.value = B.robotClass && robots.some((r) => r.name === B.robotClass) ? B.robotClass : '';
+	fillLists();
 	const info = robotInfo();
 	const [L, W] = robotLW();
 	$('bRobotText').textContent = info
@@ -428,7 +453,7 @@ function tapAt(x, y) {
 			const near = P.project(view.m, x, y);
 			if (near.off > 12) return;
 			change(() => {
-				const a = { kind: near.in > view.m.total / 2 ? 'inchesLeft' : 'inchesDone', value: 0, ...NEW_ACTION };
+				const a = { kind: near.in > view.m.total / 2 ? 'inchesLeft' : 'inchesDone', value: 0, ...newAlong() };
 				setPlace(a, near.in, view.m);
 				st.actions.push(a);
 				B.selAction = st.actions.length - 1;
@@ -666,14 +691,15 @@ const NEW = {
 	turn: () => ({ kind: 'turn', label: 'Turn', deg: 90, power: 0.5 }),
 	turnTo: () => ({ kind: 'turnTo', label: 'Square up', heading: 0, power: 0.5 }),
 	wait: () => ({ kind: 'wait', label: 'Wait', sec: 1 }),
-	run: () => ({ kind: 'run', label: 'Hold the piece', code: 'robot.claw::close' }),
-	action: () => ({ kind: 'action', code: 'Actions.scoreHigh(robot)', timeout: 5 }),
+	run: () => { const code = commandsNow()[0] || ''; return { kind: 'run', label: code ? labelFor(code) : 'Start something', code }; },
+	action: () => ({ kind: 'action', code: actionsNow()[0] || '', timeout: ACTION_LIMIT_SEC }),
 	park: () => ({ kind: 'park', sec: 3 }),
 };
 for (const b of $('bAdd').querySelectorAll('[data-add]')) {
 	b.onclick = () => change(() => {
 		const steps = B.steps.plan.steps;
-		const i = B.sel != null ? B.sel + 1 : steps.length;
+		// at the end, or after the selected step when "insert" is ticked
+		const i = B.insert && B.sel != null ? B.sel + 1 : steps.length;
 		steps.splice(i, 0, NEW[b.dataset.add]());
 		B.sel = i;
 	});
@@ -696,9 +722,9 @@ function stepForm(s, i) {
 		case 'turn': return `<div class="row">${name('Face the goal')}</div><div class="row"><label>by <input type="number" step="5" data-k="deg" value="${fmt(+s.deg)}"> deg</label>${power}</div><p class="muted">+ left, - right. Ends facing ${fmt(e.h)}.</p>`;
 		case 'turnTo': return `<div class="row">${name('Square up')}</div><div class="row"><label>to <input type="number" step="5" data-k="heading" value="${fmt(+s.heading)}"> deg</label>${power}</div><p class="muted">0 = the start heading. Ends facing ${fmt(e.h)} on the field.</p>`;
 		case 'wait': return `<div class="row">${name('Let it settle')}<label><input type="number" min="0" step="0.1" data-k="sec" value="${fmt(+s.sec)}"> s</label></div>`;
-		case 'run': return `<div class="row">${name('Hold the piece')}</div><div class="row">${code('robot.claw::close')}</div>`;
+		case 'run': return `<div class="row">${name(labelFor(commandsNow()[0]))}</div><div class="row">${code(commandsNow()[0] || 'robot.part::method')}</div>`;
 		case 'action': case 'alongside':
-			return `<div class="row">${code('Actions.scoreHigh(robot)')}</div><div class="row"><label><input type="checkbox" data-k="wait"${s.kind === 'action' ? ' checked' : ''}> wait until done</label>
+			return `<div class="row">${code(actionsNow()[0] || 'Actions.name(robot)')}</div><div class="row"><label><input type="checkbox" data-k="wait"${s.kind === 'action' ? ' checked' : ''}> wait until done</label>
 				${s.kind === 'action' ? `<label>at most <input type="number" min="0.5" step="0.5" data-k="timeout" value="${fmt(+s.timeout)}"> s</label>` : ''}</div>`;
 		case 'park': return `<div class="row"><label>Keep the last <input type="number" min="0.5" step="0.5" data-k="sec" value="${fmt(+s.sec)}"> s for the steps below</label></div>`;
 		default: return '';
@@ -714,6 +740,7 @@ function renderSteps() {
 	box.innerHTML = steps.length ? '' : '<p class="muted">No steps yet. Tap the map, or press a button above.</p>';
 	const tank = B.steps.plan.drive === 'tank';
 	$('bAddStrafe').hidden = tank;
+	$('bInsert').checked = !!B.insert;
 	steps.forEach((s, i) => {
 		const e = view.sim.ends[i];
 		const div = document.createElement('div');
@@ -753,7 +780,7 @@ function stepInput(i, t) {
 		const s = B.steps.plan.steps[i];
 		B.sel = i;
 		if (k === 'dirSel') { if (t.value !== 'other') s.dir = +t.value; else if (DIRS.some(([d]) => d === +s.dir)) s.dir = 45; }
-		else if (k === 'wait') { if (t.checked) { s.kind = 'action'; s.timeout = s.timeout ?? 5; } else s.kind = 'alongside'; }
+		else if (k === 'wait') { if (t.checked) { s.kind = 'action'; s.timeout = s.timeout ?? ACTION_LIMIT_SEC; } else s.kind = 'alongside'; }
 		else if (k === 'label' || k === 'code') s[k] = t.value;
 		else if (Number.isFinite(v)) s[k] = v;   // out of range stays: the checks say what is wrong
 	});
@@ -872,8 +899,8 @@ function actInput(i, t) {
 			if (a.kind === 'near') { a.x = snap(place.x); a.y = snap(place.y); a.value = 6; } else { delete a.x; delete a.y; setPlace(a, place.in, m); }
 		} else if (k === 'what') {
 			a.what = t.value;
-			if (a.what === 'action' && !/^Actions\./.test(a.code)) a.code = 'Actions.scoreHigh(robot)';
-			if (a.what === 'command' && /^Actions\./.test(a.code)) a.code = NEW_ACTION.code;
+			if (a.what === 'action' && !/^Actions\./.test(a.code)) a.code = actionsNow()[0] || '';
+			if (a.what === 'command' && /^Actions\./.test(a.code)) a.code = newAlong().code;
 		} else if (k === 'label' || k === 'code') a[k] = t.value;
 		else if (Number.isFinite(v)) a[k] = v;
 	});
@@ -881,11 +908,12 @@ function actInput(i, t) {
 
 $('bClear').onclick = () => change(() => { B.steps.plan.steps = []; B.sel = null; });
 $('bExample').onclick = () => change(() => { B.steps.plan = structuredClone(STEPS_EXAMPLE); B.sel = null; });
+$('bInsert').onchange = () => { B.insert = $('bInsert').checked; save(); };
 $('bPClear').onclick = () => change(() => { B.pedro.path.parts = []; B.pedro.path.holdSec = 0; B.pedro.actions = []; B.selPart = 0; });
 $('bPExample').onclick = () => change(() => { Object.assign(B.pedro, structuredClone(PEDRO_EXAMPLE)); B.selPart = 1; });
 $('bAddAct').onclick = () => change(() => {
 	const st = B.pedro;
-	st.actions.push({ kind: 'fraction', value: 0.5, ...NEW_ACTION });
+	st.actions.push({ kind: 'fraction', value: 0.5, ...newAlong() });
 	B.selAction = st.actions.length - 1;
 });
 for (const r of document.querySelectorAll('input[name=bPMode]')) r.onchange = () => change(() => { B.pedro.mode = r.value; });
@@ -919,6 +947,9 @@ $('bRun').onclick = async () => {
 	const info = robotInfo();
 	const program = C.toProgram(B, info ? info.name : '');
 	runError = '';
+	// a new run: the last run's table and fixes go (they were for the run before)
+	lastRun = null;
+	$('bResult').innerHTML = ''; $('bResult').dataset.key = '';
 	$('bRunText').textContent = 'Sending the plan...';
 	preview = null; $('bPreview').textContent = 'Preview';
 	try {
@@ -927,7 +958,7 @@ $('bRun').onclick = async () => {
 		const b = structuredClone(B);
 		lastRun = { b, tl: C.timeline(b, b.steps.speeds), id: ((sim && sim.built && sim.built.id) || 0) + 1, robotClass: r.robotClass, sent: performance.now() };
 		page.command({ action: 'clearPaths' });
-		$('bRunText').textContent = `INIT with ${r.robotClass}, as ${B.alliance}: START comes once the robot is on its spot.`;
+		$('bRunText').textContent = `INIT with ${r.robotClass}, as ${B.alliance}: the field and the preload are reset, and START comes once the robot is on its spot.`;
 	} catch (e) {
 		$('bRunText').textContent = 'The simulator did not answer.';
 	}
@@ -1013,8 +1044,8 @@ function renderNames() {
 		: '<label>OpMode <input type="text" id="bOpmode"></label><label>TeleOp next <input type="text" id="bTeleop"></label><label>package <input type="text" id="bPkg"></label>';
 	$('bOpmode').oninput = () => { if (B.mode === 'pedro') B.pedro.opmode = $('bOpmode').value; else B.steps.plan.opmode = $('bOpmode').value; renderCode(); };
 	if ($('bTeleop')) {
-		$('bTeleop').oninput = () => { B.steps.plan.teleop = $('bTeleop').value; renderCode(); };
-		$('bPkg').oninput = () => { B.steps.plan.pkg = $('bPkg').value.trim(); renderCode(); };
+		$('bTeleop').oninput = () => { B.steps.plan.teleop = $('bTeleop').value; B.steps.plan.teleopAuto = false; renderCode(); };
+		$('bPkg').oninput = () => { B.steps.plan.pkg = $('bPkg').value.trim(); B.steps.plan.pkgAuto = false; renderCode(); };
 	}
 }
 
@@ -1039,7 +1070,8 @@ function scenarioNow() {
 	const s = B.mode === 'pedro' ? B.pedro : B.steps;
 	let text = B.mode === 'pedro'
 		? C.pedroScenario(B.pedro, { tolIn: s.tolIn, tolDeg: s.tolDeg, fileName: simFileName() })
-		: S.toScenario(B.steps.plan, { tolIn: s.tolIn, tolDeg: s.tolDeg, fileName: simFileName(), speeds: B.steps.speeds });
+		: S.toScenario(B.steps.plan, { tolIn: s.tolIn, tolDeg: s.tolDeg, fileName: simFileName(), speeds: B.steps.speeds,
+			madeBy: 'the simulator\'s auto builder', half, robot: robotLW() });
 	const rec = recordedEnd();
 	if (s.recorded && rec) text = C.recordedScenario(text, rec, mirrorNow(), new Date().toISOString().slice(0, 10));
 	return text;
@@ -1051,7 +1083,16 @@ function recordedEnd() {
 	if (!lastRun || !b || b.id !== lastRun.id || b.phase !== 'done' || !b.end) return null;
 	const same = B.mode === lastRun.b.mode && JSON.stringify(B.mode === 'pedro' ? B.pedro.path : B.steps.plan.steps) === JSON.stringify(lastRun.b.mode === 'pedro' ? lastRun.b.pedro.path : lastRun.b.steps.plan.steps);
 	if (!same) return null;
+	// only a run where every step was done: a STALLED or cut-short run is not the plan's end
+	if (!runAllDone(b)) return null;
 	return C.fieldToPlan({ x: b.end[0], y: b.end[1], h: b.end[2] }, b.alliance || 'RED', mirrorOf(lastRun.b));
+}
+
+// True when the last run reported every step of its plan as done.
+function runAllDone(b) {
+	if (!lastRun || !b) return false;
+	const rows = C.compare(lastRun.b, b, lastRun.tl);
+	return rows.length > 0 && rows.every((r) => /^done/.test(r.word || ''));
 }
 
 function renderCode() {
@@ -1064,7 +1105,10 @@ function renderCode() {
 	setVal('bTolIn', s.tolIn); setVal('bTolDeg', s.tolDeg);
 	$('bRecorded').checked = !!s.recorded;
 	$('bRecorded').disabled = !recordedEnd();
-	$('bRecorded').parentElement.title = recordedEnd() ? 'The scenario checks the end the last run really reached' : 'Run this plan first (it must finish)';
+	const recWhy = recordedEnd() ? '' : (lastRun && sim && sim.built && sim.built.id === lastRun.id && sim.built.phase === 'done'
+		? ' (not now: the last run did not do every step)' : ' (run this plan first; every step must be done)');
+	$('bRecorded').parentElement.title = recordedEnd() ? 'The scenario checks the end the last run really reached' : 'Run this plan first: every step must be done (a run is forgotten when the page reloads)';
+	$('bRecWhy').textContent = recWhy;
 	$('bCode').textContent = javaNow();
 	$('bSim').textContent = scenarioNow();
 }
@@ -1091,9 +1135,17 @@ $('bSaveSim').onclick = () => {
 	setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 };
 
-// Names teams often use, for the code boxes' suggestions (their own names go here too).
-document.body.insertAdjacentHTML('beforeend', `<datalist id="bCommands">${S.COMMON_COMMANDS.map((c) => `<option value="${esc(c)}">`).join('')}</datalist>`
-	+ `<datalist id="bActionList">${S.COMMON_ACTIONS.map((c) => `<option value="${esc(c)}">`).join('')}</datalist>`);
+// The code boxes' suggestions: the chosen Robot code's own commands and actions.
+document.body.insertAdjacentHTML('beforeend', '<datalist id="bCommands"></datalist><datalist id="bActionList"></datalist>');
+function fillLists() {
+	const c = commandsNow(), a = actionsNow();
+	const key = c.join('|') + '#' + a.join('|');
+	const list = $('bCommands');
+	if (!list || list.dataset.key === key) return;
+	list.dataset.key = key;
+	list.innerHTML = c.map((x) => `<option value="${esc(x)}">`).join('');
+	$('bActionList').innerHTML = a.map((x) => `<option value="${esc(x)}">`).join('');
+}
 
 // ------------------------------------------------------------------ 3D: the plan line, the points, the plan robot
 

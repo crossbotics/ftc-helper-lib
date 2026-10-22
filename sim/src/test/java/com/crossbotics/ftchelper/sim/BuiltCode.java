@@ -61,16 +61,40 @@ final class BuiltCode {
                 + "Write anything else as a method in Robot.java or Actions.java and name that here");
     }
 
-    /** An action from its text, for {@code action}, {@code alongside} and {@code PathAt} with an action. */
+    /**
+     * An action from its text, for {@code action}, {@code alongside} and {@code PathAt} with an action. The
+     * method is found and its return type checked BEFORE it is called: a method that is not an Action
+     * maker (a command like {@code robot.claw.open()}) is refused without running it.
+     */
     static Action action(String code, RobotDefinition robot) {
-        String c = clean(code);
-        Call call = parseCall(c, robot, c, true);
+        Call call = actionCall(code, robot);
         Object made = call.invoke();
         if (!(made instanceof Action)) {
-            throw new IllegalArgumentException(c + ": " + call.method.getName() + " does not give an Action (it gives "
-                    + (made == null ? "nothing" : made.getClass().getSimpleName()) + ")");
+            throw new IllegalArgumentException(call.code + ": " + call.method.getName() + " gave nothing (null), not an Action");
         }
         return (Action) made;
+    }
+
+    /** Checks an action's text (the method, its values, that it gives an Action) without calling anything. */
+    static void checkAction(String code, RobotDefinition robot) {
+        actionCall(code, robot);
+    }
+
+    /** Checks a command's text (the method and its values) without calling anything. */
+    static void checkCommand(String code, RobotDefinition robot) {
+        command(code, robot);   // only finds the method: the Runnable it gives is not run here
+    }
+
+    private static Call actionCall(String code, RobotDefinition robot) {
+        String c = clean(code);
+        Call call = parseCall(c, robot, c, true);
+        if (!Action.class.isAssignableFrom(call.method.getReturnType())) {
+            Class<?> r = call.method.getReturnType();
+            throw new IllegalArgumentException(c + ": " + call.method.getName() + " does not give an Action (it gives "
+                    + (r == void.class ? "nothing" : r.getSimpleName()) + "). A method that does something at once is a "
+                    + "command: use it in a \"run\" step");
+        }
+        return call;
     }
 
     // ----------------------------- reading the text -----------------------------

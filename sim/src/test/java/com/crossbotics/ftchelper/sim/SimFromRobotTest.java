@@ -890,9 +890,11 @@ public class SimFromRobotTest {
         com.crossbotics.ftchelper.match.MatchMemory.clear();
         try (SimRun s = new SimRun(file.toString())) {
             s.init("FlywheelBot TeleOp");                          // no autonomous: nothing chosen yet
-            SimRun.pause(0.5);
-            assertEquals("it stays at the robot file's start until the alliance is chosen", -61.55, s.robot().y, 0.01);
-            s.press(v -> s.g1().x = v);                          // BLUE: the same spot from the blue wall
+            // "Alliance : BLUE until you choose": the robot stands on BLUE's spot, and the page looks from there
+            assertTrue("on BLUE's spot until the alliance is chosen", SimRun.waitFor(() -> Math.abs(s.robot().y - 61.55) < 0.01
+                    && Math.abs(s.robot().x - 56) < 0.01, 2));
+            assertEquals(com.crossbotics.ftchelper.match.Alliance.BLUE, SimEngine.allianceUntilChosen(s.sim.ds));   // what the page shows
+            s.press(v -> s.g1().x = v);                          // BLUE chosen: it stays
             assertTrue(SimRun.waitFor(() -> Math.abs(s.robot().y - 61.55) < 0.01 && Math.abs(s.robot().x - 56) < 0.01, 2));
             s.press(v -> s.g1().b = v);                          // RED: the robot file's start
             assertTrue(SimRun.waitFor(() -> Math.abs(s.robot().y + 61.55) < 0.01, 2));

@@ -130,6 +130,7 @@ final class SimEngine {
             // drivers choose the alliance in INIT, that alliance's default spot.
             if (com.crossbotics.ftchelper.match.MatchMemory.hasAlliance()) return;
             com.crossbotics.ftchelper.match.Alliance a = com.crossbotics.ftchelper.match.MatchMemory.chosen();
+            if (a == null) a = allianceUntilChosen(ds);
             if (a == null) return;
             target = defaultSpot(a);
         }
@@ -142,6 +143,19 @@ final class SimEngine {
         } catch (IllegalArgumentException e) {
             ds.physicsError("Start spot: " + e.getMessage() + " (" + target + ")");
         }
+    }
+
+    /**
+     * The alliance a TeleOp works with in INIT before the drivers choose one: the library's TeleOp says
+     * "Alliance : BLUE until you choose", so the robot stands on BLUE's spot and the page looks from the
+     * blue wall until then (all three agree). Null when an alliance is known or it is not such a TeleOp.
+     */
+    static com.crossbotics.ftchelper.match.Alliance allianceUntilChosen(SimDriverStation ds) {
+        SimDriverStation.Entry e = ds.current();
+        if (e == null || ds.phase() != SimDriverStation.Phase.INIT || !"TeleOp".equals(e.kind)) return null;
+        if (!com.crossbotics.ftchelper.teleop.EasyTeleOp.class.isAssignableFrom(e.type)) return null;
+        if (com.crossbotics.ftchelper.match.MatchMemory.hasAlliance() || com.crossbotics.ftchelper.match.MatchMemory.chosen() != null) return null;
+        return com.crossbotics.ftchelper.match.Alliance.BLUE;
     }
 
     /**

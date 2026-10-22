@@ -435,8 +435,9 @@ export function toJava(plan) {
 		'        return false;   // BIOBUZZ\'s field is turned half a turn between the alliances',
 		'    }'];
 	const file = [`package ${base}.autos;`, '', ...imports, '',
-		'// preselectTeleOp: your TeleOp\'s name, exactly as in @TeleOp(name = ...) in Controls.java',
-		`@Autonomous(name = ${javaString(name)}, group = ${javaString(plan.group || 'Autos')}, preselectTeleOp = ${javaString(plan.teleop || 'Quick Start TeleOp')})`,
+		plan.teleop ? '// preselectTeleOp: your TeleOp\'s name, exactly as in @TeleOp(name = ...) in Controls.java'
+			: '// Add preselectTeleOp = "your TeleOp\'s name" (as in @TeleOp(name = ...) in Controls.java) to choose it after this auto',
+		`@Autonomous(name = ${javaString(name)}, group = ${javaString(plan.group || 'Autos')}${plan.teleop ? `, preselectTeleOp = ${javaString(plan.teleop)}` : ''})`,
 		`public class ${cls} extends Auto<Robot> {`,
 		...mirror,
 		'',
@@ -454,9 +455,13 @@ const simString = (s) => '"' + String(s).replace(/"/g, "'") + '"';
 
 /**
  * A scenario file (.sim) for FTC-Helper-Lib's simulator: INIT the autonomous as RED (the simulator's
- * field numbers are seen from the red wall), START, wait for the end, and check the robot ends within
- * tolIn inches (and tolDeg degrees) of the planned spot, every move and turn says "done", and no error.
- * The robot is put on the start spot only when the code gives it (start(note, x, y, heading)).
+ * field numbers are seen from the red wall), START, wait for the end, and check every step (by its number
+ * in the autonomous report: moves, turns, waits, commands and actions alike) says "done", the robot ends
+ * within tolIn inches (and tolDeg degrees) of the planned spot, and no error. The robot is put on the
+ * start spot only when the code gives it (start(note, x, y, heading)). A plan that leaves the field gets
+ * no end checks (the real robot stops at the wall): a comment says so.
+ * opts: tolIn, tolDeg, fileName, speeds, madeBy (who made it, for the first lines), half (the inside wall
+ * size / 2) and robot ([length, width] in inches), for the leaves-the-field test.
  */
 export function toScenario(plan, opts = {}) {
 	const tolIn = opts.tolIn ?? 4, tolDeg = opts.tolDeg ?? 10;
@@ -467,7 +472,7 @@ export function toScenario(plan, opts = {}) {
 	const r1 = (v) => num(Math.round(v * 10) / 10);
 	const out = [
 		`# ${plan.opmode || 'My Auto'}: does the robot end where the plan says?`,
-		'# Made by the crossbotics.com path builder (Simple steps). The plan is dead reckoning, so a',
+		`# Made by ${opts.madeBy || 'the crossbotics.com path builder'} (Simple steps). The plan is dead reckoning, so a`,
 		`# real robot (and the simulator's) ends near it, not on it: within ${num(tolIn)} in and ${num(tolDeg)} degrees here.`,
 		`# Save it as simulator/scenarios/${file} in your robot project, then from the ftc-helper-lib folder:`,
 		`#   ./gradlew :sim:scenario -Pfile=../simulator/scenarios/${file}`,
@@ -488,17 +493,27 @@ export function toScenario(plan, opts = {}) {
 		out.push(`set pose ${r1(plan.mirror ? -plan.start.x : plan.start.x)} ${r1(plan.start.y)} ${r1(sh)}   # the code gives no spot: put the robot there`);
 	}
 	out.push('start', `expect within ${AUTO_SEC + 2} screen has "Autonomous finished"`);
-	const seen = new Set();
+	// Every step but "park" has a line in the report, in order: check each by its number.
+	let n = 0;
 	for (const s of plan.steps || []) {
-		if (!['move', 'turn', 'turnTo', 'wait', 'run'].includes(s.kind)) continue;
-		const label = String(s.label ?? '').trim();
-		if (!label || /["#]/.test(label) || seen.has(label)) continue;
-		seen.add(label);
-		out.push(`expect screen has ${simString(label + ': done')}`);
+		if (s.kind === 'park') continue;
+		n++;
+		const what = String(stepName(s)).replace(/[\r\n#]/g, ' ').trim();
+		// (the first waits a moment: the report is kept just after "Autonomous finished" shows)
+		out.push(`expect ${n === 1 ? 'within 2 ' : ''}step ${n} done`.padEnd(39) + '# ' + what);
 	}
-	out.push(`expect robot x = ${r1(e.x)} ${num(tolIn)}`, `expect robot y = ${r1(e.y)} ${num(tolIn)}`);
-	if (Math.abs(e.h) <= 180 - tolDeg - 5) out.push(`expect robot heading = ${r1(e.h)} ${num(tolDeg)}`);
-	else out.push(`# heading: about ${r1(e.h)} (near 180, where the number jumps to -180): check it on the map`);
+	// Off the field (dead reckoning through a wall): the real robot stops at the wall, so no end to check.
+	const half = opts.half ?? 70.585, rb = opts.robot || [18, 18];
+	// (the start spot counts as inside: a robot smaller than 18 in starts nearer the wall)
+	const inside = Math.max(half - Math.min(rb[0], rb[1]) / 2, Math.abs(+plan.start.x || 0), Math.abs(+plan.start.y || 0));
+	const off = sim.ends.some((p) => Math.abs(p.x) > inside + 1e-6 || Math.abs(p.y) > inside + 1e-6);
+	if (off) {
+		out.push('# No end checks: the plan drives the robot off the field (see the builder\'s checks). Fix the plan first.');
+	} else {
+		out.push(`expect robot x = ${r1(e.x)} ${num(tolIn)}`, `expect robot y = ${r1(e.y)} ${num(tolIn)}`);
+		if (Math.abs(e.h) <= 180 - tolDeg - 5) out.push(`expect robot heading = ${r1(e.h)} ${num(tolDeg)}`);
+		else out.push(`# heading: about ${r1(e.h)} (near 180, where the number jumps to -180): check it on the map`);
+	}
 	out.push('expect error none', '');
 	return out.join('\n');
 }

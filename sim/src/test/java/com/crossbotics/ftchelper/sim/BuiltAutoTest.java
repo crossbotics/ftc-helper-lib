@@ -191,6 +191,60 @@ public class BuiltAutoTest {
         }
     }
 
+    /** A robot with a method that does something at once (a command), to check it is never called as an action. */
+    public static class CountingRobot extends com.crossbotics.ftchelper.examples.gobildabot.Robot {
+        static int calls = 0;
+
+        public void sideEffect() {
+            calls++;
+        }
+
+        public Object notAnAction() {
+            calls++;
+            return "x";
+        }
+    }
+
+    // A plan that names a command where an action goes is refused BEFORE anything runs: the return type is
+    // checked first, and every step of the plan is checked before the first is built.
+    @Test public void aCommandNamedAsAnActionIsNeverCalled() throws Exception {
+        CountingRobot robot = new CountingRobot();
+        CountingRobot.calls = 0;
+        for (String code : new String[] {"robot.sideEffect()", "robot.notAnAction()"}) {
+            try {
+                BuiltCode.action(code, robot);
+                fail("read as an action: " + code);
+            } catch (IllegalArgumentException e) {
+                assertTrue(e.getMessage(), e.getMessage().contains("does not give an Action"));
+            }
+        }
+        assertEquals("never called", 0, CountingRobot.calls);
+        BuiltAuto.Program p = BuiltAuto.Program.parse("{\"name\":\"x\",\"start\":{\"x\":-56,\"y\":-60,\"h\":0},\"steps\":["
+                + "{\"kind\":\"run\",\"label\":\"Intake\",\"code\":\"robot.intake::in\"},"
+                + "{\"kind\":\"alongside\",\"label\":\"Oops\",\"code\":\"robot.sideEffect()\"}]}");
+        try {
+            p.check(robot);
+            fail("the plan was accepted");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("step 2 (\"Oops\")"));
+        }
+        assertEquals("still never called", 0, CountingRobot.calls);
+    }
+
+    // The builder's suggestions come from the chosen Robot class: its parts' commands, its Actions, its TeleOp.
+    @Test public void theSuggestionsComeFromTheRobotClass() throws Exception {
+        try (SimRun s = new SimRun("robots/starter-bot-gobilda.properties")) {
+            String info = BuiltAuto.codeInfo(com.crossbotics.ftchelper.examples.gobildabot.Robot.class, s.sim.ds.opModes);
+            assertTrue(info, info.contains("\"robot.intake::in\"") && info.contains("\"robot.launcher::spinUp\""));
+            assertTrue(info, info.contains("\"Actions.fireAll(robot)\"") && info.contains("\"Actions.fireAllWithIntake(robot)\""));
+            assertTrue(info, !info.contains("scoreHigh") && !info.contains("claw") && !info.contains("::update\""));
+            assertTrue(info, info.contains("\"teleop\":\"goBILDA Bot TeleOp\""));
+            // the OpMode list says how well each OpMode's Robot class fits the robot file
+            String list = SimView.opModes(s.sim.ds);
+            assertTrue(list, list.contains("\"name\":\"goBILDA Bot TeleOp\",\"group\":\"Examples\",\"kind\":\"TeleOp\",\"disabled\":true,\"fit\":"));
+        }
+    }
+
     // BuiltRun reads the routine's report while it runs: EasyAuto still has its private "routine" field.
     @Test public void theReportCanBeReadWhileItRuns() throws Exception {
         assertNotNull(com.crossbotics.ftchelper.auto.EasyAuto.class.getDeclaredField("routine"));
