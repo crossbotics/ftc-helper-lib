@@ -1,4 +1,4 @@
-# Tutorial 19: Testing procedures
+# Check the hardware (lesson 2b, also tutorial 19)
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues).
 

@@ -4,7 +4,7 @@
 
 Package: `com.crossbotics.ftchelper.testing`
 
-Learn it hands-on: [19 Testing procedures](../tutorials/19-testing-procedures.md). Full guide: [Testing procedures](../guides/testing.md).
+Learn it hands-on: [Check the hardware (lesson 2b, tutorial 19)](../tutorials/19-testing-procedures.md). Full guide: [Testing procedures](../guides/testing.md).
 
 Checks that every motor, servo and sensor is wired and named right, before you write robot code.
 Run it on a new robot, after rewiring, and whenever a part acts strangely. It needs no code from

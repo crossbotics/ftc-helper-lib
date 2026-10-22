@@ -135,4 +135,4 @@ shot from the table (tutorial 17); check `target.hasDistance()` first.
 
 ## Next
 
-[Tutorial 19: Testing procedures](19-testing-procedures.md)
+[Check the hardware (lesson 2b, tutorial 19)](19-testing-procedures.md)
