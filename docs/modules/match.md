@@ -112,8 +112,8 @@ FieldPose spot = MatchMemory.placement();            //   simulator puts the rob
 FieldPose p = MatchMemory.fieldPose(Alliance.BLUE, 56, -61.55, 0);   // a spot seen from that alliance's wall
 MatchMemory.setChosen(Alliance.RED);                 // the alliance in use now (EasyAuto/EasyTeleOp do it);
 Alliance now = MatchMemory.chosen();                 //   the simulator turns its drivers' view to it
-MatchMemory.changeAlliance(Alliance.RED);            // TeleOp's "switch alliance": chosen() and autonomous's
-                                                     //   remembered one (if from this match) become RED
+MatchMemory.changeAlliance(Alliance.RED);            // TeleOp's "switch alliance" (opt-in: lib.switchAlliance(...)):
+                                                     //   chosen() and autonomous's remembered one (if from this match) become RED
 ```
 
 Lets ONE TeleOp serve both alliances. The memory lasts until the app restarts and is ignored

@@ -15,13 +15,22 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   is free for teams); `DriverControls.swapSticks(boolean)`; `EasyTeleOp.driveSpeed()`, `showNote(text)`,
   `switchAlliance()`, `allianceChanged(now)`, `setPoseJob()`, `libraryKeys()`, `libraryJobs(...)`,
   `keyWords(job)`, `standardLibraryButtons()`. With the library's slow freed, `slow()` works with two drivers.
-- **Set pose here:** on a robot with odometry, park on the reset spot and hold gamepad 1 START 1 s: the
-  pose becomes `Tunables.Odometry.resetX, resetY, resetHeading` (written for BLUE; RED mirrored like the
-  start spot, unless `Tunables.Odometry.mirrorForRed = false`). Two buzzes and `Pose set: ...`; INIT
-  shows the button and the spot. From code or an action: `robot.resetPose()`, `robot.resetPose(x, y, heading)`.
-- **Switch the alliance during TeleOp:** hold gamepad 1 BACK + START together 1.5 s. Both gamepads
+- **Set pose here:** on a robot with odometry, park on the reset spot, let go of the drive sticks and
+  hold gamepad 1 START 1 s, in INIT (before the match) or during it: the pose becomes
+  `Tunables.Odometry.resetX, resetY, resetHeading` (written for BLUE; RED mirrored like the start spot,
+  unless `Tunables.Odometry.mirrorForRed = false`). Two buzzes and `Pose set: ...`; while driving or with
+  whole-robot aim on: `Pose NOT set: stop first`. START + A/B (pairing a gamepad) never sets it. INIT
+  shows the button, the spot and the mirroring used (`Reset spot for RED: ...`). From code or an
+  action: `robot.resetPose()`, `robot.resetPose(x, y, heading)`. `PoseTracker.unsetPose()`.
+- **Switch the alliance during TeleOp (optional, off by default):** `lib.switchAlliance(g1.back, g1.start)`
+  in `libraryButtons` turns it on; then holding BACK + START together 1.5 s switches. Both gamepads
   buzz twice, the screen says `Alliance now RED (was BLUE)`, and the camera's goal, the aim's goal point,
-  `robot.alliance()` and `MatchMemory` (`changeAlliance(a)`) follow.
+  `robot.alliance()` and `MatchMemory` (`changeAlliance(a)`) follow. The odometry pose follows too: on a
+  mirrored field it is mirrored in place (x and heading flip); on a turned field (`mirrorForRed = false`,
+  BIOBUZZ) it counts as not set, so the odometry aim is off until "set pose here" (the note says so).
+  INIT's `Switch alliance` line says whether it is on.
+- **INIT says when a library job has no button:** `No pause button` (warning), `No slow button`
+  (warning, `Controls.java`), `No field-centric button` (a line).
 - **Launcher speed trim that works with shot tables.** `robot.launcher.trimPercent(+2)` makes every shot
   speed (the table's or `speedRpm`) 2% faster; `setTrim(percent)`, `resetTrim()`, `speedTrim()`. Kept to
   +/- `Tunables.Launcher.trimMaxPercent` (15), the same for every table, 0 at every INIT, shown as
@@ -122,6 +131,15 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Changed
 
+- **Pause acts at the press of BACK** (it was at the release, because BACK also has "hold: reset
+  forward"): a panicking driver holding BACK gets the stop at once. Held 1 s it also resets "forward"
+  (field-centric) and stays paused; a tap goes on (going on is always at the release, so holding BACK
+  never starts the robot). If START joins (BACK + START, the debug lines), the pause is taken back.
+  `EasyTeleOp.pauseState()` (Controls.java gives it) turns this on.
+- A pair's quick job (BACK + START: debug lines) always runs when the buttons are let go.
+- The examples' `Tunables.Odometry` say `mirrorForRed = false` (BIOBUZZ's turned field); the whole-robot
+  aim recipe holds to aim (`g1.rb.hold(robot.aimMode()::on, robot.aimMode()::off)`), with the toggle second.
+
 - With the alliance switch on START + BACK, the debug lines toggle when the pair is let go (not at the
   press). GUIDE is on the button map (`G1 GUIDE: button map; hold 1 s: tuning menu [library]`), and the
   BACK and START lines list every library job on them.
@@ -155,6 +173,10 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   (`setHeading`), so it does not count as setting the pose.
 
 ### Fixed
+
+- After an alliance switch in TeleOp, the odometry pose stayed in the old alliance's numbers, so the
+  odometry aim pointed at a mirrored spot and field-centric "forward" was wrong (see Added).
+- With two drivers, `lib.slow(null)` then `g2.rt.slow()` read gamepad 1's RT: it reads gamepad 2's now.
 
 - `PedroFollower`: on a path that comes back along the same line (out 24 in, then back), the progress
   followed the outbound leg back to 0, so `PathAt` things on the return leg fired late or never. Where

@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 /**
  * Quick start, file 3 of 5: the buttons, and the TeleOp. Gamepad 1 drives (left stick, right stick X
  * turns, LT slow); the intake's buttons are on gamepad 2 (RT in, LT out). INIT shows the whole map;
- * a tap of GUIDE shows it during the match; a tap of BACK pauses everything (again: go on).
+ * a tap of GUIDE shows it during the match; a press of BACK pauses everything (a tap again: go on).
  */
 // STEP 7: the name on the Driver Station (if you change it, change preselectTeleOp in
 //         autos/FirstAuto.java to the same name). In your TeamCode, delete the @Disabled line and

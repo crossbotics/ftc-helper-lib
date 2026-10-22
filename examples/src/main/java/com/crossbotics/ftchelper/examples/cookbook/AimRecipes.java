@@ -214,10 +214,14 @@ public class AimRecipes {
         @Override
         protected void buttons(WholeRobot robot, Pad g1, Pad g2) {
             // recipe: aim-whole-robot
-            // RB: the robot turns to face the goal by itself; the driver keeps forward and sideways.
-            // Moving the turn stick still turns it by hand. Two buzzes = on, one = off.
-            // Not with a turret that follows the goal: separate modes (INIT stops with a message).
-            g1.rb.toggle(robot.aimMode()).says("aim the robot at the goal on/off").rumble();
+            // Hold RB: the robot turns to face the goal by itself; the driver keeps forward and
+            // sideways. Let go: the aim is off, the driver turns again. Moving the turn stick while
+            // holding still turns it by hand. Not with a turret that follows the goal: separate
+            // modes (INIT stops with a message).
+            g1.rb.hold(robot.aimMode()::on, robot.aimMode()::off).says("hold: aim the robot at the goal");
+            // Or a toggle (a press on, a press again off; two buzzes = on). Careful: while it is on,
+            // the robot turns by itself, even after you let go of the button.
+            // g1.rb.toggle(robot.aimMode()).says("aim the robot at the goal on/off").rumble();
             // end recipe
             g2.rumbleWhenAimed();
         }

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 import java.util.function.LongSupplier;
 
 /**
@@ -18,10 +19,16 @@ import java.util.function.LongSupplier;
  *   <li>A quick job and a long job: the quick one runs when it is let go before the hold time; the
  *       long one runs once at the hold time.</li>
  *   <li>A pair (two buttons together): when both are down, each button's own job is cancelled for
- *       that press (it waits until let go). A pair with only a quick job runs when the second one is
- *       pressed.</li>
+ *       that press (it waits until let go). A pair's quick job runs when the buttons are let go
+ *       (always, so it works the same with or without a long job on the pair).</li>
  *   <li>START held: cancelled while A or B is down on the same gamepad (START + A/B pairs a gamepad on
  *       the Driver Station).</li>
+ *   <li>Pause (when {@link #pauseAtPress} is given): a press of the pause button stops the robot AT
+ *       ONCE, even when the button also has a long job or is in a pair (a panicking driver holding it
+ *       must get the stop). Held on to the long job's time, the long job runs too and the robot stays
+ *       paused. If the press turns into a pair (the second button joins), the pause is taken back.
+ *       Going on again (already paused) is a tap, at the release, so holding the button never
+ *       starts the robot.</li>
  *   <li>While the tuning menu is open, only the menu's own buttons work; the others wait until let go.</li>
  * </ul>
  */
@@ -41,6 +48,8 @@ final class LibraryKeys {
         private boolean done = false;
         // Cancelled for this press (a pair took it, the menu opened, held through START): wait for let go.
         private boolean blocked = false;
+        // This press paused the robot at once (see pauseAtPress): nothing more on the release.
+        private boolean pausedHere = false;
 
         Group(LibraryButtons.Slot slot, Runnable tap, Runnable hold, boolean menu) {
             this.slot = slot;
@@ -60,6 +69,8 @@ final class LibraryKeys {
 
     private final List<Group> pairs = new ArrayList<>(), singles = new ArrayList<>();
     private final LongSupplier clock;
+    // "Is the robot paused now?", or null: then pause is an ordinary quick job (see pauseAtPress).
+    private BooleanSupplier paused = null;
 
     /**
      * @param slots the checked buttons ({@link LibraryButtons#slots})
@@ -82,7 +93,21 @@ final class LibraryKeys {
             for (Group p : pairs) if (p.uses(g.slot.key)) inPair = true;
             g.tapAtPress = g.hold == null && !inPair;
         }
-        for (Group p : pairs) p.tapAtPress = p.hold == null;
+        // A pair's quick job (debug) always runs when let go: the same whether or not the pair also
+        // has a long job (switch alliance, when the team turns it on).
+        for (Group p : pairs) p.tapAtPress = false;
+    }
+
+    /**
+     * Makes the pause job act at the PRESS of its button (see the class): {@code isPaused} tells
+     * whether the robot is paused now, so a press only pauses (going on stays a tap). Without it, a
+     * pause button that also has a long job (BACK: hold = reset forward) would pause only when let go.
+     *
+     * @param isPaused true while the robot is paused (null: the old way, the pause at the release)
+     */
+    LibraryKeys pauseAtPress(BooleanSupplier isPaused) {
+        paused = isPaused;
+        return this;
     }
 
     /** A map of jobs, for the constructor. */
@@ -118,7 +143,7 @@ final class LibraryKeys {
             if (down && !p.wasDown && !p.blocked) {
                 p.downAt = now;
                 p.done = false;
-                for (Group s : singles) if (p.uses(s.slot.key)) s.blocked = true;
+                for (Group s : singles) if (p.uses(s.slot.key)) block(s);
                 if (p.tapAtPress) {
                     p.tap.run();
                     p.done = true;
@@ -134,13 +159,17 @@ final class LibraryKeys {
                 continue;
             }
             // START + A or B pairs a gamepad on the Driver Station: not a START job.
-            if (down && s.slot.key.btn == Btn.START && pairing(s.slot.key, g1, g2)) s.blocked = true;
+            if (down && s.slot.key.btn == Btn.START && pairing(s.slot.key, g1, g2)) block(s);
             if (down && !s.wasDown && !s.blocked) {
                 s.downAt = now;
                 s.done = false;
                 if (s.tapAtPress) {
                     s.tap.run();
                     s.done = true;
+                } else if (pausesAtPress(s) && !paused.getAsBoolean()) {
+                    // SAFETY: stop now, not when the button is let go (the long job may still follow).
+                    s.tap.run();
+                    s.pausedHere = true;
                 }
             }
             step(s, down, now);
@@ -155,12 +184,28 @@ final class LibraryKeys {
             g.hold.run();
         }
         if (!down && g.wasDown) {
-            if (!g.blocked && !g.done && g.tap != null) g.tap.run();
+            if (!g.blocked && !g.done && !g.pausedHere && g.tap != null) g.tap.run();
             g.blocked = false;
             g.done = false;
+            g.pausedHere = false;
         }
         if (!down) g.blocked = false;
         g.wasDown = down;
+    }
+
+    // True for the pause button when pause acts at the press (and it is not already a press job).
+    private boolean pausesAtPress(Group g) {
+        return paused != null && g.slot.tap == LibraryButtons.Job.PAUSE && !g.tapAtPress;
+    }
+
+    // Cancels a button's own job for this press. If the press already paused the robot (the first
+    // button of a pair, pressed a moment before the second), the pause is taken back.
+    private void block(Group g) {
+        if (g.pausedHere) {
+            g.pausedHere = false;
+            if (paused.getAsBoolean()) g.tap.run();
+        }
+        g.blocked = true;
     }
 
     private static boolean pairing(Key start, Gamepad g1, Gamepad g2) {

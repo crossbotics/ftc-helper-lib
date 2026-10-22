@@ -26,7 +26,7 @@ import com.crossbotics.ftchelper.teleop.EasyTeleOp;
  *   Y              field-centric on/off     right bumper    claw open/close
  *   BACK           reset "forward"          left bumper     intake on/off
  *   GUIDE          tuning menu (practice)   B (hold)        intake reverse
- *   START + BACK together    debug telemetry on/off
+ *   BACK + START together    debug telemetry on/off
  *
  * Buzzes at 1:00 and 0:20 left (2026-27 BIOBUZZ: FLOWER ownership unlocks at 1:00; final 20 s).
  */

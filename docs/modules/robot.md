@@ -180,7 +180,7 @@ public class Tunables {
 | Launcher | `speedRpm`, `stepRpm` | | `readyBandRpm`, `idleRpm`, `shotIntervalSec`, `speedByDistance`, `kP`..`kF`, `nominalVolts`, `batteryCompensation`, `trimStepPercent`, `trimMaxPercent` |
 | Indexer | every number | | |
 | Camera | | | `pipeline`, `autoLighting`, `lightingSettleMs`, `lightingPictures`, `lightingMinPictures`, `lightingAfterStartMs`; webcam `exposureMs`, `gain` |
-| Odometry | | | `checked`, `linearScalar`, `angularScalar` (OTOS) |
+| Odometry | | | `checked`, `linearScalar`, `angularScalar` (OTOS), `resetX`, `resetY`, `resetHeading` (the "set pose here" spot), `mirrorForRed` (the spot for RED) |
 | Your own sections (`Auto`...) | every number (a TeleOp reads the field each time) | an autonomous reads them when it builds its steps (INIT) | `final` numbers, true/false, tables |
 
 ---
@@ -227,10 +227,17 @@ odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));   // in define(), 
 `Tunables.Odometry`: `checked` (set true after the Odometry Tuner; until then `driveTo` steps are
 skipped on a real robot), for an OTOS `linearScalar` and `angularScalar`, and optional
 `resetX, resetY, resetHeading`: the "set pose here" spot ([`resetPose()`](#robotdefinition); RED
-mirrors it unless `mirrorForRed = false`, as on a field turned half a turn). With it: `robot.pose()`
+mirrors it unless `mirrorForRed = false`, as on a field turned half a turn: BIOBUZZ needs `false`). With it: `robot.pose()`
 every loop, `driveTo` steps in [autonomous](#auto), and TeleOp starting where autonomous ended. The
 odometry is updated first each loop, before every part. Everything, with sketches of the offsets:
 [odometry module](odometry.md); hands-on: [lesson 7](../tutorials/start/07-odometry.md).
+
+**The three `mirrorForRed`s.** One question, "is RED's half a mirror image of BLUE's?", asked in three
+places: your autos' `mirrorForRed()` method (routes and start spots; default true), `Tunables.Aim.mirrorForRed`
+(the goal point; default true) and `Tunables.Odometry.mirrorForRed` (the reset spot). The reset spot
+falls back to `Tunables.Aim`'s when `Tunables.Odometry` has none, then to true; the other two have no
+fallback. Give all three the same answer: on BIOBUZZ's turned field, `false` in each. INIT shows the
+one used for the reset spot (`Reset spot for RED: ...`) and the aim's.
 
 ---
 
@@ -875,15 +882,16 @@ library's own buttons, below); `robot()` and `oneDriver()` read the robot and th
 @Override protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
     lib.fieldCentric(g1.x).slow(g1.rt);       // Y and LT are free for buttons(...)
     lib.setPose(g1.dpadDown);                 // hold D-pad down 1 s: set pose here
-    lib.switchAlliance(null, null);           // no alliance switch in TeleOp
+    lib.switchAlliance(g1.back, g1.start);    // optional: turn on the alliance switch in TeleOp
 }
 ```
 
 | [`LibraryButtons`](teleop.md#moving-the-librarys-buttons) | Default |
 | --- | --- |
-| `pause(key)`, `resetForward(key)` | G1 BACK (a tap pauses, held 1 s resets "forward") |
-| `debug(key, with)`, `switchAlliance(key, with)` | G1 START + BACK (together: debug lines; both held 1.5 s: switch alliance) |
-| `setPose(key)` | G1 START held 1 s (robots with odometry: [`resetPose()`](#robotdefinition)) |
+| `pause(key)`, `resetForward(key)` | G1 BACK (a press pauses at once, a tap goes on; held 1 s also resets "forward", field-centric only) |
+| `debug(key, with)` | G1 BACK + START (both pressed: debug lines, when let go) |
+| `switchAlliance(key, with)` | **off**; `switchAlliance(g1.back, g1.start)` turns it on (both held 1.5 s) |
+| `setPose(key)` | G1 START held 1 s, drive sticks let go, in INIT or the match (robots with odometry: [`resetPose()`](#robotdefinition)); START + A/B (pairing a gamepad) cancels it |
 | `slow(key)`, `slowToggle(key)` | G1 LT (one driver: left stick click, on/off) |
 | `fieldCentric(key)` | G1 Y (one driver: right stick click) |
 | `buttonMap(key)`, `tuningMenu(key)` | G1 GUIDE (a tap: the map; held 1 s: the tuning menu) |
@@ -903,9 +911,9 @@ The whole table, with how to move each: [the button menu](../guides/buttons.md#m
 | A / X / Y / B | free / free / field-centric on/off (mecanum) / free | lift lowest / second / highest / claw |
 | D-pad up/down | free | lift next height, or launcher speed |
 | D-pad left/right | free | wrist |
-| BACK | tap: **pause** everything (stopped on brake), tap again: go on; hold 1 s: "forward" = away from you now (with odometry: its heading becomes 0, x and y stay) | turret following on/off (with a turret; else free) |
+| BACK | press: **pause** everything at once (stopped on brake), a tap again: go on; held 1 s (field-centric on): also "forward" = away from you now (with odometry: its heading becomes 0, x and y stay), still paused | turret following on/off (with a turret; else free) |
 | START | hold 1 s: **set pose here** (with odometry: the pose becomes `Tunables.Odometry`'s reset spot) | free |
-| START + BACK | together: debug lines; both held 1.5 s: **switch the alliance** (BLUE / RED) | |
+| BACK + START | together: debug lines (when let go); with `lib.switchAlliance(g1.back, g1.start)`, both held 1.5 s: **switch the alliance** | |
 | GUIDE | tap: the button map, without the free buttons (during the match too); hold 1 s: the tuning menu (PRACTICE) | free |
 
 **One driver:** the left stick click switches slow on/off and the right stick click switches
@@ -914,16 +922,29 @@ the further LT is pulled (down to `slowSpeed` at a full squeeze, like the two-dr
 `.slow()` is slow while held. Write the switch exactly as `public static boolean oneDriver = true;`
 (INIT stops with a message if it is not static).
 
-**Switch the alliance** (the wrong one was chosen): hold gamepad 1 BACK and START together 1.5 s.
-Both gamepads buzz twice and the Driver Station says `Alliance now RED (was BLUE)`. Everything that
-reads `robot.alliance()` follows at once: the camera's goal tag (`Camera.goal()`), the aim's goal point
-(mirrored for RED), light rules you wrote with it, and `MatchMemory` (a TeleOp started again gets it).
-The pose does not change: if autonomous ran on the wrong side, set it again ("set pose here").
+**Reset "forward"** works only with field-centric on; in robot-centric driving the held BACK shows a
+note instead ("forward" means nothing there).
+
+**Switch the alliance** (optional, off by default: turn it on with `lib.switchAlliance(g1.back, g1.start)`):
+hold BACK + START together 1.5 s. Both gamepads buzz twice and the Driver Station says
+`Alliance now RED (was BLUE)`. Everything that reads `robot.alliance()` follows at once: the camera's
+goal tag (`Camera.goal()`), the aim's goal point (mirrored for RED), light rules you wrote with it, and
+`MatchMemory` (a TeleOp started again gets it). The pose follows too (autonomous ran as the wrong
+alliance): on a mirrored field (the reset spot's `mirrorForRed` true) it is mirrored in place (x and
+heading flip); on a turned field (`mirrorForRed = false`, BIOBUZZ) it counts as not set, so the aim's
+odometry backup is off until "set pose here" (the note says so). INIT's `Switch alliance` line says
+whether it is on.
 
 **Set pose here** (robots with odometry; autonomous was stopped early or did not run): park the robot
-on the reset spot, hold gamepad 1 START 1 s. Gamepad 1 buzzes twice and the Driver Station says
-`Pose set: x -56, y -61 in, heading 0 (BLUE)`. INIT shows the button and the spot. The spot:
-`Tunables.Odometry.resetX, resetY, resetHeading` ([`resetPose()`](#robotdefinition)).
+on the reset spot, let go of the drive sticks (and whole-robot aim off), hold gamepad 1 START 1 s, in
+INIT (before the match) or during it. Gamepad 1 buzzes twice and the Driver Station says
+`Pose set: x -56, y -61 in, heading 0 (BLUE)`; while the robot moves it says `Pose NOT set: stop first`.
+START + A or B (pairing a gamepad on the Driver Station) never sets it. INIT shows the button, the
+spot and the mirroring used for RED (`Reset spot for RED: ...`). The spot:
+`Tunables.Odometry.resetX, resetY, resetHeading, mirrorForRed` ([`resetPose()`](#robotdefinition)).
+
+**Freed library jobs are said at INIT:** no pause button (a warning), no slow at all (a warning), no
+field-centric button (a line).
 
 **Checked at INIT:** a module whose button is taken gets none (INIT notes it). Two jobs on one button
 in Controls.java, or a job on one of the library's buttons, stop with the button's name. INIT shows

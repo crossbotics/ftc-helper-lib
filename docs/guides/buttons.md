@@ -133,8 +133,7 @@ with other gestures.
 | A pair: hold one, press another | `g2.lb.with(g2.y, job).says("climb")` | once, when Y is pressed while LB is held |
 
 The first button (`lb` here) is the **shift key**: it gets no job of its own. One shift key can start
-several pairs (`g2.lb.with(g2.x, ...)`, `g2.lb.with(g2.y, ...)`). (Not gamepad 1's BACK:
-it is one of the library's buttons, and INIT refuses it.) The second button keeps its own
+several pairs (`g2.lb.with(g2.x, ...)`, `g2.lb.with(g2.y, ...)`). The second button keeps its own
 job when it is pressed alone. While the shift key is down, the second button's own job does not run
 (a hold it started stops), and the button does nothing more until it is let go. Neither button may be
 one of the library's buttons. **Why:** a pair is a safe place for rare, big jobs (like a climb) that must
@@ -208,9 +207,10 @@ button, or be freed (`null`: no button), in one method next to `buttons(...)` in
 ```java
 @Override
 protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
-    lib.fieldCentric(g1.x);                  // field-centric on/off: X instead of Y
+    lib.fieldCentric(g1.a);                  // field-centric on/off: A instead of Y
     lib.slow(g1.rt);                         // slow on the right trigger: LT is free now
-    lib.switchAlliance(g2.back, g2.start);   // switch alliance: the operator holds both 1.5 s
+    lib.pause(g1.x);                         // pause on X (BACK still resets forward; lib.resetForward(null) frees it)
+    lib.switchAlliance(g1.back, g1.start);   // turn ON the alliance switch: hold BACK + START 1.5 s
 }
 ```
 
@@ -223,18 +223,55 @@ writes `libraryButtons(LibraryButtons lib)` with `Key.g1(Btn.X)` instead of `g1.
 | Slow | G1 LT | none | the further it is pulled, the slower (a button: slow while held) | `lib.slow(key)` |
 | Slow on/off | none | G1 left stick click | a press | `lib.slowToggle(key)` |
 | Field-centric on/off | G1 Y | G1 right stick click | a press (mecanum with an IMU or odometry) | `lib.fieldCentric(key)` |
-| Pause / go on | G1 BACK | same | a tap | `lib.pause(key)` |
-| Reset "forward" | G1 BACK | same | held 1 s (a tap if its button has no other quick job) | `lib.resetForward(key)` |
-| Debug lines | G1 START + BACK | same | both pressed together | `lib.debug(key, with)` (`with` null: one button) |
-| Switch alliance | G1 BACK + START | same | both held 1.5 s | `lib.switchAlliance(key, with)` |
-| Set pose here | G1 START | same | held 1 s (robots with odometry) | `lib.setPose(key)` |
+| Pause / go on | G1 BACK | same | pauses at the press; a tap goes on | `lib.pause(key)` |
+| Reset "forward" | G1 BACK | same | held 1 s, field-centric only (a tap if its button has no other quick job) | `lib.resetForward(key)` |
+| Debug lines | G1 BACK + START | same | both pressed, runs when let go | `lib.debug(key, with)` (`with` null: one button) |
+| Switch alliance | **off** | off | both held 1.5 s, once turned on | `lib.switchAlliance(g1.back, g1.start)` turns it on |
+| Set pose here | G1 START | same | held 1 s with the drive sticks let go (robots with odometry); also in INIT | `lib.setPose(key)` |
 | Button map | G1 GUIDE | same | a tap | `lib.buttonMap(key)` |
 | Tuning menu | G1 GUIDE | same | held 1 s (a tap if its button has no other quick job) | `lib.tuningMenu(key)` |
 | Choose the alliance (INIT only) | G1 X = BLUE, G1 B = RED | same | a press, before START | `lib.allianceInInit(blue, red)` |
 
-The debug lines and the alliance switch share START + BACK: a quick press of both is the debug lines
-(when you let go), both held 1.5 s switch the alliance. While both are down, BACK's pause and START's
-"set pose" do nothing. With one driver, a library job you put on `g2` goes on gamepad 1.
+**BACK, step by step.** A press of BACK pauses the robot **at once** (every motor stops on brake), so a
+driver who grabs BACK in a panic gets the stop. Let go quickly: it stays paused; a tap again goes on.
+Held 1 s: it also resets "forward" (only with field-centric on; robot-centric shows a note instead) and
+stays paused until the next tap. Going on is always a tap, at the release, so holding BACK never
+starts the robot.
+
+**BACK + START** (either order) is the debug lines, when you let go. Pressing BACK a moment first
+pauses the robot until START joins, then the pause is taken back. While both are down, BACK's pause
+and START's "set pose" do nothing.
+
+**START + A or START + B** pairs a gamepad on the Driver Station: START's own job ("set pose here") is
+cancelled for that press, so pairing a gamepad never moves the pose.
+
+**Set pose here** works only with the drive sticks let go and whole-robot aim off (otherwise the note
+says "Pose NOT set: stop first"), and also in INIT: hold START 1 s before the match, so it is done
+before the buzzer.
+
+### Switching the alliance in TeleOp
+
+Off unless you turn it on (the alliance is chosen in INIT with X = BLUE, B = RED). One line in
+`libraryButtons(...)`:
+
+```java
+lib.switchAlliance(g1.back, g1.start);   // hold BACK + START 1.5 s: BLUE <-> RED
+```
+
+A quick press of both is still the debug lines. When the alliance switches, the goal flips, and so
+does the odometry's pose (autonomous ran as the wrong alliance):
+
+- On a mirrored field (the reset spot's `mirrorForRed` true), the pose is mirrored in place (x and
+  the heading flip).
+- On a field turned half a turn (`mirrorForRed = false`, BIOBUZZ), it cannot be fixed: the odometry
+  aim goes off ("Alliance now RED: odometry aim OFF until the pose is set") until you park on the
+  reset spot and hold START 1 s ("set pose here").
+
+INIT's `Switch alliance` line says whether it is on.
+
+**Freed jobs are said at INIT:** no pause button (a warning: nothing on the gamepads pauses the robot),
+no slow at all (a warning in `Controls.java`), no field-centric button (a line: driving stays as it
+starts). With one driver, a library job you put on `g2` goes on gamepad 1.
 
 **Checked at INIT** (the message names the button): two library jobs on one button (one quick job and
 one held job may share it, like BACK's pause and reset), the slow trigger with another job, a pair on

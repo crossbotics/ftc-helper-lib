@@ -103,6 +103,16 @@ public abstract class PoseTracker implements Subsystem {
         return poseSet;
     }
 
+    /**
+     * Says "the pose is not known any more" ({@link #isPoseSet()} becomes false), keeping the numbers.
+     * Aiming by odometry then stays off until the pose is set again ({@link #setPose}, TeleOp's "set
+     * pose here"). TeleOp does this when the alliance is switched on a field that is not mirrored: the
+     * pose from an autonomous run as the wrong alliance cannot be trusted. Never waits.
+     */
+    public final void unsetPose() {
+        poseSet = false;
+    }
+
     // Writes a pose to the device (or later, while it calibrates) and to this loop's pose.
     private void place(FieldPose p) {
         // Not ready yet (calibrating after INIT): written as soon as it is (see update()).

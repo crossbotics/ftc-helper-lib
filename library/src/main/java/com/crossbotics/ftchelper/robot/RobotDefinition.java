@@ -405,6 +405,17 @@ public abstract class RobotDefinition {
         return !a.has("mirrorForRed") || a.flag("mirrorForRed", true);
     }
 
+    // Which mirroring the reset spot uses for RED, and where that choice comes from, for INIT:
+    // "mirrored: x and heading flip (Tunables.Odometry.mirrorForRed = true)".
+    final String resetMirrorWords() {
+        describe();
+        String from = TunableSection.of(tunablesClass, "Odometry").has("mirrorForRed") ? "Tunables.Odometry.mirrorForRed"
+                : TunableSection.of(tunablesClass, "Aim").has("mirrorForRed") ? "Tunables.Aim.mirrorForRed (no Odometry one)"
+                : "mirrorForRed not set: default";
+        return resetMirrorsForRed() ? "mirrored, x and heading flip (" + from + " = true)"
+                : "the same numbers from the red wall (" + from + " = false)";
+    }
+
     /**
      * The reset spot for this alliance in words, e.g. "x 36, y -63 in, heading 0 (RED, mirrored)",
      * or null when {@code Tunables.Odometry} has no {@code resetX}/{@code resetY}.

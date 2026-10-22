@@ -404,9 +404,11 @@ public final class Pad {
                 throw new IllegalStateException("Controls.java: " + this + ".slow() is for one driver (oneDriver = true); "
                         + "with two drivers, G1 LT is slow already (to move it: lib.slow(...) in libraryButtons)");
             }
+            p.teamSlow = true;
             if (trigger != null) {
                 put(ButtonPlan.Kind.HOLD, () -> { }, null, "slow (squeeze: the further, the slower)");
-                if (last != null) p.slowTrigger = trigger;
+                // The whole key (this gamepad's trigger), so g2.rt.slow() reads gamepad 2's RT.
+                if (last != null) p.slowTrigger = this;
                 return this;
             }
             return put(ButtonPlan.Kind.HOLD, () -> p.slowHeld = true, () -> p.slowHeld = false, "slow (hold)");

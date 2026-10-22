@@ -12,15 +12,15 @@ import java.util.Set;
 
 /**
  * Where the library's own TeleOp jobs are on the gamepads: driving, pause, slow, field-centric, the
- * button map, the tuning menu, "set pose here" and "switch alliance". Every one can be moved to
- * another button, or freed ({@code null}: no button). The defaults are below.
+ * button map, the tuning menu, "set pose here" and "switch alliance" (off unless you turn it on). Every
+ * one can be moved to another button, or freed ({@code null}: no button). The defaults are below.
  *
  * <pre>{@code
  * // Controls.java (the robot in five files):
  * @Override protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
  *     lib.fieldCentric(g1.x);           // field-centric on/off on X instead of Y
  *     lib.slow(g1.rt);                  // slow on the right trigger (LT is free now)
- *     lib.switchAlliance(null, null);   // no alliance switch in TeleOp
+ *     lib.switchAlliance(g1.back, g1.start);   // turn on the alliance switch: hold BACK + START 1.5 s
  * }
  *
  * // EasyTeleOp (your own TeleOp):
@@ -33,11 +33,11 @@ import java.util.Set;
  *   <caption>The defaults (two drivers; one driver in brackets)</caption>
  *   <tr><th>Job</th><th>Default</th></tr>
  *   <tr><td>drive / strafe, turn</td><td>G1 left stick, G1 right stick X ({@link #swapSticks})</td></tr>
- *   <tr><td>pause / go on (a tap)</td><td>G1 BACK</td></tr>
+ *   <tr><td>pause (at the press) / go on (a tap)</td><td>G1 BACK</td></tr>
  *   <tr><td>reset "forward" (hold 1 s, field-centric)</td><td>G1 BACK</td></tr>
- *   <tr><td>debug lines (both together)</td><td>G1 START + BACK</td></tr>
- *   <tr><td>switch alliance (both held 1.5 s)</td><td>G1 BACK + START</td></tr>
- *   <tr><td>set pose here (hold 1 s, robots with odometry)</td><td>G1 START</td></tr>
+ *   <tr><td>debug lines (both pressed, runs when let go)</td><td>G1 BACK + START</td></tr>
+ *   <tr><td>switch alliance (both held 1.5 s)</td><td>none: off until {@link #switchAlliance} turns it on</td></tr>
+ *   <tr><td>set pose here (hold 1 s, robots with odometry; also in INIT)</td><td>G1 START</td></tr>
  *   <tr><td>slow (squeeze)</td><td>G1 LT (one driver: none)</td></tr>
  *   <tr><td>slow on/off</td><td>none (one driver: G1 left stick click)</td></tr>
  *   <tr><td>field-centric on/off (mecanum with an IMU)</td><td>G1 Y (one driver: G1 right stick click)</td></tr>
@@ -50,7 +50,8 @@ import java.util.Set;
  * quick job (a tap) and one long job (held); "reset forward" and "tuning menu" are the long job when
  * their button has a quick one, else a tap. The slow trigger gets nothing else. A pair is two
  * different buttons on one gamepad; debug and "switch alliance" may share one pair (a quick press of
- * both = debug, both held 1.5 s = switch). The tuning menu's button may not be one the menu itself
+ * both = debug, both held 1.5 s = switch). START + A or B (pairing a gamepad on the Driver Station)
+ * cancels START's own job for that press. The tuning menu's button may not be one the menu itself
  * uses on gamepad 1 (D-pad, A, B, X, Y, LB, RB).
  *
  * Docs: docs/guides/buttons.md (section "Moving the library's buttons"), docs/modules/teleop.md
@@ -98,8 +99,8 @@ public final class LibraryButtons {
         b.keys.put(Job.RESET_FORWARD, Key.g1(Btn.BACK));
         b.keys.put(Job.DEBUG, Key.g1(Btn.START));
         b.debugWith = Key.g1(Btn.BACK);
-        b.keys.put(Job.SWITCH_ALLIANCE, Key.g1(Btn.BACK));
-        b.switchWith = Key.g1(Btn.START);
+        // No alliance switch in TeleOp unless the team turns it on (switchAlliance(...)): the
+        // alliance is chosen in INIT, and a switch by accident mid-match would aim at the wrong goal.
         b.keys.put(Job.SET_POSE, Key.g1(Btn.START));
         b.keys.put(Job.SLOW, Key.g1(Trigger.LT));
         b.keys.put(Job.FIELD_CENTRIC, Key.g1(Btn.Y));
@@ -125,7 +126,10 @@ public final class LibraryButtons {
 
     // ----------------------------- moving them -----------------------------
 
-    /** Pause / go on (a tap). Null = no button. */
+    /**
+     * Pause / go on. A press pauses at once (even when the button also has a long job, like BACK's
+     * "reset forward"); a tap goes on again. Null = no button (INIT then warns: nothing can pause).
+     */
     public LibraryButtons pause(Key key) {
         return put(Job.PAUSE, key);
     }
@@ -181,16 +185,19 @@ public final class LibraryButtons {
 
     /**
      * "Set pose here": held 1 s, the odometry's pose becomes the reset spot
-     * ({@code Tunables.Odometry.resetX, resetY, resetHeading}). Only on a robot with odometry. Null = none.
+     * ({@code Tunables.Odometry.resetX, resetY, resetHeading}). Only on a robot with odometry, only with
+     * the drive sticks let go, and also in INIT (before the match). Null = none.
      */
     public LibraryButtons setPose(Key key) {
         return put(Job.SET_POSE, key);
     }
 
     /**
-     * Switch the alliance (BLUE / RED) during TeleOp: hold {@code key} and {@code with} together
-     * {@link #SWITCH_ALLIANCE_SEC} seconds. {@code with} null: {@code key} alone, held. Both null =
-     * none (the alliance can then only change in INIT).
+     * Turns on switching the alliance (BLUE / RED) during TeleOp: hold {@code key} and {@code with}
+     * together {@link #SWITCH_ALLIANCE_SEC} seconds. Off by default (the alliance is chosen in INIT);
+     * {@code lib.switchAlliance(g1.back, g1.start)} is the usual pair (it shares BACK + START with the
+     * debug lines: a quick press of both = debug). {@code with} null: {@code key} alone, held. Both null
+     * = off again.
      */
     public LibraryButtons switchAlliance(Key key, Key with) {
         put(Job.SWITCH_ALLIANCE, key);

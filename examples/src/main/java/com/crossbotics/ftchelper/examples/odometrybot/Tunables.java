@@ -12,10 +12,13 @@ public class Tunables {
      * checked: set true after the Odometry Tuner (lesson 7); until then driveTo steps are skipped.
      * resetX, resetY, resetHeading: the "set pose here" spot for TeleOp (hold G1 START 1 s with the robot
      * there), written for BLUE like the start spot: here the same corner tile, facing the field.
+     * mirrorForRed: false = RED uses the same numbers from the red wall (BIOBUZZ's field is turned half
+     * a turn, like the autos' mirrorForRed()); true = mirrored left-right (a mirrored field).
      */
     public static class Odometry {
         public static boolean checked = false;
         public static double resetX = -56, resetY = -61, resetHeading = 0;
+        public static boolean mirrorForRed = false;
     }
 
     public static class Intake {

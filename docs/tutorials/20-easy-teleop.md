@@ -60,7 +60,7 @@ You get these on gamepad 1 without writing anything:
 | Y | field-centric on/off (starts off) |
 | BACK (alone, on release) | "the robot now faces away from me" (one buzz) |
 | GUIDE | tuning menu (PRACTICE profile) |
-| START + BACK together | debug telemetry on/off when let go (does not reset "forward"); both held 1.5 s: switch the alliance |
+| BACK + START together | debug telemetry on/off when let go (does not reset "forward"). Switching the alliance in TeleOp is off unless `lib.switchAlliance(Key.g1(Btn.BACK), Key.g1(Btn.START))` turns it on: then both held 1.5 s switch it |
 | X / B in INIT | choose BLUE / RED when no autonomous ran before (it remembers autonomous's choice) |
 
 Each of these can move to another button, or be freed, in `libraryButtons(LibraryButtons lib)`, e.g.

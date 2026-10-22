@@ -387,20 +387,39 @@ You write nothing for this:
 
 **No autonomous, or it was stopped early?** Then TeleOp does not know where the robot is (the aim's
 odometry backup stays off and says why). Set the pose by hand: park the robot on a spot you know (the
-start tile against your wall is easiest), then hold gamepad 1 **START** for 1 second. Gamepad 1 buzzes
-twice and the Driver Station says `Pose set: x -56, y -61 in, heading 0 (BLUE)`. The spot goes in
-`Tunables.java`, written for BLUE like the start spot (RED mirrors it the same way):
+start tile against your wall is easiest), let go of the sticks, then hold gamepad 1 **START** for 1
+second. Best in INIT, before the match starts: it works there too, so it is done before the buzzer.
+Gamepad 1 buzzes twice and the Driver Station says `Pose set: x -56, y -61 in, heading 0 (BLUE)`.
+While the robot drives (a drive stick pushed, or whole-robot aim on) it says `Pose NOT set: stop
+first` instead. START + A or START + B pairs a gamepad on the Driver Station, so a START held with A
+or B never sets the pose. The spot goes in `Tunables.java`, written for BLUE like the start spot:
 
 ```java
 public static class Odometry {
     public static boolean checked = false;
     public static double resetX = -56, resetY = -61, resetHeading = 0;   // the "set pose here" spot
+    public static boolean mirrorForRed = false;   // BIOBUZZ: RED uses the same numbers from its wall
 }
 ```
 
-INIT shows the button and the spot (`Set pose: hold G1 START 1 s at ...`). From code, or in an
-action: `robot.resetPose()` (this spot) or `robot.resetPose(x, y, heading)` (any spot). The button can
-move: `lib.setPose(...)` ([the button menu](../../guides/buttons.md#moving-the-librarys-buttons)).
+`mirrorForRed = false` because BIOBUZZ's field is turned half a turn, like your autos'
+`mirrorForRed()`; leave the line out (default true: RED mirrors x and the heading) on a mirrored field.
+
+**Three `mirrorForRed`s, one answer.** Your autos' `mirrorForRed()` (routes and start spots),
+`Tunables.Aim.mirrorForRed` (the goal point, lesson 9) and `Tunables.Odometry.mirrorForRed` (this spot)
+all answer "is RED a mirror image of BLUE?". The reset spot uses `Tunables.Aim`'s when `Tunables.Odometry`
+has none, then true; the others have no fallback. On BIOBUZZ, write `false` in all three.
+
+INIT shows the button and the spot (`Set pose: hold G1 START 1 s at ...`) and the mirroring it uses
+(`Reset spot for RED: the same numbers from the red wall (Tunables.Odometry.mirrorForRed = false)`).
+From code, or in an action: `robot.resetPose()` (this spot) or `robot.resetPose(x, y, heading)` (any
+spot). The button can move: `lib.setPose(...)` ([the button menu](../../guides/buttons.md#moving-the-librarys-buttons)).
+
+**Wrong alliance in autonomous?** This robot's `Controls.java` turns on the TeleOp alliance switch
+(`lib.switchAlliance(g1.back, g1.start)`; off unless you write it): hold BACK + START 1.5 s. On BIOBUZZ's
+turned field the pose from that autonomous cannot be fixed, so the odometry aim goes off until you set
+the pose here again; on a mirrored field the pose is mirrored for you
+([the buttons guide](../../guides/buttons.md#switching-the-alliance-in-teleop)).
 
 To show the pose your own way, add one line inside `buttons(...)` in `Controls.java`:
 
@@ -500,7 +519,8 @@ button (Robot tab). **Left**: drive left with the left stick (there is no push b
 | It circles the point or stops just short | `Tunables.Drive.turnKp`/`turnKd`, or `moveMinPower` (lesson 6) |
 | TeleOp's field-centric is wrong after autonomous | the heading in `s.start(...)` is wrong |
 | `No reset spot: add resetX, resetY, resetHeading to Tunables.Odometry` when START is held | the "set pose here" spot is missing: section 7 |
-| After "set pose here" the pose is mirrored the wrong way on RED | on a field turned half a turn (BIOBUZZ) add `public static boolean mirrorForRed = false;` to `Tunables.Odometry` |
+| After "set pose here" the pose is mirrored the wrong way on RED | on a field turned half a turn (BIOBUZZ) add `public static boolean mirrorForRed = false;` to `Tunables.Odometry` (INIT's `Reset spot for RED` line shows which is used) |
+| `Pose NOT set: stop first` | the robot was driving (or aiming by itself) when START was held: stop, then hold START 1 s again |
 
 ## Next
 

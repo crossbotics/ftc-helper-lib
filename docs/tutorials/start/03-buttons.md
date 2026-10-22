@@ -70,8 +70,8 @@ gets this map (two drivers):
 | A / X / Y | free / free / field-centric on/off | lift down / low / high |
 | B | free | claw open / close |
 | D-pad up / down | free | lift next height up / down |
-| BACK | pause / go on (held 1 s, field-centric only: reset "forward") | free |
-| START + BACK | together: debug lines; both held 1.5 s: switch the alliance | free |
+| BACK | pause at the press / a tap: go on (held 1 s, field-centric only: also reset "forward") | free |
+| BACK + START | together: debug lines (when let go) | free |
 | GUIDE | tap: the button map; held 1 s: the tuning menu | free |
 
 The lift's buttons come from its named heights in `Tunables.Lift` (`down = 0, low = 900, high = 2400`):
@@ -206,31 +206,36 @@ Want two things on one button? Put them in one lambda:
 
 ## 7. Pause with BACK, and the other library buttons
 
-A tap of gamepad 1 BACK pauses the robot: every part stops on brake, the wheels hold still, actions
-wait, and no button or stick job runs. The Driver Station says PAUSED. Tap BACK again and every part
-goes on with what it was doing (a lift goes on to its height, the intake runs again). **Why:** a safe
-stop for a jam or a dropped piece, without ending the program. (With field-centric on, hold BACK 1 s instead to
-reset "forward", lesson 2; in robot-centric driving a held BACK does nothing.)
+Press gamepad 1 BACK and the robot pauses **at once**: every part stops on brake, the wheels hold
+still, actions wait, and no button or stick job runs. The Driver Station says PAUSED. Tap BACK again
+and every part goes on with what it was doing (a lift goes on to its height, the intake runs again).
+**Why:** a safe stop for a jam or a dropped piece, without ending the program; it acts at the press,
+so a driver who grabs BACK in a panic and holds it gets the stop. Holding BACK 1 s also resets
+"forward" with field-centric on (lesson 2) and the robot stays paused; in robot-centric driving a held
+BACK shows a note ("forward" is only reset in field-centric driving). Going on is always a tap.
 
-**Wrong alliance?** If the drivers find out during the match that the wrong alliance was chosen, hold
-gamepad 1 BACK and START together for 1.5 s: the alliance switches (BLUE to RED or back), both gamepads
-buzz twice and the Driver Station says `Alliance now RED (was BLUE)`. The camera's goal and the aim
-follow at once. It takes 1.5 s on purpose, so it never happens by accident.
+**Wrong alliance?** Choose it in INIT (gamepad 1 X = BLUE, B = RED, section 6). Switching during the
+match is off unless you turn it on with one line, `lib.switchAlliance(g1.back, g1.start);` in
+`libraryButtons` (below). Then holding BACK + START 1.5 s switches it (BLUE to RED or back), both
+gamepads buzz twice and the Driver Station says `Alliance now RED (was BLUE)`. The camera's goal and
+the aim follow at once. It takes 1.5 s on purpose, so it never happens by accident.
 
 **Move the library's buttons.** Every library button above (drive sticks, slow, field-centric, pause,
-debug, the alliance switch, GUIDE's map and menu, the INIT alliance buttons) can move to another button
-or be freed. One method next to `buttons(...)`:
+debug, GUIDE's map and menu, the INIT alliance buttons) can move to another button or be freed, and the
+alliance switch can be turned on. One method next to `buttons(...)`:
 
 ```java
 @Override
 protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
-    lib.fieldCentric(g1.x);   // field-centric on X: Y is free for your own job now
-    lib.slow(g1.rt);          // slow on the right trigger
+    lib.fieldCentric(g1.x);                  // field-centric on X: Y is free for your own job now
+    lib.slow(g1.rt);                         // slow on the right trigger
+    lib.switchAlliance(g1.back, g1.start);   // optional: hold BACK + START 1.5 s to switch the alliance
 }
 ```
 
 (Import `com.crossbotics.ftchelper.teleop.LibraryButtons`.) INIT checks it like your own buttons:
-two library jobs on one button stop with the button's name. Every job and how to move it:
+two library jobs on one button stop with the button's name. A job you free is said at INIT too: with
+`lib.pause(null)` INIT warns that nothing pauses the robot. Every job and how to move it:
 [the button menu](../../guides/buttons.md#moving-the-librarys-buttons).
 
 ## 8. The lesson robot's two actions, and a buzz
@@ -281,7 +286,7 @@ Driver Station. ([Simulator guide](../../guides/simulator.md).)
 2. START. Press each of your buttons once. Does each do what its words say?
 3. Tap GUIDE: the map shows. Tap again: it closes.
 4. Start an action, then press its button again: it stops, and the lift holds where it is.
-5. Tap BACK: everything stops. Tap again: everything goes on.
+5. Press BACK: everything stops at once (before you let go). Tap again: everything goes on.
 
 ## If something goes wrong
 

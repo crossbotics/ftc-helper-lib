@@ -11,6 +11,8 @@ public class Tunables {
     /** checked: set true after the Odometry Tuner; until then follow and driveTo steps are skipped. */
     public static class Odometry {
         public static boolean checked = false;
+        // RED: the same numbers from the red wall (BIOBUZZ's turned field), like the autos' mirrorForRed().
+        public static boolean mirrorForRed = false;
     }
 
     public static class Intake {

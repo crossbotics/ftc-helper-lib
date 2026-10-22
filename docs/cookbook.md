@@ -564,7 +564,7 @@ protected boolean useStandardButtons() {
 protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
     lib.fieldCentric(g1.x);                  // field-centric on/off: X instead of Y
     lib.slow(g1.rt);                         // slow on the right trigger: LT is free now
-    lib.switchAlliance(g2.back, g2.start);   // switch alliance: the operator holds both 1.5 s
+    lib.switchAlliance(g1.back, g1.start);   // optional, off by default: hold BACK + START 1.5 s
 }
 ```
 
@@ -594,9 +594,10 @@ copy back into `Tunables.java` (the file is the record).
 - **The button map:** INIT shows every button and what it does. During the match, tap **GUIDE**.
 - **The tuning menu:** hold **GUIDE** for 1 second (PRACTICE profile). A tap shows the map, a hold opens the menu.
 - **Two jobs on one button** stop INIT with the button's name, so a mistake is found before the match.
-- **Pause:** tap gamepad 1 **BACK**.
-- **Wrong alliance?** Hold gamepad 1 **BACK + START** together 1.5 s: it switches (both gamepads buzz twice).
-- **Set pose here** (robots with odometry): hold gamepad 1 **START** 1 s on the reset spot ([below](#how-do-i-set-the-pose-when-autonomous-did-not-run)).
+- **Pause:** press gamepad 1 **BACK**: everything stops at once. A tap again goes on.
+- **Wrong alliance?** Choose it in INIT (X = BLUE, B = RED). Switching during TeleOp is optional: turn it
+  on with `lib.switchAlliance(g1.back, g1.start)` ([above](#how-do-i-move-the-librarys-own-buttons-slow-field-centric-pause)), then hold **BACK + START** 1.5 s.
+- **Set pose here** (robots with odometry): hold gamepad 1 **START** 1 s on the reset spot, sticks let go, in INIT or in the match ([below](#how-do-i-set-the-pose-when-autonomous-did-not-run)).
 
 **More:** [Lesson 3: the button map](tutorials/start/03-buttons.md#6-the-button-map-init-and-guide).
 
@@ -978,14 +979,19 @@ whole-robot aim are separate modes, so INIT stops with a message if both are the
 
 <!-- recipe: aim-whole-robot -->
 ```java
-// RB: the robot turns to face the goal by itself; the driver keeps forward and sideways.
-// Moving the turn stick still turns it by hand. Two buzzes = on, one = off.
-// Not with a turret that follows the goal: separate modes (INIT stops with a message).
-g1.rb.toggle(robot.aimMode()).says("aim the robot at the goal on/off").rumble();
+// Hold RB: the robot turns to face the goal by itself; the driver keeps forward and
+// sideways. Let go: the aim is off, the driver turns again. Moving the turn stick while
+// holding still turns it by hand. Not with a turret that follows the goal: separate
+// modes (INIT stops with a message).
+g1.rb.hold(robot.aimMode()::on, robot.aimMode()::off).says("hold: aim the robot at the goal");
+// Or a toggle (a press on, a press again off; two buzzes = on). Careful: while it is on,
+// the robot turns by itself, even after you let go of the button.
+// g1.rb.toggle(robot.aimMode()).says("aim the robot at the goal on/off").rumble();
 ```
 
-**Why:** the driver drives; the robot keeps itself pointed at the goal. The stick always wins, so the
-driver can take over at once.
+**Why:** the driver drives; the robot keeps itself pointed at the goal. Hold-to-aim first: let go and
+the robot stops turning by itself, so it never surprises anyone. The stick always wins, so the driver
+can take over at once. The toggle (commented out) keeps aiming after you let go.
 **More:** [Lesson 9: aim the whole robot](tutorials/start/09-shooter-and-camera.md#10-no-turret-aim-the-whole-robot).
 
 ### How do I make the gamepad buzz when the aim is on target?
@@ -1597,8 +1603,10 @@ public static Action intakeOnOurHalf(Robot r) {
 **Where:** `Tunables.java`, section `Odometry` (and `Controls.java` for more spots).
 
 Autonomous was stopped early, or did not run: TeleOp does not know where the robot is. Park it on the
-reset spot, then hold gamepad 1 **START** for 1 second ("set pose here"). The spot, written for BLUE
-like a start spot (RED mirrors it):
+reset spot, then hold gamepad 1 **START** for 1 second ("set pose here"), in INIT or in the match, with
+the drive sticks let go. The spot, written for BLUE like a start spot. `mirrorForRed = false` because
+BIOBUZZ's field is turned half a turn (RED uses the same numbers from its own wall); leave it out
+(default `true`, RED mirrored) on a mirrored field. INIT's `Reset spot for RED` line shows which is used.
 
 <!-- recipe: tunables-reset-spot -->
 ```java
@@ -1607,6 +1615,9 @@ public static class Odometry {
     // "Set pose here" (TeleOp: hold gamepad 1 START 1 s with the robot on this spot). Inches and
     // degrees seen from your wall, written for BLUE like a start spot: our left corner tile, facing the field.
     public static double resetX = -56, resetY = -61, resetHeading = 0;
+    // RED: false = the same numbers from the red wall (BIOBUZZ's field is turned half a turn);
+    // true (or left out) = mirrored left-right, for a mirrored field.
+    public static boolean mirrorForRed = false;
 }
 ```
 
@@ -1746,7 +1757,7 @@ show("Flywheel ready", () -> robot.launcher.isReady());
 ```
 
 **Why:** you see what the robot "thinks" while you drive. The value must be quick to read (no waiting).
-**More:** [The button menu: feedback](guides/buttons.md#4-feedback). Debug lines (loop time and more): press gamepad 1 START + BACK.
+**More:** [The button menu: feedback](guides/buttons.md#4-feedback). Debug lines (loop time and more): press gamepad 1 BACK + START.
 
 ### How do I round a number on the Driver Station?
 

@@ -75,7 +75,11 @@ robot in five files: the Drive Tuner, then `Tunables.Drive.calibrated = true`.
 | `Launcher gave up: flywheel` (or `hood`, `Turret`...) | it was not ready in time: that part is the problem |
 | `Aim odometry: the pose was never set ...` | TeleOp ran without autonomous, so the robot does not know where it is: aiming uses the camera only. Run autonomous first, or park on the reset spot and hold gamepad 1 START 1 s ("set pose here", `Tunables.Odometry.resetX, resetY, resetHeading`; [lesson 7](tutorials/start/07-odometry.md#7-teleop-starts-where-autonomous-ended)) |
 | `No reset spot: add resetX, resetY, resetHeading to Tunables.Odometry` | START was held 1 s ("set pose here") but `Tunables.Odometry` has no spot: add the three numbers (inches and degrees from your wall, for BLUE) |
-| `Alliance now RED (was BLUE)` | someone held gamepad 1 BACK + START 1.5 s: the alliance switched. Hold them again to switch back ([ControlMap](modules/robot.md#controlmap)) |
+| `Alliance now RED (was BLUE)` | the alliance switch is on (`lib.switchAlliance(...)`) and someone held BACK + START 1.5 s: the alliance switched. Hold them again to switch back ([ControlMap](modules/robot.md#controlmap)) |
+| `Alliance now RED: odometry aim OFF until the pose is set (...)` | the alliance was switched on a turned field (`mirrorForRed = false`): the pose from autonomous cannot be fixed. Park on the reset spot and hold START 1 s ([buttons guide](guides/buttons.md#switching-the-alliance-in-teleop)) |
+| `Pose NOT set: stop first ...` | "set pose here" was held while the robot drove (a drive stick pushed) or whole-robot aim was on. Stop, then hold START 1 s again |
+| `No pause button (libraryButtons freed it): ...` | `lib.pause(null)` in `libraryButtons`: nothing pauses the robot. Put it on a button: `lib.pause(g1.back)` |
+| `No slow button (libraryButtons freed it): ...` | `lib.slow(null)` with no `slow()` of your own: add one, e.g. `g1.rt.slow()` |
 | `Launcher: battery 11.2 V: low. The flywheel gets back to speed slower: charge or swap it` | swap in a charged battery. The launcher's battery compensation helps, but shots still wait longer |
 | `Aim odometry: ... more than the field allows` / `Aim: camera says ... odometry ...` | the pose is wrong or drifted, or `Tunables.Aim.goalX, goalY` are not where the camera measures to |
 | `goal out of turret range (behind the robot: holding)` | the goal is behind the robot: turn the robot toward it |
@@ -111,7 +115,8 @@ it off on purpose.
 **Field-centric "forward" is wrong at the start of TeleOp**
 The robot did not start autonomous facing straight away from its driver. Set `startHeadingDeg()` in
 the autonomous (written for BLUE), or press BACK after turning the robot to face away from you (in a
-Controls.java TeleOp, hold BACK for 1 s: a tap pauses the robot).
+Controls.java TeleOp, with field-centric on, hold BACK for 1 s: the press pauses the robot, the hold
+also resets "forward"; tap BACK again to go on).
 
 **The robot drives diagonally, spins, or a wheel fights the others**
 A motor direction or a motor name is wrong. [Check motor directions](modules/drive.md#check-motor-directions).
@@ -125,13 +130,18 @@ negative number.) With the robot in five files, every direction is flipped: reve
 2. The heading was not 0 while facing away from the driver. Point the robot away and press your reset button.
 
 **A button action runs over and over**
-You used `bindHold` (runs every loop while held) where you wanted `bindPress` (runs once per press).
-In `Controls.java`: `hold(...)` instead of `press(...)`.
+- In `Controls.java`: the job is a `hold(...)` (every loop while held) where you wanted `press(...)`
+  (once per press).
+- Old style (`ControllerBindings`): `bindHold` where you wanted `bindPress`.
 
 **A button does nothing**
-- Is `controls.update(gamepad1, gamepad2)` in the loop?
-- Is it the right pad? `Pad.G1` = gamepad1, `Pad.G2` = gamepad2.
-- Was the button held through START? After `ignoreHeldButtons`, let it go and press again.
+- In `Controls.java`: is it on the right gamepad (`g1` = the driver, `g2` = the operator)?
+- Is it a hold where you pressed (or a press you hold)? `heldFor(1.0, ...)` needs 1 s; a `tap` waits
+  to know it is not a double-tap.
+- Was it held through START (or while the tuning menu closed)? Let it go and press again.
+- Is the robot paused (PAUSED on the screen)? Tap BACK.
+- Old style (`ControllerBindings`): is `controls.update(gamepad1, gamepad2)` in the loop? Is it the
+  right pad (`Pad.G1` = gamepad1, `Pad.G2` = gamepad2)? After `ignoreHeldButtons`, let it go and press again.
 
 **A job took N ms: the whole robot stopped that long**
 A button job (over 20 ms is reported) has a `sleep()` or a `while` loop that waits. The program

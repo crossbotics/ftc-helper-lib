@@ -265,6 +265,11 @@ public final class Aim {
         return mode;
     }
 
+    // True while whole-robot aim is on (never throws, unlike mode() on a robot with a following turret).
+    boolean modeOn() {
+        return mode.isOn();
+    }
+
     // A turret that follows the goal (follows(camera) or followsOdometry() in Robot.java), or null.
     private Turret followingTurretInRobot() {
         for (Module<?> m : robot.modules()) {

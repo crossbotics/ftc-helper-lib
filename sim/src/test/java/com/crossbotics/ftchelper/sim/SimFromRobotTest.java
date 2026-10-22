@@ -513,13 +513,17 @@ public class SimFromRobotTest {
     }
 
     // TeleOp without autonomous: the drivers park on the reset spot and hold G1 START 1 s ("set pose
-    // here"); then they find the alliance was wrong and hold BACK + START 1.5 s to switch it.
+    // here"); then they find the alliance was wrong and hold BACK + START 1.5 s to switch it (the
+    // odometry robot's Controls.java turns the switch on). Its field is turned (mirrorForRed = false),
+    // so the pose cannot be mirrored: the odometry aim is off until the pose is set again.
     @Test public void teleOpSetsThePoseHereAndSwitchesTheAlliance() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.odometrybot.Robot.class);
         com.crossbotics.ftchelper.match.MatchMemory.clear();
         try (SimRun s = new SimRun(file.toString())) {
             s.init("Odometry Bot TeleOp");
-            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("hold G1 START 1 s at x -56, y -61 in, heading 0 (BLUE)"), 2));
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("hold G1 START 1 s at x -56, y -61 in, heading 0 (BLUE), now or in the match"), 2));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("the same numbers from the red wall (Tunables.Odometry.mirrorForRed = false)"));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("in TeleOp: hold BACK + START 1.5 s to switch"));
             s.start();
             // A short press does nothing.
             s.press(v -> s.g1().start = v);
@@ -532,7 +536,7 @@ public class SimFromRobotTest {
             // Both held 1.5 s: the alliance switches (a quick press of both would be the debug lines).
             s.g1().back = true;
             s.g1().start = true;
-            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Alliance now RED"), 3));
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Alliance now RED: odometry aim OFF until the pose is set"), 3));
             s.g1().back = false;
             s.g1().start = false;
             s.waitForLoops(2);
@@ -540,6 +544,30 @@ public class SimFromRobotTest {
             assertTrue(String.join("\n", s.screen()), s.screenHas("RED (switched in TeleOp)"));
             assertFalse("not paused: the pair took BACK's tap", s.screenHas("PAUSED"));
             assertEquals("", s.error());
+        }
+    }
+
+    // "Set pose here" before the match: hold G1 START 1 s in INIT. Not while driving in the match.
+    @Test public void thePoseCanBeSetInInitAndNotWhileDriving() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.odometrybot.Robot.class);
+        com.crossbotics.ftchelper.match.MatchMemory.clear();
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("Odometry Bot TeleOp");
+            s.press(v -> s.g1().b = v);                          // RED
+            s.g1().start = true;
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Pose set: x -56, y -61 in, heading 0 (RED, same numbers)"), 3));
+            s.g1().start = false;
+            s.start();
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("x -56, y -61 in"), 2));
+            // Driving: "set pose" is refused.
+            s.g1().left_stick_y = -0.8f;
+            s.g1().start = true;
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Pose NOT set: stop first"), 3));
+            s.g1().start = false;
+            s.g1().left_stick_y = 0;
+            assertEquals("", s.error());
+        } finally {
+            com.crossbotics.ftchelper.match.MatchMemory.clear();   // RED must not carry over to the next test
         }
     }
 
@@ -639,10 +667,16 @@ public class SimFromRobotTest {
             s.press(v -> s.g1().back = v);                       // go on
             assertTrue(SimRun.waitFor(() -> intake.userPower() > 0.5, 1));
             assertFalse(s.screenHas("PAUSED"));
-            s.g1().back = true;                                  // held 1.5 s: resets forward, no pause
+            // Held: paused at once (before BACK is let go); 1 s on, forward is reset too and it stays paused.
+            s.g1().back = true;
+            assertTrue("paused at the press", SimRun.waitFor(() -> s.screenHas("PAUSED"), 0.5));
+            assertEquals(0, intake.userPower(), 1e-9);
             SimRun.pause(1.5);
             s.g1().back = false;
             SimRun.pause(0.3);
+            assertTrue("stays paused after the hold", s.screenHas("PAUSED"));
+            s.press(v -> s.g1().back = v);                       // a tap: go on
+            assertTrue(SimRun.waitFor(() -> intake.userPower() > 0.5, 1));
             assertFalse(s.screenHas("PAUSED"));
             assertEquals("", s.error());
         }

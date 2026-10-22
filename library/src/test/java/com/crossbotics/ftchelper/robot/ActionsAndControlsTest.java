@@ -233,7 +233,7 @@ public class ActionsAndControlsTest {
     @Test public void oneDriverCanPutSlowOnATrigger() {
         ButtonPlan plan = ControlMap.makePlan(robot, true, true, (g1, g2) -> g1.lt.slow());
         assertEquals("G1 LT: slow (squeeze: the further, the slower)", line(plan.help(), "G1 LT"));
-        assertEquals(com.crossbotics.ftchelper.gamepad.ControllerBindings.Trigger.LT, plan.slowTrigger);
+        assertEquals(com.crossbotics.ftchelper.gamepad.ControllerBindings.Trigger.LT, plan.slowTrigger.trigger());
         ButtonPlan b = ControlMap.makePlan(robot, true, true, (g1, g2) -> g1.a.slow());
         assertEquals("G1 A: slow (hold)", line(b.help(), "G1 A"));
         assertFalse(b.slowHeld);

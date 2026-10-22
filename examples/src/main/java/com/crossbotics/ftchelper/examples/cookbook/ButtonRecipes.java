@@ -111,7 +111,7 @@ public class ButtonRecipes {
         }
     }
 
-    /** The library's own buttons moved: field-centric, slow, and the alliance switch. */
+    /** The library's own buttons moved: field-centric, slow, and the alliance switch turned on. */
     @TeleOp(name = "Cookbook Library Buttons", group = "Cookbook")
     @Disabled
     public static class MovedLibraryButtons extends ControlMap<Robot> {
@@ -123,7 +123,7 @@ public class ButtonRecipes {
         protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
             lib.fieldCentric(g1.x);                  // field-centric on/off: X instead of Y
             lib.slow(g1.rt);                         // slow on the right trigger: LT is free now
-            lib.switchAlliance(g2.back, g2.start);   // switch alliance: the operator holds both 1.5 s
+            lib.switchAlliance(g1.back, g1.start);   // optional, off by default: hold BACK + START 1.5 s
         }
         // end recipe
 

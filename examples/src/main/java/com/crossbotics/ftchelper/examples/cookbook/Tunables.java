@@ -25,6 +25,9 @@ public class Tunables {
         // "Set pose here" (TeleOp: hold gamepad 1 START 1 s with the robot on this spot). Inches and
         // degrees seen from your wall, written for BLUE like a start spot: our left corner tile, facing the field.
         public static double resetX = -56, resetY = -61, resetHeading = 0;
+        // RED: false = the same numbers from the red wall (BIOBUZZ's field is turned half a turn);
+        // true (or left out) = mirrored left-right, for a mirrored field.
+        public static boolean mirrorForRed = false;
     }
     // end recipe
 

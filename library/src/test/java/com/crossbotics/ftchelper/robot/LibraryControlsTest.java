@@ -62,11 +62,11 @@ public class LibraryControlsTest {
 
     @Test public void theDefaultMapShowsEveryLibraryButton() {
         List<String> help = ControlMap.makePlan(robot, false, true, (g1, g2) -> { }).help();
-        assertEquals("G1 BACK: pause / go on; hold 1 s: forward = away from you now; with START: debug lines; "
-                + "hold both 1.5 s: switch alliance (BLUE / RED) [library]", line(help, "G1 BACK"));
+        assertEquals("G1 BACK: pause / go on; hold 1 s: forward = away from you now; with START: debug lines [library]",
+                line(help, "G1 BACK"));
         assertEquals("G1 GUIDE: button map; hold 1 s: tuning menu [library]", line(help, "G1 GUIDE"));
         assertEquals("no odometry: START has no \"set pose\"",
-                "G1 START: with BACK: debug lines; hold both 1.5 s: switch alliance (BLUE / RED) [library]", line(help, "G1 START"));
+                "G1 START: with BACK: debug lines [library]", line(help, "G1 START"));
         assertTrue("gamepad 2's GUIDE is free", line(help, "G2 free").contains("GUIDE"));
     }
 
@@ -101,7 +101,7 @@ public class LibraryControlsTest {
         assertEquals("G1 BACK: press", line(p.help(), "G1 BACK"));
         assertEquals("G1 GUIDE: press", line(p.help(), "G1 GUIDE"));
         assertEquals("G1 RT: slow (squeeze: the further, the slower)", line(p.help(), "G1 RT"));
-        assertEquals(com.crossbotics.ftchelper.gamepad.ControllerBindings.Trigger.RT, p.slowTrigger);
+        assertEquals(com.crossbotics.ftchelper.gamepad.ControllerBindings.Trigger.RT, p.slowTrigger.trigger());
     }
 
     @Test public void swappedSticksDriveWithTheRightStick() {
@@ -263,7 +263,103 @@ public class LibraryControlsTest {
         assertEquals("", r.aim().odometryProblem());
     }
 
+    @Test public void theInitLineSaysHowTheResetSpotIsUsedForRed() {
+        assertEquals("mirrored, x and heading flip (mirrorForRed not set: default = true)", odoBot(ResetSpot.class).resetMirrorWords());
+        assertEquals("the same numbers from the red wall (Tunables.Odometry.mirrorForRed = false)",
+                odoBot(ResetSpotTurned.class).resetMirrorWords());
+    }
+
+    // ----------------------------- slow -----------------------------
+
+    @Test public void aTeamSlowTriggerOnGamepadTwoReadsGamepadTwo() {
+        ButtonPlan p = plan(false, LibraryButtons.twoDrivers().slow(null), (g1, g2) -> g2.rt.slow());
+        com.qualcomm.robotcore.hardware.Gamepad pad1 = new com.qualcomm.robotcore.hardware.Gamepad();
+        com.qualcomm.robotcore.hardware.Gamepad pad2 = new com.qualcomm.robotcore.hardware.Gamepad();
+        pad1.right_trigger = 1;
+        assertEquals("gamepad 1's RT is not the slow trigger", 1, ControlMap.teamSpeed(p, 0.3, pad1, pad2), 1e-9);
+        pad1.right_trigger = 0;
+        pad2.right_trigger = 1;
+        assertEquals("gamepad 2's RT squeezed: slow", 0.3, ControlMap.teamSpeed(p, 0.3, pad1, pad2), 1e-9);
+        assertNull(ControlMap.noSlowWarning(LibraryButtons.twoDrivers().slow(null), p));
+    }
+
+    @Test public void noSlowAtAllIsAnInitWarning() {
+        LibraryButtons lib = LibraryButtons.twoDrivers().slow(null);
+        ButtonPlan p = plan(false, lib, (g1, g2) -> { });
+        String w = ControlMap.noSlowWarning(lib, p);
+        assertTrue(w, w != null && w.startsWith("No slow button"));
+        assertNull(ControlMap.noSlowWarning(LibraryButtons.twoDrivers(), plan(false, LibraryButtons.twoDrivers(), (g1, g2) -> { })));
+        LibraryButtons one = LibraryButtons.oneDriver();
+        assertNull("one driver: slow on/off", ControlMap.noSlowWarning(one, plan(true, one, (g1, g2) -> { })));
+    }
+
     // ----------------------------- switching the alliance -----------------------------
+
+    @Test public void aSwitchMirrorsThePoseOnAMirroredField() {
+        AimTest.AimBot r = odoBot(ResetSpot.class);
+        r.odometry().setPose(new FieldPose(-30, -50, 20));   // where autonomous (run as BLUE) left it
+        r.setAlliance(Alliance.RED);
+        String note = ControlMap.poseAfterSwitch(r, Alliance.RED, com.crossbotics.ftchelper.teleop.Key.g1(
+                com.crossbotics.ftchelper.gamepad.ControllerBindings.Btn.START));
+        assertTrue(note, note.contains("pose mirrored to RED's side"));
+        r.odometry().update();
+        assertPose("mirrored in place", 30, -50, -20, r.pose());
+        assertTrue("still set: the odometry aim keeps working", r.odometry().isPoseSet());
+    }
+
+    @Test public void aSwitchOnATurnedFieldTurnsTheOdometryAimOffUntilThePoseIsSet() {
+        AimTest.AimBot r = odoBot(ResetSpotTurned.class);
+        r.odometry().setPose(new FieldPose(-30, -50, 20));
+        r.odometry().update();
+        assertNotNull(r.aim().fromOdometry());
+        r.setAlliance(Alliance.RED);
+        String note = ControlMap.poseAfterSwitch(r, Alliance.RED, com.crossbotics.ftchelper.teleop.Key.g1(
+                com.crossbotics.ftchelper.gamepad.ControllerBindings.Btn.START));
+        assertEquals("Alliance now RED: odometry aim OFF until the pose is set (park on the reset spot, hold G1 START 1 s)", note);
+        assertFalse(r.odometry().isPoseSet());
+        assertNull("no odometry backup until the pose is set", r.aim().fromOdometry());
+        assertTrue(r.resetPose());
+        r.odometry().update();
+        assertNotNull("set pose here turns it back on", r.aim().fromOdometry());
+        // No pose to fix: nothing to say.
+        assertNull(ControlMap.poseAfterSwitch(odoBot(ResetSpot.class), Alliance.RED, null));
+    }
+
+    /** The AimBot with whole-robot aim (a camera, no turret). */
+    public static class PoseBot extends AimTest.AimBot {
+        public PoseBot() {
+            super(SwitchTunables.class, true);
+            withTurret = false;
+        }
+    }
+
+    /** A TeleOp on the odometry robot, to call "set pose here" the way its button does. */
+    public static class PoseControls extends ControlMap<PoseBot> {
+        @Override protected void buttons(PoseBot robot, Pad g1, Pad g2) { }
+
+        PoseBot bot() {
+            return robot();
+        }
+
+        String setPose() {
+            return setPoseJob().get();
+        }
+    }
+
+    @Test public void setPoseHereWaitsUntilTheRobotStops() {
+        PoseControls c = new PoseControls();
+        c.bot().setup(devices());
+        c.gamepad1 = new com.qualcomm.robotcore.hardware.Gamepad();
+        c.gamepad1.left_stick_y = -0.6f;   // driving
+        assertTrue(c.setPose(), c.setPose().startsWith("Pose NOT set: stop first"));
+        c.gamepad1.left_stick_y = 0;
+        c.gamepad1.right_stick_x = 0.4f;   // turning
+        assertTrue(c.setPose(), c.setPose().startsWith("Pose NOT set"));
+        c.gamepad1.right_stick_x = 0.05f;  // a stick at rest is never quite 0
+        assertTrue("still: it goes on (this robot has no reset spot)", c.setPose().startsWith("No reset spot"));
+        c.bot().aimMode().on();           // whole-robot aim turns the robot by itself
+        assertTrue(c.setPose(), c.setPose().startsWith("Pose NOT set"));
+    }
 
     // The goal tags for each alliance and a goal point (mirrored for RED).
     public static class SwitchTunables {
@@ -319,7 +415,10 @@ public class LibraryControlsTest {
         TargetObservation g = r.camera.goal();
         assertNotNull("RED looks for the red goal", g);
         assertEquals("RED SCORING", g.name);
-        assertEquals("RED: the goal point is mirrored (straight ahead now)", 0, r.aim().fromOdometry().bearingDeg, 1e-6);
+        // The pose from autonomous (run as BLUE) is mirrored too, so the aim stays right: the mirror
+        // image of BLUE's 45 degrees left.
+        assertEquals("the pose is mirrored to RED's side", -24, r.pose().x, 1e-6);
+        assertEquals("RED: the goal point and the pose are mirrored", -45, r.aim().fromOdometry().bearingDeg, 1e-6);
         assertEquals(Alliance.RED, MatchMemory.chosen());
         assertEquals("a TeleOp started again gets the corrected one", Alliance.RED, MatchMemory.allianceOr(Alliance.BLUE));
 

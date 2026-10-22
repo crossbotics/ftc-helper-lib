@@ -32,10 +32,10 @@ import java.util.List;
  *   <li>Driving on gamepad 1 ({@link DriverControls}): left stick drive, right stick X turn, left
  *       trigger slow. Mecanum and tank. Robot-centric to start; Y = field-centric on/off (mecanum).</li>
  *   <li>Field-centric "forward" continues from autonomous ({@link DriverHeading}); BACK resets it.</li>
- *   <li>The alliance from autonomous ({@link #alliance()}; BACK + START held 1.5 s switches it), the
- *       2:00 match timer with gamepad buzzes at 1:00 and 0:20, the tuning menu on GUIDE (PRACTICE
- *       profile only), debug telemetry on START + BACK, warnings for slow code, a tuned value or the
- *       PRACTICE profile.</li>
+ *   <li>The alliance from autonomous ({@link #alliance()}; chosen in INIT if no autonomous ran; a
+ *       switch during TeleOp only if you turn it on), the 2:00 match timer with gamepad buzzes at 1:00
+ *       and 0:20, the tuning menu on GUIDE (PRACTICE profile only), debug telemetry on BACK + START,
+ *       warnings for slow code, a tuned value or the PRACTICE profile.</li>
  *   <li>Every one of these buttons can move or be freed: {@link #libraryButtons(LibraryButtons)}.</li>
  *   <li>Every mechanism updated every loop, and EVERYTHING stopped at the end, even after an error.</li>
  * </ul>
@@ -122,7 +122,7 @@ public abstract class EasyTeleOp extends LinearOpMode {
      * Your buttons. Put gamepad 2 buttons on {@code operator}. Extra gamepad 1 buttons go on
      * {@code driver}: those pause while the tuning menu is open (it uses gamepad 1).
      * Already taken on gamepad 1 (unless moved with {@link #libraryButtons(LibraryButtons)}): LT, Y
-     * (field-centric), BACK, START (with BACK: debug lines and switch alliance), GUIDE.
+     * (field-centric), BACK, START (with BACK: debug lines), GUIDE.
      */
     protected void bindButtons(ControllerBindings driver, ControllerBindings operator) { }
 
@@ -180,8 +180,18 @@ public abstract class EasyTeleOp extends LinearOpMode {
     }
 
     /**
+     * How to read "the robot is paused now", or null (default). With one, a press of the pause button
+     * pauses AT ONCE (even though BACK also has "hold: reset forward"), and going on is a tap. Without
+     * one, {@link #backTap()} runs when BACK is let go. Controls.java gives one.
+     */
+    protected java.util.function.BooleanSupplier pauseState() {
+        return null;
+    }
+
+    /**
      * The "set pose here" job, or null (default: none). It sets the pose and returns the words for the
-     * Driver Station ("Pose set: ..."). Controls.java gives one on a robot with odometry.
+     * Driver Station ("Pose set: ..."). Controls.java gives one on a robot with odometry. Its button
+     * works in INIT too (held 1 s before START), so the pose can be set before the match.
      */
     protected java.util.function.Supplier<String> setPoseJob() {
         return null;
@@ -432,6 +442,34 @@ public abstract class EasyTeleOp extends LinearOpMode {
         return b.toString();
     }
 
+    /**
+     * The INIT warning when this TeleOp can pause ({@code jobs} has PAUSE) but no button pauses
+     * ({@code lib.pause(null)}), or null. Package-private and static for tests.
+     */
+    static String noPauseWarning(LibraryButtons lib, java.util.Set<LibraryButtons.Job> jobs) {
+        if (!jobs.contains(LibraryButtons.Job.PAUSE) || lib.key(LibraryButtons.Job.PAUSE) != null) return null;
+        return "No pause button (libraryButtons freed it): nothing on the gamepads pauses the robot";
+    }
+
+    /** The INIT note when field-centric is possible but has no button, or null (tests). */
+    static String noFieldCentricNote(LibraryButtons lib, boolean startsFieldCentric) {
+        if (lib.key(LibraryButtons.Job.FIELD_CENTRIC) != null) return null;
+        return "No field-centric button (libraryButtons): driving stays " + (startsFieldCentric ? "field-centric" : "robot-centric");
+    }
+
+    // In INIT: the other button of a pair this key is in (debug, switch alliance) is down too, or
+    // START + A/B (pairing a gamepad on the Driver Station): not this key's own job.
+    private boolean pairedNow(Key k) {
+        for (LibraryButtons.Job j : new LibraryButtons.Job[] {LibraryButtons.Job.DEBUG, LibraryButtons.Job.SWITCH_ALLIANCE}) {
+            Key a = lib.key(j), b = lib.with(j);
+            if (a == null || b == null) continue;
+            if (a.equals(k) && b.isDown(gamepad1, gamepad2)) return true;
+            if (b.equals(k) && a.isDown(gamepad1, gamepad2)) return true;
+        }
+        com.qualcomm.robotcore.hardware.Gamepad g = k.pad == Pad.G1 ? gamepad1 : gamepad2;
+        return k.btn == Btn.START && g != null && (g.a || g.b);
+    }
+
     // An INIT alliance button is down (not while START is held on its gamepad: START + A/B pairs a
     // gamepad on the Driver Station).
     private boolean initPressed(Key k) {
@@ -484,7 +522,22 @@ public abstract class EasyTeleOp extends LinearOpMode {
             // After bindButtons, so the button map is known.
             help = buttonHelp();
             // Checks the library's buttons (two jobs on one button stop here, with its name).
-            keys = new LibraryKeys(lib.slots(libraryJobs(help != null)), libraryJobMap(), System::nanoTime);
+            java.util.Set<LibraryButtons.Job> jobsHere = libraryJobs(help != null);
+            java.util.Map<LibraryButtons.Job, Runnable> jobMap = libraryJobMap();
+            keys = new LibraryKeys(lib.slots(jobsHere), jobMap, System::nanoTime).pauseAtPress(pauseState());
+            // "Set pose here" works in INIT too (held 1 s before START): done before the buzzer.
+            Runnable poseJob = jobsHere.contains(LibraryButtons.Job.SET_POSE) ? jobMap.get(LibraryButtons.Job.SET_POSE) : null;
+            Key poseKey = poseJob == null ? null : lib.key(LibraryButtons.Job.SET_POSE);
+            long poseDownAt = -1;
+            boolean poseBlocked = false, poseSetHere = false;
+            // Jobs the TeleOp has but no button does: say so (a freed pause button means nothing
+            // can stop the robot from the gamepad).
+            String noPause = noPauseWarning(lib, jobsHere);
+            String noFieldCentric = driving.canFieldCentric() ? noFieldCentricNote(lib, startFieldCentric()) : null;
+            // The alliance switch in TeleOp is opt-in (lib.switchAlliance(...)): say whether it is on.
+            String switchWords = lib.key(LibraryButtons.Job.SWITCH_ALLIANCE) == null
+                    ? "off in TeleOp (lib.switchAlliance(...) turns it on)"
+                    : "in TeleOp: hold " + keyWords(LibraryButtons.Job.SWITCH_ALLIANCE) + " " + LibraryButtons.SWITCH_ALLIANCE_SEC + " s to switch";
 
             // ---- INIT loop: warnings and what the drivers need to know. Never waits. ----
             boolean fromAuto = MatchMemory.hasAlliance();
@@ -496,10 +549,34 @@ public abstract class EasyTeleOp extends LinearOpMode {
             while (opModeInInit()) {
                 // The alliance: from autonomous, or chosen here (default gamepad 1: X = BLUE, B = RED).
                 // (not while START is held: START+B pairs a gamepad on the Driver Station)
+                Alliance before = alliance;
                 if (initPressed(lib.initBlue())) { alliance = Alliance.BLUE; fromAuto = false; chosenHere = true; }
                 if (initPressed(lib.initRed())) { alliance = Alliance.RED; fromAuto = false; chosenHere = true; }
                 if (fromAuto || chosenHere) MatchMemory.setChosen(alliance);
+                // The pose was set here for the other alliance: set it again for this one.
+                if (alliance != before && poseSetHere) poseJob.run();
+                // "Set pose here" held 1 s in INIT (not while START + A/B pairs a gamepad, not as part
+                // of a pair like BACK + START). Once per press.
+                if (poseKey != null) {
+                    boolean down = poseKey.isDown(gamepad1, gamepad2);
+                    if (!down) {
+                        poseBlocked = false;
+                        poseDownAt = -1;
+                    } else if (!poseBlocked) {
+                        if (pairedNow(poseKey)) {
+                            poseBlocked = true;
+                        } else if (poseDownAt < 0) {
+                            poseDownAt = System.nanoTime();
+                        } else if ((System.nanoTime() - poseDownAt) / 1e9 >= LibraryButtons.HOLD_SEC) {
+                            poseJob.run();
+                            poseSetHere = true;
+                            poseBlocked = true;
+                        }
+                    }
+                }
                 if (Profile.current().isPractice()) t.warn("PRACTICE profile");
+                if (noPause != null) t.warn(noPause);
+                if (noteText != null && System.nanoTime() - noteAt < 3e9) t.warn(noteText);
                 int changed = Tunable.countChanged();
                 if (changed > 0) t.warn(changed + " tuned value(s) differ from the code");
                 if (choose.isEmpty()) {
@@ -512,9 +589,11 @@ public abstract class EasyTeleOp extends LinearOpMode {
                     t.warn("Choose the alliance: " + choose);
                     t.line("Alliance", alliance + " until you choose");
                 }
+                t.line("Switch alliance", switchWords);
                 if (heading != null) {
                     t.line("Forward", heading.isFromAuto() ? "from autonomous" : "the way the robot faces now");
                 }
+                if (noFieldCentric != null) t.text(noFieldCentric);
                 addInitTelemetry(t);
                 if (!autoReport.isEmpty()) {
                     t.section("Autonomous");
@@ -579,7 +658,7 @@ public abstract class EasyTeleOp extends LinearOpMode {
                     if (heading != null && t.isDebug()) {
                         t.debug("Heading", "%.1f%s", heading.degrees(), heading.isFromAuto() ? " (from auto)" : "");
                     }
-                    // The loop time (debug lines: START + BACK). Lower is better; under 20 ms is good.
+                    // The loop time (debug lines: BACK + START). Lower is better; under 20 ms is good.
                     t.debug("Loop", "%.1f ms (%.0f Hz)", loopTimer.getAverageMs(), loopTimer.getHz());
                 }
                 t.update();

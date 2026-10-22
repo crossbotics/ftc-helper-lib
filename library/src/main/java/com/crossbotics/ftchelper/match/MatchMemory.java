@@ -117,7 +117,8 @@ public final class MatchMemory {
      * Changes the alliance in use during TeleOp (the wrong one was chosen): {@link #chosen()} becomes
      * {@code a}, and autonomous's remembered alliance too, if there is one from this match (its age
      * stays), so a TeleOp started again in this match gets the corrected one. EasyTeleOp's
-     * "switch alliance" buttons call it.
+     * "switch alliance" buttons call it (off unless the team turns them on with
+     * {@code lib.switchAlliance(...)}).
      */
     public static synchronized void changeAlliance(Alliance a) {
         if (a == null) return;

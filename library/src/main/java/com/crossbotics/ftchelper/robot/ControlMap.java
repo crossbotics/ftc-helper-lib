@@ -35,10 +35,11 @@ import java.util.Set;
  *
  * <p><b>The library's own buttons</b> (gamepad 1 by default): left stick drives (and strafes on
  * mecanum), right stick X turns, LT slow (the further it is pulled, the slower), Y field-centric on/off
- * (mecanum), BACK pauses everything (motors on brake; again to go on), holding BACK 1 s resets
- * "forward", START + BACK debug lines, BACK + START held 1.5 s switches the alliance, START held 1 s
- * sets the pose to the reset spot (robots with odometry), GUIDE shows the button map (a tap) or opens
- * the tuning menu (held 1 s, PRACTICE profile). With {@code oneDriver = true}: left stick click slow
+ * (mecanum), BACK pauses everything at the press (motors on brake; a tap again to go on), holding BACK
+ * 1 s also resets "forward" (field-centric), BACK + START debug lines, START held 1 s sets the pose to
+ * the reset spot (robots with odometry; sticks let go; also in INIT), GUIDE shows the button map (a
+ * tap) or opens the tuning menu (held 1 s, PRACTICE profile). Switching the alliance during TeleOp is
+ * off unless you turn it on: {@code lib.switchAlliance(g1.back, g1.start)}. With {@code oneDriver = true}: left stick click slow
  * on/off, right stick click field-centric, and the operator's buttons move to gamepad 1. Every one can
  * be moved or freed in {@link #libraryButtons(LibraryButtons, Pad, Pad)}.
  *
@@ -77,7 +78,7 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
      * @Override protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
      *     lib.fieldCentric(g1.x);              // Y is free for buttons(...) now
      *     lib.setPose(g1.dpadDown);            // hold D-pad down 1 s: set pose here
-     *     lib.switchAlliance(null, null);      // no alliance switch in TeleOp
+     *     lib.switchAlliance(g1.back, g1.start);   // turn on the alliance switch (hold both 1.5 s)
      * }
      * }</pre>
      *
@@ -168,25 +169,64 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
         if (oneDriver()) lib.moveAllToGamepad1();
     }
 
-    // "Set pose here" (robots with odometry): the pose becomes Tunables.Odometry's reset spot.
+    // "Set pose here" (robots with odometry): the pose becomes Tunables.Odometry's reset spot. Not while
+    // the robot drives or aims by itself: the pose would be set at a spot the robot is not on.
     @Override
     protected final java.util.function.Supplier<String> setPoseJob() {
         if (robot().odometrySpec() == null) return null;
         return () -> {
             if (robot().odometry() == null) return "No odometry running";
+            if (moving()) return "Pose NOT set: stop first (let go of the drive sticks, aim off), then hold the button again";
+            // The alliance may have been chosen in INIT a moment ago: use the one chosen now.
+            robot().setAlliance(alliance());
             if (!robot().resetPose()) return "No reset spot: add resetX, resetY, resetHeading to Tunables.Odometry";
             return "Pose set: " + robot().resetSpotWords();
         };
     }
+
+    // The drive sticks are pushed (past a small dead zone), or whole-robot aim is on (it turns the robot).
+    private boolean moving() {
+        if (gamepad1 != null) {
+            boolean swapped = libraryKeys() != null && libraryKeys().sticksSwapped();
+            double x = swapped ? gamepad1.right_stick_x : gamepad1.left_stick_x;
+            double y = swapped ? gamepad1.right_stick_y : gamepad1.left_stick_y;
+            double turn = swapped ? gamepad1.left_stick_x : gamepad1.right_stick_x;
+            if (Math.abs(x) > STILL || Math.abs(y) > STILL || Math.abs(turn) > STILL) return true;
+        }
+        return robot().aim() != null && robot().aim().modeOn();
+    }
+
+    // How far a drive stick may be off centre and still count as "let go" (0 to 1).
+    private static final double STILL = 0.1;
 
     // The alliance was switched in TeleOp (Camera.goal and the aim read robot.alliance(): they follow).
     @Override
     protected final void allianceChanged(com.crossbotics.ftchelper.match.Alliance now) {
         robot().setAlliance(now);
         Key pose = libraryKeys() == null ? null : libraryKeys().key(LibraryButtons.Job.SET_POSE);
-        if (robot().odometry() != null && robot().odometry().isPoseSet() && pose != null) {
-            showNote("Alliance now " + now + ". Pose from the wrong side? Park on the reset spot, hold " + pose + " 1 s");
+        String note = poseAfterSwitch(robot(), now, pose);
+        if (note != null) showNote(note);
+    }
+
+    /**
+     * The odometry's pose after the alliance was switched in TeleOp (autonomous ran as the wrong one,
+     * so the pose is in the wrong alliance's numbers). A mirrored field (the reset spot's mirrorForRed
+     * true): the pose is mirrored in place (x and heading flip), like the start spot would have been. A
+     * turned field (mirrorForRed false, BIOBUZZ): the pose cannot be fixed, so it counts as "not set"
+     * and aiming by odometry stays off until "set pose here". Returns the note for the Driver Station,
+     * or null when there is no pose to fix. Package-private and static for tests.
+     */
+    static String poseAfterSwitch(RobotDefinition robot, com.crossbotics.ftchelper.match.Alliance now, Key poseKey) {
+        com.crossbotics.ftchelper.odometry.PoseTracker o = robot.odometry();
+        if (o == null || !o.isPoseSet()) return null;
+        if (robot.resetMirrorsForRed()) {
+            com.crossbotics.ftchelper.util.FieldPose p = o.pose();
+            o.setPose(new com.crossbotics.ftchelper.util.FieldPose(-p.x + 0.0, p.y, -p.headingDeg + 0.0));
+            return "Alliance now " + now + ": pose mirrored to " + now + "'s side (mirrorForRed = true)";
         }
+        o.unsetPose();
+        String how = poseKey == null ? "robot.resetPose()" : "park on the reset spot, hold " + poseKey + " 1 s";
+        return "Alliance now " + now + ": odometry aim OFF until the pose is set (" + how + ")";
     }
 
     @Override
@@ -208,10 +248,17 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
         return plan == null ? null : plan.help(false);   // no free buttons here
     }
 
-    // BACK (a tap): pause everything (motors on brake), a tap again: go on. Hold BACK: reset "forward".
+    // BACK: pause everything at the press (motors on brake), a tap again: go on. Hold BACK: also reset
+    // "forward" (the robot stays paused).
     @Override
     protected final Runnable backTap() {
         return () -> robot().togglePause();
+    }
+
+    // So the pause acts at the press, not when BACK is let go (LibraryKeys.pauseAtPress).
+    @Override
+    protected final java.util.function.BooleanSupplier pauseState() {
+        return () -> robot().isPaused();
     }
 
     @Override
@@ -221,17 +268,16 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
             return;
         }
         // The slowest of the library's slow buttons and a button given slow() in buttons(...).
-        driving().update(gamepad, Math.min(driveSpeed(), teamSpeed(gamepad)));
+        driving().update(gamepad, Math.min(driveSpeed(), teamSpeed(plan, slowSpeed(), gamepad1, gamepad2)));
     }
 
     // A button given slow() (slow while held), and a trigger given slow() (the further it is pulled,
-    // the slower). 1 = full speed.
-    private double teamSpeed(Gamepad gamepad) {
-        double slowest = Math.max(0, Math.min(1, slowSpeed()));
+    // the slower), on whichever gamepad it is (g2.rt.slow() reads gamepad 2). 1 = full speed.
+    static double teamSpeed(ButtonPlan plan, double slowSpeed, Gamepad g1, Gamepad g2) {
+        double slowest = Math.max(0, Math.min(1, slowSpeed));
         double speed = plan != null && plan.slowHeld ? slowest : 1;
         if (plan != null && plan.slowTrigger != null) {
-            double pull = plan.slowTrigger == ControllerBindings.Trigger.LT ? gamepad.left_trigger : gamepad.right_trigger;
-            speed = Math.min(speed, StickShaping.slowScale(pull, slowest));
+            speed = Math.min(speed, StickShaping.slowScale(plan.slowTrigger.pull(g1, g2), slowest));
         }
         return speed;
     }
@@ -325,9 +371,14 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
             String spot = robot().resetSpotWords();
             if (pose != null) {
                 t.line("Set pose", spot == null ? "no reset spot (Tunables.Odometry resetX, resetY, resetHeading)"
-                        : "hold " + pose + " 1 s at " + spot);
+                        : "hold " + pose + " 1 s at " + spot + ", now or in the match");
             }
+            // Which mirroring the reset spot uses for RED (wrong for the field = the pose on the wrong side).
+            t.line("Reset spot for RED", robot().resetMirrorWords());
         }
+        // No slow at all (the library's freed and none of the team's): the drivers should know.
+        String noSlow = noSlowWarning(libraryKeys(), plan);
+        if (noSlow != null) t.warn(noSlow);
         for (String n : robot().notes()) t.text(n);
         if (plan != null) for (String n : plan.notes()) t.text(n);
         List<String> changed = RobotDefinition.changedTunables();
@@ -339,6 +390,16 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
             t.section(oneDriver() ? "Buttons (one driver)" : "Buttons");
             for (String h : plan.help()) t.text(h);
         }
+    }
+
+    /**
+     * The INIT warning when nothing makes the robot drive slow: the library's slow (and slow on/off)
+     * freed and no {@code slow()} of the team's. Null when there is one. Package-private for tests.
+     */
+    static String noSlowWarning(LibraryButtons lib, ButtonPlan plan) {
+        if (lib == null || plan == null || plan.teamSlow) return null;
+        if (lib.key(LibraryButtons.Job.SLOW) != null || lib.key(LibraryButtons.Job.SLOW_TOGGLE) != null) return null;
+        return "No slow button (libraryButtons freed it): add one, e.g. g1.rt.slow() in buttons(...)";
     }
 
     // ----------------------------- the map -----------------------------

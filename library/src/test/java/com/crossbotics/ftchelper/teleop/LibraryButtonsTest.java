@@ -1,6 +1,7 @@
 package com.crossbotics.ftchelper.teleop;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -42,12 +43,12 @@ public class LibraryButtonsTest {
 
     // ----------------------------- the defaults -----------------------------
 
-    @Test public void theDefaultsAreTheOldButtonsPlusPoseAndAlliance() {
+    @Test public void theDefaultsAreTheOldButtonsPlusPose() {
         Map<Key, String> w = LibraryButtons.twoDrivers().words(all());
-        assertEquals("pause / go on; hold 1 s: forward = away from you now; with START: debug lines; "
-                + "hold both 1.5 s: switch alliance (BLUE / RED)", w.get(Key.g1(Btn.BACK)));
-        assertEquals("hold 1 s: set pose here; with BACK: debug lines; hold both 1.5 s: switch alliance (BLUE / RED)",
-                w.get(Key.g1(Btn.START)));
+        assertEquals("pause / go on; hold 1 s: forward = away from you now; with START: debug lines", w.get(Key.g1(Btn.BACK)));
+        assertEquals("hold 1 s: set pose here; with BACK: debug lines", w.get(Key.g1(Btn.START)));
+        assertNull("switching the alliance in TeleOp is off until the team turns it on",
+                LibraryButtons.twoDrivers().key(Job.SWITCH_ALLIANCE));
         assertEquals("field-centric on/off", w.get(Key.g1(Btn.Y)));
         assertEquals("slow (squeeze: the further, the slower)", w.get(Key.g1(Trigger.LT)));
         assertEquals("button map; hold 1 s: tuning menu", w.get(Key.g1(Btn.GUIDE)));
@@ -148,8 +149,93 @@ public class LibraryButtonsTest {
         assertEquals("the release does not pause too", "[RESET_FORWARD]", ran.toString());
     }
 
+    @Test public void theAllianceSwitchIsOneLineToTurnOn() {
+        LibraryButtons lib = LibraryButtons.twoDrivers().switchAlliance(Key.g1(Btn.BACK), Key.g1(Btn.START));
+        assertEquals("pause / go on; hold 1 s: forward = away from you now; with START: debug lines; "
+                + "hold both 1.5 s: switch alliance (BLUE / RED)", lib.words(all()).get(Key.g1(Btn.BACK)));
+        assertEquals(Key.g1(Btn.START), lib.with(Job.SWITCH_ALLIANCE));
+    }
+
+    // ----------------------------- pause at the press -----------------------------
+
+    // A pretend robot that pauses: PAUSE flips it, like Controls.java's robot.togglePause().
+    private boolean paused = false;
+
+    private LibraryKeys pausingKeys(LibraryButtons lib) {
+        Map<Job, Runnable> map = LibraryKeys.jobs();
+        for (final Job j : Job.values()) map.put(j, () -> ran.add(j.name()));
+        map.put(Job.PAUSE, () -> {
+            paused = !paused;
+            ran.add(paused ? "PAUSE" : "GO_ON");
+        });
+        return new LibraryKeys(lib.slots(all()), map, clock::get).pauseAtPress(() -> paused);
+    }
+
+    @Test public void aPressOfBackPausesAtOnceAndAHoldAlsoResetsForward() {
+        LibraryKeys k = pausingKeys(LibraryButtons.twoDrivers());
+        g1.back = true;
+        loop(k, 0.02);
+        assertTrue("paused at the press, not at the release", paused);
+        g1.back = false;
+        loop(k, 0.1);
+        assertTrue("the release does not go on again", paused);
+        assertEquals("[PAUSE]", ran.toString());
+        // Paused: a tap goes on (at the release, so holding never starts the robot).
+        g1.back = true;
+        loop(k, 0.02);
+        assertTrue(paused);
+        g1.back = false;
+        loop(k, 0.1);
+        assertFalse(paused);
+        assertEquals("[PAUSE, GO_ON]", ran.toString());
+        ran.clear();
+        // Held 1 s: paused at once, then forward is reset, and it stays paused.
+        g1.back = true;
+        loop(k, 0.02);
+        assertTrue(paused);
+        loop(k, 0.5);
+        loop(k, 0.6);
+        g1.back = false;
+        loop(k, 0.02);
+        assertTrue("stays paused until the next tap", paused);
+        assertEquals("[PAUSE, RESET_FORWARD]", ran.toString());
+        ran.clear();
+        // Paused and held 1 s: forward is reset, still paused.
+        g1.back = true;
+        loop(k, 0.02);
+        loop(k, 1.1);
+        g1.back = false;
+        loop(k, 0.02);
+        assertTrue(paused);
+        assertEquals("[RESET_FORWARD]", ran.toString());
+    }
+
+    @Test public void backThenStartTakesThePauseBackForTheDebugLines() {
+        LibraryKeys k = pausingKeys(LibraryButtons.twoDrivers());
+        g1.back = true;
+        loop(k, 0.02);
+        assertTrue("BACK alone so far: paused", paused);
+        g1.start = true;
+        loop(k, 0.05);
+        assertFalse("START joined: it is the pair, the pause is taken back", paused);
+        g1.back = false;
+        g1.start = false;
+        loop(k, 0.02);
+        assertEquals("[PAUSE, GO_ON, DEBUG]", ran.toString());
+        assertFalse(paused);
+        ran.clear();
+        // Both in the same loop: no pause at all.
+        g1.back = true;
+        g1.start = true;
+        loop(k, 0.02);
+        g1.back = false;
+        g1.start = false;
+        loop(k, 0.02);
+        assertEquals("[DEBUG]", ran.toString());
+    }
+
     @Test public void startAndBackTogetherAreDebugAndHeldTheySwitchTheAlliance() {
-        LibraryKeys k = keys(LibraryButtons.twoDrivers(), all());
+        LibraryKeys k = keys(LibraryButtons.twoDrivers().switchAlliance(Key.g1(Btn.BACK), Key.g1(Btn.START)), all());
         g1.back = true;
         loop(k, 0.02);
         g1.start = true;
@@ -283,11 +369,24 @@ public class LibraryButtonsTest {
         assertEquals("[RESET_FORWARD]", ran.toString());
     }
 
+    @Test public void aFreedPauseOrFieldCentricButtonIsSaidAtInit() {
+        assertNull(EasyTeleOp.noPauseWarning(LibraryButtons.twoDrivers(), all()));
+        String w = EasyTeleOp.noPauseWarning(LibraryButtons.twoDrivers().pause(null), all());
+        assertTrue(w, w.startsWith("No pause button"));
+        assertTrue(w, w.contains("libraryButtons"));
+        Set<Job> noPauseJob = all();
+        noPauseJob.remove(Job.PAUSE);
+        assertNull("a TeleOp that cannot pause says nothing", EasyTeleOp.noPauseWarning(LibraryButtons.twoDrivers().pause(null), noPauseJob));
+        assertNull(EasyTeleOp.noFieldCentricNote(LibraryButtons.twoDrivers(), false));
+        assertEquals("No field-centric button (libraryButtons): driving stays robot-centric",
+                EasyTeleOp.noFieldCentricNote(LibraryButtons.twoDrivers().fieldCentric(null), false));
+    }
+
     @Test public void aJobTheRobotDoesNotHaveLeavesItsButtonFree() {
         Set<Job> jobs = all();
         jobs.remove(Job.SET_POSE);
         Map<Key, String> w = LibraryButtons.twoDrivers().words(jobs);
-        assertEquals("with BACK: debug lines; hold both 1.5 s: switch alliance (BLUE / RED)", w.get(Key.g1(Btn.START)));
+        assertEquals("with BACK: debug lines", w.get(Key.g1(Btn.START)));
         LibraryKeys k = keys(LibraryButtons.twoDrivers(), jobs);
         g1.start = true;
         loop(k, 0.02);

@@ -123,7 +123,7 @@ Each warning goes away 5 s after the last slow update or job. Fixes: [troublesho
 
 ### Show the loop time
 
-Every EasyTeleOp and `Controls.java` TeleOp shows it in the debug lines (START + BACK):
+Every EasyTeleOp and `Controls.java` TeleOp shows it in the debug lines (BACK + START):
 `Loop: 12.3 ms (81 Hz)`. Lower is better; under 20 ms is good. To show it all the time, or in your own
 OpMode, use [`LoopTimer`](../modules/util.md#looptimer).
 

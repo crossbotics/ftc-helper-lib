@@ -28,8 +28,11 @@ final class ButtonPlan {
     final Pad g1, g2;
     // True while a button given Button.slow() is held (one driver).
     boolean slowHeld = false;
-    // A trigger given Button.slow(): the further it is pulled, the slower (one driver). Null if none.
-    ControllerBindings.Trigger slowTrigger = null;
+    // A trigger given Button.slow(): the further it is pulled, the slower. Null if none. The whole
+    // key (gamepad and trigger), so a G2 trigger reads gamepad 2.
+    com.crossbotics.ftchelper.teleop.Key slowTrigger = null;
+    // True once the team gave any button or trigger slow() (for the INIT "no slow button" warning).
+    boolean teamSlow = false;
     // The library's own slow key (LibraryButtons), or null: then Button.slow() works with two drivers too.
     com.crossbotics.ftchelper.teleop.Key librarySlow = null;
     // Every input with a job, in the order they were given one.
