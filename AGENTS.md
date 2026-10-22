@@ -51,6 +51,10 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
     simulator's judge() checked by SimCellJudgeTest).
 - `docs/` `modules/` (reference: every public class and method), `tutorials/` (hands-on lessons),
   `guides/` (how-to and checklists), `images/` (SVG diagrams), `starter-kit.md`, setup/update pages.
+- `testing/` the community test list: one file per test in `testing/tests/`, words in `vocabulary.json`,
+  `catalogue.json` made by `python3 tools/check_tests.py --fix` (crossbotics.com reads it). A new
+  user-facing feature gets a test there. Issue forms in `.github/ISSUE_TEMPLATE/` (their option words
+  must match vocabulary.json), the triage helper's guide in `.github/triage.md`. How: `testing/README.md`.
 - `tools/check_docs.py` checks links, heading links, class coverage, tutorial programs, and that every
   java block in `docs/cookbook.md` matches its `// recipe: name` region in `examples/.../cookbook/`
   (after changing one: `python3 tools/check_docs.py --fix-cookbook`). A guide may show a recipe too, with the
@@ -113,6 +117,7 @@ python3 tools/check_docs.py
 python3 tools/check_blocking.py
 python3 tools/check_tunables.py
 node tools/check_builder.mjs       # the simulator's auto builder page code
+python3 tools/check_tests.py
 ```
 
 All must pass. Releases: follow `docs/contributing.md#releasing-a-version`. The mentor asks for an
