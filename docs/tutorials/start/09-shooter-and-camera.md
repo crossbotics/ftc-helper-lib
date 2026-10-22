@@ -138,16 +138,41 @@ camera = add(Camera.limelight("limelight").autoPipelines(0, 1, 2).goal("BLUE SCO
   of AprilTags (the square black-and-white codes on the field). The camera then gives the goal for this
   match's alliance, chosen in autonomous's INIT menu (TeleOp remembers it).
 - `.autoPipelines(0, 1, 2)`: venue lighting. Every gym has different light, and a camera setting that
-  finds tags well at school can miss them at an event. Set up three AprilTag pipelines on the
-  Limelight's web page (0 = normal light, 1 = bright: less exposure, 2 = dim: more exposure). In INIT
-  the robot tries each one, counts the pictures that see a tag, and keeps the best. Put your usual
-  pipeline first: it wins a tie. Face the robot toward a tag in INIT so the test can finish. The
-  Driver Station shows the result, e.g. `limelight lighting: pipeline 2 (9 of 10 pictures saw tags)`.
+  finds tags well at school can miss them at an event. In INIT the robot tries each pipeline, counts
+  the pictures that see a tag, and keeps the best. Put your usual pipeline first: it wins a tie.
   A webcam does the same with `.autoExposure()` (it tries exposures instead of pipelines).
   How it works: [vision.md](../../modules/vision.md#venue-lighting).
 - Its numbers: `Tunables.Limelight.pipeline` (the pipeline to use when the test is off) and
-  `autoLighting` (true = run the test; false = skip it and use `pipeline`). At INIT the Driver Station
-  shows the line that skips the test at this venue next time: copy it into `Tunables.java`.
+  `autoLighting` (true = run the test; false = skip it and use `pipeline`).
+
+**Set up the three pipelines.** On a laptop on the robot's network, open the Limelight's page:
+http://limelight.local:5801. Then, for each pipeline:
+
+1. Pick the pipeline number (0, 1 or 2) in the pipeline list at the top.
+2. Set its type to AprilTag (Fiducial), and the tag family and size from the game manual.
+3. In the **Input** tab, move the **Exposure** slider: 0 = your usual light, 1 = bright light (lower
+   exposure, so tags are not washed out white), 2 = dim light (higher exposure, and more **Sensor
+   Gain** if it is still dark).
+4. Save the pipeline. The Limelight's own docs (docs.limelightvision.io) show every setting.
+
+**At INIT and at START.** Have a tag in view at INIT (where the robot starts the match is fine), or the
+test cannot help. The Driver Station shows the result, e.g.
+`limelight lighting: pipeline 2 (9 of 10 pictures saw tags)`. At START the test stops at once and keeps
+the best pipeline so far (the first one if none saw a tag), so the robot never aims with a pipeline
+it is only trying.
+
+**At an event:** in the queue (or on the practice field), INIT once with the robot facing a HIVE tag.
+Read the pipeline it picks. The Driver Station then shows two lines, e.g.
+
+```java
+public static double pipeline = 2;
+public static boolean autoLighting = false;
+```
+
+Put them in `Tunables.Limelight` (change the `pipeline` line that is there; add the `autoLighting` line
+if it is not), and the robot uses that pipeline at once in every match there, with no test. Back at
+school, set `autoLighting = true` again. A webcam shows `exposureMs` instead of `pipeline`: that is a
+new line to add to the camera's section (for example `Tunables.Webcam`).
 - It starts in INIT, so it is already looking at START. It has no buttons.
 
 ## 6. A turret that follows it
@@ -264,13 +289,17 @@ give each a `looks(...)` shape in `Robot.java` ([Lesson 1: Draw your robot from 
 | The turret's angles are wrong | `.gearRatio(...)`, or it did not point forward at INIT. |
 | "goal out of turret range" | the goal is past `min` or `max`: turn the robot. |
 | The speed never changes with distance | no goal in view; check `Tunables.Limelight.pipeline` and the `goal(...)` names. |
-| `limelight lighting: NO TAGS SEEN` | no pipeline saw a tag in INIT, so the first one is kept. Face the robot toward a tag in INIT; check each pipeline on the Limelight's web page. |
+| `limelight lighting: trying 1 of 3: pipeline 0 (no tags yet: face a tag)` (INIT) | the test has tried every pipeline and none saw a tag. Turn the robot toward a tag; the test keeps going until START. |
+| `limelight lighting: NO TAGS SEEN` (after START) | no pipeline saw a tag in INIT, so the first one is kept. Next time have a tag in view at INIT; check each pipeline on the Limelight's web page. |
+| `limelight lighting: no pictures from pipeline 2 (missing?)` | that pipeline is not set up on the Limelight: make it (see above), or take it out of `autoPipelines(...)`. |
+| `limelight: not found: no Limelight called "limelight"` | the name in the robot configuration is different (case counts), or the Limelight is not in it. The OpMode still runs, without the camera. |
 
 ## Where next
 
 - This is the last lesson. The main track is lessons 1 to 6, plus the lessons your robot needs. Not
   done yet: [Lesson 7: Odometry: where am I on the field?](07-odometry.md) (the robot knows its place
-  on the field, and autonomous drives to field points).
+  on the field, and autonomous drives to field points), and
+  [Lesson 8: Paths with Pedro Pathing](08-paths-with-pedro.md) (smooth curved paths in autonomous).
 - [The autonomous builder](../../guides/autonomous-builder.md): everything an autonomous can do (fire
   during a move with `alongside`, menu choices, branches).
 - [The finders](../../guides/finders.md): measure every number instead of guessing.

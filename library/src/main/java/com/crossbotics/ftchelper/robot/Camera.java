@@ -21,14 +21,15 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
  * <p>{@link #goal(String, String)} names this season's goal for each alliance (the tag group's
  * name); {@link #goal()} then gives the target for the alliance chosen in autonomous. Tunables
  * ({@code Tunables.Limelight} for device "limelight"): {@code pipeline} (Limelight only, default 0).
- * No suggested buttons. It starts in INIT (a webcam needs a second or two).
+ * No suggested buttons. It starts in INIT (a webcam needs a second or two). A camera missing from the
+ * robot configuration never stops the OpMode: it warns on the Driver Station and sees nothing.
  *
  * <p>Venue lighting: {@link #autoPipelines} (Limelight) or {@link #autoExposure} (webcam) tries a few
  * camera settings in INIT and keeps the one that sees the most AprilTags; the Driver Station shows the
  * result at INIT. Its numbers are optional Tunables: {@code autoLighting} (true; false = skip the test
  * and use {@code pipeline}, or the webcam's {@code exposureMs} and {@code gain}), {@code lightingSettleMs}
  * (300), {@code lightingPictures} (10), {@code lightingMinPictures} (3), {@code lightingAfterStartMs}
- * (3000), and for a webcam {@code gain} (-1 = the camera's highest).
+ * (0 = stop at START with the best so far), and for a webcam {@code gain} (-1 = the camera's highest).
  *
  * Docs: docs/modules/robot.md (section "Camera"), docs/modules/vision.md
  */
@@ -41,8 +42,10 @@ public final class Camera extends Module<Camera> {
     TargetSource source;
     // The lighting test as running (null when it is off).
     private com.crossbotics.ftchelper.vision.LightingSweep sweep = null;
-    // The Tunables line that skips the test next time, e.g. "pipeline = 1" (shown at INIT once found).
+    // The Tunables lines that skip the test next time, e.g. "pipeline = 1;" (shown at INIT once found).
     private String skipHint = "";
+    // When build() ran, to warn about a camera that is still not working a few seconds later.
+    private long builtNanos = 0;
 
     private Camera(boolean limelight, String device) {
         super(device);
@@ -112,8 +115,16 @@ public final class Camera extends Module<Camera> {
     void build(Devices devices, TunableSection t) {
         // Optional numbers: read only when written, so a team that does not use them gets no INIT note.
         boolean auto = !t.has("autoLighting") || t.flag("autoLighting", true);
+        builtNanos = System.nanoTime();
+        // tryGet: null when the camera is not in the robot configuration. A camera problem must never
+        // stop the OpMode (the robot still drives): a stand-in camera warns and sees nothing.
+        Object found = devices.tryGet(limelight ? Limelight3A.class : WebcamName.class, device);
+        if (found == null) {
+            source = new MissingCamera(device, limelight);
+            return;
+        }
         if (limelight) {
-            LimelightTags ll = new LimelightTags(device, devices.get(Limelight3A.class, device))
+            LimelightTags ll = new LimelightTags(device, (Limelight3A) found)
                     .pipeline((int) Math.round(t.number("pipeline", 0)));
             if (auto && autoPipelines != null) {
                 ll.autoPipelines(autoPipelines);
@@ -121,7 +132,7 @@ public final class Camera extends Module<Camera> {
             }
             source = ll;
         } else {
-            WebcamTags cam = new WebcamTags(device, devices.get(WebcamName.class, device));
+            WebcamTags cam = new WebcamTags(device, (WebcamName) found);
             int gain = (int) Math.round(optional(t, "gain", -1));
             long exposureMs = Math.round(optional(t, "exposureMs", -1));
             // A manual exposure from Tunables (e.g. copied from the lighting test's result)
@@ -137,7 +148,7 @@ public final class Camera extends Module<Camera> {
             sweep.settleMs(optional(t, "lightingSettleMs", 300))
                     .pictures((int) Math.round(optional(t, "lightingPictures", 10)))
                     .minPictures((int) Math.round(optional(t, "lightingMinPictures", 3)))
-                    .giveUpAfterStartMs(optional(t, "lightingAfterStartMs", 3000));
+                    .giveUpAfterStartMs(optional(t, "lightingAfterStartMs", 0));
         }
         source.start();
     }
@@ -157,20 +168,33 @@ public final class Camera extends Module<Camera> {
     void initLoop(RobotTelemetry t) {
         if (source == null) return;
         source.update();
+        // A camera that is still not working after 3 s (a webcam needs 1-2 s to start): say so now,
+        // before START, so it can be fixed.
+        if (!source.isWorking() && (source instanceof MissingCamera || System.nanoTime() - builtNanos > 3_000_000_000L)) {
+            t.warn(device + ": " + source.status());
+        }
         if (sweep == null) return;
         String line = sweep.status();
-        if (sweep.isDone() && !sweep.gaveUp()) {
-            int i = sweep.chosen();
-            skipHint = limelight ? "pipeline = " + autoPipelines[i]
-                    : (autoExposures[i] <= 0 ? "exposureMs = -1" : "exposureMs = " + autoExposures[i]);
-        }
-        if (sweep.gaveUp() || (sweep.current() >= 0 && line.contains("no tags yet"))) t.warn(device + " lighting: " + line);
+        if (sweep.isDone() && !sweep.gaveUp()) skipHint = skipLines(sweep.chosen());
+        if (sweep.gaveUp() || sweep.noTagsYet()) t.warn(device + " lighting: " + line);
         else t.line(device + " lighting", line);
+        for (String p : sweep.problems()) t.warn(device + " lighting: " + p);
         t.debug("  scores", sweep.scores());
-        if (!skipHint.isEmpty()) t.text("  To skip this test at this venue: Tunables." + name() + "." + skipHint + ", autoLighting = false");
+        if (!skipHint.isEmpty()) {
+            t.text("  To skip this test at this venue: in Tunables." + name() + " (add a line that is not there):");
+            for (String l : skipHint.split("\n")) t.text("    " + l);
+        }
     }
 
-    // START: an unfinished lighting test now gives up after lightingAfterStartMs (and keeps the first setting).
+    // The Tunables lines that skip the test with setting i, one per line, as written in Tunables.java.
+    private String skipLines(int i) {
+        if (limelight) return "public static double pipeline = " + autoPipelines[i] + ";\npublic static boolean autoLighting = false;";
+        long ms = autoExposures[i] <= 0 ? -1 : autoExposures[i];
+        return "public static double exposureMs = " + ms + ";" + (ms < 0 ? "   // -1 = the camera's own exposure" : "")
+                + "\npublic static boolean autoLighting = false;";
+    }
+
+    // START: an unfinished lighting test now stops and keeps the best setting so far.
     @Override
     void start() {
         if (source instanceof LimelightTags) ((LimelightTags) source).matchStarted();
@@ -229,6 +253,30 @@ public final class Camera extends Module<Camera> {
         String where = "forward=6, left=0, up=12, yaw=0, pitch=20";
         if (limelight) out.add("limelight." + device + " = name=" + device + ", " + where + "   # TODO measure the mount");
         else out.add("camera." + sectionFor(device) + " = name=" + device + ", " + where + ", hfov=70.4, width=640, height=480   # TODO measure the mount");
+    }
+
+    /**
+     * The stand-in for a camera that is not in the robot configuration: sees nothing, and says why on
+     * the Driver Station (TargetSource's warning), so the OpMode still runs.
+     */
+    static final class MissingCamera implements TargetSource {
+        private final String name;
+        private final boolean limelight;
+
+        MissingCamera(String name, boolean limelight) {
+            this.name = name;
+            this.limelight = limelight;
+        }
+
+        @Override public void start() { }
+        @Override public void update() { }
+        @Override public List<TargetObservation> targets() { return java.util.Collections.emptyList(); }
+        @Override public boolean isWorking() { return false; }
+        @Override public String status() {
+            return "not found: no " + (limelight ? "Limelight" : "webcam") + " called \"" + name + "\" in the robot configuration";
+        }
+        @Override public void close() { }
+        @Override public String name() { return name; }
     }
 
     @Override

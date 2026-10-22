@@ -20,18 +20,25 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   it into TeamCode. Linked from the README, the Quick start, Start from zero and the tutorials page.
 - **Venue lighting** (camera settings that suit the light where you are): in INIT the camera tries a
   few settings, counts the pictures that see AprilTags with each, and keeps the best one. A tie goes
-  to the first setting; if no tag is seen, it keeps trying, and after START it gives up after 3 s and
-  keeps the first one. It never waits (switches go to a background helper).
+  to the first setting; if no tag is seen, it keeps trying through INIT. At START it stops and keeps
+  the best setting so far (the first one if none saw a tag), so nothing aims with a trial picture
+  (have a tag in view at INIT). Settling starts when the camera has really switched; a setting the
+  camera refuses, or a pipeline that sends no pictures ("no pictures from pipeline 2 (missing?)"), gets
+  no score and is skipped. It never waits (switches go to a background helper).
   - Limelight: `LimelightTags.autoPipelines(0, 1, 2)` (one pipeline per kind of light; a picture
     counts only if that pipeline made it). Ported from the team's 2025-26 `LimelightPipelineAutoSelector`.
   - Webcam: `WebcamTags.autoExposure()` (the camera's own exposure, then 3, 6 and 12 ms) or
     `autoExposure(ms...)`, with `.gain(g)` (default: the camera's highest), using the SDK's
-    `ExposureControl` and `GainControl`.
-  - `LightingSweep`: the helper behind both (`lighting()` gives it: `status()`, `scores()`, `restart()`).
+    `ExposureControl` and `GainControl`; "auto" gets the camera's own gain back.
+  - `LightingSweep`: the helper behind both (`lighting()` gives it: `status()`, `scores()`,
+    `problems()`, `restart()` for a retry in the match, `newSession()` when the camera restarts).
   - Five-files robot: `Camera.limelight(...).autoPipelines(0, 1, 2)` / `Camera.webcam(...).autoExposure()`.
-    The result is on the Driver Station at INIT, with the `Tunables` line that skips the test next
-    time. Optional Tunables: `autoLighting`, `lightingSettleMs`, `lightingPictures`,
-    `lightingMinPictures`, `lightingAfterStartMs`, and for a webcam `exposureMs` and `gain`.
+    The result is on the Driver Station at INIT, with the two `Tunables` lines (Java, ready to paste)
+    that skip the test next time. Optional Tunables: `autoLighting`, `lightingSettleMs`,
+    `lightingPictures`, `lightingMinPictures`, `lightingAfterStartMs` (default 0: stop at START), and
+    for a webcam `exposureMs` and `gain`.
+  - A camera missing from the robot configuration no longer stops the OpMode: the `Camera` module
+    warns at INIT and sees nothing. A camera still not working 3 s into INIT is a warning too.
   - Modules can do quick work in the INIT loop (`Module.initLoop`; the camera keeps reading pictures).
   - Simulator: `goodPipelines=1|2` (Limelight) and `goodExposureMs=4-10` (webcam) make a pretend
     camera find tags only with those settings.

@@ -98,7 +98,8 @@ public class LimelightTags implements TargetSource {
      * AprilTags with each, and keeps the best one. Set up each pipeline on the Limelight's web page
      * for a kind of lighting (e.g. 0 = normal, 1 = bright, 2 = dim: exposure and black level), then
      * list them here with your usual one FIRST (it wins ties, and it is kept if no tag is seen at all).
-     * It keeps going after START if it is not done, for at most 3 s more. Replaces {@link #pipeline}.
+     * Have a tag in view at INIT: at START the test stops and keeps the best pipeline so far.
+     * A listed pipeline that sends no pictures (not set up) is skipped. Replaces {@link #pipeline}.
      * Never waits: each switch goes to the background helper. {@link #lighting()} has the result.
      *
      * <pre>{@code
@@ -128,8 +129,9 @@ public class LimelightTags implements TargetSource {
     }
 
     /**
-     * Tell the camera the match has started, so an unfinished {@link #autoPipelines} test gives up in
-     * time (the five-files Camera module does this for you). Safe to call without autoPipelines.
+     * Tell the camera the match has started, so an unfinished {@link #autoPipelines} test stops and
+     * keeps the best pipeline so far (the five-files Camera module does this for you). Safe to call
+     * without autoPipelines.
      */
     public void matchStarted() {
         if (sweep != null) sweep.matchStarted();
@@ -194,6 +196,13 @@ public class LimelightTags implements TargetSource {
         // getLatestResult() does not wait: the SDK keeps the newest result ready for us.
         LLResult result = limelight.getLatestResult();
         if (sweep != null && !sweep.isDone()) feedSweep(result);
+        read(result);
+        // A lighting test still running in the match: its trial pictures must not be aimed with.
+        if (sweep != null && !sweep.isDone() && sweep.matchHasStarted()) latest = Collections.emptyList();
+    }
+
+    // Turns the result into targets (see update()).
+    private void read(LLResult result) {
         // No result, or nothing usable in it: we see nothing right now.
         if (result == null || !result.isValid()) {
             latest = Collections.emptyList();
@@ -235,8 +244,13 @@ public class LimelightTags implements TargetSource {
         if (result != null && result.getTimestamp() != sweepTimestamp) {
             sweepTimestamp = result.getTimestamp();
             int want = sweep.current() < 0 ? -1 : autoList[sweep.current()];
-            // isValid() is false for a picture with nothing in it: that picture counts, with 0 tags.
-            if (result.getPipelineIndex() == want) tags = result.isValid() ? result.getFiducialResults().size() : 0;
+            if (result.getPipelineIndex() == want) {
+                sweep.switched();          // the first picture from this pipeline: the switch is done
+                // isValid() is false for a picture with nothing in it: that picture counts, with 0 tags.
+                tags = result.isValid() ? result.getFiducialResults().size() : 0;
+            } else {
+                tags = LightingSweep.OTHER_SETTING;   // still the pipeline before (or the wanted one is missing)
+            }
         }
         sweep.update(tags);
     }
@@ -340,6 +354,8 @@ public class LimelightTags implements TargetSource {
         // forget the last frame's time, so the first frame after a restart is not taken for an old one
         lastTimestamp = Double.NaN;
         sweepTimestamp = Double.NaN;
+        // a new start() is a new camera session: the lighting test starts over, as in INIT
+        if (sweep != null) sweep.newSession();
         // end the background helper, so it does not keep running after the OpMode
         if (worker != null) worker.shutdown();
         worker = null;
