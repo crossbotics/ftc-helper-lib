@@ -55,14 +55,17 @@ public class Robot extends RobotDefinition {
                 .looks(Shape.arm().name("kicker").atMm(150, 90, 100).sizeMm(60, 20, 15)
                         .angle("stowed", 90).angle("deployed", 20)));
 
-        // The intake: its arm is folded straight up (90 degrees) at the start. Pushed over, it falls by
-        // gravity to its hard stop (-15 degrees) and stays: passive, nothing in the code holds it. The
-        // roller rides on the end of the arm. onAtStart(): it starts pulling pieces in at START,
-        // without a button. holds(3): it carries up to three pieces.
+        // The intake has two shapes, so each one gets a name first (docs/modules/robot.md "Shapes and parts").
+        // Its arm is folded straight up (90 degrees) at the start. Pushed over, it falls by gravity to its
+        // hard stop (-15 degrees) and stays: passive, nothing in the code holds it.
+        Shape intakeArm = Shape.arm().name("intake_arm").atMm(150, 0, 100).sizeMm(110, 200, 20)
+                .range(-15, 90).startAt(90).dropsWhen(intakeDeploy, "deployed", -15);
+        // The roller rides on the end of the arm.
+        Shape intakeRoller = Shape.roller("gobilda-gecko-48-rex").on("intake_arm").atMm(110, 0, 0).lengthMm(300);
+        // onAtStart(): it starts pulling pieces in at START, without a button. holds(3): it carries up to
+        // three pieces.
         intake = add(Intake.motor("intake").part("gobilda-5203-1150").onAtStart().holds(3)
-                .looks(Shape.arm().name("intake_arm").atMm(150, 0, 100).sizeMm(110, 200, 20)
-                                .range(-15, 90).startAt(90).dropsWhen(intakeDeploy, "deployed", -15),
-                        Shape.roller("gobilda-gecko-48-rex").on("intake_arm").atMm(110, 0, 0).lengthMm(300)));
+                .looks(intakeArm, intakeRoller));
 
         // The launcher: a flywheel on a 6000 RPM motor, fed one piece at a time by the indexer servo.
         // The indexer belongs to the launcher, so it is not added on its own. Shots leave forward and

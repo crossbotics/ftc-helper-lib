@@ -16,6 +16,7 @@ import com.crossbotics.ftchelper.robot.Parts;
 import com.crossbotics.ftchelper.robot.Pad;
 import com.crossbotics.ftchelper.robot.Positioner;
 import com.crossbotics.ftchelper.robot.RobotDefinition;
+import com.crossbotics.ftchelper.robot.Shape;
 import com.crossbotics.ftchelper.robot.Steps;
 import com.crossbotics.ftchelper.robot.Turret;
 import com.crossbotics.ftchelper.robot.Wrist;
@@ -224,6 +225,42 @@ public class MechanismRecipes {
             // The part then uses general defaults, and INIT says so.
             // A launcher or an arm must at least have the counts per turn: Motors.custom("...", 28, Double.NaN).
             lift = add(Lift.slide("lift").part(Motors.unknown("old-lift-motor")));
+            // end recipe
+        }
+    }
+
+    /** Shapes for the simulator: how each part looks and where it sits. */
+    public static class LooksRobot extends RobotDefinition {
+        public Intake intake;
+        public Lift lift;
+        public Claw claw;
+        public Launcher launcher;
+
+        @Override
+        protected void define() {
+            drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right").motor("gobilda-5203-312"));
+            // recipe: looks-parts
+            // For the simulator only: the real robot never reads .looks(...). All in mm. atMm(forward, left, up):
+            // from the middle of the chassis, on the tiles. sizeMm(front to back, side to side, up).
+            // Measure with a tape, or shape it in the simulator's Edit robot mode and copy its lines.
+            chassisMm(400, 400, 100);                    // the chassis box
+            heightMm(380);                               // the whole robot, folded
+            // TWO shapes on one part (an intake arm and its roller): name each shape first, then
+            // looks(intakeArm, intakeRoller). The arm hinges at the front and rests on its stop: passive(),
+            // nothing in the code moves it (range: its two hard stops, degrees). The roller rides on its end.
+            Shape intakeArm = Shape.arm().name("intake_arm").atMm(150, 0, 80).sizeMm(80, 300, 20)
+                    .passive().range(-20, 0).startAt(0);
+            Shape intakeRoller = Shape.roller("gobilda-gecko-72").on("intake_arm").atMm(80, 0, 0).lengthMm(300);
+            intake = add(Intake.motor("intake").part("gobilda-5203-1150").looks(intakeArm, intakeRoller));
+            // ONE shape: write it inside looks(...). A slide at the back; travelMm: how far it rises.
+            lift = add(Lift.slide("lift").part("gobilda-5203-435")
+                    .looks(Shape.slide().atMm(-170, 0, 20).sizeMm(40, 40, 300).travelMm(600)));
+            // A claw on top of the slide: on(lift) makes it go up with the slide.
+            claw = add(Claw.servo("claw").part("gobilda-2000-torque")
+                    .looks(Shape.claw().on(lift).atMm(60, 0, 300).sizeMm(80, 120, 50)));
+            // A flywheel: its size comes from the wheel's catalog id. Only its place is yours.
+            launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+                    .looks(Shape.flywheel("gobilda-hogback-96").atMm(-40, 0, 200)));
             // end recipe
         }
     }

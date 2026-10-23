@@ -170,6 +170,7 @@ first.
 **Simulator** (try your code with no robot)
 - [How do I start the simulator?](#how-do-i-start-the-simulator)
 - [How do I see my own robot in the simulator?](#how-do-i-see-my-own-robot-in-the-simulator)
+- [How do I make the simulator draw my part?](#how-do-i-make-the-simulator-draw-my-part)
 - [How do I test my code with a script?](#how-do-i-test-my-code-with-a-script)
 
 ## Coming from Blocks: where did my blocks go?
@@ -3138,6 +3139,47 @@ Then open **http://localhost:8780** in a browser. Choose an OpMode, press INIT, 
 
 **Why:** the first command makes the simulator's robot file from your `Robot.java`; the second runs your TeamCode.
 **More:** [A robot file from Robot.java](guides/simulator.md#a-robot-file-from-robotjava), [Your own robot code](guides/simulator.md#your-own-robot-code).
+
+### How do I make the simulator draw my part?
+
+**Where:** `Robot.java`: add `.looks(...)` to the part's line (optional).
+
+<!-- recipe: looks-parts -->
+```java title="Robot.java"
+// For the simulator only: the real robot never reads .looks(...). All in mm. atMm(forward, left, up):
+// from the middle of the chassis, on the tiles. sizeMm(front to back, side to side, up).
+// Measure with a tape, or shape it in the simulator's Edit robot mode and copy its lines.
+chassisMm(400, 400, 100);                    // the chassis box
+heightMm(380);                               // the whole robot, folded
+// TWO shapes on one part (an intake arm and its roller): name each shape first, then
+// looks(intakeArm, intakeRoller). The arm hinges at the front and rests on its stop: passive(),
+// nothing in the code moves it (range: its two hard stops, degrees). The roller rides on its end.
+Shape intakeArm = Shape.arm().name("intake_arm").atMm(150, 0, 80).sizeMm(80, 300, 20)
+        .passive().range(-20, 0).startAt(0);
+Shape intakeRoller = Shape.roller("gobilda-gecko-72").on("intake_arm").atMm(80, 0, 0).lengthMm(300);
+intake = add(Intake.motor("intake").part("gobilda-5203-1150").looks(intakeArm, intakeRoller));
+// ONE shape: write it inside looks(...). A slide at the back; travelMm: how far it rises.
+lift = add(Lift.slide("lift").part("gobilda-5203-435")
+        .looks(Shape.slide().atMm(-170, 0, 20).sizeMm(40, 40, 300).travelMm(600)));
+// A claw on top of the slide: on(lift) makes it go up with the slide.
+claw = add(Claw.servo("claw").part("gobilda-2000-torque")
+        .looks(Shape.claw().on(lift).atMm(60, 0, 300).sizeMm(80, 120, 50)));
+// A flywheel: its size comes from the wheel's catalog id. Only its place is yours.
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+        .looks(Shape.flywheel("gobilda-hogback-96").atMm(-40, 0, 200)));
+```
+
+**One shape or several:** one shape goes inside `looks(...)` on the part's line. Two or more (an arm
+and its roller): give each a name first (`Shape intakeArm = ...;`), then write `looks(intakeArm, intakeRoller)`
+([how](modules/robot.md#shapes-and-parts)).
+**Why:** without `.looks(...)` the simulator still runs, with a guessed box for each part (marked
+`TODO measure` in the robot file). With it, the 3D view shows your robot, the size check (18 in start
+cube, 29 in tall) is right, and pieces touch the intake where the real one is. Name the part
+(`.part(...)`) too: a roller's or a wheel's size then comes from the parts catalog. **The easy way:**
+the simulator's **Edit robot** mode: drag and size each part on the 3D robot, then copy the
+`.looks(...)` lines it shows into `Robot.java`. After a change, run `./gradlew :sim:fromRobot` again.
+**More:** [Shapes and parts](modules/robot.md#shapes-and-parts) (every shape and setting),
+[A robot file from Robot.java](guides/simulator.md#a-robot-file-from-robotjava).
 
 ### How do I test my code with a script?
 
