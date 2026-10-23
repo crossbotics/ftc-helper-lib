@@ -647,7 +647,6 @@ public class SimFromRobotTest {
         Path file = generate(com.crossbotics.ftchelper.examples.pedrobot.Robot.class);
         try (SimRun s = new SimRun(file.toString())) {
             s.init("Pedro Bot Curve to the Goal");
-            SimRun.pause(0.3);   // let the physics place the robot on its INIT spot before reading it
             double startX = s.robot().x, startY = s.robot().y;
             boolean topWall = startY > 0;
             assertEquals("the intake waits", 0, s.robot().motors.get("intake").userPower(), 1e-9);
