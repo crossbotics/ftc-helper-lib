@@ -1,11 +1,21 @@
 package com.crossbotics.ftchelper.examples.odometrybot;
 
-/** Lesson 7's robot, every number. */
+import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT_FROM_CATALOG (docs/guides/tunables.md)
+
+/**
+ * Lesson 7's robot, every number, one per line. DEFAULT_FROM_CATALOG = the library's default (in
+ * brackets in the comment).
+ */
 public class Tunables {
     public static class Drive {
-        public static double maxPower = 1.0, practiceMaxPower = 0.6, slowSpeed = 0.3;
-        public static double strafeCorrection = 1.1, turnKp = 0.012, turnKd = 0.003, moveMinPower = 0.25;
-        public static boolean calibrated = false;
+        public static double maxPower = DEFAULT_FROM_CATALOG;       // top wheel power (1.0)
+        public static double practiceMaxPower = DEFAULT_FROM_CATALOG; // top wheel power in PRACTICE (0.6)
+        public static double slowSpeed = DEFAULT_FROM_CATALOG;      // top power with the slow trigger held (0.3)
+        public static double strafeCorrection = 1.1;                // sideways moves: from the Drive Tuner
+        public static double turnKp = DEFAULT_FROM_CATALOG;         // auto turns: push per degree off (0.012)
+        public static double turnKd = DEFAULT_FROM_CATALOG;         // auto turns: brake near the end (0.003)
+        public static double moveMinPower = 0.25;                   // auto: least power that moves it (tested)
+        public static boolean calibrated = false;                   // true after the Drive Tuner: auto runs then
     }
 
     /**
@@ -16,18 +26,24 @@ public class Tunables {
      * a turn, like the autos' mirrorForRed()); true = mirrored left-right (a mirrored field).
      */
     public static class Odometry {
-        public static boolean checked = false;
-        public static double resetX = -56, resetY = -61, resetHeading = 0;
-        public static boolean mirrorForRed = false;
+        public static boolean checked = false;                      // true after the Odometry Tuner's loop test
+        public static double resetX = -56;                          // "set pose here" spot: inches across the field
+        public static double resetY = -61;                          // "set pose here" spot: inches from the centre
+        public static double resetHeading = 0;                      // heading there, degrees: 0 = facing the field
+        public static boolean mirrorForRed = false;                 // BIOBUZZ: false
     }
 
     public static class Intake {
-        public static double inPower = 1.0, outPower = 0.7;
+        public static double inPower = DEFAULT_FROM_CATALOG;        // power taking pieces in, 0 to 1 (1.0)
+        public static double outPower = DEFAULT_FROM_CATALOG;       // power pushing pieces out (0.7)
     }
 
     /** Field points for the autonomous (inches, seen from your drivers' wall, written for BLUE). */
     public static class Auto {
-        public static double goalX = -30, goalY = -30, goalHeading = 45;
-        public static double parkX = -56, parkY = -36;
+        public static double goalX = -30;                           // the scoring spot: inches across the field
+        public static double goalY = -30;                           // the scoring spot: inches from the centre
+        public static double goalHeading = 45;                      // facing there, degrees
+        public static double parkX = -56;                           // the park spot: inches across the field
+        public static double parkY = -36;                           // the park spot: inches from the centre
     }
 }

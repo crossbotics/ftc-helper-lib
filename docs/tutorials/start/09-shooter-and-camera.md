@@ -66,12 +66,23 @@ From [`gobildabot/Tunables.java`](../../../examples/src/main/java/com/crossbotic
 
 ```java
 public static class Launcher {
-    public static double speedRpm = 2679, stepRpm = 50, readyBandRpm = 107, idleRpm = 0;
-    public static double kP = 40, kI = 0, kD = 0, kF = 12.5, nominalVolts = 12.8;
+    public static double speedRpm = 2679;                       // shot speed: goBILDA's 1250 counts per second
+    public static double stepRpm = 50;                          // speed change per D-pad press
+    public static double readyBandRpm = 107;                    // "at speed" this close: goBILDA feeds above 1200
+    public static double idleRpm = DEFAULT_FROM_CATALOG;        // speed between shots, 0 = stop (0)
+    // goBILDA's own tested numbers for this kit bot (its starter code: P 40, F 12.5), so kept here.
+    // Without these lines the library would start from the parts catalog's (kF 11.7, kP 1.17, kI 0.117).
+    public static double kP = 40;                               // push per speed error: goBILDA's number
+    public static double kI = 0;                                // fix a steady error: goBILDA's number
+    public static double kD = 0;                                // brake changes: goBILDA's number
+    public static double kF = 12.5;                             // steady power for a speed: goBILDA's number
+    public static double nominalVolts = 12.8;                   // battery volts the gains were found at
+    public static double shotIntervalSec = DEFAULT_FROM_CATALOG; // least time between two pieces, s (0.25)
 }
 
 public static class Windmill {
-    public static double power = 1.0, feedSec = 0.3;
+    public static double power = DEFAULT_FROM_CATALOG;          // feeder power, 0 to 1 (1.0)
+    public static double feedSec = 0.3;                         // seconds per piece: a starting guess
 }
 ```
 
@@ -82,6 +93,7 @@ public static class Windmill {
 | `readyBandRpm` | how close to `speedRpm` counts as "at speed" (it must stay there 0.15 s) |
 | `idleRpm` | the speed it drops back to when the driver spins it down (0 = coast to a stop) |
 | `kP`, `kI`, `kD`, `kF` | the **gains**: how hard the hub pushes to hold the speed. goBILDA published tested ones for this kit bot. Your own robot can leave them out at first ([below](#the-first-spin-up-with-no-numbers)). |
+| `shotIntervalSec` | the least time between two pieces, so the wheel gets back to speed |
 | `nominalVolts` | the battery voltage when the gains were measured. Used only by battery compensation, which is off unless you turn it on ([section 8](#speed-trim-and-a-low-battery)). |
 | `power`, `feedSec` (Windmill) | the feeder's power, and how long it runs per piece |
 
@@ -90,13 +102,19 @@ at START, never in INIT.
 
 ### The first spin-up with no numbers
 
-A new launcher can run before you know any of its numbers. Write `DEFAULT_FROM_CATALOG` for `kP` to
-`kF` and `speedRpm` (or leave the lines out):
+A new launcher can run before you know any of its numbers. Write `DEFAULT_FROM_CATALOG` for each one
+(or leave the lines out):
 
 ```java
 public static class Launcher {
-    public static double speedRpm = DEFAULT_FROM_CATALOG, stepRpm = 100, readyBandRpm = 60, idleRpm = 0;
-    public static double kP = DEFAULT_FROM_CATALOG, kI = DEFAULT_FROM_CATALOG, kD = DEFAULT_FROM_CATALOG, kF = DEFAULT_FROM_CATALOG;
+    public static double speedRpm = DEFAULT_FROM_CATALOG;       // shot speed (60% of the motor's top speed)
+    public static double stepRpm = DEFAULT_FROM_CATALOG;        // speed change per D-pad press (100)
+    public static double readyBandRpm = DEFAULT_FROM_CATALOG;   // "at speed" = this close to the target (60)
+    public static double idleRpm = DEFAULT_FROM_CATALOG;        // speed between shots, 0 = stop (0)
+    public static double kP = DEFAULT_FROM_CATALOG;             // push per speed error (kF / 10)
+    public static double kI = DEFAULT_FROM_CATALOG;             // fix a steady error (kP / 10)
+    public static double kD = DEFAULT_FROM_CATALOG;             // brake changes (0)
+    public static double kF = DEFAULT_FROM_CATALOG;             // steady power for a speed (from the motor)
 }
 ```
 
@@ -252,9 +270,15 @@ turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).follows(cam
 
 ```java
 public static class Turret {
-    public static double min = -90, max = 90;
-    public static double kP = 0.02, kI = 0, kD = 0.001;
-    public static double maxPower = 0.8, tolerance = 1.5, cameraOffset = 0;
+    public static double min = -90;                             // degrees: as far right as the wires allow
+    public static double max = 90;                              // degrees: as far left as the wires allow
+    public static double kP = DEFAULT_FROM_CATALOG;             // push per degree off (0.02)
+    public static double kI = DEFAULT_FROM_CATALOG;             // fix a small steady miss (0)
+    public static double kD = DEFAULT_FROM_CATALOG;             // brake near the target (0.001)
+    public static double maxPower = DEFAULT_FROM_CATALOG;       // the most power (0.8)
+    public static double tolerance = 1.5;                       // "aimed" within this, degrees (example)
+    public static double cameraOffset = DEFAULT_FROM_CATALOG;   // aims a little to one side: Aim Tuner (0)
+    // ...
 }
 ```
 
@@ -428,8 +452,12 @@ the team's own turret design):
 
 ```java
 public static class Hood {
-    public static double posA = 0.20, posB = 0.65, angleA = 0, angleB = 25;
-    public static double travelSec = 0.45, startAngle = 0;
+    public static double posA = 0.20;                           // servo position at the steep stop (Hood Finder)
+    public static double posB = 0.65;                           // servo position at the flat stop (Hood Finder)
+    public static double angleA = 0;                            // hood angle at posA, degrees: the steep end
+    public static double angleB = 25;                           // hood angle at posB, degrees: the flat end
+    public static double travelSec = 0.45;                      // stop to stop, seconds (worked out above)
+    public static double startAngle = 0;                        // where it goes at START: the steep end
 }
 ```
 
@@ -474,13 +502,17 @@ for this section and the next two: **one class, add the lines you use** (every l
 ```java
 public static class Aim {
     // Section 9: the goal on the field, for the odometry backup.
-    public static double goalX = 13, goalY = -13;   // inches, seen from your own wall: your HIVE's up CELL
-    public static boolean mirrorForRed = false;     // BIOBUZZ: false (below)
+    public static double goalX = 13;                            // the goal: inches right of the centre line
+    public static double goalY = -13;                           // the goal: inches from the centre, - = our half
+    public static boolean mirrorForRed = false;                 // BIOBUZZ: false
     // Section 10: whole-robot aim (no turret).
-    public static double turnKp = 0.02, turnKd = 0.002, maxTurnPower = 0.5, toleranceDeg = 2;
-    public static double cameraOffset = 0;
+    public static double turnKp = DEFAULT_FROM_CATALOG;         // turn power per degree off (0.02)
+    public static double turnKd = DEFAULT_FROM_CATALOG;         // brake the turn near the goal (0.002)
+    public static double maxTurnPower = DEFAULT_FROM_CATALOG;   // the most turn power (0.5)
+    public static double toleranceDeg = DEFAULT_FROM_CATALOG;   // "aimed" within this, degrees (2)
+    public static double cameraOffset = DEFAULT_FROM_CATALOG;   // aims a little to one side: Aim Tuner (0)
     // Section 11: the buzz.
-    public static double rumbleDeg = 4;
+    public static double rumbleDeg = DEFAULT_FROM_CATALOG;      // gamepad 2 buzzes this close, degrees (4)
 }
 ```
 
@@ -684,9 +716,11 @@ public static class Aim {
     public static double flightSecPerIn = 0;     // extra seconds per inch (longer shots fly longer)
     public static double maxLeadIn = 24;         // never aim more than this far off the goal
     // Where the shooter is from the robot's centre (a turret's pivot): inches forward and left.
-    public static double shooterForwardIn = -4, shooterLeftIn = 0;
+    public static double shooterForwardIn = -4;  // shooter, inches forward of the centre (- = behind)
+    public static double shooterLeftIn = 0;      // shooter, inches left of the centre
     // A camera on the robot's body (not on the turret): where it is, inches forward and left.
-    public static double cameraForwardIn = 7, cameraLeftIn = 0;
+    public static double cameraForwardIn = 7;    // camera, inches forward of the centre
+    public static double cameraLeftIn = 0;       // camera, inches left of the centre
 }
 ```
 

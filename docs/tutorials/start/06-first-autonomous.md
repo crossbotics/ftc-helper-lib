@@ -189,8 +189,10 @@ builds):
 
 ```java
 public static class Auto {
-    public static double leaveInches = 12;                   // already there: FirstAuto uses it
-    public static double toGoalInches = 24, parkInches = 20; // new: ScoreAndPark uses them
+    public static double leaveInches = 12;                      // drive off the start line
+    // New: ScoreAndPark uses these two.
+    public static double toGoalInches = 24;                     // drive to the goal
+    public static double parkInches = 20;                       // drive into the park zone
 }
 ```
 

@@ -34,6 +34,8 @@ public class Robot extends RobotDefinition {
 
     @Override
     protected void define() {
+        // Each name in quotes ("left_drive", "intake_deploy", "launcher"...) = the device's name in the
+        // robot configuration on the Driver Station. A part's numbers: Tunables, in its name's section.
         // The drive: two motors, one per side, goBILDA 312 RPM motors and 96 mm Hogback wheels (the
         // wheel's size comes from the parts catalog). The right motor is mounted facing the other way,
         // so it runs reversed.

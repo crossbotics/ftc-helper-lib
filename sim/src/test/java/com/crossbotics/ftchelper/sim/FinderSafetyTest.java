@@ -12,6 +12,10 @@ import org.junit.Test;
  * reviews asked for, checked on the real OpMode code (not only its pieces).
  */
 public class FinderSafetyTest {
+    static {
+        CookbookSamples.fill();   // the cookbook writes MEASURE: sample numbers in their place
+    }
+
 
     @Test public void motorFinderStopsForHelpAndWaitsForTheStickToBeLetGo() throws Exception {
         try (SimRun s = new SimRun()) {

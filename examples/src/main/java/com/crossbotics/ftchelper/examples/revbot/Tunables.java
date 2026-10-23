@@ -3,21 +3,28 @@ package com.crossbotics.ftchelper.examples.revbot;
 import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT_FROM_CATALOG and MEASURE (docs/guides/tunables.md)
 
 /**
- * REV starter bot, file 2 of 5: the numbers. REV's pages do not give the flywheel's speed or the
- * poker's positions, so those numbers are starting guesses: find the real ones on the robot with the
- * finders (docs/guides/finders.md). If you tune a number live on the robot, copy the new value back
- * into this file, or it is lost at the next build.
+ * REV starter bot, file 2 of 5: the numbers, one per line. REV's pages do not give the flywheel's speed
+ * or the poker's positions, so those numbers are starting guesses: find the real ones on the robot with
+ * the finders (docs/guides/finders.md). DEFAULT_FROM_CATALOG = the library's default (in brackets in the
+ * comment). If you tune a number live on the robot, copy the new value back into this file, or it is
+ * lost at the next build.
  */
 public class Tunables {
     /** calibrated: set true after the Drive Tuner (autonomous refuses to run before). */
     public static class Drive {
-        public static double maxPower = 1.0, practiceMaxPower = 0.6, slowSpeed = 0.3;
-        public static double strafeCorrection = 1.15, turnKp = 0.012, turnKd = 0.003, moveMinPower = 0.30;
-        public static boolean calibrated = false;
+        public static double maxPower = DEFAULT_FROM_CATALOG;       // top wheel power (1.0)
+        public static double practiceMaxPower = DEFAULT_FROM_CATALOG; // top wheel power in PRACTICE (0.6)
+        public static double slowSpeed = DEFAULT_FROM_CATALOG;      // top power with the slow trigger held (0.3)
+        public static double strafeCorrection = DEFAULT_FROM_CATALOG; // sideways moves: Drive Tuner (1.15)
+        public static double turnKp = DEFAULT_FROM_CATALOG;         // auto turns: push per degree off (0.012)
+        public static double turnKd = DEFAULT_FROM_CATALOG;         // auto turns: brake near the end (0.003)
+        public static double moveMinPower = DEFAULT_FROM_CATALOG;   // auto: least power that moves it (0.30)
+        public static boolean calibrated = false;                   // true after the Drive Tuner: auto runs then
     }
 
     public static class IntakeMotor {
-        public static double inPower = 1.0, outPower = 1.0;
+        public static double inPower = DEFAULT_FROM_CATALOG;        // power taking pieces in, 0 to 1 (1.0)
+        public static double outPower = 1.0;                        // power pushing pieces out: full, like REV's code
     }
 
     /**
@@ -25,15 +32,22 @@ public class Tunables {
      * 3000 RPM is a guess. Find yours with the Flywheel Finder (kF and kP) and by watching shots.
      */
     public static class Flywheel {
-        public static double speedRpm = 3000, stepRpm = 100, readyBandRpm = 100, idleRpm = 0;
+        public static double speedRpm = 3000;                       // shot speed: a guess, watch shots and tune it
+        public static double stepRpm = DEFAULT_FROM_CATALOG;        // speed change per D-pad press (100)
+        public static double readyBandRpm = 100;                    // "at speed" = this close to the target
+        public static double idleRpm = DEFAULT_FROM_CATALOG;        // speed between shots, 0 = stop (0)
         // The hub's speed control: the defaults for the motor until the Flywheel Finder (INIT shows them).
         // Then write its numbers in their place.
-        public static double kP = DEFAULT_FROM_CATALOG, kI = DEFAULT_FROM_CATALOG, kD = DEFAULT_FROM_CATALOG, kF = DEFAULT_FROM_CATALOG;
+        public static double kP = DEFAULT_FROM_CATALOG;             // push per speed error (kF / 10)
+        public static double kI = DEFAULT_FROM_CATALOG;             // fix a steady error (kP / 10)
+        public static double kD = DEFAULT_FROM_CATALOG;             // brake changes (0)
+        public static double kF = DEFAULT_FROM_CATALOG;             // steady power for a speed (from the motor)
     }
 
     /** The feeder roller (CR servo): full power for feedSec per piece. 0.4 s is a guess: watch it and tune it. */
     public static class CrServo {
-        public static double power = 1.0, feedSec = 0.4;
+        public static double power = DEFAULT_FROM_CATALOG;          // feeder power, 0 to 1 (1.0)
+        public static double feedSec = DEFAULT_FROM_CATALOG;        // seconds per piece (0.4)
     }
 
     /**
@@ -42,10 +56,12 @@ public class Tunables {
      * with the Servo Finder BEFORE the first TeleOp, so the poker does not swing into the frame.
      */
     public static class PollenServo {
-        public static double up = 0.0, down = 0.5;
+        public static double up = 0.0;                              // servo position, folded along the side (a guess)
+        public static double down = 0.5;                            // servo position, out over a FLOWER (a guess)
     }
 
     public static class Auto {
-        public static double leaveInches = 20, leavePower = 0.5;
+        public static double leaveInches = 20;                      // drive off the start line
+        public static double leavePower = 0.5;                      // power for that move
     }
 }

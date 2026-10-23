@@ -48,7 +48,8 @@ public class MechanismRecipes {
 
             // recipe: intake-motor
             // At the top of the class: public Intake intake;   Here in define():
-            intake = add(Intake.motor("intake"));                  // Tunables.Intake: inPower, outPower
+            // "intake" = the motor's name in the robot configuration. Its numbers: Tunables.Intake.
+            intake = add(Intake.motor("intake"));
             // end recipe
 
             // recipe: lift
@@ -56,6 +57,7 @@ public class MechanismRecipes {
             // a slide on a motor with a switch at the bottom (the switch sets 0 each time it is pressed).
             // .part(...) is optional: the motor's catalog id, so the simulator moves it like the real
             // motor (without it the robot works the same). No switch? Delete .bottomSwitch(...).
+            // "lift", "lift_bottom" = the motor's and the switch's names in the robot configuration.
             lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom"));
             // end recipe
 
@@ -63,22 +65,26 @@ public class MechanismRecipes {
             // An arm in degrees. Its motor's catalog id is in the brackets (not optional, like a turret's
             // or launcher's): it needs the motor's counts per turn to work in degrees.
             // gearRatio: motor turns per arm turn. 0 degrees = where it is at INIT.
+            // "arm" = the motor's name in the robot configuration. Its numbers: Tunables.Arm.
             arm = add(Arm.motor("arm", "gobilda-5203-117").gearRatio(2));
             // end recipe
 
             // recipe: claw
             // At the top of the class: public Claw claw;   Here in define():
-            claw = add(Claw.servo("claw"));                        // Tunables.Claw: open, closed
+            // "claw" = the servo's name in the robot configuration. Its numbers: Tunables.Claw.
+            claw = add(Claw.servo("claw"));
             // end recipe
 
             // recipe: wrist
             // At the top of the class: public Wrist wrist;   Here in define():
-            wrist = add(Wrist.servo("wrist"));                     // Tunables.Wrist: any names (down, level, up)
+            // "wrist" = the servo's name in the robot configuration. Its numbers: Tunables.Wrist.
+            wrist = add(Wrist.servo("wrist"));
             // end recipe
 
             // recipe: positioner
             // Any servo with named positions: a gate, a kicker, a fold-out intake.
-            intakeDeploy = add(Positioner.servo("intake_deploy")); // Tunables.IntakeDeploy: stowed, deployed
+            // "intake_deploy" = the servo's name in the robot configuration. Numbers: Tunables.IntakeDeploy.
+            intakeDeploy = add(Positioner.servo("intake_deploy"));
             // Right after START (autonomous and TeleOp): fold the intake out.
             atStart(() -> Action.named("Deploy").then(() -> intakeDeploy.goTo("deployed")));
             // end recipe
@@ -114,6 +120,7 @@ public class MechanismRecipes {
             // recipe: intake-cr-servos
             // At the top of the class: public Intake intake;   Here in define():
             // two continuous-rotation (CR) servos. The one that spins the wrong way is reversed.
+            // "left_intake", "right_intake" = the servos' names in the robot configuration. Numbers: Tunables.Intake.
             intake = add(Intake.crServos("left_intake", "right_intake").reversed("right_intake"));
             // end recipe
         }
@@ -170,6 +177,7 @@ public class MechanismRecipes {
             // Tunables.LiftLeft (the first motor's name in CamelCase), not Tunables.Lift.
             // The motors face each other, so the second turns the other way: alsoMotorReversed.
             // (Both turn the same way for "up"? Use .alsoMotor("lift_right") instead.)
+            // "lift_left", "lift_right" = the motors' names in the robot configuration. Numbers: Tunables.LiftLeft.
             lift = add(Lift.slide("lift_left").part("gobilda-5203-435").alsoMotorReversed("lift_right"));
             // end recipe
         }
@@ -220,7 +228,8 @@ public class MechanismRecipes {
         protected void define() {
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
             // recipe: launcher
-            // A flywheel (in RPM) and the indexer that feeds it one piece at a time.
+            // A flywheel (in RPM) and the indexer that feeds it one piece at a time. "launcher" and "indexer"
+            // = their names in the robot configuration. Numbers: Tunables.Launcher and Tunables.Indexer.
             launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
                     .feeder(Indexer.servo("indexer")));
             // end recipe
@@ -239,8 +248,8 @@ public class MechanismRecipes {
             // recipe: turret-follows-camera
             // The camera knows the goal of each alliance (BLUE first, then RED).
             camera = add(Camera.limelight("limelight").goal("BLUE SCORING", "RED SCORING"));
-            // 5 motor turns per turret turn. follows(camera): it follows the goal from START,
-            // but never turns past Tunables.Turret min and max.
+            // "turret" = the motor's name in the robot configuration. 5 motor turns per turret turn.
+            // follows(camera): it follows the goal from START, but never past Tunables.Turret min and max.
             turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).follows(camera));
             // end recipe
             // recipe: launcher-aimed

@@ -19,6 +19,10 @@ import org.junit.rules.TemporaryFolder;
  * (examples/flywheelbot, examples/turretbot) driven through it: their TeleOp and autonomous.
  */
 public class SimFromRobotTest {
+    static {
+        CookbookSamples.fill();   // the cookbook writes MEASURE: sample numbers in their place
+    }
+
     @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
     private Path generate(Class<?> robotClass) throws Exception {

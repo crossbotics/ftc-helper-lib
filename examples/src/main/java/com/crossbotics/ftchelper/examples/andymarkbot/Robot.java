@@ -34,6 +34,8 @@ public class Robot extends RobotDefinition {
 
     @Override
     protected void define() {
+        // Each name in quotes ("left_drive", "rollerI", "catapult"...) = the device's name in the robot
+        // configuration on the Driver Station. A part's numbers: Tunables, in its name's section.
         // The kit's NeveRest Hex 19.2:1 is the same motor and ratio as the NeveRest Orbital 20.
         drive(Drive.tank("left_drive", "right_drive")
                 .motor("am-neverest-orbital-20").wheelMm(76.2)

@@ -11,7 +11,10 @@ It fails (exit 1) when:
   5. a java code block in docs/cookbook.md is not the same as its marked region in the cookbook's Java
      files (examples/.../cookbook: "// recipe: name" ... "// end recipe"), or a region is not shown;
      a guide that shows a recipe (the same "<!-- recipe: name -->" marker) is checked the same way;
-  6. a cookbook recipe that mentions the tuning menu does not say to copy the value into Tunables.java.
+  6. a cookbook recipe that mentions the tuning menu does not say to copy the value into Tunables.java;
+  7. a recipe that shows a Tunables section (a region named "tunables-...") breaks the section style:
+     one number per line with a "//" comment (a table: a comment line above it), and a safety number
+     (min, max, posA, posB, homeAngle, an interlock zone) written as MEASURE, never a number.
 
 After changing a cookbook Java file, copy its regions into docs/cookbook.md with:
 
@@ -229,12 +232,41 @@ def check_example_comments():
 if "--fix-cookbook" in sys.argv:
     fix_cookbook()
     problems.clear()
+FIELD = re.compile(r"^\s*public static (double|float|int|long|boolean)(\[\]\[\])? (.+?);(\s*//.*)?$")
+SAFETY = re.compile(r"^(min|max|posA|posB|homeAngle|\w+(From|To|Above|Below))$")
+
+
+def check_recipe_sections():
+    """Recipes that show a Tunables section teach the style: one commented number per line, MEASURE for safety."""
+    for name, (rel, start, code) in sorted(cookbook_regions().items()):
+        if not name.startswith("tunables-"):
+            continue
+        lines = code.splitlines()
+        for k, line in enumerate(lines):
+            m = FIELD.match(line)
+            if not m:
+                continue
+            where = f"{rel}:{start + 1 + k}: recipe {name}"
+            if m.group(2):
+                if k == 0 or not lines[k - 1].strip().startswith("//"):
+                    problems.append(f"{where}: a table needs a comment line above it")
+                continue
+            if not m.group(4):
+                problems.append(f"{where}: give the line a short // comment (what the number is)")
+            fields = [f.strip() for f in m.group(3).split(",")]
+            for f in fields:
+                field, _, value = (x.strip() for x in f.partition("="))
+                if SAFETY.match(field) and value != "MEASURE":
+                    problems.append(f"{where}: {field} is a safety number: write MEASURE, not {value}")
+
+
 check_links()
 check_classes_documented()
 check_tutorials()
 check_cookbook()
 check_marked_pages()
 check_example_comments()
+check_recipe_sections()
 
 if problems:
     print("Docs check FAILED:")

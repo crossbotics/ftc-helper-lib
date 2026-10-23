@@ -56,6 +56,8 @@ public class Robot extends RobotDefinition {
 
     @Override
     protected void define() {
+        // Each name in quotes ("front_left", "turret", "lift", "wrist", "claw"...) = the device's name in the
+        // robot configuration on the Driver Station. A part's numbers: Tunables, in its name's section.
         drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
                 .motor("gobilda-5203-312").wheelMm(104)
                 .imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD));

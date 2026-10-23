@@ -20,6 +20,10 @@ import org.junit.rules.TemporaryFolder;
  * warning; the first-run notes (defaults from the catalog) are allowed.
  */
 public class ExampleRobotsInitTest {
+    static {
+        CookbookSamples.fill();   // the cookbook writes MEASURE: sample numbers in their place
+    }
+
     @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
     // One Robot.java per example robot (docs/templates.md lists them), and the cookbook's.

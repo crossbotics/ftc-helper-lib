@@ -1,5 +1,7 @@
 package com.crossbotics.ftchelper.examples.cookbook;
 
+import static com.crossbotics.ftchelper.robot.Starting.*;
+
 import com.crossbotics.ftchelper.robot.Camera;
 import com.crossbotics.ftchelper.robot.ControlMap;
 import com.crossbotics.ftchelper.robot.Drive;
@@ -29,13 +31,15 @@ public class HoodRecipes {
         }
 
         // recipe: tunables-hood
-        public static class Hood {
-            // The servo positions a hair off the hood's two hard stops (Hood Finder). Never past them.
-            public static double posA = 0.20, posB = 0.65;
-            // Optional: the hood's angle at each stop (any scale; here 0 = steep end, 30 = flat end).
-            public static double angleA = 0, angleB = 30;
-            // Stop to stop, seconds: the launcher waits this share of it before firing.
-            public static double travelSec = 0.5, startAngle = 0;
+        public static class Hood {                                      // "hood" in the configuration
+            // posA and posB: the servo positions a hair off the hood's two hard stops. Never past them.
+            public static double posA = MEASURE;                        // servo position at stop A (Hood Finder)
+            public static double posB = MEASURE;                        // servo position at stop B (Hood Finder)
+            // Optional: the hood's angle at each stop (any scale, e.g. 0 = steep end, 30 = flat end).
+            public static double angleA = MEASURE;                      // the angle at stop A (an angle app)
+            public static double angleB = MEASURE;                      // the angle at stop B (an angle app)
+            public static double travelSec = DEFAULT_FROM_CATALOG;      // stop to stop, seconds (0.5, or the servo's)
+            public static double startAngle = DEFAULT_FROM_CATALOG;     // where it goes at START (angle A)
         }
         // end recipe
 
@@ -60,9 +64,10 @@ public class HoodRecipes {
         }
 
         // recipe: tunables-hood-linkage
-        public static class Hood {
+        public static class Hood {                                      // "hood" in the configuration
             // {servo position, hood angle} rows, blended between them. The first and last rows are the
             // stops (no posA / posB then). The angles must keep going one way.
+            // Example rows: write the Hood Finder's in their place.
             public static double[][] calibration = {{0.20, 0}, {0.32, 8}, {0.45, 18}, {0.65, 30}};
         }
         // end recipe
@@ -98,11 +103,16 @@ public class HoodRecipes {
         }
 
         // recipe: tunables-hood-motor
-        public static class Hood {
+        public static class Hood {                                      // "hood" in the configuration
             // Encoder ticks at the two stops, counted from where the hood sits at INIT (start the robot
             // with the hood on stop A), and the angles there.
-            public static double posA = 0, posB = 420, angleA = 0, angleB = 30;
-            public static double kP = 0.005, maxPower = 0.5, tolerance = 0.5;   // power per tick, ready within 0.5 deg
+            public static double posA = MEASURE;                        // ticks at stop A, usually 0 (Hood Finder)
+            public static double posB = MEASURE;                        // ticks at stop B (Hood Finder)
+            public static double angleA = MEASURE;                      // the angle at stop A (an angle app)
+            public static double angleB = MEASURE;                      // the angle at stop B (an angle app)
+            public static double kP = DEFAULT_FROM_CATALOG;             // power per tick off (0.005)
+            public static double maxPower = DEFAULT_FROM_CATALOG;       // the most power (0.5)
+            public static double tolerance = DEFAULT_FROM_CATALOG;      // ready within this (1/50 of the range)
         }
         // end recipe
 

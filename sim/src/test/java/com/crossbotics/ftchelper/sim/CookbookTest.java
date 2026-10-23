@@ -40,6 +40,10 @@ import org.junit.rules.TemporaryFolder;
  * recipe that compiles but stops at INIT (two jobs on one button, a missing Tunables number) fails here.
  */
 public class CookbookTest {
+    static {
+        CookbookSamples.fill();   // the cookbook writes MEASURE: sample numbers in their place
+    }
+
     @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
     private static final List<Class<?>> GROUPS = Arrays.asList(DrivingRecipes.class, ButtonRecipes.class,

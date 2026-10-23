@@ -37,6 +37,8 @@ public class Robot {
         // Read all sensors and encoders from the hub in one message per loop: a faster loop.
         BulkReads.auto(hardwareMap);
 
+        // Each name in quotes ("lift", "lift_bottom", "claw", "intake") = the device's name in the robot
+        // configuration on the Driver Station.
         // The lift: a motor that goes to named heights and holds them. Numbers are encoder ticks
         // (counts of how far the motor shaft has turned). Measure yours with the Hardware Check.
         lift = PositionMotor.create(hardwareMap, "lift")

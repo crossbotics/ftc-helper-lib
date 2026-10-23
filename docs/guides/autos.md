@@ -107,11 +107,16 @@ lines you do not have yet; every number in it is also in the tuning menu):
 ```java
 /** Your own numbers: a section no part reads. Every number here is in the tuning menu too. */
 public static class Auto {
-    public static double leaveInches = 24, toGoalInches = 30, parkInches = 20;
-    public static double goalX = -30, goalY = -30, goalHeading = 45;
-    public static double parkX = -56, parkY = -36;
+    public static double leaveInches = 24;                      // drive off the start line
+    public static double toGoalInches = 30;                     // drive to the goal
+    public static double parkInches = 20;                       // drive into the park zone
+    public static double goalX = -30, goalY = -30;              // the scoring spot, inches (driveTo)
+    public static double goalHeading = 45;                      // facing there, degrees
+    public static double parkX = -56, parkY = -36;              // the park spot, inches (driveTo)
     // Several autos (guides/autos.md): the cycle, and the FAR start's way to the near side.
-    public static double pickupInches = 20, offWallInches = 12, farToNearInches = 72;
+    public static double pickupInches = 20;                     // drive onto a piece
+    public static double offWallInches = 12;                    // back off the wall
+    public static double farToNearInches = 72;                  // the far start to the near side
 }
 ```
 

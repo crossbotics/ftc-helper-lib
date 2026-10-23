@@ -24,6 +24,7 @@ public class Robot extends RobotDefinition {
         // 84 mm RIGHT of the centre (-84), the sideways pod 168 mm BEHIND it (-168). The Odometry Tuner
         // measures them.
         odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
+        // "intake" = the motor's name in the robot configuration. Its numbers: Tunables.Intake.
         intake = add(Intake.motor("intake"));
     }
 }

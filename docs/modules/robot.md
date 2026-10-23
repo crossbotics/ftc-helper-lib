@@ -135,13 +135,19 @@ Tunables section, an indexer added twice. Each stops with the name.
 
 ```java
 public class Tunables {
-    public static class Drive { public static double maxPower = 1.0, practiceMaxPower = 0.6, slowSpeed = 0.3; ... }
-    public static class Lift {
-        public static double min = 0, max = 2600;            // the safe range (not tunable live)
-        public static double kP = 0.004, kI = 0, kD = 0.0002, kF = 0.05;
-        public static double down = 0, low = 900, high = 2400;   // named heights: any names
+    public static class Drive {                                 // a fixed name: always Drive
+        public static double maxPower = DEFAULT_FROM_CATALOG;   // top wheel power (1.0)
     }
-    public static class Claw { public static double open = 0.20, closed = 0.75; }
+    public static class Lift {                                  // "lift" in the robot configuration
+        public static double min = 0;                           // lowest safe point, counts (Motor Finder)
+        public static double max = 2600;                        // highest safe point (not tunable live)
+        public static double kP = DEFAULT_FROM_CATALOG;         // push toward the target (from the motor)
+        public static double high = 2400;                       // a named height: any name you like
+    }
+    public static class Claw {                                  // "claw" in the robot configuration
+        public static double open = 0.20;                       // servo position, open (Servo Finder)
+        public static double closed = 0.75;                     // servo position, closed (Servo Finder)
+    }
 }
 ```
 

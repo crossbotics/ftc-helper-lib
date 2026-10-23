@@ -25,7 +25,8 @@ and [`Tunables.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/
 claw.
 
 ```java
-// Lesson 4: the mechanisms.
+// Lesson 4: the mechanisms. "intake", "lift", "lift_bottom", "claw" = the devices' names in the robot
+// configuration on the Driver Station.
 intake = add(Intake.motor("intake"));                                             // Tunables.Intake
 lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom")); // Tunables.Lift
 claw = add(Claw.servo("claw"));                                                    // Tunables.Claw
@@ -68,20 +69,29 @@ no `_`): `"lift"` reads `Tunables.Lift`.
 
 ```java
 public static class Intake {
-    public static double inPower = 1.0, outPower = 0.7;
+    public static double inPower = DEFAULT_FROM_CATALOG;        // power taking pieces in, 0 to 1 (1.0)
+    public static double outPower = DEFAULT_FROM_CATALOG;       // power pushing pieces out (0.7)
 }
 
 public static class Lift {
-    public static double min = 0, max = MEASURE;
-    public static double kP = DEFAULT_FROM_CATALOG, kI = DEFAULT_FROM_CATALOG, kD = DEFAULT_FROM_CATALOG, kF = DEFAULT_FROM_CATALOG;
-    public static double down = 0, low = 900, high = 2400;
+    public static double min = 0;                               // lowest safe point, counts (Motor Finder)
+    public static double max = MEASURE;                         // highest safe point, counts (Motor Finder, B)
+    public static double kP = DEFAULT_FROM_CATALOG;             // push toward the height (from the motor)
+    public static double kI = DEFAULT_FROM_CATALOG;             // fix a small steady miss (0)
+    public static double kD = DEFAULT_FROM_CATALOG;             // brake near the height (from the motor)
+    public static double kF = DEFAULT_FROM_CATALOG;             // hold up against gravity (0.05)
+    public static double down = 0;                              // a named height, counts: any name you like
+    public static double low = 900;                             // a named height (Motor Finder)
+    public static double high = 2400;                           // a named height (Motor Finder)
 }
 
 public static class Claw {
-    public static double open = 0.20, closed = 0.75;
+    public static double open = 0.20;                           // servo position, open (Servo Finder)
+    public static double closed = 0.75;                         // servo position, closed (Servo Finder)
 }
 ```
 
+One number per line, each with a short comment; the number in brackets is the library's default.
 (`MEASURE` and `DEFAULT_FROM_CATALOG` come from the line
 `import static com.crossbotics.ftchelper.robot.Starting.*;` under the `package` line of the lesson
 robot's `Tunables.java`: copy it too.)
@@ -105,7 +115,7 @@ own file already has the measured number, `max = 2600`.)
 
 What each number means:
 
-- **Intake:** the power going in and going out, 0 to 1.
+- **Intake:** the power going in and going out, 0 to 1. `DEFAULT_FROM_CATALOG`: the library's 1.0 and 0.7.
 - **Lift heights are in encoder counts.** An encoder is a sensor on the motor that counts how far
   the shaft has turned. 0 is the bottom; bigger numbers are higher.
   - `min`, `max`: the safe range. The lift never goes outside it. You cannot change these from the
@@ -232,13 +242,20 @@ Copy the numbers into those sections, and give each P a real name:
 
 ```java
 public static class Claw {
-    public static double open = 0.210, closed = 0.770;
+    public static double open = 0.210;                          // servo position, open (Servo Finder)
+    public static double closed = 0.770;                        // servo position, closed (Servo Finder)
 }
 
 public static class Lift {
-    public static double min = 0, max = 2580;
-    public static double kP = DEFAULT_FROM_CATALOG, kI = DEFAULT_FROM_CATALOG, kD = DEFAULT_FROM_CATALOG, kF = DEFAULT_FROM_CATALOG;
-    public static double down = 0, low = 900, high = 2400;
+    public static double min = 0;                               // lowest safe point, counts (Motor Finder)
+    public static double max = 2580;                            // highest safe point, counts (Motor Finder)
+    public static double kP = DEFAULT_FROM_CATALOG;             // push toward the height (from the motor)
+    public static double kI = DEFAULT_FROM_CATALOG;             // fix a small steady miss (0)
+    public static double kD = DEFAULT_FROM_CATALOG;             // brake near the height (from the motor)
+    public static double kF = DEFAULT_FROM_CATALOG;             // hold up against gravity (0.05)
+    public static double down = 0;                              // a named height, counts: any name you like
+    public static double low = 900;                             // a named height (Motor Finder)
+    public static double high = 2400;                           // a named height (Motor Finder)
 }
 ```
 

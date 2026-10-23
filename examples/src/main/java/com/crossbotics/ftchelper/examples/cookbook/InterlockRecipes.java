@@ -1,5 +1,7 @@
 package com.crossbotics.ftchelper.examples.cookbook;
 
+import static com.crossbotics.ftchelper.robot.Starting.*;
+
 import com.crossbotics.ftchelper.robot.Action;
 import com.crossbotics.ftchelper.robot.Camera;
 import com.crossbotics.ftchelper.robot.Claw;
@@ -29,12 +31,12 @@ public class InterlockRecipes {
     /** The numbers these recipes read. In your TeamCode these sections go in Tunables.java. */
     public static class Numbers {
         // recipe: tunables-turret-switch
-        public static class Turret {
-            public static double min = -190, max = 190;   // its range, degrees (0 = forward, counterclockwise +)
-            // Where the switch closes, in the turret's degrees (measure it: docs/guides/turret-setup.md).
-            public static double homeAngle = -45;
-            // Optional: how slowly it looks for the switch at START, and for how long at most.
-            public static double homingPower = 0.2, homingTimeout = 5;
+        public static class Turret {                                    // "turret" in the configuration
+            public static double min = MEASURE;                         // degrees (0 = forward, counterclockwise +):
+            public static double max = MEASURE;                         // as far as the wires allow (Motor Finder)
+            public static double homeAngle = MEASURE;                   // where the switch closes (turret-setup.md)
+            public static double homingPower = DEFAULT_FROM_CATALOG;    // how slowly it looks for the switch (0.2)
+            public static double homingTimeout = DEFAULT_FROM_CATALOG;  // the most seconds it looks (5)
         }
         // end recipe
 
@@ -53,10 +55,11 @@ public class InterlockRecipes {
 
         // recipe: tunables-interlock
         // The rule's own section, named like the rule in Robot.java. Each zone in its part's units.
-        public static class TurretLift {
-            public static double turretFrom = 130, turretTo = 218;   // degrees: the back of the robot
-            public static double liftAbove = 270;                    // counts: the slide is up
-            public static double liftStopSec = 0.2;                  // optional: a heavy slide takes longer to stop
+        public static class TurretLift {                                // keepApart("TurretLift", ...) in Robot.java
+            public static double turretFrom = MEASURE;                  // degrees: where the turret's zone starts
+            public static double turretTo = MEASURE;                    // degrees: where it ends (robot's back)
+            public static double liftAbove = MEASURE;                   // counts: the slide is up from here
+            public static double liftStopSec = 0.2;                     // a heavy slide takes longer to stop (0.15)
         }
         // end recipe
     }
@@ -78,6 +81,7 @@ public class InterlockRecipes {
             // A home switch: a touch sensor ("REV Touch Sensor") or a magnetic switch ("Digital
             // Device", e.g. the REV Magnetic Limit Switch). At START the turret turns slowly until it
             // finds it; after that, every time it passes the switch its angle is set right again.
+            // "turret", "turret_home" = the motor's and the switch's names in the robot configuration.
             turret = add(Turret.motor("turret", "gobilda-5203-312").gearRatio(2.75)
                     .homeSwitch("turret_home")
                     .follows(camera));
@@ -96,11 +100,13 @@ public class InterlockRecipes {
     /** The numbers for the slip-ring recipe. */
     public static class SlipRingNumbers {
         // recipe: tunables-turret-slip-ring
-        public static class Turret {
-            // No min and max: it turns round and round. The PID and "aimed within" as usual.
-            public static double kP = 0.015, kI = 0, kD = 0, maxPower = 1.0, tolerance = 2;
-            // The absolute encoder's reading (0 to 360) with the turret pointing straight forward.
-            public static double encoderOffset = 117;
+        public static class Turret {                                    // "turret" in the configuration
+            // No min and max: it turns round and round.
+            public static double kP = 0.015;                            // push per degree off, CR servo (0.02)
+            public static double kD = DEFAULT_FROM_CATALOG;             // brake near the target (0.001)
+            public static double maxPower = 1.0;                        // a CR servo's full speed (0.8)
+            public static double tolerance = DEFAULT_FROM_CATALOG;      // "aimed" within this, degrees (1.0)
+            public static double encoderOffset = MEASURE;               // encoder reading, pointing forward
         }
         // end recipe
     }
@@ -118,6 +124,7 @@ public class InterlockRecipes {
             // recipe: turret-slip-ring
             // A CR servo turns it, an absolute encoder on an analog port says where it points (no
             // homing), and continuous(): a slip ring carries the wires, so no limits, the shortest way.
+            // "turret", "turret_pos" = the servo's and the encoder's names in the robot configuration.
             turret = add(Turret.crServo("turret").analogEncoder("turret_pos").continuous().follows(camera));
             // end recipe
         }
@@ -126,13 +133,15 @@ public class InterlockRecipes {
     /** The numbers for the servo turret recipe. */
     public static class ServoTurretNumbers {
         // recipe: tunables-turret-servo
-        public static class Turret {
-            // Two servo positions (Servo Finder) and the turret's angle at each (a phone angle app):
-            // 0 = straight forward, counterclockwise (left) +. Its range is between the two angles.
-            public static double posA = 0.10, angleA = -135;
-            public static double posB = 0.90, angleB = 135;
-            public static double travelSec = 0.6;     // seconds from posA to posB ("aimed" waits for it)
-            public static double startAngle = 0;      // a servo cannot say where it is: sent here at START
+        public static class Turret {                                    // "turret" in the configuration
+            // Two servo positions and the turret's angle at each: 0 = straight forward, counterclockwise
+            // (left) +. Its range is between the two angles.
+            public static double posA = MEASURE;                        // servo position at one end (Servo Finder)
+            public static double angleA = MEASURE;                      // the turret's angle there (an angle app)
+            public static double posB = MEASURE;                        // servo position, other end (Servo Finder)
+            public static double angleB = MEASURE;                      // the turret's angle there (an angle app)
+            public static double travelSec = DEFAULT_FROM_CATALOG;      // posA to posB, seconds (0.6, or the servo's)
+            public static double startAngle = DEFAULT_FROM_CATALOG;     // sent here at START (0)
         }
         // end recipe
     }
@@ -151,6 +160,7 @@ public class InterlockRecipes {
             // A standard servo turns the turret to an angle by itself: no encoder, no PID, no homing.
             // fullRange(): the servo's whole turn (a goBILDA 2000: 300 degrees, not 270). Turn it on
             // BEFORE you measure posA and posB (Servo Finder: press Y while choosing the servo).
+            // "turret" = the servo's name in the robot configuration. Numbers: Tunables.Turret.
             turret = add(Turret.servo("turret").part("gobilda-2000-speed").fullRange().follows(camera));
             // end recipe
         }
@@ -176,11 +186,12 @@ public class InterlockRecipes {
         }
 
         // recipe: tunables-aim-odometry-only
-        public static class Aim {
+        public static class Aim {                                       // a fixed name: always Aim
             // Where the goal is, seen from YOUR drivers' wall (inches; the same numbers as driveTo).
             // BIOBUZZ: your HIVE's CELL that is up at the start.
-            public static double goalX = 13, goalY = -13;
-            public static boolean mirrorForRed = false;   // BIOBUZZ's field is turned, not mirrored
+            public static double goalX = 13;                            // inches across the field (BIOBUZZ)
+            public static double goalY = -13;                           // inches from your wall (BIOBUZZ)
+            public static boolean mirrorForRed = false;                 // BIOBUZZ's field is turned, not mirrored
         }
         // end recipe
     }

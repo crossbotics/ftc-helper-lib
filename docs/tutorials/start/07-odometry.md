@@ -189,7 +189,7 @@ intake = add(Intake.motor("intake"));
 
 ```java
 public static class Odometry {
-    public static boolean checked = false;
+    public static boolean checked = false;                      // true after the Odometry Tuner's loop test
 }
 ```
 
@@ -306,8 +306,11 @@ public class ToTheGoal extends Auto<Robot> {
 
   ```java
   public static class Auto {
-      public static double goalX = -30, goalY = -30, goalHeading = 45;
-      public static double parkX = -56, parkY = -36;
+      public static double goalX = -30;                           // the scoring spot: inches across the field
+      public static double goalY = -30;                           // the scoring spot: inches from the centre
+      public static double goalHeading = 45;                      // facing there, degrees
+      public static double parkX = -56;                           // the park spot: inches across the field
+      public static double parkY = -36;                           // the park spot: inches from the centre
   }
   ```
 
@@ -356,8 +359,11 @@ public class ToTheGoal extends Auto<Robot> {
 And add the five points to the `Auto` section of your `Tunables.java` (keep lesson 6's numbers too):
 
 ```java
-public static double goalX = -30, goalY = -30, goalHeading = 45;
-public static double parkX = -56, parkY = -36;
+public static double goalX = -30;                           // the scoring spot: inches across the field
+public static double goalY = -30;                           // the scoring spot: inches from the centre
+public static double goalHeading = 45;                      // facing there, degrees
+public static double parkX = -56;                           // the park spot: inches across the field
+public static double parkY = -36;                           // the park spot: inches from the centre
 ```
 
 **Before the tuner is done** (`checked = false`), each `driveTo` does nothing on the robot, and the
@@ -408,9 +414,11 @@ or B never sets the pose. The spot goes in `Tunables.java`, written for BLUE lik
 
 ```java
 public static class Odometry {
-    public static boolean checked = false;
-    public static double resetX = -56, resetY = -61, resetHeading = 0;   // the "set pose here" spot
-    public static boolean mirrorForRed = false;   // BIOBUZZ: RED uses the same numbers from its wall
+    public static boolean checked = false;                      // true after the Odometry Tuner's loop test
+    public static double resetX = -56;                          // "set pose here" spot: inches across the field
+    public static double resetY = -61;                          // "set pose here" spot: inches from the centre
+    public static double resetHeading = 0;                      // heading there, degrees: 0 = facing the field
+    public static boolean mirrorForRed = false;                 // BIOBUZZ: false
 }
 ```
 

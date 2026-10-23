@@ -67,14 +67,17 @@ back into `Tunables.java`. The tables further down list every setting, part by p
 
 ## When you add a part
 
-1. Add the part to `Robot.java` (one line, with its part number: `.part("gobilda-5203-435")`).
+1. Add the part to `Robot.java` (one line, with its part number: `.part("gobilda-5203-435")`). The
+   name in quotes (`Lift.slide("lift")`) is the device's name in the robot configuration on the Driver
+   Station, exactly. Its section in `Tunables.java` is that name in CamelCase: `"lift"` reads `Lift`.
 2. Press INIT. The part works with the library's starting values. INIT shows one note per part with
    the values it used.
 3. If INIT stops and asks for a number (a lift's `min` and `max`, a turret's stops), add the part's
    section to `Tunables.java` with that number. The message names the tool that finds it.
 4. Optional: write a line for each setting in the part's table below, set to `DEFAULT_FROM_CATALOG`,
-   with a short comment. Then the file shows every setting the part has, and you can change one when
-   you need to. Leaving a line out does the same as `DEFAULT_FROM_CATALOG`.
+   with a short comment, and `MEASURE` for the numbers only your robot can give. Then the file shows
+   every setting the part has, and you can change one when you need to. Leaving a line out does the
+   same as `DEFAULT_FROM_CATALOG`. The [Cookbook](../cookbook.md) shows each part's section this way.
 
 ## What Tunables.java is
 

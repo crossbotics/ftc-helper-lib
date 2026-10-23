@@ -32,6 +32,8 @@ public class Robot extends RobotDefinition {
 
     @Override
     protected void define() {
+        // Each name in quotes ("leftDrive", "intakeMotor", "flywheel", "pollenServo"...) = the device's name
+        // in the robot configuration on the Driver Station. A part's numbers: Tunables, in its name's section.
         // REV's code does not reverse a drive motor, so the library's default (the left side
         // reversed) is a guess: if the robot spins when you push forward, change it (lesson 2).
         drive(Drive.tank("leftDrive", "rightDrive")

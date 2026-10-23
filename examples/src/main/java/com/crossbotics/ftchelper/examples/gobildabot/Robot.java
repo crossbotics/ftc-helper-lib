@@ -25,6 +25,8 @@ public class Robot extends RobotDefinition {
 
     @Override
     protected void define() {
+        // Each name in quotes ("left_drive", "intake", "launcher", "windmill"...) = the device's name in the
+        // robot configuration on the Driver Station. A part's numbers: Tunables, in its name's section.
         drive(Drive.tank("left_drive", "right_drive")
                 .motor("gobilda-5203-312").wheelMm(96)
                 .reversed("right_drive")

@@ -16,6 +16,10 @@ import org.junit.rules.TemporaryFolder;
 
 /** The Lights module in the simulator: the light's color follows the rules, flashes, and reaches the page. */
 public class SimLightsTest {
+    static {
+        CookbookSamples.fill();   // the cookbook writes MEASURE: sample numbers in their place
+    }
+
     @Rule public TemporaryFolder tmp = new TemporaryFolder();
 
     private Path robotFile() throws Exception {

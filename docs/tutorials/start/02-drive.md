@@ -96,11 +96,20 @@ A name in red in Android Studio? Click it and press Alt+Enter (Option+Enter on a
 
 ```java
 public static class Drive {
-    public static double maxPower = 1.0, practiceMaxPower = 0.6, slowSpeed = 0.3;
-    public static double strafeCorrection = 1.15, turnKp = 0.012, turnKd = 0.003, moveMinPower = 0.30;
-    public static boolean calibrated = false;
+    public static double maxPower = DEFAULT_FROM_CATALOG;       // top wheel power (1.0)
+    public static double practiceMaxPower = DEFAULT_FROM_CATALOG; // top wheel power in PRACTICE (0.6)
+    public static double slowSpeed = DEFAULT_FROM_CATALOG;      // top power with the slow trigger held (0.3)
+    public static double strafeCorrection = DEFAULT_FROM_CATALOG; // sideways moves: Drive Tuner (1.15)
+    public static double turnKp = DEFAULT_FROM_CATALOG;         // auto turns: push per degree off (0.012)
+    public static double turnKd = DEFAULT_FROM_CATALOG;         // auto turns: brake near the end (0.003)
+    public static double moveMinPower = DEFAULT_FROM_CATALOG;   // auto: least power that moves it (0.30)
+    public static boolean calibrated = false;                   // true after the Drive Tuner: auto runs then
 }
 ```
+
+`DEFAULT_FROM_CATALOG` = "use the library's default": the number in brackets at the end of the line.
+It needs the `import static` line at the top of the file ([lesson 1](01-robot-in-five-files.md#2-tunablesjava-the-numbers)).
+Write your own number in its place to change it.
 
 A **profile** is a set of limits for the whole robot: PRACTICE (gentle, for the shop) or COMPETITION
 (full power, for matches).
@@ -110,7 +119,7 @@ A **profile** is a set of limits for the whole robot: PRACTICE (gentle, for the 
   should not run at full speed. You choose the profile in any autonomous's INIT menu (the last line);
   the hub remembers it. A hub that was never set uses COMPETITION.
 - `slowSpeed`: the speed at a full squeeze of the slow trigger (0.3 = 30%).
-- The second line and `calibrated` are for autonomous. You set them with the Drive Tuner in lesson 6.
+- `strafeCorrection` to `moveMinPower`, and `calibrated`, are for autonomous. You set them with the Drive Tuner in lesson 6.
   Until `calibrated = true`, autonomous does not run.
 
 These are read at INIT. In the tuning menu (PRACTICE profile, hold GUIDE 1 s) you can change them; the

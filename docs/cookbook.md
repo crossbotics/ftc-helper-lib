@@ -276,6 +276,18 @@ a second one (two sections with one name do not compile): copy only the lines in
 change the lines you already have. A recipe that adds to a section you already have says so ("In your
 `Tunables.Launcher` section") and shows only the lines.
 
+**How a recipe's section reads:** one number per line, with a short comment.
+- `MEASURE`: a number only your robot can give (a lift's top, a servo's positions). INIT stops and
+  names the tool that finds it. Write the number in its place.
+- `DEFAULT_FROM_CATALOG`: the library's starting value, shown in brackets in the comment. Change it
+  only when you see the problem it fixes ([Find a setting by what you want](guides/tunables.md#find-a-setting-by-what-you-want)).
+- A real number: the point of the recipe (a slower robot, a spot on the field).
+- These words need one line at the top of `Tunables.java`: `import static com.crossbotics.ftchelper.robot.Starting.*;`
+
+**Names:** the name in quotes in `Robot.java` (`Lift.slide("lift")`) is the device's name in the
+robot configuration on the Driver Station, exactly. The section's name is that name in CamelCase:
+`"lift"` reads `Lift`, `"intake_deploy"` reads `IntakeDeploy`.
+
 ## Words you will meet
 
 | Word | Means |
@@ -382,12 +394,15 @@ drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
 
 <!-- recipe: tunables-drive -->
 ```java
-public static class Drive {
-    // Keep it slow for the first drives; raise maxPower when everything works.
-    public static double maxPower = 0.6, practiceMaxPower = 0.4, slowSpeed = 0.3;
-    public static double strafeCorrection = 1.15, turnKp = 0.012, turnKd = 0.003, moveMinPower = 0.30;
-    // false until the Drive Tuner (lesson 6): until then no autonomous drives the robot.
-    public static boolean calibrated = false;
+public static class Drive {                                     // a fixed name: always Drive
+    public static double maxPower = 0.6;                        // top wheel power: slow for first drives (1.0)
+    public static double practiceMaxPower = 0.4;                // top wheel power in PRACTICE (0.6)
+    public static double slowSpeed = DEFAULT_FROM_CATALOG;      // top power with the slow trigger held (0.3)
+    public static double strafeCorrection = DEFAULT_FROM_CATALOG; // sideways moves: Drive Tuner (1.15)
+    public static double turnKp = DEFAULT_FROM_CATALOG;         // auto turns: push per degree off (0.012)
+    public static double turnKd = DEFAULT_FROM_CATALOG;         // auto turns: brake near the end (0.003)
+    public static double moveMinPower = DEFAULT_FROM_CATALOG;   // auto: least power that moves it (0.30)
+    public static boolean calibrated = false;                   // true after the Drive Tuner: auto runs then
 }
 ```
 
@@ -617,9 +632,9 @@ button stop INIT with the button's name. Only one `libraryButtons(...)` method p
 <!-- recipe: tunables-buttons -->
 ```java
 /** Optional: the gesture times. Leave this section out to use these defaults. */
-public static class Buttons {
-    public static double tapGapSec = 0.35;   // the most time between the taps of a double-tap
-    public static double holdSec = 0.3;      // a press this long is a hold, not a tap
+public static class Buttons {                                   // a fixed name: always Buttons
+    public static double tapGapSec = 0.35;                      // the most time between the taps of a double-tap
+    public static double holdSec = 0.3;                         // a press this long is a hold, not a tap
 }
 ```
 
@@ -678,7 +693,16 @@ the configuration name in CamelCase (each word starts with a capital letter, no 
 <!-- recipe: intake-motor -->
 ```java
 // At the top of the class: public Intake intake;   Here in define():
-intake = add(Intake.motor("intake"));                  // Tunables.Intake: inPower, outPower
+// "intake" = the motor's name in the robot configuration. Its numbers: Tunables.Intake.
+intake = add(Intake.motor("intake"));
+```
+
+<!-- recipe: tunables-intake -->
+```java
+public static class Intake {                                    // "intake" in the configuration
+    public static double inPower = DEFAULT_FROM_CATALOG;        // power taking pieces in, 0 to 1 (1.0)
+    public static double outPower = DEFAULT_FROM_CATALOG;       // power pushing pieces out (0.7)
+}
 ```
 
 **Why:** the intake brings its buttons (operator RT in, LT out) and its numbers (`Tunables.Intake`).
@@ -694,6 +718,7 @@ A CR (continuous rotation) servo spins all the way round, like a small motor, in
 ```java
 // At the top of the class: public Intake intake;   Here in define():
 // two continuous-rotation (CR) servos. The one that spins the wrong way is reversed.
+// "left_intake", "right_intake" = the servos' names in the robot configuration. Numbers: Tunables.Intake.
 intake = add(Intake.crServos("left_intake", "right_intake").reversed("right_intake"));
 ```
 
@@ -723,22 +748,29 @@ add(Intake.motor("intake").onAtStart());
 // a slide on a motor with a switch at the bottom (the switch sets 0 each time it is pressed).
 // .part(...) is optional: the motor's catalog id, so the simulator moves it like the real
 // motor (without it the robot works the same). No switch? Delete .bottomSwitch(...).
+// "lift", "lift_bottom" = the motor's and the switch's names in the robot configuration.
 lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom"));
 ```
 
 <!-- recipe: tunables-lift -->
 ```java
-public static class Lift {
-    public static double min = 0, max = 2600;              // the safe range, counts (Motor Finder)
-    public static double kP = 0.004, kI = 0, kD = 0.0002, kF = 0.05;
-    public static double down = 0, low = 900, high = 2400; // named heights: any names you like
+public static class Lift {                                      // "lift" in the configuration
+    public static double min = MEASURE;                         // lowest safe point, counts (Motor Finder)
+    public static double max = MEASURE;                         // highest safe point, counts (Motor Finder)
+    public static double kP = DEFAULT_FROM_CATALOG;             // push toward the target (from the motor)
+    public static double kI = DEFAULT_FROM_CATALOG;             // fix a small steady miss (0)
+    public static double kD = DEFAULT_FROM_CATALOG;             // brake near the target (from the motor)
+    public static double kF = DEFAULT_FROM_CATALOG;             // hold up against gravity (0.05)
+    public static double down = MEASURE;                        // a named height, counts: any name you like
+    public static double low = MEASURE;                         // a named height (Motor Finder)
+    public static double high = MEASURE;                        // a named height (Motor Finder)
 }
 ```
 
 **Why:** the lift never goes past `min` and `max`, so it cannot break itself; INIT stops if they are missing.
 `.part(...)` is optional on a lift, intake, claw or wrist: it tells the simulator which motor or servo
 it is. An arm, a turret and a launcher take the motor's id in their brackets instead, and need it.
-The numbers here are examples: find yours with the [Motor Finder](#how-do-i-find-a-lifts-limits-and-heights).
+`MEASURE` stops INIT until you write the real number: find yours with the [Motor Finder](#how-do-i-find-a-lifts-limits-and-heights).
 `"lift"` must be the motor's name in your configuration. In `.part("gobilda-5203-435")`, 5203 is the
 goBILDA motor series and 435 its RPM (on the motor's label); the [parts catalog](guides/parts-catalog.md) lists them. To send it to a height: [from a button](#how-do-i-send-a-part-to-a-position-from-a-button).
 **More:** [Lesson 4](tutorials/start/04-lift-and-claw.md#2-their-numbers-in-tunablesjava), [Lift](modules/robot.md#lift),
@@ -798,6 +830,7 @@ numbers would be quietly wrong.
 // Tunables.LiftLeft (the first motor's name in CamelCase), not Tunables.Lift.
 // The motors face each other, so the second turns the other way: alsoMotorReversed.
 // (Both turn the same way for "up"? Use .alsoMotor("lift_right") instead.)
+// "lift_left", "lift_right" = the motors' names in the robot configuration. Numbers: Tunables.LiftLeft.
 lift = add(Lift.slide("lift_left").part("gobilda-5203-435").alsoMotorReversed("lift_right"));
 ```
 
@@ -805,10 +838,16 @@ lift = add(Lift.slide("lift_left").part("gobilda-5203-435").alsoMotorReversed("l
 ```java
 // A lift on two motors, Lift.slide("lift_left").alsoMotorReversed("lift_right"): its section is the
 // FIRST motor's name in CamelCase.
-public static class LiftLeft {
-    public static double min = 0, max = 2900;              // counts, from the first motor's encoder
-    public static double kP = 0.004, kI = 0, kD = 0.0002, kF = 0.06;
-    public static double down = 0, low = 1000, high = 2700;
+public static class LiftLeft {                                  // "lift_left" in the configuration
+    public static double min = MEASURE;                         // lowest safe point, counts (first motor)
+    public static double max = MEASURE;                         // highest safe point, counts (first motor)
+    public static double kP = DEFAULT_FROM_CATALOG;             // push toward the target (from the motor)
+    public static double kI = DEFAULT_FROM_CATALOG;             // fix a small steady miss (0)
+    public static double kD = DEFAULT_FROM_CATALOG;             // brake near the target (from the motor)
+    public static double kF = 0.06;                             // a heavier slide needs more hold (0.05)
+    public static double down = MEASURE;                        // a named height (Motor Finder)
+    public static double low = MEASURE;                         // a named height (Motor Finder)
+    public static double high = MEASURE;                        // a named height (Motor Finder)
 }
 ```
 
@@ -830,15 +869,22 @@ motors to one slide (`:sim:fromRobot` writes the second motor's line).
 // An arm in degrees. Its motor's catalog id is in the brackets (not optional, like a turret's
 // or launcher's): it needs the motor's counts per turn to work in degrees.
 // gearRatio: motor turns per arm turn. 0 degrees = where it is at INIT.
+// "arm" = the motor's name in the robot configuration. Its numbers: Tunables.Arm.
 arm = add(Arm.motor("arm", "gobilda-5203-117").gearRatio(2));
 ```
 
 <!-- recipe: tunables-arm -->
 ```java
-public static class Arm {
-    public static double min = -10, max = 120;              // degrees, 0 = where it is at INIT
-    public static double kP = 0.02, kI = 0, kD = 0.001, kF = 0.1;
-    public static double stowed = 0, pickup = 10, score = 95;
+public static class Arm {                                       // "arm" in the configuration
+    public static double min = MEASURE;                         // lowest safe angle, degrees, 0 = at INIT
+    public static double max = MEASURE;                         // highest safe angle, degrees (Motor Finder)
+    public static double kP = DEFAULT_FROM_CATALOG;             // push toward the target (0.02)
+    public static double kI = DEFAULT_FROM_CATALOG;             // fix a small steady miss (0)
+    public static double kD = DEFAULT_FROM_CATALOG;             // brake near the target (0.001)
+    public static double kF = 0.1;                              // hold up against gravity (0)
+    public static double stowed = MEASURE;                      // a named angle, degrees: any name you like
+    public static double pickup = MEASURE;                      // a named angle (Motor Finder)
+    public static double score = MEASURE;                       // a named angle (Motor Finder)
 }
 ```
 
@@ -852,15 +898,17 @@ public static class Arm {
 <!-- recipe: claw -->
 ```java
 // At the top of the class: public Claw claw;   Here in define():
-claw = add(Claw.servo("claw"));                        // Tunables.Claw: open, closed
+// "claw" = the servo's name in the robot configuration. Its numbers: Tunables.Claw.
+claw = add(Claw.servo("claw"));
 ```
 
 <!-- recipe: tunables-claw -->
 ```java
-public static class Claw {
-    // From the Servo Finder's line "Tunables.Claw: P1 = 0.210, P2 = 0.770", P1 and P2 renamed.
-    public static double open = 0.210, closed = 0.770;
-    public static double travelSec = 0.4;                   // about how long it takes to move
+public static class Claw {                                      // "claw" in the configuration
+    // The Servo Finder shows "Tunables.Claw: P1 = 0.210, P2 = 0.770": write P1 as open, P2 as closed.
+    public static double open = MEASURE;                        // servo position, open (Servo Finder)
+    public static double closed = MEASURE;                      // servo position, closed (Servo Finder)
+    public static double travelSec = DEFAULT_FROM_CATALOG;      // time for a full move (0.3, or the servo's)
 }
 ```
 
@@ -874,7 +922,18 @@ public static class Claw {
 <!-- recipe: wrist -->
 ```java
 // At the top of the class: public Wrist wrist;   Here in define():
-wrist = add(Wrist.servo("wrist"));                     // Tunables.Wrist: any names (down, level, up)
+// "wrist" = the servo's name in the robot configuration. Its numbers: Tunables.Wrist.
+wrist = add(Wrist.servo("wrist"));
+```
+
+<!-- recipe: tunables-wrist -->
+```java
+public static class Wrist {                                     // "wrist" in the configuration
+    public static double down = MEASURE;                        // servo position: any name you like
+    public static double level = MEASURE;                       // servo position (Servo Finder)
+    public static double up = MEASURE;                          // servo position (Servo Finder)
+    public static double travelSec = DEFAULT_FROM_CATALOG;      // time for a full move (0.3, or the servo's)
+}
 ```
 
 **Why:** the wrist brings its buttons (operator D-pad left and right step through the positions).
@@ -887,9 +946,19 @@ wrist = add(Wrist.servo("wrist"));                     // Tunables.Wrist: any na
 <!-- recipe: positioner -->
 ```java
 // Any servo with named positions: a gate, a kicker, a fold-out intake.
-intakeDeploy = add(Positioner.servo("intake_deploy")); // Tunables.IntakeDeploy: stowed, deployed
+// "intake_deploy" = the servo's name in the robot configuration. Numbers: Tunables.IntakeDeploy.
+intakeDeploy = add(Positioner.servo("intake_deploy"));
 // Right after START (autonomous and TeleOp): fold the intake out.
 atStart(() -> Action.named("Deploy").then(() -> intakeDeploy.goTo("deployed")));
+```
+
+<!-- recipe: tunables-positioner -->
+```java
+public static class IntakeDeploy {                              // "intake_deploy" in the configuration
+    public static double stowed = MEASURE;                      // servo position, folded (Servo Finder)
+    public static double deployed = MEASURE;                    // servo position, folded out (Servo Finder)
+    public static double travelSec = DEFAULT_FROM_CATALOG;      // time for a full move (0.3, or the servo's)
+}
 ```
 
 **Why:** a `Positioner` has no standard buttons, so you choose when it moves (here: at START).
@@ -992,22 +1061,38 @@ in the robot file.
 
 <!-- recipe: launcher -->
 ```java
-// A flywheel (in RPM) and the indexer that feeds it one piece at a time.
+// A flywheel (in RPM) and the indexer that feeds it one piece at a time. "launcher" and "indexer"
+// = their names in the robot configuration. Numbers: Tunables.Launcher and Tunables.Indexer.
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
         .feeder(Indexer.servo("indexer")));
 ```
 
 <!-- recipe: tunables-launcher -->
 ```java
-public static class Launcher {
-    public static double speedRpm = 2600, stepRpm = 100, readyBandRpm = 60, idleRpm = 1500;
+public static class Launcher {                                  // "launcher" in the configuration
+    public static double speedRpm = DEFAULT_FROM_CATALOG;       // shot speed without the table (60% of top)
+    public static double stepRpm = DEFAULT_FROM_CATALOG;        // speed change per D-pad press (100)
+    public static double readyBandRpm = DEFAULT_FROM_CATALOG;   // "at speed" = this close to the target (60)
+    public static double idleRpm = 1500;                        // spins between shots: quicker first shot (0)
+    public static double shotIntervalSec = DEFAULT_FROM_CATALOG; // least time between two pieces (0.25)
     // The hub's speed control: the defaults for the motor until the Flywheel Finder (INIT shows them).
-    // Then write the Finder's numbers in their place. It prints a line like
-    // kP = 1.24, kI = 0.124, kD = 0, kF = 12.4, nominalVolts = 12.6: that is an example, not yours.
-    public static double kP = DEFAULT_FROM_CATALOG, kI = DEFAULT_FROM_CATALOG, kD = DEFAULT_FROM_CATALOG, kF = DEFAULT_FROM_CATALOG;
-    public static double shotIntervalSec = 0.25;   // the least time between two pieces (seconds)
-    // {inches to the goal, RPM}: blended between rows (from the Shot Tuner).
+    // Then write the Finder's numbers in their place.
+    public static double kP = DEFAULT_FROM_CATALOG;             // push per speed error (kF / 10)
+    public static double kI = DEFAULT_FROM_CATALOG;             // fix a steady error (kP / 10)
+    public static double kD = DEFAULT_FROM_CATALOG;             // brake changes (0)
+    public static double kF = DEFAULT_FROM_CATALOG;             // steady power for a speed (from the motor)
+    // {inches to the goal, RPM}, blended between rows. Example rows: write the Shot Tuner's instead.
     public static double[][] speedByDistance = {{24, 2200}, {48, 2550}, {72, 2900}, {96, 3250}};
+}
+```
+
+<!-- recipe: tunables-indexer -->
+```java
+public static class Indexer {                                   // "indexer" in the configuration
+    public static double rest = MEASURE;                        // servo position, out of the way (Servo Finder)
+    public static double push = MEASURE;                        // servo position, piece pushed (Servo Finder)
+    public static double pushSec = DEFAULT_FROM_CATALOG;        // time to push (0.25, or the servo's speed)
+    public static double returnSec = DEFAULT_FROM_CATALOG;      // time to come back (the same as pushSec)
 }
 ```
 
@@ -1022,9 +1107,23 @@ public static class Launcher {
 ```java
 // The camera knows the goal of each alliance (BLUE first, then RED).
 camera = add(Camera.limelight("limelight").goal("BLUE SCORING", "RED SCORING"));
-// 5 motor turns per turret turn. follows(camera): it follows the goal from START,
-// but never turns past Tunables.Turret min and max.
+// "turret" = the motor's name in the robot configuration. 5 motor turns per turret turn.
+// follows(camera): it follows the goal from START, but never past Tunables.Turret min and max.
 turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).follows(camera));
+```
+
+<!-- recipe: tunables-turret -->
+```java
+public static class Turret {                                    // "turret" in the configuration
+    public static double min = MEASURE;                         // degrees, + = left, 0 = forward: as far as
+    public static double max = MEASURE;                         // the wires allow each way (Motor Finder)
+    public static double startAngle = DEFAULT_FROM_CATALOG;     // where you set it by hand before INIT (0)
+    public static double kP = DEFAULT_FROM_CATALOG;             // push per degree off (0.02)
+    public static double kD = DEFAULT_FROM_CATALOG;             // brake near the target (0.001)
+    public static double maxPower = DEFAULT_FROM_CATALOG;       // the most power (0.8)
+    public static double tolerance = DEFAULT_FROM_CATALOG;      // "aimed" within this, degrees (1.0)
+    public static double cameraOffset = DEFAULT_FROM_CATALOG;   // aims a little to one side: Aim Tuner (0)
+}
 ```
 
 **Why:** the turret aims for the driver, and its limits keep the wires from twisting.
@@ -1263,16 +1362,18 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer
 <!-- recipe: tunables-aim -->
 ```java
 /** Aiming (every line is optional; leave out what you do not use). */
-public static class Aim {
+public static class Aim {                                       // a fixed name: always Aim
     // The goal on the field, in inches, seen from your drivers' wall (the same numbers as
     // driveTo): with odometry, aiming goes on when the camera loses the goal. BIOBUZZ: your
     // HIVE's CELL that is up at the start (13 in right of the centre line, 13 in toward you).
-    public static double goalX = 13, goalY = -13;
-    // Default true (RED mirrors x). BIOBUZZ's field is turned, not mirrored: false.
-    public static boolean mirrorForRed = false;
-    // Whole-robot aim: turn power per degree off, the most it turns by itself, "aimed" within.
-    public static double turnKp = 0.02, turnKd = 0.002, maxTurnPower = 0.5, toleranceDeg = 2;
-    public static double rumbleDeg = 4;           // rumbleWhenAimed(): buzz within 4 degrees
+    public static double goalX = 13;                            // inches across the field (BIOBUZZ)
+    public static double goalY = -13;                           // inches from your wall (BIOBUZZ)
+    public static boolean mirrorForRed = false;                 // BIOBUZZ: turned, not mirrored (true)
+    public static double turnKp = DEFAULT_FROM_CATALOG;         // whole-robot aim: push per degree off (0.02)
+    public static double turnKd = DEFAULT_FROM_CATALOG;         // brake near the goal (0.002)
+    public static double maxTurnPower = DEFAULT_FROM_CATALOG;   // the most it turns by itself (0.5)
+    public static double toleranceDeg = DEFAULT_FROM_CATALOG;   // "aimed" within this, degrees (2)
+    public static double rumbleDeg = DEFAULT_FROM_CATALOG;      // rumbleWhenAimed(): buzz within this (4)
 }
 ```
 
@@ -1306,11 +1407,12 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer
 
 <!-- recipe: tunables-aim-odometry-only -->
 ```java
-public static class Aim {
+public static class Aim {                                       // a fixed name: always Aim
     // Where the goal is, seen from YOUR drivers' wall (inches; the same numbers as driveTo).
     // BIOBUZZ: your HIVE's CELL that is up at the start.
-    public static double goalX = 13, goalY = -13;
-    public static boolean mirrorForRed = false;   // BIOBUZZ's field is turned, not mirrored
+    public static double goalX = 13;                            // inches across the field (BIOBUZZ)
+    public static double goalY = -13;                           // inches from your wall (BIOBUZZ)
+    public static boolean mirrorForRed = false;                 // BIOBUZZ's field is turned, not mirrored
 }
 ```
 
@@ -1352,18 +1454,18 @@ it gives the robot's speed. **Off until you tune it on the real robot** (`shootO
 <!-- recipe: tunables-moving-shot -->
 ```java
 // ADD these lines to your Tunables.Aim section (keep goalX, goalY and the others).
-// false = off. Make it true only after testing on the real robot (a button can switch it
-// off in a match).
-public static boolean shootOnMove = false;
-// Seconds a piece is in the air, measured with a slow-motion video: count the frames from
-// leaving the launcher to reaching the goal, divide by the video's frames per second.
-// Longer shots fly longer: flightSecPerIn adds that much per inch (0 = the same everywhere).
-public static double flightSec = 0.8, flightSecPerIn = 0;
-public static double maxLeadIn = 24;       // never lead more than this (a bad speed reading)
+public static boolean shootOnMove = false;                  // true only after testing on the real robot
+// Seconds a piece is in the air, from a slow-motion video: count the frames from leaving the
+// launcher to reaching the goal, divide by the video's frames per second.
+public static double flightSec = MEASURE;                   // seconds in the air (slow-motion video)
+public static double flightSecPerIn = DEFAULT_FROM_CATALOG; // longer shots fly longer: per inch (0)
+public static double maxLeadIn = DEFAULT_FROM_CATALOG;      // never lead more than this, inches (24)
 // Where the shooter is from the robot's centre (a turret's pivot), and a camera on the body:
 // inches forward (+) and left (+). A camera on the turret sits at the turret's pivot.
-public static double shooterForwardIn = -4, shooterLeftIn = 0;
-public static double cameraForwardIn = 7, cameraLeftIn = 0;
+public static double shooterForwardIn = MEASURE;            // inches forward of the centre (a tape)
+public static double shooterLeftIn = MEASURE;               // inches left of the centre (a tape)
+public static double cameraForwardIn = MEASURE;             // inches forward of the centre (a tape)
+public static double cameraLeftIn = MEASURE;                // inches left of the centre (a tape)
 ```
 
 Then a button, in `Controls.java` inside `buttons(...)`:
@@ -1392,8 +1494,9 @@ are. The Driver Station says `Aim : moving shot: lead 12.3 deg, 18 in` while it 
 ```java
 // In your Tunables.Launcher section, IN PLACE OF the one speedByDistance line: one table
 // per game piece ({inches to the goal, RPM}), from the Shot Tuner. The name after
-// "speedByDistance" is the table's name: "pollen" and "nectar".
+// "speedByDistance" is the table's name: "pollen" and "nectar". Example rows: write yours.
 public static double[][] speedByDistancePollen = {{24, 2200}, {48, 2550}, {72, 2900}};
+// The NECTAR table.
 public static double[][] speedByDistanceNectar = {{24, 2400}, {48, 2800}, {72, 3200}};
 ```
 
@@ -1432,13 +1535,15 @@ the numbers; `Controls.java` (inside `buttons(...)`) for your own buttons.
 <!-- recipe: tunables-speed-trim -->
 ```java
 // In your Tunables.Launcher section (change the lines you already have, add the others).
-// From the Flywheel Finder: the gains, and the battery voltage they were found at.
-public static double kP = 1.17, kI = 0.117, kD = 0, kF = 11.70, nominalVolts = 12.6;
-// Optional (these are the defaults): one D-pad press = 1%, never more than 15% each way.
-public static double trimStepPercent = 1, trimMaxPercent = 15;
-// Optional: battery compensation, OFF by default (not yet proven on a real robot: try it and
-// tell us). true = F follows the battery; false (or no line) = F exactly as tuned.
-public static boolean batteryCompensation = true;
+public static double kP = MEASURE;                          // speed control (Flywheel Finder)
+public static double kI = MEASURE;                          // speed control (Flywheel Finder)
+public static double kD = DEFAULT_FROM_CATALOG;             // speed control (0)
+public static double kF = MEASURE;                          // steady power (Flywheel Finder)
+public static double nominalVolts = MEASURE;                // battery volts for kF (Flywheel Finder)
+public static double trimStepPercent = DEFAULT_FROM_CATALOG; // one D-pad press (1%)
+public static double trimMaxPercent = DEFAULT_FROM_CATALOG; // never more than this each way (15%)
+// Battery compensation, OFF by default (not yet proven on a real robot: try it and tell us).
+public static boolean batteryCompensation = true;           // true = F follows the battery (false)
 ```
 
 <!-- recipe: speed-trim -->
@@ -1485,13 +1590,15 @@ A new section in `Tunables.java`:
 
 <!-- recipe: tunables-hood -->
 ```java
-public static class Hood {
-    // The servo positions a hair off the hood's two hard stops (Hood Finder). Never past them.
-    public static double posA = 0.20, posB = 0.65;
-    // Optional: the hood's angle at each stop (any scale; here 0 = steep end, 30 = flat end).
-    public static double angleA = 0, angleB = 30;
-    // Stop to stop, seconds: the launcher waits this share of it before firing.
-    public static double travelSec = 0.5, startAngle = 0;
+public static class Hood {                                      // "hood" in the configuration
+    // posA and posB: the servo positions a hair off the hood's two hard stops. Never past them.
+    public static double posA = MEASURE;                        // servo position at stop A (Hood Finder)
+    public static double posB = MEASURE;                        // servo position at stop B (Hood Finder)
+    // Optional: the hood's angle at each stop (any scale, e.g. 0 = steep end, 30 = flat end).
+    public static double angleA = MEASURE;                      // the angle at stop A (an angle app)
+    public static double angleB = MEASURE;                      // the angle at stop B (an angle app)
+    public static double travelSec = DEFAULT_FROM_CATALOG;      // stop to stop, seconds (0.5, or the servo's)
+    public static double startAngle = DEFAULT_FROM_CATALOG;     // where it goes at START (angle A)
 }
 ```
 
@@ -1519,9 +1626,10 @@ the one above (a calibration table instead of `posA`, `posB`, `angleA`, `angleB`
 
 <!-- recipe: tunables-hood-linkage -->
 ```java
-public static class Hood {
+public static class Hood {                                      // "hood" in the configuration
     // {servo position, hood angle} rows, blended between them. The first and last rows are the
     // stops (no posA / posB then). The angles must keep going one way.
+    // Example rows: write the Hood Finder's in their place.
     public static double[][] calibration = {{0.20, 0}, {0.32, 8}, {0.45, 18}, {0.65, 30}};
 }
 ```
@@ -1538,11 +1646,16 @@ add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 
 <!-- recipe: tunables-hood-motor -->
 ```java
-public static class Hood {
+public static class Hood {                                      // "hood" in the configuration
     // Encoder ticks at the two stops, counted from where the hood sits at INIT (start the robot
     // with the hood on stop A), and the angles there.
-    public static double posA = 0, posB = 420, angleA = 0, angleB = 30;
-    public static double kP = 0.005, maxPower = 0.5, tolerance = 0.5;   // power per tick, ready within 0.5 deg
+    public static double posA = MEASURE;                        // ticks at stop A, usually 0 (Hood Finder)
+    public static double posB = MEASURE;                        // ticks at stop B (Hood Finder)
+    public static double angleA = MEASURE;                      // the angle at stop A (an angle app)
+    public static double angleB = MEASURE;                      // the angle at stop B (an angle app)
+    public static double kP = DEFAULT_FROM_CATALOG;             // power per tick off (0.005)
+    public static double maxPower = DEFAULT_FROM_CATALOG;       // the most power (0.5)
+    public static double tolerance = DEFAULT_FROM_CATALOG;      // ready within this (1/50 of the range)
 }
 ```
 
@@ -1581,6 +1694,7 @@ Every kind of turret (motor, servo, CR servo; switch or not; any range) has its 
 // A home switch: a touch sensor ("REV Touch Sensor") or a magnetic switch ("Digital
 // Device", e.g. the REV Magnetic Limit Switch). At START the turret turns slowly until it
 // finds it; after that, every time it passes the switch its angle is set right again.
+// "turret", "turret_home" = the motor's and the switch's names in the robot configuration.
 turret = add(Turret.motor("turret", "gobilda-5203-312").gearRatio(2.75)
         .homeSwitch("turret_home")
         .follows(camera));
@@ -1588,12 +1702,12 @@ turret = add(Turret.motor("turret", "gobilda-5203-312").gearRatio(2.75)
 
 <!-- recipe: tunables-turret-switch -->
 ```java
-public static class Turret {
-    public static double min = -190, max = 190;   // its range, degrees (0 = forward, counterclockwise +)
-    // Where the switch closes, in the turret's degrees (measure it: docs/guides/turret-setup.md).
-    public static double homeAngle = -45;
-    // Optional: how slowly it looks for the switch at START, and for how long at most.
-    public static double homingPower = 0.2, homingTimeout = 5;
+public static class Turret {                                    // "turret" in the configuration
+    public static double min = MEASURE;                         // degrees (0 = forward, counterclockwise +):
+    public static double max = MEASURE;                         // as far as the wires allow (Motor Finder)
+    public static double homeAngle = MEASURE;                   // where the switch closes (turret-setup.md)
+    public static double homingPower = DEFAULT_FROM_CATALOG;    // how slowly it looks for the switch (0.2)
+    public static double homingTimeout = DEFAULT_FROM_CATALOG;  // the most seconds it looks (5)
 }
 ```
 
@@ -1613,18 +1727,21 @@ turret at `startAngle` (default 0, straight forward) by hand before INIT.
 // A standard servo turns the turret to an angle by itself: no encoder, no PID, no homing.
 // fullRange(): the servo's whole turn (a goBILDA 2000: 300 degrees, not 270). Turn it on
 // BEFORE you measure posA and posB (Servo Finder: press Y while choosing the servo).
+// "turret" = the servo's name in the robot configuration. Numbers: Tunables.Turret.
 turret = add(Turret.servo("turret").part("gobilda-2000-speed").fullRange().follows(camera));
 ```
 
 <!-- recipe: tunables-turret-servo -->
 ```java
-public static class Turret {
-    // Two servo positions (Servo Finder) and the turret's angle at each (a phone angle app):
-    // 0 = straight forward, counterclockwise (left) +. Its range is between the two angles.
-    public static double posA = 0.10, angleA = -135;
-    public static double posB = 0.90, angleB = 135;
-    public static double travelSec = 0.6;     // seconds from posA to posB ("aimed" waits for it)
-    public static double startAngle = 0;      // a servo cannot say where it is: sent here at START
+public static class Turret {                                    // "turret" in the configuration
+    // Two servo positions and the turret's angle at each: 0 = straight forward, counterclockwise
+    // (left) +. Its range is between the two angles.
+    public static double posA = MEASURE;                        // servo position at one end (Servo Finder)
+    public static double angleA = MEASURE;                      // the turret's angle there (an angle app)
+    public static double posB = MEASURE;                        // servo position, other end (Servo Finder)
+    public static double angleB = MEASURE;                      // the turret's angle there (an angle app)
+    public static double travelSec = DEFAULT_FROM_CATALOG;      // posA to posB, seconds (0.6, or the servo's)
+    public static double startAngle = DEFAULT_FROM_CATALOG;     // sent here at START (0)
 }
 ```
 
@@ -1644,16 +1761,19 @@ hard stops just past them.
 ```java
 // A CR servo turns it, an absolute encoder on an analog port says where it points (no
 // homing), and continuous(): a slip ring carries the wires, so no limits, the shortest way.
+// "turret", "turret_pos" = the servo's and the encoder's names in the robot configuration.
 turret = add(Turret.crServo("turret").analogEncoder("turret_pos").continuous().follows(camera));
 ```
 
 <!-- recipe: tunables-turret-slip-ring -->
 ```java
-public static class Turret {
-    // No min and max: it turns round and round. The PID and "aimed within" as usual.
-    public static double kP = 0.015, kI = 0, kD = 0, maxPower = 1.0, tolerance = 2;
-    // The absolute encoder's reading (0 to 360) with the turret pointing straight forward.
-    public static double encoderOffset = 117;
+public static class Turret {                                    // "turret" in the configuration
+    // No min and max: it turns round and round.
+    public static double kP = 0.015;                            // push per degree off, CR servo (0.02)
+    public static double kD = DEFAULT_FROM_CATALOG;             // brake near the target (0.001)
+    public static double maxPower = 1.0;                        // a CR servo's full speed (0.8)
+    public static double tolerance = DEFAULT_FROM_CATALOG;      // "aimed" within this, degrees (1.0)
+    public static double encoderOffset = MEASURE;               // encoder reading, pointing forward
 }
 ```
 
@@ -1676,10 +1796,11 @@ keepApart("TurretLift", turret.zone(), lift.zoneAbove());
 <!-- recipe: tunables-interlock -->
 ```java
 // The rule's own section, named like the rule in Robot.java. Each zone in its part's units.
-public static class TurretLift {
-    public static double turretFrom = 130, turretTo = 218;   // degrees: the back of the robot
-    public static double liftAbove = 270;                    // counts: the slide is up
-    public static double liftStopSec = 0.2;                  // optional: a heavy slide takes longer to stop
+public static class TurretLift {                                // keepApart("TurretLift", ...) in Robot.java
+    public static double turretFrom = MEASURE;                  // degrees: where the turret's zone starts
+    public static double turretTo = MEASURE;                    // degrees: where it ends (robot's back)
+    public static double liftAbove = MEASURE;                   // counts: the slide is up from here
+    public static double liftStopSec = 0.2;                     // a heavy slide takes longer to stop (0.15)
 }
 ```
 
@@ -2075,11 +2196,16 @@ s.step("Clear the intake", ctx -> {
 ```java
 /** Your own numbers: a section no part reads. Every number here is in the tuning menu too. */
 public static class Auto {
-    public static double leaveInches = 24, toGoalInches = 30, parkInches = 20;
-    public static double goalX = -30, goalY = -30, goalHeading = 45;
-    public static double parkX = -56, parkY = -36;
+    public static double leaveInches = 24;                      // drive off the start line
+    public static double toGoalInches = 30;                     // drive to the goal
+    public static double parkInches = 20;                       // drive into the park zone
+    public static double goalX = -30, goalY = -30;              // the scoring spot, inches (driveTo)
+    public static double goalHeading = 45;                      // facing there, degrees
+    public static double parkX = -56, parkY = -36;              // the park spot, inches (driveTo)
     // Several autos (guides/autos.md): the cycle, and the FAR start's way to the near side.
-    public static double pickupInches = 20, offWallInches = 12, farToNearInches = 72;
+    public static double pickupInches = 20;                     // drive onto a piece
+    public static double offWallInches = 12;                    // back off the wall
+    public static double farToNearInches = 72;                  // the far start to the near side
 }
 ```
 
@@ -2463,14 +2589,16 @@ BIOBUZZ's field is turned half a turn (RED uses the same numbers from its own wa
 
 <!-- recipe: tunables-reset-spot -->
 ```java
-public static class Odometry {
-    public static boolean checked = false;   // true after the Odometry Tuner's Loop test passes
+public static class Odometry {                                  // a fixed name: always Odometry
+    public static boolean checked = false;                      // true after the Odometry Tuner's Loop test
     // "Set pose here" (TeleOp: hold gamepad 1 START 1 s with the robot on this spot). Inches and
     // degrees seen from your wall, written for BLUE like a start spot: our left corner tile, facing the field.
-    public static double resetX = -56, resetY = -61, resetHeading = 0;
+    public static double resetX = -56;                          // inches across the field
+    public static double resetY = -61;                          // inches from your wall
+    public static double resetHeading = 0;                      // degrees, 0 = facing the field
     // RED: false = the same numbers from the red wall (BIOBUZZ's field is turned half a turn);
     // true (or left out) = mirrored left-right, for a mirrored field.
-    public static boolean mirrorForRed = false;
+    public static boolean mirrorForRed = false;                 // BIOBUZZ: false
 }
 ```
 

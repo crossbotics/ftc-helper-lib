@@ -2,6 +2,28 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## v0.17.3 - 2026-10-22
+
+Every Tunables section in the docs and the example robots: one number per line with a short comment,
+and each part's name in the robot configuration said next to its line.
+
+### Changed
+
+- **Cookbook:** every recipe that adds a part shows the part's whole `Tunables.java` section: one
+  number per line with a short comment, `MEASURE` for the numbers only your robot can give (a lift's
+  `min` and `max`, a claw's positions...), `DEFAULT_FROM_CATALOG` for the rest. New sections for the
+  intake, wrist, named-position servo, indexer and turret recipes. A new box, "How a recipe's section
+  reads", explains the style and the names.
+- **Names:** each part line in the Cookbook, the example robots and the lessons says that the name in
+  quotes is the device's name in the robot configuration (Driver Station), and the section name is that
+  name in CamelCase. The Tunables guide's "When you add a part" says it too.
+- **Example robots and lessons 1, 2, 4, 6, 7, 9:** `Tunables.java` one number per line with comments;
+  `DEFAULT_FROM_CATALOG` where the number was the library's default (same values: nothing behaves
+  differently). They keep real numbers (no `MEASURE`), so they still run in the simulator.
+- `tools/check_docs.py` rule 7: a recipe's Tunables section needs a comment on every number, and
+  safety numbers (min, max, posA, posB, homeAngle, interlock zones) written as `MEASURE`.
+- Tests: the cookbook robots get sample numbers in place of `MEASURE` (`CookbookSamples`).
+
 ## v0.17.2 - 2026-10-22
 
 Docs only: find a Tunables setting by what you see on the robot.

@@ -3,20 +3,27 @@ package com.crossbotics.ftchelper.examples.lessonbot;
 import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT_FROM_CATALOG and MEASURE (docs/guides/tunables.md)
 
 /**
- * The lesson robot, file 2 of 5: every number, one section per part. The section's name is the
- * device's name in CamelCase ("lift" reads Lift). Tune the numbers live in the PRACTICE profile (hold
- * GUIDE 1 s), then copy them back here: the code is the record.
+ * The lesson robot, file 2 of 5: every number, one section per part, one number per line. The section's
+ * name is the device's name in CamelCase ("lift" reads Lift). DEFAULT_FROM_CATALOG = the library's
+ * default (in brackets in the comment). Tune the numbers live in the PRACTICE profile (hold GUIDE 1 s),
+ * then copy them back here: the code is the record.
  */
 public class Tunables {
     /** Lesson 2. calibrated: set true after the Drive Tuner (lesson 6); until then no autonomous runs. */
     public static class Drive {
-        public static double maxPower = 1.0, practiceMaxPower = 0.6, slowSpeed = 0.3;
-        public static double strafeCorrection = 1.15, turnKp = 0.012, turnKd = 0.003, moveMinPower = 0.30;
-        public static boolean calibrated = false;
+        public static double maxPower = DEFAULT_FROM_CATALOG;       // top wheel power (1.0)
+        public static double practiceMaxPower = DEFAULT_FROM_CATALOG; // top wheel power in PRACTICE (0.6)
+        public static double slowSpeed = DEFAULT_FROM_CATALOG;      // top power with the slow trigger held (0.3)
+        public static double strafeCorrection = DEFAULT_FROM_CATALOG; // sideways moves: Drive Tuner (1.15)
+        public static double turnKp = DEFAULT_FROM_CATALOG;         // auto turns: push per degree off (0.012)
+        public static double turnKd = DEFAULT_FROM_CATALOG;         // auto turns: brake near the end (0.003)
+        public static double moveMinPower = DEFAULT_FROM_CATALOG;   // auto: least power that moves it (0.30)
+        public static boolean calibrated = false;                   // true after the Drive Tuner: auto runs then
     }
 
     public static class Intake {
-        public static double inPower = 1.0, outPower = 0.7;
+        public static double inPower = DEFAULT_FROM_CATALOG;        // power taking pieces in, 0 to 1 (1.0)
+        public static double outPower = DEFAULT_FROM_CATALOG;       // power pushing pieces out (0.7)
     }
 
     /**
@@ -26,14 +33,21 @@ public class Tunables {
      * (lesson 4, step 6) and write the numbers in their place.
      */
     public static class Lift {
-        public static double min = 0, max = 2600;
-        public static double kP = DEFAULT_FROM_CATALOG, kI = DEFAULT_FROM_CATALOG, kD = DEFAULT_FROM_CATALOG, kF = DEFAULT_FROM_CATALOG;
-        public static double down = 0, low = 900, high = 2400;
+        public static double min = 0;                               // lowest safe point, counts (Motor Finder)
+        public static double max = 2600;                            // highest safe point, counts (Motor Finder)
+        public static double kP = DEFAULT_FROM_CATALOG;             // push toward the height (from the motor)
+        public static double kI = DEFAULT_FROM_CATALOG;             // fix a small steady miss (0)
+        public static double kD = DEFAULT_FROM_CATALOG;             // brake near the height (from the motor)
+        public static double kF = DEFAULT_FROM_CATALOG;             // hold up against gravity (0.05)
+        public static double down = 0;                              // a named height, counts: any name you like
+        public static double low = 900;                             // a named height (Motor Finder)
+        public static double high = 2400;                           // a named height (Motor Finder)
     }
 
     /** Lesson 4. Servo positions (the Servo Finder measures them). */
     public static class Claw {
-        public static double open = 0.20, closed = 0.75;
+        public static double open = 0.20;                           // servo position, open (Servo Finder)
+        public static double closed = 0.75;                         // servo position, closed (Servo Finder)
     }
 
     /**
@@ -42,6 +56,7 @@ public class Tunables {
      * then copy the good values back here (INIT lists them): the code is the record.
      */
     public static class Auto {
-        public static double toGoalInches = 24, parkInches = 20;
+        public static double toGoalInches = 24;                     // drive to the goal
+        public static double parkInches = 20;                       // drive into the park zone
     }
 }

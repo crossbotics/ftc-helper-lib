@@ -36,6 +36,8 @@ public class Robot extends RobotDefinition {
 
     @Override
     protected void define() {
+        // Each name in quotes ("leftDrive", "Intake", "FlyWheel", "fwActuator") = the device's name in the
+        // robot configuration on the Driver Station. A part's numbers: Tunables, in its name's section.
         // Stand-in: goBILDA's 117 RPM motor (1425.1 counts per turn) is close to the Maverick 50.9:1
         // in speed. Its counts are not: gearRatio(1221.6 / 1425.1) makes the counts per wheel turn the
         // Maverick's, so autonomous distances come out right. There are no real gears here.

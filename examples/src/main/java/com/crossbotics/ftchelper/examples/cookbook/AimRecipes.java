@@ -1,5 +1,7 @@
 package com.crossbotics.ftchelper.examples.cookbook;
 
+import static com.crossbotics.ftchelper.robot.Starting.*;
+
 import com.crossbotics.ftchelper.finders.ShotTunerOpMode;
 import com.crossbotics.ftchelper.robot.Action;
 import com.crossbotics.ftchelper.robot.Camera;
@@ -36,16 +38,18 @@ public class AimRecipes {
 
         // recipe: tunables-aim
         /** Aiming (every line is optional; leave out what you do not use). */
-        public static class Aim {
+        public static class Aim {                                       // a fixed name: always Aim
             // The goal on the field, in inches, seen from your drivers' wall (the same numbers as
             // driveTo): with odometry, aiming goes on when the camera loses the goal. BIOBUZZ: your
             // HIVE's CELL that is up at the start (13 in right of the centre line, 13 in toward you).
-            public static double goalX = 13, goalY = -13;
-            // Default true (RED mirrors x). BIOBUZZ's field is turned, not mirrored: false.
-            public static boolean mirrorForRed = false;
-            // Whole-robot aim: turn power per degree off, the most it turns by itself, "aimed" within.
-            public static double turnKp = 0.02, turnKd = 0.002, maxTurnPower = 0.5, toleranceDeg = 2;
-            public static double rumbleDeg = 4;           // rumbleWhenAimed(): buzz within 4 degrees
+            public static double goalX = 13;                            // inches across the field (BIOBUZZ)
+            public static double goalY = -13;                           // inches from your wall (BIOBUZZ)
+            public static boolean mirrorForRed = false;                 // BIOBUZZ: turned, not mirrored (true)
+            public static double turnKp = DEFAULT_FROM_CATALOG;         // whole-robot aim: push per degree off (0.02)
+            public static double turnKd = DEFAULT_FROM_CATALOG;         // brake near the goal (0.002)
+            public static double maxTurnPower = DEFAULT_FROM_CATALOG;   // the most it turns by itself (0.5)
+            public static double toleranceDeg = DEFAULT_FROM_CATALOG;   // "aimed" within this, degrees (2)
+            public static double rumbleDeg = DEFAULT_FROM_CATALOG;      // rumbleWhenAimed(): buzz within this (4)
         }
         // end recipe
 
@@ -58,8 +62,9 @@ public class AimRecipes {
             // recipe: tunables-shot-tables
             // In your Tunables.Launcher section, IN PLACE OF the one speedByDistance line: one table
             // per game piece ({inches to the goal, RPM}), from the Shot Tuner. The name after
-            // "speedByDistance" is the table's name: "pollen" and "nectar".
+            // "speedByDistance" is the table's name: "pollen" and "nectar". Example rows: write yours.
             public static double[][] speedByDistancePollen = {{24, 2200}, {48, 2550}, {72, 2900}};
+            // The NECTAR table.
             public static double[][] speedByDistanceNectar = {{24, 2400}, {48, 2800}, {72, 3200}};
             // end recipe
         }
@@ -77,18 +82,18 @@ public class AimRecipes {
             public static boolean mirrorForRed = false;
             // recipe: tunables-moving-shot
             // ADD these lines to your Tunables.Aim section (keep goalX, goalY and the others).
-            // false = off. Make it true only after testing on the real robot (a button can switch it
-            // off in a match).
-            public static boolean shootOnMove = false;
-            // Seconds a piece is in the air, measured with a slow-motion video: count the frames from
-            // leaving the launcher to reaching the goal, divide by the video's frames per second.
-            // Longer shots fly longer: flightSecPerIn adds that much per inch (0 = the same everywhere).
-            public static double flightSec = 0.8, flightSecPerIn = 0;
-            public static double maxLeadIn = 24;       // never lead more than this (a bad speed reading)
+            public static boolean shootOnMove = false;                  // true only after testing on the real robot
+            // Seconds a piece is in the air, from a slow-motion video: count the frames from leaving the
+            // launcher to reaching the goal, divide by the video's frames per second.
+            public static double flightSec = MEASURE;                   // seconds in the air (slow-motion video)
+            public static double flightSecPerIn = DEFAULT_FROM_CATALOG; // longer shots fly longer: per inch (0)
+            public static double maxLeadIn = DEFAULT_FROM_CATALOG;      // never lead more than this, inches (24)
             // Where the shooter is from the robot's centre (a turret's pivot), and a camera on the body:
             // inches forward (+) and left (+). A camera on the turret sits at the turret's pivot.
-            public static double shooterForwardIn = -4, shooterLeftIn = 0;
-            public static double cameraForwardIn = 7, cameraLeftIn = 0;
+            public static double shooterForwardIn = MEASURE;            // inches forward of the centre (a tape)
+            public static double shooterLeftIn = MEASURE;               // inches left of the centre (a tape)
+            public static double cameraForwardIn = MEASURE;             // inches forward of the centre (a tape)
+            public static double cameraLeftIn = MEASURE;                // inches left of the centre (a tape)
             // end recipe
         }
     }
@@ -104,13 +109,15 @@ public class AimRecipes {
             public static double[][] speedByDistance = {{24, 2200}, {48, 2550}, {72, 2900}};
             // recipe: tunables-speed-trim
             // In your Tunables.Launcher section (change the lines you already have, add the others).
-            // From the Flywheel Finder: the gains, and the battery voltage they were found at.
-            public static double kP = 1.17, kI = 0.117, kD = 0, kF = 11.70, nominalVolts = 12.6;
-            // Optional (these are the defaults): one D-pad press = 1%, never more than 15% each way.
-            public static double trimStepPercent = 1, trimMaxPercent = 15;
-            // Optional: battery compensation, OFF by default (not yet proven on a real robot: try it and
-            // tell us). true = F follows the battery; false (or no line) = F exactly as tuned.
-            public static boolean batteryCompensation = true;
+            public static double kP = MEASURE;                          // speed control (Flywheel Finder)
+            public static double kI = MEASURE;                          // speed control (Flywheel Finder)
+            public static double kD = DEFAULT_FROM_CATALOG;             // speed control (0)
+            public static double kF = MEASURE;                          // steady power (Flywheel Finder)
+            public static double nominalVolts = MEASURE;                // battery volts for kF (Flywheel Finder)
+            public static double trimStepPercent = DEFAULT_FROM_CATALOG; // one D-pad press (1%)
+            public static double trimMaxPercent = DEFAULT_FROM_CATALOG; // never more than this each way (15%)
+            // Battery compensation, OFF by default (not yet proven on a real robot: try it and tell us).
+            public static boolean batteryCompensation = true;           // true = F follows the battery (false)
             // end recipe
         }
 
