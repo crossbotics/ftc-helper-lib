@@ -174,7 +174,11 @@ public class SimRecorderTest {
         assertTrue(rec.checks.stream().anyMatch(c -> c.id.equals("y") && !c.on));
         Path test = dir.resolve("auto.sim");
         Files.write(test, rec.text("auto", "robot " + robot, "").getBytes(StandardCharsets.UTF_8));
-        assertEquals(0, replay(test, false).failures());
+        SimScenario replayed = replay(test, false);
+        // The report in the message: CI does not show the test's printout, and this test depends on timing.
+        assertEquals("the recorded autonomous test passes:\n" + String.join("\n", replayed.report())
+                + "\n-- the test file:\n" + new String(Files.readAllBytes(test), StandardCharsets.UTF_8),
+                0, replayed.failures());
     }
 
     @Test public void stepsAreMadeFromTapsHoldsAndSweeps() throws Exception {

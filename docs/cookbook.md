@@ -208,7 +208,7 @@ shown here; they stay at the very top, above `public class`). An import tells Ja
 **`Robot.java`**: the parts. Fields at the top, one line per part inside `define()`:
 
 <!-- recipe: file-robot -->
-```java
+```java title="Robot.java"
 public class Robot extends RobotDefinition {
     public Intake intake;          // one field per part: "public", the kind of part, a name
     public Lift lift;
@@ -234,7 +234,7 @@ public class Robot extends RobotDefinition {
 **`Controls.java`**: the buttons, and your TeleOp. Button lines go inside `buttons(...)`:
 
 <!-- recipe: file-controls -->
-```java
+```java title="Controls.java"
 @TeleOp(name = "Cookbook TeleOp", group = "Cookbook")   // the name on the Driver Station
 @Disabled                                               // delete this line in your copy
 public class Controls extends ControlMap<Robot> {
@@ -252,7 +252,7 @@ public class Controls extends ControlMap<Robot> {
 **`Actions.java`**: one method per action:
 
 <!-- recipe: file-actions -->
-```java
+```java title="Actions.java"
 public class Actions {
     // One method per action. r = your robot. Use it in Controls.java and in autos.
     public static Action scoreHigh(Robot r) {
@@ -332,7 +332,7 @@ or an action: they freeze the whole robot. To wait, see
 **Where:** `Robot.java`, inside `define()`.
 
 <!-- recipe: drive-mecanum -->
-```java
+```java title="Robot.java"
 // The four motor names, in this order: front left, front right, back left, back right.
 drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
         .motor("gobilda-5203-312").wheelMm(96)       // the motor (catalog id) and wheel size
@@ -347,7 +347,7 @@ drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
 **Where:** `Robot.java`, inside `define()` (in place of the mecanum line).
 
 <!-- recipe: drive-tank -->
-```java
+```java title="Robot.java"
 drive(Drive.tank("left_drive", "right_drive")
         .motor("gobilda-5203-312").wheelMm(96)
         .reversed("right_drive")                     // only the motors that run backward
@@ -363,7 +363,7 @@ motors in `.reversed(...)`. Two motors per side? Name all four: `Drive.tank("fro
 **Where:** `Robot.java`, in the drive line, before `.imu(...)`.
 
 <!-- recipe: drive-reversed -->
-```java
+```java title="Robot.java"
 drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
         .motor("gobilda-5203-312").wheelMm(96)
         // List EVERY reversed drive motor. Without this line the left side is reversed.
@@ -379,7 +379,7 @@ drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
 **Where:** `Robot.java`, the `.imu(...)` part of the drive line.
 
 <!-- recipe: drive-imu -->
-```java
+```java title="Robot.java"
 drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
         // Which way the hub's LOGO faces, then which way its USB PORTS face, on the robot.
         .imu("imu", LogoFacingDirection.LEFT, UsbFacingDirection.UP));
@@ -393,7 +393,7 @@ drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
 **Where:** `Tunables.java`, section `Drive`.
 
 <!-- recipe: tunables-drive -->
-```java
+```java title="Tunables.java"
 public static class Drive {                                     // a fixed name: always Drive
     public static double maxPower = 0.6;                        // top wheel power: slow for first drives (1.0)
     public static double practiceMaxPower = 0.4;                // top wheel power in PRACTICE (0.6)
@@ -415,7 +415,7 @@ is safe and matches are fast.
 **Where:** `Controls.java`, at the top of the class.
 
 <!-- recipe: one-driver -->
-```java
+```java title="Controls.java"
 // true: every button is on gamepad 1 (the operator's buttons move there).
 public static boolean oneDriver = true;
 ```
@@ -428,7 +428,7 @@ public static boolean oneDriver = true;
 **Where:** `Controls.java`, inside `buttons(...)`. For one driver (with two drivers, LT on gamepad 1 is already slow).
 
 <!-- recipe: slow-trigger -->
-```java
+```java title="Controls.java"
 // One driver: slow on LT. The further it is pulled, the slower (down to slowSpeed).
 g1.lt.slow().says("slow");
 ```
@@ -463,7 +463,7 @@ button's name. INIT lists the free buttons. To empty a button first: `g2.b.free(
 **Where:** `Controls.java`, inside `buttons(...)`.
 
 <!-- recipe: button-press -->
-```java
+```java title="Controls.java"
 // Once per press. "::" hands over the method; the button runs it later.
 g2.y.press(robot.claw::open).says("open the claw");
 // Several commands: "() ->" starts a small piece of code (a lambda).
@@ -478,7 +478,7 @@ g2.x.press(() -> robot.lift.goTo("low")).says("lift to low");
 **Where:** `Controls.java`, inside `buttons(...)`.
 
 <!-- recipe: button-hold -->
-```java
+```java title="Controls.java"
 // Runs every loop while held; the second job runs once when it is let go.
 g1.a.hold(robot.intake::in, robot.intake::stop).says("intake in (hold)");
 ```
@@ -491,7 +491,7 @@ g1.a.hold(robot.intake::in, robot.intake::stop).says("intake in (hold)");
 **Where:** `Controls.java`, inside `buttons(...)`.
 
 <!-- recipe: button-toggle -->
-```java
+```java title="Controls.java"
 // Each press switches the intake on or off. rumble(): 2 buzzes = on, 1 buzz = off.
 g1.x.toggle(robot.intake).rumble().says("intake on/off");
 ```
@@ -504,7 +504,7 @@ g1.x.toggle(robot.intake).rumble().says("intake on/off");
 **Where:** `Controls.java`, inside `buttons(...)`.
 
 <!-- recipe: button-gestures -->
-```java
+```java title="Controls.java"
 // Three gestures on one button: tap, hold, double-tap.
 g2.rb.tap(robot.launcher::fire).says("fire one")
      .hold(robot.launcher::fireWhileHeld, robot.launcher::ceaseFire).says("keep firing")
@@ -519,7 +519,7 @@ g2.rb.tap(robot.launcher::fire).says("fire one")
 **Where:** `Controls.java`, inside `buttons(...)`.
 
 <!-- recipe: button-held-for -->
-```java
+```java title="Controls.java"
 // Runs once, after the button is held for 1 second: a safe "are you sure?".
 g2.dpadLeft.heldFor(1.0, robot.launcher::stop).says("hold 1 s: flywheel off");
 ```
@@ -532,7 +532,7 @@ g2.dpadLeft.heldFor(1.0, robot.launcher::stop).says("hold 1 s: flywheel off");
 **Where:** `Controls.java`, inside `buttons(...)`.
 
 <!-- recipe: button-pair -->
-```java
+```java title="Controls.java"
 // Hold RB (the "shift key"), then press D-pad up. For big jobs that must not run by accident.
 g1.rb.with(g1.dpadUp, () -> robot.lift.goTo("high")).says("lift to the top");
 ```
@@ -548,7 +548,7 @@ Add `.rumble()` after a job (see [the toggle recipe](#how-do-i-switch-something-
 or buzz when the robot gets ready:
 
 <!-- recipe: rumble-when -->
-```java
+```java title="Controls.java"
 // A buzz on gamepad 2 each time the flywheel gets to its speed.
 g2.rumbleWhen(robot.launcher::isReady);
 ```
@@ -561,7 +561,7 @@ g2.rumbleWhen(robot.launcher::isReady);
 **Where:** `Controls.java`, inside `buttons(...)`.
 
 <!-- recipe: stick-use -->
-```java
+```java title="Controls.java"
 // A stick is a number from -1 to 1 (up and right are +). Its value goes to the job every loop.
 g2.rightStickY.use(robot.lift::manual).says("lift by hand");
 ```
@@ -576,7 +576,7 @@ g2.rightStickY.use(robot.lift::manual).says("lift by hand");
 Each part brings standard buttons (the intake: operator RT and LT). To move them:
 
 <!-- recipe: move-a-button -->
-```java
+```java title="Controls.java"
 g2.rt.free();   // free(): no job on it, even the one the intake suggests
 g2.lt.free();
 g2.lb.hold(robot.intake::in, robot.intake::stop).says("intake in (hold)");
@@ -592,7 +592,7 @@ g2.rb.hold(robot.intake::out, robot.intake::stop).says("intake out (hold)");
 `buttons(...)`, above the class's last `}`.
 
 <!-- recipe: no-standard-buttons -->
-```java
+```java title="Controls.java"
 // false: the parts bring no buttons of their own. Only the jobs in buttons(...) are used.
 @Override
 protected boolean useStandardButtons() {
@@ -610,7 +610,7 @@ protected boolean useStandardButtons() {
 `import com.crossbotics.ftchelper.teleop.LibraryButtons;`
 
 <!-- recipe: move-library-buttons -->
-```java
+```java title="Controls.java"
 // The library's own buttons (driving, pause, menus...): move them here; null = no button.
 @Override
 protected void libraryButtons(LibraryButtons lib, Pad g1, Pad g2) {
@@ -630,7 +630,7 @@ button stop INIT with the button's name. Only one `libraryButtons(...)` method p
 **Where:** `Tunables.java` (optional: leave the section out for these defaults).
 
 <!-- recipe: tunables-buttons -->
-```java
+```java title="Tunables.java"
 /** Optional: the gesture times. Leave this section out to use these defaults. */
 public static class Buttons {                                   // a fixed name: always Buttons
     public static double tapGapSec = 0.35;                      // the most time between the taps of a double-tap
@@ -651,7 +651,7 @@ started? Turn on the switch (it is off by default, so nobody switches by acciden
 `buttons(...)`). Already have a `libraryButtons(...)` method? Add only the `lib.switchAlliance` line to it.
 
 <!-- recipe: switch-alliance -->
-```java
+```java title="Controls.java"
 // Controls.java, inside the class, next to buttons(...) (import
 // com.crossbotics.ftchelper.teleop.LibraryButtons at the top). Off by default.
 @Override
@@ -691,14 +691,14 @@ the configuration name in CamelCase (each word starts with a capital letter, no 
 **Where:** `Robot.java`, inside `define()` (and `Tunables.java` for the numbers).
 
 <!-- recipe: intake-motor -->
-```java
+```java title="Robot.java"
 // At the top of the class: public Intake intake;   Here in define():
 // "intake" = the motor's name in the robot configuration. Its numbers: Tunables.Intake.
 intake = add(Intake.motor("intake"));
 ```
 
 <!-- recipe: tunables-intake -->
-```java
+```java title="Tunables.java"
 public static class Intake {                                    // "intake" in the configuration
     public static double inPower = DEFAULT_FROM_CATALOG;        // power taking pieces in, 0 to 1 (1.0)
     public static double outPower = DEFAULT_FROM_CATALOG;       // power pushing pieces out (0.7)
@@ -715,7 +715,7 @@ A CR (continuous rotation) servo spins all the way round, like a small motor, in
 **Where:** `Robot.java`, inside `define()` (and `Tunables.java` for the numbers).
 
 <!-- recipe: intake-cr-servos -->
-```java
+```java title="Robot.java"
 // At the top of the class: public Intake intake;   Here in define():
 // two continuous-rotation (CR) servos. The one that spins the wrong way is reversed.
 // "left_intake", "right_intake" = the servos' names in the robot configuration. Numbers: Tunables.Intake.
@@ -730,7 +730,7 @@ intake = add(Intake.crServos("left_intake", "right_intake").reversed("right_inta
 **Where:** `Robot.java`, inside `define()` (and `Tunables.java` for the numbers).
 
 <!-- recipe: intake-on-at-start -->
-```java
+```java title="Robot.java"
 // Runs in from START until stopped. Its button (operator RT) then switches it on/off.
 add(Intake.motor("intake").onAtStart());
 ```
@@ -743,7 +743,7 @@ add(Intake.motor("intake").onAtStart());
 **Where:** `Robot.java` (the part) and `Tunables.java` (its numbers).
 
 <!-- recipe: lift -->
-```java
+```java title="Robot.java"
 // At the top of the class: public Lift lift;   Here in define():
 // a slide on a motor with a switch at the bottom (the switch sets 0 each time it is pressed).
 // .part(...) is optional: the motor's catalog id, so the simulator moves it like the real
@@ -753,7 +753,7 @@ lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom
 ```
 
 <!-- recipe: tunables-lift -->
-```java
+```java title="Tunables.java"
 public static class Lift {                                      // "lift" in the configuration
     public static double min = MEASURE;                         // lowest safe point, counts (Motor Finder)
     public static double max = MEASURE;                         // highest safe point, counts (Motor Finder)
@@ -781,7 +781,7 @@ goBILDA motor series and 435 its RPM (on the motor's label); the [parts catalog]
 **Where:** `Robot.java`, inside `define()` (and `Tunables.java` for the numbers).
 
 <!-- recipe: lift-reversed -->
-```java
+```java title="Robot.java"
 // The lift goes DOWN on positive power (the Motor Finder says "add .reversed()"): flip it.
 add(Lift.slide("lift").reversed());
 ```
@@ -794,7 +794,7 @@ add(Lift.slide("lift").reversed());
 **Where:** `Robot.java`, inside `define()`.
 
 <!-- recipe: own-parts -->
-```java
+```java title="Robot.java"
 // A motor that is not in the catalog: its encoder counts per output turn, then its free speed (RPM).
 // On the seller's page:
 // - goBILDA: "Encoder Resolution" (the number "at the Output Shaft") and "No-Load Speed".
@@ -824,7 +824,7 @@ numbers would be quietly wrong.
 **Where:** `Robot.java`, inside `define()`, and `Tunables.java`.
 
 <!-- recipe: lift-two-motors -->
-```java
+```java title="Robot.java"
 // A slide with a motor on each side. Both get the same power, always (stop and pause too).
 // Only the FIRST motor's encoder is read: plug the encoder cable into it. The numbers are in
 // Tunables.LiftLeft (the first motor's name in CamelCase), not Tunables.Lift.
@@ -835,7 +835,7 @@ lift = add(Lift.slide("lift_left").part("gobilda-5203-435").alsoMotorReversed("l
 ```
 
 <!-- recipe: tunables-lift-two-motors -->
-```java
+```java title="Tunables.java"
 // A lift on two motors, Lift.slide("lift_left").alsoMotorReversed("lift_right"): its section is the
 // FIRST motor's name in CamelCase.
 public static class LiftLeft {                                  // "lift_left" in the configuration
@@ -865,7 +865,7 @@ motors to one slide (`:sim:fromRobot` writes the second motor's line).
 **Where:** `Robot.java`, inside `define()` (and `Tunables.java` for the numbers).
 
 <!-- recipe: arm -->
-```java
+```java title="Robot.java"
 // An arm in degrees. Its motor's catalog id is in the brackets (not optional, like a turret's
 // or launcher's): it needs the motor's counts per turn to work in degrees.
 // gearRatio: motor turns per arm turn. 0 degrees = where it is at INIT.
@@ -874,7 +874,7 @@ arm = add(Arm.motor("arm", "gobilda-5203-117").gearRatio(2));
 ```
 
 <!-- recipe: tunables-arm -->
-```java
+```java title="Tunables.java"
 public static class Arm {                                       // "arm" in the configuration
     public static double min = MEASURE;                         // lowest safe angle, degrees, 0 = at INIT
     public static double max = MEASURE;                         // highest safe angle, degrees (Motor Finder)
@@ -896,14 +896,14 @@ public static class Arm {                                       // "arm" in the 
 **Where:** `Robot.java`, inside `define()` (and `Tunables.java` for the numbers).
 
 <!-- recipe: claw -->
-```java
+```java title="Robot.java"
 // At the top of the class: public Claw claw;   Here in define():
 // "claw" = the servo's name in the robot configuration. Its numbers: Tunables.Claw.
 claw = add(Claw.servo("claw"));
 ```
 
 <!-- recipe: tunables-claw -->
-```java
+```java title="Tunables.java"
 public static class Claw {                                      // "claw" in the configuration
     // The Servo Finder shows "Tunables.Claw: P1 = 0.210, P2 = 0.770": write P1 as open, P2 as closed.
     public static double open = MEASURE;                        // servo position, open (Servo Finder)
@@ -920,14 +920,14 @@ public static class Claw {                                      // "claw" in the
 **Where:** `Robot.java`, inside `define()` (and `Tunables.java` for the numbers).
 
 <!-- recipe: wrist -->
-```java
+```java title="Robot.java"
 // At the top of the class: public Wrist wrist;   Here in define():
 // "wrist" = the servo's name in the robot configuration. Its numbers: Tunables.Wrist.
 wrist = add(Wrist.servo("wrist"));
 ```
 
 <!-- recipe: tunables-wrist -->
-```java
+```java title="Tunables.java"
 public static class Wrist {                                     // "wrist" in the configuration
     public static double down = MEASURE;                        // servo position: any name you like
     public static double level = MEASURE;                       // servo position (Servo Finder)
@@ -944,7 +944,7 @@ public static class Wrist {                                     // "wrist" in th
 **Where:** `Robot.java`, inside `define()` (and `Tunables.java` for the numbers).
 
 <!-- recipe: positioner -->
-```java
+```java title="Robot.java"
 // Any servo with named positions: a gate, a kicker, a fold-out intake.
 // "intake_deploy" = the servo's name in the robot configuration. Numbers: Tunables.IntakeDeploy.
 intakeDeploy = add(Positioner.servo("intake_deploy"));
@@ -953,7 +953,7 @@ atStart(() -> Action.named("Deploy").then(() -> intakeDeploy.goTo("deployed")));
 ```
 
 <!-- recipe: tunables-positioner -->
-```java
+```java title="Tunables.java"
 public static class IntakeDeploy {                              // "intake_deploy" in the configuration
     public static double stowed = MEASURE;                      // servo position, folded (Servo Finder)
     public static double deployed = MEASURE;                    // servo position, folded out (Servo Finder)
@@ -969,7 +969,7 @@ public static class IntakeDeploy {                              // "intake_deplo
 **Where:** `Robot.java`, inside `define()`: add `.fullRange()` to the servo part.
 
 <!-- recipe: servo-full-range -->
-```java
+```java title="Robot.java"
 // The hub normally sends 600-2400 us for positions 0 to 1: a goBILDA 2000 servo then turns
 // 270 of its 300 degrees. fullRange() sends its whole 500-2500 us: 0 to 1 = 300 degrees.
 // Turn it on FIRST, then find the positions (Servo Finder: press Y while choosing the servo).
@@ -988,7 +988,7 @@ the change: measure them again. Without `.fullRange()` nothing changes.
 **Where:** `Controls.java`, inside `buttons(...)`.
 
 <!-- recipe: mechanism-commands -->
-```java
+```java title="Controls.java"
 // The names are the ones in Tunables.java (capitals do not matter).
 g2.y.press(() -> robot.arm.goTo("score")).says("arm to score");
 g2.a.press(() -> robot.arm.goTo("pickup")).says("arm to pick up");
@@ -1010,7 +1010,7 @@ Three places: the part's line in `Robot.java`, the action in `Actions.java`, its
 folds the intake out). The `atStart` line runs the action below at START.
 
 <!-- recipe: optional-part -->
-```java
+```java title="Robot.java"
 // The deploy servo is not on the robot yet. optional(): while "intake_deploy" is not in
 // the robot configuration, INIT goes on (with a note) and the part is off.
 intakeDeploy = add(Positioner.servo("intake_deploy").optional());
@@ -1024,7 +1024,7 @@ atStart(() -> Actions.deployIntake(this));
 `(Robot r)`.
 
 <!-- recipe: optional-part-action -->
-```java
+```java title="Actions.java"
 /** Folds the intake out with the deploy servo, then runs the intake. */
 public static Action deployIntake(NotOnTheRobotYet r) {   // in your Actions.java: (Robot r)
     return Action.named("Deploy intake")
@@ -1037,7 +1037,7 @@ public static Action deployIntake(NotOnTheRobotYet r) {   // in your Actions.jav
 **`Controls.java`**, inside `buttons(...)`: the button, with `.needs(...)` at the end.
 
 <!-- recipe: optional-part-button -->
-```java
+```java title="Controls.java"
 // needs(...): while the deploy servo is not on the robot, X does nothing and the
 // button map at INIT says "off: IntakeDeploy not on the robot".
 g2.x.press(Actions.deployIntake(robot)).says("deploy intake").needs(robot.intakeDeploy);
@@ -1060,7 +1060,7 @@ in the robot file.
 **Where:** `Robot.java`, inside `define()` (and `Tunables.java` for the numbers).
 
 <!-- recipe: launcher -->
-```java
+```java title="Robot.java"
 // A flywheel (in RPM) and the indexer that feeds it one piece at a time. "launcher" and "indexer"
 // = their names in the robot configuration. Numbers: Tunables.Launcher and Tunables.Indexer.
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
@@ -1068,7 +1068,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 ```
 
 <!-- recipe: tunables-launcher -->
-```java
+```java title="Tunables.java"
 public static class Launcher {                                  // "launcher" in the configuration
     public static double speedRpm = DEFAULT_FROM_CATALOG;       // shot speed without the table (60% of top)
     public static double stepRpm = DEFAULT_FROM_CATALOG;        // speed change per D-pad press (100)
@@ -1087,7 +1087,7 @@ public static class Launcher {                                  // "launcher" in
 ```
 
 <!-- recipe: tunables-indexer -->
-```java
+```java title="Tunables.java"
 public static class Indexer {                                   // "indexer" in the configuration
     public static double rest = MEASURE;                        // servo position, out of the way (Servo Finder)
     public static double push = MEASURE;                        // servo position, piece pushed (Servo Finder)
@@ -1104,7 +1104,7 @@ public static class Indexer {                                   // "indexer" in 
 **Where:** `Robot.java`, inside `define()` (and `Tunables.java` for the numbers).
 
 <!-- recipe: turret-follows-camera -->
-```java
+```java title="Robot.java"
 // The camera knows the goal of each alliance (BLUE first, then RED).
 camera = add(Camera.limelight("limelight").goal("BLUE SCORING", "RED SCORING"));
 // "turret" = the motor's name in the robot configuration. 5 motor turns per turret turn.
@@ -1113,7 +1113,7 @@ turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).follows(cam
 ```
 
 <!-- recipe: tunables-turret -->
-```java
+```java title="Tunables.java"
 public static class Turret {                                    // "turret" in the configuration
     public static double min = MEASURE;                         // degrees, + = left, 0 = forward: as far as
     public static double max = MEASURE;                         // the wires allow each way (Motor Finder)
@@ -1134,7 +1134,7 @@ public static class Turret {                                    // "turret" in t
 **Where:** `Robot.java`, inside `define()` (and `Tunables.java` for the numbers).
 
 <!-- recipe: launcher-aimed -->
-```java
+```java title="Robot.java"
 // The speed comes from the distance to the goal (Tunables.Launcher.speedByDistance),
 // and a piece is only fed when the turret points at the goal.
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
@@ -1158,7 +1158,7 @@ size) goes in `Tunables.java`, measured with the Piece Tuner. All of it: [Pieces
 **Where:** `Robot.java`, inside `define()`.
 
 <!-- recipe: pieces-count -->
-```java
+```java title="Robot.java"
 // At the top of the class: public Pieces pieces;   Here in define(), ABOVE the intake line
 // (each loop the count is then up to date before the intake asks "full?"):
 // the kinds of piece (BIOBUZZ: yellow POLLEN, red and blue NECTAR), a sensor where they
@@ -1181,7 +1181,7 @@ Piece Tuner it reads `"UNKNOWN"`. `robot.pieces.count()`, `robot.pieces.next()` 
 **Where:** `Robot.java`, inside `define()`.
 
 <!-- recipe: intake-stops-when-full -->
-```java
+```java title="Robot.java"
 // ADD .stopsWhen(...) to the intake line you already have (do not write a second intake line),
 // and put the Pieces line above the intake line. It does not pull in a 5th piece
 // ("() ->": asked every loop). Pushing out still works.
@@ -1189,7 +1189,7 @@ intake = add(Intake.motor("intake").stopsWhen(() -> pieces.isFull()));
 ```
 
 <!-- recipe: launcher-needs-a-piece -->
-```java
+```java title="Robot.java"
 // Each feed counts one piece out. requireReady: no feed with nothing to fire.
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
         .feeder(Indexer.servo("indexer"))
@@ -1208,7 +1208,7 @@ for 1 s pulls in anyway, and the Driver Station warns when the intake is held ba
 **Where:** `Robot.java`, inside `define()`.
 
 <!-- recipe: pieces-other-sensors -->
-```java
+```java title="Robot.java"
 // A REV 2m Distance Sensor across the intake: a NECTAR (3.6 in) comes closer than a
 // POLLEN (2.8 in). Size only: it cannot tell a red NECTAR from a blue one.
 // A second webcam on the ready slot: colours (the main colour in a box of its picture).
@@ -1228,7 +1228,7 @@ away, but not how far the piece is.
 **Where:** `Controls.java`, inside `buttons(...)`.
 
 <!-- recipe: pieces-use -->
-```java
+```java title="Controls.java"
 // A buzz on gamepad 2 when the robot holds the most it may.
 g2.rumbleWhen(robot.pieces::isFull);
 // Two buzzes when a NECTAR (red or blue) is next to fire. For one kind only:
@@ -1256,7 +1256,7 @@ hold G2's left stick button 1 s to set the count to 0 when it went wrong (pieces
 two tables in your `Tunables.Launcher` section ([one table per piece](#how-do-i-use-one-shot-table-per-game-piece)).
 
 <!-- recipe: pieces-shot-tables -->
-```java
+```java title="Robot.java"
 // In define(), BELOW the Pieces line: your launcher line with three more lines. The tables
 // are Tunables.Launcher.speedByDistancePollen and speedByDistanceNectar.
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
@@ -1280,7 +1280,7 @@ piece is known. A button (D-pad right) can still pick another table until the ne
 `package org.firstinspires.ftc.teamcode;` (Android Studio writes it when you make the file), then:
 
 <!-- recipe: piece-tuner -->
-```java
+```java title="PieceTuner.java"
 import com.crossbotics.ftchelper.finders.PieceTunerOpMode;
 import com.crossbotics.ftchelper.robot.RobotDefinition;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
@@ -1313,7 +1313,7 @@ robot needs a camera with a [`goal(...)`](tutorials/start/09-shooter-and-camera.
 whole-robot aim are separate modes, so INIT stops with a message if both are there.
 
 <!-- recipe: aim-whole-robot -->
-```java
+```java title="Controls.java"
 // Hold RB: the robot turns to face the goal by itself; the driver keeps forward and
 // sideways. Let go: the aim is off, the driver turns again. Moving the turn stick while
 // holding still turns it by hand. Not with a turret that follows the goal: separate
@@ -1334,7 +1334,7 @@ can take over at once. The toggle (commented out) keeps aiming after you let go.
 **Where:** `Controls.java`, inside `buttons(...)`.
 
 <!-- recipe: aim-rumble -->
-```java
+```java title="Controls.java"
 // Gamepad 2 buzzes while the aim is close: the closer, the stronger (Tunables.Aim.rumbleDeg).
 // It works for a turret that follows the goal and for whole-robot aim.
 g2.rumbleWhenAimed();
@@ -1348,7 +1348,7 @@ g2.rumbleWhenAimed();
 **Where:** `Robot.java`, inside `define()`, and the goal's place in `Tunables.java`.
 
 <!-- recipe: aim-odometry-backup -->
-```java
+```java title="Robot.java"
 // With an odometry line and Tunables.Aim goalX, goalY, the turret and the speed keep
 // working when the camera loses the goal: from where the robot is on the field.
 odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
@@ -1360,7 +1360,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer
 ```
 
 <!-- recipe: tunables-aim -->
-```java
+```java title="Tunables.java"
 /** Aiming (every line is optional; leave out what you do not use). */
 public static class Aim {                                       // a fixed name: always Aim
     // The goal on the field, in inches, seen from your drivers' wall (the same numbers as
@@ -1395,7 +1395,7 @@ menu too: copy tuned values back into `Tunables.java`.
 in `Tunables.java`.
 
 <!-- recipe: aim-odometry-only -->
-```java
+```java title="Robot.java"
 // No camera: the odometry says where the robot is, Tunables.Aim where the goal is. The
 // turret follows that direction and the launcher's speed comes from that distance.
 odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
@@ -1406,7 +1406,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer
 ```
 
 <!-- recipe: tunables-aim-odometry-only -->
-```java
+```java title="Tunables.java"
 public static class Aim {                                       // a fixed name: always Aim
     // Where the goal is, seen from YOUR drivers' wall (inches; the same numbers as driveTo).
     // BIOBUZZ: your HIVE's CELL that is up at the start.
@@ -1429,7 +1429,7 @@ in the same way.
 **Where:** `Robot.java`, inside `define()`: the camera line.
 
 <!-- recipe: camera-lighting -->
-```java
+```java title="Robot.java"
 // Each venue's lights are different. In INIT the Limelight tries these pipelines (set each
 // one up on the Limelight's web page for a kind of light; your usual one FIRST) and keeps
 // the one that sees the most AprilTags. The Driver Station says which one it kept.
@@ -1452,7 +1452,7 @@ it gives the robot's speed. **Off until you tune it on the real robot** (`shootO
 `flightSec` with a slow-motion video, test shots while driving, and only then write `true`.
 
 <!-- recipe: tunables-moving-shot -->
-```java
+```java title="Tunables.java"
 // ADD these lines to your Tunables.Aim section (keep goalX, goalY and the others).
 public static boolean shootOnMove = false;                  // true only after testing on the real robot
 // Seconds a piece is in the air, from a slow-motion video: count the frames from leaving the
@@ -1471,7 +1471,7 @@ public static double cameraLeftIn = MEASURE;                // inches left of th
 Then a button, in `Controls.java` inside `buttons(...)`:
 
 <!-- recipe: moving-shot-button -->
-```java
+```java title="Controls.java"
 // Shooting on the move on/off (on from START when Tunables.Aim.shootOnMove = true): if
 // the shots go wide while driving, switch it off and shoot standing still.
 g2.a.toggle(robot.aim().movingShotMode()).says("shoot on the move on/off").rumble();
@@ -1491,7 +1491,7 @@ are. The Driver Station says `Aim : moving shot: lead 12.3 deg, 18 in` while it 
 `buttons(...)`) or `Actions.java` (inside the class) to switch.
 
 <!-- recipe: tunables-shot-tables -->
-```java
+```java title="Tunables.java"
 // In your Tunables.Launcher section, IN PLACE OF the one speedByDistance line: one table
 // per game piece ({inches to the goal, RPM}), from the Shot Tuner. The name after
 // "speedByDistance" is the table's name: "pollen" and "nectar". Example rows: write yours.
@@ -1501,14 +1501,14 @@ public static double[][] speedByDistanceNectar = {{24, 2400}, {48, 2800}, {72, 3
 ```
 
 <!-- recipe: shot-table-buttons -->
-```java
+```java title="Controls.java"
 // One button per game piece (the launcher's D-pad right already picks the next table).
 g2.x.press(() -> robot.launcher.useTable("pollen")).says("POLLEN shot table");
 g2.b.press(() -> robot.launcher.useTable("nectar")).says("NECTAR shot table");
 ```
 
 <!-- recipe: shot-table-action -->
-```java
+```java title="Actions.java"
 /** An action that picks the NECTAR table, then fires one (Actions.java). */
 public static Action fireNectar(Robot r) {
     return Action.named("Fire NECTAR")
@@ -1533,7 +1533,7 @@ the robot pick the table by itself: [the next piece picks it](#how-do-i-let-the-
 the numbers; `Controls.java` (inside `buttons(...)`) for your own buttons.
 
 <!-- recipe: tunables-speed-trim -->
-```java
+```java title="Tunables.java"
 // In your Tunables.Launcher section (change the lines you already have, add the others).
 public static double kP = MEASURE;                          // speed control (Flywheel Finder)
 public static double kI = MEASURE;                          // speed control (Flywheel Finder)
@@ -1547,7 +1547,7 @@ public static boolean batteryCompensation = true;           // true = F follows 
 ```
 
 <!-- recipe: speed-trim -->
-```java
+```java title="Controls.java"
 // The launcher's own buttons already do it: gamepad 2 D-pad up/down = speed trim +/- 1%
 // (held: 4 steps a second), double-tap D-pad down = back to 0. The Driver Station shows
 // "Speed trim : +3%  READY" as the launcher's first line.
@@ -1578,7 +1578,7 @@ speed x 1.03, `{48, 2550}` becomes `{48, 2627}`), copy the lines into `Tunables.
 section `Hood` (its stops), and a third number in each row of your `Launcher` section's shot table.
 
 <!-- recipe: robot-hood -->
-```java
+```java title="Robot.java"
 // The hood goes on the launcher; its numbers are in Tunables.Hood.
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
         .feeder(Indexer.servo("indexer"))
@@ -1589,7 +1589,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 A new section in `Tunables.java`:
 
 <!-- recipe: tunables-hood -->
-```java
+```java title="Tunables.java"
 public static class Hood {                                      // "hood" in the configuration
     // posA and posB: the servo positions a hair off the hood's two hard stops. Never past them.
     public static double posA = MEASURE;                        // servo position at stop A (Hood Finder)
@@ -1605,7 +1605,7 @@ public static class Hood {                                      // "hood" in the
 Then the shot table:
 
 <!-- recipe: tunables-hood-table -->
-```java
+```java title="Tunables.java"
 // In your Tunables.Launcher section, IN PLACE OF your speedByDistance line: a third number
 // in each row, {inches to the goal, RPM, hood angle}. The hood is blended between rows like the speed.
 public static double[][] speedByDistance = {{24, 2200, 3}, {48, 2550, 12}, {72, 2900, 20}};
@@ -1615,7 +1615,7 @@ Never measured an angle? Leave out `angleA`, `angleB`: the hood works in servo p
 third number is a servo position.
 
 <!-- recipe: tunables-hood-positions -->
-```java
+```java title="Tunables.java"
 // Tunables.Hood: only posA and posB (delete angleA, angleB). Tunables.Launcher, IN PLACE OF
 // your speedByDistance line, {inches, RPM, servo position}: the Shot Tuner writes these for you.
 public static double[][] speedByDistance = {{24, 2200, 0.24}, {48, 2550, 0.38}, {72, 2900, 0.50}};
@@ -1625,7 +1625,7 @@ A hood on a linkage or cam (equal servo steps do not make equal angles): this `H
 the one above (a calibration table instead of `posA`, `posB`, `angleA`, `angleB`).
 
 <!-- recipe: tunables-hood-linkage -->
-```java
+```java title="Tunables.java"
 public static class Hood {                                      // "hood" in the configuration
     // {servo position, hood angle} rows, blended between them. The first and last rows are the
     // stops (no posA / posB then). The angles must keep going one way.
@@ -1638,14 +1638,14 @@ A hood on a motor with an encoder (it knows where it is): `Hood.motor` in the la
 `Hood` section in place of the one above.
 
 <!-- recipe: robot-hood-motor -->
-```java
+```java title="Robot.java"
 add(Launcher.flywheel("launcher", "gobilda-5203-6000")
         .hood(Hood.motor("hood", "gobilda-5203-117"))   // a motor with an encoder
         .speedFromDistance(camera));
 ```
 
 <!-- recipe: tunables-hood-motor -->
-```java
+```java title="Tunables.java"
 public static class Hood {                                      // "hood" in the configuration
     // Encoder ticks at the two stops, counted from where the hood sits at INIT (start the robot
     // with the hood on stop A), and the angles there.
@@ -1662,7 +1662,7 @@ public static class Hood {                                      // "hood" in the
 Your own hood buttons, in `Controls.java` inside `buttons(...)`:
 
 <!-- recipe: hood-buttons -->
-```java
+```java title="Controls.java"
 // The launcher's hood already has gamepad 2's left stick Y (up = a bigger angle): a trim
 // while the table sets the angle, else the angle itself. Your own: steps and the start angle.
 g2.y.press(() -> robot.launcher.hood().step(+1)).says("hood +1 step");
@@ -1690,7 +1690,7 @@ Every kind of turret (motor, servo, CR servo; switch or not; any range) has its 
 **Where:** `Robot.java`, inside `define()` (the turret line), and a section `Turret` in `Tunables.java`.
 
 <!-- recipe: turret-home-switch -->
-```java
+```java title="Robot.java"
 // A home switch: a touch sensor ("REV Touch Sensor") or a magnetic switch ("Digital
 // Device", e.g. the REV Magnetic Limit Switch). At START the turret turns slowly until it
 // finds it; after that, every time it passes the switch its angle is set right again.
@@ -1701,7 +1701,7 @@ turret = add(Turret.motor("turret", "gobilda-5203-312").gearRatio(2.75)
 ```
 
 <!-- recipe: tunables-turret-switch -->
-```java
+```java title="Tunables.java"
 public static class Turret {                                    // "turret" in the configuration
     public static double min = MEASURE;                         // degrees (0 = forward, counterclockwise +):
     public static double max = MEASURE;                         // as far as the wires allow (Motor Finder)
@@ -1723,7 +1723,7 @@ turret at `startAngle` (default 0, straight forward) by hand before INIT.
 **Where:** `Robot.java`, inside `define()` (the turret line), and a section `Turret` in `Tunables.java`.
 
 <!-- recipe: turret-servo -->
-```java
+```java title="Robot.java"
 // A standard servo turns the turret to an angle by itself: no encoder, no PID, no homing.
 // fullRange(): the servo's whole turn (a goBILDA 2000: 300 degrees, not 270). Turn it on
 // BEFORE you measure posA and posB (Servo Finder: press Y while choosing the servo).
@@ -1732,7 +1732,7 @@ turret = add(Turret.servo("turret").part("gobilda-2000-speed").fullRange().follo
 ```
 
 <!-- recipe: tunables-turret-servo -->
-```java
+```java title="Tunables.java"
 public static class Turret {                                    // "turret" in the configuration
     // Two servo positions and the turret's angle at each: 0 = straight forward, counterclockwise
     // (left) +. Its range is between the two angles.
@@ -1758,7 +1758,7 @@ hard stops just past them.
 **Where:** `Robot.java`, inside `define()` (the turret line), and a section `Turret` in `Tunables.java`.
 
 <!-- recipe: turret-slip-ring -->
-```java
+```java title="Robot.java"
 // A CR servo turns it, an absolute encoder on an analog port says where it points (no
 // homing), and continuous(): a slip ring carries the wires, so no limits, the shortest way.
 // "turret", "turret_pos" = the servo's and the encoder's names in the robot configuration.
@@ -1766,7 +1766,7 @@ turret = add(Turret.crServo("turret").analogEncoder("turret_pos").continuous().f
 ```
 
 <!-- recipe: tunables-turret-slip-ring -->
-```java
+```java title="Tunables.java"
 public static class Turret {                                    // "turret" in the configuration
     // No min and max: it turns round and round.
     public static double kP = 0.015;                            // push per degree off, CR servo (0.02)
@@ -1787,14 +1787,14 @@ goal and is never "out of range". A motor turret can be `continuous()` too.
 `Tunables.java` (the zones), named like the rule.
 
 <!-- recipe: interlock-rule -->
-```java
+```java title="Robot.java"
 // AFTER the parts' add lines: the turret stays out of its zone while the lift is in its
 // zone, and the other way round. Whoever is in its zone first keeps it.
 keepApart("TurretLift", turret.zone(), lift.zoneAbove());
 ```
 
 <!-- recipe: tunables-interlock -->
-```java
+```java title="Tunables.java"
 // The rule's own section, named like the rule in Robot.java. Each zone in its part's units.
 public static class TurretLift {                                // keepApart("TurretLift", ...) in Robot.java
     public static double turretFrom = MEASURE;                  // degrees: where the turret's zone starts
@@ -1818,7 +1818,7 @@ the rule measures its speed every loop. The zones are read at INIT only: change 
 `g2.y.press(Actions.scoreInFlower(robot)).says("score in a FLOWER");`
 
 <!-- recipe: lifter-sequence -->
-```java
+```java title="Actions.java"
 /** Lifts a held ball over a FLOWER, lets it go and comes back folded (Actions.java). */
 public static Action scoreInFlower(Robot r) {
     return Action.named("Score in FLOWER")
@@ -1854,7 +1854,7 @@ on a button and in an autonomous.
 **Where:** `Actions.java`, inside the class.
 
 <!-- recipe: action-steps -->
-```java
+```java title="Actions.java"
 /** Lift up, open the claw, lift down: one step after the other. */
 public static Action scoreHigh(Robot r) {
     return Action.named("Score high")
@@ -1874,7 +1874,7 @@ public static Action scoreHigh(Robot r) {
 **Where:** `Actions.java`, inside the class.
 
 <!-- recipe: action-repeat -->
-```java
+```java title="Actions.java"
 /** Pulses the intake 3 times: the for loop adds the same steps 3 times to the action. */
 public static Action pulseThree(Robot r) {
     Action a = Action.named("Pulse three");
@@ -1896,7 +1896,7 @@ public static Action pulseThree(Robot r) {
 **Where:** `Actions.java`, inside the class.
 
 <!-- recipe: action-together -->
-```java
+```java title="Actions.java"
 /** Two parts at once: then(a, b) starts both in the same loop. */
 public static Action grabAndLift(Robot r) {
     return Action.named("Grab and lift")
@@ -1914,7 +1914,7 @@ public static Action grabAndLift(Robot r) {
 Search words: sleep, wait, pause, delay. **In an action** (`Actions.java`):
 
 <!-- recipe: wait-in-action -->
-```java
+```java title="Actions.java"
 /** Opens the claw, waits half a second, then lowers the lift. */
 public static Action dropAndLower(Robot r) {
     return Action.named("Drop and lower")
@@ -1927,7 +1927,7 @@ public static Action dropAndLower(Robot r) {
 **In an autonomous** (inside `steps(...)`): the step gets a name first, for the report:
 
 <!-- recipe: wait-in-auto -->
-```java
+```java title="autos/YourAuto.java"
 s.run("Open the claw", robot.claw::open)
  .waitSeconds("Let the piece drop", 0.5)    // a name for the report, then the seconds
  .run("Lift down", () -> robot.lift.goTo("down"));
@@ -1941,7 +1941,7 @@ s.run("Open the claw", robot.claw::open)
 **Where:** `Actions.java`, inside the class.
 
 <!-- recipe: action-wait-until -->
-```java
+```java title="Actions.java"
 /** Lowers the lift, and opens the claw only once the lift is down. */
 public static Action lowerAndRelease(Robot r) {
     return Action.named("Lower and release")
@@ -1960,7 +1960,7 @@ public static Action lowerAndRelease(Robot r) {
 **Where:** `Controls.java`, inside `buttons(...)`.
 
 <!-- recipe: action-button -->
-```java
+```java title="Controls.java"
 // Press Y: the action starts. Press Y again while it runs: it is cancelled, safely.
 g2.y.press(Actions.scoreHigh(robot)).says("score high");
 g2.x.press(Actions.grabAndLift(robot)).says("grab and lift");
@@ -1974,7 +1974,7 @@ g2.x.press(Actions.grabAndLift(robot)).says("grab and lift");
 **Where:** `Controls.java`, inside `buttons(...)`.
 
 <!-- recipe: action-cancel-all -->
-```java
+```java title="Controls.java"
 // Stop every running action at once (each stops what it started, safely).
 g2.back.press(robot::cancelAll).says("stop all actions");
 ```
@@ -1987,7 +1987,7 @@ g2.back.press(robot::cancelAll).says("stop all actions");
 **Where:** `Robot.java`, inside `define()`.
 
 <!-- recipe: action-at-start -->
-```java
+```java title="Robot.java"
 // In Robot.java's define(): this action runs once, right after START (autonomous and TeleOp).
 atStart(() -> Actions.deployIntake(this));
 ```
@@ -1996,7 +1996,7 @@ The action it runs, in `Actions.java` inside the class (`intakeDeploy` is a
 [servo with named positions](#how-do-i-add-any-servo-with-named-positions-a-gate-a-fold-out)):
 
 <!-- recipe: action-deploy-intake -->
-```java
+```java title="Actions.java"
 /** Folds the intake out (the atStart line in Robot.java runs it). */
 public static Action deployIntake(Robot r) {
     return Action.named("Deploy intake").then(() -> r.intakeDeploy.goTo("deployed"));
@@ -2011,7 +2011,7 @@ public static Action deployIntake(Robot r) {
 **Where:** a file in `autos/`, inside `steps(...)`.
 
 <!-- recipe: action-in-auto -->
-```java
+```java title="autos/YourAuto.java"
 s.start("Against our wall, facing the field", 0)
  .move("To the goal", 24, 0, 0.5)
  .action(Actions.scoreHigh(robot), 5)     // waits until it is done (at most 5 s)
@@ -2042,7 +2042,7 @@ route before tuning.
 name `LeaveTheStart`). The whole file; change the `package` and `import ...Robot` lines as the comment says:
 
 <!-- recipe: auto-first -->
-```java
+```java title="autos/LeaveTheStart.java"
 package com.crossbotics.ftchelper.examples.cookbook.autos;
 // In your TeamCode, change the line above to exactly:  package org.firstinspires.ftc.teamcode.autos;
 // and the first import below to:  import org.firstinspires.ftc.teamcode.Robot;
@@ -2074,7 +2074,7 @@ public class LeaveTheStart extends Auto<Robot> {
 **Where:** a file in `autos/`, inside `steps(...)`.
 
 <!-- recipe: auto-moves -->
-```java
+```java title="autos/YourAuto.java"
 s.start("Against our wall, facing the field", 0)
  .move("Forward", 24, 0, 0.5)            // inches, direction (0 = forward), max power
  .move("Sideways to the right", 12, 90, 0.5)   // mecanum only
@@ -2092,7 +2092,7 @@ No. Write it once, for BLUE. On BIOBUZZ's field (turned half a turn between the 
 to the autonomous class:
 
 <!-- recipe: auto-turned-field -->
-```java
+```java title="autos/YourAuto.java"
 // BIOBUZZ's field is turned half a turn between the alliances: one route works for both.
 @Override
 protected boolean mirrorForRed() {
@@ -2108,7 +2108,7 @@ protected boolean mirrorForRed() {
 **Where:** a file in `autos/`, inside `steps(...)`.
 
 <!-- recipe: auto-menu -->
-```java
+```java title="autos/YourAuto.java"
 s.start("Against our wall, facing the field", 0)
  .menuYesNo("Score", true)                  // the drivers choose in INIT with the D-pad
  .menuChoice("Park", "Near", "Far")
@@ -2126,7 +2126,7 @@ s.start("Against our wall, facing the field", 0)
 Add `parkWithSeconds` before the park steps (this follows the menu recipe above):
 
 <!-- recipe: auto-park -->
-```java
+```java title="autos/YourAuto.java"
 .parkWithSeconds(4)                        // the steps below always get the last 4 s
 .onlyIf("Park", "Near")
     .move("Park near", Tunables.Auto.parkInches, 90, 0.7)
@@ -2144,7 +2144,7 @@ Add `parkWithSeconds` before the park steps (this follows the menu recipe above)
 **Where:** a file in `autos/`, inside `steps(...)`.
 
 <!-- recipe: auto-run-while-driving -->
-```java
+```java title="autos/YourAuto.java"
 s.start("Against our wall, facing the field", 0)
  .run("Intake on", robot.intake::in)        // starts it and goes on at once
  .run("Lift up", () -> robot.lift.goTo("high"))
@@ -2161,7 +2161,7 @@ s.start("Against our wall, facing the field", 0)
 **Where:** a file in `autos/`, inside `steps(...)`.
 
 <!-- recipe: auto-wait-partner -->
-```java
+```java title="autos/YourAuto.java"
 s.menuYesNo("Wait for partner", false)
  .onlyIf("Wait for partner")
      .waitSeconds("Let our partner pass", 3)   // the robot keeps running while it waits
@@ -2176,7 +2176,7 @@ s.menuYesNo("Wait for partner", false)
 **Where:** a file in `autos/`, inside `steps(...)`.
 
 <!-- recipe: auto-own-step -->
-```java
+```java title="autos/YourAuto.java"
 // Your own step, for anything the list cannot say. Wait with ctx, never sleep().
 s.step("Clear the intake", ctx -> {
     robot.intake.out();
@@ -2193,7 +2193,7 @@ s.step("Clear the intake", ctx -> {
 **Where:** `Tunables.java`: your own section (no part reads it). Use it in a step as `Tunables.Auto.leaveInches`.
 
 <!-- recipe: tunables-auto -->
-```java
+```java title="Tunables.java"
 /** Your own numbers: a section no part reads. Every number here is in the tuning menu too. */
 public static class Auto {
     public static double leaveInches = 24;                      // drive off the start line
@@ -2219,7 +2219,7 @@ saved only on the hub is lost with a new Control Hub.
 **Where:** your autonomous class (or a shared file), next to `steps(...)`.
 
 <!-- recipe: auto-shared-opening -->
-```java
+```java title="autos/YourAuto.java"
 /** The same first steps for several autos: a method that adds them to the list. */
 static Steps scorePreload(Steps s, Robot robot) {
     return s.move("To the goal", Tunables.Auto.toGoalInches, 0, 0.5)
@@ -2237,7 +2237,7 @@ Every autonomous's INIT menu already has `Alliance` and `Start delay` (0 to 10 s
 A shorter menu line: **where:** your autonomous class, as a method of its own next to `steps(...)`:
 
 <!-- recipe: auto-max-start-delay -->
-```java
+```java title="autos/YourAuto.java"
 // Inside your autonomous class, next to steps(...): the INIT menu's "Start delay" line
 // offers 0 to 5 s (the default is 0 to 10 s).
 @Override
@@ -2250,7 +2250,7 @@ One number that is different on RED (most routes need none: RED is mirrored or t
 **where:** inside `steps(...)`, above the steps.
 
 <!-- recipe: auto-alliance-pick -->
-```java
+```java title="autos/YourAuto.java"
 // Inside steps(...): alliance() is the alliance chosen in INIT. pick(blue, red) gives the
 // first value on BLUE and the second on RED (here: RED waits 2 s for its partner).
 double waitSec = alliance().pick(0.0, 2.0);
@@ -2277,7 +2277,7 @@ says. The numbers come from your `Tunables.Auto` section ([these lines](#how-do-
 below call its methods.
 
 <!-- recipe: autos-routes -->
-```java
+```java title="autos/Routes.java"
 package com.crossbotics.ftchelper.examples.cookbook.autos;
 // In your TeamCode, change the line above to exactly:  package org.firstinspires.ftc.teamcode.autos;
 // and the first three imports below to:  import org.firstinspires.ftc.teamcode.Actions;
@@ -2325,7 +2325,7 @@ autonomous. `public static Steps scorePreload(Steps s, Robot robot)`: a method a
 in your copies, and write your TeleOp's name in `preselectTeleOp`).
 
 <!-- recipe: autos-near-preload-park -->
-```java
+```java title="autos/NearPreloadPark.java"
 package com.crossbotics.ftchelper.examples.cookbook.autos;
 // In your TeamCode, change the line above to exactly:  package org.firstinspires.ftc.teamcode.autos;
 // and the first import below to:  import org.firstinspires.ftc.teamcode.Robot;
@@ -2356,7 +2356,7 @@ public class NearPreloadPark extends Auto<Robot> {
 ```
 
 <!-- recipe: autos-near-cycle -->
-```java
+```java title="autos/NearCycle.java"
 package com.crossbotics.ftchelper.examples.cookbook.autos;
 // In your TeamCode, change the line above to exactly:  package org.firstinspires.ftc.teamcode.autos;
 // and the first import below to:  import org.firstinspires.ftc.teamcode.Robot;
@@ -2395,7 +2395,7 @@ Each line in `steps(...)` calls a piece; the piece adds its steps to the same li
 **Where:** one new file in `autos/`, `ChooseInInit.java`.
 
 <!-- recipe: autos-choose-in-init -->
-```java
+```java title="autos/ChooseInInit.java"
 package com.crossbotics.ftchelper.examples.cookbook.autos;
 // In your TeamCode, change the line above to exactly:  package org.firstinspires.ftc.teamcode.autos;
 // and the first two imports below to:  import org.firstinspires.ftc.teamcode.Robot;
@@ -2467,7 +2467,7 @@ and its scenario checks (`expect robot x ...`) use one fixed view, from the red 
 **Where:** `Robot.java`, inside `define()`, after the drive line.
 
 <!-- recipe: odometry-pinpoint -->
-```java
+```java title="Robot.java"
 // After drive(...). The offsets, mm: first how far LEFT of the centre the forward pod is
 // (right = minus: here 84 mm right), then how far FORWARD the sideways pod is (behind = minus).
 // Not sure? Write offsetsMm(0, 0): the Odometry Tuner measures them.
@@ -2482,7 +2482,7 @@ odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
 **Where:** `Robot.java`, inside `define()` (and `Tunables.java` for the numbers).
 
 <!-- recipe: odometry-otos -->
-```java
+```java title="Robot.java"
 // Where the OTOS sits: inches forward and left of the robot's centre, and its turn in degrees.
 odometry(Odometry.otos("otos").mountIn(3.5, 0, 0));
 ```
@@ -2495,7 +2495,7 @@ odometry(Odometry.otos("otos").mountIn(3.5, 0, 0));
 **Where:** `Robot.java`, inside `define()` (and `Tunables.java` for the numbers).
 
 <!-- recipe: odometry-dead-wheels -->
-```java
+```java title="Robot.java"
 // The configuration names of the motor ports the pods plug into: left, right, sideways pod.
 // trackWidthIn: left pod to right pod. perpForwardIn: the sideways pod, 6 in BEHIND the centre.
 odometry(Odometry.threeWheels("par_left", "par_right", "perp")
@@ -2510,7 +2510,7 @@ odometry(Odometry.threeWheels("par_left", "par_right", "perp")
 **Where:** a new file in TeamCode (one per robot). The whole file:
 
 <!-- recipe: odometry-tuner -->
-```java
+```java title="OdometryTuner.java"
 // The Odometry Tuner: which way each pod counts, the offsets, and a loop check.
 @TeleOp(name = "Cookbook Odometry Tuner", group = "Finders")
 @Disabled   // delete this line in your copy, or you will not see it
@@ -2532,7 +2532,7 @@ it use your `Robot.java`, so it measures the same odometry line that autonomous 
 **Where:** a file in `autos/`, inside `steps(...)`. Needs a mecanum drive.
 
 <!-- recipe: drive-to -->
-```java
+```java title="autos/YourAuto.java"
 // The start spot (x, y, heading) must be where the robot really stands: the pose starts there.
 s.start("Against our wall, in the left corner tile, facing the field", -56, -61, 0)
  .driveTo("To the goal", Tunables.Auto.goalX, Tunables.Auto.goalY, Tunables.Auto.goalHeading, 0.6)
@@ -2551,7 +2551,7 @@ On the robot it only works after the [Odometry Tuner](#how-do-i-tune-the-odometr
 **Where:** `Controls.java`, inside `buttons(...)`.
 
 <!-- recipe: show-pose -->
-```java
+```java title="Controls.java"
 show("Where", () -> String.format(Locale.US, "x %.0f, y %.0f in, heading %.0f",
         robot.pose().x, robot.pose().y, robot.pose().headingDeg));
 ```
@@ -2564,7 +2564,7 @@ show("Where", () -> String.format(Locale.US, "x %.0f, y %.0f in, heading %.0f",
 **Where:** `Actions.java`, inside the class.
 
 <!-- recipe: pose-in-action -->
-```java
+```java title="Actions.java"
 /** Runs the intake while the robot is on our half of the field (y below 0). */
 public static Action intakeOnOurHalf(Robot r) {
     return Action.named("Intake on our half")
@@ -2588,7 +2588,7 @@ BIOBUZZ's field is turned half a turn (RED uses the same numbers from its own wa
 (default `true`, RED mirrored) on a mirrored field. INIT's `Reset spot for RED` line shows which is used.
 
 <!-- recipe: tunables-reset-spot -->
-```java
+```java title="Tunables.java"
 public static class Odometry {                                  // a fixed name: always Odometry
     public static boolean checked = false;                      // true after the Odometry Tuner's Loop test
     // "Set pose here" (TeleOp: hold gamepad 1 START 1 s with the robot on this spot). Inches and
@@ -2605,7 +2605,7 @@ public static class Odometry {                                  // a fixed name:
 More spots, or from an action: in `Controls.java`, inside `buttons(...)`:
 
 <!-- recipe: reset-pose-button -->
-```java
+```java title="Controls.java"
 // A second spot of your own: hold D-pad down 1 s with the robot in the right corner tile.
 // (x, y, heading written for BLUE; RED uses them like the reset spot in Tunables.Odometry.)
 g1.dpadDown.heldFor(1.0, () -> robot.resetPose(56, -61, 0)).says("hold 1 s: pose = right corner tile");
@@ -2617,7 +2617,7 @@ g1.dpadUp.heldFor(1.0, Actions.poseHereThenIntake(robot)).says("hold 1 s: pose h
 The action, in `Actions.java` inside the class:
 
 <!-- recipe: pose-here-action -->
-```java
+```java title="Actions.java"
 /** Sets the pose to the reset spot in Tunables.Odometry, then runs the intake. */
 public static Action poseHereThenIntake(Robot r) {
     return Action.named("Pose here, intake on")
@@ -2641,7 +2641,7 @@ a mecanum drive and tuned odometry. Paths use the same field numbers as `driveTo
 **Where:** `Robot.java`, inside `define()` (and `Tunables.java` for the numbers).
 
 <!-- recipe: pedro-follower -->
-```java
+```java title="Robot.java"
 odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));   // Pedro needs odometry
 // Pedro drives the paths with the drive and odometry lines above. PedroConstants holds the
 // numbers from Pedro's Foresight tuner (docs/modules/pedro.md#tuning-pedro).
@@ -2656,7 +2656,7 @@ follower(Pedro.follower(PedroConstants.foresight));
 **Where:** your autonomous class, above `steps(...)`.
 
 <!-- recipe: pedro-line-curve -->
-```java
+```java title="autos/YourAuto.java"
 // Make each path once. A line: from (x1, y1) to (x2, y2). A curve: start, a control point
 // that pulls the curve toward it (the robot does not drive through it), end.
 static final PedroPath OUT = PedroPath.line(-56, -61, -56, -36).keepHeading(0);
@@ -2671,7 +2671,7 @@ static final PedroPath TO_GOAL = PedroPath.curve(-56, -36, -44, -36, -30, -30).t
 **Where:** a file in `autos/`, inside `steps(...)`.
 
 <!-- recipe: pedro-follow -->
-```java
+```java title="autos/YourAuto.java"
 s.start("Against our wall, in the left corner tile, facing the field", -56, -61, 0)
  .follow("Out", OUT)                     // brakes to a stop at its end
  .follow("To the goal", TO_GOAL)
@@ -2689,7 +2689,7 @@ s.start("Against our wall, in the left corner tile, facing the field", -56, -61,
 **Where:** your autonomous class, above `steps(...)`.
 
 <!-- recipe: pedro-chain -->
-```java
+```java title="autos/YourAuto.java"
 // Two parts with NO stop between them (then), a slow part near the goal (maxSpeed),
 // and hold the end point while it scores (holdEnd: at most 5 s).
 static final PedroPath IN_ONE_GO = PedroPath.line(-56, -61, -48, -50).keepHeading(0)
@@ -2706,7 +2706,7 @@ static final PedroPath IN_ONE_GO = PedroPath.line(-56, -61, -48, -50).keepHeadin
 **Where:** your autonomous class, above `steps(...)`.
 
 <!-- recipe: pedro-face-point -->
-```java
+```java title="autos/YourAuto.java"
 // Keep facing one field point the whole way (here x -60, y 60: put your goal's x and y).
 static final PedroPath WATCH_GOAL = PedroPath.line(-30, -30, -56, -36).facePoint(-60, 60);
 ```
@@ -2719,7 +2719,7 @@ static final PedroPath WATCH_GOAL = PedroPath.line(-30, -30, -56, -36).facePoint
 **Where:** your autonomous, `steps(...)`. Android Studio shows `PathAt` in red: Alt+Enter adds the import.
 
 <!-- recipe: pedro-along -->
-```java
+```java title="autos/YourAuto.java"
 s.start("Against our wall, in the left corner tile, facing the field", -56, -61, 0)
  // PathAt: start things ALONG the path, once each, while the robot keeps driving.
  .follow("To the goal", Paths.IN_ONE_GO,
@@ -2744,7 +2744,7 @@ path ends early, the report says which did not start (`STALLED, not fired: Intak
 **Where:** `Controls.java`, inside `buttons(...)`.
 
 <!-- recipe: show-value -->
-```java
+```java title="Controls.java"
 // A line of its own in buttons(...). The value is read again every loop.
 show("Lift ticks", robot.lift::position);
 show("Intake on", robot.intake::isRunning);                 // shows "Intake on : true"
@@ -2759,7 +2759,7 @@ show("Flywheel ready", () -> robot.launcher.isReady());
 **Where:** `Controls.java`, inside `buttons(...)`.
 
 <!-- recipe: show-format -->
-```java
+```java title="Controls.java"
 // Round a number: %.0f = no decimals, %.1f = one decimal. Locale.US keeps the dot (not a comma).
 show("Target RPM", () -> String.format(Locale.US, "%.0f", robot.launcher.targetRpm()));
 ```
@@ -2772,7 +2772,7 @@ show("Target RPM", () -> String.format(Locale.US, "%.0f", robot.launcher.targetR
 **Where:** a file in `autos/`, inside `steps(...)`.
 
 <!-- recipe: auto-telemetry -->
-```java
+```java title="autos/YourAuto.java"
 // In your own step: lines on the Driver Station while it runs, and a note in the report.
 s.step("Spin up", ctx -> {
     robot.launcher.spinUp();
@@ -2800,7 +2800,7 @@ light (Alt+Enter on a red `LightColor` adds it). All of it: [Lights](modules/rob
 **Where:** `Robot.java`, inside `define()` (and a field `public Lights lights;`).
 
 <!-- recipe: light-add -->
-```java
+```java title="Robot.java"
 // At the top of Robot.java: import com.crossbotics.ftchelper.robot.Lights;  (and in
 // Controls.java, for the colors: import com.crossbotics.ftchelper.robot.LightColor;)
 // A goBILDA RGB Indicator Light on a servo port ("Servo" in the robot configuration):
@@ -2817,7 +2817,7 @@ lights = add(Lights.gobilda("light"));
 **Where:** `Robot.java`, inside `define()`, below the lights line.
 
 <!-- recipe: light-blinkin -->
-```java
+```java title="Robot.java"
 // At the top of Robot.java: import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 // A REV Blinkin LED Driver ("REV Blinkin LED Driver" in the robot configuration):
 lights = add(Lights.blinkin("blinkin"));
@@ -2835,7 +2835,7 @@ when one color looks wrong on yours, give that color another pattern. Your rules
 **Where:** `Controls.java`, inside `buttons(...)`.
 
 <!-- recipe: light-rules -->
-```java
+```java title="Controls.java"
 // One rule per line. The first true rule wins: put the most important first.
 // Red and blue are left for the alliance (shown at INIT), so no rule looks like one.
 robot.lights.show(LightColor.ORANGE).blinking().when(robot.intake::isPushingOut);  // pushing out
@@ -2857,7 +2857,7 @@ the light never changes faster than every 0.1 s (FTC rule R202 J).
 inside `buttons(...)`.
 
 <!-- recipe: light-alliance -->
-```java
+```java title="Controls.java"
 // At INIT the light shows the alliance chosen (solid RED or BLUE; white blinking until one is
 // chosen) and flashes it for 1 s at START: on by default, nothing to write.
 // Your light shows red badly? Other colors for the alliance at INIT (BLUE, and PURPLE for RED):
@@ -2879,7 +2879,7 @@ are still required (R401, R402). Keep your own rules' colors away from red and b
 **Where:** `Controls.java`, inside `buttons(...)`, above your other light rules.
 
 <!-- recipe: light-flash -->
-```java
+```java title="Controls.java"
 // A flash beats every rule while it lasts, wherever it is written (write it first: it reads
 // that way). A short white flash for each piece fired (the launcher counts the pieces it
 // feeds): 0.2 s, so two quick shots are two flashes, not one long one. And one from a button.
@@ -2899,7 +2899,7 @@ an action flashes once.
 **Where:** `Actions.java`, inside the class.
 
 <!-- recipe: light-action -->
-```java
+```java title="Actions.java"
 // In Actions.java (it needs import com.crossbotics.ftchelper.robot.LightColor; at the top).
 // The last step of an action: a 1 s white flash says "done" to the drivers. Pick a color
 // (or a time) your rules do not use: a GREEN flash over the GREEN "ready" rule cannot be seen.
@@ -2922,7 +2922,7 @@ or a longer time.
 **Where:** `Controls.java`, inside `buttons(...)`, before the other rules.
 
 <!-- recipe: light-endgame -->
-```java
+```java title="Controls.java"
 // Yellow, blinking, in the last 20 seconds of TeleOp: time to park. Written above the other
 // rules, so it beats them.
 robot.lights.show(LightColor.YELLOW).blinking().inLastSeconds(20);
@@ -2947,7 +2947,7 @@ lift's or arm's `min` and `max`: those must be written.
 **Where:** a new file in TeamCode (also in the [starter kit](starter-kit.md)). The whole file:
 
 <!-- recipe: servo-finder -->
-```java
+```java title="ServoFinder.java"
 // The Servo Finder: lists every servo in the configuration. No robot needed.
 @TeleOp(name = "Cookbook Servo Finder", group = "Finders")
 @Disabled   // delete this line in your copy, or you will not see it
@@ -2969,7 +2969,7 @@ into `Tunables.java` and rename P1, P2 (`open`, `closed`). A part with
 **Where:** a new file in TeamCode (also in the [starter kit](starter-kit.md)). The whole file:
 
 <!-- recipe: motor-finder -->
-```java
+```java title="MotorFinder.java"
 // The Motor Finder: lists every motor in the configuration. No robot needed.
 @TeleOp(name = "Cookbook Motor Finder", group = "Finders")
 @Disabled   // delete this line in your copy, or you will not see it
@@ -2999,7 +2999,7 @@ only on the hub is lost with a new Control Hub, and your teammates cannot see it
 **Where:** a new file in TeamCode. The whole file:
 
 <!-- recipe: drive-tuner -->
-```java
+```java title="DriveTuner.java"
 // The Drive Tuner: wheel size and strafe correction, for the drive in your Robot.java.
 @TeleOp(name = "Cookbook Drive Tuner", group = "Finders")
 @Disabled   // delete this line in your copy, or you will not see it
@@ -3033,7 +3033,7 @@ The whole file: its first line is `package org.firstinspires.ftc.teamcode;` (And
 when you make the file), then:
 
 <!-- recipe: shot-tuner -->
-```java
+```java title="ShotTuner.java"
 import com.crossbotics.ftchelper.finders.ShotTunerOpMode;
 import com.crossbotics.ftchelper.robot.RobotDefinition;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
@@ -3061,7 +3061,7 @@ launcher picks the speed for each distance.
 **Where:** a new file in TeamCode, `HoodFinder.java` (first line `package org.firstinspires.ftc.teamcode;`):
 
 <!-- recipe: hood-finder -->
-```java
+```java title="HoodFinder.java"
 import com.crossbotics.ftchelper.finders.HoodFinderOpMode;
 import com.crossbotics.ftchelper.robot.RobotDefinition;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;

@@ -104,7 +104,7 @@ First, the numbers: your own lines in `Tunables.java`, in a section `Auto` that 
 lines you do not have yet; every number in it is also in the tuning menu):
 
 <!-- recipe: tunables-auto -->
-```java
+```java title="Tunables.java"
 /** Your own numbers: a section no part reads. Every number here is in the tuning menu too. */
 public static class Auto {
     public static double leaveInches = 24;                      // drive off the start line
@@ -124,7 +124,7 @@ Then make a new file `Routes.java` in your `autos` folder. Each method takes the
 `robot`, adds its steps, and hands the list back:
 
 <!-- recipe: autos-routes -->
-```java
+```java title="autos/Routes.java"
 package com.crossbotics.ftchelper.examples.cookbook.autos;
 // In your TeamCode, change the line above to exactly:  package org.firstinspires.ftc.teamcode.autos;
 // and the first three imports below to:  import org.firstinspires.ftc.teamcode.Actions;
@@ -218,7 +218,7 @@ piece, and park" (more points, more risk). Two files, each only a few lines, bec
 `Routes.java`:
 
 <!-- recipe: autos-near-preload-park -->
-```java
+```java title="autos/NearPreloadPark.java"
 package com.crossbotics.ftchelper.examples.cookbook.autos;
 // In your TeamCode, change the line above to exactly:  package org.firstinspires.ftc.teamcode.autos;
 // and the first import below to:  import org.firstinspires.ftc.teamcode.Robot;
@@ -249,7 +249,7 @@ public class NearPreloadPark extends Auto<Robot> {
 ```
 
 <!-- recipe: autos-near-cycle -->
-```java
+```java title="autos/NearCycle.java"
 package com.crossbotics.ftchelper.examples.cookbook.autos;
 // In your TeamCode, change the line above to exactly:  package org.firstinspires.ftc.teamcode.autos;
 // and the first import below to:  import org.firstinspires.ftc.teamcode.Robot;
@@ -293,7 +293,7 @@ The same plans (and a "Park only" plan for a robot with a problem), and two star
 OpMode:
 
 <!-- recipe: autos-choose-in-init -->
-```java
+```java title="autos/ChooseInInit.java"
 package com.crossbotics.ftchelper.examples.cookbook.autos;
 // In your TeamCode, change the line above to exactly:  package org.firstinspires.ftc.teamcode.autos;
 // and the first two imports below to:  import org.firstinspires.ftc.teamcode.Robot;

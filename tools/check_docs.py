@@ -12,6 +12,8 @@ It fails (exit 1) when:
      files (examples/.../cookbook: "// recipe: name" ... "// end recipe"), or a region is not shown;
      a guide that shows a recipe (the same "<!-- recipe: name -->" marker) is checked the same way;
   6. a cookbook recipe that mentions the tuning menu does not say to copy the value into Tunables.java;
+  8. a recipe's code box does not say which file it goes in (```java title="Robot.java"), worked out
+     from where the recipe sits in the cookbook's Java;
   7. a recipe that shows a Tunables section (a region named "tunables-...") breaks the section style:
      one number per line with a "//" comment (a table: a comment line above it), and a safety number
      (min, max, posA, posB, homeAngle, an interlock zone) written as MEASURE, never a number.
@@ -102,6 +104,53 @@ def check_tutorials():
             problems.append(f"{page.relative_to(ROOT)}: tutorial page has no link to its program")
 
 
+FINDERS = {"MotorFinder", "ServoFinder", "HoodFinder", "DriveTuner", "OdometryTuner", "ShotTuner", "PieceTuner"}
+
+
+def recipe_file(java, start, code=""):
+    """The TeamCode file a recipe goes in, worked out from where it sits in the cookbook's Java (shown as
+    the code box's title, e.g. "Robot.java")."""
+    rel = java.relative_to(COOKBOOK_CODE)
+    if rel.parts[0] == "autos":
+        return "autos/" + rel.name
+    if rel.stem in ("Robot", "Controls", "Actions", "Tunables") or rel.stem in FINDERS:
+        return rel.name
+    # A recipe that is a whole method: what it returns says where it goes.
+    if re.search(r"static Action \w+\(", code):
+        return "Actions.java"
+    if re.search(r"static Steps \w+\(", code):
+        return "autos/YourAuto.java"
+    # A topic file: the innermost method or class around the recipe says which file it belongs in.
+    stack = []
+    for n, line in enumerate(java.read_text().splitlines(), 1):
+        if n >= start:
+            break
+        code = re.sub(r'"(\\.|[^"\\])*"', '""', line.split("//")[0])
+        for ch in code:
+            if ch == "{":
+                stack.append(code.strip())
+            elif ch == "}" and stack:
+                stack.pop()
+    for opener in reversed(stack):
+        if re.search(r"\bdefine\(\)", opener):
+            return "Robot.java"
+        if re.search(r"\bbuttons\(", opener) or "extends ControlMap" in opener:
+            return "Controls.java"
+        if re.search(r"\bsteps\(", opener) or re.search(r"extends Auto\b", opener):
+            return "autos/YourAuto.java"
+        if re.search(r"static Action \w+\(", opener) or re.search(r"class Actions\b", opener):
+            return "Actions.java"
+        if re.search(r"class \w*Numbers\b", opener) or re.search(r"class Tunables\b", opener):
+            return "Tunables.java"
+    return None
+
+
+def fence(rel, start, code):
+    """The opening line of a recipe's code box: java, with the file it goes in as the box's title."""
+    name = recipe_file(ROOT / rel, start, code)
+    return f'```java title="{name}"' if name else "```java"
+
+
 def cookbook_regions():
     """The marked regions of the cookbook's Java files: name -> (file, line, code without the common indent)."""
     regions = {}
@@ -142,7 +191,8 @@ def check_cookbook():
         if m:
             pending = (m.group(1), i + 1)
         elif line.startswith("```"):
-            lang = line[3:].strip()
+            info = line[3:].strip()
+            lang = info.split()[0] if info else ""
             end = i + 1
             while end < len(lines) and not lines[end].startswith("```"):
                 end += 1
@@ -155,6 +205,9 @@ def check_cookbook():
                 else:
                     rel, start, code = regions[pending[0]]
                     shown.add(pending[0])
+                    if line != fence(rel, start, code):
+                        problems.append(f"docs/cookbook.md:{i + 1}: recipe {pending[0]}: the box should open with "
+                                        f"{fence(rel, start, code)} (python3 tools/check_docs.py --fix-cookbook)")
                     if code != body:
                         page, java = body.splitlines(), code.splitlines()
                         k = next((k for k in range(max(len(page), len(java)))
@@ -179,7 +232,7 @@ def check_cookbook():
                             "but not copying the value into Tunables.java")
 
 
-MARKED_BLOCK = re.compile(r"<!-- recipe: ([a-z0-9-]+) -->\n```java\n(.*?)\n?```", re.S)
+MARKED_BLOCK = re.compile(r"<!-- recipe: ([a-z0-9-]+) -->\n(```java[^\n]*)\n(.*?)\n?```", re.S)
 
 
 def marked_pages():
@@ -197,7 +250,7 @@ def check_marked_pages():
             line = text[:m.start()].count("\n") + 1
             if m.group(1) not in regions:
                 problems.append(f"{rel}:{line}: no recipe {m.group(1)} in {COOKBOOK_CODE.relative_to(ROOT)}")
-            elif regions[m.group(1)][2] != m.group(2).strip("\n"):
+            elif regions[m.group(1)][2] != m.group(3).strip("\n") or m.group(2) != fence(*regions[m.group(1)]):
                 problems.append(f"{rel}:{line}: recipe {m.group(1)} differs from {regions[m.group(1)][0]} "
                                 "(python3 tools/check_docs.py --fix-cookbook)")
         if text.count("<!-- recipe: ") != len(MARKED_BLOCK.findall(text)):
@@ -210,10 +263,10 @@ def fix_cookbook():
 
     def fill(m):
         name = m.group(1)
-        return f"<!-- recipe: {name} -->\n```java\n{regions[name][2]}\n```" if name in regions else m.group(0)
+        return f"<!-- recipe: {name} -->\n{fence(*regions[name])}\n{regions[name][2]}\n```" if name in regions else m.group(0)
 
     for page in [COOKBOOK_MD] + marked_pages():
-        page.write_text(re.sub(r"<!-- recipe: ([a-z0-9-]+) -->\n```java\n.*?```", fill, page.read_text(), flags=re.S))
+        page.write_text(re.sub(r"<!-- recipe: ([a-z0-9-]+) -->\n```java[^\n]*\n.*?```", fill, page.read_text(), flags=re.S))
 
 
 # Students read the example files (examples/), not the generated reference: their comments use plain

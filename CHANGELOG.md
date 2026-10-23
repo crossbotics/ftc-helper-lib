@@ -2,6 +2,17 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Changed
+
+- **Cookbook:** every code box says which file it goes in (`Robot.java`, `Tunables.java`,
+  `Controls.java`, `Actions.java`, `autos/YourAuto.java`...), as the box's title. `tools/check_docs.py`
+  works the file out from where the recipe sits in the cookbook's Java and checks every box (rule 8);
+  `--fix-cookbook` writes the titles.
+- Tests: the recorded-autonomous simulator test puts its replay report in the failure message (it
+  depends on timing and failed once on GitHub).
+
 ## v0.17.3 - 2026-10-22
 
 Every Tunables section in the docs and the example robots: one number per line with a short comment,
