@@ -140,7 +140,7 @@ For `Robot.java` (not the robot file): a `Shape` names one of these and takes it
 
 ## A part that is not in the list
 
-**In Robot.java (the robot code)**: describe it where you use it, with the seller's numbers. Its id then works wherever a catalog id goes, its numbers give the starting values (`DEFAULT_FROM_CATALOG`), and `:sim:fromRobot` writes them into the robot file for you:
+**In Robot.java (the robot code)**: describe it where you use it, with the seller's numbers. Its id then works wherever a catalog id goes, its numbers give the starting values (`DEFAULT`), and `:sim:fromRobot` writes them into the robot file for you:
 
 ```java
 launcher = add(Launcher.flywheel("launcher", Motors.custom("my-flywheel-motor", 28, 5800)));   // counts per turn, free RPM

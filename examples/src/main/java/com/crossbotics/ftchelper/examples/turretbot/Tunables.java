@@ -1,20 +1,20 @@
 package com.crossbotics.ftchelper.examples.turretbot;
 
-import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT_FROM_CATALOG and MEASURE (docs/guides/tunables.md)
+import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT and MEASURE (docs/guides/tunables.md)
 
 /**
  * Example robot 2, file 2 of 5: every number, one section per part, one number per line (see example
- * robot 1's Tunables for how tuning works). DEFAULT_FROM_CATALOG = the library's default (in brackets).
+ * robot 1's Tunables for how tuning works). DEFAULT = the library's default (in brackets).
  */
 public class Tunables {
     public static class Drive {
-        public static double maxPower = DEFAULT_FROM_CATALOG;       // top wheel power (1.0)
-        public static double practiceMaxPower = DEFAULT_FROM_CATALOG; // top wheel power in PRACTICE (0.6)
-        public static double slowSpeed = DEFAULT_FROM_CATALOG;      // top power with the slow trigger held (0.3)
-        public static double strafeCorrection = DEFAULT_FROM_CATALOG; // sideways moves: Drive Tuner (1.15)
-        public static double turnKp = DEFAULT_FROM_CATALOG;         // auto turns: push per degree off (0.012)
-        public static double turnKd = DEFAULT_FROM_CATALOG;         // auto turns: brake near the end (0.003)
-        public static double moveMinPower = DEFAULT_FROM_CATALOG;   // auto: least power that moves it (0.30)
+        public static double maxPower = DEFAULT;                    // top wheel power (1.0)
+        public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (0.6)
+        public static double slowSpeed = DEFAULT;                   // top power with the slow trigger held (0.3)
+        public static double strafeCorrection = DEFAULT;            // sideways moves: Drive Tuner (1.15)
+        public static double turnKp = DEFAULT;                      // auto turns: push per degree off (0.012)
+        public static double turnKd = DEFAULT;                      // auto turns: brake near the end (0.003)
+        public static double moveMinPower = DEFAULT;                // auto: least power that moves it (0.30)
         public static boolean calibrated = false;                   // true after the Drive Tuner: auto runs then
     }
 
@@ -23,13 +23,13 @@ public class Tunables {
      * autoPipelines tries them in INIT). autoLighting = false skips that test and uses pipeline.
      */
     public static class Limelight {
-        public static double pipeline = DEFAULT_FROM_CATALOG;       // the pipeline when the test is off (0)
+        public static double pipeline = DEFAULT;                    // the pipeline when the test is off (0)
         public static boolean autoLighting = true;                  // test the pipelines at INIT, keep the best
     }
 
     public static class Intake {
-        public static double inPower = DEFAULT_FROM_CATALOG;        // power taking pieces in, 0 to 1 (1.0)
-        public static double outPower = DEFAULT_FROM_CATALOG;       // power pushing pieces out (0.7)
+        public static double inPower = DEFAULT;                     // power taking pieces in, 0 to 1 (1.0)
+        public static double outPower = DEFAULT;                    // power pushing pieces out (0.7)
     }
 
     /**
@@ -40,17 +40,17 @@ public class Tunables {
     public static class Turret {
         public static double min = -90;                             // degrees: as far right as the wires allow
         public static double max = 90;                              // degrees: as far left as the wires allow
-        public static double kP = DEFAULT_FROM_CATALOG;             // push per degree off (0.02)
-        public static double kI = DEFAULT_FROM_CATALOG;             // fix a small steady miss (0)
-        public static double kD = DEFAULT_FROM_CATALOG;             // brake near the target (0.001)
-        public static double maxPower = DEFAULT_FROM_CATALOG;       // the most power (0.8)
+        public static double kP = DEFAULT;                          // push per degree off (0.02)
+        public static double kI = DEFAULT;                          // fix a small steady miss (0)
+        public static double kD = DEFAULT;                          // brake near the target (0.001)
+        public static double maxPower = DEFAULT;                    // the most power (0.8)
         public static double tolerance = 1.5;                       // "aimed" within this, degrees (example)
-        public static double cameraOffset = DEFAULT_FROM_CATALOG;   // aims a little to one side: Aim Tuner (0)
+        public static double cameraOffset = DEFAULT;                // aims a little to one side: Aim Tuner (0)
         // Slows down within slowZone degrees of a limit, to slowZonePower; a goal (from the odometry) more
         // than outOfRangeHold degrees past a limit: it holds where it points (the library's numbers).
-        public static double slowZone = DEFAULT_FROM_CATALOG;       // slow down this close to a limit, degrees (10)
-        public static double slowZonePower = DEFAULT_FROM_CATALOG;  // power at the very limit (0.25)
-        public static double outOfRangeHold = DEFAULT_FROM_CATALOG; // goal this far past a limit: hold (10)
+        public static double slowZone = DEFAULT;                    // slow down this close to a limit, degrees (10)
+        public static double slowZonePower = DEFAULT;               // power at the very limit (0.25)
+        public static double outOfRangeHold = DEFAULT;              // goal this far past a limit: hold (10)
         // No home switch: set the turret straight forward by hand before INIT (startAngle 0). TeleOp keeps
         // the angle the last program ended at (keepAngle; the library's numbers).
         public static double startAngle = 0;                        // degrees: where you set it by hand before INIT
@@ -66,15 +66,15 @@ public class Tunables {
      */
     public static class Launcher {
         public static double speedRpm = 2600;                       // speed until the goal is first seen (example)
-        public static double stepRpm = DEFAULT_FROM_CATALOG;        // speed change per D-pad press (100)
-        public static double readyBandRpm = DEFAULT_FROM_CATALOG;   // "at speed" = this close to the target (60)
+        public static double stepRpm = DEFAULT;                     // speed change per D-pad press (100)
+        public static double readyBandRpm = DEFAULT;                // "at speed" = this close to the target (60)
         public static double idleRpm = 1500;                        // spins between shots: quicker first shot
         // The hub's speed control: the defaults for this motor until the Flywheel Finder (INIT shows them).
-        public static double kP = DEFAULT_FROM_CATALOG;             // push per speed error (kF / 10)
-        public static double kI = DEFAULT_FROM_CATALOG;             // fix a steady error (kP / 10)
-        public static double kD = DEFAULT_FROM_CATALOG;             // brake changes (0)
-        public static double kF = DEFAULT_FROM_CATALOG;             // steady power for a speed (from the motor)
-        public static double shotIntervalSec = DEFAULT_FROM_CATALOG; // least time between two pieces, s (0.25)
+        public static double kP = DEFAULT;                          // push per speed error (kF / 10)
+        public static double kI = DEFAULT;                          // fix a steady error (kP / 10)
+        public static double kD = DEFAULT;                          // brake changes (0)
+        public static double kF = DEFAULT;                          // steady power for a speed (from the motor)
+        public static double shotIntervalSec = DEFAULT;             // least time between two pieces, s (0.25)
         // {inches to the goal, RPM, hood degrees} for POLLEN, blended between rows. Example: Shot Tuner.
         public static double[][] speedByDistancePollen = {{24, 2200, 2}, {48, 2550, 11}, {72, 2900, 19}, {96, 3250, 23}};
         // The same for NECTAR. Example rows: write the Shot Tuner's instead.
@@ -105,15 +105,15 @@ public class Tunables {
      * the autonomous and the aim use it).
      */
     public static class Aim {
-        public static double rumbleDeg = DEFAULT_FROM_CATALOG;      // gamepad 2 buzzes this close, degrees (4)
+        public static double rumbleDeg = DEFAULT;                   // gamepad 2 buzzes this close, degrees (4)
         public static boolean mirrorForRed = false;                 // BIOBUZZ: false
     }
 
     public static class Indexer {
         public static double rest = 0.15;                           // servo position, out of the way (Servo Finder)
         public static double push = 0.55;                           // servo position, piece pushed (Servo Finder)
-        public static double pushSec = DEFAULT_FROM_CATALOG;        // time to push, seconds (0.25)
-        public static double returnSec = DEFAULT_FROM_CATALOG;      // time to come back, seconds (0.25)
+        public static double pushSec = DEFAULT;                     // time to push, seconds (0.25)
+        public static double returnSec = DEFAULT;                   // time to come back, seconds (0.25)
     }
 
     /** The claw's fold-out pivot: tucked in, down to grab, and up over a FLOWER. */

@@ -1,6 +1,6 @@
 package com.crossbotics.ftchelper.examples.cookbook;
 
-import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT_FROM_CATALOG and MEASURE (docs/guides/tunables.md)
+import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT and MEASURE (docs/guides/tunables.md)
 
 /**
  * The cookbook's numbers (docs/cookbook.md). Every robot in this folder reads its sections from here:
@@ -8,7 +8,7 @@ import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT_FROM_CATA
  * IntakeDeploy).
  *
  * The style every recipe shows: one number per line with a short comment. MEASURE = a number only your
- * robot can give (INIT stops and names the tool that finds it). DEFAULT_FROM_CATALOG = the library's
+ * robot can give (INIT stops and names the tool that finds it). DEFAULT = the library's
  * starting value (in brackets in the comment). The tests write sample numbers in place of MEASURE.
  *
  * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
@@ -19,11 +19,11 @@ public class Tunables {
     public static class Drive {                                     // a fixed name: always Drive
         public static double maxPower = 0.6;                        // top wheel power: slow for first drives (1.0)
         public static double practiceMaxPower = 0.4;                // top wheel power in PRACTICE (0.6)
-        public static double slowSpeed = DEFAULT_FROM_CATALOG;      // top power with the slow trigger held (0.3)
-        public static double strafeCorrection = DEFAULT_FROM_CATALOG; // sideways moves: Drive Tuner (1.15)
-        public static double turnKp = DEFAULT_FROM_CATALOG;         // auto turns: push per degree off (0.012)
-        public static double turnKd = DEFAULT_FROM_CATALOG;         // auto turns: brake near the end (0.003)
-        public static double moveMinPower = DEFAULT_FROM_CATALOG;   // auto: least power that moves it (0.30)
+        public static double slowSpeed = DEFAULT;                   // top power with the slow trigger held (0.3)
+        public static double strafeCorrection = DEFAULT;            // sideways moves: Drive Tuner (1.15)
+        public static double turnKp = DEFAULT;                      // auto turns: push per degree off (0.012)
+        public static double turnKd = DEFAULT;                      // auto turns: brake near the end (0.003)
+        public static double moveMinPower = DEFAULT;                // auto: least power that moves it (0.30)
         public static boolean calibrated = false;                   // true after the Drive Tuner: auto runs then
     }
     // end recipe
@@ -44,8 +44,8 @@ public class Tunables {
 
     // recipe: tunables-intake
     public static class Intake {                                    // "intake" in the configuration
-        public static double inPower = DEFAULT_FROM_CATALOG;        // power taking pieces in, 0 to 1 (1.0)
-        public static double outPower = DEFAULT_FROM_CATALOG;       // power pushing pieces out (0.7)
+        public static double inPower = DEFAULT;                     // power taking pieces in, 0 to 1 (1.0)
+        public static double outPower = DEFAULT;                    // power pushing pieces out (0.7)
     }
     // end recipe
 
@@ -53,10 +53,10 @@ public class Tunables {
     public static class Lift {                                      // "lift" in the configuration
         public static double min = MEASURE;                         // lowest safe point, counts (Motor Finder)
         public static double max = MEASURE;                         // highest safe point, counts (Motor Finder)
-        public static double kP = DEFAULT_FROM_CATALOG;             // push toward the target (from the motor)
-        public static double kI = DEFAULT_FROM_CATALOG;             // fix a small steady miss (0)
-        public static double kD = DEFAULT_FROM_CATALOG;             // brake near the target (from the motor)
-        public static double kF = DEFAULT_FROM_CATALOG;             // hold up against gravity (0.05)
+        public static double kP = DEFAULT;                          // push toward the target (from the motor)
+        public static double kI = DEFAULT;                          // fix a small steady miss (0)
+        public static double kD = DEFAULT;                          // brake near the target (from the motor)
+        public static double kF = DEFAULT;                          // hold up against gravity (0.05)
         public static double down = MEASURE;                        // a named height, counts: any name you like
         public static double low = MEASURE;                         // a named height (Motor Finder)
         public static double high = MEASURE;                        // a named height (Motor Finder)
@@ -69,9 +69,9 @@ public class Tunables {
     public static class LiftLeft {                                  // "lift_left" in the configuration
         public static double min = MEASURE;                         // lowest safe point, counts (first motor)
         public static double max = MEASURE;                         // highest safe point, counts (first motor)
-        public static double kP = DEFAULT_FROM_CATALOG;             // push toward the target (from the motor)
-        public static double kI = DEFAULT_FROM_CATALOG;             // fix a small steady miss (0)
-        public static double kD = DEFAULT_FROM_CATALOG;             // brake near the target (from the motor)
+        public static double kP = DEFAULT;                          // push toward the target (from the motor)
+        public static double kI = DEFAULT;                          // fix a small steady miss (0)
+        public static double kD = DEFAULT;                          // brake near the target (from the motor)
         public static double kF = 0.06;                             // a heavier slide needs more hold (0.05)
         public static double down = MEASURE;                        // a named height (Motor Finder)
         public static double low = MEASURE;                         // a named height (Motor Finder)
@@ -83,9 +83,9 @@ public class Tunables {
     public static class Arm {                                       // "arm" in the configuration
         public static double min = MEASURE;                         // lowest safe angle, degrees, 0 = at INIT
         public static double max = MEASURE;                         // highest safe angle, degrees (Motor Finder)
-        public static double kP = DEFAULT_FROM_CATALOG;             // push toward the target (0.02)
-        public static double kI = DEFAULT_FROM_CATALOG;             // fix a small steady miss (0)
-        public static double kD = DEFAULT_FROM_CATALOG;             // brake near the target (0.001)
+        public static double kP = DEFAULT;                          // push toward the target (0.02)
+        public static double kI = DEFAULT;                          // fix a small steady miss (0)
+        public static double kD = DEFAULT;                          // brake near the target (0.001)
         public static double kF = 0.1;                              // hold up against gravity (0)
         public static double stowed = MEASURE;                      // a named angle, degrees: any name you like
         public static double pickup = MEASURE;                      // a named angle (Motor Finder)
@@ -98,7 +98,7 @@ public class Tunables {
         // The Servo Finder shows "Tunables.Claw: P1 = 0.210, P2 = 0.770": write P1 as open, P2 as closed.
         public static double open = MEASURE;                        // servo position, open (Servo Finder)
         public static double closed = MEASURE;                      // servo position, closed (Servo Finder)
-        public static double travelSec = DEFAULT_FROM_CATALOG;      // time for a full move (0.3, or the servo's)
+        public static double travelSec = DEFAULT;                   // time for a full move (0.3, or the servo's)
     }
     // end recipe
 
@@ -107,7 +107,7 @@ public class Tunables {
         public static double down = MEASURE;                        // servo position: any name you like
         public static double level = MEASURE;                       // servo position (Servo Finder)
         public static double up = MEASURE;                          // servo position (Servo Finder)
-        public static double travelSec = DEFAULT_FROM_CATALOG;      // time for a full move (0.3, or the servo's)
+        public static double travelSec = DEFAULT;                   // time for a full move (0.3, or the servo's)
     }
     // end recipe
 
@@ -116,7 +116,7 @@ public class Tunables {
     public static class IntakeDeploy {                              // "intake_deploy" in the configuration
         public static double stowed = MEASURE;                      // servo position, folded (Servo Finder)
         public static double deployed = MEASURE;                    // servo position, folded out (Servo Finder)
-        public static double travelSec = DEFAULT_FROM_CATALOG;      // time for a full move (0.3, or the servo's)
+        public static double travelSec = DEFAULT;                   // time for a full move (0.3, or the servo's)
     }
     // end recipe
 
@@ -128,28 +128,28 @@ public class Tunables {
     public static class Turret {                                    // "turret" in the configuration
         public static double min = MEASURE;                         // furthest right, degrees (Motor Finder)
         public static double max = MEASURE;                         // furthest left, degrees: 0 = forward, + = left
-        public static double startAngle = DEFAULT_FROM_CATALOG;     // where you set it by hand before INIT (0)
-        public static double kP = DEFAULT_FROM_CATALOG;             // push per degree off (0.02)
-        public static double kD = DEFAULT_FROM_CATALOG;             // brake near the target (0.001)
-        public static double maxPower = DEFAULT_FROM_CATALOG;       // the most power (0.8)
-        public static double tolerance = DEFAULT_FROM_CATALOG;      // "aimed" within this, degrees (1.0)
-        public static double cameraOffset = DEFAULT_FROM_CATALOG;   // aims a little to one side: Aim Tuner (0)
+        public static double startAngle = DEFAULT;                  // where you set it by hand before INIT (0)
+        public static double kP = DEFAULT;                          // push per degree off (0.02)
+        public static double kD = DEFAULT;                          // brake near the target (0.001)
+        public static double maxPower = DEFAULT;                    // the most power (0.8)
+        public static double tolerance = DEFAULT;                   // "aimed" within this, degrees (1.0)
+        public static double cameraOffset = DEFAULT;                // aims a little to one side: Aim Tuner (0)
     }
     // end recipe
 
     // recipe: tunables-launcher
     public static class Launcher {                                  // "launcher" in the configuration
-        public static double speedRpm = DEFAULT_FROM_CATALOG;       // shot speed without the table (60% of top)
-        public static double stepRpm = DEFAULT_FROM_CATALOG;        // speed change per D-pad press (100)
-        public static double readyBandRpm = DEFAULT_FROM_CATALOG;   // "at speed" = this close to the target (60)
+        public static double speedRpm = DEFAULT;                    // shot speed without the table (60% of top)
+        public static double stepRpm = DEFAULT;                     // speed change per D-pad press (100)
+        public static double readyBandRpm = DEFAULT;                // "at speed" = this close to the target (60)
         public static double idleRpm = 1500;                        // spins between shots: quicker first shot (0)
-        public static double shotIntervalSec = DEFAULT_FROM_CATALOG; // least time between two pieces (0.25)
+        public static double shotIntervalSec = DEFAULT;             // least time between two pieces (0.25)
         // The hub's speed control: the defaults for the motor until the Flywheel Finder (INIT shows them).
         // Then write the Finder's numbers in their place.
-        public static double kP = DEFAULT_FROM_CATALOG;             // push per speed error (kF / 10)
-        public static double kI = DEFAULT_FROM_CATALOG;             // fix a steady error (kP / 10)
-        public static double kD = DEFAULT_FROM_CATALOG;             // brake changes (0)
-        public static double kF = DEFAULT_FROM_CATALOG;             // steady power for a speed (from the motor)
+        public static double kP = DEFAULT;                          // push per speed error (kF / 10)
+        public static double kI = DEFAULT;                          // fix a steady error (kP / 10)
+        public static double kD = DEFAULT;                          // brake changes (0)
+        public static double kF = DEFAULT;                          // steady power for a speed (from the motor)
         // {inches to the goal, RPM}, blended between rows. Example rows: write the Shot Tuner's instead.
         public static double[][] speedByDistance = {{24, 2200}, {48, 2550}, {72, 2900}, {96, 3250}};
     }
@@ -159,8 +159,8 @@ public class Tunables {
     public static class Indexer {                                   // "indexer" in the configuration
         public static double rest = MEASURE;                        // servo position, out of the way (Servo Finder)
         public static double push = MEASURE;                        // servo position, piece pushed (Servo Finder)
-        public static double pushSec = DEFAULT_FROM_CATALOG;        // time to push (0.25, or the servo's speed)
-        public static double returnSec = DEFAULT_FROM_CATALOG;      // time to come back (the same as pushSec)
+        public static double pushSec = DEFAULT;                     // time to push (0.25, or the servo's speed)
+        public static double returnSec = DEFAULT;                   // time to come back (the same as pushSec)
     }
     // end recipe
 

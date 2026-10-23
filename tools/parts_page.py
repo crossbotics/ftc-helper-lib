@@ -170,7 +170,7 @@ def page(cat):
     w("## A part that is not in the list")
     w("")
     w("**In Robot.java (the robot code)**: describe it where you use it, with the seller's numbers. Its id "
-      "then works wherever a catalog id goes, its numbers give the starting values (`DEFAULT_FROM_CATALOG`), "
+      "then works wherever a catalog id goes, its numbers give the starting values (`DEFAULT`), "
       "and `:sim:fromRobot` writes them into the robot file for you:")
     w("")
     w("```java")

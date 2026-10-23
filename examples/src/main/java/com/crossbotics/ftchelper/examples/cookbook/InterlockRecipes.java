@@ -35,8 +35,8 @@ public class InterlockRecipes {
             public static double min = MEASURE;                         // furthest right, degrees (Motor Finder)
             public static double max = MEASURE;                         // furthest left, degrees: 0 = forward, + = left
             public static double homeAngle = MEASURE;                   // where the switch closes (turret-setup.md)
-            public static double homingPower = DEFAULT_FROM_CATALOG;    // how slowly it looks for the switch (0.2)
-            public static double homingTimeout = DEFAULT_FROM_CATALOG;  // the most seconds it looks (5)
+            public static double homingPower = DEFAULT;                 // how slowly it looks for the switch (0.2)
+            public static double homingTimeout = DEFAULT;               // the most seconds it looks (5)
         }
         // end recipe
 
@@ -103,9 +103,9 @@ public class InterlockRecipes {
         public static class Turret {                                    // "turret" in the configuration
             // No min and max: it turns round and round.
             public static double kP = 0.015;                            // push per degree off, CR servo (0.02)
-            public static double kD = DEFAULT_FROM_CATALOG;             // brake near the target (0.001)
+            public static double kD = DEFAULT;                          // brake near the target (0.001)
             public static double maxPower = 1.0;                        // a CR servo's full speed (0.8)
-            public static double tolerance = DEFAULT_FROM_CATALOG;      // "aimed" within this, degrees (1.0)
+            public static double tolerance = DEFAULT;                   // "aimed" within this, degrees (1.0)
             public static double encoderOffset = MEASURE;               // encoder reading, pointing forward
         }
         // end recipe
@@ -140,8 +140,8 @@ public class InterlockRecipes {
             public static double angleA = MEASURE;                      // the turret's angle there (an angle app)
             public static double posB = MEASURE;                        // servo position, other end (Servo Finder)
             public static double angleB = MEASURE;                      // the turret's angle there (an angle app)
-            public static double travelSec = DEFAULT_FROM_CATALOG;      // posA to posB, seconds (0.6, or the servo's)
-            public static double startAngle = DEFAULT_FROM_CATALOG;     // sent here at START (0)
+            public static double travelSec = DEFAULT;                   // posA to posB, seconds (0.6, or the servo's)
+            public static double startAngle = DEFAULT;                  // sent here at START (0)
         }
         // end recipe
     }

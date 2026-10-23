@@ -74,10 +74,10 @@ back into `Tunables.java`. The tables further down list every setting, part by p
    the values it used.
 3. If INIT stops and asks for a number (a lift's `min` and `max`, a turret's stops), add the part's
    section to `Tunables.java` with that number. The message names the tool that finds it.
-4. Optional: write a line for each setting in the part's table below, set to `DEFAULT_FROM_CATALOG`,
+4. Optional: write a line for each setting in the part's table below, set to `DEFAULT`,
    with a short comment, and `MEASURE` for the numbers only your robot can give. Then the file shows
    every setting the part has, and you can change one when you need to. Leaving a line out does the
-   same as `DEFAULT_FROM_CATALOG`. The [Cookbook](../cookbook.md) shows each part's section this way.
+   same as `DEFAULT`. The [Cookbook](../cookbook.md) shows each part's section this way.
 
 ## What Tunables.java is
 
@@ -146,7 +146,7 @@ gives the same lines ([testing](testing.md)).
 removing `.fullRange()` on a part in Robot.java changes where each position points: measure them again
 ([Full range](../modules/hardware.md#full-range)).
 
-## DEFAULT_FROM_CATALOG and MEASURE
+## DEFAULT and MEASURE
 
 Two words you can write in place of a number you do not have yet. Every setting is then in the file from
 day one, and the file shows what is still to do. Which one to write:
@@ -155,7 +155,7 @@ day one, and the file shows what is still to do. Which one to write:
 | --- | --- |
 | You know it | the number |
 | A safety limit (a lift's `min`/`max`, a stop) you do not know yet | `MEASURE` |
-| A tuning number (`kP`, a speed...) you do not know yet | `DEFAULT_FROM_CATALOG` |
+| A tuning number (`kP`, a speed...) you do not know yet | `DEFAULT` |
 
 Add this line at the top of `Tunables.java`, under the `package` line and above `public class Tunables`:
 
@@ -163,27 +163,30 @@ Add this line at the top of `Tunables.java`, under the `package` line and above 
 import static com.crossbotics.ftchelper.robot.Starting.*;
 
 public static class Launcher {
-    public static double kP = DEFAULT_FROM_CATALOG, kI = DEFAULT_FROM_CATALOG, kD = DEFAULT_FROM_CATALOG, kF = DEFAULT_FROM_CATALOG;
-    public static double speedRpm = DEFAULT_FROM_CATALOG;
+    public static double kP = DEFAULT, kI = DEFAULT, kD = DEFAULT, kF = DEFAULT;
+    public static double speedRpm = DEFAULT;
 }
 public static class Lift {
     public static double min = MEASURE, max = MEASURE;   // INIT stops until you write them
-    public static double kP = DEFAULT_FROM_CATALOG;
+    public static double kP = DEFAULT;
     public static double down = 0, high = MEASURE;
 }
 ```
 
 | You write | INIT does |
 | --- | --- |
-| `DEFAULT_FROM_CATALOG` | uses the library's starting value, the same as leaving the line out: worked out from the part Robot.java names (the parts catalog, or your own part's numbers) where it can, else the library's default. INIT lists each value and where it came from: `Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, kP 1.17, kI 0.117, speed 3600 rpm. Run the Flywheel Finder, then the Shot Tuner`, and for a number with no part value: `Tunables.Launcher: DEFAULT_FROM_CATALOG, library defaults: stepRpm 100`. The tuning menu shows the same source next to the value; its "copy into Tunables.java" lines are real numbers |
-| `DEFAULT_FROM_CATALOG` and no part in Robot.java (or a part whose numbers are not known) | the general default, and a note that says so and how to do better: `Lift: no part in Robot.java, so general defaults (kP, kD, slowZone, tolerance made for a goBILDA 312 RPM motor). Add .part(...) (or Motors.custom(...)), or tune them in the tuning menu` |
-| `DEFAULT_FROM_CATALOG` on a REQUIRED (safety) number | **stops**: `Tunables.Lift.max = DEFAULT_FROM_CATALOG, but it is a safety number: a safety limit never comes from the parts catalog or a library default. Write MEASURE until you know it, then the number (...)` |
+| `DEFAULT` | uses the library's starting value, the same as leaving the line out: worked out from the part Robot.java names (the parts catalog, or your own part's numbers) where it can, else the library's default. INIT lists each value and where it came from: `Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, kP 1.17, kI 0.117, speed 3600 rpm. Run the Flywheel Finder, then the Shot Tuner`, and for a number with no part value: `Tunables.Launcher: DEFAULT, library defaults: stepRpm 100`. The tuning menu shows the same source next to the value; its "copy into Tunables.java" lines are real numbers |
+| `DEFAULT` and no part in Robot.java (or a part whose numbers are not known) | the general default, and a note that says so and how to do better: `Lift: no part in Robot.java, so general defaults (kP, kD, slowZone, tolerance made for a goBILDA 312 RPM motor). Add .part(...) (or Motors.custom(...)), or tune them in the tuning menu` |
+| `DEFAULT` on a REQUIRED (safety) number | **stops**: `Tunables.Lift.max = DEFAULT, but it is a safety number: a safety limit never comes from the parts catalog or a library default. Write MEASURE until you know it, then the number (...)` |
 | `MEASURE` | **stops** and names the tool that finds it: `Tunables.Lift.min = MEASURE: find it on the robot: the bottom of the safe range, in counts: Motor Finder, X. Write the number in place of MEASURE.` |
 
-Without the import line, the build fails with `cannot find symbol` and `symbol: variable DEFAULT_FROM_CATALOG` (or `MEASURE`).
+Without the import line, the build fails with `cannot find symbol` and `symbol: variable DEFAULT` (or `MEASURE`).
 
 **Write the word, or leave the line out?** Both give the same starting value. Write the word: then the
 file shows what is still to tune.
+
+**The older name:** `DEFAULT_FROM_CATALOG` (v0.17.1 to v0.17.4) is the same word. Code that uses it
+keeps working; new code and these docs write `DEFAULT`.
 
 **Only on number lines.** Use these words only on lines that start `public static double`. On `int`,
 `boolean` or `{ }` (table) lines, leave the line out instead.
@@ -210,9 +213,18 @@ Robot.java names the motor or servo (`Launcher.flywheel("launcher", "gobilda-520
 `.part("gobilda-5203-435")`), the starting value is worked out from that part's numbers in the
 [parts catalog](parts-catalog.md) (the seller's numbers, with the date they were checked). INIT shows one
 note per part with the values it used, where they came from and the tool that tunes them. A number you
-write always wins. Writing [`DEFAULT_FROM_CATALOG`](#default_from_catalog-and-measure) does the same as
+write always wins. Writing [`DEFAULT`](#default-and-measure) does the same as
 leaving the line out. **No part named, or a part whose numbers are not known** (`Motors.unknown`, a
 custom part with `Double.NaN`): the general default (the plain one in the tables below), and INIT says so.
+
+> **Always name the part.** Write the part number on each part's line in `Robot.java`:
+> `.part("gobilda-5203-1150")` on an intake, lift, claw or wrist, or the motor's id in the brackets on a
+> launcher, an arm or a turret (`Launcher.flywheel("launcher", "gobilda-5203-6000")`). The number is on
+> the motor's or servo's label; the [parts catalog](parts-catalog.md) lists them. **Why:** `DEFAULT`
+> then starts from that part's real numbers (a lift's gains, a servo's move time, a flywheel's speed
+> control), the simulator moves the part like the real one, and the code says what is on the robot. Not
+> in the catalog? [`Motors.custom(...)` or `Parts.customServo(...)`](../modules/robot.md#parts-not-in-the-catalog).
+> A robot works without it, but INIT notes "no part in Robot.java, so general defaults".
 
 | Part | Not written | What it starts with | Tune it with |
 | --- | --- | --- | --- |

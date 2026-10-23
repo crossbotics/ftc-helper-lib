@@ -164,32 +164,32 @@ public final class SimNewRobot {
                 case "motor":
                     if (has(w, "intake", "roller", "sweeper", "collector")) {
                         parts.add(new Part("Intake", field, "Intake.motor(" + q(d.name) + ")" + ren, section)
-                                .num("inPower", "DEFAULT_FROM_CATALOG").num("outPower", "DEFAULT_FROM_CATALOG"));
+                                .num("inPower", "DEFAULT").num("outPower", "DEFAULT"));
                     } else if (has(w, "lift", "slide", "slides", "elevator", "viper", "linear", "extension")) {
                         parts.add(new Part("Lift", field, "Lift.slide(" + q(d.name) + ")" + ren, section)
-                                .num("min", "MEASURE").num("max", "MEASURE").num("kP", "DEFAULT_FROM_CATALOG").num("kI", "DEFAULT_FROM_CATALOG").num("kD", "DEFAULT_FROM_CATALOG")
-                                .num("kF", "DEFAULT_FROM_CATALOG").num("down", "0").num("high", "MEASURE"));
+                                .num("min", "MEASURE").num("max", "MEASURE").num("kP", "DEFAULT").num("kI", "DEFAULT").num("kD", "DEFAULT")
+                                .num("kF", "DEFAULT").num("down", "0").num("high", "MEASURE"));
                     } else if (has(w, "arm", "pivot", "shoulder", "elbow")) {
                         Part p = new Part("Arm", field, "Arm.motor(" + q(d.name) + ", " + q(part != null ? part : "gobilda-5203-117") + ")" + ren, section)
-                                .num("min", "MEASURE").num("max", "MEASURE").num("kP", "DEFAULT_FROM_CATALOG").num("kI", "DEFAULT_FROM_CATALOG").num("kD", "DEFAULT_FROM_CATALOG")
-                                .num("kF", "DEFAULT_FROM_CATALOG").num("stowed", "0").num("score", "MEASURE");
+                                .num("min", "MEASURE").num("max", "MEASURE").num("kP", "DEFAULT").num("kI", "DEFAULT").num("kD", "DEFAULT")
+                                .num("kF", "DEFAULT").num("stowed", "0").num("score", "MEASURE");
                         if (part == null) p.note = "TODO the motor's catalog id (docs/guides/parts-catalog.md) and gearRatio(...)";
                         parts.add(p);
                     } else if (has(w, "turret")) {
                         Part p = new Part("Turret", field, "Turret.motor(" + q(d.name) + ", " + q(part != null ? part : "gobilda-5203-117") + ")" + ren, section)
-                                .num("min", "MEASURE").num("max", "MEASURE").num("kP", "DEFAULT_FROM_CATALOG").num("kI", "DEFAULT_FROM_CATALOG").num("kD", "DEFAULT_FROM_CATALOG")
-                                .num("maxPower", "DEFAULT_FROM_CATALOG").num("tolerance", "DEFAULT_FROM_CATALOG");
+                                .num("min", "MEASURE").num("max", "MEASURE").num("kP", "DEFAULT").num("kI", "DEFAULT").num("kD", "DEFAULT")
+                                .num("maxPower", "DEFAULT").num("tolerance", "DEFAULT");
                         p.note = "TODO the motor's catalog id and gearRatio(...); follows(camera) to follow the goal";
                         parts.add(p);
                     } else if (has(w, "launcher", "shooter", "flywheel", "fly", "outtake")) {
                         launcher = new Part("Launcher", field, "Launcher.flywheel(" + q(d.name) + ", " + q(part != null ? part : "gobilda-5203-6000") + ")" + ren, section)
-                                .num("speedRpm", "DEFAULT_FROM_CATALOG").num("kP", "DEFAULT_FROM_CATALOG").num("kI", "DEFAULT_FROM_CATALOG").num("kD", "DEFAULT_FROM_CATALOG").num("kF", "DEFAULT_FROM_CATALOG")
-                                .num("stepRpm", "DEFAULT_FROM_CATALOG").num("readyBandRpm", "DEFAULT_FROM_CATALOG").num("idleRpm", "DEFAULT_FROM_CATALOG");
+                                .num("speedRpm", "DEFAULT").num("kP", "DEFAULT").num("kI", "DEFAULT").num("kD", "DEFAULT").num("kF", "DEFAULT")
+                                .num("stepRpm", "DEFAULT").num("readyBandRpm", "DEFAULT").num("idleRpm", "DEFAULT");
                         if (part == null) launcher.note = "TODO the motor's catalog id";
                         parts.add(launcher);
                     } else if (has(w, "feeder", "indexer", "kicker", "transfer", "windmill", "feed", "index")) {
                         indexers.add(new Part("Indexer", field, "Indexer.motor(" + q(d.name) + ")" + ren, section)
-                                .num("power", "DEFAULT_FROM_CATALOG").num("feedSec", "DEFAULT_FROM_CATALOG"));
+                                .num("power", "DEFAULT").num("feedSec", "DEFAULT"));
                     } else {
                         todo.add("motor " + q(d.name) + ": which module? (Intake, Lift, Arm, Turret, Launcher)");
                     }
@@ -202,20 +202,20 @@ public final class SimNewRobot {
                         parts.add(lightPart(new Part("Lights", field, "Lights.gobilda(" + q(d.name) + ")" + ren, section)));
                     } else if (has(w, "claw", "grab", "grabber", "gripper", "grip", "pincer")) {
                         parts.add(new Part("Claw", field, "Claw.servo(" + q(d.name) + ")" + ren, section)
-                                .num("open", "MEASURE").num("closed", "MEASURE").num("travelSec", "DEFAULT_FROM_CATALOG"));
+                                .num("open", "MEASURE").num("closed", "MEASURE").num("travelSec", "DEFAULT"));
                     } else if (has(w, "hood")) {
                         // The stops are a guess: the Hood Finder finds them (and the angles, if you measure them).
                         hoods.add(new Part("Hood", field, "Hood.servo(" + q(d.name) + ")" + ren, section)
-                                .num("posA", "MEASURE").num("posB", "MEASURE").num("travelSec", "DEFAULT_FROM_CATALOG"));
+                                .num("posA", "MEASURE").num("posB", "MEASURE").num("travelSec", "DEFAULT"));
                     } else if (has(w, "wrist")) {
                         parts.add(new Part("Wrist", field, "Wrist.servo(" + q(d.name) + ")" + ren, section)
-                                .num("down", "MEASURE").num("level", "MEASURE").num("up", "MEASURE").num("travelSec", "DEFAULT_FROM_CATALOG"));
+                                .num("down", "MEASURE").num("level", "MEASURE").num("up", "MEASURE").num("travelSec", "DEFAULT"));
                     } else if (has(w, "indexer", "kicker", "pusher", "feeder", "index", "feed")) {
                         indexers.add(new Part("Indexer", field, "Indexer.servo(" + q(d.name) + ")" + ren, section)
-                                .num("rest", "MEASURE").num("push", "MEASURE").num("pushSec", "DEFAULT_FROM_CATALOG").num("returnSec", "DEFAULT_FROM_CATALOG"));
+                                .num("rest", "MEASURE").num("push", "MEASURE").num("pushSec", "DEFAULT").num("returnSec", "DEFAULT"));
                     } else {
                         Part p = new Part("Positioner", field, "Positioner.servo(" + q(d.name) + ")" + ren, section)
-                                .num("stowed", "MEASURE").num("deployed", "MEASURE").num("travelSec", "DEFAULT_FROM_CATALOG");
+                                .num("stowed", "MEASURE").num("deployed", "MEASURE").num("travelSec", "DEFAULT");
                         p.note = "TODO name its positions in Tunables." + section;
                         parts.add(p);
                     }
@@ -227,7 +227,7 @@ public final class SimNewRobot {
                     }
                     else if (has(w, "feeder", "indexer", "kicker", "transfer", "windmill", "feed", "index")) {
                         indexers.add(new Part("Indexer", field, "Indexer.crServo(" + q(d.name) + ")" + ren, section)
-                                .num("power", "DEFAULT_FROM_CATALOG").num("feedSec", "DEFAULT_FROM_CATALOG"));
+                                .num("power", "DEFAULT").num("feedSec", "DEFAULT"));
                     } else {
                         todo.add("CR servo " + q(d.name) + ": which module? (Intake.crServos, Indexer.crServo)");
                     }
@@ -239,7 +239,7 @@ public final class SimNewRobot {
                 case "distance": {
                     // A piece sensor alone; with your kinds, it can go into a Pieces line (docs/modules/robot.md).
                     Part p = new Part("PieceSensor", field, "PieceSensor." + kind + "(" + q(d.name) + ").kinds(\"PIECE\")" + ren, section)
-                            .num("nearMm", "DEFAULT_FROM_CATALOG");
+                            .num("nearMm", "DEFAULT");
                     p.note = "TODO your kinds of piece (e.g. \"POLLEN\", \"NECTAR\"), then the Piece Tuner";
                     parts.add(p);
                     break;
@@ -272,7 +272,7 @@ public final class SimNewRobot {
                 usedNames.remove(intakeId[1]);
             } else {
                 parts.add(new Part("Intake", intakeId[0], "Intake.crServos(" + names + ")" + intakeId[2], intakeId[1])
-                        .num("inPower", "DEFAULT_FROM_CATALOG").num("outPower", "DEFAULT_FROM_CATALOG"));
+                        .num("inPower", "DEFAULT").num("outPower", "DEFAULT"));
             }
         }
         // A launcher takes the indexer and the hood; any other indexer or hood stands alone.
@@ -400,10 +400,10 @@ public final class SimNewRobot {
     private static String tunablesJava(String pkg, List<Part> parts, boolean odometry) {
         StringBuilder sb = new StringBuilder();
         sb.append("package ").append(pkg).append(";\n\n");
-        sb.append("import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT_FROM_CATALOG and MEASURE\n\n");
+        sb.append("import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT and MEASURE\n\n");
         sb.append("/**\n");
         sb.append(" * Every NUMBER, one section per part (the section's name is the part's configuration name in\n");
-        sb.append(" * CamelCase). DEFAULT_FROM_CATALOG = the library's starting value (from the parts catalog where\n");
+        sb.append(" * CamelCase). DEFAULT = the library's starting value (from the parts catalog where\n");
         sb.append(" * Robot.java names the motor or servo; INIT shows each one). MEASURE = a number you find on the\n");
         sb.append(" * robot: INIT stops on it and names the tool (Motor Finder, Servo Finder, Hood Finder). Write\n");
         sb.append(" * each number in place of its word once you have it (docs/guides/tunables.md).\n");
@@ -415,8 +415,8 @@ public final class SimNewRobot {
         sb.append("    /** calibrated: set true after the Drive Tuner (autonomous refuses to run before). */\n");
         sb.append("    public static class Drive {\n");
         sb.append("        public static double maxPower = 1.0, practiceMaxPower = 0.6, slowSpeed = 0.3;\n");
-        sb.append("        public static double strafeCorrection = DEFAULT_FROM_CATALOG, turnKp = DEFAULT_FROM_CATALOG;\n");
-        sb.append("        public static double turnKd = DEFAULT_FROM_CATALOG, moveMinPower = DEFAULT_FROM_CATALOG;\n");
+        sb.append("        public static double strafeCorrection = DEFAULT, turnKp = DEFAULT;\n");
+        sb.append("        public static double turnKd = DEFAULT, moveMinPower = DEFAULT;\n");
         sb.append("        public static boolean calibrated = false;\n");
         sb.append("    }\n");
         if (odometry) {

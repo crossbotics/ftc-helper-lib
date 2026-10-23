@@ -1,5 +1,6 @@
 package com.crossbotics.ftchelper.robot;
 
+import static com.crossbotics.ftchelper.robot.Starting.DEFAULT;
 import static com.crossbotics.ftchelper.robot.Starting.DEFAULT_FROM_CATALOG;
 import static com.crossbotics.ftchelper.robot.Starting.MEASURE;
 import static org.junit.Assert.assertEquals;
@@ -54,6 +55,7 @@ public class StartingWordsTest {
         assertTrue(Double.isNaN(DEFAULT_FROM_CATALOG));
         assertTrue(Double.isNaN(MEASURE));
         assertTrue(Starting.isDefaultFromCatalog(DEFAULT_FROM_CATALOG));
+        assertTrue("DEFAULT is the short name of DEFAULT_FROM_CATALOG", Starting.isDefaultFromCatalog(DEFAULT));
         assertTrue(Starting.isMeasure(MEASURE));
         assertFalse(Starting.isDefaultFromCatalog(MEASURE));
         assertFalse("a NaN from a sum is not one of them", Starting.isDefaultFromCatalog(0.0 / 0.0));
@@ -66,7 +68,7 @@ public class StartingWordsTest {
     public static class LauncherWords {
         public static class Launcher {
             public static double kP = DEFAULT_FROM_CATALOG, kI = DEFAULT_FROM_CATALOG, kD = DEFAULT_FROM_CATALOG, kF = DEFAULT_FROM_CATALOG;
-            public static double speedRpm = DEFAULT_FROM_CATALOG, stepRpm = DEFAULT_FROM_CATALOG;
+            public static double speedRpm = DEFAULT_FROM_CATALOG, stepRpm = DEFAULT;   // both names
             public static double readyBandRpm = 60, idleRpm = 0, shotIntervalSec = 0.25;
         }
     }
@@ -81,7 +83,7 @@ public class StartingWordsTest {
         assertTrue(notes, notes.contains("Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, kP 1.17, kI 0.117, "
                 + "speed 3600 rpm. Run the Flywheel Finder, then the Shot Tuner"));
         // stepRpm has no catalog value: the library's, listed once, not as "not written".
-        assertTrue(notes, notes.contains("Tunables.Launcher: DEFAULT_FROM_CATALOG, library defaults: stepRpm 100"));
+        assertTrue(notes, notes.contains("Tunables.Launcher: DEFAULT, library defaults: stepRpm 100"));
         assertFalse(notes, notes.contains("not written"));
         // The tuning menu says where the value came from.
         assertEquals("default from the catalog (gobilda-5203-6000)", find("Launcher/speedRpm").source());

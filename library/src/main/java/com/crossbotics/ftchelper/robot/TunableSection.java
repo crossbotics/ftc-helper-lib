@@ -290,7 +290,7 @@ final class TunableSection {
                         + ". Write the number in place of MEASURE.");
             }
             if (Starting.isDefaultFromCatalog(v) && !forFile) {
-                throw new IllegalStateException("Tunables." + name + "." + field + " = DEFAULT_FROM_CATALOG, but it is a safety number: "
+                throw new IllegalStateException("Tunables." + name + "." + field + " = DEFAULT, but it is a safety number: "
                         + "a safety limit never comes from the parts catalog or a library default. Write MEASURE until you "
                         + "know it, then the number (" + why + ")");
             }
@@ -356,7 +356,7 @@ final class TunableSection {
         return plain.isEmpty() ? fromCatalog : plain + "; " + fromCatalog;
     }
 
-    // "Tunables.Launcher: DEFAULT_FROM_CATALOG, library defaults: stepRpm 100, readyBandRpm 60" ("" = none left).
+    // "Tunables.Launcher: DEFAULT, library defaults: stepRpm 100, readyBandRpm 60" ("" = none left).
     String markedNote() {
         if (marked.isEmpty()) return "";
         StringBuilder sb = new StringBuilder();
@@ -364,7 +364,7 @@ final class TunableSection {
             sb.append(sb.length() == 0 ? "" : ", ").append(e.getKey());
             if (!Double.isNaN(e.getValue())) sb.append(' ').append(Module.exact(e.getValue()));
         }
-        return "Tunables." + name + ": DEFAULT_FROM_CATALOG, library defaults: " + sb;
+        return "Tunables." + name + ": DEFAULT, library defaults: " + sb;
     }
 
     private String missingNote() {
@@ -398,7 +398,7 @@ final class TunableSection {
             tool = "see its \"Found by\" column in docs/guides/tunables.md";
         }
         return new IllegalStateException("Tunables." + name + "." + field + " = MEASURE: a number you find on the robot: "
-                + tool + ". Write the number in place of MEASURE (or DEFAULT_FROM_CATALOG for the library's starting value)");
+                + tool + ". Write the number in place of MEASURE (or DEFAULT for the library's starting value)");
     }
 
     // The value of a static double field, NaN when it cannot be read (bits kept: the markers are NaNs).

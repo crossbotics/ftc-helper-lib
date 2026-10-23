@@ -1,11 +1,11 @@
 package com.crossbotics.ftchelper.examples.flywheelbot;
 
-import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT_FROM_CATALOG and MEASURE (docs/guides/tunables.md)
+import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT and MEASURE (docs/guides/tunables.md)
 
 /**
  * Example robot 1, file 2 of 5: every NUMBER, one section per part, one number per line. The section's
  * name is the part's configuration name in CamelCase ("intake_deploy" reads {@code IntakeDeploy}).
- * DEFAULT_FROM_CATALOG = the library's default (in brackets in the comment).
+ * DEFAULT = the library's default (in brackets in the comment).
  *
  * Tune on the robot with the tuning menu (GUIDE on gamepad 1, PRACTICE profile only): a changed value
  * is saved on the Control Hub, and INIT lists every value that differs from this file, ready to copy
@@ -16,38 +16,38 @@ import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT_FROM_CATA
 public class Tunables {
     /** The drivetrain. calibrated: set true after the Drive Tuner (autonomous refuses to run before). */
     public static class Drive {
-        public static double maxPower = DEFAULT_FROM_CATALOG;       // top wheel power (1.0)
-        public static double practiceMaxPower = DEFAULT_FROM_CATALOG; // top wheel power in PRACTICE (0.6)
-        public static double slowSpeed = DEFAULT_FROM_CATALOG;      // top power with the slow trigger held (0.3)
-        public static double strafeCorrection = DEFAULT_FROM_CATALOG; // not used: a tank drive cannot strafe (1.15)
-        public static double turnKp = DEFAULT_FROM_CATALOG;         // auto turns: push per degree off (0.012)
-        public static double turnKd = DEFAULT_FROM_CATALOG;         // auto turns: brake near the end (0.003)
-        public static double moveMinPower = DEFAULT_FROM_CATALOG;   // auto: least power that moves it (0.30)
+        public static double maxPower = DEFAULT;                    // top wheel power (1.0)
+        public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (0.6)
+        public static double slowSpeed = DEFAULT;                   // top power with the slow trigger held (0.3)
+        public static double strafeCorrection = DEFAULT;            // not used: a tank drive cannot strafe (1.15)
+        public static double turnKp = DEFAULT;                      // auto turns: push per degree off (0.012)
+        public static double turnKd = DEFAULT;                      // auto turns: brake near the end (0.003)
+        public static double moveMinPower = DEFAULT;                // auto: least power that moves it (0.30)
         public static boolean calibrated = false;                   // true after the Drive Tuner: auto runs then
     }
 
     /** Intake roller power, 0 to 1. */
     public static class Intake {
-        public static double inPower = DEFAULT_FROM_CATALOG;        // power taking pieces in, 0 to 1 (1.0)
-        public static double outPower = DEFAULT_FROM_CATALOG;       // power pushing pieces out (0.7)
+        public static double inPower = DEFAULT;                     // power taking pieces in, 0 to 1 (1.0)
+        public static double outPower = DEFAULT;                    // power pushing pieces out (0.7)
     }
 
     /**
      * The flywheel, in RPM. speedRpm is the shot speed; one D-pad press changes it by stepRpm.
      * readyBandRpm: how close to the speed counts as "ready to feed". kP..kF: the hub's speed control,
-     * DEFAULT_FROM_CATALOG until the Flywheel Finder (INIT shows the defaults for this motor: kF 11.7,
+     * DEFAULT until the Flywheel Finder (INIT shows the defaults for this motor: kF 11.7,
      * kP 1.17, kI 0.117). Then write its numbers in their place.
      */
     public static class Launcher {
         public static double speedRpm = 2600;                       // shot speed (example: watch shots and tune it)
-        public static double stepRpm = DEFAULT_FROM_CATALOG;        // speed change per D-pad press (100)
-        public static double readyBandRpm = DEFAULT_FROM_CATALOG;   // "at speed" = this close to the target (60)
-        public static double idleRpm = DEFAULT_FROM_CATALOG;        // speed between shots, 0 = stop (0)
-        public static double kP = DEFAULT_FROM_CATALOG;             // push per speed error (kF / 10)
-        public static double kI = DEFAULT_FROM_CATALOG;             // fix a steady error (kP / 10)
-        public static double kD = DEFAULT_FROM_CATALOG;             // brake changes (0)
-        public static double kF = DEFAULT_FROM_CATALOG;             // steady power for a speed (from the motor)
-        public static double shotIntervalSec = DEFAULT_FROM_CATALOG; // least time between two pieces, s (0.25)
+        public static double stepRpm = DEFAULT;                     // speed change per D-pad press (100)
+        public static double readyBandRpm = DEFAULT;                // "at speed" = this close to the target (60)
+        public static double idleRpm = DEFAULT;                     // speed between shots, 0 = stop (0)
+        public static double kP = DEFAULT;                          // push per speed error (kF / 10)
+        public static double kI = DEFAULT;                          // fix a steady error (kP / 10)
+        public static double kD = DEFAULT;                          // brake changes (0)
+        public static double kF = DEFAULT;                          // steady power for a speed (from the motor)
+        public static double shotIntervalSec = DEFAULT;             // least time between two pieces, s (0.25)
     }
 
     /** The indexer servo: its rest and push positions (0 to 1) and how long each move takes. */
@@ -75,12 +75,12 @@ public class Tunables {
      * goal when the launcher points at it (0 if the camera points the same way as the launcher).
      */
     public static class Aim {
-        public static double turnKp = DEFAULT_FROM_CATALOG;         // turn power per degree off (0.02)
-        public static double turnKd = DEFAULT_FROM_CATALOG;         // brake the turn near the goal (0.002)
-        public static double maxTurnPower = DEFAULT_FROM_CATALOG;   // the most turn power (0.5)
-        public static double toleranceDeg = DEFAULT_FROM_CATALOG;   // "aimed" within this, degrees (2)
-        public static double cameraOffset = DEFAULT_FROM_CATALOG;   // aims a little to one side: Aim Tuner (0)
-        public static double rumbleDeg = DEFAULT_FROM_CATALOG;      // gamepad 2 buzzes this close, degrees (4)
+        public static double turnKp = DEFAULT;                      // turn power per degree off (0.02)
+        public static double turnKd = DEFAULT;                      // brake the turn near the goal (0.002)
+        public static double maxTurnPower = DEFAULT;                // the most turn power (0.5)
+        public static double toleranceDeg = DEFAULT;                // "aimed" within this, degrees (2)
+        public static double cameraOffset = DEFAULT;                // aims a little to one side: Aim Tuner (0)
+        public static double rumbleDeg = DEFAULT;                   // gamepad 2 buzzes this close, degrees (4)
     }
 
     /**

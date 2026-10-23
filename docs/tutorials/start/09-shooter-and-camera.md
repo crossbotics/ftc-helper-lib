@@ -69,7 +69,7 @@ public static class Launcher {
     public static double speedRpm = 2679;                       // shot speed: goBILDA's 1250 counts per second
     public static double stepRpm = 50;                          // speed change per D-pad press
     public static double readyBandRpm = 107;                    // "at speed" this close: goBILDA feeds above 1200
-    public static double idleRpm = DEFAULT_FROM_CATALOG;        // speed between shots, 0 = stop (0)
+    public static double idleRpm = DEFAULT;                     // speed between shots, 0 = stop (0)
     // goBILDA's own tested numbers for this kit bot (its starter code: P 40, F 12.5), so kept here.
     // Without these lines the library would start from the parts catalog's (kF 11.7, kP 1.17, kI 0.117).
     public static double kP = 40;                               // push per speed error: goBILDA's number
@@ -77,11 +77,11 @@ public static class Launcher {
     public static double kD = 0;                                // brake changes: goBILDA's number
     public static double kF = 12.5;                             // steady power for a speed: goBILDA's number
     public static double nominalVolts = 12.8;                   // battery volts the gains were found at
-    public static double shotIntervalSec = DEFAULT_FROM_CATALOG; // least time between two pieces, s (0.25)
+    public static double shotIntervalSec = DEFAULT;             // least time between two pieces, s (0.25)
 }
 
 public static class Windmill {
-    public static double power = DEFAULT_FROM_CATALOG;          // feeder power, 0 to 1 (1.0)
+    public static double power = DEFAULT;                       // feeder power, 0 to 1 (1.0)
     public static double feedSec = 0.3;                         // seconds per piece: a starting guess
 }
 ```
@@ -102,19 +102,19 @@ at START, never in INIT.
 
 ### The first spin-up with no numbers
 
-A new launcher can run before you know any of its numbers. Write `DEFAULT_FROM_CATALOG` for each one
+A new launcher can run before you know any of its numbers. Write `DEFAULT` for each one
 (or leave the lines out):
 
 ```java
 public static class Launcher {
-    public static double speedRpm = DEFAULT_FROM_CATALOG;       // shot speed (60% of the motor's top speed)
-    public static double stepRpm = DEFAULT_FROM_CATALOG;        // speed change per D-pad press (100)
-    public static double readyBandRpm = DEFAULT_FROM_CATALOG;   // "at speed" = this close to the target (60)
-    public static double idleRpm = DEFAULT_FROM_CATALOG;        // speed between shots, 0 = stop (0)
-    public static double kP = DEFAULT_FROM_CATALOG;             // push per speed error (kF / 10)
-    public static double kI = DEFAULT_FROM_CATALOG;             // fix a steady error (kP / 10)
-    public static double kD = DEFAULT_FROM_CATALOG;             // brake changes (0)
-    public static double kF = DEFAULT_FROM_CATALOG;             // steady power for a speed (from the motor)
+    public static double speedRpm = DEFAULT;                    // shot speed (60% of the motor's top speed)
+    public static double stepRpm = DEFAULT;                     // speed change per D-pad press (100)
+    public static double readyBandRpm = DEFAULT;                // "at speed" = this close to the target (60)
+    public static double idleRpm = DEFAULT;                     // speed between shots, 0 = stop (0)
+    public static double kP = DEFAULT;                          // push per speed error (kF / 10)
+    public static double kI = DEFAULT;                          // fix a steady error (kP / 10)
+    public static double kD = DEFAULT;                          // brake changes (0)
+    public static double kF = DEFAULT;                          // steady power for a speed (from the motor)
 }
 ```
 
@@ -272,12 +272,12 @@ turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).follows(cam
 public static class Turret {
     public static double min = -90;                             // degrees: as far right as the wires allow
     public static double max = 90;                              // degrees: as far left as the wires allow
-    public static double kP = DEFAULT_FROM_CATALOG;             // push per degree off (0.02)
-    public static double kI = DEFAULT_FROM_CATALOG;             // fix a small steady miss (0)
-    public static double kD = DEFAULT_FROM_CATALOG;             // brake near the target (0.001)
-    public static double maxPower = DEFAULT_FROM_CATALOG;       // the most power (0.8)
+    public static double kP = DEFAULT;                          // push per degree off (0.02)
+    public static double kI = DEFAULT;                          // fix a small steady miss (0)
+    public static double kD = DEFAULT;                          // brake near the target (0.001)
+    public static double maxPower = DEFAULT;                    // the most power (0.8)
     public static double tolerance = 1.5;                       // "aimed" within this, degrees (example)
-    public static double cameraOffset = DEFAULT_FROM_CATALOG;   // aims a little to one side: Aim Tuner (0)
+    public static double cameraOffset = DEFAULT;                // aims a little to one side: Aim Tuner (0)
     // ...
 }
 ```
@@ -506,13 +506,13 @@ public static class Aim {
     public static double goalY = -13;                           // the goal: inches from the centre, - = our half
     public static boolean mirrorForRed = false;                 // BIOBUZZ: false
     // Section 10: whole-robot aim (no turret).
-    public static double turnKp = DEFAULT_FROM_CATALOG;         // turn power per degree off (0.02)
-    public static double turnKd = DEFAULT_FROM_CATALOG;         // brake the turn near the goal (0.002)
-    public static double maxTurnPower = DEFAULT_FROM_CATALOG;   // the most turn power (0.5)
-    public static double toleranceDeg = DEFAULT_FROM_CATALOG;   // "aimed" within this, degrees (2)
-    public static double cameraOffset = DEFAULT_FROM_CATALOG;   // aims a little to one side: Aim Tuner (0)
+    public static double turnKp = DEFAULT;                      // turn power per degree off (0.02)
+    public static double turnKd = DEFAULT;                      // brake the turn near the goal (0.002)
+    public static double maxTurnPower = DEFAULT;                // the most turn power (0.5)
+    public static double toleranceDeg = DEFAULT;                // "aimed" within this, degrees (2)
+    public static double cameraOffset = DEFAULT;                // aims a little to one side: Aim Tuner (0)
     // Section 11: the buzz.
-    public static double rumbleDeg = DEFAULT_FROM_CATALOG;      // gamepad 2 buzzes this close, degrees (4)
+    public static double rumbleDeg = DEFAULT;                   // gamepad 2 buzzes this close, degrees (4)
 }
 ```
 

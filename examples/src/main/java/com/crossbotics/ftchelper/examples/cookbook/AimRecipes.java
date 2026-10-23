@@ -45,11 +45,11 @@ public class AimRecipes {
             public static double goalX = 13;                            // inches right of centre (BIOBUZZ)
             public static double goalY = -13;                           // inches from centre, - = our half (BIOBUZZ)
             public static boolean mirrorForRed = false;                 // BIOBUZZ: turned, not mirrored (true)
-            public static double turnKp = DEFAULT_FROM_CATALOG;         // whole-robot aim: push per degree off (0.02)
-            public static double turnKd = DEFAULT_FROM_CATALOG;         // brake near the goal (0.002)
-            public static double maxTurnPower = DEFAULT_FROM_CATALOG;   // the most it turns by itself (0.5)
-            public static double toleranceDeg = DEFAULT_FROM_CATALOG;   // "aimed" within this, degrees (2)
-            public static double rumbleDeg = DEFAULT_FROM_CATALOG;      // rumbleWhenAimed(): buzz within this (4)
+            public static double turnKp = DEFAULT;                      // whole-robot aim: push per degree off (0.02)
+            public static double turnKd = DEFAULT;                      // brake near the goal (0.002)
+            public static double maxTurnPower = DEFAULT;                // the most it turns by itself (0.5)
+            public static double toleranceDeg = DEFAULT;                // "aimed" within this, degrees (2)
+            public static double rumbleDeg = DEFAULT;                   // rumbleWhenAimed(): buzz within this (4)
         }
         // end recipe
 
@@ -86,8 +86,8 @@ public class AimRecipes {
             // Seconds a piece is in the air, from a slow-motion video: count the frames from leaving the
             // launcher to reaching the goal, divide by the video's frames per second.
             public static double flightSec = MEASURE;                   // seconds in the air (slow-motion video)
-            public static double flightSecPerIn = DEFAULT_FROM_CATALOG; // longer shots fly longer: per inch (0)
-            public static double maxLeadIn = DEFAULT_FROM_CATALOG;      // never lead more than this, inches (24)
+            public static double flightSecPerIn = DEFAULT;              // longer shots fly longer: per inch (0)
+            public static double maxLeadIn = DEFAULT;                   // never lead more than this, inches (24)
             // Where the shooter is from the robot's centre (a turret's pivot), and a camera on the body:
             // inches forward (+) and left (+). A camera on the turret sits at the turret's pivot.
             public static double shooterForwardIn = MEASURE;            // inches forward of the centre (a tape)
@@ -111,11 +111,11 @@ public class AimRecipes {
             // In your Tunables.Launcher section (change the lines you already have, add the others).
             public static double kP = MEASURE;                          // speed control (Flywheel Finder)
             public static double kI = MEASURE;                          // speed control (Flywheel Finder)
-            public static double kD = DEFAULT_FROM_CATALOG;             // speed control (0)
+            public static double kD = DEFAULT;                          // speed control (0)
             public static double kF = MEASURE;                          // steady power (Flywheel Finder)
             public static double nominalVolts = MEASURE;                // battery volts for kF (Flywheel Finder)
-            public static double trimStepPercent = DEFAULT_FROM_CATALOG; // one D-pad press (1%)
-            public static double trimMaxPercent = DEFAULT_FROM_CATALOG; // never more than this each way (15%)
+            public static double trimStepPercent = DEFAULT;             // one D-pad press (1%)
+            public static double trimMaxPercent = DEFAULT;              // never more than this each way (15%)
             // Battery compensation, OFF by default (not yet proven on a real robot: try it and tell us).
             public static boolean batteryCompensation = true;           // true = F follows the battery (false)
             // end recipe

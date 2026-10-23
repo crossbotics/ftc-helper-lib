@@ -94,7 +94,7 @@ rest `TODO`, checks the draft loads, and prints the open questions. (If the file
 A team that has no code yet: `./gradlew :sim:newRobot -Pconfig=... -PteamCode=...` writes the five files
 from the configuration (check its TODOs with the team), then use `:sim:fromRobot`. Its `Tunables.java` has
 `MEASURE` lines (INIT stops on them until the team finds the numbers with the finders, which run in the
-simulator too) and `DEFAULT_FROM_CATALOG` lines (the library's defaults). A motor or servo that is not in the
+simulator too) and `DEFAULT` lines (the library's defaults). A motor or servo that is not in the
 catalog: describe it in Robot.java (`Motors.custom(id, countsPerRev, freeRpm)`,
 `Parts.customServo(id, rangeDeg, secPer60Deg)`); `:sim:fromRobot` then writes its numbers into the file.
 

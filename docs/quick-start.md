@@ -72,10 +72,10 @@ made on the Driver Station. **Why:** the names are copied for you, so they canno
    into TeamCode. It never overwrites your work: if any of the five files is already there, it
    writes nothing and stops with `... is already there: nothing written (move it away first)`. Every guess it is not sure of is a
    `TODO` line in `Robot.java` (a comment that marks something still to do): **check each TODO** like
-   the STEP lines below. In `Tunables.java` every setting is there: `DEFAULT_FROM_CATALOG` (the library's
+   the STEP lines below. In `Tunables.java` every setting is there: `DEFAULT` (the library's
    default, worked out from the part where it can) or `MEASURE` (a number to find with a finder: INIT
    stops on it and names the finder). Find each `MEASURE` number (the finders run in the simulator too)
-   and write it in its place ([the two words](guides/tunables.md#default_from_catalog-and-measure)).
+   and write it in its place ([the two words](guides/tunables.md#default-and-measure)).
 
 ### B. Copy the template (no configuration yet, or you want to see every line)
 

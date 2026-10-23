@@ -38,8 +38,8 @@ public class HoodRecipes {
             // Optional: the hood's angle at each stop (any scale, e.g. 0 = steep end, 30 = flat end).
             public static double angleA = MEASURE;                      // the angle at stop A (an angle app)
             public static double angleB = MEASURE;                      // the angle at stop B (an angle app)
-            public static double travelSec = DEFAULT_FROM_CATALOG;      // stop to stop, seconds (0.5, or the servo's)
-            public static double startAngle = DEFAULT_FROM_CATALOG;     // where it goes at START (angle A)
+            public static double travelSec = DEFAULT;                   // stop to stop, seconds (0.5, or the servo's)
+            public static double startAngle = DEFAULT;                  // where it goes at START (angle A)
         }
         // end recipe
 
@@ -110,9 +110,9 @@ public class HoodRecipes {
             public static double posB = MEASURE;                        // ticks at stop B (Hood Finder)
             public static double angleA = MEASURE;                      // the angle at stop A (an angle app)
             public static double angleB = MEASURE;                      // the angle at stop B (an angle app)
-            public static double kP = DEFAULT_FROM_CATALOG;             // power per tick off (0.005)
-            public static double maxPower = DEFAULT_FROM_CATALOG;       // the most power (0.5)
-            public static double tolerance = DEFAULT_FROM_CATALOG;      // ready within this (1/50 of the range)
+            public static double kP = DEFAULT;                          // power per tick off (0.005)
+            public static double maxPower = DEFAULT;                    // the most power (0.5)
+            public static double tolerance = DEFAULT;                   // ready within this (1/50 of the range)
         }
         // end recipe
 

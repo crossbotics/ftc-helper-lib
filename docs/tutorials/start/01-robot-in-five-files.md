@@ -127,22 +127,22 @@ public class Robot extends RobotDefinition {
 ## 2. Tunables.java: the numbers
 
 ```java
-import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT_FROM_CATALOG (docs/guides/tunables.md)
+import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT (docs/guides/tunables.md)
 
 public class Tunables {
     public static class Drive {
-        public static double maxPower = DEFAULT_FROM_CATALOG;       // top wheel power (1.0)
-        public static double practiceMaxPower = DEFAULT_FROM_CATALOG; // top wheel power in PRACTICE (0.6)
-        public static double slowSpeed = DEFAULT_FROM_CATALOG;      // top power with the slow trigger held (0.3)
-        public static double strafeCorrection = DEFAULT_FROM_CATALOG; // not used: a tank drive cannot strafe (1.15)
-        public static double turnKp = DEFAULT_FROM_CATALOG;         // auto turns: push per degree off (0.012)
-        public static double turnKd = DEFAULT_FROM_CATALOG;         // auto turns: brake near the end (0.003)
-        public static double moveMinPower = DEFAULT_FROM_CATALOG;   // auto: least power that moves it (0.30)
+        public static double maxPower = DEFAULT;                    // top wheel power (1.0)
+        public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (0.6)
+        public static double slowSpeed = DEFAULT;                   // top power with the slow trigger held (0.3)
+        public static double strafeCorrection = DEFAULT;            // not used: a tank drive cannot strafe (1.15)
+        public static double turnKp = DEFAULT;                      // auto turns: push per degree off (0.012)
+        public static double turnKd = DEFAULT;                      // auto turns: brake near the end (0.003)
+        public static double moveMinPower = DEFAULT;                // auto: least power that moves it (0.30)
         public static boolean calibrated = false;                   // true after the Drive Tuner: auto runs then
     }
 
     public static class Intake {
-        public static double inPower = DEFAULT_FROM_CATALOG;        // power taking pieces in, 0 to 1 (1.0)
+        public static double inPower = DEFAULT;                     // power taking pieces in, 0 to 1 (1.0)
         public static double outPower = 1.0;                        // power pushing pieces out: goBILDA's code
     }
 
@@ -150,7 +150,7 @@ public class Tunables {
         public static double speedRpm = 2679;                       // shot speed: goBILDA's 1250 counts per second
         public static double stepRpm = 50;                          // speed change per D-pad press
         public static double readyBandRpm = 107;                    // "at speed" this close: goBILDA feeds above 1200
-        public static double idleRpm = DEFAULT_FROM_CATALOG;        // speed between shots, 0 = stop (0)
+        public static double idleRpm = DEFAULT;                     // speed between shots, 0 = stop (0)
         // goBILDA's own tested numbers for this kit bot (its starter code: P 40, F 12.5), so kept here.
         // Without these lines the library would start from the parts catalog's (kF 11.7, kP 1.17, kI 0.117).
         public static double kP = 40;                               // push per speed error: goBILDA's number
@@ -158,11 +158,11 @@ public class Tunables {
         public static double kD = 0;                                // brake changes: goBILDA's number
         public static double kF = 12.5;                             // steady power for a speed: goBILDA's number
         public static double nominalVolts = 12.8;                   // battery volts the gains were found at
-        public static double shotIntervalSec = DEFAULT_FROM_CATALOG; // least time between two pieces, s (0.25)
+        public static double shotIntervalSec = DEFAULT;             // least time between two pieces, s (0.25)
     }
 
     public static class Windmill {
-        public static double power = DEFAULT_FROM_CATALOG;          // feeder power, 0 to 1 (1.0)
+        public static double power = DEFAULT;                       // feeder power, 0 to 1 (1.0)
         public static double feedSec = 0.3;                         // seconds per piece: a starting guess
     }
 
@@ -184,7 +184,7 @@ public class Tunables {
   would read `IntakeDeploy`.
 - Where these came from: goBILDA's code spins the launcher to 1250 counts per second (1250 / 28 counts
   per turn x 60 = 2679 RPM) and feeds above 1200 (that is 107 RPM less): `readyBandRpm = 107`.
-  `kP` to `kF` are goBILDA's tested numbers too. `DEFAULT_FROM_CATALOG` = "use the library's default"
+  `kP` to `kF` are goBILDA's tested numbers too. `DEFAULT` = "use the library's default"
   (more below): here, numbers where the library's default is the right one.
 - A number you leave out uses the library's default, and INIT tells you which
   (`Tunables.Intake: outPower not written: library defaults used (fine)`). A few safety numbers, like a
@@ -196,9 +196,9 @@ public class Tunables {
   | --- | --- |
   | You know it | the number |
   | A safety limit (a lift's `min`/`max`, a stop) you do not know yet | `MEASURE` |
-  | A tuning number (`kP`, a speed...) you do not know yet | `DEFAULT_FROM_CATALOG` |
+  | A tuning number (`kP`, a speed...) you do not know yet | `DEFAULT` |
 
-  `DEFAULT_FROM_CATALOG` = "use the library's default", worked out from the motor or servo Robot.java
+  `DEFAULT` = "use the library's default", worked out from the motor or servo Robot.java
   names where it can (INIT lists each one and where it came from: `Launcher: defaults from the catalog
   (gobilda-5203-6000): kF 11.7, ...`). It does the same as leaving the line out, but the file then shows
   what is still to tune: write the word. `MEASURE` = "a number to find on the robot": INIT stops on it
@@ -214,13 +214,13 @@ public class Tunables {
       public static class Lift {
           public static double min = MEASURE;                       // lowest safe point (Motor Finder)
           public static double max = MEASURE;                       // highest safe point (Motor Finder)
-          public static double kP = DEFAULT_FROM_CATALOG;           // push toward the target (from the motor)
+          public static double kP = DEFAULT;                        // push toward the target (from the motor)
       }
   }
   ```
 
-  Without that line the build fails with `cannot find symbol` and `symbol: variable DEFAULT_FROM_CATALOG`
-  ([the two words](../../guides/tunables.md#default_from_catalog-and-measure)). The goBILDA bot's
+  Without that line the build fails with `cannot find symbol` and `symbol: variable DEFAULT`
+  ([the two words](../../guides/tunables.md#default-and-measure)). The goBILDA bot's
   file has that line at the top, and no `MEASURE`: every number is known (goBILDA published them, or
   the library's default is right).
 - **Every number each part reads**, with its units, its default and the finder that measures it:

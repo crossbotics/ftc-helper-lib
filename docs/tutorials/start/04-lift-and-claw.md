@@ -69,17 +69,17 @@ no `_`): `"lift"` reads `Tunables.Lift`.
 
 ```java
 public static class Intake {
-    public static double inPower = DEFAULT_FROM_CATALOG;        // power taking pieces in, 0 to 1 (1.0)
-    public static double outPower = DEFAULT_FROM_CATALOG;       // power pushing pieces out (0.7)
+    public static double inPower = DEFAULT;                     // power taking pieces in, 0 to 1 (1.0)
+    public static double outPower = DEFAULT;                    // power pushing pieces out (0.7)
 }
 
 public static class Lift {
     public static double min = 0;                               // lowest safe point, counts (Motor Finder)
     public static double max = MEASURE;                         // highest safe point, counts (Motor Finder, B)
-    public static double kP = DEFAULT_FROM_CATALOG;             // push toward the height (from the motor)
-    public static double kI = DEFAULT_FROM_CATALOG;             // fix a small steady miss (0)
-    public static double kD = DEFAULT_FROM_CATALOG;             // brake near the height (from the motor)
-    public static double kF = DEFAULT_FROM_CATALOG;             // hold up against gravity (0.05)
+    public static double kP = DEFAULT;                          // push toward the height (from the motor)
+    public static double kI = DEFAULT;                          // fix a small steady miss (0)
+    public static double kD = DEFAULT;                          // brake near the height (from the motor)
+    public static double kF = DEFAULT;                          // hold up against gravity (0.05)
     public static double down = 0;                              // a named height, counts: any name you like
     public static double low = 900;                             // a named height (Motor Finder)
     public static double high = 2400;                           // a named height (Motor Finder)
@@ -92,7 +92,7 @@ public static class Claw {
 ```
 
 One number per line, each with a short comment; the number in brackets is the library's default.
-(`MEASURE` and `DEFAULT_FROM_CATALOG` come from the line
+(`MEASURE` and `DEFAULT` come from the line
 `import static com.crossbotics.ftchelper.robot.Starting.*;` under the `package` line of the lesson
 robot's `Tunables.java`: copy it too.)
 
@@ -102,7 +102,7 @@ Which word to write:
 | --- | --- |
 | You know it | the number |
 | A safety limit (`min`, `max`) you do not know yet | `MEASURE` |
-| A tuning number (`kP`...) you do not know yet | `DEFAULT_FROM_CATALOG` |
+| A tuning number (`kP`...) you do not know yet | `DEFAULT` |
 
 `max` is a safety limit you do not know yet, so it says `MEASURE`. INIT of your TeleOp then stops with:
 
@@ -115,7 +115,7 @@ own file already has the measured number, `max = 2600`.)
 
 What each number means:
 
-- **Intake:** the power going in and going out, 0 to 1. `DEFAULT_FROM_CATALOG`: the library's 1.0 and 0.7.
+- **Intake:** the power going in and going out, 0 to 1. `DEFAULT`: the library's 1.0 and 0.7.
 - **Lift heights are in encoder counts.** An encoder is a sensor on the motor that counts how far
   the shaft has turned. 0 is the bottom; bigger numbers are higher.
   - `min`, `max`: the safe range. The lift never goes outside it. You cannot change these from the
@@ -123,7 +123,7 @@ What each number means:
   - `kP`, `kI`, `kD`, `kF`: how hard it pushes to reach and hold a height (step 6). These are the
     **PID** numbers (P = push harder the further away it is, D = brake as it gets close, I = fix a
     small error that stays). `kF` is the steady push that keeps the lift from sagging. **For the first
-    run they say `DEFAULT_FROM_CATALOG`**: "not set yet, use the library's default". Robot.java names
+    run they say `DEFAULT`**: "not set yet, use the library's default". Robot.java names
     the lift's motor (`.part("gobilda-5203-435")`), so the library works them out for that motor from
     the parts catalog, and INIT says so: `Lift: defaults from the catalog (gobilda-5203-435): kP
     0.0056, kD 0.00028, slowZone 179, tolerance 14. Tune them live in the tuning menu`. Step 6 tunes
@@ -249,10 +249,10 @@ public static class Claw {
 public static class Lift {
     public static double min = 0;                               // lowest safe point, counts (Motor Finder)
     public static double max = 2580;                            // highest safe point, counts (Motor Finder)
-    public static double kP = DEFAULT_FROM_CATALOG;             // push toward the height (from the motor)
-    public static double kI = DEFAULT_FROM_CATALOG;             // fix a small steady miss (0)
-    public static double kD = DEFAULT_FROM_CATALOG;             // brake near the height (from the motor)
-    public static double kF = DEFAULT_FROM_CATALOG;             // hold up against gravity (0.05)
+    public static double kP = DEFAULT;                          // push toward the height (from the motor)
+    public static double kI = DEFAULT;                          // fix a small steady miss (0)
+    public static double kD = DEFAULT;                          // brake near the height (from the motor)
+    public static double kF = DEFAULT;                          // hold up against gravity (0.05)
     public static double down = 0;                              // a named height, counts: any name you like
     public static double low = 900;                             // a named height (Motor Finder)
     public static double high = 2400;                           // a named height (Motor Finder)
@@ -278,7 +278,7 @@ try.
    (hold a bumper for 10 times bigger steps). Use gamepad 2 to send the lift between heights and watch.
 4. A saves on the Control Hub. **B shows the changed values as code**, like `Lift: kP = 0.005`
    (that is `kP = 0.005` in `Tunables.Lift`).
-5. **Copy them into `Tunables.java`** (`kP = 0.005` in place of `kP = DEFAULT_FROM_CATALOG` in `Lift`: a
+5. **Copy them into `Tunables.java`** (`kP = 0.005` in place of `kP = DEFAULT` in `Lift`: a
    written number replaces the default). The code is the record: a value saved only on the hub is lost
    with a new Control Hub and invisible to your teammates. Until you copy them, INIT lists them under
    "Tuned on this robot (copy into Tunables.java)".

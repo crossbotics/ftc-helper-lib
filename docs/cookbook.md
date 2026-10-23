@@ -279,7 +279,7 @@ change the lines you already have. A recipe that adds to a section you already h
 **How a recipe's section reads:** one number per line, with a short comment.
 - `MEASURE`: a number only your robot can give (a lift's top, a servo's positions). INIT stops and
   names the tool that finds it. Write the number in its place.
-- `DEFAULT_FROM_CATALOG`: the library's starting value, shown in brackets in the comment. Change it
+- `DEFAULT`: the library's starting value, shown in brackets in the comment. Change it
   only when you see the problem it fixes ([Find a setting by what you want](guides/tunables.md#find-a-setting-by-what-you-want)).
 - A real number: the point of the recipe (a slower robot, a spot on the field).
 - These words need one line at the top of `Tunables.java`: `import static com.crossbotics.ftchelper.robot.Starting.*;`
@@ -397,11 +397,11 @@ drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
 public static class Drive {                                     // a fixed name: always Drive
     public static double maxPower = 0.6;                        // top wheel power: slow for first drives (1.0)
     public static double practiceMaxPower = 0.4;                // top wheel power in PRACTICE (0.6)
-    public static double slowSpeed = DEFAULT_FROM_CATALOG;      // top power with the slow trigger held (0.3)
-    public static double strafeCorrection = DEFAULT_FROM_CATALOG; // sideways moves: Drive Tuner (1.15)
-    public static double turnKp = DEFAULT_FROM_CATALOG;         // auto turns: push per degree off (0.012)
-    public static double turnKd = DEFAULT_FROM_CATALOG;         // auto turns: brake near the end (0.003)
-    public static double moveMinPower = DEFAULT_FROM_CATALOG;   // auto: least power that moves it (0.30)
+    public static double slowSpeed = DEFAULT;                   // top power with the slow trigger held (0.3)
+    public static double strafeCorrection = DEFAULT;            // sideways moves: Drive Tuner (1.15)
+    public static double turnKp = DEFAULT;                      // auto turns: push per degree off (0.012)
+    public static double turnKd = DEFAULT;                      // auto turns: brake near the end (0.003)
+    public static double moveMinPower = DEFAULT;                // auto: least power that moves it (0.30)
     public static boolean calibrated = false;                   // true after the Drive Tuner: auto runs then
 }
 ```
@@ -700,8 +700,8 @@ intake = add(Intake.motor("intake"));
 <!-- recipe: tunables-intake -->
 ```java title="Tunables.java"
 public static class Intake {                                    // "intake" in the configuration
-    public static double inPower = DEFAULT_FROM_CATALOG;        // power taking pieces in, 0 to 1 (1.0)
-    public static double outPower = DEFAULT_FROM_CATALOG;       // power pushing pieces out (0.7)
+    public static double inPower = DEFAULT;                     // power taking pieces in, 0 to 1 (1.0)
+    public static double outPower = DEFAULT;                    // power pushing pieces out (0.7)
 }
 ```
 
@@ -757,10 +757,10 @@ lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom
 public static class Lift {                                      // "lift" in the configuration
     public static double min = MEASURE;                         // lowest safe point, counts (Motor Finder)
     public static double max = MEASURE;                         // highest safe point, counts (Motor Finder)
-    public static double kP = DEFAULT_FROM_CATALOG;             // push toward the target (from the motor)
-    public static double kI = DEFAULT_FROM_CATALOG;             // fix a small steady miss (0)
-    public static double kD = DEFAULT_FROM_CATALOG;             // brake near the target (from the motor)
-    public static double kF = DEFAULT_FROM_CATALOG;             // hold up against gravity (0.05)
+    public static double kP = DEFAULT;                          // push toward the target (from the motor)
+    public static double kI = DEFAULT;                          // fix a small steady miss (0)
+    public static double kD = DEFAULT;                          // brake near the target (from the motor)
+    public static double kF = DEFAULT;                          // hold up against gravity (0.05)
     public static double down = MEASURE;                        // a named height, counts: any name you like
     public static double low = MEASURE;                         // a named height (Motor Finder)
     public static double high = MEASURE;                        // a named height (Motor Finder)
@@ -841,9 +841,9 @@ lift = add(Lift.slide("lift_left").part("gobilda-5203-435").alsoMotorReversed("l
 public static class LiftLeft {                                  // "lift_left" in the configuration
     public static double min = MEASURE;                         // lowest safe point, counts (first motor)
     public static double max = MEASURE;                         // highest safe point, counts (first motor)
-    public static double kP = DEFAULT_FROM_CATALOG;             // push toward the target (from the motor)
-    public static double kI = DEFAULT_FROM_CATALOG;             // fix a small steady miss (0)
-    public static double kD = DEFAULT_FROM_CATALOG;             // brake near the target (from the motor)
+    public static double kP = DEFAULT;                          // push toward the target (from the motor)
+    public static double kI = DEFAULT;                          // fix a small steady miss (0)
+    public static double kD = DEFAULT;                          // brake near the target (from the motor)
     public static double kF = 0.06;                             // a heavier slide needs more hold (0.05)
     public static double down = MEASURE;                        // a named height (Motor Finder)
     public static double low = MEASURE;                         // a named height (Motor Finder)
@@ -878,9 +878,9 @@ arm = add(Arm.motor("arm", "gobilda-5203-117").gearRatio(2));
 public static class Arm {                                       // "arm" in the configuration
     public static double min = MEASURE;                         // lowest safe angle, degrees, 0 = at INIT
     public static double max = MEASURE;                         // highest safe angle, degrees (Motor Finder)
-    public static double kP = DEFAULT_FROM_CATALOG;             // push toward the target (0.02)
-    public static double kI = DEFAULT_FROM_CATALOG;             // fix a small steady miss (0)
-    public static double kD = DEFAULT_FROM_CATALOG;             // brake near the target (0.001)
+    public static double kP = DEFAULT;                          // push toward the target (0.02)
+    public static double kI = DEFAULT;                          // fix a small steady miss (0)
+    public static double kD = DEFAULT;                          // brake near the target (0.001)
     public static double kF = 0.1;                              // hold up against gravity (0)
     public static double stowed = MEASURE;                      // a named angle, degrees: any name you like
     public static double pickup = MEASURE;                      // a named angle (Motor Finder)
@@ -908,7 +908,7 @@ public static class Claw {                                      // "claw" in the
     // The Servo Finder shows "Tunables.Claw: P1 = 0.210, P2 = 0.770": write P1 as open, P2 as closed.
     public static double open = MEASURE;                        // servo position, open (Servo Finder)
     public static double closed = MEASURE;                      // servo position, closed (Servo Finder)
-    public static double travelSec = DEFAULT_FROM_CATALOG;      // time for a full move (0.3, or the servo's)
+    public static double travelSec = DEFAULT;                   // time for a full move (0.3, or the servo's)
 }
 ```
 
@@ -932,7 +932,7 @@ public static class Wrist {                                     // "wrist" in th
     public static double down = MEASURE;                        // servo position: any name you like
     public static double level = MEASURE;                       // servo position (Servo Finder)
     public static double up = MEASURE;                          // servo position (Servo Finder)
-    public static double travelSec = DEFAULT_FROM_CATALOG;      // time for a full move (0.3, or the servo's)
+    public static double travelSec = DEFAULT;                   // time for a full move (0.3, or the servo's)
 }
 ```
 
@@ -957,7 +957,7 @@ atStart(() -> Action.named("Deploy").then(() -> intakeDeploy.goTo("deployed")));
 public static class IntakeDeploy {                              // "intake_deploy" in the configuration
     public static double stowed = MEASURE;                      // servo position, folded (Servo Finder)
     public static double deployed = MEASURE;                    // servo position, folded out (Servo Finder)
-    public static double travelSec = DEFAULT_FROM_CATALOG;      // time for a full move (0.3, or the servo's)
+    public static double travelSec = DEFAULT;                   // time for a full move (0.3, or the servo's)
 }
 ```
 
@@ -1070,17 +1070,17 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 <!-- recipe: tunables-launcher -->
 ```java title="Tunables.java"
 public static class Launcher {                                  // "launcher" in the configuration
-    public static double speedRpm = DEFAULT_FROM_CATALOG;       // shot speed without the table (60% of top)
-    public static double stepRpm = DEFAULT_FROM_CATALOG;        // speed change per D-pad press (100)
-    public static double readyBandRpm = DEFAULT_FROM_CATALOG;   // "at speed" = this close to the target (60)
+    public static double speedRpm = DEFAULT;                    // shot speed without the table (60% of top)
+    public static double stepRpm = DEFAULT;                     // speed change per D-pad press (100)
+    public static double readyBandRpm = DEFAULT;                // "at speed" = this close to the target (60)
     public static double idleRpm = 1500;                        // spins between shots: quicker first shot (0)
-    public static double shotIntervalSec = DEFAULT_FROM_CATALOG; // least time between two pieces (0.25)
+    public static double shotIntervalSec = DEFAULT;             // least time between two pieces (0.25)
     // The hub's speed control: the defaults for the motor until the Flywheel Finder (INIT shows them).
     // Then write the Finder's numbers in their place.
-    public static double kP = DEFAULT_FROM_CATALOG;             // push per speed error (kF / 10)
-    public static double kI = DEFAULT_FROM_CATALOG;             // fix a steady error (kP / 10)
-    public static double kD = DEFAULT_FROM_CATALOG;             // brake changes (0)
-    public static double kF = DEFAULT_FROM_CATALOG;             // steady power for a speed (from the motor)
+    public static double kP = DEFAULT;                          // push per speed error (kF / 10)
+    public static double kI = DEFAULT;                          // fix a steady error (kP / 10)
+    public static double kD = DEFAULT;                          // brake changes (0)
+    public static double kF = DEFAULT;                          // steady power for a speed (from the motor)
     // {inches to the goal, RPM}, blended between rows. Example rows: write the Shot Tuner's instead.
     public static double[][] speedByDistance = {{24, 2200}, {48, 2550}, {72, 2900}, {96, 3250}};
 }
@@ -1091,8 +1091,8 @@ public static class Launcher {                                  // "launcher" in
 public static class Indexer {                                   // "indexer" in the configuration
     public static double rest = MEASURE;                        // servo position, out of the way (Servo Finder)
     public static double push = MEASURE;                        // servo position, piece pushed (Servo Finder)
-    public static double pushSec = DEFAULT_FROM_CATALOG;        // time to push (0.25, or the servo's speed)
-    public static double returnSec = DEFAULT_FROM_CATALOG;      // time to come back (the same as pushSec)
+    public static double pushSec = DEFAULT;                     // time to push (0.25, or the servo's speed)
+    public static double returnSec = DEFAULT;                   // time to come back (the same as pushSec)
 }
 ```
 
@@ -1117,12 +1117,12 @@ turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).follows(cam
 public static class Turret {                                    // "turret" in the configuration
     public static double min = MEASURE;                         // furthest right, degrees (Motor Finder)
     public static double max = MEASURE;                         // furthest left, degrees: 0 = forward, + = left
-    public static double startAngle = DEFAULT_FROM_CATALOG;     // where you set it by hand before INIT (0)
-    public static double kP = DEFAULT_FROM_CATALOG;             // push per degree off (0.02)
-    public static double kD = DEFAULT_FROM_CATALOG;             // brake near the target (0.001)
-    public static double maxPower = DEFAULT_FROM_CATALOG;       // the most power (0.8)
-    public static double tolerance = DEFAULT_FROM_CATALOG;      // "aimed" within this, degrees (1.0)
-    public static double cameraOffset = DEFAULT_FROM_CATALOG;   // aims a little to one side: Aim Tuner (0)
+    public static double startAngle = DEFAULT;                  // where you set it by hand before INIT (0)
+    public static double kP = DEFAULT;                          // push per degree off (0.02)
+    public static double kD = DEFAULT;                          // brake near the target (0.001)
+    public static double maxPower = DEFAULT;                    // the most power (0.8)
+    public static double tolerance = DEFAULT;                   // "aimed" within this, degrees (1.0)
+    public static double cameraOffset = DEFAULT;                // aims a little to one side: Aim Tuner (0)
 }
 ```
 
@@ -1369,11 +1369,11 @@ public static class Aim {                                       // a fixed name:
     public static double goalX = 13;                            // inches right of centre (BIOBUZZ)
     public static double goalY = -13;                           // inches from centre, - = our half (BIOBUZZ)
     public static boolean mirrorForRed = false;                 // BIOBUZZ: turned, not mirrored (true)
-    public static double turnKp = DEFAULT_FROM_CATALOG;         // whole-robot aim: push per degree off (0.02)
-    public static double turnKd = DEFAULT_FROM_CATALOG;         // brake near the goal (0.002)
-    public static double maxTurnPower = DEFAULT_FROM_CATALOG;   // the most it turns by itself (0.5)
-    public static double toleranceDeg = DEFAULT_FROM_CATALOG;   // "aimed" within this, degrees (2)
-    public static double rumbleDeg = DEFAULT_FROM_CATALOG;      // rumbleWhenAimed(): buzz within this (4)
+    public static double turnKp = DEFAULT;                      // whole-robot aim: push per degree off (0.02)
+    public static double turnKd = DEFAULT;                      // brake near the goal (0.002)
+    public static double maxTurnPower = DEFAULT;                // the most it turns by itself (0.5)
+    public static double toleranceDeg = DEFAULT;                // "aimed" within this, degrees (2)
+    public static double rumbleDeg = DEFAULT;                   // rumbleWhenAimed(): buzz within this (4)
 }
 ```
 
@@ -1458,8 +1458,8 @@ public static boolean shootOnMove = false;                  // true only after t
 // Seconds a piece is in the air, from a slow-motion video: count the frames from leaving the
 // launcher to reaching the goal, divide by the video's frames per second.
 public static double flightSec = MEASURE;                   // seconds in the air (slow-motion video)
-public static double flightSecPerIn = DEFAULT_FROM_CATALOG; // longer shots fly longer: per inch (0)
-public static double maxLeadIn = DEFAULT_FROM_CATALOG;      // never lead more than this, inches (24)
+public static double flightSecPerIn = DEFAULT;              // longer shots fly longer: per inch (0)
+public static double maxLeadIn = DEFAULT;                   // never lead more than this, inches (24)
 // Where the shooter is from the robot's centre (a turret's pivot), and a camera on the body:
 // inches forward (+) and left (+). A camera on the turret sits at the turret's pivot.
 public static double shooterForwardIn = MEASURE;            // inches forward of the centre (a tape)
@@ -1537,11 +1537,11 @@ the numbers; `Controls.java` (inside `buttons(...)`) for your own buttons.
 // In your Tunables.Launcher section (change the lines you already have, add the others).
 public static double kP = MEASURE;                          // speed control (Flywheel Finder)
 public static double kI = MEASURE;                          // speed control (Flywheel Finder)
-public static double kD = DEFAULT_FROM_CATALOG;             // speed control (0)
+public static double kD = DEFAULT;                          // speed control (0)
 public static double kF = MEASURE;                          // steady power (Flywheel Finder)
 public static double nominalVolts = MEASURE;                // battery volts for kF (Flywheel Finder)
-public static double trimStepPercent = DEFAULT_FROM_CATALOG; // one D-pad press (1%)
-public static double trimMaxPercent = DEFAULT_FROM_CATALOG; // never more than this each way (15%)
+public static double trimStepPercent = DEFAULT;             // one D-pad press (1%)
+public static double trimMaxPercent = DEFAULT;              // never more than this each way (15%)
 // Battery compensation, OFF by default (not yet proven on a real robot: try it and tell us).
 public static boolean batteryCompensation = true;           // true = F follows the battery (false)
 ```
@@ -1597,8 +1597,8 @@ public static class Hood {                                      // "hood" in the
     // Optional: the hood's angle at each stop (any scale, e.g. 0 = steep end, 30 = flat end).
     public static double angleA = MEASURE;                      // the angle at stop A (an angle app)
     public static double angleB = MEASURE;                      // the angle at stop B (an angle app)
-    public static double travelSec = DEFAULT_FROM_CATALOG;      // stop to stop, seconds (0.5, or the servo's)
-    public static double startAngle = DEFAULT_FROM_CATALOG;     // where it goes at START (angle A)
+    public static double travelSec = DEFAULT;                   // stop to stop, seconds (0.5, or the servo's)
+    public static double startAngle = DEFAULT;                  // where it goes at START (angle A)
 }
 ```
 
@@ -1653,9 +1653,9 @@ public static class Hood {                                      // "hood" in the
     public static double posB = MEASURE;                        // ticks at stop B (Hood Finder)
     public static double angleA = MEASURE;                      // the angle at stop A (an angle app)
     public static double angleB = MEASURE;                      // the angle at stop B (an angle app)
-    public static double kP = DEFAULT_FROM_CATALOG;             // power per tick off (0.005)
-    public static double maxPower = DEFAULT_FROM_CATALOG;       // the most power (0.5)
-    public static double tolerance = DEFAULT_FROM_CATALOG;      // ready within this (1/50 of the range)
+    public static double kP = DEFAULT;                          // power per tick off (0.005)
+    public static double maxPower = DEFAULT;                    // the most power (0.5)
+    public static double tolerance = DEFAULT;                   // ready within this (1/50 of the range)
 }
 ```
 
@@ -1706,8 +1706,8 @@ public static class Turret {                                    // "turret" in t
     public static double min = MEASURE;                         // furthest right, degrees (Motor Finder)
     public static double max = MEASURE;                         // furthest left, degrees: 0 = forward, + = left
     public static double homeAngle = MEASURE;                   // where the switch closes (turret-setup.md)
-    public static double homingPower = DEFAULT_FROM_CATALOG;    // how slowly it looks for the switch (0.2)
-    public static double homingTimeout = DEFAULT_FROM_CATALOG;  // the most seconds it looks (5)
+    public static double homingPower = DEFAULT;                 // how slowly it looks for the switch (0.2)
+    public static double homingTimeout = DEFAULT;               // the most seconds it looks (5)
 }
 ```
 
@@ -1740,8 +1740,8 @@ public static class Turret {                                    // "turret" in t
     public static double angleA = MEASURE;                      // the turret's angle there (an angle app)
     public static double posB = MEASURE;                        // servo position, other end (Servo Finder)
     public static double angleB = MEASURE;                      // the turret's angle there (an angle app)
-    public static double travelSec = DEFAULT_FROM_CATALOG;      // posA to posB, seconds (0.6, or the servo's)
-    public static double startAngle = DEFAULT_FROM_CATALOG;     // sent here at START (0)
+    public static double travelSec = DEFAULT;                   // posA to posB, seconds (0.6, or the servo's)
+    public static double startAngle = DEFAULT;                  // sent here at START (0)
 }
 ```
 
@@ -1770,9 +1770,9 @@ turret = add(Turret.crServo("turret").analogEncoder("turret_pos").continuous().f
 public static class Turret {                                    // "turret" in the configuration
     // No min and max: it turns round and round.
     public static double kP = 0.015;                            // push per degree off, CR servo (0.02)
-    public static double kD = DEFAULT_FROM_CATALOG;             // brake near the target (0.001)
+    public static double kD = DEFAULT;                          // brake near the target (0.001)
     public static double maxPower = 1.0;                        // a CR servo's full speed (0.8)
-    public static double tolerance = DEFAULT_FROM_CATALOG;      // "aimed" within this, degrees (1.0)
+    public static double tolerance = DEFAULT;                   // "aimed" within this, degrees (1.0)
     public static double encoderOffset = MEASURE;               // encoder reading, pointing forward
 }
 ```
@@ -3016,7 +3016,7 @@ public class DriveTuner extends DriveTunerOpMode {
 
 ### How do I set the flywheel numbers?
 
-Before you have them, write `DEFAULT_FROM_CATALOG` in their place (or leave the lines out): the launcher
+Before you have them, write `DEFAULT` in their place (or leave the lines out): the launcher
 starts from the parts catalog's numbers for its motor
 (a goBILDA 6000 RPM motor: kF 11.7, kP 1.17, kI 0.117, and 60% of its top speed, 3600 RPM) and INIT
 says so. Then run the **Flywheel Finder** (in the [starter kit](starter-kit.md)) and copy its line into

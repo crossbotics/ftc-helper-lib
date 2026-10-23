@@ -8,13 +8,13 @@ minutes: 10
 needs: [flywheel]
 kit_bots: [gobilda, rev, studica]
 since: v0.17.1
-docs: [guides/tunables.md#default_from_catalog-and-measure, guides/tunables.md#first-run-what-you-get-before-tuning, tutorials/start/09-shooter-and-camera.md#the-first-spin-up-with-no-numbers]
+docs: [guides/tunables.md#default-and-measure, guides/tunables.md#first-run-what-you-get-before-tuning, tutorials/start/09-shooter-and-camera.md#the-first-spin-up-with-no-numbers]
 ---
 
 ## Why
 
 A new launcher should work before anyone has run the Flywheel Finder. With `kP` to `kF` and
-`speedRpm` written as `DEFAULT_FROM_CATALOG` in `Tunables.java`, the library starts from numbers worked out
+`speedRpm` written as `DEFAULT` in `Tunables.java`, the library starts from numbers worked out
 from the motor in the parts catalog (kF 11.7, kP 1.17, kI 0.117 and 3600 RPM for a goBILDA 6000 RPM motor). We want to know these
 starting values spin YOUR wheel to its speed.
 
@@ -26,7 +26,7 @@ starting values spin YOUR wheel to its speed.
 ## Setup
 
 - `Launcher.flywheel("name", "motor-id")` in `Robot.java`, with the real motor's catalog id.
-- In `Tunables.java`, the launcher's `kP`, `kI`, `kD`, `kF` and `speedRpm` written as `DEFAULT_FROM_CATALOG`
+- In `Tunables.java`, the launcher's `kP`, `kI`, `kD`, `kF` and `speedRpm` written as `DEFAULT`
   (`import static com.crossbotics.ftchelper.robot.Starting.*;` at the top). Note your own numbers first,
   to put them back after.
 - A charged battery (12.5 V or more).
