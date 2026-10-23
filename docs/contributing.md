@@ -107,6 +107,37 @@ https://crossbotics.com/ftc-helper/testing/ and send the result with the "Test r
 test: copy a file in `testing/tests/`, change it, and run `python3 tools/check_tests.py --fix`
 ([how](../testing/README.md#add-a-test)).
 
+## When to release
+
+- **Once a week:** the code changes made that week go out together in one release, with one set of
+  notes. Until then they collect under "Unreleased" in `CHANGELOG.md`, and the docs site shows them as
+  "Coming in the next release".
+- **A larger change** (a new tool, a new module) can go out on its own when it is ready.
+- **An urgent fix** (something that stops teams) goes out at once, as a bug-fix version.
+
+**Why:** each release sends an email to every team that watches the releases. Fewer, fuller releases are
+easier to follow than many small ones.
+
+## Docs fixes between releases
+
+A fix to the docs of something already released (a typo, a clearer step, a wrong number) does not need
+a release. The site builds its docs from the `docs-live` branch: the last release plus these fixes.
+
+1. Make the fix on `main` as usual, in a commit that changes only `docs/` (and `README.md`).
+2. Put the same commit on `docs-live` and push it:
+
+```bash
+git checkout docs-live
+git cherry-pick <the commit>
+git push origin docs-live
+git checkout main
+```
+
+3. Deploy the site (crossbotics `./scripts/deploy.sh --go`): the pages update, and no email goes out.
+
+Docs for a feature that is not released yet stay on `main` only: teams must not read about something
+their version does not have. A release moves `docs-live` to the new tag (step 4 below).
+
 ## Releasing a version
 
 The programming lead does this after merging changes:
@@ -138,6 +169,8 @@ git push origin main --tags
 ```bash
 gh release create v0.2.0 --verify-tag --title "v0.2.0" --notes-file notes.md
 ```
+
+4. Move `docs-live` to the release, so the site's docs start from it: `git push --force origin v0.2.0:refs/heads/docs-live`.
 
 **Why:** a tag alone sends no message. Teams that click **Watch > Custom > Releases** on GitHub get an
 email for each release, and that is how they learn to update ([Keep it up to date](02-keep-up-to-date.md#find-out-about-a-new-version)).
