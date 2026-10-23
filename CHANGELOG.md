@@ -4,6 +4,14 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+### Added
+
+- **Edit robot** in the simulator page: shape your robot with the mouse (drag, arrow keys or numbers in mm),
+  check every pose against the 18 in start cube and the 18 x 24 in, 29 in tall rules (a part that sticks
+  out turns red), and copy the `.looks(...)` Java for each changed part into `Robot.java`. **Try it** uses
+  the new shapes in the running simulator (in memory only). The simulator holds still while you edit.
+  See the simulator guide, "Edit robot: shape your robot".
+
 ### Changed
 
 - **Better guessed shapes in the simulator robot file.** A part with no `looks(...)` still gets a guessed

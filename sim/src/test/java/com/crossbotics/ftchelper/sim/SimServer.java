@@ -42,6 +42,9 @@ import java.util.Map;
  * POST /tests/save  name, text, replace=0|1: writes simulator/scenarios/NAME.sim
  * POST /tests/record  action=start&from=init|now, action=stop (answers the recording: steps, checks), action=cancel
  * POST /tests/run   name, text, measure=0|1: runs a test on the page; GET /tests/status its report; POST /tests/stop
+ * GET /robotedit.js  the Edit robot mode's page code
+ * GET /robot-edit, POST /robot-edit/mode|preview|java|try   Edit robot: shape the robot, get its .looks(...) Java
+ *                   (SimRobotEdit); nothing is written to a file
  */
 final class SimServer {
     private final SimEngine sim;
@@ -67,6 +70,8 @@ final class SimServer {
     final boolean lan;
     /** The page's tests: the recorder, the team's scenario files, a test run on the page. */
     final SimTests tests;
+    /** The page's Edit robot mode. */
+    final SimRobotEdit robotEdit;
 
     SimServer(SimEngine sim, int port, boolean lan) throws IOException {
         this(sim, port, lan, null);
@@ -77,6 +82,7 @@ final class SimServer {
         this.sim = sim;
         this.lan = lan;
         this.tests = new SimTests(sim, robotFile, SimTests.teamDirFromProperty());
+        this.robotEdit = new SimRobotEdit(sim, robotFile);
         this.socket = lan ? new ServerSocket(port, 50) : new ServerSocket(port, 50, InetAddress.getLoopbackAddress());
     }
 
@@ -151,7 +157,7 @@ final class SimServer {
         for (String line : head.split("\r\n")) {
             if (line.toLowerCase(Locale.US).startsWith("content-length:")) length = Integer.parseInt(line.substring(15).trim());
         }
-        boolean plan = path.startsWith("/auto") || path.startsWith("/tests");
+        boolean plan = path.startsWith("/auto") || path.startsWith("/tests") || path.startsWith("/robot-edit");
         if (length < 0 || length > (plan ? MAX_PLAN : MAX_BODY)) return false;   // far too big for a gamepad or a command
         byte[] body = new byte[length];
         int read = 0;
@@ -221,6 +227,10 @@ final class SimServer {
         } else if (method.equals("POST") && path.equals("/cmd")) {
             String reply = command(form(new String(body, StandardCharsets.UTF_8)));
             send(out, 200, "text/plain; charset=utf-8", reply.getBytes(StandardCharsets.UTF_8));
+        } else if (method.equals("GET") && path.equals("/robotedit.js")) {
+            send(out, 200, "text/javascript; charset=utf-8", resource("/sim/robotedit.js"));
+        } else if (path.equals("/robot-edit") || path.startsWith("/robot-edit/")) {
+            send(out, 200, "application/json", robotEdit(method, path, body).getBytes(StandardCharsets.UTF_8));
         } else if (method.equals("GET") && path.equals("/tests.js")) {
             send(out, 200, "text/javascript; charset=utf-8", resource("/sim/tests.js"));
         } else if (path.equals("/tests") || path.startsWith("/tests/")) {
@@ -341,6 +351,21 @@ final class SimServer {
             }
         } catch (RuntimeException e) {
             return "error: " + e.getMessage();
+        }
+    }
+
+    // ----------------------------- Edit robot (SimRobotEdit) -----------------------------
+
+    String robotEdit(String method, String path, byte[] body) {
+        String text = new String(body, StandardCharsets.UTF_8);
+        if (method.equals("GET") && path.equals("/robot-edit")) return robotEdit.json();
+        if (!method.equals("POST")) return "{\"error\":\"not found\"}";
+        switch (path) {
+            case "/robot-edit/mode": return robotEdit.mode("1".equals(form(text).get("on")));
+            case "/robot-edit/preview": return robotEdit.preview(text);
+            case "/robot-edit/java": return robotEdit.java(text);
+            case "/robot-edit/try": return robotEdit.tryIt(text);
+            default: return "{\"error\":\"not found\"}";
         }
     }
 

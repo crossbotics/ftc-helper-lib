@@ -92,8 +92,12 @@ final class SimRobot {
     Path fieldModel = null;
     // The robot file's folder (relative paths in it start here); null for a robot not read from a file.
     final Path dir;
-    // The robot as simple shapes (shape.NAME lines): for the 3D view and the size rules.
-    final SimShapes shapes;
+    // The robot as simple shapes (shape.NAME lines): for the 3D view and the size rules. The page's Edit
+    // robot mode can swap them for changed ones ("Try it", replaceShapes), so read it once per use.
+    volatile SimShapes shapes;
+    // The robot file as read, and its shape lines (shape name -> settings), for Edit robot's changes.
+    final Properties props;
+    final Map<String, Map<String, String>> shapeLines;
     // The physics engine (physics = engine, the default): the robot bumps and slides, its parts hit
     // things. null = the simple rule (physics = simple): a bump stops the whole move.
     SimWorld world = null;
@@ -124,6 +128,7 @@ final class SimRobot {
 
     private SimRobot(Properties p, Path dir) {
         this.dir = dir;
+        this.props = p;
         String teamParts = p.getProperty("parts", "").trim();
         parts = teamParts.isEmpty() ? SimParts.catalog() : SimParts.withTeamFile(dir.resolve(teamParts).normalize());
         batteryVolts = num(p, "battery", 12.8);
@@ -360,6 +365,7 @@ final class SimRobot {
         Map<String, Map<String, String>> shapeLines = new LinkedHashMap<>();
         for (String key : sortedKeys(p, "shape.")) shapeLines.put(key.substring("shape.".length()), settings(p.getProperty(key)));
         shapes = new SimShapes(this, p, shapeLines, dir);
+        this.shapeLines = java.util.Collections.unmodifiableMap(shapeLines);
         // A camera on a turret (on=turret) needs that shape: the turret's angle turns the camera.
         for (SimCamera c : cameras.values()) {
             if (c.on == null) continue;
@@ -389,6 +395,32 @@ final class SimRobot {
                         + "(it lists devices that ARE described here but not in the configuration yet)");
             }
         }
+    }
+
+    /**
+     * Swaps the robot's shapes for these shape lines (the page's Edit robot "Try it"; nothing is written to
+     * a file). Each shape keeps where it is now (a slide's height, a dropped intake). Throws, and keeps the
+     * old shapes, when the lines are not right.
+     */
+    synchronized void replaceShapes(Map<String, Map<String, String>> lines) {
+        SimShapes next = new SimShapes(this, props, lines, dir);
+        for (SimShapes.Shape s : next.shapes.values()) {
+            SimShapes.Shape old = shapes.shapes.get(s.name);
+            if (old == null || !old.type.equals(s.type)) continue;
+            s.dropped = old.dropped;
+            s.value = s.moves() ? Math.max(s.min, Math.min(s.max, old.value)) : old.value;
+        }
+        shapes = next;
+        if (world != null) world.setRobotParts(shapes.pieces());
+    }
+
+    /** "type, k=v, k=v": a shape line's settings as robot file text (the first word is the type). */
+    static String lineText(Map<String, String> settings) {
+        StringBuilder b = new StringBuilder(settings.getOrDefault("", "box"));
+        for (Map.Entry<String, String> e : settings.entrySet()) {
+            if (!e.getKey().isEmpty()) b.append(", ").append(e.getKey()).append('=').append(e.getValue());
+        }
+        return b.toString();
     }
 
     /** Reads a robot file (see sim/robots/starter.properties). */

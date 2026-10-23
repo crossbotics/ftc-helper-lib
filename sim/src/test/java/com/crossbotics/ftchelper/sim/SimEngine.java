@@ -18,6 +18,11 @@ final class SimEngine {
     final BuiltRun built = new BuiltRun(this);
     /** Run after each physics step (the test recorder watches for an OpMode that stops by itself). */
     volatile Runnable onStep = null;
+    /**
+     * True while the page's Edit robot mode is open: nothing moves (no physics step, no OpMode loop), so the
+     * robot holds still while the team shapes it. False again goes on from where it was.
+     */
+    volatile boolean paused = false;
 
     static {
         // OpModes can tell they run here: an untuned autonomous drive runs anyway (EasyAuto).
@@ -68,15 +73,7 @@ final class SimEngine {
                 double dt = Math.min(0.05, (now - last) / 1e9);
                 last = now;
                 try {
-                    synchronized (robot) {
-                        robot.step(dt);
-                        simSeconds += dt;
-                    }
-                    ds.tick();
-                    placeForInit();
-                    built.tick();
-                    Runnable watch = onStep;
-                    if (watch != null) watch.run();
+                    if (!paused) stepOnce(dt);
                 } catch (RuntimeException e) {
                     ds.physicsError("Simulator physics error: " + e);
                 }
@@ -89,6 +86,19 @@ final class SimEngine {
         }, "physics");
         physics.setDaemon(true);
         physics.start();
+    }
+
+    // One physics step and what goes with it (the OpMode's loop, the INIT spot, the auto builder's run).
+    private void stepOnce(double dt) {
+        synchronized (robot) {
+            robot.step(dt);
+            simSeconds += dt;
+        }
+        ds.tick();
+        placeForInit();
+        built.tick();
+        Runnable watch = onStep;
+        if (watch != null) watch.run();
     }
 
     /** Seconds of physics so far (the time that goes with the positions read under the robot's lock). */
