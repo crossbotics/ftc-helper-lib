@@ -245,10 +245,14 @@ public class MechanismRecipes {
             // Measure with a tape, or shape it in the simulator's Edit robot mode and copy its lines.
             chassisMm(400, 400, 100);                    // the chassis box
             heightMm(380);                               // the whole robot, folded
-            // An intake roller across the front, low: pieces it touches are picked up.
-            intake = add(Intake.motor("intake").part("gobilda-5203-1150")
-                    .looks(Shape.roller("gobilda-gecko-72").atMm(200, 0, 50).lengthMm(300)));
-            // A slide at the back. travelMm: how far it rises.
+            // TWO shapes on one part (an intake arm and its roller): name each shape first, then
+            // looks(intakeArm, intakeRoller). The arm hinges at the front and rests on its stop: passive(),
+            // nothing in the code moves it (range: its two hard stops, degrees). The roller rides on its end.
+            Shape intakeArm = Shape.arm().name("intake_arm").atMm(150, 0, 80).sizeMm(80, 300, 20)
+                    .passive().range(-20, 0).startAt(0);
+            Shape intakeRoller = Shape.roller("gobilda-gecko-72").on("intake_arm").atMm(80, 0, 0).lengthMm(300);
+            intake = add(Intake.motor("intake").part("gobilda-5203-1150").looks(intakeArm, intakeRoller));
+            // ONE shape: write it inside looks(...). A slide at the back; travelMm: how far it rises.
             lift = add(Lift.slide("lift").part("gobilda-5203-435")
                     .looks(Shape.slide().atMm(-170, 0, 20).sizeMm(40, 40, 300).travelMm(600)));
             // A claw on top of the slide: on(lift) makes it go up with the slide.

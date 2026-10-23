@@ -1566,17 +1566,37 @@ drive(Drive.tank("left_drive", "right_drive").motor("gobilda-5203-312").wheel("g
 chassisMm(400, 400, 100);                     // the chassis box, mm
 heightMm(300);                                // the whole robot
 
+// One shape: inside looks(...), on the part's line.
 intakeDeploy = add(Positioner.servo("intake_deploy").part("gobilda-2000-torque")
         .looks(Shape.arm().name("kicker").atMm(150, 90, 100).sizeMm(60, 20, 15)
                 .angle("stowed", 90).angle("deployed", 20)));
-intake = add(Intake.motor("intake").part("gobilda-5203-1150").holds(3)
-        .looks(Shape.arm().name("intake_arm").atMm(150, 0, 100).sizeMm(110, 200, 20)
-                        .range(-15, 90).startAt(90).dropsWhen(intakeDeploy, "deployed", -15),
-               Shape.roller("gobilda-gecko-48-rex").on("intake_arm").atMm(110, 0, 0).lengthMm(300)));
+
+// Two shapes: name each one first, then give the names to looks(...).
+Shape intakeArm = Shape.arm().name("intake_arm").atMm(150, 0, 100).sizeMm(110, 200, 20)
+        .range(-15, 90).startAt(90).dropsWhen(intakeDeploy, "deployed", -15);
+Shape intakeRoller = Shape.roller("gobilda-gecko-48-rex").on("intake_arm").atMm(110, 0, 0).lengthMm(300);
+intake = add(Intake.motor("intake").part("gobilda-5203-1150").holds(3).looks(intakeArm, intakeRoller));
+
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
         .looks(Shape.flywheel("gobilda-hogback-96").atMm(-40, 0, 170)).shotAngle(50));
 fixed(Shape.box("tower").atMm(-90, 0, 40).sizeMm(50, 180, 260));
 ```
+
+**One shape or several on a part.**
+
+- **One shape:** write it inside `looks(...)` on the part's line, as for the kicker and the flywheel
+  above. Its settings can go on the next line (8 spaces further in).
+- **Two or more shapes** (an intake arm and its roller), or one long shape: give each shape a name
+  first, on its own lines, with its comment above it: `Shape intakeArm = Shape.arm()...;`. Then the
+  part's line ends with `.looks(intakeArm, intakeRoller)`. **Why:** each shape reads as one sentence,
+  the part's line stays short, and you never have to count closing brackets.
+- Write the named shapes in `define()`, above the line that adds the part. A shape that rides on
+  another part (`on(lift)`) goes below that part's line.
+- The names are only for your code (camelCase, like any Java variable). The shape's name in the
+  simulator is `name("intake_arm")`, or the part's name when you do not give one.
+- Each `Shape` belongs to one part: make a new one for each part, even when two look the same.
+- The simulator's [Edit robot](../guides/simulator.md) mode prints shapes the same way: one shape
+  inline, several as named shapes.
 
 | On a part | |
 | --- | --- |

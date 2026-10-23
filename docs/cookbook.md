@@ -3151,10 +3151,14 @@ Then open **http://localhost:8780** in a browser. Choose an OpMode, press INIT, 
 // Measure with a tape, or shape it in the simulator's Edit robot mode and copy its lines.
 chassisMm(400, 400, 100);                    // the chassis box
 heightMm(380);                               // the whole robot, folded
-// An intake roller across the front, low: pieces it touches are picked up.
-intake = add(Intake.motor("intake").part("gobilda-5203-1150")
-        .looks(Shape.roller("gobilda-gecko-72").atMm(200, 0, 50).lengthMm(300)));
-// A slide at the back. travelMm: how far it rises.
+// TWO shapes on one part (an intake arm and its roller): name each shape first, then
+// looks(intakeArm, intakeRoller). The arm hinges at the front and rests on its stop: passive(),
+// nothing in the code moves it (range: its two hard stops, degrees). The roller rides on its end.
+Shape intakeArm = Shape.arm().name("intake_arm").atMm(150, 0, 80).sizeMm(80, 300, 20)
+        .passive().range(-20, 0).startAt(0);
+Shape intakeRoller = Shape.roller("gobilda-gecko-72").on("intake_arm").atMm(80, 0, 0).lengthMm(300);
+intake = add(Intake.motor("intake").part("gobilda-5203-1150").looks(intakeArm, intakeRoller));
+// ONE shape: write it inside looks(...). A slide at the back; travelMm: how far it rises.
 lift = add(Lift.slide("lift").part("gobilda-5203-435")
         .looks(Shape.slide().atMm(-170, 0, 20).sizeMm(40, 40, 300).travelMm(600)));
 // A claw on top of the slide: on(lift) makes it go up with the slide.
@@ -3165,6 +3169,9 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
         .looks(Shape.flywheel("gobilda-hogback-96").atMm(-40, 0, 200)));
 ```
 
+**One shape or several:** one shape goes inside `looks(...)` on the part's line. Two or more (an arm
+and its roller): give each a name first (`Shape intakeArm = ...;`), then write `looks(intakeArm, intakeRoller)`
+([how](modules/robot.md#shapes-and-parts)).
 **Why:** without `.looks(...)` the simulator still runs, with a guessed box for each part (marked
 `TODO measure` in the robot file). With it, the 3D view shows your robot, the size check (18 in start
 cube, 29 in tall) is right, and pieces touch the intake where the real one is. Name the part
