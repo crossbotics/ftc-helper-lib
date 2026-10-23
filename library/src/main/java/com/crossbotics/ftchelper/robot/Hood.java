@@ -624,12 +624,47 @@ public final class Hood extends Module<Hood> {
             double[][] r = ok ? rows() : new double[][] {{0, 0}, {500, 1}};
             out.add(fmt("motor.%s = lift, %s, min=%.0f, max=%.0f, gravity=0", device, motorWords(motorId, "gobilda-5203-117"), r[0][0], r[r.length - 1][0])
                     + simTodo(motorId));
+            lookLines(out, t);
             return;
         }
         double h = !ok ? 0.5 : physical(positionAt(t.has("startAngle") ? t.number("startAngle", 0) : angleAt(firstPosition())));
         h = Math.max(0, Math.min(1, h));
         if (partId != null) out.add(fmt("servo.%s = %.3f, %s", device, h, servoWords(partId, "gobilda-2000-torque")) + pulseWords() + simTodo(partId));
         else out.add(fmt("servo.%s = %.3f, part=gobilda-2000-torque", device, h) + pulseWords() + "   # TODO the real servo");
+        lookLines(out, t);   // its arm from looks(...); without looks the hood is not drawn
+    }
+
+    @Override
+    boolean drawsLooks() {
+        return true;
+    }
+
+    @Override
+    boolean makesDefaultShape() {
+        return false;   // without looks(...) it draws nothing: a shape cannot ride on it
+    }
+
+    // An arm shape (Shape.arm()) swings with the hood: its degrees are the hood's angles (Tunables angleA and
+    // angleB, or the calibration table, taken as a straight line between its end rows).
+    @Override
+    String driverFor(Shape s, TunableSection t) {
+        if (!s.type.equals("arm")) {
+            throw new IllegalStateException("Robot.java: " + name() + " is a hood: it swings an arm shape (Shape.arm()), not a " + s.type);
+        }
+        if (!simCalibration(t) || !usesAngles()) {
+            throw new IllegalStateException("Robot.java: " + name() + "'s arm shape needs the hood's angles in degrees: Tunables."
+                    + name() + " posA, posB with angleA, angleB (or a calibration table of {position, angle})");
+        }
+        double[][] r = rows();
+        double p0 = r[0][0], p1 = r[r.length - 1][0], a0 = r[0][1], a1 = r[r.length - 1][1];
+        if (kind == Kind.MOTOR) {
+            // The motor counts from its min stop (the first row): the shape starts at that row's angle.
+            return fmt("motor=%s, ticksPerDeg=%.3f, start=%s", device, (p1 - p0) / (a1 - a0), Shape.n(a0));
+        }
+        // The angle at the simulated servo's raw 0 and 1 (a reversed servo's 0 is the code's 1).
+        double perUnit = (a1 - a0) / (physical(p1) - physical(p0));
+        double at0 = a0 - perUnit * physical(p0);
+        return "servo=" + device + ", pos0=" + Shape.n(at0) + ", pos1=" + Shape.n(at0 + perUnit);
     }
 
     /**

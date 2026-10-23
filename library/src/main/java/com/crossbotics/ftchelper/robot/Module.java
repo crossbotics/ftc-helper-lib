@@ -39,6 +39,8 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
     final List<Shape> looks = new ArrayList<>();
     // While writing the simulator file: this module's Tunables section (another part's shape may need it).
     TunableSection simSection;
+    // While writing the simulator file: where the guessed shapes go (parts with no looks(...)).
+    SimGuess simGuess;
     // A servo part's .fullRange(): its servo gets the seller's whole pulse range (see applyPulse).
     boolean fullRange = false;
     // The INIT note when the servo could not change its pulse range ("" = none).
@@ -97,8 +99,8 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
      */
     public M looks(Shape... shapes) {
         if (!drawsLooks()) {
-            throw new UnsupportedOperationException("Robot.java: " + name() + " cannot take shapes yet (Intake, Positioner, Lift, Wrist, Claw, "
-                    + "Launcher and Indexer can). Draw it in the simulator robot file instead (docs/guides/simulator.md).");
+            throw new UnsupportedOperationException("Robot.java: " + name() + " cannot take shapes (the parts that move can: Intake, Positioner, Lift, "
+                    + "Arm, Wrist, Claw, Turret, Launcher, Hood and Indexer). Draw it in the simulator robot file instead (docs/guides/simulator.md).");
         }
         for (Shape s : shapes) {
             if (s.owner != null && s.owner != this) {
@@ -275,6 +277,30 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
     String driverFor(Shape s, TunableSection t) {
         if (s.spins()) return "motor=" + device;
         throw new IllegalStateException("Robot.java: " + name() + " cannot move a " + s.type + " shape");
+    }
+
+    /**
+     * The guessed shape line for a part with no looks(...): its place and size from {@link SimGuess}
+     * (the robot's sizes and the other parts), marked TODO measure.
+     *
+     * @param type   the shape's kind, e.g. "slide"
+     * @param driver what moves it, e.g. "motor=lift, ticksPerIn=100.0"
+     */
+    final String guessLine(String type, String driver) {
+        return guess().line(device, type, driver);
+    }
+
+    // This part's guessed place (one is worked out for the part alone when the robot did not plan one).
+    final SimGuess.Spot guess() {
+        SimGuess.Spot s = guessPlan().spot(this);
+        if (s == null) throw new IllegalStateException(name() + ": no guessed shape");
+        return s;
+    }
+
+    // The robot's plan for the guessed shapes (or one for this part alone).
+    final SimGuess guessPlan() {
+        if (simGuess == null) simGuess = new SimGuess(null, Double.NaN, java.util.Collections.<Module<?>>singletonList(this));
+        return simGuess;
     }
 
     /** The shape lines of {@link #looks} (a box never moves: no driver). */

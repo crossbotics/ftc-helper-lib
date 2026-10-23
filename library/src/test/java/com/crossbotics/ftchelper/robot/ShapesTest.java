@@ -81,7 +81,8 @@ public class ShapesTest {
             }
         };
         String all = lines(r);
-        assertTrue(all, all.contains("shape.intake = roller, at=8,0,2, size=2x14x2, motor=intake   # TODO"));
+        // a 2 in roller across the front of the guessed 18 in chassis, low: it takes in pieces the robot drives onto
+        assertTrue(all, all.contains("shape.intake = roller, at=8,0,2, size=2x14x2, motor=intake   # TODO measure: place and size"));
         assertTrue(all, all.contains("holds=3   # TODO"));
         assertTrue(all, !all.contains("robot.lengthIn"));
     }
@@ -164,11 +165,132 @@ public class ShapesTest {
         expectArg(() -> Intake.motor("i").part("gobilda-5203-118"), "gobilda-5203-117");
         expectArg(() -> Shape.arm().axis("sideways"), "axis");
         try {
-            Arm.motor("arm", "gobilda-5203-117").looks(Shape.box("x"));
+            Camera.webcam("Webcam 1").looks(Shape.box("x"));
             fail("expected an error");
         } catch (UnsupportedOperationException e) {
             assertTrue(e.getMessage(), e.getMessage().contains("cannot take shapes"));
         }
+    }
+
+    // ----------------------------- the guesses start from what the code knows -----------------------------
+
+    public static class GuessNumbers {
+        public static class Lift { public static double min = 0, max = 1100; }
+        public static class Arm { public static double min = -20, max = 120; }
+    }
+
+    @Test public void guessesSitInsideTheChassisFromChassisMm() {
+        String all = lines(new RobotDefinition() {
+            @Override protected void define() {
+                tunables(GuessNumbers.class);
+                drive(Drive.tank("l", "r"));
+                chassisMm(400, 300, 80);                       // 15.75 x 11.81 x 3.15 in
+                add(Intake.motor("intake").part("gobilda-5203-1150"));
+                add(Lift.slide("lift").part("gobilda-5203-435"));
+            }
+        });
+        // The roller's front at the chassis' front (7.87 in), 2 in up; 2 in narrower than the chassis.
+        assertTrue(all, all.contains("shape.intake = roller, at=6.87,0,2, size=2x9.81x2, motor=intake   # TODO measure: place and size"));
+        // The slide at the back (-7.87 in), on the chassis; as tall as the 18 in cube allows; it travels
+        // up to 29 in (29 - 0.25 - 3.15 - 14 = 11.6 in), so 1100 counts over 11.6 in.
+        assertTrue(all, all.contains("shape.lift = slide, at=-6.87,0,3.15, size=2x8x14, axis=up, motor=lift, ticksPerIn=94.8   # TODO measure: place, size and travel"));
+    }
+
+    @Test public void aClawRidesTheLiftAndTheFlywheelTheTurret() {
+        String all = lines(new RobotDefinition() {
+            @Override protected void define() {
+                tunables(GuessNumbers.class);
+                drive(Drive.tank("l", "r"));
+                heightMm(400);                                    // 15.75 in: the stage is shorter
+                add(Lift.slide("lift"));
+                add(Claw.servo("claw"));
+                add(Turret.motor("turret", "gobilda-5203-117"));
+                add(Launcher.flywheel("launcher", "gobilda-5203-6000"));
+            }
+        });
+        // 15.75 - 4 - 2 (the claw on top) - 0.25 = 9.5 in; travel 29 - 0.25 - 4 - 9.5 - 2 = 13.25 in.
+        assertTrue(all, all.contains("shape.lift = slide, at=-8,0,4, size=2x8x9.5, axis=up, motor=lift, ticksPerIn=83.0"));
+        assertTrue(all, all.contains("shape.claw = claw, on=lift, at=2,0,9.5, size=2x0.5x2, servo=claw, pos0=0, pos1=3   # TODO measure: place and size (on top of the lift)"));
+        assertTrue(all, all.contains("shape.turret = turret, at=0,0,4, size=6x6x2, motor=turret,"));
+        // The flywheel: a 96 mm wheel from the catalog, on top of the turret.
+        assertTrue(all, all.contains("shape.launcher = flywheel, on=turret, at=0,0,3.89, size=3.78x0.94x3.78, motor=launcher   "
+                + "# size from the catalog (gobilda-hogback-96, a common flywheel wheel), TODO measure: place and size (on the turret)"));
+    }
+
+    @Test public void aGuessedArmFitsOverItsRange() {
+        String all = lines(new RobotDefinition() {
+            @Override protected void define() {
+                tunables(GuessNumbers.class);
+                drive(Drive.tank("l", "r"));
+                add(Arm.motor("arm", "gobilda-5203-117"));
+                add(Claw.servo("claw"));
+            }
+        });
+        // -20 to 120 degrees, a claw on its end: at -20 the tiles (the hinge 5 in up) keep it to 5 in.
+        assertTrue(all, all.contains("shape.arm = arm, at=0,0,5, size=5x1.5x1.5, axis=left, motor=arm, ticksPerDeg=3.959, start=-20   # TODO measure"));
+        assertTrue(all, all.contains("shape.claw = claw, on=arm, at=5,0,0,"));
+    }
+
+    // ----------------------------- looks(...) on an arm, a turret and a hood -----------------------------
+
+    public static class LooksNumbers {
+        public static class Arm { public static double min = 0, max = 150; }
+        public static class Turret { public static double min = -90, max = 90; }
+        public static class Hood { public static double posA = 0.2, posB = 0.6, angleA = 10, angleB = 50; }
+        public static class Launcher { public static double speedRpm = 2600; }
+    }
+
+    @Test public void anArmATurretAndAHoodDrawTheirLooks() {
+        String all = lines(new RobotDefinition() {
+            @Override protected void define() {
+                tunables(LooksNumbers.class);
+                drive(Drive.tank("l", "r"));
+                Turret turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5)
+                        .looks(Shape.turret().atMm(-50, 0, 120).sizeMm(160, 160, 40)));
+                add(Arm.motor("arm", "gobilda-5203-117").gearRatio(2)
+                        .looks(Shape.arm().atMm(100, 0, 150).sizeMm(250, 30, 30)));
+                add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+                        .hood(com.crossbotics.ftchelper.robot.Hood.servo("hood").part("gobilda-2000-torque")
+                                .looks(Shape.arm().on(turret).atMm(0, 0, 100).sizeMm(80, 60, 5)))
+                        .looks(Shape.flywheel("gobilda-hogback-96").on(turret).atMm(0, 0, 60)));
+            }
+        });
+        // The turret shape turns with its motor (as the guess did): 1425.1 x 5 / 360 counts a degree, from min.
+        assertTrue(all, all.contains("shape.turret = turret, at=-1.97,0,4.72, size=6.3x6.3x1.57, motor=turret, ticksPerDeg=19.793, start=-90"));
+        // The arm swings with its motor from min (0 degrees).
+        assertTrue(all, all.contains("shape.arm = arm, at=3.94,0,5.91, size=9.84x1.18x1.18, motor=arm, ticksPerDeg=7.917, start=0"));
+        // The hood's arm: its degrees from the hood's stops (0.2 -> 10, 0.6 -> 50: 100 a unit, -10 at 0).
+        assertTrue(all, all.contains("shape.hood = arm, on=turret, at=0,0,3.94, size=3.15x2.36x0.2, servo=hood, pos0=-10, pos1=90"));
+        assertTrue(all, all.contains("shape.launcher = flywheel, on=turret"));
+        for (String l : all.split("\n")) if (l.startsWith("shape.")) assertTrue(l, !l.contains("TODO"));
+    }
+
+    public static class ServoTurretNumbers {
+        public static class Turret { public static double posA = 0.2, angleA = -60, posB = 0.8, angleB = 60; }
+    }
+
+    @Test public void aServoTurretDrawsItsLooksAndAWrongKindStops() {
+        String all = lines(new RobotDefinition() {
+            @Override protected void define() {
+                tunables(ServoTurretNumbers.class);
+                drive(Drive.tank("l", "r"));
+                add(Turret.servo("turret").part("gobilda-2000-torque").looks(Shape.turret().atMm(0, 0, 100).sizeMm(150, 150, 30)));
+            }
+        });
+        // -60 at 0.2, 60 at 0.8: 200 degrees a unit, -100 at 0 and 100 at 1.
+        assertTrue(all, all.contains("shape.turret = turret, at=0,0,3.94, size=5.91x5.91x1.18, servo=turret, pos0=-100, pos1=100"));
+        stops("it turns a turret shape (Shape.turret()), not a arm", new RobotDefinition() {
+            @Override protected void define() {
+                drive(Drive.tank("l", "r"));
+                add(Turret.motor("turret", "gobilda-5203-117").looks(Shape.arm().atMm(0, 0, 100).sizeMm(150, 150, 30)));
+            }
+        });
+        stops("is an arm: it swings an arm shape", new RobotDefinition() {
+            @Override protected void define() {
+                drive(Drive.tank("l", "r"));
+                add(Arm.motor("arm", "gobilda-5203-117").looks(Shape.turret().atMm(0, 0, 100).sizeMm(150, 150, 30)));
+            }
+        });
     }
 
     @Test public void numbersAreShort() {

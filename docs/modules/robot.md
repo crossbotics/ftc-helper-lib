@@ -1581,13 +1581,14 @@ fixed(Shape.box("tower").atMm(-90, 0, 40).sizeMm(50, 180, 260));
 | On a part | |
 | --- | --- |
 | `part(id)` | the main motor's or servo's catalog id (a typo stops with the list of ids). A launcher's motor is in `Launcher.flywheel(name, id)`, the drive's in [`Drive.motor(id)`](#drive). On a CR servo the id is only a note (the simulator turns every CR servo at one speed) |
-| `looks(Shape...)` | how it looks. Intake, Positioner, Launcher, Indexer, Lift, Wrist and Claw take shapes; the others are drawn in the robot file ([simulator guide](../guides/simulator.md#robot-shapes)) |
+| `looks(Shape...)` | how it looks. Every part that moves takes shapes: Intake, Positioner, Launcher, Indexer, Lift, Arm, Wrist, Claw, Turret and Hood. A part with no `looks(...)` gets a guessed shape marked TODO (from the chassis, the other parts and the catalog: [simulator guide](../guides/simulator.md#a-robot-file-from-robotjava)) |
 
 | `Shape` | What it is | Moved by |
 | --- | --- | --- |
 | `roller(ids...)` | a cylinder; several ids (90 mm and 60 mm rollers taking turns) draw one as big as the biggest. In the simulator every roller of an Intake takes pieces in, and any roller drags the pieces it touches | spins with its part's motor or CR servo |
 | `flywheel(id)`, `flywheel()` | a launcher wheel (no id: give `diameterMm` and `lengthMm`) | spins with the launcher's motor |
-| `arm()` | swings about a hinge: `atMm` is the hinge, `sizeMm(length, width, thickness)` reaches forward at 0 degrees | a Positioner's, Wrist's or Claw's servo (`angle(position, deg)` twice), or nothing (`passive`) |
+| `arm()` | swings about a hinge: `atMm` is the hinge, `sizeMm(length, width, thickness)` reaches forward at 0 degrees | a Positioner's, Wrist's or Claw's servo (`angle(position, deg)` twice); an Arm's motor (its Tunables degrees, from `min`); a Hood's servo or motor (its angles: Tunables `angleA`/`angleB` or its calibration table); or nothing (`passive`) |
+| `turret()` | turns about the up line: `atMm` is the middle of its bottom, `sizeMm` its box. Parts ride it with `on(turret)` | a Turret's motor, servo or CR servo (its Tunables angles) |
 | `slide()` | moves in a straight line along its axis (default up): `sizeMm` is one stage | a Lift's motor (`travelMm`: how far the stage moves from its `min` to its `max`), or nothing (`passive`, `travelMm`) |
 | `claw()` | two fingers that open and close; it can hold a game piece in the simulator | a Claw's servo |
 | `box(name)` | does not move: `atMm` is the middle of its bottom | nothing |
@@ -1616,7 +1617,9 @@ shape (`angle` on a passive arm, `range` on a servo arm, `travelMm` on anything 
 `lengthMm` on a box or arm), riding `on` a part that has no shape, an intake whose looks have no roller,
 one `Shape` given to two parts, two parts with one name in the robot file, and a `shotAngle` outside
 0 to 180.
-Lines without a shape stay as before: guesses marked TODO.
+A part without `looks(...)` gets a guessed shape marked `TODO measure`: it starts from the chassis
+(`chassisMm`), the height (`heightMm`), the other parts (a claw on the end of the lift, arm or wrist) and
+the catalog, and keeps the robot inside the size rules ([simulator guide](../guides/simulator.md#a-robot-file-from-robotjava)).
 
 ---
 

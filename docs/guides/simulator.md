@@ -450,8 +450,23 @@ time; every other line is yours and is kept, even for the same setting (a measur
 Lines for parts no longer in the code are removed. It stops, writing nothing, when the file describes
 a device differently from the code (`motor.claw` in the file, a claw servo in the code) or names
 other drive motors. Sizes and places come from Robot.java when it gives them (`chassisMm`, each part's
-`looks(...)`: [Shapes](../modules/robot.md#shapes-and-parts)); otherwise the generated shapes are guesses
-marked `TODO` until someone measures them (or the [robot-file skill](robot-file-skill.md) fills them in).
+`looks(...)`: [Shapes](../modules/robot.md#shapes-and-parts)). A part with no `looks(...)` gets a guessed
+shape, marked `TODO measure` until someone measures it (or the [robot-file skill](robot-file-skill.md)
+fills it in). The guesses start from what the code knows:
+
+- **The robot's sizes:** the chassis from `chassisMm` (else 18 x 18 x 4 in), the height from `heightMm`.
+- **A typical place:** the intake roller across the front, low (2 in across, 14 in long or 2 in less than
+  the chassis is wide), so pieces the robot drives onto touch it; a lift at the back; a turret on top in
+  the middle; an arm's hinge in the middle, above the turret and flywheel.
+- **The other parts:** a claw on the end of the wrist, the arm or the lift; a wrist on the end of the arm
+  or on top of the lift; the flywheel on the robot's one turret.
+- **The numbers:** the flywheel's size from the parts catalog (a 96 mm goBILDA wheel); an arm's angles
+  and a lift's counts from `Tunables` (`min` and `max`).
+- **The size rules:** a lift's stage and travel, and an arm's length, are made so the robot fits the
+  18 in start cube and stays under 29 in at full reach. The guesses do not overlap at the start.
+
+The note on each guessed line says what was guessed, for example
+`# TODO measure: place, size and travel (at the back; ...)`.
 
 It also runs **the same Tunables name checks as INIT** and prints them after the file is written: a field
 no part reads (INIT will stop on it, with a "did you mean"), and a section that looks meant for a part

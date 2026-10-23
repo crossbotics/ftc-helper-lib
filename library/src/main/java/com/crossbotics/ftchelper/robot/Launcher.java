@@ -1036,23 +1036,16 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         return true;
     }
 
-    // For the simulator file: the turret the default flywheel shape rides (its device name), or null.
-    // Set by RobotDefinition.simLines when the robot has one turret. A launcher with looks(...) says
-    // where it sits itself (Shape...on(turret)).
-    String simOnTurret = null;
-
     @Override
     void simLines(List<String> out, TunableSection t) {
         String feederLine = indexer != null ? ", feeder=" + indexer.device : "";
         out.add(fmt("motor.%s = flywheel, %s%s, shotDrop=0.15", device, motorWords(motorId, "gobilda-5203-6000"), feederLine)
                 + simTodo(motorId));
-        // On a turret robot the flywheel turns with the turret (the shots go where the turret points).
-        if (looks.isEmpty() && simOnTurret != null) {
-            out.add(fmt("shape.%s = flywheel, on=%s, at=-1,0,2, size=4x2x4, motor=%s   # TODO measure", device, simOnTurret, device));
-        } else if (looks.isEmpty()) {
-            out.add(fmt("shape.%s = flywheel, at=-1,0,6, size=4x2x4, motor=%s   # TODO measure", device, device));
-        }
-        if (!looks.isEmpty()) lookLines(out, t);
+        // No looks(...): a common flywheel wheel (its size from the catalog) on top in the middle, or on
+        // the robot's one turret (it turns with it: the shots go where the turret points). A launcher with
+        // looks(...) says where it sits itself (Shape...on(turret)).
+        if (looks.isEmpty()) out.add(guessLine("flywheel", "motor=" + device));
+        else lookLines(out, t);
         // A hood with shotAngles(...): the simulated shot angle follows the hood servo.
         TunableSection hoodSection = hood == null ? null : hood.simSection != null ? hood.simSection
                 : TunableSection.forFile(robot == null ? null : robot.tunablesClass(), hood.name());

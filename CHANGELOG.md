@@ -2,6 +2,22 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Changed
+
+- **Better guessed shapes in the simulator robot file.** A part with no `looks(...)` still gets a guessed
+  shape marked `TODO measure`, but the guess now starts from what the code knows: the chassis
+  (`chassisMm`), the height (`heightMm`), the other parts (a claw on the end of the lift, arm or wrist; the
+  flywheel on the turret), the parts catalog (the flywheel's size) and Tunables (an arm's angles, a lift's
+  counts). The intake roller sits across the front, low, so the robot picks up pieces it drives onto; a
+  lift sits at the back, a turret on top in the middle. The guesses keep the robot inside the 18 in start
+  cube and 29 in at full reach, and do not overlap at the start. Each note says what was guessed. Nothing
+  changes on the real robot.
+- **Arm, Turret and Hood take `looks(...)`** like the other parts that move (they always wrote a guess
+  before). New: `Shape.turret()` for a turret. An arm shape on an Arm turns with its motor (Tunables
+  degrees); on a Hood it follows the hood's angles (`angleA`/`angleB` or the calibration table).
+
 ## v0.17.5 - 2026-10-23
 
 `DEFAULT`, the short name; every example names its parts; Tunables comments fixed.

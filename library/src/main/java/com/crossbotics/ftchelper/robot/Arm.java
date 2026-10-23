@@ -88,6 +88,32 @@ public final class Arm extends MotorPositions<Arm> {
     }
 
     @Override
+    boolean drawsLooks() {
+        return true;
+    }
+
+    // An arm shape swings with the motor: its counts per degree from the motor and gearRatio, and it starts
+    // at min (the motor's bottom stop). Its angles are the Tunables degrees (0 = level forward, 90 = up).
+    @Override
+    String driverFor(Shape s, TunableSection t) {
+        if (!s.type.equals("arm")) {
+            throw new IllegalStateException("Robot.java: " + name() + " is an arm: it swings an arm shape (Shape.arm()), not a " + s.type);
+        }
+        return armWords(t);
+    }
+
+    // Its range for the simulator file, degrees: Tunables min and max.
+    double[] simRange() {
+        TunableSection t = simSection != null ? simSection : TunableSection.forFile(null, name());
+        double[] d = defaults();
+        return new double[] {t.number("min", d[0]), t.number("max", d[1])};
+    }
+
+    private String armWords(TunableSection t) {
+        return fmt("motor=%s, ticksPerDeg=%.3f, start=%s", device, countsPerUnit(), Shape.n(t.number("min", defaults()[0])));
+    }
+
+    @Override
     void simLines(List<String> out, TunableSection t) {
         double[] d = defaults();
         double min = t.number("min", d[0]), max = t.number("max", d[1]);
@@ -96,7 +122,11 @@ public final class Arm extends MotorPositions<Arm> {
                 + simTodo(motorId));
         secondMotorLine(out, motorId);   // a second motor (alsoMotor): tied to the same arm
         if (switchName != null) out.add(fmt("touch.%s = %s, below=20", switchName, device));
-        out.add(fmt("shape.%s = arm, at=0,0,8, size=9x1.5x1.5, axis=left, motor=%s, ticksPerDeg=%.3f, start=%.0f   # TODO measure",
-                device, device, cpd, min));
+        if (!looks.isEmpty()) {
+            lookLines(out, t);   // its arm from looks(...), with what rides on it
+            return;
+        }
+        // The hinge in the middle, on top; as long as fits the size rules over min to max (see SimGuess).
+        out.add(guessLine("arm", "axis=left, " + armWords(t)));
     }
 }

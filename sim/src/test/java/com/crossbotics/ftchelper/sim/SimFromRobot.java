@@ -31,8 +31,8 @@ import java.util.Set;
  * again and again never adds another block. An intake's {@code holds=} comes from {@code Pieces.max(n)}
  * when the intake does not say.
  *
- * <p>It is a starting point: the code does not know the robot's sizes, so the generated shapes are
- * guesses marked TODO until someone measures them.
+ * <p>It is a starting point: a part with no {@code looks(...)} gets a guessed shape (from the chassis, the
+ * other parts and the parts catalog, inside the size rules), marked TODO measure until someone measures it.
  */
 public final class SimFromRobot {
     private SimFromRobot() { }

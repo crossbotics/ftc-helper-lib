@@ -76,7 +76,7 @@ public final class Wrist extends ServoPositions<Wrist> {
             lookLines(out, t);   // e.g. an arm on the lift: .looks(Shape.arm().on(lift)...)
             return;
         }
-        out.add(fmt("shape.%s = arm, at=9,0,4, size=2.5x1.5x1.5, axis=left, servo=%s, pos0=-90, pos1=90   # TODO measure",
-                device, device));
+        // On the end of the arm, on top of the lift, else at the front (see SimGuess).
+        out.add(guessLine("arm", fmt("axis=left, servo=%s, pos0=-90, pos1=90", device)));
     }
 }

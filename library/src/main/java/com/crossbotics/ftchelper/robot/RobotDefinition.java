@@ -1119,16 +1119,18 @@ public abstract class RobotDefinition {
             for (Module<?> c : m.children()) c.simSection = TunableSection.forFile(tunablesClass, c.name());
             m.simSection = TunableSection.forFile(tunablesClass, m.name());
         }
-        // A camera on a turret turns with it in the simulator too (Camera's line gets on=TURRET), and on
-        // a robot with one turret the launcher's flywheel rides it (the shots go where it points).
-        Turret onlyTurret = null;
-        int turrets = 0;
-        for (Module<?> m : modules) if (m instanceof Turret) { onlyTurret = (Turret) m; turrets++; }
-        for (Module<?> m : modules) if (m instanceof Launcher) ((Launcher) m).simOnTurret = turrets == 1 ? onlyTurret.device : null;
+        // The guessed shapes of the parts with no looks(...): from the chassis, the height and the other
+        // parts (on a robot with one turret the launcher's flywheel rides it: the shots go where it points).
+        SimGuess plan = new SimGuess(chassisIn, heightIn, modules);
+        for (Module<?> m : modules) {
+            for (Module<?> c : m.children()) c.simGuess = plan;
+            m.simGuess = plan;
+        }
+        // A camera on a turret turns with it in the simulator too (Camera's line gets on=TURRET's shape).
         for (Module<?> m : modules) {
             if (!(m instanceof Camera)) continue;
             ((Camera) m).simOnTurret = null;
-            for (Module<?> t : modules) if (t instanceof Turret && ((Turret) t).carries((Camera) m)) ((Camera) m).simOnTurret = t.device;
+            for (Module<?> t : modules) if (t instanceof Turret && ((Turret) t).carries((Camera) m)) ((Camera) m).simOnTurret = t.firstShapeName();
         }
         drive.simLines(out);
         if (odometrySpec != null) odometrySpec.simLines(out);

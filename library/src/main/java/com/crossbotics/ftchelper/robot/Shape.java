@@ -26,7 +26,8 @@ import java.util.Map;
  * are always the robot's own: {@code atMm(forward, left, up)} from the parent (the middle of the
  * chassis on the floor, or the hinge of the arm it rides on).
  *
- * <p>The part that owns the shape moves it: an intake spins its rollers, a positioner swings its arm.
+ * <p>The part that owns the shape moves it: an intake spins its rollers, a positioner swings its arm,
+ * an arm motor swings its arm, a turret turns its turret, a hood servo or motor swings its arm.
  * A {@link #box} does not move ({@code fixed(...)} in Robot.java, or any part's {@code looks}).
  *
  * Docs: docs/modules/robot.md (section "Shapes"); the shape types: docs/guides/simulator.md#robot-shapes
@@ -91,7 +92,8 @@ public final class Shape {
     /**
      * A part that swings about a hinge (an intake that folds, an arm). {@code atMm} is the hinge;
      * {@code sizeMm(length, width, thickness)} is the box that reaches forward from it at 0 degrees.
-     * On a servo, give its angle at two named positions with {@link #angle}.
+     * On a Positioner, Wrist or Claw servo, give its angle at two named positions with {@link #angle}.
+     * An {@link Arm} motor and a {@link Hood} know their angles (Tunables.java) and need none.
      */
     public static Shape arm() {
         return new Shape("arm");
@@ -104,6 +106,15 @@ public final class Shape {
      */
     public static Shape slide() {
         return new Shape("slide");
+    }
+
+    /**
+     * A part that turns about the up line (a turret): {@code atMm} is the middle of its bottom, on the
+     * line it turns about; {@code sizeMm} its box. A {@link Turret} turns it; parts can ride on it with
+     * {@code on(turret)}.
+     */
+    public static Shape turret() {
+        return new Shape("turret");
     }
 
     /**
@@ -298,6 +309,25 @@ public final class Shape {
     }
 
     // ----------------------------- the library's -----------------------------
+
+    /** Where it is from its parent, inches: forward, left, up. */
+    double[] atIn() {
+        return at.clone();
+    }
+
+    /** Its box, inches (forward x left x up), or null when it cannot be worked out (no size given). */
+    double[] sizeInOrNull() {
+        try {
+            return boxSize("?");
+        } catch (IllegalStateException e) {
+            return null;
+        }
+    }
+
+    /** Its axis, or null for the kind's own (up for a slide or turret, left for an arm). */
+    String axisOrNull() {
+        return axis;
+    }
 
     /** The travel from {@link #travelMm}, inches (NaN = not given). */
     double travelIn() {

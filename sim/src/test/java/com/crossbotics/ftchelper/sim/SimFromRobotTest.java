@@ -216,9 +216,9 @@ public class SimFromRobotTest {
         assertTrue(text, text.contains("limelight.limelight = name=limelight, forward=6, left=0, up=12, yaw=0, pitch=30, on=turret"));
         assertTrue("the flywheel rides the turret too: " + text, text.contains("shape.launcher = flywheel, on=turret"));
         // The example's shot table is made-up numbers, not measured on the simulator's pretend launcher:
-        // here the launcher throws like a tuned one from this spot (a fixed 70 degrees and 190 in/s), so
-        // only the aim decides whether the shots go in.
-        text = text.replaceAll("(?m)^shoot\\.launcher = .*$", "shoot.launcher = shape=launcher, angle=70, speed=210");
+        // here the launcher throws like a tuned one from this spot (a fixed 70 degrees and 220 in/s from the
+        // guessed flywheel on the guessed turret: 215 to 223 go in), so only the aim decides whether the shots go in.
+        text = text.replaceAll("(?m)^shoot\\.launcher = .*$", "shoot.launcher = shape=launcher, angle=70, speed=220");
         Files.write(file, text.getBytes(StandardCharsets.UTF_8));
         com.crossbotics.ftchelper.match.MatchMemory.clear();
         try (SimRun s = new SimRun(file.toString())) {

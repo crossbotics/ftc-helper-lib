@@ -974,13 +974,44 @@ public final class Turret extends Module<Turret> {
             out.add(fmt("touch.%s = %s, at=%.0f, width=%.0f", switchName, driven, (home - start) * cpd, Math.max(1, 2 * cpd)));
         }
         if (continuous) {
-            out.add(fmt("shape.%s = turret, at=0,0,8, size=6x6x2, motor=%s, ticksPerDeg=%.3f, start=%s, minDeg=-180, maxDeg=180   # TODO measure",
-                    device, driven, cpd, Shape.n(start)));
+            shapeWords(out, t, fmt("motor=%s, ticksPerDeg=%.3f, start=%s, minDeg=-180, maxDeg=180", driven, cpd, Shape.n(start)));
         } else {
             // start = min: the simulator counts the shape's angle from the motor's min stop.
-            out.add(fmt("shape.%s = turret, at=0,0,8, size=6x6x2, motor=%s, ticksPerDeg=%.3f, start=%.0f   # TODO measure",
-                    device, driven, cpd, lo));
+            shapeWords(out, t, fmt("motor=%s, ticksPerDeg=%.3f, start=%.0f", driven, cpd, lo));
         }
+    }
+
+    // What turns its turret shape, while its lines are written ("motor=turret, ticksPerDeg=..."): see driverFor.
+    private String simDriver = null;
+
+    // Its turret shape: from looks(...), or the guess (in the middle, on top: see SimGuess).
+    private void shapeWords(List<String> out, TunableSection t, String driver) {
+        if (looks.isEmpty()) {
+            out.add(guessLine("turret", driver));
+            return;
+        }
+        simDriver = driver;
+        try {
+            lookLines(out, t);
+        } finally {
+            simDriver = null;
+        }
+    }
+
+    @Override
+    boolean drawsLooks() {
+        return true;
+    }
+
+    // A turret shape (Shape.turret()) turns with the turret; a box rides it without a driver.
+    @Override
+    String driverFor(Shape s, TunableSection t) {
+        if (!s.type.equals("turret")) {
+            throw new IllegalStateException("Robot.java: " + name() + " is a turret: it turns a turret shape (Shape.turret()), not a " + s.type
+                    + " (a part that rides on it: .on(turret) in that part's looks)");
+        }
+        if (simDriver == null) throw new IllegalStateException("Robot.java: " + name() + ": its shapes are written with its own lines");
+        return simDriver;
     }
 
     // A servo turret: the servo and a turret shape whose angle follows the servo's position.
@@ -998,7 +1029,6 @@ public final class Turret extends Module<Turret> {
         }
         out.add(partId != null ? fmt("servo.%s = 0.5, %s", device, servoWords(partId, "gobilda-2000-torque")) + pulseWords() + simTodo(partId)
                 : fmt("servo.%s = 0.5, part=gobilda-2000-torque", device) + pulseWords() + "   # TODO the real servo");
-        out.add(fmt("shape.%s = turret, at=0,0,8, size=6x6x2, servo=%s, pos0=%s, pos1=%s   # TODO measure",
-                device, device, Shape.n(at0), Shape.n(at1)));
+        shapeWords(out, t, fmt("servo=%s, pos0=%s, pos1=%s", device, Shape.n(at0), Shape.n(at1)));
     }
 }

@@ -172,7 +172,9 @@ public final class Lift extends MotorPositions<Lift> {
             lookLines(out, t);   // its slide from looks(...), with what rides on it
             return;
         }
-        out.add(fmt("shape.%s = slide, at=-7,0,4, size=2x8x8, axis=up, motor=%s, ticksPerIn=%.0f   # TODO measure",
-                device, device, Math.max(1, max / 8)));
+        // A slide at the back (see SimGuess): its travel made to fit 29 in, so its counts per inch are
+        // Tunables min to max over that travel.
+        double span = Math.abs(max - min) < 1 ? 1 : max - min;
+        out.add(guessLine("slide", fmt("axis=up, motor=%s, ticksPerIn=%.1f", device, span / guessPlan().travelIn(this))));
     }
 }

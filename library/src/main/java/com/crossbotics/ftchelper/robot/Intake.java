@@ -340,8 +340,8 @@ public final class Intake extends Module<Intake> implements Toggleable {
             else out.add("motor." + n + " = free, part=gobilda-5203-1150   # TODO the real motor");
         }
         if (looks.isEmpty()) {
-            out.add("shape." + device + " = roller, at=8,0,2, size=2x14x2, "
-                    + (servos ? "crservo=" : "motor=") + names[0] + "   # TODO measure: place and size");
+            // A roller across the front, low (see SimGuess): pieces the robot drives onto touch it.
+            out.add(guessLine("roller", (servos ? "crservo=" : "motor=") + names[0]));
         } else {
             boolean roller = false;
             for (Shape s : looks) if (s.spins()) roller = true;
