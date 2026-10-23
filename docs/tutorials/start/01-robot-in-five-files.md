@@ -130,7 +130,7 @@ public class Robot extends RobotDefinition {
 ## 2. Tunables.java: the numbers
 
 ```java
-import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT (docs/guides/tunables.md)
+import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT (1)!
 
 public class Tunables {
     public static class Drive {
@@ -154,8 +154,7 @@ public class Tunables {
         public static double stepRpm = 50;                          // speed change per D-pad press
         public static double readyBandRpm = 107;                    // "at speed" this close: goBILDA feeds above 1200
         public static double idleRpm = DEFAULT;                     // speed between shots, 0 = stop (0)
-        // goBILDA's own tested numbers for this kit bot (its starter code: P 40, F 12.5), so kept here.
-        // Without these lines the library would start from the parts catalog's (kF 11.7, kP 1.17, kI 0.117).
+        // goBILDA's tested gains for this kit bot (its code: P 40, F 12.5). (2)!
         public static double kP = 40;                               // push per speed error: goBILDA's number
         public static double kI = 0;                                // fix a steady error: goBILDA's number
         public static double kD = 0;                                // brake changes: goBILDA's number
@@ -166,7 +165,7 @@ public class Tunables {
 
     public static class Windmill {
         public static double power = DEFAULT;                       // feeder power, 0 to 1 (1.0)
-        public static double feedSec = 0.3;                         // seconds per piece: a starting guess
+        public static double feedSec = 0.3;                         // seconds per piece: a starting guess (3)!
     }
 
     public static class Auto {
@@ -177,6 +176,13 @@ public class Tunables {
     }
 }
 ```
+
+1. `DEFAULT` and `MEASURE` come from this one import line. More on the two words: below, and in
+   [the Tunables guide](../../guides/tunables.md#default-and-measure).
+2. Without these four lines, the library starts from the parts catalog's numbers for this motor
+   (kF 11.7, kP 1.17, kI 0.117). goBILDA tested its own numbers on this robot, so we keep them.
+3. goBILDA's code runs the windmill for as long as the button is held. Here it runs `feedSec` per
+   piece. 0.3 s is a first guess: watch it feed, and tune it.
 
 - **One number per line**, each with a short comment (`// ...`) that says what it is. The number in
   brackets at the end is the library's default.

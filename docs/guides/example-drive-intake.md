@@ -76,8 +76,22 @@ double speed = slowMode ? SLOW_SPEED : 1.0;   // "a ? b : c" = if a then b, else
 drive.drive(forward, strafe, turn, speed);    // every wheel power times speed
 ```
 
-A toggle is invisible, so `ToggleRumble` buzzes: two = on, one = off. `SLOW_SPEED` (0.35) is a
+A toggle is invisible, so `ToggleRumble` buzzes: two = on, one = off. A toggle flips each press:
+the first press runs the first action (ON), the next press the second (OFF). `SLOW_SPEED` (0.35) is a
 constant at the top of the file, so it is easy to find and change.
+
+## The rest of the program
+
+- `"intake"` and the four drive motor names must match the names in YOUR robot configuration.
+  Other drive names: set them on a `DriveConfig` ([tutorial 04](../tutorials/04-drive-mecanum.md)).
+- `powers(1.0, -0.7)`: in at full power to grab pieces quickly, out at 70% so pieces are pushed
+  out, not thrown.
+- The sticks: `shape(stick, 0.05, 2)` ignores tiny values (a resting stick is rarely exactly 0) and
+  squares the rest for fine control. The minus on `left_stick_y` is there because the stick reads
+  negative when pushed up ([Signs and units](../conventions.md)).
+- `t.warn(controls.getSlowActionWarning())`: if a button action took too long, it froze the whole
+  robot. The screen says which one.
+- `finally` stops the drive and the intake, however the program ends.
 
 ## Make it yours
 

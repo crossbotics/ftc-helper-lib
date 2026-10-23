@@ -48,10 +48,15 @@ slow-motion video). If they disagree, countsPerRev is wrong.
 
 ```java
 PositionServo hood = PositionServo.create(hardwareMap, "hood")
-        .degrees(0.10, 0, 0.90, 25)     // two measured points
-        .travelTime(0.4);
-MotorFeeder feeder = MotorFeeder.create(hardwareMap, "feeder").power(1.0).feedTime(0.25);
+        .degrees(0.10, 0, 0.90, 25)     // measured: raw 0.10 = 0 deg, raw 0.90 = 25 deg (1)!
+        .travelTime(0.4); // (2)!
+MotorFeeder feeder = MotorFeeder.create(hardwareMap, "feeder").power(1.0).feedTime(0.25); // (3)!
 ```
+
+1. The hood works in degrees: two measured points and a straight line in between.
+2. The servo needs about 0.4 s for a full move. A servo cannot report where it is, so the
+   launcher uses this to know when the hood has arrived.
+3. Full power (1.0) for 0.25 seconds pushes one piece into the flywheel.
 
 Measure the hood: move the servo with the Hardware Check, write down the raw position at the lowest
 and the highest angle, and measure those angles (a phone level app works). Any part that goes to an
@@ -77,7 +82,9 @@ How to get YOUR numbers:
 2. Put the robot 24 in from the target (tape measure, to the same point on the robot every time).
 3. Find the rpm and hood angle where 5 shots in a row score. Write them down.
 4. Repeat at 3-5 distances across where you will shoot from.
-5. Put the points in the table. Between them the table draws straight lines.
+5. Put the points in the table. Between them the table draws straight lines (36 in is halfway
+   between 24 and 48). Outside them it uses the nearest end: it never guesses past what you
+   tested, and telemetry says "(outside the table)".
 
 Different game pieces (2026-27: POLLEN and NECTAR) may need their own tables.
 
@@ -101,7 +108,9 @@ launcher.update();
 .bindPress(Pad.G2, Btn.B, launcher::idle)
 ```
 
-`shoot(3)` does: spin up if needed; wait until the flywheel is ready AND the hood has arrived (AND
+`shoot()` does not wait: it only asks for shots, and `launcher.update()` feeds each piece when
+ready, so the robot keeps driving meanwhile. `shotInterval(0.3)` gives the flywheel 0.3 s to get
+back to speed between pieces. `shoot(3)` does: spin up if needed; wait until the flywheel is ready AND the hood has arrived (AND
 any `requireReady` checks, like an aimed turret); feed one; wait `shotInterval`; repeat. If it is
 not ready within `readyTimeout`, it gives up and says why: "gave up: flywheel".
 

@@ -217,6 +217,12 @@ public static class Hood {
 }
 ```
 
+Where the turret's numbers come from (turret v8.1GB): its range is -190 to +190, a bit more than one
+turn, so it can point anywhere and picks the way round that stays inside the range (the design's checks
+turn it +/-190 without pulling the wires). The switch (REV-31-1462) sits at -45 degrees on the bearing
+housing and its magnet at -45 degrees on the turret, so they line up when the turret points straight
+forward: `homeAngle = 0`. Measure your own ([How to find `homeAngle`](#2-how-does-it-know-its-angle)).
+
 **B. A servo turret, +/-90, no hood.** Light and simple: no encoder and no homing.
 
 ```java

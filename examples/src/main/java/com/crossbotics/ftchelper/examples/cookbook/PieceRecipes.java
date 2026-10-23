@@ -18,7 +18,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 /**
  * Cookbook: game pieces (docs/cookbook.md#game-pieces). Which piece is in the robot, how many it holds,
  * and which one fires next, from a colour sensor, a distance sensor or a second camera.
- *
  * The Piece Tuner is its own file: PieceTuner.java.
  *
  * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
@@ -38,10 +37,8 @@ public class PieceRecipes {
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
 
             // recipe: pieces-count
-            // At the top of the class: public Pieces pieces;   Here in define(), ABOVE the intake line
-            // (each loop the count is then up to date before the intake asks "full?"):
-            // the kinds of piece (BIOBUZZ: yellow POLLEN, red and blue NECTAR), a sensor where they
-            // come in, one at the "ready to fire" slot (optional), the most the rules allow, the preload.
+            // At the top of the class: public Pieces pieces;   Here in define(), ABOVE the intake line.
+            // The kinds of piece, a sensor where they come in, one at the "ready to fire" slot (optional).
             pieces = add(Pieces.kinds("POLLEN", "RED_NECTAR", "BLUE_NECTAR")
                     .comingIn(PieceSensor.color("intake_color"))    // a REV Color Sensor V3
                     .readyToFire(PieceSensor.color("ready_color"))  // another one
@@ -50,16 +47,14 @@ public class PieceRecipes {
             // end recipe
 
             // recipe: intake-stops-when-full
-            // ADD .stopsWhen(...) to the intake line you already have (do not write a second intake line),
-            // and put the Pieces line above the intake line. It does not pull in a 5th piece
-            // ("() ->": asked every loop). Pushing out still works.
-            // .part(...): which motor it is (optional, recommended: better starting values, a true simulator).
+            // ADD .stopsWhen(...) to your intake line (no second intake line); the Pieces line goes above it.
+            // .part(...): which motor it is (optional, recommended).
             intake = add(Intake.motor("intake").part("gobilda-5203-1150").stopsWhen(() -> pieces.isFull()));
             // end recipe
 
             // recipe: launcher-needs-a-piece
             // Each feed counts one piece out. requireReady: no feed with nothing to fire.
-            // .part(...): the indexer's servo (optional, recommended: better starting values, a true simulator).
+            // .part(...): the indexer's servo (optional, recommended).
             launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
                     .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
                     .requireReady("a piece to fire", () -> !pieces.isEmpty()));
@@ -77,9 +72,8 @@ public class PieceRecipes {
         protected void define() {
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
             // recipe: pieces-other-sensors
-            // A REV 2m Distance Sensor across the intake: a NECTAR (3.6 in) comes closer than a
-            // POLLEN (2.8 in). Size only: it cannot tell a red NECTAR from a blue one.
-            // A second webcam on the ready slot: colours (the main colour in a box of its picture).
+            // A REV 2m Distance Sensor across the intake tells the sizes apart (not the colours).
+            // A second webcam on the ready slot: colours.
             pieces = add(Pieces.kinds("POLLEN", "NECTAR")
                     .comingIn(PieceSensor.distance("intake_distance"))
                     .readyToFire(PieceSensor.camera("Webcam 2"))

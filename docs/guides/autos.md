@@ -333,8 +333,7 @@ public class ChooseInInit extends Auto<Robot> {
              .move("Across to the near side", Tunables.Auto.farToNearInches, 270, 0.7)   // 270 = left
          .end();
 
-        // The plan: plain Java "if", because the pieces are methods. choice(...) gives the option
-        // chosen, as text (a String). equals(...): the same text. "!" means "not".
+        // The plan: plain Java "if". choice(...) = the option chosen, as text. (1)!
         String plan = s.choice("Plan");
         if (!plan.equals("Park only")) Routes.scorePreload(s, robot);
         if (plan.equals("Preload + Cycle + Park")) Routes.cycle(s, robot);
@@ -342,6 +341,8 @@ public class ChooseInInit extends Auto<Robot> {
     }
 }
 ```
+
+1. The pieces are Java methods, so a plain `if` picks them. `choice(...)` gives the text of the option (a String). `equals(...)` asks "the same text?". `!` means "not".
 
 What the drivers see after INIT:
 

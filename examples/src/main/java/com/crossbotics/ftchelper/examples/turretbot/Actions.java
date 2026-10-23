@@ -3,8 +3,8 @@ package com.crossbotics.ftchelper.examples.turretbot;
 import com.crossbotics.ftchelper.robot.Action;
 
 /**
- * Example robot 2, file 4 of 5: the claw's steps. Two parts move together with
- * {@code then(a, b)}; each wait lets a servo get there (about {@code travelSec}, Tunables).
+ * Example robot 2, file 4 of 5: the claw's steps.
+ * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/05-actions/
  */
 public class Actions {
 
@@ -12,7 +12,7 @@ public class Actions {
     public static Action grab(Robot r) {
         return Action.named("Grab")
                 .then(() -> r.clawFold.goTo("grab"), r.claw::open)   // both at once
-                // isDone(): the servo should be there by now (Tunables travelSec).
+                // isDone(): the servo should be there by now (its travelSec in Tunables).
                 .waitUntil("folded out", r.clawFold::isDone, 2.0)
                 .then(r.claw::close)
                 .waitUntil("claw closed", r.claw::isDone, 1.0)       // hold it before moving

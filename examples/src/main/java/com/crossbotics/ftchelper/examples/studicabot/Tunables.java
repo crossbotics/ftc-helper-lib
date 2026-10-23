@@ -25,29 +25,20 @@ public class Tunables {
         public static double outPower = 1.0;                        // power pushing pieces out: Studica's full power
     }
 
-    /**
-     * The flywheel. Studica's code runs it at the right trigger's power, with no set speed. The number
-     * here is the MOTOR's speed (see Robot.java; the wheels turn at half of it): its top speed is 6100,
-     * so 4000 is a starting guess with room to speed up. Tune it by watching shots.
-     */
+    /** The flywheel. Speeds are the MOTOR's (top 6100 RPM; the wheels turn at half). Tune by watching shots. */
     public static class FlyWheel {
         public static double speedRpm = 4000;                       // shot speed (motor RPM): a guess, watch shots
         public static double stepRpm = DEFAULT;                     // speed change per D-pad press (100)
         public static double readyBandRpm = 150;                    // "at speed" = this close to the target
         public static double idleRpm = DEFAULT;                     // speed between shots, 0 = stop (0)
-        // The hub's speed control: the defaults for the motor until the Flywheel Finder (INIT shows them).
-        // Then write its numbers in their place.
+        // The hub's speed control: the motor's defaults until the Flywheel Finder (INIT shows them).
         public static double kP = DEFAULT;                          // push per speed error (kF / 10)
         public static double kI = DEFAULT;                          // fix a steady error (kP / 10)
         public static double kD = DEFAULT;                          // brake changes (0)
         public static double kF = DEFAULT;                          // steady power for a speed (from the motor)
     }
 
-    /**
-     * The flap: rest = 0 and push = 0.2, from Studica's code (X and A). The flap goes to rest at START,
-     * and your servo's horn may sit differently from Studica's: find these with the Servo Finder BEFORE
-     * the first TeleOp. The times are guesses.
-     */
+    /** The flap. It goes to rest at START: measure rest and push with the Servo Finder BEFORE the first TeleOp. */
     public static class FwActuator {
         public static double rest = 0.0;                            // servo position, out of the way: Studica (X)
         public static double push = 0.2;                            // servo position, piece pushed: Studica (A)

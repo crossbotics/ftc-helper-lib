@@ -3,16 +3,12 @@ package com.crossbotics.ftchelper.examples.cookbook;
 import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT and MEASURE (docs/guides/tunables.md)
 
 /**
- * The cookbook's numbers (docs/cookbook.md). Every robot in this folder reads its sections from here:
- * one section per part, named after the part's configuration name in CamelCase ("intake_deploy" reads
- * IntakeDeploy).
- *
- * The style every recipe shows: one number per line with a short comment. MEASURE = a number only your
- * robot can give (INIT stops and names the tool that finds it). DEFAULT = the library's
- * starting value (in brackets in the comment). The tests write sample numbers in place of MEASURE.
- *
- * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
- * tools/check_docs.py checks that the page and this file say the same thing, so change both together.
+ * The cookbook's numbers (docs/cookbook.md): one section per part, named after the part's configuration
+ * name in CamelCase ("intake_deploy" reads IntakeDeploy). One number per line with a short comment.
+ * MEASURE = a number only your robot can give (INIT stops and names the tool that finds it). DEFAULT =
+ * the library's starting value (in brackets in the comment). The tests write sample numbers for MEASURE.
+ * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md: change both
+ * together (tools/check_docs.py checks them).
  */
 public class Tunables {
     // recipe: tunables-drive
@@ -31,13 +27,11 @@ public class Tunables {
     // recipe: tunables-reset-spot
     public static class Odometry {                                  // a fixed name: always Odometry
         public static boolean checked = false;                      // true after the Odometry Tuner's Loop test
-        // "Set pose here" (TeleOp: hold gamepad 1 START 1 s with the robot on this spot). Inches and
-        // degrees seen from your wall, written for BLUE like a start spot: our left corner tile, facing the field.
+        // "Set pose here" (TeleOp: hold gamepad 1 START 1 s on this spot), written for BLUE.
         public static double resetX = -56;                          // inches right of centre, - = left
         public static double resetY = -61;                          // inches from centre, - = our half
         public static double resetHeading = 0;                      // degrees, 0 = facing the field
-        // RED: false = the same numbers from the red wall (BIOBUZZ's field is turned half a turn);
-        // true (or left out) = mirrored left-right, for a mirrored field.
+        // RED: false = the same numbers from the red wall; true (or left out) = mirrored left-right.
         public static boolean mirrorForRed = false;                 // BIOBUZZ: false
     }
     // end recipe

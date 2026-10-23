@@ -15,24 +15,14 @@ import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
 import com.crossbotics.ftchelper.teleop.EasyTeleOp;
 
 /**
- * Tutorial 20: an easy TeleOp. EasyTeleOp does the driving, the match timer, the tuning menu,
- * "forward" from autonomous and stopping everything; we only add the lift and the claw.
- * The TeleOp partner of tutorial 16's autonomous (same mechanisms, same RobotSettings).
+ * Tutorial 20: an easy TeleOp, the partner of tutorial 16's autonomous. EasyTeleOp does the
+ * driving, the match timer, the tuning menu, "forward" from autonomous and stopping everything.
  * Needs: the drivetrain from RobotSettings, motor "lift", servo "claw".
- *
- * Driver (gamepad 1), from EasyTeleOp: left stick drive, right stick X turn, left trigger slow,
- * Y field-centric on/off, BACK reset "forward", GUIDE tuning menu, BACK + START debug lines.
- * Operator (gamepad 2), from this file: A = lift down, Y = lift high, right bumper = claw,
- * left stick Y = lift by hand.
- *
- * Before you use it: remove the {@code @Disabled} line and make "lift" and "claw" match your
- * configuration.
- *
- * Tutorial: docs/tutorials/20-easy-teleop.md
+ * Operator (gamepad 2): A = lift down, Y = lift high, RB = claw, left stick Y = lift by hand.
+ * more: https://crossbotics.com/ftc-helper/docs/tutorials/20-easy-teleop/
  */
 @TeleOp(name = "Tutorial 20: Easy TeleOp", group = "Tutorials")
-// @Disabled hides it from the list. Delete this line in your copy, or you will not see it.
-@Disabled
+@Disabled // hides this program on the Driver Station: delete this line in your copy
 public class Tut20EasyTeleOp extends EasyTeleOp {
 
     private PositionMotor lift;

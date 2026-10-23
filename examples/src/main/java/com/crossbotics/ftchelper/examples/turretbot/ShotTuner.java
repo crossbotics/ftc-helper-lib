@@ -6,16 +6,12 @@ import com.crossbotics.ftchelper.finders.ShotTunerOpMode;
 import com.crossbotics.ftchelper.robot.RobotDefinition;
 
 /**
- * The turret robot's Shot Tuner (lesson 9, docs/tutorials/start/09-shooter-and-camera.md). It uses
- * the robot's launcher, camera and drive. This robot has two tables (POLLEN and NECTAR): choose the one
- * you tune with Y (until "> Table") and the D-pad. It shows each table's line to copy into Tunables.java:
- * {@code public static double[][] speedByDistancePollen = {{48, 2550}, {72, 2900}};   // in Tunables.Launcher}. The turret stays still and
- * the "turret aimed" check is off: you point the robot at the goal with the sticks.
- * How to use it: docs/guides/finders.md. KEEP PEOPLE OUT OF THE LINE OF FIRE.
+ * The turret robot's Shot Tuner: fills the shot tables (POLLEN and NECTAR) and shows the lines to
+ * copy into Tunables.Launcher. KEEP PEOPLE OUT OF THE LINE OF FIRE.
+ * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/09-shooter-and-camera/#8-two-game-pieces-two-shot-tables
  */
 @TeleOp(name = "TurretBot Shot Tuner", group = "Finders")
-// @Disabled hides it from the list. Delete this line in your copy, or you will not see it.
-@Disabled
+@Disabled // hides it on the Driver Station: delete this line in your copy
 public class ShotTuner extends ShotTunerOpMode {
     // The robot from Robot.java, with its numbers from Tunables.java.
     @Override

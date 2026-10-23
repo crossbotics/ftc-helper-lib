@@ -1,4 +1,4 @@
-// Which folder this file lives in. Change it to your TeamCode package when you copy the file.
+// The folder this file lives in. Change it to your TeamCode folder when you copy the file.
 package com.crossbotics.ftchelper.examples;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
@@ -17,11 +17,10 @@ import com.crossbotics.ftchelper.vision.WebcamTags;
  * when the launcher points straight at it). This robot aims by turning (no turret); for a turret,
  * also fill in createTurret(). Use YOUR camera and launcher (best: from your Robot class).
  * Needs a webcam "Webcam 1", a motor "flywheel" and a motor "feeder".
- * How to use it: docs/guides/finders.md.
+ * more: https://crossbotics.com/ftc-helper/docs/guides/finders/#aim-tuner-camera-offset
  */
 @TeleOp(name = "Aim Tuner", group = "Finders")
-// @Disabled hides it from the list. Delete this line in your copy, or you will not see it.
-@Disabled
+@Disabled // hides this program on the Driver Station: delete this line in your copy
 public class ExampleAimTuner extends AimTunerOpMode {
 
     @Override

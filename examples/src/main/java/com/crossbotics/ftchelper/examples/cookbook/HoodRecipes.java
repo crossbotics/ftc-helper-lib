@@ -18,7 +18,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
  * to make the shot steeper or flatter; its angle comes from the shot table's third column. Every hood
  * design fits: a servo or a motor with an encoder, a straight gear or a linkage, real angles or plain
  * servo positions.
- *
  * The lines between "// recipe: name" and "// end recipe" are shown in docs/cookbook.md.
  * tools/check_docs.py checks that the page and this file say the same thing.
  */
@@ -46,8 +45,7 @@ public class HoodRecipes {
         public static class Launcher {
             public static double speedRpm = 2600, readyBandRpm = 60, idleRpm = 1500;
             // recipe: tunables-hood-table
-            // In your Tunables.Launcher section, IN PLACE OF your speedByDistance line: a third number
-            // in each row, {inches to the goal, RPM, hood angle}. The hood is blended between rows like the speed.
+            // IN PLACE OF your speedByDistance line: {inches to the goal, RPM, hood angle}, blended between rows.
             public static double[][] speedByDistance = {{24, 2200, 3}, {48, 2550, 12}, {72, 2900, 20}};
             // end recipe
         }
@@ -65,8 +63,7 @@ public class HoodRecipes {
 
         // recipe: tunables-hood-linkage
         public static class Hood {                                      // "hood" in the configuration
-            // {servo position, hood angle} rows, blended between them. The first and last rows are the
-            // stops (no posA / posB then). The angles must keep going one way.
+            // {servo position, hood angle} rows, blended. The first and last rows are the stops (no posA / posB).
             // Example rows: write the Hood Finder's in their place.
             public static double[][] calibration = {{0.20, 0}, {0.32, 8}, {0.45, 18}, {0.65, 30}};
         }
@@ -133,7 +130,7 @@ public class HoodRecipes {
             camera = add(Camera.webcam("Webcam 1").goal("BLUE SCORING", "RED SCORING"));
             // recipe: robot-hood
             // The hood goes on the launcher; its numbers are in Tunables.Hood.
-            // .part(...): which servos they are (optional, recommended: better starting values, a true simulator).
+            // .part(...): which servos they are (optional, recommended).
             launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
                     .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
                     .hood(Hood.servo("hood").part("gobilda-2000-torque"))

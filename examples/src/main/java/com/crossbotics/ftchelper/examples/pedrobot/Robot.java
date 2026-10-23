@@ -9,8 +9,9 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.LogoFacingDirection;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.UsbFacingDirection;
 
 /**
- * Lesson 7's robot plus Pedro Pathing: the same drive, Pinpoint and intake, and one more line. With the
- * follower line, autonomous can follow(...) curved paths; driveTo(...) still works too.
+ * Lesson 7's robot plus Pedro Pathing: with the follower line, autonomous can follow(...) curved
+ * paths; driveTo(...) still works too.
+ * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/08-paths-with-pedro/
  */
 public class Robot extends RobotDefinition {
     public Intake intake;
@@ -22,11 +23,9 @@ public class Robot extends RobotDefinition {
                 .imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD));
         // "pinpoint" = the Pinpoint's name in the robot configuration.
         odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
-        // Pedro drives the paths. It uses the drive and odometry lines above; PedroConstants holds the
-        // numbers from Pedro's Foresight tuner.
+        // Pedro drives the paths, with the drive and odometry above. Its numbers: PedroConstants.
         follower(Pedro.follower(PedroConstants.foresight));
-        // "intake" = the motor's name in the robot configuration. Its numbers: Tunables.Intake.
-        // .part(...): which motor it is (an example: your motor's id is on its label).
+        // "intake" = the motor's name in the robot configuration. .part(...): the id on its label.
         intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
     }
 }

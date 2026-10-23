@@ -24,8 +24,16 @@ every autonomous. `EasyAuto` does all of it; you write only what is special abou
 
 ## 2. Tell it about the robot
 
-`extends EasyAuto` means your class starts with everything `EasyAuto` already does. You only fill in
-the parts it asks for.
+`extends EasyAuto` means your class starts with everything `EasyAuto` already does (it is itself a
+`LinearOpMode`). There is no `runOpMode()` and no loop: you only fill in the parts it asks for.
+
+```java
+// preselectTeleOp = the TeleOp's exact name: the Driver Station gets it ready after autonomous.
+@Autonomous(name = "Tutorial 16: Easy Auto", group = "Tutorials", preselectTeleOp = "Tutorial 20: Easy TeleOp") // (1)!
+```
+
+1. When autonomous ends, the Driver Station selects this TeleOp, so the drivers only press INIT.
+   The name must match the TeleOp's name exactly, and that TeleOp must not be `@Disabled` either.
 
 ```java
 public class Tut16EasyAuto extends EasyAuto {
@@ -45,7 +53,10 @@ public class Tut16EasyAuto extends EasyAuto {
 `@Override` means "I am filling in a method `EasyAuto` asks for". `RobotSettings.config()` hands
 over the drive, tuning and IMU settings from tutorial 09 as one object (a
 [`RobotConfig`](../modules/core.md#robotconfig)); tutorial 20's TeleOp uses the same one. The mechanisms you return are
-updated every loop during every step, so a lift keeps holding while the robot drives.
+updated every loop during every step, so a lift keeps holding while the robot drives, and they all
+stop at the end, even after an error. Start the robot with the lift DOWN: that position counts as 0.
+The claw's `travelTime(0.3)` says the servo needs about 0.3 s for a full move. A servo cannot say
+where it is, so this is how a step knows when the claw should have finished moving.
 
 ## 3. INIT: placement and choices
 
@@ -60,7 +71,8 @@ updated every loop during every step, so a lift keeps holding while the robot dr
 ```
 
 The INIT screen shows the placement (so the drive team sets up right), the menu (alliance, delay,
-Route, profile), and warnings.
+Route, profile), and warnings. The distances in the steps only work from that exact spot.
+`parkReserveSec()` keeps the last 4 seconds of the 30-second autonomous for parking.
 
 ## 4. The steps
 
@@ -90,7 +102,10 @@ Read it out loud: it IS the plan. Things to notice:
 - **Labels** show on the Driver Station during the run and in the report. Make them say what the robot does.
 - **`startStep` vs `goToStep`:** `lift.startStep("HIGH")` starts the lift and goes on at once; it
   rises while the robot drives. `claw.goToStep("CLOSED")` waits until the claw should be closed.
-- **`waitUntil` has a time limit** (2 s). If the lift never gets there, the routine goes on and the
+- **Moves and turns:** `move(name, inches, direction, power)`, with direction 0 = forward, 90 = right,
+  180 = back, -90 = left. Turns: positive degrees = left. `turnTo(..., 0, ...)` faces the start direction.
+- **`waitUntil` has a time limit** (2 s). `lift::isAtTarget` is short for `() -> lift.isAtTarget()`:
+  a question the routine asks over and over. If the lift never gets there, the routine goes on and the
   report says "timed out".
 - **Mirroring:** written for BLUE. On RED, `turn(45)` becomes -45 and `move(20, 90)` goes left. On a field
   turned half a turn between the alliances (BIOBUZZ), override `mirrorForRed()` to return false: the same

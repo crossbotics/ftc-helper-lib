@@ -78,10 +78,8 @@ public class InterlockRecipes {
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
             camera = add(Camera.limelight("limelight").goal("BLUE SCORING", "RED SCORING"));
             // recipe: turret-home-switch
-            // A home switch: a touch sensor ("REV Touch Sensor") or a magnetic switch ("Digital
-            // Device", e.g. the REV Magnetic Limit Switch). At START the turret turns slowly until it
-            // finds it; after that, every time it passes the switch its angle is set right again.
-            // "turret", "turret_home" = the motor's and the switch's names in the robot configuration.
+            // "turret", "turret_home" = the motor's and the home switch's names in the robot configuration.
+            // At START the turret turns slowly until it finds the switch.
             turret = add(Turret.motor("turret", "gobilda-5203-312").gearRatio(2.75)
                     .homeSwitch("turret_home")
                     .follows(camera));
@@ -122,10 +120,9 @@ public class InterlockRecipes {
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
             camera = add(Camera.limelight("limelight").goal("BLUE SCORING", "RED SCORING"));
             // recipe: turret-slip-ring
-            // A CR servo turns it, an absolute encoder on an analog port says where it points (no
-            // homing), and continuous(): a slip ring carries the wires, so no limits, the shortest way.
+            // A CR servo turns it, an absolute encoder says where it points, continuous(): no limits.
             // "turret", "turret_pos" = the servo's and the encoder's names in the robot configuration.
-            // .part(...): which servo it is (optional, recommended: better starting values, a true simulator).
+            // .part(...): which servo it is (optional, recommended).
             turret = add(Turret.crServo("turret").part("axon-max-mk2").analogEncoder("turret_pos").continuous()
                     .follows(camera));
             // end recipe
@@ -159,10 +156,8 @@ public class InterlockRecipes {
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
             camera = add(Camera.limelight("limelight").goal("BLUE SCORING", "RED SCORING"));
             // recipe: turret-servo
-            // A standard servo turns the turret to an angle by itself: no encoder, no PID, no homing.
-            // fullRange(): the servo's whole turn (a goBILDA 2000: 300 degrees, not 270). Turn it on
-            // BEFORE you measure posA and posB (Servo Finder: press Y while choosing the servo).
             // "turret" = the servo's name in the robot configuration. Numbers: Tunables.Turret.
+            // fullRange(): the servo's whole turn. Turn it on BEFORE you measure posA and posB.
             turret = add(Turret.servo("turret").part("gobilda-2000-speed").fullRange().follows(camera));
             // end recipe
         }
@@ -212,7 +207,7 @@ public class InterlockRecipes {
             // turret follows that direction and the launcher's speed comes from that distance.
             odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
             turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).followsOdometry());
-            // .part(...): the indexer's servo (optional, recommended: better starting values, a true simulator).
+            // .part(...): the indexer's servo (optional, recommended).
             launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
                     .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
                     .speedFromOdometry()

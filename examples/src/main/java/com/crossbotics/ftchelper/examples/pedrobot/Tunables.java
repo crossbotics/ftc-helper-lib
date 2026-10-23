@@ -1,10 +1,11 @@
 package com.crossbotics.ftchelper.examples.pedrobot;
 
-import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT (docs/guides/tunables.md)
+import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT
 
 /**
- * The Pedro bot's numbers, one per line (Pedro's own numbers are in PedroConstants).
- * DEFAULT = the library's default (in brackets in the comment).
+ * The Pedro bot's numbers, one per line (Pedro's own numbers are in PedroConstants). DEFAULT = the
+ * library's default (in brackets).
+ * more: https://crossbotics.com/ftc-helper/docs/guides/tunables/
  */
 public class Tunables {
     public static class Drive {
@@ -18,10 +19,8 @@ public class Tunables {
         public static boolean calibrated = false;                   // true after the Drive Tuner: auto runs then
     }
 
-    /** checked: set true after the Odometry Tuner; until then follow and driveTo steps are skipped. */
     public static class Odometry {
         public static boolean checked = false;                      // true after the Odometry Tuner's loop test
-        // RED: the same numbers from the red wall (BIOBUZZ's turned field), like the autos' mirrorForRed().
         public static boolean mirrorForRed = false;                 // BIOBUZZ: false
     }
 

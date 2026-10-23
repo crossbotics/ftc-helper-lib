@@ -1,12 +1,12 @@
 package com.crossbotics.ftchelper.examples.lessonbot;
 
-import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT and MEASURE (docs/guides/tunables.md)
+import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT and MEASURE
 
 /**
- * The lesson robot, file 2 of 5: every number, one section per part, one number per line. The section's
- * name is the device's name in CamelCase ("lift" reads Lift). DEFAULT = the library's
- * default (in brackets in the comment). Tune the numbers live in the PRACTICE profile (hold GUIDE 1 s),
- * then copy them back here: the code is the record.
+ * The lesson robot, file 2 of 5: every number, one per line. Section name = the device's name in
+ * CamelCase ("lift" reads Lift). DEFAULT = the library's default (in brackets). Tune live, then
+ * copy the numbers back here: the code is the record.
+ * more: https://crossbotics.com/ftc-helper/docs/guides/tunables/
  */
 public class Tunables {
     /** Lesson 2. calibrated: set true after the Drive Tuner (lesson 6); until then no autonomous runs. */
@@ -26,12 +26,7 @@ public class Tunables {
         public static double outPower = DEFAULT;                    // power pushing pieces out (0.7)
     }
 
-    /**
-     * Lesson 4. Encoder counts from the bottom (the switch sets 0). min/max: the safe range (the Motor
-     * Finder measures it). down, low, high: named heights (any names). kP..kF: DEFAULT, the
-     * defaults for the motor Robot.java names (part "gobilda-5203-435"; INIT shows them). Tune them live
-     * (lesson 4, step 6) and write the numbers in their place.
-     */
+    /** Lesson 4. Encoder counts from the bottom (the switch sets 0). Tune kP..kF live (lesson 4, step 6). */
     public static class Lift {
         public static double min = 0;                               // lowest safe point, counts (Motor Finder)
         public static double max = 2600;                            // highest safe point, counts (Motor Finder)
@@ -50,11 +45,7 @@ public class Tunables {
         public static double closed = 0.75;                         // servo position, closed (Servo Finder)
     }
 
-    /**
-     * Lesson 6: the autonomous's distances, in one place. No part reads this section, but its numbers
-     * are in the tuning menu too (TeleOp, PRACTICE, after START hold GUIDE 1 s): tune, save, run the autonomous,
-     * then copy the good values back here (INIT lists them): the code is the record.
-     */
+    /** Lesson 6: the autonomous's distances. Also in the tuning menu: tune, then copy them back here. */
     public static class Auto {
         public static double toGoalInches = 24;                     // drive to the goal
         public static double parkInches = 20;                       // drive into the park zone

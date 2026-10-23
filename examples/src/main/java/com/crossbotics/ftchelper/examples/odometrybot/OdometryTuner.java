@@ -5,9 +5,12 @@ import com.crossbotics.ftchelper.robot.RobotDefinition;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-/** Lesson 7: the Odometry Tuner for this robot (directions, distance, offsets, a loop check). */
+/**
+ * Lesson 7: the Odometry Tuner for this robot (directions, distance, offsets, a loop check).
+ * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/07-odometry/#5-the-odometry-tuner
+ */
 @TeleOp(name = "Odometry Bot Odometry Tuner", group = "Finders")
-@Disabled
+@Disabled // hides it on the Driver Station: delete this line in your copy
 public class OdometryTuner extends OdometryTunerOpMode {
     @Override
     protected RobotDefinition robot() {

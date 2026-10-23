@@ -33,6 +33,14 @@ PidController headingPid = new PidController(0.015, 0, 0.002)
 `setAngleMode(true)` is important: headings wrap around at 180. From 170 to -170 is a 20 degree
 turn, not 340. In angle mode the controller always takes the short way.
 
+The gains: kP 0.015 is the turn power per degree of error, no I, and kD 0.002 slows the turn near
+the target so it does not swing past. `setOutputLimits(-0.6, 0.6)` keeps a snap from being violent.
+Within 2 degrees counts as "pointed right".
+
+The D-pad headings are field headings: 0 is the way the robot faced when the heading was last
+zeroed, and positive is left (counterclockwise). So D-pad LEFT = 90 = face left. BACK resets the
+heading to 0: press it when the robot faces straight away from you.
+
 ## 2. Hand control back to the driver
 
 ```java

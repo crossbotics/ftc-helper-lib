@@ -81,6 +81,40 @@ Not modelled or not published:
 - The pusher really swings up and down out to the side; the simulator's arm always points forward from its
   hinge, so it is drawn turning about "up" instead.
 
+### REV bot code
+
+[`revbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/revbot) is this robot in five
+files ([lesson 1](../tutorials/start/01-robot-in-five-files.md) walks through them). The configuration
+names are the ones in REV's own code, so it runs on that robot as it is. What the comments in the code
+do not say:
+
+- **Drive:** REV's code does not reverse a drive motor, so the library's default (the left side reversed)
+  is a guess. If the robot spins when you push the stick forward, change it
+  ([lesson 2, step 3](../tutorials/start/02-drive.md#3-say-which-motors-are-reversed)). REV does not say
+  which way each motor turns: check them all on your robot.
+- **Intake:** REV's code takes POLLEN in with the right bumper and pushes it out with the right trigger.
+  REV's page does not say which power sign is "in": if the intake pushes out when it should take in, add
+  `.reversed()` to its line.
+- **Launcher:** the HD Hex motor runs at 1:1 (its gearbox is off), so `"rev-hd-hex"` gives it the 6000 RPM
+  motor's numbers. The feeder roller is a Smart Robot Servo V2 (Balanced) in continuous (CR) mode.
+  REV's code spins the flywheel "to the target velocity", but the number is not on the page:
+  `speedRpm = 3000` is a guess, and so is the feeder's 0.4 s per piece. Find kF and kP with the
+  [Flywheel Finder](finders.md#flywheel-finder-gains-and-recovery), then the speed by watching shots.
+- **Fire all (Y):** spins up, then feeds the pieces one by one as soon as the wheel is at speed. It uses
+  only the launcher, so the driver can still run the intake. With fewer than 4 pieces, the feeder only
+  turns a few more times.
+- **Poker:** a Smart Robot Servo V2 (Balanced) with two spots, as in REV's code: A = `down` (out over a
+  FLOWER, to comb POLLEN out of it), B = `up` (folded along the side, the start). REV's page has no
+  numbers for them, so both are guesses: measure them with the
+  [Servo Finder](finders.md#servo-finder-ends-and-positions) BEFORE the first TeleOp, or the poker can
+  swing into the frame. Nothing moves at INIT, so the code does not fold it: fold the poker by hand
+  before INIT, so the robot fits the 18 in start cube. It first moves when A, B or an action sends it.
+- **Buttons:** one driver on gamepad 1, with the library's standard buttons (LB flywheel on/off, RB fire
+  one, D-pad up/down speed +/- 100 RPM), so this robot drives like the other examples. REV's code puts
+  the intake on RB and RT and runs the feeder by hand on the D-pad: change a button in `Controls.java` if
+  your drivers want REV's layout.
+- **Autonomous** (`autos/`): REV's own autonomous is not on its page, so this is a simple first one: fire the preloaded pieces, then drive off the start line in the last 3 s. The start spot is the simulator robot file's (back against your wall, 56 in left of the centre). `mirrorForRed()` returns false: BIOBUZZ's field is turned half a turn between the alliances (not mirrored), so the same route, driven from each alliance's own wall, works for both.
+
 ## goBILDA FTC StarterBot
 
 Sources, read 2026-10-16: [the resource guide page](https://www.gobilda.com/ftc-starter-bot-resource-guide-2026-2027-season/),
@@ -99,6 +133,33 @@ the simulator's shot arc says "shoots backward, 33° up" for it.
 Its autonomous, **goBILDA Bot Launch and Back Up**, starts with the robot's back against your wall, left
 of centre (x -56, y -63, facing the field: the simulator puts it there at INIT), fires the preload up and
 back over the robot, then drives `Away from the wall` (forward, `Tunables.Auto.backInches`).
+The robot is 15.1 in long, so at y -63 its centre is 7.5 in from the wall's inside face (y -70.6).
+goBILDA's code launches for 10 s; here the launch ends as soon as the last piece is fed.
+
+**The code ([`gobildabot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildabot)), part by part:**
+
+- Drive: one motor per side; the right one runs reversed, as in goBILDA's code.
+- Intake: the roller's motor is the 117 RPM Yellow Jacket (50.9:1, 5203-2402-0051). The two corner
+  wheels are goBILDA Speed servos in CR mode; they run with the roller, as in goBILDA's code.
+- Launcher: a 312 RPM motor with its gearbox taken off (1:1, 28 counts per turn). That is the
+  6000 RPM motor's numbers, so its id is `gobilda-5203-6000`.
+- Windmill: a 2000 Series Torque servo (2000-0025-0002) in CR mode. It runs reversed, as in goBILDA's
+  code (`Direction.REVERSE`).
+- Each part names its motor or servo from goBILDA's build guide, so the starting values and the
+  simulator use that part's real numbers.
+
+**The TeleOp buttons** (`oneDriver = true`: one driver does everything on gamepad 1, like goBILDA's TeleOp):
+
+- Left stick forward/back drives, right stick X turns. Left stick click: slow on/off.
+- RT runs the intake in, LT out, while held.
+- LB spins the flywheel up and down. RB fires one piece when the wheel is at speed; hold RB to keep firing.
+- Y fires all three (`Actions.fireAll`). Hold RT at the same time to help push them in: the action
+  uses only the launcher, so the intake stays free for the driver.
+- D-pad up/down: flywheel speed +/- 50 RPM.
+
+One difference from goBILDA's code: there, RB also spins the wheel up. Here LB spins it up too, so the
+driver can spin up early and fire the moment the shot is lined up. (RB alone also works: it spins up
+first, then fires.)
 
 Not modelled or not published:
 - The exit angle and speed of a shot are not published (estimated from the hood; `share=0.5` is the default).
@@ -132,6 +193,42 @@ Not modelled or not published:
   wheel base come from the CAD, the track width is estimated (each side is in its own CAD frame).
 - The intake rollers' exact place inside the intake subassembly is estimated.
 
+### AndyMark bot code
+
+[`andymarkbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/andymarkbot) is this robot
+in five files ([lesson 1](../tutorials/start/01-robot-in-five-files.md) walks through them). The
+configuration names are the ones in AndyMark's own code (RobitsStarterBotTeleop), so it runs on that robot
+as it is. What the comments in the code do not say:
+
+- **Drive:** the kit's NeveRest Hex 19.2:1 is the same motor and ratio as the NeveRest Orbital 20, so the
+  code uses `"am-neverest-orbital-20"`. The right motor runs reversed, as AndyMark's code sets it.
+- **Intake:** `rollerI` runs reversed (REVERSE in AndyMark's code) and the flower roller `rollerF` runs
+  with it. Their servo is the kit's 4-wire Programmable Servo, High Speed (am-4955a), in continuous mode.
+  It is not in the parts catalog, so `Parts.customServo("am-4955a", 300, 0.05)` describes it with
+  AndyMark's numbers: 300 degrees, 0.05 s per 60 degrees at 6 V (the only speed listed;
+  [am-4955](https://andymark.com/am-4955), read 2026-10-23). AndyMark's code runs the rollers at full
+  power both ways.
+- **The catapult** (a NeveRest Hex 50.9:1, am-5443, the same as the NeveRest Orbital 50; REVERSE in
+  AndyMark's code) winds rubber bands and lets go once per turn. The library has no catapult part. The
+  closest real part is an `Indexer` on a motor: it runs the motor at a set power (`power`, 0.65 from
+  AndyMark's code) for a set time (`feedSec`) per press. Tune `feedSec` so one press is one turn of the
+  catapult, which is one throw, and the arm stops ready for the next. The motor turns at about 130 RPM
+  with no load, so one turn at 0.65 power takes about 0.7 s, more with the rubber bands pulling: 0.8 s is
+  a starting guess. The library does not know when the catapult is wound or lets go (there is no sensor
+  on it), so it cannot wait for "ready" the way a flywheel launcher does. AndyMark's own code runs the
+  motor for as long as the trigger is held.
+- **Throw all (Y):** throws up to 4 pieces (the game's limit), one turn each. The hopper feeds the next
+  piece by gravity, so there is a short wait between throws (`Tunables.Auto.secondsBetweenThrows`).
+- **The flower "stick" version:** the flower mechanism has a second version with a `stick` servo instead
+  of the roller. For that one, take `"rollerF"` out of the intake line and add the commented `stick`
+  line in `Robot.java` (`Tunables.Stick`: in = 0.46, out = 0.65). AndyMark does not say which of the
+  kit's servos the stick has: use the one on yours (`"am-4955a"` if it is a High Speed servo too).
+- **Buttons:** one driver on gamepad 1, with the library's standard buttons (RT intake in, LT out, RB
+  throws one piece), so this robot drives like the other examples. AndyMark's code puts the intake on the
+  bumpers (LB in, RB out) and runs the catapult while RT is held: change a button in `Controls.java` if
+  your drivers want AndyMark's layout.
+- **Autonomous** (`autos/`): AndyMark's own autonomous is not on its page, so this is a simple first one: throw the preloaded pieces (AndyMark's manual says to shoot from against the field wall, the launcher in line with the goal), then drive off the start line in the last 3 s. The start spot is the simulator robot file's (back against your wall, 56 in left of the centre). `mirrorForRed()` returns false: BIOBUZZ's field is turned half a turn between the alliances (not mirrored), so the same route, driven from each alliance's own wall, works for both.
+
 ## Studica FTC Starter Bot
 
 Sources, read 2026-10-16: [the resource guide page](https://www.studica.com/ftc-starter-bot-resource-guide-2026-2027),
@@ -156,6 +253,39 @@ Not modelled or not published:
   speed is not on the kit page, so this file moves it at `servo.speed`. (Studica's
   [servo page](https://docs.wsr.studica.com/en/latest/docs/Motors/servo-motors.html), read 2026-10-23:
   300 degrees, 0.25 s per 60 degrees at 4.8 V. `studicabot/Robot.java` uses these.)
+
+### Studica bot code
+
+[`studicabot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/studicabot) is this robot
+in five files ([lesson 1](../tutorials/start/01-robot-in-five-files.md) walks through them). The
+configuration names are the ones in Studica's own Blocks code, so it runs on that robot as it is. What the
+comments in the code do not say:
+
+- **The Maverick motors and the Multi-Mode Smart Servo** are not in the parts catalog, so
+  `Motors.custom(...)` and `Parts.customServo(...)` describe them with Studica's own numbers (speed at
+  12 V and encoder counts per output turn from the
+  [Maverick page](https://www.studica.com/maverick-planetary-dc-gear-motor-wencoder-5091-ratio-gearbox);
+  the servo from the [servo page](https://docs.wsr.studica.com/en/latest/docs/Motors/servo-motors.html),
+  both read 2026-10-23). The starting values and the simulator then use the real parts.
+- **Drive:** two driven 100 mm wheels at the front (Maverick 50.9:1, bevel gears 1:1) and two free omni
+  wheels at the back. The library reverses the left side by default, as Studica's code does.
+- **Intake:** Studica's code runs it at power 1 (in) on the right bumper and -1 (out) on the left bumper.
+- **Launcher:** three 100 mm wheels on a Maverick 1:1, through 13T to 26T bevel gears, so the wheels turn
+  at half the motor's speed. The library's launcher cannot take a gear between the motor and the wheel:
+  its speed numbers (`speedRpm`, the D-pad's +/- 100) are the MOTOR's, not the wheel's. Studica's code
+  runs the flywheel at the right trigger's power, with no set speed; the motor's top speed is 6100 RPM,
+  so 4000 is a starting guess with room to speed up. Tune it by watching shots.
+- **The flap** (`fwActuator`) pushes each piece into the wheels: rest = 0 and push = 0.2, from Studica's
+  code (X and A). The flap goes to rest at START, and your servo's horn may sit differently from
+  Studica's: measure both with the [Servo Finder](finders.md#servo-finder-ends-and-positions) BEFORE the
+  first TeleOp. The push and return times are guesses.
+- **Fire all (Y):** spins up, then pushes the pieces in one by one with the flap as soon as the wheel is
+  at speed. It uses only the launcher, so the driver can still run the intake.
+- **Buttons:** one driver on gamepad 1, one stick to drive, and the library's standard buttons, so this
+  robot drives like the other examples. Studica's code drives "tank style" (each stick runs one side),
+  puts the intake on the bumpers, the flywheel on RT and the flap on X and A: change a button in
+  `Controls.java` if your drivers want Studica's layout.
+- **Autonomous** (`autos/`): Studica's own autonomous is not on its page, so this is a simple first one: fire the preloaded pieces, then drive off the start line in the last 3 s. The start spot is the simulator robot file's (back against your wall, 56 in left of the centre). `mirrorForRed()` returns false: BIOBUZZ's field is turned half a turn between the alliances (not mirrored), so the same route, driven from each alliance's own wall, works for both.
 
 ## What the simulator could not express (input for its next stages)
 

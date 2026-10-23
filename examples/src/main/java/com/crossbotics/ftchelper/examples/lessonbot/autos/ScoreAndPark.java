@@ -9,8 +9,9 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 /**
- * The lesson robot, file 5 of 5: an autonomous (lesson 6). Hold the piece, drive to the goal, score,
- * and always park in the last 3 seconds.
+ * The lesson robot, file 5 of 5: an autonomous. Hold the piece, drive to the goal, score, and
+ * always park in the last 3 seconds.
+ * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/06-first-autonomous/
  */
 @Autonomous(name = "Lesson Bot Score and Park", group = "Examples", preselectTeleOp = "Lesson Bot TeleOp")
 @Disabled

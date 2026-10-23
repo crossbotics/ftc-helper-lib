@@ -3,8 +3,9 @@ package com.crossbotics.ftchelper.examples.lessonbot;
 import com.crossbotics.ftchelper.robot.Action;
 
 /**
- * The lesson robot, file 4 of 5: moves that use several parts (lesson 5). A button starts one in
- * TeleOp (press again to cancel); an autonomous uses the same one as a step.
+ * The lesson robot, file 4 of 5: moves that use several parts. A button starts one in TeleOp; an
+ * autonomous uses the same one as a step.
+ * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/05-actions/
  */
 public class Actions {
 

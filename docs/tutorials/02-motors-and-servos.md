@@ -69,8 +69,10 @@ A servo goes to a position from 0 to 1. But your claw probably only works betwee
 `.range(0.20, 0.75)` fixes that for good: after it, **0 means 0.20 and 1 means 0.75.** Your
 code says `setPosition(0)` for open and `setPosition(1)` for closed, and can never go further.
 
-`CLAW_OPEN` and `CLAW_CLOSED` in the program are named numbers (0 and 1). A name says what a
-number means; a bare `0.0` does not.
+`CLAW_OPEN` and `CLAW_CLOSED` in the program are named numbers (0 and 1). `static final` means
+they never change. A name says what a number means; a bare `0.0` does not.
+
+`.done()` hands you the servo. The servo does not move until you first set a position.
 
 ### How to find the two numbers
 
@@ -120,7 +122,8 @@ ControllerBindings controls = new ControllerBindings()
 ```
 
 X shows another use of `MotorSetup`: `MotorSetup.of(arm)` works on a motor you already have,
-here to zero the encoder again.
+here to zero the encoder again. A reset stops the motor, so the chain sets the run mode again
+right after it. `done()` sets power 0 until the next loop sets the stick power.
 
 In the loop:
 
@@ -136,6 +139,8 @@ TelemetryHelper.servo(telemetry, "Claw", claw);
   says "stick up" is negative.
 - `shape(..., 0.05, 1)` ignores tiny stick noise. `* 0.5` limits the arm to half power while you test.
 - `TelemetryHelper.motor` shows power, encoder position, and speed on one line.
+- `TelemetryHelper.servo` shows the position you last asked for. A servo cannot report where it
+  really is.
 
 In `finally`: `arm.setPower(0);`.
 

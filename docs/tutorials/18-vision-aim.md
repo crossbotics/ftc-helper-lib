@@ -39,10 +39,17 @@ both camera classes have its methods, so your code can use either.
 
 ```java
 TargetSource camera = menu.get("Camera").equals("Limelight")
-        ? LimelightTags.create(hardwareMap, "limelight").pipeline(0)
-        : WebcamTags.create(hardwareMap, "Webcam 1").resolution(640, 480);
+        ? LimelightTags.create(hardwareMap, "limelight").pipeline(0) // (1)!
+        : WebcamTags.create(hardwareMap, "Webcam 1").resolution(640, 480); // (2)!
 camera.start();
 ```
+
+1. Pipeline 0 is a setup saved on the Limelight itself (its web page).
+2. 640 x 480 pixels is a good start. Higher sees tags farther away, but runs slower.
+
+The camera is chosen in an INIT menu, and it starts only after A: the program needs to know WHICH
+camera to start. `a ? b : c` is a short if/else: if the menu says Limelight, make a Limelight,
+otherwise a webcam.
 
 After this line, the program never cares which camera it is: `camera.update()`, `camera.target("RED SCORING")`,
 `camera.status()`. Next year's camera is a new class with the same methods.
@@ -52,7 +59,11 @@ many tags it sees: check that before START.
 
 ## 3. Aim the drivetrain
 
-`AimController` is a small PID for aiming: the two numbers are kP and kD (Tutorial 07).
+`AimController` is a small PID for aiming: the two numbers are kP and kD (Tutorial 07). kP 0.02 is
+the turn power per degree off (10 degrees off gives 0.2). kD 0.003 eases off as it closes in, so
+the robot does not swing past the tag. `deadband(1.5)`: within 1.5 degrees counts as aimed and gives
+0 power, so the robot does not twitch back and forth forever. `maxPower(0.5)`: never turn harder
+than 0.5 while aiming.
 
 ```java
 AimController aim = new AimController(0.02, 0.003).deadband(1.5).maxPower(0.5).maxAgeMs(150);
@@ -60,12 +71,17 @@ AimController aim = new AimController(0.02, 0.003).deadband(1.5).maxPower(0.5).m
 if (gamepad1.right_bumper) {
     turn = aim.turnPower(target);     // same sign as the drive's turn (clockwise +)
 } else {
-    aim.reset();
+    aim.reset();   // the next aim starts fresh
 }
 drive.drive(forward, strafe, turn);
 ```
 
-While the driver holds RB, the robot turns toward the tag; they keep control of driving.
+While the driver holds RB, the robot turns toward the tag; they keep control of driving. When RB
+is let go, `aim.reset()` forgets the old aim, so the next aim does not start with a wrong kick from
+an old picture.
+
+`target` is `null` when nothing is seen right now. With "any", the program takes the first target
+in `camera.targets()`. Always check for `null` before you use a target, or the program crashes.
 
 **Safety built in:** `turnPower` returns **0** when there is no target, when the picture is older than
 150 ms, or when there is no bearing. The robot never turns toward a tag it cannot see NOW. (Without

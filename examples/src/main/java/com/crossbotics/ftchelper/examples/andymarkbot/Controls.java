@@ -6,14 +6,11 @@ import com.crossbotics.ftchelper.robot.ControlMap;
 import com.crossbotics.ftchelper.robot.Pad;
 
 /**
- * AndyMark starter bot, file 3 of 5: one driver does everything on gamepad 1 ({@code oneDriver = true}).
- * - left stick forward/back drives, right stick X turns (left stick click: slow on/off)
- * - RT intake in, LT intake out, while held (from the intake)
- * - RB throws one piece (from the catapult's Indexer: one turn per press), Y throws everything
- *   (Actions.java)
- * AndyMark's code puts the intake on the bumpers (LB in, RB out) and runs the catapult while RT is
- * held. Here the library's standard buttons are used, so this robot drives like the other examples;
- * change a button here if your drivers want AndyMark's layout.
+ * AndyMark starter bot, file 3 of 5: the buttons (and the TeleOp). One driver, gamepad 1:
+ * - left stick drives, right stick X turns (left stick click: slow on/off)
+ * - RT intake in, LT intake out (while held); RB throws one piece, Y throws all (Actions.java)
+ * These are the library's standard buttons, not AndyMark's layout:
+ * more: https://crossbotics.com/ftc-helper/docs/guides/starter-bots/#andymark-bot-code
  */
 @TeleOp(name = "AndyMark Bot TeleOp", group = "Examples")
 @Disabled

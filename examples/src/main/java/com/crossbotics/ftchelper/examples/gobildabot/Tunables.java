@@ -1,14 +1,13 @@
 package com.crossbotics.ftchelper.examples.gobildabot;
 
-import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT (docs/guides/tunables.md)
+import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT
 
 /**
- * goBILDA starter bot, file 2 of 5: the numbers, one per line. The launcher's come from goBILDA's code:
- * it spins to 1250 counts per second (1250 / 28 x 60 = 2679 RPM) and feeds above 1200 (107 RPM below),
- * with the hub's speed control at P 40, F 12.5. DEFAULT = the library's default (in brackets).
+ * goBILDA starter bot, file 2 of 5: the numbers, one per line. The launcher's come from goBILDA's
+ * code. DEFAULT = the library's default (in brackets).
+ * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/01-robot-in-five-files/#2-tunablesjava-the-numbers
  */
 public class Tunables {
-    /** calibrated: set true after the Drive Tuner (autonomous refuses to run before). */
     public static class Drive {
         public static double maxPower = DEFAULT;                    // top wheel power (1.0)
         public static double practiceMaxPower = DEFAULT;            // top wheel power in PRACTICE (0.6)
@@ -31,8 +30,7 @@ public class Tunables {
         public static double stepRpm = 50;                          // speed change per D-pad press
         public static double readyBandRpm = 107;                    // "at speed" this close: goBILDA feeds above 1200
         public static double idleRpm = DEFAULT;                     // speed between shots, 0 = stop (0)
-        // goBILDA's own tested numbers for this kit bot (its starter code: P 40, F 12.5), so kept here.
-        // Without these lines the library would start from the parts catalog's (kF 11.7, kP 1.17, kI 0.117).
+        // goBILDA's tested gains for this kit bot (its code: P 40, F 12.5).
         public static double kP = 40;                               // push per speed error: goBILDA's number
         public static double kI = 0;                                // fix a steady error: goBILDA's number
         public static double kD = 0;                                // brake changes: goBILDA's number
@@ -41,10 +39,7 @@ public class Tunables {
         public static double shotIntervalSec = DEFAULT;             // least time between two pieces, s (0.25)
     }
 
-    /**
-     * The windmill: full power, for feedSec per piece. goBILDA's code runs it for as long as the button
-     * is held; 0.3 s per piece is a starting guess: watch it and tune it.
-     */
+    /** The windmill feeder. feedSec is a guess (goBILDA's code feeds while the button is held). */
     public static class Windmill {
         public static double power = DEFAULT;                       // feeder power, 0 to 1 (1.0)
         public static double feedSec = 0.3;                         // seconds per piece: a starting guess

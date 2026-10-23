@@ -16,26 +16,19 @@ public class Robot extends RobotDefinition {
 
     @Override
     protected void define() {
-        // STEP 1: the drive type and the four motor names, in this order: front left, front right,
-        //         back left, back right. A standard (tank) drive instead:
-        //         drive(Drive.tank("left_drive", "right_drive") ... );
+        // STEP 1: the drive type and the motor names: front left, front right, back left, back right.
+        //         A standard (tank) drive instead: drive(Drive.tank("left_drive", "right_drive") ... );
         drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
                 // STEP 2: your drive motor (its parts-catalog id) and wheel size in mm.
                 .motor("gobilda-5203-312").wheelMm(96)
                 // STEP 3: which way the Control Hub's logo and its USB ports face on the robot.
-                // STEP 4 (only if a wheel turns the wrong way, see the quick start): on its own line HERE,
-                //         before .imu(...), add .reversed("front_left", "back_left") listing EVERY reversed
-                //         drive motor.
+                // STEP 4 (only if a wheel turns the wrong way): on its own line HERE, before .imu(...),
+                //         add .reversed("front_left", "back_left") listing EVERY reversed drive motor.
                 .imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD));
 
-        // STEP 5: your mechanisms, one line each. This robot has one intake motor called "intake".
-        //         .part(...): which motor it is (an example: your motor's id is on its label). The starting
-        //         values and the simulator then use its numbers.
-        //         No intake? Delete this line, the "intake" field above, the g2.dpadLeft line in Controls.java
-        //         and spitOut in Actions.java. More you can add (then add their numbers in Tunables.java):
-        //           lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom"));
-        //           claw = add(Claw.servo("claw").part("gobilda-2000-torque"));
-        //         (and a field for each, like "public Lift lift;" above)
+        // STEP 5: your mechanisms, one line each; .part(...) = your motor's id (on its label). No intake?
+        //         Delete this line, the field above, g2.dpadLeft in Controls.java, spitOut in Actions.java.
+        //         A lift, a claw: https://crossbotics.com/ftc-helper/docs/quick-start/#3-change-the-step-lines
         intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
     }
 }

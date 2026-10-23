@@ -67,7 +67,9 @@ very strangely (a PID that never sees the lift move). That is why AUTO is the sa
 
 The program lets you switch bulk reads on and off with A while it runs, so you can see the
 difference in Hz. (It sets the hub mode directly for this demo; normal programs just call
-`BulkReads.auto` or `manual` once.)
+`BulkReads.auto` or `manual` once.) `List<LynxModule>` is a list of hubs: Java calls a Control
+Hub or Expansion Hub a `LynxModule`. After the switch, `loopTimer.reset()` starts measuring again,
+so the new loop speed is not mixed with the old one.
 
 ## 4. Telemetry the driver can use
 
@@ -81,12 +83,18 @@ TelemetryHelper.flag(telemetry, "Bulk reads (A)", bulk);
 TelemetryHelper.value(telemetry, "Loop", loopTimer.getHz(), "Hz");
 
 // Debug numbers: at the bottom, and only when asked for.
-if (showDebug) {
+if (showDebug) { // (1)!
     TelemetryHelper.section(telemetry, "Debug (B)");
-    for (int i = 0; i < wheels.length; i++) TelemetryHelper.motor(telemetry, names[i], wheels[i]);
+    for (int i = 0; i < wheels.length; i++) TelemetryHelper.motor(telemetry, names[i], wheels[i]); // (2)!
 }
 telemetry.update();
 ```
+
+1. The debug section is also where the encoders are read. So the bulk-read difference shows most
+   with the debug section on.
+2. `wheels` comes from `drive.getMotors()`, in the order front-left, front-right, back-left,
+   back-right. `names` is `{"FL", "FR", "BL", "BR"}`, in the same order. The `for` loop goes
+   through them one by one (i = 0, 1, 2, 3).
 
 - `section` puts a `--- Driver ---` heading line, so groups are easy to find.
 - `motor` puts power, position and speed on ONE line.

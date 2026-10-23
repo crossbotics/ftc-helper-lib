@@ -86,6 +86,20 @@ public class Lift {
 }
 ```
 
+What the real file adds:
+
+- `MAX_TICKS = 2600` is the highest the software lets the lift go: above HIGH (2400) and below the
+  real top, so the lift never runs into its physical stop under power.
+- The constructor resets the encoder, so turn the robot on with the lift DOWN. Nothing moves in a
+  constructor, so it is safe in INIT.
+- The bottom switch is optional (`Hw.tryGet`). Until it is pressed once, the lift only goes down,
+  slowly (Tutorial 08).
+- `update()` runs `moveTo` every loop, even at the target: that holds the lift up against gravity.
+  Before homing, the zero is not known, so a set height is cancelled.
+- `stepUp()` steps from the target, or, after the driver moved the lift by hand, from the set
+  height closest to where it is now (`LiftHeights.closestTo`).
+- `stop()` also forgets the target and the hand power, so the next `update()` does not start it again.
+
 The pattern for every subsystem:
 
 - **Constructor** (the method with the class's name, run by `new Lift(...)`): get and set up the hardware.
@@ -94,7 +108,9 @@ The pattern for every subsystem:
 - **Questions** (`isAtTarget`) and **`addTelemetry`**.
 - **`stop()`**.
 
-`Claw` is the same idea, smaller: `open()`, `close()`, `toggle()`, `isOpen()`.
+`Claw` is the same idea, smaller: `open()`, `close()`, `toggle()`, `isOpen()`. Its servo is
+`private`, so nobody else can send it a wrong position. A servo cannot report where it is, so
+`Claw` remembers what it last told it. The servo does not move until `open()` or `close()` is called.
 
 ## 4. The whole robot: `Robot`
 
@@ -120,12 +136,14 @@ public class Robot {
 ```
 
 The drivetrain is NOT in `Robot`: TeleOp drives with `MecanumDrive`, autonomous with `AutoDrive`.
-Both read `RobotSettings.drive()`, so they still match.
+Both read `RobotSettings.drive()`, so they still match. Only the lift needs `update()` (its PID):
+the claw is a servo, and it goes where it is told. Setting up the IMU makes the way the robot faces
+now heading 0.
 
 ## 5. TeleOp becomes short
 
 ```java
-Robot robot = new Robot(hardwareMap);
+Robot robot = new Robot(hardwareMap);   // the IMU setup makes the way the robot faces NOW heading 0
 MecanumDrive drive = new MecanumDrive(hardwareMap, RobotSettings.drive());
 
 ControllerBindings controls = new ControllerBindings()
@@ -142,6 +160,7 @@ Read the button list out loud: it IS the driver's control sheet. Print it for th
 `robot.lift::stepUp` is short for `() -> robot.lift.stepUp()`.
 
 The loop: `controls.update`, `robot.lift.manual(stick)`, `robot.update()`, drive, telemetry.
+The lift stick has a deadband of 0.1, so a bumped stick does not cancel a set height.
 
 ## 6. Autonomous uses the same classes
 
@@ -151,12 +170,15 @@ AutoDrive auto = new AutoDrive(this, RobotSettings.drive(), RobotSettings.auto()
 auto.setLoopHook(robot::update);      // the lift keeps working during every move
 ...
 robot.claw.close();
-robot.lift.goTo(LiftHeights.HIGH);
+robot.lift.goTo(LiftHeights.HIGH);   // rises during the next move (loop hook)
 auto.move(30, 0, 0.6);
-waitForLift(2.0);
+waitForLift(2.0);                    // at most 2 s: a stuck lift cannot use up the auto
 robot.claw.open();
-pause(0.3);
+pause(0.3);                        // let the piece fall
 ```
+
+`robot::update` is a method reference: the loop hook runs `robot.update()` again and again during
+every move. Without it, a move would give the lift no updates (no PID) while the robot drives.
 
 `waitForLift` and `pause` keep calling `robot.update()` while they wait (Tutorial 10, section 6),
 so the lift keeps holding its height. **Do not use `sleep()` while a mechanism must hold
@@ -168,7 +190,8 @@ position:** `sleep` stops all your code, including the lift's PID.
 `DriverHeading` in INIT, which takes that heading. TeleOp sets up the IMU again (that makes "0" the
 way the robot faces now), so `DriverHeading` adds the saved heading back. Field-centric "forward"
 (Y turns it on) is then right from the start of TeleOp, without a reset. The robot must start
-autonomous facing straight away from the driver. See
+autonomous facing straight away from the driver. After START, `heading.forgetSaved()` makes sure a
+later TeleOp run does not use the same saved heading again. See
 [DriverHeading](../modules/drive.md#driverheading).
 
 ## Run it

@@ -6,11 +6,9 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 /**
- * The lesson robot, file 3 of 5: the buttons, and the TeleOp (lesson 3). The parts bring their own
- * buttons: driving on gamepad 1; intake (RT in, LT out), lift (A down, X low, Y high, D-pad, left
- * stick by hand) and claw (B) on gamepad 2. Here we add only what is ours: two actions, a buzz
- * for the claw, and two gestures on LB.
- * Every way a button can work (the menu): docs/guides/buttons.md.
+ * The lesson robot, file 3 of 5: the buttons, and the TeleOp. The parts bring their own buttons
+ * (driving on gamepad 1; intake, lift and claw on gamepad 2). Here we add only our own.
+ * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/03-buttons/
  */
 @TeleOp(name = "Lesson Bot TeleOp", group = "Examples")
 @Disabled

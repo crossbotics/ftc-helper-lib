@@ -34,6 +34,9 @@ TankDrive drive = new TankDrive(hardwareMap, driveConfig);
 | 2 motors | `DriveConfig.tankTwoMotor()` | `left_drive`, `right_drive` (same as the FTC samples) |
 | 4 motors | `DriveConfig.tank()` | `front_left`, `front_right`, `back_left`, `back_right` |
 
+`powerLimit = 0.6` keeps every wheel at 60% or less while you test. Raise it once the robot drives
+correctly. `new TankDrive(...)` stops with a clear message if a motor name is wrong.
+
 With 4 motors, both motors on a side always get the same power.
 
 The left side is reversed by default (motors on the left face the other way). Check it with

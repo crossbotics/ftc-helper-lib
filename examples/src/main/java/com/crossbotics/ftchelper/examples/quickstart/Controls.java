@@ -22,11 +22,8 @@ public class Controls extends ControlMap<Robot> {
 
     @Override
     protected void buttons(Robot robot, Pad g1, Pad g2) {
-        // This runs ONCE, at INIT: each line plugs a job into a button, and the library runs the jobs
-        // when the buttons are pressed. So no if, while or sleep() here (they would run once, or
-        // freeze INIT). Waits go in an Action (Actions.java).
-        // Your own buttons here, later (lesson 3). One example: an action on gamepad 2's D-pad left,
-        // a button no part uses (delete it if you deleted the intake in STEP 5).
+        // Runs ONCE, at INIT: each line plugs a job into a button. No if, while or sleep() here (lesson 3).
+        // An example: an action on gamepad 2's D-pad left (delete it if you deleted the intake in STEP 5).
         g2.dpadLeft.press(Actions.spitOut(robot)).says("spit out");
     }
 }

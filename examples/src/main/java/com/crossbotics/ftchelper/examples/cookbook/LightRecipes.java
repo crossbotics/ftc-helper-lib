@@ -34,8 +34,7 @@ public class LightRecipes {
             intake = add(Intake.motor("intake"));
             launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer")));
             // recipe: light-add
-            // At the top of Robot.java: import com.crossbotics.ftchelper.robot.Lights;  (and in
-            // Controls.java, for the colors: import com.crossbotics.ftchelper.robot.LightColor;)
+            // At the top of Robot.java: import com.crossbotics.ftchelper.robot.Lights;
             // A goBILDA RGB Indicator Light on a servo port ("Servo" in the robot configuration):
             lights = add(Lights.gobilda("light"));
             // Or a REV Blinkin LED Driver with an LED strip ("REV Blinkin LED Driver" in the configuration):
@@ -55,8 +54,7 @@ public class LightRecipes {
             // At the top of Robot.java: import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
             // A REV Blinkin LED Driver ("REV Blinkin LED Driver" in the robot configuration):
             lights = add(Lights.blinkin("blinkin"));
-            // Your strip shows plain blue too dark? Show another Blinkin pattern for BLUE (the
-            // pattern names are on REV's Blinkin page). Other lights ignore this line.
+            // Plain blue too dark on your strip? Show another Blinkin pattern for BLUE.
             lights.blinkinPattern(LightColor.BLUE, RevBlinkinLedDriver.BlinkinPattern.BLUE_VIOLET);
             // end recipe
         }
@@ -66,8 +64,7 @@ public class LightRecipes {
     public static class Actions {
         // recipe: light-action
         // In Actions.java (it needs import com.crossbotics.ftchelper.robot.LightColor; at the top).
-        // The last step of an action: a 1 s white flash says "done" to the drivers. Pick a color
-        // (or a time) your rules do not use: a GREEN flash over the GREEN "ready" rule cannot be seen.
+        // The last step: a 1 s white flash says "done" to the drivers. Pick a color your rules do not use.
         public static Action shootTwo(Robot r) {
             return Action.named("Shoot two")
                     .then(r.launcher::spinUp)
@@ -88,14 +85,11 @@ public class LightRecipes {
         @Override
         protected void buttons(Robot robot, Pad g1, Pad g2) {
             // recipe: light-alliance
-            // At INIT the light shows the alliance chosen (solid RED or BLUE; white blinking until one is
-            // chosen) and flashes it for 1 s at START: on by default, nothing to write.
+            // On by default: the alliance at INIT (solid RED or BLUE), flashed for 1 s at START.
             // Your light shows red badly? Other colors for the alliance at INIT (BLUE, and PURPLE for RED):
             robot.lights.allianceColors(LightColor.BLUE, LightColor.PURPLE);
-            // No alliance color at INIT at all (your rules from INIT on): delete the line above and write
+            // No alliance color at INIT at all? Delete the line above and write:
             //     robot.lights.allianceAtInit(false);
-            // or, in Tunables.java, the light's section: public static class Light {
-            //     public static boolean allianceAtInit = false; }   (the line in Controls.java wins)
             // end recipe
         }
     }
@@ -108,17 +102,15 @@ public class LightRecipes {
         @Override
         protected void buttons(Robot robot, Pad g1, Pad g2) {
             // recipe: light-flash
-            // A flash beats every rule while it lasts, wherever it is written (write it first: it reads
-            // that way). A short white flash for each piece fired (the launcher counts the pieces it
-            // feeds): 0.2 s, so two quick shots are two flashes, not one long one. And one from a button.
+            // A flash beats every rule while it lasts (write it first: it reads that way).
+            // A short white flash for each piece fired, and one from a button.
             robot.lights.show(LightColor.WHITE).forSeconds(0.2)
                     .whenCountGoesUp(() -> robot.launcher.part().getShotsFired());
             g2.a.press(() -> robot.lights.flash(LightColor.YELLOW)).says("flash the light (signal the partner)");
             // end recipe
 
             // recipe: light-endgame
-            // Yellow, blinking, in the last 20 seconds of TeleOp: time to park. Written above the other
-            // rules, so it beats them.
+            // Yellow, blinking, in the last 20 seconds of TeleOp: time to park (above the other rules: it wins).
             robot.lights.show(LightColor.YELLOW).blinking().inLastSeconds(20);
             // end recipe
 

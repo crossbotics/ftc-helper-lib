@@ -445,6 +445,8 @@ most 200), in our field numbers, mirrored as driven. It only reads; it changes n
 **The numbers.** The simulator uses the numbers in `PedroConstants`. The Pedro example robot
 (`examples/.../pedrobot`) has numbers measured on the simulated robot itself: the measuring steps of
 Pedro's Foresight tuner ran in the simulator. So its paths brake like the simulated robot really brakes.
+(Pedro's Quickstart of 2026-10-15, on the example's simulator robot file, with the tuner's default
+distances: 48 in, 30 in/s, 36 in. Measured 2026-10-21.)
 Your robot needs its own numbers: tune on the real robot ([Tuning Pedro](#tuning-pedro)).
 
 **Can Pedro's Foresight tuner run in the simulator?** Partly. Pedro's tuner menu (the robot's web

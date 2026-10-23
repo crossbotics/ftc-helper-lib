@@ -223,8 +223,7 @@ public class Robot extends RobotDefinition {
                 .motor("gobilda-5203-312").wheelMm(96)
                 .imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD));
         odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
-        // .part(...) = which motor or servo it is: the id on its label (examples here; optional, recommended:
-        // better starting values, a true simulator). A launcher's motor id is in its brackets.
+        // .part(...) = which motor or servo it is: the id on its label (optional, recommended). (1)!
         intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
         lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom"));
         claw = add(Claw.servo("claw").part("gobilda-2000-torque"));
@@ -235,6 +234,8 @@ public class Robot extends RobotDefinition {
     }
 }
 ```
+
+1. The ids here are examples: write the ids of your parts. It is optional, but we recommend it: the library then takes better starting values from the part's numbers, and the simulator moves like the real part. The [parts catalog](guides/parts-catalog.md) lists the ids. A launcher's motor id goes in its brackets, and there it is needed.
 
 **`Controls.java`**: the buttons, and your TeleOp. Button lines go inside `buttons(...)`:
 
@@ -700,9 +701,11 @@ the configuration name in CamelCase (each word starts with a capital letter, no 
 ```java title="Robot.java"
 // At the top of the class: public Intake intake;   Here in define():
 // "intake" = the motor's name in the robot configuration. Its numbers: Tunables.Intake.
-// .part(...): which motor it is (optional, recommended: better starting values, a true simulator).
+// .part(...): which motor it is (optional, recommended). (1)!
 intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
 ```
+
+1. `.part(...)` is optional, but we recommend it: the library then takes better starting values from the part's numbers, and the simulator moves like the real part. The [parts catalog](guides/parts-catalog.md) lists the ids.
 
 <!-- recipe: tunables-intake -->
 ```java title="Tunables.java"
@@ -723,13 +726,15 @@ A CR (continuous rotation) servo spins all the way round, like a small motor, in
 
 <!-- recipe: intake-cr-servos -->
 ```java title="Robot.java"
-// At the top of the class: public Intake intake;   Here in define():
-// two continuous-rotation (CR) servos. The one that spins the wrong way is reversed.
+// Two continuous-rotation (CR) servos. The one that spins the wrong way is reversed. (1)!
 // "left_intake", "right_intake" = the servos' names in the robot configuration. Numbers: Tunables.Intake.
-// .part(...): which servo it is (optional, recommended: better starting values, a true simulator).
+// .part(...): which servo it is (optional, recommended). (2)!
 intake = add(Intake.crServos("left_intake", "right_intake").part("gobilda-2000-speed")
         .reversed("right_intake"));
 ```
+
+1. Also add the field at the top of the class: `public Intake intake;`. The two servos face each other, so one must turn the other way: `.reversed(...)` names that one.
+2. `.part(...)` is optional, but we recommend it: the library then takes better starting values from the part's numbers, and the simulator moves like the real part. The [parts catalog](guides/parts-catalog.md) lists the ids.
 
 **Why:** two servos that face each other must turn opposite ways to pull a piece in. The numbers are in `Tunables.Intake` too (`inPower`, `outPower`).
 **More:** [Intake](modules/robot.md#intake).
@@ -741,9 +746,11 @@ intake = add(Intake.crServos("left_intake", "right_intake").part("gobilda-2000-s
 <!-- recipe: intake-on-at-start -->
 ```java title="Robot.java"
 // Runs in from START until stopped. Its button (operator RT) then switches it on/off.
-// .part(...): which motor it is (optional, recommended: better starting values, a true simulator).
+// .part(...): which motor it is (optional, recommended). (1)!
 add(Intake.motor("intake").part("gobilda-5203-1150").onAtStart());
 ```
+
+1. `.part(...)` is optional, but we recommend it: the library then takes better starting values from the part's numbers, and the simulator moves like the real part. The [parts catalog](guides/parts-catalog.md) lists the ids.
 
 **Why:** many robots collect all match, so the driver should not have to switch it on.
 **More:** [Intake](modules/robot.md#intake).
@@ -755,12 +762,13 @@ add(Intake.motor("intake").part("gobilda-5203-1150").onAtStart());
 <!-- recipe: lift -->
 ```java title="Robot.java"
 // At the top of the class: public Lift lift;   Here in define():
-// a slide on a motor with a switch at the bottom (the switch sets 0 each time it is pressed).
-// .part(...): which motor it is (optional, recommended: better starting values, a true simulator).
-// No switch? Delete .bottomSwitch(...).
-// "lift", "lift_bottom" = the motor's and the switch's names in the robot configuration.
+// "lift", "lift_bottom" = the motor's and the bottom switch's names in the robot configuration. (1)!
+// .part(...): which motor it is (optional, recommended). (2)!
 lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom"));
 ```
+
+1. The bottom switch sets the lift's 0 each time it is pressed. No switch? Delete `.bottomSwitch(...)`.
+2. `.part(...)` is optional, but we recommend it: the library then takes better starting values from the part's numbers, and the simulator moves like the real part. The [parts catalog](guides/parts-catalog.md) lists the ids.
 
 <!-- recipe: tunables-lift -->
 ```java title="Tunables.java"
@@ -793,9 +801,11 @@ goBILDA motor series and 435 its RPM (on the motor's label); the [parts catalog]
 <!-- recipe: lift-reversed -->
 ```java title="Robot.java"
 // The lift goes DOWN on positive power (the Motor Finder says "add .reversed()"): flip it.
-// .part(...): which motor it is (optional, recommended: better starting values, a true simulator).
+// .part(...): which motor it is (optional, recommended). (1)!
 add(Lift.slide("lift").part("gobilda-5203-435").reversed());
 ```
+
+1. `.part(...)` is optional, but we recommend it: the library then takes better starting values from the part's numbers, and the simulator moves like the real part. The [parts catalog](guides/parts-catalog.md) lists the ids.
 
 **Why:** the lift's limits and heights count up as it goes up, so positive power must move it up.
 **More:** [Motor Finder](guides/finders.md#motor-finder-limits-positions-top-speed), [Troubleshooting](troubleshooting.md#robot-behavior).
@@ -806,20 +816,17 @@ add(Lift.slide("lift").part("gobilda-5203-435").reversed());
 
 <!-- recipe: own-parts -->
 ```java title="Robot.java"
-// A motor that is not in the catalog: its encoder counts per output turn, then its free speed (RPM).
-// On the seller's page:
-// - goBILDA: "Encoder Resolution" (the number "at the Output Shaft") and "No-Load Speed".
-// - REV: "Encoder Counts per Revolution" (at the output) and "Free Speed".
-// Its name then works like a catalog id, here and in .part(...).
+// A motor that is not in the catalog: its encoder counts per output turn, then its free speed (RPM). (1)!
 launcher = add(Launcher.flywheel("launcher", Motors.custom("my-flywheel-motor", 28, 5800)));
-// A servo: how far it turns (degrees), then its speed (seconds per 60 degrees).
-// If the seller lists 4.8 V and 6 V, use 4.8 V (the hub gives a servo about 5 V).
+// A servo: how far it turns (degrees), then its speed (seconds per 60 degrees, at 4.8 V). (2)!
 claw = add(Claw.servo("claw").part(Parts.customServo("my-claw-servo", 270, 0.16)));
-// Double.NaN means "I don't know this one". Motors.unknown(...) means "I know neither number".
-// The part then uses general defaults, and INIT says so.
-// A launcher or an arm must at least have the counts per turn: Motors.custom("...", 28, Double.NaN).
+// Motors.unknown(...): "I know neither number" (a single unknown number: Double.NaN). (3)!
 lift = add(Lift.slide("lift").part(Motors.unknown("old-lift-motor")));
 ```
+
+1. Find the two numbers on the seller's page. goBILDA: "Encoder Resolution" (the number "at the Output Shaft") and "No-Load Speed". REV: "Encoder Counts per Revolution" (at the output) and "Free Speed". The name (`"my-flywheel-motor"`) then works like a catalog id, here and in `.part(...)`.
+2. If the seller lists 4.8 V and 6 V, use the 4.8 V speed: the hub gives a servo about 5 V.
+3. `Double.NaN` means "I don't know this one". The part then uses general defaults, and INIT says so. A launcher or an arm must have at least the counts per turn: `Motors.custom("...", 28, Double.NaN)`.
 
 **Why:** the library works out a part's defaults (a launcher's gains and speed, a lift's kP, a servo's
 move time) from its motor's or servo's numbers. Describe yours with the seller's numbers and it works like
@@ -836,14 +843,15 @@ numbers would be quietly wrong.
 
 <!-- recipe: lift-two-motors -->
 ```java title="Robot.java"
-// A slide with a motor on each side. Both get the same power, always (stop and pause too).
-// Only the FIRST motor's encoder is read: plug the encoder cable into it. The numbers are in
-// Tunables.LiftLeft (the first motor's name in CamelCase), not Tunables.Lift.
-// The motors face each other, so the second turns the other way: alsoMotorReversed.
-// (Both turn the same way for "up"? Use .alsoMotor("lift_right") instead.)
-// "lift_left", "lift_right" = the motors' names in the robot configuration. Numbers: Tunables.LiftLeft.
+// "lift_left", "lift_right" = the motors' names in the robot configuration. Numbers: Tunables.LiftLeft. (1)!
+// Plug the encoder cable into the FIRST motor: only its encoder is read. (2)!
+// The motors face each other, so the second turns the other way: alsoMotorReversed. (3)!
 lift = add(Lift.slide("lift_left").part("gobilda-5203-435").alsoMotorReversed("lift_right"));
 ```
+
+1. The numbers are in `Tunables.LiftLeft` (the FIRST motor's name in CamelCase), not in `Tunables.Lift`.
+2. Both motors always get the same power (also when the lift stops or pauses), so one encoder is enough.
+3. Both motors turn the same way for "up"? Use `.alsoMotor("lift_right")` instead.
 
 <!-- recipe: tunables-lift-two-motors -->
 ```java title="Tunables.java"
@@ -877,12 +885,13 @@ motors to one slide (`:sim:fromRobot` writes the second motor's line).
 
 <!-- recipe: arm -->
 ```java title="Robot.java"
-// An arm in degrees. Its motor's catalog id is in the brackets (not optional, like a turret's
-// or launcher's): it needs the motor's counts per turn to work in degrees.
-// gearRatio: motor turns per arm turn. 0 degrees = where it is at INIT.
 // "arm" = the motor's name in the robot configuration. Its numbers: Tunables.Arm.
+// "gobilda-5203-117" = the motor's catalog id (needed: it works in degrees). (1)!
+// gearRatio: motor turns per arm turn. 0 degrees = where it is at INIT.
 arm = add(Arm.motor("arm", "gobilda-5203-117").gearRatio(2));
 ```
+
+1. Like a turret's or a launcher's, the arm's motor id is not optional: the arm needs the motor's counts per turn to work in degrees.
 
 <!-- recipe: tunables-arm -->
 ```java title="Tunables.java"
@@ -910,9 +919,11 @@ public static class Arm {                                       // "arm" in the 
 ```java title="Robot.java"
 // At the top of the class: public Claw claw;   Here in define():
 // "claw" = the servo's name in the robot configuration. Its numbers: Tunables.Claw.
-// .part(...): which servo it is (optional, recommended: better starting values, a true simulator).
+// .part(...): which servo it is (optional, recommended). (1)!
 claw = add(Claw.servo("claw").part("gobilda-2000-torque"));
 ```
+
+1. `.part(...)` is optional, but we recommend it: the library then takes better starting values from the part's numbers, and the simulator moves like the real part. The [parts catalog](guides/parts-catalog.md) lists the ids.
 
 <!-- recipe: tunables-claw -->
 ```java title="Tunables.java"
@@ -935,9 +946,11 @@ public static class Claw {                                      // "claw" in the
 ```java title="Robot.java"
 // At the top of the class: public Wrist wrist;   Here in define():
 // "wrist" = the servo's name in the robot configuration. Its numbers: Tunables.Wrist.
-// .part(...): which servo it is (optional, recommended: better starting values, a true simulator).
+// .part(...): which servo it is (optional, recommended). (1)!
 wrist = add(Wrist.servo("wrist").part("gobilda-2000-speed"));
 ```
+
+1. `.part(...)` is optional, but we recommend it: the library then takes better starting values from the part's numbers, and the simulator moves like the real part. The [parts catalog](guides/parts-catalog.md) lists the ids.
 
 <!-- recipe: tunables-wrist -->
 ```java title="Tunables.java"
@@ -960,11 +973,13 @@ public static class Wrist {                                     // "wrist" in th
 ```java title="Robot.java"
 // Any servo with named positions: a gate, a kicker, a fold-out intake.
 // "intake_deploy" = the servo's name in the robot configuration. Numbers: Tunables.IntakeDeploy.
-// .part(...): which servo it is (optional, recommended: better starting values, a true simulator).
+// .part(...): which servo it is (optional, recommended). (1)!
 intakeDeploy = add(Positioner.servo("intake_deploy").part("gobilda-2000-torque"));
 // Right after START (autonomous and TeleOp): fold the intake out.
 atStart(() -> Action.named("Deploy").then(() -> intakeDeploy.goTo("deployed")));
 ```
+
+1. `.part(...)` is optional, but we recommend it: the library then takes better starting values from the part's numbers, and the simulator moves like the real part. The [parts catalog](guides/parts-catalog.md) lists the ids.
 
 <!-- recipe: tunables-positioner -->
 ```java title="Tunables.java"
@@ -984,11 +999,12 @@ public static class IntakeDeploy {                              // "intake_deplo
 
 <!-- recipe: servo-full-range -->
 ```java title="Robot.java"
-// The hub normally sends 600-2400 us for positions 0 to 1: a goBILDA 2000 servo then turns
-// 270 of its 300 degrees. fullRange() sends its whole 500-2500 us: 0 to 1 = 300 degrees.
+// fullRange(): positions 0 to 1 = the servo's whole turn (300 degrees on a goBILDA 2000). (1)!
 // Turn it on FIRST, then find the positions (Servo Finder: press Y while choosing the servo).
 wrist = add(Wrist.servo("wrist").part("gobilda-2000-speed").fullRange());
 ```
+
+1. The hub normally sends 600-2400 us (microseconds) for positions 0 to 1: a goBILDA 2000 servo then turns only 270 of its 300 degrees. `fullRange()` sends the whole 500-2500 us.
 
 **Why:** the FTC SDK's normal servo signal (600 to 2400 microseconds) is narrower than what most servos
 take (500 to 2500), so they turn less than the seller says: 270 degrees for a goBILDA 2000, 243 for a REV
@@ -1025,15 +1041,17 @@ folds the intake out). The `atStart` line runs the action below at START.
 
 <!-- recipe: optional-part -->
 ```java title="Robot.java"
-// The deploy servo is not on the robot yet. optional(): while "intake_deploy" is not in
-// the robot configuration, INIT goes on (with a note) and the part is off.
-// .part(...): which motor or servo it is (optional, recommended: better starting values, a true simulator).
+// optional(): while "intake_deploy" is not in the robot configuration, the part is off (INIT goes on). (1)!
+// .part(...): which motor or servo it is (optional, recommended). (2)!
 intakeDeploy = add(Positioner.servo("intake_deploy").part("gobilda-2000-torque").optional());
 intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
-// At START: fold the intake out, then run it (the action is in Actions.java, below). With
-// no deploy servo the action skips the servo (and the wait for it) and just starts the intake.
+// At START: fold the intake out, then run it (the action is in Actions.java, below). (3)!
 atStart(() -> Actions.deployIntake(this));
 ```
+
+1. The deploy servo is not on the robot yet. INIT goes on with a note (see **Why**, below).
+2. `.part(...)` is optional, but we recommend it: the library then takes better starting values from the part's numbers, and the simulator moves like the real part. The [parts catalog](guides/parts-catalog.md) lists the ids.
+3. With no deploy servo, the action skips the servo (and the wait for it) and only starts the intake.
 
 **`Actions.java`**, inside `public class Actions { ... }`: the action. In your file the brackets say
 `(Robot r)`.
@@ -1076,13 +1094,14 @@ in the robot file.
 
 <!-- recipe: launcher -->
 ```java title="Robot.java"
-// A flywheel (in RPM) and the indexer that feeds it one piece at a time. "launcher" and "indexer"
-// = their names in the robot configuration. Numbers: Tunables.Launcher and Tunables.Indexer.
-// The launcher's motor id is in the brackets. The indexer's servo: .part(...) (optional, recommended:
-// better starting values, a true simulator).
+// A flywheel (in RPM) and the indexer that feeds it one piece at a time.
+// "launcher", "indexer" = names in the robot configuration. Numbers: Tunables.Launcher, .Indexer.
+// The motor's catalog id is in the brackets (needed). The indexer's .part(...) is optional, recommended. (1)!
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
         .feeder(Indexer.servo("indexer").part("gobilda-2000-speed")));
 ```
+
+1. The launcher needs its motor's id for its speed control. `.part(...)` on the indexer is optional, but we recommend it: the library then takes better starting values from the part's numbers, and the simulator moves like the real part. The [parts catalog](guides/parts-catalog.md) lists the ids.
 
 <!-- recipe: tunables-launcher -->
 ```java title="Tunables.java"
@@ -1154,12 +1173,14 @@ public static class Turret {                                    // "turret" in t
 ```java title="Robot.java"
 // The speed comes from the distance to the goal (Tunables.Launcher.speedByDistance),
 // and a piece is only fed when the turret points at the goal.
-// .part(...): which servo it is (optional, recommended: better starting values, a true simulator).
+// .part(...): which servo it is (optional, recommended). (1)!
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
         .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
         .speedFromDistance(camera)
         .requireReady("turret aimed", () -> turret.isAimed()));
 ```
+
+1. `.part(...)` is optional, but we recommend it: the library then takes better starting values from the part's numbers, and the simulator moves like the real part. The [parts catalog](guides/parts-catalog.md) lists the ids.
 
 **Why:** a shot fired before the turret is on target, or at the wrong speed, is a lost piece. For a
 turret that follows the goal, `isAimed()` means on the goal NOW: losing the goal makes it false.
@@ -1177,16 +1198,17 @@ size) goes in `Tunables.java`, measured with the Piece Tuner. All of it: [Pieces
 
 <!-- recipe: pieces-count -->
 ```java title="Robot.java"
-// At the top of the class: public Pieces pieces;   Here in define(), ABOVE the intake line
-// (each loop the count is then up to date before the intake asks "full?"):
-// the kinds of piece (BIOBUZZ: yellow POLLEN, red and blue NECTAR), a sensor where they
-// come in, one at the "ready to fire" slot (optional), the most the rules allow, the preload.
+// At the top of the class: public Pieces pieces;   Here in define(), ABOVE the intake line. (1)!
+// The kinds of piece, a sensor where they come in, one at the "ready to fire" slot (optional). (2)!
 pieces = add(Pieces.kinds("POLLEN", "RED_NECTAR", "BLUE_NECTAR")
         .comingIn(PieceSensor.color("intake_color"))    // a REV Color Sensor V3
         .readyToFire(PieceSensor.color("ready_color"))  // another one
         .max(4)                                         // BIOBUZZ G407: no more than 4
         .startsWith(4, "POLLEN"));                      // the 4 POLLEN preload
 ```
+
+1. Above the intake line, the count is up to date in each loop before the intake asks "full?".
+2. BIOBUZZ: yellow POLLEN, red and blue NECTAR. Then the most pieces the rules allow (`max`) and the preload (`startsWith`).
 
 **Why:** each piece the intake sensor sees counts one in; each feed of the indexer counts one out, the
 oldest first, once the piece has gone (a jammed feed counts nothing). Until a kind is tuned with the
@@ -1200,21 +1222,24 @@ Piece Tuner it reads `"UNKNOWN"`. `robot.pieces.count()`, `robot.pieces.next()` 
 
 <!-- recipe: intake-stops-when-full -->
 ```java title="Robot.java"
-// ADD .stopsWhen(...) to the intake line you already have (do not write a second intake line),
-// and put the Pieces line above the intake line. It does not pull in a 5th piece
-// ("() ->": asked every loop). Pushing out still works.
-// .part(...): which motor it is (optional, recommended: better starting values, a true simulator).
+// ADD .stopsWhen(...) to your intake line (no second intake line); the Pieces line goes above it. (1)!
+// .part(...): which motor it is (optional, recommended). (2)!
 intake = add(Intake.motor("intake").part("gobilda-5203-1150").stopsWhen(() -> pieces.isFull()));
 ```
+
+1. The intake then does not pull in a 5th piece. `() ->` means: the test is asked in every loop. Pushing out still works.
+2. `.part(...)` is optional, but we recommend it: the library then takes better starting values from the part's numbers, and the simulator moves like the real part. The [parts catalog](guides/parts-catalog.md) lists the ids.
 
 <!-- recipe: launcher-needs-a-piece -->
 ```java title="Robot.java"
 // Each feed counts one piece out. requireReady: no feed with nothing to fire.
-// .part(...): the indexer's servo (optional, recommended: better starting values, a true simulator).
+// .part(...): the indexer's servo (optional, recommended). (1)!
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
         .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
         .requireReady("a piece to fire", () -> !pieces.isEmpty()));
 ```
+
+1. `.part(...)` is optional, but we recommend it: the library then takes better starting values from the part's numbers, and the simulator moves like the real part. The [parts catalog](guides/parts-catalog.md) lists the ids.
 
 **Why:** BIOBUZZ rule G407: a robot may not control more than 4 pieces. The rules ask for "systems to
 prevent active pickup" of a 5th: this is one. Put the intake sensor where a piece is already held, so
@@ -1229,14 +1254,16 @@ for 1 s pulls in anyway, and the Driver Station warns when the intake is held ba
 
 <!-- recipe: pieces-other-sensors -->
 ```java title="Robot.java"
-// A REV 2m Distance Sensor across the intake: a NECTAR (3.6 in) comes closer than a
-// POLLEN (2.8 in). Size only: it cannot tell a red NECTAR from a blue one.
-// A second webcam on the ready slot: colours (the main colour in a box of its picture).
+// A REV 2m Distance Sensor across the intake tells the sizes apart (not the colours). (1)!
+// A second webcam on the ready slot: colours. (2)!
 pieces = add(Pieces.kinds("POLLEN", "NECTAR")
         .comingIn(PieceSensor.distance("intake_distance"))
         .readyToFire(PieceSensor.camera("Webcam 2"))
         .max(4));
 ```
+
+1. A NECTAR (3.6 in) comes closer to the sensor than a POLLEN (2.8 in). Size only: it cannot tell a red NECTAR from a blue one.
+2. The webcam reads the main colour in a box of its picture.
 
 **Why:** a distance sensor reads 20 mm closer with a NECTAR than with a POLLEN, but it sees no colour,
 and rule G408 forbids controlling the other alliance's NECTAR. A webcam sees colours from farther
@@ -1334,15 +1361,14 @@ whole-robot aim are separate modes, so INIT stops with a message if both are the
 
 <!-- recipe: aim-whole-robot -->
 ```java title="Controls.java"
-// Hold RB: the robot turns to face the goal by itself; the driver keeps forward and
-// sideways. Let go: the aim is off, the driver turns again. Moving the turn stick while
-// holding still turns it by hand. Not with a turret that follows the goal: separate
-// modes (INIT stops with a message).
+// Hold RB: the robot turns to face the goal by itself; the driver keeps forward and sideways. (1)!
 g1.rb.hold(robot.aimMode()::on, robot.aimMode()::off).says("hold: aim the robot at the goal");
-// Or a toggle (a press on, a press again off; two buzzes = on). Careful: while it is on,
-// the robot turns by itself, even after you let go of the button.
+// Or a toggle. Careful: while it is on, the robot turns by itself, even after you let go. (2)!
 // g1.rb.toggle(robot.aimMode()).says("aim the robot at the goal on/off").rumble();
 ```
+
+1. Let go: the aim is off, and the driver turns again. Move the turn stick while you hold RB to turn by hand. Not with a turret that follows the goal: these are separate modes (INIT stops with a message).
+2. A press switches it on, the next press switches it off. Two buzzes = on.
 
 **Why:** the driver drives; the robot keeps itself pointed at the goal. Hold-to-aim first: let go and
 the robot stops turning by itself, so it never surprises anyone. The stick always wins, so the driver
@@ -1374,20 +1400,20 @@ g2.rumbleWhenAimed();
 odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
 camera = add(Camera.limelight("limelight").goal("BLUE SCORING", "RED SCORING"));
 turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).follows(camera));
-// .part(...): the indexer's servo (optional, recommended: better starting values, a true simulator).
+// .part(...): the indexer's servo (optional, recommended). (1)!
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
         .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
         .speedFromDistance(camera)
         .startTable("pollen"));                  // the table to start with
 ```
 
+1. `.part(...)` is optional, but we recommend it: the library then takes better starting values from the part's numbers, and the simulator moves like the real part. The [parts catalog](guides/parts-catalog.md) lists the ids.
+
 <!-- recipe: tunables-aim -->
 ```java title="Tunables.java"
 /** Aiming (every line is optional; leave out what you do not use). */
 public static class Aim {                                       // a fixed name: always Aim
-    // The goal on the field, in inches, seen from your drivers' wall (the same numbers as
-    // driveTo): with odometry, aiming goes on when the camera loses the goal. BIOBUZZ: your
-    // HIVE's CELL that is up at the start (13 in right of the centre line, 13 in toward you).
+    // The goal on the field, in inches, seen from your drivers' wall (the same numbers as driveTo). (1)!
     public static double goalX = 13;                            // inches right of centre (BIOBUZZ)
     public static double goalY = -13;                           // inches from centre, - = our half (BIOBUZZ)
     public static boolean mirrorForRed = false;                 // BIOBUZZ: turned, not mirrored (true)
@@ -1398,6 +1424,8 @@ public static class Aim {                                       // a fixed name:
     public static double rumbleDeg = DEFAULT;                   // rumbleWhenAimed(): buzz within this (4)
 }
 ```
+
+1. With odometry, the aim goes on when the camera loses the goal. BIOBUZZ: your HIVE's CELL that is up at the start, 13 in right of the centre line and 13 in toward you.
 
 **Why:** a tag gets blocked by a robot or a game piece; the odometry still knows where the goal is. The
 Driver Station says which one aims (`following: camera` or `following: odometry`). It needs the pose
@@ -1422,12 +1450,14 @@ in `Tunables.java`.
 // turret follows that direction and the launcher's speed comes from that distance.
 odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
 turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).followsOdometry());
-// .part(...): the indexer's servo (optional, recommended: better starting values, a true simulator).
+// .part(...): the indexer's servo (optional, recommended). (1)!
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
         .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
         .speedFromOdometry()
         .requireReady("turret aimed", () -> turret.isAimed()));
 ```
+
+1. `.part(...)` is optional, but we recommend it: the library then takes better starting values from the part's numbers, and the simulator moves like the real part. The [parts catalog](guides/parts-catalog.md) lists the ids.
 
 <!-- recipe: tunables-aim-odometry-only -->
 ```java title="Tunables.java"
@@ -1454,13 +1484,13 @@ in the same way.
 
 <!-- recipe: camera-lighting -->
 ```java title="Robot.java"
-// Each venue's lights are different. In INIT the Limelight tries these pipelines (set each
-// one up on the Limelight's web page for a kind of light; your usual one FIRST) and keeps
-// the one that sees the most AprilTags. The Driver Station says which one it kept.
+// In INIT the Limelight tries these pipelines (your usual one FIRST) and keeps the best one. (1)!
 camera = add(Camera.limelight("limelight").autoPipelines(0, 1, 2).goal("BLUE SCORING", "RED SCORING"));
 // A webcam: Camera.webcam("Webcam 1").autoExposure().goal(...) tries the camera's own
 // exposure, then 3, 6 and 12 ms.
 ```
+
+1. Each venue's lights are different. Set up each pipeline on the Limelight's web page for one kind of light. The Limelight keeps the pipeline that sees the most AprilTags, and the Driver Station says which one.
 
 **Why:** bright stage lights or a dark corner can make a camera miss the AprilTags it saw in your shop.
 The test runs in INIT (nothing moves), takes about a second per setting, and the Driver Station says what
@@ -1479,18 +1509,18 @@ it gives the robot's speed. **Off until you tune it on the real robot** (`shootO
 ```java title="Tunables.java"
 // ADD these lines to your Tunables.Aim section (keep goalX, goalY and the others).
 public static boolean shootOnMove = false;                  // true only after testing on the real robot
-// Seconds a piece is in the air, from a slow-motion video: count the frames from leaving the
-// launcher to reaching the goal, divide by the video's frames per second.
-public static double flightSec = MEASURE;                   // seconds in the air (slow-motion video)
+public static double flightSec = MEASURE;                   // seconds in the air (slow-motion video) (1)!
 public static double flightSecPerIn = DEFAULT;              // longer shots fly longer: per inch (0)
 public static double maxLeadIn = DEFAULT;                   // never lead more than this, inches (24)
-// Where the shooter is from the robot's centre (a turret's pivot), and a camera on the body:
-// inches forward (+) and left (+). A camera on the turret sits at the turret's pivot.
+// Where the shooter (a turret's pivot) and a camera on the body are from the robot's centre. (2)!
 public static double shooterForwardIn = MEASURE;            // inches forward of the centre (a tape)
 public static double shooterLeftIn = MEASURE;               // inches left of the centre (a tape)
 public static double cameraForwardIn = MEASURE;             // inches forward of the centre (a tape)
 public static double cameraLeftIn = MEASURE;                // inches left of the centre (a tape)
 ```
+
+1. Film a shot in slow motion. Count the frames from when the piece leaves the launcher to when it reaches the goal. Divide by the video's frames per second.
+2. In inches: forward (+) and left (+). A camera on the turret sits at the turret's pivot.
 
 Then a button, in `Controls.java` inside `buttons(...)`:
 
@@ -1516,13 +1546,14 @@ are. The Driver Station says `Aim : moving shot: lead 12.3 deg, 18 in` while it 
 
 <!-- recipe: tunables-shot-tables -->
 ```java title="Tunables.java"
-// In your Tunables.Launcher section, IN PLACE OF the one speedByDistance line: one table
-// per game piece ({inches to the goal, RPM}), from the Shot Tuner. The name after
-// "speedByDistance" is the table's name: "pollen" and "nectar". Example rows: write yours.
+// IN PLACE OF the speedByDistance line: one table per game piece, {inches to the goal, RPM}. (1)!
+// The POLLEN table (example rows: write the Shot Tuner's).
 public static double[][] speedByDistancePollen = {{24, 2200}, {48, 2550}, {72, 2900}};
 // The NECTAR table.
 public static double[][] speedByDistanceNectar = {{24, 2400}, {48, 2800}, {72, 3200}};
 ```
+
+1. Write this in your `Tunables.Launcher` section. The name after `speedByDistance` is the table's name: `"pollen"` and `"nectar"`. Fill both from the Shot Tuner.
 
 <!-- recipe: shot-table-buttons -->
 ```java title="Controls.java"
@@ -1572,9 +1603,7 @@ public static boolean batteryCompensation = true;           // true = F follows 
 
 <!-- recipe: speed-trim -->
 ```java title="Controls.java"
-// The launcher's own buttons already do it: gamepad 2 D-pad up/down = speed trim +/- 1%
-// (held: 4 steps a second), double-tap D-pad down = back to 0. The Driver Station shows
-// "Speed trim : +3%  READY" as the launcher's first line.
+// The launcher's own buttons already trim: gamepad 2 D-pad up/down = +/- 1%. (1)!
 // Your own: a bigger step on a button, and a far shot that sets the trim first.
 g2.y.press(() -> robot.launcher.trimBy(+3)).says("speed trim +3%");
 g2.a.press(Action.named("Far shot +5%")
@@ -1585,6 +1614,8 @@ g2.a.press(Action.named("Far shot +5%")
 // Last match's trim (INIT offers it as "Trim last time"): from your own button too.
 g2.x.press(robot.launcher::useLastTrim).says("use last match's trim");
 ```
+
+1. Hold the D-pad for 4 steps a second. Double-tap D-pad down = back to 0. The launcher's first line on the Driver Station shows the trim: `Speed trim : +3%  READY`.
 
 **Why:** a worn wheel or softer balls make every shot a little short. The trim (+/- 1% a press, at most
 15% and never past the motor's top speed, back to 0 at every INIT) fixes it for this match, for every
@@ -1604,12 +1635,14 @@ section `Hood` (its stops), and a third number in each row of your `Launcher` se
 <!-- recipe: robot-hood -->
 ```java title="Robot.java"
 // The hood goes on the launcher; its numbers are in Tunables.Hood.
-// .part(...): which servos they are (optional, recommended: better starting values, a true simulator).
+// .part(...): which servos they are (optional, recommended). (1)!
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
         .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
         .hood(Hood.servo("hood").part("gobilda-2000-torque"))
         .speedFromDistance(camera));
 ```
+
+1. `.part(...)` is optional, but we recommend it: the library then takes better starting values from the part's numbers, and the simulator moves like the real part. The [parts catalog](guides/parts-catalog.md) lists the ids.
 
 A new section in `Tunables.java`:
 
@@ -1631,10 +1664,11 @@ Then the shot table:
 
 <!-- recipe: tunables-hood-table -->
 ```java title="Tunables.java"
-// In your Tunables.Launcher section, IN PLACE OF your speedByDistance line: a third number
-// in each row, {inches to the goal, RPM, hood angle}. The hood is blended between rows like the speed.
+// IN PLACE OF your speedByDistance line: {inches to the goal, RPM, hood angle}, blended between rows. (1)!
 public static double[][] speedByDistance = {{24, 2200, 3}, {48, 2550, 12}, {72, 2900, 20}};
 ```
+
+1. This goes in your `Tunables.Launcher` section. The hood angle is blended between rows like the speed.
 
 Never measured an angle? Leave out `angleA`, `angleB`: the hood works in servo positions, and the table's
 third number is a servo position.
@@ -1652,12 +1686,13 @@ the one above (a calibration table instead of `posA`, `posB`, `angleA`, `angleB`
 <!-- recipe: tunables-hood-linkage -->
 ```java title="Tunables.java"
 public static class Hood {                                      // "hood" in the configuration
-    // {servo position, hood angle} rows, blended between them. The first and last rows are the
-    // stops (no posA / posB then). The angles must keep going one way.
+    // {servo position, hood angle} rows, blended. The first and last rows are the stops (no posA / posB). (1)!
     // Example rows: write the Hood Finder's in their place.
     public static double[][] calibration = {{0.20, 0}, {0.32, 8}, {0.45, 18}, {0.65, 30}};
 }
 ```
+
+1. The angles must keep going one way: in servo-position order, the angles all go up, or all go down.
 
 A hood on a motor with an encoder (it knows where it is): `Hood.motor` in the launcher line, and this
 `Hood` section in place of the one above.
@@ -1716,14 +1751,15 @@ Every kind of turret (motor, servo, CR servo; switch or not; any range) has its 
 
 <!-- recipe: turret-home-switch -->
 ```java title="Robot.java"
-// A home switch: a touch sensor ("REV Touch Sensor") or a magnetic switch ("Digital
-// Device", e.g. the REV Magnetic Limit Switch). At START the turret turns slowly until it
-// finds it; after that, every time it passes the switch its angle is set right again.
-// "turret", "turret_home" = the motor's and the switch's names in the robot configuration.
+// "turret", "turret_home" = the motor's and the home switch's names in the robot configuration. (1)!
+// At START the turret turns slowly until it finds the switch. (2)!
 turret = add(Turret.motor("turret", "gobilda-5203-312").gearRatio(2.75)
         .homeSwitch("turret_home")
         .follows(camera));
 ```
+
+1. The home switch: a touch sensor ("REV Touch Sensor" in the configuration) or a magnetic switch ("Digital Device", for example the REV Magnetic Limit Switch).
+2. After that, each time the turret passes the switch, its angle is set right again.
 
 <!-- recipe: tunables-turret-switch -->
 ```java title="Tunables.java"
@@ -1749,12 +1785,13 @@ turret at `startAngle` (default 0, straight forward) by hand before INIT.
 
 <!-- recipe: turret-servo -->
 ```java title="Robot.java"
-// A standard servo turns the turret to an angle by itself: no encoder, no PID, no homing.
-// fullRange(): the servo's whole turn (a goBILDA 2000: 300 degrees, not 270). Turn it on
-// BEFORE you measure posA and posB (Servo Finder: press Y while choosing the servo).
-// "turret" = the servo's name in the robot configuration. Numbers: Tunables.Turret.
+// "turret" = the servo's name in the robot configuration. Numbers: Tunables.Turret. (1)!
+// fullRange(): the servo's whole turn. Turn it on BEFORE you measure posA and posB. (2)!
 turret = add(Turret.servo("turret").part("gobilda-2000-speed").fullRange().follows(camera));
 ```
+
+1. A standard servo turns the turret to an angle by itself: no encoder, no PID, no homing.
+2. A goBILDA 2000 servo then turns 300 degrees, not 270. Find posA and posB with the Servo Finder: press Y while you choose the servo.
 
 <!-- recipe: tunables-turret-servo -->
 ```java title="Tunables.java"
@@ -1784,13 +1821,15 @@ hard stops just past them.
 
 <!-- recipe: turret-slip-ring -->
 ```java title="Robot.java"
-// A CR servo turns it, an absolute encoder on an analog port says where it points (no
-// homing), and continuous(): a slip ring carries the wires, so no limits, the shortest way.
+// A CR servo turns it, an absolute encoder says where it points, continuous(): no limits. (1)!
 // "turret", "turret_pos" = the servo's and the encoder's names in the robot configuration.
-// .part(...): which servo it is (optional, recommended: better starting values, a true simulator).
+// .part(...): which servo it is (optional, recommended). (2)!
 turret = add(Turret.crServo("turret").part("axon-max-mk2").analogEncoder("turret_pos").continuous()
         .follows(camera));
 ```
+
+1. The encoder is on an analog port and knows the angle at once: no homing. A slip ring carries the wires, so the turret has no limits and always takes the shortest way.
+2. `.part(...)` is optional, but we recommend it: the library then takes better starting values from the part's numbers, and the simulator moves like the real part. The [parts catalog](guides/parts-catalog.md) lists the ids.
 
 <!-- recipe: tunables-turret-slip-ring -->
 ```java title="Tunables.java"
@@ -2462,8 +2501,7 @@ public class ChooseInInit extends Auto<Robot> {
              .move("Across to the near side", Tunables.Auto.farToNearInches, 270, 0.7)   // 270 = left
          .end();
 
-        // The plan: plain Java "if", because the pieces are methods. choice(...) gives the option
-        // chosen, as text (a String). equals(...): the same text. "!" means "not".
+        // The plan: plain Java "if". choice(...) = the option chosen, as text. (1)!
         String plan = s.choice("Plan");
         if (!plan.equals("Park only")) Routes.scorePreload(s, robot);
         if (plan.equals("Preload + Cycle + Park")) Routes.cycle(s, robot);
@@ -2471,6 +2509,8 @@ public class ChooseInInit extends Auto<Robot> {
     }
 }
 ```
+
+1. The pieces are Java methods, so a plain `if` picks them. `choice(...)` gives the text of the option (a String). `equals(...)` asks "the same text?". `!` means "not".
 
 **Why:** a `start(...)` inside an `onlyIf` is used only for its option, so the "Place robot" note (and
 the simulator's robot) changes as the drivers change the menu. The first option of each line is the
@@ -2495,11 +2535,12 @@ and its scenario checks (`expect robot x ...`) use one fixed view, from the red 
 
 <!-- recipe: odometry-pinpoint -->
 ```java title="Robot.java"
-// After drive(...). The offsets, mm: first how far LEFT of the centre the forward pod is
-// (right = minus: here 84 mm right), then how far FORWARD the sideways pod is (behind = minus).
+// After drive(...). Offsets, mm: how far LEFT the forward pod is, how far FORWARD the sideways pod is. (1)!
 // Not sure? Write offsetsMm(0, 0): the Odometry Tuner measures them.
 odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
 ```
+
+1. Both from the robot's centre. Right and behind are minus: here the forward pod is 84 mm right of the centre, and the sideways pod is 168 mm behind it.
 
 **Why:** the offsets tell it where the pods are, so a turn on the spot does not look like a move.
 **More:** [Lesson 7: one line in Robot.java](tutorials/start/07-odometry.md#4-one-line-in-robotjava), [Pinpoint](modules/odometry.md#pinpoint).
@@ -2618,28 +2659,30 @@ BIOBUZZ's field is turned half a turn (RED uses the same numbers from its own wa
 ```java title="Tunables.java"
 public static class Odometry {                                  // a fixed name: always Odometry
     public static boolean checked = false;                      // true after the Odometry Tuner's Loop test
-    // "Set pose here" (TeleOp: hold gamepad 1 START 1 s with the robot on this spot). Inches and
-    // degrees seen from your wall, written for BLUE like a start spot: our left corner tile, facing the field.
+    // "Set pose here" (TeleOp: hold gamepad 1 START 1 s on this spot), written for BLUE. (1)!
     public static double resetX = -56;                          // inches right of centre, - = left
     public static double resetY = -61;                          // inches from centre, - = our half
     public static double resetHeading = 0;                      // degrees, 0 = facing the field
-    // RED: false = the same numbers from the red wall (BIOBUZZ's field is turned half a turn);
-    // true (or left out) = mirrored left-right, for a mirrored field.
+    // RED: false = the same numbers from the red wall; true (or left out) = mirrored left-right. (2)!
     public static boolean mirrorForRed = false;                 // BIOBUZZ: false
 }
 ```
+
+1. Inches and degrees seen from your wall, like a start spot. Here: our left corner tile, facing the field.
+2. BIOBUZZ's field is turned half a turn between the alliances: write `false`. `true` is for a mirrored field.
 
 More spots, or from an action: in `Controls.java`, inside `buttons(...)`:
 
 <!-- recipe: reset-pose-button -->
 ```java title="Controls.java"
-// A second spot of your own: hold D-pad down 1 s with the robot in the right corner tile.
-// (x, y, heading written for BLUE; RED uses them like the reset spot in Tunables.Odometry.)
+// A second spot of your own: hold D-pad down 1 s with the robot in the right corner tile. (1)!
 g1.dpadDown.heldFor(1.0, () -> robot.resetPose(56, -61, 0)).says("hold 1 s: pose = right corner tile");
-// An action can set it too (here: the Tunables.Odometry spot, then the intake runs; the
-// action is in Actions.java, below).
+// An action can set it too (the action is in Actions.java, below). (2)!
 g1.dpadUp.heldFor(1.0, Actions.poseHereThenIntake(robot)).says("hold 1 s: pose here, intake on");
 ```
+
+1. x, y and heading are written for BLUE. RED uses them like the reset spot in `Tunables.Odometry`.
+2. Here the action sets the `Tunables.Odometry` spot, then runs the intake.
 
 The action, in `Actions.java` inside the class:
 
@@ -2828,13 +2871,14 @@ light (Alt+Enter on a red `LightColor` adds it). All of it: [Lights](modules/rob
 
 <!-- recipe: light-add -->
 ```java title="Robot.java"
-// At the top of Robot.java: import com.crossbotics.ftchelper.robot.Lights;  (and in
-// Controls.java, for the colors: import com.crossbotics.ftchelper.robot.LightColor;)
+// At the top of Robot.java: import com.crossbotics.ftchelper.robot.Lights; (1)!
 // A goBILDA RGB Indicator Light on a servo port ("Servo" in the robot configuration):
 lights = add(Lights.gobilda("light"));
 // Or a REV Blinkin LED Driver with an LED strip ("REV Blinkin LED Driver" in the configuration):
 //   lights = add(Lights.blinkin("blinkin"));
 ```
+
+1. `Controls.java` needs `import com.crossbotics.ftchelper.robot.LightColor;` for the colors (Alt+Enter on a red `LightColor` adds it).
 
 **Why:** one line, like any part. It has no numbers and no buttons of its own: the colors come from your rules.
 **More:** [Lights](modules/robot.md#lights) (the parts and their color tables).
@@ -2848,10 +2892,11 @@ lights = add(Lights.gobilda("light"));
 // At the top of Robot.java: import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 // A REV Blinkin LED Driver ("REV Blinkin LED Driver" in the robot configuration):
 lights = add(Lights.blinkin("blinkin"));
-// Your strip shows plain blue too dark? Show another Blinkin pattern for BLUE (the
-// pattern names are on REV's Blinkin page). Other lights ignore this line.
+// Plain blue too dark on your strip? Show another Blinkin pattern for BLUE. (1)!
 lights.blinkinPattern(LightColor.BLUE, RevBlinkinLedDriver.BlinkinPattern.BLUE_VIOLET);
 ```
+
+1. The pattern names are on REV's Blinkin page. Other lights ignore this line.
 
 **Why:** each `LightColor` is one of the Blinkin's patterns (`BLUE` is its plain blue). LED strips differ:
 when one color looks wrong on yours, give that color another pattern. Your rules keep saying
@@ -2885,15 +2930,15 @@ inside `buttons(...)`.
 
 <!-- recipe: light-alliance -->
 ```java title="Controls.java"
-// At INIT the light shows the alliance chosen (solid RED or BLUE; white blinking until one is
-// chosen) and flashes it for 1 s at START: on by default, nothing to write.
+// On by default: the alliance at INIT (solid RED or BLUE), flashed for 1 s at START. (1)!
 // Your light shows red badly? Other colors for the alliance at INIT (BLUE, and PURPLE for RED):
 robot.lights.allianceColors(LightColor.BLUE, LightColor.PURPLE);
-// No alliance color at INIT at all (your rules from INIT on): delete the line above and write
+// No alliance color at INIT at all? Delete the line above and write: (2)!
 //     robot.lights.allianceAtInit(false);
-// or, in Tunables.java, the light's section: public static class Light {
-//     public static boolean allianceAtInit = false; }   (the line in Controls.java wins)
 ```
+
+1. Until an alliance is chosen, the light blinks white. You do not write anything for this.
+2. Your rules then show from INIT on. Or, in `Tunables.java`, in the light's section: `public static class Light { public static boolean allianceAtInit = false; }`. The line in `Controls.java` wins.
 
 **Why:** a wrong alliance pick in INIT aims at the other alliance's goal all match. With the light solid
 RED or BLUE before START (white blinking once a second until the drivers pick), the drive team sees a wrong
@@ -2907,13 +2952,14 @@ are still required (R401, R402). Keep your own rules' colors away from red and b
 
 <!-- recipe: light-flash -->
 ```java title="Controls.java"
-// A flash beats every rule while it lasts, wherever it is written (write it first: it reads
-// that way). A short white flash for each piece fired (the launcher counts the pieces it
-// feeds): 0.2 s, so two quick shots are two flashes, not one long one. And one from a button.
+// A flash beats every rule while it lasts (write it first: it reads that way). (1)!
+// A short white flash for each piece fired, and one from a button.
 robot.lights.show(LightColor.WHITE).forSeconds(0.2)
         .whenCountGoesUp(() -> robot.launcher.part().getShotsFired());
 g2.a.press(() -> robot.lights.flash(LightColor.YELLOW)).says("flash the light (signal the partner)");
 ```
+
+1. A flash wins wherever it is written. The launcher counts the pieces it feeds. The flash is 0.2 s, so two quick shots are two flashes, not one long one.
 
 **Why:** `whenCountGoesUp` flashes each time the number goes up, so each flash is a real shot.
 `whenStarts(test)` flashes when a true/false turns from false to true (`whenStarts(robot.intake::isRunning)`:
@@ -2928,8 +2974,7 @@ an action flashes once.
 <!-- recipe: light-action -->
 ```java title="Actions.java"
 // In Actions.java (it needs import com.crossbotics.ftchelper.robot.LightColor; at the top).
-// The last step of an action: a 1 s white flash says "done" to the drivers. Pick a color
-// (or a time) your rules do not use: a GREEN flash over the GREEN "ready" rule cannot be seen.
+// The last step: a 1 s white flash says "done" to the drivers. Pick a color your rules do not use. (1)!
 public static Action shootTwo(Robot r) {
     return Action.named("Shoot two")
             .then(r.launcher::spinUp)
@@ -2939,6 +2984,8 @@ public static Action shootTwo(Robot r) {
             .then(() -> r.lights.flash(LightColor.WHITE, 1.0));
 }
 ```
+
+1. A GREEN flash over the GREEN "ready" rule cannot be seen. Pick another color, or a longer time.
 
 **Why:** the light is never "claimed" by an action, so any action (or button) may flash it. A flash
 beats every rule, but a flash in the same color as the rule under it cannot be seen: pick another color,
@@ -2950,8 +2997,7 @@ or a longer time.
 
 <!-- recipe: light-endgame -->
 ```java title="Controls.java"
-// Yellow, blinking, in the last 20 seconds of TeleOp: time to park. Written above the other
-// rules, so it beats them.
+// Yellow, blinking, in the last 20 seconds of TeleOp: time to park (above the other rules: it wins).
 robot.lights.show(LightColor.YELLOW).blinking().inLastSeconds(20);
 ```
 
@@ -3146,14 +3192,12 @@ Then open **http://localhost:8780** in a browser. Choose an OpMode, press INIT, 
 
 <!-- recipe: looks-parts -->
 ```java title="Robot.java"
-// For the simulator only: the real robot never reads .looks(...). All in mm. atMm(forward, left, up):
-// from the middle of the chassis, on the tiles. sizeMm(front to back, side to side, up).
-// Measure with a tape, or shape it in the simulator's Edit robot mode and copy its lines.
+// For the simulator only. All in mm. atMm(forward, left, up): from the middle of the chassis, on the tiles. (1)!
+// sizeMm(front to back, side to side, up).
 chassisMm(400, 400, 100);                    // the chassis box
 heightMm(380);                               // the whole robot, folded
-// TWO shapes on one part (an intake arm and its roller): name each shape first, then
-// looks(intakeArm, intakeRoller). The arm hinges at the front and rests on its stop: passive(),
-// nothing in the code moves it (range: its two hard stops, degrees). The roller rides on its end.
+// TWO shapes on one part: name each shape, then looks(intakeArm, intakeRoller).
+// passive(): nothing in the code moves the arm. range: its two hard stops, degrees. (2)!
 Shape intakeArm = Shape.arm().name("intake_arm").atMm(150, 0, 80).sizeMm(80, 300, 20)
         .passive().range(-20, 0).startAt(0);
 Shape intakeRoller = Shape.roller("gobilda-gecko-72").on("intake_arm").atMm(80, 0, 0).lengthMm(300);
@@ -3168,6 +3212,9 @@ claw = add(Claw.servo("claw").part("gobilda-2000-torque")
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
         .looks(Shape.flywheel("gobilda-hogback-96").atMm(-40, 0, 200)));
 ```
+
+1. The real robot never reads `.looks(...)`. Measure with a tape, or shape the part in the simulator's Edit robot mode and copy its lines.
+2. The arm hinges at the front and rests on its stop. The roller rides on the arm's end: `on("intake_arm")`.
 
 **One shape or several:** one shape goes inside `looks(...)` on the part's line. Two or more (an arm
 and its roller): give each a name first (`Shape intakeArm = ...;`), then write `looks(intakeArm, intakeRoller)`

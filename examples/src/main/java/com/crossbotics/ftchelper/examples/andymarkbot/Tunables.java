@@ -26,12 +26,7 @@ public class Tunables {
         public static double outPower = 1.0;                        // power pushing pieces out: AndyMark's code
     }
 
-    /**
-     * The catapult. power: 0.65, from AndyMark's code. feedSec: how long the motor runs per press. The
-     * motor turns at about 130 RPM with no load, so one turn at 0.65 power takes about 0.7 s, more with
-     * the rubber bands pulling. 0.8 s is a starting guess: tune it until one press throws once and the
-     * arm stops ready for the next throw.
-     */
+    /** The catapult. Tune feedSec until one press throws once and the arm stops ready for the next. */
     public static class Catapult {
         public static double power = 0.65;                          // motor power: AndyMark's code
         public static double feedSec = 0.8;                         // seconds per press: a starting guess

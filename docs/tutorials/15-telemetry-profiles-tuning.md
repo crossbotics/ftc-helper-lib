@@ -43,7 +43,9 @@ InitMenu menu = new InitMenu(gamepad1).profile();     // a "Profile" line in INI
 lift.maxPower(Math.min(LIFT_MAX_POWER.get(), Profile.pick(0.5, 1.0)));
 ```
 
-`Profile.pick(practice, competition)` gives one value or the other. The choice is saved on the
+`Profile.pick(practice, competition)` gives one value or the other. `Math.min` takes the smaller
+of the two, so the lift's top power is never more than the profile allows, whatever the tuned
+value is. The choice is saved on the
 Control Hub. Use it for comfort (speeds, extra screens), never to turn safety off.
 Guide: [Profiles](../guides/profiles.md).
 
@@ -52,10 +54,10 @@ Guide: [Profiles](../guides/profiles.md).
 A `Tunable` is a number you can change from the gamepad while the program runs, without rebuilding.
 
 ```java
-static final Tunable LIFT_MAX_POWER = Tunable.number("Lift/maxPower", 0.8, 0.05).range(0.1, 1.0);
+static final Tunable LIFT_MAX_POWER = Tunable.number("Lift/maxPower", 0.8, 0.05).range(0.1, 1.0); // (1)!
 ...
 PositionMotor lift = ... .tunable("Lift");     // its PID gains and positions too
-TuningMenu tuning = new TuningMenu(gamepad1);
+TuningMenu tuning = new TuningMenu(gamepad1);   // will not open in COMPETITION (2)!
 ControllerBindings menuKey = new ControllerBindings().bindPress(Pad.G1, Btn.GUIDE, tuning::toggle);
 ControllerBindings driver = new ControllerBindings().bindPress(Pad.G1, Btn.BACK, t::toggleDebug);
 ControllerBindings operator = new ControllerBindings()
@@ -65,8 +67,16 @@ ControllerBindings operator = new ControllerBindings()
 menuKey.update(gamepad1, gamepad2);
 operator.update(gamepad1, gamepad2);
 tuning.update();
-if (!tuning.isOpen()) driver.update(gamepad1, gamepad2);   // gamepad 1 belongs to the menu while it is open
+if (!tuning.isOpen()) driver.update(gamepad1, gamepad2);   // gamepad 1 belongs to the menu while it is open (3)!
 ```
+
+1. "Lift/maxPower" is its name in the menu (group "Lift"). 0.8 is the value in the code. 0.05 is
+   how much one D-pad press changes it. `range(0.1, 1.0)`: the menu cannot take it outside 0.1 to
+   1.0, so nobody can tune the lift to full reverse by mistake.
+2. The menu will not open in the COMPETITION profile, so a driver cannot change numbers by
+   accident at an event.
+3. The real program also remembers if the menu was open last loop. When the menu closes, it
+   calls `driver.ignoreHeldButtons(...)`, so a button still held from the menu does not fire.
 
 **Why three button lists?** The menu uses gamepad 1's D-pad, bumpers, A, B, X and Y. If the driver's gamepad-1
 buttons kept working, pressing Y to "reset all" would also run whatever Y does for the robot. The
@@ -97,7 +107,7 @@ if (Tunable.countChanged() > 0) t.warn(Tunable.countChanged() + " tuned value(s)
 ```
 
 Saved tuning values come back after a restart. This warning makes sure nobody forgets them at an
-event. `EasyAuto` shows it for you.
+event: copy them into the code or reset them, so the robot does what the code says. `EasyAuto` shows it for you.
 
 ## Run it
 

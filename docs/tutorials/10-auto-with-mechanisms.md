@@ -16,22 +16,47 @@ when a move gets stuck, how to wait for a mechanism safely, and how to hand info
 
 ---
 
-## 1. The problem: moves wait
+## 1. The lift
+
+The lift is the one from Tutorial 08, with the numbers from Tutorial 07:
+
+```java
+// "lift" = the name in the robot configuration. The encoder starts at 0 here.
+DcMotorEx liftMotor = MotorSetup.get(hardwareMap, "lift")
+        .brake().resetEncoder().runWithoutEncoder().done();
+// Soft limits 0 to 2600 ticks, slow near the ends. The lift also needs a real hard stop.
+SafeMotor lift = new SafeMotor(liftMotor).setLimits(0, 2600).setSlowZone(250, 0.2); // (1)!
+PidController liftPid = new PidController(0.004, 0, 0.0002, 0.05).setTolerance(20);   // tutorial 07 (2)!
+```
+
+1. 2600 is a bit above `LIFT_UP` (2400), so a wrong target or a bug cannot drive the lift into
+   its top. Within 250 ticks of an end, the power goes down to at most 0.2, so the lift does not
+   slam. FTC robots also need a physical hard stop: [safety.md](../modules/safety.md).
+2. kP 0.004 pushes harder the farther away the lift is. kI 0: no I part. kD 0.0002 brakes a little
+   near the target, so it does not overshoot. kF 0.05 is a small push that holds the lift up.
+   Within 20 ticks counts as "there".
+
+Start the robot with the lift DOWN: `resetEncoder()` makes the current position 0.
+
+## 2. The problem: moves wait
 
 `auto.move(30, 0, 0.6)` does not return until the move is done. While it runs, none of YOUR
 code runs: a lift PID in your loop would stop being updated, and the lift would sag or overshoot.
 
-## 2. The loop hook
+## 3. The loop hook
 
 A **hook** is a job you hand to someone else's code, so it runs at the right moment.
 Give `AutoDrive` a job to run once per loop **inside** every move and turn:
 
 ```java
 auto.setLoopHook(() -> {
-    lift.update();
-    lift.moveTo(liftTarget, liftPid);
+    lift.update(); // (1)!
+    lift.moveTo(liftTarget, liftPid); // (2)!
 });
 ```
+
+1. First: read the lift's switch and position.
+2. Then: PID power toward the target, with the limits applied.
 
 Now the lift keeps working during every move. To raise the lift while driving, just change the
 target and then drive:
@@ -45,7 +70,7 @@ auto.move(30, 0, 0.6);                // ...while driving
 
 Keep the hook quick: no `sleep`, no waiting loops.
 
-## 3. Choose the plan in INIT
+## 4. Choose the plan in INIT
 
 Before START, the drivers set up the robot and choose things. Use a small `ControllerBindings`
 in an INIT loop:
@@ -67,10 +92,11 @@ if (isStopRequested()) return;
 
 `opModeInInit()` is true until START (or STOP). The robot must not move in INIT; reading buttons
 and showing choices is fine. Blue = X (the blue button on many pads), red = B.
+`Math.min` and `Math.max` keep the delay between 0 and 10 seconds.
 
 A start delay lets you stay out of your partner's way.
 
-## 4. Mirror the route for red and blue
+## 5. Mirror the route for red and blue
 
 The red side of the field is usually a mirror image of blue. Write the route once, for blue, and
 flip left/right for red:
@@ -85,22 +111,23 @@ Mirror sideways moves the same way: `auto.move(12, 90 * side, 0.5)`. Forward and
 Check your game's field first: some fields are rotated, not mirrored. Then flip the forward/back
 parts too.
 
-## 5. React to a stuck move
+## 6. React to a stuck move
 
 Every move returns how it ended:
 
 ```java
-AutoDrive.Result r = auto.move(30, 0, 0.6);
+AutoDrive.Result r = auto.move(30, 0, 0.6);    // ...while driving
 if (r == AutoDrive.Result.STALLED) {
-    auto.move(4, 180, 0.4);    // blocked: back off and try once more
+    auto.move(4, 180, 0.4);                    // blocked: back off and try once more
     auto.move(6, 0, 0.4);
 }
 ```
 
 `STALLED` means the robot stopped making progress (another robot, a wall, a game piece).
+Pushing on would waste time and could burn out the motors.
 Other results: `DONE`, `TIMED_OUT`, `STOPPED` (the match ended).
 
-## 6. Wait for a mechanism, safely
+## 7. Wait for a mechanism, safely
 
 Between moves, the hook is not running. If you need to wait for the lift, keep it working
 yourself, and always add a time limit:
@@ -130,7 +157,7 @@ while (opModeIsActive() && delay.seconds() < delaySec) {
 
 `idle()` lets the rest of the robot software run for a moment before the loop goes around again.
 
-## 7. Clean up and hand over to TeleOp
+## 8. Clean up and hand over to TeleOp
 
 ```java
 } finally {

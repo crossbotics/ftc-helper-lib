@@ -50,45 +50,42 @@ public class MechanismRecipes {
             // recipe: intake-motor
             // At the top of the class: public Intake intake;   Here in define():
             // "intake" = the motor's name in the robot configuration. Its numbers: Tunables.Intake.
-            // .part(...): which motor it is (optional, recommended: better starting values, a true simulator).
+            // .part(...): which motor it is (optional, recommended).
             intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
             // end recipe
 
             // recipe: lift
             // At the top of the class: public Lift lift;   Here in define():
-            // a slide on a motor with a switch at the bottom (the switch sets 0 each time it is pressed).
-            // .part(...): which motor it is (optional, recommended: better starting values, a true simulator).
-            // No switch? Delete .bottomSwitch(...).
-            // "lift", "lift_bottom" = the motor's and the switch's names in the robot configuration.
+            // "lift", "lift_bottom" = the motor's and the bottom switch's names in the robot configuration.
+            // .part(...): which motor it is (optional, recommended).
             lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom"));
             // end recipe
 
             // recipe: arm
-            // An arm in degrees. Its motor's catalog id is in the brackets (not optional, like a turret's
-            // or launcher's): it needs the motor's counts per turn to work in degrees.
-            // gearRatio: motor turns per arm turn. 0 degrees = where it is at INIT.
             // "arm" = the motor's name in the robot configuration. Its numbers: Tunables.Arm.
+            // "gobilda-5203-117" = the motor's catalog id (needed: it works in degrees).
+            // gearRatio: motor turns per arm turn. 0 degrees = where it is at INIT.
             arm = add(Arm.motor("arm", "gobilda-5203-117").gearRatio(2));
             // end recipe
 
             // recipe: claw
             // At the top of the class: public Claw claw;   Here in define():
             // "claw" = the servo's name in the robot configuration. Its numbers: Tunables.Claw.
-            // .part(...): which servo it is (optional, recommended: better starting values, a true simulator).
+            // .part(...): which servo it is (optional, recommended).
             claw = add(Claw.servo("claw").part("gobilda-2000-torque"));
             // end recipe
 
             // recipe: wrist
             // At the top of the class: public Wrist wrist;   Here in define():
             // "wrist" = the servo's name in the robot configuration. Its numbers: Tunables.Wrist.
-            // .part(...): which servo it is (optional, recommended: better starting values, a true simulator).
+            // .part(...): which servo it is (optional, recommended).
             wrist = add(Wrist.servo("wrist").part("gobilda-2000-speed"));
             // end recipe
 
             // recipe: positioner
             // Any servo with named positions: a gate, a kicker, a fold-out intake.
             // "intake_deploy" = the servo's name in the robot configuration. Numbers: Tunables.IntakeDeploy.
-            // .part(...): which servo it is (optional, recommended: better starting values, a true simulator).
+            // .part(...): which servo it is (optional, recommended).
             intakeDeploy = add(Positioner.servo("intake_deploy").part("gobilda-2000-torque"));
             // Right after START (autonomous and TeleOp): fold the intake out.
             atStart(() -> Action.named("Deploy").then(() -> intakeDeploy.goTo("deployed")));
@@ -123,10 +120,9 @@ public class MechanismRecipes {
         protected void define() {
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
             // recipe: intake-cr-servos
-            // At the top of the class: public Intake intake;   Here in define():
-            // two continuous-rotation (CR) servos. The one that spins the wrong way is reversed.
+            // Two continuous-rotation (CR) servos. The one that spins the wrong way is reversed.
             // "left_intake", "right_intake" = the servos' names in the robot configuration. Numbers: Tunables.Intake.
-            // .part(...): which servo it is (optional, recommended: better starting values, a true simulator).
+            // .part(...): which servo it is (optional, recommended).
             intake = add(Intake.crServos("left_intake", "right_intake").part("gobilda-2000-speed")
                     .reversed("right_intake"));
             // end recipe
@@ -141,8 +137,7 @@ public class MechanismRecipes {
         protected void define() {
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
             // recipe: servo-full-range
-            // The hub normally sends 600-2400 us for positions 0 to 1: a goBILDA 2000 servo then turns
-            // 270 of its 300 degrees. fullRange() sends its whole 500-2500 us: 0 to 1 = 300 degrees.
+            // fullRange(): positions 0 to 1 = the servo's whole turn (300 degrees on a goBILDA 2000).
             // Turn it on FIRST, then find the positions (Servo Finder: press Y while choosing the servo).
             wrist = add(Wrist.servo("wrist").part("gobilda-2000-speed").fullRange());
             // end recipe
@@ -155,7 +150,7 @@ public class MechanismRecipes {
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
             // recipe: intake-on-at-start
             // Runs in from START until stopped. Its button (operator RT) then switches it on/off.
-            // .part(...): which motor it is (optional, recommended: better starting values, a true simulator).
+            // .part(...): which motor it is (optional, recommended).
             add(Intake.motor("intake").part("gobilda-5203-1150").onAtStart());
             // end recipe
         }
@@ -167,7 +162,7 @@ public class MechanismRecipes {
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
             // recipe: lift-reversed
             // The lift goes DOWN on positive power (the Motor Finder says "add .reversed()"): flip it.
-            // .part(...): which motor it is (optional, recommended: better starting values, a true simulator).
+            // .part(...): which motor it is (optional, recommended).
             add(Lift.slide("lift").part("gobilda-5203-435").reversed());
             // end recipe
         }
@@ -181,12 +176,9 @@ public class MechanismRecipes {
         protected void define() {
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
             // recipe: lift-two-motors
-            // A slide with a motor on each side. Both get the same power, always (stop and pause too).
-            // Only the FIRST motor's encoder is read: plug the encoder cable into it. The numbers are in
-            // Tunables.LiftLeft (the first motor's name in CamelCase), not Tunables.Lift.
-            // The motors face each other, so the second turns the other way: alsoMotorReversed.
-            // (Both turn the same way for "up"? Use .alsoMotor("lift_right") instead.)
             // "lift_left", "lift_right" = the motors' names in the robot configuration. Numbers: Tunables.LiftLeft.
+            // Plug the encoder cable into the FIRST motor: only its encoder is read.
+            // The motors face each other, so the second turns the other way: alsoMotorReversed.
             lift = add(Lift.slide("lift_left").part("gobilda-5203-435").alsoMotorReversed("lift_right"));
             // end recipe
         }
@@ -213,17 +205,10 @@ public class MechanismRecipes {
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
             // recipe: own-parts
             // A motor that is not in the catalog: its encoder counts per output turn, then its free speed (RPM).
-            // On the seller's page:
-            // - goBILDA: "Encoder Resolution" (the number "at the Output Shaft") and "No-Load Speed".
-            // - REV: "Encoder Counts per Revolution" (at the output) and "Free Speed".
-            // Its name then works like a catalog id, here and in .part(...).
             launcher = add(Launcher.flywheel("launcher", Motors.custom("my-flywheel-motor", 28, 5800)));
-            // A servo: how far it turns (degrees), then its speed (seconds per 60 degrees).
-            // If the seller lists 4.8 V and 6 V, use 4.8 V (the hub gives a servo about 5 V).
+            // A servo: how far it turns (degrees), then its speed (seconds per 60 degrees, at 4.8 V).
             claw = add(Claw.servo("claw").part(Parts.customServo("my-claw-servo", 270, 0.16)));
-            // Double.NaN means "I don't know this one". Motors.unknown(...) means "I know neither number".
-            // The part then uses general defaults, and INIT says so.
-            // A launcher or an arm must at least have the counts per turn: Motors.custom("...", 28, Double.NaN).
+            // Motors.unknown(...): "I know neither number" (a single unknown number: Double.NaN).
             lift = add(Lift.slide("lift").part(Motors.unknown("old-lift-motor")));
             // end recipe
         }
@@ -240,14 +225,12 @@ public class MechanismRecipes {
         protected void define() {
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right").motor("gobilda-5203-312"));
             // recipe: looks-parts
-            // For the simulator only: the real robot never reads .looks(...). All in mm. atMm(forward, left, up):
-            // from the middle of the chassis, on the tiles. sizeMm(front to back, side to side, up).
-            // Measure with a tape, or shape it in the simulator's Edit robot mode and copy its lines.
+            // For the simulator only. All in mm. atMm(forward, left, up): from the middle of the chassis, on the tiles.
+            // sizeMm(front to back, side to side, up).
             chassisMm(400, 400, 100);                    // the chassis box
             heightMm(380);                               // the whole robot, folded
-            // TWO shapes on one part (an intake arm and its roller): name each shape first, then
-            // looks(intakeArm, intakeRoller). The arm hinges at the front and rests on its stop: passive(),
-            // nothing in the code moves it (range: its two hard stops, degrees). The roller rides on its end.
+            // TWO shapes on one part: name each shape, then looks(intakeArm, intakeRoller).
+            // passive(): nothing in the code moves the arm. range: its two hard stops, degrees.
             Shape intakeArm = Shape.arm().name("intake_arm").atMm(150, 0, 80).sizeMm(80, 300, 20)
                     .passive().range(-20, 0).startAt(0);
             Shape intakeRoller = Shape.roller("gobilda-gecko-72").on("intake_arm").atMm(80, 0, 0).lengthMm(300);
@@ -273,10 +256,9 @@ public class MechanismRecipes {
         protected void define() {
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
             // recipe: launcher
-            // A flywheel (in RPM) and the indexer that feeds it one piece at a time. "launcher" and "indexer"
-            // = their names in the robot configuration. Numbers: Tunables.Launcher and Tunables.Indexer.
-            // The launcher's motor id is in the brackets. The indexer's servo: .part(...) (optional, recommended:
-            // better starting values, a true simulator).
+            // A flywheel (in RPM) and the indexer that feeds it one piece at a time.
+            // "launcher", "indexer" = names in the robot configuration. Numbers: Tunables.Launcher, .Indexer.
+            // The motor's catalog id is in the brackets (needed). The indexer's .part(...) is optional, recommended.
             launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
                     .feeder(Indexer.servo("indexer").part("gobilda-2000-speed")));
             // end recipe
@@ -302,7 +284,7 @@ public class MechanismRecipes {
             // recipe: launcher-aimed
             // The speed comes from the distance to the goal (Tunables.Launcher.speedByDistance),
             // and a piece is only fed when the turret points at the goal.
-            // .part(...): which servo it is (optional, recommended: better starting values, a true simulator).
+            // .part(...): which servo it is (optional, recommended).
             launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
                     .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
                     .speedFromDistance(camera)
@@ -323,13 +305,11 @@ public class MechanismRecipes {
         protected void define() {
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
             // recipe: optional-part
-            // The deploy servo is not on the robot yet. optional(): while "intake_deploy" is not in
-            // the robot configuration, INIT goes on (with a note) and the part is off.
-            // .part(...): which motor or servo it is (optional, recommended: better starting values, a true simulator).
+            // optional(): while "intake_deploy" is not in the robot configuration, the part is off (INIT goes on).
+            // .part(...): which motor or servo it is (optional, recommended).
             intakeDeploy = add(Positioner.servo("intake_deploy").part("gobilda-2000-torque").optional());
             intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
-            // At START: fold the intake out, then run it (the action is in Actions.java, below). With
-            // no deploy servo the action skips the servo (and the wait for it) and just starts the intake.
+            // At START: fold the intake out, then run it (the action is in Actions.java, below).
             atStart(() -> Actions.deployIntake(this));
             // end recipe
         }

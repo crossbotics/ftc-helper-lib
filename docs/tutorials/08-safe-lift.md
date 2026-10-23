@@ -42,7 +42,7 @@ SafeMotor lift = new SafeMotor(liftMotor)
 - **Soft limits** (limits in software, not metal): power that pushes past 0 or 2600 becomes 0. Power AWAY from the limit always
   works, so the lift can never get "stuck at the top".
 - **Slow zone:** close to an end, power toward it is reduced, so it does not slam.
-- **Max power:** the most it ever gets.
+- **Max power:** the most it ever gets. 90% is a little gentler on the motor and the string or belt.
 
 Set MAX a little below the real top, so the soft limit stops it before the hard stop.
 
@@ -94,7 +94,13 @@ if (target == null) {
 ```
 
 - `target` is an `Integer` (not `int`) so it can be `null`, meaning "no set height, by hand".
-- **Touching the stick cancels the set height.** The driver is always in control.
+- **Touching the stick cancels the set height.** The driver is always in control. The deadband
+  is 0.1, bigger than for driving, so a bumped stick does not cancel a set height.
+- Before homing, set heights are cancelled too: the zero is not known yet, so the operator must
+  first bring the lift down by hand.
+- B forgets the target. With the stick at rest, the power is 0 and the brake holds the lift.
+- The PID gains (`new PidController(0.004, 0, 0.0002, 0.05)`) are the ones you found in
+  Tutorial 07. The F of 0.05 is a small steady push that holds the lift up against gravity.
 - `moveTo(target, pid)` is `pid.calculate` + `setPower`, with the limits applied and the target
   kept inside them.
 - `lift.update()` must come first every loop, and **every power for this motor goes through the

@@ -72,8 +72,7 @@ public static class Launcher {
     public static double stepRpm = 50;                          // speed change per D-pad press
     public static double readyBandRpm = 107;                    // "at speed" this close: goBILDA feeds above 1200
     public static double idleRpm = DEFAULT;                     // speed between shots, 0 = stop (0)
-    // goBILDA's own tested numbers for this kit bot (its starter code: P 40, F 12.5), so kept here.
-    // Without these lines the library would start from the parts catalog's (kF 11.7, kP 1.17, kI 0.117).
+    // goBILDA's tested gains for this kit bot (its code: P 40, F 12.5). (1)!
     public static double kP = 40;                               // push per speed error: goBILDA's number
     public static double kI = 0;                                // fix a steady error: goBILDA's number
     public static double kD = 0;                                // brake changes: goBILDA's number
@@ -87,6 +86,9 @@ public static class Windmill {
     public static double feedSec = 0.3;                         // seconds per piece: a starting guess
 }
 ```
+
+1. Without these four lines, the library starts from the parts catalog's numbers for this motor
+   (kF 11.7, kP 1.17, kI 0.117). goBILDA tested its own numbers on this robot, so we keep them.
 
 | Number | Means |
 | --- | --- |
@@ -455,14 +457,20 @@ the team's own turret design):
 
 ```java
 public static class Hood {
-    public static double posA = 0.20;                           // servo position at the steep stop (Hood Finder)
+    public static double posA = 0.20;                           // servo position at the steep stop (Hood Finder) (1)!
     public static double posB = 0.65;                           // servo position at the flat stop (Hood Finder)
     public static double angleA = 0;                            // hood angle at posA, degrees: the steep end
     public static double angleB = 25;                           // hood angle at posB, degrees: the flat end
-    public static double travelSec = 0.45;                      // stop to stop, seconds (worked out above)
+    public static double travelSec = 0.45;                      // stop to stop, seconds (worked out from the gears) (2)!
     public static double startAngle = 0;                        // where it goes at START: the steep end
 }
 ```
+
+1. Example numbers from team 8938's turret: the hood moves 25 degrees between two stop cams. Find
+   your own `posA` and `posB` with the Hood Finder.
+2. A goBILDA Torque servo (300 degree mode) turns the hood through a 20T pinion and a 108T gear
+   (5.4:1). So the hood's 25 degrees take 5.4 x 25 = 135 degrees of the servo, about 0.45 of its 0 to
+   1 range. The servo turns 60 degrees in 0.2 s: 135 / 60 x 0.2 s = 0.45 s.
 
 - **`posA`, `posB`: the two hard stops.** The servo positions where the hood (almost) touches each of
   its stops. The hood NEVER goes past them, whatever a table, a trim or a stick asks: a servo pushing on
@@ -668,12 +676,13 @@ once at INIT and the library checks it every loop.
 
 ```java
 robot.lights.show(LightColor.YELLOW).blinking().inLastSeconds(20);     // last 20 s: go park
-robot.lights.show(LightColor.GREEN).when(() -> robot.launcher.isSpinning() && robot.launcher.isReady());  // fire now
-// Purple and orange, not blue or red: at INIT the light shows the alliance in red or blue, so the
-// other rules keep away from those colors (nobody reads "following" as "BLUE alliance").
+// fire now
+robot.lights.show(LightColor.GREEN).when(() -> robot.launcher.isSpinning() && robot.launcher.isReady());
+// Purple and orange, not blue or red: those show the alliance at INIT.
 robot.lights.show(LightColor.PURPLE).when(() -> robot.turret.followMode().isOn());   // following the goal
 robot.lights.otherwise(LightColor.ORANGE);                             // following is off (BACK)
-robot.lights.show(LightColor.WHITE).whenCountGoesUp(() -> robot.launcher.part().getShotsFired());   // a 0.5 s flash per piece fired
+// a 0.5 s flash per piece fired
+robot.lights.show(LightColor.WHITE).whenCountGoesUp(() -> robot.launcher.part().getShotsFired());
 ```
 
 `LightColor` needs `import com.crossbotics.ftchelper.robot.LightColor;` at the top of `Controls.java`,

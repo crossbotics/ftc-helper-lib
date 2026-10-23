@@ -39,9 +39,7 @@ public class AimRecipes {
         // recipe: tunables-aim
         /** Aiming (every line is optional; leave out what you do not use). */
         public static class Aim {                                       // a fixed name: always Aim
-            // The goal on the field, in inches, seen from your drivers' wall (the same numbers as
-            // driveTo): with odometry, aiming goes on when the camera loses the goal. BIOBUZZ: your
-            // HIVE's CELL that is up at the start (13 in right of the centre line, 13 in toward you).
+            // The goal on the field, in inches, seen from your drivers' wall (the same numbers as driveTo).
             public static double goalX = 13;                            // inches right of centre (BIOBUZZ)
             public static double goalY = -13;                           // inches from centre, - = our half (BIOBUZZ)
             public static boolean mirrorForRed = false;                 // BIOBUZZ: turned, not mirrored (true)
@@ -60,9 +58,8 @@ public class AimRecipes {
         public static class Launcher {
             public static double speedRpm = 2600, stepRpm = 100, readyBandRpm = 60, idleRpm = 1500;
             // recipe: tunables-shot-tables
-            // In your Tunables.Launcher section, IN PLACE OF the one speedByDistance line: one table
-            // per game piece ({inches to the goal, RPM}), from the Shot Tuner. The name after
-            // "speedByDistance" is the table's name: "pollen" and "nectar". Example rows: write yours.
+            // IN PLACE OF the speedByDistance line: one table per game piece, {inches to the goal, RPM}.
+            // The POLLEN table (example rows: write the Shot Tuner's).
             public static double[][] speedByDistancePollen = {{24, 2200}, {48, 2550}, {72, 2900}};
             // The NECTAR table.
             public static double[][] speedByDistanceNectar = {{24, 2400}, {48, 2800}, {72, 3200}};
@@ -83,13 +80,10 @@ public class AimRecipes {
             // recipe: tunables-moving-shot
             // ADD these lines to your Tunables.Aim section (keep goalX, goalY and the others).
             public static boolean shootOnMove = false;                  // true only after testing on the real robot
-            // Seconds a piece is in the air, from a slow-motion video: count the frames from leaving the
-            // launcher to reaching the goal, divide by the video's frames per second.
             public static double flightSec = MEASURE;                   // seconds in the air (slow-motion video)
             public static double flightSecPerIn = DEFAULT;              // longer shots fly longer: per inch (0)
             public static double maxLeadIn = DEFAULT;                   // never lead more than this, inches (24)
-            // Where the shooter is from the robot's centre (a turret's pivot), and a camera on the body:
-            // inches forward (+) and left (+). A camera on the turret sits at the turret's pivot.
+            // Where the shooter (a turret's pivot) and a camera on the body are from the robot's centre.
             public static double shooterForwardIn = MEASURE;            // inches forward of the centre (a tape)
             public static double shooterLeftIn = MEASURE;               // inches left of the centre (a tape)
             public static double cameraForwardIn = MEASURE;             // inches forward of the centre (a tape)
@@ -148,9 +142,7 @@ public class AimRecipes {
         @Override
         protected void buttons(TrimRobot robot, Pad g1, Pad g2) {
             // recipe: speed-trim
-            // The launcher's own buttons already do it: gamepad 2 D-pad up/down = speed trim +/- 1%
-            // (held: 4 steps a second), double-tap D-pad down = back to 0. The Driver Station shows
-            // "Speed trim : +3%  READY" as the launcher's first line.
+            // The launcher's own buttons already trim: gamepad 2 D-pad up/down = +/- 1%.
             // Your own: a bigger step on a button, and a far shot that sets the trim first.
             g2.y.press(() -> robot.launcher.trimBy(+3)).says("speed trim +3%");
             g2.a.press(Action.named("Far shot +5%")
@@ -180,7 +172,7 @@ public class AimRecipes {
             odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
             camera = add(Camera.limelight("limelight").goal("BLUE SCORING", "RED SCORING"));
             turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).follows(camera));
-            // .part(...): the indexer's servo (optional, recommended: better starting values, a true simulator).
+            // .part(...): the indexer's servo (optional, recommended).
             launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
                     .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
                     .speedFromDistance(camera)
@@ -248,9 +240,7 @@ public class AimRecipes {
             tunables(Numbers.class);
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
             // recipe: camera-lighting
-            // Each venue's lights are different. In INIT the Limelight tries these pipelines (set each
-            // one up on the Limelight's web page for a kind of light; your usual one FIRST) and keeps
-            // the one that sees the most AprilTags. The Driver Station says which one it kept.
+            // In INIT the Limelight tries these pipelines (your usual one FIRST) and keeps the best one.
             camera = add(Camera.limelight("limelight").autoPipelines(0, 1, 2).goal("BLUE SCORING", "RED SCORING"));
             // A webcam: Camera.webcam("Webcam 1").autoExposure().goal(...) tries the camera's own
             // exposure, then 3, 6 and 12 ms.
@@ -279,13 +269,9 @@ public class AimRecipes {
         @Override
         protected void buttons(WholeRobot robot, Pad g1, Pad g2) {
             // recipe: aim-whole-robot
-            // Hold RB: the robot turns to face the goal by itself; the driver keeps forward and
-            // sideways. Let go: the aim is off, the driver turns again. Moving the turn stick while
-            // holding still turns it by hand. Not with a turret that follows the goal: separate
-            // modes (INIT stops with a message).
+            // Hold RB: the robot turns to face the goal by itself; the driver keeps forward and sideways.
             g1.rb.hold(robot.aimMode()::on, robot.aimMode()::off).says("hold: aim the robot at the goal");
-            // Or a toggle (a press on, a press again off; two buzzes = on). Careful: while it is on,
-            // the robot turns by itself, even after you let go of the button.
+            // Or a toggle. Careful: while it is on, the robot turns by itself, even after you let go.
             // g1.rb.toggle(robot.aimMode()).says("aim the robot at the goal on/off").rumble();
             // end recipe
             g2.rumbleWhenAimed();

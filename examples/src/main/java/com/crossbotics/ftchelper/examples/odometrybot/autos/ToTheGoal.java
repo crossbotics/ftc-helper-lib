@@ -8,8 +8,9 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 /**
- * Lesson 7: drive to field points with odometry. The start spot is where the robot really is; each
- * driveTo goes to a place on the field (not "24 inches forward"), and keeps correcting on the way.
+ * Lesson 7: drive to field points with odometry. Each driveTo goes to a place on the field (not
+ * "24 inches forward"), and keeps correcting on the way.
+ * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/07-odometry/#6-drive-to-field-points
  */
 @Autonomous(name = "Odometry Bot To the Goal", group = "Examples", preselectTeleOp = "Odometry Bot TeleOp")
 @Disabled

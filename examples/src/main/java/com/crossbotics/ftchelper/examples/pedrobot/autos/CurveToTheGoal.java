@@ -9,15 +9,14 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 /**
- * Pedro paths in the same field numbers as driveTo: a line then a curve to the goal (no stop between
- * them), starting the intake halfway along it, holding still to score, then a driveTo to park.
+ * Pedro paths in the same field numbers as driveTo: a line then a curve to the goal, the intake
+ * starting halfway, holding still to score, then a driveTo to park.
+ * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/08-paths-with-pedro/#5-write-your-first-path
  */
 @Autonomous(name = "Pedro Bot Curve to the Goal", group = "Examples")
 @Disabled
 public class CurveToTheGoal extends Auto<Robot> {
-    // The paths, made once. Our field numbers: x right, y away from your wall, heading 0 = facing away.
-    // Two parts with no stop between them: a straight start, then a curve (start, a control point that
-    // pulls the curve toward it, end), turning to 45 degrees. It holds the end point while it scores.
+    // Two parts with no stop between them, then hold the end point.
     static final PedroPath TO_GOAL = PedroPath.line(-56, -61, -48, -50).keepHeading(0)
             .then(PedroPath.curve(-48, -50, -44, -36, -30, -30)).turnTo(0, 45)
             .holdEnd();
@@ -30,9 +29,7 @@ public class CurveToTheGoal extends Auto<Robot> {
     @Override
     protected void steps(Steps s, Robot robot) {
         s.start("Against our wall, in the left corner tile, facing the field", -56, -61, 0)
-         // PathAt: start something ALONG the path while the robot keeps driving. Here the intake
-         // starts halfway (0.5 of the path). It happens once; if the path ends early, the report
-         // says "not fired: Intake on". Docs: docs/modules/pedro.md, "Do things along the path".
+         // PathAt: start something along the path, while the robot keeps driving.
          .follow("To the goal", TO_GOAL, PathAt.fraction(0.5, "Intake on", robot.intake::in))
          .waitSeconds("Score (the robot holds still)", 0.5)
          .run("Intake off", robot.intake::stop)

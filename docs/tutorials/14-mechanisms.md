@@ -27,21 +27,33 @@ work, tested, in one setup chain. You keep the understanding; you skip the typin
 
 ```java
 PositionMotor lift = PositionMotor.create(hardwareMap, "lift")
-        .limits(0, 2600)                          // never below 0 or above 2600 ticks
-        .lowerSwitch(hardwareMap, "lift_bottom")  // stops at the bottom and sets 0 there
-        .slowZone(250, 0.2)                       // gentle near the ends
-        .pid(0.004, 0, 0.0002, 0.05)              // from tutorial 07
+        .limits(0, 2600)                          // never below 0 or above 2600 ticks (1)!
+        .lowerSwitch(hardwareMap, "lift_bottom")  // stops at the bottom and sets 0 there (2)!
+        .slowZone(250, 0.2)                       // gentle near the ends (3)!
+        .pid(0.004, 0, 0.0002, 0.05)              // from tutorial 07 (4)!
         .position("DOWN", 0)
         .position("LOW", 900)
         .position("HIGH", 2400);
 ```
 
+1. Positions are encoder ticks. The position at INIT counts as 0, so start with the lift DOWN.
+   The limits stop a bug or a wrong number from driving the lift into the end of its travel.
+2. Pressing the switch resets the position to 0, which fixes counting errors. Until it is pressed
+   once, the lift only goes DOWN, slowly. If `lift_bottom` is not in your configuration, the lift
+   runs without a switch and telemetry shows a warning.
+3. Within 250 ticks of an end, the power drops to at most 0.2, so the lift does not slam. FTC
+   robots also need a physical hard stop: [safety.md](../modules/safety.md).
+4. kP, kI, kD, kF. The kF of 0.05 is a small steady push up that holds the lift against gravity.
+
 Each line is one decision you understand from earlier tutorials. Buttons:
 
 ```java
-.bindPress(Pad.G1, Btn.DPAD_UP, lift::stepUp)        // next position up
+.bindPress(Pad.G1, Btn.DPAD_UP, lift::stepUp)          // next named height up
 .bindPress(Pad.G1, Btn.Y, () -> lift.goTo("HIGH"))
 ```
+
+`lift::stepUp` is a method reference: a short way to write `() -> lift.stepUp()`. The actions
+only CHOOSE a target. The moving happens in `all.update()`, so no button ever makes the robot wait.
 
 Hand control, every loop: `lift.manual(stick)`. Push the stick: you drive it. Let go: it **holds**
 where you left it (PID), instead of sagging.
@@ -56,6 +68,9 @@ PositionServo wrist = PositionServo.create(hardwareMap, "wrist")
         .maxSpeed(1.5);                           // at most 1.5 positions per second: no swinging
 ```
 
+Servo positions go from 0 to 1; find yours by testing. With `maxSpeed(1.5)`, STOW to DROP (0.7)
+takes about half a second, instead of a sudden snap that could fling a game piece.
+
 `wrist::next` and `wrist::previous` on the bumpers walk through the positions in the order you
 added them. A servo does not move until you tell it to: here, `wrist.goTo("STOW")` right after START.
 
@@ -68,7 +83,9 @@ SpinMotor intake = SpinMotor.create(hardwareMap, "intake").powers(1.0, -0.7);
 .bindRelease(Pad.G1, Btn.B, intake::stop)
 ```
 
-`in()`, `out()` and `stop()` are safe to call every loop, so the trigger logic is plain:
+`powers(1.0, -0.7)`: full power to pull pieces in, and a bit gentler out, so a piece is spat out,
+not fired. `in()`, `out()` and `stop()` are safe to call every loop, so the trigger logic is plain.
+While B is held, B's bindings are in charge, so the trigger leaves the intake alone:
 
 ```java
 if (!gamepad1.b) {
@@ -85,7 +102,9 @@ when a game piece gets stuck and the intake stops turning while it has power.)
 SpinServo spinner = SpinServo.create(hardwareMap, "spinner").power(0.8);
 ```
 
-The port must be set to **Continuous Rotation Servo** in the configuration.
+A continuous-rotation servo spins round and round like a small motor, instead of going to a
+position. `power(0.8)` is its speed when told to go forward. The port must be set to
+**Continuous Rotation Servo** in the configuration.
 
 ## 6. One group for everything
 
@@ -97,6 +116,9 @@ all.addTelemetry(t);      // each part adds its own lines
 ...
 all.stop();               // in finally
 ```
+
+`all.stop()` stops the lift, the intake and the spinner. A normal servo like the wrist just stays
+where it is.
 
 ## Run it
 

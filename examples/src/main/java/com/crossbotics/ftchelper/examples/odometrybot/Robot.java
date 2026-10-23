@@ -8,9 +8,9 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.LogoFacingDirection;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.UsbFacingDirection;
 
 /**
- * Lesson 7's robot: a mecanum drive with a goBILDA Pinpoint and two 4-bar odometry pods, and an
- * intake. The odometry line is the only new thing: with it, robot.pose() knows where the robot is on
- * the field, autonomous can driveTo(...) a field point, and TeleOp starts where autonomous ended.
+ * Lesson 7's robot: a mecanum drive with a goBILDA Pinpoint and two odometry pods, and an intake.
+ * With the odometry line, robot.pose() knows where the robot is on the field.
+ * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/07-odometry/
  */
 public class Robot extends RobotDefinition {
     public Intake intake;
@@ -20,12 +20,9 @@ public class Robot extends RobotDefinition {
         drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
                 .motor("gobilda-5203-312").wheelMm(104)
                 .imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD));
-        // The Pinpoint on an I2C port, named "pinpoint" in the configuration. The offsets: the forward pod
-        // 84 mm RIGHT of the centre (-84), the sideways pod 168 mm BEHIND it (-168). The Odometry Tuner
-        // measures them.
+        // The Pinpoint on an I2C port. The pod offsets, mm: the Odometry Tuner measures them.
         odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
-        // "intake" = the motor's name in the robot configuration. Its numbers: Tunables.Intake.
-        // .part(...): which motor it is (an example: your motor's id is on its label).
+        // "intake" = the motor's name in the robot configuration. .part(...): the id on its label.
         intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
     }
 }

@@ -1,8 +1,7 @@
 // Which folder this file lives in. Change it to your TeamCode package when you copy the file.
 package com.crossbotics.ftchelper.examples.tutorials.robot;
 
-// "import" lines list the ready-made pieces this file uses: the FTC SDK's (com.qualcomm...)
-// and this library's (com.crossbotics...).
+// com.qualcomm... = the FTC SDK. com.crossbotics... = this helper library.
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -16,80 +15,50 @@ import com.crossbotics.ftchelper.gamepad.StickShaping;
 
 /**
  * Tutorial 12: a short TeleOp, because the Robot and subsystem classes do the work.
- * Driver: drive (robot-centric; Y = field-centric on/off), BACK = reset heading. Operator: D-pad up/down = lift step,
- * A = bottom, Y = high, right bumper = claw, left stick Y = lift by hand.
- *
- * Tutorial: docs/tutorials/12-robot-structure.md
+ * Driver: drive, Y = field-centric on/off, BACK = reset heading. Operator: D-pad up/down = lift
+ * step, A = bottom, Y = high, right bumper = claw, left stick Y = lift by hand.
+ * more: https://crossbotics.com/ftc-helper/docs/tutorials/12-robot-structure/#5-teleop-becomes-short
  */
-// @TeleOp puts this program in the Driver Station's TeleOp list with this name.
 @TeleOp(name = "Tutorial 12: Main TeleOp", group = "Tutorials")
-// @Disabled hides it from the list. Delete this line in your copy, or you will not see it.
-@Disabled
-// "extends LinearOpMode" = an FTC program that runs from top to bottom (see tutorial 01).
+@Disabled // hides this program on the Driver Station: delete this line in your copy
 public class MainTeleOp extends LinearOpMode {
 
-    // Robot-centric at the start: the stick drives the way the robot's nose points. Y switches.
-    private boolean fieldCentric = false;
+    private boolean fieldCentric = false;   // Y switches
 
-    // @Override = "this replaces the SDK's own runOpMode()". It runs when INIT is pressed.
     @Override
     public void runOpMode() {
-        // ---- INIT: set up. Nothing moves until START. ----
-
-        // The lift, the claw and the IMU, from Robot.java (the same class autonomous uses).
-        // Note: setting up the IMU makes the way the robot faces NOW heading 0.
-        Robot robot = new Robot(hardwareMap);
-        // The wheels, with the settings from RobotSettings.java.
+        Robot robot = new Robot(hardwareMap);   // the IMU setup makes the way the robot faces NOW heading 0
         MecanumDrive drive = new MecanumDrive(hardwareMap, RobotSettings.drive());
 
-        // Which way the robot faces compared with the driver. It continues from the heading
-        // autonomous saved, so field-centric "forward" is right at once (drive/DriverHeading.java).
+        // Continues from the heading autonomous saved, so field-centric "forward" is right at once.
         DriverHeading heading = new DriverHeading(robot.imu);
 
-        // The buttons. "() -> ..." is a lambda: code run LATER, when the button is pressed.
-        // "robot.lift::stepUp" is a method reference: "run robot.lift.stepUp() when pressed".
         ControllerBindings controls = new ControllerBindings()
-                // Driver Y: field-centric on (first press) / off.
                 .bindToggle(Pad.G1, Btn.Y, () -> fieldCentric = true, () -> fieldCentric = false)
-                // Driver BACK: "the way the robot faces now is forward". Point it away from you first.
+                // BACK: "where the robot faces now is forward". Point it away from you first.
                 .bindPress(Pad.G1, Btn.BACK, heading::reset)
-                // Operator D-pad: one set height up / down.
                 .bindPress(Pad.G2, Btn.DPAD_UP, robot.lift::stepUp)
                 .bindPress(Pad.G2, Btn.DPAD_DOWN, robot.lift::stepDown)
-                // Operator A / Y: straight to the bottom / the top.
                 .bindPress(Pad.G2, Btn.A, () -> robot.lift.goTo(LiftHeights.BOTTOM))
                 .bindPress(Pad.G2, Btn.Y, () -> robot.lift.goTo(LiftHeights.HIGH))
-                // Operator right bumper: claw open/close.
                 .bindPress(Pad.G2, Btn.RB, robot.claw::toggle);
 
-        // "a ? b : c" = if a is true use b, otherwise c.
         telemetry.addData("Heading", heading.isFromAuto() ? "from autonomous" : "0 = the way the robot faces now");
         telemetry.update();
-        // Wait here until START is pressed.
         waitForStart();
-        // The heading autonomous saved belongs to this run now: a later TeleOp run must not use it.
-        heading.forgetSaved();
-        // A button held down while START was pressed must not count as a press.
+        heading.forgetSaved();   // a later TeleOp run must not use the saved heading again
         controls.ignoreHeldButtons(gamepad1, gamepad2);
-        // try/finally: the "finally" part runs however the program ends, so everything stops.
         try {
-            // The main loop: runs many times a second until STOP. Nothing in it waits.
             while (opModeIsActive()) {
                 controls.update(gamepad1, gamepad2);
-                // The operator's stick moves the lift by hand. Deadband 0.1 so a bumped stick does not
-                // cancel a set height; exponent 1 = no curve. Minus: stick up reads negative.
+                // Deadband 0.1: a bumped stick does not cancel a set height.
                 robot.lift.manual(StickShaping.shape(-gamepad2.left_stick_y, 0.1, 1));
-                // The lift does its work (switch, PID or hand power), once per loop.
                 robot.update();
 
-                // shape(stick, 0.05, 2) ignores tiny stick values and "squares" the rest for fine control.
-                // Left trigger = slow: not pressed = full speed, squeezed all the way = 30%.
                 double forward = StickShaping.shape(-gamepad1.left_stick_y, 0.05, 2);
                 double strafe = StickShaping.shape(gamepad1.left_stick_x, 0.05, 2);
                 double turn = StickShaping.shape(gamepad1.right_stick_x, 0.05, 2);
-                double speed = StickShaping.slowScale(gamepad1.left_trigger, 0.3);
-                // Field-centric: "forward" on the stick is away from the driver. Robot-centric: the
-                // way the robot's nose points.
+                double speed = StickShaping.slowScale(gamepad1.left_trigger, 0.3);   // full pull = 30%
                 if (fieldCentric) drive.driveFieldCentric(forward, strafe, turn, heading.degrees(), speed);
                 else drive.drive(forward, strafe, turn, speed);
 
@@ -97,7 +66,6 @@ public class MainTeleOp extends LinearOpMode {
                 telemetry.update();
             }
         } finally {
-            // SAFETY: stop the wheels and the mechanisms when the program ends, whatever the reason.
             drive.stop();
             robot.stop();
         }

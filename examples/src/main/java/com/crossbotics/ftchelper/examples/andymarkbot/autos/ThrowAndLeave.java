@@ -25,8 +25,7 @@ public class ThrowAndLeave extends Auto<Robot> {
          .move("Leave", Tunables.Auto.leaveInches, 0, Tunables.Auto.leavePower);
     }
 
-    // BIOBUZZ's field is turned half a turn between the alliances (not mirrored): the same route,
-    // driven from each alliance's own wall, works for both.
+    // BIOBUZZ's field is turned half a turn between alliances (not mirrored): one route works for both.
     @Override
     protected boolean mirrorForRed() {
         return false;

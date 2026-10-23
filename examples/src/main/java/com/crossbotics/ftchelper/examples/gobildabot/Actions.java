@@ -2,15 +2,13 @@ package com.crossbotics.ftchelper.examples.gobildabot;
 
 import com.crossbotics.ftchelper.robot.Action;
 
-/** goBILDA starter bot, file 4 of 5: steps that use several parts together. */
+/**
+ * goBILDA starter bot, file 4 of 5: steps that use several parts together.
+ * more: https://crossbotics.com/ftc-helper/docs/tutorials/start/01-robot-in-five-files/#4-actionsjava-steps-that-use-several-parts
+ */
 public class Actions {
 
-    /**
-     * Fires the three preloaded pieces: spins up, then feeds them one by one as soon as the wheel is at
-     * speed. It uses only the launcher, so the driver can still run the intake (RT) to help push pieces
-     * in, as goBILDA's code does while it launches. (An action that also ran the intake would stop the
-     * moment the driver touched RT: the driver always wins.)
-     */
+    /** Fires the three preloaded pieces. Launcher only, so the driver can run the intake (RT) too. */
     public static Action fireAll(Robot r) {
         return Action.named("Fire all")
                 .then(() -> r.launcher.fire(3))

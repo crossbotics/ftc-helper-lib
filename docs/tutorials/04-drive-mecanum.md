@@ -39,6 +39,7 @@ defaults (`front_left` ... `back_right`, left side reversed) fit most goBILDA an
 If your names differ, change them: `driveConfig.frontLeft = "fl";`.
 
 `powerLimit = 0.6` means no wheel ever gets more than 60%. Keep it low until everything works.
+`new MecanumDrive(...)` finds the four motors. It stops with a clear message if a name is wrong.
 
 ## 3. Check the motor directions FIRST
 
@@ -144,6 +145,9 @@ for ON and once for OFF. (Reverse only makes sense in robot-centric mode, so the
     drive.stop();
 }
 ```
+
+On the screen, `fieldCentric ? "field-centric" : "robot-centric"` means: if `fieldCentric` is
+true, use the first text, otherwise the second.
 
 ## Run it
 

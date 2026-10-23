@@ -170,6 +170,22 @@ went (the loop, "when pressed", "wait") in these files.
 | 7 | `Controls.java` | the TeleOp's name (renamed it? Change `preselectTeleOp` in `autos/FirstAuto.java` to the same name); `group = "Examples"` to your own group name (or delete it); `oneDriver = true` if one person drives and runs the mechanisms | the name is what you pick on the Driver Station, and `preselectTeleOp` picks the TeleOp for you after the autonomous; one driver puts every button on gamepad 1 |
 | 8 | `autos/FirstAuto.java` | the autonomous's name and `group`, where the drive team puts the robot, and how far it drives | it only drives after the Drive Tuner ([lesson 6](tutorials/start/06-first-autonomous.md)) |
 
+**STEP 5, more mechanisms:** add a line for each part in `define()`, a field for each at the top of
+the class, an import for each part class, and its numbers in `Tunables.java` (a section named after the
+part: `"lift"` reads `Tunables.Lift`). For example a lift and a claw
+([lesson 4](tutorials/start/04-lift-and-claw.md) explains them):
+
+```java
+public Lift lift;     // the fields, next to "public Intake intake;"
+public Claw claw;
+
+lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom")); // in define() (1)!
+claw = add(Claw.servo("claw").part("gobilda-2000-torque"));
+```
+
+1. `.part(...)` says which motor or servo it is, by the id on its label (these ids are examples). The
+   starting values and the simulator then use that part's real numbers.
+
 In `Controls.java` and `autos/FirstAuto.java`, also delete the `@Disabled` line and its
 `import com.qualcomm.robotcore.eventloop.opmode.Disabled;` line (step 2B), if you have not yet.
 

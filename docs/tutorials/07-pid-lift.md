@@ -37,12 +37,28 @@ Most lifts work well with **P + D + a little F**. Many never need I.
 
 ## 2. Make the controller
 
+First the heights, in ticks:
+
+```java
+// 0 = where the lift was at INIT. TOP must be below the real top of the lift.
+static final int BOTTOM = 0, MIDDLE = 1200, TOP = 2400;   // encoder ticks: measure yours (1)!
+```
+
+1. Measure yours: move the lift by hand and read the position on telemetry (Tutorial 02).
+   Keep TOP a little below the hard stop at the top.
+
+Then the controller:
+
 ```java
 PidController pid = new PidController(gains[0], gains[1], gains[2], gains[3])   // kP, kI, kD, kF
         .setOutputLimits(-0.4, 0.7)   // never more than 40% down or 70% up
         .setIntegralLimit(0.2)        // I can never add more than 0.2 power
         .setTolerance(20);            // within 20 ticks counts as "there"
 ```
+
+The output limits keep a bad gain from slamming the lift while you tune. Up gets more power because
+it fights gravity. Without the integral limit, I can build up while the lift is stuck, and then
+make it shoot past the target. This is called "windup".
 
 Make it **once**, in INIT. It remembers the last error (for D) and the sum (for I), so a new one
 every loop would forget everything.
@@ -54,7 +70,8 @@ double power = pid.calculate(target, lift.getCurrentPosition());
 lift.setPower(power);
 ```
 
-That is all: target, measurement, power out.
+That is all: target, measurement, power out. Run it every loop, even at the target: that is
+what holds the lift up against gravity.
 
 ## 4. Change the target with buttons
 
@@ -85,7 +102,11 @@ pid.setGains(gains[0], gains[1], gains[2], gains[3]);
 ```
 
 Telemetry shows a `>` next to the gain you are changing. Each press multiplies it by 1.25 (up)
-or 0.8 (down); F goes in steps of 0.01.
+or 0.8 (down), so small and large gains both change by a sensible amount. A gain at 0 first
+jumps to a small value (0.001 for P, 0.0001 for I and D), because 0 x 1.25 is still 0.
+F goes in plain steps of 0.01 and never goes below 0: a negative F would push the lift down.
+`%` in `(selected + 1) % gains.length` is the remainder after dividing, so after the last gain
+it wraps round to the first. `setGains` does not reset the controller.
 
 **Write the final numbers down.** They are lost when the OpMode stops. Put them into your
 real program.

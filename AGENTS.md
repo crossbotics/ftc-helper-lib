@@ -74,7 +74,8 @@ Read first: `README.md`, `docs/guides/architecture.md` (how it fits together),
 Every change follows the six steps in `docs/contributing.md`. A change is NOT done until all are done:
 
 1. Code, **commented for novice programmers** per `docs/commenting-style.md` (plain everyday words, the WHY,
-   pointers to the docs that explain more; examples and tutorial programs get the most comments).
+   pointers to the docs that explain more). Examples and tutorial programs keep only the essential comments
+   (at most 3 `//` lines in a row); their WHY goes in the docs as code annotations (`(1)!` markers).
    In `examples/` (files students copy and read), comments use plain `-` and `1.` lists and blank comment
    lines, never HTML (`<ul>`, `<li>`, `<p>`, `<b>`): `tools/check_docs.py` checks it. The library's own
    javadoc keeps HTML (it builds the reference's lists).

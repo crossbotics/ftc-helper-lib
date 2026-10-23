@@ -52,6 +52,9 @@ Which one to use:
 
 `Pad.G1` is gamepad 1 (the driver); `Pad.G2` is gamepad 2 (the operator).
 
+A job must be quick. Never wait or sleep inside one: the whole robot freezes until it ends.
+`bindToggle` starts OFF. The curly brackets `{ }` hold two steps in one lambda.
+
 ### Two jobs, one action
 
 ```java
@@ -121,6 +124,9 @@ while (opModeIsActive()) {
     ...telemetry...
 }
 ```
+
+Without `controls.update(...)` no button does anything. This program has no `try`/`finally`:
+it has no motors to stop.
 
 ## Run it
 

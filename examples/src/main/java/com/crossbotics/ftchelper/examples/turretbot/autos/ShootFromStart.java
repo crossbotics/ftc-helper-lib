@@ -7,9 +7,9 @@ import com.crossbotics.ftchelper.robot.Auto;
 import com.crossbotics.ftchelper.robot.Steps;
 
 /**
- * Example robot 2, file 5 of 5: the turret follows the goal from START (a mode), so the steps only
- * drive into range and fire. Each shot waits until the speed for this distance is reached and the
- * turret is aimed.
+ * Example robot 2, file 5 of 5: the turret follows the goal from START, so the steps only drive
+ * into range and fire. Each shot waits for the right speed and the turret aimed.
+ * more: https://crossbotics.com/ftc-helper/docs/guides/autonomous-builder/
  */
 @Autonomous(name = "TurretBot Shoot from Start", group = "Examples", preselectTeleOp = "TurretBot TeleOp")
 @Disabled
@@ -25,8 +25,7 @@ public class ShootFromStart extends Auto<Robot> {
          .move("Leave", 12, 90, 0.7);
     }
 
-    // BIOBUZZ's field is turned half a turn between the alliances (not mirrored): the same route,
-    // driven from each alliance's own wall, works for both.
+    // BIOBUZZ's field is turned half a turn between the alliances: the same route works for both.
     @Override
     protected boolean mirrorForRed() {
         return false;

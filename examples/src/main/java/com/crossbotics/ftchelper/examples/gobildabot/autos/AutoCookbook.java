@@ -10,15 +10,14 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 /**
  * goBILDA starter bot: every part of the autonomous builder in one program, numbered. The guide
- * docs/guides/autonomous-builder.md explains each number. Try it in the simulator: INIT, choose in
- * the menu with the D-pad, START, and read the report at the end.
+ * explains each number.
+ * more: https://crossbotics.com/ftc-helper/docs/guides/autonomous-builder/
  */
 @Autonomous(name = "goBILDA Bot Auto Cookbook", group = "Examples", preselectTeleOp = "goBILDA Bot TeleOp")
 @Disabled
 public class AutoCookbook extends Auto<Robot> {
 
-    // BIOBUZZ's field is turned half a turn between the alliances, so the same route works for both:
-    // no left/right mirroring for RED.
+    // BIOBUZZ's field is turned half a turn between the alliances: the same route works for both.
     @Override
     protected boolean mirrorForRed() {
         return false;
@@ -26,12 +25,10 @@ public class AutoCookbook extends Auto<Robot> {
 
     @Override
     protected void steps(Steps s, Robot robot) {
-        // 1. Where to put the robot: the note for the drive team (shown in INIT) and the spot (the
-        //    simulator puts the robot there). Heading 0 = facing away from the drivers.
+        // 1. Where to put the robot: a note for the drive team, and the spot. Heading 0 = away from the drivers.
         s.start("Back against our goal, facing away from it", -56, -61.1, 0)
 
-         // 2. The INIT menu: the drivers choose with the D-pad before START (alliance, start delay
-         //    and profile come with every autonomous).
+         // 2. The INIT menu: the drivers choose with the D-pad before START.
          .menuChoice("Then", "Leave", "Collect more", "Stay")
          .menuYesNo("Spin up early", true)
 

@@ -148,14 +148,14 @@ This is the odometry robot's `Robot.java`. The odometry line is the only new thi
 drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
         .motor("gobilda-5203-312").wheelMm(104)
         .imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD));
-// The Pinpoint on an I2C port, named "pinpoint" in the configuration. The offsets: the forward pod
-// 84 mm RIGHT of the centre (-84), the sideways pod 168 mm BEHIND it (-168). The Odometry Tuner
-// measures them.
-odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
-// "intake" = the motor's name in the robot configuration. Its numbers: Tunables.Intake.
-// .part(...): which motor it is (an example: your motor's id is on its label).
+// The Pinpoint on an I2C port. The pod offsets, mm: the Odometry Tuner measures them.
+odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168)); // (1)!
+// "intake" = the motor's name in the robot configuration. .part(...): the id on its label.
 intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
 ```
+
+1. On this robot the X pod (it measures forward) is 84 mm RIGHT of the centre, so -84. The Y pod
+   (it measures sideways) is 168 mm BEHIND the centre, so -168. The bullets below explain the signs.
 
 **In your own `Robot.java`**, add two lines:
 

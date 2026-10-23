@@ -32,9 +32,32 @@ there, or point to the page that explains it.
 7. **Do not comment the obvious.** `i++` and simple getters need nothing. A comment that only repeats
    the code is noise.
 8. **Section headers** in long classes: `// ---- Setup ----`, `// ---- Every loop ----`.
-9. **Examples and tutorial programs get more comments than the library**: almost every block is
-   explained, because students copy them.
+9. **Examples and tutorial programs keep only the essential comments** (decided 2026-10-23): what a line
+   is, units, "= the name in the robot configuration", "measure this", a safety warning, and a
+   `more: https://crossbotics.com/...` link where it helps. At most 3 `//` lines in a row and 8 lines of
+   `/** */` (`tools/check_docs.py` checks it). **Why:** teams copy these files, and long explanations get
+   in the way of their own code. The WHY (rules 1 and 6) goes in the docs, next to the code that shows it:
+   as a [code annotation](#code-annotations-in-the-docs) or in the text.
 10. **Keep comments true.** When code changes, its comments change in the same commit.
+
+## Code annotations in the docs
+
+A docs code box can explain a line without a long comment in the code. Add a marker `(1)!` at the end of
+the line's `//` comment (or `// (1)!` alone after the code), and put a numbered list right under the box,
+one item per marker, in order:
+
+````text
+```java title="Robot.java"
+lift = add(Lift.slide("lift").part("gobilda-5203-435"));   // the lift (1)!
+```
+
+1. "lift" is the motor's name in the robot configuration. Its numbers: `Tunables.Lift`.
+````
+
+On crossbotics.com each marker becomes a small (+) button that opens its item; the list itself is hidden
+and the Copy button copies the code without the markers. On GitHub the marker and the list show as text.
+The markers are only in the docs: `tools/check_docs.py` takes them out before it compares a box with its
+Java file, and `--fix-cookbook` keeps them on the lines that did not change.
 
 ## Format
 

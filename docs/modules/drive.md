@@ -383,7 +383,10 @@ Do this first on every new drivetrain. **Put the robot on a block, wheels off th
 2. Run it. Hold X, Y, A, B: each spins one wheel (front-left, front-right, back-left, back-right;
    on a 2-motor tank only X = left and Y = right).
 3. Every wheel must roll so the robot would go FORWARD.
-4. If one rolls backward, flip its `...Reversed` value in your `DriveConfig`.
+4. If one rolls backward, flip its `...Reversed` value in your `DriveConfig`. With the robot in five
+   files, add the motor's name to `.reversed(...)` in `Robot.java` (or take it out).
+   A held button spins its wheel at 30%: slow enough to be safe, fast enough to see the direction.
+   Run the check again after any motor or wire is changed: a wrong direction makes the robot drive in circles.
 5. Then on the floor with `powerLimit = 0.4`: stick up = forward, right stick right = turn clockwise.
    Mecanum only: left stick right = strafe right. If strafing goes diagonal, a motor name is on the wrong wheel.
 

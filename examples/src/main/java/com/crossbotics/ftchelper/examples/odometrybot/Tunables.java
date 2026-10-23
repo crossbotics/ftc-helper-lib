@@ -1,10 +1,10 @@
 package com.crossbotics.ftchelper.examples.odometrybot;
 
-import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT (docs/guides/tunables.md)
+import static com.crossbotics.ftchelper.robot.Starting.*;   // DEFAULT
 
 /**
- * Lesson 7's robot, every number, one per line. DEFAULT = the library's default (in
- * brackets in the comment).
+ * Lesson 7's robot: every number, one per line. DEFAULT = the library's default (in brackets).
+ * more: https://crossbotics.com/ftc-helper/docs/guides/tunables/
  */
 public class Tunables {
     public static class Drive {
@@ -18,13 +18,7 @@ public class Tunables {
         public static boolean calibrated = false;                   // true after the Drive Tuner: auto runs then
     }
 
-    /**
-     * checked: set true after the Odometry Tuner (lesson 7); until then driveTo steps are skipped.
-     * resetX, resetY, resetHeading: the "set pose here" spot for TeleOp (hold G1 START 1 s with the robot
-     * there), written for BLUE like the start spot: here the same corner tile, facing the field.
-     * mirrorForRed: false = RED uses the same numbers from the red wall (BIOBUZZ's field is turned half
-     * a turn, like the autos' mirrorForRed()); true = mirrored left-right (a mirrored field).
-     */
+    /** reset...: the spot for "set pose" in TeleOp (hold G1 START 1 s), written for BLUE. */
     public static class Odometry {
         public static boolean checked = false;                      // true after the Odometry Tuner's loop test
         public static double resetX = -56;                          // pose spot: inches right of centre

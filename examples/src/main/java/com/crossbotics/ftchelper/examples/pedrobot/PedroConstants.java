@@ -6,15 +6,10 @@ import com.pedropathing.math.Matrix;
 import com.pedropathing.math.Vector2D;
 
 /**
- * Pedro's Foresight numbers. THESE ARE THE SIMULATED PEDRO BOT'S NUMBERS, NOT YOUR ROBOT'S: run Pedro's
- * Foresight tuner on your robot (docs/modules/pedro.md) and paste its "Java" output here. Pedro reads
- * them at INIT, so they are not in the tuning menu: change them here and send the code again.
- *
- * Where these come from: the measuring steps of Pedro's Foresight tuner (Pedro's Quickstart,
- * 2026-10-15), run in the simulator on this robot's simulator file, with the tuner's default
- * distances (48 in, 30 in/s, 36 in). The tuner read the physics engine's own speed: speeds worked out
- * from the simulated odometry were too uneven for it (docs/modules/pedro.md, "The simulator").
- * So paths in the simulator brake the way the simulated robot really brakes. 2026-10-21.
+ * Pedro's Foresight numbers. THESE ARE THE SIMULATED PEDRO BOT'S NUMBERS, NOT YOUR ROBOT'S: run
+ * Pedro's Foresight tuner on your robot and paste its "Java" output here. Pedro reads them at INIT
+ * (not in the tuning menu): change them here and send the code again.
+ * more: https://crossbotics.com/ftc-helper/docs/modules/pedro/#tuning-pedro
  */
 public class PedroConstants {
     public static final ForesightConfig foresight = new ForesightConfig(c -> {

@@ -35,8 +35,7 @@ public class OdometryRecipes {
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
                     .imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD));
             // recipe: odometry-pinpoint
-            // After drive(...). The offsets, mm: first how far LEFT of the centre the forward pod is
-            // (right = minus: here 84 mm right), then how far FORWARD the sideways pod is (behind = minus).
+            // After drive(...). Offsets, mm: how far LEFT the forward pod is, how far FORWARD the sideways pod is.
             // Not sure? Write offsetsMm(0, 0): the Odometry Tuner measures them.
             odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
             // end recipe
@@ -108,10 +107,8 @@ public class OdometryRecipes {
 
             // recipe: reset-pose-button
             // A second spot of your own: hold D-pad down 1 s with the robot in the right corner tile.
-            // (x, y, heading written for BLUE; RED uses them like the reset spot in Tunables.Odometry.)
             g1.dpadDown.heldFor(1.0, () -> robot.resetPose(56, -61, 0)).says("hold 1 s: pose = right corner tile");
-            // An action can set it too (here: the Tunables.Odometry spot, then the intake runs; the
-            // action is in Actions.java, below).
+            // An action can set it too (the action is in Actions.java, below).
             g1.dpadUp.heldFor(1.0, Actions.poseHereThenIntake(robot)).says("hold 1 s: pose here, intake on");
             // end recipe
         }

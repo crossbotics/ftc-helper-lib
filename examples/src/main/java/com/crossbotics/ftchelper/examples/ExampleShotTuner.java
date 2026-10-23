@@ -1,4 +1,4 @@
-// Which folder this file lives in. Change it to your TeamCode package when you copy the file.
+// The folder this file lives in. Change it to your TeamCode folder when you copy the file.
 package com.crossbotics.ftchelper.examples;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
@@ -18,11 +18,10 @@ import com.crossbotics.ftchelper.vision.WebcamTags;
  * Use YOUR launcher here: the same set-up as your TeleOp (best: from your Robot class, e.g.
  * {@code return new Robot(hardwareMap).launcher;}). Needs a motor "flywheel", a motor "feeder",
  * a servo "hood" and a webcam "Webcam 1".
- * How to use it: docs/guides/finders.md.
+ * more: https://crossbotics.com/ftc-helper/docs/guides/finders/#shot-tuner-the-shot-table
  */
 @TeleOp(name = "Shot Tuner", group = "Finders")
-// @Disabled hides it from the list. Delete this line in your copy, or you will not see it.
-@Disabled
+@Disabled // hides this program on the Driver Station: delete this line in your copy
 public class ExampleShotTuner extends ShotTunerOpMode {
 
     // The launcher, as in tutorial 17. Use the flywheel numbers from the Flywheel Finder.

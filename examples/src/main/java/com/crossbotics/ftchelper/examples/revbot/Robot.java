@@ -10,23 +10,10 @@ import com.crossbotics.ftchelper.robot.Positioner;
 import com.crossbotics.ftchelper.robot.RobotDefinition;
 
 /**
- * REV's DUO FTC Starter Bot for BIOBUZZ, file 1 of 5, with the same configuration names as REV's own
- * code (its TeleOp page), so it runs on that robot as it is.
- *
- * - A tank drive: one 20:1 UltraPlanetary HD Hex motor per side, 90 mm wheels, chain 1:1.
- * - The intake: flap wheels on a Core Hex motor.
- * - The launcher: two grip wheels on an HD Hex motor at 1:1 (no gearbox), fed by a roller on a
- *   Smart Robot Servo in continuous (CR) mode.
- * - The pollen pusher ("poker"): an arm on a servo at the left side. It combs POLLEN out of a FLOWER.
- *
- * Each part says which motor or servo it is (.part(...) or the id in the brackets), from REV's build
- * guide: the starting values and the simulator then use that part's real numbers.
- *
- * Where the facts come from: docs/guides/starter-bots.md and the simulator's robot file
- * sim/robots/starter-bot-rev.properties. REV does not say which way each motor turns, so check them
- * on your robot (lesson 2, docs/tutorials/start/02-drive.md).
- *
- * Tutorial: docs/tutorials/start/01-robot-in-five-files.md walks through all five files.
+ * REV's DUO FTC Starter Bot for BIOBUZZ, file 1 of 5: what is on the robot. The configuration names
+ * are the ones in REV's own code (its TeleOp page), so it runs on that robot as it is. REV does not
+ * say which way each motor turns: check them on your robot (lesson 2).
+ * more: https://crossbotics.com/ftc-helper/docs/guides/starter-bots/#rev-bot-code
  */
 public class Robot extends RobotDefinition {
     public Intake intake;
@@ -35,27 +22,22 @@ public class Robot extends RobotDefinition {
 
     @Override
     protected void define() {
-        // Each name in quotes ("leftDrive", "intakeMotor", "flywheel", "pollenServo"...) = the device's name
-        // in the robot configuration on the Driver Station. A part's numbers: Tunables, in its name's section.
-        // REV's code does not reverse a drive motor, so the library's default (the left side
-        // reversed) is a guess: if the robot spins when you push forward, change it (lesson 2).
+        // Each name in quotes = the device's name in the robot configuration. Numbers: Tunables.
+        // Left side reversed (the default) is a guess: if the robot spins when you push forward, change it.
         drive(Drive.tank("leftDrive", "rightDrive")
                 .motor("rev-hd-hex-up20").wheelMm(90)
                 // Check how YOUR Control Hub is mounted: the way its logo and USB port face.
                 .imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD));
 
-        // REV's code: right bumper takes POLLEN in, right trigger pushes it out. Which sign is "in"
-        // is not on REV's page: if it pushes out when it should take in, add .reversed().
+        // If it pushes out when it should take in, add .reversed() (REV does not say which way is "in").
         intake = add(Intake.motor("intakeMotor").part("rev-core-hex"));
 
-        // The flywheel (HD Hex at 1:1: the 6000 RPM motor's numbers) and its feeder roller (a Smart Robot
-        // Servo V2, Balanced, in CR mode).
+        // HD Hex at 1:1 (no gearbox); the feeder roller is a Smart Robot Servo in CR mode.
         launcher = add(Launcher.flywheel("flywheel", "rev-hd-hex")
                 .feeder(Indexer.crServo("crServo").part("rev-smart-servo-v2-balanced")));
 
-        // The poker: a Smart Robot Servo V2 (Balanced) with two named spots (Tunables.PollenServo). Nothing
-        // moves at INIT, so this line does NOT fold it: fold the poker by hand before INIT, so the robot fits
-        // the 18 in start cube. It first moves when a button (A or B) or an action sends it somewhere.
+        // The poker, two named spots (Tunables.PollenServo). Nothing moves at INIT: fold it by hand
+        // before INIT, so the robot fits the 18 in start cube.
         poker = add(Positioner.servo("pollenServo").part("rev-smart-servo-v2-balanced"));
     }
 }

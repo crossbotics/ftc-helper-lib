@@ -47,6 +47,33 @@ public class Tut01HelloLibrary extends LinearOpMode {
 - The loop must be quick. It reads the gamepads, decides, sets motor powers, and goes around
   again. Never put `sleep()` in a TeleOp loop: the robot cannot react while it sleeps.
 
+### The top of the file
+
+```java
+@TeleOp(name = "Tutorial 01: Hello Library", group = "Tutorials") // (1)!
+@Disabled // hides this program on the Driver Station: delete this line in your copy (2)!
+public class Tut01HelloLibrary extends LinearOpMode { // (3)!
+
+    // A field: button actions can change it.
+    private int presses = 0; // (4)!
+
+    // The SDK calls runOpMode() when the driver presses INIT.
+    @Override // (5)!
+    public void runOpMode() {
+```
+
+1. `@TeleOp` is a label. Java calls it an "annotation". It puts the program in the Driver Station's
+   TeleOp list, with this name, in the "Tutorials" group.
+2. Every tutorial file has `@Disabled`, so the lists stay short. Delete it in your copy, or you
+   will not find your program on the Driver Station.
+3. The class name must match the file name. `extends LinearOpMode` builds the program on the SDK's
+   `LinearOpMode`. It gives you `hardwareMap`, `gamepad1`, `gamepad2` and `telemetry` (the text on
+   the Driver Station screen) for free.
+4. `private` = only this file can use it. `int` = a whole number. It starts at 0.
+   [Why it is a field](#why-is-presses-a-field).
+5. `@Override` says "this replaces a method the SDK already has". `public void` = anyone may call
+   it, and it gives nothing back.
+
 ### Why `try`/`finally`?
 
 Code in `finally` runs when the loop ends **for any reason**: STOP was pressed, or your code
@@ -55,7 +82,10 @@ crashed with an error. Putting `drive.stop()` there means a bug never leaves a m
 ## 2. Imports: telling Java where a class lives
 
 Library classes live in packages like `com.crossbotics.ftchelper.util`. At the top of the
-file, `import` lines tell Java where to find them:
+file, `import` lines tell Java where to find them. `com.qualcomm...` is the FTC SDK (from FIRST).
+`com.crossbotics...` is this helper library. The `package` line above them says which folder the
+file is in: when you copy a file into TeamCode, change it to your folder (Android Studio usually
+offers to fix it).
 
 ```java
 import com.crossbotics.ftchelper.util.LoopTimer;
@@ -119,11 +149,14 @@ while (opModeIsActive()) {
 
     TelemetryHelper.section(telemetry, "Hello");
     telemetry.addData("A presses", presses);
-    TelemetryHelper.flag(telemetry, "B held", controls.isDown(Pad.G1, Btn.B));
-    TelemetryHelper.value(telemetry, "Loop speed", loopTimer.getHz(), "Hz");
+    TelemetryHelper.flag(telemetry, "B held", controls.isDown(Pad.G1, Btn.B)); // (1)!
+    TelemetryHelper.value(telemetry, "Loop speed", loopTimer.getHz(), "Hz"); // (2)!
     telemetry.update();
 }
 ```
+
+1. `isDown` asks "is B held right now?" (yes or no). It does not bind an action to B.
+2. Loops per second (Hz). Higher is better: the robot reacts faster.
 
 - `ignoreHeldButtons` right after START: if someone holds A while pressing START, it does not
   count until they let go. (Tutorial 03 explains.)

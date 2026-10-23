@@ -30,8 +30,7 @@ public class Robot extends RobotDefinition {
                 .motor("gobilda-5203-312").wheelMm(96)
                 .imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD));
         odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
-        // .part(...) = which motor or servo it is: the id on its label (examples here; optional, recommended:
-        // better starting values, a true simulator). A launcher's motor id is in its brackets.
+        // .part(...) = which motor or servo it is: the id on its label (optional, recommended).
         intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
         lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom"));
         claw = add(Claw.servo("claw").part("gobilda-2000-torque"));

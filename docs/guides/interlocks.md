@@ -17,7 +17,7 @@ Reference: [Interlock in the robot module](../modules/robot.md#interlock). Quick
 
 Take a robot with a turret in the middle and a lift at the back. When the lift's slide is up, the
 turret must not point backward, or the shooter hits the slide. When the turret points backward, the lift
-must not rise. (The numbers below are an example. The [V2 robot](#try-it) uses a turret and wrist rule
+must not rise. (The numbers below are an example. The [V2 robot](#the-v2-robot) uses a turret and wrist rule
 instead.)
 
 ![The turret's zone and the lift's zone, seen from above and from the side](../images/interlock-zones.svg)
@@ -218,15 +218,130 @@ moving could suddenly put both in their zones. Change the numbers in `Tunables.j
 - It only knows what you tell it: measure the zones on the real robot (move one part into the other
   slowly, by hand, and write down where they touch), then add the margins.
 
-## Try it
+## The V2 robot
 
 The [v2bot example](../../examples/src/main/java/com/crossbotics/ftchelper/examples/v2bot/Robot.java) has a
-turret, a lift with a wrist and a claw, and a rule from team 8938's measured designs:
+turret, a lift with a wrist and a claw, and a rule from team 8938's measured designs (turret v8.1GB and
+the "pincer" lifter):
 `keepApart("TurretClaw", turret.zone(), wrist.zone())`. Its claw only reaches the turret while the wrist
 is folded or at pick-up (0 to 47 degrees), at any lift height, so the rule is between the turret and
 the **wrist**, not the lift: the turret stays out of 147 to 217 degrees while the wrist is low. The
-reasons and the numbers are in its `Tunables.TurretClaw`. Run its TeleOp in the
+reasons and the numbers are [below](#the-turretclaw-rule). Every number not measured on a built robot
+says "example" in its `Tunables.java`.
+
+The robot, part by part:
+
+- A mecanum drive with a goBILDA Pinpoint (odometry): the turret keeps aiming from the robot's place
+  when the camera loses the goal.
+- An intake, a color sensor that counts the pieces (BIOBUZZ allows 4 at a time, G407), and an indexer
+  servo that feeds the launcher. The `Pieces` line comes **above** the intake line, so the count is up to
+  date before the intake asks "full?".
+- A turret on a goBILDA Gear-Driven Turret bearing, turned by a 312 RPM motor (2.75 motor turns per
+  turret turn). It turns -190 to +190 degrees and finds its angle on a magnetic home switch at START
+  ([Setting up a turret](turret-setup.md#four-complete-examples), example A).
+- A flywheel launcher with a hood on a servo: speed and hood angle from the distance to the goal. It
+  fires only when the turret is aimed and there is a piece to fire.
+- A lift at the back: a goBILDA 4-stage Viper-Slide on a 435 RPM motor. On its top stage: a wrist (a
+  servo on an 8 mm axle across the slide, that swings the claw out the back, 0 to 145 degrees between
+  hard stops: a stop collar and a pin) and a two-finger claw.
+
+Run its TeleOp in the
 [simulator](simulator.md): with the wrist folded, turn the turret toward the back with the stick (it
 stops at the edge), then score in a FLOWER (G2 Y): while the wrist is out, the turret is free to turn to
 the back. When the action folds the wrist again at the end, the rule is back on: a turret at the back
 then holds the wrist out (it waits until the turret turns away).
+
+### The V2 robot's buttons
+
+The parts bring their buttons, all on gamepad 2 (the operator): RT intake on/off (held 1 s: in even when
+the count says full), LT push out (hold), LB flywheel spin up/down, RB fire (hold: keep firing), D-pad
+up/down speed trim, D-pad right the next shot table, left stick Y hood trim, right stick X turret by
+hand, BACK turret following on/off, B claw open/close, D-pad left the wrist's previous position, left
+stick button held 1 s: piece count = 0.
+
+`Controls.java` adds: A grab, Y score in a FLOWER, X stow the lifter, the lift by hand on the right
+stick Y, a buzz when the turret is on target, and the light's colors (orange while the rule holds a
+part back).
+
+Some module suggestions find their button taken by a part added earlier in `Robot.java`. The INIT
+screen lists them, e.g. `Lift by hand: no button (G2 left stick Y is taken by Hood)`. That is the
+library's check doing its job: one job per button. `Controls.java` gives the lift its own stick.
+
+### The lifter's steps
+
+The actions in `Actions.java` keep team 8938's order:
+
+1. Pick up with the slide down and the wrist 20 degrees out, so the ball is not under the robot.
+2. Swing the wrist out to 90 degrees BEFORE lifting, then lift, then tip the wrist over the FLOWER.
+   Drive there first: the robot's back to the FLOWER, about 28 mm away (the design's release point).
+3. Coming back: wrist to 90, lift down, then fold.
+
+Each wait lets a part get there (a servo: about its `travelSec`; the lift: its encoder says it
+arrived). Every wait has a time limit, so a stuck part never stops the robot for good: the action ends
+and says which step timed out.
+
+The rule is always on. While the turret points back, the wrist waits above 47 degrees by itself (the
+claw would hit the turret lower down; the Driver Station says `TurretClaw : Wrist held at ...`). So
+`grab` first turns the turret forward, and lets it follow the goal again once the wrist is back out
+at carry. Scoring needs nothing: the wrist is out at 90 degrees and more, where the turret may point
+anywhere. `stow` folds the wrist last: it waits there if the turret points back. In the autonomous
+too: had a step raised the wrist into its zone while the turret pointed back, it would wait.
+
+### Where the V2 robot's numbers come from
+
+**The lift** (`Tunables.Lift`), in encoder counts from the bottom stop. 0 is where it is at INIT, so
+start with the slide down. The top stage moves 120 mm per motor turn and the 435 RPM motor counts 384.5
+per turn: 3.2 counts per mm (the lifter design log).
+
+- `pickup` 0: slide down. With the wrist at 20 degrees the claw reaches a ball on the tiles.
+- `stowed` 44 (13.7 mm): the folded claw clears the tiles.
+- `flower` 1330 (415.1 mm): the ball over the FLOWER's top opening (wrist at 122.8 degrees).
+- `max` 1350: just under the hard stop at 425.1 mm (1362). `min` 0: the bottom stop.
+- `kP` to `tolerance`: examples. Tune your own ([lesson 4](../tutorials/start/04-lift-and-claw.md)).
+
+**The wrist** (`Tunables.Wrist`), servo positions. The goBILDA 2000 servo turns 0.15 degrees per
+microsecond of signal (300 degrees over 500-2500 us). The hub's normal signal is 600-2400 us, so 0 to 1
+turns it 270 degrees: one degree is 1/270. The wrist needs only 145 degrees, so it keeps the normal
+range (no [`.fullRange()`](../modules/robot.md#claw)).
+
+- Angles from straight down (the lifter design): folded 0, pickup 20, carry 90, flower 122.8. The hard
+  stop is at 145 (0.637).
+- `folded = 0.10` is an example: find yours with the Servo Finder. Each other position = folded +
+  degrees / 270 (pickup 0.174, carry 0.433, flower 0.555).
+- `travelSec`: the Speed servo turns 60 degrees in 0.09 s, so 145 degrees take 0.22 s. 0.3 s adds a bit.
+
+**The claw** (`Tunables.Claw`, the "pincer"): two fingers on one goBILDA Torque servo (2000-0025-0002),
+geared together. The fingers turn 1.2 times the servo's angle. Open: fingers at +17 degrees (servo +14);
+closed on a POLLEN: -10 degrees (servo -8); a NECTAR stops them at 0. The positions around 0.50 are
+examples: find yours with the Servo Finder.
+
+**The hood** works like the turret robot's ([lesson 9](../tutorials/start/09-shooter-and-camera.md#a-hood-the-shot-angle)).
+The aim's goal point (`goalX`, `goalY`) is explained in
+[lesson 9, section 9](../tutorials/start/09-shooter-and-camera.md#9-when-the-camera-loses-the-goal-the-odometry).
+`shooterForwardIn = 1`: the turret's axis is 1 in forward of the robot's centre (turret v8.1GB). It
+matters only when shooting on the move (off until tested on the real robot).
+
+### The TurretClaw rule
+
+Team 8938's pincer model was run against turret v8.1GB (2026-10-22). No lifter part ever comes inside
+the turret's reach (201.1 mm from its axis). But with the wrist between 3 and 44.5 degrees, the claw
+body comes within 2 mm of it, at +/-4 degrees of straight back, at EVERY lift height. With the wrist
+above 47 degrees (carry 90, flower 122.8), every lifter part is at least 206.7 mm away: clear.
+
+- **The turret's zone.** Its parts farther than 190 mm from the axis sit from -32.3 to +28.8 degrees
+  of where it points (the v8.1GB reach measurements). The claw is at 176 to 184 degrees. So they meet
+  when the turret points from 176 - 28.8 = 147 to 184 + 32.3 = 217 degrees (0 forward,
+  counterclockwise +, back = 180): `turretFrom = 147`, `turretTo = 217`.
+- **The wrist's zone.** 0 to 47 degrees (the measured 3 to 44.5, with a margin). In servo positions:
+  `wristTo` = folded + 47 / 270 = 0.10 + 0.174 = 0.274. `wristFrom = 0`: the wrist cannot go below
+  folded (its stop), so the zone starts at the bottom. Change `folded`? Change `wristTo` too.
+- **The lift needs no zone:** the wrist's rule covers every lift height.
+- **No `turretMargin` or `turretStopSec`:** the defaults fit. The turret is fast (a 312 RPM motor,
+  2.75:1: about 680 degrees a second), but the rule measures its speed every loop and slows it down
+  near the zone ([Stop distance](#stop-distance-a-fast-part-brakes-in-time)). It waits two margins
+  (2 x 3 degrees) from the zone: at 147 - 6 = 141 (or -143 + 6 = -137). On the built robot, push the
+  stick fully toward the back. If the turret ever ends past its waiting point, raise `turretStopSec`
+  (how long it takes to stop, default 0.15 s).
+
+On the field: while the wrist is folded or at pick-up, the turret aims anywhere from -137 to 141
+degrees. Once the wrist swings out to carry, it may point anywhere again (its -190 to 190).

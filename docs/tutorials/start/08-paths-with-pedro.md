@@ -143,8 +143,8 @@ that starts with `package`) **the same as the first line of your `Robot.java`**:
 **You do not need to read or understand this file.** Copy it as it is. The tuner fills it in, in
 section 7.
 
-**Its numbers are not for your robot.** They are Pedro's sample numbers: how fast a sample robot goes,
-how it brakes, how hard it corrects. They are good enough for the simulator. On your robot, Pedro's
+**Its numbers are not for your robot.** They were measured on the simulated example robot: how fast it
+goes, how it brakes, how hard it corrects. They are good enough for the simulator. On your robot, Pedro's
 tuner measures your own numbers (section 7). Until then, do not trust a path on the real robot.
 
 ---

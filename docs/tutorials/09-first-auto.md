@@ -28,7 +28,7 @@ written twice, one day someone changes only one. So make one class that everythi
 public final class RobotSettings {
     public static DriveConfig drive() {
         DriveConfig c = DriveConfig.mecanum();     // or tank() / tankTwoMotor()
-        c.powerLimit = 0.8;
+        c.powerLimit = 0.8;              // easier to control while learning
         return c;
     }
 
@@ -48,7 +48,15 @@ public final class RobotSettings {
 ```
 
 `static` means you call the method on the class itself (`RobotSettings.drive()`), without making a
-`RobotSettings` object first. `final` on the class means no other class can extend it.
+`RobotSettings` object first. `final` on the class means no other class can extend it. The real
+file also has a `private` constructor, so nobody can make a `RobotSettings` object by mistake.
+It is not an OpMode (no `@TeleOp`), so it never shows on the Driver Station.
+
+Each call makes a fresh set of settings, so one program cannot change another's by mistake.
+`strafeCorrection` is there because mecanum wheels slip sideways: the robot moves less sideways
+than the wheels turn, and this number makes up for it. `calibrationConfirmed` is a safety switch:
+autonomous refuses to run while it is false, so an untuned robot does not charge across the field.
+The IMU directions must match YOUR hub (Tutorial 04, section 7): wrong ones give wrong turns.
 
 Now `new MecanumDrive(hardwareMap, RobotSettings.drive())` in TeleOp and
 `RobotSettings.drive()` in autonomous always match. Use this class in your TeleOp from now on too.
@@ -89,6 +97,13 @@ while (opModeInInit()) {
 It is an **Autonomous**, so you choose the test with the gamepad during INIT (the robot does not
 move in INIT), press START, it runs that one test and shows the result.
 
+- The tuner sets `calibrationConfirmed = true` for itself only: it is how you check the calibration.
+- Every test runs at half power (0.5): steady, so the measurements repeat well.
+- "ticks per inch" is worked out from `ticksPerRev` and `wheelDiameterIn`.
+- "Result" says how the move ended: reached the target, stuck, out of time, or stopped.
+- "Wheel ticks" are the four encoder counts (front-left, front-right, back-left, back-right).
+  Very different counts can point to a slipping wheel or a wrong motor setting.
+
 **Distance (all robots):**
 
 1. Mark the floor at the front wheel. Choose A (forward 48), START.
@@ -125,6 +140,11 @@ A square. It is a great test: if the tuning is good, the robot ends where it sta
 
 `turn` is "turn BY this much". `turnTo` is "turn TO this heading" (0 = the direction at the start).
 `turnTo` fixes small errors that build up from many turns.
+
+Power 0.6 for driving and 0.5 for turning is quick enough, but slow enough to stop where you want.
+At the end, the program waits with `while (opModeIsActive()) idle();` so the heading stays on the
+screen. `idle()` lets the robot app do its own work. No motor stop is needed: every `AutoDrive`
+move stops the wheels when it ends.
 
 ## Run it
 

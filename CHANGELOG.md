@@ -2,6 +2,23 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## v0.18.1 - 2026-10-23
+
+Short comments in the example code; the explanations moved into the docs, as (+) notes next to the code.
+
+### Changed
+
+- **Example code keeps only the essential comments** (what a line is, units, the configuration name,
+  "measure this", safety, a `more:` link). The explanations moved into the docs: in the Cookbook, the
+  lessons, the starter-bot and starter-kit guides, as **code annotations**: on crossbotics.com a small
+  (+) at the end of a code line opens its note; on GitHub the notes are a numbered list under the box.
+  Nothing is lost: every explanation is in the docs next to the code it explains.
+- New docs sections for the starter bots' code (REV, AndyMark, Studica), the starter kit's files and the
+  V2 robot's buttons (guides/interlocks.md).
+- `tools/check_docs.py`: annotation markers `(1)!` (taken out when a box is compared with its Java file,
+  kept by `--fix-cookbook`; each box with markers needs its numbered list), and example comments at most
+  3 `//` lines in a row or 8 lines of `/** */`. `docs/commenting-style.md` says how.
+
 ## v0.18.0 - 2026-10-23
 
 "Edit robot" in the simulator: shape your robot with the mouse and copy the Java. Better guessed
