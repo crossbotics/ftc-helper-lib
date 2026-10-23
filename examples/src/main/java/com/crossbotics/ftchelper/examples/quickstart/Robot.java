@@ -29,11 +29,13 @@ public class Robot extends RobotDefinition {
                 .imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD));
 
         // STEP 5: your mechanisms, one line each. This robot has one intake motor called "intake".
+        //         .part(...): which motor it is (an example: your motor's id is on its label). The starting
+        //         values and the simulator then use its numbers.
         //         No intake? Delete this line, the "intake" field above, the g2.dpadLeft line in Controls.java
         //         and spitOut in Actions.java. More you can add (then add their numbers in Tunables.java):
         //           lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom"));
-        //           claw = add(Claw.servo("claw"));
+        //           claw = add(Claw.servo("claw").part("gobilda-2000-torque"));
         //         (and a field for each, like "public Lift lift;" above)
-        intake = add(Intake.motor("intake"));
+        intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
     }
 }

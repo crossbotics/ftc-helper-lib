@@ -73,7 +73,8 @@ public class Robot extends RobotDefinition {
                 .comingIn(PieceSensor.color("intake_color"))
                 .max(4)
                 .startsWith(4, "POLLEN"));
-        intake = add(Intake.motor("intake").stopsWhen(() -> pieces.isFull()));
+        // The intake roller's motor: a 1150 RPM motor (an example, like every part here: use yours).
+        intake = add(Intake.motor("intake").part("gobilda-5203-1150").stopsWhen(() -> pieces.isFull()));
 
         // The turret. homeSwitch: a REV Magnetic Limit Switch (REV-31-1462), configured as a "Digital
         // Device"; a magnet on the turret closes it at Tunables.Turret.homeAngle. At START the turret
@@ -87,7 +88,7 @@ public class Robot extends RobotDefinition {
         // The hood: a goBILDA Torque servo turns it through a 20T pinion and a 108T gear.
         // It only fires when the turret is aimed and there is a piece to fire.
         launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
-                .feeder(Indexer.servo("indexer"))
+                .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
                 .hood(Hood.servo("hood").part("gobilda-2000-torque").shotAngles(80, 55))
                 .speedFromDistance(camera)
                 .startTable("pollen")

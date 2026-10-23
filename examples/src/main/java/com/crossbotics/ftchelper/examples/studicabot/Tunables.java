@@ -27,8 +27,8 @@ public class Tunables {
 
     /**
      * The flywheel. Studica's code runs it at the right trigger's power, with no set speed. The number
-     * here is the MOTOR's speed as the library counts it (see Robot.java): the motor's real top speed
-     * shows as about 5200, so 4000 is a starting guess with room to speed up. Tune it by watching shots.
+     * here is the MOTOR's speed (see Robot.java; the wheels turn at half of it): its top speed is 6100,
+     * so 4000 is a starting guess with room to speed up. Tune it by watching shots.
      */
     public static class FlyWheel {
         public static double speedRpm = 4000;                       // shot speed (motor RPM): a guess, watch shots

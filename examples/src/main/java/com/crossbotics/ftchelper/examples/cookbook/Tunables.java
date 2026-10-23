@@ -64,8 +64,8 @@ public class Tunables {
     // end recipe
 
     // recipe: tunables-lift-two-motors
-    // A lift on two motors, Lift.slide("lift_left").alsoMotorReversed("lift_right"): its section is the
-    // FIRST motor's name in CamelCase.
+    // A lift on two motors, Lift.slide("lift_left").part("gobilda-5203-435").alsoMotorReversed("lift_right"):
+    // its section is the FIRST motor's name in CamelCase.
     public static class LiftLeft {                                  // "lift_left" in the configuration
         public static double min = MEASURE;                         // lowest safe point, counts (first motor)
         public static double max = MEASURE;                         // highest safe point, counts (first motor)

@@ -25,6 +25,7 @@ public class Robot extends RobotDefinition {
         // measures them.
         odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
         // "intake" = the motor's name in the robot configuration. Its numbers: Tunables.Intake.
-        intake = add(Intake.motor("intake"));
+        // .part(...): which motor it is (an example: your motor's id is on its label).
+        intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
     }
 }

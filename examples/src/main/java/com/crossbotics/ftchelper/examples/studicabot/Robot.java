@@ -6,6 +6,8 @@ import com.crossbotics.ftchelper.robot.Drive;
 import com.crossbotics.ftchelper.robot.Indexer;
 import com.crossbotics.ftchelper.robot.Intake;
 import com.crossbotics.ftchelper.robot.Launcher;
+import com.crossbotics.ftchelper.robot.Motors;
+import com.crossbotics.ftchelper.robot.Parts;
 import com.crossbotics.ftchelper.robot.RobotDefinition;
 
 /**
@@ -18,12 +20,13 @@ import com.crossbotics.ftchelper.robot.RobotDefinition;
  * - The launcher: three 100 mm wheels on a Maverick 1:1 motor, through 13T to 26T bevel gears (the
  *   wheels turn at half the motor's speed), fed by a polycarbonate flap on a servo.
  *
- * What the library cannot do here:
- * - The Maverick motors are not in the library's motor list ({@code Motors}). The closest goBILDA
- *   motors stand in for them (see the notes below). Studica's numbers: 50.9:1 = 119.84 RPM and
- *   1221.6 encoder counts per turn; 1:1 = 6100 RPM and 24 counts per turn.
- * - The launcher cannot take a gear between the motor and the wheel. Its speed numbers are the
- *   motor's, as the library counts them, not the wheel's. Tune them by watching shots.
+ * Each part says which motor or servo it is. The Maverick motors and Studica's Multi-Mode Smart Servo
+ * are not in the library's parts catalog, so Motors.custom(...) and Parts.customServo(...) describe them
+ * with Studica's own numbers: the starting values and the simulator then use the real parts.
+ *
+ * What the library cannot do here: the launcher cannot take a gear between the motor and the wheel.
+ * Its speed numbers are the motor's, not the wheel's (the wheels turn at half of it). Tune them by
+ * watching shots.
  *
  * Where the facts come from: docs/guides/starter-bots.md and the simulator's robot file
  * sim/robots/starter-bot-studica.properties.
@@ -38,22 +41,25 @@ public class Robot extends RobotDefinition {
     protected void define() {
         // Each name in quotes ("leftDrive", "Intake", "FlyWheel", "fwActuator") = the device's name in the
         // robot configuration on the Driver Station. A part's numbers: Tunables, in its name's section.
-        // Stand-in: goBILDA's 117 RPM motor (1425.1 counts per turn) is close to the Maverick 50.9:1
-        // in speed. Its counts are not: gearRatio(1221.6 / 1425.1) makes the counts per wheel turn the
-        // Maverick's, so autonomous distances come out right. There are no real gears here.
+        // The Maverick motors, from Studica's table (speed at 12 V, encoder counts per output turn):
+        // https://www.studica.com/maverick-planetary-dc-gear-motor-wencoder-5091-ratio-gearbox (2026-10-23).
+        // The drive: Maverick 50.9:1 (75001-509), 1221.6 counts per turn, 119.84 RPM.
         // The library reverses the left side by default, as Studica's code does.
         drive(Drive.tank("leftDrive", "rightDrive")
-                .motor("gobilda-5203-117").gearRatio(1221.6 / 1425.1).wheelMm(100)
+                .motor(Motors.custom("studica-maverick-50.9", 1221.6, 119.84)).wheelMm(100)
                 // Check how YOUR Control Hub is mounted: the way its logo and USB port face.
                 .imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD));
 
         // Studica's code: right bumper = power 1 (in), left bumper = -1 (out).
-        intake = add(Intake.motor("Intake"));
+        // The intake motor: Maverick 3.7:1 (75001-37), 88.8 counts per turn, 1648.65 RPM.
+        intake = add(Intake.motor("Intake").part(Motors.custom("studica-maverick-3.7", 88.8, 1648.65)));
 
-        // Stand-in: goBILDA's 6000 RPM motor (28 counts per turn) for the Maverick 1:1 (24 counts).
-        // So the speed the library shows is 24/28 of the motor's real speed, and the wheels turn at
-        // half the motor's speed. The flap ("fwActuator") feeds: X = 0 and A = 0.2 in Studica's code.
-        launcher = add(Launcher.flywheel("FlyWheel", "gobilda-5203-6000")
-                .feeder(Indexer.servo("fwActuator")));
+        // The launcher motor: Maverick 1:1, 24 counts per turn, 6100 RPM. The wheels turn at half its
+        // speed (13T to 26T bevel gears). The flap ("fwActuator") feeds: X = 0 and A = 0.2 in Studica's
+        // code. Its servo: the Multi-Mode Smart Servo, 300 degrees, 0.25 s per 60 degrees at 4.8 V, from
+        // https://docs.wsr.studica.com/en/latest/docs/Motors/servo-motors.html (2026-10-23).
+        launcher = add(Launcher.flywheel("FlyWheel", Motors.custom("studica-maverick-1", 24, 6100))
+                .feeder(Indexer.servo("fwActuator")
+                        .part(Parts.customServo("studica-multi-mode-smart-servo", 300, 0.25))));
     }
 }

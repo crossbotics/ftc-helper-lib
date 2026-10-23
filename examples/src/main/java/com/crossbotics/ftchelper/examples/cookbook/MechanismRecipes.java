@@ -49,14 +49,15 @@ public class MechanismRecipes {
             // recipe: intake-motor
             // At the top of the class: public Intake intake;   Here in define():
             // "intake" = the motor's name in the robot configuration. Its numbers: Tunables.Intake.
-            intake = add(Intake.motor("intake"));
+            // .part(...): which motor it is (optional, recommended: better starting values, a true simulator).
+            intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
             // end recipe
 
             // recipe: lift
             // At the top of the class: public Lift lift;   Here in define():
             // a slide on a motor with a switch at the bottom (the switch sets 0 each time it is pressed).
-            // .part(...) is optional: the motor's catalog id, so the simulator moves it like the real
-            // motor (without it the robot works the same). No switch? Delete .bottomSwitch(...).
+            // .part(...): which motor it is (optional, recommended: better starting values, a true simulator).
+            // No switch? Delete .bottomSwitch(...).
             // "lift", "lift_bottom" = the motor's and the switch's names in the robot configuration.
             lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom"));
             // end recipe
@@ -72,19 +73,22 @@ public class MechanismRecipes {
             // recipe: claw
             // At the top of the class: public Claw claw;   Here in define():
             // "claw" = the servo's name in the robot configuration. Its numbers: Tunables.Claw.
-            claw = add(Claw.servo("claw"));
+            // .part(...): which servo it is (optional, recommended: better starting values, a true simulator).
+            claw = add(Claw.servo("claw").part("gobilda-2000-torque"));
             // end recipe
 
             // recipe: wrist
             // At the top of the class: public Wrist wrist;   Here in define():
             // "wrist" = the servo's name in the robot configuration. Its numbers: Tunables.Wrist.
-            wrist = add(Wrist.servo("wrist"));
+            // .part(...): which servo it is (optional, recommended: better starting values, a true simulator).
+            wrist = add(Wrist.servo("wrist").part("gobilda-2000-speed"));
             // end recipe
 
             // recipe: positioner
             // Any servo with named positions: a gate, a kicker, a fold-out intake.
             // "intake_deploy" = the servo's name in the robot configuration. Numbers: Tunables.IntakeDeploy.
-            intakeDeploy = add(Positioner.servo("intake_deploy"));
+            // .part(...): which servo it is (optional, recommended: better starting values, a true simulator).
+            intakeDeploy = add(Positioner.servo("intake_deploy").part("gobilda-2000-torque"));
             // Right after START (autonomous and TeleOp): fold the intake out.
             atStart(() -> Action.named("Deploy").then(() -> intakeDeploy.goTo("deployed")));
             // end recipe
@@ -121,7 +125,9 @@ public class MechanismRecipes {
             // At the top of the class: public Intake intake;   Here in define():
             // two continuous-rotation (CR) servos. The one that spins the wrong way is reversed.
             // "left_intake", "right_intake" = the servos' names in the robot configuration. Numbers: Tunables.Intake.
-            intake = add(Intake.crServos("left_intake", "right_intake").reversed("right_intake"));
+            // .part(...): which servo it is (optional, recommended: better starting values, a true simulator).
+            intake = add(Intake.crServos("left_intake", "right_intake").part("gobilda-2000-speed")
+                    .reversed("right_intake"));
             // end recipe
         }
     }
@@ -148,7 +154,8 @@ public class MechanismRecipes {
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
             // recipe: intake-on-at-start
             // Runs in from START until stopped. Its button (operator RT) then switches it on/off.
-            add(Intake.motor("intake").onAtStart());
+            // .part(...): which motor it is (optional, recommended: better starting values, a true simulator).
+            add(Intake.motor("intake").part("gobilda-5203-1150").onAtStart());
             // end recipe
         }
     }
@@ -159,7 +166,8 @@ public class MechanismRecipes {
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
             // recipe: lift-reversed
             // The lift goes DOWN on positive power (the Motor Finder says "add .reversed()"): flip it.
-            add(Lift.slide("lift").reversed());
+            // .part(...): which motor it is (optional, recommended: better starting values, a true simulator).
+            add(Lift.slide("lift").part("gobilda-5203-435").reversed());
             // end recipe
         }
     }
@@ -230,8 +238,10 @@ public class MechanismRecipes {
             // recipe: launcher
             // A flywheel (in RPM) and the indexer that feeds it one piece at a time. "launcher" and "indexer"
             // = their names in the robot configuration. Numbers: Tunables.Launcher and Tunables.Indexer.
+            // The launcher's motor id is in the brackets. The indexer's servo: .part(...) (optional, recommended:
+            // better starting values, a true simulator).
             launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
-                    .feeder(Indexer.servo("indexer")));
+                    .feeder(Indexer.servo("indexer").part("gobilda-2000-speed")));
             // end recipe
         }
     }
@@ -255,8 +265,9 @@ public class MechanismRecipes {
             // recipe: launcher-aimed
             // The speed comes from the distance to the goal (Tunables.Launcher.speedByDistance),
             // and a piece is only fed when the turret points at the goal.
+            // .part(...): which servo it is (optional, recommended: better starting values, a true simulator).
             launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
-                    .feeder(Indexer.servo("indexer"))
+                    .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
                     .speedFromDistance(camera)
                     .requireReady("turret aimed", () -> turret.isAimed()));
             // end recipe
@@ -277,8 +288,9 @@ public class MechanismRecipes {
             // recipe: optional-part
             // The deploy servo is not on the robot yet. optional(): while "intake_deploy" is not in
             // the robot configuration, INIT goes on (with a note) and the part is off.
-            intakeDeploy = add(Positioner.servo("intake_deploy").optional());
-            intake = add(Intake.motor("intake"));
+            // .part(...): which motor or servo it is (optional, recommended: better starting values, a true simulator).
+            intakeDeploy = add(Positioner.servo("intake_deploy").part("gobilda-2000-torque").optional());
+            intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
             // At START: fold the intake out, then run it (the action is in Actions.java, below). With
             // no deploy servo the action skips the servo (and the wait for it) and just starts the intake.
             atStart(() -> Actions.deployIntake(this));

@@ -180,7 +180,9 @@ public class AimRecipes {
             odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
             camera = add(Camera.limelight("limelight").goal("BLUE SCORING", "RED SCORING"));
             turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).follows(camera));
-            launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer"))
+            // .part(...): the indexer's servo (optional, recommended: better starting values, a true simulator).
+            launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+                    .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
                     .speedFromDistance(camera)
                     .startTable("pollen"));                  // the table to start with
             // end recipe

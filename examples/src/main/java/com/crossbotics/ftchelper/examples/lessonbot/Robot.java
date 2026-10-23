@@ -27,9 +27,10 @@ public class Robot extends RobotDefinition {
                 .imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD));
 
         // Lesson 4: the mechanisms. "intake", "lift", "lift_bottom", "claw" = the devices' names in the robot
-        // configuration on the Driver Station.
-        intake = add(Intake.motor("intake"));                                             // Tunables.Intake
+        // configuration on the Driver Station. .part(...) = which motor or servo it is (these are examples:
+        // your part's id is on its label). The starting values and the simulator then use its numbers.
+        intake = add(Intake.motor("intake").part("gobilda-5203-1150"));                    // Tunables.Intake
         lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom")); // Tunables.Lift
-        claw = add(Claw.servo("claw"));                                                    // Tunables.Claw
+        claw = add(Claw.servo("claw").part("gobilda-2000-torque"));                         // Tunables.Claw
     }
 }

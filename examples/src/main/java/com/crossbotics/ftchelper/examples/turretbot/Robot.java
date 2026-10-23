@@ -53,7 +53,9 @@ public class Robot extends RobotDefinition {
         // 2 (dim), each set up on the Limelight's web page, and keeps the one that sees the most tags.
         camera = add(Camera.limelight("limelight").autoPipelines(0, 1, 2).goal("BLUE SCORING", "RED SCORING"));
 
-        intake = add(Intake.motor("intake").onAtStart());
+        // .part(...) on each part = which motor or servo it is (examples: your part's id is on its label).
+        // The starting values and the simulator then use its numbers.
+        intake = add(Intake.motor("intake").part("gobilda-5203-1150").onAtStart());
 
         // 5 motor turns per turret turn. follows(camera): follow mode is on from START.
         turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).follows(camera));
@@ -66,14 +68,15 @@ public class Robot extends RobotDefinition {
         // Tunables.Hood; each shot table row gives the hood angle for that distance. shotAngles: for the
         // simulator, how steep the shot leaves at each stop (80 deg up at the steep end, 55 at the flat).
         launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
-                .feeder(Indexer.servo("indexer"))
+                .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
                 .hood(Hood.servo("hood").part("gobilda-2000-torque").shotAngles(80, 55))
                 .speedFromDistance(camera)
                 .startTable("pollen")
                 .requireReady("turret aimed", () -> turret.isAimed()));
 
-        clawFold = add(Positioner.servo("claw_fold"));   // Tunables.ClawFold: stowed, grab, flower
-        claw = add(Claw.servo("claw"));                  // Tunables.Claw: open, closed
+        // The claw's fold (Tunables.ClawFold: stowed, grab, flower) and the claw (Tunables.Claw: open, closed).
+        clawFold = add(Positioner.servo("claw_fold").part("gobilda-2000-torque"));
+        claw = add(Claw.servo("claw").part("gobilda-2000-torque"));
 
         // A goBILDA RGB Indicator Light on a servo port ("Servo" in the configuration). Which color when:
         // Controls.java.

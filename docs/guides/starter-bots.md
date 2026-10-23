@@ -22,9 +22,12 @@ different robots to test with. They are also worked examples for the robot-file 
 [`revbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/revbot),
 [`andymarkbot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/andymarkbot) and
 [`studicabot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/studicabot). To copy one into
-your TeamCode: [Pick your template](../templates.md). The library has no catapult part (AndyMark), no
-Maverick motors and no gear between a flywheel motor and its wheel (Studica): those two files use the
-closest part and say so.
+your TeamCode: [Pick your template](../templates.md). The library has no catapult part (AndyMark) and no
+gear between a flywheel motor and its wheel (Studica): those two files use the closest part and say so.
+Each file names each part's motor or servo (`.part(...)`, or the motor's id in a launcher's brackets),
+so the starting values are those parts' real numbers. The parts that are not in the parts
+catalog (Studica's Maverick motors and Multi-Mode Smart Servo, AndyMark's High Speed programmable servo)
+are described with `Motors.custom(...)` and `Parts.customServo(...)` and the seller's numbers.
 
 **Shooting in the simulator:** only the goBILDA bot shoots. The REV, AndyMark and Studica files have no
 `shoot.` line (their sellers do not publish the launch direction and angle), so their launchers spin but
@@ -150,7 +153,9 @@ Not modelled or not published:
 - The flywheel turns at half the motor's speed (13T to 26T bevel gears); the simulator takes the rim speed
   straight from the motor, so a `shoot.` line would need `share=` halved.
 - Sizes: all estimated (no CAD measured). The Multi-Mode Smart Servo is not in the parts catalog and its
-  speed is not on the page.
+  speed is not on the kit page, so this file moves it at `servo.speed`. (Studica's
+  [servo page](https://docs.wsr.studica.com/en/latest/docs/Motors/servo-motors.html), read 2026-10-23:
+  300 degrees, 0.25 s per 60 degrees at 4.8 V. `studicabot/Robot.java` uses these.)
 
 ## What the simulator could not express (input for its next stages)
 

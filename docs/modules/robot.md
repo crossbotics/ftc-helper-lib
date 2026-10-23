@@ -79,13 +79,20 @@ public class Robot extends RobotDefinition {
         drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
                 .motor("gobilda-5203-312").wheelMm(96)
                 .imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD));
-        intake = add(Intake.motor("intake"));
-        lift = add(Lift.slide("lift").bottomSwitch("lift_bottom"));
-        claw = add(Claw.servo("claw"));
+        // .part(...): which motor or servo it is, by the id on its label (optional, recommended)
+        intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
+        lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom"));
+        claw = add(Claw.servo("claw").part("gobilda-2000-torque"));
         atStart(() -> Actions.deployIntake(this));   // optional: an action right after START
     }
 }
 ```
+
+**Name each part** with `.part(...)` (a launcher, an arm or a motor turret: the motor's id in its
+brackets; the drive: `.motor(...)`). It is optional, but recommended: the starting values then come from
+that part's real numbers, and the simulator moves it like the real one
+([First run](../guides/tunables.md#first-run-what-you-get-before-tuning)). Not in the catalog:
+[Parts not in the catalog](#parts-not-in-the-catalog).
 
 `define()` only describes the robot. It runs in INIT, and also without a robot (to write the
 simulator file). The OpMode classes make the hardware ([`setup`](#robotdefinition)) and update every
@@ -302,7 +309,7 @@ Robots are built in steps: the drive first, then the intake, the deploy servo wh
 the whole robot in Robot.java now and mark the parts that are not built yet with `optional()`:
 
 ```java
-intakeDeploy = add(Positioner.servo("intake_deploy").optional());   // Robot.java
+intakeDeploy = add(Positioner.servo("intake_deploy").part("gobilda-2000-torque").optional());   // Robot.java
 ```
 
 Without `optional()`, a device missing from the robot configuration stops INIT:
@@ -358,7 +365,7 @@ What "off" means, everywhere:
 ```java
 drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
         .motor("gobilda-5203-312").wheelMm(96).imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD));
-drive(Drive.tank("left_drive", "right_drive").reversed("right_drive"));
+drive(Drive.tank("left_drive", "right_drive").motor("gobilda-5203-312").wheelMm(96).reversed("right_drive"));
 ```
 
 | Method | |
@@ -446,10 +453,11 @@ takes an [Action](#action) from your `Actions.java` instead of a label and a com
 ## Intake
 
 ```java
-intake = add(Intake.motor("intake"));
-intake = add(Intake.motor("intake").onAtStart());
-intake = add(Intake.crServos("left_intake", "right_intake").reversed("right_intake"));
-intake = add(Intake.motor("intake").withCrServos("left_wheel", "right_wheel").reversed("right_wheel"));
+intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
+intake = add(Intake.motor("intake").part("gobilda-5203-1150").onAtStart());
+intake = add(Intake.crServos("left_intake", "right_intake").part("gobilda-2000-speed").reversed("right_intake"));
+intake = add(Intake.motor("intake").part("gobilda-5203-117")
+        .withCrServos("left_wheel", "right_wheel").reversed("right_wheel"));
 ```
 
 | Method | |
@@ -479,7 +487,7 @@ it down. Every number but `min` and `max` has a default, so a part works before 
 and `max` must be in `Tunables.java` (from the [Motor Finder](../guides/finders.md)), or INIT stops.
 
 ```java
-lift = add(Lift.slide("lift").bottomSwitch("lift_bottom"));
+lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom"));
 ```
 
 `Tunables.Lift` (the section is the device's name in CamelCase: `lift_left` reads `Tunables.LiftLeft`; [all its numbers](../guides/tunables.md#lift-and-arm)) (encoder counts): `min`, `max`, `kP`, `kI`, `kD`, `kF` (the steady push that holds it
@@ -505,8 +513,8 @@ line. Both get exactly the same power at the same moment: every command, the sti
 encoder cable into it; the Tunables section is the first motor's name.
 
 ```java
-lift = add(Lift.slide("lift_left").alsoMotorReversed("lift_right"));   // they face each other (usual)
-lift = add(Lift.slide("lift_left").alsoMotor("lift_right"));           // both turn the same way
+lift = add(Lift.slide("lift_left").part("gobilda-5203-435").alsoMotorReversed("lift_right"));   // they face each other (usual)
+lift = add(Lift.slide("lift_left").part("gobilda-5203-435").alsoMotor("lift_right"));           // both turn the same way
 arm = add(Arm.motor("arm_left", "gobilda-5203-117").alsoMotorReversed("arm_right"));
 ```
 
@@ -546,7 +554,7 @@ With `.part("gobilda-2000-torque")` an unwritten `travelSec` comes from the serv
 positions written, INIT says the library's positions are guesses (find yours with the Servo Finder).
 
 ```java
-claw = add(Claw.servo("claw"));       // Tunables.Claw: open, closed (both needed)
+claw = add(Claw.servo("claw").part("gobilda-2000-torque"));   // Tunables.Claw: open, closed (both needed)
 ```
 
 **A servo's full range: `.fullRange()`.** The hub sends a servo a pulse: 600 microseconds (us) for
@@ -569,7 +577,7 @@ wrist = add(Wrist.servo("wrist").part("gobilda-2000-speed").fullRange());   // 0
 ## Wrist
 
 ```java
-wrist = add(Wrist.servo("wrist"));    // Tunables.Wrist: any positions, e.g. down, level, up
+wrist = add(Wrist.servo("wrist").part("gobilda-2000-speed"));   // Tunables.Wrist: any positions, e.g. down, level, up
 ```
 
 `next()`, `previous()` (by value). Buttons: operator D-pad left/right. For the simulator, a wrist
@@ -579,7 +587,7 @@ claw can ride on it (`Claw ... .looks(Shape.claw().on(wrist)...)`).
 ## Positioner
 
 ```java
-intakeDeploy = add(Positioner.servo("intake_deploy"));   // Tunables.IntakeDeploy: stowed, deployed
+intakeDeploy = add(Positioner.servo("intake_deploy").part("gobilda-2000-torque"));   // Tunables.IntakeDeploy: stowed, deployed
 ```
 
 `goTo(name)`, `next()`. No suggested buttons: use it from Controls.java or an action. For the simulator,
@@ -596,9 +604,9 @@ is on one page, with the exact lines for each: [Setting up a turret](../guides/t
 ```java
 turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).follows(camera));     // a motor
 turret = add(Turret.motor("turret", "gobilda-5203-312").gearRatio(2.75).homeSwitch("turret_home"));
-turret = add(Turret.servo("turret").follows(camera));                                     // a servo
-turret = add(Turret.crServo("turret").encoder("turret_enc", 8192));                       // CR servo + Through Bore
-turret = add(Turret.crServo("turret").analogEncoder("turret_pos").continuous());          // slip ring + absolute encoder
+turret = add(Turret.servo("turret").part("gobilda-2000-speed").follows(camera));          // a servo
+turret = add(Turret.crServo("turret").part("axon-max-mk2").encoder("turret_enc", 8192));  // CR servo + Through Bore
+turret = add(Turret.crServo("turret").part("axon-max-mk2").analogEncoder("turret_pos").continuous());   // slip ring + absolute encoder
 ```
 
 | Made with | |
@@ -723,8 +731,10 @@ the parts move could put both in their zones at once. A rule with a part that is
 ## Launcher
 
 ```java
-launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer")));
-launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer"))
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+        .feeder(Indexer.servo("indexer").part("gobilda-2000-speed")));
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+        .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
         .speedFromDistance(camera).requireReady("turret aimed", () -> turret.isAimed()));
 ```
 
@@ -841,8 +851,9 @@ A launcher's hood: the part that tilts to make the shot leave steeper or flatter
 servo or a motor with an encoder, a straight gear or a linkage, any range, either direction.
 
 ```java
-launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer"))
-        .hood(Hood.servo("hood"))                            // or Hood.motor("hood", "gobilda-5203-117")
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+        .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
+        .hood(Hood.servo("hood").part("gobilda-2000-torque"))   // or Hood.motor("hood", "gobilda-5203-117")
         .speedFromDistance(camera));
 
 public static class Hood {                                   // Tunables.java
@@ -1048,7 +1059,7 @@ pieces = add(Pieces.kinds("POLLEN", "RED_NECTAR", "BLUE_NECTAR")  // your kinds:
         .readyToFire(PieceSensor.color("ready_color"))            // optional: the next to fire
         .max(4)                                                   // BIOBUZZ G407: at most 4
         .startsWith(4, "POLLEN"));                                // the preload
-intake = add(Intake.motor("intake").stopsWhen(() -> pieces.isFull()));   // no 5th piece
+intake = add(Intake.motor("intake").part("gobilda-5203-1150").stopsWhen(() -> pieces.isFull()));   // no 5th piece
 ```
 
 **How it counts.** Each new piece the intake sensor sees counts one IN, with its kind: the spot was
@@ -1087,7 +1098,8 @@ Driver Station warns when the intake has been held back for more than 2 s.
 **Hooks for other parts.** A shot table per kind, chosen by the next piece:
 
 ```java
-launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer"))
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+        .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
         .speedFromDistance(camera)
         .tableFrom(pieces.nextKind())                          // the next piece picks the table...
         .tableFor("nectar", "RED_NECTAR", "BLUE_NECTAR"));     // ...both NECTAR colours use "nectar"

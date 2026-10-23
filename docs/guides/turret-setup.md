@@ -204,8 +204,8 @@ has the whole robot.)
 ```java
 // Robot.java
 turret = add(Turret.motor("turret", "gobilda-5203-312").gearRatio(2.75).homeSwitch("turret_home").follows(camera));
-launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer"))
-        .hood(Hood.servo("hood")).speedFromDistance(camera).requireReady("turret aimed", () -> turret.isAimed()));
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
+        .hood(Hood.servo("hood").part("gobilda-2000-torque")).speedFromDistance(camera).requireReady("turret aimed", () -> turret.isAimed()));
 
 // Tunables.java
 public static class Turret {
@@ -222,7 +222,7 @@ public static class Hood {
 ```java
 // Robot.java
 turret = add(Turret.servo("turret").follows(camera));
-launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer"))
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
         .speedFromDistance(camera).requireReady("turret aimed", () -> turret.isAimed()));
 
 // Tunables.java
@@ -250,7 +250,7 @@ a button is held ([Aim](../modules/robot.md#aim)).
 
 ```java
 // Robot.java: no turret line
-launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer"))
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
         .speedFromDistance(camera).requireReady("aimed", () -> aimMode().isOn() && aim().isAimed()));
 
 // Controls.java

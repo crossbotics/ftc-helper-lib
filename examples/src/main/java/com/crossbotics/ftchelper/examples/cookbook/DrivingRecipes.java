@@ -64,6 +64,7 @@ public class DrivingRecipes {
         protected void define() {
             // recipe: drive-imu
             drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
+                    .motor("gobilda-5203-312").wheelMm(96)
                     // Which way the hub's LOGO faces, then which way its USB PORTS face, on the robot.
                     .imu("imu", LogoFacingDirection.LEFT, UsbFacingDirection.UP));
             // end recipe

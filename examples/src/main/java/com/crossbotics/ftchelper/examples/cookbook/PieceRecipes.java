@@ -53,13 +53,15 @@ public class PieceRecipes {
             // ADD .stopsWhen(...) to the intake line you already have (do not write a second intake line),
             // and put the Pieces line above the intake line. It does not pull in a 5th piece
             // ("() ->": asked every loop). Pushing out still works.
-            intake = add(Intake.motor("intake").stopsWhen(() -> pieces.isFull()));
+            // .part(...): which motor it is (optional, recommended: better starting values, a true simulator).
+            intake = add(Intake.motor("intake").part("gobilda-5203-1150").stopsWhen(() -> pieces.isFull()));
             // end recipe
 
             // recipe: launcher-needs-a-piece
             // Each feed counts one piece out. requireReady: no feed with nothing to fire.
+            // .part(...): the indexer's servo (optional, recommended: better starting values, a true simulator).
             launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
-                    .feeder(Indexer.servo("indexer"))
+                    .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
                     .requireReady("a piece to fire", () -> !pieces.isEmpty()));
             // end recipe
 
@@ -119,7 +121,7 @@ public class PieceRecipes {
             // In define(), BELOW the Pieces line: your launcher line with three more lines. The tables
             // are Tunables.Launcher.speedByDistancePollen and speedByDistanceNectar.
             launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
-                    .feeder(Indexer.servo("indexer"))
+                    .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
                     .speedFromDistance(camera)
                     .startTable("pollen")                                 // before a piece is known
                     .tableFrom(pieces.nextKind())                         // the next piece picks the table

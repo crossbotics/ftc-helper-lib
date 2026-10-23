@@ -133,9 +133,10 @@ public class HoodRecipes {
             camera = add(Camera.webcam("Webcam 1").goal("BLUE SCORING", "RED SCORING"));
             // recipe: robot-hood
             // The hood goes on the launcher; its numbers are in Tunables.Hood.
+            // .part(...): which servos they are (optional, recommended: better starting values, a true simulator).
             launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
-                    .feeder(Indexer.servo("indexer"))
-                    .hood(Hood.servo("hood"))
+                    .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
+                    .hood(Hood.servo("hood").part("gobilda-2000-torque"))
                     .speedFromDistance(camera));
             // end recipe
         }

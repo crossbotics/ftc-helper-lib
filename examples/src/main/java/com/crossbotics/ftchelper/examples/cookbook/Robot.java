@@ -27,13 +27,17 @@ public class Robot extends RobotDefinition {
     @Override
     protected void define() {      // the drive line, then one line per part
         drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
+                .motor("gobilda-5203-312").wheelMm(96)
                 .imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD));
         odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
-        intake = add(Intake.motor("intake"));
-        lift = add(Lift.slide("lift").bottomSwitch("lift_bottom"));
-        claw = add(Claw.servo("claw"));
+        // .part(...) = which motor or servo it is: the id on its label (examples here; optional, recommended:
+        // better starting values, a true simulator). A launcher's motor id is in its brackets.
+        intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
+        lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom"));
+        claw = add(Claw.servo("claw").part("gobilda-2000-torque"));
         camera = add(Camera.limelight("limelight").goal("BLUE SCORING", "RED SCORING"));
-        launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer"))
+        launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+                .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
                 .speedFromDistance(camera));
     }
 }

@@ -95,12 +95,12 @@ public class Robot extends RobotDefinition {
                 .reversed("right_drive")
                 .imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD));
 
-        intake = add(Intake.motor("intake")
+        intake = add(Intake.motor("intake").part("gobilda-5203-117")
                 .withCrServos("left_intake_servo", "right_intake_servo")
                 .reversed("right_intake_servo"));
 
         launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
-                .feeder(Indexer.crServo("windmill").reversed()));
+                .feeder(Indexer.crServo("windmill").part("gobilda-2000-torque").reversed()));
     }
 }
 ```
@@ -113,6 +113,9 @@ public class Robot extends RobotDefinition {
 - `"gobilda-5203-312"` is the motor, by its id in the [parts catalog](../../guides/parts-catalog.md). The
   library works out encoder counts and speeds from it. (The starter bot's launcher is a 312 RPM motor
   with its gearbox taken off, so it has the 6000 RPM motor's numbers.)
+- `.part("gobilda-5203-117")`: which motor or servo the part is, by the id on its label. It is
+  optional but recommended: the starting values are then that part's real numbers, and the simulator
+  moves it like the real one. A launcher has its motor's id in its brackets instead.
 - `.reversed("right_drive")`: the right motor is mounted facing the other way. If your robot drives
   backward or spins when you push the stick forward, change which motors are reversed.
 - `add(...)` hands the module back, so `intake = add(...)` keeps it in a field (a variable that
@@ -120,8 +123,8 @@ public class Robot extends RobotDefinition {
   reach it as `robot.intake`.
 - `define()` only DESCRIBES the robot. Nothing moves in INIT; the modules move only after START.
 - **A part that is not built yet?** Write its line anyway and add `.optional()`:
-  `intakeDeploy = add(Positioner.servo("intake_deploy").optional());`. Until "intake_deploy" is in the
-  configuration, INIT says the part is off instead of stopping, and its buttons and actions skip it.
+  `intakeDeploy = add(Positioner.servo("intake_deploy").part("gobilda-2000-torque").optional());`.
+  Until "intake_deploy" is in the configuration, INIT says the part is off instead of stopping, and its buttons and actions skip it.
   The day it is wired and configured, it just works ([parts not on the robot yet](../../modules/robot.md#parts-not-on-the-robot-yet)).
 
 ## 2. Tunables.java: the numbers
@@ -380,7 +383,8 @@ inside `define()`. Adapt it to YOUR parts: keep your own lines and add only the 
 chassisMm(400, 400, 100);
 intake = add(Intake.motor("intake").part("gobilda-5203-1150").holds(3)
         .looks(Shape.roller("gobilda-gecko-48-rex").atMm(190, 0, 60).lengthMm(300)));
-launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.crServo("windmill"))
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+        .feeder(Indexer.crServo("windmill").part("gobilda-2000-torque"))
         .looks(Shape.flywheel("gobilda-hogback-96").atMm(-40, 0, 170)).shotAngle(50));
 ```
 

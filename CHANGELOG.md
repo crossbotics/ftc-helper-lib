@@ -2,7 +2,24 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
-## Unreleased
+## v0.17.5 - 2026-10-23
+
+`DEFAULT`, the short name; every example names its parts; Tunables comments fixed.
+
+### Added
+
+- **`DEFAULT`**, the short name for `DEFAULT_FROM_CATALOG` (the same word: code with the old name keeps
+  working). INIT messages, the docs and every example now write `DEFAULT`. The docs section is now
+  "DEFAULT and MEASURE".
+- Tunables guide: "Always name the part" (where to write `.part(...)` and why).
+
+### Changed
+
+- **Every example robot, Cookbook recipe and lesson names its parts** (`.part(...)`, or the motor id in
+  the brackets), so `DEFAULT` starts from the real part and the simulator moves it like the real one.
+  The goBILDA, REV and AndyMark starter bots use their kits' parts; the Studica starter bot now uses
+  Studica's Maverick motors and servo (`Motors.custom`, `Parts.customServo`, numbers from Studica's
+  pages) instead of goBILDA stand-ins.
 
 ### Fixed
 

@@ -5,6 +5,7 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot.UsbFacingDirection;
 import com.crossbotics.ftchelper.robot.Drive;
 import com.crossbotics.ftchelper.robot.Indexer;
 import com.crossbotics.ftchelper.robot.Intake;
+import com.crossbotics.ftchelper.robot.Parts;
 import com.crossbotics.ftchelper.robot.RobotDefinition;
 
 /**
@@ -22,6 +23,10 @@ import com.crossbotics.ftchelper.robot.RobotDefinition;
  * so one press is one turn of the catapult, which is one throw. The library does not know when the
  * catapult is wound or when it lets go (there is no sensor on it), so it cannot wait for "ready" the
  * way a flywheel launcher does. AndyMark's own code runs the motor for as long as the trigger is held.
+ *
+ * Each part says which motor or servo it is (.part(...)), from AndyMark's kit parts list: the
+ * starting values and the simulator then use that part's real numbers. The kit's servo is not in the
+ * library's parts catalog, so Parts.customServo(...) describes it with AndyMark's numbers.
  *
  * Where the facts come from: docs/guides/starter-bots.md and the simulator's robot file
  * sim/robots/starter-bot-andymark.properties.
@@ -43,16 +48,23 @@ public class Robot extends RobotDefinition {
                 // Check how YOUR Control Hub is mounted: the way its logo and USB port face.
                 .imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD));
 
-        // AndyMark's code: rollerI is REVERSE, and rollerF runs with the intake.
+        // AndyMark's code: rollerI is REVERSE, and rollerF runs with the intake. rollerI's servo: the kit's
+        // 4-wire Programmable Servo, High Speed (am-4955a), in continuous mode. Not in the parts catalog:
+        // AndyMark's numbers (300 degrees, 0.05 s per 60 degrees at 6 V, the only speed listed), from
+        // https://andymark.com/am-4955 (read 2026-10-23).
         intake = add(Intake.crServos("rollerI", "rollerF")
+                .part(Parts.customServo("am-4955a", 300, 0.05))
                 .reversed("rollerI")
                 .holds(4));
 
-        // The catapult motor (REVERSE in AndyMark's code). Tunables.Catapult: power and feedSec.
-        catapult = add(Indexer.motor("catapult").reversed());
+        // The catapult motor (REVERSE in AndyMark's code): the kit's NeveRest Hex 50.9:1 (am-5443), the same
+        // motor and ratio as the NeveRest Orbital 50. Tunables.Catapult: power and feedSec.
+        catapult = add(Indexer.motor("catapult").part("am-neverest-orbital-50").reversed());
 
         // The flower mechanism has a second version with a "stick" servo instead of the roller. For
         // that one, take "rollerF" out of the intake line and add:
-        //     stick = add(Positioner.servo("stick"));   // Tunables.Stick: in = 0.46, out = 0.65
+        //     stick = add(Positioner.servo("stick").part("am-4955a"));   // Tunables.Stick: in = 0.46, out = 0.65
+        // "am-4955a" (described on the intake line) if the stick has a High Speed servo too; AndyMark does
+        // not say which of the kit's servos it is: use the one on yours.
     }
 }

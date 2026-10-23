@@ -219,13 +219,17 @@ public class Robot extends RobotDefinition {
     @Override
     protected void define() {      // the drive line, then one line per part
         drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
+                .motor("gobilda-5203-312").wheelMm(96)
                 .imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD));
         odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
-        intake = add(Intake.motor("intake"));
-        lift = add(Lift.slide("lift").bottomSwitch("lift_bottom"));
-        claw = add(Claw.servo("claw"));
+        // .part(...) = which motor or servo it is: the id on its label (examples here; optional, recommended:
+        // better starting values, a true simulator). A launcher's motor id is in its brackets.
+        intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
+        lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom"));
+        claw = add(Claw.servo("claw").part("gobilda-2000-torque"));
         camera = add(Camera.limelight("limelight").goal("BLUE SCORING", "RED SCORING"));
-        launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer"))
+        launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+                .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
                 .speedFromDistance(camera));
     }
 }
@@ -381,6 +385,7 @@ drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
 <!-- recipe: drive-imu -->
 ```java title="Robot.java"
 drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
+        .motor("gobilda-5203-312").wheelMm(96)
         // Which way the hub's LOGO faces, then which way its USB PORTS face, on the robot.
         .imu("imu", LogoFacingDirection.LEFT, UsbFacingDirection.UP));
 ```
@@ -694,7 +699,8 @@ the configuration name in CamelCase (each word starts with a capital letter, no 
 ```java title="Robot.java"
 // At the top of the class: public Intake intake;   Here in define():
 // "intake" = the motor's name in the robot configuration. Its numbers: Tunables.Intake.
-intake = add(Intake.motor("intake"));
+// .part(...): which motor it is (optional, recommended: better starting values, a true simulator).
+intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
 ```
 
 <!-- recipe: tunables-intake -->
@@ -719,7 +725,9 @@ A CR (continuous rotation) servo spins all the way round, like a small motor, in
 // At the top of the class: public Intake intake;   Here in define():
 // two continuous-rotation (CR) servos. The one that spins the wrong way is reversed.
 // "left_intake", "right_intake" = the servos' names in the robot configuration. Numbers: Tunables.Intake.
-intake = add(Intake.crServos("left_intake", "right_intake").reversed("right_intake"));
+// .part(...): which servo it is (optional, recommended: better starting values, a true simulator).
+intake = add(Intake.crServos("left_intake", "right_intake").part("gobilda-2000-speed")
+        .reversed("right_intake"));
 ```
 
 **Why:** two servos that face each other must turn opposite ways to pull a piece in. The numbers are in `Tunables.Intake` too (`inPower`, `outPower`).
@@ -732,7 +740,8 @@ intake = add(Intake.crServos("left_intake", "right_intake").reversed("right_inta
 <!-- recipe: intake-on-at-start -->
 ```java title="Robot.java"
 // Runs in from START until stopped. Its button (operator RT) then switches it on/off.
-add(Intake.motor("intake").onAtStart());
+// .part(...): which motor it is (optional, recommended: better starting values, a true simulator).
+add(Intake.motor("intake").part("gobilda-5203-1150").onAtStart());
 ```
 
 **Why:** many robots collect all match, so the driver should not have to switch it on.
@@ -746,8 +755,8 @@ add(Intake.motor("intake").onAtStart());
 ```java title="Robot.java"
 // At the top of the class: public Lift lift;   Here in define():
 // a slide on a motor with a switch at the bottom (the switch sets 0 each time it is pressed).
-// .part(...) is optional: the motor's catalog id, so the simulator moves it like the real
-// motor (without it the robot works the same). No switch? Delete .bottomSwitch(...).
+// .part(...): which motor it is (optional, recommended: better starting values, a true simulator).
+// No switch? Delete .bottomSwitch(...).
 // "lift", "lift_bottom" = the motor's and the switch's names in the robot configuration.
 lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom"));
 ```
@@ -783,7 +792,8 @@ goBILDA motor series and 435 its RPM (on the motor's label); the [parts catalog]
 <!-- recipe: lift-reversed -->
 ```java title="Robot.java"
 // The lift goes DOWN on positive power (the Motor Finder says "add .reversed()"): flip it.
-add(Lift.slide("lift").reversed());
+// .part(...): which motor it is (optional, recommended: better starting values, a true simulator).
+add(Lift.slide("lift").part("gobilda-5203-435").reversed());
 ```
 
 **Why:** the lift's limits and heights count up as it goes up, so positive power must move it up.
@@ -836,8 +846,8 @@ lift = add(Lift.slide("lift_left").part("gobilda-5203-435").alsoMotorReversed("l
 
 <!-- recipe: tunables-lift-two-motors -->
 ```java title="Tunables.java"
-// A lift on two motors, Lift.slide("lift_left").alsoMotorReversed("lift_right"): its section is the
-// FIRST motor's name in CamelCase.
+// A lift on two motors, Lift.slide("lift_left").part("gobilda-5203-435").alsoMotorReversed("lift_right"):
+// its section is the FIRST motor's name in CamelCase.
 public static class LiftLeft {                                  // "lift_left" in the configuration
     public static double min = MEASURE;                         // lowest safe point, counts (first motor)
     public static double max = MEASURE;                         // highest safe point, counts (first motor)
@@ -899,7 +909,8 @@ public static class Arm {                                       // "arm" in the 
 ```java title="Robot.java"
 // At the top of the class: public Claw claw;   Here in define():
 // "claw" = the servo's name in the robot configuration. Its numbers: Tunables.Claw.
-claw = add(Claw.servo("claw"));
+// .part(...): which servo it is (optional, recommended: better starting values, a true simulator).
+claw = add(Claw.servo("claw").part("gobilda-2000-torque"));
 ```
 
 <!-- recipe: tunables-claw -->
@@ -923,7 +934,8 @@ public static class Claw {                                      // "claw" in the
 ```java title="Robot.java"
 // At the top of the class: public Wrist wrist;   Here in define():
 // "wrist" = the servo's name in the robot configuration. Its numbers: Tunables.Wrist.
-wrist = add(Wrist.servo("wrist"));
+// .part(...): which servo it is (optional, recommended: better starting values, a true simulator).
+wrist = add(Wrist.servo("wrist").part("gobilda-2000-speed"));
 ```
 
 <!-- recipe: tunables-wrist -->
@@ -947,7 +959,8 @@ public static class Wrist {                                     // "wrist" in th
 ```java title="Robot.java"
 // Any servo with named positions: a gate, a kicker, a fold-out intake.
 // "intake_deploy" = the servo's name in the robot configuration. Numbers: Tunables.IntakeDeploy.
-intakeDeploy = add(Positioner.servo("intake_deploy"));
+// .part(...): which servo it is (optional, recommended: better starting values, a true simulator).
+intakeDeploy = add(Positioner.servo("intake_deploy").part("gobilda-2000-torque"));
 // Right after START (autonomous and TeleOp): fold the intake out.
 atStart(() -> Action.named("Deploy").then(() -> intakeDeploy.goTo("deployed")));
 ```
@@ -1013,8 +1026,9 @@ folds the intake out). The `atStart` line runs the action below at START.
 ```java title="Robot.java"
 // The deploy servo is not on the robot yet. optional(): while "intake_deploy" is not in
 // the robot configuration, INIT goes on (with a note) and the part is off.
-intakeDeploy = add(Positioner.servo("intake_deploy").optional());
-intake = add(Intake.motor("intake"));
+// .part(...): which motor or servo it is (optional, recommended: better starting values, a true simulator).
+intakeDeploy = add(Positioner.servo("intake_deploy").part("gobilda-2000-torque").optional());
+intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
 // At START: fold the intake out, then run it (the action is in Actions.java, below). With
 // no deploy servo the action skips the servo (and the wait for it) and just starts the intake.
 atStart(() -> Actions.deployIntake(this));
@@ -1063,8 +1077,10 @@ in the robot file.
 ```java title="Robot.java"
 // A flywheel (in RPM) and the indexer that feeds it one piece at a time. "launcher" and "indexer"
 // = their names in the robot configuration. Numbers: Tunables.Launcher and Tunables.Indexer.
+// The launcher's motor id is in the brackets. The indexer's servo: .part(...) (optional, recommended:
+// better starting values, a true simulator).
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
-        .feeder(Indexer.servo("indexer")));
+        .feeder(Indexer.servo("indexer").part("gobilda-2000-speed")));
 ```
 
 <!-- recipe: tunables-launcher -->
@@ -1137,8 +1153,9 @@ public static class Turret {                                    // "turret" in t
 ```java title="Robot.java"
 // The speed comes from the distance to the goal (Tunables.Launcher.speedByDistance),
 // and a piece is only fed when the turret points at the goal.
+// .part(...): which servo it is (optional, recommended: better starting values, a true simulator).
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
-        .feeder(Indexer.servo("indexer"))
+        .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
         .speedFromDistance(camera)
         .requireReady("turret aimed", () -> turret.isAimed()));
 ```
@@ -1185,14 +1202,16 @@ Piece Tuner it reads `"UNKNOWN"`. `robot.pieces.count()`, `robot.pieces.next()` 
 // ADD .stopsWhen(...) to the intake line you already have (do not write a second intake line),
 // and put the Pieces line above the intake line. It does not pull in a 5th piece
 // ("() ->": asked every loop). Pushing out still works.
-intake = add(Intake.motor("intake").stopsWhen(() -> pieces.isFull()));
+// .part(...): which motor it is (optional, recommended: better starting values, a true simulator).
+intake = add(Intake.motor("intake").part("gobilda-5203-1150").stopsWhen(() -> pieces.isFull()));
 ```
 
 <!-- recipe: launcher-needs-a-piece -->
 ```java title="Robot.java"
 // Each feed counts one piece out. requireReady: no feed with nothing to fire.
+// .part(...): the indexer's servo (optional, recommended: better starting values, a true simulator).
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
-        .feeder(Indexer.servo("indexer"))
+        .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
         .requireReady("a piece to fire", () -> !pieces.isEmpty()));
 ```
 
@@ -1260,7 +1279,7 @@ two tables in your `Tunables.Launcher` section ([one table per piece](#how-do-i-
 // In define(), BELOW the Pieces line: your launcher line with three more lines. The tables
 // are Tunables.Launcher.speedByDistancePollen and speedByDistanceNectar.
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
-        .feeder(Indexer.servo("indexer"))
+        .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
         .speedFromDistance(camera)
         .startTable("pollen")                                 // before a piece is known
         .tableFrom(pieces.nextKind())                         // the next piece picks the table
@@ -1354,7 +1373,9 @@ g2.rumbleWhenAimed();
 odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
 camera = add(Camera.limelight("limelight").goal("BLUE SCORING", "RED SCORING"));
 turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).follows(camera));
-launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer"))
+// .part(...): the indexer's servo (optional, recommended: better starting values, a true simulator).
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+        .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
         .speedFromDistance(camera)
         .startTable("pollen"));                  // the table to start with
 ```
@@ -1400,7 +1421,9 @@ in `Tunables.java`.
 // turret follows that direction and the launcher's speed comes from that distance.
 odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
 turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).followsOdometry());
-launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer"))
+// .part(...): the indexer's servo (optional, recommended: better starting values, a true simulator).
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+        .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
         .speedFromOdometry()
         .requireReady("turret aimed", () -> turret.isAimed()));
 ```
@@ -1580,9 +1603,10 @@ section `Hood` (its stops), and a third number in each row of your `Launcher` se
 <!-- recipe: robot-hood -->
 ```java title="Robot.java"
 // The hood goes on the launcher; its numbers are in Tunables.Hood.
+// .part(...): which servos they are (optional, recommended: better starting values, a true simulator).
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
-        .feeder(Indexer.servo("indexer"))
-        .hood(Hood.servo("hood"))
+        .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
+        .hood(Hood.servo("hood").part("gobilda-2000-torque"))
         .speedFromDistance(camera));
 ```
 
@@ -1762,7 +1786,9 @@ hard stops just past them.
 // A CR servo turns it, an absolute encoder on an analog port says where it points (no
 // homing), and continuous(): a slip ring carries the wires, so no limits, the shortest way.
 // "turret", "turret_pos" = the servo's and the encoder's names in the robot configuration.
-turret = add(Turret.crServo("turret").analogEncoder("turret_pos").continuous().follows(camera));
+// .part(...): which servo it is (optional, recommended: better starting values, a true simulator).
+turret = add(Turret.crServo("turret").part("axon-max-mk2").analogEncoder("turret_pos").continuous()
+        .follows(camera));
 ```
 
 <!-- recipe: tunables-turret-slip-ring -->

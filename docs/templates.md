@@ -45,10 +45,10 @@ in `Robot.java`:
 - **AndyMark's catapult:** the library has no catapult. The template drives its motor as an `Indexer`
   that runs for a set time per press. Tune that time so one press is one throw. The library cannot
   tell when the catapult is wound, so it cannot wait for "ready" as a flywheel does.
-- **Studica's flywheel:** the Maverick motors are not in the library's motor list, so goBILDA motors
-  stand in for them (a team can describe the real ones with `Motors.custom(...)`, from Studica's page:
-  [Parts not in the catalog](modules/robot.md#parts-not-in-the-catalog)), and the launcher cannot take the 2:1 gear between the motor and the wheels. The
-  flywheel speed in `Tunables.java` is the motor's, as the library counts it. Tune it by watching shots.
+- **Studica's flywheel:** the launcher cannot take the 2:1 gear between the motor and the wheels. The
+  flywheel speed in `Tunables.java` is the motor's (the wheels turn at half of it). Tune it by watching
+  shots. The Maverick motors and the servo are not in the parts catalog: `Robot.java` describes them
+  with Studica's numbers ([Parts not in the catalog](modules/robot.md#parts-not-in-the-catalog)).
 
 ## Copy a template into TeamCode
 

@@ -19,6 +19,9 @@ import com.crossbotics.ftchelper.robot.RobotDefinition;
  *   Smart Robot Servo in continuous (CR) mode.
  * - The pollen pusher ("poker"): an arm on a servo at the left side. It combs POLLEN out of a FLOWER.
  *
+ * Each part says which motor or servo it is (.part(...) or the id in the brackets), from REV's build
+ * guide: the starting values and the simulator then use that part's real numbers.
+ *
  * Where the facts come from: docs/guides/starter-bots.md and the simulator's robot file
  * sim/robots/starter-bot-rev.properties. REV does not say which way each motor turns, so check them
  * on your robot (lesson 2, docs/tutorials/start/02-drive.md).
@@ -43,15 +46,16 @@ public class Robot extends RobotDefinition {
 
         // REV's code: right bumper takes POLLEN in, right trigger pushes it out. Which sign is "in"
         // is not on REV's page: if it pushes out when it should take in, add .reversed().
-        intake = add(Intake.motor("intakeMotor"));
+        intake = add(Intake.motor("intakeMotor").part("rev-core-hex"));
 
-        // The flywheel (HD Hex at 1:1: the 6000 RPM motor's numbers) and its feeder roller.
+        // The flywheel (HD Hex at 1:1: the 6000 RPM motor's numbers) and its feeder roller (a Smart Robot
+        // Servo V2, Balanced, in CR mode).
         launcher = add(Launcher.flywheel("flywheel", "rev-hd-hex")
-                .feeder(Indexer.crServo("crServo")));
+                .feeder(Indexer.crServo("crServo").part("rev-smart-servo-v2-balanced")));
 
-        // The poker: a servo with two named spots (Tunables.PollenServo). Nothing moves at INIT, so
-        // this line does NOT fold it: fold the poker by hand before INIT, so the robot fits the 18 in
-        // start cube. It first moves when a button (A or B) or an action sends it somewhere.
-        poker = add(Positioner.servo("pollenServo"));
+        // The poker: a Smart Robot Servo V2 (Balanced) with two named spots (Tunables.PollenServo). Nothing
+        // moves at INIT, so this line does NOT fold it: fold the poker by hand before INIT, so the robot fits
+        // the 18 in start cube. It first moves when a button (A or B) or an action sends it somewhere.
+        poker = add(Positioner.servo("pollenServo").part("rev-smart-servo-v2-balanced"));
     }
 }

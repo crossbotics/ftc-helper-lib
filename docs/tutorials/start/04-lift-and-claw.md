@@ -26,10 +26,11 @@ claw.
 
 ```java
 // Lesson 4: the mechanisms. "intake", "lift", "lift_bottom", "claw" = the devices' names in the robot
-// configuration on the Driver Station.
-intake = add(Intake.motor("intake"));                                             // Tunables.Intake
+// configuration on the Driver Station. .part(...) = which motor or servo it is (these are examples:
+// your part's id is on its label). The starting values and the simulator then use its numbers.
+intake = add(Intake.motor("intake").part("gobilda-5203-1150"));                    // Tunables.Intake
 lift = add(Lift.slide("lift").part("gobilda-5203-435").bottomSwitch("lift_bottom")); // Tunables.Lift
-claw = add(Claw.servo("claw"));                                                    // Tunables.Claw
+claw = add(Claw.servo("claw").part("gobilda-2000-torque"));                         // Tunables.Claw
 ```
 
 These go in `define()`, after the drive. Each line adds one **module**: a ready-made part class (a
@@ -37,10 +38,13 @@ mechanism the library already knows how to run).
 
 - `Intake.motor("intake")`: a roller on one motor. It runs in or out.
 - `Lift.slide("lift")`: a slide that goes up and down on one motor and holds named heights.
-  - `.part("gobilda-5203-435")` says which motor it is, by its id in the
-    [parts catalog](../../guides/parts-catalog.md). The simulator uses it to move like the real one.
   - `.bottomSwitch("lift_bottom")` is the touch sensor at the bottom (step 3 says why it matters).
 - `Claw.servo("claw")`: a claw on one servo, with an `open` and a `closed` position.
+- `.part(...)` on each line says which motor or servo it is, by its id in the
+  [parts catalog](../../guides/parts-catalog.md) (the number is on the part's label). It is optional
+  but recommended. **Why:** the library then starts from that part's real numbers (the lift's gains,
+  the claw's move time), and the simulator moves it like the real one. The ids here are examples: write
+  yours.
 
 Also add the fields at the top of the class, so the other files can reach the parts as `robot.lift`,
 and an import for each part class at the top of the file (with the other imports):
@@ -300,7 +304,7 @@ Good: it reaches each height in under a second, goes past by very little, and ho
 Many slides have a motor on each side. Name the second one on the same line:
 
 ```java
-lift = add(Lift.slide("lift_left").alsoMotorReversed("lift_right"));
+lift = add(Lift.slide("lift_left").part("gobilda-5203-435").alsoMotorReversed("lift_right"));
 ```
 
 Both motors now get the very same power, in the same loop, every time: buttons, the stick, stop, pause

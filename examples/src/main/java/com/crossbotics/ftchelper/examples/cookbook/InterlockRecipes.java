@@ -125,7 +125,9 @@ public class InterlockRecipes {
             // A CR servo turns it, an absolute encoder on an analog port says where it points (no
             // homing), and continuous(): a slip ring carries the wires, so no limits, the shortest way.
             // "turret", "turret_pos" = the servo's and the encoder's names in the robot configuration.
-            turret = add(Turret.crServo("turret").analogEncoder("turret_pos").continuous().follows(camera));
+            // .part(...): which servo it is (optional, recommended: better starting values, a true simulator).
+            turret = add(Turret.crServo("turret").part("axon-max-mk2").analogEncoder("turret_pos").continuous()
+                    .follows(camera));
             // end recipe
         }
     }
@@ -210,7 +212,9 @@ public class InterlockRecipes {
             // turret follows that direction and the launcher's speed comes from that distance.
             odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
             turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).followsOdometry());
-            launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer"))
+            // .part(...): the indexer's servo (optional, recommended: better starting values, a true simulator).
+            launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+                    .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
                     .speedFromOdometry()
                     .requireReady("turret aimed", () -> turret.isAimed()));
             // end recipe

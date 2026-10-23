@@ -128,7 +128,7 @@ public class StartingWordsTest {
 
     @Test public void aSafetyNumberNeverComesFromTheCatalog() {
         String m = stopMessage(bot(LiftMaxFromCatalog.class, d -> d.add(Lift.slide("lift").part("gobilda-5203-435"))));
-        assertTrue(m, m.startsWith("Tunables.Lift.max = DEFAULT_FROM_CATALOG, but it is a safety number"));
+        assertTrue(m, m.startsWith("Tunables.Lift.max = DEFAULT, but it is a safety number"));
         assertTrue(m, m.contains("Motor Finder, B"));
     }
 

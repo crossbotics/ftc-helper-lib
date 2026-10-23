@@ -39,7 +39,7 @@ From [`gobildabot/Robot.java`](../../../examples/src/main/java/com/crossbotics/f
 
 ```java
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
-        .feeder(Indexer.crServo("windmill").reversed()));
+        .feeder(Indexer.crServo("windmill").part("gobilda-2000-torque").reversed()));
 ```
 
 - `Launcher.flywheel("launcher", "gobilda-5203-6000")`: the flywheel motor's name in the configuration,
@@ -47,7 +47,9 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
   encoder counts per turn and the top speed, so it can work in RPM (turns per minute).
 - `.feeder(...)`: the part that pushes ONE piece into the wheel. The launcher decides when.
 - `Indexer.crServo("windmill")`: a CR servo (a servo that spins all the way round, like a small motor)
-  that runs for a moment per piece. `.reversed()`: it turns the other way.
+  that runs for a moment per piece. `.part("gobilda-2000-torque")`: which servo it is, by the id on its
+  label (optional but recommended: the library and the simulator then use its real numbers).
+  `.reversed()`: it turns the other way.
 - Other feeders: `Indexer.servo("indexer")` pushes and comes back; `Indexer.motor("feeder")` runs a roller.
 
 **Imports:** each part class needs one at the top of `Robot.java`, all from
@@ -188,7 +190,7 @@ TeleOp, so the first shot does not wait. LB still spins it down.
 
 ```java
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
-        .feeder(Indexer.crServo("windmill").reversed())
+        .feeder(Indexer.crServo("windmill").part("gobilda-2000-torque").reversed())
         .spinAtStart());
 ```
 
@@ -314,7 +316,7 @@ has a turret, a lift with a wrist and a claw, and the rule that keeps them apart
 
 ```java
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
-        .feeder(Indexer.servo("indexer"))
+        .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
         .speedFromDistance(camera)
         .startTable("pollen")
         .requireReady("turret aimed", () -> turret.isAimed()));
@@ -437,14 +439,15 @@ is on a servo. The whole launcher line, from [`turretbot/Robot.java`](../../../e
 
 ```java
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
-        .feeder(Indexer.servo("indexer"))
+        .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
         .hood(Hood.servo("hood").part("gobilda-2000-torque").shotAngles(80, 55))
         .speedFromDistance(camera)
         .startTable("pollen")
         .requireReady("turret aimed", () -> turret.isAimed()));
 ```
 
-`.part("gobilda-2000-torque")` is the servo by its catalog id. `.shotAngles(80, 55)` is only for the
+`.part("gobilda-2000-torque")` is the servo by its catalog id (optional but recommended: the hood's
+move time then starts from that servo's speed). `.shotAngles(80, 55)` is only for the
 simulator: how steep the shot leaves at each stop (80 degrees up at the steep end, 55 at the flat end).
 
 Its numbers (from [`turretbot/Tunables.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/Tunables.java),
@@ -641,7 +644,7 @@ launcher line becomes:
 
 ```java
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
-        .feeder(Indexer.servo("indexer"))
+        .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
         .speedFromDistance(camera)
         .startTable("pollen")
         .tableFrom(pieces.nextKind())                         // the next piece picks the table

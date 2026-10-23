@@ -118,7 +118,7 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
      * Robot.java now, and each part starts working the day its device is in the configuration.
      *
      * <pre>{@code
-     * intakeDeploy = add(Positioner.servo("intake_deploy").optional());   // Robot.java
+     * intakeDeploy = add(Positioner.servo("intake_deploy").part("gobilda-2000-torque").optional());   // Robot.java
      * }</pre>
      *
      * <p>While it is off: every command to it is ignored ({@link #isPresent()} is false), its

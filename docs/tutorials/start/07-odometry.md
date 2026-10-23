@@ -152,7 +152,9 @@ drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
 // 84 mm RIGHT of the centre (-84), the sideways pod 168 mm BEHIND it (-168). The Odometry Tuner
 // measures them.
 odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
-intake = add(Intake.motor("intake"));
+// "intake" = the motor's name in the robot configuration. Its numbers: Tunables.Intake.
+// .part(...): which motor it is (an example: your motor's id is on its label).
+intake = add(Intake.motor("intake").part("gobilda-5203-1150"));
 ```
 
 **In your own `Robot.java`**, add two lines:
