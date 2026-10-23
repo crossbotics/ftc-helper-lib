@@ -12,6 +12,8 @@ It fails (exit 1) when:
      files (examples/.../cookbook: "// recipe: name" ... "// end recipe"), or a region is not shown;
      a guide that shows a recipe (the same "<!-- recipe: name -->" marker) is checked the same way;
   6. a cookbook recipe that mentions the tuning menu does not say to copy the value into Tunables.java;
+  9. an example file has a comment longer than 3 "//" lines in a row or 8 lines of "/** */" (the why goes
+     in the docs); a docs code box with annotation markers "(1)!" is not followed by the numbered list 1..n;
   8. a recipe's code box does not say which file it goes in (```java title="Robot.java"), worked out
      from where the recipe sits in the cookbook's Java;
   7. a recipe that shows a Tunables section (a region named "tunables-...") breaks the section style:
@@ -178,6 +180,38 @@ def cookbook_regions():
     return regions
 
 
+# Code annotations (docs only): a marker "(1)!" at the end of a "//" comment in a docs code box, or a
+# "// (1)!" added after the code (the same marker as Material for MkDocs). The site turns each marker into a (+) button that opens the matching item
+# of the numbered list right under the box; GitHub shows the marker and the list as they are. The Java
+# files have no markers: the comparisons below take them out first.
+ANNOT_MARK = re.compile(r"^(.*//.*?)\s*\((\d{1,2})\)!\s*$")
+
+
+def strip_marker(line):
+    """The line without its annotation marker, and the marker's number (None when it has none)."""
+    m = ANNOT_MARK.match(line)
+    if not m:
+        return line, None
+    rest = m.group(1).rstrip()
+    if rest.endswith("//"):
+        rest = rest[:-2].rstrip()
+    return rest, int(m.group(2))
+
+
+def strip_markers(text):
+    return "\n".join(strip_marker(l)[0] for l in text.split("\n"))
+
+
+def remark(old_body, new_code):
+    """new_code with the markers of old_body put back on the lines that did not change."""
+    marked = {}
+    for l in old_body.split("\n"):
+        clean, n = strip_marker(l)
+        if n is not None:
+            marked.setdefault(clean, l)
+    return "\n".join(marked.get(l, l) for l in new_code.split("\n"))
+
+
 def check_cookbook():
     if not COOKBOOK_MD.exists():
         problems.append("docs/cookbook.md is missing")
@@ -208,8 +242,8 @@ def check_cookbook():
                     if line != fence(rel, start, code):
                         problems.append(f"docs/cookbook.md:{i + 1}: recipe {pending[0]}: the box should open with "
                                         f"{fence(rel, start, code)} (python3 tools/check_docs.py --fix-cookbook)")
-                    if code != body:
-                        page, java = body.splitlines(), code.splitlines()
+                    if code != strip_markers(body):
+                        page, java = strip_markers(body).splitlines(), code.splitlines()
                         k = next((k for k in range(max(len(page), len(java)))
                                   if k >= len(page) or k >= len(java) or page[k] != java[k]), 0)
                         problems.append(f"docs/cookbook.md:{i + 2 + k}: recipe {pending[0]} differs from {rel}:{start + 1 + k}"
@@ -250,7 +284,8 @@ def check_marked_pages():
             line = text[:m.start()].count("\n") + 1
             if m.group(1) not in regions:
                 problems.append(f"{rel}:{line}: no recipe {m.group(1)} in {COOKBOOK_CODE.relative_to(ROOT)}")
-            elif regions[m.group(1)][2] != m.group(3).strip("\n") or m.group(2) != fence(*regions[m.group(1)]):
+            elif (regions[m.group(1)][2] != strip_markers(m.group(3).strip("\n"))
+                  or m.group(2) != fence(*regions[m.group(1)])):
                 problems.append(f"{rel}:{line}: recipe {m.group(1)} differs from {regions[m.group(1)][0]} "
                                 "(python3 tools/check_docs.py --fix-cookbook)")
         if text.count("<!-- recipe: ") != len(MARKED_BLOCK.findall(text)):
@@ -263,10 +298,14 @@ def fix_cookbook():
 
     def fill(m):
         name = m.group(1)
-        return f"<!-- recipe: {name} -->\n{fence(*regions[name])}\n{regions[name][2]}\n```" if name in regions else m.group(0)
+        if name not in regions:
+            return m.group(0)
+        # keep the annotation markers of the lines that did not change
+        return f"<!-- recipe: {name} -->\n{fence(*regions[name])}\n{remark(m.group(2), regions[name][2])}\n```"
 
     for page in [COOKBOOK_MD] + marked_pages():
-        page.write_text(re.sub(r"<!-- recipe: ([a-z0-9-]+) -->\n```java[^\n]*\n.*?```", fill, page.read_text(), flags=re.S))
+        page.write_text(re.sub(r"<!-- recipe: ([a-z0-9-]+) -->\n```java[^\n]*\n(.*?)\n?```", fill, page.read_text(),
+                               flags=re.S))
 
 
 # Students read the example files (examples/), not the generated reference: their comments use plain
@@ -276,10 +315,69 @@ HTML_IN_COMMENT = re.compile(r"^\s*\*.*</?(ul|ol|li|p|b)>", re.I)
 
 def check_example_comments():
     for f in sorted((ROOT / "examples" / "src" / "main" / "java").rglob("*.java")):
-        for n, line in enumerate(f.read_text().splitlines(), 1):
+        lines = f.read_text().splitlines()
+        run, start, doc, doc_start = 0, 0, False, 0
+        for n, line in enumerate(lines, 1):
             if HTML_IN_COMMENT.match(line):
                 problems.append(f"{f.relative_to(ROOT)}:{n}: HTML in a comment ({line.strip()[:40]}...): "
                                 "use plain '-' or '1.' lists and blank comment lines (students read these files)")
+            t = line.strip()
+            # Comments in code teams copy stay short: the "why" goes in the docs (an annotation, or a link).
+            if t.startswith("//") and not RECIPE_START.match(line) and not RECIPE_END.match(line):
+                if run == 0:
+                    start = n
+                run += 1
+            else:
+                if run > MAX_COMMENT_LINES:
+                    problems.append(f"{f.relative_to(ROOT)}:{start}: {run} comment lines in a row (at most "
+                                    f"{MAX_COMMENT_LINES}): keep what a team needs in the code, move the why to the docs")
+                run = 0
+            if t.startswith("/**"):
+                doc, doc_start = True, n
+            if doc and t.endswith("*/"):
+                if n - doc_start + 1 > MAX_JAVADOC_LINES:
+                    problems.append(f"{f.relative_to(ROOT)}:{doc_start}: a {n - doc_start + 1}-line comment block "
+                                    f"(at most {MAX_JAVADOC_LINES}): keep it short, link the docs for the rest")
+                doc = False
+
+
+MAX_COMMENT_LINES = 3
+MAX_JAVADOC_LINES = 8
+
+
+def check_annotations():
+    """A docs code box with annotation markers (1), (2)... is followed by a numbered list with one item each."""
+    for page in sorted((ROOT / "docs").rglob("*.md")):
+        rel = page.relative_to(ROOT)
+        lines = page.read_text().splitlines()
+        i = 0
+        while i < len(lines):
+            if lines[i].startswith("```") and lines[i][3:].strip():
+                end = i + 1
+                while end < len(lines) and not lines[end].startswith("```"):
+                    end += 1
+                marks = [n for n in (strip_marker(l)[1] for l in lines[i + 1:end]) if n is not None]
+                if marks:
+                    if marks != list(range(1, len(marks) + 1)):
+                        problems.append(f"{rel}:{i + 1}: annotation markers must be (1)!, (2)!... in order, once each: {marks}")
+                    j = end + 1
+                    while j < len(lines) and not lines[j].strip():
+                        j += 1
+                    items = []
+                    while j < len(lines) and (re.match(r"^\d+\. ", lines[j]) or lines[j].startswith("   ")
+                                              or not lines[j].strip()):
+                        m = re.match(r"^(\d+)\. ", lines[j])
+                        if m:
+                            items.append(int(m.group(1)))
+                        if not lines[j].strip() and (j + 1 >= len(lines) or not lines[j + 1].startswith("   ")
+                                                     and not re.match(r"^\d+\. ", lines[j + 1])):
+                            break
+                        j += 1
+                    if items != list(range(1, len(marks) + 1)):
+                        problems.append(f"{rel}:{end + 1}: the box has {len(marks)} annotation marker(s): put a numbered "
+                                        f"list 1..{len(marks)} right under it (found {items or 'none'})")
+                i = end
+            i += 1
 
 
 if "--fix-cookbook" in sys.argv:
@@ -319,6 +417,7 @@ check_tutorials()
 check_cookbook()
 check_marked_pages()
 check_example_comments()
+check_annotations()
 check_recipe_sections()
 
 if problems:
