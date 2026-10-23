@@ -2,7 +2,9 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
-## Unreleased
+## v0.17.4 - 2026-10-22
+
+The Cookbook says which file each piece of code goes in.
 
 ### Changed
 
