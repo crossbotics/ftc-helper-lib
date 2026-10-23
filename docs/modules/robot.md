@@ -1598,7 +1598,7 @@ fixed(Shape.box("tower").atMm(-90, 0, 40).sizeMm(50, 180, 260));
 - The names are only for your code (camelCase, like any Java variable). The shape's name in the
   simulator is `name("intake_arm")`, or the part's name when you do not give one.
 - Each `Shape` belongs to one part: make a new one for each part, even when two look the same.
-- The simulator's [Edit robot](../guides/simulator.md) mode prints shapes the same way: one shape
+- The simulator's [Edit robot](../guides/simulator.md#edit-robot-shape-your-robot) mode prints shapes the same way: one shape
   inline, several as named shapes.
 
 | On a part | |

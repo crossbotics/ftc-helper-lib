@@ -446,11 +446,9 @@ final class SimRobotEdit {
                 continue;
             }
             List<SimShapeJava> specs = new ArrayList<>();
-            boolean turret = false;
             for (Info in : group) {
                 SimShapeJava j = in.java.copy();
                 if (edits.containsKey(in.shape)) j.apply(edits.get(in.shape));
-                turret |= j.kind.equals("turret");
                 specs.add(j);
             }
             if (first.where.equals("fixed")) {
@@ -479,7 +477,6 @@ final class SimRobotEdit {
                 p.put("lines", t[0]);
                 p.put("looks", t[1]);
             }
-            if (turret) p.put("warn", "Shape.turret() needs a newer ftc-helper-lib: until you have it, keep the turret's line in the robot file.");
             out.add(p);
         }
         return out;

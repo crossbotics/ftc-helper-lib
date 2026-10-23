@@ -22,7 +22,7 @@ import java.util.function.Function;
  */
 final class SimShapeJava {
     static final double MM = 25.4;
-    /** The kinds the simulator draws. Shape.java has no turret() yet: the text names it anyway (see the docs). */
+    /** The kinds the simulator draws, each with its Shape factory (Shape.turret() for a turret). */
     static final List<String> KINDS = java.util.Arrays.asList("arm", "slide", "claw", "box", "roller", "flywheel", "turret");
 
     String kind;
