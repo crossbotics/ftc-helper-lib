@@ -46,7 +46,8 @@ Do this once, in your robot project.
    sure), and draws your real parts in the 3D view (`skills/robot-file/cad.md`, tools in `tools/cad/`).
    **Robot.java in five files?** The sizes and shapes it learns go into Robot.java (`part(...)`,
    `looks(...)`, `chassisMm`), and `./gradlew :sim:fromRobot` writes the robot file from it, so the code
-   and the simulator stay one description.
+   and the simulator stay one description. To fix a shape by eye afterwards, use the simulator's
+   **Edit robot** mode and copy the `.looks(...)` lines it shows into Robot.java.
 4. **Checks** the result in the simulator (it loads, the size rules, your OpModes start) and writes a
    small scenario so it stays checked.
 5. Tells you what is still unknown, and how to get real speeds (the Characterizer).

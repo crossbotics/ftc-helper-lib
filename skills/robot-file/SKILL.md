@@ -111,10 +111,15 @@ not in the robot file: each part's catalog id (`part(...)`, `Drive.wheel(...)`),
 (`looks(Shape...)`), `chassisMm`, `heightMm`, `fixed(...)` (docs/modules/robot.md "Shapes and parts"),
 then run `./gradlew :sim:fromRobot` (it also prints the Tunables name checks INIT runs: pass any problem on
 to the team). A lift or arm on two motors is `alsoMotor`/`alsoMotorReversed` in Robot.java; the
-generator writes the second motor's `with=` line. Write a `shape.` line by hand in the robot file only for a part
-Robot.java cannot draw yet (Lift, Arm, Turret, Claw, Wrist, cameras). Why: the generator keeps every
+generator writes the second motor's `with=` line. Every moving part takes `looks(...)` (intake, lift, arm, turret, claw,
+wrist, servo with positions, launcher, hood) and `fixed(...)` draws the parts that do not move. Write a
+`shape.` line by hand in the robot file only for what Robot.java cannot draw (cameras, and a CAD model's
+`model=`: see `cad.md`). Why: the generator keeps every
 unmarked line, so a hand-written `shape.intake` would win over Robot.java's for good (it prints "kept
 your shape.intake" each run); if one exists from before, delete it once Robot.java draws that part.
+Then show the team the simulator's **Edit robot** mode (docs/guides/simulator.md): they can drag and size
+any part on the 3D robot and copy the `.looks(...)` lines it prints into Robot.java. Use it yourself to
+check your shapes with them: it shows the 18 in start cube and the 29 in line.
 
 Otherwise, use `photos.md` to turn the mechanisms into robot shapes (`shape.NAME = box|slide|arm|turret|claw|roller|flywheel`),
 then the game-piece lines (`collect.`, `shoot.`, `grab.`, and piece sensors `color.`/`distance.`) and the cameras. Mount points (`at=`) and sizes
