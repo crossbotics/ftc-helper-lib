@@ -2071,7 +2071,7 @@
    "docs": [
     {
      "path": "docs/guides/tunables.md",
-     "anchor": "default_from_catalog-and-measure"
+     "anchor": "default-and-measure"
     },
     {
      "path": "docs/guides/tunables.md",
@@ -4208,7 +4208,7 @@
    "docs": [
     {
      "path": "docs/guides/tunables.md",
-     "anchor": "default_from_catalog-and-measure"
+     "anchor": "default-and-measure"
     },
     {
      "path": "docs/modules/robot.md",
