@@ -1553,6 +1553,9 @@ controls do what they should (the intake drops, the rollers spin, a piece is fir
 [`flywheelbot/Robot.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot/Robot.java);
 a lift with a wrist and a claw riding on it: [`v2bot/Robot.java`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/v2bot/Robot.java).
 
+Typing the numbers is hard: shape the robot with the mouse in the simulator and copy the Java it prints
+([Edit robot: shape your robot](../guides/simulator.md#edit-robot-shape-your-robot)).
+
 **Name the part, give only what is not known.** A part in the [parts catalog](../guides/parts-catalog.md)
 brings its numbers: a motor its speed and encoder counts, a servo its speed and range, a wheel or roller
 its diameter (and width, when the seller gives it). Places are always the robot's own. A servo's range is

@@ -307,6 +307,57 @@
   #builder .b-table { margin: 4px 0; } #builder .b-table tr.bad td { color: var(--stop); } #builder .b-table tr.warn td { color: var(--warn); }
   #builder .b-table .sr, #builder .sr { color: #cf222e; } #builder .sb { color: #1f6feb; }
   #builder .b-code { max-height: 260px; overflow: auto; font: 11.5px/1.35 ui-monospace, Menlo, monospace; background: var(--bg); padding: 6px; border-radius: 6px; white-space: pre; }
+  /* Edit robot (robotedit.js): its panel takes the Control Hub's column, like the auto builder. */
+  #editRobotBtn { margin-left: auto; font-weight: 600; border-color: var(--accent); color: var(--accent); }
+  #editRobotBtn + #builderBtn { margin-left: 0; }
+  #editRobotBtn.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  #editSection { padding: 8px 10px; }
+  #editSection[hidden] { display: none !important; }
+  @media (min-width: 1100px) and (min-height: 640px) {
+    body.editing:not(.phone) main { grid-template-columns: minmax(260px, 320px) minmax(420px, 1fr) minmax(380px, 460px);
+      grid-template-areas: "ds view edit" "ds pads edit"; }
+    body.editing:not(.phone) #hubSection { display: none; }
+    body.editing:not(.phone) #editSection { grid-area: edit; display: flex; flex-direction: column; min-height: 0; }
+    body.editing:not(.phone) #editPanel { flex: 1; min-height: 0; overflow: auto; }
+  }
+  #editSection { order: 3; }
+  #editSection .e-head { display: flex; align-items: center; gap: 8px; padding: 2px 0 6px; border-bottom: 1px solid var(--line); }
+  #editSection .e-head b { font-size: 15px; flex: 1; }
+  #editBackBtn { background: var(--go); color: #fff; border-color: var(--go); font-weight: 600; }
+  #editPanel { font-size: 13px; }
+  #editPanel p { margin: 6px 0; }
+  #editPanel code { font: 11.5px ui-monospace, Menlo, monospace; }
+  #editPanel h3 { border-top: 1px solid var(--line); padding-top: 8px; }
+  #editPanel .e-list { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
+  #editPanel .e-chip { padding: 2px 8px; font-size: 12.5px; border-radius: 12px; }
+  #editPanel .e-chip.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  #editPanel .e-chip.changed { font-weight: 700; }
+  #editPanel .e-tag { font-size: 10.5px; padding: 0 4px; border-radius: 6px; background: var(--warn); color: #fff; }
+  #editPanel .e-sel { border-top: 1px solid var(--line); padding-top: 6px; margin-top: 4px; }
+  #editPanel .e-tools { margin: 6px 0; }
+  #editPanel .e-seg { display: inline-flex; }
+  #editPanel .e-seg button { border-radius: 0; margin-left: -1px; }
+  #editPanel .e-seg button:first-child { border-radius: 6px 0 0 6px; margin-left: 0; } #editPanel .e-seg button:last-child { border-radius: 0 6px 6px 0; }
+  #editPanel button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  #editPanel button.on .muted { color: inherit; }
+  #editPanel button { font-size: 12.5px; padding: 3px 8px; }
+  #editPanel .e-grid { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; margin: 5px 0; }
+  #editPanel .e-k { width: 100%; font-weight: 600; color: var(--muted); font-size: 12px; }
+  #editPanel input[type=number] { width: 70px; padding: 3px 5px; font-size: 12.5px; background: var(--bg); }
+  #editPanel select { padding: 3px 5px; font-size: 12.5px; }
+  #editPanel .e-pose { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 6px; }
+  #editPanel .e-good { color: var(--go); } #editPanel .e-bad { color: var(--stop); } #editPanel .e-warn { color: var(--warn); font-weight: 600; }
+  #editPanel ul.e-bad { margin: 6px 0; padding-left: 18px; }
+  #editPanel .e-actions { margin: 6px 0; }
+  #editPanel .primary { background: var(--go); color: #fff; border-color: var(--go); font-weight: 600; }
+  #editPanel .e-say { color: var(--go); font-size: 12px; flex: 1; min-width: 12em; }
+  #editPanel .e-part { border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; margin: 6px 0; }
+  #editPanel .e-part .row b { flex: 1; }
+  #editPanel .e-code { max-height: 220px; overflow: auto; font: 11.5px/1.4 ui-monospace, Menlo, monospace; background: var(--bg); padding: 6px;
+    border-radius: 6px; white-space: pre; margin: 4px 0; user-select: all; }
+  body.editing #stage { outline: 2px solid var(--accent); }
+  /* the match's notes over the 3D view wait while the robot is edited */
+  body.editing #heldBadge, body.editing #lightBadge, body.editing #scoreBar, body.editing #layerNote, body.editing #toast { display: none !important; }
   /* The tests (tests.js): the recording bar under the 3D view's buttons, and the dialog to choose checks and see results. */
   #recBar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; padding: 5px 10px; border: 1px solid var(--stop);
     border-radius: 8px; background: color-mix(in srgb, var(--stop) 9%, var(--panel)); font-size: 13px; }
@@ -581,6 +632,7 @@
           <button data-tests="open">Open a test <span class="muted">run it; update it after a planned change</span></button>
           <div class="muted">How: <a href="https://github.com/crossbotics/ftc-helper-lib/blob/main/docs/tutorials/start/10-test-your-robot-code.md" target="_blank" rel="noopener">start lesson 10, "Test your robot code"</a>.</div>
         </div></span>
+      <button id="editRobotBtn" aria-pressed="false" title="Shape your robot: move and size its parts, check the size rules, and get the .looks(...) Java for Robot.java (the simulator holds still meanwhile)">Edit robot</button>
       <button id="builderBtn" aria-pressed="false" title="Build an autonomous on the field and run it here with your code (it takes the Control Hub's place)">Auto builder</button>
       <span class="muted" id="v3note"></span>
     </div>
@@ -593,6 +645,10 @@
       Drag: turn &middot; scroll: zoom &middot; right-drag or two fingers: slide &middot; double-click the robot to move it (no program running, or in INIT)</div>
   </section>
   <section id="builderSection" hidden aria-label="Auto builder"><div id="builder"></div></section>
+  <section id="editSection" hidden aria-label="Edit robot">
+    <div class="e-head"><b>Edit robot</b><button id="editBackBtn" title="Close Edit robot: the field and the match come back, as they were">Back to driving</button></div>
+    <div id="editPanel"></div>
+  </section>
 </main>
 <div id="testDlg" role="dialog" aria-modal="true" aria-labelledby="testDlgTitle" hidden></div>
 
@@ -1541,7 +1597,7 @@ function build3d() {
   requestAnimationFrame(frame3d);
 }
 function setEdit(on) {
-  v3.edit = on && !drag.running;
+  v3.edit = on && !drag.running && !(window.simEdit && simEdit.on);   // not while Edit robot is open
   if (v3.handles) v3.handles.visible = v3.edit;
 }
 function setupHandles(stage) {
@@ -2384,6 +2440,12 @@ function setView(v) {
 function frame3d() {
   requestAnimationFrame(frame3d);
   if (!v3.on || document.hidden) return;
+  // Edit robot (robotedit.js): the robot alone, in its own scene; the field and the match wait.
+  if (window.simEdit && simEdit.on && simEdit.scene) {
+    v3.controls.update();
+    v3.renderer.render(simEdit.scene, v3.camera);
+    return;
+  }
   // Draw the moment a little in the past, between the two updates around it (SimView.Buffer): smooth motion
   // at any frame rate. Across a jump (a reset, the robot put somewhere by hand) it does not glide.
   const now = performance.now() / 1000, smp = frames.sample(now);
@@ -2486,6 +2548,7 @@ if (phonePad) { document.querySelectorAll(".pad").forEach(div => { if (div.datas
 connect();
 </script>
 <script src="/tests.js"></script>
+<script src="/robotedit.js"></script>
 <script type="module" src="/builder/builder.js"></script>
 </body>
 </html>

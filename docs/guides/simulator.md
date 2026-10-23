@@ -342,6 +342,54 @@ differ (`SITE_STRICT=1` makes that a failure, before publishing the site).
 reading Java back in (the web builder reads Java in). A Pedro plan is one path (one `follow`, or one
 `driveTo` per part); add the steps before and after it in your file. Commands take plain values only.
 
+## Edit robot: shape your robot
+
+Typing where each part sits in mm is hard. **Edit robot** (the button over the 3D view) lets you shape the
+robot with the mouse and then gives you the Java to copy into `Robot.java`. `Robot.java` stays the one
+record of your robot: the editor writes no file.
+
+1. Click **Edit robot**. The simulator holds still (nothing moves, nothing drives), the field goes away,
+   and the view turns round your robot, close.
+2. See-through guides show the size rules: the **18 in start cube** (R102) at the start of the match, and
+   the 18 x 24 in box with the **29 in** line (R105) in any other pose. A part that sticks out turns red,
+   and the panel says how far and which way.
+3. Click a shape to pick it. The panel shows its part, its kind and its numbers in mm: `atMm` (place),
+   `sizeMm` (size), or length and diameter for a roller or flywheel, and its angles.
+4. Change it:
+   - **Drag** the picked shape: it moves flat. **Shift + drag**: up and down. With **Size** on, a drag
+     makes it bigger or smaller.
+   - **Arrow keys** move it forward, back, left and right; **Page Up / Page Down** up and down. 1 mm a
+     key; with Shift, 10 mm.
+   - Or type the numbers (whole mm). In a box, the arrow keys go 1; Shift + arrow goes 10.
+   - The axis and the tilt (`axis`, `tiltDeg`) where the shape has them.
+5. **Poses:** each moving part has buttons for its named positions (`stowed`, `deployed`...), its hard stops
+   and its start. Click each one and check that the robot fits. Change a named angle and the poses move
+   with it. **Start of the match** puts every part back where it starts. The panel also says if **every**
+   pose fits (the same check as "at full reach" in the Control Hub panel).
+6. **Copy into Robot.java:** the panel shows the Java for each part you changed, and where it goes. Click
+   **Copy** (or **Copy all**) and paste it there:
+   - One short shape: `.looks(Shape.flywheel("gobilda-hogback-96").atMm(-40, 0, 200))`, on the line that
+     adds the part, in place of its `.looks(...)`.
+   - Two or more shapes (or one long one): one `Shape` line each, then `.looks(intakeArm, roller)`. Put the
+     `Shape` lines in `define()`, above the line that adds the part; then use the `.looks(...)` on that line.
+   - A part that had only a guessed shape (marked "guess", "TODO measure" in the robot file): add the
+     `.looks(...)` to the line that adds the part, just before the bracket that closes `add(...)`.
+   - A `fixed(Shape.box(...))` part: in place of that `Shape.box(...)` inside `fixed(...)`.
+
+   Everything you did not change stays as it was: `dropsWhen`, `on(...)`, the part ids, the notes. Then
+   run `./gradlew :sim:fromRobot` again to write the robot file from `Robot.java`.
+7. **Try it** puts the changed shapes into the running simulator (in memory only). Click **Back to
+   driving**: the field and the match come back as they were, and game pieces hit the new shapes. **Undo
+   all** goes back to the robot file's shapes.
+
+Notes:
+- `.looks(...)` is optional. Without it the simulator still runs, with guessed boxes, but the size check and
+  where pieces touch the robot are guesses too.
+- The editor finds `Robot.java` from the robot file's first line ("made from ..."), written by
+  `./gradlew :sim:fromRobot`; `-ProbotClass=...` on `:sim:run` names another. A robot file written by hand
+  gets robot file lines (`shape.NAME = ...`) to copy instead.
+- The editor draws boxes, not CAD models.
+
 ## The robot file
 
 **Quick start:** an AI coding agent can write most of it for you from your robot configuration,

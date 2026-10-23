@@ -593,6 +593,17 @@ final class SimShapes {
         }
     }
 
+    /**
+     * The frame a shape's at= is measured in: its parent's moving part now (robot frame, 3x4), or no turn for
+     * one on the chassis. The page's Edit robot mode turns a drag on the screen into at= numbers with it.
+     */
+    double[][] parentFrame(String name) {
+        Shape s = shapes.get(name);
+        synchronized (robot) {
+            return s.parent.equals("chassis") ? identity() : mountOf(shapes.get(s.parent), shapes.get(s.parent).value);
+        }
+    }
+
     /** Everything to draw now: the chassis and each shape's boxes, in the robot frame. */
     List<Piece> pieces() {
         // one moment: the physics changes the shapes' values while it holds the robot
