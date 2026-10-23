@@ -26,6 +26,20 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   before). New: `Shape.turret()` for a turret. An arm shape on an Arm turns with its motor (Tunables
   degrees); on a Hood it follows the hood's angles (`angleA`/`angleB` or the calibration table).
 
+### Fixed
+
+- **Scenario tests that passed alone but failed in a set** (`./gradlew :sim:scenario` with a folder or
+  several files: about 1 run in 3 on a team robot). Nothing was carried over from the file before; the
+  test lines ran ahead of the physics. The physics moves the robot every 10 ms on its own thread, and in
+  the second or third file (the computer warmed up) a line right after INIT could look at the robot
+  before the physics had run once: an intake put down by hand (push servo not in the configuration) was
+  still up, and a TeleOp started at once was not yet on its INIT spot, so it missed the piece in front of
+  it. Now `expect`, `print` and `start` lines first wait for one whole physics step (about 10 ms), and
+  START puts the robot on its INIT spot first in every simulator (the command line and the simulator
+  page did not; only the JUnit test did). A new test runs two files in one run, in both orders, with the
+  physics slowed down on purpose, and checks that no OpMode or physics thread is left from the file
+  before.
+
 ## v0.17.5 - 2026-10-23
 
 `DEFAULT`, the short name; every example names its parts; Tunables comments fixed.

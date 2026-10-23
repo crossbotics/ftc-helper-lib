@@ -30,9 +30,7 @@ final class SimEngine {
     }
 
     SimEngine(SimRobot robot) {
-        this.robot = robot;
-        this.ds = new SimDriverStation(robot);
-        matchClock();
+        this(robot, SimDriverStation.defaultScope());
     }
 
     SimEngine(SimRobot robot, SimDriverStation.Scope scope) {
@@ -77,6 +75,10 @@ final class SimEngine {
                 } catch (RuntimeException e) {
                     ds.physicsError("Simulator physics error: " + e);
                 }
+                synchronized (stepsDone) {
+                    stepsDone[0]++;
+                    stepsDone.notifyAll();
+                }
                 try {
                     Thread.sleep(10);
                 } catch (InterruptedException e) {
@@ -99,6 +101,32 @@ final class SimEngine {
         built.tick();
         Runnable watch = onStep;
         if (watch != null) watch.run();
+    }
+
+    // Physics steps finished so far (each one: the robot moved, the Driver Station's timers, the INIT spot).
+    private final long[] stepsDone = {0};
+
+    /**
+     * Waits until the physics has run one whole step that began after this call, at most maxSec. WHY: the
+     * physics runs on its own thread, every 10 ms. A scenario line right after INIT ("expect shape
+     * intake_arm = -40", START) could run before the physics had seen the INIT at all: the robot not yet
+     * on its INIT spot, a dropped intake still up. That happened only sometimes (when the computer was
+     * quick, e.g. in the second file of a run), so a test passed alone and failed in a set. Returns at
+     * once when the physics is not running.
+     */
+    void awaitStep(double maxSec) throws InterruptedException {
+        Thread p = physics;
+        if (!running || p == null || !p.isAlive() || Thread.currentThread() == p) return;
+        long deadline = System.nanoTime() + (long) (maxSec * 1e9);
+        synchronized (stepsDone) {
+            // the step running now may have begun before the call: wait for the one after it too
+            long want = stepsDone[0] + 2;
+            while (stepsDone[0] < want && running && p.isAlive()) {
+                long left = deadline - System.nanoTime();
+                if (left <= 0) return;
+                stepsDone.wait(Math.max(1, left / 1_000_000));
+            }
+        }
     }
 
     /** Seconds of physics so far (the time that goes with the positions read under the robot's lock). */
