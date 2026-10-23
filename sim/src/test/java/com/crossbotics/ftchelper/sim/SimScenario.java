@@ -114,15 +114,7 @@ public final class SimScenario {
         List<String> summary = new ArrayList<>();
         for (Path f : files) {
             Path useRobot = robotFor(f, robot);
-            freshMatch();
-            SimEngine sim = new SimEngine(SimRobot.load(useRobot));
-            sim.start();
-            SimScenario s = new SimScenario(sim);
-            try {
-                s.run(f);
-            } finally {
-                sim.shutdown();
-            }
+            SimScenario s = runFile(f, useRobot, null);
             System.out.println("== " + f + " (robot file " + useRobot + ")");
             for (String line : s.report) System.out.println(line);
             System.out.println(s.failures == 0 ? "PASSED" : "FAILED: " + s.failures + " check(s)");
@@ -136,6 +128,26 @@ public final class SimScenario {
             for (String l : summary) System.out.println(l);
         }
         System.exit(failed == 0 ? 0 : 1);
+    }
+
+    /**
+     * Runs one scenario file the way the command line does: a fresh robot app (freshMatch), a new
+     * simulator with this robot file, every line, then the simulator shut down (its OpMode and physics
+     * stopped) before the next file. setup (may be null) gets the simulator before it starts (tests).
+     */
+    static SimScenario runFile(Path file, Path robot, java.util.function.Consumer<SimEngine> setup)
+            throws IOException, InterruptedException {
+        freshMatch();
+        SimEngine sim = new SimEngine(SimRobot.load(robot));
+        if (setup != null) setup.accept(sim);
+        sim.start();
+        SimScenario s = new SimScenario(sim);
+        try {
+            s.run(file);
+        } finally {
+            sim.shutdown();
+        }
+        return s;
     }
 
     // A folder: every .sim file in it, in name order; a file: itself.
@@ -230,6 +242,11 @@ public final class SimScenario {
     private void step(int n, String line) throws InterruptedException {
         List<String> t = tokens(line);
         String cmd = t.get(0).toLowerCase(Locale.US);
+        // Lines that look at the robot, and START: first let the physics catch up with the lines before
+        // (one whole step, about 10 ms), as on a real robot, where the world never waits. Without it, a
+        // quick computer checked the robot before the physics had seen the INIT (not yet on its spot, the
+        // intake not yet dropped): a file passed alone and failed after another one (SimEngine.awaitStep).
+        if (cmd.equals("expect") || cmd.equals("print") || cmd.equals("start")) sim.awaitStep(1);
         switch (cmd) {
             case "init": {
                 int before = sim.ds.activity();

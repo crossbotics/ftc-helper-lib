@@ -75,7 +75,12 @@ final class SimDriverStation {
     final Scope scope;
 
     SimDriverStation(SimRobot robot) {
-        this(robot, Boolean.getBoolean("sim.teamOnly") ? Scope.TEAM : Scope.LIBRARY);
+        this(robot, defaultScope());
+    }
+
+    /** The team's OpModes when the simulator runs with TeamCode (-Dsim.teamOnly=true), else the library's. */
+    static Scope defaultScope() {
+        return Boolean.getBoolean("sim.teamOnly") ? Scope.TEAM : Scope.LIBRARY;
     }
 
     SimDriverStation(SimRobot robot, Scope scope) {
