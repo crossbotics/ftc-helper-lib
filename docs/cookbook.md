@@ -533,8 +533,8 @@ g2.dpadLeft.heldFor(1.0, robot.launcher::stop).says("hold 1 s: flywheel off");
 
 <!-- recipe: button-pair -->
 ```java title="Controls.java"
-// Hold RB (the "shift key"), then press D-pad up. For big jobs that must not run by accident.
-g1.rb.with(g1.dpadUp, () -> robot.lift.goTo("high")).says("lift to the top");
+// Hold RB (the "shift key"), then press D-pad up: for a job that must not run by accident.
+g1.rb.with(g1.dpadUp, () -> robot.lift.goTo("high")).says("lift to high");
 ```
 
 **Why:** a pair is a safe place for rare, big jobs (a climb); D-pad up alone still does its own job.
@@ -627,14 +627,14 @@ button stop INIT with the button's name. Only one `libraryButtons(...)` method p
 
 ### How do I change the double-tap and hold times?
 
-**Where:** `Tunables.java` (optional: leave the section out for these defaults).
+**Where:** `Tunables.java` (optional: leave the section out for the defaults).
 
 <!-- recipe: tunables-buttons -->
 ```java title="Tunables.java"
-/** Optional: the gesture times. Leave this section out to use these defaults. */
+/** Optional: slower gestures, e.g. for new drivers. Leave the section out for the defaults (in brackets). */
 public static class Buttons {                                   // a fixed name: always Buttons
-    public static double tapGapSec = 0.35;                      // the most time between the taps of a double-tap
-    public static double holdSec = 0.3;                         // a press this long is a hold, not a tap
+    public static double tapGapSec = 0.45;                      // most time between the taps of a double-tap (0.35)
+    public static double holdSec = 0.4;                         // a press this long is a hold, not a tap (0.3)
 }
 ```
 
@@ -1115,8 +1115,8 @@ turret = add(Turret.motor("turret", "gobilda-5203-117").gearRatio(5).follows(cam
 <!-- recipe: tunables-turret -->
 ```java title="Tunables.java"
 public static class Turret {                                    // "turret" in the configuration
-    public static double min = MEASURE;                         // degrees, + = left, 0 = forward: as far as
-    public static double max = MEASURE;                         // the wires allow each way (Motor Finder)
+    public static double min = MEASURE;                         // furthest right, degrees (Motor Finder)
+    public static double max = MEASURE;                         // furthest left, degrees: 0 = forward, + = left
     public static double startAngle = DEFAULT_FROM_CATALOG;     // where you set it by hand before INIT (0)
     public static double kP = DEFAULT_FROM_CATALOG;             // push per degree off (0.02)
     public static double kD = DEFAULT_FROM_CATALOG;             // brake near the target (0.001)
@@ -1366,8 +1366,8 @@ public static class Aim {                                       // a fixed name:
     // The goal on the field, in inches, seen from your drivers' wall (the same numbers as
     // driveTo): with odometry, aiming goes on when the camera loses the goal. BIOBUZZ: your
     // HIVE's CELL that is up at the start (13 in right of the centre line, 13 in toward you).
-    public static double goalX = 13;                            // inches across the field (BIOBUZZ)
-    public static double goalY = -13;                           // inches from your wall (BIOBUZZ)
+    public static double goalX = 13;                            // inches right of centre (BIOBUZZ)
+    public static double goalY = -13;                           // inches from centre, - = our half (BIOBUZZ)
     public static boolean mirrorForRed = false;                 // BIOBUZZ: turned, not mirrored (true)
     public static double turnKp = DEFAULT_FROM_CATALOG;         // whole-robot aim: push per degree off (0.02)
     public static double turnKd = DEFAULT_FROM_CATALOG;         // brake near the goal (0.002)
@@ -1410,8 +1410,8 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer
 public static class Aim {                                       // a fixed name: always Aim
     // Where the goal is, seen from YOUR drivers' wall (inches; the same numbers as driveTo).
     // BIOBUZZ: your HIVE's CELL that is up at the start.
-    public static double goalX = 13;                            // inches across the field (BIOBUZZ)
-    public static double goalY = -13;                           // inches from your wall (BIOBUZZ)
+    public static double goalX = 13;                            // inches right of centre (BIOBUZZ)
+    public static double goalY = -13;                           // inches from centre, - = our half (BIOBUZZ)
     public static boolean mirrorForRed = false;                 // BIOBUZZ's field is turned, not mirrored
 }
 ```
@@ -1703,8 +1703,8 @@ turret = add(Turret.motor("turret", "gobilda-5203-312").gearRatio(2.75)
 <!-- recipe: tunables-turret-switch -->
 ```java title="Tunables.java"
 public static class Turret {                                    // "turret" in the configuration
-    public static double min = MEASURE;                         // degrees (0 = forward, counterclockwise +):
-    public static double max = MEASURE;                         // as far as the wires allow (Motor Finder)
+    public static double min = MEASURE;                         // furthest right, degrees (Motor Finder)
+    public static double max = MEASURE;                         // furthest left, degrees: 0 = forward, + = left
     public static double homeAngle = MEASURE;                   // where the switch closes (turret-setup.md)
     public static double homingPower = DEFAULT_FROM_CATALOG;    // how slowly it looks for the switch (0.2)
     public static double homingTimeout = DEFAULT_FROM_CATALOG;  // the most seconds it looks (5)
@@ -2199,9 +2199,9 @@ public static class Auto {
     public static double leaveInches = 24;                      // drive off the start line
     public static double toGoalInches = 30;                     // drive to the goal
     public static double parkInches = 20;                       // drive into the park zone
-    public static double goalX = -30, goalY = -30;              // the scoring spot, inches (driveTo)
+    public static double goalX = -30, goalY = -30;              // scoring spot: inches from centre (- y = our half)
     public static double goalHeading = 45;                      // facing there, degrees
-    public static double parkX = -56, parkY = -36;              // the park spot, inches (driveTo)
+    public static double parkX = -56, parkY = -36;              // park spot: inches from centre (- y = our half)
     // Several autos (guides/autos.md): the cycle, and the FAR start's way to the near side.
     public static double pickupInches = 20;                     // drive onto a piece
     public static double offWallInches = 12;                    // back off the wall
@@ -2593,8 +2593,8 @@ public static class Odometry {                                  // a fixed name:
     public static boolean checked = false;                      // true after the Odometry Tuner's Loop test
     // "Set pose here" (TeleOp: hold gamepad 1 START 1 s with the robot on this spot). Inches and
     // degrees seen from your wall, written for BLUE like a start spot: our left corner tile, facing the field.
-    public static double resetX = -56;                          // inches across the field
-    public static double resetY = -61;                          // inches from your wall
+    public static double resetX = -56;                          // inches right of centre, - = left
+    public static double resetY = -61;                          // inches from centre, - = our half
     public static double resetHeading = 0;                      // degrees, 0 = facing the field
     // RED: false = the same numbers from the red wall (BIOBUZZ's field is turned half a turn);
     // true (or left out) = mirrored left-right, for a mirrored field.

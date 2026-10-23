@@ -16,7 +16,7 @@ public class Tunables {
         public static double practiceMaxPower = 0.4;                // top wheel power in PRACTICE (0.6)
         public static double slowSpeed = DEFAULT_FROM_CATALOG;      // top power with the slow trigger held (0.3)
         // The library's defaults until you tune them (strafeCorrection: the Drive Tuner, lesson 6).
-        public static double strafeCorrection = DEFAULT_FROM_CATALOG; // sideways moves: Drive Tuner (1.15)
+        public static double strafeCorrection = DEFAULT_FROM_CATALOG; // not used: a tank drive cannot strafe (1.15)
         public static double turnKp = DEFAULT_FROM_CATALOG;         // auto turns: push per degree off (0.012)
         public static double turnKd = DEFAULT_FROM_CATALOG;         // auto turns: brake near the end (0.003)
         public static double moveMinPower = DEFAULT_FROM_CATALOG;   // auto: least power that moves it (0.30)

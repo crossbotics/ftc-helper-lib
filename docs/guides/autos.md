@@ -110,9 +110,9 @@ public static class Auto {
     public static double leaveInches = 24;                      // drive off the start line
     public static double toGoalInches = 30;                     // drive to the goal
     public static double parkInches = 20;                       // drive into the park zone
-    public static double goalX = -30, goalY = -30;              // the scoring spot, inches (driveTo)
+    public static double goalX = -30, goalY = -30;              // scoring spot: inches from centre (- y = our half)
     public static double goalHeading = 45;                      // facing there, degrees
-    public static double parkX = -56, parkY = -36;              // the park spot, inches (driveTo)
+    public static double parkX = -56, parkY = -36;              // park spot: inches from centre (- y = our half)
     // Several autos (guides/autos.md): the cycle, and the FAR start's way to the near side.
     public static double pickupInches = 20;                     // drive onto a piece
     public static double offWallInches = 12;                    // back off the wall

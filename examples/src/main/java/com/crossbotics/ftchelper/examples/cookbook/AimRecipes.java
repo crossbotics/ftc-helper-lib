@@ -42,8 +42,8 @@ public class AimRecipes {
             // The goal on the field, in inches, seen from your drivers' wall (the same numbers as
             // driveTo): with odometry, aiming goes on when the camera loses the goal. BIOBUZZ: your
             // HIVE's CELL that is up at the start (13 in right of the centre line, 13 in toward you).
-            public static double goalX = 13;                            // inches across the field (BIOBUZZ)
-            public static double goalY = -13;                           // inches from your wall (BIOBUZZ)
+            public static double goalX = 13;                            // inches right of centre (BIOBUZZ)
+            public static double goalY = -13;                           // inches from centre, - = our half (BIOBUZZ)
             public static boolean mirrorForRed = false;                 // BIOBUZZ: turned, not mirrored (true)
             public static double turnKp = DEFAULT_FROM_CATALOG;         // whole-robot aim: push per degree off (0.02)
             public static double turnKd = DEFAULT_FROM_CATALOG;         // brake near the goal (0.002)

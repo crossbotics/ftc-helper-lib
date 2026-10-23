@@ -78,8 +78,8 @@ public class ButtonRecipes {
             // end recipe
 
             // recipe: button-pair
-            // Hold RB (the "shift key"), then press D-pad up. For big jobs that must not run by accident.
-            g1.rb.with(g1.dpadUp, () -> robot.lift.goTo("high")).says("lift to the top");
+            // Hold RB (the "shift key"), then press D-pad up: for a job that must not run by accident.
+            g1.rb.with(g1.dpadUp, () -> robot.lift.goTo("high")).says("lift to high");
             // end recipe
 
             // recipe: rumble-when

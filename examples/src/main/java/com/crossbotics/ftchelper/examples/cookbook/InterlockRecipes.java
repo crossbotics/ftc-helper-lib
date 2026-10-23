@@ -32,8 +32,8 @@ public class InterlockRecipes {
     public static class Numbers {
         // recipe: tunables-turret-switch
         public static class Turret {                                    // "turret" in the configuration
-            public static double min = MEASURE;                         // degrees (0 = forward, counterclockwise +):
-            public static double max = MEASURE;                         // as far as the wires allow (Motor Finder)
+            public static double min = MEASURE;                         // furthest right, degrees (Motor Finder)
+            public static double max = MEASURE;                         // furthest left, degrees: 0 = forward, + = left
             public static double homeAngle = MEASURE;                   // where the switch closes (turret-setup.md)
             public static double homingPower = DEFAULT_FROM_CATALOG;    // how slowly it looks for the switch (0.2)
             public static double homingTimeout = DEFAULT_FROM_CATALOG;  // the most seconds it looks (5)
@@ -189,8 +189,8 @@ public class InterlockRecipes {
         public static class Aim {                                       // a fixed name: always Aim
             // Where the goal is, seen from YOUR drivers' wall (inches; the same numbers as driveTo).
             // BIOBUZZ: your HIVE's CELL that is up at the start.
-            public static double goalX = 13;                            // inches across the field (BIOBUZZ)
-            public static double goalY = -13;                           // inches from your wall (BIOBUZZ)
+            public static double goalX = 13;                            // inches right of centre (BIOBUZZ)
+            public static double goalY = -13;                           // inches from centre, - = our half (BIOBUZZ)
             public static boolean mirrorForRed = false;                 // BIOBUZZ's field is turned, not mirrored
         }
         // end recipe

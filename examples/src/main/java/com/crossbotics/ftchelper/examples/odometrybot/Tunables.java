@@ -27,8 +27,8 @@ public class Tunables {
      */
     public static class Odometry {
         public static boolean checked = false;                      // true after the Odometry Tuner's loop test
-        public static double resetX = -56;                          // "set pose here" spot: inches across the field
-        public static double resetY = -61;                          // "set pose here" spot: inches from the centre
+        public static double resetX = -56;                          // pose spot: inches right of centre
+        public static double resetY = -61;                          // pose spot: inches from centre, - = our half
         public static double resetHeading = 0;                      // heading there, degrees: 0 = facing the field
         public static boolean mirrorForRed = false;                 // BIOBUZZ: false
     }
@@ -40,10 +40,10 @@ public class Tunables {
 
     /** Field points for the autonomous (inches, seen from your drivers' wall, written for BLUE). */
     public static class Auto {
-        public static double goalX = -30;                           // the scoring spot: inches across the field
-        public static double goalY = -30;                           // the scoring spot: inches from the centre
+        public static double goalX = -30;                           // scoring spot: inches right of centre
+        public static double goalY = -30;                           // scoring spot: inches from centre, - = our half
         public static double goalHeading = 45;                      // facing there, degrees
-        public static double parkX = -56;                           // the park spot: inches across the field
-        public static double parkY = -36;                           // the park spot: inches from the centre
+        public static double parkX = -56;                           // park spot: inches right of centre
+        public static double parkY = -36;                           // park spot: inches from centre, - = our half
     }
 }

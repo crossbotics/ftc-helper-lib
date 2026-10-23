@@ -2,6 +2,19 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Fixed
+
+- **Field numbers explained right:** comments on `goalX`/`goalY`, `parkX`/`parkY` and `resetX`/`resetY`
+  said "inches from your wall"; they are inches right of the field's centre (x) and from the centre
+  toward the far wall (y, negative = your half), as in lesson 7.
+- Tank-drive example robots (and lesson 1): `strafeCorrection` says it is not used (a tank drive
+  cannot strafe).
+- Turret `min`/`max` comments: one plain comment each (furthest right, furthest left).
+- The double-tap and hold recipe shows a real change (0.45 s, 0.4 s) instead of the defaults; the
+  shift-key recipe's text matches its example.
+
 ## v0.17.4 - 2026-10-22
 
 The Cookbook says which file each piece of code goes in.
