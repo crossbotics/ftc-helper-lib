@@ -335,7 +335,7 @@
     const p = $("#editPanel");
     if (!info) { p.innerHTML = ""; return; }
     const list = info.shapes.map((s) => `<button class="e-chip${s.name === sel ? " on" : ""}${edits[s.name] ? " changed" : ""}" data-pick="${esc(s.name)}"
-      title="${esc(s.part || "robot file")}">${esc(s.name)}${s.where === "guess" ? ' <span class="e-tag">guess</span>' : ""}${edits[s.name] ? " *" : ""}</button>`).join("");
+      title="${esc(s.name + ": " + (s.part || "robot file"))}">${esc(s.name)}${s.where === "guess" ? ' <span class="e-tag">guess</span>' : ""}${edits[s.name] ? " *" : ""}</button>`).join("");
     p.innerHTML = `
       <p class="muted e-intro">${info.java ? `Shapes from <code>${esc(info.robotClass.split(".").slice(-2).join("."))}</code>. Change them here, then copy the Java into Robot.java.`
         : esc(info.why)} The simulator holds still while you edit.</p>
