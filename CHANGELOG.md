@@ -2,7 +2,10 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
-## Unreleased
+## v0.18.0 - 2026-10-23
+
+"Edit robot" in the simulator: shape your robot with the mouse and copy the Java. Better guessed
+shapes; arms, turrets and hoods take `looks(...)`; simulator tests that run together no longer fail at random.
 
 ### Added
 
