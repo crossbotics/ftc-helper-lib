@@ -44,7 +44,7 @@ public class OptionalFeederTest {
         r.startForTests();
         r.launcher.spinUp();
         r.all().update();
-        assertTrue("the wheel spins", Math.abs(d.motor("launcher").power) > 0);
+        assertTrue("the wheel spins", r.launcher.isSpinning() && d.motor("launcher").velocityCommand > 0);
         r.launcher.fire();
         for (int i = 0; i < 5; i++) r.all().update();
         assertFalse("still not in the configuration (nothing asked for it)", d.has("windmill"));
