@@ -680,7 +680,7 @@ final class SimRobot {
     }
 
     /** What a robot at this pose would overlap ("field wall" or an element's name), or null. */
-    private String blockedAt(double cx, double cy, double h) {
+    String blockedAt(double cx, double cy, double h) {
         for (double[] c : footprint(cx, cy, h)) {
             if (Math.abs(c[0]) > field.wallHalf + 1e-6 || Math.abs(c[1]) > field.wallHalf + 1e-6) return "the field wall";
         }

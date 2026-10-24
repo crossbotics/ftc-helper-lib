@@ -24,11 +24,11 @@ public class SimStartSpotMemoryTest {
         FieldPose blue = SimEngine.forAlliance(red, Alliance.BLUE);
         assertEquals(12, blue.x, 1e-9);
         assertEquals(60, blue.y, 1e-9);
-        assertEquals(270, blue.headingDeg, 1e-9);
+        assertEquals(-90, blue.headingDeg, 1e-9);   // 270, kept between -180 and 180
         FieldPose back = SimEngine.forAlliance(blue, Alliance.BLUE);
         assertEquals(-12, back.x, 1e-9);
         assertEquals(-60, back.y, 1e-9);
-        assertEquals(450, back.headingDeg, 1e-9);   // the same way as 90
+        assertEquals(90, back.headingDeg, 1e-9);
         FieldPose same = SimEngine.forAlliance(red, Alliance.RED);
         assertEquals(red.x, same.x, 1e-9);
     }
@@ -42,5 +42,7 @@ public class SimStartSpotMemoryTest {
         assertEquals(-62.25, got.y, 1e-9);
         assertEquals(0, got.headingDeg, 1e-9);
         assertNull("another autonomous has its own", SimEngine.loadSpot("Score Far"));
+        SimEngine.saveSpot("Score and Park", null);
+        assertNull("forgotten", SimEngine.loadSpot("Score and Park"));
     }
 }

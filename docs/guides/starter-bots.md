@@ -421,9 +421,9 @@ What they changed, and what each change needed:
 | a flywheel on a sliding mount and a ramp that sends shots out of the back | none | only shapes and the shot angle (`.shotAngle(147)`) for the simulator |
 | new buttons (B: intake on/off) | none | `Controls.java` |
 
-Their order on the robot was the Quick start's: the Hardware Check, the motor directions, the Servo
-Finder, the Flywheel Finder, the first drive at 0.4 power, each mechanism, then the Drive Tuner and the
-autonomous.
+Their order on the robot was the Quick start's: the Hardware Check, the Servo Finder, the Flywheel
+Finder, then (on a block, at 0.4 power) the motor directions and the first drive, each mechanism, then
+the Drive Tuner and the autonomous.
 
 ## What the simulator could not express (input for its next stages)
 

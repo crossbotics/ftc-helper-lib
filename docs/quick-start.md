@@ -289,7 +289,7 @@ went (the loop, "when pressed", "wait") in these files.
    **Why:** Autonomous turns inches into encoder counts with them (an encoder counts how far the motor shaft turned).
 3. **`Robot.java`:** `.imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD)`: which way the Control Hub's logo and USB ports face.
    **Why:** The IMU (a sensor in the hub) measures the heading, the way the robot faces; field-centric driving and autonomous turns use it.
-4. **`Robot.java`:** only if a wheel turns the wrong way (you find out in section 6 below): add `.reversed(...)` listing **every** reversed drive motor, on its own line **before** `.imu(...)` (the STEP 4 comment marks the place).
+4. **`Robot.java`:** only if a wheel turns the wrong way (you find out in section 7, step 4, below): add `.reversed(...)` listing **every** reversed drive motor, on its own line **before** `.imu(...)` (the STEP 4 comment marks the place).
    **Why:** The list replaces the default (the left side reversed); `.imu(...)` ends the drive line with `));`, so a `.reversed(...)` after it does not build.
 5. **`Robot.java`:** your mechanisms: keep, delete or add `add(...)` lines (and a field for each). On each line, `.part("gobilda-5203-1150")`: your motor's or servo's id (on its label; optional but recommended). No intake? Also delete the `g2.dpadLeft` line in `Controls.java` and `spitOut` in `Actions.java`.
    **Why:** Each part brings its numbers and buttons; with `.part(...)` its starting values are that part's real numbers, and the simulator moves it like the real one.
@@ -338,8 +338,8 @@ Guessing them can push a part into the frame. **So the finders come before the f
 
 - **Road 3:** every `MEASURE` in `Tunables.java`. Your TeleOp and autos stop at INIT on each one and
   name the finder to use. The finders still run: they do not read `Tunables.java`.
-- **Road 1 and 2:** the starter bot's files have no `MEASURE`, but some numbers are the seller's or our
-  guesses. Your starter bot's notes list them ([REV](guides/starter-bots.md#rev-bot-code),
+- **Road 1 and 2:** the REV bot has two `MEASURE` numbers (its poker's `up` and `down`): INIT stops on
+  them. The other starter bots have none, but some numbers are the seller's or our guesses. Your starter bot's notes list them ([REV](guides/starter-bots.md#rev-bot-code),
   [goBILDA](guides/starter-bots.md#gobilda-bot-code), [AndyMark](guides/starter-bots.md#andymark-bot-code),
   [Studica](guides/starter-bots.md#studica-bot-code)). Measure every servo position on that list
   before the first TeleOp (REV's poker, Studica's flap). Road 2: also every part you added.
@@ -372,9 +372,11 @@ How:
    direction can make the robot spin or drive off the table.
 4. Left stick up: every wheel must roll the way that moves the robot forward. A wheel rolls backward?
    Fix STEP 4 ([how to check each wheel](tutorials/start/02-drive.md#7-check-the-motor-directions)).
-5. On the floor: left stick drives (and strafes on mecanum), right stick turns, LT slows down.
+5. On the floor, with space around the robot and one person's hand on STOP: left stick drives (and
+   strafes on mecanum), right stick turns, LT slows down.
 6. Tap BACK: everything stops (PAUSED); tap again to go on. Tap GUIDE to see every button.
-7. **Each mechanism, one at a time**, on the floor: tap GUIDE for its buttons, then try each one.
+7. **Each mechanism, one at a time**, on the floor, hand on STOP: tap GUIDE for its buttons, then try
+   each one.
    A flywheel: eye protection, nobody in front of it. Something moves the wrong way? Add or take away
    `.reversed()` on its line in `Robot.java`.
 
