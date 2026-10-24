@@ -64,7 +64,7 @@ public abstract class RobotDefinition {
     // Your own OpMode (init(op) ... stop()): the OpMode, and the drive made for driveWith().
     private com.qualcomm.robotcore.eventloop.opmode.OpMode ownOpMode = null;
     // The Driver Hub's screen of the OpMode running now (for show()). Set at the first INIT loop.
-    private com.crossbotics.ftchelper.telemetry.RobotTelemetry screen = null;
+    com.crossbotics.ftchelper.telemetry.RobotTelemetry screen = null;
     private com.crossbotics.ftchelper.drive.DriverControls ownDriving = null;
     // The team's own parts and per-loop code (addOwn, everyLoop), updated after the library's parts.
     private final List<com.crossbotics.ftchelper.core.Subsystem> own = new ArrayList<>();
