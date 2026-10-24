@@ -6,6 +6,12 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
+- **The battery while tuning.** The tuning menu shows the battery, warns below 12.5 V, and notes the
+  volts with each change: the copy lines say `Lift: kF = 0.06   // tuned at 12.7 V`, and the INIT list
+  of tuned values says it too. The Drive Tuner, the Characterizer and the Shot Tuner show the battery
+  and warn when it is low (the Flywheel Finder already did). Every finder writes the battery at START in
+  the results file. **Why:** a power tuned on a low battery is too strong on a charged one.
+
 - **The Simulator button opens the page.** When the simulator is ready, http://localhost:8780 opens in
   your browser. If no browser opens, the address in the Run window is a link: click it. In the Terminal,
   `./gradlew :sim:run -Popen` does the same (without `-Popen` nothing opens, as before).
