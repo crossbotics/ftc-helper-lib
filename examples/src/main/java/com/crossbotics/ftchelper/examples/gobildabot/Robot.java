@@ -28,9 +28,11 @@ public class Robot extends RobotDefinition {
                 .imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD));
 
         // The roller (117 RPM motor) and the two corner wheels run together, as in goBILDA's code.
+        // It carries 4 POLLEN and no NECTAR (too big for it): count yours by hand.
         intake = add(Intake.motor("intake").part("gobilda-5203-117")
                 .withCrServos("left_intake_servo", "right_intake_servo")
-                .reversed("right_intake_servo"));
+                .reversed("right_intake_servo")
+                .holds(4).holds(0, "NECTAR"));
 
         // Launcher: a 312 RPM motor without its gearbox (= 6000 RPM). Windmill: reversed, as in goBILDA's code.
         launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")

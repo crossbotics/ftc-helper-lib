@@ -49,6 +49,9 @@ final class SimPieces {
         final String[] shapes;   // shape=a+b+c: pieces come in at any of them
         final double threshold, reach;   // reach: a piece this close to the shape (inches) can be taken in
         final int holds;
+        // limits=NECTAR:0+POLLEN:3: the most of a kind (0 = never that kind); a name matches every kind
+        // that contains it ("NECTAR": red and blue NECTAR).
+        final Map<String, Integer> limits = new LinkedHashMap<>();
 
         Collect(String name, Map<String, String> s) {
             this.name = name;
@@ -60,6 +63,30 @@ final class SimPieces {
             threshold = 0.2 * ("-".equals(s.get("inward")) ? -1 : 1);
             holds = (int) num(s, "holds", 4, "collect." + name);
             reach = num(s, "reach", 0.75, "collect." + name);
+            String l = s.get("limits");
+            if (l != null && !l.trim().isEmpty()) {
+                for (String part : l.split("\\s*\\+\\s*")) {
+                    int c = part.lastIndexOf(':');
+                    try {
+                        limits.put(part.substring(0, c).trim(), Integer.parseInt(part.substring(c + 1).trim()));
+                    } catch (RuntimeException e) {
+                        throw new IllegalArgumentException("Robot file: collect." + name + ": limits= is PIECE:COUNT+PIECE:COUNT (e.g. limits=NECTAR:0)");
+                    }
+                }
+            }
+        }
+
+        /** True if a piece of this kind still fits, with these pieces inside: the total and its kind's limit. */
+        boolean canTake(SimField.PieceType t, List<SimField.PieceType> inside) {
+            if (inside.size() >= holds) return false;
+            for (Map.Entry<String, Integer> e : limits.entrySet()) {
+                Map<String, Integer> one = java.util.Collections.singletonMap(e.getKey(), 0);
+                if (com.crossbotics.ftchelper.robot.Intake.limitFor(one, t.name) < 0) continue;
+                int n = 0;
+                for (SimField.PieceType h : inside) if (com.crossbotics.ftchelper.robot.Intake.limitFor(one, h.name) >= 0) n++;
+                return n < e.getValue();
+            }
+            return true;
         }
     }
 
@@ -315,14 +342,24 @@ final class SimPieces {
             if (!preloaded) {
                 // no preload: the robot starts empty
             } else if (!collects.isEmpty() || !shoots.isEmpty()) {
-                // never more than the intake holds (collect.NAME = ..., holds=3 takes 3 of a 4-piece preload)
-                int room = Integer.MAX_VALUE;
-                if (!collects.isEmpty()) {
-                    room = 0;
-                    for (Collect c : collects) room = Math.max(room, c.holds);
-                }
+                // Never more than the intake holds, nor a kind it cannot take (collect.NAME = ..., holds=3 takes 3
+                // of a 4-piece preload): the rest waits on the tiles behind the robot, touching it, as the rules
+                // allow (manual 10.3.1).
+                int k = 0;
                 for (Map.Entry<String, Integer> e : robot.field.preload.entrySet()) {
-                    for (int i = 0; i < e.getValue() && stored.size() < room; i++) stored.add(robot.field.pieceTypes.get(e.getKey()));
+                    SimField.PieceType t = robot.field.pieceTypes.get(e.getKey());
+                    for (int i = 0; i < e.getValue(); i++) {
+                        boolean fits = collects.isEmpty();
+                        for (Collect c : collects) if (c.canTake(t, stored)) fits = true;
+                        if (fits) {
+                            stored.add(t);
+                        } else {
+                            double[] at = toField(new double[] {-robot.lengthIn / 2 - t.diameterIn / 2 - 0.1,
+                                    (k - 1.5) * (t.diameterIn + 0.2), t.diameterIn / 2});
+                            world.addBall(t, at[0], at[1], at[2], 0, 0, 0);
+                            k++;
+                        }
+                    }
                 }
             } else if (!grabs.isEmpty()) {
                 int k = 0;
@@ -604,7 +641,7 @@ final class SimPieces {
                 boolean taken = false;
                 double[] bp = world.ballPos(b);
                 for (Collect c : collects) {
-                    if (stored.size() >= c.holds || !(touchesAny(b, c.shapes) || nearAny(c.shapes, bp, b.type.diameterIn / 2, c.reach))) continue;
+                    if (!c.canTake(b.type, stored) || !(touchesAny(b, c.shapes) || nearAny(c.shapes, bp, b.type.diameterIn / 2, c.reach))) continue;
                     // the power after the motor's (or CR servo's) direction setting, for both
                     double power = c.motor != null ? robot.motors.get(c.motor).appliedPower
                             : robot.crServos.get(c.crservo)[0] * (robot.crServos.get(c.crservo)[1] == 1 ? -1 : 1);
@@ -754,7 +791,7 @@ final class SimPieces {
                 double r = type.diameterIn / 2, depth = stackDepth.get(i);
                 boolean taken = false;
                 for (Collect c : collects) {
-                    if (stored.size() >= c.holds || !nearAny(c.shapes, p, r, c.reach + depth)) continue;
+                    if (!c.canTake(type, stored) || !nearAny(c.shapes, p, r, c.reach + depth)) continue;
                     double power = c.motor != null ? robot.motors.get(c.motor).appliedPower
                             : robot.crServos.get(c.crservo)[0] * (robot.crServos.get(c.crservo)[1] == 1 ? -1 : 1);
                     if (c.threshold > 0 ? power >= c.threshold : power <= c.threshold) {

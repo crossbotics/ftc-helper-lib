@@ -454,6 +454,13 @@ public abstract class RobotDefinition {
         // before the autonomous reads them to build its steps.
         // The interlock rules' numbers (read once: not changeable live, see Interlock).
         for (Interlock r : interlocks.rules) r.build(TunableSection.of(tunablesClass, r.name()), this);
+        // The piece count learns what the intake holds (Intake.holds): "full" at that number unless
+        // Pieces.max says another, and its kind limits ("NECTAR": 0).
+        Intake intake = null;
+        for (Module<?> m : modules) if (m instanceof Intake && !m.missing && intake == null) intake = (Intake) m;
+        if (intake != null) {
+            for (Module<?> m : modules) if (m instanceof Pieces) ((Pieces) m).fromIntake(intake.holdsInAll(), intake.kindLimits());
+        }
         // Drive, Odometry (scales, "checked"), Buttons (gesture times), Aim (goal point), every part and rule.
         Set<String> used = usedSections();
         usedAtSetup = used;

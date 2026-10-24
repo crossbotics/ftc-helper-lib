@@ -36,6 +36,8 @@ public final class Intake extends Module<Intake> implements Toggleable {
     private final List<String> extraCrServos = new ArrayList<>();
     private boolean onAtStart = false;
     private int holds = 0;                // 0 = not given
+    // Limits for some kinds of piece ("NECTAR" -> 0: it cannot hold a NECTAR), in the order given.
+    private final java.util.Map<String, Integer> kindLimits = new java.util.LinkedHashMap<>();
 
     private final List<DcMotorEx> motors = new ArrayList<>();
     private final List<CRServo> crServos = new ArrayList<>();
@@ -97,7 +99,10 @@ public final class Intake extends Module<Intake> implements Toggleable {
     }
 
     /**
-     * How many game pieces it can hold at once (for the simulator; default: a guess of 3).
+     * How many game pieces it can hold at once: count them by hand (load pieces until no more fit). The
+     * simulator uses it, and so does the robot's piece count ({@link Pieces}: "full" at this number unless
+     * its {@code max} says another). Above the game's limit (BIOBUZZ G407: 4) INIT warns. Default: a guess
+     * of 3 (simulator only).
      *
      * @param pieces e.g. 4
      */
@@ -105,6 +110,56 @@ public final class Intake extends Module<Intake> implements Toggleable {
         if (pieces < 1) throw new IllegalArgumentException("Intake.holds: at least 1");
         holds = pieces;
         return this;
+    }
+
+    /**
+     * How many pieces of one kind it can hold, for a robot where the kinds differ: 0 = it cannot take that
+     * kind at all (goBILDA's starter bot and a NECTAR). A name matches every kind that contains it, any
+     * case: "NECTAR" is red and blue NECTAR. Give the total with {@link #holds(int)} too, for a mix
+     * ({@code .holds(4).holds(1, "NECTAR")}: 4 pieces, at most 1 of them a NECTAR); without it, the total is
+     * the largest of these numbers.
+     *
+     * @param pieces 0 or more
+     * @param kind   e.g. "NECTAR", "POLLEN"
+     */
+    public Intake holds(int pieces, String kind) {
+        if (pieces < 0) throw new IllegalArgumentException("Intake.holds(" + pieces + ", \"" + kind + "\"): 0 or more");
+        if (kind == null || kind.trim().isEmpty()) throw new IllegalArgumentException("Intake.holds(n, kind): name the kind, e.g. \"NECTAR\"");
+        kindLimits.put(kind.trim(), pieces);
+        return this;
+    }
+
+    /** How many pieces it holds in all (0 = not given): {@link #holds(int)}, else the largest kind limit. */
+    public int holdsInAll() {
+        if (holds > 0) return holds;
+        int most = 0;
+        for (int n : kindLimits.values()) most = Math.max(most, n);
+        return most;
+    }
+
+    /** The kind limits from {@link #holds(int, String)} (a copy; empty = none). */
+    public java.util.Map<String, Integer> kindLimits() {
+        return new java.util.LinkedHashMap<>(kindLimits);
+    }
+
+    /**
+     * The limit for one kind of piece from {@link #holds(int, String)} (the first name it contains), or -1
+     * when no limit names it.
+     *
+     * @param kind a piece kind, e.g. "RED_NECTAR" or "red NECTAR"
+     */
+    public int limitFor(String kind) {
+        return limitFor(kindLimits, kind);
+    }
+
+    /** The limit in {@code limits} whose name is in {@code kind} (letters only, any case), or -1. */
+    public static int limitFor(java.util.Map<String, Integer> limits, String kind) {
+        if (kind == null) return -1;
+        String k = kind.replaceAll("[^A-Za-z0-9]", "").toUpperCase(java.util.Locale.US);
+        for (java.util.Map.Entry<String, Integer> e : limits.entrySet()) {
+            if (k.contains(e.getKey().replaceAll("[^A-Za-z0-9]", "").toUpperCase(java.util.Locale.US))) return e.getValue();
+        }
+        return -1;
     }
 
     /**
@@ -353,7 +408,24 @@ public final class Intake extends Module<Intake> implements Toggleable {
         }
         for (String n : extraCrServos) out.add("crservo." + n + " =");
         // The pieces come in at every roller and spinner while the motor (or first CR servo) turns inward.
+        int all = holdsInAll();
+        StringBuilder limits = new StringBuilder();
+        for (java.util.Map.Entry<String, Integer> e : kindLimits.entrySet()) {
+            limits.append(limits.length() == 0 ? ", limits=" : "+").append(e.getKey().replace(' ', '_')).append(':').append(e.getValue());
+        }
         out.add("collect." + device + " = shape=" + spinningShapeNames() + ", " + (servos ? "crservo=" : "motor=")
-                + names[0] + ", holds=" + (holds > 0 ? holds : 3 + "   # TODO how many it holds"));
+                + names[0] + ", holds=" + (all > 0 ? all + limits.toString() : 3 + limits.toString() + "   # TODO how many it holds"));
+    }
+
+    // INIT: more than the game allows at a time (BIOBUZZ G407: 4).
+    @Override
+    List<String> notes() {
+        List<String> out = super.notes();
+        int all = holdsInAll();
+        if (all > Pieces.GAME_LIMIT) {
+            out.add("!! " + name() + ".holds(" + all + "): the game allows " + Pieces.GAME_LIMIT
+                    + " pieces at a time (BIOBUZZ G407). Stop it at " + Pieces.GAME_LIMIT + " (Pieces and stopsWhen)");
+        }
+        return out;
     }
 }

@@ -48,6 +48,12 @@ public final class Pieces extends Module<Pieces> {
     private final List<String> kinds;
     private PieceSensor in = null, ready = null;
     private int max = 0;                 // 0 = no limit
+    // The intake's numbers (Intake.holds), used when max(...) is not given; kind limits always.
+    private int intakeHolds = 0;
+    private java.util.Map<String, Integer> kindLimits = new java.util.LinkedHashMap<>();
+
+    /** The most pieces the game allows a robot at a time (BIOBUZZ G407). */
+    public static final int GAME_LIMIT = 4;
     private final List<String> startWith = new ArrayList<>();
     // The pieces held, oldest first: the first one is the next to fire.
     private final List<String> held = new ArrayList<>();
@@ -321,9 +327,42 @@ public final class Pieces extends Module<Pieces> {
         return next().equals(kind);
     }
 
-    /** True when it holds {@link #max} pieces (or more). False with no max. */
+    /**
+     * True when it holds {@link #max} pieces (or more); without a max, the intake's {@code holds(n)}. False
+     * with neither.
+     */
     public boolean isFull() {
-        return max > 0 && held.size() >= max;
+        int limit = limit();
+        return limit > 0 && held.size() >= limit;
+    }
+
+    /**
+     * True when no more of this kind fits: the robot is full, or it holds as many of this kind as the
+     * intake's {@code holds(n, kind)} allows (0 = never this kind).
+     *
+     * @param kind e.g. "RED_NECTAR"
+     */
+    public boolean isFullFor(String kind) {
+        if (isFull()) return true;
+        for (java.util.Map.Entry<String, Integer> e : kindLimits.entrySet()) {
+            java.util.Map<String, Integer> one = java.util.Collections.singletonMap(e.getKey(), 0);
+            if (Intake.limitFor(one, kind) < 0) continue;
+            int n = 0;
+            for (String h : held) if (Intake.limitFor(one, h) >= 0) n++;   // red and blue NECTAR count together
+            return n >= e.getValue();
+        }
+        return false;
+    }
+
+    // The limit in use: max(...), else the intake's holds(n); 0 = none.
+    private int limit() {
+        return max > 0 ? max : intakeHolds;
+    }
+
+    /** Set up by the robot (RobotDefinition): the intake's holds(n) and its kind limits. */
+    void fromIntake(int holds, java.util.Map<String, Integer> limits) {
+        intakeHolds = holds;
+        kindLimits = new java.util.LinkedHashMap<>(limits);
     }
 
     /** True when it holds none. */
@@ -356,9 +395,9 @@ public final class Pieces extends Module<Pieces> {
         return ready;
     }
 
-    /** The limit from {@link #max(int)} (0 = none). */
+    /** The limit in use: {@link #max(int)}, else the intake's {@code holds(n)} (0 = none). */
     public int maxPieces() {
-        return max;
+        return limit();
     }
 
     // ----------------------------- hooks -----------------------------
@@ -423,8 +462,14 @@ public final class Pieces extends Module<Pieces> {
 
     @Override
     public void addTelemetry(RobotTelemetry t) {
-        if (max > 0 && held.size() > max) t.warn("Pieces: holding " + held.size() + ", more than " + max);
-        t.line("Pieces", held.size() + (max > 0 ? "/" + max : "") + ", next " + next());
+        int limit = limit();
+        if (limit > 0 && held.size() > limit) t.warn("Pieces: holding " + held.size() + ", more than " + limit);
+        for (java.util.Map.Entry<String, Integer> e : kindLimits.entrySet()) {
+            int n = 0;
+            for (String h : held) if (Intake.limitFor(java.util.Collections.singletonMap(e.getKey(), 0), h) >= 0) n++;
+            if (n > e.getValue()) t.warn("Pieces: holding " + n + " " + e.getKey() + ", the intake holds " + e.getValue());
+        }
+        t.line("Pieces", held.size() + (limit > 0 ? "/" + limit : "") + ", next " + next());
         t.debug("  held", held.toString());
         t.debug("  in/fired/pushed out", totalIn + " / " + totalOut + " / " + pushedOut);
         if (in != null) in.addTelemetry(t);
