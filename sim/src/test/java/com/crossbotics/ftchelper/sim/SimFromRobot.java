@@ -91,7 +91,9 @@ public final class SimFromRobot {
             System.exit(1);
         }
         System.out.println("Wrote " + file + (existed ? "" : " (new)") + ".");
-        for (String k : r.kept) System.out.println("  kept your " + k + " (it is not marked " + MARK + ")");
+        for (String k : r.kept) {
+            System.out.println("  kept your " + k + (k.contains(" = ") ? "" : " (it is not marked " + MARK + ")"));
+        }
         printChanged(r, file);
         if (r.text.contains("TODO")) System.out.println("  Lines with TODO are guesses: measure them (docs/guides/simulator.md).");
         int standIns = 0;
@@ -342,9 +344,10 @@ public final class SimFromRobot {
                 if (gen.containsKey(k) && !teamKeys.containsKey(k) && written.add(k)) {
                     String g = gen.get(k);
                     String was = value(line), now = value(g);
-                    if (!guess && !was.equals(now) && codeGuesses(g)) {
+                    if (!guess && !was.equals(now) && codeGuesses(g) && codeGuesses(line)) {
                         // The code only guesses this number (TODO, or a MEASURE stand-in): the team's edit wins.
                         outLines.add(line);
+                        kept.add(k + " = " + was + " (the code guesses " + now + ")");
                     } else {
                         if (!guess && !was.equals(now)) changed.add(k + ": " + was + " -> " + now);
                         outLines.add(g);

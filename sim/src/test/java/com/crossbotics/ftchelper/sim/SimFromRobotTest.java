@@ -92,6 +92,7 @@ public class SimFromRobotTest {
         assertTrue("a stand-in the team changed stays: " + r.text, r.text.contains("tunable.Claw.open = 0.31 "));
         assertTrue("a number the code gives wins: " + r.text, r.text.contains("drive.wheelDiameterIn = 4 "));
         assertEquals(Collections.singletonList("drive.wheelDiameterIn: 3.8 -> 4"), r.changed);
+        assertEquals(Arrays.asList("drive.trackWidthIn = 15.2 (the code guesses 0)", "tunable.Claw.open = 0.31 (the code guesses 0.5)"), r.kept);
     }
 
     @Test public void runningItAgainNeverAddsAnotherBlock() {
