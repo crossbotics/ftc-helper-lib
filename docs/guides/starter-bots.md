@@ -199,7 +199,9 @@ five files. Part by part:
 
 - Drive: one motor per side; the right one runs reversed, as in goBILDA's code.
 - Intake: the roller's motor is the 117 RPM Yellow Jacket (50.9:1, 5203-2402-0051). The two corner
-  wheels are goBILDA Speed servos in CR mode; they run with the roller, as in goBILDA's code.
+  wheels are goBILDA Speed servos in CR mode; they run with the roller, as in goBILDA's code. It carries
+  4 POLLEN and no NECTAR (too big for it): `.holds(4).holds(0, "NECTAR")`, so the simulator's intake
+  does not take a NECTAR. Count yours by hand ([Quick start, section 6](../quick-start.md#6-measure-the-numbers)).
 - Launcher: a 312 RPM motor with its gearbox taken off (1:1, 28 counts per turn). That is the
   6000 RPM motor's numbers, so its id is `gobilda-5203-6000`.
 - Windmill: a 2000 Series Torque servo (2000-0025-0002) in CR mode. It runs reversed, as in goBILDA's
@@ -370,6 +372,9 @@ robot file and the notes on this page all use them.
 4. **Buttons:** each part brings its own buttons. Move one, or add a job, in `Controls.java`
    ([lesson 3](../tutorials/start/03-buttons.md)). Several parts together: an action in `Actions.java`
    ([lesson 5](../tutorials/start/05-actions.md)).
+5. **Changed the intake, or where the pieces ride?** Count again how many fit (POLLEN, NECTAR, a mix)
+   and change `.holds(...)` on the intake's line
+   ([Quick start, section 6, step 5](../quick-start.md#6-measure-the-numbers)).
 
 ### A part taken off
 

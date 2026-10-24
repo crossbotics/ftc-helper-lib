@@ -251,8 +251,9 @@ public final class SimFromRobot {
     }
 
     /**
-     * An intake without {@code .holds(n)} gets "holds=3   # TODO" from the code; when the robot counts its
-     * pieces ({@code Pieces.max(n)}), that limit is how many it holds, so use it instead of the guess.
+     * An intake without {@code .holds(n)} gets the game's limit as a guess ("holds=4 ... # TODO") from the
+     * code; when the robot counts its pieces ({@code Pieces.max(n)}), that limit is how many it holds, so use
+     * it instead of the guess.
      */
     static List<String> holdsFromPieces(List<String> lines, RobotDefinition robot) {
         int max = 0;
@@ -260,11 +261,10 @@ public final class SimFromRobot {
             if (m instanceof com.crossbotics.ftchelper.robot.Pieces) max = Math.max(max, ((com.crossbotics.ftchelper.robot.Pieces) m).maxPieces());
         }
         if (max <= 0) return lines;
+        java.util.regex.Pattern guess = java.util.regex.Pattern.compile(", holds=\\d+((?:, limits=\\S+)?)   # TODO how many it holds.*$");
         List<String> out = new ArrayList<>();
         for (String l : lines) {
-            if (l.startsWith("collect.") && l.contains(", holds=3   # TODO how many it holds")) {
-                l = l.replace(", holds=3   # TODO how many it holds", ", holds=" + max + "   # Pieces.max");
-            }
+            if (l.startsWith("collect.")) l = guess.matcher(l).replaceFirst(", holds=" + max + "$1   # Pieces.max");
             out.add(l);
         }
         return out;

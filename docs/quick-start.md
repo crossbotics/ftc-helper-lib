@@ -359,6 +359,12 @@ How:
    section of `Tunables.java`, in place of `MEASURE` or the guess
    ([how to read a finder's lines](guides/tunables.md#how-to-read-a-finders-lines)).
 4. Build and install again. INIT no longer stops: every `MEASURE` has its number.
+5. **Count how many pieces fit**, robot off. Load pieces by hand, through the intake as in a match,
+   until no more fit: first POLLEN only, then NECTAR only, then a mix. Write it on the intake's line in
+   `Robot.java`: `.holds(4)`, and for a kind that fits less, `.holds(1, "NECTAR")` (`0` = it cannot take
+   one; goBILDA's starter bot has `.holds(4).holds(0, "NECTAR")`). **Why:** the simulator then takes in
+   only what your robot can, and the piece count says "full" at the right number. More than 4 is against
+   the rules (no more than 4 at a time): INIT warns.
 
 ## 7. Drive, then each mechanism
 

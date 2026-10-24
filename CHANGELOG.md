@@ -2,6 +2,22 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Added
+
+- **How many pieces the robot holds, per kind.** `Intake.holds(n)` is now the one number for the
+  simulator and the robot: the piece count (`Pieces`) says "full" at it unless its `max` says another.
+  New: `holds(n, "NECTAR")` for one kind, `0` = it cannot take that kind (goBILDA's starter bot:
+  `.holds(4).holds(0, "NECTAR")`); with `holds(n)` too it is a mix. The simulator's intake does not take a
+  piece that does not fit (robot file: `limits=NECTAR:0`), `Pieces.isFullFor(kind)` tells, and INIT warns
+  above the game's limit (4 at a time). The Quick start has a new step: count how many fit, by hand.
+
+### Changed
+
+- **Preload pieces that do not fit wait on the tiles** behind the robot, touching it (as the rules
+  allow), instead of disappearing. Without `holds(n)` the simulator now guesses 4 (it was 3).
+
 ## v0.19.0 - 2026-10-24
 
 ### Added

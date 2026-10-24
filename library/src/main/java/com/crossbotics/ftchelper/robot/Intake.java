@@ -101,8 +101,8 @@ public final class Intake extends Module<Intake> implements Toggleable {
     /**
      * How many game pieces it can hold at once: count them by hand (load pieces until no more fit). The
      * simulator uses it, and so does the robot's piece count ({@link Pieces}: "full" at this number unless
-     * its {@code max} says another). Above the game's limit (BIOBUZZ G407: 4) INIT warns. Default: a guess
-     * of 3 (simulator only).
+     * its {@code max} says another). Above the game's limit (BIOBUZZ G407: 4) INIT warns. Without it the
+     * simulator guesses the game's limit (4).
      *
      * @param pieces e.g. 4
      */
@@ -414,7 +414,8 @@ public final class Intake extends Module<Intake> implements Toggleable {
             limits.append(limits.length() == 0 ? ", limits=" : "+").append(e.getKey().replace(' ', '_')).append(':').append(e.getValue());
         }
         out.add("collect." + device + " = shape=" + spinningShapeNames() + ", " + (servos ? "crservo=" : "motor=")
-                + names[0] + ", holds=" + (all > 0 ? all + limits.toString() : 3 + limits.toString() + "   # TODO how many it holds"));
+                + names[0] + ", holds=" + (all > 0 ? all + limits.toString()
+                        : Pieces.GAME_LIMIT + limits.toString() + "   # TODO how many it holds: count them, then .holds(n)"));
     }
 
     // INIT: more than the game allows at a time (BIOBUZZ G407: 4).

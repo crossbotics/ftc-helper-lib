@@ -83,7 +83,7 @@ public class ShapesTest {
         String all = lines(r);
         // a 2 in roller across the front of the guessed 18 in chassis, low: it takes in pieces the robot drives onto
         assertTrue(all, all.contains("shape.intake = roller, at=8,0,2, size=2x14x2, motor=intake   # TODO measure: place and size"));
-        assertTrue(all, all.contains("holds=3   # TODO"));
+        assertTrue(all, all.contains("holds=4   # TODO how many it holds"));
         assertTrue(all, !all.contains("robot.lengthIn"));
     }
 
