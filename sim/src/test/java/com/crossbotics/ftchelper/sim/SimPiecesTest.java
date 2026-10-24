@@ -53,6 +53,34 @@ public class SimPiecesTest {
     @Test public void thePreloadIsNoMoreThanTheIntakeHolds() throws Exception {
         SimRobot r = robot("collect.intake = shape=intake, motor=intake, holds=3\n");
         assertEquals("3 of the 4 POLLEN fit", 3, r.pieces.storedCount());
+        assertEquals("the 4th waits on the tiles, touching the robot (manual 10.3.1)", 31, r.pieces.drawn().size());
+    }
+
+    // A robot that cannot hold a NECTAR (goBILDA's starter bot): its intake takes POLLEN but no NECTAR.
+    @Test public void anIntakeTakesNoKindItCannotHold() throws Exception {
+        SimRobot r = robot("collect.intake = shape=intake, motor=intake, holds=8, limits=NECTAR:0\n");
+        r.setPose(30, -30, 0);
+        r.pieces.place("red NECTAR", 30, -16, 0);
+        r.motors.get("intake").device.setPower(1);
+        r.push(10, 0, 1.0);
+        run(r, 1.5);
+        assertEquals("no NECTAR taken in", 4, r.pieces.storedCount());
+        SimRobot p = robot("collect.intake = shape=intake, motor=intake, holds=8, limits=NECTAR:0\n");
+        p.setPose(30, -30, 0);
+        p.pieces.place("POLLEN", 30, -16, 0);
+        p.motors.get("intake").device.setPower(1);
+        p.push(10, 0, 1.0);
+        run(p, 1.5);
+        assertEquals("a POLLEN still is", 5, p.pieces.storedCount());
+    }
+
+    @Test public void aBadLimitsLineSaysHowToWriteIt() throws Exception {
+        try {
+            robot("collect.intake = shape=intake, motor=intake, holds=4, limits=NECTAR\n");
+            org.junit.Assert.fail();
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("limits= is PIECE:COUNT"));
+        }
     }
 
     @Test public void anIntakeRunningOutPushesTheHeldPiecesOut() throws Exception {
