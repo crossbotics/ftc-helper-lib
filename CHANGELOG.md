@@ -18,9 +18,10 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Fixed
 
-- **Simulator: an autonomous with only the alliance starts on the right side.** An autonomous whose start
-  spot is only in words (like the starter kit's "Score and Park") now starts on the robot file's start for
-  the alliance chosen in INIT. Before, a BLUE autonomous stayed on the RED spot.
+- **Simulator: an autonomous with its start spot in words only says what to do.** For an autonomous like the
+  starter kit's "Score and Park", the robot stays where it is in INIT, and the Driver Hub now says: drag it
+  to its start spot, or give the spot in inches in the code (`s.start("...", x, y, heading)`) so it goes
+  there by itself. Before, it silently stayed (a BLUE autonomous on the RED spot).
 - **Simulator: an autonomous with an error stays chosen.** Before, an error in INIT switched the Driver Hub
   to the autonomous's TeleOp, so pressing INIT again ran the TeleOp.
 

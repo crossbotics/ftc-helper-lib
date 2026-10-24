@@ -154,6 +154,12 @@ final class SimEngine {
 
     private final Object placeLock = new Object();
 
+    // In INIT of an autonomous whose start spot is only in words: what the page says to do ("" = nothing).
+    volatile String placeNote = "";
+    static final String PLACE_NOTE = "This autonomous gives its start spot in words only, so the robot stays where it is: "
+            + "drag it to its start spot on the map. To place it by itself, give the spot in inches in the code: "
+            + "s.start(\"...\", x, y, heading) (the Robot panel shows the numbers for where the robot is now).";
+
     private void placeForInitNow() {
         if (ds.phase() != SimDriverStation.Phase.INIT || ds.current() == null) return;
         String run = ds.current().name + "#" + ds.initCount;
@@ -164,16 +170,17 @@ final class SimEngine {
         boolean auto = "Autonomous".equals(ds.current().kind);
         com.crossbotics.ftchelper.util.FieldPose target;
         if (auto) {
-            // An autonomous that names its start spot goes there. One that names only the alliance (an INIT
-            // menu, with the spot in words): that alliance's default spot, so a BLUE auto starts on the blue
-            // side. One with neither leaves the robot where it is.
+            // An autonomous that names its start spot (in inches) goes there. One that says it only in words
+            // leaves the robot where it is: the page asks the team to drag it there, or to give the spot in
+            // inches in the code (placeNote).
             target = com.crossbotics.ftchelper.match.MatchMemory.placement();
             if (target == null) {
-                com.crossbotics.ftchelper.match.Alliance a = com.crossbotics.ftchelper.match.MatchMemory.chosen();
-                if (a == null) return;
-                target = defaultSpot(a);
+                placeNote = PLACE_NOTE;
+                return;
             }
+            placeNote = "";
         } else {
+            placeNote = "";
             // TeleOp after an autonomous: the robot is where autonomous left it. Without one: once the
             // drivers choose the alliance in INIT, that alliance's default spot.
             if (com.crossbotics.ftchelper.match.MatchMemory.hasAlliance()) return;

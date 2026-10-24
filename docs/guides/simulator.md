@@ -195,8 +195,9 @@ builds an autonomous on the field and runs it with your code: see [The auto buil
 
 **Where the robot starts.** In INIT the robot is put where the program says: an autonomous that names its
 start spot (`s.start(note, x, y, heading)`, or `startSpotIn()` in an EasyAuto) puts it there for the
-alliance chosen in its menu; an autonomous with an alliance menu but its spot only in words
-(`startPosition()`) goes to the robot file's start for that alliance, like a TeleOp; a TeleOp with no autonomous before it puts it at the robot file's start for
+alliance chosen in its menu; an autonomous with its spot only in words (`startPosition()`, or
+`s.start(note, heading)`) leaves the robot where it is, and the Driver Hub asks you to drag it to its
+start spot (or to give the spot in inches in the code, so it goes there by itself); a TeleOp with no autonomous before it puts it at the robot file's start for
 RED, or that spot's mirror image for BLUE, as the drivers choose the alliance (X / B); until they choose,
 it stands on BLUE's spot and the page looks from the blue wall, because the TeleOp says
 `Alliance : BLUE until you choose` (and aims and drives for BLUE). After an

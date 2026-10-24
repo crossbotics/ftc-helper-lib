@@ -485,11 +485,12 @@
     </div>
     <div id="error"></div>
     <div id="standIns" class="status" style="color:var(--warn);white-space:pre-wrap"></div>
+    <div id="placeNote" class="status" style="color:var(--warn);white-space:pre-wrap"></div>
   </section>
 
   <section id="padsSection">
     <div class="row padhead"><h2 style="margin:0">Gamepads</h2>
-      <span class="muted padsHint">On-screen, the keyboard, or your own USB or Bluetooth controller: plug it in, press one of its buttons, choose it in the list.</span>
+      <span class="muted padsHint">On-screen, the keyboard, or your own USB or Bluetooth controller: plug it in and press one of its buttons. The first one found becomes gamepad 1, the next gamepad 2. To change, pick it in the list next to "Gamepad 1" or "Gamepad 2".</span>
       <button id="padsToggle" aria-expanded="true" title="Show or hide the on-screen gamepads (the keyboard, a real controller or a phone still work): more room for the 3D field">Hide gamepads</button></div>
     <div class="pads">
     <div class="pad" data-pad="1">
@@ -1091,6 +1092,8 @@ function render(s) {
   // MEASURE numbers the simulator filled in from the robot file (tunable. lines): the real robot stops on them.
   const standIns = s.standIns || "";
   if ($("#standIns").textContent !== standIns) $("#standIns").textContent = standIns;
+  const placeNote = s.placeNote || "";
+  if ($("#placeNote").textContent !== placeNote) $("#placeNote").textContent = placeNote;
   $("#autoTimer").checked = s.autoTimer;
   $("#teleTimer").checked = s.teleTimer;
   renderHub(s);
