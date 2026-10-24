@@ -52,6 +52,11 @@ android {
         unitTests.all {
             systemProperty 'sim.teamDir', useTeamCode ? robotProject.path : ''
             systemProperty 'ftchelper.dataDir', new File(buildDir, 'sim-data-test').path
+            // A failed test shows its whole message in the console (CI's log), not only "AssertionError at line N".
+            testLogging {
+                events 'failed'
+                exceptionFormat = 'full'
+            }
         }
     }
 }

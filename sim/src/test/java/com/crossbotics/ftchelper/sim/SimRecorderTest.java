@@ -181,6 +181,29 @@ public class SimRecorderTest {
                 0, replayed.failures());
     }
 
+    // The cause of the test above failing now and then on a busy computer (CI): a late loop kept the windmill
+    // running a few ms longer and the simulator shot one piece more than the OpMode fired. Here the loop is
+    // late on purpose: the windmill runs up to 0.1 s longer per feed. The pieces shot must still be the
+    // OpMode's 4, and the report must say 4 (the extra-piece rule itself: SimPiecesTest).
+    @Test public void aLateLoopFiresNoExtraPiece() throws Exception {
+        for (double feedSec : new double[] {0.3, 0.32, 0.36, 0.4}) {
+            SimEngine sim = engine(GOBILDA);   // (the code's Tunables numbers: changed after it)
+            com.crossbotics.ftchelper.examples.gobildabot.Tunables.Windmill.feedSec = feedSec;
+            try {
+                sim.ds.init("goBILDA Bot Launch and Back Up");
+                SimRun.waitFor(() -> sim.ds.screen.updates() > 0, 3);
+                sim.ds.start();
+                assertTrue("the autonomous ends", SimRun.waitFor(() -> sim.ds.phase() == SimDriverStation.Phase.STOPPED, 30));
+                List<String> report = com.crossbotics.ftchelper.match.MatchMemory.lastReport();
+                assertTrue(report.toString(), report.contains("Fire all: done (4 fired)"));
+                assertEquals("feeds of " + feedSec + " s: " + report, 4, sim.robot.pieces.launched());
+            } finally {
+                sim.shutdown();
+                SimScenario.freshMatch();       // the code's numbers again
+            }
+        }
+    }
+
     @Test public void stepsAreMadeFromTapsHoldsAndSweeps() throws Exception {
         SimEngine sim = engine(GOBILDA);
         try {

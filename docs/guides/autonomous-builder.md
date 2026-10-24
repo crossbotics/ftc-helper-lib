@@ -369,7 +369,7 @@ When the steps are done, the Driver Station shows "Autonomous finished" and one 
 ```text
 Start: done
 Spin up the flywheel: done
-Fire all: done (3 fired)
+Fire all: done (4 fired)
 Clear the intake: done
 Leave the launch zone: done
 ```

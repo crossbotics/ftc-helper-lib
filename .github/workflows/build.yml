@@ -6,6 +6,9 @@ on:
 
 jobs:
   build:
+    # docs-live is the last release (its code passed this job as the release) plus docs-only fixes:
+    # it gets the docs job below instead (docs/contributing.md, "Docs fixes between releases").
+    if: github.ref_name != 'docs-live' && github.base_ref != 'docs-live'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,5 +30,16 @@ jobs:
         run: python3 tools/check_tunables.py
       - name: Auto builder page code (same Java as the web builder, simulator-only logic)
         run: node tools/check_builder.mjs
+      - name: Test list (testing/tests) and its catalogue
+        run: python3 tools/check_tests.py
+
+  docs:
+    # docs-live only: its docs fixes are checked against the released code, without the Gradle build.
+    if: github.ref_name == 'docs-live' || github.base_ref == 'docs-live'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Docs and tutorials check
+        run: python3 tools/check_docs.py
       - name: Test list (testing/tests) and its catalogue
         run: python3 tools/check_tests.py

@@ -140,6 +140,11 @@ git checkout main
    `git cherry-pick --abort`, then make the fix again by hand on `docs-live` (and keep the `main` one).
 3. Deploy the site (crossbotics `./scripts/deploy.sh --go`): the pages update, and no email goes out.
 
+On GitHub, a push to `docs-live` runs only the docs checks (`tools/check_docs.py`, `tools/check_tests.py`),
+not the Gradle build: its code already passed as the release. That is the `docs` job in
+`.github/workflows/build.yml`, and GitHub uses the workflow file of the branch it runs on: a change to it
+reaches `docs-live` with the next release, or sooner by cherry-picking that commit (only the workflow file).
+
 Docs for a feature that is not released yet stay on `main` only: teams must not read about something
 their version does not have. A release moves `docs-live` to the new tag (step 4 of [Releasing a version](#releasing-a-version)).
 

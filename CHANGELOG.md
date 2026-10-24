@@ -23,6 +23,16 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   real robot, like the library's default.
 - goBILDA starter bot: Y and the autonomous fire 4 pieces (was 3). Every robot starts with 4 preloads
   (game manual G304.G).
+- **Simulator: a feeder fires one piece per feed, even on a busy computer.** A motor or CR servo feeder
+  (like the goBILDA bot's windmill) now sends one piece each time it is turned on and, only if it keeps
+  running, one more every 0.3 s from 0.45 s on. Before, it sent one at once and one more every 0.3 s while it
+  ran, so a feeder set to 0.3 s per piece sat exactly on the edge: when the computer was busy and the OpMode's
+  loop turned it off a few ms late, an extra piece flew. A recorded autonomous test then wrote
+  "launched >= 4" for an autonomous that fired 3, and failed when it was run again (it failed now and then
+  on GitHub). Keep a motor or CR servo indexer's `feedSec` under 0.45 s for one piece per feed.
+- The Gradle console (and so the GitHub log) shows a failed test's whole message, not only the line number.
+- GitHub: a push to `docs-live` runs only the docs checks, not the whole build (docs/contributing.md).
+
 
 ## v0.18.1 - 2026-10-23
 
