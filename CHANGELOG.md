@@ -4,6 +4,12 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+### Changed
+
+- **The REV starter bot's poker positions are `MEASURE`.** `Tunables.PollenServo` `up` and `down` were
+  guesses (REV publishes no numbers): INIT now stops until the Servo Finder gives yours. **Why:** a guess
+  could swing the poker into the frame. The simulator's REV robot file has stand-ins, so it still runs.
+
 ### Added
 
 - **The Simulator button opens the page.** When the simulator is ready, http://localhost:8780 opens in

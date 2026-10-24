@@ -29,7 +29,23 @@ final class CookbookSamples {
                 throw new IllegalStateException(e);
             }
         }
+        // The REV kit bot's poker positions are MEASURE too (a guess could push the arm into the frame).
+        kit("com.crossbotics.ftchelper.examples.revbot.Tunables$PollenServo", "up", 0.0, "down", 0.5);
         done = true;
+    }
+
+    // A kit bot's MEASURE fields: the sample numbers (only where the field is still MEASURE).
+    private static void kit(String section, Object... pairs) {
+        try {
+            Class<?> c = Class.forName(section);
+            for (int i = 0; i < pairs.length; i += 2) {
+                Field f = c.getDeclaredField((String) pairs[i]);
+                f.setAccessible(true);
+                if (Starting.isMeasure(f.getDouble(null))) f.setDouble(null, ((Number) pairs[i + 1]).doubleValue());
+            }
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     // "Tunables$Lift.min" -> its sample number.
