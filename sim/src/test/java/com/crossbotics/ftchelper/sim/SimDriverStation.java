@@ -359,9 +359,10 @@ final class SimDriverStation {
         }
     }
 
-    // An autonomous that ended: choose its preselectTeleOp next (if that TeleOp is in the list).
+    // An autonomous that ended: choose its preselectTeleOp next (if that TeleOp is in the list). Not after an
+    // error: the team fixes it and runs the same autonomous again, so it stays chosen.
     private void preselectNext(Entry e) {
-        if (e == null || !"Autonomous".equals(e.kind)) return;
+        if (e == null || !"Autonomous".equals(e.kind) || !error.isEmpty()) return;
         Autonomous a = e.type.getAnnotation(Autonomous.class);
         String teleOp = a == null ? "" : a.preselectTeleOp();
         if (teleOp.isEmpty()) return;

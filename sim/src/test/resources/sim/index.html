@@ -176,8 +176,7 @@
   details.keys summary { cursor: pointer; }
   #padsSection.small .gp, #padsSection.small .owner, #padsSection.small .stickyLbl { display: none; }
   .padhead { justify-content: space-between; }
-  .padhead .padsHint { display: none; flex: 1; min-width: 0; }
-  #padsSection.small .padhead .padsHint { display: inline; }
+  .padhead .padsHint { flex: 1; min-width: 0; }
   #padsSection.small .pad { margin-bottom: 2px; }
   #padsSection.small .pad > .row { flex-wrap: nowrap; }
   #padsSection.small .pad > .row .muted { display: none; }
@@ -190,6 +189,11 @@
   .caret { font-size: 10px; margin-left: 5px; opacity: .7; }
   #builderBtn { margin-left: auto; font-weight: 600; border-color: var(--accent); color: var(--accent); }
   .v3help { margin-top: 4px; }
+  /* The simulator stopped (the program or the server): a bar across the top that says how to start it again. */
+  #offline { padding: 8px 16px; background: var(--stop); color: #fff; font-weight: 600; }
+  #offline code { background: rgba(255,255,255,.2); padding: 0 4px; border-radius: 4px; font-weight: 400; }
+  #offline[hidden] { display: none; }
+  .moveHint { text-align: center; margin-top: 4px; }
   #hubSection h3 { border-top: 1px solid var(--line); padding-top: 8px; }
   #hubSection .tab > h3:first-child { border-top: 0; padding-top: 0; }
   /* Narrow screens, one column: the Driver Hub, then the field, the builder, the gamepads, the Control Hub. */
@@ -443,6 +447,9 @@
   <span class="note">A pretend Control Hub and Driver Hub. Your real OpMode code runs here; the hardware and physics are pretend.
     <b>Work in progress:</b> <a href="https://github.com/crossbotics/ftc-helper-lib/issues" target="_blank" rel="noopener">tell us what works and what does not</a>.</span>
 </header>
+<div id="offline" role="alert" hidden>The simulator is not running. To start it again: in Android Studio, pick
+  <b>Simulator</b> next to the green Run button and click Run (or type <code>./gradlew :sim:run</code> in a Terminal).
+  This page connects again by itself.</div>
 <main>
   <section id="dsSection">
     <h2>Driver Hub</h2>
@@ -482,7 +489,7 @@
 
   <section id="padsSection">
     <div class="row padhead"><h2 style="margin:0">Gamepads</h2>
-      <span class="muted padsHint">Pictures hidden: keys, controllers and phones still work.</span>
+      <span class="muted padsHint">On-screen, the keyboard, or your own USB or Bluetooth controller: plug it in, press one of its buttons, choose it in the list.</span>
       <button id="padsToggle" aria-expanded="true" title="Show or hide the on-screen gamepads (the keyboard, a real controller or a phone still work): more room for the 3D field">Hide gamepads</button></div>
     <div class="pads">
     <div class="pad" data-pad="1">
@@ -500,7 +507,7 @@
     </div>
     <div class="padfoot">
     <label class="muted stickyLbl" title="A click holds a button until clicked again; sticks stay where you leave them: to hold two things at once with a mouse."><input type="checkbox" id="sticky"> Sticky buttons</label>
-    <details class="keys" id="keyHelp"><summary>Keys and controllers</summary>
+    <details class="keys" id="keyHelp"><summary>Keys and your own controller</summary>
       Keyboard: left stick <code>W A S D</code>, right stick <code>arrows</code>, D-pad <code>T F G H</code>,
       A/B/X/Y <code>K L J I</code>, LB/RB <code>Q E</code>, LT/RT <code>Z C</code>, BACK <code>Backspace</code>,
       START <code>Enter</code>, GUIDE <code>M</code>.
@@ -522,15 +529,17 @@
     <div class="tabbody">
     <div class="tab on" data-tab="robot">
     <canvas id="field" width="380" height="380" aria-label="Field, seen from above"></canvas>
-    <div class="muted" style="text-align:center">While no program runs (or in INIT): drag the robot to move it, mouse wheel over it to turn it.</div>
+    <div class="moveHint"><b>Move the robot:</b> drag it on this map. <b>Turn it:</b> mouse wheel over it.
+      <span class="muted">When no program runs, and in INIT.</span></div>
     <div id="spotText" class="muted" style="text-align:center"></div>
-    <h3>Move by hand</h3>
-    <div class="row">
-      <span class="muted">Push:</span>
-      <button data-push="24,0,2">48 in forward</button><button data-push="-24,0,0.5">12 in back</button>
-      <button data-push="0,24,2">48 in right</button>
+    <h3>Push the robot</h3>
+    <div class="muted">Rolls the robot like a hand push, also while a program runs: its wheels and odometry feel it (the Drive Tuner's push test).</div>
+    <div class="row" style="margin-top:4px">
+      <button data-push="24,0,2" title="Rolls the robot 48 in forward in 2 s">48 in forward</button><button data-push="-24,0,0.5" title="Rolls the robot 12 in back in 0.5 s">12 in back</button>
+      <button data-push="0,24,2" title="Rolls the robot 48 in to its right in 2 s">48 in right</button>
     </div>
-    <div class="row" style="margin-top:6px">
+    <h3>Start over</h3>
+    <div class="row">
       <button id="resetPose" title="The robot to its start spot and every game piece back where the match starts">Back to start</button>
       <button id="resetField" title="Every game piece back where the match starts; the robot stays where it is">Reset field</button>
       <label class="muted" title="The robot holds the preload (BIOBUZZ: 4 POLLEN) at the start; untick for an empty robot"><input type="checkbox" id="preloaded" checked> Preloaded</label>
@@ -646,7 +655,7 @@
       <button id="scoreBar" hidden title="The score: click for where the points come from (Match panel)"></button><div id="toast" role="alert" hidden></div></div>
     <div id="stageOff">The 3D view is off (tick "Show"). The field from above is in the Control Hub's Robot tab.</div>
     <div class="muted v3help" title="While no program runs (or in INIT): double-click the robot, then drag it to move it or drag its ring to turn it (double-click again to stop).">
-      Drag: turn &middot; scroll: zoom &middot; right-drag or two fingers: slide &middot; double-click the robot to move it (no program running, or in INIT)</div>
+      View: drag to turn, scroll to zoom, right-drag or two fingers to slide &middot; <b>Move the robot:</b> double-click it, then drag it (or its ring to turn it)</div>
   </section>
   <section id="builderSection" hidden aria-label="Auto builder"><div id="builder"></div></section>
   <section id="editSection" hidden aria-label="Edit robot">
@@ -857,13 +866,24 @@ function fillSources() {
     // A controller without the browser's "standard" button layout may have its buttons mixed up.
     list.forEach((g, i) => { if (g) opts.push(["controller:" + i, "Controller " + (i + 1) + ": " + g.id.slice(0, 28)
       + (g.mapping === "standard" ? "" : " (buttons may be mixed up)")]); });
+    // None found yet (the browser shows a controller only after one of its buttons is pressed): say how.
+    if (!list.some(g => g)) opts.push(["", "Your controller: plug it in, press a button"]);
     opts.push(["remote","Phone / other page"]);
-    const html = opts.map(([v, t]) => `<option value="${v}">${escapeHtml(t)}</option>`).join("");
+    const html = opts.map(([v, t]) => `<option value="${v}"${v ? "" : " disabled"}>${escapeHtml(t)}</option>`).join("");
     if (sel.dataset.html !== html) { sel.innerHTML = html; sel.dataset.html = html; }
     sel.value = opts.some(o => o[0] === now) ? now : "screen";
   });
 }
-window.addEventListener("gamepadconnected", fillSources);
+// A controller just found: gamepad 1 takes it if it is still on-screen, else gamepad 2 (the on-screen buttons
+// still work with every source). Choosing another source in the list is still possible.
+window.addEventListener("gamepadconnected", e => {
+  const id = "controller:" + e.gamepad.index;
+  if (!phonePad && source[1] !== id && source[2] !== id) {
+    const n = source[1] === "screen" ? 1 : source[2] === "screen" ? 2 : 0;
+    if (n) { source[n] = id; pads[n] = blankPad(); }
+  }
+  fillSources();
+});
 window.addEventListener("gamepaddisconnected", fillSources);
 
 // ---------------------------------------------------------------- talking to the simulator
@@ -905,8 +925,9 @@ const frames = new SimView.Buffer();
 const link = { mode: "connecting", opened: false, errors: 0, es: null, pollTimer: 0, frames: 0, states: 0, bytes: 0, since: performance.now() };
 let opmodeList = [], opmodeKey = null;
 function notRunning() {
-  $("#status").textContent = "The simulator is not running. Start it with ./gradlew :sim:run";
+  $("#status").textContent = "The simulator is not running: see the red bar at the top.";
   $("#dhLink").classList.remove("ok");
+  $("#offline").hidden = false;
 }
 function gotFrame(f) {
   link.frames++;
@@ -914,6 +935,7 @@ function gotFrame(f) {
 }
 function gotState(s) {
   link.states++;
+  $("#offline").hidden = true;
   builderHooks.lastState = s;
   // The stream sends only the OpMode list's key: ask for the list itself when it changes.
   if (s.opmodes) { opmodeList = s.opmodes; opmodeKey = s.opmodesKey; }
@@ -1052,6 +1074,7 @@ function render(s) {
   $("#dhTime").textContent = running && s.phase === "RUNNING" ? clock(t) : length ? clock(length) : "0:00";
   $("#status").innerHTML = s.opmode
     ? `Robot Status: <b>${s.phase === "RUNNING" ? "running" : s.phase.toLowerCase()}</b> &middot; Op Mode: <b>${escapeHtml(s.opmode)}</b>`
+      + (s.phase === "STOPPED" ? " &middot; press INIT to run it again" : "")
     : "Robot Status: <b>stopped</b> &middot; choose an OpMode, then INIT.";
   $("#dhLink").classList.add("ok");
   $("#dhBatt").textContent = s.battery.toFixed(2) + " V";

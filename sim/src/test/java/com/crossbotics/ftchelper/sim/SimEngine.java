@@ -164,9 +164,15 @@ final class SimEngine {
         boolean auto = "Autonomous".equals(ds.current().kind);
         com.crossbotics.ftchelper.util.FieldPose target;
         if (auto) {
-            // An autonomous that names its start spot; one that does not leaves the robot where it is.
+            // An autonomous that names its start spot goes there. One that names only the alliance (an INIT
+            // menu, with the spot in words): that alliance's default spot, so a BLUE auto starts on the blue
+            // side. One with neither leaves the robot where it is.
             target = com.crossbotics.ftchelper.match.MatchMemory.placement();
-            if (target == null) return;
+            if (target == null) {
+                com.crossbotics.ftchelper.match.Alliance a = com.crossbotics.ftchelper.match.MatchMemory.chosen();
+                if (a == null) return;
+                target = defaultSpot(a);
+            }
         } else {
             // TeleOp after an autonomous: the robot is where autonomous left it. Without one: once the
             // drivers choose the alliance in INIT, that alliance's default spot.
