@@ -126,14 +126,14 @@ Two run buttons start the [simulator](guides/simulator.md) from Android Studio, 
 They are two small files in a `.run` folder in your project (next to `TeamCode`). A project made with
 `./gradlew :sim:newRobot` has them already. To add them to your project, do one of these:
 
-- In the Terminal, in the `ftc-helper-lib` folder (after the [laptop setup](quick-start.md#laptop-setup-once)):
+- Make a folder `.run` in your project folder, and copy the two `.run.xml` files from
+  `ftc-helper-lib/sim/run-buttons` into it.
+- Or, if your laptop has the [laptop setup](quick-start.md#laptop-setup-once), run this in the Terminal,
+  in the `ftc-helper-lib` folder:
 
   ```bash
   ./gradlew :sim:installButtons
   ```
-
-- Or make a folder `.run` in your project folder, and copy the two `.run.xml` files from
-  `ftc-helper-lib/sim/run-buttons` into it.
 
 Then close the project and open it again (**File > Close Project**). Commit the `.run` folder.
 **Why:** everyone who clones the project gets the buttons.

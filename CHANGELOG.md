@@ -2,7 +2,7 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
-## Unreleased
+## v0.18.3 - 2026-10-24
 
 ### Added
 
@@ -21,7 +21,9 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   and `:sim:newRobot` adds them to a new project. Commit the `.run` folder. See "Add the library", step 7.
 - **The robot file is made at each start.** `:sim:run` and `:sim:scenario` (and the buttons) first make
   `simulator/robot.properties` from Robot.java, like `:sim:fromRobot`, and print
-  `Robot file made from Robot.java: simulator/robot.properties`. Your own lines are kept, as before. If the
+  `Robot file made from Robot.java: simulator/robot.properties`. Your own lines are kept, as before, and so
+are numbers you write on `TODO` and stand-in lines. When the code changes another marked line, it prints
+the change and keeps the old file as `robot.properties.bak`. A robot file you wrote by hand is not changed. If the
   file and the code disagree, the simulator says why and uses the file as it is. `-PnoFromRobot` skips this
   step. `:sim:fromRobot` still works alone.
 - **Run all tests on the simulator page:** **Tests > Run all tests** runs every test in `simulator/scenarios`,

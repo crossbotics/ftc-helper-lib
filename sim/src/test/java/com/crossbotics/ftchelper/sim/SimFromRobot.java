@@ -51,6 +51,8 @@ public final class SimFromRobot {
         final String text;
         final List<String> problems;
         final List<String> kept;
+        /** Marked lines the code changed: "key: old -> new" (the old file is kept as .bak). */
+        final List<String> changed = new ArrayList<>();
 
         Result(String text, List<String> problems, List<String> kept) {
             this.text = text;
@@ -90,6 +92,7 @@ public final class SimFromRobot {
         }
         System.out.println("Wrote " + file + (existed ? "" : " (new)") + ".");
         for (String k : r.kept) System.out.println("  kept your " + k + " (it is not marked " + MARK + ")");
+        printChanged(r, file);
         if (r.text.contains("TODO")) System.out.println("  Lines with TODO are guesses: measure them (docs/guides/simulator.md).");
         int standIns = 0;
         for (String line : r.text.split("\n")) if (line.startsWith("tunable.")) standIns++;
@@ -122,6 +125,9 @@ public final class SimFromRobot {
         if (!r.problems.isEmpty()) return r;
         if (!r.text.equals(existing)) {
             if (file.getParent() != null) Files.createDirectories(file.getParent());
+            if (existing != null && !r.changed.isEmpty()) {
+                Files.write(backup(file), existing.getBytes(StandardCharsets.UTF_8));
+            }
             Files.write(file, r.text.getBytes(StandardCharsets.UTF_8));
         }
         SimRobot.load(file);
@@ -141,6 +147,12 @@ public final class SimFromRobot {
         if (where.isEmpty()) return robotFile;
         Path file = Paths.get(where);
         String shown = (file.getParent() == null ? "" : file.getParent().getFileName() + "/") + file.getFileName();
+        if (Files.isRegularFile(file) && madeFrom(file) == null) {
+            // A robot file the team wrote (or copied): not changed without asking.
+            System.out.println("Robot file: " + shown + " is your own (not made from Robot.java): used as it is. "
+                    + "./gradlew :sim:fromRobot adds the code's lines to it.");
+            return file;
+        }
         String name = robotClassFor(file, System.getProperty("sim.robotClass", ""), System.getProperty("sim.teamCode", ""));
         if (name == null) return robotFile;
         String javaFile = name.substring(name.lastIndexOf('.') + 1) + ".java";
@@ -150,6 +162,7 @@ public final class SimFromRobot {
             Result r = make(robot, name, file, field.isEmpty() ? DEFAULT_FIELD : field);
             if (r.problems.isEmpty()) {
                 System.out.println("Robot file made from " + javaFile + ": " + shown);
+                printChanged(r, file);
                 return file;
             }
             System.out.println("Robot file NOT made from " + javaFile + ": it and " + shown + " disagree:");
@@ -159,6 +172,18 @@ public final class SimFromRobot {
             System.out.println("Robot file NOT made from " + javaFile + " (" + e + "). The simulator uses " + shown + " as it is.");
         }
         return Files.isRegularFile(file) ? file : robotFile;
+    }
+
+    // The old robot file, kept when the code changed a marked line: robot.properties.bak.
+    static Path backup(Path file) {
+        return file.resolveSibling(file.getFileName() + ".bak");
+    }
+
+    private static void printChanged(Result r, Path file) {
+        if (r.changed.isEmpty()) return;
+        for (String c : r.changed) System.out.println("  changed from Robot.java: " + c);
+        System.out.println("  The old file is " + backup(file).getFileName() + ". To keep a number of your own on a line, "
+                + "delete that line's \"" + MARK + "\" note.");
     }
 
     /**
@@ -254,6 +279,11 @@ public final class SimFromRobot {
         {"drive.trackWidthIn = 15", "drive.trackWidthIn"}, {"drive.wheelBaseIn = 13", "drive.wheelBaseIn"}};
 
     // True for an unmarked line that is still exactly a guess a new file got, now given by the code.
+    // A generated line whose number the code does not know: "TODO" in its note, or a MEASURE stand-in.
+    private static boolean codeGuesses(String generatedLine) {
+        return generatedLine.trim().startsWith("tunable.") || generatedLine.contains("TODO");
+    }
+
     private static boolean isGuess(String line, Map<String, String> gen) {
         String t = line.trim();
         for (String[] g : GUESSES) if (g[1] != null && !g[0].startsWith("#") && g[0].equals(t) && gen.containsKey(g[1])) return true;
@@ -301,6 +331,7 @@ public final class SimFromRobot {
         check(gen, teamKeys, lines, problems);
 
         Set<String> written = new LinkedHashSet<>();
+        List<String> changed = new ArrayList<>();
         List<String> outLines = new ArrayList<>();
         int lastOurs = -1;   // where our last line went: new parts go right after it (no new block each run)
         for (String line : lines) {
@@ -309,7 +340,15 @@ public final class SimFromRobot {
             if (k != null && (line.contains(MARK) || guess)) {
                 // One of ours (or a guess the code now gives): the new version, or nothing if the part is gone.
                 if (gen.containsKey(k) && !teamKeys.containsKey(k) && written.add(k)) {
-                    outLines.add(gen.get(k));
+                    String g = gen.get(k);
+                    String was = value(line), now = value(g);
+                    if (!guess && !was.equals(now) && codeGuesses(g)) {
+                        // The code only guesses this number (TODO, or a MEASURE stand-in): the team's edit wins.
+                        outLines.add(line);
+                    } else {
+                        if (!guess && !was.equals(now)) changed.add(k + ": " + was + " -> " + now);
+                        outLines.add(g);
+                    }
                     if (!guess) lastOurs = outLines.size() - 1;
                 }
                 continue;
@@ -337,7 +376,9 @@ public final class SimFromRobot {
         for (String l : outLines) sb.append(l).append('\n');
         // One newline at the end, however many there were.
         String text = sb.toString().replaceAll("\n+$", "\n");
-        return new Result(text, problems, kept);
+        Result result = new Result(text, problems, kept);
+        result.changed.addAll(changed);
+        return result;
     }
 
     // A device the code names as one kind (motor, servo...) but the file has as another; other drive motors.

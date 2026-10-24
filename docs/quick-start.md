@@ -246,7 +246,7 @@ simulator/robot.properties`. It is the simulator's description of your robot: it
 servos, and how they look. The names and the drive come from `Robot.java`; the sizes are guesses, marked `TODO`.
 
 - **Commit it** with your code. **Why:** everyone on the team then gets the same simulator robot.
-- **When you measure the robot,** edit the `TODO` lines with the real numbers.
+- **When you measure the robot,** edit the `TODO` lines with the real numbers. The numbers you write stay.
 - **Why it is safe to make it again at each start:** it refreshes only its own lines (marked
   `# from Robot.java`) and keeps the lines you wrote. (`./gradlew :sim:fromRobot` does the same step alone;
   `-PnoFromRobot` starts the simulator with the file as it is.)

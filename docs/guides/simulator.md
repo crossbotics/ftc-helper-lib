@@ -518,6 +518,11 @@ name, the drive (type, motors, wheel, which side the code reverses: `drive.mirro
 turret's stops, the claw's open and closed positions, the `odometry` lines, one shape per module, and the `collect.`,
 `shoot.` and `grab.` lines. Each line it writes ends with `# from Robot.java` and is rewritten every
 time; every other line is yours and is kept, even for the same setting (a measured `shape.lift` wins).
+Two kinds of marked line keep a number you write on them: a `TODO` line and a `tunable.` stand-in (the
+code only guesses those numbers). When the code changes any other marked line, it prints the change and
+keeps the old file as `robot.properties.bak`. To keep your own number on such a line, delete its
+`# from Robot.java` note. A robot file you wrote by hand (no "made from" line at the top) is not changed
+when the simulator starts: `:sim:fromRobot` adds the code's lines to it.
 Lines for parts no longer in the code are removed. It stops, writing nothing, when the file describes
 a device differently from the code (`motor.claw` in the file, a claw servo in the code) or names
 other drive motors. Sizes and places come from Robot.java when it gives them (`chassisMm`, each part's

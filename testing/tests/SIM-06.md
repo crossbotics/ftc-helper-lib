@@ -7,7 +7,7 @@ where: sim
 minutes: 15
 needs: [any]
 kit_bots: [gobilda, rev, andymark, studica]
-since: unreleased
+since: v0.18.3
 docs: [guides/simulator.md#measure-in-the-simulator, guides/tunables.md#default-and-measure]
 ---
 

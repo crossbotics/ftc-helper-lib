@@ -7,7 +7,7 @@ where: sim
 minutes: 20
 needs: [any]
 kit_bots: [gobilda, rev, andymark, studica]
-since: unreleased
+since: v0.18.3
 docs: [01-add-to-project.md#step-7-the-simulator-buttons-once, guides/simulator.md#start-it]
 ---
 

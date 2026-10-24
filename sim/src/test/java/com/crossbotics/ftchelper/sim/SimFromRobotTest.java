@@ -80,6 +80,20 @@ public class SimFromRobotTest {
         assertEquals(Collections.singletonList("robot.widthIn"), r.kept);
     }
 
+    @Test public void aNumberTheCodeOnlyGuessesKeepsTheTeamsEdit() {
+        java.util.List<String> code = Arrays.asList("drive.type = tank", "drive.trackWidthIn = 0   # TODO measure",
+                "tunable.Claw.open = 0.5   # stand-in", "drive.wheelDiameterIn = 4");
+        String first = SimFromRobot.merge(null, code, "Robot", "x").text;
+        String edited = first.replace("drive.trackWidthIn = 0 ", "drive.trackWidthIn = 15.2 ")
+                .replace("tunable.Claw.open = 0.5 ", "tunable.Claw.open = 0.31 ")
+                .replace("drive.wheelDiameterIn = 4 ", "drive.wheelDiameterIn = 3.8 ");
+        SimFromRobot.Result r = SimFromRobot.merge(edited, code, "Robot", "x");
+        assertTrue("a TODO number the team measured stays: " + r.text, r.text.contains("drive.trackWidthIn = 15.2 "));
+        assertTrue("a stand-in the team changed stays: " + r.text, r.text.contains("tunable.Claw.open = 0.31 "));
+        assertTrue("a number the code gives wins: " + r.text, r.text.contains("drive.wheelDiameterIn = 4 "));
+        assertEquals(Collections.singletonList("drive.wheelDiameterIn: 3.8 -> 4"), r.changed);
+    }
+
     @Test public void runningItAgainNeverAddsAnotherBlock() {
         String first = SimFromRobot.merge(null, Arrays.asList("drive.type = tank"), "Robot", "x").text;
         String second = SimFromRobot.merge(first, Arrays.asList("drive.type = tank", "motor.lift = lift"), "Robot", "x").text;

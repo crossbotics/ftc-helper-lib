@@ -77,6 +77,26 @@ public class SimFromRobotAutoTest {
         assertEquals("nothing written", clash, read(file));
     }
 
+    @Test public void aHandWrittenFileIsNotChanged() throws Exception {
+        Path file = robotFile();
+        String own = "battery = 12.8\ndrive.type = mecanum\n";   // written by hand: no "made from" line
+        Files.write(file, own.getBytes(StandardCharsets.UTF_8));
+        assertEquals(file, SimFromRobot.auto(starter));
+        assertEquals("used as it is", own, read(file));
+    }
+
+    @Test public void aChangedMarkedLineIsReplacedAndTheOldFileKept() throws Exception {
+        Path file = robotFile();
+        SimFromRobot.auto(starter);
+        String made = read(file);
+        String edited = made.replace("drive.motors = left_drive, right_drive   " + SimFromRobot.MARK,
+                "drive.motors = a, b   " + SimFromRobot.MARK);
+        Files.write(file, edited.getBytes(StandardCharsets.UTF_8));
+        SimFromRobot.auto(starter);
+        assertEquals("the code's line is back", made, read(file));
+        assertEquals("the old file is kept", edited, read(SimFromRobot.backup(file)));
+    }
+
     @Test public void theRobotClassIsFoundInTeamCode() throws Exception {
         Path src = tmp.newFolder("TeamCode", "src", "main", "java", "a").toPath();
         Files.write(src.resolve("Other.java"), "package a;\nclass Other extends RobotDefinition {}\n".getBytes(StandardCharsets.UTF_8));
