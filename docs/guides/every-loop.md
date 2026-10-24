@@ -208,6 +208,8 @@ next, until the app restarts. The library keeps these:
 
 ## See also
 
+- [Your own code at INIT, START, every loop and STOP](your-own-code.md): where your code goes in each
+  step, and how to write the whole OpMode yourself with the library's robot.
 - [Non-blocking code](non-blocking.md): what blocks and what never does.
 - [Use only what you need](use-only-what-you-need.md): the building blocks in your own loop.
 - [Architecture](architecture.md): the big picture.

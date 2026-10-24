@@ -184,6 +184,7 @@ first.
 | `repeat 3 times` | a `for` loop that adds the steps 3 times to an action ([repeat](#how-do-i-repeat-steps-several-times)) | `Actions.java` |
 | set servo position | a named position: `robot.claw.open()`, `robot.intakeDeploy.goTo("deployed")` ([servo positions](#how-do-i-add-any-servo-with-named-positions-a-gate-a-fold-out)) | `Controls.java`, `Actions.java` |
 | `waitForStart` | nothing: the library waits for START. For something right after START: `atStart(...)` ([at START](#how-do-i-run-an-action-right-after-start)) | `Robot.java` |
+| blocks before `waitForStart`, or after the loop | `atInit(...)`, `duringInit(...)`, `atStop(...)` ([your own code](guides/your-own-code.md)) | `Robot.java` |
 | `if gamepad2.y then ...` inside the loop | one line, once: `g2.y.press(...)` ([buttons](#how-do-i-make-a-button-do-something-once)) | `Controls.java` |
 | `if` the button is held | `g1.a.hold(...)` ([hold](#how-do-i-run-something-only-while-a-button-is-held)) | `Controls.java` |
 | `sleep 500` | `.waitSeconds(0.5)` ([wait](#how-do-i-wait-half-a-second-like-sleep-in-blocks)) | `Actions.java` or an autonomous |

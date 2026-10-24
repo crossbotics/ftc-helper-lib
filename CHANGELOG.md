@@ -6,6 +6,17 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
+- **Your own code at each step of an OpMode.** Next to `atStart(...)` and `everyLoop(...)`, `Robot.java`
+  now has `atInit(...)` (once in INIT), `duringInit(...)` (the INIT loop, until START) and `atStop(...)`
+  (the end, after the motors stop), and `show("label", value)` for a line on the Driver Hub. In
+  `define()` they count for every OpMode; in `Controls.java`'s `buttons(...)` or a new `atInit(robot)`
+  in an autonomous, for that OpMode only. See the new guide "Your own code at INIT, START, every loop
+  and STOP".
+- **Your own OpMode with the library's robot.** A plain `LinearOpMode` can use `Robot.java`:
+  `robot.init(this)`, `robot.initLoop()`, `robot.start()`, `robot.update()`, `robot.stop()`, and
+  `robot.driveWith(gamepad1)`. The parts keep their safety, actions still never wait. Example: the
+  lesson robot's `OwnTeleOp.java` ("Lesson Bot: own OpMode" in the simulator).
+
 - **The Simulator button opens the page.** When the simulator is ready, http://localhost:8780 opens in
   your browser. If no browser opens, the address in the Run window is a link: click it. In the Terminal,
   `./gradlew :sim:run -Popen` does the same (without `-Popen` nothing opens, as before).

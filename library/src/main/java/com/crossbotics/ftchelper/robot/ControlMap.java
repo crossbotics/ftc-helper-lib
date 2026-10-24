@@ -64,6 +64,10 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
      * Your buttons, after the modules' standard ones. A job here replaces a module's suggestion on
      * the same button.
      *
+     * <p>It runs once, in INIT. Code of your own for this TeleOp only goes here too:
+     * {@code robot.duringInit(...)}, {@code robot.atStart(...)}, {@code robot.everyLoop(...)},
+     * {@code robot.atStop(...)} (docs/guides/your-own-code.md).
+     *
      * @param robot your robot (its modules are set up)
      * @param g1    the driver's gamepad (the operator's too with {@code oneDriver})
      * @param g2    the operator's gamepad (with {@code oneDriver = true}: gamepad 1, the same as g1)
@@ -362,6 +366,12 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
             job.run();
         }
         menuWasOpen = menu;
+    }
+
+    // The end: the team's atStop code (robot.atStop), after everything stopped.
+    @Override
+    protected final void atEnd() {
+        if (robot != null) robot.ended();
     }
 
     @Override

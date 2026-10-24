@@ -132,6 +132,12 @@ public abstract class EasyTeleOp extends LinearOpMode {
      */
     protected void everyLoop() { }
 
+    /**
+     * Your own code at the very end (STOP, the end, or an error), after the wheels and every part are
+     * stopped: e.g. save a number for the next OpMode. Runs even if stopping failed.
+     */
+    protected void atEnd() { }
+
     /** Extra lines for the Driver Station, every loop. The mechanisms' lines are already shown. */
     protected void addTelemetry(RobotTelemetry t) { }
 
@@ -719,6 +725,7 @@ public abstract class EasyTeleOp extends LinearOpMode {
             RuntimeException first = null;
             try { driving.stop(); } catch (RuntimeException e) { first = e; }
             try { if (robot != null) robot.stop(); } catch (RuntimeException e) { if (first == null) first = e; }
+            try { atEnd(); } catch (RuntimeException e) { if (first == null) first = e; }
             // A stop error is shown only if the program had no error of its own; otherwise it goes
             // in the robot log, and the Driver Station shows the program's error (the real cause).
             if (first != null) {

@@ -55,6 +55,16 @@ public abstract class RobotDefinition {
     private PathFollower follower = null;
     private final List<Module<?>> modules = new ArrayList<>();
     private final List<Supplier<Action>> atStart = new ArrayList<>();
+    // The team's own code at each step of an OpMode (atInit, duringInit, atStop; see "Your own code").
+    private final List<Runnable> atInit = new ArrayList<>();
+    private final List<Runnable> duringInit = new ArrayList<>();
+    private final List<Runnable> atStop = new ArrayList<>();
+    private boolean ended = false;
+    // Your own OpMode (init(op) ... stop()): the OpMode, and the drive made for driveWith().
+    private com.qualcomm.robotcore.eventloop.opmode.OpMode ownOpMode = null;
+    // The Driver Hub's screen of the OpMode running now (for show()). Set at the first INIT loop.
+    private com.crossbotics.ftchelper.telemetry.RobotTelemetry screen = null;
+    private com.crossbotics.ftchelper.drive.DriverControls ownDriving = null;
     // The team's own parts and per-loop code (addOwn, everyLoop), updated after the library's parts.
     private final List<com.crossbotics.ftchelper.core.Subsystem> own = new ArrayList<>();
     // Everything the library itself put in all() at setup. Anything else in all() (addOwn, everyLoop, or
@@ -191,10 +201,81 @@ public abstract class RobotDefinition {
      * An action that runs once, right after START, in autonomous and in TeleOp (for example a servo
      * that pushes the intake into place). Never in INIT: a robot must not move before START.
      *
+     * <p>In {@code define()}: every OpMode. In {@code Controls.java}'s {@code buttons(...)} or an
+     * autonomous's {@code atInit(robot)}: that OpMode only.
+     *
      * @param action e.g. {@code () -> Actions.deployIntake(this)}
      */
-    protected final void atStart(Supplier<Action> action) {
+    public final void atStart(Supplier<Action> action) {
+        if (action == null) throw new IllegalArgumentException("atStart(null): give it the action, e.g. () -> Actions.deployIntake(this)");
         atStart.add(action);
+    }
+
+    // ----------------------------- your own code at each step -----------------------------
+    // An FTC OpMode has five steps: INIT (once), the INIT loop (until START), START (once), the loop
+    // (until STOP), STOP (once). Your own code can go in each: atInit, duringInit, atStart, everyLoop,
+    // atStop. In define(): every OpMode. In Controls.java's buttons(...) or an autonomous's
+    // atInit(robot): that OpMode only. docs/guides/your-own-code.md
+
+    /**
+     * Code of your own that runs once in INIT, right after the library made every part's hardware (for
+     * example: reset a counter, read a switch, set the lights). It must not move anything: a robot must
+     * not move before START. Added after INIT has set the robot up, it runs at once.
+     *
+     * <pre>{@code
+     * atInit(() -> piecesScored = 0);
+     * }</pre>
+     *
+     * @param code what to run, e.g. a lambda {@code () -> ...}
+     */
+    public final void atInit(Runnable code) {
+        if (code == null) throw new IllegalArgumentException("atInit(null): give it the code to run");
+        if (built) code.run();
+        else atInit.add(code);
+    }
+
+    /**
+     * Code of your own that runs again and again in INIT, until START (FTC's {@code init_loop}): for
+     * example, show a sensor on the Driver Hub so the drivers can check it before the match. It must be
+     * quick, never wait, and not move anything.
+     *
+     * <pre>{@code
+     * duringInit(() -> show("Lift (counts)", lift.position()));
+     * }</pre>
+     *
+     * @param code what to run, e.g. a lambda {@code () -> ...}
+     */
+    public final void duringInit(Runnable code) {
+        if (code == null) throw new IllegalArgumentException("duringInit(null): give it the code to run");
+        duringInit.add(code);
+    }
+
+    /**
+     * Code of your own that runs once when the OpMode ends: STOP, the end of an autonomous, or an error.
+     * It runs after every motor is stopped (for example: save a number for the next OpMode, write a log
+     * line). If one {@code atStop} fails, the others still run.
+     *
+     * <pre>{@code
+     * atStop(() -> RobotLog.ii("team", "pieces scored: " + piecesScored));
+     * }</pre>
+     *
+     * @param code what to run, e.g. a lambda {@code () -> ...}
+     */
+    public final void atStop(Runnable code) {
+        if (code == null) throw new IllegalArgumentException("atStop(null): give it the code to run");
+        atStop.add(code);
+    }
+
+    /**
+     * Shows one line of your own on the Driver Hub in this loop, under the library's warnings: use it
+     * in {@link #duringInit} and {@link #everyLoop} (call it every loop: the screen starts empty each
+     * loop). Does nothing before INIT.
+     *
+     * @param label the name on the left, e.g. "Pieces scored"
+     * @param value the value on the right
+     */
+    public final void show(String label, Object value) {
+        if (screen != null) screen.line(label, value);
     }
 
     /**
@@ -372,6 +453,8 @@ public abstract class RobotDefinition {
         // Everything so far is the library's; the team's own parts come last (they see this loop's commands).
         libraryParts.addAll(all.all());
         for (com.crossbotics.ftchelper.core.Subsystem s : own) all.add(s);
+        // The team's own INIT code, now that every part's hardware is made.
+        for (Runnable r : new ArrayList<>(atInit)) r.run();
         return this;
     }
 
@@ -1043,7 +1126,149 @@ public abstract class RobotDefinition {
     /** Every pass of the INIT loop (the OpMode classes call this): each module's quick INIT work and lines. */
     final void initLoop(com.crossbotics.ftchelper.telemetry.RobotTelemetry t) {
         if (!built) return;
+        screen = t;
         for (Module<?> m : modules) if (!m.missing) m.initLoop(t);
+        for (Runnable r : duringInit) r.run();
+    }
+
+    /**
+     * The end of the OpMode (STOP, the end of an autonomous, or an error), after every motor is stopped:
+     * the team's {@link #atStop} code, once. Each runs even if one before it fails; the first error is
+     * thrown after all ran. The OpMode classes call it.
+     */
+    final void ended() {
+        if (ended) return;
+        ended = true;
+        RuntimeException first = null;
+        for (Runnable r : atStop) {
+            try { r.run(); } catch (RuntimeException e) { if (first == null) first = e; }
+        }
+        if (first != null) throw first;
+    }
+
+    // ----------------------------- your own OpMode -----------------------------
+
+    /**
+     * INIT in your own OpMode (a plain {@code LinearOpMode} that uses this robot): makes every part's
+     * hardware, turns on bulk reads (faster loops), checks the robot configuration and Tunables.java
+     * (INIT stops with the reason, as in the library's OpModes), and runs your {@link #atInit} code.
+     * Moves nothing. docs/guides/your-own-code.md
+     *
+     * <pre>{@code
+     * Robot robot = new Robot();
+     * robot.init(this);
+     * while (opModeInInit()) robot.initLoop();
+     * robot.start();
+     * try {
+     *     while (opModeIsActive()) {
+     *         robot.driveWith(gamepad1);
+     *         if (gamepad1.a) robot.run(Actions.score(robot));
+     *         robot.update();
+     *     }
+     * } finally {
+     *     robot.stop();
+     * }
+     * }</pre>
+     *
+     * @param opMode your OpMode ({@code this})
+     * @return this robot
+     */
+    public final RobotDefinition init(com.qualcomm.robotcore.eventloop.opmode.OpMode opMode) {
+        if (opMode == null) throw new IllegalArgumentException("init(null): give it your OpMode: robot.init(this)");
+        if (ownOpMode != null || built) throw new IllegalStateException("robot.init(this) runs once: make a new Robot() in each OpMode");
+        ownOpMode = opMode;
+        com.crossbotics.ftchelper.hardware.BulkReads.auto(opMode.hardwareMap);
+        screen = new com.crossbotics.ftchelper.telemetry.RobotTelemetry(opMode.telemetry);
+        setup(opMode.hardwareMap);
+        // The wheels, as the library's TeleOp makes them (robot-centric; the left trigger drives slowly).
+        ownDriving = com.crossbotics.ftchelper.drive.DriverControls.create(opMode.hardwareMap, robotConfig().drive(), null)
+                .slowSpeed(slowSpeed());
+        return this;
+    }
+
+    /**
+     * One pass of the INIT loop in your own OpMode (call it in {@code while (opModeInInit())}): each
+     * part's INIT work (a camera's check), your {@link #duringInit} code, the robot's INIT notes, then it
+     * sends the Driver Hub's screen. Never waits.
+     */
+    public final void initLoop() {
+        requireOwn("initLoop()");
+        initLoop(screen);
+        showNotes(screen);
+        for (String w : sectionWarnings) screen.warn(w);
+        screen.update();
+    }
+
+    /**
+     * START in your own OpMode: each part's start (a turret going to its start angle) and your
+     * {@link #atStart} actions. Call it once, after the INIT loop.
+     */
+    public final void start() {
+        requireOwn("start()");
+        started();
+    }
+
+    /**
+     * One loop in your own OpMode (call it once in each pass of {@code while (opModeIsActive())}): every
+     * part and running action moves a little, your {@link #everyLoop} code runs, and the Driver Hub's
+     * screen is sent with each part's line. Never waits. Your own {@code telemetry.addData(...)} lines
+     * go out with it (do not call {@code telemetry.update()} yourself).
+     */
+    public final void update() {
+        requireOwn("update()");
+        all.update();
+        all.addTelemetry(screen);
+        screen.update();
+    }
+
+    /**
+     * STOP in your own OpMode (put it in a {@code finally}, so it runs even after an error): stops the
+     * wheels and every part, then runs your {@link #atStop} code.
+     */
+    public final void stop() {
+        requireOwn("stop()");
+        RuntimeException first = null;
+        try { if (ownDriving != null) ownDriving.stop(); } catch (RuntimeException e) { first = e; }
+        try { all.stop(); } catch (RuntimeException e) { if (first == null) first = e; }
+        try { ended(); } catch (RuntimeException e) { if (first == null) first = e; }
+        if (first != null) throw first;
+    }
+
+    /**
+     * Drives with a gamepad's sticks in your own OpMode, as the library's TeleOp does without its
+     * extras: left stick forward/back (and sideways on mecanum), right stick turns, the left trigger
+     * drives slowly. Robot-centric (forward = the robot's front). Call it every loop.
+     *
+     * @param gamepad e.g. {@code gamepad1}
+     */
+    public final void driveWith(com.qualcomm.robotcore.hardware.Gamepad gamepad) {
+        requireOwn("driveWith(gamepad)");
+        if (gamepad == null) throw new IllegalArgumentException("driveWith(null): give it a gamepad, e.g. gamepad1");
+        driving().update(gamepad);
+    }
+
+    /**
+     * Drives with numbers in your own OpMode (for example in your own autonomous), each -1 to 1. Robot-
+     * centric. The wheels keep this power until the next call: send 0, 0, 0 to stop.
+     *
+     * @param forward     + = forward
+     * @param strafeRight + = to the right (mecanum only; a tank drive ignores it)
+     * @param turnRight   + = turn clockwise, seen from above
+     */
+    public final void driveWith(double forward, double strafeRight, double turnRight) {
+        requireOwn("driveWith(forward, strafe, turn)");
+        driving().drive(forward, strafeRight, turnRight, 1.0);
+    }
+
+    private com.crossbotics.ftchelper.drive.DriverControls driving() {
+        return ownDriving;
+    }
+
+    private void requireOwn(String what) {
+        if (ownOpMode == null) {
+            throw new IllegalStateException("robot." + what + " is for your own OpMode: call robot.init(this) in INIT first. "
+                    + "(In Controls.java and the autos the library does this for you.)");
+        }
     }
 
     /** Right after START: the modules' start (an intake "on at the start") and the atStart actions. */

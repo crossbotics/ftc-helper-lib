@@ -630,6 +630,27 @@ public class SimFromRobotTest {
         }
     }
 
+    // The same robot in a plain LinearOpMode (docs/guides/your-own-code.md): init, the INIT loop, start,
+    // the loop and stop by hand, with the library's parts, actions, driving and screen.
+    @Test public void theLessonBotRunsInAPlainOpMode() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.lessonbot.Robot.class);
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("Lesson Bot: own OpMode");
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Press START : A scores high"), 3));
+            s.start();
+            s.press(v -> s.g1().a = v);                               // score high (an action: never waits)
+            s.g1().left_stick_y = -1;                                 // and drive at the same time
+            assertTrue("the lift rises\n" + String.join("\n", s.screen()),
+                    SimRun.waitFor(() -> s.robot().motors.get("lift").shaft() > 1500, 5));
+            assertTrue("it drives while the lift moves", Math.abs(s.robot().motors.get("front_left").userPower()) > 0.3);
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Scored : 1"));
+            s.g1().left_stick_y = 0;
+            assertEquals("", s.error());
+            s.sim.ds.stop();
+            assertTrue("STOP stops the wheels", SimRun.waitFor(() -> s.robot().motors.get("front_left").userPower() == 0, 2));
+        }
+    }
+
     // Lesson 7: odometry. The simulator's pretend Pinpoint follows the robot; driveTo ends at the field
     // points (the start spot is the drivers' frame: x right, y away, for BLUE).
     @Test public void theOdometryBotDrivesToFieldPoints() throws Exception {

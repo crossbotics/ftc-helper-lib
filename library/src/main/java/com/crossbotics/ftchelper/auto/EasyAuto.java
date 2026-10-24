@@ -119,6 +119,12 @@ public abstract class EasyAuto extends LinearOpMode {
         return new Subsystems();
     }
 
+    /**
+     * Your own code at the very end (STOP, the end, or an error), after the wheels and every part are
+     * stopped: e.g. save a number for the next OpMode. Runs even if stopping failed.
+     */
+    protected void atEnd() { }
+
     /** Extra INIT choices, e.g. {@code menu.choice("Route", "Near", "Far")}. */
     protected void addChoices(InitMenu menu) { }
 
@@ -260,6 +266,7 @@ public abstract class EasyAuto extends LinearOpMode {
                     MatchMemory.remember(alliance(), end != null ? end : new FieldPose(0, 0, endHeading));
                 }
             } catch (RuntimeException e) { if (first == null) first = e; }
+            try { atEnd(); } catch (RuntimeException e) { if (first == null) first = e; }
             // A stop error is shown only if the program had no error of its own; otherwise it goes
             // in the robot log, and the Driver Station shows the program's error (the real cause).
             if (first != null) {

@@ -51,6 +51,23 @@ public abstract class Auto<R extends RobotDefinition> extends EasyAuto {
      */
     protected abstract void steps(Steps s, R robot);
 
+    /**
+     * Your own code for this autonomous only, once in INIT after the robot is set up (do not put it in
+     * {@code steps}: that is read several times). Give the robot this auto's code for each step there:
+     *
+     * <pre>{@code
+     * @Override protected void atInit(Robot robot) {
+     *     robot.duringInit(() -> robot.show("Lift (counts)", robot.lift.position()));
+     *     robot.atStop(() -> RobotLog.ii("team", "auto ended"));
+     * }
+     * }</pre>
+     *
+     * Code for every OpMode goes in Robot.java's {@code define()} instead (docs/guides/your-own-code.md).
+     *
+     * @param robot the robot (set up)
+     */
+    protected void atInit(R robot) { }
+
     /** The robot this autonomous runs (set up in INIT). */
     protected final R robot() {
         return robot;
@@ -121,6 +138,7 @@ public abstract class Auto<R extends RobotDefinition> extends EasyAuto {
         // angle from the last program is not used).
         robot.autonomous = true;
         robot.setup(hardwareMap);
+        atInit(robot);
         return robot.all();
     }
 
@@ -206,6 +224,13 @@ public abstract class Auto<R extends RobotDefinition> extends EasyAuto {
             t.section("Tuned on this robot (copy into Tunables.java)");
             for (String c : changed) t.text(c);
         }
+    }
+
+    // The end: the team's atStop code (robot.atStop), after everything stopped. A robot made again in INIT
+    // (the profile changed) never reaches here: only the one that ran.
+    @Override
+    protected final void atEnd() {
+        if (robot != null) robot.ended();
     }
 
     // With odometry, TeleOp gets the whole end pose (where, and which way it faces).
