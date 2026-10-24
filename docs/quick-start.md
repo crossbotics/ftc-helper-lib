@@ -70,7 +70,7 @@ made on the Driver Station. **Why:** the names are copied for you, so they canno
 
    It writes `Robot.java`, `Tunables.java`, `Controls.java`, `Actions.java` and `autos/LeaveStart.java`
    into TeamCode. It also adds the **Simulator** and **Simulator tests** run buttons to Android Studio
-   (the `.run` folder: commit it). It never overwrites your work: if any of the five files is already there, it
+   (they show after a Gradle sync). It never overwrites your work: if any of the five files is already there, it
    writes nothing and stops with `... is already there: nothing written (move it away first)`. Every guess it is not sure of is a
    `TODO` line in `Robot.java` (a comment that marks something still to do): **check each TODO** like
    the STEP lines below. In `Tunables.java` every setting is there: `DEFAULT` (the library's
@@ -223,7 +223,7 @@ and a hub that was never set uses COMPETITION.
 No robot nearby? The simulator runs your code on a laptop with a 3D field.
 
 **In Android Studio:** pick **Simulator** in the list next to the green Run button, and click Run.
-(No **Simulator** in the list? Add the buttons once: [Step 7 of Add the library](01-add-to-project.md#step-7-the-simulator-buttons-once).)
+(No **Simulator** in the list? Close the project and open it again: [Step 7 of Add the library](01-add-to-project.md#step-7-the-simulator-buttons-once).)
 The red **Stop** button stops it.
 
 **Or in the Terminal** (do the laptop setup below once), in the `ftc-helper-lib` folder (`cd ftc-helper-lib`):

@@ -209,26 +209,27 @@ tasks.register('newRobot', JavaExec) {
 
 // ./gradlew :sim:installButtons
 // The run buttons "Simulator" and "Simulator tests" for Android Studio: copies sim/run-buttons/*.run.xml into
-// the robot project's .run folder (only the missing ones). Commit them: everyone who clones gets the buttons.
+// the robot project's .idea/runConfigurations folder (only the missing ones). A Gradle sync in Android Studio
+// does the same (sim/run-buttons/tasks.gradle); this task is for a project that has not been synced yet.
 tasks.register('installButtons') {
     group = 'application'
-    description = 'Adds the Simulator and Simulator tests run buttons to Android Studio (the robot project\'s .run folder).'
+    description = 'Adds the Simulator and Simulator tests run buttons to Android Studio (the robot project\'s .idea/runConfigurations).'
     def from = file('run-buttons')
-    def to = robotProject != null ? new File(robotProject, '.run') : null
+    def to = robotProject != null ? new File(robotProject, '.idea/runConfigurations') : null
     doLast {
         if (to == null) throw new GradleException('installButtons: no robot project here (no ../TeamCode). Give it: -PteamCode=path/to/TeamCode')
         to.mkdirs()
         from.listFiles().findAll { it.name.endsWith('.run.xml') }.sort { it.name }.each { f ->
-            def dest = new File(to, f.name)
+            def name = f.name - '.run.xml'
+            def dest = new File(to, name + '.xml')
             if (dest.exists()) {
-                println "Already there: .run/${f.name}"
+                println "Already there: ${name}"
             } else {
                 dest.bytes = f.bytes
-                println "Added .run/${f.name}"
+                println "Added: ${name}"
             }
         }
         println 'In Android Studio: pick "Simulator" in the list next to the green Run button, then click Run.'
-        println '(No buttons in the list? Close the project and open it again.) Commit the .run folder.'
     }
 }
 

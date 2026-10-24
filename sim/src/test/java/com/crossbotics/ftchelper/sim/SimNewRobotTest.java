@@ -205,7 +205,8 @@ public class SimNewRobotTest {
     }
 
     // Android Studio's run buttons (sim/run-buttons): each file is a Gradle run configuration of a task that
-    // tasks.gradle makes; newRobot (and :sim:installButtons) copy them into the robot project's .run folder once.
+    // tasks.gradle makes; newRobot, :sim:installButtons and each Gradle sync copy them into the robot project's
+    // .idea/runConfigurations once (Android Studio does not read a .run folder).
     @Test public void theRunButtonsAreAddedOnceAndRunTheSimulatorTasks() throws Exception {
         Path buttons = new File("run-buttons").toPath();
         String tasks = new String(Files.readAllBytes(buttons.resolve("tasks.gradle")), StandardCharsets.UTF_8);
@@ -226,9 +227,10 @@ public class SimNewRobotTest {
         assertEquals(java.util.Arrays.asList("Simulator", "Simulator tests"), names);
 
         Path project = tmp.newFolder("robot-project").toPath();
-        assertEquals(java.util.Arrays.asList(".run/Simulator.run.xml", ".run/Simulator_tests.run.xml"), SimNewRobot.addRunButtons(buttons, project));
-        Files.write(project.resolve(".run/Simulator.run.xml"), "the team's own".getBytes(StandardCharsets.UTF_8));
+        assertEquals(java.util.Arrays.asList("Simulator", "Simulator_tests"), SimNewRobot.addRunButtons(buttons, project));
+        assertTrue(Files.isRegularFile(project.resolve(".idea/runConfigurations/Simulator.xml")));
+        Files.write(project.resolve(".idea/runConfigurations/Simulator.xml"), "the team's own".getBytes(StandardCharsets.UTF_8));
         assertTrue("only the missing ones", SimNewRobot.addRunButtons(buttons, project).isEmpty());
-        assertEquals("the team's own", new String(Files.readAllBytes(project.resolve(".run/Simulator.run.xml")), StandardCharsets.UTF_8));
+        assertEquals("the team's own", new String(Files.readAllBytes(project.resolve(".idea/runConfigurations/Simulator.xml")), StandardCharsets.UTF_8));
     }
 }

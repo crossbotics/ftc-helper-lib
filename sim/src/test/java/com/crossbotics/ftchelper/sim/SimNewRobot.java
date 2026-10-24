@@ -93,9 +93,10 @@ public final class SimNewRobot {
 
     /**
      * Android Studio's run buttons (Simulator, Simulator tests): the *.run.xml files of the buttons folder
-     * (sim/run-buttons) copied into the robot project's .run folder, only those not there yet.
+     * (sim/run-buttons) copied into the robot project's .idea/runConfigurations folder as NAME.xml (Android
+     * Studio reads them there, not from a .run folder), only those not there yet.
      *
-     * @return the files added, as ".run/NAME"
+     * @return the buttons added, by name
      */
     static List<String> addRunButtons(Path buttons, Path project) throws java.io.IOException {
         List<String> added = new ArrayList<>();
@@ -104,13 +105,14 @@ public final class SimNewRobot {
         try (java.util.stream.Stream<Path> s = Files.list(buttons)) {
             s.filter(f -> f.getFileName().toString().endsWith(".run.xml")).sorted().forEach(files::add);
         }
-        Path to = project.resolve(".run");
+        Path to = project.resolve(".idea").resolve("runConfigurations");
         for (Path f : files) {
-            Path dest = to.resolve(f.getFileName().toString());
+            String name = f.getFileName().toString().replace(".run.xml", "");
+            Path dest = to.resolve(name + ".xml");
             if (Files.exists(dest)) continue;
             Files.createDirectories(to);
             Files.copy(f, dest);
-            added.add(".run/" + f.getFileName());
+            added.add(name);
         }
         return added;
     }

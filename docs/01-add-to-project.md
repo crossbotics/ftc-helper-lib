@@ -123,23 +123,17 @@ Two run buttons start the [simulator](guides/simulator.md) from Android Studio, 
 - **Simulator**: the simulator with your TeamCode. Open http://localhost:8780 when the Run window says so.
 - **Simulator tests**: every test in your project's `simulator/scenarios` folder ([lesson 10](tutorials/start/10-test-your-robot-code.md)).
 
-They are two small files in a `.run` folder in your project (next to `TeamCode`). A project made with
-`./gradlew :sim:newRobot` has them already. To add them to your project, do one of these:
-
-- Make a folder `.run` in your project folder, and copy the two `.run.xml` files from
-  `ftc-helper-lib/sim/run-buttons` into it.
-- Or, if your laptop has the [laptop setup](quick-start.md#laptop-setup-once), run this in the Terminal,
-  in the `ftc-helper-lib` folder:
-
-  ```bash
-  ./gradlew :sim:installButtons
-  ```
-
-Then close the project and open it again (**File > Close Project**). Commit the `.run` folder.
-**Why:** everyone who clones the project gets the buttons.
+**You do nothing to get them:** the library adds them at each Gradle sync (Android Studio syncs when it
+opens the project; the elephant button at the top right, or **File > Sync Project with Gradle Files**,
+syncs again). The first time on a laptop, the Build window says `Simulator button added to Android Studio`.
+**Not in the list yet?** Close the project (**File > Close Project**) and open it again: Android Studio
+reads its buttons when it opens a project. They are two small files in your project's
+`.idea/runConfigurations` folder. That folder is not in git, so each laptop adds them at its first sync.
+Don't want them? Write `simulatorButtons=false` in your project's `gradle.properties`.
 
 **Use them:** in the list next to the green Run button (it shows `TeamCode`), pick **Simulator**, then
-click Run (the green triangle). The red square **Stop** button stops the simulator. To go back to the
+click Run (the green triangle). The red square **Stop** button stops the simulator. The Run window then
+says `Build cancelled` in red: that is normal, nothing broke. To go back to the
 robot app, pick `TeamCode` in the list again.
 
 **Why the buttons need no setup:** they use Android Studio's own Java and Android SDK. You do not set

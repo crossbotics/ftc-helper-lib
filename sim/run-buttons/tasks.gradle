@@ -1,7 +1,13 @@
 // The simulator's run buttons in Android Studio: "Simulator" and "Simulator tests" in the run list.
 // library/build.gradle applies this file in a robot project only (not in the library's own build).
 //
-// The buttons (the .run/*.run.xml files in the robot project) run these tasks. Each task starts the
+// The buttons are Android Studio run configurations: at each Gradle sync this file adds the missing ones
+// to the robot project's .idea/runConfigurations folder (Android Studio reads them there, not from a .run
+// folder). .idea is not in git, so every laptop gets them at its first sync. Android Studio reads that
+// folder when it opens a project (and sees new files in it later), so on a project's very first open the
+// buttons show after it is opened again. gradle.properties simulatorButtons=false stops it.
+//
+// The buttons run these tasks. Each task starts the
 // simulator's own build (the ftc-helper-lib folder: :sim:run or :sim:scenario), like typing ./gradlew there:
 //  - with the Java that runs this build (Android Studio's), so no JAVA_HOME is needed, and this project's
 //    Android SDK (ANDROID_HOME), so ftc-helper-lib needs no local.properties of its own;
@@ -17,6 +23,23 @@ def javaHome = new File(System.getProperty('java.home'))
 def java = new File(javaHome, 'bin/java.exe').isFile() ? new File(javaHome, 'bin/java.exe') : new File(javaHome, 'bin/java')
 def passOn = gradle.startParameter.projectProperties.findAll { !it.key.startsWith('android.') }
         .collect { "-P${it.key}=${it.value}".toString() }
+
+// From Android Studio (its sync and builds set these), or a project it has opened (.idea): not a Terminal build
+// of a project no IDE has seen. On a first open .idea is made only after the first sync.
+def fromIde = findProperty('android.injected.invoked.from.ide') != null || findProperty('android.injected.build.model.only') != null ||
+        System.getProperty('idea.sync.active') != null || rootProject.file('.idea').isDirectory()
+if (fromIde && (findProperty('simulatorButtons') ?: 'true').toString() != 'false') {
+    def runConfigs = rootProject.file('.idea/runConfigurations')
+    new File(projectDir.parentFile, 'sim/run-buttons').listFiles().findAll { it.name.endsWith('.run.xml') }.sort { it.name }.each { f ->
+        def dest = new File(runConfigs, f.name - '.run.xml' + '.xml')
+        if (!dest.exists()) {
+            runConfigs.mkdirs()
+            dest.bytes = f.bytes
+            logger.lifecycle("Simulator button added to Android Studio: ${f.name - '.run.xml'}. Not in the list next to the "
+                    + "green Run button? Close the project (File > Close Project) and open it again.")
+        }
+    }
+}
 
 [[name: 'simulator', task: ':sim:run', about: 'Starts the simulator with your TeamCode (open http://localhost:8780).'],
  [name: 'simulatorTests', task: ':sim:scenario', about: 'Runs every test in simulator/scenarios in the simulator.']].each { b ->

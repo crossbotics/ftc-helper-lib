@@ -423,7 +423,7 @@ Tunables section (here `Tunables.IntakeDeploy`).
    and anything it was not sure about. If one of the five files is already in TeamCode, it writes
    nothing and says which file: move that file away first. (Gradle then also prints
    `BUILD FAILED`: that is expected, nothing broke. Your files are untouched.) It also adds the
-   **Simulator** and **Simulator tests** buttons to Android Studio (the `.run` folder: commit it).
+   **Simulator** and **Simulator tests** buttons to Android Studio (they show after a Gradle sync).
 2. **Build and drive.** The drive works on day one; each module has safe starting numbers.
 3. **A simulator robot file** from the code: start the simulator (the **Simulator** button, or
    `./gradlew :sim:run`). Each time it starts, it writes `simulator/robot.properties` from Robot.java.

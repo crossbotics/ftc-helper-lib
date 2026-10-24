@@ -153,8 +153,8 @@ Do these in order. Each one catches a different kind of problem.
    the simulator robot file from `Robot.java` (the robot file format can change with the library).
    No tests yet? Run each autonomous in the simulator by hand (the **Simulator** button, or
    `./gradlew :sim:run`) and read its report, or record a test ([start lesson 10](tutorials/start/10-test-your-robot-code.md)).
-4. **New simulator buttons?** A new library version can bring new files in `ftc-helper-lib/sim/run-buttons`.
-   `./gradlew :sim:installButtons` adds the ones you do not have yet (it never replaces yours).
+4. **New simulator buttons?** A new library version can bring new ones. The Gradle sync after the update
+   adds the ones you do not have yet (it never replaces yours).
 5. **Install the app on the robot** (the green Run button, with the Control Hub connected).
 6. **Test on the robot**, on blocks first: every button of TeleOp, then each autonomous at low power
    (PRACTICE profile), then at match power. Test the parts on your list from the CHANGELOG first.

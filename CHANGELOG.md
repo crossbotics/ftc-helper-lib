@@ -2,6 +2,18 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## v0.18.4 - 2026-10-24
+
+### Fixed
+
+- **The simulator buttons now show in Android Studio.** Android Studio does not read the `.run` folder
+  that v0.18.3 used. Now the library adds the two buttons at each Gradle sync, in the project's
+  `.idea/runConfigurations` folder (only the missing ones; that folder is not in git, so each laptop gets
+  them at its first sync). You do nothing: pick **Simulator** next to the green Run button. On a laptop's
+  first sync of a project, close the project and open it again to see them.
+  A `.run` folder from v0.18.3 can be deleted. `simulatorButtons=false` in `gradle.properties` turns
+  this off. `:sim:newRobot` and `:sim:installButtons` write to the same folder.
+
 ## v0.18.3 - 2026-10-24
 
 ### Added
