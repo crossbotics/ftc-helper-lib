@@ -26,6 +26,13 @@ android {
     testOptions {
         // Android classes do nothing in plain unit tests instead of throwing.
         unitTests.returnDefaultValues = true
+        // A failed test shows its whole message in the console (CI's log), not only "AssertionError at line N".
+        unitTests.all {
+            testLogging {
+                events 'failed'
+                exceptionFormat = 'full'
+            }
+        }
     }
 }
 

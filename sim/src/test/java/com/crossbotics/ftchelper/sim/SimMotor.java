@@ -61,6 +61,14 @@ final class SimMotor {
     // The push of the drive model (wheel motors): when set, it decides the shaft speed.
     Double forcedVel = null;
     volatile double appliedPower = 0;   // the power the shaft really gets this step, in its own direction
+    /**
+     * Times the OpMode turned it on with setPower (from at most FEED_ON to more): as a flywheel's feeder, each
+     * is one feed. Counted here, not by the physics: a feed that follows the one before in the same loop
+     * (setPower(0), then setPower(1)) is never seen off by the physics.
+     */
+    volatile int starts = 0;
+    /** A feeder runs above this power. */
+    static final double FEED_ON = 0.3;
 
     final DcMotorEx device;
     // A dead-wheel odometry pod plugged into this port: its count replaces the motor's own (null = none).
@@ -170,6 +178,7 @@ final class SimMotor {
                 double was = Double.isNaN(targetVelocity) ? power : targetVelocity;
                 power = Math.max(-1, Math.min(1, ((Number) a[0]).doubleValue()));
                 targetVelocity = Double.NaN;
+                if (Math.abs(was) <= FEED_ON && Math.abs(power) > FEED_ON) starts++;
                 commanded(was, power);
                 return null;
             }

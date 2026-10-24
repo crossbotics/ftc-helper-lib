@@ -684,7 +684,8 @@ pages, not the manual), they roll and bounce, the robot pushes them, and the FLO
 # (shape=intake+left_spinner+right_spinner): a piece comes in at any of them
 collect.intake = shape=intake, motor=intake, holds=4
 # each flywheel shot (motor.flywheel = flywheel, feeder=feeder) sends a held piece off this shape.
-# The feeder is a motor or CR servo (a piece every 0.3 s while it runs), or a servo that pushes
+# The feeder is a motor or CR servo (a piece each time it starts; one more every 0.3 s from 0.45 s on
+# while it keeps running), or a servo that pushes
 # (an indexer: it feeds while it is more than 0.15 away from where it starts). The shot leaves
 # 45 degrees up from the shape's forward (angle= defaults to 40), at half the wheel's rim speed
 shoot.launcher = shape=flywheel, angle=45, share=0.5
@@ -724,8 +725,9 @@ distance.intake_distance = at=intake, acrossMm=150
 ```
 
 The colours are the screen colours of the field file, not a real sensor's: measure the real ones with
-the Piece Tuner (it also runs here). A motor feeder sends a piece every 0.3 s while it runs: keep a
-motor indexer's `feedSec` under 0.3 s, or one feed fires two pieces here and the count is off by one.
+the Piece Tuner (it also runs here). A motor or CR servo feeder sends one piece each time it is turned on and,
+if it keeps running, one more every 0.3 s from 0.45 s on: keep an indexer's `feedSec` under 0.45 s, or one
+feed fires two pieces here and the count is off by one.
 A second webcam's colours are not simulated (it says "not found" and sees nothing).
 
 **Rollers turn the pieces they touch.** A roller or spinner (any `roller` or `flywheel` shape) drags a
@@ -910,7 +912,8 @@ empty, with a note. Real ratios are used (an UltraPlanetary "5:1" is 5.23:1). Se
 seller's row closest to 5 V (a Control Hub servo port gives about 5 V; the headline number is often 6 V).
 
 Motor kinds: `free` (just spins), `lift` (hard stops, gravity), `flywheel` (coasts; while its `feeder`
-(a motor or a CR servo) runs, a piece goes through every 0.3 s and slows it down). `ticksPerRev=` sets a motor's encoder
+(a motor or a CR servo) runs, pieces go through and slow it down: one each time the feeder starts, then one
+every 0.3 s from 0.45 s on). `ticksPerRev=` sets a motor's encoder
 counts per turn (default 537.7; flywheel 28). On a robot, `setPower` in RUN_USING_ENCODER aims for the
 top speed of the motor TYPE chosen in the configuration; here it is the robot file's `maxTicksPerSec`. The wheel motors are on the left/right sides of the robot like a
 real one, with one side's motors mounted mirrored, so motor directions in your code matter here too.

@@ -32,7 +32,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 final class SimRobot {
     final Map<String, SimMotor> motors = new LinkedHashMap<>();
     final Map<String, SimServo> servos = new LinkedHashMap<>();
-    final Map<String, double[]> crServos = new LinkedHashMap<>();   // name -> {power, reversed (1/0)}
+    final Map<String, double[]> crServos = new LinkedHashMap<>();   // name -> {power, reversed (1/0), times turned on}
     final Map<String, SimTouch> touches = new LinkedHashMap<>();
     // motor name -> the CR servo that turns it (drivenBy=).
     private final Map<String, String> drivenBy = new LinkedHashMap<>();
@@ -114,8 +114,13 @@ final class SimRobot {
     private volatile double yawRateDeg = 0;   // degrees per second, counterclockwise
     // A hand push: inches per second forward/right, and how long it still lasts.
     private double pushForward = 0, pushRight = 0, pushLeft = 0;
-    // Per flywheel: seconds since the last piece went through (a running feeder sends one every 0.3 s).
+    // Per flywheel with a motor or CR servo feeder (each feed sends one piece at once, then one more every 0.3 s
+    // from 0.45 s on): how far the feeder has run towards its next piece (seconds; a piece at 0.3), the feeder's
+    // starts seen so far, whether it ran last step, and a feed whose piece waits for the wheel to spin.
     private final Map<String, Double> sinceShot = new LinkedHashMap<>();
+    private final Map<String, Integer> feedStartsSeen = new LinkedHashMap<>();
+    private final java.util.Set<String> feederOn = new java.util.HashSet<>();
+    private final java.util.Set<String> feedWaiting = new java.util.HashSet<>();
     // Per flywheel with a servo pusher: the pusher is out now (it already sent this push's piece).
     private final java.util.Set<String> pusherOut = new java.util.HashSet<>();
     static final double SECONDS_PER_PIECE = 0.3;
@@ -248,7 +253,7 @@ final class SimRobot {
             }
             servos.put(name, servo);
         }
-        for (String key : sortedKeys(p, "crservo.")) crServos.put(key.substring("crservo.".length()), new double[] {0, 0});
+        for (String key : sortedKeys(p, "crservo.")) crServos.put(key.substring("crservo.".length()), new double[] {0, 0, 0});
         // An encoder turned by a CR servo (motor.X = ..., drivenBy=SERVO): its power is the CR servo's.
         for (Map.Entry<String, String> e : drivenBy.entrySet()) {
             final double[] cr = crServos.get(e.getValue());
@@ -541,7 +546,12 @@ final class SimRobot {
                     if (isBlocked() && m.getName().startsWith("set")) return null;
                     switch (m.getName()) {
                         case "setPower":
-                            synchronized (this) { state[0] = Math.max(-1, Math.min(1, ((Number) a[0]).doubleValue())); }
+                            synchronized (this) {
+                                double was = state[0];
+                                state[0] = Math.max(-1, Math.min(1, ((Number) a[0]).doubleValue()));
+                                // as a flywheel's feeder: one more feed (see SimMotor.starts)
+                                if (Math.abs(was) <= SimMotor.FEED_ON && Math.abs(state[0]) > SimMotor.FEED_ON) state[2]++;
+                            }
                             return null;
                         case "getPower": synchronized (this) { return state[0]; }
                         // state[0] is the power asked for; the panel shows the turning direction (reversed flips it).
@@ -634,6 +644,8 @@ final class SimRobot {
         shots = 0;
         sinceShot.clear();
         pusherOut.clear();
+        feederOn.clear();
+        feedWaiting.clear();
         x = startX;
         y = startY;
         imuZero += wrap(startHeading - headingDeg);   // a hand move: the IMU does not see it (like the odometry)
@@ -735,25 +747,61 @@ final class SimRobot {
             boolean on = feeder != null ? Math.abs(feeder.appliedPower) > 0.3
                     : cr != null ? Math.abs(cr[0]) > 0.3
                     : pusher != null && Math.abs(pusher.actual - pusher.start) > SERVO_FEED_MOVE;
-            double since = sinceShot.getOrDefault(m.name, SECONDS_PER_PIECE) + dt;
-            // While the feeder runs, a piece goes through every SECONDS_PER_PIECE (the first at once).
-            // A servo pusher (an indexer) sends ONE piece per push, however long it stays out: a push
-            // and a slow return can last longer than SECONDS_PER_PIECE, and that fired a second piece.
-            boolean again = pusher == null || !pusherOut.contains(m.name);
             if (pusher != null) {
+                // A servo pusher (an indexer) sends ONE piece per push, at once, however long it stays
+                // out: a push and a slow return can last longer than SECONDS_PER_PIECE, and that fired a
+                // second piece.
+                boolean again = !pusherOut.contains(m.name);
                 if (on) pusherOut.add(m.name);
                 else pusherOut.remove(m.name);
+                if (on && again && Math.abs(m.shaftSpeed()) > 100) feedShot(m);
+                continue;
             }
-            if (on && again && since >= SECONDS_PER_PIECE && Math.abs(m.shaftSpeed()) > 100) {
-                // With game pieces, a shot needs a piece in the robot (it flies off the shooter shape).
-                if (!pieces.shootsPieces() || pieces.shoot(m)) {
-                    m.shot();
-                    shots++;
+            // A motor or CR servo feeder (a windmill, a belt): each time it is turned on, one piece goes in at
+            // once; if it keeps running, one more every SECONDS_PER_PIECE, the first of them 1.5 x that after
+            // it started. So a feed of up to 0.45 s sends exactly one piece, however long the OpMode's loop
+            // takes to turn it off. WHY: before, one piece went at once and one more every 0.3 s while it
+            // ran, and feeds that follow each other in the same loop look like one long run. A feeder tuned
+            // to one piece per feed runs about 0.3 s, so three feeds in a row ran 0.9 s, exactly when a
+            // fourth piece was due: a few ms of lag (a busy computer) fired it, and a recorded autonomous
+            // test failed now and then ("launched >= 4", but the OpMode had fired 3).
+            int starts = feeder != null ? feeder.starts : (int) cr[2];
+            Integer seen = feedStartsSeen.put(m.name, starts);
+            // Turned on by the OpMode's setPower (the device counts it), or, for a power set directly (tests),
+            // seen running after it was off.
+            boolean started = starts > 0 ? starts != (seen == null ? 0 : seen) : on && !feederOn.contains(m.name);
+            if (on) feederOn.add(m.name);
+            else feederOn.remove(m.name);
+            boolean spinning = Math.abs(m.shaftSpeed()) > 100;
+            double since = sinceShot.getOrDefault(m.name, 0.0);
+            if (started) feedWaiting.add(m.name);
+            if (feedWaiting.contains(m.name)) {
+                // the feed's piece: as soon as the wheel spins (turned off before that: it never went in)
+                if (spinning) {
+                    feedShot(m);
+                    feedWaiting.remove(m.name);
+                    since = -SECONDS_PER_PIECE / 2;
+                } else if (!on) {
+                    feedWaiting.remove(m.name);
                 }
-                since = 0;
+            } else if (on) {
+                since += dt;
+                if (since >= SECONDS_PER_PIECE && spinning) {
+                    feedShot(m);
+                    // keep the remainder (no drift from the 10 ms steps), at most a piece-time behind
+                    since = Math.min(since - SECONDS_PER_PIECE, SECONDS_PER_PIECE / 2);
+                }
             }
-            if (!on) since = SECONDS_PER_PIECE;
             sinceShot.put(m.name, since);
+        }
+    }
+
+    // One piece from the feeder into the flywheel: with game pieces, a shot needs a piece in the robot
+    // (it flies off the shooter shape); without them, every feed is a shot.
+    private void feedShot(SimMotor m) {
+        if (!pieces.shootsPieces() || pieces.shoot(m)) {
+            m.shot();
+            shots++;
         }
     }
 

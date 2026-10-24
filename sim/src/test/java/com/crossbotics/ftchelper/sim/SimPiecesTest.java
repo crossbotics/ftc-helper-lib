@@ -288,6 +288,37 @@ public class SimPiecesTest {
         }
     }
 
+    // A motor (or CR servo) feeder: each feed sends one piece, however late the OpMode turns it off, also when
+    // the next feed starts in the same loop (the physics never sees it off). Only a feeder that keeps running
+    // sends more: one every 0.3 s from 0.45 s on. Before, three 0.3 s feeds in a row were one 0.9 s run, and a
+    // few ms of lag fired a fourth piece (a recorded autonomous test failed now and then on a busy computer).
+    @Test public void eachFeedSendsOnePieceHoweverLateItStops() throws Exception {
+        for (double lag : new double[] {0, 0.02, 0.05, 0.12}) {
+            SimRobot r = robot("");
+            r.setPose(0, -40, 0);
+            r.motors.get("flywheel").device.setPower(1);
+            run(r, 2.0);
+            com.qualcomm.robotcore.hardware.DcMotorEx feeder = r.motors.get("feeder").device;
+            for (int feed = 0; feed < 3; feed++) {
+                feeder.setPower(0);                          // the last feed ends and the next starts in one loop
+                feeder.setPower(1);
+                run(r, 0.3 + lag);
+            }
+            feeder.setPower(0);
+            run(r, 0.1);
+            assertEquals("three feeds of " + (0.3 + lag) + " s in a row", 3, r.pieces.launched());
+        }
+        SimRobot r = robot("");
+        r.setPose(0, -40, 0);
+        r.motors.get("flywheel").device.setPower(1);
+        run(r, 2.0);
+        r.motors.get("feeder").device.setPower(1);
+        run(r, 0.4);
+        assertEquals("a feed up to 0.45 s: one piece", 1, r.pieces.launched());
+        run(r, 0.4);
+        assertEquals("kept running: one more at 0.45 s and at 0.75 s", 3, r.pieces.launched());
+    }
+
     // Preloaded or not (the page's checkbox, "set preload", or "preload = off" in the robot file), and the
     // field put back without moving the robot.
     @Test public void preloadCanBeTurnedOffAndTheFieldReset() throws Exception {
