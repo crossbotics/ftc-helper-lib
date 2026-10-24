@@ -36,7 +36,10 @@ final class SimEngine {
     SimEngine(SimRobot robot, SimDriverStation.Scope scope) {
         this.robot = robot;
         this.ds = new SimDriverStation(robot, scope);
-        ds.beforeStart = this::placeForInit;
+        ds.beforeStart = () -> {
+            placeForInit();
+            rememberWordsSpot();
+        };
         matchClock();
     }
 
@@ -156,9 +159,91 @@ final class SimEngine {
 
     // In INIT of an autonomous whose start spot is only in words: what the page says to do ("" = nothing).
     volatile String placeNote = "";
-    static final String PLACE_NOTE = "This autonomous gives its start spot in words only, so the robot stays where it is: "
-            + "drag it to its start spot on the map. To place it by itself, give the spot in inches in the code: "
-            + "s.start(\"...\", x, y, heading) (the Robot panel shows the numbers for where the robot is now).";
+    static final String PLACE_NOTE = "This autonomous gives its start spot in words only. The robot is on your alliance's "
+            + "side: drag it to the exact start spot on the map. At START the simulator remembers it for this "
+            + "autonomous (for the other alliance, the same spot on its side). Or give the spot in inches in the code: s.start(\"...\", x, y, heading) "
+            + "(the Robot panel shows the numbers for where the robot is now).";
+
+    // The words-only autonomous in INIT now: its OpMode name (null = none), and the alliance chosen.
+    private volatile String wordsKey = null;
+    private volatile com.crossbotics.ftchelper.match.Alliance wordsAlliance = null;
+
+    // A spot is saved as RED's (as the robot file's start is written). BLUE's is the same spot seen from the
+    // blue wall: turned half a turn about the field's centre, like defaultSpot. The same turn goes both ways.
+    static com.crossbotics.ftchelper.util.FieldPose forAlliance(com.crossbotics.ftchelper.util.FieldPose p,
+                                                               com.crossbotics.ftchelper.match.Alliance a) {
+        return a == com.crossbotics.ftchelper.match.Alliance.RED ? p
+                : new com.crossbotics.ftchelper.util.FieldPose(-p.x, -p.y, p.headingDeg + 180);
+    }
+    /**
+     * True on the page (SimMain): a words-only autonomous's spot at START is saved for next time (one spot
+     * per autonomous, used for both alliances: turned half a turn for the other side), in
+     * sim-start-spots.properties next to the simulator's settings. Off in tests, so one test cannot move
+     * another's robot.
+     */
+    volatile boolean rememberSpots = false;
+
+    static java.io.File spotsFile() {
+        return new java.io.File(com.crossbotics.ftchelper.core.SettingsFile.folder(), "sim-start-spots.properties");
+    }
+
+    private static java.util.Properties readSpots() {
+        java.util.Properties p = new java.util.Properties();
+        java.io.File f = spotsFile();
+        if (f.isFile()) {
+            try (java.io.InputStream in = new java.io.FileInputStream(f)) {
+                p.load(in);
+            } catch (java.io.IOException e) {
+                // unreadable: start from the defaults
+            }
+        }
+        return p;
+    }
+
+    private com.crossbotics.ftchelper.util.FieldPose savedSpot(String key) {
+        return rememberSpots ? loadSpot(key) : null;
+    }
+
+    /** The saved RED spot of this autonomous (OpMode name), or null. */
+    static com.crossbotics.ftchelper.util.FieldPose loadSpot(String key) {
+        String v = readSpots().getProperty(key);
+        if (v == null) return null;
+        try {
+            String[] n = v.split(",");
+            return new com.crossbotics.ftchelper.util.FieldPose(Double.parseDouble(n[0]), Double.parseDouble(n[1]), Double.parseDouble(n[2]));
+        } catch (RuntimeException e) {
+            return null;
+        }
+    }
+
+    // At START of a words-only autonomous: where the robot stands now, for next time.
+    private void rememberWordsSpot() {
+        String key = wordsKey;
+        if (!rememberSpots || key == null || ds.phase() != SimDriverStation.Phase.INIT) return;
+        double x, y, h;
+        synchronized (robot) {
+            x = robot.x;
+            y = robot.y;
+            h = robot.headingDeg;
+        }
+        // Saved as RED's spot (the same turn takes BLUE's spot to RED's).
+        com.crossbotics.ftchelper.util.FieldPose red = forAlliance(new com.crossbotics.ftchelper.util.FieldPose(x, y, h),
+                wordsAlliance == null ? com.crossbotics.ftchelper.match.Alliance.RED : wordsAlliance);
+        saveSpot(key, red);
+    }
+
+    /** Saves an autonomous's RED spot (OpMode name -> field inches and degrees) for next time. */
+    static void saveSpot(String key, com.crossbotics.ftchelper.util.FieldPose red) {
+        java.util.Properties p = readSpots();
+        p.setProperty(key, String.format(java.util.Locale.US, "%.2f,%.2f,%.1f", red.x, red.y, red.headingDeg));
+        java.io.File f = spotsFile();
+        if (f.getParentFile() != null) f.getParentFile().mkdirs();
+        try (java.io.OutputStream out = new java.io.FileOutputStream(f)) {
+            p.store(out, "Start spots of autonomous OpModes that give theirs in words only (field inches, degrees)");
+        } catch (java.io.IOException e) {
+            // not saved: next time it starts from the default spot again
+        }
+    }
 
     private void placeForInitNow() {
         if (ds.phase() != SimDriverStation.Phase.INIT || ds.current() == null) return;
@@ -174,13 +259,23 @@ final class SimEngine {
             // leaves the robot where it is: the page asks the team to drag it there, or to give the spot in
             // inches in the code (placeNote).
             target = com.crossbotics.ftchelper.match.MatchMemory.placement();
+            wordsKey = null;
             if (target == null) {
+                // Its spot in words only: the chosen alliance's side, where this auto started last time if
+                // the team placed it before (remembered at START), else the robot file's start for that side.
                 placeNote = PLACE_NOTE;
-                return;
+                com.crossbotics.ftchelper.match.Alliance a = com.crossbotics.ftchelper.match.MatchMemory.chosen();
+                if (a == null) return;
+                wordsKey = ds.current().name;
+                wordsAlliance = a;
+                com.crossbotics.ftchelper.util.FieldPose saved = savedSpot(wordsKey);
+                target = saved == null ? defaultSpot(a) : forAlliance(saved, a);
+            } else {
+                placeNote = "";
             }
-            placeNote = "";
         } else {
             placeNote = "";
+            wordsKey = null;
             // TeleOp after an autonomous: the robot is where autonomous left it. Without one: once the
             // drivers choose the alliance in INIT, that alliance's default spot.
             if (com.crossbotics.ftchelper.match.MatchMemory.hasAlliance()) return;
