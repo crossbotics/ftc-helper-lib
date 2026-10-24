@@ -7,7 +7,7 @@ where: sim
 minutes: 15
 needs: [any]
 kit_bots: [gobilda, rev, andymark, studica]
-since: unreleased
+since: v0.18.2
 docs: [tutorials/start/10-test-your-robot-code.md, guides/simulator.md#scenario-files-test-without-a-browser]
 ---
 
