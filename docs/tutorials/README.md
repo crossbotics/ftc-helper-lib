@@ -17,8 +17,8 @@ Never used Android Studio? Start with [Start from zero](../start-from-zero.md) (
 Scratch or Blocks before? Read [From Blocks to Java](../blocks-to-java.md) next, before the Quick start:
 it shows where each block you know went.
 
-Want a driving robot first, with no explanations? Do the [Quick start](../quick-start.md) (30 minutes),
-then come back here. Not sure which robot code to start from? [Pick your template](../templates.md).
+Want a driving robot first, with no explanations? Do the [Quick start](../quick-start.md): it has a road
+for a starter bot as it is, a changed starter bot, and your own robot. Then come back here. Not sure which robot code to start from? [Pick your template](../templates.md).
 
 The shortest way to a whole robot program. **Lessons 1 to 6 are for every robot:** do them in order.
 **Lessons 7 to 9 are for some robots:** do only the ones your robot needs (odometry, paths, a shooter).

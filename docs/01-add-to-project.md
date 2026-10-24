@@ -160,7 +160,8 @@ GitHub Desktop (**File > Clone Repository…**) gets submodules by itself. Andro
 
 ## Next
 
-- [Quick start](quick-start.md): five files, the lines to change, and a driving robot in 30 minutes
+- [Quick start](quick-start.md): [pick your road](quick-start.md#pick-your-road), then the configuration,
+  the five files, the Hardware Check, the first drive and a first autonomous
 - [Tutorials](tutorials/README.md): start with the main track, lesson 1: [the robot in five files](tutorials/start/01-robot-in-five-files.md)
   (`./gradlew :sim:newRobot` writes the five files from your robot configuration, and adds the simulator buttons)
 - [Keep it up to date](02-keep-up-to-date.md)

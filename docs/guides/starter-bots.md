@@ -2,8 +2,10 @@
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
-**For:** anyone who wants a ready robot to try in the [simulator](simulator.md), or an example robot
-file. **You need:** the simulator running ([Start it](simulator.md#start-it)).
+**For:** a team with one of these starter bots (roads 1 and 2 of the [Quick start](../quick-start.md#pick-your-road)),
+or anyone who wants a ready robot to try in the [simulator](simulator.md). This page has each starter
+bot's [configuration names](#the-configuration-names), what its code does differently, and
+[what to change when you changed the robot](#you-changed-your-starter-bot).
 
 Each seller in FTC (REV, goBILDA, AndyMark, Studica) gives away the design of a simple "starter bot" for
 the season. For 2026-27 (BIOBUZZ) we wrote one robot file for each, so the simulator has four real,
@@ -65,6 +67,54 @@ files hold only our own numbers.
 **Same for all four:** the start pose is x = -56 with the back against the red wall (field file: inside
 face at y = -70.585); the game-piece capacity is not stated by any seller, so `holds=4` is the game's limit;
 motor directions come from the sellers' code where it has them.
+
+## The configuration names
+
+Make the robot configuration on the Driver Station with these names ([how](../quick-start.md#2-make-the-robot-configuration)).
+They are the names in each seller's own code, so the template runs on the starter bot as it is. Use the
+port each wire is really in. Leave the `imu` line as it is (the Control Hub's own IMU). A motor type
+that is not in the Driver Station's list: pick the closest one (the library takes the motor's numbers
+from `Robot.java`).
+
+**goBILDA:**
+
+| Name | Kind | What it is |
+| --- | --- | --- |
+| `left_drive`, `right_drive` | Motor (goBILDA 5202/3/4 series) | the drive motors (312 RPM) |
+| `intake` | Motor (goBILDA 5202/3/4 series) | the intake roller (117 RPM) |
+| `launcher` | Motor (goBILDA 5202/3/4 series) | the flywheel (a 312 RPM motor with its gearbox taken off) |
+| `left_intake_servo`, `right_intake_servo` | Continuous Rotation Servo | the two corner wheels |
+| `windmill` | Continuous Rotation Servo | the feeder |
+
+**REV:**
+
+| Name | Kind | What it is |
+| --- | --- | --- |
+| `leftDrive`, `rightDrive` | Motor (REV UltraPlanetary HD Hex) | the drive motors (20:1) |
+| `intakeMotor` | Motor (REV Core Hex) | the intake |
+| `flywheel` | Motor (REV HD Hex) | the flywheel (no gearbox) |
+| `crServo` | Continuous Rotation Servo | the feeder roller |
+| `pollenServo` | Servo | the pollen pusher ("poker") |
+
+**AndyMark:**
+
+| Name | Kind | What it is |
+| --- | --- | --- |
+| `left_drive`, `right_drive` | Motor (the closest NeveRest type) | the drive motors (NeveRest Hex 19.2:1) |
+| `rollerI` | Continuous Rotation Servo | the intake rollers |
+| `rollerF` | Continuous Rotation Servo | the flower roller (the "stick" version has a `stick` Servo instead) |
+| `catapult` | Motor (the closest NeveRest type) | the catapult (NeveRest Hex 50.9:1) |
+
+**Studica:**
+
+| Name | Kind | What it is |
+| --- | --- | --- |
+| `leftDrive`, `rightDrive` | Motor (the closest type to a Maverick 50.9:1) | the drive motors |
+| `Intake` | Motor | the intake (Maverick 3.7:1) |
+| `FlyWheel` | Motor | the flywheel (Maverick 1:1) |
+| `fwActuator` | Servo | the flap that pushes each piece into the wheels |
+
+Capitals count: Studica's `Intake` and `FlyWheel` start with a capital letter.
 
 ## REV DUO FTC Starter Bot
 
@@ -294,6 +344,85 @@ comments in the code do not say:
   puts the intake on the bumpers, the flywheel on RT and the flap on X and A: change a button in
   `Controls.java` if your drivers want Studica's layout.
 - **Autonomous** (`autos/`): Studica's own autonomous is not on its page, so this is a simple first one: fire the preloaded pieces, then drive off the start line in the last 3 s.
+
+## You changed your starter bot
+
+This is road 2 of the [Quick start](../quick-start.md#road-2-a-changed-starter-bot). Start from your
+starter bot's template ([way C](../quick-start.md#c-copy-your-starter-bots-template)), then make your
+changes **one at a time**: change, build, check. **Why:** when something breaks, you know which change
+did it.
+
+**Keep the seller's names** for every part you did not change. **Why:** the template, the starter bot's
+robot file and the notes on this page all use them.
+
+### A part added
+
+1. **The configuration:** a name for its port (small letters, `_` between words: `intake_deploy`).
+2. **`Robot.java`:** a field at the top of the class, and an `add(...)` line in `define()`, with
+   `.part(...)` for its motor or servo ([the parts](../modules/robot.md), [the parts catalog](parts-catalog.md),
+   short recipes in the [cookbook](../cookbook.md)). Not built yet? Add `.optional()`: the code then runs
+   without it ([parts not on the robot yet](../modules/robot.md#parts-not-on-the-robot-yet)).
+3. **`Tunables.java`:** its section, named after the device in CamelCase (`intake_deploy` reads
+   `Tunables.IntakeDeploy`). Write `MEASURE` for each position and limit, and `DEFAULT` for the rest
+   ([DEFAULT and MEASURE](tunables.md#default-and-measure)). **Why:** INIT then stops until a finder gives
+   the real number, so a guess never pushes the part into the frame.
+4. **Buttons:** each part brings its own buttons. Move one, or add a job, in `Controls.java`
+   ([lesson 3](../tutorials/start/03-buttons.md)). Several parts together: an action in `Actions.java`
+   ([lesson 5](../tutorials/start/05-actions.md)).
+
+### A part taken off
+
+1. Delete its `add(...)` line and its field in `Robot.java`, and its section in `Tunables.java`.
+2. Build. Android Studio marks in red every line that still uses it (in `Controls.java`, `Actions.java`
+   and `autos/`). Delete or change each one.
+3. Take its name out of the configuration.
+
+### A motor, servo or wheel changed
+
+1. Change its `.part(...)` (a drive: `.motor(...)` and `.wheelMm(...)`). The `DEFAULT` numbers follow the
+   new part. Numbers that are written in `Tunables.java` (a flywheel's `kF`, a speed) may now be wrong:
+   measure them again with the finder.
+2. A drive motor changed: the Hardware Check and the motor directions again, and later the Drive Tuner
+   again.
+3. The configuration: change that port's motor type.
+
+### A part moved, or a new shape
+
+The robot code does not change, unless a servo's positions changed (then the Servo Finder again). Only
+the simulator's robot file changes: the part's place and size
+([Edit robot](simulator.md#edit-robot-shape-your-robot) in the simulator page, or `looks(...)` in
+`Robot.java`: [shapes](../modules/robot.md#shapes-and-parts)).
+
+### The simulator's robot file
+
+Start from your starter bot's measured file: copy `sim/robots/starter-bot-<seller>.properties` to
+`simulator/robot.properties` in your robot project. After each change, run `./gradlew :sim:fromRobot`
+from the `ftc-helper-lib` folder: it adds a line for each new part, marked `TODO measure`
+([a robot file from Robot.java](simulator.md#a-robot-file-from-robotjava)). The lines of the copied file
+are yours, so it does not delete them: for a part you took off, delete its lines (and its `shape.` lines)
+by hand. It stops and says why if a line in the file and your code disagree: fix that line by hand.
+Then measure the robot and write the real sizes on the `TODO` lines.
+
+### Your names on the Driver Station
+
+Change the names in `@TeleOp(name = ...)` and `@Autonomous(name = ..., preselectTeleOp = ...)`, and
+`group = "Examples"`, to your own. `preselectTeleOp` must be the TeleOp's name exactly.
+
+### A worked example: team 8938's robot 1
+
+Team 8938 started from goBILDA's starter bot ([its pages](https://crossbotics.com/teams/8938-octobots/)).
+What they changed, and what each change needed:
+
+| Change | Configuration | Code |
+| --- | --- | --- |
+| an intake that folds up at the start, pushed over by a servo at START | `intake_deploy` (Servo) added | a `Positioner` with `.optional()`; `Tunables.IntakeDeploy`: `stowed` and `deployed` are `MEASURE` (Servo Finder); an action that pushes it over at START, and X to push it again |
+| corner wheels driven from the intake through gears, not by servos | `left_intake_servo`, `right_intake_servo` taken out | the `.withCrServos(...)` part of the intake line deleted; the new wheels are only shapes for the simulator |
+| a flywheel on a sliding mount and a ramp that sends shots out of the back | none | only shapes and the shot angle (`.shotAngle(147)`) for the simulator |
+| new buttons (B: intake on/off) | none | `Controls.java` |
+
+Their order on the robot was the Quick start's: the Hardware Check, the motor directions, the Servo
+Finder, the Flywheel Finder, the first drive at 0.4 power, each mechanism, then the Drive Tuner and the
+autonomous.
 
 ## What the simulator could not express (input for its next stages)
 

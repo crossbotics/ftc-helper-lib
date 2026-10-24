@@ -9,6 +9,12 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - **The Simulator button opens the page.** When the simulator is ready, http://localhost:8780 opens in
   your browser. If no browser opens, the address in the Run window is a link: click it. In the Terminal,
   `./gradlew :sim:run -Popen` does the same (without `-Popen` nothing opens, as before).
+- **Pick your road (Quick start).** The Quick start now starts with three roads: an unchanged starter
+  bot (goBILDA, REV DUO, AndyMark Robits, Studica), a changed starter bot, and your own robot. Each road
+  lists its steps in order, from adding the library to a first autonomous. New sections: make the robot
+  configuration, measure the numbers with the finders (before the first drive), and a first
+  autonomous. The starter bots page has each starter bot's configuration names, and what to change when
+  you changed the robot (with team 8938's robot 1 as an example).
 
 ## v0.18.4 - 2026-10-24
 
