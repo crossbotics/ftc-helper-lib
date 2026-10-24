@@ -33,7 +33,7 @@ later lesson goes wrong.
 1. Build and install. On the Driver Station, choose the TeleOp "Hardware Check", INIT, then START.
 2. Count the devices in your configuration. Count the devices the Hardware Check lists (D-pad up and down goes through them).
 3. For each motor: choose it, push gamepad 1's right stick up a little. Watch which way it turns and whether its encoder count goes UP.
-4. For each servo: choose it, press X (it goes to 0.5), then D-pad right and left. It moves a little each press.
+4. For each servo: choose it. Set the start point near where the servo sits (D-pad right and left; nothing moves). Press A: it moves to the start point. Then D-pad right and left: it moves a little each press.
 5. Read the battery line and the IMU line. (The IMU is the turn sensor inside the Control Hub. "Yaw" is the way the robot faces, in degrees.) Turn the robot left by hand: the yaw goes up.
 6. Read each hint the screen shows for a device. Is it right for your robot?
 

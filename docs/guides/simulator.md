@@ -1023,6 +1023,7 @@ set preload off                        # the robot holds no preload (now and aft
 set field start                        # every game piece back where the match starts it (the robot stays)
 set device intake_deploy missing       # take a device out of the configuration from the next INIT
                                        # (a part not on the robot yet); present = put it back
+set tunable IntakeDeploy.deployed 0.6  # a Tunables number for this file only (before init; see below)
 expect screen has "Ready"              # or: screen not "..."
 expect value "Lift" > 500              # the number on the screen line that starts with Lift
 expect time < 25                       # seconds since START (e.g. how long an autonomous took)
@@ -1071,6 +1072,22 @@ short names); `Controls.java` uses the library's names. The ones that differ:
 | `a b x y back start` | the same |
 
 So `g2.dpadLeft.press(...)` in Java is `press g2.dpad_left` in a scenario.
+
+**A number you have not measured yet: `set tunable`.** A Tunables number written as `MEASURE` stops
+INIT until you measure it on the robot. A test can stand in for it: `set tunable IntakeDeploy.deployed 0.6`
+sets `Tunables.IntakeDeploy.deployed` to 0.6 for this file only.
+
+- Put it before `init` (or after `stop`): the parts read their numbers at INIT. While an OpMode is in
+  INIT or running, the line fails.
+- It works for numbers (`double`, `int`, `float`, `long`) and `true`/`false`. `MEASURE` and `DEFAULT` work too.
+- It sets the field in the Tunables class your Robot.java uses (found the way INIT finds it:
+  `Tunables` next to Robot.java, or the class you give with `tunables(...)`), and in every other class
+  named Tunables that has it.
+- At the end of the file, the number goes back to the value in your code. The next file starts fresh.
+- A misspelled name fails and names what exists: `Tunables.IntakeDeploy has no field "deployd" (did you
+  mean deployed?)`.
+
+When you measure the real number, write it in Tunables.java and delete the `set tunable` line.
 
 **Check a `show(...)` line.** A `show("Intake on", ...)` line is on the screen as `Label : value`
 (the label, a space, a colon, a space, the value). Check it with its words:

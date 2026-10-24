@@ -919,7 +919,7 @@ public static class Claw {                                      // "claw" in the
     // The Servo Finder shows "Tunables.Claw: P1 = 0.210, P2 = 0.770": write P1 as open, P2 as closed.
     public static double open = MEASURE;                        // servo position, open (Servo Finder)
     public static double closed = MEASURE;                      // servo position, closed (Servo Finder)
-    public static double travelSec = DEFAULT;                   // time for a full move (0.3, or the servo's)
+    public static double travelSec = DEFAULT;                   // time for a full 0-to-1 move (0.3, or the servo's)
 }
 ```
 
@@ -944,7 +944,7 @@ public static class Wrist {                                     // "wrist" in th
     public static double down = MEASURE;                        // servo position: any name you like
     public static double level = MEASURE;                       // servo position (Servo Finder)
     public static double up = MEASURE;                          // servo position (Servo Finder)
-    public static double travelSec = DEFAULT;                   // time for a full move (0.3, or the servo's)
+    public static double travelSec = DEFAULT;                   // time for a full 0-to-1 move (0.3, or the servo's)
 }
 ```
 
@@ -970,7 +970,7 @@ atStart(() -> Action.named("Deploy").then(() -> intakeDeploy.goTo("deployed")));
 public static class IntakeDeploy {                              // "intake_deploy" in the configuration
     public static double stowed = MEASURE;                      // servo position, folded (Servo Finder)
     public static double deployed = MEASURE;                    // servo position, folded out (Servo Finder)
-    public static double travelSec = DEFAULT;                   // time for a full move (0.3, or the servo's)
+    public static double travelSec = DEFAULT;                   // time for a full 0-to-1 move (0.3, or the servo's)
 }
 ```
 
@@ -1571,8 +1571,8 @@ public static double kF = MEASURE;                          // steady power (Fly
 public static double nominalVolts = MEASURE;                // battery volts for kF (Flywheel Finder)
 public static double trimStepPercent = DEFAULT;             // one D-pad press (1%)
 public static double trimMaxPercent = DEFAULT;              // never more than this each way (15%)
-// Battery compensation, OFF by default (not yet proven on a real robot: try it and tell us).
-public static boolean batteryCompensation = true;           // true = F follows the battery (false)
+// Battery compensation: true = F follows the battery. Try it on a real robot and tell us.
+public static boolean batteryCompensation = false;          // (off until proven on a real robot)
 ```
 
 <!-- recipe: speed-trim -->
@@ -1595,8 +1595,8 @@ g2.x.press(robot.launcher::useLastTrim).says("use last match's trim");
 15% and never past the motor's top speed, back to 0 at every INIT) fixes it for this match, for every
 table. At INIT the Driver Station offers last time's trim (`Trim last time : +3%`): double-tap D-pad up
 after START to use it (or your own button: `useLastTrim`, in the recipe); it is never applied by itself. Battery compensation scales the F gain by `nominalVolts` / the battery
-(tuned at 12.6 V, at 11.5 V: F x 1.10). It is off unless you write `batteryCompensation = true`, and not
-yet proven on a real robot: leave that line out (off) until you want to test it. It needs the `kF` and
+(tuned at 12.6 V, at 11.5 V: F x 1.10). It is not yet proven on a real robot, so it is off: the
+box writes `batteryCompensation = false`. Change it to `true` only when you want to test it. It needs the `kF` and
 `nominalVolts` the Flywheel Finder found together, which is why the box writes the gains as `MEASURE`;
 without battery compensation, `DEFAULT` gains (from the motor) are a fine start. A trim you need every match, with a charged battery, points at the wheel
 or the balls: the table is off. Make the trim part of it (+3%: every

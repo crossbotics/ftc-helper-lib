@@ -12,7 +12,7 @@ wait 0.92
 start
 # The checks
 expect within 6 phase STOPPED          # the recorder wrote 3.3 (1.5 x the 2.2 s it took); loosened by hand
-expect within 3 launched >= 3
+expect within 3 launched >= 4
 expect within 3 points "red" >= 13
 expect step 1 done
 expect step 2 done

@@ -161,7 +161,7 @@ five files. Part by part:
 - Left stick forward/back drives, right stick X turns. Left stick click: slow on/off.
 - RT runs the intake in, LT out, while held.
 - LB spins the flywheel up and down. RB fires one piece when the wheel is at speed; hold RB to keep firing.
-- Y fires all three (`Actions.fireAll`). Hold RT at the same time to help push them in: the action
+- Y fires all four preloads (`Actions.fireAll`). Hold RT at the same time to help push them in: the action
   uses only the launcher, so the intake stays free for the driver.
 - D-pad up/down: flywheel speed +/- 50 RPM.
 

@@ -10,7 +10,8 @@ import com.crossbotics.ftchelper.testing.HardwareCheckOpMode;
  * Run it after every wiring change and before every event. See docs/guides/testing.md.
  *
  * Controls (gamepad 1): D-pad up/down chooses a device. Motors: right stick Y = power (at most 50%).
- * Servos: D-pad right/left nudges it. Sensors: just read the screen. PUT THE ROBOT ON A BLOCK first.
+ * Servos: D-pad sets a start point, A moves it there, then D-pad right/left nudges it.
+ * Sensors: just read the screen. PUT THE ROBOT ON A BLOCK first.
  */
 @TeleOp(name = "Hardware Check", group = "Starter")
 // @Disabled hides it from the list. Delete this line in your copy, or you will not see it.

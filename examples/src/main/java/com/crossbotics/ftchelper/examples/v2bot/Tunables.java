@@ -123,7 +123,7 @@ public class Tunables {
         public static double pickup = 0.174;                        // servo position, 20 deg (folded + 20 / 270)
         public static double carry = 0.433;                         // servo position, 90 deg (folded + 90 / 270)
         public static double flower = 0.555;                        // servo position, 122.8 deg (folded + 122.8 / 270)
-        public static double travelSec = 0.3;                       // time for a full move, seconds (worked out)
+        public static double travelSec = 0.45;                      // time for a full 0-to-1 move, seconds (worked out)
     }
 
     /** The claw (the "pincer"): two fingers geared to one servo. */

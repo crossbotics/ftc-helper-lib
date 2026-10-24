@@ -196,24 +196,31 @@ public final class SimScenario {
         run(Files.readAllLines(file, StandardCharsets.UTF_8));
     }
 
-    /** Runs every line (a file's text, line by line). */
+    /**
+     * Runs every line (a file's text, line by line). At the end the OpMode is stopped and every Tunables
+     * number a "set tunable" line changed goes back to what it was, so the next file starts fresh.
+     */
     void run(List<String> lines) throws InterruptedException {
-        for (int n = 0; n < lines.size() && go; n++) {
-            String line = lines.get(n).trim();
-            if (line.isEmpty() || line.startsWith("#")) continue;
-            try {
-                step(n + 1, line);
-            } catch (RuntimeException e) {
-                if (line.toLowerCase(Locale.US).startsWith("expect")) {
-                    Seen x = new Seen(n + 1, line);
-                    x.broken = true;
-                    x.why = String.valueOf(e.getMessage());
-                    seen.add(x);
+        try {
+            for (int n = 0; n < lines.size() && go; n++) {
+                String line = lines.get(n).trim();
+                if (line.isEmpty() || line.startsWith("#")) continue;
+                try {
+                    step(n + 1, line);
+                } catch (RuntimeException e) {
+                    if (line.toLowerCase(Locale.US).startsWith("expect")) {
+                        Seen x = new Seen(n + 1, line);
+                        x.broken = true;
+                        x.why = String.valueOf(e.getMessage());
+                        seen.add(x);
+                    }
+                    fail(n + 1, line, e.getMessage());
                 }
-                fail(n + 1, line, e.getMessage());
             }
+            sim.ds.stop();
+        } finally {
+            restoreTunables();
         }
-        sim.ds.stop();
     }
 
     int failures() {
@@ -346,7 +353,11 @@ public final class SimScenario {
                         if (!t.get(2).equals("start")) throw new IllegalArgumentException("set field start");
                         sim.robot.pieces.reset();
                         break;
-                    default: throw new IllegalArgumentException("set battery | touch NAME on|off | pose X Y HEADING | autotimer on|off | piece TYPE X Y [Z] | preload on|off | scatter off|realistic|rough|file | field start | device NAME missing|present");
+                    // set tunable Section.field VALUE: a Tunables number for this file only
+                    case "tunable":
+                        ok(n, line, setTunable(t));
+                        return;
+                    default: throw new IllegalArgumentException("set battery | touch NAME on|off | pose X Y HEADING | autotimer on|off | piece TYPE X Y [Z] | preload on|off | scatter off|realistic|rough|file | field start | device NAME missing|present | tunable Section.field VALUE");
                 }
                 ok(n, line, "");
                 return;
@@ -366,6 +377,138 @@ public final class SimScenario {
 
     // Notes for the current line (e.g. a wait that ran out of time).
     private String note = "";
+
+    // ---- set tunable ----
+
+    // The Tunables fields this file changed, and the value each had before (put back at the end of the file).
+    private final Map<java.lang.reflect.Field, Object> tunablesBefore = new java.util.LinkedHashMap<>();
+    // The Tunables classes in the code, found once per run of the program (reading the code is slow).
+    private static List<Class<?>> tunablesClasses = null;
+
+    /**
+     * set tunable Section.field VALUE: sets that number in the robot's Tunables class for this file only,
+     * in place of MEASURE, DEFAULT or the number written there. So a test can run before the number is
+     * measured on the robot. It goes before init (or after stop): the parts read their numbers at INIT.
+     * The Tunables classes: the one each Robot class uses (found the way INIT finds it: Tunables next to
+     * Robot.java, or the class given with tunables(...)), and every other class named Tunables. Every one
+     * that has the field gets the value. Returns the note for the report (where it was set).
+     */
+    private String setTunable(List<String> t) {
+        if (t.size() < 4 || t.get(2).indexOf('.') < 0) {
+            throw new IllegalArgumentException("set tunable Section.field VALUE   (e.g. set tunable IntakeDeploy.deployed 0.6)");
+        }
+        SimDriverStation.Phase phase = sim.ds.phase();
+        if (phase == SimDriverStation.Phase.INIT || phase == SimDriverStation.Phase.RUNNING) {
+            throw new IllegalArgumentException("set tunable goes before init (or after stop): the parts read their numbers at INIT");
+        }
+        String name = t.get(2);
+        String sectionName = name.substring(0, name.indexOf('.'));
+        String fieldName = name.substring(name.indexOf('.') + 1);
+        String value = t.get(3);
+        List<String> sections = new ArrayList<>();
+        List<String> fields = new ArrayList<>();
+        List<String> where = new ArrayList<>();
+        for (Class<?> top : tunablesClasses()) {
+            for (Class<?> section : top.getDeclaredClasses()) {
+                if (!sections.contains(section.getSimpleName())) sections.add(section.getSimpleName());
+                if (!section.getSimpleName().equals(sectionName)) continue;
+                for (java.lang.reflect.Field f : section.getDeclaredFields()) {
+                    int mod = f.getModifiers();
+                    if (!java.lang.reflect.Modifier.isStatic(mod) || java.lang.reflect.Modifier.isFinal(mod) || f.isSynthetic()) continue;
+                    if (!fields.contains(f.getName())) fields.add(f.getName());
+                    if (!f.getName().equals(fieldName)) continue;
+                    Object v = tunableValue(f, value, name);
+                    try {
+                        f.setAccessible(true);
+                        if (!tunablesBefore.containsKey(f)) tunablesBefore.put(f, f.get(null));
+                        f.set(null, v);
+                    } catch (IllegalAccessException e) {
+                        throw new IllegalArgumentException("cannot set Tunables." + name + ": " + e.getMessage());
+                    }
+                    where.add(BuiltAuto.shortName(top));
+                }
+            }
+        }
+        if (where.isEmpty()) {
+            if (!sections.contains(sectionName)) {
+                throw new IllegalArgumentException("no Tunables section \"" + sectionName + "\"" + didYouMean(sectionName, sections)
+                        + " (capitals count). Sections: " + String.join(", ", sections));
+            }
+            throw new IllegalArgumentException("Tunables." + sectionName + " has no field \"" + fieldName + "\"" + didYouMean(fieldName, fields)
+                    + " (capitals count). Fields: " + String.join(", ", fields));
+        }
+        return "set in " + String.join(", ", where) + " for this file";
+    }
+
+    // The value as the field's type: a number (double, float, int, long), true/false, or MEASURE / DEFAULT.
+    private static Object tunableValue(java.lang.reflect.Field f, String value, String name) {
+        Class<?> type = f.getType();
+        try {
+            if (type == double.class) {
+                if (value.equals("MEASURE")) return com.crossbotics.ftchelper.robot.Starting.MEASURE;
+                if (value.equals("DEFAULT")) return com.crossbotics.ftchelper.robot.Starting.DEFAULT;
+                return Double.parseDouble(value);
+            }
+            if (type == float.class) return Float.parseFloat(value);
+            if (type == int.class) return Integer.parseInt(value);
+            if (type == long.class) return Long.parseLong(value);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Tunables." + name + " is a number (" + type.getSimpleName() + "), not \"" + value + "\"");
+        }
+        if (type == boolean.class) {
+            if (value.equals("true")) return true;
+            if (value.equals("false")) return false;
+            throw new IllegalArgumentException("Tunables." + name + " is true or false, not \"" + value + "\"");
+        }
+        throw new IllegalArgumentException("Tunables." + name + " is a " + type.getSimpleName() + ": set tunable only sets numbers and true/false");
+    }
+
+    // " (did you mean X?)" for a name spelled almost like a known one, or "".
+    private static String didYouMean(String name, List<String> known) {
+        String best = null;
+        int bestDistance = Integer.MAX_VALUE;
+        for (String k : known) {
+            int d = k.equalsIgnoreCase(name) ? 0 : com.crossbotics.ftchelper.util.Spelling.distance(k.toLowerCase(Locale.US), name.toLowerCase(Locale.US));
+            if (d < bestDistance) {
+                bestDistance = d;
+                best = k;
+            }
+        }
+        return best != null && bestDistance <= 2 ? " (did you mean " + best + "?)" : "";
+    }
+
+    // Every Tunables class in the code: each Robot class's (the way INIT finds it) and every class named Tunables.
+    private List<Class<?>> tunablesClasses() {
+        return tunablesClasses(sim.ds.scope);
+    }
+
+    private static synchronized List<Class<?>> tunablesClasses(SimDriverStation.Scope scope) {
+        if (tunablesClasses != null) return tunablesClasses;
+        java.util.Set<Class<?>> all = new java.util.LinkedHashSet<>();
+        for (Class<? extends com.crossbotics.ftchelper.robot.RobotDefinition> c : BuiltAuto.robotClasses(scope)) {
+            try {
+                Class<?> k = c.getDeclaredConstructor().newInstance().describe().tunablesClass();
+                if (k != null) all.add(k);
+            } catch (Throwable ignored) {
+                // a Robot class that cannot be made here: INIT says why
+            }
+        }
+        all.addAll(SimFresh.tunablesClasses());
+        tunablesClasses = new ArrayList<>(all);
+        return tunablesClasses;
+    }
+
+    // Puts back every Tunables number this file changed (the end of each file).
+    private void restoreTunables() {
+        for (Map.Entry<java.lang.reflect.Field, Object> e : tunablesBefore.entrySet()) {
+            try {
+                e.getKey().set(null, e.getValue());
+            } catch (IllegalAccessException ignored) {
+                // it was set above, so it can be set back
+            }
+        }
+        tunablesBefore.clear();
+    }
 
     /**
      * Waits until the OpMode has run this many more loops (screen updates or iterative loops), at

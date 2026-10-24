@@ -49,6 +49,12 @@ final class CookbookSamples {
         done = true;
     }
 
+    /** Writes the sample numbers again (a test that put a MEASURE back, or after SimFresh put the code's back). */
+    static synchronized void fillAgain() {
+        done = false;
+        fill();
+    }
+
     private static void put(Map<String, Double> s, String section, Object... pairs) {
         for (int i = 0; i < pairs.length; i += 2) {
             s.put(section + "." + pairs[i], ((Number) pairs[i + 1]).doubleValue());

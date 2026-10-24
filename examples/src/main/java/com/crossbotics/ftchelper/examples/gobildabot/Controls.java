@@ -7,7 +7,7 @@ import com.crossbotics.ftchelper.robot.Pad;
 
 /**
  * goBILDA starter bot, file 3 of 5: one driver does everything on gamepad 1, like goBILDA's TeleOp.
- * The parts bring their buttons; Y (fire all three) is ours.
+ * The parts bring their buttons; Y (fire all four) is ours.
  * more: https://crossbotics.com/ftc-helper/docs/guides/starter-bots/#gobilda-ftc-starterbot
  */
 @TeleOp(name = "goBILDA Bot TeleOp", group = "Examples")

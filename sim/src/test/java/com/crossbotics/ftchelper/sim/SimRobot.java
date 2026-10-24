@@ -1061,6 +1061,11 @@ final class SimRobot {
         synchronized double target() {
             return target;
         }
+
+        /** The last position the OpMode sent (its own scale); NaN = none yet. */
+        synchronized double commanded() {
+            return commanded;
+        }
     }
 
     /** A pretend switch: pressed when its motor is near its bottom, or when clicked in the panel. */

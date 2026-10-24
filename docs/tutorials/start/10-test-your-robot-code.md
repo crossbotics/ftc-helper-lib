@@ -24,7 +24,7 @@ command and check), [Record a test](../../guides/simulator.md#record-a-test) (th
 
 You change one number for the lift, and the autonomous stops scoring. You find out at the next event.
 A **test** finds it in a minute, on your laptop: it does what a driver would do (INIT, START, sticks,
-buttons) and then checks the result ("the autonomous finished", "3 pieces were shot").
+buttons) and then checks the result ("the autonomous finished", "4 pieces were shot").
 
 A test does not prove the robot is good. It proves that **what worked yesterday still works today**.
 That is the break you did not mean to make: a typo, a wrong button, a number changed in the wrong
@@ -73,7 +73,7 @@ wait 0.92
 start
 # The checks
 expect within 6 phase STOPPED
-expect within 3 launched >= 3
+expect within 3 launched >= 4
 expect within 3 points "red" >= 13
 expect step 1 done
 expect step 2 done
@@ -89,14 +89,14 @@ expect bumped none
 | `press g1.b` | press and let go of gamepad 1's B: RED in the INIT menu |
 | `start` | START |
 | `expect within 6 phase STOPPED` | **a check:** within 6 s, the OpMode stops by itself (the autonomous ends). The **phase** is where the OpMode is: `INIT`, `RUNNING` (after START) or `STOPPED` (`IDLE` before INIT) |
-| `expect within 3 launched >= 3` | within 3 s, at least 3 pieces were shot |
+| `expect within 3 launched >= 4` | within 3 s, at least 4 pieces were shot |
 | `expect within 3 points "red" >= 13` | RED has at least 13 points |
 | `expect step 1 done` | the autonomous report's first step says `done` (the **report** is the list of steps the Driver Station shows when the autonomous ends: [lesson 6](06-first-autonomous.md#4-what-you-get-for-free)) |
 | `expect error none` | no error on the Driver Station |
 | `expect bumped none` | the robot does not push against a wall or a field element at the end |
 
 Every `expect` line is a check. The test **passes** when every check passes. The report shows each
-line as `ok` or `FAIL`, with the value it saw: `FAIL 13 expect within 3 launched >= 3 -> was 2`.
+line as `ok` or `FAIL`, with the value it saw: `FAIL 13 expect within 3 launched >= 4 -> was 2`.
 
 ## 4. How close is close enough? Tolerances
 
@@ -107,7 +107,7 @@ close is close enough:
 | --- | --- | --- |
 | `expect robot y = -36 3` | y is -36, give or take 3 inches (between -39 and -33) | where the robot ends |
 | `expect robot heading = 90 5` | 90 degrees, give or take 5 | which way it faces |
-| `expect launched >= 3` | 3 or more | counts: pieces, points |
+| `expect launched >= 4` | 4 or more | counts: pieces, points |
 | `expect time < 25` | less than 25 s since START | "fast enough" |
 | `expect within 4 stored >= 1` | wait up to 4 s for it to become true | anything that takes time |
 
@@ -130,7 +130,7 @@ The window shows two lists:
 
 **Why:** a detail changes every time you improve something. A test that checks "the screen says
 `Launcher : 2600 rpm`" fails when you tune the speed, but nothing is broken. A test that checks
-"3 pieces were shot" fails only when the shooting is broken. Fewer, better checks make a test you trust.
+"4 pieces were shot" fails only when the shooting is broken. Fewer, better checks make a test you trust.
 
 ## 6. A few good tests
 
@@ -191,6 +191,16 @@ A test is plain text, so you can add a line the recorder did not: open the file 
 expect servo claw target = 0.75 0.01
 ```
 
+**A test can stand in for a number you have not measured yet.** A `MEASURE` in Tunables.java stops
+INIT, so the test stops too. Put this line before `init`, and the test uses 0.6 in its place, for this
+file only (your code does not change):
+
+```text
+set tunable IntakeDeploy.deployed 0.6
+```
+
+When you measure the real number, write it in Tunables.java and delete the line.
+
 **Button names here are the FTC names, not the Java names:** `g2.dpadLeft` in `Controls.java` is
 `g2.dpad_left` in a test. Every command, every check and the name list:
 [Scenario files](../../guides/simulator.md#scenario-files-test-without-a-browser).
@@ -213,7 +223,7 @@ No robot project yet? Try the recorder with goBILDA's starter bot, from the `ftc
 1. Open http://localhost:8780. **Tests > Record a test**.
 2. Choose "goBILDA Bot Launch and Back Up", INIT, press gamepad 1 **B** (RED; the **L** key on the
    keyboard), START. Wait until the Driver Station says `Autonomous finished`.
-3. **Stop recording.** Look at the goal checks: it finishes, steps 1 and 2 are done, 3 pieces shot.
+3. **Stop recording.** Look at the goal checks: it finishes, steps 1 and 2 are done, 4 pieces shot.
 4. With `-PteamCode=none` there is no robot project, so **Download** saves the file in your browser's
    downloads. Press **Run it now**: PASSED.
 5. Run the same test without the page:

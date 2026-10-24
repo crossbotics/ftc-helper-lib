@@ -48,16 +48,18 @@ listed, not an error. With every device there: `Robot.java: every device is in t
 | D-pad up / down | choose a device (changing stops the last one) |
 | Motor or CR servo: right stick Y | power, max 50% (hold right bumper for 100%) |
 | Motor: A | zero the encoder |
+| Servo, before its first move: D-pad right / left, bumpers, X | choose the START POINT: +/- 0.01, +/- 0.1, 0.5 (nothing moves) |
+| Servo, before its first move: A | move the servo to the start point |
 | Servo: D-pad right / left | +/- 0.01 |
 | Servo: bumpers | +/- 0.1 |
 | Servo: X | go to 0.5 |
 | GUIDE (or hold START 1 s) | the help page with every button, like the finders (motors stop while it is open; `helpLines()` gives its lines, override it to add your own) |
 
-A servo does not move until you press a servo button. **The first press jumps:** the code does not know
-where a servo is, so with no position sent since power-on it starts from the middle (0.5): the first
-press sends 0.51 or 0.49, and the servo swings from wherever it is to about the middle. Before that
-press, check that the middle is safe for the part (nothing it would push into), hands clear. To find positions, use the [Servo Finder](finders.md#servofinderopmode), which lets you choose a
-start point first. For each device it shows what to check,
+**A servo does not move until you press A at its start point.** A servo cannot tell where it is, so
+the code does not know where it sits. Before the first move, the servo buttons only change the start
+point on the screen (it starts at 0.5). Set it near where the servo sits now, keep hands clear, then
+press A: the servo moves there. After that, the buttons move it. This is the same as the
+[Servo Finder](finders.md#servofinderopmode), which also finds the safe ends and positions. For each device it shows what to check,
 for example "positive power turns the way you expect, and the encoder counts UP".
 
 **Put the robot on a block** before testing drive motors.

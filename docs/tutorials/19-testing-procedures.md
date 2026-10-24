@@ -54,9 +54,10 @@ Put the robot on a block, so the wheels are off the ground. Run it. It lists eve
   reads a stick pushed up as a negative number; the Hardware Check flips it for you, like the
   library's driving). Watch: does positive power turn it the way you expect? Does the encoder count
   UP? A = zero the encoder.
-- **Servo**: D-pad right/left = +/- 0.01, bumpers +/- 0.1, X = 0.5. The first press jumps to about
-  0.5 (the middle) from wherever the servo is: hands clear, and nothing that the middle would push into
-  the frame. For positions, the Servo Finder is safer (you choose its start point first).
+- **Servo**: a servo cannot tell where it is, so first choose a **start point** near where the servo
+  sits now: D-pad right/left = +/- 0.01, bumpers +/- 0.1, X = 0.5. Nothing moves yet. Hands clear,
+  then A: the servo moves to the start point. After that, the same buttons move it. To find the safe
+  ends and positions, use the Servo Finder.
 - **Sensors**: live values. Press the switch, wave a hand at the distance sensor.
 - **IMU**: turn the robot left by hand: **yaw** (the heading: which way the robot faces, in degrees)
   goes UP (if your hub is mounted logo up, USB forward).

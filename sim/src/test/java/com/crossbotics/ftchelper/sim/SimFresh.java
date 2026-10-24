@@ -116,7 +116,7 @@ final class SimFresh {
     }
 
     // Every class named Tunables in the code the simulator runs (the team's and the library's examples).
-    private static List<Class<?>> tunablesClasses() {
+    static List<Class<?>> tunablesClasses() {
         List<Class<?>> out = new ArrayList<>();
         for (String part : System.getProperty("java.class.path", "").split(File.pathSeparator)) {
             File where = new File(part);

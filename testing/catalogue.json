@@ -1503,7 +1503,7 @@
        "Build and install. On the Driver Station, choose the TeleOp \"Hardware Check\", INIT, then START.",
        "Count the devices in your configuration. Count the devices the Hardware Check lists (D-pad up and down goes through them).",
        "For each motor: choose it, push gamepad 1's right stick up a little. Watch which way it turns and whether its encoder count goes UP.",
-       "For each servo: choose it, press X (it goes to 0.5), then D-pad right and left. It moves a little each press.",
+       "For each servo: choose it. Set the start point near where the servo sits (D-pad right and left; nothing moves). Press A: it moves to the start point. Then D-pad right and left: it moves a little each press.",
        "Read the battery line and the IMU line. (The IMU is the turn sensor inside the Control Hub. \"Yaw\" is the way the robot faces, in degrees.) Turn the robot left by hand: the yaw goes up.",
        "Read each hint the screen shows for a device. Is it right for your robot?"
       ]
@@ -4264,6 +4264,78 @@
     "different": [
      {
       "p": "No lift or launcher: use the parts you have (any Claw, Wrist, Hood, servo Turret or Indexer reads a `travelSec`-like time)."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SIM-05",
+   "title": "A simulator test stands in for a number not measured yet (set tunable)",
+   "area": "simulator",
+   "priority": "medium",
+   "where": "sim",
+   "minutes": 15,
+   "needs": [],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/tutorials/start/10-test-your-robot-code.md",
+     "anchor": ""
+    },
+    {
+     "path": "docs/guides/simulator.md",
+     "anchor": "scenario-files-test-without-a-browser"
+    }
+   ],
+   "file": "testing/tests/SIM-05.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A number written as `MEASURE` in Tunables.java stops INIT until it is measured on the robot. The scenario line `set tunable Section.field VALUE` lets a simulator test run before that. We need to know that it works on your robot's code, that it changes nothing for the next test file, and that a typo gives a message a student understands."
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "Your robot project with the simulator running your code, and one test of yours in `simulator/scenarios/` (record one first: [start lesson 10](repo:docs/tutorials/start/10-test-your-robot-code.md))."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Pick one number in your Tunables.java (for example a servo position). Write down its value.",
+       "Change it to `MEASURE` in Tunables.java. Run your test: `./gradlew :sim:scenario`. INIT stops and names the number.",
+       "Add `set tunable Section.field VALUE` before `init` in the test (your section and field, the value you wrote down). Run it again: it passes.",
+       "Make a second test file without that line (copy the first, delete the line). Run both with one command: the second one stops at INIT again (the number did not carry over).",
+       "Make a typo in the name (for example one letter wrong). Run it: read the message.",
+       "Put the number back in Tunables.java and delete the `set tunable` line."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "3 runs out of 3: with the line the test passes, the next file without it stops at INIT, and the typo message names the right field (\"did you mean ...\")."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "the section and field you used, and its type (a number, or true/false)",
+       "the result of each run (passed, or the message)",
+       "the typo message, and whether it was clear"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Any robot with a Tunables.java works. No `MEASURE` lines? Step 2 makes one."
      }
     ]
    }

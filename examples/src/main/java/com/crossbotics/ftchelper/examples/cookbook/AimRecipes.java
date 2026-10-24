@@ -110,8 +110,8 @@ public class AimRecipes {
             public static double nominalVolts = MEASURE;                // battery volts for kF (Flywheel Finder)
             public static double trimStepPercent = DEFAULT;             // one D-pad press (1%)
             public static double trimMaxPercent = DEFAULT;              // never more than this each way (15%)
-            // Battery compensation, OFF by default (not yet proven on a real robot: try it and tell us).
-            public static boolean batteryCompensation = true;           // true = F follows the battery (false)
+            // Battery compensation: true = F follows the battery. Try it on a real robot and tell us.
+            public static boolean batteryCompensation = false;          // (off until proven on a real robot)
             // end recipe
         }
 

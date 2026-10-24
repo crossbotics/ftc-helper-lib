@@ -2,6 +2,28 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Added
+
+- **`set tunable` in simulator tests:** `set tunable IntakeDeploy.deployed 0.6` sets a Tunables number for
+  one scenario file. So a test runs before you measure the number on the robot (a `MEASURE` stops INIT).
+  Put it before `init`. At the end of the file the number goes back to the value in your code. A wrong
+  name fails and says what exists. See the simulator guide, "Scenario files", and start lesson 10.
+
+### Fixed
+
+- **Hardware Check: a servo no longer jumps on the first press (safety).** A servo cannot tell where it
+  is. Before, the first press sent about 0.5, and the servo swung there from wherever it was (into the
+  frame, on some robots). Now you first choose a start point near where the servo sits (D-pad, bumpers,
+  X; nothing moves), then A moves it there. The same as the Servo Finder.
+- V2 robot: `Tunables.Wrist.travelSec` is 0.45 s (was 0.3). A full 0-to-1 move is 270 degrees: 0.41 s for
+  this servo, so 0.3 s said "arrived" too early.
+- Cookbook, speed trim recipe: `batteryCompensation = false` (was `true`). It is off until it is proven on a
+  real robot, like the library's default.
+- goBILDA starter bot: Y and the autonomous fire 4 pieces (was 3). Every robot starts with 4 preloads
+  (game manual G304.G).
+
 ## v0.18.1 - 2026-10-23
 
 Short comments in the example code; the explanations moved into the docs, as (+) notes next to the code.

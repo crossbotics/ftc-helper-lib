@@ -8,17 +8,17 @@ import com.crossbotics.ftchelper.robot.Action;
  */
 public class Actions {
 
-    /** Fires the three preloaded pieces. Launcher only, so the driver can run the intake (RT) too. */
+    /** Fires the four preloaded pieces (every robot starts with 4: manual G304.G). Launcher only, so the driver can run the intake (RT) too. */
     public static Action fireAll(Robot r) {
         return Action.named("Fire all")
-                .then(() -> r.launcher.fire(3))
+                .then(() -> r.launcher.fire(4))
                 .waitUntil("the shots", () -> !r.launcher.isShooting(), 8.0);
     }
 
     /** For the autonomous: the intake helps push the pieces in while they are fired. */
     public static Action fireAllWithIntake(Robot r) {
         return Action.named("Fire all")
-                .then(r.intake::in, () -> r.launcher.fire(3))
+                .then(r.intake::in, () -> r.launcher.fire(4))
                 .waitUntil("the shots", () -> !r.launcher.isShooting(), 8.0)
                 .then(r.intake::stop);
     }

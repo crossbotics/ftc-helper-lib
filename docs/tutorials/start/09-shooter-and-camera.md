@@ -178,7 +178,7 @@ gamepad 1 with `oneDriver = true`, as in the goBILDA bot:
 | D-pad up double-tap | use last time's trim (only when the Driver Station offers it at INIT) |
 
 Spinning up early with LB saves time: the wheel is ready when the shot is lined up. The goBILDA bot adds
-one job of its own, Y to fire all three: `g1.y.press(Actions.fireAll(robot)).says("fire all");`
+one job of its own, Y to fire all four: `g1.y.press(Actions.fireAll(robot)).says("fire all");`
 
 **Are LB and RB still free?** A job of yours in `Controls.java` on one of these buttons takes it from
 the launcher. If you followed lesson 5, your actions are on gamepad 2's RB and LB, so the launcher gets

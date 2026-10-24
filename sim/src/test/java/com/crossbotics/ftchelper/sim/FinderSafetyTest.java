@@ -122,6 +122,35 @@ public class FinderSafetyTest {
         }
     }
 
+    // A servo cannot report where it is: before the first move, the Hardware Check only changes the start
+    // point (nothing is sent, not even 0.5). A moves the servo there.
+    @Test public void hardwareCheckDoesNotMoveAServoBeforeTheStartPointIsConfirmed() throws Exception {
+        try (SimRun s = new SimRun()) {
+            s.init("Hardware Check").start();
+            String chosen = null;
+            for (int i = 0; i < 40 && chosen == null; i++) {
+                for (String l : s.screen()) if (l.startsWith("> ") && l.contains("(servo)")) chosen = l;
+                if (chosen == null) s.press(v -> s.g1().dpad_down = v);
+            }
+            assertTrue(String.join("\n", s.screen()), chosen != null);
+            SimRobot.SimServo servo = s.robot().servos.get(chosen.substring(2, chosen.indexOf("  (")));
+            double before = servo.target();
+            s.press(v -> s.g1().dpad_right = v);         // the first press: start point 0.51
+            assertTrue("the first press sends nothing", Double.isNaN(servo.commanded()));
+            s.press(v -> s.g1().right_bumper = v);       // 0.61
+            s.press(v -> s.g1().x = v);                  // 0.50
+            s.press(v -> s.g1().dpad_left = v);          // 0.49
+            assertTrue("nothing is sent before A", Double.isNaN(servo.commanded()));
+            assertEquals("nothing moves before A", before, servo.target(), 1e-9);
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Start point") && s.screenHas("0.49"));
+            s.press(v -> s.g1().a = v);                  // move there
+            assertEquals(0.49, servo.commanded(), 1e-6);
+            s.press(v -> s.g1().dpad_right = v);         // a normal nudge now
+            assertEquals(0.50, servo.commanded(), 1e-6);
+            assertEquals("", s.error());
+        }
+    }
+
     @Test public void everyHelpPageFitsTheScreen() throws Exception {
         String[] finders = {"Servo Finder", "Motor Finder", "Flywheel Finder", "Drive Tuner", "Hardware Check"};
         try (SimRun s = new SimRun()) {

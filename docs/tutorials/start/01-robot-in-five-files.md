@@ -46,7 +46,7 @@ do not need to understand every word yet: read the list once, and come back to i
   library class works with: your `Robot`.
 - `Drive.tank(...).motor(...).wheelMm(96)`: **method chaining**. Each method hands the same thing back,
   so the next one adds to it with another dot. Read it left to right as one sentence.
-- `() -> r.launcher.fire(3)`: a **lambda**, a small piece of code you hand over now, to run later (when
+- `() -> r.launcher.fire(4)`: a **lambda**, a small piece of code you hand over now, to run later (when
   a button is pressed, or an action gets to that step). `() ->` means "no inputs, run this".
 - `r.intake::in`: a **method reference**, the short way to write the lambda `() -> r.intake.in()`:
   "the intake's `in` method".
@@ -265,7 +265,7 @@ the library; the `<Robot>` in angle brackets says which robot it is for: yours.
 
 That is the whole TeleOp. The modules already have their **standard buttons**: the intake on the
 triggers, the launcher on the bumpers, its speed on the D-pad. `oneDriver = true` puts them all on
-gamepad 1, like goBILDA's code. You only write what is different: here, Y fires all three.
+gamepad 1, like goBILDA's code. You only write what is different: here, Y fires all four.
 
 - **INIT shows the map** on the Driver Station: every button with its job, and the free ones. During the
   match, a tap of GUIDE shows it again, without the free ones (tap again to close).
@@ -287,13 +287,13 @@ gamepad 1, like goBILDA's code. You only write what is different: here, Y fires 
 ```java
 public static Action fireAllWithIntake(Robot r) {
     return Action.named("Fire all")
-            .then(r.intake::in, () -> r.launcher.fire(3))
+            .then(r.intake::in, () -> r.launcher.fire(4))
             .waitUntil("the shots", () -> !r.launcher.isShooting(), 8.0)
             .then(r.intake::stop);
 }
 ```
 
-`r.intake::in` (a method reference) and `() -> r.launcher.fire(3)` (a lambda) are two ways to write a
+`r.intake::in` (a method reference) and `() -> r.launcher.fire(4)` (a lambda) are two ways to write a
 small piece of code that runs later, when the action gets to that step
 ([Java you will meet](#java-you-will-meet)).
 

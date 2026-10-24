@@ -49,7 +49,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
  * <p>Controls (gamepad 1): D-pad up/down = choose a device.
  * <ul>
  *   <li>Motor / CR servo: right stick Y = power (max 50%; hold right bumper for 100%). A = zero the encoder.</li>
- *   <li>Servo: D-pad right/left = +/- 0.01, bumpers = +/- 0.1, X = 0.5. (A servo does not move until you press.)</li>
+ *   <li>Servo: first choose a START POINT near where the servo sits now (D-pad right/left = +/- 0.01,
+ *       bumpers = +/- 0.1, X = 0.5; nothing moves), then A = move it there. After that: D-pad right/left
+ *       = +/- 0.01, bumpers = +/- 0.1, X = 0.5. (A servo cannot tell where it is, so nothing moves before A.)</li>
  *   <li>Sensors: just read the values.</li>
  * </ul>
  * Changing the chosen device stops the last one. Put the robot on a block first.
@@ -71,6 +73,8 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
         final HardwareDevice device;
         // The servo position WE last sent (0..1). NaN = not moved yet in this OpMode.
         double servoPosition = Double.NaN;
+        // The start point chosen before the first move (0..1). A moves the servo there.
+        double startAt = 0.5;
         Device(String name, String kind, HardwareDevice device) {
             this.name = name;
             this.kind = kind;
@@ -174,8 +178,9 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
             "  hold RB = full). A = zero the encoder.",
             "  Check: + power turns the way you expect and",
             "  the encoder counts UP.",
-            "Servo: D-pad right/left = +/- 0.01, bumpers =",
-            "  +/- 0.1, X = 0.5 (moves only when you press).",
+            "Servo: first a START POINT near where it sits",
+            "  (nothing moves), A = move it there. Then D-pad",
+            "  right/left = +/-0.01, bumpers = +/-0.1, X = 0.5.",
             "IMU: turn the robot left, yaw must go UP.",
             "Sensors: just read the values.",
             "Steps: docs/guides/testing.md",
@@ -283,23 +288,34 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
             ((CRServo) d.device).setPower(stickPower);
         } else if (d.device instanceof Servo) {
             Servo s = (Servo) d.device;
-            // Start from the position we last sent; if we have not sent one yet, from the position the
-            // SDK last sent to this servo (the servo's real position is never known: a servo cannot report it).
-            double p = Double.isNaN(d.servoPosition) ? s.getPosition() : d.servoPosition;
-            // No position sent yet since power-on (the SDK may report NaN or a number out of range):
-            // start from the middle, 0.5, so the first nudge is a small known step.
-            if (Double.isNaN(p) || p < 0 || p > 1) p = 0.5;
-            boolean change = false;
-            if (pressed(now, 2)) { p += 0.01; change = true; }
-            if (pressed(now, 3)) { p -= 0.01; change = true; }
-            if (pressed(now, 4)) { p += 0.1; change = true; }
-            if (pressed(now, 5)) { p -= 0.1; change = true; }
-            if (pressed(now, 7)) { p = 0.5; change = true; }
-            // SAFETY: only send a position when a button was pressed, so just choosing a servo in the
-            // list never makes it jump. Keep it in 0..1, the only range a servo accepts.
-            if (change) {
-                d.servoPosition = Math.max(0, Math.min(1, p));
-                s.setPosition(d.servoPosition);
+            // SAFETY: a servo cannot report where it is. Before the first move, the buttons only change
+            // the START POINT (nothing moves); A moves the servo there. Pick a value near where it sits
+            // now, so it does not jump into the frame. (The same as the Servo Finder.)
+            if (Double.isNaN(d.servoPosition)) {
+                double start = d.startAt;
+                if (pressed(now, 2)) start += 0.01;
+                if (pressed(now, 3)) start -= 0.01;
+                if (pressed(now, 4)) start += 0.1;
+                if (pressed(now, 5)) start -= 0.1;
+                if (pressed(now, 7)) start = 0.5;
+                d.startAt = Math.max(0, Math.min(1, start));
+                if (pressed(now, 6)) {
+                    d.servoPosition = d.startAt;
+                    s.setPosition(d.servoPosition);
+                }
+            } else {
+                double p = d.servoPosition;
+                boolean change = false;
+                if (pressed(now, 2)) { p += 0.01; change = true; }
+                if (pressed(now, 3)) { p -= 0.01; change = true; }
+                if (pressed(now, 4)) { p += 0.1; change = true; }
+                if (pressed(now, 5)) { p -= 0.1; change = true; }
+                if (pressed(now, 7)) { p = 0.5; change = true; }
+                // Only send a position when a button was pressed. Keep it in 0..1, the only range a servo accepts.
+                if (change) {
+                    d.servoPosition = Math.max(0, Math.min(1, p));
+                    s.setPosition(d.servoPosition);
+                }
             }
         }
         // Remember this loop's buttons, so next loop we can tell a NEW press from a held button.
@@ -355,9 +371,15 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
             t.text("Right stick = power (RB = full)");
             t.line("Power", "%.2f", ((CRServo) h).getPower());
         } else if (h instanceof Servo) {
-            t.text("D-pad L/R = 0.01, bumpers = 0.1, X = 0.5");
-            t.line("Position", Double.isNaN(d.servoPosition) ? "not moved yet" : String.format(Locale.US, "%.2f", d.servoPosition));
-            t.text("Write down the positions you need (open, closed...).");
+            if (Double.isNaN(d.servoPosition)) {
+                t.line("Start point", String.format(Locale.US, "%.2f  (A = move the servo there)", d.startAt));
+                t.text("Choose a start point near where the servo sits now. Nothing moves until A.");
+                t.text("D-pad L/R = 0.01, bumpers = 0.1, X = 0.5");
+            } else {
+                t.text("D-pad L/R = 0.01, bumpers = 0.1, X = 0.5");
+                t.line("Position", "%.2f", d.servoPosition);
+                t.text("Write down the positions you need (open, closed...).");
+            }
         } else if (h instanceof IMU) {
             IMU imu = (IMU) h;
             // yaw = turning left/right, pitch = nose up/down, roll = tipping sideways

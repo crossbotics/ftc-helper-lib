@@ -92,7 +92,7 @@ public class Tunables {
         // The Servo Finder shows "Tunables.Claw: P1 = 0.210, P2 = 0.770": write P1 as open, P2 as closed.
         public static double open = MEASURE;                        // servo position, open (Servo Finder)
         public static double closed = MEASURE;                      // servo position, closed (Servo Finder)
-        public static double travelSec = DEFAULT;                   // time for a full move (0.3, or the servo's)
+        public static double travelSec = DEFAULT;                   // time for a full 0-to-1 move (0.3, or the servo's)
     }
     // end recipe
 
@@ -101,7 +101,7 @@ public class Tunables {
         public static double down = MEASURE;                        // servo position: any name you like
         public static double level = MEASURE;                       // servo position (Servo Finder)
         public static double up = MEASURE;                          // servo position (Servo Finder)
-        public static double travelSec = DEFAULT;                   // time for a full move (0.3, or the servo's)
+        public static double travelSec = DEFAULT;                   // time for a full 0-to-1 move (0.3, or the servo's)
     }
     // end recipe
 
@@ -110,7 +110,7 @@ public class Tunables {
     public static class IntakeDeploy {                              // "intake_deploy" in the configuration
         public static double stowed = MEASURE;                      // servo position, folded (Servo Finder)
         public static double deployed = MEASURE;                    // servo position, folded out (Servo Finder)
-        public static double travelSec = DEFAULT;                   // time for a full move (0.3, or the servo's)
+        public static double travelSec = DEFAULT;                   // time for a full 0-to-1 move (0.3, or the servo's)
     }
     // end recipe
 
