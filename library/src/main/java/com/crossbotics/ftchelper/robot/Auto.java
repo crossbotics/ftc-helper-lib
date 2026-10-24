@@ -53,7 +53,9 @@ public abstract class Auto<R extends RobotDefinition> extends EasyAuto {
 
     /**
      * Your own code for this autonomous only, once in INIT after the robot is set up (do not put it in
-     * {@code steps}: that is read several times). Give the robot this auto's code for each step there:
+     * {@code steps}: that is read several times). If the drivers change the profile in the INIT menu, the
+     * robot is made again right after START and this runs once more, for the new robot: so it must not
+     * move anything either. Give the robot this auto's code for each step here:
      *
      * <pre>{@code
      * @Override protected void atInit(Robot robot) {
@@ -126,7 +128,10 @@ public abstract class Auto<R extends RobotDefinition> extends EasyAuto {
     @Override
     protected final Subsystems createSubsystems() {
         // A fresh robot each time: EasyAuto makes the mechanisms again if the profile changes in INIT.
+        R before = robot;
         robot = newRobot();
+        // Made again after START: it keeps the Driver Hub screen, so show(...) still works.
+        if (before != null) robot.screen = before.screen;
         // The autonomous's own mirrorForRed(): the whole robot uses it (aim, reset spot), and so does the
         // TeleOp after it, unless Tunables says it (Tunables wins; INIT warns when the two differ).
         if (ownMirror()) {

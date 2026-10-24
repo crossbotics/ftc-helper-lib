@@ -82,6 +82,10 @@ protected void atInit(Robot robot) {
   ([the robot module](../modules/robot.md)). **Why:** STOP and the pause button then stop its motor
   too.
 - If one `atStop` fails, the others still run, and the Driver Station shows the first error.
+- `atStop` runs at every end, also when STOP is pressed in INIT. `wasStarted()` tells them apart:
+  `atStop(() -> { if (wasStarted()) savedCount = piecesScored; })`.
+- In `Controls.java`, write `robot.show(...)`: plain `show(...)` there is the TeleOp's own `show`, which
+  takes a value to read again every loop (`show("Lift", robot.lift::position)`).
 
 ## Road 2: your own OpMode, with the library's robot
 
@@ -93,7 +97,7 @@ their own loop, their own buttons. You can, and still use your `Robot.java`, `Tu
 | --- | --- |
 | `robot.init(this)` | INIT: makes every part, turns on bulk reads (faster loops), runs the INIT checks. Moves nothing. |
 | `robot.initLoop()` | one pass of the INIT loop: the parts' INIT work, your `duringInit`, then it sends the screen |
-| `robot.start()` | START: each part's start and your `atStart` actions |
+| `robot.start()` | START: each part's start and your `atStart` actions (nothing if STOP was pressed in INIT) |
 | `robot.update()` | one loop: every part and action moves a little, your `everyLoop`, then it sends the screen |
 | `robot.stop()` | STOP: stops the wheels and every part, then your `atStop`. Put it in a `finally`. |
 
@@ -115,9 +119,9 @@ public class OwnTeleOp extends LinearOpMode {
             robot.show("Press START", "A scores high");
             robot.initLoop();                   // sends the screen
         }
-        robot.start();
 
         try {
+            robot.start();                      // (does nothing if STOP was pressed in INIT)
             while (opModeIsActive()) {
                 robot.driveWith(gamepad1);
 
@@ -153,11 +157,16 @@ Try it in the simulator: **Lesson Bot: own OpMode**.
 **What you keep:** every part's safety (lift and arm limits, soft stops, jam back-out), the actions,
 the interlock rules, the INIT checks of `Tunables.java`, bulk reads, and the simulator.
 
+**The same as the library's OpModes:** in a TeleOp, the alliance and (with odometry) the pose come
+from the autonomous that just ran. An OpMode marked `@Autonomous` starts every part from its start
+position. INIT shows the PRACTICE and "tuned values differ" warnings.
+
 **What you do yourself now:** the buttons (the library's taps, double-taps and holds are in
 [Use only what you need](use-only-what-you-need.md#controllerbindings)), the alliance choice, the
 pause button, field-centric driving, the tuning menu, the button list on the Driver Hub, and the
-match timer's buzzes. For an autonomous: the steps one after another, the RED/BLUE mirroring and the
-start spot (the library's `Auto` does these for you).
+match timer's buzzes. For an autonomous: the steps one after another, the alliance choice, the
+RED/BLUE mirroring, the start spot, and handing the alliance and the end pose to the TeleOp (the
+library's `Auto` does all of these for you).
 
 ## Which road?
 

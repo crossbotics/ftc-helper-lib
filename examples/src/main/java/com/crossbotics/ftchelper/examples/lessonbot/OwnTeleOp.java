@@ -24,9 +24,9 @@ public class OwnTeleOp extends LinearOpMode {
             robot.show("Press START", "A scores high");
             robot.initLoop();                   // sends the screen
         }
-        robot.start();
 
         try {
+            robot.start();                      // (does nothing if STOP was pressed in INIT)
             while (opModeIsActive()) {
                 robot.driveWith(gamepad1);
 

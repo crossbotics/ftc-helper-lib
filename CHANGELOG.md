@@ -17,6 +17,12 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   `robot.driveWith(gamepad1)`. The parts keep their safety, actions still never wait. Example: the
   lesson robot's `OwnTeleOp.java` ("Lesson Bot: own OpMode" in the simulator).
 
+### Before you update
+
+- `RobotDefinition` has new methods: `init`, `initLoop`, `start`, `update`, `stop`, `show`, `driveWith`,
+  `atInit`, `duringInit`, `atStop`, `wasStarted`. If your `Robot.java` has a method with one of these
+  names and no parameters (for example your own `stop()`), rename yours.
+
 - **The Simulator button opens the page.** When the simulator is ready, http://localhost:8780 opens in
   your browser. If no browser opens, the address in the Run window is a link: click it. In the Terminal,
   `./gradlew :sim:run -Popen` does the same (without `-Popen` nothing opens, as before).

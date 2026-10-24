@@ -60,6 +60,7 @@ public abstract class RobotDefinition {
     private final List<Runnable> duringInit = new ArrayList<>();
     private final List<Runnable> atStop = new ArrayList<>();
     private boolean ended = false;
+    private boolean wasStarted = false;
     // Your own OpMode (init(op) ... stop()): the OpMode, and the drive made for driveWith().
     private com.qualcomm.robotcore.eventloop.opmode.OpMode ownOpMode = null;
     // The Driver Hub's screen of the OpMode running now (for show()). Set at the first INIT loop.
@@ -262,14 +263,23 @@ public abstract class RobotDefinition {
      * @param code what to run, e.g. a lambda {@code () -> ...}
      */
     public final void atStop(Runnable code) {
+        // (STOP pressed in INIT ends the OpMode too: wasStarted() tells the two apart.)
         if (code == null) throw new IllegalArgumentException("atStop(null): give it the code to run");
         atStop.add(code);
     }
 
     /**
+     * True once START was pressed in this OpMode. In {@link #atStop}: false means STOP came in INIT (the
+     * match never ran), e.g. do not save a number for the next OpMode then.
+     */
+    public final boolean wasStarted() {
+        return wasStarted;
+    }
+
+    /**
      * Shows one line of your own on the Driver Hub in this loop, under the library's warnings: use it
      * in {@link #duringInit} and {@link #everyLoop} (call it every loop: the screen starts empty each
-     * loop). Does nothing before INIT.
+     * loop). Does nothing before the first INIT loop (so not in {@link #atInit}).
      *
      * @param label the name on the left, e.g. "Pieces scored"
      * @param value the value on the right
@@ -1158,8 +1168,8 @@ public abstract class RobotDefinition {
      * Robot robot = new Robot();
      * robot.init(this);
      * while (opModeInInit()) robot.initLoop();
-     * robot.start();
      * try {
+     *     robot.start();
      *     while (opModeIsActive()) {
      *         robot.driveWith(gamepad1);
      *         if (gamepad1.a) robot.run(Actions.score(robot));
@@ -1177,9 +1187,19 @@ public abstract class RobotDefinition {
         if (opMode == null) throw new IllegalArgumentException("init(null): give it your OpMode: robot.init(this)");
         if (ownOpMode != null || built) throw new IllegalStateException("robot.init(this) runs once: make a new Robot() in each OpMode");
         ownOpMode = opMode;
+        // An @Autonomous OpMode: parts start from their start positions (a turret's angle from the last
+        // program is not used), as in the library's autonomous. TeleOp: the alliance and, with odometry,
+        // the pose come from the autonomous that just ran, as in the library's TeleOp.
+        autonomous = opMode.getClass().isAnnotationPresent(com.qualcomm.robotcore.eventloop.opmode.Autonomous.class);
+        if (!autonomous) setAlliance(com.crossbotics.ftchelper.match.MatchMemory.allianceOr(Alliance.BLUE));
         com.crossbotics.ftchelper.hardware.BulkReads.auto(opMode.hardwareMap);
         screen = new com.crossbotics.ftchelper.telemetry.RobotTelemetry(opMode.telemetry);
         setup(opMode.hardwareMap);
+        com.crossbotics.ftchelper.util.FieldPose fromAuto = com.crossbotics.ftchelper.util.PoseStore.peek();
+        if (!autonomous && tracker != null && fromAuto != null
+                && com.crossbotics.ftchelper.util.PoseStore.ageSec() <= com.crossbotics.ftchelper.match.MatchMemory.MAX_AGE_SEC) {
+            tracker.setPose(fromAuto);
+        }
         // The wheels, as the library's TeleOp makes them (robot-centric; the left trigger drives slowly).
         ownDriving = com.crossbotics.ftchelper.drive.DriverControls.create(opMode.hardwareMap, robotConfig().drive(), null)
                 .slowSpeed(slowSpeed());
@@ -1193,18 +1213,23 @@ public abstract class RobotDefinition {
      */
     public final void initLoop() {
         requireOwn("initLoop()");
+        if (com.crossbotics.ftchelper.core.Profile.current().isPractice()) screen.warn("PRACTICE profile");
+        int changed = Tunable.countChanged();
+        if (changed > 0) screen.warn(changed + " tuned value(s) differ from the code");
         initLoop(screen);
         showNotes(screen);
-        for (String w : sectionWarnings) screen.warn(w);
         screen.update();
     }
 
     /**
      * START in your own OpMode: each part's start (a turret going to its start angle) and your
-     * {@link #atStart} actions. Call it once, after the INIT loop.
+     * {@link #atStart} actions. Call it once, after the INIT loop. If STOP was pressed in INIT, it does
+     * nothing: nothing may move then.
      */
     public final void start() {
         requireOwn("start()");
+        if (ownOpMode instanceof com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
+                && ((com.qualcomm.robotcore.eventloop.opmode.LinearOpMode) ownOpMode).isStopRequested()) return;
         started();
     }
 
@@ -1273,6 +1298,7 @@ public abstract class RobotDefinition {
 
     /** Right after START: the modules' start (an intake "on at the start") and the atStart actions. */
     final void started() {
+        wasStarted = true;
         // The interlock rules first: every part gets its fence (and "wait") from where the parts are now,
         // BEFORE any START command is sent (a hood going to its startAngle, a turret homing, an atStart
         // action). A command into a zone the other part is in then waits at the fence like any other.
