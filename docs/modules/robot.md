@@ -320,6 +320,18 @@ and the part is **off** until its device is in the configuration. Then it simply
 change too, and change back later. Team 8938 kept a `HAS_DEPLOY_SERVO` switch for this; `optional()`
 does it for every part.)
 
+**A part inside a part** can be optional too, for example a launcher's feeder that is not built (or was
+taken off):
+
+```java
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+        .feeder(Indexer.crServo("windmill").part("gobilda-2000-torque").optional()));   // Robot.java
+```
+
+Without `"windmill"` in the configuration, the launcher still spins, and `fire()` feeds nothing (the
+pieces must reach the wheel another way, for example pushed in by the intake). The other way round does
+not work: a feeder cannot be on while its launcher is off.
+
 What "off" means, everywhere:
 
 | Where | A part that is off |

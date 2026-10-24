@@ -13,6 +13,9 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   piece that does not fit (robot file: `limits=NECTAR:0`), `Pieces.isFullFor(kind)` tells, and INIT warns
   above the game's limit (4 at a time). The Quick start has a new step: count how many fit, by hand.
 
+- **A launcher's feeder can be `optional()`**, like any part: without it in the configuration, INIT goes
+  on, the launcher spins, and firing feeds nothing (the pieces get to the wheel another way).
+
 ### Changed
 
 - **Preload pieces that do not fit wait on the tiles** behind the robot, touching it (as the rules
