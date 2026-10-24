@@ -20,7 +20,7 @@ We tested them on a Mac. We need Windows, Linux and Chromebook results most.
 ## Setup
 
 - Your robot project in Android Studio, with the library in `ftc-helper-lib` and your code in five files.
-- The buttons added once: `./gradlew :sim:installButtons` in the `ftc-helper-lib` folder, then close and open the project.
+- The buttons in the list next to the green Run button. The library adds them at the Gradle sync; the first time on a laptop, close the project (**File > Close Project**) and open it again. Write down if they were not there after that.
 - At least one test in `simulator/scenarios` (record one: start lesson 10), for step 6.
 
 ## Steps

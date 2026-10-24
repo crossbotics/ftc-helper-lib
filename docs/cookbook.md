@@ -3143,7 +3143,7 @@ mentor, or see [Add it to a project](01-add-to-project.md).) `./gradlew` runs Gr
 ### How do I start the simulator?
 
 In Android Studio, pick **Simulator** in the list next to the green Run button, and click Run. (No
-**Simulator** in the list? [Add the buttons once](01-add-to-project.md#step-7-the-simulator-buttons-once).)
+**Simulator** in the list? Close the project and open it again: [the buttons](01-add-to-project.md#step-7-the-simulator-buttons-once).)
 Or, in the terminal:
 
 ```bash

@@ -364,7 +364,7 @@ the examples are hidden: they are marked `@Disabled`.) Open http://localhost:878
 up, RB fires (hold it to keep firing). ([Simulator guide](../../guides/simulator.md).)
 
 **Your own robot** (the five files in your TeamCode): in Android Studio, pick **Simulator** in the list
-next to the green Run button, and click Run. (No **Simulator** in the list? [Add the buttons once](../../01-add-to-project.md#step-7-the-simulator-buttons-once).)
+next to the green Run button, and click Run. (No **Simulator** in the list? Close the project and open it again: [the buttons](../../01-add-to-project.md#step-7-the-simulator-buttons-once).)
 Or, in the Terminal, from the `ftc-helper-lib` folder:
 
 ```bash
@@ -423,7 +423,7 @@ Tunables section (here `Tunables.IntakeDeploy`).
    and anything it was not sure about. If one of the five files is already in TeamCode, it writes
    nothing and says which file: move that file away first. (Gradle then also prints
    `BUILD FAILED`: that is expected, nothing broke. Your files are untouched.) It also adds the
-   **Simulator** and **Simulator tests** buttons to Android Studio (they show after a Gradle sync).
+   **Simulator** and **Simulator tests** buttons to Android Studio (the first time, close the project and open it again to see them).
 2. **Build and drive.** The drive works on day one; each module has safe starting numbers.
 3. **A simulator robot file** from the code: start the simulator (the **Simulator** button, or
    `./gradlew :sim:run`). Each time it starts, it writes `simulator/robot.properties` from Robot.java.

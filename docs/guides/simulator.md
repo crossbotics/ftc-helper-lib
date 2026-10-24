@@ -25,8 +25,9 @@ flowchart LR
 **In Android Studio (the easy way):** pick **Simulator** in the list next to the green Run button, and
 click Run. When the Run window says `Open http://localhost:8780`, open that page. The red square
 **Stop** button stops the simulator. **Simulator tests** in the same list runs every test in your
-`simulator/scenarios` folder. No such buttons in the list? Add them once:
-[Step 7 of Add the library](../01-add-to-project.md#step-7-the-simulator-buttons-once). The buttons need no laptop setup.
+`simulator/scenarios` folder. The library adds the buttons when Android Studio syncs. Not in the list
+yet? close the project (**File > Close Project**) and open it again ([Step 7 of Add the library](../01-add-to-project.md#step-7-the-simulator-buttons-once)).
+The buttons need no laptop setup.
 
 **In the Terminal:** first time on this laptop? Do the [laptop setup](#laptop-setup-once) just below first.
 

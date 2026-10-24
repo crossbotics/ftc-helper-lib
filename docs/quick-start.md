@@ -70,7 +70,7 @@ made on the Driver Station. **Why:** the names are copied for you, so they canno
 
    It writes `Robot.java`, `Tunables.java`, `Controls.java`, `Actions.java` and `autos/LeaveStart.java`
    into TeamCode. It also adds the **Simulator** and **Simulator tests** run buttons to Android Studio
-   (they show after a Gradle sync). It never overwrites your work: if any of the five files is already there, it
+   (the first time, close the project and open it again to see them). It never overwrites your work: if any of the five files is already there, it
    writes nothing and stops with `... is already there: nothing written (move it away first)`. Every guess it is not sure of is a
    `TODO` line in `Robot.java` (a comment that marks something still to do): **check each TODO** like
    the STEP lines below. In `Tunables.java` every setting is there: `DEFAULT` (the library's
