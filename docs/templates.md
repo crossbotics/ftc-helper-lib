@@ -3,7 +3,9 @@
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
 **For:** a team that starts its robot code. **You need:** the library in your robot project
-([Add it to a project](01-add-to-project.md)).
+([Add it to a project](01-add-to-project.md)). New to the library? Start at
+[Pick your road](quick-start.md#pick-your-road) in the Quick start: it uses this page in its place and
+says what comes after (the configuration, the Hardware Check, the finders, the first autonomous).
 
 A **template** is robot code you copy and then change. Start from the one that looks most like your
 robot: you delete less and type less. Most of them (all but the last row) are a robot in five files:

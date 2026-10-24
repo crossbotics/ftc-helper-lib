@@ -9,7 +9,8 @@ names and numbers, and you have a working robot.
 > **Start with the robot in five files instead.** [Lesson 1](tutorials/start/01-robot-in-five-files.md) of the
 > tutorials' main track shows a shorter way: `Robot.java`, `Tunables.java`, `Controls.java`, `Actions.java` and autos, made from your robot
 > configuration by `./gradlew :sim:newRobot`, with ready-made modules ([robot module](modules/robot.md)).
-> This starter kit still works and is kept for teams that use it.
+> This starter kit still works and is kept for teams that use it. New team? Start at
+> [Pick your road](quick-start.md#pick-your-road) in the Quick start.
 
 **Before this:** [Add it to a project](01-add-to-project.md).
 

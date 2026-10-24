@@ -24,6 +24,12 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   of tuned values says it too. The Drive Tuner, the Characterizer and the Shot Tuner show the battery
   and warn when it is low (the Flywheel Finder already did). Every finder writes the battery at START in
   the results file. **Why:** a power tuned on a low battery is too strong on a charged one.
+- **Pick your road (Quick start).** The Quick start now starts with three roads: an unchanged starter
+  bot (goBILDA, REV DUO, AndyMark Robits, Studica), a changed starter bot, and your own robot. Each road
+  lists its steps in order, from adding the library to a first autonomous. New sections: make the robot
+  configuration, measure the numbers with the finders (before the first drive), and a first
+  autonomous. The starter bots page has each starter bot's configuration names, and what to change when
+  you changed the robot (with team 8938's robot 1 as an example).
 
 ### Changed
 

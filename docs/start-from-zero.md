@@ -280,7 +280,8 @@ clones the project gets it.
 
 1. Used Scratch or Blocks before? Read [From Blocks to Java](blocks-to-java.md) next, **before** the
    Quick start: it shows where each block you know went.
-2. [Quick start](quick-start.md): get the five robot files, change the lines marked STEP, and drive.
+2. [Quick start](quick-start.md): [pick your road](quick-start.md#pick-your-road) (an unchanged
+   starter bot, a changed starter bot, or your own robot), get the five robot files, and drive.
 3. [Lesson 1: the robot in five files](tutorials/start/01-robot-in-five-files.md), then lessons 2 to 6 of the
    [main track](tutorials/README.md#start-here-the-main-track), then the lessons your robot needs (7 to 9).
 4. Not sure which robot code to start from? [Pick your template](templates.md): a kit bot, an example
