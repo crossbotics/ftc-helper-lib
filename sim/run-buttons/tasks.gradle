@@ -41,8 +41,9 @@ if (fromIde && (findProperty('simulatorButtons') ?: 'true').toString() != 'false
     }
 }
 
-[[name: 'simulator', task: ':sim:run', about: 'Starts the simulator with your TeamCode (open http://localhost:8780).'],
- [name: 'simulatorTests', task: ':sim:scenario', about: 'Runs every test in simulator/scenarios in the simulator.']].each { b ->
+// The Simulator button also opens the page in the browser (-Popen).
+[[name: 'simulator', task: ':sim:run', extra: ['-Popen'], about: 'Starts the simulator with your TeamCode and opens http://localhost:8780.'],
+ [name: 'simulatorTests', task: ':sim:scenario', extra: [], about: 'Runs every test in simulator/scenarios in the simulator.']].each { b ->
     tasks.register(b.name, Exec) {
         group = 'simulator'
         description = b.about
@@ -50,7 +51,7 @@ if (fromIde && (findProperty('simulatorButtons') ?: 'true').toString() != 'false
         executable = java.path
         args = ['-Dorg.gradle.appname=gradlew', '-classpath', new File(libDir, 'gradle/wrapper/gradle-wrapper.jar').path,
                 'org.gradle.wrapper.GradleWrapperMain', '--console=plain', '--gradle-user-home', gradle.gradleUserHomeDir.path,
-                b.task, "-PteamCode=${teamCode.path}".toString()] + passOn
+                b.task, "-PteamCode=${teamCode.path}".toString()] + b.extra + passOn
         doFirst {
             environment 'ANDROID_HOME', androidComponents.sdkComponents.sdkDirectory.get().asFile.path
         }

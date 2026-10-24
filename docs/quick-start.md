@@ -223,7 +223,8 @@ and a hub that was never set uses COMPETITION.
 No robot nearby? The simulator runs your code on a laptop with a 3D field.
 
 **In Android Studio:** pick **Simulator** in the list next to the green Run button, and click Run.
-When the Run window says `Open http://localhost:8780`, click that address (it is a blue link).
+The page opens in your browser when the simulator is ready. (No browser opened? The address in the Run
+window is a blue link: click it.)
 (No **Simulator** in the list? Close the project and open it again: [Step 7 of Add the library](01-add-to-project.md#step-7-the-simulator-buttons-once).)
 The red **Stop** button stops it.
 

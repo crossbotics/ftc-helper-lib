@@ -23,8 +23,8 @@ flowchart LR
 ## Start it
 
 **In Android Studio (the easy way):** pick **Simulator** in the list next to the green Run button, and
-click Run. When the Run window says `Open http://localhost:8780`, click that address (it is a blue
-link) to open the page. The red square
+click Run. When it is ready, the page (http://localhost:8780) opens in your browser. No browser
+opened? The address in the Run window (`Open http://localhost:8780`) is a blue link: click it. The red square
 **Stop** button stops the simulator. **Simulator tests** in the same list runs every test in your
 `simulator/scenarios` folder. The library adds the buttons when Android Studio syncs. Not in the list
 yet? close the project (**File > Close Project**) and open it again ([Step 7 of Add the library](../01-add-to-project.md#step-7-the-simulator-buttons-once)).
@@ -107,7 +107,7 @@ TeamCode; with none, it finds `../TeamCode` when the library sits in a robot pro
 
 | Command | Does | Options |
 | --- | --- | --- |
-| `./gradlew :sim:run` (the **Simulator** button) | the simulator page; first makes the robot file from `Robot.java` | `-Probot=FILE` (default: your `simulator/robot.properties`, else the library's example), `-Plan` (phones on the WiFi), `-Pport=8781` (another port, to run two at once; default 8780), `-PteamCode=DIR`, `-PnoFromRobot` (use the robot file as it is) |
+| `./gradlew :sim:run` (the **Simulator** button) | the simulator page; first makes the robot file from `Robot.java` | `-Probot=FILE` (default: your `simulator/robot.properties`, else the library's example), `-Plan` (phones on the WiFi), `-Pport=8781` (another port, to run two at once; default 8780), `-PteamCode=DIR`, `-PnoFromRobot` (use the robot file as it is), `-Popen` (open the page in the browser, as the button does) |
 | `./gradlew :sim:scenario -Pfile=a.sim` (the **Simulator tests** button: no `-Pfile`) | runs test scripts ([below](#scenario-files-test-without-a-browser)); with no `-Pfile` in a robot project: every test in `simulator/scenarios`; first makes the robot file from `Robot.java` | `-Pfile=a.sim,b.sim` (a comma list) or a folder (every `.sim` in it), `-Probot=`, `-PteamCode=`, `-PnoFromRobot` |
 | `./gradlew :sim:fromRobot` | only makes the robot file from your `Robot.java` (`:sim:run` and `:sim:scenario` do it first) | `-ProbotClass=` (which class), `-Pout=FILE`, `-Pfield=NAME` (default `biobuzz-2026`) |
 | `./gradlew :sim:installButtons` | adds the **Simulator** and **Simulator tests** buttons to Android Studio now (a Gradle sync in Android Studio adds them too) | |

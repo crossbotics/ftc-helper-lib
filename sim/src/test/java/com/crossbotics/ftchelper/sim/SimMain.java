@@ -33,10 +33,11 @@ public final class SimMain {
 
     private static void run(String[] args) throws Exception {
         Path robotFile = Paths.get("sim/robots/starter.properties");
-        boolean lan = false;
+        boolean lan = false, open = false;
         int port = 8780;
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--lan")) lan = true;
+            else if (args[i].equals("--open")) open = true;
             else if (args[i].equals("--port") && i + 1 < args.length) port = Integer.parseInt(args[++i]);
             else robotFile = Paths.get(args[i]);
         }
@@ -49,7 +50,27 @@ public final class SimMain {
         System.out.println("Open http://localhost:" + server.port() + " in a browser. Ctrl+C stops it.");
         if (lan) System.out.println("Phones on the same WiFi: http://<this computer's address>:" + server.port() + "/?phone=2");
         System.out.println(sim.ds.opModes.size() + " OpModes found.");
+        if (open) openBrowser("http://localhost:" + server.port());
         Runtime.getRuntime().addShutdownHook(new Thread(sim::shutdown));
         server.serve();
+    }
+
+    /**
+     * Opens the page in the computer's own browser (--open: the Simulator button in Android Studio). The
+     * server is already listening, so the page loads. If no browser opens, it says so: the address above
+     * still works (in Android Studio's Run window it is a link).
+     */
+    static void openBrowser(String url) {
+        String os = System.getProperty("os.name", "").toLowerCase(java.util.Locale.ROOT);
+        String[] cmd = os.contains("win") ? new String[] {"rundll32", "url.dll,FileProtocolHandler", url}
+                : os.contains("mac") ? new String[] {"open", url}
+                : new String[] {"xdg-open", url};   // Linux and Chromebook
+        try {
+            java.io.File nowhere = new java.io.File(os.contains("win") ? "NUL" : "/dev/null");   // the browser's own messages
+            new ProcessBuilder(cmd).redirectErrorStream(true).redirectOutput(ProcessBuilder.Redirect.appendTo(nowhere)).start();
+            System.out.println("Opening the page in your browser.");
+        } catch (java.io.IOException | RuntimeException e) {
+            System.out.println("Could not open a browser (" + e.getMessage() + "): open " + url + " yourself.");
+        }
     }
 }
