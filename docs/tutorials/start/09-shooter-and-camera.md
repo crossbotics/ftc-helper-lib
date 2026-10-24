@@ -818,7 +818,8 @@ give each a `looks(...)` shape in `Robot.java` ([Lesson 1: Draw your robot from 
 1. Safety glasses, and nobody in front of the launcher.
 2. Spin up with LB (the starting values work for this) and read the speed on the Driver Station: does
    it reach the speed and stay there? Then the Flywheel Finder: its gains in `Tunables.Launcher`.
-3. Feed by hand at low speed, then fire with RB. Watch the feeder push ONE piece per shot; tune
+3. Load the pieces by hand with the flywheel stopped, spin up at low speed, then fire with RB (hands
+   away from the wheel once it spins). Watch the feeder push ONE piece per shot; tune
    `feedSec` (or `push`, `pushSec`) until it does.
 4. Turret: point it forward, INIT, and turn it by hand to each end. It must stop before the hard stops.
 5. Only then turn following on, and fill `speedByDistance` at 4 to 6 distances on a charged battery

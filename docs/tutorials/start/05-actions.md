@@ -70,7 +70,8 @@ public static Action grabAndLift(Robot r) {
 ```
 
 A servo cannot report where it is. `isDone()` is a guess: it turns true after `travelSec` (default
-0.3 s, set it in `Tunables.Claw`). So the lift only rises once the claw has had time to close.
+0.3 s, set it in `Tunables.Claw`): the time for a full 0-to-1 move, scaled by how far this move goes
+([how to time it](../../guides/tunables.md#claw-wrist-and-positioner)). So the lift only rises once the claw has had time to close.
 
 To move two parts **at the same time**, give `then` several commands:
 `.then(() -> r.lift.goTo("low"), r.claw::open)`.
@@ -145,7 +146,9 @@ uses this to fold its intake down:
 atStart(() -> Actions.deployIntake(this));
 ```
 
-Never in INIT: nothing may move before START.
+Never in INIT: the library never moves anything before START. That is the library's safety choice
+(people are still next to the robot in INIT), not a game rule: BIOBUZZ allows an OpMode to pre-position
+servos and motors in INIT (R103.B), as long as the robot is still once INIT is done (G304.H).
 
 ## Try it in the simulator
 

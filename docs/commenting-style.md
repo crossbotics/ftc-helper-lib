@@ -29,6 +29,8 @@ there, or point to the page that explains it.
    they appear in a file (for example "`() -> ...` is a small piece of code we hand over to run later"):
    lambda `() -> ...`, method reference `lift::stepUp`, ternary `a ? b : c`, `final`, `static`,
    `interface`, `@Override`, `try/finally`, `synchronized`, `volatile`, generics `<T>`, enum.
+   In examples and tutorial programs (rule 9) that note goes in the docs next to the code (a code
+   annotation or the text), not in the file.
 7. **Do not comment the obvious.** `i++` and simple getters need nothing. A comment that only repeats
    the code is noise.
 8. **Section headers** in long classes: `// ---- Setup ----`, `// ---- Every loop ----`.
@@ -39,6 +41,14 @@ there, or point to the page that explains it.
    in the way of their own code. The WHY (rules 1 and 6) goes in the docs, next to the code that shows it:
    as a [code annotation](#code-annotations-in-the-docs) or in the text.
 10. **Keep comments true.** When code changes, its comments change in the same commit.
+11. **Say it once** (docs code boxes). Each part has its own job:
+    - the **code comment** says WHAT the line is, in one line;
+    - the **(+) note** ([code annotation](#code-annotations-in-the-docs)) says WHY, for that one line
+      only: at most about 3 sentences, and no numbers the text or a table already gives;
+    - the **text under the box** says what the step does and what to check.
+
+    Never write the same sentence twice (in the comment and the note, or the note and the text). A note
+    every recipe would repeat (what `.part(...)` does) is explained once, where it first appears.
 
 ## Code annotations in the docs
 

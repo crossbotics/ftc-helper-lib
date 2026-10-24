@@ -155,7 +155,15 @@ day one, and the file shows what is still to do. Which one to write:
 | --- | --- |
 | You know it | the number |
 | A safety limit (a lift's `min`/`max`, a stop) you do not know yet | `MEASURE` |
-| A tuning number (`kP`, a speed...) you do not know yet | `DEFAULT` |
+| A servo position only your robot can give (a fold-out's `stowed`/`deployed`, a claw's `open`/`closed`, a wrist's angles) | `MEASURE` |
+| A tuning number (`kP`, a speed, a servo's `travelSec`...) you do not know yet | `DEFAULT` |
+
+**Why positions are `MEASURE`:** the library's guesses (a Positioner's `stowed` 0.0 and `deployed` 0.5)
+are not your servo's. With `DEFAULT` the servo goes to a guess at the first command after START, and a
+guess can push the part into the frame. With `MEASURE` your TeleOp and autos stop at INIT until the
+[Servo Finder](finders.md#servo-finder-ends-and-positions) gives the numbers. A part that is `optional()`
+and not plugged in does not stop, so the simulator still runs before the servo is mounted. A wrong tuning
+number only makes a part slow or soft, so `DEFAULT` (a starting value from the part) is fine there.
 
 Add this line at the top of `Tunables.java`, under the `package` line and above `public class Tunables`:
 
@@ -231,7 +239,7 @@ custom part with `Double.NaN`): the general default (the plain one in the tables
 | Launcher | `kF`, `kP`, `kI`, `kD` | REV's formula with the motor's top speed: F = 32767 / (top RPM x counts per turn / 60), P = F / 10, I = P / 10, D = 0. A goBILDA 6000 RPM motor: kF 11.7, kP 1.17, kI 0.117. Not the hub's own gains (the numbers the Control Hub uses when the code gives none: P 10, I 3, F 0): with no F the wheel only creeps up to speed | [Flywheel Finder](finders.md#flywheel-finder-gains-and-recovery) |
 | Launcher | `speedRpm` | 60% of the motor's top speed, to 10 RPM (6000 RPM motor: 3600). Room above it for the speed control to recover after a shot and on a tired battery, and a gentle first shot | [Shot Tuner](finders.md#shot-tuner-the-shot-table) |
 | Lift with `.part(...)` | `kP`, `kD`, `slowZone`, `tolerance` | the plain defaults (made for a goBILDA 312 RPM motor, 537.7 counts a turn) scaled to your motor's counts per turn, so it acts the same per motor turn. A 435 RPM motor: kP 0.0056, kD 0.00028, slowZone 179, tolerance 14 | the tuning menu (lesson 4, step 6) |
-| Claw, Wrist, Positioner with `.part(...)` | `travelSec` | the servo's catalog speed at the hub's 5 V over its whole move (goBILDA 2000 torque: 270 degrees at 0.25 s per 60 = 1.13 s) | time a full move |
+| Claw, Wrist, Positioner with `.part(...)` | `travelSec` | the servo's catalog speed at the hub's 5 V over its whole move (goBILDA 2000 torque: 270 degrees at 0.25 s per 60 = 1.13 s) | time a move and divide by its distance ([how](#claw-wrist-and-positioner)) |
 | Hood, servo Turret with `.part(...)` | `travelSec` | the same, over the move from `posA` to `posB` | time it |
 | servo Indexer with `.part(...)` | `pushSec`, `returnSec` | the same, from `rest` to `push`, at least 0.25 s | watch a feed |
 | Claw, Wrist, Positioner, servo Indexer | every position | the library's guesses, with a note: they are NOT your servo's | [Servo Finder](finders.md#servo-finder-ends-and-positions) before the first TeleOp |
@@ -401,8 +409,16 @@ Section: the device's name in CamelCase (`claw` reads `Claw`, `intake_deploy` re
 
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
-| `travelSec` | how long the servo takes for a full move, from position 0 to 1 (a shorter move: its share): a servo cannot say when it has arrived, so this is the guess | seconds | 0.3 (with `.part(...)`: from the servo's catalog speed, [First run](#first-run-what-you-get-before-tuning)) | no | test (time a full move) | actions go on before it arrives (more) |
+| `travelSec` | how long the servo takes for a full move, from position 0 to 1 (a shorter move: its share): a servo cannot say when it has arrived, so this is the guess | seconds | 0.3 (with `.part(...)`: from the servo's catalog speed, [First run](#first-run-what-you-get-before-tuning)) | no | test: time a move, divide by its distance (below) | actions go on before it arrives (more) |
 | `<position>` | every other number is a named position, 0 to 1. A Claw needs `open` and `closed` | servo position 0 to 1 | Claw: open 0.20, closed 0.75. Wrist: down 0.15, level 0.5, up 0.85. Positioner: stowed 0.0, deployed 0.5 (only when none are written; INIT says they are guesses) | yes, at once | Servo Finder (P1, P2...) | it does not open, close or reach far enough |
+
+**Timing `travelSec`.** It is the time for a FULL move, 0 to 1, and the library scales it by how far each
+move goes. A mounted servo usually cannot go from 0 to 1, so time a move between two of your positions
+and divide: `travelSec = measured seconds / |positionB - positionA|`. Example: 0.6 s from `stowed = 0.20`
+to `deployed = 0.74` gives 0.6 / 0.54 = 1.1. Writing the 0.6 itself makes the part count as "arrived"
+after about half of the real move. Or leave it `DEFAULT`: with `.part(...)` it comes from the servo's
+catalog speed. A part that keeps falling after the servo has moved (a fold-out dropping by gravity) is
+not servo travel: add `.waitSeconds(...)` to the action for that.
 
 ## Turret
 

@@ -466,7 +466,7 @@ intake = add(Intake.motor("intake").part("gobilda-5203-117")
 | `reverse()`, `endReverse()` | push out while a button is held, then back to what it was doing |
 | `isRunning()`, `isPushingOut()` | running at all; pushing out now (`out()`, or `reverse()` held) |
 | `onAtStart()` | runs in from START until stopped |
-| `holds(n)` | for the simulator: how many pieces it carries (default: a guess of 3) |
+| `holds(n)` | for the simulator only: how many pieces it carries (default: a guess of 3). It does not stop the real intake: to stop at a count, use [Pieces](#pieces-and-piecesensor) and `stopsWhen(...)` ([cookbook](../cookbook.md#how-do-i-stop-the-intake-when-the-robot-is-full)). BIOBUZZ: no more than 4 at a time (G407) |
 | `stopsWhen(condition)`, `isHeldBack()`, `heldBackSec()` | never runs IN while the condition is true (pushing out still works), e.g. `stopsWhen(() -> pieces.isFull())` ([Pieces](#pieces-and-piecesensor)); how long it has been held back |
 | `inAnyway()` | runs in even though `stopsWhen` says no, until `stop()` or `out()` (the count was wrong) |
 

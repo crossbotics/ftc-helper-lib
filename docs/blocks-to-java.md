@@ -220,6 +220,9 @@ when it ends (at INIT), and Java does not let a job change it. A field stays as 
   `atStart(() -> Actions.deployIntake(this))` hands the robot to the Action.
 - **`() ->`** starts a lambda: code you hand over now, to run later. **`::`** is a method
   reference: `robot.intake::out` is the short way to write `() -> robot.intake.out()`.
+- **`a ? b : c`** picks one of two: if `a` is true, `b`, else `c`. Like the Blocks "if-then-else"
+  value block. `deployAtStart ? Actions.deployIntake(this) : Action.named("Stay folded")` is one Action
+  or the other.
 
 ## Next
 

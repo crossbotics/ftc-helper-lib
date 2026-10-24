@@ -53,7 +53,11 @@ listed, not an error. With every device there: `Robot.java: every device is in t
 | Servo: X | go to 0.5 |
 | GUIDE (or hold START 1 s) | the help page with every button, like the finders (motors stop while it is open; `helpLines()` gives its lines, override it to add your own) |
 
-A servo does not move until you press a servo button. For each device it shows what to check,
+A servo does not move until you press a servo button. **The first press jumps:** the code does not know
+where a servo is, so with no position sent since power-on it starts from the middle (0.5): the first
+press sends 0.51 or 0.49, and the servo swings from wherever it is to about the middle. Before that
+press, check that the middle is safe for the part (nothing it would push into), hands clear. To find positions, use the [Servo Finder](finders.md#servofinderopmode), which lets you choose a
+start point first. For each device it shows what to check,
 for example "positive power turns the way you expect, and the encoder counts UP".
 
 **Put the robot on a block** before testing drive motors.

@@ -75,8 +75,8 @@ there by hand before INIT, or every angle is off`.
 - a magnetic switch (e.g. REV Magnetic Limit Switch, with a magnet on the turret) configured as a
   **Digital Device**. It reads LOW near the magnet; the library knows.
 
-At **START** (never in INIT: the game rules want a robot standing still after INIT, and the library never
-moves anything before START), if the switch is not closed already, the turret turns slowly
+At **START** (never in INIT: the library never moves anything before START, a safety choice; the game rules also
+want the robot standing still once INIT is done, G304.H), if the switch is not closed already, the turret turns slowly
 (`homingPower`) toward it and the Driver Station says `homing: looking for the switch`. (A turret that
 starts ON the switch is homed at once: no turning, no "looking" line.) It turns from `startAngle` toward
 `homeAngle`, or the way `homeDirection` says (+1 = counterclockwise, -1 = clockwise).

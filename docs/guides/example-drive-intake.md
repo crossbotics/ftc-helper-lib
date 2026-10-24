@@ -62,7 +62,7 @@ reverse button, the intake goes back to on OR off, whichever it was, with no ext
 in, so it does not interrupt anything (like a jam back-out).
 
 **"Defaulted to on":** `intakeOn` starts `true`, and the first loop after START turns it on. It never
-runs during INIT (motors must not move before START).
+runs during INIT (the library moves nothing before START: a safety choice).
 
 ## How slow mode works
 

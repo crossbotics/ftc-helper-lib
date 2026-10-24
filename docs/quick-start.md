@@ -159,16 +159,22 @@ went (the loop, "when pressed", "wait") in these files.
   back, so the next one adds to it with another dot. Read it left to right as one sentence.
 
 
-| STEP | File | Change | Why |
-| --- | --- | --- | --- |
-| 1 | `Robot.java` | `Drive.mecanum(...)` or `Drive.tank(...)`, and the motor names **exactly** as in the configuration, in the order front left, front right, back left, back right (a two-motor tank: left, right) | the library works out each wheel's power from its place; a typo stops at INIT with the list of real names |
-| 2 | `Robot.java` | `.motor("gobilda-5203-312")` and `.wheelMm(96)`: your drive motor ([its catalog id](guides/parts-catalog.md)) and wheel size | autonomous turns inches into encoder counts with them (an encoder counts how far the motor shaft turned) |
-| 3 | `Robot.java` | `.imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD)`: which way the Control Hub's logo and USB ports face | the IMU (a sensor in the hub) measures the heading, the way the robot faces; field-centric driving and autonomous turns use it |
-| 4 | `Robot.java` | only if a wheel turns the wrong way (step 5 below): add `.reversed(...)` listing **every** reversed drive motor, on its own line **before** `.imu(...)` (the STEP 4 comment marks the place) | the list replaces the default (the left side reversed); `.imu(...)` ends the drive line with `));`, so a `.reversed(...)` after it does not build |
-| 5 | `Robot.java` | your mechanisms: keep, delete or add `add(...)` lines (and a field for each). On each line, `.part("gobilda-5203-1150")`: your motor's or servo's id (on its label; optional but recommended). No intake? Also delete the `g2.dpadLeft` line in `Controls.java` and `spitOut` in `Actions.java` | each part brings its numbers and buttons; with `.part(...)` its starting values are that part's real numbers, and the simulator moves it like the real one |
-| 6 | `Tunables.java` | leave `maxPower` and `practiceMaxPower` at 0.4 for now | a slow first drive is a safe first drive |
-| 7 | `Controls.java` | the TeleOp's name (renamed it? Change `preselectTeleOp` in `autos/FirstAuto.java` to the same name); `group = "Examples"` to your own group name (or delete it); `oneDriver = true` if one person drives and runs the mechanisms | the name is what you pick on the Driver Station, and `preselectTeleOp` picks the TeleOp for you after the autonomous; one driver puts every button on gamepad 1 |
-| 8 | `autos/FirstAuto.java` | the autonomous's name and `group`, where the drive team puts the robot, and how far it drives | it only drives after the Drive Tuner ([lesson 6](tutorials/start/06-first-autonomous.md)) |
+1. **`Robot.java`:** `Drive.mecanum(...)` or `Drive.tank(...)`, and the motor names **exactly** as in the configuration, in the order front left, front right, back left, back right (a two-motor tank: left, right).
+   **Why:** The library works out each wheel's power from its place; a typo stops at INIT with the list of real names.
+2. **`Robot.java`:** `.motor("gobilda-5203-312")` and `.wheelMm(96)`: your drive motor ([its catalog id](guides/parts-catalog.md)) and wheel size.
+   **Why:** Autonomous turns inches into encoder counts with them (an encoder counts how far the motor shaft turned).
+3. **`Robot.java`:** `.imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD)`: which way the Control Hub's logo and USB ports face.
+   **Why:** The IMU (a sensor in the hub) measures the heading, the way the robot faces; field-centric driving and autonomous turns use it.
+4. **`Robot.java`:** only if a wheel turns the wrong way (you find out in section 5 below): add `.reversed(...)` listing **every** reversed drive motor, on its own line **before** `.imu(...)` (the STEP 4 comment marks the place).
+   **Why:** The list replaces the default (the left side reversed); `.imu(...)` ends the drive line with `));`, so a `.reversed(...)` after it does not build.
+5. **`Robot.java`:** your mechanisms: keep, delete or add `add(...)` lines (and a field for each). On each line, `.part("gobilda-5203-1150")`: your motor's or servo's id (on its label; optional but recommended). No intake? Also delete the `g2.dpadLeft` line in `Controls.java` and `spitOut` in `Actions.java`.
+   **Why:** Each part brings its numbers and buttons; with `.part(...)` its starting values are that part's real numbers, and the simulator moves it like the real one.
+6. **`Tunables.java`:** leave `maxPower` and `practiceMaxPower` at 0.4 for now.
+   **Why:** A slow first drive is a safe first drive.
+7. **`Controls.java`:** the TeleOp's name (renamed it? Change `preselectTeleOp` in `autos/FirstAuto.java` to the same name); `group = "Examples"` to your own group name (or delete it); `oneDriver = true` if one person drives and runs the mechanisms.
+   **Why:** The name is what you pick on the Driver Station, and `preselectTeleOp` picks the TeleOp for you after the autonomous; one driver puts every button on gamepad 1.
+8. **`autos/FirstAuto.java`:** the autonomous's name and `group`, where the drive team puts the robot, and how far it drives.
+   **Why:** It only drives after the Drive Tuner ([lesson 6](tutorials/start/06-first-autonomous.md)).
 
 **STEP 5, more mechanisms:** add a line for each part in `define()`, a field for each at the top of
 the class, an import for each part class, and its numbers in `Tunables.java` (a section named after the

@@ -124,30 +124,35 @@ A fix to the docs of something already released (a typo, a clearer step, a wrong
 a release. The site builds its docs from the `docs-live` branch: the last release plus these fixes.
 
 1. Make the fix on `main` as usual, in a commit that changes only `docs/` (and `README.md`).
-2. Put the same commit on `docs-live` and push it:
+2. Put the same commit on `docs-live`, check it, and push it:
 
 ```bash
 git checkout docs-live
 git cherry-pick <the commit>
+python3 tools/check_docs.py
 git push origin docs-live
 git checkout main
 ```
 
+   The check matters: a box fixed on `main` can use code that is not released yet. Then the check fails
+   on `docs-live` (`git reset --hard origin/docs-live` drops the pick), and the fix waits for the release.
+   If the cherry-pick stops with a conflict, the page changed on `main` since the release:
+   `git cherry-pick --abort`, then make the fix again by hand on `docs-live` (and keep the `main` one).
 3. Deploy the site (crossbotics `./scripts/deploy.sh --go`): the pages update, and no email goes out.
 
 Docs for a feature that is not released yet stay on `main` only: teams must not read about something
-their version does not have. A release moves `docs-live` to the new tag (step 4 below).
+their version does not have. A release moves `docs-live` to the new tag (step 4 of [Releasing a version](#releasing-a-version)).
 
 ## Releasing a version
 
-The programming lead does this after merging changes:
+The programming lead does this after merging changes. `vX.Y.Z` is the new version, e.g. `v0.19.0`.
 
-1. In `CHANGELOG.md`, rename "Unreleased" to the new version and date, e.g. `## v0.2.0 - 2026-11-01`.
-   Then `python3 tools/check_tests.py --set-since v0.2.0` (the tests that said `since: unreleased`).
-2. Commit, then tag and push:
+1. In `CHANGELOG.md`, rename "Unreleased" to the new version and date, e.g. `## vX.Y.Z - 2026-11-01`.
+   Then `python3 tools/check_tests.py --set-since vX.Y.Z` (the tests that said `since: unreleased`).
+2. Commit, then tag and push (`-a` makes an annotated tag, like every release tag in this repo):
 
 ```bash
-git tag v0.2.0
+git tag -a vX.Y.Z -m "vX.Y.Z"
 git push origin main --tags
 ```
 
@@ -167,16 +172,23 @@ git push origin main --tags
    release**. Or:
 
 ```bash
-gh release create v0.2.0 --verify-tag --title "v0.2.0" --notes-file notes.md
+gh release create vX.Y.Z --verify-tag --title "vX.Y.Z" --notes-file notes.md
 ```
 
-4. Move `docs-live` to the release, so the site's docs start from it: `git push --force origin v0.2.0:refs/heads/docs-live`.
+4. Move `docs-live` to the release, so the site's docs start from it:
+
+```bash
+git push --force origin 'vX.Y.Z^{commit}:refs/heads/docs-live'
+```
+
+   `^{commit}` pushes the commit the tag points to. A branch cannot point at an annotated tag, so
+   `git push origin vX.Y.Z:refs/heads/docs-live` is rejected.
 
 **Why:** a tag alone sends no message. Teams that click **Watch > Custom > Releases** on GitHub get an
 email for each release, and that is how they learn to update ([Keep it up to date](02-keep-up-to-date.md#find-out-about-a-new-version)).
 
-Version numbers: change the middle number (0.**2**.0) for new features, the last number
-(0.2.**1**) for bug fixes, and the first number when something old stops working the same way.
+Version numbers: change the middle number (0.**19**.0) for new features, the last number
+(0.19.**1**) for bug fixes, and the first number when something old stops working the same way.
 
 ## Writing a tutorial
 

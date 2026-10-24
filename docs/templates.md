@@ -40,7 +40,7 @@ copy single lines from the other templates later (for example the launcher line 
 **The kit bots** use the same configuration names as each seller's own code, so the files run on that
 kit as it is. Where each number comes from, and what each kit bot's code does differently (buttons,
 guessed numbers): [The four BIOBUZZ starter bots](guides/starter-bots.md) ([REV](guides/starter-bots.md#rev-bot-code),
-[AndyMark](guides/starter-bots.md#andymark-bot-code), [Studica](guides/starter-bots.md#studica-bot-code)).
+[goBILDA](guides/starter-bots.md#gobilda-bot-code), [AndyMark](guides/starter-bots.md#andymark-bot-code), [Studica](guides/starter-bots.md#studica-bot-code)).
 Two kit mechanisms are not parts of the library, so their templates use the closest part and say so
 in `Robot.java`:
 

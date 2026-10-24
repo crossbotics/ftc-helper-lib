@@ -149,9 +149,10 @@ Watch the current (amps): a high number while not moving means it is pushing on 
    **X** (reverse), try again.
 2. Press **B**: it holds a speed (60% of the top). Change it with the D-pad to the speed you shoot at.
 3. If the measured speed stays below the target at every speed, press **RB** (more F); above, **LB**.
-4. Feed a piece by hand: the screen shows the recovery time (on the robot only: the simulator has no
-   hand to feed with). Use it for the launcher's
-   `shotInterval(...)` (a little longer than the recovery time).
+4. Feed one piece with the robot's own feeder (or the windmill), or push it in with a stick: **never
+   with your fingers**, which would be next to a wheel at full speed. Safety glasses on. The screen
+   shows the recovery time (on the robot only: the simulator has no piece to feed). Use it for the
+   launcher's `shotInterval(...)` (a little longer than the recovery time).
 5. Five files: copy the `Tunables.Launcher: kP = ..., kI = ..., kD = 0, kF = ..., nominalVolts = ...` line
    into `Tunables.Launcher` (the section is the motor's name). A slow recovery adds `shotIntervalSec`.
    `nominalVolts` is the battery voltage the gains were found at: the launcher's battery compensation

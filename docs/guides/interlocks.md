@@ -308,7 +308,9 @@ range (no [`.fullRange()`](../modules/robot.md#claw)).
   stop is at 145 (0.637).
 - `folded = 0.10` is an example: find yours with the Servo Finder. Each other position = folded +
   degrees / 270 (pickup 0.174, carry 0.433, flower 0.555).
-- `travelSec`: the Speed servo turns 60 degrees in 0.09 s, so 145 degrees take 0.22 s. 0.3 s adds a bit.
+- `travelSec` is for a full 0-to-1 move, which is 270 degrees on this servo. The Speed servo turns 60
+  degrees in 0.09 s, so 0 to 1 takes 270 / 60 x 0.09 = 0.41 s: write about 0.45. The library scales it, so
+  the 145-degree fold waits its share (0.24 s).
 
 **The claw** (`Tunables.Claw`, the "pincer"): two fingers on one goBILDA Torque servo (2000-0025-0002),
 geared together. The fingers turn 1.2 times the servo's angle. Open: fingers at +17 degrees (servo +14);

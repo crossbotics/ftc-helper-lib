@@ -139,7 +139,8 @@ Lists every motor. Keep hands away; eye protection on.
 If the encoder counts BACKWARD at forward power, it warns (check the encoder cable and port) and step
 2 is not allowed: speed control with a backward encoder would run away.
 
-Feed a piece by hand in step 2: it shows the **recovery time** (shot -> ready again).
+Feed a piece in step 2 (with the robot's feeder or a push stick, never fingers near the wheel): it shows
+the **recovery time** (shot -> ready again).
 The gains: F = 32767 / top speed (counts/s), P = F / 10, I = P / 10, D = 0 (a common starting
 point for REV hubs). `countsPerRev()` is 28 (the motor's own encoder, wheel on the motor shaft);
 override it for a geared wheel. Output:

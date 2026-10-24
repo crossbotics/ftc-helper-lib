@@ -36,7 +36,11 @@ event may meet a change it has not tested. So: **update often, but not right bef
 - **The version list:** the [tags page](https://github.com/crossbotics/ftc-helper-lib/tags) shows every
   version (`v0.16.0`, ...), newest first.
 - **Check once a week** in the season (for example after the first practice of the week). It takes one
-  minute.
+  minute. Releases come about once a week: the code changes of that week go out together.
+- **The docs site shows the newest release.** Fixes to the docs go on the site between releases, so it
+  can be a little ahead of the `ftc-helper-lib/docs` folder in your project. A box that says "Coming in
+  the next release" is not in any version yet. On an older version? Read the `docs` folder in your own
+  project: it matches your version.
 
 ## Read the CHANGELOG before you update
 

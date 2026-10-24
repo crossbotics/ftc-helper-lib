@@ -1,4 +1,4 @@
-# The four BIOBUZZ starter bots as test robots
+# The four BIOBUZZ starter bots: robot files and code
 
 > **Work in progress:** this library and its docs are still changing. Something wrong or unclear? [Tell us](https://github.com/crossbotics/ftc-helper-lib/issues/new/choose).
 
@@ -28,6 +28,11 @@ Each file names each part's motor or servo (`.part(...)`, or the motor's id in a
 so the starting values are those parts' real numbers. The parts that are not in the parts
 catalog (Studica's Maverick motors and Multi-Mode Smart Servo, AndyMark's High Speed programmable servo)
 are described with `Motors.custom(...)` and `Parts.customServo(...)` and the seller's numbers.
+
+**The autonomous programs** (`autos/`), the same for all four: each starts at the simulator robot file's
+start spot (back against your wall, 56 in left of the centre). `mirrorForRed()` returns false: BIOBUZZ's
+field is turned half a turn between the alliances (not mirrored), so the same route, driven from each
+alliance's own wall, works for both.
 
 **Shooting in the simulator:** only the goBILDA bot shoots. The REV, AndyMark and Studica files have no
 `shoot.` line (their sellers do not publish the launch direction and angle), so their launchers spin but
@@ -113,7 +118,7 @@ do not say:
   one, D-pad up/down speed +/- 100 RPM), so this robot drives like the other examples. REV's code puts
   the intake on RB and RT and runs the feeder by hand on the D-pad: change a button in `Controls.java` if
   your drivers want REV's layout.
-- **Autonomous** (`autos/`): REV's own autonomous is not on its page, so this is a simple first one: fire the preloaded pieces, then drive off the start line in the last 3 s. The start spot is the simulator robot file's (back against your wall, 56 in left of the centre). `mirrorForRed()` returns false: BIOBUZZ's field is turned half a turn between the alliances (not mirrored), so the same route, driven from each alliance's own wall, works for both.
+- **Autonomous** (`autos/`): REV's own autonomous is not on its page, so this is a simple first one: fire the preloaded pieces, then drive off the start line in the last 3 s.
 
 ## goBILDA FTC StarterBot
 
@@ -136,7 +141,10 @@ back over the robot, then drives `Away from the wall` (forward, `Tunables.Auto.b
 The robot is 15.1 in long, so at y -63 its centre is 7.5 in from the wall's inside face (y -70.6).
 goBILDA's code launches for 10 s; here the launch ends as soon as the last piece is fed.
 
-**The code ([`gobildabot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildabot)), part by part:**
+### goBILDA bot code
+
+[`gobildabot`](../../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildabot) is this robot in
+five files. Part by part:
 
 - Drive: one motor per side; the right one runs reversed, as in goBILDA's code.
 - Intake: the roller's motor is the 117 RPM Yellow Jacket (50.9:1, 5203-2402-0051). The two corner
@@ -227,7 +235,7 @@ as it is. What the comments in the code do not say:
   throws one piece), so this robot drives like the other examples. AndyMark's code puts the intake on the
   bumpers (LB in, RB out) and runs the catapult while RT is held: change a button in `Controls.java` if
   your drivers want AndyMark's layout.
-- **Autonomous** (`autos/`): AndyMark's own autonomous is not on its page, so this is a simple first one: throw the preloaded pieces (AndyMark's manual says to shoot from against the field wall, the launcher in line with the goal), then drive off the start line in the last 3 s. The start spot is the simulator robot file's (back against your wall, 56 in left of the centre). `mirrorForRed()` returns false: BIOBUZZ's field is turned half a turn between the alliances (not mirrored), so the same route, driven from each alliance's own wall, works for both.
+- **Autonomous** (`autos/`): AndyMark's own autonomous is not on its page, so this is a simple first one: throw the preloaded pieces (AndyMark's manual says to shoot from against the field wall, the launcher in line with the goal), then drive off the start line in the last 3 s.
 
 ## Studica FTC Starter Bot
 
@@ -285,7 +293,7 @@ comments in the code do not say:
   robot drives like the other examples. Studica's code drives "tank style" (each stick runs one side),
   puts the intake on the bumpers, the flywheel on RT and the flap on X and A: change a button in
   `Controls.java` if your drivers want Studica's layout.
-- **Autonomous** (`autos/`): Studica's own autonomous is not on its page, so this is a simple first one: fire the preloaded pieces, then drive off the start line in the last 3 s. The start spot is the simulator robot file's (back against your wall, 56 in left of the centre). `mirrorForRed()` returns false: BIOBUZZ's field is turned half a turn between the alliances (not mirrored), so the same route, driven from each alliance's own wall, works for both.
+- **Autonomous** (`autos/`): Studica's own autonomous is not on its page, so this is a simple first one: fire the preloaded pieces, then drive off the start line in the last 3 s.
 
 ## What the simulator could not express (input for its next stages)
 

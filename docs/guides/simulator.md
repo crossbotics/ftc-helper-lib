@@ -360,7 +360,7 @@ record of your robot: the editor writes no file.
      makes it bigger or smaller.
    - **Arrow keys** move it forward, back, left and right; **Page Up / Page Down** up and down. 1 mm a
      key; with Shift, 10 mm.
-   - Or type the numbers (whole mm). In a box, the arrow keys go 1; Shift + arrow goes 10.
+   - Or type the numbers (whole mm) in the boxes.
    - The axis and the tilt (`axis`, `tiltDeg`) where the shape has them.
 5. **Poses:** each moving part has buttons for its named positions (`stowed`, `deployed`...), its hard stops
    and its start. Click each one and check that the robot fits. Change a named angle and the poses move
@@ -377,7 +377,8 @@ record of your robot: the editor writes no file.
    - A `fixed(Shape.box(...))` part: in place of that `Shape.box(...)` inside `fixed(...)`.
 
    Everything you did not change stays as it was: `dropsWhen`, `on(...)`, the part ids, the notes. Then
-   run `./gradlew :sim:fromRobot` again to write the robot file from `Robot.java`.
+   run `./gradlew :sim:fromRobot -PteamCode=../TeamCode` again (from the `ftc-helper-lib` folder) to write
+   the robot file from `Robot.java`.
 7. **Try it** puts the changed shapes into the running simulator (in memory only). Click **Back to
    driving**: the field and the match come back as they were, and game pieces hit the new shapes. **Undo
    all** goes back to the robot file's shapes.
@@ -386,7 +387,7 @@ Notes:
 - `.looks(...)` is optional. Without it the simulator still runs, with guessed boxes, but the size check and
   where pieces touch the robot are guesses too.
 - The editor finds `Robot.java` from the robot file's first line ("made from ..."), written by
-  `./gradlew :sim:fromRobot`; `-ProbotClass=...` on `:sim:run` names another. A robot file written by hand
+  `./gradlew :sim:fromRobot -PteamCode=../TeamCode`; `-ProbotClass=...` on `:sim:run` names another. A robot file written by hand
   gets robot file lines (`shape.NAME = ...`) to copy instead.
 - The editor draws boxes, not CAD models.
 

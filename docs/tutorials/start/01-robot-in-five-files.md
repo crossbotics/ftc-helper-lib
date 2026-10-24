@@ -397,6 +397,10 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 `Shape` needs one more import at the top of `Robot.java`: `import com.crossbotics.ftchelper.robot.Shape;`
 (Alt+Enter on the red word adds it).
 
+`holds(3)` only tells the simulator how many pieces fit. It does not stop the real intake at 3: for that,
+count the pieces and use `stopsWhen(...)` ([cookbook: stop the intake when the robot is full](../../cookbook.md#how-do-i-stop-the-intake-when-the-robot-is-full)).
+In BIOBUZZ a robot may not hold more than 4 pieces at a time (G407).
+
 Then, from the `ftc-helper-lib` folder:
 
 ```bash
@@ -442,7 +446,7 @@ of written instructions an AI coding agent, like Claude Code, follows). Run it a
 - Where would you change the launcher's speed? (Tunables.java, section `Launcher`.)
 - The operator wants the claw on X instead of B. Which file? (Controls.java: `g2.x.toggle(robot.claw)`.)
 - An action is lifting the lift and the operator moves the lift stick. What happens? (The action stops: the driver wins.)
-- Why does `define()` not move anything? (It runs in INIT, and nothing may move before START.)
+- Why does `define()` not move anything? (It runs in INIT, and the library moves nothing before START: its safety choice, see Lesson 5.)
 
 ## Next
 

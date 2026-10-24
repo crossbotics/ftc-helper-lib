@@ -90,8 +90,8 @@ while (opModeInInit()) {
 if (isStopRequested()) return;
 ```
 
-`opModeInInit()` is true until START (or STOP). The robot must not move in INIT; reading buttons
-and showing choices is fine. Blue = X (the blue button on many pads), red = B.
+`opModeInInit()` is true until START (or STOP). The library's rule is that the robot does not move in INIT (a safety choice; the game asks only that it
+is still once INIT is done); reading buttons and showing choices is fine. Blue = X (the blue button on many pads), red = B.
 `Math.min` and `Math.max` keep the delay between 0 and 10 seconds.
 
 A start delay lets you stay out of your partner's way.
