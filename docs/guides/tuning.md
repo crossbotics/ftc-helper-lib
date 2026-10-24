@@ -103,6 +103,12 @@ The starter kit's `MainTeleOp` already has it.
 
 Changed values show the code value next to them: `Lift/kP = 0.0050  (code 0.004)`.
 
+**The battery.** The menu shows the battery's voltage, and warns below 12.5 V. Each change notes the
+battery: the copy lines say `Lift: kF = 0.06   // tuned at 12.7 V`. Copy that note into
+`Tunables.java` too. **Why:** numbers that set a power (a hold power, a drive gain) are right only for
+about the battery they were tuned on: tuned on a low battery, they are too strong on a charged one.
+Tune on a charged battery (12.5 V or more).
+
 ## Optional: FTC Dashboard (practice only)
 
 > **Not at events (2026-27 rule R704.D):** the game manual bans "additional logging/streaming

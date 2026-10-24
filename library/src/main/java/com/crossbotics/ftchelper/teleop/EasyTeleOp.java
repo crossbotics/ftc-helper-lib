@@ -544,7 +544,7 @@ public abstract class EasyTeleOp extends LinearOpMode {
         alliance = MatchMemory.allianceOr(Alliance.BLUE);
         timer = MatchTimer.teleOp();
         for (double s : buzzAtSecondsLeft()) timer.rumbleAt(s, gamepad1, gamepad2);
-        tuning = new TuningMenu(gamepad1);
+        tuning = new TuningMenu(gamepad1).battery(com.crossbotics.ftchelper.hardware.Hw.batteryReader(hardwareMap));
         confirm = new ToggleRumble(gamepad1);
         confirm2 = gamepad2 == null ? null : new ToggleRumble(gamepad2);
 

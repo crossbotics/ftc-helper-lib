@@ -91,6 +91,12 @@ import com.crossbotics.ftchelper.vision.TargetSource;
  */
 public abstract class ShotTunerOpMode extends FinderOpMode {
 
+    // Its numbers are powers or speeds: they depend on the battery.
+    @Override
+    protected boolean batteryMatters() {
+        return true;
+    }
+
     /** Camera pictures older than this are not used for the distance (milliseconds). */
     public static final double MAX_TARGET_AGE_MS = 250;
 

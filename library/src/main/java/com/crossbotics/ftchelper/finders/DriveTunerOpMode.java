@@ -51,6 +51,12 @@ import java.util.List;
  */
 public abstract class DriveTunerOpMode extends FinderOpMode {
 
+    // Its numbers are powers or speeds: they depend on the battery.
+    @Override
+    protected boolean batteryMatters() {
+        return true;
+    }
+
     private static final String[] TESTS = {"Push (by hand)", "Drive forward", "Strafe right", "Turn 90 left"};
 
     /**

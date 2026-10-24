@@ -6,6 +6,9 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
+- **The Simulator button opens the page.** When the simulator is ready, http://localhost:8780 opens in
+  your browser. If no browser opens, the address in the Run window is a link: click it. In the Terminal,
+  `./gradlew :sim:run -Popen` does the same (without `-Popen` nothing opens, as before).
 - **Your own code at each step of an OpMode.** Next to `atStart(...)` and `everyLoop(...)`, `Robot.java`
   now has `atInit(...)` (once in INIT), `duringInit(...)` (the INIT loop, until START) and `atStop(...)`
   (the end, after the motors stop), and `show("label", value)` for a line on the Driver Hub. In
@@ -16,16 +19,17 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   `robot.init(this)`, `robot.initLoop()`, `robot.start()`, `robot.update()`, `robot.stop()`, and
   `robot.driveWith(gamepad1)`. The parts keep their safety, actions still never wait. Example: the
   lesson robot's `OwnTeleOp.java` ("Lesson Bot: own OpMode" in the simulator).
+- **The battery while tuning.** The tuning menu shows the battery, warns below 12.5 V, and notes the
+  volts with each change: the copy lines say `Lift: kF = 0.06   // tuned at 12.7 V`, and the INIT list
+  of tuned values says it too. The Drive Tuner, the Characterizer and the Shot Tuner show the battery
+  and warn when it is low (the Flywheel Finder already did). Every finder writes the battery at START in
+  the results file. **Why:** a power tuned on a low battery is too strong on a charged one.
 
 ### Changed
 
 - `RobotDefinition` has new methods: `init`, `initLoop`, `start`, `update`, `stop`, `show`, `driveWith`,
   `atInit`, `duringInit`, `atStop`, `wasStarted`. If your `Robot.java` has a method with one of these
   names and no parameters (for example your own `stop()`), rename yours.
-
-- **The Simulator button opens the page.** When the simulator is ready, http://localhost:8780 opens in
-  your browser. If no browser opens, the address in the Run window is a link: click it. In the Terminal,
-  `./gradlew :sim:run -Popen` does the same (without `-Popen` nothing opens, as before).
 
 ## v0.18.4 - 2026-10-24
 

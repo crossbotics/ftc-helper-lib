@@ -57,6 +57,10 @@ Any time, with no order: the **Piece Tuner** for a robot with game-piece sensors
 
 - Put the robot on a block for the Servo, Motor and Flywheel finders (wheels off the floor).
 - Eye protection for the Flywheel Finder, Shot Tuner and Aim Tuner. Nobody in the line of fire.
+- A charged battery (12.5 V or more) for the Drive Tuner, the Characterizer, the Flywheel Finder and
+  the Shot Tuner: their numbers are powers and speeds, so they depend on the battery. Their screens show
+  the battery and warn when it is low. Every finder writes the battery at START in the results file
+  (`== Drive Tuner, 2026-10-24 14:05, battery 12.8 V ==`).
 - The finders are in the starter kit (`ServoFinder`, `MotorFinder`, `FlywheelFinder`, `DriveTuner`, `Characterizer`)
   and in the examples (`ExampleShotTuner`, `ExampleAimTuner`: put your launcher and camera in them).
   Remove `@Disabled`, build, and they are in the TeleOp list under "Finders".
@@ -284,7 +288,8 @@ table's hood for this distance, like the speed. Each speed and hood angle is its
 counts (`Tried here: 2550 @ hood 10: 3/4 (best), 2550 @ hood 12.5: 1/3`), and X saves the hood the
 winning shots were fired with.
 
-Charge the battery before tuning speeds: a weak battery changes how far the shots go. The launcher's
+Charge the battery before tuning speeds: a weak battery changes how far the shots go (the screen shows
+the battery and warns below 12.5 V). The launcher's
 speed trim (the D-pad in a match) is not used in the tuner, so the table holds the real speeds.
 
 ## Piece Tuner: what each sensor sees

@@ -145,4 +145,47 @@ public class TuningTest {
         b.decrease();
         assertEquals(java.util.Arrays.asList("Lift: kP = 0.0045", "speed = 0.4"), Tunable.changedAsCode());
     }
+
+    // The battery (option 1 of the battery plan): the menu shows it, warns when low, and notes its volts
+    // with each change; the copy lines say "tuned at"; the note is saved and comes back; a reset clears it.
+    @Test public void theMenuNotesTheBatteryWithEachChange() {
+        Profile.set(Profile.PRACTICE);
+        try {
+            Gamepad g = new Gamepad();
+            Tunable kf = Tunable.number("Lift/kF", 0.05, 0.01);
+            double[] volts = {12.31};
+            TuningMenu menu = new TuningMenu(g).battery(() -> volts[0]);
+            menu.toggle();
+            g.dpad_right = true; menu.update();
+            g.dpad_right = false; menu.update();
+            assertEquals(12.31, kf.tunedVolts(), 1e-9);
+            assertEquals(java.util.Arrays.asList("Lift: kF = 0.06   // tuned at 12.3 V"), Tunable.changedAsCode());
+
+            com.crossbotics.ftchelper.Fakes.FakeTelemetry ft = new com.crossbotics.ftchelper.Fakes.FakeTelemetry();
+            com.crossbotics.ftchelper.telemetry.RobotTelemetry t = new com.crossbotics.ftchelper.telemetry.RobotTelemetry(ft.telemetry, () -> 0L);
+            menu.addTelemetry(t);
+            t.update();
+            String screen = ft.lastScreen.toString();
+            assertTrue(screen, screen.contains("Battery 12.3 V: low"));
+            assertTrue(screen, screen.contains("Battery 12.3 V (noted with each change)"));
+
+            assertTrue(Tunable.saveAll());
+            Tunable.clearForTests();
+            SettingsFile.useForTests(new SettingsFile(file));
+            Tunable again = Tunable.number("Lift/kF", 0.05, 0.01);
+            assertEquals("the note comes back after a restart", 12.31, again.tunedVolts(), 1e-9);
+            again.reset();
+            assertTrue("a reset forgets it", Double.isNaN(again.tunedVolts()));
+        } finally {
+            Profile.resetForTests();
+        }
+    }
+
+    @Test public void noBatteryReaderMeansNoNote() {
+        Tunable a = Tunable.number("Lift/kP", 0.004, 0.0005);
+        a.increase();
+        a.tunedAt(Double.NaN);
+        a.tunedAt(0.4);   // a hub that does not measure
+        assertEquals(java.util.Arrays.asList("Lift: kP = 0.0045"), Tunable.changedAsCode());
+    }
 }

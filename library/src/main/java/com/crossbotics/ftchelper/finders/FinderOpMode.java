@@ -46,6 +46,15 @@ public abstract class FinderOpMode extends LinearOpMode {
      * each, to fit on the Driver Station). GUIDE (or START held 1 s) shows it, in INIT or while running.
      * Default: a page that says there is no help yet.
      */
+    /**
+     * True for a finder whose numbers depend on the battery (a power, a gain, a speed): it shows the
+     * battery, warns below {@link com.crossbotics.ftchelper.tuning.TuningMenu#LOW_BATTERY_VOLTS}, and
+     * says the volts next to its results. Default false (positions and distances do not depend on it).
+     */
+    protected boolean batteryMatters() {
+        return false;
+    }
+
     protected String[] helpLines() {
         return new String[] {"No help page for this finder yet. See its docs."};
     }
@@ -126,6 +135,18 @@ public abstract class FinderOpMode extends LinearOpMode {
                 && !g.dpad_up && !g.dpad_down && !g.dpad_left && !g.dpad_right;
     }
 
+    // "Battery 12.7 V", a warning when it is low, and (with results) that they are for this battery.
+    private static void showBattery(RobotTelemetry t, double volts, boolean withResults) {
+        if (Double.isNaN(volts)) return;
+        double low = com.crossbotics.ftchelper.tuning.TuningMenu.LOW_BATTERY_VOLTS;
+        if (volts < low) {
+            t.warn(String.format(java.util.Locale.US, "Battery %.1f V: low. Charge it first (%.1f V or more): "
+                    + "numbers found now are too strong on a charged battery", volts, low));
+        }
+        t.line("Battery", String.format(java.util.Locale.US, "%.1f V%s", volts,
+                withResults ? " (the numbers below are for about this battery)" : ""));
+    }
+
     private void showHelp(RobotTelemetry t) {
         t.section(finderName() + " help  (GUIDE = back)");
         for (String line : helpLines()) t.text(line);
@@ -140,6 +161,8 @@ public abstract class FinderOpMode extends LinearOpMode {
         t = new RobotTelemetry(telemetry);
         results = new FinderResults(finderName());
         BulkReads.auto(hardwareMap);
+        // The battery, read off the loop (never waits). Every finder notes it at START in the results file.
+        java.util.function.DoubleSupplier battery = com.crossbotics.ftchelper.hardware.Hw.batteryReader(hardwareMap);
         ControllerBindings controls = new ControllerBindings();
         Throwable failure = null;
         try {
@@ -151,6 +174,7 @@ public abstract class FinderOpMode extends LinearOpMode {
                     showHelp(t);
                     t.text("Press START on the Driver Station to begin.");
                 } else {
+                    if (batteryMatters()) showBattery(t, battery.getAsDouble(), false);
                     showInit(t);
                     t.text("GUIDE (center button), or hold START 1 s = help.");
                 }
@@ -160,6 +184,7 @@ public abstract class FinderOpMode extends LinearOpMode {
             // A button held through START must not count as a press.
             controls.ignoreHeldButtons(gamepad1, gamepad2);
             boolean helpWasOpen = false;
+            boolean voltsNoted = false;
             while (opModeIsActive()) {
                 // GUIDE, or START held 1 s: the help page (and everything stops), while running too.
                 updateHelpKeys();
@@ -185,7 +210,13 @@ public abstract class FinderOpMode extends LinearOpMode {
                 helpWasOpen = false;
                 if (waitingForNeutral && neutral(gamepad1)) waitingForNeutral = false;
                 controls.update(gamepad1, gamepad2);
+                // The battery at START (its first reading): rested, before the tests pull it down.
+                if (!voltsNoted && !Double.isNaN(battery.getAsDouble())) {
+                    results.battery(battery.getAsDouble());
+                    voltsNoted = true;
+                }
                 step();
+                if (batteryMatters()) showBattery(t, battery.getAsDouble(), !results.isEmpty());
                 if (waitingForNeutral) t.warn("Let go of every stick, trigger and button on gamepad 1 to go on.");
                 if (!controls.getSlowActionWarning().isEmpty()) t.warn(controls.getSlowActionWarning());
                 show(t);
