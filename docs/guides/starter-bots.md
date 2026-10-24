@@ -110,9 +110,10 @@ do not say:
   turns a few more times.
 - **Poker:** a Smart Robot Servo V2 (Balanced) with two spots, as in REV's code: A = `down` (out over a
   FLOWER, to comb POLLEN out of it), B = `up` (folded along the side, the start). REV's page has no
-  numbers for them, so both are guesses: measure them with the
-  [Servo Finder](finders.md#servo-finder-ends-and-positions) BEFORE the first TeleOp, or the poker can
-  swing into the frame. Nothing moves at INIT, so the code does not fold it: fold the poker by hand
+  numbers for them, so both are `MEASURE`: INIT stops until you measure them with the
+  [Servo Finder](finders.md#servo-finder-ends-and-positions) and write them in `Tunables.java`.
+  **Why:** a guess could swing the poker into the frame. (The simulator's REV robot file has stand-ins
+  for them, so it runs before you measure.) Nothing moves at INIT, so the code does not fold it: fold the poker by hand
   before INIT, so the robot fits the 18 in start cube. It first moves when A, B or an action sends it.
 - **Buttons:** one driver on gamepad 1, with the library's standard buttons (LB flywheel on/off, RB fire
   one, D-pad up/down speed +/- 100 RPM), so this robot drives like the other examples. REV's code puts

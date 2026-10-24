@@ -47,8 +47,9 @@ public class Tunables {
 
     /** The poker. Both spots are guesses: measure them with the Servo Finder BEFORE the first TeleOp. */
     public static class PollenServo {
-        public static double up = 0.0;                              // servo position, folded along the side (a guess)
-        public static double down = 0.5;                            // servo position, out over a FLOWER (a guess)
+        // MEASURE: INIT stops until the Servo Finder gives these two (a guess could push the arm into the frame).
+        public static double up = MEASURE;                          // servo position, folded along the side (Servo Finder)
+        public static double down = MEASURE;                        // servo position, out over a FLOWER (Servo Finder)
     }
 
     public static class Auto {
