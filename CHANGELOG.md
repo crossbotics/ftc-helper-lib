@@ -2,7 +2,10 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
-## Unreleased
+## v0.18.2 - 2026-10-24
+
+Safety fixes: the Hardware Check no longer jumps a servo; `set tunable` lets simulator tests stand in for
+numbers you have not measured yet; the simulator feeder fires one piece per feed.
 
 ### Added
 

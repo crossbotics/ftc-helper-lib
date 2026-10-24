@@ -382,6 +382,8 @@ public final class SimScenario {
 
     // The Tunables fields this file changed, and the value each had before (put back at the end of the file).
     private final Map<java.lang.reflect.Field, Object> tunablesBefore = new java.util.LinkedHashMap<>();
+    // The library's example robots' package: a team's own Tunables is set instead when it has the field.
+    private static final String EXAMPLES = "com.crossbotics.ftchelper.examples.";
     // The Tunables classes in the code, found once per run of the program (reading the code is slow).
     private static List<Class<?>> tunablesClasses = null;
 
@@ -391,7 +393,8 @@ public final class SimScenario {
      * measured on the robot. It goes before init (or after stop): the parts read their numbers at INIT.
      * The Tunables classes: the one each Robot class uses (found the way INIT finds it: Tunables next to
      * Robot.java, or the class given with tunables(...)), and every other class named Tunables. Every one
-     * that has the field gets the value. Returns the note for the report (where it was set).
+     * that has the field gets the value; when a team's own Tunables (not the library's example robots) has
+     * it, only the team's. Returns the note for the report (where it was set).
      */
     private String setTunable(List<String> t) {
         if (t.size() < 4 || t.get(2).indexOf('.') < 0) {
@@ -408,6 +411,8 @@ public final class SimScenario {
         List<String> sections = new ArrayList<>();
         List<String> fields = new ArrayList<>();
         List<String> where = new ArrayList<>();
+        List<java.lang.reflect.Field> found = new ArrayList<>();
+        List<Class<?>> foundIn = new ArrayList<>();
         for (Class<?> top : tunablesClasses()) {
             for (Class<?> section : top.getDeclaredClasses()) {
                 if (!sections.contains(section.getSimpleName())) sections.add(section.getSimpleName());
@@ -417,17 +422,25 @@ public final class SimScenario {
                     if (!java.lang.reflect.Modifier.isStatic(mod) || java.lang.reflect.Modifier.isFinal(mod) || f.isSynthetic()) continue;
                     if (!fields.contains(f.getName())) fields.add(f.getName());
                     if (!f.getName().equals(fieldName)) continue;
-                    Object v = tunableValue(f, value, name);
-                    try {
-                        f.setAccessible(true);
-                        if (!tunablesBefore.containsKey(f)) tunablesBefore.put(f, f.get(null));
-                        f.set(null, v);
-                    } catch (IllegalAccessException e) {
-                        throw new IllegalArgumentException("cannot set Tunables." + name + ": " + e.getMessage());
-                    }
-                    where.add(BuiltAuto.shortName(top));
+                    found.add(f);
+                    foundIn.add(top);
                 }
             }
+        }
+        // A team's own Tunables (TeamCode) wins: the library's example robots are on the classpath too.
+        boolean teamCode = foundIn.stream().anyMatch(c -> !c.getName().startsWith(EXAMPLES));
+        for (int i = 0; i < found.size(); i++) {
+            if (teamCode && foundIn.get(i).getName().startsWith(EXAMPLES)) continue;
+            java.lang.reflect.Field f = found.get(i);
+            Object v = tunableValue(f, value, name);
+            try {
+                f.setAccessible(true);
+                if (!tunablesBefore.containsKey(f)) tunablesBefore.put(f, f.get(null));
+                f.set(null, v);
+            } catch (IllegalAccessException e) {
+                throw new IllegalArgumentException("cannot set Tunables." + name + ": " + e.getMessage());
+            }
+            where.add(BuiltAuto.shortName(foundIn.get(i)));
         }
         if (where.isEmpty()) {
             if (!sections.contains(sectionName)) {
