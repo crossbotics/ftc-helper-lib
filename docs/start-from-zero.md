@@ -257,7 +257,8 @@ Some steps in these docs are commands you type. You type them in Android Studio'
    source/target version 8`, `SDK processing. This version only understands SDK XML versions up to 3`,
    `Deprecated Gradle features were used`, `[Incubating] Problems report`.
 6. **Stop a running command** with **Ctrl+C** (on a Mac too). Some commands keep running on purpose:
-   the simulator (`./gradlew :sim:run`) is a small server that runs until you stop it.
+   the simulator (`./gradlew :sim:run`) is a small server that runs until you stop it. (Started with
+   the **Simulator** button in Android Studio? Its red Stop button stops it.)
 7. **Windows:** type `.\gradlew` (PowerShell) or `gradlew.bat` instead of `./gradlew`.
 
 The library's commands also need a one-time **laptop setup** (where Java and the Android SDK are):

@@ -19,9 +19,9 @@ This lesson explains with a worked example: goBILDA's BIOBUZZ starter bot, rewri
 (a two-motor drive, an intake and a launcher). Lessons 2 to 6 use the **lesson robot**
 ([`examples/.../lessonbot`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/lessonbot)) the
 same way: read its lines, make the same change in your own files, and use its files as the answer key.
-The simulator commands with `-PteamCode=none` run the library's examples; for your own robot use
-`-PteamCode=../TeamCode`. That one is the default (`./gradlew :sim:run` alone builds `../TeamCode` too):
-the lessons write it out so you always see which code runs.
+The simulator commands with `-PteamCode=none` run the library's examples. For your own robot, use the
+**Simulator** button in Android Studio (pick it in the list next to the green Run button, click Run), or
+`./gradlew :sim:run`: it builds your `../TeamCode`.
 Three more complete robots are next to it:
 [`flywheelbot`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot)
 (an intake that runs from the start, a flywheel the driver speeds up and down, an indexer servo, a
@@ -363,16 +363,17 @@ The examples are built into the simulator, so:
 the examples are hidden: they are marked `@Disabled`.) Open http://localhost:8780, pick "goBILDA Bot TeleOp", INIT (read the button map), START. LB spins
 up, RB fires (hold it to keep firing). ([Simulator guide](../../guides/simulator.md).)
 
-**Your own robot** (the five files in your TeamCode), from the `ftc-helper-lib` folder:
+**Your own robot** (the five files in your TeamCode): in Android Studio, pick **Simulator** in the list
+next to the green Run button, and click Run. (No **Simulator** in the list? [Add the buttons once](../../01-add-to-project.md#step-7-the-simulator-buttons-once).)
+Or, in the Terminal, from the `ftc-helper-lib` folder:
 
 ```bash
-./gradlew :sim:fromRobot -PteamCode=../TeamCode
-./gradlew :sim:run -PteamCode=../TeamCode
+./gradlew :sim:run
 ```
 
-The first line writes your robot's simulator file, `simulator/robot.properties` (see below). Open
-http://localhost:8780, pick your TeleOp, INIT, START. Press **Ctrl+C** in the Terminal to stop the
-simulator.
+When it starts, the simulator writes your robot's simulator file, `simulator/robot.properties`, from
+`Robot.java` (see below). Open http://localhost:8780, pick your TeleOp, INIT, START. To stop the simulator:
+the red **Stop** button (or **Ctrl+C** in the Terminal). Changed your code? Stop it and start it again.
 
 ### Draw your robot from Robot.java
 
@@ -401,13 +402,8 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 count the pieces and use `stopsWhen(...)` ([cookbook: stop the intake when the robot is full](../../cookbook.md#how-do-i-stop-the-intake-when-the-robot-is-full)).
 In BIOBUZZ a robot may not hold more than 4 pieces at a time (G407).
 
-Then, from the `ftc-helper-lib` folder:
-
-```bash
-./gradlew :sim:fromRobot -PteamCode=../TeamCode
-```
-
-Then start it with `./gradlew :sim:run -PteamCode=../TeamCode` and open http://localhost:8780: the roller spins when the intake runs, a piece is picked up and fired, and the
+Then start the simulator again (the **Simulator** button, or `./gradlew :sim:run`): it writes the robot
+file from `Robot.java` first. Open http://localhost:8780: the roller spins when the intake runs, a piece is picked up and fired, and the
 size rules are checked on your shapes. The flywheel example (`examples/.../flywheelbot/Robot.java`) also
 has an intake that folds up at the start and falls over at START. An arm on a servo names its angle at
 two positions, `angle("stowed", 90).angle("deployed", 20)`: those names must be positions in that part's
@@ -426,18 +422,15 @@ Tunables section (here `Tunables.IntakeDeploy`).
    Claw). Read every `TODO` in Robot.java: the drive motor and wheel size, how the hub is mounted,
    and anything it was not sure about. If one of the five files is already in TeamCode, it writes
    nothing and says which file: move that file away first. (Gradle then also prints
-   `BUILD FAILED`: that is expected, nothing broke. Your files are untouched.)
+   `BUILD FAILED`: that is expected, nothing broke. Your files are untouched.) It also adds the
+   **Simulator** and **Simulator tests** buttons to Android Studio (the `.run` folder: commit it).
 2. **Build and drive.** The drive works on day one; each module has safe starting numbers.
-3. **A simulator robot file** from the code:
-
-   ```bash
-   ./gradlew :sim:fromRobot -PteamCode=../TeamCode
-   ```
-
+3. **A simulator robot file** from the code: start the simulator (the **Simulator** button, or
+   `./gradlew :sim:run`). Each time it starts, it writes `simulator/robot.properties` from Robot.java.
    The names and the drive come from Robot.java; the sizes are guesses marked TODO until someone
    measures them (or the [robot-file skill](../../guides/robot-file-skill.md) does it from photos or CAD: a **skill** is a set
-of written instructions an AI coding agent, like Claude Code, follows). Run it again whenever
-   Robot.java changes: your measured lines are kept.
+of written instructions an AI coding agent, like Claude Code, follows). Your measured lines are kept
+   each time.
 4. **Add a mechanism later:** one line in Robot.java (and its Tunables section). Its standard buttons
    and its simulator lines come with it.
 

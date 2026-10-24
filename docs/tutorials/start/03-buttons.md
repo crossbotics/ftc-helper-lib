@@ -297,15 +297,14 @@ Backspace). Press RB and watch the lift rise. Press RB again while it moves: it 
 Then add one job of your own to Controls.java, and one on a button that already has one, to see the
 INIT message.
 
-**Your own robot** (from the `ftc-helper-lib` folder):
+**Your own robot:** pick **Simulator** in the list next to Android Studio's green Run button, and click Run. Or, from the `ftc-helper-lib` folder:
 
 ```bash
-./gradlew :sim:fromRobot -PteamCode=../TeamCode
-./gradlew :sim:run -PteamCode=../TeamCode
+./gradlew :sim:run
 ```
 
-Pick your own TeleOp, INIT, and read your map. Add a job and a `show(...)` line, build again (stop the
-simulator with **Ctrl+C**, then run both lines again), and check the button and the new line on the
+Pick your own TeleOp, INIT, and read your map. Add a job and a `show(...)` line, stop the simulator
+(the red Stop button, or **Ctrl+C**) and start it again: it builds your code when it starts, and check the button and the new line on the
 Driver Station. ([Simulator guide](../../guides/simulator.md).)
 
 ## Check it on the robot

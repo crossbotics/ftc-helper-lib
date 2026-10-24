@@ -401,6 +401,8 @@
   #testDlg .td-head2 { font-size: 16px; font-weight: 700; margin: 8px 0; }
   #testDlg .td-pass { color: var(--go); } #testDlg .td-fail { color: var(--stop); }
   #testDlg .td-failline { color: var(--stop); font-weight: 700; }
+  #testDlg .td-passline { color: var(--go); }
+  #testDlg .td-diff .td-failline { white-space: pre-wrap; }
   #testDlg .td-diff > div { padding: 5px 0; border-top: 1px solid var(--line); font: 12px/1.45 ui-monospace, Menlo, monospace; overflow-wrap: anywhere; }
   #testDlg .td-diff .old { color: var(--stop); text-decoration: line-through; } #testDlg .td-diff .new { color: var(--go); font-weight: 700; }
   #testDlg .td-list { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -631,6 +633,7 @@
           <button data-tests="record"><b>Record a test</b> <span class="muted">from a fresh field: choose, INIT, drive, then Stop</span></button>
           <button data-tests="recordNow">Record from now <span class="muted">the robot stays where it is</span></button>
           <button data-tests="open">Open a test <span class="muted">run it; update it after a planned change</span></button>
+          <button data-tests="runAll">Run all tests <span class="muted">every test in simulator/scenarios, one after another</span></button>
           <div class="muted">How: <a href="https://github.com/crossbotics/ftc-helper-lib/blob/main/docs/tutorials/start/10-test-your-robot-code.md" target="_blank" rel="noopener">start lesson 10, "Test your robot code"</a>.</div>
         </div></span>
       <button id="editRobotBtn" aria-pressed="false" title="Shape your robot: move and size its parts, check the size rules, and get the .looks(...) Java for Robot.java (the simulator holds still meanwhile)">Edit robot</button>

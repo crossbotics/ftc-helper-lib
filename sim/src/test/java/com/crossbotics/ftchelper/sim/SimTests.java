@@ -12,7 +12,7 @@ import java.util.Locale;
 /**
  * The page's tests: the recorder, the team's scenario files (only in simulator/scenarios of the robot
  * project, by a plain name: nothing else on the computer can be read or written), a test run on the
- * page (the person watches the robot), and "the change was on purpose: update the test".
+ * page (the person watches the robot), "Run all tests", and "the change was on purpose: update the test".
  */
 final class SimTests {
     final SimEngine sim;
@@ -138,6 +138,7 @@ final class SimTests {
         runName = name == null ? "" : name;
         measuring = measure;
         done = false;
+        all = null;
         note = robotNote(lines);
         final SimScenario s = new SimScenario(sim);
         s.measure = measure;
@@ -148,8 +149,9 @@ final class SimTests {
         t.start();
     }
 
-    /** Stops a test running on the page (the lines left are not run). */
+    /** Stops a test running on the page (the lines left are not run), and the tests after it in "Run all tests". */
     void stopRun() {
+        allStopped = true;
         SimScenario s = running;
         if (s != null) s.go = false;
         sim.ds.stopAsync();
@@ -196,6 +198,118 @@ final class SimTests {
         }
     }
 
+    // ------------------------------------------------------------------ run all tests on the page
+
+    /** One test of "Run all tests": passed, or its failed lines. */
+    static final class Result {
+        final String name;
+        final int failures;
+        final boolean finished;
+        final List<String> fails = new ArrayList<>();
+        final String note;
+
+        Result(String name, SimScenario s, boolean finished, String note) {
+            this.name = name;
+            this.failures = s == null ? 0 : s.failures();
+            this.finished = finished;
+            this.note = note;
+            if (s != null) for (String l : s.report()) if (l.trim().startsWith("FAIL")) fails.add(l.trim());
+        }
+
+        boolean passed() {
+            return failures == 0 && finished;
+        }
+    }
+
+    // null: no "Run all tests" (a single test, or nothing yet)
+    private volatile List<Result> all = null;
+    private volatile int allTotal = 0;
+    private volatile boolean allStopped = false;
+
+    /**
+     * Runs every test in the scenarios folder, one after another, each exactly like ./gradlew :sim:scenario:
+     * a new simulator (its own robot, from the test's "robot" line or the page's robot file) and a fresh robot
+     * app for each file. WHY not on the page's robot: a test leaves the robot as it ended (an intake pushed
+     * down), and the next test must start like a robot just turned on. The page's simulator waits meanwhile
+     * (its OpMode stopped); the person's tuned numbers and settings come back at the end.
+     */
+    synchronized void startRunAll() throws IOException {
+        if (recorder.recording()) throw new IllegalArgumentException("stop the recording first");
+        if (runningNow()) throw new IllegalArgumentException("a test is running");
+        if (folder() == null) throw new IllegalArgumentException("no robot project: start the simulator with your TeamCode to run its tests");
+        final List<String> names = list();
+        if (names.isEmpty()) throw new IllegalArgumentException("no tests in simulator/scenarios yet: record one first");
+        final List<Result> results = java.util.Collections.synchronizedList(new ArrayList<Result>());
+        all = results;
+        allTotal = names.size();
+        allStopped = false;
+        measuring = false;
+        done = false;
+        note = "";
+        running = null;
+        final Path robot = robotFile != null ? robotFile : java.nio.file.Paths.get("sim/robots/starter.properties");
+        Thread t = new Thread(() -> {
+            sim.ds.stop();
+            List<Object[]> userTunables = SimFresh.current();
+            com.crossbotics.ftchelper.core.SettingsFile userSettings = com.crossbotics.ftchelper.core.SettingsFile.shared();
+            try {
+                for (int i = 0; i < names.size() && !allStopped; i++) {
+                    runName = names.get(i);
+                    SimScenario s = null;
+                    String why = "";
+                    try {
+                        Path f = file(names.get(i));
+                        SimScenario.freshMatch();
+                        SimEngine e = new SimEngine(SimRobot.load(SimScenario.robotFor(f, robot)), sim.ds.scope);
+                        e.start();
+                        s = new SimScenario(e);
+                        running = s;
+                        try {
+                            s.run(f);
+                        } finally {
+                            e.shutdown();
+                        }
+                    } catch (IOException | RuntimeException | InterruptedException e) {
+                        why = "The run stopped: " + e.getMessage();
+                    }
+                    results.add(new Result(names.get(i), s, why.isEmpty() && s != null && s.go, why));
+                }
+            } finally {
+                com.crossbotics.ftchelper.robot.RobotDefinition.freshRobotApp();
+                SimFresh.restore(userTunables);
+                com.crossbotics.ftchelper.core.SettingsFile.useForTests(userSettings);
+                done = true;
+            }
+        }, "test-run-all");
+        t.setDaemon(true);
+        runner = t;
+        t.start();
+    }
+
+    // "Run all tests" for the status: every result so far.
+    private void allJson(StringBuilder b) {
+        List<Result> rs = all;
+        if (rs == null) {
+            b.append("null");
+            return;
+        }
+        List<Result> copy;
+        synchronized (rs) {
+            copy = new ArrayList<>(rs);
+        }
+        b.append("{\"total\":").append(allTotal).append(",\"stopped\":").append(allStopped).append(",\"results\":[");
+        for (int i = 0; i < copy.size(); i++) {
+            Result r = copy.get(i);
+            b.append(i > 0 ? "," : "").append("{\"name\":");
+            SimJson.string(b, r.name).append(",\"passed\":").append(r.passed()).append(",\"finished\":").append(r.finished)
+                    .append(",\"failures\":").append(r.failures).append(",\"note\":");
+            SimJson.string(b, r.note).append(",\"fails\":[");
+            for (int j = 0; j < r.fails.size(); j++) SimJson.string(b.append(j > 0 ? "," : ""), r.fails.get(j));
+            b.append("]}");
+        }
+        b.append("]}");
+    }
+
     // A "robot" line naming another robot file than the one the page runs: said, then run anyway.
     private String robotNote(List<String> lines) {
         for (String raw : lines) {
@@ -223,7 +337,8 @@ final class SimTests {
         SimJson.string(b, note).append(",\"report\":[");
         List<String> rep = s == null ? new ArrayList<String>() : new ArrayList<>(s.report());
         for (int i = 0; i < rep.size(); i++) SimJson.string(b.append(i > 0 ? "," : ""), rep.get(i));
-        b.append("],\"failures\":").append(s == null ? 0 : s.failures());
+        b.append("],\"failures\":").append(s == null ? 0 : s.failures()).append(",\"all\":");
+        allJson(b);
         if (s != null && done && measuring) {
             Update u = update(runLines, s.seen);
             b.append(",\"update\":").append(u.json());
@@ -384,7 +499,9 @@ final class SimTests {
 
     /** A short state for the stream (the page shows the recording bar from it). */
     String brief() {
-        return String.format(Locale.US, "{\"rec\":%b,\"sec\":%.1f,\"count\":%d,\"run\":%b}",
-                recorder.recording(), recorder.seconds(), recorder.count(), runningNow());
+        List<Result> rs = all;
+        String allNow = rs != null && runningNow() ? Math.min(rs.size() + 1, allTotal) + " of " + allTotal : "";
+        return String.format(Locale.US, "{\"rec\":%b,\"sec\":%.1f,\"count\":%d,\"run\":%b,\"all\":\"%s\"}",
+                recorder.recording(), recorder.seconds(), recorder.count(), runningNow(), allNow);
     }
 }

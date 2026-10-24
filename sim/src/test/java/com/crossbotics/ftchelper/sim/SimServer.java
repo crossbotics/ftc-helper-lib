@@ -42,6 +42,7 @@ import java.util.Map;
  * POST /tests/save  name, text, replace=0|1: writes simulator/scenarios/NAME.sim
  * POST /tests/record  action=start&from=init|now, action=stop (answers the recording: steps, checks), action=cancel
  * POST /tests/run   name, text, measure=0|1: runs a test on the page; GET /tests/status its report; POST /tests/stop
+ * POST /tests/runAll  runs every test in simulator/scenarios on the page, one after another (GET /tests/status: "all")
  * GET /robotedit.js  the Edit robot mode's page code
  * GET /robot-edit, POST /robot-edit/mode|preview|java|try   Edit robot: shape the robot, get its .looks(...) Java
  *                   (SimRobotEdit); nothing is written to a file
@@ -372,7 +373,7 @@ final class SimServer {
     // ----------------------------- the page's tests (SimTests, SimRecorder) -----------------------------
 
     // /tests...: answers JSON ({"error": "..."} when something is not right).
-    private String tests(String method, String path, String query, byte[] body) {
+    String tests(String method, String path, String query, byte[] body) {
         try {
             Map<String, String> f = method.equals("POST") ? form(new String(body, StandardCharsets.UTF_8)) : form(query);
             if (method.equals("GET") && path.equals("/tests")) return tests.info();
@@ -404,6 +405,9 @@ final class SimServer {
                 }
                 case "/tests/run":
                     tests.startRun(f.getOrDefault("name", ""), f.getOrDefault("text", ""), "1".equals(f.get("measure")));
+                    return "{\"ok\":true}";
+                case "/tests/runAll":
+                    tests.startRunAll();
                     return "{\"ok\":true}";
                 case "/tests/stop":
                     tests.stopRun();

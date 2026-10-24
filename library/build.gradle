@@ -75,3 +75,8 @@ android.libraryVariants.configureEach { variant ->
         }
     }
 }
+
+// In a robot project: the tasks behind the simulator's run buttons in Android Studio (sim/run-buttons).
+if (rootProject.projectDir != projectDir.parentFile) {
+    apply from: new File(projectDir.parentFile, 'sim/run-buttons/tasks.gradle')
+}

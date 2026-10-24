@@ -242,16 +242,15 @@ drop and strafe. Read the report at the end. ([Simulator guide](../../guides/sim
 `start(note, 0)` gives no spot on the field (lesson 7 adds one), so the simulator leaves the robot
 where the last program stopped it. "Back to start" puts the robot and the game pieces back.
 
-**Your own robot.** From the `ftc-helper-lib` folder:
+**Your own robot:** pick **Simulator** in the list next to Android Studio's green Run button, and click Run. Or, from the `ftc-helper-lib` folder:
 
 ```bash
-./gradlew :sim:fromRobot -PteamCode=../TeamCode
-./gradlew :sim:run -PteamCode=../TeamCode
+./gradlew :sim:run
 ```
 
 Choose your own autonomous, INIT, START, and read its report at the end. The simulator runs it even
 before the Drive Tuner (`calibrated = false`); a real robot does not. Changed a step? Stop the
-simulator (**Ctrl+C** in the Terminal) and run both lines again.
+simulator (the red Stop button, or **Ctrl+C** in the Terminal) and start it again.
 
 **See the park rule work.** In **your own** `autos/ScoreAndPark.java`, change `parkWithSeconds(3)` to
 `parkWithSeconds(28)`, and run it again: the score steps are "cut short" or "skipped", and the park

@@ -40,6 +40,7 @@ public final class SimMain {
             else if (args[i].equals("--port") && i + 1 < args.length) port = Integer.parseInt(args[++i]);
             else robotFile = Paths.get(args[i]);
         }
+        robotFile = SimFromRobot.auto(robotFile);
         SimEngine sim = new SimEngine(SimRobot.load(robotFile));
         sim.start();
         SimServer server = new SimServer(sim, port, lan, robotFile);

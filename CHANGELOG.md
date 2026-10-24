@@ -14,6 +14,19 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   the robot is measured. The real robot never reads the robot file: it still stops at INIT. When you
   write the real number, the code's number wins and the line goes away. A scenario's `set tunable` still
   wins over a stand-in. See the simulator guide, "MEASURE in the simulator".
+- **Simulator buttons in Android Studio.** Pick **Simulator** (or **Simulator tests**) in the list next to
+  the green Run button and click Run: no Terminal, no `JAVA_HOME`, no `local.properties` in
+  `ftc-helper-lib`. The red Stop button stops the simulator. The buttons are two files in your project's
+  `.run` folder: `./gradlew :sim:installButtons` adds them (or copy them from `ftc-helper-lib/sim/run-buttons`),
+  and `:sim:newRobot` adds them to a new project. Commit the `.run` folder. See "Add the library", step 7.
+- **The robot file is made at each start.** `:sim:run` and `:sim:scenario` (and the buttons) first make
+  `simulator/robot.properties` from Robot.java, like `:sim:fromRobot`, and print
+  `Robot file made from Robot.java: simulator/robot.properties`. Your own lines are kept, as before. If the
+  file and the code disagree, the simulator says why and uses the file as it is. `-PnoFromRobot` skips this
+  step. `:sim:fromRobot` still works alone.
+- **Run all tests on the simulator page:** **Tests > Run all tests** runs every test in `simulator/scenarios`,
+  one after another, each on a fresh simulator like `:sim:scenario`, and shows passed or failed for each,
+  with the failed lines. Changed your code? Stop the simulator and start it again first.
 
 ## v0.18.2 - 2026-10-24
 

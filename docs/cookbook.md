@@ -3133,7 +3133,8 @@ linkage). Copy the lines into `Tunables.java`.
 
 ## Simulator
 
-The simulator runs your real code on a laptop, with the field in 3D. Type these commands in a terminal:
+The simulator runs your real code on a laptop, with the field in 3D. The easy way to start it is a
+button in Android Studio (below). Or type the commands in a terminal:
 in Android Studio, the **Terminal** tab at the bottom ([how](start-from-zero.md#6-the-terminal-tab)).
 First go into the `ftc-helper-lib` folder by typing `cd ftc-helper-lib`. (It is the library's folder
 inside your robot project, next to `TeamCode` in Android Studio's Project panel. Not there? Ask your
@@ -3141,23 +3142,28 @@ mentor, or see [Add it to a project](01-add-to-project.md).) `./gradlew` runs Gr
 
 ### How do I start the simulator?
 
+In Android Studio, pick **Simulator** in the list next to the green Run button, and click Run. (No
+**Simulator** in the list? [Add the buttons once](01-add-to-project.md#step-7-the-simulator-buttons-once).)
+Or, in the terminal:
+
 ```bash
 ./gradlew :sim:run
 ```
 
-Then open **http://localhost:8780** in a browser. Choose an OpMode, press INIT, then START.
+Then open **http://localhost:8780** in a browser. Choose an OpMode, press INIT, then START. The red
+**Stop** button (or Ctrl+C in the terminal) stops it.
 
 **Why:** you can try buttons and autonomous routes before the robot is built.
 **More:** [Simulator: start it](guides/simulator.md#start-it).
 
 ### How do I see my own robot in the simulator?
 
-```bash
-./gradlew :sim:fromRobot -PteamCode=../TeamCode
-./gradlew :sim:run -PteamCode=../TeamCode
-```
+Start the simulator (the **Simulator** button, or `./gradlew :sim:run`). It runs your TeamCode, and
+when it starts it makes the simulator's robot file from your `Robot.java`: it prints `Robot file made
+from Robot.java: simulator/robot.properties`.
 
-**Why:** the first command makes the simulator's robot file from your `Robot.java`; the second runs your TeamCode.
+**Why:** the robot file then always matches your code. Your own lines in it are kept. Changed the
+code? Stop the simulator and start it again.
 **More:** [A robot file from Robot.java](guides/simulator.md#a-robot-file-from-robotjava), [Your own robot code](guides/simulator.md#your-own-robot-code).
 
 ### How do I make the simulator draw my part?
@@ -3198,7 +3204,7 @@ and its roller): give each a name first (`Shape intakeArm = ...;`), then write `
 cube, 29 in tall) is right, and pieces touch the intake where the real one is. Name the part
 (`.part(...)`) too: a roller's or a wheel's size then comes from the parts catalog. **The easy way:**
 the simulator's **Edit robot** mode: drag and size each part on the 3D robot, then copy the
-`.looks(...)` lines it shows into `Robot.java`. After a change, run `./gradlew :sim:fromRobot` again.
+`.looks(...)` lines it shows into `Robot.java`. After a change, stop the simulator and start it again.
 **More:** [Shapes and parts](modules/robot.md#shapes-and-parts) (every shape and setting),
 [A robot file from Robot.java](guides/simulator.md#a-robot-file-from-robotjava).
 
@@ -3219,13 +3225,14 @@ expect within 1 motor intake power = 0 0.01
 expect error none
 ```
 
-Run it (or every test in the folder: leave out `-Pfile`):
+Run every test in the folder: **Tests > Run all tests** on the simulator page, or the **Simulator tests**
+button in Android Studio. Or, in the terminal (leave out `-Pfile` for every test):
 
 ```bash
-./gradlew :sim:scenario -Pfile=../simulator/scenarios/intake.sim -PteamCode=../TeamCode
+./gradlew :sim:scenario -Pfile=../simulator/scenarios/intake.sim
 ```
 
-`-PteamCode=../TeamCode` runs your own code (it is also the default when the library sits in your robot project).
+It runs your own code (`../TeamCode`, next to the library in your robot project).
 **Why:** a script checks the same things every time, with no clicking, and catches a mistake before a meeting.
 Button names in a scenario are the FTC names, not the Java ones: `g2.rt`, `g2.lb`, `g2.a` are the same,
 but `g2.dpadUp` is `g2.dpad_up` and `g2.leftStickY` is `g2.left_stick_y`.

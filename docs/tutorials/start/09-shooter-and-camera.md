@@ -802,11 +802,10 @@ distance, on your robot.
 The whole-robot aim: do the same with `flywheelbot` (`-ProbotClass=com.crossbotics.ftchelper.examples.flywheelbot.Robot -Pout=build/flywheelbot.properties`),
 choose "FlywheelBot TeleOp", drive until the goal is in view, and press RB on gamepad 1. ([Simulator guide](../../guides/simulator.md).)
 
-**Your own robot** with its shooter (and camera), from the `ftc-helper-lib` folder:
+**Your own robot** with its shooter (and camera): pick **Simulator** in the list next to Android Studio's green Run button, and click Run. Or, from the `ftc-helper-lib` folder:
 
 ```bash
-./gradlew :sim:fromRobot -PteamCode=../TeamCode
-./gradlew :sim:run -PteamCode=../TeamCode
+./gradlew :sim:run
 ```
 
 Pick your TeleOp, INIT (read the map: the launcher's standard buttons are there), START, and fire.

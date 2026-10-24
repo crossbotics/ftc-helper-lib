@@ -1,0 +1,35 @@
+// The simulator's run buttons in Android Studio: "Simulator" and "Simulator tests" in the run list.
+// library/build.gradle applies this file in a robot project only (not in the library's own build).
+//
+// The buttons (the .run/*.run.xml files in the robot project) run these tasks. Each task starts the
+// simulator's own build (the ftc-helper-lib folder: :sim:run or :sim:scenario), like typing ./gradlew there:
+//  - with the Java that runs this build (Android Studio's), so no JAVA_HOME is needed, and this project's
+//    Android SDK (ANDROID_HOME), so ftc-helper-lib needs no local.properties of its own;
+//  - the Gradle wrapper's Java program directly, not gradlew or gradlew.bat: the Stop button then stops
+//    that one program, and its build stops the simulator. (On Windows, gradlew.bat would leave it running.)
+// WHY not a GradleBuild task: when it is stopped, Gradle 9 keeps a lock on the simulator build's files,
+// and the next Run fails until Android Studio is restarted.
+// Other -P settings given to the button (Run > Edit Configurations > Run) go to the simulator, e.g. -Plan.
+
+def libDir = projectDir.parentFile
+def teamCode = rootProject.file('TeamCode')
+def javaHome = new File(System.getProperty('java.home'))
+def java = new File(javaHome, 'bin/java.exe').isFile() ? new File(javaHome, 'bin/java.exe') : new File(javaHome, 'bin/java')
+def passOn = gradle.startParameter.projectProperties.findAll { !it.key.startsWith('android.') }
+        .collect { "-P${it.key}=${it.value}".toString() }
+
+[[name: 'simulator', task: ':sim:run', about: 'Starts the simulator with your TeamCode (open http://localhost:8780).'],
+ [name: 'simulatorTests', task: ':sim:scenario', about: 'Runs every test in simulator/scenarios in the simulator.']].each { b ->
+    tasks.register(b.name, Exec) {
+        group = 'simulator'
+        description = b.about
+        workingDir = libDir
+        executable = java.path
+        args = ['-Dorg.gradle.appname=gradlew', '-classpath', new File(libDir, 'gradle/wrapper/gradle-wrapper.jar').path,
+                'org.gradle.wrapper.GradleWrapperMain', '--console=plain', '--gradle-user-home', gradle.gradleUserHomeDir.path,
+                b.task, "-PteamCode=${teamCode.path}".toString()] + passOn
+        doFirst {
+            environment 'ANDROID_HOME', androidComponents.sdkComponents.sdkDirectory.get().asFile.path
+        }
+    }
+}

@@ -22,7 +22,13 @@ flowchart LR
 
 ## Start it
 
-First time on this laptop? Do the [laptop setup](#laptop-setup-once) just below first.
+**In Android Studio (the easy way):** pick **Simulator** in the list next to the green Run button, and
+click Run. When the Run window says `Open http://localhost:8780`, open that page. The red square
+**Stop** button stops the simulator. **Simulator tests** in the same list runs every test in your
+`simulator/scenarios` folder. No such buttons in the list? Add them once:
+[Step 7 of Add the library](../01-add-to-project.md#step-7-the-simulator-buttons-once). The buttons need no laptop setup.
+
+**In the Terminal:** first time on this laptop? Do the [laptop setup](#laptop-setup-once) just below first.
 
 1. Open a terminal in the `ftc-helper-lib` folder (in Android Studio: the **Terminal** tab at the
    bottom, then `cd ftc-helper-lib` if your robot project holds it). **Why:** the commands only work
@@ -34,10 +40,14 @@ First time on this laptop? Do the [laptop setup](#laptop-setup-once) just below 
    ```
 
    **Why:** `./gradlew` runs Gradle, the tool that builds the code. `:sim:run` is the job to do: the
-   `run` job of the `sim` (simulator) part. (Gradle calls a job a **task**.) It builds the code and starts the simulator.
+   `run` job of the `sim` (simulator) part. (Gradle calls a job a **task**.) It builds the code, makes
+   the robot file from your `Robot.java` ([how](#a-robot-file-from-robotjava)), and starts the simulator.
 3. Open **http://localhost:8780** in a browser. **Why:** that page is your Driver Hub, gamepads and field.
 
 Press Ctrl+C in the terminal to stop it.
+
+**Changed your code?** Stop the simulator and start it again (Run, or `./gradlew :sim:run`). **Why:** the
+simulator builds your code and makes the robot file only when it starts.
 
 **What you see:** the Driver Hub on the left, the field in 3D in the middle with the gamepads under it,
 and the Control Hub's panels on the right. Try it: pick an OpMode with the TeleOp button, press INIT,
@@ -72,8 +82,8 @@ the robot project already builds:
 - **Normal warnings you can ignore:** `source value 8 is obsolete` (and `target value 8`), `SDK processing. This
   version only understands SDK XML versions up to 3`, `Deprecated Gradle features were used`,
   `[Incubating] Problems report`.
-- **A quick build check:** `./gradlew :sim:fromRobot -PteamCode=../TeamCode` builds your TeamCode
-  first, so it also tells you on a laptop, with no Control Hub, whether your code builds.
+- **A quick build check:** `./gradlew :sim:fromRobot` builds your TeamCode first, so it also tells you
+  on a laptop, with no Control Hub, whether your code builds.
 
 ### Options
 
@@ -95,9 +105,10 @@ TeamCode; with none, it finds `../TeamCode` when the library sits in a robot pro
 
 | Command | Does | Options |
 | --- | --- | --- |
-| `./gradlew :sim:run` | the simulator page | `-Probot=FILE` (default: your `simulator/robot.properties`, else the library's example), `-Plan` (phones on the WiFi), `-Pport=8781` (another port, to run two at once; default 8780), `-PteamCode=DIR` |
-| `./gradlew :sim:scenario -Pfile=a.sim` | runs test scripts ([below](#scenario-files-test-without-a-browser)); with no `-Pfile` in a robot project: every test in `simulator/scenarios` | `-Pfile=a.sim,b.sim` (a comma list) or a folder (every `.sim` in it), `-Probot=`, `-PteamCode=` |
-| `./gradlew :sim:fromRobot` | writes the robot file from your `Robot.java` | `-ProbotClass=` (which class), `-Pout=FILE`, `-Pfield=NAME` (default `biobuzz-2026`) |
+| `./gradlew :sim:run` (the **Simulator** button) | the simulator page; first makes the robot file from `Robot.java` | `-Probot=FILE` (default: your `simulator/robot.properties`, else the library's example), `-Plan` (phones on the WiFi), `-Pport=8781` (another port, to run two at once; default 8780), `-PteamCode=DIR`, `-PnoFromRobot` (use the robot file as it is) |
+| `./gradlew :sim:scenario -Pfile=a.sim` (the **Simulator tests** button: no `-Pfile`) | runs test scripts ([below](#scenario-files-test-without-a-browser)); with no `-Pfile` in a robot project: every test in `simulator/scenarios`; first makes the robot file from `Robot.java` | `-Pfile=a.sim,b.sim` (a comma list) or a folder (every `.sim` in it), `-Probot=`, `-PteamCode=`, `-PnoFromRobot` |
+| `./gradlew :sim:fromRobot` | only makes the robot file from your `Robot.java` (`:sim:run` and `:sim:scenario` do it first) | `-ProbotClass=` (which class), `-Pout=FILE`, `-Pfield=NAME` (default `biobuzz-2026`) |
+| `./gradlew :sim:installButtons` | adds the **Simulator** and **Simulator tests** buttons to Android Studio (the robot project's `.run` folder) | |
 | `./gradlew :sim:fromConfig -Pconfig=FILE.xml` | a first robot file from a robot configuration | `-Pout=FILE`, `-Pfield=NAME` |
 | `./gradlew :sim:newRobot -Pconfig=FILE.xml` | the five files (Robot.java, ...) from a configuration | `-PteamCode=DIR`, `-Ppackage=` (default `org.firstinspires.ftc.teamcode`) |
 | `./gradlew :sim:fit` | fits Characterizer logs ([below](#real-numbers-the-characterizer)) | `-Plog=`, `-Probot=`, `-Pwrite`, `-Pforce` |
@@ -377,8 +388,7 @@ record of your robot: the editor writes no file.
    - A `fixed(Shape.box(...))` part: in place of that `Shape.box(...)` inside `fixed(...)`.
 
    Everything you did not change stays as it was: `dropsWhen`, `on(...)`, the part ids, the notes. Then
-   run `./gradlew :sim:fromRobot -PteamCode=../TeamCode` again (from the `ftc-helper-lib` folder) to write
-   the robot file from `Robot.java`.
+   stop the simulator and start it again: it writes the robot file from `Robot.java` when it starts.
 7. **Try it** puts the changed shapes into the running simulator (in memory only). Click **Back to
    driving**: the field and the match come back as they were, and game pieces hit the new shapes. **Undo
    all** goes back to the robot file's shapes.
@@ -386,8 +396,8 @@ record of your robot: the editor writes no file.
 Notes:
 - `.looks(...)` is optional. Without it the simulator still runs, with guessed boxes, but the size check and
   where pieces touch the robot are guesses too.
-- The editor finds `Robot.java` from the robot file's first line ("made from ..."), written by
-  `./gradlew :sim:fromRobot -PteamCode=../TeamCode`; `-ProbotClass=...` on `:sim:run` names another. A robot file written by hand
+- The editor finds `Robot.java` from the robot file's first line ("made from ..."), written when the
+  simulator makes the robot file; `-ProbotClass=...` on `:sim:run` names another. A robot file written by hand
   gets robot file lines (`shape.NAME = ...`) to copy instead.
 - The editor draws boxes, not CAD models.
 
@@ -486,10 +496,21 @@ forward and up sizes.
 ### A robot file from Robot.java
 
 A team that writes its robot in five files ([lesson 1](../tutorials/start/01-robot-in-five-files.md)) gets
-its robot file from the code:
+its robot file from the code. **It is automatic:** each time the simulator starts (`:sim:run`, `:sim:scenario`,
+or their buttons), it first makes the robot file from the Robot class and prints one line:
+
+```text
+Robot file made from Robot.java: simulator/robot.properties
+```
+
+The Robot class is the one `-ProbotClass=` names, else the one the robot file was made from (its first
+line), else `org.firstinspires.ftc.teamcode.Robot`, else a class in TeamCode that extends
+`RobotDefinition`. No Robot class (a team without the five files): nothing is made. When the file and the
+code disagree (below), it writes nothing, prints why, and the simulator uses the file as it is.
+`-PnoFromRobot` (or `-Probot=FILE`) skips this step. To make the file alone, with no simulator:
 
 ```bash
-./gradlew :sim:fromRobot -PteamCode=../TeamCode [-ProbotClass=org.firstinspires.ftc.teamcode.Robot] [-Pout=...]
+./gradlew :sim:fromRobot [-ProbotClass=org.firstinspires.ftc.teamcode.Robot] [-Pout=...]
 ```
 
 It writes `simulator/robot.properties` (or `-Pout`) from `Robot.java` and `Tunables.java`: every device
@@ -1003,6 +1024,12 @@ Over the 3D view, **Tests**:
 - **Run it now** runs the test on the page, from a fresh start like `:sim:scenario`, while you watch (the
   page's gamepads and buttons wait; **Stop the test** ends it). The result: PASSED, or FAILED with each
   failed line and the value it saw.
+- **Run all tests** (in the Tests menu) runs every test in `simulator/scenarios`, one after another, each
+  exactly like `:sim:scenario`: a new simulator of its own, with the test's `robot` line. The page's robot
+  waits meanwhile (the bar says `Running all tests: 2 of 5`; **Stop the test** ends the run). The result:
+  passed or failed for each test, with the failed lines. Click a test's name to open it (run it alone, or
+  update it). It runs the code the simulator started with: after a code change, stop the simulator and
+  start it again first.
 - **Open a test** lists the tests in `simulator/scenarios` (or opens a file from the computer) and runs one.
   If it fails after a change you made **on purpose**, **The change was on purpose: update the test** runs
   it once more and measures (a `within` may then wait up to 3 times as long, to see how long it takes

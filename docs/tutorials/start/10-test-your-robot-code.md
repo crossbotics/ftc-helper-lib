@@ -11,8 +11,8 @@ all, after every change to your code.
 and you already try your changes in the simulator (lessons 1 to 9 show how). Nothing in lessons 1 to 9
 needs it.
 
-**You need:** your robot project with the simulator running your code
-(`./gradlew :sim:run -PteamCode=../TeamCode`, [lesson 1](01-robot-in-five-files.md)). About 45 minutes.
+**You need:** your robot project with the simulator running your code (the **Simulator** button in
+Android Studio, or `./gradlew :sim:run`, [lesson 1](01-robot-in-five-files.md)). About 45 minutes.
 No project yet? Do [Try it with goBILDA's starter bot](#try-it-with-gobildas-starter-bot) at the end first.
 
 **Reference:** [Scenario files](../../guides/simulator.md#scenario-files-test-without-a-browser) (every
@@ -160,16 +160,22 @@ A check of words (`phase`, `step`, `screen`) cannot take a new number: the windo
 change it or delete it by hand. The file gets a note with the date and the lines that changed; the old
 numbers are in git.
 
-## 8. Run all your tests with one command
+## 8. Run all your tests at once
 
-From the `ftc-helper-lib` folder:
+Three ways, each runs every test in your `simulator/scenarios` folder:
 
-```bash
-./gradlew :sim:scenario -PteamCode=../TeamCode
-```
+- **On the simulator page:** **Tests > Run all tests**. The page shows passed or failed for each test,
+  with the failed lines. Click a test's name to open it.
+- **In Android Studio:** pick **Simulator tests** in the list next to the green Run button, and click
+  Run. (No such button? [Add the buttons once](../../01-add-to-project.md#step-7-the-simulator-buttons-once).)
+- **In the Terminal,** from the `ftc-helper-lib` folder:
 
-With no file named, it runs every test in your `simulator/scenarios` folder, each from a fresh robot
-(nothing carries over from one test to the next), and ends with a list (paths shortened here):
+  ```bash
+  ./gradlew :sim:scenario
+  ```
+
+Each test starts from a fresh robot (nothing carries over from one test to the next). The button and the
+command end with a list (paths shortened here):
 
 ```text
 == 3 of 3 passed
@@ -178,6 +184,8 @@ With no file named, it runs every test in your `simulator/scenarios` folder, eac
   PASSED  ../simulator/scenarios/pick-up.sim
 ```
 
+The button and the command first build your code and make the robot file from `Robot.java`. The page
+runs the code the simulator started with: after a code change, stop the simulator and start it again.
 One test: `-Pfile=../simulator/scenarios/main-teleop.sim`. The simulator's automatic tests
 (`./gradlew :sim:testDebugUnitTest`) also run every file in that folder. Run your tests before you
 commit, and before every event.
@@ -192,7 +200,7 @@ expect servo claw target = 0.75 0.01
 ```
 
 **A number you have not measured yet.** A `MEASURE` in Tunables.java stops INIT on the robot. In the
-simulator it does not: `:sim:fromRobot` puts a stand-in for it in the robot file
+simulator it does not: when the simulator starts, it puts a stand-in for it in the robot file
 (`tunable.IntakeDeploy.deployed = 0.5`), and the simulator uses that ([MEASURE in the
 simulator](../../guides/simulator.md#measure-in-the-simulator)). So most tests need nothing for it.
 

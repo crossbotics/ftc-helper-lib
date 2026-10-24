@@ -334,11 +334,10 @@ each side. Then run it. Where the green line leaves the orange one, something we
 something (it turns red), or it went too fast to turn or brake in time. Fix the path (move a control
 point, or slow that part with `maxSpeed(0.5)`), press **Clear lines**, and run it again.
 
-**Your own robot.** From the `ftc-helper-lib` folder:
+**Your own robot:** pick **Simulator** in the list next to Android Studio's green Run button, and click Run. Or, from the `ftc-helper-lib` folder:
 
 ```bash
-./gradlew :sim:fromRobot -PteamCode=../TeamCode
-./gradlew :sim:run -PteamCode=../TeamCode
+./gradlew :sim:run
 ```
 
 Choose your autonomous, INIT, START, and read the report at the end. (The example has `@Disabled`

@@ -309,6 +309,54 @@ public class SimRecorderTest {
         }
     }
 
+    // The page's "Run all tests" (POST /tests/runAll): every test in the folder, one after another, each from a
+    // fresh start, with passed or failed (and the failed lines) per test, while the simulator keeps running.
+    @Test public void runAllTestsRunsEveryTestInTheFolder() throws Exception {
+        Path team = Files.createTempDirectory("team-all");
+        Path folder = Files.createDirectories(team.resolve("simulator").resolve("scenarios"));
+        String steps = "init \"goBILDA Bot TeleOp\"\nwait 0.5\nstart\nwait 0.3\n";
+        Files.write(folder.resolve("a-runs.sim"), (steps + "expect phase RUNNING\n").getBytes(StandardCharsets.UTF_8));
+        Files.write(folder.resolve("b-stops.sim"), (steps + "expect phase STOPPED\n").getBytes(StandardCharsets.UTF_8));
+        SimEngine sim = engine(GOBILDA);
+        try {
+            System.setProperty("sim.teamDir", team.toString());
+            SimServer server;
+            try {
+                server = new SimServer(sim, 0, false, GOBILDA.toAbsolutePath().normalize());
+            } finally {
+                System.clearProperty("sim.teamDir");
+            }
+            assertEquals("{\"ok\":true}", server.tests("POST", "/tests/runAll", "", new byte[0]));
+            String twice = server.tests("POST", "/tests/runAll", "", new byte[0]);
+            assertTrue(twice, twice.contains("a test is running"));
+            assertTrue(server.tests.brief(), server.tests.brief().matches(".*\"all\":\"[12] of 2\".*"));
+            assertTrue("both tests end", SimRun.waitFor(() -> !server.tests.runningNow(), 30));
+            String st = server.tests("GET", "/tests/status", "", new byte[0]);
+            System.out.println(st);
+            assertTrue(st, st.contains("\"done\":true"));
+            assertTrue(st, st.contains("{\"name\":\"a-runs\",\"passed\":true,\"finished\":true,\"failures\":0"));
+            assertTrue(st, st.contains("{\"name\":\"b-stops\",\"passed\":false,\"finished\":true,\"failures\":1"));
+            assertTrue(st, st.matches(".*\"fails\":\\[\"FAIL +5 +expect phase STOPPED.*"));
+            // the simulator is still there, and its buttons work again
+            assertEquals("ok", server.command(cmd("action", "init", "opmode", "goBILDA Bot TeleOp")));
+        } finally {
+            sim.shutdown();
+        }
+        // no robot project, or no tests: said, nothing run
+        SimEngine none = engine(GOBILDA);
+        try {
+            SimTests t = new SimTests(none, GOBILDA, Files.createTempDirectory("team-empty"));
+            try {
+                t.startRunAll();
+                fail("no tests to run");
+            } catch (IllegalArgumentException expected) {
+                assertTrue(expected.getMessage(), expected.getMessage().contains("no tests"));
+            }
+        } finally {
+            none.shutdown();
+        }
+    }
+
     @Test public void eachTestStartsWithTheCodesTunablesNumbers() {
         SimFresh.readCodeValues();
         double code = com.crossbotics.ftchelper.examples.gobildabot.Tunables.Auto.backInches;

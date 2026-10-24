@@ -102,8 +102,19 @@ if (useTeamCode) {
 // Finder results and Characterizer logs from simulator runs go here (on a robot: /sdcard/FIRST/ftc-helper).
 def simDataDir = new File(buildDir, 'sim-data').path
 
-// ./gradlew :sim:run  [-Probot=path/to/robot.properties] [-Plan] [-Pport=8781] [-ProbotClass=...]  (-Plan: phones on the same
-// WiFi can join; -Pport: another port, e.g. to run two simulators at once; -ProbotClass: the Robot class for Edit robot)
+// :sim:run and :sim:scenario first make the robot file from Robot.java, like :sim:fromRobot (SimFromRobot.auto).
+// Not with -PnoFromRobot, and not with -Probot=... (another robot file).
+def autoRobotFile = teamRobotFile != null && !project.hasProperty('noFromRobot') && !project.hasProperty('robot')
+def fromRobotProperties = { task ->
+    task.systemProperty 'sim.fromRobot', autoRobotFile ? teamRobotFile.path : ''
+    task.systemProperty 'sim.teamCode', useTeamCode ? teamCodeDir.path : ''
+    task.systemProperty 'sim.robotClass', project.findProperty('robotClass') ?: ''
+    task.systemProperty 'sim.field', project.findProperty('field') ?: ''
+}
+
+// ./gradlew :sim:run  [-Probot=path/to/robot.properties] [-Plan] [-Pport=8781] [-ProbotClass=...] [-PnoFromRobot]
+// (-Plan: phones on the same WiFi can join; -Pport: another port, e.g. to run two simulators at once; -ProbotClass: the
+// Robot class for Edit robot and the robot file; -PnoFromRobot: use the robot file as it is)
 tasks.register('run', JavaExec) {
     group = 'application'
     description = 'Starts the simulator (open http://localhost:8780).'
@@ -120,11 +131,11 @@ tasks.register('run', JavaExec) {
     // the robot project: the page's test recorder saves tests in its simulator/scenarios folder
     systemProperty 'sim.teamDir', useTeamCode ? robotProject.path : ''
     systemProperty 'ftchelper.dataDir', simDataDir
-    // Edit robot: the Robot class whose .looks(...) the page prints (default: the one the robot file was made from)
-    systemProperty 'sim.robotClass', project.findProperty('robotClass') ?: ''
+    // the robot file from Robot.java first; -ProbotClass is also the class whose .looks(...) Edit robot prints
+    fromRobotProperties(it)
 }
 
-// ./gradlew :sim:scenario -Pfile=path/to/test.sim [-Probot=...]   (several: -Pfile=a.sim,b.sim; a folder: every .sim in it)
+// ./gradlew :sim:scenario -Pfile=path/to/test.sim [-Probot=...] [-PnoFromRobot]   (several: -Pfile=a.sim,b.sim; a folder: every .sim in it)
 // Runs scenario files without a browser and prints a report; fails if any "expect" fails.
 // In a robot project, with no -Pfile: every test in simulator/scenarios (start lesson 10).
 tasks.register('scenario', JavaExec) {
@@ -144,6 +155,7 @@ tasks.register('scenario', JavaExec) {
     args = ['--robot', robot] + files
     systemProperty 'sim.teamOnly', useTeamCode
     systemProperty 'ftchelper.dataDir', simDataDir
+    fromRobotProperties(it)
 }
 
 // ./gradlew :sim:fromConfig -Pconfig=path/to/config.xml [-Pout=path/to/robot.properties] [-Pfield=biobuzz-2026]
@@ -164,7 +176,7 @@ tasks.register('fromConfig', JavaExec) {
 // ./gradlew :sim:fromRobot -PteamCode=../TeamCode [-ProbotClass=org.firstinspires.ftc.teamcode.Robot]
 //                          [-Pout=simulator/robot.properties] [-Pfield=biobuzz-2026]
 // The robot file from the team's Robot.java: every device name and the drive from the code. Lines it
-// writes are marked "# from Robot.java"; the team's own lines are kept.
+// writes are marked "# from Robot.java"; the team's own lines are kept. :sim:run and :sim:scenario do this first.
 tasks.register('fromRobot', JavaExec) {
     group = 'application'
     description = 'Writes (or refreshes) the simulator robot file from Robot.java.'
@@ -191,7 +203,33 @@ tasks.register('newRobot', JavaExec) {
     workingDir = rootProject.projectDir
     args = ['--config', project.findProperty('config') ?: '',
             '--teamCode', teamCodeDir != null ? teamCodeDir.path : '',
-            '--package', project.findProperty('package') ?: '']
+            '--package', project.findProperty('package') ?: '',
+            '--buttons', file('run-buttons').path]
+}
+
+// ./gradlew :sim:installButtons
+// The run buttons "Simulator" and "Simulator tests" for Android Studio: copies sim/run-buttons/*.run.xml into
+// the robot project's .run folder (only the missing ones). Commit them: everyone who clones gets the buttons.
+tasks.register('installButtons') {
+    group = 'application'
+    description = 'Adds the Simulator and Simulator tests run buttons to Android Studio (the robot project\'s .run folder).'
+    def from = file('run-buttons')
+    def to = robotProject != null ? new File(robotProject, '.run') : null
+    doLast {
+        if (to == null) throw new GradleException('installButtons: no robot project here (no ../TeamCode). Give it: -PteamCode=path/to/TeamCode')
+        to.mkdirs()
+        from.listFiles().findAll { it.name.endsWith('.run.xml') }.sort { it.name }.each { f ->
+            def dest = new File(to, f.name)
+            if (dest.exists()) {
+                println "Already there: .run/${f.name}"
+            } else {
+                dest.bytes = f.bytes
+                println "Added .run/${f.name}"
+            }
+        }
+        println 'In Android Studio: pick "Simulator" in the list next to the green Run button, then click Run.'
+        println '(No buttons in the list? Close the project and open it again.) Commit the .run folder.'
+    }
 }
 
 // ./gradlew :sim:fit [-Plog=path/to/log.csv or a folder] [-Probot=...] [-Pwrite] [-Pforce]

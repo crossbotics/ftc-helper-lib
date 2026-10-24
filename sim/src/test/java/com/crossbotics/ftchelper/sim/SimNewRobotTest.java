@@ -203,4 +203,32 @@ public class SimNewRobotTest {
             fresh.all().stop();
         }
     }
+
+    // Android Studio's run buttons (sim/run-buttons): each file is a Gradle run configuration of a task that
+    // tasks.gradle makes; newRobot (and :sim:installButtons) copy them into the robot project's .run folder once.
+    @Test public void theRunButtonsAreAddedOnceAndRunTheSimulatorTasks() throws Exception {
+        Path buttons = new File("run-buttons").toPath();
+        String tasks = new String(Files.readAllBytes(buttons.resolve("tasks.gradle")), StandardCharsets.UTF_8);
+        List<String> names = new ArrayList<>();
+        try (java.util.stream.Stream<Path> files = Files.list(buttons)) {
+            for (Path f : (Iterable<Path>) files.filter(p -> p.toString().endsWith(".run.xml")).sorted()::iterator) {
+                org.w3c.dom.Element conf = (org.w3c.dom.Element) javax.xml.parsers.DocumentBuilderFactory.newInstance()
+                        .newDocumentBuilder().parse(f.toFile()).getElementsByTagName("configuration").item(0);
+                assertEquals(f.toString(), "GradleRunConfiguration", conf.getAttribute("type"));
+                names.add(conf.getAttribute("name"));
+                String xml = new String(Files.readAllBytes(f), StandardCharsets.UTF_8);
+                assertTrue(xml, xml.contains("<option name=\"externalProjectPath\" value=\"$PROJECT_DIR$\" />"));
+                java.util.regex.Matcher task = java.util.regex.Pattern.compile("<option value=\"(\\w+)\" />").matcher(xml);
+                assertTrue(xml, task.find());
+                assertTrue("tasks.gradle makes the task " + task.group(1), tasks.contains("name: '" + task.group(1) + "'"));
+            }
+        }
+        assertEquals(java.util.Arrays.asList("Simulator", "Simulator tests"), names);
+
+        Path project = tmp.newFolder("robot-project").toPath();
+        assertEquals(java.util.Arrays.asList(".run/Simulator.run.xml", ".run/Simulator_tests.run.xml"), SimNewRobot.addRunButtons(buttons, project));
+        Files.write(project.resolve(".run/Simulator.run.xml"), "the team's own".getBytes(StandardCharsets.UTF_8));
+        assertTrue("only the missing ones", SimNewRobot.addRunButtons(buttons, project).isEmpty());
+        assertEquals("the team's own", new String(Files.readAllBytes(project.resolve(".run/Simulator.run.xml")), StandardCharsets.UTF_8));
+    }
 }

@@ -72,6 +72,9 @@ No robot, no field, no phone needed:
 - **Scripted tests** (scenario files) that press buttons and check results, to catch mistakes before a
   meeting.
 
+In Android Studio, pick **Simulator** in the list next to the green Run button and click Run
+([the buttons](docs/01-add-to-project.md#step-7-the-simulator-buttons-once)). Or, in the `ftc-helper-lib` folder:
+
 ```bash
 ./gradlew :sim:run
 ```

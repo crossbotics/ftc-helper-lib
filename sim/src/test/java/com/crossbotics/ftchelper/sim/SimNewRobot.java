@@ -56,11 +56,12 @@ public final class SimNewRobot {
     }
 
     public static void main(String[] args) throws Exception {
-        String config = "", teamCode = "", pkg = "org.firstinspires.ftc.teamcode";
+        String config = "", teamCode = "", pkg = "org.firstinspires.ftc.teamcode", buttons = "";
         for (int i = 0; i + 1 < args.length; i += 2) {
             if (args[i].equals("--config")) config = args[i + 1];
             if (args[i].equals("--teamCode")) teamCode = args[i + 1];
             if (args[i].equals("--package") && !args[i + 1].isEmpty()) pkg = args[i + 1];
+            if (args[i].equals("--buttons")) buttons = args[i + 1];
         }
         if (config.isEmpty() || teamCode.isEmpty()) {
             System.err.println("newRobot: -Pconfig=path/to/config.xml and -PteamCode=path/to/TeamCode are needed");
@@ -81,8 +82,37 @@ public final class SimNewRobot {
             Files.write(p, f.getValue().getBytes(StandardCharsets.UTF_8));
             System.out.println("Wrote " + p);
         }
-        System.out.println("Next: read the TODO lines in Robot.java, build, and try it in the simulator "
-                + "(./gradlew :sim:fromRobot, then :sim:run). Tutorial: docs/tutorials/start/01-robot-in-five-files.md");
+        Path project = Paths.get(teamCode).toAbsolutePath().normalize().getParent();
+        if (!buttons.isEmpty() && project != null) {
+            for (String b : addRunButtons(Paths.get(buttons), project)) System.out.println("Added the run button " + b);
+        }
+        System.out.println("Next: read the TODO lines in Robot.java, then try it in the simulator: in Android Studio, pick "
+                + "Simulator in the list next to the green Run button and click Run (or ./gradlew :sim:run). "
+                + "Tutorial: docs/tutorials/start/01-robot-in-five-files.md");
+    }
+
+    /**
+     * Android Studio's run buttons (Simulator, Simulator tests): the *.run.xml files of the buttons folder
+     * (sim/run-buttons) copied into the robot project's .run folder, only those not there yet.
+     *
+     * @return the files added, as ".run/NAME"
+     */
+    static List<String> addRunButtons(Path buttons, Path project) throws java.io.IOException {
+        List<String> added = new ArrayList<>();
+        if (!Files.isDirectory(buttons)) return added;
+        List<Path> files = new ArrayList<>();
+        try (java.util.stream.Stream<Path> s = Files.list(buttons)) {
+            s.filter(f -> f.getFileName().toString().endsWith(".run.xml")).sorted().forEach(files::add);
+        }
+        Path to = project.resolve(".run");
+        for (Path f : files) {
+            Path dest = to.resolve(f.getFileName().toString());
+            if (Files.exists(dest)) continue;
+            Files.createDirectories(to);
+            Files.copy(f, dest);
+            added.add(".run/" + f.getFileName());
+        }
+        return added;
     }
 
     // ----------------------------- the guesses -----------------------------

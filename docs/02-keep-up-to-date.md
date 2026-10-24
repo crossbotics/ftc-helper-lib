@@ -140,24 +140,21 @@ Do these in order. Each one catches a different kind of problem.
 1. **Sync Gradle:** **Sync Now** in the yellow bar, or **File > Sync Project with Gradle Files**.
 2. **Build:** **Build > Make Project** (the hammer icon). A red error that names a library method:
    look for it in the CHANGELOG's **Changed** list; it says the new name or the new way.
-3. **Remake the simulator robot file** (from the `ftc-helper-lib` folder: `cd ftc-helper-lib` in the
-   Terminal). The robot file format can change with the library:
-
-   ```bash
-   ./gradlew :sim:fromRobot -PteamCode=../TeamCode
-   ```
-
-4. **Run your tests** (your saved simulator tests in `simulator/scenarios/`). They run the same
-   checks as last time, so they show what changed. Run them **from the `ftc-helper-lib` folder** (like
-   step 3: `cd ftc-helper-lib` first if the Terminal is in the robot project folder):
+3. **Run your tests** (your saved simulator tests in `simulator/scenarios/`). They run the same
+   checks as last time, so they show what changed. In Android Studio: pick **Simulator tests** in the
+   list next to the green Run button, and click Run. Or, from the `ftc-helper-lib` folder
+   (`cd ftc-helper-lib` in the Terminal):
 
    ```bash
    ./gradlew :sim:scenario
    ```
 
-   Or one file: `./gradlew :sim:scenario -Pfile=../simulator/scenarios/main-teleop.sim`.
-   No tests yet? Run each autonomous in the simulator by hand (`./gradlew :sim:run`) and read its
-   report, or record a test ([start lesson 10](tutorials/start/10-test-your-robot-code.md)).
+   Or one file: `./gradlew :sim:scenario -Pfile=../simulator/scenarios/main-teleop.sim`. It first remakes
+   the simulator robot file from `Robot.java` (the robot file format can change with the library).
+   No tests yet? Run each autonomous in the simulator by hand (the **Simulator** button, or
+   `./gradlew :sim:run`) and read its report, or record a test ([start lesson 10](tutorials/start/10-test-your-robot-code.md)).
+4. **New simulator buttons?** A new library version can bring new files in `ftc-helper-lib/sim/run-buttons`.
+   `./gradlew :sim:installButtons` adds the ones you do not have yet (it never replaces yours).
 5. **Install the app on the robot** (the green Run button, with the Control Hub connected).
 6. **Test on the robot**, on blocks first: every button of TeleOp, then each autonomous at low power
    (PRACTICE profile), then at match power. Test the parts on your list from the CHANGELOG first.

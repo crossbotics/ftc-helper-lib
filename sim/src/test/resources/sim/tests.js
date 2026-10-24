@@ -1,6 +1,6 @@
 // The simulator page's tests (start lesson 10, "Test your robot code"): record a test, choose its checks,
-// save it in the robot project's simulator/scenarios folder (or download it), run it on the page, and,
-// after a planned change, update it. The simulator does the work (SimRecorder, SimTests); this file is
+// save it in the robot project's simulator/scenarios folder (or download it), run it (or all of them) on the
+// page, and, after a planned change, update it. The simulator does the work (SimRecorder, SimTests); this file is
 // the menu, the recording bar and the dialog.
 "use strict";
 (() => {
@@ -65,6 +65,7 @@
     if (b.dataset.tests === "record") record("init");
     if (b.dataset.tests === "recordNow") record("now");
     if (b.dataset.tests === "open") showOpen();
+    if (b.dataset.tests === "runAll") runAll();
   });
 
   // ------------------------------------------------------------ recording
@@ -98,8 +99,10 @@
       $("#recStop").textContent = "Stop recording";
       $("#recCancel").hidden = false;
     } else if (mode === "run") {
-      $("#recText").textContent = "Running a test";
-      $("#recHint").textContent = "Hands off: the test drives the robot. The result opens when it ends.";
+      $("#recText").textContent = t.all ? `Running all tests: ${t.all}` : "Running a test";
+      $("#recHint").textContent = t.all
+        ? "Each test runs on a fresh simulator of its own, like the Simulator tests button. The result opens when they end."
+        : "Hands off: the test drives the robot. The result opens when it ends.";
       $("#recStop").textContent = "Stop the test";
       $("#recCancel").hidden = true;
     }
@@ -300,6 +303,47 @@
       await save(test.name, text, true);
       test.text = text;
     };
+  }
+
+  // ------------------------------------------------------------ run all tests
+  // Every test in simulator/scenarios, one after another, each from a fresh start (like ./gradlew :sim:scenario).
+  async function runAll() {
+    const r = await postJSON("/tests/runAll", {});
+    if (r.error) return open(head("Run all tests") + `<p class="td-say bad">${esc(r.error)}</p>`), wireClose();
+    clearInterval(polling);
+    polling = setInterval(async () => {
+      const st = await getJSON("/tests/status").catch(() => null);
+      if (!st || !st.all || st.running || !st.done) return;
+      clearInterval(polling);
+      showAll(st.all);
+    }, 300);
+  }
+
+  function showAll(all) {
+    const rs = all.results;
+    const failed = rs.filter((x) => !x.passed).length;
+    const notRun = all.total - rs.length;
+    const top = failed === 0 && notRun === 0
+      ? `<p class="td-pass">PASSED: all ${all.total} test${all.total === 1 ? "" : "s"}</p>`
+      : `<p class="td-fail">${failed ? `FAILED: ${failed} of ${all.total}` : "Stopped"}${notRun ? ` (${notRun} not run)` : ""}</p>`;
+    const rows = rs.map((x) => `<div><button class="td-pick" data-name="${esc(x.name)}">${esc(x.name)}<span class="muted">.sim</span></button> `
+      + `<b class="${x.passed ? "td-passline" : "td-failline"}">${x.passed ? "passed" : x.finished ? `failed: ${x.failures} check${x.failures === 1 ? "" : "s"}` : "stopped"}</b>`
+      + (x.note ? `<br><span class="muted">${esc(x.note)}</span>` : "")
+      + x.fails.map((l) => `<br><span class="td-failline">${esc(l)}</span>`).join("") + `</div>`).join("");
+    open(head("Run all tests") + top
+      + `<div class="td-diff">${rows}</div>`
+      + `<p class="muted">Open a test to run it alone, or to update it after a planned change.
+         Changed your code? Stop the simulator and start it again (the Run button): it builds your code and makes the robot file when it starts.</p>`
+      + `<div class="td-actions"><button id="tdRunAll" data-first>Run all again</button></div><p class="td-say" role="status"></p>`);
+    wireClose();
+    $("#tdRunAll").onclick = runAll;
+    dlg.querySelectorAll(".td-pick").forEach((b) => (b.onclick = async () => {
+      const r = await getJSON("/tests/read?name=" + encodeURIComponent(b.dataset.name));
+      if (r.error) return say(r.error, true);
+      if (!info) info = await getJSON("/tests");
+      test = { name: b.dataset.name, text: r.text, saved: true };
+      showTest();
+    }));
   }
 
   window.simTests = { state };

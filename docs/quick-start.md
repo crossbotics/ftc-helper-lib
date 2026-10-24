@@ -69,7 +69,8 @@ made on the Driver Station. **Why:** the names are copied for you, so they canno
    ```
 
    It writes `Robot.java`, `Tunables.java`, `Controls.java`, `Actions.java` and `autos/LeaveStart.java`
-   into TeamCode. It never overwrites your work: if any of the five files is already there, it
+   into TeamCode. It also adds the **Simulator** and **Simulator tests** run buttons to Android Studio
+   (the `.run` folder: commit it). It never overwrites your work: if any of the five files is already there, it
    writes nothing and stops with `... is already there: nothing written (move it away first)`. Every guess it is not sure of is a
    `TODO` line in `Robot.java` (a comment that marks something still to do): **check each TODO** like
    the STEP lines below. In `Tunables.java` every setting is there: `DEFAULT` (the library's
@@ -219,36 +220,43 @@ and a hub that was never set uses COMPETITION.
 
 ## Try it in the simulator first (optional)
 
-No robot nearby? The simulator runs your code on a laptop with a 3D field. Do the laptop setup
-below once. Then, in the Terminal, go into the `ftc-helper-lib` folder (`cd ftc-helper-lib`) and run:
+No robot nearby? The simulator runs your code on a laptop with a 3D field.
+
+**In Android Studio:** pick **Simulator** in the list next to the green Run button, and click Run.
+(No **Simulator** in the list? Add the buttons once: [Step 7 of Add the library](01-add-to-project.md#step-7-the-simulator-buttons-once).)
+The red **Stop** button stops it.
+
+**Or in the Terminal** (do the laptop setup below once), in the `ftc-helper-lib` folder (`cd ftc-helper-lib`):
 
 ```bash
-./gradlew :sim:fromRobot -PteamCode=../TeamCode
-./gradlew :sim:run -PteamCode=../TeamCode
+./gradlew :sim:run
 ```
 
 Then open http://localhost:8780, pick your TeleOp, INIT, START, set gamepad 1's list to "Keyboard", and drive with the keyboard
 (W A S D, arrows). The simulator builds the robot from your code, so it cannot find a wrong motor direction: only
 the real robot can. ([Simulator guide](guides/simulator.md).)
 
-`:sim:fromRobot` builds your TeamCode first, so it is also a quick check that your code builds, on a
-laptop, with no Control Hub. (`fromRobot` is a Gradle **task**: one job Gradle can run. `:sim:` says it
-is in the library's `sim` part.)
+The simulator builds your TeamCode first, so it is also a quick check that your code builds, on a
+laptop, with no Control Hub. (`run` is a Gradle **task**: one job Gradle can run. `:sim:` says it is in
+the library's `sim` part.)
 
-**What `simulator/robot.properties` is:** `:sim:fromRobot` writes this file in your robot project (next
-to `TeamCode`). It is the simulator's description of your robot: its size, its motors and servos, and
-how they look. The names and the drive come from `Robot.java`; the sizes are guesses, marked `TODO`.
+**What `simulator/robot.properties` is:** each time the simulator starts, it writes this file in your
+robot project (next to `TeamCode`) from `Robot.java`, and prints `Robot file made from Robot.java:
+simulator/robot.properties`. It is the simulator's description of your robot: its size, its motors and
+servos, and how they look. The names and the drive come from `Robot.java`; the sizes are guesses, marked `TODO`.
 
 - **Commit it** with your code. **Why:** everyone on the team then gets the same simulator robot.
 - **When you measure the robot,** edit the `TODO` lines with the real numbers.
-- Run `:sim:fromRobot` again whenever `Robot.java` changes. **Why it is safe:** it refreshes only its
-  own lines (marked `# from Robot.java`) and keeps the lines you wrote.
-- To stop the simulator: click in the Terminal and press **Ctrl+C**.
+- **Why it is safe to make it again at each start:** it refreshes only its own lines (marked
+  `# from Robot.java`) and keeps the lines you wrote. (`./gradlew :sim:fromRobot` does the same step alone;
+  `-PnoFromRobot` starts the simulator with the file as it is.)
+- **Changed your code?** Stop the simulator and start it again. **Why:** it builds your code when it
+  starts. To stop it in the Terminal: click in the Terminal and press **Ctrl+C**.
 
 ### Laptop setup (once)
 
-The library is its own Gradle build, separate from your robot project's. So it needs these, even when
-the robot project already builds:
+Only for the Terminal commands (the Simulator button needs none of this). The library is its own
+Gradle build, separate from your robot project's. So it needs these, even when the robot project already builds:
 
 - **Java.** The commands need `JAVA_HOME` (where Java is; Java 17 or newer). Android Studio has its
   own Java, usually in its `jbr` folder. Set it in the terminal (it lasts until you close that

@@ -169,11 +169,10 @@ Open http://localhost:8780, pick "Lesson Bot TeleOp", INIT, START. Then try each
 If the claw does not open at the top and the screen says `timed out waiting for lift at the top`, the
 lift is too slow for the 2 s limit (see the table below).
 
-**Your own robot.** From the `ftc-helper-lib` folder, write your simulator file and start it:
+**Your own robot:** pick **Simulator** in the list next to Android Studio's green Run button, and click Run. Or, from the `ftc-helper-lib` folder:
 
 ```bash
-./gradlew :sim:fromRobot -PteamCode=../TeamCode
-./gradlew :sim:run -PteamCode=../TeamCode
+./gradlew :sim:run
 ```
 
 Then try your own action's button, as in steps 1 to 3 above.

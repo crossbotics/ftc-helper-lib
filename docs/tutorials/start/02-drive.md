@@ -207,8 +207,8 @@ From the `ftc-helper-lib` folder, write the lesson robot's simulator file from i
 
 Open http://localhost:8780, pick "Lesson Bot TeleOp", INIT, START. Set gamepad 1's list to "Keyboard". On the keyboard: left stick W A S D,
 right stick the arrows, LT is Z, Y is I, BACK is Backspace. Drive, strafe, turn, pull LT, switch to
-field-centric and turn the robot around. For your own robot: `./gradlew :sim:fromRobot -PteamCode=../TeamCode`,
-then `./gradlew :sim:run -PteamCode=../TeamCode`. ([Simulator guide](../../guides/simulator.md).)
+field-centric and turn the robot around. For your own robot: pick **Simulator** in the list next to Android Studio's
+green Run button and click Run (or `./gradlew :sim:run`). ([Simulator guide](../../guides/simulator.md).)
 
 The simulator builds its robot from your code, so it **cannot** find a wrong motor direction. Only the
 real robot can (step 7).

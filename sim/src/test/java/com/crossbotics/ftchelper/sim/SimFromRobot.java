@@ -21,6 +21,8 @@ import java.util.Set;
  *                          [-Pout=simulator/robot.properties] [-Pfield=biobuzz-2026]
  * </pre>
  *
+ * <p>:sim:run and :sim:scenario do the same first ({@link #auto}), so a team seldom runs it alone.
+ *
  * <p>Lines it writes end with "# from Robot.java" and are rewritten every time. Every other line is
  * the team's (measured, from photos or CAD) and is kept, even for the same setting: a measured
  * {@code shape.lift} wins over the generated guess. Generated lines whose part is gone from the code
@@ -58,9 +60,9 @@ public final class SimFromRobot {
     }
 
     public static void main(String[] args) throws Exception {
-        String robotClass = "org.firstinspires.ftc.teamcode.Robot";
+        String robotClass = DEFAULT_CLASS;
         String out = "";
-        String field = "biobuzz-2026";
+        String field = DEFAULT_FIELD;
         for (int i = 0; i + 1 < args.length; i += 2) {
             if (args[i].equals("--robot")) robotClass = args[i + 1].isEmpty() ? robotClass : args[i + 1];
             if (args[i].equals("--out")) out = args[i + 1];
@@ -79,18 +81,14 @@ public final class SimFromRobot {
             return;
         }
         Path file = Paths.get(out);
-        String existing = Files.isRegularFile(file) ? new String(Files.readAllBytes(file), StandardCharsets.UTF_8) : null;
-        Result r = merge(existing, holdsFromPieces(robot.simLines(), robot), robotClass, field);
+        boolean existed = Files.isRegularFile(file);
+        Result r = make(robot, robotClass, file, field);
         if (!r.problems.isEmpty()) {
             System.err.println("fromRobot: the robot file and Robot.java disagree (nothing written):");
             for (String p : r.problems) System.err.println("  " + p);
             System.exit(1);
         }
-        if (file.getParent() != null) Files.createDirectories(file.getParent());
-        Files.write(file, r.text.getBytes(StandardCharsets.UTF_8));
-        // Load it at once: a file the simulator cannot read is caught here, not later.
-        SimRobot.load(file);
-        System.out.println("Wrote " + file + (existing == null ? " (new)" : "") + ".");
+        System.out.println("Wrote " + file + (existed ? "" : " (new)") + ".");
         for (String k : r.kept) System.out.println("  kept your " + k + " (it is not marked " + MARK + ")");
         if (r.text.contains("TODO")) System.out.println("  Lines with TODO are guesses: measure them (docs/guides/simulator.md).");
         int standIns = 0;
@@ -108,6 +106,121 @@ public final class SimFromRobot {
             System.out.println("Tunables.java: names checked like INIT does (INIT stops on a field no part reads, and warns about a section):");
             for (String p : tunables) System.out.println("  " + p);
         }
+    }
+
+    static final String DEFAULT_CLASS = "org.firstinspires.ftc.teamcode.Robot";
+    static final String DEFAULT_FIELD = "biobuzz-2026";
+
+    /**
+     * Merges the code's lines into the file and writes it (only when it changed), then loads it once, so a
+     * file the simulator cannot read is caught here. Writes nothing when the file and the code disagree
+     * (the result's problems).
+     */
+    static Result make(RobotDefinition robot, String robotClass, Path file, String field) throws java.io.IOException {
+        String existing = Files.isRegularFile(file) ? new String(Files.readAllBytes(file), StandardCharsets.UTF_8) : null;
+        Result r = merge(existing, holdsFromPieces(robot.simLines(), robot), robotClass, field);
+        if (!r.problems.isEmpty()) return r;
+        if (!r.text.equals(existing)) {
+            if (file.getParent() != null) Files.createDirectories(file.getParent());
+            Files.write(file, r.text.getBytes(StandardCharsets.UTF_8));
+        }
+        SimRobot.load(file);
+        return r;
+    }
+
+    /**
+     * The first step of ./gradlew :sim:run and :sim:scenario: the robot file made again from the team's
+     * Robot class, the same way as :sim:fromRobot (the team's own lines are kept). sim.fromRobot is the
+     * robot file (empty: -PnoFromRobot or -Probot=..., nothing is done). Prints one line.
+     *
+     * @param robotFile the robot file the simulator would use now
+     * @return the robot file to use: the one made, or robotFile when there is no Robot class or it failed
+     */
+    static Path auto(Path robotFile) {
+        String where = System.getProperty("sim.fromRobot", "");
+        if (where.isEmpty()) return robotFile;
+        Path file = Paths.get(where);
+        String shown = (file.getParent() == null ? "" : file.getParent().getFileName() + "/") + file.getFileName();
+        String name = robotClassFor(file, System.getProperty("sim.robotClass", ""), System.getProperty("sim.teamCode", ""));
+        if (name == null) return robotFile;
+        String javaFile = name.substring(name.lastIndexOf('.') + 1) + ".java";
+        String field = System.getProperty("sim.field", "");
+        try {
+            RobotDefinition robot = (RobotDefinition) Class.forName(name).getDeclaredConstructor().newInstance();
+            Result r = make(robot, name, file, field.isEmpty() ? DEFAULT_FIELD : field);
+            if (r.problems.isEmpty()) {
+                System.out.println("Robot file made from " + javaFile + ": " + shown);
+                return file;
+            }
+            System.out.println("Robot file NOT made from " + javaFile + ": it and " + shown + " disagree:");
+            for (String p : r.problems) System.out.println("  " + p);
+            System.out.println("  The simulator uses " + shown + " as it is. Fix one of them (docs/guides/simulator.md).");
+        } catch (Exception | LinkageError e) {
+            System.out.println("Robot file NOT made from " + javaFile + " (" + e + "). The simulator uses " + shown + " as it is.");
+        }
+        return Files.isRegularFile(file) ? file : robotFile;
+    }
+
+    /**
+     * The team's Robot class: the one given (-ProbotClass), the one the robot file was made from (its first
+     * line), org.firstinspires.ftc.teamcode.Robot, or a class in TeamCode that extends RobotDefinition
+     * (Robot.java first). Null when there is none.
+     */
+    static String robotClassFor(Path robotFile, String given, String teamCode) {
+        if (!given.trim().isEmpty()) return given.trim();
+        List<String> names = new ArrayList<>();
+        String made = madeFrom(robotFile);
+        if (made != null) names.add(made);
+        names.add(DEFAULT_CLASS);
+        names.addAll(robotSources(teamCode));
+        for (String n : names) {
+            try {
+                if (RobotDefinition.class.isAssignableFrom(Class.forName(n, false, SimFromRobot.class.getClassLoader()))) return n;
+            } catch (ClassNotFoundException | LinkageError e) {
+                // not in the code the simulator runs: the next one
+            }
+        }
+        return null;
+    }
+
+    // "# The simulator's robot, made from X ..." at the top of a robot file: X, or null.
+    private static String madeFrom(Path robotFile) {
+        if (!Files.isRegularFile(robotFile)) return null;
+        try {
+            for (String line : Files.readAllLines(robotFile, StandardCharsets.UTF_8)) {
+                java.util.regex.Matcher m = java.util.regex.Pattern.compile("^#.*made from ([\\w.$]+)").matcher(line);
+                if (m.find()) return m.group(1).replaceAll("\\.$", "");
+                if (!line.startsWith("#") && !line.trim().isEmpty()) return null;
+            }
+        } catch (java.io.IOException | RuntimeException e) {
+            // unreadable: no name from it
+        }
+        return null;
+    }
+
+    // Classes in TeamCode's Java files that say "extends RobotDefinition", Robot.java first.
+    static List<String> robotSources(String teamCode) {
+        List<String> out = new ArrayList<>();
+        if (teamCode.isEmpty()) return out;
+        Path src = Paths.get(teamCode, "src", "main", "java");
+        if (!Files.isDirectory(src)) return out;
+        try (java.util.stream.Stream<Path> files = Files.walk(src)) {
+            files.filter(f -> f.toString().endsWith(".java")).sorted((a, b) -> Boolean.compare(
+                    !a.getFileName().toString().equals("Robot.java"), !b.getFileName().toString().equals("Robot.java"))).forEach(f -> {
+                try {
+                    String text = new String(Files.readAllBytes(f), StandardCharsets.UTF_8);
+                    if (!text.contains("extends RobotDefinition")) return;
+                    java.util.regex.Matcher pkg = java.util.regex.Pattern.compile("(?m)^\\s*package\\s+([\\w.]+)\\s*;").matcher(text);
+                    String cls = f.getFileName().toString().replace(".java", "");
+                    out.add(pkg.find() ? pkg.group(1) + "." + cls : cls);
+                } catch (java.io.IOException e) {
+                    // unreadable: not a candidate
+                }
+            });
+        } catch (java.io.IOException e) {
+            // no list: no candidates
+        }
+        return out;
     }
 
     /**
@@ -164,7 +277,7 @@ public final class SimFromRobot {
 
         if (existing == null) {
             StringBuilder sb = new StringBuilder();
-            sb.append("# The simulator's robot, made from ").append(robotName).append(" by ./gradlew :sim:fromRobot.\n");
+            sb.append("# The simulator's robot, made from ").append(robotName).append(" (again at each start of the simulator).\n");
             sb.append("# Lines marked \"").append(MARK).append("\" come from the code and are rewritten each time.\n");
             sb.append("# Change any other line (or unmark a generated one to keep your own value): measure the\n");
             sb.append("# robot, or ask the robot-file skill (skills/robot-file). See docs/guides/simulator.md.\n\n");

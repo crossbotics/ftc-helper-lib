@@ -497,15 +497,14 @@ Odometry can only be as good as its tuning: on the real robot, the tuner's Forwa
 kind of error. `odometry.driftDegPerMin` makes the heading creep instead
 ([simulator lines](../../modules/odometry.md#the-simulator)). Delete the line when you are done.
 
-**Your own robot.** From the `ftc-helper-lib` folder:
+**Your own robot:** pick **Simulator** in the list next to Android Studio's green Run button, and click Run. Or, from the `ftc-helper-lib` folder:
 
 ```bash
-./gradlew :sim:fromRobot -PteamCode=../TeamCode
-./gradlew :sim:run -PteamCode=../TeamCode
+./gradlew :sim:run
 ```
 
-`:sim:fromRobot` writes the odometry lines into your `simulator/robot.properties` from the odometry
-line in `Robot.java`. Choose "To the Goal", INIT, START, and read the report at the end.
+When it starts, the simulator writes the odometry lines into your `simulator/robot.properties` from
+the odometry line in `Robot.java`. Choose "To the Goal", INIT, START, and read the report at the end.
 
 You can also run your "Odometry Tuner" in the simulator, to learn the tests before you try them on the
 robot. **Spin** and **Loop** work with the sticks. **Forward**: use the page's "48 in forward" push

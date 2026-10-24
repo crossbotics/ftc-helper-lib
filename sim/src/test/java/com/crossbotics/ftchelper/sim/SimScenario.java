@@ -103,6 +103,7 @@ public final class SimScenario {
             if (args[i].equals("--robot") && i + 1 < args.length) robot = Paths.get(args[++i]);
             else files.addAll(expand(Paths.get(args[i])));
         }
+        robot = SimFromRobot.auto(robot);
         if (files.isEmpty()) {
             System.out.println("No scenario file. Use: ./gradlew :sim:scenario -Pfile=path/to/test.sim "
                     + "(or a folder: every .sim file in it)");

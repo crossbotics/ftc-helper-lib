@@ -116,6 +116,36 @@ git add .gitmodules ftc-helper-lib settings.gradle TeamCode/build.gradle
 git commit -m "Add ftc-helper-lib"
 ```
 
+## Step 7: The simulator buttons (once)
+
+Two run buttons start the [simulator](guides/simulator.md) from Android Studio, with no Terminal:
+
+- **Simulator**: the simulator with your TeamCode. Open http://localhost:8780 when the Run window says so.
+- **Simulator tests**: every test in your project's `simulator/scenarios` folder ([lesson 10](tutorials/start/10-test-your-robot-code.md)).
+
+They are two small files in a `.run` folder in your project (next to `TeamCode`). A project made with
+`./gradlew :sim:newRobot` has them already. To add them to your project, do one of these:
+
+- In the Terminal, in the `ftc-helper-lib` folder (after the [laptop setup](quick-start.md#laptop-setup-once)):
+
+  ```bash
+  ./gradlew :sim:installButtons
+  ```
+
+- Or make a folder `.run` in your project folder, and copy the two `.run.xml` files from
+  `ftc-helper-lib/sim/run-buttons` into it.
+
+Then close the project and open it again (**File > Close Project**). Commit the `.run` folder.
+**Why:** everyone who clones the project gets the buttons.
+
+**Use them:** in the list next to the green Run button (it shows `TeamCode`), pick **Simulator**, then
+click Run (the green triangle). The red square **Stop** button stops the simulator. To go back to the
+robot app, pick `TeamCode` in the list again.
+
+**Why the buttons need no setup:** they use Android Studio's own Java and Android SDK. You do not set
+`JAVA_HOME`, and `ftc-helper-lib` needs no `local.properties`. (Typing `./gradlew` in the Terminal still
+needs the laptop setup.)
+
 ## For everyone else on the team
 
 When a teammate clones the robot project for the first time, they must get the submodule too:
@@ -137,7 +167,7 @@ GitHub Desktop (**File > Clone Repository…**) gets submodules by itself. Andro
 
 - [Quick start](quick-start.md): five files, the lines to change, and a driving robot in 30 minutes
 - [Tutorials](tutorials/README.md): start with the main track, lesson 1: [the robot in five files](tutorials/start/01-robot-in-five-files.md)
-  (`./gradlew :sim:newRobot` writes the five files from your robot configuration)
+  (`./gradlew :sim:newRobot` writes the five files from your robot configuration, and adds the simulator buttons)
 - [Keep it up to date](02-keep-up-to-date.md)
 - New to git? [Git and GitHub for FTC teams](guides/github.md): clone, commit, push, pull, with the
   command line or GitHub Desktop
