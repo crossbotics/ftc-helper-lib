@@ -364,7 +364,9 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
             trimMaxPct = Math.max(0, Math.min(50, asked));
             if (asked > 50) numberNotes.add("Tunables." + name() + ".trimMaxPercent = " + Shape.n(asked) + ": at most 50 is used");
         }
-        Feeder feed = indexer != null ? indexer.forLauncher() : new NoFeeder();
+        // A feeder marked optional() and not in the configuration: no feeding (pieces go in some other way,
+        // e.g. pushed by the intake); the launcher still spins and its "fire" waits for nothing.
+        Feeder feed = indexer != null && !indexer.missing ? indexer.forLauncher() : new NoFeeder();
         part = new com.crossbotics.ftchelper.launcher.Launcher(flywheel, feed)
                 .idleRpm(t.number("idleRpm", 0))
                 .shotInterval(t.number("shotIntervalSec", 0.25));
