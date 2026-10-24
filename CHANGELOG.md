@@ -17,7 +17,7 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   `robot.driveWith(gamepad1)`. The parts keep their safety, actions still never wait. Example: the
   lesson robot's `OwnTeleOp.java` ("Lesson Bot: own OpMode" in the simulator).
 
-### Before you update
+### Changed
 
 - `RobotDefinition` has new methods: `init`, `initLoop`, `start`, `update`, `stop`, `show`, `driveWith`,
   `atInit`, `duringInit`, `atStop`, `wasStarted`. If your `Robot.java` has a method with one of these
