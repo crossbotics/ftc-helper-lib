@@ -23,7 +23,8 @@ flowchart LR
 ## Start it
 
 **In Android Studio (the easy way):** pick **Simulator** in the list next to the green Run button, and
-click Run. When the Run window says `Open http://localhost:8780`, open that page. The red square
+click Run. When the Run window says `Open http://localhost:8780`, click that address (it is a blue
+link) to open the page. The red square
 **Stop** button stops the simulator. **Simulator tests** in the same list runs every test in your
 `simulator/scenarios` folder. The library adds the buttons when Android Studio syncs. Not in the list
 yet? close the project (**File > Close Project**) and open it again ([Step 7 of Add the library](../01-add-to-project.md#step-7-the-simulator-buttons-once)).

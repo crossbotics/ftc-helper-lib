@@ -120,7 +120,8 @@ git commit -m "Add ftc-helper-lib"
 
 Two run buttons start the [simulator](guides/simulator.md) from Android Studio, with no Terminal:
 
-- **Simulator**: the simulator with your TeamCode. Open http://localhost:8780 when the Run window says so.
+- **Simulator**: the simulator with your TeamCode. When the Run window says `Open http://localhost:8780`,
+  click that address (it is a blue link) to open the page.
 - **Simulator tests**: every test in your project's `simulator/scenarios` folder ([lesson 10](tutorials/start/10-test-your-robot-code.md)).
 
 **You do nothing to get them:** the library adds them at each Gradle sync (Android Studio syncs when it
