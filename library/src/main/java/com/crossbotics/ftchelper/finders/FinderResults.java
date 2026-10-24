@@ -46,12 +46,19 @@ public final class FinderResults {
     private static BackgroundWorker saver;
 
     private final String finderName;
+    // The battery's volts at START (NaN = not known), written in the saved file's header.
+    private volatile double volts = Double.NaN;
     // key -> line, in the order they were first set
     private final Map<String, String> lines = new LinkedHashMap<>();
 
     /** @param finderName shown above the lines in the saved file, e.g. "Servo finder" */
     public FinderResults(String finderName) {
         this.finderName = finderName;
+    }
+
+    /** Notes the battery's volts at START, for the saved file's header ("battery 12.7 V"). */
+    public void battery(double volts) {
+        if (!Double.isNaN(volts) && volts > 1) this.volts = volts;
     }
 
     /** Sets (or replaces) the line with this key. */
@@ -95,9 +102,10 @@ public final class FinderResults {
         return append(header(), lines());
     }
 
-    // "== Servo finder, 2026-10-16 14:05 ==" above each saved group of lines.
+    // "== Servo finder, 2026-10-16 14:05, battery 12.7 V ==" above each saved group of lines.
     private String header() {
-        return "== " + finderName + ", " + new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(new Date()) + " ==";
+        return "== " + finderName + ", " + new SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(new Date())
+                + (Double.isNaN(volts) ? "" : ", battery " + num(volts, 1) + " V") + " ==";
     }
 
     /**

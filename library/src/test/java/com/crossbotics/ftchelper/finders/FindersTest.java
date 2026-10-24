@@ -70,6 +70,14 @@ public class FindersTest {
         assertEquals("== header ==", saved.get(0));
         assertEquals("c", saved.get(1));
         assertEquals("== again ==", saved.get(3));
+
+        // The battery at START goes in the saved header (a number that depends on power is right only
+        // for about that battery).
+        r.battery(12.74);
+        assertTrue(r.saveNow());
+        saved = Files.readAllLines(FinderResults.file.toPath());
+        String header = saved.get(saved.size() - 3);
+        assertTrue(header, header.endsWith(", battery 12.7 V =="));
     }
 
     @Test public void chooserWrapsAround() {

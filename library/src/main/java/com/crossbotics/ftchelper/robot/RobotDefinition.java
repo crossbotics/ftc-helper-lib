@@ -1205,7 +1205,8 @@ public abstract class RobotDefinition {
         List<String> out = new ArrayList<>();
         for (Tunable t : Tunable.all()) {
             if (t.isChanged()) {
-                out.add("Tunables." + t.name().replace('/', '.') + " = " + t.display() + " (code " + t.defaultValue() + ")");
+                out.add("Tunables." + t.name().replace('/', '.') + " = " + t.display() + " (code " + t.defaultValue() + ")"
+                        + (Double.isNaN(t.tunedVolts()) ? "" : String.format(java.util.Locale.US, ", tuned at %.1f V", t.tunedVolts())));
             }
         }
         return out;

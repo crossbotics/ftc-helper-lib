@@ -56,6 +56,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
  */
 public abstract class CharacterizerOpMode extends FinderOpMode {
 
+    // Its numbers are powers or speeds: they depend on the battery.
+    @Override
+    protected boolean batteryMatters() {
+        return true;
+    }
+
     /** A lift, arm or flywheel to measure. */
     public static final class Mechanism {
         final String motor;

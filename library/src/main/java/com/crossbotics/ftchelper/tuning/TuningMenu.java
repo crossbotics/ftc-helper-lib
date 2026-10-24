@@ -44,6 +44,11 @@ public class TuningMenu {
     // (an "edge"), so holding a button does not repeat the action every loop.
     // Same order as "now" in update(): up, down, right, left, A, X, Y, B.
     private final boolean[] was = new boolean[8];
+    // The battery (volts, never waits; NaN = unknown), noted with each change. Null = not shown.
+    private java.util.function.DoubleSupplier battery = null;
+
+    /** Below this battery voltage the menu warns: numbers tuned then are too strong on a charged battery. */
+    public static final double LOW_BATTERY_VOLTS = 12.5;
 
     /**
      * Makes a menu.
@@ -52,6 +57,22 @@ public class TuningMenu {
      */
     public TuningMenu(Gamepad gamepad) {
         this.gamepad = gamepad;
+    }
+
+    /**
+     * The battery reader (e.g. {@code Hw.batteryReader(hardwareMap)}): the menu shows the battery, warns
+     * when it is low, and notes its volts with each change ("tuned at 12.6 V" in the copy lines).
+     *
+     * @param volts a reader that never waits
+     * @return this menu
+     */
+    public TuningMenu battery(java.util.function.DoubleSupplier volts) {
+        battery = volts;
+        return this;
+    }
+
+    private double volts() {
+        return battery == null ? Double.NaN : battery.getAsDouble();
     }
 
     /** Opens or closes the menu. In the COMPETITION profile it stays closed. */
@@ -88,8 +109,8 @@ public class TuningMenu {
                 if (pressed(now, 0)) selected = (selected + all.size() - 1) % all.size();
                 if (pressed(now, 1)) selected = (selected + 1) % all.size();
                 // Right/left change the chosen value by one step (or ten with a bumper).
-                if (pressed(now, 2)) for (int i = 0; i < times; i++) t.increase();
-                if (pressed(now, 3)) for (int i = 0; i < times; i++) t.decrease();
+                if (pressed(now, 2)) { for (int i = 0; i < times; i++) t.increase(); t.tunedAt(volts()); }
+                if (pressed(now, 3)) { for (int i = 0; i < times; i++) t.decrease(); t.tunedAt(volts()); }
                 // A saves, X resets the chosen one (not saved until A), Y resets all and saves.
                 // Saving writes a file, which can be slow, so it runs in the background and the
                 // robot loop never waits; the message changes when it is done.
@@ -124,6 +145,14 @@ public class TuningMenu {
         if (!open) return;
         List<Tunable> all = Tunable.shown();
         t.section("TUNING (practice)");
+        double v = volts();
+        if (!Double.isNaN(v)) {
+            if (v < LOW_BATTERY_VOLTS) {
+                t.warn(String.format(java.util.Locale.US, "Battery %.1f V: low. Tune on a charged battery (%.1f V or more): "
+                        + "numbers tuned now are too strong later", v, LOW_BATTERY_VOLTS));
+            }
+            t.text(String.format(java.util.Locale.US, "Battery %.1f V (noted with each change)", v));
+        }
         List<String> hidden = Tunable.hiddenGroups();
         if (!hidden.isEmpty()) {
             StringBuilder names = new StringBuilder();

@@ -53,6 +53,11 @@ public final class Tunable {
     private String source = "";
     // The code value when it is outside range(...) (NaN = fine): the range's end is used instead.
     private double codeOutside = Double.NaN;
+    // The battery's volts when this value was last changed in the tuning menu (NaN = not known). Saved
+    // with the value: a number that depends on power (a hold power, a drive gain) is right only for
+    // about this battery level.
+    private double tunedVolts = Double.NaN;
+    private static final String VOLTS_PREFIX = "tunedVolts.";
 
     // Private: make one with Tunable.number(...), so the same name never gives two tunables.
     private Tunable(String name, double defaultValue, double step) {
@@ -61,6 +66,7 @@ public final class Tunable {
         this.step = Math.abs(step);
         // Start from the saved value on the hub if there is one, otherwise the code value.
         this.value = SettingsFile.shared().getDouble(PREFIX + name, defaultValue);
+        this.tunedVolts = SettingsFile.shared().getDouble(VOLTS_PREFIX + name, Double.NaN);
     }
 
     // "synchronized" (here and on the other static methods): only one piece of code at a time may
@@ -168,7 +174,7 @@ public final class Tunable {
             // The shown value without its trailing zeros ("0.004500" -> "0.0045"), as one writes it in code.
             String value = t.display();
             if (value.contains(".")) value = value.replaceAll("0+$", "").replaceAll("\\.$", ".0");
-            out.add((group.isEmpty() ? "" : group + ": ") + field + " = " + value);
+            out.add((group.isEmpty() ? "" : group + ": ") + field + " = " + value + t.voltsNote());
         }
         return out;
     }
@@ -215,7 +221,7 @@ public final class Tunable {
 
     // Every value back to its code value (quick: no file).
     private static synchronized void resetValues() {
-        for (Tunable t : ALL) t.value = t.defaultValue;
+        for (Tunable t : ALL) t.reset();
     }
 
     // Puts the values into the settings in memory (quick: no file).
@@ -226,6 +232,8 @@ public final class Tunable {
             // so a later change to the code default is not hidden by an old saved copy.
             if (t.isChanged()) settings.put(PREFIX + t.name, Double.toString(t.value));
             else settings.remove(PREFIX + t.name);
+            if (t.isChanged() && !Double.isNaN(t.tunedVolts)) settings.put(VOLTS_PREFIX + t.name, Double.toString(t.tunedVolts));
+            else settings.remove(VOLTS_PREFIX + t.name);
         }
     }
 
@@ -316,6 +324,28 @@ public final class Tunable {
     /** Back to the code value. */
     public void reset() {
         value = defaultValue;
+        tunedVolts = Double.NaN;
+    }
+
+    /**
+     * Notes the battery's volts at a change (the tuning menu does it). NaN or a reading of 1 V or less
+     * (no voltage sensor) is not noted.
+     *
+     * @param volts the battery now
+     */
+    public synchronized void tunedAt(double volts) {
+        if (!Double.isNaN(volts) && volts > 1) tunedVolts = volts;
+    }
+
+    /** The battery's volts when this value was changed (NaN = not known). */
+    public synchronized double tunedVolts() {
+        return isChanged() ? tunedVolts : Double.NaN;
+    }
+
+    /** "   // tuned at 12.6 V" for a changed value whose battery is known, else "". */
+    public String voltsNote() {
+        double v = tunedVolts();
+        return Double.isNaN(v) ? "" : String.format(Locale.US, "   // tuned at %.1f V", v);
     }
 
     /** True if the value is not the code value. */
