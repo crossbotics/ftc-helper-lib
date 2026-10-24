@@ -30,6 +30,12 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   configuration, measure the numbers with the finders (before the first drive), and a first
   autonomous. The starter bots page has each starter bot's configuration names, and what to change when
   you changed the robot (with team 8938's robot 1 as an example).
+- **The simulator page says more.** A red bar at the top says when the simulator is not running and how to
+  start it again (the page connects again by itself). A stopped OpMode says "press INIT to run it again".
+  The gamepads say that your own USB or Bluetooth controller works, and a controller you plug in is chosen
+  for gamepad 1 (or 2) if it is still on-screen. The Robot panel says "drag the robot on the map" first; the
+  push buttons are now **Push the robot** (for the Drive Tuner's push test) and **Start over** holds Back
+  to start and Reset field.
 
 ### Changed
 
@@ -39,6 +45,15 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - **The REV starter bot's poker positions are `MEASURE`.** `Tunables.PollenServo` `up` and `down` were
   guesses (REV publishes no numbers): INIT now stops until the Servo Finder gives yours. **Why:** a guess
   could swing the poker into the frame. The simulator's REV robot file has stand-ins, so it still runs.
+
+### Fixed
+
+- **Simulator: an autonomous with its start spot in words only says what to do.** For an autonomous like the
+  starter kit's "Score and Park", the robot stays where it is in INIT, and the Driver Hub now says: drag it
+  to its start spot, or give the spot in inches in the code (`s.start("...", x, y, heading)`) so it goes
+  there by itself. Before, it silently stayed (a BLUE autonomous on the RED spot).
+- **Simulator: an autonomous with an error stays chosen.** Before, an error in INIT switched the Driver Hub
+  to the autonomous's TeleOp, so pressing INIT again ran the TeleOp.
 
 ## v0.18.4 - 2026-10-24
 

@@ -131,13 +131,22 @@ The page fits one laptop screen. On a narrow screen the parts stack and the page
   pieces, battery), Motors, Servos & switches, Cameras. Each of its buttons shows or hides a panel.
   The panels stack in that order, and this browser remembers your choice for the next run.
 
+**When the simulator stops.** An OpMode that stopped says "press INIT to run it again" under the Driver
+Hub: press INIT. If the simulator program itself stops (you clicked the red Stop button, or closed
+Android Studio), a red bar across the top of the page says so and how to start it again: pick
+**Simulator** next to the green Run button and click Run (or `./gradlew :sim:run`). The page connects
+again by itself; you do not need to reload it.
+
 **Driver Hub** (left): choose an OpMode, then INIT, START, STOP, like the real one. The screen shows
 the telemetry about as wide as a real Driver Hub. OpModes marked "(hidden on robot)" have `@Disabled`:
 the simulator shows them anyway. Autonomous stops by itself after 30 s, and TeleOp after 2:00, like the
 real Driver Station with its timer on (the clock counts down; a box under it turns each timer off).
-An error in the OpMode shows in red, with the line where it happened.
+An error in the OpMode shows in red, with the line where it happened. After an error the same OpMode
+stays chosen (an autonomous does not switch to its TeleOp), so you fix it and press INIT again.
 
-**Gamepads** (middle): each gamepad has its own source:
+**Gamepads** (middle): each gamepad has its own source. Your own game controller works: plug it in (USB
+or Bluetooth) and press one of its buttons. Gamepad 1 takes it if it is still on-screen (else gamepad 2);
+you can choose it in the gamepad's list too. Until a controller is found, the list says how.
 
 | Source | How |
 | --- | --- |
@@ -153,8 +162,9 @@ button (like a pulled cable): keep the simulator tab visible while you drive.
 The GUIDE (PS) button often does not reach the browser (Windows and macOS keep it): use the on-screen
 GUIDE, the M key, or hold START for 1 second (the finders accept that too).
 
-**Control Hub** (right): the field from above (the drivers are at the bottom), "push by hand"
-buttons (for the Drive Tuner's push test), every motor (power, count, speed, current; "STOP" when it
+**Control Hub** (right): the field from above (the drivers are at the bottom; drag the robot on it to
+move it), **Push the robot** buttons (they roll the robot like a hand push, also while a program runs,
+so its wheels and odometry feel it: the Drive Tuner's push test), **Start over** (Back to start, Reset field), every motor (power, count, speed, current; "STOP" when it
 is at a hard stop), every servo (where it is and where it is going), the switches (click to hold
 one pressed), the cameras and the tags they see, and the battery voltage (lower it to see a weaker robot).
 
@@ -185,7 +195,9 @@ builds an autonomous on the field and runs it with your code: see [The auto buil
 
 **Where the robot starts.** In INIT the robot is put where the program says: an autonomous that names its
 start spot (`s.start(note, x, y, heading)`, or `startSpotIn()` in an EasyAuto) puts it there for the
-alliance chosen in its menu; a TeleOp with no autonomous before it puts it at the robot file's start for
+alliance chosen in its menu; an autonomous with its spot only in words (`startPosition()`, or
+`s.start(note, heading)`) leaves the robot where it is, and the Driver Hub asks you to drag it to its
+start spot (or to give the spot in inches in the code, so it goes there by itself); a TeleOp with no autonomous before it puts it at the robot file's start for
 RED, or that spot's mirror image for BLUE, as the drivers choose the alliance (X / B); until they choose,
 it stands on BLUE's spot and the page looks from the blue wall, because the TeleOp says
 `Alliance : BLUE until you choose` (and aims and drives for BLUE). After an
