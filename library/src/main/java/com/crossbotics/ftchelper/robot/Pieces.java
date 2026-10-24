@@ -349,7 +349,7 @@ public final class Pieces extends Module<Pieces> {
             if (Intake.limitFor(one, kind) < 0) continue;
             int n = 0;
             for (String h : held) if (Intake.limitFor(one, h) >= 0) n++;   // red and blue NECTAR count together
-            return n >= e.getValue();
+            if (n >= e.getValue()) return true;   // every limit that names this kind counts
         }
         return false;
     }

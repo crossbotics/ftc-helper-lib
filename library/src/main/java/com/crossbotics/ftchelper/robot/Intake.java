@@ -115,26 +115,28 @@ public final class Intake extends Module<Intake> implements Toggleable {
     /**
      * How many pieces of one kind it can hold, for a robot where the kinds differ: 0 = it cannot take that
      * kind at all (goBILDA's starter bot and a NECTAR). A name matches every kind that contains it, any
-     * case: "NECTAR" is red and blue NECTAR. Give the total with {@link #holds(int)} too, for a mix
-     * ({@code .holds(4).holds(1, "NECTAR")}: 4 pieces, at most 1 of them a NECTAR); without it, the total is
-     * the largest of these numbers.
+     * case: "NECTAR" is red and blue NECTAR. Give the total with {@link #holds(int)} too
+     * ({@code .holds(4).holds(1, "NECTAR")}: 4 pieces, at most 1 of them a NECTAR); without it the total is
+     * not known (the simulator guesses the game's limit).
      *
      * @param pieces 0 or more
      * @param kind   e.g. "NECTAR", "POLLEN"
      */
     public Intake holds(int pieces, String kind) {
         if (pieces < 0) throw new IllegalArgumentException("Intake.holds(" + pieces + ", \"" + kind + "\"): 0 or more");
-        if (kind == null || kind.trim().isEmpty()) throw new IllegalArgumentException("Intake.holds(n, kind): name the kind, e.g. \"NECTAR\"");
+        if (kind == null || kind.replaceAll("[^A-Za-z0-9]", "").isEmpty()) {
+            throw new IllegalArgumentException("Intake.holds(n, kind): name the kind, e.g. \"NECTAR\"");
+        }
         kindLimits.put(kind.trim(), pieces);
         return this;
     }
 
-    /** How many pieces it holds in all (0 = not given): {@link #holds(int)}, else the largest kind limit. */
+    /**
+     * How many pieces it holds in all (0 = not given): {@link #holds(int)}. Kind limits alone do not give a
+     * total (a limit for NECTAR says nothing about POLLEN): write {@code holds(n)} too.
+     */
     public int holdsInAll() {
-        if (holds > 0) return holds;
-        int most = 0;
-        for (int n : kindLimits.values()) most = Math.max(most, n);
-        return most;
+        return holds;
     }
 
     /** The kind limits from {@link #holds(int, String)} (a copy; empty = none). */

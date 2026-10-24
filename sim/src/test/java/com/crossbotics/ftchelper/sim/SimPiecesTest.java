@@ -74,6 +74,26 @@ public class SimPiecesTest {
         assertEquals("a POLLEN still is", 5, p.pieces.storedCount());
     }
 
+    // Two limits that both name a kind: both count (red NECTAR: 0 wins over NECTAR: 1).
+    @Test public void everyLimitThatNamesAKindCounts() throws Exception {
+        SimRobot r = robot("collect.intake = shape=intake, motor=intake, holds=8, limits=NECTAR:1+red_NECTAR:0\n");
+        r.setPose(30, -30, 0);
+        r.pieces.place("red NECTAR", 30, -16, 0);
+        r.motors.get("intake").device.setPower(1);
+        r.push(10, 0, 1.0);
+        run(r, 1.5);
+        assertEquals("no red NECTAR taken in", 4, r.pieces.storedCount());
+    }
+
+    // A robot with its back to the wall: preload pieces that do not fit wait at its front, inside the field.
+    @Test public void piecesThatDoNotFitStayInsideTheField() throws Exception {
+        SimRobot r = robot("collect.intake = shape=intake, motor=intake, holds=2\n");
+        assertEquals(2, r.pieces.storedCount());
+        for (Object[] d : r.pieces.drawn()) {
+            assertTrue("inside the walls: " + java.util.Arrays.toString(d), Math.abs((Double) d[1]) < 72 && Math.abs((Double) d[2]) < 72);
+        }
+    }
+
     @Test public void aBadLimitsLineSaysHowToWriteIt() throws Exception {
         try {
             robot("collect.intake = shape=intake, motor=intake, holds=4, limits=NECTAR\n");

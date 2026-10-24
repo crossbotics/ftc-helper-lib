@@ -84,7 +84,7 @@ final class SimPieces {
                 if (com.crossbotics.ftchelper.robot.Intake.limitFor(one, t.name) < 0) continue;
                 int n = 0;
                 for (SimField.PieceType h : inside) if (com.crossbotics.ftchelper.robot.Intake.limitFor(one, h.name) >= 0) n++;
-                return n < e.getValue();
+                if (n >= e.getValue()) return false;   // every limit that names this kind counts
             }
             return true;
         }
@@ -345,35 +345,54 @@ final class SimPieces {
                 // Never more than the intake holds, nor a kind it cannot take (collect.NAME = ..., holds=3 takes 3
                 // of a 4-piece preload): the rest waits on the tiles behind the robot, touching it, as the rules
                 // allow (manual 10.3.1).
-                int k = 0;
+                List<SimField.PieceType> outside = new ArrayList<>();
                 for (Map.Entry<String, Integer> e : robot.field.preload.entrySet()) {
                     SimField.PieceType t = robot.field.pieceTypes.get(e.getKey());
                     for (int i = 0; i < e.getValue(); i++) {
                         boolean fits = collects.isEmpty();
                         for (Collect c : collects) if (c.canTake(t, stored)) fits = true;
-                        if (fits) {
-                            stored.add(t);
-                        } else {
-                            double[] at = toField(new double[] {-robot.lengthIn / 2 - t.diameterIn / 2 - 0.1,
-                                    (k - 1.5) * (t.diameterIn + 0.2), t.diameterIn / 2});
-                            world.addBall(t, at[0], at[1], at[2], 0, 0, 0);
-                            k++;
-                        }
+                        if (fits) stored.add(t);
+                        else outside.add(t);
                     }
                 }
+                placeBeside(outside);
             } else if (!grabs.isEmpty()) {
-                int k = 0;
+                List<SimField.PieceType> outside = new ArrayList<>();
                 for (Map.Entry<String, Integer> e : robot.field.preload.entrySet()) {
                     SimField.PieceType t = robot.field.pieceTypes.get(e.getKey());
-                    for (int i = 0; i < e.getValue(); i++, k++) {
-                        double[] at = toField(new double[] {-robot.lengthIn / 2 - t.diameterIn / 2 - 0.1,
-                                (k - 1.5) * (t.diameterIn + 0.2), t.diameterIn / 2});
-                        world.addBall(t, at[0], at[1], at[2], 0, 0, 0);
-                    }
+                    for (int i = 0; i < e.getValue(); i++) outside.add(t);
                 }
+                placeBeside(outside);
             }
             for (String k : scored.keySet()) scored.put(k, 0);
             launched = 0;
+        }
+    }
+
+    // Preload pieces that do not start inside the robot: in a row on the tiles touching its back (manual 10.3.1),
+    // side by side by their own sizes, centred. Behind the robot is outside the field (its back to a wall):
+    // the same row at its front instead.
+    private void placeBeside(List<SimField.PieceType> pieces) {
+        if (pieces.isEmpty()) return;
+        double width = 0;
+        for (SimField.PieceType t : pieces) width += t.diameterIn + 0.2;
+        for (int side : new int[] {-1, 1}) {
+            List<double[]> at = new ArrayList<>();
+            double y = -width / 2;
+            boolean inside = true;
+            for (SimField.PieceType t : pieces) {
+                double r = t.diameterIn / 2;
+                double[] p = toField(new double[] {side * (robot.lengthIn / 2 + r + 0.1), y + r + 0.1, r});
+                if (Math.abs(p[0]) > robot.field.wallHalf - r || Math.abs(p[1]) > robot.field.wallHalf - r) inside = false;
+                at.add(p);
+                y += t.diameterIn + 0.2;
+            }
+            if (!inside && side == -1) continue;   // try the front
+            for (int i = 0; i < pieces.size(); i++) {
+                double[] p = at.get(i);
+                world.addBall(pieces.get(i), p[0], p[1], p[2], 0, 0, 0);
+            }
+            return;
         }
     }
 

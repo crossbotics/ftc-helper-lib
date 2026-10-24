@@ -329,7 +329,10 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 ```
 
 Without `"windmill"` in the configuration, the launcher still spins, and `fire()` feeds nothing (the
-pieces must reach the wheel another way, for example pushed in by the intake). The other way round does
+pieces must reach the wheel another way, for example pushed in by the intake). The launcher still counts
+each `fire()` as a shot, and a piece count (`Pieces`) does not go down: with
+`stopsWhen(pieces::isFull)` on an intake that also feeds the wheel, the intake could stop when full.
+Leave `stopsWhen` out on such a robot. The other way round does
 not work: a feeder cannot be on while its launcher is off.
 
 What "off" means, everywhere:

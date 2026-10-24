@@ -30,9 +30,9 @@ public class IntakeCapacityTest {
         assertEquals(-1, Intake.limitFor(limits, "POLLEN"));
     }
 
-    @Test public void theTotalIsHoldsOrTheLargestKindLimit() {
+    @Test public void theTotalIsHoldsOnly() {
         assertEquals(4, Intake.motor("intake").holds(4).holds(1, "NECTAR").holdsInAll());
-        assertEquals(3, Intake.motor("intake").holds(3, "POLLEN").holds(0, "NECTAR").holdsInAll());
+        assertEquals("kind limits alone give no total", 0, Intake.motor("intake").holds(3, "POLLEN").holds(0, "NECTAR").holdsInAll());
         assertEquals(0, Intake.motor("intake").holdsInAll());
     }
 
