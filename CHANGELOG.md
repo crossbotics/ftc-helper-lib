@@ -2,6 +2,19 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Added
+
+- **The simulator runs code that still has `MEASURE` numbers.** `:sim:fromRobot` writes a stand-in line in
+  the simulator's robot file for each `MEASURE` in Tunables.java, for example
+  `tunable.IntakeDeploy.deployed = 0.5` (the library's default for that number). At INIT the simulator
+  uses it in place of `MEASURE` and says so under the Driver Hub; when the OpMode stops, the number is
+  `MEASURE` again. So you can try your robot code in the simulator (`:sim:run` and scenario files) before
+  the robot is measured. The real robot never reads the robot file: it still stops at INIT. When you
+  write the real number, the code's number wins and the line goes away. A scenario's `set tunable` still
+  wins over a stand-in. See the simulator guide, "MEASURE in the simulator".
+
 ## v0.18.2 - 2026-10-24
 
 Safety fixes: the Hardware Check no longer jumps a servo; `set tunable` lets simulator tests stand in for

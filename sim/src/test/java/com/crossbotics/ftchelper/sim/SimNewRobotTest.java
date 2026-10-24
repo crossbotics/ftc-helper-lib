@@ -183,7 +183,21 @@ public class SimNewRobotTest {
                 fresh.setup(sim.hardwareMap());
             } catch (IllegalStateException e) {
                 if (initStops == null || !e.getMessage().contains(initStops)) throw e;
-                return;   // stopped on a MEASURE, as it should
+                // Stopped on a MEASURE, as it should. The robot file has a stand-in for each one: with them in
+                // place of MEASURE (as the simulator does at INIT), INIT works.
+                assertTrue(r.text, r.text.contains("tunable."));
+                for (java.util.Map.Entry<String, String> st : sim.standIns.entrySet()) {
+                    String section = st.getKey().substring(0, st.getKey().indexOf('.'));
+                    java.lang.reflect.Field fld = loader.loadClass("org.firstinspires.ftc.teamcode.Tunables$" + section)
+                            .getDeclaredField(st.getKey().substring(section.length() + 1));
+                    assertTrue(st.getKey(), com.crossbotics.ftchelper.robot.Starting.isMeasure(fld.getDouble(null)));
+                    fld.setDouble(null, Double.parseDouble(st.getValue()));
+                }
+                RobotDefinition standIns = (RobotDefinition) loader.loadClass("org.firstinspires.ftc.teamcode.Robot")
+                        .getDeclaredConstructor().newInstance();
+                standIns.setup(SimRobot.load(file).hardwareMap());
+                standIns.all().stop();
+                return;
             }
             if (initStops != null) org.junit.Assert.fail("INIT should stop on a MEASURE line");
             fresh.all().stop();

@@ -21,6 +21,19 @@ final class CookbookSamples {
     /** Writes the sample numbers in place of every MEASURE in the cookbook's sections (once). */
     static synchronized void fill() {
         if (done) return;
+        Map<String, Double> s = samples();
+        for (String top : new String[] {"Tunables", "AimRecipes", "HoodRecipes", "InterlockRecipes"}) {
+            try {
+                walk(Class.forName(PKG + top), s);
+            } catch (ClassNotFoundException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+        done = true;
+    }
+
+    // "Tunables$Lift.min" -> its sample number.
+    private static Map<String, Double> samples() {
         Map<String, Double> s = new HashMap<>();
         put(s, "Tunables$Lift", "min", 0, "max", 2600, "down", 0, "low", 900, "high", 2400);
         put(s, "Tunables$LiftLeft", "min", 0, "max", 2900, "down", 0, "low", 1000, "high", 2700);
@@ -39,20 +52,31 @@ final class CookbookSamples {
         put(s, "InterlockRecipes$Numbers$TurretLift", "turretFrom", 130, "turretTo", 218, "liftAbove", 270);
         put(s, "InterlockRecipes$SlipRingNumbers$Turret", "encoderOffset", 117);
         put(s, "InterlockRecipes$ServoTurretNumbers$Turret", "posA", 0.10, "angleA", -135, "posB", 0.90, "angleB", 135);
-        for (String top : new String[] {"Tunables", "AimRecipes", "HoodRecipes", "InterlockRecipes"}) {
-            try {
-                walk(Class.forName(PKG + top), s);
-            } catch (ClassNotFoundException e) {
-                throw new IllegalStateException(e);
-            }
-        }
-        done = true;
+        return s;
     }
 
     /** Writes the sample numbers again (a test that put a MEASURE back, or after SimFresh put the code's back). */
     static synchronized void fillAgain() {
         done = false;
         fill();
+    }
+
+    /**
+     * Puts MEASURE back in every field of these cookbook sections that has a sample number (as the code
+     * writes them), e.g. "Tunables$Lift". Undo it with {@link #fillAgain()}.
+     */
+    static synchronized void measureAgain(String... sections) {
+        for (String section : sections) {
+            try {
+                for (Field f : Class.forName(PKG + section).getDeclaredFields()) {
+                    if (!Modifier.isStatic(f.getModifiers()) || f.getType() != double.class) continue;
+                    f.setAccessible(true);
+                    if (samples().containsKey(section + "." + f.getName())) f.setDouble(null, Starting.MEASURE);
+                }
+            } catch (ReflectiveOperationException e) {
+                throw new IllegalStateException(e);
+            }
+        }
     }
 
     private static void put(Map<String, Double> s, String section, Object... pairs) {

@@ -222,6 +222,21 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
      */
     void simLines(List<String> out, TunableSection t) { }
 
+    /**
+     * The simulator's stand-in for a field written MEASURE (the robot file's
+     * {@code tunable.Section.field = value} line): the value the library would use if the line were left
+     * out, so the simulator can INIT before the number is measured. NaN = the library has none (the line
+     * then says so). Default: the fallback the module's {@link #simLines} asked for. Parts with named
+     * positions give their guessed positions. The real robot never reads the robot file.
+     *
+     * @param field the field name, e.g. "deployed"
+     * @param t     this module's section, read for the file (after {@link #simLines})
+     * @return the stand-in, or NaN
+     */
+    double simStandIn(String field, TunableSection t) {
+        return t.measuredFallback(field);
+    }
+
     /** Checks a parts catalog id for the main device (default: a motor). */
     String checkPart(String id) {
         Motors.get(id);

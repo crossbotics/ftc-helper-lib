@@ -155,6 +155,27 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
     abstract double countsPerUnit();
     abstract String unit();
 
+    // The simulator's stand-in for a MEASURE field: min and max the library's defaults (the robot file's
+    // motor line uses the same), a setting its starting value, a position the library's guess with that
+    // name when it is in the range, else the middle of the range.
+    @Override
+    double simStandIn(String field, TunableSection t) {
+        double[] d = defaults();
+        double[] cat = catalogDefaults();
+        int i = Arrays.asList(FIELD_ORDER).indexOf(field);
+        if (i >= 2) return cat != null && i < cat.length && !Double.isNaN(cat[i]) ? cat[i] : d[i];
+        double lo = t.number("min", d[0]), hi = t.number("max", d[1]);
+        if (!(hi > lo)) {
+            // One end written, the other MEASURE and on the wrong side of it: the default range's size from it.
+            if (t.isMeasure("max")) hi = lo + (d[1] - d[0]);
+            else lo = hi - (d[1] - d[0]);
+        }
+        if (field.equals("min")) return lo;
+        if (field.equals("max")) return hi;
+        Double guess = defaultPositions().get(field);
+        return guess != null && guess >= lo && guess <= hi ? guess : (lo + hi) / 2;
+    }
+
     void lowerSwitchName(String name) {
         switchName = name;
     }

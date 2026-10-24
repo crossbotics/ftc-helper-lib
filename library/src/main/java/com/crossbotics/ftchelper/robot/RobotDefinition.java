@@ -1135,10 +1135,18 @@ public abstract class RobotDefinition {
         drive.simLines(out);
         if (odometrySpec != null) odometrySpec.simLines(out);
         for (Shape s : fixed) out.add(s.line(s.name, s.parentName(s.name), null));
+        List<Object[]> read = new ArrayList<>();   // {module, its section}: for the stand-in lines below
         for (Module<?> m : modules) {
-            for (Module<?> c : m.children()) c.simLines(out, TunableSection.forFile(tunablesClass, c.name()));
-            m.simLines(out, TunableSection.forFile(tunablesClass, m.name()));
+            for (Module<?> c : m.children()) {
+                TunableSection t = TunableSection.forFile(tunablesClass, c.name());
+                c.simLines(out, t);
+                read.add(new Object[] {c, t});
+            }
+            TunableSection t = TunableSection.forFile(tunablesClass, m.name());
+            m.simLines(out, t);
+            read.add(new Object[] {m, t});
         }
+        standInLines(out, read);
         // Two lines with one name (a shape named like another part's): the simulator would keep only
         // the last, and a part could vanish from the size checks. Stop with the name instead.
         java.util.Set<String> keys = new java.util.HashSet<>();
@@ -1151,6 +1159,42 @@ public abstract class RobotDefinition {
             }
         }
         return out;
+    }
+
+    // The note on a stand-in line (after the "# from Robot.java" mark).
+    static final String STAND_IN_NOTE = "Simulator only: a stand-in for MEASURE (%s). The real robot stops at INIT "
+            + "until you write the measured number in Tunables.java";
+
+    /**
+     * One "tunable.Section.field = value" line per field written MEASURE: the simulator uses that value in
+     * its place, so the code can be tried before the robot is measured (the real robot never reads the
+     * file, so it still stops). Each part gives the value it would use without the line (its library
+     * default); a section no part owns (Drive, Odometry, Aim, an interlock rule), or a field with no library
+     * value, gets 0 marked TODO.
+     */
+    private void standInLines(List<String> out, List<Object[]> read) {
+        java.util.Set<String> done = new java.util.HashSet<>();
+        for (Object[] mt : read) {
+            Module<?> m = (Module<?>) mt[0];
+            TunableSection t = (TunableSection) mt[1];
+            done.add(t.name);
+            for (String field : t.measured()) out.add(standInLine(t.name, field, m.simStandIn(field, t)));
+        }
+        List<String> others = new ArrayList<>(java.util.Arrays.asList("Drive", "Odometry", "Aim"));
+        for (Interlock r : interlocks.rules) others.add(r.name());
+        for (String name : others) {
+            if (!done.add(name)) continue;
+            TunableSection t = TunableSection.forFile(tunablesClass, name);
+            for (String field : t.measured()) out.add(standInLine(name, field, Double.NaN));
+        }
+    }
+
+    private static String standInLine(String section, String field, double v) {
+        String key = "tunable." + section + "." + field + " = ";
+        if (Double.isNaN(v) || Double.isInfinite(v)) {
+            return key + "0   # " + String.format(java.util.Locale.US, STAND_IN_NOTE, "no library value: TODO write a number");
+        }
+        return key + Module.exact(v) + "   # " + String.format(java.util.Locale.US, STAND_IN_NOTE, "the library's default");
     }
 
     /**

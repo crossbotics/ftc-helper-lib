@@ -70,6 +70,41 @@ final class SimDriverStation {
         return t;
     });
 
+    // The robot file's stand-ins for MEASURE numbers (tunable.Section.field = VALUE): put in at INIT, taken
+    // out when the OpMode ends (SimTunables.StandIns). Its own lock: the OpMode's thread takes them out.
+    private final SimTunables.StandIns standIns = new SimTunables.StandIns();
+    private final Object standInLock = new Object();
+    /** Fields a scenario file's "set tunable" set: they get no stand-in (set tunable wins). */
+    final java.util.Set<java.lang.reflect.Field> noStandIn = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private volatile String standInNote = "";
+
+    /**
+     * The note about the stand-ins this INIT used, e.g. "Tunables.IntakeDeploy.deployed = MEASURE: the
+     * simulator uses the stand-in 0.5 from the robot file (the real robot stops here)"; "" = none.
+     */
+    String standInNote() {
+        return standInNote;
+    }
+
+    // At INIT: the stand-ins for the fields that are MEASURE now (each INIT reads the robot file's lines again).
+    private void putStandIns() {
+        synchronized (standInLock) {
+            standIns.restore();
+            standIns.apply(scope, robot.standIns, noStandIn);
+            standInNote = String.join("\n", standIns.notes);
+        }
+    }
+
+    /**
+     * Takes the robot file's stand-ins out again (the fields are MEASURE again): when the OpMode ends, and
+     * before a test on the page reads the Tunables to put them back afterwards. The note stays until the next INIT.
+     */
+    void takeOutStandIns() {
+        synchronized (standInLock) {
+            standIns.restore();
+        }
+    }
+
     /** Which OpModes to list: the library's (examples, starter kit) or the team's (TeamCode). */
     enum Scope { LIBRARY, TEAM }
     final Scope scope;
@@ -214,6 +249,8 @@ final class SimDriverStation {
         }
         Entry e = find(name);
         if (e == null) throw new IllegalArgumentException("No OpMode called " + name);
+        // A MEASURE number would stop INIT: the robot file's stand-in goes in its place (simulator only).
+        putStandIns();
         try {
             OpMode o = e.type.getDeclaredConstructor().newInstance();
             o.hardwareMap = robot.hardwareMap();
@@ -241,6 +278,7 @@ final class SimDriverStation {
             thread.start();
         } catch (ReflectiveOperationException ex) {
             error = "Could not make " + name + ": " + ex;
+            takeOutStandIns();
             phase = Phase.STOPPED;
         }
     }
@@ -276,6 +314,7 @@ final class SimDriverStation {
             if (op == o) {
                 robot.allOff();
                 robot.closeCameras();
+                takeOutStandIns();
                 phase = Phase.STOPPED;
                 preselectNext(current);
             }
@@ -313,6 +352,7 @@ final class SimDriverStation {
             if (op == o) {
                 robot.allOff();
                 robot.closeCameras();
+                takeOutStandIns();
                 phase = Phase.STOPPED;
                 preselectNext(current);
             }
@@ -381,6 +421,7 @@ final class SimDriverStation {
         }
         robot.allOff();
         robot.closeCameras();
+        takeOutStandIns();
         phase = Phase.STOPPED;
     }
 

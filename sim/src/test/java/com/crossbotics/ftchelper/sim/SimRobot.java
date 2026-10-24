@@ -130,6 +130,11 @@ final class SimRobot {
 
     // The parts catalog this robot uses: the library's, plus the team's own file if it names one (parts =).
     private final SimParts parts;
+    /**
+     * The stand-ins for Tunables numbers written MEASURE ("tunable.IntakeDeploy.deployed = 0.5"): "Section.field"
+     * -> value. The simulator uses one at INIT only while the code still says MEASURE (SimTunables.StandIns).
+     */
+    final Map<String, String> standIns = new LinkedHashMap<>();
 
     private SimRobot(Properties p, Path dir) {
         this.dir = dir;
@@ -137,6 +142,22 @@ final class SimRobot {
         String teamParts = p.getProperty("parts", "").trim();
         parts = teamParts.isEmpty() ? SimParts.catalog() : SimParts.withTeamFile(dir.resolve(teamParts).normalize());
         batteryVolts = num(p, "battery", 12.8);
+        for (String key : sortedKeys(p, "tunable.")) {
+            String name = key.substring("tunable.".length());
+            String v = p.getProperty(key).trim();
+            if (name.indexOf('.') <= 0 || name.endsWith(".")) {
+                throw new IllegalArgumentException("Robot file: \"" + key + "\": a stand-in is written tunable.Section.field = number "
+                        + "(e.g. tunable.IntakeDeploy.deployed = 0.5)");
+            }
+            if (!v.equals("true") && !v.equals("false")) {
+                try {
+                    Double.parseDouble(v);
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("Robot file: \"" + key + "\": the stand-in must be a number (or true/false), not \"" + v + "\"");
+                }
+            }
+            standIns.put(name, v);
+        }
         servoSpeed = above0(p, "servo.speed", 1.0);
         int port = 0;
         // Drivetrain motors first, so they get the first ports like on a real hub.

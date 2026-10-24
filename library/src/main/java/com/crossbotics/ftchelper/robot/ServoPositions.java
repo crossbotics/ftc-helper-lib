@@ -122,6 +122,18 @@ public abstract class ServoPositions<M extends ServoPositions<M>> extends Module
         return out;
     }
 
+    // The simulator's stand-in for a MEASURE field: travelSec from the part (or 0.3 s), a position the
+    // library's guess with that name (a Positioner's stowed 0.0, deployed 0.5), else the middle, 0.5.
+    @Override
+    double simStandIn(String field, TunableSection t) {
+        if (field.equals("travelSec")) {
+            double c = catalogFullMoveSec();
+            return Double.isNaN(c) ? DEFAULT_TRAVEL_SEC : c;
+        }
+        Double guess = defaultPositions().get(field);
+        return guess != null ? guess : 0.5;
+    }
+
     @Override
     String toolFor(String field) {
         if (field.equals("travelSec")) return "time a full move (0 to 1)";

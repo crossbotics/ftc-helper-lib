@@ -276,6 +276,14 @@ public final class Indexer extends Module<Indexer> implements Feeder {
         if (!inLauncher) plan.operator().rb.press(this::feedOne).says("feed one");
     }
 
+    // The simulator's stand-in for a MEASURE field: a servo indexer's rest 0.0 and push 0.5 (the defaults).
+    @Override
+    double simStandIn(String field, TunableSection t) {
+        if (field.equals("rest")) return 0.0;
+        if (field.equals("push")) return 0.5;
+        return super.simStandIn(field, t);
+    }
+
     @Override
     String toolFor(String field) {
         if (field.equals("rest") || field.equals("push")) return "the Servo Finder, docs/guides/finders.md#servo-finder-ends-and-positions";

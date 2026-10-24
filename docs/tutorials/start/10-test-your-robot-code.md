@@ -191,15 +191,17 @@ A test is plain text, so you can add a line the recorder did not: open the file 
 expect servo claw target = 0.75 0.01
 ```
 
-**A test can stand in for a number you have not measured yet.** A `MEASURE` in Tunables.java stops
-INIT, so the test stops too. Put this line before `init`, and the test uses 0.6 in its place, for this
-file only (your code does not change):
+**A number you have not measured yet.** A `MEASURE` in Tunables.java stops INIT on the robot. In the
+simulator it does not: `:sim:fromRobot` puts a stand-in for it in the robot file
+(`tunable.IntakeDeploy.deployed = 0.5`), and the simulator uses that ([MEASURE in the
+simulator](../../guides/simulator.md#measure-in-the-simulator)). So most tests need nothing for it.
+
+A test that wants another number puts this line before `init`. The test uses 0.6, for this file only
+(your code does not change):
 
 ```text
 set tunable IntakeDeploy.deployed 0.6
 ```
-
-When you measure the real number, write it in Tunables.java and delete the line.
 
 **Button names here are the FTC names, not the Java names:** `g2.dpadLeft` in `Controls.java` is
 `g2.dpad_left` in a test. Every command, every check and the name list:

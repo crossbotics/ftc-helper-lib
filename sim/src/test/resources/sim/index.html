@@ -475,6 +475,7 @@
     <div class="dh-foot" aria-hidden="true"><i></i><i></i><i></i></div>
     </div>
     <div id="error"></div>
+    <div id="standIns" class="status" style="color:var(--warn);white-space:pre-wrap"></div>
   </section>
 
   <section id="padsSection">
@@ -1061,6 +1062,9 @@ function render(s) {
   const err = $("#error");
   err.style.display = s.error ? "block" : "none";
   err.textContent = s.error;
+  // MEASURE numbers the simulator filled in from the robot file (tunable. lines): the real robot stops on them.
+  const standIns = s.standIns || "";
+  if ($("#standIns").textContent !== standIns) $("#standIns").textContent = standIns;
   $("#autoTimer").checked = s.autoTimer;
   $("#teleTimer").checked = s.teleTimer;
   renderHub(s);

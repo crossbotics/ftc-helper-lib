@@ -478,6 +478,7 @@ default):
 | `start.x`, `start.y`, `start.heading` | | where the robot starts |
 | `preload = on/off` | on | the field file's preload in the robot at the start |
 | `physics = engine/simple` | engine | the physics engine, or the old "a bump stops the move" rule |
+| `tunable.SECTION.FIELD = N` | none | a stand-in for a Tunables number written `MEASURE`: the simulator uses N in its place ([MEASURE in the simulator](#measure-in-the-simulator)) |
 
 A flywheel's rim speed comes from its `flywheel` shape: the diameter is the larger of the shape's
 forward and up sizes.
@@ -525,6 +526,31 @@ A lift or arm on [two motors](../modules/robot.md#two-motors-on-one-lift-or-arm)
 `motor.lift_right = lift, part=..., with=lift_left, mirrored=true`, so both motors turn one slide. (A
 line of your own for that motor, not marked `# from Robot.java`, is kept instead: delete it to get the
 generated one.)
+
+### MEASURE in the simulator
+
+A Tunables number written `MEASURE` ([DEFAULT and MEASURE](tunables.md#default-and-measure)) stops INIT
+on the robot until you measure it. In the simulator that would stop you too, before the robot is even
+built. So `:sim:fromRobot` writes one **stand-in** line for each `MEASURE` it finds:
+
+```properties
+tunable.IntakeDeploy.deployed = 0.5   # from Robot.java. Simulator only: a stand-in for MEASURE (the library's default). ...
+```
+
+- At INIT, the simulator uses 0.5 in place of `MEASURE`, and says so under the Driver Hub (and in a
+  scenario's report): `Tunables.IntakeDeploy.deployed = MEASURE: the simulator uses the stand-in 0.5 from
+  the robot file (the real robot stops here)`. When the OpMode stops, the number is `MEASURE` again.
+- The robot never reads the robot file, so the real robot still stops at INIT. Safety on the robot does
+  not change.
+- The value is the library's default for that field: a Positioner's `stowed` 0 and `deployed` 0.5, a
+  claw's `open` 0.2 and `closed` 0.75, a wrist's guesses, a lift's `min` 0 and `max` 2600 (the same as its
+  `motor.` line), a lift position by its name (`high` 2400) or else the middle of the range, a hood's
+  `posA` and `posB` at the ends. A field with no library value gets 0, marked TODO: write a number there.
+- A stand-in is used only while the code says `MEASURE`. When you write the real number in Tunables.java,
+  the code's number wins, and the next `:sim:fromRobot` takes the line away.
+- Change a stand-in: remove its `# from Robot.java` note and write your number. Then the line is yours,
+  and `:sim:fromRobot` keeps it.
+- A scenario's `set tunable` wins over a stand-in, for its file ([scenario files](#scenario-files-test-without-a-browser)).
 
 `./gradlew :sim:newRobot -Pconfig=config.xml -PteamCode=../TeamCode` writes the five files themselves
 from the robot configuration ([robot module](../modules/robot.md#making-the-files)).
@@ -1076,9 +1102,12 @@ short names); `Controls.java` uses the library's names. The ones that differ:
 
 So `g2.dpadLeft.press(...)` in Java is `press g2.dpad_left` in a scenario.
 
-**A number you have not measured yet: `set tunable`.** A Tunables number written as `MEASURE` stops
-INIT until you measure it on the robot. A test can stand in for it: `set tunable IntakeDeploy.deployed 0.6`
-sets `Tunables.IntakeDeploy.deployed` to 0.6 for this file only.
+**Another number for one test: `set tunable`.** A Tunables number written as `MEASURE` stops
+INIT until you measure it on the robot. In the simulator, the robot file's stand-in is used in its place
+([MEASURE in the simulator](#measure-in-the-simulator)), so most tests need nothing. A test that wants
+another value sets it: `set tunable IntakeDeploy.deployed 0.6` sets `Tunables.IntakeDeploy.deployed` to
+0.6 for this file only. It wins over the stand-in (`set tunable IntakeDeploy.deployed MEASURE` checks
+that INIT stops).
 
 - Put it before `init` (or after `stop`): the parts read their numbers at INIT. While an OpMode is in
   INIT or running, the line fails.
@@ -1090,7 +1119,8 @@ sets `Tunables.IntakeDeploy.deployed` to 0.6 for this file only.
 - A misspelled name fails and names what exists: `Tunables.IntakeDeploy has no field "deployd" (did you
   mean deployed?)`.
 
-When you measure the real number, write it in Tunables.java and delete the `set tunable` line.
+When you measure the real number, write it in Tunables.java. Delete the `set tunable` line if it only
+stood in for the `MEASURE`.
 
 **Check a `show(...)` line.** A `show("Intake on", ...)` line is on the screen as `Label : value`
 (the label, a space, a colon, a space, the value). Check it with its words:

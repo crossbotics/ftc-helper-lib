@@ -26,8 +26,11 @@ public class SimSetTunableTest {
         SimFromRobot.Result res = SimFromRobot.merge(null, new MechanismRecipes.Robot().simLines(),
                 MechanismRecipes.Robot.class.getName(), "biobuzz-2026");
         assertTrue(res.problems.toString(), res.problems.isEmpty());
+        // Without the robot file's stand-ins for MEASURE (SimStandInTest): here only set tunable stands in.
+        StringBuilder text = new StringBuilder();
+        for (String line : res.text.split("\n")) if (!line.startsWith("tunable.")) text.append(line).append('\n');
         Path file = tmp.newFile("mechanisms.properties").toPath();
-        Files.write(file, res.text.getBytes(StandardCharsets.UTF_8));
+        Files.write(file, text.toString().getBytes(StandardCharsets.UTF_8));
         return file;
     }
 

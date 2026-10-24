@@ -157,6 +157,9 @@ final class SimTests {
 
     private void runNow(SimScenario s, List<String> lines) {
         SimRobot r = sim.robot;
+        // Not the robot file's stand-ins: those are put in again at the next INIT, only where the code says MEASURE.
+        sim.ds.stop();
+        sim.ds.takeOutStandIns();
         List<Object[]> userTunables = SimFresh.current();
         com.crossbotics.ftchelper.core.SettingsFile userSettings = com.crossbotics.ftchelper.core.SettingsFile.shared();
         sim.ds.pad1.pageLocked = true;

@@ -38,6 +38,9 @@ final class TunableSection {
     private final java.util.Set<String> catalogMarked = new java.util.LinkedHashSet<>();
     // Which tool finds a field, for the message when it says MEASURE (the module's; null = the general words).
     java.util.function.Function<String, String> tools = null;
+    // forFile only: the library's own value for each MEASURE field a module asked for (the fallback it gave),
+    // for the simulator's stand-in lines (Module.simStandIn).
+    private final Map<String, Double> measuredFallbacks = new LinkedHashMap<>();
 
     private TunableSection(String name, Class<?> section) {
         this.name = name;
@@ -98,6 +101,33 @@ final class TunableSection {
         return t == double.class || t == int.class || t == float.class || t == long.class;
     }
 
+    /** True if the field is written as MEASURE (a double whose value is the MEASURE marker). */
+    boolean isMeasure(String field) {
+        Field f = raw(field);
+        return f != null && f.getType() == double.class && Starting.isMeasure(rawValue(f));
+    }
+
+    /**
+     * Every field written as MEASURE, in the order Java lists them (empty without a section). For the
+     * simulator's stand-in lines ({@code tunable.Section.field = value} in the robot file).
+     */
+    List<String> measured() {
+        List<String> out = new ArrayList<>();
+        for (String f : fieldNames()) if (isMeasure(f)) out.add(f);
+        return out;
+    }
+
+    /**
+     * forFile only: the value the module would use for this MEASURE field if it were not written (the
+     * fallback it asked {@link #number} with), or NaN when the module did not ask for it.
+     *
+     * @param field the field name, e.g. "posA"
+     */
+    double measuredFallback(String field) {
+        Double v = measuredFallbacks.get(field);
+        return v == null ? Double.NaN : v;
+    }
+
     /** True if the section has this field (for optional numbers). */
     boolean has(String field) {
         return field(field) != null;
@@ -123,6 +153,9 @@ final class TunableSection {
      */
     double number(String field, double fallback) {
         Field f = field(field);
+        if (f == null && forFile && isMeasure(field) && !measuredFallbacks.containsKey(field)) {
+            measuredFallbacks.put(field, fallback);
+        }
         if (f == null) {
             // Written as DEFAULT_FROM_CATALOG: not a missing number, a chosen one; the note lists it with its value.
             if (marked.containsKey(field)) marked.put(field, fallback);

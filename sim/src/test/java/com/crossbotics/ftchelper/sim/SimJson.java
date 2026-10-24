@@ -35,6 +35,8 @@ final class SimJson {
         field(b, "opmode", cur == null ? "" : cur.name).append(',');
         field(b, "kind", cur == null ? "" : cur.kind).append(',');
         field(b, "error", ds.error()).append(',');
+        // The robot file's stand-ins this INIT used for MEASURE numbers (simulator only), "" = none.
+        field(b, "standIns", ds.standInNote()).append(',');
         field(b, "next", ds.next).append(',');
         // The alliance the program uses now (its INIT menu or TeleOp's choice): the page turns the
         // drivers' view to that side. "" = none said.

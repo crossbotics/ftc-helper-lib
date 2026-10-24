@@ -577,6 +577,23 @@ public final class Hood extends Module<Hood> {
                         : "hood angle (up = bigger angle)");
     }
 
+    // The simulator's stand-in for a MEASURE field: posA and posB the ends (0 and 1, or 0 and 500 counts for a
+    // motor hood); angleA and angleB the same numbers as posA and posB (the angle is then the position).
+    @Override
+    double simStandIn(String field, TunableSection t) {
+        double top = kind == Kind.MOTOR ? 500 : 1;
+        boolean measureA = t.isMeasure("posA"), measureB = t.isMeasure("posB");
+        double a = measureA ? 0 : t.number("posA", 0), b = measureB ? top : t.number("posB", top);
+        // One written, the other MEASURE on the same number: the other end instead (they must differ).
+        if (a == b) {
+            if (measureA) a = b == 0 ? top : 0;
+            else b = a == 0 ? top : 0;
+        }
+        if (field.equals("posA") || field.equals("angleA")) return a;
+        if (field.equals("posB") || field.equals("angleB")) return b;
+        return super.simStandIn(field, t);
+    }
+
     @Override
     String toolFor(String field) {
         if (field.startsWith("pos") || field.startsWith("angle")) return "the Hood Finder, docs/guides/finders.md#hood-finder";

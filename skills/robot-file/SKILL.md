@@ -74,7 +74,10 @@ positions.
 ```
 
 Its lines end with `# from Robot.java` and are rewritten each run. When you measure a value, write it on
-a line WITHOUT that mark (or remove the mark): your line is then kept on every later run. Then go on
+a line WITHOUT that mark (or remove the mark): your line is then kept on every later run. A
+`tunable.Section.field = N` line is a stand-in for a Tunables number still written `MEASURE`: the
+simulator uses it in place of `MEASURE` (the real robot never reads this file and still stops). Do not
+copy a stand-in into Tunables.java as if it were measured; the finders give the real number. Then go on
 with step 3 for the TODO lines (sizes, places, the shot).
 
 A part marked `.optional()` in Robot.java that is NOT built yet (its device is not in the team's
@@ -93,8 +96,8 @@ rest `TODO`, checks the draft loads, and prints the open questions. (If the file
 
 A team that has no code yet: `./gradlew :sim:newRobot -Pconfig=... -PteamCode=...` writes the five files
 from the configuration (check its TODOs with the team), then use `:sim:fromRobot`. Its `Tunables.java` has
-`MEASURE` lines (INIT stops on them until the team finds the numbers with the finders, which run in the
-simulator too) and `DEFAULT` lines (the library's defaults). A motor or servo that is not in the
+`MEASURE` lines (INIT on the robot stops on them until the team finds the numbers with the finders; the
+simulator uses the robot file's stand-ins for them) and `DEFAULT` lines (the library's defaults). A motor or servo that is not in the
 catalog: describe it in Robot.java (`Motors.custom(id, countsPerRev, freeRpm)`,
 `Parts.customServo(id, rangeDeg, secPer60Deg)`); `:sim:fromRobot` then writes its numbers into the file.
 

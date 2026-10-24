@@ -210,8 +210,10 @@ Servo Finder still run: they do not read `Tunables.java`. For a lift's `min` and
 5. Write each number in place of `MEASURE`, build, and INIT your TeleOp again.
 
 A part that is `optional()` and not on the robot does not
-stop on `MEASURE`, and `./gradlew :sim:fromRobot` writes the simulator's robot file with `MEASURE` lines
-still in it (so you can run the finders in the simulator). `:sim:newRobot` writes every part's settings
+stop on `MEASURE`. **In the simulator**, INIT does not stop: `./gradlew :sim:fromRobot` writes a stand-in
+for each `MEASURE` in the simulator's robot file (`tunable.IntakeDeploy.deployed = 0.5`), and the simulator
+uses it in place of `MEASURE` ([MEASURE in the simulator](simulator.md#measure-in-the-simulator)). The real
+robot never reads that file, so it still stops. `:sim:newRobot` writes every part's settings
 this way. A part not in the catalog: [describe it in Robot.java](../modules/robot.md#parts-not-in-the-catalog).
 
 ## First run: what you get before tuning

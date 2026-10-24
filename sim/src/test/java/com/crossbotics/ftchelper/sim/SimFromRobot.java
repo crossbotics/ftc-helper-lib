@@ -31,6 +31,10 @@ import java.util.Set;
  * again and again never adds another block. An intake's {@code holds=} comes from {@code Pieces.max(n)}
  * when the intake does not say.
  *
+ * <p>A Tunables number written MEASURE gets a stand-in line, {@code tunable.IntakeDeploy.deployed = 0.5}: the
+ * simulator uses it in place of MEASURE (the real robot never reads this file, so it still stops at INIT).
+ * The value is the library's default for that field. Once the code has a number, the line goes away.
+ *
  * <p>It is a starting point: a part with no {@code looks(...)} gets a guessed shape (from the chassis, the
  * other parts and the parts catalog, inside the size rules), marked TODO measure until someone measures it.
  */
@@ -89,6 +93,12 @@ public final class SimFromRobot {
         System.out.println("Wrote " + file + (existing == null ? " (new)" : "") + ".");
         for (String k : r.kept) System.out.println("  kept your " + k + " (it is not marked " + MARK + ")");
         if (r.text.contains("TODO")) System.out.println("  Lines with TODO are guesses: measure them (docs/guides/simulator.md).");
+        int standIns = 0;
+        for (String line : r.text.split("\n")) if (line.startsWith("tunable.")) standIns++;
+        if (standIns > 0) {
+            System.out.println("  " + standIns + " tunable. line(s): stand-ins for MEASURE numbers, so the simulator can INIT "
+                    + "(the real robot still stops until you write the numbers in Tunables.java).");
+        }
         // The same Tunables name checks as INIT (a field no part reads, a section meant for a part that no
         // part reads), so a misnamed number is found now, not at the robot. The file is written anyway.
         List<String> tunables = robot.checkTunables();
