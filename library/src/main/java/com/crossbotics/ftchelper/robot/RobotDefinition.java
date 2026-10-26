@@ -61,6 +61,7 @@ public abstract class RobotDefinition {
     private final List<Runnable> atStop = new ArrayList<>();
     private boolean ended = false;
     private boolean wasStarted = false;
+    private boolean startingLogged = false;   // the "starting numbers" notes went to the robot log once
     // Your own OpMode (init(op) ... stop()): the OpMode, and the drive made for driveWith().
     private com.qualcomm.robotcore.eventloop.opmode.OpMode ownOpMode = null;
     // The Driver Hub's screen of the OpMode running now (for show()). Set at the first INIT loop.
@@ -1112,13 +1113,50 @@ public abstract class RobotDefinition {
     final void showNotes(com.crossbotics.ftchelper.telemetry.RobotTelemetry t) {
         boolean loud = !com.crossbotics.ftchelper.core.Profile.current().isPractice();
         List<String> off = offNotes();
+        // The parts on starting numbers (the library's or the parts catalog's): one short line, not one long
+        // line per part, so the warnings and the button list stay in view. The full lines go to the robot log.
+        List<String> starting = new ArrayList<>();
+        List<String> startingLines = new ArrayList<>();
         for (String n : notes()) {
             // At the very top of the screen, above every other warning: at an event this is the one to see.
-            if (loud && off.contains(n)) t.warnFirst(offWarning(n));
-            else t.text(n);
+            if (loud && off.contains(n)) {
+                t.warnFirst(offWarning(n));
+                continue;
+            }
+            String part = startingPart(n);
+            if (part != null) {
+                if (!starting.contains(part)) starting.add(part);
+                startingLines.add(n);
+                continue;
+            }
+            t.text(n);
+        }
+        if (!starting.isEmpty()) {
+            StringBuilder names = new StringBuilder();
+            for (String p : starting) names.append(names.length() == 0 ? "" : ", ").append(p);
+            t.text("Starting numbers in use (fine for a first test; measure them later): " + names
+                    + ". Each value and where it came from: the tuning menu");
+            if (!startingLogged) {
+                startingLogged = true;
+                try {
+                    for (String n : startingLines) com.qualcomm.robotcore.util.RobotLog.ii("ftc-helper", "INIT " + n);
+                } catch (RuntimeException | LinkageError e) {
+                    // no robot log (a test without the SDK): the tuning menu still shows each value
+                }
+            }
         }
         for (String w : sectionWarnings) t.warn(w);
         for (String w : settingProblems()) t.warn(w);
+    }
+
+    // The part a "starting numbers" note is about ("Tunables.Launcher: DEFAULT, library defaults: ...",
+    // "Launcher: defaults from the catalog (...)", "Tunables.Intake not written: library defaults used (fine)"),
+    // or null for any other note.
+    static String startingPart(String note) {
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile(
+                "^(?:Tunables\\.)?(\\w+)(?::| not written)[^!]*?(?:DEFAULT, library defaults|defaults from the catalog|library defaults used)")
+                .matcher(note);
+        return m.find() ? m.group(1) : null;
     }
 
     /** INIT warnings about misnamed Tunables sections (empty when none); see {@link #checkTunables()}. */
