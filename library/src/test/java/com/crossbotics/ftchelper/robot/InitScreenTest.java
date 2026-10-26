@@ -27,7 +27,7 @@ public class InitScreenTest {
         assertEquals("Launcher", RobotDefinition.startingPart("Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7. Run the Flywheel Finder"));
         assertEquals("Intake", RobotDefinition.startingPart("Tunables.Intake not written: library defaults used (fine)"));
         assertEquals("Lift", RobotDefinition.startingPart("Tunables.Lift: kD, kF not written: library defaults used (fine)"));
-        assertNull(RobotDefinition.startingPart("\\"intake_deploy\\" not in the configuration: IntakeDeploy is off (optional part)"));
+        assertNull(RobotDefinition.startingPart("\"intake_deploy\" not in the configuration: IntakeDeploy is off (optional part)"));
     }
 
     public static class Numbers {
