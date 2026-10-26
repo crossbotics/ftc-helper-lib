@@ -6,12 +6,10 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Changed
 
-<<<<<<< HEAD
 - **A shorter INIT screen.** The parts on starting numbers (the library's or the parts catalog's) are one
   short line now: `Starting numbers in use (fine for a first test; measure them later): Intake,
   Launcher, Claw`. Before, each part had a long line, and the warnings and the button list scrolled out
   of view. Each value and where it came from: the tuning menu, and the robot log.
-=======
 - **A tidier simulator toolbar.** The 3D view's toolbar has how to look on the left (View, Layers) and
   what to do on the right (Tests, Edit robot, Auto builder). "Show", "Field CAD model" and "Camera view"
   are in the View menu now; a hidden 3D view has a "Show it" button.
@@ -19,7 +17,6 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   robot file does not have, the error now says that in the simulator the configuration is the robot file,
   and how to add the device (or start with the Simulator button), not only "check the configuration on
   the Driver Station".
->>>>>>> sim-cleanup
 
 ## v0.20.0 - 2026-10-24
 
