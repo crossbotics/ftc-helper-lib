@@ -215,14 +215,18 @@ stripes, so you see them turn and which way; a roller glows **green** while it t
 **orange** while it pushes them out, a flywheel or other spinner glows **yellow** while it turns, and a
 passive part (moved by gravity or springs) **blinks yellow** while it moves. The field is built from the field file's shapes (tiles, walls, tape, solid and overhead
 parts) with each AprilTag as a square with its ID. If the robot file names a 3D model of the field
-(`field.model`), the page shows that model instead (with the tag squares on top); the "Field CAD model"
-box switches between them. Each camera shows as a cone (webcam yellow, Limelight green); "Camera
-view" shows a camera's picture in the corner (pick the camera when there are two; it is redrawn 15 times
+(`field.model`), the page shows that model instead (with the tag squares on top); "Field CAD model" in
+the **View** menu switches between them. Each camera shows as a cone (webcam yellow, Limelight green);
+"Camera view" in the View menu shows a camera's picture in the corner (pick the camera when there are two; it is redrawn 15 times
 a second, smaller than the screen, so it costs little). The game pieces are striped balls, so you can see
 them roll and spin. A tipping HIVE turns smoothly (with a rules file the simulator turns it over its
 `tipSeconds` and the page plays the same turn; without one the simulator tips it at once and the page
 still turns it over half a second). The 3D library (three.js, MIT license) comes with the simulator, so the page
-works without the internet. Untick "Show" on a slow computer.
+works without the internet. On a slow computer, untick "Show the 3D view" in the View menu.
+
+The toolbar over the 3D view: how to look on the left (**View**: where it looks from, and the "Show",
+"Field CAD model" and "Camera view" boxes; **Layers**: lines and maps over the field), what to do on the
+right (**Tests**, **Edit robot**, **Auto builder**).
 
 **Smooth motion.** The simulator moves everything 100 times a second and sends the page where everything
 is 50 times a second (a stream: `GET /stream`), with its own clock. The page draws the moment about
