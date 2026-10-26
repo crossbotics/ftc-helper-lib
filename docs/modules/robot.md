@@ -180,7 +180,8 @@ public class Tunables {
 - **A part that is not on the robot** ([`optional()`](#parts-not-on-the-robot-yet), device not in the
   configuration) needs no section: nothing about its numbers stops INIT, not even a Lift's `min`/`max`.
 - **Missing numbers are not errors**, with a few exceptions: the library's default is used and INIT
-  says which (`Tunables.Lift: kD, kF not written: library defaults used (fine)`). **The exceptions are
+  names the part in its `Starting numbers in use` line (the robot log has the full line,
+  `Tunables.Lift: kD, kF not written: library defaults used (fine)`). **The exceptions are
   safety numbers** (a safety limit never comes from a library default): a Lift's or Arm's `min` and
   `max`, a Hood's `posA` and `posB` (or its `calibration`), a servo Turret's `posA`, `angleA`, `posB`,
   `angleB`, a Turret's `homeAngle` with a home switch, and an interlock rule's zone numbers (none of these for a

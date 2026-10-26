@@ -1154,7 +1154,7 @@ public abstract class RobotDefinition {
     // or null for any other note.
     static String startingPart(String note) {
         java.util.regex.Matcher m = java.util.regex.Pattern.compile(
-                "^(?:Tunables\\.)?(\\w+)(?::| not written)[^!]*?(?:DEFAULT, library defaults|defaults from the catalog|library defaults used)")
+                "^(?:Tunables\\.)?(\\w+)(?::| not written)[^!]*?(?:DEFAULT, library defaults|defaults from the catalog|defaults? from \\S+ \\(custom\\)|library defaults used)")
                 .matcher(note);
         return m.find() ? m.group(1) : null;
     }
