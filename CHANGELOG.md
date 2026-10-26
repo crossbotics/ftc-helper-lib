@@ -2,6 +2,15 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Changed
+
+- **A shorter INIT screen.** The parts on starting numbers (the library's or the parts catalog's) are one
+  short line now: `Starting numbers in use (fine for a first test; measure them later): Intake,
+  Launcher, Claw`. Before, each part had a long line, and the warnings and the button list scrolled out
+  of view. Each value and where it came from: the tuning menu, and the robot log.
+
 ## v0.20.0 - 2026-10-24
 
 ### Added

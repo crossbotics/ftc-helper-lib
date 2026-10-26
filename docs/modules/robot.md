@@ -245,7 +245,7 @@ public static class Lift {
 
 | Word | Means | INIT |
 | --- | --- | --- |
-| `DEFAULT` | not set yet: the library's starting value, worked out from the part Robot.java names where it can (else the library's default). The same as leaving the line out, but visible | one note per part with each value and where it came from: `Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, ...`; `default from my-motor (custom)`; `general default (no part in Robot.java)`. The tuning menu shows the same words next to the value. **On a safety number** (a lift's `min`/`max`, a hood's stops...) INIT stops: a safety limit never comes from the catalog |
+| `DEFAULT` | not set yet: the library's starting value, worked out from the part Robot.java names where it can (else the library's default). The same as leaving the line out, but visible | INIT: one line naming the parts on starting numbers; the robot log and the tuning menu: each value and where it came from: `Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, ...`; `default from my-motor (custom)`; `general default (no part in Robot.java)`. The tuning menu shows the same words next to the value. **On a safety number** (a lift's `min`/`max`, a hood's stops...) INIT stops: a safety limit never comes from the catalog |
 | `MEASURE` | a number you find on the robot | stops and names the tool: `Tunables.Lift.min = MEASURE: find it on the robot: the bottom of the safe range, in counts: Motor Finder, X` |
 
 Only for `double` fields (an `int` cannot hold them; a `boolean` or a table has no such word: leave the
@@ -786,8 +786,9 @@ stays), or one table per game piece: `speedByDistancePollen`, `speedByDistanceNe
 at). **First run:** the ones not written start from the parts catalog for the motor in
 `Launcher.flywheel(...)` (F = 32767 / its top speed in counts per second, P = F / 10, I = P / 10, D = 0: a
 6000 RPM motor gets kF 11.7, kP 1.17, kI 0.117), not the hub's own gains, and an unwritten `speedRpm` is 60%
-of the motor's top speed (3600). INIT says so once: `Launcher: defaults from the catalog (gobilda-5203-6000):
-kF 11.7, kP 1.17, kI 0.117, speed 3600 rpm. Run the Flywheel Finder, then the Shot Tuner`. A written number
+of the motor's top speed (3600). INIT names the launcher in its "Starting numbers in use" line; the robot
+log has the values: `Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, kP 1.17, kI 0.117,
+speed 3600 rpm. Run the Flywheel Finder, then the Shot Tuner`. A written number
 always wins; `DEFAULT` in place of a number is the same as no line
 ([DEFAULT and MEASURE](#default-and-measure)). A motor not in the catalog:
 `Motors.custom(...)` ([Parts not in the catalog](#parts-not-in-the-catalog)). Buttons (operator): LB spin up/down, RB fire one (hold: keep firing, `fireWhileHeld()` / `ceaseFire()` on release),

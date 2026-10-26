@@ -195,8 +195,8 @@ public class Tunables {
   per turn x 60 = 2679 RPM) and feeds above 1200 (that is 107 RPM less): `readyBandRpm = 107`.
   `kP` to `kF` are goBILDA's tested numbers too. `DEFAULT` = "use the library's default"
   (more below): here, numbers where the library's default is the right one.
-- A number you leave out uses the library's default, and INIT tells you which
-  (`Tunables.Intake: outPower not written: library defaults used (fine)`). A few safety numbers, like a
+- A number you leave out uses the library's default, and INIT tells you which part
+  (its `Starting numbers in use` line; the tuning menu shows each value). A few safety numbers, like a
   lift's `min` and `max`, have no default: INIT stops and says which line to write.
 - **Numbers you do not have yet:** write a word in their place, so every setting is in the file from day
   one. Which one to write:
