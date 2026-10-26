@@ -222,7 +222,7 @@ a second, smaller than the screen, so it costs little). The game pieces are stri
 them roll and spin. A tipping HIVE turns smoothly (with a rules file the simulator turns it over its
 `tipSeconds` and the page plays the same turn; without one the simulator tips it at once and the page
 still turns it over half a second). The 3D library (three.js, MIT license) comes with the simulator, so the page
-works without the internet. Untick "Show" on a slow computer.
+works without the internet. On a slow computer, untick "Show the 3D view" in the View menu.
 
 **Smooth motion.** The simulator moves everything 100 times a second and sends the page where everything
 is 50 times a second (a stream: `GET /stream`), with its own clock. The page draws the moment about

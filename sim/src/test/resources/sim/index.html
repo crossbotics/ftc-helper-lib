@@ -213,6 +213,11 @@
   #stageOff { display: none; color: var(--muted); padding: 24px; text-align: center; }
   /* The View and Layers menus over the 3D view (the same look), and the words for the layers' lines (bottom left). */
   .dropdown { position: relative; }
+  /* The 3D view's toolbar: how to look (View, Layers) on the left, what to do (Tests, Edit robot, Auto
+     builder) on the right. */
+  #view3dSection .row .tools { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+  .menu hr { border: 0; border-top: 1px solid var(--line); margin: 6px 0; }
+  .menu select { margin-left: 22px; }
   .menu { position: absolute; z-index: 8; top: calc(100% + 4px); left: 0; width: min(320px, 86vw); padding: 8px 10px;
     background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,.22);
     display: grid; gap: 5px; font-size: 13px; }
@@ -608,7 +613,6 @@
   <section id="view3dSection">
     <div class="row">
       <h2 style="margin:0">Field in 3D</h2>
-      <label class="muted"><input type="checkbox" id="show3d"> Show</label>
       <span class="dropdown"><button id="viewsBtn" aria-haspopup="true" aria-expanded="false" title="Where the 3D view looks from (keys 1-8)">View: <b id="viewName">Drivers (red wall)</b><span class="caret" aria-hidden="true">&#9662;</span></button>
         <div id="viewsMenu" class="menu" hidden>
           <button data-view="drivers"><kbd>1</kbd> Drivers <span class="muted">your alliance's wall, <span id="driversWall">red now</span></span></button>
@@ -620,10 +624,12 @@
           <button data-view="follow"><kbd>7</kbd> Follow robot</button>
           <button data-view="close" id="closeBtn"><kbd>8</kbd> <span id="closeName">HIVE close-up</span></button>
           <div class="muted">Keys 1-8 pick a view (not while typing). Remembered in this browser.</div>
+          <hr>
+          <label><input type="checkbox" id="show3d"> Show the 3D view <span class="muted">(off: a lighter page)</span></label>
+          <label id="cadLabel" style="display:none"><input type="checkbox" id="useCad" checked> Field CAD model <span class="muted">(the real field parts)</span></label>
+          <label id="camViewLabel" style="display:none"><input type="checkbox" id="camView" checked> Camera view <span class="muted">(what the robot's camera sees, in a corner)</span></label>
+          <select id="camPick" aria-label="Which camera" style="display:none"></select>
         </div></span>
-      <label class="muted" id="camViewLabel" style="display:none"><input type="checkbox" id="camView" checked> Camera view</label>
-      <select id="camPick" aria-label="Which camera" style="display:none"></select>
-      <label class="muted" id="cadLabel" style="display:none"><input type="checkbox" id="useCad" checked> Field CAD model</label>
       <span class="dropdown"><button id="layersBtn" aria-haspopup="true" aria-expanded="false" title="Lines and maps over the 3D view">Layers<span class="caret" aria-hidden="true">&#9662;</span></button>
         <div id="layersMenu" class="menu" hidden>
           <label><input type="checkbox" data-layer="sight"> Camera sight lines to the tags</label>
@@ -638,7 +644,7 @@
           <label><input type="checkbox" data-layer="size"> Robot size box (and the 18 in start cube)</label>
           <div class="muted">What each line means: <a href="https://github.com/crossbotics/ftc-helper-lib/blob/main/docs/guides/simulator.md#layers" target="_blank" rel="noopener">the simulator guide, "Layers"</a>.</div>
         </div></span>
-      <span class="dropdown"><button id="testsBtn" aria-haspopup="true" aria-expanded="false" title="Record a test of your code, run it, and update it after a planned change">Tests<span class="caret" aria-hidden="true">&#9662;</span></button>
+      <span class="tools"><span class="dropdown"><button id="testsBtn" aria-haspopup="true" aria-expanded="false" title="Record a test of your code, run it, and update it after a planned change">Tests<span class="caret" aria-hidden="true">&#9662;</span></button>
         <div id="testsMenu" class="menu" hidden>
           <button data-tests="record"><b>Record a test</b> <span class="muted">from a fresh field: choose, INIT, drive, then Stop</span></button>
           <button data-tests="recordNow">Record from now <span class="muted">the robot stays where it is</span></button>
@@ -647,14 +653,14 @@
           <div class="muted">How: <a href="https://github.com/crossbotics/ftc-helper-lib/blob/main/docs/tutorials/start/10-test-your-robot-code.md" target="_blank" rel="noopener">start lesson 10, "Test your robot code"</a>.</div>
         </div></span>
       <button id="editRobotBtn" aria-pressed="false" title="Shape your robot: move and size its parts, check the size rules, and get the .looks(...) Java for Robot.java (the simulator holds still meanwhile)">Edit robot</button>
-      <button id="builderBtn" aria-pressed="false" title="Build an autonomous on the field and run it here with your code (it takes the Control Hub's place)">Auto builder</button>
+      <button id="builderBtn" aria-pressed="false" title="Build an autonomous on the field and run it here with your code (it takes the Control Hub's place)">Auto builder</button></span>
       <span class="muted" id="v3note"></span>
     </div>
     <div id="recBar" role="status" hidden><span class="dot" aria-hidden="true"></span><b id="recText">Recording</b>
       <span class="muted" id="recHint"></span><button id="recStop">Stop recording</button><button id="recCancel">Cancel</button></div>
     <div id="stage" class="off" aria-label="Field and robot in 3D. Drag to turn, scroll to zoom, right-drag to slide."><div id="layerNote" role="status" hidden></div>
       <button id="scoreBar" hidden title="The score: click for where the points come from (Match panel)"></button><div id="toast" role="alert" hidden></div></div>
-    <div id="stageOff">The 3D view is off (tick "Show"). The field from above is in the Control Hub's Robot tab.</div>
+    <div id="stageOff">The 3D view is off: <button id="stageOn">Show it</button> (or View &#9662;, "Show the 3D view"). The field from above is in the Control Hub's Robot tab.</div>
     <div class="muted v3help" title="While no program runs (or in INIT): double-click the robot, then drag it to move it or drag its ring to turn it (double-click again to stop).">
       View: drag to turn, scroll to zoom, right-drag or two fingers to slide &middot; <b>Move the robot:</b> double-click it, then drag it (or its ring to turn it)</div>
   </section>
@@ -2534,6 +2540,7 @@ function set3d(on) {
   if (on) { start3d(); resize3d(); }
 }
 $("#show3d").onchange = e => set3d(e.target.checked);
+$("#stageOn").onclick = () => set3d(true);
 // The on-screen gamepads can be hidden (remembered in this browser): the sources and keys still work.
 function setPadsSmall(small, keep) {
   $("#padsSection").classList.toggle("small", small);

@@ -309,7 +309,7 @@ final class SimDriverStation {
         } catch (InterruptedException ignored) {
             try { o.stop(); } catch (RuntimeException e) { /* stopping anyway */ }
         } catch (Throwable t) {
-            if (!t.getClass().getName().endsWith("ForceStopException")) error = firstLines(t);
+            if (!t.getClass().getName().endsWith("ForceStopException")) error = withSimHint(firstLines(t));
         } finally {
             if (op == o) {
                 robot.allOff();
@@ -319,6 +319,25 @@ final class SimDriverStation {
                 preselectNext(current);
             }
         }
+    }
+
+    /** What to do in the simulator when the code asks for a device the robot file does not have. */
+    static final String CONFIG_HINT = "In the simulator, the robot configuration is the robot file (simulator/robot.properties), "
+            + "made from Robot.java at each start. A device your code asks for itself (hardwareMap.get, not in Robot.java) "
+            + "needs its own line there: motor.NAME =, servo.NAME =, crservo.NAME =... Started with -Probot=FILE or "
+            + "-PnoFromRobot? That file is used as it is: start with the Simulator button instead. "
+            + "More: docs/guides/simulator.md, \"The robot file\".";
+
+    // The error, with CONFIG_HINT after its first line when it is a device the robot file does not have
+    // ("Check ... the active configuration on the Driver Station" does not apply in the simulator).
+    static String withSimHint(String error) {
+        if (error == null) return "";
+        boolean missingDevice = error.contains("active configuration on the Driver Station")
+                || error.contains("Unable to find a hardware device")
+                || error.contains("in the active robot configuration");
+        if (!missingDevice || error.contains(CONFIG_HINT)) return error;
+        int nl = error.indexOf('\n');
+        return nl < 0 ? error + "\n" + CONFIG_HINT : error.substring(0, nl) + "\n" + CONFIG_HINT + error.substring(nl);
     }
 
     private static String firstLines(Throwable t) {
@@ -345,7 +364,7 @@ final class SimDriverStation {
             String[] lines = trace.split("\n");
             StringBuilder b = new StringBuilder();
             for (int i = 0; i < Math.min(8, lines.length); i++) b.append(lines[i].trim()).append('\n');
-            error = b.toString().trim();
+            error = withSimHint(b.toString().trim());
         } finally {
             // Only the CURRENT OpMode may switch things off (an old one that ended late must not
             // switch off the next one's motors).
