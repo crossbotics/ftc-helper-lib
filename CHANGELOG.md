@@ -2,6 +2,18 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Changed
+
+- **A tidier simulator toolbar.** The 3D view's toolbar has how to look on the left (View, Layers) and
+  what to do on the right (Tests, Edit robot, Auto builder). "Show", "Field CAD model" and "Camera view"
+  are in the View menu now; a hidden 3D view has a "Show it" button.
+- **A missing device in the simulator says what to do there.** When the code asks for a device the
+  robot file does not have, the error now says that in the simulator the configuration is the robot file,
+  and how to add the device (or start with the Simulator button), not only "check the configuration on
+  the Driver Station".
+
 ## v0.20.0 - 2026-10-24
 
 ### Added
