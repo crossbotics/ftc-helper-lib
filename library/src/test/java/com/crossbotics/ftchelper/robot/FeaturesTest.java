@@ -90,8 +90,13 @@ public class FeaturesTest {
         for (RobotDefinition r : new RobotDefinition[] {new TankShooter(), noTurret, new AimTest.AimBot(AimTest.GoalTunables.class, true)}) {
             for (Feature f : r.features()) names.add(f.name.matches("Fire \\d+") ? "Fire 1" : f.name.startsWith("Fire 1,") ? "Fire 1" : f.name);
         }
+        // the table's first column, one cell per row
+        StringBuilder cells = new StringBuilder();
+        for (String line : section.split("\n")) {
+            if (line.startsWith("| ") && line.indexOf('|', 2) > 0) cells.append(line, 2, line.indexOf('|', 2)).append('\n');
+        }
         for (String n : names) {
-            assertTrue("docs/modules/robot.md, \"What your robot can do\": add a row for \"" + n + "\"", section.contains("| " + n));
+            assertTrue("docs/modules/robot.md, \"What your robot can do\": add a row for \"" + n + "\"", cells.toString().contains(n));
         }
     }
 }

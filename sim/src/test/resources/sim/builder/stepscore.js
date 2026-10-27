@@ -343,17 +343,19 @@ export function startInches(start, robot, half) {
 	const fp = footprint(+start.x, +start.y, +start.h || 0, robot[0], robot[1]);
 	const x0 = Math.min(...fp.map((p) => p[0])), x1 = Math.max(...fp.map((p) => p[0])), y0 = Math.min(...fp.map((p) => p[1]));
 	const d = (v, wall) => (v <= 0.6 ? `against ${wall}` : `${num(Math.round(v * 2) / 2)} in from ${wall}`);
+	const y1 = Math.max(...fp.map((p) => p[1]));
+	const side = (x0 + half <= 0.6 || half - x1 <= 0.6) && y0 + half > 0.6;
 	return `Left side ${d(x0 + half, 'the left wall')}, right side ${d(half - x1, 'the right wall')}, back ${d(y0 + half, 'our wall')}.`
-		+ tileWords(+start.x, x0, x1, half);
+		+ (side ? tileWords(+start.y, y0, y1, half, ['Near', 'Far'], 'out from our wall') : tileWords(+start.x, x0, x1, half));
 }
 
 // Where the robot sits on the tiles, counted from the left as the drivers see them: " Centred on tile 3."
-function tileWords(x, x0, x1, half) {
+function tileWords(x, x0, x1, half, sides = ['Left', 'Right'], from = 'from the left') {
 	const tile = 2 * half / 6, out = [];
 	const k = (x + half) / tile;   // in tiles from the left wall
-	if (Math.abs(k - Math.floor(k) - 0.5) < 0.02) out.push(`Centred on tile ${Math.floor(k) + 1} from the left`);
+	if (Math.abs(k - Math.floor(k) - 0.5) < 0.02) out.push(`Centred on tile ${Math.floor(k) + 1} ${from}`);
 	else if (Math.abs(k - Math.round(k)) < 0.02 && Math.round(k) > 0 && Math.round(k) < 6) out.push(`Centred on the seam between tiles ${Math.round(k)} and ${Math.round(k) + 1}`);
-	for (const [v, side] of [[x0, 'Left'], [x1, 'Right']]) {
+	for (const [v, side] of [[x0, sides[0]], [x1, sides[1]]]) {
 		for (let j = 1; j < 6; j++) {
 			const sm = -half + j * tile;
 			if (Math.abs(v - sm) < 0.05) out.push(`${side} side on the seam ${j}|${j + 1}`);
