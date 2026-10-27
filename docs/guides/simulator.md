@@ -302,15 +302,21 @@ the x to get the hub back; on a narrow screen it sits under the 3D view).
 
 What a team does, step by step:
 
-1. **Robot and alliance.** The builder finds the Robot classes in the code the simulator runs (your
-   TeamCode, or the library's examples) and picks the one whose device names match the robot file
-   ("Best fit"); pick another in the list if it guessed wrong. Its drive (tank or mecanum) and the robot's
+0. **Load an existing auto** (at the top, when your TeamCode has autonomous OpModes written with `Steps`):
+   pick one and press Load to start from it. The builder reads its Java (plain numbers only; it lists what
+   it could not read, such as `Tunables.Auto...` names). Your file is not changed: copy the Java when you
+   are done.
+1. **Robot and alliance.** The builder finds the Robot classes (your `Robot.java`) in the code the
+   simulator runs (your TeamCode, or the library's examples). The auto drives that robot: its drive, its
+   size and its parts. With one Robot class, it just says which. With several, a list picks one: "Best
+   match" is the one whose motor and servo names match the simulator's robot file; pick another if it
+   guessed wrong. Its drive (tank or mecanum) and the robot's
    size come from your code and the robot file. So do the suggestions in the command and action boxes
    (your parts' methods, the named positions in Tunables, your `Actions.java`), a new step's first guess,
    and **TeleOp next** (the TeleOp written for that Robot class) and the package, until you type your own.
    A new plan has no steps ("Load the lesson's example" puts lesson 6's in). **Run as** RED or BLUE, and
-   say how RED's side relates to BLUE's (`mirrorForRed()`): **false: rotated 180°** (BIOBUZZ: each red
-   part is the blue one turned half a turn about the field's centre), or **true: mirrored**.
+   **Red's side**: **Rotated 180°** (BIOBUZZ: each red part is the blue one turned half a turn about the
+   field's centre) or **Mirrored**. The builder writes `mirrorForRed()` in the Java for you (false / true).
    **What this robot can do** lists the library's ready-made features for that Robot class, worked out from
    its parts: each one ready (with the line to use it) or not ready (with what to add). For example "Fire 1"
    to "Fire 4" and "Fire all" with a launcher; "Aim at the goal" and aim mode with a camera that has a goal
@@ -323,9 +329,7 @@ What a team does, step by step:
      `Actions.java`; its time limit starts at 10 s), **aim at the goal** (`aimAtGoal`: the whole robot turns
      to the goal with the camera or the odometry backup, or a following turret aims; it never turns blind,
      and the report says "not seen"; only for a robot that can aim; the plan's preview does not turn for it,
-     the run does), and "park from here" (`parkWithSeconds`). **Start from** loads one of your autonomous
-     OpModes (written with `Steps`) as the starting point: the builder reads its Java (plain numbers only;
-     it lists what it could not read). Your file is not changed: copy the Java when you are done. A button adds its step at the end (tick "add after the selected step" to put it
+     the run does), and "park from here" (`parkWithSeconds`). A button adds its step at the end (tick "add after the selected step" to put it
      after the one you picked). **Start over** (beside Undo) removes every step; Undo brings them back.
      Tap the field map to add a drive to that spot (a tank drive gets a turn first), drag the blue dot at the end of a drive to
      change it, or use the list: each step has its numbers, arrows to move it, and its own warnings.
@@ -357,7 +361,10 @@ What a team does, step by step:
    yellow knob in front of the robot (15° steps while snapping), the **Face** arrows (0°, 45°, 90° ...) or
    the 15° buttons; a tap on the start robot adds no step. The line under it measures the spot like a tape
    (each side from its side wall, the back from your wall) and names the tile ("Centred on tile 4 from
-   the left", "Left side on the seam 2|3", "at the teeth's edge"). The **note** is what the Driver Station shows
+   the left", "Left side on the seam 2|3", "at the teeth's edge"). Against a side wall it lines up along
+   that wall the same way. **Write it for me** puts the place in the tile in the note too: "Our wall,
+   tile 3 from left, centred, facing field", "Tile 3 from left, left edge on seam, ...", "Left wall, 4th
+   tile out, near edge at teeth, ..." (near/far: the edge nearer or farther from your wall). The **note** is what the Driver Station shows
    at INIT as `Place robot : ...`, so the drive team reads it at match setup: about 50 characters fit one
    line. **Write it for me** writes it from the spot ("Our wall, left corner tile, facing the field"); it
    follows the robot until you type your own words. **Print setup card** shows the card for the drive
@@ -411,7 +418,7 @@ simulator-only part (`simcore.js`), and, when it finds a checkout of the site, w
 differ (`SITE_STRICT=1` makes that a failure, before publishing the site).
 
 **Not covered:** the INIT menu (`menuChoice`, `onlyIf`), your own steps (`step(...)`) and `waitUntil`
-(Start from lists them as not read). A Pedro plan is one path (one `follow`, or one
+(Load an existing auto lists them as not read). A Pedro plan is one path (one `follow`, or one
 `driveTo` per part); add the steps before and after it in your file. Commands take plain values only.
 
 ## Edit robot: shape your robot

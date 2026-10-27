@@ -284,11 +284,14 @@ do"), and its Action list starts with the ready actions.
 | --- | --- | --- | --- |
 | Fire 1, Fire 2 ... Fire all | action | a launcher | `robot.launcher.fireAction(2)`, `robot.launcher.fireAllAction()` |
 | Aim at the goal | auto step | a drive, and a camera with `goal(...)` (or `odometry(...)` + `Tunables.Aim` `goalX, goalY`); with a following turret, the turret | `.aimAtGoal("Aim", 3)` |
-| Aim mode: the whole robot turns to the goal while you drive | TeleOp toggle | the same, and no following turret. Mecanum: drive and strafe while it stays aimed; tank: forward and back only | `g1.rb.toggle(robot.aimMode())` |
+| Aim mode (the whole robot turns to the goal): it stays aimed while you drive | TeleOp toggle | the same, and no following turret. Mecanum: drive and strafe while it stays aimed; tank: forward and back only | `g1.rb.toggle(robot.aimMode())` |
 | Turret follows the goal | TeleOp toggle | a turret with `follows(camera)` or `followsOdometry()` (the robot drives at full speed while it aims) | `g1.rb.toggle(robot.turret.followMode())` |
-| Goal line: seen, in range, LOCKED | automatic | what aiming needs | (nothing to write) |
+| Goal line on the Driver Station: seen, in range, LOCKED | automatic | what aiming needs | (nothing to write) |
 | Buzz when aimed | TeleOp | what aiming needs | `g1.rumbleWhenAimed();` |
 | Shoot while moving | TeleOp toggle | aiming, and `odometry(...)` (the speed). Tune it first | `g1.x.toggle(robot.aim().movingShotMode())` |
+
+This table is kept by hand (it reads better than a generated one); a test (`FeaturesTest`) fails when a
+feature in the code has no row here.
 
 **The buttons stay yours.** The library never takes a button by itself: two features could want the same
 one. The list gives the line; you pick the button in `Controls.java`.

@@ -76,4 +76,22 @@ public class FeaturesTest {
             assertTrue(expected.getMessage(), expected.getMessage().contains("at least 1"));
         }
     }
+
+    // The docs' table (docs/modules/robot.md, "What your robot can do") is kept by hand: every feature the
+    // code can list must have a row there, by its name ("Fire 2" is the "Fire 1, Fire 2 ..." row).
+    @Test public void everyFeatureHasARowInTheDocs() throws Exception {
+        String doc = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("../docs/modules/robot.md")), "UTF-8");
+        int from = doc.indexOf("## What your robot can do");
+        assertTrue("the docs have the section", from >= 0);
+        String section = doc.substring(from, doc.indexOf("\n## ", from + 5));
+        java.util.Set<String> names = new java.util.TreeSet<>();
+        AimTest.AimBot noTurret = new AimTest.AimBot(AimTest.GoalTunables.class, true);
+        noTurret.withTurret = false;
+        for (RobotDefinition r : new RobotDefinition[] {new TankShooter(), noTurret, new AimTest.AimBot(AimTest.GoalTunables.class, true)}) {
+            for (Feature f : r.features()) names.add(f.name.matches("Fire \\d+") ? "Fire 1" : f.name.startsWith("Fire 1,") ? "Fire 1" : f.name);
+        }
+        for (String n : names) {
+            assertTrue("docs/modules/robot.md, \"What your robot can do\": add a row for \"" + n + "\"", section.contains("| " + n));
+        }
+    }
 }

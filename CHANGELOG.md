@@ -18,16 +18,20 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   **`Goal : LOCKED (camera, 52 in, 0.8 deg off)`**: not seen, seen, in range (of the shot table), LOCKED,
   also `robot.aim().stage()` for lights. The auto builder shows the list ("What this robot can do"), puts
   the ready actions first and has "+ Aim at the goal" for a robot that can aim.
-- **Auto builder: Start from one of your autos.** It reads an autonomous written with Steps from your
-  TeamCode into the builder (and lists what it could not read). Your file is not changed.
+- **Auto builder: Load an existing auto** (at the top). It reads an autonomous written with Steps from
+  your TeamCode into the builder (and lists what it could not read). Your file is not changed.
 - **The start spot follows the rules and the real tiles.** It must touch the field wall (G304): a spot
   away from every wall goes to the nearest one, and a check refuses it. The map draws the real field
   (141.17 in, tiles of 23.53 in, each seam with its 0.4 in band of interlocking teeth, from the field CAD),
   snapping also lines a side up with the teeth's edge, and the line under the spot names the tile
   ("Centred on tile 4 from the left"). Turn the start with a yellow knob, the Face arrows or 15° buttons; a
   tap on the start robot no longer adds a step.
-- **Clearer words in the auto builder:** `mirrorForRed()` is "false: red's side is rotated 180° (like
-  BIOBUZZ)" or "true: red's side is mirrored", and Robot code says where its list comes from.
+- **Clearer words in the auto builder:** "Red's side: Rotated 180° (like BIOBUZZ) / Mirrored" (the builder
+  writes `mirrorForRed()` for you). "Robot (your Robot.java)" is plain text when your code has one Robot
+  class, and a list ("Best match" first) only when it has several.
+- **The start spot lines up along a side wall too** (tile middle, seam, teeth edge), and **the note for the
+  drive team says where in the tile**: "Our wall, tile 3 from left, centred, facing field", "... left edge
+  on seam", "... near edge at teeth".
 
 - **The auto builder lists your actions.** An Action or Start something step is a list of what your
   code has (`Actions.fireAll(robot)` to shoot, `Actions.deployIntake(robot)`...), with "type your own..."

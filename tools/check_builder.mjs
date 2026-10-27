@@ -193,6 +193,15 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 	ok(near(teeth.x - R[1] / 2, -half + 2 * tile + S.TEETH_IN, 0.06), 'snapStart: a side near the teeth\'s edge goes onto it');
 	const mid = S.startChecks({ x: 0, y: -30, h: 0 }, R, n, obs, half);
 	ok(mid.some((c) => c.level === 'bad' && /G304/.test(c.text) && /touch the field wall/.test(c.text)), 'startChecks: away from the wall is refused (G304)');
+	{
+		const sx = half - 0.5 - R[1] / 2, c4 = -half + 3.5 * tile;
+		const p = S.snapStart({ x: sx, y: c4 + 1, h: 0 }, R, half);
+		ok(near(p.y, c4, 0.06) && near(p.x, sx, 0.06), 'snapStart: against a side wall it lines up along that wall too');
+		ok(S.autoNote({ x: -half + 2.5 * tile, y: wallY, h: 0 }, R, half) === 'Our wall, tile 3 from left, centred, facing field', 'autoNote: says the robot is centred in the tile');
+		ok(/left edge on seam/.test(S.autoNote({ x: -half + 2 * tile + R[1] / 2, y: wallY, h: 0 }, R, half)), 'autoNote: an edge on the seam');
+		ok(/left edge at teeth/.test(S.autoNote({ x: -half + 2 * tile + S.TEETH_IN + R[1] / 2, y: wallY, h: 0 }, R, half)), 'autoNote: an edge at the teeth');
+		ok(S.autoNote({ x: -sx, y: -half + 3 * tile + R[0] / 2, h: 0 }, R, half) === 'Left wall, 4th tile out, near edge on seam, facing field', 'autoNote: along a side wall, the wall and the place stay');
+	}
 	ok(/Centred on tile 4 from the left\.$/.test(S.startInches({ x: -half + 3.5 * tile, y: wallY, h: 0 }, R, half)), 'startInches: names the tile it is centred on');
 	ok(/Left side on the seam 2\|3/.test(S.startInches({ x: -half + 2 * tile + R[1] / 2, y: wallY, h: 0 }, R, half)), 'startInches: a side on a seam');
 	{

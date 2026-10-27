@@ -312,6 +312,22 @@ export function snapStart(start, robot, half, on = true) {
 		if (y0 + half - GAP < 3) y -= y0 + half - GAP;
 		if (x0 + half - GAP < 3) x -= x0 + half - GAP; else if (half - GAP - x1 < 3) x += half - GAP - x1;
 	}
+	// Against a side wall (not in a corner): line up along that wall too, like x along our wall.
+	if (on) {
+		[x0, x1, y0, y1] = box();
+		const side = x0 + half - GAP < 0.6 || half - GAP - x1 < 0.6, ours = y0 + half - GAP < 0.6;
+		if (side && !ours) {
+			const cands = [];
+			for (let j = 1; j < 12; j++) cands.push([-half + j * tile / 2, y]);
+			for (let j = 1; j < 6; j++) {
+				const sm = -half + j * tile;
+				for (const e of [sm, sm - TEETH_IN, sm + TEETH_IN]) cands.push([e, y0], [e, y1]);
+			}
+			let best = null;
+			for (const [line, at] of cands) { const d = line - at; if (Math.abs(d) <= 1.5 && (best == null || Math.abs(d) < Math.abs(best))) best = d; }
+			if (best != null) y += best;
+		}
+	}
 	// G304: the robot must touch the field wall. Not touching any: to the nearest of our wall and the side walls.
 	[x0, x1, y0, y1] = box();
 	const gaps = [[y0 + half - GAP, 'y', -1], [x0 + half - GAP, 'x', -1], [half - GAP - x1, 'x', 1]];
@@ -399,19 +415,34 @@ export function autoNote(start, robot = [18, 18], half = 70.585) {
 		const sideWall = (col === 0 && walls.includes('the left wall')) || (col === 5 && walls.includes('the right wall'));
 		where = sideWall && !onSeam ? `${ORD[row]} tile out` : `${where}, ${ORD[row]} tile out`;
 	}
-	// An edge on a tile seam (within half an inch): a quick thing to line up by eye.
-	const seam = (v) => { const j = Math.round((v + half) / tile); return j > 0 && j < 6 && Math.abs(v + half - j * tile) <= 0.5; };
-	const edge = onSeam ? '' : seam(minX) ? 'left edge on the seam' : seam(maxX) ? 'right edge on the seam' : '';
+	// Where in the tile, along the wall it is against (along our wall, or up a side wall): centred, an edge on
+	// the seam, or an edge at the teeth's edge. What the drive team lines up by eye.
+	const maxY = Math.max(...fp.map((p) => p[1]));
+	const alongSide = !walls.includes('our wall') && (walls.includes('the left wall') || walls.includes('the right wall'));
+	const [c, lo, hi, loName, hiName] = alongSide ? [+start.y, minY, maxY, 'near', 'far'] : [+start.x, minX, maxX, 'left', 'right'];
+	const off = (v) => { const j = Math.round((v + half) / tile); return j > 0 && j < 6 ? Math.abs(v + half - j * tile) : 99; };
+	const mid = Math.abs((c + half) / tile - Math.floor((c + half) / tile) - 0.5) * tile;
+	const centreOnSeam = alongSide ? off(c) <= 1 : onSeam;
+	const edge = centreOnSeam ? '' : mid <= 0.5 ? 'centred'
+		: off(lo) <= 0.25 ? `${loName} edge on seam` : off(hi) <= 0.25 ? `${hiName} edge on seam`
+		: Math.abs(off(lo) - TEETH_IN) <= 0.25 ? `${loName} edge at teeth` : Math.abs(off(hi) - TEETH_IN) <= 0.25 ? `${hiName} edge at teeth` : '';
 	const wallText = walls.length ? `Against ${walls.join(' and ')}` : `${num(Math.round(minY + half))} in off our wall`;
 	const face = facingWords(start);
 	const short = (w) => w.replace(/ from the (left|right)/, ' from $1');
+	const shorter = (w) => short(w).replace(/^(\d)(st|nd|rd|th) tile from/, 'tile $1 from');
+	const face2 = face.replace('facing the field', 'facing field');
+	const bare = wallText.replace(/^Against /, ''), bare2 = bare.replace(/^the /, '');
+	// The place in the tile is kept as long as anything is: it is what the drive team lines up. The wall goes
+	// last (our wall is the usual one).
 	const tries = [
-		[wallText, where, edge, face], [wallText, where, face],
-		[wallText.replace(/^Against /, ''), where, face], [wallText.replace(/^Against /, ''), short(where), face], [short(where), face]];
+		[wallText, where, edge, face], [bare, where, edge, face], [bare, short(where), edge, face], [bare2, shorter(where), edge, face],
+		[bare2, shorter(where), edge, face2], [shorter(where), edge, face2],
+		[bare, short(where), face], [short(where), face]];
 	for (const t of tries) {
 		const text = t.filter(Boolean).join(', ');
 		const out = text[0].toUpperCase() + text.slice(1);
-		if (out.length <= NOTE_MAX) return out;
+		// A few characters over (the Driver Station wraps them) before the wall or the place is dropped.
+		if (out.length <= NOTE_MAX || (t === tries[4] && out.length <= NOTE_MAX + 6)) return out;
 	}
 	const t = tries[tries.length - 1].join(', ');
 	return t[0].toUpperCase() + t.slice(1);

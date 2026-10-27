@@ -141,12 +141,15 @@ panel.innerHTML = `
 </div>
 <p class="muted b-intro">Build an autonomous on the field, press <b>Run</b>: the simulator runs it with your real code
   (the <i>Built Auto</i>). Then copy the Java. <a href="https://github.com/crossbotics/ftc-helper-lib/blob/main/docs/guides/simulator.md#the-auto-builder" target="_blank" rel="noopener">Guide</a></p>
+<div class="b-sec b-load" id="bFromRow"><div class="row"><b>Load an existing auto</b> <select id="bFrom" aria-label="Your autonomous"></select><button id="bFromGo">Load</button></div>
+  <ul class="b-checks" id="bFromNote"></ul></div>
 <details class="b-sec" open><summary>Robot and alliance</summary>
-  <div class="row"><label title="The Robot classes the simulator found in your TeamCode. Best fit: the one whose motor and servo names match the simulator's robot file (simulator/robot.properties)">Robot code <select id="bRobot" aria-label="Robot class"></select></label></div>
+  <div class="row" id="bRobotRow"><label>Robot (your Robot.java) <select id="bRobot" aria-label="Robot class"></select></label></div>
   <div class="muted" id="bRobotText"></div>
   <div class="row"><span class="muted">Run as</span>
     <span class="b-seg" role="group" aria-label="Alliance"><button id="bRed" class="b-red">RED</button><button id="bBlue" class="b-blue">BLUE</button></span></div>
-  <div class="row"><label title="mirrorForRed() in the Java. false: red's half is blue's rotated 180° (BIOBUZZ). true: red's half is a mirror image of blue's">Your auto's <code>mirrorForRed()</code> <select id="bMirror"><option value="false">false: red's side is rotated 180° (like BIOBUZZ)</option><option value="true">true: red's side is mirrored</option></select></label></div>
+  <div class="row"><span class="muted" title="How red's half of the field compares with blue's. The builder writes mirrorForRed() in the Java for you (rotated: false, mirrored: true)">Red's side</span>
+    <select id="bMirror" aria-label="Red's side of the field"><option value="false">Rotated 180° (like BIOBUZZ)</option><option value="true">Mirrored</option></select></div>
 </details>
 <details class="b-sec" id="bFeatSec"><summary>What this robot can do <span class="muted" id="bFeatCount"></span></summary>
   <p class="muted">Ready-made by the library, from the parts in your Robot.java. Not ready: it says what to add.</p>
@@ -185,8 +188,6 @@ panel.innerHTML = `
   <div id="bTankNote" class="b-tanknote" hidden></div>
   <div id="bList"></div>
   <div class="row"><button id="bClear" title="Remove every step">Remove all steps</button><button id="bExample" title="The steps from lesson 6">Load the lesson's example</button></div>
-  <div class="row" id="bFromRow"><label title="Loads one of your autonomous OpModes (written with Steps) as the starting point">Start from <select id="bFrom"></select></label><button id="bFromGo">Load</button></div>
-  <ul class="b-checks" id="bFromNote"></ul>
 </div>
 <div class="b-sec" id="bPedroPane">
   <h4 class="b-h">Path</h4>
@@ -334,15 +335,18 @@ function renderRobot() {
 	if (sel.dataset.key !== key) {
 		sel.dataset.key = key;
 		sel.innerHTML = robots.length
-			? `<option value="">${esc('Best fit: ' + (robots.find((r) => r.name === bestFit())?.short || bestFit()))}</option>` + robots.map((r) => `<option value="${esc(r.name)}">${esc(r.short)}</option>`).join('')
+			? `<option value="">${esc('Best match: ' + (robots.find((r) => r.name === bestFit())?.short || bestFit()))}</option>` + robots.map((r) => `<option value="${esc(r.name)}">${esc(r.short)}</option>`).join('')
 			: '<option value="">(none found)</option>';
 	}
 	if (document.activeElement !== sel) sel.value = B.robotClass && robots.some((r) => r.name === B.robotClass) ? B.robotClass : '';
 	fillLists();
 	const info = robotInfo();
 	const [L, W] = robotLW();
+	// One Robot class (the usual case): no list, just which one. Several: a list, the best match first.
+	$('bRobotRow').hidden = robots.length <= 1;
 	$('bRobotText').textContent = info
-		? `${info.name}: ${info.drive || '?'} drive${info.odometry ? ', odometry' : ''}${info.follower ? ', Pedro follower' : ''}. Size from the robot file: ${fmt(L)} x ${fmt(W)} in.`
+		? `${robots.length <= 1 ? 'Robot: ' : ''}${info.name}: ${info.drive || '?'} drive${info.odometry ? ', odometry' : ''}${info.follower ? ', Pedro follower' : ''}. Size from the robot file: ${fmt(L)} x ${fmt(W)} in.`
+			+ (robots.length > 1 ? ` Your code has ${robots.length} Robot classes: this auto drives the one picked. "Best match": the one whose motor and servo names match the simulator's robot file.` : '')
 		: (robots.length ? '' : 'Looking for your Robot class...');
 	$('bRed').classList.toggle('on', B.alliance === 'RED');
 	$('bBlue').classList.toggle('on', B.alliance === 'BLUE');
