@@ -157,6 +157,8 @@ panel.innerHTML = `
 <details class="b-sec" open><summary>Start spot</summary>
   <div class="row" id="bPresetRow"><label>Spot <select id="bPreset"></select></label></div>
   <div class="row"><label>x <input type="number" step="0.5" id="bSx"></label><label>y <input type="number" step="0.5" id="bSy"></label><label>heading <input type="number" step="5" id="bSh"></label></div>
+  <label class="muted" title="A drag stays inside the walls. With this on, it also goes against a wall that is near and lines up with a tile middle or seam: easy to copy at the field."><input type="checkbox" id="bSnap"> Snap to the walls and the tile lines</label>
+  <div class="muted" id="bInches"></div>
   <label class="b-note">Note for the drive team <input type="text" id="bNote" maxlength="120" placeholder="Our wall, left corner tile, facing the field"></label>
   <div class="row"><button id="bWrite" title="Write the note from the spot: the wall, the tile, the way it faces">Write it for me</button>
     <button id="bCard" title="One page for the drive team: the note, the spot on the field, red and blue">Print setup card</button></div>
@@ -370,11 +372,13 @@ function renderTools() {
 	const now = B.mode === 'pedro' ? B.addPedro : B.add;
 	$('bTools').innerHTML = '<span class="muted">Tap adds:</span><span class="b-seg" role="group" aria-label="What a tap on the map adds">'
 		+ list.map(([v, t]) => `<button data-tool="${v}" aria-pressed="${v === now}" class="${v === now ? 'on' : ''}">${t}</button>`).join('')
-		+ '</span><button id="bUndo" title="Undo the last change">Undo</button>';
+		+ '</span><button id="bUndo" title="Undo the last change">Undo</button>'
+		+ `<button id="bNew" title="${B.mode === 'pedro' ? 'Remove every part and action (Undo brings them back)' : 'Remove every step (Undo brings them back)'}">Start over</button>`;
 	for (const b of $('bTools').querySelectorAll('[data-tool]')) {
 		b.onclick = () => { if (B.mode === 'pedro') B.addPedro = b.dataset.tool; else B.add = b.dataset.tool; render(); };
 	}
 	$('bUndo').onclick = () => { if (undoList.length) { B = { ...JSON.parse(undoList.pop()), open: true }; render(); } };
+	$('bNew').onclick = () => (B.mode === 'pedro' ? $('bPClear') : $('bClear')).click();
 	$('bEdit3d').checked = !!B.edit3d;
 }
 $('bEdit3d').onchange = () => { B.edit3d = $('bEdit3d').checked; render(); };
@@ -415,7 +419,7 @@ function moveHandle(id, x, y) {
 	if (B.mode === 'pedro') {
 		const path = B.pedro.path;
 		const xy = [snap(x), snap(y)];
-		if (id === 's') { path.start = xy; return; }
+		if (id === 's') { const p = S.snapStart({ x, y, h: +B.pedro.start.h || 0 }, robotLW(), half, B.snapStart !== false); path.start = [p.x, p.y]; return; }
 		const m = /^([ecp])(\d+)(?:\.(\d+))?$/.exec(id);
 		const part = path.parts[+m[2]];
 		if (!part) return;
@@ -425,7 +429,7 @@ function moveHandle(id, x, y) {
 		return;
 	}
 	const plan = B.steps.plan;
-	if (id === 's') { plan.start.x = snap(x); plan.start.y = snap(y, 0.1); return; }
+	if (id === 's') { Object.assign(plan.start, S.snapStart({ x, y, h: +plan.start.h || 0 }, robotLW(), half, B.snapStart !== false)); return; }
 	const i = +id.slice(1), s = plan.steps[i];
 	if (!s || s.kind !== 'move') return;
 	// Mecanum: straight there; tank: along the robot's front only (forward or back, never sideways).
@@ -648,6 +652,8 @@ function renderStart() {
 		});
 	};
 	setVal('bSx', +st.x); setVal('bSy', +st.y); setVal('bSh', +st.h || 0);
+	$('bSnap').checked = B.snapStart !== false;
+	$('bInches').textContent = S.startInches(st, lw, half);
 	setVal('bNote', st.note);
 	const len = String(st.note ?? '').trim().length;
 	$('bNoteHelp').innerHTML = `Shown on the Driver Station at INIT as <b>"Place robot : ${esc(st.note ?? '')}"</b>: the drive team reads it at match setup. `
@@ -657,8 +663,14 @@ function renderStart() {
 	$('bStartOn').checked = !!B.pedro.start.on;
 }
 const onNum = (id, fn) => $(id).addEventListener('change', () => { const v = parseFloat($(id).value); if (Number.isFinite(v)) change(() => fn(v)); });
-onNum('bSx', (v) => { if (B.mode === 'pedro') B.pedro.path.start = clampXY(v, B.pedro.path.start[1]); else B.steps.plan.start.x = clampXY(v, 0)[0]; });
-onNum('bSy', (v) => { if (B.mode === 'pedro') B.pedro.path.start = clampXY(B.pedro.path.start[0], v); else B.steps.plan.start.y = clampXY(0, v)[1]; });
+// Typed numbers stay as typed, only kept inside the walls (no snapping).
+function typedStart(x, y) {
+	const st = startNow(), p = S.snapStart({ x: x ?? +st.x, y: y ?? +st.y, h: +st.h || 0 }, robotLW(), half, false);
+	if (B.mode === 'pedro') B.pedro.path.start = [p.x, p.y]; else Object.assign(B.steps.plan.start, p);
+}
+onNum('bSx', (v) => typedStart(v, null));
+onNum('bSy', (v) => typedStart(null, v));
+$('bSnap').onchange = () => { B.snapStart = $('bSnap').checked; save(); };
 onNum('bSh', (v) => { if (B.mode === 'pedro') B.pedro.start.h = P.wrap(v); else B.steps.plan.start.h = P.wrap(v); });
 $('bNote').oninput = () => {
 	const st = B.mode === 'pedro' ? B.pedro.start : B.steps.plan.start;
@@ -711,11 +723,24 @@ for (const b of $('bAdd').querySelectorAll('[data-add]')) {
 	});
 }
 
+/**
+ * A command or action box: a list of what the robot code has (so a team sees "Actions.fireAll(robot)" without
+ * knowing the name), and a text box only for "type your own". data-k="codeSel" for the list, "code" for the box.
+ */
+function codePick(list, code, typed, ph, listId) {
+	const known = list.includes(code);
+	const text = typed || !known || !list.length;
+	const box = `<input type="text" class="code" data-k="code" spellcheck="false" autocapitalize="off" value="${esc(code ?? '')}" placeholder="${ph}" list="${listId}">`;
+	if (!list.length) return box;
+	return `<select data-k="codeSel" class="code" aria-label="Pick one">${list.map((c) => `<option value="${esc(c)}"${c === code && !text ? ' selected' : ''}>${esc(c)}</option>`).join('')}`
+		+ `<option value="__own"${text ? ' selected' : ''}>type your own...</option></select>${text ? box : ''}`;
+}
+
 function stepForm(s, i) {
 	const e = view.sim.ends[i];
 	const name = (ph) => `<label class="grow">Name <input type="text" data-k="label" value="${esc(s.label ?? '')}" placeholder="${ph}"></label>`;
 	const power = `<label>power <input type="number" min="0.1" max="1" step="0.05" data-k="power" value="${fmt(+s.power)}"></label>`;
-	const code = (ph) => `<label class="grow">${s.kind === 'run' ? 'Command' : 'Action'} <input type="text" class="code" data-k="code" spellcheck="false" autocapitalize="off" value="${esc(s.code ?? '')}" placeholder="${ph}" list="${s.kind === 'run' ? 'bCommands' : 'bActionList'}"></label>`;
+	const code = (ph) => `<label class="grow b-pick">${s.kind === 'run' ? 'Command' : 'Action'} ${codePick(s.kind === 'run' ? commandsNow() : actionsNow(), s.code, s.typed, ph, s.kind === 'run' ? 'bCommands' : 'bActionList')}</label>`;
 	switch (s.kind) {
 		case 'move': {
 			// A tank drive: forward or back only (no strafe, no other angle).
@@ -791,6 +816,12 @@ function stepInput(i, t) {
 		if (k === 'dirSel') { if (t.value !== 'other') s.dir = +t.value; else if (DIRS.some(([d]) => d === +s.dir)) s.dir = 45; }
 		else if (k === 'dir' && B.steps.plan.drive === 'tank' && S.sideways(v)) return;   // a tank drive: forward or back only
 		else if (k === 'wait') { if (t.checked) { s.kind = 'action'; s.timeout = s.timeout ?? ACTION_LIMIT_SEC; } else s.kind = 'alongside'; }
+		else if (k === 'codeSel') {
+			if (t.value === '__own') { s.typed = true; return; }
+			// a command step's name follows the command until the team types their own
+			if (s.kind === 'run' && (!s.label || s.label === labelFor(s.code) || s.label === 'Start something')) s.label = labelFor(t.value);
+			s.code = t.value; delete s.typed;
+		}
 		else if (k === 'label' || k === 'code') s[k] = t.value;
 		else if (Number.isFinite(v)) s[k] = v;   // out of range stays: the checks say what is wrong
 	});
@@ -886,8 +917,8 @@ function renderActions() {
 				: `<label><input type="number" step="${a.kind === 'fraction' ? 0.05 : a.kind === 'part' ? 1 : 0.5}" data-k="value" value="${value}"> ${UNIT[a.kind] || ''}</label>`}</div>
 			<div class="row"><label><input type="radio" name="bWhat${i}" value="command" data-k="what"${a.what !== 'action' ? ' checked' : ''}> name + command</label>
 				<label><input type="radio" name="bWhat${i}" value="action" data-k="what"${a.what === 'action' ? ' checked' : ''}> an action</label></div>
-			${a.what === 'action' ? `<div class="row"><label class="grow">Action <input type="text" class="code" data-k="code" spellcheck="false" value="${esc(a.code)}" list="bActionList"></label></div>`
-				: `<div class="row"><label class="grow">Name <input type="text" data-k="label" value="${esc(a.label)}"></label></div><div class="row"><label class="grow">Command <input type="text" class="code" data-k="code" spellcheck="false" value="${esc(a.code)}" list="bCommands"></label></div>`}`;
+			${a.what === 'action' ? `<div class="row"><label class="grow b-pick">Action ${codePick(actionsNow(), a.code, a.typed, 'Actions.name(robot)', 'bActionList')}</label></div>`
+				: `<div class="row"><label class="grow">Name <input type="text" data-k="label" value="${esc(a.label)}"></label></div><div class="row"><label class="grow b-pick">Command ${codePick(commandsNow(), a.code, a.typed, 'robot.part::method', 'bCommands')}</label></div>`}`;
 		div.querySelector('[data-sel]').onclick = () => { B.selAction = i; render(); };
 		div.querySelector('[data-del]').onclick = () => change(() => { st.actions.splice(i, 1); B.selAction = null; });
 		div.addEventListener('change', (evt) => actInput(i, evt.target));
@@ -911,6 +942,10 @@ function actInput(i, t) {
 			a.what = t.value;
 			if (a.what === 'action' && !/^Actions\./.test(a.code)) a.code = actionsNow()[0] || '';
 			if (a.what === 'command' && /^Actions\./.test(a.code)) a.code = newAlong().code;
+		} else if (k === 'codeSel') {
+			if (t.value === '__own') { a.typed = true; return; }
+			if (a.what !== 'action' && (!a.label || a.label === labelFor(a.code))) a.label = labelFor(t.value);
+			a.code = t.value; delete a.typed;
 		} else if (k === 'label' || k === 'code') a[k] = t.value;
 		else if (Number.isFinite(v)) a[k] = v;
 	});

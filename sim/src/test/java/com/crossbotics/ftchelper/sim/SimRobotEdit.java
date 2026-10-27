@@ -360,7 +360,23 @@ final class SimRobotEdit {
                 SimJson.string(b.append(n++ > 0 ? "," : ""), s.name).append(":[").append(fmt(s.value)).append(',')
                         .append(fmt(s.min)).append(',').append(fmt(s.max)).append(']');
             }
-            b.append("},\"most\":{\"ok\":").append(shapes.mostOk).append(',');
+            // Each launcher's shot direction from its shape as edited (Edit robot draws an arrow): robot frame.
+            b.append("},\"shots\":[");
+            n = 0;
+            for (SimPieces.ShotNow shot : sim.robot.pieces.shotsNow()) {
+                SimShapes.Piece p = null;
+                for (SimShapes.Piece q : pieces) if (q.shape.equals(shot.shape)) p = q;
+                if (p == null) continue;
+                double a = Math.toRadians(shot.angleDeg), gap = Math.max(p.sf, p.su) / 2 + 1;
+                double[] dir = new double[3], from = new double[3];
+                for (int k = 0; k < 3; k++) {
+                    dir[k] = Math.cos(a) * p.ef[k] + Math.sin(a) * p.eu[k];
+                    from[k] = p.center[k] + dir[k] * gap;
+                }
+                SimJson.string(b.append(n++ > 0 ? ",{\"name\":" : "{\"name\":"), shot.launcher)
+                        .append(",\"from\":").append(vec(from)).append(",\"dir\":").append(vec(dir)).append('}');
+            }
+            b.append("],\"most\":{\"ok\":").append(shapes.mostOk).append(',');
             field(b, "pose", shapes.mostPose).append(',');
             field(b, "size", shapes.most.toString()).append(',');
             b.append("\"poses\":").append(shapes.posesTried).append("}}");
