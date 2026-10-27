@@ -27,16 +27,16 @@ def robotProject = useTeamCode ? teamCodeDir.parentFile : null
 def teamRobotFile = robotProject != null ? new File(robotProject, 'simulator/robot.properties') : null
 
 android {
-    namespace 'com.crossbotics.ftchelper.sim'
-    compileSdk 30
+    namespace = 'com.crossbotics.ftchelper.sim'
+    compileSdk = 30
 
     defaultConfig {
-        minSdk 24
+        minSdk = 24
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
 
     sourceSets {

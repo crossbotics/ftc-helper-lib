@@ -204,6 +204,13 @@ final class SimEngine {
      */
     volatile boolean rememberSpots = false;
 
+    /**
+     * True on the page (SimMain): INIT of an autonomous resets the field (every piece where the match starts
+     * them, and the preload) and the robot's place, like a new match. Off in scripted tests: they set the field
+     * up before INIT themselves.
+     */
+    volatile boolean freshAutoInit = false;
+
     static java.io.File spotsFile() {
         return new java.io.File(com.crossbotics.ftchelper.core.SettingsFile.folder(), "sim-start-spots.properties");
     }
@@ -276,13 +283,20 @@ final class SimEngine {
     private void placeForInitNow() {
         if (ds.phase() != SimDriverStation.Phase.INIT || ds.current() == null) return;
         String run = ds.current().name + "#" + ds.initCount;
+        boolean auto = "Autonomous".equals(ds.current().kind);
         if (!run.equals(placedFor)) {
             placedFor = run;
             placedAt = null;
             placeNote = "";
             if (rememberSpots) spotCache = readSpots();   // once per INIT
+            // An autonomous starts a match: every game piece back where the match starts them (and the
+            // preload), and the robot back on the robot file's start until its start spot is known below.
+            if (auto && freshAutoInit) {
+                robot.pieces.reset();
+                robot.resetPose();
+                jumps.incrementAndGet();
+            }
         }
-        boolean auto = "Autonomous".equals(ds.current().kind);
         com.crossbotics.ftchelper.util.FieldPose target;
         if (auto) {
             // An autonomous that names its start spot (in inches) goes there. One that says it only in words

@@ -44,6 +44,7 @@ public final class SimMain {
         robotFile = SimFromRobot.auto(robotFile);
         SimEngine sim = new SimEngine(SimRobot.load(robotFile));
         sim.rememberSpots = true;   // a words-only autonomous starts where the team placed it last time
+        sim.freshAutoInit = true;   // INIT of an autonomous: a fresh field and the robot on its start spot
         sim.start();
         SimServer server = new SimServer(sim, port, lan, robotFile);
         System.out.println();
