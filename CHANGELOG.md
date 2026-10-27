@@ -6,6 +6,18 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Changed
 
+- **The auto builder lists your actions.** An Action or Start something step is a list of what your
+  code has (`Actions.fireAll(robot)` to shoot, `Actions.deployIntake(robot)`...), with "type your own..."
+  at the end. Before, it was a text box, and the browser hid every name but the one already in it.
+- **Start over in the auto builder:** beside Undo, it removes every step (or every Pedro part).
+- **The start spot is easy to place.** A dragged robot stays inside the field walls, goes against a wall
+  that is near, and lines up with a tile middle or seam ("Snap to the walls and the tile lines", on at
+  first). A line measures the spot like a tape (each side from its wall, the back from your wall). A step
+  that leaves the field names the wall it hits, and says when the start spot itself is past the wall.
+- **Edit robot: Every part out** puts each moving part at its pose farthest from the start (an intake
+  deployed), and a yellow arrow shows each launcher and the way its shots leave.
+- **The score bar says why each side has points before the match** (10 in BIOBUZZ): the field starts with
+  pieces in the up CELLs and GARDENs, and they count at the end.
 - **An autonomous starts a fresh match in the simulator.** On the page, INIT of an autonomous puts every
   game piece back where the match starts them (with the preload) and the robot on its start spot, so you
   can run an auto again and again with no Reset field. A TeleOp's INIT keeps the field as the autonomous

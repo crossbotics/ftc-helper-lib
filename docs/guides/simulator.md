@@ -249,7 +249,9 @@ Hub's **Match** button shows the game, and a score bar sits over the 3D view (cl
 - **The score and the clock**: RED and BLUE totals, the period (AUTO, TELEOP or free play) and the time
   left. Click a total to see where its points come from (LEAVE, PARK, TIPs, pieces in the up CELL, FLOWERs
   owned and the pieces in them, the bottom NECTAR bonus, the GARDEN, the other side's fouls). A line says
-  whether a NECTAR into a FLOWER is allowed now (G410).
+  whether a NECTAR into a FLOWER is allowed now (G410). **Before anything is scored, each side shows
+  points already** (10 in BIOBUZZ): the field starts with pieces in each up CELL and GARDEN, and pieces
+  there count at the end of the match. The score bar says so.
 - **FLOWERs**: each FLOWER's owner and its stack from the bottom up (a dot per piece in its colour; a hollow
   dot is outside the scoring rings). In 3D, a ring over each FLOWER in its owner's colour (grey: none) with
   how many pieces count.
@@ -305,8 +307,11 @@ What a team does, step by step:
    - **Simple steps** (any drive): drive, strafe (mecanum), turn, turn to, wait, start something (a
      command), an action from `Actions.java` (its time limit starts at 10 s), and "park from here"
      (`parkWithSeconds`). A button adds its step at the end (tick "add after the selected step" to put it
-     after the one you picked). Tap the field map to add a drive to that spot (a tank drive gets a turn first), drag the blue dot at the end of a drive to
+     after the one you picked). **Start over** (beside Undo) removes every step; Undo brings them back.
+     Tap the field map to add a drive to that spot (a tank drive gets a turn first), drag the blue dot at the end of a drive to
      change it, or use the list: each step has its numbers, arrows to move it, and its own warnings.
+     **A command or an action is a list** of the ones your code has (for example
+     `Actions.fireAll(robot)` to shoot): pick one, or pick "type your own..." to write it.
      **A tank drive cannot strafe, so the builder never makes one for it:** no Strafe button, a drive's
      direction is only forward or back, a tap adds a turn and a drive, and a dragged end stays on the line
      through the robot's front. When the Robot code chosen has a tank drive, any strafe already in the
@@ -323,7 +328,11 @@ What a team does, step by step:
 3. **Edit in 3D too:** with "Edit in the 3D view" ticked, the same points are balls in the 3D view: drag
    them, or tap the field to add a step or a part (not near the robot). The purple dashed line is the plan.
 4. **The start spot and the note for the drive team.** Pick a ready-made spot (against your wall, each one
-   checked against the start rules) or drag the green dot. The **note** is what the Driver Station shows
+   checked against the start rules) or drag the green dot. A drag keeps the robot inside the walls. With
+   **Snap to the walls and the tile lines** ticked (on at first), it also goes against a wall that is
+   within 3 in, and its centre or a side lines up with a tile middle or seam within 1.5 in: a spot the
+   drive team can copy by eye. Typed x and y stay as typed (only kept inside). The line under it measures
+   the spot like a tape: each side from its side wall, the back from your wall. The **note** is what the Driver Station shows
    at INIT as `Place robot : ...`, so the drive team reads it at match setup: about 50 characters fit one
    line. **Write it for me** writes it from the spot ("Our wall, left corner tile, facing the field"); it
    follows the robot until you type your own words. **Print setup card** shows the card for the drive
@@ -402,7 +411,10 @@ record of your robot: the editor writes no file.
    - The axis and the tilt (`axis`, `tiltDeg`) where the shape has them.
 5. **Poses:** each moving part has buttons for its named positions (`stowed`, `deployed`...), its hard stops
    and its start. Click each one and check that the robot fits. Change a named angle and the poses move
-   with it. **Start of the match** puts every part back where it starts. The panel also says if **every**
+   with it. **Start of the match** puts every part back where it starts; **Every part out** puts each
+   moving part at its named pose farthest from the start (an intake deployed, a slide up), to see and
+   change the parts there. A **yellow arrow** shows each launcher and the way its shots leave (the shot
+   angle from Robot.java), so you can find it among the boxes and line up a ramp or a hood with it. The panel also says if **every**
    pose fits (the same check as "at full reach" in the Control Hub panel).
 6. **Copy into Robot.java:** the panel shows the Java for each part you changed, and where it goes. Click
    **Copy** (or **Copy all**) and paste it there:
