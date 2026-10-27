@@ -303,9 +303,12 @@ the x to get the hub back; on a narrow screen it sits under the 3D view).
 What a team does, step by step:
 
 0. **Load an existing auto** (at the top, when your TeamCode has autonomous OpModes written with `Steps`):
-   pick one and press Load to start from it. The builder reads its Java (plain numbers only; it lists what
-   it could not read, such as `Tunables.Auto...` names). Your file is not changed: copy the Java when you
-   are done.
+   pick one and press Load to start from it. The builder reads its Java. Numbers written as names are
+   worked out from your compiled code: `Tunables.Auto.parkSeconds`, a constant in the auto (`START_X`), a
+   small formula, or a static method of the auto that gives a number (`turnToField(PARK_HEADING)`).
+   **The Java you copy back keeps the `Tunables` names** while the number is unchanged; the auto's own
+   names become numbers (they are not in the builder's file), and a note lists them. The builder lists
+   what it could not read. Your file is not changed: copy the Java when you are done.
 1. **Robot and alliance.** The builder finds the Robot classes (your `Robot.java`) in the code the
    simulator runs (your TeamCode, or the library's examples). The auto drives that robot: its drive, its
    size and its parts. With one Robot class, it just says which. With several, a list picks one: "Best

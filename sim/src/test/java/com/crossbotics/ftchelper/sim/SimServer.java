@@ -206,6 +206,9 @@ final class SimServer {
             send(out, 200, "text/javascript; charset=utf-8", resource("/sim" + path));
         } else if (method.equals("GET") && path.equals("/auto")) {
             send(out, 200, "application/json", builderInfo().getBytes(StandardCharsets.UTF_8));
+        } else if (method.equals("POST") && path.equals("/auto/values")) {
+            // the numbers behind names in an auto's steps (Load an existing auto)
+            send(out, 200, "application/json", SimAutoValues.answer(new String(body, StandardCharsets.UTF_8), sim.ds.opModes).getBytes(StandardCharsets.UTF_8));
         } else if (method.equals("POST") && path.equals("/auto")) {
             send(out, 200, "application/json", runPlan(new String(body, StandardCharsets.UTF_8)).getBytes(StandardCharsets.UTF_8));
         } else if (method.equals("GET") && path.equals("/simview.js")) {
@@ -472,6 +475,7 @@ final class SimServer {
             b.append(n++ > 0 ? "," : "").append("{\"name\":");
             SimJson.string(b, e.name);
             SimJson.string(b.append(",\"className\":"), e.type.getSimpleName());
+            SimJson.string(b.append(",\"fullName\":"), e.type.getName());
             SimJson.string(b.append(",\"source\":"), src);
             b.append('}');
         }

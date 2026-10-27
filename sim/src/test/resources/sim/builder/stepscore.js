@@ -589,23 +589,29 @@ export function className(name) {
 /** One step as Java (no leading dot). */
 export function stepCode(s) {
 	switch (s.kind) {
-		case 'move': return `move(${javaString(s.label)}, ${num(+s.inches)}, ${num(+s.dir)}, ${num(+s.power)})`;
-		case 'turn': return `turn(${javaString(s.label)}, ${num(+s.deg)}, ${num(+s.power)})`;
-		case 'turnTo': return `turnTo(${javaString(s.label)}, ${num(+s.heading)}, ${num(+s.power)})`;
-		case 'wait': return `waitSeconds(${javaString(s.label)}, ${num(+s.sec)})`;
+		case 'move': return `move(${javaString(s.label)}, ${val(s, 'inches')}, ${val(s, 'dir')}, ${val(s, 'power')})`;
+		case 'turn': return `turn(${javaString(s.label)}, ${val(s, 'deg')}, ${val(s, 'power')})`;
+		case 'turnTo': return `turnTo(${javaString(s.label)}, ${val(s, 'heading')}, ${val(s, 'power')})`;
+		case 'wait': return `waitSeconds(${javaString(s.label)}, ${val(s, 'sec')})`;
 		case 'run': return `run(${javaString(s.label)}, ${String(s.code ?? '').trim() || 'null'})`;
-		case 'action': return `action(${String(s.code ?? '').trim() || 'null'}, ${num(+s.timeout)})`;
-		case 'aim': return `aimAtGoal(${javaString(s.label)}, ${num(+s.timeout)})`;
+		case 'action': return `action(${String(s.code ?? '').trim() || 'null'}, ${val(s, 'timeout')})`;
+		case 'aim': return `aimAtGoal(${javaString(s.label)}, ${val(s, 'timeout')})`;
 		case 'alongside': return `alongside(${String(s.code ?? '').trim() || 'null'})`;
-		case 'park': return `parkWithSeconds(${num(+s.sec)})`;
+		case 'park': return `parkWithSeconds(${val(s, 'sec')})`;
 		default: return `/* ${s.kind}? */`;
 	}
 }
 
 /** The start line: start(note, x, y, heading), or start(note, heading) without the spot. */
+// A number as Java: the name it was loaded through (Tunables.Auto.parkSeconds, START_X) while it is unchanged.
+function val(o, k) {
+	const n = o.names?.[k];
+	return n && Math.abs(+n.v - +o[k]) < 1e-9 ? n.code : num(+o[k] || 0);
+}
+
 function startCode(st) {
 	const note = javaString(st.note || 'Place the robot here');
-	return st.spot === false ? `start(${note}, ${num(+st.h || 0)})` : `start(${note}, ${num(+st.x)}, ${num(+st.y)}, ${num(+st.h || 0)})`;
+	return st.spot === false ? `start(${note}, ${val(st, 'h')})` : `start(${note}, ${val(st, 'x')}, ${val(st, 'y')}, ${val(st, 'h')})`;
 }
 
 /**
@@ -615,7 +621,8 @@ function startCode(st) {
 export function toJava(plan) {
 	const lines = ['s.' + startCode(plan.start), ...(plan.steps || []).map((s) => ' .' + stepCode(s))];
 	const steps = lines.join('\n') + ';';
-	const codes = (plan.steps || []).map((s) => String(s.code ?? '')).join(' ');
+	const codes = (plan.steps || []).map((s) => String(s.code ?? '') + ' ' + Object.values(s.names || {}).map((n) => n.code).join(' ')).join(' ')
+		+ ' ' + Object.values(plan.start?.names || {}).map((n) => n.code).join(' ');
 	const base = (plan.pkg || 'org.firstinspires.ftc.teamcode').replace(/\.autos$/, '');
 	const name = plan.opmode || 'My Auto';
 	const cls = plan.className || className(name);
@@ -735,11 +742,38 @@ export function fromJava(src, opts = {}) {
 	let start = null, mirror, opmode, teleop, group, cls, pkg;
 	const str = (arg) => (arg?.length === 1 && arg[0].s != null ? arg[0].s : null);
 	const text = (toks) => (toks?.length ? tk.src.slice(toks[0].at, toks[toks.length - 1].end).replace(/\s*\n\s*/g, ' ').trim() : '');
+	// opts.values: numbers for names and formulas the code has ({"Tunables.Auto.parkSeconds": 3}), from the
+	// simulator. A step read through one keeps the name: the Java written back says it again (see val()).
+	const values = opts.values || {};
+	const unread = new Set();
 	const nums = (args, what) => {
-		const vals = args.map(evalNum);
+		const names = [];
+		const vals = args.map((a, i) => {
+			const r = evalNum(a);
+			if (r.bad == null && !r.pose) return r;
+			const t = text(a);
+			if (Number.isFinite(values[t])) { names[i] = t; return { v: values[t] }; }
+			unread.add(t);
+			return r;
+		});
 		const bad = vals.find((v) => v.bad != null || v.pose);
 		if (bad) { problems.push(`${what}: could not read "${bad.bad ?? 'new FieldPose(...)'}". Use plain numbers. This step was left out.`); return null; }
-		return vals.map((v) => v.v);
+		const out = vals.map((v) => v.v);
+		out.names = names;
+		return out;
+	};
+	// The names a step was read through: { inches: { code: "Tunables.Auto.offWallInches", v: 6 } }.
+	// Only Tunables names are kept: they work in any file. The auto's own constants and methods (START_X,
+	// turnToField(...)) are not in the builder's file, so their number is written.
+	const own = new Set();
+	const named = (obj, keys, v) => {
+		keys.forEach((k, i) => {
+			const c = v.names[i];
+			if (!c) return;
+			if (/[A-Za-z_$]/.test(c.replace(/\bTunables(\s*\.\s*[A-Za-z_$][\w$]*)+/g, ''))) { own.add(c); return; }
+			(obj.names ??= {})[k] = { code: c, v: obj[k] };
+		});
+		return obj;
 	};
 	const others = new Set();
 	for (let i = 0; i < tk.length; i++) {
@@ -794,7 +828,7 @@ export function fromJava(src, opts = {}) {
 		if (m === 'start') {
 			if ((args.length === 2 || args.length === 4) && label != null) {
 				const v = nums(args.slice(1), 's.start');
-				if (v) start = args.length === 4 ? { note: label, x: v[0], y: v[1], h: v[2], spot: true } : { note: label, h: v[0], spot: false };
+				if (v) start = args.length === 4 ? named({ note: label, x: v[0], y: v[1], h: v[2], spot: true }, ['x', 'y', 'h'], v) : named({ note: label, h: v[0], spot: false }, ['h'], v);
 				i = next - 1;
 			}
 			continue;
@@ -813,20 +847,20 @@ export function fromJava(src, opts = {}) {
 			problems.push(`${m}(${text(args[0])}, ...): write the name in quotes, e.g. "To the goal". This step was left out.`);
 			continue;
 		}
-		if (m === 'move') { const v = nums(args.slice(1), what); if (v) steps.push({ kind: 'move', label, inches: v[0], dir: v[1], power: v[2] }); }
-		else if (m === 'turn') { const v = nums(args.slice(1), what); if (v) steps.push({ kind: 'turn', label, deg: v[0], power: v[1] }); }
-		else if (m === 'turnTo') { const v = nums(args.slice(1), what); if (v) steps.push({ kind: 'turnTo', label, heading: v[0], power: v[1] }); }
-		else if (m === 'waitSeconds') { const v = nums(args.slice(1), what); if (v) steps.push({ kind: 'wait', label, sec: v[0] }); }
-		else if (m === 'aimAtGoal') { const v = nums(args.slice(1), what); if (v) steps.push({ kind: 'aim', label, timeout: v[0] }); }
+		if (m === 'move') { const v = nums(args.slice(1), what); if (v) steps.push(named({ kind: 'move', label, inches: v[0], dir: v[1], power: v[2] }, ['inches', 'dir', 'power'], v)); }
+		else if (m === 'turn') { const v = nums(args.slice(1), what); if (v) steps.push(named({ kind: 'turn', label, deg: v[0], power: v[1] }, ['deg', 'power'], v)); }
+		else if (m === 'turnTo') { const v = nums(args.slice(1), what); if (v) steps.push(named({ kind: 'turnTo', label, heading: v[0], power: v[1] }, ['heading', 'power'], v)); }
+		else if (m === 'waitSeconds') { const v = nums(args.slice(1), what); if (v) steps.push(named({ kind: 'wait', label, sec: v[0] }, ['sec'], v)); }
+		else if (m === 'aimAtGoal') { const v = nums(args.slice(1), what); if (v) steps.push(named({ kind: 'aim', label, timeout: v[0] }, ['timeout'], v)); }
 		else if (m === 'run') steps.push({ kind: 'run', label, code: text(args[1]) });
 		else if (m === 'alongside') steps.push({ kind: 'alongside', code: text(args[0]) });
-		else if (m === 'parkWithSeconds') { const v = nums(args, 'parkWithSeconds'); if (v) steps.push({ kind: 'park', sec: v[0] }); }
+		else if (m === 'parkWithSeconds') { const v = nums(args, 'parkWithSeconds'); if (v) steps.push(named({ kind: 'park', sec: v[0] }, ['sec'], v)); }
 		else if (m === 'action') {
 			if (args.length !== 1 && args.length !== 2) { problems.push(`action(...): give an action and a time limit. This step was left out.`); continue; }
-			let timeout = ACTION_TIMEOUT_SEC;
-			if (args.length === 2) { const v = nums(args.slice(1), `action(${text(args[0])})`); if (!v) continue; timeout = v[0]; }
+			let timeout = ACTION_TIMEOUT_SEC, v = null;
+			if (args.length === 2) { v = nums(args.slice(1), `action(${text(args[0])})`); if (!v) continue; timeout = v[0]; }
 			else notes.push(`action(${text(args[0])}) has no time limit: the library gives it ${ACTION_TIMEOUT_SEC} s, and the code now says so.`);
-			steps.push({ kind: 'action', code: text(args[0]), timeout });
+			steps.push(v ? named({ kind: 'action', code: text(args[0]), timeout }, ['timeout'], v) : { kind: 'action', code: text(args[0]), timeout });
 		}
 	}
 	for (const m of others) {
@@ -860,8 +894,9 @@ export function fromJava(src, opts = {}) {
 		if (cls !== undefined) plan.className = cls;
 		if (pkg !== undefined) plan.pkg = pkg.replace(/\.autos$/, '');
 	}
+	if (own.size) notes.push(`Written as numbers (your auto's own names, not in the builder's file): ${[...own].join(', ')}.`);
 	const drive = steps.some((s) => s.kind === 'move' && sideways(s.dir)) ? 'mecanum' : null;
-	return { plan, drive, problems, notes, tank };
+	return { plan, drive, problems, notes, tank, unread: [...unread] };
 }
 
 export { pointInPoly, headingOf };

@@ -19,7 +19,9 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   also `robot.aim().stage()` for lights. The auto builder shows the list ("What this robot can do"), puts
   the ready actions first and has "+ Aim at the goal" for a robot that can aim.
 - **Auto builder: Load an existing auto** (at the top). It reads an autonomous written with Steps from
-  your TeamCode into the builder (and lists what it could not read). Your file is not changed.
+  your TeamCode into the builder (and lists what it could not read). Your file is not changed. Names in the
+  steps (`Tunables.Auto.parkSeconds`, `START_X`, `turnToField(PARK_HEADING)`) are worked out from your compiled
+  code, and the Java written back keeps the `Tunables` names.
 - **The start spot follows the rules and the real tiles.** It must touch the field wall (G304): a spot
   away from every wall goes to the nearest one, and a check refuses it. The map draws the real field
   (141.17 in, tiles of 23.53 in, each seam with its 0.4 in band of interlocking teeth, from the field CAD),

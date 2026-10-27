@@ -202,6 +202,18 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 		ok(/left edge at teeth/.test(S.autoNote({ x: -half + 2 * tile + S.TEETH_IN + R[1] / 2, y: wallY, h: 0 }, R, half)), 'autoNote: an edge at the teeth');
 		ok(S.autoNote({ x: -sx, y: -half + 3 * tile + R[0] / 2, h: 0 }, R, half) === 'Left wall, 4th tile out, near edge on seam, facing field', 'autoNote: along a side wall, the wall and the place stay');
 	}
+	{
+		const src = 's.start("Spot", START_X, -61, 0).move("Off", Tunables.Auto.offWallInches, 180, 0.3).turnTo("Turn", turnToField(PARK_HEADING), 0.5).parkWithSeconds(Tunables.Auto.parkSeconds);';
+		const r0 = S.fromJava(src);
+		ok(r0.unread.join('|') === 'START_X|Tunables.Auto.offWallInches|turnToField(PARK_HEADING)|Tunables.Auto.parkSeconds', 'fromJava: lists the names it could not read');
+		const r = S.fromJava(src, { values: { START_X: 52, 'Tunables.Auto.offWallInches': 4, 'turnToField(PARK_HEADING)': 142.2, 'Tunables.Auto.parkSeconds': 6 } });
+		const j = S.toJava({ ...r.plan, drive: 'tank' }).steps;
+		ok(r.problems.length === 0 && r.plan.steps.length === 3, 'fromJava with values: every step read');
+		ok(/start\("Spot", 52, -61, 0\)/.test(j) && /move\("Off", Tunables\.Auto\.offWallInches, 180, 0\.3\)/.test(j) && /turnTo\("Turn", 142\.2, 0\.5\)/.test(j) && /parkWithSeconds\(Tunables\.Auto\.parkSeconds\)/.test(j),
+			'toJava: Tunables names stay, the auto\'s own names become numbers');
+		r.plan.steps[0].inches = 5;
+		ok(/move\("Off", 5, 180/.test(S.toJava({ ...r.plan, drive: 'tank' }).steps), 'toJava: a changed number is written as the number');
+	}
 	ok(/Centred on tile 4 from the left\.$/.test(S.startInches({ x: -half + 3.5 * tile, y: wallY, h: 0 }, R, half)), 'startInches: names the tile it is centred on');
 	ok(/Left side on the seam 2\|3/.test(S.startInches({ x: -half + 2 * tile + R[1] / 2, y: wallY, h: 0 }, R, half)), 'startInches: a side on a seam');
 	{

@@ -1034,11 +1034,19 @@ function renderFrom() {
 		sel.innerHTML = autos.map((a, i) => `<option value="${i}">${esc(a.name)} (${esc(a.className)}.java)</option>`).join('');
 	}
 }
-$('bFromGo').onclick = () => {
+$('bFromGo').onclick = async () => {
 	const a = autos[+$('bFrom').value];
 	if (!a) return;
 	if (B.steps.plan.steps.length && !confirm(`Replace your ${B.steps.plan.steps.length} steps with "${a.name}"?`)) return;
-	const r = S.fromJava(a.source, { drive: B.steps.plan.drive });
+	// Names and formulas (Tunables.Auto.parkSeconds, START_X, turnToField(...)): the simulator works them out
+	// from your compiled code, then the Java is read again with those numbers.
+	let r = S.fromJava(a.source, { drive: B.steps.plan.drive });
+	if (r.unread?.length) {
+		try {
+			const ans = await (await fetch('/auto/values', { method: 'POST', body: JSON.stringify({ className: a.fullName || a.className, exprs: r.unread }) })).json();
+			if (ans.values) r = S.fromJava(a.source, { drive: B.steps.plan.drive, values: ans.values });
+		} catch { /* the simulator did not answer: plain numbers only */ }
+	}
 	const out = [];
 	if (r.plan) {
 		change(() => {
