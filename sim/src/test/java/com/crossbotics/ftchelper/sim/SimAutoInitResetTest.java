@@ -16,12 +16,12 @@ public class SimAutoInitResetTest {
             s.sim.freshAutoInit = true;
             int staged = s.robot().pieces.drawn().size();
             s.robot().pieces.place("POLLEN", 0, 0, 0);            // an extra piece left from the last run
-            s.robot().setPose(20, -20, 45);                         // and the robot where the last run ended
+            s.robot().setPose(40, -40, 45);                         // and the robot where the last run ended
             assertEquals(staged + 1, s.robot().pieces.drawn().size());
             s.init("Score and Park");
             assertTrue("the field as the match starts it",
                     SimRun.waitFor(() -> s.robot().pieces.drawn().size() == staged, 3));
-            assertTrue("the robot moved off where the last run ended", SimRun.waitFor(() -> Math.abs(s.robot().x - 20) > 1, 3));
+            assertTrue("the robot moved off where the last run ended", SimRun.waitFor(() -> Math.abs(s.robot().x - 40) > 1, 3));
             s.sim.ds.stop();
         }
     }
