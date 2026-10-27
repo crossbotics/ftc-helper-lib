@@ -1542,7 +1542,7 @@ final class SimPieces {
 
     /** One launcher's next shot as it would leave now, without the shot table's scatter (see shotsNow). */
     static final class ShotNow {
-        String launcher, piece, why = "";   // why: empty when it would shoot, else why not ("flywheel stopped")
+        String launcher, shape, piece, why = "";   // why: empty when it would shoot, else why not ("flywheel stopped")
         double[] at, vel, spin;             // field inches, inches per second, radians per second
         double speedIn, angleDeg, diameterIn, massG, dragCd;
     }
@@ -1559,6 +1559,7 @@ final class SimPieces {
             for (Shoot s : shoots) {
                 ShotNow n = new ShotNow();
                 n.launcher = s.name;
+                n.shape = s.shape;
                 SimMotor flywheel = s.flywheel != null ? robot.motors.get(s.flywheel) : null;
                 if (flywheel == null) {
                     // one launcher and no flywheel= named: the robot's flywheel motor fires it (as in shoot())

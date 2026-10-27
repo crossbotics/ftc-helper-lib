@@ -227,7 +227,7 @@ export function startChecks(start, robot, field, obs, half) {
 	const hits = checkHits([{ x: +start.x, y: +start.y, h: +start.h || 0, part: 0 }], obs, half, L, W).hits.map((h) => h.name);
 	for (const n of hits) {
 		out.push({ level: 'bad', text: n === 'the wall'
-			? 'The start spot is past the field wall: the simulator refuses it ("the start position overlaps the field wall").'
+			? 'The start spot is past the field wall: the simulator refuses it ("the start position overlaps the field wall"). Drag the green dot a little, or pick a Spot from the list.'
 			: `The robot starts on ${n}: move it (the simulator refuses a start that overlaps a field part).` });
 	}
 	const gap = Math.min(...fp.map(([x, y]) => Math.min(half - Math.abs(x), half - Math.abs(y))));
@@ -263,6 +263,54 @@ export function startPresets(robot, field, obs, half) {
 		if (x != null && !out.some((p) => p.x === x)) out.push({ name, x, y, h: 0, note: autoNote({ x, y, h: 0 }, robot, half) });
 	}
 	return out;
+}
+
+/** Which wall a point is at, in the drivers' words (seen from our wall). */
+export function wallName(x, y) {
+	if (Math.abs(y) >= Math.abs(x)) return y < 0 ? 'our wall' : 'the far wall';
+	return x < 0 ? 'the left wall' : 'the right wall';
+}
+
+/**
+ * A dragged start spot made easy to copy at the field: the robot kept inside the walls, pushed back against a
+ * wall that is near (3 in), and its centre or a side lined up with a tile middle or seam that is near (1.5 in).
+ * Returns { x, y }. Snapping off: only kept inside.
+ */
+export function snapStart(start, robot, half, on = true) {
+	const [L, W] = robot, tile = 2 * half / 6, h = +start.h || 0;
+	let x = +start.x, y = +start.y;
+	const box = () => {
+		const fp = footprint(x, y, h, L, W);
+		return [Math.min(...fp.map((p) => p[0])), Math.max(...fp.map((p) => p[0])), Math.min(...fp.map((p) => p[1])), Math.max(...fp.map((p) => p[1]))];
+	};
+	const GAP = 0.5;   // like the presets: 0.5 in off the wall counts as touching it (G304)
+	if (on) {
+		// x: the centre on a tile middle or a seam, or a side on a seam
+		const [x0, x1] = box(), cands = [];
+		for (let j = 1; j < 12; j++) cands.push([-half + j * tile / 2, x]);
+		for (let j = 1; j < 6; j++) { const s = -half + j * tile; cands.push([s, x0], [s, x1]); }
+		let best = null;
+		for (const [line, at] of cands) { const d = line - at; if (Math.abs(d) <= 1.5 && (best == null || Math.abs(d) < Math.abs(best))) best = d; }
+		if (best != null) x += best;
+	}
+	// inside the walls, then against a wall that is near
+	let [x0, x1, y0, y1] = box();
+	if (x0 < -half + GAP) x += -half + GAP - x0; else if (x1 > half - GAP) x -= x1 - (half - GAP);
+	if (y0 < -half + GAP) y += -half + GAP - y0; else if (y1 > half - GAP) y -= y1 - (half - GAP);
+	if (on) {
+		[x0, x1, y0, y1] = box();
+		if (y0 + half - GAP < 3) y -= y0 + half - GAP;
+		if (x0 + half - GAP < 3) x -= x0 + half - GAP; else if (half - GAP - x1 < 3) x += half - GAP - x1;
+	}
+	return { x: round1(x), y: round1(y) };
+}
+
+/** The spot measured the way a drive team checks it with a tape: the sides from the side walls, the back from our wall. */
+export function startInches(start, robot, half) {
+	const fp = footprint(+start.x, +start.y, +start.h || 0, robot[0], robot[1]);
+	const x0 = Math.min(...fp.map((p) => p[0])), x1 = Math.max(...fp.map((p) => p[0])), y0 = Math.min(...fp.map((p) => p[1]));
+	const d = (v, wall) => (v <= 0.6 ? `against ${wall}` : `${num(Math.round(v * 2) / 2)} in from ${wall}`);
+	return `Left side ${d(x0 + half, 'the left wall')}, right side ${d(half - x1, 'the right wall')}, back ${d(y0 + half, 'our wall')}.`;
 }
 
 // ------------------------------------------------------------------ the note for the drive team
@@ -435,12 +483,14 @@ export function checkPlan(plan, opts = {}) {
 	// The field: walls, field parts, the other alliance's half (G402), and the start spot.
 	if (opts.obs) {
 		const half = opts.half ?? 70.585;
-		for (const c of startChecks(plan.start, robot, opts.field, opts.obs, half)) add(-1, c.level, c.text);
+		const startList = startChecks(plan.start, robot, opts.field, opts.obs, half);
+		for (const c of startList) add(-1, c.level, c.text);
+		const startOut = startList.some((c) => /past the field wall/.test(c.text));
 		const moving = sim.samples.filter((p) => p.step >= 0);
 		const mine = checkHits(moving.map((p) => ({ ...p, part: p.step })), opts.obs, half, robot[0], robot[1]);
 		for (const h of mine.hits) {
 			add(h.part, 'bad', h.name === 'the wall'
-				? `Step ${h.part + 1} (${stepName(steps[h.part])}): the robot leaves the field (hits the wall near (${num(Math.round(h.x))}, ${num(Math.round(h.y))})).`
+				? `Step ${h.part + 1} (${stepName(steps[h.part])}): the robot leaves the field (it hits ${wallName(h.x, h.y)} at (${num(Math.round(h.x))}, ${num(Math.round(h.y))}))${startOut ? '. It starts past the wall: move the start spot first' : ''}.`
 				: `Step ${h.part + 1} (${stepName(steps[h.part])}): the robot hits ${h.name} near (${num(Math.round(h.x))}, ${num(Math.round(h.y))}).`);
 		}
 		const crossed = new Set();

@@ -121,6 +121,16 @@ public class SimRobotEditTest {
                 assertEquals(-15, ((Number) armNow.get(0)).doubleValue(), 1e-6);
                 assertTrue(SimJsonReader.object(pv.get("most"), "most").containsKey("ok"));
                 assertEquals(150 / 25.4, s.robot().shapes.shapes.get("intake_arm").at[0], 0.01);
+                // The launcher's arrow: where shots leave its shape and which way (a unit vector), robot frame.
+                List<Object> shots = SimJsonReader.array(pv.get("shots"), "shots");
+                assertEquals(pv.toString(), 1, shots.size());
+                Map<String, Object> shot = SimJsonReader.object(shots.get(0), "shot");
+                assertEquals("launcher", shot.get("name"));
+                List<Object> dir = SimJsonReader.array(shot.get("dir"), "dir");
+                double len = 0;
+                for (Object o : dir) len += Math.pow(((Number) o).doubleValue(), 2);
+                assertEquals(1, Math.sqrt(len), 1e-3);
+                assertTrue("up, not down", ((Number) dir.get(2)).doubleValue() > 0);
 
                 // Try it: the simulator uses it, in memory; nothing is written.
                 String before = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);

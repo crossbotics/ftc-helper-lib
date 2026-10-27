@@ -1435,7 +1435,12 @@ function gotGame(g) {
   $("#scoreRed b").textContent = pts(red.total);
   $("#scoreBlue b").textContent = pts(blue.total);
   $("#clockText").textContent = clockWords(g.clock);
-  $("#scoreBar").innerHTML = `<span class="sr">RED ${pts(red.total)}</span> &middot; ${escapeHtml(clockWords(g.clock))} &middot; <span class="sb">BLUE ${pts(blue.total)}</span> <span class="hint">(click: where the points come from)</span>`;
+  // Before anything is scored, the points are the field's own pieces (in the up CELLs and GARDENs): they count at the end.
+  const setupOnly = side => side.total > 0 && Math.abs(side.total - ((side.teleop || {}).cellPoints || 0) - ((side.teleop || {}).gardenPoints || 0)) < 1e-6;
+  const hint = setupOnly(red) && setupOnly(blue)
+    ? "(pieces placed at setup: they count at the end. Click: where)"
+    : "(click: where the points come from)";
+  $("#scoreBar").innerHTML = `<span class="sr">RED ${pts(red.total)}</span> &middot; ${escapeHtml(clockWords(g.clock))} &middot; <span class="sb">BLUE ${pts(blue.total)}</span> <span class="hint">${hint}</span>`;
   $("#nectarNote").textContent = g.clock && g.clock.period === "TELEOP" || g.clock && g.clock.period === "AUTO"
     ? (g.clock.nectarAllowed ? "NECTAR into a FLOWER: allowed now (last 60 s)." : "NECTAR into a FLOWER now is a MAJOR FOUL (G410) until the last 60 s.") : "";
   showScoreDetail();

@@ -174,6 +174,20 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 	const obs = P.obstacles(n), half = n.field.insideWallSize / 2;
 	const presets = S.startPresets([18, 18], n, obs, half);
 	ok(presets.length >= 3 && presets.every((p) => S.startChecks(p, [18, 18], n, obs, half).every((c) => c.level !== 'bad')), 'start presets on the simulator\'s field pass the start checks');
+	// A dragged start spot: kept inside the walls (also past a corner), against a near wall, a side on a seam.
+	const R = [15.1, 16.8], tile = 2 * half / 6;
+	for (const [x, y, h] of [[80, -80, 0], [59, -63.9, 0], [-75, -50, 30], [0, -20, 90]]) {
+		const p = { ...S.snapStart({ x, y, h }, R, half), h };
+		ok(S.startChecks(p, R, n, obs, half).every((c) => !/past the field wall/.test(c.text)), `snapStart (${x}, ${y}, ${h}): inside the walls`);
+	}
+	const back = S.snapStart({ x: 10, y: -60, h: 0 }, R, half);
+	ok(near(back.y, -half + 0.5 + R[0] / 2, 0.06), 'snapStart: 2 in off our wall goes against it');
+	const seam = S.snapStart({ x: 30.5, y: -40, h: 0 }, R, half);
+	ok(near(seam.x - R[1] / 2, -half + 4 * tile, 0.06) && seam.y === -40, 'snapStart: a side near a tile seam goes onto it; far from walls the y stays');
+	const free = S.snapStart({ x: 30.5, y: -60, h: 0 }, R, half, false);
+	ok(free.x === 30.5 && free.y === -60, 'snapStart off: only kept inside');
+	ok(/^Left side .* from the left wall, right side against the right wall, back against our wall\.$/.test(S.startInches(S.snapStart({ x: 80, y: -80, h: 0 }, R, half), R, half)), 'startInches: the corner reads "against"');
+	ok(S.wallName(-70, 10) === 'the left wall' && S.wallName(60, -71) === 'our wall' && S.wallName(71, 5) === 'the right wall' && S.wallName(0, 71) === 'the far wall', 'wallName');
 	// The same as the web builder's copy where there is one.
 	const site = siteDir();
 	if (site && fs.existsSync(path.join(site, 'field.json'))) {

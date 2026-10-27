@@ -49,7 +49,11 @@
     try {
       const v = await postJSON("/robot-edit/preview", { edits, values });
       if (v.error) problem = v.error;
-      else { problem = ""; view = v; draw(); }
+      else {
+        problem = ""; view = v;
+        if (!Object.keys(values).length) { startValues = {}; for (const [k, r] of Object.entries(v.values || {})) startValues[k] = r[0]; }
+        draw();
+      }
     } catch (e) { problem = "No answer from the simulator."; }
     busy = false;
     if (again) { again = false; refresh(); return; }
@@ -235,6 +239,17 @@
       m.add(e);
       robot.add(m);
     }
+    // each launcher: an arrow the way its shots leave, so the launcher is easy to find among the boxes
+    for (const sh of view.shots || []) {
+      const dir = new THREE.Vector3(-sh.dir[1], sh.dir[0], sh.dir[2]).normalize();
+      const from = new THREE.Vector3(-sh.from[1], sh.from[0], sh.from[2]);
+      const arrow = new THREE.ArrowHelper(dir, from, 10, 0xd29922, 2.6, 1.6);
+      arrow.line.material.linewidth = 2;
+      guides.add(arrow);
+      const t = SimView.label(THREE, `${sh.name}: shots leave this way`, { heightIn: 1.1, background: "rgba(154,103,0,.92)" });
+      t.position.copy(from).addScaledVector(dir, 11).add(new THREE.Vector3(0, 0, 1.5));
+      labels.add(t);
+    }
     // a word over each part that does not fit (red is also some parts' own colour)
     for (const name of c.red) {
       const pcs = view.pieces.filter((p) => p.name === name);
@@ -329,6 +344,24 @@
     }
     return out;
   }
+  // "Every part out": each moving shape at its named pose farthest from where the match starts.
+  let startValues = {};   // shape -> its value at the start of the match (from the last preview at the start)
+  function outPose() {
+    const out = {};
+    for (const s of (info ? info.shapes : [])) {
+      const st = startValues[s.name];
+      const ps = poses(s);
+      if (st == null || !ps.length) continue;
+      let best = null;
+      for (const [, v] of ps) if (best == null || Math.abs(v - st) > Math.abs(best - st)) best = v;
+      if (best != null && Math.abs(best - st) > 1e-6) out[s.name] = best;
+    }
+    return out;
+  }
+  function outNow() {
+    const want = outPose(), keys = Object.keys(want);
+    return keys.length > 0 && keys.length === Object.keys(values).length && keys.every((k) => Math.abs(want[k] - values[k]) < 1e-6);
+  }
   const poseWords = (s, v) => (s.unit === "deg" ? `${Math.round(v)}&deg;` : `${Math.round(v * MM)} mm`);
 
   function render() {
@@ -342,7 +375,8 @@
       <div class="e-list" role="group" aria-label="Shapes">${list || '<span class="muted">This robot has no shapes yet.</span>'}</div>
       <div id="eShape"></div>
       <div class="e-pose row"><b>Pose:</b> <button data-start class="${atStart() ? "on" : ""}">Start of the match</button>
-        <span class="muted" id="ePoseNote">${atStart() ? "every part where it starts" : "parts moved: see the buttons of each part"}</span></div>
+        <button data-out class="${outNow() ? "on" : ""}" title="Every moving part at the named pose farthest from where it starts (an intake deployed, a slide up): easier to see and change">Every part out</button>
+        <span class="muted" id="ePoseNote">${atStart() ? "every part where it starts" : outNow() ? "every moving part out" : "parts moved"}. Click a part for its own poses.</span></div>
       <div id="eChecks" role="status"></div>
       <div class="row e-actions"><button id="eTry" class="primary" title="The simulator uses these shapes now (in memory only): go back to driving to see pieces hit them">Try it</button>
         <button id="eUndoAll" title="Every shape back as the robot file has it">Undo all</button>
@@ -352,6 +386,7 @@
       <div id="eJava"></div>`;
     p.querySelectorAll("[data-pick]").forEach((b) => (b.onclick = () => pick(b.dataset.pick)));
     p.querySelector("[data-start]").onclick = () => { values = {}; render(); refresh(); };
+    p.querySelector("[data-out]").onclick = () => { values = outPose(); render(); refresh(); };
     $("#eTry").onclick = tryIt;
     $("#eUndoAll").onclick = async () => {
       edits = {}; values = {}; say = "";
