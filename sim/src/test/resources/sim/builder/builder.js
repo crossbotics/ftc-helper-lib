@@ -1051,7 +1051,8 @@ $('bFromGo').onclick = async () => {
 	if (r.plan) {
 		change(() => {
 			const keep = B.steps.plan;
-			B.steps.plan = { ...keep, ...r.plan, drive: keep.drive, start: { ...keep.start, ...(r.plan.start || {}) } };
+			// the auto's own note stays (the builder does not write over it)
+			B.steps.plan = { ...keep, ...r.plan, drive: keep.drive, start: { ...keep.start, ...(r.plan.start || {}), ...(r.plan.start?.note ? { noteAuto: false } : {}) } };
 			B.sel = null;
 		});
 		out.push({ level: 'good', text: `Loaded "${a.name}": ${r.plan.steps.length} step${r.plan.steps.length === 1 ? '' : 's'}. The file is not changed: Copy the Java when you are done.` });
