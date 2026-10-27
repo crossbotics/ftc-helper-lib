@@ -196,7 +196,10 @@ View) adds lines and maps over the 3D view: see [Layers](#layers) below. **Tests
 code, runs it and updates it: see [Record a test](#record-a-test). **Auto builder** (next to Tests)
 builds an autonomous on the field and runs it with your code: see [The auto builder](#the-auto-builder).
 
-**Where the robot starts.** In INIT the robot is put where the program says: an autonomous that names its
+**Where the robot starts.** On the page, INIT of an autonomous is a new match: every game piece goes
+back where the match starts them (with the preload), and the robot goes to its start spot. (A TeleOp's
+INIT keeps the field as it is, so it goes on from the autonomous. Scenario files set up their own field.)
+In INIT the robot is put where the program says: an autonomous that names its
 start spot (`s.start(note, x, y, heading)`, or `startSpotIn()` in an EasyAuto) puts it there for the
 alliance chosen in its menu; an autonomous with its spot only in words (`startPosition()`, or
 `s.start(note, heading)`) puts it on the chosen alliance's side (the robot file's start), and the Driver

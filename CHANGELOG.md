@@ -6,6 +6,12 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Changed
 
+- **An autonomous starts a fresh match in the simulator.** On the page, INIT of an autonomous puts every
+  game piece back where the match starts them (with the preload) and the robot on its start spot, so you
+  can run an auto again and again with no Reset field. A TeleOp's INIT keeps the field as the autonomous
+  left it.
+- **The library's build files use `name = value`** (for example `compileSdk = 30`): the old form stops
+  working in Gradle 10.
 - **Fewer warnings when the simulator starts.** The simulator's own build no longer prints "source value
   8 is obsolete" (and Android's longer version of it on a new Java) or "A restricted method in
   java.lang.System has been called". They were harmless; a real problem now stands out. A few from
