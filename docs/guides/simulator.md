@@ -83,7 +83,10 @@ the robot project already builds:
 - **Windows:** type `gradlew.bat` (or `.\gradlew` in PowerShell) instead of `./gradlew`.
 - **Normal warnings you can ignore:** `source value 8 is obsolete` (and `target value 8`), `SDK processing. This
   version only understands SDK XML versions up to 3`, `Deprecated Gradle features were used`,
-  `[Incubating] Problems report`.
+  `[Incubating] Problems report`, `A restricted method in java.lang.System has been called` (Gradle on a
+  new Java). The library hides most of them in the simulator's own build since v0.20.2. **Android Studio's
+  "Project update recommended: Start AGP Upgrade Assistant" note: do not click it.** The FTC SDK sets
+  its own Android build version; an upgrade can break the robot build. Close the note.
 - **A quick build check:** `./gradlew :sim:fromRobot` builds your TeamCode first, so it also tells you
   on a laptop, with no Control Hub, whether your code builds.
 

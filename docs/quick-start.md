@@ -489,7 +489,9 @@ Gradle build, separate from your robot project's. So it needs these, even when t
   `Java compiler version 21 has deprecated support for compiling with source/target version 8` (it
   goes on with `Try one of the following options: 1. [Recommended] Use Java toolchain...`: do
   nothing), `SDK processing. This version only understands SDK XML versions up to 3`,
-  `Deprecated Gradle features were used`, `[Incubating] Problems report`. The first run downloads a lot
+  `Deprecated Gradle features were used`, `[Incubating] Problems report`. Android Studio's
+  "Start AGP Upgrade Assistant" note: do not click it (the FTC SDK sets its own Android build
+  version). The first run downloads a lot
   and takes a few minutes. How to read the rest of the output: [Start from zero: the Terminal
   tab](start-from-zero.md#6-the-terminal-tab).
 

@@ -2,6 +2,15 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Changed
+
+- **Fewer warnings when the simulator starts.** The simulator's own build no longer prints "source value
+  8 is obsolete" (and Android's longer version of it on a new Java) or "A restricted method in
+  java.lang.System has been called". They were harmless; a real problem now stands out. A few from
+  Android's own build tools remain ("Deprecated Gradle features were used", "SDK processing").
+
 ## v0.20.1 - 2026-10-26
 
 ### Changed
