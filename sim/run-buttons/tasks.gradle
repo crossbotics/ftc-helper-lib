@@ -21,6 +21,7 @@ def libDir = projectDir.parentFile
 def teamCode = rootProject.file('TeamCode')
 def javaHome = new File(System.getProperty('java.home'))
 def java = new File(javaHome, 'bin/java.exe').isFile() ? new File(javaHome, 'bin/java.exe') : new File(javaHome, 'bin/java')
+def nativeAccess = (System.getProperty('java.specification.version') ?: '0').tokenize('.')[0].toInteger() >= 22
 def passOn = gradle.startParameter.projectProperties.findAll { !it.key.startsWith('android.') }
         .collect { "-P${it.key}=${it.value}".toString() }
 
@@ -49,7 +50,9 @@ if (fromIde && (findProperty('simulatorButtons') ?: 'true').toString() != 'false
         description = b.about
         workingDir = libDir
         executable = java.path
-        args = ['-Dorg.gradle.appname=gradlew', '-classpath', new File(libDir, 'gradle/wrapper/gradle-wrapper.jar').path,
+        // Java 22 and newer warn when Gradle loads its native helper ("A restricted method in java.lang.System
+        // has been called"): allowed here, so the warning does not show (harmless either way).
+        args = (nativeAccess ? ['--enable-native-access=ALL-UNNAMED'] : []) + ['-Dorg.gradle.appname=gradlew', '-classpath', new File(libDir, 'gradle/wrapper/gradle-wrapper.jar').path,
                 'org.gradle.wrapper.GradleWrapperMain', '--console=plain', '--gradle-user-home', gradle.gradleUserHomeDir.path,
                 b.task, "-PteamCode=${teamCode.path}".toString()] + b.extra + passOn
         doFirst {

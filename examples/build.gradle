@@ -48,3 +48,7 @@ dependencies {
     testImplementation "org.firstinspires.ftc:Vision:$ftcSdkVersion"
     testImplementation 'junit:junit:4.13.2'
 }
+
+// Java 8 is what the robot needs; the newer Java that builds it warns "source value 8 is obsolete" on
+// every module. A known, harmless warning: hidden, so a real problem stands out.
+tasks.withType(JavaCompile).configureEach { options.compilerArgs.add("-Xlint:-options") }

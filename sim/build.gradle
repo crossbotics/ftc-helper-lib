@@ -251,3 +251,7 @@ tasks.register('fit', JavaExec) {
             (project.hasProperty('write') ? ['--write'] : []) + (project.hasProperty('force') ? ['--force'] : []) +
             (sample ? ['--sample'] : [])
 }
+
+// Java 8 is what the robot needs; the newer Java that builds it warns "source value 8 is obsolete" on
+// every module. A known, harmless warning: hidden, so a real problem stands out.
+tasks.withType(JavaCompile).configureEach { options.compilerArgs.add("-Xlint:-options") }
