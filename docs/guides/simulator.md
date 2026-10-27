@@ -246,12 +246,19 @@ pages open), the page asks for `/state` 10 times a second instead and still glid
 With a rules file (BIOBUZZ has one: [Game rules and the score](#game-rules-and-the-score)), the Control
 Hub's **Match** button shows the game, and a score bar sits over the 3D view (click it to open the panel):
 
-- **The score and the clock**: RED and BLUE totals, the period (AUTO, TELEOP or free play) and the time
-  left. Click a total to see where its points come from (LEAVE, PARK, TIPs, pieces in the up CELL, FLOWERs
-  owned and the pieces in them, the bottom NECTAR bonus, the GARDEN, the other side's fouls). A line says
-  whether a NECTAR into a FLOWER is allowed now (G410). **Before anything is scored, each side shows
-  points already** (10 in BIOBUZZ): the field starts with pieces in each up CELL and GARDEN, and pieces
-  there count at the end of the match. The score bar says so.
+- **The score and the clock**: RED and BLUE, the period (AUTO, TELEOP, "AUTO done", FINAL or free play)
+  and the time left. **The score counts like a referee** (manual 10.5): HIVE TIPs count when they happen,
+  LEAVE and AUTO PARK at the end of AUTO. Pieces in the CELLs, FLOWERs and GARDENs and TELEOP PARK count
+  **only at the end of the match**, because they change all match long (a TIP spills the CELL's pieces).
+  Until then they show **grey, as "+N"**: what they would add if the match ended now. When TeleOp ends (or
+  you stop it) the score is **FINAL** and held: moving the robot after that changes nothing. A new
+  autonomous, or a TeleOp after a FINAL, starts a new match. (BIOBUZZ starts each side at "+10": the
+  field's own pieces in the up CELLs and GARDENs.)
+- **Where the points come from**: click a side. The table is grouped like FIRST's score calculator: AUTO
+  (LEAVE, PARK, TIPs), TELEOP (TIPs, CELL, FLOWERs, the bottom NECTAR bonus, GARDEN, PARK), FOUL (the other
+  side's fouls), the total, and the **RANKING POINTS**: SWARM (LEAVE + PARK points, 16 to earn it),
+  POLLINATOR 1 and 2 (4 and 7 TIPs), each with a tick or a cross and the count. The end-of-match rows have a
+  * until the end. A line says whether a NECTAR into a FLOWER is allowed now (G410).
 - **FLOWERs**: each FLOWER's owner and its stack from the bottom up (a dot per piece in its colour; a hollow
   dot is outside the scoring rings). In 3D, a ring over each FLOWER in its owner's colour (grey: none) with
   how many pieces count.
@@ -302,11 +309,23 @@ What a team does, step by step:
    (your parts' methods, the named positions in Tunables, your `Actions.java`), a new step's first guess,
    and **TeleOp next** (the TeleOp written for that Robot class) and the package, until you type your own.
    A new plan has no steps ("Load the lesson's example" puts lesson 6's in). **Run as** RED or BLUE, and
-   say whether RED's routes are mirrored (`mirrorForRed()`; BIOBUZZ's turned field: "false (turned field)").
+   say how RED's side relates to BLUE's (`mirrorForRed()`): **false: rotated 180°** (BIOBUZZ: each red
+   part is the blue one turned half a turn about the field's centre), or **true: mirrored**.
+   **What this robot can do** lists the library's ready-made features for that Robot class, worked out from
+   its parts: each one ready (with the line to use it) or not ready (with what to add). For example "Fire 1"
+   to "Fire 4" and "Fire all" with a launcher; "Aim at the goal" and aim mode with a camera that has a goal
+   (or odometry and a goal point); "Turret follows the goal" with a following turret. Ready actions are the
+   first ones in the Action list. The same list is `robot.features()` in Java
+   ([What your robot can do](../modules/robot.md#what-your-robot-can-do)).
 2. **Choose the mode.**
    - **Simple steps** (any drive): drive, strafe (mecanum), turn, turn to, wait, start something (a
-     command), an action from `Actions.java` (its time limit starts at 10 s), and "park from here"
-     (`parkWithSeconds`). A button adds its step at the end (tick "add after the selected step" to put it
+     command), an action (the library's ready ones like `robot.launcher.fireAction(2)`, or one from
+     `Actions.java`; its time limit starts at 10 s), **aim at the goal** (`aimAtGoal`: the whole robot turns
+     to the goal with the camera or the odometry backup, or a following turret aims; it never turns blind,
+     and the report says "not seen"; only for a robot that can aim; the plan's preview does not turn for it,
+     the run does), and "park from here" (`parkWithSeconds`). **Start from** loads one of your autonomous
+     OpModes (written with `Steps`) as the starting point: the builder reads its Java (plain numbers only;
+     it lists what it could not read). Your file is not changed: copy the Java when you are done. A button adds its step at the end (tick "add after the selected step" to put it
      after the one you picked). **Start over** (beside Undo) removes every step; Undo brings them back.
      Tap the field map to add a drive to that spot (a tank drive gets a turn first), drag the blue dot at the end of a drive to
      change it, or use the list: each step has its numbers, arrows to move it, and its own warnings.
@@ -328,11 +347,17 @@ What a team does, step by step:
 3. **Edit in 3D too:** with "Edit in the 3D view" ticked, the same points are balls in the 3D view: drag
    them, or tap the field to add a step or a part (not near the robot). The purple dashed line is the plan.
 4. **The start spot and the note for the drive team.** Pick a ready-made spot (against your wall, each one
-   checked against the start rules) or drag the green dot. A drag keeps the robot inside the walls. With
-   **Snap to the walls and the tile lines** ticked (on at first), it also goes against a wall that is
-   within 3 in, and its centre or a side lines up with a tile middle or seam within 1.5 in: a spot the
-   drive team can copy by eye. Typed x and y stay as typed (only kept inside). The line under it measures
-   the spot like a tape: each side from its side wall, the back from your wall. The **note** is what the Driver Station shows
+   checked against the start rules) or drag the green dot. **The robot must touch the field wall** (G304:
+   a corner, or turned 45°, is fine): a drag or typed numbers away from every wall go to the nearest one
+   (your wall or a side wall). With **Snap to the walls and the tile lines** ticked (on at first), it also
+   goes against a wall that is within 3 in, and its centre lines up with a tile middle or seam, or a side
+   with a seam or **the edge of the tiles' teeth**, within 1.5 in: a spot the drive team can copy by eye.
+   The map shows the real tiles: 141.17 in inside the walls, 6 tiles of 23.53 in, each seam with its
+   band of interlocking teeth (0.4 in each side, from the official field CAD). **Turn the start** with the
+   yellow knob in front of the robot (15° steps while snapping), the **Face** arrows (0°, 45°, 90° ...) or
+   the 15° buttons; a tap on the start robot adds no step. The line under it measures the spot like a tape
+   (each side from its side wall, the back from your wall) and names the tile ("Centred on tile 4 from
+   the left", "Left side on the seam 2|3", "at the teeth's edge"). The **note** is what the Driver Station shows
    at INIT as `Place robot : ...`, so the drive team reads it at match setup: about 50 characters fit one
    line. **Write it for me** writes it from the spot ("Our wall, left corner tile, facing the field"); it
    follows the robot until you type your own words. **Print setup card** shows the card for the drive
@@ -385,8 +410,8 @@ what the shared files wrote when the fixtures were made (`sim/src/test/resources
 simulator-only part (`simcore.js`), and, when it finds a checkout of the site, warns when the site's copies
 differ (`SITE_STRICT=1` makes that a failure, before publishing the site).
 
-**Not covered:** the INIT menu (`menuChoice`, `onlyIf`), your own steps (`step(...)`), `waitUntil`, and
-reading Java back in (the web builder reads Java in). A Pedro plan is one path (one `follow`, or one
+**Not covered:** the INIT menu (`menuChoice`, `onlyIf`), your own steps (`step(...)`) and `waitUntil`
+(Start from lists them as not read). A Pedro plan is one path (one `follow`, or one
 `driveTo` per part); add the steps before and after it in your file. Commands take plain values only.
 
 ## Edit robot: shape your robot

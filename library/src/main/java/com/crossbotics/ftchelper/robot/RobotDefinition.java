@@ -908,6 +908,91 @@ public abstract class RobotDefinition {
     }
 
     /**
+     * What the library can do for this robot by itself, ready or not, worked out from Robot.java's parts
+     * (no hardware needed): the launcher's "Fire 1", "Fire 2"... and "Fire all" actions, "Aim at the goal"
+     * in an autonomous, the aim toggles for TeleOp, and the Goal line on the Driver Station. A feature that
+     * is not ready says what is missing. The simulator and the auto builder show this list.
+     */
+    public final List<Feature> features() {
+        describe();
+        List<Feature> out = new ArrayList<>();
+        // The parts by their Robot.java field name ("launcher"), for the lines to write.
+        java.util.Map<Module<?>, String> names = new java.util.IdentityHashMap<>();
+        for (java.lang.reflect.Field f : getClass().getFields()) {
+            if (java.lang.reflect.Modifier.isStatic(f.getModifiers())) continue;
+            try {
+                Object v = f.get(this);
+                if (v instanceof Module) names.put((Module<?>) v, f.getName());
+            } catch (IllegalAccessException ignored) {
+                // not readable: no name
+            }
+        }
+        int holds = 0;
+        boolean launcher = false, camera = false, mecanum = drive != null && drive.isMecanum();
+        Turret following = null, turret = null;
+        for (Module<?> m : modules) {
+            if (m instanceof Intake) holds = Math.max(holds, ((Intake) m).holdsInAll());
+            if (m instanceof Camera && ((Camera) m).hasGoal()) camera = true;
+            if (m instanceof Turret) {
+                turret = (Turret) m;
+                if (turret.followsGoal()) following = turret;
+            }
+        }
+        if (holds <= 0) holds = Pieces.GAME_LIMIT;
+        for (Module<?> m : modules) {
+            if (!(m instanceof Launcher)) continue;
+            launcher = true;
+            String n = names.containsKey(m) ? names.get(m) : m.name().toLowerCase(java.util.Locale.US);
+            for (int i = 1; i <= holds; i++) {
+                out.add(new Feature(Feature.Kind.ACTION, "Fire " + i, "robot." + n + ".fireAction(" + i + ")", "a launcher", "",
+                        i == 1 ? "fires one piece, done when it has left" : ""));
+            }
+            out.add(new Feature(Feature.Kind.ACTION, "Fire all", "robot." + n + ".fireAllAction()", "a launcher", "",
+                    "fires every piece it holds (a Pieces part's count, else the intake's holds(...))"));
+        }
+        if (!launcher) {
+            out.add(new Feature(Feature.Kind.ACTION, "Fire 1, Fire X, Fire all", "robot.launcher.fireAction(1)", "a launcher",
+                    "a Launcher in Robot.java", ""));
+        }
+        Class<?> tc = tunablesClass != null ? tunablesClass : findTunables();
+        TunableSection aimT = TunableSection.of(tc, "Aim");
+        boolean goalPoint = aimT.has("goalX") && aimT.has("goalY"), odo = odometrySpec() != null;
+        String aimNeeds = "a camera with goal(...) in Robot.java, or odometry(...) + Tunables.Aim goalX, goalY";
+        String aimMissing = camera || (goalPoint && odo) ? ""
+                : odo ? "a camera with goal(...), or Tunables.Aim goalX and goalY (the odometry backup)"
+                : goalPoint ? "a camera with goal(...), or an odometry(...) line (the odometry backup)"
+                : "a camera with goal(...) (or odometry + Tunables.Aim goalX, goalY)";
+        String source = camera ? (goalPoint && odo ? "camera, odometry as a backup" : "camera") : (aimMissing.isEmpty() ? "odometry only: keep the start spot right" : "");
+        String aimOnly = aimMissing;   // what aiming needs; aimMissing adds the drive, for turning the robot
+        if (drive == null) aimMissing = aimMissing.isEmpty() ? "a drive" : aimMissing + "; a drive";
+        out.add(new Feature(Feature.Kind.AUTOMATIC, "Goal line on the Driver Station: seen, in range, LOCKED", "", aimNeeds,
+                aimOnly, source));
+        if (following != null) {
+            String tn = names.containsKey(following) ? names.get(following) : "turret";
+            out.add(new Feature(Feature.Kind.TOGGLE, "Turret follows the goal", "g1.rb.toggle(robot." + tn + ".followMode())",
+                    "a turret with follows(camera) or followsOdometry()", "", "the robot can drive at full speed while it aims"));
+            out.add(new Feature(Feature.Kind.AUTO_STEP, "Aim at the goal", ".aimAtGoal(\"Aim\", 3)",
+                    "a turret that follows the goal", "", "waits until the turret is aimed"));
+        } else {
+            if (turret != null) {
+                out.add(new Feature(Feature.Kind.TOGGLE, "Turret follows the goal", "g1.rb.toggle(robot."
+                        + (names.containsKey(turret) ? names.get(turret) : "turret") + ".followMode())",
+                        "a turret with follows(camera) or followsOdometry()", "follows(camera) or followsOdometry() on the turret in Robot.java", ""));
+            }
+            out.add(new Feature(Feature.Kind.TOGGLE, "Aim mode (the whole robot turns to the goal)", "g1.rb.toggle(robot.aimMode())",
+                    "a drive + " + aimNeeds, aimMissing, mecanum ? "mecanum: drive and strafe while it stays aimed"
+                    : "tank drive: it stays aimed while you drive forward and back (no strafing)"));
+            out.add(new Feature(Feature.Kind.AUTO_STEP, "Aim at the goal", ".aimAtGoal(\"Aim\", 3)", "a drive + " + aimNeeds, aimMissing,
+                    "turns the whole robot; does not turn blind"));
+        }
+        out.add(new Feature(Feature.Kind.TOGGLE, "Buzz when aimed", "g1.rumbleWhenAimed();", aimNeeds, aimOnly, "the closer, the stronger"));
+        out.add(new Feature(Feature.Kind.TOGGLE, "Shoot while moving", "g1.x.toggle(robot.aim().movingShotMode())",
+                aimNeeds + ", and odometry(...) (the robot's speed)",
+                !aimOnly.isEmpty() ? aimOnly : odo ? "" : "an odometry(...) line (the robot's speed)", "tune it on the real robot first (Tunables.Aim flightSec)"));
+        return out;
+    }
+
+    /**
      * Robot.java against a robot configuration (the Hardware Check shows it): one line for each device
      * Robot.java names that is NOT in the configuration, and what that means. Empty when all are there.
      *

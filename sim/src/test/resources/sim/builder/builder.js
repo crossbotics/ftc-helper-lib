@@ -77,7 +77,7 @@ function change(fn) {
 
 // The simulator's side: the field (neutral names), the Robot classes, the last state.
 let field = null, obs = [], half = 70.585;
-let robots = [], guess = '';
+let robots = [], guess = '', autos = [];   // autos: your Steps autos and their Java (Start from)
 let sim = null;          // the last state (10 a second)
 let lastRun = null;      // { b: the plan as it ran, tl: its timeline, id: the run's number, sent: page time }
 let runError = '';
@@ -94,6 +94,7 @@ async function loadSimInfo() {
 		const a = await (await fetch('/auto', { cache: 'no-store' })).json();
 		robots = a.robots || [];
 		guess = a.guess || '';
+		autos = a.autos || [];
 	} catch { robots = []; }
 	render();
 }
@@ -141,11 +142,15 @@ panel.innerHTML = `
 <p class="muted b-intro">Build an autonomous on the field, press <b>Run</b>: the simulator runs it with your real code
   (the <i>Built Auto</i>). Then copy the Java. <a href="https://github.com/crossbotics/ftc-helper-lib/blob/main/docs/guides/simulator.md#the-auto-builder" target="_blank" rel="noopener">Guide</a></p>
 <details class="b-sec" open><summary>Robot and alliance</summary>
-  <div class="row"><label>Robot code <select id="bRobot" aria-label="Robot class"></select></label></div>
+  <div class="row"><label title="The Robot classes the simulator found in your TeamCode. Best fit: the one whose motor and servo names match the simulator's robot file (simulator/robot.properties)">Robot code <select id="bRobot" aria-label="Robot class"></select></label></div>
   <div class="muted" id="bRobotText"></div>
   <div class="row"><span class="muted">Run as</span>
     <span class="b-seg" role="group" aria-label="Alliance"><button id="bRed" class="b-red">RED</button><button id="bBlue" class="b-blue">BLUE</button></span></div>
-  <div class="row"><label title="mirrorForRed() in the Java: false on a field turned half a turn between the alliances (BIOBUZZ)">Your auto's <code>mirrorForRed()</code> <select id="bMirror"><option value="false">false (turned field, like BIOBUZZ)</option><option value="true">true (mirrored field)</option></select></label></div>
+  <div class="row"><label title="mirrorForRed() in the Java. false: red's half is blue's rotated 180° (BIOBUZZ). true: red's half is a mirror image of blue's">Your auto's <code>mirrorForRed()</code> <select id="bMirror"><option value="false">false: red's side is rotated 180° (like BIOBUZZ)</option><option value="true">true: red's side is mirrored</option></select></label></div>
+</details>
+<details class="b-sec" id="bFeatSec"><summary>What this robot can do <span class="muted" id="bFeatCount"></span></summary>
+  <p class="muted">Ready-made by the library, from the parts in your Robot.java. Not ready: it says what to add.</p>
+  <div id="bFeatures"></div>
 </details>
 <div class="b-sec">
   <div class="row b-tools" id="bTools"></div>
@@ -157,6 +162,11 @@ panel.innerHTML = `
 <details class="b-sec" open><summary>Start spot</summary>
   <div class="row" id="bPresetRow"><label>Spot <select id="bPreset"></select></label></div>
   <div class="row"><label>x <input type="number" step="0.5" id="bSx"></label><label>y <input type="number" step="0.5" id="bSy"></label><label>heading <input type="number" step="5" id="bSh"></label></div>
+  <div class="row b-face" id="bFace"><span class="muted">Face</span>
+    <button data-h="0" title="Facing the field (0°)">&#8593;</button><button data-h="45" title="45° left">&#8598;</button><button data-h="90" title="Facing left (90°)">&#8592;</button>
+    <button data-h="135" title="135° left">&#8601;</button><button data-h="180" title="Facing our wall (180°)">&#8595;</button><button data-h="-135" title="135° right">&#8600;</button>
+    <button data-h="-90" title="Facing right (-90°)">&#8594;</button><button data-h="-45" title="45° right">&#8599;</button>
+    <button data-turn="15" title="Turn 15° left">&#8634; 15°</button><button data-turn="-15" title="Turn 15° right">&#8635; 15°</button></div>
   <label class="muted" title="A drag stays inside the walls. With this on, it also goes against a wall that is near and lines up with a tile middle or seam: easy to copy at the field."><input type="checkbox" id="bSnap"> Snap to the walls and the tile lines</label>
   <div class="muted" id="bInches"></div>
   <label class="b-note">Note for the drive team <input type="text" id="bNote" maxlength="120" placeholder="Our wall, left corner tile, facing the field"></label>
@@ -170,11 +180,13 @@ panel.innerHTML = `
   <div class="row b-addrow" id="bAdd">
     <button data-add="move">+ Drive</button><button data-add="strafe" id="bAddStrafe">+ Strafe</button><button data-add="turn">+ Turn</button>
     <button data-add="turnTo">+ Turn to</button><button data-add="wait">+ Wait</button><button data-add="run">+ Start something</button>
-    <button data-add="action">+ Action</button><button data-add="park">+ Park from here</button>
+    <button data-add="action">+ Action</button><button data-add="aim" id="bAddAim" title="Turn to the goal (camera, or the odometry backup)">+ Aim at the goal</button><button data-add="park">+ Park from here</button>
     <label class="muted" title="Off: new steps go at the end"><input type="checkbox" id="bInsert"> add after the selected step</label></div>
   <div id="bTankNote" class="b-tanknote" hidden></div>
   <div id="bList"></div>
   <div class="row"><button id="bClear" title="Remove every step">Remove all steps</button><button id="bExample" title="The steps from lesson 6">Load the lesson's example</button></div>
+  <div class="row" id="bFromRow"><label title="Loads one of your autonomous OpModes (written with Steps) as the starting point">Start from <select id="bFrom"></select></label><button id="bFromGo">Load</button></div>
+  <ul class="b-checks" id="bFromNote"></ul>
 </div>
 <div class="b-sec" id="bPedroPane">
   <h4 class="b-h">Path</h4>
@@ -304,7 +316,7 @@ function work() {
 	const checks = [];
 	for (const h of mine.hits) checks.push({ level: 'bad', text: `Part ${h.part + 1}: the robot touches ${h.name} near (${fmt(h.x)}, ${fmt(h.y)}).` });
 	for (const w of P.warnings(path, P.sample(path), st.start.on ? +st.start.h || 0 : null)) checks.push({ level: 'warn', text: w });
-	if (st.mirror && field && /BIOBUZZ/.test(field.season)) checks.push({ level: 'warn', text: 'BIOBUZZ is a turned field: with mirrorForRed() true, the other alliance drives to the wrong places.' });
+	if (st.mirror && field && /BIOBUZZ/.test(field.season)) checks.push({ level: 'warn', text: 'BIOBUZZ: red\'s side is rotated 180°, not mirrored. With mirrorForRed() true, the other alliance drives to the wrong places.' });
 	const order = P.ordered(st.actions, m);
 	for (const p of P.checkActions(st.actions, m, { step: st.mode, label: st.label })) {
 		checks.push({ level: p.level, text: `Action ${order.indexOf(st.actions[p.i]) + 1}: ${p.text}`, act: p.i });
@@ -337,6 +349,22 @@ function renderRobot() {
 	$('bRed').setAttribute('aria-pressed', String(B.alliance === 'RED'));
 	$('bBlue').setAttribute('aria-pressed', String(B.alliance === 'BLUE'));
 	$('bMirror').value = String(mirrorNow());
+	renderFeatures();
+	renderFrom();
+}
+
+// The library's features for this robot (robot.features()): ready, or what is missing.
+function renderFeatures() {
+	const list = robotInfo()?.features || [];
+	const ready = list.filter((f) => !f.missing);
+	$('bFeatCount').textContent = list.length ? `(${ready.length} of ${list.length} ready)` : '';
+	$('bFeatures').innerHTML = list.length ? `<table class="b-feat"><tr><th></th><th>Feature</th><th>Use it</th></tr>${list.map((f) => `<tr class="${f.missing ? 'off' : ''}">
+		<td>${f.missing ? '&#10007;' : '&#10003;'}</td><td><b>${esc(f.name)}</b> <span class="muted">${esc(f.words)}</span>${f.note ? `<br><span class="muted">${esc(f.note)}</span>` : ''}</td>
+		<td>${f.missing ? `needs ${esc(f.missing)}` : f.code ? `<code>${esc(f.code)}</code>` : 'on by itself'}</td></tr>`).join('')}</table>`
+		: '<p class="muted">The simulator has not answered yet.</p>';
+	// "+ Aim at the goal" only for a robot that can aim (or before the simulator answers)
+	const aim = list.find((f) => f.kind === 'AUTO_STEP' && f.name === 'Aim at the goal');
+	$('bAddAim').hidden = !!list.length && !(aim && !aim.missing);
 }
 $('bRobot').onchange = () => change(() => { B.robotClass = $('bRobot').value; });
 $('bRed').onclick = () => change(() => { B.alliance = 'RED'; });
@@ -394,6 +422,7 @@ function handles() {
 		});
 		path.parts.forEach((part, i) => out.push({ id: `e${i}`, x: part.end[0], y: part.end[1], kind: 'end', label: String(i + 1) }));
 		out.push({ id: 's', x: path.start[0], y: path.start[1], kind: 'start' });
+		out.push(turnKnob(path.start[0], path.start[1], +B.pedro.start.h || 0));
 		return out;
 	}
 	const plan = B.steps.plan;
@@ -403,7 +432,28 @@ function handles() {
 		out.push({ id: `m${i}`, x: e.x, y: e.y, kind: 'move', label: String(i + 1) });
 	});
 	out.push({ id: 's', x: +plan.start.x, y: +plan.start.y, kind: 'start' });
+	out.push(turnKnob(+plan.start.x, +plan.start.y, +plan.start.h || 0));
 	return out;
+}
+
+// The start robot's turn knob: in front of it; drag it around to turn the start (15° steps with snapping on).
+function turnKnob(x, y, h) {
+	const d = robotLW()[0] / 2 + 5, a = h * Math.PI / 180;
+	return { id: 'sh', x: x - Math.sin(a) * d, y: y + Math.cos(a) * d, kind: 'turn' };
+}
+
+// Turns the start to heading h (degrees), then keeps it inside the walls and touching one (G304).
+function setStartHeading(h) {
+	h = P.wrap(h);
+	if (B.mode === 'pedro') {
+		B.pedro.start.h = h;
+		const p = S.snapStart({ x: B.pedro.path.start[0], y: B.pedro.path.start[1], h }, robotLW(), half, false);
+		B.pedro.path.start = [p.x, p.y];
+	} else {
+		const st = B.steps.plan.start;
+		st.h = h;
+		Object.assign(st, S.snapStart({ x: +st.x, y: +st.y, h }, robotLW(), half, false));
+	}
 }
 
 // The pose before step i of a Simple steps plan (the start for step 0).
@@ -415,6 +465,12 @@ function poseBefore(i) {
 
 /** Moves a point to (x, y), plan numbers (a drag on the panel's map or in 3D). */
 function moveHandle(id, x, y) {
+	if (id === 'sh') {
+		const st = startNow();
+		const h = P.headingOf(x - +st.x, y - +st.y);
+		setStartHeading(B.snapStart !== false ? Math.round(h / 15) * 15 : Math.round(h));
+		return;
+	}
 	[x, y] = clampXY(x, y);
 	if (B.mode === 'pedro') {
 		const path = B.pedro.path;
@@ -557,10 +613,11 @@ function renderMap() {
 		const grp = el('g', { class: 'bh', 'data-h': h.id, style: 'cursor:grab' }, hg);
 		el('circle', { cx: h.x, cy: -h.y, r: r * 1.8, fill: 'transparent' }, grp);
 		const sel = (B.mode !== 'pedro' && h.id === `m${B.sel}`) || (B.mode === 'pedro' && h.id === `e${B.selPart}`);
-		const fill = { start: START, end: PATH, move: PATH, ctrl: '#fff', point: '#fff' }[h.kind];
+		const fill = { start: START, end: PATH, move: PATH, ctrl: '#fff', point: '#fff', turn: '#f2c230' }[h.kind];
+		if (h.kind === 'turn') { const st = startNow(); el('line', { x1: +st.x, y1: -+st.y, x2: h.x, y2: -h.y, stroke: '#f2c230', 'stroke-width': r * 0.35, 'pointer-events': 'none' }, hg); }
 		el('circle', { cx: h.x, cy: -h.y, r: r * (h.kind === 'ctrl' ? 0.85 : 1.1), fill, stroke: sel ? '#ffe14d' : h.kind === 'ctrl' || h.kind === 'point' ? PATH : '#fff', 'stroke-width': r * (sel ? 0.5 : 0.3) }, grp);
 		if (h.label) el('text', { x: h.x + r * 1.4, y: -h.y - r * 1.2, 'font-size': r * 2.1, fill: '#101c45', 'font-weight': 700, 'paint-order': 'stroke', stroke: '#fff', 'stroke-width': r * 0.5, 'pointer-events': 'none' }, hg).textContent = h.label;
-		el('title', {}, grp).textContent = { start: 'Start spot: drag to move', end: 'End of a part: drag to move', move: 'End of a drive: drag to change it', ctrl: 'Control point: the path bends toward it', point: 'The point the robot faces' }[h.kind];
+		el('title', {}, grp).textContent = { start: 'Start spot: drag to move', turn: 'Turn the start: drag around the robot (15° steps when snapping is on)', end: 'End of a part: drag to move', move: 'End of a drive: drag to change it', ctrl: 'Control point: the path bends toward it', point: 'The point the robot faces' }[h.kind];
 	}
 	const t = at && at.t != null ? at.t : 0;
 	$('bTimeText').textContent = `${fmt(t)} s of ${fmt(tl.total)}`;
@@ -603,7 +660,11 @@ svg.addEventListener('pointerup', () => {
 	drag = null;
 	if (d.moved && (d.id || d.act != null)) { undoList.push(d.before); render(); return; }
 	if (d.id || d.act != null) { render(); return; }
-	if (!d.moved) tapAt(d.at[0], d.at[1]);
+	if (d.moved) return;
+	// A tap on the start robot adds nothing (drag its yellow knob to turn it).
+	const st = startNow(), [L, W] = robotLW();
+	if (P.pointInPoly(d.at, P.footprint(+st.x, +st.y, +st.h || 0, L, W))) return;
+	tapAt(d.at[0], d.at[1]);
 });
 svg.addEventListener('pointercancel', () => { drag = null; });
 
@@ -670,8 +731,11 @@ function typedStart(x, y) {
 }
 onNum('bSx', (v) => typedStart(v, null));
 onNum('bSy', (v) => typedStart(null, v));
+for (const b of $('bFace').querySelectorAll('button')) {
+	b.onclick = () => change(() => setStartHeading(b.dataset.h != null ? +b.dataset.h : (+startNow().h || 0) + +b.dataset.turn));
+}
 $('bSnap').onchange = () => { B.snapStart = $('bSnap').checked; save(); };
-onNum('bSh', (v) => { if (B.mode === 'pedro') B.pedro.start.h = P.wrap(v); else B.steps.plan.start.h = P.wrap(v); });
+onNum('bSh', (v) => setStartHeading(v));
 $('bNote').oninput = () => {
 	const st = B.mode === 'pedro' ? B.pedro.start : B.steps.plan.start;
 	st.note = $('bNote').value; st.noteAuto = false;
@@ -701,7 +765,7 @@ $('bCard').onclick = () => {
 
 // ------------------------------------------------------------------ Simple steps: the list
 
-const KIND_TEXT = { move: 'Drive', turn: 'Turn', turnTo: 'Turn to', wait: 'Wait', run: 'Start something', action: 'Action', alongside: 'Action', park: 'Park from here' };
+const KIND_TEXT = { move: 'Drive', turn: 'Turn', turnTo: 'Turn to', wait: 'Wait', run: 'Start something', action: 'Action', alongside: 'Action', aim: 'Aim at the goal', park: 'Park from here' };
 const DIRS = [[0, 'forward'], [180, 'back'], [90, 'right (strafe)'], [270, 'left (strafe)']];
 const NEW = {
 	move: () => ({ kind: 'move', label: 'Drive', inches: 24, dir: 0, power: 0.6 }),
@@ -711,6 +775,7 @@ const NEW = {
 	wait: () => ({ kind: 'wait', label: 'Wait', sec: 1 }),
 	run: () => { const code = commandsNow()[0] || ''; return { kind: 'run', label: code ? labelFor(code) : 'Start something', code }; },
 	action: () => ({ kind: 'action', code: actionsNow()[0] || '', timeout: ACTION_LIMIT_SEC }),
+	aim: () => ({ kind: 'aim', label: 'Aim', timeout: 3 }),
 	park: () => ({ kind: 'park', sec: 3 }),
 };
 for (const b of $('bAdd').querySelectorAll('[data-add]')) {
@@ -759,6 +824,8 @@ function stepForm(s, i) {
 		case 'action': case 'alongside':
 			return `<div class="row">${code(actionsNow()[0] || 'Actions.name(robot)')}</div><div class="row"><label><input type="checkbox" data-k="wait"${s.kind === 'action' ? ' checked' : ''}> wait until done</label>
 				${s.kind === 'action' ? `<label>at most <input type="number" min="0.5" step="0.5" data-k="timeout" value="${fmt(+s.timeout)}"> s</label>` : ''}</div>`;
+		case 'aim': return `<div class="row">${name('Aim')}<label>at most <input type="number" min="0.5" step="0.5" data-k="timeout" value="${fmt(+s.timeout)}"> s</label></div>
+			<p class="muted">Turns to the goal with the camera (or the odometry backup); a following turret aims instead. The preview does not turn: the run does.</p>`;
 		case 'park': return `<div class="row"><label>Keep the last <input type="number" min="0.5" step="0.5" data-k="sec" value="${fmt(+s.sec)}"> s for the steps below</label></div>`;
 		default: return '';
 	}
@@ -953,6 +1020,34 @@ function actInput(i, t) {
 
 $('bClear').onclick = () => change(() => { B.steps.plan.steps = []; B.sel = null; });
 $('bExample').onclick = () => change(() => { B.steps.plan = structuredClone(STEPS_EXAMPLE); B.sel = null; });
+// Start from one of your autos: its Java read back into steps (plain numbers only; the rest is listed).
+function renderFrom() {
+	const sel = $('bFrom');
+	$('bFromRow').hidden = !autos.length;
+	const key = autos.map((a) => a.className).join('|');
+	if (sel.dataset.key !== key) {
+		sel.dataset.key = key;
+		sel.innerHTML = autos.map((a, i) => `<option value="${i}">${esc(a.name)} (${esc(a.className)}.java)</option>`).join('');
+	}
+}
+$('bFromGo').onclick = () => {
+	const a = autos[+$('bFrom').value];
+	if (!a) return;
+	if (B.steps.plan.steps.length && !confirm(`Replace your ${B.steps.plan.steps.length} steps with "${a.name}"?`)) return;
+	const r = S.fromJava(a.source, { drive: B.steps.plan.drive });
+	const out = [];
+	if (r.plan) {
+		change(() => {
+			const keep = B.steps.plan;
+			B.steps.plan = { ...keep, ...r.plan, drive: keep.drive, start: { ...keep.start, ...(r.plan.start || {}) } };
+			B.sel = null;
+		});
+		out.push({ level: 'good', text: `Loaded "${a.name}": ${r.plan.steps.length} step${r.plan.steps.length === 1 ? '' : 's'}. The file is not changed: Copy the Java when you are done.` });
+	} else out.push({ level: 'bad', text: `"${a.name}": no steps could be read.` });
+	for (const t of [...(r.problems || []), ...(r.tank || [])]) out.push({ level: 'warn', text: t });
+	for (const t of r.notes || []) out.push({ level: 'ok', text: t });
+	$('bFromNote').innerHTML = out.map((c) => `<li class="${c.level}">${esc(c.text)}</li>`).join('');
+};
 $('bInsert').onchange = () => { B.insert = $('bInsert').checked; save(); };
 $('bPClear').onclick = () => change(() => { B.pedro.path.parts = []; B.pedro.path.holdSec = 0; B.pedro.actions = []; B.selPart = 0; });
 $('bPExample').onclick = () => change(() => { Object.assign(B.pedro, structuredClone(PEDRO_EXAMPLE)); B.selPart = 1; });

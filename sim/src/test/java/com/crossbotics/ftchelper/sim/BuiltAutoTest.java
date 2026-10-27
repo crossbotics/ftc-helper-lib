@@ -273,9 +273,31 @@ public class BuiltAutoTest {
             assertTrue(info, info.contains("\"Actions.fireAll(robot)\"") && info.contains("\"Actions.fireAllWithIntake(robot)\""));
             assertTrue(info, !info.contains("scoreHigh") && !info.contains("claw") && !info.contains("::update\""));
             assertTrue(info, info.contains("\"teleop\":\"goBILDA Bot TeleOp\""));
+            // the library's ready-made actions come first, and the feature list with them
+            assertTrue(info, info.contains("\"actions\":[\"robot.launcher.fireAction(1)\"") && info.contains("\"robot.launcher.fireAllAction()\""));
+            assertTrue(info, info.contains("\"features\":[") && info.contains("\"name\":\"Aim at the goal\""));
             // the OpMode list says how well each OpMode's Robot class fits the robot file
             String list = SimView.opModes(s.sim.ds);
             assertTrue(list, list.contains("\"name\":\"goBILDA Bot TeleOp\",\"group\":\"Examples\",\"kind\":\"TeleOp\",\"disabled\":true,\"fit\":"));
+        }
+    }
+
+    // The library's "Fire 2" runs by name; "Aim at the goal" on a robot with no camera does not turn (it says
+    // "not seen") and the plan goes on.
+    @Test public void theLibrarysActionsAndTheAimStepRun() throws Exception {
+        BuiltAuto.program = BuiltAuto.Program.from(SimJsonReader.object(SimJsonReader.parse("{\"name\":\"Library steps\",\"mode\":\"steps\","
+                + "\"mirror\":false,\"robotClass\":\"\",\"start\":{\"note\":\"\",\"x\":-56,\"y\":-62.95,\"h\":0,\"spot\":true},\"steps\":["
+                + "{\"kind\":\"aim\",\"label\":\"Aim\",\"timeout\":1},"
+                + "{\"kind\":\"action\",\"code\":\"robot.launcher.fireAction(2)\",\"timeout\":8},"
+                + "{\"kind\":\"move\",\"label\":\"Leave\",\"inches\":12,\"dir\":0,\"power\":0.7}]}"), "a program"));
+        BuiltAuto.robotClass = com.crossbotics.ftchelper.examples.gobildabot.Robot.class;
+        try (SimRun s = new SimRun("robots/starter-bot-gobilda.properties")) {
+            runToTheEnd(s);
+            String all = String.join("\n", com.crossbotics.ftchelper.match.MatchMemory.lastReport());
+            assertTrue(all, all.contains("Aim") && all.contains("not seen"));
+            assertTrue(all, all.contains("Fire 2"));
+            assertTrue(all, all.contains("Leave: done"));
+            assertEquals("it did not turn blind", 0, s.robot().headingDeg, 5);
         }
     }
 

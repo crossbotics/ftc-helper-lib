@@ -240,7 +240,8 @@
   #scoreBar { position: absolute; top: 40px; left: 8px; z-index: 3; padding: 3px 10px; border-radius: 14px;
     background: color-mix(in srgb, var(--panel) 90%, transparent); font-size: 12.5px; font-variant-numeric: tabular-nums; white-space: nowrap; }
   #scoreBar[hidden], #toast[hidden] { display: none; }
-  #scoreBar .hint { font-size: 11px; opacity: .7; }
+  #scoreBar .hint, #scoreBar .later, .scoreRow .later { font-size: 11px; opacity: .7; }
+  #scoreBar .later, .scoreRow .later { font-weight: 400; }
   #scoreBar .sr, .scoreRow .red b { color: #cf222e; font-weight: 700; } #scoreBar .sb, .scoreRow .blue b { color: #1f6feb; font-weight: 700; }
   #toast { position: absolute; top: 72px; left: 50%; transform: translateX(-50%); z-index: 4; max-width: 80%; padding: 6px 12px; border-radius: 8px;
     background: var(--stop); color: #fff; font-size: 12.5px; font-weight: 600; pointer-events: none; }
@@ -309,6 +310,11 @@
   #builder .b-checks li { margin: 2px 0; }
   #builder .b-tanknote { border: 1px solid var(--warn); border-radius: 6px; padding: 4px 8px; margin-bottom: 6px; }
   #builder .b-tanknote p { margin: 0; }
+  #builder .b-face button { min-width: 26px; padding: 1px 5px; }
+  #builder .b-feat { width: 100%; border-collapse: collapse; font-size: 12px; }
+  #builder .b-feat td, #builder .b-feat th { border-top: 1px solid var(--line); padding: 3px 4px; text-align: left; vertical-align: top; }
+  #builder .b-feat tr.off { opacity: .65; }
+  #builder .b-feat code { font-size: 11px; word-break: break-all; }
   #builder .b-checks li.bad { color: var(--stop); } #builder .b-checks li.warn { color: var(--warn); } #builder .b-checks li.good { color: var(--go); }
   #builder .b-warn { color: var(--warn); font-weight: 600; }
   #builder .b-clock { margin-left: auto; font: 700 15px/1 ui-monospace, Menlo, monospace; color: var(--muted); }
@@ -1432,15 +1438,21 @@ function gotGame(g) {
   if (!on) return;
   const sc = g.score || {}, red = sc.red || { total: 0 }, blue = sc.blue || { total: 0 };
   const pts = v => Math.round(v || 0);
-  $("#scoreRed b").textContent = pts(red.total);
-  $("#scoreBlue b").textContent = pts(blue.total);
-  $("#clockText").textContent = clockWords(g.clock);
-  // Before anything is scored, the points are the field's own pieces (in the up CELLs and GARDENs): they count at the end.
-  const setupOnly = side => side.total > 0 && Math.abs(side.total - ((side.teleop || {}).cellPoints || 0) - ((side.teleop || {}).gardenPoints || 0)) < 1e-6;
-  const hint = setupOnly(red) && setupOnly(blue)
-    ? "(pieces placed at setup: they count at the end. Click: where)"
+  // Like a referee (manual 10.5): TIPs, LEAVE and AUTO PARK count when they happen; CELL, FLOWER and GARDEN pieces
+  // and TELEOP PARK only at the end of the match. Until then they show grey: "+N at the end, if it ended now".
+  const state = (g.match || {}).state || "none", over = state === "ended";
+  const shown = side => over || side.counted === undefined ? side.total : side.counted;
+  const later = side => !over && side.atEnd ? ` <span class="later">+${pts(side.atEnd)}</span>` : "";
+  $("#scoreRed").innerHTML = `RED <b>${pts(shown(red))}</b>${later(red)}`;
+  $("#scoreBlue").innerHTML = `BLUE <b>${pts(shown(blue))}</b>${later(blue)}`;
+  const left = (g.match || {}).endedLeft;
+  const when = over ? (left > 0.5 ? `FINAL (TeleOp stopped at ${clockWords({ period: "TELEOP", secondsLeft: left }).slice(7)})` : "FINAL")
+    : state === "afterAuto" ? "AUTO done" : clockWords(g.clock);
+  $("#clockText").textContent = when;
+  const hint = over ? "(click: where the points come from)"
+    : (red.atEnd || blue.atEnd) ? "(grey: counted at the end of the match, if it ended now. Click: where)"
     : "(click: where the points come from)";
-  $("#scoreBar").innerHTML = `<span class="sr">RED ${pts(red.total)}</span> &middot; ${escapeHtml(clockWords(g.clock))} &middot; <span class="sb">BLUE ${pts(blue.total)}</span> <span class="hint">${hint}</span>`;
+  $("#scoreBar").innerHTML = `<span class="sr">RED ${pts(shown(red))}</span>${later(red)} &middot; ${escapeHtml(when)} &middot; <span class="sb">BLUE ${pts(shown(blue))}</span>${later(blue)} <span class="hint">${hint}</span>`;
   $("#nectarNote").textContent = g.clock && g.clock.period === "TELEOP" || g.clock && g.clock.period === "AUTO"
     ? (g.clock.nectarAllowed ? "NECTAR into a FLOWER: allowed now (last 60 s)." : "NECTAR into a FLOWER now is a MAJOR FOUL (G410) until the last 60 s.") : "";
   showScoreDetail();
@@ -1487,13 +1499,22 @@ function showScoreDetail() {
   $("#scoreBlue").setAttribute("aria-expanded", scoreOpen === "blue" ? "true" : "false");
   if (!s) return;
   const a = s.auto || {}, o = s.teleop || {}, n = v => Math.round(v || 0);
-  const rows = [["AUTO: LEAVE", "", a.leave], ["AUTO: PARK", "", a.park], ["AUTO: HIVE TIPs", a.tips, a.tipPoints],
-    ["TELEOP: HIVE TIPs", o.tips, o.tipPoints], ["Pieces in the up CELL", o.inCells, o.cellPoints],
-    ["FLOWERs owned / pieces in them", `${o.flowersOwned || 0} / ${o.inFlowers || 0}`, o.flowerPoints], ["Bottom NECTAR bonus", "", o.bottomNectar],
-    ["In the GARDEN", o.inGarden, o.gardenPoints], ["TELEOP: PARK", "", o.park], ["From the other side's fouls", "", s.foulPoints]];
+  const over = ((game.match || {}).state) === "ended", end = over ? "" : " *";
+  // The same groups as FIRST's score calculator: AUTO, TELEOP, FOUL, then the RANKING POINTS.
+  const rows = [["AUTO: LEAVE", "", a.leave], ["AUTO: PARK", "", a.park], ["AUTO: HIVE TIPs", a.tips, a.tipPoints], ["AUTO", "", s.autoTotal, true],
+    ["TELEOP: HIVE TIPs", o.tips, o.tipPoints], ["Pieces in the up CELL" + end, o.inCells, o.cellPoints],
+    ["FLOWERs owned / pieces in them" + end, `${o.flowersOwned || 0} / ${o.inFlowers || 0}`, o.flowerPoints], ["Bottom NECTAR bonus" + end, "", o.bottomNectar],
+    ["In the GARDEN" + end, o.inGarden, o.gardenPoints], ["TELEOP: PARK" + end, "", o.park], ["TELEOP", "", s.teleopTotal, true],
+    ["FOUL (the other side's fouls)", "", s.foulPoints, true]];
+  const rp = game.rp || {}, got = s.rp || {}, mark = (have, need) => need === null || need === undefined ? "" : `${have >= need ? "&#10003;" : "&#10007;"} ${n(have)}/${need}`;
+  const rps = [["SWARM RP (LEAVE + PARK points)", mark(got.swarm || 0, rp.swarm)], ["POLLINATOR 1 RP (TIPs)", mark(got.tips || 0, rp.pollinator1)],
+    ["POLLINATOR 2 RP (TIPs)", mark(got.tips || 0, rp.pollinator2)]].filter(r => r[1]);
   t.innerHTML = `<tr><th>${scoreOpen.toUpperCase()}</th><th class="num">count</th><th class="num">points</th></tr>` +
-    rows.map(([k, c, p]) => `<tr><td>${k}</td><td class="num">${c === "" || c === undefined ? "" : c}</td><td class="num">${n(p)}</td></tr>`).join("") +
-    `<tr><th>Total</th><th></th><th class="num">${n(s.total)}</th></tr>`;
+    rows.map(([k, c, p, sum]) => sum ? `<tr><th>${k}</th><th></th><th class="num">${n(p)}</th></tr>`
+      : `<tr><td>${k}</td><td class="num">${c === "" || c === undefined ? "" : c}</td><td class="num">${n(p)}</td></tr>`).join("") +
+    `<tr><th>Total${over ? "" : " (if the match ended now)"}</th><th></th><th class="num">${n(s.total)}</th></tr>` +
+    rps.map(([k, v]) => `<tr><td>${k}</td><td class="num" colspan="2">${v}</td></tr>`).join("") +
+    (over ? "" : `<tr><td colspan="3" class="muted">* counted at the end of the match (manual 10.5): shown as if it ended now.</td></tr>`);
 }
 for (const side of ["red", "blue"]) {
   $("#score" + side[0].toUpperCase() + side.slice(1)).onclick = () => { scoreOpen = scoreOpen === side ? "" : side; showScoreDetail(); };

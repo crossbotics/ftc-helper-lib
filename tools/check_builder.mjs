@@ -182,10 +182,25 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 	}
 	const back = S.snapStart({ x: 10, y: -60, h: 0 }, R, half);
 	ok(near(back.y, -half + 0.5 + R[0] / 2, 0.06), 'snapStart: 2 in off our wall goes against it');
-	const seam = S.snapStart({ x: 30.5, y: -40, h: 0 }, R, half);
-	ok(near(seam.x - R[1] / 2, -half + 4 * tile, 0.06) && seam.y === -40, 'snapStart: a side near a tile seam goes onto it; far from walls the y stays');
+	const seam = S.snapStart({ x: 32, y: -40, h: 0 }, R, half);   // the side 0.07 in past the seam (the teeth edges are 0.4 in off)
+	const wallY = -half + 0.5 + R[0] / 2;
+	ok(near(seam.x - R[1] / 2, -half + 4 * tile, 0.06) && near(seam.y, wallY, 0.06), 'snapStart: a side near a tile seam goes onto it; away from every wall it goes to the nearest (G304)');
 	const free = S.snapStart({ x: 30.5, y: -60, h: 0 }, R, half, false);
-	ok(free.x === 30.5 && free.y === -60, 'snapStart off: only kept inside');
+	ok(free.x === 30.5 && near(free.y, wallY, 0.06), 'snapStart off: no tile snapping, but it still ends touching a wall (G304)');
+	const side = S.snapStart({ x: -55, y: 0, h: 0 }, R, half, false);
+	ok(near(side.x - R[1] / 2, -half + 0.5, 0.06) && side.y === 0, 'snapStart: nearest the left wall goes against it');
+	const teeth = S.snapStart({ x: -half + 2 * tile + S.TEETH_IN + R[1] / 2 + 0.3, y: -62, h: 0 }, R, half);
+	ok(near(teeth.x - R[1] / 2, -half + 2 * tile + S.TEETH_IN, 0.06), 'snapStart: a side near the teeth\'s edge goes onto it');
+	const mid = S.startChecks({ x: 0, y: -30, h: 0 }, R, n, obs, half);
+	ok(mid.some((c) => c.level === 'bad' && /G304/.test(c.text) && /touch the field wall/.test(c.text)), 'startChecks: away from the wall is refused (G304)');
+	ok(/Centred on tile 4 from the left\.$/.test(S.startInches({ x: -half + 3.5 * tile, y: wallY, h: 0 }, R, half)), 'startInches: names the tile it is centred on');
+	ok(/Left side on the seam 2\|3/.test(S.startInches({ x: -half + 2 * tile + R[1] / 2, y: wallY, h: 0 }, R, half)), 'startInches: a side on a seam');
+	{
+		const plan = { drive: 'tank', start: { x: 0, y: wallY, h: 0 }, steps: [{ kind: 'aim', label: 'Aim', timeout: 3 }] };
+		ok(S.stepCode(plan.steps[0]) === 'aimAtGoal("Aim", 3)', 'aim step: the Java');
+		const back2 = S.fromJava('s.start("x", 0, -61, 0).aimAtGoal("Aim", 2.5).move("Out", 10, 0, 0.5);');
+		ok(back2.plan && back2.plan.steps[0].kind === 'aim' && back2.plan.steps[0].timeout === 2.5 && back2.plan.steps.length === 2, 'aim step: read back from Java');
+	}
 	ok(/^Left side .* from the left wall, right side against the right wall, back against our wall\.$/.test(S.startInches(S.snapStart({ x: 80, y: -80, h: 0 }, R, half), R, half)), 'startInches: the corner reads "against"');
 	ok(S.wallName(-70, 10) === 'the left wall' && S.wallName(60, -71) === 'our wall' && S.wallName(71, 5) === 'the right wall' && S.wallName(0, 71) === 'the far wall', 'wallName');
 	// The same as the web builder's copy where there is one.

@@ -462,7 +462,33 @@ final class SimServer {
         Class<?> guess = BuiltAuto.guess(list, sim.robot);
         b.append("],\"guess\":");
         SimJson.string(b, guess == null ? "" : guess.getName());
-        return b.append('}').toString();
+        // The autonomous OpModes written with Steps, with their Java: "Start from" loads one into the builder.
+        b.append(",\"autos\":[");
+        int n = 0;
+        for (SimDriverStation.Entry e : sim.ds.opModes) {
+            if (!"Autonomous".equals(e.kind)) continue;
+            String src = autoSource(e.type);
+            if (src == null || !src.contains("Steps")) continue;
+            b.append(n++ > 0 ? "," : "").append("{\"name\":");
+            SimJson.string(b, e.name);
+            SimJson.string(b.append(",\"className\":"), e.type.getSimpleName());
+            SimJson.string(b.append(",\"source\":"), src);
+            b.append('}');
+        }
+        return b.append("]}").toString();
+    }
+
+    // An OpMode's Java from the TeamCode folder (-PteamCode), or null (not found, too big, or no TeamCode).
+    private static String autoSource(Class<?> type) {
+        String dir = System.getProperty("sim.teamCode", "");
+        if (dir.isEmpty() || type.getEnclosingClass() != null) return null;
+        java.io.File f = new java.io.File(dir, "src/main/java/" + type.getName().replace('.', '/') + ".java");
+        if (!f.isFile() || f.length() > 200_000) return null;
+        try {
+            return new String(java.nio.file.Files.readAllBytes(f.toPath()), java.nio.charset.StandardCharsets.UTF_8);
+        } catch (java.io.IOException e) {
+            return null;
+        }
     }
 
     // POST /auto: run the plan. Answers {"ok":true,"robotClass":...} or {"error":"..."} at once; START comes

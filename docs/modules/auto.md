@@ -72,6 +72,7 @@ your TeleOp after autonomous.
 | `move(label, inches, direction, power)` | drive (0 forward, 90 right, 180 back, -90 left) |
 | `turn(label, degrees, power)` | turn by (positive = left) |
 | `turnTo(label, heading, power)` | turn to a heading (0 = start direction) |
+| `turnToward(label, bearingDeg, toleranceDeg, maxPower, timeoutSec)` | turn toward something the robot measures (`bearingDeg` gives degrees to turn, + left, NaN = not seen): up to 4 turns, a fresh reading after each. Not mirrored. `Steps.aimAtGoal` uses it |
 | `moveWithTurn(label, inches, fieldDir, heading, power, turnPower)` | drive and turn together (mecanum) |
 | `driveTo(label, pose, ready, x, y, heading, power, tolerance)` | drive to a field point with odometry (mecanum); the five-files `Steps.driveTo` fills in the pose for you ([odometry](odometry.md#driveto)) |
 | `followPath(label, pathJob, timeoutSec[, events])` | follow a path another library drives, e.g. Pedro; `PathJob` is its small plug (start, busy, ready, distance left, cancel; optional: `totalIn()`, `partNow()`). `events`: a list of `PathEvent`s, each fired once when the robot gets to its place; the report lists those that did not fire (`STALLED, not fired: Spin up`). The five-files `Steps.follow` makes both for you ([pedro](pedro.md#do-things-along-the-path)) |

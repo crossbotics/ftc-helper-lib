@@ -7,8 +7,11 @@ import java.util.Map;
 
 /**
  * The match score, worked out from what the simulator sees (the rules file's points; BIOBUZZ: manual 10.5 and
- * table 10-2), so a team sees what a run is worth. Live: what the score would be if the match ended now. The
- * score starts again at "Back to start", "Reset field" and when an autonomous starts (a new match).
+ * table 10-2), so a team sees what a run is worth. Like a referee (10.5): HIVE TIPs count when they happen, LEAVE
+ * and AUTO PARK at the end of AUTO, and the pieces in CELLs, FLOWERs and GARDENs and TELEOP PARK only at the end
+ * of the match (when TeleOp stops). Until then the page shows those as "at the end, if it ended now". The score
+ * starts again at "Back to start", "Reset field", when an autonomous starts, and when a TeleOp starts after a
+ * match that ended (a new match).
  *
  * What counts: LEAVE and AUTO PARK at the end of AUTO (the robot is the alliance its program chose; red if none),
  * HIVE TIPs (AUTO or TELEOP by when the tip finished), pieces in each up CELL, FLOWERs (the owner's points for
@@ -46,6 +49,10 @@ final class SimScore {
     private Boolean autoLeave = null, autoPark = null;
     private String autoAlliance = "";
     private boolean autoBefore = false;     // AUTO was running at the last step
+    // The end of the match (TeleOp stopped): the score then, held (null: not ended), and the time that was left.
+    private Map<String, Side> ended = null;
+    private double endedLeft = Double.NaN, teleopLeft = Double.NaN;
+    private boolean teleopBefore = false;   // TELEOP was running at the last step
 
     SimScore(SimRobot robot, SimPieces pieces) {
         this.robot = robot;
@@ -59,6 +66,8 @@ final class SimScore {
         autoLeave = null;
         autoPark = null;
         autoAlliance = "";
+        ended = null;
+        endedLeft = Double.NaN;
     }
 
     /** After each physics step: an autonomous starting is a new match; its end is when LEAVE and AUTO PARK count. */
@@ -74,6 +83,26 @@ final class SimScore {
             autoPark = a != null && inZone(a.loadingZone);
         }
         autoBefore = autoNow;
+        boolean teleopNow = c.period().equals("TELEOP") && c.secondsLeft() > 0;
+        if (teleopNow && !teleopBefore && ended != null) clear();   // a TeleOp after an ended match: a new match
+        if (teleopNow) teleopLeft = c.secondsLeft();
+        if (!teleopNow && teleopBefore && ended == null) {
+            ended = sides();
+            endedLeft = c.period().equals("TELEOP") ? 0 : teleopLeft;
+        }
+        teleopBefore = teleopNow;
+    }
+
+    /**
+     * Where the match is: "auto", "afterAuto" (AUTO done, TeleOp not started), "teleop", "ended" (TeleOp stopped:
+     * the score is held), or "none" (free play, nothing run since the last reset).
+     */
+    String matchState() {
+        SimPieces.MatchClock c = pieces.clock;
+        if (c.period().equals("AUTO") && c.secondsLeft() > 0) return "auto";
+        if (c.period().equals("TELEOP") && c.secondsLeft() > 0) return "teleop";
+        if (ended != null) return "ended";
+        return autoLeave != null ? "afterAuto" : "none";
     }
 
     /** A HIVE finished tipping. */
@@ -122,6 +151,16 @@ final class SimScore {
 
         double total() {
             return leave + parkAuto + tipAuto + parkTeleop + tipTeleop + cell + flower + bottomNectar + garden + fouls;
+        }
+
+        /** AUTO's points (LEAVE, AUTO PARK, AUTO TIPs). */
+        double autoTotal() {
+            return leave + parkAuto + tipAuto;
+        }
+
+        /** The points counted only at the end of the match: CELLs, FLOWERs, the bottom NECTAR bonus, GARDENs, TELEOP PARK. */
+        double atEnd() {
+            return cell + flower + bottomNectar + garden + parkTeleop;
         }
     }
 
@@ -237,10 +276,17 @@ final class SimScore {
                 .append(",\"nectarAllowed\":").append(!c.period().equals("AUTO") && !(c.period().equals("TELEOP") && c.secondsLeft() > r.nectarLastSec)).append('}');
         b.append(",\"score\":{");
         int i = 0;
-        for (Map.Entry<String, Side> e : sides().entrySet()) {
+        String state = matchState();
+        boolean over = state.equals("ended");
+        for (Map.Entry<String, Side> e : (over ? ended : sides()).entrySet()) {
             Side s = e.getValue();
             if (i++ > 0) b.append(',');
+            // counted: what a referee has counted so far (all of it once the match ended); atEnd: the end-of-match
+            // points (if it ended now, until it has)
             b.append(q(e.getKey())).append(":{\"total\":").append(num(s.total()))
+                    .append(",\"counted\":").append(num(over ? s.total() : s.total() - s.atEnd())).append(",\"atEnd\":").append(num(s.atEnd()))
+                    .append(",\"autoTotal\":").append(num(s.autoTotal())).append(",\"teleopTotal\":").append(num(s.tipTeleop + s.atEnd()))
+                    .append(",\"rp\":{\"swarm\":").append(num(s.leave + s.parkAuto + s.parkTeleop)).append(",\"tips\":").append(s.tipsAuto + s.tipsTeleop).append('}')
                     .append(",\"auto\":{\"leave\":").append(num(s.leave)).append(",\"park\":").append(num(s.parkAuto))
                     .append(",\"tips\":").append(s.tipsAuto).append(",\"tipPoints\":").append(num(s.tipAuto)).append('}')
                     .append(",\"teleop\":{\"park\":").append(num(s.parkTeleop)).append(",\"tips\":").append(s.tipsTeleop)
@@ -251,7 +297,10 @@ final class SimScore {
                     .append(",\"gardenPoints\":").append(num(s.garden)).append('}')
                     .append(",\"foulPoints\":").append(num(s.fouls)).append('}');
         }
-        b.append("},\"flowers\":[");
+        b.append("},\"match\":{\"state\":").append(q(state)).append(",\"endedLeft\":").append(num(over ? endedLeft : Double.NaN)).append('}');
+        b.append(",\"rp\":{\"swarm\":").append(num(r.rpSwarm)).append(",\"pollinator1\":").append(num(r.rpPollinator1))
+                .append(",\"pollinator2\":").append(num(r.rpPollinator2)).append('}');
+        b.append(",\"flowers\":[");
         i = 0;
         for (Map.Entry<String, List<Object[]>> e : pieces.flowers().entrySet()) {
             if (i++ > 0) b.append(',');

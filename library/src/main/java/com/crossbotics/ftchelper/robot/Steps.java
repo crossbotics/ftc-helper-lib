@@ -344,6 +344,22 @@ public final class Steps {
         return this;
     }
 
+    /**
+     * Points at the goal, then goes on: the whole robot turns toward it (the camera first, the odometry
+     * backup; {@code Tunables.Aim} numbers), or, with a turret that follows the goal, waits until the
+     * turret is aimed. Gives up after {@code timeoutSec}; the report says "not seen" if there was no
+     * goal (the robot does not turn blind). In the auto builder: "Aim at the goal".
+     */
+    public Steps aimAtGoal(String label, double timeoutSec) {
+        if (!adding()) return this;
+        Aim a = robot.aim();
+        if (a == null) throw new IllegalStateException("aimAtGoal(...) is ready after setup (inside the autonomous's steps)");
+        Turret t = a.followingTurretInRobot();
+        if (t != null) routine.waitUntil(label, t::isAimed, timeoutSec);
+        else routine.turnToward(label, a::bearingNow, a.toleranceNow(), a.maxTurnPowerNow(), timeoutSec);
+        return this;
+    }
+
     /** Runs a command now and goes on at once (e.g. {@code () -> robot.lift.goTo("high")}). */
     public Steps run(String label, Runnable command) {
         if (adding()) routine.run(label, command);

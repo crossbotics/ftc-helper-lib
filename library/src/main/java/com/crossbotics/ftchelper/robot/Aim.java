@@ -385,8 +385,22 @@ public final class Aim {
         return mode.isOn();
     }
 
+    // For aimAtGoal: how far to turn the robot to face the goal now (positive = left), NaN if not seen.
+    double bearingNow() {
+        TargetObservation g = goal();
+        return g == null ? Double.NaN : corrected(g).bearingDeg;
+    }
+
+    double toleranceNow() {
+        return toleranceDeg.getAsDouble();
+    }
+
+    double maxTurnPowerNow() {
+        return maxTurnPower.getAsDouble();
+    }
+
     // A turret that follows the goal (follows(camera) or followsOdometry() in Robot.java), or null.
-    private Turret followingTurretInRobot() {
+    Turret followingTurretInRobot() {
         for (Module<?> m : robot.modules()) {
             // A turret that is not on the robot yet (optional) does not aim: whole-robot aim may be used.
             if (m instanceof Turret && m.isPresent() && ((Turret) m).followsGoal()) return (Turret) m;
@@ -487,6 +501,60 @@ public final class Aim {
         return null;
     }
 
+    // ----------------------------- seen, in range, locked -----------------------------
+
+    /** How far along the aim is, for the Driver Station line, lights or a buzz: each stage includes the ones before. */
+    public enum Stage {
+        /** The robot cannot aim (no camera with a goal, no odometry goal point), or no goal now. */
+        NOT_SEEN,
+        /** The goal is known (camera, or the odometry backup). */
+        SEEN,
+        /** ... and its distance is inside the launcher's shot table (or the launcher has no table). */
+        IN_RANGE,
+        /** ... and the robot (or the following turret) points at it, within {@code toleranceDeg}. */
+        LOCKED;
+
+        /** "not seen", "seen", "in range", "LOCKED". */
+        public String words() {
+            return this == NOT_SEEN ? "not seen" : this == SEEN ? "seen" : this == IN_RANGE ? "in range" : "LOCKED";
+        }
+    }
+
+    /** True if the robot can find the goal at all: a camera with goal(...) in Robot.java, or the odometry backup. */
+    public boolean canAim() {
+        return aimingCamera() != null || (hasGoalPoint && robot.odometry() != null);
+    }
+
+    /**
+     * The aim's stage now: NOT_SEEN, SEEN, IN_RANGE or LOCKED. Locked: a following turret is aimed, or the
+     * robot's front is within {@code toleranceDeg} of the goal (aim mode on or not). E.g. lights:
+     * {@code robot.aim().stage() == Aim.Stage.LOCKED}.
+     */
+    public Stage stage() {
+        TargetObservation g = goal();
+        if (g == null) return Stage.NOT_SEEN;
+        Boolean range = null;
+        for (Module<?> m : robot.modules()) {
+            if (m instanceof Launcher && m.isPresent()) { range = ((Launcher) m).inRange(g.distanceIn); break; }
+        }
+        if (Boolean.FALSE.equals(range)) return Stage.SEEN;
+        Turret t = followingTurret();
+        boolean locked = t != null ? t.isAimed() : Math.abs(corrected(g).bearingDeg) <= toleranceDeg.getAsDouble();
+        return locked ? Stage.LOCKED : Stage.IN_RANGE;
+    }
+
+    // The Driver Station line: "Goal: LOCKED (camera, 52 in, 0.8 deg off)".
+    private String stageLine() {
+        TargetObservation g = goal();
+        Stage st = stage();
+        if (g == null) return "not seen" + (aimingCamera() != null ? " (the camera does not see it)" : "");
+        Turret t = followingTurret();
+        double off = t != null ? t.aimErrorDeg() : corrected(g).bearingDeg;
+        return st.words() + " (" + sourceOf(g).words() + (Double.isNaN(g.distanceIn) ? "" : Module.fmt(", %.0f in", g.distanceIn))
+                + (st == Stage.SEEN ? ", out of the shot table's range" : "")
+                + (Double.isNaN(off) ? "" : Module.fmt(", %.1f deg off", off)) + ")";
+    }
+
     // ----------------------------- the Driver Station -----------------------------
 
     /** The goal-point tolerance used by {@link Turret#isAimed()} for the goal error (Tunables.Aim.toleranceDeg, 2). */
@@ -529,6 +597,8 @@ public final class Aim {
             }
             t.debug("Aim lead", r == null ? "no goal" : r.toString());
         }
+        // Seen, in range, locked: always, on a robot that can aim (the drivers see it before they shoot).
+        if (canAim()) t.line("Goal", stageLine());
         if (!mode.isOn()) return;
         if (driverTurning) {
             t.line("Aim", "the driver is turning");

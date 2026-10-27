@@ -252,4 +252,36 @@ public class SimGameTest {
         assertEquals(3, red.leave, 0);
         assertEquals(5, red.parkAuto, 0);
     }
+
+    // 10.5: CELL, FLOWER and GARDEN pieces and TELEOP PARK count only at the end of the match. Until then the page
+    // gets them apart ("atEnd", shown grey); when TeleOp stops, the score is held: moving after that changes nothing.
+    @Test public void endOfMatchPointsCountWhenTeleOpEnds() throws Exception {
+        SimRobot r = robot("");
+        run(r, 1.0);
+        String json;
+        synchronized (r) { json = r.pieces.score.json(); }
+        assertTrue(json, json.contains("\"red\":{\"total\":10,\"counted\":0,\"atEnd\":10"));
+        assertTrue(json, json.contains("\"match\":{\"state\":\"none\""));
+        assertTrue(json, json.contains("\"rp\":{\"swarm\":16,\"pollinator1\":4,\"pollinator2\":7}"));
+        r.pieces.clock = at("TELEOP", 60);
+        run(r, 0.1);
+        r.setPose(-35, -60, 0);                              // in the red LOADING ZONE: TELEOP PARK, at the end
+        run(r, 0.1);
+        synchronized (r) { json = r.pieces.score.json(); }
+        assertTrue(json, json.contains("\"match\":{\"state\":\"teleop\""));
+        assertTrue(json, json.contains("\"red\":{\"total\":15,\"counted\":0,\"atEnd\":15"));
+        r.pieces.clock = at("", Double.NaN);                 // TeleOp stopped with 60 s left
+        run(r, 0.1);
+        r.setPose(0, -60, 0);                                // out of the zone after the end: no change
+        run(r, 0.1);
+        synchronized (r) { json = r.pieces.score.json(); }
+        assertTrue(json, json.contains("\"match\":{\"state\":\"ended\",\"endedLeft\":60}"));
+        assertTrue(json, json.contains("\"red\":{\"total\":15,\"counted\":15,\"atEnd\":15"));
+        assertTrue(json, json.contains("\"rp\":{\"swarm\":5,\"tips\":0}"));
+        r.pieces.clock = at("TELEOP", 120);                  // a new TeleOp after the end: a new match
+        run(r, 0.1);
+        synchronized (r) { json = r.pieces.score.json(); }
+        assertTrue(json, json.contains("\"match\":{\"state\":\"teleop\""));
+        assertTrue(json, json.contains("\"red\":{\"total\":10,"));
+    }
 }

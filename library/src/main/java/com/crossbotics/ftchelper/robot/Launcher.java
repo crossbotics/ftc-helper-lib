@@ -570,6 +570,54 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     }
 
     /**
+     * A ready-made action: fires {@code count} pieces and is done when the last one has left (or after
+     * 3 s + 2 s a piece). In an autonomous: {@code .action(robot.launcher.fireAction(2))}; the auto
+     * builder lists it as "Fire X". It uses only the launcher, so the intake keeps doing what it does.
+     */
+    public Action fireAction(int count) {
+        if (count < 1) throw new IllegalArgumentException(name() + ".fireAction(" + count + "): fire at least 1 piece");
+        return Action.named(count == 1 ? "Fire 1" : "Fire " + count)
+                .then(() -> fire(count))
+                .waitUntil("the shots", () -> !isShooting(), 3 + 2.0 * count);
+    }
+
+    /**
+     * A ready-made action: fires every piece the robot holds, then is done. How many: the count from a
+     * {@code Pieces} part if Robot.java has one (nothing held: nothing fired), else what the intake holds
+     * ({@code holds(...)}), else the game's limit ({@link Pieces#GAME_LIMIT}).
+     */
+    public Action fireAllAction() {
+        int most = mostHeld();
+        return Action.named("Fire all")
+                .then(() -> { int n = heldNow(most); if (n > 0) fire(n); })
+                .waitUntil("the shots", () -> !isShooting(), 3 + 2.0 * most);
+    }
+
+    // The most the robot can hold: the intake's holds(...) or the game's limit.
+    private int mostHeld() {
+        if (robot != null) {
+            for (Module<?> m : robot.modules()) {
+                if (m instanceof Intake && ((Intake) m).holdsInAll() > 0) return ((Intake) m).holdsInAll();
+            }
+        }
+        return Pieces.GAME_LIMIT;
+    }
+
+    // How many to fire now: a Pieces part's count if there is one, else the most the robot holds.
+    private int heldNow(int most) {
+        if (robot != null) {
+            for (Module<?> m : robot.modules()) if (m instanceof Pieces && m.isPresent()) return ((Pieces) m).count();
+        }
+        return most;
+    }
+
+    /** True if a shot table is in use and the distance is inside its tested rows; null with no table (fixed speed). */
+    Boolean inRange(double distanceIn) {
+        if (tableName == null || tables.get(tableName) == null || Double.isNaN(distanceIn)) return null;
+        return tables.get(tableName).covers(distanceIn);
+    }
+
+    /**
      * For a held button, every loop: fires one piece, then the next as soon as that one is fed, for as
      * long as the button is held (the launcher keeps its time between shots). Pair it with
      * {@link #ceaseFire()} on release: {@code g1.rb.hold(robot.launcher::fireWhileHeld, robot.launcher::ceaseFire)}.

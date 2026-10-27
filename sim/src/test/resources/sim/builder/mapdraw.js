@@ -16,10 +16,18 @@ const BIOBUZZ_LABELS = [[0, -20, 'HIVE'], [0, 20, 'HIVE'], [23, -63, 'FLOWER'], 
 
 /** The tiles, the field parts (from the simulator's field file, or none yet) and the labels. */
 export function drawField(g, field) {
-	el('rect', { x: -72, y: -72, width: 144, height: 144, fill: '#e9ebee', stroke: '#555', 'stroke-width': 0.5 }, g);
-	for (let v = -72; v <= 72; v += 24) {
-		el('line', { x1: v, y1: -72, x2: v, y2: 72, stroke: '#b8bcc4', 'stroke-width': 0.3 }, g);
-		el('line', { x1: -72, y1: v, x2: 72, y2: v, stroke: '#b8bcc4', 'stroke-width': 0.3 }, g);
+	// The real field: inside the walls 141.17 in (the field file), 6 tiles of 23.53 in. Each seam is drawn
+	// with the band where the tiles' teeth interlock (0.4 in each side, from the field CAD).
+	const half = field?.field?.insideWallSize ? field.field.insideWallSize / 2 : 70.585, tile = 2 * half / 6, teeth = 0.4;
+	el('rect', { x: -half, y: -half, width: 2 * half, height: 2 * half, fill: '#e9ebee', stroke: '#555', 'stroke-width': 0.5 }, g);
+	for (let k = 1; k < 6; k++) {
+		const v = -half + k * tile;
+		el('rect', { x: v - teeth, y: -half, width: 2 * teeth, height: 2 * half, fill: '#c9ccd3' }, g);
+		el('rect', { x: -half, y: v - teeth, width: 2 * half, height: 2 * teeth, fill: '#c9ccd3' }, g);
+		el('line', { x1: v, y1: -half, x2: v, y2: half, stroke: '#9aa0aa', 'stroke-width': 0.2 }, g);
+		el('line', { x1: -half, y1: v, x2: half, y2: v, stroke: '#9aa0aa', 'stroke-width': 0.2 }, g);
+	}
+	for (let v = -72; v <= 72; v += 24) {   // inch numbers (where the robot is), not the tile seams
 		el('text', { x: v, y: 77, 'font-size': 3.6, 'text-anchor': 'middle', fill: '#333' }, g).textContent = v;
 		el('text', { x: -73.5, y: -v + 1.2, 'font-size': 3.6, 'text-anchor': 'end', fill: '#333' }, g).textContent = v;
 	}

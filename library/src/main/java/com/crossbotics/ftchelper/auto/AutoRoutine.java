@@ -190,6 +190,32 @@ public class AutoRoutine {
         return add(label, ctx -> record(takeDrive().turnTo(m(headingDeg), maxPower)));
     }
 
+    /**
+     * Turns toward something the robot measures, like the goal from the camera: {@code bearingDeg} says
+     * how far to turn (positive = left, NaN = not seen). Up to 4 turns (a fresh reading after each),
+     * until it is within {@code toleranceDeg}, or {@code timeoutSec} has passed. Not mirrored for RED:
+     * the bearing is measured, not written. The report notes "not seen" or "not within" if it did not get there.
+     */
+    public AutoRoutine turnToward(String label, java.util.function.DoubleSupplier bearingDeg, double toleranceDeg,
+                                  double maxPower, double timeoutSec) {
+        return add(label, ctx -> {
+            long end = clock.getAsLong() + (long) (timeoutSec * 1e9);
+            for (int i = 0; i < 4 && ctx.isActive(); i++) {
+                double left = (end - clock.getAsLong()) / 1e9;
+                if (left <= 0 || !ctx.waitUntil(() -> !Double.isNaN(bearingDeg.getAsDouble()), left)) {
+                    note(i == 0 ? "not seen" : "not within " + toleranceDeg + " deg");
+                    return;
+                }
+                double b = bearingDeg.getAsDouble();
+                if (Math.abs(b) <= toleranceDeg) return;
+                record(takeDrive().turn(b, maxPower));
+                ctx.waitFor(0.15);   // a fresh camera picture after the turn
+            }
+            double b = bearingDeg.getAsDouble();
+            if (Double.isNaN(b) || Math.abs(b) > toleranceDeg) note("not within " + toleranceDeg + " deg");
+        });
+    }
+
     /** Drives in a field direction while turning to a heading (mecanum only). Both angles are mirrored for RED. */
     public AutoRoutine moveWithTurn(String label, double distanceIn, double fieldDirectionDeg,
                                     double headingDeg, double maxPower, double maxTurnPower) {

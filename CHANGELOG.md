@@ -6,6 +6,29 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Changed
 
+- **The score counts like a referee.** HIVE TIPs count when they happen, LEAVE and AUTO PARK at the end of
+  AUTO; pieces in the CELLs, FLOWERs and GARDENs and TELEOP PARK only at the end of the match (they change
+  all match long). Until then the score bar shows them grey ("+10": if the match ended now). When TeleOp
+  ends the score is FINAL and held. Click a side: AUTO, TELEOP and FOUL, as on FIRST's score calculator,
+  and the RANKING POINTS (SWARM, POLLINATOR 1 and 2) with the count toward each.
+- **Ready-made features: `robot.features()`.** The library works out from Robot.java what it can do for
+  your robot, and says what is missing for the rest. New with it: the launcher's **`fireAction(n)`**
+  ("Fire 2") and **`fireAllAction()`** actions; **`s.aimAtGoal("Aim", 3)`** in an autonomous (the whole
+  robot turns to the goal, or a following turret aims; never blind); and the TeleOp line
+  **`Goal : LOCKED (camera, 52 in, 0.8 deg off)`**: not seen, seen, in range (of the shot table), LOCKED,
+  also `robot.aim().stage()` for lights. The auto builder shows the list ("What this robot can do"), puts
+  the ready actions first and has "+ Aim at the goal" for a robot that can aim.
+- **Auto builder: Start from one of your autos.** It reads an autonomous written with Steps from your
+  TeamCode into the builder (and lists what it could not read). Your file is not changed.
+- **The start spot follows the rules and the real tiles.** It must touch the field wall (G304): a spot
+  away from every wall goes to the nearest one, and a check refuses it. The map draws the real field
+  (141.17 in, tiles of 23.53 in, each seam with its 0.4 in band of interlocking teeth, from the field CAD),
+  snapping also lines a side up with the teeth's edge, and the line under the spot names the tile
+  ("Centred on tile 4 from the left"). Turn the start with a yellow knob, the Face arrows or 15° buttons; a
+  tap on the start robot no longer adds a step.
+- **Clearer words in the auto builder:** `mirrorForRed()` is "false: red's side is rotated 180° (like
+  BIOBUZZ)" or "true: red's side is mirrored", and Robot code says where its list comes from.
+
 - **The auto builder lists your actions.** An Action or Start something step is a list of what your
   code has (`Actions.fireAll(robot)` to shoot, `Actions.deployIntake(robot)`...), with "type your own..."
   at the end. Before, it was a text box, and the browser hid every name but the one already in it.
@@ -16,8 +39,6 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   that leaves the field names the wall it hits, and says when the start spot itself is past the wall.
 - **Edit robot: Every part out** puts each moving part at its pose farthest from the start (an intake
   deployed), and a yellow arrow shows each launcher and the way its shots leave.
-- **The score bar says why each side has points before the match** (10 in BIOBUZZ): the field starts with
-  pieces in the up CELLs and GARDENs, and they count at the end.
 - **An autonomous starts a fresh match in the simulator.** On the page, INIT of an autonomous puts every
   game piece back where the match starts them (with the preload) and the robot on its start spot, so you
   can run an auto again and again with no Reset field. A TeleOp's INIT keeps the field as the autonomous

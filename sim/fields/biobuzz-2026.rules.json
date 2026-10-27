@@ -19,6 +19,12 @@
   "majorFoul": 20,
   "notes": "Table 10-2 (10.5.5). majorFoul: the glossary (a credit of 20 points to the opponent)."
  },
+ "rankingPoints": {
+  "swarm": 16,
+  "pollinator1": 4,
+  "pollinator2": 7,
+  "notes": "Table 10-3, 'All Other Events': SWARM = LEAVE + PARK points at or above 16; POLLINATOR 1 and 2 = HIVE TIPs at or above 4 and 7."
+ },
  "alliances": {
   "red": {"nectar": "red NECTAR", "loadingZone": "Red LOADING ZONE", "garden": "Red GARDEN"},
   "blue": {"nectar": "blue NECTAR", "loadingZone": "Blue LOADING ZONE", "garden": "Blue GARDEN"},

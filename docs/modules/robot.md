@@ -60,6 +60,7 @@ flowchart LR
 | [`Mode`](#modes) | a rule a module follows every loop while the mode is on |
 | [`ControlMap`](#controlmap), [`Pad`](#controlmap) | `Controls.java`: the TeleOp and the button map |
 | [`Auto`](#auto), [`Steps`](#auto) | one autonomous as a list of steps |
+| [`Feature`](#what-your-robot-can-do) | what the library does by itself for your robot, ready or not (`robot.features()`) |
 | [`Toggleable`](#controlmap) | anything one button switches on and off |
 | [`Motors`](#motors) | look up the encoder counts and speed of common motors, by catalog id (a part's name in the [parts catalog](../guides/parts-catalog.md), e.g. `"gobilda-5203-312"`) |
 | [`Shape`](#shapes-and-parts), [`Parts`](#shapes-and-parts) | how each part looks and where it sits, for the simulator; wheels, rollers and servos by catalog id |
@@ -271,6 +272,36 @@ robot.everyLoop(() -> lastHeight = robot.lift.position());  // a small piece of 
 
 Pause stops every part in `all()` that is not the library's own, also one added the old way with
 `robot.all().add(...)`. A second motor on a lift or arm needs none of this: `alsoMotor` (see [Lift](#lift)).
+
+## What your robot can do
+
+The library does some things by itself, once your robot has the parts for them. `robot.features()`
+lists them, worked out from Robot.java alone (no hardware): each one **ready**, with the line to use it,
+or **not ready**, with what to add. The simulator's auto builder shows this list ("What this robot can
+do"), and its Action list starts with the ready actions.
+
+| Feature | Kind | Needs | The line |
+| --- | --- | --- | --- |
+| Fire 1, Fire 2 ... Fire all | action | a launcher | `robot.launcher.fireAction(2)`, `robot.launcher.fireAllAction()` |
+| Aim at the goal | auto step | a drive, and a camera with `goal(...)` (or `odometry(...)` + `Tunables.Aim` `goalX, goalY`); with a following turret, the turret | `.aimAtGoal("Aim", 3)` |
+| Aim mode: the whole robot turns to the goal while you drive | TeleOp toggle | the same, and no following turret. Mecanum: drive and strafe while it stays aimed; tank: forward and back only | `g1.rb.toggle(robot.aimMode())` |
+| Turret follows the goal | TeleOp toggle | a turret with `follows(camera)` or `followsOdometry()` (the robot drives at full speed while it aims) | `g1.rb.toggle(robot.turret.followMode())` |
+| Goal line: seen, in range, LOCKED | automatic | what aiming needs | (nothing to write) |
+| Buzz when aimed | TeleOp | what aiming needs | `g1.rumbleWhenAimed();` |
+| Shoot while moving | TeleOp toggle | aiming, and `odometry(...)` (the speed). Tune it first | `g1.x.toggle(robot.aim().movingShotMode())` |
+
+**The buttons stay yours.** The library never takes a button by itself: two features could want the same
+one. The list gives the line; you pick the button in `Controls.java`.
+
+```java
+for (Feature f : robot.features()) telemetry.addLine(f.toString());   // ready  action: Fire 2  robot.launcher.fireAction(2) ...
+```
+
+| `Feature` | |
+| --- | --- |
+| `kind` | `AUTO_STEP`, `ACTION`, `TOGGLE` or `AUTOMATIC` (`kind.words()`: "auto step" ...) |
+| `name`, `code`, `needs`, `note` | what it is called, the line to use it ("" for automatic), what it needs, a short note |
+| `ready()`, `missing` | it has what it needs; what to add ("" when ready) |
 
 ## Parts not in the catalog
 
@@ -760,6 +791,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 | `spinUp()`, `idle()`, `toggle()` | to the shot speed; back to `idleRpm` |
 | `fire()`, `fire(n)` | spins up if needed, feeds as soon as it is at speed (gives up after 3 s, saying why) |
 | `fireWhileHeld()`, `ceaseFire()` | for a held button: one shot, then the next as soon as it is fed; on release no more (a tap still fires its one shot) |
+| `fireAction(n)`, `fireAllAction()` | ready-made [actions](#action): fire n pieces ("Fire 2"), or every piece the robot holds ("Fire all": a `Pieces` part's count, else the intake's `holds(...)`, else 4), and be done when the last one has left (time limit 3 s + 2 s a piece). `.action(robot.launcher.fireAction(1))` in an autonomous, `g1.y.press(robot.launcher.fireAllAction())` in TeleOp. Only the launcher: the intake keeps doing what it does |
 | `adjust(steps)` | speed +/- steps x `stepRpm` (not saved) |
 | `trimBy(change)`, `setTrim(percent)`, `resetTrim()`, `trim()` | the [speed trim](#speed-trim-and-battery-compensation): every shot speed (table or fixed) +/- that many percent, e.g. `trimBy(+2)`; kept to +/- `trimMaxPercent` and to the motor's top speed; `resetTrim()` also clears `adjust` |
 | `atMotorLimit()` | true when the trimmed speed is cut to the motor's top speed ("(motor limit)"; more trim up does nothing) |
@@ -1049,6 +1081,19 @@ sit at the pivot). INIT shows `Moving shot: ON: flight 0.80 s ...`; TeleOp shows
 `Aim: moving shot: lead 12.3 deg, 18 in` while the robot moves, and a debug line with every number.
 Off: nothing changes. The math: [MovingShot](vision.md#movingshot).
 
+**Seen, in range, LOCKED.** On a robot that can aim (a camera with `goal(...)`, or the odometry backup),
+TeleOp always shows one line, so the drivers know when to shoot:
+`Goal : LOCKED (camera, 52 in, 0.8 deg off)`. The stages, each with the ones before it:
+**not seen**; **seen** (the goal is known; also says "out of the shot table's range" when its distance is
+outside the launcher's `speedByDistance` rows); **in range** (inside the table, or the launcher has no
+table); **LOCKED** (the robot's front, or a following turret, within `toleranceDeg`; aim mode does not
+have to be on). Your code can use it too, for lights: `robot.aim().stage() == Aim.Stage.LOCKED`.
+
+**Aim at the goal in an autonomous**: `s.aimAtGoal("Aim", 3)` turns the whole robot to the goal (up to
+4 turns, a fresh reading after each, until within `toleranceDeg`; `maxTurnPower`), or, with a turret
+that follows the goal, waits until it is aimed. It never turns blind: with no goal it waits up to the
+time limit, and the report says `not seen`. The auto builder has it as "+ Aim at the goal".
+
 **The aim buzz**: `g2.rumbleWhenAimed();` buzzes that gamepad while the aim is within `rumbleDeg`, the
 closer the stronger and longer (an [AimRumble](gamepad.md)). It follows a turret that is following, or
 whole-robot aim; nothing while neither aims, or while paused.
@@ -1060,6 +1105,7 @@ whole-robot aim; nothing while neither aims, or while paused.
 | `odometryProblem()`, `disagreement()` | why the odometry backup is off now, ""  if it works; the camera/odometry distance warning, "" if they agree |
 | `hasGoalPoint()` | `Tunables.Aim` has `goalX` and `goalY` |
 | `mode()` (= `robot.aimMode()`) | whole-robot aim (stops with a message on a robot whose turret follows the goal) |
+| `canAim()`, `stage()` | the robot can find the goal at all (a camera with a goal, or the odometry backup); NOT_SEEN, SEEN, IN_RANGE or LOCKED now (`Stage.words()`: "not seen" ... "LOCKED") |
 | `errorDeg()`, `isAimed()`, `rumbleDeg()` | degrees off now (NaN = unknown); aimed (whole robot within `toleranceDeg`, or the following turret's `isAimed()`: on the goal now). While shooting on the move: off the virtual goal |
 | `movingShotMode()` | shooting on the move on/off (on from START with `shootOnMove = true`): `g2.a.toggle(robot.aim().movingShotMode())` |
 | `isMovingShot()`, `lead()` | it is on and the robot moves (over 2 in/s or 5 deg/s); the last lead (a [MovingShot](vision.md#movingshot) `Result`: `leadDeg`, `leadIn`, `distanceIn`), null if none |
@@ -1512,6 +1558,7 @@ What [`Steps`](#auto) can do:
 | `isYes(label)`, `choice(label)` | read a choice |
 | `move(label, inches, directionDeg, power)` | drive (0 forward, 90 right: clockwise, like a compass) |
 | `turn(label, degrees, power)`, `turnTo(label, headingDeg, power)` | turn by an angle / to a heading (90 = left: counterclockwise, the other way from a move's direction) |
+| `aimAtGoal(label, timeoutSec)` | turn to the goal with the camera (or the odometry backup), or wait for a following turret; "not seen" in the report if there was no goal ([Aim](#aim)) |
 | `driveTo(label, xIn, yIn, headingDeg, power[, toleranceIn][, PathAt...])` | drive to a field point and heading with the odometry, correcting all the way (mecanum; needs `Tunables.Odometry.checked` on a robot) ([driveTo](../guides/autonomous-builder.md#drive-to-a-field-point-driveto)); [`PathAt`](#pathat) starts things on the way |
 | `follow(label, path[, timeoutSec][, PathAt...])` | follow a path with the robot's [path follower](#pathfollower) ([pedro](pedro.md)); [`PathAt`](#pathat) starts things along it |
 | `run(label, command)` | start something and go on at once |
