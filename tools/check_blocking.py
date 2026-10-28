@@ -26,6 +26,7 @@ ALLOWED_LOOPS = {
     "testing/HardwareCheckOpMode.java": "an OpMode: its run loop",
     "teleop/EasyTeleOp.java": "an OpMode: its INIT and run loops (each pass is quick; it never waits)",
     "finders/FinderOpMode.java": "an OpMode: its INIT and run loops (each pass is quick; it never waits)",
+    "finders/TuneAndCheckOpMode.java": "an OpMode: its INIT menu and run loops (each pass is quick; it never waits)",
     "finders/DriveTunerOpMode.java": "a tuning OpMode: its test moves block on purpose, like autonomous",
     "util/BackgroundWorker.java": "the background thread's own loop (not the robot's loop)",
 }
