@@ -249,7 +249,8 @@ Some steps in these docs are commands you type. You type them in Android Studio'
    ([Add it to a project](01-add-to-project.md), the Quick start's step 1). With FTC's new project
    (way B), it is not there until you do that step.
 4. **Run one command:** type it (or paste it), press **Enter**, and wait for the prompt to come back.
-   Run one line at a time.
+   Run one line at a time. A `git` command says `not recognized` (Windows)? Git is not on the command
+   line yet, even with GitHub Desktop: [git is not recognized](troubleshooting.md#autonomous-choice-and-git-problems).
 5. **Gradle commands print a lot** (`./gradlew ...`). The first one downloads for a few minutes. Look
    at the **last** lines: `BUILD SUCCESSFUL` is good; `BUILD FAILED` comes with the first problem just
    above `* What went wrong:`. Warnings are not errors. These are normal and safe to ignore:

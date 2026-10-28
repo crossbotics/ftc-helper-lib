@@ -114,7 +114,9 @@ waiting for, never before an event.
 ## Update: GitHub Desktop
 
 GitHub Desktop has no button to change a submodule's version, so you type a few lines in a terminal it
-opens for you:
+opens for you. Those lines need git on the command line, which GitHub Desktop does not give you on
+Windows: `git --version` must print a version first
+([git is not recognized](troubleshooting.md#autonomous-choice-and-git-problems)).
 
 1. Commit and push your own work first (**Commit to main**, **Push origin**).
 2. **Repository > Open in Terminal** (Windows: **Repository > Open in Command Prompt**, or the name of
