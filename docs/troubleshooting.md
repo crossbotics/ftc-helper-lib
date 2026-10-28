@@ -8,6 +8,7 @@ text and search this page for it (Ctrl+F, or Cmd+F on a Mac).
 ## Build problems
 
 **<samp>Project directory '.../ftc-helper-lib/library' does not exist</samp>**
+
 The submodule folder is empty: the project was cloned (copied from GitHub) without the library in
 it. Run in the Terminal tab:
 ```bash
@@ -15,23 +16,30 @@ git submodule update --init
 ```
 
 **<samp>Cannot resolve symbol 'crossbotics'</samp> / red imports**
+
 Gradle does not know about the library yet. Check steps 2 and 3 in
 [Add it to a project](01-add-to-project.md), then **File > Sync Project with Gradle Files**.
 
 **<samp>Plugin [id: 'com.android.library'] was not found</samp>**
+
 Your project's top `build.gradle` (the one in the project folder, not in TeamCode) must list the
 Android library plugin. Every FtcRobotController
 project does (`id 'com.android.library' version '...' apply false`). If yours is very old, update the SDK.
 
 **Errors in the library after an FTC SDK update**
+
 See [A new FTC SDK version](02-keep-up-to-date.md#a-new-ftc-sdk-version).
 
 ## Driver Station errors
 
-**<samp>No DcMotorEx named "..." in the active robot configuration</samp>** (or <samp>No Servo named "intake_deploy" ...</samp>)
+**<samp>No DcMotorEx named "..." in the active robot configuration</samp>**
+- or <samp>No Servo named "intake_deploy" ...</samp>
+
 The name in code and the name in the Driver Station configuration differ. The message lists the
 names that do exist. Fix the spelling, or pick the right configuration on the Driver Station.
-**The part is not on the robot yet?** (The message then ends <samp>Not on the robot yet? Add .optional() ...</samp>.)
+
+**The part is not on the robot yet?** The message then ends <samp>Not on the robot yet? Add .optional() ...</samp>
+
 Add `.optional()` to its line in Robot.java: INIT then goes on, says the part is off, and its
 buttons and actions skip it until it is in the configuration
 ([parts not on the robot yet](modules/robot.md#parts-not-on-the-robot-yet)). The
@@ -39,24 +47,34 @@ buttons and actions skip it until it is in the configuration
 the configuration is missing.
 
 **<samp>libraryButtons: G1 BACK has two library jobs: ... Move or free one</samp>**
-(also <samp>has two long (held) library jobs</samp>, <samp>is the slow trigger and also ...</samp>,
-<samp>cannot open the tuning menu</samp>.) In `libraryButtons(...)` a library job was moved onto a button that already has one. Pick
+- or <samp>has two long (held) library jobs</samp>
+- or <samp>is the slow trigger and also ...</samp>
+- or <samp>cannot open the tuning menu</samp>
+
+In `libraryButtons(...)` a library job was moved onto a button that already has one. Pick
 another button, or free the other job with `null` ([the button menu](guides/buttons.md#moving-the-librarys-buttons)).
 
 **<samp>Tunables.Lift has no max: write max (the top of the safe range, in counts: Motor Finder, B). A safety limit never comes from a library default.</samp>**
-(also <samp>has no min</samp>, <samp>Tunables.java has no Lift section</samp>, or <samp>Arm</samp> in <samp>deg</samp>.) On purpose: a lift or arm
+- or <samp>has no min</samp>
+- or <samp>Tunables.java has no Lift section</samp>
+- or the same for <samp>Arm</samp>, in <samp>deg</samp>
+
+On purpose: a lift or arm
 must never use a library default for its safe range. Run the [Motor Finder](guides/finders.md), then
 write `min` and `max` in that section of `Tunables.java`.
 
 **<samp>Tunables.Lift.max must be a public static number (like "public static double max = 1000;"): ...</samp>**
+
 The field is there but written another way: not `public`, or not a number (for example a `String`).
 Write it exactly like `public static double max = 2900;`. (Without `static`, it counts as missing: you
 get <samp>has no max</samp> instead.)
 
 **<samp>Tunables.Lift: max (...) must be more than min (...)</samp>**
+
 The two numbers are swapped or equal. `max` is the top of the safe range, `min` the bottom.
 
 **<samp>Tunables.Lift.Max looks like "max" (capitals and spelling count). Fix the name in Tunables.java; a position must not look like a setting.</samp>**
+
 A field name is a known setting with other capitals or an `_` (`Max`, `MAX`, `MIN`, `kp`, `KP`,
 `k_P`): this always stops INIT. Or it is up to two letters off a setting (`maxPowr`, `maxPwr` for
 `maxPower`) that the section does not write itself: then too. (`slowZone2` next to a written
@@ -66,24 +84,31 @@ library's default. Fix the spelling. If it really is a position, give it a name 
 like a setting. The known names: [Lift](modules/robot.md#lift).
 
 **<samp>Tunables.Intake.inPowr is not a setting of Intake (did you mean inPower?): the robot would quietly ignore it. ...</samp>**
-(any part: <samp>Tunables.Aim.goalx</samp>, <samp>Tunables.Launcher.nominalVolt</samp>, <samp>Tunables.TurretLift.turetFrom</samp>.) A field
+- or the same for any part: <samp>Tunables.Aim.goalx</samp>, <samp>Tunables.Launcher.nominalVolt</samp>, <samp>Tunables.TurretLift.turetFrom</samp>
+
+A field
 in that section is not a name the part reads: a typo, other capitals, or a leftover from an older robot.
 Before, the line was quietly skipped and the part used its default. Fix the name (the "did you mean" is
 the closest real one; <samp>Known:</samp> lists them all, and so does the [Tunables reference](guides/tunables.md)),
 or delete the line. A number you keep for your own code goes in your own section (`Tunables.Auto`).
 
 **<samp>!! Tunables.Launcher is not read by any part: your launcher's section is Tunables.Shooter (its device name "shooter" in CamelCase). Move the numbers there</samp>**
+
 A part reads the section named after its DEVICE (its configuration name in CamelCase), not after its
 kind: `Launcher.flywheel("shooter", ...)` reads `Tunables.Shooter`, `Indexer.servo("feeder")` reads
 `Tunables.Feeder`, `Lift.slide("lift_left")` reads `Tunables.LiftLeft`. Until you move the numbers, the part
 uses the library's defaults. (Also <samp>did you mean Tunables.LiftLeft?</samp> for a section spelled almost like a
 part's.) An interlock rule's fields follow the same name: `liftLeftAbove`, not `liftAbove`.
 
-**The interlock line says <samp>... held ...: Turret angle unknown (...)</samp>.** The other part's position is not
+**The interlock line says <samp>... held ...: Turret angle unknown (...)</samp>**
+
+The other part's position is not
 known yet (a turret looking for its home switch, a servo turret before START), so it counts as maybe in
 its zone and this part waits. It goes on by itself once the angle is known.
 
-**<samp>AutoDriveConfig.calibrationConfirmed is false</samp>**, or **<samp>AUTONOMOUS IS OFF: the drive is not tuned yet</samp>** (EasyAuto, Auto)
+**<samp>AutoDriveConfig.calibrationConfirmed is false</samp>**
+- or <samp>AUTONOMOUS IS OFF: the drive is not tuned yet</samp> (EasyAuto, Auto)
+
 On purpose: a robot with untuned numbers can drive much too far. Tune `AutoDrive`, then set it to `true`: [Tune AutoDrive](modules/drive.md#tune-autodrive). With the
 robot in five files: the Drive Tuner, then `Tunables.Drive.calibrated = true`.
 
@@ -120,16 +145,20 @@ robot in five files: the Drive Tuner, then `Tunables.Drive.calibrated = true`.
 | <samp>ready_color: no new reading for N s</samp> | a piece sensor (or its camera) stopped answering: a loose cable, or a camera that stopped streaming. It sees nothing until readings come back |
 | <samp>Intake: held back by stopsWhen for N s (the count says full)</samp> | the piece count says full. Not really full? Hold the in-button (RT) 1 s to pull in anyway, or hold G2's left stick button 1 s: count = 0 ([Pieces](modules/robot.md#pieces-and-piecesensor)) |
 
-**<samp>EasyTeleOp needs your robot settings</samp>** / **<samp>EasyAuto needs your robot settings</samp>**
+**<samp>EasyTeleOp needs your robot settings</samp>**
+- or <samp>EasyAuto needs your robot settings</samp>
+
 Add `robotConfig()` to the OpMode: `return new RobotSettings();` (starter kit) or
 `return RobotSettings.config();` (tutorials). See [RobotConfig](modules/core.md#robotconfig).
 
 **<samp>Autonomous needs the IMU (turn sensor)</samp>**
+
 `RobotSettings.imu()` returned null. Return `ImuSetup.get(...)` there: every Control Hub has an IMU.
 
 ## Robot behavior
 
 **A part's button does nothing, and INIT says <samp>... no button (G2 RB is your "score high" in Controls.java)</samp>**
+
 A job of yours in `Controls.java` is on a button that part suggested, so yours won and the part has no
 button for that job. It often happens when a later lesson adds a part (a launcher wants gamepad 2's LB
 and RB). Move your job to a free button (INIT lists them: <samp>G2 free: ...</samp>), or free the part's job and
@@ -246,6 +275,7 @@ The option is spelled differently in `menuChoice(...)` and in `onlyIf(...)` (cap
 option in the simulator: [Several autonomous modes](guides/autos.md#test-each-one-in-the-simulator).
 
 **<samp>modified: ftc-helper-lib (new commits)</samp> in `git status`**
+
 Your library folder is at another version than the project expects. If you did not mean to update it:
 `git submodule update`. See [Keep it up to date](02-keep-up-to-date.md#after-a-teammate-updates-it).
 
@@ -253,7 +283,9 @@ Your library folder is at another version than the project expects. If you did n
 Read the CHANGELOG's **Changed** list, or go back to the old version:
 [Go back to the old version](02-keep-up-to-date.md#go-back-to-the-old-version).
 
-**<samp>'git' is not recognized</samp> (Windows), or <samp>git: command not found</samp>**
+**<samp>'git' is not recognized</samp> (Windows)**
+- or <samp>git: command not found</samp>
+
 The Terminal cannot find git. GitHub Desktop does not fix this: it keeps its own git, and only GitHub
 Desktop can use that one.
 
@@ -272,6 +304,7 @@ Desktop can use that one.
     4. Close Android Studio fully, open it again, and do step 3 again.
 
 **<samp>rejected</samp>, <samp>CONFLICT</samp>, <samp>divergent branches</samp> or another git message**
+
 See [Git and GitHub: problems](guides/github.md#problems).
 
 ## Still stuck?
