@@ -109,6 +109,12 @@ Tunables.Claw: P1 = 0.210, P2 = 0.740
 In five files: `public static double open = 0.210, closed = 0.740;` in `Tunables.Claw`. A servo
 module has no ends of its own, so the ends become a reminder.
 
+## CameraFixCheckOpMode
+
+`CameraFixCheckOpMode` (**alpha**): the standing test for the [camera fix](odometry.md#camera-fix-alpha). It
+finds `Tunables.CameraFix` `turnDegBlue` / `turnDegRed` and shows where the camera puts the robot, to check
+with a tape. Needs `robot()`; in Tune and check for a robot with `cameraFix(camera)`.
+
 ## FeedStopFinderOpMode
 
 `FeedStopFinderOpMode` finds a launcher's feed stop positions: `Tunables.Launcher: feedStopHold = ...,

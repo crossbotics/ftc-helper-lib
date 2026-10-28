@@ -93,6 +93,7 @@ public static double pipeline = 2;
 public static boolean autoLighting = false;
 ```
 
+Put them in with the laptop and **install the app on the robot again** (these numbers are read at INIT).
 Every match there then uses that pipeline, with no test. Back at school, set `autoLighting = true`
 again. **Copy tuned values back to `Tunables.java`:** a value changed live (the tuning menu) is only on
 this Control Hub; the file is the record.

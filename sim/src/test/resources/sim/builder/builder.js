@@ -183,7 +183,7 @@ panel.innerHTML = `
   <div class="row b-addrow" id="bAdd">
     <button data-add="move">+ Drive</button><button data-add="strafe" id="bAddStrafe">+ Strafe</button><button data-add="turn">+ Turn</button>
     <button data-add="turnTo">+ Turn to</button><button data-add="wait">+ Wait</button><button data-add="run">+ Start something</button>
-    <button data-add="action">+ Action</button><button data-add="aim" id="bAddAim" title="Turn to the goal (camera, or the odometry backup)">+ Aim at the goal</button><button data-add="ready" id="bAddReady" title="Spin the launcher up and wait until it is ready to fire">+ Ready to launch</button><button data-add="park">+ Park from here</button>
+    <button data-add="action">+ Action</button><button data-add="aim" id="bAddAim" title="Turn to the goal (camera, or the odometry backup)">+ Aim at the goal</button><button data-add="ready" id="bAddReady" title="Spin the launcher up and wait until it is ready to fire">+ Ready to launch</button><button data-add="remember" title="Save the heading now, for Turn back">+ Remember heading</button><button data-add="back" title="Turn back to the remembered heading">+ Turn back</button><button data-add="park">+ Park from here</button>
     <label class="muted" title="Off: new steps go at the end"><input type="checkbox" id="bInsert"> add after the selected step</label></div>
   <div id="bTankNote" class="b-tanknote" hidden></div>
   <div id="bList"></div>
@@ -771,7 +771,7 @@ $('bCard').onclick = () => {
 
 // ------------------------------------------------------------------ Simple steps: the list
 
-const KIND_TEXT = { move: 'Drive', turn: 'Turn', turnTo: 'Turn to', wait: 'Wait', run: 'Start something', action: 'Action', alongside: 'Action', aim: 'Aim at the goal', ready: 'Ready to launch', park: 'Park from here' };
+const KIND_TEXT = { move: 'Drive', turn: 'Turn', turnTo: 'Turn to', wait: 'Wait', run: 'Start something', action: 'Action', alongside: 'Action', aim: 'Aim at the goal', ready: 'Ready to launch', remember: 'Remember heading', back: 'Turn back', park: 'Park from here' };
 const DIRS = [[0, 'forward'], [180, 'back'], [90, 'right (strafe)'], [270, 'left (strafe)']];
 const NEW = {
 	move: () => ({ kind: 'move', label: 'Drive', inches: 24, dir: 0, power: 0.6 }),
@@ -783,6 +783,8 @@ const NEW = {
 	action: () => ({ kind: 'action', code: actionsNow()[0] || '', timeout: ACTION_LIMIT_SEC }),
 	aim: () => ({ kind: 'aim', label: 'Aim', timeout: 3 }),
 	ready: () => ({ kind: 'ready', label: 'Ready', timeout: 3 }),
+	remember: () => ({ kind: 'remember', label: 'Remember heading' }),
+	back: () => ({ kind: 'back', label: 'Turn back', power: 0.5 }),
 	park: () => ({ kind: 'park', sec: 3 }),
 };
 for (const b of $('bAdd').querySelectorAll('[data-add]')) {
@@ -831,8 +833,12 @@ function stepForm(s, i) {
 		case 'action': case 'alongside':
 			return `<div class="row">${code(actionsNow()[0] || 'Actions.name(robot)')}</div><div class="row"><label><input type="checkbox" data-k="wait"${s.kind === 'action' ? ' checked' : ''}> wait until done</label>
 				${s.kind === 'action' ? `<label>at most <input type="number" min="0.5" step="0.5" data-k="timeout" value="${fmt(+s.timeout)}"> s</label>` : ''}</div>`;
-		case 'aim': return `<div class="row">${name('Aim')}<label>at most <input type="number" min="0.5" step="0.5" data-k="timeout" value="${fmt(+s.timeout)}"> s</label></div>
-			<p class="muted">Turns to the goal with the camera (or the odometry backup); a following turret aims instead. The preview does not turn: the run does.</p>`;
+		case 'aim': return `<div class="row">${name('Aim')}<label>at most <input type="number" min="0.5" step="0.5" data-k="timeout" value="${fmt(+s.timeout)}"> s</label>
+				<label>sweep <input type="number" min="0" max="180" step="5" data-k="sweep" value="${fmt(+(s.sweep || 0))}"> deg each way</label></div>
+			<p class="muted">Turns to the goal with the camera (or the odometry backup); a following turret aims instead. Sweep (0 = none): not in view, the robot turns slowly up to that far each way to find it. The preview does not turn: the run does.</p>`;
+		case 'remember': return `<div class="row">${name('Remember heading')}</div><p class="muted">Saves the way the robot faces now. A later "Turn back" turns to it.</p>`;
+		case 'back': return `<div class="row">${name('Turn back')}<label>power <input type="number" min="0.1" max="1" step="0.05" data-k="power" value="${fmt(+s.power)}"></label></div>
+			<p class="muted">Turns back to the heading saved by "Remember heading". Without odometry pods it uses the IMU: better than nothing. The preview does not turn: the run does.</p>`;
 		case 'ready': return `<div class="row">${name('Ready')}<label>at most <input type="number" min="0.5" step="0.5" data-k="timeout" value="${fmt(+s.timeout)}"> s</label></div>
 			<p class="muted">Spins the launcher up and waits until it is at speed. Put it before the drive to the shooting spot: the first shot then goes at once.</p>`;
 		case 'park': return `<div class="row"><label>Keep the last <input type="number" min="0.5" step="0.5" data-k="sec" value="${fmt(+s.sec)}"> s for the steps below</label></div>`;

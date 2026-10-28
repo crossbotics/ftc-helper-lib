@@ -38,21 +38,23 @@ final class TunableFields {
                 "turnKd", "turnKp");
         part("Odometry", "angularScalar", "checked", "linearScalar", "mirrorForRed", "resetHeading", "resetX", "resetY");
         part("Aim", "cameraForwardIn", "cameraLatencyMs", "cameraLeftIn", "cameraMaxAgeMs", "cameraOdometryAgree",
-                "cameraOffset", "flightSec", "flightSecPerIn", "goalX", "goalY", "maxGoalDistance", "maxLeadIn",
+                "cameraOffset", "flightSec", "flightSecPerIn", "goalX", "goalY", "lockMarginDeg", "maxGoalDistance", "maxLeadIn",
                 "maxTurnPower", "minTurnPower", "mirrorForRed", "rumbleDeg", "shootOnMove", "shooterForwardIn",
-                "shooterLeftIn", "toleranceDeg", "turnKd", "turnKp");
+                "shooterLeftIn", "sweepPower", "sweepStepDeg", "toleranceDeg", "turnKd", "turnKp");
         part("Buttons", "holdSec", "tapGapSec");
+        part("CameraFix", "blend", "enabled", "maxAgeMs", "maxJumpIn", "maxSpeedInPerSec", "maxTurnDegPerSec", "minTags",
+                "turnDegBlue", "turnDegRed");
         part("Camera", "autoLighting", "exposureMs", "gain", "lightingAfterStartMs", "lightingMinPictures",
-                "lightingPictures", "lightingSettleMs", "pipeline");
+                "lightingPictures", "lightingSettleMs", "liveView", "pipeline");
         part("Hood", "angleA", "angleB", "byHandPerSec", "calibration", "kP", "maxPower", "posA", "posB",
                 "startAngle", "stepAngle", "tolerance", "travelSec", "trimMax");
         part("Indexer", "feedSec", "power", "push", "pushSec", "rest", "returnSec");
         part("Intake", "inPower", "outPower");
         part("Interlock");   // only <part>From, <part>To, ... (see interlock below)
-        part("Launcher", "assistSec", "batteryCompensation", "blueTrimPercent", "fallbackDistanceIn", "feedStopHold",
-                "feedStopOpenSec", "feedStopRelease", "idleRpm", "kD", "kF", "kI", "kP", "nominalVolts", "quickBandRpm",
+        part("Launcher", "assistSec", "batteryCompensation", "blueTrimPercent", "ejectRpm", "ejectSec", "fallbackDistanceIn", "feedStopHold",
+                "feedStopMoveSec", "feedStopOpenSec", "feedStopRelease", "idleRpm", "kD", "kF", "kI", "kP", "nominalVolts", "quickBandRpm",
                 "quickMaxWaitSec", "readyBandRpm", "redTrimPercent", "shotIntervalSec", "speedByDistance", "speedRpm",
-                "sprayEnabled", "sprayLastSeconds", "stepRpm", "trimMaxPercent", "trimStepPercent");
+                "sprayEnabled", "sprayLastSec", "stepRpm", "trimMaxPercent", "trimStepPercent");
         part("LiftArm", "kD", "kF", "kI", "kP", "max", "maxPower", "min", "slowZone", "slowZonePower", "tolerance");
         part("Lights", "allianceAtInit");
         part("PieceSensor", "gain", "gapMm", "hueTolerance", "minSaturation", "nearMm", "sizeToleranceMm", "steadyMs");

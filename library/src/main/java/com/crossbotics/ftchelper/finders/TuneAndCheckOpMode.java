@@ -205,6 +205,11 @@ public class TuneAndCheckOpMode extends LinearOpMode {
                 @Override protected RobotDefinition robot() { return fresh.get(); }
             }));
         }
+        if (robot != null && robot.hasCameraFix()) {
+            out.add(new Tool("Camera Fix Check", "ALPHA: the camera fix's turn", () -> new CameraFixCheckOpMode() {
+                @Override protected RobotDefinition robot() { return fresh.get(); }
+            }));
+        }
         if (any(modules, PieceSensor.class)) {
             out.add(new Tool("Piece Tuner", "what each piece sensor sees", () -> new PieceTunerOpMode() {
                 @Override protected RobotDefinition robot() { return fresh.get(); }

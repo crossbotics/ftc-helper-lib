@@ -191,6 +191,72 @@ public class AutoRoutine {
     }
 
     /**
+     * {@link #turnToward} with a sweep: when nothing is seen at the start, the robot turns slowly, in
+     * steps of {@code stepDeg}, up to {@code sweepDeg} to the left, then up to {@code sweepDeg} to the
+     * right of where it started, and looks after each step. As soon as it sees the target it turns
+     * toward it as {@link #turnToward} does. Never seen: it turns back to where it started, and the
+     * report notes "not seen (swept)". It never turns farther than {@code sweepDeg} either way.
+     */
+    public AutoRoutine turnTowardWithSweep(String label, java.util.function.DoubleSupplier bearingDeg, double toleranceDeg,
+                                           double maxPower, double timeoutSec, double sweepDeg, double stepDeg, double sweepPower) {
+        return add(label, ctx -> {
+            long end = clock.getAsLong() + (long) (timeoutSec * 1e9);
+            java.util.function.DoubleSupplier left = () -> (end - clock.getAsLong()) / 1e9;
+            // Headings are measured, not added up: a turn that stops short does not throw the sweep off.
+            double start = needDrive().headingDeg();
+            java.util.List<Double> stops = sweepStops(sweepDeg, stepDeg);
+            int next = 0;
+            boolean seen = !Double.isNaN(bearingDeg.getAsDouble());
+            while (!seen && ctx.isActive() && left.getAsDouble() > 0) {
+                // a fresh picture first (it may see the target without any turn)
+                if (ctx.waitUntil(() -> !Double.isNaN(bearingDeg.getAsDouble()), Math.min(0.2, left.getAsDouble()))) {
+                    seen = true;
+                    break;
+                }
+                if (next >= stops.size() || left.getAsDouble() <= 0) break;
+                record(takeDrive().turnTo(start + stops.get(next++), sweepPower));
+            }
+            if (!seen) {
+                // Back to where it started (also after the time limit: a robot left turned is worse).
+                if (ctx.isActive() && Math.abs(needDrive().headingDeg() - start) > 1) record(takeDrive().turnTo(start, sweepPower));
+                note("not seen (swept)");
+                return;
+            }
+            for (int i = 0; i < 4 && ctx.isActive() && left.getAsDouble() > 0; i++) {
+                double b = bearingDeg.getAsDouble();
+                if (Double.isNaN(b)) {
+                    if (!ctx.waitUntil(() -> !Double.isNaN(bearingDeg.getAsDouble()), left.getAsDouble())) {
+                        note("lost it");
+                        return;
+                    }
+                    b = bearingDeg.getAsDouble();
+                }
+                if (Math.abs(b) <= toleranceDeg) return;
+                record(takeDrive().turn(b, maxPower));
+                ctx.waitFor(Math.min(0.15, Math.max(0, left.getAsDouble())));   // a fresh camera picture after the turn
+            }
+            double b = bearingDeg.getAsDouble();
+            if (Double.isNaN(b) || Math.abs(b) > toleranceDeg) note("not within " + toleranceDeg + " deg");
+        });
+    }
+
+    /**
+     * The sweep's stops, degrees from the start (+ = left): left in steps up to {@code sweepDeg}, then right
+     * in steps down to {@code -sweepDeg}; both ends always included. None for a sweep of 0. Public for tests.
+     */
+    public static java.util.List<Double> sweepStops(double sweepDeg, double stepDeg) {
+        java.util.List<Double> stops = new java.util.ArrayList<>();
+        double most = Math.abs(sweepDeg);
+        if (most < 1e-9) return stops;
+        double step = Math.min(Math.max(1, Math.abs(stepDeg)), most);
+        for (double a = step; a < most - 1e-9; a += step) stops.add(a);
+        stops.add(most);
+        for (double a = most - step; a > -most + 1e-9; a -= step) stops.add(a);
+        stops.add(-most);
+        return stops;
+    }
+
+    /**
      * Turns toward something the robot measures, like the goal from the camera: {@code bearingDeg} says
      * how far to turn (positive = left, NaN = not seen). Up to 4 turns (a fresh reading after each),
      * until it is within {@code toleranceDeg}, or {@code timeoutSec} has passed. Not mirrored for RED:

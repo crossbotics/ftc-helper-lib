@@ -196,6 +196,21 @@ public abstract class PoseTracker implements Subsystem {
         speedInPerSec = 0;
     }
 
+    /**
+     * Moves the pose by a small correction (inches, our frame), keeping the heading, the speed and
+     * {@link #isPoseSet()} as they are: the camera fix uses it, so a correction is not read as a jump
+     * (setPose would set the speed to 0 and restart the dead-wheel difference).
+     */
+    public final void nudge(double dxIn, double dyIn) {
+        if (!isReady()) return;
+        write(pose.y + dyIn, -(pose.x + dxIn), pose.headingDeg);
+        pose.x += dxIn;
+        pose.y += dyIn;
+        // The last position moves with it, so the next loop's difference is the robot's own motion.
+        lastX += dxIn;
+        lastY += dyIn;
+    }
+
     // True once setPose was called (see isPoseSet()).
     private boolean poseSet = false;
 

@@ -54,6 +54,7 @@ FILE_KEY = {
     "Camera.java": "Camera",
     "PieceSensor.java": "PieceSensor",
     "Lights.java": "Lights",
+    "CameraFix.java": "CameraFix",
 }
 # A section named in the call (TunableSection.of(tunablesClass, "Buttons")) -> reference key.
 NAMED_KEY = {"Drive": "Drive", "Odometry": "Odometry", "Aim": "Aim", "Buttons": "Buttons"}

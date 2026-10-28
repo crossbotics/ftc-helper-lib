@@ -101,6 +101,7 @@ on the robot network). Set the correct tag size there for distances.
 | `lighting()` / `matchStarted()` | the lighting test (null without `autoPipelines`); tell it START happened |
 | `.pollRate(hz)` | results per second |
 | `setRobotHeading(deg)` | for the Limelight's MegaTag2 position feature (not needed to aim). Safe every loop: sent in the background |
+| `fieldSighting()` | **alpha**: the robot's field position from the newest picture (`FieldSighting`: `mt2XIn`, `mt2YIn`, `mt1XIn`, `mt1YIn`, `mt1YawDeg`, `tags`, `timeNanos`, `number`), in the Limelight's field frame; NaN when none. The [camera fix](odometry.md#camera-fix-alpha) uses it |
 | `.keepTargetsMs(ms)` | how long targets stay without a new picture (default 500) |
 | `.groups(list)` | tag groups reported as one target each (default `TagGroup.currentSeason()`; empty list = off) |
 | `getLimelight()` | the SDK object, for color pipelines and more |

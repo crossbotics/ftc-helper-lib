@@ -34,7 +34,8 @@ public class FiringTest {
             public static double speedRpm = 3000, feedStopHold = 0.1, feedStopRelease = 0.6, feedStopOpenSec = 0.3;
             public static double redTrimPercent = 2, blueTrimPercent = -1;
             public static boolean sprayEnabled = false;
-            public static double sprayLastSeconds = 5;
+            public static double sprayLastSec = 5;
+            public static double ejectRpm = 600, ejectSec = 0.3;
         }
     }
 
@@ -82,7 +83,9 @@ public class FiringTest {
         loop(r, fly, 0);
         loop(r, fly, 0);
         assertEquals("open for the piece", 0.6, d.servo("stop").position, 1e-9);
-        assertTrue("the intake is borrowed to push it in", d.motor("intake").power > 0);
+        assertEquals("the intake waits while the stop opens (0.1 s)", 0, d.motor("intake").power, 1e-9);
+        runFor(r, fly, 0.13);
+        assertTrue("then it is borrowed to push the piece in", d.motor("intake").power > 0);
         assertTrue(r.intake.isPushingForShot());
         loop(r, fly, 400);                                    // the shot: the wheel loses 400 rpm
         loop(r, fly, 400);
@@ -241,6 +244,71 @@ public class FiringTest {
         r.setAlliance(Alliance.BLUE);
         loop(r, d.motor("launcher"), 0);
         assertEquals(2970, r.launcher.targetRpm(), 1e-6);    // -1%
+    }
+
+    @Test public void ejectSendsOnePieceOutSlowlyThenGoesBack() throws Exception {
+        PretendDevices d = new PretendDevices();
+        Bot r = new Bot();
+        r.setup(d);
+        r.startForTests();
+        PretendMotor fly = d.motor("launcher");
+        Action a = r.launcher.ejectAction();
+        r.run(a);
+        r.all().update();
+        assertEquals(600, r.launcher.targetRpm(), 1e-6);
+        assertTrue(r.launcher.isEjecting());
+        fly.velocity = 400 / 60.0 * 28;                      // the wheel at 400 of 600 rpm: enough to eject
+        r.all().update();
+        r.all().update();
+        assertEquals("the piece goes without waiting for the speed", 0.6, d.servo("stop").position, 1e-9);
+        long end = System.nanoTime() + 450_000_000L;
+        while (System.nanoTime() < end) { fly.velocity = 400 / 60.0 * 28; r.all().update(); Thread.sleep(5); }
+        assertTrue(!r.launcher.isEjecting());
+        assertTrue("it was not spinning before: idle again", !r.launcher.isSpinning());
+        assertTrue(!a.isRunning());
+    }
+
+    // Review (Codex): a wheel still at shooting speed must not throw the ejected piece: it slows first.
+    @Test public void ejectWaitsForTheWheelToSlowDown() throws Exception {
+        PretendDevices d = new PretendDevices();
+        Bot r = new Bot();
+        r.setup(d);
+        r.startForTests();
+        PretendMotor fly = d.motor("launcher");
+        r.launcher.spinUp();
+        runFor(r, fly, 0.3);                                  // at 3000 rpm
+        r.launcher.eject();
+        for (int i = 0; i < 5; i++) { fly.velocity = 3000 / 60.0 * 28; r.all().update(); }
+        assertEquals("not fed at 3000 rpm", 0.1, d.servo("stop").position, 1e-9);
+        for (int i = 0; i < 3; i++) { fly.velocity = 700 / 60.0 * 28; r.all().update(); }
+        assertEquals("fed once near 600 rpm", 0.6, d.servo("stop").position, 1e-9);
+        long end = System.nanoTime() + 450_000_000L;
+        while (System.nanoTime() < end) { fly.velocity = fly.velocityCommand; r.all().update(); Thread.sleep(5); }
+        assertTrue(!r.launcher.isEjecting());
+        assertTrue("it was spinning before: spinning again", r.launcher.isSpinning());
+        assertEquals("3000 rpm, -1% BLUE alliance trim", 2970, r.launcher.targetRpm(), 1e-6);
+    }
+
+    // Review (Codex): a cancelled eject goes back to what the wheel did, and an explicit stop stays stopped.
+    @Test public void aCancelledEjectGoesBackAndStopStaysStopped() {
+        PretendDevices d = new PretendDevices();
+        Bot r = new Bot();
+        r.setup(d);
+        r.startForTests();
+        Action a = r.launcher.ejectAction();
+        r.run(a);
+        r.all().update();
+        r.cancel(a);
+        r.all().update();
+        assertTrue(!r.launcher.isEjecting());
+        assertTrue("idle before: idle again", !r.launcher.isSpinning());
+        assertEquals(0, r.launcher.targetRpm(), 1e-6);
+        r.launcher.eject();
+        r.all().update();
+        r.launcher.stop();
+        r.all().update();
+        assertTrue(!r.launcher.isEjecting());
+        assertEquals(0, r.launcher.targetRpm(), 1e-6);
     }
 
     @Test public void readyActionIsDoneWhenTheWheelIsAtSpeed() throws Exception {

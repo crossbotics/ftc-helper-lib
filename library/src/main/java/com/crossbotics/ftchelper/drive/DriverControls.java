@@ -124,6 +124,18 @@ public final class DriverControls {
 
     // Turn assist (e.g. aim at a goal), or null: gets the driver's turn and gives the turn to use.
     private java.util.function.DoubleUnaryOperator turnAssist = null;
+    // Reverse drive: while this says true, forward and strafe are flipped (the back is the front).
+    private java.util.function.BooleanSupplier reversed = () -> false;
+
+    /**
+     * Reverse drive while {@code when} is true: forward and strafe are flipped, so the back of the robot
+     * acts as the front (turning is not flipped). Robot-centric only: field-centric driving ignores it
+     * (the field does not turn round). The robot in five files: {@code g1.x.toggle(robot.reverseDriveMode())}.
+     */
+    public DriverControls reverseWhen(java.util.function.BooleanSupplier when) {
+        reversed = when == null ? () -> false : when;
+        return this;
+    }
 
     /**
      * A helper that may change the turn, e.g. aiming at a goal while the driver drives: every loop it
@@ -173,6 +185,10 @@ public final class DriverControls {
         double turn = StickShaping.shape(swapped ? gamepad.left_stick_x : gamepad.right_stick_x, deadband, exponent);
         if (turnAssist != null) turn = turnAssist.applyAsDouble(turn);
         lastSpeed = speed;
+        if (!isFieldCentric() && reversed.getAsBoolean()) {
+            forward = -forward;
+            strafe = -strafe;
+        }
         if (isFieldCentric()) wheels.fieldCentric(forward, strafe, turn, heading.degrees(), lastSpeed);
         else wheels.robotCentric(forward, strafe, turn, lastSpeed);
     }

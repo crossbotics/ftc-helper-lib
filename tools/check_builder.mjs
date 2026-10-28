@@ -222,6 +222,10 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 		const back2 = S.fromJava('s.start("x", 0, -61, 0).aimAtGoal("Aim", 2.5).move("Out", 10, 0, 0.5);');
 		ok(back2.plan && back2.plan.steps[0].kind === 'aim' && back2.plan.steps[0].timeout === 2.5 && back2.plan.steps.length === 2, 'aim step: read back from Java');
 		ok(S.stepCode({ kind: 'ready', label: 'Ready', timeout: 3 }) === 'readyToLaunch("Ready", 3)', 'ready step: the Java');
+		ok(S.stepCode({ kind: 'aim', label: 'Aim', timeout: 4, sweep: 45 }) === 'aimAtGoal("Aim", 4, 45)', 'aim step with a sweep: the Java');
+		ok(S.stepCode({ kind: 'remember', label: 'R' }) === 'rememberHeading("R")' && S.stepCode({ kind: 'back', label: 'B', power: 0.5 }) === 'turnBack("B", 0.5)', 'remember / turn back: the Java');
+		const back4 = S.fromJava('s.start("x", 0, -61, 0).aimAtGoal("Aim", 4, 45).rememberHeading("R").turn("T", 90, 0.5).turnBack("B", 0.4);');
+		ok(back4.plan && back4.plan.steps[0].sweep === 45 && back4.plan.steps[1].kind === 'remember' && back4.plan.steps[3].kind === 'back' && back4.plan.steps[3].power === 0.4, 'sweep, remember, turn back: read back from Java');
 		const back3 = S.fromJava('s.start("x", 0, -61, 0).readyToLaunch("Ready", 2).move("Out", 10, 0, 0.5);');
 		ok(back3.plan && back3.plan.steps[0].kind === 'ready' && back3.plan.steps[0].timeout === 2 && back3.plan.steps.length === 2, 'ready step: read back from Java');
 	}

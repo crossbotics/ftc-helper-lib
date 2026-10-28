@@ -123,6 +123,10 @@ public final class Aim {
     private final double shooterForwardIn, shooterLeftIn, cameraForwardIn, cameraLeftIn;
     // The last lead worked out (for the Driver Station), and when (nanoseconds).
     private MovingShot.Result lastLead = null;
+    // Locked stays locked until the error passes toleranceDeg + this (no flicker at the edge).
+    private final double lockMarginDeg;
+    private final double sweepStepDeg, sweepPower;
+    private boolean lockedLast = false;
     private long lastLeadNanos = 0;
 
     Aim(RobotDefinition robot, TunableSection t) {
@@ -149,6 +153,12 @@ public final class Aim {
         shooterLeftIn = t.has("shooterLeftIn") ? t.number("shooterLeftIn", 0) : 0;
         cameraForwardIn = t.has("cameraForwardIn") ? t.number("cameraForwardIn", 0) : 0;
         cameraLeftIn = t.has("cameraLeftIn") ? t.number("cameraLeftIn", 0) : 0;
+        lockMarginDeg = t.has("lockMarginDeg") ? Math.abs(t.number("lockMarginDeg", 1)) : 1;
+        sweepStepDeg = t.has("sweepStepDeg") ? Math.max(1, Math.abs(t.number("sweepStepDeg", 15))) : 15;
+        sweepPower = t.has("sweepPower") ? Math.min(1, Math.abs(t.number("sweepPower", 0.3))) : 0.3;
+        // Whole-robot aim turns on only with a goal in view (last season's rule): a press with no goal
+        // leaves it off (one buzz with .rumble()), so the robot never waits to turn toward nothing.
+        mode.onlyWhen(() -> goal() != null, "no goal in view");
     }
 
     // A number from Tunables.Aim that the tuning menu can change. No section: the library's default
@@ -391,6 +401,15 @@ public final class Aim {
         return g == null ? Double.NaN : corrected(g).bearingDeg;
     }
 
+    // aimAtGoal's sweep: degrees per step and the turn power (Tunables.Aim sweepStepDeg 15, sweepPower 0.3).
+    double sweepStepNow() {
+        return sweepStepDeg;
+    }
+
+    double sweepPowerNow() {
+        return sweepPower;
+    }
+
     double toleranceNow() {
         return toleranceDeg.getAsDouble();
     }
@@ -480,12 +499,21 @@ public final class Aim {
      * launcher check: {@code .requireReady("aimed", () -> aim().isAimed())}.
      */
     public boolean isAimed() {
-        if (mode.isOn()) {
-            double e = errorDeg();
-            return !Double.isNaN(e) && Math.abs(e) <= toleranceDeg.getAsDouble();
-        }
+        if (mode.isOn()) return withinLock(errorDeg());
         Turret t = followingTurret();
         return t != null && t.isAimed();
+    }
+
+    // Within the tolerance; once in, it stays in until the error passes toleranceDeg + lockMarginDeg
+    // (a camera's jitter at the edge would make LOCKED and a launcher's "aimed" check flicker).
+    private boolean withinLock(double errorDeg) {
+        if (Double.isNaN(errorDeg)) {
+            lockedLast = false;
+            return false;
+        }
+        double limit = toleranceDeg.getAsDouble() + (lockedLast ? lockMarginDeg : 0);
+        lockedLast = Math.abs(errorDeg) <= limit;
+        return lockedLast;
     }
 
     /** The error that starts the buzz of {@code rumbleWhenAimed()} (Tunables.Aim.rumbleDeg, default 4). */
@@ -532,14 +560,17 @@ public final class Aim {
      */
     public Stage stage() {
         TargetObservation g = goal();
-        if (g == null) return Stage.NOT_SEEN;
+        if (g == null) {
+            lockedLast = false;   // lost: a goal that comes back must get inside the tolerance again
+            return Stage.NOT_SEEN;
+        }
         Boolean range = null;
         for (Module<?> m : robot.modules()) {
             if (m instanceof Launcher && m.isPresent()) { range = ((Launcher) m).inRange(g.distanceIn); break; }
         }
         if (Boolean.FALSE.equals(range)) return Stage.SEEN;
         Turret t = followingTurret();
-        boolean locked = t != null ? t.isAimed() : Math.abs(corrected(g).bearingDeg) <= toleranceDeg.getAsDouble();
+        boolean locked = t != null ? t.isAimed() : withinLock(corrected(g).bearingDeg);
         return locked ? Stage.LOCKED : Stage.IN_RANGE;
     }
 
@@ -599,6 +630,7 @@ public final class Aim {
         }
         // Seen, in range, locked: always, on a robot that can aim (the drivers see it before they shoot).
         if (canAim()) t.line("Goal", stageLine());
+        if (mode.refusedLately()) t.warn("Aim mode not on: " + mode.whyRefused() + " (press again with the goal in view)");
         if (!mode.isOn()) return;
         if (driverTurning) {
             t.line("Aim", "the driver is turning");

@@ -170,7 +170,14 @@ public class BuiltAuto extends Auto<RobotDefinition> {
                 case "turnTo": s.turnTo(label, need(st, "heading", where), need(st, "power", where)); break;
                 case "wait": s.waitSeconds(label, need(st, "sec", where)); break;
                 case "run": s.run(label, BuiltCode.command(SimJsonReader.string(st, "code", ""), robot)); break;
-                case "aim": s.aimAtGoal(label, need(st, "timeout", where)); break;
+                case "aim":
+                    if (st.get("sweep") instanceof Number && ((Number) st.get("sweep")).doubleValue() > 0) {
+                        s.aimAtGoal(label, need(st, "timeout", where), need(st, "sweep", where));
+                    }
+                    else s.aimAtGoal(label, need(st, "timeout", where));
+                    break;
+                case "remember": s.rememberHeading(label); break;
+                case "back": s.turnBack(label, need(st, "power", where)); break;
                 case "ready": s.readyToLaunch(label, need(st, "timeout", where)); break;
                 case "action": s.action(BuiltCode.action(SimJsonReader.string(st, "code", ""), robot), need(st, "timeout", where)); break;
                 case "alongside": s.alongside(BuiltCode.action(SimJsonReader.string(st, "code", ""), robot)); break;

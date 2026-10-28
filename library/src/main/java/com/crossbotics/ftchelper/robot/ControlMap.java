@@ -250,6 +250,8 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
         // Whole-robot aim (robot.aimMode()): while it is on, the robot's turn comes from the aim
         // unless the driver moves the turn stick.
         driving().turnAssist(robot().aim()::assistTurn);
+        // Reverse drive (robot.reverseDriveMode()): the back is the front while it is on.
+        driving().reverseWhen(robot().reverseDriveMode()::isOn);
         // The "pose was never set" warning says how to set it with the button.
         Key pose = jobs.contains(LibraryButtons.Job.SET_POSE) ? libraryKeys().key(LibraryButtons.Job.SET_POSE) : null;
         robot().resetPoseHint = pose == null ? null : "park on the reset spot and hold " + pose + " 1 s";
@@ -306,6 +308,9 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
         if (robot().isPaused()) t.warn("PAUSED: everything stopped on brake. " + keyWords(LibraryButtons.Job.PAUSE) + " to go on.");
         if (plan != null && !plan.slowWarning().isEmpty()) t.warn(plan.slowWarning());
         if (robot().aim() != null) robot().aim().addTelemetry(t);
+        if (robot().reverseDriveMode().isOn()) {
+            t.line("Drive", driving().isFieldCentric() ? "REVERSED is on, but field-centric ignores it" : "REVERSED: the back is the front");
+        }
         for (Shown s : shown) {
             Object v;
             try {

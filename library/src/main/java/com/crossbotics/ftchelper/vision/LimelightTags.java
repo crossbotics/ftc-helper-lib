@@ -235,6 +235,10 @@ public class LimelightTags implements TargetSource {
             if (o != null) out.add(o);
         }
         latest = out;
+        // The field position (alpha camera fix, CameraPoseFix): MegaTag2 for the fix, MegaTag1 (with its
+        // own yaw) for the Camera Fix Check.
+        double[] mt2 = fieldInches(result.getBotpose_MT2()), mt1 = fieldInches(result.getBotpose());
+        sighting = new FieldSighting(mt2[0], mt2[1], mt1[0], mt1[1], mt1[2], result.getBotposeTagCount(), pictureTime, ++sightings);
     }
 
     // Venue lighting: hands the sweep the number of tags in a NEW picture taken with the pipeline being
@@ -295,6 +299,51 @@ public class LimelightTags implements TargetSource {
         // Limelight camera space: x right, z forward. The bearing is positive to the LEFT, so the minus sign.
         double bearing = -Math.toDegrees(Math.atan2(mid[0], mid[2]));
         return new TargetObservation(TargetObservation.CLUSTER, group.name, bearing, Math.hypot(mid[0], mid[2]), timeNanos);
+    }
+
+    /**
+     * <b>ALPHA</b> (the camera fix, {@code CameraPoseFix}): the robot's field position the Limelight worked
+     * out from the tags in one picture, in the Limelight's field frame (inches, degrees). NaN when it had
+     * none. MegaTag2 needs the robot's heading ({@link #setRobotHeading}); MegaTag1 gives its own yaw.
+     */
+    public static final class FieldSighting {
+        public final double mt2XIn, mt2YIn, mt1XIn, mt1YIn, mt1YawDeg;
+        public final int tags;
+        /** When the picture was taken (System.nanoTime clock). */
+        public final long timeNanos;
+        /** Counts up with each new picture: a new number = a new picture. */
+        public final long number;
+
+        FieldSighting(double mt2X, double mt2Y, double mt1X, double mt1Y, double mt1Yaw, int tags, long time, long number) {
+            mt2XIn = mt2X;
+            mt2YIn = mt2Y;
+            mt1XIn = mt1X;
+            mt1YIn = mt1Y;
+            mt1YawDeg = mt1Yaw;
+            this.tags = tags;
+            timeNanos = time;
+            this.number = number;
+        }
+    }
+
+    private FieldSighting sighting = null;
+    private long sightings = 0;
+
+    /** ALPHA: the field position from the newest picture with tags, or null before the first. */
+    public FieldSighting fieldSighting() {
+        return sighting;
+    }
+
+    // {x, y, yaw} in inches and degrees, NaN for no pose (null, or all zero: the Limelight's "no solve").
+    private static double[] fieldInches(Pose3D p) {
+        double[] none = {Double.NaN, Double.NaN, Double.NaN};
+        if (p == null || p.getPosition() == null) return none;
+        org.firstinspires.ftc.robotcore.external.navigation.Position at =
+                p.getPosition().toUnit(org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit.INCH);
+        if (at.x == 0 && at.y == 0 && at.z == 0) return none;
+        double yaw = p.getOrientation() == null ? Double.NaN
+                : p.getOrientation().getYaw(org.firstinspires.ftc.robotcore.external.navigation.AngleUnit.DEGREES);
+        return new double[] {at.x, at.y, yaw};
     }
 
     /**

@@ -78,6 +78,7 @@ your TeleOp after autonomous.
 | `followPath(label, pathJob, timeoutSec[, events])` | follow a path another library drives, e.g. Pedro; `PathJob` is its small plug (start, busy, ready, distance left, cancel; optional: `totalIn()`, `partNow()`). `events`: a list of `PathEvent`s, each fired once when the robot gets to its place; the report lists those that did not fire (`STALLED, not fired: Spin up`). The five-files `Steps.follow` makes both for you ([pedro](pedro.md#do-things-along-the-path)) |
 | `driveTo(label, pose, ready, x, y, heading, power, tolerance, events)` | `driveTo` with `PathEvent`s on the way: the "path" is the straight line from where the step starts |
 | `rememberHeading(label)` / `returnToHeading(label, power)` | come back to a saved heading |
+| `turnTowardWithSweep(label, bearingDeg, toleranceDeg, maxPower, timeoutSec, sweepDeg, stepDeg, sweepPower)` | `turnToward` with a sweep: nothing seen at the start, it turns in `stepDeg` steps up to `sweepDeg` left, then right, looking after each; never seen: back to the start, "not seen (swept)". `Steps.aimAtGoal(label, sec, sweepDeg)` uses it |
 | `run(label, code)` | run code at once, continue (e.g. `claw::open`) |
 | `waitFor(label, seconds)` | wait; mechanisms keep working |
 | `waitUntil(label, condition, timeout)` | wait for something, with a time limit |

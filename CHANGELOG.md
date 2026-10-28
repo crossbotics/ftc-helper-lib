@@ -4,32 +4,56 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+**What matters for your robot**
+
+- **Tune and check:** one OpMode with every check and finder that fits your robot. Nothing to copy.
+- **Firing is smarter:** a tap fires carefully; a held button fires a little faster; autonomous speeds up
+  when time is short. No code change.
+- **New, only if your robot has them:** a feed stop servo, an intake that pushes pieces into the wheel, an
+  eject button, reverse drive, an aim that looks around for the goal.
+- **Update library button:** updating to the next version takes one click.
+- **Experimental, ignore for BIOBUZZ:** a "camera fix" for odometry. It is off, untested, and not for this
+  season.
+
 ### Added
 
-- **Firing (Batch 1): the launcher chooses how strict it is.** Three shot modes: CAREFUL (every piece at
-  speed), QUICK (the volley's first piece at speed, the next ones in a looser band, `quickBandRpm`, or after
-  `quickMaxWaitSec`) and SPRAY (no wait for the speed band; the wheel must turn at half its speed or more). A tap fires CAREFUL, a held button QUICK; an
-  autonomous fires CAREFUL while there is time before the park, QUICK when CAREFUL will not fit, SPRAY when
-  QUICK will not fit either. SPRAY only with `sprayEnabled = true` (it also takes TeleOp's last
-  `sprayLastSeconds`). The Driver Station says `Fire: QUICK (12 s left)`; `shotMode(...)` sets one by hand.
-  Nothing to change in your code. [Firing](docs/modules/robot.md#firing-shot-modes-feed-stop-piece-path)
-- **A feed stop: `.feedStop("feed_stop")` on the launcher** (only if the robot has one). Hold at START
-  (never in INIT), open for each piece, closed when the shot is seen (or after `feedStopOpenSec`); open
-  through a QUICK or SPRAY stream. The simulator holds the pieces back while it is closed (`stop=` in the
-  robot file). The **Feed Stop Finder** (in Tune and check) finds `feedStopHold` and `feedStopRelease`.
-- **The piece path: `.pushedBy(intake)` on the launcher** (only if a part must push the pieces in). For
-  each piece the intake runs in, even when the driver has it off, then goes back to what it was doing.
-- **Ready to launch:** `.readyToLaunch("Ready", 3)` in Steps and the auto builder, `robot.launcher.readyAction(3)`:
-  spin up and wait until ready. `fallbackDistanceIn` gives the speed before any goal was seen.
-- **Alliance trim:** `redTrimPercent`, `blueTrimPercent` in `Tunables.Launcher` (0 = none).
-- **Firing stats** on the debug lines (PRACTICE profile only): each piece's mode, speed, drop, recovery and
-  gap, and the volley's average and worst (`launcher.getShotStats()`).
 - **"Tune and check": every check and finder in one OpMode, always there.** The library adds it to the
   TeleOp list (group "Finders"); nothing to copy. INIT shows a menu of the Hardware Check and the finders
   that fit Robot.java (the Hood Finder only with a hood, the Shot Tuner only with a launcher...). D-pad
   picks, A opens the tool's INIT screen, START runs it; BACK in the tool's INIT goes back to the menu.
   Your own finder files still work. Not in it: the Aim Tuner and the Characterizer (they need your camera
   or lifts). [Guide](docs/guides/finders.md#tune-and-check-all-of-them-in-one-opmode)
+- **Three shot modes.** The launcher chooses how strict it is before each piece:
+  - CAREFUL: every piece waits until the wheel is at speed (as before).
+  - QUICK: the first piece waits; the next ones go a little sooner (`quickBandRpm`, `quickMaxWaitSec`).
+  - SPRAY: no wait for the speed band (the wheel must still turn at half its speed). Only with
+    `sprayEnabled = true`: then also in TeleOp's last `sprayLastSec` (5 s).
+  The Driver Station says `Fire: QUICK (12 s left)`; `shotMode(...)` sets one by hand.
+  [Firing](docs/modules/robot.md#firing-shot-modes-feed-stop-piece-path)
+- **A feed stop: `.feedStop("feed_stop")` on the launcher** (only if the robot has one). Hold at START
+  (never in INIT), open for each piece, closed when the shot is seen (or after `feedStopOpenSec`); in SPRAY
+  open until the last piece. The **Feed Stop Finder** (in Tune and check) finds `feedStopHold` and
+  `feedStopRelease`. The simulator holds the pieces back while it is closed (`stop=` in the robot file).
+- **The piece path: `.pushedBy(intake)` on the launcher** (only if the intake must push the pieces in). For
+  each piece the intake runs in, even when the driver has it off, then goes back to what it was doing.
+  Add the intake before the launcher in Robot.java.
+- **Ready to launch:** `.readyToLaunch("Ready", 3)` in an autonomous and the auto builder
+  (`robot.launcher.readyAction(3)`): spin up and wait until ready. `fallbackDistanceIn` (Tunables) is the
+  distance to use before the camera has seen a goal.
+- **Eject:** `robot.launcher.ejectAction()`: one piece out at a low speed (`ejectRpm` 600, `ejectSec` 1).
+- **Alliance trim:** `redTrimPercent`, `blueTrimPercent` in the launcher's Tunables (0 = none); the Speed
+  trim line shows it.
+- **Firing stats** on the debug lines (PRACTICE profile only): each piece's mode, speed, drop, recovery and
+  gap, and the volley's average and worst (`launcher.getShotStats()`).
+- **Aim at the goal with a sweep:** `.aimAtGoal("Aim", 4, 45)` (and in the auto builder). Not in view: the
+  robot turns slowly up to 45 degrees each way to find it, then aims; never seen, it turns back.
+- **Remember heading, turn back:** `.rememberHeading("label")` and `.turnBack("label", 0.5)` (and in the
+  builder). Without odometry pods it uses the IMU: better than nothing.
+- **Reverse drive:** `g1.x.toggle(robot.reverseDriveMode()).rumble()`: the back is the front.
+- **Webcam live view:** a webcam shows its picture in the PRACTICE profile (Driver Station > Camera
+  Stream), never at an event. A Limelight: plug it into a laptop and open its web page.
+- **Setting up Limelight lighting pipelines:** a new step-by-step guide.
+  [Guide](docs/guides/limelight-lighting.md)
 - **An "Update library" button in Android Studio** (next to Simulator and Simulator tests; it appears at the
   next Gradle sync). It gets the version list from GitHub, switches the `ftc-helper-lib` folder to the
   newest release, and prints what changed since your version (the CHANGELOG parts). It commits nothing,
@@ -38,8 +62,19 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - **"A newer version is out."** The Simulator button asks GitHub once a day. When a newer release is out,
   the Run window and the simulator page (under the Driver Hub) say so. Offline it says nothing;
   `-PnoUpdateCheck` turns it off.
+- **Experimental (ignore for BIOBUZZ): camera fix.** ALPHA, NOT TESTED ON A ROBOT, off by default.
+  `cameraFix(camera)` corrects the odometry from a Limelight's AprilTag position. BIOBUZZ's tags move with
+  the HIVE, so it is not for this season; your robot is not affected. [Camera fix](docs/modules/odometry.md#camera-fix-alpha)
 
 ### Changed
+
+- **A held fire button now fires QUICK** (the first piece at speed, the next ones a little sooner). A tap is
+  CAREFUL, as before. In an autonomous, firing switches to QUICK by itself when CAREFUL would not fit before
+  the park time. To keep every shot CAREFUL: `robot.launcher.shotMode(ShotMode.CAREFUL)`.
+- **The aim button turns whole-robot aim on only with the goal in view** (last season's rule): a press with
+  no goal leaves it off (one buzz with `.rumble()`). Code that calls `robot.aimMode().on()` is not checked.
+- **"Aimed" no longer flickers:** once LOCKED (or AIMED) it stays so until the error passes `toleranceDeg` +
+  `lockMarginDeg` (2 + 1 degrees). A launcher's "aimed" check may now pass up to 3 degrees off.
 
 - **The score counts like a referee.** HIVE TIPs count when they happen, LEAVE and AUTO PARK at the end of
   AUTO; pieces in the CELLs, FLOWERs and GARDENs and TELEOP PARK only at the end of the match (they change
@@ -69,7 +104,6 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - **The start spot lines up along a side wall too** (tile middle, seam, teeth edge), and **the note for the
   drive team says where in the tile**: "Our wall, tile 3 from left, centred, facing field", "... left edge
   on seam", "... near edge at teeth".
-
 - **The auto builder lists your actions.** An Action or Start something step is a list of what your
   code has (`Actions.fireAll(robot)` to shoot, `Actions.deployIntake(robot)`...), with "type your own..."
   at the end. Before, it was a text box, and the browser hid every name but the one already in it.

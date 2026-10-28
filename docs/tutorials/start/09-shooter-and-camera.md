@@ -178,7 +178,8 @@ gamepad 1 with `oneDriver = true`, as in the goBILDA bot:
 | D-pad up double-tap | use last time's trim (only when the Driver Station offers it at INIT) |
 
 Spinning up early with LB saves time: the wheel is ready when the shot is lined up. The goBILDA bot adds
-a fire-all button with the library's ready action: `g1.y.press(robot.launcher.fireAllAction()).says("fire all");`
+one job of its own, Y to fire all four: `g1.y.press(Actions.fireAll(robot)).says("fire all");`. The library's
+ready action does the same with no `Actions.java`: `g1.y.press(robot.launcher.fireAllAction())`.
 
 **Are LB and RB still free?** A job of yours in `Controls.java` on one of these buttons takes it from
 the launcher. If you followed lesson 5, your actions are on gamepad 2's RB and LB, so the launcher gets
@@ -241,10 +242,12 @@ laptop with its USB-C cable and open its page: http://limelight.local:5801. Then
 1. Pick the pipeline number (0, 1 or 2) in the pipeline list at the top.
 2. Set its type to Fiducial Markers, the family to AprilTag Classic 36h11, the marker size to 82.55 mm
    (3.25 in, manual 9.9), and turn on Full 3D (Advanced tab).
-3. In the **Input** tab, move the **Exposure** slider: 0 = your usual light, 1 = bright light (lower
-   exposure, so tags are not washed out white), 2 = dim light (higher exposure, and more **Sensor
-   Gain**, which makes the whole picture brighter but grainier, if it is still dark).
-4. Save the pipeline. The Limelight's own docs (docs.limelightvision.io) show every setting.
+3. In the **Input** tab: Black Level 0, Sensor Gain 15, and the **Exposure** slider set so the tags
+   have steady boxes. Pipeline 0 (your usual light): that exposure. Pipeline 1 (bright light): a lower
+   exposure, so the tags are not washed out white. Pipeline 2 (dim light): a higher exposure, and more
+   **Sensor Gain** if it is still dark (brighter, but grainier).
+4. Leave the ID filter empty (the robot aims at the middle of a CELL's 4 tags and needs at least 2).
+   There is no save button: the Limelight keeps the changes by itself.
 
 **At INIT and at START.** Have a tag in view at INIT (where the robot starts the match is fine), or the
 test cannot help. The Driver Station shows the result, e.g.
@@ -252,7 +255,7 @@ test cannot help. The Driver Station shows the result, e.g.
 the best pipeline so far (the first one if none saw a tag), so the robot never aims with a pipeline
 it is only trying.
 
-**At an event:** in the queue (or on the practice field), INIT once with the robot facing a HIVE tag.
+**At an event:** in the queue (or on the practice field), INIT once with the robot facing a CELL's tags.
 Read the pipeline it picks. Under the `limelight lighting` line the Driver Station then shows two lines
 to copy, e.g.
 
@@ -262,9 +265,10 @@ public static boolean autoLighting = false;
 ```
 
 Put them in `Tunables.Limelight` (change the `pipeline` line that is there; add the `autoLighting` line
-if it is not), and the robot uses that pipeline at once in every match there, with no test. Back at
-school, set `autoLighting = true` again. A webcam shows `exposureMs` instead of `pipeline`: that is a
-new line to add to the camera's section (for example `Tunables.Webcam`).
+if it is not) on the laptop, then **install the app on the robot again** (these numbers are read at
+INIT, not changed live). Every match there then uses that pipeline, with no test. Back at school, set
+`autoLighting = true` again. A webcam shows `exposureMs` instead of `pipeline`: that is a new line to add
+to the camera's section (its name in CamelCase: `Webcam 1` reads `Tunables.Webcam1`).
 
 ## 6. A turret that follows it
 

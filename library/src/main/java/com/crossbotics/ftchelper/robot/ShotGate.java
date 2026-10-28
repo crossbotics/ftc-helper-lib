@@ -26,6 +26,8 @@ final class ShotGate implements Feeder {
     private final Flywheel flywheel;
     private final BooleanSupplier stream;  // true: more pieces follow at once (keep the feed stop open)
     private final double hold, release, openSec, assistSec, moveSec;
+    // True for a servo indexer (it pushes, then comes back by itself); false for a roller (CR servo, motor).
+    private final boolean pusherIndexer;
     LongSupplier clock = System::nanoTime;
 
     private boolean started = false;       // START was pressed: the feed stop may move
@@ -35,11 +37,13 @@ final class ShotGate implements Feeder {
     private double feedAt = 0;             // when the feed began, seconds
     private boolean indexerStarted = false;
     private boolean mustOpen = false;      // the feed stop was closed at the feed: give it time to open
+    private double rpmAtFeed = Double.NaN; // the wheel's speed when the feed began (a drop from it = the shot)
     private int shotsAtFeed = 0;
     private String lastEnd = "";           // "shot seen" or "backup time": how the last feed ended
 
-    ShotGate(Servo stop, double hold, double release, double openSec, Feeder indexer, List<Intake> pushers,
-             double assistSec, double moveSec, Flywheel flywheel, BooleanSupplier stream) {
+    ShotGate(Servo stop, double hold, double release, double openSec, Feeder indexer, boolean pusherIndexer,
+             List<Intake> pushers, double assistSec, double moveSec, Flywheel flywheel, BooleanSupplier stream) {
+        this.pusherIndexer = pusherIndexer;
         this.stop = stop;
         this.hold = hold;
         this.release = release;
@@ -70,11 +74,13 @@ final class ShotGate implements Feeder {
         feedAt = now();
         indexerStarted = false;
         shotsAtFeed = flywheel.getShotCount();
+        rpmAtFeed = Math.abs(flywheel.getRpm());
         mustOpen = stop != null && !(started && sent == release);
         open = stop != null;
-        // At once, not at the next update: the stop starts opening and the pushers start this loop.
+        // At once, not at the next update: the stop starts opening. The pushers wait until it is open
+        // (they would push the pieces against a closed stop).
         if (stop != null && started) send(release);
-        if (assistSec > 0) for (Intake p : pushers) p.pushForShot(true);
+        if (assistSec > 0 && !mustOpen) for (Intake p : pushers) p.pushForShot(true);
     }
 
     @Override
@@ -91,7 +97,10 @@ final class ShotGate implements Feeder {
                 indexer.feedOne();
                 indexerStarted = true;
             }
-            boolean shot = flywheel.getShotCount() > shotsAtFeed;
+            // The shot: the wheel's own counter, or (QUICK and SPRAY feed before the wheel is "ready", when
+            // the counter is not armed) a drop from the speed it had when the feed began.
+            boolean shot = flywheel.getShotCount() > shotsAtFeed
+                    || (!Double.isNaN(rpmAtFeed) && rpmAtFeed - Math.abs(flywheel.getRpm()) > flywheel.getShotDrop());
             double limit = stop != null ? openSec : assistSec;
             // The shot (or the backup time) ends the feed and closes the stop at once, even while the
             // indexer is still coming back: isBusy() still waits for it before the next piece.
@@ -99,13 +108,17 @@ final class ShotGate implements Feeder {
             if ((shot || t - feedAt >= limit) && indexerGoing) {
                 feeding = false;
                 lastEnd = shot ? "shot seen" : "backup time";
+                // A feed stop closing: a roller or belt indexer (a CR servo, a motor) stops now, so it does
+                // not push the next piece against the closed stop. A servo pusher finishes its return.
+                if (stop != null && indexer != null && indexer.isBusy() && !pusherIndexer) indexer.stop();
             }
         }
         // The feed stop: open while feeding, and between pieces of a stream; else closed.
         if (!feeding) open = open && stream.getAsBoolean();
         if (stop != null && started) send(open ? release : hold);
-        // The pushing parts run during the feed, at most assistSec (a stream reopens them for each piece).
-        boolean push = feeding && t - feedAt < Math.max(assistSec, 0);
+        // The pushing parts run during the feed once the stop is open, for at most assistSec.
+        double pushFrom = mustOpen ? moveSec : 0;
+        boolean push = feeding && t - feedAt >= pushFrom && t - feedAt < pushFrom + Math.max(assistSec, 0);
         for (Intake p : pushers) p.pushForShot(push);
         if (indexer != null) indexer.update();
     }

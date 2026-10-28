@@ -371,8 +371,42 @@ public final class Steps {
         for (Module<?> m : robot.modules()) if (m instanceof Launcher) { launcher = (Launcher) m; break; }
         if (launcher == null) throw new IllegalStateException("readyToLaunch(...): Robot.java has no launcher");
         final Launcher l = launcher;
-        routine.run(label + ": spin up", l::spinUp);
-        routine.waitUntil(label, l::isReady, timeoutSec);
+        routine.step(label, ctx -> {
+            l.spinUp();
+            if (!ctx.waitUntil(l::isReady, timeoutSec) && ctx.isActive()) ctx.note("timed out: " + l.part().whyNotReady());
+        });
+        return this;
+    }
+
+    /**
+     * {@link #aimAtGoal(String, double)} with a sweep: when the goal is not in view, the whole robot turns
+     * slowly up to {@code sweepDeg} each way to find it ({@code Tunables.Aim} {@code sweepStepDeg} 15,
+     * {@code sweepPower} 0.3), then aims. Never seen: it turns back to where it started ("not seen
+     * (swept)"). A turret that follows the goal does not sweep: it waits as without a sweep.
+     */
+    public Steps aimAtGoal(String label, double timeoutSec, double sweepDeg) {
+        if (!adding()) return this;
+        Aim a = robot.aim();
+        if (a == null) throw new IllegalStateException("aimAtGoal(...) is ready after setup (inside the autonomous's steps)");
+        Turret t = a.followingTurretInRobot();
+        if (t != null) routine.waitUntil(label, t::isAimed, timeoutSec);
+        else routine.turnTowardWithSweep(label, a::bearingNow, a.toleranceNow(), a.maxTurnPowerNow(), timeoutSec,
+                sweepDeg, a.sweepStepNow(), a.sweepPowerNow());
+        return this;
+    }
+
+    /** Remembers the robot's heading now, for {@link #turnBack}. */
+    public Steps rememberHeading(String label) {
+        if (adding()) routine.rememberHeading(label);
+        return this;
+    }
+
+    /**
+     * Turns back to the heading saved by {@link #rememberHeading} (the last one), e.g. after a turn to
+     * collect a piece. Without odometry pods it uses the IMU heading: better than nothing.
+     */
+    public Steps turnBack(String label, double maxPower) {
+        if (adding()) routine.returnToHeading(label, maxPower);
         return this;
     }
 

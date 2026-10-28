@@ -47,6 +47,24 @@ public class DriverControlsTest {
         assertFalse(d.isFieldCentric());
     }
 
+    @Test public void reverseDriveFlipsForwardAndStrafeButNotTheTurn() {
+        Wheels w = new Wheels(true);
+        DriverControls d = new DriverControls(w, heading(null));
+        boolean[] rev = {true};
+        d.reverseWhen(() -> rev[0]);
+        Gamepad g = new Gamepad();
+        g.left_stick_y = -1;                         // forward
+        g.left_stick_x = 1;                          // strafe right
+        g.right_stick_x = 1;                         // turn right
+        d.update(g);
+        assertEquals(-1, w.forward, 1e-9);
+        assertEquals(-1, w.side, 1e-9);
+        assertEquals("the turn is not flipped", 1, w.turn, 1e-9);
+        rev[0] = false;
+        d.update(g);
+        assertEquals(1, w.forward, 1e-9);
+    }
+
     @Test public void fieldCentricUsesTheDriverHeading() {
         Wheels w = new Wheels(true);
         DriverControls d = new DriverControls(w, heading(90.0));   // autonomous ended turned left 90

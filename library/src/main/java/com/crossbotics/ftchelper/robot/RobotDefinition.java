@@ -126,6 +126,40 @@ public abstract class RobotDefinition {
     }
 
     /**
+     * <b>ALPHA, NOT TESTED ON A ROBOT.</b> Corrects the odometry's x and y with the field position this
+     * Limelight works out from AprilTags (MegaTag2). Also needs an {@link #odometry} line, and it is OFF
+     * until {@code Tunables.CameraFix.enabled = true}. <b>Not for BIOBUZZ:</b> its tags are under the
+     * CELLs and move when a HIVE tips. Find {@code turnDegBlue} / {@code turnDegRed} with the Camera Fix
+     * Check (Tune and check). Docs: docs/modules/odometry.md, "Camera fix (alpha)".
+     *
+     * @param camera a Limelight camera added with {@code add(Camera.limelight(...))}
+     */
+    protected final void cameraFix(Camera camera) {
+        if (camera == null) throw new IllegalArgumentException("Robot.java: cameraFix(null): add the camera first");
+        cameraFixCamera = camera;
+    }
+
+    private Camera cameraFixCamera = null;
+    private CameraFix cameraFix = null;
+
+    /** The camera fix (alpha), or null without a cameraFix(...) line or before setup. */
+    final CameraFix cameraFixPart() {
+        return cameraFix;
+    }
+
+    /** The camera given to {@code cameraFix(...)} (alpha), or null. */
+    public final Camera cameraFixCamera() {
+        describe();
+        return cameraFixCamera;
+    }
+
+    /** True with a {@code cameraFix(camera)} line in Robot.java (the alpha camera fix). */
+    public final boolean hasCameraFix() {
+        describe();
+        return cameraFixCamera != null;
+    }
+
+    /**
      * A path follower from another library, e.g. {@code follower(Pedro.follower(Constants.foresight))} with
      * the ftc-helper-lib "pedro" module. It needs an {@link #odometry} line too (it uses the same pose).
      */
@@ -453,6 +487,12 @@ public abstract class RobotDefinition {
             for (Module<?> child : m.children()) Tunable.hideGroup(child.name(), child.missing);
             Tunable.hideGroup(m.name(), m.missing);
         }
+        // The camera fix (alpha): after the cameras and the odometry, so it sees this loop's picture and pose.
+        if (cameraFixCamera != null) {
+            if (cameraFixCamera.robot != this) throw new IllegalStateException("Robot.java: cameraFix(camera): that camera is not added");
+            cameraFix = new CameraFix(this, cameraFixCamera, TunableSection.of(tunablesClass, "CameraFix"));
+            all.add(cameraFix);
+        }
         // The other sections (Tunables.Auto...): in the tuning menu, and their saved values used now,
         // before the autonomous reads them to build its steps.
         // The interlock rules' numbers (read once: not changeable live, see Interlock).
@@ -659,6 +699,17 @@ public abstract class RobotDefinition {
     public final Mode aimMode() {
         if (aim == null) throw new IllegalStateException("robot.aimMode() is ready after setup (use it in Controls.java's buttons(...))");
         return aim.mode();
+    }
+
+    private final Mode reverseDrive = new Mode("Reverse drive", false);
+
+    /**
+     * Reverse drive: while on, TeleOp's forward and strafe are flipped, so the back of the robot acts as
+     * the front (turning is not flipped; field-centric driving ignores it). Off at START. One line in
+     * Controls.java: {@code g1.x.toggle(robot.reverseDriveMode()).rumble();}.
+     */
+    public final Mode reverseDriveMode() {
+        return reverseDrive;
     }
 
     /** The path follower as running (null before setup, or with no follower(...) line). */
@@ -969,6 +1020,8 @@ public abstract class RobotDefinition {
                     "per piece: mode, speed, drop, recovery; PRACTICE profile only"));
             out.add(new Feature(Feature.Kind.AUTOMATIC, "Alliance trim", "", "a launcher", "",
                     "Tunables redTrimPercent, blueTrimPercent (0 = none)"));
+            out.add(new Feature(Feature.Kind.ACTION, "Eject", "robot." + n + ".ejectAction()", "a launcher", "",
+                    "one piece out at a low speed (Tunables ejectRpm, ejectSec)"));
         }
         if (!launcher) {
             out.add(new Feature(Feature.Kind.ACTION, "Fire 1, Fire X, Fire all", "robot.launcher.fireAction(1)", "a launcher",
@@ -1006,9 +1059,25 @@ public abstract class RobotDefinition {
                     : "tank drive: it stays aimed while you drive forward and back (no strafing)"));
             out.add(new Feature(Feature.Kind.AUTO_STEP, "Aim at the goal", ".aimAtGoal(\"Aim\", 3)", "a drive + " + aimNeeds, aimMissing,
                     "turns the whole robot; does not turn blind"));
+            out.add(new Feature(Feature.Kind.AUTO_STEP, "Aim at the goal with a sweep", ".aimAtGoal(\"Aim\", 4, 45)", "a drive + " + aimNeeds,
+                    aimMissing, "not in view: turns slowly up to 45 deg each way to find it"));
         }
+        out.add(new Feature(Feature.Kind.AUTO_STEP, "Remember heading, turn back", ".rememberHeading(\"Remember\") ... .turnBack(\"Back\", 0.5)",
+                "a drive", drive == null ? "a drive" : "", "useful without odometry pods: the IMU's heading"));
+        out.add(new Feature(Feature.Kind.TOGGLE, "Reverse drive", "g1.x.toggle(robot.reverseDriveMode()).rumble()", "a drive",
+                drive == null ? "a drive" : "", "the back is the front (robot-centric driving)"));
+        Camera webcam = null;
+        for (Module<?> m : modules) if (m instanceof Camera && !((Camera) m).isLimelight()) { webcam = (Camera) m; break; }
+        out.add(new Feature(Feature.Kind.AUTOMATIC, "Camera live view (webcam)", "", "a webcam",
+                webcam == null ? "a webcam (a Limelight has its own web page)" : "",
+                webcam == null ? "" : "PRACTICE profile: Driver Station menu > Camera Stream, in INIT"));
+        boolean fixOn = CameraFix.enabledIn(TunableSection.of(tunablesClass != null ? tunablesClass : findTunables(), "CameraFix"));
+        out.add(new Feature(Feature.Kind.AUTOMATIC, "Camera fix (ALPHA, untested; not for BIOBUZZ)", "", "a Limelight + odometry(...)",
+                cameraFixCamera == null ? "cameraFix(camera) in Robot.java and Tunables.CameraFix.enabled = true"
+                        : !fixOn ? "Tunables.CameraFix.enabled = true (off: BIOBUZZ teams leave it off)" : "",
+                "corrects the odometry from AprilTags; off by default"));
         out.add(new Feature(Feature.Kind.TOGGLE, "Buzz when aimed", "g1.rumbleWhenAimed();", aimNeeds, aimOnly, "the closer, the stronger"));
-        out.add(new Feature(Feature.Kind.TOGGLE, "Shoot while moving", "g1.x.toggle(robot.aim().movingShotMode())",
+        out.add(new Feature(Feature.Kind.TOGGLE, "Shoot while moving", "g2.a.toggle(robot.aim().movingShotMode())",
                 aimNeeds + ", and odometry(...) (the robot's speed)",
                 !aimOnly.isEmpty() ? aimOnly : odo ? "" : "an odometry(...) line (the robot's speed)", "tune it on the real robot first (Tunables.Aim flightSec)"));
         return out;
@@ -1156,6 +1225,12 @@ public abstract class RobotDefinition {
     public final List<String> notes() {
         describe();
         List<String> out = new ArrayList<>();
+        // The alpha camera fix, said plainly every INIT.
+        if (cameraFixCamera != null) {
+            boolean on = cameraFix != null && cameraFix.enabled();
+            out.add("Camera fix: ALPHA, NOT TESTED ON A ROBOT, " + (on ? "ON" : "off (Tunables.CameraFix.enabled = false)")
+                    + ". Not for BIOBUZZ: its tags move with the HIVE");
+        }
         if (tunablesClass == null) {
             out.add("No Tunables class next to Robot.java: every module uses the library's defaults");
             // Each part's own notes still show (the defaults it worked out from its part, positions that are
