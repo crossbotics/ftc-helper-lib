@@ -2,7 +2,14 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
-## Unreleased
+## v0.20.3 - 2026-10-28
+
+**What matters for your robot**
+
+- **Clearer INIT errors:** a mistake found at INIT shows as plain lines on the Driver Station, with what to
+  fix, not the FTC app's red crash line. Nothing moves until you press STOP.
+- **Clearer messages:** the button clash messages and 13 others now say the line to change.
+- No code change needed.
 
 ### Changed
 
