@@ -148,6 +148,7 @@ Everything else, by what you want to do:
 | Every number in Tunables.java, part by part (units, defaults, tuning menu, which finder) | [Tunables reference](docs/guides/tunables.md) |
 | Change numbers while the robot runs | [Tuning](docs/guides/tuning.md) |
 | **Set up any turret: motor, servo or CR servo; home switch or not; +/-90 to a slip ring; hood; camera** | [Setting up a turret](docs/guides/turret-setup.md) |
+| **Set up a Limelight's pipelines for bright, normal and dim light (the lighting test at INIT)** | [Setting up Limelight lighting pipelines](docs/guides/limelight-lighting.md) |
 | Keep two parts from hitting each other (a turret and a lift) | [Interlocks](docs/guides/interlocks.md) |
 | Test the robot (checklists) | [Testing procedures](docs/guides/testing.md) |
 | **Try OpModes without a robot (pretend Control Hub + Driver Hub, field in 3D)** | [Simulator](docs/guides/simulator.md) |

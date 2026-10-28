@@ -145,7 +145,8 @@ no test (set `autoLighting = true` again at home). A webcam shows `exposureMs` (
 
 **Limelight:** set up one AprilTag pipeline per kind of light on the Limelight's web page (for
 example 0 = normal, 1 = bright: lower exposure, 2 = dim: higher exposure and gain; the Exposure
-slider is in the pipeline's Input tab at http://limelight.local:5801), then:
+slider is in the pipeline's Input tab at http://limelight.local:5801; every step:
+[Setting up Limelight lighting pipelines](../guides/limelight-lighting.md)), then:
 
 ```java
 LimelightTags camera = LimelightTags.create(hardwareMap, "limelight").autoPipelines(0, 1, 2);

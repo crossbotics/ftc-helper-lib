@@ -230,11 +230,13 @@ camera = add(Camera.limelight("limelight").autoPipelines(0, 1, 2).goal("BLUE SCO
   `autoLighting` (true = run the test; false = skip it and use `pipeline`).
 - The camera starts in INIT, so it is already looking at START. It has no buttons.
 
-**Set up the three pipelines.** On a laptop on the robot's network, open the Limelight's page:
-http://limelight.local:5801. Then, for each pipeline:
+**Set up the three pipelines** (every step, with the settings and why:
+[Setting up Limelight lighting pipelines](../../guides/limelight-lighting.md)). Plug the Limelight into a
+laptop with its USB-C cable and open its page: http://limelight.local:5801. Then, for each pipeline:
 
 1. Pick the pipeline number (0, 1 or 2) in the pipeline list at the top.
-2. Set its type to AprilTag (Fiducial), and the tag family and size from the game manual.
+2. Set its type to Fiducial Markers, the family to AprilTag Classic 36h11, the marker size to 82.55 mm
+   (3.25 in, manual 9.9), and turn on Full 3D (Advanced tab).
 3. In the **Input** tab, move the **Exposure** slider: 0 = your usual light, 1 = bright light (lower
    exposure, so tags are not washed out white), 2 = dim light (higher exposure, and more **Sensor
    Gain**, which makes the whole picture brighter but grainier, if it is still dark).
