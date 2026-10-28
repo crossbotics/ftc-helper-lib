@@ -40,7 +40,8 @@ export const DEFAULT_SPEEDS = { inPerSec: 40, degPerSec: 180, settleSec: 0.3 };
 export const COMMON_COMMANDS = ['robot.claw::close', 'robot.claw::open', 'robot.intake::in', 'robot.intake::out', 'robot.intake::stop',
 	'robot.launcher::spinUp', 'robot.launcher::stop', '() -> robot.lift.goTo("high")', '() -> robot.lift.goTo("low")',
 	'() -> robot.arm.goTo("up")', '() -> robot.arm.goTo("down")'];
-export const COMMON_ACTIONS = ['Actions.scoreHigh(robot)', 'Actions.scoreLow(robot)', 'Actions.fireAll(robot)',
+export const COMMON_ACTIONS = ['robot.launcher.fireAllAction()', 'robot.launcher.fireAction(1)', 'robot.launcher.ejectAction()',
+	'Actions.scoreHigh(robot)', 'Actions.scoreLow(robot)', 'Actions.fireAll(robot)',
 	'Actions.fireAllWithIntake(robot)', 'Actions.grab(robot)', 'Actions.stow(robot)'];
 
 const clampPower = (p) => Math.max(0.1, Math.min(1, Number.isFinite(+p) ? +p : 0.5));   // AutoDrive clamps to 0.1..1
@@ -536,6 +537,8 @@ export function checkPlan(plan, opts = {}) {
 			add(i, 'bad', `${n}: give something to do, e.g. ${s.kind === 'run' ? 'robot.claw::close' : 'Actions.scoreHigh(robot)'}.`);
 		}
 		if ((s.kind === 'action' || s.kind === 'aim' || s.kind === 'ready') && !(+s.timeout > 0)) add(i, 'bad', `${n}: give a time limit in seconds (more than 0).`);
+		if (s.kind === 'aim' && s.sweep != null && !(+s.sweep >= 0 && +s.sweep <= 180)) add(i, 'bad', `${n}: the sweep is 0 to 180 degrees each way (0 = none).`);
+		if (s.kind === 'back' && !(+s.power > 0 && +s.power <= 1)) add(i, 'bad', `${n}: give a power from 0.1 to 1.`);
 		if (s.kind === 'park') {
 			parks++;
 			if (!(+s.sec > 0)) add(i, 'bad', `${n}: give the seconds the park steps need (more than 0).`);

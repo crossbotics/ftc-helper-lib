@@ -223,6 +223,9 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 		ok(back2.plan && back2.plan.steps[0].kind === 'aim' && back2.plan.steps[0].timeout === 2.5 && back2.plan.steps.length === 2, 'aim step: read back from Java');
 		ok(S.stepCode({ kind: 'ready', label: 'Ready', timeout: 3 }) === 'readyToLaunch("Ready", 3)', 'ready step: the Java');
 		ok(S.stepCode({ kind: 'aim', label: 'Aim', timeout: 4, sweep: 45 }) === 'aimAtGoal("Aim", 4, 45)', 'aim step with a sweep: the Java');
+		const badSteps = { drive: 'mecanum', start: { x: 0, y: wallY, h: 0 }, steps: [{ kind: 'aim', label: 'A', timeout: 3, sweep: -5 }, { kind: 'back', label: 'B', power: 0 }] };
+		const badChecks = S.checkPlan(badSteps).list.filter((c) => c.level === 'bad').map((c) => c.text).join(' | ');
+		ok(/sweep is 0 to 180/.test(badChecks) && /power from 0.1 to 1/.test(badChecks), 'checkPlan: a bad sweep and a bad turn-back power are refused: ' + badChecks);
 		ok(S.stepCode({ kind: 'remember', label: 'R' }) === 'rememberHeading("R")' && S.stepCode({ kind: 'back', label: 'B', power: 0.5 }) === 'turnBack("B", 0.5)', 'remember / turn back: the Java');
 		const back4 = S.fromJava('s.start("x", 0, -61, 0).aimAtGoal("Aim", 4, 45).rememberHeading("R").turn("T", 90, 0.5).turnBack("B", 0.4);');
 		ok(back4.plan && back4.plan.steps[0].sweep === 45 && back4.plan.steps[1].kind === 'remember' && back4.plan.steps[3].kind === 'back' && back4.plan.steps[3].power === 0.4, 'sweep, remember, turn back: read back from Java');
