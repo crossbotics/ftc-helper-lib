@@ -354,7 +354,7 @@ public class Turret implements Subsystem {
      * {@code () -> ...} is a small piece of code handed over to run later (here: every loop).
      */
     public Turret homeSwitch(BooleanSupplier isClosed, double angleDeg) {
-        if (servo != null) throw new IllegalStateException(name + ": a servo turret needs no home switch (its angle is where it was sent)");
+        if (servo != null) throw new IllegalStateException(name + ": a servo turret needs no home switch (its angle is where it was sent): take out .homeSwitch(...)");
         homeSwitch = isClosed;
         homeAngle = angleDeg;
         // With a switch, the angle is not trusted until the switch has been seen.

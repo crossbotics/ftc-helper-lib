@@ -112,6 +112,12 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
      */
     @Override
     public void runOpMode() {
+        // A mistake found at INIT: plain lines on the Driver Station (inside "Tune and check", the host shows it).
+        if (hosting != null) runBody();
+        else com.crossbotics.ftchelper.core.InitStop.run(this, this::runBody);
+    }
+
+    private void runBody() {
         // ---- INIT ----
         RobotTelemetry t = new RobotTelemetry(telemetry);
         findDevices();

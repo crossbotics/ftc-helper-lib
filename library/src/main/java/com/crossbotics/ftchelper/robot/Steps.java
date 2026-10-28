@@ -353,7 +353,7 @@ public final class Steps {
     public Steps aimAtGoal(String label, double timeoutSec) {
         if (!adding()) return this;
         Aim a = robot.aim();
-        if (a == null) throw new IllegalStateException("aimAtGoal(...) is ready after setup (inside the autonomous's steps)");
+        if (a == null) throw new IllegalStateException("aimAtGoal(...) can only be a step inside your autonomous (it runs after setup), not in define()");
         Turret t = a.followingTurretInRobot();
         if (t != null) routine.waitUntil(label, t::isAimed, timeoutSec);
         else routine.turnToward(label, a::bearingNow, a.toleranceNow(), a.maxTurnPowerNow(), timeoutSec);
@@ -387,7 +387,7 @@ public final class Steps {
     public Steps aimAtGoal(String label, double timeoutSec, double sweepDeg) {
         if (!adding()) return this;
         Aim a = robot.aim();
-        if (a == null) throw new IllegalStateException("aimAtGoal(...) is ready after setup (inside the autonomous's steps)");
+        if (a == null) throw new IllegalStateException("aimAtGoal(...) can only be a step inside your autonomous (it runs after setup), not in define()");
         Turret t = a.followingTurretInRobot();
         if (t != null) routine.waitUntil(label, t::isAimed, timeoutSec);
         else routine.turnTowardWithSweep(label, a::bearingNow, a.toleranceNow(), a.maxTurnPowerNow(), timeoutSec,

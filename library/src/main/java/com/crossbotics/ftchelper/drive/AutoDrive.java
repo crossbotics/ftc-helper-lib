@@ -166,7 +166,8 @@ public class AutoDrive {
         // Every move needs a real time limit. "!(x > 0)" also catches NaN (not a number), which
         // would otherwise slip through a plain "x <= 0" test.
         if (!(cfg.actionTimeoutSec > 0) || Double.isInfinite(cfg.actionTimeoutSec)) {
-            throw new IllegalArgumentException("actionTimeoutSec must be a positive number");
+            throw new IllegalArgumentException("AutoDriveConfig.actionTimeoutSec is " + cfg.actionTimeoutSec + ": write a time limit in seconds, more than 0"
+                    + " (e.g. 5). Every move needs one, so a stuck robot stops");
         }
         return cfg;
     }

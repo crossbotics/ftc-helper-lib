@@ -29,6 +29,7 @@ ALLOWED_LOOPS = {
     "finders/TuneAndCheckOpMode.java": "an OpMode: its INIT menu and run loops (each pass is quick; it never waits)",
     "finders/DriveTunerOpMode.java": "a tuning OpMode: its test moves block on purpose, like autonomous",
     "util/BackgroundWorker.java": "the background thread's own loop (not the robot's loop)",
+    "core/InitStop.java": "an INIT error: shows it and waits for STOP (nothing moves)",
 }
 
 SLEEP = re.compile(r"\bsleep\s*\(|Thread\.sleep|\.join\s*\(")

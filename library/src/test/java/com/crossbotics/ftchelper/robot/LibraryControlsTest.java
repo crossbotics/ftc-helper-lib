@@ -132,7 +132,7 @@ public class LibraryControlsTest {
             plan(false, LibraryButtons.twoDrivers().fieldCentric(new ButtonPlan(false).g1.back), (g1, g2) -> { });
             fail("expected an error");
         } catch (IllegalStateException e) {
-            assertTrue(e.getMessage(), e.getMessage().contains("G1 BACK has two library jobs"));
+            assertTrue(e.getMessage(), e.getMessage().contains("Two library features are on G1 BACK"));
         }
     }
 

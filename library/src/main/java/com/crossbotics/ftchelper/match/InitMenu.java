@@ -186,7 +186,12 @@ public class InitMenu {
     public String get(String label) {
         ListItem item = find(label);
         // A misspelled label is a bug in the program: say so clearly instead of guessing.
-        if (item == null) throw new IllegalArgumentException("No choice called \"" + label + "\" in the menu");
+        if (item == null) {
+            StringBuilder names = new StringBuilder();
+            for (Item i : items) if (i instanceof ListItem) names.append(names.length() == 0 ? "" : ", ").append(i.label);
+            throw new IllegalArgumentException("No choice called \"" + label + "\" in the INIT menu. The choices: "
+                    + (names.length() == 0 ? "none yet" : names) + " (capitals count)");
+        }
         return item.show();
     }
 

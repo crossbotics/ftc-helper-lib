@@ -88,6 +88,16 @@ public class MatchTest {
         assertTrue(ft.lastScreen.contains("> Route: Near"));
     }
 
+    @Test public void aMisspelledChoiceListsTheRealOnes() {
+        InitMenu menu = new InitMenu(new Gamepad()).choice("Route", "Near", "Far").yesNo("Park", true);
+        try {
+            menu.get("Rout");
+            org.junit.Assert.fail("expected an error");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("The choices: Route, Park (capitals count)"));
+        }
+    }
+
     @Test public void memoryHandsTheAllianceToTeleOp() {
         assertEquals(Alliance.BLUE, MatchMemory.allianceOr(Alliance.BLUE));
         MatchMemory.remember(Alliance.RED, null);

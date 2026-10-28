@@ -153,7 +153,10 @@ public class PositionServo implements AngleDevice {
      */
     public PositionServo degrees(double posA, double degA, double posB, double degB) {
         // Two equal points make no line (and would divide by zero later), so stop with a clear message.
-        if (posA == posB || degA == degB) throw new IllegalArgumentException("degrees(): the two points must differ");
+        if (posA == posB || degA == degB) throw new IllegalArgumentException(String.format(java.util.Locale.US,
+                "%s.degrees(%.2f, %.0f, %.2f, %.0f): the two measured points must differ (both the positions and the"
+                + " angles). Measure two positions far apart, e.g. 0.2 and 0.8, with the Servo Finder",
+                name, posA, degA, posB, degB));
         this.posA = posA;
         this.degA = degA;
         this.posB = posB;

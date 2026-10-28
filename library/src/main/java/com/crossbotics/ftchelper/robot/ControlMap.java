@@ -345,7 +345,7 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
      * @param value how to read it (a method reference or a small lambda; it must not wait)
      */
     protected final void show(String label, java.util.function.Supplier<?> value) {
-        if (label == null || value == null) throw new IllegalArgumentException("show(label, value): neither may be null");
+        if (label == null || value == null) throw new IllegalArgumentException("show(label, value) in Controls.java: the label or the value is missing (null), e.g. show(\"Lift\", r.lift::getPosition)");
         shown.add(new Shown(label, value));
     }
 

@@ -102,7 +102,7 @@ public final class Pad {
     /** {@link #rumbleWhen(BooleanSupplier)} with {@code buzzes} short buzzes (1 to 3). */
     public void rumbleWhen(BooleanSupplier when, int buzzes) {
         if (when == null) throw new IllegalArgumentException(this + ".rumbleWhen: the test is null");
-        if (buzzes < 1 || buzzes > 3) throw new IllegalArgumentException(this + ".rumbleWhen: buzzes is 1 to 3");
+        if (buzzes < 1 || buzzes > 3) throw new IllegalArgumentException(this + ".rumbleWhen(..., " + buzzes + "): buzzes must be 1 to 3");
         plan.watches.add(new ButtonPlan.Watch(which, when, buzzes));
     }
 
@@ -236,7 +236,7 @@ public final class Pad {
 
         /** {@code n} quick taps in a row (2 to 5) run {@code job}, e.g. 3 taps = intake backward. */
         public Button taps(int n, Runnable job) {
-            if (n < 2 || n > 5) throw new IllegalArgumentException(this + ".taps: n is 2 to 5");
+            if (n < 2 || n > 5) throw new IllegalArgumentException(this + ".taps(" + n + ", ...): taps must be 2 to 5");
             if (n == 2) return doubleTap(job);
             gestures(Gestures.tapsKey(n), job, gestures().taps.get(n)).taps.put(n, job);
             return this;
@@ -268,7 +268,7 @@ public final class Pad {
          * moves, like re-homing a lift). Let go sooner and nothing happens (or the tap job runs).
          */
         public Button heldFor(double seconds, Runnable job) {
-            if (!(seconds > 0) || seconds > 5) throw new IllegalArgumentException(this + ".heldFor: seconds is more than 0, up to 5");
+            if (!(seconds > 0) || seconds > 5) throw new IllegalArgumentException(this + ".heldFor(" + seconds + ", ...): the seconds must be more than 0, up to 5");
             Gestures g = gestures(Gestures.heldForKey(seconds), job, gestures().heldFor);
             g.heldFor = job;
             g.heldForSec = seconds;
@@ -329,7 +329,7 @@ public final class Pad {
 
         /** {@link #rumble()} with {@code buzzes} short buzzes (1 to 3). */
         public Button rumble(int buzzes) {
-            if (buzzes != -1 && (buzzes < 1 || buzzes > 3)) throw new IllegalArgumentException(this + ".rumble: buzzes is 1 to 3");
+            if (buzzes != -1 && (buzzes < 1 || buzzes > 3)) throw new IllegalArgumentException(this + ".rumble(" + buzzes + "): buzzes must be 1 to 3");
             if (last == null) return this;
             if (lastGesture != null && last.gestures != null) last.gestures.rumble.put(lastGesture, buzzes);
             else last.rumble = buzzes;

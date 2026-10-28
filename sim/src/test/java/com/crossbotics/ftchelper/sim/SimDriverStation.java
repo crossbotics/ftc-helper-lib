@@ -121,6 +121,9 @@ final class SimDriverStation {
     SimDriverStation(SimRobot robot, Scope scope) {
         this.robot = robot;
         this.scope = scope;
+        // An INIT error stops the OpMode with the error, as before: the simulator's own panel shows it
+        // (on a robot, the library shows it on the Driver Station's lines and waits for STOP).
+        com.crossbotics.ftchelper.core.InitStop.throwInsteadOfShowing(true);
         findOpModes();
         // The auto builder's own autonomous (it runs the page's plan with the team's code): always listed.
         opModes.add(new Entry(BuiltAuto.NAME, "Builder", "Autonomous", false, BuiltAuto.class));

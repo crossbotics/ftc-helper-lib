@@ -240,7 +240,7 @@ public class Launcher implements Subsystem {
      * by more than {@link #hoodDeadband} (0.25 deg).
      */
     public void setDistance(double distance) {
-        if (table == null) throw new IllegalStateException("Launcher.setDistance needs a table(...)");
+        if (table == null) throw new IllegalStateException("Launcher.setDistance(...) has no shot table: add .table(...) where you make the Launcher (docs/modules/launcher.md)");
         ShotTable.Shot shot = table.lookup(distance);
         shotRpm = shot.rpm;
         // A table with no hood column leaves the hood where it is (it would otherwise go to 0 degrees).

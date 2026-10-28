@@ -2,6 +2,24 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Changed
+
+- **A mistake at INIT is shown as plain lines on the Driver Station.** Before, the FTC app showed one red
+  line that started with Java words (<samp>User code threw an uncaught exception: IllegalStateException - ...</samp>).
+  Now the screen shows <samp>INIT STOPPED: the robot did not start.</samp>, the message, and
+  <samp>Fix it, then press INIT again.</samp> Nothing moves until STOP. A mistake in your own code says
+  where it is (<samp>NullPointerException in Robot.java line 42</samp>). Mistakes after START show as before.
+  In EasyTeleOp, EasyAuto, the finders, the Hardware Check, Tune and check, and `robot.init(this)` in your
+  own LinearOpMode. [Troubleshooting](docs/troubleshooting.md#driver-station-errors)
+- **Clearer error messages.** `libraryButtons(...)` clashes now say the line to change (e.g.
+  <samp>turn it off: lib.debug(null, null)</samp>). These also show your numbers or name the fix:
+  `PositionServo.degrees(...)`, `Launcher.setDistance(...)`, `Intake.holds(...)`, `aimAtGoal(...)`,
+  `AutoDriveConfig.actionTimeoutSec`, a servo turret's `homeSwitch(...)`, the INIT menu's `get(...)`
+  (lists the real choices), the gamepad's `taps`, `heldFor`, `rumble` and `rumbleWhen`, `show(...)` in
+  Controls.java, dead-wheel odometry's `ticksPerIn` and `trackWidthIn`, and a Shape's `axis(...)`.
+
 ## v0.20.2 - 2026-10-28
 
 **What matters for your robot**

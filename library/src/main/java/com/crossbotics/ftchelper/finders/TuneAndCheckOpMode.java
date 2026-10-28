@@ -77,6 +77,11 @@ public class TuneAndCheckOpMode extends LinearOpMode {
 
     @Override
     public void runOpMode() {
+        // A mistake found at INIT: plain lines on the Driver Station, not the FTC app's red line.
+        com.crossbotics.ftchelper.core.InitStop.run(this, this::runBody);
+    }
+
+    private void runBody() {
         RobotTelemetry t = new RobotTelemetry(telemetry);
         List<Class<? extends RobotDefinition>> robots = robotsGiven != null ? robotsGiven : findRobots();
         int robotAt = Math.max(0, indexOfName(robots, lastRobot));
