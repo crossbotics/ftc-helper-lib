@@ -40,6 +40,9 @@ final class SimMotor {
     // FLYWHEEL: the motor that feeds it, and how much a shot slows it (share of the speed).
     String feeder = null;
     double shotDrop = 0.15;
+    // FLYWHEEL: its feed stop servo (stop=) and the position where it lets pieces through (stopOpen=); null = none.
+    String stop = null;
+    double stopOpen = 0.5;
 
     // What the OpMode set.
     private DcMotorSimple.Direction direction = DcMotorSimple.Direction.FORWARD;

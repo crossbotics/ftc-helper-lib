@@ -491,6 +491,17 @@ Section: the device's name in CamelCase: a launcher on the motor `launcher` read
 | `batteryCompensation` | with a written `kF`: scale F by the battery voltage (not yet proven on a real robot). Without your own `kF` it stays off, with a note | true/false | false | no | none | to try it: `true`, then the 4-shot test (lesson 9) |
 | `trimStepPercent` | one speed trim step | percent | 1 | no | none | the drivers want bigger steps |
 | `trimMaxPercent` | the most speed trim, at most 50 | percent | 15 | no | none | you need more trim (better: fix the table) |
+| `redTrimPercent` | every shot speed this much faster on the RED alliance (the field halves differ a little) | percent | 0 | no | test, at an event | shots on one half land short or long |
+| `blueTrimPercent` | the same on the BLUE alliance | percent | 0 | no | test, at an event | the same |
+| `quickBandRpm` | QUICK mode: after a volley's first piece, feed within this of the speed | RPM | 3 x `readyBandRpm` | no | firing stats (the drop) | QUICK shots land short (less) or it waits too long (more) |
+| `quickMaxWaitSec` | QUICK mode: after a volley's first piece, feed after this wait at most | seconds | 0.3 | no | firing stats (the recovery) | the same |
+| `sprayEnabled` | allows SPRAY: no wait for the speed, at the end of TeleOp and when QUICK will not fit before the park in autonomous | true/false | false | no | none | the drivers want it |
+| `sprayLastSeconds` | with `sprayEnabled`: the last seconds of TeleOp that SPRAY (0 = never by itself) | seconds | 5 | no | none | the drivers want more or less |
+| `fallbackDistanceIn` | with the speed from the distance: the distance to use before any goal was seen | inches | none: `speedRpm` | no | none | the first shot of the match has no goal in view |
+| `feedStopHold` | with `.feedStop(...)`: the servo position that holds the pieces back | servo position 0-1 | 0 (a guess, INIT says so) | no | Servo Finder | after the Servo Finder |
+| `feedStopRelease` | with `.feedStop(...)`: the servo position that lets a piece through | servo position 0-1 | 0.5 (a guess) | no | Servo Finder | the same |
+| `feedStopOpenSec` | with `.feedStop(...)`: the backup time it stays open when no shot is seen | seconds | 0.5 | no | firing stats | pieces get stuck (more) |
+| `assistSec` | with `.pushedBy(...)`: how long the parts push each piece in, at most (less when the shot is seen) | seconds | 0.25 | no | test | pieces do not reach the wheel (more) |
 
 ## Indexer
 

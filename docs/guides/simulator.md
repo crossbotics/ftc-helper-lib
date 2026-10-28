@@ -323,7 +323,7 @@ What a team does, step by step:
    field's centre) or **Mirrored**. The builder writes `mirrorForRed()` in the Java for you (false / true).
    **What this robot can do** lists the library's ready-made features for that Robot class, worked out from
    its parts: each one ready (with the line to use it) or not ready (with what to add). For example "Fire 1"
-   to "Fire 4" and "Fire all" with a launcher; "Aim at the goal" and aim mode with a camera that has a goal
+   to "Fire 4", "Fire all" and "Ready to launch" with a launcher; "Aim at the goal" and aim mode with a camera that has a goal
    (or odometry and a goal point); "Turret follows the goal" with a following turret. Ready actions are the
    first ones in the Action list. The same list is `robot.features()` in Java
    ([What your robot can do](../modules/robot.md#what-your-robot-can-do)).
@@ -333,7 +333,8 @@ What a team does, step by step:
      `Actions.java`; its time limit starts at 10 s), **aim at the goal** (`aimAtGoal`: the whole robot turns
      to the goal with the camera or the odometry backup, or a following turret aims; it never turns blind,
      and the report says "not seen"; only for a robot that can aim; the plan's preview does not turn for it,
-     the run does), and "park from here" (`parkWithSeconds`). A button adds its step at the end (tick "add after the selected step" to put it
+     the run does), **ready to launch** (`readyToLaunch`: spins the launcher up and waits until it is at
+     speed; only for a robot with a launcher), and "park from here" (`parkWithSeconds`). A button adds its step at the end (tick "add after the selected step" to put it
      after the one you picked). **Start over** (beside Undo) removes every step; Undo brings them back.
      Tap the field map to add a drive to that spot (a tank drive gets a turn first), drag the blue dot at the end of a drive to
      change it, or use the list: each step has its numbers, arrows to move it, and its own warnings.
@@ -545,7 +546,7 @@ default):
 | `odometry.reversed = names` | none | these pods count backward (as wired; the code's `reversed(...)` turns them back): dead-wheel port names, or `x`/`y` for a Pinpoint's pods |
 | `odometry.scaleError` | 0 | noise: 0.01 = it measures 1% too far (wheel slip, a wrong pod size) |
 | `odometry.driftDegPerMin` | 0 | noise: the heading creeps this many degrees per minute |
-| `motor.NAME = KIND, ...` | | a motor: `free`, `lift` or `flywheel`, then `part=`, `ticksPerRev=` (catalog, else 537.7 or 28 for a flywheel), `rpm=` or `maxTicksPerSec=` (catalog, else 2780), `min=`, `max=` (counts), `gravity=` (0), `kS=` (0), `accelSec=`, `coastSec=`, `feeder=` (a motor, CR servo or servo that feeds a flywheel), `shotDrop=` (0.15: how much a shot slows the wheel), `drivenBy=CRSERVO` (no motor on this port: only an encoder, on a shaft that CR servo turns, e.g. a CR servo turret's Through Bore), `with=FIRST` (a second motor on the same slide or arm as the motor `FIRST`: both turn one shaft and both push, so each carries half its `gravity`; `mirrored=true`: its shaft turns the other way, two motors facing each other. `:sim:fromRobot` writes it for [`alsoMotor`](../modules/robot.md#two-motors-on-one-lift-or-arm)) |
+| `motor.NAME = KIND, ...` | | a motor: `free`, `lift` or `flywheel`, then `part=`, `ticksPerRev=` (catalog, else 537.7 or 28 for a flywheel), `rpm=` or `maxTicksPerSec=` (catalog, else 2780), `min=`, `max=` (counts), `gravity=` (0), `kS=` (0), `accelSec=`, `coastSec=`, `feeder=` (a motor, CR servo or servo that feeds a flywheel), `shotDrop=` (0.15: how much a shot slows the wheel), `stop=SERVO`, `stopOpen=` (0.5) (a feed stop: pieces get through only while that servo is within 0.05 of `stopOpen`; `:sim:fromRobot` writes it for [`feedStop(...)`](../modules/robot.md#firing-shot-modes-feed-stop-piece-path)), `drivenBy=CRSERVO` (no motor on this port: only an encoder, on a shaft that CR servo turns, e.g. a CR servo turret's Through Bore), `with=FIRST` (a second motor on the same slide or arm as the motor `FIRST`: both turn one shaft and both push, so each carries half its `gravity`; `mirrored=true`: its shaft turns the other way, two motors facing each other. `:sim:fromRobot` writes it for [`alsoMotor`](../modules/robot.md#two-motors-on-one-lift-or-arm)) |
 | `servo.NAME = START, ...` | start 0.5 | a servo: `part=` (catalog), or `rangeDeg=` and `secPer60=` for one not in the catalog. `pwm=500-2500`: the robot's code uses the servo's full range (`.fullRange()`; `:sim:fromRobot` writes it); START and every position in the file are then in that range. Like the hub, the simulated servo gets the normal 600-2400 us at each INIT and the code's `setPwmRange` after, so 0 to 1 turns a goBILDA 2000 servo 270 degrees, or 300 with full range |
 | `servo.speed` | 1.0 | positions per second for a servo with no part |
 | `crservo.NAME =` | | a continuous servo (the value is not used) |

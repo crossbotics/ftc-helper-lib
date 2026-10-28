@@ -399,6 +399,8 @@ public abstract class RobotDefinition {
         if (built) throw new IllegalStateException("This robot is already set up: make a new one per OpMode");
         describe();
         built = true;
+        // A new OpMode: the last one's match timer no longer counts (the launcher reads the time left).
+        com.crossbotics.ftchelper.match.MatchTimer.forget();
         // A misspelled Tunables field stops INIT here, before anything is made (see TunableFields).
         checkTunablesNames(devices);
         // Paused: nothing is updated (so nothing moves). At the end (STOP, or an error) everything is
@@ -949,9 +951,29 @@ public abstract class RobotDefinition {
             }
             out.add(new Feature(Feature.Kind.ACTION, "Fire all", "robot." + n + ".fireAllAction()", "a launcher", "",
                     "fires every piece it holds (a Pieces part's count, else the intake's holds(...))"));
+            Launcher l = (Launcher) m;
+            out.add(new Feature(Feature.Kind.AUTO_STEP, "Ready to launch", ".readyToLaunch(\"Ready\", 3)", "a launcher", "",
+                    "spins up and waits until ready; the action: robot." + n + ".readyAction(3)"));
+            out.add(new Feature(Feature.Kind.AUTOMATIC, "Shot modes: CAREFUL, QUICK, SPRAY", "", "a launcher", "",
+                    "tap CAREFUL, hold QUICK; autonomous by the time left; SPRAY "
+                            + l.sprayWords(TunableSection.of(tunablesClass != null ? tunablesClass : findTunables(), l.name()))));
+            out.add(new Feature(Feature.Kind.AUTOMATIC, "Feed stop", "", "a feed stop servo: .feedStop(\"name\") on the launcher",
+                    l.feedStopName() == null ? ".feedStop(\"name\") on the launcher, if the robot has a feed stop" : "",
+                    l.feedStopName() == null ? "" : l.feedStopName() + ": hold at START, open for each piece, closed when the shot is seen"));
+            StringBuilder path = new StringBuilder();
+            for (Intake p : l.pushers()) path.append(path.length() == 0 ? "" : ", ").append(names.containsKey(p) ? names.get(p) : p.name());
+            out.add(new Feature(Feature.Kind.AUTOMATIC, "Piece path: parts that push a piece in", "", ".pushedBy(intake) on the launcher",
+                    path.length() == 0 ? ".pushedBy(...) on the launcher, if a part must push the pieces in" : "",
+                    path.length() == 0 ? "" : path + " (borrowed for each piece, then back as it was)"));
+            out.add(new Feature(Feature.Kind.AUTOMATIC, "Firing stats (debug lines)", "", "a launcher", "",
+                    "per piece: mode, speed, drop, recovery; PRACTICE profile only"));
+            out.add(new Feature(Feature.Kind.AUTOMATIC, "Alliance trim", "", "a launcher", "",
+                    "Tunables redTrimPercent, blueTrimPercent (0 = none)"));
         }
         if (!launcher) {
             out.add(new Feature(Feature.Kind.ACTION, "Fire 1, Fire X, Fire all", "robot.launcher.fireAction(1)", "a launcher",
+                    "a Launcher in Robot.java", ""));
+            out.add(new Feature(Feature.Kind.AUTO_STEP, "Ready to launch", ".readyToLaunch(\"Ready\", 3)", "a launcher",
                     "a Launcher in Robot.java", ""));
         }
         Class<?> tc = tunablesClass != null ? tunablesClass : findTunables();

@@ -185,6 +185,11 @@ public class TuneAndCheckOpMode extends LinearOpMode {
         if (robot == null || any(modules, Launcher.class)) {
             out.add(new Tool("Flywheel Finder", "the flywheel's gains", () -> new FlywheelFinderOpMode() { }));
         }
+        if (hasFeedStop(modules)) {
+            out.add(new Tool("Feed Stop Finder", "the feed stop's hold and release", () -> new FeedStopFinderOpMode() {
+                @Override protected RobotDefinition robot() { return fresh.get(); }
+            }));
+        }
         if (robot != null) {
             out.add(new Tool("Drive Tuner", "the wheel size, for the autonomous", () -> new DriveTunerOpMode() {
                 @Override protected RobotDefinition robot() { return fresh.get(); }
@@ -206,6 +211,11 @@ public class TuneAndCheckOpMode extends LinearOpMode {
             }));
         }
         return out;
+    }
+
+    private static boolean hasFeedStop(List<Module<?>> modules) {
+        for (Module<?> m : modules) if (m instanceof Launcher && ((Launcher) m).feedStopName() != null) return true;
+        return false;
     }
 
     private static boolean any(List<Module<?>> modules, Class<?> kind) {

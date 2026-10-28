@@ -221,6 +221,9 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 		ok(S.stepCode(plan.steps[0]) === 'aimAtGoal("Aim", 3)', 'aim step: the Java');
 		const back2 = S.fromJava('s.start("x", 0, -61, 0).aimAtGoal("Aim", 2.5).move("Out", 10, 0, 0.5);');
 		ok(back2.plan && back2.plan.steps[0].kind === 'aim' && back2.plan.steps[0].timeout === 2.5 && back2.plan.steps.length === 2, 'aim step: read back from Java');
+		ok(S.stepCode({ kind: 'ready', label: 'Ready', timeout: 3 }) === 'readyToLaunch("Ready", 3)', 'ready step: the Java');
+		const back3 = S.fromJava('s.start("x", 0, -61, 0).readyToLaunch("Ready", 2).move("Out", 10, 0, 0.5);');
+		ok(back3.plan && back3.plan.steps[0].kind === 'ready' && back3.plan.steps[0].timeout === 2 && back3.plan.steps.length === 2, 'ready step: read back from Java');
 	}
 	ok(/^Left side .* from the left wall, right side against the right wall, back against our wall\.$/.test(S.startInches(S.snapStart({ x: 80, y: -80, h: 0 }, R, half), R, half)), 'startInches: the corner reads "against"');
 	ok(S.wallName(-70, 10) === 'the left wall' && S.wallName(60, -71) === 'our wall' && S.wallName(71, 5) === 'the right wall' && S.wallName(0, 71) === 'the far wall', 'wallName');

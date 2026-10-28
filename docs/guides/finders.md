@@ -42,6 +42,7 @@ The menu lists only the tools that fit your robot. It finds Robot.java by itself
 | Hood Finder | the robot has a hood |
 | Motor Finder | the robot has a lift or an arm (or there is no Robot.java) |
 | Flywheel Finder | the robot has a launcher (or there is no Robot.java) |
+| Feed Stop Finder | the launcher has a `.feedStop(...)` |
 | Drive Tuner | there is a Robot.java |
 | Odometry Tuner | Robot.java has an `odometry(...)` line |
 | Shot Tuner | the robot has a launcher |
@@ -174,6 +175,23 @@ so it works before Tunables.Hood has numbers. A hood with `.fullRange()` gets th
    [reference](../modules/finders.md#motorfinderopmode).
 
 Watch the current (amps): a high number while not moving means it is pushing on something. Stop.
+
+## Feed Stop Finder
+
+For a launcher with a feed stop (`.feedStop("feed_stop")` in Robot.java): where it holds the pieces back,
+and where it lets one through. It is in [Tune and check](#tune-and-check-all-of-them-in-one-opmode) for
+such a robot.
+
+1. Put a piece behind the feed stop. The wheel stays off.
+2. D-pad: a start point near where the feed stop sits now (nothing moves). **A** moves it there.
+3. D-pad right/left +/- 0.01, up/down +/- 0.05 (hold RB: 10 times finer).
+4. Where it holds the piece firmly, without straining on the frame: **X** (hold). Where the piece rolls
+   through freely: **B** (release). **A** then goes between the two, to try them.
+5. Copy the line: `Tunables.Launcher: feedStopHold = 0.150, feedStopRelease = 0.550`.
+
+The open time (`feedStopOpenSec`) and the push time (`assistSec`) are not measured here. Fire a few pieces
+in the PRACTICE profile and read the debug lines: `Last feed ended: shot seen` is good; `backup time` means
+the piece did not reach the wheel in time (more `assistSec`, or check the release position).
 
 ## Flywheel Finder: gains and recovery
 

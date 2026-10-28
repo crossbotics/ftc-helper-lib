@@ -360,6 +360,22 @@ public final class Steps {
         return this;
     }
 
+    /**
+     * Spins the launcher up and waits until it is ready to fire (at speed, every check true), at most
+     * {@code timeoutSec}. The speed keeps following the distance during the next steps. Put it before
+     * the drive to the shooting spot, so the first shot goes at once. In the auto builder: "Ready to launch".
+     */
+    public Steps readyToLaunch(String label, double timeoutSec) {
+        if (!adding()) return this;
+        Launcher launcher = null;
+        for (Module<?> m : robot.modules()) if (m instanceof Launcher) { launcher = (Launcher) m; break; }
+        if (launcher == null) throw new IllegalStateException("readyToLaunch(...): Robot.java has no launcher");
+        final Launcher l = launcher;
+        routine.run(label + ": spin up", l::spinUp);
+        routine.waitUntil(label, l::isReady, timeoutSec);
+        return this;
+    }
+
     /** Runs a command now and goes on at once (e.g. {@code () -> robot.lift.goTo("high")}). */
     public Steps run(String label, Runnable command) {
         if (adding()) routine.run(label, command);

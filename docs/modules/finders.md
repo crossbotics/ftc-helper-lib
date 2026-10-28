@@ -109,6 +109,12 @@ Tunables.Claw: P1 = 0.210, P2 = 0.740
 In five files: `public static double open = 0.210, closed = 0.740;` in `Tunables.Claw`. A servo
 module has no ends of its own, so the ends become a reminder.
 
+## FeedStopFinderOpMode
+
+`FeedStopFinderOpMode` finds a launcher's feed stop positions: `Tunables.Launcher: feedStopHold = ...,
+feedStopRelease = ...`. It needs `robot()` (the robot in five files, with a launcher that has
+`.feedStop(...)`). In Tune and check by itself. Steps: [Feed Stop Finder](../guides/finders.md#feed-stop-finder).
+
 ## MotorFinderOpMode
 
 Lists every motor. **The count starts at 0 when you choose the motor: put the mechanism at its bottom first.**

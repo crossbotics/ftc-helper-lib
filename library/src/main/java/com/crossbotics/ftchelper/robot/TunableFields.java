@@ -49,8 +49,10 @@ final class TunableFields {
         part("Indexer", "feedSec", "power", "push", "pushSec", "rest", "returnSec");
         part("Intake", "inPower", "outPower");
         part("Interlock");   // only <part>From, <part>To, ... (see interlock below)
-        part("Launcher", "batteryCompensation", "idleRpm", "kD", "kF", "kI", "kP", "nominalVolts", "readyBandRpm",
-                "shotIntervalSec", "speedByDistance", "speedRpm", "stepRpm", "trimMaxPercent", "trimStepPercent");
+        part("Launcher", "assistSec", "batteryCompensation", "blueTrimPercent", "fallbackDistanceIn", "feedStopHold",
+                "feedStopOpenSec", "feedStopRelease", "idleRpm", "kD", "kF", "kI", "kP", "nominalVolts", "quickBandRpm",
+                "quickMaxWaitSec", "readyBandRpm", "redTrimPercent", "shotIntervalSec", "speedByDistance", "speedRpm",
+                "sprayEnabled", "sprayLastSeconds", "stepRpm", "trimMaxPercent", "trimStepPercent");
         part("LiftArm", "kD", "kF", "kI", "kP", "max", "maxPower", "min", "slowZone", "slowZonePower", "tolerance");
         part("Lights", "allianceAtInit");
         part("PieceSensor", "gain", "gapMm", "hueTolerance", "minSaturation", "nearMm", "sizeToleranceMm", "steadyMs");

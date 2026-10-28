@@ -283,6 +283,12 @@ do"), and its Action list starts with the ready actions.
 | Feature | Kind | Needs | The line |
 | --- | --- | --- | --- |
 | Fire 1, Fire 2 ... Fire all | action | a launcher | `robot.launcher.fireAction(2)`, `robot.launcher.fireAllAction()` |
+| Ready to launch | auto step | a launcher: spins up and waits until ready | `.readyToLaunch("Ready", 3)`, the action `robot.launcher.readyAction(3)` |
+| Shot modes: CAREFUL, QUICK, SPRAY | automatic | a launcher ([Firing](#firing-shot-modes-feed-stop-piece-path)) | (nothing to write; SPRAY: `sprayEnabled = true`) |
+| Feed stop | automatic | a feed stop servo | `.feedStop("feed_stop")` on the launcher |
+| Piece path: parts that push a piece in | automatic | an intake that pushes pieces into the wheel | `.pushedBy(intake)` on the launcher |
+| Firing stats (debug lines) | automatic | a launcher (PRACTICE profile only) | (nothing to write) |
+| Alliance trim | automatic | a launcher | `Tunables.Launcher` `redTrimPercent`, `blueTrimPercent` |
 | Aim at the goal | auto step | a drive, and a camera with `goal(...)` (or `odometry(...)` + `Tunables.Aim` `goalX, goalY`); with a following turret, the turret | `.aimAtGoal("Aim", 3)` |
 | Aim mode (the whole robot turns to the goal): it stays aimed while you drive | TeleOp toggle | the same, and no following turret. Mecanum: drive and strafe while it stays aimed; tank: forward and back only | `g1.rb.toggle(robot.aimMode())` |
 | Turret follows the goal | TeleOp toggle | a turret with `follows(camera)` or `followsOdometry()` (the robot drives at full speed while it aims) | `g1.rb.toggle(robot.turret.followMode())` |
@@ -813,6 +819,11 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 | `spinAtStart()` | spins up at START (autonomous and TeleOp), ready for the first shot |
 | `hood(Hood)`, `hood()` | the launcher's [hood](#hood): its angle from the table's third column; the launcher waits for it before feeding |
 | `shotAngle(deg)` | for the simulator: which way a piece leaves, degrees up from the wheel shape's forward (the robot's forward for a wheel mounted level; 135 = up and out of the back) |
+| `feedStop(servo)`, `feedStopName()` | a [feed stop](#firing-shot-modes-feed-stop-piece-path): a servo that holds the pieces back until a shot is allowed |
+| `pushedBy(intake...)`, `pushers()` | the parts that push a piece into the wheel, in order: borrowed for each piece, then back as they were |
+| `readyAction(timeoutSec)` | a ready-made action: spin up, done when ready ("Ready to launch") |
+| `shotMode(mode)`, `shotModeNow()`, `sprayEnabled()` | set the [shot mode](#firing-shot-modes-feed-stop-piece-path) by hand (`ShotMode.CAREFUL`, `QUICK`, `SPRAY`; `null` = the launcher chooses, the default); the mode in use |
+| `allianceTrim()` | this alliance's trim from Tunables (`redTrimPercent`, `blueTrimPercent`), percent |
 
 `Tunables.Launcher` (the section is the flywheel motor's name in CamelCase: a launcher on `shooter` reads `Tunables.Shooter`, its feeder on `feeder` reads `Tunables.Feeder`; [all its numbers](../guides/tunables.md#launcher)): `speedRpm`, `stepRpm`, `readyBandRpm`, `idleRpm`, `shotIntervalSec`,
 `speedByDistance` (`{{inches, rpm}, ...}`, blended between rows; with no goal in view the last speed
@@ -843,6 +854,51 @@ public static double[][] speedByDistanceNectar = {{24, 2400}, {48, 2800}, {72, 3
 
 The Driver Station shows `Shot table: POLLEN, 48 in (camera)` (`odometry`, or `last seen` while no
 goal is seen); with one table, `Shot distance: 48 in (camera)`.
+
+### Firing: shot modes, feed stop, piece path
+
+The launcher chooses how strict it is before each piece, so nobody has to think about it:
+
+| Mode | Waits for the speed | Feed stop | When |
+| --- | --- | --- | --- |
+| CAREFUL | every piece: within `readyBandRpm` for 0.15 s, and every check | opens for each piece | a tap of the fire button; autonomous while there is time |
+| QUICK | the first piece like CAREFUL; the next ones within `quickBandRpm`, or after `quickMaxWaitSec` | stays open in the stream | a held fire button; autonomous when CAREFUL will not fit before the park time |
+| SPRAY | no: the wheel only has to turn at half its speed or more | stays open | only with `sprayEnabled = true`: the last `sprayLastSeconds` of TeleOp, and autonomous when QUICK will not fit either |
+
+Autonomous counts the time to the park (`parkWithSeconds(...)`): the pieces still to fire x the time a
+piece takes in each mode (measured from the last volleys, else an estimate). While it fires, the
+Driver Station says `Fire: QUICK (12 s left)`. `robot.launcher.shotMode(ShotMode.CAREFUL)` sets a mode
+by hand (`null` = choose again).
+
+**Feed stop** (`.feedStop("feed_stop")`, only if the robot has one): it goes to `feedStopHold` at START
+(never in INIT: nothing moves before the match), opens to `feedStopRelease` for a piece, and closes when
+the wheel sees the shot (its speed drops), or after `feedStopOpenSec` (0.5 s). In a QUICK or SPRAY stream
+it stays open until the last piece. It gets a new position only when the position changes. Find
+`feedStopHold` and `feedStopRelease` with the Servo Finder.
+
+**Piece path** (`.pushedBy(intake)`, only if a part must push the pieces into the wheel): for each piece,
+the intake runs in for at most `assistSec` (0.25 s) or until the shot is seen, even when the driver has it
+off; then it goes back to what it was doing. Pushing out (the driver) still wins. A robot that needs no
+push leaves it out, and nothing extra runs. (Last season's intake ran 250 ms after each shot, always.)
+
+**Firing stats** (debug lines, PRACTICE profile only: at an event they are noise): each piece's mode, the
+speed when it was fed, the drop, the time back to ready and the time since the last piece, then one line
+per volley with the average and the worst ([ShotStats](launcher.md#shotstats)). Use them to set
+`quickBandRpm`, `quickMaxWaitSec` and `shotIntervalSec`.
+
+**Alliance trim**: `redTrimPercent` and `blueTrimPercent` (0 at first) make every shot on that alliance a
+little faster or slower, on top of the speed trim: the two field halves are not always the same. One
+table, two small trims.
+
+```java
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+        .feedStop("feed_stop")             // only if the robot has one
+        .pushedBy(intake));                // only if the intake must push the pieces in
+public static double feedStopHold = 0.15, feedStopRelease = 0.55;   // Tunables.Launcher (Servo Finder)
+public static boolean sprayEnabled = true;                          // optional: SPRAY at the end
+public static double redTrimPercent = 0, blueTrimPercent = 0;       // optional
+// autonomous: .readyToLaunch("Ready", 3) before the drive to the shooting spot, then .action(robot.launcher.fireAllAction())
+```
 
 ### Speed trim and battery compensation
 
@@ -1562,6 +1618,7 @@ What [`Steps`](#auto) can do:
 | `move(label, inches, directionDeg, power)` | drive (0 forward, 90 right: clockwise, like a compass) |
 | `turn(label, degrees, power)`, `turnTo(label, headingDeg, power)` | turn by an angle / to a heading (90 = left: counterclockwise, the other way from a move's direction) |
 | `aimAtGoal(label, timeoutSec)` | turn to the goal with the camera (or the odometry backup), or wait for a following turret; "not seen" in the report if there was no goal ([Aim](#aim)) |
+| `readyToLaunch(label, timeoutSec)` | spin the launcher up and wait until it is ready to fire; the speed keeps following the distance in the next steps ([Firing](#firing-shot-modes-feed-stop-piece-path)) |
 | `driveTo(label, xIn, yIn, headingDeg, power[, toleranceIn][, PathAt...])` | drive to a field point and heading with the odometry, correcting all the way (mecanum; needs `Tunables.Odometry.checked` on a robot) ([driveTo](../guides/autonomous-builder.md#drive-to-a-field-point-driveto)); [`PathAt`](#pathat) starts things on the way |
 | `follow(label, path[, timeoutSec][, PathAt...])` | follow a path with the robot's [path follower](#pathfollower) ([pedro](pedro.md)); [`PathAt`](#pathat) starts things along it |
 | `run(label, command)` | start something and go on at once |

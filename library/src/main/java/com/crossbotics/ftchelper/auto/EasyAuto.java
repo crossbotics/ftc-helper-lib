@@ -391,7 +391,7 @@ public abstract class EasyAuto extends LinearOpMode {
         }
 
         // ---- START: the match clock begins now ----
-        MatchTimer timer = MatchTimer.autonomous();
+        MatchTimer timer = MatchTimer.autonomous().reserve(parkReserveSec());
         timer.start();
         // Build the routine with everything chosen in INIT. Each ".something(...)" sets one thing and
         // hands the routine back, so the settings can be chained like this.

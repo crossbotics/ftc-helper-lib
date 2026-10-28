@@ -19,12 +19,13 @@
 //          { kind: 'run', label, code }                      starts a command, goes on at once
 //          { kind: 'action', code, timeout }                 runs an action from Actions.java and waits
 //          { kind: 'aim', label, timeout }                   aimAtGoal: turns to the goal (camera / odometry)
+//          { kind: 'ready', label, timeout }                 readyToLaunch: spins the launcher up, waits until ready
 //          { kind: 'alongside', code }                       starts an action, goes on at once
 //          { kind: 'park', sec }                             parkWithSeconds: the steps after it get the last sec
 import { wrap, num, round1, headingOf, footprint, checkHits, otherAlliance, pointInPoly, polysOverlap,
 	javaString, tokenize, readArgs, evalNum } from './pathcore.js';
 
-export const KINDS = ['move', 'turn', 'turnTo', 'wait', 'run', 'action', 'aim', 'alongside', 'park'];
+export const KINDS = ['move', 'turn', 'turnTo', 'wait', 'run', 'action', 'aim', 'ready', 'alongside', 'park'];
 export const AUTO_SEC = 30;
 export const MOVE_TIMEOUT_SEC = 10;       // AutoDriveConfig.actionTimeoutSec: a move or turn longer than this ends TIMED_OUT
 export const ACTION_TIMEOUT_SEC = 10;     // Steps.action(a) without a time limit
@@ -149,6 +150,7 @@ export function stepSeconds(step, h, startH, speeds = DEFAULT_SPEEDS) {
 		case 'wait': return Math.max(0, +step.sec || 0);
 		case 'action': return Math.max(0, Number.isFinite(+step.timeout) ? +step.timeout : ACTION_TIMEOUT_SEC);
 		case 'aim': return Math.min(1, Math.max(0, +step.timeout || 0));   // a short turn when the goal is in view
+		case 'ready': return Math.min(1.5, Math.max(0, +step.timeout || 0));   // a spin-up
 		default: return 0;
 	}
 }
@@ -461,6 +463,7 @@ export function stepWords(s) {
 		case 'run': return `${s.label}: start ${s.code}`;
 		case 'action': return `${s.code}, up to ${num(+s.timeout)} s`;
 		case 'aim': return `${s.label}: aim at the goal (up to ${num(+s.timeout)} s)`;
+		case 'ready': return `${s.label}: ready to launch (up to ${num(+s.timeout)} s)`;
 		case 'alongside': return `${s.code}, while the next steps run`;
 		case 'park': return `Park: the last ${num(+s.sec)} s go to the steps after it`;
 		default: return s.kind;
@@ -488,7 +491,7 @@ export function checkPlan(plan, opts = {}) {
 	steps.forEach((s, i) => {
 		const n = `Step ${i + 1}`;
 		if (!KINDS.includes(s.kind)) { add(i, 'bad', `${n}: there is no such step.`); return; }
-		if ((s.kind === 'move' || s.kind === 'turn' || s.kind === 'turnTo' || s.kind === 'wait' || s.kind === 'run' || s.kind === 'aim') && !String(s.label ?? '').trim()) {
+		if ((s.kind === 'move' || s.kind === 'turn' || s.kind === 'turnTo' || s.kind === 'wait' || s.kind === 'run' || s.kind === 'aim' || s.kind === 'ready') && !String(s.label ?? '').trim()) {
 			add(i, 'bad', `${n}: give it a name for the report, e.g. "To the goal".`);
 		}
 		if (s.kind === 'move') {
@@ -525,7 +528,7 @@ export function checkPlan(plan, opts = {}) {
 		if ((s.kind === 'run' || s.kind === 'action' || s.kind === 'alongside') && !String(s.code ?? '').trim()) {
 			add(i, 'bad', `${n}: give something to do, e.g. ${s.kind === 'run' ? 'robot.claw::close' : 'Actions.scoreHigh(robot)'}.`);
 		}
-		if ((s.kind === 'action' || s.kind === 'aim') && !(+s.timeout > 0)) add(i, 'bad', `${n}: give a time limit in seconds (more than 0).`);
+		if ((s.kind === 'action' || s.kind === 'aim' || s.kind === 'ready') && !(+s.timeout > 0)) add(i, 'bad', `${n}: give a time limit in seconds (more than 0).`);
 		if (s.kind === 'park') {
 			parks++;
 			if (!(+s.sec > 0)) add(i, 'bad', `${n}: give the seconds the park steps need (more than 0).`);
@@ -596,6 +599,7 @@ export function stepCode(s) {
 		case 'run': return `run(${javaString(s.label)}, ${String(s.code ?? '').trim() || 'null'})`;
 		case 'action': return `action(${String(s.code ?? '').trim() || 'null'}, ${val(s, 'timeout')})`;
 		case 'aim': return `aimAtGoal(${javaString(s.label)}, ${val(s, 'timeout')})`;
+		case 'ready': return `readyToLaunch(${javaString(s.label)}, ${val(s, 'timeout')})`;
 		case 'alongside': return `alongside(${String(s.code ?? '').trim() || 'null'})`;
 		case 'park': return `parkWithSeconds(${val(s, 'sec')})`;
 		default: return `/* ${s.kind}? */`;
@@ -723,7 +727,7 @@ export function toScenario(plan, opts = {}) {
 
 // ------------------------------------------------------------------ Java in
 
-const STEP_METHODS = { move: 4, turn: 3, turnTo: 3, waitSeconds: 2, run: 2, action: null, aimAtGoal: 2, alongside: 1, parkWithSeconds: 1 };
+const STEP_METHODS = { move: 4, turn: 3, turnTo: 3, waitSeconds: 2, run: 2, action: null, aimAtGoal: 2, readyToLaunch: 2, alongside: 1, parkWithSeconds: 1 };
 const OTHER_METHODS = ['menuChoice', 'menuYesNo', 'onlyIf', 'end', 'driveTo', 'follow', 'step', 'waitUntil', 'moveWithTurn'];
 
 /**
@@ -843,7 +847,7 @@ export function fromJava(src, opts = {}) {
 		const want = STEP_METHODS[m];
 		const what = `${m}(${label != null ? javaString(label) : text(args[0])})`;
 		if (want != null && args.length !== want) { problems.push(`${what}: needs ${want} things, found ${args.length}. This step was left out.`); continue; }
-		if (['move', 'turn', 'turnTo', 'waitSeconds', 'run', 'aimAtGoal'].includes(m) && label == null) {
+		if (['move', 'turn', 'turnTo', 'waitSeconds', 'run', 'aimAtGoal', 'readyToLaunch'].includes(m) && label == null) {
 			problems.push(`${m}(${text(args[0])}, ...): write the name in quotes, e.g. "To the goal". This step was left out.`);
 			continue;
 		}
@@ -852,6 +856,7 @@ export function fromJava(src, opts = {}) {
 		else if (m === 'turnTo') { const v = nums(args.slice(1), what); if (v) steps.push(named({ kind: 'turnTo', label, heading: v[0], power: v[1] }, ['heading', 'power'], v)); }
 		else if (m === 'waitSeconds') { const v = nums(args.slice(1), what); if (v) steps.push(named({ kind: 'wait', label, sec: v[0] }, ['sec'], v)); }
 		else if (m === 'aimAtGoal') { const v = nums(args.slice(1), what); if (v) steps.push(named({ kind: 'aim', label, timeout: v[0] }, ['timeout'], v)); }
+		else if (m === 'readyToLaunch') { const v = nums(args.slice(1), what); if (v) steps.push(named({ kind: 'ready', label, timeout: v[0] }, ['timeout'], v)); }
 		else if (m === 'run') steps.push({ kind: 'run', label, code: text(args[1]) });
 		else if (m === 'alongside') steps.push({ kind: 'alongside', code: text(args[0]) });
 		else if (m === 'parkWithSeconds') { const v = nums(args, 'parkWithSeconds'); if (v) steps.push(named({ kind: 'park', sec: v[0] }, ['sec'], v)); }

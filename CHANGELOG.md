@@ -6,6 +6,24 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
+- **Firing (Batch 1): the launcher chooses how strict it is.** Three shot modes: CAREFUL (every piece at
+  speed), QUICK (the volley's first piece at speed, the next ones in a looser band, `quickBandRpm`, or after
+  `quickMaxWaitSec`) and SPRAY (no wait for the speed band; the wheel must turn at half its speed or more). A tap fires CAREFUL, a held button QUICK; an
+  autonomous fires CAREFUL while there is time before the park, QUICK when CAREFUL will not fit, SPRAY when
+  QUICK will not fit either. SPRAY only with `sprayEnabled = true` (it also takes TeleOp's last
+  `sprayLastSeconds`). The Driver Station says `Fire: QUICK (12 s left)`; `shotMode(...)` sets one by hand.
+  Nothing to change in your code. [Firing](docs/modules/robot.md#firing-shot-modes-feed-stop-piece-path)
+- **A feed stop: `.feedStop("feed_stop")` on the launcher** (only if the robot has one). Hold at START
+  (never in INIT), open for each piece, closed when the shot is seen (or after `feedStopOpenSec`); open
+  through a QUICK or SPRAY stream. The simulator holds the pieces back while it is closed (`stop=` in the
+  robot file). The **Feed Stop Finder** (in Tune and check) finds `feedStopHold` and `feedStopRelease`.
+- **The piece path: `.pushedBy(intake)` on the launcher** (only if a part must push the pieces in). For
+  each piece the intake runs in, even when the driver has it off, then goes back to what it was doing.
+- **Ready to launch:** `.readyToLaunch("Ready", 3)` in Steps and the auto builder, `robot.launcher.readyAction(3)`:
+  spin up and wait until ready. `fallbackDistanceIn` gives the speed before any goal was seen.
+- **Alliance trim:** `redTrimPercent`, `blueTrimPercent` in `Tunables.Launcher` (0 = none).
+- **Firing stats** on the debug lines (PRACTICE profile only): each piece's mode, speed, drop, recovery and
+  gap, and the volley's average and worst (`launcher.getShotStats()`).
 - **"Tune and check": every check and finder in one OpMode, always there.** The library adds it to the
   TeleOp list (group "Finders"); nothing to copy. INIT shows a menu of the Hardware Check and the finders
   that fit Robot.java (the Hood Finder only with a hood, the Shot Tuner only with a launcher...). D-pad
