@@ -99,6 +99,8 @@ if (useTeamCode) {
     }
 }
 
+apply from: 'library-version.gradle'   // "a newer version is out" note, and :sim:updateLibrary
+
 // Finder results and Characterizer logs from simulator runs go here (on a robot: /sdcard/FIRST/ftc-helper).
 def simDataDir = new File(buildDir, 'sim-data').path
 
@@ -133,6 +135,12 @@ tasks.register('run', JavaExec) {
     systemProperty 'ftchelper.dataDir', simDataDir
     // the robot file from Robot.java first; -ProbotClass is also the class whose .looks(...) Edit robot prints
     fromRobotProperties(it)
+    // A newer library release? Said here (the Run window) and under the simulator's Driver Hub. -PnoUpdateCheck: not asked.
+    doFirst {
+        def note = libraryUpdateNote()
+        if (note) logger.lifecycle("\n*** ${note}\n")
+        systemProperty 'sim.libUpdate', note
+    }
 }
 
 // ./gradlew :sim:scenario -Pfile=path/to/test.sim [-Probot=...] [-PnoFromRobot]   (several: -Pfile=a.sim,b.sim; a folder: every .sim in it)

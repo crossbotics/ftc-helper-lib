@@ -499,6 +499,7 @@
     <div id="error"></div>
     <div id="standIns" class="status" style="color:var(--warn);white-space:pre-wrap"></div>
     <div id="placeNote" class="status" style="color:var(--warn);white-space:pre-wrap"></div>
+    <div id="libUpdate" class="status" style="white-space:pre-wrap"></div>
   </section>
 
   <section id="padsSection">
@@ -1106,6 +1107,8 @@ function render(s) {
   // MEASURE numbers the simulator filled in from the robot file (tunable. lines): the real robot stops on them.
   const standIns = s.standIns || "";
   if ($("#standIns").textContent !== standIns) $("#standIns").textContent = standIns;
+  const libUpdate = s.libUpdate || "";
+  if ($("#libUpdate").textContent !== libUpdate) $("#libUpdate").textContent = libUpdate;
   const placeNote = s.placeNote || "";
   if ($("#placeNote").textContent !== placeNote) $("#placeNote").textContent = placeNote;
   $("#autoTimer").checked = s.autoTimer;

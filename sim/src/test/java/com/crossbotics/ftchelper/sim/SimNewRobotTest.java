@@ -224,10 +224,10 @@ public class SimNewRobotTest {
                 assertTrue("tasks.gradle makes the task " + task.group(1), tasks.contains("name: '" + task.group(1) + "'"));
             }
         }
-        assertEquals(java.util.Arrays.asList("Simulator", "Simulator tests"), names);
+        assertEquals(java.util.Arrays.asList("Simulator", "Simulator tests", "Update library"), names);
 
         Path project = tmp.newFolder("robot-project").toPath();
-        assertEquals(java.util.Arrays.asList("Simulator", "Simulator_tests"), SimNewRobot.addRunButtons(buttons, project));
+        assertEquals(java.util.Arrays.asList("Simulator", "Simulator_tests", "Update_library"), SimNewRobot.addRunButtons(buttons, project));
         assertTrue(Files.isRegularFile(project.resolve(".idea/runConfigurations/Simulator.xml")));
         Files.write(project.resolve(".idea/runConfigurations/Simulator.xml"), "the team's own".getBytes(StandardCharsets.UTF_8));
         assertTrue("only the missing ones", SimNewRobot.addRunButtons(buttons, project).isEmpty());

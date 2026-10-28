@@ -27,6 +27,8 @@ event may meet a change it has not tested. So: **update often, but not right bef
 
 ## Find out about a new version
 
+- **The Simulator button tells you.** Once a day it asks GitHub. When a newer version is out, the Run
+  window and the simulator page say so ([the Update library button](#update-the-update-library-button)).
 - **Watch the library on GitHub.** On the library's page
   ([github.com/crossbotics/ftc-helper-lib](https://github.com/crossbotics/ftc-helper-lib)), click
   **Watch** (top right) > **Custom** > tick **Releases** > **Apply**. GitHub then emails you when a
@@ -76,6 +78,30 @@ It prints the commit (a long code of 40 letters and digits) and, if there is one
 name like `v0.16.0` given to one release), for example
 ` 3f2c1a9e5b7d40c18a6f2e9b0d4c7a1f8e3b5c62 ftc-helper-lib (v0.16.0)`. The tag in brackets is the part
 to read.
+
+## Update: the Update library button
+
+The easiest way. It needs git on the command line (`git --version` in the Terminal prints a version;
+not? [git is not recognized](troubleshooting.md#autonomous-choice-and-git-problems)).
+
+1. Commit and push your own work first. **Why:** you can then tell your changes apart from the update.
+2. In the list next to the green Run button, pick **Update library**, then click Run. (Not in the list?
+   Close the project and open it again: [the buttons](01-add-to-project.md#step-7-the-simulator-buttons-once).)
+3. It gets the version list from GitHub, switches the `ftc-helper-lib` folder to the newest version, and
+   shows **What changed** (the CHANGELOG parts since your version). Read it: a version can ask you to
+   change a line in your code.
+4. Sync (the elephant button), build (the hammer), and fix what the notes say.
+5. Do the [checks after an update](#after-an-update-check-everything).
+6. Commit the change (`ftc-helper-lib v0.20.2`, for example: the Run window says the exact text). Push
+   only when the checks pass.
+
+It commits nothing by itself, and it stops if files inside `ftc-helper-lib` are changed. **A specific
+version, or back to the old one:** **Run > Edit Configurations**, pick **Update library**, and add
+`-PlibVersion=v0.20.1` after `updateLibrary` in the **Run** box.
+
+**How you know a version is out:** the **Simulator** button checks once a day. When a newer version is
+out, the Run window and the simulator page (under the Driver Hub) say so: `ftc-helper-lib v0.20.2 is out
+(this project has v0.20.1)`. It updates nothing. (Offline, it says nothing.)
 
 ## Update: the command line
 

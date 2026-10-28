@@ -1,0 +1,147 @@
+// The library's version: "is a newer one out?" and the "Update library" button.
+// sim/build.gradle applies this file. The robot project's "Update library" button (sim/run-buttons/tasks.gradle)
+// runs :sim:updateLibrary here, like the Simulator button runs :sim:run.
+//
+// A version is a git tag vMAJOR.MINOR.PATCH on the library (the CHANGELOG has one part per version).
+// WHY git and not a download: the library is a git submodule, so the robot project remembers the version
+// as a commit. Switching the submodule to the new tag is the whole update; the team then commits that.
+
+def libDir = rootProject.projectDir
+def robotDir = { -> def p = project.findProperty('teamCode'); p && p != 'none' ? rootProject.file(p).parentFile : libDir.parentFile }
+
+// Runs git in the library folder. Returns [exit code, output]; -1 when git is not there or too slow.
+def git = { List<String> args, int timeoutSec = 30, File dir = libDir ->
+    try {
+        def p = new ProcessBuilder(['git'] + args).directory(dir).redirectErrorStream(true).start()
+        def out = new StringBuilder()
+        def reader = Thread.start { out.append(p.inputStream.text) }
+        if (!p.waitFor(timeoutSec, java.util.concurrent.TimeUnit.SECONDS)) { p.destroyForcibly(); return [-1, 'timed out'] }
+        reader.join(2000)
+        return [p.exitValue(), out.toString().trim()]
+    } catch (IOException e) {
+        return [-1, 'git not found']
+    }
+}
+
+def RELEASE = ~/^v(\d+)\.(\d+)\.(\d+)$/
+def versionKey = { String tag -> def m = tag =~ RELEASE; m.matches() ? (1..3).collect { m.group(it).toInteger() } : null }
+def newer = { String a, String b ->   // true when a is a newer release than b
+    def ka = versionKey(a), kb = versionKey(b)
+    if (ka == null) return false
+    if (kb == null) return true
+    for (i in 0..2) { if (ka[i] != kb[i]) return ka[i] > kb[i] }
+    return false
+}
+def newest = { List<String> tags -> tags.findAll { versionKey(it) != null }.max { a, b -> newer(a, b) ? 1 : (newer(b, a) ? -1 : 0) } }
+
+// The release this library folder is on, or null (a commit between releases: a library developer's main).
+def currentRelease = { ->
+    def r = git(['tag', '--points-at', 'HEAD'], 10)
+    r[0] == 0 ? newest(r[1].readLines()*.trim()) : null
+}
+
+// The newest release on GitHub, asked at most once a day (a file in the Gradle home keeps the answer).
+// Null when offline, when git is missing, or when GitHub does not answer within 5 seconds.
+def latestRelease = { ->
+    def cache = new File(gradle.gradleUserHomeDir, 'ftc-helper-lib/latest-release.txt')
+    if (cache.isFile() && System.currentTimeMillis() - cache.lastModified() < 24L * 3600 * 1000) {
+        def t = cache.text.trim()
+        return t ? t : null
+    }
+    def r = git(['ls-remote', '--tags', '--refs', 'origin'], 5)
+    if (r[0] != 0) return null
+    def tag = newest(r[1].readLines().collect { it.tokenize('/').last().trim() })
+    if (tag != null) { cache.parentFile.mkdirs(); cache.text = tag }
+    return tag
+}
+
+// One line for the Run window and under the simulator's Driver Hub, or '' when nothing is newer.
+ext.libraryUpdateNote = { ->
+    if (project.hasProperty('noUpdateCheck')) return ''
+    def have = currentRelease()
+    if (have == null) return ''
+    def latest = latestRelease()
+    if (latest == null || !newer(latest, have)) return ''
+    return "ftc-helper-lib ${latest} is out (this project has ${have}). Read its notes (CHANGELOG), then use the " +
+            "\"Update library\" button. Not in the week before an event."
+}
+
+// The CHANGELOG parts of the versions after `from` up to `to` (both tags), read from the `to` version.
+def changesBetween = { String from, String to ->
+    def r = git(['show', "${to}:CHANGELOG.md".toString()], 10)
+    if (r[0] != 0) return ''
+    def keep = new StringBuilder()
+    boolean on = false
+    r[1].eachLine { line ->
+        def m = line =~ /^## (v\d+\.\d+\.\d+)\b.*/
+        if (m.matches()) on = !newer(from, m.group(1)) && m.group(1) != from && !newer(m.group(1), to)
+        else if (line.startsWith('## ')) on = false
+        if (on) keep.append(line).append('\n')
+    }
+    return keep.toString().trim()
+}
+
+// ./gradlew :sim:updateLibrary [-PlibVersion=v0.20.1]   (the robot project's "Update library" button runs it)
+// Switches the library folder to the newest release (or the -PlibVersion one: also to go back) and shows what
+// changed. It commits nothing: the team builds, runs the tests, and commits the submodule change itself.
+tasks.register('updateLibrary') {
+    group = 'application'
+    description = 'Switches ftc-helper-lib to its newest release (or -PlibVersion=vX.Y.Z) and shows the changes.'
+    doLast {
+        def say = { String s -> println(s) }
+        if (git(['--version'], 10)[0] != 0) {
+            throw new GradleException('Update library: git is not found. Install git, then try again: ' +
+                    'docs/troubleshooting.md, "git is not recognized".')
+        }
+        def changed = git(['status', '--porcelain', '--untracked-files=no'], 10)
+        if (changed[0] == 0 && changed[1]) {
+            throw new GradleException("Update library: files in the ftc-helper-lib folder are changed:\n${changed[1]}\n" +
+                    'An update would mix them up. Keep them (docs/02-keep-up-to-date.md, "Change the library from ' +
+                    'inside the robot project") or undo them (git -C ftc-helper-lib checkout -- .), then try again.')
+        }
+        def own = git(['status', '--porcelain', '--untracked-files=no'], 10, robotDir())
+        if (own[0] == 0 && own[1].readLines().any { !it.trim().endsWith('ftc-helper-lib') }) {
+            say('Note: the robot project has changes that are not committed. Commit them first next time, so you ' +
+                    'can tell them apart from the update.')
+        }
+        say('Getting the list of versions from GitHub...')
+        def fetched = git(['fetch', '--tags', '--force', 'origin'], 120)
+        if (fetched[0] != 0) {
+            throw new GradleException("Update library: could not reach GitHub (${fetched[1]}). Check the internet, then try again.")
+        }
+        def tags = git(['tag'], 10)[1].readLines()*.trim()
+        def want = project.findProperty('libVersion')
+        def target = want ? want.toString() : newest(tags)
+        if (target == null || !tags.contains(target)) {
+            throw new GradleException("Update library: there is no version ${target}. The versions: " +
+                    tags.findAll { versionKey(it) != null }.sort { a, b -> newer(a, b) ? -1 : 1 }.take(8).join(', '))
+        }
+        def have = currentRelease()
+        def head = git(['rev-parse', 'HEAD'], 10)[1]
+        def targetCommit = git(['rev-parse', "${target}^{commit}".toString()], 10)[1]
+        if (head == targetCommit) {
+            say("You have ${target}: the newest. Nothing to do.")
+            new File(gradle.gradleUserHomeDir, 'ftc-helper-lib/latest-release.txt').with { parentFile.mkdirs(); text = newest(tags) }
+            return
+        }
+        if (have != null && newer(have, target)) say("Going BACK from ${have} to ${target}.")
+        else if (have != null) {
+            def notes = changesBetween(have, target)
+            if (notes) {
+                say("\n===== What changed from ${have} to ${target} (CHANGELOG) =====\n${notes}\n===== end =====\n")
+            }
+        }
+        def out = git(['checkout', '--quiet', target], 60)
+        if (out[0] != 0) throw new GradleException("Update library: git could not switch to ${target}: ${out[1]}")
+        new File(gradle.gradleUserHomeDir, 'ftc-helper-lib/latest-release.txt').with { parentFile.mkdirs(); text = newest(tags) }
+        say("""Done: ftc-helper-lib is now ${target}. Nothing is committed yet. Now:
+  1. Read "What changed" above: a version can ask you to change a line in your code.
+  2. Sync: File > Sync Project with Gradle Files (the elephant button).
+  3. Build (the hammer). Fix what the notes say.
+  4. Run "Simulator tests" (the list next to the green Run button). All must pass.
+  5. Commit the change: in GitHub Desktop, "ftc-helper-lib ${target}" (or: git add ftc-helper-lib, then
+     git commit -m "ftc-helper-lib ${target}"). Push only when the tests pass.
+  6. Install on the robot and test it there. Teammates then: git pull, then git submodule update.
+Go back: the same button with -PlibVersion=${have ?: 'vX.Y.Z'} (Run > Edit Configurations > Run).""")
+    }
+}

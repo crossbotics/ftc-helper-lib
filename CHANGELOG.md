@@ -4,6 +4,17 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+### Added
+
+- **An "Update library" button in Android Studio** (next to Simulator and Simulator tests; it appears at the
+  next Gradle sync). It gets the version list from GitHub, switches the `ftc-helper-lib` folder to the
+  newest release, and prints what changed since your version (the CHANGELOG parts). It commits nothing,
+  and it stops when files inside `ftc-helper-lib` are changed. `-PlibVersion=v0.20.1` picks a version (or
+  goes back). Terminal: `./gradlew :sim:updateLibrary`.
+- **"A newer version is out."** The Simulator button asks GitHub once a day. When a newer release is out,
+  the Run window and the simulator page (under the Driver Hub) say so. Offline it says nothing;
+  `-PnoUpdateCheck` turns it off.
+
 ### Changed
 
 - **The score counts like a referee.** HIVE TIPs count when they happen, LEAVE and AUTO PARK at the end of
