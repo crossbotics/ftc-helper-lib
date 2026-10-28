@@ -48,8 +48,8 @@ public final class DeadWheelOdometry extends PoseTracker {
                               double ticksPerIn, double trackWidthIn, double parallelLeftIn, double perpForwardIn,
                               boolean lRev, boolean rRev, boolean pRev) {
         super(name);
-        if (!(ticksPerIn > 0)) throw new IllegalArgumentException(name + ": ticksPerIn must be more than 0");
-        if (right != null && !(trackWidthIn > 0)) throw new IllegalArgumentException(name + ": trackWidthIn must be more than 0");
+        if (!(ticksPerIn > 0)) throw new IllegalArgumentException(name + ": ticksPerIn is " + ticksPerIn + ": write the pod's encoder counts per inch (more than 0)");
+        if (right != null && !(trackWidthIn > 0)) throw new IllegalArgumentException(name + ": trackWidthIn is " + trackWidthIn + ": write the distance between the two side pods, in inches (more than 0)");
         this.left = left;
         this.right = right;
         this.perp = perp;

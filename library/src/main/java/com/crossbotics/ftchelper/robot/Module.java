@@ -308,7 +308,7 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
     // This part's guessed place (one is worked out for the part alone when the robot did not plan one).
     final SimGuess.Spot guess() {
         SimGuess.Spot s = guessPlan().spot(this);
-        if (s == null) throw new IllegalStateException(name() + ": no guessed shape");
+        if (s == null) throw new IllegalStateException(name() + ": the simulator could not place this part. This is a library bug: please report it (docs/troubleshooting.md, \"Still stuck?\")");
         return s;
     }
 

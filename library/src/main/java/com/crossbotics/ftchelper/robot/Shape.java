@@ -186,7 +186,7 @@ public final class Shape {
      */
     public Shape axis(String axis) {
         String a = axis.toLowerCase(Locale.US);
-        if (!AXES.contains(a)) throw new IllegalArgumentException("Shape axis must be one of " + AXES + ", not \"" + axis + "\"");
+        if (!AXES.contains(a)) throw new IllegalArgumentException("Robot.java: a .shape(...) line has axis(\"" + axis + "\"): use one of " + AXES);
         this.axis = a;
         return this;
     }

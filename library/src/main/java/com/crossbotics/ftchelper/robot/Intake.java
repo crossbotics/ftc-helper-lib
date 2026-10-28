@@ -108,7 +108,7 @@ public final class Intake extends Module<Intake> implements Toggleable {
      * @param pieces e.g. 4
      */
     public Intake holds(int pieces) {
-        if (pieces < 1) throw new IllegalArgumentException("Intake.holds: at least 1");
+        if (pieces < 1) throw new IllegalArgumentException("Intake.holds(" + pieces + "): write the most pieces it holds, 1 or more, e.g. holds(4)");
         holds = pieces;
         return this;
     }
@@ -124,7 +124,7 @@ public final class Intake extends Module<Intake> implements Toggleable {
      * @param kind   e.g. "NECTAR", "POLLEN"
      */
     public Intake holds(int pieces, String kind) {
-        if (pieces < 0) throw new IllegalArgumentException("Intake.holds(" + pieces + ", \"" + kind + "\"): 0 or more");
+        if (pieces < 0) throw new IllegalArgumentException("Intake.holds(" + pieces + ", \"" + kind + "\"): the count can't be below 0");
         if (kind == null || kind.replaceAll("[^A-Za-z0-9]", "").isEmpty()) {
             throw new IllegalArgumentException("Intake.holds(n, kind): name the kind, e.g. \"NECTAR\"");
         }

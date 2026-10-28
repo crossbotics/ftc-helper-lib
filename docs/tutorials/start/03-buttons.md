@@ -321,7 +321,7 @@ Driver Station. ([Simulator guide](../../guides/simulator.md).)
 | --- | --- |
 | INIT stops: "has two jobs" | Two of your lines use one button. Pick another, or put both in one lambda. |
 | INIT stops: "is the library's ... button" | That button is the library's (driving, pause, menus). Pick a free one (INIT lists them), or move the library's job with `libraryButtons` (section 7). |
-| INIT stops: "libraryButtons: ... has two library jobs" | You moved a library job onto a button that has one already. Pick another, or free the other job (`null`). |
+| INIT stops: "libraryButtons: Two library features are on ..." | You moved a library feature onto a button that has one already. The message names the line to change: pick another button, or turn the other one off (`null`). |
 | INIT stops: "slow() is for one driver" | With two drivers, G1 LT is slow already. Delete the line, or free the library's slow first (`lib.slow(null)`). |
 | A part's button does nothing | Your job replaced its suggestion, or INIT says it has no button (one driver). |
 | No button does anything | The robot is paused: tap BACK. |

@@ -1421,7 +1421,19 @@ public abstract class RobotDefinition {
         if (!autonomous) setAlliance(com.crossbotics.ftchelper.match.MatchMemory.allianceOr(Alliance.BLUE));
         com.crossbotics.ftchelper.hardware.BulkReads.auto(opMode.hardwareMap);
         screen = new com.crossbotics.ftchelper.telemetry.RobotTelemetry(opMode.telemetry);
-        setup(opMode.hardwareMap);
+        try {
+            setup(opMode.hardwareMap);
+        } catch (RuntimeException e) {
+            // A mistake found at INIT, in a LinearOpMode: plain lines on the Driver Station until STOP,
+            // then a clean stop (your code after robot.init(this) does not run).
+            if (!(opMode instanceof com.qualcomm.robotcore.eventloop.opmode.LinearOpMode)) throw e;
+            com.qualcomm.robotcore.eventloop.opmode.LinearOpMode op = (com.qualcomm.robotcore.eventloop.opmode.LinearOpMode) opMode;
+            if (op.isStarted()) throw e;
+            // SAFETY: your atInit code may have moved a part: stop every part made so far first.
+            try { if (all != null) all.stop(); } catch (RuntimeException ignored) { /* the first error is the one to show */ }
+            if (!com.crossbotics.ftchelper.core.InitStop.showAndWait(op, e)) throw e;
+            opMode.terminateOpModeNow();
+        }
         com.crossbotics.ftchelper.util.FieldPose fromAuto = com.crossbotics.ftchelper.util.PoseStore.peek();
         if (!autonomous && tracker != null && fromAuto != null
                 && com.crossbotics.ftchelper.util.PoseStore.ageSec() <= com.crossbotics.ftchelper.match.MatchMemory.MAX_AGE_SEC) {

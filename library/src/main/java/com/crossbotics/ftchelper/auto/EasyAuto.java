@@ -209,6 +209,11 @@ public abstract class EasyAuto extends LinearOpMode {
      */
     @Override
     public final void runOpMode() {
+        // A mistake found at INIT: plain lines on the Driver Station, not the FTC app's red line.
+        com.crossbotics.ftchelper.core.InitStop.run(this, this::runBody);
+    }
+
+    private void runBody() {
         // ---- Setup (INIT) ----
         RobotTelemetry t = new RobotTelemetry(telemetry);
         // Bulk reads: each hub answers with all its motor readings in one message instead of one at a

@@ -19,6 +19,7 @@ with tutorial 12.
 | [`Profile`](#profile) | behave differently in PRACTICE and COMPETITION |
 | [`SettingsFile`](#settingsfile) | keep small settings on the Control Hub between restarts |
 | [`RobotConfig`](#robotconfig) | describe the drivetrain once, for TeleOp and every autonomous |
+| [`InitStop`](#initstop) | show a mistake found at INIT as plain lines on the Driver Station |
 
 ---
 
@@ -161,3 +162,25 @@ public class RobotSettings extends RobotConfig {
 
 The mechanisms are not in here: they go in your own `Robot` class, so your programs can reach them
 by name (`robot.lift`). See the [starter kit](../starter-kit.md).
+
+## InitStop
+
+A mistake found at INIT (a wrong name in Robot.java, a missing number in Tunables.java), shown as plain
+lines on the Driver Station instead of the FTC app's red line:
+
+<samp>INIT STOPPED: the robot did not start.</samp><br>
+<samp>Tunables.Lift has no max: write max (...)</samp><br>
+<samp>Fix it, then press INIT again. Press STOP now.</samp>
+
+Then it waits for STOP; nothing moves. The library's OpModes (EasyTeleOp, EasyAuto, the finders, the
+Hardware Check, Tune and check) and `robot.init(this)` use it already. A mistake after START is not
+caught: the FTC app shows it as before. The robot log keeps the full error.
+
+| Method | What it does |
+| --- | --- |
+| `InitStop.run(this, () -> { ... })` | in your own `LinearOpMode`: runs the code; a mistake before START is shown and waits for STOP |
+| `InitStop.showAndWait(this, e)` | show one error now and wait for STOP (false in the simulator) |
+| `InitStop.words(e)` | the plain words for an error: a library message as it is; another error with where it happened, e.g. "NullPointerException in Robot.java line 42" |
+
+**Why:** the red line starts with Java words, and the real message after them is easy to miss. In the
+simulator, INIT errors still show in its own error panel.

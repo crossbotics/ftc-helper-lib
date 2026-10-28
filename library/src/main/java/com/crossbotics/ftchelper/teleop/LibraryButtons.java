@@ -65,22 +65,30 @@ public final class LibraryButtons {
 
     /** The library's jobs, with the words the button map shows. */
     public enum Job {
-        PAUSE("pause / go on"),
-        RESET_FORWARD("forward = away from you now"),
-        DEBUG("debug lines"),
-        SLOW("slow (squeeze: the further, the slower)"),
-        SLOW_TOGGLE("slow on/off"),
-        FIELD_CENTRIC("field-centric on/off"),
-        BUTTON_MAP("button map"),
-        TUNING_MENU("tuning menu"),
-        SET_POSE("set pose here"),
-        SWITCH_ALLIANCE("switch alliance (BLUE / RED)");
+        PAUSE("pause / go on", "pause"),
+        RESET_FORWARD("forward = away from you now", "resetForward"),
+        DEBUG("debug lines", "debug"),
+        SLOW("slow (squeeze: the further, the slower)", "slow"),
+        SLOW_TOGGLE("slow on/off", "slowToggle"),
+        FIELD_CENTRIC("field-centric on/off", "fieldCentric"),
+        BUTTON_MAP("button map", "buttonMap"),
+        TUNING_MENU("tuning menu", "tuningMenu"),
+        SET_POSE("set pose here", "setPose"),
+        SWITCH_ALLIANCE("switch alliance (BLUE / RED)", "switchAlliance");
 
         /** The words on the button map. */
         public final String words;
+        /** Its line in libraryButtons(...), e.g. "lib.debug" (for the INIT messages). */
+        final String method;
 
-        Job(String words) {
+        Job(String words, String method) {
             this.words = words;
+            this.method = method;
+        }
+
+        // How to turn it off: "lib.pause(null)"; the two-button ones take two nulls.
+        String off() {
+            return "lib." + method + (this == DEBUG || this == SWITCH_ALLIANCE ? "(null, null)" : "(null)");
         }
     }
 
@@ -327,8 +335,8 @@ public final class LibraryButtons {
         for (Job pairJob : new Job[] {Job.DEBUG, Job.SWITCH_ALLIANCE}) {
             Key k = keys.get(pairJob), w = with(pairJob);
             if (k == null || !jobs.contains(pairJob)) continue;
-            if (w != null && w.equals(k)) throw clash("the " + pairJob.words + " pair is " + k + " twice: give it two different buttons");
-            if (w != null && w.pad != k.pad) throw clash("the " + pairJob.words + " pair " + k + " + " + w + " is on two gamepads: put both on one");
+            if (w != null && w.equals(k)) throw pairProblem(pairJob, "\"" + pairJob.words + "\" is " + k + " + " + k + ": it needs two different buttons");
+            if (w != null && w.pad != k.pad) throw pairProblem(pairJob, "\"" + pairJob.words + "\" is " + k + " + " + w + ", on two gamepads: put both on one");
             if (w == null) continue;   // one button alone: a slot of its own, below
             Slot s = find(out, k, w);
             if (s == null) {
@@ -372,7 +380,7 @@ public final class LibraryButtons {
         for (Map<Key, List<Job>> m : java.util.Arrays.asList(quick, flexible, held)) for (Key k : m.keySet()) if (!all.contains(k)) all.add(k);
         for (Key k : all) {
             List<Job> q = list(quick, k), f = list(flexible, k), h = list(held, k);
-            if (q.size() > 1) throw clash(k + " has two library jobs: \"" + q.get(0).words + "\" and \"" + q.get(1).words + "\"");
+            if (q.size() > 1) throw clash("Two library features are on " + k + ": \"" + q.get(0).words + "\" and \"" + q.get(1).words + "\". A button can do only one", q.get(1));
             Slot s = new Slot(k, null);
             if (!q.isEmpty()) s.tap = q.get(0);
             List<Job> longJobs = new ArrayList<>(h);
@@ -381,7 +389,8 @@ public final class LibraryButtons {
                 else longJobs.add(j);              // with a quick job: held
             }
             if (longJobs.size() > 1) {
-                throw clash(k + " has two long (held) library jobs: \"" + longJobs.get(0).words + "\" and \"" + longJobs.get(1).words + "\"");
+                throw clash("Two hold-down library features are on " + k + ": \"" + longJobs.get(0).words + "\" and \""
+                        + longJobs.get(1).words + "\". A button can hold only one", longJobs.get(1));
             }
             if (!longJobs.isEmpty()) {
                 s.hold = longJobs.get(0);
@@ -394,7 +403,9 @@ public final class LibraryButtons {
         if (slow != null) {
             for (Slot s : out) {
                 if (s.key.equals(slow) || slow.equals(s.with)) {
-                    throw clash(slow + " is the slow " + (slow.isTrigger() ? "trigger" : "button") + " and also \"" + s.words() + "\"");
+                    Job other = s.tap != null ? s.tap : s.hold;
+                    throw clash(slow + " is the slow " + (slow.isTrigger() ? "trigger" : "button") + ", and also \"" + s.words()
+                            + "\". The slow " + (slow.isTrigger() ? "trigger" : "button") + " can do nothing else", other == null ? Job.SLOW : other);
                 }
             }
         }
@@ -404,7 +415,9 @@ public final class LibraryButtons {
             switch (menu.btn) {
                 case DPAD_UP: case DPAD_DOWN: case DPAD_LEFT: case DPAD_RIGHT:
                 case A: case B: case X: case Y: case LB: case RB:
-                    throw clash(menu + " cannot open the tuning menu: the menu itself uses it. Pick GUIDE, BACK, START, a stick click or a trigger");
+                    throw new IllegalStateException("libraryButtons: " + menu + " cannot open the tuning menu: the menu itself uses "
+                            + menu.btn + ". In Controls.java, in libraryButtons(...), pick GUIDE, BACK, START, a stick click or a"
+                            + " trigger, e.g. lib.tuningMenu(g1.guide)");
                 default:
                     break;
             }
@@ -469,7 +482,16 @@ public final class LibraryButtons {
         return l == null ? new ArrayList<Job>() : l;
     }
 
-    private static IllegalStateException clash(String what) {
-        return new IllegalStateException("libraryButtons: " + what + ". Move or free one (docs/guides/buttons.md, \"Moving the library's buttons\")");
+    // A two-button job set up wrong, with the line that fixes it.
+    private static IllegalStateException pairProblem(Job job, String what) {
+        return new IllegalStateException("libraryButtons: " + what + ". In Controls.java, in libraryButtons(...): lib."
+                + job.method + "(g1.start, g1.back), for example (docs/guides/buttons.md, \"Moving the library's buttons\")");
+    }
+
+    // A clash, with the line that fixes it: move that job to a free button, or turn it off.
+    private static IllegalStateException clash(String what, Job fix) {
+        return new IllegalStateException("libraryButtons: " + what + ". In Controls.java, in libraryButtons(...), move one to a"
+                + " free button (lib." + fix.method + "(...)), or turn it off: " + fix.off()
+                + " (docs/guides/buttons.md, \"Moving the library's buttons\")");
     }
 }

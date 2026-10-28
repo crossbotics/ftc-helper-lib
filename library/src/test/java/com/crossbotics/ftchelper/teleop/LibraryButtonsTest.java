@@ -96,12 +96,15 @@ public class LibraryButtonsTest {
     }
 
     @Test public void twoLibraryJobsOnOneButtonStopWithItsName() {
-        expectClash(LibraryButtons.twoDrivers().fieldCentric(Key.g1(Btn.BACK)), "G1 BACK has two library jobs");
-        expectClash(LibraryButtons.twoDrivers().setPose(Key.g1(Btn.BACK)), "G1 BACK has two long (held) library jobs");
+        expectClash(LibraryButtons.twoDrivers().fieldCentric(Key.g1(Btn.BACK)), "Two library features are on G1 BACK");
+        expectClash(LibraryButtons.twoDrivers().setPose(Key.g1(Btn.BACK)), "Two hold-down library features are on G1 BACK");
         expectClash(LibraryButtons.twoDrivers().fieldCentric(Key.g1(Trigger.LT)), "G1 LT is the slow trigger");
         expectClash(LibraryButtons.twoDrivers().tuningMenu(Key.g1(Btn.A)), "G1 A cannot open the tuning menu");
+        // Each says the line that fixes it.
+        expectClash(LibraryButtons.twoDrivers().fieldCentric(Key.g1(Btn.BACK)), "turn it off: lib.fieldCentric(null)");
+        expectClash(LibraryButtons.twoDrivers().tuningMenu(Key.g1(Btn.A)), "lib.tuningMenu(g1.guide)");
         expectClash(LibraryButtons.twoDrivers().debug(Key.g1(Btn.A), Key.g2(Btn.B)), "on two gamepads");
-        expectClash(LibraryButtons.twoDrivers().switchAlliance(Key.g1(Btn.A), Key.g1(Btn.A)), "twice");
+        expectClash(LibraryButtons.twoDrivers().switchAlliance(Key.g1(Btn.A), Key.g1(Btn.A)), "it needs two different buttons");
         try {
             LibraryButtons.twoDrivers().allianceInInit(Key.g1(Btn.X), Key.g1(Btn.X));
             fail("expected an error");
@@ -125,7 +128,7 @@ public class LibraryButtonsTest {
         assertEquals(Key.g1(Btn.A), lib.key(Job.PAUSE));
         // And a clash that appears there is caught.
         expectClash(LibraryButtons.oneDriver().fieldCentric(Key.g2(Btn.L_STICK_BTN)).moveAllToGamepad1(),
-                "G1 left stick click has two library jobs");
+                "Two library features are on G1 left stick click");
     }
 
     // ----------------------------- running them -----------------------------

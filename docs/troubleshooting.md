@@ -32,6 +32,16 @@ See [A new FTC SDK version](02-keep-up-to-date.md#a-new-ftc-sdk-version).
 
 ## Driver Station errors
 
+**<samp>INIT STOPPED: the robot did not start.</samp>**
+
+The library found a mistake at INIT. The line under it says what is wrong and how to fix it: find it
+below. Nothing moves. Press STOP, fix it, then press INIT again. (After START, a mistake still shows as
+the FTC app's red line, <samp>User code threw an uncaught exception: ...</samp>, after every part has
+stopped. The words after the dash are the same messages as below.)
+
+A mistake in your own code (not a library message) shows its kind and where it is, e.g.
+<samp>NullPointerException in Robot.java line 42</samp>: open that line.
+
 **<samp>No DcMotorEx named "..." in the active robot configuration</samp>**
 - or <samp>No Servo named "intake_deploy" ...</samp>
 
@@ -46,13 +56,15 @@ buttons and actions skip it until it is in the configuration
 [Hardware Check](modules/testing.md#hardwarecheckopmode) with `robot()` lists every Robot.java device
 the configuration is missing.
 
-**<samp>libraryButtons: G1 BACK has two library jobs: ... Move or free one</samp>**
-- or <samp>has two long (held) library jobs</samp>
-- or <samp>is the slow trigger and also ...</samp>
-- or <samp>cannot open the tuning menu</samp>
+**<samp>libraryButtons: Two library features are on G1 BACK: "pause / go on" and "debug lines". A button can do only one. ...</samp>**
+- or <samp>Two hold-down library features are on ...</samp>
+- or <samp>G1 LT is the slow trigger, and also ...</samp>
+- or <samp>G1 A cannot open the tuning menu ...</samp>
 
-In `libraryButtons(...)` a library job was moved onto a button that already has one. Pick
-another button, or free the other job with `null` ([the button menu](guides/buttons.md#moving-the-librarys-buttons)).
+In `libraryButtons(...)` in Controls.java, one of the library's features was moved onto a button that
+already has one. The message ends with the line to change: move that feature to a free button
+(`lib.debug(g1.start, null)`), or turn it off with `null` (`lib.debug(null, null)`).
+[Moving the library's buttons](guides/buttons.md#moving-the-librarys-buttons).
 
 **<samp>Tunables.Lift has no max: write max (the top of the safe range, in counts: Motor Finder, B). A safety limit never comes from a library default.</samp>**
 - or <samp>has no min</samp>
