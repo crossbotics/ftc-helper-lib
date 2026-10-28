@@ -77,7 +77,7 @@ function change(fn) {
 
 // The simulator's side: the field (neutral names), the Robot classes, the last state.
 let field = null, obs = [], half = 70.585;
-let robots = [], guess = '';
+let robots = [], guess = '', autos = [];   // autos: your Steps autos and their Java (Start from)
 let sim = null;          // the last state (10 a second)
 let lastRun = null;      // { b: the plan as it ran, tl: its timeline, id: the run's number, sent: page time }
 let runError = '';
@@ -94,6 +94,7 @@ async function loadSimInfo() {
 		const a = await (await fetch('/auto', { cache: 'no-store' })).json();
 		robots = a.robots || [];
 		guess = a.guess || '';
+		autos = a.autos || [];
 	} catch { robots = []; }
 	render();
 }
@@ -140,12 +141,19 @@ panel.innerHTML = `
 </div>
 <p class="muted b-intro">Build an autonomous on the field, press <b>Run</b>: the simulator runs it with your real code
   (the <i>Built Auto</i>). Then copy the Java. <a href="https://github.com/crossbotics/ftc-helper-lib/blob/main/docs/guides/simulator.md#the-auto-builder" target="_blank" rel="noopener">Guide</a></p>
+<div class="b-sec b-load" id="bFromRow"><div class="row"><b>Load an existing auto</b> <select id="bFrom" aria-label="Your autonomous"></select><button id="bFromGo">Load</button></div>
+  <ul class="b-checks" id="bFromNote"></ul></div>
 <details class="b-sec" open><summary>Robot and alliance</summary>
-  <div class="row"><label>Robot code <select id="bRobot" aria-label="Robot class"></select></label></div>
+  <div class="row" id="bRobotRow"><label>Robot (your Robot.java) <select id="bRobot" aria-label="Robot class"></select></label></div>
   <div class="muted" id="bRobotText"></div>
   <div class="row"><span class="muted">Run as</span>
     <span class="b-seg" role="group" aria-label="Alliance"><button id="bRed" class="b-red">RED</button><button id="bBlue" class="b-blue">BLUE</button></span></div>
-  <div class="row"><label title="mirrorForRed() in the Java: false on a field turned half a turn between the alliances (BIOBUZZ)">Your auto's <code>mirrorForRed()</code> <select id="bMirror"><option value="false">false (turned field, like BIOBUZZ)</option><option value="true">true (mirrored field)</option></select></label></div>
+  <div class="row"><span class="muted" title="How red's half of the field compares with blue's. The builder writes mirrorForRed() in the Java for you (rotated: false, mirrored: true)">Red's side</span>
+    <select id="bMirror" aria-label="Red's side of the field"><option value="false">Rotated 180° (like BIOBUZZ)</option><option value="true">Mirrored</option></select></div>
+</details>
+<details class="b-sec" id="bFeatSec"><summary>What this robot can do <span class="muted" id="bFeatCount"></span></summary>
+  <p class="muted">Ready-made by the library, from the parts in your Robot.java. Not ready: it says what to add.</p>
+  <div id="bFeatures"></div>
 </details>
 <div class="b-sec">
   <div class="row b-tools" id="bTools"></div>
@@ -157,6 +165,13 @@ panel.innerHTML = `
 <details class="b-sec" open><summary>Start spot</summary>
   <div class="row" id="bPresetRow"><label>Spot <select id="bPreset"></select></label></div>
   <div class="row"><label>x <input type="number" step="0.5" id="bSx"></label><label>y <input type="number" step="0.5" id="bSy"></label><label>heading <input type="number" step="5" id="bSh"></label></div>
+  <div class="row b-face" id="bFace"><span class="muted">Face</span>
+    <button data-h="0" title="Facing the field (0°)">&#8593;</button><button data-h="45" title="45° left">&#8598;</button><button data-h="90" title="Facing left (90°)">&#8592;</button>
+    <button data-h="135" title="135° left">&#8601;</button><button data-h="180" title="Facing our wall (180°)">&#8595;</button><button data-h="-135" title="135° right">&#8600;</button>
+    <button data-h="-90" title="Facing right (-90°)">&#8594;</button><button data-h="-45" title="45° right">&#8599;</button>
+    <button data-turn="15" title="Turn 15° left">&#8634; 15°</button><button data-turn="-15" title="Turn 15° right">&#8635; 15°</button></div>
+  <label class="muted" title="A drag stays inside the walls. With this on, it also goes against a wall that is near and lines up with a tile middle or seam: easy to copy at the field."><input type="checkbox" id="bSnap"> Snap to the walls and the tile lines</label>
+  <div class="muted" id="bInches"></div>
   <label class="b-note">Note for the drive team <input type="text" id="bNote" maxlength="120" placeholder="Our wall, left corner tile, facing the field"></label>
   <div class="row"><button id="bWrite" title="Write the note from the spot: the wall, the tile, the way it faces">Write it for me</button>
     <button id="bCard" title="One page for the drive team: the note, the spot on the field, red and blue">Print setup card</button></div>
@@ -168,7 +183,7 @@ panel.innerHTML = `
   <div class="row b-addrow" id="bAdd">
     <button data-add="move">+ Drive</button><button data-add="strafe" id="bAddStrafe">+ Strafe</button><button data-add="turn">+ Turn</button>
     <button data-add="turnTo">+ Turn to</button><button data-add="wait">+ Wait</button><button data-add="run">+ Start something</button>
-    <button data-add="action">+ Action</button><button data-add="park">+ Park from here</button>
+    <button data-add="action">+ Action</button><button data-add="aim" id="bAddAim" title="Turn to the goal (camera, or the odometry backup)">+ Aim at the goal</button><button data-add="ready" id="bAddReady" title="Spin the launcher up and wait until it is ready to fire">+ Ready to launch</button><button data-add="remember" title="Save the heading now, for Turn back">+ Remember heading</button><button data-add="back" title="Turn back to the remembered heading">+ Turn back</button><button data-add="park">+ Park from here</button>
     <label class="muted" title="Off: new steps go at the end"><input type="checkbox" id="bInsert"> add after the selected step</label></div>
   <div id="bTankNote" class="b-tanknote" hidden></div>
   <div id="bList"></div>
@@ -302,7 +317,7 @@ function work() {
 	const checks = [];
 	for (const h of mine.hits) checks.push({ level: 'bad', text: `Part ${h.part + 1}: the robot touches ${h.name} near (${fmt(h.x)}, ${fmt(h.y)}).` });
 	for (const w of P.warnings(path, P.sample(path), st.start.on ? +st.start.h || 0 : null)) checks.push({ level: 'warn', text: w });
-	if (st.mirror && field && /BIOBUZZ/.test(field.season)) checks.push({ level: 'warn', text: 'BIOBUZZ is a turned field: with mirrorForRed() true, the other alliance drives to the wrong places.' });
+	if (st.mirror && field && /BIOBUZZ/.test(field.season)) checks.push({ level: 'warn', text: 'BIOBUZZ: red\'s side is rotated 180°, not mirrored. With mirrorForRed() true, the other alliance drives to the wrong places.' });
 	const order = P.ordered(st.actions, m);
 	for (const p of P.checkActions(st.actions, m, { step: st.mode, label: st.label })) {
 		checks.push({ level: p.level, text: `Action ${order.indexOf(st.actions[p.i]) + 1}: ${p.text}`, act: p.i });
@@ -320,21 +335,42 @@ function renderRobot() {
 	if (sel.dataset.key !== key) {
 		sel.dataset.key = key;
 		sel.innerHTML = robots.length
-			? `<option value="">${esc('Best fit: ' + (robots.find((r) => r.name === bestFit())?.short || bestFit()))}</option>` + robots.map((r) => `<option value="${esc(r.name)}">${esc(r.short)}</option>`).join('')
+			? `<option value="">${esc('Best match: ' + (robots.find((r) => r.name === bestFit())?.short || bestFit()))}</option>` + robots.map((r) => `<option value="${esc(r.name)}">${esc(r.short)}</option>`).join('')
 			: '<option value="">(none found)</option>';
 	}
 	if (document.activeElement !== sel) sel.value = B.robotClass && robots.some((r) => r.name === B.robotClass) ? B.robotClass : '';
 	fillLists();
 	const info = robotInfo();
 	const [L, W] = robotLW();
+	// One Robot class (the usual case): no list, just which one. Several: a list, the best match first.
+	$('bRobotRow').hidden = robots.length <= 1;
 	$('bRobotText').textContent = info
-		? `${info.name}: ${info.drive || '?'} drive${info.odometry ? ', odometry' : ''}${info.follower ? ', Pedro follower' : ''}. Size from the robot file: ${fmt(L)} x ${fmt(W)} in.`
+		? `${robots.length <= 1 ? 'Robot: ' : ''}${info.name}: ${info.drive || '?'} drive${info.odometry ? ', odometry' : ''}${info.follower ? ', Pedro follower' : ''}. Size from the robot file: ${fmt(L)} x ${fmt(W)} in.`
+			+ (robots.length > 1 ? ` Your code has ${robots.length} Robot classes: this auto drives the one picked. "Best match": the one whose motor and servo names match the simulator's robot file.` : '')
 		: (robots.length ? '' : 'Looking for your Robot class...');
 	$('bRed').classList.toggle('on', B.alliance === 'RED');
 	$('bBlue').classList.toggle('on', B.alliance === 'BLUE');
 	$('bRed').setAttribute('aria-pressed', String(B.alliance === 'RED'));
 	$('bBlue').setAttribute('aria-pressed', String(B.alliance === 'BLUE'));
 	$('bMirror').value = String(mirrorNow());
+	renderFeatures();
+	renderFrom();
+}
+
+// The library's features for this robot (robot.features()): ready, or what is missing.
+function renderFeatures() {
+	const list = robotInfo()?.features || [];
+	const ready = list.filter((f) => !f.missing);
+	$('bFeatCount').textContent = list.length ? `(${ready.length} of ${list.length} ready)` : '';
+	$('bFeatures').innerHTML = list.length ? `<table class="b-feat"><tr><th></th><th>Feature</th><th>Use it</th></tr>${list.map((f) => `<tr class="${f.missing ? 'off' : ''}">
+		<td>${f.missing ? '&#10007;' : '&#10003;'}</td><td><b>${esc(f.name)}</b> <span class="muted">${esc(f.words)}</span>${f.note ? `<br><span class="muted">${esc(f.note)}</span>` : ''}</td>
+		<td>${f.missing ? `needs ${esc(f.missing)}` : f.code ? `<code>${esc(f.code)}</code>` : 'on by itself'}</td></tr>`).join('')}</table>`
+		: '<p class="muted">The simulator has not answered yet.</p>';
+	// "+ Aim at the goal" only for a robot that can aim (or before the simulator answers)
+	const aim = list.find((f) => f.kind === 'AUTO_STEP' && f.name === 'Aim at the goal');
+	$('bAddAim').hidden = !!list.length && !(aim && !aim.missing);
+	const ready = list.find((f) => f.kind === 'AUTO_STEP' && f.name === 'Ready to launch');
+	$('bAddReady').hidden = !!list.length && !(ready && !ready.missing);
 }
 $('bRobot').onchange = () => change(() => { B.robotClass = $('bRobot').value; });
 $('bRed').onclick = () => change(() => { B.alliance = 'RED'; });
@@ -370,11 +406,13 @@ function renderTools() {
 	const now = B.mode === 'pedro' ? B.addPedro : B.add;
 	$('bTools').innerHTML = '<span class="muted">Tap adds:</span><span class="b-seg" role="group" aria-label="What a tap on the map adds">'
 		+ list.map(([v, t]) => `<button data-tool="${v}" aria-pressed="${v === now}" class="${v === now ? 'on' : ''}">${t}</button>`).join('')
-		+ '</span><button id="bUndo" title="Undo the last change">Undo</button>';
+		+ '</span><button id="bUndo" title="Undo the last change">Undo</button>'
+		+ `<button id="bNew" title="${B.mode === 'pedro' ? 'Remove every part and action (Undo brings them back)' : 'Remove every step (Undo brings them back)'}">Start over</button>`;
 	for (const b of $('bTools').querySelectorAll('[data-tool]')) {
 		b.onclick = () => { if (B.mode === 'pedro') B.addPedro = b.dataset.tool; else B.add = b.dataset.tool; render(); };
 	}
 	$('bUndo').onclick = () => { if (undoList.length) { B = { ...JSON.parse(undoList.pop()), open: true }; render(); } };
+	$('bNew').onclick = () => (B.mode === 'pedro' ? $('bPClear') : $('bClear')).click();
 	$('bEdit3d').checked = !!B.edit3d;
 }
 $('bEdit3d').onchange = () => { B.edit3d = $('bEdit3d').checked; render(); };
@@ -390,6 +428,7 @@ function handles() {
 		});
 		path.parts.forEach((part, i) => out.push({ id: `e${i}`, x: part.end[0], y: part.end[1], kind: 'end', label: String(i + 1) }));
 		out.push({ id: 's', x: path.start[0], y: path.start[1], kind: 'start' });
+		out.push(turnKnob(path.start[0], path.start[1], +B.pedro.start.h || 0));
 		return out;
 	}
 	const plan = B.steps.plan;
@@ -399,7 +438,28 @@ function handles() {
 		out.push({ id: `m${i}`, x: e.x, y: e.y, kind: 'move', label: String(i + 1) });
 	});
 	out.push({ id: 's', x: +plan.start.x, y: +plan.start.y, kind: 'start' });
+	out.push(turnKnob(+plan.start.x, +plan.start.y, +plan.start.h || 0));
 	return out;
+}
+
+// The start robot's turn knob: in front of it; drag it around to turn the start (15° steps with snapping on).
+function turnKnob(x, y, h) {
+	const d = robotLW()[0] / 2 + 5, a = h * Math.PI / 180;
+	return { id: 'sh', x: x - Math.sin(a) * d, y: y + Math.cos(a) * d, kind: 'turn' };
+}
+
+// Turns the start to heading h (degrees), then keeps it inside the walls and touching one (G304).
+function setStartHeading(h) {
+	h = P.wrap(h);
+	if (B.mode === 'pedro') {
+		B.pedro.start.h = h;
+		const p = S.snapStart({ x: B.pedro.path.start[0], y: B.pedro.path.start[1], h }, robotLW(), half, false);
+		B.pedro.path.start = [p.x, p.y];
+	} else {
+		const st = B.steps.plan.start;
+		st.h = h;
+		Object.assign(st, S.snapStart({ x: +st.x, y: +st.y, h }, robotLW(), half, false));
+	}
 }
 
 // The pose before step i of a Simple steps plan (the start for step 0).
@@ -411,11 +471,17 @@ function poseBefore(i) {
 
 /** Moves a point to (x, y), plan numbers (a drag on the panel's map or in 3D). */
 function moveHandle(id, x, y) {
+	if (id === 'sh') {
+		const st = startNow();
+		const h = P.headingOf(x - +st.x, y - +st.y);
+		setStartHeading(B.snapStart !== false ? Math.round(h / 15) * 15 : Math.round(h));
+		return;
+	}
 	[x, y] = clampXY(x, y);
 	if (B.mode === 'pedro') {
 		const path = B.pedro.path;
 		const xy = [snap(x), snap(y)];
-		if (id === 's') { path.start = xy; return; }
+		if (id === 's') { const p = S.snapStart({ x, y, h: +B.pedro.start.h || 0 }, robotLW(), half, B.snapStart !== false); path.start = [p.x, p.y]; return; }
 		const m = /^([ecp])(\d+)(?:\.(\d+))?$/.exec(id);
 		const part = path.parts[+m[2]];
 		if (!part) return;
@@ -425,7 +491,7 @@ function moveHandle(id, x, y) {
 		return;
 	}
 	const plan = B.steps.plan;
-	if (id === 's') { plan.start.x = snap(x); plan.start.y = snap(y, 0.1); return; }
+	if (id === 's') { Object.assign(plan.start, S.snapStart({ x, y, h: +plan.start.h || 0 }, robotLW(), half, B.snapStart !== false)); return; }
 	const i = +id.slice(1), s = plan.steps[i];
 	if (!s || s.kind !== 'move') return;
 	// Mecanum: straight there; tank: along the robot's front only (forward or back, never sideways).
@@ -553,10 +619,11 @@ function renderMap() {
 		const grp = el('g', { class: 'bh', 'data-h': h.id, style: 'cursor:grab' }, hg);
 		el('circle', { cx: h.x, cy: -h.y, r: r * 1.8, fill: 'transparent' }, grp);
 		const sel = (B.mode !== 'pedro' && h.id === `m${B.sel}`) || (B.mode === 'pedro' && h.id === `e${B.selPart}`);
-		const fill = { start: START, end: PATH, move: PATH, ctrl: '#fff', point: '#fff' }[h.kind];
+		const fill = { start: START, end: PATH, move: PATH, ctrl: '#fff', point: '#fff', turn: '#f2c230' }[h.kind];
+		if (h.kind === 'turn') { const st = startNow(); el('line', { x1: +st.x, y1: -+st.y, x2: h.x, y2: -h.y, stroke: '#f2c230', 'stroke-width': r * 0.35, 'pointer-events': 'none' }, hg); }
 		el('circle', { cx: h.x, cy: -h.y, r: r * (h.kind === 'ctrl' ? 0.85 : 1.1), fill, stroke: sel ? '#ffe14d' : h.kind === 'ctrl' || h.kind === 'point' ? PATH : '#fff', 'stroke-width': r * (sel ? 0.5 : 0.3) }, grp);
 		if (h.label) el('text', { x: h.x + r * 1.4, y: -h.y - r * 1.2, 'font-size': r * 2.1, fill: '#101c45', 'font-weight': 700, 'paint-order': 'stroke', stroke: '#fff', 'stroke-width': r * 0.5, 'pointer-events': 'none' }, hg).textContent = h.label;
-		el('title', {}, grp).textContent = { start: 'Start spot: drag to move', end: 'End of a part: drag to move', move: 'End of a drive: drag to change it', ctrl: 'Control point: the path bends toward it', point: 'The point the robot faces' }[h.kind];
+		el('title', {}, grp).textContent = { start: 'Start spot: drag to move', turn: 'Turn the start: drag around the robot (15° steps when snapping is on)', end: 'End of a part: drag to move', move: 'End of a drive: drag to change it', ctrl: 'Control point: the path bends toward it', point: 'The point the robot faces' }[h.kind];
 	}
 	const t = at && at.t != null ? at.t : 0;
 	$('bTimeText').textContent = `${fmt(t)} s of ${fmt(tl.total)}`;
@@ -599,7 +666,11 @@ svg.addEventListener('pointerup', () => {
 	drag = null;
 	if (d.moved && (d.id || d.act != null)) { undoList.push(d.before); render(); return; }
 	if (d.id || d.act != null) { render(); return; }
-	if (!d.moved) tapAt(d.at[0], d.at[1]);
+	if (d.moved) return;
+	// A tap on the start robot adds nothing (drag its yellow knob to turn it).
+	const st = startNow(), [L, W] = robotLW();
+	if (P.pointInPoly(d.at, P.footprint(+st.x, +st.y, +st.h || 0, L, W))) return;
+	tapAt(d.at[0], d.at[1]);
 });
 svg.addEventListener('pointercancel', () => { drag = null; });
 
@@ -648,6 +719,8 @@ function renderStart() {
 		});
 	};
 	setVal('bSx', +st.x); setVal('bSy', +st.y); setVal('bSh', +st.h || 0);
+	$('bSnap').checked = B.snapStart !== false;
+	$('bInches').textContent = S.startInches(st, lw, half);
 	setVal('bNote', st.note);
 	const len = String(st.note ?? '').trim().length;
 	$('bNoteHelp').innerHTML = `Shown on the Driver Station at INIT as <b>"Place robot : ${esc(st.note ?? '')}"</b>: the drive team reads it at match setup. `
@@ -657,9 +730,18 @@ function renderStart() {
 	$('bStartOn').checked = !!B.pedro.start.on;
 }
 const onNum = (id, fn) => $(id).addEventListener('change', () => { const v = parseFloat($(id).value); if (Number.isFinite(v)) change(() => fn(v)); });
-onNum('bSx', (v) => { if (B.mode === 'pedro') B.pedro.path.start = clampXY(v, B.pedro.path.start[1]); else B.steps.plan.start.x = clampXY(v, 0)[0]; });
-onNum('bSy', (v) => { if (B.mode === 'pedro') B.pedro.path.start = clampXY(B.pedro.path.start[0], v); else B.steps.plan.start.y = clampXY(0, v)[1]; });
-onNum('bSh', (v) => { if (B.mode === 'pedro') B.pedro.start.h = P.wrap(v); else B.steps.plan.start.h = P.wrap(v); });
+// Typed numbers stay as typed, only kept inside the walls (no snapping).
+function typedStart(x, y) {
+	const st = startNow(), p = S.snapStart({ x: x ?? +st.x, y: y ?? +st.y, h: +st.h || 0 }, robotLW(), half, false);
+	if (B.mode === 'pedro') B.pedro.path.start = [p.x, p.y]; else Object.assign(B.steps.plan.start, p);
+}
+onNum('bSx', (v) => typedStart(v, null));
+onNum('bSy', (v) => typedStart(null, v));
+for (const b of $('bFace').querySelectorAll('button')) {
+	b.onclick = () => change(() => setStartHeading(b.dataset.h != null ? +b.dataset.h : (+startNow().h || 0) + +b.dataset.turn));
+}
+$('bSnap').onchange = () => { B.snapStart = $('bSnap').checked; save(); };
+onNum('bSh', (v) => setStartHeading(v));
 $('bNote').oninput = () => {
 	const st = B.mode === 'pedro' ? B.pedro.start : B.steps.plan.start;
 	st.note = $('bNote').value; st.noteAuto = false;
@@ -689,7 +771,7 @@ $('bCard').onclick = () => {
 
 // ------------------------------------------------------------------ Simple steps: the list
 
-const KIND_TEXT = { move: 'Drive', turn: 'Turn', turnTo: 'Turn to', wait: 'Wait', run: 'Start something', action: 'Action', alongside: 'Action', park: 'Park from here' };
+const KIND_TEXT = { move: 'Drive', turn: 'Turn', turnTo: 'Turn to', wait: 'Wait', run: 'Start something', action: 'Action', alongside: 'Action', aim: 'Aim at the goal', ready: 'Ready to launch', remember: 'Remember heading', back: 'Turn back', park: 'Park from here' };
 const DIRS = [[0, 'forward'], [180, 'back'], [90, 'right (strafe)'], [270, 'left (strafe)']];
 const NEW = {
 	move: () => ({ kind: 'move', label: 'Drive', inches: 24, dir: 0, power: 0.6 }),
@@ -699,6 +781,10 @@ const NEW = {
 	wait: () => ({ kind: 'wait', label: 'Wait', sec: 1 }),
 	run: () => { const code = commandsNow()[0] || ''; return { kind: 'run', label: code ? labelFor(code) : 'Start something', code }; },
 	action: () => ({ kind: 'action', code: actionsNow()[0] || '', timeout: ACTION_LIMIT_SEC }),
+	aim: () => ({ kind: 'aim', label: 'Aim', timeout: 3 }),
+	ready: () => ({ kind: 'ready', label: 'Ready', timeout: 3 }),
+	remember: () => ({ kind: 'remember', label: 'Remember heading' }),
+	back: () => ({ kind: 'back', label: 'Turn back', power: 0.5 }),
 	park: () => ({ kind: 'park', sec: 3 }),
 };
 for (const b of $('bAdd').querySelectorAll('[data-add]')) {
@@ -711,11 +797,24 @@ for (const b of $('bAdd').querySelectorAll('[data-add]')) {
 	});
 }
 
+/**
+ * A command or action box: a list of what the robot code has (so a team sees "Actions.fireAll(robot)" without
+ * knowing the name), and a text box only for "type your own". data-k="codeSel" for the list, "code" for the box.
+ */
+function codePick(list, code, typed, ph, listId) {
+	const known = list.includes(code);
+	const text = typed || !known || !list.length;
+	const box = `<input type="text" class="code" data-k="code" spellcheck="false" autocapitalize="off" value="${esc(code ?? '')}" placeholder="${ph}" list="${listId}">`;
+	if (!list.length) return box;
+	return `<select data-k="codeSel" class="code" aria-label="Pick one">${list.map((c) => `<option value="${esc(c)}"${c === code && !text ? ' selected' : ''}>${esc(c)}</option>`).join('')}`
+		+ `<option value="__own"${text ? ' selected' : ''}>type your own...</option></select>${text ? box : ''}`;
+}
+
 function stepForm(s, i) {
 	const e = view.sim.ends[i];
 	const name = (ph) => `<label class="grow">Name <input type="text" data-k="label" value="${esc(s.label ?? '')}" placeholder="${ph}"></label>`;
 	const power = `<label>power <input type="number" min="0.1" max="1" step="0.05" data-k="power" value="${fmt(+s.power)}"></label>`;
-	const code = (ph) => `<label class="grow">${s.kind === 'run' ? 'Command' : 'Action'} <input type="text" class="code" data-k="code" spellcheck="false" autocapitalize="off" value="${esc(s.code ?? '')}" placeholder="${ph}" list="${s.kind === 'run' ? 'bCommands' : 'bActionList'}"></label>`;
+	const code = (ph) => `<label class="grow b-pick">${s.kind === 'run' ? 'Command' : 'Action'} ${codePick(s.kind === 'run' ? commandsNow() : actionsNow(), s.code, s.typed, ph, s.kind === 'run' ? 'bCommands' : 'bActionList')}</label>`;
 	switch (s.kind) {
 		case 'move': {
 			// A tank drive: forward or back only (no strafe, no other angle).
@@ -734,6 +833,14 @@ function stepForm(s, i) {
 		case 'action': case 'alongside':
 			return `<div class="row">${code(actionsNow()[0] || 'Actions.name(robot)')}</div><div class="row"><label><input type="checkbox" data-k="wait"${s.kind === 'action' ? ' checked' : ''}> wait until done</label>
 				${s.kind === 'action' ? `<label>at most <input type="number" min="0.5" step="0.5" data-k="timeout" value="${fmt(+s.timeout)}"> s</label>` : ''}</div>`;
+		case 'aim': return `<div class="row">${name('Aim')}<label>at most <input type="number" min="0.5" step="0.5" data-k="timeout" value="${fmt(+s.timeout)}"> s</label>
+				<label>sweep <input type="number" min="0" max="180" step="5" data-k="sweep" value="${fmt(+(s.sweep || 0))}"> deg each way</label></div>
+			<p class="muted">Turns to the goal with the camera (or the odometry backup); a following turret aims instead. Sweep (0 = none): not in view, the robot turns slowly up to that far each way to find it. The preview does not turn: the run does.</p>`;
+		case 'remember': return `<div class="row">${name('Remember heading')}</div><p class="muted">Saves the way the robot faces now. A later "Turn back" turns to it.</p>`;
+		case 'back': return `<div class="row">${name('Turn back')}<label>power <input type="number" min="0.1" max="1" step="0.05" data-k="power" value="${fmt(+s.power)}"></label></div>
+			<p class="muted">Turns back to the heading saved by "Remember heading". Without odometry pods it uses the IMU: better than nothing. The preview does not turn: the run does.</p>`;
+		case 'ready': return `<div class="row">${name('Ready')}<label>at most <input type="number" min="0.5" step="0.5" data-k="timeout" value="${fmt(+s.timeout)}"> s</label></div>
+			<p class="muted">Spins the launcher up and waits until it is at speed. Put it before the drive to the shooting spot: the first shot then goes at once.</p>`;
 		case 'park': return `<div class="row"><label>Keep the last <input type="number" min="0.5" step="0.5" data-k="sec" value="${fmt(+s.sec)}"> s for the steps below</label></div>`;
 		default: return '';
 	}
@@ -791,6 +898,12 @@ function stepInput(i, t) {
 		if (k === 'dirSel') { if (t.value !== 'other') s.dir = +t.value; else if (DIRS.some(([d]) => d === +s.dir)) s.dir = 45; }
 		else if (k === 'dir' && B.steps.plan.drive === 'tank' && S.sideways(v)) return;   // a tank drive: forward or back only
 		else if (k === 'wait') { if (t.checked) { s.kind = 'action'; s.timeout = s.timeout ?? ACTION_LIMIT_SEC; } else s.kind = 'alongside'; }
+		else if (k === 'codeSel') {
+			if (t.value === '__own') { s.typed = true; return; }
+			// a command step's name follows the command until the team types their own
+			if (s.kind === 'run' && (!s.label || s.label === labelFor(s.code) || s.label === 'Start something')) s.label = labelFor(t.value);
+			s.code = t.value; delete s.typed;
+		}
 		else if (k === 'label' || k === 'code') s[k] = t.value;
 		else if (Number.isFinite(v)) s[k] = v;   // out of range stays: the checks say what is wrong
 	});
@@ -886,8 +999,8 @@ function renderActions() {
 				: `<label><input type="number" step="${a.kind === 'fraction' ? 0.05 : a.kind === 'part' ? 1 : 0.5}" data-k="value" value="${value}"> ${UNIT[a.kind] || ''}</label>`}</div>
 			<div class="row"><label><input type="radio" name="bWhat${i}" value="command" data-k="what"${a.what !== 'action' ? ' checked' : ''}> name + command</label>
 				<label><input type="radio" name="bWhat${i}" value="action" data-k="what"${a.what === 'action' ? ' checked' : ''}> an action</label></div>
-			${a.what === 'action' ? `<div class="row"><label class="grow">Action <input type="text" class="code" data-k="code" spellcheck="false" value="${esc(a.code)}" list="bActionList"></label></div>`
-				: `<div class="row"><label class="grow">Name <input type="text" data-k="label" value="${esc(a.label)}"></label></div><div class="row"><label class="grow">Command <input type="text" class="code" data-k="code" spellcheck="false" value="${esc(a.code)}" list="bCommands"></label></div>`}`;
+			${a.what === 'action' ? `<div class="row"><label class="grow b-pick">Action ${codePick(actionsNow(), a.code, a.typed, 'Actions.name(robot)', 'bActionList')}</label></div>`
+				: `<div class="row"><label class="grow">Name <input type="text" data-k="label" value="${esc(a.label)}"></label></div><div class="row"><label class="grow b-pick">Command ${codePick(commandsNow(), a.code, a.typed, 'robot.part::method', 'bCommands')}</label></div>`}`;
 		div.querySelector('[data-sel]').onclick = () => { B.selAction = i; render(); };
 		div.querySelector('[data-del]').onclick = () => change(() => { st.actions.splice(i, 1); B.selAction = null; });
 		div.addEventListener('change', (evt) => actInput(i, evt.target));
@@ -911,6 +1024,10 @@ function actInput(i, t) {
 			a.what = t.value;
 			if (a.what === 'action' && !/^Actions\./.test(a.code)) a.code = actionsNow()[0] || '';
 			if (a.what === 'command' && /^Actions\./.test(a.code)) a.code = newAlong().code;
+		} else if (k === 'codeSel') {
+			if (t.value === '__own') { a.typed = true; return; }
+			if (a.what !== 'action' && (!a.label || a.label === labelFor(a.code))) a.label = labelFor(t.value);
+			a.code = t.value; delete a.typed;
 		} else if (k === 'label' || k === 'code') a[k] = t.value;
 		else if (Number.isFinite(v)) a[k] = v;
 	});
@@ -918,6 +1035,43 @@ function actInput(i, t) {
 
 $('bClear').onclick = () => change(() => { B.steps.plan.steps = []; B.sel = null; });
 $('bExample').onclick = () => change(() => { B.steps.plan = structuredClone(STEPS_EXAMPLE); B.sel = null; });
+// Start from one of your autos: its Java read back into steps (plain numbers only; the rest is listed).
+function renderFrom() {
+	const sel = $('bFrom');
+	$('bFromRow').hidden = !autos.length;
+	const key = autos.map((a) => a.className).join('|');
+	if (sel.dataset.key !== key) {
+		sel.dataset.key = key;
+		sel.innerHTML = autos.map((a, i) => `<option value="${i}">${esc(a.name)} (${esc(a.className)}.java)</option>`).join('');
+	}
+}
+$('bFromGo').onclick = async () => {
+	const a = autos[+$('bFrom').value];
+	if (!a) return;
+	if (B.steps.plan.steps.length && !confirm(`Replace your ${B.steps.plan.steps.length} steps with "${a.name}"?`)) return;
+	// Names and formulas (Tunables.Auto.parkSeconds, START_X, turnToField(...)): the simulator works them out
+	// from your compiled code, then the Java is read again with those numbers.
+	let r = S.fromJava(a.source, { drive: B.steps.plan.drive });
+	if (r.unread?.length) {
+		try {
+			const ans = await (await fetch('/auto/values', { method: 'POST', body: JSON.stringify({ className: a.fullName || a.className, exprs: r.unread }) })).json();
+			if (ans.values) r = S.fromJava(a.source, { drive: B.steps.plan.drive, values: ans.values });
+		} catch { /* the simulator did not answer: plain numbers only */ }
+	}
+	const out = [];
+	if (r.plan) {
+		change(() => {
+			const keep = B.steps.plan;
+			// the auto's own note stays (the builder does not write over it)
+			B.steps.plan = { ...keep, ...r.plan, drive: keep.drive, start: { ...keep.start, ...(r.plan.start || {}), ...(r.plan.start?.note ? { noteAuto: false } : {}) } };
+			B.sel = null;
+		});
+		out.push({ level: 'good', text: `Loaded "${a.name}": ${r.plan.steps.length} step${r.plan.steps.length === 1 ? '' : 's'}. The file is not changed: Copy the Java when you are done.` });
+	} else out.push({ level: 'bad', text: `"${a.name}": no steps could be read.` });
+	for (const t of [...(r.problems || []), ...(r.tank || [])]) out.push({ level: 'warn', text: t });
+	for (const t of r.notes || []) out.push({ level: 'ok', text: t });
+	$('bFromNote').innerHTML = out.map((c) => `<li class="${c.level}">${esc(c.text)}</li>`).join('');
+};
 $('bInsert').onchange = () => { B.insert = $('bInsert').checked; save(); };
 $('bPClear').onclick = () => change(() => { B.pedro.path.parts = []; B.pedro.path.holdSec = 0; B.pedro.actions = []; B.selPart = 0; });
 $('bPExample').onclick = () => change(() => { Object.assign(B.pedro, structuredClone(PEDRO_EXAMPLE)); B.selPart = 1; });

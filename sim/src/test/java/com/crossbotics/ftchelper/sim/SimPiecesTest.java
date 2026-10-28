@@ -336,6 +336,51 @@ public class SimPiecesTest {
         }
     }
 
+    // A feed stop (stop=): with the feeder running, no piece gets through while it holds; opened, they go.
+    @Test public void aFeedStopHoldsThePiecesBackUntilItOpens() throws Exception {
+        SimRobot r = robot("servo.gate = 0.10, part=gobilda-2000-speed\n"
+                + "motor.flywheel = flywheel, part=gobilda-5203-6000, feeder=spinner, stop=gate, stopOpen=0.60\n"
+                + "shoot.launcher = shape=flywheel, angle=45, speed=200\n");
+        r.setPose(0, -40, 0);
+        r.servos.get("gate").device.setPosition(0.10);
+        r.motors.get("flywheel").device.setPower(1);
+        run(r, 2.0);
+        r.crServos.get("spinner")[0] = 1;            // the feeder runs (an intake pushing pieces up)
+        run(r, 1.0);
+        assertEquals("held back: nothing gets through", 0, r.pieces.launched());
+        r.servos.get("gate").device.setPosition(0.60);
+        run(r, 1.0);
+        assertTrue("open: pieces go", r.pieces.launched() >= 1);
+        int n = r.pieces.launched();
+        r.servos.get("gate").device.setPosition(0.10);
+        run(r, 1.0);
+        assertEquals("closed again: no more", n, r.pieces.launched());
+        try {
+            robot("motor.flywheel = flywheel, part=gobilda-5203-6000, feeder=spinner, stop=nothing\n");
+            assertTrue("a stop that is not a servo is refused", false);
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("stop=nothing"));
+        }
+    }
+
+    // Review (Codex): a servo pusher that pushes against a closed stop sends its piece when the stop opens.
+    @Test public void aPushAgainstAClosedStopGoesWhenItOpens() throws Exception {
+        SimRobot r = robot("servo.gate = 0.10, part=gobilda-2000-speed\n"
+                + "motor.flywheel = flywheel, part=gobilda-5203-6000, feeder=claw, stop=gate, stopOpen=0.60\n"
+                + "shoot.launcher = shape=flywheel, angle=45, speed=200\n");
+        r.setPose(0, -40, 0);
+        r.servos.get("gate").device.setPosition(0.10);
+        r.motors.get("flywheel").device.setPower(1);
+        run(r, 2.0);
+        SimRobot.SimServo claw = r.servos.get("claw");
+        claw.device.setPosition(claw.start > 0.5 ? 0 : 1);  // the pusher goes out, the stop is closed
+        run(r, 1.0);
+        assertEquals(0, r.pieces.launched());
+        r.servos.get("gate").device.setPosition(0.60);
+        run(r, 1.0);
+        assertEquals("its one piece goes once the stop opens", 1, r.pieces.launched());
+    }
+
     // A motor (or CR servo) feeder: each feed sends one piece, however late the OpMode turns it off, also when
     // the next feed starts in the same loop (the physics never sees it off). Only a feeder that keeps running
     // sends more: one every 0.3 s from 0.45 s on. Before, three 0.3 s feeds in a row were one 0.9 s run, and a

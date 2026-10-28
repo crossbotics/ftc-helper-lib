@@ -151,6 +151,7 @@ driving.stop();
 | `stop()` | all wheels to 0 |
 | `slowSpeed(s)` | speed at full slow trigger, default 0.3 |
 | `sticks(deadband, exponent)` | stick feel, default 0.05 and 2 ([StickShaping](gamepad.md)) |
+| `reverseWhen(() -> on)` | reverse drive while it says true: forward and strafe flipped (the back is the front), not the turn; field-centric ignores it. The five-files TeleOp uses it for `robot.reverseDriveMode()` |
 | `swapSticks(true)`, `sticksSwapped()` | the right stick drives (and strafes), the left stick X turns; default false |
 | `setFieldCentric(on)`, `toggleFieldCentric()`, `isFieldCentric()` | field-centric switch. Starts off. Stays off on a tank robot or without a heading. |
 | `canFieldCentric()` | true with mecanum wheels and a heading |

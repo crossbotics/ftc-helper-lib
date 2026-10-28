@@ -302,6 +302,59 @@ odometry line); `robot.odometrySpec()` is the line as written; `robot.odometryCh
 
 ---
 
+## Camera fix (alpha)
+
+> **ALPHA. NOT TESTED ON A ROBOT. OFF BY DEFAULT. NOT FOR BIOBUZZ.**
+> BIOBUZZ's only field tags are under the CELLs, facing down, and each HIVE tips 30 degrees as it fills.
+> The tags move during the match, so a position worked out from them is wrong whenever a HIVE tips.
+> Aiming with those tags is fine (it needs the direction, not the robot's place). The camera fix is for
+> a season with fixed wall tags. Try it only if you want to help test it, and tell us what you see.
+
+`cameraFix(camera)` in `Robot.java` (`CameraPoseFix`, `CameraFixCheckOpMode`) corrects the odometry's x and y
+with the field position a Limelight 3A works out from the AprilTags (MegaTag2). It was built from last
+season's lessons: last season's version never worked because the odometry itself lost distance, the
+heading never reached the camera, and the field directions were guessed ([From last season](../from-last-season.md)).
+
+- **The odometry must be right on its own first:** a 48 in move reads 48 in (the Drive Tuner, the Odometry
+  Tuner). The camera only corrects small drift.
+- **Only the camera's correction is smoothed** (`blend`, a fifth of the difference per picture), never the
+  wheel moves.
+- **Each picture is compared with where the robot was when it was taken**, not where it is now.
+- **Refused:** an old picture (`maxAgeMs`), a repeated one, fewer than `minTags` tags, the robot moving or
+  turning fast, a jump bigger than `maxJumpIn`, a pose that was never set, a mirrored RED field.
+- **The heading goes to the Limelight** every loop (`updateRobotOrientation`, in the background), turned
+  into its field frame.
+- **A debug line says what happened** to each picture: `Camera fix (ALPHA): used +1.2, -0.4 in (4 tags, 1.3 in off)`
+  or `refused: moving`. INIT says `Camera fix: ALPHA, NOT TESTED ON A ROBOT, off (Tunables.CameraFix.enabled = false). Not for BIOBUZZ: its tags move with the HIVE`.
+
+```java
+camera = add(Camera.limelight("limelight").goal("BLUE SCORING", "RED SCORING"));
+odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
+cameraFix(camera);                                       // Robot.java (alpha)
+
+public static class CameraFix {                          // Tunables.java
+    public static boolean enabled = false;               // true to try it
+    public static double turnDegBlue = 0, turnDegRed = 0; // the Camera Fix Check finds them
+}
+```
+
+**The field directions** (the turn from the Limelight's field frame to ours, a multiple of 90 degrees) are
+found by a test, not guessed: **Camera Fix Check** in [Tune and check](../guides/finders.md#tune-and-check-all-of-them-in-one-opmode).
+Put the robot on the field facing away from your drivers' wall, with tags in view. It shows the Limelight's
+own pose, the turn that fits, and the robot's place with that turn: check it with a tape measure. X saves
+the turn for BLUE, B for RED. The Limelight's pipeline needs Full 3D and the right tag size
+([Limelight lighting pipelines](../guides/limelight-lighting.md)).
+
+| `Tunables.CameraFix` | What it does | Default |
+| --- | --- | --- |
+| `enabled` | on or off | false |
+| `turnDegBlue`, `turnDegRed` | the turn from the Limelight's field frame to ours (Camera Fix Check) | 0 |
+| `maxAgeMs` | an older picture is skipped | 100 |
+| `maxSpeedInPerSec`, `maxTurnDegPerSec` | faster: skipped | 20, 30 |
+| `maxJumpIn` | a bigger difference is refused | 12 |
+| `blend` | the share of the difference applied per picture | 0.2 |
+| `minTags` | fewer tags: skipped | 2 |
+
 ## PoseTracker
 
 Every kind of odometry is a `PoseTracker`, so your code reads them all the same way.

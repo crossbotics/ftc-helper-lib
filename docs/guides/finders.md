@@ -21,12 +21,44 @@ The section is the device's name in CamelCase (each word starts with a capital, 
 `.tunables("Name")` in Robot.java: then copy the numbers into that section).
 The finders call positions P1, P2...: give them real names (`low`, `high`, `open`, `closed`).
 
+## Tune and check: all of them in one OpMode
+
+The library adds one OpMode by itself: **Tune and check** (TeleOp list, group "Finders"). There is no
+file to copy. It holds the Hardware Check and every finder that fits your Robot.java.
+
+1. Pick **Tune and check** and press INIT. A menu shows.
+2. D-pad up/down picks a tool. **A** opens it: you see its own INIT screen. Read its safety note.
+3. Press **START**: the tool runs, as it does on its own.
+4. Another tool: press STOP, then INIT. The menu starts on the last tool. In a tool's INIT,
+   **BACK** goes back to the menu.
+
+The menu lists only the tools that fit your robot. It finds Robot.java by itself (any class in
+`org.firstinspires.ftc.teamcode` that extends `RobotDefinition`; two robots: D-pad left/right picks one):
+
+| Tool | In the menu when |
+| --- | --- |
+| Hardware Check | always |
+| Servo Finder | the configuration has a servo |
+| Hood Finder | the robot has a hood |
+| Motor Finder | the robot has a lift or an arm (or there is no Robot.java) |
+| Flywheel Finder | the robot has a launcher (or there is no Robot.java) |
+| Feed Stop Finder | the launcher has a `.feedStop(...)` |
+| Camera Fix Check (**alpha**) | Robot.java has `cameraFix(camera)` ([camera fix](../modules/odometry.md#camera-fix-alpha)). BIOBUZZ teams: ignore it |
+| Drive Tuner | there is a Robot.java |
+| Odometry Tuner | Robot.java has an `odometry(...)` line |
+| Shot Tuner | the robot has a launcher |
+| Piece Tuner | the robot has a piece sensor |
+
+Not in the menu: the **Aim Tuner** and the **Characterizer**. They need your camera or your lifts, so they
+keep their own file (below). Your own finder files still work: keep them or delete them.
+
 ## The order
 
 ```mermaid
 flowchart LR
     H["Hardware Check<br/>everything plugged in<br/>and turning the right way"] --> S["Servo Finder<br/>ends + positions"]
-    S --> M["Motor Finder<br/>limits + positions"]
+    S --> FS["Feed Stop Finder<br/>hold + release"]
+    FS --> M["Motor Finder<br/>limits + positions"]
     M --> F["Flywheel Finder<br/>gains + recovery"]
     F --> D["Drive Tuner<br/>wheel size + strafe"]
     D --> O["Odometry Tuner<br/>pod directions + offsets"]
@@ -61,7 +93,8 @@ Any time, with no order: the **Piece Tuner** for a robot with game-piece sensors
   the Shot Tuner: their numbers are powers and speeds, so they depend on the battery. Their screens show
   the battery and warn when it is low. Every finder writes the battery at START in the results file
   (`== Drive Tuner, 2026-10-24 14:05, battery 12.8 V ==`).
-- The finders are in the starter kit (`ServoFinder`, `MotorFinder`, `FlywheelFinder`, `DriveTuner`, `Characterizer`)
+- The easy way: **Tune and check** (above) has every finder that fits your robot, with no file to copy.
+  Or, one file per finder: the finders are in the starter kit (`ServoFinder`, `MotorFinder`, `FlywheelFinder`, `DriveTuner`, `Characterizer`)
   and in the examples (`ExampleShotTuner`, `ExampleAimTuner`: put your launcher and camera in them).
   Remove `@Disabled`, build, and they are in the TeleOp list under "Finders".
 - The robot in five files: the Servo, Motor and Flywheel finders need no code. The Drive Tuner, the
@@ -145,6 +178,28 @@ so it works before Tunables.Hood has numbers. A hood with `.fullRange()` gets th
    [reference](../modules/finders.md#motorfinderopmode).
 
 Watch the current (amps): a high number while not moving means it is pushing on something. Stop.
+
+## Feed Stop Finder
+
+For a launcher with a feed stop (`.feedStop("feed_stop")` in Robot.java): where it holds the pieces back,
+and where it lets one through. It is in [Tune and check](#tune-and-check-all-of-them-in-one-opmode) for
+such a robot.
+
+1. Put a piece behind the feed stop. The wheel stays off.
+2. A servo's position is a number from 0 to 1. With the D-pad, pick a start number near where the feed
+   stop sits now (nothing moves yet). **A** moves the servo there.
+3. D-pad right/left +/- 0.01, up/down +/- 0.05 (hold RB: 10 times finer).
+4. Where it holds the piece firmly, without straining on the frame: press **X** to save this as the
+   hold position. Where the piece rolls through freely: press **B** to save this as the release
+   position. **A** then goes between the two, to try them.
+5. Copy the line it shows, e.g. `Tunables.Launcher: feedStopHold = 0.150, feedStopRelease = 0.550` (the
+   section is your launcher's: a launcher on `shooter` says `Tunables.Shooter`).
+
+The open time (`feedStopOpenSec`) and the push time (`assistSec`) are not measured here. Fire a few pieces
+in the PRACTICE profile ([profiles](profiles.md); debug lines show only there) and read the debug lines on
+the Driver Station: `Last feed ended: shot seen` is good; `backup time` means the wheel did not see a shot
+in time: the piece did not reach the wheel (more `assistSec`, or check the release position), or your
+wheel slows by less than 150 RPM per shot (a heavy wheel).
 
 ## Flywheel Finder: gains and recovery
 

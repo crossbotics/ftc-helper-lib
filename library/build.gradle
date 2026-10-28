@@ -10,17 +10,17 @@ plugins {
 def ftcSdkVersion = '12.0.0'
 
 android {
-    namespace 'com.crossbotics.ftchelper'
-    compileSdk 30
+    namespace = 'com.crossbotics.ftchelper'
+    compileSdk = 30
 
     defaultConfig {
-        minSdk 24
+        minSdk = 24
     }
 
     compileOptions {
         // Same as the FTC SDK (build.common.gradle).
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
 
     testOptions {
@@ -80,3 +80,7 @@ android.libraryVariants.configureEach { variant ->
 if (rootProject.projectDir != projectDir.parentFile) {
     apply from: new File(projectDir.parentFile, 'sim/run-buttons/tasks.gradle')
 }
+
+// Java 8 is what the robot needs; the newer Java that builds it warns "source value 8 is obsolete" on
+// every module. A known, harmless warning: hidden, so a real problem stands out.
+tasks.withType(JavaCompile).configureEach { options.compilerArgs.add("-Xlint:-options") }

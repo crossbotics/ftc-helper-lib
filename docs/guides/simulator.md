@@ -83,7 +83,10 @@ the robot project already builds:
 - **Windows:** type `gradlew.bat` (or `.\gradlew` in PowerShell) instead of `./gradlew`.
 - **Normal warnings you can ignore:** `source value 8 is obsolete` (and `target value 8`), `SDK processing. This
   version only understands SDK XML versions up to 3`, `Deprecated Gradle features were used`,
-  `[Incubating] Problems report`.
+  `[Incubating] Problems report`, `A restricted method in java.lang.System has been called` (Gradle on a
+  new Java). The library hides most of them in the simulator's own build since v0.20.2. **Android Studio's
+  "Project update recommended: Start AGP Upgrade Assistant" note: do not click it.** The FTC SDK sets
+  its own Android build version; an upgrade can break the robot build. Close the note.
 - **A quick build check:** `./gradlew :sim:fromRobot` builds your TeamCode first, so it also tells you
   on a laptop, with no Control Hub, whether your code builds.
 
@@ -110,6 +113,7 @@ TeamCode; with none, it finds `../TeamCode` when the library sits in a robot pro
 | `./gradlew :sim:run` (the **Simulator** button) | the simulator page; first makes the robot file from `Robot.java` | `-Probot=FILE` (default: your `simulator/robot.properties`, else the library's example), `-Plan` (phones on the WiFi), `-Pport=8781` (another port, to run two at once; default 8780), `-PteamCode=DIR`, `-PnoFromRobot` (use the robot file as it is), `-Popen` (open the page in the browser, as the button does) |
 | `./gradlew :sim:scenario -Pfile=a.sim` (the **Simulator tests** button: no `-Pfile`) | runs test scripts ([below](#scenario-files-test-without-a-browser)); with no `-Pfile` in a robot project: every test in `simulator/scenarios`; first makes the robot file from `Robot.java` | `-Pfile=a.sim,b.sim` (a comma list) or a folder (every `.sim` in it), `-Probot=`, `-PteamCode=`, `-PnoFromRobot` |
 | `./gradlew :sim:fromRobot` | only makes the robot file from your `Robot.java` (`:sim:run` and `:sim:scenario` do it first) | `-ProbotClass=` (which class), `-Pout=FILE`, `-Pfield=NAME` (default `biobuzz-2026`) |
+| `./gradlew :sim:updateLibrary` (the **Update library** button) | switches the library folder to its newest release and prints what changed; commits nothing ([Keep it up to date](../02-keep-up-to-date.md#update-the-update-library-button)) | `-PlibVersion=v0.20.1` (a specific version, or back) |
 | `./gradlew :sim:installButtons` | adds the **Simulator** and **Simulator tests** buttons to Android Studio now (a Gradle sync in Android Studio adds them too) | |
 | `./gradlew :sim:fromConfig -Pconfig=FILE.xml` | a first robot file from a robot configuration | `-Pout=FILE`, `-Pfield=NAME` |
 | `./gradlew :sim:newRobot -Pconfig=FILE.xml` | the five files (Robot.java, ...) from a configuration | `-PteamCode=DIR`, `-Ppackage=` (default `org.firstinspires.ftc.teamcode`) |
@@ -193,7 +197,10 @@ View) adds lines and maps over the 3D view: see [Layers](#layers) below. **Tests
 code, runs it and updates it: see [Record a test](#record-a-test). **Auto builder** (next to Tests)
 builds an autonomous on the field and runs it with your code: see [The auto builder](#the-auto-builder).
 
-**Where the robot starts.** In INIT the robot is put where the program says: an autonomous that names its
+**Where the robot starts.** On the page, INIT of an autonomous is a new match: every game piece goes
+back where the match starts them (with the preload), and the robot goes to its start spot. (A TeleOp's
+INIT keeps the field as it is, so it goes on from the autonomous. Scenario files set up their own field.)
+In INIT the robot is put where the program says: an autonomous that names its
 start spot (`s.start(note, x, y, heading)`, or `startSpotIn()` in an EasyAuto) puts it there for the
 alliance chosen in its menu; an autonomous with its spot only in words (`startPosition()`, or
 `s.start(note, heading)`) puts it on the chosen alliance's side (the robot file's start), and the Driver
@@ -214,9 +221,10 @@ something. Its shapes (below) move with their motors and servos. Rollers and whe
 stripes, so you see them turn and which way; a roller glows **green** while it takes pieces in and
 **orange** while it pushes them out, a flywheel or other spinner glows **yellow** while it turns, and a
 passive part (moved by gravity or springs) **blinks yellow** while it moves. The field is built from the field file's shapes (tiles, walls, tape, solid and overhead
-parts) with each AprilTag as a square with its ID. If the robot file names a 3D model of the field
-(`field.model`), the page shows that model instead (with the tag squares on top); "Field CAD model" in
-the **View** menu switches between them. Each camera shows as a cone (webcam yellow, Limelight green);
+parts) with each AprilTag as a square with its ID. With a 3D model of the field (the library has
+BIOBUZZ's, made from FIRST's field CAD; a robot file can name its own with `field.model`), the page shows
+that model instead (with the tag squares on top); "Field CAD model" in the **View** menu switches between
+them. Each camera shows as a cone (webcam yellow, Limelight green);
 "Camera view" in the View menu shows a camera's picture in the corner (pick the camera when there are two; it is redrawn 15 times
 a second, smaller than the screen, so it costs little). The game pieces are striped balls, so you can see
 them roll and spin. A tipping HIVE turns smoothly (with a rules file the simulator turns it over its
@@ -240,10 +248,19 @@ pages open), the page asks for `/state` 10 times a second instead and still glid
 With a rules file (BIOBUZZ has one: [Game rules and the score](#game-rules-and-the-score)), the Control
 Hub's **Match** button shows the game, and a score bar sits over the 3D view (click it to open the panel):
 
-- **The score and the clock**: RED and BLUE totals, the period (AUTO, TELEOP or free play) and the time
-  left. Click a total to see where its points come from (LEAVE, PARK, TIPs, pieces in the up CELL, FLOWERs
-  owned and the pieces in them, the bottom NECTAR bonus, the GARDEN, the other side's fouls). A line says
-  whether a NECTAR into a FLOWER is allowed now (G410).
+- **The score and the clock**: RED and BLUE, the period (AUTO, TELEOP, "AUTO done", FINAL or free play)
+  and the time left. **The score counts like a referee** (manual 10.5): HIVE TIPs count when they happen,
+  LEAVE and AUTO PARK at the end of AUTO. Pieces in the CELLs, FLOWERs and GARDENs and TELEOP PARK count
+  **only at the end of the match**, because they change all match long (a TIP spills the CELL's pieces).
+  Until then they show **grey, as "+N"**: what they would add if the match ended now. When TeleOp ends (or
+  you stop it) the score is **FINAL** and held: moving the robot after that changes nothing. A new
+  autonomous, or a TeleOp after a FINAL, starts a new match. (BIOBUZZ starts each side at "+10": the
+  field's own pieces in the up CELLs and GARDENs.)
+- **Where the points come from**: click a side. The table is grouped like FIRST's score calculator: AUTO
+  (LEAVE, PARK, TIPs), TELEOP (TIPs, CELL, FLOWERs, the bottom NECTAR bonus, GARDEN, PARK), FOUL (the other
+  side's fouls), the total, and the **RANKING POINTS**: SWARM (LEAVE + PARK points, 16 to earn it),
+  POLLINATOR 1 and 2 (4 and 7 TIPs), each with a tick or a cross and the count. The end-of-match rows have a
+  * until the end. A line says whether a NECTAR into a FLOWER is allowed now (G410).
 - **FLOWERs**: each FLOWER's owner and its stack from the bottom up (a dot per piece in its colour; a hollow
   dot is outside the scoring rings). In 3D, a ring over each FLOWER in its owner's colour (grey: none) with
   how many pieces count.
@@ -287,20 +304,43 @@ the x to get the hub back; on a narrow screen it sits under the 3D view).
 
 What a team does, step by step:
 
-1. **Robot and alliance.** The builder finds the Robot classes in the code the simulator runs (your
-   TeamCode, or the library's examples) and picks the one whose device names match the robot file
-   ("Best fit"); pick another in the list if it guessed wrong. Its drive (tank or mecanum) and the robot's
+0. **Load an existing auto** (at the top, when your TeamCode has autonomous OpModes written with `Steps`):
+   pick one and press Load to start from it. The builder reads its Java. Numbers written as names are
+   worked out from your compiled code: `Tunables.Auto.parkSeconds`, a constant in the auto (`START_X`), a
+   small formula, or a static method of the auto that gives a number (`turnToField(PARK_HEADING)`).
+   **The Java you copy back keeps the `Tunables` names** while the number is unchanged; the auto's own
+   names become numbers (they are not in the builder's file), and a note lists them. The builder lists
+   what it could not read. Your file is not changed: copy the Java when you are done.
+1. **Robot and alliance.** The builder finds the Robot classes (your `Robot.java`) in the code the
+   simulator runs (your TeamCode, or the library's examples). The auto drives that robot: its drive, its
+   size and its parts. With one Robot class, it just says which. With several, a list picks one: "Best
+   match" is the one whose motor and servo names match the simulator's robot file; pick another if it
+   guessed wrong. Its drive (tank or mecanum) and the robot's
    size come from your code and the robot file. So do the suggestions in the command and action boxes
    (your parts' methods, the named positions in Tunables, your `Actions.java`), a new step's first guess,
    and **TeleOp next** (the TeleOp written for that Robot class) and the package, until you type your own.
    A new plan has no steps ("Load the lesson's example" puts lesson 6's in). **Run as** RED or BLUE, and
-   say whether RED's routes are mirrored (`mirrorForRed()`; BIOBUZZ's turned field: "false (turned field)").
+   **Red's side**: **Rotated 180°** (BIOBUZZ: each red part is the blue one turned half a turn about the
+   field's centre) or **Mirrored**. The builder writes `mirrorForRed()` in the Java for you (false / true).
+   **What this robot can do** lists the library's ready-made features for that Robot class, worked out from
+   its parts: each one ready (with the line to use it) or not ready (with what to add). For example "Fire 1"
+   to "Fire 4", "Fire all" and "Ready to launch" with a launcher; "Aim at the goal" and aim mode with a camera that has a goal
+   (or odometry and a goal point); "Turret follows the goal" with a following turret. Ready actions are the
+   first ones in the Action list. The same list is `robot.features()` in Java
+   ([What your robot can do](../modules/robot.md#what-your-robot-can-do)).
 2. **Choose the mode.**
    - **Simple steps** (any drive): drive, strafe (mecanum), turn, turn to, wait, start something (a
-     command), an action from `Actions.java` (its time limit starts at 10 s), and "park from here"
-     (`parkWithSeconds`). A button adds its step at the end (tick "add after the selected step" to put it
-     after the one you picked). Tap the field map to add a drive to that spot (a tank drive gets a turn first), drag the blue dot at the end of a drive to
+     command), an action (the library's ready ones like `robot.launcher.fireAction(2)`, or one from
+     `Actions.java`; its time limit starts at 10 s), **aim at the goal** (`aimAtGoal`: the whole robot turns
+     to the goal with the camera or the odometry backup, or a following turret aims; it never turns blind,
+     and the report says "not seen"; only for a robot that can aim; the plan's preview does not turn for it,
+     the run does), **ready to launch** (`readyToLaunch`: spins the launcher up and waits until it is at
+     speed; only for a robot with a launcher), and "park from here" (`parkWithSeconds`). A button adds its step at the end (tick "add after the selected step" to put it
+     after the one you picked). **Start over** (beside Undo) removes every step; Undo brings them back.
+     Tap the field map to add a drive to that spot (a tank drive gets a turn first), drag the blue dot at the end of a drive to
      change it, or use the list: each step has its numbers, arrows to move it, and its own warnings.
+     **A command or an action is a list** of the ones your code has (for example
+     `Actions.fireAll(robot)` to shoot): pick one, or pick "type your own..." to write it.
      **A tank drive cannot strafe, so the builder never makes one for it:** no Strafe button, a drive's
      direction is only forward or back, a tap adds a turn and a drive, and a dragged end stays on the line
      through the robot's front. When the Robot code chosen has a tank drive, any strafe already in the
@@ -317,7 +357,20 @@ What a team does, step by step:
 3. **Edit in 3D too:** with "Edit in the 3D view" ticked, the same points are balls in the 3D view: drag
    them, or tap the field to add a step or a part (not near the robot). The purple dashed line is the plan.
 4. **The start spot and the note for the drive team.** Pick a ready-made spot (against your wall, each one
-   checked against the start rules) or drag the green dot. The **note** is what the Driver Station shows
+   checked against the start rules) or drag the green dot. **The robot must touch the field wall** (G304:
+   a corner, or turned 45°, is fine): a drag or typed numbers away from every wall go to the nearest one
+   (your wall or a side wall). With **Snap to the walls and the tile lines** ticked (on at first), it also
+   goes against a wall that is within 3 in, and its centre lines up with a tile middle or seam, or a side
+   with a seam or **the edge of the tiles' teeth**, within 1.5 in: a spot the drive team can copy by eye.
+   The map shows the real tiles: 141.17 in inside the walls, 6 tiles of 23.53 in, each seam with its
+   band of interlocking teeth (0.4 in each side, from the official field CAD). **Turn the start** with the
+   yellow knob in front of the robot (15° steps while snapping), the **Face** arrows (0°, 45°, 90° ...) or
+   the 15° buttons; a tap on the start robot adds no step. The line under it measures the spot like a tape
+   (each side from its side wall, the back from your wall) and names the tile ("Centred on tile 4 from
+   the left", "Left side on the seam 2|3", "at the teeth's edge"). Against a side wall it lines up along
+   that wall the same way. **Write it for me** puts the place in the tile in the note too: "Our wall,
+   tile 3 from left, centred, facing field", "Tile 3 from left, left edge on seam, ...", "Left wall, 4th
+   tile out, near edge at teeth, ..." (near/far: the edge nearer or farther from your wall). The **note** is what the Driver Station shows
    at INIT as `Place robot : ...`, so the drive team reads it at match setup: about 50 characters fit one
    line. **Write it for me** writes it from the spot ("Our wall, left corner tile, facing the field"); it
    follows the robot until you type your own words. **Print setup card** shows the card for the drive
@@ -370,8 +423,8 @@ what the shared files wrote when the fixtures were made (`sim/src/test/resources
 simulator-only part (`simcore.js`), and, when it finds a checkout of the site, warns when the site's copies
 differ (`SITE_STRICT=1` makes that a failure, before publishing the site).
 
-**Not covered:** the INIT menu (`menuChoice`, `onlyIf`), your own steps (`step(...)`), `waitUntil`, and
-reading Java back in (the web builder reads Java in). A Pedro plan is one path (one `follow`, or one
+**Not covered:** the INIT menu (`menuChoice`, `onlyIf`), your own steps (`step(...)`) and `waitUntil`
+(Load an existing auto lists them as not read). A Pedro plan is one path (one `follow`, or one
 `driveTo` per part); add the steps before and after it in your file. Commands take plain values only.
 
 ## Edit robot: shape your robot
@@ -396,7 +449,10 @@ record of your robot: the editor writes no file.
    - The axis and the tilt (`axis`, `tiltDeg`) where the shape has them.
 5. **Poses:** each moving part has buttons for its named positions (`stowed`, `deployed`...), its hard stops
    and its start. Click each one and check that the robot fits. Change a named angle and the poses move
-   with it. **Start of the match** puts every part back where it starts. The panel also says if **every**
+   with it. **Start of the match** puts every part back where it starts; **Every part out** puts each
+   moving part at its named pose farthest from the start (an intake deployed, a slide up), to see and
+   change the parts there. A **yellow arrow** shows each launcher and the way its shots leave (the shot
+   angle from Robot.java), so you can find it among the boxes and line up a ramp or a hood with it. The panel also says if **every**
    pose fits (the same check as "at full reach" in the Control Hub panel).
 6. **Copy into Robot.java:** the panel shows the Java for each part you changed, and where it goes. Click
    **Copy** (or **Copy all**) and paste it there:
@@ -465,7 +521,7 @@ default):
 | Line | Default | Means |
 | --- | --- | --- |
 | `field = NAME` | `biobuzz-2026` | the field file in `sim/fields/` |
-| `field.model = FILE` | none | the field's 3D model for the 3D view (path from the robot file) |
+| `field.model = FILE` | the library's model of the field (`sim/fields/<field>.glb`, BIOBUZZ has one) | the field's 3D model for the 3D view (path from the robot file) |
 | `parts = FILE.json` | none | your own parts catalog, added to the library's ([parts catalog](parts-catalog.md)) |
 | `battery = V` | 12.8 | battery volts at the start (the page's slider: 11 to 13.5) |
 | `robot.lengthIn`, `robot.widthIn` | 18 | the footprint, for bumping into field parts |
@@ -491,7 +547,7 @@ default):
 | `odometry.reversed = names` | none | these pods count backward (as wired; the code's `reversed(...)` turns them back): dead-wheel port names, or `x`/`y` for a Pinpoint's pods |
 | `odometry.scaleError` | 0 | noise: 0.01 = it measures 1% too far (wheel slip, a wrong pod size) |
 | `odometry.driftDegPerMin` | 0 | noise: the heading creeps this many degrees per minute |
-| `motor.NAME = KIND, ...` | | a motor: `free`, `lift` or `flywheel`, then `part=`, `ticksPerRev=` (catalog, else 537.7 or 28 for a flywheel), `rpm=` or `maxTicksPerSec=` (catalog, else 2780), `min=`, `max=` (counts), `gravity=` (0), `kS=` (0), `accelSec=`, `coastSec=`, `feeder=` (a motor, CR servo or servo that feeds a flywheel), `shotDrop=` (0.15: how much a shot slows the wheel), `drivenBy=CRSERVO` (no motor on this port: only an encoder, on a shaft that CR servo turns, e.g. a CR servo turret's Through Bore), `with=FIRST` (a second motor on the same slide or arm as the motor `FIRST`: both turn one shaft and both push, so each carries half its `gravity`; `mirrored=true`: its shaft turns the other way, two motors facing each other. `:sim:fromRobot` writes it for [`alsoMotor`](../modules/robot.md#two-motors-on-one-lift-or-arm)) |
+| `motor.NAME = KIND, ...` | | a motor: `free`, `lift` or `flywheel`, then `part=`, `ticksPerRev=` (catalog, else 537.7 or 28 for a flywheel), `rpm=` or `maxTicksPerSec=` (catalog, else 2780), `min=`, `max=` (counts), `gravity=` (0), `kS=` (0), `accelSec=`, `coastSec=`, `feeder=` (a motor, CR servo or servo that feeds a flywheel), `shotDrop=` (0.15: how much a shot slows the wheel), `stop=SERVO`, `stopOpen=` (0.5) (a feed stop: pieces get through only while that servo is within 0.05 of `stopOpen`; `:sim:fromRobot` writes it for [`feedStop(...)`](../modules/robot.md#firing-shot-modes-feed-stop-piece-path)), `drivenBy=CRSERVO` (no motor on this port: only an encoder, on a shaft that CR servo turns, e.g. a CR servo turret's Through Bore), `with=FIRST` (a second motor on the same slide or arm as the motor `FIRST`: both turn one shaft and both push, so each carries half its `gravity`; `mirrored=true`: its shaft turns the other way, two motors facing each other. `:sim:fromRobot` writes it for [`alsoMotor`](../modules/robot.md#two-motors-on-one-lift-or-arm)) |
 | `servo.NAME = START, ...` | start 0.5 | a servo: `part=` (catalog), or `rangeDeg=` and `secPer60=` for one not in the catalog. `pwm=500-2500`: the robot's code uses the servo's full range (`.fullRange()`; `:sim:fromRobot` writes it); START and every position in the file are then in that range. Like the hub, the simulated servo gets the normal 600-2400 us at each INIT and the code's `setPwmRange` after, so 0 to 1 turns a goBILDA 2000 servo 270 degrees, or 300 with full range |
 | `servo.speed` | 1.0 | positions per second for a servo with no part |
 | `crservo.NAME =` | | a continuous servo (the value is not used) |
@@ -1229,11 +1285,11 @@ same folder with the same name.
 Coordinates: inches from the field center, +x to the right and +y away from the drivers (drawn at the
 bottom), z up from the tiles; headings and tag facing in degrees, counterclockwise from +x for tags.
 
-A field's 3D model (for the 3D view) is a `.glb` file in the same frame, in inches, z up. It is not in
-the library: models made from FIRST's field CAD belong in the team's own robot project
-(`simulator/fields/`), named by `field.model` in the robot file. Without one, the 3D view builds the field
-from the field file. The BIOBUZZ model is made by a script (`export_sim_field_glb.py`) that is not in this library yet (ask the maintainer)
-from the field CAD export.
+A field's 3D model (for the 3D view) is a `.glb` file in the same frame, in inches, z up, next to the
+field file with the same name: `sim/fields/biobuzz-2026.glb` is BIOBUZZ's, made from FIRST's official
+field CAD, and every robot file with `field = biobuzz-2026` uses it. A robot file can name another one with
+`field.model` (a path from the robot file). Without a model, the 3D view builds the field from the field
+file.
 
 ## Cameras
 

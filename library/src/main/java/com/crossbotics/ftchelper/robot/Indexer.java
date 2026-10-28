@@ -329,7 +329,12 @@ public final class Indexer extends Module<Indexer> implements Feeder {
         lookLines(out, t);
     }
 
-    /** True for a motor feeder (the simulator's flywheel needs to know). */
+    /** True for a servo that pushes and comes back (not a CR servo or motor that runs). */
+    boolean isServo() {
+        return kind == Kind.SERVO;
+    }
+
+        /** True for a motor feeder (the simulator's flywheel needs to know). */
     boolean isMotor() {
         return kind == Kind.MOTOR;
     }

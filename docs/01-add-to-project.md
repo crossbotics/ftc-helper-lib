@@ -123,17 +123,19 @@ git commit -m "Add ftc-helper-lib"
 
 ## Step 7: The simulator buttons (once)
 
-Two run buttons start the [simulator](guides/simulator.md) from Android Studio, with no Terminal:
+Three run buttons work from Android Studio, with no Terminal. Two start the [simulator](guides/simulator.md):
 
 - **Simulator**: the simulator with your TeamCode. When it is ready, the page (http://localhost:8780)
   opens in your browser. (No browser opened? The address in the Run window is a blue link: click it.)
 - **Simulator tests**: every test in your project's `simulator/scenarios` folder ([lesson 10](tutorials/start/10-test-your-robot-code.md)).
+- **Update library**: switches the library to its newest version and shows what changed. It commits
+  nothing. How and when: [Keep it up to date](02-keep-up-to-date.md#update-the-update-library-button).
 
 **You do nothing to get them:** the library adds them at each Gradle sync (Android Studio syncs when it
 opens the project; the elephant button at the top right, or **File > Sync Project with Gradle Files**,
 syncs again). The first time on a laptop, the Build window says `Simulator button added to Android Studio`.
 **Not in the list yet?** Close the project (**File > Close Project**) and open it again: Android Studio
-reads its buttons when it opens a project. They are two small files in your project's
+reads its buttons when it opens a project. They are small files in your project's
 `.idea/runConfigurations` folder. That folder is not in git, so each laptop adds them at its first sync.
 Don't want them? Write `simulatorButtons=false` in your project's `gradle.properties`.
 

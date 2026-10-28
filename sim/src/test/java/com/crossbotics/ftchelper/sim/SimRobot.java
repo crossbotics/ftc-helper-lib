@@ -124,6 +124,8 @@ final class SimRobot {
     // Per flywheel with a servo pusher: the pusher is out now (it already sent this push's piece).
     private final java.util.Set<String> pusherOut = new java.util.HashSet<>();
     static final double SECONDS_PER_PIECE = 0.3;
+    // A feed stop lets pieces through while it is within this much (raw position) of its open position.
+    static final double STOP_OPEN_WITHIN = 0.05;
     // A servo feeder (an indexer) is feeding while it is this far (raw position) from where it starts.
     static final double SERVO_FEED_MOVE = 0.15;
     private int shots = 0;
@@ -225,6 +227,8 @@ final class SimRobot {
             m.gravity = dbl(s, "gravity", 0);
             m.feeder = s.get("feeder");
             m.shotDrop = dbl(s, "shotDrop", 0.15);
+            m.stop = s.get("stop");
+            m.stopOpen = dbl(s, "stopOpen", 0.5);
             if (s.containsKey("drivenBy")) drivenBy.put(name, s.get("drivenBy"));
             if (s.containsKey("with")) {
                 tiedTo.put(name, s.get("with"));
@@ -311,6 +315,9 @@ final class SimRobot {
                     && !servos.containsKey(m.feeder)) {
                 throw new IllegalArgumentException("Robot file: motor." + m.name + ": feeder=" + m.feeder
                         + " is not a motor, crservo or servo in the robot file");
+            }
+            if (m.stop != null && !servos.containsKey(m.stop)) {
+                throw new IllegalArgumentException("Robot file: motor." + m.name + ": stop=" + m.stop + " is not a servo in the robot file");
             }
         }
         for (String key : sortedKeys(p, "touch.")) {
@@ -472,8 +479,31 @@ final class SimRobot {
                 throw new IllegalArgumentException("Robot file: field.model must be a .glb file");
             }
             robot.fieldModel = m;
+        } else {
+            // No field.model: the library's own 3D model of this season's field, if it has one
+            // (sim/fields/<field>.glb next to the field file), so every team sees the real field parts.
+            robot.fieldModel = libraryFieldModel(p.getProperty("field", "").trim());
         }
         return robot;
+    }
+
+    // The library's 3D model for a field named in the robot file: sim/fields/<name>.glb on the classpath
+    // (a file in the library checkout), or <file>.glb next to a field given by its path. Null if none.
+    static Path libraryFieldModel(String field) {
+        if (field.isEmpty()) return null;
+        try {
+            Path asFile = java.nio.file.Paths.get(field);
+            if (Files.isRegularFile(asFile)) {
+                Path glb = asFile.resolveSibling(asFile.getFileName().toString().replaceFirst("\\.json$", "") + ".glb");
+                return Files.isRegularFile(glb) ? glb : null;
+            }
+            java.net.URL u = SimRobot.class.getResource("/" + field + ".glb");
+            if (u == null || !"file".equals(u.getProtocol())) return null;
+            Path glb = java.nio.file.Paths.get(u.toURI());
+            return Files.isRegularFile(glb) ? glb : null;
+        } catch (RuntimeException | java.net.URISyntaxException e) {
+            return null;   // a name that is not a path, or an odd class path: no model (the simple field)
+        }
     }
 
     // ---------------------------------------------------------------- devices
@@ -768,14 +798,22 @@ final class SimRobot {
             boolean on = feeder != null ? Math.abs(feeder.appliedPower) > 0.3
                     : cr != null ? Math.abs(cr[0]) > 0.3
                     : pusher != null && Math.abs(pusher.actual - pusher.start) > SERVO_FEED_MOVE;
+            // A feed stop: pieces get through only while it is (nearly) at its open position.
+            SimServo gate = m.stop == null ? null : servos.get(m.stop);
+            boolean open = gate == null || Math.abs(gate.actual - m.stopOpen) < STOP_OPEN_WITHIN;
             if (pusher != null) {
                 // A servo pusher (an indexer) sends ONE piece per push, at once, however long it stays
                 // out: a push and a slow return can last longer than SECONDS_PER_PIECE, and that fired a
                 // second piece.
+                // A push against a closed feed stop waits: its piece goes when the stop opens (while the
+                // pusher is still out), and counts as this push's one piece.
                 boolean again = !pusherOut.contains(m.name);
-                if (on) pusherOut.add(m.name);
-                else pusherOut.remove(m.name);
-                if (on && again && Math.abs(m.shaftSpeed()) > 100) feedShot(m);
+                if (!on) pusherOut.remove(m.name);
+                else if (again && open) {
+                    // (a still wheel: the push is spent and its piece does not go, as before)
+                    if (Math.abs(m.shaftSpeed()) > 100) feedShot(m);
+                    pusherOut.add(m.name);
+                }
                 continue;
             }
             // A motor or CR servo feeder (a windmill, a belt): each time it is turned on, one piece goes in at
@@ -797,15 +835,16 @@ final class SimRobot {
             double since = sinceShot.getOrDefault(m.name, 0.0);
             if (started) feedWaiting.add(m.name);
             if (feedWaiting.contains(m.name)) {
-                // the feed's piece: as soon as the wheel spins (turned off before that: it never went in)
-                if (spinning) {
+                // the feed's piece: as soon as the wheel spins and the feed stop is open (turned off before
+                // that: it never went in)
+                if (spinning && open) {
                     feedShot(m);
                     feedWaiting.remove(m.name);
                     since = -SECONDS_PER_PIECE / 2;
                 } else if (!on) {
                     feedWaiting.remove(m.name);
                 }
-            } else if (on) {
+            } else if (on && open) {
                 since += dt;
                 if (since >= SECONDS_PER_PIECE && spinning) {
                     feedShot(m);

@@ -48,6 +48,16 @@ public class Launcher implements Subsystem {
      */
     public enum State { OFF, IDLE, SPINNING, WAITING_READY, FEEDING }
 
+    /**
+     * How strict the launcher is before it feeds a piece.
+     * CAREFUL = every piece waits until the wheel is at speed (the band, then the settle time) and every
+     * check passes: one shot that must score. QUICK = the first piece of a volley waits like CAREFUL; the
+     * next ones go in a looser speed band ({@link #quickBand}), or after {@link #quickMaxWait} at most: a
+     * volley with time to spare. SPRAY = no wait for the speed or the checks: time is nearly out, get
+     * everything out (the wheel must still be spinning).
+     */
+    public enum ShotMode { CAREFUL, QUICK, SPRAY }
+
     private final Flywheel flywheel;
     private final Feeder feeder;
     private AngleDevice hood = null;   // null = no hood
@@ -74,7 +84,17 @@ public class Launcher implements Subsystem {
     private double nextFeedAt = 0;       // the earliest time (seconds) the next piece may be fed
     private double waitingSince = Double.NaN;   // when it started waiting for "ready"; NaN = not waiting
     private String lastProblem = "";
+    private ShotMode mode = ShotMode.CAREFUL;
+    private double quickBandRpm = Double.NaN;   // NaN = 3 x the flywheel's ready band
+    private double quickMaxWaitSec = 0.3;
+    // A piece asked for within this many seconds after the last feed belongs to the same volley.
+    private double volleyGapSec = 1.0;
+    private double lastFeedAt = Double.NEGATIVE_INFINITY;
+    private final ShotStats stats = new ShotStats();
     private double problemAt = 0;        // when lastProblem happened (seconds), for the warning's few seconds
+
+    /** SPRAY feeds only when the wheel turns at least this share of its target speed (0.5). */
+    public static final double SPRAY_MIN_SHARE = 0.5;
 
     /** How long a problem ("gave up: turret aimed") stays as a warning on the Driver Station, seconds. */
     public static final double PROBLEM_SHOW_SEC = 5;
@@ -155,6 +175,47 @@ public class Launcher implements Subsystem {
     public Launcher hoodDeadband(double degrees) {
         hoodDeadbandDeg = Double.isNaN(degrees) ? 0.25 : Math.abs(degrees);
         return this;
+    }
+
+    /** How strict it is before each feed (see {@link ShotMode}). Default CAREFUL. Takes effect at the next piece. */
+    public Launcher shotMode(ShotMode shotMode) {
+        mode = shotMode == null ? ShotMode.CAREFUL : shotMode;
+        return this;
+    }
+
+    /** The shot mode in use. */
+    public ShotMode getShotMode() {
+        return mode;
+    }
+
+    /**
+     * QUICK: after the volley's first piece, feed when the wheel is within this many RPM of its speed.
+     * Default: 3 x the flywheel's ready band (its tolerance).
+     */
+    public Launcher quickBand(double rpm) {
+        quickBandRpm = Double.isNaN(rpm) ? Double.NaN : Math.abs(rpm);
+        return this;
+    }
+
+    /** QUICK: after the volley's first piece, feed after waiting this long at most, seconds. Default 0.3. */
+    public Launcher quickMaxWait(double seconds) {
+        quickMaxWaitSec = Math.abs(seconds);
+        return this;
+    }
+
+    /** The least time between two pieces, seconds ({@link #shotInterval}). */
+    public double getShotInterval() {
+        return shotIntervalSec;
+    }
+
+    /** The QUICK wait limit, seconds ({@link #quickMaxWait}). */
+    public double getQuickMaxWait() {
+        return quickMaxWaitSec;
+    }
+
+    /** The QUICK band in use, RPM. */
+    public double getQuickBand() {
+        return Double.isNaN(quickBandRpm) ? 3 * flywheel.getTolerance() : quickBandRpm;
     }
 
     /** Speed to keep when not shooting, in RPM (0 = stop). A low idle speed makes spin-up faster. */
@@ -303,6 +364,7 @@ public class Launcher implements Subsystem {
         // ("a ? b : c ? d : e" reads: if a then b, else if c then d, else e.)
         flywheel.setRpm(off ? 0 : spinning ? shotRpm * speedScale : idleRpm);
         flywheel.update();
+        stats.watch(now, flywheel.getRpm(), flywheel.isReady());
         feeder.update();
         if (hood != null) hood.update();
 
@@ -319,15 +381,17 @@ public class Launcher implements Subsystem {
 
         // Feed only when EVERYTHING is ready: flywheel at speed, hood arrived, every extra check true.
         // A piece fed too early flies short or wide.
-        if (isReady()) {
+        if (Double.isNaN(waitingSince)) waitingSince = now;
+        if (readyForMode(now)) {
+            stats.fed(mode, now, now - lastFeedAt <= volleyGap(), flywheel.getRpm(), flywheel.getTargetRpm());
             feeder.feedOne();
             shotsLeft--;
             fired++;
+            lastFeedAt = now;
             nextFeedAt = now + shotIntervalSec;
             waitingSince = Double.NaN;
         } else {
-            // Not ready: start the clock (first time only) and check again next loop.
-            if (Double.isNaN(waitingSince)) waitingSince = now;
+            // Not ready: the clock started above (first time only); check again next loop.
             // Waited too long: give up the rest of the shots, and say WHY, so the drivers are not left
             // wondering and the robot does not fire later at a bad moment.
             if (now - waitingSince > readyTimeoutSec) {
@@ -341,6 +405,44 @@ public class Launcher implements Subsystem {
     // ---------------------------------------------------------------------------------------
     // Questions
     // ---------------------------------------------------------------------------------------
+
+    // The time after a feed within which the next piece is part of the same volley.
+    private double volleyGap() {
+        return shotIntervalSec + volleyGapSec;
+    }
+
+    // May the next piece go now, for the shot mode in use?
+    private boolean readyForMode(double now) {
+        switch (mode) {
+            case SPRAY:
+                // No wait for the speed band, the hood or the checks, but the wheel must really turn:
+                // at least SPRAY_MIN_SHARE of its target (a stopped or stalled wheel only jams pieces).
+                return spinning && !off
+                        && Math.abs(flywheel.getRpm()) >= SPRAY_MIN_SHARE * Math.abs(flywheel.getTargetRpm());
+            case QUICK:
+                // The volley's first piece waits like CAREFUL. The next ones: everything but the speed
+                // ready, and the speed in the looser band or the wait at its limit.
+                if (now - lastFeedAt > volleyGap()) return isReady();
+                if (!othersReady()) return false;
+                double err = Math.abs(flywheel.getTargetRpm() - flywheel.getRpm());
+                return err <= getQuickBand() || now - waitingSince >= quickMaxWaitSec;
+            default:
+                return isReady();
+        }
+    }
+
+    // Everything but the flywheel's speed: spinning, the hood arrived, every check true.
+    private boolean othersReady() {
+        if (!spinning || off) return false;
+        if (hood != null && !hood.isDone()) return false;
+        for (BooleanSupplier c : checks) if (!c.getAsBoolean()) return false;
+        return true;
+    }
+
+    /** What each fed piece did to the wheel: for tuning the shot modes (debug lines). */
+    public ShotStats getShotStats() {
+        return stats;
+    }
 
     /** True when the flywheel is at speed, the hood has arrived, and every check passes. */
     public boolean isReady() {
@@ -428,6 +530,8 @@ public class Launcher implements Subsystem {
         flywheel.addTelemetry(t);
         t.debug("Launcher waits for", whyNotReady().isEmpty() ? "-" : whyNotReady());
         t.debug("Launcher fired", fired);
+        t.debug("Launcher mode", mode);
+        stats.addTelemetry(t);
         feeder.addTelemetry(t);
         if (hood != null) hood.addTelemetry(t);
     }

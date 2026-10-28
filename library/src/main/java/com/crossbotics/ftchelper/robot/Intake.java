@@ -43,6 +43,7 @@ public final class Intake extends Module<Intake> implements Toggleable {
     private final List<CRServo> crServos = new ArrayList<>();
     private Tunable inPower, outPower;
     private boolean on = false;           // running in
+    private boolean pushingForShot = false;   // the launcher borrows it to push a piece in (pushedBy)
     private boolean out = false;          // running out (until stop or in)
     private boolean reversing = false;    // pushing out while a button is held
     private double lastPower = Double.NaN;
@@ -325,6 +326,23 @@ public final class Intake extends Module<Intake> implements Toggleable {
         return heldBackSince < 0 ? 0 : (clock.getAsLong() - heldBackSince) / 1e9;
     }
 
+    /**
+     * The launcher borrows the intake to push a piece into the wheel ({@code Launcher.pushedBy(intake)}):
+     * true runs it in, even when it is off; false gives it back, doing what it did before. It never
+     * changes the intake's own on/off. Pushing out (the driver) still wins.
+     */
+    void pushForShot(boolean push) {
+        boolean giveBack = pushingForShot && !push;
+        pushingForShot = push;
+        // Given back: its own power now, not at its next update (the launcher may stop the loop first).
+        if (giveBack) update();
+    }
+
+    /** True while the launcher borrows it to push a piece in. */
+    public boolean isPushingForShot() {
+        return pushingForShot && !missing;
+    }
+
     /** True while it runs in or out. */
     public boolean isRunning() {
         return (on || out || reversing) && !missing;
@@ -334,7 +352,10 @@ public final class Intake extends Module<Intake> implements Toggleable {
     public void update() {
         if (!isHeldBack()) heldBackSince = -1;
         else if (heldBackSince < 0) heldBackSince = clock.getAsLong();
-        double power = reversing || out ? -outPower.get() : on && !isHeldBack() ? inPower.get() : 0;
+        // Pushing out (the driver) wins. Else in: when on (and not held back), or while the launcher
+        // borrows it to push a piece into the wheel (pushedBy): then even when the driver has it off.
+        double power = reversing || out ? -outPower.get()
+                : (on && !isHeldBack()) || pushingForShot ? inPower.get() : 0;
         write(power);
     }
 

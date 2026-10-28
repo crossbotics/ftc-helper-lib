@@ -2,6 +2,131 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## v0.20.2 - 2026-10-28
+
+**What matters for your robot**
+
+- **Tune and check:** one OpMode with every check and finder that fits your robot. Nothing to copy.
+- **Firing is smarter:** a tap fires carefully; a held button fires a little faster; autonomous speeds up
+  when time is short. No code change.
+- **New, only if your robot has them:** a feed stop servo, an intake that pushes pieces into the wheel, an
+  eject button, reverse drive, an aim that looks around for the goal.
+- **Update library button:** updating to the next version takes one click.
+- **Experimental, ignore for BIOBUZZ:** a "camera fix" for odometry. It is off, untested, and not for this
+  season.
+
+### Added
+
+- **"Tune and check": every check and finder in one OpMode, always there.** The library adds it to the
+  TeleOp list (group "Finders"); nothing to copy. INIT shows a menu of the Hardware Check and the finders
+  that fit Robot.java (the Hood Finder only with a hood, the Shot Tuner only with a launcher...). D-pad
+  picks, A opens the tool's INIT screen, START runs it; BACK in the tool's INIT goes back to the menu.
+  Your own finder files still work. Not in it: the Aim Tuner and the Characterizer (they need your camera
+  or lifts). [Guide](docs/guides/finders.md#tune-and-check-all-of-them-in-one-opmode)
+- **Three shot modes.** The launcher chooses how strict it is before each piece:
+  - CAREFUL: every piece waits until the wheel is at speed (as before).
+  - QUICK: the first piece waits; the next ones go a little sooner (`quickBandRpm`, `quickMaxWaitSec`).
+  - SPRAY: no wait for the speed band (the wheel must still turn at half its speed). Only with
+    `sprayEnabled = true`: then also in TeleOp's last `sprayLastSec` (5 s).
+  The Driver Station says `Fire: QUICK (12 s left)`; `shotMode(...)` sets one by hand.
+  [Firing](docs/modules/robot.md#firing-shot-modes-feed-stop-piece-path)
+- **A feed stop: `.feedStop("feed_stop")` on the launcher** (only if the robot has one). Hold at START
+  (never in INIT), open for each piece, closed when the shot is seen (or after `feedStopOpenSec`); in SPRAY
+  open until the last piece. The **Feed Stop Finder** (in Tune and check) finds `feedStopHold` and
+  `feedStopRelease`. The simulator holds the pieces back while it is closed (`stop=` in the robot file).
+- **The piece path: `.pushedBy(intake)` on the launcher** (only if the intake must push the pieces in). For
+  each piece the intake runs in, even when the driver has it off, then goes back to what it was doing.
+  Add the intake before the launcher in Robot.java.
+- **Ready to launch:** `.readyToLaunch("Ready", 3)` in an autonomous and the auto builder
+  (`robot.launcher.readyAction(3)`): spin up and wait until ready. `fallbackDistanceIn` (Tunables) is the
+  distance to use before the camera has seen a goal.
+- **Eject:** `robot.launcher.ejectAction()`: one piece out at a low speed (`ejectRpm` 600, `ejectSec` 1).
+- **Alliance trim:** `redTrimPercent`, `blueTrimPercent` in the launcher's Tunables (0 = none); the Speed
+  trim line shows it.
+- **Firing stats** on the debug lines (PRACTICE profile only): each piece's mode, speed, drop, recovery and
+  gap, and the volley's average and worst (`launcher.getShotStats()`).
+- **Aim at the goal with a sweep:** `.aimAtGoal("Aim", 4, 45)` (and in the auto builder). Not in view: the
+  robot turns slowly up to 45 degrees each way to find it, then aims; never seen, it turns back.
+- **Remember heading, turn back:** `.rememberHeading("label")` and `.turnBack("label", 0.5)` (and in the
+  builder). Without odometry pods it uses the IMU: better than nothing.
+- **Reverse drive:** `g1.x.toggle(robot.reverseDriveMode()).rumble()`: the back is the front.
+- **Webcam live view:** a webcam shows its picture in the PRACTICE profile (Driver Station > Camera
+  Stream), never at an event. A Limelight: plug it into a laptop and open its web page.
+- **The real field in 3D for every team.** The simulator's 3D view now shows BIOBUZZ's real field parts
+  (made from FIRST's field CAD) in every project, not only where the robot file named a model.
+- **Setting up Limelight lighting pipelines:** a new step-by-step guide.
+  [Guide](docs/guides/limelight-lighting.md)
+- **An "Update library" button in Android Studio** (next to Simulator and Simulator tests; it appears at the
+  next Gradle sync). It gets the version list from GitHub, switches the `ftc-helper-lib` folder to the
+  newest release, and prints what changed since your version (the CHANGELOG parts). It commits nothing,
+  and it stops when files inside `ftc-helper-lib` are changed. `-PlibVersion=v0.20.1` picks a version (or
+  goes back). Terminal: `./gradlew :sim:updateLibrary`.
+- **"A newer version is out."** The Simulator button asks GitHub once a day. When a newer release is out,
+  the Run window and the simulator page (under the Driver Hub) say so. Offline it says nothing;
+  `-PnoUpdateCheck` turns it off.
+- **Experimental (ignore for BIOBUZZ): camera fix.** ALPHA, NOT TESTED ON A ROBOT, off by default.
+  `cameraFix(camera)` corrects the odometry from a Limelight's AprilTag position. BIOBUZZ's tags move with
+  the HIVE, so it is not for this season; your robot is not affected. [Camera fix](docs/modules/odometry.md#camera-fix-alpha)
+
+### Changed
+
+- **A held fire button now fires QUICK** (the first piece at speed, the next ones a little sooner). A tap is
+  CAREFUL, as before. In an autonomous, firing switches to QUICK by itself when CAREFUL would not fit before
+  the park time. To keep every shot CAREFUL: `robot.launcher.shotMode(ShotMode.CAREFUL)`.
+- **The aim button turns whole-robot aim on only with the goal in view** (last season's rule): a press with
+  no goal leaves it off (one buzz with `.rumble()`). Code that calls `robot.aimMode().on()` is not checked.
+- **"Aimed" no longer flickers:** once LOCKED (or AIMED) it stays so until the error passes `toleranceDeg` +
+  `lockMarginDeg` (2 + 1 degrees). A launcher's "aimed" check may now pass up to 3 degrees off.
+
+- **The score counts like a referee.** HIVE TIPs count when they happen, LEAVE and AUTO PARK at the end of
+  AUTO; pieces in the CELLs, FLOWERs and GARDENs and TELEOP PARK only at the end of the match (they change
+  all match long). Until then the score bar shows them grey ("+10": if the match ended now). When TeleOp
+  ends the score is FINAL and held. Click a side: AUTO, TELEOP and FOUL, as on FIRST's score calculator,
+  and the RANKING POINTS (SWARM, POLLINATOR 1 and 2) with the count toward each.
+- **Ready-made features: `robot.features()`.** The library works out from Robot.java what it can do for
+  your robot, and says what is missing for the rest. New with it: the launcher's **`fireAction(n)`**
+  ("Fire 2") and **`fireAllAction()`** actions; **`s.aimAtGoal("Aim", 3)`** in an autonomous (the whole
+  robot turns to the goal, or a following turret aims; never blind); and the TeleOp line
+  **`Goal : LOCKED (camera, 52 in, 0.8 deg off)`**: not seen, seen, in range (of the shot table), LOCKED,
+  also `robot.aim().stage()` for lights. The auto builder shows the list ("What this robot can do"), puts
+  the ready actions first and has "+ Aim at the goal" for a robot that can aim.
+- **Auto builder: Load an existing auto** (at the top). It reads an autonomous written with Steps from
+  your TeamCode into the builder (and lists what it could not read). Your file is not changed. Names in the
+  steps (`Tunables.Auto.parkSeconds`, `START_X`, `turnToField(PARK_HEADING)`) are worked out from your compiled
+  code, and the Java written back keeps the `Tunables` names.
+- **The start spot follows the rules and the real tiles.** It must touch the field wall (G304): a spot
+  away from every wall goes to the nearest one, and a check refuses it. The map draws the real field
+  (141.17 in, tiles of 23.53 in, each seam with its 0.4 in band of interlocking teeth, from the field CAD),
+  snapping also lines a side up with the teeth's edge, and the line under the spot names the tile
+  ("Centred on tile 4 from the left"). Turn the start with a yellow knob, the Face arrows or 15° buttons; a
+  tap on the start robot no longer adds a step.
+- **Clearer words in the auto builder:** "Red's side: Rotated 180° (like BIOBUZZ) / Mirrored" (the builder
+  writes `mirrorForRed()` for you). "Robot (your Robot.java)" is plain text when your code has one Robot
+  class, and a list ("Best match" first) only when it has several.
+- **The start spot lines up along a side wall too** (tile middle, seam, teeth edge), and **the note for the
+  drive team says where in the tile**: "Our wall, tile 3 from left, centred, facing field", "... left edge
+  on seam", "... near edge at teeth".
+- **The auto builder lists your actions.** An Action or Start something step is a list of what your
+  code has (`Actions.fireAll(robot)` to shoot, `Actions.deployIntake(robot)`...), with "type your own..."
+  at the end. Before, it was a text box, and the browser hid every name but the one already in it.
+- **Start over in the auto builder:** beside Undo, it removes every step (or every Pedro part).
+- **The start spot is easy to place.** A dragged robot stays inside the field walls, goes against a wall
+  that is near, and lines up with a tile middle or seam ("Snap to the walls and the tile lines", on at
+  first). A line measures the spot like a tape (each side from its wall, the back from your wall). A step
+  that leaves the field names the wall it hits, and says when the start spot itself is past the wall.
+- **Edit robot: Every part out** puts each moving part at its pose farthest from the start (an intake
+  deployed), and a yellow arrow shows each launcher and the way its shots leave.
+- **An autonomous starts a fresh match in the simulator.** On the page, INIT of an autonomous puts every
+  game piece back where the match starts them (with the preload) and the robot on its start spot, so you
+  can run an auto again and again with no Reset field. A TeleOp's INIT keeps the field as the autonomous
+  left it.
+- **The library's build files use `name = value`** (for example `compileSdk = 30`): the old form stops
+  working in Gradle 10.
+- **Fewer warnings when the simulator starts.** The simulator's own build no longer prints "source value
+  8 is obsolete" (and Android's longer version of it on a new Java) or "A restricted method in
+  java.lang.System has been called". They were harmless; a real problem now stands out. A few from
+  Android's own build tools remain ("Deprecated Gradle features were used", "SDK processing").
+
 ## v0.20.1 - 2026-10-26
 
 ### Changed

@@ -365,6 +365,12 @@ public class Flywheel implements Subsystem {
     /** The highest speed it may be asked for (see {@link #maxRpm}). */
     public double getMaxRpm() { return maxRpm; }
 
+    /** A drop of more than this many RPM counts as a shot ({@link #shotDrop}). */
+    public double getShotDrop() { return shotDropRpm; }
+
+    /** The ready band: within this many RPM of the target (for the settle time) = ready. */
+    public double getTolerance() { return toleranceRpm; }
+
     /** The measured speed (RPM). */
     public double getRpm() { return rpm; }
 

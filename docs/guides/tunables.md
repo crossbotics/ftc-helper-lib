@@ -352,6 +352,9 @@ Section `Aim` (fixed name). Every line is optional. Module: [Aim](../modules/rob
 | `maxTurnPower` | whole-robot aim: the most turn power | 0 to 1 | 0.5 | yes, at once | test | aim is too fast or too slow |
 | `minTurnPower` | whole-robot aim: the least power that still turns the robot | 0 to 1 | 0 | yes, at once | test | aim stops a few degrees short |
 | `toleranceDeg` | whole-robot aim counts as aimed within this | degrees | 2 | yes, at once | test | shots miss although "AIMED" (less) |
+| `lockMarginDeg` | once LOCKED (or AIMED), it stays so until the error passes `toleranceDeg` + this: no flicker at the edge | degrees | 1 | no | test | LOCKED flickers (more) |
+| `sweepStepDeg` | `aimAtGoal(label, sec, sweepDeg)`: the robot turns this much between two looks while it sweeps for the goal | degrees | 15 | no | test | the goal is passed by between looks (less) |
+| `sweepPower` | the sweep's turn power | 0-1 | 0.3 | no | test | the sweep is too slow, or the picture blurs (less) |
 | `cameraOffset` | whole-robot aim (no turret): a camera that is not on the robot's centre line. A turret has its own, `Tunables.Turret.cameraOffset`; the Aim Tuner prints the line for the one your robot uses | degrees | 0 | yes, at once | test | the robot aims a little to one side |
 | `rumbleDeg` | the aim buzz starts this close to the goal | degrees | 4 | yes, at once | test | the drivers want it earlier or later |
 | `shootOnMove` | shooting while driving: on at START | true/false | false | no | test | only after tuning it on the real robot |
@@ -491,6 +494,20 @@ Section: the device's name in CamelCase: a launcher on the motor `launcher` read
 | `batteryCompensation` | with a written `kF`: scale F by the battery voltage (not yet proven on a real robot). Without your own `kF` it stays off, with a note | true/false | false | no | none | to try it: `true`, then the 4-shot test (lesson 9) |
 | `trimStepPercent` | one speed trim step | percent | 1 | no | none | the drivers want bigger steps |
 | `trimMaxPercent` | the most speed trim, at most 50 | percent | 15 | no | none | you need more trim (better: fix the table) |
+| `redTrimPercent` | every shot speed this much faster on the RED alliance (the field halves differ a little) | percent | 0 | no | test, at an event | shots on one half land short or long |
+| `blueTrimPercent` | the same on the BLUE alliance | percent | 0 | no | test, at an event | the same |
+| `quickBandRpm` | QUICK mode: after a volley's first piece, feed within this of the speed | RPM | 3 x `readyBandRpm` | no | firing stats (the drop) | QUICK shots land short (less) or it waits too long (more) |
+| `quickMaxWaitSec` | QUICK mode: after a volley's first piece, feed after this wait at most | seconds | 0.3 | no | firing stats (the recovery) | the same |
+| `sprayEnabled` | allows SPRAY: no wait for the speed, at the end of TeleOp and when QUICK will not fit before the park in autonomous | true/false | false | no | none | the drivers want it |
+| `sprayLastSec` | with `sprayEnabled`: the last seconds of TeleOp that SPRAY (0 = never by itself) | seconds | 5 | no | none | the drivers want more or less |
+| `fallbackDistanceIn` | with the speed from the distance: the distance to use before any goal was seen | inches | none: `speedRpm` | no | none | the first shot of the match has no goal in view |
+| `feedStopHold` | with `.feedStop(...)`: the servo position that holds the pieces back | servo position 0-1 | 0 (a guess, INIT says so) | no | Feed Stop Finder | after the Servo Finder |
+| `feedStopRelease` | with `.feedStop(...)`: the servo position that lets a piece through | servo position 0-1 | 0.5 (a guess) | no | Feed Stop Finder | the same |
+| `feedStopMoveSec` | with `.feedStop(...)`: how long it takes to open; the indexer and the pushing parts wait this long | seconds | 0.1 | no | test | a slow servo is still part-closed when the piece comes (more) |
+| `feedStopOpenSec` | with `.feedStop(...)`: the backup time it stays open when no shot is seen | seconds | 0.5 | no | firing stats | pieces get stuck (more) |
+| `assistSec` | with `.pushedBy(...)`: how long the parts push each piece in, at most (less when the shot is seen) | seconds | 0.25 | no | test | pieces do not reach the wheel (more) |
+| `ejectRpm` | `ejectAction()`: the low speed that pushes one piece out | RPM | 600 | no | test | the piece does not clear the robot (more) or flies too far (less) |
+| `ejectSec` | `ejectAction()`: how long the eject lasts | seconds | 1 | no | test | the piece is still in the robot at the end (more) |
 
 ## Indexer
 
@@ -530,6 +547,24 @@ default that says "of the range" fits degrees, positions and counts. Module: [Ho
 | `kP` | a motor hood: power per count off | power per count | 0.005 | yes, at once | test | slow (more) or shakes (less) |
 | `maxPower` | a motor hood: the most power | 0 to 1 | 0.5 | yes, at once | test | it hits its stops hard |
 
+## CameraFix
+
+<!-- tunables: CameraFix -->
+Section `CameraFix` (fixed name). **ALPHA, not tested on a robot, not for BIOBUZZ** (its tags move with the
+HIVE). Only with `cameraFix(camera)` in Robot.java. Module: [Camera fix (alpha)](../modules/odometry.md#camera-fix-alpha).
+
+| Field | What it does | Units | Default | Live | Found by | When to change |
+| --- | --- | --- | --- | --- | --- | --- |
+| `enabled` | the camera fix on or off | true/false | false | no | none | to try it (not in BIOBUZZ) |
+| `turnDegBlue` | the turn from the Limelight's field frame to ours, on BLUE | degrees | 0 | no | Camera Fix Check | the check says another turn |
+| `turnDegRed` | the same on RED | degrees | 0 | no | Camera Fix Check | the same |
+| `maxAgeMs` | an older picture is skipped | ms | 100 | no | none | rarely |
+| `maxSpeedInPerSec` | faster than this: no fix | inches per second | 20 | no | none | rarely |
+| `maxTurnDegPerSec` | turning faster than this: no fix (the heading lags in the picture) | degrees per second | 30 | no | none | rarely |
+| `maxJumpIn` | a bigger difference is refused (a bad picture) | inches | 12 | no | none | rarely |
+| `blend` | the share of the difference applied per picture | 0-1 | 0.2 | no | none | the pose jumps (less) |
+| `minTags` | fewer tags in the picture: skipped | count | 2 | no | none | rarely |
+
 ## Camera
 
 <!-- tunables: Camera -->
@@ -538,6 +573,7 @@ menu. Module: [Camera](../modules/robot.md#camera).
 
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
+| `liveView` | a webcam: show its picture (the Driver Station's Camera Stream, in INIT) in the PRACTICE profile; never in COMPETITION (it costs speed) | true/false | true | no | none | `false` to save speed in practice too |
 | `pipeline` | a Limelight: the pipeline to use | number | 0 | no | the lighting test at INIT | the test found a better one at this venue |
 | `autoLighting` | try a few settings at INIT and keep the best (`autoPipelines` / `autoExposure`) | true/false | true | no | none | `false` to skip the test at a venue you know |
 | `exposureMs` | a webcam: a fixed exposure when the test is off (-1 = the camera's own) | ms | -1 | no | the lighting test at INIT | the test found a better one |

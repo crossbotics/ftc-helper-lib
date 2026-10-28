@@ -170,6 +170,15 @@ public class BuiltAuto extends Auto<RobotDefinition> {
                 case "turnTo": s.turnTo(label, need(st, "heading", where), need(st, "power", where)); break;
                 case "wait": s.waitSeconds(label, need(st, "sec", where)); break;
                 case "run": s.run(label, BuiltCode.command(SimJsonReader.string(st, "code", ""), robot)); break;
+                case "aim":
+                    if (st.get("sweep") instanceof Number && ((Number) st.get("sweep")).doubleValue() > 0) {
+                        s.aimAtGoal(label, need(st, "timeout", where), need(st, "sweep", where));
+                    }
+                    else s.aimAtGoal(label, need(st, "timeout", where));
+                    break;
+                case "remember": s.rememberHeading(label); break;
+                case "back": s.turnBack(label, need(st, "power", where)); break;
+                case "ready": s.readyToLaunch(label, need(st, "timeout", where)); break;
                 case "action": s.action(BuiltCode.action(SimJsonReader.string(st, "code", ""), robot), need(st, "timeout", where)); break;
                 case "alongside": s.alongside(BuiltCode.action(SimJsonReader.string(st, "code", ""), robot)); break;
                 case "park": s.parkWithSeconds(need(st, "sec", where)); break;
@@ -389,6 +398,16 @@ public class BuiltAuto extends Auto<RobotDefinition> {
      */
     static String codeInfo(Class<? extends RobotDefinition> c, List<SimDriverStation.Entry> opModes) {
         Set<String> commands = new LinkedHashSet<>(), actions = new LinkedHashSet<>();
+        List<com.crossbotics.ftchelper.robot.Feature> features = new ArrayList<>();
+        try {
+            // The library's ready-made features: its ready actions come first in the list ("Fire 2").
+            features = c.getDeclaredConstructor().newInstance().features();
+            for (com.crossbotics.ftchelper.robot.Feature f : features) {
+                if (f.ready() && f.kind == com.crossbotics.ftchelper.robot.Feature.Kind.ACTION) actions.add(f.code);
+            }
+        } catch (Throwable ignored) {
+            // a Robot that cannot be made here: no features
+        }
         try {
             RobotDefinition r = c.getDeclaredConstructor().newInstance();
             r.modules();   // reads define(): the parts are made (no hardware)
@@ -431,6 +450,19 @@ public class BuiltAuto extends Auto<RobotDefinition> {
         b.append("],\"actions\":[");
         i = 0;
         for (String s : actions) SimJson.string(b.append(i++ > 0 ? "," : ""), s);
+        b.append("],\"features\":[");
+        i = 0;
+        for (com.crossbotics.ftchelper.robot.Feature f : features) {
+            b.append(i++ > 0 ? "," : "").append("{\"kind\":");
+            SimJson.string(b, f.kind.name());
+            SimJson.string(b.append(",\"words\":"), f.kind.words());
+            SimJson.string(b.append(",\"name\":"), f.name);
+            SimJson.string(b.append(",\"code\":"), f.code);
+            SimJson.string(b.append(",\"needs\":"), f.needs);
+            SimJson.string(b.append(",\"missing\":"), f.missing);
+            SimJson.string(b.append(",\"note\":"), f.note);
+            b.append('}');
+        }
         b.append("],\"teleop\":");
         return SimJson.string(b, teleOpFor(c, opModes)).toString();
     }

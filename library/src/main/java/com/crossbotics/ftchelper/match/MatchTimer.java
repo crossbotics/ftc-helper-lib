@@ -104,10 +104,48 @@ public class MatchTimer {
         });
     }
 
+    // The match timer started last (EasyAuto's or EasyTeleOp's), for parts that act on the time left.
+    private static MatchTimer current = null;
+    private double reserveSec = 0;
+
+    /**
+     * The match timer of the OpMode running now: the one started last since {@link #forget()} (each
+     * robot is set up at INIT, which forgets the last OpMode's), or null. The launcher reads it to choose
+     * its shot mode from the time left.
+     */
+    public static MatchTimer current() {
+        return current;
+    }
+
+    /** Forgets the last OpMode's timer (done at every INIT, before the new one starts). */
+    public static void forget() {
+        current = null;
+    }
+
+    /**
+     * Seconds at the end kept for parking (autonomous: {@code parkWithSeconds(...)}); 0 = none. The
+     * launcher counts its time to fire up to there.
+     */
+    public MatchTimer reserve(double seconds) {
+        reserveSec = Math.max(0, seconds);
+        return this;
+    }
+
+    /** The seconds kept for parking ({@link #reserve}). */
+    public double reserveSec() {
+        return reserveSec;
+    }
+
+    /** True for the 30 s autonomous timer ({@link #autonomous()}). */
+    public boolean isAutonomous() {
+        return lengthSec <= AUTO_SECONDS;
+    }
+
     /** Starts counting (call right after {@code waitForStart()}). Starting again restarts it. */
     public void start() {
         startNanos = clockNanos.getAsLong();
         running = true;
+        current = this;
         // A restart means every cue may run again.
         for (Cue c : cues) c.done = false;
     }

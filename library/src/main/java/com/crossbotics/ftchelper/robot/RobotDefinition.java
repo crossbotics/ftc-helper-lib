@@ -126,6 +126,40 @@ public abstract class RobotDefinition {
     }
 
     /**
+     * <b>ALPHA, NOT TESTED ON A ROBOT.</b> Corrects the odometry's x and y with the field position this
+     * Limelight works out from AprilTags (MegaTag2). Also needs an {@link #odometry} line, and it is OFF
+     * until {@code Tunables.CameraFix.enabled = true}. <b>Not for BIOBUZZ:</b> its tags are under the
+     * CELLs and move when a HIVE tips. Find {@code turnDegBlue} / {@code turnDegRed} with the Camera Fix
+     * Check (Tune and check). Docs: docs/modules/odometry.md, "Camera fix (alpha)".
+     *
+     * @param camera a Limelight camera added with {@code add(Camera.limelight(...))}
+     */
+    protected final void cameraFix(Camera camera) {
+        if (camera == null) throw new IllegalArgumentException("Robot.java: cameraFix(null): add the camera first");
+        cameraFixCamera = camera;
+    }
+
+    private Camera cameraFixCamera = null;
+    private CameraFix cameraFix = null;
+
+    /** The camera fix (alpha), or null without a cameraFix(...) line or before setup. */
+    final CameraFix cameraFixPart() {
+        return cameraFix;
+    }
+
+    /** The camera given to {@code cameraFix(...)} (alpha), or null. */
+    public final Camera cameraFixCamera() {
+        describe();
+        return cameraFixCamera;
+    }
+
+    /** True with a {@code cameraFix(camera)} line in Robot.java (the alpha camera fix). */
+    public final boolean hasCameraFix() {
+        describe();
+        return cameraFixCamera != null;
+    }
+
+    /**
      * A path follower from another library, e.g. {@code follower(Pedro.follower(Constants.foresight))} with
      * the ftc-helper-lib "pedro" module. It needs an {@link #odometry} line too (it uses the same pose).
      */
@@ -399,6 +433,8 @@ public abstract class RobotDefinition {
         if (built) throw new IllegalStateException("This robot is already set up: make a new one per OpMode");
         describe();
         built = true;
+        // A new OpMode: the last one's match timer no longer counts (the launcher reads the time left).
+        com.crossbotics.ftchelper.match.MatchTimer.forget();
         // A misspelled Tunables field stops INIT here, before anything is made (see TunableFields).
         checkTunablesNames(devices);
         // Paused: nothing is updated (so nothing moves). At the end (STOP, or an error) everything is
@@ -450,6 +486,12 @@ public abstract class RobotDefinition {
             all.add(m.missing ? new MissingPart.Absent(m) : m);
             for (Module<?> child : m.children()) Tunable.hideGroup(child.name(), child.missing);
             Tunable.hideGroup(m.name(), m.missing);
+        }
+        // The camera fix (alpha): after the cameras and the odometry, so it sees this loop's picture and pose.
+        if (cameraFixCamera != null) {
+            if (cameraFixCamera.robot != this) throw new IllegalStateException("Robot.java: cameraFix(camera): that camera is not added");
+            cameraFix = new CameraFix(this, cameraFixCamera, TunableSection.of(tunablesClass, "CameraFix"));
+            all.add(cameraFix);
         }
         // The other sections (Tunables.Auto...): in the tuning menu, and their saved values used now,
         // before the autonomous reads them to build its steps.
@@ -657,6 +699,17 @@ public abstract class RobotDefinition {
     public final Mode aimMode() {
         if (aim == null) throw new IllegalStateException("robot.aimMode() is ready after setup (use it in Controls.java's buttons(...))");
         return aim.mode();
+    }
+
+    private final Mode reverseDrive = new Mode("Reverse drive", false);
+
+    /**
+     * Reverse drive: while on, TeleOp's forward and strafe are flipped, so the back of the robot acts as
+     * the front (turning is not flipped; field-centric driving ignores it). Off at START. One line in
+     * Controls.java: {@code g1.x.toggle(robot.reverseDriveMode()).rumble();}.
+     */
+    public final Mode reverseDriveMode() {
+        return reverseDrive;
     }
 
     /** The path follower as running (null before setup, or with no follower(...) line). */
@@ -908,6 +961,129 @@ public abstract class RobotDefinition {
     }
 
     /**
+     * What the library can do for this robot by itself, ready or not, worked out from Robot.java's parts
+     * (no hardware needed): the launcher's "Fire 1", "Fire 2"... and "Fire all" actions, "Aim at the goal"
+     * in an autonomous, the aim toggles for TeleOp, and the Goal line on the Driver Station. A feature that
+     * is not ready says what is missing. The simulator and the auto builder show this list.
+     */
+    public final List<Feature> features() {
+        describe();
+        List<Feature> out = new ArrayList<>();
+        // The parts by their Robot.java field name ("launcher"), for the lines to write.
+        java.util.Map<Module<?>, String> names = new java.util.IdentityHashMap<>();
+        for (java.lang.reflect.Field f : getClass().getFields()) {
+            if (java.lang.reflect.Modifier.isStatic(f.getModifiers())) continue;
+            try {
+                Object v = f.get(this);
+                if (v instanceof Module) names.put((Module<?>) v, f.getName());
+            } catch (IllegalAccessException ignored) {
+                // not readable: no name
+            }
+        }
+        int holds = 0;
+        boolean launcher = false, camera = false, mecanum = drive != null && drive.isMecanum();
+        Turret following = null, turret = null;
+        for (Module<?> m : modules) {
+            if (m instanceof Intake) holds = Math.max(holds, ((Intake) m).holdsInAll());
+            if (m instanceof Camera && ((Camera) m).hasGoal()) camera = true;
+            if (m instanceof Turret) {
+                turret = (Turret) m;
+                if (turret.followsGoal()) following = turret;
+            }
+        }
+        if (holds <= 0) holds = Pieces.GAME_LIMIT;
+        for (Module<?> m : modules) {
+            if (!(m instanceof Launcher)) continue;
+            launcher = true;
+            String n = names.containsKey(m) ? names.get(m) : m.name().toLowerCase(java.util.Locale.US);
+            for (int i = 1; i <= holds; i++) {
+                out.add(new Feature(Feature.Kind.ACTION, "Fire " + i, "robot." + n + ".fireAction(" + i + ")", "a launcher", "",
+                        i == 1 ? "fires one piece, done when it has left" : ""));
+            }
+            out.add(new Feature(Feature.Kind.ACTION, "Fire all", "robot." + n + ".fireAllAction()", "a launcher", "",
+                    "fires every piece it holds (a Pieces part's count, else the intake's holds(...))"));
+            Launcher l = (Launcher) m;
+            out.add(new Feature(Feature.Kind.AUTO_STEP, "Ready to launch", ".readyToLaunch(\"Ready\", 3)", "a launcher", "",
+                    "spins up and waits until ready; the action: robot." + n + ".readyAction(3)"));
+            out.add(new Feature(Feature.Kind.AUTOMATIC, "Shot modes: CAREFUL, QUICK, SPRAY", "", "a launcher", "",
+                    "tap CAREFUL, hold QUICK; autonomous by the time left; SPRAY "
+                            + l.sprayWords(TunableSection.of(tunablesClass != null ? tunablesClass : findTunables(), l.name()))));
+            out.add(new Feature(Feature.Kind.AUTOMATIC, "Feed stop", "", "a feed stop servo: .feedStop(\"name\") on the launcher",
+                    l.feedStopName() == null ? ".feedStop(\"name\") on the launcher, if the robot has a feed stop" : "",
+                    l.feedStopName() == null ? "" : l.feedStopName() + ": hold at START, open for each piece, closed when the shot is seen"));
+            StringBuilder path = new StringBuilder();
+            for (Intake p : l.pushers()) path.append(path.length() == 0 ? "" : ", ").append(names.containsKey(p) ? names.get(p) : p.name());
+            out.add(new Feature(Feature.Kind.AUTOMATIC, "Piece path: parts that push a piece in", "", ".pushedBy(intake) on the launcher",
+                    path.length() == 0 ? ".pushedBy(...) on the launcher, if a part must push the pieces in" : "",
+                    path.length() == 0 ? "" : path + " (borrowed for each piece, then back as it was)"));
+            out.add(new Feature(Feature.Kind.AUTOMATIC, "Firing stats (debug lines)", "", "a launcher", "",
+                    "per piece: mode, speed, drop, recovery; PRACTICE profile only"));
+            out.add(new Feature(Feature.Kind.AUTOMATIC, "Alliance trim", "", "a launcher", "",
+                    "Tunables redTrimPercent, blueTrimPercent (0 = none)"));
+            out.add(new Feature(Feature.Kind.ACTION, "Eject", "robot." + n + ".ejectAction()", "a launcher", "",
+                    "one piece out at a low speed (Tunables ejectRpm, ejectSec)"));
+        }
+        if (!launcher) {
+            out.add(new Feature(Feature.Kind.ACTION, "Fire 1, Fire X, Fire all", "robot.launcher.fireAction(1)", "a launcher",
+                    "a Launcher in Robot.java", ""));
+            out.add(new Feature(Feature.Kind.AUTO_STEP, "Ready to launch", ".readyToLaunch(\"Ready\", 3)", "a launcher",
+                    "a Launcher in Robot.java", ""));
+        }
+        Class<?> tc = tunablesClass != null ? tunablesClass : findTunables();
+        TunableSection aimT = TunableSection.of(tc, "Aim");
+        boolean goalPoint = aimT.has("goalX") && aimT.has("goalY"), odo = odometrySpec() != null;
+        String aimNeeds = "a camera with goal(...) in Robot.java, or odometry(...) + Tunables.Aim goalX, goalY";
+        String aimMissing = camera || (goalPoint && odo) ? ""
+                : odo ? "a camera with goal(...), or Tunables.Aim goalX and goalY (the odometry backup)"
+                : goalPoint ? "a camera with goal(...), or an odometry(...) line (the odometry backup)"
+                : "a camera with goal(...) (or odometry + Tunables.Aim goalX, goalY)";
+        String source = camera ? (goalPoint && odo ? "camera, odometry as a backup" : "camera") : (aimMissing.isEmpty() ? "odometry only: keep the start spot right" : "");
+        String aimOnly = aimMissing;   // what aiming needs; aimMissing adds the drive, for turning the robot
+        if (drive == null) aimMissing = aimMissing.isEmpty() ? "a drive" : aimMissing + "; a drive";
+        out.add(new Feature(Feature.Kind.AUTOMATIC, "Goal line on the Driver Station: seen, in range, LOCKED", "", aimNeeds,
+                aimOnly, source));
+        if (following != null) {
+            String tn = names.containsKey(following) ? names.get(following) : "turret";
+            out.add(new Feature(Feature.Kind.TOGGLE, "Turret follows the goal", "g1.rb.toggle(robot." + tn + ".followMode())",
+                    "a turret with follows(camera) or followsOdometry()", "", "the robot can drive at full speed while it aims"));
+            out.add(new Feature(Feature.Kind.AUTO_STEP, "Aim at the goal", ".aimAtGoal(\"Aim\", 3)",
+                    "a turret that follows the goal", "", "waits until the turret is aimed"));
+        } else {
+            if (turret != null) {
+                out.add(new Feature(Feature.Kind.TOGGLE, "Turret follows the goal", "g1.rb.toggle(robot."
+                        + (names.containsKey(turret) ? names.get(turret) : "turret") + ".followMode())",
+                        "a turret with follows(camera) or followsOdometry()", "follows(camera) or followsOdometry() on the turret in Robot.java", ""));
+            }
+            out.add(new Feature(Feature.Kind.TOGGLE, "Aim mode (the whole robot turns to the goal)", "g1.rb.toggle(robot.aimMode())",
+                    "a drive + " + aimNeeds, aimMissing, mecanum ? "mecanum: drive and strafe while it stays aimed"
+                    : "tank drive: it stays aimed while you drive forward and back (no strafing)"));
+            out.add(new Feature(Feature.Kind.AUTO_STEP, "Aim at the goal", ".aimAtGoal(\"Aim\", 3)", "a drive + " + aimNeeds, aimMissing,
+                    "turns the whole robot; does not turn blind"));
+            out.add(new Feature(Feature.Kind.AUTO_STEP, "Aim at the goal with a sweep", ".aimAtGoal(\"Aim\", 4, 45)", "a drive + " + aimNeeds,
+                    aimMissing, "not in view: turns slowly up to 45 deg each way to find it"));
+        }
+        out.add(new Feature(Feature.Kind.AUTO_STEP, "Remember heading, turn back", ".rememberHeading(\"Remember\") ... .turnBack(\"Back\", 0.5)",
+                "a drive", drive == null ? "a drive" : "", "useful without odometry pods: the IMU's heading"));
+        out.add(new Feature(Feature.Kind.TOGGLE, "Reverse drive", "g1.x.toggle(robot.reverseDriveMode()).rumble()", "a drive",
+                drive == null ? "a drive" : "", "the back is the front (robot-centric driving)"));
+        Camera webcam = null;
+        for (Module<?> m : modules) if (m instanceof Camera && !((Camera) m).isLimelight()) { webcam = (Camera) m; break; }
+        out.add(new Feature(Feature.Kind.AUTOMATIC, "Camera live view (webcam)", "", "a webcam",
+                webcam == null ? "a webcam (a Limelight has its own web page)" : "",
+                webcam == null ? "" : "PRACTICE profile: Driver Station menu > Camera Stream, in INIT"));
+        boolean fixOn = CameraFix.enabledIn(TunableSection.of(tunablesClass != null ? tunablesClass : findTunables(), "CameraFix"));
+        out.add(new Feature(Feature.Kind.AUTOMATIC, "Camera fix (ALPHA, untested; not for BIOBUZZ)", "", "a Limelight + odometry(...)",
+                cameraFixCamera == null ? "cameraFix(camera) in Robot.java and Tunables.CameraFix.enabled = true"
+                        : !fixOn ? "Tunables.CameraFix.enabled = true (off: BIOBUZZ teams leave it off)" : "",
+                "corrects the odometry from AprilTags; off by default"));
+        out.add(new Feature(Feature.Kind.TOGGLE, "Buzz when aimed", "g1.rumbleWhenAimed();", aimNeeds, aimOnly, "the closer, the stronger"));
+        out.add(new Feature(Feature.Kind.TOGGLE, "Shoot while moving", "g2.a.toggle(robot.aim().movingShotMode())",
+                aimNeeds + ", and odometry(...) (the robot's speed)",
+                !aimOnly.isEmpty() ? aimOnly : odo ? "" : "an odometry(...) line (the robot's speed)", "tune it on the real robot first (Tunables.Aim flightSec)"));
+        return out;
+    }
+
+    /**
      * Robot.java against a robot configuration (the Hardware Check shows it): one line for each device
      * Robot.java names that is NOT in the configuration, and what that means. Empty when all are there.
      *
@@ -1049,6 +1225,12 @@ public abstract class RobotDefinition {
     public final List<String> notes() {
         describe();
         List<String> out = new ArrayList<>();
+        // The alpha camera fix, said plainly every INIT.
+        if (cameraFixCamera != null) {
+            boolean on = cameraFix != null && cameraFix.enabled();
+            out.add("Camera fix: ALPHA, NOT TESTED ON A ROBOT, " + (on ? "ON" : "off (Tunables.CameraFix.enabled = false)")
+                    + ". Not for BIOBUZZ: its tags move with the HIVE");
+        }
         if (tunablesClass == null) {
             out.add("No Tunables class next to Robot.java: every module uses the library's defaults");
             // Each part's own notes still show (the defaults it worked out from its part, positions that are

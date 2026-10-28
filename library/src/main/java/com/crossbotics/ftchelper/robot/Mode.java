@@ -12,6 +12,11 @@ package com.crossbotics.ftchelper.robot;
 public final class Mode implements Toggleable {
     private final String name;
     private boolean on;
+    // onlyWhen(...): it turns on only while this is true; null = always may. And why not, for the screen.
+    private java.util.function.BooleanSupplier allowed = null;
+    private String notAllowedWhy = "";
+    private boolean refused = false;
+    private long refusedAt = 0;   // System.nanoTime() of the refused press
 
     /**
      * @param name     shown on the Driver Station, e.g. "Turret follow"
@@ -22,15 +27,51 @@ public final class Mode implements Toggleable {
         this.on = startsOn;
     }
 
-    /** Switches it on. */
-    public void on() { on = true; }
+    /**
+     * A button press ({@link #toggle()}) turns it on only while {@code check} is true (whole-robot aim:
+     * only with a goal in view). A press that cannot turn it on leaves it off: with {@code .rumble()} on
+     * the button, one buzz (off) instead of two. Once on it stays on. Code that calls {@link #on()}
+     * is not checked (an action may switch it on before the goal is in view).
+     */
+    void onlyWhen(java.util.function.BooleanSupplier check, String why) {
+        allowed = check;
+        notAllowedWhy = why;
+    }
+
+    /** True if the last try to switch it on was refused ({@link #whyRefused()} says why). */
+    public boolean wasRefused() { return refused; }
+
+    /** Why it could not be switched on, e.g. "no goal in view" ("" if it could). */
+    public String whyRefused() { return refused ? notAllowedWhy : ""; }
+
+    /** Switches it on (from code: never refused). */
+    public void on() {
+        on = true;
+        refused = false;
+    }
 
     /** Switches it off. */
-    public void off() { on = false; }
+    public void off() {
+        on = false;
+        refused = false;
+    }
 
     /** On if off, off if on. */
     @Override
-    public void toggle() { on = !on; }
+    public void toggle() {
+        if (on) {
+            off();
+            return;
+        }
+        refused = allowed != null && !allowed.getAsBoolean();
+        if (refused) refusedAt = System.nanoTime();
+        else on = true;
+    }
+
+    // True for 3 s after a refused press (the Driver Station's warning).
+    boolean refusedLately() {
+        return refused && System.nanoTime() - refusedAt < 3_000_000_000L;
+    }
 
     /** True while on. */
     public boolean isOn() { return on; }

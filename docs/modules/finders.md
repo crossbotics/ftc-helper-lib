@@ -63,6 +63,22 @@ Safe in every finder:
 
 ---
 
+## TuneAndCheckOpMode
+
+`TuneAndCheckOpMode` is the library's own OpMode, **"Tune and check"** (group "Finders"): a menu in INIT with the Hardware Check
+and the finders that fit Robot.java. A opens a tool (its INIT screen), START runs it, BACK in the tool's
+INIT goes back to the menu. It finds the robot classes in `org.firstinspires.ftc.teamcode` (on the robot:
+the app's classes, as the SDK finds OpModes; in the simulator: the class path). Not in it: the Aim Tuner
+and the Characterizer. Steps: [the finders guide](../guides/finders.md#tune-and-check-all-of-them-in-one-opmode).
+
+| Member | What it does |
+| --- | --- |
+| `NAME` | `"Tune and check"`, the Driver Station name |
+| `useRobots(list)` | uses these robot classes instead of looking (the simulator's tests); `null` = look again |
+
+`Hosting` runs a finder inside it: a finder's `inInit()` and `running()` are the host's INIT and START.
+A finder of your own that loops by itself uses `running()`, not `opModeIsActive()`.
+
 ## ServoFinderOpMode
 
 Lists every servo in the configuration. Nudge the chosen one and mark what you find.
@@ -92,6 +108,18 @@ Tunables.Claw: P1 = 0.210, P2 = 0.740
 
 In five files: `public static double open = 0.210, closed = 0.740;` in `Tunables.Claw`. A servo
 module has no ends of its own, so the ends become a reminder.
+
+## CameraFixCheckOpMode
+
+`CameraFixCheckOpMode` (**alpha**): the standing test for the [camera fix](odometry.md#camera-fix-alpha). It
+finds `Tunables.CameraFix` `turnDegBlue` / `turnDegRed` and shows where the camera puts the robot, to check
+with a tape. Needs `robot()`; in Tune and check for a robot with `cameraFix(camera)`.
+
+## FeedStopFinderOpMode
+
+`FeedStopFinderOpMode` finds a launcher's feed stop positions: `Tunables.Launcher: feedStopHold = ...,
+feedStopRelease = ...`. It needs `robot()` (the robot in five files, with a launcher that has
+`.feedStop(...)`). In Tune and check by itself. Steps: [Feed Stop Finder](../guides/finders.md#feed-stop-finder).
 
 ## MotorFinderOpMode
 

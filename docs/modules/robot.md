@@ -60,6 +60,7 @@ flowchart LR
 | [`Mode`](#modes) | a rule a module follows every loop while the mode is on |
 | [`ControlMap`](#controlmap), [`Pad`](#controlmap) | `Controls.java`: the TeleOp and the button map |
 | [`Auto`](#auto), [`Steps`](#auto) | one autonomous as a list of steps |
+| [`Feature`](#what-your-robot-can-do) | what the library does by itself for your robot, ready or not (`robot.features()`) |
 | [`Toggleable`](#controlmap) | anything one button switches on and off |
 | [`Motors`](#motors) | look up the encoder counts and speed of common motors, by catalog id (a part's name in the [parts catalog](../guides/parts-catalog.md), e.g. `"gobilda-5203-312"`) |
 | [`Shape`](#shapes-and-parts), [`Parts`](#shapes-and-parts) | how each part looks and where it sits, for the simulator; wheels, rollers and servos by catalog id |
@@ -271,6 +272,53 @@ robot.everyLoop(() -> lastHeight = robot.lift.position());  // a small piece of 
 
 Pause stops every part in `all()` that is not the library's own, also one added the old way with
 `robot.all().add(...)`. A second motor on a lift or arm needs none of this: `alsoMotor` (see [Lift](#lift)).
+
+## What your robot can do
+
+The library does some things by itself, once your robot has the parts for them. `robot.features()`
+lists them, worked out from Robot.java alone (no hardware): each one **ready**, with the line to use it,
+or **not ready**, with what to add. The simulator's auto builder shows this list ("What this robot can
+do"), and its Action list starts with the ready actions.
+
+| Feature | Kind | Needs | The line |
+| --- | --- | --- | --- |
+| Fire 1, Fire 2 ... Fire all | action | a launcher | `robot.launcher.fireAction(2)`, `robot.launcher.fireAllAction()` |
+| Ready to launch | auto step | a launcher: spins up and waits until ready | `.readyToLaunch("Ready", 3)`, the action `robot.launcher.readyAction(3)` |
+| Shot modes: CAREFUL, QUICK, SPRAY | automatic | a launcher ([Firing](#firing-shot-modes-feed-stop-piece-path)) | (nothing to write; SPRAY: `sprayEnabled = true`) |
+| Feed stop | automatic | a feed stop servo | `.feedStop("feed_stop")` on the launcher |
+| Piece path: parts that push a piece in | automatic | an intake that pushes pieces into the wheel | `.pushedBy(intake)` on the launcher |
+| Firing stats (debug lines) | automatic | a launcher (PRACTICE profile only) | (nothing to write) |
+| Alliance trim | automatic | a launcher | `Tunables.Launcher` `redTrimPercent`, `blueTrimPercent` |
+| Eject | action | a launcher: one piece out at a low speed (`ejectRpm`, `ejectSec`) | `robot.launcher.ejectAction()` |
+| Aim at the goal | auto step | a drive, and a camera with `goal(...)` (or `odometry(...)` + `Tunables.Aim` `goalX, goalY`); with a following turret, the turret | `.aimAtGoal("Aim", 3)` |
+| Aim at the goal with a sweep | auto step | the same; not in view, the robot turns slowly up to the sweep each way to find it, then aims (back where it started if never seen). A turret that follows the goal does not sweep | `.aimAtGoal("Aim", 4, 45)` |
+| Remember heading, turn back | auto step | a drive (without odometry pods it uses the IMU: better than nothing) | `.rememberHeading("Remember")` ... `.turnBack("Back", 0.5)` |
+| Reverse drive | TeleOp toggle | a drive: the back is the front (robot-centric driving; field-centric ignores it) | `g1.x.toggle(robot.reverseDriveMode()).rumble()` |
+| Camera live view (webcam) | automatic | a webcam, PRACTICE profile (never at an event): Driver Station menu > Camera Stream, in INIT. A Limelight: plug it into a laptop (its own web page) | `liveView = false` in the webcam's section (`Tunables.Webcam1`) turns it off |
+| Camera fix (ALPHA, untested; not for BIOBUZZ) | automatic | off unless you turn it on. **BIOBUZZ teams: ignore it; your robot is not affected.** A Limelight + `odometry(...)` + `cameraFix(camera)`, and `Tunables.CameraFix.enabled = true` ([Odometry: camera fix](odometry.md#camera-fix-alpha)) | `cameraFix(camera);` in Robot.java |
+| Aim mode (the whole robot turns to the goal): it stays aimed while you drive | TeleOp toggle | the same, and no following turret. Mecanum: drive and strafe while it stays aimed; tank: forward and back only | `g1.rb.toggle(robot.aimMode())` |
+| Turret follows the goal | TeleOp toggle | a turret with `follows(camera)` or `followsOdometry()` (the robot drives at full speed while it aims) | `g1.rb.toggle(robot.turret.followMode())` |
+| Goal line on the Driver Station: seen, in range, LOCKED | automatic | what aiming needs | (nothing to write) |
+| Buzz when aimed | TeleOp | what aiming needs | `g1.rumbleWhenAimed();` |
+| Shoot while moving | TeleOp toggle | aiming, and `odometry(...)` (the speed). Tune it first | `g2.a.toggle(robot.aim().movingShotMode())` |
+
+This table is kept by hand (it reads better than a generated one); a test (`FeaturesTest`) fails when a
+feature in the code has no row here.
+
+**The buttons stay yours.** The library never takes a button by itself: two features could want the same
+one. The list gives the line; you pick the button in `Controls.java`. The buttons in the lines are only
+examples: pick free ones (INIT lists them, `G1 free: ...`). With one driver (`oneDriver = true`), RB on
+gamepad 1 is the launcher's fire button, so put aim mode somewhere else.
+
+```java
+for (Feature f : robot.features()) telemetry.addLine(f.toString());   // ready  action: Fire 2  robot.launcher.fireAction(2) ...
+```
+
+| `Feature` | |
+| --- | --- |
+| `kind` | `AUTO_STEP`, `ACTION`, `TOGGLE` or `AUTOMATIC` (`kind.words()`: "auto step" ...) |
+| `name`, `code`, `needs`, `note` | what it is called, the line to use it ("" for automatic), what it needs, a short note |
+| `ready()`, `missing` | it has what it needs; what to add ("" when ready) |
 
 ## Parts not in the catalog
 
@@ -760,6 +808,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 | `spinUp()`, `idle()`, `toggle()` | to the shot speed; back to `idleRpm` |
 | `fire()`, `fire(n)` | spins up if needed, feeds as soon as it is at speed (gives up after 3 s, saying why) |
 | `fireWhileHeld()`, `ceaseFire()` | for a held button: one shot, then the next as soon as it is fed; on release no more (a tap still fires its one shot) |
+| `fireAction(n)`, `fireAllAction()` | ready-made [actions](#action): fire n pieces ("Fire 2"), or every piece the robot holds ("Fire all": a `Pieces` part's count, else the intake's `holds(...)`, else 4), and be done when the last one has left (time limit 3 s + 2 s a piece). `.action(robot.launcher.fireAction(1))` in an autonomous, `g1.y.press(robot.launcher.fireAllAction())` in TeleOp. Only the launcher: the intake keeps doing what it does |
 | `adjust(steps)` | speed +/- steps x `stepRpm` (not saved) |
 | `trimBy(change)`, `setTrim(percent)`, `resetTrim()`, `trim()` | the [speed trim](#speed-trim-and-battery-compensation): every shot speed (table or fixed) +/- that many percent, e.g. `trimBy(+2)`; kept to +/- `trimMaxPercent` and to the motor's top speed; `resetTrim()` also clears `adjust` |
 | `atMotorLimit()` | true when the trimmed speed is cut to the motor's top speed ("(motor limit)"; more trim up does nothing) |
@@ -778,6 +827,12 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 | `spinAtStart()` | spins up at START (autonomous and TeleOp), ready for the first shot |
 | `hood(Hood)`, `hood()` | the launcher's [hood](#hood): its angle from the table's third column; the launcher waits for it before feeding |
 | `shotAngle(deg)` | for the simulator: which way a piece leaves, degrees up from the wheel shape's forward (the robot's forward for a wheel mounted level; 135 = up and out of the back) |
+| `feedStop(servo)`, `feedStopName()` | a [feed stop](#firing-shot-modes-feed-stop-piece-path): a servo that holds the pieces back until a shot is allowed |
+| `pushedBy(intake...)`, `pushers()` | the parts that push a piece into the wheel, in order: borrowed for each piece, then back as they were |
+| `readyAction(timeoutSec)` | a ready-made action: spin up, done when ready ("Ready to launch") |
+| `shotMode(mode)`, `shotModeNow()`, `sprayEnabled()` | set the [shot mode](#firing-shot-modes-feed-stop-piece-path) by hand (`ShotMode.CAREFUL`, `QUICK`, `SPRAY`; `null` = the launcher chooses, the default); the mode in use |
+| `allianceTrim()` | this alliance's trim from Tunables (`redTrimPercent`, `blueTrimPercent`), percent |
+| `ejectAction()`, `eject()`, `isEjecting()` | one piece out at a low speed (`ejectRpm` 600, `ejectSec` 1): it feeds once the wheel is near that speed (a wheel at shooting speed slows first), then the wheel goes back to what it did ("Eject") |
 
 `Tunables.Launcher` (the section is the flywheel motor's name in CamelCase: a launcher on `shooter` reads `Tunables.Shooter`, its feeder on `feeder` reads `Tunables.Feeder`; [all its numbers](../guides/tunables.md#launcher)): `speedRpm`, `stepRpm`, `readyBandRpm`, `idleRpm`, `shotIntervalSec`,
 `speedByDistance` (`{{inches, rpm}, ...}`, blended between rows; with no goal in view the last speed
@@ -808,6 +863,56 @@ public static double[][] speedByDistanceNectar = {{24, 2400}, {48, 2800}, {72, 3
 
 The Driver Station shows `Shot table: POLLEN, 48 in (camera)` (`odometry`, or `last seen` while no
 goal is seen); with one table, `Shot distance: 48 in (camera)`.
+
+### Firing: shot modes, feed stop, piece path
+
+The launcher chooses how strict it is before each piece, so nobody has to think about it:
+
+| Mode | Waits for the speed | Feed stop | When |
+| --- | --- | --- | --- |
+| CAREFUL | every piece: within `readyBandRpm` for 0.15 s, and every check | opens for each piece | a tap of the fire button; autonomous while there is time |
+| QUICK | the first piece like CAREFUL; the next ones within `quickBandRpm`, or after `quickMaxWaitSec` | opens for each piece | a held fire button; autonomous when CAREFUL will not fit before the park time |
+| SPRAY | no: the wheel only has to turn at half its speed or more | stays open until the last piece | only with `sprayEnabled = true`: the last `sprayLastSec` of TeleOp, and autonomous when QUICK will not fit either |
+
+Autonomous counts the time to the park (`parkWithSeconds(...)`): the pieces still to fire x the time a
+piece takes in each mode (measured from the last volleys, else an estimate). While it fires, the
+Driver Station says `Fire: QUICK (12 s left)`. `robot.launcher.shotMode(ShotMode.CAREFUL)` sets a mode
+by hand (`null` = choose again).
+
+**Feed stop** (`.feedStop("feed_stop")`, only if the robot has one): it goes to `feedStopHold` at START
+(never in INIT: nothing moves before the match), opens to `feedStopRelease` for a piece, and closes when
+the wheel sees the shot (its speed drops), or after `feedStopOpenSec` (0.5 s). The indexer and the pushing
+parts wait `feedStopMoveSec` (0.1 s) while it opens. In CAREFUL and QUICK it closes after each piece, so a
+running intake cannot push a piece into a wheel that is not ready; in SPRAY it stays open until the last
+piece. A roller or belt indexer (a CR servo, a motor) stops when the stop closes. It gets a new position
+only when the position changes. Find `feedStopHold` and `feedStopRelease` with the **Feed Stop Finder**
+(in [Tune and check](../guides/finders.md#tune-and-check-all-of-them-in-one-opmode)).
+
+**Piece path** (`.pushedBy(intake)`, only if a part must push the pieces into the wheel): for each piece,
+the intake runs in for at most `assistSec` (0.25 s) or until the shot is seen, even when the driver has it
+off; then it goes back to what it was doing. **Add the intake before the launcher** in `define()`
+(`intake = add(...)` first): `pushedBy(intake)` needs it. Pushing out (the driver) still wins. A robot that needs no
+push leaves it out, and nothing extra runs. (Last season's intake ran 250 ms after each shot, always.)
+
+**Firing stats** (debug lines, PRACTICE profile only: at an event they are noise): each piece's mode, the
+speed when it was fed, the drop, the time back to ready and the time since the last piece, then one line
+per volley with the average and the worst ([ShotStats](launcher.md#shotstats)). Use them to set
+`quickBandRpm`, `quickMaxWaitSec` and `shotIntervalSec`.
+
+**Alliance trim**: `redTrimPercent` and `blueTrimPercent` (0 at first) make every shot on that alliance a
+little faster or slower, on top of the speed trim: the two field halves are not always the same. One
+table, two small trims.
+
+```java
+intake = add(Intake.motor("intake"));   // first: the launcher's pushedBy(...) needs it
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+        .feedStop("feed_stop")             // only if the robot has one
+        .pushedBy(intake));                // only if the intake must push the pieces in
+public static double feedStopHold = 0.15, feedStopRelease = 0.55;   // Tunables.Launcher: examples, yours differ (Feed Stop Finder)
+public static boolean sprayEnabled = true;                          // optional: SPRAY at the end
+public static double redTrimPercent = 0, blueTrimPercent = 0;       // optional
+// autonomous: .readyToLaunch("Ready", 3) before the drive to the shooting spot, then .action(robot.launcher.fireAllAction())
+```
 
 ### Speed trim and battery compensation
 
@@ -970,11 +1075,20 @@ Its optional Tunables (leave them out for the defaults):
 | `lightingPictures` | 10 | pictures counted per setting |
 | `lightingMinPictures` | 3 | pictures with tags a setting needs to count as good |
 | `lightingAfterStartMs` | 0 | after START, how long to keep trying (ms); 0 = stop at START with the best so far. No targets while it tries |
+| `liveView` | true | a webcam: show its picture in the PRACTICE profile (never at an event: it costs speed). See it on the Driver Station: the menu > Camera Stream, in INIT |
 | `exposureMs` (webcam) | -1 | a fixed manual exposure (ms) when the test is off; -1 = the camera's own |
 | `gain` (webcam) | -1 | the gain for manual exposures; -1 = the camera's highest |
 
 These are read once, in INIT, and are not in the tuning menu: change them in `Tunables.java` and
-install again.
+install again. The section is the camera's name in CamelCase: `Webcam 1` reads `Tunables.Webcam1`,
+`limelight` reads `Tunables.Limelight`.
+
+**Live view** (checking the brightness): a webcam shows its picture in the PRACTICE profile, and INIT
+says `Webcam1 live view: on (PRACTICE): Driver Station menu > Camera Stream, in INIT` (`liveViewOn()`).
+A Limelight's live picture: plug it into a laptop and open http://limelight.local:5801 (seeing it through
+the Control Hub is not checked yet). `isLimelight()` says which camera it is.
+
+**Setting up a Limelight's lighting pipelines**, step by step: [the guide](../guides/limelight-lighting.md).
 
 ## Aim
 
@@ -1023,12 +1137,32 @@ distances differ by more than `cameraOdometryAgree` (6 in), the Driver Station w
 (or one that does not follow). Both at once would chase the same error with two motors and swing back
 and forth, so `robot.aimMode()` stops at INIT with a message on a robot whose turret follows the goal.
 
+**Reverse drive:** `g1.x.toggle(robot.reverseDriveMode()).rumble();` in `Controls.java`. While it is on,
+forward and strafe are flipped, so the back of the robot acts as the front (the turn is not flipped;
+field-centric driving ignores it). The Driver Station says `Drive : REVERSED: the back is the front`.
+Off at START.
+
 **Whole-robot aim** (no turret): one line in `Controls.java`. While it is on, the robot turns to face
 the goal and the driver keeps forward and sideways; moving the turn stick still turns it by hand. Off
 at START. `turnKp`, `turnKd`, `maxTurnPower`, `minTurnPower` (the least power that turns the robot),
 `toleranceDeg` and `cameraOffset` are its numbers (this `cameraOffset` is `Tunables.Aim`'s, for the whole
 robot; a turret has its own in `Tunables.Turret`; the Aim Tuner prints the line for the one your robot
 uses). The Driver Station shows `Aim : camera, 1.5 deg off  AIMED`.
+
+**The aim lock rules** (last season spent about 60 commits on these; now they are the defaults):
+- **Our goal only:** the camera gives this match's alliance goal (`goal("BLUE SCORING", "RED SCORING")`),
+  never the other alliance's.
+- **The button turns aim on only with the goal in view.** A press with no goal leaves it off (with
+  `.rumble()`: one buzz instead of two), and the Driver Station says `Aim mode not on: no goal in view`
+  for 3 s. Code that calls `robot.aimMode().on()` is not checked.
+- **A short hold:** a picture stays good for `cameraMaxAgeMs` (150 ms) when the tag drops out for a moment.
+- **No flicker:** once LOCKED (or AIMED), it stays so until the error passes `toleranceDeg` + `lockMarginDeg`
+  (2 + 1 degrees), so the Goal line, the buzz and a launcher's "aimed" check do not flicker at the edge.
+
+**Aim at the goal with a sweep** (autonomous): `s.aimAtGoal("Aim", 4, 45)`. When the goal is not in view,
+the robot turns slowly (`sweepPower`, 0.3) in steps of `sweepStepDeg` (15) up to 45 degrees to the left,
+then to the right, and looks after each step; once it sees the goal, it aims. Never seen: it turns back
+to where it started and the report says `not seen (swept)`. It never turns blind past the sweep.
 
 ```java
 g1.rb.toggle(robot.aimMode()).says("aim the robot at the goal on/off").rumble();   // Controls.java
@@ -1049,6 +1183,19 @@ sit at the pivot). INIT shows `Moving shot: ON: flight 0.80 s ...`; TeleOp shows
 `Aim: moving shot: lead 12.3 deg, 18 in` while the robot moves, and a debug line with every number.
 Off: nothing changes. The math: [MovingShot](vision.md#movingshot).
 
+**Seen, in range, LOCKED.** On a robot that can aim (a camera with `goal(...)`, or the odometry backup),
+TeleOp always shows one line, so the drivers know when to shoot:
+`Goal : LOCKED (camera, 52 in, 0.8 deg off)`. The stages, each with the ones before it:
+**not seen**; **seen** (the goal is known; also says "out of the shot table's range" when its distance is
+outside the launcher's `speedByDistance` rows); **in range** (inside the table, or the launcher has no
+table); **LOCKED** (the robot's front, or a following turret, within `toleranceDeg`; aim mode does not
+have to be on). Your code can use it too, for lights: `robot.aim().stage() == Aim.Stage.LOCKED`.
+
+**Aim at the goal in an autonomous**: `s.aimAtGoal("Aim", 3)` turns the whole robot to the goal (up to
+4 turns, a fresh reading after each, until within `toleranceDeg`; `maxTurnPower`), or, with a turret
+that follows the goal, waits until it is aimed. It never turns blind: with no goal it waits up to the
+time limit, and the report says `not seen`. The auto builder has it as "+ Aim at the goal".
+
 **The aim buzz**: `g2.rumbleWhenAimed();` buzzes that gamepad while the aim is within `rumbleDeg`, the
 closer the stronger and longer (an [AimRumble](gamepad.md)). It follows a turret that is following, or
 whole-robot aim; nothing while neither aims, or while paused.
@@ -1060,6 +1207,7 @@ whole-robot aim; nothing while neither aims, or while paused.
 | `odometryProblem()`, `disagreement()` | why the odometry backup is off now, ""  if it works; the camera/odometry distance warning, "" if they agree |
 | `hasGoalPoint()` | `Tunables.Aim` has `goalX` and `goalY` |
 | `mode()` (= `robot.aimMode()`) | whole-robot aim (stops with a message on a robot whose turret follows the goal) |
+| `canAim()`, `stage()` | the robot can find the goal at all (a camera with a goal, or the odometry backup); NOT_SEEN, SEEN, IN_RANGE or LOCKED now (`Stage.words()`: "not seen" ... "LOCKED") |
 | `errorDeg()`, `isAimed()`, `rumbleDeg()` | degrees off now (NaN = unknown); aimed (whole robot within `toleranceDeg`, or the following turret's `isAimed()`: on the goal now). While shooting on the move: off the virtual goal |
 | `movingShotMode()` | shooting on the move on/off (on from START with `shootOnMove = true`): `g2.a.toggle(robot.aim().movingShotMode())` |
 | `isMovingShot()`, `lead()` | it is on and the robot moves (over 2 in/s or 5 deg/s); the last lead (a [MovingShot](vision.md#movingshot) `Result`: `leadDeg`, `leadIn`, `distanceIn`), null if none |
@@ -1512,6 +1660,10 @@ What [`Steps`](#auto) can do:
 | `isYes(label)`, `choice(label)` | read a choice |
 | `move(label, inches, directionDeg, power)` | drive (0 forward, 90 right: clockwise, like a compass) |
 | `turn(label, degrees, power)`, `turnTo(label, headingDeg, power)` | turn by an angle / to a heading (90 = left: counterclockwise, the other way from a move's direction) |
+| `aimAtGoal(label, timeoutSec)` | turn to the goal with the camera (or the odometry backup), or wait for a following turret; "not seen" in the report if there was no goal ([Aim](#aim)) |
+| `aimAtGoal(label, timeoutSec, sweepDeg)` | the same, with a [sweep](#aim) when the goal is not in view: up to `sweepDeg` each way, slowly, then aim. A turret that follows the goal does not sweep: the step waits for the turret |
+| `rememberHeading(label)`, `turnBack(label, maxPower)` | save the heading now; later turn back to it (without odometry pods it uses the IMU: better than nothing). The same as `AutoRoutine`'s `rememberHeading` / `returnToHeading` |
+| `readyToLaunch(label, timeoutSec)` | spin the launcher up and WAIT until it is ready to fire, then go on; the speed keeps following the distance in the next steps ([Firing](#firing-shot-modes-feed-stop-piece-path)). To spin up while the next step drives instead: `.run("Spin up", robot.launcher::spinUp)` |
 | `driveTo(label, xIn, yIn, headingDeg, power[, toleranceIn][, PathAt...])` | drive to a field point and heading with the odometry, correcting all the way (mecanum; needs `Tunables.Odometry.checked` on a robot) ([driveTo](../guides/autonomous-builder.md#drive-to-a-field-point-driveto)); [`PathAt`](#pathat) starts things on the way |
 | `follow(label, path[, timeoutSec][, PathAt...])` | follow a path with the robot's [path follower](#pathfollower) ([pedro](pedro.md)); [`PathAt`](#pathat) starts things along it |
 | `run(label, command)` | start something and go on at once |

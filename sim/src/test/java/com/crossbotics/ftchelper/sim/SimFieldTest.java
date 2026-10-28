@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.Rule;
@@ -85,8 +86,11 @@ public class SimFieldTest {
         Files.write(robotFile.toPath(), (base + "\nfield.model = fields/test.glb\n").getBytes("UTF-8"));
         SimRobot r = SimRobot.load(robotFile.toPath());
         assertEquals(new File(fields, "test.glb").getCanonicalFile(), r.fieldModel.toFile().getCanonicalFile());
-        assertEquals("no field.model: the page builds the field from the field file", null,
-                SimRobot.load(new File("robots/starter.properties").toPath()).fieldModel);
+        Path own = SimRobot.load(new File("robots/starter.properties").toPath()).fieldModel;
+        assertTrue("no field.model: the library's model of the field (sim/fields/biobuzz-2026.glb): " + own,
+                own != null && own.getFileName().toString().equals("biobuzz-2026.glb"));
+        assertEquals("an unknown field: no model (the page builds the field from the field file)", null,
+                SimRobot.libraryFieldModel("no-such-field"));
         Files.write(robotFile.toPath(), (base + "\nfield.model = fields/missing.glb\n").getBytes("UTF-8"));
         try {
             SimRobot.load(robotFile.toPath());

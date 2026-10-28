@@ -37,6 +37,8 @@ final class SimJson {
         field(b, "error", ds.error()).append(',');
         // The robot file's stand-ins this INIT used for MEASURE numbers (simulator only), "" = none.
         field(b, "standIns", ds.standInNote()).append(',');
+        // A newer library release is out (sim/library-version.gradle), "" = none or not asked.
+        field(b, "libUpdate", System.getProperty("sim.libUpdate", "")).append(',');
         // INIT of an autonomous with its start spot in words only: drag the robot there (SimEngine.placeNote).
         field(b, "placeNote", ds.phase() == SimDriverStation.Phase.INIT ? sim.placeNote : "").append(',');
         field(b, "next", ds.next).append(',');

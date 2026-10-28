@@ -27,16 +27,16 @@ def robotProject = useTeamCode ? teamCodeDir.parentFile : null
 def teamRobotFile = robotProject != null ? new File(robotProject, 'simulator/robot.properties') : null
 
 android {
-    namespace 'com.crossbotics.ftchelper.sim'
-    compileSdk 30
+    namespace = 'com.crossbotics.ftchelper.sim'
+    compileSdk = 30
 
     defaultConfig {
-        minSdk 24
+        minSdk = 24
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
 
     sourceSets {
@@ -99,6 +99,8 @@ if (useTeamCode) {
     }
 }
 
+apply from: 'library-version.gradle'   // "a newer version is out" note, and :sim:updateLibrary
+
 // Finder results and Characterizer logs from simulator runs go here (on a robot: /sdcard/FIRST/ftc-helper).
 def simDataDir = new File(buildDir, 'sim-data').path
 
@@ -133,6 +135,12 @@ tasks.register('run', JavaExec) {
     systemProperty 'ftchelper.dataDir', simDataDir
     // the robot file from Robot.java first; -ProbotClass is also the class whose .looks(...) Edit robot prints
     fromRobotProperties(it)
+    // A newer library release? Said here (the Run window) and under the simulator's Driver Hub. -PnoUpdateCheck: not asked.
+    doFirst {
+        def note = libraryUpdateNote()
+        if (note) logger.lifecycle("\n*** ${note}\n")
+        systemProperty 'sim.libUpdate', note
+    }
 }
 
 // ./gradlew :sim:scenario -Pfile=path/to/test.sim [-Probot=...] [-PnoFromRobot]   (several: -Pfile=a.sim,b.sim; a folder: every .sim in it)
@@ -251,3 +259,7 @@ tasks.register('fit', JavaExec) {
             (project.hasProperty('write') ? ['--write'] : []) + (project.hasProperty('force') ? ['--force'] : []) +
             (sample ? ['--sample'] : [])
 }
+
+// Java 8 is what the robot needs; the newer Java that builds it warns "source value 8 is obsolete" on
+// every module. A known, harmless warning: hidden, so a real problem stands out.
+tasks.withType(JavaCompile).configureEach { options.compilerArgs.add("-Xlint:-options") }

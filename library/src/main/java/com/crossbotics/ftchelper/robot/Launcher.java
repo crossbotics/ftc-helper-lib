@@ -4,6 +4,9 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.crossbotics.ftchelper.hardware.MotorSetup;
 import com.crossbotics.ftchelper.launcher.Feeder;
 import com.crossbotics.ftchelper.launcher.Flywheel;
+import com.crossbotics.ftchelper.launcher.Launcher.ShotMode;
+import com.crossbotics.ftchelper.match.Alliance;
+import com.crossbotics.ftchelper.match.MatchTimer;
 import com.crossbotics.ftchelper.launcher.ShotTable;
 import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
 import com.crossbotics.ftchelper.tuning.Tunable;
@@ -140,6 +143,35 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     private boolean holding = false;
     private int heldShots = 0;
     private double shotAngleDeg = Double.NaN;
+    // The feed stop's device (feedStop(...)), or null; the parts that push a piece in (pushedBy(...)).
+    private String feedStopDevice = null;
+    private final java.util.List<Intake> pushers = new java.util.ArrayList<>();
+    private ShotGate gate = null;
+    // The shot mode: set in code (shotMode(...)), or null = the launcher chooses (see chooseMode()).
+    private ShotMode forcedMode = null;
+    // The mode in use now, and why (for the Driver Station: "QUICK (12 s left)").
+    private ShotMode modeNow = ShotMode.CAREFUL;
+    private String modeWhy = "";
+    // SPRAY: allowed at all (Tunables sprayEnabled), and the last seconds of TeleOp it takes over.
+    private boolean sprayOn = false;
+    private double sprayLastSec = 5;
+    // The alliance trims, percent (each half of the field can differ a little).
+    private double redTrimPct = 0, blueTrimPct = 0;
+    // Eject (ejectAction): one piece out at a low speed. On while ejecting, until when (seconds), and
+    // whether it was spinning before (it goes back to that). Tunables ejectRpm 600, ejectSec 1.
+    private boolean ejecting = false;
+    private double ejectUntil = 0;
+    // Eject: the piece was fed (else it waits for the wheel near ejectRpm), and the latest it may wait.
+    private boolean ejectFed = false;
+    private double ejectGiveUpAt = 0;
+    /** Eject feeds only with the wheel within this share of ejectRpm (0.5 to 1.5 x): not too slow, not too fast. */
+    static final double EJECT_BAND = 0.5;
+    /** Eject waits at most this long for the wheel to slow to (or reach) the eject speed, seconds. */
+    static final double EJECT_SLOW_SEC = 3;
+    private boolean spinningBeforeEject = false;
+    private double ejectRpm = 600, ejectSec = 1;
+    // The distance to use before any goal was seen (Tunables fallbackDistanceIn); NaN = none.
+    private double fallbackDistanceIn = Double.NaN;
 
     private Launcher(String motor, String motorId) {
         super(motor);
@@ -173,6 +205,48 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     /** The hood given with {@link #hood(Hood)}, or null. */
     public Hood hood() {
         return hood;
+    }
+
+    /**
+     * A feed stop: a servo that holds the pieces back until a shot is allowed. It goes to {@code feedStopHold}
+     * at START (never in INIT), opens to {@code feedStopRelease} for each piece, and closes when the wheel
+     * sees the shot (its speed drops), or after {@code feedStopOpenSec} at most. In a QUICK or SPRAY stream it
+     * stays open until the last piece. Tunables (this launcher's section): {@code feedStopHold},
+     * {@code feedStopRelease} (servo positions: the Feed Stop Finder, in Tune and check), {@code feedStopOpenSec} (0.5),
+     * {@code feedStopMoveSec} (0.1, the time it takes to open).
+     *
+     * @param servo the feed stop servo's configuration name
+     */
+    public Launcher feedStop(String servo) {
+        if (servo == null || servo.trim().isEmpty()) throw new IllegalArgumentException("Robot.java: " + name() + ".feedStop(name): the servo's configuration name");
+        feedStopDevice = servo;
+        return this;
+    }
+
+    /**
+     * The parts that push a piece into the wheel, in order (e.g. the intake that rolls it up a ramp).
+     * For each piece they run in, even when the driver has them off, for at most {@code assistSec}
+     * (Tunables, 0.25) or until the shot is seen; then each goes back to what it was doing. Pushing out
+     * (the driver) still wins. A robot whose pieces need no push leaves this out.
+     *
+     * @param parts the intakes, in order
+     */
+    public Launcher pushedBy(Intake... parts) {
+        for (Intake p : parts) {
+            if (p == null) throw new IllegalArgumentException("Robot.java: " + name() + ".pushedBy(...): a part is null (add it first)");
+            if (!pushers.contains(p)) pushers.add(p);
+        }
+        return this;
+    }
+
+    /** The feed stop's configuration name, or null. */
+    public String feedStopName() {
+        return feedStopDevice;
+    }
+
+    /** The parts that push a piece in ({@link #pushedBy}), in order (read only). */
+    public java.util.List<Intake> pushers() {
+        return java.util.Collections.unmodifiableList(pushers);
     }
 
     /** The indexer that feeds it. Without one, {@link #fire()} only spins up. */
@@ -367,10 +441,53 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         // A feeder marked optional() and not in the configuration: no feeding (pieces go in some other way,
         // e.g. pushed by the intake); the launcher still spins and its "fire" waits for nothing.
         Feeder feed = indexer != null && !indexer.missing ? indexer.forLauncher() : new NoFeeder();
+        // A feed stop or pushing parts: one feed opens the stop, runs the pushers and the indexer, and
+        // ends when the wheel sees the shot (ShotGate).
+        gate = null;
+        if (feedStopDevice != null || !pushers.isEmpty()) {
+            for (Intake p : pushers) {
+                if (p.robot != robot) throw new IllegalStateException("Robot.java: " + name() + ".pushedBy(" + p.name()
+                        + "): that intake is not added: write it with add(...) first");
+            }
+            com.qualcomm.robotcore.hardware.Servo stopServo = null;
+            double hold = 0, release = 0;
+            if (feedStopDevice != null) {
+                stopServo = devices.get(com.qualcomm.robotcore.hardware.Servo.class, feedStopDevice);
+                hold = t.has("feedStopHold") ? t.number("feedStopHold", 0) : 0;
+                release = t.has("feedStopRelease") ? t.number("feedStopRelease", 0.5) : 0.5;
+                if (!t.has("feedStopHold") && !t.has("feedStopRelease")) {
+                    numberNotes.add(name() + ": feed stop " + feedStopDevice + ": no positions written: hold 0, release 0.5 are "
+                            + "library guesses: find yours with the Feed Stop Finder in Tune and check (Tunables." + name() + ".feedStopHold, feedStopRelease)");
+                }
+            }
+            // The stop stays open between pieces only in SPRAY (get everything out). CAREFUL and QUICK
+            // close it after each piece, so a running intake cannot push a piece into a wheel not ready yet.
+            final java.util.function.BooleanSupplier stream = () -> part != null && part.getShotsLeft() > 0
+                    && part.getShotMode() == ShotMode.SPRAY;
+            double openSec = t.has("feedStopOpenSec") ? t.number("feedStopOpenSec", 0.5) : 0.5;
+            double assistSec = t.has("assistSec") ? t.number("assistSec", 0.25) : 0.25;
+            double moveSec = t.has("feedStopMoveSec") ? Math.abs(t.number("feedStopMoveSec", 0.1)) : 0.1;
+            gate = new ShotGate(stopServo, hold, release, openSec,
+                    indexer != null && !indexer.missing ? feed : null, indexer != null && indexer.isServo(),
+                    pushers, assistSec, moveSec,
+                    flywheel, stream);
+            gate.clock = clock;
+            feed = gate;
+        }
         part = new com.crossbotics.ftchelper.launcher.Launcher(flywheel, feed)
                 .idleRpm(t.number("idleRpm", 0))
                 .shotInterval(t.number("shotIntervalSec", 0.25));
         for (int i = 0; i < checks.size(); i++) part.requireReady(checkNames.get(i), checks.get(i));
+        // The shot modes (all optional: read only when written, so no "missing" note).
+        if (t.has("quickBandRpm")) part.quickBand(t.number("quickBandRpm", Double.NaN));
+        if (t.has("quickMaxWaitSec")) part.quickMaxWait(t.number("quickMaxWaitSec", 0.3));
+        sprayOn = t.has("sprayEnabled") && t.flag("sprayEnabled", false);
+        sprayLastSec = t.has("sprayLastSec") ? Math.max(0, t.number("sprayLastSec", 5)) : 5;
+        redTrimPct = t.has("redTrimPercent") ? t.number("redTrimPercent", 0) : 0;
+        blueTrimPct = t.has("blueTrimPercent") ? t.number("blueTrimPercent", 0) : 0;
+        fallbackDistanceIn = t.has("fallbackDistanceIn") ? t.number("fallbackDistanceIn", Double.NaN) : Double.NaN;
+        ejectRpm = t.has("ejectRpm") ? Math.abs(t.number("ejectRpm", 600)) : 600;
+        ejectSec = t.has("ejectSec") ? Math.abs(t.number("ejectSec", 1)) : 1;
         // The hood (built before this module): the launcher sends it the table's angle and waits for it.
         // The hood moves for changes over 1/100 of its range (0.25 deg for 25 deg), so camera jitter
         // does not keep it "moving" (degrees, servo positions or ticks alike).
@@ -463,6 +580,12 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     }
 
     @Override
+    List<String> deviceNames() {
+        if (feedStopDevice == null) return super.deviceNames();
+        return java.util.Arrays.asList(device, feedStopDevice);
+    }
+
+    @Override
     String defaultSourceId() {
         return motorId;
     }
@@ -518,6 +641,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
 
     @Override
     void start() {
+        if (gate != null) gate.start();
         if (usesDistance()) speedMode.on();
         if (spinAtStart) {
             spinning = true;
@@ -567,6 +691,185 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         askedToFire = true;
         spinning = true;
         part.shoot(count);
+    }
+
+    /**
+     * A ready-made action: fires {@code count} pieces and is done when the last one has left (or after
+     * 3 s + 2 s a piece). In an autonomous: {@code .action(robot.launcher.fireAction(2))}; the auto
+     * builder lists it as "Fire X". It uses only the launcher, so the intake keeps doing what it does.
+     */
+    public Action fireAction(int count) {
+        if (count < 1) throw new IllegalArgumentException(name() + ".fireAction(" + count + "): fire at least 1 piece");
+        return Action.named(count == 1 ? "Fire 1" : "Fire " + count)
+                .then(() -> fire(count))
+                .waitUntil("the shots", () -> !isShooting(), 3 + 2.0 * count);
+    }
+
+    /**
+     * A ready-made action: fires every piece the robot holds, then is done. How many: the count from a
+     * {@code Pieces} part if Robot.java has one (nothing held: nothing fired), else what the intake holds
+     * ({@code holds(...)}), else the game's limit ({@link Pieces#GAME_LIMIT}).
+     */
+    public Action fireAllAction() {
+        int most = mostHeld();
+        return Action.named("Fire all")
+                .then(() -> { int n = heldNow(most); if (n > 0) fire(n); })
+                .waitUntil("the shots", () -> !isShooting(), 3 + 2.0 * most);
+    }
+
+    /**
+     * A ready-made action: spins up (the speed from the distance, with {@code speedFromDistance}) and is
+     * done when the wheel is at speed and every check passes, or after {@code timeoutSec} (the report says
+     * "timed out"). Use it before driving to the shooting spot, so the first shot goes at once. In an
+     * autonomous: {@code .readyToLaunch("Ready", 3)}; the auto builder lists it as "Ready to launch".
+     */
+    public Action readyAction(double timeoutSec) {
+        return Action.named("Ready to launch")
+                .then(this::spinUp)
+                .waitUntil("the launcher ready", this::isReady, timeoutSec);
+    }
+
+    /**
+     * A ready-made action: one piece out through the launcher at a low speed ({@code ejectRpm}, 600, for
+     * {@code ejectSec}, 1 s), e.g. a wrong-colour piece. It feeds once the wheel is near the eject speed
+     * (half to one and a half times it: a wheel at shooting speed slows down first, up to 3 s), then the
+     * wheel goes back to what it did before. "Eject" in the auto
+     * builder's Action list; TeleOp: {@code g2.b.press(robot.launcher.ejectAction())}.
+     */
+    public Action ejectAction() {
+        return Action.named("Eject")
+                .then(this::eject)
+                .waitUntil("the piece out", () -> !ejecting, ejectSec + EJECT_SLOW_SEC + 1);
+    }
+
+    /** Starts an eject now (see {@link #ejectAction()}). */
+    public void eject() {
+        needBuilt(part);
+        touch();
+        if (!ejecting) spinningBeforeEject = spinning;
+        ejecting = true;
+        ejectFed = false;
+        ejectGiveUpAt = clock.getAsLong() / 1e9 + EJECT_SLOW_SEC;
+        spinning = true;
+        part.stopShooting();
+        if (gate != null) gate.cancel();
+        part.setRpm(ejectRpm);
+        part.speedScale(1);
+        part.shotMode(ShotMode.SPRAY);
+        part.spinUp();
+    }
+
+    // The eject is over (done, cancelled or given up): no piece on its way, and the wheel as it was.
+    private void endEject() {
+        ejecting = false;
+        part.stopShooting();
+        if (gate != null) gate.cancel();
+        spinning = spinningBeforeEject;
+        if (spinning) part.spinUp();
+        else part.idle();
+    }
+
+    /** True while ejecting. */
+    public boolean isEjecting() {
+        return ejecting;
+    }
+
+    /**
+     * Sets the shot mode by hand: {@code ShotMode.CAREFUL}, {@code QUICK} or {@code SPRAY} (see
+     * {@link com.crossbotics.ftchelper.launcher.Launcher.ShotMode}). {@code null} = the launcher chooses
+     * (the default): a tap fires CAREFUL, a held button QUICK; in autonomous CAREFUL while there is time,
+     * QUICK when CAREFUL will not fit before the park time, SPRAY when QUICK will not fit either; in
+     * TeleOp's last {@code sprayLastSec}, SPRAY. SPRAY only with {@code Tunables...sprayEnabled = true}.
+     */
+    public void shotMode(ShotMode mode) {
+        forcedMode = mode;
+    }
+
+    /** The shot mode in use now. */
+    public ShotMode shotModeNow() {
+        return modeNow;
+    }
+
+    // For robot.features(): "on (the last 5 s of TeleOp)" or "off (Tunables sprayEnabled = true)".
+    String sprayWords(TunableSection t) {
+        boolean on = t.has("sprayEnabled") && t.flag("sprayEnabled", false);
+        double last = t.has("sprayLastSec") ? t.number("sprayLastSec", 5) : 5;
+        return on ? fmt("on (the last %.0f s of TeleOp)", last) : "off (Tunables sprayEnabled = true)";
+    }
+
+    /** True when Tunables lets the launcher SPRAY ({@code sprayEnabled = true}). */
+    public boolean sprayEnabled() {
+        return sprayOn;
+    }
+
+    // The mode for the next piece, and why. Asked every loop, so it follows the time left.
+    private ShotMode chooseMode() {
+        modeWhy = "";
+        if (forcedMode != null) {
+            modeWhy = "set in code";
+            return forcedMode;
+        }
+        MatchTimer timer = MatchTimer.current();
+        if (timer != null && timer.isRunning()) {
+            if (timer.isAutonomous()) {
+                int left = part.getShotsLeft();
+                double time = timer.secondsLeft() - timer.reserveSec();
+                modeWhy = fmt("%.0f s left", Math.max(0, time));
+                if (left == 0 || time >= left * secPerShot(ShotMode.CAREFUL)) return ShotMode.CAREFUL;
+                if (!sprayOn || time >= left * secPerShot(ShotMode.QUICK)) return ShotMode.QUICK;
+                return ShotMode.SPRAY;
+            }
+            if (sprayOn && sprayLastSec > 0 && timer.secondsLeft() <= sprayLastSec) {
+                modeWhy = fmt("last %.0f s", sprayLastSec);
+                return ShotMode.SPRAY;
+            }
+        }
+        return holding ? ShotMode.QUICK : ShotMode.CAREFUL;
+    }
+
+    /**
+     * About how long one piece takes in this mode, seconds: the measured average time between pieces
+     * (two or more measured), else an estimate: CAREFUL the time between shots + 0.35 s to get back to
+     * speed, QUICK the time between shots + the QUICK wait, SPRAY the time between shots.
+     */
+    double secPerShot(ShotMode mode) {
+        double sum = 0;
+        int n = 0;
+        for (java.util.List<com.crossbotics.ftchelper.launcher.ShotStats.Shot> v : java.util.Arrays.asList(
+                part.getShotStats().lastVolley(), part.getShotStats().volley())) {
+            for (com.crossbotics.ftchelper.launcher.ShotStats.Shot s : v) {
+                if (s.mode == mode && !Double.isNaN(s.gapSec)) { sum += s.gapSec; n++; }
+            }
+        }
+        if (n >= 2) return sum / n;
+        double interval = part.getShotInterval();
+        if (mode == ShotMode.SPRAY) return interval;
+        if (mode == ShotMode.QUICK) return interval + part.getQuickMaxWait();
+        return interval + 0.35;
+    }
+
+    // The most the robot can hold: the intake's holds(...) or the game's limit.
+    private int mostHeld() {
+        if (robot != null) {
+            for (Module<?> m : robot.modules()) {
+                if (m instanceof Intake && ((Intake) m).holdsInAll() > 0) return ((Intake) m).holdsInAll();
+            }
+        }
+        return Pieces.GAME_LIMIT;
+    }
+
+    // How many to fire now: a Pieces part's count if there is one, else the most the robot holds.
+    private int heldNow(int most) {
+        if (robot != null) {
+            for (Module<?> m : robot.modules()) if (m instanceof Pieces && m.isPresent()) return ((Pieces) m).count();
+        }
+        return most;
+    }
+
+    /** True if a shot table is in use and the distance is inside its tested rows; null with no table (fixed speed). */
+    Boolean inRange(double distanceIn) {
+        if (tableName == null || tables.get(tableName) == null || Double.isNaN(distanceIn)) return null;
+        return tables.get(tableName).covers(distanceIn);
     }
 
     /**
@@ -839,6 +1142,30 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
 
     @Override
     public void update() {
+        if (ejecting) {
+            // Ejecting: the low speed, no trim, no wait for the speed; then back to what it did before.
+            part.setRpm(ejectRpm);
+            part.speedScale(1);
+            part.shotMode(ShotMode.SPRAY);
+            modeNow = ShotMode.SPRAY;
+            modeWhy = "eject";
+            double now = clock.getAsLong() / 1e9;
+            double rpm = Math.abs(flywheel.getRpm());
+            if (!ejectFed) {
+                // Feed only near the eject speed: a wheel still at shooting speed would throw it hard.
+                if (rpm >= (1 - EJECT_BAND) * ejectRpm && rpm <= (1 + EJECT_BAND) * ejectRpm) {
+                    part.shoot(1);
+                    ejectFed = true;
+                    ejectUntil = now + ejectSec;
+                } else if (now >= ejectGiveUpAt) {
+                    endEject();
+                }
+            } else if (now >= ejectUntil && !part.isShooting()) {
+                endEject();   // the piece's feed has finished (a feed stop closed) and the time is up
+            }
+            part.update();
+            return;
+        }
         // A sensor (or other code) that picks the table: a NEW answer picks it.
         if (tableSupplier != null) {
             String now = tableSupplier.get();
@@ -857,6 +1184,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
             if (seen == null || !seen.hasDistance()) seen = robot.aim().fromOdometry();
             distanceSource = Aim.sourceOf(seen);
             if (seen != null && seen.hasDistance()) lastDistance = seen.distanceIn;
+            // Never seen a goal yet: the fallback distance from Tunables, if there is one.
+            if (Double.isNaN(lastDistance) && !Double.isNaN(fallbackDistanceIn)) lastDistance = fallbackDistanceIn;
             // No goal at all: keep the last distance, so the last speed (a sudden change would spoil
             // the next shot). Before the first one: speedRpm.
             boolean hoodTable = hoodFromTable();
@@ -880,11 +1209,13 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         }
         // The trim multiplies whichever speed was chosen: +3% = x 1.03. Never past the motor's top speed:
         // the flywheel would cut it anyway, silently, and the trim on the screen would be a lie.
-        double scale = 1 + trimPct / 100.0;
+        double scale = 1 + (trimPct + allianceTrim()) / 100.0;
         double base = part.getShotRpm(), top = flywheel.getMaxRpm();
         atMotorLimit = base > 0 && base * scale >= top - 1e-6;
         if (base > 0 && base * scale > top) scale = top / base;
         part.speedScale(scale);
+        modeNow = chooseMode();
+        part.shotMode(modeNow);
         part.update();
     }
 
@@ -892,6 +1223,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     public void stop() {
         if (part == null) return;
         touch();
+        ejecting = false;   // an explicit stop stays stopped
         spinning = false;
         part.stop();
     }
@@ -923,8 +1255,10 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
 
     @Override
     void halt() {
+        if (ejecting && part != null) endEject();
         shotsAtPause = 0;                         // a cancel while paused drops them too
         if (part != null) part.stopShooting();   // drop the shots still waiting; keep the speed
+        if (gate != null) gate.cancel();         // and the piece on its way: no late indexer push
     }
 
     // An action that fires: how many shots the launcher had fired when the action took it, and whether
@@ -966,10 +1300,12 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         if (!tableProblem.isEmpty()) t.warn(name() + ": " + tableProblem);
         // First: the trim and READY, the two things the operator glances at. Always with the speed from
         // the distance (the operator sees it is 0), else when used.
-        if (usesDistance() || trimPct != 0 || adjustSteps != 0 || atMotorLimit) {
+        if (usesDistance() || trimPct != 0 || adjustSteps != 0 || atMotorLimit || allianceTrim() != 0) {
             t.line("Speed trim", trimWords() + (part.isReady() ? "  READY" : ""));
         }
         if (offered != null) t.line("Trim last time", lastTrimOffered() + " (double-tap D-pad up to use it)");
+        // While it fires: how strict it is, and why ("Fire: QUICK (12 s left)").
+        if (part.isShooting()) t.line("Fire", modeNow + (modeWhy.isEmpty() ? "" : " (" + modeWhy + ")"));
         // The distance and where it came from, e.g. "48 in (camera)"; "(last seen)" while no goal is seen.
         String where = !speedMode.isOn() || tableName == null ? "" : Double.isNaN(lastDistance) ? "no goal yet"
                 : fmt("%.0f in (%s)", lastDistance, distanceSource == Aim.Source.NONE ? "last seen" : distanceSource.words());
@@ -981,10 +1317,19 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         part.addTelemetry(t);
     }
 
+    /** The trim for this alliance from Tunables ({@code redTrimPercent}, {@code blueTrimPercent}), percent. */
+    public double allianceTrim() {
+        Alliance a = robot == null ? null : robot.alliance();
+        return a == Alliance.RED ? redTrimPct : a == Alliance.BLUE ? blueTrimPct : 0;
+    }
+
     // "+3%", "+200 rpm", "+200 rpm, -2%", "0%"; "(limit)" at trimMaxPercent, "(motor limit)" at the
     // motor's top speed.
     private String trimWords() {
         String w = trimWords(trimPct, adjustSteps);
+        // The alliance trim from Tunables, on top of the driver's: shown, so no speed change is hidden.
+        double a = allianceTrim();
+        if (a != 0) w += " (" + percent(a, true) + " " + (robot.alliance() == Alliance.RED ? "RED" : "BLUE") + ")";
         if (atMotorLimit) return w + " (motor limit)";
         if (trimPct != 0 && Math.abs(trimPct) >= trimMaxPct) return w + " (limit)";
         return w;
@@ -1040,8 +1385,18 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
 
     @Override
     void simLines(List<String> out, TunableSection t) {
-        String feederLine = indexer != null ? ", feeder=" + indexer.device : "";
-        out.add(fmt("motor.%s = flywheel, %s%s, shotDrop=0.15", device, motorWords(motorId, "gobilda-5203-6000"), feederLine)
+        // The feeder: the indexer, else the first part that pushes pieces in (pushedBy).
+        String feederLine = indexer != null ? ", feeder=" + indexer.device
+                : !pushers.isEmpty() ? ", feeder=" + pushers.get(0).deviceNames().get(0) : "";
+        // A feed stop: pieces go in only while it is at the release position.
+        String stopLine = "";
+        if (feedStopDevice != null) {
+            double hold = t.has("feedStopHold") ? t.number("feedStopHold", 0) : 0;
+            double release = t.has("feedStopRelease") ? t.number("feedStopRelease", 0.5) : 0.5;
+            out.add(fmt("servo.%s = %.2f, part=gobilda-2000-speed", feedStopDevice, hold));
+            stopLine = fmt(", stop=%s, stopOpen=%.2f", feedStopDevice, release);
+        }
+        out.add(fmt("motor.%s = flywheel, %s%s%s, shotDrop=0.15", device, motorWords(motorId, "gobilda-5203-6000"), feederLine, stopLine)
                 + simTodo(motorId));
         // No looks(...): a common flywheel wheel (its size from the catalog) on top in the middle, or on
         // the robot's one turret (it turns with it: the shots go where the turret points). A launcher with

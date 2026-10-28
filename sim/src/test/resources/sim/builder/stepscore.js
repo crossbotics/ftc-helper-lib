@@ -18,12 +18,17 @@
 //          { kind: 'wait', label, sec }
 //          { kind: 'run', label, code }                      starts a command, goes on at once
 //          { kind: 'action', code, timeout }                 runs an action from Actions.java and waits
+//          { kind: 'aim', label, timeout }                   aimAtGoal: turns to the goal (camera / odometry)
+//          { kind: 'ready', label, timeout }                 readyToLaunch: spins the launcher up, waits until ready
+//          { kind: 'remember', label }                       rememberHeading: saves the heading now
+//          { kind: 'back', label, power }                    turnBack: turns back to the saved heading
+//          (aim: sweep = degrees each way to look for the goal; 0 or missing = no sweep)
 //          { kind: 'alongside', code }                       starts an action, goes on at once
 //          { kind: 'park', sec }                             parkWithSeconds: the steps after it get the last sec
 import { wrap, num, round1, headingOf, footprint, checkHits, otherAlliance, pointInPoly, polysOverlap,
 	javaString, tokenize, readArgs, evalNum } from './pathcore.js';
 
-export const KINDS = ['move', 'turn', 'turnTo', 'wait', 'run', 'action', 'alongside', 'park'];
+export const KINDS = ['move', 'turn', 'turnTo', 'wait', 'run', 'action', 'aim', 'ready', 'remember', 'back', 'alongside', 'park'];
 export const AUTO_SEC = 30;
 export const MOVE_TIMEOUT_SEC = 10;       // AutoDriveConfig.actionTimeoutSec: a move or turn longer than this ends TIMED_OUT
 export const ACTION_TIMEOUT_SEC = 10;     // Steps.action(a) without a time limit
@@ -35,7 +40,8 @@ export const DEFAULT_SPEEDS = { inPerSec: 40, degPerSec: 180, settleSec: 0.3 };
 export const COMMON_COMMANDS = ['robot.claw::close', 'robot.claw::open', 'robot.intake::in', 'robot.intake::out', 'robot.intake::stop',
 	'robot.launcher::spinUp', 'robot.launcher::stop', '() -> robot.lift.goTo("high")', '() -> robot.lift.goTo("low")',
 	'() -> robot.arm.goTo("up")', '() -> robot.arm.goTo("down")'];
-export const COMMON_ACTIONS = ['Actions.scoreHigh(robot)', 'Actions.scoreLow(robot)', 'Actions.fireAll(robot)',
+export const COMMON_ACTIONS = ['robot.launcher.fireAllAction()', 'robot.launcher.fireAction(1)', 'robot.launcher.ejectAction()',
+	'Actions.scoreHigh(robot)', 'Actions.scoreLow(robot)', 'Actions.fireAll(robot)',
 	'Actions.fireAllWithIntake(robot)', 'Actions.grab(robot)', 'Actions.stow(robot)'];
 
 const clampPower = (p) => Math.max(0.1, Math.min(1, Number.isFinite(+p) ? +p : 0.5));   // AutoDrive clamps to 0.1..1
@@ -147,6 +153,10 @@ export function stepSeconds(step, h, startH, speeds = DEFAULT_SPEEDS) {
 		}
 		case 'wait': return Math.max(0, +step.sec || 0);
 		case 'action': return Math.max(0, Number.isFinite(+step.timeout) ? +step.timeout : ACTION_TIMEOUT_SEC);
+		case 'aim': return Math.min(1, Math.max(0, +step.timeout || 0));   // a short turn when the goal is in view
+		case 'ready': return Math.min(1.5, Math.max(0, +step.timeout || 0));   // a spin-up
+		case 'remember': return 0;
+		case 'back': return 1;   // a turn back (its size is only known on the robot)
 		default: return 0;
 	}
 }
@@ -227,11 +237,11 @@ export function startChecks(start, robot, field, obs, half) {
 	const hits = checkHits([{ x: +start.x, y: +start.y, h: +start.h || 0, part: 0 }], obs, half, L, W).hits.map((h) => h.name);
 	for (const n of hits) {
 		out.push({ level: 'bad', text: n === 'the wall'
-			? 'The start spot is past the field wall: the simulator refuses it ("the start position overlaps the field wall").'
+			? 'The start spot is past the field wall: the simulator refuses it ("the start position overlaps the field wall"). Drag the green dot a little, or pick a Spot from the list.'
 			: `The robot starts on ${n}: move it (the simulator refuses a start that overlaps a field part).` });
 	}
 	const gap = Math.min(...fp.map(([x, y]) => Math.min(half - Math.abs(x), half - Math.abs(y))));
-	if (!hits.includes('the wall') && gap > 1) out.push({ level: 'warn', text: `The robot must touch the field wall at the start (G304); it is ${num(Math.round(gap * 10) / 10)} in away.` });
+	if (!hits.includes('the wall') && gap > 1) out.push({ level: 'bad', text: `The robot must touch the field wall at the start (G304); it is ${num(Math.round(gap * 10) / 10)} in away. Drag it to a wall (a corner or turned 45° is fine), or pick a Spot.` });
 	if (fp.some(([, y]) => y > 1e-6)) out.push({ level: 'bad', text: 'The robot must start fully on your half of the field (G304.A): y below 0 for every corner.' });
 	const lz = loadingZone(field);
 	if (lz && polysOverlap(fp, lz.polygon)) out.push({ level: 'bad', text: 'The robot must not start in your LOADING ZONE (G304).' });
@@ -263,6 +273,104 @@ export function startPresets(robot, field, obs, half) {
 		if (x != null && !out.some((p) => p.x === x)) out.push({ name, x, y, h: 0, note: autoNote({ x, y, h: 0 }, robot, half) });
 	}
 	return out;
+}
+
+/** Which wall a point is at, in the drivers' words (seen from our wall). */
+export function wallName(x, y) {
+	if (Math.abs(y) >= Math.abs(x)) return y < 0 ? 'our wall' : 'the far wall';
+	return x < 0 ? 'the left wall' : 'the right wall';
+}
+
+/**
+ * A dragged start spot made easy to copy at the field: the robot kept inside the walls, pushed back against a
+ * wall that is near (3 in), and its centre or a side lined up with a tile middle or seam that is near (1.5 in).
+ * Returns { x, y }. Snapping off: only kept inside.
+ */
+// The tiles' interlocking teeth reach about 0.4 in (10 mm) past each seam: the official field CAD's am-2499
+// tiles (bounding boxes 9.6 to 11.6 mm past the 597.6 mm tile pitch). A drive team lines a robot's side up
+// with the seam or with the teeth's edge.
+export const TEETH_IN = 0.4;
+
+export function snapStart(start, robot, half, on = true) {
+	const [L, W] = robot, tile = 2 * half / 6, h = +start.h || 0;
+	let x = +start.x, y = +start.y;
+	const box = () => {
+		const fp = footprint(x, y, h, L, W);
+		return [Math.min(...fp.map((p) => p[0])), Math.max(...fp.map((p) => p[0])), Math.min(...fp.map((p) => p[1])), Math.max(...fp.map((p) => p[1]))];
+	};
+	const GAP = 0.5;   // like the presets: 0.5 in off the wall counts as touching it (G304)
+	if (on) {
+		// x: the centre on a tile middle or a seam, or a side on a seam
+		const [x0, x1] = box(), cands = [];
+		for (let j = 1; j < 12; j++) cands.push([-half + j * tile / 2, x]);
+		for (let j = 1; j < 6; j++) {
+			const s = -half + j * tile;
+			for (const e of [s, s - TEETH_IN, s + TEETH_IN]) cands.push([e, x0], [e, x1]);
+		}
+		let best = null;
+		for (const [line, at] of cands) { const d = line - at; if (Math.abs(d) <= 1.5 && (best == null || Math.abs(d) < Math.abs(best))) best = d; }
+		if (best != null) x += best;
+	}
+	// inside the walls, then against a wall that is near
+	let [x0, x1, y0, y1] = box();
+	if (x0 < -half + GAP) x += -half + GAP - x0; else if (x1 > half - GAP) x -= x1 - (half - GAP);
+	if (y0 < -half + GAP) y += -half + GAP - y0; else if (y1 > half - GAP) y -= y1 - (half - GAP);
+	if (on) {
+		[x0, x1, y0, y1] = box();
+		if (y0 + half - GAP < 3) y -= y0 + half - GAP;
+		if (x0 + half - GAP < 3) x -= x0 + half - GAP; else if (half - GAP - x1 < 3) x += half - GAP - x1;
+	}
+	// Against a side wall (not in a corner): line up along that wall too, like x along our wall.
+	if (on) {
+		[x0, x1, y0, y1] = box();
+		const side = x0 + half - GAP < 0.6 || half - GAP - x1 < 0.6, ours = y0 + half - GAP < 0.6;
+		if (side && !ours) {
+			const cands = [];
+			for (let j = 1; j < 12; j++) cands.push([-half + j * tile / 2, y]);
+			for (let j = 1; j < 6; j++) {
+				const sm = -half + j * tile;
+				for (const e of [sm, sm - TEETH_IN, sm + TEETH_IN]) cands.push([e, y0], [e, y1]);
+			}
+			let best = null;
+			for (const [line, at] of cands) { const d = line - at; if (Math.abs(d) <= 1.5 && (best == null || Math.abs(d) < Math.abs(best))) best = d; }
+			if (best != null) y += best;
+		}
+	}
+	// G304: the robot must touch the field wall. Not touching any: to the nearest of our wall and the side walls.
+	[x0, x1, y0, y1] = box();
+	const gaps = [[y0 + half - GAP, 'y', -1], [x0 + half - GAP, 'x', -1], [half - GAP - x1, 'x', 1]];
+	if (gaps.every(([g]) => g > 0.05)) {
+		const [g, axis, sign] = gaps.reduce((a, b) => (b[0] < a[0] ? b : a));
+		if (axis === 'y') y -= g; else x += sign * g;
+	}
+	return { x: round1(x), y: round1(y) };
+}
+
+/** The spot measured the way a drive team checks it with a tape: the sides from the side walls, the back from our wall. */
+export function startInches(start, robot, half) {
+	const fp = footprint(+start.x, +start.y, +start.h || 0, robot[0], robot[1]);
+	const x0 = Math.min(...fp.map((p) => p[0])), x1 = Math.max(...fp.map((p) => p[0])), y0 = Math.min(...fp.map((p) => p[1]));
+	const d = (v, wall) => (v <= 0.6 ? `against ${wall}` : `${num(Math.round(v * 2) / 2)} in from ${wall}`);
+	const y1 = Math.max(...fp.map((p) => p[1]));
+	const side = (x0 + half <= 0.6 || half - x1 <= 0.6) && y0 + half > 0.6;
+	return `Left side ${d(x0 + half, 'the left wall')}, right side ${d(half - x1, 'the right wall')}, back ${d(y0 + half, 'our wall')}.`
+		+ (side ? tileWords(+start.y, y0, y1, half, ['Near', 'Far'], 'out from our wall') : tileWords(+start.x, x0, x1, half));
+}
+
+// Where the robot sits on the tiles, counted from the left as the drivers see them: " Centred on tile 3."
+function tileWords(x, x0, x1, half, sides = ['Left', 'Right'], from = 'from the left') {
+	const tile = 2 * half / 6, out = [];
+	const k = (x + half) / tile;   // in tiles from the left wall
+	if (Math.abs(k - Math.floor(k) - 0.5) < 0.02) out.push(`Centred on tile ${Math.floor(k) + 1} ${from}`);
+	else if (Math.abs(k - Math.round(k)) < 0.02 && Math.round(k) > 0 && Math.round(k) < 6) out.push(`Centred on the seam between tiles ${Math.round(k)} and ${Math.round(k) + 1}`);
+	for (const [v, side] of [[x0, sides[0]], [x1, sides[1]]]) {
+		for (let j = 1; j < 6; j++) {
+			const sm = -half + j * tile;
+			if (Math.abs(v - sm) < 0.05) out.push(`${side} side on the seam ${j}|${j + 1}`);
+			else if (Math.abs(Math.abs(v - sm) - TEETH_IN) < 0.05) out.push(`${side} side at the teeth's edge, seam ${j}|${j + 1}`);
+		}
+	}
+	return out.length ? ' ' + out.join('. ') + '.' : '';
 }
 
 // ------------------------------------------------------------------ the note for the drive team
@@ -317,19 +425,34 @@ export function autoNote(start, robot = [18, 18], half = 70.585) {
 		const sideWall = (col === 0 && walls.includes('the left wall')) || (col === 5 && walls.includes('the right wall'));
 		where = sideWall && !onSeam ? `${ORD[row]} tile out` : `${where}, ${ORD[row]} tile out`;
 	}
-	// An edge on a tile seam (within half an inch): a quick thing to line up by eye.
-	const seam = (v) => { const j = Math.round((v + half) / tile); return j > 0 && j < 6 && Math.abs(v + half - j * tile) <= 0.5; };
-	const edge = onSeam ? '' : seam(minX) ? 'left edge on the seam' : seam(maxX) ? 'right edge on the seam' : '';
+	// Where in the tile, along the wall it is against (along our wall, or up a side wall): centred, an edge on
+	// the seam, or an edge at the teeth's edge. What the drive team lines up by eye.
+	const maxY = Math.max(...fp.map((p) => p[1]));
+	const alongSide = !walls.includes('our wall') && (walls.includes('the left wall') || walls.includes('the right wall'));
+	const [c, lo, hi, loName, hiName] = alongSide ? [+start.y, minY, maxY, 'near', 'far'] : [+start.x, minX, maxX, 'left', 'right'];
+	const off = (v) => { const j = Math.round((v + half) / tile); return j > 0 && j < 6 ? Math.abs(v + half - j * tile) : 99; };
+	const mid = Math.abs((c + half) / tile - Math.floor((c + half) / tile) - 0.5) * tile;
+	const centreOnSeam = alongSide ? off(c) <= 1 : onSeam;
+	const edge = centreOnSeam ? '' : mid <= 0.5 ? 'centred'
+		: off(lo) <= 0.25 ? `${loName} edge on seam` : off(hi) <= 0.25 ? `${hiName} edge on seam`
+		: Math.abs(off(lo) - TEETH_IN) <= 0.25 ? `${loName} edge at teeth` : Math.abs(off(hi) - TEETH_IN) <= 0.25 ? `${hiName} edge at teeth` : '';
 	const wallText = walls.length ? `Against ${walls.join(' and ')}` : `${num(Math.round(minY + half))} in off our wall`;
 	const face = facingWords(start);
 	const short = (w) => w.replace(/ from the (left|right)/, ' from $1');
+	const shorter = (w) => short(w).replace(/^(\d)(st|nd|rd|th) tile from/, 'tile $1 from');
+	const face2 = face.replace('facing the field', 'facing field');
+	const bare = wallText.replace(/^Against /, ''), bare2 = bare.replace(/^the /, '');
+	// The place in the tile is kept as long as anything is: it is what the drive team lines up. The wall goes
+	// last (our wall is the usual one).
 	const tries = [
-		[wallText, where, edge, face], [wallText, where, face],
-		[wallText.replace(/^Against /, ''), where, face], [wallText.replace(/^Against /, ''), short(where), face], [short(where), face]];
+		[wallText, where, edge, face], [bare, where, edge, face], [bare, short(where), edge, face], [bare2, shorter(where), edge, face],
+		[bare2, shorter(where), edge, face2], [shorter(where), edge, face2],
+		[bare, short(where), face], [short(where), face]];
 	for (const t of tries) {
 		const text = t.filter(Boolean).join(', ');
 		const out = text[0].toUpperCase() + text.slice(1);
-		if (out.length <= NOTE_MAX) return out;
+		// A few characters over (the Driver Station wraps them) before the wall or the place is dropped.
+		if (out.length <= NOTE_MAX || (t === tries[4] && out.length <= NOTE_MAX + 6)) return out;
 	}
 	const t = tries[tries.length - 1].join(', ');
 	return t[0].toUpperCase() + t.slice(1);
@@ -345,6 +468,10 @@ export function stepWords(s) {
 		case 'wait': return `${s.label}: wait ${num(+s.sec)} s`;
 		case 'run': return `${s.label}: start ${s.code}`;
 		case 'action': return `${s.code}, up to ${num(+s.timeout)} s`;
+		case 'aim': return `${s.label}: aim at the goal (up to ${num(+s.timeout)} s${+s.sweep > 0 ? `, sweep ${num(+s.sweep)} deg each way` : ''})`;
+		case 'remember': return `${s.label}: remember the heading`;
+		case 'back': return `${s.label}: turn back to the remembered heading`;
+		case 'ready': return `${s.label}: ready to launch (up to ${num(+s.timeout)} s)`;
 		case 'alongside': return `${s.code}, while the next steps run`;
 		case 'park': return `Park: the last ${num(+s.sec)} s go to the steps after it`;
 		default: return s.kind;
@@ -372,7 +499,7 @@ export function checkPlan(plan, opts = {}) {
 	steps.forEach((s, i) => {
 		const n = `Step ${i + 1}`;
 		if (!KINDS.includes(s.kind)) { add(i, 'bad', `${n}: there is no such step.`); return; }
-		if ((s.kind === 'move' || s.kind === 'turn' || s.kind === 'turnTo' || s.kind === 'wait' || s.kind === 'run') && !String(s.label ?? '').trim()) {
+		if ((s.kind === 'move' || s.kind === 'turn' || s.kind === 'turnTo' || s.kind === 'wait' || s.kind === 'run' || s.kind === 'aim' || s.kind === 'ready' || s.kind === 'remember' || s.kind === 'back') && !String(s.label ?? '').trim()) {
 			add(i, 'bad', `${n}: give it a name for the report, e.g. "To the goal".`);
 		}
 		if (s.kind === 'move') {
@@ -409,7 +536,9 @@ export function checkPlan(plan, opts = {}) {
 		if ((s.kind === 'run' || s.kind === 'action' || s.kind === 'alongside') && !String(s.code ?? '').trim()) {
 			add(i, 'bad', `${n}: give something to do, e.g. ${s.kind === 'run' ? 'robot.claw::close' : 'Actions.scoreHigh(robot)'}.`);
 		}
-		if (s.kind === 'action' && !(+s.timeout > 0)) add(i, 'bad', `${n}: give a time limit in seconds (more than 0).`);
+		if ((s.kind === 'action' || s.kind === 'aim' || s.kind === 'ready') && !(+s.timeout > 0)) add(i, 'bad', `${n}: give a time limit in seconds (more than 0).`);
+		if (s.kind === 'aim' && s.sweep != null && !(+s.sweep >= 0 && +s.sweep <= 180)) add(i, 'bad', `${n}: the sweep is 0 to 180 degrees each way (0 = none).`);
+		if (s.kind === 'back' && !(+s.power > 0 && +s.power <= 1)) add(i, 'bad', `${n}: give a power from 0.1 to 1.`);
 		if (s.kind === 'park') {
 			parks++;
 			if (!(+s.sec > 0)) add(i, 'bad', `${n}: give the seconds the park steps need (more than 0).`);
@@ -435,12 +564,14 @@ export function checkPlan(plan, opts = {}) {
 	// The field: walls, field parts, the other alliance's half (G402), and the start spot.
 	if (opts.obs) {
 		const half = opts.half ?? 70.585;
-		for (const c of startChecks(plan.start, robot, opts.field, opts.obs, half)) add(-1, c.level, c.text);
+		const startList = startChecks(plan.start, robot, opts.field, opts.obs, half);
+		for (const c of startList) add(-1, c.level, c.text);
+		const startOut = startList.some((c) => /past the field wall/.test(c.text));
 		const moving = sim.samples.filter((p) => p.step >= 0);
 		const mine = checkHits(moving.map((p) => ({ ...p, part: p.step })), opts.obs, half, robot[0], robot[1]);
 		for (const h of mine.hits) {
 			add(h.part, 'bad', h.name === 'the wall'
-				? `Step ${h.part + 1} (${stepName(steps[h.part])}): the robot leaves the field (hits the wall near (${num(Math.round(h.x))}, ${num(Math.round(h.y))})).`
+				? `Step ${h.part + 1} (${stepName(steps[h.part])}): the robot leaves the field (it hits ${wallName(h.x, h.y)} at (${num(Math.round(h.x))}, ${num(Math.round(h.y))}))${startOut ? '. It starts past the wall: move the start spot first' : ''}.`
 				: `Step ${h.part + 1} (${stepName(steps[h.part])}): the robot hits ${h.name} near (${num(Math.round(h.x))}, ${num(Math.round(h.y))}).`);
 		}
 		const crossed = new Set();
@@ -471,22 +602,32 @@ export function className(name) {
 /** One step as Java (no leading dot). */
 export function stepCode(s) {
 	switch (s.kind) {
-		case 'move': return `move(${javaString(s.label)}, ${num(+s.inches)}, ${num(+s.dir)}, ${num(+s.power)})`;
-		case 'turn': return `turn(${javaString(s.label)}, ${num(+s.deg)}, ${num(+s.power)})`;
-		case 'turnTo': return `turnTo(${javaString(s.label)}, ${num(+s.heading)}, ${num(+s.power)})`;
-		case 'wait': return `waitSeconds(${javaString(s.label)}, ${num(+s.sec)})`;
+		case 'move': return `move(${javaString(s.label)}, ${val(s, 'inches')}, ${val(s, 'dir')}, ${val(s, 'power')})`;
+		case 'turn': return `turn(${javaString(s.label)}, ${val(s, 'deg')}, ${val(s, 'power')})`;
+		case 'turnTo': return `turnTo(${javaString(s.label)}, ${val(s, 'heading')}, ${val(s, 'power')})`;
+		case 'wait': return `waitSeconds(${javaString(s.label)}, ${val(s, 'sec')})`;
 		case 'run': return `run(${javaString(s.label)}, ${String(s.code ?? '').trim() || 'null'})`;
-		case 'action': return `action(${String(s.code ?? '').trim() || 'null'}, ${num(+s.timeout)})`;
+		case 'action': return `action(${String(s.code ?? '').trim() || 'null'}, ${val(s, 'timeout')})`;
+		case 'aim': return +s.sweep > 0 ? `aimAtGoal(${javaString(s.label)}, ${val(s, 'timeout')}, ${val(s, 'sweep')})` : `aimAtGoal(${javaString(s.label)}, ${val(s, 'timeout')})`;
+		case 'remember': return `rememberHeading(${javaString(s.label)})`;
+		case 'back': return `turnBack(${javaString(s.label)}, ${val(s, 'power')})`;
+		case 'ready': return `readyToLaunch(${javaString(s.label)}, ${val(s, 'timeout')})`;
 		case 'alongside': return `alongside(${String(s.code ?? '').trim() || 'null'})`;
-		case 'park': return `parkWithSeconds(${num(+s.sec)})`;
+		case 'park': return `parkWithSeconds(${val(s, 'sec')})`;
 		default: return `/* ${s.kind}? */`;
 	}
 }
 
 /** The start line: start(note, x, y, heading), or start(note, heading) without the spot. */
+// A number as Java: the name it was loaded through (Tunables.Auto.parkSeconds, START_X) while it is unchanged.
+function val(o, k) {
+	const n = o.names?.[k];
+	return n && Math.abs(+n.v - +o[k]) < 1e-9 ? n.code : num(+o[k] || 0);
+}
+
 function startCode(st) {
 	const note = javaString(st.note || 'Place the robot here');
-	return st.spot === false ? `start(${note}, ${num(+st.h || 0)})` : `start(${note}, ${num(+st.x)}, ${num(+st.y)}, ${num(+st.h || 0)})`;
+	return st.spot === false ? `start(${note}, ${val(st, 'h')})` : `start(${note}, ${val(st, 'x')}, ${val(st, 'y')}, ${val(st, 'h')})`;
 }
 
 /**
@@ -496,7 +637,8 @@ function startCode(st) {
 export function toJava(plan) {
 	const lines = ['s.' + startCode(plan.start), ...(plan.steps || []).map((s) => ' .' + stepCode(s))];
 	const steps = lines.join('\n') + ';';
-	const codes = (plan.steps || []).map((s) => String(s.code ?? '')).join(' ');
+	const codes = (plan.steps || []).map((s) => String(s.code ?? '') + ' ' + Object.values(s.names || {}).map((n) => n.code).join(' ')).join(' ')
+		+ ' ' + Object.values(plan.start?.names || {}).map((n) => n.code).join(' ');
 	const base = (plan.pkg || 'org.firstinspires.ftc.teamcode').replace(/\.autos$/, '');
 	const name = plan.opmode || 'My Auto';
 	const cls = plan.className || className(name);
@@ -597,7 +739,7 @@ export function toScenario(plan, opts = {}) {
 
 // ------------------------------------------------------------------ Java in
 
-const STEP_METHODS = { move: 4, turn: 3, turnTo: 3, waitSeconds: 2, run: 2, action: null, alongside: 1, parkWithSeconds: 1 };
+const STEP_METHODS = { move: 4, turn: 3, turnTo: 3, waitSeconds: 2, run: 2, action: null, aimAtGoal: null, readyToLaunch: 2, rememberHeading: 1, turnBack: 2, alongside: 1, parkWithSeconds: 1 };
 const OTHER_METHODS = ['menuChoice', 'menuYesNo', 'onlyIf', 'end', 'driveTo', 'follow', 'step', 'waitUntil', 'moveWithTurn'];
 
 /**
@@ -616,11 +758,38 @@ export function fromJava(src, opts = {}) {
 	let start = null, mirror, opmode, teleop, group, cls, pkg;
 	const str = (arg) => (arg?.length === 1 && arg[0].s != null ? arg[0].s : null);
 	const text = (toks) => (toks?.length ? tk.src.slice(toks[0].at, toks[toks.length - 1].end).replace(/\s*\n\s*/g, ' ').trim() : '');
+	// opts.values: numbers for names and formulas the code has ({"Tunables.Auto.parkSeconds": 3}), from the
+	// simulator. A step read through one keeps the name: the Java written back says it again (see val()).
+	const values = opts.values || {};
+	const unread = new Set();
 	const nums = (args, what) => {
-		const vals = args.map(evalNum);
+		const names = [];
+		const vals = args.map((a, i) => {
+			const r = evalNum(a);
+			if (r.bad == null && !r.pose) return r;
+			const t = text(a);
+			if (Number.isFinite(values[t])) { names[i] = t; return { v: values[t] }; }
+			unread.add(t);
+			return r;
+		});
 		const bad = vals.find((v) => v.bad != null || v.pose);
 		if (bad) { problems.push(`${what}: could not read "${bad.bad ?? 'new FieldPose(...)'}". Use plain numbers. This step was left out.`); return null; }
-		return vals.map((v) => v.v);
+		const out = vals.map((v) => v.v);
+		out.names = names;
+		return out;
+	};
+	// The names a step was read through: { inches: { code: "Tunables.Auto.offWallInches", v: 6 } }.
+	// Only Tunables names are kept: they work in any file. The auto's own constants and methods (START_X,
+	// turnToField(...)) are not in the builder's file, so their number is written.
+	const own = new Set();
+	const named = (obj, keys, v) => {
+		keys.forEach((k, i) => {
+			const c = v.names[i];
+			if (!c) return;
+			if (/[A-Za-z_$]/.test(c.replace(/\bTunables(\s*\.\s*[A-Za-z_$][\w$]*)+/g, ''))) { own.add(c); return; }
+			(obj.names ??= {})[k] = { code: c, v: obj[k] };
+		});
+		return obj;
 	};
 	const others = new Set();
 	for (let i = 0; i < tk.length; i++) {
@@ -675,7 +844,7 @@ export function fromJava(src, opts = {}) {
 		if (m === 'start') {
 			if ((args.length === 2 || args.length === 4) && label != null) {
 				const v = nums(args.slice(1), 's.start');
-				if (v) start = args.length === 4 ? { note: label, x: v[0], y: v[1], h: v[2], spot: true } : { note: label, h: v[0], spot: false };
+				if (v) start = args.length === 4 ? named({ note: label, x: v[0], y: v[1], h: v[2], spot: true }, ['x', 'y', 'h'], v) : named({ note: label, h: v[0], spot: false }, ['h'], v);
 				i = next - 1;
 			}
 			continue;
@@ -689,24 +858,29 @@ export function fromJava(src, opts = {}) {
 		i = next - 1;
 		const want = STEP_METHODS[m];
 		const what = `${m}(${label != null ? javaString(label) : text(args[0])})`;
+		if (m === 'aimAtGoal' && args.length !== 2 && args.length !== 3) { problems.push(`${what}: needs 2 or 3 things, found ${args.length}. This step was left out.`); continue; }
 		if (want != null && args.length !== want) { problems.push(`${what}: needs ${want} things, found ${args.length}. This step was left out.`); continue; }
-		if (['move', 'turn', 'turnTo', 'waitSeconds', 'run'].includes(m) && label == null) {
+		if (['move', 'turn', 'turnTo', 'waitSeconds', 'run', 'aimAtGoal', 'readyToLaunch', 'rememberHeading', 'turnBack'].includes(m) && label == null) {
 			problems.push(`${m}(${text(args[0])}, ...): write the name in quotes, e.g. "To the goal". This step was left out.`);
 			continue;
 		}
-		if (m === 'move') { const v = nums(args.slice(1), what); if (v) steps.push({ kind: 'move', label, inches: v[0], dir: v[1], power: v[2] }); }
-		else if (m === 'turn') { const v = nums(args.slice(1), what); if (v) steps.push({ kind: 'turn', label, deg: v[0], power: v[1] }); }
-		else if (m === 'turnTo') { const v = nums(args.slice(1), what); if (v) steps.push({ kind: 'turnTo', label, heading: v[0], power: v[1] }); }
-		else if (m === 'waitSeconds') { const v = nums(args.slice(1), what); if (v) steps.push({ kind: 'wait', label, sec: v[0] }); }
+		if (m === 'move') { const v = nums(args.slice(1), what); if (v) steps.push(named({ kind: 'move', label, inches: v[0], dir: v[1], power: v[2] }, ['inches', 'dir', 'power'], v)); }
+		else if (m === 'turn') { const v = nums(args.slice(1), what); if (v) steps.push(named({ kind: 'turn', label, deg: v[0], power: v[1] }, ['deg', 'power'], v)); }
+		else if (m === 'turnTo') { const v = nums(args.slice(1), what); if (v) steps.push(named({ kind: 'turnTo', label, heading: v[0], power: v[1] }, ['heading', 'power'], v)); }
+		else if (m === 'waitSeconds') { const v = nums(args.slice(1), what); if (v) steps.push(named({ kind: 'wait', label, sec: v[0] }, ['sec'], v)); }
+		else if (m === 'aimAtGoal') { const v = nums(args.slice(1), what); if (v) steps.push(v.length > 1 ? named({ kind: 'aim', label, timeout: v[0], sweep: v[1] }, ['timeout', 'sweep'], v) : named({ kind: 'aim', label, timeout: v[0] }, ['timeout'], v)); }
+		else if (m === 'rememberHeading') steps.push({ kind: 'remember', label });
+		else if (m === 'turnBack') { const v = nums(args.slice(1), what); if (v) steps.push(named({ kind: 'back', label, power: v[0] }, ['power'], v)); }
+		else if (m === 'readyToLaunch') { const v = nums(args.slice(1), what); if (v) steps.push(named({ kind: 'ready', label, timeout: v[0] }, ['timeout'], v)); }
 		else if (m === 'run') steps.push({ kind: 'run', label, code: text(args[1]) });
 		else if (m === 'alongside') steps.push({ kind: 'alongside', code: text(args[0]) });
-		else if (m === 'parkWithSeconds') { const v = nums(args, 'parkWithSeconds'); if (v) steps.push({ kind: 'park', sec: v[0] }); }
+		else if (m === 'parkWithSeconds') { const v = nums(args, 'parkWithSeconds'); if (v) steps.push(named({ kind: 'park', sec: v[0] }, ['sec'], v)); }
 		else if (m === 'action') {
 			if (args.length !== 1 && args.length !== 2) { problems.push(`action(...): give an action and a time limit. This step was left out.`); continue; }
-			let timeout = ACTION_TIMEOUT_SEC;
-			if (args.length === 2) { const v = nums(args.slice(1), `action(${text(args[0])})`); if (!v) continue; timeout = v[0]; }
+			let timeout = ACTION_TIMEOUT_SEC, v = null;
+			if (args.length === 2) { v = nums(args.slice(1), `action(${text(args[0])})`); if (!v) continue; timeout = v[0]; }
 			else notes.push(`action(${text(args[0])}) has no time limit: the library gives it ${ACTION_TIMEOUT_SEC} s, and the code now says so.`);
-			steps.push({ kind: 'action', code: text(args[0]), timeout });
+			steps.push(v ? named({ kind: 'action', code: text(args[0]), timeout }, ['timeout'], v) : { kind: 'action', code: text(args[0]), timeout });
 		}
 	}
 	for (const m of others) {
@@ -740,8 +914,9 @@ export function fromJava(src, opts = {}) {
 		if (cls !== undefined) plan.className = cls;
 		if (pkg !== undefined) plan.pkg = pkg.replace(/\.autos$/, '');
 	}
+	if (own.size) notes.push(`Written as numbers (your auto's own names, not in the builder's file): ${[...own].join(', ')}.`);
 	const drive = steps.some((s) => s.kind === 'move' && sideways(s.dir)) ? 'mecanum' : null;
-	return { plan, drive, problems, notes, tank };
+	return { plan, drive, problems, notes, tank, unread: [...unread] };
 }
 
 export { pointInPoly, headingOf };

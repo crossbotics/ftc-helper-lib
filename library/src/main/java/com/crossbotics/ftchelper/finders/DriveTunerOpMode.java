@@ -233,7 +233,7 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
             auto.setStopCondition(null);
             auto.setLoopHook(null);
         }
-        if (helpKeyDown() && opModeIsActive()) {
+        if (helpKeyDown() && running()) {
             lastResult = "Stopped by GUIDE/START: not measured.";
             waiting = Wait.CHOOSE;
             openHelp();

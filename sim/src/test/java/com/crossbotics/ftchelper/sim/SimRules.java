@@ -18,6 +18,8 @@ final class SimRules {
     final double autoSec, teleopSec;
     /** Points (manual table 10-2). */
     final double leave, parkAuto, parkTeleop, tipAuto, tipTeleop, inCell, bottomNectar, inOwnedFlower, inGarden, majorFoul;
+    /** RANKING POINT thresholds (NaN: the game has none): LEAVE + PARK points, and the HIVE TIPs for the two TIP RPs. */
+    final double rpSwarm, rpPollinator1, rpPollinator2;
 
     /** One alliance's pieces and zones (names in the field file). */
     static final class Alliance {
@@ -72,6 +74,10 @@ final class SimRules {
         inOwnedFlower = SimJsonReader.number(pts, "inOwnedFlower", 0);
         inGarden = SimJsonReader.number(pts, "inGarden", 0);
         majorFoul = SimJsonReader.number(pts, "majorFoul", 0);
+        Map<String, Object> rp = obj(root, "rankingPoints");
+        rpSwarm = SimJsonReader.number(rp, "swarm", Double.NaN);
+        rpPollinator1 = SimJsonReader.number(rp, "pollinator1", Double.NaN);
+        rpPollinator2 = SimJsonReader.number(rp, "pollinator2", Double.NaN);
         Map<String, Object> al = obj(root, "alliances");
         for (Map.Entry<String, Object> e : al.entrySet()) {
             if (e.getValue() instanceof Map) alliances.put(e.getKey(), new Alliance(e.getKey(), SimJsonReader.object(e.getValue(), e.getKey())));

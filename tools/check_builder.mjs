@@ -174,6 +174,66 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 	const obs = P.obstacles(n), half = n.field.insideWallSize / 2;
 	const presets = S.startPresets([18, 18], n, obs, half);
 	ok(presets.length >= 3 && presets.every((p) => S.startChecks(p, [18, 18], n, obs, half).every((c) => c.level !== 'bad')), 'start presets on the simulator\'s field pass the start checks');
+	// A dragged start spot: kept inside the walls (also past a corner), against a near wall, a side on a seam.
+	const R = [15.1, 16.8], tile = 2 * half / 6;
+	for (const [x, y, h] of [[80, -80, 0], [59, -63.9, 0], [-75, -50, 30], [0, -20, 90]]) {
+		const p = { ...S.snapStart({ x, y, h }, R, half), h };
+		ok(S.startChecks(p, R, n, obs, half).every((c) => !/past the field wall/.test(c.text)), `snapStart (${x}, ${y}, ${h}): inside the walls`);
+	}
+	const back = S.snapStart({ x: 10, y: -60, h: 0 }, R, half);
+	ok(near(back.y, -half + 0.5 + R[0] / 2, 0.06), 'snapStart: 2 in off our wall goes against it');
+	const seam = S.snapStart({ x: 32, y: -40, h: 0 }, R, half);   // the side 0.07 in past the seam (the teeth edges are 0.4 in off)
+	const wallY = -half + 0.5 + R[0] / 2;
+	ok(near(seam.x - R[1] / 2, -half + 4 * tile, 0.06) && near(seam.y, wallY, 0.06), 'snapStart: a side near a tile seam goes onto it; away from every wall it goes to the nearest (G304)');
+	const free = S.snapStart({ x: 30.5, y: -60, h: 0 }, R, half, false);
+	ok(free.x === 30.5 && near(free.y, wallY, 0.06), 'snapStart off: no tile snapping, but it still ends touching a wall (G304)');
+	const side = S.snapStart({ x: -55, y: 0, h: 0 }, R, half, false);
+	ok(near(side.x - R[1] / 2, -half + 0.5, 0.06) && side.y === 0, 'snapStart: nearest the left wall goes against it');
+	const teeth = S.snapStart({ x: -half + 2 * tile + S.TEETH_IN + R[1] / 2 + 0.3, y: -62, h: 0 }, R, half);
+	ok(near(teeth.x - R[1] / 2, -half + 2 * tile + S.TEETH_IN, 0.06), 'snapStart: a side near the teeth\'s edge goes onto it');
+	const mid = S.startChecks({ x: 0, y: -30, h: 0 }, R, n, obs, half);
+	ok(mid.some((c) => c.level === 'bad' && /G304/.test(c.text) && /touch the field wall/.test(c.text)), 'startChecks: away from the wall is refused (G304)');
+	{
+		const sx = half - 0.5 - R[1] / 2, c4 = -half + 3.5 * tile;
+		const p = S.snapStart({ x: sx, y: c4 + 1, h: 0 }, R, half);
+		ok(near(p.y, c4, 0.06) && near(p.x, sx, 0.06), 'snapStart: against a side wall it lines up along that wall too');
+		ok(S.autoNote({ x: -half + 2.5 * tile, y: wallY, h: 0 }, R, half) === 'Our wall, tile 3 from left, centred, facing field', 'autoNote: says the robot is centred in the tile');
+		ok(/left edge on seam/.test(S.autoNote({ x: -half + 2 * tile + R[1] / 2, y: wallY, h: 0 }, R, half)), 'autoNote: an edge on the seam');
+		ok(/left edge at teeth/.test(S.autoNote({ x: -half + 2 * tile + S.TEETH_IN + R[1] / 2, y: wallY, h: 0 }, R, half)), 'autoNote: an edge at the teeth');
+		ok(S.autoNote({ x: -sx, y: -half + 3 * tile + R[0] / 2, h: 0 }, R, half) === 'Left wall, 4th tile out, near edge on seam, facing field', 'autoNote: along a side wall, the wall and the place stay');
+	}
+	{
+		const src = 's.start("Spot", START_X, -61, 0).move("Off", Tunables.Auto.offWallInches, 180, 0.3).turnTo("Turn", turnToField(PARK_HEADING), 0.5).parkWithSeconds(Tunables.Auto.parkSeconds);';
+		const r0 = S.fromJava(src);
+		ok(r0.unread.join('|') === 'START_X|Tunables.Auto.offWallInches|turnToField(PARK_HEADING)|Tunables.Auto.parkSeconds', 'fromJava: lists the names it could not read');
+		const r = S.fromJava(src, { values: { START_X: 52, 'Tunables.Auto.offWallInches': 4, 'turnToField(PARK_HEADING)': 142.2, 'Tunables.Auto.parkSeconds': 6 } });
+		const j = S.toJava({ ...r.plan, drive: 'tank' }).steps;
+		ok(r.problems.length === 0 && r.plan.steps.length === 3, 'fromJava with values: every step read');
+		ok(/start\("Spot", 52, -61, 0\)/.test(j) && /move\("Off", Tunables\.Auto\.offWallInches, 180, 0\.3\)/.test(j) && /turnTo\("Turn", 142\.2, 0\.5\)/.test(j) && /parkWithSeconds\(Tunables\.Auto\.parkSeconds\)/.test(j),
+			'toJava: Tunables names stay, the auto\'s own names become numbers');
+		r.plan.steps[0].inches = 5;
+		ok(/move\("Off", 5, 180/.test(S.toJava({ ...r.plan, drive: 'tank' }).steps), 'toJava: a changed number is written as the number');
+	}
+	ok(/Centred on tile 4 from the left\.$/.test(S.startInches({ x: -half + 3.5 * tile, y: wallY, h: 0 }, R, half)), 'startInches: names the tile it is centred on');
+	ok(/Left side on the seam 2\|3/.test(S.startInches({ x: -half + 2 * tile + R[1] / 2, y: wallY, h: 0 }, R, half)), 'startInches: a side on a seam');
+	{
+		const plan = { drive: 'tank', start: { x: 0, y: wallY, h: 0 }, steps: [{ kind: 'aim', label: 'Aim', timeout: 3 }] };
+		ok(S.stepCode(plan.steps[0]) === 'aimAtGoal("Aim", 3)', 'aim step: the Java');
+		const back2 = S.fromJava('s.start("x", 0, -61, 0).aimAtGoal("Aim", 2.5).move("Out", 10, 0, 0.5);');
+		ok(back2.plan && back2.plan.steps[0].kind === 'aim' && back2.plan.steps[0].timeout === 2.5 && back2.plan.steps.length === 2, 'aim step: read back from Java');
+		ok(S.stepCode({ kind: 'ready', label: 'Ready', timeout: 3 }) === 'readyToLaunch("Ready", 3)', 'ready step: the Java');
+		ok(S.stepCode({ kind: 'aim', label: 'Aim', timeout: 4, sweep: 45 }) === 'aimAtGoal("Aim", 4, 45)', 'aim step with a sweep: the Java');
+		const badSteps = { drive: 'mecanum', start: { x: 0, y: wallY, h: 0 }, steps: [{ kind: 'aim', label: 'A', timeout: 3, sweep: -5 }, { kind: 'back', label: 'B', power: 0 }] };
+		const badChecks = S.checkPlan(badSteps).list.filter((c) => c.level === 'bad').map((c) => c.text).join(' | ');
+		ok(/sweep is 0 to 180/.test(badChecks) && /power from 0.1 to 1/.test(badChecks), 'checkPlan: a bad sweep and a bad turn-back power are refused: ' + badChecks);
+		ok(S.stepCode({ kind: 'remember', label: 'R' }) === 'rememberHeading("R")' && S.stepCode({ kind: 'back', label: 'B', power: 0.5 }) === 'turnBack("B", 0.5)', 'remember / turn back: the Java');
+		const back4 = S.fromJava('s.start("x", 0, -61, 0).aimAtGoal("Aim", 4, 45).rememberHeading("R").turn("T", 90, 0.5).turnBack("B", 0.4);');
+		ok(back4.plan && back4.plan.steps[0].sweep === 45 && back4.plan.steps[1].kind === 'remember' && back4.plan.steps[3].kind === 'back' && back4.plan.steps[3].power === 0.4, 'sweep, remember, turn back: read back from Java');
+		const back3 = S.fromJava('s.start("x", 0, -61, 0).readyToLaunch("Ready", 2).move("Out", 10, 0, 0.5);');
+		ok(back3.plan && back3.plan.steps[0].kind === 'ready' && back3.plan.steps[0].timeout === 2 && back3.plan.steps.length === 2, 'ready step: read back from Java');
+	}
+	ok(/^Left side .* from the left wall, right side against the right wall, back against our wall\.$/.test(S.startInches(S.snapStart({ x: 80, y: -80, h: 0 }, R, half), R, half)), 'startInches: the corner reads "against"');
+	ok(S.wallName(-70, 10) === 'the left wall' && S.wallName(60, -71) === 'our wall' && S.wallName(71, 5) === 'the right wall' && S.wallName(0, 71) === 'the far wall', 'wallName');
 	// The same as the web builder's copy where there is one.
 	const site = siteDir();
 	if (site && fs.existsSync(path.join(site, 'field.json'))) {

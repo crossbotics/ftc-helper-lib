@@ -464,6 +464,9 @@ public class SimFromRobotTest {
             s.sim.robot.setPose(32, -12.74, 105);
             SimRun.pause(0.5);
             assertEquals("nothing turns it before aim is on", 105, s.robot().headingDeg, 1.0);
+            // The aim button turns aim on only with the goal in view: wait for the camera to see it.
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Goal : in range")
+                    || s.screenHas("Goal : seen") || s.screenHas("Goal : LOCKED"), 6));
             s.press(v -> s.g1().right_bumper = v);                   // aim on
             assertTrue("it turns to face the goal: " + s.robot().headingDeg + "\n" + String.join("\n", s.screen()),
                     SimRun.waitFor(() -> Math.abs(s.robot().headingDeg - 90) < 3, 6));

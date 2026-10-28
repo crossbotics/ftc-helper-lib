@@ -268,3 +268,24 @@ Launcher launcher = new Launcher(flywheel, feeder)
 | `isReady()`, `whyNotReady()` | e.g. "flywheel, Turret": your first debug clue |
 | `getState()` (OFF, IDLE, SPINNING, WAITING_READY, FEEDING), `isShooting()`, `getShotsLeft()`, `getShotsFired()`, `getLastProblem()` | read (the last problem shows as a warning for `PROBLEM_SHOW_SEC`, 5 s; a jam while jammed) |
 | `spinUpStep()`, `shootStep(n)` | autonomous steps |
+| `.shotMode(mode)`, `getShotMode()` | how strict it is before each piece: `ShotMode.CAREFUL` (default: every piece at speed), `QUICK` (the volley's first piece at speed, the next ones in a looser band or after a short wait), `SPRAY` (no wait for the speed band or the checks; the wheel must turn at `SPRAY_MIN_SHARE`, half its speed, or more) |
+| `.quickBand(rpm)`, `getQuickBand()` | QUICK: the looser band (default 3 x the flywheel's tolerance) |
+| `.quickMaxWait(s)`, `getQuickMaxWait()` | QUICK: the longest wait for the band (default 0.3 s) |
+| `getShotInterval()` | the least time between pieces |
+| `getShotStats()` | the [firing stats](#shotstats) |
+
+A piece asked for within `shotInterval` + 1 s of the last feed belongs to the same volley. The robot in
+five files chooses the mode itself ([Firing](robot.md#firing-shot-modes-feed-stop-piece-path)).
+
+### ShotStats
+
+`launcher.getShotStats()`: what each fed piece did to the wheel, for tuning. `count()`, `last()`,
+`volley()` (the pieces of this volley), `lastVolley()`, `ShotStats.summary(list)` ("drop avg 290 worst
+340, recovery avg 0.20 worst 0.26 s"). Each `ShotStats.Shot` has `mode`, `rpmAtFeed`, `targetRpm`,
+`dropRpm`, `recoverySec` (NaN while recovering, or when the next piece came first) and `gapSec` (since the
+last piece of the volley; NaN for the first). The launcher's debug lines show them (PRACTICE profile only):
+
+```
+Shot 3        QUICK  fed at 2410/2450 rpm, drop 310, back in 0.21 s, 0.30 s after the last
+Volley (4)    drop avg 290 worst 340, recovery avg 0.20 worst 0.26 s
+```

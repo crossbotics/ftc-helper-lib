@@ -123,6 +123,10 @@ public final class Aim {
     private final double shooterForwardIn, shooterLeftIn, cameraForwardIn, cameraLeftIn;
     // The last lead worked out (for the Driver Station), and when (nanoseconds).
     private MovingShot.Result lastLead = null;
+    // Locked stays locked until the error passes toleranceDeg + this (no flicker at the edge).
+    private final double lockMarginDeg;
+    private final double sweepStepDeg, sweepPower;
+    private boolean lockedLast = false;
     private long lastLeadNanos = 0;
 
     Aim(RobotDefinition robot, TunableSection t) {
@@ -149,6 +153,12 @@ public final class Aim {
         shooterLeftIn = t.has("shooterLeftIn") ? t.number("shooterLeftIn", 0) : 0;
         cameraForwardIn = t.has("cameraForwardIn") ? t.number("cameraForwardIn", 0) : 0;
         cameraLeftIn = t.has("cameraLeftIn") ? t.number("cameraLeftIn", 0) : 0;
+        lockMarginDeg = t.has("lockMarginDeg") ? Math.abs(t.number("lockMarginDeg", 1)) : 1;
+        sweepStepDeg = t.has("sweepStepDeg") ? Math.max(1, Math.abs(t.number("sweepStepDeg", 15))) : 15;
+        sweepPower = t.has("sweepPower") ? Math.min(1, Math.abs(t.number("sweepPower", 0.3))) : 0.3;
+        // Whole-robot aim turns on only with a goal in view (last season's rule): a press with no goal
+        // leaves it off (one buzz with .rumble()), so the robot never waits to turn toward nothing.
+        mode.onlyWhen(() -> goal() != null, "no goal in view");
     }
 
     // A number from Tunables.Aim that the tuning menu can change. No section: the library's default
@@ -385,8 +395,31 @@ public final class Aim {
         return mode.isOn();
     }
 
+    // For aimAtGoal: how far to turn the robot to face the goal now (positive = left), NaN if not seen.
+    double bearingNow() {
+        TargetObservation g = goal();
+        return g == null ? Double.NaN : corrected(g).bearingDeg;
+    }
+
+    // aimAtGoal's sweep: degrees per step and the turn power (Tunables.Aim sweepStepDeg 15, sweepPower 0.3).
+    double sweepStepNow() {
+        return sweepStepDeg;
+    }
+
+    double sweepPowerNow() {
+        return sweepPower;
+    }
+
+    double toleranceNow() {
+        return toleranceDeg.getAsDouble();
+    }
+
+    double maxTurnPowerNow() {
+        return maxTurnPower.getAsDouble();
+    }
+
     // A turret that follows the goal (follows(camera) or followsOdometry() in Robot.java), or null.
-    private Turret followingTurretInRobot() {
+    Turret followingTurretInRobot() {
         for (Module<?> m : robot.modules()) {
             // A turret that is not on the robot yet (optional) does not aim: whole-robot aim may be used.
             if (m instanceof Turret && m.isPresent() && ((Turret) m).followsGoal()) return (Turret) m;
@@ -466,12 +499,21 @@ public final class Aim {
      * launcher check: {@code .requireReady("aimed", () -> aim().isAimed())}.
      */
     public boolean isAimed() {
-        if (mode.isOn()) {
-            double e = errorDeg();
-            return !Double.isNaN(e) && Math.abs(e) <= toleranceDeg.getAsDouble();
-        }
+        if (mode.isOn()) return withinLock(errorDeg());
         Turret t = followingTurret();
         return t != null && t.isAimed();
+    }
+
+    // Within the tolerance; once in, it stays in until the error passes toleranceDeg + lockMarginDeg
+    // (a camera's jitter at the edge would make LOCKED and a launcher's "aimed" check flicker).
+    private boolean withinLock(double errorDeg) {
+        if (Double.isNaN(errorDeg)) {
+            lockedLast = false;
+            return false;
+        }
+        double limit = toleranceDeg.getAsDouble() + (lockedLast ? lockMarginDeg : 0);
+        lockedLast = Math.abs(errorDeg) <= limit;
+        return lockedLast;
     }
 
     /** The error that starts the buzz of {@code rumbleWhenAimed()} (Tunables.Aim.rumbleDeg, default 4). */
@@ -485,6 +527,63 @@ public final class Aim {
             if (m instanceof Turret && m.isPresent() && ((Turret) m).followMode().isOn()) return (Turret) m;
         }
         return null;
+    }
+
+    // ----------------------------- seen, in range, locked -----------------------------
+
+    /** How far along the aim is, for the Driver Station line, lights or a buzz: each stage includes the ones before. */
+    public enum Stage {
+        /** The robot cannot aim (no camera with a goal, no odometry goal point), or no goal now. */
+        NOT_SEEN,
+        /** The goal is known (camera, or the odometry backup). */
+        SEEN,
+        /** ... and its distance is inside the launcher's shot table (or the launcher has no table). */
+        IN_RANGE,
+        /** ... and the robot (or the following turret) points at it, within {@code toleranceDeg}. */
+        LOCKED;
+
+        /** "not seen", "seen", "in range", "LOCKED". */
+        public String words() {
+            return this == NOT_SEEN ? "not seen" : this == SEEN ? "seen" : this == IN_RANGE ? "in range" : "LOCKED";
+        }
+    }
+
+    /** True if the robot can find the goal at all: a camera with goal(...) in Robot.java, or the odometry backup. */
+    public boolean canAim() {
+        return aimingCamera() != null || (hasGoalPoint && robot.odometry() != null);
+    }
+
+    /**
+     * The aim's stage now: NOT_SEEN, SEEN, IN_RANGE or LOCKED. Locked: a following turret is aimed, or the
+     * robot's front is within {@code toleranceDeg} of the goal (aim mode on or not). E.g. lights:
+     * {@code robot.aim().stage() == Aim.Stage.LOCKED}.
+     */
+    public Stage stage() {
+        TargetObservation g = goal();
+        if (g == null) {
+            lockedLast = false;   // lost: a goal that comes back must get inside the tolerance again
+            return Stage.NOT_SEEN;
+        }
+        Boolean range = null;
+        for (Module<?> m : robot.modules()) {
+            if (m instanceof Launcher && m.isPresent()) { range = ((Launcher) m).inRange(g.distanceIn); break; }
+        }
+        if (Boolean.FALSE.equals(range)) return Stage.SEEN;
+        Turret t = followingTurret();
+        boolean locked = t != null ? t.isAimed() : withinLock(corrected(g).bearingDeg);
+        return locked ? Stage.LOCKED : Stage.IN_RANGE;
+    }
+
+    // The Driver Station line: "Goal: LOCKED (camera, 52 in, 0.8 deg off)".
+    private String stageLine() {
+        TargetObservation g = goal();
+        Stage st = stage();
+        if (g == null) return "not seen" + (aimingCamera() != null ? " (the camera does not see it)" : "");
+        Turret t = followingTurret();
+        double off = t != null ? t.aimErrorDeg() : corrected(g).bearingDeg;
+        return st.words() + " (" + sourceOf(g).words() + (Double.isNaN(g.distanceIn) ? "" : Module.fmt(", %.0f in", g.distanceIn))
+                + (st == Stage.SEEN ? ", out of the shot table's range" : "")
+                + (Double.isNaN(off) ? "" : Module.fmt(", %.1f deg off", off)) + ")";
     }
 
     // ----------------------------- the Driver Station -----------------------------
@@ -529,6 +628,9 @@ public final class Aim {
             }
             t.debug("Aim lead", r == null ? "no goal" : r.toString());
         }
+        // Seen, in range, locked: always, on a robot that can aim (the drivers see it before they shoot).
+        if (canAim()) t.line("Goal", stageLine());
+        if (mode.refusedLately()) t.warn("Aim mode not on: " + mode.whyRefused() + " (press again with the goal in view)");
         if (!mode.isOn()) return;
         if (driverTurning) {
             t.line("Aim", "the driver is turning");

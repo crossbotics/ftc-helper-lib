@@ -120,6 +120,19 @@ public final class Camera extends Module<Camera> {
         return true;
     }
 
+    /** True for a Limelight, false for a webcam. */
+    public boolean isLimelight() {
+        return limelight;
+    }
+
+    // True when the webcam shows its picture (live view, PRACTICE profile only).
+    private boolean liveView = false;
+
+    /** True when the webcam's live view is on (PRACTICE profile, {@code Tunables liveView} not false). */
+    public boolean liveViewOn() {
+        return liveView;
+    }
+
     @Override
     void build(Devices devices, TunableSection t) {
         // Optional numbers: read only when written, so a team that does not use them gets no INIT note.
@@ -142,6 +155,12 @@ public final class Camera extends Module<Camera> {
             source = ll;
         } else {
             WebcamTags cam = new WebcamTags(device, (WebcamName) found);
+            // Live view: the picture on the robot's screen and the Driver Station's Camera Stream, for
+            // checking the brightness. On in the PRACTICE profile (Tunables liveView, true), never at an
+            // event (COMPETITION): drawing the picture costs speed.
+            liveView = com.crossbotics.ftchelper.core.Profile.current().isPractice()
+                    && (!t.has("liveView") || t.flag("liveView", true));
+            cam.liveView(liveView);
             int gain = (int) Math.round(optional(t, "gain", -1));
             long exposureMs = Math.round(optional(t, "exposureMs", -1));
             // A manual exposure from Tunables (e.g. copied from the lighting test's result)
@@ -175,6 +194,7 @@ public final class Camera extends Module<Camera> {
     // The INIT loop: keep the camera reading (so the lighting test runs), and show the result.
     @Override
     void initLoop(RobotTelemetry t) {
+        if (liveView) t.line(name() + " live view", "on (PRACTICE): Driver Station menu > Camera Stream, in INIT");
         if (source == null) return;
         source.update();
         // A camera that is still not working after 3 s (a webcam needs 1-2 s to start): say so now,
