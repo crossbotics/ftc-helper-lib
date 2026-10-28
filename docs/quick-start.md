@@ -249,9 +249,10 @@ A simulator test runs this template on every library change, so it always builds
 
 ### C. Copy your starter bot's template
 
-Each starter bot is a robot in five files in the library, with the seller's configuration names:
+Each starter bot is a robot in five files in the library, with the seller's configuration names. The
+folders are inside `ftc-helper-lib/examples/src/main/java/com/crossbotics/ftchelper/examples/`:
 
-| Starter bot | Its folder (inside `ftc-helper-lib/examples/src/main/java/com/crossbotics/ftchelper/examples/`) | Its autonomous |
+| Starter bot | Its folder | Its autonomous |
 | --- | --- | --- |
 | goBILDA FTC StarterBot | [`gobildabot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/gobildabot) | `autos/LaunchAndBackUp.java` |
 | REV DUO FTC Starter Bot | [`revbot`](../examples/src/main/java/com/crossbotics/ftchelper/examples/revbot) | `autos/ShootAndLeave.java` |
