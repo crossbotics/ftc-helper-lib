@@ -7,18 +7,18 @@ text and search this page for it (Ctrl+F, or Cmd+F on a Mac).
 
 ## Build problems
 
-**`Project directory '.../ftc-helper-lib/library' does not exist`**
+**<samp>Project directory '.../ftc-helper-lib/library' does not exist</samp>**
 The submodule folder is empty: the project was cloned (copied from GitHub) without the library in
 it. Run in the Terminal tab:
 ```bash
 git submodule update --init
 ```
 
-**`Cannot resolve symbol 'crossbotics'` / red imports**
+**<samp>Cannot resolve symbol 'crossbotics'</samp> / red imports**
 Gradle does not know about the library yet. Check steps 2 and 3 in
 [Add it to a project](01-add-to-project.md), then **File > Sync Project with Gradle Files**.
 
-**`Plugin [id: 'com.android.library'] was not found`**
+**<samp>Plugin [id: 'com.android.library'] was not found</samp>**
 Your project's top `build.gradle` (the one in the project folder, not in TeamCode) must list the
 Android library plugin. Every FtcRobotController
 project does (`id 'com.android.library' version '...' apply false`). If yours is very old, update the SDK.
@@ -28,35 +28,35 @@ See [A new FTC SDK version](02-keep-up-to-date.md#a-new-ftc-sdk-version).
 
 ## Driver Station errors
 
-**`No DcMotorEx named "..." in the active robot configuration`** (or `No Servo named "intake_deploy" ...`)
+**<samp>No DcMotorEx named "..." in the active robot configuration</samp>** (or <samp>No Servo named "intake_deploy" ...</samp>)
 The name in code and the name in the Driver Station configuration differ. The message lists the
 names that do exist. Fix the spelling, or pick the right configuration on the Driver Station.
-**The part is not on the robot yet?** (The message then ends `Not on the robot yet? Add .optional() ...`.)
+**The part is not on the robot yet?** (The message then ends <samp>Not on the robot yet? Add .optional() ...</samp>.)
 Add `.optional()` to its line in Robot.java: INIT then goes on, says the part is off, and its
 buttons and actions skip it until it is in the configuration
 ([parts not on the robot yet](modules/robot.md#parts-not-on-the-robot-yet)). The
 [Hardware Check](modules/testing.md#hardwarecheckopmode) with `robot()` lists every Robot.java device
 the configuration is missing.
 
-**`libraryButtons: G1 BACK has two library jobs: ... Move or free one`**
-(also `has two long (held) library jobs`, `is the slow trigger and also ...`, `cannot open the tuning
-menu`.) In `libraryButtons(...)` a library job was moved onto a button that already has one. Pick
+**<samp>libraryButtons: G1 BACK has two library jobs: ... Move or free one</samp>**
+(also <samp>has two long (held) library jobs</samp>, <samp>is the slow trigger and also ...</samp>,
+<samp>cannot open the tuning menu</samp>.) In `libraryButtons(...)` a library job was moved onto a button that already has one. Pick
 another button, or free the other job with `null` ([the button menu](guides/buttons.md#moving-the-librarys-buttons)).
 
-**`Tunables.Lift has no max: write max (the top of the safe range, in counts: Motor Finder, B). A safety limit never comes from a library default.`**
-(also `has no min`, `Tunables.java has no Lift section`, or `Arm` in `deg`.) On purpose: a lift or arm
+**<samp>Tunables.Lift has no max: write max (the top of the safe range, in counts: Motor Finder, B). A safety limit never comes from a library default.</samp>**
+(also <samp>has no min</samp>, <samp>Tunables.java has no Lift section</samp>, or <samp>Arm</samp> in <samp>deg</samp>.) On purpose: a lift or arm
 must never use a library default for its safe range. Run the [Motor Finder](guides/finders.md), then
 write `min` and `max` in that section of `Tunables.java`.
 
-**`Tunables.Lift.max must be a public static number (like "public static double max = 1000;"): ...`**
+**<samp>Tunables.Lift.max must be a public static number (like "public static double max = 1000;"): ...</samp>**
 The field is there but written another way: not `public`, or not a number (for example a `String`).
 Write it exactly like `public static double max = 2900;`. (Without `static`, it counts as missing: you
-get `has no max` instead.)
+get <samp>has no max</samp> instead.)
 
-**`Tunables.Lift: max (...) must be more than min (...)`**
+**<samp>Tunables.Lift: max (...) must be more than min (...)</samp>**
 The two numbers are swapped or equal. `max` is the top of the safe range, `min` the bottom.
 
-**`Tunables.Lift.Max looks like "max" (capitals and spelling count). Fix the name in Tunables.java; a position must not look like a setting.`**
+**<samp>Tunables.Lift.Max looks like "max" (capitals and spelling count). Fix the name in Tunables.java; a position must not look like a setting.</samp>**
 A field name is a known setting with other capitals or an `_` (`Max`, `MAX`, `MIN`, `kp`, `KP`,
 `k_P`): this always stops INIT. Or it is up to two letters off a setting (`maxPowr`, `maxPwr` for
 `maxPower`) that the section does not write itself: then too. (`slowZone2` next to a written
@@ -65,82 +65,82 @@ Without this stop it would quietly become a named position, and the real setting
 library's default. Fix the spelling. If it really is a position, give it a name that does not look
 like a setting. The known names: [Lift](modules/robot.md#lift).
 
-**`Tunables.Intake.inPowr is not a setting of Intake (did you mean inPower?): the robot would quietly ignore it. ...`**
-(any part: `Tunables.Aim.goalx`, `Tunables.Launcher.nominalVolt`, `Tunables.TurretLift.turetFrom`.) A field
+**<samp>Tunables.Intake.inPowr is not a setting of Intake (did you mean inPower?): the robot would quietly ignore it. ...</samp>**
+(any part: <samp>Tunables.Aim.goalx</samp>, <samp>Tunables.Launcher.nominalVolt</samp>, <samp>Tunables.TurretLift.turetFrom</samp>.) A field
 in that section is not a name the part reads: a typo, other capitals, or a leftover from an older robot.
 Before, the line was quietly skipped and the part used its default. Fix the name (the "did you mean" is
-the closest real one; `Known:` lists them all, and so does the [Tunables reference](guides/tunables.md)),
+the closest real one; <samp>Known:</samp> lists them all, and so does the [Tunables reference](guides/tunables.md)),
 or delete the line. A number you keep for your own code goes in your own section (`Tunables.Auto`).
 
-**`!! Tunables.Launcher is not read by any part: your launcher's section is Tunables.Shooter (its device name "shooter" in CamelCase). Move the numbers there`**
+**<samp>!! Tunables.Launcher is not read by any part: your launcher's section is Tunables.Shooter (its device name "shooter" in CamelCase). Move the numbers there</samp>**
 A part reads the section named after its DEVICE (its configuration name in CamelCase), not after its
 kind: `Launcher.flywheel("shooter", ...)` reads `Tunables.Shooter`, `Indexer.servo("feeder")` reads
 `Tunables.Feeder`, `Lift.slide("lift_left")` reads `Tunables.LiftLeft`. Until you move the numbers, the part
-uses the library's defaults. (Also `did you mean Tunables.LiftLeft?` for a section spelled almost like a
+uses the library's defaults. (Also <samp>did you mean Tunables.LiftLeft?</samp> for a section spelled almost like a
 part's.) An interlock rule's fields follow the same name: `liftLeftAbove`, not `liftAbove`.
 
-**The interlock line says `... held ...: Turret angle unknown (...)`.** The other part's position is not
+**The interlock line says <samp>... held ...: Turret angle unknown (...)</samp>.** The other part's position is not
 known yet (a turret looking for its home switch, a servo turret before START), so it counts as maybe in
 its zone and this part waits. It goes on by itself once the angle is known.
 
-**`AutoDriveConfig.calibrationConfirmed is false`**, or **"AUTONOMOUS IS OFF: the drive is not tuned yet"** (EasyAuto, Auto)
+**<samp>AutoDriveConfig.calibrationConfirmed is false</samp>**, or **<samp>AUTONOMOUS IS OFF: the drive is not tuned yet</samp>** (EasyAuto, Auto)
 On purpose: a robot with untuned numbers can drive much too far. Tune `AutoDrive`, then set it to `true`: [Tune AutoDrive](modules/drive.md#tune-autodrive). With the
 robot in five files: the Drive Tuner, then `Tunables.Drive.calibrated = true`.
 
-## Warnings on the Driver Station (`!! ...` at the top)
+## Warnings on the Driver Station (<samp>!! ...</samp> at the top)
 
 | Warning | Meaning |
 | --- | --- |
-| `lift: push it DOWN to the switch to home it` | homing (finding where 0 is): drive it down to the switch once |
-| `lift: no switch "lift_bottom" in the configuration` | the switch name is wrong or missing: it runs without the switch |
-| `claw: no position called "OPNE"` | a typo in a position name: the command was ignored |
-| `homing failed: switch not found` (turret) | the switch never closed: wire, magnet gap, or the wrong direction in `home(...)` |
-| `follower encoder not reading: follower switched off` (flywheel) | the second flywheel motor has no encoder cable: plug it in (or use one motor) |
-| `Launcher gave up: flywheel` (or `hood`, `Turret`...) | it was not ready in time: that part is the problem |
-| `Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, kP 1.17, ...` | normal on a first run: no gains written, so it starts from the motor's catalog numbers. The wheel gets to speed, but slower after each shot than when tuned: run the [Flywheel Finder](guides/finders.md#flywheel-finder-gains-and-recovery) and write its line ([First run](guides/tunables.md#first-run-what-you-get-before-tuning)) |
-| `Aim odometry: the pose was never set ...` | TeleOp ran without autonomous, so the robot does not know where it is: aiming uses the camera only. Run autonomous first, or park on the reset spot and hold gamepad 1 START 1 s ("set pose here", `Tunables.Odometry.resetX, resetY, resetHeading`; [lesson 7](tutorials/start/07-odometry.md#7-teleop-starts-where-autonomous-ended)) |
-| `No reset spot: add resetX, resetY, resetHeading to Tunables.Odometry` | START was held 1 s ("set pose here") but `Tunables.Odometry` has no spot: add the three numbers (inches and degrees from your wall, for BLUE) |
-| `Alliance now RED (was BLUE)` | the alliance switch is on (`lib.switchAlliance(...)`) and someone held START, then BACK, 1.5 s: the alliance switched. Hold them again to switch back ([ControlMap](modules/robot.md#controlmap)) |
-| `Alliance now RED: odometry aim OFF until the pose is set (...)` | the alliance was switched on a turned field (`mirrorForRed = false`): the pose from autonomous cannot be fixed. Park on the reset spot and hold START 1 s ([buttons guide](guides/buttons.md#switching-the-alliance-in-teleop)) |
-| `Set pose here needs odometry: ...` | START was held 1 s, but the robot has no `odometry(...)` line in Robot.java, so it cannot know where it is ([lesson 7](tutorials/start/07-odometry.md)). Nothing changed |
-| `Launcher : WAITING_READY  left 1  waits for: turret aimed` | the launcher holds the piece until that check is true (here: the turret on the goal). `Launcher gave up: ...` shows for 5 s when it waited too long |
-| `Pose NOT set: stop first ...` | "set pose here" was held while the robot drove (a drive stick pushed) or whole-robot aim was on. Stop, then hold START 1 s again |
-| `No pause button (libraryButtons freed it): ...` | `lib.pause(null)` in `libraryButtons`: nothing pauses the robot. Put it on a button: `lib.pause(g1.back)` |
-| `No slow button (libraryButtons freed it): ...` | `lib.slow(null)` with no `slow()` of your own: add one, e.g. `g1.rt.slow()` |
-| `COMPETITION: "intake_deploy" not in the configuration: IntakeDeploy is OFF (optional part). On the robot? ...` | the same as the note below, loud because the COMPETITION profile is on: at an event a part that is off is most likely a misspelled or lost configuration name. Fix the name (or plug it in) and INIT again; if the part really is not built, it is safe to play |
-| `"intake_deploy" not in the configuration: IntakeDeploy is off (optional part)` | a note, not a problem: the part is marked `optional()` and not on the robot yet. Its commands, buttons (`- off: ... not on the robot` on the map) and action steps are skipped. Plugged in now? Add it to the configuration and INIT again ([parts not on the robot yet](modules/robot.md#parts-not-on-the-robot-yet)) |
-| `Launcher: battery 11.2 V: low. The flywheel gets back to speed slower: charge or swap it` | swap in a charged battery: the wheel gets back to speed slower, so shots wait longer |
-| `Aim odometry: ... more than the field allows` / `Aim: camera says ... odometry ...` | the pose is wrong or drifted, or `Tunables.Aim.goalX, goalY` are not where the camera measures to |
-| `goal out of turret range (behind the robot: holding)` | the goal is behind the robot: turn the robot toward it |
-| `PRACTICE profile` | set COMPETITION at events |
-| `N tuned value(s) differ from the code` | saved tuning values are in use: copy them into the code, then reset |
-| `... button job took N ms: the whole robot stopped that long. ...` or `a button job took N ms: ...` | a button job waited: see "A job took N ms" under [Robot behavior](#robot-behavior) |
-| `Lift update took N ms: update() must not wait or sleep` | a part's `update()` took more than 25 ms: no wait or `sleep()` in `update()`. It goes away 5 s after the last slow update |
-| `intake_color: not found: no colour sensor called ...` (or distance sensor) | a piece sensor's name is not in the robot configuration: it sees nothing, and Pieces counts nothing with it. Fix the name |
-| `ready_color: no new reading for N s` | a piece sensor (or its camera) stopped answering: a loose cable, or a camera that stopped streaming. It sees nothing until readings come back |
-| `Intake: held back by stopsWhen for N s (the count says full)` | the piece count says full. Not really full? Hold the in-button (RT) 1 s to pull in anyway, or hold G2's left stick button 1 s: count = 0 ([Pieces](modules/robot.md#pieces-and-piecesensor)) |
+| <samp>lift: push it DOWN to the switch to home it</samp> | homing (finding where 0 is): drive it down to the switch once |
+| <samp>lift: no switch "lift_bottom" in the configuration</samp> | the switch name is wrong or missing: it runs without the switch |
+| <samp>claw: no position called "OPNE"</samp> | a typo in a position name: the command was ignored |
+| <samp>homing failed: switch not found</samp> (turret) | the switch never closed: wire, magnet gap, or the wrong direction in `home(...)` |
+| <samp>follower encoder not reading: follower switched off</samp> (flywheel) | the second flywheel motor has no encoder cable: plug it in (or use one motor) |
+| <samp>Launcher gave up: flywheel</samp> (or <samp>hood</samp>, <samp>Turret</samp>...) | it was not ready in time: that part is the problem |
+| <samp>Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, kP 1.17, ...</samp> | normal on a first run: no gains written, so it starts from the motor's catalog numbers. The wheel gets to speed, but slower after each shot than when tuned: run the [Flywheel Finder](guides/finders.md#flywheel-finder-gains-and-recovery) and write its line ([First run](guides/tunables.md#first-run-what-you-get-before-tuning)) |
+| <samp>Aim odometry: the pose was never set ...</samp> | TeleOp ran without autonomous, so the robot does not know where it is: aiming uses the camera only. Run autonomous first, or park on the reset spot and hold gamepad 1 START 1 s ("set pose here", `Tunables.Odometry.resetX, resetY, resetHeading`; [lesson 7](tutorials/start/07-odometry.md#7-teleop-starts-where-autonomous-ended)) |
+| <samp>No reset spot: add resetX, resetY, resetHeading to Tunables.Odometry</samp> | START was held 1 s ("set pose here") but `Tunables.Odometry` has no spot: add the three numbers (inches and degrees from your wall, for BLUE) |
+| <samp>Alliance now RED (was BLUE)</samp> | the alliance switch is on (`lib.switchAlliance(...)`) and someone held START, then BACK, 1.5 s: the alliance switched. Hold them again to switch back ([ControlMap](modules/robot.md#controlmap)) |
+| <samp>Alliance now RED: odometry aim OFF until the pose is set (...)</samp> | the alliance was switched on a turned field (`mirrorForRed = false`): the pose from autonomous cannot be fixed. Park on the reset spot and hold START 1 s ([buttons guide](guides/buttons.md#switching-the-alliance-in-teleop)) |
+| <samp>Set pose here needs odometry: ...</samp> | START was held 1 s, but the robot has no `odometry(...)` line in Robot.java, so it cannot know where it is ([lesson 7](tutorials/start/07-odometry.md)). Nothing changed |
+| <samp>Launcher : WAITING_READY  left 1  waits for: turret aimed</samp> | the launcher holds the piece until that check is true (here: the turret on the goal). <samp>Launcher gave up: ...</samp> shows for 5 s when it waited too long |
+| <samp>Pose NOT set: stop first ...</samp> | "set pose here" was held while the robot drove (a drive stick pushed) or whole-robot aim was on. Stop, then hold START 1 s again |
+| <samp>No pause button (libraryButtons freed it): ...</samp> | `lib.pause(null)` in `libraryButtons`: nothing pauses the robot. Put it on a button: `lib.pause(g1.back)` |
+| <samp>No slow button (libraryButtons freed it): ...</samp> | `lib.slow(null)` with no `slow()` of your own: add one, e.g. `g1.rt.slow()` |
+| <samp>COMPETITION: "intake_deploy" not in the configuration: IntakeDeploy is OFF (optional part). On the robot? ...</samp> | the same as the note below, loud because the COMPETITION profile is on: at an event a part that is off is most likely a misspelled or lost configuration name. Fix the name (or plug it in) and INIT again; if the part really is not built, it is safe to play |
+| <samp>"intake_deploy" not in the configuration: IntakeDeploy is off (optional part)</samp> | a note, not a problem: the part is marked `optional()` and not on the robot yet. Its commands, buttons (<samp>- off: ... not on the robot</samp> on the map) and action steps are skipped. Plugged in now? Add it to the configuration and INIT again ([parts not on the robot yet](modules/robot.md#parts-not-on-the-robot-yet)) |
+| <samp>Launcher: battery 11.2 V: low. The flywheel gets back to speed slower: charge or swap it</samp> | swap in a charged battery: the wheel gets back to speed slower, so shots wait longer |
+| <samp>Aim odometry: ... more than the field allows</samp> / <samp>Aim: camera says ... odometry ...</samp> | the pose is wrong or drifted, or `Tunables.Aim.goalX, goalY` are not where the camera measures to |
+| <samp>goal out of turret range (behind the robot: holding)</samp> | the goal is behind the robot: turn the robot toward it |
+| <samp>PRACTICE profile</samp> | set COMPETITION at events |
+| <samp>N tuned value(s) differ from the code</samp> | saved tuning values are in use: copy them into the code, then reset |
+| <samp>... button job took N ms: the whole robot stopped that long. ...</samp> or <samp>a button job took N ms: ...</samp> | a button job waited: see "A job took N ms" under [Robot behavior](#robot-behavior) |
+| <samp>Lift update took N ms: update() must not wait or sleep</samp> | a part's `update()` took more than 25 ms: no wait or `sleep()` in `update()`. It goes away 5 s after the last slow update |
+| <samp>intake_color: not found: no colour sensor called ...</samp> (or distance sensor) | a piece sensor's name is not in the robot configuration: it sees nothing, and Pieces counts nothing with it. Fix the name |
+| <samp>ready_color: no new reading for N s</samp> | a piece sensor (or its camera) stopped answering: a loose cable, or a camera that stopped streaming. It sees nothing until readings come back |
+| <samp>Intake: held back by stopsWhen for N s (the count says full)</samp> | the piece count says full. Not really full? Hold the in-button (RT) 1 s to pull in anyway, or hold G2's left stick button 1 s: count = 0 ([Pieces](modules/robot.md#pieces-and-piecesensor)) |
 
-**`EasyTeleOp needs your robot settings` / `EasyAuto needs your robot settings`**
+**<samp>EasyTeleOp needs your robot settings</samp>** / **<samp>EasyAuto needs your robot settings</samp>**
 Add `robotConfig()` to the OpMode: `return new RobotSettings();` (starter kit) or
 `return RobotSettings.config();` (tutorials). See [RobotConfig](modules/core.md#robotconfig).
 
-**`Autonomous needs the IMU (turn sensor)`**
+**<samp>Autonomous needs the IMU (turn sensor)</samp>**
 `RobotSettings.imu()` returned null. Return `ImuSetup.get(...)` there: every Control Hub has an IMU.
 
 ## Robot behavior
 
-**A part's button does nothing, and INIT says `... no button (G2 RB is your "score high" in Controls.java)`**
+**A part's button does nothing, and INIT says <samp>... no button (G2 RB is your "score high" in Controls.java)</samp>**
 A job of yours in `Controls.java` is on a button that part suggested, so yours won and the part has no
 button for that job. It often happens when a later lesson adds a part (a launcher wants gamepad 2's LB
-and RB). Move your job to a free button (INIT lists them: `G2 free: ...`), or free the part's job and
+and RB). Move your job to a free button (INIT lists them: <samp>G2 free: ...</samp>), or free the part's job and
 give it another button ([lesson 3](tutorials/start/03-buttons.md#5-one-job-per-button-or-several-gestures)).
 
 **A servo turns less than its seller says (a goBILDA 2000 servo: about 270 degrees, not 300)**
 The hub sends 600 to 2400 microseconds for positions 0 to 1 (the FTC SDK's normal range); the servo's
 full turn needs 500 to 2500. Add `.fullRange()` to the part in Robot.java (`ServoSetup...fullRange()`
 or `PositionServo...fullRange()` without the five files), then measure its positions again: they move
-once the range changes ([Full range](modules/hardware.md#full-range)). INIT says `cannot change its pulse
-range` for a servo that is not on a REV hub.
+once the range changes ([Full range](modules/hardware.md#full-range)). INIT says <samp>cannot change its pulse range</samp>
+for a servo that is not on a REV hub.
 
 **My servo positions are off after adding (or removing) `.fullRange()`**
 Positions are measured for one pulse range. Find them again with the Servo Finder (Y while choosing the
@@ -148,7 +148,7 @@ servo = full range) or the Hood Finder, and copy the new numbers into `Tunables.
 
 **Every shot is a little short (or long) today**
 The wheel is worn, the balls are softer, or the battery is lower than when you tuned. In the match: the
-operator's D-pad up/down trims every shot speed by 1% (`Speed trim : +3%` on the Driver Station; held:
+operator's D-pad up/down trims every shot speed by 1% (<samp>Speed trim : +3%</samp> on the Driver Station; held:
 4 steps a second; double-tap D-pad down = 0). If it happens every match, the table is off: multiply its
 speeds by the trim (or tune it again with the Shot Tuner) and copy the new line into `Tunables.java`
 ([Lesson 9](tutorials/start/09-shooter-and-camera.md#speed-trim-and-a-low-battery)).
@@ -245,7 +245,7 @@ where the robot must stand. Read the menu and the note out loud before START:
 The option is spelled differently in `menuChoice(...)` and in `onlyIf(...)` (capitals count). Test each
 option in the simulator: [Several autonomous modes](guides/autos.md#test-each-one-in-the-simulator).
 
-**`modified: ftc-helper-lib (new commits)` in `git status`**
+**<samp>modified: ftc-helper-lib (new commits)</samp> in `git status`**
 Your library folder is at another version than the project expects. If you did not mean to update it:
 `git submodule update`. See [Keep it up to date](02-keep-up-to-date.md#after-a-teammate-updates-it).
 
@@ -253,7 +253,7 @@ Your library folder is at another version than the project expects. If you did n
 Read the CHANGELOG's **Changed** list, or go back to the old version:
 [Go back to the old version](02-keep-up-to-date.md#go-back-to-the-old-version).
 
-**`'git' is not recognized` (Windows), or `git: command not found`**
+**<samp>'git' is not recognized</samp> (Windows), or <samp>git: command not found</samp>**
 The Terminal cannot find git. GitHub Desktop does not fix this: it keeps its own git, and only GitHub
 Desktop can use that one.
 
@@ -262,7 +262,7 @@ Desktop can use that one.
    software** (the recommended choice). The other choices are fine as they are.
 2. Close Android Studio fully and open it again. A Terminal that was open before the install does not
    see git.
-3. Type `git --version` in the Terminal. It prints `git version 2...` when it works.
+3. Type `git --version` in the Terminal. It prints <samp>git version 2...</samp> when it works.
 4. Still not recognized: add git to the PATH (the list of folders Windows looks in for commands) by hand.
    No administrator is needed for this.
     1. Find the folder that has `git.exe` in it: `C:\Program Files\Git\cmd`, or
@@ -271,7 +271,7 @@ Desktop can use that one.
     3. Select **Path**, then **Edit**, then **New**. Paste the folder from step 1. Click **OK**, then **OK**.
     4. Close Android Studio fully, open it again, and do step 3 again.
 
-**`rejected`, `CONFLICT`, `divergent branches` or another git message**
+**<samp>rejected</samp>, <samp>CONFLICT</samp>, <samp>divergent branches</samp> or another git message**
 See [Git and GitHub: problems](guides/github.md#problems).
 
 ## Still stuck?

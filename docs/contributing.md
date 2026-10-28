@@ -59,6 +59,10 @@ A change is not done until all six are done.
   and stop motors in `finally`).
 - Hardware setup methods leave motors at power 0.
 - Nothing game-specific. Field positions, tag IDs and mechanism tuning belong in TeamCode.
+- In the docs, text the robot or a tool SHOWS (a Driver Station message, a warning, a Gradle or git
+  error) is written `<samp>...</samp>`; text you TYPE (code, names, commands) stays in backticks. The
+  site shows the two differently, so a student can tell "what you see" from "what you write".
+  Inside `<samp>`, write `&lt;` and `&amp;` for `<` and `&`.
 - Classes that use time take a clock in a second constructor (`LongSupplier clockNanos`) so tests
   can control time. See `PidController` or `LoopTimer`.
 
