@@ -23,6 +23,8 @@ in Android Studio, and everyone on the team gets the same version.
 
 - The robot project (the `FtcRobotController` folder) open in Android Studio, and it builds.
   For 2026-27 that is FTC SDK 12.0, which needs Android Studio Narwhal 3 Feature Drop or newer.
+- The hub software up to date (once a season): the Driver Station app and the Robot Controller
+  app must have the same version, 12.0. How: [Start from zero, section 3](start-from-zero.md#3-first-build-and-install).
 - Git on the command line. Type `git --version` in Android Studio's **Terminal** tab (bottom of the
   window). It prints `git version 2...` when git is there. On Windows it often is not, even with
   GitHub Desktop installed (GitHub Desktop's git works only inside GitHub Desktop): install Git for

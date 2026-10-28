@@ -60,6 +60,8 @@ These words are on every page of these docs.
      Use the **SDK 12.0** version: open **Releases** on that page, pick **v12.0**, and download the
      source code `.zip`. Unzip it. In Android Studio: **File > Open**, and pick the unzipped folder.
      **Why 12.0:** it is the version this library is built and tested with.
+     **Then add the library** to it, after section 3: [Add it to a project](01-add-to-project.md)
+     (about 10 minutes). The [Quick start](quick-start.md#1-add-the-library) sends you there too.
 4. Open the project folder: the top folder, the one that has `TeamCode` and `FtcRobotController`
    inside it. **Why:** Android Studio needs the whole project, not only the `TeamCode` folder.
 5. **Wait for the first Gradle sync.** **Gradle** is the tool that builds the app. The first time, it
@@ -78,6 +80,22 @@ These words are on every page of these docs.
    `TeamCode > java > org.firstinspires.ftc.teamcode`.)
 
 ## 3. First build and install
+
+**Once a season, first: update the hub software.** The Driver Hub (its Driver Station app and its
+Android system) and the Control Hub (its operating system and firmware) must be up to date.
+**Why:** the Driver Station app and the Robot Controller app must have the same version (the first
+two numbers: **12.0** for the 2026-27 season). If not, the Driver Station shows a version warning,
+or the two do not connect. Robot inspectors check this at events too.
+
+- **Driver Hub, no laptop needed:** connect the Driver Hub to a Wi-Fi network with internet. Open
+  the **Software Manager** app on it and tap **Update All**. Keep it charged; it takes some minutes.
+- **Control Hub (and the Driver Hub too, if you like):** the **REV Hardware Client 2** on the laptop
+  (Windows 10 or 11, macOS 15 or newer, or Linux; download it from
+  [rhc2.revrobotics.com](https://rhc2.revrobotics.com/download/download.html)). Connect the hub with a
+  USB cable, pick it, and install the newest **operating system** and **firmware**.
+  REV's steps: [Updating the Driver Hub](https://docs.revrobotics.com/duo-control/managing-the-control-system/updating-the-driver-hub).
+- **The Robot Controller app** you do not update this way: step 4 below installs it from Android
+  Studio, built from the robot project (SDK 12.0). **Why:** your code is part of that app.
 
 1. **Build:** click the green **hammer** at the top of the window (**Build > Make Project**).
    Wait for the **Build** tab to say it finished, with no errors.
@@ -278,6 +296,10 @@ whole team ([Add it to a project](01-add-to-project.md), about 10 minutes). Afte
 clones the project gets it.
 
 ## Next
+
+**No `ftc-helper-lib` folder next to `TeamCode` yet?** Add the library first:
+[Add it to a project](01-add-to-project.md). Folder there but empty? Type `git submodule update --init`
+in the Terminal. Then:
 
 1. Used Scratch or Blocks before? Read [From Blocks to Java](blocks-to-java.md) next, **before** the
    Quick start: it shows where each block you know went.
