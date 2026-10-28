@@ -21,6 +21,35 @@ The section is the device's name in CamelCase (each word starts with a capital, 
 `.tunables("Name")` in Robot.java: then copy the numbers into that section).
 The finders call positions P1, P2...: give them real names (`low`, `high`, `open`, `closed`).
 
+## Tune and check: all of them in one OpMode
+
+The library adds one OpMode by itself: **Tune and check** (TeleOp list, group "Finders"). There is no
+file to copy. It holds the Hardware Check and every finder that fits your Robot.java.
+
+1. Pick **Tune and check** and press INIT. A menu shows.
+2. D-pad up/down picks a tool. **A** opens it: you see its own INIT screen. Read its safety note.
+3. Press **START**: the tool runs, as it does on its own.
+4. Another tool: press STOP, then INIT. The menu starts on the last tool. In a tool's INIT,
+   **BACK** goes back to the menu.
+
+The menu lists only the tools that fit your robot. It finds Robot.java by itself (any class in
+`org.firstinspires.ftc.teamcode` that extends `RobotDefinition`; two robots: D-pad left/right picks one):
+
+| Tool | In the menu when |
+| --- | --- |
+| Hardware Check | always |
+| Servo Finder | the configuration has a servo |
+| Hood Finder | the robot has a hood |
+| Motor Finder | the robot has a lift or an arm (or there is no Robot.java) |
+| Flywheel Finder | the robot has a launcher (or there is no Robot.java) |
+| Drive Tuner | there is a Robot.java |
+| Odometry Tuner | Robot.java has an `odometry(...)` line |
+| Shot Tuner | the robot has a launcher |
+| Piece Tuner | the robot has a piece sensor |
+
+Not in the menu: the **Aim Tuner** and the **Characterizer**. They need your camera or your lifts, so they
+keep their own file (below). Your own finder files still work: keep them or delete them.
+
 ## The order
 
 ```mermaid

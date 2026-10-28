@@ -152,6 +152,30 @@ public abstract class FinderOpMode extends LinearOpMode {
         for (String line : helpLines()) t.text(line);
     }
 
+    // Set while "Tune and check" runs this finder inside itself: INIT, START and STOP are then the host's.
+    private Hosting hosting;
+
+    /** Runs this finder inside "Tune and check" ({@link TuneAndCheckOpMode}). You do not call it yourself. */
+    public final void runInside(Hosting hosting) {
+        this.hosting = hosting;
+        hosting.lend(this);
+        runOpMode();
+    }
+
+    /** opModeInInit(), or the host's when this finder runs inside "Tune and check". */
+    protected final boolean inInit() {
+        return hosting == null ? opModeInInit() : hosting.inInit(this);
+    }
+
+    /** opModeIsActive(), or the host's when this finder runs inside "Tune and check". Use it, not opModeIsActive(). */
+    protected final boolean running() {
+        return hosting == null ? opModeIsActive() : hosting.running(this);
+    }
+
+    private boolean stopRequested() {
+        return hosting == null ? isStopRequested() : hosting.stopRequested();
+    }
+
     /**
      * The whole finder. The FTC SDK calls this when you press INIT. {@code final}: a finder cannot
      * skip the safety steps here.
@@ -168,7 +192,7 @@ public abstract class FinderOpMode extends LinearOpMode {
         try {
             setup();
             bind(controls);
-            while (opModeInInit()) {
+            while (inInit()) {
                 updateHelpKeys();
                 if (helpOpen) {
                     showHelp(t);
@@ -180,12 +204,12 @@ public abstract class FinderOpMode extends LinearOpMode {
                 }
                 t.update();
             }
-            if (isStopRequested()) return;
+            if (stopRequested()) return;
             // A button held through START must not count as a press.
             controls.ignoreHeldButtons(gamepad1, gamepad2);
             boolean helpWasOpen = false;
             boolean voltsNoted = false;
-            while (opModeIsActive()) {
+            while (running()) {
                 // GUIDE, or START held 1 s: the help page (and everything stops), while running too.
                 updateHelpKeys();
                 if (helpOpen) {

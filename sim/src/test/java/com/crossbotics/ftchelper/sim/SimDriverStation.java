@@ -124,6 +124,11 @@ final class SimDriverStation {
         findOpModes();
         // The auto builder's own autonomous (it runs the page's plan with the team's code): always listed.
         opModes.add(new Entry(BuiltAuto.NAME, "Builder", "Autonomous", false, BuiltAuto.class));
+        // "Tune and check" is the library's own OpMode (not in TeamCode): on the robot the SDK lists it too.
+        if (scope == Scope.TEAM) {
+            opModes.add(new Entry(com.crossbotics.ftchelper.finders.TuneAndCheckOpMode.NAME, "Finders", "TeleOp", false,
+                    com.crossbotics.ftchelper.finders.TuneAndCheckOpMode.class));
+        }
     }
 
     // Loops run by an iterative OpMode (a LinearOpMode's loops are counted by its telemetry updates).

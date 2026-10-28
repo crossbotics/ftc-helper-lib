@@ -6,6 +6,12 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Added
 
+- **"Tune and check": every check and finder in one OpMode, always there.** The library adds it to the
+  TeleOp list (group "Finders"); nothing to copy. INIT shows a menu of the Hardware Check and the finders
+  that fit Robot.java (the Hood Finder only with a hood, the Shot Tuner only with a launcher...). D-pad
+  picks, A opens the tool's INIT screen, START runs it; BACK in the tool's INIT goes back to the menu.
+  Your own finder files still work. Not in it: the Aim Tuner and the Characterizer (they need your camera
+  or lifts). [Guide](docs/guides/finders.md#tune-and-check-all-of-them-in-one-opmode)
 - **An "Update library" button in Android Studio** (next to Simulator and Simulator tests; it appears at the
   next Gradle sync). It gets the version list from GitHub, switches the `ftc-helper-lib` folder to the
   newest release, and prints what changed since your version (the CHANGELOG parts). It commits nothing,

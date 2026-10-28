@@ -88,6 +88,24 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
     // Each button's state in the LAST loop (same order as "now" in handleInput), to notice new presses.
     private final boolean[] was = new boolean[10];
 
+    // Set while "Tune and check" runs this check inside itself: INIT, START and STOP are then the host's.
+    private com.crossbotics.ftchelper.finders.Hosting hosting;
+
+    /** Runs this check inside "Tune and check" (TuneAndCheckOpMode). You do not call it yourself. */
+    public final void runInside(com.crossbotics.ftchelper.finders.Hosting hosting) {
+        this.hosting = hosting;
+        hosting.lend(this);
+        runOpMode();
+    }
+
+    private boolean inInit() {
+        return hosting == null ? opModeInInit() : hosting.inInit(this);
+    }
+
+    private boolean running() {
+        return hosting == null ? opModeIsActive() : hosting.running(this);
+    }
+
     /**
      * The whole check. The FTC SDK calls this when you press INIT.
      * {@code @Override} means it fills in the method LinearOpMode asks for.
@@ -102,7 +120,7 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
         // Robot.java against this configuration (only if robot() gives the robot).
         robotLines = robotCheck();
         // INIT: the screen until START (GUIDE shows the help here too).
-        while (opModeInInit()) {
+        while (inInit()) {
             updateHelp();
             if (helpOpen) {
                 showHelp(t);
@@ -117,8 +135,10 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
         // ---- Running ----
         // try/finally: the "finally" part runs however the loop ends (STOP pressed, or an error),
         // so every motor and CR servo is always stopped at the end.
+        // BACK in "Tune and check" (INIT): back to its menu, nothing ran.
+        if (hosting != null && hosting.stopRequested()) return;
         try {
-            while (opModeIsActive()) {
+            while (running()) {
                 updateHelp();
                 if (helpOpen) {
                     // Help open: nothing moves while the driver reads, and no button acts.
