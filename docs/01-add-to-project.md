@@ -23,8 +23,11 @@ in Android Studio, and everyone on the team gets the same version.
 
 - The robot project (the `FtcRobotController` folder) open in Android Studio, and it builds.
   For 2026-27 that is FTC SDK 12.0, which needs Android Studio Narwhal 3 Feature Drop or newer.
-- Git. Android Studio's **Terminal** tab (bottom of the window) has it on most computers.
-  Type `git --version` to check.
+- Git on the command line. Type `git --version` in Android Studio's **Terminal** tab (bottom of the
+  window). It prints `git version 2...` when git is there. On Windows it often is not, even with
+  GitHub Desktop installed (GitHub Desktop's git works only inside GitHub Desktop): install Git for
+  Windows, then close and open Android Studio again. Still `not recognized`? See
+  [git is not recognized](troubleshooting.md#autonomous-choice-and-git-problems).
 
 ## Step 1: Add the submodule
 
