@@ -170,15 +170,15 @@ gamepad 1 with `oneDriver = true`, as in the goBILDA bot:
 | Button | Does |
 | --- | --- |
 | LB | spin up / spin down (to `idleRpm`) |
-| RB | fire one: spins up if needed, feeds as soon as it is at speed |
-| RB held | keeps firing, one piece after another; let go and no more are fed |
+| RB | fire one: spins up if needed, feeds as soon as it is at speed (CAREFUL) |
+| RB held | keeps firing, one piece after another, a little faster (QUICK); let go and no more are fed |
 | D-pad up / down | speed + / - `stepRpm`; with speed from distance (below), the speed trim + / - 1% |
 | D-pad up / down held | one more step every 0.25 s (after half a second), for a big change |
 | D-pad down double-tap | back to `speedRpm` (no trim) |
 | D-pad up double-tap | use last time's trim (only when the Driver Station offers it at INIT) |
 
 Spinning up early with LB saves time: the wheel is ready when the shot is lined up. The goBILDA bot adds
-one job of its own, Y to fire all four: `g1.y.press(Actions.fireAll(robot)).says("fire all");`
+a fire-all button with the library's ready action: `g1.y.press(robot.launcher.fireAllAction()).says("fire all");`
 
 **Are LB and RB still free?** A job of yours in `Controls.java` on one of these buttons takes it from
 the launcher. If you followed lesson 5, your actions are on gamepad 2's RB and LB, so the launcher gets
@@ -202,7 +202,11 @@ The launcher keeps two rules for you. Know them, because they explain what the r
 
 1. **Never feed into a slow flywheel.** A piece is fed only when the wheel has stayed within
    `readyBandRpm` of its speed, and every other check (step 7) is true. Between two pieces it waits
-   `shotIntervalSec`, so the wheel can get back to speed.
+   `shotIntervalSec`, so the wheel can get back to speed. That is the **CAREFUL** shot mode, for a tap
+   of RB. Held RB is **QUICK**: the first piece waits the same way, the next ones go a little sooner
+   (within `quickBandRpm`, or after `quickMaxWaitSec`). In an autonomous the launcher picks by the time
+   left before the park. A third mode, **SPRAY**, does not wait for the speed: it is off unless you set
+   `sprayEnabled = true` ([Firing](../../modules/robot.md#firing-shot-modes-feed-stop-piece-path)).
 2. **Never wait forever.** If it is not ready within 3 s, it gives up the shots still waiting and the
    Driver Station says why: `Launcher gave up: flywheel`. A robot that fired late, at a bad moment,
    would be worse than one that did not fire.
