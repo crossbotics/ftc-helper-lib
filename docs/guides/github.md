@@ -78,6 +78,9 @@ git config --global user.email "12345678+YOUR-NAME@users.noreply.github.com"
 git config --global pull.rebase false
 ```
 
+`git --version` says `not recognized` (Windows)? GitHub Desktop's own git does not work in the Terminal.
+See [git is not recognized](../troubleshooting.md#autonomous-choice-and-git-problems).
+
 **Change the two lines before you run them:** `YOUR-NAME` is your first name or GitHub username, and
 the email is YOUR private GitHub address (below), not the example's. Keep the quotes.
 

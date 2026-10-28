@@ -253,6 +253,24 @@ Your library folder is at another version than the project expects. If you did n
 Read the CHANGELOG's **Changed** list, or go back to the old version:
 [Go back to the old version](02-keep-up-to-date.md#go-back-to-the-old-version).
 
+**`'git' is not recognized` (Windows), or `git: command not found`**
+The Terminal cannot find git. GitHub Desktop does not fix this: it keeps its own git, and only GitHub
+Desktop can use that one.
+
+1. Install Git for Windows from [git-scm.com/downloads/win](https://git-scm.com/downloads/win). On the
+   page "Adjusting your PATH environment", keep **Git from the command line and also from 3rd-party
+   software** (the recommended choice). The other choices are fine as they are.
+2. Close Android Studio fully and open it again. A Terminal that was open before the install does not
+   see git.
+3. Type `git --version` in the Terminal. It prints `git version 2...` when it works.
+4. Still not recognized: add git to the PATH (the list of folders Windows looks in for commands) by hand.
+   No administrator is needed for this.
+    1. Find the folder that has `git.exe` in it: `C:\Program Files\Git\cmd`, or
+       `C:\Users\YOUR-NAME\AppData\Local\Programs\Git\cmd` when Git was installed for one user only.
+    2. Press the Windows key, type `environment`, and open **Edit environment variables for your account**.
+    3. Select **Path**, then **Edit**, then **New**. Paste the folder from step 1. Click **OK**, then **OK**.
+    4. Close Android Studio fully, open it again, and do step 3 again.
+
 **`rejected`, `CONFLICT`, `divergent branches` or another git message**
 See [Git and GitHub: problems](guides/github.md#problems).
 
