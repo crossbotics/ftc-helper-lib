@@ -52,6 +52,8 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - **Reverse drive:** `g1.x.toggle(robot.reverseDriveMode()).rumble()`: the back is the front.
 - **Webcam live view:** a webcam shows its picture in the PRACTICE profile (Driver Station > Camera
   Stream), never at an event. A Limelight: plug it into a laptop and open its web page.
+- **The real field in 3D for every team.** The simulator's 3D view now shows BIOBUZZ's real field parts
+  (made from FIRST's field CAD) in every project, not only where the robot file named a model.
 - **Setting up Limelight lighting pipelines:** a new step-by-step guide.
   [Guide](docs/guides/limelight-lighting.md)
 - **An "Update library" button in Android Studio** (next to Simulator and Simulator tests; it appears at the

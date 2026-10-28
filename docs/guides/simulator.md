@@ -221,9 +221,10 @@ something. Its shapes (below) move with their motors and servos. Rollers and whe
 stripes, so you see them turn and which way; a roller glows **green** while it takes pieces in and
 **orange** while it pushes them out, a flywheel or other spinner glows **yellow** while it turns, and a
 passive part (moved by gravity or springs) **blinks yellow** while it moves. The field is built from the field file's shapes (tiles, walls, tape, solid and overhead
-parts) with each AprilTag as a square with its ID. If the robot file names a 3D model of the field
-(`field.model`), the page shows that model instead (with the tag squares on top); "Field CAD model" in
-the **View** menu switches between them. Each camera shows as a cone (webcam yellow, Limelight green);
+parts) with each AprilTag as a square with its ID. With a 3D model of the field (the library has
+BIOBUZZ's, made from FIRST's field CAD; a robot file can name its own with `field.model`), the page shows
+that model instead (with the tag squares on top); "Field CAD model" in the **View** menu switches between
+them. Each camera shows as a cone (webcam yellow, Limelight green);
 "Camera view" in the View menu shows a camera's picture in the corner (pick the camera when there are two; it is redrawn 15 times
 a second, smaller than the screen, so it costs little). The game pieces are striped balls, so you can see
 them roll and spin. A tipping HIVE turns smoothly (with a rules file the simulator turns it over its
@@ -520,7 +521,7 @@ default):
 | Line | Default | Means |
 | --- | --- | --- |
 | `field = NAME` | `biobuzz-2026` | the field file in `sim/fields/` |
-| `field.model = FILE` | none | the field's 3D model for the 3D view (path from the robot file) |
+| `field.model = FILE` | the library's model of the field (`sim/fields/<field>.glb`, BIOBUZZ has one) | the field's 3D model for the 3D view (path from the robot file) |
 | `parts = FILE.json` | none | your own parts catalog, added to the library's ([parts catalog](parts-catalog.md)) |
 | `battery = V` | 12.8 | battery volts at the start (the page's slider: 11 to 13.5) |
 | `robot.lengthIn`, `robot.widthIn` | 18 | the footprint, for bumping into field parts |
@@ -1284,11 +1285,11 @@ same folder with the same name.
 Coordinates: inches from the field center, +x to the right and +y away from the drivers (drawn at the
 bottom), z up from the tiles; headings and tag facing in degrees, counterclockwise from +x for tags.
 
-A field's 3D model (for the 3D view) is a `.glb` file in the same frame, in inches, z up. It is not in
-the library: models made from FIRST's field CAD belong in the team's own robot project
-(`simulator/fields/`), named by `field.model` in the robot file. Without one, the 3D view builds the field
-from the field file. The BIOBUZZ model is made by a script (`export_sim_field_glb.py`) that is not in this library yet (ask the maintainer)
-from the field CAD export.
+A field's 3D model (for the 3D view) is a `.glb` file in the same frame, in inches, z up, next to the
+field file with the same name: `sim/fields/biobuzz-2026.glb` is BIOBUZZ's, made from FIRST's official
+field CAD, and every robot file with `field = biobuzz-2026` uses it. A robot file can name another one with
+`field.model` (a path from the robot file). Without a model, the 3D view builds the field from the field
+file.
 
 ## Cameras
 

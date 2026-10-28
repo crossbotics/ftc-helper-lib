@@ -479,8 +479,31 @@ final class SimRobot {
                 throw new IllegalArgumentException("Robot file: field.model must be a .glb file");
             }
             robot.fieldModel = m;
+        } else {
+            // No field.model: the library's own 3D model of this season's field, if it has one
+            // (sim/fields/<field>.glb next to the field file), so every team sees the real field parts.
+            robot.fieldModel = libraryFieldModel(p.getProperty("field", "").trim());
         }
         return robot;
+    }
+
+    // The library's 3D model for a field named in the robot file: sim/fields/<name>.glb on the classpath
+    // (a file in the library checkout), or <file>.glb next to a field given by its path. Null if none.
+    static Path libraryFieldModel(String field) {
+        if (field.isEmpty()) return null;
+        try {
+            Path asFile = java.nio.file.Paths.get(field);
+            if (Files.isRegularFile(asFile)) {
+                Path glb = asFile.resolveSibling(asFile.getFileName().toString().replaceFirst("\\.json$", "") + ".glb");
+                return Files.isRegularFile(glb) ? glb : null;
+            }
+            java.net.URL u = SimRobot.class.getResource("/" + field + ".glb");
+            if (u == null || !"file".equals(u.getProtocol())) return null;
+            Path glb = java.nio.file.Paths.get(u.toURI());
+            return Files.isRegularFile(glb) ? glb : null;
+        } catch (RuntimeException | java.net.URISyntaxException e) {
+            return null;   // a name that is not a path, or an odd class path: no model (the simple field)
+        }
     }
 
     // ---------------------------------------------------------------- devices
