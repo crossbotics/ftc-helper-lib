@@ -2,6 +2,22 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Changed
+
+- **Three example robots now shoot with the ready-made steps.** Their autonomous gets ready, aims, then
+  fires: `.readyToLaunch("Ready", 3)`, `.aimAtGoal(...)`, `.action(robot.launcher.fireAllAction())`.
+  `flywheelbot` turns the whole robot (with a 45 degree sweep when the goal is not in view); `turretbot`
+  and `v2bot` wait for the turret to aim. `flywheelbot`'s G2 Y fires with `robot.launcher.fireAllAction()`,
+  and its hand-written `Actions.fireThree` is gone. Your own code needs no change.
+  [Lesson 9, section 10](docs/tutorials/start/09-shooter-and-camera.md#10-no-turret-aim-the-whole-robot)
+
+### Fixed
+
+- **`v2bot`'s autonomous start spot fits in the simulator.** It was y -61.6 in, 0.1 in into the wall:
+  the simulator said so and used another spot. Now y -61.5 in.
+
 ## v0.20.3 - 2026-10-28
 
 **What matters for your robot**

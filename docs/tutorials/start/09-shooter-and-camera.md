@@ -618,6 +618,21 @@ only `aim().isAimed()` the robot would never fire while the aim is off. `aim()` 
 are the robot's own (the code is inside `Robot.java`); in `Controls.java` and `Actions.java` the same
 things are `robot.aim()` and `robot.aimMode()`.
 
+**In an autonomous: get ready, aim, fire.** Three ready-made steps, no `Actions.java`. From
+[`flywheelbot/autos/ShootAndLeave.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot/autos/ShootAndLeave.java):
+
+```java
+.readyToLaunch("Ready", 3)                    // spins up, waits until at speed
+.aimAtGoal("Aim", 4, 45)                      // turns the robot; goal not seen: looks 45 degrees each way
+.action(robot.launcher.fireAllAction())       // fires every piece it holds
+```
+
+`readyToLaunch` waits until the wheel is at speed (at most 3 s). `aimAtGoal` turns the whole robot to
+the goal (at most 4 s). If the camera does not see the goal, it turns slowly up to 45 degrees left, then
+right, to find it. Never seen: it turns back and goes on. `fireAllAction()` fires every piece the robot
+holds and waits until the last one has left. With a turret that follows the goal (`turretbot`,
+`v2bot`), the same `aimAtGoal` waits for the turret to aim instead: the robot does not turn.
+
 ## 11. Feel the aim: a buzz when on target
 
 The driver who fires watches the field, not the screen. One line in `Controls.java`:

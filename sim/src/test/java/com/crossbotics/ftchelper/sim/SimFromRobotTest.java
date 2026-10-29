@@ -177,13 +177,50 @@ public class SimFromRobotTest {
             double y0 = s.robot().y;
             s.start();
             assertTrue("it finishes", SimRun.waitFor(() -> s.screenHas("Autonomous finished"), 25));
-            assertTrue(String.join("\n", s.screen()), s.screenHas("Fire three: done"));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Fire all: done"));
             assertTrue(String.join("\n", s.screen()), s.screenHas("Leave: done"));
             assertTrue("it moved", Math.abs(s.robot().y - y0) > 12);
             assertTrue("it shot\n" + String.join("\n", s.screen()), s.robot().shots() >= 1);
             assertEquals("", s.error());
         } finally {
             Tunables.Drive.calibrated = was;
+        }
+    }
+
+    // The turret robots' autos: ready, the turret aims, fire all, leave.
+    @Test public void turretBotAutoShootsAndLeaves() throws Exception {
+        boolean was = com.crossbotics.ftchelper.examples.turretbot.Tunables.Drive.calibrated;
+        com.crossbotics.ftchelper.examples.turretbot.Tunables.Drive.calibrated = true;
+        try {
+            // Its start spot is in words only: the simulator's spot does not show the goal, so no shot is checked.
+            runShootingAuto(com.crossbotics.ftchelper.examples.turretbot.Robot.class, "TurretBot Shoot from Start", false);
+        } finally {
+            com.crossbotics.ftchelper.examples.turretbot.Tunables.Drive.calibrated = was;
+        }
+    }
+
+    @Test public void v2BotAutoShootsAndLeaves() throws Exception {
+        boolean was = com.crossbotics.ftchelper.examples.v2bot.Tunables.Drive.calibrated;
+        com.crossbotics.ftchelper.examples.v2bot.Tunables.Drive.calibrated = true;
+        try {
+            runShootingAuto(com.crossbotics.ftchelper.examples.v2bot.Robot.class, "V2 Bot Shoot and Stow", true);
+        } finally {
+            com.crossbotics.ftchelper.examples.v2bot.Tunables.Drive.calibrated = was;
+        }
+    }
+
+    private void runShootingAuto(Class<?> robotClass, String auto, boolean mustShoot) throws Exception {
+        Path file = generate(robotClass);
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init(auto);
+            s.start();
+            assertTrue("it finishes\n" + String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Autonomous finished"), 28));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Fire all: done"));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Leave: done"));
+            if (mustShoot) assertTrue("it shot\n" + String.join("\n", s.screen()), s.robot().shots() >= 1);
+            assertEquals("", s.error());
+        } finally {
+            com.crossbotics.ftchelper.match.MatchMemory.clear();
         }
     }
 
