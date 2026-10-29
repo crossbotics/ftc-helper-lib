@@ -326,6 +326,8 @@ final class SimScore {
             if (i++ > 0) b.append(',');
             b.append("{\"name\":").append(q(e.getKey())).append(",\"tipping\":").append(e.getValue() > 0)
                     .append(",\"progress\":").append(num(e.getValue())).append(",\"turnDeg\":").append(num(h == null ? 0 : h.turnDeg))
+                    // which CELL is up as this was written: the page skips a turn whose HIVE has tipped since
+                    .append(",\"up\":").append(h == null ? 0 : h.up)
                     .append(",\"tipSeconds\":").append(num(r.tipSeconds)).append('}');
         }
         b.append("],\"shots\":[");

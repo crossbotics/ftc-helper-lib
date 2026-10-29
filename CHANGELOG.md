@@ -2,6 +2,23 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## v0.21.1 - 2026-10-29
+
+**What matters for your robot**
+
+- **Two simulator fixes.** The Auto builder button opens again, and a tipped HIVE stays tipped in the picture.
+  No code change needed.
+
+### Fixed
+
+- **Simulator: the Auto builder button did nothing** (since v0.20.2). A name was declared twice in the
+  builder's page code (`builder.js`), so the browser did not load it. `tools/check_builder.mjs` now checks
+  that every builder file parses.
+- **Simulator: a tipped HIVE turned back in the 3D picture** right after it tipped (the game went on as
+  tipped: the points, the pieces and the CELLs were right). The page gets the score part less often than
+  the HIVEs, and an old "tipping" in it started the turn again from the tipped place. Each HIVE in the score
+  part now says which CELL is up, and the page skips a turn that no longer matches.
+
 ## v0.21.0 - 2026-10-29
 
 **What matters for your robot**

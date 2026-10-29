@@ -175,6 +175,10 @@ public class SimGameTest {
         assertEquals(0, r.pieces.tipProgress().get("Red HIVE"), 0);
         assertTrue("the pieces moved smoothly (most in one 0.01 s step: " + maxJump + " in)", maxJump < 3);
         assertEquals("a TELEOP tip (free play counts as TELEOP)", 20, side(r, "red").tipTeleop, 0);
+        // The page gets the game part less often than the HIVEs: each HIVE's "up" in it lets the page skip a
+        // "tipping" written before the tip ended (else it turned the HIVE back in the picture).
+        String json = r.pieces.score.json();
+        assertTrue(json, json.contains("\"name\":\"Red HIVE\",\"tipping\":false") && json.contains("\"up\":-1"));
     }
 
     // Each launched shot gets a verdict: a steep shot from 60 in out into the red HIVE's up CELL goes in cleanly;
