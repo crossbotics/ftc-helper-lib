@@ -369,8 +369,8 @@ function renderFeatures() {
 	// "+ Aim at the goal" only for a robot that can aim (or before the simulator answers)
 	const aim = list.find((f) => f.kind === 'AUTO_STEP' && f.name === 'Aim at the goal');
 	$('bAddAim').hidden = !!list.length && !(aim && !aim.missing);
-	const ready = list.find((f) => f.kind === 'AUTO_STEP' && f.name === 'Ready to launch');
-	$('bAddReady').hidden = !!list.length && !(ready && !ready.missing);
+	const readyStep = list.find((f) => f.kind === 'AUTO_STEP' && f.name === 'Ready to launch');
+	$('bAddReady').hidden = !!list.length && !(readyStep && !readyStep.missing);
 }
 $('bRobot').onchange = () => change(() => { B.robotClass = $('bRobot').value; });
 $('bRed').onclick = () => change(() => { B.alliance = 'RED'; });

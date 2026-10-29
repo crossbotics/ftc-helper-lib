@@ -1874,6 +1874,8 @@ function startServerTips(hives) {
     if (!g.tipping || g.progress >= 1 || (v3.hiveTurns || []).some(t => t.name === g.name)) continue;
     const h = hives.find(x => x.name === g.name), mine = v3.hivePlates && v3.hivePlates[g.name];
     if (!h || !mine) continue;
+    // The game part comes less often than the HIVEs: a "tipping" from before the HIVE tipped would turn it back.
+    if (g.up !== undefined && g.up !== h.up) continue;
     const meshes = [...mine.plates];
     for (const id of mine.ids) { const m = v3.tagGroup.getObjectByName("tag " + id); if (m) { m.updateMatrix(); m.matrixAutoUpdate = false; meshes.push(m); } }
     const cadFrom = h.up !== h.startUp ? h.startUp * h.tipDeg * Math.PI / 180 : 0;

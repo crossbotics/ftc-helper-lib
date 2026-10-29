@@ -23,6 +23,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import os from 'node:os';
+import { spawnSync } from 'node:child_process';
 
 const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const dir = path.join(root, 'sim/src/test/resources/sim/builder');
@@ -385,6 +387,16 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 	ok(tin.problems.some((t) => /moveWithTurn.*not possible on a tank drive/.test(t)), 'fromJava, tank: moveWithTurn is left out and listed');
 	const min = S.fromJava(javaIn);
 	ok(min.drive === 'mecanum' && min.tank.length === 0 && strafes(min.plan.steps).length === 1 && min.problems.some((t) => /moveWithTurn/.test(t)), 'fromJava, mecanum: the strafe stays; moveWithTurn is still never read silently');
+	// Every page file parses (builder.js is never imported here: it needs the page). One syntax error stops the
+	// whole module in the browser, and the Auto builder button then does nothing.
+	const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'builder-check-'));
+	for (const f of fs.readdirSync(dir).filter((n) => n.endsWith('.js'))) {
+		const copy = path.join(tmp, f.replace(/\.js$/, '.mjs'));
+		fs.copyFileSync(path.join(dir, f), copy);
+		const r = spawnSync(process.execPath, ['--check', copy], { encoding: 'utf8' });
+		ok(r.status === 0, `${f} parses` + (r.status === 0 ? '' : ': ' + ((r.stderr || '').match(/SyntaxError[^\n]*/) || [r.stderr])[0]));
+	}
+	fs.rmSync(tmp, { recursive: true, force: true });
 	// Both pages use these (no copy of their own) and run tankSteps on every render.
 	const page = fs.readFileSync(path.join(dir, 'builder.js'), 'utf8');
 	ok(/S\.stepsToPoint\(/.test(page) && /S\.dragMove\(/.test(page) && /S\.tankSteps\(/.test(page) && /syncRobot\(\);\s*enforceTank\(\);/.test(page), 'builder.js: drive there, drag and every render use the shared tank rules');
