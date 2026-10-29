@@ -532,7 +532,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.21.0",
    "docs": [
     {
      "path": "docs/modules/robot.md",
