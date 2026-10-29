@@ -1,5 +1,6 @@
 package com.crossbotics.ftchelper.examples.flywheelbot;
 
+import com.crossbotics.ftchelper.robot.Aim;
 import com.crossbotics.ftchelper.robot.Camera;
 import com.crossbotics.ftchelper.robot.Drive;
 import com.crossbotics.ftchelper.robot.Indexer;
@@ -49,11 +50,14 @@ public class Robot extends RobotDefinition {
         intake = add(Intake.motor("intake").part("gobilda-5203-1150").onAtStart().holds(3)
                 .looks(intakeArm, intakeRoller));
 
-        // A flywheel fed by the indexer servo (part of the launcher, not added on its own). Shots: 50 degrees up.
+        // A flywheel fed by the indexer servo (part of the launcher, not added on its own). Shots: 75 degrees up
+        // (a steep shot drops into the CELL from above).
+        // Fires only when LOCKED: the camera sees the goal and the robot's front points at it. Never blind.
         launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
                 .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
                 .looks(Shape.flywheel("gobilda-hogback-96").atMm(-40, 0, 170))
-                .shotAngle(50));
+                .shotAngle(75)
+                .requireReady("aimed", () -> aim().stage() == Aim.Stage.LOCKED));
 
         // The goal's AprilTag group for each alliance. robot.aimMode() turns the robot to face it.
         camera = add(Camera.webcam("Webcam 1").goal("BLUE SCORING", "RED SCORING"));

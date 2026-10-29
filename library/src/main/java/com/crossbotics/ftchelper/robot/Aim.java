@@ -578,7 +578,11 @@ public final class Aim {
     private String stageLine() {
         TargetObservation g = goal();
         Stage st = stage();
-        if (g == null) return "not seen" + (aimingCamera() != null ? " (the camera does not see it)" : "");
+        if (g == null) {
+            Camera c = aimingCamera();
+            String why = c == null ? "" : c.whyNoGoal();
+            return "not seen" + (c == null ? "" : why.isEmpty() ? " (the camera does not see it)" : " (" + why + ")");
+        }
         Turret t = followingTurret();
         double off = t != null ? t.aimErrorDeg() : corrected(g).bearingDeg;
         return st.words() + " (" + sourceOf(g).words() + (Double.isNaN(g.distanceIn) ? "" : Module.fmt(", %.0f in", g.distanceIn))

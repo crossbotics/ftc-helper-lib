@@ -187,7 +187,7 @@ public class AimTest {
     }
 
     private TargetObservation seen(double bearing, double distance) {
-        return new TargetObservation(TargetObservation.CLUSTER, "BLUE SCORING", bearing, distance, clock.get());
+        return new TargetObservation(TargetObservation.CLUSTER, "BLUE SCORING", bearing, distance, clock.get(), 0);   // roll 0: right side up (the up CELL)
     }
 
     // ----------------------------- the goal from the odometry -----------------------------

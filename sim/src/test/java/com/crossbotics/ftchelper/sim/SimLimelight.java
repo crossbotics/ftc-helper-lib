@@ -113,8 +113,11 @@ final class SimLimelight extends Limelight3A {
             double[] n = SimCamera.tagNormal(s.pose);
             double[] nc = {SimCamera.dot(n, c[1]), SimCamera.dot(n, c[2]), SimCamera.dot(n, c[3])};
             // The tag's turn as the camera sees it: yaw about the camera's up/down axis, pitch about its
-            // left/right axis (0, 0 when the tag faces the lens straight on). Roll is not worked out.
+            // left/right axis (0, 0 when the tag faces the lens straight on), and roll: its printed up (the
+            // field file's "up", which a tipped HIVE turns over) in the picture, 0 = right side up, 180 = upside down.
             double yaw = Math.toDegrees(Math.atan2(nc[0], -nc[2])), pitch = Math.toDegrees(Math.atan2(-nc[1], -nc[2]));
+            double[] up = {s.pose[5], s.pose[6], s.pose[7]};
+            double roll = Double.isNaN(up[0]) ? 0 : Math.toDegrees(Math.atan2(SimCamera.dot(up, c[1]), -SimCamera.dot(up, c[2])));
             JSONObject f = new JSONObject();
             f.put("fID", s.tag.id);
             f.put("fam", "36H11C");
@@ -126,8 +129,9 @@ final class SimLimelight extends Limelight3A {
             f.put("typ", s.cy);
             f.put("ta", area);
             f.put("skew", 0);
-            // Target in camera space: metres, x right, y down, z out of the lens; then roll, pitch, yaw.
-            f.put("t6t_cs", new JSONArray(new double[] {s.cam[0] * 0.0254, s.cam[1] * 0.0254, s.cam[2] * 0.0254, 0, pitch, yaw}));
+            // Target in camera space: metres, x right, y down, z out of the lens; then roll, pitch, yaw (the
+            // order the FTC SDK reads: LLResult.createPose3DRobot).
+            f.put("t6t_cs", new JSONArray(new double[] {s.cam[0] * 0.0254, s.cam[1] * 0.0254, s.cam[2] * 0.0254, roll, pitch, yaw}));
             fiducials.put(f);
             ids.add(new double[] {s.tag.id});
             notes.add(String.format(Locale.US, "tag %d: tx %.1f deg, ty %.1f deg, %.1f in along the floor",

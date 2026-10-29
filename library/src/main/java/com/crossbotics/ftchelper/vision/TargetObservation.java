@@ -19,6 +19,10 @@ import java.util.Locale;
  *       Same meaning for every camera.</li>
  *   <li>{@link #timeNanos}: when the camera took the picture, on the {@code System.nanoTime()} clock
  *       (a stopwatch that counts nanoseconds, billionths of a second).</li>
+ *   <li>{@link #rollDeg}: how far the tag (or the row of tags) is turned in the picture, in degrees:
+ *       0 = right side up, 180 (or -180) = upside down. NaN if the camera could not tell.
+ *       {@link #isUpright()} asks "right side up?". BIOBUZZ: a CELL's tags read right side up only
+ *       while that CELL is the up one, the one you can score in.</li>
  * </ul>
  *
  * <p>All the values are {@code final}: they are set once when the object is made and never change,
@@ -49,6 +53,8 @@ public final class TargetObservation {
     public final double distanceIn;
     /** When the picture was taken ({@code System.nanoTime()} clock, nanoseconds). */
     public final long timeNanos;
+    /** How far it is turned in the picture: 0 = right side up, +/-180 = upside down. NaN if unknown. */
+    public final double rollDeg;
 
     /**
      * Makes one observation. The camera classes call this for you.
@@ -60,11 +66,22 @@ public final class TargetObservation {
      * @param timeNanos  when the picture was taken ({@code System.nanoTime()} clock)
      */
     public TargetObservation(int id, String name, double bearingDeg, double distanceIn, long timeNanos) {
+        this(id, name, bearingDeg, distanceIn, timeNanos, Double.NaN);
+    }
+
+    /**
+     * Makes one observation with the tag's turn in the picture. The camera classes call this for you.
+     *
+     * @param rollDeg how far it is turned in the picture, degrees: 0 = right side up, +/-180 = upside
+     *                down (NaN if unknown)
+     */
+    public TargetObservation(int id, String name, double bearingDeg, double distanceIn, long timeNanos, double rollDeg) {
         this.id = id;
         this.name = name;
         this.bearingDeg = bearingDeg;
         this.distanceIn = distanceIn;
         this.timeNanos = timeNanos;
+        this.rollDeg = rollDeg;
     }
 
     /**
@@ -91,6 +108,14 @@ public final class TargetObservation {
     /** True if the camera worked out a bearing (some detections have only an id). */
     public boolean hasBearing() {
         return !Double.isNaN(bearingDeg);
+    }
+
+    /**
+     * True if the tag reads right side up in the picture (turned less than 90 degrees either way).
+     * False if it is upside down, or if the camera could not tell (NaN).
+     */
+    public boolean isUpright() {
+        return !Double.isNaN(rollDeg) && Math.abs(rollDeg) < 90;
     }
 
     /** True if this target came from the odometry ({@link #ODOMETRY}), not from a camera. */

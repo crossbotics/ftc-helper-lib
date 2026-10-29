@@ -160,6 +160,9 @@ public class SimFromRobotTest {
             SimMotor fly = s.robot().motors.get("launcher");
             boolean spun = SimRun.waitFor(() -> fly.velocity() > 1000, 4);
             assertTrue("the flywheel spins up: " + fly.velocity() + " " + fly.userPower() + "\n" + String.join("\n", s.screen()), spun);
+            // It fires only when LOCKED on the goal: face BLUE's up CELL (tags 42-45), then fire one.
+            s.sim.robot.setPose(-57, 12.75, 270);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Goal : LOCKED"), 6));
             int before = s.robot().shots();
             s.press(v -> s.g2().right_bumper = v);                    // fire one
             assertTrue("a shot goes", SimRun.waitFor(() -> s.robot().shots() > before, 4));
@@ -173,17 +176,100 @@ public class SimFromRobotTest {
         Tunables.Drive.calibrated = true;   // as if the Drive Tuner was done
         try (SimRun s = new SimRun(file.toString())) {
             s.init("FlywheelBot Shoot and Leave");
-            assertTrue(s.screenHas("Back wall, touching the goal side"));
+            assertTrue(s.screenHas("Back wall, 2nd tile right of the centre line"));
             double y0 = s.robot().y;
             s.start();
             assertTrue("it finishes", SimRun.waitFor(() -> s.screenHas("Autonomous finished"), 25));
-            assertTrue(String.join("\n", s.screen()), s.screenHas("Fire three: done"));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Fire all: done"));
             assertTrue(String.join("\n", s.screen()), s.screenHas("Leave: done"));
             assertTrue("it moved", Math.abs(s.robot().y - y0) > 12);
             assertTrue("it shot\n" + String.join("\n", s.screen()), s.robot().shots() >= 1);
             assertEquals("", s.error());
         } finally {
             Tunables.Drive.calibrated = was;
+        }
+    }
+
+    // Its speed and shot angle are tuned in the simulator: the shots go cleanly into our HIVE's up CELL.
+    @Test public void flywheelBotAutoScoresOnBothAlliances() throws Exception {
+        boolean was = Tunables.Drive.calibrated;
+        Tunables.Drive.calibrated = true;
+        try {
+            Path file = generate(com.crossbotics.ftchelper.examples.flywheelbot.Robot.class);
+            runShootingAuto(file, "FlywheelBot Shoot and Leave", false, true);
+            runShootingAuto(file, "FlywheelBot Shoot and Leave", true, true);
+        } finally {
+            Tunables.Drive.calibrated = was;
+        }
+    }
+
+    // The flywheel robot fires only when LOCKED on the goal: facing away (the goal not in view), a press of
+    // fire feeds nothing.
+    @Test public void flywheelBotNeverFiresBlind() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.flywheelbot.Robot.class);
+        com.crossbotics.ftchelper.match.MatchMemory.clear();
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init("FlywheelBot TeleOp");
+            s.press(v -> s.g1().x = v);                          // BLUE
+            s.start();
+            synchronized (s.robot()) { s.sim.robot.setPose(-48, 40, 0); }   // facing the blue wall: no goal
+            s.press(v -> s.g2().left_bumper = v);                // spin up
+            SimRun.pause(2.0);
+            s.press(v -> s.g2().right_bumper = v);               // fire one
+            SimRun.pause(3.0);
+            assertEquals("no blind shot\n" + String.join("\n", s.screen()), 0, s.robot().shots());
+            assertTrue(String.join("\n", s.screen()), s.screenHas("aimed"));
+            assertEquals("", s.error());
+        }
+    }
+
+    // The turret robots' autos: ready, the turret aims, fire all, leave.
+    @Test public void turretBotAutoShootsAndLeaves() throws Exception {
+        boolean was = com.crossbotics.ftchelper.examples.turretbot.Tunables.Drive.calibrated;
+        com.crossbotics.ftchelper.examples.turretbot.Tunables.Drive.calibrated = true;
+        try {
+            Path file = generate(com.crossbotics.ftchelper.examples.turretbot.Robot.class);
+            runShootingAuto(file, "TurretBot Shoot from Start", false, true);
+            runShootingAuto(file, "TurretBot Shoot from Start", true, true);
+        } finally {
+            com.crossbotics.ftchelper.examples.turretbot.Tunables.Drive.calibrated = was;
+        }
+    }
+
+    @Test public void v2BotAutoShootsAndLeaves() throws Exception {
+        boolean was = com.crossbotics.ftchelper.examples.v2bot.Tunables.Drive.calibrated;
+        com.crossbotics.ftchelper.examples.v2bot.Tunables.Drive.calibrated = true;
+        try {
+            runShootingAuto(generate(com.crossbotics.ftchelper.examples.v2bot.Robot.class), "V2 Bot Shoot and Stow", false, false);
+        } finally {
+            com.crossbotics.ftchelper.examples.v2bot.Tunables.Drive.calibrated = was;
+        }
+    }
+
+    // red: the INIT menu's B (it starts on BLUE). clean: the shots must go cleanly into our HIVE's up CELL
+    // (turretbot's and flywheelbot's speeds are tuned in the simulator; v2bot's are not yet).
+    private void runShootingAuto(Path file, String auto, boolean red, boolean clean) throws Exception {
+        com.crossbotics.ftchelper.match.MatchMemory.clear();
+        try (SimRun s = new SimRun(file.toString())) {
+            s.init(auto);
+            if (red) s.press(v -> s.g1().b = v);
+            s.start();
+            assertTrue("it finishes\n" + String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Autonomous finished"), 28));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Fire all: done"));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Leave: done"));
+            assertTrue((red ? "RED" : "BLUE") + ": it shot\n" + String.join("\n", s.screen()), s.robot().shots() >= 1);
+            SimRun.pause(2.0);                                  // the last shot lands
+            String hive = red ? "Red HIVE" : "Blue HIVE";
+            int cleanShots = 0;
+            StringBuilder all = new StringBuilder();
+            for (SimPieces.ShotVerdict v : s.robot().pieces.verdicts()) {
+                all.append(v.verdict).append(' ').append(v.hive).append("; ");
+                if (v.verdict.equals("clean") && v.hive.equals(hive)) cleanShots++;
+            }
+            assertTrue(auto + (red ? " RED" : " BLUE") + ": clean shots into our HIVE: " + all, !clean || cleanShots >= 1);
+            assertEquals("", s.error());
+        } finally {
+            com.crossbotics.ftchelper.match.MatchMemory.clear();
         }
     }
 
@@ -230,18 +316,14 @@ public class SimFromRobotTest {
         String text = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
         assertTrue(text, text.contains("limelight.limelight = name=limelight, forward=6, left=0, up=12, yaw=0, pitch=30, on=turret"));
         assertTrue("the flywheel rides the turret too: " + text, text.contains("shape.launcher = flywheel, on=turret"));
-        // The example's shot table is made-up numbers, not measured on the simulator's pretend launcher:
-        // here the launcher throws like a tuned one from this spot (a fixed 70 degrees and 220 in/s from the
-        // guessed flywheel on the guessed turret: 215 to 223 go in), so only the aim decides whether the shots go in.
-        text = text.replaceAll("(?m)^shoot\\.launcher = .*$", "shoot.launcher = shape=launcher, angle=70, speed=220");
-        Files.write(file, text.getBytes(StandardCharsets.UTF_8));
+        // The example's shot table is tuned in the simulator, so its own numbers score from here.
         com.crossbotics.ftchelper.match.MatchMemory.clear();
         try (SimRun s = new SimRun(file.toString())) {
             s.init("TurretBot TeleOp");
-            s.press(v -> s.g1().b = v);                              // RED: it aims at RED SCORING
+            s.press(v -> s.g1().b = v);                              // RED: it aims at the red HIVE's up CELL
             assertTrue(SimRun.waitFor(() -> s.screenHas("RED (chosen here)"), 2));
             s.start();
-            s.sim.robot.setPose(44, -14, 110);
+            s.sim.robot.setPose(57, -13, 110);                       // the up CELL (+x, RED AUDIENCE) 20 degrees right
             SimShapes.Shape turret = s.robot().shapes.shapes.get("turret");
             boolean aimed = SimRun.waitFor(() -> s.screenHas("AIMED"), 6);
             assertTrue("aimed: " + turret.value + "\n" + String.join("\n", s.screen()), aimed);
@@ -457,11 +539,11 @@ public class SimFromRobotTest {
         com.crossbotics.ftchelper.match.MatchMemory.clear();
         try (SimRun s = new SimRun(file.toString())) {
             s.init("FlywheelBot TeleOp");
-            s.press(v -> s.g1().b = v);                              // RED: it aims at RED SCORING
+            s.press(v -> s.g1().b = v);                              // RED: it aims at the red HIVE's up CELL
             assertTrue(SimRun.waitFor(() -> s.screenHas("RED (chosen here)"), 2));
             s.start();
-            // Level with the RED SCORING tags, facing them, then turned 15 degrees left.
-            s.sim.robot.setPose(32, -12.74, 105);
+            // Level with the up CELL's tags (34-37, RED AUDIENCE), facing them, then turned 15 degrees left.
+            s.sim.robot.setPose(57, -12.75, 105);
             SimRun.pause(0.5);
             assertEquals("nothing turns it before aim is on", 105, s.robot().headingDeg, 1.0);
             // The aim button turns aim on only with the goal in view: wait for the camera to see it.
@@ -992,10 +1074,10 @@ public class SimFromRobotTest {
         com.crossbotics.ftchelper.match.MatchMemory.clear();
         try (SimRun s = new SimRun(file.toString())) {
             s.init("FlywheelBot Shoot and Leave");                 // the INIT menu starts on BLUE
-            assertTrue("blue: the spot from the blue wall", SimRun.waitFor(() -> Math.abs(s.robot().x - 56) < 0.01
+            assertTrue("blue: the spot from the blue wall", SimRun.waitFor(() -> Math.abs(s.robot().x + 48) < 0.01
                     && Math.abs(s.robot().y - 61.55) < 0.01 && Math.abs(Math.abs(s.robot().headingDeg) - 180) < 0.01, 2));
             s.press(v -> s.g1().b = v);                          // RED: the same spot from the red wall
-            assertTrue("red: turned half a turn", SimRun.waitFor(() -> Math.abs(s.robot().x + 56) < 0.01
+            assertTrue("red: turned half a turn", SimRun.waitFor(() -> Math.abs(s.robot().x - 48) < 0.01
                     && Math.abs(s.robot().y + 61.55) < 0.01 && Math.abs(s.robot().headingDeg) < 0.01, 2));
             assertEquals("", s.error());
         }
@@ -1010,7 +1092,7 @@ public class SimFromRobotTest {
             s.sim.ds.start();
             double x, y;
             synchronized (s.robot()) { x = s.robot().x; y = s.robot().y; }
-            assertTrue("on the red spot at START: " + x + ", " + y, Math.hypot(x + 56, y + 61.55) < 1);
+            assertTrue("on the red spot at START: " + x + ", " + y, Math.hypot(x - 48, y + 61.55) < 1);
         }
     }
 

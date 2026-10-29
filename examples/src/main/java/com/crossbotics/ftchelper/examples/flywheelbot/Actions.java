@@ -17,12 +17,4 @@ public class Actions {
                 .waitUntil("the deploy servo", r.intakeDeploy::isDone, 2.0)
                 .then(() -> r.intakeDeploy.goTo("stowed"));    // and back out of the way
     }
-
-    /** Fires every piece the robot holds (three in a full robot), one after another. */
-    public static Action fireThree(Robot r) {
-        return Action.named("Fire three")
-                .then(() -> r.launcher.fire(3))
-                // isShooting(): true until the last piece is fed.
-                .waitUntil("the shots", () -> !r.launcher.isShooting(), 6.0);
-    }
 }

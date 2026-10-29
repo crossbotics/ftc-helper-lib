@@ -27,7 +27,7 @@ public class Tunables {
 
     /** The flywheel, in RPM. kP..kF: DEFAULT until the Flywheel Finder; then write its numbers here. */
     public static class Launcher {
-        public static double speedRpm = 2600;                       // shot speed (example: watch shots and tune it)
+        public static double speedRpm = 2300;                       // shot speed (tuned in the simulator for the auto's spot)
         public static double stepRpm = DEFAULT;                     // speed change per D-pad press (100)
         public static double readyBandRpm = DEFAULT;                // "at speed" = this close to the target (60)
         public static double idleRpm = DEFAULT;                     // speed between shots, 0 = stop (0)

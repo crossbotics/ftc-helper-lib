@@ -1042,7 +1042,15 @@ camera = add(Camera.webcam("Webcam 1"));
 ```
 
 `goal()` (the alliance's goal, or null), `target(name)`, `target(id)`, `source()` (the
-[`TargetSource`](vision.md) inside). Tunables (Limelight): `pipeline` ([all its numbers](../guides/tunables.md#camera)). It starts in INIT.
+[`TargetSource`](vision.md) inside).
+
+**The goal is our HIVE's up CELL.** `goal("BLUE SCORING", "RED SCORING")` names each alliance's HIVE.
+`goal()` gives that HIVE's CELL whose tags read right side up now: the up CELL, the one you can score
+in ("RED SCORING" or "RED AUDIENCE": a tip swaps them). A CELL whose tags read upside down (a down CELL,
+for example seen from under the HIVE) is never the goal: then `goal()` is null and the Driver Station
+says `Goal : not seen (RED SCORING is upside down (a down CELL))`. Aiming, the turret, the shot table's
+distance, LOCKED and the launcher's "aimed" checks all use `goal()`. How the camera tells:
+[vision.md](vision.md#taggroup). `target("RED SCORING")` still gives that group, upside down or not. Tunables (Limelight): `pipeline` ([all its numbers](../guides/tunables.md#camera)). It starts in INIT.
 
 Venue lighting ([vision.md](vision.md#venue-lighting)): the camera tries a few settings in INIT and
 keeps the one that sees the most AprilTags.
@@ -1151,7 +1159,8 @@ uses). The Driver Station shows `Aim : camera, 1.5 deg off  AIMED`.
 
 **The aim lock rules** (last season spent about 60 commits on these; now they are the defaults):
 - **Our goal only:** the camera gives this match's alliance goal (`goal("BLUE SCORING", "RED SCORING")`),
-  never the other alliance's.
+  never the other alliance's, and only its CELL that reads right side up (the up CELL), never a down
+  CELL's underside ([Camera](#camera)).
 - **The button turns aim on only with the goal in view.** A press with no goal leaves it off (with
   `.rumble()`: one buzz instead of two), and the Driver Station says `Aim mode not on: no goal in view`
   for 3 s. Code that calls `robot.aimMode().on()` is not checked.
@@ -1190,6 +1199,9 @@ TeleOp always shows one line, so the drivers know when to shoot:
 outside the launcher's `speedByDistance` rows); **in range** (inside the table, or the launcher has no
 table); **LOCKED** (the robot's front, or a following turret, within `toleranceDeg`; aim mode does not
 have to be on). Your code can use it too, for lights: `robot.aim().stage() == Aim.Stage.LOCKED`.
+Or to fire only when the robot points at the goal (no turret; aim mode on or off; never blind):
+`.requireReady("aimed", () -> aim().stage() == Aim.Stage.LOCKED)` on the launcher line, as the
+`flywheelbot` example does.
 
 **Aim at the goal in an autonomous**: `s.aimAtGoal("Aim", 3)` turns the whole robot to the goal (up to
 4 turns, a fresh reading after each, until within `toleranceDeg`; `maxTurnPower`), or, with a turret
@@ -1751,7 +1763,7 @@ Shape intakeRoller = Shape.roller("gobilda-gecko-48-rex").on("intake_arm").atMm(
 intake = add(Intake.motor("intake").part("gobilda-5203-1150").holds(3).looks(intakeArm, intakeRoller));
 
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
-        .looks(Shape.flywheel("gobilda-hogback-96").atMm(-40, 0, 170)).shotAngle(50));
+        .looks(Shape.flywheel("gobilda-hogback-96").atMm(-40, 0, 170)).shotAngle(75));
 fixed(Shape.box("tower").atMm(-90, 0, 40).sizeMm(50, 180, 260));
 ```
 

@@ -196,6 +196,14 @@ speeds by the trim (or tune it again with the Shot Tuner) and copy the new line 
 Battery compensation is off by default (not yet proven on a robot); to try it, see
 [lesson 9's battery box](tutorials/start/09-shooter-and-camera.md#speed-trim-and-a-low-battery).
 
+**In an autonomous move the robot turns and stops short (in the simulator or on the field)**
+A corner touched a wall or a field part, and the robot pivoted on it. `move(...)` drives straight and
+does not turn by itself. Look at the start spot: on BIOBUZZ's field a FLOWER stands against your wall
+about 20 to 27 in right of the centre line, and a spot at x 36 is only 0.3 in from it, so a move to the
+left drives into it. Start farther away (the example robots use x 44 to 48), or drive forward first. In the
+simulator the robot box turns red on a bump, and a scenario can check `expect bumped none`
+([autos guide](guides/autos.md)).
+
 **The robot paused when I used START + BACK** (the debug lines, or the alliance switch)
 BACK was pressed first. BACK is the pause button, and it pauses the moment it goes down; START joining
 later does not undo that, so you get a plain pause (and no debug lines or switch). Tap BACK to go on.

@@ -19,12 +19,13 @@ public class ShootAndStow extends Auto<Robot> {
 
     @Override
     protected void steps(Steps s, Robot robot) {
-        // Inches: x -36 = the 2nd tile from the left; y -61.6 = an 18 in robot's back against our wall.
-        s.start("Back against our wall, 2nd tile from the left, facing the field", -36, -61.6, 0)
+        // Inches: x -36 = the 2nd tile from the left; y -61.5 = the robot's back against our wall.
+        s.start("Back against our wall, 2nd tile from the left, facing the field", -36, -61.5, 0)
          .move("Into range", 18, 0, 0.6)
          .waitUntil("Turret homed", () -> robot.turret.isHomed(), 6.0)
-         .run("Fire the preload", () -> robot.launcher.fire(4))
-         .waitUntil("Shots done", () -> !robot.launcher.isShooting(), 10.0)
+         .readyToLaunch("Ready", 3)                    // spins up, waits until at speed
+         .aimAtGoal("Aim", 3)                          // waits until the turret points at the goal
+         .action(robot.launcher.fireAllAction())       // fires the preload (the piece count says 4)
          .action(Actions.stow(robot), 5.0)
          .parkWithSeconds(3)
          .move("Leave", 12, 90, 0.7);

@@ -21,8 +21,8 @@ public class Controls extends ControlMap<Robot> {
         g1.rb.toggle(robot.aimMode()).says("aim the robot at the goal on/off").rumble();
         // Gamepad 2 buzzes while the robot points at the goal (the closer, the stronger).
         g2.rumbleWhenAimed();
-        // Y: fire everything the robot holds (an action from Actions.java; press again to cancel).
-        g2.y.press(Actions.fireThree(robot)).says("fire three");
+        // Y: fire every piece the robot holds (the launcher's ready-made action; press again to cancel).
+        g2.y.press(robot.launcher.fireAllAction()).says("fire all");
         // Free buttons, listed on the help page.
         g2.a.free();
         g2.x.free();

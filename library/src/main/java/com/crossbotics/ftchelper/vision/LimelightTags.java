@@ -40,6 +40,11 @@ import org.firstinspires.ftc.robotcore.external.navigation.Position;
  * than the row (not the CELL opening). So the two cameras give about the same bearing when you face the
  * group, but different distances: make the shot table with the camera the robot uses.
  *
+ * <p>Right side up or not: a group's {@link TargetObservation#rollDeg} comes from the ORDER of its tags in
+ * the picture (their numbers rise to the right when the tags are right side up, as printed). That needs
+ * only where the tags are, not which slot of the Limelight's pose array holds the roll. A single tag's
+ * rollDeg is the roll as the FTC SDK reads it from the pose.
+ *
  * <p>Bearing is the Limelight's tx with the sign flipped (tx is positive to the RIGHT; the
  * library uses positive = LEFT everywhere). Distance comes from the tag's 3D pose and needs the
  * correct tag size in the pipeline; it is NaN when the pipeline gives no pose.
@@ -228,7 +233,8 @@ public class LimelightTags implements TargetSource {
             // The minus sign flips the Limelight's tx (positive = RIGHT) into our bearing (positive = LEFT),
             // so the Limelight and the webcam agree. See docs/conventions.md.
             out.add(new TargetObservation(f.getFiducialId(), "Tag " + f.getFiducialId(),
-                    -f.getTargetXDegrees(), distanceInches(f.getTargetPoseCameraSpace()), pictureTime));
+                    -f.getTargetXDegrees(), distanceInches(f.getTargetPoseCameraSpace()), pictureTime,
+                    rollDegrees(f.getTargetPoseCameraSpace())));
         }
         for (TagGroup g : groups) {
             TargetObservation o = groupTarget(g, places, pictureTime);
@@ -298,7 +304,17 @@ public class LimelightTags implements TargetSource {
         }
         // Limelight camera space: x right, z forward. The bearing is positive to the LEFT, so the minus sign.
         double bearing = -Math.toDegrees(Math.atan2(mid[0], mid[2]));
-        return new TargetObservation(TargetObservation.CLUSTER, group.name, bearing, Math.hypot(mid[0], mid[2]), timeNanos);
+        // The row's turn in the picture: the tag numbers rise to the RIGHT when the tags are right side up
+        // (as printed). Rising to the left (x negative) = upside down. y is down, so + = turned clockwise.
+        double roll = Math.toDegrees(Math.atan2(dir[1], dir[0]));
+        return new TargetObservation(TargetObservation.CLUSTER, group.name, bearing, Math.hypot(mid[0], mid[2]), timeNanos, roll);
+    }
+
+    // One tag's turn as the FTC SDK reads it from the Limelight's pose (NaN without a pose). Not used to
+    // choose a goal: the tag groups use the order of the tags in the row instead (see groupTarget).
+    private static double rollDegrees(Pose3D pose) {
+        if (pose == null || pose.getOrientation() == null || cameraSpaceInches(pose) == null) return Double.NaN;
+        return pose.getOrientation().getRoll(org.firstinspires.ftc.robotcore.external.navigation.AngleUnit.DEGREES);
     }
 
     /**
