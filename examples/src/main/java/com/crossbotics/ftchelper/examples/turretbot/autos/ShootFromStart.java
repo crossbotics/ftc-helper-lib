@@ -18,7 +18,7 @@ public class ShootFromStart extends Auto<Robot> {
 
     @Override
     protected void steps(Steps s, Robot robot) {
-        // Inches, written for BLUE: x 6 = just right of the centre line; y -61.5 = back against our wall.
+        // Inches: x 6 = just right of the centre line; y -61.5 = back against our wall.
         s.start("Back against our wall, just right of the centre line, facing the field", 6, -61.5, 0)
          .move("Into range", 12, 0, 0.6)
          .readyToLaunch("Ready", 3)                    // spins up, waits until at speed
@@ -28,10 +28,9 @@ public class ShootFromStart extends Auto<Robot> {
          .move("Leave", 12, 90, 0.7);
     }
 
-    // BIOBUZZ's two SCORING goals are mirror images (both on the far side): RED uses this route
-    // mirrored left-right, so the camera sees the goal from the start on both alliances.
+    // BIOBUZZ's field is turned half a turn between the alliances: the same route works for both.
     @Override
     protected boolean mirrorForRed() {
-        return true;
+        return false;
     }
 }
