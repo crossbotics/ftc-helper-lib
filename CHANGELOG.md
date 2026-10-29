@@ -15,6 +15,10 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Fixed
 
+- **`turretbot`'s autonomous now fires, on both alliances.** Its start spot was in words only, and from
+  the spot the simulator used, the camera never saw the goal: 0 shots. It now starts just right of the
+  centre line (x 6, y -61.5 in, written for BLUE) and drives 12 in. It uses `mirrorForRed()` = `true`:
+  BIOBUZZ's two SCORING goals are mirror images (both on the far side), so RED uses the route mirrored.
 - **`v2bot`'s autonomous start spot fits in the simulator.** It was y -61.6 in, 0.1 in into the wall:
   the simulator said so and used another spot. Now y -61.5 in.
 

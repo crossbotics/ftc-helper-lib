@@ -192,8 +192,9 @@ public class SimFromRobotTest {
         boolean was = com.crossbotics.ftchelper.examples.turretbot.Tunables.Drive.calibrated;
         com.crossbotics.ftchelper.examples.turretbot.Tunables.Drive.calibrated = true;
         try {
-            // Its start spot is in words only: the simulator's spot does not show the goal, so no shot is checked.
-            runShootingAuto(com.crossbotics.ftchelper.examples.turretbot.Robot.class, "TurretBot Shoot from Start", false);
+            Path file = generate(com.crossbotics.ftchelper.examples.turretbot.Robot.class);
+            runShootingAuto(file, "TurretBot Shoot from Start", false);
+            runShootingAuto(file, "TurretBot Shoot from Start", true);
         } finally {
             com.crossbotics.ftchelper.examples.turretbot.Tunables.Drive.calibrated = was;
         }
@@ -203,21 +204,23 @@ public class SimFromRobotTest {
         boolean was = com.crossbotics.ftchelper.examples.v2bot.Tunables.Drive.calibrated;
         com.crossbotics.ftchelper.examples.v2bot.Tunables.Drive.calibrated = true;
         try {
-            runShootingAuto(com.crossbotics.ftchelper.examples.v2bot.Robot.class, "V2 Bot Shoot and Stow", true);
+            runShootingAuto(generate(com.crossbotics.ftchelper.examples.v2bot.Robot.class), "V2 Bot Shoot and Stow", false);
         } finally {
             com.crossbotics.ftchelper.examples.v2bot.Tunables.Drive.calibrated = was;
         }
     }
 
-    private void runShootingAuto(Class<?> robotClass, String auto, boolean mustShoot) throws Exception {
-        Path file = generate(robotClass);
+    // red: the INIT menu's B (it starts on BLUE).
+    private void runShootingAuto(Path file, String auto, boolean red) throws Exception {
+        com.crossbotics.ftchelper.match.MatchMemory.clear();
         try (SimRun s = new SimRun(file.toString())) {
             s.init(auto);
+            if (red) s.press(v -> s.g1().b = v);
             s.start();
             assertTrue("it finishes\n" + String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Autonomous finished"), 28));
             assertTrue(String.join("\n", s.screen()), s.screenHas("Fire all: done"));
             assertTrue(String.join("\n", s.screen()), s.screenHas("Leave: done"));
-            if (mustShoot) assertTrue("it shot\n" + String.join("\n", s.screen()), s.robot().shots() >= 1);
+            assertTrue((red ? "RED" : "BLUE") + ": it shot\n" + String.join("\n", s.screen()), s.robot().shots() >= 1);
             assertEquals("", s.error());
         } finally {
             com.crossbotics.ftchelper.match.MatchMemory.clear();
