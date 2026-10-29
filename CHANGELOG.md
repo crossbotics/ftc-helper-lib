@@ -32,10 +32,16 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   `Actions.fireThree` is gone. [Lesson 9, section 10](docs/tutorials/start/09-shooter-and-camera.md#10-no-turret-aim-the-whole-robot)
 - **`flywheelbot` fires only when LOCKED on the goal** (`.requireReady("aimed", () -> aim().stage() == Aim.Stage.LOCKED)`):
   never blind, with the aim mode on or off. Its autonomous starts on the 2nd tile right of the centre
-  line (x 48), where its camera sees the up CELL.
+  line (x 48), where its camera sees the up CELL, and drives 24 in.
+- **`flywheelbot` shoots 75 degrees up (was 50), at 2300 rpm (was 2600).** A 50 degree shot came in too
+  flat to drop into the CELL from any spot where the camera sees it. Tuned in the simulator: its
+  autonomous scores 3 of 3 cleanly on blue and on red (about 98 % of pretend shots go in from that spot).
 - **`turretbot`'s POLLEN shot table is tuned in the simulator.** Its autonomous starts at x 44, y -61.5 in,
   drives 20 in, turns 45 degrees left to face the HIVE, and scores all 4 shots cleanly on blue and on
   red. The NECTAR table is still example numbers.
+- **Troubleshooting: a robot that turns and stops short in an autonomous move.** A corner touched a
+  wall or a field part (for example the FLOWER next to a start spot at x 36). `move(...)` itself drives
+  straight. [Troubleshooting](docs/troubleshooting.md#robot-behavior)
 
 ### Fixed
 

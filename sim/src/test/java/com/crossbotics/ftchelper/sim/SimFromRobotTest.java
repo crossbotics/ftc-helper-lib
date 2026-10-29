@@ -190,6 +190,19 @@ public class SimFromRobotTest {
         }
     }
 
+    // Its speed and shot angle are tuned in the simulator: the shots go cleanly into our HIVE's up CELL.
+    @Test public void flywheelBotAutoScoresOnBothAlliances() throws Exception {
+        boolean was = Tunables.Drive.calibrated;
+        Tunables.Drive.calibrated = true;
+        try {
+            Path file = generate(com.crossbotics.ftchelper.examples.flywheelbot.Robot.class);
+            runShootingAuto(file, "FlywheelBot Shoot and Leave", false, true);
+            runShootingAuto(file, "FlywheelBot Shoot and Leave", true, true);
+        } finally {
+            Tunables.Drive.calibrated = was;
+        }
+    }
+
     // The flywheel robot fires only when LOCKED on the goal: facing away (the goal not in view), a press of
     // fire feeds nothing.
     @Test public void flywheelBotNeverFiresBlind() throws Exception {
@@ -234,7 +247,7 @@ public class SimFromRobotTest {
     }
 
     // red: the INIT menu's B (it starts on BLUE). clean: the shots must go cleanly into our HIVE's up CELL
-    // (turretbot's shot table is tuned in the simulator; v2bot's is not yet).
+    // (turretbot's and flywheelbot's speeds are tuned in the simulator; v2bot's are not yet).
     private void runShootingAuto(Path file, String auto, boolean red, boolean clean) throws Exception {
         com.crossbotics.ftchelper.match.MatchMemory.clear();
         try (SimRun s = new SimRun(file.toString())) {

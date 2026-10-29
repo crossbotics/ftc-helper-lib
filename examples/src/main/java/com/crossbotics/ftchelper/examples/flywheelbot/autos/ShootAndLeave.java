@@ -24,7 +24,7 @@ public class ShootAndLeave extends Auto<Robot> {
         s.start("Back wall, 2nd tile right of the centre line, facing the field", 48, -61.55, 0)
          .menuYesNo("Shoot", true)                                    // a choice in the INIT menu
          .onlyIf("Shoot")
-             .move("Into range", 16, 0, 0.6)
+             .move("Into range", 24, 0, 0.6)
              .aimAtGoal("Aim", 4, 45)                                 // turns the robot; goal not seen: looks 45 degrees each way
              .readyToLaunch("Ready", 3)                               // spins up, waits until at speed and aimed
              .action(robot.launcher.fireAllAction())                  // fires every piece it holds, only when aimed

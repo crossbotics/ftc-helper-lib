@@ -615,7 +615,7 @@ robot's whole launcher line (its last line is the check):
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
         .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
         .looks(Shape.flywheel("gobilda-hogback-96").atMm(-40, 0, 170))
-        .shotAngle(50)
+        .shotAngle(75)
         .requireReady("aimed", () -> aim().stage() == Aim.Stage.LOCKED));
 ```
 
@@ -645,7 +645,9 @@ wheel spins up).
 
 **Where to start:** the camera must see the goal. At the start, our HIVE's up CELL is on the HIVE's
 right side (seen from our wall), and its tags face that way, so `flywheelbot` starts on the 2nd tile
-right of the centre line, drives 16 in, and aims from there.
+right of the centre line, drives 24 in, and aims from there. Its launcher shoots 75 degrees up, so the
+piece drops into the CELL from above; its `speedRpm` (2300) was tuned in the simulator for that spot: 3
+of 3 shots go in cleanly on blue and on red. On your robot, tune it again from real shots.
 
 ## 11. Feel the aim: a buzz when on target
 

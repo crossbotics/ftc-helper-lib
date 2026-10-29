@@ -1763,7 +1763,7 @@ Shape intakeRoller = Shape.roller("gobilda-gecko-48-rex").on("intake_arm").atMm(
 intake = add(Intake.motor("intake").part("gobilda-5203-1150").holds(3).looks(intakeArm, intakeRoller));
 
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
-        .looks(Shape.flywheel("gobilda-hogback-96").atMm(-40, 0, 170)).shotAngle(50));
+        .looks(Shape.flywheel("gobilda-hogback-96").atMm(-40, 0, 170)).shotAngle(75));
 fixed(Shape.box("tower").atMm(-90, 0, 40).sizeMm(50, 180, 260));
 ```
 
