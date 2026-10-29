@@ -141,10 +141,50 @@ public class VisionTest {
                 assertEquals(expectBearing, o.bearingDeg, 1e-9);
                 assertEquals(Math.hypot(5, 40), o.distanceIn, 1e-9);
                 assertEquals(7, o.timeNanos);
+                // The row's turn: the tag numbers rise to the right only when the tags are right side up.
+                assertEquals(upsideDown ? 180 : 0, Math.abs(o.rollDeg), 1e-9);
+                assertEquals(!upsideDown, o.isUpright());
             }
         }
         assertNull("one tag is not enough", LimelightTags.groupTarget(red, row(5, 40, false, 32), 7));
         assertNull("other tags do not count", LimelightTags.groupTarget(red, row(5, 40, false, 34, 35), 7));
+    }
+
+    // A pretend camera that sees exactly these targets.
+    private static TargetSource sees(TargetObservation... seen) {
+        final List<TargetObservation> list = Arrays.asList(seen);
+        return new TargetSource() {
+            @Override public void start() { }
+            @Override public void update() { }
+            @Override public List<TargetObservation> targets() { return list; }
+            @Override public boolean isWorking() { return true; }
+            @Override public String status() { return "pretend"; }
+            @Override public void close() { }
+            @Override public String name() { return "pretend"; }
+        };
+    }
+
+    private static TargetObservation cell(String name, double rollDeg) {
+        return new TargetObservation(TargetObservation.CLUSTER, name, 1, 40, 0, rollDeg);
+    }
+
+    @Test public void theGoalIsTheRightSideUpCellOfTheSameHive() {
+        // Our HIVE's up CELL, whichever of the two it is; the other alliance's HIVE never counts.
+        TargetObservation up = cell("RED AUDIENCE", 3), down = cell("RED SCORING", 178), blue = cell("BLUE AUDIENCE", 0);
+        assertEquals("RED AUDIENCE", TagGroup.goalTarget(sees(down, up, blue), "RED SCORING").name);
+        assertEquals("RED AUDIENCE", TagGroup.goalTarget(sees(down, up), "RED AUDIENCE").name);
+        assertEquals("RED SCORING", TagGroup.goalTarget(sees(cell("RED SCORING", -2), cell("RED AUDIENCE", -179)), "RED SCORING").name);
+        // Only an upside-down CELL in view (e.g. from under the HIVE): no goal, and the reason.
+        assertNull(TagGroup.goalTarget(sees(down, blue), "RED SCORING"));
+        assertEquals("RED SCORING is upside down (a down CELL)", TagGroup.whyNoGoal(sees(down), "RED SCORING"));
+        assertEquals("", TagGroup.whyNoGoal(sees(blue), "RED SCORING"));
+        // A camera that cannot tell (no roll): not used.
+        assertNull(TagGroup.goalTarget(sees(cell("RED AUDIENCE", Double.NaN)), "RED SCORING"));
+        assertFalse(new TargetObservation(5, "Tag 5", 0, 10, 0).isUpright());
+        // A name that is not a group on a HIVE: the target with that name, as before.
+        assertEquals("Tag 20", TagGroup.goalTarget(sees(new TargetObservation(20, "Tag 20", 0, 30, 0)), "Tag 20").name);
+        // camera.target(name) still gives the named group, upside down or not.
+        assertEquals(178, sees(down, up).target("RED SCORING").rollDeg, 0);
     }
 
     @Test public void tagGroupsAreChecked() {

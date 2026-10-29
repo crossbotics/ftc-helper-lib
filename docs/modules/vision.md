@@ -41,6 +41,14 @@ aiming but not for finding the robot's position on the field. SDK 12 also adds t
 with id `TargetObservation.CLUSTER` and its name. `LimelightTags` reports the same groups by the
 same names ([TagGroup](#taggroup)), so `camera.target("RED SCORING")` works with either camera.
 
+**Aim at the up CELL only.** Each HIVE has two CELLs; only the up one can be scored in, and a tip swaps
+them. A CELL's tags read **right side up** only while that CELL is up; the down CELL's tags read upside
+down. `TagGroup.goalTarget(camera, "RED SCORING")` gives the red HIVE's group that reads right side up
+now ("RED SCORING" or "RED AUDIENCE"), or null when only an upside-down CELL is in view (for example
+from under the HIVE: the robot must never aim at the underside of a down CELL). The five-files
+[`Camera`](robot.md#camera) module's `goal()` uses it. `camera.target(name)` still gives the named
+group, upside down or not.
+
 ---
 
 ## TargetSource
@@ -206,6 +214,12 @@ A Limelight reports each tag on its own. `LimelightTags` also reports each **gro
 as one target, with the same name as the webcam's SDK cluster (BIOBUZZ: the 4 tags under each CELL,
 `TagGroup.biobuzz()`).
 
+**Right side up or not:** the tag numbers in a row rise to the right when the tags are right side up
+(as printed). So the order of the tags in the picture says how the row is turned: the group's
+`rollDeg` (0 = right side up, 180 = upside down). This needs only where the tags are. (The Limelight
+also sends each tag's turn in its pose, but the Limelight's docs and the FTC SDK do not agree on which
+number in that list is the roll; a single tag's `rollDeg` is the SDK's reading.)
+
 **Where it aims:** at the middle of the tag row, worked out from the tags in view. The two seen tags
 farthest apart give the row's direction. Each seen tag then steps back along the row by its place in
 the group. It needs at least 2 of the group's tags and their 3D poses (set the tag size in the pipeline).
@@ -227,6 +241,9 @@ camera.groups(java.util.Arrays.asList(goal));
 | --- | --- |
 | `TagGroup.biobuzz()` / `TagGroup.currentSeason()` | this season's groups |
 | `contains(id)`, `alongRowIn(id)`, `ids()` | what is in a group |
+| `element` | the field element the group is on, e.g. "RED HIVE" (BIOBUZZ: each HIVE has two groups, one per CELL); null if not given (`new TagGroup(name, ids, places, element)` gives one) |
+| `TagGroup.goalTarget(camera, name)` | the target to aim at for a goal named `name`: for a group on a HIVE, that HIVE's group that reads right side up now (the up CELL); null if only an upside-down one is in view. Any other name: `camera.target(name)` |
+| `TagGroup.whyNoGoal(camera, name)` | why there is no goal while part of it is seen: "RED SCORING is upside down (a down CELL)"; "" otherwise |
 | `LimelightTags.groupTarget(group, places, time)` | the group's target from tag places in camera space (public for tests) |
 
 ## TargetObservation
@@ -238,6 +255,7 @@ camera.groups(java.util.Arrays.asList(goal));
 | `bearingDeg` | how far to turn to face it; **+ = it is to the left** |
 | `distanceIn` | inches from the camera, flat in the camera's own view (its up/down left out), or NaN if unknown. It is the floor distance only for a level camera; a camera tilted up reads more. Same meaning for both cameras, but make the shot table with the camera mounted as on the robot |
 | `timeNanos` | when the picture was taken |
+| `rollDeg`, `isUpright()` | how far it is turned in the picture: 0 = right side up, 180 (or -180) = upside down, NaN if the camera cannot tell. `isUpright()`: turned less than 90 degrees either way (false for NaN). Webcam: the SDK's `ftcPose.roll` (for a cluster, the turn of its row). Limelight: a group's from the order of its tags ([TagGroup](#taggroup)) |
 | `ageMs(now)`, `isFresh(now, maxAgeMs)` | how old; never aim with an old picture |
 | `hasBearing()`, `hasDistance()` | was it worked out? |
 

@@ -225,6 +225,12 @@ camera = add(Camera.limelight("limelight").autoPipelines(0, 1, 2).goal("BLUE SCO
 - `.goal("BLUE SCORING", "RED SCORING")`: this season's goal for each alliance, by the name of its group
   of AprilTags (the square black-and-white codes on the field). The camera then gives the goal for this
   match's alliance, chosen in autonomous's INIT menu (TeleOp remembers it).
+- BIOBUZZ: each name stands for that alliance's HIVE. A HIVE has two CELLs, each with 4 tags under it,
+  and only the **up** CELL can be scored in. When the HIVE tips, the other CELL comes up. The up CELL's
+  tags read right side up; the down CELL's read upside down. So the camera always aims at our HIVE's
+  CELL whose tags read right side up, whichever it is now. It never aims at a down CELL, not even when
+  that is the only one in view (from under the HIVE the turret would aim at the CELL's underside): then
+  the Driver Station says `Goal : not seen (RED SCORING is upside down (a down CELL))`.
 - `.autoPipelines(0, 1, 2)`: venue lighting. A **pipeline** is one set of camera settings saved on the
   Limelight, by number (what to look for, how bright the picture is). Every gym has different light,
   and a pipeline that finds tags well at school can miss them at an event. In INIT the robot tries
@@ -371,7 +377,7 @@ BIOBUZZ has two game pieces: POLLEN, a 2.8 in ball, and NECTAR, a 3.6 in ball (g
 `speedByDistance`. From [`turretbot/Tunables.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/Tunables.java):
 
 ```java
-public static double[][] speedByDistancePollen = {{24, 2200, 2}, {48, 2550, 11}, {72, 2900, 19}, {96, 3250, 23}};
+public static double[][] speedByDistancePollen = {{36, 2010, 5}, {48, 2290, 5}, {60, 2560, 5}, {72, 2830, 5}};
 public static double[][] speedByDistanceNectar = {{24, 2400, 0}, {48, 2800, 6}, {72, 3200, 14}, {96, 3600, 18}};
 ```
 
@@ -603,35 +609,43 @@ really turns your robot, if it stops a few degrees short. Tune them live in the 
 the values back into `Tunables.java`** (INIT lists every tuned value that differs from the file).
 
 **Fire only when aimed.** Add a `requireReady` check to the launcher line in `Robot.java`. The flywheel
-robot's whole launcher line with the check added (its last line is the new one):
+robot's whole launcher line (its last line is the check):
 
 ```java
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
         .feeder(Indexer.servo("indexer").part("gobilda-2000-speed"))
         .looks(Shape.flywheel("gobilda-hogback-96").atMm(-40, 0, 170))
         .shotAngle(50)
-        .requireReady("aimed", () -> !aimMode().isOn() || aim().isAimed()));
+        .requireReady("aimed", () -> aim().stage() == Aim.Stage.LOCKED));
 ```
 
-Read the check as: "fire when the aim is off (the driver aims), or when it is on and aimed". With
-only `aim().isAimed()` the robot would never fire while the aim is off. `aim()` and `aimMode()` here
-are the robot's own (the code is inside `Robot.java`); in `Controls.java` and `Actions.java` the same
-things are `robot.aim()` and `robot.aimMode()`.
+Read the check as: "fire only when LOCKED": the camera sees the goal now and the robot's front points
+at it (within `toleranceDeg`). The aim mode can be on or off: the driver can line up by hand. No goal in
+view: no shot, never blind. It needs `import com.crossbotics.ftchelper.robot.Aim;` at the top of
+`Robot.java`. `aim()` here is the robot's own (the code is inside `Robot.java`); in `Controls.java` and
+`Actions.java` the same thing is `robot.aim()`.
 
 **In an autonomous: get ready, aim, fire.** Three ready-made steps, no `Actions.java`. From
 [`flywheelbot/autos/ShootAndLeave.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/flywheelbot/autos/ShootAndLeave.java):
 
 ```java
-.readyToLaunch("Ready", 3)                    // spins up, waits until at speed
 .aimAtGoal("Aim", 4, 45)                      // turns the robot; goal not seen: looks 45 degrees each way
-.action(robot.launcher.fireAllAction())       // fires every piece it holds
+.readyToLaunch("Ready", 3)                    // spins up, waits until at speed and aimed
+.action(robot.launcher.fireAllAction())       // fires every piece it holds, only when aimed
 ```
 
-`readyToLaunch` waits until the wheel is at speed (at most 3 s). `aimAtGoal` turns the whole robot to
-the goal (at most 4 s). If the camera does not see the goal, it turns slowly up to 45 degrees left, then
-right, to find it. Never seen: it turns back and goes on. `fireAllAction()` fires every piece the robot
-holds and waits until the last one has left. With a turret that follows the goal (`turretbot`,
-`v2bot`), the same `aimAtGoal` waits for the turret to aim instead: the robot does not turn.
+`aimAtGoal` turns the whole robot to the goal (at most 4 s). If the camera does not see the goal, it
+turns slowly up to 45 degrees left, then right, to find it. Never seen: it turns back and goes on.
+`readyToLaunch` waits until the wheel is at speed and every launcher check is true, here "aimed" (at
+most 3 s). That is why this robot aims first. `fireAllAction()` fires every piece the robot holds and
+waits until the last one has left; with the "aimed" check, a robot that never found the goal fires
+nothing. With a turret that follows the goal (`turretbot`, `v2bot`), `aimAtGoal` waits for the turret to
+aim instead: the robot does not turn, and `readyToLaunch` can come first (the turret aims while the
+wheel spins up).
+
+**Where to start:** the camera must see the goal. At the start, our HIVE's up CELL is on the HIVE's
+right side (seen from our wall), and its tags face that way, so `flywheelbot` starts on the 2nd tile
+right of the centre line, drives 16 in, and aims from there.
 
 ## 11. Feel the aim: a buzz when on target
 
@@ -810,19 +824,19 @@ The turret robot: write its robot file from `Robot.java`, then run it:
 
 Choose "TurretBot TeleOp", pick the alliance in INIT (gamepad 1 X = BLUE, B = RED) and START. Drive until
 the goal is in view and watch the turret follow it and the speed change with the distance. Where to
-look: each alliance's goal is its "SCORING" CELL on the HIVE in the middle of the field, and the tags
-are on the CELL's underside, so the camera must be **below and in front of** them, looking up. RED: the
-red CELL on the far side from the audience starts tipped down (low tags, facing the audience side), so
-stand on the audience side, e.g. x 44, y -14 facing the HIVE (heading 90). BLUE: the blue CELL on that side starts tipped UP
-(tags about 50 in high, facing away from the audience), so stand on the far side, e.g. x -50, y 14
-facing the HIVE (heading -90), not too close (the tags must fit in the picture). Drag the robot there on
-the map, or drive. The turret robot's camera is tilted 30 degrees up for that. Press BACK on gamepad 2 to stop following, D-pad right to switch
-between the POLLEN and NECTAR tables.
+look: each alliance's goal is the up CELL of its HIVE in the middle of the field, and the tags are on
+the CELL's underside, so the camera must be **below and in front of** them, looking up. At the start the
+up CELL is on the HIVE's right side, seen from your own wall. RED: stand on the audience side, e.g. x 57,
+y -13 facing the HIVE (heading 90). BLUE: stand on the far side, e.g. x -57, y 13 facing the HIVE
+(heading -90), not too close (the tags must fit in the picture). Drag the robot there on the map, or
+drive. The turret robot's camera is tilted 30 degrees up for that. Press BACK on gamepad 2 to stop
+following, D-pad right to switch between the POLLEN and NECTAR tables.
 
-**Expect misses.** Spin up (LB) and fire (RB) from those spots: most shots fly over the CELL. The
-example's shot tables are made-up numbers, not measured. That is normal: the
+**Shots.** Spin up (LB) and fire (RB) from those spots. The turret robot's POLLEN table was tuned in the
+simulator, so its POLLEN shots go in (its autonomous scores all 4). Its NECTAR table is still made-up
+numbers: expect misses. That is normal: on your robot, the
 [Shot Tuner](#7-speed-from-distance-and-fire-only-when-aimed) finds the speeds that hit, for each
-distance, on your robot.
+distance.
 
 The whole-robot aim: do the same with `flywheelbot` (`-ProbotClass=com.crossbotics.ftchelper.examples.flywheelbot.Robot -Pout=build/flywheelbot.properties`),
 choose "FlywheelBot TeleOp", drive until the goal is in view, and press RB on gamepad 1. ([Simulator guide](../../guides/simulator.md).)

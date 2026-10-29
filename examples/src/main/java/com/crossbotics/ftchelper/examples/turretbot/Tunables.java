@@ -65,7 +65,8 @@ public class Tunables {
         public static double kF = DEFAULT;                          // steady power for a speed (from the motor)
         public static double shotIntervalSec = DEFAULT;             // least time between two pieces, s (0.25)
         // {inches to the goal, RPM, hood degrees} for POLLEN, blended between rows. Example: Shot Tuner.
-        public static double[][] speedByDistancePollen = {{24, 2200, 2}, {48, 2550, 11}, {72, 2900, 19}, {96, 3250, 23}};
+        // These go in cleanly in the simulator (48 and 60 in measured there). Use your own robot's numbers.
+        public static double[][] speedByDistancePollen = {{36, 2010, 5}, {48, 2290, 5}, {60, 2560, 5}, {72, 2830, 5}};
         // The same for NECTAR. Example rows: write the Shot Tuner's instead.
         public static double[][] speedByDistanceNectar = {{24, 2400, 0}, {48, 2800, 6}, {72, 3200, 14}, {96, 3600, 18}};
     }

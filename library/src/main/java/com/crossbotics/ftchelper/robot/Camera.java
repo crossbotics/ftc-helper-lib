@@ -4,6 +4,7 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.crossbotics.ftchelper.match.Alliance;
 import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
 import com.crossbotics.ftchelper.vision.LimelightTags;
+import com.crossbotics.ftchelper.vision.TagGroup;
 import com.crossbotics.ftchelper.vision.TargetObservation;
 import com.crossbotics.ftchelper.vision.TargetSource;
 import com.crossbotics.ftchelper.vision.WebcamTags;
@@ -19,7 +20,10 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
  * }</pre>
  *
  * <p>{@link #goal(String, String)} names this season's goal for each alliance (the tag group's
- * name); {@link #goal()} then gives the target for the alliance chosen in autonomous. Tunables
+ * name); {@link #goal()} then gives the target for the alliance chosen in autonomous. BIOBUZZ: the goal
+ * is always that alliance's HIVE's CELL that reads right side up (the up CELL, the one you can score
+ * in), whichever of its two CELLs that is now; a CELL whose tags read upside down is never the goal
+ * ({@link TagGroup#goalTarget}). Tunables
  * ({@code Tunables.Limelight} for device "limelight"): {@code pipeline} (Limelight only, default 0).
  * No suggested buttons. It starts in INIT (a webcam needs a second or two). A camera missing from the
  * robot configuration never stops the OpMode: it warns on the Driver Station and sees nothing.
@@ -66,7 +70,9 @@ public final class Camera extends Module<Camera> {
     }
 
     /**
-     * The goal's tag group for each alliance, e.g. "BLUE SCORING" and "RED SCORING" in BIOBUZZ.
+     * The goal's tag group for each alliance, e.g. "BLUE SCORING" and "RED SCORING" in BIOBUZZ. For
+     * BIOBUZZ each name stands for that alliance's HIVE: the aim goes to its CELL that reads right side
+     * up now (the up CELL), "RED SCORING" or "RED AUDIENCE", and never to a CELL that reads upside down.
      *
      * @param blueGroup the group the BLUE alliance aims at
      * @param redGroup  the group the RED alliance aims at
@@ -234,12 +240,24 @@ public final class Camera extends Module<Camera> {
 
     /**
      * The goal for this match's alliance (see {@link #goal(String, String)}), or null if it is not
-     * seen now (or no goal was named). Always check for null.
+     * seen now (or no goal was named). BIOBUZZ: that alliance's HIVE's CELL that reads right side up;
+     * null when only an upside-down CELL is in view. Always check for null.
      */
     public TargetObservation goal() {
         if (source == null || blueGoal == null) return null;
+        return TagGroup.goalTarget(source, goalName());
+    }
+
+    // Why goal() is null while the camera sees part of the goal ("RED SCORING is upside down (a down
+    // CELL)"); "" otherwise.
+    String whyNoGoal() {
+        return source == null || blueGoal == null ? "" : TagGroup.whyNoGoal(source, goalName());
+    }
+
+    // The goal's name for this match's alliance.
+    private String goalName() {
         Alliance a = robot == null ? Alliance.BLUE : robot.alliance();
-        return source.target(a.pick(blueGoal, redGoal));
+        return a.pick(blueGoal, redGoal);
     }
 
     // True if goal(...) was given in Robot.java (robot.aim() aims with the first such camera).
@@ -278,7 +296,9 @@ public final class Camera extends Module<Camera> {
         source.addTelemetry(t);
         if (blueGoal != null) {
             TargetObservation g = goal();
-            t.line("Goal", g == null ? "not seen" : fmt("%.0f in, %.1f deg", g.distanceIn, g.bearingDeg));
+            String why = g == null ? whyNoGoal() : "";
+            if (g != null) t.line("Goal", fmt("%s, %.0f in, %.1f deg", g.name, g.distanceIn, g.bearingDeg));
+            else t.line("Goal", why.isEmpty() ? "not seen" : "not seen (" + why + ")");
         }
     }
 

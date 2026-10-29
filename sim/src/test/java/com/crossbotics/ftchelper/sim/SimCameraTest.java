@@ -184,6 +184,72 @@ public class SimCameraTest {
         assertEquals(35.53 + 1.27, o[2], 0.1);
     }
 
+    // The goal is always our HIVE's CELL that reads right side up (the up CELL), with either camera: red's up
+    // CELL is +x at the start (tags 34-37), blue's is -x (42-45); a tip swaps them; a down CELL (upside down)
+    // is never the goal, even when it is the only one in view.
+    @Test public void theGoalIsTheRightSideUpCellOfOurHive() throws Exception {
+        SimRobot r = robot();
+        LimelightTags ll = LimelightTags.create(r.hardwareMap(), "limelight");
+        WebcamTags cam = WebcamTags.create(r.hardwareMap(), "Webcam 1");
+        ll.start();
+        cam.start();
+        com.crossbotics.ftchelper.vision.TargetSource[] both = {ll, cam};
+        // Red, at the start: from +x both red CELLs are in view; only the up one (+x, RED AUDIENCE) is the goal.
+        synchronized (r) { r.setPose(60, -12.75, 90); }
+        for (com.crossbotics.ftchelper.vision.TargetSource c : both) {
+            assertGoal(c, "RED SCORING", "RED AUDIENCE");
+            TargetObservation down = waitFor(c, "RED SCORING");
+            assertNotNull(c.name() + " sees the down CELL too", down);
+            assertFalse(c.name() + ": the down CELL reads upside down: " + down.rollDeg, down.isUpright());
+        }
+        // Blue, at the start: its up CELL is -x (BLUE SCORING).
+        synchronized (r) { r.setPose(-60, 12.75, 270); }
+        for (com.crossbotics.ftchelper.vision.TargetSource c : both) assertGoal(c, "BLUE SCORING", "BLUE SCORING");
+        // Each HIVE tips: the other CELL comes up.
+        for (SimField.Hive h : r.field.hives) r.field.tip(h);
+        synchronized (r) { r.setPose(-56, -12.75, 270); }   // x -56: clear of the FLOWER
+        for (com.crossbotics.ftchelper.vision.TargetSource c : both) assertGoal(c, "RED SCORING", "RED SCORING");
+        synchronized (r) { r.setPose(56, 12.75, 90); }   // x 56: clear of the FLOWER
+        for (com.crossbotics.ftchelper.vision.TargetSource c : both) assertGoal(c, "BLUE SCORING", "BLUE AUDIENCE");
+        // Back to the start, and right next to the red HIVE (its frame stops the robot going under): the up
+        // CELL is straight above the camera, so only the down CELL's tags (30-33) are in view. No goal.
+        for (SimField.Hive h : r.field.hives) r.field.tip(h);
+        synchronized (r) { r.setPose(28, -12.75, 90); }
+        for (com.crossbotics.ftchelper.vision.TargetSource c : both) {
+            TargetObservation down = waitFor(c, "RED SCORING");
+            assertNotNull(c.name() + " sees the down CELL next to the HIVE", down);
+            assertTrue(c.name() + ": only the down CELL: " + c.targets(), c.target("RED AUDIENCE") == null);
+            assertTrue(c.name() + ": no goal", com.crossbotics.ftchelper.vision.TagGroup.goalTarget(c, "RED SCORING") == null);
+            assertEquals("RED SCORING is upside down (a down CELL)", com.crossbotics.ftchelper.vision.TagGroup.whyNoGoal(c, "RED SCORING"));
+        }
+        ll.close();
+        cam.close();
+    }
+
+    // Waits up to 2 s for the camera to see this group again (after a move, the old picture may still be in).
+    private static TargetObservation waitFor(com.crossbotics.ftchelper.vision.TargetSource c, String name) throws InterruptedException {
+        TargetObservation t = null;
+        for (int i = 0; i < 100; i++) {
+            Thread.sleep(20);
+            c.update();
+            t = c.target(name);
+            if (t != null && i > 10) return t;
+        }
+        return t;
+    }
+
+    // The goal for this name, after the camera has had time for new pictures, is the group called want.
+    private static void assertGoal(com.crossbotics.ftchelper.vision.TargetSource c, String name, String want) throws InterruptedException {
+        TargetObservation g = null;
+        for (int i = 0; i < 100; i++) {
+            Thread.sleep(20);
+            c.update();
+            g = com.crossbotics.ftchelper.vision.TagGroup.goalTarget(c, name);
+            if (g != null && g.name.equals(want) && i > 10) return;
+        }
+        assertEquals(c.name() + " goal for " + name + ": " + c.targets(), want, g == null ? null : g.name);
+    }
+
     @Test public void limelightResultIsNeverNullAndFollowsThePollRate() throws Exception {
         SimRobot r = robot();
         com.qualcomm.hardware.limelightvision.Limelight3A ll = r.limelights.get("limelight");

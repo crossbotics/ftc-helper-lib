@@ -309,18 +309,20 @@ public class WebcamTags implements TargetSource {
         // view (sideways and forward only), the same kind of distance as the Limelight's.
         double bearing = d.ftcPose != null ? d.ftcPose.bearing : Double.NaN;
         double range = d.ftcPose != null ? d.ftcPose.range : Double.NaN;
+        // roll: how far the tag (or the cluster's row of tags) is turned in the picture; 0 = right side up.
+        double roll = d.ftcPose != null ? d.ftcPose.roll : Double.NaN;
         // "instanceof" asks "is this a single tag?"; then "(AprilTagSingleDetection) d" lets us use it as one.
         if (d instanceof AprilTagSingleDetection) {
             AprilTagSingleDetection s = (AprilTagSingleDetection) d;
             String tagName = s.metadata != null ? s.metadata.name : "Tag " + s.id;
             // frameAcquisitionNanoTime: when the picture was taken, on the System.nanoTime() clock
-            return new TargetObservation(s.id, tagName, bearing, range, d.frameAcquisitionNanoTime);
+            return new TargetObservation(s.id, tagName, bearing, range, d.frameAcquisitionNanoTime, roll);
         }
         if (d instanceof AprilTagClusterDetection) {
             // A cluster has a name but no single tag number, so its id is CLUSTER (-1).
             AprilTagClusterDetection c = (AprilTagClusterDetection) d;
             String clusterName = c.metadata != null ? c.metadata.name : "Cluster";
-            return new TargetObservation(TargetObservation.CLUSTER, clusterName, bearing, range, d.frameAcquisitionNanoTime);
+            return new TargetObservation(TargetObservation.CLUSTER, clusterName, bearing, range, d.frameAcquisitionNanoTime, roll);
         }
         // Some other kind of detection a future SDK might add: still report it, so it shows up.
         return new TargetObservation(TargetObservation.CLUSTER, "Unknown", bearing, range, d.frameAcquisitionNanoTime);

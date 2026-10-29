@@ -4,22 +4,47 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+**What matters for your robot**
+
+- **The aim goes to the CELL you can score in.** BIOBUZZ: the camera's goal is now always your HIVE's up
+  CELL (its tags read right side up), never a down CELL. No code change: `goal("BLUE SCORING", "RED SCORING")`
+  does it.
+
 ### Changed
 
-- **Three example robots now shoot with the ready-made steps.** Their autonomous gets ready, aims, then
-  fires: `.readyToLaunch("Ready", 3)`, `.aimAtGoal(...)`, `.action(robot.launcher.fireAllAction())`.
-  `flywheelbot` turns the whole robot (with a 45 degree sweep when the goal is not in view); `turretbot`
-  and `v2bot` wait for the turret to aim. `flywheelbot`'s G2 Y fires with `robot.launcher.fireAllAction()`,
-  and its hand-written `Actions.fireThree` is gone. Your own code needs no change.
-  [Lesson 9, section 10](docs/tutorials/start/09-shooter-and-camera.md#10-no-turret-aim-the-whole-robot)
+- **The goal is our HIVE's up CELL, found by how its tags are turned.** Each HIVE has two CELLs; only the
+  up one can be scored in, and a tip swaps them. The up CELL's tags read right side up, the down CELL's
+  upside down. `Camera.goal()` (so aiming, the turret, the shot table's distance, the `Goal` line, LOCKED,
+  the launcher's "aimed" checks, `aimAtGoal` and the auto builder) now gives our HIVE's group that reads
+  right side up, "RED SCORING" or "RED AUDIENCE". Before, it was always "RED SCORING", the DOWN CELL at
+  the start for red. A down CELL is never the goal, even when it is the only one in view (from under the
+  HIVE): the Driver Station says `Goal : not seen (RED SCORING is upside down (a down CELL))`. The `Goal`
+  line also names the CELL group in use. `camera.target("RED SCORING")` still gives that group.
+  [Camera](docs/modules/robot.md#camera)
+- **Added to the vision classes:** `TargetObservation.rollDeg` and `isUpright()` (the tag's turn in the
+  picture; webcam: the SDK's `ftcPose.roll`; Limelight group: from the order of its tags in the row),
+  `TagGroup.element`, `TagGroup.goalTarget(camera, name)` and `TagGroup.whyNoGoal(camera, name)`.
+  [vision.md](docs/modules/vision.md#taggroup)
+- **Three example robots now shoot with the ready-made steps.** `.readyToLaunch(...)`, `.aimAtGoal(...)`,
+  `.action(robot.launcher.fireAllAction())`. `flywheelbot` turns the whole robot (with a 45 degree sweep
+  when the goal is not in view), and aims before it gets ready; `turretbot` and `v2bot` wait for the
+  turret to aim. `flywheelbot`'s G2 Y fires with `robot.launcher.fireAllAction()`, and its hand-written
+  `Actions.fireThree` is gone. [Lesson 9, section 10](docs/tutorials/start/09-shooter-and-camera.md#10-no-turret-aim-the-whole-robot)
+- **`flywheelbot` fires only when LOCKED on the goal** (`.requireReady("aimed", () -> aim().stage() == Aim.Stage.LOCKED)`):
+  never blind, with the aim mode on or off. Its autonomous starts on the 2nd tile right of the centre
+  line (x 48), where its camera sees the up CELL.
+- **`turretbot`'s POLLEN shot table is tuned in the simulator.** Its autonomous starts at x 44, y -61.5 in,
+  drives 20 in, turns 45 degrees left to face the HIVE, and scores all 4 shots cleanly on blue and on
+  red. The NECTAR table is still example numbers.
 
 ### Fixed
 
-- **`turretbot`'s autonomous now fires, on both alliances.** Its start spot was in words only, and from
-  the spot the simulator used, the camera never saw the goal: 0 shots. It now starts just right of the
-  centre line (x 6, y -61.5 in, seen from your own wall) and drives 12 in. `mirrorForRed()` stays `false`.
+- **`turretbot`'s autonomous fires, on both alliances.** Its start spot was in words only, and from the
+  spot the simulator used, the camera never saw the goal: 0 shots. `mirrorForRed()` stays `false`.
 - **`v2bot`'s autonomous start spot fits in the simulator.** It was y -61.6 in, 0.1 in into the wall:
   the simulator said so and used another spot. Now y -61.5 in.
+- **Simulator: the Limelight reports each tag's turn** (from the field file's printed "up", which a tipped
+  HIVE turns over); before, it sent 0 for every tag.
 
 ## v0.20.3 - 2026-10-28
 

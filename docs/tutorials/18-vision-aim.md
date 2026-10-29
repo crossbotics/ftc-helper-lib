@@ -125,7 +125,10 @@ and [robot.md: Aim](../modules/robot.md#aim).
   CELL). `WebcamTags` reports each with id `TargetObservation.CLUSTER` and its name. `LimelightTags`
   reports the same groups by the same names (a Limelight sees single tags; the library groups them
   with `TagGroup`, aimed at the middle of the tag row), so `camera.target("RED SCORING")` works with
-  either camera. With a Limelight, single tags also work by number (`camera.target(31)`). The webcam
+  either camera. Only the CELL that is up can be scored in, and its tags are the ones that read right
+  side up: `TagGroup.goalTarget(camera, "RED SCORING")` gives the red HIVE's up CELL (either group), or
+  null when only the down CELL (upside-down tags) is in view
+  ([vision.md](../modules/vision.md#taggroup)). With a Limelight, single tags also work by number (`camera.target(31)`). The webcam
   reports a tag that belongs to a cluster ONLY as part of its cluster, so `camera.target(31)` gives null
   there (to see single tags with a webcam, give `WebcamTags.library(...)` a tag library without clusters).
 

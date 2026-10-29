@@ -402,7 +402,7 @@ public class LibraryControlsTest {
         r.setup(devices());
         AimTest.FakeCamera cam = new AimTest.FakeCamera();
         r.camera.source = cam;
-        cam.seen = new TargetObservation(TargetObservation.CLUSTER, "RED SCORING", 3, 40, 0);
+        cam.seen = new TargetObservation(TargetObservation.CLUSTER, "RED SCORING", 3, 40, 0, 0);   // right side up: the up CELL
         assertEquals(Alliance.BLUE, r.alliance());
         assertNull("BLUE looks for the blue goal", r.camera.goal());
         r.tracker.setPose(new FieldPose(24, 0, 0));
