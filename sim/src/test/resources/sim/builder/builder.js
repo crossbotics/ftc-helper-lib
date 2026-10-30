@@ -1033,7 +1033,7 @@ function actInput(i, t) {
 	});
 }
 
-$('bClear').onclick = () => change(() => { B.steps.plan.steps = []; B.sel = null; });
+$('bClear').onclick = () => change(() => { B.steps.plan.steps = []; B.steps.plan.setup = []; B.sel = null; });
 $('bExample').onclick = () => change(() => { B.steps.plan = structuredClone(STEPS_EXAMPLE); B.sel = null; });
 // Start from one of your autos: its Java read back into steps (plain numbers only; the rest is listed).
 function renderFrom() {
@@ -1065,6 +1065,7 @@ $('bFromGo').onclick = async () => {
 			// the auto's own note stays (the builder does not write over it)
 			B.steps.plan = { ...keep, ...r.plan, drive: keep.drive, start: { ...keep.start, ...(r.plan.start || {}), ...(r.plan.start?.note ? { noteAuto: false } : {}) } };
 			B.sel = null;
+			B.view = 'steps';   // your file has more than the builder keeps: paste only what it wrote
 		});
 		out.push({ level: 'good', text: `Loaded "${a.name}": ${r.plan.steps.length} step${r.plan.steps.length === 1 ? '' : 's'}. The file is not changed: Copy the Java when you are done.` });
 	} else out.push({ level: 'bad', text: `"${a.name}": no steps could be read.` });
@@ -1222,7 +1223,7 @@ function javaNow() {
 	}
 	const plan = B.steps.plan;
 	const j = S.toJava({ ...plan, className: plan.className || undefined });
-	return B.view === 'steps' ? '// In steps(Steps s, Robot robot):\n' + j.steps : j.file;
+	return B.view === 'steps' ? '// Replaces everything inside steps(Steps s, Robot robot):\n' + j.steps : j.file;
 }
 
 function simFileName() {

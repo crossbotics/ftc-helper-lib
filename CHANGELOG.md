@@ -2,6 +2,17 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Fixed
+
+- **Simulator, auto builder: a loaded auto lost its setup lines with no warning.** `robot.deployAtStart = false;`
+  above the steps was not read, so **Run** did not do it and the copied Java did not have it. Plain lines like
+  this (`robot.NAME = true, false or a number`) are now kept, run and written back. Other lines in `steps()`
+  and overrides such as `atInit()` are listed after Load as not carried over, and the note counts the comments
+  inside `steps()` that are not kept. After Load, the copy list starts on **only the steps**.
+  [The auto builder](docs/guides/simulator.md#the-auto-builder)
+
 ## v0.21.1 - 2026-10-29
 
 **What matters for your robot**

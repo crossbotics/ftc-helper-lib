@@ -636,7 +636,8 @@ function startCode(st) {
  */
 export function toJava(plan) {
 	const lines = ['s.' + startCode(plan.start), ...(plan.steps || []).map((s) => ' .' + stepCode(s))];
-	const steps = lines.join('\n') + ';';
+	// the setup lines read from your auto (robot.deployAtStart = false;) come before the steps, as in your file
+	const steps = [...(plan.setup || []).map((s) => s.code), lines.join('\n') + ';'].join('\n');
 	const codes = (plan.steps || []).map((s) => String(s.code ?? '') + ' ' + Object.values(s.names || {}).map((n) => n.code).join(' ')).join(' ')
 		+ ' ' + Object.values(plan.start?.names || {}).map((n) => n.code).join(' ');
 	const base = (plan.pkg || 'org.firstinspires.ftc.teamcode').replace(/\.autos$/, '');
@@ -751,6 +752,58 @@ const OTHER_METHODS = ['menuChoice', 'menuYesNo', 'onlyIf', 'end', 'driveTo', 'f
  * Plain numbers only, like the Pedro importer: a step with a name in place of a number
  * (Tunables.Auto.parkInches) is left out, and the problem says so.
  */
+// What else is in the auto, beside the steps: setup lines in steps() (robot.deployAtStart = false;), which
+// change what the robot does. A plain one is kept and run; the rest are listed, never dropped silently.
+function readAround(src, tk) {
+	const setup = [], skipped = [], overrides = [];
+	let comments = 0;
+	const text = (a, b) => tk.src.slice(tk[a].at, tk[b].end).replace(/\s*\n\s*/g, ' ').trim();
+	const short = (s) => (s.length > 70 ? s.slice(0, 67) + '...' : s);
+	for (let i = 0; i + 1 < tk.length; i++) {
+		// @Override protected void atInit(Robot robot): every override but the two the builder writes
+		if (tk[i].p === '@' && tk[i + 1].id === 'Override') {
+			let k = i + 2;
+			while (k + 1 < tk.length && !(tk[k].id && tk[k + 1].p === '(')) k++;
+			if (tk[k] && !['steps', 'mirrorForRed'].includes(tk[k].id)) overrides.push(tk[k].id);
+		}
+	}
+	const at = tk.findIndex((t, i) => t.id === 'void' && tk[i + 1]?.id === 'steps' && tk[i + 2]?.p === '(');
+	if (at < 0) return { setup, skipped, overrides, comments };
+	let open = at + 3;
+	while (open < tk.length && tk[open].p !== '{') open++;
+	let depth = 0, from = open + 1, close = -1;
+	for (let i = open; i < tk.length; i++) {
+		const p = tk[i].p;
+		if (p === '{' || p === '(') depth++;
+		else if (p === '}' || p === ')') depth--;
+		if (depth === 0) { close = i; break; }
+		const ended = depth === 1 && (p === ';' || p === '}');
+		if (!ended || i < from) continue;
+		const st = tk.slice(from, i + 1);
+		const list = /^(s|steps)$/.test(st[0].id ?? '') && st[1]?.p === '.';
+		const passesList = st.some((t, k) => /^(s|steps)$/.test(t.id ?? '') && (st[k - 1]?.p === '(' || st[k - 1]?.p === ',') && (st[k + 1]?.p === ',' || st[k + 1]?.p === ')'));
+		const value = st[3]?.p === '=' && st[0].id === 'robot' && st[1].p === '.' && st[2].id && st.length <= 7
+			? (st[4].id === 'true' || st[4].id === 'false') && st[5]?.p === ';' ? st[4].id === 'true'
+				: st[4].n != null && st[5]?.p === ';' ? st[4].n
+					: st[4].p === '-' && st[5]?.n != null && st[6]?.p === ';' ? -st[5].n : null
+			: null;
+		if (value !== null) {
+			const eol = src.indexOf('\n', tk[i].end);
+			const rest = src.slice(tk[i].end, eol < 0 ? src.length : eol).trim();
+			setup.push({ field: st[2].id, value, code: text(from, i) + (rest.startsWith('//') ? '   ' + rest : '') });
+		} else if (!list && !passesList) skipped.push(short(text(from, i)));
+		from = i + 1;
+	}
+	if (close > open) {
+		const kept = new Set(setup.map((s) => s.code.split('   //')[1]).filter(Boolean));
+		for (let i = open; i < close; i++) {
+			const gap = src.slice(tk[i].end, tk[i + 1].at);
+			for (const c of gap.match(/\/\/[^\n]*|\/\*[\s\S]*?\*\//g) || []) if (!kept.has(c.slice(2).trimEnd()) && !kept.has(c.slice(2).trim())) comments++;
+		}
+	}
+	return { setup, skipped, overrides, comments };
+}
+
 export function fromJava(src, opts = {}) {
 	const tk = tokenize(src);
 	const problems = [], notes = [];
@@ -906,13 +959,21 @@ export function fromJava(src, opts = {}) {
 		tank = t.changes;
 	}
 	const plan = anything ? { start, steps } : null;
+	const around = readAround(src, tk);
 	if (plan) {
+		plan.setup = around.setup;
 		if (mirror !== undefined) plan.mirror = mirror;
 		if (opmode !== undefined) plan.opmode = opmode;
 		if (teleop !== undefined) plan.teleop = teleop;
 		if (group !== undefined) plan.group = group;
 		if (cls !== undefined) plan.className = cls;
 		if (pkg !== undefined) plan.pkg = pkg.replace(/\.autos$/, '');
+	}
+	if (plan) {
+		for (const s of around.setup) notes.push(`Kept, and the builder's Run does it too: ${s.code.split('   //')[0]}`);
+		for (const s of around.skipped) problems.push(`Not carried over, and the builder's Run does not do it: ${s}`);
+		for (const m of around.overrides) problems.push(`${m}() in your auto is not carried over, and the builder's Run does not do it.`);
+		if (around.comments) notes.push(`${around.comments} comment${around.comments === 1 ? '' : 's'} inside steps() will not be in the Java.`);
 	}
 	if (own.size) notes.push(`Written as numbers (your auto's own names, not in the builder's file): ${[...own].join(', ')}.`);
 	const drive = steps.some((s) => s.kind === 'move' && sideways(s.dir)) ? 'mecanum' : null;

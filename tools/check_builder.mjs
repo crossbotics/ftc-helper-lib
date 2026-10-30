@@ -205,6 +205,34 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 		ok(S.autoNote({ x: -sx, y: -half + 3 * tile + R[0] / 2, h: 0 }, R, half) === 'Left wall, 4th tile out, near edge on seam, facing field', 'autoNote: along a side wall, the wall and the place stay');
 	}
 	{
+		// The rest of an auto: setup lines stay and run; anything else is listed, never dropped silently.
+		const auto = `public class A extends Auto<Robot> {
+    @Override protected void atInit(Robot robot) { robot.lift.home(); }
+    @Override protected void steps(Steps s, Robot robot) {
+        robot.deployAtStart = false;   // the front is on the wall
+        robot.reach = -2.5;
+        robot.intake.in();
+        // a note
+        s.start("Spot", 0, -61, 0)
+         .move("Off", 4, 180, 0.3);   // slowly
+    }
+    @Override protected boolean mirrorForRed() { return false; }
+}`;
+		const a = S.fromJava(auto);
+		ok(a.plan.setup.length === 2 && a.plan.setup[0].field === 'deployAtStart' && a.plan.setup[0].value === false && a.plan.setup[1].value === -2.5, 'fromJava: reads robot.NAME = value; setup lines');
+		ok(a.problems.some((t) => /Not carried over.*robot\.intake\.in\(\)/.test(t)), 'fromJava: lists a line it cannot keep');
+		ok(a.problems.some((t) => /atInit\(\) in your auto/.test(t)) && !a.problems.some((t) => /steps\(\) in your|mirrorForRed\(\) in your/.test(t)), 'fromJava: lists an override it does not write');
+		ok(a.notes.some((t) => /^2 comments inside steps/.test(t)), 'fromJava: counts the comments it will not keep');
+		const aj = S.toJava({ ...a.plan, drive: 'tank' });
+		ok(/robot\.deployAtStart = false;   \/\/ the front is on the wall\n/.test(aj.steps) && aj.steps.indexOf('deployAtStart') < aj.steps.indexOf('s.start'), 'toJava: the setup line comes before the steps, with its comment');
+		ok(/        robot\.deployAtStart = false;/.test(aj.file), 'toJava: the setup line is in the whole file too');
+		const aback = S.fromJava(aj.file);
+		ok(JSON.stringify(aback.plan.setup.map((s) => s.value)) === '[false,-2.5]' && !aback.problems.length, 'the setup lines survive reading the Java again');
+		const ap = C.toProgram({ mode: 'steps', steps: { plan: a.plan } });
+		ok(JSON.stringify(ap.setup) === '[{"field":"deployAtStart","value":false},{"field":"reach","value":-2.5}]', 'toProgram: the Run gets the setup lines');
+		ok(S.fromJava('s.start("x", 0, -61, 0).move("Out", 10, 0, 0.5);').plan.setup.length === 0, 'fromJava: only steps, no setup and no warning');
+	}
+	{
 		const src = 's.start("Spot", START_X, -61, 0).move("Off", Tunables.Auto.offWallInches, 180, 0.3).turnTo("Turn", turnToField(PARK_HEADING), 0.5).parkWithSeconds(Tunables.Auto.parkSeconds);';
 		const r0 = S.fromJava(src);
 		ok(r0.unread.join('|') === 'START_X|Tunables.Auto.offWallInches|turnToField(PARK_HEADING)|Tunables.Auto.parkSeconds', 'fromJava: lists the names it could not read');
