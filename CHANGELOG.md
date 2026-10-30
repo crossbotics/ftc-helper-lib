@@ -4,8 +4,23 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+### Added
+
+- **Simulator, Edit robot: the shot angle.** Change each launcher's angle in the panel: the arrow follows it,
+  **Try it** shoots with it, and the panel gives the `.shotAngle(...)` line to copy into `Robot.java`.
+  [Edit robot](docs/guides/simulator.md#edit-robot-shape-your-robot)
+- **Simulator, Control Hub: move the robot with numbers.** x, y, heading, the Face buttons and Snap, the same
+  as the auto builder's start spot.
+
+### Changed
+
+- **Simulator: less text around the gamepads.** The help moved behind a **?** button. **Push the robot** is
+  folded. The auto builder no longer shows the package: it comes from your Robot class.
+
 ### Fixed
 
+- **Simulator: "Last used from another page" showed with no other page,** for example after a page reload.
+  It now shows only while the other page is open, and it is shorter.
 - **Simulator, auto builder: a loaded auto lost its setup lines with no warning.** `robot.deployAtStart = false;`
   above the steps was not read, so **Run** did not do it and the copied Java did not have it. Plain lines like
   this (`robot.NAME = true, false or a number`) are now kept, run and written back. Other lines in `steps()`

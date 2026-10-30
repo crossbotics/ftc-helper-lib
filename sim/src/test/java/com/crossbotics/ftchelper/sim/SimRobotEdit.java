@@ -67,6 +67,7 @@ final class SimRobotEdit {
     private SimShapes base;
     // The edits "Try it" put in the simulator ("{}" = none), for a page that opens again.
     private String tried = "{}";
+    private String triedAngles = "{}";
     private volatile boolean editing = false;
 
     SimRobotEdit(SimEngine sim, Path robotFile) {
@@ -257,6 +258,16 @@ final class SimRobotEdit {
         field(b, "why", why).append(',');
         field(b, "robotFile", robotFile == null ? "" : robotFile.toString()).append(',');
         b.append("\"tried\":").append(tried).append(',');
+        b.append("\"triedAngles\":").append(triedAngles).append(',');
+        b.append("\"launchers\":[");
+        int shooters = 0;
+        for (SimPieces.ShotAngle a : sim.robot.pieces.shotAngles()) {
+            b.append(shooters++ > 0 ? ",{" : "{");
+            field(b, "name", a.name).append(',');
+            b.append("\"angle\":").append(SimShapeJava.num(a.readDeg)).append(',');
+            field(b, "by", a.by).append('}');
+        }
+        b.append("],");
         SimRobot r = sim.robot;
         b.append("\"chassis\":[").append(SimShapeJava.num(Math.round(r.lengthIn * 25.4))).append(',')
                 .append(SimShapeJava.num(Math.round(r.widthIn * 25.4))).append(',')
@@ -324,6 +335,7 @@ final class SimRobotEdit {
                 l.remove("baseModel");
                 l.remove("cadPose");
             }
+            Map<String, Double> angles = shotAngles(req);
             Map<String, Object> values = req.containsKey("values") ? SimJsonReader.object(req.get("values"), "values") : new LinkedHashMap<>();
             SimShapes shapes = new SimShapes(sim.robot, withoutModel(sim.robot.props), lines, sim.robot.dir);
             synchronized (sim.robot) {
@@ -367,7 +379,7 @@ final class SimRobotEdit {
                 SimShapes.Piece p = null;
                 for (SimShapes.Piece q : pieces) if (q.shape.equals(shot.shape)) p = q;
                 if (p == null) continue;
-                double a = Math.toRadians(shot.angleDeg), gap = Math.max(p.sf, p.su) / 2 + 1;
+                double a = Math.toRadians(angleNow(shot, angles)), gap = Math.max(p.sf, p.su) / 2 + 1;
                 double[] dir = new double[3], from = new double[3];
                 for (int k = 0; k < 3; k++) {
                     dir[k] = Math.cos(a) * p.ef[k] + Math.sin(a) * p.eu[k];
@@ -394,9 +406,11 @@ final class SimRobotEdit {
             Map<String, Map<String, Object>> edits = edits(req);
             boolean all = Boolean.TRUE.equals(req.get("all"));
             check(lines(edits));   // the same checks as the preview: a change the simulator cannot draw stops here
+            List<Map<String, String>> parts = parts(edits, all);
+            parts.addAll(angleParts(shotAngles(req), all));
             StringBuilder b = new StringBuilder("{\"parts\":[");
             int n = 0;
-            for (Map<String, String> part : parts(edits, all)) {
+            for (Map<String, String> part : parts) {
                 b.append(n++ > 0 ? ",{" : "{");
                 boolean first = true;
                 for (Map.Entry<String, String> e : part.entrySet()) {
@@ -417,12 +431,61 @@ final class SimRobotEdit {
         try {
             Map<String, Object> req = SimJsonReader.object(SimJsonReader.parse(body), "the request");
             Map<String, Map<String, Object>> edits = edits(req);
+            Map<String, Double> angles = shotAngles(req);
             sim.robot.replaceShapes(lines(edits));
+            sim.robot.pieces.setShotAngles(angles);
             tried = req.containsKey("edits") ? toJson(req.get("edits")) : "{}";
+            triedAngles = req.containsKey("shotAngles") ? toJson(req.get("shotAngles")) : "{}";
             return "{\"ok\":true}";
         } catch (IllegalArgumentException | IllegalStateException e) {
             return error(e);
         }
+    }
+
+    // ----------------------------------------------------------------------------- shot angles
+
+    // The request's changed shot angles, checked: a launcher this robot has, set by a number, 0 to 180 (as .shotAngle takes).
+    private Map<String, Double> shotAngles(Map<String, Object> req) {
+        Map<String, Double> out = new LinkedHashMap<>();
+        if (!req.containsKey("shotAngles")) return out;
+        for (Map.Entry<String, Object> e : SimJsonReader.object(req.get("shotAngles"), "shotAngles").entrySet()) {
+            SimPieces.ShotAngle known = null;
+            for (SimPieces.ShotAngle a : sim.robot.pieces.shotAngles()) if (a.name.equals(e.getKey())) known = a;
+            if (known == null) throw new IllegalArgumentException("No launcher named " + e.getKey());
+            if (!known.by.isEmpty()) throw new IllegalArgumentException(e.getKey() + ": its " + known.by + " sets the shot angle");
+            double deg = e.getValue() instanceof Number ? ((Number) e.getValue()).doubleValue() : Double.NaN;
+            if (Double.isNaN(deg) || deg < 0 || deg > 180) throw new IllegalArgumentException(e.getKey() + ": the shot angle must be 0 to 180 degrees");
+            out.put(e.getKey(), deg);
+        }
+        return out;
+    }
+
+    // A launcher's angle in this preview: the changed one, else the robot file's (not one "Try it" put in).
+    private double angleNow(SimPieces.ShotNow shot, Map<String, Double> angles) {
+        for (SimPieces.ShotAngle a : sim.robot.pieces.shotAngles()) {
+            if (a.name.equals(shot.launcher) && a.by.isEmpty()) return angles.getOrDefault(a.name, a.readDeg);
+        }
+        return shot.angleDeg;
+    }
+
+    // What to paste for each changed shot angle (or each one: all).
+    private List<Map<String, String>> angleParts(Map<String, Double> angles, boolean all) {
+        List<Map<String, String>> out = new ArrayList<>();
+        for (SimPieces.ShotAngle a : sim.robot.pieces.shotAngles()) {
+            if (!a.by.isEmpty() || (!all && !angles.containsKey(a.name))) continue;
+            String deg = SimShapeJava.num(angles.getOrDefault(a.name, a.readDeg));
+            Map<String, String> p = new LinkedHashMap<>();
+            p.put("name", a.name + " shot angle");
+            if (robotClass.isEmpty()) {
+                p.put("where", "In the robot file, on the line shoot." + a.name + " = ...: set angle= to this");
+                p.put("java", "angle=" + deg);
+            } else {
+                p.put("where", "In Robot.java, on the line that adds the launcher: change .shotAngle(...) to this, or add it. Then run your auto's scenario again: its shots change");
+                p.put("java", ".shotAngle(" + deg + ")");
+            }
+            out.add(p);
+        }
+        return out;
     }
 
     // ----------------------------------------------------------------------------- edits -> Java

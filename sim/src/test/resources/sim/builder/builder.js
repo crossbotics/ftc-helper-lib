@@ -267,9 +267,9 @@ function syncRobot() {
 	const info = robotInfo();
 	if (info && info.drive) B.steps.plan.drive = info.drive;
 	const plan = B.steps.plan;
-	// "TeleOp next" and the package follow the Robot code until the team types their own.
+	// "TeleOp next" follows the Robot code until the team types their own; the package always does.
 	if (info && plan.teleopAuto !== false && info.teleop != null) plan.teleop = info.teleop;
-	if (info && plan.pkgAuto !== false && info.name.includes('.')) plan.pkg = info.name.slice(0, info.name.lastIndexOf('.'));
+	if (info && info.name.includes('.')) plan.pkg = info.name.slice(0, info.name.lastIndexOf('.'));
 }
 
 // A tank drive cannot strafe: every strafe becomes a turn, a drive and a turn back (stepscore.tankSteps),
@@ -1206,11 +1206,10 @@ function renderNames() {
 	box.dataset.key = key;
 	box.innerHTML = B.mode === 'pedro'
 		? '<label>Your autonomous\'s name (for the scenario) <input type="text" id="bOpmode"></label>'
-		: '<label>OpMode <input type="text" id="bOpmode"></label><label>TeleOp next <input type="text" id="bTeleop"></label><label>package <input type="text" id="bPkg"></label>';
+		: '<label>OpMode <input type="text" id="bOpmode"></label><label>TeleOp next <input type="text" id="bTeleop"></label>';
 	$('bOpmode').oninput = () => { if (B.mode === 'pedro') B.pedro.opmode = $('bOpmode').value; else B.steps.plan.opmode = $('bOpmode').value; renderCode(); };
 	if ($('bTeleop')) {
 		$('bTeleop').oninput = () => { B.steps.plan.teleop = $('bTeleop').value; B.steps.plan.teleopAuto = false; renderCode(); };
-		$('bPkg').oninput = () => { B.steps.plan.pkg = $('bPkg').value.trim(); B.steps.plan.pkgAuto = false; renderCode(); };
 	}
 }
 
@@ -1264,7 +1263,7 @@ function renderCode() {
 	renderNames();
 	const s = B.mode === 'pedro' ? B.pedro : B.steps;
 	setVal('bOpmode', B.mode === 'pedro' ? B.pedro.opmode : B.steps.plan.opmode);
-	if ($('bTeleop')) { setVal('bTeleop', B.steps.plan.teleop); setVal('bPkg', B.steps.plan.pkg); }
+	if ($('bTeleop')) { setVal('bTeleop', B.steps.plan.teleop); }
 	$('bViewRow').hidden = B.mode === 'pedro';
 	$('bView').value = B.view;
 	setVal('bTolIn', s.tolIn); setVal('bTolDeg', s.tolDeg);

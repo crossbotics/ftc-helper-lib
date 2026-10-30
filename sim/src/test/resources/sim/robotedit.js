@@ -15,6 +15,7 @@
   let info = null;        // GET /robot-edit: the shapes as read, whose part each is
   let edits = {};         // shape -> its changes { atMm, sizeMm, lengthMm, diameterMm, axis, tiltDeg, angles, range, startAt, travelMm }
   let values = {};        // shape -> the pose shown (degrees, or inches along a slide); none = the start of the match
+  let shotAngles = {};    // launcher -> its changed shot angle, degrees
   let view = null;        // POST /robot-edit/preview: the pieces, the frames, the size at every pose
   let java = null;        // POST /robot-edit/java
   let sel = null;         // the shape picked
@@ -47,7 +48,7 @@
     if (busy) { again = true; return; }
     busy = true;
     try {
-      const v = await postJSON("/robot-edit/preview", { edits, values });
+      const v = await postJSON("/robot-edit/preview", { edits, values, shotAngles });
       if (v.error) problem = v.error;
       else {
         problem = ""; view = v;
@@ -67,7 +68,7 @@
   function askJava() {
     clearTimeout(javaTimer);
     javaTimer = setTimeout(async () => {
-      try { java = await postJSON("/robot-edit/java", { edits, all: showAll }); } catch (e) { java = { error: "No answer from the simulator." }; }
+      try { java = await postJSON("/robot-edit/java", { edits, all: showAll, shotAngles }); } catch (e) { java = { error: "No answer from the simulator." }; }
       renderJava();
     }, 120);
   }
@@ -83,6 +84,7 @@
     if (!v3.ready) return;
     try { info = await getJSON("/robot-edit"); } catch (e) { return; }
     edits = JSON.parse(JSON.stringify(info.tried || {}));
+    shotAngles = JSON.parse(JSON.stringify(info.triedAngles || {}));
     values = {};
     await setMode(true);
     if (!E.scene) build();
@@ -377,6 +379,7 @@
       <div class="e-pose row"><b>Pose:</b> <button data-start class="${atStart() ? "on" : ""}">Start of the match</button>
         <button data-out class="${outNow() ? "on" : ""}" title="Every moving part at the named pose farthest from where it starts (an intake deployed, a slide up): easier to see and change">Every part out</button>
         <span class="muted" id="ePoseNote">${atStart() ? "every part where it starts" : outNow() ? "every moving part out" : "parts moved"}. Click a part for its own poses.</span></div>
+      <div id="eShots"></div>
       <div id="eChecks" role="status"></div>
       <div class="row e-actions"><button id="eTry" class="primary" title="The simulator uses these shapes now (in memory only): go back to driving to see pieces hit them">Try it</button>
         <button id="eUndoAll" title="Every shape back as the robot file has it">Undo all</button>
@@ -387,10 +390,15 @@
     p.querySelectorAll("[data-pick]").forEach((b) => (b.onclick = () => pick(b.dataset.pick)));
     p.querySelector("[data-start]").onclick = () => { values = {}; render(); refresh(); };
     p.querySelector("[data-out]").onclick = () => { values = outPose(); render(); refresh(); };
+    renderShots();
     $("#eTry").onclick = tryIt;
     $("#eUndoAll").onclick = async () => {
-      edits = {}; values = {}; say = "";
-      if (info.tried && Object.keys(info.tried).length) { await postJSON("/robot-edit/try", { edits: {} }); info.tried = {}; say = "The simulator is back to the robot file's shapes."; }
+      edits = {}; shotAngles = {}; values = {}; say = "";
+      if (Object.keys(info.tried || {}).length || Object.keys(info.triedAngles || {}).length) {
+        await postJSON("/robot-edit/try", { edits: {}, shotAngles: {} });
+        info.tried = {}; info.triedAngles = {};
+        say = "The simulator is back to the robot file's shapes and shot angles.";
+      }
       render(); refresh();
     };
     $("#eAll").onchange = (ev) => { showAll = ev.target.checked; askJava(); };
@@ -501,6 +509,25 @@
     el.innerHTML = h;
   }
 
+  // Each launcher's shot angle: the arrow follows it. Shapes (a ramp) do not change a shot: the simulator
+  // throws the piece from the launcher at this angle.
+  function renderShots() {
+    const el = $("#eShots");
+    if (!el) return;
+    const list = info.launchers || [];
+    if (!list.length) { el.innerHTML = ""; return; }
+    el.innerHTML = '<h3>Shot angle</h3>' + list.map((l) => l.by
+      ? `<p class="muted">${esc(l.name)}: its ${esc(l.by)} sets the angle.</p>`
+      : `<div class="row"><label>${esc(l.name)} <input type="number" min="0" max="180" step="1" data-shot="${esc(l.name)}" value="${shotAngles[l.name] ?? l.angle}"> degrees</label></div>`).join("")
+      + '<p class="muted">Up from the launcher\'s front: 90 = straight up, more than 90 = out of the back. The arrow shows it. Moving a shape (a ramp) does not change it.</p>';
+    el.querySelectorAll("[data-shot]").forEach((box) => (box.oninput = () => {
+      const l = list.find((x) => x.name === box.dataset.shot), v = parseFloat(box.value);
+      if (!Number.isFinite(v)) return;
+      if (v === l.angle) delete shotAngles[l.name]; else shotAngles[l.name] = v;
+      changed();
+    }));
+  }
+
   function renderJava() {
     const el = $("#eJava");
     if (!el) return;
@@ -523,11 +550,12 @@
   }
 
   async function tryIt() {
-    const r = await postJSON("/robot-edit/try", { edits });
+    const r = await postJSON("/robot-edit/try", { edits, shotAngles });
     if (r.error) { say = ""; problem = r.error; renderShape(); renderChecks(); return; }
     info.tried = JSON.parse(JSON.stringify(edits));
-    say = Object.keys(edits).length ? "The simulator uses these shapes now. Back to driving to try them (nothing is saved: copy the Java)."
-      : "The simulator is back to the robot file's shapes.";
+    info.triedAngles = JSON.parse(JSON.stringify(shotAngles));
+    say = Object.keys(edits).length || Object.keys(shotAngles).length ? "The simulator uses these shapes now. Back to driving to try them (nothing is saved: copy the Java)."
+      : "The simulator is back to the robot file's shapes and shot angles.";
     $("#eSay").textContent = say;
   }
 

@@ -206,6 +206,53 @@ public class SimRobotEditTest {
     }
 
     // The page: the buttons the mode needs are there, and its code is served.
+    // The shot angle: the arrow follows it (a shape does not change it), the Java says .shotAngle, Try it shoots with it.
+    @Test public void theShotAngleMovesTheArrowAndGivesTheJava() throws Exception {
+        Path file = robotFile(com.crossbotics.ftchelper.examples.flywheelbot.Robot.class);
+        try (SimRun s = new SimRun(file.toString())) {
+            SimServer server = new SimServer(s.sim, 0, false, file);
+            try {
+                Map<String, Object> state = json(server.robotEdit("GET", "/robot-edit", new byte[0]));
+                Map<String, Object> launcher = SimJsonReader.object(SimJsonReader.array(state.get("launchers"), "launchers").get(0), "launcher");
+                String name = (String) launcher.get("name");
+                double read = ((Number) launcher.get("angle")).doubleValue();
+                assertEquals("flywheelbot's .shotAngle", 75, read, 1e-6);
+
+                double arrow = arrowUp(json(server.robotEdit("POST", "/robot-edit/preview", "{\"edits\":{}}".getBytes(StandardCharsets.UTF_8))));
+                String changed = "{\"edits\":{},\"shotAngles\":{\"" + name + "\":30}}";
+                double low = arrowUp(json(server.robotEdit("POST", "/robot-edit/preview", changed.getBytes(StandardCharsets.UTF_8))));
+                assertEquals("the arrow at 75 degrees", Math.sin(Math.toRadians(75)), arrow, 1e-3);
+                assertEquals("the arrow at 30 degrees", Math.sin(Math.toRadians(30)), low, 1e-3);
+
+                Map<String, Object> java = json(server.robotEdit("POST", "/robot-edit/java", changed.getBytes(StandardCharsets.UTF_8)));
+                assertEquals(".shotAngle(30)", part(java, name + " shot angle").get("java"));
+                assertTrue("no change, no part", SimJsonReader.array(json(server.robotEdit("POST", "/robot-edit/java", "{\"edits\":{}}".getBytes(StandardCharsets.UTF_8))).get("parts"), "parts").isEmpty());
+
+                // Try it: the simulator's shots use it, a reopened page gets it, and Undo goes back.
+                json(server.robotEdit("POST", "/robot-edit/try", changed.getBytes(StandardCharsets.UTF_8)));
+                assertEquals(30, s.sim.robot.pieces.shotsNow().get(0).angleDeg, 1e-6);
+                assertEquals(30.0, ((Number) SimJsonReader.object(json(server.robotEdit("GET", "/robot-edit", new byte[0])).get("triedAngles"), "tried").get(name)).doubleValue(), 1e-6);
+                json(server.robotEdit("POST", "/robot-edit/try", "{\"edits\":{},\"shotAngles\":{}}".getBytes(StandardCharsets.UTF_8)));
+                assertEquals(read, s.sim.robot.pieces.shotsNow().get(0).angleDeg, 1e-6);
+
+                // Too far, or a launcher that is not there: a message, nothing changes.
+                String bad = (String) json(server.robotEdit("POST", "/robot-edit/try", ("{\"edits\":{},\"shotAngles\":{\"" + name + "\":200}}").getBytes(StandardCharsets.UTF_8))).get("error");
+                assertTrue(bad, bad.contains("0 to 180"));
+                bad = (String) json(server.robotEdit("POST", "/robot-edit/try", "{\"edits\":{},\"shotAngles\":{\"nope\":20}}".getBytes(StandardCharsets.UTF_8))).get("error");
+                assertTrue(bad, bad.contains("nope"));
+                assertEquals(read, s.sim.robot.pieces.shotsNow().get(0).angleDeg, 1e-6);
+            } finally {
+                server.close();
+            }
+        }
+    }
+
+    // How much the first launcher's arrow points up (the third number of its direction).
+    private static double arrowUp(Map<String, Object> preview) {
+        Map<String, Object> shot = SimJsonReader.object(SimJsonReader.array(preview.get("shots"), "shots").get(0), "shot");
+        return ((Number) SimJsonReader.array(shot.get("dir"), "dir").get(2)).doubleValue();
+    }
+
     @Test public void thePageHasTheEditRobotButtons() throws Exception {
         String page;
         try (InputStream in = SimServer.class.getResourceAsStream("/sim/index.html")) {

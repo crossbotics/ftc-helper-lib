@@ -30,6 +30,7 @@ final class SimGamepad {
         // Updates from the page arrive on several threads: an older one must not undo a newer one.
         String session = s.getOrDefault("session", "");
         if (session.length() > 64) session = session.substring(0, 64);
+        if (fromPage && session.equals(owner)) ownerHeard = System.nanoTime();
         long seq = -1;
         try { seq = Long.parseLong(s.getOrDefault("seq", "-1")); } catch (NumberFormatException ignored) { }
         if (seq >= 0) {
@@ -45,6 +46,7 @@ final class SimGamepad {
             owner = session;
             ownerFrom = s.getOrDefault("_from", "");
             ownerSeen = now;
+            ownerHeard = now;
         } else if (!session.equals(owner) && (now - ownerSeen) / 1e9 < 1.0) {
             return;
         }
@@ -85,6 +87,9 @@ final class SimGamepad {
     };
     private String owner = "", ownerFrom = "";
     private long ownerSeen = 0;
+    private long ownerHeard = 0;     // when the owner's page last sent anything: a page sends many times a second
+    /** A page silent this long has gone (closed, or reloaded: a reloaded page has a new session). */
+    static final double OWNER_GONE_SEC = 3;
 
     // When the latest buzz the OpMode asked for ends (System.nanoTime), 0 = none yet.
     private long rumbleUntil = 0;
@@ -126,8 +131,12 @@ final class SimGamepad {
         return b.append("]}").toString();
     }
 
-    /** The page that last pressed something on this gamepad: its session id and address. */
-    synchronized String owner() { return owner; }
+    /** The page that last pressed something on this gamepad, while it is still open: its session id, or "". */
+    synchronized String owner() { return owner(System.nanoTime()); }
+    /** {@link #owner()} at this time (System.nanoTime). */
+    synchronized String owner(long nowNanos) {
+        return (nowNanos - ownerHeard) / 1e9 > OWNER_GONE_SEC ? "" : owner;
+    }
     synchronized String ownerFrom() { return ownerFrom; }
 
     private static boolean isBlank(Map<String, String> s) {
