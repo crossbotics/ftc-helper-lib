@@ -2,7 +2,13 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
-## Unreleased
+## v0.22.0 - 2026-10-30
+
+**What matters for your robot**
+
+- **The auto builder keeps setup lines, and the simulator gets a shot angle box.** Load an auto, and a line like
+  `robot.deployAtStart = false;` now stays and runs. Change a launcher's angle in Edit robot and copy the line.
+  No code change needed.
 
 ### Added
 

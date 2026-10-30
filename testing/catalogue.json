@@ -4581,7 +4581,7 @@
     "andymark",
     "studica"
    ],
-   "since": "unreleased",
+   "since": "v0.22.0",
    "docs": [
     {
      "path": "docs/guides/simulator.md",
