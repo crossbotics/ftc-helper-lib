@@ -81,6 +81,8 @@ public class BuiltAuto extends Auto<RobotDefinition> {
         double x, y, h;
         boolean spot = true;
         final List<Map<String, Object>> steps = new ArrayList<>();
+        // Lines like robot.deployAtStart = false; read from the team's auto: {field, value}, set before the steps.
+        final List<Map<String, Object>> setup = new ArrayList<>();
 
         static Program parse(String json) {
             return from(SimJsonReader.object(SimJsonReader.parse(json), "the plan"));
@@ -99,6 +101,11 @@ public class BuiltAuto extends Auto<RobotDefinition> {
             p.y = need(st, "y", "start");
             p.h = need(st, "h", "start");
             p.spot = !Boolean.FALSE.equals(st.get("spot"));
+            if (m.get("setup") != null) {
+                for (Object o : SimJsonReader.array(m.get("setup"), "the plan's setup")) {
+                    p.setup.add(SimJsonReader.object(o, "a setup line"));
+                }
+            }
             for (Object o : SimJsonReader.array(m.get("steps"), "the plan's steps")) {
                 p.steps.add(SimJsonReader.object(o, "a step"));
             }
@@ -112,6 +119,7 @@ public class BuiltAuto extends Auto<RobotDefinition> {
          */
         void addTo(Steps s, RobotDefinition robot) {
             check(robot);
+            for (Map<String, Object> line : setup) setField(robot, line);
             if (spot) s.start(note, x, y, h);
             else s.start(note, h);
             for (int i = 0; i < steps.size(); i++) {
@@ -130,6 +138,22 @@ public class BuiltAuto extends Auto<RobotDefinition> {
 
         // Every command and action name in the plan, found and checked; nothing is called. A strafe on a
         // tank drive is refused here too, so it never runs (the page turns strafes into a turn and a drive).
+        // robot.NAME = value; from the auto, on the Robot class's public field of that name.
+        private static void setField(RobotDefinition robot, Map<String, Object> line) {
+            String name = SimJsonReader.string(line, "field", "");
+            Object value = line.get("value");
+            try {
+                java.lang.reflect.Field f = robot.getClass().getField(name);
+                if (f.getType() == boolean.class && value instanceof Boolean) f.setBoolean(robot, (Boolean) value);
+                else if (f.getType() == double.class && value instanceof Number) f.setDouble(robot, ((Number) value).doubleValue());
+                else if (f.getType() == int.class && value instanceof Number) f.setInt(robot, ((Number) value).intValue());
+                else throw new IllegalArgumentException("is a " + f.getType().getSimpleName());
+            } catch (NoSuchFieldException | IllegalAccessException | IllegalArgumentException e) {
+                throw new IllegalStateException(NAME + ": robot." + name + " = " + value + " from your auto cannot be set: "
+                        + robot.getClass().getSimpleName() + " needs a public boolean or number field with that name", e);
+            }
+        }
+
         void check(RobotDefinition robot) {
             boolean tank = robot.drive() != null && !robot.drive().isMecanum();
             for (int i = 0; i < steps.size(); i++) {

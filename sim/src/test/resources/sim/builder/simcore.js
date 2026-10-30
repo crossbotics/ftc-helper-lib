@@ -108,6 +108,7 @@ export function toProgram(b, robotClass = '') {
 	const plan = b.steps.plan;
 	const out = { name: plan.opmode || 'Built Auto', mode: 'steps', mirror: !!plan.mirror, robotClass,
 		start: { note: plan.start.note || 'Place the robot here', x: +plan.start.x, y: +plan.start.y, h: +plan.start.h || 0, spot: plan.start.spot !== false },
+		setup: (plan.setup || []).map((s) => ({ field: s.field, value: s.value })),
 		steps: (plan.steps || []).map((s) => ({ ...s })) };
 	return out;
 }

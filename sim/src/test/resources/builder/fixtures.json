@@ -1,6 +1,6 @@
 {
  "from": "the shared path builder files (sim/src/test/resources/sim/builder)",
- "made": "2026-10-22",
+ "made": "2026-10-30",
  "steps": [
   {
    "name": "lesson 6 example",
@@ -54,6 +54,7 @@
     "h": 0,
     "spot": true
    },
+   "setup": [],
    "steps": [
     {
      "kind": "run",
@@ -97,6 +98,7 @@
     "h": 0,
     "spot": true
    },
+   "setup": [],
    "steps": [
     {
      "kind": "run",
@@ -157,6 +159,7 @@
     "h": 90,
     "spot": false
    },
+   "setup": [],
    "steps": [
     {
      "kind": "alongside",

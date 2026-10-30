@@ -267,9 +267,9 @@ function syncRobot() {
 	const info = robotInfo();
 	if (info && info.drive) B.steps.plan.drive = info.drive;
 	const plan = B.steps.plan;
-	// "TeleOp next" and the package follow the Robot code until the team types their own.
+	// "TeleOp next" follows the Robot code until the team types their own; the package always does.
 	if (info && plan.teleopAuto !== false && info.teleop != null) plan.teleop = info.teleop;
-	if (info && plan.pkgAuto !== false && info.name.includes('.')) plan.pkg = info.name.slice(0, info.name.lastIndexOf('.'));
+	if (info && info.name.includes('.')) plan.pkg = info.name.slice(0, info.name.lastIndexOf('.'));
 }
 
 // A tank drive cannot strafe: every strafe becomes a turn, a drive and a turn back (stepscore.tankSteps),
@@ -1033,7 +1033,7 @@ function actInput(i, t) {
 	});
 }
 
-$('bClear').onclick = () => change(() => { B.steps.plan.steps = []; B.sel = null; });
+$('bClear').onclick = () => change(() => { B.steps.plan.steps = []; B.steps.plan.setup = []; B.sel = null; });
 $('bExample').onclick = () => change(() => { B.steps.plan = structuredClone(STEPS_EXAMPLE); B.sel = null; });
 // Start from one of your autos: its Java read back into steps (plain numbers only; the rest is listed).
 function renderFrom() {
@@ -1065,6 +1065,7 @@ $('bFromGo').onclick = async () => {
 			// the auto's own note stays (the builder does not write over it)
 			B.steps.plan = { ...keep, ...r.plan, drive: keep.drive, start: { ...keep.start, ...(r.plan.start || {}), ...(r.plan.start?.note ? { noteAuto: false } : {}) } };
 			B.sel = null;
+			B.view = 'steps';   // your file has more than the builder keeps: paste only what it wrote
 		});
 		out.push({ level: 'good', text: `Loaded "${a.name}": ${r.plan.steps.length} step${r.plan.steps.length === 1 ? '' : 's'}. The file is not changed: Copy the Java when you are done.` });
 	} else out.push({ level: 'bad', text: `"${a.name}": no steps could be read.` });
@@ -1205,11 +1206,10 @@ function renderNames() {
 	box.dataset.key = key;
 	box.innerHTML = B.mode === 'pedro'
 		? '<label>Your autonomous\'s name (for the scenario) <input type="text" id="bOpmode"></label>'
-		: '<label>OpMode <input type="text" id="bOpmode"></label><label>TeleOp next <input type="text" id="bTeleop"></label><label>package <input type="text" id="bPkg"></label>';
+		: '<label>OpMode <input type="text" id="bOpmode"></label><label>TeleOp next <input type="text" id="bTeleop"></label>';
 	$('bOpmode').oninput = () => { if (B.mode === 'pedro') B.pedro.opmode = $('bOpmode').value; else B.steps.plan.opmode = $('bOpmode').value; renderCode(); };
 	if ($('bTeleop')) {
 		$('bTeleop').oninput = () => { B.steps.plan.teleop = $('bTeleop').value; B.steps.plan.teleopAuto = false; renderCode(); };
-		$('bPkg').oninput = () => { B.steps.plan.pkg = $('bPkg').value.trim(); B.steps.plan.pkgAuto = false; renderCode(); };
 	}
 }
 
@@ -1222,7 +1222,7 @@ function javaNow() {
 	}
 	const plan = B.steps.plan;
 	const j = S.toJava({ ...plan, className: plan.className || undefined });
-	return B.view === 'steps' ? '// In steps(Steps s, Robot robot):\n' + j.steps : j.file;
+	return B.view === 'steps' ? '// Replaces everything inside steps(Steps s, Robot robot):\n' + j.steps : j.file;
 }
 
 function simFileName() {
@@ -1263,7 +1263,7 @@ function renderCode() {
 	renderNames();
 	const s = B.mode === 'pedro' ? B.pedro : B.steps;
 	setVal('bOpmode', B.mode === 'pedro' ? B.pedro.opmode : B.steps.plan.opmode);
-	if ($('bTeleop')) { setVal('bTeleop', B.steps.plan.teleop); setVal('bPkg', B.steps.plan.pkg); }
+	if ($('bTeleop')) { setVal('bTeleop', B.steps.plan.teleop); }
 	$('bViewRow').hidden = B.mode === 'pedro';
 	$('bView').value = B.view;
 	setVal('bTolIn', s.tolIn); setVal('bTolDeg', s.tolDeg);

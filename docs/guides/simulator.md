@@ -167,7 +167,9 @@ The GUIDE (PS) button often does not reach the browser (Windows and macOS keep i
 GUIDE, the M key, or hold START for 1 second (the finders accept that too).
 
 **Control Hub** (right): the field from above (the drivers are at the bottom; drag the robot on it to
-move it), **Push the robot** buttons (they roll the robot like a hand push, also while a program runs,
+move it, or type **x**, **y** and **heading**, use the **Face** buttons, and tick **Snap** to go against a wall and
+line up with the tiles: the same controls as the auto builder's start spot, in the numbers `s.start` takes), the
+**Push the robot** buttons, folded (they roll the robot like a hand push, also while a program runs,
 so its wheels and odometry feel it: the Drive Tuner's push test), **Start over** (Back to start, Reset field), every motor (power, count, speed, current; "STOP" when it
 is at a hard stop), every servo (where it is and where it is going), the switches (click to hold
 one pressed), the cameras and the tags they see, and the battery voltage (lower it to see a weaker robot).
@@ -311,6 +313,12 @@ What a team does, step by step:
    **The Java you copy back keeps the `Tunables` names** while the number is unchanged; the auto's own
    names become numbers (they are not in the builder's file), and a note lists them. The builder lists
    what it could not read. Your file is not changed: copy the Java when you are done.
+   **Setup lines** in `steps()` such as `robot.deployAtStart = false;` (a public `boolean` or number field of
+   your Robot, set to a plain value) are kept, and **Run** does them too, like your real auto. Any other line
+   in `steps()`, and an override such as `atInit()`, is listed as not carried over: Run does not do it, so the
+   run can differ from your real auto. After Load, the copy list says **only the steps**: paste it over
+   everything inside `steps()`, and your file keeps its comments, constants and other methods. Comments inside
+   `steps()` are not kept (a note gives the number).
 1. **Robot and alliance.** The builder finds the Robot classes (your `Robot.java`) in the code the
    simulator runs (your TeamCode, or the library's examples). The auto drives that robot: its drive, its
    size and its parts. With one Robot class, it just says which. With several, a list picks one: "Best
@@ -318,7 +326,8 @@ What a team does, step by step:
    guessed wrong. Its drive (tank or mecanum) and the robot's
    size come from your code and the robot file. So do the suggestions in the command and action boxes
    (your parts' methods, the named positions in Tunables, your `Actions.java`), a new step's first guess,
-   and **TeleOp next** (the TeleOp written for that Robot class) and the package, until you type your own.
+   and **TeleOp next** (the TeleOp written for that Robot class), until you type your own. The Java's package
+   also comes from your Robot class.
    A new plan has no steps ("Load the lesson's example" puts lesson 6's in). **Run as** RED or BLUE, and
    **Red's side**: **Rotated 180°** (BIOBUZZ: each red part is the blue one turned half a turn about the
    field's centre) or **Mirrored**. The builder writes `mirrorForRed()` in the Java for you (false / true).
@@ -390,7 +399,7 @@ What a team does, step by step:
    changes have an **Apply** button: a 0.3 s wait before a turn (or a new direction) that came right after a
    drive (the robot still rolls when a drive ends, so it slides on a few inches), holding a Pedro path's
    end, or slowing its last part. Press Run again to check.
-8. **Copy the Java** (the whole file for Simple steps, or only the steps; for a Pedro path the imports, the
+8. **Copy the Java** (the whole file for Simple steps, or only the steps, which replace everything inside `steps()`; for a Pedro path the imports, the
    `PedroPath` field and the steps to paste, the same as the web builder), **Save the scenario** (a scenario
    file that checks the note, the start spot, that every step is "done" by its number in the report
    (`expect step 3 done`: actions too, and two steps with one name each get their own check), and the end,
@@ -466,7 +475,12 @@ record of your robot: the editor writes no file.
 
    Everything you did not change stays as it was: `dropsWhen`, `on(...)`, the part ids, the notes. Then
    stop the simulator and start it again: it writes the robot file from `Robot.java` when it starts.
-7. **Try it** puts the changed shapes into the running simulator (in memory only). Click **Back to
+7. **Shot angle:** each launcher's angle, in degrees up from its front (90 = straight up, more than 90 = out of
+   the back). The arrow shows it. This is `.shotAngle(...)` in `Robot.java` (`angle=` on a robot file's
+   `shoot.` line). A shape such as a ramp does not change a shot, so moving one does not move the arrow. A
+   launcher with a hood or a shot table gets its angle from that, and the panel says so. Copy the new
+   `.shotAngle(...)` into `Robot.java`, then run your auto's scenario again.
+8. **Try it** puts the changed shapes and shot angles into the running simulator (in memory only). Click **Back to
    driving**: the field and the match come back as they were, and game pieces hit the new shapes. **Undo
    all** goes back to the robot file's shapes.
 

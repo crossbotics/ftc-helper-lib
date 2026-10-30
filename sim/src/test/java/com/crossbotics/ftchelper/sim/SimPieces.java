@@ -92,7 +92,9 @@ final class SimPieces {
 
     private static final class Shoot {
         final String name, shape, flywheel, hood;
-        final double angleDeg, share, spin, fixedSpeed, hoodAt0, hoodAt1;
+        final double share, spin, fixedSpeed, hoodAt0, hoodAt1;
+        final double readAngleDeg;     // as the robot file has it
+        double angleDeg;               // now: Edit robot's "Try it" can change it, in memory only
         final SimShotTable table;      // table=: how this launcher really throws (null: angle/share/spin)
         // scatter=off|realistic|rough and its parts (one standard deviation): how much each shot differs
         final String scatter;
@@ -104,7 +106,8 @@ final class SimPieces {
             this.name = name;
             shape = req(s, "shape", "shoot." + name);
             flywheel = s.get("flywheel");     // which flywheel motor fires it (needed when there are two)
-            angleDeg = num(s, "angle", 40, "shoot." + name);
+            readAngleDeg = num(s, "angle", 40, "shoot." + name);
+            angleDeg = readAngleDeg;
             share = num(s, "share", 0.5, "shoot." + name);
             // the ball's spin, as a share of "rolling": 1 = it leaves turning like a ball rolling along a still hood
             // (speed / radius) with backspin (the wheel under the ball, the hood over it); -1 topspin; 0 none
@@ -1541,6 +1544,34 @@ final class SimPieces {
     }
 
     /** One launcher's next shot as it would leave now, without the shot table's scatter (see shotsNow). */
+    /** A launcher's shot angle as the robot file has it. by: what sets it instead ("hood", "shot table"), or "". */
+    static final class ShotAngle {
+        final String name, by;
+        final double readDeg;
+
+        ShotAngle(String name, double readDeg, String by) {
+            this.name = name;
+            this.readDeg = readDeg;
+            this.by = by;
+        }
+    }
+
+    /** Every launcher's shot angle (Edit robot shows them). */
+    List<ShotAngle> shotAngles() {
+        synchronized (robot) {
+            List<ShotAngle> out = new ArrayList<>();
+            for (Shoot s : shoots) out.add(new ShotAngle(s.name, s.readAngleDeg, s.table != null ? "shot table" : s.hood != null ? "hood" : ""));
+            return out;
+        }
+    }
+
+    /** Edit robot's "Try it": these launchers shoot at these angles (degrees), the others as the robot file says. */
+    void setShotAngles(Map<String, Double> degrees) {
+        synchronized (robot) {
+            for (Shoot s : shoots) s.angleDeg = degrees.getOrDefault(s.name, s.readAngleDeg);
+        }
+    }
+
     static final class ShotNow {
         String launcher, shape, piece, why = "";   // why: empty when it would shoot, else why not ("flywheel stopped")
         double[] at, vel, spin;             // field inches, inches per second, radians per second

@@ -176,14 +176,18 @@
   details.keys summary { cursor: pointer; }
   #padsSection.small .gp, #padsSection.small .owner, #padsSection.small .stickyLbl { display: none; }
   .padhead { justify-content: space-between; }
-  .padhead .padsHint { flex: 1; min-width: 0; }
+  .padTitle { display: inline-flex; align-items: center; gap: 8px; }
+  .helpBtn { width: 22px; height: 22px; padding: 0; border-radius: 50%; font-size: 12px; font-weight: 700; line-height: 1; }
+  #padsHelp p { margin: 4px 0; }
+  .moveRow label { display: inline-flex; align-items: center; gap: 3px; }
+  .moveRow input { width: 6em; }
+  .moveFace button { padding: 2px 6px; font-size: 12px; }
   #padsSection.small .pad { margin-bottom: 2px; }
   #padsSection.small .pad > .row { flex-wrap: nowrap; }
   #padsSection.small .pad > .row .muted { display: none; }
   #padsSection.small .pad .src { min-width: 0; width: 0; flex: 1 1 auto; max-width: 170px; }
   #padsSection.small .pad > .row b { white-space: nowrap; }
   .pads > .pad { min-width: 0; }
-  .padhead .padsHint { font-size: 12px; }
   /* Keyboard focus: a clear ring on every control. */
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .caret { font-size: 10px; margin-left: 5px; opacity: .7; }
@@ -503,9 +507,19 @@
   </section>
 
   <section id="padsSection">
-    <div class="row padhead"><h2 style="margin:0">Gamepads</h2>
-      <span class="muted padsHint">On-screen, the keyboard, or your own USB or Bluetooth controller: plug it in and press one of its buttons. It goes to gamepad 1 if that one is on-screen, else gamepad 2. To change, pick it in that gamepad's list.</span>
+    <div class="row padhead"><span class="padTitle"><h2 style="margin:0">Gamepads</h2>
+      <button id="padsHelpBtn" class="helpBtn" aria-expanded="false" aria-controls="padsHelp" aria-label="Gamepad help" title="Gamepad help">?</button></span>
       <button id="padsToggle" aria-expanded="true" title="Show or hide the on-screen gamepads (the keyboard, a real controller or a phone still work): more room for the 3D field">Hide gamepads</button></div>
+    <div id="padsHelp" class="keys" hidden>
+      <p>On-screen, the keyboard, or your own USB or Bluetooth controller: plug it in and press one of its buttons. It goes to gamepad 1 if that one is on-screen, else gamepad 2. To change, pick it in that gamepad's list.</p>
+      <p>Keyboard: left stick <code>W A S D</code>, right stick <code>arrows</code>, D-pad <code>T F G H</code>,
+      A/B/X/Y <code>K L J I</code>, LB/RB <code>Q E</code>, LT/RT <code>Z C</code>, BACK <code>Backspace</code>,
+      START <code>Enter</code>, GUIDE <code>M</code>.</p>
+      <p>Real controller: plug it in, choose it above, press any of its buttons once (a browser rule).
+      GUIDE/PS often does not reach the browser: click the on-screen GUIDE (it works with every source) or press <code>M</code> (keyboard source).</p>
+      <p>Another page using a gamepad (a phone, a second tab)? Set that gamepad here to "Phone / other page" so they do not fight.</p>
+      <p id="lanHelp"></p>
+    </div>
     <div class="pads">
     <div class="pad" data-pad="1">
       <div class="row"><b>Gamepad 1</b> <span class="muted">(driver)</span>
@@ -522,14 +536,6 @@
     </div>
     <div class="padfoot">
     <label class="muted stickyLbl" title="A click holds a button until clicked again; sticks stay where you leave them: to hold two things at once with a mouse."><input type="checkbox" id="sticky"> Sticky buttons</label>
-    <details class="keys" id="keyHelp"><summary>Keys and your own controller</summary>
-      Keyboard: left stick <code>W A S D</code>, right stick <code>arrows</code>, D-pad <code>T F G H</code>,
-      A/B/X/Y <code>K L J I</code>, LB/RB <code>Q E</code>, LT/RT <code>Z C</code>, BACK <code>Backspace</code>,
-      START <code>Enter</code>, GUIDE <code>M</code>.
-      Real controller: plug it in, choose it above, press any of its buttons once (a browser rule).
-      GUIDE/PS often does not reach the browser: click the on-screen GUIDE (it works with every source) or press <code>M</code> (keyboard source).
-    </details>
-    <div class="keys" id="lanHelp"></div>
     </div>
   </section>
 
@@ -546,13 +552,22 @@
     <canvas id="field" width="380" height="380" aria-label="Field, seen from above"></canvas>
     <div class="moveHint"><b>Move the robot:</b> drag it on this map. <b>Turn it:</b> mouse wheel over it.
       <span class="muted">When no program runs, and in INIT.</span></div>
+    <div class="row moveRow"><label>x <input type="number" step="0.5" id="mvX"></label><label>y <input type="number" step="0.5" id="mvY"></label><label>heading <input type="number" step="5" id="mvH"></label></div>
+    <div class="row moveFace" id="mvFace"><span class="muted">Face</span>
+      <button data-h="0" title="Facing the field (0°)">&#8593;</button><button data-h="45" title="45° left">&#8598;</button><button data-h="90" title="Facing left (90°)">&#8592;</button>
+      <button data-h="135" title="135° left">&#8601;</button><button data-h="180" title="Facing your wall (180°)">&#8595;</button><button data-h="-135" title="135° right">&#8600;</button>
+      <button data-h="-90" title="Facing right (-90°)">&#8594;</button><button data-h="-45" title="45° right">&#8599;</button>
+      <button data-turn="15" title="Turn 15° left">&#8634; 15°</button><button data-turn="-15" title="Turn 15° right">&#8635; 15°</button></div>
+    <label class="muted" title="The robot goes against a wall that is near and lines up with a tile middle or seam: easy to copy at the field."><input type="checkbox" id="mvSnap"> Snap to the walls and the tile lines</label>
+    <div id="mvNote" class="muted" role="status"></div>
     <div id="spotText" class="muted" style="text-align:center"></div>
-    <h3>Push the robot</h3>
+    <details class="pushBox"><summary>Push the robot</summary>
     <div class="muted">Rolls the robot like a hand push, also while a program runs: its wheels and odometry feel it (the Drive Tuner's push test).</div>
     <div class="row" style="margin-top:4px">
       <button data-push="24,0,2" title="Rolls the robot 48 in forward in 2 s">48 in forward</button><button data-push="-24,0,0.5" title="Rolls the robot 12 in back in 0.5 s">12 in back</button>
       <button data-push="0,24,2" title="Rolls the robot 48 in to its right in 2 s">48 in right</button>
     </div>
+    </details>
     <h3>Start over</h3>
     <div class="row">
       <button id="resetPose" title="The robot to its start spot and every game piece back where the match starts">Back to start</button>
@@ -902,6 +917,12 @@ window.addEventListener("gamepadconnected", e => {
 });
 window.addEventListener("gamepaddisconnected", fillSources);
 
+$("#padsHelpBtn").onclick = () => {
+  const help = $("#padsHelp");
+  help.hidden = !help.hidden;
+  $("#padsHelpBtn").setAttribute("aria-expanded", help.hidden ? "false" : "true");
+};
+
 // ---------------------------------------------------------------- talking to the simulator
 function post(path, data) {
   return fetch(path, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -1123,7 +1144,7 @@ function render(s) {
     if (bz) lastBuzz[n] = bz.seq;
     // Another page (a phone, a second tab) pressed something on this gamepad last.
     $(".owner", div).textContent = o && o.owner && o.owner !== session
-      ? "Last used from another page (" + o.from + "). Set this one to \"Phone / other page\" so they do not fight." : "";
+      ? "Another page (" + o.from + ") is using this gamepad too." : "";
   });
   $("#lanHelp").textContent = s.lan && s.addresses.length
     ? "Phone as gamepad 2: open http://" + s.addresses[0] + ":" + s.port + "/?phone=2 (set gamepad 2 here to Phone)."
@@ -1253,9 +1274,61 @@ function mapToField(ev) {
   const px = (ev.clientX - b.left) * c.width / b.width, py = (ev.clientY - b.top) * c.height / b.height;
   return [px / (c.width / size) - size / 2, size / 2 - py / (c.width / size)];
 }
-function placeRobot(x, y, h) {
+function sendPose(x, y, h) {
   command({ action: "pose", x: x.toFixed(2), y: y.toFixed(2), heading: h.toFixed(1) });
 }
+// A spot as s.start takes it: seen from this alliance's drivers' wall (RED: the field's numbers; BLUE: turned half a turn).
+function fieldToSpot(x, y, h) {
+  const blue = viewAlliance === "BLUE";
+  h = blue ? h + 180 : h;
+  return { x: blue ? -x : x, y: blue ? -y : y, h: ((h % 360) + 540) % 360 - 180 };
+}
+function placeSpot(spot, snap) {
+  const r = drag.robot;
+  if (!r || drag.running) return;
+  const half = ((fieldData && fieldData.field && (fieldData.field.insideWallSize || fieldData.field.size)) || 144) / 2;
+  const L = r.length || 18, W = r.width || 18;
+  let { x, y } = spot;
+  if (snap && stepCore) {
+    // the auto builder's start spot rule (stepscore.js, loaded below): against a wall, on the tile lines
+    const p = stepCore.snapStart(spot, [L, W], half, true);
+    x = p.x; y = p.y;
+  } else {
+    // anywhere on the field: only kept inside the walls (the size of the turned robot's box)
+    const a = spot.h * Math.PI / 180, c = Math.abs(Math.cos(a)), s = Math.abs(Math.sin(a));
+    const hx = s * L / 2 + c * W / 2, hy = c * L / 2 + s * W / 2;
+    x = Math.max(-half + hx, Math.min(half - hx, x));
+    y = Math.max(-half + hy, Math.min(half - hy, y));
+  }
+  const f = fieldToSpot(x, y, spot.h);   // the same half turn goes back
+  // The simulator may say no ("that pose overlaps ..."): say it here, next to the numbers.
+  post("/cmd", { action: "pose", x: f.x.toFixed(2), y: f.y.toFixed(2), heading: f.h.toFixed(1) })
+    .then(r => r && r.text ? r.text() : "")
+    .then(t => { $("#mvNote").textContent = t && t !== "ok" ? t.replace(/^error: /, "Not moved: ") : ""; });
+}
+// A drag or the wheel on the map: free, unless Snap is on.
+function placeRobot(x, y, h) {
+  if ($("#mvSnap").checked) placeSpot(fieldToSpot(x, y, h), true);
+  else sendPose(x, y, h);
+}
+let stepCore = null;
+import("/builder/stepscore.js").then(m => { stepCore = m; }).catch(() => { /* no Snap then: the rest still works */ });
+try { $("#mvSnap").checked = localStorage.getItem("simMoveSnap") === "1"; } catch (e) { /* not kept: fine */ }
+$("#mvSnap").onchange = e => { try { localStorage.setItem("simMoveSnap", e.target.checked ? "1" : "0"); } catch (err) { /* not kept: fine */ } };
+function typedSpot() {
+  const r = drag.robot;
+  if (!r) return;
+  const now = fieldToSpot(r.x, r.y, r.heading);
+  const read = (id, was) => { const v = parseFloat($(id).value); return Number.isFinite(v) ? v : was; };
+  placeSpot({ x: read("#mvX", now.x), y: read("#mvY", now.y), h: read("#mvH", now.h) }, false);
+}
+for (const id of ["#mvX", "#mvY", "#mvH"]) $(id).addEventListener("change", typedSpot);
+document.querySelectorAll("#mvFace button").forEach(b => b.onclick = () => {
+  const r = drag.robot;
+  if (!r) return;
+  const now = fieldToSpot(r.x, r.y, r.heading);
+  placeSpot({ x: now.x, y: now.y, h: b.dataset.h != null ? +b.dataset.h : now.h + +b.dataset.turn }, $("#mvSnap").checked);
+});
 $("#field").addEventListener("pointerdown", ev => {
   const r = drag.robot;
   if (!r || drag.running) return;
@@ -1299,8 +1372,13 @@ function showSpot(r) {
   h = ((h % 360) + 540) % 360 - 180;
   const n = v => (Math.abs(v) < 0.05 ? 0 : v).toFixed(1);
   // Two frames on one screen: say which (the line above is always the field's, from the red wall).
-  el.innerHTML = `As a ${blue ? "BLUE" : "RED"} start spot (seen from the ${blue ? "blue" : "red"} wall, as s.start takes it): x ${n(x)} in, y ${n(y)} in, heading ${n(h)}&deg;` +
-    `<br><code>s.start("...", ${n(x)}, ${n(y)}, ${n(h)})</code>`;
+  el.innerHTML = `Seen from the ${blue ? "blue" : "red"} wall, as s.start takes them:<br><code>s.start("...", ${n(x)}, ${n(y)}, ${n(h)})</code>`;
+  for (const [id, v] of [["#mvX", x], ["#mvY", y], ["#mvH", h]]) {
+    const box = $(id);
+    box.disabled = drag.running;
+    if (document.activeElement !== box) box.value = n(v);
+  }
+  document.querySelectorAll("#mvFace button").forEach(b => b.disabled = drag.running);
 }
 
 function drawField(r) {

@@ -110,6 +110,44 @@ public class BuiltAutoTest {
         }
     }
 
+    /** A Robot with a setup field, used as r1 uses deployAtStart: read at START. */
+    public static class SetupBot extends com.crossbotics.ftchelper.examples.gobildabot.Robot {
+        static volatile Boolean seenAtStart;
+        public boolean deployAtStart = true;
+        public SetupBot() {
+            atStart(() -> {
+                seenAtStart = deployAtStart;
+                return com.crossbotics.ftchelper.robot.Action.named("Seen");
+            });
+        }
+    }
+
+    // robot.deployAtStart = false; read from the team's auto: the builder's Run sets it too, as the real auto does.
+    @Test public void aSetupLineIsSetOnTheRobot() throws Exception {
+        SetupBot.seenAtStart = null;
+        BuiltAuto.program = program(1);
+        // Actions are found next to the Robot class, and this one has none there.
+        BuiltAuto.program.steps.removeIf(st -> String.valueOf(st.get("code")).contains("Actions."));
+        BuiltAuto.program.setup.add(SimJsonReader.object(SimJsonReader.parse("{\"field\":\"deployAtStart\",\"value\":false}"), "a line"));
+        BuiltAuto.robotClass = SetupBot.class;
+        try (SimRun s = new SimRun("robots/starter-bot-gobilda.properties")) {
+            runToTheEnd(s);
+            assertEquals(Boolean.FALSE, SetupBot.seenAtStart);
+        }
+    }
+
+    // A field the Robot does not have stops INIT and names it.
+    @Test public void aWrongSetupLineStopsInit() throws Exception {
+        BuiltAuto.program = program(1);
+        BuiltAuto.program.setup.add(SimJsonReader.object(SimJsonReader.parse("{\"field\":\"noSuchField\",\"value\":true}"), "a line"));
+        BuiltAuto.robotClass = com.crossbotics.ftchelper.examples.gobildabot.Robot.class;
+        try (SimRun s = new SimRun("robots/starter-bot-gobilda.properties")) {
+            s.sim.ds.init(BuiltAuto.NAME, Alliance.RED);
+            assertTrue(SimRun.waitFor(() -> !s.error().isEmpty(), 5));
+            assertTrue(s.error(), s.error().contains("noSuchField"));
+        }
+    }
+
     // A Pedro path on the Pedro example robot: the real follower, the PathAt along it (the intake), the hold.
     @Test public void aPedroPlanRunsOnThePedroRobot() throws Exception {
         Path file = generate(com.crossbotics.ftchelper.examples.pedrobot.Robot.class);
