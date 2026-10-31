@@ -32,7 +32,7 @@ makes it by itself, so it adds no time to your robot's builds.
 ## Read a page
 
 Each class page starts with what the class is for, often with a short example. Below come its methods:
-the name and inputs (`move(String label, double inches, double directionDeg, double maxPower)`), a
+the name and inputs (`move(double inches, double directionDeg, double maxPower)`), a
 sentence on what it does, then each input (`@param`) and what it gives back (`@return`). The word
 before each input is its type: `String` is text, `double` is a number with a decimal point. "Static"
 methods are called on the class (`Action.named("Score")`); the others on an object you made

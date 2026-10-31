@@ -34,6 +34,8 @@ final class TunableSection {
     // The fields written as DEFAULT_FROM_CATALOG that a module read: the value it used (NaN = the module worked it
     // out itself), for the INIT note. A module that names them in its own note takes them out (fromCatalog).
     private final Map<String, Double> marked = new LinkedHashMap<>();
+    // Names in others() that look like a gain ("kPP"): named in note().
+    private final java.util.Set<String> gainTypos = new java.util.LinkedHashSet<>();
     // The fields written DEFAULT_FROM_CATALOG whose value the module worked out from the part (fromCatalog).
     private final java.util.Set<String> catalogMarked = new java.util.LinkedHashSet<>();
     // Which tool finds a field, for the message when it says MEASURE (the module's; null = the general words).
@@ -300,9 +302,25 @@ final class TunableSection {
                         + "\" (capitals and spelling count). Fix the name in Tunables.java; a position must not "
                         + "look like a setting.");
             }
+            // Only gains not written: the note says the gain keeps its default. (kDI next to a written kI is still kD's typo.)
+            List<String> notWritten = new ArrayList<>();
+            for (String k : known) if (!has(k)) notWritten.add(k);
+            String gain = lookalikeGain(f.getName(), notWritten);
+            if (gain != null) gainTypos.add(f.getName() + " looks like " + gain);
             out.put(f.getName(), number(f.getName(), 0));
         }
         return out;
+    }
+
+    // "kPP" for "kP". Gain names are too short for lookalike's spelling check, and a name close to one may
+    // still be a position the team means ("kick"), so this only adds a line to INIT's notes.
+    static String lookalikeGain(String name, Collection<String> known) {
+        if (!squash(name).startsWith("k") || name.length() > 4) return null;
+        for (String k : known) {
+            if (k.length() == 2 && k.charAt(0) == 'k' && Character.isUpperCase(k.charAt(1))
+                    && editDistance(squash(k), squash(name)) <= 1) return k;
+        }
+        return null;
     }
 
     /**
@@ -385,8 +403,12 @@ final class TunableSection {
     String note() {
         String fromCatalog = markedNote();
         String plain = missingNote();
-        if (fromCatalog.isEmpty()) return plain;
-        return plain.isEmpty() ? fromCatalog : plain + "; " + fromCatalog;
+        String typos = gainTypos.isEmpty() ? "" : "Tunables." + name + ": " + gainTypos.toString().replaceAll("[\\[\\]]", "")
+                + ": used as a named position, and the library's default is used for the gain. Fix the name if it is a typo";
+        String out = plain;
+        if (!fromCatalog.isEmpty()) out = out.isEmpty() ? fromCatalog : out + "; " + fromCatalog;
+        if (!typos.isEmpty()) out = out.isEmpty() ? typos : out + "; " + typos;
+        return out;
     }
 
     // "Tunables.Launcher: DEFAULT, library defaults: stepRpm 100, readyBandRpm 60" ("" = none left).

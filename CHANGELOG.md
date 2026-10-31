@@ -18,6 +18,8 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   for taught pieces. `:sim:fromConfig`, `:sim:newRobot` and `:sim:fromRobot` know it.
 - Hardware Check shows a HuskyLens and each box it sees. Cookbook recipe, a section in tutorial 18, test AIM-06.
 - `AutoDrive.turn` and `turnTo` with a time limit.
+- INIT names a Tunables field in a lift or arm section that looks like a gain, such as `kPP` for `kP`. It still runs.
+- `tools/release.py` makes a release in steps that stop at the first problem. GitHub checks each release tag.
 
 ### Changed
 
@@ -37,6 +39,15 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - **One motor that failed could leave others on.** A stop now reaches every motor of a lift, intake and flywheel,
   and a failed send is sent again. A turret whose encoder read fails still stops.
 - **`turnToward` and `turnTowardWithSweep` could run past their time limit,** up to the drive's own 10 s.
+- Hardware Check: a slow distance sensor no longer holds up the buttons and the screen. It reads on a helper thread.
+- A finder's save no longer waits for a save that is still writing.
+- Simulator page: a lost link now grays the 3D view and tries again, requests can no longer pile up when the stream
+  fails, and size results say when they come from guessed shapes.
+- Simulator: only this computer's address is served (use `-Plan` for phones), the Built Auto no longer runs the last plan
+  again from the Driver Hub's list, and the autonomous timer reads the game's rules.
+- Stronger checks: `check_blocking` finds more kinds of waiting and lists the allowed methods one by one; `check_docs`
+  matches whole names; `check_builder` compares the site's copies with the site's release and has a plan worked out by hand.
+- Docs: safety lines for early arm and Hardware Check steps, and small fixes to pages that did not match the code.
 - Simulator test: "every example stops with all motors off" could not fail, because it looked after the simulator
   had switched them off. It now looks before, with sticks and a trigger held.
 - `Tunable.fromCode`: a tuned value still stays, and its reset now goes back to this program's code value.

@@ -243,7 +243,8 @@ final class SimDriverStation {
      */
     synchronized void init(String name, com.crossbotics.ftchelper.match.Alliance alliance) {
         initCount++;
-        // A new program: its own alliance and start spot (not the last program's).
+        // A new program: its own alliance and start spot (not the last program's). A plain OpMode never sets
+        // them, and the simulator places the robot from them. (A real robot keeps both: docs/guides/simulator.md.)
         com.crossbotics.ftchelper.match.MatchMemory.setChosen(null);
         com.crossbotics.ftchelper.match.MatchMemory.setPlacement(null, null);
         // The INIT menu's alliance line starts on the remembered alliance (InitMenu.alliance()).
@@ -486,6 +487,11 @@ final class SimDriverStation {
         commands.submit(() -> { if (op == o) stop(); });
     }
 
+    // How long autonomous lasts: the game's rules (the match clock reads the same number), or 30 s with no rules.
+    double autoSec() {
+        return robot.field == null || robot.field.rules == null ? 30 : robot.field.rules.autoSec;
+    }
+
     /** Called often by the simulator: the autonomous and TeleOp timers, and gamepads let go when the page goes quiet. */
     void tick() {
         OpMode o = op;
@@ -494,7 +500,7 @@ final class SimDriverStation {
         pad1.releaseIfSilent(2.5);
         pad2.releaseIfSilent(2.5);
         Entry e = current;
-        boolean autoEnd = autoTimer && e != null && e.kind.equals("Autonomous") && runSeconds() >= 30;
+        boolean autoEnd = autoTimer && e != null && e.kind.equals("Autonomous") && runSeconds() >= autoSec();
         boolean teleEnd = teleTimer && e != null && e.kind.equals("TeleOp") && runSeconds() >= teleOpSec;
         if (!autoStopping && phase == Phase.RUNNING && (autoEnd || teleEnd)) {
             autoStopping = true;

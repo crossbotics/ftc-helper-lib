@@ -499,4 +499,36 @@ public class RobotModulesTest {
         }
         assertNull(r.all());
     }
+
+    // "kPP" is too short for the spelling check that stops INIT, and may be a name the team means: a note.
+    @Test public void aNameCloseToAGainIsNamedInTheNotes() {
+        java.util.List<String> gains = java.util.Arrays.asList("kP", "kI", "kD", "kF", "min", "max");
+        org.junit.Assert.assertEquals("kP", TunableSection.lookalikeGain("kPP", gains));
+        org.junit.Assert.assertEquals("kD", TunableSection.lookalikeGain("kd2", gains));
+        org.junit.Assert.assertNull("a position's name", TunableSection.lookalikeGain("high", gains));
+        org.junit.Assert.assertNull("close to min, but no gain", TunableSection.lookalikeGain("mid", gains));
+        org.junit.Assert.assertNull("too far from any gain", TunableSection.lookalikeGain("kick", gains));
+    }
+
+    /** A section with a typo for kP, and no kP. */
+    public static class TypoTunables {
+        public static class Typo { public static double kPP = 3; }
+        public static class Both { public static double kPP = 3; public static double kP = 0.01; }
+        public static class CloseToTwo { public static double kI = 0.1; public static double kDI = 3; }
+    }
+
+    // The note says the gain keeps its default: so only when the section has not written that gain.
+    @Test public void theGainNoteIsOnlyForAGainNotWritten() {
+        java.util.List<String> gains = java.util.Arrays.asList("kP", "kI", "kD", "kF");
+        TunableSection typo = TunableSection.of(TypoTunables.class, "Typo");
+        typo.others(gains);
+        assertTrue(typo.note(), typo.note().contains("kPP looks like kP"));
+        TunableSection both = TunableSection.of(TypoTunables.class, "Both");
+        both.others(gains);
+        assertFalse(both.note(), both.note().contains("looks like"));
+        // kDI is close to both kI and kD. kI is written, so the one it can mean is kD.
+        TunableSection closeToTwo = TunableSection.of(TypoTunables.class, "CloseToTwo");
+        closeToTwo.others(gains);
+        assertTrue(closeToTwo.note(), closeToTwo.note().contains("kDI looks like kD"));
+    }
 }

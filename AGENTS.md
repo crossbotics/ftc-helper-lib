@@ -109,8 +109,8 @@ an API changes, update the cookbook recipes that use it too; a new user-facing f
   repeated values; never move motors from it). Only autonomous moves/steps block, ON PURPOSE: they
   say BLOCKS in their Javadoc, check `opModeIsActive()`/`ctx.isActive()`, keep mechanisms updating,
   have a time limit, and stop motors in `finally`. Examples never call `sleep()`.
-  `tools/check_blocking.py` enforces this; a new intentionally blocking class must be added to its
-  allow-list with the reason.
+  `tools/check_blocking.py` enforces this; a new method that blocks on purpose must be added to its
+  allow-list with the reason. It cannot see a wait for a lock: never hold a lock the loop needs during slow work.
 - Hardware setup leaves motors at power 0. Nothing moves before START.
 - Safety stays on in every profile (limits, timeouts, jam checks, stale-target rejection).
 - Extend through the interfaces (`Subsystem`, `AutoStep`, `Feeder`, `TargetSource`); keep new parts
@@ -120,13 +120,14 @@ an API changes, update the cookbook recipes that use it too; a new user-facing f
 ## Before finishing
 
 ```bash
-./gradlew :library:testDebugUnitTest :examples:assembleDebug :examples:testDebugUnitTest
+./gradlew :library:testDebugUnitTest :examples:assembleDebug :examples:testDebugUnitTest :sim:testDebugUnitTest
 python3 tools/check_docs.py
+python3 tools/parts_page.py --check
 python3 tools/check_blocking.py
 python3 tools/check_tunables.py
 node tools/check_builder.mjs       # the simulator's auto builder page code
 python3 tools/check_tests.py
 ```
 
-All must pass. Releases: follow `docs/contributing.md#releasing-a-version`. The mentor asks for an
+All must pass (GitHub runs the same list). Releases: `tools/release.py`, see `docs/contributing.md#releasing-a-version`. The mentor asks for an
 outside review (Codex "Astra", and Fable) of large changes before release.

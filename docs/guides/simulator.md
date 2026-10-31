@@ -391,7 +391,7 @@ What a team does, step by step:
 6. **Run in the simulator.** The simulator INITs the **Built Auto** (its own autonomous, listed in the
    Driver Hub under "Builder") with your plan, puts the field's pieces back and the preload in the robot (a
    fresh match, whatever a TeleOp did before), chooses the alliance, puts the robot on the start spot and
-   presses START. The last run's results go away when a new run starts. The clock beside Run counts the autonomous's seconds (real time, like a match: no fast
+   presses START. Each Run is one INIT: to run the plan again, press Run again (an INIT of the Built Auto from the Driver Hub's list has no plan, and says so). The last run's results go away when a new run starts. The clock beside Run counts the autonomous's seconds (real time, like a match: no fast
    forward). A **purple robot** drives the plan beside your robot; each of its steps starts when your
    robot's step starts, so you see where they part. The green line is where your robot really went.
 7. **Read the result:** a table with each step's word from the report (done, STALLED, timed out, skipped
@@ -425,12 +425,14 @@ without being run.
 **Shared with the web builder.** The plan, its checks, the Java, the scenario, the start note and the
 setup card come from the same files as the web builder: `pathcore.js`, `stepscore.js`, `mapdraw.js` and
 `setupcard.js` in `sim/src/test/resources/sim/builder/`. **The library is their source**: change them here,
-then copy them to the web site (its `scripts/sync-path-builder.mjs` copies them with the field file).
+release them. The web site's `scripts/sync-path-builder.mjs` copies them, with the field file, from the release.
 `node tools/check_builder.mjs` checks that the Java and the scenario for a set of plans are letter for letter
 what the shared files wrote when the fixtures were made (`sim/src/test/resources/builder/fixtures.json`;
 `--write-fixtures sim/src/test/resources/sim/builder` makes them again after an intended change), checks the
-simulator-only part (`simcore.js`), and, when it finds a checkout of the site, warns when the site's copies
-differ (`SITE_STRICT=1` makes that a failure, before publishing the site).
+simulator-only part (`simcore.js`), and, when it finds a checkout of the site, fails when the site's copies
+differ from the release the site names. The fixtures are a snapshot: they find a change, not a first answer that
+was wrong, so one small plan has its numbers worked out by hand. The site copies these files and the field from
+that release, never from your working folder.
 
 **Not covered:** the INIT menu (`menuChoice`, `onlyIf`), your own steps (`step(...)`) and `waitUntil`
 (Load an existing auto lists them as not read). A Pedro plan is one path (one `follow`, or one
@@ -1405,7 +1407,9 @@ on the robot. The IMU never drifts, and it ignores how the hub is mounted: your 
 On a robot, a wrong line can make pitch, roll and the turn speed wrong, and it can start the yaw at a wrong angle. So check it on the real
 robot: with the Hardware Check, turn left and yaw goes UP; in TeleOp, field-centric stick up goes away from you. STOP works like on a
 robot: a `sleep()` ends at once, and an OpMode that ignores STOP for 3 s is cut off from the hardware
-(restart the simulator to run another).
+(restart the simulator to run another). Each INIT here forgets `MatchMemory.chosen()` and the start spot of the last
+program, so the robot is not put on an old program's spot. A real robot keeps them until a program sets them, so your own
+OpMode must not read them before it has set them (the library's autonomous and TeleOp do this for you).
 
 ## Automatic tests
 

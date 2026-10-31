@@ -1,6 +1,7 @@
 package com.crossbotics.ftchelper.sim;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -211,6 +212,24 @@ public class FinderSafetyTest {
         EXPECTED.put(BuiltAuto.NAME, "auto builder");
     }
 
+    // The reason is on the message's first line, in the words of the library's or the SDK's own check: not a
+    // crash whose text happens to hold the same word. A reason in quotes is a device: the SDK's "No X named".
+    static boolean isExpected(String err, String reason) {
+        String first = err.split("\n")[0];
+        boolean ownCheck = first.startsWith("java.lang.IllegalArgumentException:") || first.startsWith("java.lang.IllegalStateException:")
+                || !first.matches("^[\\w.$]+(Exception|Error)\\b.*");
+        if (!ownCheck || !first.contains(reason)) return false;
+        return !reason.startsWith("\"") || first.contains("named " + reason);
+    }
+
+    @Test public void aCrashWithTheRightWordIsNotExpected() {
+        assertTrue(isExpected("java.lang.IllegalArgumentException: No DcMotorEx named \"turret\" in the active robot configuration.", "\"turret\""));
+        assertTrue(isExpected("java.lang.IllegalStateException: AutoDriveConfig.calibrationConfirmed is false.", "calibrationConfirmed"));
+        assertFalse(isExpected("java.lang.NullPointerException: \"turret\" is null", "\"turret\""));
+        assertFalse(isExpected("java.lang.IllegalStateException: a bad \"turret\" value", "\"turret\""));
+        assertFalse(isExpected("It crashed\n  Webcam", "Webcam"));
+    }
+
     @Test public void everyExampleStartsAndStopsCleanly() throws Exception {
         List<String> problems = new ArrayList<>();
         List<String> seen = new ArrayList<>();
@@ -230,8 +249,8 @@ public class FinderSafetyTest {
                 String err = s.error();
                 String expected = EXPECTED.get(e.name);
                 // An autonomous refusing an untuned drivetrain is right (calibrationConfirmed is false).
-                boolean ok = err.isEmpty() || (expected != null && err.contains(expected))
-                        || (e.kind.equals("Autonomous") && err.contains("calibrationConfirmed"));
+                boolean ok = err.isEmpty() || (expected != null && isExpected(err, expected))
+                        || (e.kind.equals("Autonomous") && isExpected(err, "calibrationConfirmed"));
                 if (!ok) problems.add(e.name + ": " + err.split("\n")[0]);
                 if (!err.isEmpty()) seen.add(e.name + " -> " + err.split("\n")[0]);
                 // What the OpMode left on itself: after stop() the simulator has switched everything off.
@@ -240,6 +259,26 @@ public class FinderSafetyTest {
         }
         System.out.println("Expected errors seen:\n" + String.join("\n", seen));
         assertTrue(String.join("\n", problems), problems.isEmpty());
+    }
+
+    // A distance sensor can wait up to 200 ms for a measurement: the Hardware Check's screen must not.
+    @Test public void aSlowDistanceSensorDoesNotStopTheHardwareCheck() throws Exception {
+        String base = new String(java.nio.file.Files.readAllBytes(new java.io.File("robots/starter.properties").toPath()), "UTF-8");
+        java.io.File f = java.io.File.createTempFile("slow-distance", ".properties");
+        f.deleteOnExit();
+        java.nio.file.Files.write(f.toPath(), (base + "\ndistance.zzz_slow = at=intake, acrossMm=150\n").getBytes("UTF-8"));
+        try (SimRun s = new SimRun(f.getPath())) {
+            s.robot().pieceSensors.get("zzz_slow").readDelayMs = 400;
+            s.init("Hardware Check").start();
+            for (int i = 0; i < 30 && !s.screenHas("> zzz_slow"); i++) s.press(v -> s.g1().dpad_down = v);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Distance"), 3));
+            int before = s.sim.ds.screen.updates();
+            SimRun.pause(0.4);
+            int shown = s.sim.ds.screen.updates() - before;
+            assertTrue("screen updates in 0.4 s with a 400 ms sensor: " + shown, shown > 5);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas(" in"), 3));
+            assertEquals("", s.error());
+        }
     }
 
     /** Sets a motor going and ends without stopping it. */

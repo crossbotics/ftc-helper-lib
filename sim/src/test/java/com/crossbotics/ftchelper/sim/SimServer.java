@@ -127,6 +127,13 @@ final class SimServer {
                 if (first.length < 3) return;
                 boolean keepAlive = first[2].equals("HTTP/1.1") && !head.toLowerCase(Locale.US).contains("\r\nconnection: close");
                 KEEP.set(keepAlive);
+                // Another web site can make its own name point at this computer (DNS rebinding): refuse any
+                // name but this computer's, so that page can neither read nor drive the simulator.
+                if (!lan && !hostIsThisComputer(head)) {
+                    KEEP.set(false);
+                    send(out, 404, "text/plain", "refused".getBytes(StandardCharsets.UTF_8));
+                    return;
+                }
                 if (first[1].startsWith("/stream") && first[0].equals("GET")) {
                     handedOff = startStream(c, out);
                     return;
@@ -596,6 +603,16 @@ final class SimServer {
             if (state == 4) return b.toString("ISO-8859-1");
             if (b.size() > 16384) return null;
         }
+    }
+
+    // True when the Host header names this computer (or a request has none: a browser always sends one).
+    static boolean hostIsThisComputer(String head) {
+        for (String line : head.split("\r\n")) {
+            if (!line.toLowerCase(Locale.US).startsWith("host:")) continue;
+            String host = line.substring(5).trim().toLowerCase(Locale.US).replaceFirst(":\\d+$", "");
+            return host.equals("localhost") || host.equals("127.0.0.1") || host.equals("[::1]");
+        }
+        return true;
     }
 
     // True when there is no Origin header, or it names the same host:port as the Host header.

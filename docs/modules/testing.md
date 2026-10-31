@@ -24,6 +24,7 @@ public class HardwareCheck extends HardwareCheckOpMode { }
 It finds: motors, continuous-rotation (CR) servos that spin like a motor, servos, the IMU, touch sensors, digital channels
 (magnetic switches, beam breaks), color and distance sensors, analog inputs, webcams, Limelights and HuskyLens cameras (it shows each box it sees, with the taught number).
 It also shows the battery voltage and warns below 12.0 V.
+Slow reads (a HuskyLens, a distance sensor) run on a helper thread, so the buttons never wait. A distance can show one read late.
 
 **With your robot in five files**, give it the robot, and INIT also checks Robot.java against the
 configuration: one line for each device Robot.java names that is NOT there, and what that means.

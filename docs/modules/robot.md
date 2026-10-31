@@ -115,6 +115,11 @@ part each loop. Nothing moves in INIT.
 | For your code | |
 | --- | --- |
 | `run(Action)`, `cancel(Action)`, `cancelAll()` | start or stop actions |
+| `atInit(Runnable)`, `duringInit(Runnable)`, `atStop(Runnable)` | your own code once at INIT, every pass of INIT, and at STOP |
+| `wasStarted()` | true once START was pressed |
+| `pauseAll()`, `resume()`, `togglePause()`, `isPaused()` | stop every part and hold it stopped, go on again, and ask which it is |
+| `setAlliance(Alliance)` | sets this match's alliance. The OpMode classes do this for you: only for your own plain OpMode |
+| `driveWith(gamepad)`, `driveWith(forward, strafeRight, turnRight)` | drives from a gamepad, or from your own numbers (forward, strafe right and turn right are +). Only in your own plain OpMode, after `robot.init(this)`: anywhere else it stops with an error |
 | `interlocks()` | the interlock rules from `define()` (read only) |
 | `alliance()` | this match's alliance (from autonomous's menu; TeleOp remembers it) |
 | `notes()` | INIT notes: missing Tunables sections or fields (the library's defaults are used), parts that are off (not in the configuration) |

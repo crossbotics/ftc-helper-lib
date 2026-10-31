@@ -66,7 +66,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
  */
 public abstract class HardwareCheckOpMode extends LinearOpMode {
     // The HuskyLens being shown, and its last answers (the helper thread writes these).
-    private BackgroundWorker huskyWorker = null;
+    // Slow reads (a HuskyLens, a distance sensor) run on this helper thread, so the buttons never wait.
+    private BackgroundWorker reader = null;
+    private volatile DistanceRead lastDistance = null;
     private HuskyLens huskyShown = null;
     private volatile Boolean huskyAnswers = null;
     private volatile HuskyLens.Block[] huskyBoxes = new HuskyLens.Block[0];
@@ -171,7 +173,7 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
                 t.update();
             }
         } finally {
-            if (huskyWorker != null) huskyWorker.shutdown();
+            if (reader != null) reader.shutdown();
             stopAll();
         }
     }
@@ -399,6 +401,7 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
         if (h instanceof DcMotorEx) {
             DcMotorEx m = (DcMotorEx) h;
             t.text("Right stick = power (RB = full), A = zero encoder");
+            t.text("No limits here! A lift or arm: short taps, know its hard stop, hands clear.");
             t.line("Power", "%.2f", m.getPower());
             t.line("Encoder", m.getCurrentPosition());
             t.line("Speed", "%.0f ticks/s", m.getVelocity());
@@ -433,9 +436,9 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
             ColorSensor c = (ColorSensor) h;
             t.line("R G B", "%d %d %d", c.red(), c.green(), c.blue());
             // many color sensors (like the REV one) can also measure distance: show it too
-            if (h instanceof DistanceSensor) t.line("Distance", "%.1f in", ((DistanceSensor) h).getDistance(DistanceUnit.INCH));
+            if (h instanceof DistanceSensor) showDistance((DistanceSensor) h, t);
         } else if (h instanceof DistanceSensor) {
-            t.line("Distance", "%.1f in", ((DistanceSensor) h).getDistance(DistanceUnit.INCH));
+            showDistance((DistanceSensor) h, t);
         } else if (h instanceof AnalogInput) {
             AnalogInput a = (AnalogInput) h;
             t.line("Voltage", "%.3f V (max %.1f)", a.getVoltage(), a.getMaxVoltage());
@@ -451,8 +454,7 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
                 huskyAnswers = null;
                 huskyBoxes = new HuskyLens.Block[0];
             }
-            if (huskyWorker == null) huskyWorker = new BackgroundWorker("hardware-check-huskylens");
-            huskyWorker.submitLatest("read", () -> {
+            reader().submitLatest("read", () -> {
                 boolean answers = HuskyLensCamera.answers(husky);
                 huskyBoxes = answers ? husky.blocks() : new HuskyLens.Block[0];
                 huskyAnswers = answers;
@@ -466,6 +468,41 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
         }
         // where it is plugged in (hub and port), shown when debug lines are on
         t.debug("Connection", h.getConnectionInfo());
+    }
+
+    private BackgroundWorker reader() {
+        if (reader == null) reader = new BackgroundWorker("hardware-check-reader");
+        return reader;
+    }
+
+    // Some distance sensors wait for a new measurement (up to 200 ms on a REV 2m sensor). So the helper
+    // thread asks, and this shows the last answer.
+    private void showDistance(final DistanceSensor sensor, RobotTelemetry t) {
+        reader().submitLatest("distance", () -> {
+            try {
+                lastDistance = new DistanceRead(sensor, sensor.getDistance(DistanceUnit.INCH), null);
+            } catch (RuntimeException | LinkageError e) {
+                lastDistance = new DistanceRead(sensor, Double.NaN, e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
+            }
+        });
+        DistanceRead read = lastDistance;
+        // An answer from the sensor shown before this one does not count.
+        if (read == null || read.sensor != sensor) t.line("Distance", "%s", "asking...");
+        else if (read.trouble != null) t.line("Distance", "%s", "no answer: " + read.trouble);
+        else t.line("Distance", "%.1f in", read.inches);
+    }
+
+    // One answer, kept whole: the sensor and its number can never come from two different reads.
+    private static final class DistanceRead {
+        final DistanceSensor sensor;
+        final double inches;
+        final String trouble;
+
+        DistanceRead(DistanceSensor sensor, double inches, String trouble) {
+            this.sensor = sensor;
+            this.inches = inches;
+            this.trouble = trouble;
+        }
     }
 
     // Starts every IMU, in INIT, with a known mounting so its angles mean something.

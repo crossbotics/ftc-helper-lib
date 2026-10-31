@@ -197,6 +197,7 @@
   #offline { padding: 8px 16px; background: var(--stop); color: #fff; font-weight: 600; }
   #offline code { background: rgba(255,255,255,.2); padding: 0 4px; border-radius: 4px; font-weight: 400; }
   #offline[hidden] { display: none; }
+  body.stale #view3dSection { opacity: .45; }
   .moveHint { text-align: center; margin-top: 4px; }
   #hubSection h3 { border-top: 1px solid var(--line); padding-top: 8px; }
   #hubSection .tab > h3:first-child { border-top: 0; padding-top: 0; }
@@ -924,9 +925,11 @@ $("#padsHelpBtn").onclick = () => {
 };
 
 // ---------------------------------------------------------------- talking to the simulator
+// It reads each answer to its end, so the browser can let go of it (up to 50 of these a second).
 function post(path, data) {
   return fetch(path, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams(data).toString() }).catch(() => {});
+    body: new URLSearchParams(data).toString() })
+    .then(r => r.text().then(text => ({ text: () => Promise.resolve(text) }))).catch(() => {});
 }
 // A Driver Station or panel command: shows the simulator's answer if it is a problem.
 function command(data) {
@@ -968,10 +971,12 @@ function notRunning() {
 }
 function gotFrame(f) {
   link.frames++;
+  gotData();
   frames.push(f, performance.now() / 1000);
 }
 function gotState(s) {
   link.states++;
+  gotData();
   $("#offline").hidden = true;
   builderHooks.lastState = s;
   // The stream sends only the OpMode list's key: ask for the list itself when it changes.
@@ -988,6 +993,28 @@ function gotState(s) {
   fillHitPieces(s);
   if (s.game) gotGame(s.game);          // /state has it; the stream sends it on its own
 }
+// Watchdog: a stream can hang with no error (the laptop slept, the WiFi changed, the simulator froze). The
+// page would go on drawing the last values as if they were live, so no data for 2 s grays the view and says
+// so, and for 4 s starts the stream again.
+const STALE_MS = 2000, RECONNECT_MS = 4000;
+let lastData = performance.now();      // from the page's start: a stream can also hang before its first data
+function gotData() {
+  lastData = performance.now();
+  document.body.classList.remove("stale");
+}
+function watchLink() {
+  const quiet = performance.now() - lastData;
+  if (quiet < STALE_MS) return;
+  document.body.classList.add("stale");
+  notRunning();
+  if (quiet >= RECONNECT_MS && link.es) {
+    link.es.close();
+    link.es = null;
+    lastData = performance.now() - STALE_MS;   // counts again from here, and stays gray
+    connect();
+  }
+}
+setInterval(watchLink, 500);
 function connect() {
   if (!window.EventSource) return startPolling();
   const es = new EventSource("/stream");
@@ -1007,18 +1034,30 @@ function connect() {
 function startPolling() {
   if (link.pollTimer) return;
   link.mode = "polling";
-  link.pollTimer = setInterval(async () => {
+  // One request at a time, with a time limit: the next one waits for this one's answer, so slow answers
+  // never pile up in the browser.
+  const asking = link.pollTimer = {};
+  const ask = async () => {
+    const started = performance.now();
+    const stop = new AbortController();
+    const limit = setTimeout(() => stop.abort(), 2000);
     try {
-      const r = await fetch("/state", { cache: "no-store" });
+      const r = await fetch("/state", { cache: "no-store", signal: stop.signal });
       const text = await r.text();
-      link.bytes += text.length;
-      const s = JSON.parse(text);
-      if (s.fast) gotFrame(s.fast);
-      gotState(s);
-    } catch (e) { notRunning(); }
-  }, 100);
+      // A late answer, after the page went back to the stream, must not replace newer data.
+      if (link.pollTimer === asking) {
+        link.bytes += text.length;
+        const s = JSON.parse(text);
+        if (s.fast) gotFrame(s.fast);
+        gotState(s);
+      }
+    } catch (e) { if (link.pollTimer === asking) notRunning(); }
+    clearTimeout(limit);
+    if (link.pollTimer === asking) setTimeout(ask, Math.max(0, 100 - (performance.now() - started)));
+  };
+  ask();
   // Every 30 s, try the stream again (the simulator may have been restarted with it).
-  setTimeout(() => { clearInterval(link.pollTimer); link.pollTimer = 0; link.opened = false; link.errors = 0; connect(); }, 30000);
+  setTimeout(() => { link.pollTimer = 0; link.opened = false; link.errors = 0; connect(); }, 30000);
 }
 
 // ---------------------------------------------------------------- Driver Hub
@@ -1226,7 +1265,8 @@ function renderHub(s) {
     $("#sizeText").innerHTML = `Now: ${f(z.now)} ${chip(z.startOk, "start cube 18 in")} ${chip(z.matchOk, "18 x 24 x 29")}` +
       (z.floorOk ? "" : ` ${chip(false, z.below.toFixed(1) + " in below the tiles: check the shapes")}`) + `<br>` +
       (z.mostOk ? `At full reach: every pose fits ${chip(true, "18 x 24 x 29")} (biggest each way: ${f(z.most)}; ${z.poses} poses tried)`
-                : `At full reach: ${chip(false, "too big")} worst pose ${escapeHtml(z.mostPose)}: ${f(z.most)}. Add hard stops or change the shapes.`);
+                : `At full reach: ${chip(false, "too big")} worst pose ${escapeHtml(z.mostPose)}: ${f(z.most)}. Add hard stops or change the shapes.`) +
+      (z.guessed && z.guessed.length ? `<br>${chip(false, "from a guess")} These results use guessed shapes (TODO in the robot file): ${escapeHtml(z.guessed.join(", "))}. Measure them before you trust this.` : "");
   }
   update3d(s.robot, s.cameras || []);
   update3dPaths(s);

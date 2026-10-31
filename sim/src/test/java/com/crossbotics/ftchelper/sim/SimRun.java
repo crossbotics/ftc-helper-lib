@@ -19,6 +19,8 @@ final class SimRun implements AutoCloseable {
     }
 
     SimRun(String robotFile) throws Exception {
+        // A new simulator: the robot was just turned on. What one test's autonomous remembered must not reach the next.
+        com.crossbotics.ftchelper.match.MatchMemory.clear();
         sim = new SimEngine(SimRobot.load(Paths.get(robotFile)));
         sim.start();
     }

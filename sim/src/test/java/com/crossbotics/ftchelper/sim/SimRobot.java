@@ -64,6 +64,7 @@ final class SimRobot {
     private static final java.util.Set<Thread> BLOCKED = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     static void block(Thread t) {
+        BLOCKED.removeIf(old -> !old.isAlive());   // a thread that ended needs no block, and would stay in memory
         BLOCKED.add(t);
     }
 
@@ -100,6 +101,8 @@ final class SimRobot {
     // The robot file as read, and its shape lines (shape name -> settings), for Edit robot's changes.
     final Properties props;
     final Map<String, Map<String, String>> shapeLines;
+    // The shapes whose line says "TODO" (the code only guessed them: SimFromRobot). The size checks on them are guesses too.
+    final List<String> guessedShapes = new ArrayList<>();
     // The physics engine (physics = engine, the default): the robot bumps and slides, its parts hit
     // things. null = the simple rule (physics = simple): a bump stops the whole move.
     SimWorld world = null;
@@ -475,13 +478,19 @@ final class SimRobot {
         }
         // Properties keeps "# comments" out, but not comments after a value: cut them off. A note starts
         // with a # after a space (or at the start of the value), so color=#ff0000 is not a note.
+        List<String> guessed = new ArrayList<>();
         for (String k : p.stringPropertyNames()) {
             String v = p.getProperty(k);
             int hash = v.startsWith("#") ? 0 : -1;
             for (int i = 1; i < v.length() && hash < 0; i++) if (v.charAt(i) == '#' && Character.isWhitespace(v.charAt(i - 1))) hash = i;
-            if (hash >= 0) p.setProperty(k, v.substring(0, hash).trim());
+            if (hash >= 0) {
+                if (k.startsWith("shape.") && v.substring(hash).contains("TODO")) guessed.add(k.substring("shape.".length()));
+                p.setProperty(k, v.substring(0, hash).trim());
+            }
         }
         SimRobot robot = new SimRobot(p, file.toAbsolutePath().getParent());
+        java.util.Collections.sort(guessed);
+        robot.guessedShapes.addAll(guessed);
         String model = p.getProperty("field.model", "").trim();
         if (!model.isEmpty()) {
             Path m = file.toAbsolutePath().getParent().resolve(model).normalize();

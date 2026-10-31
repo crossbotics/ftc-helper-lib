@@ -54,6 +54,8 @@ Put the robot on a block, so the wheels are off the ground. Run it. It lists eve
   reads a stick pushed up as a negative number; the Hardware Check flips it for you, like the
   library's driving). Watch: does positive power turn it the way you expect? Does the encoder count
   UP? A = zero the encoder.
+  **On a lift or an arm:** no limits apply here, and RB gives full power. Use short, gentle taps, know where its hard
+  stop is (the end of its travel), and keep hands clear.
 - **Servo**: a servo cannot tell where it is, so first choose a **start point** near where the servo
   sits now: D-pad right/left = +/- 0.01, bumpers +/- 0.1, X = 0.5. Nothing moves yet. Hands clear,
   then A: the servo moves to the start point. After that, the same buttons move it. To find the safe

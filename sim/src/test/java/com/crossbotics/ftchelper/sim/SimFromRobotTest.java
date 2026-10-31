@@ -908,11 +908,13 @@ public class SimFromRobotTest {
             s.init("Quick Start TeleOp");
             assertTrue(String.join("\n", s.screen()), s.screenHas("G2 D-pad left: spit out"));
             s.start();
-            double y0 = s.robot().y;
+            double x0 = s.robot().x, y0 = s.robot().y;
+            double facing = Math.toRadians(s.robot().headingDeg);     // heading 0 faces +y, and + is to the left
             s.g1().left_stick_y = -1;                                 // stick up: forward
             SimRun.pause(1.0);
             s.g1().left_stick_y = 0;
-            assertTrue("it drove forward: " + (s.robot().y - y0), s.robot().y - y0 > 3);
+            double forward = (s.robot().y - y0) * Math.cos(facing) - (s.robot().x - x0) * Math.sin(facing);
+            assertTrue("it drove forward: " + forward, forward > 3);
             s.press(v -> s.g2().dpad_left = v);                       // spit out
             assertTrue("the intake pushes out", SimRun.waitFor(() -> s.robot().motors.get("intake").appliedPower < -0.1, 1));
             assertEquals("", s.error());

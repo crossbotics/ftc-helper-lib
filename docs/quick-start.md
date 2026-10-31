@@ -327,7 +327,8 @@ In `Controls.java` and `autos/FirstAuto.java`, also delete the `@Disabled` line 
 2. Add the small **Hardware Check** OpMode from [Check the hardware (lesson 2b)](tutorials/19-testing-procedures.md#1-the-3-line-opmode)
    (it is not one of the five files), build and install again.
 3. **Robot on a block, wheels off the ground.** Run the Hardware Check. Every device must be found.
-   Each motor must turn, and its encoder must count up at positive power
+   No limits are set yet, so on a lift or an arm use short, gentle taps, know where its hard stop is (the end of its
+   travel), and keep hands clear. Each motor must turn, and its encoder must count up at positive power
    ([how to use it](tutorials/19-testing-procedures.md#2-use-it)).
    **Why:** it tests each part alone, before your code moves them together. A part that is not found,
    or that turns the wrong way, is a wire, a port or a name to fix now.

@@ -7,3 +7,5 @@ local.properties
 captures/
 .cxx/
 .kotlin/
+# A release's notes (docs/contributing.md): they go on GitHub, not in the repo.
+/notes.md

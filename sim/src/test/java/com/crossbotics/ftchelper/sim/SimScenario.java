@@ -728,6 +728,7 @@ public final class SimScenario {
                         : t.get(1).equals("floor") ? e.aboveFloor() : e.fits(18, 24, 29) && e.aboveFloor();
                 why[0] = t.get(1).equals("most") ? (sim.robot.shapes.mostOk ? "every pose fits; biggest each way: " + e
                         : "worst pose " + sim.robot.shapes.mostPose + ": " + e) : e.toString();
+                if (!sim.robot.guessedShapes.isEmpty()) why[0] += " (from guessed shapes: " + String.join(", ", sim.robot.guessedShapes) + ")";
                 return ok == t.get(2).equals("ok");
             }
             case "camera": {

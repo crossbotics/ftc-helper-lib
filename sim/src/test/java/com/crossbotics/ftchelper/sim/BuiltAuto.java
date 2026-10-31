@@ -32,15 +32,29 @@ public class BuiltAuto extends Auto<RobotDefinition> {
     /** Its name in the Driver Hub's list. */
     static final String NAME = "Built Auto";
 
-    /** The plan to run (set by the page through POST /auto, or by a test). */
+    /**
+     * The plan for the next INIT (set by the page through POST /auto, or by a test). That INIT takes it, so
+     * a later INIT from the Driver Hub's list never runs the last plan again by surprise.
+     */
     static volatile Program program;
     /** The team's Robot class to run it with. */
     static volatile Class<? extends RobotDefinition> robotClass;
 
+    // This run's plan: taken once from the one the page sent.
+    private synchronized Program plan() {
+        if (myPlan == null) {
+            myPlan = program;
+            program = null;
+        }
+        return myPlan;
+    }
+
+    private Program myPlan;
+
     @Override
     protected RobotDefinition newRobot() {
         Class<? extends RobotDefinition> c = robotClass;
-        if (program == null) {
+        if (plan() == null) {
             throw new IllegalStateException(NAME + " runs a plan from the auto builder: open \"Auto builder\" over the 3D view and press Run");
         }
         if (c == null) throw new IllegalStateException(NAME + ": no Robot class to run with (the auto builder found none in the code)");
@@ -53,13 +67,13 @@ public class BuiltAuto extends Auto<RobotDefinition> {
 
     @Override
     protected boolean mirrorForRed() {
-        Program p = program;
+        Program p = plan();
         return p != null && p.mirror;
     }
 
     @Override
     protected void steps(Steps s, RobotDefinition robot) {
-        Program p = program;
+        Program p = plan();
         if (p == null) {
             throw new IllegalStateException(NAME + " runs a plan from the auto builder: open \"Auto builder\" over the 3D view and press Run");
         }

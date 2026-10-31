@@ -234,7 +234,8 @@ public class MotorFinder extends MotorFinderOpMode {
   again.
 
 Each finder shows a line that starts with `Tunables.`. It says which section of `Tunables.java` the
-numbers go in:
+numbers go in. The numbers below are an example: yours differ on each robot, so use what your finder shows, not these
+and not the ones in `lessonbot/Tunables.java`:
 
 ```text
 Tunables.Claw: P1 = 0.210, P2 = 0.770
