@@ -7,7 +7,7 @@ where: both
 minutes: 30
 needs: [huskylens]
 kit_bots: []
-since: unreleased
+since: v0.23.0
 docs: [modules/vision.md#huskylenscamera, modules/robot.md#camera]
 ---
 

@@ -619,7 +619,7 @@
     ]
    ],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.23.0",
    "docs": [
     {
      "path": "docs/modules/vision.md",

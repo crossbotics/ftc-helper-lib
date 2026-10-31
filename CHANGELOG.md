@@ -2,13 +2,15 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
-## Unreleased
+## v0.23.0 - 2026-10-31
 
 **What matters for your robot**
 
 - **HuskyLens support, not yet tried on a real camera.** `Camera.huskyLens("huskylens")` finds AprilTags, colors or
   one object. It says only the numbers you taught it, so you list which real tag each one is. Nothing changes if you
   do not use one.
+- **Safety fixes, and Hold BACK works differently.** Stops now reach every motor, and a lift that times out no longer
+  keeps pushing. With odometry, Hold BACK changes only what "forward" means for the driver: the pose stays. See Changed.
 
 ### Added
 
