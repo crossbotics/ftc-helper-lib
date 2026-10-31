@@ -237,7 +237,7 @@ direction), but `driveTo(..., 0, ...)` faces away from your wall. With odometry,
   Use `turnTo`, then `move`.
 
 Put the points in `Tunables.Auto` (`goalX`, `goalY`, `goalHeading`), like the move distances: they are
-in the tuning menu too.
+in the tuning menu too. A value you change there must be copied back into `Tunables.java`.
 
 
 ## Follow a curved path: follow (pedro module)

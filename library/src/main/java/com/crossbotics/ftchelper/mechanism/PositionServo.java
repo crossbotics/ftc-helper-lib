@@ -183,7 +183,7 @@ public class PositionServo implements AngleDevice {
      */
     public PositionServo tunable(String prefix) {
         for (Map.Entry<String, Double> e : positions.entrySet()) {
-            tunables.put(e.getKey(), Tunable.number(prefix + "/" + e.getKey(), e.getValue(), 0.01).range(0, 1));
+            tunables.put(e.getKey(), Tunable.fromCode(prefix + "/" + e.getKey(), e.getValue(), 0.01).range(0, 1));
         }
         return this;
     }

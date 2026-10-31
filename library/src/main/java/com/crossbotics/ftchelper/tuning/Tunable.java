@@ -87,9 +87,11 @@ public final class Tunable {
         Tunable t = number(name, defaultValue, step);
         // The code value changed since (or was outside the range): start from it again.
         double code = Double.isNaN(t.codeOutside) ? t.defaultValue : t.codeOutside;
-        if (!t.isChanged() && Math.abs(code - defaultValue) > 1e-12) {
+        if (Math.abs(code - defaultValue) > 1e-12) {
+            boolean tuned = t.isChanged();
             t.defaultValue = defaultValue;
-            t.value = defaultValue;
+            // A tuned value stays, and reset() goes back to THIS code value.
+            if (!tuned) t.value = defaultValue;
             t.codeOutside = Double.NaN;   // checked again by range(...)
         }
         return t;

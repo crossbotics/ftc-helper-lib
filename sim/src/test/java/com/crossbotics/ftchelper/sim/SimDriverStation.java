@@ -276,6 +276,7 @@ final class SimDriverStation {
             robot.resetConfig();
             screen.clearScreen();
             error = "";
+            leftOnAtStop = new ArrayList<>();
             current = e;
             op = o;
             phase = Phase.INIT;
@@ -320,7 +321,7 @@ final class SimDriverStation {
             if (!t.getClass().getName().endsWith("ForceStopException")) error = withSimHint(firstLines(t));
         } finally {
             if (op == o) {
-                robot.allOff();
+                switchOff();
                 robot.closeCameras();
                 takeOutStandIns();
                 phase = Phase.STOPPED;
@@ -377,7 +378,7 @@ final class SimDriverStation {
             // Only the CURRENT OpMode may switch things off (an old one that ended late must not
             // switch off the next one's motors).
             if (op == o) {
-                robot.allOff();
+                switchOff();
                 robot.closeCameras();
                 takeOutStandIns();
                 phase = Phase.STOPPED;
@@ -447,11 +448,26 @@ final class SimDriverStation {
                 Thread.currentThread().interrupt();
             }
         }
-        robot.allOff();
+        switchOff();
         robot.closeCameras();
         takeOutStandIns();
         phase = Phase.STOPPED;
     }
+
+    // Everything off (as the FTC app does), noting first what the OpMode itself left on. FinderSafetyTest
+    // reads that: looking after this would always find 0.
+    private void switchOff() {
+        List<String> on = robot.motorsOn();
+        if (!on.isEmpty()) leftOnAtStop = on;   // the first call after an OpMode ends sees it; a later one finds nothing
+        robot.allOff();
+    }
+
+    /** The motors with power still on when the last OpMode ended, before the simulator stopped them. */
+    List<String> leftOnAtStop() {
+        return leftOnAtStop;
+    }
+
+    private volatile List<String> leftOnAtStop = new ArrayList<>();
 
     /** Ends the command thread (when the simulator shuts down). */
     void close() {

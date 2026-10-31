@@ -403,7 +403,8 @@ You write nothing for this:
   line carries on from autonomous. A Pinpoint is still calibrating right after INIT: the pose is kept
   and written to it as soon as it is ready.
 - Field-centric "forward" comes from the odometry's heading. Holding BACK (with field-centric on)
-  makes "forward" the way the robot faces now, and keeps x and y.
+  makes "forward" the way the robot faces now, for the driver only. The pose does not change, so aiming
+  at a field point stays right. A pose that is wrong is fixed with "set pose here" (section 7).
 
 **No autonomous, or it was stopped early?** Then TeleOp does not know where the robot is (the aim's
 odometry backup stays off and says why). Set the pose by hand: park the robot on a spot you know (the

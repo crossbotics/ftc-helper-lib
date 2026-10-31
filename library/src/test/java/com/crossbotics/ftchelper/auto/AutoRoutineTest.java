@@ -18,7 +18,7 @@ import org.junit.Test;
 /** AutoRoutine on a pretend mecanum robot (10 ms per loop). */
 public class AutoRoutineTest {
 
-    static final class Sim {
+    static class Sim {
         final FakeMotor fl = new FakeMotor(), fr = new FakeMotor(), bl = new FakeMotor(), br = new FakeMotor();
         final Fakes.Clock clock = new Fakes.Clock();
         final Fakes.FakeTelemetry ft = new Fakes.FakeTelemetry();

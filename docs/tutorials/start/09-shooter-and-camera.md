@@ -159,8 +159,8 @@ If the wheel needs longer than 0.25 s to get back to speed after a shot, the lin
   Motors.custom("my-motor", 28, 5800))` (counts per turn, free RPM), and the starting numbers come from
   its numbers ([Parts not in the catalog](../../modules/robot.md#parts-not-in-the-catalog)).
 
-You can change `speedRpm` and `stepRpm` with the tuning menu (PRACTICE profile, hold GUIDE 1 s). The
-others are read once at INIT: change them in the file.
+You can change `speedRpm` and `stepRpm` with the tuning menu (PRACTICE profile, hold GUIDE 1 s). Then copy
+the new values back into `Tunables.java`: INIT lists them. The others are read once at INIT: change them in the file.
 
 ## 3. The buttons it brings
 
@@ -307,7 +307,7 @@ public static class Turret {
   goal far outside (behind the robot, more than 10 degrees past a limit, from the odometry of section 9)
   makes it hold where it points instead of swinging from one limit to the other.
 - `kP`, `kI`, `kD`: how hard it turns toward the target. Tune `kP` live in the tuning menu: too low and
-  it lags, too high and it shakes.
+  it lags, too high and it shakes. Then copy the value back into `Tunables.java`.
 - `tolerance`: how many degrees off still counts as "aimed". `cameraOffset`: if shots land to one side,
   the [Aim Tuner](../../guides/finders.md#aim-tuner-camera-offset) finds it.
 - **0 degrees is where the turret points when you press INIT** (`startAngle`, default 0). Point it

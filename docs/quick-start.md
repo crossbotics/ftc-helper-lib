@@ -393,7 +393,7 @@ It drives? Raise `maxPower` and `practiceMaxPower` in `Tunables.java` (1.0 and 0
 
 **Changed a number live?** The tuning menu (hold GUIDE 1 s after START, in the PRACTICE profile) changes a
 number on the hub only. **Copy each new value back into `Tunables.java`**: INIT lists the values that
-differ. If you do not, the next build loses it. ([The tuning menu](guides/tunables.md#the-live-column-the-tuning-menu).)
+differ. If you do not, the hub keeps using its saved value, even after you edit that number in `Tunables.java`, and another hub does not have it. ([The tuning menu](guides/tunables.md#the-live-column-the-tuning-menu).)
 
 ## 8. The simulator
 
@@ -535,7 +535,7 @@ to add steps.
 | It spins when it should drive straight | a wheel direction is wrong: STEP 4 |
 | INIT stops on `MEASURE` and names a finder | that number is not measured yet: [section 6](#6-measure-the-numbers) |
 | The autonomous says `AUTONOMOUS IS OFF: the drive is not tuned yet` | the Drive Tuner, then `calibrated = true`: [section 9](#9-a-first-autonomous) |
-| A number you changed in the tuning menu is gone after a build | it was not copied back into `Tunables.java` ([section 7](#7-drive-then-each-mechanism)) |
+| You changed a number in `Tunables.java` and nothing changed on the robot | a value tuned on the hub wins. INIT lists it: copy it back into `Tunables.java`, or in the tuning menu press X then A (or Y to reset all) ([section 7](#7-drive-then-each-mechanism)) |
 | Nothing moves | it is paused (tap BACK) |
 | After the autonomous, the Driver Station does not pick your TeleOp | `preselectTeleOp` in `autos/FirstAuto.java` must be the TeleOp's exact name (STEP 7) |
 | `./gradlew` says `JAVA_HOME is not set`, or `SDK location not found` | the [laptop setup](#laptop-setup-once) |

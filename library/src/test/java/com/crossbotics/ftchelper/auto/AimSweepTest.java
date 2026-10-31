@@ -42,4 +42,29 @@ public class AimSweepTest {
         assertTrue("never past the sweep: " + most[0], most[0] <= 45 + 3);
         assertTrue(r.getReport().get(0), r.getReport().get(0).contains("not seen (swept)"));
     }
+
+    // Review, 2026-10-30: a 1 s aim started a turn that ran to the drive's own 10 s limit.
+    @Test public void aStuckRobotDoesNotTurnLongerThanTheAimsTimeLimit() {
+        AutoRoutineTest.Sim s = new AutoRoutineTest.Sim() {
+            @Override void step() { clock.addSec(0.01); }   // the motors run but the robot cannot turn
+        };
+        MatchTimer timer = new MatchTimer(30, s.clock::get);
+        timer.start();
+        AutoRoutine r = s.routine(timer).turnToward("Aim", () -> 40.0, 2, 0.5, 1);
+        r.runAll();
+        assertTrue("seconds: " + s.clock.nanos / 1e9, s.clock.nanos / 1e9 < 1.05);
+        assertTrue(r.getReport().get(0), r.getReport().get(0).contains("not within") || r.getReport().get(0).contains("TIMED_OUT"));
+    }
+
+    @Test public void aSweepAlsoKeepsToItsTimeLimit() {
+        AutoRoutineTest.Sim s = new AutoRoutineTest.Sim() {
+            @Override void step() { clock.addSec(0.01); }
+        };
+        MatchTimer timer = new MatchTimer(30, s.clock::get);
+        timer.start();
+        AutoRoutine r = s.routine(timer).turnTowardWithSweep("Aim", () -> Double.NaN, 2, 0.5, 1, 60, 15, 0.3);
+        r.runAll();
+        // A robot that cannot turn: the sweep's turn stops at 1 s. It does not move, so no turn back.
+        assertTrue("seconds: " + s.clock.nanos / 1e9, s.clock.nanos / 1e9 < 1.5);
+    }
 }

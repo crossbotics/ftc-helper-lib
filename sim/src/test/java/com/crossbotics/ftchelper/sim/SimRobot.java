@@ -598,6 +598,14 @@ final class SimRobot {
     }
 
     /** All outputs off (the FTC app does this when an OpMode stops). */
+    /** The motors and continuous servos with power on now, by name. */
+    synchronized List<String> motorsOn() {
+        List<String> on = new ArrayList<>();
+        for (SimMotor m : motors.values()) if (Math.abs(m.userPower()) > 1e-9) on.add(m.name);
+        for (Map.Entry<String, double[]> cr : crServos.entrySet()) if (Math.abs(cr.getValue()[0]) > 1e-9) on.add(cr.getKey());
+        return on;
+    }
+
     synchronized void allOff() {
         for (SimMotor m : motors.values()) m.device.setPower(0);
         for (double[] cr : crServos.values()) cr[0] = 0;

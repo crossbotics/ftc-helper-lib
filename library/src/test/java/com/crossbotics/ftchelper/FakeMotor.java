@@ -16,6 +16,8 @@ public final class FakeMotor {
     public double maxAbsPower = 0;
     public double[] pidf = null;
     public boolean failSetPower = false;  // true = setPower throws, like a disconnected motor
+    public boolean failRead = false;      // true = getCurrentPosition throws
+    public boolean failSetMode = false;   // true = setMode throws
     public DcMotor.RunMode mode = DcMotor.RunMode.RUN_WITHOUT_ENCODER;
     public DcMotor.ZeroPowerBehavior zeroPower = DcMotor.ZeroPowerBehavior.BRAKE;
     public final DcMotorEx motor;
@@ -31,11 +33,15 @@ public final class FakeMotor {
                             maxAbsPower = Math.max(maxAbsPower, Math.abs(power));
                             return null;
                         case "getPower": return power;
-                        case "getCurrentPosition": positionReads++; return (int) Math.round(position);
+                        case "getCurrentPosition":
+                            if (failRead) throw new RuntimeException("encoder read failed");
+                            positionReads++;
+                            return (int) Math.round(position);
                         case "getVelocity": return velocity;
                         case "setVelocity": velocityCommand = (Double) args[0]; return null;
                         case "getCurrent": return currentAmps;
                         case "setMode":
+                            if (failSetMode) throw new RuntimeException("mode failed");
                             mode = (DcMotor.RunMode) args[0];
                             if (mode == DcMotor.RunMode.STOP_AND_RESET_ENCODER) position = 0;
                             return null;

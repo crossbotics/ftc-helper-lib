@@ -47,6 +47,8 @@ public final class Intake extends Module<Intake> implements Toggleable {
     private boolean out = false;          // running out (until stop or in)
     private boolean reversing = false;    // pushing out while a button is held
     private double lastPower = Double.NaN;
+    // True from pause() to resume(): the robot's loop does not update it then.
+    private boolean paused = false;
     // While this is true it does not run IN (out still works): e.g. pieces.whenFull(). null = never.
     private java.util.function.BooleanSupplier stopIn = null;
     // inAnyway(): runs in although stopsWhen says no, until stop() or out().
@@ -261,15 +263,24 @@ public final class Intake extends Module<Intake> implements Toggleable {
     /** Stops (and ends a reverse). */
     @Override
     void pause() {
-        for (DcMotorEx m : motors) m.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        for (DcMotorEx m : motors) m.setPower(0);
-        for (CRServo s : crServos) s.setPower(0);
+        paused = true;   // first: a launcher pausing after this must not start the motors again
         lastPower = Double.NaN;   // resume sends its power again
+        // Every motor and servo stops even if one fails: nothing updates while paused.
+        RuntimeException first = null;
+        for (DcMotorEx m : motors) {
+            try { m.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE); } catch (RuntimeException e) { first = e; }
+            try { m.setPower(0); } catch (RuntimeException e) { if (first == null) first = e; }
+        }
+        for (CRServo s : crServos) {
+            try { s.setPower(0); } catch (RuntimeException e) { if (first == null) first = e; }
+        }
+        if (first != null) throw first;
     }
 
     @Override
     void resume() {
         // A roller spins down freely again (coast), and runs as it did before.
+        paused = false;
         for (DcMotorEx m : motors) m.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         lastPower = Double.NaN;
     }
@@ -335,7 +346,8 @@ public final class Intake extends Module<Intake> implements Toggleable {
         boolean giveBack = pushingForShot && !push;
         pushingForShot = push;
         // Given back: its own power now, not at its next update (the launcher may stop the loop first).
-        if (giveBack) update();
+        // Not while the robot is paused: nothing updates then, so a power sent here would stay on.
+        if (giveBack && !paused) update();
     }
 
     /** True while the launcher borrows it to push a piece in. */
@@ -362,9 +374,18 @@ public final class Intake extends Module<Intake> implements Toggleable {
     // Sends the power only when it changes (each write takes time on the hub).
     private void write(double power) {
         if (power == lastPower) return;
+        // NaN until every motor took it: a send that failed is sent again, not skipped as "the same".
+        lastPower = Double.NaN;
+        // Every motor gets it even if one fails (a motor left out would keep its old power).
+        RuntimeException first = null;
+        for (DcMotorEx m : motors) {
+            try { m.setPower(power); } catch (RuntimeException e) { if (first == null) first = e; }
+        }
+        for (CRServo s : crServos) {
+            try { s.setPower(power); } catch (RuntimeException e) { if (first == null) first = e; }
+        }
+        if (first != null) throw first;
         lastPower = power;
-        for (DcMotorEx m : motors) m.setPower(power);
-        for (CRServo s : crServos) s.setPower(power);
     }
 
     @Override

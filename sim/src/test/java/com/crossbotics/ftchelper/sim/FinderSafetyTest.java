@@ -218,7 +218,15 @@ public class FinderSafetyTest {
             for (SimDriverStation.Entry e : new ArrayList<>(s.sim.ds.opModes)) {
                 s.init(e.name);
                 s.start();
+                // The sticks and a trigger held, so a TeleOp really has its motors on at STOP.
+                s.g1().left_stick_y = -0.5f;
+                s.g1().right_stick_x = 0.3f;
+                s.g1().right_trigger = 0.8f;
+                SimRun.pause(0.1);
                 s.sim.ds.stop();
+                s.g1().left_stick_y = 0;
+                s.g1().right_stick_x = 0;
+                s.g1().right_trigger = 0;
                 String err = s.error();
                 String expected = EXPECTED.get(e.name);
                 // An autonomous refusing an untuned drivetrain is right (calibrationConfirmed is false).
@@ -226,12 +234,33 @@ public class FinderSafetyTest {
                         || (e.kind.equals("Autonomous") && err.contains("calibrationConfirmed"));
                 if (!ok) problems.add(e.name + ": " + err.split("\n")[0]);
                 if (!err.isEmpty()) seen.add(e.name + " -> " + err.split("\n")[0]);
-                for (SimMotor m : s.robot().motors.values()) {
-                    if (Math.abs(m.userPower()) > 1e-9) problems.add(e.name + ": motor " + m.name + " still on after STOP");
-                }
+                // What the OpMode left on itself: after stop() the simulator has switched everything off.
+                for (String on : s.sim.ds.leftOnAtStop()) problems.add(e.name + ": motor " + on + " still on after STOP");
             }
         }
         System.out.println("Expected errors seen:\n" + String.join("\n", seen));
         assertTrue(String.join("\n", problems), problems.isEmpty());
+    }
+
+    /** Sets a motor going and ends without stopping it. */
+    public static class LeavesAMotorOn extends com.qualcomm.robotcore.eventloop.opmode.LinearOpMode {
+        @Override public void runOpMode() {
+            com.qualcomm.robotcore.hardware.DcMotor m = hardwareMap.get(com.qualcomm.robotcore.hardware.DcMotor.class, "intake");
+            waitForStart();
+            m.setPower(0.5);
+            while (opModeIsActive()) telemetry.update();
+        }
+    }
+
+    // The check above must be able to fail.
+    @Test public void aMotorLeftOnIsSeen() throws Exception {
+        try (SimRun s = new SimRun()) {
+            s.sim.ds.register("Leaves a motor on", "TeleOp", LeavesAMotorOn.class);
+            s.init("Leaves a motor on").start();
+            assertTrue(SimRun.waitFor(() -> s.robot().motors.get("intake").userPower() > 0.4, 2));
+            s.sim.ds.stop();
+            assertTrue(s.sim.ds.leftOnAtStop().toString(), s.sim.ds.leftOnAtStop().contains("intake"));
+            assertEquals("the simulator still stops it", 0, s.robot().motors.get("intake").userPower(), 1e-9);
+        }
     }
 }

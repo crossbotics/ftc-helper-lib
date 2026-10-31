@@ -802,7 +802,11 @@ public abstract class RobotDefinition {
         if (tracker == null) throw new IllegalStateException("resetPose: Robot.java has no odometry(...) line (or setup has not run)");
         double[] p = resetSpotFor(alliance, xIn, yIn, headingDeg);
         tracker.setPose(new com.crossbotics.ftchelper.util.FieldPose(p[0], p[1], p[2]));
+        driverForwardDeg = 0;   // the pose is right now: "forward" for the driver is the field's again
     }
+
+    // With odometry: the pose heading the driver last called "forward" (hold BACK). 0 = the field's own.
+    double driverForwardDeg = 0;
 
     // A spot written for BLUE, as used on this alliance: {x, y, heading}.
     final double[] resetSpotFor(Alliance a, double x, double y, double h) {

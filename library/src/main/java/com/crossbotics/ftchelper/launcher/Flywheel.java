@@ -467,15 +467,21 @@ public class Flywheel implements Subsystem {
     private void send(double ticksPerSec) {
         // Same as last time: skip it, each hardware command costs loop time.
         if (ticksPerSec == lastSent) return;
-        lastSent = ticksPerSec;
+        // NaN until it is all sent: a send that failed is sent again, not skipped as "the same".
+        lastSent = Double.NaN;
         // A switched-off follower gets nothing. ("a ? b : c" means: if a use b, otherwise c.)
         DcMotorEx f = followerDisabled ? null : follower;
         if (ticksPerSec == 0) {
             // Coast: plain power 0 (speed control at 0 would brake hard).
             // A hard stop strains the motor, gears and belts of a fast, heavy wheel.
-            motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            motor.setPower(0);
-            if (f != null) { f.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); f.setPower(0); }
+            // The follower stops even if the main motor fails (it would keep pushing the wheel).
+            RuntimeException first = null;
+            try { coast(motor); } catch (RuntimeException e) { first = e; }
+            if (f != null) {
+                try { coast(f); } catch (RuntimeException e) { if (first == null) first = e; }
+            }
+            if (first != null) throw first;
+            lastSent = 0;
             return;
         }
         // Speeding up again after a coast: switch speed control back on (only when needed, as
@@ -485,6 +491,17 @@ public class Flywheel implements Subsystem {
         if (f != null) {
             if (f.getMode() != DcMotor.RunMode.RUN_USING_ENCODER) f.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             f.setVelocity(ticksPerSec);
+        }
+        lastSent = ticksPerSec;
+    }
+
+    // Plain power 0, and no speed control.
+    private static void coast(DcMotorEx m) {
+        // The power 0 goes out even if the mode change fails.
+        try {
+            m.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        } finally {
+            m.setPower(0);
         }
     }
 

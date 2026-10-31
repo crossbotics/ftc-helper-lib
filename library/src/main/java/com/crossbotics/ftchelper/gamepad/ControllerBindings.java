@@ -117,7 +117,7 @@ public class ControllerBindings {
     // How to read the extra paddles M1/M2, which the SDK's Gamepad does not know about.
     private final Map<String, BooleanSupplier> extraButtons = new LinkedHashMap<>();
     // The trigger-axis bindings, which run every loop no matter what.
-    private final List<Runnable> axisActions = new ArrayList<>();
+    private final List<AxisAction> axisActions = new ArrayList<>();
 
     // ---------------------------------------------------------------------------------------
     // Binding methods. Each returns `this`, so you can chain them.
@@ -213,7 +213,7 @@ public class ControllerBindings {
      */
     public ControllerBindings bindTriggerAxis(Pad pad, Trigger trigger, DoubleConsumer use) {
         // Save a small piece of code that, every loop, reads the trigger and hands the value on.
-        axisActions.add(() -> use.accept(readTrigger(pad, trigger)));
+        axisActions.add(new AxisAction(() -> readTrigger(pad, trigger), use));
         return this;
     }
 
@@ -271,9 +271,9 @@ public class ControllerBindings {
             }
         }
         // Trigger-axis actions run every loop, whatever the trigger's value.
-        for (Runnable axis : axisActions) {
+        for (AxisAction axis : axisActions) {
             long start = System.nanoTime();
-            axis.run();
+            axis.use.accept(axis.value.getAsDouble());
             checkSlow("trigger axis", start);
         }
     }
@@ -327,7 +327,8 @@ public class ControllerBindings {
     }
 
     /**
-     * Acts as if every button were let go now: "release" actions run for buttons that are down.
+     * Acts as if every button and trigger were let go now: "release" actions run for buttons that are
+     * down, and {@link #bindTriggerAxis} code gets 0.
      * Call it before you stop calling {@link #update} for a while (for example while a menu uses
      * the gamepad), so a "start on press, stop on release" action can never be left running.
      * Afterwards, call {@link #ignoreHeldButtons} when you start calling update() again.
@@ -339,6 +340,12 @@ public class ControllerBindings {
                 action.run(false);
                 checkSlow(entry.getKey(), start);
             }
+        }
+        // A trigger let go is 0: a motor set from a trigger must not keep its last power.
+        for (AxisAction axis : axisActions) {
+            long start = System.nanoTime();
+            axis.use.accept(0);
+            checkSlow("trigger axis", start);
         }
     }
 
@@ -470,5 +477,16 @@ public class ControllerBindings {
         Gamepad g = pad == Pad.G1 ? g1 : g2;
         if (g == null) return 0;
         return trigger == Trigger.RT ? g.right_trigger : g.left_trigger;
+    }
+
+    // A trigger binding: where its value comes from, and the code that gets it.
+    private static final class AxisAction {
+        final java.util.function.DoubleSupplier value;
+        final DoubleConsumer use;
+
+        AxisAction(java.util.function.DoubleSupplier value, DoubleConsumer use) {
+            this.value = value;
+            this.use = use;
+        }
     }
 }

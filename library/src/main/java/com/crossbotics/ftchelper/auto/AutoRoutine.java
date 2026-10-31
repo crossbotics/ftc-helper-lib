@@ -214,11 +214,12 @@ public class AutoRoutine {
                     break;
                 }
                 if (next >= stops.size() || left.getAsDouble() <= 0) break;
-                record(takeDrive().turnTo(start + stops.get(next++), sweepPower));
+                record(takeDrive().turnTo(start + stops.get(next++), sweepPower, left.getAsDouble()));
             }
             if (!seen) {
-                // Back to where it started (also after the time limit: a robot left turned is worse).
-                if (ctx.isActive() && Math.abs(needDrive().headingDeg() - start) > 1) record(takeDrive().turnTo(start, sweepPower));
+                // Back to where it started (also after the time limit: a robot left turned is worse). It
+                // gets the step's time again for this: a robot that cannot turn must not use up the auto.
+                if (ctx.isActive() && Math.abs(needDrive().headingDeg() - start) > 1) record(takeDrive().turnTo(start, sweepPower, timeoutSec));
                 note("not seen (swept)");
                 return;
             }
@@ -232,7 +233,7 @@ public class AutoRoutine {
                     b = bearingDeg.getAsDouble();
                 }
                 if (Math.abs(b) <= toleranceDeg) return;
-                record(takeDrive().turn(b, maxPower));
+                record(takeDrive().turn(b, maxPower, left.getAsDouble()));
                 ctx.waitFor(Math.min(0.15, Math.max(0, left.getAsDouble())));   // a fresh camera picture after the turn
             }
             double b = bearingDeg.getAsDouble();
@@ -274,8 +275,8 @@ public class AutoRoutine {
                 }
                 double b = bearingDeg.getAsDouble();
                 if (Math.abs(b) <= toleranceDeg) return;
-                record(takeDrive().turn(b, maxPower));
-                ctx.waitFor(0.15);   // a fresh camera picture after the turn
+                record(takeDrive().turn(b, maxPower, (end - clock.getAsLong()) / 1e9));
+                ctx.waitFor(Math.min(0.15, Math.max(0, (end - clock.getAsLong()) / 1e9)));   // a fresh camera picture after the turn
             }
             double b = bearingDeg.getAsDouble();
             if (Double.isNaN(b) || Math.abs(b) > toleranceDeg) note("not within " + toleranceDeg + " deg");

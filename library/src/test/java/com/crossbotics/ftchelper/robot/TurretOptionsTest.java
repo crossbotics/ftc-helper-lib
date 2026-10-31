@@ -359,4 +359,50 @@ public class TurretOptionsTest {
             assertTrue(e.getMessage(), e.getMessage().contains("Turret.crServo"));
         }
     }
+
+    // Review, 2026-10-30: saving the angle read the encoder first, and a failed read skipped the stop.
+    @Test public void aFailedEncoderReadDoesNotKeepTheTurretFromStopping() {
+        for (boolean pause : new boolean[] {false, true}) {
+            OneTurret r = bot(SlipRing.class, () -> motorTurret().continuous());
+            r.startForTests();
+            r.turret.aimAt(90);
+            loops(r, "turret", 2);
+            FakeMotor m = kit.motors.get("turret");
+            assertTrue("it is moving", m.power != 0);
+            assertTrue("the test needs a homed turret: stop saves its angle", r.turret.part().isHomed());
+            m.failRead = true;
+            try {
+                Thread.sleep(5);                               // its last reading is too old to use again
+                r.turret.part().getAngle();
+                fail("the test needs a read that fails");
+            } catch (RuntimeException | InterruptedException expected) {
+                // reading it now fails
+            }
+            if (pause) r.turret.pause();
+            else r.turret.stop();
+            assertEquals(pause ? "pause" : "stop", 0, m.power, 1e-9);
+            m.failRead = false;
+            Turret.forgetAngles();
+        }
+    }
+
+    @Test public void aTurretHeldByAnActionStopsEvenIfItsEncoderFails() throws Exception {
+        OneTurret r = bot(SlipRing.class, () -> motorTurret().continuous());
+        r.startForTests();
+        r.turret.aimAt(90);
+        loops(r, "turret", 2);
+        FakeMotor m = kit.motors.get("turret");
+        assertTrue(m.power != 0);
+        r.run(Action.named("Aim").then(() -> r.turret.aimAt(90)).waitUntil(() -> false, 5));
+        r.all().update();
+        r.all().update();
+        m.failRead = true;
+        Thread.sleep(5);
+        try {
+            r.turret.stop();
+        } catch (RuntimeException reported) {
+            assertEquals("encoder read failed", reported.getMessage());
+        }
+        assertEquals(0, m.power, 1e-9);
+    }
 }

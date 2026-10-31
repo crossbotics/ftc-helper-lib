@@ -1399,7 +1399,11 @@ camera when `createCamera()` returns null. The physics is a model: real numbers 
 tables) must still be found on the robot.
 
 Differences to know: the screen here updates as fast as the OpMode sends (a real Driver Station
-redraws about 4 times a second, so a flickering line looks steadier there). STOP works like on a
+redraws about 4 times a second, so a flickering line looks steadier there). The loop runs faster than
+on a robot, and hardware answers at once: code that counts loops, instead of using time, can act differently
+on the robot. The IMU never drifts, and it ignores how the hub is mounted: your `.imu(...)` line is not checked here.
+On a robot, a wrong line can make pitch, roll and the turn speed wrong, and it can start the yaw at a wrong angle. So check it on the real
+robot: with the Hardware Check, turn left and yaw goes UP; in TeleOp, field-centric stick up goes away from you. STOP works like on a
 robot: a `sleep()` ends at once, and an OpMode that ignores STOP for 3 s is cut off from the hardware
 (restart the simulator to run another).
 
@@ -1407,8 +1411,9 @@ robot: a `sleep()` ends at once, and an OpMode that ignores STOP for 3 s is cut 
 
 `sim/src/test/.../FinderSafetyTest.java` runs whole OpModes with scripted button presses, on every
 push. It checks, for example, that help stops the motors, that a stick held through help does not
-count, that the Drive Tuner's push test finds the real wheel size, and that every example starts and
-stops with all motors off. Its first run found a real bug: every finder crashed at INIT in v0.7.2.
+count, that the Drive Tuner's push test finds the real wheel size, and that every example, run with
+the sticks and a trigger held, leaves no motor on by itself at STOP (it looks before the simulator
+switches them off). Its first run found a real bug: every finder crashed at INIT in v0.7.2.
 
 ```bash
 ./gradlew :sim:testDebugUnitTest

@@ -208,4 +208,16 @@ public class GamepadTest {
         c.update(g1, g2);
         assertEquals("no second release", 1, stops[0]);
     }
+
+    // Review, 2026-10-30: a motor set from a trigger kept its power while the tuning menu was open.
+    @Test public void releaseAllSetsTriggerBindingsToZero() {
+        Gamepad g1 = new Gamepad(), g2 = new Gamepad();
+        double[] power = {0};
+        ControllerBindings c = new ControllerBindings().bindTriggerAxis(Pad.G1, Trigger.RT, v -> power[0] = v);
+        g1.right_trigger = 0.8f;
+        c.update(g1, g2);
+        assertEquals(0.8, power[0], 1e-6);
+        c.releaseAll();
+        assertEquals("let go", 0, power[0], 1e-9);
+    }
 }

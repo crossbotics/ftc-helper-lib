@@ -94,7 +94,7 @@ Commands and reading:
 | `update()` | every loop |
 | `isAtTarget()`, `isAt(name)`, `getPosition()`, `getTargetName()` | read ("hand", "hold", "none" or the name) |
 | `isWaitingForHoming()` | true until the bottom switch was pressed once |
-| `goToStep(name)` | autonomous: go and wait until there |
+| `goToStep(name)` | autonomous: go and wait until there. Not there in time (a jam?): it holds where it is, so it stops pushing, and the end report says "timed out" |
 | `startStep(name)` | autonomous: start going and continue at once (moves during the next steps) |
 | `getSafeMotor()`, `getPid()` | the layers inside |
 | `fence(lo, hi)`, `fence(lo, hi, upPower, downPower)`, `isHeld()` | set every loop by an [interlock rule](robot.md#interlock): a target past `lo`..`hi` waits at its edge; the caps (0 to 1) limit the power toward each side so it brakes in time |

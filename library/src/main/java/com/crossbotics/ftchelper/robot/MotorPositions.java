@@ -228,7 +228,7 @@ public abstract class MotorPositions<M extends MotorPositions<M>> extends Module
         part.tunable(name());
         for (String p : positions.keySet()) {
             // A tuned position stays inside the safe range.
-            Tunable.number(name() + "/" + p, positions.get(p), 1).range(min, max);
+            Tunable.fromCode(name() + "/" + p, positions.get(p), 1).range(min, max);
         }
         t.fromCatalog(catalogFields.toArray(new String[0]));
         catalogNote = fromCatalog.isEmpty() ? "" : defaultsNote(catalogMotor(), fromCatalog,

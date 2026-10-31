@@ -145,16 +145,16 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
 
     // With odometry, field-centric "forward" comes from the odometry's heading (it does not drift like
     // a re-zeroed IMU, and carries on from autonomous). BACK (held, field-centric) makes the way the
-    // robot faces now 0, keeping x and y.
+    // robot faces now 0 for the DRIVER only: the pose stays true, or aiming at a field point would turn
+    // by the same wrong angle. (Aim uses the pose; a pose that is wrong is fixed with resetPose.)
     @Override
     protected final com.crossbotics.ftchelper.drive.DriverHeading createHeading(com.qualcomm.robotcore.hardware.IMU imu) {
         if (robot().odometrySpec() == null) return super.createHeading(imu);
         return com.crossbotics.ftchelper.drive.DriverHeading.of(
-                () -> robot().odometry() == null ? 0 : robot().odometry().pose().headingDeg,
+                () -> robot().odometry() == null ? 0 : robot().odometry().pose().headingDeg - robot().driverForwardDeg,
                 () -> {
                     if (robot().odometry() == null) return;
-                    // Only the heading: x and y stay (and a pose that was never set stays "not set").
-                    robot().odometry().setHeading(0);
+                    robot().driverForwardDeg = robot().odometry().pose().headingDeg;
                 },
                 startsFromAuto());
     }
@@ -234,6 +234,8 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
         if (robot.resetMirrorsForRed()) {
             com.crossbotics.ftchelper.util.FieldPose p = o.pose();
             o.setPose(new com.crossbotics.ftchelper.util.FieldPose(-p.x + 0.0, p.y, -p.headingDeg + 0.0));
+            // The driver's "forward" flips with it, so the sticks do not change while the robot stands still.
+            robot.driverForwardDeg = -robot.driverForwardDeg;
             return "Alliance now " + now + ": pose mirrored to " + now + "'s side (mirrorForRed = true)";
         }
         o.unsetPose();

@@ -1142,8 +1142,8 @@ distances. INIT shows the alliance and the choice: `Aim: RED, goal x 13, y -13 i
 **A wrong pose must not aim the robot.** The odometry is only as good as its pose: autonomous's start
 spot, carried into TeleOp. So the backup is OFF (camera only, and a warning on the Driver Station:
 `Aim odometry: the pose was never set ...`) until the pose was set: autonomous ran in this match, or
-your code called `robot.odometry().setPose(...)` (holding BACK to reset "forward" changes only the
-heading and does not count). It is also off while it says the goal is farther than `maxGoalDistance`
+your code called `robot.odometry().setPose(...)` (holding BACK to reset "forward" changes only what
+"forward" means for the driver, not the pose, and does not count). It is also off while it says the goal is farther than `maxGoalDistance`
 (170 in: more than the field allows). While the camera and the odometry both see the goal and their
 distances differ by more than `cameraOdometryAgree` (6 in), the Driver Station warns
 (`Aim: camera says 60 in, odometry 48 in: ...`).
@@ -1601,7 +1601,7 @@ The whole table, with how to move each: [the button menu](../guides/buttons.md#m
 | A / X / Y / B | free / free / field-centric on/off (mecanum) / free | lift lowest / second / highest / claw |
 | D-pad up/down | free | lift next height, or launcher speed |
 | D-pad left/right | free | wrist |
-| BACK | press: **pause** everything at once (stopped on brake), a tap again: go on; held 1 s (field-centric on): also "forward" = away from you now (with odometry: its heading becomes 0, x and y stay), still paused | turret following on/off (with a turret; else free) |
+| BACK | press: **pause** everything at once (stopped on brake), a tap again: go on; held 1 s (field-centric on): also "forward" = away from you now (with odometry: the pose stays, only the driver's "forward" changes), still paused | turret following on/off (with a turret; else free) |
 | START | hold 1 s: **set pose here** (with odometry: the pose becomes `Tunables.Odometry`'s reset spot) | free |
 | START + BACK | hold START, then press BACK: debug lines (when let go); with `lib.switchAlliance(g1.start, g1.back)`, both held 1.5 s: **switch the alliance**. BACK first is only a pause | |
 | GUIDE | tap: the button map, without the free buttons (during the match too); hold 1 s: the tuning menu (PRACTICE) | free |

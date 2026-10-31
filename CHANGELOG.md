@@ -17,6 +17,32 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - Simulator: `huskylens.NAME = ...` in the robot file, a pretend HuskyLens built on the SDK's own class, for tags and
   for taught pieces. `:sim:fromConfig`, `:sim:newRobot` and `:sim:fromRobot` know it.
 - Hardware Check shows a HuskyLens and each box it sees. Cookbook recipe, a section in tutorial 18, test AIM-06.
+- `AutoDrive.turn` and `turnTo` with a time limit.
+
+### Changed
+
+- **Hold BACK to reset "forward" (with odometry): the pose stays as it was.** It used to write 0 into the pose's
+  heading. Only what "forward" means for the driver changes now. "Set pose here" still fixes a wrong pose.
+  A BACK reset now lasts for this run: after INIT again, "forward" comes from the pose.
+- `PositionMotor.tunable`, `PositionServo.tunable` and `PidTunables.of` use `Tunable.fromCode`: a second part with
+  the same name uses its own code values, unless the value was tuned.
+
+### Fixed
+
+- **Pause could start the intake again.** With a launcher `pushedBy(intake)` declared after the intake, pausing during
+  a shot sent the intake its power again, and it ran until you resumed.
+- **Opening the tuning menu left trigger-driven parts on.** `releaseAll()` now gives `bindTriggerAxis` code 0.
+- **A lift that timed out in `goToStep` kept pushing.** It now holds where it is, and the report says "timed out".
+- **Aiming with odometry went wrong after "forward" was reset** (see Changed).
+- **One motor that failed could leave others on.** A stop now reaches every motor of a lift, intake and flywheel,
+  and a failed send is sent again. A turret whose encoder read fails still stops.
+- **`turnToward` and `turnTowardWithSweep` could run past their time limit,** up to the drive's own 10 s.
+- Simulator test: "every example stops with all motors off" could not fail, because it looked after the simulator
+  had switched them off. It now looks before, with sticks and a trigger held.
+- `Tunable.fromCode`: a tuned value still stays, and its reset now goes back to this program's code value.
+- Docs: four live-tuning steps now say to copy the value back to `Tunables.java`. Five pages said a tuned value is
+  lost at a build, INIT or restart. It is not: the hub keeps it, and it wins over a later edit in `Tunables.java`.
+- Simulator guide: says the pretend IMU ignores how the hub is mounted.
 
 ## v0.22.0 - 2026-10-30
 

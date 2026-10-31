@@ -123,7 +123,7 @@ A **profile** is a set of limits for the whole robot: PRACTICE (gentle, for the 
   Until `calibrated = true`, autonomous does not run.
 
 These are read at INIT. In the tuning menu (PRACTICE profile, hold GUIDE 1 s) you can change them; the
-new value is used from the next INIT.
+new value is used from the next INIT. Then copy it back into `Tunables.java`: INIT lists the values that differ.
 
 ## 6. The driving you get for free
 

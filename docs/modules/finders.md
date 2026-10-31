@@ -295,7 +295,7 @@ Tunables.IntakeColor: nearMm = 52   // a piece is there below this
 It warns when two kinds read too close together (under 15 degrees, or 10 mm for a distance sensor),
 or when EMPTY looks like a piece (aim a distance sensor at a far wall; put a grey background behind a
 camera's spot). Copy the lines into `Tunables.java` and rebuild: a value changed only in the tuning
-menu is lost at the next INIT.
+menu stays on this hub, and it wins over a later edit in `Tunables.java`.
 
 ## HoodFinderOpMode
 
