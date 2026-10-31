@@ -1039,6 +1039,7 @@ Not built yet: a CR servo with an absolute encoder. It fits the same way: anythi
 ```java
 camera = add(Camera.limelight("limelight").goal("BLUE SCORING", "RED SCORING"));
 camera = add(Camera.webcam("Webcam 1"));
+camera = add(Camera.huskyLens("huskylens").tag(1, 34).tag(2, 35).goal("BLUE SCORING", "RED SCORING"));
 ```
 
 `goal()` (the alliance's goal, or null), `target(name)`, `target(id)`, `source()` (the
@@ -1051,6 +1052,13 @@ for example seen from under the HIVE) is never the goal: then `goal()` is null a
 says `Goal : not seen (RED SCORING is upside down (a down CELL))`. Aiming, the turret, the shot table's
 distance, LOCKED and the launcher's "aimed" checks all use `goal()`. How the camera tells:
 [vision.md](vision.md#taggroup). `target("RED SCORING")` still gives that group, upside down or not. Tunables (Limelight): `pipeline` ([all its numbers](../guides/tunables.md#camera)). It starts in INIT.
+
+**A HuskyLens** says the number you taught it, not the tag's real number, so list them with
+`tag(taughtNumber, tagNumber)`. It can look for taught colors or one object instead: `colors()`, `objects()`,
+and `label(taughtNumber, name)` for `target(name)`. Tunables: `hfovDeg` (its view angle: measure it) and
+`sizeIn` (for a rough distance; the shot table needs it). INIT says what is missing. It has no lighting test.
+What it cannot do so well, and how to teach it: [vision.md](vision.md#huskylenscamera). `isHuskyLens()`,
+`isWebcam()` and `isLimelight()` say which kind it is.
 
 Venue lighting ([vision.md](vision.md#venue-lighting)): the camera tries a few settings in INIT and
 keeps the one that sees the most AprilTags.

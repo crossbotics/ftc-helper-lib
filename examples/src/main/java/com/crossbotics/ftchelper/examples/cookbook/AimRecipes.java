@@ -234,6 +234,7 @@ public class AimRecipes {
     /** Venue lighting: the camera tries a few settings in INIT and keeps the best. */
     public static class LightingRobot extends RobotDefinition {
         public Camera camera;
+        public Camera pieceCamera;
 
         @Override
         protected void define() {
@@ -244,6 +245,13 @@ public class AimRecipes {
             camera = add(Camera.limelight("limelight").autoPipelines(0, 1, 2).goal("BLUE SCORING", "RED SCORING"));
             // A webcam: Camera.webcam("Webcam 1").autoExposure().goal(...) tries the camera's own
             // exposure, then 3, 6 and 12 ms.
+            // end recipe
+
+            // recipe: huskylens
+            // At the top of the class: public Camera pieceCamera;   Colors you taught it: ID1, ID2.
+            pieceCamera = add(Camera.huskyLens("huskylens").colors().label(1, "POLLEN").label(2, "NECTAR"));
+            // Or AprilTags: list which real tag each taught number is, and add goal(...).
+            // camera = add(Camera.huskyLens("huskylens").tag(1, 34).tag(2, 35).goal("BLUE SCORING", "RED SCORING"));
             // end recipe
         }
     }

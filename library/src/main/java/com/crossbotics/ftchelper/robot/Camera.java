@@ -1,18 +1,22 @@
 package com.crossbotics.ftchelper.robot;
 
+import com.qualcomm.hardware.dfrobot.HuskyLens;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.crossbotics.ftchelper.match.Alliance;
 import com.crossbotics.ftchelper.telemetry.RobotTelemetry;
+import com.crossbotics.ftchelper.vision.HuskyLensCamera;
 import com.crossbotics.ftchelper.vision.LimelightTags;
 import com.crossbotics.ftchelper.vision.TagGroup;
 import com.crossbotics.ftchelper.vision.TargetObservation;
 import com.crossbotics.ftchelper.vision.TargetSource;
 import com.crossbotics.ftchelper.vision.WebcamTags;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 
 /**
- * A camera that finds AprilTags: a Limelight 3A or a webcam. Other modules use it: a {@link Turret}
+ * A camera that finds AprilTags: a Limelight 3A, a webcam or a HuskyLens. Other modules use it: a {@link Turret}
  * that follows the goal, a {@link Launcher} whose speed comes from the distance.
  *
  * <pre>{@code
@@ -35,10 +39,23 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
  * (300), {@code lightingPictures} (10), {@code lightingMinPictures} (3), {@code lightingAfterStartMs}
  * (0 = stop at START with the best so far), and for a webcam {@code gain} (-1 = the camera's highest).
  *
+ * <p>A HuskyLens ({@link #huskyLens}) says the number it was TAUGHT, not the tag's real number: list
+ * them with {@link #tag}. It can also look for taught colours or an object ({@link #colors},
+ * {@link #objects}, {@link #label}). Tunables: {@code hfovDeg} (its view angle: measure it) and
+ * {@code sizeIn} (for a rough distance). No lighting test.
+ *
  * Docs: docs/modules/robot.md (section "Camera"), docs/modules/vision.md
  */
 public final class Camera extends Module<Camera> {
+    private enum Kind { LIMELIGHT, WEBCAM, HUSKYLENS }
+
+    private final Kind kind;
     private final boolean limelight;
+    // HuskyLens: what it looks for, and what its taught numbers mean.
+    private HuskyLensCamera.Mode huskyMode = HuskyLensCamera.Mode.TAGS;
+    private final Map<Integer, Integer> huskyTags = new LinkedHashMap<>();
+    private final Map<Integer, String> huskyLabels = new LinkedHashMap<>();
+    private boolean hfovMeasured = true, sizeKnown = true;
     private String blueGoal = null, redGoal = null;
     // Venue lighting: the Limelight pipelines or webcam exposures to try (null = no test).
     private int[] autoPipelines = null;
@@ -54,19 +71,76 @@ public final class Camera extends Module<Camera> {
     // When build() ran, to warn about a camera that is still not working a few seconds later.
     private long builtNanos = 0;
 
-    private Camera(boolean limelight, String device) {
+    private Camera(Kind kind, String device) {
         super(device);
-        this.limelight = limelight;
+        this.kind = kind;
+        this.limelight = kind == Kind.LIMELIGHT;
     }
 
     /** A Limelight 3A. */
     public static Camera limelight(String name) {
-        return new Camera(true, name);
+        return new Camera(Kind.LIMELIGHT, name);
     }
 
     /** A webcam (USB). */
     public static Camera webcam(String name) {
-        return new Camera(false, name);
+        return new Camera(Kind.WEBCAM, name);
+    }
+
+    /**
+     * A DFRobot HuskyLens on an I2C port (configure it as "HuskyLens"). It looks for AprilTags unless
+     * you say {@link #colors()} or {@link #objects()}.
+     *
+     * <pre>{@code
+     * camera = add(Camera.huskyLens("huskylens").tag(1, 30).tag(2, 31).goal("BLUE SCORING", "RED SCORING"));
+     * }</pre>
+     */
+    public static Camera huskyLens(String name) {
+        return new Camera(Kind.HUSKYLENS, name);
+    }
+
+    // The HuskyLens lines need a HuskyLens.
+    private void needsHuskyLens(String method) {
+        if (kind != Kind.HUSKYLENS) throw new IllegalStateException("Robot.java: " + device + ": " + method + " is for a HuskyLens");
+    }
+
+    /**
+     * HuskyLens: which real AprilTag a taught number is. Teach the tags with "Learn Multiple" on: the
+     * first is ID1, the next ID2. Needed for {@code target(tagNumber)} and for {@link #goal(String, String)}.
+     *
+     * @param taughtNumber the number on the camera's screen (ID1 = 1)
+     * @param tagNumber    the AprilTag's real number
+     */
+    public Camera tag(int taughtNumber, int tagNumber) {
+        needsHuskyLens("tag(...)");
+        huskyTags.put(taughtNumber, tagNumber);
+        return this;
+    }
+
+    /**
+     * HuskyLens: a name for a taught number, for {@code target(name)}.
+     *
+     * @param taughtNumber the number on the camera's screen
+     * @param name         the name, e.g. "POLLEN"
+     */
+    public Camera label(int taughtNumber, String name) {
+        needsHuskyLens("label(...)");
+        huskyLabels.put(taughtNumber, name);
+        return this;
+    }
+
+    /** HuskyLens: look for the colours you taught it, not AprilTags. */
+    public Camera colors() {
+        needsHuskyLens("colors()");
+        huskyMode = HuskyLensCamera.Mode.COLORS;
+        return this;
+    }
+
+    /** HuskyLens: look for the ONE object you taught it, not AprilTags. */
+    public Camera objects() {
+        needsHuskyLens("objects()");
+        huskyMode = HuskyLensCamera.Mode.OBJECTS;
+        return this;
     }
 
     /**
@@ -95,6 +169,7 @@ public final class Camera extends Module<Camera> {
      * @param pipelines the pipeline numbers to try, usual one first
      */
     public Camera autoPipelines(int... pipelines) {
+        if (kind == Kind.HUSKYLENS) throw new IllegalStateException("Robot.java: " + device + " is a HuskyLens: it has no lighting test");
         if (!limelight) throw new IllegalStateException("Robot.java: " + device + " is a webcam: use autoExposure() (autoPipelines is for a Limelight)");
         autoPipelines = pipelines == null || pipelines.length == 0 ? null : pipelines.clone();
         return this;
@@ -115,6 +190,7 @@ public final class Camera extends Module<Camera> {
      * @param exposuresMs the exposures to try, usual one first
      */
     public Camera autoExposure(long... exposuresMs) {
+        if (kind == Kind.HUSKYLENS) throw new IllegalStateException("Robot.java: " + device + " is a HuskyLens: it has no lighting test");
         if (limelight) throw new IllegalStateException("Robot.java: " + device + " is a Limelight: use autoPipelines(...) (autoExposure is for a webcam)");
         autoExposures = exposuresMs == null || exposuresMs.length == 0 ? null : exposuresMs.clone();
         return this;
@@ -126,9 +202,19 @@ public final class Camera extends Module<Camera> {
         return true;
     }
 
-    /** True for a Limelight, false for a webcam. */
+    /** True for a Limelight. */
     public boolean isLimelight() {
         return limelight;
+    }
+
+    /** True for a webcam. */
+    public boolean isWebcam() {
+        return kind == Kind.WEBCAM;
+    }
+
+    /** True for a HuskyLens. */
+    public boolean isHuskyLens() {
+        return kind == Kind.HUSKYLENS;
     }
 
     // True when the webcam shows its picture (live view, PRACTICE profile only).
@@ -146,12 +232,21 @@ public final class Camera extends Module<Camera> {
         builtNanos = System.nanoTime();
         // tryGet: null when the camera is not in the robot configuration. A camera problem must never
         // stop the OpMode (the robot still drives): a stand-in camera warns and sees nothing.
-        Object found = devices.tryGet(limelight ? Limelight3A.class : WebcamName.class, device);
+        Object found = devices.tryGet(limelight ? Limelight3A.class : kind == Kind.HUSKYLENS ? HuskyLens.class : WebcamName.class, device);
         if (found == null) {
-            source = new MissingCamera(device, limelight);
+            source = new MissingCamera(device, kindWords());
             return;
         }
-        if (limelight) {
+        if (kind == Kind.HUSKYLENS) {
+            HuskyLensCamera husky = new HuskyLensCamera(device, (HuskyLens) found).mode(huskyMode);
+            for (Map.Entry<Integer, Integer> e : huskyTags.entrySet()) husky.tag(e.getKey(), e.getValue());
+            for (Map.Entry<Integer, String> e : huskyLabels.entrySet()) husky.label(e.getKey(), e.getValue());
+            hfovMeasured = t.has("hfovDeg");
+            sizeKnown = t.has("sizeIn");
+            if (hfovMeasured) husky.hfovDeg(t.number("hfovDeg", HuskyLensCamera.GUESSED_HFOV_DEG));
+            if (sizeKnown) husky.sizeIn(t.number("sizeIn", 0));
+            source = husky;
+        } else if (limelight) {
             LimelightTags ll = new LimelightTags(device, (Limelight3A) found)
                     .pipeline((int) Math.round(t.number("pipeline", 0)));
             if (auto && autoPipelines != null) {
@@ -185,6 +280,22 @@ public final class Camera extends Module<Camera> {
                     .giveUpAfterStartMs(optional(t, "lightingAfterStartMs", 0));
         }
         source.start();
+    }
+
+    @Override
+    List<String> notes() {
+        List<String> out = super.notes();
+        if (kind != Kind.HUSKYLENS || source instanceof MissingCamera) return out;
+        if (!hfovMeasured) out.add("Tunables." + name() + ": hfovDeg missing: its turn angles use a guess of "
+                + fmt("%.0f", HuskyLensCamera.GUESSED_HFOV_DEG) + " degrees (measure it: docs/modules/vision.md#huskylenscamera)");
+        if (blueGoal != null && !sizeKnown) out.add("Tunables." + name() + ": sizeIn missing: no distance to the goal, so a shot table cannot use this camera");
+        if (blueGoal != null && huskyTags.isEmpty()) out.add(device + ": goal(...) needs tag(taughtNumber, tagNumber) lines: a HuskyLens says only taught numbers");
+        return out;
+    }
+
+    // The words for this kind of camera, for messages.
+    private String kindWords() {
+        return limelight ? "Limelight" : kind == Kind.HUSKYLENS ? "HuskyLens" : "webcam";
     }
 
     // A number that is only read when Tunables has it (no "missing" note otherwise).
@@ -275,7 +386,7 @@ public final class Camera extends Module<Camera> {
         return source == null ? null : source.target(id);
     }
 
-    /** The camera inside (a LimelightTags or WebcamTags), for anything this module does not offer. */
+    /** The camera inside (a LimelightTags, WebcamTags or HuskyLensCamera), for anything this module does not offer. */
     public TargetSource source() {
         return source;
     }
@@ -310,7 +421,21 @@ public final class Camera extends Module<Camera> {
         // On a turret (a turret follows this camera and cameraOnBody() is not used): it turns with the
         // turret in the simulator too (on=turret: measured with the turret pointing straight forward).
         if (simOnTurret != null) where += ", on=" + simOnTurret;
-        if (limelight) out.add("limelight." + device + " = name=" + device + ", " + where + "   # TODO measure the mount");
+        if (kind == Kind.HUSKYLENS) {
+            StringBuilder taught = new StringBuilder();
+            // The file lists what was taught, in the order of the taught numbers (ID1 first).
+            int last = 0;
+            for (int n : huskyTags.keySet()) last = Math.max(last, n);
+            for (int n : huskyLabels.keySet()) last = Math.max(last, n);
+            for (int n = 1; n <= last; n++) {
+                if (n > 1) taught.append('|');
+                if (huskyMode == HuskyLensCamera.Mode.TAGS && huskyTags.containsKey(n)) taught.append(huskyTags.get(n));
+                else if (huskyLabels.containsKey(n)) taught.append(huskyLabels.get(n));
+                else taught.append('-');
+            }
+            out.add("huskylens." + device + " = name=" + device + ", " + where + (t != null && t.has("hfovDeg") ? ", hfov=" + fmt("%.1f", t.number("hfovDeg", HuskyLensCamera.GUESSED_HFOV_DEG)) : "")
+                    + (last > 0 ? ", taught=" + taught : "") + "   # TODO measure the mount and hfov");
+        } else if (limelight) out.add("limelight." + device + " = name=" + device + ", " + where + "   # TODO measure the mount");
         else out.add("camera." + sectionFor(device) + " = name=" + device + ", " + where + ", hfov=70.4, width=640, height=480   # TODO measure the mount");
     }
 
@@ -320,11 +445,11 @@ public final class Camera extends Module<Camera> {
      */
     static final class MissingCamera implements TargetSource {
         private final String name;
-        private final boolean limelight;
+        private final String kindWords;
 
-        MissingCamera(String name, boolean limelight) {
+        MissingCamera(String name, String kindWords) {
             this.name = name;
-            this.limelight = limelight;
+            this.kindWords = kindWords;
         }
 
         @Override public void start() { }
@@ -332,7 +457,7 @@ public final class Camera extends Module<Camera> {
         @Override public List<TargetObservation> targets() { return java.util.Collections.emptyList(); }
         @Override public boolean isWorking() { return false; }
         @Override public String status() {
-            return "not found: no " + (limelight ? "Limelight" : "webcam") + " called \"" + name + "\" in the robot configuration";
+            return "not found: no " + kindWords + " called \"" + name + "\" in the robot configuration";
         }
         @Override public void close() { }
         @Override public String name() { return name; }

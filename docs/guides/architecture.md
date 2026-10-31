@@ -77,7 +77,7 @@ An interface is a short list of methods a class promises to have. Any class that
 | `Subsystem` | every mechanism helper | you build a new kind of mechanism |
 | `AutoStep` | `goToStep`, `shootStep`, `runForStep`... | a step needs custom logic |
 | `Feeder` | `MotorFeeder`, `ServoFeeder` | the launcher is fed a new way |
-| `TargetSource` | `WebcamTags`, `LimelightTags` | a new camera or a new kind of target |
+| `TargetSource` | `WebcamTags`, `LimelightTags`, `HuskyLensCamera` | a new camera or a new kind of target |
 
 See [Extending the library](extending.md).
 

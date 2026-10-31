@@ -50,6 +50,8 @@ final class SimRobot {
     final Map<String, SimCamera> cameras = new LinkedHashMap<>();
     // Limelights (limelight.KEY = name=limelight, ...): their pretend camera is in cameras too.
     final Map<String, SimLimelight> limelights = new LinkedHashMap<>();
+    // HuskyLens cameras (huskylens.KEY = name=huskylens, ...): their pretend camera is in cameras too.
+    final Map<String, SimHuskyLens> huskyLenses = new LinkedHashMap<>();
     private final Map<String, HardwareDevice> devices = new LinkedHashMap<>();
     // Devices described in the robot file but NOT in the configuration ("missing = a, b", or a
     // scenario's "set device NAME missing"): a part not built yet. Used at the next INIT.
@@ -367,6 +369,15 @@ final class SimRobot {
             cameras.put(llName, c);
             limelights.put(llName, new SimLimelight(c));
         }
+        for (String key : sortedKeys(p, "huskylens.")) {
+            Map<String, String> s = settings(p.getProperty(key));
+            String hName = s.containsKey("name") ? s.get("name") : key.substring("huskylens.".length());
+            if (hName.isEmpty()) throw new IllegalArgumentException("Robot file: \"" + key + "\" needs a name");
+            if (cameras.containsKey(hName)) throw new IllegalArgumentException("Robot file: two cameras are called \"" + hName + "\"");
+            SimCamera c = new SimCamera(hName, "huskylens", s, this);
+            cameras.put(hName, c);
+            huskyLenses.put(hName, new SimHuskyLens(c, s));
+        }
         imuName = p.getProperty("imu", "").trim();
         // missing = intake_deploy, lift: in the robot file (drawn, simulated) but not in the configuration.
         missingDevices.addAll(list(p.getProperty("missing", "")));
@@ -534,6 +545,7 @@ final class SimRobot {
         if (odometry != null) odometry.addDevices(devices, motors);
         for (SimCamera c : cameras.values()) if (c.device != null) devices.put(c.name, c.device);
         for (SimLimelight l : limelights.values()) devices.put(l.cam.name, l);
+        for (SimHuskyLens h : huskyLenses.values()) devices.put(h.cam.name, h);
         devices.put("Control Hub battery", voltageSensor());
     }
 

@@ -20,12 +20,12 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
  */
 final class SimCamera implements InvocationHandler {
     final String name;
-    final String kind;          // "webcam" or "limelight"
+    final String kind;          // "webcam", "limelight" or "huskylens"
     final double forwardIn, leftIn, upIn, yawDeg, pitchDeg, hfovDeg;
     final int width, height;
     // on=SHAPE: the shape it rides (a turret), or null for a camera fixed to the chassis.
     final String on;
-    final WebcamName device;     // null for a Limelight (SimLimelight is its device)
+    final WebcamName device;     // null for a Limelight or HuskyLens (SimLimelight, SimHuskyLens are their devices)
     final SimRobot robot;
     private final java.util.Set<Integer> goodPipelines;
     private final double[] goodExposureMs;
@@ -49,10 +49,12 @@ final class SimCamera implements InvocationHandler {
         yawDeg = num(s, "yaw", 0);
         pitchDeg = num(s, "pitch", 0);
         on = s.containsKey("on") && !s.get("on").trim().isEmpty() && !s.get("on").trim().equals("chassis") ? s.get("on").trim() : null;
-        // Logitech C920 at 640x480: about 70 degrees across; Limelight 3A: 54.5 (its spec sheet)
-        hfovDeg = num(s, "hfov", kind.equals("limelight") ? 54.5 : 70.4);
-        width = (int) num(s, "width", 640);
-        height = (int) num(s, "height", 480);
+        // Logitech C920 at 640x480: about 70 degrees across; Limelight 3A: 54.5 (its spec sheet);
+        // HuskyLens: 60 is a guess (no number from the seller), and its boxes are in a 320x240 screen (FTC docs).
+        boolean husky = kind.equals("huskylens");
+        hfovDeg = num(s, "hfov", kind.equals("limelight") ? 54.5 : husky ? 60 : 70.4);
+        width = (int) num(s, "width", husky ? 320 : 640);
+        height = (int) num(s, "height", husky ? 240 : 480);
         if (hfovDeg <= 1 || hfovDeg >= 179) throw new IllegalArgumentException("Robot file: camera." + name + ": hfov must be between 1 and 179 degrees");
         // Pretend venue lighting (for the library's lighting test): goodPipelines=1|2 = a Limelight sees
         // tags only on these pipelines; goodExposureMs=4-10 = a webcam sees tags only with a manual
@@ -284,7 +286,7 @@ final class SimCamera implements InvocationHandler {
     /** The decimation for the page: the one used last, or the usual default (the SDK's 3; a Limelight 2). */
     double decimationForPage() {
         double d = decimationNow;
-        return Double.isNaN(d) ? (kind.equals("limelight") ? 2 : 3) : d;
+        return Double.isNaN(d) ? (kind.equals("webcam") ? 3 : 2) : d;
     }
 
     /** Why the camera does or does not see one tag (the page's sight lines). */

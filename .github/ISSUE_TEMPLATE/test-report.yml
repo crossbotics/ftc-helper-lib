@@ -82,6 +82,7 @@ body:
         - None
         - Limelight 3A
         - Webcam
+        - HuskyLens
     validations:
       required: true
   - type: dropdown

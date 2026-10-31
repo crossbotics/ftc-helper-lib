@@ -1207,10 +1207,10 @@ function renderHub(s) {
   $("#touches").innerHTML = s.touches.map(t =>
     `<span class="chip ${t.pressed ? "on" : ""}" data-touch="${escapeHtml(t.name)}">${escapeHtml(t.name)}: ${t.pressed ? "pressed" : "open"}${t.manual ? " (held)" : ""}</span>`).join("") || '<span class="muted">none</span>';
   $("#cameras").innerHTML = (s.cameras || []).map(c =>
-    `<div class="cam"><b>${escapeHtml(c.name)}</b> <span class="muted">${c.kind === "limelight" ? "Limelight 3A" : "webcam"}, ${c.width}x${c.height}, ${c.hfov}° across, ` +
+    `<div class="cam"><b>${escapeHtml(c.name)}</b> <span class="muted">${c.kind === "limelight" ? "Limelight 3A" : c.kind === "huskylens" ? "HuskyLens" : "webcam"}, ${c.width}x${c.height}, ${c.hfov}° across, ` +
     `${c.forward} in forward, ${c.left} in left, ${c.up} in up, yaw ${c.yaw}°, pitch ${c.pitch}°</span><br>` +
-    (!c.open ? `<span class="muted">Not open (${c.kind === "limelight" ? "the OpMode has not called start()" : "the OpMode has no VisionPortal on it"}).</span>`
-      : c.seen.length ? `Tags in the picture: ${c.seen.join(", ")}<ul>${c.detections.map(d => `<li>${escapeHtml(d)}</li>`).join("")}</ul>`
+    (!c.open ? `<span class="muted">Not open (${c.kind === "webcam" ? "the OpMode has no VisionPortal on it" : "the OpMode has not called start()"}).</span>`
+      : c.seen.length || c.detections.length ? `${c.seen.length ? `Tags in the picture: ${c.seen.join(", ")}` : "In the picture:"}<ul>${c.detections.map(d => `<li>${escapeHtml(d)}</li>`).join("")}</ul>`
       : '<span class="muted">Open, no tags in the picture.</span>') + `</div>`).join("") || '<span class="muted">none (add camera.NAME to the robot file)</span>';
   const bat = $("#battery");
   if (document.activeElement !== bat) bat.value = s.battery;
@@ -2244,11 +2244,11 @@ function buildCameras(cams) {
     const far = [[-hx, -hy], [hx, -hy], [hx, hy], [-hx, hy]].map(([x, y]) => new THREE.Vector3(x, y, -L));
     const pts = [];
     far.forEach((p, i) => { pts.push(new THREE.Vector3(0, 0, 0), p, p, far[(i + 1) % 4]); });
-    const color = c.kind === "limelight" ? 0x39d353 : 0xffc400;     // Limelight green, webcam yellow
+    const color = c.kind === "limelight" ? 0x39d353 : c.kind === "huskylens" ? 0x4aa8ff : 0xffc400;     // Limelight green, HuskyLens blue, webcam yellow
     const cone = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color }));
     cone.layers.set(1); holder.add(cone);
     v3.camGroup.add(holder);
-    v3.simCams.push({ name: c.name, cam, cone, holder, color, dim: c.kind === "limelight" ? 0x2a6b35 : 0x7a6a33, pos: null });
+    v3.simCams.push({ name: c.name, cam, cone, holder, color, dim: c.kind === "limelight" ? 0x2a6b35 : c.kind === "huskylens" ? 0x2a5f8f : 0x7a6a33, pos: null });
   }
   $("#camViewLabel").style.display = cams.length ? "" : "none";
   const pick = $("#camPick");

@@ -81,4 +81,5 @@ the draft goes next to it (`robot.properties.draft`). An example configuration i
 | `RevTouchSensor`, `DigitalDevice`, `ModernRoboticsAnalogTouchSensor` | `touch.NAME` |
 | `Webcam` | `camera.KEY = name=...` |
 | `EthernetDevice` (a Limelight) | `limelight.KEY = name=...` |
+| `HuskyLens` | `huskylens.KEY = name=...` (then add `hfov=` and `taught=`) |
 | anything else | a note: not simulated yet |

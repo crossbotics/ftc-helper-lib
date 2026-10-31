@@ -109,6 +109,7 @@ public final class SimConfigImport {
         if (tag.equals("goBILDAPinpoint")) return "pinpoint";
         if (tag.equals("SparkFunOTOS")) return "otos";
         if (tag.equals("EthernetDevice") || tag.contains("Limelight")) return "limelight";
+        if (tag.equals("HuskyLens")) return "huskylens";
         return "other";
     }
 
@@ -289,6 +290,11 @@ public final class SimConfigImport {
                 b.append("camera.").append(unique(safe(d.name), keys)).append(" = name=").append(d.name)
                         .append(", forward=0, left=0, up=10, yaw=0, pitch=0   # TODO: where it sits and how it is tilted\n");
                 questions.add("Webcam \"" + d.name + "\": where is it (forward/left/up from the robot's centre, inches) and how is it tilted?");
+            }
+            if (k.equals("huskylens")) {
+                b.append("huskylens.").append(unique(safe(d.name), keys)).append(" = name=").append(d.name)
+                        .append(", forward=0, left=0, up=10, yaw=0, pitch=0   # TODO: where it sits and its tilt; taught=30|31 what you taught it, in order\n");
+                questions.add("HuskyLens \"" + d.name + "\": where does it sit, how is it tilted, and what did you teach it (ID1, ID2...)?");
             }
             if (k.equals("limelight")) {
                 b.append("limelight.").append(unique(safe(d.name), keys)).append(" = name=").append(d.name)

@@ -10,7 +10,7 @@ A **library** is code someone else wrote that your program can use, so you do no
 It takes the jobs every robot needs and makes each one a line or two of clear code: motors and
 servos, buttons, mecanum and standard (tank) drive, lifts and arms that cannot hurt themselves,
 intakes with jam back-out, a full shooter kit (flywheel, hood, turret, feeder), AprilTag aiming with a
-webcam or Limelight 3A, odometry and paths, a piece count, lights for the drivers, rules that keep two
+webcam, Limelight 3A or HuskyLens, odometry and paths, a piece count, lights for the drivers, rules that keep two
 parts from hitting each other, autonomous modes written as a list of steps, live tuning, practice and
 competition profiles, a hardware check, and a **simulator** that runs your real code on a laptop with
 the field in 3D (see below). It started from our 2025-26 (DECODE) robot code, and is
@@ -180,7 +180,7 @@ the library, with its own docs page. (In the lessons, a module is also a ready-m
 | Pedro (add-on) | `com.crossbotics.ftchelper.pedro` | Pedro Pathing on your robot's drive and odometry lines: `follower(Pedro.follower(...))` in Robot.java, `follow(...)` steps with `PedroPath` lines and curves in our field numbers, Pedro's tuners on the same lines. In the `pedro` folder; only teams that add it get Pedro. | [pedro.md](docs/modules/pedro.md) |
 | Mechanism | `com.crossbotics.ftchelper.mechanism` | Lifts/arms to named positions, intakes with jam back-out, servos with positions or degrees, continuous servos. | [mechanism.md](docs/modules/mechanism.md) |
 | Launcher | `com.crossbotics.ftchelper.launcher` | Flywheel in RPM, shot table, feeders, turret with safe limits, and a Launcher that only feeds when ready. | [launcher.md](docs/modules/launcher.md) |
-| Vision | `com.crossbotics.ftchelper.vision` | AprilTags with a webcam (SDK 12 clusters too) or a Limelight 3A, one interface, safe aiming. | [vision.md](docs/modules/vision.md) |
+| Vision | `com.crossbotics.ftchelper.vision` | AprilTags with a webcam (SDK 12 clusters too), a Limelight 3A or a HuskyLens (colors too), one interface, safe aiming. | [vision.md](docs/modules/vision.md) |
 | Robot | `com.crossbotics.ftchelper.robot` | The robot in five files: Robot.java (what is on it), Tunables.java (its numbers), Controls.java (the buttons and the TeleOp), Actions.java (moves that use several parts) and autos. Ready-made modules: drive, intake, lift (one or two motors), arm, claw, wrist, positioner (any servo with named positions), turret, launcher with a hood and a feeder (indexer), camera, aim (whole-robot aim, the odometry backup, shooting on the move), pieces (a piece count from color sensors), lights; interlock rules that keep two parts apart; the odometry and Pedro lines; parts not on the robot yet (`.optional()`). | [robot.md](docs/modules/robot.md) |
 | TeleOp | `com.crossbotics.ftchelper.teleop` | EasyTeleOp: a whole TeleOp where you add only your mechanisms and buttons; driving, timer, tuning menu and safety come with it. | [teleop.md](docs/modules/teleop.md) |
 | Auto | `com.crossbotics.ftchelper.auto` | Autonomous as a list of named steps; EasyAuto does menu, timer, mirroring, park time, report. | [auto.md](docs/modules/auto.md) |

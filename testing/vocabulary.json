@@ -39,6 +39,7 @@
     "pedro": {"label": "Pedro Pathing in the project", "group": "Odometry", "field": "robot_has", "options": ["Pedro Pathing added to the project"]},
     "limelight": {"label": "Limelight 3A", "group": "Camera", "field": "camera", "options": ["Limelight 3A"]},
     "webcam": {"label": "Webcam", "group": "Camera", "field": "camera", "options": ["Webcam"]},
+    "huskylens": {"label": "HuskyLens", "group": "Camera", "field": "camera", "options": ["HuskyLens"]},
     "flywheel": {"label": "Flywheel shooter", "group": "Shooter", "field": "shooter", "options": ["Flywheel (no turret)", "Flywheel on a turret"]},
     "turret": {"label": "Turret", "group": "Shooter", "field": "shooter", "options": ["Flywheel on a turret"]},
     "home-switch": {"label": "Turret home switch (touch or magnetic)", "group": "Shooter", "field": "robot_has", "options": ["Turret home switch (touch or magnetic)"]},

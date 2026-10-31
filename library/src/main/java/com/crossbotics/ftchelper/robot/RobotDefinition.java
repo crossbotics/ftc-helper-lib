@@ -1067,7 +1067,7 @@ public abstract class RobotDefinition {
         out.add(new Feature(Feature.Kind.TOGGLE, "Reverse drive", "g1.x.toggle(robot.reverseDriveMode()).rumble()", "a drive",
                 drive == null ? "a drive" : "", "the back is the front (robot-centric driving)"));
         Camera webcam = null;
-        for (Module<?> m : modules) if (m instanceof Camera && !((Camera) m).isLimelight()) { webcam = (Camera) m; break; }
+        for (Module<?> m : modules) if (m instanceof Camera && ((Camera) m).isWebcam()) { webcam = (Camera) m; break; }
         out.add(new Feature(Feature.Kind.AUTOMATIC, "Camera live view (webcam)", "", "a webcam",
                 webcam == null ? "a webcam (a Limelight has its own web page)" : "",
                 webcam == null ? "" : "PRACTICE profile: Driver Station menu > Camera Stream, in INIT"));

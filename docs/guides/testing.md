@@ -99,7 +99,7 @@ Run the **Hardware Check** OpMode ([starter kit](../starter-kit.md), or
 | touch / magnetic switches | change when pressed / magnet near | wiring; magnetic: false = near |
 | IMU | yaw goes UP when the robot turns LEFT | the logo/USB directions in the drive's `.imu("imu", LogoFacingDirection..., UsbFacingDirection...)` in `Robot.java` |
 | distance / color | sensible numbers | wiring, I2C port, configuration type |
-| camera | listed; Limelight "connected" | USB / Ethernet cable, configuration name |
+| camera | listed; Limelight "connected"; HuskyLens `Answers: yes` and a `Sees` line per box | USB / Ethernet / I2C cable, configuration name; a HuskyLens's Protocol Type |
 | battery | 12.5 V or more when charged | charge or replace; under 12.0 V never play a match |
 | Robot.java's devices (with `robot()`) | `Robot.java: every device is in the configuration`, or only the parts you know are not built yet (`optional, so the part is off`) | add the device to the configuration, or fix its name ([parts not on the robot yet](../modules/robot.md#parts-not-on-the-robot-yet)) |
 

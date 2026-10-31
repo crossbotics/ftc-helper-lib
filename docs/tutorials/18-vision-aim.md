@@ -54,6 +54,19 @@ otherwise a webcam.
 After this line, the program never cares which camera it is: `camera.update()`, `camera.target("RED SCORING")`,
 `camera.status()`. Next year's camera is a new class with the same methods.
 
+**A third kind: the HuskyLens.** It has the same methods, with one difference you must handle. It says
+the number you TAUGHT it on its screen, not the tag's real number, so you tell it which is which:
+
+```java
+TargetSource camera = HuskyLensCamera.create(hardwareMap, "huskylens")
+        .tag(1, 34).tag(2, 35); // (1)!
+```
+
+1. The first tag you taught is number 1. It is really AprilTag 34. Now `camera.target(34)` works.
+
+This lesson's program offers only the other two in its menu. Its bearing comes from a box in the picture, and its distance is only a rough estimate. Teaching it, and what
+it cannot do so well: [the HuskyLens section](../modules/vision.md#huskylenscamera).
+
 The webcam needs 1-2 s to start, so start it in INIT. The INIT loop shows `camera.status()` and how
 many tags it sees: check that before START.
 

@@ -22,7 +22,7 @@ public class HardwareCheck extends HardwareCheckOpMode { }
 ```
 
 It finds: motors, continuous-rotation (CR) servos that spin like a motor, servos, the IMU, touch sensors, digital channels
-(magnetic switches, beam breaks), color and distance sensors, analog inputs, webcams and Limelights.
+(magnetic switches, beam breaks), color and distance sensors, analog inputs, webcams, Limelights and HuskyLens cameras (it shows each box it sees, with the taught number).
 It also shows the battery voltage and warns below 12.0 V.
 
 **With your robot in five files**, give it the robot, and INIT also checks Robot.java against the

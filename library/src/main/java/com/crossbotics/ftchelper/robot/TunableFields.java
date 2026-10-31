@@ -44,8 +44,8 @@ final class TunableFields {
         part("Buttons", "holdSec", "tapGapSec");
         part("CameraFix", "blend", "enabled", "maxAgeMs", "maxJumpIn", "maxSpeedInPerSec", "maxTurnDegPerSec", "minTags",
                 "turnDegBlue", "turnDegRed");
-        part("Camera", "autoLighting", "exposureMs", "gain", "lightingAfterStartMs", "lightingMinPictures",
-                "lightingPictures", "lightingSettleMs", "liveView", "pipeline");
+        part("Camera", "autoLighting", "exposureMs", "gain", "hfovDeg", "lightingAfterStartMs", "lightingMinPictures",
+                "lightingPictures", "lightingSettleMs", "liveView", "pipeline", "sizeIn");
         part("Hood", "angleA", "angleB", "byHandPerSec", "calibration", "kP", "maxPower", "posA", "posB",
                 "startAngle", "stepAngle", "tolerance", "travelSec", "trimMax");
         part("Indexer", "feedSec", "power", "push", "pushSec", "rest", "returnSec");

@@ -2,6 +2,22 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+**What matters for your robot**
+
+- **HuskyLens support, not yet tried on a real camera.** `Camera.huskyLens("huskylens")` finds AprilTags, colors or
+  one object. It says only the numbers you taught it, so you list which real tag each one is. Nothing changes if you
+  do not use one.
+
+### Added
+
+- `HuskyLensCamera` (vision) and `Camera.huskyLens(name)` with `tag`, `label`, `colors()`, `objects()`, and Tunables
+  `hfovDeg` and `sizeIn`. Reads run on a helper thread. A goal works with 2 taught tags of a group in view.
+- Simulator: `huskylens.NAME = ...` in the robot file, a pretend HuskyLens built on the SDK's own class, for tags and
+  for taught pieces. `:sim:fromConfig`, `:sim:newRobot` and `:sim:fromRobot` know it.
+- Hardware Check shows a HuskyLens and each box it sees. Cookbook recipe, a section in tutorial 18, test AIM-06.
+
 ## v0.22.0 - 2026-10-30
 
 **What matters for your robot**

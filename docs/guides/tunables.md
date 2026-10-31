@@ -62,6 +62,7 @@ back into `Tunables.java`. The tables further down list every setting, part by p
 | The wires allow a turret to turn more or less | [`Turret.min`, `max`](#turret) | Motor Finder |
 | **Camera and sensors** | | |
 | The camera pictures are too dark or noisy | [`Camera.gain`](#camera) | more / less |
+| A HuskyLens's turn angles are too big or too small | [`Camera.hfovDeg`](#camera) | measure it |
 | A color sensor sees pieces that are not there | [`nearMm`](#piecesensor) | less |
 | A color sensor mixes up kinds of piece | [`hueTolerance`](#piecesensor) | less |
 
@@ -582,6 +583,8 @@ menu. Module: [Camera](../modules/robot.md#camera).
 | `lightingPictures` | the test: pictures per setting | count | 10 | no | none | results vary |
 | `lightingMinPictures` | the test: pictures with tags a setting needs | count | 3 | no | none | a bad setting wins |
 | `lightingAfterStartMs` | the test: keep trying this long after START (no targets meanwhile) | ms | 0 | no | none | rarely |
+| `hfovDeg` | a HuskyLens: its view angle, left edge to right edge of the picture | degrees | 60 (a guess) | no | measure ([how](../modules/vision.md#huskylenscamera)) | always: measure yours |
+| `sizeIn` | a HuskyLens: the real size of what it looks at, for a rough distance (none: no distance) | inches | none | no | measure | the longest side it shows: a tag's black square, a ball's width |
 
 ## PieceSensor
 

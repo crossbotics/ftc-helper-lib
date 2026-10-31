@@ -572,6 +572,7 @@ default):
 | `color.NAME = at=ready` | | a colour sensor with distance (REV Color Sensor V3) that sees the piece at one spot: `at=ready` (next to fire) or `at=intake` ([game pieces](#game-pieces)) |
 | `distance.NAME = at=intake, acrossMm=150` | `acrossMm=150` | a distance sensor across a channel: `acrossMm` minus the piece's size when one is there ([game pieces](#game-pieces)) |
 | `camera.NAME = ...` | | a webcam or Limelight ([cameras](#cameras)); `on=turret`: it turns with the turret |
+| `huskylens.NAME = ...` | | a HuskyLens ([cameras](#cameras)); `taught=` says what it was taught |
 | `shape.NAME = TYPE, ...` | | a part to draw and check ([robot shapes](#robot-shapes)). Sizes when `size=` is left out: slide 2x2x12, arm 10x2x2, turret 8x8x2, claw 3x1x3, roller 2x12x2, flywheel 4x2x4 |
 | `collect.NAME = shape=a+b, motor=M, holds=N` | `reach=0.75`, `holds=4` | takes pieces in ([game pieces](#game-pieces)); `crservo=` instead of `motor=`, `inward=-`; `limits=NECTAR:0+POLLEN:3`: the most of one kind (`0` = never that kind; a name matches every kind that contains it). Preload pieces that do not fit wait on the tiles behind the robot |
 | `shoot.NAME = shape=S, ...` | `angle=40`, `share=0.5` | shoots pieces: `spin=`, `speed=` (a fixed speed, in/s), `table=` (a shot table, path from the robot file), `flywheel=` (which flywheel, when there are two), `hood=SERVO, hoodAt0=A, hoodAt1=B` (the angle follows a hood servo: A with the servo at 0, B at 1) |
@@ -1339,6 +1340,19 @@ a floor map of where it can see them ([Layers](#layers)).
 ```properties
 limelight.ll = name=limelight, forward=6, left=-3, up=14, yaw=0, pitch=25
 ```
+
+**HuskyLens**: the same settings with `huskylens.` (boxes in its 320 x 240 screen; hfov default 60 is a guess: use the
+number you measured). `taught=` lists what you taught it, in order: tag numbers, or piece names from the field
+file for colors and objects. `-` skips a number.
+
+```properties
+huskylens.h = name=huskylens, forward=6, up=12, pitch=30, hfov=60, taught=34|35|36|37
+huskylens.p = name=piececam, forward=8, up=8, pitch=-15, taught=POLLEN|NECTAR
+```
+
+It sends what the SDK's driver sends: boxes with the taught number (0 for an untaught tag), at most 6. Its
+smallest box is a guess (13 pixels for a tag, 6 for a piece). Not simulated: wrong matches, light, a piece
+hiding another, line and face modes, the buttons.
 
 **A camera on a turret** (or an arm or slide): add `on=` and the shape's name. The camera then turns
 (and moves) with that part. Measure forward/left/up/yaw with the turret pointing straight forward (its
