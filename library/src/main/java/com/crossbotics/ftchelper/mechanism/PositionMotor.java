@@ -255,7 +255,7 @@ public class PositionMotor implements Subsystem {
         // value (at least 1), so big and small positions both tune in sensible steps.
         for (Map.Entry<String, Double> e : positions.entrySet()) {
             double step = Math.max(1, Math.abs(e.getValue()) / 20);
-            positionTunables.put(e.getKey(), Tunable.number(prefix + "/" + e.getKey(), e.getValue(), step));
+            positionTunables.put(e.getKey(), Tunable.fromCode(prefix + "/" + e.getKey(), e.getValue(), step));
         }
         return this;
     }
@@ -461,7 +461,8 @@ public class PositionMotor implements Subsystem {
 
     /**
      * A step: go to a named position and wait until there (or the step timeout). Only for autonomous:
-     * the step waits on purpose, and keeps updating every mechanism while it waits.
+     * the step waits on purpose, and keeps updating every mechanism while it waits. Not there in time
+     * (a jam?): it holds where it is, so it stops pushing, and the end report says "timed out".
      */
     public AutoStep goToStep(String positionName) {
         // "ctx -> { ... }" is a small piece of code handed over to run later, when the routine reaches
@@ -469,7 +470,13 @@ public class PositionMotor implements Subsystem {
         return ctx -> {
             goTo(positionName);
             // The time limit means a stuck lift cannot use up the whole autonomous.
-            ctx.waitUntil(this::isAtTarget, timeoutSec);
+            if (!ctx.waitUntil(this::isAtTarget, timeoutSec)) {
+                // Also when the wait ended early (park time): the next step may not update it.
+                boolean timedOut = ctx.isActive();
+                hold();
+                update();
+                if (timedOut) ctx.note("timed out");
+            }
         };
     }
 

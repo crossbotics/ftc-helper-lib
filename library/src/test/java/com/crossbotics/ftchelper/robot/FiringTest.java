@@ -326,4 +326,43 @@ public class FiringTest {
         assertTrue(!a.isRunning());
         assertEquals("done", a.result());
     }
+
+    // Review, 2026-10-30: the launcher gave the intake back during pause, and that sent its power again.
+    @Test public void pausingWhileTheIntakePushesAShotLeavesTheIntakeStopped() throws Exception {
+        PretendDevices d = new PretendDevices();
+        Bot r = new Bot();
+        r.setup(d);
+        r.startForTests();
+        PretendMotor fly = d.motor("launcher");
+        r.launcher.spinUp();
+        runFor(r, fly, 0.3);
+        r.intake.in();
+        r.launcher.fire();
+        runFor(r, fly, 0.15);                                 // the stop has opened: the intake pushes
+        assertTrue(r.intake.isPushingForShot());
+        r.pauseAll();
+        assertEquals("nothing updates while paused: it must be off", 0, d.motor("intake").power, 1e-9);
+        r.resume();
+        loop(r, fly, 0);
+        assertTrue("after pause it runs as the driver left it", d.motor("intake").power > 0);
+    }
+
+    @Test public void aFailedIntakeSendIsSentAgainAndReachesTheOtherMotors() {
+        PretendDevices d = new PretendDevices();
+        Bot r = new Bot();
+        r.setup(d);
+        r.startForTests();
+        r.intake.in();
+        r.all().update();
+        assertTrue(d.motor("intake").power > 0);
+        d.motor("intake").failSetPower = true;
+        try {
+            r.intake.stop();
+        } catch (RuntimeException expected) {
+            // the motor said no
+        }
+        d.motor("intake").failSetPower = false;
+        r.intake.stop();
+        assertEquals("the second stop is sent, not skipped as the same", 0, d.motor("intake").power, 1e-9);
+    }
 }

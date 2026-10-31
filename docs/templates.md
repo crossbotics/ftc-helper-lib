@@ -87,7 +87,7 @@ in `Robot.java`:
 
 **Numbers:** every number in `Tunables.java` is a starting value. Find the real ones with the
 [finders](guides/finders.md). If you change a number live on the robot (the tuning menu), copy the new
-value back into `Tunables.java`: INIT lists the values that differ. If you do not, the next build loses it.
+value back into `Tunables.java`: INIT lists the values that differ. If you do not, the hub keeps using its saved value, even after you edit that number in `Tunables.java`, and another hub does not have it.
 
 **Try it first in the simulator.** The kit bots have robot files: for example
 `./gradlew :sim:run -Probot=sim/robots/starter-bot-rev.properties -PteamCode=none`, then pick

@@ -170,4 +170,21 @@ public class SafeMotorTest {
         // Target 5000 is clamped to 1000: error 10 -> power 0.1, not 1.0.
         assertEquals(0.1, lift.moveTo(5000, pid), E);
     }
+
+    // Review, 2026-10-30: one motor that failed left its partner on its old power.
+    @Test public void aStopReachesThePartnerEvenIfTheFirstMotorFails() {
+        FakeMotor a = new FakeMotor(), b = new FakeMotor();
+        SafeMotor lift = new SafeMotor(a.motor).setLimits(0, 1000).alsoPowers(b.motor);
+        a.position = 500;
+        lift.setPower(0.5);
+        assertEquals(0.5, b.power, 1e-9);
+        a.failSetPower = true;
+        try {
+            lift.stop();
+            org.junit.Assert.fail("the error is still reported");
+        } catch (RuntimeException expected) {
+            assertEquals("motor unplugged", expected.getMessage());
+        }
+        assertEquals(0, b.power, 1e-9);
+    }
 }

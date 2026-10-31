@@ -426,4 +426,38 @@ public class LibraryControlsTest {
         assertEquals(Alliance.BLUE, r.alliance());
         assertNull(r.camera.goal());
     }
+
+    // Review, 2026-10-30: BACK wrote 0 into the pose's heading, so aiming at a field point turned wrongly.
+    @Test public void forwardForTheDriverLeavesThePoseAndTheAimAlone() {
+        PoseControls c = new PoseControls();
+        c.bot().setup(devices());
+        c.bot().resetPose(-24, 0, 90);
+        c.bot().odometry().update();
+        com.crossbotics.ftchelper.drive.DriverHeading h = c.createHeading(null);
+        assertEquals(90, h.degrees(), 1e-6);
+        double bearing = c.bot().aim().fromOdometry().bearingDeg;
+        h.reset();
+        c.bot().odometry().update();
+        assertEquals("forward for the driver is here now", 0, h.degrees(), 1e-6);
+        assertEquals("the pose did not change", 90, c.bot().pose().headingDeg, 1e-6);
+        assertEquals("the aim did not change", bearing, c.bot().aim().fromOdometry().bearingDeg, 1e-6);
+        // A pose set again is true: forward is the field's again.
+        c.bot().resetPose(-24, 0, 45);
+        c.bot().odometry().update();
+        assertEquals(45, h.degrees(), 1e-6);
+    }
+
+    @Test public void switchingAllianceKeepsForwardForTheDriver() {
+        PoseControls c = new PoseControls();
+        c.bot().setup(devices());
+        c.bot().resetPose(-24, 0, 60);
+        c.bot().odometry().update();
+        com.crossbotics.ftchelper.drive.DriverHeading h = c.createHeading(null);
+        h.reset();
+        assertEquals(0, h.degrees(), 1e-6);
+        assertTrue(c.bot().resetMirrorsForRed());
+        ControlMap.poseAfterSwitch(c.bot(), Alliance.RED, null);
+        c.bot().odometry().update();
+        assertEquals("the robot did not turn", 0, h.degrees(), 1e-6);
+    }
 }

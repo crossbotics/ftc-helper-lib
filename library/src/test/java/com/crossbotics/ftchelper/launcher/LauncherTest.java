@@ -493,4 +493,22 @@ public class LauncherTest {
         assertTrue(turret.aimAtTarget(new com.crossbotics.ftchelper.vision.TargetObservation(1, "t", 10, 40, now[0]), false));
         assertEquals(6, turret.getTargetAngle(), E);
     }
+
+    // Review, 2026-10-30: a mode change that failed skipped the power 0 on that motor.
+    @Test public void flywheelStopSendsPowerZeroEvenIfTheModeChangeFails() {
+        FakeMotor m = new FakeMotor();
+        Fakes.Clock c = new Fakes.Clock();
+        Flywheel fw = new Flywheel("fly", m.motor).withClock(c::get).countsPerRev(28);
+        fw.setRpm(3000);
+        fw.update();
+        m.power = 0.5;
+        m.failSetMode = true;
+        try {
+            fw.stop();
+            fw.update();
+        } catch (RuntimeException reported) {
+            assertEquals("mode failed", reported.getMessage());
+        }
+        assertEquals(0, m.power, E);
+    }
 }

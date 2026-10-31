@@ -250,4 +250,48 @@ public class MechanismTest {
         claw.goTo("OPNE");
         assertTrue(claw.getWarning().contains("OPNE"));
     }
+
+    // Review, 2026-10-30: a jammed lift kept its target and pushed on through the next steps.
+    @Test public void goToStepThatTimesOutHoldsWhereItIsAndSaysSo() {
+        FakeMotor m = new FakeMotor();
+        PositionMotor lift = lift(m);
+        String[] note = {""};
+        boolean[] active = {true};
+        com.crossbotics.ftchelper.auto.AutoContext ctx = new com.crossbotics.ftchelper.auto.AutoContext() {
+            @Override public boolean isActive() { return active[0]; }
+            @Override public void loop() { }
+            @Override public boolean waitUntil(java.util.function.BooleanSupplier done, double sec) { lift.update(); m.power = 0.5; return false; }
+            @Override public void waitFor(double sec) { }
+            @Override public double secondsLeft() { return 30; }
+            @Override public com.crossbotics.ftchelper.telemetry.RobotTelemetry telemetry() { return null; }
+            @Override public void note(String text) { note[0] = text; }
+        };
+        m.position = 500;                                    // jammed here on the way to HIGH
+        lift.goToStep("HIGH").run(ctx);
+        assertEquals("timed out", note[0]);
+        assertEquals("it no longer wants HIGH", 500, lift.getTarget(), 1e-6);
+        assertEquals("so it stops pushing, with no other update", 0, m.power, 1e-6);
+        // Park time ended the wait: the same, and no "timed out" (it did not time out).
+        note[0] = "";
+        active[0] = false;
+        m.power = 0.5;
+        lift.goToStep("HIGH").run(ctx);
+        assertEquals("", note[0]);
+        assertEquals(0, m.power, 1e-6);
+    }
+
+    // Review, 2026-10-30: two programs with the same name kept the first one's numbers (plain parts).
+    @org.junit.Test public void aSecondPartWithTheSameNameUsesItsOwnCodeValues() {
+        com.crossbotics.ftchelper.tuning.TuningReset.clear();
+        new PositionMotor("lift", new FakeMotor().motor).limits(0, 2600).pid(0.004, 0, 0, 0)
+                .position("HIGH", 2400).tunable("SameName");
+        FakeMotor m = new FakeMotor();
+        PositionMotor second = new PositionMotor("lift", m.motor).limits(0, 2600).pid(0.009, 0, 0, 0)
+                .position("HIGH", 1000).tunable("SameName");
+        assertEquals(1000, com.crossbotics.ftchelper.tuning.Tunable.number("SameName/HIGH", -1, 1).get(), 1e-9);
+        assertEquals(0.009, com.crossbotics.ftchelper.tuning.Tunable.number("SameName/kP", -1, 1).get(), 1e-9);
+        second.goTo("HIGH");
+        assertEquals(1000, second.getTarget(), 1e-9);
+        com.crossbotics.ftchelper.tuning.TuningReset.clear();
+    }
 }

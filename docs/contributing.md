@@ -155,17 +155,20 @@ their version does not have. A release moves `docs-live` to the new tag (step 4 
 ## Releasing a version
 
 The programming lead does this after merging changes. `vX.Y.Z` is the new version, e.g. `v0.19.0`.
+`tools/release.py` does the steps and stops at the first problem, so a step cannot be forgotten.
 
-1. In `CHANGELOG.md`, rename "Unreleased" to the new version and date, e.g. `## vX.Y.Z - 2026-11-01`.
-   Then `python3 tools/check_tests.py --set-since vX.Y.Z` (the tests that said `since: unreleased`).
-2. Commit, then tag and push (`-a` makes an annotated tag, like every release tag in this repo):
+1. Get the changelog and the test list ready. This renames "Unreleased" in `CHANGELOG.md` to the new version and
+   today's date, and sets `since:` on the tests that said `since: unreleased`:
 
 ```bash
-git tag -a vX.Y.Z -m "vX.Y.Z"
-git push origin main --tags
+python3 tools/release.py prepare vX.Y.Z
 ```
 
-3. Make a **GitHub release** from the tag. Its notes have three parts, in this order:
+   If it stops after it changed files, run `git restore CHANGELOG.md testing/`, fix the problem and run it again.
+
+2. Read the changes, run the checks in `AGENTS.md`, and commit.
+3. Write the notes of the **GitHub release** in a file, `notes.md` in the repo's top folder (git ignores it). They have three parts, in this order
+   (the script stops if one is missing):
    - **What's new:** 3 to 6 lines in plain words, one per new feature, for a student who will not read
      the rest. Say what it does for the team, not how it is built.
    - **Plain words in these first two parts.** Write for an FTC student who does not code: short
@@ -177,21 +180,17 @@ git push origin main --tags
      Then a link to [Keep it up to date](https://crossbotics.com/ftc-helper/docs/02-keep-up-to-date/).
    - **Full change list:** that version's CHANGELOG part, pasted as it is.
 
-   On GitHub: **Releases** > **Draft a new release**, choose the tag, paste the notes, **Publish
-   release**. Or:
+4. Publish. It runs the checks that need no Gradle (the Gradle tests are step 2), tags, pushes `main` and the tag together, makes the GitHub release, moves
+   `docs-live` to the release, and checks that `docs-live` holds the same files as the tag. `--dry-run` gets the
+   latest from GitHub and runs only the checks. It pushes nothing:
 
 ```bash
-gh release create vX.Y.Z --verify-tag --title "vX.Y.Z" --notes-file notes.md
+python3 tools/release.py publish vX.Y.Z notes.md
 ```
 
-4. Move `docs-live` to the release, so the site's docs start from it:
-
-```bash
-git push --force origin 'vX.Y.Z^{commit}:refs/heads/docs-live'
-```
-
-   `^{commit}` pushes the commit the tag points to. A branch cannot point at an annotated tag, so
-   `git push origin vX.Y.Z:refs/heads/docs-live` is rejected.
+   GitHub checks the tag too: the build fails if the tag has no changelog heading or a test still says
+   `since: unreleased`. `docs-live` moves by a merge commit that holds exactly the tag's files, not a force push.
+   If publish stops part way, fix the problem and run the same command: it goes on with the steps not done yet.
 
 **Why:** a tag alone sends no message. Teams that click **Watch > Custom > Releases** on GitHub get an
 email for each release, and that is how they learn to update ([Keep it up to date](02-keep-up-to-date.md#find-out-about-a-new-version)).

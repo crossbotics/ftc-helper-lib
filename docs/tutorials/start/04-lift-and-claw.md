@@ -234,7 +234,8 @@ public class MotorFinder extends MotorFinderOpMode {
   again.
 
 Each finder shows a line that starts with `Tunables.`. It says which section of `Tunables.java` the
-numbers go in:
+numbers go in. The numbers below are an example: yours differ on each robot, so use what your finder shows, not these
+and not the ones in `lessonbot/Tunables.java`:
 
 ```text
 Tunables.Claw: P1 = 0.210, P2 = 0.770
@@ -357,7 +358,7 @@ the claw starts open, so it seems to do nothing); the next B closes it. ([Simula
 | It sags below a height | `kF` too small (step 6). |
 | It shakes at a height | `kP` too big, or `kD` too big. |
 | The claw hums when closed | `closed` pushes too far: lower it a little with the Servo Finder or the tuning menu. |
-| A tuned value is gone after a new install | It was only on the hub. Copy the B list into `Tunables.java`. |
+| You changed a number in `Tunables.java` and nothing changed | A value tuned on the hub wins. Copy the B list into `Tunables.java`, or in the tuning menu press X then A (or Y to reset all). |
 
 ## Under the hood
 

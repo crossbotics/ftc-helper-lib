@@ -96,6 +96,7 @@ REQUIRED_EXTRA = {
 READ = re.compile(r"\b(?P<var>\w+)\.(?P<m>number|flag|tunable|table|tables|require|has|others)\(\s*")
 CHAINED = re.compile(r"TunableSection\.of\([^;()]*(?:\([^()]*\))?[^;()]*,\s*\"(?P<sec>\w+)\"\)\."
                      r"(?P<m>number|flag|tunable|table|tables|require|has|others)\(\s*")
+UNPLACED = re.compile(r"\b\w+\(\s*\)\s*\.\s*(?P<m>number|flag|tunable|table|tables|require|others)\(\s*\"")
 ASSIGN = re.compile(r"\b(?P<var>\w+)\s*=\s*TunableSection\.of\([^;]*?,\s*\"(?P<sec>\w+)\"\)\s*;")
 NUMBER = re.compile(r"^-?\d+(\.\d+)?$")
 
@@ -216,6 +217,10 @@ def extract():
                 handle(key_for(m.group("var"), m.start()), m.group("var"), m.group("m"), m.end())
         for m in CHAINED.finditer(text):
             handle(NAMED_KEY.get(m.group("sec")), "TunableSection.of(\"%s\")" % m.group("sec"), m.group("m"), m.end())
+        # section().number("x"): the script cannot tell which section this reads, so it must not be skipped.
+        for m in UNPLACED.finditer(text):
+            problems.append('%s: %s: read the section into a variable first (t = ...; t.%s(...)), so this check can see the field'
+                            % (path.name, m.group(0).strip(), m.group("m")))
         for h, live in helpers.items():
             for m in re.finditer(r"\b%s\(\s*\w+\s*,\s*\"(\w+)\"\s*,\s*" % h, text):
                 args = args_at(text, m.end())

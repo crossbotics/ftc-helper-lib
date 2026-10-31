@@ -578,6 +578,17 @@ public final class Turret extends Module<Turret> {
     }
 
     // Remembers the angle for the next program (end of autonomous, end of TeleOp).
+    // For stop and pause: a reading that fails must not keep the motor from stopping.
+    private void rememberAngleIfItReads() {
+        try {
+            rememberAngle();
+        } catch (RuntimeException e) {
+            synchronized (REMEMBERED) {
+                REMEMBERED.remove(device);   // its angle is not known now
+            }
+        }
+    }
+
     private void rememberAngle() {
         if (part == null || analog) return;
         if (kind == Kind.SERVO) {
@@ -795,8 +806,10 @@ public final class Turret extends Module<Turret> {
     @Override
     public void stop() {
         if (part == null) return;
-        touch();
-        if (started) rememberAngle();
+        // touch() ends an action that has the turret: that can read the encoder too. Stop anyway.
+        RuntimeException failed = null;
+        try { touch(); } catch (RuntimeException e) { failed = e; }
+        if (started) rememberAngleIfItReads();
         else {
             // Stopped in INIT (no START): the drivers may have stopped to put the turret back at its
             // startAngle by hand (the INIT line says so). Forget the carried angle: the next INIT uses startAngle.
@@ -807,6 +820,7 @@ public final class Turret extends Module<Turret> {
         follow.off();
         goalBehind = false;
         part.stop();
+        if (failed != null) throw failed;
     }
 
     private double pausedTarget = Double.NaN;
@@ -815,7 +829,7 @@ public final class Turret extends Module<Turret> {
     @Override
     void pause() {
         if (part == null) return;
-        rememberAngle();
+        rememberAngleIfItReads();
         pausedTarget = part.getTargetAngle();
         pausedFollowing = follow.isOn();
         follow.off();

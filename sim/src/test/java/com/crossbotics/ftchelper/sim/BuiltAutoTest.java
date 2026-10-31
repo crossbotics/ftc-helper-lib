@@ -136,6 +136,21 @@ public class BuiltAutoTest {
         }
     }
 
+    // Run hands the plan to one INIT. A later INIT from the Driver Hub's list must not run it again by surprise.
+    @Test public void anInitFromTheListDoesNotRunTheLastPlan() throws Exception {
+        BuiltAuto.program = program(1);
+        BuiltAuto.program.steps.removeIf(st -> String.valueOf(st.get("code")).contains("Actions."));
+        BuiltAuto.robotClass = SetupBot.class;
+        try (SimRun s = new SimRun("robots/starter-bot-gobilda.properties")) {
+            s.init(BuiltAuto.NAME);
+            assertEquals("the plan is taken at INIT", null, BuiltAuto.program);
+            assertEquals(s.error(), "", s.error());
+            s.sim.ds.stop();
+            s.init(BuiltAuto.NAME);
+            assertTrue(s.error(), SimRun.waitFor(() -> s.error().contains("auto builder"), 3));
+        }
+    }
+
     // A field the Robot does not have stops INIT and names it.
     @Test public void aWrongSetupLineStopsInit() throws Exception {
         BuiltAuto.program = program(1);

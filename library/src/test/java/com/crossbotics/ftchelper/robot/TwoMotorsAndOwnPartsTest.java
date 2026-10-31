@@ -316,4 +316,79 @@ public class TwoMotorsAndOwnPartsTest {
         assertEquals("!! Choose the alliance", screen.lastScreen.get(2));
         assertNotNull(screen.lastScreen);
     }
+
+    // ----------------------------- two robots in one app -----------------------------
+
+    public static class NumbersA {
+        public static class Drive { public static boolean calibrated = true; }
+        public static class Lift {
+            public static double min = 0, max = 3000, kP = 0.004, kI = 0, kD = 0, kF = 0.08, down = 0, high = 2700;
+        }
+        public static class Claw { public static double open = 0.25, closed = 0.70; }
+    }
+
+    public static class NumbersB {
+        public static class Drive { public static boolean calibrated = true; }
+        public static class Lift {
+            public static double min = 0, max = 3000, kP = 0.009, kI = 0, kD = 0, kF = 0.02, down = 0, high = 1500;
+        }
+        public static class Claw { public static double open = 0.40, closed = 0.90; }
+    }
+
+    public static class NumbersNoGains {
+        public static class Drive { public static boolean calibrated = true; }
+        public static class Lift { public static double min = 0, max = 3000, down = 0, high = 1500; }
+        public static class Claw { public static double open = 0.40, closed = 0.90; }
+    }
+
+    static final class LiftAndClaw extends RobotDefinition {
+        final Class<?> numbers;
+        final String part;
+        Lift lift;
+        Claw claw;
+
+        LiftAndClaw(Class<?> numbers) { this(numbers, "gobilda-5203-435"); }
+
+        LiftAndClaw(Class<?> numbers, String part) {
+            this.numbers = numbers;
+            this.part = part;
+        }
+
+        @Override protected void define() {
+            tunables(numbers);
+            drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right").motor("gobilda-5203-312").wheelMm(104));
+            lift = add(Lift.slide("lift").part(part));
+            claw = add(Claw.servo("claw"));
+        }
+    }
+
+    // Review, 2026-10-30: gains not written in Tunables come from the motor: the second robot got the first's.
+    @Test public void aSecondRobotWithAnotherMotorGetsItsOwnStartingGains() {
+        // One PretendDevices: making a new one forgets every tunable, as a new app would.
+        PretendDevices d = new PretendDevices();
+        new LiftAndClaw(NumbersNoGains.class, "gobilda-5203-117").setup(d);
+        double alone = com.crossbotics.ftchelper.tuning.Tunable.number("Lift/kP", -1, 1).get();
+        TuningReset.clear();
+        new LiftAndClaw(NumbersNoGains.class, "gobilda-5203-1150").setup(d);
+        double first = com.crossbotics.ftchelper.tuning.Tunable.number("Lift/kP", -1, 1).get();
+        assertTrue("the test needs two different values: " + alone, Math.abs(first - alone) > 1e-9);
+        new LiftAndClaw(NumbersNoGains.class, "gobilda-5203-117").setup(d);
+        assertEquals(alone, com.crossbotics.ftchelper.tuning.Tunable.number("Lift/kP", -1, 1).get(), 1e-9);
+    }
+
+    // The positions and gains written in Tunables: each robot's own (same names).
+    @Test public void aSecondRobotWithTheSameNamesUsesItsOwnNumbers() {
+        PretendDevices d = new PretendDevices();
+        new LiftAndClaw(NumbersA.class).setup(d);
+        LiftAndClaw b = new LiftAndClaw(NumbersB.class);
+        b.setup(d);
+        assertEquals(1500, com.crossbotics.ftchelper.tuning.Tunable.number("Lift/high", -1, 1).get(), 1e-9);
+        assertEquals(0.009, com.crossbotics.ftchelper.tuning.Tunable.number("Lift/kP", -1, 1).get(), 1e-9);
+        assertEquals(0.02, com.crossbotics.ftchelper.tuning.Tunable.number("Lift/kF", -1, 1).get(), 1e-9);
+        assertEquals(0.90, com.crossbotics.ftchelper.tuning.Tunable.number("Claw/closed", -1, 1).get(), 1e-9);
+        b.startForTests();
+        b.claw.close();
+        b.all().update();
+        assertEquals("the servo goes to robot B's number", 0.90, d.servo("claw").position, 1e-9);
+    }
 }

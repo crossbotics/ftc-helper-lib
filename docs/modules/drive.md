@@ -317,6 +317,7 @@ It resets the drive encoders, uses RUN_USING_ENCODER and brake, and sets power t
 | `moveWithTurn(distanceIn, fieldDirectionDeg, targetHeadingDeg, maxPower, maxTurnPower)` | drive in a FIELD direction (fixed even while turning) and turn to a heading at the same time. If the move finishes and the heading is not there yet, it finishes the turn inside the same time limit. After a stall it does not turn. |
 | `turn(degrees, maxPower)` | turn in place by an amount. Positive = left. |
 | `turnTo(headingDeg, maxPower)` | turn in place to face a heading (IMU degrees, 0 = start direction) |
+| `turn(degrees, maxPower, timeoutSec)`, `turnTo(headingDeg, maxPower, timeoutSec)` | the same with a shorter time limit, for a step that has its own (never more than `actionTimeoutSec`) |
 | `headingDeg()` | the IMU heading |
 | `resetHeading()` | make the current heading 0 |
 | `getWheelTicks()` | encoder counts (FL, FR, BL, BR) |

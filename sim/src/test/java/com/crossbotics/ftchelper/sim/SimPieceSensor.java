@@ -82,12 +82,17 @@ final class SimPieceSensor {
         return new float[] {((c >> 16) & 255) / 255f * 0.4f, ((c >> 8) & 255) / 255f * 0.4f, (c & 255) / 255f * 0.4f};
     }
 
+    // For a test: how long getDistance takes (some real sensors wait up to 200 ms for a measurement).
+    volatile long readDelayMs = 0;
+
     HardwareDevice device() {
         Class<?>[] kinds = color ? new Class<?>[] {NormalizedColorSensor.class, DistanceSensor.class}
                 : new Class<?>[] {DistanceSensor.class};
         return (HardwareDevice) Proxy.newProxyInstance(DistanceSensor.class.getClassLoader(), kinds, (proxy, m, a) -> {
             switch (m.getName()) {
-                case "getDistance": return ((DistanceUnit) a[0]).fromMm(distanceMm());
+                case "getDistance":
+                    if (readDelayMs > 0) Thread.sleep(readDelayMs);
+                    return ((DistanceUnit) a[0]).fromMm(distanceMm());
                 case "getNormalizedColors": {
                     float[] c = rgb();
                     NormalizedRGBA out = new NormalizedRGBA();

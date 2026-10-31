@@ -97,7 +97,8 @@ public class Robot extends RobotDefinition {
 
         intake = add(Intake.motor("intake").part("gobilda-5203-117")
                 .withCrServos("left_intake_servo", "right_intake_servo")
-                .reversed("right_intake_servo"));
+                .reversed("right_intake_servo")
+                .holds(4).holds(0, "NECTAR"));
 
         launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
                 .feeder(Indexer.crServo("windmill").part("gobilda-2000-torque").reversed()));
@@ -116,6 +117,7 @@ public class Robot extends RobotDefinition {
 - `.part("gobilda-5203-117")`: which motor or servo the part is, by the id on its label. It is
   optional but recommended: the starting values are then that part's real numbers, and the simulator
   moves it like the real one. A launcher has its motor's id in its brackets instead.
+- `.holds(4).holds(0, "NECTAR")`: it carries 4 POLLEN and no NECTAR, which is too big for it.
 - `.reversed("right_drive")`: the right motor is mounted facing the other way. If your robot drives
   backward or spins when you push the stick forward, change which motors are reversed.
 - `add(...)` hands the module back, so `intake = add(...)` keeps it in a field (a variable that

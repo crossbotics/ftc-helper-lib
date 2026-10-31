@@ -283,6 +283,9 @@ final class SimJson {
         b.append("\"matchOk\":").append(now.fits(18, 24, 29)).append(',');
         b.append("\"mostOk\":").append(r.shapes.mostOk).append(',');
         b.append("\"floorOk\":").append(now.aboveFloor()).append(',');
+        b.append("\"guessed\":[");
+        for (int i = 0; i < r.guessedShapes.size(); i++) nameInList(b, i, r.guessedShapes.get(i));
+        b.append("],");
         b.append("\"below\":").append(fmt(Math.max(0, -now.bottom))).append(',');
         field(b, "mostPose", r.shapes.mostPose).append(',');
         b.append("\"poses\":").append(r.shapes.posesTried).append(',');
@@ -293,6 +296,12 @@ final class SimJson {
         if (full) b.append(",\"fast\":").append(SimView.frame(sim));
         b.append('}');
         return b.toString();
+    }
+
+    // One name in a JSON list.
+    private static void nameInList(StringBuilder b, int i, String name) {
+        if (i > 0) b.append(',');
+        b.append('"').append(name.replace("\\", "\\\\").replace("\"", "\\\"")).append('"');
     }
 
     // The computer's WiFi addresses, so a phone knows where to connect.

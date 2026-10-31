@@ -2,6 +2,61 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## v0.23.0 - 2026-10-31
+
+**What matters for your robot**
+
+- **HuskyLens support, not yet tried on a real camera.** `Camera.huskyLens("huskylens")` finds AprilTags, colors or
+  one object. It says only the numbers you taught it, so you list which real tag each one is. Nothing changes if you
+  do not use one.
+- **Safety fixes, and Hold BACK works differently.** Stops now reach every motor, and a lift that times out no longer
+  keeps pushing. With odometry, Hold BACK changes only what "forward" means for the driver: the pose stays. See Changed.
+
+### Added
+
+- `HuskyLensCamera` (vision) and `Camera.huskyLens(name)` with `tag`, `label`, `colors()`, `objects()`, and Tunables
+  `hfovDeg` and `sizeIn`. Reads run on a helper thread. A goal works with 2 taught tags of a group in view.
+- Simulator: `huskylens.NAME = ...` in the robot file, a pretend HuskyLens built on the SDK's own class, for tags and
+  for taught pieces. `:sim:fromConfig`, `:sim:newRobot` and `:sim:fromRobot` know it.
+- Hardware Check shows a HuskyLens and each box it sees. Cookbook recipe, a section in tutorial 18, test AIM-06.
+- `AutoDrive.turn` and `turnTo` with a time limit.
+- INIT names a Tunables field in a lift or arm section that looks like a gain, such as `kPP` for `kP`. It still runs.
+- `tools/release.py` makes a release in steps that stop at the first problem. GitHub checks each release tag.
+
+### Changed
+
+- **Hold BACK to reset "forward" (with odometry): the pose stays as it was.** It used to write 0 into the pose's
+  heading. Only what "forward" means for the driver changes now. "Set pose here" still fixes a wrong pose.
+  A BACK reset now lasts for this run: after INIT again, "forward" comes from the pose.
+- `PositionMotor.tunable`, `PositionServo.tunable` and `PidTunables.of` use `Tunable.fromCode`: a second part with
+  the same name uses its own code values, unless the value was tuned.
+
+### Fixed
+
+- **Pause could start the intake again.** With a launcher `pushedBy(intake)` declared after the intake, pausing during
+  a shot sent the intake its power again, and it ran until you resumed.
+- **Opening the tuning menu left trigger-driven parts on.** `releaseAll()` now gives `bindTriggerAxis` code 0.
+- **A lift that timed out in `goToStep` kept pushing.** It now holds where it is, and the report says "timed out".
+- **Aiming with odometry went wrong after "forward" was reset** (see Changed).
+- **One motor that failed could leave others on.** A stop now reaches every motor of a lift, intake and flywheel,
+  and a failed send is sent again. A turret whose encoder read fails still stops.
+- **`turnToward` and `turnTowardWithSweep` could run past their time limit,** up to the drive's own 10 s.
+- Hardware Check: a slow distance sensor no longer holds up the buttons and the screen. It reads on a helper thread.
+- A finder's save no longer waits for a save that is still writing.
+- Simulator page: a lost link now grays the 3D view and tries again, requests can no longer pile up when the stream
+  fails, and size results say when they come from guessed shapes.
+- Simulator: only this computer's address is served (use `-Plan` for phones), the Built Auto no longer runs the last plan
+  again from the Driver Hub's list, and the autonomous timer reads the game's rules.
+- Stronger checks: `check_blocking` finds more kinds of waiting and lists the allowed methods one by one; `check_docs`
+  matches whole names; `check_builder` compares the site's copies with the site's release and has a plan worked out by hand.
+- Docs: safety lines for early arm and Hardware Check steps, and small fixes to pages that did not match the code.
+- Simulator test: "every example stops with all motors off" could not fail, because it looked after the simulator
+  had switched them off. It now looks before, with sticks and a trigger held.
+- `Tunable.fromCode`: a tuned value still stays, and its reset now goes back to this program's code value.
+- Docs: four live-tuning steps now say to copy the value back to `Tunables.java`. Five pages said a tuned value is
+  lost at a build, INIT or restart. It is not: the hub keeps it, and it wins over a later edit in `Tunables.java`.
+- Simulator guide: says the pretend IMU ignores how the hub is mounted.
+
 ## v0.22.0 - 2026-10-30
 
 **What matters for your robot**

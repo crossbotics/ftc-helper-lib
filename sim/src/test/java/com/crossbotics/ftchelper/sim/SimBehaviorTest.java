@@ -222,4 +222,44 @@ public class SimBehaviorTest {
             sim.shutdown();
         }
     }
+
+    // A shape the code only guessed says TODO in the robot file: the size results must say they are guesses.
+    @Test public void guessedShapesAreNamed() throws Exception {
+        String base = new String(java.nio.file.Files.readAllBytes(new java.io.File("robots/starter.properties").toPath()), "UTF-8");
+        java.io.File f = java.io.File.createTempFile("guessed", ".properties");
+        f.deleteOnExit();
+        java.nio.file.Files.write(f.toPath(), (base + "\nshape.guessed_box = box, at=0,0,4, size=2x2x2   # TODO measure: place and size\n").getBytes("UTF-8"));
+        SimRobot r = SimRobot.load(f.toPath());
+        org.junit.Assert.assertEquals(java.util.Collections.singletonList("guessed_box"), r.guessedShapes);
+        org.junit.Assert.assertTrue("a measured robot file names none", SimRobot.load(java.nio.file.Paths.get("robots/starter.properties")).guessedShapes.isEmpty());
+    }
+
+    /** Runs until STOP. */
+    public static class RunsUntilStopped extends com.qualcomm.robotcore.eventloop.opmode.LinearOpMode {
+        @Override public void runOpMode() {
+            waitForStart();
+            while (opModeIsActive()) telemetry.update();
+        }
+    }
+
+    // The autonomous stops when the match clock says: both read the game's rules. A game with a 1 s autonomous.
+    @Test public void theAutonomousTimerReadsTheRules() throws Exception {
+        String rules = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("fields/biobuzz-2026.rules.json")), "UTF-8");
+        String shorter = rules.replaceFirst("\"autoSec\"\\s*:\\s*[0-9.]+", "\"autoSec\": 1");
+        org.junit.Assert.assertNotEquals("the rules file has autoSec", rules, shorter);
+        SimRobot r = SimRobot.load(java.nio.file.Paths.get("robots/starter.properties"));
+        r.field.rules = new SimRules(shorter, "a test");
+        SimEngine sim = new SimEngine(r);
+        sim.start();
+        try {
+            sim.ds.register("Runs until stopped", "Autonomous", RunsUntilStopped.class);
+            sim.ds.init("Runs until stopped");
+            org.junit.Assert.assertTrue(SimRun.waitFor(() -> sim.ds.phase() == SimDriverStation.Phase.INIT, 3));
+            sim.ds.start();
+            org.junit.Assert.assertTrue(SimRun.waitFor(() -> sim.ds.phase() == SimDriverStation.Phase.RUNNING, 3));
+            org.junit.Assert.assertTrue("it stopped at the rules' time, not 30 s", SimRun.waitFor(() -> sim.ds.phase() != SimDriverStation.Phase.RUNNING, 5));
+        } finally {
+            sim.shutdown();
+        }
+    }
 }

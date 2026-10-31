@@ -33,6 +33,8 @@ import java.util.function.Consumer;
 public final class FinderResults {
     // Where results are saved. Tests use another file.
     static File file = new File(folder(), "finder-results.txt");
+    // Held while the file is written, so two saves never mix their lines.
+    static final Object FILE_LOCK = new Object();
 
     /**
      * The folder for results and logs: /sdcard/FIRST/ftc-helper on the robot. The simulator sets the
@@ -122,20 +124,23 @@ public final class FinderResults {
         });
     }
 
-    // Adds the header and lines to the end of the file. Runs on the background thread.
-    static synchronized boolean append(String header, List<String> copy) {
-        try {
-            File folder = file.getParentFile();
-            if (folder != null && !folder.exists() && !folder.mkdirs()) return false;
-            // "true" = add to the end of the file, keep what is already there
-            try (Writer out = new FileWriter(file, true)) {
-                out.write(header + "\n");
-                for (String line : copy) out.write(line + "\n");
-                out.write("\n");
+    // Adds the header and lines to the end of the file. Runs on the background thread. It holds its own
+    // lock while it writes, never the one saver() needs: a save pressed during a slow write must not wait.
+    static boolean append(String header, List<String> copy) {
+        synchronized (FILE_LOCK) {
+            try {
+                File folder = file.getParentFile();
+                if (folder != null && !folder.exists() && !folder.mkdirs()) return false;
+                // "true" = add to the end of the file, keep what is already there
+                try (Writer out = new FileWriter(file, true)) {
+                    out.write(header + "\n");
+                    for (String line : copy) out.write(line + "\n");
+                    out.write("\n");
+                }
+                return true;
+            } catch (IOException | SecurityException e) {
+                return false;
             }
-            return true;
-        } catch (IOException | SecurityException e) {
-            return false;
         }
     }
 

@@ -327,7 +327,8 @@ In `Controls.java` and `autos/FirstAuto.java`, also delete the `@Disabled` line 
 2. Add the small **Hardware Check** OpMode from [Check the hardware (lesson 2b)](tutorials/19-testing-procedures.md#1-the-3-line-opmode)
    (it is not one of the five files), build and install again.
 3. **Robot on a block, wheels off the ground.** Run the Hardware Check. Every device must be found.
-   Each motor must turn, and its encoder must count up at positive power
+   No limits are set yet, so on a lift or an arm use short, gentle taps, know where its hard stop is (the end of its
+   travel), and keep hands clear. Each motor must turn, and its encoder must count up at positive power
    ([how to use it](tutorials/19-testing-procedures.md#2-use-it)).
    **Why:** it tests each part alone, before your code moves them together. A part that is not found,
    or that turns the wrong way, is a wire, a port or a name to fix now.
@@ -393,7 +394,7 @@ It drives? Raise `maxPower` and `practiceMaxPower` in `Tunables.java` (1.0 and 0
 
 **Changed a number live?** The tuning menu (hold GUIDE 1 s after START, in the PRACTICE profile) changes a
 number on the hub only. **Copy each new value back into `Tunables.java`**: INIT lists the values that
-differ. If you do not, the next build loses it. ([The tuning menu](guides/tunables.md#the-live-column-the-tuning-menu).)
+differ. If you do not, the hub keeps using its saved value, even after you edit that number in `Tunables.java`, and another hub does not have it. ([The tuning menu](guides/tunables.md#the-live-column-the-tuning-menu).)
 
 ## 8. The simulator
 
@@ -535,7 +536,7 @@ to add steps.
 | It spins when it should drive straight | a wheel direction is wrong: STEP 4 |
 | INIT stops on `MEASURE` and names a finder | that number is not measured yet: [section 6](#6-measure-the-numbers) |
 | The autonomous says `AUTONOMOUS IS OFF: the drive is not tuned yet` | the Drive Tuner, then `calibrated = true`: [section 9](#9-a-first-autonomous) |
-| A number you changed in the tuning menu is gone after a build | it was not copied back into `Tunables.java` ([section 7](#7-drive-then-each-mechanism)) |
+| You changed a number in `Tunables.java` and nothing changed on the robot | a value tuned on the hub wins. INIT lists it: copy it back into `Tunables.java`, or in the tuning menu press X then A (or Y to reset all) ([section 7](#7-drive-then-each-mechanism)) |
 | Nothing moves | it is paused (tap BACK) |
 | After the autonomous, the Driver Station does not pick your TeleOp | `preselectTeleOp` in `autos/FirstAuto.java` must be the TeleOp's exact name (STEP 7) |
 | `./gradlew` says `JAVA_HOME is not set`, or `SDK location not found` | the [laptop setup](#laptop-setup-once) |

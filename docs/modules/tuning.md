@@ -30,7 +30,8 @@ pid.setGains(LIFT_KP.get(), 0, 0, 0);   // read it every loop
 
 | Method | What it does |
 | --- | --- |
-| `Tunable.number(name, value, step)` | makes one ("Group/Name"), or returns the existing one with that name |
+| `Tunable.number(name, value, step)` | makes one ("Group/Name"), or returns the existing one with that name (the first code value stays) |
+| `Tunable.fromCode(name, value, step)` | the same, but an existing one that was not tuned takes this code value. `PositionMotor.tunable`, `PositionServo.tunable`, `PidTunables.of` and the robot in five files use it: two programs with one name each use their own numbers |
 | `.range(min, max)` | the menu cannot go outside |
 | `get()` | the value now (read it every loop) |
 | `set(v)`, `increase()`, `decrease()`, `reset()` | change it (in memory) |

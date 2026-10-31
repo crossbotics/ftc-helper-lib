@@ -67,8 +67,8 @@ each one under its exact name, matches the motor types that pin down a part (REV
 Core Hex, NeveRest) to the parts catalog, marks everything else `TODO`, checks the draft loads, and
 prints the questions still open. It finds the drivetrain from the motor names (front/back and
 left/right in any form: `front_left`, `leftFront`, `fl`...). A goBILDA Pinpoint or SparkFun OTOS becomes
-the `odometry = ...` line (with a `TODO` for its offsets or mounting). Devices the simulator does not
-have yet (colour and distance sensors, LEDs) are listed as notes. If the robot file exists,
+the `odometry = ...` line (with a `TODO` for its offsets or mounting). Colour and distance sensors and lights
+get their lines too. Devices the simulator does not have yet are listed as notes. If the robot file exists,
 the draft goes next to it (`robot.properties.draft`). An example configuration is
 `sim/configs/example-config.xml`.
 
@@ -81,4 +81,5 @@ the draft goes next to it (`robot.properties.draft`). An example configuration i
 | `RevTouchSensor`, `DigitalDevice`, `ModernRoboticsAnalogTouchSensor` | `touch.NAME` |
 | `Webcam` | `camera.KEY = name=...` |
 | `EthernetDevice` (a Limelight) | `limelight.KEY = name=...` |
+| `HuskyLens` | `huskylens.KEY = name=...` (then add `hfov=` and `taught=`) |
 | anything else | a note: not simulated yet |

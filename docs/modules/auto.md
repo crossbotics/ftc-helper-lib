@@ -72,13 +72,13 @@ your TeleOp after autonomous.
 | `move(label, inches, direction, power)` | drive (0 forward, 90 right, 180 back, -90 left) |
 | `turn(label, degrees, power)` | turn by (positive = left) |
 | `turnTo(label, heading, power)` | turn to a heading (0 = start direction) |
-| `turnToward(label, bearingDeg, toleranceDeg, maxPower, timeoutSec)` | turn toward something the robot measures (`bearingDeg` gives degrees to turn, + left, NaN = not seen): up to 4 turns, a fresh reading after each. Not mirrored. `Steps.aimAtGoal` uses it |
+| `turnToward(label, bearingDeg, toleranceDeg, maxPower, timeoutSec)` | turn toward something the robot measures (`bearingDeg` gives degrees to turn, + left, NaN = not seen): up to 4 turns, a fresh reading after each, all inside `timeoutSec`. Not mirrored. `Steps.aimAtGoal` uses it |
 | `moveWithTurn(label, inches, fieldDir, heading, power, turnPower)` | drive and turn together (mecanum) |
 | `driveTo(label, pose, ready, x, y, heading, power, tolerance)` | drive to a field point with odometry (mecanum); the five-files `Steps.driveTo` fills in the pose for you ([odometry](odometry.md#driveto)) |
 | `followPath(label, pathJob, timeoutSec[, events])` | follow a path another library drives, e.g. Pedro; `PathJob` is its small plug (start, busy, ready, distance left, cancel; optional: `totalIn()`, `partNow()`). `events`: a list of `PathEvent`s, each fired once when the robot gets to its place; the report lists those that did not fire (`STALLED, not fired: Spin up`). The five-files `Steps.follow` makes both for you ([pedro](pedro.md#do-things-along-the-path)) |
 | `driveTo(label, pose, ready, x, y, heading, power, tolerance, events)` | `driveTo` with `PathEvent`s on the way: the "path" is the straight line from where the step starts |
 | `rememberHeading(label)` / `returnToHeading(label, power)` | come back to a saved heading |
-| `turnTowardWithSweep(label, bearingDeg, toleranceDeg, maxPower, timeoutSec, sweepDeg, stepDeg, sweepPower)` | `turnToward` with a sweep: nothing seen at the start, it turns in `stepDeg` steps up to `sweepDeg` left, then right, looking after each; never seen: back to the start, "not seen (swept)". `Steps.aimAtGoal(label, sec, sweepDeg)` uses it |
+| `turnTowardWithSweep(label, bearingDeg, toleranceDeg, maxPower, timeoutSec, sweepDeg, stepDeg, sweepPower)` | `turnToward` with a sweep: nothing seen at the start, it turns in `stepDeg` steps up to `sweepDeg` left, then right, looking after each; never seen: back to the start (that turn gets up to `timeoutSec` again), "not seen (swept)". `Steps.aimAtGoal(label, sec, sweepDeg)` uses it |
 | `run(label, code)` | run code at once, continue (e.g. `claw::open`) |
 | `waitFor(label, seconds)` | wait; mechanisms keep working |
 | `waitUntil(label, condition, timeout)` | wait for something, with a time limit |

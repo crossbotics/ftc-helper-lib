@@ -1473,6 +1473,27 @@ it kept. Point the robot at the tags in INIT. Its numbers are optional (`Tunable
 `autoLighting = false` skips the test and uses `pipeline`).
 **More:** [Vision: venue lighting](modules/vision.md#venue-lighting), [Camera](modules/robot.md#camera).
 
+### How do I find game pieces with a HuskyLens?
+
+**Where:** `Robot.java`, inside `define()`. First teach it, on the camera: dial to Color Recognition, turn
+on Learn Multiple, point the `+` at a piece, press the learning button.
+
+<!-- recipe: huskylens -->
+```java title="Robot.java"
+// At the top of the class: public Camera pieceCamera;   Colors you taught it: ID1, ID2. (1)!
+pieceCamera = add(Camera.huskyLens("huskylens").colors().label(1, "POLLEN").label(2, "NECTAR"));
+// Or AprilTags: list which real tag each taught number is, and add goal(...). (2)!
+// camera = add(Camera.huskyLens("huskylens").tag(1, 34).tag(2, 35).goal("BLUE SCORING", "RED SCORING"));
+```
+
+1. A HuskyLens is one camera doing one job: colors or tags, not both at the same time.
+2. It says the number you taught it, never the tag's real number.
+
+**Why:** the camera finds the piece itself, so the hub does no picture work. Then
+`pieceCamera.target("POLLEN")` gives the bearing to the nearest box, or null. In `Tunables`, set `hfovDeg`
+(measure it) and, for a rough distance, `sizeIn` (the longest side of the piece it sees). Not tested on a real robot yet.
+**More:** [HuskyLensCamera](modules/vision.md#huskylenscamera), [Camera](modules/robot.md#camera).
+
 ### How do I shoot while the robot is driving?
 
 **Where:** `Tunables.java` (the numbers, in your `Aim` section), and a button in `Controls.java`

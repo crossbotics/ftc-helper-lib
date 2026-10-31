@@ -50,6 +50,8 @@ final class SimRobot {
     final Map<String, SimCamera> cameras = new LinkedHashMap<>();
     // Limelights (limelight.KEY = name=limelight, ...): their pretend camera is in cameras too.
     final Map<String, SimLimelight> limelights = new LinkedHashMap<>();
+    // HuskyLens cameras (huskylens.KEY = name=huskylens, ...): their pretend camera is in cameras too.
+    final Map<String, SimHuskyLens> huskyLenses = new LinkedHashMap<>();
     private final Map<String, HardwareDevice> devices = new LinkedHashMap<>();
     // Devices described in the robot file but NOT in the configuration ("missing = a, b", or a
     // scenario's "set device NAME missing"): a part not built yet. Used at the next INIT.
@@ -62,6 +64,7 @@ final class SimRobot {
     private static final java.util.Set<Thread> BLOCKED = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     static void block(Thread t) {
+        BLOCKED.removeIf(old -> !old.isAlive());   // a thread that ended needs no block, and would stay in memory
         BLOCKED.add(t);
     }
 
@@ -98,6 +101,8 @@ final class SimRobot {
     // The robot file as read, and its shape lines (shape name -> settings), for Edit robot's changes.
     final Properties props;
     final Map<String, Map<String, String>> shapeLines;
+    // The shapes whose line says "TODO" (the code only guessed them: SimFromRobot). The size checks on them are guesses too.
+    final List<String> guessedShapes = new ArrayList<>();
     // The physics engine (physics = engine, the default): the robot bumps and slides, its parts hit
     // things. null = the simple rule (physics = simple): a bump stops the whole move.
     SimWorld world = null;
@@ -367,6 +372,15 @@ final class SimRobot {
             cameras.put(llName, c);
             limelights.put(llName, new SimLimelight(c));
         }
+        for (String key : sortedKeys(p, "huskylens.")) {
+            Map<String, String> s = settings(p.getProperty(key));
+            String hName = s.containsKey("name") ? s.get("name") : key.substring("huskylens.".length());
+            if (hName.isEmpty()) throw new IllegalArgumentException("Robot file: \"" + key + "\" needs a name");
+            if (cameras.containsKey(hName)) throw new IllegalArgumentException("Robot file: two cameras are called \"" + hName + "\"");
+            SimCamera c = new SimCamera(hName, "huskylens", s, this);
+            cameras.put(hName, c);
+            huskyLenses.put(hName, new SimHuskyLens(c, s));
+        }
         imuName = p.getProperty("imu", "").trim();
         // missing = intake_deploy, lift: in the robot file (drawn, simulated) but not in the configuration.
         missingDevices.addAll(list(p.getProperty("missing", "")));
@@ -464,13 +478,19 @@ final class SimRobot {
         }
         // Properties keeps "# comments" out, but not comments after a value: cut them off. A note starts
         // with a # after a space (or at the start of the value), so color=#ff0000 is not a note.
+        List<String> guessed = new ArrayList<>();
         for (String k : p.stringPropertyNames()) {
             String v = p.getProperty(k);
             int hash = v.startsWith("#") ? 0 : -1;
             for (int i = 1; i < v.length() && hash < 0; i++) if (v.charAt(i) == '#' && Character.isWhitespace(v.charAt(i - 1))) hash = i;
-            if (hash >= 0) p.setProperty(k, v.substring(0, hash).trim());
+            if (hash >= 0) {
+                if (k.startsWith("shape.") && v.substring(hash).contains("TODO")) guessed.add(k.substring("shape.".length()));
+                p.setProperty(k, v.substring(0, hash).trim());
+            }
         }
         SimRobot robot = new SimRobot(p, file.toAbsolutePath().getParent());
+        java.util.Collections.sort(guessed);
+        robot.guessedShapes.addAll(guessed);
         String model = p.getProperty("field.model", "").trim();
         if (!model.isEmpty()) {
             Path m = file.toAbsolutePath().getParent().resolve(model).normalize();
@@ -534,6 +554,7 @@ final class SimRobot {
         if (odometry != null) odometry.addDevices(devices, motors);
         for (SimCamera c : cameras.values()) if (c.device != null) devices.put(c.name, c.device);
         for (SimLimelight l : limelights.values()) devices.put(l.cam.name, l);
+        for (SimHuskyLens h : huskyLenses.values()) devices.put(h.cam.name, h);
         devices.put("Control Hub battery", voltageSensor());
     }
 
@@ -586,6 +607,14 @@ final class SimRobot {
     }
 
     /** All outputs off (the FTC app does this when an OpMode stops). */
+    /** The motors and continuous servos with power on now, by name. */
+    synchronized List<String> motorsOn() {
+        List<String> on = new ArrayList<>();
+        for (SimMotor m : motors.values()) if (Math.abs(m.userPower()) > 1e-9) on.add(m.name);
+        for (Map.Entry<String, double[]> cr : crServos.entrySet()) if (Math.abs(cr.getValue()[0]) > 1e-9) on.add(cr.getKey());
+        return on;
+    }
+
     synchronized void allOff() {
         for (SimMotor m : motors.values()) m.device.setPower(0);
         for (double[] cr : crServos.values()) cr[0] = 0;

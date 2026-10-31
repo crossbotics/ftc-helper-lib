@@ -132,8 +132,13 @@ public class SafeMotor {
 
     // The one place a power is written: this motor and every partner, together.
     private void send(double power) {
-        motor.setPower(power);
-        for (DcMotorSimple m : partners) m.setPower(power);
+        // Every motor gets it even if one fails: above all a stop, which must reach the others.
+        RuntimeException first = null;
+        try { motor.setPower(power); } catch (RuntimeException e) { first = e; }
+        for (DcMotorSimple m : partners) {
+            try { m.setPower(power); } catch (RuntimeException e) { if (first == null) first = e; }
+        }
+        if (first != null) throw first;
     }
 
     /**

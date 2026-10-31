@@ -95,6 +95,8 @@ need hard stops), then make sure the shapes are right before blaming the robot.
     word; `name=` must be the configuration name). A Logitech C920 sees about 70 degrees across
     (`hfov=70.4`); a Limelight 3A 54.5. On a turret (or arm)? Add `on=turret` (the shape's name) and
     measure with the turret pointing straight forward: then it turns with the turret.
+    A HuskyLens: `huskylens.KEY = name=..., forward=, left=, up=, yaw=, pitch=, hfov=, taught=30|31` (ask
+    for the view angle they measured, and what they taught it, in order: ID1 first; piece names for colors).
 
 ## Game pieces
 
@@ -104,7 +106,8 @@ need hard stops), then make sure the shapes are right before blaming the robot.
     code's `setDirection`: a CR servo set to REVERSE that the code runs at +1 to pull in turns at -1, so it
     needs `inward=-`. The intake shape must stick out past the chassis box (`robot.lengthIn`), or a piece on
     the tiles is pushed away by the box before it reaches the roller. Side spinners on the same motor
-    take pieces in too: `shape=intake+left_spinner+right_spinner`.
+    take pieces in too: `shape=intake+left_spinner+right_spinner`. `shape=` is required on every `collect.`,
+    `shoot.` and `grab.` line: the shapes that do the work. A `grab.` line also needs `servo=`: the servo that holds.
 22. How does it score (shoot? lift and drop?) -> `shoot.` (`angle=` degrees up from forward, `share=`
     of the wheel's rim speed, about 0.5) or `grab.` with the lift/arm shapes. Where is the middle of the
     launcher wheel (forward/left/up)? -> its `flywheel` shape's `at=` (a roller or flywheel's `at=` is its

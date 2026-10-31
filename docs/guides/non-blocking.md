@@ -110,6 +110,10 @@ use `submitLatest` for anything sent repeatedly, so only the newest value is sen
 
 ## Checked automatically
 
-`tools/check_blocking.py` (run on every push) fails the build if a `sleep(`, `Thread.sleep`, or a
-`while` loop appears in the library outside the classes that block on purpose, or a `sleep(`
-appears in any example.
+`tools/check_blocking.py` (run on every push) fails the build if the library has a `sleep(`, `Thread.sleep` or
+`.join(`; a `while` loop outside the methods that block on purpose (it lists them, each with the reason); or another
+kind of wait, such as `.await(`, `.acquire(`, `.take(`, a `Future` or `LockSupport.park`. Examples may not sleep or wait
+either.
+
+It only reads the words of the code, so two things stay your job. A wait for a lock: never hold a lock the loop also
+needs while you write a file or talk to a device. And a slow request inside a call: some SDK methods wait for a device.

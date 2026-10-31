@@ -337,4 +337,53 @@ public class FindersTest {
         assertEquals(60, ShotTunerOpMode.sagLimitRpm(1000), 1e-9);
         assertEquals(90, ShotTunerOpMode.sagLimitRpm(3000), 1e-9);
     }
+
+    // A write can be slow (a file on a named pipe waits until someone reads it). A second save pressed during
+    // it must still return at once: the robot's loop calls it.
+    @Test public void aSaveDuringASlowWriteDoesNotWait() throws Exception {
+        File pipe = new File(tmp.getRoot(), "slow-results");
+        boolean made;
+        try {
+            made = new ProcessBuilder("mkfifo", pipe.getPath()).start().waitFor() == 0;
+        } catch (java.io.IOException noMkfifo) {
+            made = false;                                       // Windows has no named pipes of this kind
+        }
+        org.junit.Assume.assumeTrue(made);
+        File before = FinderResults.file;
+        FinderResults.file = pipe;
+        try {
+            FinderResults r = new FinderResults("Test finder");
+            r.set("a", "a line");
+            java.util.concurrent.atomic.AtomicInteger saved = new java.util.concurrent.atomic.AtomicInteger();
+            r.saveInBackground(ok -> saved.incrementAndGet());
+            Thread.sleep(100);                                  // the helper thread is now stuck in its write
+            java.util.concurrent.CountDownLatch returned = new java.util.concurrent.CountDownLatch(1);
+            Thread caller = new Thread(() -> {
+                r.saveInBackground(ok -> saved.incrementAndGet());
+                returned.countDown();
+            });
+            caller.setDaemon(true);
+            caller.start();
+            boolean atOnce = returned.await(1, java.util.concurrent.TimeUnit.SECONDS);
+            // Let both writes end: read the pipe until both have.
+            Thread reader = new Thread(() -> {
+                byte[] buf = new byte[256];
+                while (saved.get() < 2) {
+                    try (java.io.FileInputStream in = new java.io.FileInputStream(pipe)) {
+                        while (in.read(buf) >= 0) { }
+                    } catch (java.io.IOException e) {
+                        return;
+                    }
+                }
+            });
+            reader.setDaemon(true);
+            reader.start();
+            assertTrue("the second save waited for the first one's write", atOnce);
+            long end = System.currentTimeMillis() + 5000;
+            while (saved.get() < 2 && System.currentTimeMillis() < end) Thread.sleep(10);
+            assertEquals(2, saved.get());
+        } finally {
+            FinderResults.file = before;
+        }
+    }
 }

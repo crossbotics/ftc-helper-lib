@@ -128,8 +128,8 @@ Steps, each with a plain on-screen prompt:
 4. **Check.** All pods point to 0°, 45°, 90°, then back. The student checks by eye.
 5. **Steering tune.** A 90° step per pod, reports the time to settle and any overshoot; nudges
    `steerKp`/`steerKd`.
-6. Prints the lines for `Tunables.java`, and says to copy them there (live-tuned values are lost on
-   restart otherwise).
+6. Prints the lines for `Tunables.java`, and says to copy them there (live-tuned values stay only on that
+   hub otherwise).
 
 Plus a scenario test (`FinderSafetyTest`) that runs it in the simulator with the hidden mount angles.
 

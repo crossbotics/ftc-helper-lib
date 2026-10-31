@@ -44,10 +44,10 @@ public final class PidTunables {
         // Each gain gets its own step size. The fallbacks are used when a gain starts at 0
         // (1/8 of 0 would be a step of 0, and the D-pad could never change it).
         return new PidTunables(
-                Tunable.number(group + "/kP", kP, stepFor(kP, 0.001)),
-                Tunable.number(group + "/kI", kI, stepFor(kI, 0.0001)),
-                Tunable.number(group + "/kD", kD, stepFor(kD, 0.0001)),
-                Tunable.number(group + "/kF", kF, stepFor(kF, 0.01)));
+                Tunable.fromCode(group + "/kP", kP, stepFor(kP, 0.001)),
+                Tunable.fromCode(group + "/kI", kI, stepFor(kI, 0.0001)),
+                Tunable.fromCode(group + "/kD", kD, stepFor(kD, 0.0001)),
+                Tunable.fromCode(group + "/kF", kF, stepFor(kF, 0.01)));
     }
 
     /**

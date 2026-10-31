@@ -90,7 +90,8 @@ def check_classes_documented():
         if not re.search(r"^public (final |abstract )?(class|enum|interface) ", src, re.M):
             continue
         name = java.stem
-        if f"`{name}" not in module_docs and f"[{name}" not in module_docs:
+        # The whole name: `Pose` must not count because a page names `PoseEstimate`.
+        if not re.search(r"[`\[]%s\b" % re.escape(name), module_docs):
             problems.append(f"{java.relative_to(ROOT)}: public class {name} is not documented in docs/modules/")
 
 
@@ -99,7 +100,8 @@ def check_tutorials():
     all_text = "".join(tut_docs.values())
     for java in sorted(list(TUT_CODE.rglob("*.java")) + list(TUT_TEST.rglob("*.java"))):
         name = java.name
-        if name not in all_text and java.stem not in all_text:
+        # The whole name: Lesson1 must not count because a page names Lesson10.
+        if not re.search(r"\b%s\b" % re.escape(java.stem), all_text):
             problems.append(f"{java.relative_to(ROOT)}: tutorial program is not mentioned in any tutorial page")
     for page, text in tut_docs.items():
         if "examples/src/" not in text:

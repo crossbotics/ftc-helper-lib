@@ -1,6 +1,7 @@
 package com.crossbotics.ftchelper.sim;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -211,6 +212,24 @@ public class FinderSafetyTest {
         EXPECTED.put(BuiltAuto.NAME, "auto builder");
     }
 
+    // The reason is on the message's first line, in the words of the library's or the SDK's own check: not a
+    // crash whose text happens to hold the same word. A reason in quotes is a device: the SDK's "No X named".
+    static boolean isExpected(String err, String reason) {
+        String first = err.split("\n")[0];
+        boolean ownCheck = first.startsWith("java.lang.IllegalArgumentException:") || first.startsWith("java.lang.IllegalStateException:")
+                || !first.matches("^[\\w.$]+(Exception|Error)\\b.*");
+        if (!ownCheck || !first.contains(reason)) return false;
+        return !reason.startsWith("\"") || first.contains("named " + reason);
+    }
+
+    @Test public void aCrashWithTheRightWordIsNotExpected() {
+        assertTrue(isExpected("java.lang.IllegalArgumentException: No DcMotorEx named \"turret\" in the active robot configuration.", "\"turret\""));
+        assertTrue(isExpected("java.lang.IllegalStateException: AutoDriveConfig.calibrationConfirmed is false.", "calibrationConfirmed"));
+        assertFalse(isExpected("java.lang.NullPointerException: \"turret\" is null", "\"turret\""));
+        assertFalse(isExpected("java.lang.IllegalStateException: a bad \"turret\" value", "\"turret\""));
+        assertFalse(isExpected("It crashed\n  Webcam", "Webcam"));
+    }
+
     @Test public void everyExampleStartsAndStopsCleanly() throws Exception {
         List<String> problems = new ArrayList<>();
         List<String> seen = new ArrayList<>();
@@ -218,20 +237,69 @@ public class FinderSafetyTest {
             for (SimDriverStation.Entry e : new ArrayList<>(s.sim.ds.opModes)) {
                 s.init(e.name);
                 s.start();
+                // The sticks and a trigger held, so a TeleOp really has its motors on at STOP.
+                s.g1().left_stick_y = -0.5f;
+                s.g1().right_stick_x = 0.3f;
+                s.g1().right_trigger = 0.8f;
+                SimRun.pause(0.1);
                 s.sim.ds.stop();
+                s.g1().left_stick_y = 0;
+                s.g1().right_stick_x = 0;
+                s.g1().right_trigger = 0;
                 String err = s.error();
                 String expected = EXPECTED.get(e.name);
                 // An autonomous refusing an untuned drivetrain is right (calibrationConfirmed is false).
-                boolean ok = err.isEmpty() || (expected != null && err.contains(expected))
-                        || (e.kind.equals("Autonomous") && err.contains("calibrationConfirmed"));
+                boolean ok = err.isEmpty() || (expected != null && isExpected(err, expected))
+                        || (e.kind.equals("Autonomous") && isExpected(err, "calibrationConfirmed"));
                 if (!ok) problems.add(e.name + ": " + err.split("\n")[0]);
                 if (!err.isEmpty()) seen.add(e.name + " -> " + err.split("\n")[0]);
-                for (SimMotor m : s.robot().motors.values()) {
-                    if (Math.abs(m.userPower()) > 1e-9) problems.add(e.name + ": motor " + m.name + " still on after STOP");
-                }
+                // What the OpMode left on itself: after stop() the simulator has switched everything off.
+                for (String on : s.sim.ds.leftOnAtStop()) problems.add(e.name + ": motor " + on + " still on after STOP");
             }
         }
         System.out.println("Expected errors seen:\n" + String.join("\n", seen));
         assertTrue(String.join("\n", problems), problems.isEmpty());
+    }
+
+    // A distance sensor can wait up to 200 ms for a measurement: the Hardware Check's screen must not.
+    @Test public void aSlowDistanceSensorDoesNotStopTheHardwareCheck() throws Exception {
+        String base = new String(java.nio.file.Files.readAllBytes(new java.io.File("robots/starter.properties").toPath()), "UTF-8");
+        java.io.File f = java.io.File.createTempFile("slow-distance", ".properties");
+        f.deleteOnExit();
+        java.nio.file.Files.write(f.toPath(), (base + "\ndistance.zzz_slow = at=intake, acrossMm=150\n").getBytes("UTF-8"));
+        try (SimRun s = new SimRun(f.getPath())) {
+            s.robot().pieceSensors.get("zzz_slow").readDelayMs = 400;
+            s.init("Hardware Check").start();
+            for (int i = 0; i < 30 && !s.screenHas("> zzz_slow"); i++) s.press(v -> s.g1().dpad_down = v);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Distance"), 3));
+            int before = s.sim.ds.screen.updates();
+            SimRun.pause(0.4);
+            int shown = s.sim.ds.screen.updates() - before;
+            assertTrue("screen updates in 0.4 s with a 400 ms sensor: " + shown, shown > 5);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas(" in"), 3));
+            assertEquals("", s.error());
+        }
+    }
+
+    /** Sets a motor going and ends without stopping it. */
+    public static class LeavesAMotorOn extends com.qualcomm.robotcore.eventloop.opmode.LinearOpMode {
+        @Override public void runOpMode() {
+            com.qualcomm.robotcore.hardware.DcMotor m = hardwareMap.get(com.qualcomm.robotcore.hardware.DcMotor.class, "intake");
+            waitForStart();
+            m.setPower(0.5);
+            while (opModeIsActive()) telemetry.update();
+        }
+    }
+
+    // The check above must be able to fail.
+    @Test public void aMotorLeftOnIsSeen() throws Exception {
+        try (SimRun s = new SimRun()) {
+            s.sim.ds.register("Leaves a motor on", "TeleOp", LeavesAMotorOn.class);
+            s.init("Leaves a motor on").start();
+            assertTrue(SimRun.waitFor(() -> s.robot().motors.get("intake").userPower() > 0.4, 2));
+            s.sim.ds.stop();
+            assertTrue(s.sim.ds.leftOnAtStop().toString(), s.sim.ds.leftOnAtStop().contains("intake"));
+            assertEquals("the simulator still stops it", 0, s.robot().motors.get("intake").userPower(), 1e-9);
+        }
     }
 }

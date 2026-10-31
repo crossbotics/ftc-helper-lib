@@ -279,6 +279,12 @@ public final class SimNewRobot {
                 case "webcam":
                     parts.add(0, new Part("Camera", field, "Camera.webcam(" + q(d.name) + ")" + goal() + ren, section));
                     break;
+                case "huskylens": {
+                    Part p = new Part("Camera", field, "Camera.huskyLens(" + q(d.name) + ")" + ren, section);
+                    p.note = "TODO what you taught it: .tag(1, 30) = ID1 is AprilTag 30; or .colors().label(1, \"POLLEN\")";
+                    parts.add(0, p);
+                    break;
+                }
                 case "limelight":
                     parts.add(0, new Part("Camera", field, "Camera.limelight(" + q(d.name) + ")" + goal() + ren, section)
                             .num("pipeline", "0"));

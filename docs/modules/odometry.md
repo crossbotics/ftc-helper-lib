@@ -562,8 +562,8 @@ Every step: [the autonomous builder](../guides/autonomous-builder.md#drive-to-a-
    starts there. Otherwise it starts at (0, 0, 0) where the robot stands.
 4. **Field-centric "forward"** comes from the odometry's heading, not the IMU's. Why: it carries on
    from autonomous with nothing added, and the Pinpoint's and OTOS's IMUs are made for it.
-   Holding BACK (field-centric on) makes "forward" the way the robot faces now: it sets the odometry's
-   heading to 0 and keeps x and y.
+   Holding BACK (field-centric on) makes "forward" the way the robot faces now, for the driver only: the
+   pose does not change, so aiming at a field point stays right.
 
 ---
 

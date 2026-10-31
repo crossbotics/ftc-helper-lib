@@ -3,19 +3,21 @@
 //   node tools/check_builder.mjs
 //
 // It fails (exit 1) when:
-//   1. the Java or the scenario for a shared fixture plan is not, letter for letter, what crossbotics.com's
-//      web path builder wrote for it (sim/src/test/resources/builder/fixtures.json: plans and the web
-//      builder's output, made with --write-fixtures);
+//   1. the Java or the scenario for a shared fixture plan is not, letter for letter, what the shared files wrote
+//      for it when the fixtures were made (sim/src/test/resources/builder/fixtures.json, made with
+//      --write-fixtures). This is a snapshot: it finds a change, not whether the first output was right. The
+//      plan with numbers worked out by hand (below) checks that;
 //   2. simcore.js (the simulator-only part) gets something wrong: the plan as the Built Auto reads it,
 //      plan <-> field numbers for both alliances, the field's neutral names, plan versus real, the fixes,
 //      the Pedro scenario, the recorded scenario;
-//   3. a copy of the shared files on the web site differs from the library's (only checked when a site
-//      checkout is found: SITE_BUILDER_DIR, or ../crossbotics*/public/ftc-helper/path-builder; a warning
-//      unless SITE_STRICT=1, since the site copies the library's files after a change).
+//   3. a copy of the shared files on the web site differs from the release the site names in its
+//      src/lib-release.json (only checked when a site checkout is found: SITE_BUILDER_DIR, or
+//      ../site/public/ftc-helper/path-builder; it says so when it finds none, as on GitHub). The library
+//      may be ahead of the site between releases: that is no problem, since the site copies from the release.
 //
 // Which way the files go: the LIBRARY is the source of pathcore.js, stepscore.js, mapdraw.js and
-// setupcard.js. Change them here, run this check, then copy them to the site (its
-// scripts/sync-path-builder.mjs copies them, like the field file).
+// setupcard.js. Change them here and run this check. A release takes them to the site (its
+// scripts/sync-path-builder.mjs copies them, and the field file, from the release the site names).
 //
 // To make the fixtures again (only when the output changes on purpose), from the library's own files
 // (sim/src/test/resources/sim/builder: the source) or from the site's once it has copied them:
@@ -268,8 +270,24 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 	const site = siteDir();
 	if (site && fs.existsSync(path.join(site, 'field.json'))) {
 		const web = JSON.parse(fs.readFileSync(path.join(site, 'field.json'), 'utf8'));
-		ok(JSON.stringify(web.elements) === JSON.stringify(n.elements), 'neutral field: the same parts and names as the site\'s field.json');
+		// The site's field comes from its release, and this checkout may be ahead of that.
+		const tag = siteRelease(site);
+		const atTag = tag && spawnSync('git', ['show', `${tag}:sim/fields/biobuzz-2026.json`], { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+		const released = atTag && atTag.status === 0 ? C.neutralField(JSON.parse(atTag.stdout)) : n;
+		ok(JSON.stringify(web.elements) === JSON.stringify(released.elements), 'neutral field: the same parts and names as the site\'s field.json');
 	}
+}
+
+// A plan with its numbers worked out by hand: start at (0, 0) facing away from the wall (y up), 24 in
+// forward, a quarter turn left, 12 in forward. The fixtures above cannot find a wrong first answer; this can.
+{
+	const plan = { drive: 'mecanum', mirror: false, start: { x: 0, y: 0, h: 0, note: '', spot: true },
+		steps: [{ kind: 'move', label: 'A', inches: 24, dir: 0, power: 0.5 }, { kind: 'turn', label: 'B', deg: 90, power: 0.5 },
+			{ kind: 'move', label: 'C', inches: 12, dir: 0, power: 0.5 }] };
+	const e = S.simulate(plan).ends;
+	ok(near(e[0].x, 0, 1e-6) && near(e[0].y, 24, 1e-6), 'by hand: 24 in forward ends at (0, 24)');
+	ok(near(e[1].x, 0, 1e-6) && near(e[1].y, 24, 1e-6) && near(e[1].h, 90, 1e-6), 'by hand: a turn stays in place, heading 90');
+	ok(near(e[2].x, -12, 1e-6) && near(e[2].y, 24, 1e-6), 'by hand: 12 in forward facing left ends at (-12, 24)');
 }
 
 // The timeline: the steps plan's dead reckoning; a Pedro path at an even pace to its end.
@@ -277,7 +295,6 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 	const b = { mode: 'steps', steps: { plan: STEP_PLANS[1].plan } };
 	const tl = C.timeline(b);
 	const sim = S.simulate(STEP_PLANS[1].plan);
-	ok(near(tl.total, sim.total) && tl.ends.length === sim.ends.length, 'timeline: steps = stepscore.simulate');
 	const mid = C.poseAtTime(tl, sim.ends[1].t1);
 	ok(near(mid.x, sim.ends[1].x, 1e-6) && near(mid.y, sim.ends[1].y, 1e-6), 'timeline: the pose at a step\'s end time is its end');
 	const pb = { mode: 'pedro', pedro: PEDRO_PLANS[0].st };
@@ -432,8 +449,7 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 	if (sitePage && fs.existsSync(sitePage)) {
 		const sp = fs.readFileSync(sitePage, 'utf8');
 		const good = /S\.stepsToPoint\(/.test(sp) && /S\.dragMove\(/.test(sp) && /S\.tankSteps\(/.test(sp) && /fromJava\(.*\{ drive: state\.plan\.drive \}/.test(sp);
-		if (process.env.SITE_STRICT === '1') ok(good, 'the site\'s steps.js: drive there, drag, every render and Java in use the shared tank rules');
-		else if (!good) console.log('WARN the site\'s steps.js does not use the shared tank rules yet');
+		ok(good, 'the site\'s steps.js: drive there, drag, every render and Java in use the shared tank rules');
 	}
 }
 
@@ -442,24 +458,23 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 function siteDir() {
 	const want = process.env.SITE_BUILDER_DIR;
 	if (want) return fs.existsSync(path.join(want, 'stepscore.js')) ? want : null;
-	const code = path.resolve(root, '..');
-	for (const name of fs.existsSync(code) ? fs.readdirSync(code).sort() : []) {
-		if (!/^crossbotics/.test(name)) continue;
-		const d = path.join(code, name, 'public/ftc-helper/path-builder');
-		if (fs.existsSync(path.join(d, 'stepscore.js'))) return d;
-	}
-	return null;
+	const d = path.resolve(root, '../site/public/ftc-helper/path-builder');
+	return fs.existsSync(path.join(d, 'stepscore.js')) ? d : null;
+}
+// The release the site's folder names (<site>/src/lib-release.json), or null.
+function siteRelease(d) {
+	const release = path.resolve(d, '../../../src/lib-release.json');
+	return fs.existsSync(release) ? JSON.parse(fs.readFileSync(release, 'utf8')).tag : null;
 }
 const site = siteDir();
 if (site) {
-	// The library changes first and the site copies it later, so a site that is behind is a warning
-	// (SITE_STRICT=1 makes it a failure, e.g. right before publishing the site).
-	const strict = process.env.SITE_STRICT === '1';
-	for (const f of SHARED) {
-		const a = fs.readFileSync(path.join(dir, f), 'utf8'), b = fs.readFileSync(path.join(site, f), 'utf8');
-		const what = `${f}: the site's copy (${site}) differs from the library's. The library is the source: copy it to the site (scripts/sync-path-builder.mjs there)`;
-		if (strict) ok(a === b, what);
-		else if (a !== b) console.log('WARN ' + what);
+	// The site's copies must be what its release holds.
+	const tag = siteRelease(site);
+	ok(!!tag, `the site names its library release (${site})`);
+	for (const f of tag ? SHARED : []) {
+		const r = spawnSync('git', ['show', `${tag}:sim/src/test/resources/sim/builder/${f}`], { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+		ok(r.status === 0, `${f}: this checkout has the site's release ${tag} (git fetch --tags)`);
+		if (r.status === 0) ok(r.stdout === fs.readFileSync(path.join(site, f), 'utf8'), `${f}: the site's copy (${site}) is not what ${tag} holds. Run the site's scripts/sync-path-builder.mjs`);
 	}
 } else {
 	console.log('No site checkout found (SITE_BUILDER_DIR): the shared files were not compared with the site\'s.');

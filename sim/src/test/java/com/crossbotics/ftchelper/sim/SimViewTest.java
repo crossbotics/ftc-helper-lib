@@ -187,14 +187,14 @@ public class SimViewTest {
                     InputStream in = c.getInputStream();
                     for (int i = 0; i < 2; i++) {
                         String body = "a=1&session=t&seq=" + (i + 1);
-                        out.write(("POST /pad/1 HTTP/1.1\r\nHost: x\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: "
+                        out.write(("POST /pad/1 HTTP/1.1\r\nHost: localhost\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: "
                                 + body.length() + "\r\n\r\n" + body).getBytes(StandardCharsets.UTF_8));
                         out.flush();
                         String head = readResponse(in);
                         assertTrue(head, head.startsWith("HTTP/1.1 200"));
                         assertTrue(head, head.toLowerCase(java.util.Locale.US).contains("connection: keep-alive"));
                     }
-                    out.write("GET /opmodes HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.UTF_8));
+                    out.write("GET /opmodes HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n".getBytes(StandardCharsets.UTF_8));
                     out.flush();
                     String head = readResponse(in);
                     assertTrue(head, head.contains("Connection: close"));
@@ -203,14 +203,14 @@ public class SimViewTest {
                 int jumps = s.sim.jumps.get();
                 try (Socket c = new Socket(InetAddress.getLoopbackAddress(), server.port())) {
                     String body = "action=pose&x=-40&y=-40&heading=0";
-                    c.getOutputStream().write(("POST /cmd HTTP/1.1\r\nHost: x\r\nConnection: close\r\nContent-Length: " + body.length()
+                    c.getOutputStream().write(("POST /cmd HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\nContent-Length: " + body.length()
                             + "\r\n\r\n" + body).getBytes(StandardCharsets.UTF_8));
                     readResponse(c.getInputStream());
                 }
                 assertEquals("putting the robot somewhere is a jump", jumps + 1, s.sim.jumps.get());
                 try (Socket c = new Socket(InetAddress.getLoopbackAddress(), server.port())) {
                     c.setSoTimeout(3000);
-                    c.getOutputStream().write("GET /stream HTTP/1.1\r\nHost: x\r\n\r\n".getBytes(StandardCharsets.UTF_8));
+                    c.getOutputStream().write("GET /stream HTTP/1.1\r\nHost: localhost\r\n\r\n".getBytes(StandardCharsets.UTF_8));
                     BufferedReader r = new BufferedReader(new InputStreamReader(c.getInputStream(), StandardCharsets.UTF_8));
                     List<String> events = new ArrayList<>();
                     long end = System.currentTimeMillis() + 2000;
@@ -251,5 +251,39 @@ public class SimViewTest {
             read += k;
         }
         return head + new String(body, StandardCharsets.UTF_8);
+    }
+
+    // The server itself refuses another name, and the command does nothing.
+    @Test public void aRequestForAnotherNameIsRefusedAndDoesNothing() throws Exception {
+        try (SimRun s = new SimRun()) {
+            SimServer server = new SimServer(s.sim, 0, false);
+            Thread t = new Thread(server::serve, "test-server");
+            t.setDaemon(true);
+            t.start();
+            try {
+                int jumps = s.sim.jumps.get();
+                try (Socket c = new Socket(InetAddress.getLoopbackAddress(), server.port())) {
+                    c.setSoTimeout(3000);
+                    String body = "action=pose&x=-40&y=-40&heading=0";
+                    c.getOutputStream().write(("POST /cmd HTTP/1.1\r\nHost: evil.example:8780\r\nConnection: close\r\nContent-Length: " + body.length()
+                            + "\r\n\r\n" + body).getBytes(StandardCharsets.UTF_8));
+                    String answer = readResponse(c.getInputStream());
+                    assertTrue(answer, answer.startsWith("HTTP/1.1 404"));
+                }
+                assertEquals("the command must not run", jumps, s.sim.jumps.get());
+            } finally {
+                server.close();
+            }
+        }
+    }
+
+    // Another web site can point its own name at this computer (DNS rebinding): only this computer's names pass.
+    @Test public void onlyThisComputersNamesAreServed() {
+        assertTrue(SimServer.hostIsThisComputer("GET / HTTP/1.1\r\nHost: localhost:8780\r\n\r\n"));
+        assertTrue(SimServer.hostIsThisComputer("GET / HTTP/1.1\r\nHost: 127.0.0.1:8780\r\n\r\n"));
+        assertTrue(SimServer.hostIsThisComputer("GET / HTTP/1.1\r\nHost: [::1]:8780\r\n\r\n"));
+        assertTrue(SimServer.hostIsThisComputer("GET / HTTP/1.0\r\n\r\n"));
+        assertFalse(SimServer.hostIsThisComputer("POST /cmd HTTP/1.1\r\nOrigin: http://evil.example:8780\r\nHost: evil.example:8780\r\n\r\n"));
+        assertFalse(SimServer.hostIsThisComputer("GET / HTTP/1.1\r\nHost: localhost.evil.example\r\n\r\n"));
     }
 }

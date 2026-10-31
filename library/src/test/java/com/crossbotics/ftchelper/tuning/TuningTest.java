@@ -54,7 +54,10 @@ public class TuningTest {
         assertEquals(12, b.defaultValue(), 1e-12);
         assertEquals(1, b.step(), 1e-12);
         b.set(15);
-        assertEquals(15, Tunable.fromCode("Auto/leaveInches", 24, 1).get(), 1e-12);
+        Tunable c = Tunable.fromCode("Auto/leaveInches", 24, 1);
+        assertEquals(15, c.get(), 1e-12);
+        c.reset();
+        assertEquals("reset goes to this program's code value", 24, c.get(), 1e-12);
     }
 
     @Test public void savedValuesComeBackAfterARestart() {

@@ -32,6 +32,11 @@ jobs:
         run: node tools/check_builder.mjs
       - name: Test list (testing/tests) and its catalogue
         run: python3 tools/check_tests.py
+      - name: A release tag has its changelog heading and test list
+        if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
+        env:
+          TAG: ${{ github.ref_name }}
+        run: python3 tools/release.py check "$TAG"
 
   docs:
     # docs-live only: its docs fixes are checked against the released code, without the Gradle build.

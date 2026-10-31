@@ -154,6 +154,8 @@ robot in five files: the Drive Tuner, then `Tunables.Drive.calibrated = true`.
 | <samp>... button job took N ms: the whole robot stopped that long. ...</samp> or <samp>a button job took N ms: ...</samp> | a button job waited: see "A job took N ms" under [Robot behavior](#robot-behavior) |
 | <samp>Lift update took N ms: update() must not wait or sleep</samp> | a part's `update()` took more than 25 ms: no wait or `sleep()` in `update()`. It goes away 5 s after the last slow update |
 | <samp>intake_color: not found: no colour sensor called ...</samp> (or distance sensor) | a piece sensor's name is not in the robot configuration: it sees nothing, and Pieces counts nothing with it. Fix the name |
+| <samp>huskylens: not answering: check the cable...</samp> | the HuskyLens does not answer on I2C (with a loose cable or its Protocol Type on UART). Check the cable (its green wire goes to the hub's white wire on a home-made cable), and in its General Settings set Protocol Type to I2C or Auto Detect |
+| <samp>huskylens</samp> sees a tag but `target(34)` is null | it says only the number you taught it. Add `.tag(taughtNumber, 34)`, or teach that tag ([how](modules/vision.md#huskylenscamera)) |
 | <samp>ready_color: no new reading for N s</samp> | a piece sensor (or its camera) stopped answering: a loose cable, or a camera that stopped streaming. It sees nothing until readings come back |
 | <samp>Intake: held back by stopsWhen for N s (the count says full)</samp> | the piece count says full. Not really full? Hold the in-button (RT) 1 s to pull in anyway, or hold G2's left stick button 1 s: count = 0 ([Pieces](modules/robot.md#pieces-and-piecesensor)) |
 

@@ -560,6 +560,35 @@ public class AutoDrive {
         return turnUntil(headingDeg, maxPower, deadlineFromNow());
     }
 
+    /**
+     * {@link #turn(double, double)} with its own time limit, for a step that has a time limit of its own.
+     *
+     * <p><b>BLOCKS</b> (on purpose): returns when the move ends. Autonomous only; never in TeleOp.
+     *
+     * @param degrees    how far to turn, counterclockwise positive
+     * @param maxPower   0.2 to 1
+     * @param timeoutSec seconds it may take; never more than the drive's own {@code actionTimeoutSec}
+     * @return how the turn ended: DONE, TIMED_OUT or STOPPED
+     */
+    public Result turn(double degrees, double maxPower, double timeoutSec) {
+        return turnTo(Angles.wrapDegrees(heading.getAsDouble() + degrees), maxPower, timeoutSec);
+    }
+
+    /**
+     * {@link #turnTo(double, double)} with its own time limit, for a step that has a time limit of its own.
+     *
+     * <p><b>BLOCKS</b> (on purpose): returns when the move ends. Autonomous only; never in TeleOp.
+     *
+     * @param headingDeg target IMU heading, degrees (counterclockwise positive, 0 = start direction)
+     * @param maxPower   0.2 to 1
+     * @param timeoutSec seconds it may take; never more than the drive's own {@code actionTimeoutSec}
+     * @return how the turn ended: DONE, TIMED_OUT or STOPPED
+     */
+    public Result turnTo(double headingDeg, double maxPower, double timeoutSec) {
+        double sec = Math.min(Math.max(0, timeoutSec), cfg.actionTimeoutSec);
+        return turnUntil(headingDeg, maxPower, clockNanos.getAsLong() + (long) (sec * 1e9));
+    }
+
     // The turn-in-place loop used by turn(), turnTo() and the end of moveWithTurn().
     // It is only "done" when the heading has stayed close enough for turnSettleSec, so a robot
     // that swings past the target and back is not counted as finished too early.

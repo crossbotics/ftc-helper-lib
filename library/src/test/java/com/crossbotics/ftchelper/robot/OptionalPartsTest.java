@@ -542,6 +542,7 @@ public class OptionalPartsTest {
             add(Lights.gobilda("light").optional());
             add(Lights.blinkin("blinkin").optional());
             add(Camera.webcam("Webcam 1").optional());
+            add(Camera.huskyLens("huskylens").optional());
             add(PieceSensor.color("intake_color").kinds("POLLEN", "NECTAR").optional());
         }
     }
@@ -565,7 +566,7 @@ public class OptionalPartsTest {
         for (Module<?> m : parts) assertFalse(m.name(), m.isPresent());
         int offNotes = 0;
         for (String n : r.notes()) if (n.contains("not in the configuration")) offNotes++;
-        assertEquals(r.notes().toString(), 16, offNotes);
+        assertEquals(r.notes().toString(), 17, offNotes);
         r.started();
         List<String> problems = new ArrayList<>();
         int calls = 0;

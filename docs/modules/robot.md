@@ -115,6 +115,11 @@ part each loop. Nothing moves in INIT.
 | For your code | |
 | --- | --- |
 | `run(Action)`, `cancel(Action)`, `cancelAll()` | start or stop actions |
+| `atInit(Runnable)`, `duringInit(Runnable)`, `atStop(Runnable)` | your own code once at INIT, every pass of INIT, and at STOP |
+| `wasStarted()` | true once START was pressed |
+| `pauseAll()`, `resume()`, `togglePause()`, `isPaused()` | stop every part and hold it stopped, go on again, and ask which it is |
+| `setAlliance(Alliance)` | sets this match's alliance. The OpMode classes do this for you: only for your own plain OpMode |
+| `driveWith(gamepad)`, `driveWith(forward, strafeRight, turnRight)` | drives from a gamepad, or from your own numbers (forward, strafe right and turn right are +). Only in your own plain OpMode, after `robot.init(this)`: anywhere else it stops with an error |
 | `interlocks()` | the interlock rules from `define()` (read only) |
 | `alliance()` | this match's alliance (from autonomous's menu; TeleOp remembers it) |
 | `notes()` | INIT notes: missing Tunables sections or fields (the library's defaults are used), parts that are off (not in the configuration) |
@@ -1039,6 +1044,7 @@ Not built yet: a CR servo with an absolute encoder. It fits the same way: anythi
 ```java
 camera = add(Camera.limelight("limelight").goal("BLUE SCORING", "RED SCORING"));
 camera = add(Camera.webcam("Webcam 1"));
+camera = add(Camera.huskyLens("huskylens").tag(1, 34).tag(2, 35).goal("BLUE SCORING", "RED SCORING"));
 ```
 
 `goal()` (the alliance's goal, or null), `target(name)`, `target(id)`, `source()` (the
@@ -1051,6 +1057,13 @@ for example seen from under the HIVE) is never the goal: then `goal()` is null a
 says `Goal : not seen (RED SCORING is upside down (a down CELL))`. Aiming, the turret, the shot table's
 distance, LOCKED and the launcher's "aimed" checks all use `goal()`. How the camera tells:
 [vision.md](vision.md#taggroup). `target("RED SCORING")` still gives that group, upside down or not. Tunables (Limelight): `pipeline` ([all its numbers](../guides/tunables.md#camera)). It starts in INIT.
+
+**A HuskyLens** says the number you taught it, not the tag's real number, so list them with
+`tag(taughtNumber, tagNumber)`. It can look for taught colors or one object instead: `colors()`, `objects()`,
+and `label(taughtNumber, name)` for `target(name)`. Tunables: `hfovDeg` (its view angle: measure it) and
+`sizeIn` (for a rough distance; the shot table needs it). INIT says what is missing. It has no lighting test.
+What it cannot do so well, and how to teach it: [vision.md](vision.md#huskylenscamera). `isHuskyLens()`,
+`isWebcam()` and `isLimelight()` say which kind it is.
 
 Venue lighting ([vision.md](vision.md#venue-lighting)): the camera tries a few settings in INIT and
 keeps the one that sees the most AprilTags.
@@ -1134,8 +1147,8 @@ distances. INIT shows the alliance and the choice: `Aim: RED, goal x 13, y -13 i
 **A wrong pose must not aim the robot.** The odometry is only as good as its pose: autonomous's start
 spot, carried into TeleOp. So the backup is OFF (camera only, and a warning on the Driver Station:
 `Aim odometry: the pose was never set ...`) until the pose was set: autonomous ran in this match, or
-your code called `robot.odometry().setPose(...)` (holding BACK to reset "forward" changes only the
-heading and does not count). It is also off while it says the goal is farther than `maxGoalDistance`
+your code called `robot.odometry().setPose(...)` (holding BACK to reset "forward" changes only what
+"forward" means for the driver, not the pose, and does not count). It is also off while it says the goal is farther than `maxGoalDistance`
 (170 in: more than the field allows). While the camera and the odometry both see the goal and their
 distances differ by more than `cameraOdometryAgree` (6 in), the Driver Station warns
 (`Aim: camera says 60 in, odometry 48 in: ...`).
@@ -1593,7 +1606,7 @@ The whole table, with how to move each: [the button menu](../guides/buttons.md#m
 | A / X / Y / B | free / free / field-centric on/off (mecanum) / free | lift lowest / second / highest / claw |
 | D-pad up/down | free | lift next height, or launcher speed |
 | D-pad left/right | free | wrist |
-| BACK | press: **pause** everything at once (stopped on brake), a tap again: go on; held 1 s (field-centric on): also "forward" = away from you now (with odometry: its heading becomes 0, x and y stay), still paused | turret following on/off (with a turret; else free) |
+| BACK | press: **pause** everything at once (stopped on brake), a tap again: go on; held 1 s (field-centric on): also "forward" = away from you now (with odometry: the pose stays, only the driver's "forward" changes), still paused | turret following on/off (with a turret; else free) |
 | START | hold 1 s: **set pose here** (with odometry: the pose becomes `Tunables.Odometry`'s reset spot) | free |
 | START + BACK | hold START, then press BACK: debug lines (when let go); with `lib.switchAlliance(g1.start, g1.back)`, both held 1.5 s: **switch the alliance**. BACK first is only a pause | |
 | GUIDE | tap: the button map, without the free buttons (during the match too); hold 1 s: the tuning menu (PRACTICE) | free |

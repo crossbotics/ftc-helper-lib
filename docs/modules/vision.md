@@ -6,8 +6,8 @@ Package: `com.crossbotics.ftchelper.vision`
 
 Learn it hands-on: [18 Vision aiming](../tutorials/18-vision-aim.md).
 
-Find **AprilTags** (square black-and-white field markers, each with an id number) with a USB webcam
-or a Limelight 3A camera, and aim at them. Your code talks to ONE interface (a set of methods every
+Find **AprilTags** (square black-and-white field markers, each with an id number) with a USB webcam,
+a Limelight 3A or a HuskyLens camera, and aim at them. Your code talks to ONE interface (a set of methods every
 camera has), so switching cameras is a one-line change. With the [robot in five files](robot.md#camera),
 its `Camera` part sets this up; start with [lesson 9](../tutorials/start/09-shooter-and-camera.md).
 Use this page to aim in your own code (tutorial 18).
@@ -18,8 +18,9 @@ The **bearing** is how far the robot must turn to face a target, in degrees (+ =
 | --- | --- |
 | [`TargetSource`](#targetsource) | talk to any camera the same way (the interface) |
 | [`WebcamTags`](#webcamtags) | find AprilTags with a USB webcam (the SDK's tag finder; SDK 12 clusters too) |
+| [`HuskyLensCamera`](#huskylenscamera) | find taught AprilTags, colors or an object with a HuskyLens |
 | [`LimelightTags`](#limelighttags) | find AprilTags with a Limelight 3A |
-| [`TagGroup`](#taggroup) | report a row of tags as one target with a Limelight |
+| [`TagGroup`](#taggroup) | report a row of tags as one target with a Limelight or a HuskyLens |
 | [`TargetObservation`](#targetobservation) | read one target: id, name, bearing, distance, picture time |
 | [`AimController`](#aimcontroller) | turn the bearing into a turn power, safely |
 | [`MovingShot`](#movingshot) | the math of shooting while moving: an old picture brought to now, the lead for the flight time |
@@ -121,6 +122,72 @@ the library sends them on a background thread, so they never slow the loop.
 The library flips the Limelight's `tx` sign so that bearing is **positive to the LEFT**, like
 everywhere else. The picture time includes the Limelight's own capture and processing time, so
 "how old is this picture" is honest. The same picture is not reported twice.
+
+## HuskyLensCamera
+
+A [DFRobot HuskyLens](https://wiki.dfrobot.com/sen0305/) is a small camera with a screen and two buttons.
+It plugs into an I2C sensor port of a hub (not USB; the FTC docs suggest bus 1, 2 or 3, because bus 0
+has the hub's IMU), and it does not use the SDK's VisionPortal. It finds
+AprilTags, colors or one object by itself. The SDK has the driver, and the
+[FTC docs](https://ftc-docs.firstinspires.org/en/latest/devices/huskylens/huskylens.html) show the wiring.
+goBILDA sells one with a cable that fits a REV hub. Configure it as `HuskyLens`.
+
+```java
+HuskyLensCamera camera = HuskyLensCamera.create(hardwareMap, "huskylens")
+        .tag(1, 34).tag(2, 35)   // taught number 1 is AprilTag 34, taught number 2 is AprilTag 35 // (1)!
+        .hfovDeg(60)             // its view angle: measure yours // (2)!
+        .sizeIn(3.25);           // for a rough distance: the tag's black square, in inches // (3)!
+camera.start();
+// every loop:
+camera.update();
+TargetObservation tag = camera.target(34);
+```
+
+1. **It never says a tag's real number.** It says the number you taught it. Without `tag(...)`, `target(34)` finds nothing.
+2. The seller gives no view angle, so the library uses a guess of 60 until you measure. See below.
+3. Without `sizeIn`, `distanceIn` is `NaN` (no distance).
+
+**Teach it, on the camera.** Turn the dial to Tag Recognition. Long press the dial, turn on **Learn
+Multiple**, and save. Point the `+` at a tag and press the learning button: that tag is ID1. Press the
+learning button again before the countdown ends for ID2, and so on. An untaught tag has the number 0 (from the camera's protocol; test AIM-06 checks it).
+Write the list down: the numbers in `tag(...)` must match the order you taught.
+
+| Method | What it does |
+| --- | --- |
+| `create(hardwareMap, name)` | finds it in the robot configuration |
+| `mode(Mode.TAGS / COLORS / OBJECTS)` | what to look for (default `TAGS`); `OBJECTS` follows ONE taught object. You can change it in a running OpMode |
+| `tag(taughtNumber, tagNumber)` | which real AprilTag a taught number is |
+| `label(taughtNumber, name)` | a name for `target(name)`, for example a taught color: `label(1, "POLLEN")` |
+| `hfovDeg(degrees)` | the view angle, left edge to right edge of the picture |
+| `sizeIn(inches)` | the real size of what it looks at (its longest side as the camera sees it), for a rough distance |
+| `groups(list)`, `keepTargetsMs(ms)` | as on the Limelight |
+| `mode()`, `latestBlocks()`, `getHuskyLens()` | the mode now, the SDK's boxes, the SDK's object (for example for line tracking's arrows) |
+| `HuskyLensCamera.answers(device)` | asks "are you there?" and checks the answer (slow: never in the robot's loop) |
+| `start()`, `update()`, `targets()`, `target(...)`, `isWorking()`, `status()`, `close()` | see [`TargetSource`](#targetsource) |
+
+**Measure the view angle.** Stand a thin stick 24 in straight in front of the lens. Move it sideways until
+it just touches the edge of the screen. Measure how far it moved, in inches (`s`). The angle is
+`2 * atan(s / 24)`: 14 in sideways gives about 60 degrees. A wrong angle makes bearings too big or too
+small, but 0 is still straight ahead, so aiming still ends in the right place.
+
+**What it cannot do as well as the other cameras:**
+
+- **Distance is rough.** It comes from the size of a box only (a thing twice as far looks half as big), and a
+  slanted tag has a smaller box. Make your shot table with this camera, and check it. For long or exact
+  shots, use a Limelight or a webcam.
+- **A single tag has no "right side up".** A tag group has one, from the order of its tags in the picture, as
+  with the Limelight ([`TagGroup`](#taggroup)). So a goal needs 2 taught tags of the group in view.
+- **At most 6 boxes in one reading.** That is the SDK driver's limit. With more in view, some are left out.
+- **Colors change with the light.** The seller says so too. Teach them at the venue if you can.
+- **A cable that comes off takes about a second to show.** The SDK cannot tell an unplugged HuskyLens from one
+  that sees nothing: on a REV hub an empty port reads as zeros, and its `knock()` still says true. So while it
+  sees nothing, this class asks "are you there?" about once a second and checks the answer itself.
+
+Reading it is a slow I2C request, so `update()` hands it to a helper thread and never waits.
+
+!!! warning "Not yet tried on a real robot"
+    This class is tested with the SDK's own HuskyLens class and pretend I2C answers, not with a real
+    camera. Test it first ([test AIM-06](https://github.com/crossbotics/ftc-helper-lib/blob/main/testing/tests/AIM-06.md)), and please tell us what you find.
 
 ## Venue lighting
 
