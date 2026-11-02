@@ -7,7 +7,7 @@ where: both
 minutes: 30
 needs: [pinpoint|otos|dead-wheels]
 kit_bots: []
-since: unreleased
+since: v0.24.0
 docs: [modules/odometry.md#keep-out-boxes-and-routes]
 ---
 
