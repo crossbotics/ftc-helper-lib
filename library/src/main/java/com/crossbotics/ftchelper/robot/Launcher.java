@@ -121,7 +121,11 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     private double trimPct = 0;
     private double trimStepPct = 1, trimMaxPct = 15;
     private boolean spinning = false;
+    // spinAtStart(...) in Robot.java: TRUE, FALSE, or null = not written (then on with a separate feeder).
+    private Boolean spinAtStartCode = null;
+    // Decided at build: Tunables spinAtStart, else the code, else the feeder (see spinsAtStart()).
     private boolean spinAtStart = false;
+    private String spinAtStartWhy = "";
     // True when the trimmed speed is cut to the motor's top speed (shown as "(motor limit)").
     private boolean atMotorLimit = false;
     // Last time's trim {percent, rpm steps}, offered at INIT until it is used or the trim is changed; null = none.
@@ -139,7 +143,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     static final java.util.Map<String, double[]> lastTrim = new java.util.HashMap<>();
     /** A held D-pad steps again every this many seconds (the first repeat 0.5 s after the press). */
     static final double REPEAT_SEC = 0.25;
-    // fireWhileHeld: true while the button is held, and how many shots this press has asked for.
+    // fireWhileHeld: true while the button is held, and how many shots the HOLD has added (not the
+    // press's own shot, which counts like a tap on fire()).
     private boolean holding = false;
     private int heldShots = 0;
     private double shotAngleDeg = Double.NaN;
@@ -158,6 +163,14 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     // fire(): the most shots that may wait at once (Tunables maxFiringQueue). Taps past it are ignored,
     // so a nervous driver tapping ten times does not get ten shots later.
     private int maxFiringQueue = 4;
+    // Tap, then hold the fire button: SPRAY while held (Tunables sprayOnTapHold, only with sprayEnabled).
+    private boolean sprayOnTapHold = false;
+    // The button times (Tunables.Buttons tapGapSec, holdSec), the same ones every other button uses.
+    private com.crossbotics.ftchelper.tuning.Tunable tapGap, holdTime;
+    // The fire button: when this press began, and when the last SHORT press was let go (seconds; NaN = none).
+    private double pressedAt = Double.NaN, tappedAt = Double.NaN;
+    // This press came right after a tap (it may become a spray), and it is spraying now.
+    private boolean afterTap = false, spraying = false;
     // The alliance trims, percent (each half of the field can differ a little).
     private double redTrimPct = 0, blueTrimPct = 0;
     // Eject (ejectAction): one piece out at a low speed. On while ejecting, until when (seconds), and
@@ -277,11 +290,32 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
 
     /**
      * Spins up at START (in autonomous and TeleOp), so it is at speed when the first shot is wanted.
-     * LB (or {@link #idle()}) still lets it coast down.
+     * LB (or {@link #idle()}) still lets it coast down. A launcher with a separate feeder (an indexer
+     * or a feed stop) does this already: a spinning wheel cannot throw a piece the feeder has not
+     * pushed in. Tunables {@code spinAtStart} (true / false) wins over the code.
      */
     public Launcher spinAtStart() {
-        spinAtStart = true;
+        return spinAtStart(true);
+    }
+
+    /**
+     * {@code true}: spins up at START (see {@link #spinAtStart()}). {@code false}: waits for LB, even
+     * with a separate feeder (e.g. to save the battery). Tunables {@code spinAtStart} wins over this.
+     */
+    public Launcher spinAtStart(boolean on) {
+        spinAtStartCode = on;
         return this;
+    }
+
+    /** True if it spins up at START (decided at INIT: Tunables, then the code, then the feeder). */
+    public boolean spinsAtStart() {
+        return spinAtStart;
+    }
+
+    // A feeder of its own (an indexer, or a feed stop holding the pieces back): only then is a wheel
+    // spinning all match safe. Pushing parts alone (pushedBy) are not: the intake pushes while it intakes.
+    private boolean separateFeeder() {
+        return indexer != null || feedStopDevice != null;
     }
 
     /** The flywheel turns the other way. */
@@ -488,6 +522,21 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         sprayLastSec = t.has("sprayLastSec") ? Math.max(0, t.number("sprayLastSec", 5)) : 5;
         // At least 1: 0 would make the fire button do nothing.
         maxFiringQueue = t.has("maxFiringQueue") ? Math.max(1, (int) Math.round(t.number("maxFiringQueue", 4))) : 4;
+        // Tap, then hold: a part of SPRAY, so only with sprayEnabled; on unless turned off.
+        sprayOnTapHold = sprayOn && (!t.has("sprayOnTapHold") || t.flag("sprayOnTapHold", true));
+        tapGap = ButtonPlan.tapGap(robot);
+        holdTime = ButtonPlan.holdTime(robot);
+        // Spin at START: Tunables first (a team changes it without code), then Robot.java, then the feeder.
+        if (t.has("spinAtStart")) {
+            spinAtStart = t.flag("spinAtStart", false);
+            spinAtStartWhy = "Tunables spinAtStart";
+        } else if (spinAtStartCode != null) {
+            spinAtStart = spinAtStartCode;
+            spinAtStartWhy = "Robot.java";
+        } else {
+            spinAtStart = separateFeeder();
+            spinAtStartWhy = spinAtStart ? "it has a separate feeder" : "no separate feeder";
+        }
         redTrimPct = t.has("redTrimPercent") ? t.number("redTrimPercent", 0) : 0;
         blueTrimPct = t.has("blueTrimPercent") ? t.number("blueTrimPercent", 0) : 0;
         fallbackDistanceIn = t.has("fallbackDistanceIn") ? t.number("fallbackDistanceIn", Double.NaN) : Double.NaN;
@@ -648,7 +697,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     void start() {
         if (gate != null) gate.start();
         if (usesDistance()) speedMode.on();
-        if (spinAtStart) {
+        if (spinAtStart && !missing) {
             spinning = true;
             part.spinUp();
         }
@@ -687,7 +736,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     /**
      * Fires one piece (spins up first if needed; feeds as soon as it is at speed). Each call adds one
      * shot to the queue, up to {@code maxFiringQueue} shots waiting (Tunables, default 4): four quick
-     * taps while the wheel spins up fire four pieces, and more taps than that are ignored. The piece
+     * taps while the wheel spins up fire four pieces, and more taps than that are ignored. The
+     * launcher's own RB button counts its taps the same way (see {@link #fireWhileHeld()}). The piece
      * being fed now does not count, only the ones still waiting. {@link #fire(int)} has no limit.
      */
     public void fire() {
@@ -828,6 +878,10 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
             modeWhy = "set in code";
             return forcedMode;
         }
+        if (spraying) {
+            modeWhy = "tap, then hold";
+            return ShotMode.SPRAY;
+        }
         MatchTimer timer = MatchTimer.current();
         if (timer != null && timer.isRunning()) {
             if (timer.isAutonomous()) {
@@ -892,34 +946,126 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     }
 
     /**
-     * For a held button, every loop: fires one piece, then the next as soon as that one is fed, for as
-     * long as the button is held (the launcher keeps its time between shots). Pair it with
-     * {@link #ceaseFire()} on release: {@code g1.rb.hold(robot.launcher::fireWhileHeld, robot.launcher::ceaseFire)}.
+     * The fire button, every loop while it is held. Every press fires at once: it is a tap on
+     * {@link #fire()} (one more shot, up to {@code maxFiringQueue} waiting). What comes after depends
+     * on the press:
+     * <ul>
+     * <li>let go quickly: nothing more (four quick taps = four shots);</li>
+     * <li>held ({@code Tunables.Buttons.holdSec}, 0.3 s): keeps firing, the next piece as soon as the
+     * last is fed (QUICK);</li>
+     * <li>a tap, then pressed again within {@code Tunables.Buttons.tapGapSec} and held: SPRAY while held,
+     * a steady stream that does not wait for the speed (only with {@code sprayEnabled}; Tunables
+     * {@code sprayOnTapHold = false} turns this one off). Without it, the same press keeps firing as above.</li>
+     * </ul>
+     * Pair it with {@link #ceaseFire()} on release, or put both on a button with {@link #fireOn}.
      */
     public void fireWhileHeld() {
         needBuilt(part);
-        touch();
-        askedToFire = true;
-        spinning = true;
+        double now = clock.getAsLong() / 1e9;
         if (!holding) {
+            // A new press: exactly a tap, so taps on this button and on fire() count the same way.
             holding = true;
             heldShots = 0;
+            pressedAt = now;
+            afterTap = sprayOnTapHold && !Double.isNaN(tappedAt) && now - tappedAt <= tapGap.get();
+            fire();
+            return;
         }
+        touch();
+        // Tap, then hold: once the press is a hold (not a second quick tap), SPRAY until let go.
+        if (afterTap && !spraying && now - pressedAt >= holdTime.get()) spraying = true;
+        if (spraying) {
+            // Always one shot waiting: the feed stop stays open and the pieces stream through.
+            if (part.getShotsLeft() == 0) {
+                askedToFire = true;
+                spinning = true;
+                part.shoot(1);
+                heldShots++;
+            }
+            return;
+        }
+        // Still held: one more piece only when nothing is waiting or feeding, so a hold never runs ahead.
         if (!part.isShooting()) {
+            askedToFire = true;
+            spinning = true;
             part.shoot(1);
             heldShots++;
         }
     }
 
     /**
-     * The button is let go: no more shots. The press's first shot still goes (a quick tap fires one,
-     * even while the wheel is still spinning up); a later shot still waiting is dropped.
+     * The fire button is let go: the hold (or spray) adds no more. Shots from taps still go (four quick
+     * taps fire four pieces, even while the wheel is still spinning up); a shot the hold added and not
+     * yet fed is dropped.
      */
     public void ceaseFire() {
         if (part == null) return;
         touch();
-        if (holding && heldShots > 1) part.stopShooting();
+        // The hold adds a shot only when nothing else waits, so anything waiting now is the hold's.
+        if (holding && heldShots > 0) part.stopShooting();
+        // A short press is a tap: the next press, soon, may be "tap, then hold". A long one is not.
+        double now = clock.getAsLong() / 1e9;
+        boolean shortPress = holding && holdTime != null && now - pressedAt < holdTime.get();
+        tappedAt = shortPress ? now : Double.NaN;
         holding = false;
+        afterTap = false;
+        spraying = false;
+    }
+
+    /** True while the fire button is held after a tap and spraying (see {@link #fireWhileHeld()}). */
+    public boolean isSprayingOnHold() {
+        return spraying;
+    }
+
+    /** True when tap, then hold the fire button sprays (Tunables {@code sprayEnabled} and {@code sprayOnTapHold}). */
+    public boolean sprayOnTapHold() {
+        return sprayOnTapHold;
+    }
+
+    /**
+     * Puts the fire button on {@code button} instead of RB, in {@code Controls.java}: everything RB does
+     * (tap: fire one, more taps: more shots, hold: keep firing, tap then hold: spray). {@code null}: no fire
+     * button. Example: {@code robot.launcher.fireOn(g2.lb);}
+     *
+     * @param button the new button (e.g. {@code g2.lb}), or null for none
+     * @return the button, to add {@code .rumble()}; null when given null
+     */
+    public Pad.Button fireOn(Pad.Button button) {
+        return moveJob(FIRE_JOB, button, () -> button.hold(this::fireWhileHeld, this::ceaseFire).says(fireWords()));
+    }
+
+    /**
+     * Puts spin up / down on {@code button} instead of LB, in {@code Controls.java}. {@code null}: no
+     * button for it. Example: {@code robot.launcher.spinOn(g2.x);}
+     *
+     * @param button the new button, or null for none
+     * @return the button; null when given null
+     */
+    public Pad.Button spinOn(Pad.Button button) {
+        return moveJob(SPIN_JOB, button, () -> button.toggle(this).says(SPIN_WORDS));
+    }
+
+    // The jobs RB and LB get, by name, so fireOn/spinOn can find and move them.
+    static final String FIRE_JOB = "launcher fire", SPIN_JOB = "launcher spin";
+    static final String SPIN_WORDS = "spin up / down";
+
+    // "fire one; hold: keep firing" (+ "; tap, then hold: spray" when that is on).
+    private String fireWords() {
+        return "fire one; hold: keep firing" + (sprayOnTapHold ? "; tap, then hold: spray" : "");
+    }
+
+    // Takes this launcher's suggested job off its button and, unless button is null, binds it again there.
+    private Pad.Button moveJob(String job, Pad.Button button, Runnable bind) {
+        if (button == null) {
+            // Nothing to bind to; the plan is the one being made now (Controls.java runs during it).
+            ButtonPlan plan = ButtonPlan.current;
+            if (plan != null) plan.dropJob(name(), job);
+            return null;
+        }
+        button.pad.plan.dropJob(name(), job);
+        bind.run();
+        if (button.last != null) button.last.job = job;
+        return button;
     }
 
     /**
@@ -1370,8 +1516,10 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     @Override
     void suggestButtons(ButtonPlan plan) {
         Pad op = plan.operator();
-        op.lb.toggle(this).says("spin up / down");
-        op.rb.hold(this::fireWhileHeld, this::ceaseFire).says("fire one; hold: keep firing");
+        op.lb.toggle(this).says(SPIN_WORDS);
+        if (op.lb.last != null) op.lb.last.job = SPIN_JOB;
+        op.rb.hold(this::fireWhileHeld, this::ceaseFire).says(fireWords());
+        if (op.rb.last != null) op.rb.last.job = FIRE_JOB;
         // With the speed from the table the D-pad trims it by a percentage; with a fixed speed it steps
         // the rpm. Held: one more step every 0.25 s. Double-tap down: back to none.
         String up = usesDistance() ? "speed trim +" + percent(trimStepPct, false) : "speed up";

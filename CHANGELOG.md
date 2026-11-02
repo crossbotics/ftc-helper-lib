@@ -2,6 +2,32 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Added
+
+- **Tap, then hold the fire button to spray.** With `sprayEnabled = true`, a tap of RB and then a held second press
+  SPRAYS while held. Every press still fires at once: RB never waits to see which gesture you mean. Tunables
+  `sprayOnTapHold = false` turns the gesture off. Test SHOT-08.
+- **Move the launcher's buttons in one line:** `robot.launcher.fireOn(g2.y)` and `spinOn(...)` in `Controls.java`
+  (`null` = no button). Cookbook recipe "move-launcher-buttons".
+- `spinAtStart(boolean)`, `spinsAtStart()`, Tunables `spinAtStart`.
+
+### Changed
+
+- **A launcher with its own feeder now spins up at START.** With an indexer or a feed stop, the wheel spins up right
+  after START (autonomous and TeleOp), so the first shot does not wait; a spinning wheel cannot throw a piece the
+  feeder has not pushed in. LB still lets it coast. Before, it waited for LB unless `Robot.java` said `.spinAtStart()`.
+  To keep the old way: `spinAtStart = false` in the launcher's section of `Tunables.java`. A launcher the intake
+  pushes into (`pushedBy` only) still waits for LB.
+- **Turret bot example: the POLLEN table is 40 RPM lower.** It was tuned in the simulator while the wheel was still
+  speeding up, so its shots left at the bottom of the "ready" band (about 40 RPM under the target). With the wheel
+  at speed from START, those numbers shot long. If you copied them, check yours: a table tuned on a wheel that is
+  still speeding up shoots long once the wheel is truly at speed.
+- **The launcher's RB counts quick taps like `fire()`.** Before, a tap on RB while a shot was waiting did nothing,
+  so four quick taps fired one piece. Now each press adds one shot, up to `maxFiringQueue` (default 4), the same as
+  `fire()`. Holding RB still keeps firing, one piece after another; letting go keeps the taps' shots.
+
 ## v0.24.0 - 2026-11-02
 
 ### Added

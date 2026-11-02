@@ -595,6 +595,21 @@ g2.rb.hold(robot.intake::out, robot.intake::stop).says("intake out (hold)");
 **Why:** `free()` takes the standard job off a button; then you give the new buttons their jobs.
 **More:** [Lesson 3: the buttons the parts bring](tutorials/start/03-buttons.md#2-the-buttons-the-parts-bring).
 
+### How do I put the launcher's fire button on another button?
+
+**Where:** `Controls.java`, inside `buttons(...)`.
+
+<!-- recipe: move-launcher-buttons -->
+```java title="Controls.java"
+robot.launcher.fireOn(g2.y);   // all of RB's firing moves to Y
+robot.launcher.spinOn(g2.x);   // LB's spin up / down moves to X
+```
+
+**Why:** the fire button is more than one job: a tap fires one, quick taps line up more shots, a hold keeps
+firing, and a tap then a hold sprays. `fireOn` moves all of it in one line, and RB is free for something else.
+`fireOn(null)` leaves no fire button at all.
+**More:** [Firing](modules/robot.md#firing-shot-modes-feed-stop-piece-path).
+
 ### How do I turn off all the standard buttons?
 
 **Where:** `Controls.java`, inside the class, as a method of its own: below the `}` that ends

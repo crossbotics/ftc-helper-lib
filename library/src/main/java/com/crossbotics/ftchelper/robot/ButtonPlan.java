@@ -22,6 +22,8 @@ import java.util.function.Supplier;
  * the library's driving buttons, stop the program at INIT with the button's name.
  */
 final class ButtonPlan {
+    /** The map being made now (set while Controls.java adds its jobs), or null: for {@code fireOn(null)}. */
+    static ButtonPlan current = null;
     /** Who made the jobs being added now: a module's name, or null for Controls.java. */
     String source = null;
     /** The module making suggestions now (its buttons need it), or null. */
@@ -79,6 +81,8 @@ final class ButtonPlan {
         Gestures gestures;
         // PAIR: the shift key held down, and the button pressed with it.
         Pad.Button shift, with;
+        // A part's job that the team may move with one line (e.g. "launcher fire": fireOn(g2.lb)), or null.
+        String job;
         // The parts this job needs (a module's suggestion, toggle(part), needs(...)): off if one is not on the robot.
         final List<Module<?>> needs = new ArrayList<>();
 
@@ -207,6 +211,16 @@ final class ButtonPlan {
         }
         jobs.put(input, e);
         return e;
+    }
+
+    /**
+     * Takes a part's job (by its name, e.g. {@code "launcher fire"}) off whatever button it has, so the
+     * team can put it on another one ({@code fireOn(g2.lb)}) or none. No INIT note: the team moved it.
+     */
+    void dropJob(String part, String job) {
+        jobs.entrySet().removeIf(e -> job.equals(e.getValue().job) && part.equals(e.getValue().source));
+        rejected.removeIf(e -> job.equals(e.job) && part.equals(e.source));
+        replaced.removeIf(r -> job.equals(r[0].job) && part.equals(r[0].source));
     }
 
     /** Notes for INIT, e.g. a module suggestion that found no free button. */
@@ -467,11 +481,11 @@ final class ButtonPlan {
     }
 
     // Tunables.Buttons: the gesture times (live in the tuning menu).
-    private static com.crossbotics.ftchelper.tuning.Tunable tapGap(RobotDefinition robot) {
+    static com.crossbotics.ftchelper.tuning.Tunable tapGap(RobotDefinition robot) {
         return TunableSection.of(robot.tunablesClass(), "Buttons").tunable("tapGapSec", 0.35, 0.05).range(0.1, 1);
     }
 
-    private static com.crossbotics.ftchelper.tuning.Tunable holdTime(RobotDefinition robot) {
+    static com.crossbotics.ftchelper.tuning.Tunable holdTime(RobotDefinition robot) {
         return TunableSection.of(robot.tunablesClass(), "Buttons").tunable("holdSec", 0.3, 0.05).range(0.1, 2);
     }
 
