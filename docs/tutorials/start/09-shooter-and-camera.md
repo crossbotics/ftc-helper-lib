@@ -170,7 +170,7 @@ gamepad 1 with `oneDriver = true`, as in the goBILDA bot:
 | Button | Does |
 | --- | --- |
 | LB | spin up / spin down (to `idleRpm`) |
-| RB | fire one: spins up if needed, feeds as soon as it is at speed (CAREFUL) |
+| RB | fire one: spins up if needed, feeds as soon as it is at speed (CAREFUL). Each quick tap adds one more (see Many quick taps, below) |
 | RB held | keeps firing, one piece after another, a little faster (QUICK); let go and no more are fed |
 | D-pad up / down | speed + / - `stepRpm`; with speed from distance (below), the speed trim + / - 1% |
 | D-pad up / down held | one more step every 0.25 s (after half a second), for a big change |
@@ -188,13 +188,16 @@ no spin-up and no fire button. INIT says so, for example
 Move your own jobs to free buttons (INIT lists them: `G2 free: ...`), so the launcher gets its
 buttons back.
 
-**Spin up at START.** Add `.spinAtStart()` and the wheel spins up right after START, in autonomous and
-TeleOp, so the first shot does not wait. LB still spins it down.
+**Spin up at START.** A launcher with a feeder of its own (an indexer, as here, or a feed stop) spins
+up right after START, in autonomous and TeleOp, so the first shot does not wait. That is safe: a
+spinning wheel cannot throw a piece the feeder has not pushed in. LB still spins it down (to coast
+while you park). A launcher that the intake pushes pieces into (`pushedBy` only) waits for LB, because
+the intake would push pieces into a spinning wheel. To change it, write `spinAtStart = true` or `false`
+in the launcher's section of `Tunables.java`, or `.spinAtStart(false)` in `Robot.java`.
 
 ```java
 launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
-        .feeder(Indexer.crServo("windmill").part("gobilda-2000-torque").reversed())
-        .spinAtStart());
+        .feeder(Indexer.crServo("windmill").part("gobilda-2000-torque").reversed()));
 ```
 
 ## 4. The two safety rules
@@ -212,13 +215,26 @@ The launcher keeps two rules for you. Know them, because they explain what the r
    Driver Station says why: `Launcher gave up: flywheel`. A robot that fired late, at a bad moment,
    would be worse than one that did not fire.
 
-**Many quick taps.** If your own button calls `fire()`, each tap adds one shot to a queue (a waiting
-list). Four quick taps while the wheel spins up fire four pieces. A nervous driver who taps ten times
+**Many quick taps.** Each tap on RB (or on your own button that calls `fire()`) adds one shot to a
+queue (a waiting list). Four quick taps while the wheel spins up fire four pieces. A nervous driver who taps ten times
 does not get ten shots: at most `maxFiringQueue` shots wait (default 4), and more taps are ignored.
 Only waiting shots count: once a piece is fed, a new tap can add one again. Change it in
 `Tunables.java`, e.g. `public static double maxFiringQueue = 1;` so that only one shot can wait. If you
-tune it live, copy the number back to `Tunables.java`. The RB button the launcher brings works a little differently: a tap while a shot
-is still waiting adds nothing.
+tune it live, copy the number back to `Tunables.java`.
+Holding RB is different: it fires one piece after another for as long as you hold it, and never
+lines up shots ahead. Let go, and the shots from your taps still go.
+
+**Tap, then hold: spray.** With `sprayEnabled = true`, tap RB, then press it again quickly and hold
+it: the launcher SPRAYS while you hold, a steady stream that does not wait for the speed. Use it to
+empty the robot fast. Every press still fires at once, so RB never waits to see which gesture you
+mean. Two quick taps stay two shots: the spray starts only once the second press is held
+(`Buttons.holdSec`, 0.3 s). `sprayOnTapHold = false` turns this gesture off. The launcher still picks
+SPRAY by itself when time is short (the last seconds of a period).
+
+**Another button.** All of this is one job. Put it on another button with one line in
+`Controls.java`: `robot.launcher.fireOn(g2.y);` (and `robot.launcher.spinOn(g2.x);` for LB's job).
+Do not give the fire button a double tap or a long press of your own: then a quick press waits to see
+the gesture, and it does not fire at once.
 
 ## 5. A camera that knows the goal
 
@@ -385,7 +401,7 @@ BIOBUZZ has two game pieces: POLLEN, a 2.8 in ball, and NECTAR, a 3.6 in ball (g
 `speedByDistance`. From [`turretbot/Tunables.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/Tunables.java):
 
 ```java
-public static double[][] speedByDistancePollen = {{36, 2010, 5}, {48, 2290, 5}, {60, 2560, 5}, {72, 2830, 5}};
+public static double[][] speedByDistancePollen = {{36, 1970, 5}, {48, 2250, 5}, {60, 2520, 5}, {72, 2790, 5}};
 public static double[][] speedByDistanceNectar = {{24, 2400, 0}, {48, 2800, 6}, {72, 3200, 14}, {96, 3600, 18}};
 ```
 

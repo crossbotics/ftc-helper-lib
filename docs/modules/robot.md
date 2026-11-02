@@ -814,9 +814,11 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 | Method | |
 | --- | --- |
 | `spinUp()`, `idle()`, `toggle()` | to the shot speed; back to `idleRpm` |
-| `fire()`, `fire(n)` | spins up if needed, feeds as soon as it is at speed (gives up after 3 s, saying why). Each `fire()` adds one shot, up to `maxFiringQueue` waiting (Tunables, default 4): more taps are ignored. `fire(n)` has no limit |
-| `maxFiringQueue()` | the most shots `fire()` lets wait at once |
-| `fireWhileHeld()`, `ceaseFire()` | for a held button: one shot, then the next as soon as it is fed; on release no more (a tap still fires its one shot) |
+| `fire()`, `fire(n)` | spins up if needed, feeds as soon as it is at speed (gives up after 3 s, saying why). Each `fire()` adds one shot, up to `maxFiringQueue` waiting (Tunables, default 4): more taps are ignored. A press of RB counts the same way. `fire(n)` has no limit |
+| `maxFiringQueue()` | the most shots `fire()` (or a press of RB) lets wait at once |
+| `fireWhileHeld()`, `ceaseFire()` | the launcher's RB. Every press fires at once: it is a tap on `fire()` (one more shot, up to `maxFiringQueue`). Held: the next piece as soon as the last is fed (QUICK). A tap, then pressed again within `Buttons.tapGapSec` and held: SPRAY while held (with `sprayEnabled` and `sprayOnTapHold`). On release the hold adds no more, and the taps' shots still go. A double tap or long press of your own on the same button stops the "fires at once" |
+| `fireOn(button)`, `spinOn(button)` | in `Controls.java`: puts RB's whole fire job (or LB's spin up / down) on another button, e.g. `robot.launcher.fireOn(g2.y)`; `null` = no button. No INIT note for the moved job (a job you push off the new button still gets one). Calling it again moves it again |
+| `isSprayingOnHold()`, `sprayOnTapHold()` | spraying now from a tap then a hold; true when that gesture sprays |
 | `fireAction(n)`, `fireAllAction()` | ready-made [actions](#action): fire n pieces ("Fire 2"), or every piece the robot holds ("Fire all": a `Pieces` part's count, else the intake's `holds(...)`, else 4), and be done when the last one has left (time limit 3 s + 2 s a piece). `.action(robot.launcher.fireAction(1))` in an autonomous, `g1.y.press(robot.launcher.fireAllAction())` in TeleOp. Only the launcher: the intake keeps doing what it does |
 | `adjust(steps)` | speed +/- steps x `stepRpm` (not saved) |
 | `trimBy(change)`, `setTrim(percent)`, `resetTrim()`, `trim()` | the [speed trim](#speed-trim-and-battery-compensation): every shot speed (table or fixed) +/- that many percent, e.g. `trimBy(+2)`; kept to +/- `trimMaxPercent` and to the motor's top speed; `resetTrim()` also clears `adjust` |
@@ -833,7 +835,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 | `table(name)`, `speedRpm()` | a shot table as Tunables.java has it (null if none); `Tunables.Launcher.speedRpm` (the Shot Tuner starts from them) |
 | `isReady()`, `isShooting()`, `targetRpm()`, `part()` | |
 | `requireReady(what, check)` | another check before each feed (e.g. the turret is aimed) |
-| `spinAtStart()` | spins up at START (autonomous and TeleOp), ready for the first shot |
+| `spinAtStart()`, `spinAtStart(on)`, `spinsAtStart()` | spins up at START (autonomous and TeleOp), ready for the first shot. On by itself with a separate feeder (an indexer or a feed stop): a spinning wheel cannot throw a piece the feeder has not pushed in. `spinAtStart(false)` waits for LB; Tunables `spinAtStart` wins over both |
 | `hood(Hood)`, `hood()` | the launcher's [hood](#hood): its angle from the table's third column; the launcher waits for it before feeding |
 | `shotAngle(deg)` | for the simulator: which way a piece leaves, degrees up from the wheel shape's forward (the robot's forward for a wheel mounted level; 135 = up and out of the back) |
 | `feedStop(servo)`, `feedStopName()` | a [feed stop](#firing-shot-modes-feed-stop-piece-path): a servo that holds the pieces back until a shot is allowed |
@@ -856,7 +858,7 @@ log has the values: `Launcher: defaults from the catalog (gobilda-5203-6000): kF
 speed 3600 rpm. Run the Flywheel Finder, then the Shot Tuner`. A written number
 always wins; `DEFAULT` in place of a number is the same as no line
 ([DEFAULT and MEASURE](#default-and-measure)). A motor not in the catalog:
-`Motors.custom(...)` ([Parts not in the catalog](#parts-not-in-the-catalog)). Buttons (operator): LB spin up/down, RB fire one (hold: keep firing, `fireWhileHeld()` / `ceaseFire()` on release),
+`Motors.custom(...)` ([Parts not in the catalog](#parts-not-in-the-catalog)). Buttons (operator): LB spin up/down, RB fire one (more taps: more shots; hold: keep firing; tap, then hold: spray with `sprayEnabled`; `fireWhileHeld()` / `ceaseFire()` on release; move them with `fireOn` / `spinOn`),
 D-pad up/down the speed trim +/- `trimStepPercent` with speed from distance, or +/- `stepRpm` with a fixed
 speed (held: one more step every 0.25 s); double-tap D-pad down = no trim; double-tap D-pad up = last
 time's trim (when offered); D-pad right the next shot table (two or more). Each only when free.

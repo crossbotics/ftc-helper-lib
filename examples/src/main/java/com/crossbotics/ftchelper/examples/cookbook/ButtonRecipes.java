@@ -108,6 +108,11 @@ public class ButtonRecipes {
             g2.lb.hold(robot.intake::in, robot.intake::stop).says("intake in (hold)");
             g2.rb.hold(robot.intake::out, robot.intake::stop).says("intake out (hold)");
             // end recipe
+
+            // recipe: move-launcher-buttons
+            robot.launcher.fireOn(g2.y);   // all of RB's firing moves to Y
+            robot.launcher.spinOn(g2.x);   // LB's spin up / down moves to X
+            // end recipe
         }
     }
 

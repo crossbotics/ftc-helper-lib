@@ -705,7 +705,12 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
         if (standard) robot.suggestButtons(plan);
         plan.source = null;
         // One driver: the team's g2 lines go on gamepad 1 too, like the parts' buttons.
-        team.add(plan.g1, oneDriver ? plan.g1 : plan.g2);
+        ButtonPlan.current = plan;   // a part's fireOn(null) takes its job off this map
+        try {
+            team.add(plan.g1, oneDriver ? plan.g1 : plan.g2);
+        } finally {
+            ButtonPlan.current = null;
+        }
         return plan;
     }
 

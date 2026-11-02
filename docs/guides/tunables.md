@@ -486,7 +486,7 @@ Section: the device's name in CamelCase: a launcher on the motor `launcher` read
 | `readyBandRpm` | "at speed" means within this of the target | RPM | 60 | no | test | it waits too long to fire (more) or shots vary (less) |
 | `idleRpm` | the speed between shots (0 = stop) | RPM | 0 | no | test | the first shot takes too long to spin up |
 | `shotIntervalSec` | the least time between two shots | seconds | 0.25 | no | Flywheel Finder (the recovery) | quick shots land short (more) |
-| `maxFiringQueue` | `fire()` (a tap): the most shots that may wait at once. More taps are ignored. The piece being fed now does not count. At least 1. `fire(n)` and actions have no limit | shots | 4 | no | none | taps fire more (or fewer) shots than the drivers mean |
+| `maxFiringQueue` | a tap on RB or `fire()`: the most shots that may wait at once. More taps are ignored. The piece being fed now does not count. At least 1. `fire(n)` and actions have no limit | shots | 4 | no | none | taps fire more (or fewer) shots than the drivers mean |
 | `speedByDistance` | the shot table: rows of `{inches, rpm}`, or `{inches, rpm, hood}` with a [hood](#hood); blended between rows | inches, RPM | none: `speedRpm` | no | Shot Tuner | the field, the balls or the wheel changed |
 | `speedByDistance<Name>` | one more table per game piece, e.g. `speedByDistancePollen` (used as "pollen") | inches, RPM | none | no | Shot Tuner | pieces fly differently |
 | `kP` | the hub's speed control: push per speed error | hub units | from the parts catalog: kF / 10 (6000 RPM motor: 1.17) | no | Flywheel Finder | after the Flywheel Finder |
@@ -503,6 +503,8 @@ Section: the device's name in CamelCase: a launcher on the motor `launcher` read
 | `quickMaxWaitSec` | QUICK mode: after a volley's first piece, feed after this wait at most | seconds | 0.3 | no | firing stats (the recovery) | the same |
 | `sprayEnabled` | allows SPRAY: no wait for the speed, at the end of TeleOp and when QUICK will not fit before the park in autonomous | true/false | false | no | none | the drivers want it |
 | `sprayLastSec` | with `sprayEnabled`: the last seconds of TeleOp that SPRAY (0 = never by itself) | seconds | 5 | no | none | the drivers want more or less |
+| `sprayOnTapHold` | with `sprayEnabled`: a tap, then a hold of the fire button sprays while held | true/false | true | no | none | the drivers spray by accident (false) |
+| `spinAtStart` | spins the wheel up at START, so it is at speed for the first shot. Wins over `spinAtStart(...)` in `Robot.java` | true/false | true with a separate feeder (an indexer or a feed stop), else false | no | none | save the battery (false), or a robot without a feeder of its own whose drivers want it (true) |
 | `fallbackDistanceIn` | with the speed from the distance: the distance to use before any goal was seen | inches | none: `speedRpm` | no | none | the first shot of the match has no goal in view |
 | `feedStopHold` | with `.feedStop(...)`: the servo position that holds the pieces back | servo position 0-1 | 0 (a guess, INIT says so) | no | Feed Stop Finder | after the Servo Finder |
 | `feedStopRelease` | with `.feedStop(...)`: the servo position that lets a piece through | servo position 0-1 | 0.5 (a guess) | no | Feed Stop Finder | the same |

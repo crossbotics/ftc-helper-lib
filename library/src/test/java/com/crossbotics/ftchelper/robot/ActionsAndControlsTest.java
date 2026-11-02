@@ -387,6 +387,30 @@ public class ActionsAndControlsTest {
         assertEquals(1, l.part().getShotsLeft());
     }
 
+    @Test public void rbTapsCountLikeFireAndLettingGoKeepsThem() {
+        RobotDefinition r = new RobotDefinition() {
+            @Override protected void define() {
+                drive(Drive.tank("l", "r"));
+                add(Launcher.flywheel("launcher", "gobilda-5203-6000"));
+            }
+        };
+        r.setup(new RobotTestKit());
+        Launcher l = (Launcher) r.modules().get(0);
+        for (int i = 0; i < 3; i++) {           // three quick RB taps while the wheel spins up
+            l.fireWhileHeld();
+            l.ceaseFire();
+        }
+        assertEquals(3, l.part().getShotsLeft());
+        l.fireWhileHeld();                      // a fourth press, held: its own shot counts like a tap
+        l.fireWhileHeld();                      // held on: shots are waiting, so the hold adds nothing
+        l.ceaseFire();                          // let go: the taps' shots still go
+        assertEquals(4, l.part().getShotsLeft());
+        for (int i = 0; i < 6; i++) { l.fireWhileHeld(); l.ceaseFire(); }
+        assertEquals("RB and fire() share the limit", 4, l.part().getShotsLeft());
+        l.fire();
+        assertEquals(4, l.part().getShotsLeft());
+    }
+
     public static class QueueNumbers {
         public static class Launcher {
             public static double maxFiringQueue = 2;

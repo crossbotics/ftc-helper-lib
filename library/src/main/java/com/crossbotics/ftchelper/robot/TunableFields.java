@@ -54,7 +54,7 @@ final class TunableFields {
         part("Launcher", "assistSec", "batteryCompensation", "blueTrimPercent", "ejectRpm", "ejectSec", "fallbackDistanceIn", "feedStopHold",
                 "feedStopMoveSec", "feedStopOpenSec", "feedStopRelease", "idleRpm", "kD", "kF", "kI", "kP", "maxFiringQueue", "nominalVolts", "quickBandRpm",
                 "quickMaxWaitSec", "readyBandRpm", "redTrimPercent", "shotIntervalSec", "speedByDistance", "speedRpm",
-                "sprayEnabled", "sprayLastSec", "stepRpm", "trimMaxPercent", "trimStepPercent");
+                "spinAtStart", "sprayEnabled", "sprayLastSec", "sprayOnTapHold", "stepRpm", "trimMaxPercent", "trimStepPercent");
         part("LiftArm", "kD", "kF", "kI", "kP", "max", "maxPower", "min", "slowZone", "slowZonePower", "tolerance");
         part("Lights", "allianceAtInit");
         part("PieceSensor", "gain", "gapMm", "hueTolerance", "minSaturation", "nearMm", "sizeToleranceMm", "steadyMs");

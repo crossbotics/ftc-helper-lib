@@ -14,7 +14,7 @@ docs: [guides/tunables.md#launcher, tutorials/start/09-shooter-and-camera.md#4-t
 ## Why
 
 Drivers tap the fire button fast: some mean "fire four", some just want it to fire NOW. Each
-`launcher.fire()` adds one shot, but at most `maxFiringQueue` shots wait (default 4). We want to
+tap on RB (or on a button that calls `launcher.fire()`) adds one shot, but at most `maxFiringQueue` shots wait (default 4). We want to
 know that the limit feels right to real drivers, and that extra taps never fire pieces later.
 
 ## Safety
@@ -24,8 +24,7 @@ know that the limit feels right to real drivers, and that extra taps never fire 
 
 ## Setup
 
-- A button that calls `robot.launcher::fire` in `Controls.java`, e.g.
-  `g2.lb.tap(robot.launcher::fire).says("fire one")`.
+- The launcher's own RB button (or a button of yours that calls `robot.launcher::fire`).
 - Each burst must start from a stopped wheel: before each one, STOP the OpMode, wait until the wheel
   stops, then INIT and START again.
 - 6 pieces loaded (or as many as the robot holds).

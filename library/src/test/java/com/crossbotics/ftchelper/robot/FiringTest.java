@@ -251,6 +251,8 @@ public class FiringTest {
         Bot r = new Bot();
         r.setup(d);
         r.startForTests();
+        assertTrue("a separate feeder: it spins at START", r.launcher.isSpinning());
+        r.launcher.idle();                                    // this test starts from a stopped wheel
         PretendMotor fly = d.motor("launcher");
         Action a = r.launcher.ejectAction();
         r.run(a);
@@ -295,6 +297,7 @@ public class FiringTest {
         Bot r = new Bot();
         r.setup(d);
         r.startForTests();
+        r.launcher.idle();                                    // this test starts from a stopped wheel
         Action a = r.launcher.ejectAction();
         r.run(a);
         r.all().update();

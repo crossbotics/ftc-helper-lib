@@ -84,7 +84,11 @@ g2.rb.tap(robot.launcher::fire).says("fire one")
      .doubleTap(() -> robot.launcher.fire(3)).says("fire three");
 ```
 
-Taps on `fire` add up: at most `maxFiringQueue` shots wait (Tunables, default 4), so many nervous taps do
+A part's own buttons can move with one line too: `robot.launcher.fireOn(g2.y)` puts all of the
+launcher's RB firing (taps, hold, tap then hold) on Y, and `spinOn(...)` moves LB's spin up / down
+([cookbook](../cookbook.md#how-do-i-put-the-launchers-fire-button-on-another-button)).
+
+Taps on `fire` (and on the launcher's own RB) add up: at most `maxFiringQueue` shots wait (Tunables, default 4), so many nervous taps do
 not fire many pieces later ([Tunables](tunables.md#launcher)).
 
 **When does a gesture's job run?** At once, unless the same button has a longer gesture that starts
