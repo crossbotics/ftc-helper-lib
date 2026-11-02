@@ -2610,6 +2610,43 @@ It replaces `.move(...)`: you give a place on the field, not a distance.
 On the robot it only works after the [Odometry Tuner](#how-do-i-tune-the-odometry) and `checked = true` in `Tunables.java`, section `Odometry`.
 **More:** [Lesson 7: drive to field points](tutorials/start/07-odometry.md#6-drive-to-field-points), [driveTo](guides/autonomous-builder.md#drive-to-a-field-point-driveto).
 
+### How do I get around field elements on the way to a spot?
+
+**Where:** `Robot.java`, inside `define()`, then a file in `autos/`, or `Controls.java`. Needs odometry and a mecanum drive.
+
+<!-- recipe: field-map -->
+```java title="Robot.java"
+// After odometry(...). The margin: half the robot's corner to corner size, plus some for drift.
+// Each box: two opposite corners, like driveTo's numbers. These are BIOBUZZ's two HIVE frames.
+fieldMap(FieldMap.margin(13)
+        .keepOut("HIVE frame, near", -19.5, -24.8, 19.5, -15.4)
+        .keepOut("HIVE frame, far", -19.5, 15.4, 19.5, 24.8));
+```
+
+In an autonomous, `routeTo` is `driveTo` with a way around the boxes. It starts from wherever the park time stopped the robot:
+
+<!-- recipe: route-to-park -->
+```java title="autos/YourAuto.java"
+s.start("Against our wall, in the left corner tile, facing the field", -56, -61, 0)
+ .driveTo("To the goal", Tunables.Auto.goalX, Tunables.Auto.goalY, Tunables.Auto.goalHeading, 0.6)
+ .parkWithSeconds(6)    // the route slows at each corner: give it more time than a straight line
+ .routeTo("Park", Tunables.Auto.parkX, Tunables.Auto.parkY, 0, 0.8);
+```
+
+In TeleOp, a button or a time starts it. Any drive stick stops it:
+
+<!-- recipe: route-button -->
+```java title="Controls.java"
+// route(...) makes the job. It starts when the button or the time says so.
+Runnable park = route("Park", Tunables.Auto.parkX, Tunables.Auto.parkY, 0, 0.8);
+g1.dpadLeft.tap(park).says("drive to the park spot (a drive stick stops it)");
+atSecondsLeft(10, park);
+```
+
+**Why:** a straight line from an unknown place can go through a field element. The robot works out the way when it sets off.
+It uses only its pose: it cannot see another robot. Go slow the first time.
+**More:** [Keep-out boxes and routes](modules/odometry.md#keep-out-boxes-and-routes).
+
 ### How do I show where the robot is?
 
 **Where:** `Controls.java`, inside `buttons(...)`.

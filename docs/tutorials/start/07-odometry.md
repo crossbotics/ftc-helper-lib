@@ -394,6 +394,46 @@ mirrored field (`mirrorForRed()` true), RED flips x and the heading. More, and t
 (`driveTo(label, x, y, heading, power, inches)`):
 [the autonomous builder](../../guides/autonomous-builder.md#drive-to-a-field-point-driveto).
 
+### Go around things on the way
+
+A `driveTo` is one straight line. Remember `parkWithSeconds(4)`: when the park time comes, the running
+step stops, wherever the robot is. A straight line home from there can go through a field element, such
+as a HIVE frame. **Why it matters:** the robot stops against it (`STALLED`), and does not park.
+
+So tell the robot where the things are. In `Robot.java`, after the `odometry(...)` line:
+
+```java
+fieldMap(FieldMap.margin(13)
+        .keepOut("HIVE frame, near", -19.5, -24.8, 19.5, -15.4)
+        .keepOut("HIVE frame, far", -19.5, 15.4, 19.5, 24.8));
+```
+
+- `keepOut(name, x1, y1, x2, y2)`: a box, from two opposite corners, in the same field numbers as `driveTo`.
+- `margin(13)`: the robot's centre stays this far from every box, in inches. Half the robot's corner to
+  corner size, plus some, because the pose is never perfect.
+
+Then write `routeTo` where you wrote `driveTo`. It works out its way when the step starts:
+
+```java
+.parkWithSeconds(6)
+.routeTo("Park", Tunables.Auto.parkX, Tunables.Auto.parkY, 0, 0.8);
+```
+
+The whole program: [`autos/ParkAround.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/odometrybot/autos/ParkAround.java).
+
+TeleOp can do it too. In `Controls.java`, `route(...)` makes a job, and a button or a time starts it:
+
+```java
+Runnable park = route("Park", Tunables.Auto.parkX, Tunables.Auto.parkY, 0, 0.8);
+g1.dpadLeft.tap(park).says("drive to the park spot (a drive stick stops it)");
+atSecondsLeft(10, park);
+```
+
+**Any drive stick stops it at once.** The driver always wins. If a stick is pushed at the time you chose, the
+gamepad buzzes and the route waits up to 5 s for the driver to let go. The robot only trusts its pose: it cannot
+see another robot. So the first time, go slow (power 0.3) with your thumb on a stick.
+More: [keep-out boxes and routes](../../modules/odometry.md#keep-out-boxes-and-routes).
+
 ## 7. TeleOp starts where autonomous ended
 
 You write nothing for this:

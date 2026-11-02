@@ -546,6 +546,51 @@ public class AutoRoutine {
         });
     }
 
+    /**
+     * Drives to a field point around the boxes of a {@link com.crossbotics.ftchelper.drive.FieldMap}. The
+     * route is worked out when the step starts, from where the robot is THEN, so it works after a step
+     * was cut short at any place. It slows down at each corner of the route, and does not stop there
+     * ({@link AutoDrive#followRoute}). The report words are {@code driveTo}'s. "no route" in the report:
+     * the robot stayed where it was.
+     *
+     * <p><b>BLOCKS</b> (on purpose), like every driving step. Mirrored for RED like {@code driveTo}: the
+     * map and the point are written for BLUE.
+     *
+     * @param pose      where the robot is now
+     * @param ready     false while the odometry cannot be trusted
+     * @param poseKnown false if nothing set the pose (no start spot): the pose is only "where it stood",
+     *                  so a route from it would be wrong, and the robot stays
+     * @param map       the boxes
+     */
+    public AutoRoutine driveRoute(String label, final java.util.function.Supplier<com.crossbotics.ftchelper.util.FieldPose> pose,
+                                  final BooleanSupplier ready, final BooleanSupplier poseKnown,
+                                  final com.crossbotics.ftchelper.drive.FieldMap map,
+                                  final double xIn, final double yIn, final double headingDeg, final double maxPower,
+                                  final double toleranceIn) {
+        return add(label, ctx -> {
+            // One bad reading is not a lost odometry, but a route needs a pose it can trust to start from.
+            if (!ctx.waitUntil(ready, AutoDrive.ODOMETRY_LOST_SEC)) {
+                record(ctx.isActive() ? AutoDrive.Result.NO_ODOMETRY : AutoDrive.Result.STOPPED);
+                return;
+            }
+            if (!poseKnown.getAsBoolean()) {
+                note("no pose: the robot stayed where it was (give start(...) a spot)");
+                return;
+            }
+            com.crossbotics.ftchelper.util.FieldPose at = pose.get();
+            // The map is written for BLUE: plan there. (m flips RED's x to BLUE's, and back again.)
+            List<double[]> route = map.route(m(at.x), at.y, xIn, yIn);
+            if (route.isEmpty()) {
+                note("no route: the robot stayed where it was");
+                return;
+            }
+            List<double[]> points = new java.util.ArrayList<>();
+            for (double[] p : route) points.add(new double[] {m(p[0]), p[1]});
+            AutoDrive.Result r = takeDrive().followRoute(pose, ready, points, m(headingDeg), maxPower, toleranceIn);
+            if (r != AutoDrive.Result.DONE) record(r);
+        });
+    }
+
     /** Any step: a mechanism's step (e.g. {@code lift.goToStep("HIGH")}) or your own lambda. */
     public AutoRoutine step(String label, AutoStep step) {
         return add(label, step);

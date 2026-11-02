@@ -242,6 +242,52 @@ public final class Steps {
         return this;
     }
 
+    /**
+     * Like {@link #driveTo(String, double, double, double, double)}, but it goes around the boxes of
+     * {@code fieldMap(...)} in Robot.java. It works out the route when the step starts, from where the
+     * robot is then. So after {@code parkWithSeconds}, it gets home from wherever the park time stopped
+     * the robot:
+     *
+     * <pre>{@code
+     * s.driveTo("To the goal", -30, -30, 45, 0.6)
+     *  .parkWithSeconds(4)
+     *  .routeTo("Park", -56, -36, 0, 0.8);
+     * }</pre>
+     *
+     * <p>The robot slows down at each corner of the route, and does not stop there. It uses only
+     * the odometry: it cannot see another robot. Docs: docs/modules/odometry.md, "Keep-out boxes and routes".
+     */
+    public Steps routeTo(String label, double xIn, double yIn, double headingDeg, double maxPower) {
+        return routeTo(label, xIn, yIn, headingDeg, maxPower, 1.0);
+    }
+
+    /** {@link #routeTo(String, double, double, double, double)} with your own "close enough" at the end, inches. */
+    public Steps routeTo(String label, double xIn, double yIn, double headingDeg, double maxPower, double toleranceIn) {
+        if (robot.fieldMap() == null) {
+            throw new IllegalStateException("Steps: routeTo(\"" + label + "\") needs a map: add a fieldMap(...) line "
+                    + "to Robot.java (docs/modules/odometry.md)");
+        }
+        if (robot.odometrySpec() == null) {
+            throw new IllegalStateException("Steps: routeTo(\"" + label + "\") needs odometry: add an odometry(...) line "
+                    + "to Robot.java (docs/modules/odometry.md)");
+        }
+        if (!robot.drive().isMecanum()) {
+            throw new IllegalStateException("Steps: routeTo(\"" + label + "\") needs a mecanum drive (it drives sideways).");
+        }
+        String bad = robot.fieldMap().whyBadSpot(xIn, yIn);
+        if (!bad.isEmpty()) throw new IllegalStateException("Steps: routeTo(\"" + label + "\"): " + bad);
+        if (!adding()) return this;
+        boolean simulator = "true".equals(System.getProperty(com.crossbotics.ftchelper.auto.EasyAuto.SIMULATOR_PROPERTY));
+        if (!robot.odometryChecked() && !simulator) {
+            routine.step(label, ctx -> ctx.note("skipped: Tunables.Odometry.checked is false (run the Odometry Tuner first)"));
+            return this;
+        }
+        routine.driveRoute(label, robot::pose, () -> robot.odometry() != null && robot.odometry().isReady(),
+                () -> robot.odometry() != null && robot.odometry().isPoseSet(),
+                robot.fieldMap(), xIn, yIn, headingDeg, maxPower, toleranceIn);
+        return this;
+    }
+
     // At INIT: no missing PathAt, and no part(n) past the path's last part (parts: 0 = unknown).
     private void checkAlong(String step, String label, PathAt[] along, int parts) {
         if (along == null) return;

@@ -126,6 +126,25 @@ public abstract class RobotDefinition {
     }
 
     /**
+     * The places on the field the robot must not drive through, for {@code s.routeTo(...)} in an
+     * autonomous and {@code route(...)} in Controls.java. Needs an {@link #odometry} line.
+     *
+     * @param map e.g. {@code FieldMap.margin(13).keepOut("Left post", -30, 10, -20, 20)}
+     */
+    protected final void fieldMap(com.crossbotics.ftchelper.drive.FieldMap map) {
+        if (map == null) throw new IllegalArgumentException("Robot.java: fieldMap(null): give it a FieldMap, e.g. FieldMap.margin(13)");
+        fieldMapSpec = map;
+    }
+
+    /** The map from {@code fieldMap(...)} in Robot.java, or null if there is none. */
+    public final com.crossbotics.ftchelper.drive.FieldMap fieldMap() {
+        describe();
+        return fieldMapSpec;
+    }
+
+    private com.crossbotics.ftchelper.drive.FieldMap fieldMapSpec = null;
+
+    /**
      * <b>ALPHA, NOT TESTED ON A ROBOT.</b> Corrects the odometry's x and y with the field position this
      * Limelight works out from AprilTags (MegaTag2). Also needs an {@link #odometry} line, and it is OFF
      * until {@code Tunables.CameraFix.enabled = true}. <b>Not for BIOBUZZ:</b> its tags are under the

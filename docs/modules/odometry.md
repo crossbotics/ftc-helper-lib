@@ -552,6 +552,102 @@ Every step: [the autonomous builder](../guides/autonomous-builder.md#drive-to-a-
 
 ---
 
+## Keep-out boxes and routes
+
+`driveTo` drives one straight line. That is fine when you know where the line starts. After
+`parkWithSeconds` stops the robot at some place in the middle of a step, you do not know, and the line
+can go through a field element. A **route** goes around such places. The robot works out the route when
+it sets off, from where it is at that moment.
+
+**1. List the boxes in `Robot.java`.** Each box is two opposite corners, in `driveTo`'s numbers, written
+for BLUE. The library knows no game, so the numbers are yours.
+
+```java
+odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
+fieldMap(FieldMap.margin(13)
+        .keepOut("HIVE frame, near", -19.5, -24.8, 19.5, -15.4)
+        .keepOut("HIVE frame, far", -19.5, 15.4, 19.5, 24.8));
+```
+
+**The margin** is how far the robot's centre stays from every box: half the robot's corner to corner
+size, plus some for odometry drift (the error that grows as the robot drives). For an 18 x 18 in robot,
+13 in. The bigger the margin, the safer, but a small gap between two boxes closes: with a margin of 13,
+the 30.8 in gap between these two frames leaves a path 4.8 in wide for the robot's centre. A route's
+corners also stay inside the walls by the margin. A path less than 3 in wide needs a `.safePoint(x, y)` at
+each end: the boxes' corners do not fit in it, so without them the route says `no route`.
+
+**2. Use it in an autonomous:** `routeTo` takes the same numbers as `driveTo`.
+
+```java
+s.start("Against our wall, in the left corner tile, facing the field", -56, -61, 0)
+ .driveTo("To the goal", -30, -30, 45, 0.6)
+ .parkWithSeconds(6)
+ .routeTo("Park", -56, -36, 0, 0.8);
+```
+
+**3. Or in TeleOp:** in `Controls.java`, `route(...)` makes a job. A button or a time starts it.
+
+```java
+Runnable park = route("Park", -56, -36, 0, 0.8);
+g1.dpadLeft.tap(park).says("drive to the park spot (a drive stick stops it)");
+atSecondsLeft(10, park);
+```
+
+**How the route is found.** First the straight line. If it crosses a box (with the margin added), the
+robot goes around the boxes' corners by the shortest way of straight lines. It slows down at each
+corner, and does not stop there. At speed it slides a few inches past a corner, away from the box (6 in at
+power 0.7 in the simulator), so list what stands near the corners too. To make routes go your way, add `.safePoint(x, y)`: a place a route may
+pass through. A robot that stands inside a margin first goes out by the nearest side.
+
+**A spot right next to a box** (a place to score, inside the margin) is allowed. The robot goes to just
+outside the margin, then straight in: only that last line is inside the margin, so check it on the robot.
+A spot on the box itself stops INIT. So does a spot with no way in from outside.
+
+**A spot near a wall:** the library does not know your robot's size. A spot closer to a wall than half your
+robot presses it against the wall, and the route ends `STALLED`.
+
+**In TeleOp, the driver always wins:**
+
+- **Any drive stick stops the route at once**, and the sticks drive from that loop on. The Driver Station
+  says `Park: stopped: a drive stick moved`.
+- **A route that `atSecondsLeft(...)` starts does not take the robot from a driver who is driving.** If a
+  stick is pushed at that time, the gamepad buzzes, the Driver Station says `Park: waiting: let go of the
+  drive sticks to start it`, and the route starts on the first loop the sticks are let go. After 5 s it gives
+  up: `Park: not started: the driver kept driving`. Why not wait longer: a driver who parked by hand and lets
+  go at the last moment must not see the robot drive off. Pause and the tuning menu make it wait the same way.
+- Pause and the tuning menu stop it too. It does not set off again by itself.
+- It never waits: the rest of the robot keeps running. "Set pose here" is refused while it drives.
+- `Park: there` says it arrived. It also ends on `STALLED`, `TIMED_OUT` (10 s on one line of the route)
+  or `NO_ODOMETRY`, the same words as `driveTo`.
+- The sticks' slow button and reverse drive do nothing to a route. Whole-robot aim does not turn the robot during a route.
+
+**When it does not set off:**
+
+| Where | The words | Why |
+| --- | --- | --- |
+| INIT stops | `needs a map`, `needs odometry`, `needs a mecanum drive` | a line is missing in `Robot.java` |
+| INIT stops | `... is on "HIVE frame, near"` | the spot you gave is on a box: move it |
+| INIT stops | `... and a robot cannot drive in from outside` | other boxes close every way to that spot: move it, or use a smaller margin |
+| Report, or Driver Station | `no route` | boxes close every way. The robot stays where it is |
+| Report, or Driver Station | `no pose` / `the pose is not set` | nothing set the pose ([set pose here](#tunablesodometry), or a start spot with x and y) |
+| Report, or Driver Station | `Tunables.Odometry.checked is false` | run the [Odometry Tuner](#the-odometry-tuner) first (in the simulator it runs anyway) |
+| Driver Station | `Tunables.Drive.calibrated is false` | run the Drive Tuner first (in the simulator it runs anyway) |
+| Driver Station | `the driver kept driving` | a time started it, and a drive stick stayed pushed for 5 s |
+
+The INIT screen warns about the two tuners' words if `Controls.java` has a `route(...)`, so you find out
+before the match. These are numbers in `Tunables.java`: if you tune them live, copy them back to the file.
+
+**What it cannot do.** It uses only the odometry's numbers. It cannot see: **another robot is not on the
+map**, and a wrong pose means a wrong route. If it hits something, the stuck check ends the route
+(`STALLED`), and the robot does not reach the spot. Make the first test slow, and stand by to stop it.
+
+**RED:** written for BLUE, like `driveTo`. With `mirrorForRed` true, RED drives the mirror image of the
+route (x and the heading flip). With it false (BIOBUZZ), RED uses the same numbers from the red wall.
+
+More: [`FieldMap` and `RouteDriver`](drive.md#fieldmap), the [cookbook](../cookbook.md#how-do-i-get-around-field-elements-on-the-way-to-a-spot).
+
+---
+
 ## TeleOp starts where autonomous ended
 
 1. **Autonomous START:** the first step ("Start") sets the pose from the start spot (mirrored for RED

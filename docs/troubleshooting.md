@@ -171,6 +171,24 @@ Add `robotConfig()` to the OpMode: `return new RobotSettings();` (starter kit) o
 
 ## Robot behavior
 
+**A route says <samp>Park: stopped: a drive stick moved</samp>, or it never seems to start**
+
+Any drive stick stops a TeleOp route at once. A route that a time starts waits 5 s for the driver to let go
+of the sticks, and the gamepad buzzes. If the Driver Station says <samp>Park: not started: ...</samp>, the
+words say why: [the table](modules/odometry.md#keep-out-boxes-and-routes).
+
+**A route or `routeTo` says <samp>STALLED</samp>, or the robot touches a box on the way**
+
+The pose is wrong, the box is too small, or the margin is too small. Compare the `Pose` line with where the
+robot really is. Then measure the box again, or make the margin bigger ([what the margin is](modules/odometry.md#keep-out-boxes-and-routes)).
+Another robot in the way also stops it: a route cannot see robots. A spot closer to a wall than half your
+robot also ends this way: the robot presses the wall.
+
+**INIT stops: <samp>... is on "..."</samp> or <samp>... a robot cannot drive in from outside</samp>**
+
+The spot you gave `routeTo` or `route` is on a box, or other boxes close every way to it. Move the spot. For
+the second one, a smaller margin in `fieldMap(...)` can also help.
+
 **A part's button does nothing, and INIT says <samp>... no button (G2 RB is your "score high" in Controls.java)</samp>**
 
 A job of yours in `Controls.java` is on a button that part suggested, so yours won and the part has no

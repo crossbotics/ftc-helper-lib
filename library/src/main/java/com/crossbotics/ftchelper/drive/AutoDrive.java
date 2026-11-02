@@ -411,7 +411,7 @@ public class AutoDrive {
      */
     // driveTo's last few inches: proportional speed, so it stops on the point.
     // How long the odometry may be "not ready" before driveTo gives up (NO_ODOMETRY), seconds.
-    static final double ODOMETRY_LOST_SEC = 0.2;
+    public static final double ODOMETRY_LOST_SEC = 0.2;
     static final double DRIVE_TO_NEAR_IN = 8, DRIVE_TO_KP = 0.04, DRIVE_TO_MIN_POWER = 0.12, DRIVE_TO_MIN_TURN = 0.08;
     // driveTo's stuck checks count at most this much time per loop (seconds), see driveTo.
     static final double STALL_STEP_SEC = 0.1;
@@ -526,6 +526,57 @@ public class AutoDrive {
                     log.accept("AutoDrive: driveTo stopped, robot stuck");
                     return Result.STALLED;
                 }
+                idle.run();
+            }
+        } finally {
+            stop();
+        }
+    }
+
+    /**
+     * Drives a route of field points without stopping at the points on the way: a route from
+     * {@link FieldMap#route}, in the odometry's frame. It slows down near each one, and goes on as soon
+     * as it is within {@link RouteDriver#PASS_POINT_IN} or has slid past it. So a park around a box costs
+     * little time.
+     *
+     * <p><b>BLOCKS</b> (on purpose): returns when it arrives, gets stuck or runs out of time. Each line of
+     * the route has its own {@code actionTimeoutSec}.
+     *
+     * @param pose        the odometry's pose, read each loop (the loop hook updates it)
+     * @param ready       false while the odometry cannot be trusted: it holds still, and after 0.2 s it ends
+     * @param points      the points, each {x, y}, inches; the last one is where it ends
+     * @param headingDeg  the heading to turn to on the way (counterclockwise +; 0 = facing away)
+     * @param maxPower    0.1 to 1
+     * @param toleranceIn close enough at the last point, inches (1 is usual)
+     * @return DONE, NO_ODOMETRY, STALLED, TIMED_OUT or STOPPED
+     */
+    public Result followRoute(java.util.function.Supplier<com.crossbotics.ftchelper.util.FieldPose> pose,
+                              BooleanSupplier ready, java.util.List<double[]> points,
+                              double headingDeg, double maxPower, double toleranceIn) {
+        if (tank) {
+            throw new UnsupportedOperationException("followRoute needs mecanum wheels (it drives sideways).");
+        }
+        RouteDriver driver = new RouteDriver(cfg, powerLimit, pose, ready, clockNanos);
+        if (!driver.start(points, headingDeg, maxPower, toleranceIn)) return Result.DONE;   // nowhere to go
+        // The driver times each line. This is only for checkStop, which must have a time.
+        long deadline = clockNanos.getAsLong() + (long) ((points.size() + 1) * cfg.actionTimeoutSec * 1e9);
+        try {
+            while (true) {
+                Result early = checkStop(deadline);
+                if (early != null) return early;
+                // Update the odometry (and the mechanisms) first, so the pose judged below is this loop's.
+                runLoopHook();
+                double[] p = driver.update();
+                if (!driver.isRunning()) {
+                    switch (driver.result()) {
+                        case DONE: return Result.DONE;
+                        case STALLED: log.accept("AutoDrive: route stopped, robot stuck"); return Result.STALLED;
+                        case TIMED_OUT: log.accept("AutoDrive: timed out"); return Result.TIMED_OUT;
+                        case NO_ODOMETRY: log.accept("AutoDrive: route stopped, the odometry is not working"); return Result.NO_ODOMETRY;
+                        default: return Result.STOPPED;
+                    }
+                }
+                setPowers(MecanumMixer.mix(p[0], p[1], p[2], powerLimit));
                 idle.run();
             }
         } finally {
