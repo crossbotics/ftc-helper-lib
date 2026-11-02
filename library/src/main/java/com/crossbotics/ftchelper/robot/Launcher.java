@@ -147,6 +147,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     // press's own shot, which counts like a tap on fire()).
     private boolean holding = false;
     private int heldShots = 0;
+    // Shots fire(...) added after the hold's last shot: they wait behind it, and letting go keeps them.
+    private int shotsAfterHold = 0;
     private double shotAngleDeg = Double.NaN;
     // The feed stop's device (feedStop(...)), or null; the parts that push a piece in (pushedBy(...)).
     private String feedStopDevice = null;
@@ -315,7 +317,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     // A feeder of its own (an indexer, or a feed stop holding the pieces back): only then is a wheel
     // spinning all match safe. Pushing parts alone (pushedBy) are not: the intake pushes while it intakes.
     private boolean separateFeeder() {
-        return indexer != null || feedStopDevice != null;
+        return (indexer != null && !indexer.missing) || feedStopDevice != null;
     }
 
     /** The flywheel turns the other way. */
@@ -757,6 +759,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     public void fire(int count) {
         needBuilt(part);
         touch();
+        shotsAfterHold += Math.max(0, count);
         askedToFire = true;
         spinning = true;
         part.shoot(count);
@@ -981,15 +984,19 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
                 spinning = true;
                 part.shoot(1);
                 heldShots++;
+                shotsAfterHold = 0;
             }
             return;
         }
-        // Still held: one more piece only when nothing is waiting or feeding, so a hold never runs ahead.
+        // A press shorter than holdSec is a tap: only its own shot, even if that one is already fed.
+        if (now - pressedAt < holdTime.get()) return;
+        // Held: one more piece only when nothing is waiting or feeding, so a hold never runs ahead.
         if (!part.isShooting()) {
             askedToFire = true;
             spinning = true;
             part.shoot(1);
             heldShots++;
+            shotsAfterHold = 0;
         }
     }
 
@@ -1001,8 +1008,16 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     public void ceaseFire() {
         if (part == null) return;
         touch();
-        // The hold adds a shot only when nothing else waits, so anything waiting now is the hold's.
-        if (holding && heldShots > 0) part.stopShooting();
+        // The hold adds a shot only when nothing waits, so it is first in line: drop it if it still waits,
+        // and keep the shots others (fire(), another button) added after it.
+        if (holding && heldShots > 0) {
+            int waiting = part.getShotsLeft();
+            int keep = Math.min(waiting, shotsAfterHold);
+            if (waiting > keep) {
+                part.stopShooting();
+                if (keep > 0) part.shoot(keep);
+            }
+        }
         // A short press is a tap: the next press, soon, may be "tap, then hold". A long one is not.
         double now = clock.getAsLong() / 1e9;
         boolean shortPress = holding && holdTime != null && now - pressedAt < holdTime.get();
@@ -1056,16 +1071,22 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
 
     // Takes this launcher's suggested job off its button and, unless button is null, binds it again there.
     private Pad.Button moveJob(String job, Pad.Button button, Runnable bind) {
+        String key = jobKey(job);
         if (button == null) {
             // Nothing to bind to; the plan is the one being made now (Controls.java runs during it).
             ButtonPlan plan = ButtonPlan.current;
-            if (plan != null) plan.dropJob(name(), job);
+            if (plan != null) plan.dropJob(key);
             return null;
         }
-        button.pad.plan.dropJob(name(), job);
+        button.pad.plan.dropJob(key);
         bind.run();
-        if (button.last != null) button.last.job = job;
+        if (button.last != null) button.last.job = key;
         return button;
+    }
+
+    // "Launcher: launcher fire": the job and whose it is, so a second fireOn finds the first one's button.
+    private String jobKey(String job) {
+        return name() + ": " + job;
     }
 
     /**
@@ -1517,9 +1538,9 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     void suggestButtons(ButtonPlan plan) {
         Pad op = plan.operator();
         op.lb.toggle(this).says(SPIN_WORDS);
-        if (op.lb.last != null) op.lb.last.job = SPIN_JOB;
+        if (op.lb.last != null) op.lb.last.job = jobKey(SPIN_JOB);
         op.rb.hold(this::fireWhileHeld, this::ceaseFire).says(fireWords());
-        if (op.rb.last != null) op.rb.last.job = FIRE_JOB;
+        if (op.rb.last != null) op.rb.last.job = jobKey(FIRE_JOB);
         // With the speed from the table the D-pad trims it by a percentage; with a fixed speed it steps
         // the rpm. Held: one more step every 0.25 s. Double-tap down: back to none.
         String up = usesDistance() ? "speed trim +" + percent(trimStepPct, false) : "speed up";

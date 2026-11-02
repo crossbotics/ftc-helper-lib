@@ -228,11 +228,13 @@ lines up shots ahead. Let go, and the shots from your taps still go.
 it: the launcher SPRAYS while you hold, a steady stream that does not wait for the speed. Use it to
 empty the robot fast. Every press still fires at once, so RB never waits to see which gesture you
 mean. Two quick taps stay two shots: the spray starts only once the second press is held
-(`Buttons.holdSec`, 0.3 s). `sprayOnTapHold = false` turns this gesture off and keeps SPRAY for the
-last seconds of TeleOp only.
+(`Buttons.holdSec`, 0.3 s). `sprayOnTapHold = false` turns this gesture off. The launcher still picks
+SPRAY by itself when time is short (the last seconds of a period).
 
 **Another button.** All of this is one job. Put it on another button with one line in
 `Controls.java`: `robot.launcher.fireOn(g2.y);` (and `robot.launcher.spinOn(g2.x);` for LB's job).
+Do not give the fire button a double tap or a long press of your own: then a quick press waits to see
+the gesture, and it does not fire at once.
 
 ## 5. A camera that knows the goal
 

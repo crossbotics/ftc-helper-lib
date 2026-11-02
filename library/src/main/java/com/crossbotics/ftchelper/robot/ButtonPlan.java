@@ -81,7 +81,7 @@ final class ButtonPlan {
         Gestures gestures;
         // PAIR: the shift key held down, and the button pressed with it.
         Pad.Button shift, with;
-        // A part's job that the team may move with one line (e.g. "launcher fire": fireOn(g2.lb)), or null.
+        // A part's job that the team may move with one line (e.g. "Launcher: launcher fire": fireOn(g2.lb)), or null.
         String job;
         // The parts this job needs (a module's suggestion, toggle(part), needs(...)): off if one is not on the robot.
         final List<Module<?>> needs = new ArrayList<>();
@@ -214,13 +214,14 @@ final class ButtonPlan {
     }
 
     /**
-     * Takes a part's job (by its name, e.g. {@code "launcher fire"}) off whatever button it has, so the
-     * team can put it on another one ({@code fireOn(g2.lb)}) or none. No INIT note: the team moved it.
+     * Takes a part's job (by its key, e.g. {@code "Launcher: launcher fire"}) off whatever button it has,
+     * the part's suggested one or one an earlier {@code fireOn} gave it, so the team can put it on another
+     * one ({@code fireOn(g2.lb)}) or none. No INIT note: the team moved it.
      */
-    void dropJob(String part, String job) {
-        jobs.entrySet().removeIf(e -> job.equals(e.getValue().job) && part.equals(e.getValue().source));
-        rejected.removeIf(e -> job.equals(e.job) && part.equals(e.source));
-        replaced.removeIf(r -> job.equals(r[0].job) && part.equals(r[0].source));
+    void dropJob(String key) {
+        jobs.entrySet().removeIf(e -> key.equals(e.getValue().job));
+        rejected.removeIf(e -> key.equals(e.job));
+        replaced.removeIf(r -> key.equals(r[0].job));
     }
 
     /** Notes for INIT, e.g. a module suggestion that found no free button. */

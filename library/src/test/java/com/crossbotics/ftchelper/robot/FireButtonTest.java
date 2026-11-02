@@ -207,4 +207,65 @@ public class FireButtonTest {
         saysNo.startForTests();
         assertFalse("spinAtStart(false) in Robot.java", ((Launcher) saysNo.modules().get(0)).isSpinning());
     }
+
+    @Test public void aShortPressFiresOnlyItsOwnShotEvenIfThatOneIsAlreadyFed() {
+        Fakes.Clock c = new Fakes.Clock();
+        Launcher l = launcher(SprayOff.class, c);
+        l.fireWhileHeld();                                  // the press: one shot
+        l.part().stopShooting();                            // pretend it is fed at once (wheel at speed)
+        c.addSec(0.2);                                      // still under holdSec (0.3 s)
+        l.fireWhileHeld();
+        assertEquals("a tap, not yet a hold", 0, l.part().getShotsLeft());
+        c.addSec(0.2);                                      // now a hold
+        l.fireWhileHeld();
+        assertEquals("held: keeps firing", 1, l.part().getShotsLeft());
+    }
+
+    @Test public void lettingGoKeepsTheShotsAnotherButtonAdded() {
+        Fakes.Clock c = new Fakes.Clock();
+        Launcher l = launcher(SprayOff.class, c);
+        l.fireWhileHeld();
+        l.part().stopShooting();                            // the press's shot is fed
+        c.addSec(0.4);
+        l.fireWhileHeld();                                  // the hold adds one
+        assertEquals(1, l.part().getShotsLeft());
+        l.fire();                                           // another button taps fire()
+        assertEquals(2, l.part().getShotsLeft());
+        l.ceaseFire();
+        assertEquals("the hold's shot goes, the tap's stays", 1, l.part().getShotsLeft());
+    }
+
+    @Test public void fireOnAgainOrFireOnNullTakesItOffTheButtonFireOnGaveIt() {
+        Fakes.Clock c = new Fakes.Clock();
+        Launcher l = launcher(SprayOff.class, c);
+        ButtonPlan moved = ControlMap.makePlan(l.robot, false, true, (g1, g2) -> {
+            l.fireOn(g2.x);
+            l.fireOn(g2.y);
+        });
+        assertFalse("X lost it: " + line(moved, "G2 X"), line(moved, "G2 X").contains("fire one"));
+        assertTrue(line(moved, "G2 Y"), line(moved, "G2 Y").contains("fire one"));
+        ButtonPlan none = ControlMap.makePlan(l.robot, false, true, (g1, g2) -> {
+            l.fireOn(g2.x);
+            l.fireOn(null);
+        });
+        for (String s : none.help()) assertFalse(s, s.contains("fire one"));
+    }
+
+    @Test public void aMissingOptionalIndexerIsNoSeparateFeeder() {
+        RobotTestKit kit = new RobotTestKit();
+        kit.absent.add("indexer");
+        final Launcher[] l = new Launcher[1];
+        RobotDefinition r = new RobotDefinition() {
+            @Override protected void define() {
+                tunables(SprayOff.class);
+                drive(Drive.tank("l", "r"));
+                Intake in = add(Intake.motor("intake").part("gobilda-5203-1150"));
+                l[0] = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+                        .feeder(Indexer.servo("indexer").optional()).pushedBy(in));
+            }
+        }.setup(kit);
+        r.started();
+        assertFalse("the intake pushes pieces in: wait for LB", l[0].spinsAtStart());
+        assertFalse(l[0].isSpinning());
+    }
 }
