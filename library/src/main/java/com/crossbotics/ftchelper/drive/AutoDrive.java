@@ -536,8 +536,8 @@ public class AutoDrive {
     /**
      * Drives a route of field points without stopping at the points on the way: a route from
      * {@link FieldMap#route}, in the odometry's frame. It slows down near each one, and goes on as soon
-     * as it is within {@link RouteDriver#PASS_POINT_IN} or has slid past it. So a park around a box costs
-     * little time.
+     * as it is within {@link RouteDriver#PASS_POINT_IN} or has slid past it, if the line on from there is
+     * clear ({@code clear}). So a park around a box costs little time.
      *
      * <p><b>BLOCKS</b> (on purpose): returns when it arrives, gets stuck or runs out of time. Each line of
      * the route has its own {@code actionTimeoutSec}.
@@ -545,18 +545,19 @@ public class AutoDrive {
      * @param pose        the odometry's pose, read each loop (the loop hook updates it)
      * @param ready       false while the odometry cannot be trusted: it holds still, and after 0.2 s it ends
      * @param points      the points, each {x, y}, inches; the last one is where it ends
+     * @param clear       the map's line check, in the odometry's frame ({@link RouteDriver#checkLines}), or null
      * @param headingDeg  the heading to turn to on the way (counterclockwise +; 0 = facing away)
      * @param maxPower    0.1 to 1
      * @param toleranceIn close enough at the last point, inches (1 is usual)
      * @return DONE, NO_ODOMETRY, STALLED, TIMED_OUT or STOPPED
      */
     public Result followRoute(java.util.function.Supplier<com.crossbotics.ftchelper.util.FieldPose> pose,
-                              BooleanSupplier ready, java.util.List<double[]> points,
+                              BooleanSupplier ready, java.util.List<double[]> points, RouteDriver.LineCheck clear,
                               double headingDeg, double maxPower, double toleranceIn) {
         if (tank) {
             throw new UnsupportedOperationException("followRoute needs mecanum wheels (it drives sideways).");
         }
-        RouteDriver driver = new RouteDriver(cfg, powerLimit, pose, ready, clockNanos);
+        RouteDriver driver = new RouteDriver(cfg, powerLimit, pose, ready, clockNanos).checkLines(clear);
         if (!driver.start(points, headingDeg, maxPower, toleranceIn)) return Result.DONE;   // nowhere to go
         // The driver times each line. This is only for checkStop, which must have a time.
         long deadline = clockNanos.getAsLong() + (long) ((points.size() + 1) * cfg.actionTimeoutSec * 1e9);

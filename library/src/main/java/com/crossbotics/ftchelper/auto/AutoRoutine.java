@@ -586,7 +586,9 @@ public class AutoRoutine {
             }
             List<double[]> points = new java.util.ArrayList<>();
             for (double[] p : route) points.add(new double[] {m(p[0]), p[1]});
-            AutoDrive.Result r = takeDrive().followRoute(pose, ready, points, m(headingDeg), maxPower, toleranceIn);
+            // The map's line check, in this alliance's numbers like the points.
+            com.crossbotics.ftchelper.drive.RouteDriver.LineCheck clear = (x1, y1, x2, y2) -> map.lineIsClear(m(x1), y1, m(x2), y2);
+            AutoDrive.Result r = takeDrive().followRoute(pose, ready, points, clear, m(headingDeg), maxPower, toleranceIn);
             if (r != AutoDrive.Result.DONE) record(r);
         });
     }

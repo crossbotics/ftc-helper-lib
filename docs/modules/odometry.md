@@ -573,7 +573,7 @@ fieldMap(FieldMap.margin(13)
 size, plus some for odometry drift (the error that grows as the robot drives). For an 18 x 18 in robot,
 13 in. The bigger the margin, the safer, but a small gap between two boxes closes: with a margin of 13,
 the 30.8 in gap between these two frames leaves a path 4.8 in wide for the robot's centre. A route's
-corners also stay inside the walls by the margin. A path less than 3 in wide needs a `.safePoint(x, y)` at
+corners also stay inside the walls by the margin. A path less than 2.5 in wide needs a `.safePoint(x, y)` at
 each end: the boxes' corners do not fit in it, so without them the route says `no route`.
 
 **2. Use it in an autonomous:** `routeTo` takes the same numbers as `driveTo`.
@@ -595,9 +595,10 @@ atSecondsLeft(10, park);
 
 **How the route is found.** First the straight line. If it crosses a box (with the margin added), the
 robot goes around the boxes' corners by the shortest way of straight lines. It slows down at each
-corner, and does not stop there. At speed it slides a few inches past a corner, away from the box (6 in at
-power 0.7 in the simulator), so list what stands near the corners too. To make routes go your way, add `.safePoint(x, y)`: a place a route may
-pass through. A robot that stands inside a margin first goes out by the nearest side.
+corner, and does not stop there: it goes on up to 2 in early, or after it slid past (6 in at power 0.7
+in the simulator), but only if the line from where it is to the next point misses every margin. If not,
+it drives back to the point first. So list what stands near the corners too. To make routes go your way, add `.safePoint(x, y)`: a place a route may
+pass through, at least 0.5 in outside every margin. A robot that stands inside a margin first goes out by the nearest side.
 
 **A spot right next to a box** (a place to score, inside the margin) is allowed. The robot goes to just
 outside the margin, then straight in: only that last line is inside the margin, so check it on the robot.
@@ -615,6 +616,7 @@ robot presses it against the wall, and the route ends `STALLED`.
   drive sticks to start it`, and the route starts on the first loop the sticks are let go. After 5 s it gives
   up: `Park: not started: the driver kept driving`. Why not wait longer: a driver who parked by hand and lets
   go at the last moment must not see the robot drive off. Pause and the tuning menu make it wait the same way.
+  If the match ends first, it does not start: `Park: not started: the match is over`.
 - Pause and the tuning menu stop it too. It does not set off again by itself.
 - It never waits: the rest of the robot keeps running. "Set pose here" is refused while it drives.
 - `Park: there` says it arrived. It also ends on `STALLED`, `TIMED_OUT` (10 s on one line of the route)

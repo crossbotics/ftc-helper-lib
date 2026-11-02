@@ -352,7 +352,7 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
     // match: a driver who parked by hand and lets go at the last moment must not see the robot drive off.
     private static final double ROUTE_WAIT_SEC = 5;
     private RouteJob waitingRoute = null;
-    private double waitingUntilLeft = 0;
+    private double waitingUntilSec = 0;
     private boolean routesMade = false;
 
     // The job route(...) makes. atSecondsLeft knows it from any other job: it can wait for the driver.
@@ -453,12 +453,14 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
     }
 
     private void routeAtTime(RouteJob job) {
+        if (matchTimer().isOver()) return;   // atSecondsLeft(0, ...): the match is over, no route now
         if (routeMayStartNow()) {
             job.run();
             return;
         }
         waitingRoute = job;
-        waitingUntilLeft = matchTimer().secondsLeft() - ROUTE_WAIT_SEC;
+        // Match time gone by, not time left: time left stops at 0, so it could wait past the end.
+        waitingUntilSec = matchTimer().elapsedSec() + ROUTE_WAIT_SEC;
         if (gamepad1 != null) gamepad1.rumbleBlips(2);
     }
 
@@ -470,11 +472,14 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
     private void checkWaitingRoute() {
         if (waitingRoute == null) return;
         RouteJob job = waitingRoute;
-        if (routeMayStartNow()) {
-            job.run();
-        } else if (matchTimer().secondsLeft() <= waitingUntilLeft) {
+        if (matchTimer().isOver()) {
+            waitingRoute = null;
+            showNote(job.label + ": not started: the match is over");
+        } else if (matchTimer().elapsedSec() >= waitingUntilSec) {
             waitingRoute = null;
             showNote(job.label + ": not started: the driver kept driving");
+        } else if (routeMayStartNow()) {
+            job.run();
         }
     }
 
@@ -497,7 +502,8 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
         List<double[]> points = new ArrayList<>();
         for (double[] p : route) points.add(new double[] {flip ? -p[0] : p[0], p[1]});
         routeDriver = new com.crossbotics.ftchelper.drive.RouteDriver(r.robotConfig().auto(), driveConfig().powerLimit, r::pose,
-                () -> r.odometry() != null && r.odometry().isReady() && r.odometry().isPoseSet(), System::nanoTime);
+                () -> r.odometry() != null && r.odometry().isReady() && r.odometry().isPoseSet(), System::nanoTime)
+                .checkLines((x1, y1, x2, y2) -> r.fieldMap().lineIsClear(flip ? -x1 : x1, y1, flip ? -x2 : x2, y2));
         routeLabel = label;
         routeDriver.start(points, flip ? -headingDeg : headingDeg, maxPower, toleranceIn);
     }

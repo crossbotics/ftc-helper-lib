@@ -89,6 +89,37 @@ public class RouteDriverTest {
         assertTrue("to the point, forward: " + p[0], p[0] > 0);
     }
 
+    @Test public void itLeavesASafePointEarlyOnlyIfTheLineOnIsClear() {
+        // A safe point close to a box's corner (margin 0). Leaving it 2 in early would cut through the box.
+        FieldMap map = FieldMap.margin(0).keepOut("box", 0, 0, 10, 10).safePoint(10.6, 10.6);
+        x = 12;
+        y = 5;
+        List<double[]> route = map.route(x, y, 5, 12);
+        assertEquals(2, route.size());
+        RouteDriver d = driver().checkLines(map::lineIsClear);
+        d.start(route, 0, 0.6, 1);
+        runToEnd(d, 3000);
+        assertEquals(RouteDriver.Result.DONE, d.result());
+        for (double[] p : path) {
+            assertFalse("inside the box at " + p[0] + ", " + p[1], p[0] > 0.2 && p[0] < 9.8 && p[1] > 0.2 && p[1] < 9.8);
+        }
+    }
+
+    @Test public void aRobotThatSlidPastACornerIntoAMarginGoesBackToTheCorner() {
+        // Box -10..10 with margin 6: its margin ends at 16, the corner point stands at 18.5.
+        FieldMap map = FieldMap.margin(6).keepOut("box", -10, -10, 10, 10);
+        RouteDriver d = driver().checkLines(map::lineIsClear);
+        x = 40;
+        y = 40;
+        d.start(points(18.5, 18.5, -30, 18.5), 0, 0.6, 1);
+        loop(d);
+        // It slid on, down and left, past the corner and into the margin: the line on would cross it.
+        x = 14;
+        y = 14;
+        double[] p = loop(d);
+        assertTrue("back up to the corner: forward " + p[0] + ", right " + p[1], p[0] > 0 && p[1] > 0);
+    }
+
     @Test public void itTurnsToTheHeadingOnTheWay() {
         RouteDriver d = driver();
         d.start(points(10, 20), 90, 0.6, 1);

@@ -469,19 +469,21 @@ List<double[]> points = map.route(pose.x, pose.y, 0, 40);   // each point is {x,
 | --- | --- |
 | `FieldMap.margin(inches)` | a new map: how far the robot's centre stays from every box |
 | `keepOut(name, x1, y1, x2, y2)` | adds a box: two opposite corners, inches |
-| `safePoint(x, y)` | adds a place a route may pass through. It stops at INIT if it is within a margin, or closer to a wall than the margin |
+| `safePoint(x, y)` | adds a place a route may pass through. It stops at INIT if it is within a margin (or less than 0.5 in outside it), or closer to a wall than the margin |
 | `fieldSize(inches)` | the square field's side. Default 144 |
 | `route(fromX, fromY, toX, toY)` | the points to drive to, in order, ending at the spot. Empty if there is no route: the robot must not set off |
+| `lineIsClear(x1, y1, x2, y2)` | true if the robot's centre may drive straight there: the line misses every margin (a box whose margin holds the end: only the box itself) |
 | `whyBadSpot(x, y)` | why a route cannot end there (off the field, on a box, or boxed in), or `""`. A spot inside a margin is fine: the last line goes straight in |
 | `marginIn()`, `boxCount()` | what the map holds |
 
 ## RouteDriver
 
-Drives a route without waiting. `route(...)` in `Controls.java` uses it for you, and in autonomous `AutoDrive.followRoute(pose, ready, points, headingDeg, power, toleranceIn)` runs it in a blocking loop (`Steps.routeTo` uses that). Each loop, call
+Drives a route without waiting. `route(...)` in `Controls.java` uses it for you, and in autonomous `AutoDrive.followRoute(pose, ready, points, clear, headingDeg, power, toleranceIn)` runs it in a blocking loop (`Steps.routeTo` uses that). Each loop, call
 `update()` and send what it returns to the wheels. [`AutoDrive.driveTo`](#autodrive) does the same work in autonomous, and blocks.
 
 ```java
-RouteDriver route = new RouteDriver(autoConfig, 1.0, robot::pose, odometry::isReady, System::nanoTime);
+RouteDriver route = new RouteDriver(autoConfig, 1.0, robot::pose, odometry::isReady, System::nanoTime)
+        .checkLines(map::lineIsClear);   // leave a point early only if the line on is clear
 route.start(map.route(pose.x, pose.y, 0, 40), 0, 0.7, 1.0);
 // every loop:
 if (route.isRunning()) {
@@ -493,6 +495,7 @@ if (route.isRunning()) {
 | Method | What it does |
 | --- | --- |
 | `new RouteDriver(cfg, powerLimit, pose, ready, clockNanos)` | `ready` false: it holds still, and after 0.2 s it ends |
+| `checkLines(check)` | the map's line check (`map::lineIsClear`). A point on the way counts as reached early (within 2 in, or slid past it) only if the line from the robot to the next point is clear; if not, it drives to the point (within 0.5 in). Give it one for every route from `FieldMap.route` |
 | `start(points, headingDeg, maxPower, toleranceIn)` | starts a route. False if it has no points |
 | `update()` | one loop. Never waits. All 0 once it has ended |
 | `isRunning()` | true while it drives |

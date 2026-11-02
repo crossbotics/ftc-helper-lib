@@ -353,6 +353,60 @@ public class ActionsAndControlsTest {
         assertEquals(1, l.part().getShotsLeft());
     }
 
+    @Test public void rapidFireTapsStopAtTheQueueLimit() {
+        RobotDefinition r = new RobotDefinition() {
+            @Override protected void define() {
+                drive(Drive.tank("l", "r"));
+                add(Launcher.flywheel("launcher", "gobilda-5203-6000"));
+            }
+        };
+        r.setup(new RobotTestKit());
+        Launcher l = (Launcher) r.modules().get(0);
+        assertEquals(4, l.maxFiringQueue());
+        for (int i = 0; i < 10; i++) l.fire();  // ten nervous taps while the wheel spins up
+        assertEquals(4, l.part().getShotsLeft());
+        l.fire(3);                              // an autonomous asking on purpose: no limit
+        assertEquals(7, l.part().getShotsLeft());
+    }
+
+    @Test public void aTapDuringAFireActionFiresItsOwnShot() {
+        RobotDefinition r = new RobotDefinition() {
+            @Override protected void define() {
+                drive(Drive.tank("l", "r"));
+                add(Launcher.flywheel("launcher", "gobilda-5203-6000"));
+            }
+        };
+        r.setup(new RobotTestKit());
+        Launcher l = (Launcher) r.modules().get(0);
+        r.startForTests();
+        r.run(l.fireAction(4));
+        r.all().update();                       // the wheel is not up to speed: all 4 still wait
+        assertEquals(4, l.part().getShotsLeft());
+        // The driver taps: the action lets go (its shots go with it), and the tap still adds one.
+        l.fire();
+        assertEquals(1, l.part().getShotsLeft());
+    }
+
+    public static class QueueNumbers {
+        public static class Launcher {
+            public static double maxFiringQueue = 2;
+        }
+    }
+
+    @Test public void maxFiringQueueComesFromTunables() {
+        RobotDefinition r = new RobotDefinition() {
+            @Override protected void define() {
+                tunables(QueueNumbers.class);
+                drive(Drive.tank("l", "r"));
+                add(Launcher.flywheel("launcher", "gobilda-5203-6000"));
+            }
+        };
+        r.setup(new RobotTestKit());
+        Launcher l = (Launcher) r.modules().get(0);
+        for (int i = 0; i < 5; i++) l.fire();
+        assertEquals(2, l.part().getShotsLeft());
+    }
+
     @Test public void pauseStopsEverythingOnBrakeAndResumeGoesOn() {
         com.crossbotics.ftchelper.FakeMotor intake = kit.motors.get("intake");
         robot.intake.in();

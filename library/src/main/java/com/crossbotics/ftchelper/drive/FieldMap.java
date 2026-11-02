@@ -84,9 +84,9 @@ public final class FieldMap {
 
     /**
      * Adds a place a route may pass through (optional: the boxes' corners are used without this). Use
-     * one to make routes go your way, e.g. through a gap you trust. A gap less than 3 in wide (after the
-     * margins) needs one at each end, because the boxes' corners do not fit in it. It must be outside
-     * every margin, and inside the walls by the margin.
+     * one to make routes go your way, e.g. through a gap you trust. A gap less than 2.5 in wide (after the
+     * margins) needs one at each end, because the boxes' corners do not fit in it. It must be at least 0.5 in
+     * outside every margin, and inside the walls by the margin.
      *
      * @param x inches right of the centre line
      * @param y inches from the centre toward the far wall
@@ -162,8 +162,8 @@ public final class FieldMap {
         if (!whyBadSpot(toX, toY).isEmpty()) return Collections.emptyList();
         List<double[]> out = new ArrayList<>();
         double[] goal = {toX, toY};
-        // Already there: no trip out of a margin and back for this.
-        if (Math.hypot(toX - fromX, toY - fromY) <= RouteDriver.PASS_POINT_IN) {
+        // Already there: no trip out of a margin and back for this (but never across a box).
+        if (Math.hypot(toX - fromX, toY - fromY) <= RouteDriver.PASS_POINT_IN && !crossesABox(fromX, fromY, toX, toY)) {
             out.add(goal);
             return out;
         }
@@ -191,6 +191,32 @@ public final class FieldMap {
         out.addAll(middle);
         if (end != goal) out.add(goal);
         return out;
+    }
+
+    /**
+     * True if the robot's centre may drive straight from one place to another: the line misses every box
+     * with its margin. A box whose margin holds the END is checked without its margin, because a route's
+     * last line goes straight in to a spot next to a box. {@link RouteDriver#checkLines} uses this.
+     *
+     * @param fromX from: inches right of the centre line
+     * @param fromY from: inches toward the far wall
+     * @param toX   to: inches right
+     * @param toY   to: inches toward the far wall
+     */
+    public boolean lineIsClear(double fromX, double fromY, double toX, double toY) {
+        double[] a = {fromX, fromY}, b = {toX, toY};
+        for (int i = 0; i < grown.size(); i++) {
+            double[] g = grown.get(i);
+            if (lineCrosses(a, b, inside(g, toX, toY) ? boxes.get(i) : g)) return false;
+        }
+        return true;
+    }
+
+    // True if the line goes through a box itself (the margins not counted).
+    private boolean crossesABox(double fromX, double fromY, double toX, double toY) {
+        double[] a = {fromX, fromY}, b = {toX, toY};
+        for (double[] box : boxes) if (lineCrosses(a, b, box)) return true;
+        return false;
     }
 
     // The index of the box whose margin holds this point, or -1.
@@ -312,10 +338,14 @@ public final class FieldMap {
     }
 
     private void checkSafePoint(double x, double y) {
-        int box = boxAt(x, y);
-        if (box >= 0) {
-            throw new IllegalArgumentException("FieldMap.safePoint(" + x + ", " + y + ") is within the " + marginIn
-                    + " in margin of \"" + names.get(box) + "\": move it, or use a smaller margin");
+        // A robot counts a safe point as reached RouteDriver.ON_POINT_IN early: that much room outside the margin.
+        double room = RouteDriver.ON_POINT_IN;
+        for (int i = 0; i < grown.size(); i++) {
+            double[] g = grown.get(i);
+            if (inside(new double[] {g[0] - room, g[1] - room, g[2] + room, g[3] + room}, x, y)) {
+                throw new IllegalArgumentException("FieldMap.safePoint(" + x + ", " + y + ") is within the " + marginIn
+                        + " in margin of \"" + names.get(i) + "\" (or less than " + room + " in outside it): move it, or use a smaller margin");
+            }
         }
         if (Math.abs(x) > wallLimit() || Math.abs(y) > wallLimit()) {
             throw new IllegalArgumentException("FieldMap.safePoint(" + x + ", " + y + ") is too near a wall: the robot's centre "

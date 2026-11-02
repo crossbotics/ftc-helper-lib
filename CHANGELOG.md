@@ -13,7 +13,12 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   `atSecondsLeft(seconds, job)`. Any drive stick stops it at once, and it never waits. A route that a time starts
   waits up to 5 s for the driver to let go of the sticks. It uses only the pose: it cannot see another robot. Not yet
   tried on a real robot.
-- `FieldMap` and `RouteDriver` (drive), `AutoDrive.followRoute`, `AutoRoutine.driveRoute`. Cookbook recipes, a section in lesson 7, test ODO-05.
+- `FieldMap` (with `lineIsClear`) and `RouteDriver` (with `checkLines`: it leaves a point early only if the line on
+  is clear), `AutoDrive.followRoute`, `AutoRoutine.driveRoute`. Cookbook recipes, a section in lesson 7, test ODO-05.
+- **Many quick taps on fire no longer pile up.** Each `launcher.fire()` still adds one shot, but at most
+  `maxFiringQueue` shots wait (Tunables, default 4); more taps are ignored. Only waiting shots count: a piece being
+  fed does not. A tap during a fire action stops the action and still fires its own shot. `fire(n)` and the fire
+  actions have no limit. Test SHOT-07.
 
 ## v0.23.0 - 2026-10-31
 

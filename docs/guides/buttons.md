@@ -84,6 +84,9 @@ g2.rb.tap(robot.launcher::fire).says("fire one")
      .doubleTap(() -> robot.launcher.fire(3)).says("fire three");
 ```
 
+Taps on `fire` add up: at most `maxFiringQueue` shots wait (Tunables, default 4), so many nervous taps do
+not fire many pieces later ([Tunables](tunables.md#launcher)).
+
 **When does a gesture's job run?** At once, unless the same button has a longer gesture that starts
 the same way. Then the library waits only until it knows:
 

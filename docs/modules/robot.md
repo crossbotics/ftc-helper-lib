@@ -814,7 +814,8 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 | Method | |
 | --- | --- |
 | `spinUp()`, `idle()`, `toggle()` | to the shot speed; back to `idleRpm` |
-| `fire()`, `fire(n)` | spins up if needed, feeds as soon as it is at speed (gives up after 3 s, saying why) |
+| `fire()`, `fire(n)` | spins up if needed, feeds as soon as it is at speed (gives up after 3 s, saying why). Each `fire()` adds one shot, up to `maxFiringQueue` waiting (Tunables, default 4): more taps are ignored. `fire(n)` has no limit |
+| `maxFiringQueue()` | the most shots `fire()` lets wait at once |
 | `fireWhileHeld()`, `ceaseFire()` | for a held button: one shot, then the next as soon as it is fed; on release no more (a tap still fires its one shot) |
 | `fireAction(n)`, `fireAllAction()` | ready-made [actions](#action): fire n pieces ("Fire 2"), or every piece the robot holds ("Fire all": a `Pieces` part's count, else the intake's `holds(...)`, else 4), and be done when the last one has left (time limit 3 s + 2 s a piece). `.action(robot.launcher.fireAction(1))` in an autonomous, `g1.y.press(robot.launcher.fireAllAction())` in TeleOp. Only the launcher: the intake keeps doing what it does |
 | `adjust(steps)` | speed +/- steps x `stepRpm` (not saved) |

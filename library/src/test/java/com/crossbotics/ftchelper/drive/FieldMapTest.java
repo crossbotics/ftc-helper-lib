@@ -165,6 +165,10 @@ public class FieldMapTest {
         assertFalse(with.route(-10, -10, 10, 10).isEmpty());
     }
 
+    @Test(expected = IllegalArgumentException.class) public void aSafePointRightAtAMarginStopsAtInit() {
+        FieldMap.margin(0).keepOut("box", 0, 0, 10, 10).safePoint(10.1, 10.1);   // less than 0.5 in outside
+    }
+
     @Test(expected = IllegalArgumentException.class) public void aSafePointTooNearAWallStopsAtInit() {
         FieldMap.margin(13).safePoint(0, 60);
     }
@@ -219,6 +223,21 @@ public class FieldMapTest {
         assertFalse(map.whyBadSpot(0, 0).isEmpty());
         assertEquals(1, map.boxCount());
         assertEquals(0, map.marginIn(), 0);
+    }
+
+    @Test public void aSpotCloseByOnTheOtherSideOfAThinBoxIsNotOneStraightLine() {
+        FieldMap map = FieldMap.margin(0).keepOut("divider", -0.5, -10, 0.5, 10);
+        List<double[]> route = map.route(-0.9, 0, 0.9, 0);
+        assertTrue("not straight through: " + route.size(), route.size() != 1);
+    }
+
+    @Test public void aLineIsClearOnlyIfItMissesEveryMargin() {
+        FieldMap map = FieldMap.margin(5).keepOut("box", -10, -10, 10, 10);
+        assertTrue(map.lineIsClear(-30, 20, 30, 20));
+        assertFalse("through the margin", map.lineIsClear(-30, 12, 30, 12));
+        // A line that ends inside the margin, at a spot next to the box: only the box itself counts.
+        assertTrue(map.lineIsClear(0, 30, 0, 12));
+        assertFalse(map.lineIsClear(0, 30, 0, -12));
     }
 
     @Test public void aLineAlongABoxsSideIsClear() {

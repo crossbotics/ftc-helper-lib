@@ -212,6 +212,14 @@ The launcher keeps two rules for you. Know them, because they explain what the r
    Driver Station says why: `Launcher gave up: flywheel`. A robot that fired late, at a bad moment,
    would be worse than one that did not fire.
 
+**Many quick taps.** If your own button calls `fire()`, each tap adds one shot to a queue (a waiting
+list). Four quick taps while the wheel spins up fire four pieces. A nervous driver who taps ten times
+does not get ten shots: at most `maxFiringQueue` shots wait (default 4), and more taps are ignored.
+Only waiting shots count: once a piece is fed, a new tap can add one again. Change it in
+`Tunables.java`, e.g. `public static double maxFiringQueue = 1;` so that only one shot can wait. If you
+tune it live, copy the number back to `Tunables.java`. The RB button the launcher brings works a little differently: a tap while a shot
+is still waiting adds nothing.
+
 ## 5. A camera that knows the goal
 
 From [`turretbot/Robot.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/Robot.java):

@@ -16,7 +16,8 @@ import java.util.function.Supplier;
  * {@link AutoDrive#driveTo}. In autonomous, {@link AutoDrive#followRoute} runs it for you and blocks.
  *
  * <pre>{@code
- * RouteDriver route = new RouteDriver(autoConfig, 1.0, robot::pose, odometry::isReady, System::nanoTime);
+ * RouteDriver route = new RouteDriver(autoConfig, 1.0, robot::pose, odometry::isReady, System::nanoTime)
+ *         .checkLines(map::lineIsClear);
  * route.start(map.route(pose.x, pose.y, -56, -36), 0, 0.7, 2.0);
  * // every loop:
  * if (route.isRunning()) {
@@ -51,6 +52,16 @@ public final class RouteDriver {
     // A fast robot can slide past a point on the way, outside PASS_POINT_IN. Going back to it costs time
     // and can hit what is behind it: so past the point and this close also counts as reached.
     private static final double PASSED_BY_IN = 8.0;
+    // Leaving a point early is only allowed when the line from here to the next point is clear (see
+    // checkLines). Otherwise it drives on to the point itself, and this close counts as there. (FieldMap
+    // keeps safe points this far outside every margin, so the line on from here is clear too.)
+    static final double ON_POINT_IN = 0.5;
+
+    /** Says if a straight line on the field is clear. {@link FieldMap#lineIsClear} is one. */
+    public interface LineCheck {
+        /** True if the robot's centre may drive straight from (x1, y1) to (x2, y2), inches. */
+        boolean isClear(double x1, double y1, double x2, double y2);
+    }
 
     private final AutoDriveConfig cfg;
     private final double limit;
@@ -68,6 +79,7 @@ public final class RouteDriver {
     private boolean wasNear;
     private double lineStartDist, lineStartX, lineStartY, lineStartSec, notReadySince, stallClock, lastLoopSec;
     private int closeLoops;
+    private LineCheck lineCheck = null;
 
     /**
      * @param cfg        the autonomous numbers (turn gains, stuck rule, time limit)
@@ -86,6 +98,24 @@ public final class RouteDriver {
         this.pose = pose;
         this.ready = ready;
         this.clockNanos = clockNanos;
+    }
+
+    /**
+     * Gives it the map's line check (optional, but routes from {@link FieldMap#route} should have it). A
+     * point on the way then counts as reached early (within 2 in, or slid past it) only if the line from
+     * where the robot is to the next point is clear. Without it, a robot that left a safe point early, or
+     * slid past a corner at an angle, could cut through a box's margin.
+     *
+     * <pre>{@code
+     * route.checkLines(map::lineIsClear);
+     * }</pre>
+     *
+     * @param check the check, or null for none
+     * @return this, to chain
+     */
+    public RouteDriver checkLines(LineCheck check) {
+        this.lineCheck = check;
+        return this;
     }
 
     /**
@@ -172,14 +202,16 @@ public final class RouteDriver {
             } else {
                 closeLoops = 0;
             }
-        } else if (dist <= PASS_POINT_IN || (past && dist <= PASSED_BY_IN)) {
+        } else if (dist <= ON_POINT_IN
+                || ((dist <= PASS_POINT_IN || (past && dist <= PASSED_BY_IN)) && nextLineIsClear(p))) {
             // A point on the way: on to the next line at once.
             next++;
             startLine();
             return update();
         }
 
-        double tol = last ? toleranceIn : PASS_POINT_IN;
+        // Not last and not yet left: the next line is not clear from here, so it drives to the point itself.
+        double tol = last ? toleranceIn : ON_POINT_IN;
         double speed;
         if (dist <= tol) speed = 0;
         else if (dist < AutoDrive.DRIVE_TO_NEAR_IN) {
@@ -206,6 +238,12 @@ public final class RouteDriver {
         boolean stuck = near ? dist > tol && nearStall.update(dist, stallClock) : stall.update(dist, stallClock);
         if (cfg.stallExitEnabled && stuck) return finish(Result.STALLED);
         return new double[] {forward, right, turn};
+    }
+
+    private boolean nextLineIsClear(FieldPose p) {
+        if (lineCheck == null) return true;
+        double[] after = points.get(next + 1);
+        return lineCheck.isClear(p.x, p.y, after[0], after[1]);
     }
 
     // A new line of the route: fresh time limit and stuck checks.

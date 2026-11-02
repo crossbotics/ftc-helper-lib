@@ -4605,6 +4605,89 @@
    }
   },
   {
+   "id": "SHOT-07",
+   "title": "Many quick taps on the fire button",
+   "area": "shooter",
+   "priority": "medium",
+   "where": "both",
+   "minutes": 10,
+   "needs": [
+    [
+     "flywheel"
+    ]
+   ],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "studica"
+   ],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/guides/tunables.md",
+     "anchor": "launcher"
+    },
+    {
+     "path": "docs/tutorials/start/09-shooter-and-camera.md",
+     "anchor": "4-the-two-safety-rules"
+    }
+   ],
+   "file": "testing/tests/SHOT-07.md",
+   "sections": {
+    "why": [
+     {
+      "p": "Drivers tap the fire button fast: some mean \"fire four\", some just want it to fire NOW. Each `launcher.fire()` adds one shot, but at most `maxFiringQueue` shots wait (default 4). We want to know that the limit feels right to real drivers, and that extra taps never fire pieces later."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Safety glasses. Nobody in front of the launcher.",
+       "Robot on a block or held so it cannot move."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A button that calls `robot.launcher::fire` in `Controls.java`, e.g. `g2.lb.tap(robot.launcher::fire).says(\"fire one\")`.",
+       "Each burst must start from a stopped wheel: before each one, STOP the OpMode, wait until the wheel stops, then INIT and START again.",
+       "6 pieces loaded (or as many as the robot holds)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "START. With the wheel stopped, tap the button 4 times fast, all within about half a second (the limit counts shots that WAIT: while the wheel spins up, nothing is fed yet). Count the pieces that fire.",
+       "STOP, reload, INIT and START again. Tap the button 10 times fast. Count the pieces that fire.",
+       "Set `maxFiringQueue = 1` in `Tunables.java` and build the code again (or change it in the tuning menu). Repeat step 2.",
+       "Put your own number back in `Tunables.java`."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Step 1 fires 4 pieces. Step 2 fires 4 pieces (or fewer if the robot held fewer). Step 3 fires 1 piece. Taps after a piece was fed may add shots again: that is not a fail."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "the pieces fired in each step",
+       "the time from the first tap to the first piece (seconds)",
+       "what your drivers think of the default of 4"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "No feeder (pieces pushed in some other way): report \"could not run\"."
+     }
+    ]
+   }
+  },
+  {
    "id": "SIM-05",
    "title": "A simulator test stands in for a number not measured yet (set tunable)",
    "area": "simulator",
