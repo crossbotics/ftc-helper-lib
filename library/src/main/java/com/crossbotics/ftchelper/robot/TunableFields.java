@@ -52,7 +52,7 @@ final class TunableFields {
         part("Intake", "inPower", "outPower");
         part("Interlock");   // only <part>From, <part>To, ... (see interlock below)
         part("Launcher", "assistSec", "batteryCompensation", "blueTrimPercent", "ejectRpm", "ejectSec", "fallbackDistanceIn", "feedStopHold",
-                "feedStopMoveSec", "feedStopOpenSec", "feedStopRelease", "idleRpm", "kD", "kF", "kI", "kP", "nominalVolts", "quickBandRpm",
+                "feedStopMoveSec", "feedStopOpenSec", "feedStopRelease", "idleRpm", "kD", "kF", "kI", "kP", "maxFiringQueue", "nominalVolts", "quickBandRpm",
                 "quickMaxWaitSec", "readyBandRpm", "redTrimPercent", "shotIntervalSec", "speedByDistance", "speedRpm",
                 "sprayEnabled", "sprayLastSec", "stepRpm", "trimMaxPercent", "trimStepPercent");
         part("LiftArm", "kD", "kF", "kI", "kP", "max", "maxPower", "min", "slowZone", "slowZonePower", "tolerance");

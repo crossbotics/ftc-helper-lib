@@ -1,5 +1,6 @@
 package com.crossbotics.ftchelper.examples.cookbook;
 
+import com.crossbotics.ftchelper.drive.FieldMap;
 import com.crossbotics.ftchelper.robot.Action;
 import com.crossbotics.ftchelper.robot.Auto;
 import com.crossbotics.ftchelper.robot.ControlMap;
@@ -110,6 +111,60 @@ public class OdometryRecipes {
             g1.dpadDown.heldFor(1.0, () -> robot.resetPose(56, -61, 0)).says("hold 1 s: pose = right corner tile");
             // An action can set it too (the action is in Actions.java, below).
             g1.dpadUp.heldFor(1.0, Actions.poseHereThenIntake(robot)).says("hold 1 s: pose here, intake on");
+            // end recipe
+        }
+    }
+
+    /** A robot that knows the places it must not drive through. */
+    public static class RouteRobot extends RobotDefinition {
+        @Override
+        protected void define() {
+            drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right")
+                    .imu("imu", LogoFacingDirection.UP, UsbFacingDirection.FORWARD));
+            odometry(Odometry.pinpoint("pinpoint").offsetsMm(-84, -168));
+            // recipe: field-map
+            // After odometry(...). The margin: half the robot's corner to corner size, plus some for drift.
+            // Each box: two opposite corners, like driveTo's numbers. These are BIOBUZZ's two HIVE frames.
+            fieldMap(FieldMap.margin(13)
+                    .keepOut("HIVE frame, near", -19.5, -24.8, 19.5, -15.4)
+                    .keepOut("HIVE frame, far", -19.5, 15.4, 19.5, 24.8));
+            // end recipe
+        }
+    }
+
+    /** When the park time comes, get home around the boxes from wherever the robot is. */
+    @Autonomous(name = "Cookbook Route Home", group = "Cookbook")
+    @Disabled
+    public static class RouteHome extends Auto<RouteRobot> {
+        @Override
+        protected boolean mirrorForRed() {
+            return false;
+        }
+
+        @Override
+        protected void steps(Steps s, RouteRobot robot) {
+            // recipe: route-to-park
+            s.start("Against our wall, in the left corner tile, facing the field", -56, -61, 0)
+             .driveTo("To the goal", Tunables.Auto.goalX, Tunables.Auto.goalY, Tunables.Auto.goalHeading, 0.6)
+             .parkWithSeconds(6)    // the route slows at each corner: give it more time than a straight line
+             .routeTo("Park", Tunables.Auto.parkX, Tunables.Auto.parkY, 0, 0.8);
+            // end recipe
+        }
+    }
+
+    /** A button and a time that send the robot to a spot by itself. */
+    @TeleOp(name = "Cookbook Route Button", group = "Cookbook")
+    @Disabled
+    public static class RouteControls extends ControlMap<RouteRobot> {
+        public static boolean oneDriver = false;
+
+        @Override
+        protected void buttons(RouteRobot robot, Pad g1, Pad g2) {
+            // recipe: route-button
+            // route(...) makes the job. It starts when the button or the time says so.
+            Runnable park = route("Park", Tunables.Auto.parkX, Tunables.Auto.parkY, 0, 0.8);
+            g1.dpadLeft.tap(park).says("drive to the park spot (a drive stick stops it)");
+            atSecondsLeft(10, park);
             // end recipe
         }
     }

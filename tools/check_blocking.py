@@ -29,7 +29,7 @@ EXAMPLES = ROOT / "examples/src/main/java"
 # The methods allowed to loop in each file, and why. A file here is no free pass: a new loop in another
 # method of the file fails until it is added.
 ALLOWED_LOOPS = {
-    "drive/AutoDrive.java": ({"move", "moveWithTurn", "driveTo", "turnUntil", "settle"},
+    "drive/AutoDrive.java": ({"move", "moveWithTurn", "driveTo", "followRoute", "turnUntil", "settle"},
                              "autonomous moves block on purpose (with time limits and STOP checks)"),
     "auto/AutoRoutine.java": ({"turnTowardWithSweep", "followPath", "waitUntil", "waitFor"},
                               "autonomous step runner blocks on purpose (keeps mechanisms updating)"),

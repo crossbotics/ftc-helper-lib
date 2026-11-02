@@ -486,6 +486,7 @@ Section: the device's name in CamelCase: a launcher on the motor `launcher` read
 | `readyBandRpm` | "at speed" means within this of the target | RPM | 60 | no | test | it waits too long to fire (more) or shots vary (less) |
 | `idleRpm` | the speed between shots (0 = stop) | RPM | 0 | no | test | the first shot takes too long to spin up |
 | `shotIntervalSec` | the least time between two shots | seconds | 0.25 | no | Flywheel Finder (the recovery) | quick shots land short (more) |
+| `maxFiringQueue` | `fire()` (a tap): the most shots that may wait at once. More taps are ignored. The piece being fed now does not count. At least 1. `fire(n)` and actions have no limit | shots | 4 | no | none | taps fire more (or fewer) shots than the drivers mean |
 | `speedByDistance` | the shot table: rows of `{inches, rpm}`, or `{inches, rpm, hood}` with a [hood](#hood); blended between rows | inches, RPM | none: `speedRpm` | no | Shot Tuner | the field, the balls or the wheel changed |
 | `speedByDistance<Name>` | one more table per game piece, e.g. `speedByDistancePollen` (used as "pollen") | inches, RPM | none | no | Shot Tuner | pieces fly differently |
 | `kP` | the hub's speed control: push per speed error | hub units | from the parts catalog: kF / 10 (6000 RPM motor: 1.17) | no | Flywheel Finder | after the Flywheel Finder |

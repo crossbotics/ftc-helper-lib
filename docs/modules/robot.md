@@ -485,6 +485,9 @@ one used for the reset spot (`Reset spot for RED: ...`) and the aim's.
 
 ---
 
+`fieldMap(FieldMap.margin(13).keepOut(...))` in `Robot.java` lists the places the robot must not drive
+through, for `s.routeTo(...)` and `route(...)`: [keep-out boxes and routes](odometry.md#keep-out-boxes-and-routes).
+
 ## PathFollower
 
 The small plug a path-following add-on fills in, so the core library never needs that other library.
@@ -811,7 +814,8 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 | Method | |
 | --- | --- |
 | `spinUp()`, `idle()`, `toggle()` | to the shot speed; back to `idleRpm` |
-| `fire()`, `fire(n)` | spins up if needed, feeds as soon as it is at speed (gives up after 3 s, saying why) |
+| `fire()`, `fire(n)` | spins up if needed, feeds as soon as it is at speed (gives up after 3 s, saying why). Each `fire()` adds one shot, up to `maxFiringQueue` waiting (Tunables, default 4): more taps are ignored. `fire(n)` has no limit |
+| `maxFiringQueue()` | the most shots `fire()` lets wait at once |
 | `fireWhileHeld()`, `ceaseFire()` | for a held button: one shot, then the next as soon as it is fed; on release no more (a tap still fires its one shot) |
 | `fireAction(n)`, `fireAllAction()` | ready-made [actions](#action): fire n pieces ("Fire 2"), or every piece the robot holds ("Fire all": a `Pieces` part's count, else the intake's `holds(...)`, else 4), and be done when the last one has left (time limit 3 s + 2 s a piece). `.action(robot.launcher.fireAction(1))` in an autonomous, `g1.y.press(robot.launcher.fireAllAction())` in TeleOp. Only the launcher: the intake keeps doing what it does |
 | `adjust(steps)` | speed +/- steps x `stepRpm` (not saved) |
@@ -1652,6 +1656,24 @@ the whole map and the free buttons.
 
 ---
 
+### Drive to a spot by itself
+
+`route(...)` in `buttons(...)` makes a job that drives the robot to a field spot around the boxes of
+`fieldMap(...)`. Any drive stick stops it. How it works, and what it cannot do: [keep-out boxes and routes](odometry.md#keep-out-boxes-and-routes).
+
+```java
+Runnable park = route("Park", -56, -36, 0, 0.8);
+g1.dpadLeft.tap(park).says("drive to the park spot (a drive stick stops it)");
+atSecondsLeft(10, park);
+```
+
+| In `Controls.java` | |
+| --- | --- |
+| `route(label, xIn, yIn, headingDeg, power[, toleranceIn])` | makes the job (a `Runnable`). Mistakes stop INIT. It starts when a button or a time runs it |
+| `atSecondsLeft(seconds, job)` | runs a job once when this many seconds of TeleOp are left. A `route(...)` job waits up to 5 s for the driver to let go of the drive sticks |
+| `routeRunning()` | true while a route drives the robot |
+| `stopRoute()` | ends a running route |
+
 ## Auto
 
 ```java
@@ -1690,6 +1712,7 @@ What [`Steps`](#auto) can do:
 | `rememberHeading(label)`, `turnBack(label, maxPower)` | save the heading now; later turn back to it (without odometry pods it uses the IMU: better than nothing). The same as `AutoRoutine`'s `rememberHeading` / `returnToHeading` |
 | `readyToLaunch(label, timeoutSec)` | spin the launcher up and WAIT until it is ready to fire, then go on; the speed keeps following the distance in the next steps ([Firing](#firing-shot-modes-feed-stop-piece-path)). To spin up while the next step drives instead: `.run("Spin up", robot.launcher::spinUp)` |
 | `driveTo(label, xIn, yIn, headingDeg, power[, toleranceIn][, PathAt...])` | drive to a field point and heading with the odometry, correcting all the way (mecanum; needs `Tunables.Odometry.checked` on a robot) ([driveTo](../guides/autonomous-builder.md#drive-to-a-field-point-driveto)); [`PathAt`](#pathat) starts things on the way |
+| `routeTo(label, xIn, yIn, headingDeg, power[, toleranceIn])` | `driveTo`, but around the boxes of `fieldMap(...)`, from wherever the robot is when the step starts ([routes](odometry.md#keep-out-boxes-and-routes)) |
 | `follow(label, path[, timeoutSec][, PathAt...])` | follow a path with the robot's [path follower](#pathfollower) ([pedro](pedro.md)); [`PathAt`](#pathat) starts things along it |
 | `run(label, command)` | start something and go on at once |
 | `waitSeconds(label, seconds)`, `waitUntil(label, condition, timeoutSec)` | wait (the robot keeps running). A step always has a label (it shows in INIT and the report); an [Action](#action)'s `waitSeconds(seconds)` has none |
@@ -1728,6 +1751,10 @@ for park)" or "skipped (time for park)". Choose the seconds from a timed run: ho
 take, plus about a second. Without `parkWithSeconds`, every step is a main step and nothing keeps time
 for the end. It is [`EasyAuto`](../guides/easy-autos.md#time-for-parking)'s `thenPark()` and
 `parkReserveSec()` in one call.
+
+The step that was stopped can leave the robot anywhere, so a straight `driveTo` home can go through a
+field element. With `routeTo` the park goes around the boxes you list:
+[keep-out boxes and routes](odometry.md#keep-out-boxes-and-routes).
 
 The steps are read in INIT (for the menu, the start position and the park time; nothing runs), again
 in INIT whenever a menu choice changes (so a `start(...)` inside an `onlyIf` follows the menu:

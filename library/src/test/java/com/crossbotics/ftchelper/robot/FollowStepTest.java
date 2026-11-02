@@ -312,4 +312,46 @@ public class FollowStepTest {
             assertEquals(message, e.getMessage());
         }
     }
+
+    // ---------------- routeTo: what INIT and the report say ----------------
+
+    private RobotDefinition routeRobot(final boolean map, final boolean odometry, final boolean mecanum, final Class<?> tunables) {
+        RobotDefinition r = new RobotDefinition() {
+            @Override protected void define() {
+                tunables(tunables);
+                if (mecanum) drive(Drive.mecanum("fl", "fr", "bl", "br"));
+                else drive(Drive.tank("l", "r"));
+                if (odometry) odometry(Odometry.custom(d -> tracker));
+                if (map) fieldMap(com.crossbotics.ftchelper.drive.FieldMap.margin(10).keepOut("Post", -5, -5, 5, 5));
+            }
+        };
+        r.setup(new RobotTestKit());
+        return r;
+    }
+
+    private String routeInitError(RobotDefinition r, double x, double y) {
+        AutoRoutine routine = new AutoRoutine(() -> true, () -> { }, new Fakes.FakeTelemetry().telemetry);
+        try {
+            new Steps(routine, null, r).routeTo("Home", x, y, 0, 0.6);
+            return "";
+        } catch (IllegalStateException e) {
+            return e.getMessage();
+        }
+    }
+
+    @Test public void routeToStopsInitWhenSomethingIsMissingOrWrong() {
+        assertTrue(routeInitError(routeRobot(false, true, true, Checked.class), 30, 30).contains("needs a map"));
+        assertTrue(routeInitError(routeRobot(true, false, true, Checked.class), 30, 30).contains("needs odometry"));
+        assertTrue(routeInitError(routeRobot(true, true, false, Checked.class), 30, 30).contains("needs a mecanum drive"));
+        assertTrue(routeInitError(routeRobot(true, true, true, Checked.class), 0, 0).contains("on \"Post\""));
+        assertEquals("", routeInitError(routeRobot(true, true, true, Checked.class), 30, 30));
+    }
+
+    @Test public void routeToIsSkippedUntilTheOdometryIsChecked() {
+        RobotDefinition r = routeRobot(true, true, true, NotChecked.class);
+        AutoRoutine routine = new AutoRoutine(() -> true, () -> { }, new Fakes.FakeTelemetry().telemetry).subsystems(r.all());
+        new Steps(routine, null, r).routeTo("Home", 30, 30, 0, 0.6);
+        routine.runAll();
+        assertEquals("[Home: skipped: Tunables.Odometry.checked is false (run the Odometry Tuner first)]", routine.getReport().toString());
+    }
 }

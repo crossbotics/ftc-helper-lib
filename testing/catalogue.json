@@ -1532,6 +1532,93 @@
    }
   },
   {
+   "id": "ODO-05",
+   "title": "A route goes around keep-out boxes, in autonomous and in TeleOp",
+   "area": "odometry",
+   "priority": "high",
+   "where": "both",
+   "minutes": 30,
+   "needs": [
+    [
+     "pinpoint",
+     "otos",
+     "dead-wheels"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "v0.24.0",
+   "docs": [
+    {
+     "path": "docs/modules/odometry.md",
+     "anchor": "keep-out-boxes-and-routes"
+    }
+   ],
+   "file": "testing/tests/ODO-05.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A route has run only in the simulator. On a real robot the pose drifts and the robot slides. We need to know that the margin is big enough, that the robot really misses the box, and that a drive stick stops it at once."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "The robot drives by itself. Clear floor, nobody near the robot, PRACTICE profile.",
+       "Use power 0.3 for the first runs, with your thumb on a drive stick.",
+       "If the odometry is wrong, the robot can go the wrong way. Be ready to press STOP."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A mecanum robot with `Tunables.Odometry.checked = true` and `Tunables.Drive.calibrated = true`.",
+       "A box of your own on the floor, or a real field element. Measure it. In Robot.java: `fieldMap(FieldMap.margin(13).keepOut(\"Box\", x1, y1, x2, y2))`, with a margin for your robot.",
+       "An autonomous with a long wait, then `.parkWithSeconds(25).routeTo(\"Home\", x, y, 0, 0.3)`, on the far side of the box.",
+       "In Controls.java: `g1.dpadLeft.tap(route(\"Home\", x, y, 0, 0.3))` and `atSecondsLeft(100, route(\"Timed\", x, y, 0, 0.3))`.",
+       "Simulator: `SimRouteTest` has robots with the two HIVE frames, or use your own robot's file."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Run the autonomous with the robot on the far side of the box. After 5 s, the wait stops. The robot goes around the box to the spot, and the report says `Home: done`.",
+       "Measure how far the robot stayed from the box, and how far from the spot it ended.",
+       "In TeleOp, set the pose (hold START 1 s on the reset spot). Tap D-pad left. The robot goes around the box, and the Driver Station says `Home: there`. The other parts still work while it drives.",
+       "Tap D-pad left again and move a drive stick. The robot stops at once and the stick drives it. The Driver Station says `Home: stopped: a drive stick moved`.",
+       "Tap D-pad left and tap BACK. Everything stops. Tap BACK again. The robot does not set off.",
+       "Start with the robot just inside the margin. Tap D-pad left. It first goes out by the nearest side, away from the box.",
+       "Stand in the way with a piece of foam, or hold the robot back with your hand. It stops, and says `STALLED`.",
+       "Let the time reach the `atSecondsLeft` mark with the sticks let go. The route starts by itself.",
+       "Run it again and hold a drive stick at the mark. The gamepad buzzes and the Driver Station says `Timed: waiting`. Let go within 5 s: the route starts. Run it again and hold the stick for over 5 s: `Timed: not started: the driver kept driving`.",
+       "Add a `route` to a spot inside the margin, right next to the box. The robot goes to just outside the margin, then straight in."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Steps 1, 3, 4, 5, 7 and 9 work as written, and the robot never touches the box (3 of 3 runs at power 0.3, then 3 of 3 at 0.7)."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "the odometry kind, the robot's size and the margin",
+       "how far from the box it passed, and how far from the spot it ended, at each power",
+       "how long the route took, with how many corners (for the park time)",
+       "anything that surprised you"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A tank drive cannot use routes: INIT stops and says so. Without a field, tape a box on the floor and use its numbers."
+     }
+    ]
+   }
+  },
+  {
    "id": "PATH-02",
    "title": "PathAt - start things along a path while it drives",
    "area": "paths",
@@ -4513,6 +4600,89 @@
     "different": [
      {
       "p": "No lift or launcher: use the parts you have (any Claw, Wrist, Hood, servo Turret or Indexer reads a `travelSec`-like time)."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SHOT-07",
+   "title": "Many quick taps on the fire button",
+   "area": "shooter",
+   "priority": "medium",
+   "where": "both",
+   "minutes": 10,
+   "needs": [
+    [
+     "flywheel"
+    ]
+   ],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "studica"
+   ],
+   "since": "v0.24.0",
+   "docs": [
+    {
+     "path": "docs/guides/tunables.md",
+     "anchor": "launcher"
+    },
+    {
+     "path": "docs/tutorials/start/09-shooter-and-camera.md",
+     "anchor": "4-the-two-safety-rules"
+    }
+   ],
+   "file": "testing/tests/SHOT-07.md",
+   "sections": {
+    "why": [
+     {
+      "p": "Drivers tap the fire button fast: some mean \"fire four\", some just want it to fire NOW. Each `launcher.fire()` adds one shot, but at most `maxFiringQueue` shots wait (default 4). We want to know that the limit feels right to real drivers, and that extra taps never fire pieces later."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Safety glasses. Nobody in front of the launcher.",
+       "Robot on a block or held so it cannot move."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A button that calls `robot.launcher::fire` in `Controls.java`, e.g. `g2.lb.tap(robot.launcher::fire).says(\"fire one\")`.",
+       "Each burst must start from a stopped wheel: before each one, STOP the OpMode, wait until the wheel stops, then INIT and START again.",
+       "6 pieces loaded (or as many as the robot holds)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "START. With the wheel stopped, tap the button 4 times fast, all within about half a second (the limit counts shots that WAIT: while the wheel spins up, nothing is fed yet). Count the pieces that fire.",
+       "STOP, reload, INIT and START again. Tap the button 10 times fast. Count the pieces that fire.",
+       "Set `maxFiringQueue = 1` in `Tunables.java` and build the code again (or change it in the tuning menu). Repeat step 2.",
+       "Put your own number back in `Tunables.java`."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Step 1 fires 4 pieces. Step 2 fires 4 pieces (or fewer if the robot held fewer). Step 3 fires 1 piece. Taps after a piece was fed may add shots again: that is not a fail."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "the pieces fired in each step",
+       "the time from the first tap to the first piece (seconds)",
+       "what your drivers think of the default of 4"
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "No feeder (pieces pushed in some other way): report \"could not run\"."
      }
     ]
    }

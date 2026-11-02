@@ -155,6 +155,9 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     // SPRAY: allowed at all (Tunables sprayEnabled), and the last seconds of TeleOp it takes over.
     private boolean sprayOn = false;
     private double sprayLastSec = 5;
+    // fire(): the most shots that may wait at once (Tunables maxFiringQueue). Taps past it are ignored,
+    // so a nervous driver tapping ten times does not get ten shots later.
+    private int maxFiringQueue = 4;
     // The alliance trims, percent (each half of the field can differ a little).
     private double redTrimPct = 0, blueTrimPct = 0;
     // Eject (ejectAction): one piece out at a low speed. On while ejecting, until when (seconds), and
@@ -483,6 +486,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         if (t.has("quickMaxWaitSec")) part.quickMaxWait(t.number("quickMaxWaitSec", 0.3));
         sprayOn = t.has("sprayEnabled") && t.flag("sprayEnabled", false);
         sprayLastSec = t.has("sprayLastSec") ? Math.max(0, t.number("sprayLastSec", 5)) : 5;
+        // At least 1: 0 would make the fire button do nothing.
+        maxFiringQueue = t.has("maxFiringQueue") ? Math.max(1, (int) Math.round(t.number("maxFiringQueue", 4))) : 4;
         redTrimPct = t.has("redTrimPercent") ? t.number("redTrimPercent", 0) : 0;
         blueTrimPct = t.has("blueTrimPercent") ? t.number("blueTrimPercent", 0) : 0;
         fallbackDistanceIn = t.has("fallbackDistanceIn") ? t.number("fallbackDistanceIn", Double.NaN) : Double.NaN;
@@ -679,12 +684,26 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         else spinUp();
     }
 
-    /** Fires one piece (spins up first if needed; feeds as soon as it is at speed). */
+    /**
+     * Fires one piece (spins up first if needed; feeds as soon as it is at speed). Each call adds one
+     * shot to the queue, up to {@code maxFiringQueue} shots waiting (Tunables, default 4): four quick
+     * taps while the wheel spins up fire four pieces, and more taps than that are ignored. The piece
+     * being fed now does not count, only the ones still waiting. {@link #fire(int)} has no limit.
+     */
     public void fire() {
+        needBuilt(part);
+        // The driver asks first: a running action lets go here, and its shots go with it. Then count.
+        touch();
+        if (part.getShotsLeft() >= maxFiringQueue) return;   // full: no extra shot
         fire(1);
     }
 
-    /** Fires {@code count} pieces, one after another. */
+    /** The most shots {@link #fire()} lets wait at once (Tunables {@code maxFiringQueue}, default 4). */
+    public int maxFiringQueue() {
+        return maxFiringQueue;
+    }
+
+    /** Fires {@code count} pieces, one after another (no queue limit: an autonomous asks for what it means). */
     public void fire(int count) {
         needBuilt(part);
         touch();

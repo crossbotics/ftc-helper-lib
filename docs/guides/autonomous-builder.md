@@ -455,6 +455,7 @@ Both ways: [Several autonomous modes](autos.md#example-3-near-and-far-starts).
 | `alongside(action)` | start an action | no |
 | `step(label, ctx -> ...)` | your own step | your code |
 | `parkWithSeconds(seconds)` | the steps after it get the last seconds | — |
+| `routeTo(label, x, y, heading, power)` | not in the builder yet: write it by hand. Like `driveTo`, around the [keep-out boxes](../modules/odometry.md#keep-out-boxes-and-routes) | — |
 
 `Auto` settings you can change (write a method with the same name):
 

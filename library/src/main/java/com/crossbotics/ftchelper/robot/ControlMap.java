@@ -181,7 +181,7 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
         if (robot().odometrySpec() == null) return null;
         return () -> {
             if (robot().odometry() == null) return "No odometry running";
-            if (moving()) return "Pose NOT set: stop first (let go of the drive sticks, aim off), then hold the button again";
+            if (routeRunning() || moving()) return "Pose NOT set: stop first (let go of the drive sticks, aim off), then hold the button again";
             // The alliance may have been chosen in INIT a moment ago: use the one chosen now.
             robot().setAlliance(alliance());
             if (!robot().resetPose()) return "No reset spot: add resetX, resetY, resetHeading to Tunables.Odometry";
@@ -198,14 +198,17 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
 
     // The drive sticks are pushed (past a small dead zone), or whole-robot aim is on (it turns the robot).
     private boolean moving() {
-        if (gamepad1 != null) {
-            boolean swapped = libraryKeys() != null && libraryKeys().sticksSwapped();
-            double x = swapped ? gamepad1.right_stick_x : gamepad1.left_stick_x;
-            double y = swapped ? gamepad1.right_stick_y : gamepad1.left_stick_y;
-            double turn = swapped ? gamepad1.left_stick_x : gamepad1.right_stick_x;
-            if (Math.abs(x) > STILL || Math.abs(y) > STILL || Math.abs(turn) > STILL) return true;
-        }
-        return robot().aim() != null && robot().aim().modeOn();
+        return sticksPushed() || (robot().aim() != null && robot().aim().modeOn());
+    }
+
+    // The drive sticks are pushed, past a small dead zone.
+    private boolean sticksPushed() {
+        if (gamepad1 == null) return false;
+        boolean swapped = libraryKeys() != null && libraryKeys().sticksSwapped();
+        double x = swapped ? gamepad1.right_stick_x : gamepad1.left_stick_x;
+        double y = swapped ? gamepad1.right_stick_y : gamepad1.left_stick_y;
+        double turn = swapped ? gamepad1.left_stick_x : gamepad1.right_stick_x;
+        return Math.abs(x) > STILL || Math.abs(y) > STILL || Math.abs(turn) > STILL;
     }
 
     // How far a drive stick may be off centre and still count as "let go" (0 to 1).
@@ -215,6 +218,7 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
     @Override
     protected final void allianceChanged(com.crossbotics.ftchelper.match.Alliance now) {
         robot().setAlliance(now);
+        endRoute("the alliance changed");   // its numbers are for the other alliance
         Key pose = libraryKeys() == null ? null : libraryKeys().key(LibraryButtons.Job.SET_POSE);
         String note = poseAfterSwitch(robot(), now, pose);
         if (note != null) showNote(note);
@@ -281,8 +285,22 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
     @Override
     protected final void drive(Gamepad gamepad) {
         if (robot().isPaused()) {
+            endRoute("paused");    // it does not set off again by itself after the pause
             driving().hold();      // paused: the wheels hold still too
             return;
+        }
+        if (routeRunning()) {
+            // The driver always wins: any drive stick ends the route, and the sticks drive from this loop.
+            if (sticksPushed()) {
+                endRoute("a drive stick moved");
+            } else {
+                double[] p = routeDriver.update();
+                if (routeRunning()) {
+                    driving().drive(p[0], p[1], p[2], 1);
+                    return;
+                }
+                showNote(routeLabel + ": " + routeWords(routeDriver.result()));
+            }
         }
         // The slowest of the library's slow buttons and a button given slow() in buttons(...).
         driving().update(gamepad, Math.min(driveSpeed(), teamSpeed(plan, slowSpeed(), gamepad1, gamepad2)));
@@ -308,6 +326,8 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
     @Override
     protected final void addTelemetry(RobotTelemetry t) {
         if (robot().isPaused()) t.warn("PAUSED: everything stopped on brake. " + keyWords(LibraryButtons.Job.PAUSE) + " to go on.");
+        if (routeRunning()) t.warn("Route: " + routeLabel + " (any drive stick stops it)");
+        if (waitingRoute != null) t.warn(waitingRoute.label + ": waiting: let go of the drive sticks to start it");
         if (plan != null && !plan.slowWarning().isEmpty()) t.warn(plan.slowWarning());
         if (robot().aim() != null) robot().aim().addTelemetry(t);
         if (robot().reverseDriveMode().isOn()) {
@@ -321,6 +341,206 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
                 v = "error: " + e.getMessage();
             }
             t.line(s.label, v);
+        }
+    }
+
+    // ----------------------------- routes: drive to a spot by itself -----------------------------
+
+    private com.crossbotics.ftchelper.drive.RouteDriver routeDriver = null;
+    private String routeLabel = "";
+    // How long a route that a time started waits for the driver to let go, seconds. Not to the end of the
+    // match: a driver who parked by hand and lets go at the last moment must not see the robot drive off.
+    private static final double ROUTE_WAIT_SEC = 5;
+    private RouteJob waitingRoute = null;
+    private double waitingUntilSec = 0;
+    private boolean routesMade = false;
+
+    // The job route(...) makes. atSecondsLeft knows it from any other job: it can wait for the driver.
+    private static final class RouteJob implements Runnable {
+        final String label;
+        final Runnable start;
+
+        RouteJob(String label, Runnable start) {
+            this.label = label;
+            this.start = start;
+        }
+
+        @Override
+        public void run() {
+            start.run();
+        }
+    }
+
+    /**
+     * Makes a job that drives the robot to a field spot by itself, around the boxes of
+     * {@code fieldMap(...)} in Robot.java. Call it in {@code buttons(...)} and give the job to a button
+     * or a time. It works out the route when the job starts, from where the robot is then.
+     *
+     * <pre>{@code
+     * Runnable park = route("Park", -56, -36, 0, 0.8);
+     * g1.dpadLeft.tap(park).says("drive to the park spot");
+     * atSecondsLeft(10, park);
+     * }</pre>
+     *
+     * <p><b>Any drive stick stops it at once</b>, and the sticks drive from then on. Pause and the tuning
+     * menu stop it too, and it stays stopped. It also ends when it is stuck, when the odometry stops
+     * working, or after {@code actionTimeoutSec} on one line of the route; the Driver Station says why.
+     * It never waits: the rest of the robot keeps running. It cannot see another robot.
+     *
+     * <p>Mistakes stop INIT: no {@code fieldMap(...)} or {@code odometry(...)} line, a tank drive, or a
+     * spot on a box. In the match it does not set off without a known pose, and on a real robot only
+     * after the Drive Tuner and the Odometry Tuner ({@code Tunables.Drive.calibrated},
+     * {@code Tunables.Odometry.checked}; the INIT screen warns). Docs: docs/modules/odometry.md,
+     * "Keep-out boxes and routes".
+     *
+     * @param label      a name for the Driver Station
+     * @param xIn        inches right of the centre line, written for BLUE like {@code driveTo}
+     * @param yIn        inches from the centre toward the far wall
+     * @param headingDeg the heading to turn to (counterclockwise +; 0 = facing away)
+     * @param maxPower   0.1 to 1
+     * @return the job: it starts the route, and returns at once
+     */
+    protected final Runnable route(String label, double xIn, double yIn, double headingDeg, double maxPower) {
+        return route(label, xIn, yIn, headingDeg, maxPower, 1.0);
+    }
+
+    /** {@link #route(String, double, double, double, double)} with your own "close enough" at the end, inches. */
+    protected final Runnable route(final String label, final double xIn, final double yIn, final double headingDeg,
+                                   final double maxPower, final double toleranceIn) {
+        RobotDefinition r = robot();
+        if (r.fieldMap() == null) {
+            throw new IllegalStateException("Controls.java: route(\"" + label + "\") needs a map: add a fieldMap(...) line "
+                    + "to Robot.java (docs/modules/odometry.md)");
+        }
+        if (r.odometrySpec() == null) {
+            throw new IllegalStateException("Controls.java: route(\"" + label + "\") needs odometry: add an odometry(...) line "
+                    + "to Robot.java (docs/modules/odometry.md)");
+        }
+        if (!r.drive().isMecanum()) {
+            throw new IllegalStateException("Controls.java: route(\"" + label + "\") needs a mecanum drive (it drives sideways).");
+        }
+        String bad = r.fieldMap().whyBadSpot(xIn, yIn);
+        if (!bad.isEmpty()) throw new IllegalStateException("Controls.java: route(\"" + label + "\"): " + bad);
+        routesMade = true;
+        return new RouteJob(label, () -> startRoute(label, xIn, yIn, headingDeg, maxPower, toleranceIn));
+    }
+
+    /** True while a {@link #route} job drives the robot. */
+    protected final boolean routeRunning() {
+        return routeDriver != null && routeDriver.isRunning();
+    }
+
+    /** Ends a running {@link #route} job now (nothing happens if none runs). */
+    protected final void stopRoute() {
+        waitingRoute = null;
+        endRoute("stopped by your code");
+    }
+
+    /**
+     * Runs a job once, when this many seconds of TeleOp are left, e.g. {@code atSecondsLeft(10, park)}.
+     * Call it in {@code buttons(...)}. The job must be quick, like a button's.
+     *
+     * <p>A {@link #route} job does not take the robot from a driver who is driving. If a drive stick is
+     * pushed at that time (or the robot is paused, or the menu is open), the gamepad buzzes and the route
+     * waits up to 5 s. It starts on the first loop the sticks are let go. After 5 s it gives up.
+     *
+     * @param seconds seconds left on the clock
+     * @param job     what to do
+     */
+    protected final void atSecondsLeft(double seconds, Runnable job) {
+        if (job == null) throw new IllegalArgumentException("atSecondsLeft(" + seconds + ", null) in Controls.java: the job is missing");
+        matchTimer().cueAt(seconds, job instanceof RouteJob ? () -> routeAtTime((RouteJob) job) : job);
+    }
+
+    private void routeAtTime(RouteJob job) {
+        if (matchTimer().isOver()) return;   // atSecondsLeft(0, ...): the match is over, no route now
+        if (routeMayStartNow()) {
+            job.run();
+            return;
+        }
+        waitingRoute = job;
+        // Match time gone by, not time left: time left stops at 0, so it could wait past the end.
+        waitingUntilSec = matchTimer().elapsedSec() + ROUTE_WAIT_SEC;
+        if (gamepad1 != null) gamepad1.rumbleBlips(2);
+    }
+
+    private boolean routeMayStartNow() {
+        return !sticksPushed() && !robot().isPaused() && !isTuningMenuOpen();
+    }
+
+    // Each loop: a route that waits for the driver starts, or gives up.
+    private void checkWaitingRoute() {
+        if (waitingRoute == null) return;
+        RouteJob job = waitingRoute;
+        if (matchTimer().isOver()) {
+            waitingRoute = null;
+            showNote(job.label + ": not started: the match is over");
+        } else if (matchTimer().elapsedSec() >= waitingUntilSec) {
+            waitingRoute = null;
+            showNote(job.label + ": not started: the driver kept driving");
+        } else if (routeMayStartNow()) {
+            job.run();
+        }
+    }
+
+    private void startRoute(String label, double xIn, double yIn, double headingDeg, double maxPower, double toleranceIn) {
+        waitingRoute = null;
+        String refused = whyNoRoute();
+        if (refused != null) {
+            showNote(label + ": not started: " + refused);
+            return;
+        }
+        RobotDefinition r = robot();
+        com.crossbotics.ftchelper.util.FieldPose at = r.pose();
+        // The map and the spot are written for BLUE. RED plans there too, then drives the mirror image.
+        boolean flip = alliance() == com.crossbotics.ftchelper.match.Alliance.RED && r.resetMirrorsForRed();
+        List<double[]> route = r.fieldMap().route(flip ? -at.x : at.x, at.y, xIn, yIn);
+        if (route.isEmpty()) {
+            showNote(label + ": not started: no route around the boxes");
+            return;
+        }
+        List<double[]> points = new ArrayList<>();
+        for (double[] p : route) points.add(new double[] {flip ? -p[0] : p[0], p[1]});
+        routeDriver = new com.crossbotics.ftchelper.drive.RouteDriver(r.robotConfig().auto(), driveConfig().powerLimit, r::pose,
+                () -> r.odometry() != null && r.odometry().isReady() && r.odometry().isPoseSet(), System::nanoTime)
+                .checkLines((x1, y1, x2, y2) -> r.fieldMap().lineIsClear(flip ? -x1 : x1, y1, flip ? -x2 : x2, y2));
+        routeLabel = label;
+        routeDriver.start(points, flip ? -headingDeg : headingDeg, maxPower, toleranceIn);
+    }
+
+    // Why a route cannot set off now, or null. On a real robot it needs tuned numbers, like autonomous.
+    private String whyNoRoute() {
+        RobotDefinition r = robot();
+        if (r.isPaused()) return "the robot is paused";
+        if (isTuningMenuOpen()) return "the menu is open";
+        if (r.odometry() == null || !r.odometry().isReady()) return "the odometry is not ready";
+        if (!r.odometry().isPoseSet()) return "the pose is not set";
+        return whyNotTuned();
+    }
+
+    // On a real robot a route needs tuned numbers, or null if it has them. The simulator needs none.
+    private String whyNotTuned() {
+        if ("true".equals(System.getProperty(com.crossbotics.ftchelper.auto.EasyAuto.SIMULATOR_PROPERTY))) return null;
+        RobotDefinition r = robot();
+        if (!r.odometryChecked()) return "Tunables.Odometry.checked is false (run the Odometry Tuner first)";
+        if (!r.robotConfig().auto().calibrationConfirmed) return "Tunables.Drive.calibrated is false (run the Drive Tuner first)";
+        return null;
+    }
+
+    // Ends a running route, and says why. The caller sends the wheels what they do next, this same loop.
+    private void endRoute(String why) {
+        if (!routeRunning()) return;
+        routeDriver.cancel();
+        showNote(routeLabel + ": stopped: " + why);
+    }
+
+    private static String routeWords(com.crossbotics.ftchelper.drive.RouteDriver.Result r) {
+        switch (r) {
+            case DONE: return "there";
+            case STALLED: return "stopped: STALLED (stuck)";
+            case TIMED_OUT: return "stopped: TIMED_OUT";
+            case NO_ODOMETRY: return "stopped: NO_ODOMETRY";
+            default: return "stopped";
         }
     }
 
@@ -354,6 +574,8 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
     @Override
     protected final void everyLoop() {
         boolean menu = isTuningMenuOpen();
+        if (menu) endRoute("the menu opened");
+        checkWaitingRoute();
         // Gestures (tap, hold, double-tap...) and "buzz when" watches: every loop.
         if (plan != null) plan.loop(robot().isPaused(), menu);
         // Paused (BACK): the sticks move nothing; each job got 0 once when the pause began.
@@ -385,6 +607,9 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
     protected final void addInitTelemetry(RobotTelemetry t) {
         // The modules' INIT work first (a camera's lighting test), with their lines.
         robot().initLoop(t);
+        // Say it now: the team must not find out at the 0:10 mark of a match.
+        String untuned = routesMade ? whyNotTuned() : null;
+        if (untuned != null) t.warn("route(...) will not start: " + untuned);
         // The alliance may be chosen in INIT: show how the aim's goal point is used for it (mirrorForRed),
         // and a loud warning if the odometry backup cannot work (no pose from autonomous).
         if (robot().aim() != null) {

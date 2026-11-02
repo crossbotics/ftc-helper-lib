@@ -32,6 +32,8 @@ OpMode, or to look up a setting. Which way is plus and minus: [Signs and units](
 | [`DifferentialMixer`](#differentialmixer) | the standard-drive left/right math (no hardware) |
 | [`MotionMath`](#motionmath) | the math that slows a move down near its end (the "taper") |
 | [`StallDetector`](#stalldetector) | tell when a move is stuck |
+| [`FieldMap`](#fieldmap) | your keep-out boxes, and the route around them |
+| [`RouteDriver`](#routedriver) | drive a route in TeleOp, one loop at a time |
 
 Also in this page: [Check motor directions](#check-motor-directions) and [Tune AutoDrive](#tune-autodrive).
 
@@ -451,3 +453,52 @@ if (stall.update(distanceLeft, getRuntime())) { ... stuck ... }
 | `reset()` | start over (before a new move) |
 
 It checks progress over the whole time window, not each loop, so it works the same at any loop speed.
+
+## FieldMap
+
+The places on the field the robot must not drive through, and the way around them. On a five-file robot
+it is one line in `Robot.java`, `fieldMap(...)`: see [Keep-out boxes and routes](odometry.md#keep-out-boxes-and-routes),
+which says what the numbers mean and what a route cannot do. No hardware: you can use it alone.
+
+```java
+FieldMap map = FieldMap.margin(13).keepOut("Post", -5, -5, 5, 5);
+List<double[]> points = map.route(pose.x, pose.y, 0, 40);   // each point is {x, y}; empty = no route
+```
+
+| Method | What it does |
+| --- | --- |
+| `FieldMap.margin(inches)` | a new map: how far the robot's centre stays from every box |
+| `keepOut(name, x1, y1, x2, y2)` | adds a box: two opposite corners, inches |
+| `safePoint(x, y)` | adds a place a route may pass through. It stops at INIT if it is within a margin (or less than 0.5 in outside it), or closer to a wall than the margin |
+| `fieldSize(inches)` | the square field's side. Default 144 |
+| `route(fromX, fromY, toX, toY)` | the points to drive to, in order, ending at the spot. Empty if there is no route: the robot must not set off |
+| `lineIsClear(x1, y1, x2, y2)` | true if the robot's centre may drive straight there: the line misses every margin (a box whose margin holds the end: only the box itself) |
+| `whyBadSpot(x, y)` | why a route cannot end there (off the field, on a box, or boxed in), or `""`. A spot inside a margin is fine: the last line goes straight in |
+| `marginIn()`, `boxCount()` | what the map holds |
+
+## RouteDriver
+
+Drives a route without waiting. `route(...)` in `Controls.java` uses it for you, and in autonomous `AutoDrive.followRoute(pose, ready, points, clear, headingDeg, power, toleranceIn)` runs it in a blocking loop (`Steps.routeTo` uses that). Each loop, call
+`update()` and send what it returns to the wheels. [`AutoDrive.driveTo`](#autodrive) does the same work in autonomous, and blocks.
+
+```java
+RouteDriver route = new RouteDriver(autoConfig, 1.0, robot::pose, odometry::isReady, System::nanoTime)
+        .checkLines(map::lineIsClear);   // leave a point early only if the line on is clear
+route.start(map.route(pose.x, pose.y, 0, 40), 0, 0.7, 1.0);
+// every loop:
+if (route.isRunning()) {
+    double[] p = route.update();          // {forward, strafe right, turn clockwise}
+    driving.drive(p[0], p[1], p[2], 1);
+}
+```
+
+| Method | What it does |
+| --- | --- |
+| `new RouteDriver(cfg, powerLimit, pose, ready, clockNanos)` | `ready` false: it holds still, and after 0.2 s it ends |
+| `checkLines(check)` | the map's line check (`map::lineIsClear`). A point on the way counts as reached early (within 2 in, or slid past it) only if the line from the robot to the next point is clear; if not, it drives to the point (within 0.5 in). Give it one for every route from `FieldMap.route` |
+| `start(points, headingDeg, maxPower, toleranceIn)` | starts a route. False if it has no points |
+| `update()` | one loop. Never waits. All 0 once it has ended |
+| `isRunning()` | true while it drives |
+| `result()` | `DONE`, `STALLED`, `TIMED_OUT`, `NO_ODOMETRY` or `CANCELLED`; null while it runs |
+| `cancel()` | ends it now. Your code sends the wheels what comes next |
+| `PASS_POINT_IN` | a point on the way counts as reached within this many inches (2) |
