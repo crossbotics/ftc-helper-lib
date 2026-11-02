@@ -7,7 +7,7 @@ where: both
 minutes: 10
 needs: [flywheel]
 kit_bots: [gobilda, rev, studica]
-since: unreleased
+since: v0.25.0
 docs: [tutorials/start/09-shooter-and-camera.md#4-the-two-safety-rules, guides/tunables.md#launcher]
 ---
 

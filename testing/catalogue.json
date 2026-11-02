@@ -4704,7 +4704,7 @@
     "rev",
     "studica"
    ],
-   "since": "unreleased",
+   "since": "v0.25.0",
    "docs": [
     {
      "path": "docs/tutorials/start/09-shooter-and-camera.md",
