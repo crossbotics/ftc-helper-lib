@@ -43,8 +43,10 @@ drive(Drive.tank("left_drive", "right_drive").motor("gobilda-5203-312").wheelMm(
   example `"gobilda-5203-312"` (goBILDA 312 RPM), `"gobilda-5203-435"` or `"rev-hd-hex-20"`. A typo stops
   at once with the list of ids. The default is `"gobilda-5203-312"`.
 - `.wheelMm(mm)`: the wheel diameter in millimetres (default 96). goBILDA mecanum wheels are 96 or 104.
-- `.wheel(id)`: the wheel by its catalog id instead, for example `"gobilda-hogback-96"`. The diameter
-  comes from the catalog. (The catalog has no mecanum wheels yet: use `wheelMm` for those.)
+- `.wheel(id)`: the wheel by its catalog id instead, for example `"gobilda-hogback-96"` (a traction
+  wheel) or `"gobilda-gripforce-mecanum-104"` (goBILDA's 104 mm mecanum set). The diameter comes from
+  the catalog. The [parts catalog](../../guides/parts-catalog.md) lists the common mecanum, omni and
+  traction wheels from goBILDA, REV, AndyMark and Studica. Not there? Use `wheelMm`.
 - `.gearRatio(r)`: motor turns per wheel turn, if gears or a belt sit between them. Default 1.
 
 **Why:** TeleOp does not need these, the sticks just set power. But autonomous does: "drive 24 inches"

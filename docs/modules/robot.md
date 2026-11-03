@@ -442,7 +442,7 @@ drive(Drive.tank("left_drive", "right_drive").motor("gobilda-5203-312").wheelMm(
 | `mecanum(fl, fr, bl, br)`, `tank(left, right)`, `tank(fl, fr, bl, br)` | the type and motor names |
 | `motor(id)` | the drive motor's [catalog id](#motors) (default `gobilda-5203-312`; the other parts use `part(id)`) |
 | `wheelMm(mm)`, `gearRatio(r)` | wheel diameter (default 96), motor turns per wheel turn |
-| `wheel(id)` | the wheel by its [catalog id](#shapes-and-parts), e.g. `"gobilda-hogback-96"`: its diameter comes from the catalog |
+| `wheel(id)` | the wheel by its [catalog id](#shapes-and-parts), e.g. `"gobilda-hogback-96"` or `"gobilda-gripforce-mecanum-104"`: its diameter comes from the catalog |
 | `wheelsAtMm(track, wheelBase)` | for the simulator: wheel centres side to side and front to back, mm |
 | `reversed(names...)` | exactly these motors run reversed (default: the left side) |
 | `imu(name, logo, usb)`, `noImu()` | the IMU and how the hub is mounted (default "imu", UP, FORWARD) |

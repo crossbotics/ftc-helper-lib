@@ -1203,6 +1203,54 @@
   ],
   "wheels": [
     {
+      "id": "andymark-higrip-102",
+      "name": "AndyMark HiGrip Wheel 4 in (60A, black)",
+      "partNumber": "am-2256_blk",
+      "seller": "AndyMark",
+      "url": "https://www.andymark.com/products/4-in-higrip-wheel-60a-durometer",
+      "status": "in stock",
+      "diameterMm": 101.6,
+      "widthMm": null,
+      "checked": "2026-11-03",
+      "notes": "Traction wheel; also 80A white (am-2256) and 50A blue (am-2256_blue). The page gives no width. Stock from the store's product data."
+    },
+    {
+      "id": "andymark-mecanum-102-bb",
+      "name": "AndyMark BB Mecanum Wheels 4 in (nub bore, set of 4)",
+      "partNumber": "am-4734",
+      "seller": "AndyMark",
+      "url": "https://andymark.com/products/4-in-bb-mecanum-wheels",
+      "status": "in stock",
+      "diameterMm": 101.6,
+      "widthMm": 38.6,
+      "checked": "2026-11-03",
+      "notes": "Slim mecanum set of 4 (2 left, 2 right) made for FTC, 12 rollers per wheel, 60A TPU on ball bearings. Also with 1/2 in hex (am-4736) and 3/8 in hex (am-4735) bores. 4 in, 1.52 in wide. Stock from the store's product data."
+    },
+    {
+      "id": "andymark-mecanum-102-hd",
+      "name": "AndyMark HD Mecanum Wheels 4 in (nub bore, set of 4)",
+      "partNumber": "am-3919",
+      "seller": "AndyMark",
+      "url": "https://andymark.com/products/4-in-hd-mecanum-wheels",
+      "status": "in stock",
+      "diameterMm": 101.6,
+      "widthMm": 55.4,
+      "checked": "2026-11-03",
+      "notes": "Mecanum set of 4 (2 left, 2 right), 9 rollers per wheel, 80A TPU. The page says 4 in (AndyMark also calls it 100 mm) and 2.18 in wide. Stock from the store's product data."
+    },
+    {
+      "id": "andymark-omni-102",
+      "name": "AndyMark DuraOmni Wheel 4 in",
+      "partNumber": "am-3047",
+      "seller": "AndyMark",
+      "url": "https://andymark.com/products/duraomni-wheel",
+      "status": "in stock",
+      "diameterMm": 101.6,
+      "widthMm": 50.8,
+      "checked": "2026-11-03",
+      "notes": "Omni wheel, 8 rollers, 80A TPU; hubs not included. The page's SKU field is blank: the part number is from its CAD file names. 4 in, 2 in wide. Stock from the store's product data."
+    },
+    {
       "id": "gobilda-boot-72-rex",
       "name": "goBILDA Boot-Wheel 72 mm (8 mm REX bore, 30A)",
       "partNumber": "3615-4008-0072",
@@ -1239,6 +1287,30 @@
       "notes": "widthMm measured in goBILDA's STEP CAD of its BIOBUZZ starter bot (3200-2627-0003, see sim/robots/starter-bot-gobilda.properties); the page gives the diameter only."
     },
     {
+      "id": "gobilda-gecko-96",
+      "name": "goBILDA GripForce Gecko Wheel 96 mm (14 mm bore, 30A)",
+      "partNumber": "3613-0014-0096",
+      "seller": "goBILDA",
+      "url": "https://www.gobilda.com/gripforce-gecko-wheel-14mm-bore-96mm-diameter-30a-durometer/",
+      "status": "in stock",
+      "diameterMm": 96,
+      "widthMm": null,
+      "checked": "2026-11-03",
+      "notes": "Traction wheel, 30A tread, 14 mm bore (a 15A version is 3632-0014-0096). The page gives no width; stock from the page's data (InStock)."
+    },
+    {
+      "id": "gobilda-gripforce-mecanum-104",
+      "name": "goBILDA GripForce Mecanum Wheel Set 104 mm (40A rollers)",
+      "partNumber": "3625-0202-0104",
+      "seller": "goBILDA",
+      "url": "https://www.gobilda.com/gripforce-mecanum-wheel-set-o104mm-40a-durometer-rollers/",
+      "status": "in stock",
+      "diameterMm": 104,
+      "widthMm": null,
+      "checked": "2026-11-03",
+      "notes": "A set of 4: 2 left slant, 2 right slant (the page's pictures). 40A silicone rollers, 236 g each. The wheels of goBILDA's newer Strafer chassis kits. The page gives the diameter, not the width. Use it as a drive wheel: Drive.mecanum(...).wheel(\"gobilda-gripforce-mecanum-104\")."
+    },
+    {
       "id": "gobilda-hogback-96",
       "name": "goBILDA Hogback Traction Wheel 96 mm (50A)",
       "partNumber": "3626-0014-0096",
@@ -1249,6 +1321,66 @@
       "widthMm": 24,
       "checked": "2026-10-20",
       "notes": "widthMm measured in goBILDA's STEP CAD of its BIOBUZZ starter bot (3200-2627-0003, see sim/robots/starter-bot-gobilda.properties); the page gives the diameter only."
+    },
+    {
+      "id": "gobilda-mecanum-140",
+      "name": "goBILDA Mecanum Wheel Set 140 mm (70A bearing-supported rollers)",
+      "partNumber": "3213-3606-0003",
+      "seller": "goBILDA",
+      "url": "https://www.gobilda.com/140mm-mecanum-wheel-set-70a-durometer-bearing-supported-rollers/",
+      "status": "in stock",
+      "diameterMm": 140,
+      "widthMm": 37,
+      "checked": "2026-11-03",
+      "notes": "Mecanum, 16 rollers per wheel, 70A bearing-supported rollers. Hub fits 8 mm and 12 mm REX shafts. The page does not say how many wheels are in the set; stock from the page's data (InStock)."
+    },
+    {
+      "id": "gobilda-mecanum-96",
+      "name": "goBILDA Mecanum Wheel Set 96 mm (70A bearing-supported rollers)",
+      "partNumber": "3213-3606-0002",
+      "seller": "goBILDA",
+      "url": "https://www.gobilda.com/96mm-mecanum-wheel-set-70a-durometer-bearing-supported-rollers/",
+      "status": "in stock",
+      "diameterMm": 96,
+      "widthMm": null,
+      "checked": "2026-11-03",
+      "notes": "A set of 4: 2 left slant, 2 right slant (the page's pictures). 70A rubber rollers, 207 g each. The wheels of older Strafer chassis kits. The page gives the diameter, not the width. Use it as a drive wheel: Drive.mecanum(...).wheel(\"gobilda-mecanum-96\")."
+    },
+    {
+      "id": "gobilda-omni-72",
+      "name": "goBILDA Omni Wheel 72 mm (14 mm bore, 50A)",
+      "partNumber": "3624-0014-0072",
+      "seller": "goBILDA",
+      "url": "https://www.gobilda.com/72mm-omni-wheel-14mm-bore-50a-durometer/",
+      "status": "in stock",
+      "diameterMm": 72,
+      "widthMm": null,
+      "checked": "2026-11-03",
+      "notes": "Omni wheel, 50A rollers, 14 mm bore, sold one at a time. The page gives no width; stock from the page's data (InStock)."
+    },
+    {
+      "id": "gobilda-omni-96",
+      "name": "goBILDA Omni Wheel 96 mm (14 mm bore, 50A)",
+      "partNumber": "3624-0014-0096",
+      "seller": "goBILDA",
+      "url": "https://www.gobilda.com/96mm-omni-wheel-14mm-bore-50a-durometer/",
+      "status": "in stock",
+      "diameterMm": 96,
+      "widthMm": null,
+      "checked": "2026-11-03",
+      "notes": "Omni wheel, 50A rollers, 14 mm bore, sold one at a time. The page gives no width; stock from the page's data (InStock)."
+    },
+    {
+      "id": "gobilda-rhino-96",
+      "name": "goBILDA Rhino Wheel 96 mm (14 mm bore, 30A)",
+      "partNumber": "3614-0014-0096",
+      "seller": "goBILDA",
+      "url": "https://www.gobilda.com/3614-series-rhino-wheel-14mm-bore-96mm-diameter-30a-durometer/",
+      "status": "in stock",
+      "diameterMm": 96,
+      "widthMm": 32,
+      "checked": "2026-11-03",
+      "notes": "Traction wheel, 30A rubber, 14 mm bore. Width from the page's description; stock from the page's data (InStock)."
     },
     {
       "id": "offset-tubing-60",
@@ -1273,6 +1405,90 @@
       "widthMm": null,
       "checked": "2026-10-20",
       "notes": "55A silicone tubing pieces, 6 per size (the 'Both' pack: 6 x 60 mm, 6 x 90 mm, 1 OFFSET HEXAHUB, 6 M3 screws). SKU OSTR-HEX-07-00 is for the product (choose 60 mm, 90 mm or both). Read on the seller's legacy page, which shows the text; offsetrobotics.com/product/offset-surgical-tubing-rollers needs a browser. The page gives the diameter only; how long a roller is depends on how many hubs are on the shaft."
+    },
+    {
+      "id": "rev-mecanum-75",
+      "name": "REV DUO Mecanum Wheel Set 75 mm",
+      "partNumber": "REV-45-1655",
+      "seller": "REV Robotics",
+      "url": "https://www.revrobotics.com/rev-45-1655/",
+      "status": "in stock",
+      "diameterMm": 75,
+      "widthMm": 40,
+      "checked": "2026-11-03",
+      "notes": "Mecanum set of 4 (2 left REV-41-1656, 2 right REV-41-1657), NBR rollers, steel hubs, 5 mm hex adapters. The page says 75-78 mm: 75 here; the Drive Tuner measures the true size."
+    },
+    {
+      "id": "rev-omni-60",
+      "name": "REV DUO Omni Wheel 60 mm (2-pack)",
+      "partNumber": "REV-41-1160-PK2",
+      "seller": "REV Robotics",
+      "url": "https://www.revrobotics.com/rev-41-1160/",
+      "status": "in stock",
+      "diameterMm": 60,
+      "widthMm": 15,
+      "checked": "2026-11-03",
+      "notes": "Omni wheel, TPU rollers, nylon hub, sold in 2-packs. Shares a page with the 90 mm wheel."
+    },
+    {
+      "id": "rev-omni-90",
+      "name": "REV DUO Omni Wheel 90 mm (2-pack)",
+      "partNumber": "REV-41-1190-PK2",
+      "seller": "REV Robotics",
+      "url": "https://www.revrobotics.com/rev-41-1190/",
+      "status": "in stock",
+      "diameterMm": 90,
+      "widthMm": 15,
+      "checked": "2026-11-03",
+      "notes": "Omni wheel, TPU rollers, nylon hub, sold in 2-packs. Width = the page's 15 mm thickness. Shares a page with the 60 mm wheel."
+    },
+    {
+      "id": "rev-traction-90",
+      "name": "REV DUO Traction Wheel 90 mm (2-pack)",
+      "partNumber": "REV-41-1354-PK2",
+      "seller": "REV Robotics",
+      "url": "https://www.revrobotics.com/rev-41-1354/",
+      "status": "in stock",
+      "diameterMm": 90,
+      "widthMm": 15,
+      "checked": "2026-11-03",
+      "notes": "Traction wheel, TPU tread, nylon hub, 5 mm hex bore, sold in 2-packs. The same page sells 60 mm (REV-41-1350-PK4) and 30 mm versions."
+    },
+    {
+      "id": "studica-mecanum-100",
+      "name": "Studica Slim Mecanum Wheel Set 100 mm (bearing rollers, 2 left, 2 right)",
+      "partNumber": "76246",
+      "seller": "Studica",
+      "url": "https://www.studica.com/100mm-slim-mecanum-wheel-set-bearing-rollers-2-left-2-right",
+      "status": "in stock",
+      "diameterMm": 100,
+      "widthMm": 38,
+      "checked": "2026-11-03",
+      "notes": "Mecanum set of 4, 12 rollers per wheel on steel ball bearings, steel body; uses the 6 mm D-shaft hub. The page prints the width as 38m (read as 38 mm). Read in a browser (the site blocks scripts)."
+    },
+    {
+      "id": "studica-omni-100",
+      "name": "Studica Omni Wheel 100 mm",
+      "partNumber": "76272",
+      "seller": "Studica",
+      "url": "https://www.studica.com/100mm-omni-wheel",
+      "status": "in stock",
+      "diameterMm": 100,
+      "widthMm": 16,
+      "checked": "2026-11-03",
+      "notes": "Omni wheel, 18 rubber rollers, nylon body, 6 mm hub (use the Enhanced Wheel D-Shaft Hub Kit). Read in a browser."
+    },
+    {
+      "id": "studica-traction-100",
+      "name": "Studica Drive Wheel 100 mm (50A, 25 mm wide, 1/2 in hex)",
+      "partNumber": "76262",
+      "seller": "Studica",
+      "url": "https://www.studica.com/100mm-drive-wheel-50a-25mm-wide-1-2-inch-inner-hex-blue",
+      "status": "in stock",
+      "diameterMm": 100,
+      "widthMm": 25,
+      "checked": "2026-11-03",
+      "notes": "Traction wheel, 50A TPU tread, 1/2 in hex bore (fits a 6 mm D-shaft with a hub). A 12.5 mm wide version is also sold. Read in a browser."
     }
   ]
 }

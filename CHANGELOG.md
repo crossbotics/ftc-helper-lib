@@ -2,6 +2,15 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## v0.26.0 - 2026-11-03
+
+### Added
+
+- **Drive wheels in the parts catalog.** 18 more wheels, read from the sellers' pages: the common mecanum, omni and
+  traction wheels from goBILDA, REV, AndyMark and Studica. `Drive.wheel(id)` now works for a mecanum drive, for
+  example `Drive.mecanum(...).wheel("gobilda-gripforce-mecanum-104")` (goBILDA's Strafer kit). The list:
+  [parts catalog](docs/guides/parts-catalog.md).
+
 ## v0.25.0 - 2026-11-02
 
 ### Added
