@@ -150,12 +150,30 @@ public final class Parts {
 
     // Copied from sim/parts/parts.json ("wheels": diameterMm, widthMm; "servos": id, rangeDeg, pulseMinUs, pulseMaxUs). PartsCatalogTest checks they match.
     static {
+        wheel("andymark-higrip-102", 101.6, Double.NaN);
+        wheel("andymark-mecanum-102-bb", 101.6, 38.6);
+        wheel("andymark-mecanum-102-hd", 101.6, 55.4);
+        wheel("andymark-omni-102", 101.6, 50.8);
         wheel("gobilda-boot-72-rex", 72, Double.NaN);
         wheel("gobilda-gecko-48-rex", 48, Double.NaN);
         wheel("gobilda-gecko-72", 72, 24);
+        wheel("gobilda-gecko-96", 96, Double.NaN);
+        wheel("gobilda-gripforce-mecanum-104", 104, Double.NaN);
         wheel("gobilda-hogback-96", 96, 24);
+        wheel("gobilda-mecanum-140", 140, 37);
+        wheel("gobilda-mecanum-96", 96, Double.NaN);
+        wheel("gobilda-omni-72", 72, Double.NaN);
+        wheel("gobilda-omni-96", 96, Double.NaN);
+        wheel("gobilda-rhino-96", 96, 32);
         wheel("offset-tubing-60", 60, Double.NaN);
         wheel("offset-tubing-90", 90, Double.NaN);
+        wheel("rev-mecanum-75", 75, 40);
+        wheel("rev-omni-60", 60, 15);
+        wheel("rev-omni-90", 90, 15);
+        wheel("rev-traction-90", 90, 15);
+        wheel("studica-mecanum-100", 100, 38);
+        wheel("studica-omni-100", 100, 16);
+        wheel("studica-traction-100", 100, 25);
         // "servos": id, rangeDeg, pulseMinUs, pulseMaxUs (NaN = null in the catalog), and seconds per 60 degrees:
         // the byVoltage row at 4.8 V, else the 6.0 V secPer60Deg (a REV hub's servo ports give 5 V).
         servo("gobilda-2000-torque", 300, 500, 2500, 0.25);
