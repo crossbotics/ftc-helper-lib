@@ -669,9 +669,8 @@ function tapAt(x, y, tool) {
 		}
 		change(() => {
 			const from = path.parts.length ? path.parts[path.parts.length - 1].end : path.start;
-			const last = path.parts[path.parts.length - 1];
-			let heading = last ? structuredClone(last.heading) : { mode: 'path' };
-			if (heading.mode === 'turn') heading = { mode: 'keep', a: heading.b };
+			// forward or backwards along it: the one with no turn (pathcore.newPartHeading)
+			const heading = P.newPartHeading(path, x, y, +st.start.h || 0);
 			path.parts.push({ ctrl: tool === 'curve' ? curveControls(from, [x, y], 1) : [], end: [x, y], heading, maxSpeed: null });
 			B.selPart = path.parts.length - 1;
 		});

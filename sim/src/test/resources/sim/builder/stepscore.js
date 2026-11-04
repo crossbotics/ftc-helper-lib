@@ -118,8 +118,9 @@ const snapIn = (v) => Math.round(v / 0.5) * 0.5;   // the map's half inch
 
 /**
  * The steps that drive the robot from pose p ({ x, y, h }) to (x, y) ("drive there" on the map): mecanum
- * one move in any direction; tank a turn (unless it is straight ahead or behind), then a move forward or
- * back, never a strafe. Both pages use it.
+ * one move in any direction, with no turn (a spot behind it: it backs up); tank the smaller turn, then a
+ * move: its front toward a spot more ahead than behind (forward), its back toward a spot more behind
+ * (it backs up), never a strafe. Both pages use it.
  */
 export function stepsToPoint(drive, p, x, y) {
 	const dx = x - p.x, dy = y - p.y, dist = snapIn(Math.hypot(dx, dy));
@@ -129,6 +130,9 @@ export function stepsToPoint(drive, p, x, y) {
 	if (drive === 'mecanum') return [{ kind: 'move', label: name, inches: dist, dir: ((Math.round(-a) % 360) + 360) % 360, power: 0.6 }];
 	if (Math.abs(a) <= 1) return [{ kind: 'move', label: name, inches: dist, dir: 0, power: 0.6 }];
 	if (Math.abs(a) >= 179) return [{ kind: 'move', label: name, inches: dist, dir: 180, power: 0.6 }];
+	// the smaller turn: the front toward a spot ahead, the back toward a spot behind (then it backs up)
+	if (Math.abs(a) > 90) return [{ kind: 'turn', label: `Back toward (${num(round1(x))}, ${num(round1(y))})`, deg: Math.round(wrap(a + 180)), power: 0.5 },
+		{ kind: 'move', label: name, inches: dist, dir: 180, power: 0.6 }];
 	return [{ kind: 'turn', label: `Face (${num(round1(x))}, ${num(round1(y))})`, deg: Math.round(a), power: 0.5 },
 		{ kind: 'move', label: name, inches: dist, dir: 0, power: 0.6 }];
 }

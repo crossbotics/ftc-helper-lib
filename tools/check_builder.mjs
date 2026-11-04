@@ -405,6 +405,25 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 	const mec = S.stepsToPoint('mecanum', { x: 0, y: 0, h: 0 }, 20, 0);
 	ok(mec.length === 1 && mec[0].dir === 90, 'mecanum: "drive there" is still one move (a strafe here)');
 	ok(S.dragMove('mecanum', { x: 0, y: 0, h: 0 }, 0, -10).dir === 180 && S.dragMove('mecanum', { x: 0, y: 0, h: 0 }, -10, 0).dir === 270, 'mecanum: a dragged end goes any way');
+	// "Drive there" uses the way the robot already faces: a spot more behind than ahead backs up (the smaller turn).
+	{
+		const ahead = S.stepsToPoint('tank', { x: 0, y: 0, h: 0 }, 5, 20), behind = S.stepsToPoint('tank', { x: 0, y: 0, h: 0 }, 5, -20);
+		const small = (r) => r[0].kind === 'turn' && Math.abs(r[0].deg) <= 90;
+		ok(small(ahead) && ahead[1].dir === 0 && small(behind) && behind[1].dir === 180,
+			'tank: "drive there" turns the front to a spot ahead (forward), the back to a spot behind (backs up)');
+		const e = S.simulate({ drive: 'tank', start: { x: 0, y: 0, h: 0 }, steps: behind }).end;
+		ok(Math.hypot(e.x - 5, e.y + 20) < 0.6, 'tank: backing up to a spot behind ends on it');
+		const mb = S.stepsToPoint('mecanum', { x: 0, y: 0, h: 0 }, 0, -20);
+		ok(mb.length === 1 && mb[0].dir === 180, 'mecanum: a spot straight behind: it backs up, no turn');
+		const path = { start: [0, 0], parts: [] };
+		ok(P.newPartHeading(path, 0, 20, 0).mode === 'path' && P.newPartHeading(path, 2, -20, 0).mode === 'back',
+			'Pedro: a new part to a spot ahead faces along it, to a spot behind drives backwards');
+		const one = { start: [0, 0], parts: [{ ctrl: [], end: [0, 24], heading: { mode: 'path' }, maxSpeed: null }] };
+		ok(P.newPartHeading(one, 0, 0, 0).mode === 'back' && P.newPartHeading(one, 0, 48, 0).mode === 'path',
+			'Pedro: after a part, back along it is backwards, on ahead is forward');
+		const keep = { start: [0, 0], parts: [{ ctrl: [], end: [0, 24], heading: { mode: 'keep', a: 30 }, maxSpeed: null }] };
+		ok(P.newPartHeading(keep, 0, 0, 0).mode === 'keep', 'Pedro: a part that keeps a heading: the new part keeps it too');
+	}
 	// The drive switch: every fixture plan as a tank plan has no strafe and drives the same route.
 	for (const f of STEP_PLANS) {
 		const r = S.tankSteps(f.plan.steps);

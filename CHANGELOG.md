@@ -2,6 +2,15 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Changed
+
+- **Auto builder: a tap drives the way the robot already faces.** A spot behind the robot now backs up to it.
+  A tank drive makes the smaller turn first (its back toward a spot more behind), not a turn of more than 90
+  degrees to face it; a mecanum robot already slid straight there. A new Pedro part to a spot behind gets
+  "Drive backwards along it". Shared code: `stepscore.js` `stepsToPoint`, `pathcore.js` `newPartHeading`.
+
 ## v0.27.1 - 2026-11-04
 
 ### Changed

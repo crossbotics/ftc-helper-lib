@@ -348,7 +348,10 @@ What a team does, step by step:
      **Put a step between two:** point between two steps in the list and press the **+** that shows there.
      The buttons move into that gap: each one you press (and each tap on the map) goes in there, one after
      the other, until you press **Done**. **Start over** (beside Undo) removes every step; Undo brings them back.
-     Tap the field map to add a drive to that spot (a tank drive gets a turn first). "Tap adds" chooses what a
+     Tap the field map to add a drive to that spot. It uses the way the robot already faces: a spot ahead
+     drives forward, a spot behind **backs up** (a mecanum robot slides straight there, with no turn; a tank
+     drive makes the smaller turn first: its front toward a spot more ahead, its back toward a spot more
+     behind). Want it to turn around instead? Add a turn first (**turn to face**). "Tap adds" chooses what a
      tap does: **drive there**, **turn to face** (a turn toward the spot), **an action** (an action step at the
      nearest point on the route: on a drive's line the drive splits there, at a point it goes right after the
      drive that arrives), or nothing. Or use the list: each
@@ -396,6 +399,8 @@ What a team does, step by step:
    - **Pedro path** (mecanum with odometry): tap to add lines or curves, drag the ends and the control
      points, choose each part's heading rule and speed limit, hold the end, and add things to start along the
      path (`PathAt`: inches done or left, part of the path, start of a part, near a point).
+     A new part to a spot behind the robot gets **Drive backwards along it** (and a spot ahead: **Face along
+     the path**), so it needs no turn; a part that keeps a heading passes it on.
      **Turn to face** (Tap adds): the selected part (or the last) ends facing the spot you tap; with no part
      yet, the start robot turns to face it.
      **Put a point between two** the same way: the white dot slides along a part, and a click splits the part
