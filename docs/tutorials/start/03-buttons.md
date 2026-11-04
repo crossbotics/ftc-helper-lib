@@ -207,7 +207,11 @@ Want two things on one button? Put them in one lambda:
 - **During the match**, tap GUIDE: the map again, without the free buttons. The robot still drives.
   Tap GUIDE again to close it. (Holding GUIDE 1 s opens the tuning menu, PRACTICE profile only.)
 - In TeleOp's INIT (before START), gamepad 1 X and B choose the alliance: X = BLUE, B = RED. After an
-  autonomous, its alliance is already set.
+  autonomous, its alliance is already set. The INIT screen also has a small menu, like an autonomous's:
+  D-pad up/down picks **Alliance** or **Profile**, left/right changes it. A practice round that starts
+  straight in TeleOp can switch to PRACTICE there (the drive's `practiceMaxPower` and the debug lines
+  apply from START). Your own INIT code uses gamepad 1's D-pad? Turn the menu off: `@Override protected
+  boolean initMenu() { return false; }`.
 
 ## 7. Pause with BACK, and the other library buttons
 

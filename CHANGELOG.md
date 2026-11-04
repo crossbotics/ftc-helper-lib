@@ -10,6 +10,10 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   speed, then go back to the usual one (`speedRpm` or the shot table). For a robot with no camera that shoots
   from more than one spot. The auto builder's fire actions get a **flywheel** box that writes it. Also
   `useSpeed(rpm)` / `useNormalSpeed()`.
+- **TeleOp INIT menu:** gamepad 1's D-pad chooses the **Alliance** and the **Profile** in TeleOp's INIT, like an
+  autonomous's menu (X / B still choose the alliance). A practice round often starts straight in TeleOp. A
+  profile changed there sets the drive's power limit (`practiceMaxPower` or `maxPower`) and the debug lines
+  at START. Off with `initMenu()` returning false (for your own INIT code on gamepad 1's D-pad).
 
 ### Fixed
 

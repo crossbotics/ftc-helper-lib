@@ -63,6 +63,11 @@ public abstract class EasyTeleOp extends LinearOpMode {
 
     private RobotTelemetry t;
     private DriverControls driving;
+    // The drive's settings, kept: a profile changed in INIT changes its power limit at START.
+    private DriveConfig driveCfg;
+    // The INIT menu (gamepad 1 D-pad): the line the cursor is on (0 = alliance, 1 = profile), last loop's D-pad.
+    private int menuLine = 0;
+    private final boolean[] menuWas = new boolean[4];
     private DriverHeading heading;
     // Buzzes to confirm a toggle or a reset (two = on, one = off).
     private ToggleRumble confirm, confirm2;
@@ -518,6 +523,29 @@ public abstract class EasyTeleOp extends LinearOpMode {
 
     // An INIT alliance button is down (not while START is held on its gamepad: START + A/B pairs a
     // gamepad on the Driver Station).
+    /**
+     * The INIT menu on gamepad 1's D-pad (alliance, profile)? Default on. Override with {@code return false}
+     * when your own INIT code uses gamepad 1's D-pad.
+     */
+    protected boolean initMenu() {
+        return true;
+    }
+
+    // One loop of the INIT menu: D-pad up/down moves the cursor (only the profile line when there is no
+    // alliance line), left/right returns -1/+1 to change the line under it (0: no change). Once per press;
+    // not while START is held (START + a button pairs a gamepad).
+    private int initMenuStep(boolean allianceLine) {
+        com.qualcomm.robotcore.hardware.Gamepad g = gamepad1;
+        if (g == null) return 0;
+        boolean[] now = {g.dpad_up, g.dpad_down, g.dpad_left, g.dpad_right};
+        boolean[] pressed = new boolean[4];
+        for (int i = 0; i < 4; i++) pressed[i] = now[i] && !menuWas[i] && !g.start;
+        System.arraycopy(now, 0, menuWas, 0, 4);
+        if (!allianceLine) menuLine = 1;
+        else if (pressed[0] || pressed[1]) menuLine = 1 - menuLine;
+        return pressed[2] ? -1 : pressed[3] ? 1 : 0;
+    }
+
     private boolean initPressed(Key k) {
         if (k == null || !k.isDown(gamepad1, gamepad2)) return false;
         com.qualcomm.robotcore.hardware.Gamepad g = k.pad == Pad.G1 ? gamepad1 : gamepad2;
@@ -543,7 +571,8 @@ public abstract class EasyTeleOp extends LinearOpMode {
         IMU imu = createImu();
         // After the IMU is set up: take autonomous's heading, so "forward" carries over.
         heading = createHeading(imu);
-        driving = DriverControls.create(hardwareMap, driveConfig(), heading).slowSpeed(slowSpeed());
+        driveCfg = driveConfig();
+        driving = DriverControls.create(hardwareMap, driveCfg, heading).slowSpeed(slowSpeed());
         driving.setFieldCentric(startFieldCentric());
         configureDriving(driving);
         alliance = MatchMemory.allianceOr(Alliance.BLUE);
@@ -602,12 +631,27 @@ public abstract class EasyTeleOp extends LinearOpMode {
             MatchMemory.setChosen(fromAuto ? alliance : null);
             boolean chosenHere = false;
             String choose = chooseWords();
+            // The profile at INIT: changed in the INIT menu, the drive's power limit follows at START.
+            Profile profileAtInit = Profile.current();
+            boolean menu = initMenu();
             while (opModeInInit()) {
                 // The alliance: from autonomous, or chosen here (default gamepad 1: X = BLUE, B = RED).
                 // (not while START is held: START+B pairs a gamepad on the Driver Station)
                 Alliance before = alliance;
                 if (initPressed(lib.initBlue())) { alliance = Alliance.BLUE; fromAuto = false; chosenHere = true; }
                 if (initPressed(lib.initRed())) { alliance = Alliance.RED; fromAuto = false; chosenHere = true; }
+                // The INIT menu on gamepad 1's D-pad: the alliance and the profile, as in an autonomous
+                // (a practice round often starts straight in TeleOp). Nothing moves in INIT.
+                if (menu) {
+                    int change = initMenuStep(!choose.isEmpty());
+                    if (change != 0 && menuLine == 0 && !choose.isEmpty()) {
+                        alliance = alliance == Alliance.BLUE ? Alliance.RED : Alliance.BLUE;
+                        fromAuto = false;
+                        chosenHere = true;
+                    } else if (change != 0 && menuLine == 1) {
+                        Profile.set(Profile.current().isPractice() ? Profile.COMPETITION : Profile.PRACTICE);
+                    }
+                }
                 if (fromAuto || chosenHere) MatchMemory.setChosen(alliance);
                 // The pose was set here for the other alliance: set it again for this one.
                 if (alliance != before && poseSetHere) poseJob.run();
@@ -647,6 +691,11 @@ public abstract class EasyTeleOp extends LinearOpMode {
                     t.line("Alliance", alliance + " until you choose");
                 }
                 t.line("Switch alliance", switchWords);
+                if (menu) {
+                    t.section("Choose (D-pad), then START");
+                    if (!choose.isEmpty()) t.text((menuLine == 0 ? "> " : "  ") + "Alliance: " + alliance);
+                    t.text((menuLine == 1 ? "> " : "  ") + "Profile: " + Profile.current().name());
+                }
                 if (heading != null) {
                     t.line("Forward", heading.isFromAuto() ? "from autonomous" : "the way the robot faces now");
                 }
@@ -661,6 +710,12 @@ public abstract class EasyTeleOp extends LinearOpMode {
             if (isStopRequested()) return;
 
             // ---- START ----
+            // The profile was changed in INIT: the drive's power limit (practiceMaxPower or maxPower) and
+            // the debug lines follow it now. (Parts made in INIT keep the settings they were made with.)
+            if (Profile.current() != profileAtInit) {
+                driveCfg.powerLimit = driveConfig().powerLimit;
+                t.setDebug(Profile.current().isPractice());
+            }
             timer.start();
             // The saved heading belongs to this run now; a later TeleOp run must not use it.
             if (heading != null) heading.forgetSaved();
