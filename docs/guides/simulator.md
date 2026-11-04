@@ -344,15 +344,50 @@ What a team does, step by step:
      to the goal with the camera or the odometry backup, or a following turret aims; it never turns blind,
      and the report says "not seen"; only for a robot that can aim; the plan's preview does not turn for it,
      the run does), **ready to launch** (`readyToLaunch`: spins the launcher up and waits until it is at
-     speed; only for a robot with a launcher), and "park from here" (`parkWithSeconds`). A button adds its step at the end (tick "add after the selected step" to put it
-     after the one you picked). **Start over** (beside Undo) removes every step; Undo brings them back.
-     Tap the field map to add a drive to that spot (a tank drive gets a turn first), drag the blue dot at the end of a drive to
-     change it, or use the list: each step has its numbers, arrows to move it, and its own warnings.
+     speed; only for a robot with a launcher), and "park from here" (`parkWithSeconds`). A button adds its step at the end.
+     **Put a step between two:** point between two steps in the list and press the **+** that shows there.
+     The buttons move into that gap: each one you press (and each tap on the map) goes in there, one after
+     the other, until you press **Done**. **Start over** (beside Undo) removes every step; Undo brings them back.
+     Tap the field map to add a drive to that spot (a tank drive gets a turn first). "Tap adds" chooses what a
+     tap does: **drive there**, **turn to face** (a turn toward the spot), **an action** (an action step at the
+     nearest point on the route: on a drive's line the drive splits there, at a point it goes right after the
+     drive that arrives), or nothing. Or use the list: each
+     step has its numbers, arrows to move it, and its own warnings. The step numbers on the map are white
+     on a dark badge.
+     **Drag a point** (the blue dot at the end of a drive) anywhere: the drive and the turn before it change
+     so the robot ends there (a tank drive gets a turn when it needs one), and **the other points stay
+     where they were**: the next drive turns and stretches to reach its point again, and the heading after
+     it is kept (a turn after it turns more or less, or a "Turn back" step is added). This works when at most
+     one turn or "turn to" sits between the point and the next drive; with more steps that turn between
+     (two turns, an aim, a turn back), only the heading is kept, so the later points can move. A team's own step
+     names stay; the "To (x, y)" and "Face (x, y)" names follow the point. With a mecanum drive and no
+     turn before the drive, the drive changes direction instead (a strafe).
+     **Put a point between two:** move the pointer over a drive's line: a white dot with a plus slides
+     along it. Click to split that drive in two there (the route stays the same), then drag the new point,
+     or press the **+** after its step in the list to add something there. Press and drag does both at
+     once. A click away from the lines still adds a drive at the end.
+     **Turn a turn on the map:** after each turn step (turn, turn to, or a drive that turns), the map draws
+     the robot facing the way it ends, with a yellow knob in front of it. Drag the knob around: the step
+     turns to face it (15° steps with "Snap" on, else 5°). A turn turns by what it needs; a "turn to" and a
+     drive that turns get the new heading. A turn or "turn to" right before its drive aims that drive, so the
+     drive swings with it (its point moves). Any other turn keeps the next point where it was.
+     **Mecanum: turn then, or turn while driving.** A drive and a turn are two steps: the robot drives,
+     THEN turns (or turns, then drives). Tick **turn while driving** on a drive to make it one step that
+     drives and turns at the same time (`Steps.moveWithTurn`; a turn just before the drive goes into it, so
+     the robot ends at the same spot, facing the same way). Its direction is then fixed on the field: degrees
+     clockwise from the way the robot faced at the start, like "turn to"'s heading. Untick it to get a drive
+     and a "turn to" again. A tank drive cannot do this: a drive that turns becomes a turn, a drive and a
+     turn there (INIT also refuses one on a tank robot).
+     **Numbers are places, letters are things the robot does.** The points it drives to have a number on a
+     dark round badge. Each step that does something (an action, start something, ready to launch, aim at
+     the goal) has an orange diamond with a letter (A, B, C...) at the spot where it happens, and the same
+     letter beside its step in the list. Click a diamond to select its step. Pedro paths do the same: parts
+     are numbered, the actions along the path are lettered (in the order the robot reaches them).
      **A command or an action is a list** of the ones your code has (for example
      `Actions.fireAll(robot)` to shoot): pick one, or pick "type your own..." to write it.
      **A tank drive cannot strafe, so the builder never makes one for it:** no Strafe button, a drive's
-     direction is only forward or back, a tap adds a turn and a drive, and a dragged end stays on the line
-     through the robot's front. When the Robot code chosen has a tank drive, any strafe already in the
+     direction is only forward or back, a tap adds a turn and a drive, and a dragged point changes the
+     turn before its drive (or adds one). When the Robot code chosen has a tank drive, any strafe already in the
      steps (from a mecanum plan, the lesson's example or a saved plan) becomes a turn, the drive forward
      (or back, when that turns less) and a turn back to the heading it had (left out when a turnTo comes
      next), so the robot drives the same route; a box above the steps lists each one. If a strafe still
@@ -360,9 +395,22 @@ What a team does, step by step:
      and nothing runs.
    - **Pedro path** (mecanum with odometry): tap to add lines or curves, drag the ends and the control
      points, choose each part's heading rule and speed limit, hold the end, and add things to start along the
-     path (`PathAt`: inches done or left, part of the path, start of a part, near a point). **follow** needs a
+     path (`PathAt`: inches done or left, part of the path, start of a part, near a point).
+     **Turn to face** (Tap adds): the selected part (or the last) ends facing the spot you tap; with no part
+     yet, the start robot turns to face it.
+     **Put a point between two** the same way: the white dot slides along a part, and a click splits the part
+     in two there (the same shape; a turn is shared out between the two). Or press **+ point** on a part to
+     split it in the middle. A part that keeps a heading or turns gets a yellow knob at its end: drag it to
+     set the end heading. **Turn from one heading to another** also says WHEN: **while driving** (all the
+     way), **first, then drive** (in the first 30% of the part) or **drive, then turn** (in the last 30%):
+     `PedroPath.turnTo(a, b, from, until)`. Pedro steers to the heading but does not wait for it, so a turn at
+     the end of the LAST part can be cut short when the path ends: tick **Hold the end** (the builder warns). **follow** needs a
      `follower(...)` line in Robot.java (the pedro module); **driveTo steps** need only odometry. The builder
      says so when your robot cannot do the mode, and Run stays off.
+   - **Right-click on the map** (or press and hold on a touch screen) for a short menu of what you can do
+     there. On a point: add an action at it, add a step after it, turn while driving (mecanum), remove it.
+     On a line: put a point here, add an action here. On the field: drive here, turn to face here (Pedro:
+     line or curve to here, turn to face here). The menu does nothing a button cannot: it saves trips.
 3. **Edit in 3D too:** with "Edit in the 3D view" ticked, the same points are balls in the 3D view: drag
    them, or tap the field to add a step or a part (not near the robot). The purple dashed line is the plan.
 4. **The start spot and the note for the drive team.** Pick a ready-made spot (against your wall, each one

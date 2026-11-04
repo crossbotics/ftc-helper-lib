@@ -9,6 +9,8 @@ import com.pedropathing.paths.Path;
 import com.pedropathing.paths.curves.Curve;
 import com.pedropathing.paths.curves.Line;
 import com.pedropathing.paths.curves.bezier.BezierCurve;
+import com.pedropathing.paths.interpolator.Interpolator;
+import com.pedropathing.paths.interpolator.PiecewiseInterpolator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +43,8 @@ public final class PedroPath {
         final double[] xs, ys;
         Heading heading = Heading.TANGENT;
         double h1, h2;
+        // LINEAR only: the turn happens between these parts of the way (0 = the part's start, 1 = its end).
+        double turnFrom = 0, turnUntil = 1;
         double maxSpeed = Double.NaN;   // NaN: Pedro's own setting
 
         Part(double[] xs, double[] ys) {
@@ -53,6 +57,8 @@ public final class PedroPath {
             p.heading = heading;
             p.h1 = h1;
             p.h2 = h2;
+            p.turnFrom = turnFrom;
+            p.turnUntil = turnUntil;
             p.maxSpeed = maxSpeed;
             return p;
         }
@@ -105,10 +111,38 @@ public final class PedroPath {
 
     /** Turns from {@code startDeg} to {@code endDeg} evenly along the (last) part. */
     public PedroPath turnTo(double startDeg, double endDeg) {
+        return turnTo(startDeg, endDeg, 0, 1);
+    }
+
+    /**
+     * Turns from {@code startDeg} to {@code endDeg} on one stretch of the (last) part only: it keeps
+     * {@code startDeg} before {@code from}, turns evenly until {@code until}, then keeps {@code endDeg}.
+     * The two numbers are parts of the way, 0 = the part's start, 1 = its end. So:
+     * <pre>
+     * PedroPath.line(-56, -61, -30, -30).turnTo(0, 90, 0, 0.3)   // turn first (in the first 30%), then drive
+     * PedroPath.line(-56, -61, -30, -30).turnTo(0, 90, 0.7, 1)   // drive first, turn in the last 30%
+     * </pre>
+     * A mecanum robot slides sideways where it does not face the way it drives. Pedro's own heading
+     * control does the turning: it follows the target heading, so a turn squeezed into a short stretch
+     * may finish a little after it.
+     *
+     * @param startDeg the heading at the part's start, degrees (0 = away, counterclockwise +)
+     * @param endDeg   the heading at its end
+     * @param from     where the turn starts, 0 to 1
+     * @param until    where it ends, more than {@code from}, at most 1
+     * @return a new path (this one does not change)
+     */
+    public PedroPath turnTo(double startDeg, double endDeg, double from, double until) {
+        if (!(from >= 0 && until <= 1 && until > from)) {
+            throw new IllegalArgumentException("PedroPath.turnTo: give from and until between 0 and 1, until more than from (not "
+                    + from + ", " + until + ")");
+        }
         PedroPath c = new PedroPath(this);
         c.last().heading = Heading.LINEAR;
         c.last().h1 = startDeg;
         c.last().h2 = endDeg;
+        c.last().turnFrom = from;
+        c.last().turnUntil = until;
         return c;
     }
 
@@ -251,11 +285,22 @@ public final class PedroPath {
         Curve curve = pts.length == 2 ? new Line(pts[0], pts[1]) : new BezierCurve(pts);
         Path p = new AtomicPath(curve);
         switch (part.heading) {
-            case LINEAR: return p.linear(PedroFrame.headingToPedro(s * part.h1), PedroFrame.headingToPedro(s * part.h2));
+            case LINEAR: return linear(p, PedroFrame.headingToPedro(s * part.h1), PedroFrame.headingToPedro(s * part.h2), part.turnFrom, part.turnUntil);
             case CONSTANT: return p.constant(PedroFrame.headingToPedro(s * part.h1));
             case REVERSE_TANGENT: return p.reverseTangent();
             case FACE_POINT: return p.facingPoint(new Pose(s * part.h1, part.h2));
             default: return p.tangent();
         }
+    }
+
+    // A turn from a to b (Pedro's radians) between the parts of the way from and until: Pedro's piecewise
+    // heading keeps a, turns evenly, then keeps b (each piece gets its own 0..1 stretch).
+    private static Path linear(Path p, double a, double b, double from, double until) {
+        if (from <= 0 && until >= 1) return p.linear(a, b);
+        PiecewiseInterpolator h = Interpolator.piecewise();
+        if (from > 0) h = h.until(from, Interpolator.constant(a));
+        h = h.until(until, Interpolator.linear(a, b));
+        if (until < 1) h = h.until(1, Interpolator.constant(b));
+        return p.heading(h);
     }
 }

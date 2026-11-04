@@ -192,6 +192,32 @@ public final class Steps {
     }
 
     /**
+     * Drives in a straight line AND turns at the same time (mecanum only: a tank drive cannot drive
+     * sideways, so it cannot do this; use {@link #move} and then {@link #turnTo}). Waits until done; if the
+     * drive ends before the turn, it finishes the turn (inside the same time limit). Mirrored for RED.
+     *
+     * <p>The direction stays fixed on the FIELD while the robot turns, so it is measured like
+     * {@link #turnTo}'s heading: from the way the robot faced at the start, but clockwise (0 = that way,
+     * 90 = to its right then, 180 = the opposite way, -90 = left).
+     *
+     * <pre>{@code
+     * s.start("Back wall, left corner tile, facing the field", 0)
+     *  .moveWithTurn("Out and face the goal", 30, 20, 45, 0.6);   // 30 in, 20° right of straight out, end facing 45° left
+     * }</pre>
+     *
+     * @param label        the name in the report
+     * @param inches       how far, inches (negative = the other way)
+     * @param directionDeg the way to drive, degrees clockwise from the start heading
+     * @param headingDeg   the heading to end at, degrees (0 = the start heading, counterclockwise +)
+     * @param maxPower     0.1 to 1, for driving and for turning
+     * @return this list, to add the next step
+     */
+    public Steps moveWithTurn(String label, double inches, double directionDeg, double headingDeg, double maxPower) {
+        if (adding()) routine.moveWithTurn(label, inches, directionDeg, headingDeg, maxPower, maxPower);
+        return this;
+    }
+
+    /**
      * Drives to a point on the field, using the odometry, and turns to a heading at the same time
      * (mecanum). Seen from your drivers' wall, written for BLUE like the start spot: {@code xIn} inches
      * right of the centre line, {@code yIn} inches from the centre toward the far wall, heading 0 =

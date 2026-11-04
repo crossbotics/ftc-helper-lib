@@ -4988,6 +4988,157 @@
    }
   },
   {
+   "id": "SIM-09",
+   "title": "Edit an auto on the builder map (add between two, drag to turn)",
+   "area": "simulator",
+   "priority": "medium",
+   "where": "sim",
+   "minutes": 20,
+   "needs": [],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "v0.27.0",
+   "docs": [
+    {
+     "path": "docs/guides/simulator.md",
+     "anchor": "the-auto-builder"
+    }
+   ],
+   "file": "testing/tests/SIM-09.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A team fixes its autonomous on the map, not in the numbers. Putting a point between two steps, and dragging a point to change the turn before it, must work on a tank drive and a mecanum drive, and must never move the other points."
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "SIM-01 works on this laptop.",
+       "Your robot from `Robot.java`, or a kit bot's robot file."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Open the simulator and press **Auto builder**. In **Simple steps**, press **Start over**.",
+       "With \"drive there\" picked, tap the map 3 times to make 3 drives that turn a corner.",
+       "Read the step numbers on the map. Each one must be easy to read (white on a dark badge).",
+       "Move the mouse over the line of the first drive. A white dot with a plus must slide along the line.",
+       "Click. A new point must appear there, and the steps list must have one more drive. The route must not change.",
+       "Drag the new point to the side. The line must bend there. Points 2 and 3 (now 3 and 4) must stay where they were.",
+       "Drag the last point to the side. The robot must turn to drive to it (a tank drive: the turn step before it changes).",
+       "Press **Undo** 3 times. The plan must go back to the 3 drives from step 2.",
+       "In the steps list, point between step 1 and step 2. A **+** must show. Press it, then press **+ Wait**. The wait must be step 2. Press **Done**.",
+       "Find a turn step on the map (a yellow knob in front of a robot outline). Drag the knob around. The robot outline must turn with it, and the turn step's number in the list must change.",
+       "Choose **an action** in \"Tap adds\", then tap on the line of step 1. An action step must appear in the list between the two halves of that drive. The map must show it as an orange diamond with a letter (A), and the list must show the same letter.",
+       "Right-click on point 2 (or press and hold on a touch screen). A menu must open. Press **Add an action at this point**: an action step must appear right after that drive.",
+       "Press **Run**. The robot must drive the plan."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Each step does what it says, on 2 runs out of 2."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "Your computer and browser.",
+       "Your robot: tank or mecanum.",
+       "Any step where a point moved that you did not drag, or a new point did not appear."
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A mecanum drive can drive sideways: in step 7, a drive with no turn before it changes its direction (a strafe) instead of a turn."
+     },
+     {
+      "p": "A mecanum drive also has **turn while driving** on each drive. Tick it on a drive that has a turn before it: the turn and the drive must become one \"Drive and turn\" step, and the robot must end at the same spot and heading on the map. Press **Run**: the robot must turn while it drives. Untick it: the drive and a \"turn to\" come back."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SIM-10",
+   "title": "Edit a Pedro path on the builder map (a point between two, when it turns)",
+   "area": "simulator",
+   "priority": "medium",
+   "where": "sim",
+   "minutes": 15,
+   "needs": [],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "v0.27.0",
+   "docs": [
+    {
+     "path": "docs/guides/simulator.md",
+     "anchor": "the-auto-builder"
+    }
+   ],
+   "file": "testing/tests/SIM-10.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A Pedro path is fixed on the map. Putting a point between two, and choosing when the robot turns on a part, must change only that part."
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "SIM-01 works on this laptop.",
+       "A robot file for a mecanum robot with odometry. The Pedro example robot works: `-Probot=` its robot file, or the `pedrobot` example."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Open the simulator and press **Auto builder**. Press **Pedro path**, then **Load the Pedro lesson's example**.",
+       "Move the mouse over part 2 (the curve). A white dot with a plus must slide along it.",
+       "Click. A new point must appear there, and the list must have one more part. The curve must keep its shape.",
+       "Drag the new point to the side. Only the parts next to it may change.",
+       "On the last part, choose **Turn from one heading to another**, then **drive, then turn (last 30%)**. The robot outlines on the map must keep the first heading until near the end of the part.",
+       "Drag the yellow knob at the end of the last part. The end heading in the list must change.",
+       "Choose **turn to face** in \"Tap adds\", select part 1, and tap a spot on the field. Part 1 must now end facing that spot (its yellow knob points at it).",
+       "Right-click on the field. The menu must offer \"Line to here\", \"Curve to here\" and \"turn to face here\".",
+       "Press **Run**. The robot must follow the path and end facing the end heading."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Each step does what it says, on 2 runs out of 2."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "Your computer and browser.",
+       "The robot file you used.",
+       "Any step where a part changed that you did not touch."
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A tank robot cannot run Pedro paths: the builder says so, and **Run** stays off. Steps 1 to 6 still work."
+     }
+    ]
+   }
+  },
+  {
    "id": "SOM-03",
    "title": "Shooting on the move in the simulator - strafe and compare",
    "area": "moving-shot",

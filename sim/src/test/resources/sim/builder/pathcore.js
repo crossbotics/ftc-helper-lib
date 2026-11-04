@@ -8,6 +8,7 @@
 // A path: { start: [x, y], parts: [part...], holdSec: 0 }. Each part starts where the one before ends.
 // A part: { ctrl: [[x, y]...] (0 = a line, 1 or more = a curve), end: [x, y],
 //           heading: { mode: 'path' | 'back' | 'keep' | 'turn' | 'point', a, b, x, y }, maxSpeed: null | 0..1 }
+//           (turn: optional from, to = the stretch of the part it turns on, 0..1; missing = 0 and 1, all the way)
 // The sampling follows ftc-helper-lib's PedroFollower.sample (one point about every inch, at most 200
 // a part) and Pedro 3.0.2's heading rules (turnTo takes the short way round).
 
@@ -62,11 +63,104 @@ export function curveLength(pts) {
 	return len;
 }
 
+/** A turn's stretch of its part ({ from, to }, 0..1): all of it unless the part says (PedroPath.turnTo(a, b, from, until)). */
+export function turnSpan(h) {
+	const from = Number.isFinite(+h.from) ? Math.max(0, Math.min(1, +h.from)) : 0;
+	const to = Number.isFinite(+h.to) ? Math.max(0, Math.min(1, +h.to)) : 1;
+	return to > from ? { from, to } : { from: 0, to: 1 };
+}
+// True when a turn has its own stretch (not all of the part).
+const partial = (h) => { const { from, to } = turnSpan(h); return from > 0 || to < 1; };
+// How much of a turn is done (0..1). Like Pedro 3.0.2: a turn all along the part follows the curve's own
+// number t; a turn on a stretch (PiecewiseInterpolator) follows the share of the DISTANCE driven, c.
+function turnShare(h, t, c = t) {
+	if (!partial(h)) return t;
+	const { from, to } = turnSpan(h);
+	return Math.max(0, Math.min(1, (c - from) / (to - from)));
+}
+/** True when a turn's stretch is not right (not 0 <= from < to <= 1): PedroPath.turnTo refuses it, so Run stops at INIT. */
+export function badSpan(h) {
+	if (h?.mode !== 'turn' || (h.from == null && h.to == null)) return false;
+	const from = h.from == null ? 0 : +h.from, to = h.to == null ? 1 : +h.to;
+	return !(from >= 0 && to <= 1 && to > from);
+}
+/** The turn presets the page offers: while driving (all the way), first (then drive), last (drive first). */
+export const TURN_WHEN = { along: [0, 1], first: [0, 0.3], last: [0.7, 1] };
+/** Which preset a turn is ('along', 'first', 'last'), or 'other'. */
+export function turnWhen(h) {
+	const { from, to } = turnSpan(h);
+	for (const [k, v] of Object.entries(TURN_WHEN)) if (Math.abs(v[0] - from) < 1e-6 && Math.abs(v[1] - to) < 1e-6) return k;
+	return 'other';
+}
+
+/**
+ * Splits part i in two at t (0..1 along its curve, de Casteljau): two parts that make the same shape.
+ * The heading rule goes to both (a turn's angle at the split becomes the end of the first and the start of
+ * the second; its stretch is shared out), the speed limit too. The PathAt "start of part n" numbers after
+ * it move up one. Returns { parts, actions } (new lists), or null if t is too near an end.
+ */
+export function splitPart(path, i, t, actions = []) {
+	const part = path.parts[i];
+	if (!part || !(t > 0.02 && t < 0.98)) return null;
+	const pts = partPoints(path, i);
+	// de Casteljau: the left points are the first part, the right ones the second
+	const left = [], right = [];
+	let q = pts.map((p) => [p[0], p[1]]);
+	while (q.length) {
+		left.push(q[0]); right.unshift(q[q.length - 1]);
+		q = q.slice(1).map((b, k) => [q[k][0] + (b[0] - q[k][0]) * t, q[k][1] + (b[1] - q[k][1]) * t]);
+	}
+	const r1 = (p) => [round1(p[0]), round1(p[1])];
+	const mid = r1(left[left.length - 1]);
+	const h = part.heading;
+	let h1 = structuredClone(h), h2 = structuredClone(h);
+	if (h.mode === 'turn') {
+		// a turn on a stretch is measured by distance (like Pedro): c = the share of the distance at the split
+		const c = partial(h) ? curveLength(left) / (curveLength(pts) || 1) : t;
+		const at = round1(wrap(h.a + diff(h.a, h.b) * turnShare(h, t, c)));
+		const { from, to } = turnSpan(h);
+		// two decimals, and never an empty stretch (PedroPath.turnTo refuses from >= until)
+		const span = (a, b) => {
+			let f = Math.round(a * 100) / 100, u = Math.round(b * 100) / 100;
+			if (u - f < 0.01) { if (u >= 0.01) f = u - 0.01; else u = f + 0.01; }
+			return f <= 0 && u >= 1 ? {} : { from: Math.max(0, f), to: Math.min(1, u) };
+		};
+		// a part with no turning left keeps its heading
+		h1 = from >= c ? { mode: 'keep', a: h.a } : { mode: 'turn', a: h.a, b: at, ...span(from / c, Math.min(1, to / c)) };
+		h2 = to <= c ? { mode: 'keep', a: h.b } : { mode: 'turn', a: at, b: h.b, ...span(Math.max(0, (from - c) / (1 - c)), (to - c) / (1 - c)) };
+	}
+	const parts = path.parts.slice();
+	parts.splice(i, 1,
+		{ ...part, ctrl: left.slice(1, -1).map(r1), end: mid, heading: h1 },
+		{ ...part, ctrl: right.slice(1, -1).map(r1), end: part.end, heading: h2 });
+	const acts = (actions || []).map((a) => (a.kind === 'part' && +a.value > i + 1 ? { ...a, value: +a.value + 1 } : a));
+	return { parts, actions: acts };
+}
+
+/**
+ * "Turn to face" on the map: part i ends facing the point (x, y): a turn from the heading the robot has when it
+ * gets there (the end of the part before; the first part: startH). A turn keeps its "when". With no part i:
+ * null. Returns a new list of parts.
+ */
+export function facePart(path, i, x, y, startH = null) {
+	const part = path.parts[i];
+	if (!part) return null;
+	const b = round1(headingOf(x - part.end[0], y - part.end[1]));
+	// the turn starts from the way the robot faces when it gets to this part: where the part before ended
+	// (the first part: the start heading), so it never snaps round at the join
+	const smp = sample(path);
+	const a = round1(i > 0 ? partEnds(smp, i - 1).end : startH != null ? +startH : partEnds(smp, i).start);
+	const h = part.heading.mode === 'turn' ? { ...part.heading, a, b } : { mode: 'turn', a, b };
+	const parts = path.parts.slice();
+	parts[i] = { ...part, heading: h };
+	return parts;
+}
+
 // The facing at t for a part's heading rule. tangentAt: the path's own direction there.
-function headingAt(h, t, x, y, tangent) {
+function headingAt(h, t, x, y, tangent, c = t) {
 	switch (h.mode) {
 		case 'keep': return wrap(h.a);
-		case 'turn': return wrap(h.a + diff(h.a, h.b) * t);
+		case 'turn': return wrap(h.a + diff(h.a, h.b) * turnShare(h, t, c));
 		case 'point': return Math.hypot(h.x - x, h.y - y) < 1e-6 ? tangent : headingOf(h.x - x, h.y - y);
 		case 'back': return wrap(tangent + 180);
 		default: return tangent;
@@ -85,9 +179,14 @@ export function sample(path) {
 		const n = Math.max(2, Math.min(MAX_POINTS, Math.ceil(len) + 1));
 		// A curve's direction at an end can be zero (a control point on the end): look just inside.
 		let lastTan = null;
+		// the share of the distance at each point (a turn on a stretch follows it, like Pedro)
+		const at = Array.from({ length: n }, (_, k) => bez(pts, k / (n - 1)));
+		const cum = [0];
+		for (let k = 1; k < n; k++) cum.push(cum[k - 1] + Math.hypot(at[k].x - at[k - 1].x, at[k].y - at[k - 1].y));
+		const total = cum[n - 1] || 1;
 		for (let k = 0; k < n; k++) {
 			const t = k / (n - 1);
-			const p = bez(pts, t);
+			const p = at[k];
 			let tan;
 			if (Math.hypot(p.dx, p.dy) > 1e-9) tan = headingOf(p.dx, p.dy);
 			else {
@@ -95,7 +194,7 @@ export function sample(path) {
 				tan = Math.hypot(q.dx, q.dy) > 1e-9 ? headingOf(q.dx, q.dy) : (lastTan ?? 0);
 			}
 			lastTan = tan;
-			out.push({ x: p.x, y: p.y, h: headingAt(part.heading, t, p.x, p.y, tan), part: i, t });
+			out.push({ x: p.x, y: p.y, h: headingAt(part.heading, t, p.x, p.y, tan, cum[k] / total), part: i, t });
 		}
 	});
 	return out;
@@ -437,7 +536,10 @@ export const javaString = (s) => '"' + String(s ?? '').replace(/\\/g, '\\\\').re
 function headingCode(h) {
 	switch (h.mode) {
 		case 'keep': return `.keepHeading(${num(h.a)})`;
-		case 'turn': return `.turnTo(${num(h.a)}, ${num(h.b)})`;
+		case 'turn': {
+			const { from, to } = turnSpan(h);
+			return from <= 0 && to >= 1 ? `.turnTo(${num(h.a)}, ${num(h.b)})` : `.turnTo(${num(h.a)}, ${num(h.b)}, ${num(from)}, ${num(to)})`;
+		}
 		case 'back': return '.facePathBackwards()';
 		case 'point': return `.facePoint(${num(h.x)}, ${num(h.y)})`;
 		default: return '';   // facePath() is the default
@@ -671,10 +773,10 @@ export function fromJava(src) {
 			if (known.includes(m)) {
 				const { args, next } = readArgs(tk, i + 2);
 				i = next - 1;
-				const want = { turnTo: 2, keepHeading: 1, facePath: 0, facePathBackwards: 0, facePoint: 2, maxSpeed: 1, holdEnd: null }[m];
+				const want = { turnTo: args.length === 4 ? 4 : 2, keepHeading: 1, facePath: 0, facePathBackwards: 0, facePoint: 2, maxSpeed: 1, holdEnd: null }[m];
 				const v = need(args, want, `.${m}`);
 				if (!v) continue;
-				if (m === 'turnTo') last.heading = { mode: 'turn', a: v[0], b: v[1] };
+				if (m === 'turnTo') last.heading = v.length === 4 ? { mode: 'turn', a: v[0], b: v[1], from: v[2], to: v[3] } : { mode: 'turn', a: v[0], b: v[1] };
 				else if (m === 'keepHeading') last.heading = { mode: 'keep', a: v[0] };
 				else if (m === 'facePath') last.heading = { mode: 'path' };
 				else if (m === 'facePathBackwards') last.heading = { mode: 'back' };

@@ -424,14 +424,168 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 	const tt = S.tankSteps([{ kind: 'move', label: 'Over', inches: 10, dir: 90, power: 0.6 }, { kind: 'turnTo', label: 'Square', heading: 0, power: 0.5 }]);
 	ok(tt.steps.map((s) => s.kind).join() === 'turn,move,turnTo', 'tankSteps: no turn back before a turnTo');
 	ok(S.checkPlan({ ...STEP_PLANS[0].plan, drive: 'tank' }).list.some((c) => c.level === 'bad' && /not possible on a tank drive/.test(c.text)), 'checkPlan: a tank strafe is still bad (a last guard)');
-	// Pasted Java on a tank drive: each strafe listed and turned into a turn and a drive; moveWithTurn left out, said so.
-	const javaIn = S.toJava(STEP_PLANS[0].plan).file.replace('.parkWithSeconds(3)', '.parkWithSeconds(3)\n        .moveWithTurn("Swing", 10, 0, 90, 0.5, 0.5)');
+	// Pasted Java on a tank drive: each strafe (and the moveWithTurn) listed and turned into turns and drives.
+	const javaIn = S.toJava(STEP_PLANS[0].plan).file.replace('.parkWithSeconds(3)', '.parkWithSeconds(3)\n        .moveWithTurn("Swing", 10, 0, 90, 0.5)');
 	const tin = S.fromJava(javaIn, { drive: 'tank' });
-	ok(tin.plan && strafes(tin.plan.steps).length === 0 && tin.drive === null, 'fromJava, tank: no strafe read in, the drive stays tank');
-	ok(tin.tank.length === 1 && /Park.*not possible on a tank drive/.test(tin.tank[0]), 'fromJava, tank: the strafe is listed');
-	ok(tin.problems.some((t) => /moveWithTurn.*not possible on a tank drive/.test(t)), 'fromJava, tank: moveWithTurn is left out and listed');
+	ok(tin.plan && strafes(tin.plan.steps).length === 0 && tin.drive === null && !tin.plan.steps.some((s) => s.kind === 'moveTurn'), 'fromJava, tank: no strafe or moveWithTurn read in, the drive stays tank');
+	ok(tin.tank.length === 2 && tin.tank.some((t) => /Park.*not possible on a tank drive/.test(t)) && tin.tank.some((t) => /Swing.*mecanum/.test(t)), 'fromJava, tank: the strafe and the moveWithTurn are listed');
 	const min = S.fromJava(javaIn);
-	ok(min.drive === 'mecanum' && min.tank.length === 0 && strafes(min.plan.steps).length === 1 && min.problems.some((t) => /moveWithTurn/.test(t)), 'fromJava, mecanum: the strafe stays; moveWithTurn is still never read silently');
+	const swing = min.plan.steps.find((s) => s.kind === 'moveTurn');
+	ok(min.tank.length === 0 && strafes(min.plan.steps).length === 1 && swing && swing.inches === 10 && swing.dir === 0 && swing.heading === 90 && swing.power === 0.5,
+		'fromJava, mecanum: the strafe stays; moveWithTurn is read as "drive and turn"');
+	ok(S.toJava(min.plan).steps.includes('.moveWithTurn("Swing", 10, 0, 90, 0.5)'), 'toJava: moveWithTurn written back the same');
+	// Drive and turn at once (mecanum): it drives a line fixed on the field and turns on the way.
+	{
+		const plan = { drive: 'mecanum', start: { x: 0, y: -60, h: 0 }, steps: [{ kind: 'turn', label: 'Face', deg: 90, power: 0.5 }, { kind: 'moveTurn', label: 'Out', inches: 20, dir: 90, heading: 45, power: 0.6 }] };
+		const e = S.simulate(plan).ends[1];
+		ok(near(e.x, 20, 1e-6) && near(e.y, -60, 1e-6) && near(e.h, 45, 1e-6), 'moveTurn: the direction counts from the START heading (90 = right), it ends at its heading');
+		ok(S.checkPlan({ ...plan, drive: 'tank' }).list.some((c) => c.level === 'bad' && c.step === 1 && /mecanum/.test(c.text)), 'checkPlan: moveTurn on a tank drive is bad');
+		const t = S.tankSteps(plan.steps);
+		const tank = S.simulate({ ...plan, steps: t.steps }).end;
+		ok(t.steps.every((s) => s.kind !== 'moveTurn') && near(tank.x, 20, 0.01) && near(tank.y, -60, 0.01) && near(tank.h, 45, 0.01), 'tankSteps: moveTurn becomes turn, drive, turn: the same end');
+		// turn while driving: a turn then a move become one moveTurn and back, with the same end
+		const two = { drive: 'mecanum', start: { x: 0, y: -60, h: 0 }, steps: [{ kind: 'move', label: 'A', inches: 10, dir: 0, power: 0.6 }, { kind: 'turn', label: 'T', deg: 30, power: 0.5 }, { kind: 'move', label: 'B', inches: 20, dir: 45, power: 0.6 }] };
+		const before = S.simulate(two).end;
+		const on = S.turnWhileDriving(two, 2, true);
+		const onEnd = S.simulate({ ...two, steps: on.steps }).end;
+		ok(on.steps.length === 2 && on.i === 1 && on.steps[1].kind === 'moveTurn' && near(onEnd.x, before.x, 0.1) && near(onEnd.y, before.y, 0.1) && near(onEnd.h, before.h, 0.1),
+			'turnWhileDriving on: the turn before goes into the drive, the same end');
+		const off = S.turnWhileDriving({ ...two, steps: on.steps }, 1, false);
+		const offEnd = S.simulate({ ...two, steps: off.steps }).end;
+		ok(off.steps.map((s) => s.kind).join() === 'move,move,turnTo' && near(offEnd.x, before.x, 0.1) && near(offEnd.y, before.y, 0.1) && near(offEnd.h, before.h, 0.1),
+			'turnWhileDriving off: drive, then turn, the same end');
+		// a split drive-and-turn keeps the route and the end
+		const sp = S.splitMove({ ...two, steps: on.steps }, 1, 8);
+		const spEnd = S.simulate({ ...two, steps: sp }).end;
+		ok(sp.length === 3 && sp[1].kind === 'moveTurn' && sp[2].kind === 'moveTurn' && near(spEnd.x, before.x, 0.1) && near(spEnd.y, before.y, 0.1) && near(spEnd.h, before.h, 0.1),
+			'splitMove: a drive-and-turn splits in two with the same end');
+		// a dragged drive-and-turn ends where dropped, still facing its heading
+		const dr = S.dragPoint({ ...two, steps: on.steps }, 1, 5, -30);
+		const dEnd = S.simulate({ ...two, steps: dr.steps }).ends[dr.i];
+		ok(near(dEnd.x, 5, 0.6) && near(dEnd.y, -30, 0.6) && near(dEnd.h, before.h, 0.1), 'dragPoint: a drive-and-turn ends where dropped, at its heading');
+	}
+	// The turn knob: a turn, turnTo or moveTurn ends facing the heading given.
+	{
+		const plan = { drive: 'tank', start: { x: 0, y: -60, h: 30 }, steps: [{ kind: 'move', label: 'A', inches: 10, dir: 0, power: 0.6 }, { kind: 'turn', label: 'T', deg: 10, power: 0.5 }, { kind: 'turnTo', label: 'U', heading: 0, power: 0.5 }] };
+		const a = S.setTurnHeading(plan, 1, -45), b = S.setTurnHeading(plan, 2, 120);
+		ok(near(S.simulate({ ...plan, steps: a }).ends[1].h, -45) && a[1].deg === -75, 'setTurnHeading: a turn turns by what it needs');
+		ok(near(S.simulate({ ...plan, steps: b }).ends[2].h, 120) && b[2].heading === 90, 'setTurnHeading: a turnTo gets the heading (from the start heading)');
+		ok(S.setTurnHeading(plan, 0, 10) === null, 'setTurnHeading: not a drive');
+		// the next point stays (its drive is aimed again), except a turn or turnTo right before its drive, which aims it
+		for (const drive of ['tank', 'mecanum']) {
+			const p2 = { drive, start: { x: 0, y: -60, h: 0 }, steps: [{ kind: 'move', label: 'A', inches: 20, dir: 0, power: 0.6 }, { kind: 'turnTo', label: 'U', heading: 0, power: 0.5 },
+				{ kind: 'turn', label: 'G', deg: 0, power: 0.5 }, { kind: 'move', label: 'B', inches: 20, dir: 0, power: 0.6 }, { kind: 'turn', label: 'F', deg: 90, power: 0.5 }, { kind: 'move', label: 'C', inches: 10, dir: 0, power: 0.6 }] };
+			const old = S.simulate(p2).ends;
+			const a2 = S.setTurnHeading(p2, 1, 45), e2 = S.simulate({ ...p2, steps: a2 }).ends;
+			const bi = a2.findIndex((st) => st.label === 'B');
+			ok(near(e2[bi].x, old[3].x, 0.6) && near(e2[bi].y, old[3].y, 0.6), `${drive}: a turned knob keeps the next point`);
+			const c2 = S.setTurnHeading(p2, 4, 0), e3 = S.simulate({ ...p2, steps: c2 }).ends;
+			ok(c2[4].deg === 0 && near(e3[5].y, old[3].y + 10, 0.01), `${drive}: a turn right before its drive swings that drive`);
+			// a turnTo right before its drive swings it too (no opposite turn added: Fable's review)
+			const p3 = { drive, start: { x: 0, y: 0, h: 0 }, steps: [{ kind: 'move', label: 'A', inches: 20, dir: 0, power: 0.6 }, { kind: 'turnTo', label: 'U', heading: 0, power: 0.5 }, { kind: 'move', label: 'B', inches: 20, dir: 0, power: 0.6 }] };
+			const t3 = S.setTurnHeading(p3, 1, 45), e4 = S.simulate({ ...p3, steps: t3 }).end;
+			ok(t3.length === 3 && t3[1].heading === 45 && near(e4.h, 45) && !near(e4.x, 0, 1), `${drive}: a turnTo right before its drive swings that drive`);
+			// a drag through a turnTo keeps the point after it (Codex's review)
+			const d3 = S.dragPoint(p3, 0, 10, 20), e5 = S.simulate({ ...p3, steps: d3.steps });
+			ok(near(e5.end.x, 0, 0.6) && near(e5.end.y, 40, 0.6), `${drive}: a drag keeps the next point across a turnTo`);
+		}
+	}
+	// "An action" tapped on the map: on a line the drive splits there; at a point, right after the drive that arrives.
+	{
+		const plan = { drive: 'tank', start: { x: 0, y: -60, h: 0 }, steps: [{ kind: 'move', label: 'A', inches: 20, dir: 0, power: 0.6 },
+			{ kind: 'turn', label: 'T', deg: -90, power: 0.5 }, { kind: 'move', label: 'B', inches: 20, dir: 0, power: 0.6 }] };
+		const act = { kind: 'action', code: 'Actions.fireAll(robot)', timeout: 10 };
+		const mid = S.actionAt(plan, 1, -50, act);
+		const e = S.simulate({ ...plan, steps: mid.steps });
+		ok(mid.i === 1 && mid.steps[1].kind === 'action' && mid.steps.length === 5 && near(e.ends[0].y, -50) && near(e.end.x, 20) && near(e.end.y, -40),
+			'actionAt: on a line, the drive splits there and the route stays');
+		const at = S.actionAt(plan, 0.5, -40.5, act);
+		ok(at.i === 1 && at.steps[1].kind === 'action' && at.steps[2].kind === 'turn', 'actionAt: at a point, right after the drive (before the turn there)');
+		ok(S.actionAt(plan, 0, -61, act).i === 0, 'actionAt: at the start, first');
+		ok(S.actionAt(plan, 60, 60, act) === null, 'actionAt: far from the route, nothing');
+		ok(plan.steps.length === 3, 'actionAt: the plan given is not changed');
+	}
+	// Pedro: reviews' findings. Turn to face starts from the heading the robot arrives with; a split never
+	// makes an empty stretch; a bad stretch is found; a stretch on a curve follows the distance (like Pedro).
+	{
+		const two = { start: [0, 0], parts: [{ ctrl: [], end: [0, 20], heading: { mode: 'keep', a: 45 }, maxSpeed: null }, { ctrl: [], end: [20, 20], heading: { mode: 'path' }, maxSpeed: null }], holdSec: 0 };
+		ok(P.facePart(two, 1, 20, 40)[1].heading.a === 45, 'facePart: the turn starts where the part before ended (no snap at the join)');
+		ok(P.facePart(two, 0, 0, 40, 30)[0].heading.a === 30, 'facePart: part 1 starts from the start heading');
+		const late = { start: [0, 0], parts: [{ ctrl: [], end: [0, 40], heading: { mode: 'turn', a: 0, b: 90, from: 0.7, to: 1 }, maxSpeed: null }], holdSec: 0 };
+		const sp = P.splitPart(late, 0, 0.701).parts.map((q) => q.heading);
+		ok(sp.every((h) => !P.badSpan(h)), 'splitPart: no empty stretch after rounding');
+		ok(P.badSpan({ mode: 'turn', a: 0, b: 90, from: 0.5, to: 0.5 }) && !P.badSpan({ mode: 'turn', a: 0, b: 90 }) && !P.badSpan(late.parts[0].heading), 'badSpan: from >= to is found');
+		const curve = { start: [0, 0], parts: [{ ctrl: [[0, 10]], end: [100, 10], heading: { mode: 'turn', a: 0, b: 90, from: 0.7, to: 1 }, maxSpeed: null }], holdSec: 0 };
+		const cs = P.sample(curve);
+		let run = 0;
+		const len = cs.slice(1).reduce((acc, q, k) => acc + Math.hypot(q.x - cs[k].x, q.y - cs[k].y), 0);
+		const before = cs.filter((q, k) => { if (k) run += Math.hypot(q.x - cs[k - 1].x, q.y - cs[k - 1].y); return run / len < 0.69; });
+		ok(before.every((q) => near(q.h, 0, 1e-6)), 'Pedro curve: no turn before 70% of the distance');
+	}
+	// Pedro "turn to face": the part ends facing the point.
+	{
+		const path = { start: [0, -60], parts: [{ ctrl: [], end: [0, -30], heading: { mode: 'path' }, maxSpeed: null }], holdSec: 0 };
+		const f = P.facePart(path, 0, -30, -30);
+		const smp = P.sample({ ...path, parts: f });
+		ok(f[0].heading.mode === 'turn' && near(smp[smp.length - 1].h, 90) && near(smp[0].h, 0), 'facePart: turns from its start heading to face the point');
+		const g = P.facePart({ ...path, parts: [{ ...path.parts[0], heading: { mode: 'turn', a: 0, b: 10, from: 0.7, to: 1 } }] }, 0, 30, -30);
+		ok(g[0].heading.b === -90 && g[0].heading.from === 0.7, 'facePart: a turn keeps its "when"');
+		ok(P.facePart(path, 3, 0, 0) === null, 'facePart: no such part');
+	}
+	// Pedro: a part splits in two with the same shape; a turn on one stretch.
+	{
+		const path = { start: [0, -60], parts: [{ ctrl: [[30, -40]], end: [0, -20], heading: { mode: 'turn', a: 0, b: 90 }, maxSpeed: 0.5 }], holdSec: 0 };
+		const r = P.splitPart(path, 0, 0.5, [{ kind: 'part', value: 1 }, { kind: 'part', value: 2 }]);
+		const before = P.sample(path), after = P.sample({ ...path, parts: r.parts });
+		const atHalf = before[Math.round((before.length - 1) / 2)];
+		ok(r.parts.length === 2 && near(r.parts[0].end[0], 15, 0.1) && near(r.parts[0].end[1], -40, 0.1) && r.parts[1].maxSpeed === 0.5, 'splitPart: the new point is on the curve, the speed limit stays');
+		ok(near(after[after.length - 1].h, 90) && near(P.partEnds(after, 0).end, 45, 0.1) && near(atHalf.h, 45, 1), 'splitPart: the turn is shared out (45 at the split)');
+		ok(r.actions[0].value === 1 && r.actions[1].value === 3, 'splitPart: "start of part" numbers after it move up');
+		ok(P.splitPart(path, 0, 0.01) === null, 'splitPart: not on top of an end');
+		const last = { ...path, parts: [{ ...path.parts[0], heading: { mode: 'turn', a: 0, b: 90, from: 0.7, to: 1 } }] };
+		const ls = P.sample(last);
+		ok(near(ls[Math.round((ls.length - 1) * 0.5)].h, 0) && near(ls[ls.length - 1].h, 90) && P.turnWhen(last.parts[0].heading) === 'last', 'Pedro: "drive, then turn" keeps the heading until 70%');
+		const j = P.toJava(last, { label: 'Go', start: { on: false } }).all;
+		ok(/\.turnTo\(0, 90, 0\.7, 1\)/.test(j), 'Pedro Java: turnTo(a, b, from, until)');
+		const back = P.fromJava(j).paths?.[0]?.path?.parts?.[0]?.heading ?? P.fromJava(j).path?.parts?.[0]?.heading;
+		ok(back && back.from === 0.7 && back.to === 1, 'Pedro Java in: turnTo with 4 numbers keeps the stretch');
+		const sl = P.splitPart(last, 0, 0.5);
+		ok(sl.parts[0].heading.mode === 'keep' && sl.parts[1].heading.from === 0.4 && sl.parts[1].heading.to === 1, 'splitPart: a late turn stays in the second part');
+	}
+	// The map's edits: a drag moves one point (the turn before it follows; the next point and every point
+	// after it stay), and a tap on a line splits that drive in two. Both drives.
+	for (const drive of ['tank', 'mecanum']) {
+		const plan = { drive, start: { x: 0, y: -60, h: 0 }, steps: [] };
+		for (const [x, y] of [[0, -30], [30, -30], [30, 0], [10, 20]]) plan.steps.push(...S.stepsToPoint(drive, S.simulate(plan).end, x, y));
+		const moves = (pl) => S.simulate(pl).ends.filter((_, k) => pl.steps[k].kind === 'move');
+		const before = moves(plan);
+		let hitOk = true, restOk = true, tankOk = true, headOk = true;
+		plan.steps.forEach((s, i) => {
+			if (s.kind !== 'move') return;
+			const n = plan.steps.slice(0, i + 1).filter((t) => t.kind === 'move').length - 1;   // which point
+			for (const [dx, dy] of [[12, 0], [-9, 7], [0, -8], [15, 15], [-20, -3]]) {
+				const want = { x: before[n].x + dx, y: before[n].y + dy };
+				const r = S.dragPoint(plan, i, want.x, want.y);
+				const pl = { ...plan, steps: r.steps }, after = moves(pl);
+				if (r.steps[r.i].kind !== 'move' || Math.hypot(after[n].x - want.x, after[n].y - want.y) > 1) hitOk = false;
+				if (after.length !== before.length || before.some((e, k) => k !== n && Math.hypot(e.x - after[k].x, e.y - after[k].y) > 0.6)) restOk = false;
+				if (n < before.length - 2 && Math.abs(P.wrap(S.simulate(pl).end.h - S.simulate(plan).end.h)) > 0.5) headOk = false;
+				if (drive === 'tank' && r.steps.some((t) => t.kind === 'move' && !S.TANK_DIRS.includes(t.dir))) tankOk = false;
+			}
+		});
+		ok(hitOk, `${drive}: a dragged point ends where it was dropped (the turn before it follows)`);
+		ok(restOk, `${drive}: a drag moves only that point: the others stay`);
+		ok(headOk, `${drive}: a drag keeps the heading at the end (the last drive and the one before it may turn it)`);
+		if (drive === 'tank') ok(tankOk, 'tank: a drag never makes a strafe');
+		const firstMove = plan.steps.findIndex((s) => s.kind === 'move');
+		const split = S.splitMove(plan, firstMove, 10);
+		const sp = moves({ ...plan, steps: split });
+		ok(split.length === plan.steps.length + 1 && sp.length === before.length + 1 && near(sp[0].y, -50, 1e-6)
+			&& before.every((e, k) => near(e.x, sp[k + 1].x, 1e-6) && near(e.y, sp[k + 1].y, 1e-6)), `${drive}: a tap on a line puts a new point there; the route stays`);
+		ok(S.splitMove(plan, firstMove, 0.2) === null && S.splitMove(plan, firstMove, 29.8) === null, `${drive}: no new point on top of an end`);
+	}
+	ok(S.dragPoint({ drive: 'tank', start: { x: 0, y: 0, h: 0 }, steps: [{ kind: 'move', label: 'Out', inches: 20, dir: 0 }] }, 0, 10, 20).steps[1].label === 'Out',
+		'a drag keeps the team\'s own step name');
 	// Every page file parses (builder.js is never imported here: it needs the page). One syntax error stops the
 	// whole module in the browser, and the Auto builder button then does nothing.
 	const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'builder-check-'));
@@ -444,7 +598,7 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 	fs.rmSync(tmp, { recursive: true, force: true });
 	// Both pages use these (no copy of their own) and run tankSteps on every render.
 	const page = fs.readFileSync(path.join(dir, 'builder.js'), 'utf8');
-	ok(/S\.stepsToPoint\(/.test(page) && /S\.dragMove\(/.test(page) && /S\.tankSteps\(/.test(page) && /syncRobot\(\);\s*enforceTank\(\);/.test(page), 'builder.js: drive there, drag and every render use the shared tank rules');
+	ok(/S\.stepsToPoint\(/.test(page) && /S\.dragPoint\(/.test(page) && /S\.setTurnHeading\(/.test(page) && /S\.actionAt\(/.test(page) && /P\.facePart\(/.test(page) && /P\.splitPart\(/.test(page) && /S\.turnWhileDriving\(/.test(page) && /S\.tankSteps\(/.test(page) && /syncRobot\(\);\s*enforceTank\(\);/.test(page), 'builder.js: drive there, drag and every render use the shared tank rules');
 	const sitePage = siteDir() && path.join(siteDir(), 'steps.js');
 	if (sitePage && fs.existsSync(sitePage)) {
 		const sp = fs.readFileSync(sitePage, 'utf8');

@@ -226,6 +226,7 @@ in degrees, 0 = facing away, counterclockwise + ([the frame](odometry.md#the-fra
 | Code | The robot |
 | --- | --- |
 | `.turnTo(startDeg, endDeg)` | turns evenly from one heading to the other on the way |
+| `.turnTo(startDeg, endDeg, from, until)` | turns only on one stretch of the part (0 = its start, 1 = its end): `0, 0.3` turns first, then drives; `0.7, 1` drives first, then turns (on the last part, add `.holdEnd()` so the turn can finish) |
 | `.keepHeading(deg)` | keeps one heading the whole way (it slides sideways as needed) |
 | `.facePath()` | faces along the path, front first |
 | `.facePathBackwards()` | faces along the path, back first |

@@ -161,6 +161,7 @@ for a route that shares nothing. The decision table, naming, and worked examples
 | `move(label, inches, directionDeg, maxPower)` | degrees **clockwise** from forward: 0 forward, 90 right, 180 back, 270 left | mecanum strafes at any angle; a tank drive only 0 and 180 (any other angle stops with "Turn first, then move") |
 | `turn(label, degrees, maxPower)` | **counterclockwise +** | by an angle from where it is now |
 | `turnTo(label, headingDeg, maxPower)` | **counterclockwise +** | to a heading; 0 = the way it faced at the start (the IMU's heading, not the field's: see [driveTo](#drive-to-a-field-point-driveto)) |
+| `moveWithTurn(label, inches, directionDeg, headingDeg, maxPower)` | direction **clockwise from the start heading**; heading **counterclockwise +** (0 = the start heading) | mecanum only: drives and turns at the same time. The direction stays fixed on the field while it turns, so it is not "from forward" |
 
 Each waits until it is done. A move slows down near its end so it does not overshoot. It does not
 correct the heading on the way: after a bump or a long drive, add a `turnTo` to square up. A move that

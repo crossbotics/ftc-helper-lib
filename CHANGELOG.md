@@ -2,6 +2,40 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## v0.27.0 - 2026-11-04
+
+### Added
+
+- **Put a point between two in the auto builder** (Simple steps). Move the mouse over a drive's line on the map:
+  a white dot with a plus slides along it. A click splits that drive in two there; then drag the new point, or
+  add a step after it. Before, a click anywhere only added a step at the end.
+- **Put a step between two in the auto builder's list.** A **+** shows between two steps; press it and the add
+  buttons (and taps on the map) put steps there. It replaces the "add after the selected step" box.
+- **Turn knobs on the auto builder's map.** After each turn step the map draws the robot facing the way it ends,
+  with a yellow knob: drag it around to turn the step. Pedro parts that keep or turn a heading get one too.
+- **Pedro paths: put a point between two** (the dot on a part, or **+ point**): the part splits in two, the same
+  shape. `pathcore.js` `splitPart`.
+- **More "Tap adds" choices in the auto builder:** Simple steps **an action** (at the nearest point on the route;
+  on a line the drive splits there), and Pedro **turn to face** (the selected part ends facing the spot).
+  `stepscore.js` `actionAt`, `pathcore.js` `facePart`.
+- **Letters for actions in the auto builder:** points keep numbers on a dark round badge; actions get an orange
+  diamond with a letter (A, B, C...) on the map and beside them in the list. Simple steps now show where each
+  action happens on the map (click it to select its step); Pedro's actions along the path were numbered before.
+- **A menu on the auto builder's map:** right-click (or press and hold on a touch screen) for what can be done
+  there: add an action, put a point, add a step after, turn while driving, remove, drive or turn to face here.
+- **`Steps.moveWithTurn(label, inches, directionDeg, headingDeg, power)`**: drive and turn at the same time
+  (mecanum). In the auto builder: **turn while driving** on a drive (mecanum), else the robot drives, then turns.
+- **`PedroPath.turnTo(startDeg, endDeg, from, until)`**: a turn on one stretch of a part, so a path can turn
+  first, then drive, or drive, then turn. In the auto builder: the "when" list of "Turn from one heading to another".
+
+### Changed
+
+- **Dragging a point in the auto builder changes the turn too** (Simple steps, both drives). Before, a tank
+  drive's point only moved forward and back along its line. Now the turn before the drive follows the point
+  (a tank drive gets a turn when it needs one), and the other points stay where they were: the next drive is
+  aimed at its point again (when at most one turn or turnTo is between them). The step numbers on the map are white on a dark badge, easier to read.
+  Shared code: `stepscore.js` `dragPoint` and `splitMove` (crossbotics.com's path builder can use them too).
+
 ## v0.26.1 - 2026-11-04
 
 ### Fixed

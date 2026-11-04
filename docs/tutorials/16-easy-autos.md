@@ -104,6 +104,8 @@ Read it out loud: it IS the plan. Things to notice:
   rises while the robot drives. `claw.goToStep("CLOSED")` waits until the claw should be closed.
 - **Moves and turns:** `move(name, inches, direction, power)`, with direction 0 = forward, 90 = right,
   180 = back, -90 = left. Turns: positive degrees = left. `turnTo(..., 0, ...)` faces the start direction.
+  A mecanum robot can also drive AND turn at once: `moveWithTurn(name, inches, direction, heading, power)`.
+  Its direction counts from the start direction (like `turnTo`), because the robot turns on the way.
 - **`waitUntil` has a time limit** (2 s). `lift::isAtTarget` is short for `() -> lift.isAtTarget()`:
   a question the routine asks over and over. If the lift never gets there, the routine goes on and the
   report says "timed out".

@@ -3,6 +3,7 @@ package com.crossbotics.ftchelper.pedro;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.crossbotics.ftchelper.odometry.PoseTracker;
 import com.crossbotics.ftchelper.util.FieldPose;
@@ -107,6 +108,23 @@ public class PedroTest {
         assertEquals(30, end.x(), 1e-6);
         assertEquals(-30, end.y(), 1e-6);
         assertEquals(-45, PedroFrame.fromPedro(end).headingDeg, 1e-6);
+    }
+
+    // turnTo(a, b, from, until): the heading stays a before "from", turns evenly, then stays b after "until".
+    @Test public void aTurnCanHappenOnOneStretchOfThePart() {
+        double a = PedroFrame.headingToPedro(0), b = PedroFrame.headingToPedro(90);
+        Path last = PedroPath.line(0, 0, 0, 40).turnTo(0, 90, 0.6, 1).build(false);
+        assertEquals(a, last.heading(0.3), 1e-6);                  // driving first, no turn yet
+        assertEquals(a + (b - a) * 0.5, last.heading(0.8), 1e-6);  // half way through the turn
+        assertEquals(b, last.heading(1), 1e-6);
+        Path first = PedroPath.line(0, 0, 0, 40).turnTo(0, 90, 0, 0.25).build(false);
+        assertEquals(b, first.heading(0.5), 1e-6);                 // turned first, then drives facing 90
+        Path even = PedroPath.line(0, 0, 0, 40).turnTo(0, 90, 0, 1).build(false);
+        assertEquals(a + (b - a) * 0.5, even.heading(0.5), 1e-6);
+        try {
+            PedroPath.line(0, 0, 0, 40).turnTo(0, 90, 0.5, 0.5);
+            fail("until must be more than from");
+        } catch (IllegalArgumentException expected) { /* fine */ }
     }
 
     // The simulator draws the planned path: points from start to end, mirrored as driven.

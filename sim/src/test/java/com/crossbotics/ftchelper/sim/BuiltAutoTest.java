@@ -318,6 +318,51 @@ public class BuiltAutoTest {
         }
     }
 
+    // "Drive and turn at once" (moveTurn, Steps.moveWithTurn) on a mecanum robot: it drives out 24 in and
+    // ends facing 90 (left). A tank drive refuses it at INIT, with the step's number.
+    @Test public void aDriveAndTurnRunsOnMecanumOnly() throws Exception {
+        String json = "{\"name\":\"x\",\"start\":{\"x\":-36,\"y\":-60,\"h\":0},\"steps\":["
+                + "{\"kind\":\"moveTurn\",\"label\":\"Out and turn\",\"inches\":24,\"dir\":0,\"heading\":90,\"power\":0.6}]}";
+        try {
+            BuiltAuto.Program.parse(json).check(new com.crossbotics.ftchelper.examples.gobildabot.Robot());
+            fail("drive and turn at once was accepted on a tank drive");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("step 1 (\"Out and turn\")") && e.getMessage().contains("not possible on a tank drive"));
+        }
+        Path file = generate(com.crossbotics.ftchelper.examples.lessonbot.Robot.class);
+        BuiltAuto.program = BuiltAuto.Program.parse(json);
+        BuiltAuto.robotClass = com.crossbotics.ftchelper.examples.lessonbot.Robot.class;
+        try (SimRun s = new SimRun(file.toString())) {
+            runToTheEnd(s);
+            List<String> report = com.crossbotics.ftchelper.match.MatchMemory.lastReport();
+            assertTrue(String.join("\n", report), report.contains("Out and turn: done"));
+            assertEquals(-36, s.robot().x, 4);
+            assertEquals(-36, s.robot().y, 4);
+            assertEquals(90, s.robot().headingDeg, 10);
+        }
+    }
+
+    // A Pedro part's turn on one stretch (from, to) reaches PedroPath.turnTo(a, b, from, until).
+    @Test public void aPedroTurnStretchIsRead() throws Exception {
+        String json = "{\"name\":\"x\",\"mode\":\"pedro\",\"start\":{\"x\":-56,\"y\":-61,\"h\":0},\"steps\":[{\"kind\":\"follow\",\"label\":\"Go\",\"path\":{\"parts\":["
+                + "{\"pts\":[[-56,-61],[-30,-30]],\"heading\":{\"mode\":\"turn\",\"a\":0,\"b\":90,\"from\":0.7,\"to\":1}}],\"holdSec\":3},\"along\":[]}]}";
+        BuiltAuto.Program p = BuiltAuto.Program.parse(json);
+        p.check(new com.crossbotics.ftchelper.examples.pedrobot.Robot());
+        assertEquals(1, p.steps.size());
+        // On the Pedro robot: it drives the line and ends facing 90 (it turned at the end; the hold lets it finish).
+        Path file = generate(com.crossbotics.ftchelper.examples.pedrobot.Robot.class);
+        BuiltAuto.program = p;
+        BuiltAuto.robotClass = com.crossbotics.ftchelper.examples.pedrobot.Robot.class;
+        try (SimRun s = new SimRun(file.toString())) {
+            runToTheEnd(s);
+            List<String> report = com.crossbotics.ftchelper.match.MatchMemory.lastReport();
+            assertTrue(String.join("\n", report), report.contains("Go: done"));
+            assertEquals(-30, s.robot().x, 3);
+            assertEquals(-30, s.robot().y, 3);
+            assertEquals(90, s.robot().headingDeg, 10);
+        }
+    }
+
     // The builder's suggestions come from the chosen Robot class: its parts' commands, its Actions, its TeleOp.
     @Test public void theSuggestionsComeFromTheRobotClass() throws Exception {
         try (SimRun s = new SimRun("robots/starter-bot-gobilda.properties")) {
