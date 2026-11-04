@@ -117,6 +117,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     private Flywheel flywheel;
     private Tunable speedRpm, stepRpm;
     private int adjustSteps = 0;
+    // A speed one action asked for (fireAction(n, rpm), useSpeed): it wins over speedRpm and the shot table. NaN = none.
+    private double fixedRpm = Double.NaN;
     // The speed trim (percent, 0 = none), one press of the D-pad, and the most it may go each way.
     private double trimPct = 0;
     private double trimStepPct = 1, trimMaxPct = 15;
@@ -790,6 +792,70 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     }
 
     /**
+     * Like {@link #fireAction(int)}, at this flywheel speed: for a robot with no camera, whose autonomous
+     * shoots from a spot it knows. It sets the speed, waits for the wheel to reach it (the usual "ready"
+     * check), fires, and then goes back to the usual speed (speedRpm or the shot table). Stopped or timed
+     * out: back to the usual speed too. In an autonomous: {@code .action(robot.launcher.fireAction(2, 2250))};
+     * the auto builder's "flywheel speed" box on a fire action writes it.
+     *
+     * @param count pieces to fire, 1 or more
+     * @param rpm   the flywheel speed, RPM (above 0, at most the motor's top speed)
+     */
+    public Action fireAction(int count, double rpm) {
+        if (count < 1) throw new IllegalArgumentException(name() + ".fireAction(" + count + ", ...): fire at least 1 piece");
+        checkRpm(rpm, "fireAction(" + count + ", " + rpm + ")");
+        return Action.named((count == 1 ? "Fire 1" : "Fire " + count) + " at " + Math.round(rpm) + " RPM")
+                .then(() -> useSpeed(rpm), () -> fire(count))
+                .waitUntil("the shots", () -> !isShooting(), 3 + 2.0 * count)
+                .then(this::useNormalSpeed);
+    }
+
+    /**
+     * Like {@link #fireAllAction()}, at this flywheel speed (see {@link #fireAction(int, double)}). In an
+     * autonomous: {@code .action(robot.launcher.fireAllAction(2250))}.
+     *
+     * @param rpm the flywheel speed, RPM (above 0, at most the motor's top speed)
+     */
+    public Action fireAllAction(double rpm) {
+        checkRpm(rpm, "fireAllAction(" + rpm + ")");
+        int most = mostHeld();
+        return Action.named("Fire all at " + Math.round(rpm) + " RPM")
+                .then(() -> useSpeed(rpm), () -> { int n = heldNow(most); if (n > 0) fire(n); })
+                .waitUntil("the shots", () -> !isShooting(), 3 + 2.0 * most)
+                .then(this::useNormalSpeed);
+    }
+
+    /**
+     * Uses this flywheel speed from now on, instead of speedRpm or the shot table, until
+     * {@link #useNormalSpeed()}. The speed trim still applies. Most code wants
+     * {@link #fireAction(int, double)} instead: it goes back by itself.
+     *
+     * @param rpm the flywheel speed, RPM; 0 or NaN = back to the usual speed
+     */
+    public void useSpeed(double rpm) {
+        touch();
+        fixedRpm = Double.isNaN(rpm) || rpm <= 0 ? Double.NaN : rpm;
+    }
+
+    /** Back to the usual speed: speedRpm, or the shot table with the distance. */
+    public void useNormalSpeed() {
+        useSpeed(Double.NaN);
+    }
+
+    /** The speed set by {@link #useSpeed} or a fire action with a speed (RPM), NaN when none. */
+    public double fixedSpeedRpm() {
+        return fixedRpm;
+    }
+
+    private void checkRpm(double rpm, String call) {
+        if (Double.isNaN(rpm) || rpm <= 0) throw new IllegalArgumentException(name() + "." + call + ": the speed must be above 0 RPM");
+        if (flywheel != null && rpm > flywheel.getMaxRpm()) {
+            throw new IllegalArgumentException(name() + "." + call + ": " + Math.round(rpm) + " RPM is above the motor's top speed ("
+                    + Math.round(flywheel.getMaxRpm()) + " RPM)");
+        }
+    }
+
+    /**
      * A ready-made action: spins up (the speed from the distance, with {@code speedFromDistance}) and is
      * done when the wheel is at speed and every check passes, or after {@code timeoutSec} (the report says
      * "timed out"). Use it before driving to the shooting spot, so the first shot goes at once. In an
@@ -1364,7 +1430,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
                 }
             }
         }
-        if (speedMode.isOn() && !tables.isEmpty() && usesDistance()) {
+        if (Double.isNaN(fixedRpm) && speedMode.isOn() && !tables.isEmpty() && usesDistance()) {
             // The camera first (a fresh picture with a distance), then the odometry.
             TargetObservation seen = robot.aim().cameraGoal(distanceCamera);
             if (seen == null || !seen.hasDistance()) seen = robot.aim().fromOdometry();
@@ -1391,7 +1457,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
                 hood.tableDriven = false;
                 hood.loop(false);
             }
-            part.setRpm(speedRpm.get() + adjustSteps * stepRpm.get());
+            // a speed an action asked for, else speedRpm (and the D-pad steps)
+            part.setRpm(!Double.isNaN(fixedRpm) ? fixedRpm : speedRpm.get() + adjustSteps * stepRpm.get());
         }
         // The trim multiplies whichever speed was chosen: +3% = x 1.03. Never past the motor's top speed:
         // the flywheel would cut it anyway, silently, and the trim on the screen would be a lie.
@@ -1441,6 +1508,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
 
     @Override
     void halt() {
+        fixedRpm = Double.NaN;                    // a fire action's own speed ends with it
         if (ejecting && part != null) endEject();
         shotsAtPause = 0;                         // a cancel while paused drops them too
         if (part != null) part.stopShooting();   // drop the shots still waiting; keep the speed

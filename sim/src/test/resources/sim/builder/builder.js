@@ -1098,12 +1098,21 @@ for (const b of $('bAdd').querySelectorAll('[data-add]')) {
  * knowing the name), and a text box only for "type your own". data-k="codeSel" for the list, "code" for the box.
  */
 function codePick(list, code, typed, ph, listId) {
-	const known = list.includes(code);
+	const plain = S.withFireSpeed(code, null);   // a fire action's own speed has its own box (speedBox): the list shows the plain one
+	const known = list.includes(plain);
 	const text = typed || !known || !list.length;
 	const box = `<input type="text" class="code" data-k="code" spellcheck="false" autocapitalize="off" value="${esc(code ?? '')}" placeholder="${ph}" list="${listId}">`;
 	if (!list.length) return box;
-	return `<select data-k="codeSel" class="code" aria-label="Pick one">${list.map((c) => `<option value="${esc(c)}"${c === code && !text ? ' selected' : ''}>${esc(c)}</option>`).join('')}`
+	return `<select data-k="codeSel" class="code" aria-label="Pick one">${list.map((c) => `<option value="${esc(c)}"${c === plain && !text ? ' selected' : ''}>${esc(c)}</option>`).join('')}`
 		+ `<option value="__own"${text ? ' selected' : ''}>type your own...</option></select>${text ? box : ''}`;
+}
+
+// A fire action's own flywheel speed (fireAction(n, rpm), fireAllAction(rpm)): for a robot with no camera,
+// shooting from a spot it knows. Empty: the usual speed (speedRpm, or the shot table). '' for other code.
+function speedBox(code) {
+	const f = S.fireSpeed(code);
+	if (!f) return '';
+	return `<label title="Empty: the usual speed (speedRpm, or the shot table with a camera). A number: this shot's own speed, then back to the usual one">flywheel <input type="number" min="0" step="25" data-k="fireRpm" value="${f.rpm ?? ''}" placeholder="usual"> RPM</label>`;
 }
 
 // Mecanum: a drive turns WHILE it drives (moveWithTurn) or drives and then turns. merge: the turn before it goes in.
@@ -1138,7 +1147,7 @@ function stepForm(s, i) {
 		case 'wait': return `<div class="row">${name('Let it settle')}<label><input type="number" min="0" step="0.1" data-k="sec" value="${fmt(+s.sec)}"> s</label></div>`;
 		case 'run': return `<div class="row">${name(labelFor(commandsNow()[0]))}</div><div class="row">${code(commandsNow()[0] || 'robot.part::method')}</div>`;
 		case 'action': case 'alongside':
-			return `<div class="row">${code(actionsNow()[0] || 'Actions.name(robot)')}</div><div class="row"><label><input type="checkbox" data-k="wait"${s.kind === 'action' ? ' checked' : ''}> wait until done</label>
+			return `<div class="row">${code(actionsNow()[0] || 'Actions.name(robot)')}</div><div class="row">${speedBox(s.code)}<label><input type="checkbox" data-k="wait"${s.kind === 'action' ? ' checked' : ''}> wait until done</label>
 				${s.kind === 'action' ? `<label>at most <input type="number" min="0.5" step="0.5" data-k="timeout" value="${fmt(+s.timeout)}"> s</label>` : ''}</div>`;
 		case 'aim': return `<div class="row">${name('Aim')}<label>at most <input type="number" min="0.5" step="0.5" data-k="timeout" value="${fmt(+s.timeout)}"> s</label>
 				<label>sweep <input type="number" min="0" max="180" step="5" data-k="sweep" value="${fmt(+(s.sweep || 0))}"> deg each way</label></div>
@@ -1233,11 +1242,14 @@ function stepInput(i, t) {
 		if (k === 'dirSel') { if (t.value !== 'other') s.dir = +t.value; else if (DIRS.some(([d]) => d === +s.dir)) s.dir = 45; }
 		else if (k === 'dir' && B.steps.plan.drive === 'tank' && S.sideways(v)) return;   // a tank drive: forward or back only
 		else if (k === 'wait') { if (t.checked) { s.kind = 'action'; s.timeout = s.timeout ?? ACTION_LIMIT_SEC; } else s.kind = 'alongside'; }
+		else if (k === 'fireRpm') s.code = S.withFireSpeed(s.code, t.value === '' ? null : v);
 		else if (k === 'codeSel') {
 			if (t.value === '__own') { s.typed = true; return; }
 			// a command step's name follows the command until the team types their own
 			if (s.kind === 'run' && (!s.label || s.label === labelFor(s.code) || s.label === 'Start something')) s.label = labelFor(t.value);
-			s.code = t.value; delete s.typed;
+			// another fire action keeps the speed typed in its box
+			const kept = (S.fireSpeed(s.code) || {}).rpm;
+			s.code = kept ? S.withFireSpeed(t.value, kept) : t.value; delete s.typed;
 		}
 		else if (k === 'label' || k === 'code') s[k] = t.value;
 		else if (Number.isFinite(v)) s[k] = v;   // out of range stays: the checks say what is wrong
@@ -1349,7 +1361,7 @@ function renderActions() {
 				: `<label><input type="number" step="${a.kind === 'fraction' ? 0.05 : a.kind === 'part' ? 1 : 0.5}" data-k="value" value="${value}"> ${UNIT[a.kind] || ''}</label>`}</div>
 			<div class="row"><label><input type="radio" name="bWhat${i}" value="command" data-k="what"${a.what !== 'action' ? ' checked' : ''}> name + command</label>
 				<label><input type="radio" name="bWhat${i}" value="action" data-k="what"${a.what === 'action' ? ' checked' : ''}> an action</label></div>
-			${a.what === 'action' ? `<div class="row"><label class="grow b-pick">Action ${codePick(actionsNow(), a.code, a.typed, 'Actions.name(robot)', 'bActionList')}</label></div>`
+			${a.what === 'action' ? `<div class="row"><label class="grow b-pick">Action ${codePick(actionsNow(), a.code, a.typed, 'Actions.name(robot)', 'bActionList')}</label></div>${speedBox(a.code) ? `<div class="row">${speedBox(a.code)}</div>` : ''}`
 				: `<div class="row"><label class="grow">Name <input type="text" data-k="label" value="${esc(a.label)}"></label></div><div class="row"><label class="grow b-pick">Command ${codePick(commandsNow(), a.code, a.typed, 'robot.part::method', 'bCommands')}</label></div>`}`;
 		div.querySelector('[data-sel]').onclick = () => { B.selAction = i; render(); };
 		div.querySelector('[data-del]').onclick = () => change(() => { st.actions.splice(i, 1); B.selAction = null; });
@@ -1374,10 +1386,12 @@ function actInput(i, t) {
 			a.what = t.value;
 			if (a.what === 'action' && !/^Actions\./.test(a.code)) a.code = actionsNow()[0] || '';
 			if (a.what === 'command' && /^Actions\./.test(a.code)) a.code = newAlong().code;
-		} else if (k === 'codeSel') {
+		} else if (k === 'fireRpm') a.code = S.withFireSpeed(a.code, t.value === '' ? null : v);
+		else if (k === 'codeSel') {
 			if (t.value === '__own') { a.typed = true; return; }
 			if (a.what !== 'action' && (!a.label || a.label === labelFor(a.code))) a.label = labelFor(t.value);
-			a.code = t.value; delete a.typed;
+			const kept = (S.fireSpeed(a.code) || {}).rpm;
+			a.code = kept ? S.withFireSpeed(t.value, kept) : t.value; delete a.typed;
 		} else if (k === 'label' || k === 'code') a[k] = t.value;
 		else if (Number.isFinite(v)) a[k] = v;
 	});

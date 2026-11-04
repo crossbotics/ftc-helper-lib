@@ -348,6 +348,10 @@ What a team does, step by step:
      **Put a step between two:** point between two steps in the list and press the **+** that shows there.
      The buttons move into that gap: each one you press (and each tap on the map) goes in there, one after
      the other, until you press **Done**. **Start over** (beside Undo) removes every step; Undo brings them back.
+     **A fire action's own speed:** a launcher's "Fire" action (`fireAction(n)`, `fireAllAction()`) has a
+     **flywheel** box. Empty: the usual speed (`speedRpm`, or the shot table with a camera). A number: that
+     shot's own speed in RPM, then back to the usual one. For a robot with no camera, it is the way to
+     shoot from two spots at two speeds (the code gets `fireAllAction(2250)`).
      Tap the field map to add a drive to that spot. It uses the way the robot already faces: a spot ahead
      drives forward, a spot behind **backs up** (a mecanum robot slides straight there, with no turn; a tank
      drive makes the smaller turn first: its front toward a spot more ahead, its back toward a spot more

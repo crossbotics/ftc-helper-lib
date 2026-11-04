@@ -47,6 +47,34 @@ export const COMMON_ACTIONS = ['robot.launcher.fireAllAction()', 'robot.launcher
 	'Actions.scoreHigh(robot)', 'Actions.scoreLow(robot)', 'Actions.fireAll(robot)',
 	'Actions.fireAllWithIntake(robot)', 'Actions.grab(robot)', 'Actions.stow(robot)'];
 
+// A launcher's fire action, with or without its own flywheel speed (the builder's "flywheel speed" box):
+// robot.launcher.fireAction(2), fireAction(2, 2250), fireAllAction(), fireAllAction(2250).
+const FIRE_CALL = /^(\s*robot\.\w+\.)(fireAction|fireAllAction)\(\s*([^)]*?)\s*\)(\s*;?\s*)$/;
+
+/**
+ * The flywheel speed a fire action's code asks for: { rpm } (rpm null = the usual speed), or null when the
+ * code is not a launcher's fireAction / fireAllAction (or its values are not plain numbers).
+ */
+export function fireSpeed(code) {
+	const m = FIRE_CALL.exec(code || '');
+	if (!m) return null;
+	const args = m[3] === '' ? [] : m[3].split(',').map((a) => a.trim());
+	if (args.some((a) => !/^-?\d+(\.\d+)?$/.test(a))) return null;
+	const n = m[2] === 'fireAction' ? 1 : 0;   // fireAction's first value is the count
+	if (args.length !== n && args.length !== n + 1) return null;
+	return { rpm: args.length === n + 1 ? +args[n] : null };
+}
+
+/** The fire action's code with this flywheel speed (null, 0 or empty: the usual speed). Other code: unchanged. */
+export function withFireSpeed(code, rpm) {
+	const m = FIRE_CALL.exec(code || '');
+	if (!m || !fireSpeed(code)) return code;
+	const args = m[3] === '' ? [] : m[3].split(',').map((a) => a.trim());
+	const keep = m[2] === 'fireAction' ? args.slice(0, 1) : [];
+	if (Number.isFinite(+rpm) && +rpm > 0 && rpm !== '' && rpm !== null) keep.push(String(Math.round(+rpm)));
+	return `${m[1]}${m[2]}(${keep.join(', ')})${m[4]}`;
+}
+
 const clampPower = (p) => Math.max(0.1, Math.min(1, Number.isFinite(+p) ? +p : 0.5));   // AutoDrive clamps to 0.1..1
 
 /** A move's direction as a field vector: dir clockwise from the robot's front, robot facing h. */

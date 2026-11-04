@@ -667,6 +667,12 @@ nothing. With a turret that follows the goal (`turretbot`, `v2bot`), `aimAtGoal`
 aim instead: the robot does not turn, and `readyToLaunch` can come first (the turret aims while the
 wheel spins up).
 
+**No camera?** A robot with no camera has no distance, so it shoots at `speedRpm`. An autonomous that
+shoots from two spots gives each shot its own speed: `.action(robot.launcher.fireAllAction(2250))` fires
+every piece at 2250 RPM, then goes back to `speedRpm` (`fireAction(2, 2250)` fires two). Find each spot's
+speed in the simulator first, then on the field. The auto builder writes it from the **flywheel** box of a
+fire action.
+
 **Where to start:** the camera must see the goal. At the start, our HIVE's up CELL is on the HIVE's
 right side (seen from our wall), and its tags face that way, so `flywheelbot` starts on the 2nd tile
 right of the centre line, drives 24 in, and aims from there. Its launcher shoots 75 degrees up, so the

@@ -4,6 +4,18 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ## Unreleased
 
+### Added
+
+- **A flywheel speed for one fire action:** `robot.launcher.fireAction(n, rpm)` and `fireAllAction(rpm)` fire at that
+  speed, then go back to the usual one (`speedRpm` or the shot table). For a robot with no camera that shoots
+  from more than one spot. The auto builder's fire actions get a **flywheel** box that writes it. Also
+  `useSpeed(rpm)` / `useNormalSpeed()`.
+
+### Fixed
+
+- **Simulator scenarios:** `expect robot heading = -180 5` now passes at 178.6 (an angle goes the short way
+  round). Before, a robot facing straight back could fail the check by 358 degrees.
+
 ### Changed
 
 - **Auto builder: a tap drives the way the robot already faces.** A spot behind the robot now backs up to it.
