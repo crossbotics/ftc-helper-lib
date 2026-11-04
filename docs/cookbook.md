@@ -2163,7 +2163,7 @@ s.start("Against our wall, facing the field", 0)
 
 **Why:** each move is measured from where the robot is now, so the steps read like directions to a person.
 `moveWithTurn` is the one exception: it drives and turns at once, so its direction is fixed on the field,
-counted like `turnTo`'s heading from the way the robot faced at the start (180 = back toward your wall).
+counted like `turnTo`'s heading from the way the robot faced at the start (180 = the opposite way).
 **More:** [Driving: move, turn, turnTo](guides/autonomous-builder.md#driving-move-turn-turnto).
 
 ### Does my autonomous need a RED version?

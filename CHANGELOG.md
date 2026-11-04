@@ -33,7 +33,7 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - **Dragging a point in the auto builder changes the turn too** (Simple steps, both drives). Before, a tank
   drive's point only moved forward and back along its line. Now the turn before the drive follows the point
   (a tank drive gets a turn when it needs one), and the other points stay where they were: the next drive is
-  aimed at its point again. The step numbers on the map are white on a dark badge, easier to read.
+  aimed at its point again (when at most one turn or turnTo is between them). The step numbers on the map are white on a dark badge, easier to read.
   Shared code: `stepscore.js` `dragPoint` and `splitMove` (crossbotics.com's path builder can use them too).
 
 ## v0.26.0 - 2026-11-03

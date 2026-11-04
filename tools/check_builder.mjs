@@ -471,16 +471,23 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 		ok(near(S.simulate({ ...plan, steps: a }).ends[1].h, -45) && a[1].deg === -75, 'setTurnHeading: a turn turns by what it needs');
 		ok(near(S.simulate({ ...plan, steps: b }).ends[2].h, 120) && b[2].heading === 90, 'setTurnHeading: a turnTo gets the heading (from the start heading)');
 		ok(S.setTurnHeading(plan, 0, 10) === null, 'setTurnHeading: not a drive');
-		// the next point stays (its drive is aimed again), except a turn right before its drive, which aims it
+		// the next point stays (its drive is aimed again), except a turn or turnTo right before its drive, which aims it
 		for (const drive of ['tank', 'mecanum']) {
 			const p2 = { drive, start: { x: 0, y: -60, h: 0 }, steps: [{ kind: 'move', label: 'A', inches: 20, dir: 0, power: 0.6 }, { kind: 'turnTo', label: 'U', heading: 0, power: 0.5 },
-				{ kind: 'move', label: 'B', inches: 20, dir: 0, power: 0.6 }, { kind: 'turn', label: 'F', deg: 90, power: 0.5 }, { kind: 'move', label: 'C', inches: 10, dir: 0, power: 0.6 }] };
+				{ kind: 'turn', label: 'G', deg: 0, power: 0.5 }, { kind: 'move', label: 'B', inches: 20, dir: 0, power: 0.6 }, { kind: 'turn', label: 'F', deg: 90, power: 0.5 }, { kind: 'move', label: 'C', inches: 10, dir: 0, power: 0.6 }] };
 			const old = S.simulate(p2).ends;
 			const a2 = S.setTurnHeading(p2, 1, 45), e2 = S.simulate({ ...p2, steps: a2 }).ends;
-			const b = e2[a2.findIndex((st) => st.label === 'B')];
-			ok(near(b.x, old[2].x, 0.6) && near(b.y, old[2].y, 0.6), `${drive}: a turned knob keeps the next point`);
-			const c2 = S.setTurnHeading(p2, 3, 0), e3 = S.simulate({ ...p2, steps: c2 }).ends;
-			ok(c2[3].deg === 0 && near(e3[4].y, old[2].y + 10, 0.01), `${drive}: a turn right before its drive swings that drive`);
+			const bi = a2.findIndex((st) => st.label === 'B');
+			ok(near(e2[bi].x, old[3].x, 0.6) && near(e2[bi].y, old[3].y, 0.6), `${drive}: a turned knob keeps the next point`);
+			const c2 = S.setTurnHeading(p2, 4, 0), e3 = S.simulate({ ...p2, steps: c2 }).ends;
+			ok(c2[4].deg === 0 && near(e3[5].y, old[3].y + 10, 0.01), `${drive}: a turn right before its drive swings that drive`);
+			// a turnTo right before its drive swings it too (no opposite turn added: Fable's review)
+			const p3 = { drive, start: { x: 0, y: 0, h: 0 }, steps: [{ kind: 'move', label: 'A', inches: 20, dir: 0, power: 0.6 }, { kind: 'turnTo', label: 'U', heading: 0, power: 0.5 }, { kind: 'move', label: 'B', inches: 20, dir: 0, power: 0.6 }] };
+			const t3 = S.setTurnHeading(p3, 1, 45), e4 = S.simulate({ ...p3, steps: t3 }).end;
+			ok(t3.length === 3 && t3[1].heading === 45 && near(e4.h, 45) && !near(e4.x, 0, 1), `${drive}: a turnTo right before its drive swings that drive`);
+			// a drag through a turnTo keeps the point after it (Codex's review)
+			const d3 = S.dragPoint(p3, 0, 10, 20), e5 = S.simulate({ ...p3, steps: d3.steps });
+			ok(near(e5.end.x, 0, 0.6) && near(e5.end.y, 40, 0.6), `${drive}: a drag keeps the next point across a turnTo`);
 		}
 	}
 	// "An action" tapped on the map: on a line the drive splits there; at a point, right after the drive that arrives.
@@ -497,6 +504,23 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 		ok(S.actionAt(plan, 0, -61, act).i === 0, 'actionAt: at the start, first');
 		ok(S.actionAt(plan, 60, 60, act) === null, 'actionAt: far from the route, nothing');
 		ok(plan.steps.length === 3, 'actionAt: the plan given is not changed');
+	}
+	// Pedro: reviews' findings. Turn to face starts from the heading the robot arrives with; a split never
+	// makes an empty stretch; a bad stretch is found; a stretch on a curve follows the distance (like Pedro).
+	{
+		const two = { start: [0, 0], parts: [{ ctrl: [], end: [0, 20], heading: { mode: 'keep', a: 45 }, maxSpeed: null }, { ctrl: [], end: [20, 20], heading: { mode: 'path' }, maxSpeed: null }], holdSec: 0 };
+		ok(P.facePart(two, 1, 20, 40)[1].heading.a === 45, 'facePart: the turn starts where the part before ended (no snap at the join)');
+		ok(P.facePart(two, 0, 0, 40, 30)[0].heading.a === 30, 'facePart: part 1 starts from the start heading');
+		const late = { start: [0, 0], parts: [{ ctrl: [], end: [0, 40], heading: { mode: 'turn', a: 0, b: 90, from: 0.7, to: 1 }, maxSpeed: null }], holdSec: 0 };
+		const sp = P.splitPart(late, 0, 0.701).parts.map((q) => q.heading);
+		ok(sp.every((h) => !P.badSpan(h)), 'splitPart: no empty stretch after rounding');
+		ok(P.badSpan({ mode: 'turn', a: 0, b: 90, from: 0.5, to: 0.5 }) && !P.badSpan({ mode: 'turn', a: 0, b: 90 }) && !P.badSpan(late.parts[0].heading), 'badSpan: from >= to is found');
+		const curve = { start: [0, 0], parts: [{ ctrl: [[0, 10]], end: [100, 10], heading: { mode: 'turn', a: 0, b: 90, from: 0.7, to: 1 }, maxSpeed: null }], holdSec: 0 };
+		const cs = P.sample(curve);
+		let run = 0;
+		const len = cs.slice(1).reduce((acc, q, k) => acc + Math.hypot(q.x - cs[k].x, q.y - cs[k].y), 0);
+		const before = cs.filter((q, k) => { if (k) run += Math.hypot(q.x - cs[k - 1].x, q.y - cs[k - 1].y); return run / len < 0.69; });
+		ok(before.every((q) => near(q.h, 0, 1e-6)), 'Pedro curve: no turn before 70% of the distance');
 	}
 	// Pedro "turn to face": the part ends facing the point.
 	{

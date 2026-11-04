@@ -349,6 +349,9 @@ function work() {
 	if (st.mode === 'follow' && lastPart?.heading.mode === 'turn' && P.turnSpan(lastPart.heading).to > 0.95 && P.turnSpan(lastPart.heading).from > 0 && !(path.holdSec > 0)) {
 		checks.push({ level: 'warn', text: `Part ${path.parts.length} turns at the end: the path can end before the turn does. Tick "Hold the end" so the robot finishes turning.` });
 	}
+	path.parts.forEach((part, i) => {
+		if (P.badSpan(part.heading)) checks.push({ level: 'bad', text: `Part ${i + 1}: the turn's stretch must go from 0 to 1, with "to" more than "from" (now ${part.heading.from ?? 0} to ${part.heading.to ?? 1}). Run stops at INIT (PedroPath.turnTo refuses it).` });
+	});
 	if (st.mirror && field && /BIOBUZZ/.test(field.season)) checks.push({ level: 'warn', text: 'BIOBUZZ: red\'s side is rotated 180°, not mirrored. With mirrorForRed() true, the other alliance drives to the wrong places.' });
 	const order = P.ordered(st.actions, m);
 	for (const p of P.checkActions(st.actions, m, { step: st.mode, label: st.label })) {
@@ -648,7 +651,7 @@ function tapAt(x, y, tool) {
 			// the selected part (else the last) ends facing the point; no part yet: the start turns to face it
 			if (!path.parts.length) { const s0 = startNow(); change(() => setStartHeading(Math.round(P.headingOf(x - +s0.x, y - +s0.y)))); return; }
 			const i = path.parts[B.selPart] ? B.selPart : path.parts.length - 1;
-			const parts = P.facePart(path, i, x, y);
+			const parts = P.facePart(path, i, x, y, +st.start.h || 0);
 			if (parts) change(() => { path.parts = parts; B.selPart = i; });
 			return;
 		}
@@ -848,8 +851,14 @@ svg.addEventListener('pointerdown', (evt) => {
 });
 svg.addEventListener('contextmenu', (evt) => {
 	evt.preventDefault();
-	drag = null;
-	openMenu(evt.clientX, evt.clientY, toField(svg, evt), evt.target.closest('.bh')?.dataset.h);
+	// A phone's press and hold sends this too (before our own timer): the press may have split a line at
+	// once; the menu is wanted instead, so that split goes, and the menu is for the spot as it was.
+	const d = drag;
+	drag = null; dragBase = null;
+	if (d) clearTimeout(d.hold);
+	if (d?.added) { B = { ...JSON.parse(d.before), open: true }; render(); }
+	const at = toField(svg, evt);
+	openMenu(evt.clientX, evt.clientY, at, d?.added ? undefined : evt.target.closest('.bh')?.dataset.h);
 });
 svg.addEventListener('pointermove', (evt) => {
 	if (!drag) { const [x, y] = toField(svg, evt); showSpot(lineSpot(x, y)); return; }
@@ -1158,7 +1167,7 @@ function renderSteps() {
 	$('bAddStrafe').hidden = tank;
 	renderTankNotice();
 	// The add buttons sit above the list, or in the gap where a "+" was pressed (B.at: steps go in there).
-	if (B.at != null && !(B.at >= 0 && B.at < steps.length)) B.at = null;
+	if (B.at != null && !(B.at >= 0 && B.at <= steps.length && steps.length)) B.at = null;
 	steps.forEach((s, i) => {
 		const gap = document.createElement('div');
 		gap.className = 'b-gap' + (B.at === i ? ' on' : '');
@@ -1195,6 +1204,15 @@ function renderSteps() {
 		div.addEventListener('focusin', () => { B.sel = i; });
 		box.appendChild(div);
 	});
+	// "Add a step after" the last one: the same box, at the end of the list
+	if (B.at != null && B.at === steps.length) {
+		const gap = document.createElement('div');
+		gap.className = 'b-gap on';
+		gap.innerHTML = `<div class="row"><b>Add here, after step ${steps.length}:</b> <span class="muted">a button below, or tap the map</span><button class="small" data-gapx>Done</button></div>`;
+		gap.appendChild($('bAdd'));
+		gap.querySelector('[data-gapx]').onclick = () => { B.at = null; render(); };
+		box.appendChild(gap);
+	}
 	if (focused) {
 		const e = box.querySelector(`[data-i="${focused[0]}"] [data-k="${focused[1]}"]`);
 		if (e && e.type !== 'checkbox') { e.focus({ preventScroll: true }); try { if (focused[2] != null) e.setSelectionRange(focused[2], focused[2]); } catch { /* number inputs */ } }

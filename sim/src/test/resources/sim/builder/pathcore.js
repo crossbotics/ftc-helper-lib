@@ -69,10 +69,20 @@ export function turnSpan(h) {
 	const to = Number.isFinite(+h.to) ? Math.max(0, Math.min(1, +h.to)) : 1;
 	return to > from ? { from, to } : { from: 0, to: 1 };
 }
-// How much of a turn is done at t (0..1): none before its stretch, all after it.
-function turnShare(h, t) {
+// True when a turn has its own stretch (not all of the part).
+const partial = (h) => { const { from, to } = turnSpan(h); return from > 0 || to < 1; };
+// How much of a turn is done (0..1). Like Pedro 3.0.2: a turn all along the part follows the curve's own
+// number t; a turn on a stretch (PiecewiseInterpolator) follows the share of the DISTANCE driven, c.
+function turnShare(h, t, c = t) {
+	if (!partial(h)) return t;
 	const { from, to } = turnSpan(h);
-	return Math.max(0, Math.min(1, (t - from) / (to - from)));
+	return Math.max(0, Math.min(1, (c - from) / (to - from)));
+}
+/** True when a turn's stretch is not right (not 0 <= from < to <= 1): PedroPath.turnTo refuses it, so Run stops at INIT. */
+export function badSpan(h) {
+	if (h?.mode !== 'turn' || (h.from == null && h.to == null)) return false;
+	const from = h.from == null ? 0 : +h.from, to = h.to == null ? 1 : +h.to;
+	return !(from >= 0 && to <= 1 && to > from);
 }
 /** The turn presets the page offers: while driving (all the way), first (then drive), last (drive first). */
 export const TURN_WHEN = { along: [0, 1], first: [0, 0.3], last: [0.7, 1] };
@@ -105,12 +115,19 @@ export function splitPart(path, i, t, actions = []) {
 	const h = part.heading;
 	let h1 = structuredClone(h), h2 = structuredClone(h);
 	if (h.mode === 'turn') {
-		const at = round1(wrap(h.a + diff(h.a, h.b) * turnShare(h, t)));
+		// a turn on a stretch is measured by distance (like Pedro): c = the share of the distance at the split
+		const c = partial(h) ? curveLength(left) / (curveLength(pts) || 1) : t;
+		const at = round1(wrap(h.a + diff(h.a, h.b) * turnShare(h, t, c)));
 		const { from, to } = turnSpan(h);
-		const span = (a, b) => (a <= 0 && b >= 1 ? {} : { from: Math.round(a * 100) / 100, to: Math.round(b * 100) / 100 });
+		// two decimals, and never an empty stretch (PedroPath.turnTo refuses from >= until)
+		const span = (a, b) => {
+			let f = Math.round(a * 100) / 100, u = Math.round(b * 100) / 100;
+			if (u - f < 0.01) { if (u >= 0.01) f = u - 0.01; else u = f + 0.01; }
+			return f <= 0 && u >= 1 ? {} : { from: Math.max(0, f), to: Math.min(1, u) };
+		};
 		// a part with no turning left keeps its heading
-		h1 = from >= t ? { mode: 'keep', a: h.a } : { mode: 'turn', a: h.a, b: at, ...span(from / t, Math.min(1, to / t)) };
-		h2 = to <= t ? { mode: 'keep', a: h.b } : { mode: 'turn', a: at, b: h.b, ...span(Math.max(0, (from - t) / (1 - t)), (to - t) / (1 - t)) };
+		h1 = from >= c ? { mode: 'keep', a: h.a } : { mode: 'turn', a: h.a, b: at, ...span(from / c, Math.min(1, to / c)) };
+		h2 = to <= c ? { mode: 'keep', a: h.b } : { mode: 'turn', a: at, b: h.b, ...span(Math.max(0, (from - c) / (1 - c)), (to - c) / (1 - c)) };
 	}
 	const parts = path.parts.slice();
 	parts.splice(i, 1,
@@ -121,14 +138,18 @@ export function splitPart(path, i, t, actions = []) {
 }
 
 /**
- * "Turn to face" on the map: part i ends facing the point (x, y) (a turn from the heading it starts with;
- * a turn keeps its "when"). With no part i: null. Returns a new list of parts.
+ * "Turn to face" on the map: part i ends facing the point (x, y): a turn from the heading the robot has when it
+ * gets there (the end of the part before; the first part: startH). A turn keeps its "when". With no part i:
+ * null. Returns a new list of parts.
  */
-export function facePart(path, i, x, y) {
+export function facePart(path, i, x, y, startH = null) {
 	const part = path.parts[i];
 	if (!part) return null;
 	const b = round1(headingOf(x - part.end[0], y - part.end[1]));
-	const a = round1(partEnds(sample(path), i).start);
+	// the turn starts from the way the robot faces when it gets to this part: where the part before ended
+	// (the first part: the start heading), so it never snaps round at the join
+	const smp = sample(path);
+	const a = round1(i > 0 ? partEnds(smp, i - 1).end : startH != null ? +startH : partEnds(smp, i).start);
 	const h = part.heading.mode === 'turn' ? { ...part.heading, a, b } : { mode: 'turn', a, b };
 	const parts = path.parts.slice();
 	parts[i] = { ...part, heading: h };
@@ -136,10 +157,10 @@ export function facePart(path, i, x, y) {
 }
 
 // The facing at t for a part's heading rule. tangentAt: the path's own direction there.
-function headingAt(h, t, x, y, tangent) {
+function headingAt(h, t, x, y, tangent, c = t) {
 	switch (h.mode) {
 		case 'keep': return wrap(h.a);
-		case 'turn': return wrap(h.a + diff(h.a, h.b) * turnShare(h, t));
+		case 'turn': return wrap(h.a + diff(h.a, h.b) * turnShare(h, t, c));
 		case 'point': return Math.hypot(h.x - x, h.y - y) < 1e-6 ? tangent : headingOf(h.x - x, h.y - y);
 		case 'back': return wrap(tangent + 180);
 		default: return tangent;
@@ -158,9 +179,14 @@ export function sample(path) {
 		const n = Math.max(2, Math.min(MAX_POINTS, Math.ceil(len) + 1));
 		// A curve's direction at an end can be zero (a control point on the end): look just inside.
 		let lastTan = null;
+		// the share of the distance at each point (a turn on a stretch follows it, like Pedro)
+		const at = Array.from({ length: n }, (_, k) => bez(pts, k / (n - 1)));
+		const cum = [0];
+		for (let k = 1; k < n; k++) cum.push(cum[k - 1] + Math.hypot(at[k].x - at[k - 1].x, at[k].y - at[k - 1].y));
+		const total = cum[n - 1] || 1;
 		for (let k = 0; k < n; k++) {
 			const t = k / (n - 1);
-			const p = bez(pts, t);
+			const p = at[k];
 			let tan;
 			if (Math.hypot(p.dx, p.dy) > 1e-9) tan = headingOf(p.dx, p.dy);
 			else {
@@ -168,7 +194,7 @@ export function sample(path) {
 				tan = Math.hypot(q.dx, q.dy) > 1e-9 ? headingOf(q.dx, q.dy) : (lastTan ?? 0);
 			}
 			lastTan = tan;
-			out.push({ x: p.x, y: p.y, h: headingAt(part.heading, t, p.x, p.y, tan), part: i, t });
+			out.push({ x: p.x, y: p.y, h: headingAt(part.heading, t, p.x, p.y, tan, cum[k] / total), part: i, t });
 		}
 	});
 	return out;

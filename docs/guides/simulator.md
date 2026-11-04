@@ -357,7 +357,9 @@ What a team does, step by step:
      **Drag a point** (the blue dot at the end of a drive) anywhere: the drive and the turn before it change
      so the robot ends there (a tank drive gets a turn when it needs one), and **the other points stay
      where they were**: the next drive turns and stretches to reach its point again, and the heading after
-     it is kept (a turn after it turns more or less, or a "Turn back" step is added). A team's own step
+     it is kept (a turn after it turns more or less, or a "Turn back" step is added). This works when at most
+     one turn or "turn to" sits between the point and the next drive; with more steps that turn between
+     (two turns, an aim, a turn back), only the heading is kept, so the later points can move. A team's own step
      names stay; the "To (x, y)" and "Face (x, y)" names follow the point. With a mecanum drive and no
      turn before the drive, the drive changes direction instead (a strafe).
      **Put a point between two:** move the pointer over a drive's line: a white dot with a plus slides
@@ -367,7 +369,8 @@ What a team does, step by step:
      **Turn a turn on the map:** after each turn step (turn, turn to, or a drive that turns), the map draws
      the robot facing the way it ends, with a yellow knob in front of it. Drag the knob around: the step
      turns to face it (15° steps with "Snap" on, else 5°). A turn turns by what it needs; a "turn to" and a
-     drive that turns get the new heading.
+     drive that turns get the new heading. A turn or "turn to" right before its drive aims that drive, so the
+     drive swings with it (its point moves). Any other turn keeps the next point where it was.
      **Mecanum: turn then, or turn while driving.** A drive and a turn are two steps: the robot drives,
      THEN turns (or turns, then drives). Tick **turn while driving** on a drive to make it one step that
      drives and turns at the same time (`Steps.moveWithTurn`; a turn just before the drive goes into it, so

@@ -15,7 +15,8 @@ This library uses ONE set of rules everywhere. Learn these and you can read any 
 | `strafeRight` | robot moves to its right (mecanum only) | `MecanumDrive.drive`, `MecanumMixer.mix` |
 | `turnClockwise` | robot turns right (clockwise, seen from above) | same |
 | IMU heading | robot turned **left** (counterclockwise) | `ImuSetup.headingDeg`, `AutoDrive.turn`, `AutoDrive.turnTo`, `FieldPose.headingDeg` |
-| `move(..., directionDeg, ...)` | clockwise from forward: 0 forward, 90 right, 180 back, -90 left | `AutoDrive.move`, `AutoDrive.moveWithTurn` |
+| `move(..., directionDeg, ...)` | clockwise from forward: 0 forward, 90 right, 180 back, -90 left | `AutoDrive.move`, `Steps.move` |
+| `moveWithTurn(..., directionDeg, headingDeg, ...)` | the direction clockwise, but from the START heading (fixed on the field, because the robot turns on the way); the heading counterclockwise, 0 = the start heading | `AutoDrive.moveWithTurn`, `Steps.moveWithTurn` |
 
 Why is turning clockwise-positive but heading counterclockwise-positive?
 

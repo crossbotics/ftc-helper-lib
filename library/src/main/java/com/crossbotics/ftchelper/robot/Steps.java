@@ -198,7 +198,7 @@ public final class Steps {
      *
      * <p>The direction stays fixed on the FIELD while the robot turns, so it is measured like
      * {@link #turnTo}'s heading: from the way the robot faced at the start, but clockwise (0 = that way,
-     * 90 = to its right, 180 = back toward your wall, -90 = left).
+     * 90 = to its right then, 180 = the opposite way, -90 = left).
      *
      * <pre>{@code
      * s.start("Back wall, left corner tile, facing the field", 0)

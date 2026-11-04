@@ -231,14 +231,15 @@ export function dragPoint(plan, i, x, y) {
 
 // After step i changed (now at i + shift), the next point stays where it was (old: the ends before the
 // change): the next drive is aimed at it again, and the heading after it is kept. The next drive is aimed
-// again only when at most one turn (right before it) lies between; else only the heading after step i is kept.
+// again only when at most one turn or turnTo (right before it) lies between; else only the heading after
+// step i is kept.
 function keepNext(drive, start, steps, i, shift, old) {
 	const k = steps.findIndex((s, n) => n > i + shift && DRIVES.includes(s.kind));
 	const between = k < 0 ? [] : steps.slice(i + shift + 1, k).filter((s) => MOVING_KINDS.includes(s.kind));
-	const reaim = k >= 0 && (between.length === 0 || (between.length === 1 && steps[k - 1].kind === 'turn'));
+	const reaim = k >= 0 && (between.length === 0 || (between.length === 1 && ['turn', 'turnTo'].includes(steps[k - 1].kind)));
 	if (!reaim) { keepHeading(start, steps, i + shift, old[i].h); return; }
-	// a turn right before its drive aims that drive: the drive turns with it (the next point moves)
-	if (k - 1 === i + shift && steps[k - 1].kind === 'turn') return;
+	// a turn (or turnTo) right before its drive aims that drive: the drive turns with it (the next point moves)
+	if (k - 1 === i + shift && ['turn', 'turnTo'].includes(steps[k - 1].kind)) return;
 	const k2 = aimMove(drive, start, steps, k, old[k - shift].x, old[k - shift].y, true);
 	keepHeading(start, steps, k2, old[k - shift].h);
 }
@@ -266,9 +267,10 @@ export function splitMove(plan, i, inches) {
 
 /**
  * Step i (a turn, turnTo or moveTurn) ends facing field heading h (the map's turn knob): a turn turns by
- * what that needs, a turnTo and a moveTurn get h as their heading. Whole degrees. The next point stays where
- * it was (its drive is aimed at it again), like a dragged point. Returns a new list of steps, or null for
- * any other step. The plan given is not changed.
+ * what that needs, a turnTo and a moveTurn get h as their heading. Whole degrees. A turn or turnTo right
+ * before its drive aims that drive, so the drive turns with it (its point moves); otherwise the next point
+ * stays where it was (its drive is aimed at it again), like a dragged point. Returns a new list of steps,
+ * or null for any other step. The plan given is not changed.
  */
 export function setTurnHeading(plan, i, h) {
 	const s = (plan.steps || [])[i];
