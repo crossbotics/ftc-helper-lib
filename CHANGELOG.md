@@ -36,6 +36,16 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   aimed at its point again (when at most one turn or turnTo is between them). The step numbers on the map are white on a dark badge, easier to read.
   Shared code: `stepscore.js` `dragPoint` and `splitMove` (crossbotics.com's path builder can use them too).
 
+## v0.26.1 - 2026-11-04
+
+### Fixed
+
+- **Drive Tuner: the tape and the clear floor are now told apart.** Its screens said "Tape, 5 ft space", which reads
+  like 5 ft of tape. Now: tape as long as the test drive (48 in), and 5 ft of clear floor ahead and to the right.
+- **Finders guide, Drive Tuner: a clearer tape setup.** Start each test with the robot's left wheels along the tape
+  and the front left wheel's front edge on a 0 mark: easier to push straight by hand, and to measure. It also says
+  why there is no sideways push test.
+
 ## v0.26.0 - 2026-11-03
 
 ### Added

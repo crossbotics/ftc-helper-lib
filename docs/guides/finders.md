@@ -220,14 +220,25 @@ wheel slows by less than 150 RPM per shot (a heavy wheel).
 
 ## Drive Tuner: wheel size and strafe correction
 
-1. **Push test:** A, then roll the robot by hand exactly 48 in along the tape, straight, then B.
+**Set up the floor:** a straight line of tape, marked **0** and **48 in**, and 5 ft of clear floor ahead
+of the robot and to its right. **Start each test** with the robot's **left wheels touching the tape**
+(their outside edge) and the front left wheel's front edge on **0**. **Why the left wheels:** a wheel
+edge against a line is easy to keep straight when you push by hand, and easy to measure from: forward
+from 0 to that wheel's front edge, sideways from the tape to the left wheels.
+
+1. **Push test:** A, then roll the robot by hand, its left wheels along the tape, until the front left
+   wheel's front edge is on 48 in, then B.
    This gives the wheel size from the encoder counts alone. Every wheel must count up by about the
    same amount; if one does not, fix its direction or encoder cable first.
 2. **Drive test:** A; it drives 48 in. Measure, set the real distance with the D-pad, A. The new
    wheel size is used at once: run it again until it measures 48 (wheels slip a little on tiles, so
    this is the final word). A move that got stuck is not measured. The screen keeps showing the heading
    and the wheel counts while it drives.
-3. **Strafe test** (mecanum): the same, for `c.strafeCorrection`.
+3. **Strafe test** (mecanum): back at the start, A; it strafes right, away from the tape. Measure from
+   the tape to the left wheels, straight across. The same as the Drive test, for `c.strafeCorrection`.
+   No push test sideways: pushed sideways by hand, a mecanum wheel's rollers spin and its encoder
+   counts almost nothing. The strafe correction is about the slip of a **powered** strafe, so only the
+   robot strafing by itself can measure it.
 4. **Turn 90 left** (a check, nothing to copy): it turns 90 degrees left; put a square against the
    robot to see it, and the screen shows the IMU's heading (it should say 90).
 5. Copy the lines, then switch autonomous on:
