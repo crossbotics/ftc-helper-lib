@@ -17,7 +17,7 @@ import java.util.List;
 
 /**
  * Finds the autonomous drive numbers in {@code RobotSettings.auto()}: the wheel size and (mecanum)
- * the strafe correction. Put tape on the floor and a tape measure next to it.
+ * the strafe correction. Put 48 in of tape on the floor (as long as the test drive) and a tape measure next to it.
  *
  * <pre>
  * D-pad up/down = choose a test, A = start it.
@@ -134,7 +134,8 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
     @Override
     protected void showInit(RobotTelemetry t) {
         t.text("Drive tuner: wheel size and strafe correction for autonomous.");
-        t.text("Tape on the floor, 5 ft of space ahead and to the right. Press START.");
+        // Two different lengths: the TAPE is as long as the test drive; the clear FLOOR is longer (it may overshoot).
+        t.text("Tape " + FinderResults.num(testDistanceIn(), 0) + " in long on the floor. Clear floor: 5 ft ahead and to the right. Press START.");
     }
 
     @Override
@@ -351,7 +352,8 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
     protected String[] helpLines() {
         String d = FinderResults.num(testDistanceIn(), 0) + " in";
         return new String[] {
-            "Wheel size + strafe correction. Tape, 5 ft space.",
+            "Wheel size + strafe correction. Tape " + d + " long;",
+            "  clear floor 5 ft ahead and to the right.",
             "D-pad up/down = choose a test, A = start it.",
             "GUIDE or START stops a moving test (not measured).",
             "Push: A, roll the robot BY HAND exactly " + d + ",",
