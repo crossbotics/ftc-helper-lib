@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 330" width="760" height="330" font-family="Helvetica, Arial, sans-serif" font-size="15">
+  <rect width="760" height="330" rx="12" fill="#ffffff" stroke="#d5d9e0"/>
+  <text x="20" y="34" font-size="19" font-weight="bold" fill="#101c45">Servo Finder: the two ends (X, B) and the positions (A)</text>
+  <!-- the frame stops -->
+  <rect x="60" y="100" width="40" height="70" fill="#e5e7eb" stroke="#6b7280"/>
+  <path d="M60,100 l40,20 M60,120 l40,20 M60,140 l40,20 M60,160 l40,10" stroke="#9ca3af"/>
+  <text x="80" y="190" text-anchor="middle" font-size="13" fill="#4b5563">frame</text>
+  <rect x="660" y="100" width="40" height="70" fill="#e5e7eb" stroke="#6b7280"/>
+  <path d="M660,100 l40,20 M660,120 l40,20 M660,140 l40,20 M660,160 l40,10" stroke="#9ca3af"/>
+  <text x="680" y="190" text-anchor="middle" font-size="13" fill="#4b5563">frame</text>
+  <!-- the scale -->
+  <line x1="100" y1="135" x2="660" y2="135" stroke="#374151" stroke-width="3"/>
+  <text x="100" y="225" text-anchor="middle" fill="#374151">0</text>
+  <text x="660" y="225" text-anchor="middle" fill="#374151">1</text>
+  <text x="380" y="225" text-anchor="middle" fill="#374151">the servo's position, 0 to 1</text>
+  <!-- safe band between the ends -->
+  <rect x="132" y="121" width="496" height="28" fill="#dbe8d4" stroke="#2d7a32"/>
+  <!-- ends -->
+  <line x1="132" y1="88" x2="132" y2="160" stroke="#b03030" stroke-width="3"/>
+  <text x="132" y="80" text-anchor="middle" fill="#b03030" font-weight="bold">X: one end</text>
+  <line x1="628" y1="88" x2="628" y2="160" stroke="#b03030" stroke-width="3"/>
+  <text x="628" y="80" text-anchor="middle" fill="#b03030" font-weight="bold">B: other end</text>
+  <text x="380" y="80" text-anchor="middle" font-size="13" fill="#2d7a32">the finder keeps the servo between the ends</text>
+  <!-- positions -->
+  <polygon points="250,135 241,120 259,120" fill="#1f4e9c"/>
+  <text x="250" y="112" text-anchor="middle" fill="#1f4e9c" font-weight="bold">A: P1</text>
+  <polygon points="500,135 491,120 509,120" fill="#1f4e9c"/>
+  <text x="500" y="112" text-anchor="middle" fill="#1f4e9c" font-weight="bold">A: P2</text>
+  <!-- steps -->
+  <text x="20" y="260" fill="#101c45" font-weight="bold">1.</text>
+  <text x="44" y="260" fill="#2d3446">Pick a start point near where it sits (nothing moves), A. Nudge with the D-pad.</text>
+  <text x="20" y="284" fill="#101c45" font-weight="bold">2.</text>
+  <text x="44" y="284" fill="#2d3446">Each end: go until it JUST stops pushing on the frame, back off 0.01, X or B.</text>
+  <text x="20" y="308" fill="#101c45" font-weight="bold">3.</text>
+  <text x="44" y="308" fill="#2d3446">Each position you need (open, closed): A. Copy the line; rename P1, P2.</text>
+</svg>

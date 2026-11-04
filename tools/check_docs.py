@@ -413,6 +413,36 @@ def check_recipe_sections():
                     problems.append(f"{where}: {field} is a safety number: write MEASURE, not {value}")
 
 
+def check_finder_order():
+    """docs/guides/finders.md keeps the Tune and check menu's order: its table, its "The order" diagram and its
+    sections. Three different orders confused readers before; the menu (TuneAndCheckOpMode) is the source."""
+    java = ROOT / "library/src/main/java/com/crossbotics/ftchelper/finders/TuneAndCheckOpMode.java"
+    guide = ROOT / "docs/guides/finders.md"
+    menu = re.findall(r'new Tool\("([^"]+)"', java.read_text())
+    text = guide.read_text()
+    where = "docs/guides/finders.md"
+    if not menu:
+        problems.append(f"{java.relative_to(ROOT)}: no menu tools found (new Tool(\"...\"))")
+        return
+    table = [m.group(1) for m in re.finditer(r"^\| ([A-Z][A-Za-z ]+?)(?: \(\*\*alpha\*\*\))? \|", text, re.M)
+             if m.group(1) in menu]
+    if table != menu:
+        problems.append(f"{where}: the Tune and check table must list the menu's tools in its order: {', '.join(menu)}")
+    # the diagram and the sections: the menu's tools in the menu's order (the own-file tools may sit between)
+    block = text[text.index("## The order"):text.index("## Before you start")]
+    diagram = [n for n in re.findall(r'\["([A-Z][A-Za-z ]+?)(?: \(own file\))?<br/>', block) if n in menu]
+    if diagram != menu:
+        problems.append(f"{where}: \"The order\" diagram must show the menu's tools in its order: {', '.join(menu)}")
+    sections = []
+    for h in re.findall(r"^## (.+)$", text, re.M):
+        name = re.split(r":| \(", h)[0].strip()
+        if name in menu:
+            sections.append(name)
+    expected = [n for n in menu if n != "Hardware Check"]   # the Hardware Check has its own page (testing.md)
+    if sections != expected:
+        problems.append(f"{where}: the tool sections must follow the menu's order: {', '.join(expected)} (found {', '.join(sections)})")
+
+
 check_links()
 check_classes_documented()
 check_tutorials()
@@ -421,6 +451,7 @@ check_marked_pages()
 check_example_comments()
 check_annotations()
 check_recipe_sections()
+check_finder_order()
 
 if problems:
     print("Docs check FAILED:")

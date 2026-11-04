@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 400" width="760" height="400" font-family="Helvetica, Arial, sans-serif" font-size="15">
+  <rect width="760" height="400" rx="12" fill="#ffffff" stroke="#d5d9e0"/>
+  <defs>
+    <marker id="s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2b3a9a"/></marker>
+  </defs>
+  <text x="20" y="34" font-size="19" font-weight="bold" fill="#101c45">Shot Tuner: one table point at each distance</text>
+  <!-- goal on the left -->
+  <rect x="30" y="80" width="60" height="150" rx="6" fill="#fde7c7" stroke="#b45309" stroke-width="2"/>
+  <text x="60" y="160" text-anchor="middle" fill="#b45309" font-weight="bold">goal</text>
+  <!-- floor line -->
+  <line x1="90" y1="230" x2="730" y2="230" stroke="#9ca3af" stroke-width="2"/>
+  <!-- robots at distances -->
+  <g fill="#eef2f8" stroke="#101c45" stroke-width="2">
+    <rect x="210" y="196" width="50" height="34" rx="5"/>
+    <rect x="370" y="196" width="50" height="34" rx="5"/>
+    <rect x="530" y="196" width="50" height="34" rx="5"/>
+  </g>
+  <rect x="680" y="196" width="50" height="34" rx="5" fill="#ffffff" stroke="#9ca3af" stroke-width="2" stroke-dasharray="5 4"/>
+  <text x="235" y="218" text-anchor="middle" font-weight="bold" fill="#101c45">1</text>
+  <text x="395" y="218" text-anchor="middle" font-weight="bold" fill="#101c45">2</text>
+  <text x="555" y="218" text-anchor="middle" font-weight="bold" fill="#101c45">3</text>
+  <text x="705" y="218" text-anchor="middle" font-weight="bold" fill="#9ca3af">4-6</text>
+  <!-- shot arcs -->
+  <path d="M215,196 Q160,90 92,118" fill="none" stroke="#2b3a9a" stroke-width="2" marker-end="url(#s)"/>
+  <path d="M375,196 Q240,60 92,112" fill="none" stroke="#2b3a9a" stroke-width="2" marker-end="url(#s)"/>
+  <path d="M535,196 Q320,40 92,106" fill="none" stroke="#2b3a9a" stroke-width="2" marker-end="url(#s)"/>
+  <!-- distance marks -->
+  <g stroke="#b03030" stroke-width="2">
+    <line x1="90" y1="248" x2="235" y2="248"/>
+    <line x1="235" y1="242" x2="235" y2="254"/>
+    <line x1="235" y1="268" x2="395" y2="268"/>
+    <line x1="395" y1="262" x2="395" y2="274"/>
+    <line x1="395" y1="288" x2="555" y2="288"/>
+    <line x1="555" y1="282" x2="555" y2="294"/>
+  </g>
+  <text x="162" y="264" text-anchor="middle" font-size="13" fill="#b03030">nearest spot</text>
+  <text x="315" y="284" text-anchor="middle" font-size="13" fill="#b03030">back 1-2 ft</text>
+  <text x="475" y="304" text-anchor="middle" font-size="13" fill="#b03030">back 1-2 ft</text>
+  <!-- steps -->
+  <text x="20" y="330" fill="#101c45" font-weight="bold">At each spot:</text>
+  <text x="140" y="330" fill="#2d3446">LB starts the flywheel. Shoot 3-5 (RB), and mark each: A = HIT, B = MISS.</text>
+  <text x="140" y="352" fill="#2d3446">Try 2-3 speeds (D-pad). X saves the speed with the best hit ratio.</text>
+  <text x="20" y="378" fill="#101c45" font-weight="bold">Then:</text>
+  <text x="140" y="378" fill="#2d3446">4-6 points per table. Copy each table line into Tunables.java.</text>
+</svg>
