@@ -2,6 +2,22 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Changed
+
+- **The finders guide: one order, the same as the Tune and check menu.** Its table, its "The order" diagram,
+  its sections and the finders reference now all follow the menu (Hardware Check, Servo, Hood, Motor,
+  Flywheel, Feed Stop, Drive, Odometry, Shot, Camera Fix, Piece; the Aim Tuner and the Characterizer, which
+  keep their own file, sit where they belong). Each tool's section starts with what you need and when it is
+  done. `tools/check_docs.py` now fails if the guide's order stops matching the menu.
+
+### Added
+
+- **Diagrams in the finders guide:** the Servo Finder's ends and positions, the Drive Tuner's floor (tape
+  along the left wheels, 48 in, 5 ft of clear floor), where odometry pods sit (`offsetsMm`), and the Shot
+  Tuner's distances. A short Camera Fix Check (alpha) section.
+
 ## v0.27.0 - 2026-11-04
 
 ### Added

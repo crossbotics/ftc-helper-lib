@@ -23,15 +23,18 @@ device's name in CamelCase (`lift` -> `Lift`, `intake_deploy` -> `IntakeDeploy`,
 
 | Class | Use it to | Needs code from you? |
 | --- | --- | --- |
+| [`TuneAndCheckOpMode`](#tuneandcheckopmode) | every check and finder that fits Robot.java, in one menu (added by itself) | no |
 | [`ServoFinderOpMode`](#servofinderopmode) | find a servo's safe ends and positions | no |
+| [`HoodFinderOpMode`](#hoodfinderopmode) | find a launcher hood's two stops (`posA`, `posB`) and, if you measure them, its angles (a linkage's calibration table) | `robot()` (five files) or `hoodName()` |
 | [`MotorFinderOpMode`](#motorfinderopmode) | find a lift's, arm's or turret's limits, positions and top speed | no |
 | [`FlywheelFinderOpMode`](#flywheelfinderopmode) | find a flywheel's top speed, speed-control gains (the tuning numbers) and recovery time | no |
+| [`FeedStopFinderOpMode`](#feedstopfinderopmode) | find a feed stop's hold and release positions | `robot()` (five files, with `.feedStop(...)`) |
 | [`DriveTunerOpMode`](#drivetuneropmode) | find the wheel size and strafe correction for autonomous | `robot()` (five files) or `robotConfig()` |
 | [`OdometryTunerOpMode`](#odometrytuneropmode) | check which way each odometry pod counts and measure where it sits (the offsets); a loop check sets `checked` | `robot()` (five files, with an `odometry(...)` line) |
-| [`PieceTunerOpMode`](#piecetuneropmode) | see what each game-piece sensor reads, and measure each kind's colour (or size) and the "empty" line | `robot()` (five files, with a `Pieces` or `PieceSensor` line) |
-| [`HoodFinderOpMode`](#hoodfinderopmode) | find a launcher hood's two stops (`posA`, `posB`) and, if you measure them, its angles (a linkage's calibration table) | `robot()` (five files) or `hoodName()` |
-| [`ShotTunerOpMode`](#shottuneropmode) | build the shot table: distance -> speed (and hood angle) | `robot()` (five files), or your launcher (+ camera) |
 | [`AimTunerOpMode`](#aimtuneropmode) | find the camera offset so shots go in the middle | your camera (+ turret or drive) |
+| [`ShotTunerOpMode`](#shottuneropmode) | build the shot table: distance -> speed (and hood angle) | `robot()` (five files), or your launcher (+ camera) |
+| [`CameraFixCheckOpMode`](#camerafixcheckopmode) | ALPHA: find the camera fix's turn for each alliance | `robot()` (five files, with `cameraFix(camera)`) |
+| [`PieceTunerOpMode`](#piecetuneropmode) | see what each game-piece sensor reads, and measure each kind's colour (or size) and the "empty" line | `robot()` (five files, with a `Pieces` or `PieceSensor` line) |
 | [`CharacterizerOpMode`](#characterizeropmode) | measure how the drive, lifts and flywheels really move (feedforward numbers, and the simulator's robot file) | `robotConfig()`, `mechanisms()` |
 | [`FinderOpMode`](#finderopmode) | the shared frame of every finder (for writing your own) | |
 | [`FinderResults`](#finderresults) | the code lines a finder shows and saves | |
@@ -109,17 +112,36 @@ Tunables.Claw: P1 = 0.210, P2 = 0.740
 In five files: `public static double open = 0.210, closed = 0.740;` in `Tunables.Claw`. A servo
 module has no ends of its own, so the ends become a reminder.
 
-## CameraFixCheckOpMode
+## HoodFinderOpMode
 
-`CameraFixCheckOpMode` (**alpha**): the standing test for the [camera fix](odometry.md#camera-fix-alpha). It
-finds `Tunables.CameraFix` `turnDegBlue` / `turnDegRed` and shows where the camera puts the robot, to check
-with a tape. Needs `robot()`; in Tune and check for a robot with `cameraFix(camera)`.
+Finds `Tunables.Hood`'s numbers for a launcher's [hood](robot.md#hood). With the robot in five files it
+reads the hood from Robot.java (its name, servo or motor, `reversed()`, `fullRange()`), so it works before
+`Tunables.Hood` has any numbers (the turret robot's
+[HoodFinder.java](../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/HoodFinder.java)):
 
-## FeedStopFinderOpMode
+```java
+@TeleOp(name = "Hood Finder", group = "Finders")
+public class HoodFinder extends HoodFinderOpMode {
+    @Override protected RobotDefinition robot() { return new Robot(); }
+}
+```
 
-`FeedStopFinderOpMode` finds a launcher's feed stop positions: `Tunables.Launcher: feedStopHold = ...,
-feedStopRelease = ...`. It needs `robot()` (the robot in five files, with a launcher that has
-`.feedStop(...)`). In Tune and check by itself. Steps: [Feed Stop Finder](../guides/finders.md#feed-stop-finder).
+Without five files it uses the servo (or motor) called `hoodName()` ("hood").
+
+| Button | Does |
+| --- | --- |
+| D-pad (servo) | before the first move: a start point (nothing moves), **A** moves there. Then right/left +/- 0.01, up/down +/- 0.05, hold RB 10x finer |
+| (motor) | nothing is powered: move the hood by hand and watch the encoder (0 = where it was at INIT, as in a match) |
+| **X** / **B** | this is stop A / stop B (a hair off it: a straining servo hums) |
+| hold **LB** + D-pad | the angle you measured here (up/down +/- 1, right/left +/- 0.1), before X, B or A |
+| **A** | save a calibration point here {position, angle} |
+| **Y** | undo the last point |
+
+Output: `Tunables.Hood: posA = 0.205, posB = 0.648` (and `angleA = 0, angleB = 25` when you gave the
+angle at both stops); with 3 or more points, `public static double[][] calibration = {{0.205, 0}, {0.33, 9}, ...};`
+for a linkage (it replaces posA/posB). Copy them into `Tunables.java`: the robot uses the file, not this
+screen. A number changed in the tuning menu (`Hood/posA`) is also lost at the next restart unless you
+copy it back into `Tunables.java`.
 
 ## MotorFinderOpMode
 
@@ -188,6 +210,12 @@ top speed was measured (the screen shows `Battery: 12.61 V (gains for 12.6 V)`):
 that voltage, and the launcher's [battery compensation](launcher.md#battery-compensation) (off unless turned on) scales F from
 it. Step 2 runs with that compensation, so an F you fine-tune there is for the same voltage. Under
 11.5 V it warns: charge the battery first.
+
+## FeedStopFinderOpMode
+
+`FeedStopFinderOpMode` finds a launcher's feed stop positions: `Tunables.Launcher: feedStopHold = ...,
+feedStopRelease = ...`. It needs `robot()` (the robot in five files, with a launcher that has
+`.feedStop(...)`). In Tune and check by itself. Steps: [Feed Stop Finder](../guides/finders.md#feed-stop-finder).
 
 ## DriveTunerOpMode
 
@@ -267,66 +295,36 @@ A reversed pod: the result says which name to add to (or take out of) `.reversed
 runs, the screen shows the pose and the raw pod counts since it began. Walk-through:
 [finders guide](../guides/finders.md#odometry-tuner-directions-offsets-and-a-loop-check).
 
-## PieceTunerOpMode
+## AimTunerOpMode
 
-Needs your robot in five files with a [`Pieces` or `PieceSensor`](robot.md#pieces-and-piecesensor)
-line. Next to `Robot.java`:
+Finds the camera offset: where the target sits in the camera's view when the LAUNCHER points
+straight at it (degrees, left = +). Fill in:
 
-```java
-@TeleOp(name = "Piece Tuner", group = "Finders")
-public class PieceTuner extends PieceTunerOpMode {
-    @Override protected RobotDefinition robot() { return new Robot(); }
-}
-```
-
-Nothing moves. **D-pad up/down** chooses the sensor, **D-pad left/right** what is in front of it (each
-kind, then EMPTY), **A** measures it (20 readings, about half a second: hold the piece still, where it really sits on
-the robot), **B** forgets that sensor's measurements. The screen shows the live reading (hue and
-saturation, distance) and the kind it sees now. Until a kind's line is in `Tunables.java`, the
-sensor reads that kind as `UNKNOWN`. Measure every kind and EMPTY; the lines to copy:
-
-```java
-Tunables.IntakeColor: POLLEN = 74   // its colour (hue, degrees)
-Tunables.IntakeColor: RED_NECTAR = 6   // its colour (hue, degrees)
-Tunables.IntakeColor: hueTolerance = 34
-Tunables.IntakeColor: nearMm = 52   // a piece is there below this
-```
-
-It warns when two kinds read too close together (under 15 degrees, or 10 mm for a distance sensor),
-or when EMPTY looks like a piece (aim a distance sensor at a far wall; put a grey background behind a
-camera's spot). Copy the lines into `Tunables.java` and rebuild: a value changed only in the tuning
-menu stays on this hub, and it wins over a later edit in `Tunables.java`.
-
-## HoodFinderOpMode
-
-Finds `Tunables.Hood`'s numbers for a launcher's [hood](robot.md#hood). With the robot in five files it
-reads the hood from Robot.java (its name, servo or motor, `reversed()`, `fullRange()`), so it works before
-`Tunables.Hood` has any numbers (the turret robot's
-[HoodFinder.java](../../examples/src/main/java/com/crossbotics/ftchelper/examples/turretbot/HoodFinder.java)):
-
-```java
-@TeleOp(name = "Hood Finder", group = "Finders")
-public class HoodFinder extends HoodFinderOpMode {
-    @Override protected RobotDefinition robot() { return new Robot(); }
-}
-```
-
-Without five files it uses the servo (or motor) called `hoodName()` ("hood").
+| Method | Required? | |
+| --- | --- | --- |
+| `createCamera()` | yes | your camera |
+| `createTurret()` / `cameraOnTurret()` | no | aim with a turret (default: turn the robot) |
+| `robotConfig()` | without a turret | to turn the robot, and drive |
+| `createAimController()` | no | the aiming gains (use your TeleOp's) |
+| `createLauncher()`, `shotRpm()` | no | for test shots (with a table: the camera's distance) |
+| `startOffsetDeg()` | no | the offset in your code now |
 
 | Button | Does |
 | --- | --- |
-| D-pad (servo) | before the first move: a start point (nothing moves), **A** moves there. Then right/left +/- 0.01, up/down +/- 0.05, hold RB 10x finer |
-| (motor) | nothing is powered: move the hood by hand and watch the encoder (0 = where it was at INIT, as in a match) |
-| **X** / **B** | this is stop A / stop B (a hair off it: a straining servo hums) |
-| hold **LB** + D-pad | the angle you measured here (up/down +/- 1, right/left +/- 0.1), before X, B or A |
-| **A** | save a calibration point here {position, angle} |
-| **Y** | undo the last point |
+| hold **A** | aim at the target |
+| D-pad right/left, up/down | aim 0.5 / 2 deg more right / left. **Shots go left of the middle? press RIGHT.** |
+| **RB** / **LB** | shoot one / flywheel off |
+| **X** | home the turret (a turret with a home switch does not aim before it is homed; `homeDirection()`, default -1) |
+| sticks | drive when not aiming |
 
-Output: `Tunables.Hood: posA = 0.205, posB = 0.648` (and `angleA = 0, angleB = 25` when you gave the
-angle at both stops); with 3 or more points, `public static double[][] calibration = {{0.205, 0}, {0.33, 9}, ...};`
-for a linkage (it replaces posA/posB). Copy them into `Tunables.java`: the robot uses the file, not this
-screen. A number changed in the tuning menu (`Hood/posA`) is also lost at the next restart unless you
-copy it back into `Tunables.java`.
+A camera to the SIDE of the launcher needs a different offset at each distance (it sees the target
+from a different angle). If the offset that works changes with distance, move the camera onto the
+launcher's line, or tune at the distance you shoot from most.
+
+Output: `new AimController(...).offset(-1.5)` or `turret.cameraOffset(-1.5)`; with a turret also
+`Tunables.Turret: cameraOffset = -1.5` (the section is the turret motor's name).
+
+---
 
 ## ShotTunerOpMode
 
@@ -411,36 +409,41 @@ Copy each line into `Tunables.java` (replace the line with the same name): the r
 not this screen. The lines are also saved on the Control Hub at STOP. The screen says what to do next
 (`Next: LB to spin up the flywheel.`).
 
-## AimTunerOpMode
+## CameraFixCheckOpMode
 
-Finds the camera offset: where the target sits in the camera's view when the LAUNCHER points
-straight at it (degrees, left = +). Fill in:
+`CameraFixCheckOpMode` (**alpha**): the standing test for the [camera fix](odometry.md#camera-fix-alpha). It
+finds `Tunables.CameraFix` `turnDegBlue` / `turnDegRed` and shows where the camera puts the robot, to check
+with a tape. Needs `robot()`; in Tune and check for a robot with `cameraFix(camera)`.
 
-| Method | Required? | |
-| --- | --- | --- |
-| `createCamera()` | yes | your camera |
-| `createTurret()` / `cameraOnTurret()` | no | aim with a turret (default: turn the robot) |
-| `robotConfig()` | without a turret | to turn the robot, and drive |
-| `createAimController()` | no | the aiming gains (use your TeleOp's) |
-| `createLauncher()`, `shotRpm()` | no | for test shots (with a table: the camera's distance) |
-| `startOffsetDeg()` | no | the offset in your code now |
+## PieceTunerOpMode
 
-| Button | Does |
-| --- | --- |
-| hold **A** | aim at the target |
-| D-pad right/left, up/down | aim 0.5 / 2 deg more right / left. **Shots go left of the middle? press RIGHT.** |
-| **RB** / **LB** | shoot one / flywheel off |
-| **X** | home the turret (a turret with a home switch does not aim before it is homed; `homeDirection()`, default -1) |
-| sticks | drive when not aiming |
+Needs your robot in five files with a [`Pieces` or `PieceSensor`](robot.md#pieces-and-piecesensor)
+line. Next to `Robot.java`:
 
-A camera to the SIDE of the launcher needs a different offset at each distance (it sees the target
-from a different angle). If the offset that works changes with distance, move the camera onto the
-launcher's line, or tune at the distance you shoot from most.
+```java
+@TeleOp(name = "Piece Tuner", group = "Finders")
+public class PieceTuner extends PieceTunerOpMode {
+    @Override protected RobotDefinition robot() { return new Robot(); }
+}
+```
 
-Output: `new AimController(...).offset(-1.5)` or `turret.cameraOffset(-1.5)`; with a turret also
-`Tunables.Turret: cameraOffset = -1.5` (the section is the turret motor's name).
+Nothing moves. **D-pad up/down** chooses the sensor, **D-pad left/right** what is in front of it (each
+kind, then EMPTY), **A** measures it (20 readings, about half a second: hold the piece still, where it really sits on
+the robot), **B** forgets that sensor's measurements. The screen shows the live reading (hue and
+saturation, distance) and the kind it sees now. Until a kind's line is in `Tunables.java`, the
+sensor reads that kind as `UNKNOWN`. Measure every kind and EMPTY; the lines to copy:
 
----
+```java
+Tunables.IntakeColor: POLLEN = 74   // its colour (hue, degrees)
+Tunables.IntakeColor: RED_NECTAR = 6   // its colour (hue, degrees)
+Tunables.IntakeColor: hueTolerance = 34
+Tunables.IntakeColor: nearMm = 52   // a piece is there below this
+```
+
+It warns when two kinds read too close together (under 15 degrees, or 10 mm for a distance sensor),
+or when EMPTY looks like a piece (aim a distance sensor at a far wall; put a grey background behind a
+camera's spot). Copy the lines into `Tunables.java` and rebuild: a value changed only in the tuning
+menu stays on this hub, and it wins over a later edit in `Tunables.java`.
 
 ## CharacterizerOpMode
 

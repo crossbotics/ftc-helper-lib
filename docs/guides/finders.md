@@ -43,10 +43,10 @@ The menu lists only the tools that fit your robot. It finds Robot.java by itself
 | Motor Finder | the robot has a lift or an arm (or there is no Robot.java) |
 | Flywheel Finder | the robot has a launcher (or there is no Robot.java) |
 | Feed Stop Finder | the launcher has a `.feedStop(...)` |
-| Camera Fix Check (**alpha**) | Robot.java has `cameraFix(camera)` ([camera fix](../modules/odometry.md#camera-fix-alpha)). BIOBUZZ teams: ignore it |
 | Drive Tuner | there is a Robot.java |
 | Odometry Tuner | Robot.java has an `odometry(...)` line |
 | Shot Tuner | the robot has a launcher |
+| Camera Fix Check (**alpha**) | Robot.java has `cameraFix(camera)` ([camera fix](../modules/odometry.md#camera-fix-alpha)). BIOBUZZ teams: ignore it |
 | Piece Tuner | the robot has a piece sensor |
 
 Not in the menu: the **Aim Tuner** and the **Characterizer**. They need your camera or your lifts, so they
@@ -54,25 +54,32 @@ keep their own file (below). Your own finder files still work: keep them or dele
 
 ## The order
 
+The same order as the **Tune and check** menu. Two tools keep their own file (not in the menu): the
+**Aim Tuner** and the **Characterizer**. A tool for a part your robot does not have is not in the menu: skip it.
+
 ```mermaid
 flowchart LR
     H["Hardware Check<br/>everything plugged in<br/>and turning the right way"] --> S["Servo Finder<br/>ends + positions"]
-    S --> FS["Feed Stop Finder<br/>hold + release"]
-    FS --> M["Motor Finder<br/>limits + positions"]
+    S --> HO["Hood Finder<br/>a hood's two stops"]
+    HO --> M["Motor Finder<br/>limits + positions"]
     M --> F["Flywheel Finder<br/>gains + recovery"]
-    F --> D["Drive Tuner<br/>wheel size + strafe"]
+    F --> FS["Feed Stop Finder<br/>hold + release"]
+    FS --> D["Drive Tuner<br/>wheel size + strafe"]
     D --> O["Odometry Tuner<br/>pod directions + offsets"]
-    O --> A["Aim Tuner<br/>camera offset"]
+    O --> A["Aim Tuner (own file)<br/>camera offset"]
     A --> T["Shot Tuner<br/>shot table"]
-    T --> C["Characterizer<br/>feedforward + simulator"]
+    T --> CF["Camera Fix Check<br/>alpha"]
+    CF --> P["Piece Tuner<br/>what each sensor sees"]
+    P --> C["Characterizer (own file)<br/>feedforward + simulator"]
 ```
 
 1. **Hardware Check first** ([testing](testing.md)): every device found, every motor turns the right way.
-2. **Servo Finder** for each servo, **Motor Finder** for each lift, arm or turret: put the limits
-   and positions in your code (five files: `min`, `max` and the named heights in `Tunables.Lift`,
-   `open` and `closed` in `Tunables.Claw`). Do this BEFORE you drive a mechanism with code: a wrong
-   limit breaks parts. A launcher's hood: the **Hood Finder** ([below](#hood-finder)) instead.
+2. **Servo Finder** for each servo, **Hood Finder** for a launcher's hood, **Motor Finder** for each lift,
+   arm or turret: put the limits and positions in your code (five files: `min`, `max` and the named heights
+   in `Tunables.Lift`, `open` and `closed` in `Tunables.Claw`). Do this BEFORE you drive a mechanism with
+   code: a wrong limit breaks parts.
 3. **Flywheel Finder**: the gains for your `Flywheel` (five files: `kP` to `kF` in `Tunables.Launcher`).
+   Then the **Feed Stop Finder** for a launcher with a feed stop.
 4. **Drive Tuner**: the wheel size and strafe correction (five files: `.wheelMm(...)` in `Robot.java`
    and `strafeCorrection` in `Tunables.Drive`, then `Tunables.Drive.calibrated = true`; older helpers:
    `RobotSettings.auto()`), before you write autonomous.
@@ -80,10 +87,10 @@ flowchart LR
    sits (five files: the offsets in the odometry line of `Robot.java`, then
    `Tunables.Odometry.checked = true`), before autonomous uses `driveTo`.
 6. **Aim Tuner**, then **Shot Tuner**: aim first, so the shot table is built with straight shots.
-7. **Characterizer** (any time after the Motor Finder): how the motors really move, for feedforward
-   and the simulator.
-
-Any time, with no order: the **Piece Tuner** for a robot with game-piece sensors ([below](#piece-tuner-what-each-sensor-sees)).
+   The **Camera Fix Check** (alpha) only with a `cameraFix(camera)` line.
+7. **Piece Tuner** for a robot with game-piece sensors. Nothing moves, so it can also come earlier.
+8. **Characterizer** last, when the robot drives and its lifts work: how the motors really move, for
+   feedforward and the simulator.
 
 ## Before you start
 
@@ -118,6 +125,10 @@ Check once on your own Driver Hub and controllers that the help page fits and is
 
 ## Servo Finder: ends and positions
 
+**You need:** the robot on a block. **Done when:** every position you use is in `Tunables.java`, between the two ends.
+
+![Servo Finder: X and B mark the two ends, just before the frame; A saves each position between them](../images/finder-servo.svg)
+
 0. **Full range?** If the part has `.fullRange()` in Robot.java (the servo's whole turn: a goBILDA 2000
    servo 300 degrees instead of 270, [why](../modules/hardware.md#full-range)), press **Y** while choosing
    the servo, so the finder uses the same range. Positions found with one range are wrong with the other.
@@ -136,6 +147,8 @@ Check once on your own Driver Hub and controllers that the help page fits and is
    servo (the lines found so far stay on the screen).
 
 ## Hood Finder
+
+**You need:** the hood mounted, the flywheel off. **Done when:** `posA`, `posB` (or a `calibration` table) and `travelSec` are in `Tunables.Hood`.
 
 For a launcher's [hood](../modules/robot.md#hood) (`Tunables.Hood`). It reads the hood from Robot.java,
 so it works before Tunables.Hood has numbers. A hood with `.fullRange()` gets the same full range here.
@@ -164,6 +177,8 @@ so it works before Tunables.Hood has numbers. A hood with `.fullRange()` gets th
 
 ## Motor Finder: limits, positions, top speed
 
+**You need:** the robot on a block, the mechanism at its bottom. **Done when:** `min`, `max` and every named height are in `Tunables.java`.
+
 1. **Put the mechanism at its bottom**, then choose the motor (D-pad, A): its count starts at 0 there.
 2. Move it slowly with the right stick (max power starts at 0.3). Stop just before the bottom and
    press **X**; just before the top and press **B**. From now on the power goes off at those marks; the
@@ -179,7 +194,28 @@ so it works before Tunables.Hood has numbers. A hood with `.fullRange()` gets th
 
 Watch the current (amps): a high number while not moving means it is pushing on something. Stop.
 
+## Flywheel Finder: gains and recovery
+
+**You need:** safety glasses, nobody in the line of fire, a charged battery. **Done when:** the `Tunables.Launcher` gains line is copied and the speed holds the target.
+
+1. Choose the flywheel motor. Let go of A, then hold **A** again: full power until the speed stops
+   rising. It works out the gains from the top speed. Wheel spinning the wrong way? Let go, press
+   **X** (reverse), try again.
+2. Press **B**: it holds a speed (60% of the top). Change it with the D-pad to the speed you shoot at.
+3. If the measured speed stays below the target at every speed, press **RB** (more F); above, **LB**.
+4. Feed one piece with the robot's own feeder, or push it in with a stick: **never
+   with your fingers**, which would be next to a wheel at full speed. Safety glasses on. The screen
+   shows the recovery time (on the robot only: the simulator has no piece to feed). Use it for the
+   launcher's `shotInterval(...)` (a little longer than the recovery time).
+5. Five files: copy the `Tunables.Launcher: kP = ..., kI = ..., kD = 0, kF = ..., nominalVolts = ...` line
+   into `Tunables.Launcher` (the section is the motor's name). A slow recovery adds `shotIntervalSec`.
+   `nominalVolts` is the battery voltage the gains were found at: the launcher's battery compensation
+   (off unless you write `batteryCompensation = true`) uses it, so a low battery spins the wheel back up as fast. The RB/LB F changes are only on the
+   screen: copy the line (with the F you ended on) into `Tunables.java`.
+
 ## Feed Stop Finder
+
+**You need:** the launcher's Robot.java line with `.feedStop(...)`, one piece. **Done when:** `feedStopHold` and `feedStopRelease` are in `Tunables.java`.
 
 For a launcher with a feed stop (`.feedStop("feed_stop")` in Robot.java): where it holds the pieces back,
 and where it lets one through. It is in [Tune and check](#tune-and-check-all-of-them-in-one-opmode) for
@@ -201,24 +237,11 @@ the Driver Station: `Last feed ended: shot seen` is good; `backup time` means th
 in time: the piece did not reach the wheel (more `assistSec`, or check the release position), or your
 wheel slows by less than 150 RPM per shot (a heavy wheel).
 
-## Flywheel Finder: gains and recovery
-
-1. Choose the flywheel motor. Let go of A, then hold **A** again: full power until the speed stops
-   rising. It works out the gains from the top speed. Wheel spinning the wrong way? Let go, press
-   **X** (reverse), try again.
-2. Press **B**: it holds a speed (60% of the top). Change it with the D-pad to the speed you shoot at.
-3. If the measured speed stays below the target at every speed, press **RB** (more F); above, **LB**.
-4. Feed one piece with the robot's own feeder (or the windmill), or push it in with a stick: **never
-   with your fingers**, which would be next to a wheel at full speed. Safety glasses on. The screen
-   shows the recovery time (on the robot only: the simulator has no piece to feed). Use it for the
-   launcher's `shotInterval(...)` (a little longer than the recovery time).
-5. Five files: copy the `Tunables.Launcher: kP = ..., kI = ..., kD = 0, kF = ..., nominalVolts = ...` line
-   into `Tunables.Launcher` (the section is the motor's name). A slow recovery adds `shotIntervalSec`.
-   `nominalVolts` is the battery voltage the gains were found at: the launcher's battery compensation
-   (off unless you write `batteryCompensation = true`) uses it, so a low battery spins the wheel back up as fast. The RB/LB F changes are only on the
-   screen: copy the line (with the F you ended on) into `Tunables.java`.
-
 ## Drive Tuner: wheel size and strafe correction
+
+**You need:** a charged battery, tape, 5 ft of clear floor. **Done when:** the Drive test (and on a mecanum the Strafe test) measures 48 within 0.5 in, and `calibrated = true` is copied.
+
+![The Drive Tuner floor from above: a tape line marked 0 and 48 in along the robot's left wheels, the push and drive arrow along it, the strafe arrow to the right, and 5 ft of clear floor ahead and to the right](../images/finder-drive-tuner.svg)
 
 **Set up the floor:** a straight line of tape, marked **0** and **48 in**, and 5 ft of clear floor ahead
 of the robot and to its right. **Start each test** with the robot's **left wheels touching the tape**
@@ -249,6 +272,10 @@ from 0 to that wheel's front edge, sideways from the tape to the left wheels.
    - older helpers: the `c.` lines go in `RobotSettings.auto()`, then `c.calibrationConfirmed = true`.
 
 ## Odometry Tuner: directions, offsets and a loop check
+
+**You need:** a 48 in tape strip with a start mark, room to spin. **Done when:** the Loop test shows `checked = true` and it is in `Tunables.java`.
+
+![A Pinpoint seen from above: the X pod 84 mm right of the centre and the Y pod 168 mm behind it give offsetsMm(-84, -168); the five tests in order](../images/finder-odometry.svg)
 
 For a robot in five files with an `odometry(...)` line ([odometry](../modules/odometry.md)). It needs
 your robot, in a small file next to `Robot.java` (the odometry robot's
@@ -283,6 +310,8 @@ can also push the robot by hand. D-pad chooses, **A** starts, **B** ends the tes
 
 ## Aim Tuner: camera offset
 
+**You need:** its own file, safety glasses, pieces, the target 4-6 ft away. **Done when:** shots go in the middle at two or three distances, and the `cameraOffset` line is copied.
+
 **Before you start:** the Aim Tuner is set up with the older helpers' pieces, not with `robot()`: your
 `createCamera()`, and `createTurret()` or `robotConfig()` (to aim by turning the robot), and
 `createLauncher()` for test shots ([reference](../modules/finders.md#aimtuneropmode)). For a robot in five
@@ -299,6 +328,10 @@ files, `robotConfig()` is `return new Robot().robotConfig();`. The Characterizer
    move it onto the launcher's line (or as close as you can), or tune at the distance you shoot from most.
 
 ## Shot Tuner: the shot table
+
+**You need:** a charged battery, safety glasses, pieces, the aim tuned. **Done when:** each table has 4-6 points, copied into `Tunables.Launcher`.
+
+![Shot Tuner: the robot at the nearest spot, then 1-2 ft further back each time; at each spot shoot 3-5, mark HIT or MISS, and X saves the best speed](../images/finder-shot-tuner.svg)
 
 It tunes the way experienced teams do: at each distance, shoot 3-5 pieces at a speed and mark each
 one **HIT** or **MISS**, try the next speed, and keep the speed with the best **hit ratio** (hits out
@@ -358,7 +391,19 @@ Charge the battery before tuning speeds: a weak battery changes how far the shot
 the battery and warns below 12.5 V). The launcher's
 speed trim (the D-pad in a match) is not used in the tuner, so the table holds the real speeds.
 
+## Camera Fix Check (alpha)
+
+**You need:** a `cameraFix(camera)` line in Robot.java and AprilTags in view. BIOBUZZ teams: skip it.
+**Done when:** `turnDegBlue` and `turnDegRed` are in `Tunables.CameraFix`. Nothing moves.
+
+1. Put the robot on the field facing AWAY from your drivers' wall (heading 0), tags in view.
+2. The screen shows where the camera puts the robot. Check it with a tape measure.
+3. **X** saves the turn for BLUE. Stand at the RED wall and press **B** for RED.
+4. Copy the line into `Tunables.CameraFix`. Details: [camera fix](../modules/odometry.md#camera-fix-alpha).
+
 ## Piece Tuner: what each sensor sees
+
+**You need:** one piece of each kind. **Done when:** "It sees" names each piece you hold up, and NONE with nothing there.
 
 For a robot with a [`Pieces` or `PieceSensor`](../modules/robot.md#pieces-and-piecesensor) line. Its
 file names your robot, like the Odometry Tuner (the cookbook's [piece-tuner recipe](../cookbook.md#how-do-i-tune-the-piece-sensors)).
@@ -376,6 +421,8 @@ distance sensor that does not look straight across), and EMPTY that looks like a
 at a far wall or a grey or black background).
 
 ## Characterizer: how the robot really moves
+
+**You need:** its own file, a charged battery, 5 ft of clear floor. **Done when:** each test ran 2-3 times and the numbers agree.
 
 Last, when the robot drives and its lifts work: the **Characterizer** measures how each motor really
 behaves (the power to start moving, the power per speed, how quickly it speeds up, and for a lift the
