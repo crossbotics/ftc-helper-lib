@@ -309,6 +309,40 @@ export function turnWhileDriving(plan, i, on) {
 	return { steps, i };
 }
 
+/**
+ * "An action" tapped on the map at (x, y): on a drive's line (away from its ends) the drive splits there and
+ * the action goes between the two parts; else it goes right after the step that ends at the nearest point
+ * on the route (the start: first). Nothing within maxOff inches: null. Returns { steps (a new list), i (the
+ * action's index) }. The plan given is not changed.
+ */
+export function actionAt(plan, x, y, action, maxOff = 12) {
+	const steps = plan.steps || [], sim = simulate(plan);
+	const poses = [{ x: +plan.start.x, y: +plan.start.y, h: wrap(+plan.start.h || 0) }, ...sim.ends];
+	let best = null;
+	steps.forEach((s, i) => {
+		if (!DRIVES.includes(s.kind)) return;
+		const a = poses[i], b = poses[i + 1], dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy);
+		if (L < 2) return;
+		const d = snapIn(Math.max(0, Math.min(1, ((x - a.x) * dx + (y - a.y) * dy) / (L * L))) * L);
+		const off = Math.hypot(x - (a.x + dx * d / L), y - (a.y + dy * d / L));
+		if (d >= 1 && L - d >= 1 && off <= maxOff && (!best || off < best.off)) best = { split: i, d, off };
+	});
+	poses.forEach((p, k) => {
+		const off = Math.hypot(x - p.x, y - p.y);
+		// a point: the first step that ends there (the drive that arrives, before a turn on the spot)
+		if (off <= maxOff && (!best || off < best.off - 1e-9)) best = { at: poses.findIndex((q) => Math.hypot(q.x - p.x, q.y - p.y) < 0.25), off };
+	});
+	if (!best) return null;
+	if (best.split != null) {
+		const split = splitMove(plan, best.split, best.d);
+		if (split) { split.splice(best.split + 1, 0, { ...action }); return { steps: split, i: best.split + 1 }; }
+		return null;
+	}
+	const out = steps.slice();
+	out.splice(best.at, 0, { ...action });
+	return { steps: out, i: best.at };
+}
+
 /** The heading a turn or turnTo ends at, and the signed degrees it turns (the short way, like AutoDrive). */
 export function turnEnd(step, h, startH) {
 	const target = step.kind === 'turn' ? wrap(h + (+step.deg || 0)) : wrap(startH + (+step.heading || 0));   // turnTo, moveTurn

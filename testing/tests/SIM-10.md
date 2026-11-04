@@ -31,7 +31,10 @@ part, must change only that part.
 5. On the last part, choose **Turn from one heading to another**, then **drive, then turn (last 30%)**.
    The robot outlines on the map must keep the first heading until near the end of the part.
 6. Drag the yellow knob at the end of the last part. The end heading in the list must change.
-7. Press **Run**. The robot must follow the path and end facing the end heading.
+7. Choose **turn to face** in "Tap adds", select part 1, and tap a spot on the field. Part 1 must now end
+   facing that spot (its yellow knob points at it).
+8. Right-click on the field. The menu must offer "Line to here", "Curve to here" and "turn to face here".
+9. Press **Run**. The robot must follow the path and end facing the end heading.
 
 ## Pass rule
 

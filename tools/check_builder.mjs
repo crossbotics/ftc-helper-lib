@@ -483,6 +483,31 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 			ok(c2[3].deg === 0 && near(e3[4].y, old[2].y + 10, 0.01), `${drive}: a turn right before its drive swings that drive`);
 		}
 	}
+	// "An action" tapped on the map: on a line the drive splits there; at a point, right after the drive that arrives.
+	{
+		const plan = { drive: 'tank', start: { x: 0, y: -60, h: 0 }, steps: [{ kind: 'move', label: 'A', inches: 20, dir: 0, power: 0.6 },
+			{ kind: 'turn', label: 'T', deg: -90, power: 0.5 }, { kind: 'move', label: 'B', inches: 20, dir: 0, power: 0.6 }] };
+		const act = { kind: 'action', code: 'Actions.fireAll(robot)', timeout: 10 };
+		const mid = S.actionAt(plan, 1, -50, act);
+		const e = S.simulate({ ...plan, steps: mid.steps });
+		ok(mid.i === 1 && mid.steps[1].kind === 'action' && mid.steps.length === 5 && near(e.ends[0].y, -50) && near(e.end.x, 20) && near(e.end.y, -40),
+			'actionAt: on a line, the drive splits there and the route stays');
+		const at = S.actionAt(plan, 0.5, -40.5, act);
+		ok(at.i === 1 && at.steps[1].kind === 'action' && at.steps[2].kind === 'turn', 'actionAt: at a point, right after the drive (before the turn there)');
+		ok(S.actionAt(plan, 0, -61, act).i === 0, 'actionAt: at the start, first');
+		ok(S.actionAt(plan, 60, 60, act) === null, 'actionAt: far from the route, nothing');
+		ok(plan.steps.length === 3, 'actionAt: the plan given is not changed');
+	}
+	// Pedro "turn to face": the part ends facing the point.
+	{
+		const path = { start: [0, -60], parts: [{ ctrl: [], end: [0, -30], heading: { mode: 'path' }, maxSpeed: null }], holdSec: 0 };
+		const f = P.facePart(path, 0, -30, -30);
+		const smp = P.sample({ ...path, parts: f });
+		ok(f[0].heading.mode === 'turn' && near(smp[smp.length - 1].h, 90) && near(smp[0].h, 0), 'facePart: turns from its start heading to face the point');
+		const g = P.facePart({ ...path, parts: [{ ...path.parts[0], heading: { mode: 'turn', a: 0, b: 10, from: 0.7, to: 1 } }] }, 0, 30, -30);
+		ok(g[0].heading.b === -90 && g[0].heading.from === 0.7, 'facePart: a turn keeps its "when"');
+		ok(P.facePart(path, 3, 0, 0) === null, 'facePart: no such part');
+	}
 	// Pedro: a part splits in two with the same shape; a turn on one stretch.
 	{
 		const path = { start: [0, -60], parts: [{ ctrl: [[30, -40]], end: [0, -20], heading: { mode: 'turn', a: 0, b: 90 }, maxSpeed: 0.5 }], holdSec: 0 };
@@ -549,7 +574,7 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 	fs.rmSync(tmp, { recursive: true, force: true });
 	// Both pages use these (no copy of their own) and run tankSteps on every render.
 	const page = fs.readFileSync(path.join(dir, 'builder.js'), 'utf8');
-	ok(/S\.stepsToPoint\(/.test(page) && /S\.dragPoint\(/.test(page) && /S\.setTurnHeading\(/.test(page) && /P\.splitPart\(/.test(page) && /S\.turnWhileDriving\(/.test(page) && /S\.tankSteps\(/.test(page) && /syncRobot\(\);\s*enforceTank\(\);/.test(page), 'builder.js: drive there, drag and every render use the shared tank rules');
+	ok(/S\.stepsToPoint\(/.test(page) && /S\.dragPoint\(/.test(page) && /S\.setTurnHeading\(/.test(page) && /S\.actionAt\(/.test(page) && /P\.facePart\(/.test(page) && /P\.splitPart\(/.test(page) && /S\.turnWhileDriving\(/.test(page) && /S\.tankSteps\(/.test(page) && /syncRobot\(\);\s*enforceTank\(\);/.test(page), 'builder.js: drive there, drag and every render use the shared tank rules');
 	const sitePage = siteDir() && path.join(siteDir(), 'steps.js');
 	if (sitePage && fs.existsSync(sitePage)) {
 		const sp = fs.readFileSync(sitePage, 'utf8');

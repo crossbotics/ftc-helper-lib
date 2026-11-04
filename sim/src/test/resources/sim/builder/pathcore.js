@@ -120,6 +120,21 @@ export function splitPart(path, i, t, actions = []) {
 	return { parts, actions: acts };
 }
 
+/**
+ * "Turn to face" on the map: part i ends facing the point (x, y) (a turn from the heading it starts with;
+ * a turn keeps its "when"). With no part i: null. Returns a new list of parts.
+ */
+export function facePart(path, i, x, y) {
+	const part = path.parts[i];
+	if (!part) return null;
+	const b = round1(headingOf(x - part.end[0], y - part.end[1]));
+	const a = round1(partEnds(sample(path), i).start);
+	const h = part.heading.mode === 'turn' ? { ...part.heading, a, b } : { mode: 'turn', a, b };
+	const parts = path.parts.slice();
+	parts[i] = { ...part, heading: h };
+	return parts;
+}
+
 // The facing at t for a part's heading rule. tangentAt: the path's own direction there.
 function headingAt(h, t, x, y, tangent) {
 	switch (h.mode) {

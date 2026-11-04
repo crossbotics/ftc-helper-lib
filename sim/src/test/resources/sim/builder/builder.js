@@ -408,8 +408,8 @@ function cannotRun() {
 // ------------------------------------------------------------------ the map (the panel's SVG)
 
 const svg = $('bMap');
-const TOOLS_STEPS = [['drive', 'drive there'], ['face', 'turn to face'], ['none', 'nothing']];
-const TOOLS_PEDRO = [['line', 'a line'], ['curve', 'a curve'], ['action', 'an action'], ['none', 'nothing']];
+const TOOLS_STEPS = [['drive', 'drive there'], ['face', 'turn to face'], ['action', 'an action'], ['none', 'nothing']];
+const TOOLS_PEDRO = [['line', 'a line'], ['curve', 'a curve'], ['face', 'turn to face'], ['action', 'an action'], ['none', 'nothing']];
 
 function renderTools() {
 	const list = B.mode === 'pedro' ? TOOLS_PEDRO : TOOLS_STEPS;
@@ -417,6 +417,7 @@ function renderTools() {
 	$('bTools').innerHTML = '<span class="muted">Tap adds:</span><span class="b-seg" role="group" aria-label="What a tap on the map adds">'
 		+ list.map(([v, t]) => `<button data-tool="${v}" aria-pressed="${v === now}" class="${v === now ? 'on' : ''}">${t}</button>`).join('')
 		+ '</span><button id="bUndo" title="Undo the last change">Undo</button>'
+		+ '<span class="muted b-tip" title="Right-click (or press and hold) on the map">Right-click: more</span>'
 		+ `<button id="bNew" title="${B.mode === 'pedro' ? 'Remove every part and action (Undo brings them back)' : 'Remove every step (Undo brings them back)'}">Start over</button>`;
 	for (const b of $('bTools').querySelectorAll('[data-tool]')) {
 		b.onclick = () => { if (B.mode === 'pedro') B.addPedro = b.dataset.tool; else B.add = b.dataset.tool; render(); };
@@ -553,7 +554,7 @@ function moveHandle(id, x, y) {
 // points: { i (the step), d (inches along it), x, y }, or null. A tap there puts a new point on the line.
 function lineSpot(x, y) {
 	if (B.mode === 'pedro') return pedroSpot(x, y);
-	if (!view?.sim) return null;
+	if (!view?.sim || B.add === 'action') return null;   // "an action": a tap on a line adds one there
 	const r = handleRadius(svg);
 	let best = null;
 	B.steps.plan.steps.forEach((s, i) => {
@@ -614,13 +615,22 @@ function curveControls(a, b, n) {
 }
 
 /** A tap on the field (not a drag), plan numbers: adds a step or a part, with the tool chosen. */
-function tapAt(x, y) {
+function tapAt(x, y, tool) {
 	if (Math.abs(x) > LIMIT + 2 || Math.abs(y) > LIMIT + 2) return;
 	[x, y] = clampXY(snap(x), snap(y));
 	if (B.mode === 'pedro') {
 		const st = B.pedro, path = st.path;
-		if (B.addPedro === 'none') return;
-		if (B.addPedro === 'action') {
+		tool = tool || B.addPedro;
+		if (tool === 'none') return;
+		if (tool === 'face') {
+			// the selected part (else the last) ends facing the point; no part yet: the start turns to face it
+			if (!path.parts.length) { const s0 = startNow(); change(() => setStartHeading(Math.round(P.headingOf(x - +s0.x, y - +s0.y)))); return; }
+			const i = path.parts[B.selPart] ? B.selPart : path.parts.length - 1;
+			const parts = P.facePart(path, i, x, y);
+			if (parts) change(() => { path.parts = parts; B.selPart = i; });
+			return;
+		}
+		if (tool === 'action') {
 			if (!path.parts.length) return;
 			const near = P.project(view.m, x, y);
 			if (near.off > 12) return;
@@ -637,17 +647,24 @@ function tapAt(x, y) {
 			const last = path.parts[path.parts.length - 1];
 			let heading = last ? structuredClone(last.heading) : { mode: 'path' };
 			if (heading.mode === 'turn') heading = { mode: 'keep', a: heading.b };
-			path.parts.push({ ctrl: B.addPedro === 'curve' ? curveControls(from, [x, y], 1) : [], end: [x, y], heading, maxSpeed: null });
+			path.parts.push({ ctrl: tool === 'curve' ? curveControls(from, [x, y], 1) : [], end: [x, y], heading, maxSpeed: null });
 			B.selPart = path.parts.length - 1;
 		});
 		return;
 	}
-	if (B.add === 'none') return;
+	tool = tool || B.add;
+	if (tool === 'none') return;
+	if (tool === 'action') {
+		// at the nearest point on the route (on a drive's line: the drive splits there)
+		const r = S.actionAt(B.steps.plan, x, y, NEW.action());
+		if (r) change(() => { B.steps.plan.steps = r.steps; B.sel = r.i; });
+		return;
+	}
 	change(() => {
 		const plan = B.steps.plan;
 		const i = B.at != null ? B.at : B.sel != null ? B.sel + 1 : plan.steps.length, p = poseBefore(i);
 		let add;
-		if (B.add === 'face') {
+		if (tool === 'face') {
 			const a = Math.round(P.wrap(P.headingOf(x - p.x, y - p.y) - p.h));
 			add = a ? [{ kind: 'turn', label: `Face (${fmt(x)}, ${fmt(y)})`, deg: a, power: 0.5 }] : [];
 		} else add = stepsTo(p, x, y);
@@ -756,6 +773,8 @@ const mirrorOf = (b) => (b.mode === 'pedro' ? !!b.pedro.mirror : !!b.steps.plan.
 // Dragging on the panel's map: a point, a PathAt marker; a tap adds.
 let drag = null;
 svg.addEventListener('pointerdown', (evt) => {
+	closeMenu();
+	if (evt.button === 2) return;   // the right button opens the menu (contextmenu below)
 	const h = evt.target.closest('.bh'), mk = evt.target.closest('.bact');
 	drag = { x0: evt.clientX, y0: evt.clientY, moved: false, at: toField(svg, evt), before: JSON.stringify(B) };
 	dragBase = null;
@@ -774,6 +793,21 @@ svg.addEventListener('pointerdown', (evt) => {
 	if (drag.id && /^[mk]\d+$/.test(drag.id)) B.sel = +drag.id.slice(1);
 	if (drag.id && /^[eh]\d+$/.test(drag.id)) B.selPart = +drag.id.slice(1);
 	svg.setPointerCapture(evt.pointerId);
+	// Press and hold (a touch screen has no right button): the same menu, if the finger stays still.
+	if (evt.pointerType !== 'mouse') {
+		const d = drag, hid = h?.dataset.h;
+		d.hold = setTimeout(() => {
+			if (drag !== d || d.moved) return;
+			drag = null; dragBase = null;
+			if (d.added) { B = { ...JSON.parse(d.before), open: true }; render(); }   // a new point is not wanted: the menu instead
+			openMenu(evt.clientX, evt.clientY, d.at, hid);
+		}, 550);
+	}
+});
+svg.addEventListener('contextmenu', (evt) => {
+	evt.preventDefault();
+	drag = null;
+	openMenu(evt.clientX, evt.clientY, toField(svg, evt), evt.target.closest('.bh')?.dataset.h);
 });
 svg.addEventListener('pointermove', (evt) => {
 	if (!drag) { const [x, y] = toField(svg, evt); showSpot(lineSpot(x, y)); return; }
@@ -790,6 +824,7 @@ svg.addEventListener('pointermove', (evt) => {
 svg.addEventListener('pointerup', () => {
 	if (!drag) return;
 	const d = drag;
+	clearTimeout(d.hold);
 	drag = null;
 	dragBase = null;
 	if ((d.moved && (d.id || d.act != null)) || d.added) { undoList.push(d.before); render(); return; }
@@ -800,7 +835,83 @@ svg.addEventListener('pointerup', () => {
 	if (P.pointInPoly(d.at, P.footprint(+st.x, +st.y, +st.h || 0, L, W))) return;
 	tapAt(d.at[0], d.at[1]);
 });
-svg.addEventListener('pointercancel', () => { drag = null; dragBase = null; });
+svg.addEventListener('pointercancel', () => { if (drag) clearTimeout(drag.hold); drag = null; dragBase = null; });
+
+// ------------------------------------------------------------------ the map's menu (right-click, or press and hold)
+
+// What can be done where the pointer is: on a point, on a line, or on the field. [[words, what it does]...]
+function menuItems(at, id) {
+	const [x, y] = at, out = [];
+	const item = (t, fn) => out.push([t, fn]);
+	if (B.mode === 'pedro') {
+		const path = B.pedro.path, st = B.pedro;
+		const e = /^e(\d+)$/.exec(id || '');
+		if (e) {
+			const i = +e[1];
+			item('Add an action at this point', () => tapAt(path.parts[i].end[0], path.parts[i].end[1], 'action'));
+			item(`Turn to face... (then tap where part ${i + 1} should face)`, () => { B.selPart = i; B.addPedro = 'face'; render(); });
+			item('Add a point in the middle of the part', () => change(() => { const r = P.splitPart(path, i, 0.5, st.actions); if (r) { path.parts = r.parts; st.actions = r.actions; } }));
+			item(`Remove part ${i + 1}`, () => change(() => { path.parts.splice(i, 1); B.selPart = Math.max(0, Math.min(i, path.parts.length - 1)); }));
+			return out;
+		}
+		const spot = pedroSpot(x, y);
+		if (spot) {
+			item('Put a point here', () => change(() => { const r = P.splitPart(path, spot.part, spot.t, st.actions); if (r) { path.parts = r.parts; st.actions = r.actions; B.selPart = spot.part; } }));
+			item('Add an action here', () => tapAt(spot.x, spot.y, 'action'));
+			return out;
+		}
+		item('Line to here', () => tapAt(x, y, 'line'));
+		item('Curve to here', () => tapAt(x, y, 'curve'));
+		item(path.parts.length ? `Part ${(path.parts[B.selPart] ? B.selPart : path.parts.length - 1) + 1}: turn to face here` : 'Start: face here', () => tapAt(x, y, 'face'));
+		return out;
+	}
+	const plan = B.steps.plan, steps = plan.steps;
+	const m = /^([mk])(\d+)$/.exec(id || '');
+	if (m) {
+		const i = +m[2], s = steps[i];
+		if (m[1] === 'm') {
+			const e = view.sim.ends[i];
+			item('Add an action at this point', () => tapAt(e.x, e.y, 'action'));
+			item('Add a step after this one...', () => { B.at = i + 1; B.sel = i; render(); $('bAdd').scrollIntoView({ block: 'nearest' }); });
+			if (plan.drive !== 'tank' && s.kind === 'move') item('Turn while driving (one step)', () => change(() => { const r = S.turnWhileDriving(plan, i, true); if (r) { plan.steps = r.steps; B.sel = r.i; } }));
+			if (s.kind === 'moveTurn') item('Drive, then turn (two steps)', () => change(() => { const r = S.turnWhileDriving(plan, i, false); if (r) { plan.steps = r.steps; B.sel = r.i; } }));
+			item(`Remove step ${i + 1} (${KIND_TEXT[s.kind]})`, () => change(() => { steps.splice(i, 1); B.sel = null; }));
+		} else item(`Remove step ${i + 1} (${KIND_TEXT[s.kind]})`, () => change(() => { steps.splice(i, 1); B.sel = null; }));
+		return out;
+	}
+	const spot = view?.sim ? (() => { const keep = B.add; B.add = 'drive'; const r = lineSpot(x, y); B.add = keep; return r; })() : null;
+	if (spot) {
+		item('Put a point here', () => change(() => { const r = S.splitMove(plan, spot.i, spot.d); if (r) { plan.steps = r; B.sel = spot.i; } }));
+		item('Add an action here', () => tapAt(spot.x, spot.y, 'action'));
+		return out;
+	}
+	const where = B.at != null ? ` (as step ${B.at + 1})` : B.sel != null ? ` (after step ${B.sel + 1})` : '';
+	item(`Drive here${where}`, () => tapAt(x, y, 'drive'));
+	item(`Turn to face here${where}`, () => tapAt(x, y, 'face'));
+	if (steps.length) item('Add an action at the nearest point', () => tapAt(x, y, 'action'));
+	return out;
+}
+
+const menu = document.createElement('div');
+menu.className = 'b-menu';
+menu.setAttribute('role', 'menu');
+menu.hidden = true;
+document.body.appendChild(menu);
+function openMenu(cx, cy, at, id) {
+	const items = menuItems(at, id);
+	if (!items.length) return;
+	menu.innerHTML = items.map(([t], k) => `<button role="menuitem" data-k="${k}">${esc(t)}</button>`).join('');
+	menu.querySelectorAll('button').forEach((b) => { b.onclick = () => { closeMenu(); items[+b.dataset.k][1](); }; });
+	menu.hidden = false;
+	const w = menu.offsetWidth, h = menu.offsetHeight;
+	menu.style.left = Math.max(4, Math.min(cx, innerWidth - w - 4)) + 'px';
+	menu.style.top = Math.max(4, Math.min(cy, innerHeight - h - 4)) + 'px';
+	menu.querySelector('button').focus({ preventScroll: true });
+}
+function closeMenu() { menu.hidden = true; }
+document.addEventListener('pointerdown', (evt) => { if (!menu.hidden && !menu.contains(evt.target)) closeMenu(); }, true);
+document.addEventListener('keydown', (evt) => { if (evt.key === 'Escape') closeMenu(); });
+addEventListener('scroll', closeMenu, true);
 svg.addEventListener('pointerleave', () => { if (!drag) showSpot(null); });
 
 // While a point is dragged: only the map, the 3D lines and the code (the forms follow on release).

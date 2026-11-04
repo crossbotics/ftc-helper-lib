@@ -5036,6 +5036,8 @@
        "Press **Undo** 3 times. The plan must go back to the 3 drives from step 2.",
        "In the steps list, point between step 1 and step 2. A **+** must show. Press it, then press **+ Wait**. The wait must be step 2. Press **Done**.",
        "Find a turn step on the map (a yellow knob in front of a robot outline). Drag the knob around. The robot outline must turn with it, and the turn step's number in the list must change.",
+       "Choose **an action** in \"Tap adds\", then tap on the line of step 1. An action step must appear in the list between the two halves of that drive.",
+       "Right-click on point 2 (or press and hold on a touch screen). A menu must open. Press **Add an action at this point**: an action step must appear right after that drive.",
        "Press **Run**. The robot must drive the plan."
       ]
      }
@@ -5109,6 +5111,8 @@
        "Drag the new point to the side. Only the parts next to it may change.",
        "On the last part, choose **Turn from one heading to another**, then **drive, then turn (last 30%)**. The robot outlines on the map must keep the first heading until near the end of the part.",
        "Drag the yellow knob at the end of the last part. The end heading in the list must change.",
+       "Choose **turn to face** in \"Tap adds\", select part 1, and tap a spot on the field. Part 1 must now end facing that spot (its yellow knob points at it).",
+       "Right-click on the field. The menu must offer \"Line to here\", \"Curve to here\" and \"turn to face here\".",
        "Press **Run**. The robot must follow the path and end facing the end heading."
       ]
      }

@@ -348,7 +348,10 @@ What a team does, step by step:
      **Put a step between two:** point between two steps in the list and press the **+** that shows there.
      The buttons move into that gap: each one you press (and each tap on the map) goes in there, one after
      the other, until you press **Done**. **Start over** (beside Undo) removes every step; Undo brings them back.
-     Tap the field map to add a drive to that spot (a tank drive gets a turn first), or use the list: each
+     Tap the field map to add a drive to that spot (a tank drive gets a turn first). "Tap adds" chooses what a
+     tap does: **drive there**, **turn to face** (a turn toward the spot), **an action** (an action step at the
+     nearest point on the route: on a drive's line the drive splits there, at a point it goes right after the
+     drive that arrives), or nothing. Or use the list: each
      step has its numbers, arrows to move it, and its own warnings. The step numbers on the map are white
      on a dark badge.
      **Drag a point** (the blue dot at the end of a drive) anywhere: the drive and the turn before it change
@@ -385,6 +388,8 @@ What a team does, step by step:
    - **Pedro path** (mecanum with odometry): tap to add lines or curves, drag the ends and the control
      points, choose each part's heading rule and speed limit, hold the end, and add things to start along the
      path (`PathAt`: inches done or left, part of the path, start of a part, near a point).
+     **Turn to face** (Tap adds): the selected part (or the last) ends facing the spot you tap; with no part
+     yet, the start robot turns to face it.
      **Put a point between two** the same way: the white dot slides along a part, and a click splits the part
      in two there (the same shape; a turn is shared out between the two). Or press **+ point** on a part to
      split it in the middle. A part that keeps a heading or turns gets a yellow knob at its end: drag it to
@@ -394,6 +399,10 @@ What a team does, step by step:
      the end of the LAST part can be cut short when the path ends: tick **Hold the end** (the builder warns). **follow** needs a
      `follower(...)` line in Robot.java (the pedro module); **driveTo steps** need only odometry. The builder
      says so when your robot cannot do the mode, and Run stays off.
+   - **Right-click on the map** (or press and hold on a touch screen) for a short menu of what you can do
+     there. On a point: add an action at it, add a step after it, turn while driving (mecanum), remove it.
+     On a line: put a point here, add an action here. On the field: drive here, turn to face here (Pedro:
+     line or curve to here, turn to face here). The menu does nothing a button cannot: it saves trips.
 3. **Edit in 3D too:** with "Edit in the 3D view" ticked, the same points are balls in the 3D view: drag
    them, or tap the field to add a step or a part (not near the robot). The purple dashed line is the plan.
 4. **The start spot and the note for the drive team.** Pick a ready-made spot (against your wall, each one

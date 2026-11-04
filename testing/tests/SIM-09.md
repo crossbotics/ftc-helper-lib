@@ -36,7 +36,11 @@ never move the other points.
    The wait must be step 2. Press **Done**.
 10. Find a turn step on the map (a yellow knob in front of a robot outline). Drag the knob around. The robot
     outline must turn with it, and the turn step's number in the list must change.
-11. Press **Run**. The robot must drive the plan.
+11. Choose **an action** in "Tap adds", then tap on the line of step 1. An action step must appear in the
+    list between the two halves of that drive.
+12. Right-click on point 2 (or press and hold on a touch screen). A menu must open. Press **Add an action
+    at this point**: an action step must appear right after that drive.
+13. Press **Run**. The robot must drive the plan.
 
 ## Pass rule
 
