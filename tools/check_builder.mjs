@@ -602,8 +602,8 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 	const sitePage = siteDir() && path.join(siteDir(), 'steps.js');
 	if (sitePage && fs.existsSync(sitePage)) {
 		const sp = fs.readFileSync(sitePage, 'utf8');
-		const good = /S\.stepsToPoint\(/.test(sp) && /S\.dragMove\(/.test(sp) && /S\.tankSteps\(/.test(sp) && /fromJava\(.*\{ drive: state\.plan\.drive \}/.test(sp);
-		ok(good, 'the site\'s steps.js: drive there, drag, every render and Java in use the shared tank rules');
+		const good = /S\.stepsToPoint\(/.test(sp) && /S\.(dragMove|dragPoint)\(/.test(sp) && /S\.tankSteps\(/.test(sp) && /fromJava\(.*\{ drive: state\.plan\.drive \}/.test(sp);
+		ok(good, 'the site\'s steps.js: drive there, drag, every render and Java in use the shared tank rules');   // dragPoint calls dragMove
 	}
 }
 
