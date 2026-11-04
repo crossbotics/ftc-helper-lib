@@ -179,6 +179,9 @@ protected void steps(Steps s, Robot robot) {
   between the parts.
 - **`.turnTo(0, 45)`**: on this part, it turns evenly from heading 0 to heading 45 (headings go
   counterclockwise, as in lesson 7: 45 = turned to the left. Only a `move`'s direction goes clockwise.)
+  To turn on one stretch only, add two numbers: where the turn starts and ends, as parts of the way
+  (0 = the part's start, 1 = its end). `.turnTo(0, 45, 0, 0.3)` turns first, then drives;
+  `.turnTo(0, 45, 0.7, 1)` drives first, then turns (on the last part, add `.holdEnd()` so the turn finishes).
 - **`.holdEnd()`**: at the end, Pedro keeps the robot on the point while it scores (at most 5 s;
   `.holdEnd(2)` for 2 s).
 - **`static final`**: the path is made once, when the program starts. It is the same every match.
