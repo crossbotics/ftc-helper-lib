@@ -4988,6 +4988,78 @@
    }
   },
   {
+   "id": "SIM-09",
+   "title": "Edit an auto on the builder map (add a point between two, drag to turn)",
+   "area": "simulator",
+   "priority": "medium",
+   "where": "sim",
+   "minutes": 15,
+   "needs": [],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/guides/simulator.md",
+     "anchor": "the-auto-builder"
+    }
+   ],
+   "file": "testing/tests/SIM-09.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A team fixes its autonomous on the map, not in the numbers. Putting a point between two steps, and dragging a point to change the turn before it, must work on a tank drive and a mecanum drive, and must never move the other points."
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "SIM-01 works on this laptop.",
+       "Your robot from `Robot.java`, or a kit bot's robot file."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Open the simulator and press **Auto builder**. In **Simple steps**, press **Start over**.",
+       "With \"drive there\" picked, tap the map 3 times to make 3 drives that turn a corner.",
+       "Read the step numbers on the map. Each one must be easy to read (white on a dark badge).",
+       "Move the mouse over the line of the first drive. A white dot with a plus must slide along the line.",
+       "Click. A new point must appear there, and the steps list must have one more drive. The route must not change.",
+       "Drag the new point to the side. The line must bend there. Points 2 and 3 (now 3 and 4) must stay where they were.",
+       "Drag the last point to the side. The robot must turn to drive to it (a tank drive: the turn step before it changes).",
+       "Press **Undo** 3 times. The plan must go back to the 3 drives from step 2.",
+       "Press **Run**. The robot must drive the plan."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Each step does what it says, on 2 runs out of 2."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "Your computer and browser.",
+       "Your robot: tank or mecanum.",
+       "Any step where a point moved that you did not drag, or a new point did not appear."
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A mecanum drive can drive sideways: in step 7, a drive with no turn before it changes its direction (a strafe) instead of a turn."
+     }
+    ]
+   }
+  },
+  {
    "id": "SOM-03",
    "title": "Shooting on the move in the simulator - strafe and compare",
    "area": "moving-shot",

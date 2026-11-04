@@ -157,7 +157,7 @@ panel.innerHTML = `
 </details>
 <div class="b-sec">
   <div class="row b-tools" id="bTools"></div>
-  <svg id="bMap" viewBox="-82 -80 164 168" role="img" aria-label="The field from your drivers' wall: drag the points, tap to add"></svg>
+  <svg id="bMap" viewBox="-82 -80 164 168" role="img" aria-label="The field from your drivers' wall: drag the points, tap a line to put a point on it, tap elsewhere to add"></svg>
   <div class="row"><button id="bPreview" title="The plan robot drives the plan (a plan, not physics)">Preview</button>
     <input type="range" id="bTime" min="0" max="1000" value="0" aria-label="Time along the plan"><span class="muted" id="bTimeText"></span></div>
   <label class="muted"><input type="checkbox" id="bEdit3d"> Edit in the 3D view too (drag the points; a tap adds)</label>
@@ -469,7 +469,11 @@ function poseBefore(i) {
 	return view.sim.ends[i - 1];
 }
 
-/** Moves a point to (x, y), plan numbers (a drag on the panel's map or in 3D). */
+// The steps as they were when this drag started ({ id, steps }): every move of the pointer works from them
+// again, so a turn the drag adds (and takes away again) never piles up.
+let dragBase = null;
+
+/** Moves a point to (x, y), plan numbers (a drag on the panel's map or in 3D). Give the same id all through a drag. */
 function moveHandle(id, x, y) {
 	if (id === 'sh') {
 		const st = startNow();
@@ -492,11 +496,38 @@ function moveHandle(id, x, y) {
 	}
 	const plan = B.steps.plan;
 	if (id === 's') { Object.assign(plan.start, S.snapStart({ x, y, h: +plan.start.h || 0 }, robotLW(), half, B.snapStart !== false)); return; }
-	const i = +id.slice(1), s = plan.steps[i];
-	if (!s || s.kind !== 'move') return;
-	// Mecanum: straight there; tank: along the robot's front only (forward or back, never sideways).
-	const n = S.dragMove(plan.drive, poseBefore(i), x, y);
-	if (n) { s.inches = n.inches; s.dir = n.dir; }
+	if (!dragBase || dragBase.id !== id) dragBase = { id, steps: structuredClone(plan.steps) };
+	// The drive and the turn before it change so it ends there (a tank drive gets a turn when it needs
+	// one: it never strafes); the next point stays where it was (stepscore.dragPoint).
+	const r = S.dragPoint({ ...plan, steps: dragBase.steps }, +id.slice(1), x, y);
+	if (r) { plan.steps = r.steps; B.sel = r.i; }
+}
+
+// The place on a drive's line nearest (x, y), plan numbers, close enough to grab and away from its two
+// points: { i (the step), d (inches along it), x, y }, or null. A tap there puts a new point on the line.
+function lineSpot(x, y) {
+	if (B.mode === 'pedro' || !view?.sim) return null;
+	const r = handleRadius(svg);
+	let best = null;
+	B.steps.plan.steps.forEach((s, i) => {
+		const a = poseBefore(i), b = view.sim.ends[i];
+		if (s.kind !== 'move' || !b) return;
+		const dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy);
+		if (L < 1) return;
+		const d = snap(Math.max(0, Math.min(1, ((x - a.x) * dx + (y - a.y) * dy) / (L * L))) * L);
+		const px = a.x + dx * d / L, py = a.y + dy * d / L, off = Math.hypot(x - px, y - py);
+		if (off > r * 1.6 || d < r * 1.8 || L - d < r * 1.8) return;
+		if (!best || off < best.off) best = { i, d, x: px, y: py, off };
+	});
+	return best;
+}
+// The white dot with a plus that slides along a line under the pointer (made by renderMap).
+function showSpot(spot) {
+	const dot = svg.querySelector('#bSpot');
+	if (!dot) return;
+	dot.setAttribute('visibility', spot ? 'visible' : 'hidden');
+	if (spot) dot.setAttribute('transform', `translate(${spot.x} ${-spot.y})`);
+	svg.style.cursor = spot ? 'copy' : '';
 }
 
 // The steps that drive the robot from pose p to (x, y): mecanum one move in any direction; tank a turn,
@@ -622,9 +653,18 @@ function renderMap() {
 		const fill = { start: START, end: PATH, move: PATH, ctrl: '#fff', point: '#fff', turn: '#f2c230' }[h.kind];
 		if (h.kind === 'turn') { const st = startNow(); el('line', { x1: +st.x, y1: -+st.y, x2: h.x, y2: -h.y, stroke: '#f2c230', 'stroke-width': r * 0.35, 'pointer-events': 'none' }, hg); }
 		el('circle', { cx: h.x, cy: -h.y, r: r * (h.kind === 'ctrl' ? 0.85 : 1.1), fill, stroke: sel ? '#ffe14d' : h.kind === 'ctrl' || h.kind === 'point' ? PATH : '#fff', 'stroke-width': r * (sel ? 0.5 : 0.3) }, grp);
-		if (h.label) el('text', { x: h.x + r * 1.4, y: -h.y - r * 1.2, 'font-size': r * 2.1, fill: '#101c45', 'font-weight': 700, 'paint-order': 'stroke', stroke: '#fff', 'stroke-width': r * 0.5, 'pointer-events': 'none' }, hg).textContent = h.label;
-		el('title', {}, grp).textContent = { start: 'Start spot: drag to move', turn: 'Turn the start: drag around the robot (15° steps when snapping is on)', end: 'End of a part: drag to move', move: 'End of a drive: drag to change it', ctrl: 'Control point: the path bends toward it', point: 'The point the robot faces' }[h.kind];
+		// The number: white on a dark badge up and to the right of the point (easy to read on any tile or line).
+		if (h.label) {
+			const bx = h.x + r * 2.4, by = -h.y - r * 2.4, w = r * (h.label.length > 1 ? 4 : 3);
+			el('rect', { x: bx - w / 2, y: by - r * 1.5, width: w, height: r * 3, rx: r * 1.5, fill: sel ? '#7a5a00' : '#101c45', stroke: '#fff', 'stroke-width': r * 0.3, 'pointer-events': 'none' }, hg);
+			el('text', { x: bx, y: by + r * 0.78, 'font-size': r * 2.2, 'text-anchor': 'middle', fill: '#fff', 'font-weight': 700, 'pointer-events': 'none' }, hg).textContent = h.label;
+		}
+		el('title', {}, grp).textContent = { start: 'Start spot: drag to move', turn: 'Turn the start: drag around the robot (15° steps when snapping is on)', end: 'End of a part: drag to move', move: 'End of a drive: drag it anywhere (the turn before it changes too)', ctrl: 'Control point: the path bends toward it', point: 'The point the robot faces' }[h.kind];
 	}
+	// The new-point dot (Simple steps): hidden until the pointer is over a drive's line.
+	const spot = el('g', { id: 'bSpot', visibility: 'hidden', 'pointer-events': 'none' }, svg);
+	el('circle', { r: r * 1.1, fill: '#fff', stroke: PATH, 'stroke-width': r * 0.35 }, spot);
+	el('path', { d: `M${-r * 0.6} 0H${r * 0.6}M0 ${-r * 0.6}V${r * 0.6}`, stroke: PATH, 'stroke-width': r * 0.3 }, spot);
 	const t = at && at.t != null ? at.t : 0;
 	$('bTimeText').textContent = `${fmt(t)} s of ${fmt(tl.total)}`;
 }
@@ -642,14 +682,21 @@ let drag = null;
 svg.addEventListener('pointerdown', (evt) => {
 	const h = evt.target.closest('.bh'), mk = evt.target.closest('.bact');
 	drag = { x0: evt.clientX, y0: evt.clientY, moved: false, at: toField(svg, evt), before: JSON.stringify(B) };
+	dragBase = null;
+	const spot = !h && !mk ? lineSpot(drag.at[0], drag.at[1]) : null;
 	if (h) drag.id = h.dataset.h;
 	else if (mk) { drag.act = +mk.dataset.a; B.selAction = drag.act; }
+	else if (spot) {
+		// On a drive's line: split that drive in two, and hold the new point (a drag moves it at once).
+		const steps = S.splitMove(B.steps.plan, spot.i, spot.d);
+		if (steps) { B.steps.plan.steps = steps; drag.id = `m${spot.i}`; drag.added = true; quickRender(); }
+	}
 	if (drag.id && /^m\d+$/.test(drag.id)) B.sel = +drag.id.slice(1);
 	if (drag.id && /^e\d+$/.test(drag.id)) B.selPart = +drag.id.slice(1);
 	svg.setPointerCapture(evt.pointerId);
 });
 svg.addEventListener('pointermove', (evt) => {
-	if (!drag) return;
+	if (!drag) { const [x, y] = toField(svg, evt); showSpot(lineSpot(x, y)); return; }
 	if (Math.hypot(evt.clientX - drag.x0, evt.clientY - drag.y0) > 5) drag.moved = true;
 	if (!drag.moved) return;
 	const [x, y] = toField(svg, evt);
@@ -664,7 +711,8 @@ svg.addEventListener('pointerup', () => {
 	if (!drag) return;
 	const d = drag;
 	drag = null;
-	if (d.moved && (d.id || d.act != null)) { undoList.push(d.before); render(); return; }
+	dragBase = null;
+	if ((d.moved && (d.id || d.act != null)) || d.added) { undoList.push(d.before); render(); return; }
 	if (d.id || d.act != null) { render(); return; }
 	if (d.moved) return;
 	// A tap on the start robot adds nothing (drag its yellow knob to turn it).
@@ -672,7 +720,8 @@ svg.addEventListener('pointerup', () => {
 	if (P.pointInPoly(d.at, P.footprint(+st.x, +st.y, +st.h || 0, L, W))) return;
 	tapAt(d.at[0], d.at[1]);
 });
-svg.addEventListener('pointercancel', () => { drag = null; });
+svg.addEventListener('pointercancel', () => { drag = null; dragBase = null; });
+svg.addEventListener('pointerleave', () => { if (!drag) showSpot(null); });
 
 // While a point is dragged: only the map, the 3D lines and the code (the forms follow on release).
 function quickRender() {
@@ -1409,6 +1458,7 @@ function setup3dDrag() {
 		if (hit) {
 			g.id = hit.object.userData.id;
 			g.before = JSON.stringify(B);
+			dragBase = null;
 			page.v3.controls.enabled = false;
 			stage.setPointerCapture(ev.pointerId);
 			ev.stopPropagation(); ev.preventDefault();
@@ -1431,6 +1481,7 @@ function setup3dDrag() {
 		if (g.id) {
 			if (g.moved) undoList.push(g.before);
 			g.id = null;
+			dragBase = null;
 			page.v3.controls.enabled = true;
 			render();
 			ev.stopPropagation();

@@ -133,6 +133,104 @@ export function dragMove(drive, p, x, y) {
 	return { inches: Math.abs(along), dir: along < 0 ? 180 : 0 };
 }
 
+// The pose before step k ({ x, y, h }): the start for step 0.
+function poseBeforeStep(start, steps, k) {
+	if (k <= 0) return { x: +start.x, y: +start.y, h: wrap(+start.h || 0) };
+	const e = simulate({ start, steps }).ends[k - 1];
+	return { x: e.x, y: e.y, h: e.h };
+}
+
+// A name the map made ("Face (12, 30)", "To (12, 30)") follows the point; a team's own name stays.
+function follow(s, word, x, y) {
+	if (s.label == null || new RegExp(`^${word} \\(`).test(String(s.label))) s.label = `${word} (${num(round1(x))}, ${num(round1(y))})`;
+	return s;
+}
+
+// Makes the move at index j end at (x, y), changing the turn just before it when there is one (and the
+// move goes straight forward or back). A tank drive with no turn there gets one. A mecanum move with no
+// turn before it changes its direction instead. Turns round to whole degrees (fine: to 0.1 degree, for a
+// point that must stay where it was). Changes steps (a copy); returns the move's new index.
+function aimMove(drive, start, steps, j, x, y, fine = false) {
+	const s = { ...steps[j] };
+	steps[j] = s;
+	const prev = steps[j - 1];
+	const hasTurn = prev && prev.kind === 'turn' && !sideways(+s.dir);
+	if (!hasTurn && (drive === 'mecanum' || sideways(+s.dir))) {
+		const n = dragMove('mecanum', poseBeforeStep(start, steps, j), x, y);
+		if (n) follow(Object.assign(s, { inches: n.inches, dir: n.dir }), 'To', x, y);
+		return j;
+	}
+	const p = poseBeforeStep(start, steps, hasTurn ? j - 1 : j);
+	const dist = snapIn(Math.hypot(x - p.x, y - p.y));
+	if (dist < 0.5) return j;
+	// Drive forward or back: the one that turns closer to the turn it had (no turn yet: the smaller turn).
+	const oldDeg = hasTurn ? +prev.deg || 0 : 0;
+	const fwd = wrap(headingOf(x - p.x, y - p.y) - p.h), bwd = wrap(fwd + 180);
+	const back = Math.abs(wrap(bwd - oldDeg)) < Math.abs(wrap(fwd - oldDeg));
+	const deg = fine ? round1(back ? bwd : fwd) : Math.round(back ? bwd : fwd);
+	Object.assign(s, { inches: dist, dir: back ? 180 : 0 });
+	follow(s, 'To', x, y);
+	if (hasTurn) { steps[j - 1] = follow({ ...prev, deg }, 'Face', x, y); return j; }
+	if (Math.abs(deg) < 2) {   // close enough to straight ahead: only the length changes
+		const n = dragMove('tank', p, x, y);
+		follow(Object.assign(s, { inches: n.inches, dir: n.dir }), 'To', x, y);
+		return j;
+	}
+	steps.splice(j, 0, follow({ kind: 'turn', deg, power: 0.5 }, 'Face', x, y));
+	return j + 1;
+}
+
+// After step j, the robot should face oldH again (so the steps after it keep their way): the next driving
+// step changes (a turn turns less or more; a move gets a turn back before it; a turnTo needs nothing).
+function keepHeading(start, steps, j, oldH) {
+	const d = wrap(simulate({ start, steps }).ends[j].h - oldH);
+	if (Math.abs(d) < 0.5) return;
+	const k = steps.findIndex((s, n) => n > j && MOVING_KINDS.includes(s.kind));
+	if (k < 0) return;
+	if (steps[k].kind === 'turn') steps[k] = { ...steps[k], deg: round1(wrap((+steps[k].deg || 0) - d)) };
+	else if (steps[k].kind === 'move') steps.splice(j + 1, 0, { kind: 'turn', label: 'Turn back', deg: round1(-d), power: 0.5 });
+}
+
+/**
+ * A drive's end point dragged to (x, y) on the map (both drives). The drive and the turn just before it
+ * change so it ends there (a tank drive gets a turn when it needs one), and the NEXT point stays where it
+ * was: the next drive (and its turn) is aimed at it again, and the heading after it is kept. So a drag
+ * moves only that one point, like a point on a drawing. Returns { steps (a new list), i (the drive's new
+ * index) }, or null when step i is not a move. The plan given is not changed.
+ */
+export function dragPoint(plan, i, x, y) {
+	const steps = (plan.steps || []).slice(), start = plan.start, drive = plan.drive;
+	if (!steps[i] || steps[i].kind !== 'move') return null;
+	const old = simulate(plan).ends;
+	// The next drive is aimed again only when at most one turn (right before it) lies between.
+	const k = steps.findIndex((s, n) => n > i && s.kind === 'move');
+	const between = k < 0 ? [] : steps.slice(i + 1, k).filter((s) => MOVING_KINDS.includes(s.kind));
+	const reaim = k >= 0 && (between.length === 0 || (between.length === 1 && steps[k - 1].kind === 'turn'));
+	const j = aimMove(drive, start, steps, i, x, y);
+	if (!reaim) { keepHeading(start, steps, j, old[i].h); return { steps, i: j }; }
+	const k2 = aimMove(drive, start, steps, k + (j - i), old[k].x, old[k].y, true);
+	keepHeading(start, steps, k2, old[k].h);
+	return { steps, i: j };
+}
+
+/**
+ * Splits drive i in two at `inches` along it (a new point on the map's line): the same direction and
+ * power, the first part named for the new point. Returns a new list of steps, or null if it cannot split.
+ */
+export function splitMove(plan, i, inches) {
+	const s = (plan.steps || [])[i];
+	if (!s || s.kind !== 'move') return null;
+	const total = Math.abs(+s.inches || 0), a = snapIn(Math.abs(inches));
+	if (a < 0.5 || total - a < 0.5) return null;
+	const sign = +s.inches < 0 ? -1 : 1;
+	const p = simulate({ ...plan, steps: plan.steps.slice(0, i) }).end;
+	const v = moveVector(p.h, (+s.dir || 0) + (sign < 0 ? 180 : 0));
+	const first = follow({ ...s, inches: sign * a, label: null }, 'To', p.x + v[0] * a, p.y + v[1] * a);
+	const steps = plan.steps.slice();
+	steps.splice(i, 1, first, { ...s, inches: sign * (total - a) });
+	return steps;
+}
+
 /** The heading a turn or turnTo ends at, and the signed degrees it turns (the short way, like AutoDrive). */
 export function turnEnd(step, h, startH) {
 	const target = step.kind === 'turn' ? wrap(h + (+step.deg || 0)) : wrap(startH + (+step.heading || 0));

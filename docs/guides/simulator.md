@@ -346,13 +346,24 @@ What a team does, step by step:
      the run does), **ready to launch** (`readyToLaunch`: spins the launcher up and waits until it is at
      speed; only for a robot with a launcher), and "park from here" (`parkWithSeconds`). A button adds its step at the end (tick "add after the selected step" to put it
      after the one you picked). **Start over** (beside Undo) removes every step; Undo brings them back.
-     Tap the field map to add a drive to that spot (a tank drive gets a turn first), drag the blue dot at the end of a drive to
-     change it, or use the list: each step has its numbers, arrows to move it, and its own warnings.
+     Tap the field map to add a drive to that spot (a tank drive gets a turn first), or use the list: each
+     step has its numbers, arrows to move it, and its own warnings. The step numbers on the map are white
+     on a dark badge.
+     **Drag a point** (the blue dot at the end of a drive) anywhere: the drive and the turn before it change
+     so the robot ends there (a tank drive gets a turn when it needs one), and **the other points stay
+     where they were**: the next drive turns and stretches to reach its point again, and the heading after
+     it is kept (a turn after it turns more or less, or a "Turn back" step is added). A team's own step
+     names stay; the "To (x, y)" and "Face (x, y)" names follow the point. With a mecanum drive and no
+     turn before the drive, the drive changes direction instead (a strafe).
+     **Put a point between two:** move the pointer over a drive's line: a white dot with a plus slides
+     along it. Click to split that drive in two there (the route stays the same), then drag the new point,
+     or select its step and add something after it (tick "add after the selected step"). Press and drag
+     does both at once. A click away from the lines still adds a drive at the end.
      **A command or an action is a list** of the ones your code has (for example
      `Actions.fireAll(robot)` to shoot): pick one, or pick "type your own..." to write it.
      **A tank drive cannot strafe, so the builder never makes one for it:** no Strafe button, a drive's
-     direction is only forward or back, a tap adds a turn and a drive, and a dragged end stays on the line
-     through the robot's front. When the Robot code chosen has a tank drive, any strafe already in the
+     direction is only forward or back, a tap adds a turn and a drive, and a dragged point changes the
+     turn before its drive (or adds one). When the Robot code chosen has a tank drive, any strafe already in the
      steps (from a mecanum plan, the lesson's example or a saved plan) becomes a turn, the drive forward
      (or back, when that turns less) and a turn back to the heading it had (left out when a turnTo comes
      next), so the robot drives the same route; a box above the steps lists each one. If a strafe still

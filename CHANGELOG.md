@@ -2,6 +2,22 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Added
+
+- **Put a point between two in the auto builder** (Simple steps). Move the mouse over a drive's line on the map:
+  a white dot with a plus slides along it. A click splits that drive in two there; then drag the new point, or
+  add a step after it. Before, a click anywhere only added a step at the end.
+
+### Changed
+
+- **Dragging a point in the auto builder changes the turn too** (Simple steps, both drives). Before, a tank
+  drive's point only moved forward and back along its line. Now the turn before the drive follows the point
+  (a tank drive gets a turn when it needs one), and the other points stay where they were: the next drive is
+  aimed at its point again. The step numbers on the map are white on a dark badge, easier to read.
+  Shared code: `stepscore.js` `dragPoint` and `splitMove` (crossbotics.com's path builder can use them too).
+
 ## v0.26.0 - 2026-11-03
 
 ### Added

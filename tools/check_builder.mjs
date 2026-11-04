@@ -432,6 +432,40 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 	ok(tin.problems.some((t) => /moveWithTurn.*not possible on a tank drive/.test(t)), 'fromJava, tank: moveWithTurn is left out and listed');
 	const min = S.fromJava(javaIn);
 	ok(min.drive === 'mecanum' && min.tank.length === 0 && strafes(min.plan.steps).length === 1 && min.problems.some((t) => /moveWithTurn/.test(t)), 'fromJava, mecanum: the strafe stays; moveWithTurn is still never read silently');
+	// The map's edits: a drag moves one point (the turn before it follows; the next point and every point
+	// after it stay), and a tap on a line splits that drive in two. Both drives.
+	for (const drive of ['tank', 'mecanum']) {
+		const plan = { drive, start: { x: 0, y: -60, h: 0 }, steps: [] };
+		for (const [x, y] of [[0, -30], [30, -30], [30, 0], [10, 20]]) plan.steps.push(...S.stepsToPoint(drive, S.simulate(plan).end, x, y));
+		const moves = (pl) => S.simulate(pl).ends.filter((_, k) => pl.steps[k].kind === 'move');
+		const before = moves(plan);
+		let hitOk = true, restOk = true, tankOk = true, headOk = true;
+		plan.steps.forEach((s, i) => {
+			if (s.kind !== 'move') return;
+			const n = plan.steps.slice(0, i + 1).filter((t) => t.kind === 'move').length - 1;   // which point
+			for (const [dx, dy] of [[12, 0], [-9, 7], [0, -8], [15, 15], [-20, -3]]) {
+				const want = { x: before[n].x + dx, y: before[n].y + dy };
+				const r = S.dragPoint(plan, i, want.x, want.y);
+				const pl = { ...plan, steps: r.steps }, after = moves(pl);
+				if (r.steps[r.i].kind !== 'move' || Math.hypot(after[n].x - want.x, after[n].y - want.y) > 1) hitOk = false;
+				if (after.length !== before.length || before.some((e, k) => k !== n && Math.hypot(e.x - after[k].x, e.y - after[k].y) > 0.6)) restOk = false;
+				if (n < before.length - 2 && Math.abs(P.wrap(S.simulate(pl).end.h - S.simulate(plan).end.h)) > 0.5) headOk = false;
+				if (drive === 'tank' && r.steps.some((t) => t.kind === 'move' && !S.TANK_DIRS.includes(t.dir))) tankOk = false;
+			}
+		});
+		ok(hitOk, `${drive}: a dragged point ends where it was dropped (the turn before it follows)`);
+		ok(restOk, `${drive}: a drag moves only that point: the others stay`);
+		ok(headOk, `${drive}: a drag keeps the heading at the end (the last drive and the one before it may turn it)`);
+		if (drive === 'tank') ok(tankOk, 'tank: a drag never makes a strafe');
+		const firstMove = plan.steps.findIndex((s) => s.kind === 'move');
+		const split = S.splitMove(plan, firstMove, 10);
+		const sp = moves({ ...plan, steps: split });
+		ok(split.length === plan.steps.length + 1 && sp.length === before.length + 1 && near(sp[0].y, -50, 1e-6)
+			&& before.every((e, k) => near(e.x, sp[k + 1].x, 1e-6) && near(e.y, sp[k + 1].y, 1e-6)), `${drive}: a tap on a line puts a new point there; the route stays`);
+		ok(S.splitMove(plan, firstMove, 0.2) === null && S.splitMove(plan, firstMove, 29.8) === null, `${drive}: no new point on top of an end`);
+	}
+	ok(S.dragPoint({ drive: 'tank', start: { x: 0, y: 0, h: 0 }, steps: [{ kind: 'move', label: 'Out', inches: 20, dir: 0 }] }, 0, 10, 20).steps[1].label === 'Out',
+		'a drag keeps the team\'s own step name');
 	// Every page file parses (builder.js is never imported here: it needs the page). One syntax error stops the
 	// whole module in the browser, and the Auto builder button then does nothing.
 	const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'builder-check-'));
@@ -444,7 +478,7 @@ ok(JSON.stringify(programs) === JSON.stringify(fixtures.programs), 'the programs
 	fs.rmSync(tmp, { recursive: true, force: true });
 	// Both pages use these (no copy of their own) and run tankSteps on every render.
 	const page = fs.readFileSync(path.join(dir, 'builder.js'), 'utf8');
-	ok(/S\.stepsToPoint\(/.test(page) && /S\.dragMove\(/.test(page) && /S\.tankSteps\(/.test(page) && /syncRobot\(\);\s*enforceTank\(\);/.test(page), 'builder.js: drive there, drag and every render use the shared tank rules');
+	ok(/S\.stepsToPoint\(/.test(page) && /S\.dragPoint\(/.test(page) && /S\.tankSteps\(/.test(page) && /syncRobot\(\);\s*enforceTank\(\);/.test(page), 'builder.js: drive there, drag and every render use the shared tank rules');
 	const sitePage = siteDir() && path.join(siteDir(), 'steps.js');
 	if (sitePage && fs.existsSync(sitePage)) {
 		const sp = fs.readFileSync(sitePage, 'utf8');
