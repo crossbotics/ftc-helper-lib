@@ -3443,7 +3443,7 @@
     "andymark",
     "studica"
    ],
-   "since": "unreleased",
+   "since": "v0.28.0",
    "docs": [
     {
      "path": "docs/tutorials/start/03-buttons.md",
@@ -5227,7 +5227,7 @@
     "andymark",
     "studica"
    ],
-   "since": "unreleased",
+   "since": "v0.28.0",
    "docs": [
     {
      "path": "docs/guides/simulator.md",
@@ -5297,7 +5297,7 @@
    "kit_bots": [
     "gobilda"
    ],
-   "since": "unreleased",
+   "since": "v0.28.0",
    "docs": [
     {
      "path": "docs/guides/simulator.md",

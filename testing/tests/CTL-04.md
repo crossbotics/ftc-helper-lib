@@ -7,7 +7,7 @@ where: both
 minutes: 10
 needs: [any]
 kit_bots: [gobilda, rev, andymark, studica]
-since: unreleased
+since: v0.28.0
 docs: [tutorials/start/03-buttons.md#6-the-button-map-init-and-guide]
 ---
 
