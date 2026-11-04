@@ -3430,6 +3430,81 @@
    }
   },
   {
+   "id": "CTL-04",
+   "title": "TeleOp INIT menu: choose the alliance and the profile with the D-pad",
+   "area": "controls",
+   "priority": "medium",
+   "where": "both",
+   "minutes": 10,
+   "needs": [],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/tutorials/start/03-buttons.md",
+     "anchor": "6-the-button-map-init-and-guide"
+    }
+   ],
+   "file": "testing/tests/CTL-04.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A practice round often starts straight in TeleOp, with no autonomous before it to set the alliance. The drivers must be able to choose the alliance and the PRACTICE / COMPETITION profile in TeleOp's INIT."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "On a real robot: wheels on a block, or space to drive, before START. Nothing moves in INIT."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A robot in five files (any kit bot), or its simulator robot file.",
+       "No autonomous run since the robot app started (so no alliance is remembered)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Pick the TeleOp and press INIT. The screen must show \"Choose (D-pad), then START\" with \"> Alliance: BLUE\" and \"Profile: ...\" under it.",
+       "Press gamepad 1 D-pad right. The alliance must change to RED (\"Alliance : RED (chosen here)\").",
+       "Press D-pad down, then D-pad left. The profile must change (COMPETITION to PRACTICE, or back). In PRACTICE, the screen must say \"PRACTICE profile\".",
+       "Press START and drive. In PRACTICE the top speed must be lower (`Tunables.Drive.practiceMaxPower`).",
+       "STOP, INIT again: the profile you chose must still be there.",
+       "Set the profile back to what it was."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Each step does what it says, on 2 runs out of 2."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "The robot and where (simulator or real robot).",
+       "Any step that did not change what it says."
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A TeleOp of your own that overrides `initMenu()` to return false has no menu: X and B still choose the alliance."
+     }
+    ]
+   }
+  },
+  {
    "id": "DOC-02",
    "title": "Follow one main-track lesson from start to end",
    "area": "docs",
@@ -5134,6 +5209,147 @@
     "different": [
      {
       "p": "A tank robot cannot run Pedro paths: the builder says so, and **Run** stays off. Steps 1 to 6 still work."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SIM-11",
+   "title": "Auto builder taps drive the way the robot faces (a spot behind backs up)",
+   "area": "simulator",
+   "priority": "medium",
+   "where": "sim",
+   "minutes": 10,
+   "needs": [],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/guides/simulator.md",
+     "anchor": "the-auto-builder"
+    }
+   ],
+   "file": "testing/tests/SIM-11.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A tap on the map adds a drive to that spot. A spot behind the robot must back up to it, not turn the robot around first: it saves time, and it is what a driver would do."
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "SIM-01 works on this laptop.",
+       "One mecanum robot file and one tank robot file (the goBILDA starter bot is tank; a Strafer or the Pedro example robot is mecanum)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Open the simulator with the mecanum robot and press **Auto builder**. **Simple steps**, \"Tap adds: drive there\". Tap a spot straight ahead of the robot. The new step must be a move forward (direction 0).",
+       "Tap a spot behind the robot. The new step must be one move with direction 180 (it backs up), and no turn.",
+       "Open the tank robot. Tap a spot behind the robot and a little to one side. The builder must add a small turn (under 90 degrees) and a move with direction 180: the robot backs up to the spot.",
+       "Tap a spot ahead and to one side. The builder must add a turn and a move forward.",
+       "Press **Pedro path** (the mecanum robot), \"Tap adds: a line\", and tap a spot behind the robot. The new part's heading must be **Drive backwards along it**. Tap a spot ahead of that point: **Face along the path**.",
+       "Press **Run** for the Simple steps of step 3. The robot must back up to the tapped spot."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Each step does what it says, on 2 runs out of 2."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "Your computer and browser.",
+       "The robot files you used.",
+       "Any tap that turned the robot around (more than 90 degrees) to drive forward."
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Any mecanum and any tank robot file work. On crossbotics.com's path builder (no robot file), steps 1 to 5 work the same with its Mecanum / Tank switch."
+     }
+    ]
+   }
+  },
+  {
+   "id": "SIM-12",
+   "title": "A fire action with its own flywheel speed (auto builder flywheel box)",
+   "area": "shooter",
+   "priority": "medium",
+   "where": "sim",
+   "minutes": 10,
+   "needs": [
+    [
+     "flywheel"
+    ]
+   ],
+   "kit_bots": [
+    "gobilda"
+   ],
+   "since": "unreleased",
+   "docs": [
+    {
+     "path": "docs/guides/simulator.md",
+     "anchor": "the-auto-builder"
+    },
+    {
+     "path": "docs/guides/autonomous-builder.md",
+     "anchor": "4-actions-several-parts-together"
+    }
+   ],
+   "file": "testing/tests/SIM-12.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A robot with no camera shoots at one speed, `speedRpm`. An autonomous that shoots from two spots needs a speed for each. `robot.launcher.fireAllAction(rpm)` fires at that speed, then goes back to `speedRpm`."
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "SIM-01 works on this laptop.",
+       "A robot file for a robot with a flywheel launcher (the goBILDA starter bot)."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Open the simulator and press **Auto builder**. **Simple steps**. Add an action step and pick `robot.launcher.fireAllAction()`. A **flywheel** box must show next to it, empty (\"usual\").",
+       "Type 2000 in the flywheel box. The Java on the page must say `.action(robot.launcher.fireAllAction(2000), ...)`.",
+       "Empty the box. The Java must say `fireAllAction()` again.",
+       "Type a speed again and press **Run**. While it fires, the Driver Station's launcher target must be that speed. After the action, it must be back at `speedRpm`.",
+       "Copy the Java into a new file in TeamCode, build, and pick it in the builder's \"Start from one of your autos\". The step must load with the same speed in its box."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Each step does what it says, on 2 runs out of 2."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "Your computer and browser.",
+       "The robot file and the speeds you used."
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Any robot with a `Launcher` works. A robot with a camera and a shot table: the fire action's own speed wins over the table while it fires, then the table is used again."
      }
     ]
    }
