@@ -131,6 +131,46 @@ public class LauncherTrimTest {
         assertEquals(0, l.trim(), 1e-9);
     }
 
+    // A fire action with its own speed (a robot with no camera, shooting from a spot it knows): the speed wins
+    // over speedRpm while it runs, the trim still scales it, and a stopped action goes back to speedRpm.
+    @Test public void aFireActionWithASpeedUsesItThenGoesBack() {
+        RobotDefinition r = fixedBot(Tuned.class);
+        r.setup(new RobotTestKit());
+        r.startForTests();
+        Launcher l = launcherOf(r);
+        l.spinUp();
+        r.all().update();
+        assertEquals(2600, l.targetRpm(), 1e-9);
+        l.useSpeed(2250);
+        r.all().update();
+        assertEquals(2250, l.targetRpm(), 1e-9);
+        l.setTrim(-4);
+        r.all().update();
+        assertEquals("the trim scales it too", 2250 * 0.96, l.targetRpm(), 1e-6);
+        l.setTrim(0);
+        l.useNormalSpeed();
+        r.all().update();
+        assertEquals(2600, l.targetRpm(), 1e-9);
+        assertTrue(Double.isNaN(l.fixedSpeedRpm()));
+        Action a = l.fireAction(2, 2250);
+        assertEquals("Fire 2 at 2250 RPM", a.name());
+        assertEquals("Fire all at 2100 RPM", l.fireAllAction(2100).name());
+        r.run(a);
+        r.all().update();
+        assertEquals("while it runs", 2250, l.targetRpm(), 1e-9);
+        r.cancel(a);
+        r.all().update();
+        assertEquals("stopped: back to speedRpm", 2600, l.targetRpm(), 1e-9);
+        for (double bad : new double[] {0, -5, Double.NaN, 99999}) {
+            try {
+                l.fireAction(1, bad);
+                throw new AssertionError(bad + " RPM must be refused");
+            } catch (IllegalArgumentException expected) {
+                assertTrue(expected.getMessage(), expected.getMessage().contains("RPM"));
+            }
+        }
+    }
+
     @Test public void theTrimScalesTheShotTableAndTheDpadTrimsIt() {
         AimTest.AimBot r = new AimTest.AimBot(AimTest.GoalTunables.class, false);   // odometry distance
         r.setup(new RobotTestKit());

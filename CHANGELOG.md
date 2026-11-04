@@ -2,6 +2,31 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## v0.28.0 - 2026-11-04
+
+### Added
+
+- **A flywheel speed for one fire action:** `robot.launcher.fireAction(n, rpm)` and `fireAllAction(rpm)` fire at that
+  speed, then go back to the usual one (`speedRpm` or the shot table). For a robot with no camera that shoots
+  from more than one spot. The auto builder's fire actions get a **flywheel** box that writes it. Also
+  `useSpeed(rpm)` / `useNormalSpeed()`.
+- **TeleOp INIT menu:** gamepad 1's D-pad chooses the **Alliance** and the **Profile** in TeleOp's INIT, like an
+  autonomous's menu (X / B still choose the alliance). A practice round often starts straight in TeleOp. A
+  profile changed there sets the drive's power limit (`practiceMaxPower` or `maxPower`) and the debug lines
+  at START. Off with `initMenu()` returning false (for your own INIT code on gamepad 1's D-pad).
+
+### Fixed
+
+- **Simulator scenarios:** `expect robot heading = -180 5` now passes at 178.6 (an angle goes the short way
+  round). Before, a robot facing straight back could fail the check by 358 degrees.
+
+### Changed
+
+- **Auto builder: a tap drives the way the robot already faces.** A spot behind the robot now backs up to it.
+  A tank drive makes the smaller turn first (its back toward a spot more behind), not a turn of more than 90
+  degrees to face it; a mecanum robot already slid straight there. A new Pedro part to a spot behind gets
+  "Drive backwards along it". Shared code: `stepscore.js` `stepsToPoint`, `pathcore.js` `newPartHeading`.
+
 ## v0.27.1 - 2026-11-04
 
 ### Changed

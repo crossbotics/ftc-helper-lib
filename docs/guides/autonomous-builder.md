@@ -298,7 +298,13 @@ is a small piece of code (a "lambda") for a command that needs inputs.
 ```java
 .action(Actions.fireAllWithIntake(robot), 8)   // run it and wait, at most 8 s
 .alongside(Actions.fireAll(robot))             // start it and go on: it runs during the next steps
+.action(robot.launcher.fireAllAction(2325), 8) // the library's: fire every piece at 2325 RPM, then back to speedRpm
 ```
+
+**A robot with no camera, shooting from more than one spot:** give each shot its own flywheel speed with
+`robot.launcher.fireAllAction(rpm)` or `fireAction(n, rpm)` ([launcher](../modules/robot.md#launcher)). The
+speed goes back to `speedRpm` when the action ends (or is stopped). The auto builders write it from a fire
+action's **flywheel** box. Write the RPM as a plain number: the builders can then open the file again.
 
 An [`Action`](../modules/robot.md#action) from `Actions.java` is the same thing a TeleOp button runs,
 so a sequence is written once and used in both. `action(a, timeoutSec)` waits until it is done (10 s

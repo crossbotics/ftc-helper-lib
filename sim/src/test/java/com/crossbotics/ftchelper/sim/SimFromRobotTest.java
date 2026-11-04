@@ -1118,6 +1118,31 @@ public class SimFromRobotTest {
         }
     }
 
+    // A practice round that starts straight in TeleOp: the INIT menu on gamepad 1's D-pad chooses the alliance and
+    // the profile, as in an autonomous. Left/right on the alliance line switches it; down, then left/right, the profile.
+    @Test public void teleOpInitMenuChoosesTheAllianceAndTheProfile() throws Exception {
+        Path file = generate(com.crossbotics.ftchelper.examples.flywheelbot.Robot.class);
+        com.crossbotics.ftchelper.match.MatchMemory.clear();
+        com.crossbotics.ftchelper.core.Profile before = com.crossbotics.ftchelper.core.Profile.current();
+        try (SimRun s = new SimRun(file.toString())) {
+            com.crossbotics.ftchelper.core.Profile.set(com.crossbotics.ftchelper.core.Profile.COMPETITION);
+            s.init("FlywheelBot TeleOp");
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> String.join("\n", s.screen()).contains("> Alliance: BLUE"), 2));
+            assertTrue(String.join("\n", s.screen()).contains("  Profile: COMPETITION"));
+            s.press(v -> s.g1().dpad_right = v);                 // the alliance line: BLUE -> RED
+            assertTrue("RED: the robot file's start", SimRun.waitFor(() -> Math.abs(s.robot().y + 61.55) < 0.01, 2));
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> String.join("\n", s.screen()).contains("Alliance : RED (chosen here)"), 2));
+            s.press(v -> s.g1().dpad_down = v);                  // the profile line
+            s.press(v -> s.g1().dpad_left = v);                  // COMPETITION -> PRACTICE
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> String.join("\n", s.screen()).contains("> Profile: PRACTICE"), 2));
+            assertEquals(com.crossbotics.ftchelper.core.Profile.PRACTICE, com.crossbotics.ftchelper.core.Profile.current());
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> String.join("\n", s.screen()).contains("PRACTICE profile"), 2));
+            assertEquals("", s.error());
+        } finally {
+            com.crossbotics.ftchelper.core.Profile.set(before);
+        }
+    }
+
     // Like the real Driver Station with its TeleOp timer on: TeleOp stops at the end of the period (2:00;
     // shortened here), and nothing keeps driving at "Time : 0:00". With the timer off it runs on.
     @Test public void teleOpStopsWhenItsTimerRunsOut() throws Exception {

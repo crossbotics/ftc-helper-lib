@@ -200,6 +200,24 @@ export function sample(path) {
 	return out;
 }
 
+/**
+ * The heading of a new part from the path's end to (x, y) (a tap on the map). It keeps the last part's way
+ * of turning (a "turn" part: keep its end heading). A part that faces along the path, or drives backwards
+ * along it, picks the one that needs no turn: backwards when the spot is more behind the robot than ahead.
+ * startH: the start heading (used when there is no part yet).
+ */
+export function newPartHeading(path, x, y, startH = 0) {
+	const last = path.parts[path.parts.length - 1];
+	let h = last ? JSON.parse(JSON.stringify(last.heading)) : { mode: 'path' };
+	if (h.mode === 'turn') h = { mode: 'keep', a: h.b };
+	if (h.mode !== 'path' && h.mode !== 'back') return h;
+	const from = last ? last.end : path.start;
+	const s = last ? sample(path) : [];
+	const robotH = s.length ? s[s.length - 1].h : +startH || 0;
+	const away = Math.abs(diff(robotH, headingOf(x - from[0], y - from[1]))) > 90;
+	return { ...h, mode: away ? 'back' : 'path' };
+}
+
 /** The heading a part starts and ends with (from its samples). */
 export function partEnds(samples, i) {
 	const s = samples.filter((p) => p.part === i);

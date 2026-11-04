@@ -822,6 +822,12 @@ public final class SimScenario {
                         default: throw new IllegalArgumentException("robot field: x, y, heading, imu or shots");
                     }
                 }
+                // an angle "= want tol" goes the short way round: 178.6 is within 5 of -180
+                boolean angle = t.get(1).equals("heading") || t.get(1).equals("imu");
+                if (angle && t.size() > 3 && t.get(2).equals("=")) {
+                    double want = Double.parseDouble(t.get(3));
+                    v = want + (((v - want) % 360 + 540) % 360 - 180);
+                }
                 return compare(v, t.subList(2, t.size()), why);
             }
             default:
