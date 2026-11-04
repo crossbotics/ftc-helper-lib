@@ -7,7 +7,7 @@ where: sim
 minutes: 15
 needs: [any]
 kit_bots: [gobilda, rev, andymark, studica]
-since: unreleased
+since: v0.27.0
 docs: [guides/simulator.md#the-auto-builder]
 ---
 
