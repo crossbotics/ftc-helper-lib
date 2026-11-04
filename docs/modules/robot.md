@@ -1709,6 +1709,7 @@ What [`Steps`](#auto) can do:
 | `isYes(label)`, `choice(label)` | read a choice |
 | `move(label, inches, directionDeg, power)` | drive (0 forward, 90 right: clockwise, like a compass) |
 | `turn(label, degrees, power)`, `turnTo(label, headingDeg, power)` | turn by an angle / to a heading (90 = left: counterclockwise, the other way from a move's direction) |
+| `moveWithTurn(label, inches, directionDeg, headingDeg, power)` | drive AND turn at the same time (mecanum only). The direction is fixed on the field: clockwise from the start heading (0 = the way the robot faced at the start, 90 = its right then). It ends facing `headingDeg` (0 = the start heading, counterclockwise +). A tank drive cannot: use `move`, then `turnTo` |
 | `aimAtGoal(label, timeoutSec)` | turn to the goal with the camera (or the odometry backup), or wait for a following turret; "not seen" in the report if there was no goal ([Aim](#aim)) |
 | `aimAtGoal(label, timeoutSec, sweepDeg)` | the same, with a [sweep](#aim) when the goal is not in view: up to `sweepDeg` each way, slowly, then aim. A turret that follows the goal does not sweep: the step waits for the turret |
 | `rememberHeading(label)`, `turnBack(label, maxPower)` | save the heading now; later turn back to it (without odometry pods it uses the IMU: better than nothing). The same as `AutoRoutine`'s `rememberHeading` / `returnToHeading` |

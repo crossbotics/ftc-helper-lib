@@ -177,6 +177,11 @@ public class BuiltAuto extends Auto<RobotDefinition> {
                 String where = "step " + (i + 1) + (label.isEmpty() ? "" : " (\"" + label + "\")");
                 try {
                     double dir = SimJsonReader.number(st, "dir", 0);
+                    if (tank && kind.equals("moveTurn")) {
+                        throw new IllegalArgumentException("drive and turn at once (moveWithTurn), not possible on a tank drive: "
+                                + robot.getClass().getSimpleName() + " has a tank drive. Drive, then turn "
+                                + "(the auto builder does this for a tank drive)");
+                    }
                     if (tank && kind.equals("move") && Math.abs(Math.sin(Math.toRadians(dir))) > 1e-6) {
                         throw new IllegalArgumentException("a strafe (a move at " + (dir == Math.rint(dir) ? String.valueOf((long) dir) : String.valueOf(dir))
                                 + " degrees), not possible on a tank drive: " + robot.getClass().getSimpleName()
@@ -204,6 +209,8 @@ public class BuiltAuto extends Auto<RobotDefinition> {
         private void addStep(Steps s, RobotDefinition robot, Map<String, Object> st, String kind, String label, String where) {
             switch (kind) {
                 case "move": s.move(label, need(st, "inches", where), need(st, "dir", where), need(st, "power", where)); break;
+                case "moveTurn": s.moveWithTurn(label, need(st, "inches", where), need(st, "dir", where), need(st, "heading", where),
+                        need(st, "power", where)); break;
                 case "turn": s.turn(label, need(st, "deg", where), need(st, "power", where)); break;
                 case "turnTo": s.turnTo(label, need(st, "heading", where), need(st, "power", where)); break;
                 case "wait": s.waitSeconds(label, need(st, "sec", where)); break;
@@ -255,7 +262,10 @@ public class BuiltAuto extends Auto<RobotDefinition> {
                 Map<String, Object> h = SimJsonReader.object(part.get("heading"), where + ": a heading");
                 switch (SimJsonReader.string(h, "mode", "path")) {
                     case "keep": p = p.keepHeading(need(h, "a", where)); break;
-                    case "turn": p = p.turnTo(need(h, "a", where), need(h, "b", where)); break;
+                    case "turn":
+                        // the turn's stretch of the part (0 to 1): all of it unless the page says
+                        p = p.turnTo(need(h, "a", where), need(h, "b", where), SimJsonReader.number(h, "from", 0), SimJsonReader.number(h, "to", 1));
+                        break;
                     case "back": p = p.facePathBackwards(); break;
                     case "point": p = p.facePoint(need(h, "x", where), need(h, "y", where)); break;
                     default: break;   // facePath(), the default

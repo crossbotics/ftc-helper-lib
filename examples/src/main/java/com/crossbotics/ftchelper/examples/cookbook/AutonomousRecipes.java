@@ -68,6 +68,7 @@ public class AutonomousRecipes {
              .move("Sideways to the right", 12, 90, 0.5)   // mecanum only
              .turn("Turn left 90", 90, 0.4)         // turns: counterclockwise (left) is +
              .turn("Turn right 90", -90, 0.4)       // so a right turn is minus
+             .moveWithTurn("Back, turning", 12, 180, 90, 0.4)   // mecanum only: drive and turn at once
              .turnTo("Face the start way", 0, 0.4); // to a heading: 0 = the way it faced at the start
             // end recipe
         }

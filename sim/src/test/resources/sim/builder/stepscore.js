@@ -13,6 +13,9 @@
 // A plan: { drive: 'tank' | 'mecanum', start: { x, y, h, note, spot (write x, y) },
 //           steps: [step...], mirror (mirrorForRed()), opmode, teleop, className, pkg, group }
 // A step:  { kind: 'move', label, inches, dir, power }      dir: clockwise from forward
+//          { kind: 'moveTurn', label, inches, dir, heading, power }   moveWithTurn (mecanum): drives and turns
+//                                                            at once; dir: clockwise from the START heading
+//                                                            (fixed on the field), heading: 0 = the start heading
 //          { kind: 'turn', label, deg, power }               counterclockwise +
 //          { kind: 'turnTo', label, heading, power }         0 = the start heading
 //          { kind: 'wait', label, sec }
@@ -28,7 +31,7 @@
 import { wrap, num, round1, headingOf, footprint, checkHits, otherAlliance, pointInPoly, polysOverlap,
 	javaString, tokenize, readArgs, evalNum } from './pathcore.js';
 
-export const KINDS = ['move', 'turn', 'turnTo', 'wait', 'run', 'action', 'aim', 'ready', 'remember', 'back', 'alongside', 'park'];
+export const KINDS = ['move', 'moveTurn', 'turn', 'turnTo', 'wait', 'run', 'action', 'aim', 'ready', 'remember', 'back', 'alongside', 'park'];
 export const AUTO_SEC = 30;
 export const MOVE_TIMEOUT_SEC = 10;       // AutoDriveConfig.actionTimeoutSec: a move or turn longer than this ends TIMED_OUT
 export const ACTION_TIMEOUT_SEC = 10;     // Steps.action(a) without a time limit
@@ -59,7 +62,8 @@ export const sideways = (dir) => Math.abs(Math.sin(dir * Math.PI / 180)) > 1e-6;
 /** The move directions a drive can do, for the page's picker: a tank drive only forward (0) and back (180). */
 export const TANK_DIRS = [0, 180];
 
-const MOVING_KINDS = ['move', 'turn', 'turnTo'];
+const MOVING_KINDS = ['move', 'moveTurn', 'turn', 'turnTo'];
+const DRIVES = ['move', 'moveTurn'];   // the steps with an end point on the map
 
 /**
  * The steps for a tank drive: a tank drive cannot strafe, so every move with a sideways part becomes a
@@ -72,6 +76,16 @@ const MOVING_KINDS = ['move', 'turn', 'turnTo'];
 export function tankSteps(steps) {
 	const out = [], changes = [];
 	(steps || []).forEach((s, i) => {
+		if (s.kind === 'moveTurn' && Number.isFinite(+s.dir) && Number.isFinite(+s.inches)) {
+			// Drive and turn at once needs sideways wheels: turn to face the way, drive, then turn to the heading.
+			const name = String(s.label ?? '').trim() || 'Drive';
+			const way = wrap(-(+s.dir) + (+s.inches < 0 ? 180 : 0));   // the way it drives, as a heading (0 = the start's)
+			out.push({ kind: 'turnTo', label: `${name} (turn)`, heading: round1(way), power: 0.5 },
+				{ kind: 'move', label: s.label, inches: Math.abs(+s.inches), dir: 0, power: s.power },
+				{ kind: 'turnTo', label: `${name} (face)`, heading: +s.heading || 0, power: 0.5 });
+			changes.push(`Step ${i + 1} (${name}): drive and turn at once needs mecanum wheels. Now: turn to ${num(round1(way))}°, drive ${num(Math.abs(+s.inches))} in, turn to ${num(+s.heading || 0)}°.`);
+			return;
+		}
 		if (s.kind !== 'move' || !Number.isFinite(+s.dir) || !Number.isFinite(+s.inches)) { out.push(s); return; }
 		if (!sideways(+s.dir)) {
 			const back = Math.cos(+s.dir * Math.PI / 180) < 0;
@@ -146,6 +160,9 @@ function follow(s, word, x, y) {
 	return s;
 }
 
+// The direction to drive from p to (x, y) as a moveTurn gives it: degrees clockwise from the start heading.
+const fieldDir = (startH, p, x, y) => ((Math.round(wrap(startH - headingOf(x - p.x, y - p.y)) * 10) / 10) + 360) % 360;
+
 // Makes the move at index j end at (x, y), changing the turn just before it when there is one (and the
 // move goes straight forward or back). A tank drive with no turn there gets one. A mecanum move with no
 // turn before it changes its direction instead. Turns round to whole degrees (fine: to 0.1 degree, for a
@@ -153,6 +170,11 @@ function follow(s, word, x, y) {
 function aimMove(drive, start, steps, j, x, y, fine = false) {
 	const s = { ...steps[j] };
 	steps[j] = s;
+	if (s.kind === 'moveTurn') {   // fixed on the field: only its direction and length change
+		const p = poseBeforeStep(start, steps, j), dist = snapIn(Math.hypot(x - p.x, y - p.y));
+		if (dist >= 0.5) follow(Object.assign(s, { inches: dist, dir: fieldDir(wrap(+start.h || 0), p, x, y) }), 'To', x, y);
+		return j;
+	}
 	const prev = steps[j - 1];
 	const hasTurn = prev && prev.kind === 'turn' && !sideways(+s.dir);
 	if (!hasTurn && (drive === 'mecanum' || sideways(+s.dir))) {
@@ -200,17 +222,25 @@ function keepHeading(start, steps, j, oldH) {
  */
 export function dragPoint(plan, i, x, y) {
 	const steps = (plan.steps || []).slice(), start = plan.start, drive = plan.drive;
-	if (!steps[i] || steps[i].kind !== 'move') return null;
+	if (!steps[i] || !DRIVES.includes(steps[i].kind)) return null;
 	const old = simulate(plan).ends;
-	// The next drive is aimed again only when at most one turn (right before it) lies between.
-	const k = steps.findIndex((s, n) => n > i && s.kind === 'move');
-	const between = k < 0 ? [] : steps.slice(i + 1, k).filter((s) => MOVING_KINDS.includes(s.kind));
-	const reaim = k >= 0 && (between.length === 0 || (between.length === 1 && steps[k - 1].kind === 'turn'));
 	const j = aimMove(drive, start, steps, i, x, y);
-	if (!reaim) { keepHeading(start, steps, j, old[i].h); return { steps, i: j }; }
-	const k2 = aimMove(drive, start, steps, k + (j - i), old[k].x, old[k].y, true);
-	keepHeading(start, steps, k2, old[k].h);
+	keepNext(drive, start, steps, i, j - i, old);
 	return { steps, i: j };
+}
+
+// After step i changed (now at i + shift), the next point stays where it was (old: the ends before the
+// change): the next drive is aimed at it again, and the heading after it is kept. The next drive is aimed
+// again only when at most one turn (right before it) lies between; else only the heading after step i is kept.
+function keepNext(drive, start, steps, i, shift, old) {
+	const k = steps.findIndex((s, n) => n > i + shift && DRIVES.includes(s.kind));
+	const between = k < 0 ? [] : steps.slice(i + shift + 1, k).filter((s) => MOVING_KINDS.includes(s.kind));
+	const reaim = k >= 0 && (between.length === 0 || (between.length === 1 && steps[k - 1].kind === 'turn'));
+	if (!reaim) { keepHeading(start, steps, i + shift, old[i].h); return; }
+	// a turn right before its drive aims that drive: the drive turns with it (the next point moves)
+	if (k - 1 === i + shift && steps[k - 1].kind === 'turn') return;
+	const k2 = aimMove(drive, start, steps, k, old[k - shift].x, old[k - shift].y, true);
+	keepHeading(start, steps, k2, old[k - shift].h);
 }
 
 /**
@@ -219,21 +249,69 @@ export function dragPoint(plan, i, x, y) {
  */
 export function splitMove(plan, i, inches) {
 	const s = (plan.steps || [])[i];
-	if (!s || s.kind !== 'move') return null;
+	if (!s || !DRIVES.includes(s.kind)) return null;
 	const total = Math.abs(+s.inches || 0), a = snapIn(Math.abs(inches));
 	if (a < 0.5 || total - a < 0.5) return null;
 	const sign = +s.inches < 0 ? -1 : 1;
 	const p = simulate({ ...plan, steps: plan.steps.slice(0, i) }).end;
-	const v = moveVector(p.h, (+s.dir || 0) + (sign < 0 ? 180 : 0));
+	const startH = wrap(+plan.start.h || 0);
+	const v = moveVector(s.kind === 'moveTurn' ? startH : p.h, (+s.dir || 0) + (sign < 0 ? 180 : 0));
 	const first = follow({ ...s, inches: sign * a, label: null }, 'To', p.x + v[0] * a, p.y + v[1] * a);
+	// drive and turn at once: the first part turns its share of the way (as far as it drives)
+	if (s.kind === 'moveTurn') first.heading = round1(wrap(p.h + wrap(startH + (+s.heading || 0) - p.h) * a / total - startH));
 	const steps = plan.steps.slice();
 	steps.splice(i, 1, first, { ...s, inches: sign * (total - a) });
 	return steps;
 }
 
+/**
+ * Step i (a turn, turnTo or moveTurn) ends facing field heading h (the map's turn knob): a turn turns by
+ * what that needs, a turnTo and a moveTurn get h as their heading. Whole degrees. The next point stays where
+ * it was (its drive is aimed at it again), like a dragged point. Returns a new list of steps, or null for
+ * any other step. The plan given is not changed.
+ */
+export function setTurnHeading(plan, i, h) {
+	const s = (plan.steps || [])[i];
+	if (!s || !['turn', 'turnTo', 'moveTurn'].includes(s.kind)) return null;
+	const steps = plan.steps.slice(), startH = wrap(+plan.start.h || 0);
+	const old = simulate(plan).ends;
+	if (s.kind === 'turn') steps[i] = { ...s, deg: Math.round(wrap(h - poseBeforeStep(plan.start, plan.steps, i).h)) };
+	else steps[i] = { ...s, heading: Math.round(wrap(h - startH)) };
+	keepNext(plan.drive, plan.start, steps, i, 0, old);
+	return steps;
+}
+
+/**
+ * Mecanum: drive i turns WHILE it drives (on: a moveTurn, Steps.moveWithTurn) or drives and THEN turns
+ * (off: a move and a turnTo). On: a turn just before the move goes into it, so the robot ends where it
+ * did, facing the way it did. Off: the robot also ends at the same spot and heading. Returns
+ * { steps (a new list), i (the drive's index) }, or null when step i cannot change that way.
+ */
+export function turnWhileDriving(plan, i, on) {
+	const steps = (plan.steps || []).slice(), s = steps[i];
+	const startH = wrap(+plan.start.h || 0);
+	if (on) {
+		if (!s || s.kind !== 'move') return null;
+		const hp = poseBeforeStep(plan.start, steps, i).h;   // after the turn before it, if any
+		const way = hp - (+s.dir || 0) + (+s.inches < 0 ? 180 : 0);    // the way it drives, as a heading
+		const merge = steps[i - 1]?.kind === 'turn';
+		const n = { kind: 'moveTurn', label: s.label, inches: Math.abs(+s.inches || 0), dir: (Math.round(wrap(startH - way) * 10) / 10 + 360) % 360,
+			heading: round1(wrap(hp - startH)), power: s.power };
+		steps.splice(merge ? i - 1 : i, merge ? 2 : 1, n);
+		return { steps, i: merge ? i - 1 : i };
+	}
+	if (!s || s.kind !== 'moveTurn') return null;
+	const hb = poseBeforeStep(plan.start, steps, i).h;
+	const way = startH - (+s.dir || 0) + (+s.inches < 0 ? 180 : 0);
+	const name = String(s.label ?? '').trim() || 'Drive';
+	steps.splice(i, 1, { kind: 'move', label: s.label, inches: Math.abs(+s.inches || 0), dir: (Math.round(wrap(hb - way) * 10) / 10 + 360) % 360, power: s.power },
+		{ kind: 'turnTo', label: `${name} (turn)`, heading: +s.heading || 0, power: 0.5 });
+	return { steps, i };
+}
+
 /** The heading a turn or turnTo ends at, and the signed degrees it turns (the short way, like AutoDrive). */
 export function turnEnd(step, h, startH) {
-	const target = step.kind === 'turn' ? wrap(h + (+step.deg || 0)) : wrap(startH + (+step.heading || 0));
+	const target = step.kind === 'turn' ? wrap(h + (+step.deg || 0)) : wrap(startH + (+step.heading || 0));   // turnTo, moveTurn
 	let d = wrap(target - h);
 	return { target, d };
 }
@@ -244,6 +322,11 @@ export function stepSeconds(step, h, startH, speeds = DEFAULT_SPEEDS) {
 		case 'move': {
 			const inches = Math.abs(+step.inches || 0);
 			return inches < 1e-9 ? 0 : inches / (speeds.inPerSec * clampPower(step.power)) + speeds.settleSec;
+		}
+		case 'moveTurn': {   // the longer of the drive and the turn (they happen together)
+			const inches = Math.abs(+step.inches || 0), d = Math.abs(turnEnd(step, h, startH).d);
+			const t = Math.max(inches / (speeds.inPerSec * clampPower(step.power)), d / (speeds.degPerSec * clampPower(step.power)));
+			return t < 1e-9 ? 0 : t + speeds.settleSec;
 		}
 		case 'turn': case 'turnTo': {
 			const { d } = turnEnd(step, h, startH);
@@ -284,6 +367,14 @@ export function simulate(plan, speeds = DEFAULT_SPEEDS, startDelay = 0) {
 			const n = Math.max(1, Math.ceil(L));
 			for (let k = 1; k <= n; k++) samples.push({ x: x + v[0] * L * k / n, y: y + v[1] * L * k / n, h, step: i, t: t0 + dt * k / n });
 			x += v[0] * L; y += v[1] * L;
+		} else if (s.kind === 'moveTurn') {
+			// a straight line fixed on the field (from the start heading), turning evenly on the way
+			const inches = +s.inches || 0, L = Math.abs(inches);
+			const v = moveVector(startH, (+s.dir || 0) + (inches < 0 ? 180 : 0));
+			const { d } = turnEnd(s, h, startH);
+			const n = Math.max(1, Math.ceil(L), Math.ceil(Math.abs(d) / 3));
+			for (let k = 1; k <= n; k++) samples.push({ x: x + v[0] * L * k / n, y: y + v[1] * L * k / n, h: wrap(h + d * k / n), step: i, t: t0 + dt * k / n });
+			x += v[0] * L; y += v[1] * L; h = wrap(h + d);
 		} else if (s.kind === 'turn' || s.kind === 'turnTo') {
 			const { d } = turnEnd(s, h, startH);
 			const n = Math.max(1, Math.ceil(Math.abs(d) / 3));
@@ -561,6 +652,7 @@ export function stepWords(s) {
 	const dirWord = (d) => ({ 0: 'forward', 180: 'back', 90: 'right', 270: 'left' }[((+d % 360) + 360) % 360] ?? `at ${num(+d)}° (clockwise from forward)`);
 	switch (s.kind) {
 		case 'move': return `${s.label}: drive ${num(Math.abs(+s.inches))} in ${dirWord((+s.dir || 0) + (+s.inches < 0 ? 180 : 0))}`;
+		case 'moveTurn': return `${s.label}: drive ${num(Math.abs(+s.inches))} in at ${num(+s.dir)}° and turn to ${num(+s.heading)}° on the way (both from the start heading)`;
 		case 'turn': return `${s.label}: turn ${num(Math.abs(+s.deg))}° ${+s.deg >= 0 ? 'left' : 'right'}`;
 		case 'turnTo': return `${s.label}: turn to ${num(+s.heading)}° (0 = the start heading)`;
 		case 'wait': return `${s.label}: wait ${num(+s.sec)} s`;
@@ -597,7 +689,7 @@ export function checkPlan(plan, opts = {}) {
 	steps.forEach((s, i) => {
 		const n = `Step ${i + 1}`;
 		if (!KINDS.includes(s.kind)) { add(i, 'bad', `${n}: there is no such step.`); return; }
-		if ((s.kind === 'move' || s.kind === 'turn' || s.kind === 'turnTo' || s.kind === 'wait' || s.kind === 'run' || s.kind === 'aim' || s.kind === 'ready' || s.kind === 'remember' || s.kind === 'back') && !String(s.label ?? '').trim()) {
+		if ((s.kind === 'move' || s.kind === 'moveTurn' || s.kind === 'turn' || s.kind === 'turnTo' || s.kind === 'wait' || s.kind === 'run' || s.kind === 'aim' || s.kind === 'ready' || s.kind === 'remember' || s.kind === 'back') && !String(s.label ?? '').trim()) {
 			add(i, 'bad', `${n}: give it a name for the report, e.g. "To the goal".`);
 		}
 		if (s.kind === 'move') {
@@ -609,7 +701,11 @@ export function checkPlan(plan, opts = {}) {
 				if (Math.abs(+s.inches) < 0.05) add(i, 'warn', `${n} (${stepName(s)}): 0 inches, so it does nothing.`);
 			}
 		}
-		if (s.kind === 'move' || s.kind === 'turn' || s.kind === 'turnTo') {
+		if (s.kind === 'moveTurn') {
+			if (![s.inches, s.dir, s.heading].every((v) => Number.isFinite(+v))) add(i, 'bad', `${n}: give the inches, the direction and the heading as numbers.`);
+			else if (plan.drive === 'tank') add(i, 'bad', `${n} (${stepName(s)}): drive and turn at once needs mecanum wheels (a tank drive cannot slide sideways). Drive, then turn.`);
+		}
+		if (MOVING_KINDS.includes(s.kind)) {
 			if (!(+s.power > 0 && +s.power <= 1)) add(i, 'warn', `${n} (${stepName(s)}): power ${num(+s.power)} is held to 0.1..1 (${num(clampPower(s.power))}).`);
 			const dt = sim.ends[i].t1 - sim.ends[i].t0;
 			if (dt > MOVE_TIMEOUT_SEC) add(i, 'warn', `${n} (${stepName(s)}): about ${num(Math.round(dt * 10) / 10)} s, but a move or turn stops after ${MOVE_TIMEOUT_SEC} s (the report says TIMED_OUT). Split it, or use more power.`);
@@ -618,7 +714,7 @@ export function checkPlan(plan, opts = {}) {
 		// (it slows only to moveMinPower), so it slides on. In FTC-Helper-Lib's simulator a mecanum robot
 		// slid about 5 in this way (a turn or strafe right after a 24 in drive at 0.6); a 0.3 s wait removed it.
 		const prev = steps[i - 1];
-		if (prev?.kind === 'move' && Math.abs(+prev.inches) >= 0.5 && Number.isFinite(+prev.dir)) {
+		if (prev?.kind === 'move' && Math.abs(+prev.inches) >= 0.5 && Number.isFinite(+prev.dir) && s.kind !== 'moveTurn') {
 			const way = (st) => (+st.dir || 0) + (+st.inches < 0 ? 180 : 0);
 			const turns = s.kind === 'turn' || s.kind === 'turnTo';
 			const newWay = s.kind === 'move' && Math.abs(+s.inches) >= 0.5 && Math.abs(wrap(way(s) - way(prev))) > 10;
@@ -701,6 +797,7 @@ export function className(name) {
 export function stepCode(s) {
 	switch (s.kind) {
 		case 'move': return `move(${javaString(s.label)}, ${val(s, 'inches')}, ${val(s, 'dir')}, ${val(s, 'power')})`;
+		case 'moveTurn': return `moveWithTurn(${javaString(s.label)}, ${val(s, 'inches')}, ${val(s, 'dir')}, ${val(s, 'heading')}, ${val(s, 'power')})`;
 		case 'turn': return `turn(${javaString(s.label)}, ${val(s, 'deg')}, ${val(s, 'power')})`;
 		case 'turnTo': return `turnTo(${javaString(s.label)}, ${val(s, 'heading')}, ${val(s, 'power')})`;
 		case 'wait': return `waitSeconds(${javaString(s.label)}, ${val(s, 'sec')})`;
@@ -838,8 +935,8 @@ export function toScenario(plan, opts = {}) {
 
 // ------------------------------------------------------------------ Java in
 
-const STEP_METHODS = { move: 4, turn: 3, turnTo: 3, waitSeconds: 2, run: 2, action: null, aimAtGoal: null, readyToLaunch: 2, rememberHeading: 1, turnBack: 2, alongside: 1, parkWithSeconds: 1 };
-const OTHER_METHODS = ['menuChoice', 'menuYesNo', 'onlyIf', 'end', 'driveTo', 'follow', 'step', 'waitUntil', 'moveWithTurn'];
+const STEP_METHODS = { move: 4, moveWithTurn: 5, turn: 3, turnTo: 3, waitSeconds: 2, run: 2, action: null, aimAtGoal: null, readyToLaunch: 2, rememberHeading: 1, turnBack: 2, alongside: 1, parkWithSeconds: 1 };
+const OTHER_METHODS = ['menuChoice', 'menuYesNo', 'onlyIf', 'end', 'driveTo', 'follow', 'step', 'waitUntil'];
 
 /**
  * Reads an Auto file, or only its steps, and gives back what it could:
@@ -977,8 +1074,6 @@ export function fromJava(src, opts = {}) {
 		if (t.p !== '.' || !tk[i + 1]?.id || tk[i + 2]?.p !== '(') continue;
 		const m = tk[i + 1].id;
 		const before = tk[i - 1];
-		// moveWithTurn (AutoRoutine's, on any list): never read silently.
-		if (m === 'moveWithTurn') { others.add(m); i = readArgs(tk, i + 2).next - 1; continue; }
 		// Only the step list's own calls: s.x(...), steps.x(...), or chained after one: ...).x(...)
 		const onList = before && (before.p === ')' || /^(s|steps)$/.test(before.id ?? '')) && tk[i - 2]?.p !== '.';
 		if (!onList) {
@@ -1016,6 +1111,7 @@ export function fromJava(src, opts = {}) {
 			continue;
 		}
 		if (m === 'move') { const v = nums(args.slice(1), what); if (v) steps.push(named({ kind: 'move', label, inches: v[0], dir: v[1], power: v[2] }, ['inches', 'dir', 'power'], v)); }
+		else if (m === 'moveWithTurn') { const v = nums(args.slice(1), what); if (v) steps.push(named({ kind: 'moveTurn', label, inches: v[0], dir: v[1], heading: v[2], power: v[3] }, ['inches', 'dir', 'heading', 'power'], v)); }
 		else if (m === 'turn') { const v = nums(args.slice(1), what); if (v) steps.push(named({ kind: 'turn', label, deg: v[0], power: v[1] }, ['deg', 'power'], v)); }
 		else if (m === 'turnTo') { const v = nums(args.slice(1), what); if (v) steps.push(named({ kind: 'turnTo', label, heading: v[0], power: v[1] }, ['heading', 'power'], v)); }
 		else if (m === 'waitSeconds') { const v = nums(args.slice(1), what); if (v) steps.push(named({ kind: 'wait', label, sec: v[0] }, ['sec'], v)); }
@@ -1040,8 +1136,6 @@ export function fromJava(src, opts = {}) {
 			onlyIf: 'every step inside an onlyIf was read as if it always runs', end: 'it closes an onlyIf',
 			driveTo: 'use the Pedro / driveTo builder for it', follow: 'use the Pedro / driveTo builder for it',
 			step: 'your own steps are not in this builder', waitUntil: 'a wait for a condition is not in this builder',
-			moveWithTurn: opts.drive === 'tank' ? 'not possible on a tank drive (it drives sideways while it turns). Use turnTo, then move'
-				: 'Steps has no moveWithTurn (it is AutoRoutine\'s). Use turnTo, then move',
 		}[m];
 		problems.push(`${m}(...) was left out: ${why}.`);
 	}

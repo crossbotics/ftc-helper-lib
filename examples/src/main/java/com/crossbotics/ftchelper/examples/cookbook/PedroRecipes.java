@@ -63,6 +63,11 @@ public class PedroRecipes {
         static final PedroPath WATCH_GOAL = PedroPath.line(-30, -30, -56, -36).facePoint(-60, 60);
         // end recipe
 
+        // recipe: pedro-turn-when
+        // Turn from 0 to 90 only in the last 30% of the line (0.7 to 1): drive first, then turn.
+        static final PedroPath DRIVE_THEN_TURN = PedroPath.line(-56, -61, -30, -30).turnTo(0, 90, 0.7, 1);
+        // end recipe
+
         @Override
         protected boolean mirrorForRed() {
             return false;

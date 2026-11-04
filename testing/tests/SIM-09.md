@@ -1,10 +1,10 @@
 ---
 id: SIM-09
-title: Edit an auto on the builder map (add a point between two, drag to turn)
+title: Edit an auto on the builder map (add between two, drag to turn)
 area: simulator
 priority: medium
 where: sim
-minutes: 15
+minutes: 20
 needs: [any]
 kit_bots: [gobilda, rev, andymark, studica]
 since: unreleased
@@ -32,7 +32,11 @@ never move the other points.
 6. Drag the new point to the side. The line must bend there. Points 2 and 3 (now 3 and 4) must stay where they were.
 7. Drag the last point to the side. The robot must turn to drive to it (a tank drive: the turn step before it changes).
 8. Press **Undo** 3 times. The plan must go back to the 3 drives from step 2.
-9. Press **Run**. The robot must drive the plan.
+9. In the steps list, point between step 1 and step 2. A **+** must show. Press it, then press **+ Wait**.
+   The wait must be step 2. Press **Done**.
+10. Find a turn step on the map (a yellow knob in front of a robot outline). Drag the knob around. The robot
+    outline must turn with it, and the turn step's number in the list must change.
+11. Press **Run**. The robot must drive the plan.
 
 ## Pass rule
 
@@ -48,3 +52,8 @@ Each step does what it says, on 2 runs out of 2.
 
 A mecanum drive can drive sideways: in step 7, a drive with no turn before it changes its direction (a
 strafe) instead of a turn.
+
+A mecanum drive also has **turn while driving** on each drive. Tick it on a drive that has a turn before it:
+the turn and the drive must become one "Drive and turn" step, and the robot must end at the same spot and
+heading on the map. Press **Run**: the robot must turn while it drives. Untick it: the drive and a "turn to"
+come back.

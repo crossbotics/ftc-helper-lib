@@ -223,7 +223,7 @@ export function reportSteps(b) {
 	const out = [];
 	(b.steps.plan.steps || []).forEach((s, i) => {
 		if (s.kind === 'park') return;
-		out.push({ i, name: S.stepName(s), moving: s.kind === 'move' || s.kind === 'turn' || s.kind === 'turnTo' });
+		out.push({ i, name: S.stepName(s), moving: s.kind === 'move' || s.kind === 'moveTurn' || s.kind === 'turn' || s.kind === 'turnTo' });
 	});
 	return out;
 }

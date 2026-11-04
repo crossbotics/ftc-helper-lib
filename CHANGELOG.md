@@ -9,6 +9,16 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - **Put a point between two in the auto builder** (Simple steps). Move the mouse over a drive's line on the map:
   a white dot with a plus slides along it. A click splits that drive in two there; then drag the new point, or
   add a step after it. Before, a click anywhere only added a step at the end.
+- **Put a step between two in the auto builder's list.** A **+** shows between two steps; press it and the add
+  buttons (and taps on the map) put steps there. It replaces the "add after the selected step" box.
+- **Turn knobs on the auto builder's map.** After each turn step the map draws the robot facing the way it ends,
+  with a yellow knob: drag it around to turn the step. Pedro parts that keep or turn a heading get one too.
+- **Pedro paths: put a point between two** (the dot on a part, or **+ point**): the part splits in two, the same
+  shape. `pathcore.js` `splitPart`.
+- **`Steps.moveWithTurn(label, inches, directionDeg, headingDeg, power)`**: drive and turn at the same time
+  (mecanum). In the auto builder: **turn while driving** on a drive (mecanum), else the robot drives, then turns.
+- **`PedroPath.turnTo(startDeg, endDeg, from, until)`**: a turn on one stretch of a part, so a path can turn
+  first, then drive, or drive, then turn. In the auto builder: the "when" list of "Turn from one heading to another".
 
 ### Changed
 

@@ -17,7 +17,10 @@ const $ = (id) => document.getElementById(id);
 const STORE = 'simAutoBuilder-v1';
 const LIMIT = 72;
 const PLAN = '#8250df', GHOST = '#8250df', ACT = '#c2410c', PATH = '#1b5fa8', BAD = '#c8322a', START = '#1b7f3b';
-const MOVING = new Set(['move', 'turn', 'turnTo']);
+const MOVING = new Set(['move', 'moveTurn', 'turn', 'turnTo']);
+const DRIVES = new Set(['move', 'moveTurn']);           // steps with an end point on the map
+const TURNS = new Set(['turn', 'turnTo', 'moveTurn']);  // steps with a turn knob on the map
+const KNOB = '#f2c230';                                 // the turn knobs' yellow
 const fmt = (v) => P.num(P.round1(v));
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const snap = (v, q = 0.5) => Math.round(v / q) * q;
@@ -57,7 +60,7 @@ const ACTION_LIMIT_SEC = 10;
 
 let B = {
 	open: false, mode: 'steps', alliance: 'RED', robotClass: '', edit3d: true,
-	add: 'drive', addPedro: 'line', sel: null, selPart: 0, selAction: null, view: 'file', insert: false,
+	add: 'drive', addPedro: 'line', sel: null, selPart: 0, selAction: null, view: 'file', at: null,
 	steps: { plan: structuredClone(STEPS_EMPTY), speeds: { ...S.DEFAULT_SPEEDS }, tolIn: 4, tolDeg: 10, recorded: false },
 	pedro: { ...structuredClone(PEDRO_EXAMPLE), tolIn: 4, tolDeg: 10, recorded: false },
 };
@@ -184,7 +187,8 @@ panel.innerHTML = `
     <button data-add="move">+ Drive</button><button data-add="strafe" id="bAddStrafe">+ Strafe</button><button data-add="turn">+ Turn</button>
     <button data-add="turnTo">+ Turn to</button><button data-add="wait">+ Wait</button><button data-add="run">+ Start something</button>
     <button data-add="action">+ Action</button><button data-add="aim" id="bAddAim" title="Turn to the goal (camera, or the odometry backup)">+ Aim at the goal</button><button data-add="ready" id="bAddReady" title="Spin the launcher up and wait until it is ready to fire">+ Ready to launch</button><button data-add="remember" title="Save the heading now, for Turn back">+ Remember heading</button><button data-add="back" title="Turn back to the remembered heading">+ Turn back</button><button data-add="park">+ Park from here</button>
-    <label class="muted" title="Off: new steps go at the end"><input type="checkbox" id="bInsert"> add after the selected step</label></div>
+    </div>
+  <div id="bAddHome"></div>
   <div id="bTankNote" class="b-tanknote" hidden></div>
   <div id="bList"></div>
   <div class="row"><button id="bClear" title="Remove every step">Remove all steps</button><button id="bExample" title="The steps from lesson 6">Load the lesson's example</button></div>
@@ -287,7 +291,7 @@ function renderTankNotice() {
 	const box = $('bTankNote');
 	box.hidden = !tankNotice.length;
 	if (!tankNotice.length) return;
-	box.innerHTML = `<p><b>A tank drive cannot strafe</b>, so ${tankNotice.length === 1 ? 'this strafe became' : 'these strafes became'} a turn and a drive (the robot drives the same route; step numbers from before the change):</p>`
+	box.innerHTML = `<p><b>A tank drive cannot strafe</b> (or drive and turn at once), so ${tankNotice.length === 1 ? 'this step became' : 'these steps became'} a turn and a drive (the robot drives the same route; step numbers from before the change):</p>`
 		+ `<ul class="b-checks">${tankNotice.map((t) => `<li class="warn">${esc(t)}</li>`).join('')}</ul>`
 		+ '<button class="small" id="bTankOk">OK</button>';
 	$('bTankOk').onclick = () => { tankNotice = []; renderTankNotice(); };
@@ -317,6 +321,12 @@ function work() {
 	const checks = [];
 	for (const h of mine.hits) checks.push({ level: 'bad', text: `Part ${h.part + 1}: the robot touches ${h.name} near (${fmt(h.x)}, ${fmt(h.y)}).` });
 	for (const w of P.warnings(path, P.sample(path), st.start.on ? +st.start.h || 0 : null)) checks.push({ level: 'warn', text: w });
+	// A turn squeezed into the end of the last part: the path can end before the turn does (Pedro steers to the
+	// heading, it does not wait for it). Holding the end lets it finish.
+	const lastPart = path.parts[path.parts.length - 1];
+	if (st.mode === 'follow' && lastPart?.heading.mode === 'turn' && P.turnSpan(lastPart.heading).to > 0.95 && P.turnSpan(lastPart.heading).from > 0 && !(path.holdSec > 0)) {
+		checks.push({ level: 'warn', text: `Part ${path.parts.length} turns at the end: the path can end before the turn does. Tick "Hold the end" so the robot finishes turning.` });
+	}
 	if (st.mirror && field && /BIOBUZZ/.test(field.season)) checks.push({ level: 'warn', text: 'BIOBUZZ: red\'s side is rotated 180°, not mirrored. With mirrorForRed() true, the other alliance drives to the wrong places.' });
 	const order = P.ordered(st.actions, m);
 	for (const p of P.checkActions(st.actions, m, { step: st.mode, label: st.label })) {
@@ -426,14 +436,24 @@ function handles() {
 			if (part.heading.mode === 'point') out.push({ id: `p${i}`, x: part.heading.x, y: part.heading.y, kind: 'point' });
 			part.ctrl.forEach((c, j) => out.push({ id: `c${i}.${j}`, x: c[0], y: c[1], kind: 'ctrl' }));
 		});
+		const samples = P.sample(path);
+		path.parts.forEach((part, i) => {
+			// a part that sets its own heading (keep one, or turn): a knob to drag around its end
+			if (part.heading.mode === 'keep' || part.heading.mode === 'turn') out.push(knob(`h${i}`, part.end[0], part.end[1], P.partEnds(samples, i).end));
+		});
 		path.parts.forEach((part, i) => out.push({ id: `e${i}`, x: part.end[0], y: part.end[1], kind: 'end', label: String(i + 1) }));
 		out.push({ id: 's', x: path.start[0], y: path.start[1], kind: 'start' });
 		out.push(turnKnob(path.start[0], path.start[1], +B.pedro.start.h || 0));
 		return out;
 	}
 	const plan = B.steps.plan;
+	// The turn knobs first (under the points): one in front of the robot after each turn step.
 	plan.steps.forEach((s, i) => {
-		if (s.kind !== 'move' || !view?.sim?.ends[i]) return;
+		const e = view?.sim?.ends[i];
+		if (e && TURNS.has(s.kind)) out.push(knob(`k${i}`, e.x, e.y, e.h));
+	});
+	plan.steps.forEach((s, i) => {
+		if (!DRIVES.has(s.kind) || !view?.sim?.ends[i]) return;
 		const e = view.sim.ends[i];
 		out.push({ id: `m${i}`, x: e.x, y: e.y, kind: 'move', label: String(i + 1) });
 	});
@@ -446,6 +466,17 @@ function handles() {
 function turnKnob(x, y, h) {
 	const d = robotLW()[0] / 2 + 5, a = h * Math.PI / 180;
 	return { id: 'sh', x: x - Math.sin(a) * d, y: y + Math.cos(a) * d, kind: 'turn' };
+}
+// A turn step's knob (or a Pedro part's end heading): in front of the robot where the turn ends, facing h.
+// The map draws the robot there too, so the way it faces shows; drag the knob around to turn it.
+function knob(id, x, y, h) {
+	const d = robotLW()[0] / 2 + 5, a = h * Math.PI / 180;
+	return { id, x: x - Math.sin(a) * d, y: y + Math.cos(a) * d, kind: 'knob', base: { x, y, h } };
+}
+// A dragged knob's heading: toward the pointer, in 5° steps (15° with snapping on, like the start).
+function knobHeading(base, x, y) {
+	const h = P.headingOf(x - base.x, y - base.y), q = B.snapStart !== false ? 15 : 5;
+	return P.wrap(Math.round(h / q) * q);
 }
 
 // Turns the start to heading h (degrees), then keeps it inside the walls and touching one (G304).
@@ -481,6 +512,21 @@ function moveHandle(id, x, y) {
 		setStartHeading(B.snapStart !== false ? Math.round(h / 15) * 15 : Math.round(h));
 		return;
 	}
+	if (/^[kh]\d+$/.test(id)) {
+		// A turn knob: the step (or Pedro part) ends facing the pointer. Its base stays where the drag started.
+		if (!dragBase || dragBase.id !== id) dragBase = { id, base: handles().find((k) => k.id === id)?.base, steps: structuredClone(B.steps.plan.steps) };
+		if (!dragBase.base) return;
+		const h = knobHeading(dragBase.base, x, y), i = +id.slice(1);
+		if (id[0] === 'h') {
+			const hd = B.pedro.path.parts[i]?.heading;
+			if (hd?.mode === 'turn') hd.b = h; else if (hd?.mode === 'keep') hd.a = h;
+			B.selPart = i;
+			return;
+		}
+		const steps = S.setTurnHeading({ ...B.steps.plan, steps: dragBase.steps }, i, h);
+		if (steps) { B.steps.plan.steps = steps; B.sel = i; }
+		return;
+	}
 	[x, y] = clampXY(x, y);
 	if (B.mode === 'pedro') {
 		const path = B.pedro.path;
@@ -506,12 +552,13 @@ function moveHandle(id, x, y) {
 // The place on a drive's line nearest (x, y), plan numbers, close enough to grab and away from its two
 // points: { i (the step), d (inches along it), x, y }, or null. A tap there puts a new point on the line.
 function lineSpot(x, y) {
-	if (B.mode === 'pedro' || !view?.sim) return null;
+	if (B.mode === 'pedro') return pedroSpot(x, y);
+	if (!view?.sim) return null;
 	const r = handleRadius(svg);
 	let best = null;
 	B.steps.plan.steps.forEach((s, i) => {
 		const a = poseBefore(i), b = view.sim.ends[i];
-		if (s.kind !== 'move' || !b) return;
+		if (!DRIVES.has(s.kind) || !b) return;
 		const dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy);
 		if (L < 1) return;
 		const d = snap(Math.max(0, Math.min(1, ((x - a.x) * dx + (y - a.y) * dy) / (L * L))) * L);
@@ -521,6 +568,28 @@ function lineSpot(x, y) {
 	});
 	return best;
 }
+// Pedro: the place on a part's own line or curve nearest (x, y), away from its ends: { part, t (0..1 along
+// it), x, y }, or null. (Not with "an action" chosen: a tap near the path adds an action then.)
+function pedroSpot(x, y) {
+	if (B.addPedro === 'action') return null;
+	const r = handleRadius(svg), path = B.pedro.path;
+	let best = null;
+	path.parts.forEach((part, i) => {
+		const pts = P.sample({ start: P.partStart(path, i), parts: [part], holdSec: 0 });
+		let along = 0;
+		const lens = [0];
+		for (let k = 1; k < pts.length; k++) lens.push(along += Math.hypot(pts[k].x - pts[k - 1].x, pts[k].y - pts[k - 1].y));
+		for (let k = 1; k < pts.length; k++) {
+			const p = pts[k - 1], q = pts[k], dx = q.x - p.x, dy = q.y - p.y, L2 = dx * dx + dy * dy;
+			const f = L2 ? Math.max(0, Math.min(1, ((x - p.x) * dx + (y - p.y) * dy) / L2)) : 0;
+			const px = p.x + dx * f, py = p.y + dy * f, off = Math.hypot(x - px, y - py), d = lens[k - 1] + (lens[k] - lens[k - 1]) * f;
+			if (off > r * 1.6 || d < r * 1.8 || along - d < r * 1.8) continue;
+			if (!best || off < best.off) best = { part: i, t: p.t + (q.t - p.t) * f, x: px, y: py, off };
+		}
+	});
+	return best;
+}
+
 // The white dot with a plus that slides along a line under the pointer (made by renderMap).
 function showSpot(spot) {
 	const dot = svg.querySelector('#bSpot');
@@ -576,7 +645,7 @@ function tapAt(x, y) {
 	if (B.add === 'none') return;
 	change(() => {
 		const plan = B.steps.plan;
-		const i = B.sel != null ? B.sel + 1 : plan.steps.length, p = poseBefore(i);
+		const i = B.at != null ? B.at : B.sel != null ? B.sel + 1 : plan.steps.length, p = poseBefore(i);
 		let add;
 		if (B.add === 'face') {
 			const a = Math.round(P.wrap(P.headingOf(x - p.x, y - p.y) - p.h));
@@ -584,6 +653,7 @@ function tapAt(x, y) {
 		} else add = stepsTo(p, x, y);
 		plan.steps.splice(i, 0, ...add);
 		if (add.length) B.sel = i + add.length - 1;
+		if (B.at != null) B.at += add.length;   // the next one goes after it
 	});
 }
 
@@ -650,8 +720,14 @@ function renderMap() {
 		const grp = el('g', { class: 'bh', 'data-h': h.id, style: 'cursor:grab' }, hg);
 		el('circle', { cx: h.x, cy: -h.y, r: r * 1.8, fill: 'transparent' }, grp);
 		const sel = (B.mode !== 'pedro' && h.id === `m${B.sel}`) || (B.mode === 'pedro' && h.id === `e${B.selPart}`);
-		const fill = { start: START, end: PATH, move: PATH, ctrl: '#fff', point: '#fff', turn: '#f2c230' }[h.kind];
-		if (h.kind === 'turn') { const st = startNow(); el('line', { x1: +st.x, y1: -+st.y, x2: h.x, y2: -h.y, stroke: '#f2c230', 'stroke-width': r * 0.35, 'pointer-events': 'none' }, hg); }
+		const fill = { start: START, end: PATH, move: PATH, ctrl: '#fff', point: '#fff', turn: KNOB, knob: KNOB }[h.kind];
+		if (h.kind === 'turn') { const st = startNow(); el('line', { x1: +st.x, y1: -+st.y, x2: h.x, y2: -h.y, stroke: KNOB, 'stroke-width': r * 0.35, 'pointer-events': 'none' }, hg); }
+		if (h.kind === 'knob') {
+			// the robot as it faces after the turn (an outline with its front arrow), and the knob's arm
+			const mine = (B.mode === 'pedro' ? `h${B.selPart}` : `k${B.sel}`) === h.id;
+			drawRobot(el('g', { 'pointer-events': 'none', opacity: mine ? 1 : 0.8 }, hg), h.base, KNOB, mine ? 0.2 : 0.1, r * (mine ? 0.5 : 0.35), lw);
+			el('line', { x1: h.base.x, y1: -h.base.y, x2: h.x, y2: -h.y, stroke: KNOB, 'stroke-width': r * 0.35, 'stroke-dasharray': `${r} ${r * 0.6}`, 'pointer-events': 'none' }, hg);
+		}
 		el('circle', { cx: h.x, cy: -h.y, r: r * (h.kind === 'ctrl' ? 0.85 : 1.1), fill, stroke: sel ? '#ffe14d' : h.kind === 'ctrl' || h.kind === 'point' ? PATH : '#fff', 'stroke-width': r * (sel ? 0.5 : 0.3) }, grp);
 		// The number: white on a dark badge up and to the right of the point (easy to read on any tile or line).
 		if (h.label) {
@@ -659,9 +735,9 @@ function renderMap() {
 			el('rect', { x: bx - w / 2, y: by - r * 1.5, width: w, height: r * 3, rx: r * 1.5, fill: sel ? '#7a5a00' : '#101c45', stroke: '#fff', 'stroke-width': r * 0.3, 'pointer-events': 'none' }, hg);
 			el('text', { x: bx, y: by + r * 0.78, 'font-size': r * 2.2, 'text-anchor': 'middle', fill: '#fff', 'font-weight': 700, 'pointer-events': 'none' }, hg).textContent = h.label;
 		}
-		el('title', {}, grp).textContent = { start: 'Start spot: drag to move', turn: 'Turn the start: drag around the robot (15° steps when snapping is on)', end: 'End of a part: drag to move', move: 'End of a drive: drag it anywhere (the turn before it changes too)', ctrl: 'Control point: the path bends toward it', point: 'The point the robot faces' }[h.kind];
+		el('title', {}, grp).textContent = { start: 'Start spot: drag to move', turn: 'Turn the start: drag around the robot (15° steps when snapping is on)', end: 'End of a part: drag to move', move: 'End of a drive: drag it anywhere (the turn before it changes too)', ctrl: 'Control point: the path bends toward it', point: 'The point the robot faces', knob: 'The way the robot faces after this turn: drag it around (5° steps, 15° when snapping is on)' }[h.kind];
 	}
-	// The new-point dot (Simple steps): hidden until the pointer is over a drive's line.
+	// The new-point dot: hidden until the pointer is over a drive's line (or a Pedro part).
 	const spot = el('g', { id: 'bSpot', visibility: 'hidden', 'pointer-events': 'none' }, svg);
 	el('circle', { r: r * 1.1, fill: '#fff', stroke: PATH, 'stroke-width': r * 0.35 }, spot);
 	el('path', { d: `M${-r * 0.6} 0H${r * 0.6}M0 ${-r * 0.6}V${r * 0.6}`, stroke: PATH, 'stroke-width': r * 0.3 }, spot);
@@ -686,13 +762,17 @@ svg.addEventListener('pointerdown', (evt) => {
 	const spot = !h && !mk ? lineSpot(drag.at[0], drag.at[1]) : null;
 	if (h) drag.id = h.dataset.h;
 	else if (mk) { drag.act = +mk.dataset.a; B.selAction = drag.act; }
-	else if (spot) {
+	else if (spot && B.mode === 'pedro') {
+		// On a part: split it in two there (the same shape), and hold the new end (a drag moves it at once).
+		const r = P.splitPart(B.pedro.path, spot.part, spot.t, B.pedro.actions);
+		if (r) { B.pedro.path.parts = r.parts; B.pedro.actions = r.actions; drag.id = `e${spot.part}`; drag.added = true; quickRender(); }
+	} else if (spot) {
 		// On a drive's line: split that drive in two, and hold the new point (a drag moves it at once).
 		const steps = S.splitMove(B.steps.plan, spot.i, spot.d);
 		if (steps) { B.steps.plan.steps = steps; drag.id = `m${spot.i}`; drag.added = true; quickRender(); }
 	}
-	if (drag.id && /^m\d+$/.test(drag.id)) B.sel = +drag.id.slice(1);
-	if (drag.id && /^e\d+$/.test(drag.id)) B.selPart = +drag.id.slice(1);
+	if (drag.id && /^[mk]\d+$/.test(drag.id)) B.sel = +drag.id.slice(1);
+	if (drag.id && /^[eh]\d+$/.test(drag.id)) B.selPart = +drag.id.slice(1);
 	svg.setPointerCapture(evt.pointerId);
 });
 svg.addEventListener('pointermove', (evt) => {
@@ -820,7 +900,7 @@ $('bCard').onclick = () => {
 
 // ------------------------------------------------------------------ Simple steps: the list
 
-const KIND_TEXT = { move: 'Drive', turn: 'Turn', turnTo: 'Turn to', wait: 'Wait', run: 'Start something', action: 'Action', alongside: 'Action', aim: 'Aim at the goal', ready: 'Ready to launch', remember: 'Remember heading', back: 'Turn back', park: 'Park from here' };
+const KIND_TEXT = { move: 'Drive', moveTurn: 'Drive and turn', turn: 'Turn', turnTo: 'Turn to', wait: 'Wait', run: 'Start something', action: 'Action', alongside: 'Action', aim: 'Aim at the goal', ready: 'Ready to launch', remember: 'Remember heading', back: 'Turn back', park: 'Park from here' };
 const DIRS = [[0, 'forward'], [180, 'back'], [90, 'right (strafe)'], [270, 'left (strafe)']];
 const NEW = {
 	move: () => ({ kind: 'move', label: 'Drive', inches: 24, dir: 0, power: 0.6 }),
@@ -839,10 +919,11 @@ const NEW = {
 for (const b of $('bAdd').querySelectorAll('[data-add]')) {
 	b.onclick = () => change(() => {
 		const steps = B.steps.plan.steps;
-		// at the end, or after the selected step when "insert" is ticked
-		const i = B.insert && B.sel != null ? B.sel + 1 : steps.length;
+		// at the end, or where the list's "+" was pressed (the next one then goes after it)
+		const i = B.at != null ? Math.min(B.at, steps.length) : steps.length;
 		steps.splice(i, 0, NEW[b.dataset.add]());
 		B.sel = i;
+		if (B.at != null) B.at = i + 1;
 	});
 }
 
@@ -859,6 +940,12 @@ function codePick(list, code, typed, ph, listId) {
 		+ `<option value="__own"${text ? ' selected' : ''}>type your own...</option></select>${text ? box : ''}`;
 }
 
+// Mecanum: a drive turns WHILE it drives (moveWithTurn) or drives and then turns. merge: the turn before it goes in.
+function turnWhile(on, merge) {
+	return `<label class="muted" title="${on ? 'On: one step that drives and turns at once (moveWithTurn). Off: drive, then turn (two steps)' : `Drive and turn at once (mecanum)${merge ? ': the turn before this drive goes into it' : ': then drag the yellow knob to set the heading'}`}">`
+		+ `<input type="checkbox" data-k="turnWhile"${on ? ' checked' : ''}> turn while driving</label>`;
+}
+
 function stepForm(s, i) {
 	const e = view.sim.ends[i];
 	const name = (ph) => `<label class="grow">Name <input type="text" data-k="label" value="${esc(s.label ?? '')}" placeholder="${ph}"></label>`;
@@ -873,8 +960,13 @@ function stepForm(s, i) {
 				.map(([d, t]) => `<option value="${d}"${d === +s.dir ? ' selected' : ''}>${t}</option>`).join('')
 				+ (tank ? '' : `<option value="other"${known ? '' : ' selected'}>another angle</option>`);
 			return `<div class="row">${name('To the goal')}</div><div class="row"><label><input type="number" step="0.5" data-k="inches" value="${fmt(+s.inches)}"> in</label>
-				<select data-k="dirSel" aria-label="Direction">${opts}</select>${known ? '' : `<label><input type="number" step="5" data-k="dir" value="${fmt(+s.dir)}"> deg</label>`}${power}</div>`;
+				<select data-k="dirSel" aria-label="Direction">${opts}</select>${known ? '' : `<label><input type="number" step="5" data-k="dir" value="${fmt(+s.dir)}"> deg</label>`}${power}</div>
+				${tank ? '' : turnWhile(false, B.steps.plan.steps[i - 1]?.kind === 'turn')}`;
 		}
+		case 'moveTurn':
+			return `<div class="row">${name('To the goal')}</div><div class="row"><label><input type="number" step="0.5" data-k="inches" value="${fmt(+s.inches)}"> in</label>
+				<label>at <input type="number" step="5" data-k="dir" value="${fmt(+s.dir)}"> deg</label><label>end facing <input type="number" step="5" data-k="heading" value="${fmt(+s.heading)}"> deg</label>${power}</div>
+				${turnWhile(true)}<p class="muted">Both from the way the robot faced at the start: the direction clockwise (90 = its right), the heading counterclockwise (90 = left). Drag the yellow knob to turn it.</p>`;
 		case 'turn': return `<div class="row">${name('Face the goal')}</div><div class="row"><label>by <input type="number" step="5" data-k="deg" value="${fmt(+s.deg)}"> deg</label>${power}</div><p class="muted">+ left, - right. Ends facing ${fmt(e.h)}.</p>`;
 		case 'turnTo': return `<div class="row">${name('Square up')}</div><div class="row"><label>to <input type="number" step="5" data-k="heading" value="${fmt(+s.heading)}"> deg</label>${power}</div><p class="muted">0 = the start heading. Ends facing ${fmt(e.h)} on the field.</p>`;
 		case 'wait': return `<div class="row">${name('Let it settle')}<label><input type="number" min="0" step="0.1" data-k="sec" value="${fmt(+s.sec)}"> s</label></div>`;
@@ -901,12 +993,25 @@ function renderSteps() {
 	const focused = act?.closest?.('#bList [data-i]') ? [act.closest('[data-i]').dataset.i, act.dataset.k, act.selectionStart] : null;
 	const steps = B.steps.plan.steps;
 	if (B.sel != null && !steps[B.sel]) B.sel = null;
+	$('bAddHome').appendChild($('bAdd'));   // out of the list first: the list is made again below
 	box.innerHTML = steps.length ? '' : '<p class="muted">No steps yet. Tap the map, or press a button above.</p>';
 	const tank = B.steps.plan.drive === 'tank';
 	$('bAddStrafe').hidden = tank;
 	renderTankNotice();
-	$('bInsert').checked = !!B.insert;
+	// The add buttons sit above the list, or in the gap where a "+" was pressed (B.at: steps go in there).
+	if (B.at != null && !(B.at >= 0 && B.at < steps.length)) B.at = null;
 	steps.forEach((s, i) => {
+		const gap = document.createElement('div');
+		gap.className = 'b-gap' + (B.at === i ? ' on' : '');
+		if (B.at === i) {
+			gap.innerHTML = `<div class="row"><b>Add here, ${i ? `after step ${i}` : 'first'}:</b> <span class="muted">a button below, or tap the map</span><button class="small" data-gapx>Done</button></div>`;
+			gap.appendChild($('bAdd'));
+			gap.querySelector('[data-gapx]').onclick = () => { B.at = null; render(); };
+		} else {
+			gap.innerHTML = `<button class="b-gapbtn" title="Add a step here, ${i ? `between step ${i} and ${i + 1}` : 'before step 1'}" aria-label="Add a step here">+</button>`;
+			gap.querySelector('button').onclick = () => { B.at = i; render(); };
+		}
+		box.appendChild(gap);
 		const e = view.sim.ends[i];
 		const div = document.createElement('div');
 		div.className = 'b-step' + (i === B.sel ? ' sel' : '') + (MOVING.has(s.kind) ? '' : ' mark');
@@ -944,6 +1049,11 @@ function stepInput(i, t) {
 	change(() => {
 		const s = B.steps.plan.steps[i];
 		B.sel = i;
+		if (k === 'turnWhile') {
+			const r = S.turnWhileDriving(B.steps.plan, i, t.checked);
+			if (r) { B.steps.plan.steps = r.steps; B.sel = r.i; }
+			return;
+		}
 		if (k === 'dirSel') { if (t.value !== 'other') s.dir = +t.value; else if (DIRS.some(([d]) => d === +s.dir)) s.dir = 45; }
 		else if (k === 'dir' && B.steps.plan.drive === 'tank' && S.sideways(v)) return;   // a tank drive: forward or back only
 		else if (k === 'wait') { if (t.checked) { s.kind = 'action'; s.timeout = s.timeout ?? ACTION_LIMIT_SEC; } else s.kind = 'alongside'; }
@@ -960,6 +1070,8 @@ function stepInput(i, t) {
 
 // ------------------------------------------------------------------ Pedro: parts and PathAt
 
+// When a Pedro part's turn happens (pathcore.TURN_WHEN): mecanum turns while it drives, or on one stretch.
+const WHEN = [['along', 'while driving (all the way)'], ['first', 'first, then drive (first 30%)'], ['last', 'drive, then turn (last 30%)']];
 const HEADINGS = [['path', 'Face along the path'], ['back', 'Drive backwards along it'], ['keep', 'Keep one heading'], ['turn', 'Turn from one heading to another'], ['point', 'Face a point']];
 const AKIND = { inchesLeft: 'Inches left', inchesDone: 'Inches done', fraction: 'Part of the path (0 to 1)', part: 'Start of part', near: 'Near a point' };
 
@@ -983,17 +1095,23 @@ function renderPedro() {
 		div.className = 'b-step' + (i === B.selPart ? ' sel' : '');
 		div.dataset.i = i;
 		div.innerHTML = `<div class="b-top"><b data-sel><span class="b-num">${i + 1}</span>Part</b><span class="muted">to (${fmt(part.end[0])}, ${fmt(part.end[1])}), facing ${fmt(ends.start)} then ${fmt(ends.end)}</span>
-			<span class="b-btns"><button class="small" data-del title="Remove">&times;</button></span></div>
+			<span class="b-btns"><button class="small" data-split title="Add a point in the middle of this part (two parts, the same shape)">+ point</button><button class="small" data-del title="Remove">&times;</button></span></div>
 			<div class="row"><select data-k="shape" aria-label="Shape"><option value="line">Straight line</option><option value="curve1">Curve, 1 control point</option><option value="curve2">Curve, 2 control points</option>${shape === 'curveN' ? `<option value="curveN">Curve, ${part.ctrl.length} control points</option>` : ''}</select>
 			<label>end x <input type="number" step="0.5" data-k="ex" value="${fmt(part.end[0])}"></label><label>y <input type="number" step="0.5" data-k="ey" value="${fmt(part.end[1])}"></label></div>
 			<div class="row"><select data-k="mode" aria-label="Heading">${HEADINGS.map(([v, t]) => `<option value="${v}"${v === h.mode ? ' selected' : ''}>${t}</option>`).join('')}</select>
 			${h.mode === 'keep' ? `<label><input type="number" step="5" data-k="a" value="${fmt(h.a)}"> deg</label>` : ''}
-			${h.mode === 'turn' ? `<label>from <input type="number" step="5" data-k="a" value="${fmt(h.a)}"></label><label>to <input type="number" step="5" data-k="b" value="${fmt(h.b)}"></label>` : ''}
+			${h.mode === 'turn' ? `<label>from <input type="number" step="5" data-k="a" value="${fmt(h.a)}"></label><label>to <input type="number" step="5" data-k="b" value="${fmt(h.b)}"></label>
+				<select data-k="when" aria-label="When it turns" title="Mecanum: turn while it drives, or turn on one stretch of the part">${WHEN.map(([v, t]) => `<option value="${v}"${v === P.turnWhen(h) ? ' selected' : ''}>${t}</option>`).join('')}${P.turnWhen(h) === 'other' ? '<option value="other" selected>on a stretch:</option>' : ''}</select>
+				${P.turnWhen(h) === 'other' ? `<label><input type="number" step="0.05" min="0" max="1" data-k="from" value="${fmt(P.turnSpan(h).from)}"></label><label>to <input type="number" step="0.05" min="0" max="1" data-k="to" value="${fmt(P.turnSpan(h).to)}"> of the part</label>` : ''}` : ''}
 			${h.mode === 'point' ? `<label>x <input type="number" step="0.5" data-k="px" value="${fmt(h.x)}"></label><label>y <input type="number" step="0.5" data-k="py" value="${fmt(h.y)}"></label>` : ''}
 			<label>max speed <input type="number" min="0.05" max="1" step="0.05" data-k="speed" value="${part.maxSpeed ?? ''}" placeholder="full"></label></div>`;
 		div.querySelector('select[data-k=shape]').value = shape;
 		div.querySelector('[data-sel]').onclick = () => { B.selPart = i; render(); };
 		div.querySelector('[data-del]').onclick = () => change(() => { st.path.parts.splice(i, 1); B.selPart = Math.max(0, Math.min(B.selPart, st.path.parts.length - 1)); });
+		div.querySelector('[data-split]').onclick = () => change(() => {
+			const r = P.splitPart(st.path, i, 0.5, st.actions);
+			if (r) { st.path.parts = r.parts; st.actions = r.actions; B.selPart = i + 1; }
+		});
 		div.addEventListener('change', (evt) => partInput(i, evt.target));
 		box.appendChild(div);
 	});
@@ -1016,12 +1134,19 @@ function partInput(i, t) {
 			const mode = t.value;
 			part.heading = mode === 'keep' ? { mode, a: P.round1(ends.start) } : mode === 'turn' ? { mode, a: P.round1(ends.start), b: P.round1(ends.end) }
 				: mode === 'point' ? { mode, x: 0, y: 0 } : { mode };
+		} else if (k === 'when') {
+			const w = P.TURN_WHEN[t.value];
+			if (!w || (w[0] === 0 && w[1] === 1)) { delete part.heading.from; delete part.heading.to; } else Object.assign(part.heading, { from: w[0], to: w[1] });
 		} else if (k === 'speed') part.maxSpeed = Number.isFinite(v) && v > 0 ? Math.min(1, v) : null;
 		else if (Number.isFinite(v)) {
 			if (k === 'ex') part.end = clampXY(v, part.end[1]);
 			else if (k === 'ey') part.end = clampXY(part.end[0], v);
 			else if (k === 'a') part.heading.a = v;
 			else if (k === 'b') part.heading.b = v;
+			else if (k === 'from' || k === 'to') {
+				const sp = { ...P.turnSpan(part.heading), [k]: Math.max(0, Math.min(1, v)) };
+				if (sp.to > sp.from) Object.assign(part.heading, sp);
+			}
 			else if (k === 'px') part.heading.x = v;
 			else if (k === 'py') part.heading.y = v;
 		}
@@ -1122,7 +1247,6 @@ $('bFromGo').onclick = async () => {
 	for (const t of r.notes || []) out.push({ level: 'ok', text: t });
 	$('bFromNote').innerHTML = out.map((c) => `<li class="${c.level}">${esc(c.text)}</li>`).join('');
 };
-$('bInsert').onchange = () => { B.insert = $('bInsert').checked; save(); };
 $('bPClear').onclick = () => change(() => { B.pedro.path.parts = []; B.pedro.path.holdSec = 0; B.pedro.actions = []; B.selPart = 0; });
 $('bPExample').onclick = () => change(() => { Object.assign(B.pedro, structuredClone(PEDRO_EXAMPLE)); B.selPart = 1; });
 $('bAddAct').onclick = () => change(() => {
@@ -1407,7 +1531,7 @@ function draw3d() {
 	// The points: a ball each (grab one to drag it when "Edit in the 3D view" is on).
 	for (const h of handles()) {
 		const f = toFieldNow(h);
-		const color = { start: START, end: PATH, move: PATH, ctrl: 0xffffff, point: ACT }[h.kind];
+		const color = { start: START, end: PATH, move: PATH, ctrl: 0xffffff, point: ACT, turn: KNOB, knob: KNOB }[h.kind];
 		const ball = new THREE.Mesh(new THREE.SphereGeometry(h.kind === 'ctrl' ? 1.4 : 1.9, 16, 12), new THREE.MeshBasicMaterial({ color }));
 		ball.position.set(f.x, f.y, 2);
 		ball.userData.id = h.id;
