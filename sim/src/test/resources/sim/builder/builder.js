@@ -909,7 +909,12 @@ function openMenu(cx, cy, at, id) {
 	menu.querySelector('button').focus({ preventScroll: true });
 }
 function closeMenu() { menu.hidden = true; }
-document.addEventListener('pointerdown', (evt) => { if (!menu.hidden && !menu.contains(evt.target)) closeMenu(); }, true);
+// A click outside closes the menu. On the map that click does nothing else (it would add a step).
+document.addEventListener('pointerdown', (evt) => {
+	if (menu.hidden || menu.contains(evt.target)) return;
+	closeMenu();
+	if (svg.contains(evt.target) && evt.button !== 2) evt.stopPropagation();
+}, true);
 document.addEventListener('keydown', (evt) => { if (evt.key === 'Escape') closeMenu(); });
 addEventListener('scroll', closeMenu, true);
 svg.addEventListener('pointerleave', () => { if (!drag) showSpot(null); });
