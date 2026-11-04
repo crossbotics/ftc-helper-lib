@@ -18,6 +18,9 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - **More "Tap adds" choices in the auto builder:** Simple steps **an action** (at the nearest point on the route;
   on a line the drive splits there), and Pedro **turn to face** (the selected part ends facing the spot).
   `stepscore.js` `actionAt`, `pathcore.js` `facePart`.
+- **Letters for actions in the auto builder:** points keep numbers on a dark round badge; actions get an orange
+  diamond with a letter (A, B, C...) on the map and beside them in the list. Simple steps now show where each
+  action happens on the map (click it to select its step); Pedro's actions along the path were numbered before.
 - **A menu on the auto builder's map:** right-click (or press and hold on a touch screen) for what can be done
   there: add an action, put a point, add a step after, turn while driving, remove, drive or turn to face here.
 - **`Steps.moveWithTurn(label, inches, directionDeg, headingDeg, power)`**: drive and turn at the same time

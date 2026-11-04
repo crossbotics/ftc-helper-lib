@@ -21,6 +21,28 @@ const MOVING = new Set(['move', 'moveTurn', 'turn', 'turnTo']);
 const DRIVES = new Set(['move', 'moveTurn']);           // steps with an end point on the map
 const TURNS = new Set(['turn', 'turnTo', 'moveTurn']);  // steps with a turn knob on the map
 const KNOB = '#f2c230';                                 // the turn knobs' yellow
+// Things the robot DOES (not drives): an orange diamond with a letter on the map (A, B, C...), so they never
+// look like the points it drives to (a dark round badge with a number).
+const DOING = new Set(['run', 'action', 'alongside', 'ready', 'aim']);
+const letter = (n) => (n < 26 ? String.fromCharCode(65 + n) : letter(Math.floor(n / 26) - 1) + letter(n % 26));
+// The letters of a Simple steps plan: { step index: 'A', ... } in step order.
+function stepLetters(steps) {
+	const out = {};
+	let n = 0;
+	steps.forEach((s, i) => { if (DOING.has(s.kind)) out[i] = letter(n++); });
+	return out;
+}
+const shortCode = (code) => String(code || '').replace(/^Actions\./, '').replace(/^robot\./, '').replace(/\(.*$/, '').replace(/::/, ' ');
+// An action's mark: an orange diamond with its letter in white, and its name beside it.
+function actionMark(g, x, y, r, txt, name, opts = {}) {
+	const d = r * 1.75;
+	el('polygon', { points: pts([[x, y + d], [x + d, y], [x, y - d], [x - d, y]]), fill: opts.never ? '#fff' : ACT, stroke: opts.sel ? '#ffe14d' : opts.never ? ACT : '#fff', 'stroke-width': r * (opts.sel ? 0.5 : 0.3) }, g);
+	el('text', { x, y: -y + r * 0.75, 'font-size': r * 2, 'text-anchor': 'middle', fill: opts.never ? ACT : '#fff', 'font-weight': 700, 'pointer-events': 'none' }, g).textContent = txt;
+	if (name) {
+		el('text', { x: x + d + r * 0.5, y: -y + r * 0.75, 'font-size': r * 1.8, fill: ACT, 'font-weight': 700, 'paint-order': 'stroke', stroke: '#fff', 'stroke-width': r * 0.5, 'pointer-events': 'none' }, g)
+			.textContent = name;
+	}
+}
 const fmt = (v) => P.num(P.round1(v));
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const snap = (v, q = 0.5) => Math.round(v / q) * q;
@@ -330,7 +352,7 @@ function work() {
 	if (st.mirror && field && /BIOBUZZ/.test(field.season)) checks.push({ level: 'warn', text: 'BIOBUZZ: red\'s side is rotated 180°, not mirrored. With mirrorForRed() true, the other alliance drives to the wrong places.' });
 	const order = P.ordered(st.actions, m);
 	for (const p of P.checkActions(st.actions, m, { step: st.mode, label: st.label })) {
-		checks.push({ level: p.level, text: `Action ${order.indexOf(st.actions[p.i]) + 1}: ${p.text}`, act: p.i });
+		checks.push({ level: p.level, text: `Action ${letter(order.indexOf(st.actions[p.i]))}: ${p.text}`, act: p.i });
 	}
 	if (field) for (const c of S.startChecks({ x: path.start[0], y: path.start[1], h: +st.start.h || 0 }, lw, field, obs, half)) checks.push(c);
 	if (!path.parts.length) checks.push({ level: 'bad', text: 'Tap the map to add the first part of the path.' });
@@ -719,16 +741,34 @@ function renderMap() {
 	if (at) drawRobot(el('g', { 'pointer-events': 'none' }, svg), at, GHOST, 0.12, 0.6, lw);
 	// The PathAt markers (Pedro): where each starts.
 	if (B.mode === 'pedro' && B.pedro.path.parts.length) {
-		const m = view.m;
+		const m = view.m, stack = new Map();
 		P.ordered(B.pedro.actions, m).forEach((a, n) => {
 			const place = P.actionPlace(a, m);
 			const i = B.pedro.actions.indexOf(a);
 			const grp = el('g', { class: 'bact', 'data-a': i, style: 'cursor:grab' }, svg);
-			const d = r * 1.1;
-			el('polygon', { points: pts([[place.x, place.y + d], [place.x + d, place.y], [place.x, place.y - d], [place.x - d, place.y]]), fill: place.when === 'never' ? '#fff' : ACT, stroke: i === B.selAction ? '#ffe14d' : ACT, 'stroke-width': r * 0.3 }, grp);
-			el('text', { x: place.x + r * 1.4, y: -place.y + r * 2.4, 'font-size': r * 2, fill: ACT, 'font-weight': 700, 'paint-order': 'stroke', stroke: '#fff', 'stroke-width': r * 0.5, 'pointer-events': 'none' }, svg)
-				.textContent = `${n + 1} ${(a.what === 'action' ? a.code.replace(/^Actions\./, '').replace(/\(.*$/, '') : a.label) || '?'}`;
-			el('title', {}, grp).textContent = `${P.pathAtCode(a)} (drag along the path)`;
+			// several at one place: the next ones sit in a row below it, joined by a line, so none hides another
+			const key = `${P.round1(place.x)},${P.round1(place.y)}`, k = stack.get(key) || 0;
+			stack.set(key, k + 1);
+			if (k) el('line', { x1: place.x, y1: -place.y, x2: place.x, y2: -(place.y - k * r * 4), stroke: ACT, 'stroke-width': r * 0.2, 'pointer-events': 'none' }, grp);
+			actionMark(grp, place.x, place.y - k * r * 4, r, letter(n), (a.what === 'action' ? shortCode(a.code) : a.label) || '?', { never: place.when === 'never', sel: i === B.selAction });
+			el('title', {}, grp).textContent = `${letter(n)}: ${P.pathAtCode(a)} (drag along the path)`;
+		});
+	}
+	// Simple steps: where each thing the robot does happens (a click selects its step). Several at one spot
+	// sit in a row below it, so none hides another or the point.
+	if (B.mode !== 'pedro' && view.sim) {
+		const steps = B.steps.plan.steps, lets = stepLetters(steps), st = B.steps.plan.start;
+		const seen = new Map();
+		steps.forEach((s, i) => {
+			if (!lets[i]) return;
+			const e = i > 0 ? view.sim.ends[i - 1] : { x: +st.x, y: +st.y };
+			const key = `${P.round1(e.x)},${P.round1(e.y)}`, k = seen.get(key) || 0;
+			seen.set(key, k + 1);
+			const x = e.x - r * 2.2, y = e.y - r * 3 - k * r * 4;
+			const grp = el('g', { class: 'bdo', 'data-i': i, style: 'cursor:pointer' }, svg);
+			el('line', { x1: e.x, y1: -e.y, x2: x, y2: -y, stroke: ACT, 'stroke-width': r * 0.2, 'pointer-events': 'none' }, grp);
+			actionMark(grp, x, y, r, lets[i], (s.kind === 'action' || s.kind === 'alongside' ? shortCode(s.code) : s.label), { sel: i === B.sel });
+			el('title', {}, grp).textContent = `${lets[i]}: step ${i + 1}, ${S.stepWords(s)} (click to select it)`;
 		});
 	}
 	// The points to drag.
@@ -776,6 +816,8 @@ svg.addEventListener('pointerdown', (evt) => {
 	closeMenu();
 	if (evt.button === 2) return;   // the right button opens the menu (contextmenu below)
 	const h = evt.target.closest('.bh'), mk = evt.target.closest('.bact');
+	const doing = evt.target.closest('.bdo');
+	if (doing && !h) { B.sel = +doing.dataset.i; render(); document.querySelector(`#bList [data-i="${B.sel}"]`)?.scrollIntoView({ block: 'nearest' }); return; }
 	drag = { x0: evt.clientX, y0: evt.clientY, moved: false, at: toField(svg, evt), before: JSON.stringify(B) };
 	dragBase = null;
 	const spot = !h && !mk ? lineSpot(drag.at[0], drag.at[1]) : null;
@@ -1109,6 +1151,7 @@ function renderSteps() {
 	const focused = act?.closest?.('#bList [data-i]') ? [act.closest('[data-i]').dataset.i, act.dataset.k, act.selectionStart] : null;
 	const steps = B.steps.plan.steps;
 	if (B.sel != null && !steps[B.sel]) B.sel = null;
+	const lets = stepLetters(steps);   // the letters on the map's action marks
 	$('bAddHome').appendChild($('bAdd'));   // out of the list first: the list is made again below
 	box.innerHTML = steps.length ? '' : '<p class="muted">No steps yet. Tap the map, or press a button above.</p>';
 	const tank = B.steps.plan.drive === 'tank';
@@ -1133,7 +1176,7 @@ function renderSteps() {
 		div.className = 'b-step' + (i === B.sel ? ' sel' : '') + (MOVING.has(s.kind) ? '' : ' mark');
 		div.dataset.i = i;
 		const mine = view.checks.filter((c) => c.step === i);
-		div.innerHTML = `<div class="b-top"><b data-sel><span class="b-num">${i + 1}</span>${KIND_TEXT[s.kind] ?? s.kind}</b>
+		div.innerHTML = `<div class="b-top"><b data-sel><span class="b-num">${i + 1}</span>${lets[i] ? `<span class="b-let" title="${lets[i]} on the map"><i>${lets[i]}</i></span>` : ''}${KIND_TEXT[s.kind] ?? s.kind}</b>
 			<span class="muted">${fmt(e.t0)}-${fmt(e.t1)} s</span>
 			<span class="b-btns"><button class="small" data-up title="Move up"${i === 0 ? ' disabled' : ''}>&#8593;</button><button class="small" data-down title="Move down"${i === steps.length - 1 ? ' disabled' : ''}>&#8595;</button><button class="small" data-del title="Remove">&times;</button></span></div>
 			${stepForm(s, i)}
@@ -1282,7 +1325,7 @@ function renderActions() {
 		div.className = 'b-step' + (i === B.selAction ? ' sel' : '');
 		div.dataset.i = i;
 		const value = Number.isFinite(+a.value) ? fmt(+a.value) : '';
-		div.innerHTML = `<div class="b-top"><b data-sel><span class="b-num">${n + 1}</span>${esc((a.what === 'action' ? a.code : a.label) || '(no name)')}</b>
+		div.innerHTML = `<div class="b-top"><b data-sel><span class="b-let" title="${letter(n)} on the map"><i>${letter(n)}</i></span>${esc((a.what === 'action' ? a.code : a.label) || '(no name)')}</b>
 			<span class="muted">${place.when === 'never' ? 'never starts' : `at ${fmt(place.in)} in`}</span><span class="b-btns"><button class="small" data-del title="Remove">&times;</button></span></div>
 			<div class="row"><select data-k="kind" aria-label="When">${P.KINDS.map((k) => `<option value="${k}"${k === a.kind ? ' selected' : ''}>${AKIND[k]}</option>`).join('')}</select>
 			${a.kind === 'near' ? `<label>x <input type="number" step="0.5" data-k="x" value="${fmt(a.x)}"></label><label>y <input type="number" step="0.5" data-k="y" value="${fmt(a.y)}"></label><label>within <input type="number" step="0.5" data-k="value" value="${value}"> in</label>`

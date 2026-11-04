@@ -375,6 +375,11 @@ What a team does, step by step:
      clockwise from the way the robot faced at the start, like "turn to"'s heading. Untick it to get a drive
      and a "turn to" again. A tank drive cannot do this: a drive that turns becomes a turn, a drive and a
      turn there (INIT also refuses one on a tank robot).
+     **Numbers are places, letters are things the robot does.** The points it drives to have a number on a
+     dark round badge. Each step that does something (an action, start something, ready to launch, aim at
+     the goal) has an orange diamond with a letter (A, B, C...) at the spot where it happens, and the same
+     letter beside its step in the list. Click a diamond to select its step. Pedro paths do the same: parts
+     are numbered, the actions along the path are lettered (in the order the robot reaches them).
      **A command or an action is a list** of the ones your code has (for example
      `Actions.fireAll(robot)` to shoot): pick one, or pick "type your own..." to write it.
      **A tank drive cannot strafe, so the builder never makes one for it:** no Strafe button, a drive's

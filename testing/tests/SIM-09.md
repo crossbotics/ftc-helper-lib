@@ -38,6 +38,7 @@ never move the other points.
     outline must turn with it, and the turn step's number in the list must change.
 11. Choose **an action** in "Tap adds", then tap on the line of step 1. An action step must appear in the
     list between the two halves of that drive.
+    The map must show it as an orange diamond with a letter (A), and the list must show the same letter.
 12. Right-click on point 2 (or press and hold on a touch screen). A menu must open. Press **Add an action
     at this point**: an action step must appear right after that drive.
 13. Press **Run**. The robot must drive the plan.

@@ -5036,7 +5036,7 @@
        "Press **Undo** 3 times. The plan must go back to the 3 drives from step 2.",
        "In the steps list, point between step 1 and step 2. A **+** must show. Press it, then press **+ Wait**. The wait must be step 2. Press **Done**.",
        "Find a turn step on the map (a yellow knob in front of a robot outline). Drag the knob around. The robot outline must turn with it, and the turn step's number in the list must change.",
-       "Choose **an action** in \"Tap adds\", then tap on the line of step 1. An action step must appear in the list between the two halves of that drive.",
+       "Choose **an action** in \"Tap adds\", then tap on the line of step 1. An action step must appear in the list between the two halves of that drive. The map must show it as an orange diamond with a letter (A), and the list must show the same letter.",
        "Right-click on point 2 (or press and hold on a touch screen). A menu must open. Press **Add an action at this point**: an action step must appear right after that drive.",
        "Press **Run**. The robot must drive the plan."
       ]
