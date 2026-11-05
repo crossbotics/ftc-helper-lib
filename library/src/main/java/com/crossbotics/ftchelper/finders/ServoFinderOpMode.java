@@ -51,6 +51,59 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
     private boolean fullRange = false;      // Y while choosing: the servo's whole pulse range
     private String pulseNote = "";          // set when the servo cannot change its pulse range
     private final java.util.Set<String> widened = new java.util.HashSet<>();   // servos widened in this run
+    private Servo other;          // a second servo that moves with the chosen one (a two-servo part), or null
+    private String otherName = "";
+    private boolean otherMirrored = false;
+    private String chooseNote = "";        // "feeder_right moves with feeder_left: choose feeder_left"
+
+    /**
+     * The robot's two-servo parts ({@code alsoServo...} in Robot.java): each first servo's name, and its
+     * second servo's name with "mirrored" or not. With one listed, the second servo moves with the first
+     * here too (two servos on one part must never fight), and the second cannot be chosen alone. Tune and
+     * check fills it from Robot.java; a Servo Finder of your own has none (take one side's arm off first).
+     *
+     * @return first servo name to {second servo name, mirrored}; empty = none
+     */
+    protected Map<String, Map.Entry<String, Boolean>> pairedServos() {
+        return java.util.Collections.emptyMap();
+    }
+
+    /**
+     * The direction Robot.java gives each servo it knows (true = {@code reversed()}): the finder turns them the
+     * same way, so the positions it shows are the ones Tunables.java needs. A servo not listed keeps the
+     * direction it has (your own finder can set it in {@code setup()}). Tune and check fills it from Robot.java.
+     *
+     * @return configuration name to reversed or not; empty = leave every servo as it is
+     */
+    protected Map<String, Boolean> servoDirections() {
+        return java.util.Collections.emptyMap();
+    }
+
+    /**
+     * Each servo's parts catalog id ({@code part(...)} in Robot.java), so the finder can say which way its
+     * seller says a bigger number turns it (a hint: check it by test). Tune and check fills it from Robot.java.
+     *
+     * @return configuration name to catalog id; empty = none
+     */
+    protected Map<String, String> servoParts() {
+        return java.util.Collections.emptyMap();
+    }
+
+    // "bigger = clockwise (seller); test: D-pad up" for a catalog servo whose seller says which way it turns.
+    private String directionHint() {
+        String id = servoParts().get(servoName);
+        com.crossbotics.ftchelper.robot.Parts.ServoPart p = id == null ? null : com.crossbotics.ftchelper.robot.Parts.findServo(id);
+        if (p == null || p.biggerTurns() == null) return "";
+        boolean rev = servo.getDirection() == Servo.Direction.REVERSE;   // the direction really in use
+        String way = rev ? (p.biggerTurns().equals("clockwise") ? "counterclockwise" : "clockwise") : p.biggerTurns();
+        return "bigger = " + way + " (seller" + (rev ? ", reversed" : "") + "); test: D-pad up";
+    }
+
+    // Sends a position to the chosen servo and its second one.
+    private void send(double p) {
+        servo.setPosition(p);
+        if (other != null) other.setPosition(p);
+    }
 
     @Override protected String finderName() { return "Servo finder"; }
 
@@ -85,16 +138,49 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
     // A = use the chosen servo. Its ends and positions start fresh (earlier lines for it are replaced).
     private void choose() {
         if (chooser.isEmpty()) return;
-        servoName = chooser.current();
+        String name = chooser.current();
+        Map<String, Map.Entry<String, Boolean>> pairs = pairedServos();
+        chooseNote = "";
+        for (Map.Entry<String, Map.Entry<String, Boolean>> e : pairs.entrySet()) {
+            if (e.getValue().getKey().equals(name)) {
+                // The second servo alone would push against the first: find the positions on the first.
+                chooseNote = name + " moves with " + e.getKey() + " (one part, two servos): choose " + e.getKey();
+                return;
+            }
+        }
+        servoName = name;
         servo = hardwareMap.get(Servo.class, servoName);
+        // The direction Robot.java gives it (reversed() swaps 0 and 1), so the numbers fit Tunables.java. A
+        // servo Robot.java does not name keeps its own.
+        Boolean rev = servoDirections().get(servoName);
+        if (rev != null) servo.setDirection(rev ? Servo.Direction.REVERSE : Servo.Direction.FORWARD);
+        Map.Entry<String, Boolean> pair = pairs.get(servoName);
+        other = null;
+        otherName = "";
+        if (pair != null && !hardwareMap.getAllNames(Servo.class).contains(pair.getKey())) {
+            // Only one side would move, and drag the other servo through its gears: do not use it.
+            chooseNote = servoName + " moves with " + pair.getKey() + ", which is not in the configuration: add it first";
+            servo = null;
+            return;
+        }
+        if (pair != null) {
+            otherName = pair.getKey();
+            otherMirrored = pair.getValue();
+            other = hardwareMap.get(Servo.class, otherName);
+            Servo.Direction d = servo.getDirection();
+            Servo.Direction opposite = d == Servo.Direction.FORWARD ? Servo.Direction.REVERSE : Servo.Direction.FORWARD;
+            other.setDirection(otherMirrored ? opposite : d);
+        }
         // The pulse range as chosen with Y. Off: back to the SDK's normal one only if this run widened it
         // (otherwise it is left as the robot configuration made it).
         boolean set = true;
         if (fullRange) {
             set = ServoSetup.setPulseRange(servo, ServoSetup.FULL_PULSE_LOW_US, ServoSetup.FULL_PULSE_HIGH_US);
+            if (other != null) ServoSetup.setPulseRange(other, ServoSetup.FULL_PULSE_LOW_US, ServoSetup.FULL_PULSE_HIGH_US);
             if (set) widened.add(servoName);
         } else if (widened.remove(servoName)) {
             ServoSetup.setPulseRange(servo, ServoSetup.SDK_PULSE_LOW_US, ServoSetup.SDK_PULSE_HIGH_US);
+            if (other != null) ServoSetup.setPulseRange(other, ServoSetup.SDK_PULSE_LOW_US, ServoSetup.SDK_PULSE_HIGH_US);
         }
         pulseNote = set ? "" : "This servo cannot change its pulse range: it uses the normal 600-2400 us";
         position = Double.NaN;
@@ -110,7 +196,7 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
     // A, before the first move: the servo goes to the chosen start point.
     private void moveToStart() {
         position = startAt;
-        servo.setPosition(position);
+        send(position);
     }
 
     // Moves by "amount" (10 times finer while RB is held). Before the first move it only changes the
@@ -127,7 +213,7 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
             next = Math.max(Math.min(endA, endB), Math.min(Math.max(endA, endB), next));
         }
         position = next;
-        servo.setPosition(position);
+        send(position);
     }
 
     private void savePosition() {
@@ -184,11 +270,16 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
         if (servo == null) {
             t.section("Choose a servo (D-pad, then A)");
             chooser.addTelemetry(t, "No servos in the robot configuration.");
+            if (!chooseNote.isEmpty()) t.warn(chooseNote);
             t.line("Full range (Y)", fullRange ? "ON: 500-2500 us (goBILDA 2000: 300 deg)" : "off: 600-2400 us, the SDK's normal (goBILDA 2000: 270 deg)");
             return;
         }
         t.section("Servo \"" + servoName + "\"  (BACK = another)" + (fullRange ? "  FULL RANGE" : ""));
         if (!pulseNote.isEmpty()) t.warn(pulseNote);
+        if (Boolean.TRUE.equals(servoDirections().get(servoName))) t.line("Direction", "reversed, as in Robot.java");
+        String hint = directionHint();
+        if (!hint.isEmpty()) t.line("Hint", hint);
+        if (other != null) t.line("Moves with it", otherName + (otherMirrored ? " (mirrored)" : " (same way)") + ", alsoTrim not used here");
         if (Double.isNaN(position)) {
             t.line("Start point", FinderResults.num(startAt, 3) + "  (D-pad; A = move the servo there)");
             t.text("Choose a start point near where the servo sits now. Nothing moves until A.");

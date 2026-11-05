@@ -120,4 +120,19 @@ public class PartsCatalogTest {
         assertTrue(key + " missing", m.find());
         return Double.parseDouble(m.group(1));
     }
+
+    // biggerTurns: the same as parts.json for every servo (only where the seller says it).
+    @Test public void everyServoDirectionMatchesThePartsCatalog() throws Exception {
+        String json = catalog();
+        String servos = json.substring(json.indexOf("\"servos\""), json.indexOf("\"wheels\""));
+        Matcher m = Pattern.compile("\"id\"\\s*:\\s*\"([^\"]+)\"(.*?)\"biggerTurns\"\\s*:\\s*(null|\"[a-z]+\")", Pattern.DOTALL).matcher(servos);
+        int seen = 0;
+        while (m.find()) {
+            String want = m.group(3).equals("null") ? null : m.group(3).replace("\"", "");
+            assertEquals(m.group(1), want, Parts.servoPart(m.group(1)).biggerTurns());
+            seen++;
+        }
+        assertEquals(Parts.servos().size(), seen);
+        assertEquals("clockwise", Parts.servoPart("gobilda-2000-torque").biggerTurns());
+    }
 }

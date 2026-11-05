@@ -300,7 +300,12 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         return this;
     }
 
-    /** The feed wheel given with {@link #feedWheel(Indexer)}, or null. */
+    /** The indexer given with {@link #feeder(Indexer)} (it pushes the pieces in), or null. */
+    public Indexer feeder() {
+        return indexer;
+    }
+
+    /** The feed wheel ({@link #feedWheel(Indexer)}), or null. */
     public Indexer feedWheel() {
         return feedWheel;
     }

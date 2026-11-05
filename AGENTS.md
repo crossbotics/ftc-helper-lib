@@ -115,7 +115,12 @@ an API changes, update the cookbook recipes that use it too; a new user-facing f
 - Safety stays on in every profile (limits, timeouts, jam checks, stale-target rejection).
 - Extend through the interfaces (`Subsystem`, `AutoStep`, `Feeder`, `TargetSource`); keep new parts
   testable (devices and a clock in the constructor).
-- No game-specific code (field positions, tag ids, scoring heights): that belongs in TeamCode.
+- Parts stay general: every building block (a claw, a feeder, a drive) must work for any team, in any season.
+  When one robot needs something new, add the general block that is missing (for example `alsoServo` for any
+  part on two servos), never that robot's mechanism or a special case for it.
+- Season knowledge may be in the library, as season definitions kept apart and updated each season: the field
+  (`sim/fields/<season>.json`), the rules, the game's piece and goal names, scoring. A team's own choices (its
+  start spots, routes, positions, tuned numbers) belong in TeamCode.
 
 ## Before finishing
 

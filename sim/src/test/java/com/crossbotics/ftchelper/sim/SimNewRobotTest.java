@@ -64,6 +64,19 @@ public class SimNewRobotTest {
         compileAndLoad(f);
     }
 
+    // "claw_left" + "claw_right": one claw on two servos, the right one mirrored (not two claws).
+    @Test public void aLeftAndARightServoBecomeOnePart() throws Exception {
+        String xml = "<Robot><LynxUsbDevice name=\"p\"><LynxModule name=\"Control Hub\" port=\"173\">"
+                + "<goBILDA5202SeriesMotor name=\"leftDrive\" port=\"0\"/><goBILDA5202SeriesMotor name=\"rightDrive\" port=\"1\"/>"
+                + "<Servo name=\"claw_left\" port=\"0\"/><Servo name=\"claw_right\" port=\"1\"/>"
+                + "</LynxModule></LynxUsbDevice></Robot>";
+        Map<String, String> f = SimNewRobot.files(SimConfigImport.read(xml), "org.firstinspires.ftc.teamcode");
+        String robot = f.get("Robot.java");
+        assertTrue(robot, robot.contains("Claw.servo(\"claw_left\").alsoServoReversed(\"claw_right\")"));
+        assertTrue(robot, !robot.contains("Claw.servo(\"claw_right\")"));
+        compileAndLoad(f);
+    }
+
     // A Pinpoint in the configuration becomes the odometry line (offsets to measure), a Tunables.Odometry
     // section, and the simulator robot file's odometry lines.
     @Test public void aPinpointBecomesTheOdometry() throws Exception {

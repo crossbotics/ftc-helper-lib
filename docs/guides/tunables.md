@@ -417,6 +417,7 @@ Section: the device's name in CamelCase (`claw` reads `Claw`, `intake_deploy` re
 | Field | What it does | Units | Default | Live | Found by | When to change |
 | --- | --- | --- | --- | --- | --- | --- |
 | `travelSec` | how long the servo takes for a full move, from position 0 to 1 (a shorter move: its share): a servo cannot say when it has arrived, so this is the guess | seconds | 0.3 (with `.part(...)`: from the servo's catalog speed, [First run](#first-run-what-you-get-before-tuning)) | no | test: time a move, divide by its distance (below) | actions go on before it arrives (more) |
+| `alsoTrim` | with a second servo (`alsoServo`, `alsoServoReversed`): raw position added for it, so the two meet | raw position, -0.2 to 0.2 | 0 | yes, at the next move | test: watch both sides | the two sides do not line up |
 | `<position>` | every other number is a named position, 0 to 1. A Claw needs `open` and `closed` | servo position 0 to 1 | Claw: open 0.20, closed 0.75. Wrist: down 0.15, level 0.5, up 0.85. Positioner: stowed 0.0, deployed 0.5 (only when none are written; INIT says they are guesses) | yes, at once | Servo Finder (P1, P2...) | it does not open, close or reach far enough |
 
 **Timing `travelSec`.** It is the time for a FULL move, 0 to 1, and the library scales it by how far each
@@ -525,6 +526,7 @@ Section: the device's name in CamelCase: `Indexer.servo("feeder")` reads **`Feed
 | `rest` | a servo indexer: where it waits | 0 to 1 | 0.0 | yes, at once | Servo Finder | it blocks the pieces |
 | `push` | a servo indexer: where it pushes a piece into the wheel | 0 to 1 | 0.5 | yes, at once | Servo Finder | pieces are not pushed far enough |
 | `pushSec` | a servo indexer: time to push | seconds | 0.25 (with `.part(...)`: the servo's catalog time from `rest` to `push`, at least 0.25) | yes, at once | test | it comes back before the piece is gone (more) |
+| `alsoTrim` | a servo indexer with a second servo (`alsoServoReversed`): raw position added for it, so the two arms meet | raw position, -0.2 to 0.2 | 0 | yes, at the next move | test: watch both arms | one arm pushes further than the other |
 | `returnSec` | a servo indexer: time to come back | seconds | 0.25 (with `.part(...)`: the same as `pushSec`) | yes, at once | test | the next piece jams on it (more) |
 | `power` | a motor or CR servo indexer: power while it feeds (- = the other way) | -1 to 1 | 1.0 | yes, at once | test | pieces are fed too hard or too softly |
 | `feedSec` | a motor or CR servo indexer: time for one piece | seconds | 0.4 | yes, at once | test | it feeds two (less) or none (more) |

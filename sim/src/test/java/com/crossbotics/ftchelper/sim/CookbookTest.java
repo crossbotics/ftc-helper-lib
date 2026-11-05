@@ -185,6 +185,24 @@ public class CookbookTest {
         }
     }
 
+    // The two-servo claw recipe: both fingers move together (the second mirrored), and pause stops both.
+    @Test public void theTwoServoClawMovesBothFingers() throws Exception {
+        try (SimRun s = new SimRun(robotFile(MechanismRecipes.TwoServoClaw.class).toString())) {
+            s.sim.ds.register("Cookbook Two Servo Claw", "TeleOp", MechanismRecipes.TwoServoClawControls.class);
+            s.init("Cookbook Two Servo Claw");
+            SimRobot.SimServo left = s.robot().servos.get("claw_left"), right = s.robot().servos.get("claw_right");
+            double l0 = left.actual, r0 = right.actual;
+            s.start();
+            s.press(v -> s.g2().b = v);                            // open (where it starts)
+            s.press(v -> s.g2().b = v);                            // close
+            assertTrue("the first finger moves\n" + String.join("\n", s.screen()),
+                    SimRun.waitFor(() -> Math.abs(left.actual - l0) > 0.1, 3));
+            assertTrue("the second finger moves too", SimRun.waitFor(() -> Math.abs(right.actual - r0) > 0.1, 1));
+            assertEquals("mirrored: the second goes the other way", -(left.actual - l0), right.actual - r0, 0.05);
+            assertEquals("", s.error());
+        }
+    }
+
     // One autonomous with a menu: the "Start" line moves the note and the robot in INIT, and the "Plan"
     // line chooses the steps (Far + cycle: 12 steps, the 3rd crosses to the near side).
     @Test public void theInitMenuChoosesTheStartAndThePlan() throws Exception {

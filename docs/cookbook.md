@@ -62,6 +62,7 @@ first.
 - [My motor isn't in the catalog](#my-motor-isnt-in-the-catalog)
 - [How do I add an arm that moves in degrees?](#how-do-i-add-an-arm-that-moves-in-degrees)
 - [How do I add a claw?](#how-do-i-add-a-claw)
+- [How do I run a claw on two servos?](#how-do-i-run-a-claw-on-two-servos)
 - [How do I add a wrist?](#how-do-i-add-a-wrist)
 - [How do I add any servo with named positions (a gate, a fold-out)?](#how-do-i-add-any-servo-with-named-positions-a-gate-a-fold-out)
 - [How do I get my servo's full range?](#how-do-i-get-my-servos-full-range)
@@ -941,6 +942,39 @@ public static class Claw {                                      // "claw" in the
 
 **Why:** the claw brings its button (operator B opens and closes), and the Servo Finder gives the two numbers.
 **More:** [Lesson 4](tutorials/start/04-lift-and-claw.md#1-three-lines-in-robotjava), [Claw](modules/robot.md#claw).
+
+### How do I run a claw on two servos?
+
+**Where:** `Robot.java`, inside `define()`, and `Tunables.java`.
+
+<!-- recipe: claw-two-servos -->
+```java title="Robot.java"
+// "claw_left", "claw_right" = the servos' names in the robot configuration. Numbers: Tunables.ClawLeft.
+// Find open and closed in Tune and check > Servo Finder on the FIRST servo: the second moves with it.
+// The servos face each other, so the second turns the other way: alsoServoReversed.
+claw = add(Claw.servo("claw_left").part("gobilda-2000-torque").alsoServoReversed("claw_right"));
+```
+
+<!-- recipe: tunables-claw-two-servos -->
+```java title="Tunables.java"
+// A claw on two servos, Claw.servo("claw_left").alsoServoReversed("claw_right"): its section is the
+// FIRST servo's name in CamelCase.
+public static class ClawLeft {                                  // "claw_left" in the configuration
+    public static double open = MEASURE;                        // servo position, open (Servo Finder on claw_left)
+    public static double closed = MEASURE;                      // servo position, closed (Servo Finder)
+    public static double travelSec = DEFAULT;                   // time for a full 0-to-1 move (0.3, or the servo's)
+    public static double alsoTrim = DEFAULT;                    // the second servo: raw position added so the two meet (0; used at the next move)
+}
+```
+
+**Why:** two servos on one part must never fight. The library sends both the same position at the same
+moment, also when the robot pauses (BACK) or stops; your own code copying the position would miss some of
+them. **Reversed or not?** Servos that face each other (mirror images, the usual way) turn opposite ways:
+`alsoServoReversed`. Both facing the same way: `.alsoServo("claw_right")`. **The fingers do not quite meet?**
+The horns may sit a spline tooth apart: set `alsoTrim` (a small raw position, like 0.02) for the second
+servo. The same line works on a Wrist, a Positioner and a servo feeder:
+`Indexer.servo("feeder_left").alsoServoReversed("feeder_right")` (two arms that pinch a piece into a launcher).
+**More:** [Two servos on one part](modules/robot.md#claw), [Tunables names](guides/tunables.md#claw-wrist-and-positioner).
 
 ### How do I add a wrist?
 

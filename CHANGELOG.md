@@ -2,6 +2,29 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## v0.30.0 - 2026-11-05
+
+### Added
+
+- **Two servos on one part: `alsoServoReversed(name)` and `alsoServo(name)`** on a Claw, Wrist, Positioner and a
+  servo Indexer, like `alsoMotor` for lifts. A claw with a servo for each finger, an arm with a servo on each
+  side, or two feed arms that pinch together behind a piece. Both get the same position at the same moment;
+  `alsoTrim` lines up the second. In Tune and check, the Servo Finder moves the second servo with the first.
+  Also `PositionServo.withServo` and `ServoFeeder.withServo`, and `Launcher.feeder()` (the feeder given).
+  `:sim:newRobot` makes one part on two servos from a left and a right servo (`claw_left`, `claw_right`).
+- **Motor Direction Check in Tune and check** (`MotorDirectionCheckOpMode`): hold X, Y, A or B to spin one
+  drive motor at 30%, set up as Robot.java says; each wheel must roll forward. No file to copy for the robot in
+  five files any more.
+- **Which way a servo turns:** the parts catalog says it where the seller does (`biggerTurns`: goBILDA's 2000
+  servos turn clockwise as the number grows; REV and Axon do not say), the Servo Finder in Tune and check shows
+  it as a hint, and the finders guide has a new **A new servo part, step by step** (the middle, the direction, the
+  ends, two servos). Signs and units says plainly: there is no standard, so check each servo by test.
+
+### Fixed
+
+- **The Servo Finder in Tune and check and `reversed()`:** it now turns a servo the way Robot.java does, so the
+  numbers it shows fit Tunables.java. Before, a reversed servo's numbers came out the other way round (1 - x).
+
 ## v0.29.0 - 2026-11-05
 
 ### Added

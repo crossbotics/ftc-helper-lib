@@ -40,6 +40,10 @@ public class PositionServo implements AngleDevice {
     // so it can go in a Subsystems group. "final" below means set once and never replaced.
     private final String name;
     private final Servo servo;
+    // More servos that move with this one (withServo): the other side of a two-servo part, and their trims.
+    private final List<Servo> others = new java.util.ArrayList<>();
+    private final List<java.util.function.DoubleSupplier> otherTrims = new java.util.ArrayList<>();
+    private double pulseLowUs = Double.NaN, pulseHighUs = Double.NaN;   // pulseRange/fullRange, for a second servo
     // Where we get the time from, in nanoseconds (billionths of a second). Tests swap in a fake clock.
     // "Time::nanos" is a method reference: "ask the library clock (core.Time) whenever you need the time".
     private LongSupplier clockNanos = com.crossbotics.ftchelper.core.Time::nanos;
@@ -123,7 +127,10 @@ public class PositionServo implements AngleDevice {
      * @return this servo, for the next setting
      */
     public PositionServo pulseRange(double lowUs, double highUs) {
+        pulseLowUs = lowUs;
+        pulseHighUs = highUs;
         fullRange = ServoSetup.setPulseRange(servo, lowUs, highUs);
+        for (Servo o : others) ServoSetup.setPulseRange(o, lowUs, highUs);   // a second servo: the same travel
         pulseNote = fullRange ? "" : "cannot change its pulse range (not a REV hub servo): it uses the normal 600-2400 us";
         return this;
     }
@@ -191,6 +198,29 @@ public class PositionServo implements AngleDevice {
     // ---------------------------------------------------------------------------------------
     // Commands (quick: safe to call from buttons, never wait)
     // ---------------------------------------------------------------------------------------
+
+    /**
+     * A second servo that moves with this one, to the same positions plus {@code trim}: the other side of
+     * a two-servo part (a claw's other finger, an arm's other side). Set its direction yourself (a servo
+     * mounted facing the other way: REVERSE). The trim is read at each move.
+     *
+     * @param other the other servo
+     * @param trim  raw position added for the other servo (0 = none), so two horns that do not line up
+     *              still meet; the result is kept between 0 and 1
+     * @return this
+     */
+    public PositionServo withServo(Servo other, java.util.function.DoubleSupplier trim) {
+        // A pulse range set before: the second servo gets it too (else the two travel different amounts).
+        if (!Double.isNaN(pulseLowUs)) ServoSetup.setPulseRange(other, pulseLowUs, pulseHighUs);
+        others.add(other);
+        otherTrims.add(trim);
+        return this;
+    }
+
+    // A position plus a trim, kept between 0 and 1.
+    private static double trimmed(double position, java.util.function.DoubleSupplier trim) {
+        return Math.max(0, Math.min(1, position + trim.getAsDouble()));
+    }
 
     /** Goes to a named position. An unknown name (a typo) does nothing and shows a warning. */
     public void goTo(String positionName) {
@@ -490,6 +520,7 @@ public class PositionServo implements AngleDevice {
             sweepStartSec = now;
             sweepDoneSec = now + time;
             servo.setPosition(position);
+            for (int i = 0; i < others.size(); i++) others.get(i).setPosition(trimmed(position, otherTrims.get(i)));
             commanded = position;
         }
     }

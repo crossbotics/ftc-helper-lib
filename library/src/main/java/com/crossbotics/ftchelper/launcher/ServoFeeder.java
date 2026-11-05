@@ -22,6 +22,9 @@ public class ServoFeeder implements Feeder {
     // "implements Feeder": this class keeps the Feeder promise, so a Launcher can use it.
     private final String name;
     private final Servo servo;
+    // More servos that move with the first (a second arm, on the other side): withServo.
+    private final java.util.List<Servo> others = new java.util.ArrayList<>();
+    private final java.util.List<java.util.function.DoubleSupplier> otherTrims = new java.util.ArrayList<>();
     // Where we get the time (nanoseconds). Tests swap in a fake clock.
     private LongSupplier clockNanos = com.crossbotics.ftchelper.core.Time::nanos;
     private double rest = 0, push = 1;
@@ -47,6 +50,36 @@ public class ServoFeeder implements Feeder {
         return this;
     }
 
+    /**
+     * A second servo that moves with the first, to the same positions: for two arms, one on each side,
+     * that pinch together behind the piece. Mounted facing the other way: set its direction to REVERSE
+     * (then the same position mirrors the first arm). The trim (raw position, 0 = none) is added for this
+     * servo, so two arms that do not quite line up still meet; it is read at each move.
+     *
+     * <pre>{@code
+     * Servo right = hardwareMap.get(Servo.class, "kicker_right");
+     * right.setDirection(Servo.Direction.REVERSE);
+     * Feeder kicker = ServoFeeder.create(hardwareMap, "kicker_left").withServo(right, () -> 0).positions(0.15, 0.6);
+     * }</pre>
+     *
+     * @param other the other arm's servo
+     * @param trim  raw position added for it (0 = none); the result is kept between 0 and 1
+     * @return this feeder
+     */
+    public ServoFeeder withServo(Servo other, java.util.function.DoubleSupplier trim) {
+        others.add(other);
+        otherTrims.add(trim);
+        return this;
+    }
+
+    // Sends a position to every arm (the others with their trim).
+    private void send(double position) {
+        servo.setPosition(position);
+        for (int i = 0; i < others.size(); i++) {
+            others.get(i).setPosition(Math.max(0, Math.min(1, position + otherTrims.get(i).getAsDouble())));
+        }
+    }
+
     /** Raw servo positions (0 to 1) for "rest" and "push". Defaults 0 and 1: set your own. */
     public ServoFeeder positions(double restPosition, double pushPosition) {
         rest = restPosition;
@@ -63,14 +96,14 @@ public class ServoFeeder implements Feeder {
 
     /** Moves to rest (call in INIT only if moving there is safe). */
     public void goToRest() {
-        servo.setPosition(rest);
+        send(rest);
     }
 
     /** Starts one push. Ignored while a push or return is still going on. */
     @Override
     public void feedOne() {
         if (phase != 0) return;
-        servo.setPosition(push);
+        send(push);
         phase = 1;
         // We do not wait: we write down when the push should be done, and update() checks.
         phaseEnd = now() + pushSec;
@@ -83,7 +116,7 @@ public class ServoFeeder implements Feeder {
         if (phase == 0 || now() < phaseEnd) return;
         if (phase == 1) {
             // Push done: come back.
-            servo.setPosition(rest);
+            send(rest);
             phase = 2;
             phaseEnd = now() + returnSec;
         } else {
@@ -98,7 +131,7 @@ public class ServoFeeder implements Feeder {
     /** Sends the arm back to rest if it was out, and ends any feed. */
     @Override
     public void stop() {
-        if (phase != 0) servo.setPosition(rest);
+        if (phase != 0) send(rest);
         phase = 0;
     }
 

@@ -32,6 +32,25 @@ The names tell you which one you have: `turnClockwise`, `headingCcwDeg` ("CCW" =
 The SDK gives **negative** `left_stick_y` when you push the stick UP (away from you).
 So "forward" is `-gamepad1.left_stick_y`. Every example in these docs has the minus sign.
 
+## Servos and motors: which way is "bigger"?
+
+There is **no standard** for this, so the library makes no promise about it:
+
+- A servo position from 0 to 1 is a pulse length: 0 is the short pulse, 1 the long one. Which way a bigger
+  number turns the shaft (clockwise or counterclockwise) depends on the servo's brand and model.
+- Which way positive power turns a motor also depends on the motor and its gearbox.
+- `.reversed()` in Robot.java swaps the ends (servo: 0 and 1; motor: + and -). It changes the numbers, not the
+  wiring.
+
+So **check each one by test**, never by its label: in the Servo Finder press D-pad up (a bigger number) and
+watch which way the part moves; for a motor, the Motor Finder or the Hardware Check. Then choose the numbers
+(or `.reversed()`) so they read the way you think about the part. Any order is fine for named positions:
+a claw's `open` can be higher or lower than `closed`.
+
+**Two servos that face each other** (one on each side of a claw, an arm or a pinch): the same number turns them
+opposite ways, as seen from outside. That is why such a part uses `alsoServoReversed` (the second servo mirrors
+the first); two servos facing the same way use `alsoServo` ([two servos on one part](modules/robot.md#claw)).
+
 ## Units
 
 | Thing | Unit |

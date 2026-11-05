@@ -337,6 +337,11 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
     }
 
     /** True if its first device is in the configuration (a part with no device of its own always is). */
+    /** The parts catalog id given with {@code part(...)} in Robot.java, or null. */
+    public String partId() {
+        return partId;
+    }
+
     final boolean deviceIn(Devices devices) {
         return deviceNames().isEmpty() || devices.has(device);
     }
@@ -444,11 +449,16 @@ public abstract class Module<M extends Module<M>> implements Subsystem {
     // SDK's 600-2400 us and INIT says so. Without fullRange() nothing is changed (the SDK's normal range).
     final void applyPulse(com.qualcomm.robotcore.hardware.Servo servo) {
         pulseNote = "";
+        applyPulse(servo, device);
+    }
+
+    // The same for a second servo of the part (alsoServo...): its note is added, not put in place of the first's.
+    final void applyPulse(com.qualcomm.robotcore.hardware.Servo servo, String servoName) {
         // Off (an optional part not on the robot): its stand-in servo needs no pulse range, and no note.
         if (!fullRange || missing) return;
         double[] p = fullPulse();
         if (!com.crossbotics.ftchelper.hardware.ServoSetup.setPulseRange(servo, p[0], p[1])) {
-            pulseNote = name() + ": the servo \"" + device + "\" cannot change its pulse range (not on a REV hub): "
+            pulseNote += (pulseNote.isEmpty() ? "" : "; ") + name() + ": the servo \"" + servoName + "\" cannot change its pulse range (not on a REV hub): "
                     + "fullRange() does nothing, it turns its normal range (600-2400 us)";
         }
     }

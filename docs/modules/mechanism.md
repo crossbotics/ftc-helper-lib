@@ -171,6 +171,7 @@ hood.setDegrees(18);                      // moves the servo at once (servos do)
 | `.degrees(posA, degA, posB, degB)` | use degrees, from two measured points |
 | `.travelTime(seconds)` | time for a full 0..1 move: used to guess "arrived" (a servo cannot report its position). A shorter move waits its share. Timed between two positions: seconds / distance |
 | `.maxSpeed(perSecond)` | move slowly (raw positions per second). After a pause in `update()` calls it goes on slowly; it never jumps the rest of the way |
+| `.withServo(other, trim)` | a second servo that moves with this one (the other side of a two-servo part), to the same positions plus `trim` (a `DoubleSupplier`, raw position; read at each move). Set its direction yourself |
 | `.tunable(prefix)` | positions in the tuning menu; call LAST |
 | `goTo(name)`, `set(raw)`, `setDegrees(deg)` | move |
 | `toggle(a, b)`, `next()`, `previous()` | for buttons |

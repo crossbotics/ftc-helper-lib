@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 /**
@@ -167,6 +168,80 @@ public class TuneAndCheckOpMode extends LinearOpMode {
         t.update();
     }
 
+    // Each servo part's catalog id (part(...) in Robot.java), its second servo's too (the same servo model).
+    static Map<String, String> servoParts(List<Module<?>> modules) {
+        Map<String, String> out = new java.util.HashMap<>();
+        List<Module<?>> all = withChildren(modules);
+        for (Module<?> m : all) {
+            if (m.partId() == null) continue;
+            String second = null;
+            if (m instanceof com.crossbotics.ftchelper.robot.ServoPositions) second = ((com.crossbotics.ftchelper.robot.ServoPositions<?>) m).secondServoName();
+            else if (m instanceof com.crossbotics.ftchelper.robot.Indexer) second = ((com.crossbotics.ftchelper.robot.Indexer) m).secondServoName();
+            else continue;
+            out.put(m.deviceName(), m.partId());
+            if (second != null) out.put(second, m.partId());
+        }
+        return out;
+    }
+
+    // Every positional servo part Robot.java names, and whether it is reversed() (also a second servo, a
+    // launcher's feeder and hood, a servo hood, a servo turret). The Servo Finder turns each the same way.
+    static Map<String, Boolean> servoDirections(List<Module<?>> modules) {
+        Map<String, Boolean> out = new java.util.HashMap<>();
+        for (Module<?> m : withChildren(modules)) {
+            if (m instanceof com.crossbotics.ftchelper.robot.ServoPositions) {
+                com.crossbotics.ftchelper.robot.ServoPositions<?> s = (com.crossbotics.ftchelper.robot.ServoPositions<?>) m;
+                out.put(s.deviceName(), s.isReversed());
+                if (s.secondServoName() != null) out.put(s.secondServoName(), s.secondServoMirrored() != s.isReversed());
+            } else if (m instanceof com.crossbotics.ftchelper.robot.Indexer && ((com.crossbotics.ftchelper.robot.Indexer) m).isServo()) {
+                com.crossbotics.ftchelper.robot.Indexer s = (com.crossbotics.ftchelper.robot.Indexer) m;
+                out.put(s.deviceName(), s.isReversed());
+                if (s.secondServoName() != null) out.put(s.secondServoName(), s.secondServoMirrored() != s.isReversed());
+            } else if (m instanceof Hood && !((Hood) m).isMotor()) {
+                out.put(m.deviceName(), ((Hood) m).isReversed());
+            } else if (m instanceof com.crossbotics.ftchelper.robot.Turret && ((com.crossbotics.ftchelper.robot.Turret) m).isServoTurret()) {
+                out.put(m.deviceName(), ((com.crossbotics.ftchelper.robot.Turret) m).isReversedServo());
+            }
+        }
+        return out;
+    }
+
+    // The parts and their launcher children (feeder, hood).
+    static List<Module<?>> withChildren(List<Module<?>> modules) {
+        List<Module<?>> all = new ArrayList<>(modules);
+        for (Module<?> m : modules) {
+            if (!(m instanceof Launcher)) continue;
+            Launcher l = (Launcher) m;
+            if (l.feeder() != null) all.add(l.feeder());
+            if (l.hood() != null) all.add(l.hood());
+        }
+        return all;
+    }
+
+    // Each two-servo part's first servo, its second servo and whether it is mirrored (alsoServo... in
+    // Robot.java), also a launcher's feeder (a child part).
+    static Map<String, Map.Entry<String, Boolean>> servoPairs(List<Module<?>> modules) {
+        Map<String, Map.Entry<String, Boolean>> out = new java.util.LinkedHashMap<>();
+        List<Module<?>> all = withChildren(modules);
+        for (Module<?> m : all) {
+            String first = null, second = null;
+            boolean mirrored = false;
+            if (m instanceof com.crossbotics.ftchelper.robot.ServoPositions) {
+                com.crossbotics.ftchelper.robot.ServoPositions<?> s = (com.crossbotics.ftchelper.robot.ServoPositions<?>) m;
+                second = s.secondServoName();
+                mirrored = s.secondServoMirrored();
+                first = s.deviceName();
+            } else if (m instanceof com.crossbotics.ftchelper.robot.Indexer) {
+                com.crossbotics.ftchelper.robot.Indexer s = (com.crossbotics.ftchelper.robot.Indexer) m;
+                second = s.secondServoName();
+                mirrored = s.secondServoMirrored();
+                first = s.deviceName();
+            }
+            if (first != null && second != null) out.put(first, new java.util.AbstractMap.SimpleEntry<>(second, mirrored));
+        }
+        return out;
+    }
+
     // The checks and finders that fit this robot (null: no robot), in the order to use them.
     private List<Tool> toolsFor(final Class<? extends RobotDefinition> robotClass) {
         final RobotDefinition robot = robotClass == null ? null : make(robotClass);
@@ -176,8 +251,22 @@ public class TuneAndCheckOpMode extends LinearOpMode {
         out.add(new Tool("Hardware Check", "every device found, turns the right way", () -> new HardwareCheckOpMode() {
             @Override protected RobotDefinition robot() { return fresh.get(); }
         }));
+        // Every robot in five files has a drive (define() needs one): each wheel must roll forward.
+        if (robot != null) {
+            out.add(new Tool("Motor Direction Check", "each drive wheel rolls forward", () -> new MotorDirectionCheckOpMode() {
+                @Override protected RobotDefinition robot() { return fresh.get(); }
+            }));
+        }
         if (!hardwareMap.getAllNames(Servo.class).isEmpty()) {
-            out.add(new Tool("Servo Finder", "a servo's ends and positions", () -> new ServoFinderOpMode() { }));
+            // Two-servo parts (alsoServo... in Robot.java): the second servo moves with the first in the finder.
+            final Map<String, Map.Entry<String, Boolean>> pairs = servoPairs(modules);
+            final Map<String, Boolean> directions = servoDirections(modules);
+            final Map<String, String> partIds = servoParts(modules);
+            out.add(new Tool("Servo Finder", "a servo's ends and positions", () -> new ServoFinderOpMode() {
+                @Override protected Map<String, Map.Entry<String, Boolean>> pairedServos() { return pairs; }
+                @Override protected Map<String, Boolean> servoDirections() { return directions; }
+                @Override protected Map<String, String> servoParts() { return partIds; }
+            }));
         }
         if (any(modules, Hood.class)) {
             out.add(new Tool("Hood Finder", "the hood's two stops", () -> new HoodFinderOpMode() {

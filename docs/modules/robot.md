@@ -631,6 +631,23 @@ positions written, INIT says the library's positions are guesses (find yours wit
 claw = add(Claw.servo("claw").part("gobilda-2000-torque"));   // Tunables.Claw: open, closed (both needed)
 ```
 
+**Two servos on one part** (a claw with a servo for each finger, an arm with a servo on each side): name the
+second servo on the same line, like [`alsoMotor`](#two-motors-on-one-lift-or-arm). Both get the same position
+at the same moment (every command, pause, stop, interlock rules). The Tunables section is the first servo's;
+`alsoTrim` (raw position, -0.2 to 0.2, default 0) is added for the second, so two horns that sit a spline
+tooth apart still meet. It works on a Claw, Wrist, Positioner and a servo [Indexer](#indexer). Which way a bigger number turns a
+servo has no standard (it depends on the servo): check it by test, [Signs and units](../conventions.md#servos-and-motors-which-way-is-bigger).
+
+```java
+claw = add(Claw.servo("claw_left").alsoServoReversed("claw_right"));   // they face each other (usual)
+arm = add(Positioner.servo("arm_left").alsoServo("arm_right"));        // both turn the same way
+```
+
+| | |
+| --- | --- |
+| `alsoServoReversed(name)` | a second servo turning the other way (two servos that face each other, mirror images) |
+| `alsoServo(name)` | a second servo, turning the same way as the first for the same position |
+
 **A servo's full range: `.fullRange()`.** The hub sends a servo a pulse: 600 microseconds (us) for
 position 0 and 2400 us for 1. That is the FTC SDK's normal range, and the library keeps it. Most FTC
 servos take 500 to 2500 us, so on the normal range they turn a bit less than the seller says: a goBILDA
@@ -999,7 +1016,8 @@ public static double trimStepPercent = 1, trimMaxPercent = 15;   // optional (th
 
 `Indexer.servo(name)` (Tunables: `rest`, `push`, `pushSec`, `returnSec`), `Indexer.crServo(name)` and
 `Indexer.motor(name)` (`power`, `feedSec` per piece), `.reversed()`, and for a servo indexer
-`.fullRange()` (the servo's whole turn: [full range](#claw); set `rest` and `push` again after). Usually given to a launcher with
+`.alsoServoReversed(name)` (two arms, one on each side, that pinch together behind the piece and push it in:
+see [two servos on one part](#claw)) and `.fullRange()` (the servo's whole turn: [full range](#claw); set `rest` and `push` again after). Usually given to a launcher with
 `.feeder(...)`; added on its own its button is operator RB (feed one). A servo indexer goes to `rest`
 at START. Commands: `feedOne()`, `isBusy()`, `isFeeding()`, `isJammed()`, `clearJam()`. `onFeed(runnable)`
 runs your code each time a feed really starts. A [Pieces](#pieces-and-piecesensor) counter counts the

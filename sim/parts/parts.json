@@ -1,6 +1,6 @@
 {
   "checked": "2026-10-16",
-  "notes": "Every number was read from the seller's product page or the seller's own documentation on the 'checked' date (URL per part). Values marked COMPUTED/DERIVED in a part's notes are worked out from the seller's numbers. null = the seller does not publish it. Motor values at 12 V; servo headline values at 6.0 V with the full table in byVoltage. countsPerRev = encoder counts per output-shaft revolution as the FTC SDK reports them (x4 quadrature). Torque converted to kg-cm with 1 N-m = 10.197 kg-cm where the seller gives N-m. A part added here is also added to library/.../robot/Parts.java (wheels, servos) or Motors.java (motors); PartsCatalogTest and MotorsCatalogTest check they match. Servos: rangeDeg is the seller's full turn over pulseMinUs-pulseMaxUs (the pulse range the seller gives; null = not given). The FTC SDK sends 600-2400 us for positions 0-1 unless the code widens it (.fullRange()), so on a normal hub a servo turns rangeDeg x 1800 / (pulseMaxUs - pulseMinUs): a goBILDA 2000 servo 270 deg, not 300 (SDK 12.0 PwmControl.PwmRange.defaultRange, checked 2026-10-22).",
+  "notes": "Every number was read from the seller's product page or the seller's own documentation on the 'checked' date (URL per part). Values marked COMPUTED/DERIVED in a part's notes are worked out from the seller's numbers. null = the seller does not publish it. Motor values at 12 V; servo headline values at 6.0 V with the full table in byVoltage. countsPerRev = encoder counts per output-shaft revolution as the FTC SDK reports them (x4 quadrature). Torque converted to kg-cm with 1 N-m = 10.197 kg-cm where the seller gives N-m. A part added here is also added to library/.../robot/Parts.java (wheels, servos) or Motors.java (motors); PartsCatalogTest and MotorsCatalogTest check they match. Servos: rangeDeg is the seller's full turn over pulseMinUs-pulseMaxUs (the pulse range the seller gives; null = not given). The FTC SDK sends 600-2400 us for positions 0-1 unless the code widens it (.fullRange()), so on a normal hub a servo turns rangeDeg x 1800 / (pulseMaxUs - pulseMinUs): a goBILDA 2000 servo 270 deg, not 300 (SDK 12.0 PwmControl.PwmRange.defaultRange, checked 2026-10-22). Servos: biggerTurns = which way a bigger position (a longer pulse) turns it, as the seller states it (goBILDA's spec tables: 'Clockwise w/ Increasing PWM Signal', checked 2026-11-05; the side it is seen from is not stated); null = the seller does not say (REV, Axon: an Axon servo's direction can also be switched with its programmer). A hint only: check by test.",
   "motors": [
     {
       "id": "gobilda-5203-6000",
@@ -681,6 +681,7 @@
       "torqueKgCm": 21.6,
       "stallCurrentA": 2.5,
       "continuousCapable": true,
+      "biggerTurns": "clockwise",
       "voltage": 6.0,
       "byVoltage": [
         {
@@ -722,6 +723,7 @@
       "torqueKgCm": 9.3,
       "stallCurrentA": 2.5,
       "continuousCapable": true,
+      "biggerTurns": "clockwise",
       "voltage": 6.0,
       "byVoltage": [
         {
@@ -763,6 +765,7 @@
       "torqueKgCm": 4.7,
       "stallCurrentA": 2.5,
       "continuousCapable": true,
+      "biggerTurns": "clockwise",
       "voltage": 6.0,
       "byVoltage": [
         {
@@ -804,6 +807,7 @@
       "torqueKgCm": 21.6,
       "stallCurrentA": 2.5,
       "continuousCapable": true,
+      "biggerTurns": "clockwise",
       "voltage": 6.0,
       "byVoltage": [
         {
@@ -845,6 +849,7 @@
       "torqueKgCm": 9.3,
       "stallCurrentA": 2.5,
       "continuousCapable": true,
+      "biggerTurns": "clockwise",
       "voltage": 6.0,
       "byVoltage": [
         {
@@ -886,6 +891,7 @@
       "torqueKgCm": 4.7,
       "stallCurrentA": 2.5,
       "continuousCapable": true,
+      "biggerTurns": "clockwise",
       "voltage": 6.0,
       "byVoltage": [
         {
@@ -927,6 +933,7 @@
       "torqueKgCm": 13.5,
       "stallCurrentA": 2.0,
       "continuousCapable": true,
+      "biggerTurns": null,
       "voltage": 6.0,
       "byVoltage": [
         {
@@ -954,6 +961,7 @@
       "torqueKgCm": 13.5,
       "stallCurrentA": 2.1,
       "continuousCapable": true,
+      "biggerTurns": null,
       "voltage": 6.0,
       "byVoltage": [
         {
@@ -988,6 +996,7 @@
       "torqueKgCm": 5.6,
       "stallCurrentA": 2.9,
       "continuousCapable": true,
+      "biggerTurns": null,
       "voltage": 6.0,
       "byVoltage": [
         {
@@ -1022,6 +1031,7 @@
       "torqueKgCm": 34,
       "stallCurrentA": 4.0,
       "continuousCapable": true,
+      "biggerTurns": null,
       "voltage": 6.0,
       "byVoltage": [
         {
@@ -1070,6 +1080,7 @@
       "torqueKgCm": 34,
       "stallCurrentA": 4.0,
       "continuousCapable": true,
+      "biggerTurns": null,
       "voltage": 6.0,
       "byVoltage": [
         {
@@ -1118,6 +1129,7 @@
       "torqueKgCm": 25,
       "stallCurrentA": 3.8,
       "continuousCapable": true,
+      "biggerTurns": null,
       "voltage": 6.0,
       "byVoltage": [
         {
@@ -1166,6 +1178,7 @@
       "torqueKgCm": 25,
       "stallCurrentA": 3.8,
       "continuousCapable": true,
+      "biggerTurns": null,
       "voltage": 6.0,
       "byVoltage": [
         {

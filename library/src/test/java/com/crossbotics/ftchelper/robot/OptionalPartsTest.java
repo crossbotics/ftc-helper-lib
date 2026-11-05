@@ -530,7 +530,7 @@ public class OptionalPartsTest {
             add(Intake.crServos("left_intake", "right_intake").optional());
             add(Lift.slide("lift").bottomSwitch("lift_bottom").optional());
             add(Arm.motor("arm", "gobilda-5203-117").optional());
-            add(Claw.servo("claw").optional());
+            add(Claw.servo("claw").alsoServoReversed("claw_2").optional());
             add(Wrist.servo("wrist").optional());
             add(Positioner.servo("intake_deploy").optional());
             add(Turret.motor("turret", "gobilda-5203-117").homeSwitch("turret_home").optional());

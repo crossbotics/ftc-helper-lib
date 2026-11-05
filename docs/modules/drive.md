@@ -382,6 +382,10 @@ whatever happens (even if your code throws an error).
 
 Do this first on every new drivetrain. **Put the robot on a block, wheels off the ground.**
 
+**With the robot in five files:** nothing to copy. Use **Tune and check > Motor Direction Check**: it reads the
+directions from Robot.java ([steps](../guides/finders.md#motor-direction-check-each-wheel-rolls-forward)).
+**Your own `DriveConfig`** (no Robot.java):
+
 1. Copy `examples/.../MotorDirectionCheck.java` into TeamCode, set its `config()` to your
    `DriveConfig`, and remove `@Disabled`.
 2. Run it. Hold X, Y, A, B: each spins one wheel (front-left, front-right, back-left, back-right;

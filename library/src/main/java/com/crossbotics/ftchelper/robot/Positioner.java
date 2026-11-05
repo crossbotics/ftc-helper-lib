@@ -58,7 +58,7 @@ public final class Positioner extends ServoPositions<Positioner> {
 
     @Override
     void simLines(List<String> out, TunableSection t) {
-        out.add(simServoLine(t, "gobilda-2000-torque"));
+        simServoLines(out, t, "gobilda-2000-torque");
         lookLines(out, t);
     }
 

@@ -946,6 +946,79 @@
    }
   },
   {
+   "id": "DRV-03",
+   "title": "Motor Direction Check - each drive wheel rolls forward",
+   "area": "drive",
+   "priority": "high",
+   "where": "both",
+   "minutes": 10,
+   "needs": [],
+   "kit_bots": [],
+   "since": "v0.30.0",
+   "docs": [
+    {
+     "path": "docs/guides/finders.md",
+     "anchor": "motor-direction-check-each-wheel-rolls-forward"
+    },
+    {
+     "path": "docs/modules/drive.md",
+     "anchor": "check-motor-directions"
+    }
+   ],
+   "file": "testing/tests/DRV-03.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A drive motor that turns the wrong way makes the robot drive in circles, strafe the wrong way, or fight itself. The check must spin each motor exactly as Robot.java sets it up."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "The wheels spin. Keep hands and cables clear of them."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A robot in five files with a drive. Its simulator robot file is fine for steps 1 to 4.",
+       "**The robot on a block, wheels off the ground.**"
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "INIT **Tune and check**. **Motor Direction Check** must be in the menu, after the Hardware Check.",
+       "Open it, press START. Nothing may move until you hold a button.",
+       "Hold X. Only the front-left motor may run (tank: the left one). The screen must say its name, and \"(reversed)\" if Robot.java reverses it. Let go: it must stop.",
+       "Do the same with Y, A and B.",
+       "On the real robot: every wheel must roll the way that drives the robot forward. If one does not, add its name to `reversed(...)` on the drive line (or take it out), INIT again and check that wheel again."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Each step does what it says, on 2 runs out of 2."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "The robot and where (simulator or real robot).",
+       "Which motors needed `reversed(...)`."
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A 2-motor tank drive has only X (left) and Y (right)."
+     }
+    ]
+   }
+  },
+  {
    "id": "HOOD-01",
    "title": "Hood Finder on a servo hood - stops and angles",
    "area": "hood",
@@ -4128,6 +4201,79 @@
     "different": [
      {
       "p": "A servo on something other than a REV hub cannot change its range: INIT says so and nothing changes; report that. An Axon or REV servo programmed to a smaller range turns less: say how it was programmed. A servo turret or hood has `.fullRange()` too ([TUR-03](repo:testing/tests/TUR-03.md), [HOOD-01](repo:testing/tests/HOOD-01.md))."
+     }
+    ]
+   }
+  },
+  {
+   "id": "MEC-03",
+   "title": "A part on two servos - same position, same moment",
+   "area": "mechanisms",
+   "priority": "medium",
+   "where": "both",
+   "minutes": 15,
+   "needs": [],
+   "kit_bots": [],
+   "since": "v0.30.0",
+   "docs": [
+    {
+     "path": "docs/modules/robot.md",
+     "anchor": "claw"
+    },
+    {
+     "path": "docs/guides/tunables.md",
+     "anchor": "claw-wrist-and-positioner"
+    }
+   ],
+   "file": "testing/tests/MEC-03.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A claw with a servo for each finger, or an arm with a servo on each side, must move both servos together. If one moves and the other does not, they fight: a servo burns out, or the part twists."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "Test with nothing in the claw first. Keep fingers out of it."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A Claw (or a Wrist, Positioner or servo Indexer) with a second servo: `Claw.servo(\"claw_left\").alsoServoReversed(\"claw_right\")`, or its simulator robot file.",
+       "`Tunables.ClawLeft`: `open` and `closed` found with the Servo Finder on `claw_left`, `alsoTrim = 0`."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "INIT. Neither servo must move.",
+       "Press START, then close the claw (operator B). Both fingers must close at the same moment and meet in the middle.",
+       "Open it. Both must open together.",
+       "Open and close it 5 times fast. Neither finger may ever move alone: both must end at the same place each time. (A pause, BACK, does not stop a servo that is already going: it finishes its move. Feed arms go back to `rest` on a pause.)",
+       "If the fingers do not quite meet, set `alsoTrim = 0.02` (or -0.02) in the tuning menu, then open and close again (a new trim is used at the next move). The second finger must move a little more (or less)."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Each step does what it says, on 2 runs out of 2."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "The robot and where (simulator or real robot).",
+       "The part (claw, wrist, arm, feed arms), the servos, and the `alsoTrim` you needed."
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Two servos that face the same way: use `alsoServo` instead. One finger opens when the other closes: you have the wrong one of the two."
      }
     ]
    }

@@ -20,13 +20,16 @@ import java.util.Map;
  * <p>A servo does not move until the program first tells it where to go, after START.
  */
 public abstract class ServoPositions<M extends ServoPositions<M>> extends Module<M> {
-    static final List<String> KNOWN = Collections.singletonList("travelSec");
+    static final List<String> KNOWN = java.util.Arrays.asList("travelSec", "alsoTrim");
     /** travelSec with no part(...) and none written: 0.3 s. */
     static final double DEFAULT_TRAVEL_SEC = 0.3;
     // INIT notes about starting values (from the parts catalog, or the library's guessed positions).
     private final List<String> startNotes = new ArrayList<>();
 
     boolean reversed = false;
+    // A second servo that moves with this one (alsoServo), and whether it turns the same way (else mirrored).
+    String alsoServo = null;
+    boolean alsoSameWay = false;
     PositionServo part;
     // The positions' names in the order the servo cycles through them.
     final List<String> order = new ArrayList<>();
@@ -39,6 +42,73 @@ public abstract class ServoPositions<M extends ServoPositions<M>> extends Module
     public M reversed() {
         reversed = true;
         return self();
+    }
+
+    /**
+     * A second servo that moves with this one, mirrored: the other side of a two-servo part, for example a
+     * claw with a servo for each finger, or an arm with a servo on each side. Both go to the same positions;
+     * the second one turns the other way, because it is mounted facing the first. One Tunables section (this
+     * part's). If the two do not quite meet, set {@code alsoTrim} (raw position added for the second one).
+     *
+     * <pre>{@code
+     * claw = add(Claw.servo("claw_left").alsoServoReversed("claw_right").part("gobilda-2000-torque"));
+     * }</pre>
+     *
+     * @param name the second servo's configuration name
+     * @return this part
+     */
+    public M alsoServoReversed(String name) {
+        secondServo(name, false);
+        return self();
+    }
+
+    /**
+     * Like {@link #alsoServoReversed}, for a second servo mounted facing the same way as the first (it turns the
+     * same way, not mirrored).
+     *
+     * @param name the second servo's configuration name
+     * @return this part
+     */
+    public M alsoServo(String name) {
+        secondServo(name, true);
+        return self();
+    }
+
+    private void secondServo(String name, boolean sameWay) {
+        if (name == null || name.trim().isEmpty()) throw new IllegalArgumentException("Robot.java: " + name() + ".alsoServo needs the servo's name");
+        if (name.equals(device)) throw new IllegalArgumentException("Robot.java: " + name() + ".alsoServo(\"" + name + "\") is its first servo");
+        if (alsoServo != null) {
+            throw new IllegalStateException("Robot.java: " + name() + " already has a second servo (\"" + alsoServo
+                    + "\"); a part takes two servos at most");
+        }
+        alsoServo = name;
+        alsoSameWay = sameWay;
+    }
+
+    /** The second servo's configuration name ({@code alsoServo...}), or null if it has one servo. */
+    public String secondServoName() {
+        return alsoServo;
+    }
+
+    /** True if {@code reversed()} is set in Robot.java (positions 0 and 1 swap ends). */
+    public boolean isReversed() {
+        return reversed;
+    }
+
+    /** True if the second servo mirrors the first ({@code alsoServoReversed}). */
+    public boolean secondServoMirrored() {
+        return alsoServo != null && !alsoSameWay;
+    }
+
+    @Override
+    List<String> deviceNames() {
+        if (alsoServo == null) return super.deviceNames();
+        return java.util.Arrays.asList(device, alsoServo);
+    }
+
+    // The second servo's direction: mirrored (the other way from the first), or the same way.
+    boolean alsoReversed() {
+        return alsoSameWay ? reversed : !reversed;
     }
 
     /**
@@ -85,6 +155,17 @@ public abstract class ServoPositions<M extends ServoPositions<M>> extends Module
         double catalogTravel = catalogFullMoveSec();
         boolean travelFromCatalog = !t.has("travelSec") && !Double.isNaN(catalogTravel);
         part = new PositionServo(name(), servo).travelTime(t.number("travelSec", travelFromCatalog ? catalogTravel : DEFAULT_TRAVEL_SEC));
+        if (alsoServo == null && t.has("alsoTrim")) {
+            throw new IllegalStateException("Tunables." + name() + ".alsoTrim needs a second servo: add .alsoServoReversed(name) "
+                    + "(or .alsoServo(name)) to " + name() + " in Robot.java, or delete the alsoTrim line");
+        }
+        if (alsoServo != null) {
+            Servo other = devices.get(Servo.class, alsoServo);
+            if (alsoReversed()) other.setDirection(Servo.Direction.REVERSE);
+            applyPulse(other, alsoServo);
+            com.crossbotics.ftchelper.tuning.Tunable trim = t.tunable("alsoTrim", 0, 0.005).range(-0.2, 0.2);
+            part.withServo(other, trim::get);
+        }
         if (travelFromCatalog) {
             t.fromCatalog("travelSec");
             startNotes.add(defaultsNote(partId, java.util.Collections.singletonList("travelSec " + exact(catalogTravel) + " s for a full move"),
@@ -231,11 +312,19 @@ public abstract class ServoPositions<M extends ServoPositions<M>> extends Module
 
     // "servo.claw = 0.2, part=gobilda-2000-torque": where the simulated servo starts (its first position).
     // The part given with part(...), or the default marked TODO.
-    String simServoLine(TunableSection t, String part) {
+    void simServoLines(List<String> out, TunableSection t, String part) {
         Map<String, Double> p = positionsFrom(t);
-        double first = physical(p.isEmpty() ? 0.5 : p.values().iterator().next());
-        if (partId != null) return fmt("servo.%s = %.2f, %s", device, first, servoWords(partId, part)) + pulseWords() + simTodo(partId);
-        return fmt("servo.%s = %.2f, part=%s", device, first, part) + pulseWords() + "   # TODO the real servo";
+        double v = p.isEmpty() ? 0.5 : p.values().iterator().next();
+        out.add(servoLine(device, physical(v), part));
+        if (alsoServo != null) {
+            double trimmed = Math.max(0, Math.min(1, v + t.number("alsoTrim", 0)));
+            out.add(servoLine(alsoServo, alsoReversed() ? 1 - trimmed : trimmed, part));
+        }
+    }
+
+    private String servoLine(String name, double start, String part) {
+        if (partId != null) return fmt("servo.%s = %.2f, %s", name, start, servoWords(partId, part)) + pulseWords() + simTodo(partId);
+        return fmt("servo.%s = %.2f, part=%s", name, start, part) + pulseWords() + "   # TODO the real servo";
     }
 
     @Override

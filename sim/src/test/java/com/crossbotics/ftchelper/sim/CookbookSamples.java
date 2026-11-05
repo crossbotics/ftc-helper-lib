@@ -55,6 +55,7 @@ final class CookbookSamples {
         put(s, "Tunables$LiftLeft", "min", 0, "max", 2900, "down", 0, "low", 1000, "high", 2700);
         put(s, "Tunables$Arm", "min", -10, "max", 120, "stowed", 0, "pickup", 10, "score", 95);
         put(s, "Tunables$Claw", "open", 0.210, "closed", 0.770);
+        put(s, "Tunables$ClawLeft", "open", 0.210, "closed", 0.770);
         put(s, "Tunables$Wrist", "down", 0.15, "level", 0.45, "up", 0.80);
         put(s, "Tunables$IntakeDeploy", "stowed", 0.0, "deployed", 0.8);
         put(s, "Tunables$Turret", "min", -90, "max", 90);

@@ -38,6 +38,7 @@ The menu lists only the tools that fit your robot. It finds Robot.java by itself
 | Tool | In the menu when |
 | --- | --- |
 | Hardware Check | always |
+| Motor Direction Check | there is a Robot.java |
 | Servo Finder | the configuration has a servo |
 | Hood Finder | the robot has a hood |
 | Motor Finder | the robot has a lift or an arm (or there is no Robot.java) |
@@ -59,7 +60,8 @@ The same order as the **Tune and check** menu. Two tools keep their own file (no
 
 ```mermaid
 flowchart LR
-    H["Hardware Check<br/>everything plugged in<br/>and turning the right way"] --> S["Servo Finder<br/>ends + positions"]
+    H["Hardware Check<br/>everything plugged in<br/>and turning the right way"] --> MD["Motor Direction Check<br/>each wheel rolls forward"]
+    MD --> S["Servo Finder<br/>ends + positions"]
     S --> HO["Hood Finder<br/>a hood's two stops"]
     HO --> M["Motor Finder<br/>limits + positions"]
     M --> F["Flywheel Finder<br/>gains + recovery"]
@@ -74,6 +76,7 @@ flowchart LR
 ```
 
 1. **Hardware Check first** ([testing](testing.md)): every device found, every motor turns the right way.
+   Then the **Motor Direction Check**: each drive wheel rolls forward, with Robot.java's directions.
 2. **Servo Finder** for each servo, **Hood Finder** for a launcher's hood, **Motor Finder** for each lift,
    arm or turret: put the limits and positions in your code (five files: `min`, `max` and the named heights
    in `Tunables.Lift`, `open` and `closed` in `Tunables.Claw`). Do this BEFORE you drive a mechanism with
@@ -123,16 +126,70 @@ While help is open, the finder's buttons pause and its motors stop. GUIDE again 
 Then let go of every stick, trigger and button once: until then the finder ignores them.
 Check once on your own Driver Hub and controllers that the help page fits and is easy to read.
 
+## Motor Direction Check: each wheel rolls forward
+
+**You need:** the robot on a block (the wheels spin). **Done when:** every drive wheel rolls the way that drives
+the robot forward.
+
+It spins ONE drive motor at a time at 30%, set up exactly as Robot.java says (its direction, from
+`reversed(...)` on the drive line). The Hardware Check spins a motor in its raw direction; this check uses
+yours, so it shows what the robot will really do.
+
+1. Hold **X** (front-left), **Y** (front-right), **A** (back-left) or **B** (back-right). A tank drive: X = left,
+   Y = right. The screen shows the motor's name, and "(reversed)" when Robot.java reverses it.
+2. Each wheel must roll the way that drives the robot FORWARD (for the robot in five files, the front is
+   the end Robot.java says).
+3. One rolls backward: add its name to `reversed(...)` on the drive line in Robot.java (or take it out).
+   INIT again and check it again.
+4. The wrong wheel turns? Its name in the robot configuration is on the wrong port: swap the names on the
+   Driver Hub, not the wires.
+
+Run it on every new robot, and again after any motor or wire is changed: a wrong direction makes the robot
+drive in circles, strafe the wrong way, or fight itself.
+
 ## Servo Finder: ends and positions
 
 **You need:** the robot on a block. **Done when:** every position you use is in `Tunables.java`, between the two ends.
+
+### A new servo part, step by step
+
+The hard part of a new servo is not knowing which way it turns, or where its ends are. Go in this order, slowly.
+Use **Tune and check > Servo Finder**: it knows Robot.java (`reversed()`, a second servo, the servo's catalog part).
+
+1. **Arm off.** Put the servo in, but leave its arm (the horn) off, or its screw loose. Then nothing can hit the
+   frame while you start.
+2. **Go to the middle.** Choose the servo, leave the start point at 0.5, press **A**. The servo goes to the middle
+   of its turn and holds there.
+3. **Put the arm on in the middle of the part's swing**, so the part can move both ways from here. Tighten the
+   screw. Mark the horn and the shaft with a paint pen: a new horn later goes on the same tooth.
+4. **Find the direction.** Press **D-pad right** (0.01 bigger) a few times and watch the part. Write it down:
+   "bigger = open", "bigger = up". There is no standard way a servo turns
+   ([why](../conventions.md#servos-and-motors-which-way-is-bigger)); for a catalog servo the screen shows a
+   **Hint** (goBILDA: "bigger = clockwise (seller)"), but only your test counts, because the part's way depends
+   on how the servo is mounted.
+5. **Find each end, slowly.** Move toward one end in small steps (D-pad right/left, hold **RB** for 10 times
+   finer) until the part JUST touches the frame. **A servo that hums is pushing on something: back off at once**
+   (it gets hot and can strip its gears). Back off 0.01 more and press **X**. The same at the other end: **B**.
+6. **Save each position you need** (open, closed, rest, push...): move there, press **A**. Then copy the lines
+   into `Tunables.java` (step 3 below).
+7. **Want "bigger" the other way?** (For example bigger = up.) Add `.reversed()` to the part in Robot.java, then
+   find the positions again (each old number becomes 1 minus it).
+
+**Two servos on one part:** do step 1 for BOTH arms. Choose the FIRST servo: the second moves with it, mirrored.
+Then put both arms on at the middle (step 3), so they match, and go on from step 4. If they do not quite meet, set
+`alsoTrim` after (in TeleOp).
+
+**At START** the part goes straight to its first position from wherever it is (a servo always knows its own
+angle). Keep hands clear.
+
+### The finder's buttons
 
 ![Servo Finder: X and B mark the two ends, just before the frame; A saves each position between them](../images/finder-servo.svg)
 
 0. **Full range?** If the part has `.fullRange()` in Robot.java (the servo's whole turn: a goBILDA 2000
    servo 300 degrees instead of 270, [why](../modules/hardware.md#full-range)), press **Y** while choosing
    the servo, so the finder uses the same range. Positions found with one range are wrong with the other.
-1. Choose the servo (D-pad, A). A servo cannot tell where it is, so first choose a START POINT near
+1. Choose the servo (D-pad, A). A servo cannot tell the program where it is, so first choose a START POINT near
    where it sits now (D-pad; nothing moves), then press A: it moves there. Then nudge it with the
    D-pad: right/left = 0.01, up/down = 0.05, hold RB for 10 times finer.
 2. Move it toward one end until it JUST stops pushing on the frame (listen: a straining servo hums).
@@ -145,6 +202,24 @@ Check once on your own Driver Hub and controllers that the help page fits and is
    `public static double open = 0.210, closed = 0.770;` in `Tunables.Claw`. Keep every position
    between the ends the finder shows. **Y** undoes the last saved position; **BACK** chooses another
    servo (the lines found so far stay on the screen).
+
+**`reversed()` in Robot.java:** in **Tune and check**, the finder turns the servo the same way (the screen says
+`Direction: reversed, as in Robot.java`), so its numbers go straight into Tunables.java. Either order is fine:
+`rest` may be higher or lower than `push`, `open` higher or lower than `closed`. Which way a bigger number turns
+depends on the servo (there is no standard): D-pad up shows you ([Signs and units](../conventions.md#servos-and-motors-which-way-is-bigger)).
+
+**A part on two servos** (`alsoServoReversed(...)` or `alsoServo(...)` in Robot.java, for example a claw with a
+servo for each finger, or two feed arms): choose the FIRST servo. In **Tune and check**, the second servo moves
+with it (mirrored or the same way, as Robot.java says), so the two never fight; the screen shows
+`Moves with it: claw_right (mirrored)`. The second servo cannot be chosen alone. `alsoTrim` is not used in the
+finder: check it after, in TeleOp. A Servo Finder of your own (not from Tune and check) does not know Robot.java
+and moves only one servo: it would drag the other, unpowered servo through its gears. Take the other side's arm
+off first, or unplug the second servo's wire.
+
+**After a new horn (maintenance):** loosen or take off both arms. In the finder, choose the first servo, set the
+start point to your `rest` number and press A: both servos go there and hold. Put the arms on at that position
+and tighten them. Move to your other position and check that they meet. Mark the horn and the shaft with a paint
+pen, so the next horn goes on the same tooth. One spline tooth on a goBILDA servo is about 0.05 in position.
 
 ## Hood Finder
 
