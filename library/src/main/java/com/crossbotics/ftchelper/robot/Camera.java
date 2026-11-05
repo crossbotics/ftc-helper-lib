@@ -229,7 +229,7 @@ public final class Camera extends Module<Camera> {
     void build(Devices devices, TunableSection t) {
         // Optional numbers: read only when written, so a team that does not use them gets no INIT note.
         boolean auto = !t.has("autoLighting") || t.flag("autoLighting", true);
-        builtNanos = System.nanoTime();
+        builtNanos = com.crossbotics.ftchelper.core.Time.nanos();
         // tryGet: null when the camera is not in the robot configuration. A camera problem must never
         // stop the OpMode (the robot still drives): a stand-in camera warns and sees nothing.
         Object found = devices.tryGet(limelight ? Limelight3A.class : kind == Kind.HUSKYLENS ? HuskyLens.class : WebcamName.class, device);
@@ -316,7 +316,7 @@ public final class Camera extends Module<Camera> {
         source.update();
         // A camera that is still not working after 3 s (a webcam needs 1-2 s to start): say so now,
         // before START, so it can be fixed.
-        if (!source.isWorking() && (source instanceof MissingCamera || System.nanoTime() - builtNanos > 3_000_000_000L)) {
+        if (!source.isWorking() && (source instanceof MissingCamera || com.crossbotics.ftchelper.core.Time.nanos() - builtNanos > 3_000_000_000L)) {
             t.warn(device + ": " + source.status());
         }
         if (sweep == null) return;

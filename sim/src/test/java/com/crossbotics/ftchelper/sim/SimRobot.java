@@ -131,6 +131,16 @@ final class SimRobot {
     static final double SECONDS_PER_PIECE = 0.3;
     // A feed stop lets pieces through while it is within this much (raw position) of its open position.
     static final double STOP_OPEN_WITHIN = 0.05;
+    // A feed wheel (stage=) must run this long (seconds, in all) since the last push for the next push to
+    // have a piece at the arm.
+    static final double STAGE_SEC = 0.05;
+    // Each flywheel's feed wheel run time since its last push (seconds).
+    private final Map<String, Double> stagedSec = new LinkedHashMap<>();
+    // Was a piece staged when the push began? Kept while the push waits for a closed feed stop: a wheel
+    // that runs only after the push began does not count.
+    private final Map<String, Boolean> pushStaged = new LinkedHashMap<>();
+    // Each push servo's distance from its start last step (it grows while the arm moves out).
+    private final Map<String, Double> pushDist = new LinkedHashMap<>();
     // A servo feeder (an indexer) is feeding while it is this far (raw position) from where it starts.
     static final double SERVO_FEED_MOVE = 0.15;
     private int shots = 0;
@@ -234,6 +244,7 @@ final class SimRobot {
             m.shotDrop = dbl(s, "shotDrop", 0.15);
             m.stop = s.get("stop");
             m.stopOpen = dbl(s, "stopOpen", 0.5);
+            m.stage = s.get("stage");
             if (s.containsKey("drivenBy")) drivenBy.put(name, s.get("drivenBy"));
             if (s.containsKey("with")) {
                 tiedTo.put(name, s.get("with"));
@@ -724,6 +735,9 @@ final class SimRobot {
         shots = 0;
         sinceShot.clear();
         pusherOut.clear();
+        stagedSec.clear();
+        pushStaged.clear();
+        pushDist.clear();
         feederOn.clear();
         feedWaiting.clear();
         x = startX;
@@ -830,6 +844,12 @@ final class SimRobot {
             // A feed stop: pieces get through only while it is (nearly) at its open position.
             SimServo gate = m.stop == null ? null : servos.get(m.stop);
             boolean open = gate == null || Math.abs(gate.actual - m.stopOpen) < STOP_OPEN_WITHIN;
+            if (m.stage != null) {
+                SimMotor sm = motors.get(m.stage);
+                double[] sc = crServos.get(m.stage);
+                boolean wheelOn = sm != null ? Math.abs(sm.appliedPower) > 0.3 : sc != null && Math.abs(sc[0]) > 0.3;
+                if (wheelOn) stagedSec.merge(m.name, dt, Double::sum);
+            }
             if (pusher != null) {
                 // A servo pusher (an indexer) sends ONE piece per push, at once, however long it stays
                 // out: a push and a slow return can last longer than SECONDS_PER_PIECE, and that fired a
@@ -837,10 +857,23 @@ final class SimRobot {
                 // A push against a closed feed stop waits: its piece goes when the stop opens (while the
                 // pusher is still out), and counts as this push's one piece.
                 boolean again = !pusherOut.contains(m.name);
-                if (!on) pusherOut.remove(m.name);
-                else if (again && open) {
+                // The push begins the moment the arm starts to move out (not once it is far enough out to
+                // shoot): a feed wheel that did not run long enough BEFORE that: no piece at the arm, the
+                // push is spent. A wheel that starts while the arm moves does not count.
+                double dist = Math.abs(pusher.actual - pusher.start);
+                Double lastDist = pushDist.put(m.name, dist);
+                boolean outward = lastDist != null && dist > lastDist + 1e-9;
+                if (outward && !pushStaged.containsKey(m.name)) {
+                    pushStaged.put(m.name, m.stage == null || stagedSec.getOrDefault(m.name, 0.0) >= STAGE_SEC);
+                    stagedSec.put(m.name, 0.0);
+                }
+                if (!on) {
+                    pusherOut.remove(m.name);
+                    if (!outward) pushStaged.remove(m.name);   // back (or still): the next push starts fresh
+                } else if (again && open) {
                     // (a still wheel: the push is spent and its piece does not go, as before)
-                    if (Math.abs(m.shaftSpeed()) > 100) feedShot(m);
+                    boolean staged = pushStaged.getOrDefault(m.name, m.stage == null);
+                    if (Math.abs(m.shaftSpeed()) > 100 && staged) feedShot(m);
                     pusherOut.add(m.name);
                 }
                 continue;

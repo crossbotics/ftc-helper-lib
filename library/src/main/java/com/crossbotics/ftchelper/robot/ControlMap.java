@@ -502,7 +502,7 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
         List<double[]> points = new ArrayList<>();
         for (double[] p : route) points.add(new double[] {flip ? -p[0] : p[0], p[1]});
         routeDriver = new com.crossbotics.ftchelper.drive.RouteDriver(r.robotConfig().auto(), driveConfig().powerLimit, r::pose,
-                () -> r.odometry() != null && r.odometry().isReady() && r.odometry().isPoseSet(), System::nanoTime)
+                () -> r.odometry() != null && r.odometry().isReady() && r.odometry().isPoseSet(), com.crossbotics.ftchelper.core.Time::nanos)
                 .checkLines((x1, y1, x2, y2) -> r.fieldMap().lineIsClear(flip ? -x1 : x1, y1, flip ? -x2 : x2, y2));
         routeLabel = label;
         routeDriver.start(points, flip ? -headingDeg : headingDeg, maxPower, toleranceIn);

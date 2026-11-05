@@ -55,7 +55,7 @@ public class Flywheel implements Subsystem {
     // The gains from pidf(), kept so a follower added later gets them too. null = pidf() not called.
     private double[] gains = null;
     // Where we get the time (nanoseconds). Tests swap in a fake clock.
-    private LongSupplier clockNanos = System::nanoTime;
+    private LongSupplier clockNanos = com.crossbotics.ftchelper.core.Time::nanos;
 
     private double countsPerRev = 28;
     private double toleranceRpm = 75;

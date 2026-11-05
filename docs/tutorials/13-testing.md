@@ -151,8 +151,22 @@ import com.crossbotics.ftchelper.testkit.PretendDevices;
 
 **Why:** a typo in `Tunables.java` stops INIT on the robot; here it fails on the laptop first. And a
 change to `Robot.java` (a second lift motor, a new interlock rule) is checked in a second. The test
-cannot see how the real robot moves (gravity, time passing): that is what the
-[simulator](../guides/simulator.md) is for. A whole example: `examples/src/test/.../v2bot/V2botTest.java`.
+cannot see how the real robot moves (gravity): that is what the
+[simulator](../guides/simulator.md) is for.
+
+**Time passing:** for a test of timing ("the arm pushes 0.2 s after fire"), use a pretend clock. The test moves
+the time by hand, so it does not wait, and a slow laptop cannot make it fail:
+
+```java
+PretendClock clock = PretendClock.use();   // and PretendClock.stopUsing() in @After
+robot.intake.in();
+clock.addSec(0.25);                         // 0.25 s later, at once
+robot.all().update();
+```
+
+A pretend motor does not speed up by itself: for a flywheel, set `fly.velocity = fly.velocityCommand` in each
+loop, or it is never ready ([PretendClock](../modules/testkit.md#pretendclock) has a whole example).
+ A whole example: `examples/src/test/.../v2bot/V2botTest.java`.
 More: [test kit](../modules/testkit.md).
 
 ## Run it

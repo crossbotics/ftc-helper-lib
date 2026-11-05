@@ -508,7 +508,7 @@ public final class Interlock {
         // Every part in a rule (its fence is set every loop: free if no rule holds it).
         private final List<Module<?>> parts = new ArrayList<>();
         // Where we get the time (nanoseconds). Tests swap in a pretend clock.
-        java.util.function.LongSupplier clock = System::nanoTime;
+        java.util.function.LongSupplier clock = com.crossbotics.ftchelper.core.Time::nanos;
         private long lastNanos = Long.MIN_VALUE;
         private final double[] loopSecs = new double[LOOPS_KEPT];
         private int loopCount = 0;

@@ -64,7 +64,9 @@ A change is not done until all six are done.
   site shows the two differently, so a student can tell "what you see" from "what you write".
   Inside `<samp>`, write `&lt;` and `&amp;` for `<` and `&`.
 - Classes that use time take a clock in a second constructor (`LongSupplier clockNanos`) so tests
-  can control time. See `PidController` or `LoopTimer`.
+  can control time. See `PidController` or `LoopTimer`. A default clock is `Time::nanos` (core), so a
+  test's `PretendClock` moves every part at once (most parts do). Keep `System.nanoTime` only where the time
+  is compared with one from the SDK (camera picture times) or measures the loop itself.
 
 ## Build and test
 

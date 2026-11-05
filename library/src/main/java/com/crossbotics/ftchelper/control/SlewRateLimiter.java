@@ -48,8 +48,9 @@ public class SlewRateLimiter {
      * @param fallPerSecond largest change per second toward zero
      */
     public SlewRateLimiter(double risePerSecond, double fallPerSecond) {
-        // "System::nanoTime" hands over the real clock method itself (a "method reference").
-        this(risePerSecond, fallPerSecond, System::nanoTime);
+        // "Time::nanos" hands over the library clock method itself (a "method reference"): the real clock,
+        // or a test's pretend one.
+        this(risePerSecond, fallPerSecond, com.crossbotics.ftchelper.core.Time::nanos);
     }
 
     /**

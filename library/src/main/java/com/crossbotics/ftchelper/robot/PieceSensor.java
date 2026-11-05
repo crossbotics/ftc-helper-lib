@@ -83,7 +83,7 @@ public final class PieceSensor extends Module<PieceSensor> {
     private int arrivals = 0;
     private boolean dipCounted = false, dipRising = false;
     private double dipMin = Double.NaN, dipPeak = Double.NaN;
-    LongSupplier clock = System::nanoTime;
+    LongSupplier clock = com.crossbotics.ftchelper.core.Time::nanos;
     // Where slow reads run: null = the library's helper thread. Tests run them at once (Runnable::run).
     Consumer<Runnable> background = null;
     private BackgroundWorker worker = null;

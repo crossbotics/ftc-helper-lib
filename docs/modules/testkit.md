@@ -19,6 +19,7 @@ second, so you can run them after every change.
 | [`PretendCRServo`](#pretendmotor-pretendservo-pretendcrservo) | read the power sent to a CR servo |
 | [`PretendPinpoint`](#pretendpinpoint) | a goBILDA Pinpoint that says the robot is where the test puts it |
 | [`PretendTelemetry`](#pretendtelemetry) | read what the Driver Station would show |
+| [`PretendClock`](#pretendclock) | move the time forward by hand: a timing test does not wait |
 
 **Why in the library:** a team's tests (in `TeamCode/src/test`) can use it with no extra Gradle lines
 (only JUnit, [tutorial 13](../tutorials/13-testing.md#3-set-up-teamcode-for-tests-once)). It is a few
@@ -96,3 +97,53 @@ assertTrue(screen.has("Lift : high"));
 | `lastScreen` | the last screen sent, one line per entry (`"Lift : high  900 ticks"`, `"!! warning"`) |
 | `has(words)` | true if a line of the last screen contains them |
 | `updates` | how many screens were sent |
+
+## PretendClock
+
+A clock that moves only when your test says so. The robot's parts read the library's clock
+([`Time`](core.md#time)), so with a pretend clock a test of timing ("the arm pushes 0.2 s after fire") runs at
+once and gives the same result on every computer. With the real clock, a test must wait, and a slow computer
+can make it fail when the code is fine.
+
+```java
+@After public void realClock() {
+    PretendClock.stopUsing();          // (1)!
+}
+
+@Test public void theArmPushesAfterStaging() {
+    PretendClock clock = PretendClock.use();
+    PretendDevices devices = new PretendDevices();
+    Robot robot = new Robot();
+    robot.setup(devices);
+    robot.startForTests();
+    PretendMotor fly = devices.motor("launcher");
+    robot.launcher.spinUp();
+    for (int i = 0; i < 100; i++) {    // 0.5 s, 5 ms a loop
+        clock.addSec(0.005);           // (2)!
+        fly.velocity = fly.velocityCommand;   // (3)!
+        robot.all().update();
+        if (i == 60) robot.launcher.fire();   // at 0.3 s
+    }
+    assertEquals(0.7, devices.servo("feeder_arm").position, 1e-9);
+}
+```
+
+1. The next test gets the real clock again.
+2. 5 ms later, at once: nothing waits. The whole loop takes far less than a second.
+3. A pretend motor does not speed up by itself: the test says the wheel reached the speed asked. Without
+   this line the flywheel is never ready, and nothing fires.
+
+| Member | What it does |
+| --- | --- |
+| `PretendClock.use()` | makes a pretend clock and has the robot's parts use it (the only way to make one) |
+| `PretendClock.stopUsing()` | the real clock again (in `@After`) |
+| `addSec(sec)` | moves the time forward (seconds, 0 or more) |
+| `sec()` | the time now, seconds (it starts at 1) |
+
+A part that waits for a helper thread (a camera, a distance sensor on the library's helper thread) still
+needs real time: the thread runs on its own. The camera aim keeps the real clock too (the camera stamps its
+pictures with it).
+
+**Always** call `PretendClock.stopUsing()` in `@After`. A pretend clock left in use stops time for every later
+test: their flywheels are never ready and their time limits never end.
+

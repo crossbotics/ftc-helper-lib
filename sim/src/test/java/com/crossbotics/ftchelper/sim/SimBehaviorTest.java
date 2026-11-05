@@ -152,6 +152,63 @@ public class SimBehaviorTest {
         java.nio.file.Files.delete(f);
     }
 
+    // A feed wheel (stage=): a push sends a piece only if the feed wheel ran just before (it brought the
+    // piece up to the arm). Launcher.feedWheel(...) writes it.
+    @Test public void aPushNeedsTheFeedWheelToRunFirst() throws Exception {
+        String base = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("robots/starter.properties")), "UTF-8");
+        java.nio.file.Path f = java.nio.file.Files.createTempFile("stage", ".properties");
+        java.nio.file.Files.write(f, base.replace("feeder=feeder", "feeder=hood, stage=feeder").getBytes("UTF-8"));
+        SimRobot robot = SimRobot.load(f);
+        robot.motors.get("flywheel").device.setPower(1);
+        for (int i = 0; i < 200; i++) robot.step(0.01);            // 2 s: the wheel spins up
+        com.qualcomm.robotcore.hardware.Servo arm = (com.qualcomm.robotcore.hardware.Servo) robot.servos.get("hood").device;
+        arm.setPosition(0.9);                                      // a push with no staging
+        for (int i = 0; i < 50; i++) robot.step(0.01);
+        assertEquals("no piece at the arm: no shot", 0, robot.shots());
+        arm.setPosition(0.1);
+        robot.motors.get("feeder").device.setPower(1);             // the feed wheel stages a piece
+        for (int i = 0; i < 50; i++) robot.step(0.01);
+        arm.setPosition(0.9);
+        for (int i = 0; i < 50; i++) robot.step(0.01);
+        assertEquals("staged, then pushed: one shot", 1, robot.shots());
+        java.nio.file.Files.delete(f);
+    }
+
+    @Test public void aWheelThatRunsOnlyAfterThePushDoesNotStageIt() throws Exception {
+        String base = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("robots/starter.properties")), "UTF-8");
+        java.nio.file.Path f = java.nio.file.Files.createTempFile("stage", ".properties");
+        java.nio.file.Files.write(f, base.replace("feeder=feeder", "feeder=hood, stage=feeder, stop=claw, stopOpen=0.9").getBytes("UTF-8"));
+        SimRobot robot = SimRobot.load(f);
+        robot.motors.get("flywheel").device.setPower(1);
+        for (int i = 0; i < 200; i++) robot.step(0.01);            // 2 s: the wheel spins up
+        com.qualcomm.robotcore.hardware.Servo arm = (com.qualcomm.robotcore.hardware.Servo) robot.servos.get("hood").device;
+        com.qualcomm.robotcore.hardware.Servo gate = (com.qualcomm.robotcore.hardware.Servo) robot.servos.get("claw").device;
+        arm.setPosition(0.9);                                      // a push with no staging, the feed stop closed
+        for (int i = 0; i < 50; i++) robot.step(0.01);
+        robot.motors.get("feeder").device.setPower(1);             // the wheel runs only now, the arm still out
+        for (int i = 0; i < 50; i++) robot.step(0.01);
+        gate.setPosition(0.9);                                     // the feed stop opens
+        for (int i = 0; i < 100; i++) robot.step(0.01);
+        assertEquals("nothing was staged when the push began: no shot", 0, robot.shots());
+        java.nio.file.Files.delete(f);
+    }
+
+    @Test public void aWheelThatStartsWhileTheArmMovesOutDoesNotStageIt() throws Exception {
+        String base = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get("robots/starter.properties")), "UTF-8");
+        java.nio.file.Path f = java.nio.file.Files.createTempFile("stage", ".properties");
+        java.nio.file.Files.write(f, base.replace("feeder=feeder", "feeder=hood, stage=feeder").getBytes("UTF-8"));
+        SimRobot robot = SimRobot.load(f);
+        robot.motors.get("flywheel").device.setPower(1);
+        for (int i = 0; i < 200; i++) robot.step(0.01);            // 2 s: the wheel spins up
+        com.qualcomm.robotcore.hardware.Servo arm = (com.qualcomm.robotcore.hardware.Servo) robot.servos.get("hood").device;
+        arm.setPosition(0.9);                                      // the arm starts out, no staging yet
+        robot.step(0.01);
+        robot.motors.get("feeder").device.setPower(1);             // the wheel starts 0.01 s into the push
+        for (int i = 0; i < 100; i++) robot.step(0.01);
+        assertEquals("the wheel started after the push began: no shot", 0, robot.shots());
+        java.nio.file.Files.delete(f);
+    }
+
     @Test public void partsComeFromTheCatalog() throws Exception {
         SimParts.Motor m312 = SimParts.catalog().motor("gobilda-5203-312");
         assertEquals(537.7, m312.countsPerRev, 1e-9);

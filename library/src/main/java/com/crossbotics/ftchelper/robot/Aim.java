@@ -93,6 +93,8 @@ public final class Aim {
     }
 
     // The time, in nanoseconds. Tests use a pretend clock.
+    // The real clock (not core.Time): the camera stamps its pictures with System.nanoTime(), so a picture's
+    // age must be measured on the same clock.
     static LongSupplier clock = System::nanoTime;
 
     private final RobotDefinition robot;

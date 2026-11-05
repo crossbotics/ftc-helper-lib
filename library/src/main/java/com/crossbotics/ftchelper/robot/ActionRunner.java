@@ -15,7 +15,7 @@ final class ActionRunner implements Subsystem {
     static final double SHOW_RESULT_SEC = 3;
 
     private final List<Action> running = new ArrayList<>();
-    private LongSupplier clock = System::nanoTime;
+    private LongSupplier clock = com.crossbotics.ftchelper.core.Time::nanos;
     // The action whose "then" step is running its commands now (null = the driver's commands).
     private Action current = null;
     // The last finished action, for the Driver Station.

@@ -114,7 +114,8 @@ and the picture time in `System.nanoTime()`. Then `AimController`, `Turret.aimBy
 4. **Safety stays on in every profile.** Limits, timeouts, jam checks.
 5. **Testable**: put the logic in a part with no hardware, or take a clock (`LongSupplier`, a method
    that returns the time) and devices in the constructor (the code that makes the object), so tests can
-   use pretend ones (see `library/src/test`).
+   use pretend ones (see `library/src/test`). A part's default clock is `Time::nanos` (core), not
+   `System::nanoTime`: then a test's [`PretendClock`](../modules/testkit.md#pretendclock) moves it too.
 6. **The six steps**: code, Javadoc, test, module page, tutorial, CHANGELOG ([Contributing](../contributing.md)).
 7. **No game-specific numbers** in the library.
 

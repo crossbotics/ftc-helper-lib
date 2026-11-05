@@ -4846,6 +4846,84 @@
    }
   },
   {
+   "id": "SHOT-09",
+   "title": "A feed wheel stages each piece before the push arm",
+   "area": "shooter",
+   "priority": "medium",
+   "where": "both",
+   "minutes": 15,
+   "needs": [
+    [
+     "flywheel"
+    ]
+   ],
+   "kit_bots": [],
+   "since": "v0.29.0",
+   "docs": [
+    {
+     "path": "docs/modules/robot.md",
+     "anchor": "firing-shot-modes-feed-stop-piece-path"
+    },
+    {
+     "path": "docs/guides/tunables.md",
+     "anchor": "indexer"
+    }
+   ],
+   "file": "testing/tests/SHOT-09.md",
+   "sections": {
+    "why": [
+     {
+      "p": "Some launchers have two feed parts: a CR servo wheel moves each piece up to a servo arm, and the arm pushes it into the flywheel. The wheel must run before the arm pushes, or the arm pushes nothing."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "The flywheel spins fast: hands and loose clothes away from it. Wear eye protection near a real launcher."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A launcher with `.feeder(Indexer.servo(\"feeder_arm\"))` and `.feedWheel(Indexer.crServo(\"feeder_wheel\"))`, or its simulator robot file (`./gradlew :sim:fromRobot`).",
+       "2 or more pieces loaded.",
+       "`Tunables.FeederWheel`: `alwaysOn = false`, `stageSec = 0.2`, `stopSec = 0.3`."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "Press START. Spin up. The feed wheel must not turn yet.",
+       "Fire one piece. The feed wheel must start first. The arm must push about 0.2 s later, while the wheel still turns. The wheel must stop about 0.3 s after the push starts. The piece must leave.",
+       "Set `stopSec = -0.1` in the tuning menu. Fire again. The wheel must stop just before the arm pushes. The piece still goes: the wheel ran 0.1 s.",
+       "Set `alwaysOn = true` in `Tunables.java` and INIT again. After START with the flywheel on, the wheel must turn all the time. A fire must push at once.",
+       "Press LB (the flywheel coasts down). The wheel must stop."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Each step does what it says, on 2 runs out of 2."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "The robot and where (simulator or real robot).",
+       "The `stageSec` and `stopSec` that worked best on your robot."
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "A launcher with a feed wheel but no arm does not start: `feedWheel(...)` needs `feeder(...)` too."
+     }
+    ]
+   }
+  },
+  {
    "id": "SIM-05",
    "title": "A simulator test stands in for a number not measured yet (set tunable)",
    "area": "simulator",

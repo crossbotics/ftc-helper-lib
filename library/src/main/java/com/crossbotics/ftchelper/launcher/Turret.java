@@ -100,7 +100,7 @@ public class Turret implements Subsystem {
     private double homingTimeoutSec = 5.0;
     private double maxAgeMs = 150;
     // Where we get the time (nanoseconds). Tests swap in a fake clock.
-    private LongSupplier clockNanos = System::nanoTime;
+    private LongSupplier clockNanos = com.crossbotics.ftchelper.core.Time::nanos;
 
     private double offsetDeg = 0;           // angle = counts / countsPerDegree + offset
     private boolean homed = true;           // true until a home switch is added: then we must home first

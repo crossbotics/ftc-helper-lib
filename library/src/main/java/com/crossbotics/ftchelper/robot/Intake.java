@@ -59,7 +59,7 @@ public final class Intake extends Module<Intake> implements Toggleable {
     private long heldBackSince = -1;
     /** Held this long, the in-button runs it in anyway; held back this long, the Driver Station warns. */
     static final double OVERRIDE_SEC = 1.0, WARN_SEC = 2.0;
-    java.util.function.LongSupplier clock = System::nanoTime;
+    java.util.function.LongSupplier clock = com.crossbotics.ftchelper.core.Time::nanos;
 
     private Intake(boolean servos, String... names) {
         super(names[0]);

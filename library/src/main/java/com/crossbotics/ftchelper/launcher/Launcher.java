@@ -67,7 +67,7 @@ public class Launcher implements Subsystem {
     private final List<String> checkNames = new ArrayList<>();
     private final List<BooleanSupplier> checks = new ArrayList<>();
     // Where we get the time (nanoseconds). Tests swap in a fake clock.
-    private LongSupplier clockNanos = System::nanoTime;
+    private LongSupplier clockNanos = com.crossbotics.ftchelper.core.Time::nanos;
 
     private double shotIntervalSec = 0.25;
     private double readyTimeoutSec = 3.0;
