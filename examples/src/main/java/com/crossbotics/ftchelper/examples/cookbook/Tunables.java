@@ -73,6 +73,17 @@ public class Tunables {
     }
     // end recipe
 
+    // recipe: tunables-claw-two-servos
+    // A claw on two servos, Claw.servo("claw_left").alsoServoReversed("claw_right"): its section is the
+    // FIRST servo's name in CamelCase.
+    public static class ClawLeft {                                  // "claw_left" in the configuration
+        public static double open = MEASURE;                        // servo position, open (Servo Finder on claw_left)
+        public static double closed = MEASURE;                      // servo position, closed (Servo Finder)
+        public static double travelSec = DEFAULT;                   // time for a full 0-to-1 move (0.3, or the servo's)
+        public static double alsoTrim = DEFAULT;                    // the second servo: raw position added so the two meet (0; used at the next move)
+    }
+    // end recipe
+
     // recipe: tunables-arm
     public static class Arm {                                       // "arm" in the configuration
         public static double min = MEASURE;                         // lowest safe angle, degrees, 0 = at INIT

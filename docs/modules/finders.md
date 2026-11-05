@@ -24,6 +24,7 @@ device's name in CamelCase (`lift` -> `Lift`, `intake_deploy` -> `IntakeDeploy`,
 | Class | Use it to | Needs code from you? |
 | --- | --- | --- |
 | [`TuneAndCheckOpMode`](#tuneandcheckopmode) | every check and finder that fits Robot.java, in one menu (added by itself) | no |
+| [`MotorDirectionCheckOpMode`](#motordirectioncheckopmode) | spin one drive motor at a time, with Robot.java's directions: each wheel must roll forward | `robot()` (five files) |
 | [`ServoFinderOpMode`](#servofinderopmode) | find a servo's safe ends and positions | no |
 | [`HoodFinderOpMode`](#hoodfinderopmode) | find a launcher hood's two stops (`posA`, `posB`) and, if you measure them, its angles (a linkage's calibration table) | `robot()` (five files) or `hoodName()` |
 | [`MotorFinderOpMode`](#motorfinderopmode) | find a lift's, arm's or turret's limits, positions and top speed | no |
@@ -81,6 +82,22 @@ and the Characterizer. Steps: [the finders guide](../guides/finders.md#tune-and-
 
 `Hosting` runs a finder inside it: a finder's `inInit()` and `running()` are the host's INIT and START.
 A finder of your own that loops by itself uses `running()`, not `opModeIsActive()`.
+
+## MotorDirectionCheckOpMode
+
+Hold **X**, **Y**, **A** or **B** (front-left, front-right, back-left, back-right; a tank drive: X left, Y
+right): that drive motor runs at 30% while held, set up as Robot.java says (`reversed(...)` on the drive
+line). Each wheel must roll forward. In Tune and check for every robot in five files; on its own:
+
+```java
+@TeleOp(name = "Motor Direction Check", group = "Finders")
+public class MotorDirectionCheck extends MotorDirectionCheckOpMode {
+    @Override protected RobotDefinition robot() { return new Robot(); }
+}
+```
+
+Steps: [Motor Direction Check](../guides/finders.md#motor-direction-check-each-wheel-rolls-forward). A robot
+without five files (its own `DriveConfig`): copy `examples/.../MotorDirectionCheck.java` instead.
 
 ## ServoFinderOpMode
 

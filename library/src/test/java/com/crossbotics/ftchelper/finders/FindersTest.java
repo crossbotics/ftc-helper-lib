@@ -386,4 +386,23 @@ public class FindersTest {
             FinderResults.file = before;
         }
     }
+
+    // Tune and check's Servo Finder turns each servo Robot.java names the way Robot.java does: a reversed claw,
+    // a second servo (mirrored), a launcher's servo hood; a servo Robot.java does not name is left alone.
+    public static class DirectionsBot extends com.crossbotics.ftchelper.robot.RobotDefinition {
+        @Override protected void define() {
+            drive(com.crossbotics.ftchelper.robot.Drive.tank("left", "right"));
+            add(com.crossbotics.ftchelper.robot.Claw.servo("claw_left").reversed().alsoServoReversed("claw_right"));
+            add(com.crossbotics.ftchelper.robot.Launcher.flywheel("launcher", "gobilda-5203-6000")
+                    .hood(com.crossbotics.ftchelper.robot.Hood.servo("hood").reversed()));
+        }
+    }
+
+    @Test public void tuneAndCheckKnowsEachServosDirection() {
+        java.util.Map<String, Boolean> d = TuneAndCheckOpMode.servoDirections(new DirectionsBot().modules());
+        assertEquals(Boolean.TRUE, d.get("claw_left"));
+        assertEquals("mirrored from a reversed first: forward", Boolean.FALSE, d.get("claw_right"));
+        assertEquals("a launcher's hood too", Boolean.TRUE, d.get("hood"));
+        assertEquals("not named: left alone", null, d.get("other"));
+    }
 }

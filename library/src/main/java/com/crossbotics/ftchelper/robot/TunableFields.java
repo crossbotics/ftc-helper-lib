@@ -48,7 +48,7 @@ final class TunableFields {
                 "lightingPictures", "lightingSettleMs", "liveView", "pipeline", "sizeIn");
         part("Hood", "angleA", "angleB", "byHandPerSec", "calibration", "kP", "maxPower", "posA", "posB",
                 "startAngle", "stepAngle", "tolerance", "travelSec", "trimMax");
-        part("Indexer", "alwaysOn", "feedSec", "power", "push", "pushSec", "rest", "returnSec", "stageSec", "stopSec");
+        part("Indexer", "alsoTrim", "alwaysOn", "feedSec", "power", "push", "pushSec", "rest", "returnSec", "stageSec", "stopSec");
         part("Intake", "inPower", "outPower");
         part("Interlock");   // only <part>From, <part>To, ... (see interlock below)
         part("Launcher", "assistSec", "batteryCompensation", "blueTrimPercent", "ejectRpm", "ejectSec", "fallbackDistanceIn", "feedStopHold",
@@ -58,7 +58,7 @@ final class TunableFields {
         part("LiftArm", "kD", "kF", "kI", "kP", "max", "maxPower", "min", "slowZone", "slowZonePower", "tolerance");
         part("Lights", "allianceAtInit");
         part("PieceSensor", "gain", "gapMm", "hueTolerance", "minSaturation", "nearMm", "sizeToleranceMm", "steadyMs");
-        part("ServoPositions", "travelSec");
+        part("ServoPositions", "alsoTrim", "travelSec");
         part("Turret", "angleA", "angleB", "cameraOffset", "encoderOffset", "homeAngle", "homeDirection", "homingPower",
                 "homingTimeout", "kD", "kI", "kP", "keepAngle", "max", "maxPower", "min", "outOfRangeHold", "posA", "posB",
                 "slowZone", "slowZonePower", "startAngle", "tolerance", "travelSec");

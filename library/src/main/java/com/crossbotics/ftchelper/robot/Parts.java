@@ -60,6 +60,16 @@ public final class Parts {
         public final double secPer60Deg;
         /** True for a servo described in Robot.java ({@link Parts#customServo}), not from the catalog. */
         public final boolean custom;
+        /**
+         * Which way a bigger position turns it, as the seller states it ("clockwise" or "counterclockwise"), or
+         * null when the seller does not say. A hint only: the seller does not say from which side, and the way the
+         * part moves depends on how the servo is mounted. Check it by test (Servo Finder: D-pad up).
+         */
+        public String biggerTurns() {
+            return biggerTurns;
+        }
+
+        String biggerTurns = null;
 
         ServoPart(String id, double rangeDeg, double pulseMinUs, double pulseMaxUs, double secPer60Deg) {
             this(id, rangeDeg, pulseMinUs, pulseMaxUs, secPer60Deg, false);
@@ -144,6 +154,11 @@ public final class Parts {
         SERVOS.put(id, new ServoPart(id, rangeDeg, pulseMinUs, pulseMaxUs, secPer60Deg));
     }
 
+    // The seller states which way a bigger position (a longer pulse) turns it (parts.json "biggerTurns").
+    private static void sellerSaysBiggerTurns(String direction, String... ids) {
+        for (String id : ids) SERVOS.get(id).biggerTurns = direction;
+    }
+
     private static void wheel(String id, double diameterMm, double widthMm) {
         WHEELS.put(id, new Wheel(id, diameterMm, widthMm));
     }
@@ -189,6 +204,9 @@ public final class Parts {
         servo("axon-max-plus", Double.NaN, Double.NaN, Double.NaN, 0.14);
         servo("axon-mini-mk2", 360, 500, 2500, 0.11);
         servo("axon-mini-plus", Double.NaN, Double.NaN, Double.NaN, 0.11);
+        // goBILDA's spec tables: "Clockwise w/ Increasing PWM Signal" (checked 2026-11-05). REV and Axon do not say.
+        sellerSaysBiggerTurns("clockwise", "gobilda-2000-torque", "gobilda-2000-speed", "gobilda-2000-super-speed",
+                "gobilda-2000-5turn-torque", "gobilda-2000-5turn-speed", "gobilda-2000-5turn-super-speed");
     }
 
     /**

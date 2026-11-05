@@ -26,7 +26,12 @@ import java.util.function.LongSupplier;
  * }
  * }</pre>
  *
- * <p>Tunables: {@code Indexer.servo}: {@code rest}, {@code push}, {@code pushSec}, {@code returnSec}.
+ * <p>Two arms that push together (one on each side, pinching behind the piece):
+ * {@code Indexer.servo("feeder_left").alsoServoReversed("feeder_right")}. They share one Tunables section (the first
+ * name's): the second arm mirrors the first; {@code alsoTrim} lines it up.
+ *
+ * <p>Tunables: {@code Indexer.servo}: {@code rest}, {@code push}, {@code pushSec}, {@code returnSec} (and
+ * {@code alsoTrim} with a second servo).
  * {@code Indexer.crServo} and {@code Indexer.motor}: {@code power} and {@code feedSec} (how long it
  * runs per piece). Added on its own (no launcher), its suggested button is operator RB: feed one.
  *
@@ -42,6 +47,10 @@ public final class Indexer extends Module<Indexer> implements Feeder {
 
     private final Kind kind;
     private boolean reversed = false;
+    // alsoServo: a second push servo that moves with the first, and whether it turns the same way (else mirrored).
+    private String alsoServo = null;
+    private boolean alsoSameWay = false;
+    private Tunable alsoTrim;
     // INIT notes about starting values (from the parts catalog, or the guessed rest/push positions).
     private final List<String> startNotes = new java.util.ArrayList<>();
     boolean inLauncher = false;
@@ -114,6 +123,10 @@ public final class Indexer extends Module<Indexer> implements Feeder {
 
     @Override
     void build(Devices devices, TunableSection t) {
+        if (alsoServo == null && t.has("alsoTrim")) {
+            throw new IllegalStateException("Tunables." + name() + ".alsoTrim needs a second servo: add .alsoServoReversed(name) "
+                    + "to " + name() + " in Robot.java (a servo indexer), or delete the alsoTrim line");
+        }
         switch (kind) {
             case SERVO:
                 rest = t.tunable("rest", 0.0, 0.01).range(0, 1);
@@ -147,6 +160,13 @@ public final class Indexer extends Module<Indexer> implements Feeder {
                 if (reversed) s.setDirection(Servo.Direction.REVERSE);
                 applyPulse(s);   // .fullRange(): the servo's whole turn (nothing changes without it)
                 servoFeeder = new ServoFeeder(name(), s);
+                if (alsoServo != null) {
+                    Servo o = devices.get(Servo.class, alsoServo);
+                    if (alsoReversed()) o.setDirection(Servo.Direction.REVERSE);
+                    applyPulse(o, alsoServo);
+                    alsoTrim = t.tunable("alsoTrim", 0, 0.005).range(-0.2, 0.2);
+                    servoFeeder.withServo(o, alsoTrim::get);
+                }
                 feeder = servoFeeder;
                 break;
             case CR_SERVO:
@@ -371,14 +391,85 @@ public final class Indexer extends Module<Indexer> implements Feeder {
         throw new IllegalStateException("Robot.java: " + name() + " can only spin a roller (on a CR servo or a motor)");
     }
 
+    /**
+     * A second push servo that moves with this one, mirrored: two arms, one on each side, that pinch
+     * together behind the piece and push it in. Both go to the same {@code rest} and {@code push}; the
+     * second turns the other way (it is mounted facing the first). If the two do not quite meet, set
+     * {@code alsoTrim} (raw position added for the second one). For {@code Indexer.servo} only.
+     *
+     * <pre>{@code
+     * .feeder(Indexer.servo("feeder_left").alsoServoReversed("feeder_right").part("gobilda-2000-torque"))
+     * }</pre>
+     *
+     * @param name the second servo's configuration name
+     * @return this indexer
+     * @throws IllegalStateException on a CR servo or motor indexer
+     */
+    public Indexer alsoServoReversed(String name) {
+        if (kind != Kind.SERVO) throw new IllegalStateException("Robot.java: " + name() + ": a second servo (alsoServo...) is for Indexer.servo(...)");
+        secondServo(name, false);
+        return this;
+    }
+
+    /**
+     * Like {@link #alsoServoReversed}, for a second servo mounted facing the same way (it turns the same way).
+     *
+     * @param name the second servo's configuration name
+     * @return this indexer
+     */
+    public Indexer alsoServo(String name) {
+        if (kind != Kind.SERVO) throw new IllegalStateException("Robot.java: " + name() + ": a second servo (alsoServo...) is for Indexer.servo(...)");
+        secondServo(name, true);
+        return this;
+    }
+
+    private void secondServo(String name, boolean sameWay) {
+        if (name == null || name.trim().isEmpty()) throw new IllegalArgumentException("Robot.java: " + name() + ".alsoServo needs the servo's name");
+        if (name.equals(device)) throw new IllegalArgumentException("Robot.java: " + name() + ".alsoServo(\"" + name + "\") is its first servo");
+        if (alsoServo != null) {
+            throw new IllegalStateException("Robot.java: " + name() + " already has a second servo (\"" + alsoServo
+                    + "\"); a part takes two servos at most");
+        }
+        alsoServo = name;
+        alsoSameWay = sameWay;
+    }
+
+    /** The second servo's configuration name ({@code alsoServo...}), or null if it has one servo. */
+    public String secondServoName() {
+        return alsoServo;
+    }
+
+    /** True if {@code reversed()} is set in Robot.java (positions 0 and 1 swap ends). */
+    public boolean isReversed() {
+        return reversed;
+    }
+
+    /** True if the second servo mirrors the first ({@code alsoServoReversed}). */
+    public boolean secondServoMirrored() {
+        return alsoServo != null && !alsoSameWay;
+    }
+
+    // The second servo's direction: mirrored (the other way from the first), or the same way.
+    private boolean alsoReversed() {
+        return alsoSameWay ? reversed : !reversed;
+    }
+
+    @Override
+    List<String> deviceNames() {
+        if (alsoServo == null) return super.deviceNames();
+        return java.util.Arrays.asList(device, alsoServo);
+    }
+
     @Override
     void simLines(List<String> out, TunableSection t) {
         if (kind == Kind.SERVO) {
             // Where it rests, as the simulated servo sees it (a reversed servo's 0.15 is really 0.85).
             double rest = t.number("rest", 0);
-            out.add(partId != null ? fmt("servo.%s = %.2f, %s", device, reversed ? 1 - rest : rest, servoWords(partId, "gobilda-2000-speed"))
-                    + pulseWords() + simTodo(partId)
-                    : fmt("servo.%s = %.2f, part=gobilda-2000-speed", device, reversed ? 1 - rest : rest) + pulseWords() + "   # TODO the real servo");
+            out.add(servoLine(device, reversed ? 1 - rest : rest));
+            if (alsoServo != null) {
+                double r2 = Math.max(0, Math.min(1, rest + t.number("alsoTrim", 0)));
+                out.add(servoLine(alsoServo, alsoReversed() ? 1 - r2 : r2));
+            }
         }
         else if (kind == Kind.CR_SERVO) out.add("crservo." + device + " =" + (partId != null ? "   # " + partId : ""));
         else if (partId != null) out.add("motor." + device + " = free, " + motorWords(partId, "gobilda-5203-1150") + simTodo(partId));
@@ -386,8 +477,14 @@ public final class Indexer extends Module<Indexer> implements Feeder {
         lookLines(out, t);
     }
 
+    // One servo's robot-file line (the simulator).
+    private String servoLine(String name, double rest) {
+        return partId != null ? fmt("servo.%s = %.2f, %s", name, rest, servoWords(partId, "gobilda-2000-speed")) + pulseWords() + simTodo(partId)
+                : fmt("servo.%s = %.2f, part=gobilda-2000-speed", name, rest) + pulseWords() + "   # TODO the real servo";
+    }
+
     /** True for a servo that pushes and comes back (not a CR servo or motor that runs). */
-    boolean isServo() {
+    public boolean isServo() {
         return kind == Kind.SERVO;
     }
 

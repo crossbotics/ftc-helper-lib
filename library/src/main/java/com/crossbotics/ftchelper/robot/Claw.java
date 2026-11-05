@@ -105,7 +105,7 @@ public final class Claw extends ServoPositions<Claw> implements Toggleable {
             closed = physical(closed);
             open = physical(open);
         }
-        out.add(simServoLine(t, "gobilda-2000-torque"));
+        simServoLines(out, t, "gobilda-2000-torque");
         if (looks.isEmpty()) {
             // On the end of the wrist, the arm or the lift, else at the front (see SimGuess).
             out.add(guessLine("claw", fmt("servo=%s, pos0=0, pos1=3", device)));

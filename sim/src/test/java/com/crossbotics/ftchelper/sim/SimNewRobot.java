@@ -49,6 +49,42 @@ public final class SimNewRobot {
         }
     }
 
+    // Joins "X_left" + "X_right" (or "left_X" + "right_X") servo parts of the same kind into one part on two
+    // servos: the first line gets .alsoServoReversed("X_right") (they face each other, the usual way).
+    static void pairServos(List<Part> list) {
+        for (int i = 0; i < list.size(); i++) {
+            Part p = list.get(i);
+            String name = servoName(p);
+            if (name == null || !name.contains("left")) continue;
+            String other = name.replace("left", "right");
+            for (int j = 0; j < list.size(); j++) {
+                Part o = list.get(j);
+                if (j == i || !o.type.equals(p.type) || !other.equals(servoName(o))) continue;
+                int at = p.line.indexOf(')') + 1;   // after Claw.servo("claw_left")
+                Part joined = new Part(p.type, p.field, p.line.substring(0, at) + ".alsoServoReversed(" + q(other) + ")"
+                        + p.line.substring(at), p.section);
+                joined.numbers.putAll(p.numbers);
+                joined.note = (p.note.isEmpty() ? "" : p.note + "; ") + "one part on two servos: " + other
+                        + " mirrors it (same way? use .alsoServo)";
+                list.set(i, joined);
+                list.remove(j);
+                if (j < i) i--;
+                break;
+            }
+        }
+    }
+
+    // The servo name of a Claw/Wrist/Positioner/Indexer.servo("...") line, else null.
+    private static String servoName(Part p) {
+        for (String k : new String[] {"Claw.servo(\"", "Wrist.servo(\"", "Positioner.servo(\"", "Indexer.servo(\""}) {
+            if (p.line.startsWith(k)) {
+                int end = p.line.indexOf('"', k.length());
+                return end < 0 ? null : p.line.substring(k.length(), end);
+            }
+        }
+        return null;
+    }
+
     // A light: its rules go in Controls.java (which color, when).
     private static Part lightPart(Part p) {
         p.note = "TODO its rules in Controls.java, e.g. robot." + p.field + ".show(LightColor.GREEN).when(...) (docs/modules/robot.md#lights)";
@@ -314,6 +350,10 @@ public final class SimNewRobot {
             }
         }
         // A launcher takes the indexer and the hood; any other indexer or hood stands alone.
+        // A left and a right servo of the same kind ("claw_left", "claw_right"): one part on two servos,
+        // the right one mirrored (alsoServoReversed), not two parts.
+        pairServos(parts);
+        pairServos(indexers);
         if (launcher != null && (!indexers.isEmpty() || !hoods.isEmpty())) {
             Part ix = indexers.isEmpty() ? null : indexers.remove(0);
             Part hd = hoods.isEmpty() ? null : hoods.remove(0);

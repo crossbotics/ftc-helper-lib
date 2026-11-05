@@ -71,7 +71,7 @@ public final class Wrist extends ServoPositions<Wrist> {
 
     @Override
     void simLines(List<String> out, TunableSection t) {
-        out.add(simServoLine(t, "gobilda-2000-speed"));
+        simServoLines(out, t, "gobilda-2000-speed");
         if (!looks.isEmpty()) {
             lookLines(out, t);   // e.g. an arm on the lift: .looks(Shape.arm().on(lift)...)
             return;

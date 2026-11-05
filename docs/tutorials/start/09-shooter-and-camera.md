@@ -51,6 +51,9 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
   label (optional but recommended: the library and the simulator then use its real numbers).
   `.reversed()`: it turns the other way.
 - Other feeders: `Indexer.servo("indexer")` pushes and comes back; `Indexer.motor("feeder")` runs a roller.
+- Two arms, one on each side, that pinch together behind the piece and push it in:
+  `.feeder(Indexer.servo("feeder_left").part("gobilda-2000-torque").alsoServoReversed("feeder_right"))`. Both
+  arms get the same `rest` and `push` (in `Tunables.FeederLeft`); `alsoTrim` lines up the second.
 - A wheel AND an arm: a CR servo wheel moves each piece up to a servo arm, and the arm pushes it into the
   flywheel. Write the arm as the feeder and add the wheel with `.feedWheel(...)`:
   `.feeder(Indexer.servo("feeder_arm").part("gobilda-2000-torque")).feedWheel(Indexer.crServo("feeder_wheel"))`.

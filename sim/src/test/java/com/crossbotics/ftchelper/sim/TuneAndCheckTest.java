@@ -81,10 +81,36 @@ public class TuneAndCheckTest {
             s.init(TuneAndCheckOpMode.NAME);
             String screen = String.join("\n", s.screen());
             assertTrue(screen, s.screenHas("Robot: Robot"));
-            for (String tool : new String[] {"Hardware Check", "Flywheel Finder", "Drive Tuner", "Shot Tuner"}) {
+            for (String tool : new String[] {"Hardware Check", "Motor Direction Check", "Flywheel Finder", "Drive Tuner", "Shot Tuner"}) {
                 assertTrue(tool + "\n" + screen, s.screenHas(tool));
             }
             assertFalse("no lift or arm on this robot\n" + screen, s.screenHas("Motor Finder"));
+            assertEquals("", s.error());
+        }
+    }
+
+    // The Motor Direction Check: one drive motor runs while its button is held, set up as Robot.java says.
+    @Test public void theMotorDirectionCheckSpinsOneMotorWhileHeld() throws Exception {
+        TuneAndCheckOpMode.useRobots(Collections.<Class<? extends RobotDefinition>>singletonList(
+                com.crossbotics.ftchelper.examples.turretbot.Robot.class));
+        try (SimRun s = new SimRun()) {
+            s.init(TuneAndCheckOpMode.NAME);
+            // The menu starts on the last tool opened (and wraps around): step down until it is chosen.
+            for (int i = 0; i < 10 && !s.screenHas("> Motor Direction Check"); i++) s.press(v -> s.g1().dpad_down = v);
+            assertTrue(String.join("\n", s.screen()), s.screenHas("> Motor Direction Check"));
+            s.press(v -> s.g1().a = v);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Wheels off the ground"), 1));
+            s.start();
+            SimMotor fl = s.robot().motors.get("front_left"), fr = s.robot().motors.get("front_right");
+            s.g1().x = true;                              // hold X: front-left
+            assertTrue("front-left runs", SimRun.waitFor(() -> Math.abs(fl.userPower()) > 0.25, 1));
+            assertEquals("only that one", 0, fr.userPower(), 1e-9);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("RUNNING"), 1));
+            s.g1().y = true;                              // two held: none runs (one wheel at a time)
+            assertTrue("two buttons: none runs", SimRun.waitFor(() -> fl.userPower() == 0 && fr.userPower() == 0, 1));
+            s.g1().y = false;
+            s.g1().x = false;
+            assertTrue("it stops when let go", SimRun.waitFor(() -> fl.userPower() == 0, 1));
             assertEquals("", s.error());
         }
     }

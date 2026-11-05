@@ -161,31 +161,11 @@ the ground.**
 1. **One motor at a time:** run the Hardware Check ([testing procedures](../19-testing-procedures.md#2-use-it)).
    D-pad up/down picks a motor, the right stick sets its power. Does the encoder count up with positive
    power? That shows the motor and its wires work.
-2. **With the code's directions:** copy
-   [`MotorDirectionCheck.java`](../../../examples/src/main/java/com/crossbotics/ftchelper/examples/MotorDirectionCheck.java)
-   into TeamCode (next to Robot.java; in Android Studio, copy it from `ftc-helper-lib/examples/...` and
-   paste it on the `teamcode` folder, as in [Start from zero](../../start-from-zero.md#5-copy-a-file-into-teamcode-and-change-one-line)).
-   Then change three things in your copy:
-   - **Line 2,** the `package` line. Before: `package com.crossbotics.ftchelper.examples;`. After:
-
-     ```java
-     package org.firstinspires.ftc.teamcode;
-     ```
-
-     **Why:** the `package` line must match the folder the file is in, or it does not build.
-   - **Delete the line `@Disabled`.** **Why:** with it, the Driver Station hides the OpMode.
-   - **Make its `config()` read your Robot.java.** Find these lines and change the `return` line:
-
-     ```java
-     static DriveConfig config() {
-         return new Robot().robotConfig().drive();   // the same names and directions as Robot.java
-     }
-     ```
-
-     `Robot` needs no `import` line: it is in the same folder.
-
+2. **With the code's directions:** run **Tune and check** (in the TeleOp list, group "Finders"; nothing to copy),
+   pick **Motor Direction Check** with the D-pad, press A, then START. It reads the directions from Robot.java.
    Hold X, Y, A, B: each spins one wheel at 30% (front left, front right, back left, back right; a
-   two-motor tank: X = left, Y = right). **Every wheel must roll the way that moves the robot forward.**
+   two-motor tank: X = left, Y = right). The screen shows the motor's name. **Every wheel must roll the way
+   that moves the robot forward.** ([More](../../guides/finders.md#motor-direction-check-each-wheel-rolls-forward))
 3. **A wheel rolls backward?** Change `.reversed(...)` in Robot.java so that motor's setting flips:
    add its name to the list, or take it out. Remember the list replaces the default (the left side). For
    example, if the lesson robot's back right wheel rolls backward, it needs

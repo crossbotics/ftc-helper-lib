@@ -696,6 +696,16 @@ public final class Turret extends Module<Turret> {
         part.manual(power);
     }
 
+    /** True for a {@code Turret.servo} with {@code reversed()} in Robot.java. */
+    public boolean isReversedServo() {
+        return kind == Kind.SERVO && reversed;
+    }
+
+    /** True for {@code Turret.servo} (a positional servo; not a motor or CR servo turret). */
+    public boolean isServoTurret() {
+        return kind == Kind.SERVO;
+    }
+
     /**
      * True when it points where it should, within the tolerance. While FOLLOWING, that means at the
      * goal now: the goal is seen this moment (a fresh camera picture, or the odometry), the turret is

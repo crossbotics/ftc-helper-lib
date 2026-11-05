@@ -184,7 +184,9 @@ ServoFeeder kicker = ServoFeeder.create(hardwareMap, "kicker")
         .times(0.15, 0.15);               // push time, return time
 ```
 
-`goToRest()` moves it to rest (only call it in INIT if that is safe).
+`goToRest()` moves it to rest (only call it in INIT if that is safe). `withServo(other, trim)`: a second servo
+that moves with the first (two arms, one on each side), to the same positions plus `trim` (raw; `() -> 0` for
+none). Set its direction yourself (facing the first: REVERSE).
 
 ## Turret
 

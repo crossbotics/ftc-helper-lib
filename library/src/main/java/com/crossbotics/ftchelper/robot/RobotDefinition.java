@@ -1167,7 +1167,11 @@ public abstract class RobotDefinition {
     }
 
     private static String offLine(Module<?> m) {
-        return "\"" + m.device + "\" (" + m.name() + "): not in the configuration: optional, so the part is off (fine)";
+        List<String> names = m.deviceNames();
+        StringBuilder others = new StringBuilder();
+        for (int i = 1; i < names.size(); i++) others.append(i > 1 ? ", " : "").append(names.get(i));
+        String also = names.size() > 1 && names.get(0).equals(m.device) ? " (and its " + others + " is not used)" : "";
+        return "\"" + m.device + "\" (" + m.name() + "): not in the configuration: optional, so the part is off (fine)" + also;
     }
 
     /**

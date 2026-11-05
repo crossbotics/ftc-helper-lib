@@ -117,7 +117,8 @@ and the picture time in `System.nanoTime()`. Then `AimController`, `Turret.aimBy
    use pretend ones (see `library/src/test`). A part's default clock is `Time::nanos` (core), not
    `System::nanoTime`: then a test's [`PretendClock`](../modules/testkit.md#pretendclock) moves it too.
 6. **The six steps**: code, Javadoc, test, module page, tutorial, CHANGELOG ([Contributing](../contributing.md)).
-7. **No game-specific numbers** in the library.
+7. **Parts stay general** (any team, any season). Season knowledge goes in the season definitions (the field, the
+   rules); a team's own numbers and spots stay in TeamCode.
 
 ## Versions
 

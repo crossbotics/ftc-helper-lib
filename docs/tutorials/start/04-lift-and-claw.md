@@ -319,6 +319,30 @@ that copies the power every loop misses the moments the library stops the lift (
   for "up": `alsoMotorReversed`. Check with the chain or belt OFF: push the stick up and watch both
   motors; each must turn the way that lifts. One wrong: use `alsoMotor` instead.
 
+### A claw with two servos
+
+Some claws have a servo for each finger, and some arms have a servo on each side. Name the second servo on
+the same line, like the lift's second motor:
+
+```java
+claw = add(Claw.servo("claw_left").part("gobilda-2000-torque").alsoServoReversed("claw_right"));
+```
+
+Both servos get the same position at the same moment: buttons, actions, pause and stop. **Why one line?**
+The same reason as the lift: code that copies the position can miss a move, and then the fingers fight.
+
+- The numbers are in `Tunables.ClawLeft` (the FIRST servo's name). Find `open` and `closed` with **Tune and
+  check > Servo Finder** on `claw_left`: `claw_right` moves with it there too, so the fingers never fight.
+  ([A new servo part, step by step](../../guides/finders.md#a-new-servo-part-step-by-step): the direction, the
+  ends, and how to line the two up again after a new horn.)
+- **Reversed or not?** Servos that face each other (mirror images, the usual way) turn opposite ways for
+  "close": `alsoServoReversed`. Both facing the same way: `alsoServo`. (Which way a bigger number turns a servo
+  has no standard: it depends on the servo, so check it in the Servo Finder,
+  [Signs and units](../../conventions.md#servos-and-motors-which-way-is-bigger).)
+- **The fingers do not quite meet?** The two servo horns may sit one spline tooth apart. Set
+  `alsoTrim` in the same section: a small raw position (for example 0.02) added for the second servo. A new
+  trim is used at the next move: open and close the claw again to see it.
+
 ## Try it in the simulator
 
 From the `ftc-helper-lib` folder, write a simulator robot file (the text file that describes the robot

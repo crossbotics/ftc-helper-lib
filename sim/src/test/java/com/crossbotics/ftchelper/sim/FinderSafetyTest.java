@@ -80,6 +80,50 @@ public class FinderSafetyTest {
         }
     }
 
+    /** A Servo Finder that knows a two-servo part: "claw" with "wrist" as its mirrored second servo. */
+    public static class PairFinder extends com.crossbotics.ftchelper.finders.ServoFinderOpMode {
+        @Override protected java.util.Map<String, java.util.Map.Entry<String, Boolean>> pairedServos() {
+            return java.util.Collections.singletonMap("claw", new java.util.AbstractMap.SimpleEntry<>("wrist", true));
+        }
+    }
+
+    /** A Servo Finder for a robot whose "claw" has reversed() and part("gobilda-2000-torque") in Robot.java. */
+    public static class ReversedFinder extends com.crossbotics.ftchelper.finders.ServoFinderOpMode {
+        @Override protected java.util.Map<String, Boolean> servoDirections() { return java.util.Collections.singletonMap("claw", true); }
+        @Override protected java.util.Map<String, String> servoParts() { return java.util.Collections.singletonMap("claw", "gobilda-2000-torque"); }
+    }
+
+    // reversed() in Robot.java: the finder turns the servo the same way, so its numbers fit Tunables.java.
+    @Test public void servoFinderTurnsAReversedServoTheSameWayAsRobotJava() throws Exception {
+        try (SimRun s = new SimRun()) {
+            s.sim.ds.register("Reversed Finder", "TeleOp", ReversedFinder.class);
+            s.init("Reversed Finder").start();
+            s.press(v -> s.g1().a = v);                  // "claw"
+            for (int i = 0; i < 3; i++) s.press(v -> s.g1().dpad_right = v);   // start point 0.53
+            s.press(v -> s.g1().a = v);
+            assertEquals("0.53 reversed is 0.47 at the servo", 0.47, s.robot().servos.get("claw").target(), 1e-6);
+            // goBILDA says clockwise for a bigger number; reversed, it is counterclockwise.
+            assertTrue(String.join("\n", s.screen()), s.screenHas("bigger = counterclockwise (seller, reversed)"));
+            assertEquals("", s.error());
+        }
+    }
+
+    // A two-servo part: the second servo moves with the first in the finder (mirrored), so they never fight.
+    @Test public void servoFinderMovesTheSecondServoOfAPairToo() throws Exception {
+        try (SimRun s = new SimRun()) {
+            s.sim.ds.register("Pair Finder", "TeleOp", PairFinder.class);
+            s.init("Pair Finder").start();
+            s.press(v -> s.g1().a = v);                  // "claw", first in the list
+            SimRobot.SimServo claw = s.robot().servos.get("claw"), wrist = s.robot().servos.get("wrist");
+            for (int i = 0; i < 3; i++) s.press(v -> s.g1().dpad_right = v);   // start point 0.53
+            s.press(v -> s.g1().a = v);                  // move there
+            assertEquals(0.53, claw.target(), 1e-6);
+            assertEquals("the second servo, mirrored", 0.47, wrist.target(), 1e-6);
+            assertTrue(String.join("\n", s.screen()), s.screenHas("wrist (mirrored)"));
+            assertEquals("", s.error());
+        }
+    }
+
     @Test public void driveTunerPushTestFindsTheRealWheelSize() throws Exception {
         try (SimRun s = new SimRun()) {
             s.init("Drive Tuner").start();

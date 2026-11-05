@@ -194,6 +194,32 @@ public class MechanismRecipes {
         protected void buttons(TwoMotorLift robot, Pad g1, Pad g2) { }
     }
 
+    /** A claw with a servo for each finger. */
+    public static class TwoServoClaw extends RobotDefinition {
+        public Claw claw;
+
+        @Override
+        protected void define() {
+            drive(Drive.mecanum("front_left", "front_right", "back_left", "back_right"));
+            // recipe: claw-two-servos
+            // "claw_left", "claw_right" = the servos' names in the robot configuration. Numbers: Tunables.ClawLeft.
+            // Find open and closed in Tune and check > Servo Finder on the FIRST servo: the second moves with it.
+            // The servos face each other, so the second turns the other way: alsoServoReversed.
+            claw = add(Claw.servo("claw_left").part("gobilda-2000-torque").alsoServoReversed("claw_right"));
+            // end recipe
+        }
+    }
+
+    /** Its TeleOp: the claw's standard button (operator B) opens and closes both fingers. */
+    @TeleOp(name = "Cookbook Two Servo Claw", group = "Cookbook")
+    @Disabled
+    public static class TwoServoClawControls extends ControlMap<TwoServoClaw> {
+        public static boolean oneDriver = false;
+
+        @Override
+        protected void buttons(TwoServoClaw robot, Pad g1, Pad g2) { }
+    }
+
     /** Parts that are not in the parts catalog: described in Robot.java with their own numbers. */
     public static class OwnParts extends RobotDefinition {
         public Launcher launcher;

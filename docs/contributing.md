@@ -58,7 +58,10 @@ A change is not done until all six are done.
   autonomous-only classes like `AutoDrive` (which always check `opModeIsActive()`, have a timeout,
   and stop motors in `finally`).
 - Hardware setup methods leave motors at power 0.
-- Nothing game-specific. Field positions, tag IDs and mechanism tuning belong in TeamCode.
+- Parts stay general: any team, any season. A robot that needs something new gets the general block that is
+  missing, not its own mechanism. Season knowledge (the field, the rules, piece and goal names, scoring) may
+  be in the library as season definitions, kept apart and updated each season. A team's own start spots,
+  routes, positions and tuned numbers belong in TeamCode.
 - In the docs, text the robot or a tool SHOWS (a Driver Station message, a warning, a Gradle or git
   error) is written `<samp>...</samp>`; text you TYPE (code, names, commands) stays in backticks. The
   site shows the two differently, so a student can tell "what you see" from "what you write".

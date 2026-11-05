@@ -133,8 +133,8 @@ def page(cat):
         w(f"### {f}")
         w("")
         w("| id | Part | Part number | Range on the hub (°) | Full range (°) | Pulse (us) | Speed used (s per 60°) "
-          "| Headline speed (s per 60°) | Torque (kg-cm) | Stall current (A) | Continuous |")
-        w("|---|---|---|---|---|---|---|---|---|---|---|")
+          "| Headline speed (s per 60°) | Torque (kg-cm) | Stall current (A) | Continuous | Bigger number turns |")
+        w("|---|---|---|---|---|---|---|---|---|---|---|---|")
         for s in ss:
             sec, volts = servo_5v(s)
             used = f"{num(sec, 3)} at {num(volts)} V" if sec is not None else "—"
@@ -143,7 +143,13 @@ def page(cat):
             w(f"| `{s['id']}` | [{s['name']}]({s['url']}) | {s.get('partNumber') or '—'} | {num(sdk_range(s))} "
               f"| {num(s.get('rangeDeg'))} | {pulse} "
               f"| {used} | {num(s.get('secPer60Deg'), 3)} at {num(s.get('voltage'))} V | {num(s.get('torqueKgCm'))} "
-              f"| {num(s.get('stallCurrentA'))} | {num(s.get('continuousCapable'))} |")
+              f"| {num(s.get('stallCurrentA'))} | {num(s.get('continuousCapable'))} | {s.get('biggerTurns') or 'not given'} |")
+    w("")
+    w("**Bigger number turns** is which way a bigger position (a longer pulse) turns the servo, as its seller states "
+      "it (goBILDA: clockwise; the side it is seen from is not stated). It is only a hint: the way the PART moves "
+      "depends on how the servo is mounted, so check it by test (Servo Finder: D-pad up). REV and Axon do not say "
+      "(an Axon servo can be switched either way with its programmer). "
+      "[Signs and units](../conventions.md#servos-and-motors-which-way-is-bigger).")
     w("")
     w("**Range on the hub** is what positions 0 to 1 turn the servo with the FTC SDK's normal pulse, "
       "600-2400 microseconds (us). **Full range** is the seller's, over its **pulse** range; the robot "
