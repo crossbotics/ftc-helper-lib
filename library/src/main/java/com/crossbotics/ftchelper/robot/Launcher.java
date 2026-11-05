@@ -83,6 +83,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     private final String motorId;
     private boolean reversed = false;
     private Indexer indexer = null;
+    // The feed wheel (feedWheel(...)): it moves the pieces up to the indexer before (and while) it pushes.
+    private Indexer feedWheel = null;
     private Hood hood = null;
     // Shot tables whose rows have a third column (the hood angle), by name.
     private final java.util.Set<String> hoodTables = new java.util.HashSet<>();
@@ -135,7 +137,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     // A held D-pad: when the next step is due (seconds); NaN = not held.
     private double repeatAt = Double.NaN;
     // The time (nanoseconds); tests use a pretend clock.
-    java.util.function.LongSupplier clock = System::nanoTime;
+    java.util.function.LongSupplier clock = com.crossbotics.ftchelper.core.Time::nanos;
 
     /**
      * The trim each launcher (by name) had when it was last changed: {percent, rpm steps}. "static": it
@@ -267,6 +269,40 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     /** The parts that push a piece in ({@link #pushedBy}), in order (read only). */
     public java.util.List<Intake> pushers() {
         return java.util.Collections.unmodifiableList(pushers);
+    }
+
+    /**
+     * A feed wheel: a CR servo (or a motor) that moves the pieces up to the {@link #feeder} (a servo arm
+     * that pushes each one into the wheel, then comes back). For each piece: the feed wheel starts, runs
+     * {@code stageSec} (the piece gets to the arm), then the arm pushes while the feed wheel still turns;
+     * the feed wheel stops {@code stopSec} after the push starts (below 0: before the push; 0: as it
+     * starts). The next shot waits until the feed wheel stops. Or {@code alwaysOn = true}: it runs all the time
+     * the launcher is spun up (not while idle at {@code idleRpm}), and the arm pushes at once. With a feed stop,
+     * the arm also waits for it to open. The launcher runs the feed wheel: its own {@code feedOne()} and
+     * {@code stop()} do nothing. Its Tunables go in its own section ({@code power}, {@code alwaysOn}, {@code stageSec}, {@code stopSec}).
+     *
+     * <pre>{@code
+     * launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+     *         .feeder(Indexer.servo("feeder_arm").part("gobilda-2000-torque"))
+     *         .feedWheel(Indexer.crServo("feeder_wheel").part("gobilda-2000-speed")));
+     * }</pre>
+     *
+     * @param wheel {@code Indexer.crServo(name)} or {@code Indexer.motor(name)}
+     */
+    public Launcher feedWheel(Indexer wheel) {
+        if (wheel == null) throw new IllegalArgumentException("Robot.java: " + name() + ".feedWheel(null)");
+        if (!wheel.spins()) throw new IllegalArgumentException("Robot.java: " + name() + ".feedWheel(" + wheel.name()
+                + "): a feed wheel spins: Indexer.crServo(name) or Indexer.motor(name) (the push servo goes in feeder(...))");
+        if (wheel == indexer) throw new IllegalArgumentException("Robot.java: " + name() + ".feedWheel(" + wheel.name() + "): it is the feeder already");
+        feedWheel = wheel;
+        wheel.inLauncher = true;
+        wheel.feedWheel = true;
+        return this;
+    }
+
+    /** The feed wheel given with {@link #feedWheel(Indexer)}, or null. */
+    public Indexer feedWheel() {
+        return feedWheel;
     }
 
     /** The indexer that feeds it. Without one, {@link #fire()} only spins up. */
@@ -405,6 +441,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     List<Module<?>> children() {
         List<Module<?>> out = new java.util.ArrayList<>();
         if (indexer != null) out.add(indexer);
+        if (feedWheel != null) out.add(feedWheel);
         if (hood != null) out.add(hood);
         return out;
     }
@@ -485,7 +522,11 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         // A feed stop or pushing parts: one feed opens the stop, runs the pushers and the indexer, and
         // ends when the wheel sees the shot (ShotGate).
         gate = null;
-        if (feedStopDevice != null || !pushers.isEmpty()) {
+        if (feedWheel != null && indexer == null) {
+            throw new IllegalStateException("Robot.java: " + name() + ".feedWheel(" + feedWheel.name() + ") needs a feeder(...) too: "
+                    + "the part that pushes each piece into the wheel (e.g. Indexer.servo(\"feeder_arm\"))");
+        }
+        if (feedStopDevice != null || !pushers.isEmpty() || feedWheel != null) {
             for (Intake p : pushers) {
                 if (p.robot != robot) throw new IllegalStateException("Robot.java: " + name() + ".pushedBy(" + p.name()
                         + "): that intake is not added: write it with add(...) first");
@@ -511,7 +552,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
             gate = new ShotGate(stopServo, hold, release, openSec,
                     indexer != null && !indexer.missing ? feed : null, indexer != null && indexer.isServo(),
                     pushers, assistSec, moveSec,
-                    flywheel, stream);
+                    flywheel, stream, feedWheel != null && !feedWheel.missing ? feedWheel : null,
+                    () -> spinning);   // (true in an eject too: the wheel brings the piece to throw out)
             gate.clock = clock;
             feed = gate;
         }
@@ -722,6 +764,10 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         needBuilt(part);
         touch();
         spinning = false;
+        shotsAtPause = 0;   // shots waiting from a pause are dropped, like the others
+        // A feed that has not pushed yet (the feed wheel staging, the feed stop opening) is dropped too: its
+        // piece must not go into a wheel that is slowing down.
+        if (gate != null && gate.waitingToPush()) gate.cancel();
         part.idle();
     }
 
@@ -1478,6 +1524,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         touch();
         ejecting = false;   // an explicit stop stays stopped
         spinning = false;
+        shotsAtPause = 0;   // and a pause's waiting shots do not fire at resume
         part.stop();
     }
 
@@ -1491,7 +1538,9 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         if (part == null) return;
         // Brake the wheel to a stop (it normally coasts down), and stop the feeder. "spinning" is kept,
         // and so are the shots still waiting (stop() would drop them).
-        shotsAtPause = part.getShotsLeft();
+        // A feed that has not pushed yet (the feed wheel staging, the feed stop opening): its piece is still
+        // there, so it fires after the pause too.
+        shotsAtPause = part.getShotsLeft() + (gate != null && gate.waitingToPush() ? 1 : 0);
         flywheelMotor.setZeroPowerBehavior(com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.BRAKE);
         part.stop();
     }
@@ -1652,6 +1701,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
             out.add(fmt("servo.%s = %.2f, part=gobilda-2000-speed", feedStopDevice, hold));
             stopLine = fmt(", stop=%s, stopOpen=%.2f", feedStopDevice, release);
         }
+        // A feed wheel: a push sends a piece only if the feed wheel ran just before (the piece got to the arm).
+        if (feedWheel != null) stopLine += ", stage=" + feedWheel.device;
         out.add(fmt("motor.%s = flywheel, %s%s%s, shotDrop=0.15", device, motorWords(motorId, "gobilda-5203-6000"), feederLine, stopLine)
                 + simTodo(motorId));
         // No looks(...): a common flywheel wheel (its size from the catalog) on top in the middle, or on

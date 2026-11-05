@@ -68,6 +68,7 @@ final class CameraFix implements Subsystem {
             return;
         }
         settings.turnDeg = red ? turnRed : turnBlue;
+        // The real clock (not core.Time): the Limelight's picture times are on System.nanoTime().
         long now = System.nanoTime();
         FieldPose p = tracker.pose();
         fix.record(now, p.x, p.y);

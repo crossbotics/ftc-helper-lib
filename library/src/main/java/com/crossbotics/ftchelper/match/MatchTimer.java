@@ -59,8 +59,8 @@ public class MatchTimer {
 
     /** A timer for a period of this many seconds. */
     public MatchTimer(double lengthSec) {
-        // "System::nanoTime" = "ask the system clock each time" (the real clock).
-        this(lengthSec, System::nanoTime);
+        // "Time::nanos" = "ask the library clock each time" (the real clock; a test can swap in a pretend one).
+        this(lengthSec, com.crossbotics.ftchelper.core.Time::nanos);
     }
 
     /** For tests: your own clock. */

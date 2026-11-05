@@ -30,6 +30,11 @@ import java.util.function.LongSupplier;
  * {@code Indexer.crServo} and {@code Indexer.motor}: {@code power} and {@code feedSec} (how long it
  * runs per piece). Added on its own (no launcher), its suggested button is operator RB: feed one.
  *
+ * <p>A feed wheel ({@code Launcher.feedWheel(Indexer.crServo("feeder_wheel"))}): a CR servo or motor that
+ * moves the pieces up to the pusher (the launcher's {@code feeder}). Its Tunables: {@code power},
+ * {@code alwaysOn} (false: it runs only while firing), {@code stageSec} (it runs this long before the
+ * push, 0.2) and {@code stopSec} (it stops this long after the push starts, 0.3; below 0 = before the push).
+ *
  * Docs: docs/modules/robot.md (section "Indexer")
  */
 public final class Indexer extends Module<Indexer> implements Feeder {
@@ -40,11 +45,17 @@ public final class Indexer extends Module<Indexer> implements Feeder {
     // INIT notes about starting values (from the parts catalog, or the guessed rest/push positions).
     private final List<String> startNotes = new java.util.ArrayList<>();
     boolean inLauncher = false;
+    // A launcher's feed wheel (Launcher.feedWheel): it stages the pieces; the launcher runs it (runWheel).
+    boolean feedWheel = false;
+    private boolean alwaysOn = false;
+    private Tunable stageSec, stopSec;
+    private CRServo wheelCr;
+    private DcMotorEx wheelMotor;
     Feeder feeder;
     private ServoFeeder servoFeeder;
     private MotorFeeder motorFeeder;
     private Tunable rest, push, pushSec, returnSec, power, feedSec;
-    LongSupplier clock = System::nanoTime;
+    LongSupplier clock = com.crossbotics.ftchelper.core.Time::nanos;
     // Told each time a feed really starts (team code).
     private final List<Runnable> feedListeners = new java.util.ArrayList<>();
     // Told when a feed starts and when it ends, and whether it ended normally (a Pieces counter).
@@ -140,21 +151,66 @@ public final class Indexer extends Module<Indexer> implements Feeder {
                 break;
             case CR_SERVO:
                 power = t.tunable("power", 1.0, 0.05).range(-1, 1);
-                feedSec = t.tunable("feedSec", 0.4, 0.02).range(0.02, 3);
+                // A feed wheel runs as long as the launcher says, not feedSec: no feedSec in its menu.
+                if (!feedWheel) feedSec = t.tunable("feedSec", 0.4, 0.02).range(0.02, 3);
                 CRServo cr = devices.get(CRServo.class, device);
                 cr.setDirection(reversed ? DcMotorSimple.Direction.REVERSE : DcMotorSimple.Direction.FORWARD);
                 feeder = new TimedCrServo(cr);
+                wheelCr = cr;
+                buildWheel(t);
                 break;
             default:
                 power = t.tunable("power", 1.0, 0.05).range(-1, 1);
-                feedSec = t.tunable("feedSec", 0.4, 0.02).range(0.02, 3);
+                // A feed wheel runs as long as the launcher says, not feedSec: no feedSec in its menu.
+                if (!feedWheel) feedSec = t.tunable("feedSec", 0.4, 0.02).range(0.02, 3);
                 DcMotorEx m = MotorSetup.of(devices.get(DcMotorEx.class, device)).reversed(reversed)
                         .brake().runWithoutEncoder().done();
                 motorFeeder = new MotorFeeder(name(), m);
                 feeder = motorFeeder;
+                wheelMotor = m;
+                buildWheel(t);
                 break;
         }
         applyTunables();
+    }
+
+    // A feed wheel's own numbers (only for Launcher.feedWheel: an indexer that feeds has no use for them).
+    private void buildWheel(TunableSection t) {
+        if (!feedWheel) return;
+        alwaysOn = t.flag("alwaysOn", false);
+        stageSec = t.tunable("stageSec", 0.2, 0.02).range(0, 2);
+        stopSec = t.tunable("stopSec", 0.3, 0.02).range(-2, 2);
+    }
+
+    /** A feed wheel: true = it runs all the time the flywheel is on; false = only while firing. */
+    boolean wheelAlwaysOn() {
+        return alwaysOn;
+    }
+
+    /** A feed wheel: seconds it runs before the push (Tunables stageSec). */
+    double stageSec() {
+        return stageSec == null ? 0 : stageSec.get();
+    }
+
+    /** A feed wheel: seconds after the push starts that it stops (Tunables stopSec; below 0 = before the push). */
+    double stopSec() {
+        return stopSec == null ? 0 : stopSec.get();
+    }
+
+    /** A feed wheel: its power when on (Tunables power). */
+    double wheelPower() {
+        return power.get();
+    }
+
+    /** A feed wheel: sets its power (0 = stop). The launcher calls it on a change only. */
+    void runWheel(double p) {
+        if (wheelCr != null) wheelCr.setPower(p);
+        else if (wheelMotor != null) wheelMotor.setPower(p);
+    }
+
+    /** True for a CR servo or a motor (they can be a feed wheel), false for a push servo. */
+    boolean spins() {
+        return kind != Kind.SERVO;
     }
 
     // Live tuning: copies the tuning menu's values in (cheap, so every loop).
@@ -162,7 +218,7 @@ public final class Indexer extends Module<Indexer> implements Feeder {
         if (servoFeeder != null) {
             servoFeeder.positions(rest.get(), push.get()).times(pushSec.get(), returnSec.get());
         }
-        if (motorFeeder != null) motorFeeder.power(power.get()).feedTime(feedSec.get());
+        if (motorFeeder != null && feedSec != null) motorFeeder.power(power.get()).feedTime(feedSec.get());
     }
 
     @Override
@@ -177,6 +233,7 @@ public final class Indexer extends Module<Indexer> implements Feeder {
     @Override
     public void feedOne() {
         needBuilt(feeder);
+        if (feedWheel) return;   // a launcher's feed wheel: the launcher runs it (fire the launcher instead)
         touch();
         feedCounted();
     }
@@ -261,7 +318,7 @@ public final class Indexer extends Module<Indexer> implements Feeder {
 
     @Override
     public void stop() {
-        if (feeder == null) return;
+        if (feeder == null || feedWheel) return;   // a feed wheel: the launcher runs and stops it
         touch();
         stopFeeder();
     }

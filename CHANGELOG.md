@@ -2,6 +2,24 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Added
+
+- **A feed wheel: `.feedWheel(Indexer.crServo("feeder_wheel"))` on the launcher**, for a robot whose wheel moves
+  the pieces up to a push arm (the `feeder`). Only while firing (the default): the wheel runs `stageSec` before
+  the arm pushes, and stops `stopSec` after the push starts (below 0: before it). Or `alwaysOn = true`: it runs
+  while the launcher is spun up, and the arm pushes at once. The next shot waits until the wheel stops. In the
+  simulator a push needs the wheel to run before the push begins.
+- **A pretend clock for JUnit tests: `PretendClock` (testkit)**, and the library's clock `Time` (core). The robot's
+  parts read `Time`, so a test moves the time by hand (`clock.addSec(0.2)`) instead of waiting: quick, and the
+  same result on a slow computer. The library's own feed wheel and firing tests use it.
+
+### Fixed
+
+- **A pause (BACK) while a feed waited to push** (a feed stop opening, a feed wheel staging) dropped that shot.
+  Now it fires after the pause, like the other shots that were waiting.
+
 ## v0.28.0 - 2026-11-04
 
 ### Added

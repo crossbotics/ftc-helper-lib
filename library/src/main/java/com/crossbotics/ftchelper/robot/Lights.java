@@ -84,7 +84,7 @@ public final class Lights extends Module<Lights> {
 
     private Output output;
     // The time in nanoseconds (tests use a pretend clock).
-    LongSupplier clock = System::nanoTime;
+    LongSupplier clock = com.crossbotics.ftchelper.core.Time::nanos;
 
     private final List<Rule> rules = new ArrayList<>();
     private final List<Rule> watches = new ArrayList<>();

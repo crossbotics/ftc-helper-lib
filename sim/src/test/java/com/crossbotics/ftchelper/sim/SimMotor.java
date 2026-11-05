@@ -43,6 +43,8 @@ final class SimMotor {
     // FLYWHEEL: its feed stop servo (stop=) and the position where it lets pieces through (stopOpen=); null = none.
     String stop = null;
     double stopOpen = 0.5;
+    // FLYWHEEL: its feed wheel (stage=, a CR servo or motor): a push sends a piece only if it ran just before.
+    String stage = null;
 
     // What the OpMode set.
     private DcMotorSimple.Direction direction = DcMotorSimple.Direction.FORWARD;

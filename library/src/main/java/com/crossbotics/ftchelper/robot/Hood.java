@@ -99,7 +99,7 @@ public final class Hood extends Module<Hood> {
     // The stick: the time of the last loop it was pushed (nanoseconds; -1 = let go).
     private long lastByHand = -1;
     // The time; tests use a pretend clock.
-    LongSupplier clock = System::nanoTime;
+    LongSupplier clock = com.crossbotics.ftchelper.core.Time::nanos;
 
     private Hood(Kind kind, String device, String motorId) {
         super(device);

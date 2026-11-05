@@ -537,6 +537,7 @@ public class OptionalPartsTest {
             add(Turret.servo("servo_turret").optional());
             add(Turret.crServo("cr_turret").analogEncoder("cr_turret_encoder").optional());
             add(Launcher.flywheel("launcher", "gobilda-5203-6000").feeder(Indexer.motor("feeder"))
+                    .feedWheel(Indexer.crServo("feed_wheel"))
                     .hood(Hood.motor("hood", "gobilda-5203-117")).optional());
             add(Indexer.crServo("windmill").optional());
             add(Lights.gobilda("light").optional());

@@ -57,7 +57,7 @@ public final class Pad {
     /** Two taps closer together than this (seconds) are a double-tap. */
     public static final double DOUBLE_TAP_SEC = 0.35;
     // The time, in nanoseconds (tests use a pretend clock).
-    static java.util.function.LongSupplier clock = System::nanoTime;
+    static java.util.function.LongSupplier clock = com.crossbotics.ftchelper.core.Time::nanos;
 
     Pad(ButtonPlan plan, ControllerBindings.Pad which) {
         this.plan = plan;

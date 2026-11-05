@@ -8,6 +8,7 @@ import com.crossbotics.ftchelper.core.SettingsFile;
 import com.crossbotics.ftchelper.launcher.Launcher.ShotMode;
 import com.crossbotics.ftchelper.match.Alliance;
 import com.crossbotics.ftchelper.match.MatchTimer;
+import com.crossbotics.ftchelper.testkit.PretendClock;
 import com.crossbotics.ftchelper.testkit.PretendDevices;
 import com.crossbotics.ftchelper.testkit.PretendMotor;
 import com.crossbotics.ftchelper.tuning.TuningReset;
@@ -21,7 +22,11 @@ import org.junit.Test;
  */
 public class FiringTest {
 
+    // A pretend clock: the tests move the time by hand (no waiting, the same result on a slow computer).
+    private final PretendClock clock = PretendClock.use();
+
     @After public void back() {
+        PretendClock.stopUsing();
         SettingsFile.useForTests(null);
         TuningReset.clear();
         MatchTimer.forget();
@@ -57,12 +62,11 @@ public class FiringTest {
         r.all().update();
     }
 
-    // Loops for this many real seconds with the wheel at speed.
-    private static void runFor(Bot r, PretendMotor fly, double sec) throws InterruptedException {
-        long end = System.nanoTime() + (long) (sec * 1e9);
-        while (System.nanoTime() < end) {
+    // Loops for this many pretend seconds (5 ms a loop) with the wheel at speed.
+    private void runFor(Bot r, PretendMotor fly, double sec) {
+        for (int i = 0; i < Math.round(sec / 0.005); i++) {
+            clock.addSec(0.005);
             loop(r, fly, 0);
-            Thread.sleep(5);
         }
     }
 
@@ -133,8 +137,7 @@ public class FiringTest {
         PretendMotor fly = d.motor("launcher");
         r.launcher.spinUp();
         fly.velocity = fly.velocityCommand;
-        long end = System.nanoTime() + 300_000_000L;
-        while (System.nanoTime() < end) { fly.velocity = fly.velocityCommand; r.all().update(); Thread.sleep(5); }
+        for (int i = 0; i < 60; i++) { clock.addSec(0.005); fly.velocity = fly.velocityCommand; r.all().update(); }
         double rest = d.servo("indexer").position;
         Action a = r.launcher.fireAction(1);
         r.run(a);
@@ -142,8 +145,7 @@ public class FiringTest {
         r.all().update();                                     // the feed starts: the stop opens, the indexer waits
         assertEquals(0.6, d.servo("stop").position, 1e-9);
         r.cancel(a);
-        end = System.nanoTime() + 300_000_000L;
-        while (System.nanoTime() < end) { fly.velocity = fly.velocityCommand; r.all().update(); Thread.sleep(5); }
+        for (int i = 0; i < 60; i++) { clock.addSec(0.005); fly.velocity = fly.velocityCommand; r.all().update(); }
         assertEquals("the indexer never pushed", rest, d.servo("indexer").position, 1e-9);
         assertEquals("the stop closed", 0.1, d.servo("stop").position, 1e-9);
     }
@@ -156,11 +158,10 @@ public class FiringTest {
         r.startForTests();
         PretendMotor fly = d.motor("launcher");
         r.launcher.spinUp();
-        long end = System.nanoTime() + 300_000_000L;
-        while (System.nanoTime() < end) { fly.velocity = fly.velocityCommand; r.all().update(); Thread.sleep(5); }
+        for (int i = 0; i < 60; i++) { clock.addSec(0.005); fly.velocity = fly.velocityCommand; r.all().update(); }
         r.launcher.fire();
-        end = System.nanoTime() + 200_000_000L;               // the stop opens, the indexer pushes (0.1 s later)
-        while (System.nanoTime() < end) { fly.velocity = fly.velocityCommand; r.all().update(); Thread.sleep(5); }
+        // 200 ms: the stop opens, the indexer pushes (0.1 s later)
+        for (int i = 0; i < 40; i++) { clock.addSec(0.005); fly.velocity = fly.velocityCommand; r.all().update(); }
         assertEquals(0.6, d.servo("indexer").position, 1e-9);
         for (int i = 0; i < 3; i++) { fly.velocity = fly.velocityCommand - 400 / 60.0 * 28; r.all().update(); }
         assertEquals("closed on the shot", 0.1, d.servo("stop").position, 1e-9);
@@ -263,8 +264,7 @@ public class FiringTest {
         r.all().update();
         r.all().update();
         assertEquals("the piece goes without waiting for the speed", 0.6, d.servo("stop").position, 1e-9);
-        long end = System.nanoTime() + 450_000_000L;
-        while (System.nanoTime() < end) { fly.velocity = 400 / 60.0 * 28; r.all().update(); Thread.sleep(5); }
+        for (int i = 0; i < 90; i++) { clock.addSec(0.005); fly.velocity = 400 / 60.0 * 28; r.all().update(); }
         assertTrue(!r.launcher.isEjecting());
         assertTrue("it was not spinning before: idle again", !r.launcher.isSpinning());
         assertTrue(!a.isRunning());
@@ -284,8 +284,7 @@ public class FiringTest {
         assertEquals("not fed at 3000 rpm", 0.1, d.servo("stop").position, 1e-9);
         for (int i = 0; i < 3; i++) { fly.velocity = 700 / 60.0 * 28; r.all().update(); }
         assertEquals("fed once near 600 rpm", 0.6, d.servo("stop").position, 1e-9);
-        long end = System.nanoTime() + 450_000_000L;
-        while (System.nanoTime() < end) { fly.velocity = fly.velocityCommand; r.all().update(); Thread.sleep(5); }
+        for (int i = 0; i < 90; i++) { clock.addSec(0.005); fly.velocity = fly.velocityCommand; r.all().update(); }
         assertTrue(!r.launcher.isEjecting());
         assertTrue("it was spinning before: spinning again", r.launcher.isSpinning());
         assertEquals("3000 rpm, -1% BLUE alliance trim", 2970, r.launcher.targetRpm(), 1e-6);

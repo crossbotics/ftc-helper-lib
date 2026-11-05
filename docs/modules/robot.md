@@ -292,6 +292,7 @@ do"), and its Action list starts with the ready actions.
 | Shot modes: CAREFUL, QUICK, SPRAY | automatic | a launcher ([Firing](#firing-shot-modes-feed-stop-piece-path)) | (nothing to write; SPRAY: `sprayEnabled = true`) |
 | Feed stop | automatic | a feed stop servo | `.feedStop("feed_stop")` on the launcher |
 | Piece path: parts that push a piece in | automatic | an intake that pushes pieces into the wheel | `.pushedBy(intake)` on the launcher |
+| Feed wheel: stages each piece for the arm | automatic | a CR servo (or motor) wheel before a push arm | `.feedWheel(Indexer.crServo("feeder_wheel"))` on the launcher |
 | Firing stats (debug lines) | automatic | a launcher (PRACTICE profile only) | (nothing to write) |
 | Alliance trim | automatic | a launcher | `Tunables.Launcher` `redTrimPercent`, `blueTrimPercent` |
 | Eject | action | a launcher: one piece out at a low speed (`ejectRpm`, `ejectSec`) | `robot.launcher.ejectAction()` |
@@ -842,6 +843,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 | `shotAngle(deg)` | for the simulator: which way a piece leaves, degrees up from the wheel shape's forward (the robot's forward for a wheel mounted level; 135 = up and out of the back) |
 | `feedStop(servo)`, `feedStopName()` | a [feed stop](#firing-shot-modes-feed-stop-piece-path): a servo that holds the pieces back until a shot is allowed |
 | `pushedBy(intake...)`, `pushers()` | the parts that push a piece into the wheel, in order: borrowed for each piece, then back as they were |
+| `feedWheel(Indexer)`, `feedWheel()` | a [feed wheel](#firing-shot-modes-feed-stop-piece-path): a CR servo or motor that moves each piece up to the `feeder` (a push arm). Needs `feeder(...)` too |
 | `readyAction(timeoutSec)` | a ready-made action: spin up, done when ready ("Ready to launch") |
 | `shotMode(mode)`, `shotModeNow()`, `sprayEnabled()` | set the [shot mode](#firing-shot-modes-feed-stop-piece-path) by hand (`ShotMode.CAREFUL`, `QUICK`, `SPRAY`; `null` = the launcher chooses, the default); the mode in use |
 | `allianceTrim()` | this alliance's trim from Tunables (`redTrimPercent`, `blueTrimPercent`), percent |
@@ -906,6 +908,29 @@ the intake runs in for at most `assistSec` (0.25 s) or until the shot is seen, e
 off; then it goes back to what it was doing. **Add the intake before the launcher** in `define()`
 (`intake = add(...)` first): `pushedBy(intake)` needs it. Pushing out (the driver) still wins. A robot that needs no
 push leaves it out, and nothing extra runs. (Last season's intake ran 250 ms after each shot, always.)
+
+**Feed wheel** (`.feedWheel(Indexer.crServo("feeder_wheel"))`, with a push arm as the `feeder`): the wheel
+moves the pieces up to the arm, and the arm pushes each one into the flywheel, then comes back. Its numbers
+go in its own section (`Tunables.FeederWheel`). Two ways, chosen with `alwaysOn`:
+
+- **Only while firing** (`alwaysOn = false`, the default): for each piece the wheel starts, runs `stageSec`
+  (0.2 s, the piece gets to the arm), then the arm pushes while the wheel still turns. The wheel stops
+  `stopSec` (0.3 s) after the push starts. A `stopSec` below 0 stops it before the push; 0 stops it as the push starts. The next shot waits until the wheel stops.
+- **Always on** (`alwaysOn = true`): the wheel runs all the time the launcher is spun up (not while it idles
+  at `idleRpm`), so a piece is always at the arm. The arm pushes at once (no `stageSec`).
+
+With a feed stop, the arm also waits for the stop to open (`feedStopMoveSec`). The launcher runs the feed
+wheel: the wheel's own `feedOne()` and `stop()` do nothing.
+
+A cancelled fire stops the wheel (only while firing) and the arm never pushes. In the simulator a push sends a
+piece only if the wheel ran just before it.
+
+```java
+launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+        .feeder(Indexer.servo("feeder_arm").part("gobilda-2000-torque"))        // pushes up, comes back
+        .feedWheel(Indexer.crServo("feeder_wheel").part("gobilda-2000-speed")));  // stages each piece
+public static class FeederWheel { public static boolean alwaysOn = false; public static double stageSec = 0.2, stopSec = 0.3; }
+```
 
 **Firing stats** (debug lines, PRACTICE profile only: at an event they are noise): each piece's mode, the
 speed when it was fed, the drop, the time back to ready and the time since the last piece, then one line

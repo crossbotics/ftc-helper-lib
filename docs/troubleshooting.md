@@ -303,6 +303,12 @@ It was blocked, or it moved too slowly. If it was not blocked, raise `moveMinPow
 **The loop is slow (telemetry shows under ~30 Hz, that is, under 30 loops per second)**
 Turn on [bulk reads](modules/hardware.md#bulkreads), send fewer telemetry lines, and remove any `sleep()`.
 
+### My JUnit tests time out or never fire, but only when run together
+
+A test used a pretend clock (`PretendClock.use()`) and did not give the real clock back. Time then stands still
+for every later test. Fix: put `PretendClock.stopUsing()` in that test class's `@After` method
+([PretendClock](modules/testkit.md#pretendclock)).
+
 ## Autonomous choice and git problems
 
 **The robot ran the wrong autonomous plan, or started in the wrong place**

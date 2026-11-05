@@ -41,8 +41,8 @@ public class PositionServo implements AngleDevice {
     private final String name;
     private final Servo servo;
     // Where we get the time from, in nanoseconds (billionths of a second). Tests swap in a fake clock.
-    // "System::nanoTime" is a method reference: "ask System.nanoTime() whenever you need the time".
-    private LongSupplier clockNanos = System::nanoTime;
+    // "Time::nanos" is a method reference: "ask the library clock (core.Time) whenever you need the time".
+    private LongSupplier clockNanos = com.crossbotics.ftchelper.core.Time::nanos;
     // Named positions in the order you added them (next() and previous() use that order).
     private final Map<String, Double> positions = new LinkedHashMap<>();
     private final Map<String, Tunable> tunables = new LinkedHashMap<>();

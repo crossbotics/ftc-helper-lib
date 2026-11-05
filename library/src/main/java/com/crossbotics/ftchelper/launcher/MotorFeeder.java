@@ -28,7 +28,7 @@ public class MotorFeeder implements Feeder {
     private final String name;
     private final DcMotorEx motor;
     // Where we get the time (nanoseconds). Tests swap in a fake clock.
-    private LongSupplier clockNanos = System::nanoTime;
+    private LongSupplier clockNanos = com.crossbotics.ftchelper.core.Time::nanos;
     private double power = 1.0;
     private double feedSec = 0.25;
     private BooleanSupplier pieceGone = null;   // the optional sensor question; null = run for feedSec

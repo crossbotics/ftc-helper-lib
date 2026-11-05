@@ -23,7 +23,7 @@ public class ServoFeeder implements Feeder {
     private final String name;
     private final Servo servo;
     // Where we get the time (nanoseconds). Tests swap in a fake clock.
-    private LongSupplier clockNanos = System::nanoTime;
+    private LongSupplier clockNanos = com.crossbotics.ftchelper.core.Time::nanos;
     private double rest = 0, push = 1;
     private double pushSec = 0.15, returnSec = 0.15;
 

@@ -528,6 +528,9 @@ Section: the device's name in CamelCase: `Indexer.servo("feeder")` reads **`Feed
 | `returnSec` | a servo indexer: time to come back | seconds | 0.25 (with `.part(...)`: the same as `pushSec`) | yes, at once | test | the next piece jams on it (more) |
 | `power` | a motor or CR servo indexer: power while it feeds (- = the other way) | -1 to 1 | 1.0 | yes, at once | test | pieces are fed too hard or too softly |
 | `feedSec` | a motor or CR servo indexer: time for one piece | seconds | 0.4 | yes, at once | test | it feeds two (less) or none (more) |
+| `alwaysOn` | a feed wheel (`Launcher.feedWheel(...)`): true = it runs all the time the launcher is spun up (not while it idles); false = only while firing | true / false | false | no (at INIT) | test | the pieces wait too long for the wheel (true) or it uses battery for nothing (false) |
+| `stageSec` | a feed wheel, only while firing: it runs this long before the arm pushes (the piece gets to the arm; with a feed stop, the arm also waits for it to open) | seconds | 0.2 | yes, at once | test | the arm pushes before the piece is there (more) |
+| `stopSec` | a feed wheel, only while firing: it stops this long after the arm starts to push. Below 0 = before the push; 0 = as the push starts | seconds, -2 to 2 | 0.3 | yes, at once | test | it pushes the next piece in behind (less) or the piece stops on the arm (more) |
 
 ## Hood
 

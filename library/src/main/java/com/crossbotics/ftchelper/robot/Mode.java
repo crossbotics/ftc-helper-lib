@@ -16,7 +16,7 @@ public final class Mode implements Toggleable {
     private java.util.function.BooleanSupplier allowed = null;
     private String notAllowedWhy = "";
     private boolean refused = false;
-    private long refusedAt = 0;   // System.nanoTime() of the refused press
+    private long refusedAt = 0;   // the time (Time.nanos()) of the refused press
 
     /**
      * @param name     shown on the Driver Station, e.g. "Turret follow"
@@ -64,13 +64,13 @@ public final class Mode implements Toggleable {
             return;
         }
         refused = allowed != null && !allowed.getAsBoolean();
-        if (refused) refusedAt = System.nanoTime();
+        if (refused) refusedAt = com.crossbotics.ftchelper.core.Time.nanos();
         else on = true;
     }
 
     // True for 3 s after a refused press (the Driver Station's warning).
     boolean refusedLately() {
-        return refused && System.nanoTime() - refusedAt < 3_000_000_000L;
+        return refused && com.crossbotics.ftchelper.core.Time.nanos() - refusedAt < 3_000_000_000L;
     }
 
     /** True while on. */

@@ -31,7 +31,7 @@ public class SpinServo implements Subsystem {
     private final String name;
     private final CRServo servo;
     // Where we get the time (nanoseconds). Tests swap in a fake clock.
-    private LongSupplier clockNanos = System::nanoTime;
+    private LongSupplier clockNanos = com.crossbotics.ftchelper.core.Time::nanos;
     private AnalogInput angleSensor = null;   // null = no angle sensor
     private double sensorMaxVolts = 3.3;
     private double power = 1.0;

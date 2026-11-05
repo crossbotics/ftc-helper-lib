@@ -20,6 +20,7 @@ with tutorial 12.
 | [`SettingsFile`](#settingsfile) | keep small settings on the Control Hub between restarts |
 | [`RobotConfig`](#robotconfig) | describe the drivetrain once, for TeleOp and every autonomous |
 | [`InitStop`](#initstop) | show a mistake found at INIT as plain lines on the Driver Station |
+| [`Time`](#time) | the library's clock (a test can swap in a pretend one) |
 
 ---
 
@@ -184,3 +185,22 @@ caught: the FTC app shows it as before. The robot log keeps the full error.
 
 **Why:** the red line starts with Java words, and the real message after them is easy to miss. In the
 simulator, INIT errors still show in its own error panel.
+
+## Time
+
+The library's clock: `Time.nanos()` is the time now, in nanoseconds (only differences mean anything). On the
+robot it is the real clock, `System.nanoTime()`. Most of the robot's parts (the five-files modules, the
+launcher, the mechanisms, the match timer, the PID and slew controllers) read it each time they need the time.
+
+**Why:** a JUnit test can swap in a pretend clock and move the time forward by hand. Then a test of timing is
+quick and gives the same result on a slow computer. Use the testkit's [`PretendClock`](testkit.md#pretendclock).
+
+| Method | What it does |
+| --- | --- |
+| `Time.nanos()` | the time now, nanoseconds; never waits |
+| `Time.useForTests(clock)` | JUnit tests only: use this clock (nanoseconds); null = the real clock again |
+
+A new part that needs the time reads `Time::nanos` (not `System::nanoTime`), so tests can move it. The code that
+measures how long the loop itself takes (the slow-loop warning) keeps the real clock. So does the camera aim:
+the camera stamps its pictures with the real clock, so a picture's age is measured on it too.
+

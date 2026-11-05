@@ -42,7 +42,7 @@ public class SpinMotor implements Subsystem {
     private final String name;
     private final DcMotorEx motor;
     // Where we get the time (nanoseconds). Tests swap in a fake clock.
-    private LongSupplier clockNanos = System::nanoTime;
+    private LongSupplier clockNanos = com.crossbotics.ftchelper.core.Time::nanos;
     private double inPower = 1.0, outPower = -1.0;
     private JamDetector jam = null;   // null = no jam detection
     private double unjamSec = 0.4;

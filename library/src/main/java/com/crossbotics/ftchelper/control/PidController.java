@@ -78,8 +78,9 @@ public class PidController {
      * @param kF power added every time (same sign always), e.g. 0.1 to hold up a lift
      */
     public PidController(double kP, double kI, double kD, double kF) {
-        // "System::nanoTime" hands over the real clock method itself (a "method reference").
-        this(kP, kI, kD, kF, System::nanoTime);
+        // "Time::nanos" hands over the library clock method itself (a "method reference"): the real clock,
+        // or a test's pretend one.
+        this(kP, kI, kD, kF, com.crossbotics.ftchelper.core.Time::nanos);
     }
 
     /**

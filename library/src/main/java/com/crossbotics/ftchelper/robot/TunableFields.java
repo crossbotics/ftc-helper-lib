@@ -48,7 +48,7 @@ final class TunableFields {
                 "lightingPictures", "lightingSettleMs", "liveView", "pipeline", "sizeIn");
         part("Hood", "angleA", "angleB", "byHandPerSec", "calibration", "kP", "maxPower", "posA", "posB",
                 "startAngle", "stepAngle", "tolerance", "travelSec", "trimMax");
-        part("Indexer", "feedSec", "power", "push", "pushSec", "rest", "returnSec");
+        part("Indexer", "alwaysOn", "feedSec", "power", "push", "pushSec", "rest", "returnSec", "stageSec", "stopSec");
         part("Intake", "inPower", "outPower");
         part("Interlock");   // only <part>From, <part>To, ... (see interlock below)
         part("Launcher", "assistSec", "batteryCompensation", "blueTrimPercent", "ejectRpm", "ejectSec", "fallbackDistanceIn", "feedStopHold",

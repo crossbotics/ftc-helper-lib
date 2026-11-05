@@ -77,7 +77,7 @@ public final class Pieces extends Module<Pieces> {
     private int pushedOut = 0;
     /** Pieces still roll out this long after the intake stops pushing out. */
     static final long OUT_COAST_NS = 300_000_000L;
-    LongSupplier clock = System::nanoTime;
+    LongSupplier clock = com.crossbotics.ftchelper.core.Time::nanos;
 
     private Pieces(List<String> kinds) {
         super("pieces");
