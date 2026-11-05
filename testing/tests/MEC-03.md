@@ -7,7 +7,7 @@ where: both
 minutes: 15
 needs: []
 kit_bots: []
-since: unreleased
+since: v0.30.0
 docs: [modules/robot.md#claw, guides/tunables.md#claw-wrist-and-positioner]
 ---
 

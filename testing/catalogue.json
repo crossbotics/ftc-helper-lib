@@ -954,7 +954,7 @@
    "minutes": 10,
    "needs": [],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.30.0",
    "docs": [
     {
      "path": "docs/guides/finders.md",
@@ -4214,7 +4214,7 @@
    "minutes": 15,
    "needs": [],
    "kit_bots": [],
-   "since": "unreleased",
+   "since": "v0.30.0",
    "docs": [
     {
      "path": "docs/modules/robot.md",
