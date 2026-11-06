@@ -307,16 +307,16 @@ public abstract class EasyTeleOp extends LinearOpMode {
     protected final String keyWords(LibraryButtons.Job job) {
         Key k = lib == null ? null : lib.key(job);
         if (k == null) return "(no button)";
-        String one = k.pad == Pad.G1 ? k.name() : k.toString();
+        String one = k.pad == Pad.G1 ? k.said() : k.toString();
         Key w = lib.with(job);
         if (w == null) return one;
         // A pair with the pause button: the other button goes first ("START, then BACK").
         Key pause = lib.key(LibraryButtons.Job.PAUSE);
         if (pause != null && libraryJobs(true).contains(LibraryButtons.Job.PAUSE)) {
-            if (pause.equals(k)) return w.name() + ", then " + k.name();
-            if (pause.equals(w)) return one + ", then " + w.name();
+            if (pause.equals(k)) return w.said() + ", then " + k.said();
+            if (pause.equals(w)) return one + ", then " + w.said();
         }
-        return one + " + " + w.name();
+        return one + " + " + w.said();
     }
 
     /**
@@ -488,8 +488,8 @@ public abstract class EasyTeleOp extends LinearOpMode {
         boolean samePad = blue != null && red != null && blue.pad == red.pad;
         StringBuilder b = new StringBuilder();
         if (samePad) b.append(blue.pad == Pad.G1 ? "gamepad 1 " : "gamepad 2 ");
-        if (blue != null) b.append(samePad ? blue.name() : blue.toString()).append(" = BLUE");
-        if (red != null) b.append(blue != null ? ", " : "").append(samePad ? red.name() : red.toString()).append(" = RED");
+        if (blue != null) b.append(samePad ? blue.said() : blue.toString()).append(" = BLUE");
+        if (red != null) b.append(blue != null ? ", " : "").append(samePad ? red.said() : red.toString()).append(" = RED");
         return b.toString();
     }
 
@@ -560,6 +560,8 @@ public abstract class EasyTeleOp extends LinearOpMode {
      */
     @Override
     public final void runOpMode() {
+        // The screens name the buttons printed on these controllers (A or ×): docs/modules/gamepad.md.
+        com.crossbotics.ftchelper.gamepad.ButtonNames.watch(gamepad1, gamepad2);
         // A mistake found at INIT: plain lines on the Driver Station, not the FTC app's red line.
         com.crossbotics.ftchelper.core.InitStop.run(this, this::runBody);
     }
@@ -692,7 +694,7 @@ public abstract class EasyTeleOp extends LinearOpMode {
                 }
                 t.line("Switch alliance", switchWords);
                 if (menu) {
-                    t.section("Choose (D-pad), then START");
+                    t.section("Choose (D-pad), then {PLAY}");
                     if (!choose.isEmpty()) t.text((menuLine == 0 ? "> " : "  ") + "Alliance: " + alliance);
                     t.text((menuLine == 1 ? "> " : "  ") + "Profile: " + Profile.current().name());
                 }

@@ -41,7 +41,7 @@ t.update();                                             // ONCE, at the end of t
 | `warnFirst(text)` | a warning above every other one, even those added before it (the library: a part that is OFF in COMPETITION). Several keep their order |
 | `setDebug(on)`, `toggleDebug()`, `isDebug()` | debug level |
 | `setMinIntervalMs(ms)` | send at most every N ms (100 = 10/s is plenty) for a faster loop. Warnings from skipped loops are kept for the next send |
-| `update()` | send (warnings first) and start a fresh screen |
+| `update()` | send (warnings first) and start a fresh screen. Button marks such as `{A}` become the names on the driver's controller ([ButtonNames](gamepad.md#buttonnames)) |
 | `pending()`, `raw()` | the lines waiting (for tests); the SDK telemetry |
 
 **Standard or debug?** Ask: "does the DRIVER need this during a match?" Yes = `line`. No = `debug`.

@@ -127,7 +127,7 @@ public class AutoDrive {
                 driveConfig.hasBackMotors() ? setUp(opMode, driveConfig.backLeft, driveConfig.backLeftReversed) : null,
                 driveConfig.hasBackMotors() ? setUp(opMode, driveConfig.backRight, driveConfig.backRightReversed) : null,
                 () -> ImuSetup.headingDeg(imu), imu::resetYaw,
-                isActive, opMode::idle, line -> opMode.telemetry.addLine(line),
+                isActive, opMode::idle, line -> opMode.telemetry.addLine(com.crossbotics.ftchelper.gamepad.ButtonNames.say(line)),
                 System::nanoTime);
     }
 

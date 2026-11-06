@@ -28,7 +28,7 @@ file to copy. It holds the Hardware Check and every finder that fits your Robot.
 
 1. Pick **Tune and check** and press INIT. A menu shows.
 2. D-pad up/down picks a tool. **A** opens it: you see its own INIT screen. Read its safety note.
-3. Press **START**: the tool runs, as it does on its own.
+3. Press **▶** (start) on the Driver Hub: the tool runs, as it does on its own.
 4. Another tool: press STOP, then INIT. The menu starts on the last tool. In a tool's INIT,
    **BACK** goes back to the menu.
 
@@ -101,7 +101,7 @@ flowchart LR
 - Eye protection for the Flywheel Finder, Shot Tuner and Aim Tuner. Nobody in the line of fire.
 - A charged battery (12.5 V or more) for the Drive Tuner, the Characterizer, the Flywheel Finder and
   the Shot Tuner: their numbers are powers and speeds, so they depend on the battery. Their screens show
-  the battery and warn when it is low. Every finder writes the battery at START in the results file
+  the battery and warn when it is low. Every finder writes the battery at the start (▶) in the results file
   (`== Drive Tuner, 2026-10-24 14:05, battery 12.8 V ==`).
 - The easy way: **Tune and check** (above) has every finder that fits your robot, with no file to copy.
   Or, one file per finder: the finders are in the starter kit (`ServoFinder`, `MotorFinder`, `FlywheelFinder`, `DriveTuner`, `Characterizer`)
@@ -121,10 +121,21 @@ flowchart LR
 
 Press **GUIDE** (the center button) in any finder (not the Hardware Check, which has no help page), in
 INIT or while it runs: a page shows every
-button and the steps. No GUIDE button (or it does nothing)? Hold **START** for 1 second instead.
+button and the steps. No GUIDE button (or it does nothing)? Hold the gamepad's **START** for 1 second instead.
 While help is open, the finder's buttons pause and its motors stop. GUIDE again goes back.
 Then let go of every stick, trigger and button once: until then the finder ignores them.
 Check once on your own Driver Hub and controllers that the help page fits and is easy to read.
+
+**The button names on the screens** are the ones printed on YOUR controller. The library asks the FTC
+SDK which kind it is (once the controller is linked with START + A, or OPTIONS + ×):
+
+| Logitech / Xbox (this guide) | A | B | X | Y | LB | RB | LT | RT | BACK | START | GUIDE |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| PlayStation (PS4, PS5, Etpark) | × | ○ | □ | △ | L1 | R1 | L2 | R2 | SHARE | OPTIONS | PS |
+
+**▶** on a screen is always the Driver Hub's start button (it starts the OpMode after INIT), never a
+gamepad button. **START** is the small button on the gamepad (OPTIONS on a PS controller). This guide
+uses the Logitech names.
 
 ## Motor Direction Check: each wheel rolls forward
 
@@ -420,7 +431,7 @@ of shots: 3 in out of 4 beats 2 out of 3). Every button is on **gamepad 1**.
    `odometry(...)` line and `Tunables.Aim.goalX, goalY`; put the robot in the middle of the field
    facing away from you before INIT, or override `startSpotIn()`). The distance is the average of the
    last half second of fresh readings, so one noisy picture does not go into the table. Press **LB**
-   to start the flywheel (it is off at START).
+   to start the flywheel (it is off at the start).
 3. The speed starts at what your table already gives at this distance (or `Tunables.Launcher.speedRpm`),
    so you only fine-tune. Shoot 3-5 (**RB** one at a time, or hold **RT**) and after each shot press
    **A** = HIT or **B** = MISS (the marks go to the shots in the order they were fired). Each shot keeps

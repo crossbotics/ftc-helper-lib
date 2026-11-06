@@ -90,7 +90,7 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
     protected void showInit(RobotTelemetry t) {
         t.text("Flywheel finder: top speed, speed-control gains, recovery after a shot.");
         t.warn("Hands away from the wheel. Eye protection on.");
-        t.text("Press START.");
+        t.text("Press {PLAY} on the Driver Hub.");
     }
 
     @Override
@@ -287,11 +287,11 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
     @Override
     protected void show(RobotTelemetry t) {
         if (motor == null) {
-            t.section("Choose the flywheel motor (D-pad, then A)");
+            t.section("Choose the flywheel motor (D-pad, then {A})");
             chooser.addTelemetry(t, "No motors in the robot configuration.");
             return;
         }
-        t.section("Flywheel \"" + motorName + "\"  (BACK = another)");
+        t.section("Flywheel \"" + motorName + "\"  ({BACK} = another)");
         double rpm = FinderMath.ticksPerSecToRpm(motor.getVelocity(), countsPerRev());
         t.line("Speed", FinderResults.num(rpm, 0) + " RPM");
         if (!Double.isNaN(volts)) {
@@ -299,18 +299,18 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
             if (volts < Flywheel.LOW_BATTERY_VOLTS) t.warn("Battery low: charge it before measuring (the gains are for this voltage).");
         }
         if (gains == null) {
-            t.line("Direction", reversed ? "reversed (X)" : "normal (X = reverse)");
-            t.text("Step 1: hold A for full power until the speed stops rising.");
-            t.text("Wheel spins the wrong way? Let go, press X, try again.");
+            t.line("Direction", reversed ? "reversed ({X})" : "normal ({X} = reverse)");
+            t.text("Step 1: hold {A} for full power until the speed stops rising.");
+            t.text("Wheel spins the wrong way? Let go, press {X}, try again.");
             return;
         }
         t.line("Top speed", FinderResults.num(topRpm(), 0) + " RPM");
         // Forward power but the count goes down: the encoder disagrees with the motor. Speed control
         // cannot work like that (it would run away), so step 2 is not allowed.
         if (topTicks < 0) t.warn("The encoder counts BACKWARD at forward power: check the encoder cable and motor port.");
-        t.line("F gain", FinderResults.num(gains[3], 2) + " (RB/LB)");
+        t.line("F gain", FinderResults.num(gains[3], 2) + " ({RB}/{LB})");
         if (!holding) {
-            t.text("Step 2: B = hold a speed. (Or hold A again to measure the top speed again.)");
+            t.text("Step 2: {B} = hold a speed. (Or hold {A} again to measure the top speed again.)");
             return;
         }
         t.line("Target", FinderResults.num(targetRpm, 0) + " RPM (D-pad)");
@@ -318,7 +318,7 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
         t.line("Ready", flywheel.isReady() ? "YES" : "no");
         t.line("Shots seen", flywheel.getShotCount());
         if (!Double.isNaN(recoverySec)) t.line("Recovery", FinderResults.num(recoverySec, 2) + " s");
-        t.text("Too slow at every speed: F up (RB). Too fast: F down (LB).");
+        t.text("Too slow at every speed: F up ({RB}). Too fast: F down ({LB}).");
     }
 
     @Override
@@ -326,16 +326,16 @@ public abstract class FlywheelFinderOpMode extends FinderOpMode {
         return new String[] {
             "Finds flywheel gains, top speed, recovery time.",
             "Hands away from the wheel. Eye protection on.",
-            "1. D-pad up/down = choose the motor, A = use it.",
-            "2. Let go of A. Hold A = full power (max 5 s) until",
+            "1. D-pad up/down = choose the motor, {A} = use it.",
+            "2. Let go of {A}. Hold {A} = full power (max 5 s) until",
             "   the speed stops rising: gains worked out.",
-            "   Wrong way? Let go, X = reverse, try again.",
-            "3. B = hold a speed (60% of top). D-pad up/down =",
+            "   Wrong way? Let go, {X} = reverse, try again.",
+            "3. {B} = hold a speed (60% of top). D-pad up/down =",
             "   +/-100 RPM, right/left = +/-25 RPM.",
-            "4. Too slow at every speed: RB (F +2%).",
-            "   Too fast: LB (F -2%).",
+            "4. Too slow at every speed: {RB} (F +2%).",
+            "   Too fast: {LB} (F -2%).",
             "5. Feed a piece by hand: the recovery time shows.",
-            "   B again = stop. BACK = another motor.",
+            "   {B} again = stop. {BACK} = another motor.",
             "STOP saves the lines (gains + the battery volts).",
         };
     }

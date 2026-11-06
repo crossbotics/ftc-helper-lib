@@ -45,13 +45,13 @@ public class LibraryButtonsTest {
 
     @Test public void theDefaultsAreTheOldButtonsPlusPose() {
         Map<Key, String> w = LibraryButtons.twoDrivers().words(all());
-        assertEquals("pause / go on; hold 1 s: forward = away from you now; after START: debug lines", w.get(Key.g1(Btn.BACK)));
-        assertEquals("hold 1 s: set pose here; then BACK: debug lines", w.get(Key.g1(Btn.START)));
+        assertEquals("pause / go on; hold 1 s: forward = away from you now; after START: debug lines", com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.BACK))));
+        assertEquals("hold 1 s: set pose here; then BACK: debug lines", com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.START))));
         assertNull("switching the alliance in TeleOp is off until the team turns it on",
                 LibraryButtons.twoDrivers().key(Job.SWITCH_ALLIANCE));
-        assertEquals("field-centric on/off", w.get(Key.g1(Btn.Y)));
+        assertEquals("field-centric on/off", com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.Y))));
         assertEquals("slow (squeeze: the further, the slower)", w.get(Key.g1(Trigger.LT)));
-        assertEquals("button map; hold 1 s: tuning menu", w.get(Key.g1(Btn.GUIDE)));
+        assertEquals("button map; hold 1 s: tuning menu", com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.GUIDE))));
         assertEquals(Key.g1(Btn.X), LibraryButtons.twoDrivers().initBlue());
         assertEquals(Key.g1(Btn.B), LibraryButtons.twoDrivers().initRed());
     }
@@ -61,16 +61,16 @@ public class LibraryButtonsTest {
         jobs.remove(Job.PAUSE);
         jobs.remove(Job.BUTTON_MAP);
         Map<Key, String> w = LibraryButtons.twoDrivers().words(jobs);
-        assertTrue(w.get(Key.g1(Btn.BACK)), w.get(Key.g1(Btn.BACK)).startsWith("forward = away from you now; with START"));
-        assertEquals("tuning menu", w.get(Key.g1(Btn.GUIDE)));
+        assertTrue(com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.BACK))), com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.BACK))).startsWith("forward = away from you now; with START"));
+        assertEquals("tuning menu", com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.GUIDE))));
     }
 
     @Test public void oneDriverHasSlowAndFieldCentricOnTheStickClicks() {
         Map<Key, String> w = LibraryButtons.oneDriver().words(all());
-        assertEquals("slow on/off", w.get(Key.g1(Btn.L_STICK_BTN)));
-        assertEquals("field-centric on/off", w.get(Key.g1(Btn.R_STICK_BTN)));
+        assertEquals("slow on/off", com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.L_STICK_BTN))));
+        assertEquals("field-centric on/off", com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.R_STICK_BTN))));
         assertNull(w.get(Key.g1(Trigger.LT)));
-        assertNull(w.get(Key.g1(Btn.Y)));
+        assertNull(com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.Y))));
     }
 
     // ----------------------------- moving and freeing -----------------------------
@@ -82,15 +82,15 @@ public class LibraryButtonsTest {
                 .debug(Key.g1(Btn.START), null).setPose(null).switchAlliance(null, null).allianceInInit(Key.g2(Btn.X), null);
         Map<Key, String> w = lib.words(all());
         assertEquals("pause / go on", w.get(Key.g2(Btn.BACK)));
-        assertEquals("forward = away from you now", w.get(Key.g1(Btn.DPAD_DOWN)));
-        assertEquals("field-centric on/off", w.get(Key.g1(Btn.X)));
+        assertEquals("forward = away from you now", com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.DPAD_DOWN))));
+        assertEquals("field-centric on/off", com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.X))));
         assertEquals("slow (squeeze: the further, the slower)", w.get(Key.g1(Trigger.RT)));
-        assertEquals("tuning menu", w.get(Key.g1(Btn.R_STICK_BTN)));
-        assertEquals("debug lines", w.get(Key.g1(Btn.START)));
-        assertNull("BACK is free", w.get(Key.g1(Btn.BACK)));
-        assertNull("Y is free", w.get(Key.g1(Btn.Y)));
+        assertEquals("tuning menu", com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.R_STICK_BTN))));
+        assertEquals("debug lines", com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.START))));
+        assertNull("BACK is free", com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.BACK))));
+        assertNull("Y is free", com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.Y))));
         assertNull("LT is free", w.get(Key.g1(Trigger.LT)));
-        assertNull("GUIDE is free", w.get(Key.g1(Btn.GUIDE)));
+        assertNull("GUIDE is free", com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.GUIDE))));
         assertEquals(Key.g2(Btn.X), lib.initBlue());
         assertNull(lib.initRed());
     }
@@ -155,7 +155,7 @@ public class LibraryButtonsTest {
     @Test public void theAllianceSwitchIsOneLineToTurnOn() {
         LibraryButtons lib = LibraryButtons.twoDrivers().switchAlliance(Key.g1(Btn.BACK), Key.g1(Btn.START));
         assertEquals("pause / go on; hold 1 s: forward = away from you now; after START: debug lines; "
-                + "hold both 1.5 s: switch alliance (BLUE / RED)", lib.words(all()).get(Key.g1(Btn.BACK)));
+                + "hold both 1.5 s: switch alliance (BLUE / RED)", com.crossbotics.ftchelper.gamepad.ButtonNames.say(lib.words(all()).get(Key.g1(Btn.BACK))));
         assertEquals(Key.g1(Btn.START), lib.with(Job.SWITCH_ALLIANCE));
     }
 
@@ -490,7 +490,7 @@ public class LibraryButtonsTest {
         Set<Job> jobs = all();
         jobs.remove(Job.SET_POSE);
         Map<Key, String> w = LibraryButtons.twoDrivers().words(jobs);
-        assertEquals("then BACK: debug lines", w.get(Key.g1(Btn.START)));
+        assertEquals("then BACK: debug lines", com.crossbotics.ftchelper.gamepad.ButtonNames.say(w.get(Key.g1(Btn.START))));
         LibraryKeys k = keys(LibraryButtons.twoDrivers(), jobs);
         g1.start = true;
         loop(k, 0.02);

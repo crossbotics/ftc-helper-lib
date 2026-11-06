@@ -206,12 +206,16 @@ Want two things on one button? Put them in one lambda:
   `G2 free: ...`. Read it before every match.
 - **During the match**, tap GUIDE: the map again, without the free buttons. The robot still drives.
   Tap GUIDE again to close it. (Holding GUIDE 1 s opens the tuning menu, PRACTICE profile only.)
-- In TeleOp's INIT (before START), gamepad 1 X and B choose the alliance: X = BLUE, B = RED. After an
+- In TeleOp's INIT (before ▶), gamepad 1 X and B choose the alliance: X = BLUE, B = RED. After an
   autonomous, its alliance is already set. The INIT screen also has a small menu, like an autonomous's:
   D-pad up/down picks **Alliance** or **Profile**, left/right changes it. A practice round that starts
   straight in TeleOp can switch to PRACTICE there (the drive's `practiceMaxPower` and the debug lines
   apply from START). Your own INIT code uses gamepad 1's D-pad? Turn the menu off: `@Override protected
   boolean initMenu() { return false; }`.
+- **A PlayStation controller?** The map names the buttons printed on it: `G2 ×: down [Lift]`,
+  `G2 R1: score high`, and × ○ □ △, L1 R1 L2 R2, SHARE OPTIONS PS for the rest. Controls.java still uses
+  the SDK's names (`g2.a` is the × button, `g2.rb` is R1). On every screen, **▶** is the Driver Hub's start
+  button and **START** the small gamepad button ([the full list](../../modules/gamepad.md#buttonnames)).
 
 ## 7. Pause with BACK, and the other library buttons
 

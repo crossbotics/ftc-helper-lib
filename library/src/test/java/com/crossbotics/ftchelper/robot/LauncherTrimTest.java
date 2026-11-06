@@ -260,7 +260,7 @@ public class LauncherTrimTest {
         RobotTelemetry t = new RobotTelemetry(ft.telemetry, () -> 0L);
         r.launcher.initLoop(t);
         t.update();
-        assertTrue(ft.lastScreen.toString(), ft.lastScreen.toString().contains("Trim last time : +3% (double-tap D-pad up after START to use it)"));
+        assertTrue(ft.lastScreen.toString(), ft.lastScreen.toString().contains("Trim last time : +3% (double-tap D-pad up after ▶ to use it)"));
         ButtonPlan plan = ControlMap.makePlan(r, false, true, (g1, g2) -> { });
         String up = line(plan.help(), "G2 D-pad up");
         assertTrue(up, up.contains("double-tap: use last time's trim (+3%)"));

@@ -63,7 +63,7 @@ public abstract class MotorFinderOpMode extends FinderOpMode {
     @Override
     protected void showInit(RobotTelemetry t) {
         t.text("Motor finder: finds a mechanism's limits, positions and top speed.");
-        t.text("Put the mechanism at its BOTTOM (or start) before you choose it. Press START.");
+        t.text("Put the mechanism at its BOTTOM (or start) before you choose it. Press {PLAY}.");
     }
 
     @Override
@@ -137,7 +137,7 @@ public abstract class MotorFinderOpMode extends FinderOpMode {
         if (gamepad1.right_trigger > 0.5) {
             // Speed test: full power toward the HIGH end, stopping SPEED_TEST_MARGIN before it.
             if (!bothEnds()) {
-                note = "Mark both ends first (X and B).";
+                note = "Mark both ends first ({X} and {B}).";
                 power = 0;
             } else {
                 double stopAt = highEnd - (highEnd - lowEnd) * SPEED_TEST_MARGIN;
@@ -172,7 +172,7 @@ public abstract class MotorFinderOpMode extends FinderOpMode {
             }
             if (!past.isEmpty()) {
                 outside = FinderResults.commas(past) + ": outside the ends (" + FinderResults.num(lo, 0) + " to " + FinderResults.num(hi, 0)
-                        + "). The robot stops at min/max, so it never gets there: Y undoes the last point, or mark the end again.";
+                        + "). The robot stops at min/max, so it never gets there: {Y} undoes the last point, or mark the end again.";
             }
         }
         String line = "PositionMotor.create(hardwareMap, \"" + motorName + "\")";
@@ -211,21 +211,21 @@ public abstract class MotorFinderOpMode extends FinderOpMode {
     @Override
     protected void show(RobotTelemetry t) {
         if (motor == null) {
-            t.section("Choose a motor (D-pad, then A)");
+            t.section("Choose a motor (D-pad, then {A})");
             chooser.addTelemetry(t, "No motors in the robot configuration.");
             return;
         }
-        t.section("Motor \"" + motorName + "\"  (BACK = another)");
+        t.section("Motor \"" + motorName + "\"  ({BACK} = another)");
         t.line("Count", ticks());
         t.line("Speed", FinderResults.num(motor.getVelocity(), 0) + " counts/s");
         t.line("Current", FinderResults.num(motor.getCurrent(CurrentUnit.AMPS), 1) + " A");
         t.line("Max power", FinderResults.num(maxPower, 2) + " (D-pad up/down)");
-        t.line("LOW end (X)", Double.isNaN(lowEnd) ? "-" : FinderResults.num(lowEnd, 0));
-        t.line("HIGH end (B)", Double.isNaN(highEnd) ? "-" : FinderResults.num(highEnd, 0));
+        t.line("LOW end ({X})", Double.isNaN(lowEnd) ? "-" : FinderResults.num(lowEnd, 0));
+        t.line("HIGH end ({B})", Double.isNaN(highEnd) ? "-" : FinderResults.num(highEnd, 0));
         if (topSpeed > 0) t.line("Top speed", FinderResults.num(topSpeed, 0) + " counts/s");
         if (!note.isEmpty()) t.text(note);
         if (!outside.isEmpty()) t.warn(outside);
-        t.text("Stick = move, A = save position, Y = undo, hold RT = speed test");
+        t.text("Stick = move, {A} = save position, {Y} = undo, hold {RT} = speed test");
     }
 
     @Override
@@ -233,15 +233,15 @@ public abstract class MotorFinderOpMode extends FinderOpMode {
         return new String[] {
             "Finds limits, positions, top speed (lift/arm...).",
             "Before: robot on a block, mechanism at its BOTTOM.",
-            "1. D-pad up/down = choose a motor, A = use it",
+            "1. D-pad up/down = choose a motor, {A} = use it",
             "   (its count starts at 0 here).",
             "2. Right stick = move slowly. D-pad up/down =",
             "   max power (0.1 to 0.6, starts at 0.3).",
-            "3. Just above the bottom: X = LOW end. Just below",
-            "   the top: B = HIGH end. Then the power goes off",
-            "   at them; it coasts a bit past (LB = go past).",
-            "4. Each height you need: A (P1, P2...). Y = undo.",
-            "5. After X and B: hold RT = speed test (full power",
+            "3. Just above the bottom: {X} = LOW end. Just below",
+            "   the top: {B} = HIGH end. Then the power goes off",
+            "   at them; it coasts a bit past ({LB} = go past).",
+            "4. Each height you need: {A} (P1, P2...). {Y} = undo.",
+            "5. After {X} and {B}: hold {RT} = speed test (full power",
             "   up, stops before the top).",
             "High amps, not moving = pushing on something: stop.",
         };

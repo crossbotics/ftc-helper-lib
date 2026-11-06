@@ -123,6 +123,8 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
      */
     @Override
     public void runOpMode() {
+        // The screens name the buttons printed on these controllers (A or ×): docs/modules/gamepad.md.
+        com.crossbotics.ftchelper.gamepad.ButtonNames.watch(gamepad1, gamepad2);
         // A mistake found at INIT: plain lines on the Driver Station (inside "Tune and check", the host shows it).
         if (hosting != null) runBody();
         else com.crossbotics.ftchelper.core.InitStop.run(this, this::runBody);
@@ -133,7 +135,7 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
         RobotTelemetry t = new RobotTelemetry(telemetry);
         findDevices();
         startImus();   // IMU start-up can take a moment: do it in INIT, never in the loop
-        t.text("Found " + devices.size() + " devices. Robot on a block! Press START.");
+        t.text("Found " + devices.size() + " devices. Robot on a block! Press {PLAY}.");
         // Robot.java against this configuration (only if robot() gives the robot).
         robotLines = robotCheck();
         // INIT: the screen until START (GUIDE shows the help here too).
@@ -141,11 +143,11 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
             updateHelp();
             if (helpOpen) {
                 showHelp(t);
-                t.text("Press START on the Driver Station to begin.");
+                t.text("Press {PLAY} on the Driver Hub to begin.");
             } else {
-                t.text("Found " + devices.size() + " devices. Robot on a block! Press START.");
+                t.text("Found " + devices.size() + " devices. Robot on a block! Press {PLAY}.");
                 for (String line : robotLines) t.text(line);
-                t.text("GUIDE (center button), or hold START 1 s = help.");
+                t.text("{GUIDE} (center button), or hold {START} 1 s = help.");
             }
             t.update();
         }
@@ -161,7 +163,7 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
                     // Help open: nothing moves while the driver reads, and no button acts.
                     stopAll();
                     showHelp(t);
-                    t.text("Help open: motors stopped. GUIDE (or hold START) = back.");
+                    t.text("Help open: motors stopped. {GUIDE} (or hold {START}) = back.");
                     t.update();
                     // the buttons held now must not act when help closes
                     rememberButtons();
@@ -169,7 +171,7 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
                 }
                 handleInput();
                 show(t);
-                t.text("GUIDE (or hold START 1 s) = help");
+                t.text("{GUIDE} (or hold {START} 1 s) = help");
                 t.update();
             }
         } finally {
@@ -202,7 +204,7 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
     }
 
     private void showHelp(RobotTelemetry t) {
-        t.section("Hardware Check help  (GUIDE = back)");
+        t.section("Hardware Check help  ({GUIDE} = back)");
         for (String line : helpLines()) t.text(line);
     }
 
@@ -213,12 +215,12 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
             "Robot on a block first!",
             "D-pad up/down = choose a device (stops the last).",
             "Motor / CR servo: right stick = power (50%;",
-            "  hold RB = full). A = zero the encoder.",
+            "  hold {RB} = full). {A} = zero the encoder.",
             "  Check: + power turns the way you expect and",
             "  the encoder counts UP.",
             "Servo: first a START POINT near where it sits",
-            "  (nothing moves), A = move it there. Then D-pad",
-            "  right/left = +/-0.01, bumpers = +/-0.1, X = 0.5.",
+            "  (nothing moves), {A} = move it there. Then D-pad",
+            "  right/left = +/-0.01, bumpers = +/-0.1, {X} = 0.5.",
             "IMU: turn the robot left, yaw must go UP.",
             "Sensors: just read the values.",
             "Steps: docs/guides/testing.md",
@@ -400,7 +402,7 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
         HardwareDevice h = d.device;
         if (h instanceof DcMotorEx) {
             DcMotorEx m = (DcMotorEx) h;
-            t.text("Right stick = power (RB = full), A = zero encoder");
+            t.text("Right stick = power ({RB} = full), {A} = zero encoder");
             t.text("No limits here! A lift or arm: short taps, know its hard stop, hands clear.");
             t.line("Power", "%.2f", m.getPower());
             t.line("Encoder", m.getCurrentPosition());
@@ -408,15 +410,15 @@ public abstract class HardwareCheckOpMode extends LinearOpMode {
             t.line("Current", "%.2f A", m.getCurrent(CurrentUnit.AMPS));
             t.text("Check: positive power turns the way you expect, and the encoder counts UP.");
         } else if (h instanceof CRServo) {
-            t.text("Right stick = power (RB = full)");
+            t.text("Right stick = power ({RB} = full)");
             t.line("Power", "%.2f", ((CRServo) h).getPower());
         } else if (h instanceof Servo) {
             if (Double.isNaN(d.servoPosition)) {
-                t.line("Start point", String.format(Locale.US, "%.2f  (A = move the servo there)", d.startAt));
-                t.text("Choose a start point near where the servo sits now. Nothing moves until A.");
-                t.text("D-pad L/R = 0.01, bumpers = 0.1, X = 0.5");
+                t.line("Start point", String.format(Locale.US, "%.2f  ({A} = move the servo there)", d.startAt));
+                t.text("Choose a start point near where the servo sits now. Nothing moves until {A}.");
+                t.text("D-pad L/R = 0.01, bumpers = 0.1, {X} = 0.5");
             } else {
-                t.text("D-pad L/R = 0.01, bumpers = 0.1, X = 0.5");
+                t.text("D-pad L/R = 0.01, bumpers = 0.1, {X} = 0.5");
                 t.line("Position", "%.2f", d.servoPosition);
                 t.text("Write down the positions you need (open, closed...).");
             }

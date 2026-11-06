@@ -136,7 +136,7 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
     protected void showInit(RobotTelemetry t) {
         t.text("Drive tuner: wheel size and strafe correction for autonomous.");
         // Two different lengths: the TAPE is as long as the test drive; the clear FLOOR is longer (it may overshoot).
-        t.text("Tape " + FinderResults.num(testDistanceIn(), 0) + " in long on the floor. Clear floor: 5 ft ahead and to the right. Press START.");
+        t.text("Tape " + FinderResults.num(testDistanceIn(), 0) + " in long on the floor. Clear floor: 5 ft ahead and to the right. Press {PLAY}.");
     }
 
     @Override
@@ -236,7 +236,7 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
             auto.setLoopHook(null);
         }
         if (helpKeyDown() && running()) {
-            lastResult = "Stopped by GUIDE/START: not measured.";
+            lastResult = "Stopped by {GUIDE}/{START}: not measured.";
             waiting = Wait.CHOOSE;
             openHelp();
         }
@@ -264,7 +264,7 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
         if (now - movingShownAt < 100_000_000L) return;
         movingShownAt = now;
         t.section("Drive tuner");
-        t.text(name + ": moving... (GUIDE or START stops it)");
+        t.text(name + ": moving... ({GUIDE} or {START} stops it)");
         t.line("Heading", FinderResults.num(auto.headingDeg(), 1) + " deg");
         t.line("Wheel counts", java.util.Arrays.toString(auto.getWheelTicks()));
         t.update();
@@ -331,18 +331,18 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
             int[] now = auto.getWheelTicks();
             int[] deltas = new int[now.length];
             for (int i = 0; i < now.length; i++) deltas[i] = now[i] - pushStart[i];
-            t.text("Roll the robot BY HAND exactly " + FinderResults.num(testDistanceIn(), 0) + " in, straight. Then press B.");
+            t.text("Roll the robot BY HAND exactly " + FinderResults.num(testDistanceIn(), 0) + " in, straight. Then press {B}.");
             // Each wheel: they should all go up by about the same amount.
             t.line("Wheel counts", java.util.Arrays.toString(deltas));
         } else if (waiting == Wait.MEASURE) {
-            t.text("Measure how far it really went. Set it with the D-pad, then press A.");
+            t.text("Measure how far it really went. Set it with the D-pad, then press {A}.");
             t.line("Measured", FinderResults.num(measured, 2) + " in");
         } else {
             for (int i = 0; i < TESTS.length; i++) {
                 if (i == 2 && !canStrafe()) continue;
                 t.text((i == test ? "> " : "  ") + TESTS[i]);
             }
-            t.text("D-pad = choose, A = start");
+            t.text("D-pad = choose, {A} = start");
         }
         t.line("Now using", "wheel " + FinderResults.num(autoConfig.wheelDiameterIn, 3) + " in, strafe "
                 + FinderResults.num(autoConfig.strafeCorrection, 3));
@@ -355,12 +355,12 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
         return new String[] {
             "Wheel size + strafe correction. Tape " + d + " long;",
             "  clear floor 5 ft ahead and to the right.",
-            "D-pad up/down = choose a test, A = start it.",
-            "GUIDE or START stops a moving test (not measured).",
-            "Push: A, roll the robot BY HAND exactly " + d + ",",
-            "  straight along the tape, then B.",
+            "D-pad up/down = choose a test, {A} = start it.",
+            "{GUIDE} or {START} stops a moving test (not measured).",
+            "Push: {A}, roll the robot BY HAND exactly " + d + ",",
+            "  straight along the tape, then {B}.",
             "Drive: drives " + d + ". Measure it, set the real",
-            "  distance (D-pad up/down 1 in, l/r 0.25 in), A.",
+            "  distance (D-pad up/down 1 in, l/r 0.25 in), {A}.",
             "Strafe (mecanum): the same, to the right.",
             "Turn: turns 90 left: check it with a square.",
             "Each new number is used at once: repeat Drive and",

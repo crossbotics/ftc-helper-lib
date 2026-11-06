@@ -132,9 +132,9 @@ public abstract class HoodFinderOpMode extends FinderOpMode {
     protected void showInit(RobotTelemetry t) {
         t.text("Hood finder: the hood's two stops (and its angles) for Tunables." + section + ".");
         t.text(motor != null ? "Motor hood: nothing is powered; move the hood by hand. Start it on the stop you call 0."
-                : "Servo hood: nothing moves until you choose a start point and press A.");
+                : "Servo hood: nothing moves until you choose a start point and press {A}.");
         if (pulseUs != null) t.text(String.format(java.util.Locale.US, "Full range (Robot.java .fullRange()): %.0f-%.0f us, as in a match.", pulseUs[0], pulseUs[1]));
-        t.text("Press START.");
+        t.text("Press {PLAY} on the Driver Hub.");
     }
 
     @Override
@@ -206,7 +206,7 @@ public abstract class HoodFinderOpMode extends FinderOpMode {
     private void savePoint() {
         if (!known()) return;
         if (!angleGiven) {
-            note = "Measure the hood's angle here first: hold LB and use the D-pad.";
+            note = "Measure the hood's angle here first: hold {LB} and use the D-pad.";
             return;
         }
         points.add(new double[] {here(), angle});
@@ -248,7 +248,7 @@ public abstract class HoodFinderOpMode extends FinderOpMode {
         String table = null;
         if (!points.isEmpty()) {
             if (!stops || !angles) {
-                problem = "For a calibration table, give the angle at BOTH stops (hold LB + D-pad there, then X or B again).";
+                problem = "For a calibration table, give the angle at BOTH stops (hold {LB} + D-pad there, then {X} or {B} again).";
             } else {
                 List<double[]> rows = new ArrayList<>(points);
                 rows.add(new double[] {posA, angleA});
@@ -263,8 +263,8 @@ public abstract class HoodFinderOpMode extends FinderOpMode {
                 }
             }
         } else if (stops && (Double.isNaN(angleA) != Double.isNaN(angleB))) {
-            problem = "Angle at " + (Double.isNaN(angleA) ? "stop A" : "stop B") + " missing: hold LB + D-pad there, then "
-                    + (Double.isNaN(angleA) ? "X" : "B") + " again (or leave both out: the hood then works in positions).";
+            problem = "Angle at " + (Double.isNaN(angleA) ? "stop A" : "stop B") + " missing: hold {LB} + D-pad there, then "
+                    + (Double.isNaN(angleA) ? "{X}" : "{B}") + " again (or leave both out: the hood then works in positions).";
         }
         if (table != null) {
             results.set("hood:1", table);
@@ -288,12 +288,12 @@ public abstract class HoodFinderOpMode extends FinderOpMode {
     static String tableProblem(List<double[]> sorted) {
         int dir = 0;
         for (int i = 1; i < sorted.size(); i++) {
-            if (sorted.get(i)[0] == sorted.get(i - 1)[0]) return "Two points at the same place: Y undoes the last one.";
+            if (sorted.get(i)[0] == sorted.get(i - 1)[0]) return "Two points at the same place: {Y} undoes the last one.";
             double d = sorted.get(i)[1] - sorted.get(i - 1)[1];
             int now = d > 0 ? 1 : d < 0 ? -1 : 0;
             if (now == 0 || (dir != 0 && now != dir)) {
                 return "The angles must keep going one way along the hood (" + FinderResults.num(sorted.get(i - 1)[1], 1) + " then "
-                        + FinderResults.num(sorted.get(i)[1], 1) + "): measure again, Y undoes the last point.";
+                        + FinderResults.num(sorted.get(i)[1], 1) + "): measure again, {Y} undoes the last point.";
             }
             dir = now;
         }
@@ -307,19 +307,19 @@ public abstract class HoodFinderOpMode extends FinderOpMode {
     protected void show(RobotTelemetry t) {
         t.section("Hood \"" + device + "\" (" + (motor != null ? "motor" : "servo") + ")");
         if (servo != null && Double.isNaN(position)) {
-            t.line("Start point", FinderResults.num(startAt, 3) + "  (D-pad up/down; A = move the servo there)");
+            t.line("Start point", FinderResults.num(startAt, 3) + "  (D-pad up/down; {A} = move the servo there)");
             t.line("Step", step.label() + "  (D-pad left = smaller, right = bigger)");
-            t.text("Choose a start point near where the servo sits now. Nothing moves until A.");
+            t.text("Choose a start point near where the servo sits now. Nothing moves until {A}.");
             return;
         }
         t.line("Position", text(here()) + (motor != null ? " ticks (move the hood by hand)" : ""));
         if (servo != null) t.line("Step", step.label() + "  (D-pad left = smaller, right = bigger)");
-        t.line("Angle here", angleGiven ? FinderResults.num(angle, 1) + " (hold LB + D-pad)"
-                : "- (hold LB + D-pad to give one" + (angle != 0 ? "; it starts from " + FinderResults.num(angle, 1) : "") + ")");
-        t.line("Stop A", Double.isNaN(posA) ? "- (X)" : text(posA) + (Double.isNaN(angleA) ? "" : " at " + FinderResults.num(angleA, 1)));
-        t.line("Stop B", Double.isNaN(posB) ? "- (B)" : text(posB) + (Double.isNaN(angleB) ? "" : " at " + FinderResults.num(angleB, 1)));
-        t.line("Points", points.size() + " (A saves one, Y undoes)");
-        if (servo != null) t.text("A straining servo hums: back off a little from each stop before X / B.");
+        t.line("Angle here", angleGiven ? FinderResults.num(angle, 1) + " (hold {LB} + D-pad)"
+                : "- (hold {LB} + D-pad to give one" + (angle != 0 ? "; it starts from " + FinderResults.num(angle, 1) : "") + ")");
+        t.line("Stop A", Double.isNaN(posA) ? "- ({X})" : text(posA) + (Double.isNaN(angleA) ? "" : " at " + FinderResults.num(angleA, 1)));
+        t.line("Stop B", Double.isNaN(posB) ? "- ({B})" : text(posB) + (Double.isNaN(angleB) ? "" : " at " + FinderResults.num(angleB, 1)));
+        t.line("Points", points.size() + " ({A} saves one, {Y} undoes)");
+        if (servo != null) t.text("A straining servo hums: back off a little from each stop before {X} / {B}.");
         if (!note.isEmpty()) t.text(note);
         if (!problem.isEmpty()) t.warn(problem);
     }
@@ -328,15 +328,15 @@ public abstract class HoodFinderOpMode extends FinderOpMode {
     protected String[] helpLines() {
         return new String[] {
             "Finds the hood's two stops and its angles.",
-            "Servo: D-pad up/down = a start point, A = move",
+            "Servo: D-pad up/down = a start point, {A} = move",
             "  there; then up/down moves by the step,",
             "  left/right = smaller/bigger step (0.1-0.001).",
             "Motor: unpowered, move the hood by hand.",
-            "Go to one stop, back off a hair: X = stop A.",
-            "The other stop: B = stop B.",
-            "Angles (optional): hold LB + D-pad = the angle",
-            "  you measured here, before X / B / A.",
-            "A = save a point (position, angle), Y = undo.",
+            "Go to one stop, back off a hair: {X} = stop A.",
+            "The other stop: {B} = stop B.",
+            "Angles (optional): hold {LB} + D-pad = the angle",
+            "  you measured here, before {X} / {B} / {A}.",
+            "{A} = save a point (position, angle), {Y} = undo.",
             "3+ points: a calibration table (a linkage).",
             "Copy the lines into Tunables.java.",
         };

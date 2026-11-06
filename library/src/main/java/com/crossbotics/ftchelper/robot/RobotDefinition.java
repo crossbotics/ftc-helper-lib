@@ -1033,7 +1033,7 @@ public abstract class RobotDefinition {
                             + l.sprayWords(TunableSection.of(tunablesClass != null ? tunablesClass : findTunables(), l.name()))));
             out.add(new Feature(Feature.Kind.AUTOMATIC, "Feed stop", "", "a feed stop servo: .feedStop(\"name\") on the launcher",
                     l.feedStopName() == null ? ".feedStop(\"name\") on the launcher, if the robot has a feed stop" : "",
-                    l.feedStopName() == null ? "" : l.feedStopName() + ": hold at START, open for each piece, closed when the shot is seen"));
+                    l.feedStopName() == null ? "" : l.feedStopName() + ": hold from {PLAY}, open for each piece, closed when the shot is seen"));
             StringBuilder path = new StringBuilder();
             for (Intake p : l.pushers()) path.append(path.length() == 0 ? "" : ", ").append(names.containsKey(p) ? names.get(p) : p.name());
             out.add(new Feature(Feature.Kind.AUTOMATIC, "Piece path: parts that push a piece in", "", ".pushedBy(intake) on the launcher",
@@ -1348,7 +1348,7 @@ public abstract class RobotDefinition {
             if (!startingLogged) {
                 startingLogged = true;
                 try {
-                    for (String n : startingLines) com.qualcomm.robotcore.util.RobotLog.ii("ftc-helper", "INIT " + n);
+                    for (String n : startingLines) com.qualcomm.robotcore.util.RobotLog.ii("ftc-helper", "INIT " + com.crossbotics.ftchelper.gamepad.ButtonNames.say(n));
                 } catch (RuntimeException | LinkageError e) {
                     // no robot log (a test without the SDK): the tuning menu still shows each value
                 }

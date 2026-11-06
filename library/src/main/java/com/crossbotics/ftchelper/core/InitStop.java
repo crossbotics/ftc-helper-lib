@@ -55,8 +55,8 @@ public final class InitStop {
         while (!op.isStopRequested()) {
             op.telemetry.clearAll();
             op.telemetry.addLine("INIT STOPPED: the robot did not start.");
-            op.telemetry.addLine(why);
-            op.telemetry.addLine("Fix it, then press INIT again. Press STOP now.");
+            op.telemetry.addLine(com.crossbotics.ftchelper.gamepad.ButtonNames.say(why));
+            op.telemetry.addLine("Fix it, then press INIT again. Press STOP (■) on the Driver Hub now.");
             op.telemetry.update();
             op.idle();
         }

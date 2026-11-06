@@ -41,6 +41,7 @@ ALLOWED_LOOPS = {
     "finders/DriveTunerOpMode.java": ({"chooseNext", "choosePrevious"}, "a short search for the next test in a fixed list"),
     "util/BackgroundWorker.java": ({"run"}, "the background thread's own loop (not the robot's loop)"),
     "core/InitStop.java": ({"showAndWait"}, "an INIT error: shows it and waits for STOP (nothing moves)"),
+    "gamepad/ButtonNames.java": ({"say"}, "goes once through the marks in one short screen line (it never waits)"),
 }
 
 # The methods allowed to wait another way.

@@ -64,7 +64,7 @@ public abstract class FeedStopFinderOpMode extends FinderOpMode {
     protected void showInit(RobotTelemetry t) {
         if (!problem.isEmpty()) t.warn(problem);
         t.text("Feed stop finder: where it holds, where it lets a piece through.");
-        t.text("Nothing moves until you press A. Press START.");
+        t.text("Nothing moves until you press {A}. Press {PLAY}.");
     }
 
     @Override
@@ -123,17 +123,17 @@ public abstract class FeedStopFinderOpMode extends FinderOpMode {
             return;
         }
         if (!moved()) {
-            t.line("Start point", FinderResults.num(startAt, 3) + "  (D-pad up/down; A = move the feed stop there)");
+            t.line("Start point", FinderResults.num(startAt, 3) + "  (D-pad up/down; {A} = move the feed stop there)");
             t.line("Step", step.label() + "  (D-pad left = smaller, right = bigger)");
-            t.text("Choose a start point near where it sits now. Nothing moves until A.");
+            t.text("Choose a start point near where it sits now. Nothing moves until {A}.");
             return;
         }
         t.line("Position", FinderResults.num(position, 3));
         t.line("Step", step.label() + "  (D-pad left = smaller, right = bigger)");
-        t.line("Hold (X)", Double.isNaN(hold) ? "-" : FinderResults.num(hold, 3));
-        t.line("Release (B)", Double.isNaN(release) ? "-" : FinderResults.num(release, 3));
-        t.text("D-pad up/down = move, X = hold here, B = release here"
-                + (!Double.isNaN(hold) && !Double.isNaN(release) ? ", A = try hold / release" : ""));
+        t.line("Hold ({X})", Double.isNaN(hold) ? "-" : FinderResults.num(hold, 3));
+        t.line("Release ({B})", Double.isNaN(release) ? "-" : FinderResults.num(release, 3));
+        t.text("D-pad up/down = move, {X} = hold here, {B} = release here"
+                + (!Double.isNaN(hold) && !Double.isNaN(release) ? ", {A} = try hold / release" : ""));
     }
 
     @Override
@@ -142,13 +142,13 @@ public abstract class FeedStopFinderOpMode extends FinderOpMode {
             "Finds the feed stop's hold and release positions.",
             "1. Put a piece behind the feed stop. Wheel off.",
             "2. D-pad up/down = a START POINT near where it is",
-            "   (nothing moves), A = move it there.",
+            "   (nothing moves), {A} = move it there.",
             "3. D-pad up/down = move by the step; left/right =",
             "   smaller/bigger step (0.1 to 0.001, starts 0.05).",
             "4. Where it holds the piece firmly (not straining",
-            "   on the frame): X = hold.",
-            "5. Where the piece rolls through freely: B = release.",
-            "6. A = try hold / release. Copy the line.",
+            "   on the frame): {X} = hold.",
+            "5. Where the piece rolls through freely: {B} = release.",
+            "6. {A} = try hold / release. Copy the line.",
             "STOP saves the line to the results file.",
         };
     }

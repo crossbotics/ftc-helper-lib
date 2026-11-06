@@ -71,3 +71,13 @@ Any array of four wheel values is in this order:
 Standard (tank) drive left/right arrays are `[left, right]`.
 
 `MecanumMixer.FRONT_LEFT` (0), `FRONT_RIGHT` (1), `BACK_LEFT` (2), `BACK_RIGHT` (3) name the positions.
+
+## Button names: START and ▶
+
+- **▶** is the Driver Hub's start button: press it after INIT to start the OpMode. The screens never
+  call it START.
+- **START** is the small button on the gamepad (OPTIONS on a PS controller).
+- The docs use the Logitech names (A, B, X, Y, LB, RB, LT, RT, BACK, START, GUIDE). The library's screens
+  show the names on YOUR controller: × ○ □ △, L1 R1 L2 R2, SHARE OPTIONS PS on a PlayStation one
+  ([ButtonNames](modules/gamepad.md#buttonnames)).
+

@@ -50,7 +50,8 @@ public class LibraryControlsTest {
     }
 
     private static String line(List<String> help, String start) {
-        for (String h : help) if (h.startsWith(start)) return h;
+        // As the screen shows it: the button marks ({BACK}) become names.
+        for (String h : help) if (h.startsWith(start)) return com.crossbotics.ftchelper.gamepad.ButtonNames.say(h);
         return "";
     }
 

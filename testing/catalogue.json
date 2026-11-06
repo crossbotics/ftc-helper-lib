@@ -3548,10 +3548,10 @@
     "steps": [
      {
       "ol": [
-       "Pick the TeleOp and press INIT. The screen must show \"Choose (D-pad), then START\" with \"> Alliance: BLUE\" and \"Profile: ...\" under it.",
+       "Pick the TeleOp and press INIT. The screen must show \"Choose (D-pad), then ▶\" with \"> Alliance: BLUE\" and \"Profile: ...\" under it.",
        "Press gamepad 1 D-pad right. The alliance must change to RED (\"Alliance : RED (chosen here)\").",
        "Press D-pad down, then D-pad left. The profile must change (COMPETITION to PRACTICE, or back). In PRACTICE, the screen must say \"PRACTICE profile\".",
-       "Press START and drive. In PRACTICE the top speed must be lower (`Tunables.Drive.practiceMaxPower`).",
+       "Press ▶ on the Driver Hub and drive. In PRACTICE the top speed must be lower (`Tunables.Drive.practiceMaxPower`).",
        "STOP, INIT again: the profile you chose must still be there.",
        "Set the profile back to what it was."
       ]
@@ -3573,6 +3573,80 @@
     "different": [
      {
       "p": "A TeleOp of your own that overrides `initMenu()` to return false has no menu: X and B still choose the alliance."
+     }
+    ]
+   }
+  },
+  {
+   "id": "CTL-05",
+   "title": "A PS controller sees its own button names on the screens",
+   "area": "controls",
+   "priority": "medium",
+   "where": "both",
+   "minutes": 10,
+   "needs": [],
+   "kit_bots": [
+    "gobilda",
+    "rev",
+    "andymark",
+    "studica"
+   ],
+   "since": "v0.32.0",
+   "docs": [
+    {
+     "path": "docs/modules/gamepad.md",
+     "anchor": "buttonnames"
+    }
+   ],
+   "file": "testing/tests/CTL-05.md",
+   "sections": {
+    "why": [
+     {
+      "p": "A student holding a PlayStation-style controller has no button called \"A\". The library's screens must name the buttons printed on the controller in use, and say ▶ (not START) for the Driver Hub's start button."
+     }
+    ],
+    "safety": [
+     {
+      "ul": [
+       "On a real robot: wheels on a block before you press ▶. Nothing moves in INIT."
+      ]
+     }
+    ],
+    "setup": [
+     {
+      "ul": [
+       "A robot in five files (any kit bot), or its simulator robot file.",
+       "A PS4, PS5 or Etpark controller as gamepad 1 (linked with OPTIONS + ×). In the simulator: plug it into the laptop and pick it as gamepad 1 on the page, or put `set gamepad 1 ps` at the top of a scenario."
+      ]
+     }
+    ],
+    "steps": [
+     {
+      "ol": [
+       "INIT **Tune and check**. The menu's last lines must say \"× = open it. Then ▶.\" and \"SHARE = back to this menu\".",
+       "Open the Servo Finder with ×. Its screen must say \"Press ▶\" and \"PS (center button), or hold OPTIONS 1 s = help\".",
+       "Press ▶ on the Driver Hub, then the PS button: the help page must name × ○ □ △ and L1, with no A, B, X or Y.",
+       "STOP. INIT your TeleOp and press the PS button: the button map must say \"G1 ×\", \"G1 R2\" and the like.",
+       "Do steps 1 and 2 again with a Logitech or Xbox controller: the screens must say A, B, BACK, GUIDE and START."
+      ]
+     }
+    ],
+    "pass": [
+     {
+      "p": "Each step shows what it says, on 2 runs out of 2. No line shows a mark in braces, such as `{A}`."
+     }
+    ],
+    "record": [
+     {
+      "ul": [
+       "The controller (make and model) and where (simulator or real robot).",
+       "Any screen line that still shows a letter name on a PS controller, or a `{...}` mark."
+      ]
+     }
+    ],
+    "different": [
+     {
+      "p": "Lines your own code writes with plain `telemetry.addLine(...)` keep the names you wrote. Send them through `RobotTelemetry` with marks such as `{A}` to get the controller's names."
      }
     ]
    }

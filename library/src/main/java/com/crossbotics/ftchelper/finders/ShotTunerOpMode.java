@@ -338,12 +338,12 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
                     + " in, heading " + FinderResults.num(spot.length > 2 ? spot[2] : 0, 0) + " (seen from your wall), then INIT ("
                     + robotDef.alliance() + ")");
         }
-        if (names.size() > 1) t.line("Tables", FinderResults.commas(names) + " (Y until > Table, D-pad to choose)");
-        t.text("Steps: 1 pick the table. 2 park at the nearest distance. 3 LB spin up, RB shoot 3-5,");
-        t.text("A = HIT, B = MISS for each; D-pad to the next speed, again. X saves the best speed.");
+        if (names.size() > 1) t.line("Tables", FinderResults.commas(names) + " ({Y} until > Table, D-pad to choose)");
+        t.text("Steps: 1 pick the table. 2 park at the nearest distance. 3 {LB} spin up, {RB} shoot 3-5,");
+        t.text("{A} = HIT, {B} = MISS for each; D-pad to the next speed, again. {X} saves the best speed.");
         t.text("4 back 1-2 ft, again: 4-6 points per table.");
         t.text("5 copy the lines into Tunables.java (also saved on the hub at STOP).");
-        t.text("The flywheel stays off until you press LB. Press START.");
+        t.text("The flywheel stays off until you press {LB}. Press {PLAY}.");
     }
 
     @Override
@@ -477,7 +477,7 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
             return;
         }
         if (trials.unmarkedCount() > 0) {
-            note = "Mark the " + trials.unmarkedCount() + " shot(s) first (A = HIT, B = MISS), then X.";
+            note = "Mark the " + trials.unmarkedCount() + " shot(s) first ({A} = HIT, {B} = MISS), then {X}.";
             return;
         }
         if (tally.isEmpty()) {
@@ -485,7 +485,7 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
             double now = nowSec();
             if (Double.isNaN(noShotsAskedAt) || now - noShotsAskedAt > CONFIRM_SEC) {
                 noShotsAskedAt = now;
-                note = "No shots marked here: shoot and mark 3-5 first (A / B). Press X again to save the speed now anyway.";
+                note = "No shots marked here: shoot and mark 3-5 first ({A} / {B}). Press {X} again to save the speed now anyway.";
                 return;
             }
         }
@@ -658,9 +658,9 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
 
     @Override
     protected void show(RobotTelemetry t) {
-        t.section("Shot tuner  (Y = what the D-pad changes)");
+        t.section("Shot tuner  ({Y} = what the D-pad changes)");
         t.line((field == Field.SPEED ? "> " : "  ") + "Speed", FinderResults.num(rpm, 0) + " RPM, measured "
-                + FinderResults.num(launcher.getFlywheel().getRpm(), 0) + (spinning ? "" : "  (OFF: LB)"));
+                + FinderResults.num(launcher.getFlywheel().getRpm(), 0) + (spinning ? "" : "  (OFF: {LB})"));
         if (hood != null) t.line((field == Field.HOOD ? "> " : "  ") + "Hood", hoodText(hoodDeg));
         if (names.size() > 1) t.line((field == Field.TABLE ? "> " : "  ") + "Table", tuning.toUpperCase(java.util.Locale.US)
                 + "  (" + FinderResults.commas(names).toUpperCase(java.util.Locale.US) + ")");   // all in capitals, as the table in use
@@ -682,7 +682,7 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         }
         t.line("Ready", launcher.isReady() ? "YES" : "no: " + launcher.whyNotReady());
         int waiting = trials.unmarkedCount();
-        t.line("Shots fired", launcher.getShotsFired() + (waiting == 0 ? "" : ", " + waiting + " to mark (A hit / B miss)"));
+        t.line("Shots fired", launcher.getShotsFired() + (waiting == 0 ? "" : ", " + waiting + " to mark ({A} hit / {B} miss)"));
         // The way teams tune: hits / shots at this speed (and hood), and every one tried at this spot.
         t.line("Hits at " + FinderResults.num(rpm, 0) + (hood != null ? ", hood " + hoodText(hoodDeg) : ""),
                 tally.hits(rpm, hoodNow()) + "/" + tally.shots(rpm, hoodNow()) + (tally.shots(rpm, hoodNow()) < 3 ? "  (shoot 3-5)" : ""));
@@ -693,7 +693,7 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         t.line("Points", FinderResults.commas(counts) + "  (4-6 per table)");
         if (!Double.isNaN(recoverySec)) t.line("Recovery", FinderResults.num(recoverySec, 2) + " s");
         if (!launcher.getLastProblem().isEmpty()) t.warn(launcher.getLastProblem());
-        t.text("RB shoot, hold RT keep shooting, A HIT, B MISS, X save best, hold BACK 1 s delete");
+        t.text("{RB} shoot, hold {RT} keep shooting, {A} HIT, {B} MISS, {X} save best, hold {BACK} 1 s delete");
         t.text("Left stick click = undo the last mark, right stick click = drop the last shot (no piece)");
         t.text("Next: " + nextStep(d));
         if (!note.isEmpty()) t.text(note);
@@ -711,15 +711,15 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
 
     // The next thing to do, in a few words, from what the tuner sees now.
     private String nextStep(double d) {
-        if (!spinning) return "LB to spin up the flywheel.";
+        if (!spinning) return "{LB} to spin up the flywheel.";
         if (Double.isNaN(d)) {
             return odometryDistance ? "point the camera at the goal, or check the odometry." : "point the camera at the goal.";
         }
-        if (trials.unmarkedCount() > 0) return "A = HIT or B = MISS for each shot.";
-        if (tally.shots(rpm, hoodNow()) < 3) return "RB to shoot 3-5 at this speed, marking each A HIT / B MISS.";
-        if (tally.tries() < 2) return "D-pad to another speed, shoot 3-5 again; X saves the best.";
-        if (tables.get(tuning).points().isEmpty()) return "X saves the best speed here.";
-        return "X saves; move 1-2 ft and do it again (4-6 points), then copy the lines into Tunables.java.";
+        if (trials.unmarkedCount() > 0) return "{A} = HIT or {B} = MISS for each shot.";
+        if (tally.shots(rpm, hoodNow()) < 3) return "{RB} to shoot 3-5 at this speed, marking each {A} HIT / {B} MISS.";
+        if (tally.tries() < 2) return "D-pad to another speed, shoot 3-5 again; {X} saves the best.";
+        if (tables.get(tuning).points().isEmpty()) return "{X} saves the best speed here.";
+        return "{X} saves; move 1-2 ft and do it again (4-6 points), then copy the lines into Tunables.java.";
     }
 
     @Override
@@ -727,16 +727,16 @@ public abstract class ShotTunerOpMode extends FinderOpMode {
         return new String[] {
             "Builds the shot table: distance -> speed (+ hood).",
             "Nobody in the line of fire. Eye protection on.",
-            "LB = flywheel on/off. Y = what the D-pad changes:",
+            "{LB} = flywheel on/off. {Y} = what the D-pad changes:",
             "  SPEED / HOOD / DISTANCE (by hand) / TABLE.",
             "D-pad up/down: 100 RPM / 1/5 of the hood /",
             "  6 in; right/left: 10 RPM / 1/50 / 1 in.",
-            "RB = shoot one, hold RT = keep shooting.",
-            "A = HIT, B = MISS (the oldest shot not marked).",
+            "{RB} = shoot one, hold {RT} = keep shooting.",
+            "{A} = HIT, {B} = MISS (the oldest shot not marked).",
             "L stick click = undo mark, R = drop last shot.",
-            "X = save the best speed. Hold BACK 1 s = delete.",
+            "{X} = save the best speed. Hold {BACK} 1 s = delete.",
             "Sticks = drive (if set up), left trigger = slow.",
-            "3-5 shots a speed, 2-3 speeds, X; back 1-2 ft.",
+            "3-5 shots a speed, 2-3 speeds, {X}; back 1-2 ft.",
             "4-6 points per table, then copy into Tunables.",
         };
     }

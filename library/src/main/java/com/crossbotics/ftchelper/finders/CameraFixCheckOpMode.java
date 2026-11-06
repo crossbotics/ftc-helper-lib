@@ -60,7 +60,7 @@ public abstract class CameraFixCheckOpMode extends FinderOpMode {
     protected void showInit(RobotTelemetry t) {
         if (!problem.isEmpty()) t.warn(problem);
         t.text("Camera fix check (ALPHA): robot FACING AWAY from your wall,");
-        t.text("tags in view. Nothing moves. Press START.");
+        t.text("tags in view. Nothing moves. Press {PLAY}.");
     }
 
     @Override
@@ -105,7 +105,7 @@ public abstract class CameraFixCheckOpMode extends FinderOpMode {
         double[] ours = new CameraPoseFix(set).toOurs(s.mt1XIn, s.mt1YIn);
         t.line("Turn that fits", String.format(Locale.US, "%.0f deg", suggested));
         t.line("Robot's place (our frame)", String.format(Locale.US, "x %.1f, y %.1f in: check it with a tape", ours[0], ours[1]));
-        t.text("X = save the turn for BLUE, B = for RED (at the red wall)");
+        t.text("{X} = save the turn for BLUE, {B} = for RED (at the red wall)");
     }
 
     @Override
@@ -119,8 +119,8 @@ public abstract class CameraFixCheckOpMode extends FinderOpMode {
             "   the field's centre line (+ = right), y from the",
             "   centre (+ = away from you). They should match",
             "   within a few inches.",
-            "3. X = save the turn for BLUE. At the RED wall,",
-            "   B = save it for RED. Copy the line.",
+            "3. {X} = save the turn for BLUE. At the RED wall,",
+            "   {B} = save it for RED. Copy the line.",
             "Not for BIOBUZZ: its tags move with the HIVE.",
         };
     }

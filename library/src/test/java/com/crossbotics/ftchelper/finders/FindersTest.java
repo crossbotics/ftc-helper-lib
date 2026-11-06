@@ -182,7 +182,19 @@ public class FindersTest {
             String[] lines = f.helpLines();
             assertTrue(f.finderName() + ": help is empty", lines.length > 0);
             assertTrue(f.finderName() + ": help is too long for the screen", lines.length <= 13);
-            for (String line : lines) assertTrue(f.finderName() + ": line too wide: " + line, line.length() <= 52);
+            // As the screen shows it: the button marks ({A}) become names, on both kinds of controller.
+            for (com.crossbotics.ftchelper.gamepad.ButtonNames.Style style : com.crossbotics.ftchelper.gamepad.ButtonNames.Style.values()) {
+                com.crossbotics.ftchelper.gamepad.ButtonNames.force(1, style);
+                try {
+                    for (String raw : lines) {
+                        String line = com.crossbotics.ftchelper.gamepad.ButtonNames.say(raw);
+                        assertTrue(f.finderName() + " (" + style + "): line too wide: " + line, line.length() <= 52);
+                        assertFalse(f.finderName() + ": a mark that is not a button: " + line, line.contains("{"));
+                    }
+                } finally {
+                    com.crossbotics.ftchelper.gamepad.ButtonNames.force(1, null);
+                }
+            }
         }
     }
 
