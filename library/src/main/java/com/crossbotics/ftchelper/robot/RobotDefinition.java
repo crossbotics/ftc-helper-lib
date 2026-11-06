@@ -1345,6 +1345,14 @@ public abstract class RobotDefinition {
             // PRACTICE (where the team tunes). The parts catalog's numbers (the seller's, such as a servo's
             // speed) and numbers not written at all are fine as they are: robot log only.
             List<String> guesses = libraryGuesses(startingLines);
+            // Control gains from the catalog (a flywheel's kF/kP, a lift's kP) are worked out, not tuned: they
+            // stay on the screen in every profile, so a team never goes to an event on them unknowingly.
+            List<String> gains = catalogGains(startingLines);
+            if (!gains.isEmpty()) {
+                StringBuilder g = new StringBuilder();
+                for (String p : gains) g.append(g.length() == 0 ? "" : ", ").append(p);
+                t.text("Starting gains (worked out, not tuned): " + g + ". Tune them (Flywheel Finder, tuning menu)");
+            }
             if (!loud && !guesses.isEmpty()) {
                 StringBuilder names = new StringBuilder();
                 int shown = Math.min(guesses.size(), STARTING_NAMES_SHOWN);
@@ -1368,6 +1376,18 @@ public abstract class RobotDefinition {
     // The part a "starting numbers" note is about ("Tunables.Launcher: DEFAULT, library defaults: ...",
     // "Launcher: defaults from the catalog (...)", "Tunables.Intake not written: library defaults used (fine)"),
     // or null for any other note.
+    // The parts whose control GAINS came from the parts catalog: "Launcher" from "Launcher: defaults from the
+    // catalog (gobilda-5203-6000): kF 11.7, kP 1.17, ...". A servo's travelSec (a speed) is not a gain.
+    static List<String> catalogGains(List<String> notes) {
+        List<String> out = new ArrayList<>();
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile("^(\\w+): defaults from [^:]+: (.*)$");
+        for (String note : notes) for (String n : note.split(";\\s+")) {
+            java.util.regex.Matcher m = p.matcher(n.trim());
+            if (m.find() && m.group(2).matches("(?s).*\\bk[PIDF] .*") && !out.contains(m.group(1))) out.add(m.group(1));
+        }
+        return out;
+    }
+
     /** How many "Part.field" names the INIT line shows before "and N more". */
     static final int STARTING_NAMES_SHOWN = 4;
 

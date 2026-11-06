@@ -595,7 +595,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
                     () -> spinning);   // (true in an eject too: the wheel brings the piece to throw out)
             if (feedWheelOutWith != null) {
                 final Intake out = feedWheelOutWith;
-                gate.wheelBacksOutWhile(out::isPushingOut);
+                gate.wheelBacksOutWhile(() -> out.isPushingOut() && !part.isShooting());
             }
             gate.clock = clock;
             feed = gate;
@@ -807,6 +807,12 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     public void idle() {
         needBuilt(part);
         touch();
+        idleNow();
+    }
+
+    // Back to idle WITHOUT touch(): the automatic return after a shot fired while off (update()). touch()
+    // would count it as the driver moving the launcher and cancel an action still running.
+    private void idleNow() {
         spinning = false;
         idleAfterShots = false;
         shotsAtPause = 0;   // shots waiting from a pause are dropped, like the others
@@ -824,7 +830,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     /** Spins up if idle, idles if spinning. */
     @Override
     public void toggle() {
-        if (spinning) idle();
+        // Spun up only for a shot fired while off: this toggle means "keep it on" (the shot still goes).
+        if (spinning && !idleAfterShots) idle();
         else spinUp();
     }
 
@@ -835,14 +842,18 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
      * launcher's own RB button counts its taps the same way (see {@link #fireWhileHeld()}). The piece
      * being fed now does not count, only the ones still waiting. {@code maxFiringQueue = 0}: no queue at
      * all, a press while a shot is still on its way (waiting or being fed) is ignored. {@link #fire(int)}
-     * has no limit. Fired while the wheel is off (idle), it goes back to idle after the shots.
+     * has no limit. Pressed while the wheel is off (idle), it spins up for the shot and goes back to idle after it.
      */
     public void fire() {
         needBuilt(part);
         // The driver asks first: a running action lets go here, and its shots go with it. Then count.
         touch();
         if (maxFiringQueue == 0 ? part.isShooting() : part.getShotsLeft() >= maxFiringQueue) return;   // full: no extra shot
+        // The driver switched the wheel off: spin up for this shot, then back to off (an autonomous's fire(n)
+        // and fire actions keep it spun up, as before).
+        boolean wasOff = !spinning;
         fire(1);
+        if (wasOff) idleAfterShots = true;
     }
 
     /** The most shots {@link #fire()} lets wait at once (Tunables {@code maxFiringQueue}, default 4; 0 = no queue). */
@@ -852,14 +863,13 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
 
     /**
      * Fires {@code count} pieces, one after another (no queue limit: an autonomous asks for what it means).
-     * Fired while the wheel is off (idle), it goes back to idle after the last shot.
+     * It leaves the wheel spun up (only the driver's {@link #fire()} from an idle wheel goes back to idle).
      */
     public void fire(int count) {
         needBuilt(part);
         touch();
         shotsAfterHold += Math.max(0, count);
         askedToFire = true;
-        if (!spinning && count > 0) idleAfterShots = true;
         spinning = true;
         part.shoot(count);
     }
@@ -1567,7 +1577,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         modeNow = chooseMode();
         part.shotMode(modeNow);
         // Fired while it was off: back to idle once the last shot has gone (not while the button is held).
-        if (idleAfterShots && !holding && !part.isShooting()) idle();
+        if (idleAfterShots && !holding && !part.isShooting()) idleNow();
         part.update();
     }
 

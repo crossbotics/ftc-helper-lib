@@ -186,8 +186,9 @@ public class Tunables {
 - **A part that is not on the robot** ([`optional()`](#parts-not-on-the-robot-yet), device not in the
   configuration) needs no section: nothing about its numbers stops INIT, not even a Lift's `min`/`max`.
 - **Missing numbers are not errors**, with a few exceptions: the library's default is used and INIT
-  names a library guess in its `Library starting values` line (PRACTICE only) (the robot log has the full line,
-  `Tunables.Lift: kD, kF not written: library defaults used (fine)`). **The exceptions are
+  does not mention a number you did not write (the robot log has it: `Tunables.Lift: kD, kF not written:
+  library defaults used (fine)`). A number written `DEFAULT` is named in PRACTICE, in the `Library starting
+  values` line. **The exceptions are
   safety numbers** (a safety limit never comes from a library default): a Lift's or Arm's `min` and
   `max`, a Hood's `posA` and `posB` (or its `calibration`), a servo Turret's `posA`, `angleA`, `posB`,
   `angleB`, a Turret's `homeAngle` with a home switch, and an interlock rule's zone numbers (none of these for a
@@ -875,7 +876,7 @@ stays), or one table per game piece: `speedByDistancePollen`, `speedByDistanceNe
 at). **First run:** the ones not written start from the parts catalog for the motor in
 `Launcher.flywheel(...)` (F = 32767 / its top speed in counts per second, P = F / 10, I = P / 10, D = 0: a
 6000 RPM motor gets kF 11.7, kP 1.17, kI 0.117), not the hub's own gains, and an unwritten `speedRpm` is 60%
-of the motor's top speed (3600). The parts catalog's numbers are not on the INIT screen (they are fine as they are); the robot
+of the motor's top speed (3600). INIT says `Starting gains (worked out, not tuned): Launcher` until you write your own (the Flywheel Finder); the robot
 log has the values: `Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, kP 1.17, kI 0.117,
 speed 3600 rpm. Run the Flywheel Finder, then the Shot Tuner`. A written number
 always wins; `DEFAULT` in place of a number is the same as no line

@@ -62,11 +62,13 @@ public class InitScreenTest {
             assertFalse("no long per-part lines on the screen: " + all, all.contains("defaults from the catalog ("));
             assertTrue(all + " notes " + r.notes(), all.contains("Library starting values (DEFAULT): Launcher.stepRpm, Launcher.readyBandRpm"));
             assertFalse("the catalog's numbers are not named: " + all, all.contains("Claw.") || all.contains("Intake."));
+            assertTrue("catalog GAINS stay on the screen: " + all, all.contains("Starting gains (worked out, not tuned): Launcher"));
 
             com.crossbotics.ftchelper.core.Profile.set(com.crossbotics.ftchelper.core.Profile.COMPETITION);
             RobotTelemetry t2 = new RobotTelemetry(new PretendTelemetry().telemetry);
             r.showNotes(t2);
             assertFalse("not at an event: " + t2.pending(), t2.pending().toString().contains("Library starting values"));
+            assertTrue("gains also at an event: " + t2.pending(), t2.pending().toString().contains("Starting gains"));
         } finally {
             com.crossbotics.ftchelper.core.Profile.resetForTests();
         }

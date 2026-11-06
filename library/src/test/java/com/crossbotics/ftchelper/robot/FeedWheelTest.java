@@ -334,6 +334,32 @@ public class FeedWheelTest {
         r.launcher.fire();
         runFor(r, fly, 1.5);
         assertTrue("spun up by the driver: it stays on", r.launcher.isSpinning());
+
+        // Off, a press spins it up; a toggle now means "keep it on": the shot still goes and it stays on.
+        r.launcher.idle();
+        runFor(r, fly, 0.1);
+        r.launcher.fire();
+        runFor(r, fly, 0.02);
+        r.launcher.toggle();
+        runFor(r, fly, 1.5);
+        assertTrue("kept on", r.launcher.isSpinning());
+    }
+
+    // An autonomous's fire(n) from an idle wheel: the action runs to its end, and the wheel stays spun up
+    // (only the driver's fire() goes back to off).
+    @Test public void anActionsShotFromIdleRunsToItsEndAndKeepsTheWheelUp() {
+        PretendDevices d = new PretendDevices();
+        Bot r = started(d, WhileFiring.class);
+        PretendMotor fly = d.motor("launcher");
+        r.launcher.idle();
+        runFor(r, fly, 0.1);
+        final boolean[] reached = {false};
+        Action a = Action.named("fire then more").then(() -> r.launcher.fire(1))
+                .waitUntil("the shot", () -> !r.launcher.isShooting(), 5).waitSeconds(0.5).then(() -> reached[0] = true);
+        r.run(a);
+        runFor(r, fly, 3.0);
+        assertTrue("the step after the shot ran", reached[0]);
+        assertTrue("an action's shots keep the wheel spun up", r.launcher.isSpinning());
     }
 
     // maxFiringQueue = 0: no queue. A second press while the first shot is on its way does nothing.

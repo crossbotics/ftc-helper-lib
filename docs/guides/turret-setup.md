@@ -180,8 +180,8 @@ A turret that follows the odometry assumes it turns about the robot's centre.
 
 ## Summary
 
-**Required** means INIT stops without it. Every other number has a default (INIT names the turret in
-its `Library starting values` line in PRACTICE, the robot log; the tuning menu shows each value). The defaults are safe for a first test, not for your robot: write
+**Required** means INIT stops without it. Every other number has a default (in PRACTICE, INIT's
+`Library starting values` line names a number written `DEFAULT`; the robot log has every value; the tuning menu shows each one). The defaults are safe for a first test, not for your robot: write
 `min` and `max` for your wires and hard stops (default -90 to 90), and `encoderOffset` for an absolute
 encoder (default 0, so the turret would think it starts straight forward).
 

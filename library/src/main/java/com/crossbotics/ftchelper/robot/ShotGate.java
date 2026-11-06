@@ -168,7 +168,9 @@ final class ShotGate implements Feeder {
                     : wheelOffAt >= 0 && t >= wheelFrom && t < wheelOffAt;
             // Not firing and the intake pushes out (Launcher.feedWheelOutWith): backward, so the pieces
             // in the feeder go out too. A feed always wins: a shot is never pushed backward.
-            if (!feeding && started && backOut != null && backOut.getAsBoolean()) sendWheelPower(-wheel.wheelPower());
+            // Not while a feed's forward time still runs (wheelOffAt) or the indexer is still busy.
+            boolean feedDone = !feeding && (wheelOffAt < 0 || t >= wheelOffAt) && (indexer == null || !indexer.isBusy());
+            if (feedDone && started && backOut != null && backOut.getAsBoolean()) sendWheelPower(-wheel.wheelPower());
             else sendWheel(on);
         }
     }

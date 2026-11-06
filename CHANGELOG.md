@@ -16,10 +16,13 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 - **A quieter INIT screen:** the "Starting numbers in use" line is now `Library starting values (DEFAULT): ...`,
   in the PRACTICE profile only, and it names the numbers (`Launcher.stepRpm`) left at a library guess. The
   parts catalog's numbers (the seller's, such as a servo's speed) and numbers not written are fine as they are:
-  robot log only. "Switch alliance : off" is gone (the line shows only when it is on). A part's button that
+  robot log only. Control gains worked out from the catalog (a flywheel's kF/kP, a lift's kP) stay on the screen in
+  every profile: `Starting gains (worked out, not tuned): Launcher`. "Switch alliance : off" is gone (the line shows only when it is on). A part's button that
   Controls.java took or freed on purpose ("Intake in (hold): no button ...") goes to the robot log, not the screen.
-- **Firing with the flywheel off:** a fire press while the wheel is idle (switched off) spins it up, fires, and
-  then goes back to idle by itself. Before, it stayed spun up after the shot.
+- **Firing with the flywheel off:** a driver's fire press (`fire()`, the fire button) while the wheel is idle
+  (switched off) spins it up, fires, and then goes back to idle by itself. Before, it stayed spun up after the
+  shot. An autonomous's `fire(n)` and fire actions keep it spun up, as before. The on/off button pressed while
+  such a shot spins up means "keep it on": the shot still goes.
 - **`Tunables.Launcher.maxFiringQueue = 0` is allowed:** no queue, a press while a shot is on its way is ignored.
   Before, 0 counted as 1.
 

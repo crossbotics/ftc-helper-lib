@@ -41,7 +41,9 @@ Write the gamepad, a dot, then the button.
 Some of gamepad 1's buttons are the library's own: the left stick, right stick X, BACK, START, GUIDE,
 LT (slow, with two drivers) and Y (field-centric, on a mecanum with an IMU or odometry, with two
 drivers). With `oneDriver = true`, the left stick click (slow on/off) and the right stick click
-(field-centric on/off) instead of LT and Y. INIT stops with a message if you use one. Every one of
+(field-centric on/off) instead of LT and Y. Field-centric on/off needs a **double tap** (two presses within
+0.35 s, a fixed time: `Buttons.tapGapSec` does not change it): one tap by accident would turn the sticks
+around. INIT stops with a message if you use one. Every one of
 them can be moved or freed: [Moving the library's buttons](#moving-the-librarys-buttons).
 
 ## 2. How it starts
@@ -169,7 +171,7 @@ on the button.
 While the robot is paused (a tap of gamepad 1 BACK), no button job runs, with one exception: a hold's
 stop job (the second job in `hold(job, stopJob)`) still runs when the button is let go, or when the
 pause starts in the middle of a gesture's hold. **Why:** so a part a hold started is told to stop, and
-stays stopped when the pause ends. Field-centric on/off needs a **double tap** (two presses within 0.35 s): one tap by accident would turn the sticks around. Of the library's own buttons, field-centric on/off and slow on/off wait
+stays stopped when the pause ends. Of the library's own buttons, field-centric on/off and slow on/off wait
 too; pause, "forward", the menus, the debug lines, set pose and the alliance switch still work.
 
 ## 4. Feedback
