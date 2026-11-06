@@ -116,7 +116,7 @@ public class GesturesTest {
         make((p1, p2) -> p2.a.hold(log("held")).says("keep going").tap(log("tap")).says("one"));
         pressA(0.1);
         assertEquals(java.util.Arrays.asList("tap"), ran);
-        String help = String.join("\n", plan.help());
+        String help = com.crossbotics.ftchelper.gamepad.ButtonNames.say(String.join("\n", plan.help()));
         assertTrue(help, help.contains("G2 A: hold: keep going; tap: one"));
     }
 
@@ -321,7 +321,7 @@ public class GesturesTest {
         waitSec(0.1);
         pressA(0.06);                                         // the double-tap: 3 buzzes
         assertEquals(java.util.Arrays.asList(3), buzzes);
-        String help = String.join("\n", plan.help());
+        String help = com.crossbotics.ftchelper.gamepad.ButtonNames.say(String.join("\n", plan.help()));
         assertTrue(help, help.contains("G2 B: toggle (buzz: 2 on, 1 off)"));
         assertTrue(help, help.contains("double-tap: job (buzz)"));
     }
@@ -363,7 +363,7 @@ public class GesturesTest {
         g2.x = true; loop(0.02); g2.x = false; loop(0.02);
         g2.left_bumper = false; loop(0.02);
         assertEquals(java.util.Arrays.asList("lb + y", "lb + x"), ran);
-        String help = String.join("\n", plan.help());
+        String help = com.crossbotics.ftchelper.gamepad.ButtonNames.say(String.join("\n", plan.help()));
         assertTrue(help, help.contains("G2 LB + Y: climb"));
         assertTrue(help, help.contains("G2 LB: shift key"));
     }
@@ -399,7 +399,7 @@ public class GesturesTest {
         waitSec(0.1);
         pressA(0.06);
         assertTrue(robot.runner.isBusy());
-        String help = String.join("\n", plan.help());
+        String help = com.crossbotics.ftchelper.gamepad.ButtonNames.say(String.join("\n", plan.help()));
         assertTrue(help, help.contains("double-tap: Wiggle"));
     }
 }

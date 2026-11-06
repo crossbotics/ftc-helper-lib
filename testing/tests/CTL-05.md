@@ -19,8 +19,9 @@ name the buttons printed on the controller in use, and say ▶ (not START) for t
 ## Setup
 
 - A robot in five files (any kit bot), or its simulator robot file.
-- A PS4, PS5 or Etpark controller as gamepad 1 (linked with OPTIONS + ×). In the simulator: plug it into the
-  laptop and pick it as gamepad 1 on the page, or put `set gamepad 1 ps` at the top of a scenario.
+- A PS4, PS5 or Etpark controller as gamepad 1 (linked with OPTIONS + ×). In the simulator: plug a Sony
+  controller into the laptop and pick it as gamepad 1 on the page (an Etpark shows letters there), or put
+  `set gamepad 1 ps` at the top of a scenario.
 
 ## Safety
 

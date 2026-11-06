@@ -41,7 +41,7 @@ import java.util.List;
  * motor's top speed (then the Driver Station says "(motor limit)"). It starts at 0 at every INIT and is
  * the same for every table. The Driver Station shows {@code Speed trim: +3%  READY} as the launcher's
  * first line. The trim used last time is remembered (until the robot app restarts) and offered at
- * INIT: "Trim last time: +3% (double-tap D-pad up after {PLAY} to use it)"; it is never applied by
+ * INIT: "Trim last time: +3% (double-tap D-pad up after ▶ to use it)"; it is never applied by
  * itself. The Shot Tuner never uses it (tables are recorded clean). If you trim the same way match
  * after match, the table is off: tune it again (or fold the trim into Tunables.java) instead.
  *

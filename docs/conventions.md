@@ -76,6 +76,7 @@ Standard (tank) drive left/right arrays are `[left, right]`.
 
 - **▶** is the Driver Hub's start button: press it after INIT to start the OpMode. The screens never
   call it START.
+- **■** is the Driver Hub's stop button (STOP).
 - **START** is the small button on the gamepad (OPTIONS on a PS controller).
 - The docs use the Logitech names (A, B, X, Y, LB, RB, LT, RT, BACK, START, GUIDE). The library's screens
   show the names on YOUR controller: × ○ □ △, L1 R1 L2 R2, SHARE OPTIONS PS on a PlayStation one

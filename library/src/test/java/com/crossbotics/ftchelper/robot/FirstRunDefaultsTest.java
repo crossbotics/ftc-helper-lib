@@ -98,7 +98,7 @@ public class FirstRunDefaultsTest {
         assertEquals(0, sent[2], 0);
         assertEquals(11.7025, sent[3], 1e-4);
         assertEquals(3600, launcherOf(r).speedRpm(), 0);
-        String notes = r.notes().toString();
+        String notes = com.crossbotics.ftchelper.gamepad.ButtonNames.say(r.notes().toString());
         assertTrue(notes, notes.contains("Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, kP 1.17, kI 0.117, "
                 + "speed 3600 rpm. Run the Flywheel Finder, then the Shot Tuner"));
         // speedRpm is in that note, not in the "library defaults used" one.
@@ -129,7 +129,7 @@ public class FirstRunDefaultsTest {
     @Test public void withAShotTableTheNoteIsAboutTheGainsOnly() {
         RobotDefinition r = launcherBot(TableNoGains.class, "gobilda-5203-6000");
         r.setup(new RobotTestKit());
-        String notes = r.notes().toString();
+        String notes = com.crossbotics.ftchelper.gamepad.ButtonNames.say(r.notes().toString());
         assertTrue(notes, notes.contains("Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, kP 1.17, kI 0.117. "
                 + "Run the Flywheel Finder"));
         assertFalse(notes, notes.contains("rpm)"));
@@ -173,7 +173,7 @@ public class FirstRunDefaultsTest {
         assertEquals(0.00028, l.part().getPid().getKD(), 1e-12);
         assertEquals(0.05, l.part().getPid().getKF(), 1e-12);       // a power: the same for every motor
         assertEquals(14, l.toleranceUsed, 0);                       // 20 x 384.5 / 537.7 = 14.3
-        String notes = r.notes().toString();
+        String notes = com.crossbotics.ftchelper.gamepad.ButtonNames.say(r.notes().toString());
         assertTrue(notes, notes.contains("Lift: defaults from the catalog (gobilda-5203-435): kP 0.0056, kD 0.00028, "
                 + "slowZone 179, tolerance 14. Tune them live in the tuning menu (PRACTICE, hold GUIDE)"));
     }
@@ -184,7 +184,7 @@ public class FirstRunDefaultsTest {
         Lift l = liftOf(r);
         assertEquals(0.01, l.part().getPid().getKP(), 0);
         assertEquals(30, l.toleranceUsed, 0);
-        String notes = r.notes().toString();
+        String notes = com.crossbotics.ftchelper.gamepad.ButtonNames.say(r.notes().toString());
         // 250 counts on a 312 RPM motor = 0.46 turn = 663 counts on a 117 RPM motor (1425.1 a turn).
         assertTrue(notes, notes.contains("(gobilda-5203-117): kD 0.000075, slowZone 663. Tune them"));
     }
@@ -220,7 +220,7 @@ public class FirstRunDefaultsTest {
         r.setup(new RobotTestKit());
         // 270 degrees (the SDK's normal range) at 0.25 s per 60 degrees (4.8 V): 1.125 s.
         assertEquals(1.13, ((Claw) r.modules().get(0)).part().getTravelTime(), 1e-9);
-        String notes = r.notes().toString();
+        String notes = com.crossbotics.ftchelper.gamepad.ButtonNames.say(r.notes().toString());
         assertTrue(notes, notes.contains("Claw: defaults from the catalog (gobilda-2000-torque): travelSec 1.13 s "
                 + "for a full move. Time a full move to check"));
         assertFalse("its positions are written: no guess note", notes.contains("library guesses"));
@@ -243,7 +243,7 @@ public class FirstRunDefaultsTest {
         };
         r.setup(new RobotTestKit());
         assertEquals("no part: the plain 0.3 s", 0.3, ((Claw) r.modules().get(0)).part().getTravelTime(), 0);
-        String notes = r.notes().toString();
+        String notes = com.crossbotics.ftchelper.gamepad.ButtonNames.say(r.notes().toString());
         assertTrue(notes, notes.contains("Claw: no positions written: open 0.2, closed 0.75 are library guesses, not your "
                 + "servo's: find yours with the Servo Finder before the first TeleOp"));
     }
@@ -271,7 +271,7 @@ public class FirstRunDefaultsTest {
             }
         };
         r.setup(new RobotTestKit());
-        String notes = r.notes().toString();
+        String notes = com.crossbotics.ftchelper.gamepad.ButtonNames.say(r.notes().toString());
         // Hood: 0.4 of 270 degrees at 0.25 s per 60 degrees = 0.45 s.
         assertTrue(notes, notes.contains("Hood: defaults from the catalog (gobilda-2000-torque): travelSec 0.45 s "
                 + "from stop to stop"));

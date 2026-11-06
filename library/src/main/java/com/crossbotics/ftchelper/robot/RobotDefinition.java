@@ -1033,7 +1033,7 @@ public abstract class RobotDefinition {
                             + l.sprayWords(TunableSection.of(tunablesClass != null ? tunablesClass : findTunables(), l.name()))));
             out.add(new Feature(Feature.Kind.AUTOMATIC, "Feed stop", "", "a feed stop servo: .feedStop(\"name\") on the launcher",
                     l.feedStopName() == null ? ".feedStop(\"name\") on the launcher, if the robot has a feed stop" : "",
-                    l.feedStopName() == null ? "" : l.feedStopName() + ": hold from {PLAY}, open for each piece, closed when the shot is seen"));
+                    l.feedStopName() == null ? "" : l.feedStopName() + ": hold from the start (▶), open for each piece, closed when the shot is seen"));
             StringBuilder path = new StringBuilder();
             for (Intake p : l.pushers()) path.append(path.length() == 0 ? "" : ", ").append(names.containsKey(p) ? names.get(p) : p.name());
             out.add(new Feature(Feature.Kind.AUTOMATIC, "Piece path: parts that push a piece in", "", ".pushedBy(intake) on the launcher",

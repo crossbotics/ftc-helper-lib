@@ -204,7 +204,7 @@ keeps working; new code and these docs write `DEFAULT`.
 **INIT stopped on `MEASURE`: what now?** Only your TeleOp and your autos stop. The Motor Finder and the
 Servo Finder still run: they do not read `Tunables.java`. For a lift's `min` and `max`:
 
-1. On the Driver Station, choose **Motor Finder**, press INIT, then START.
+1. On the Driver Station, choose **Motor Finder**, press INIT, then ▶ (start).
 2. Put the lift at the bottom. Choose `lift` (D-pad, then A): its count starts at 0 there.
 3. Move it with gamepad 1's right stick. Press **X** just above the bottom block (`min`) and **B** just
    below the top block (`max`).

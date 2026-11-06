@@ -264,7 +264,7 @@ final class ButtonPlan {
                 out.add(p + " " + name + ": " + words(e) + who + offWords(e));
             }
             for (Entry pair : pairs) {
-                if (pair.shift.pad == p) out.add(p + " " + pair.shift.label + " + " + pair.with.label + ": " + words(pair) + offWords(pair));
+                if (pair.shift.pad == p) out.add(p + " " + pair.shift.label + " + " + ButtonNames.mark(p == g2 ? 2 : 1, pair.with.label) + ": " + words(pair) + offWords(pair));
             }
             if (withFree && free.length() > 0) out.add(p + " free: " + free);
         }

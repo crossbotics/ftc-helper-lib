@@ -40,6 +40,7 @@ public class ButtonNamesTest {
         ButtonNames.watch(pad(Gamepad.Type.LOGITECH_F310), pad(Gamepad.Type.SONY_PS4));
         assertEquals("A then ×", ButtonNames.say("{A} then {2:A}"));
         assertEquals("G1 RT, G2 R2, G2:L1", ButtonNames.say("G1 RT, G2 RT, G2:LB"));
+        assertEquals("a pair line: both names", "G2 L1 + △: score", ButtonNames.say("G2 LB + {2:Y}: score"));
         assertEquals("{2:RT}", ButtonNames.mark(2, "RT"));
         assertEquals("D-pad up", ButtonNames.mark(1, "D-pad up"));
     }

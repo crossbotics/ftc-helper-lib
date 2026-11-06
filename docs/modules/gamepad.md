@@ -241,6 +241,7 @@ t.update();                               // RobotTelemetry turns the marks into
 
 Plain `telemetry.addLine(...)` does not change marks: write your own lines with real names, or send
 them through `RobotTelemetry` (or `ButtonNames.say`). In the simulator, a scenario line
-`set gamepad 1 ps` makes gamepad 1 a PS controller; on the page, a PS controller plugged into the laptop is
-seen by itself.
+`set gamepad 1 ps` makes gamepad 1 a PS controller; on the page, a Sony PS controller plugged into the
+laptop is seen by itself (an Etpark is not: use the scenario line). The test recorder does not write
+`set gamepad` lines: add one by hand to a recorded test that checks PS names.
 
