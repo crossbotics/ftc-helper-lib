@@ -120,7 +120,8 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
         autoConfig.calibrationConfirmed = true;
         IMU imu = config.imu(hardwareMap);
         if (imu == null) throw new IllegalStateException("The drive tuner needs the IMU: add .imu(...) to the drive in Robot.java (or RobotSettings.imu()).");
-        auto = new AutoDrive(this, driveConfig, autoConfig, imu);
+        // running(), not opModeIsActive(): inside "Tune and check" this finder is not the running OpMode.
+        auto = new AutoDrive(this, driveConfig, autoConfig, imu, this::running);
         // The wheel motors, so the push test can let them roll freely.
         wheels.add(hardwareMap.get(DcMotorEx.class, driveConfig.frontLeft));
         wheels.add(hardwareMap.get(DcMotorEx.class, driveConfig.frontRight));

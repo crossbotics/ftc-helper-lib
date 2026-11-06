@@ -105,6 +105,18 @@ public class AutoDrive {
      * @throws IllegalStateException if {@code autoConfig.calibrationConfirmed} is false
      */
     public AutoDrive(final LinearOpMode opMode, DriveConfig driveConfig, AutoDriveConfig autoConfig, final IMU imu) {
+        this(opMode, driveConfig, autoConfig, imu, opMode::opModeIsActive);
+    }
+
+    /**
+     * Like {@link #AutoDrive(LinearOpMode, DriveConfig, AutoDriveConfig, IMU)}, with your own "keep going"
+     * check: for an OpMode that runs inside another one (a finder inside "Tune and check"), whose own
+     * {@code opModeIsActive()} is always false. Moves end with STOPPED as soon as it gives false.
+     *
+     * @param isActive gives true while the moves may run, false once they must stop
+     */
+    public AutoDrive(final LinearOpMode opMode, DriveConfig driveConfig, AutoDriveConfig autoConfig, final IMU imu,
+                     BooleanSupplier isActive) {
         // "this(...)" hands everything to the second constructor below, so both share one setup.
         // "a ? b : c" means "if a then b, else c": a 2-motor tank drive has no back motors (null).
         // "() -> ..." is a small piece of code we hand over to run later (each time a heading is
@@ -115,7 +127,7 @@ public class AutoDrive {
                 driveConfig.hasBackMotors() ? setUp(opMode, driveConfig.backLeft, driveConfig.backLeftReversed) : null,
                 driveConfig.hasBackMotors() ? setUp(opMode, driveConfig.backRight, driveConfig.backRightReversed) : null,
                 () -> ImuSetup.headingDeg(imu), imu::resetYaw,
-                opMode::opModeIsActive, opMode::idle, line -> opMode.telemetry.addLine(line),
+                isActive, opMode::idle, line -> opMode.telemetry.addLine(line),
                 System::nanoTime);
     }
 

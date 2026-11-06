@@ -115,4 +115,25 @@ public class TuneAndCheckTest {
             assertEquals("", s.error());
         }
     }
+
+    // The Drive Tuner's moves run inside the menu too. They once ended at once with STOPPED: the move
+    // asked the finder's own opModeIsActive(), which is false when "Tune and check" is the OpMode running.
+    @Test public void theDriveTunersDriveTestRunsFromTheMenu() throws Exception {
+        TuneAndCheckOpMode.useRobots(Collections.<Class<? extends RobotDefinition>>singletonList(
+                com.crossbotics.ftchelper.examples.turretbot.Robot.class));
+        try (SimRun s = new SimRun()) {
+            s.init(TuneAndCheckOpMode.NAME);
+            for (int i = 0; i < 10 && !s.screenHas("> Drive Tuner"); i++) s.press(v -> s.g1().dpad_down = v);
+            assertTrue(String.join("\n", s.screen()), s.screenHas("> Drive Tuner"));
+            s.press(v -> s.g1().a = v);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Drive tuner"), 1));
+            s.start();
+            s.press(v -> s.g1().dpad_down = v);           // Push -> Drive forward
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("> Drive forward"), 1));
+            s.press(v -> s.g1().a = v);
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Drive: done"), 15));
+            assertFalse(String.join("\n", s.screen()), s.screenHas("STOPPED"));
+            assertEquals("", s.error());
+        }
+    }
 }

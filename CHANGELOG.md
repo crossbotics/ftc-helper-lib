@@ -2,6 +2,19 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Added
+
+- **`new AutoDrive(opMode, driveConfig, autoConfig, imu, isActive)`:** the usual constructor with your own "keep
+  going" check, for an OpMode that runs inside another one.
+
+### Fixed
+
+- **Drive Tuner inside "Tune and check":** the Drive, Strafe and Turn tests ended at once with `STOPPED`. The
+  moves asked the tuner's own `opModeIsActive()`, which is always false inside the menu. They now ask the menu.
+  The Drive Tuner in its own file was not affected.
+
 ## v0.31.1 - 2026-11-06
 
 ### Fixed
