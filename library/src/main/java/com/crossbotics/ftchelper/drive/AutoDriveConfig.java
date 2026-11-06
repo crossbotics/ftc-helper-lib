@@ -62,8 +62,9 @@ public class AutoDriveConfig {
      * Slow down over at least this many inches at the end of a move (0 = only {@code taperStartFraction}).
      * WHY: 10% of a short move is too little road to slow down on: an 8 in move would slow down over
      * 0.8 in only, still reach the end fast, and slide past it. With 6, every move slows down over its
-     * last 6 in (or all of it, if it is shorter), so it reaches the end at the same slow speed and
-     * slides the same amount, whatever its length and cruise power.
+     * last 6 in (or all of it, if it is shorter), so it reaches the end at about the same slow speed and
+     * slides about the same amount, whatever its length. (A faster cruise still arrives a little faster:
+     * test the Drive Tuner at your moves' power.) driveTo and routes also slow over their last 8 in.
      */
     public double slowDownIn = 0;
     /** moveWithTurn: heading correction is multiplied by this before mixing. */
@@ -87,7 +88,6 @@ public class AutoDriveConfig {
     /** See {@link #stallProgressIn}. Seconds. */
     public double stallTimeSec = 0.4;
 
-    /** Encoder counts per inch of wheel travel, worked out from the values above. */
     /**
      * The part of a move of this length (a fraction, 0 to 1) where it slows down: the larger of
      * {@code taperStartFraction} and {@code slowDownIn} over the length.
@@ -100,6 +100,7 @@ public class AutoDriveConfig {
         return Math.min(1, Math.max(taperStartFraction, byInches));
     }
 
+    /** Encoder counts per inch of wheel travel, worked out from the values above. */
     public double ticksPerInch() {
         // One wheel turn rolls the robot one wheel circumference (pi x diameter) inches,
         // and takes (ticks per motor turn x motor turns per wheel turn) ticks.

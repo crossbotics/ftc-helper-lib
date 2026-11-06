@@ -515,8 +515,13 @@ public class AutoDrive {
                 // of circling it.
                 double speed;
                 if (dist <= toleranceIn) speed = 0;
-                else if (dist < DRIVE_TO_NEAR_IN) speed = Math.max(nearMin, Math.min(DRIVE_TO_KP * dist, maxSpeed));
-                else speed = MotionMath.taperSpeed(dist / startDist, cfg.moveMinPower, maxSpeed, cfg.taperFraction(startDist));
+                else if (dist < DRIVE_TO_NEAR_IN) {
+                    double near = Math.min(DRIVE_TO_KP * dist, maxSpeed);
+                    // With slowDownIn the slow-down goes on here too: never faster than it (but at least nearMin).
+                    if (cfg.slowDownIn > 0) near = Math.min(near, MotionMath.taperSpeed(dist / startDist,
+                            cfg.moveMinPower, maxSpeed, cfg.taperFraction(startDist)));
+                    speed = Math.max(nearMin, near);
+                } else speed = MotionMath.taperSpeed(dist / startDist, cfg.moveMinPower, maxSpeed, cfg.taperFraction(startDist));
                 double fwd = dist > 1e-6 ? speed * forwardErr / dist : 0;
                 double right = dist > 1e-6 ? speed * rightErr / dist : 0;
                 // PID output is counterclockwise; the drive's turn is clockwise.

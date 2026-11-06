@@ -190,6 +190,10 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
     // A: start the chosen test, or confirm the measured distance.
     private void pressA() {
         if (waiting == Wait.MEASURE) {
+            // The results file says which power the numbers were measured at: written when a measurement
+            // is set (not when the move ends: a STOP before A would label the old numbers).
+            results.set("drive:power", "// measured at power " + FinderResults.num(testPower, 1)
+                    + ": these numbers fit autonomous moves at that power");
             // The new number is used at once (AutoDrive reads these settings on every move), so the
             // next test already uses it.
             boolean right = Math.abs(measured - testDistanceIn()) <= CLOSE_ENOUGH_IN;
@@ -300,9 +304,6 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
         measured = testDistanceIn();
         if (result == AutoDrive.Result.DONE) {
             lastResult = name + ": done.";
-            // The results file says which power the numbers were measured at.
-            results.set("drive:power", "// measured at power " + FinderResults.num(testPower, 1)
-                    + ": these numbers fit autonomous moves at that power");
             waiting = Wait.MEASURE;
         } else {
             lastResult = name + ": " + result + ". Not measured: clear the path and run it again.";

@@ -59,7 +59,7 @@ Run Drive and Strafe again until they measure 48. Each new number is used at onc
 Strafe tests drive at (`Power : 0.5` on the screen; 0.3 to 1.0). Set it to the power your `.move(...)`
 lines use, for example 0.6. **Why:** a faster robot slides further when it stops, so the numbers are right
 for the power they were measured at. Short moves stop past the end? Set `Tunables.Drive.slowDownIn`
-(below the table in [Drive](../../guides/tunables.md#drive)), for example 6: every move then slows down
+(a row in the [Drive table](../../guides/tunables.md#drive)), for example 6: every move then slows down
 over its last 6 in.
 Details and the results file: [Drive Tuner](../../guides/finders.md#drive-tuner-wheel-size-and-strafe-correction).
 

@@ -1066,11 +1066,11 @@
       "ol": [
        "INIT **Tune and check**, open the **Drive Tuner**, press ▶. The test list shows `Power : 0.5`.",
        "Press D-pad right once. It must show `Power : 0.6`. D-pad left/right must stop at 0.3 and 1.0.",
-       "Run the **Drive** test. It must drive at the higher power and end near 48 in. Measure, set it, press A until it measures 48 within 0.5 in. `Tunables.Drive: calibrated = true` must show only after that.",
-       "Change the power again: `calibrated = true` must go away until the Drive test measures right again.",
+       "Run the **Drive** test (it is faster than at 0.5) and, on a mecanum robot, the **Strafe** test. Measure, set it, press A until each measures 48 within 0.5 in. `Tunables.Drive: calibrated = true` must show only after that.",
+       "Change the power again: `calibrated = true` must go away until the Drive (and Strafe) test measures right again.",
        "STOP. In the results file, the Drive Tuner part must say `measured at power 0.6`.",
        "Run an autonomous with an 8 in move at 0.6, 3 times. Measure where it ends each time.",
-       "Set `Tunables.Drive.slowDownIn = 6`, INIT, run it 3 more times. It must end closer to the 8 in (it slows down over the whole move now), or as close as before."
+       "Set `Tunables.Drive.slowDownIn = 6`, INIT, run it 3 more times. It must end closer to the 8 in (it slows down over its last 6 in now), or as close as before."
       ]
      }
     ],

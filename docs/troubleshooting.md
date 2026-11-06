@@ -294,6 +294,14 @@ changes the count: add a lower limit switch so it re-zeroes each time it reaches
 **AutoDrive moves the wrong distance**
 Tune `wheelDiameterIn` and `strafeCorrection`: [Tune AutoDrive](modules/drive.md#tune-autodrive).
 
+**An autonomous move stops past its end (short moves most, or fast ones)**
+
+A robot slides a little when it brakes, and a faster one slides further. Two fixes: run the
+[Drive Tuner](guides/finders.md#drive-tuner-wheel-size-and-strafe-correction) at the power your moves use
+(D-pad left/right on its test list), and set `Tunables.Drive.slowDownIn = 6` so every move slows down over
+its last 6 in ([tunables](guides/tunables.md#drive)): a short move then reaches the end as slowly as a long
+one. Still past it by the same amount every time? Shorten that move by that amount.
+
 **AutoDrive turns overshoot or stop short**
 Overshoot: raise `turnKd` or lower `turnKp`. Stop short: raise `turnKp` a little or set `turnMinPower`.
 

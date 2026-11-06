@@ -273,6 +273,7 @@ c.wheelDiameterIn = 3.812;   // RobotSettings.auto()
 Robot.java: .wheelMm(96.8)   // in the drive(...) line
 c.strafeCorrection = 1.180;   // RobotSettings.auto()
 Tunables.Drive: strafeCorrection = 1.180
+// measured at power 0.6: these numbers fit autonomous moves at that power
 ```
 
 Five files: the wheel size goes in the drive line of `Robot.java` (`.wheelMm(96.8)`, millimetres),

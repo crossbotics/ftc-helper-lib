@@ -11,8 +11,8 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
   when it stops, so the numbers fit the power they were measured at. A new power must measure right again
   before `calibrated = true` shows; the results file says which power the numbers fit.
 - **`Tunables.Drive.slowDownIn` (`AutoDriveConfig.slowDownIn`):** every autonomous move slows down over at least
-  its last this-many inches, as well as its last 10%. With 6, a short move reaches its end as slowly as a long
-  one, so it slides the same and ends where it should. 0 (the default) changes nothing.
+  its last this-many inches, as well as its last 10%. With 6, a short move reaches its end about as slowly as a
+  long one, so it slides about the same and ends where it should. 0 (the default) changes nothing.
 
 ## v0.32.0 - 2026-11-06
 
