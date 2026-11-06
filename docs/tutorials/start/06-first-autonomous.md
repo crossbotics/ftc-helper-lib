@@ -54,6 +54,13 @@ Run it, choose a test with the D-pad, start it with **A**:
 | Turn | it turns 90 degrees left; check it against a tile seam | nothing to copy: a check of the turn |
 
 Run Drive and Strafe again until they measure 48. Each new number is used at once inside the tuner.
+
+**Test at your autonomous's power.** On the test list, D-pad left/right sets the power the Drive and
+Strafe tests drive at (`Power : 0.5` on the screen; 0.3 to 1.0). Set it to the power your `.move(...)`
+lines use, for example 0.6. **Why:** a faster robot slides further when it stops, so the numbers are right
+for the power they were measured at. Short moves stop past the end? Set `Tunables.Drive.slowDownIn`
+(below the table in [Drive](../../guides/tunables.md#drive)), for example 6: every move then slows down
+over its last 6 in.
 Details and the results file: [Drive Tuner](../../guides/finders.md#drive-tuner-wheel-size-and-strafe-correction).
 
 **Where the numbers go.** The tuner shows these lines (it also saves them in `finder-results.txt`):

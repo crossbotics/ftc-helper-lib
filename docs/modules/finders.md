@@ -249,7 +249,10 @@ public class DriveTuner extends DriveTunerOpMode {
 
 With a `RobotSettings` class instead: `@Override protected RobotConfig robotConfig() { return new RobotSettings(); }`.
 
-D-pad chooses a test, **A** starts it.
+D-pad up/down chooses a test, **A** starts it. D-pad left/right sets the power the Drive and Strafe tests
+drive at (0.3 to 1.0, starts at 0.5): use your autonomous moves' power, because a faster robot slides
+further when it stops. A new power must measure right again before `calibrated = true` shows, and the
+results file says which power the numbers fit.
 
 | Test | You do | It finds |
 | --- | --- | --- |

@@ -271,6 +271,7 @@ Tuning numbers for `AutoDrive`. The defaults are last season's robot. **Tune the
 | `turnMinPower` | 0.0 | smallest turn power outside the tolerance. Try 0.05-0.1 if turns stop short. |
 | `moveMinPower` | 0.30 | slowest speed at the end of a move |
 | `taperStartFraction` | 0.10 | start slowing for the last 10% of a move |
+| `slowDownIn` | 0 | ...and for at least this many inches at the end (0 = only the 10%). `taperFraction(distanceIn)` gives the larger of the two |
 | `moveTurnScale` | 0.60 | `moveWithTurn`: heading correction is multiplied by this |
 | `moveMaxTurnPower` | 0.35 | `moveWithTurn`: most turn power while moving |
 | `actionTimeoutSec` | 10.0 | any move or turn gives up after this long |
@@ -376,7 +377,9 @@ if (auto.move(30, 0, 0.7) == AutoDrive.Result.STALLED) {
 The distance is measured from the four wheel encoders: forward travel plus sideways travel
 (divided by `strafeCorrection`), so straight, sideways and diagonal moves all go the real distance.
 The robot drives at `maxPower` until the last 10% (`taperStartFraction`) of the distance, then
-slows in a straight line down to `moveMinPower`. This makes stops more accurate. At the distance the
+slows in a straight line down to `moveMinPower`. This makes stops more accurate. With `slowDownIn`
+(for example 6) it also slows over at least the last 6 in: 10% of a short move is too little road to slow
+down on, so without it a short move reaches the end fast and slides past it. At the distance the
 wheels brake and the move waits (at most 0.3 s, mechanisms still updating) until the robot has stopped
 rolling, so the next move starts from a robot that stands still. The motors always stop at the end,
 whatever happens (even if your code throws an error).
