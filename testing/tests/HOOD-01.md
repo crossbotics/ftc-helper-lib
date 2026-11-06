@@ -31,7 +31,7 @@ safe on hoods built differently from ours.
 ## Steps
 
 1. Start the Hood Finder. Choose a START POINT near where the hood sits (D-pad; nothing moves), press A.
-2. Nudge toward one stop (D-pad right/left 0.01, up/down 0.05, hold RB for finer). Stop when it JUST touches, back off a hair, press X.
+2. Nudge toward one stop (D-pad up/down moves by the step; left/right makes the step smaller/bigger). Stop when it JUST touches, back off a hair, press X.
 3. Do the same at the other stop, press B. The screen shows `Tunables.Hood: posA = ..., posB = ...`.
 4. Optional: lay the phone on the hood at each stop and type the angle (hold LB + D-pad) before X or B.
 5. Copy the line(s) into `Tunables.java`. Time a stop-to-stop move for `travelSec`.

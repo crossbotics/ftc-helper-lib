@@ -1696,7 +1696,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     @Override
     void simLines(List<String> out, TunableSection t) {
         // The feeder: the indexer, else the first part that pushes pieces in (pushedBy).
-        String feederLine = indexer != null ? ", feeder=" + indexer.device
+        String feederLine = indexer != null ? ", feeder=" + indexer.device + indexer.pushWords()
                 : !pushers.isEmpty() ? ", feeder=" + pushers.get(0).deviceNames().get(0) : "";
         // A feed stop: pieces go in only while it is at the release position.
         String stopLine = "";

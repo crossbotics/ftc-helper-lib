@@ -12,6 +12,7 @@ public class ShapesTest {
     /** The numbers these test robots read. */
     public static class Numbers {
         public static class IntakeDeploy { public static double stowed = 0.2, deployed = 0.7; }
+        public static class FeederArm { public static double rest = 0.5, push = 0.4; }
     }
 
     // A folding intake: a servo arm, rollers riding on it, a flywheel and a fixed ramp.
@@ -36,6 +37,50 @@ public class ShapesTest {
                            Shape.flywheel("gobilda-hogback-96").on("launcher_slide").atMm(0, 0, 0))
                     .shotAngle(147));
             fixed(Shape.box("ramp").atMm(-150, 0, 200).sizeMm(100, 150, 10).note("est."));
+        }
+    }
+
+    // A feed arm (a push servo, reversed) that tilts a piece up into the flywheel, and Gecko wheels on a CR
+    // servo that squeeze the piece against it: robot 1's feeder.
+    static class SqueezeFeederBot extends RobotDefinition {
+        @Override protected void define() {
+            tunables(Numbers.class);
+            drive(Drive.tank("l", "r").wheel("gobilda-hogback-96").wheelsAtMm(402, 288));
+            chassisMm(384, 426, 97);
+            heightMm(305);
+            add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+                    .feeder(Indexer.servo("feeder_arm").part("gobilda-2000-torque").reversed()
+                            .looks(Shape.arm().name("feeder_arm").atMm(40, 30, 60).sizeMm(48, 24, 24).angle("rest", 0).angle("push", 40),
+                                   Shape.box("arm_pads").on("feeder_arm").atMm(30, -16, 0).sizeMm(16, 32, 32)))
+                    .feedWheel(Indexer.crServo("feeder_wheel").part("gobilda-2000-speed")
+                            .looks(Shape.roller("gobilda-gecko-48-rex-15a").name("squeeze_wheels").atMm(40, -40, 60).axis("up").lengthMm(40)))
+                    .looks(Shape.flywheel("gobilda-hogback-96").atMm(80, 0, 168))
+                    .shotAngle(53));
+        }
+    }
+
+    @Test public void aPushServoSwingsItsArmAndAFeedWheelSpins() {
+        String all = lines(new SqueezeFeederBot());
+        // reversed(): rest 0.5 and push 0.4 are 0.5 and 0.6 for the simulated servo; 0 -> 40 degrees over 0.1 =
+        // 400 degrees per unit, so -200 at 0 and 200 at 1.
+        assertTrue(all, all.contains("servo=feeder_arm, pos0=-200, pos1=200"));
+        assertTrue(all, all.contains("on=feeder_arm"));
+        assertTrue(all, all.contains("crservo=feeder_wheel"));
+        // Where the arm pushes to, for the simulator (reversed: 0.4 is 0.6 at the servo).
+        assertTrue(all, all.contains("feeder=feeder_arm, feederPush=0.60"));
+        try {
+            new SqueezeFeederBot() {
+                @Override protected void define() {
+                    tunables(Numbers.class);
+                    drive(Drive.tank("l", "r").wheel("gobilda-hogback-96").wheelsAtMm(402, 288));
+                    add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+                            .feeder(Indexer.servo("feeder_arm").looks(Shape.arm().atMm(0, 0, 60).sizeMm(48, 24, 24)
+                                    .angle("down", 0).angle("up", 40))));
+                }
+            }.simLines();
+            fail("an arm on a push servo needs its angles at rest and push");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage(), e.getMessage().contains("rest") && e.getMessage().contains("push"));
         }
     }
 

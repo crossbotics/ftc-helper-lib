@@ -22,8 +22,9 @@ import java.util.List;
  *
  * <pre>
  * A servo hood:
- *   Start:  D-pad = choose a start point (the servo does NOT move yet), A = move it there.
- *   Nudge:  D-pad right/left = +/- 0.01, up/down = +/- 0.05, hold RB = 10 times finer.
+ *   Start:  D-pad up/down = choose a start point (the servo does NOT move yet), A = move it there.
+ *   Nudge:  D-pad up/down = move by the step, D-pad left/right = smaller/bigger step
+ *           (0.1, 0.05, 0.01, 0.005, 0.001; it starts at 0.05).
  * A motor hood: nothing is powered. Move the hood by hand; the screen shows the encoder (0 = where it
  *   was at INIT, so start with the hood on the stop you want as 0, the same as in a match).
  * Both:
@@ -73,6 +74,7 @@ public abstract class HoodFinderOpMode extends FinderOpMode {
     private DcMotorEx motor;    // a motor hood, or null
     private double position = Double.NaN;   // servo: NaN = not moved yet
     private double startAt = 0.5;
+    private final NudgeStep step = new NudgeStep();   // D-pad left/right changes it (servo hood)
     private double angle = 0;               // the angle the driver typed in (hold LB + D-pad)
     private boolean angleGiven = false;
     private double posA = Double.NaN, posB = Double.NaN, angleA = Double.NaN, angleB = Double.NaN;
@@ -137,10 +139,10 @@ public abstract class HoodFinderOpMode extends FinderOpMode {
 
     @Override
     protected void bind(ControllerBindings c) {
-        c.bindPress(Pad.G1, Btn.DPAD_UP, () -> dpad(0.05, 1))
-         .bindPress(Pad.G1, Btn.DPAD_DOWN, () -> dpad(-0.05, -1))
-         .bindPress(Pad.G1, Btn.DPAD_RIGHT, () -> dpad(0.01, 0.1))
-         .bindPress(Pad.G1, Btn.DPAD_LEFT, () -> dpad(-0.01, -0.1))
+        c.bindPress(Pad.G1, Btn.DPAD_UP, () -> dpad(1, 1))
+         .bindPress(Pad.G1, Btn.DPAD_DOWN, () -> dpad(-1, -1))
+         .bindPress(Pad.G1, Btn.DPAD_RIGHT, () -> dpad(0, 0.1))
+         .bindPress(Pad.G1, Btn.DPAD_LEFT, () -> dpad(0, -0.1))
          .bindPress(Pad.G1, Btn.A, () -> {
                     if (servo != null && Double.isNaN(position)) moveToStart();
                     else savePoint();
@@ -150,20 +152,24 @@ public abstract class HoodFinderOpMode extends FinderOpMode {
          .bindPress(Pad.G1, Btn.Y, this::undo);
     }
 
-    // The D-pad: with LB held, the angle typed in; else the servo nudge (or its start point).
-    private void dpad(double servoStep, double angleStep) {
+    // The D-pad: with LB held, the angle typed in; else up/down moves the servo one step (or its start
+    // point) and left/right (direction 0) makes the step smaller/bigger.
+    private void dpad(int direction, double angleStep) {
         if (gamepad1.left_bumper) {
             angle = Math.round((angle + angleStep) * 10) / 10.0;
             angleGiven = true;
             return;
         }
         if (servo == null) return;
-        double step = gamepad1.right_bumper ? servoStep / 10 : servoStep;
-        if (Double.isNaN(position)) {
-            startAt = FinderMath.servoPosition(startAt + step);
+        if (direction == 0) {
+            if (angleStep > 0) step.bigger(); else step.smaller();
             return;
         }
-        position = FinderMath.servoPosition(position + step);
+        if (Double.isNaN(position)) {
+            startAt = step.move(startAt, direction);
+            return;
+        }
+        position = step.move(position, direction);
         servo.setPosition(position);
     }
 
@@ -301,11 +307,13 @@ public abstract class HoodFinderOpMode extends FinderOpMode {
     protected void show(RobotTelemetry t) {
         t.section("Hood \"" + device + "\" (" + (motor != null ? "motor" : "servo") + ")");
         if (servo != null && Double.isNaN(position)) {
-            t.line("Start point", FinderResults.num(startAt, 3) + "  (D-pad; A = move the servo there)");
+            t.line("Start point", FinderResults.num(startAt, 3) + "  (D-pad up/down; A = move the servo there)");
+            t.line("Step", step.label() + "  (D-pad left = smaller, right = bigger)");
             t.text("Choose a start point near where the servo sits now. Nothing moves until A.");
             return;
         }
         t.line("Position", text(here()) + (motor != null ? " ticks (move the hood by hand)" : ""));
+        if (servo != null) t.line("Step", step.label() + "  (D-pad left = smaller, right = bigger)");
         t.line("Angle here", angleGiven ? FinderResults.num(angle, 1) + " (hold LB + D-pad)"
                 : "- (hold LB + D-pad to give one" + (angle != 0 ? "; it starts from " + FinderResults.num(angle, 1) : "") + ")");
         t.line("Stop A", Double.isNaN(posA) ? "- (X)" : text(posA) + (Double.isNaN(angleA) ? "" : " at " + FinderResults.num(angleA, 1)));
@@ -320,8 +328,9 @@ public abstract class HoodFinderOpMode extends FinderOpMode {
     protected String[] helpLines() {
         return new String[] {
             "Finds the hood's two stops and its angles.",
-            "Servo: D-pad = a start point, A = move there;",
-            "  then D-pad nudges (RB = 10x finer).",
+            "Servo: D-pad up/down = a start point, A = move",
+            "  there; then up/down moves by the step,",
+            "  left/right = smaller/bigger step (0.1-0.001).",
             "Motor: unpowered, move the hood by hand.",
             "Go to one stop, back off a hair: X = stop A.",
             "The other stop: B = stop B.",

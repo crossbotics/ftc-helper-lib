@@ -170,9 +170,14 @@ public final class Parts {
         wheel("andymark-mecanum-102-hd", 101.6, 55.4);
         wheel("andymark-omni-102", 101.6, 50.8);
         wheel("gobilda-boot-72-rex", 72, Double.NaN);
+        wheel("gobilda-gecko-32-rex", 32, Double.NaN);
+        wheel("gobilda-gecko-32-rex-15a", 32, Double.NaN);
         wheel("gobilda-gecko-48-rex", 48, Double.NaN);
+        wheel("gobilda-gecko-48-rex-15a", 48, Double.NaN);
         wheel("gobilda-gecko-72", 72, 24);
+        wheel("gobilda-gecko-72-15a", 72, Double.NaN);
         wheel("gobilda-gecko-96", 96, Double.NaN);
+        wheel("gobilda-gecko-96-15a", 96, Double.NaN);
         wheel("gobilda-gripforce-mecanum-104", 104, Double.NaN);
         wheel("gobilda-hogback-96", 96, 24);
         wheel("gobilda-mecanum-140", 140, 37);

@@ -23,9 +23,10 @@ import java.util.Map;
  * Choose:  D-pad up/down = servo, A = use it, Y = full range on/off (500-2500 us instead of the
  *          SDK's normal 600-2400: a goBILDA 2000 servo turns 300 degrees instead of 270; use it when
  *          the part has .fullRange() in Robot.java, so the numbers fit)
- * Start:   D-pad = choose a start point (the servo does NOT move yet), A = move it there.
+ * Start:   D-pad up/down = choose a start point (the servo does NOT move yet), A = move it there.
  *          Pick a value near where it sits now: a servo cannot tell where it is.
- * Nudge:   D-pad right/left = +/- 0.01   D-pad up/down = +/- 0.05   hold RB = 10 times finer
+ * Nudge:   D-pad up/down = move by the step, D-pad left/right = smaller/bigger step
+ *          (0.1, 0.05, 0.01, 0.005, 0.001; it starts at 0.05)
  *          X = mark this as one END, B = mark the other END (where it just stops touching the frame).
  *          Once both are marked, it stays between them (hold LB to go past, e.g. to mark again)
  *          A = save this as a position (P1, P2, ...; rename them in your code), Y = undo the last one
@@ -55,6 +56,7 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
     private String otherName = "";
     private boolean otherMirrored = false;
     private String chooseNote = "";        // "feeder_right moves with feeder_left: choose feeder_left"
+    private final NudgeStep step = new NudgeStep();   // D-pad left/right changes it
 
     /**
      * The robot's two-servo parts ({@code alsoServo...} in Robot.java): each first servo's name, and its
@@ -120,10 +122,10 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
 
     @Override
     protected void bind(ControllerBindings c) {
-        c.bindPress(Pad.G1, Btn.DPAD_UP, () -> { if (servo == null) chooser.previous(); else nudge(0.05); })
-         .bindPress(Pad.G1, Btn.DPAD_DOWN, () -> { if (servo == null) chooser.next(); else nudge(-0.05); })
-         .bindPress(Pad.G1, Btn.DPAD_RIGHT, () -> { if (servo != null) nudge(0.01); })
-         .bindPress(Pad.G1, Btn.DPAD_LEFT, () -> { if (servo != null) nudge(-0.01); })
+        c.bindPress(Pad.G1, Btn.DPAD_UP, () -> { if (servo == null) chooser.previous(); else nudge(1); })
+         .bindPress(Pad.G1, Btn.DPAD_DOWN, () -> { if (servo == null) chooser.next(); else nudge(-1); })
+         .bindPress(Pad.G1, Btn.DPAD_RIGHT, () -> { if (servo != null) step.bigger(); })
+         .bindPress(Pad.G1, Btn.DPAD_LEFT, () -> { if (servo != null) step.smaller(); })
          .bindPress(Pad.G1, Btn.A, () -> {
                     if (servo == null) choose();
                     else if (!moved()) moveToStart();
@@ -185,6 +187,7 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
         pulseNote = set ? "" : "This servo cannot change its pulse range: it uses the normal 600-2400 us";
         position = Double.NaN;
         startAt = 0.5;
+        step.reset();
         endA = endB = Double.NaN;
         positions.clear();
     }
@@ -199,15 +202,14 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
         send(position);
     }
 
-    // Moves by "amount" (10 times finer while RB is held). Before the first move it only changes the
-    // start point: nothing moves until A.
-    private void nudge(double amount) {
-        double step = gamepad1.right_bumper ? amount / 10 : amount;
+    // Moves one step up (+1) or down (-1). Before the first move it only changes the start point:
+    // nothing moves until A.
+    private void nudge(int direction) {
         if (Double.isNaN(position)) {
-            startAt = FinderMath.servoPosition(startAt + step);
+            startAt = step.move(startAt, direction);
             return;
         }
-        double next = FinderMath.servoPosition(position + step);
+        double next = step.move(position, direction);
         // Once both ends are marked, it stays between them (hold LB to go past, e.g. to mark again).
         if (!Double.isNaN(endA) && !Double.isNaN(endB) && !gamepad1.left_bumper) {
             next = Math.max(Math.min(endA, endB), Math.min(Math.max(endA, endB), next));
@@ -281,14 +283,16 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
         if (!hint.isEmpty()) t.line("Hint", hint);
         if (other != null) t.line("Moves with it", otherName + (otherMirrored ? " (mirrored)" : " (same way)") + ", alsoTrim not used here");
         if (Double.isNaN(position)) {
-            t.line("Start point", FinderResults.num(startAt, 3) + "  (D-pad; A = move the servo there)");
+            t.line("Start point", FinderResults.num(startAt, 3) + "  (D-pad up/down; A = move the servo there)");
+            t.line("Step", step.label() + "  (D-pad left = smaller, right = bigger)");
             t.text("Choose a start point near where the servo sits now. Nothing moves until A.");
             return;
         }
         t.line("Position", FinderResults.num(position, 3));
+        t.line("Step", step.label() + "  (D-pad left = smaller, right = bigger)");
         t.line("End X", Double.isNaN(endA) ? "-" : FinderResults.num(endA, 3));
         t.line("End B", Double.isNaN(endB) ? "-" : FinderResults.num(endB, 3));
-        t.text("D-pad nudge (RB = finer, LB = past the ends), X/B = ends, A = save position, Y = undo");
+        t.text("D-pad up/down = move (LB = past the ends), X/B = ends, A = save position, Y = undo");
         if (!Double.isNaN(endA) && !Double.isNaN(endB)
                 && (position < Math.min(endA, endB) - 1e-9 || position > Math.max(endA, endB) + 1e-9)) {
             t.warn("Outside the marked ends");
@@ -301,10 +305,10 @@ public abstract class ServoFinderOpMode extends FinderOpMode {
             "Finds a servo's safe ends and positions.",
             "1. D-pad up/down = choose a servo, A = use it.",
             "   Y = full range (if Robot.java has .fullRange()).",
-            "2. D-pad = a START POINT near where it sits now",
+            "2. D-pad up/down = a START POINT near where it is",
             "   (nothing moves), A = move it there.",
-            "3. D-pad right/left = +/-0.01, up/down = +/-0.05,",
-            "   hold RB = 10x finer.",
+            "3. D-pad up/down = move by the step; left/right =",
+            "   smaller/bigger step (0.1 to 0.001, starts 0.05).",
             "4. Move to one end until it JUST stops pushing on",
             "   the frame (a straining servo hums), back off a",
             "   little: X. The other end: B. Then it stays",

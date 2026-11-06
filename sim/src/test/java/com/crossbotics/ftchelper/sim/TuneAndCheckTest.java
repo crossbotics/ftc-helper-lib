@@ -55,7 +55,8 @@ public class TuneAndCheckTest {
             // The Servo Finder itself now: choose "claw", move it to a start point.
             s.press(v -> s.g1().a = v);
             SimRobot.SimServo claw = s.robot().servos.get("claw");
-            for (int i = 0; i < 3; i++) s.press(v -> s.g1().dpad_right = v);
+            s.press(v -> s.g1().dpad_left = v);          // step 0.01
+            for (int i = 0; i < 3; i++) s.press(v -> s.g1().dpad_up = v);   // start point 0.53
             s.press(v -> s.g1().a = v);
             assertEquals(0.53, claw.target(), 1e-6);
             assertEquals("", s.error());
