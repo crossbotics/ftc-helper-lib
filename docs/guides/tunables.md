@@ -31,6 +31,7 @@ back into `Tunables.java`. The tables further down list every setting, part by p
 | Turns stop short | [`Drive.turnKp`](#drive) | more |
 | Turns wobble or overshoot | [`Drive.turnKp`](#drive) / [`Drive.turnKd`](#drive) | less / more |
 | The robot stops just before the end of a move | [`Drive.moveMinPower`](#drive) | more |
+| Short moves slide past the end | [`Drive.slowDownIn`](#drive) | more (try 6) |
 | Path steps do not run on the real robot | [`Odometry.checked`](#odometry) | `true`, after the Odometry Tuner |
 | The odometry's distances are off (OTOS) | [`Odometry.linearScalar`](#odometry) | Odometry Tuner |
 | **Intake** | | |
@@ -321,6 +322,7 @@ Section `Drive` (fixed name). Read once at INIT. Module: [Drive](../modules/robo
 | `turnKp` | autonomous turn: how hard it turns per degree off | power per degree | 0.012 | yes, next INIT | test | turns stop short (more) or wobble (less) |
 | `turnKd` | autonomous turn: brakes the turn as it gets close | power per degree/s | 0.003 | yes, next INIT | test | turns overshoot (more) |
 | `moveMinPower` | the least power that still moves the robot (autonomous) | 0 to 1 | 0.30 | yes, next INIT | test | the robot stops just before the end of a move |
+| `slowDownIn` | autonomous: every move slows down over at least its last this-many inches (as well as its last 10%). So a short move reaches the end about as slowly as a long one, and slides about the same (`driveTo` and routes already slow over their last 8 in) | inches, 0 to 48 | 0 (only the last 10%) | yes, next INIT | test: try 6 | short moves slide past the end; moves at different speeds end in different places |
 | `calibrated` | autonomous drives the robot only when this is `true`. Until then INIT says `AUTONOMOUS IS OFF` (the simulator runs it anyway, and says so) | true/false | false | no | Drive Tuner, then set it | after the Drive Tuner, once moves are right |
 
 ## Odometry

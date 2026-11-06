@@ -58,6 +58,15 @@ public class AutoDriveConfig {
     public double moveMinPower = 0.30;
     /** The last part of the move (as a fraction, 0.10 = last 10%) where speed tapers down. */
     public double taperStartFraction = 0.10;
+    /**
+     * Slow down over at least this many inches at the end of a move (0 = only {@code taperStartFraction}).
+     * WHY: 10% of a short move is too little road to slow down on: an 8 in move would slow down over
+     * 0.8 in only, still reach the end fast, and slide past it. With 6, every move slows down over its
+     * last 6 in (or all of it, if it is shorter), so it reaches the end at about the same slow speed and
+     * slides about the same amount, whatever its length. (A faster cruise still arrives a little faster:
+     * test the Drive Tuner at your moves' power.) driveTo and routes also slow over their last 8 in.
+     */
+    public double slowDownIn = 0;
     /** moveWithTurn: heading correction is multiplied by this before mixing. */
     public double moveTurnScale = 0.60;
     /** moveWithTurn: largest heading-correction power, so moving stays the main job. */
@@ -78,6 +87,18 @@ public class AutoDriveConfig {
     public double stallProgressIn = 0.25;
     /** See {@link #stallProgressIn}. Seconds. */
     public double stallTimeSec = 0.4;
+
+    /**
+     * The part of a move of this length (a fraction, 0 to 1) where it slows down: the larger of
+     * {@code taperStartFraction} and {@code slowDownIn} over the length.
+     *
+     * @param distanceIn the move's length, inches
+     * @return the fraction to slow down over, 0 to 1
+     */
+    public double taperFraction(double distanceIn) {
+        double byInches = distanceIn > 1e-6 && slowDownIn > 0 ? slowDownIn / distanceIn : 0;
+        return Math.min(1, Math.max(taperStartFraction, byInches));
+    }
 
     /** Encoder counts per inch of wheel travel, worked out from the values above. */
     public double ticksPerInch() {

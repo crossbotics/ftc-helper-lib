@@ -449,7 +449,7 @@ drive(Drive.tank("left_drive", "right_drive").motor("gobilda-5203-312").wheelMm(
 | `imu(name, logo, usb)`, `noImu()` | the IMU and how the hub is mounted (default "imu", UP, FORWARD) |
 
 `Tunables.Drive` ([all its numbers](../guides/tunables.md#drive)): `maxPower`, `practiceMaxPower` (PRACTICE profile), `slowSpeed` (the slow trigger),
-`strafeCorrection`, `turnKp`, `turnKd`, `moveMinPower`, and `calibrated` (autonomous refuses to run
+`strafeCorrection`, `turnKp`, `turnKd`, `moveMinPower`, `slowDownIn` (slow down over at least this many inches), and `calibrated` (autonomous refuses to run
 until it is `true`: tune with the Drive Tuner first, [lesson 6](../tutorials/start/06-first-autonomous.md)).
 The Drive Tuner and the Shot Tuner take the whole robot: `@Override protected RobotDefinition robot() { return new Robot(); }`;
 every finder shows `Tunables.` lines to copy ([finders](finders.md)).

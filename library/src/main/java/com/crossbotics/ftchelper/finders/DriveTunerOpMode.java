@@ -20,7 +20,7 @@ import java.util.List;
  * the strafe correction. Put 48 in of tape on the floor (as long as the test drive) and a tape measure next to it.
  *
  * <pre>
- * D-pad up/down = choose a test, A = start it.
+ * D-pad up/down = choose a test, D-pad left/right = the test power (0.3 to 1.0, starts 0.5), A = start it.
  *   Push:    roll the robot BY HAND exactly 48 in along the tape, then press B. (Wheel size.)
  *   Drive:   it drives 48 in forward. Measure, set the real distance with the D-pad, press A.
  *   Strafe:  it drives 48 in to the right (mecanum). Measure, set it, press A.
@@ -93,6 +93,12 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
     // What the screen is waiting for: nothing, the end of a push, or a measured distance.
     private enum Wait { CHOOSE, PUSHING, MEASURE }
     private Wait waiting = Wait.CHOOSE;
+    // The power the Drive and Strafe tests drive at (D-pad left/right on the test list). WHY: a faster
+    // robot slides further when it stops, so the numbers fit the power they were measured at. Test at
+    // the power your autonomous moves use.
+    private double testPower = DEFAULT_POWER;
+    /** The test power at START, and its range and step (D-pad left/right). */
+    static final double DEFAULT_POWER = 0.5, MIN_POWER = 0.3, MAX_POWER = 1.0, POWER_STEP = 0.1;
     private int[] pushStart;
     private double measured;
     private String lastResult = "";
@@ -143,14 +149,32 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
     protected void bind(ControllerBindings c) {
         c.bindPress(Pad.G1, Btn.DPAD_UP, () -> { if (waiting == Wait.MEASURE) measured += 1; else choosePrevious(); })
          .bindPress(Pad.G1, Btn.DPAD_DOWN, () -> { if (waiting == Wait.MEASURE) measured = Math.max(1, measured - 1); else chooseNext(); })
-         .bindPress(Pad.G1, Btn.DPAD_RIGHT, () -> { if (waiting == Wait.MEASURE) measured += 0.25; })
-         .bindPress(Pad.G1, Btn.DPAD_LEFT, () -> { if (waiting == Wait.MEASURE) measured = Math.max(1, measured - 0.25); })
+         .bindPress(Pad.G1, Btn.DPAD_RIGHT, () -> { if (waiting == Wait.MEASURE) measured += 0.25; else changePower(+1); })
+         .bindPress(Pad.G1, Btn.DPAD_LEFT, () -> { if (waiting == Wait.MEASURE) measured = Math.max(1, measured - 0.25); else changePower(-1); })
          .bindPress(Pad.G1, Btn.A, this::pressA)
          .bindPress(Pad.G1, Btn.B, this::finishPush);
     }
 
     private boolean canStrafe() {
         return driveConfig.type == DriveConfig.DriveType.MECANUM;
+    }
+
+    // D-pad left/right on the test list: the test power, 0.3 to 1.0 in steps of 0.1. A new power needs
+    // the Drive (and Strafe) test to measure right again before "calibrated" shows.
+    private void changePower(int direction) {
+        if (waiting != Wait.CHOOSE) return;
+        double p = nextPower(testPower, direction);
+        if (p == testPower) return;
+        testPower = p;
+        driveRight = false;
+        strafeRight = false;
+        writeCalibrated();
+    }
+
+    /** One step of the test power: up (direction +1) or down (-1), kept inside 0.3..1.0. */
+    static double nextPower(double power, int direction) {
+        double p = Math.round((power + direction * POWER_STEP) * 10) / 10.0;
+        return Math.max(MIN_POWER, Math.min(MAX_POWER, p));
     }
 
     private void chooseNext() {
@@ -166,6 +190,10 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
     // A: start the chosen test, or confirm the measured distance.
     private void pressA() {
         if (waiting == Wait.MEASURE) {
+            // The results file says which power the numbers were measured at: written when a measurement
+            // is set (not when the move ends: a STOP before A would label the old numbers).
+            results.set("drive:power", "// measured at power " + FinderResults.num(testPower, 1)
+                    + ": these numbers fit autonomous moves at that power");
             // The new number is used at once (AutoDrive reads these settings on every move), so the
             // next test already uses it.
             boolean right = Math.abs(measured - testDistanceIn()) <= CLOSE_ENOUGH_IN;
@@ -245,10 +273,10 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
     private void runMove(int which) {
         switch (which) {
             case 1:
-                afterMove("Drive", auto.move(testDistanceIn(), 0, 0.5));
+                afterMove("Drive", auto.move(testDistanceIn(), 0, testPower));
                 break;
             case 2:
-                afterMove("Strafe", auto.move(testDistanceIn(), 90, 0.5));
+                afterMove("Strafe", auto.move(testDistanceIn(), 90, testPower));
                 break;
             default:
                 auto.resetHeading();
@@ -342,7 +370,8 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
                 if (i == 2 && !canStrafe()) continue;
                 t.text((i == test ? "> " : "  ") + TESTS[i]);
             }
-            t.text("D-pad = choose, {A} = start");
+            t.text("D-pad up/down = choose, {A} = start");
+            t.line("Power", FinderResults.num(testPower, 1) + " (D-pad left/right: your autos' power)");
         }
         t.line("Now using", "wheel " + FinderResults.num(autoConfig.wheelDiameterIn, 3) + " in, strafe "
                 + FinderResults.num(autoConfig.strafeCorrection, 3));
@@ -355,7 +384,7 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
         return new String[] {
             "Wheel size + strafe correction. Tape " + d + " long;",
             "  clear floor 5 ft ahead and to the right.",
-            "D-pad up/down = choose a test, {A} = start it.",
+            "D-pad up/down = a test, l/r = power. {A} = start.",
             "{GUIDE} or {START} stops a moving test (not measured).",
             "Push: {A}, roll the robot BY HAND exactly " + d + ",",
             "  straight along the tape, then {B}.",
@@ -365,7 +394,7 @@ public abstract class DriveTunerOpMode extends FinderOpMode {
             "Turn: turns 90 left: check it with a square.",
             "Each new number is used at once: repeat Drive and",
             "  Strafe until they measure " + d + ".",
-            "Then copy the lines into your code.",
+            "Power: as your autos. Then copy the lines.",
         };
     }
 

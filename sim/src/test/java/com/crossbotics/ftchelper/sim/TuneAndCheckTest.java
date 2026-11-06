@@ -130,6 +130,9 @@ public class TuneAndCheckTest {
             s.start();
             s.press(v -> s.g1().dpad_down = v);           // Push -> Drive forward
             assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("> Drive forward"), 1));
+            assertTrue(String.join("\n", s.screen()), s.screenHas("Power : 0.5"));
+            s.press(v -> s.g1().dpad_right = v);          // the test power: the autos' 0.6
+            assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Power : 0.6"), 1));
             s.press(v -> s.g1().a = v);
             assertTrue(String.join("\n", s.screen()), SimRun.waitFor(() -> s.screenHas("Drive: done"), 15));
             assertFalse(String.join("\n", s.screen()), s.screenHas("STOPPED"));

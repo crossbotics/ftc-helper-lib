@@ -221,7 +221,7 @@ public class AutoDrive {
 
     /**
      * Drives a distance in a straight line, robot-relative, without turning.
-     * Full speed until the last part, then slows down (see {@code taperStartFraction}). At the distance
+     * Full speed until the last part, then slows down (see {@code taperStartFraction} and {@code slowDownIn}). At the distance
      * the wheels brake and it waits (at most 0.3 s, mechanisms still updating) until the robot has stopped.
      *
      * <p><b>BLOCKS</b> (on purpose): returns when the move ends. Autonomous only; never in TeleOp.
@@ -281,7 +281,7 @@ public class AutoDrive {
                 // Slow down near the end so the robot does not overshoot or skid (see MotionMath).
                 double remaining = distanceIn - traveled;
                 double speed = MotionMath.taperSpeed(remaining / distanceIn,
-                        cfg.moveMinPower, maxSpeed, cfg.taperStartFraction);
+                        cfg.moveMinPower, maxSpeed, cfg.taperFraction(distanceIn));
                 // Turn "forward, right" at this speed into four wheel powers (no turning).
                 setPowers(MecanumMixer.mix(speed * command[0], speed * command[1], 0, powerLimit));
 
@@ -375,7 +375,7 @@ public class AutoDrive {
                     // Slow down near the end, like move().
                     double remaining = distanceIn - traveled;
                     double speed = MotionMath.taperSpeed(remaining / distanceIn,
-                            cfg.moveMinPower, maxSpeed, cfg.taperStartFraction);
+                            cfg.moveMinPower, maxSpeed, cfg.taperFraction(distanceIn));
                     setPowers(MecanumMixer.mix(speed * command[0], speed * command[1], turn, powerLimit));
 
                     // Stuck: give up and do NOT try the turn (the robot is pinned against something).
@@ -515,8 +515,13 @@ public class AutoDrive {
                 // of circling it.
                 double speed;
                 if (dist <= toleranceIn) speed = 0;
-                else if (dist < DRIVE_TO_NEAR_IN) speed = Math.max(nearMin, Math.min(DRIVE_TO_KP * dist, maxSpeed));
-                else speed = MotionMath.taperSpeed(dist / startDist, cfg.moveMinPower, maxSpeed, cfg.taperStartFraction);
+                else if (dist < DRIVE_TO_NEAR_IN) {
+                    double near = Math.min(DRIVE_TO_KP * dist, maxSpeed);
+                    // With slowDownIn the slow-down goes on here too: never faster than it (but at least nearMin).
+                    if (cfg.slowDownIn > 0) near = Math.min(near, MotionMath.taperSpeed(dist / startDist,
+                            cfg.moveMinPower, maxSpeed, cfg.taperFraction(startDist)));
+                    speed = Math.max(nearMin, near);
+                } else speed = MotionMath.taperSpeed(dist / startDist, cfg.moveMinPower, maxSpeed, cfg.taperFraction(startDist));
                 double fwd = dist > 1e-6 ? speed * forwardErr / dist : 0;
                 double right = dist > 1e-6 ? speed * rightErr / dist : 0;
                 // PID output is counterclockwise; the drive's turn is clockwise.

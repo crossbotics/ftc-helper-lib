@@ -41,6 +41,17 @@ public class FindersTest {
         assertEquals(0.05, step.size(), E);
     }
 
+    // The Drive Tuner's test power: D-pad left/right, 0.3 to 1.0 in steps of 0.1.
+    @Test public void driveTunerPowerStepsAndStaysInRange() {
+        assertEquals(0.6, DriveTunerOpMode.nextPower(0.5, +1), 1e-12);
+        assertEquals(0.4, DriveTunerOpMode.nextPower(0.5, -1), 1e-12);
+        assertEquals(1.0, DriveTunerOpMode.nextPower(1.0, +1), 1e-12);
+        assertEquals(0.3, DriveTunerOpMode.nextPower(0.3, -1), 1e-12);
+        double p = 0.3;
+        for (int i = 0; i < 7; i++) p = DriveTunerOpMode.nextPower(p, +1);
+        assertEquals("no rounding drift", 1.0, p, 1e-12);
+    }
+
     @Test public void flywheelGainsFromTopSpeed() {
         double[] g = FinderMath.flywheelPidf(2800);            // ~6000 RPM at 28 counts per turn
         assertEquals(32767 / 2800.0, g[3], E);                 // F

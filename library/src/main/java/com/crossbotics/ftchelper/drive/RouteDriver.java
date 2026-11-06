@@ -215,8 +215,12 @@ public final class RouteDriver {
         double speed;
         if (dist <= tol) speed = 0;
         else if (dist < AutoDrive.DRIVE_TO_NEAR_IN) {
-            speed = Math.max(Math.min(1, AutoDrive.DRIVE_TO_MIN_POWER / limit), Math.min(AutoDrive.DRIVE_TO_KP * dist, maxSpeed));
-        } else speed = MotionMath.taperSpeed(dist / lineStartDist, cfg.moveMinPower, maxSpeed, cfg.taperStartFraction);
+            double near = Math.min(AutoDrive.DRIVE_TO_KP * dist, maxSpeed);
+            // With slowDownIn the slow-down goes on here too: never faster than it (but at least the least power).
+            if (cfg.slowDownIn > 0) near = Math.min(near, MotionMath.taperSpeed(dist / lineStartDist,
+                    cfg.moveMinPower, maxSpeed, cfg.taperFraction(lineStartDist)));
+            speed = Math.max(Math.min(1, AutoDrive.DRIVE_TO_MIN_POWER / limit), near);
+        } else speed = MotionMath.taperSpeed(dist / lineStartDist, cfg.moveMinPower, maxSpeed, cfg.taperFraction(lineStartDist));
 
         // The field error seen from the robot: heading h (CCW from "away") faces (-sin h, cos h).
         double h = Math.toRadians(p.headingDeg);

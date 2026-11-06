@@ -25,7 +25,7 @@ import java.util.List;
  *
  * <p>Its numbers are in {@code Tunables.Drive}: {@code maxPower}, {@code practiceMaxPower} (the
  * PRACTICE profile's limit), {@code slowSpeed} (the slow trigger), and the autonomous ones
- * ({@code strafeCorrection}, {@code turnKp}, {@code turnKd}, {@code moveMinPower}) with
+ * ({@code strafeCorrection}, {@code turnKp}, {@code turnKd}, {@code moveMinPower}, {@code slowDownIn}) with
  * {@code calibrated = true} once the Drive Tuner is done (autonomous refuses to run before).
  *
  * <p>Motor directions: the left side is reversed by default (the usual way motors are mounted). If
@@ -175,6 +175,7 @@ public final class Drive {
         final double turnKp = t.tunable("turnKp", 0.012, 0.001).range(0, 1).get();
         final double turnKd = t.tunable("turnKd", 0.003, 0.0005).range(0, 1).get();
         final double moveMin = t.tunable("moveMinPower", 0.30, 0.02).range(0, 1).get();
+        final double slowDown = t.tunable("slowDownIn", 0, 0.5).range(0, 48).get();
         final boolean calibrated = t.flag("calibrated", false);
         return new RobotConfig() {
             @Override public DriveConfig drive() {
@@ -200,6 +201,7 @@ public final class Drive {
                 c.turnKp = turnKp;
                 c.turnKd = turnKd;
                 c.moveMinPower = moveMin;
+                c.slowDownIn = slowDown;
                 c.calibrationConfirmed = calibrated;
                 return c;
             }

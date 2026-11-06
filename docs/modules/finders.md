@@ -249,7 +249,10 @@ public class DriveTuner extends DriveTunerOpMode {
 
 With a `RobotSettings` class instead: `@Override protected RobotConfig robotConfig() { return new RobotSettings(); }`.
 
-D-pad chooses a test, **A** starts it.
+D-pad up/down chooses a test, **A** starts it. D-pad left/right sets the power the Drive and Strafe tests
+drive at (0.3 to 1.0, starts at 0.5): use your autonomous moves' power, because a faster robot slides
+further when it stops. A new power must measure right again before `calibrated = true` shows, and the
+results file says which power the numbers fit.
 
 | Test | You do | It finds |
 | --- | --- | --- |
@@ -270,6 +273,7 @@ c.wheelDiameterIn = 3.812;   // RobotSettings.auto()
 Robot.java: .wheelMm(96.8)   // in the drive(...) line
 c.strafeCorrection = 1.180;   // RobotSettings.auto()
 Tunables.Drive: strafeCorrection = 1.180
+// measured at power 0.6: these numbers fit autonomous moves at that power
 ```
 
 Five files: the wheel size goes in the drive line of `Robot.java` (`.wheelMm(96.8)`, millimetres),

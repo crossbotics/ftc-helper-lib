@@ -31,6 +31,7 @@ public class AutoDriveSimTest {
             loops++;
             if (stopActiveAfterLoops >= 0 && loops >= stopActiveAfterLoops) active = false;
             if (stuck) return;
+            if (fl.power != 0) lastMovingPower = Math.abs(fl.power);
             for (FakeMotor m : all) m.position += m.power * TICKS_PER_LOOP_AT_FULL;
             if (twoMotorTank) {
                 heading += (-fl.power + fr.power) / 2 * DEG_PER_LOOP_AT_FULL;
@@ -40,6 +41,8 @@ public class AutoDriveSimTest {
         }
 
         boolean twoMotorTank = false;
+        // The wheel power in the last loop that still drove: how fast the robot reached the end.
+        double lastMovingPower = 0;
 
         AutoDrive auto(AutoDriveConfig cfg, double powerLimit) {
             return new AutoDrive(cfg, false, powerLimit, fl.motor, fr.motor, bl.motor, br.motor,
@@ -86,6 +89,29 @@ public class AutoDriveSimTest {
         double inches = r.fl.position / c.ticksPerInch();
         assertEquals(24, inches, 0.5);
         assertTrue(r.allStopped());
+    }
+
+    // slowDownIn: 10% of a short move is too little road to slow down on. With slowDownIn the short move
+    // reaches its end as slowly as a long one, so it slides the same.
+    @Test public void slowDownInMakesAShortMoveArriveSlowly() {
+        SimRobot plain = new SimRobot();
+        assertEquals(AutoDrive.Result.DONE, plain.auto(config(), 1).move(8, 0, 1.0));
+        SimRobot slowed = new SimRobot();
+        AutoDriveConfig c = config();
+        c.slowDownIn = 6;
+        assertEquals(AutoDrive.Result.DONE, slowed.auto(c, 1).move(8, 0, 1.0));
+        assertTrue("6 in: slow at the end (" + slowed.lastMovingPower + ")", slowed.lastMovingPower < 0.45);
+        assertTrue("10% only: faster at the end (" + plain.lastMovingPower + " vs " + slowed.lastMovingPower + ")",
+                plain.lastMovingPower > slowed.lastMovingPower + 0.15);
+        assertEquals(8, slowed.fl.position / c.ticksPerInch(), 0.5);
+
+        // A long move: the last 10% is longer than 6 in, so slowDownIn changes nothing.
+        AutoDriveConfig d = config();
+        d.slowDownIn = 6;
+        assertEquals(0.10, d.taperFraction(100), 1e-12);
+        assertEquals(0.75, d.taperFraction(8), 1e-12);
+        assertEquals(1.0, d.taperFraction(4), 1e-12);
+        assertEquals(0.10, config().taperFraction(8), 1e-12);
     }
 
     @Test public void powerLimitIsNeverExceeded() {
