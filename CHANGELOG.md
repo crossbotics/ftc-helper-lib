@@ -2,6 +2,20 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## Unreleased
+
+### Added
+
+- **`Launcher.feedWheelOutWith(intake)`:** the feed wheel runs backward while that intake pushes out, so the
+  pieces in the feeder come out too. A shot being fed wins.
+
+### Changed
+
+- **Firing with the flywheel off:** a fire press while the wheel is idle (switched off) spins it up, fires, and
+  then goes back to idle by itself. Before, it stayed spun up after the shot.
+- **`Tunables.Launcher.maxFiringQueue = 0` is allowed:** no queue, a press while a shot is on its way is ignored.
+  Before, 0 counted as 1.
+
 ## v0.33.0 - 2026-11-06
 
 ### Added

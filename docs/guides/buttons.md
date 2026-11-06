@@ -89,7 +89,9 @@ launcher's RB firing (taps, hold, tap then hold) on Y, and `spinOn(...)` moves L
 ([cookbook](../cookbook.md#how-do-i-put-the-launchers-fire-button-on-another-button)).
 
 Taps on `fire` (and on the launcher's own RB) add up: at most `maxFiringQueue` shots wait (Tunables, default 4), so many nervous taps do
-not fire many pieces later ([Tunables](tunables.md#launcher)).
+not fire many pieces later ([Tunables](tunables.md#launcher)). `maxFiringQueue = 0`: no queue at all, a press
+while a shot is still on its way does nothing. The launcher's LB (or wherever you move its on/off) switches the
+wheel off; a fire press then spins it up, fires, and switches it off again.
 
 **When does a gesture's job run?** At once, unless the same button has a longer gesture that starts
 the same way. Then the library waits only until it knows:

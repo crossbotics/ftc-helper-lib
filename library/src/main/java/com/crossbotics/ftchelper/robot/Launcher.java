@@ -169,6 +169,11 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     // fire(): the most shots that may wait at once (Tunables maxFiringQueue). Taps past it are ignored,
     // so a nervous driver tapping ten times does not get ten shots later.
     private int maxFiringQueue = 4;
+    // Fired while the wheel was off (idle): after the last shot it goes back to idle by itself, so a
+    // flywheel the driver switched off spins up to fire and then down again. spinUp() and idle() clear it.
+    private boolean idleAfterShots = false;
+    // The feed wheel runs backward while this part pushes pieces out (feedWheelOutWith), or null.
+    private Intake feedWheelOutWith = null;
     // Tap, then hold the fire button: SPRAY while held (Tunables sprayOnTapHold, only with sprayEnabled).
     private boolean sprayOnTapHold = false;
     // The button times (Tunables.Buttons tapGapSec, holdSec), the same ones every other button uses.
@@ -303,6 +308,27 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
     /** The indexer given with {@link #feeder(Indexer)} (it pushes the pieces in), or null. */
     public Indexer feeder() {
         return indexer;
+    }
+
+    /**
+     * The feed wheel runs backward while this part pushes pieces out ({@code intake.out()}), and stops
+     * again when it stops pushing out. WHY: pushing pieces out of the intake leaves the ones already in
+     * the feeder stuck there; with this they come back out too. A shot being fed always wins. Needs a
+     * {@link #feedWheel(Indexer)}.
+     *
+     * <pre>{@code
+     * add(Launcher.flywheel("launcher", "gobilda-5203-6000")
+     *         .feeder(Indexer.servo("feeder_arm")).feedWheel(Indexer.crServo("feeder_wheel"))
+     *         .feedWheelOutWith(intake));
+     * }</pre>
+     *
+     * @param part the intake whose "out" also turns the feed wheel backward
+     * @return this launcher, for more settings
+     */
+    public Launcher feedWheelOutWith(Intake part) {
+        if (part == null) throw new IllegalArgumentException("Robot.java: " + name() + ".feedWheelOutWith(null): add the intake first");
+        feedWheelOutWith = part;
+        return this;
     }
 
     /** The feed wheel ({@link #feedWheel(Indexer)}), or null. */
@@ -527,6 +553,14 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         // A feed stop or pushing parts: one feed opens the stop, runs the pushers and the indexer, and
         // ends when the wheel sees the shot (ShotGate).
         gate = null;
+        if (feedWheelOutWith != null && feedWheel == null) {
+            throw new IllegalStateException("Robot.java: " + name() + ".feedWheelOutWith(" + feedWheelOutWith.name()
+                    + ") needs a feed wheel: add .feedWheel(Indexer.crServo(\"...\")) to the launcher, or take feedWheelOutWith out");
+        }
+        if (feedWheelOutWith != null && feedWheelOutWith.robot != robot) {
+            throw new IllegalStateException("Robot.java: " + name() + ".feedWheelOutWith(" + feedWheelOutWith.name()
+                    + "): that intake is not added to this robot (add(...) it in define())");
+        }
         if (feedWheel != null && indexer == null) {
             throw new IllegalStateException("Robot.java: " + name() + ".feedWheel(" + feedWheel.name() + ") needs a feeder(...) too: "
                     + "the part that pushes each piece into the wheel (e.g. Indexer.servo(\"feeder_arm\"))");
@@ -559,6 +593,10 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
                     pushers, assistSec, moveSec,
                     flywheel, stream, feedWheel != null && !feedWheel.missing ? feedWheel : null,
                     () -> spinning);   // (true in an eject too: the wheel brings the piece to throw out)
+            if (feedWheelOutWith != null) {
+                final Intake out = feedWheelOutWith;
+                gate.wheelBacksOutWhile(out::isPushingOut);
+            }
             gate.clock = clock;
             feed = gate;
         }
@@ -571,8 +609,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         if (t.has("quickMaxWaitSec")) part.quickMaxWait(t.number("quickMaxWaitSec", 0.3));
         sprayOn = t.has("sprayEnabled") && t.flag("sprayEnabled", false);
         sprayLastSec = t.has("sprayLastSec") ? Math.max(0, t.number("sprayLastSec", 5)) : 5;
-        // At least 1: 0 would make the fire button do nothing.
-        maxFiringQueue = t.has("maxFiringQueue") ? Math.max(1, (int) Math.round(t.number("maxFiringQueue", 4))) : 4;
+        // 0 = no queue: a press while a shot is on its way is ignored (fire() then needs nothing waiting).
+        maxFiringQueue = t.has("maxFiringQueue") ? Math.max(0, (int) Math.round(t.number("maxFiringQueue", 4))) : 4;
         // Tap, then hold: a part of SPRAY, so only with sprayEnabled; on unless turned off.
         sprayOnTapHold = sprayOn && (!t.has("sprayOnTapHold") || t.flag("sprayOnTapHold", true));
         tapGap = ButtonPlan.tapGap(robot);
@@ -761,6 +799,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         needBuilt(part);
         touch();
         spinning = true;
+        idleAfterShots = false;   // asked to stay spun up
         part.spinUp();
     }
 
@@ -769,6 +808,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         needBuilt(part);
         touch();
         spinning = false;
+        idleAfterShots = false;
         shotsAtPause = 0;   // shots waiting from a pause are dropped, like the others
         // A feed that has not pushed yet (the feed wheel staging, the feed stop opening) is dropped too: its
         // piece must not go into a wheel that is slowing down.
@@ -793,27 +833,33 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
      * shot to the queue, up to {@code maxFiringQueue} shots waiting (Tunables, default 4): four quick
      * taps while the wheel spins up fire four pieces, and more taps than that are ignored. The
      * launcher's own RB button counts its taps the same way (see {@link #fireWhileHeld()}). The piece
-     * being fed now does not count, only the ones still waiting. {@link #fire(int)} has no limit.
+     * being fed now does not count, only the ones still waiting. {@code maxFiringQueue = 0}: no queue at
+     * all, a press while a shot is still on its way (waiting or being fed) is ignored. {@link #fire(int)}
+     * has no limit. Fired while the wheel is off (idle), it goes back to idle after the shots.
      */
     public void fire() {
         needBuilt(part);
         // The driver asks first: a running action lets go here, and its shots go with it. Then count.
         touch();
-        if (part.getShotsLeft() >= maxFiringQueue) return;   // full: no extra shot
+        if (maxFiringQueue == 0 ? part.isShooting() : part.getShotsLeft() >= maxFiringQueue) return;   // full: no extra shot
         fire(1);
     }
 
-    /** The most shots {@link #fire()} lets wait at once (Tunables {@code maxFiringQueue}, default 4). */
+    /** The most shots {@link #fire()} lets wait at once (Tunables {@code maxFiringQueue}, default 4; 0 = no queue). */
     public int maxFiringQueue() {
         return maxFiringQueue;
     }
 
-    /** Fires {@code count} pieces, one after another (no queue limit: an autonomous asks for what it means). */
+    /**
+     * Fires {@code count} pieces, one after another (no queue limit: an autonomous asks for what it means).
+     * Fired while the wheel is off (idle), it goes back to idle after the last shot.
+     */
     public void fire(int count) {
         needBuilt(part);
         touch();
         shotsAfterHold += Math.max(0, count);
         askedToFire = true;
+        if (!spinning && count > 0) idleAfterShots = true;
         spinning = true;
         part.shoot(count);
     }
@@ -1520,6 +1566,8 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         part.speedScale(scale);
         modeNow = chooseMode();
         part.shotMode(modeNow);
+        // Fired while it was off: back to idle once the last shot has gone (not while the button is held).
+        if (idleAfterShots && !holding && !part.isShooting()) idle();
         part.update();
     }
 
@@ -1529,6 +1577,7 @@ public final class Launcher extends Module<Launcher> implements Toggleable {
         touch();
         ejecting = false;   // an explicit stop stays stopped
         spinning = false;
+        idleAfterShots = false;
         shotsAtPause = 0;   // and a pause's waiting shots do not fire at resume
         part.stop();
     }

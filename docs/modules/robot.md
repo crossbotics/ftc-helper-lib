@@ -831,8 +831,8 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 
 | Method | |
 | --- | --- |
-| `spinUp()`, `idle()`, `toggle()` | to the shot speed; back to `idleRpm` |
-| `fire()`, `fire(n)` | spins up if needed, feeds as soon as it is at speed (gives up after 3 s, saying why). Each `fire()` adds one shot, up to `maxFiringQueue` waiting (Tunables, default 4): more taps are ignored. A press of RB counts the same way. `fire(n)` has no limit |
+| `spinUp()`, `idle()`, `toggle()` | to the shot speed; back to `idleRpm`. Fired while idle (the driver switched the wheel off), it spins up for the shots and goes back to idle after the last one |
+| `fire()`, `fire(n)` | spins up if needed, feeds as soon as it is at speed (gives up after 3 s, saying why). Each `fire()` adds one shot, up to `maxFiringQueue` waiting (Tunables, default 4): more taps are ignored. `maxFiringQueue = 0`: no queue, a press while a shot is on its way is ignored. A press of RB counts the same way. `fire(n)` has no limit |
 | `maxFiringQueue()` | the most shots `fire()` (or a press of RB) lets wait at once |
 | `fireWhileHeld()`, `ceaseFire()` | the launcher's RB. Every press fires at once: it is a tap on `fire()` (one more shot, up to `maxFiringQueue`). Held: the next piece as soon as the last is fed (QUICK). A tap, then pressed again within `Buttons.tapGapSec` and held: SPRAY while held (with `sprayEnabled` and `sprayOnTapHold`). On release the hold adds no more, and the taps' shots still go. A double tap or long press of your own on the same button stops the "fires at once" |
 | `fireOn(button)`, `spinOn(button)` | in `Controls.java`: puts RB's whole fire job (or LB's spin up / down) on another button, e.g. `robot.launcher.fireOn(g2.y)`; `null` = no button. No INIT note for the moved job (a job you push off the new button still gets one). Calling it again moves it again |
@@ -861,6 +861,7 @@ launcher = add(Launcher.flywheel("launcher", "gobilda-5203-6000")
 | `feedStop(servo)`, `feedStopName()` | a [feed stop](#firing-shot-modes-feed-stop-piece-path): a servo that holds the pieces back until a shot is allowed |
 | `pushedBy(intake...)`, `pushers()` | the parts that push a piece into the wheel, in order: borrowed for each piece, then back as they were |
 | `feedWheel(Indexer)`, `feedWheel()` | a [feed wheel](#firing-shot-modes-feed-stop-piece-path): a CR servo or motor that moves each piece up to the `feeder` (a push arm). Needs `feeder(...)` too |
+| `feedWheelOutWith(intake)` | the feed wheel runs backward while that intake pushes out (`out()`), so the pieces in the feeder come out too. A shot being fed wins. Needs `feedWheel(...)` |
 | `readyAction(timeoutSec)` | a ready-made action: spin up, done when ready ("Ready to launch") |
 | `shotMode(mode)`, `shotModeNow()`, `sprayEnabled()` | set the [shot mode](#firing-shot-modes-feed-stop-piece-path) by hand (`ShotMode.CAREFUL`, `QUICK`, `SPRAY`; `null` = the launcher chooses, the default); the mode in use |
 | `allianceTrim()` | this alliance's trim from Tunables (`redTrimPercent`, `blueTrimPercent`), percent |
@@ -928,7 +929,8 @@ push leaves it out, and nothing extra runs. (Last season's intake ran 250 ms aft
 
 **Feed wheel** (`.feedWheel(Indexer.crServo("feeder_wheel"))`, with a push arm as the `feeder`): the wheel
 moves the pieces up to the arm, and the arm pushes each one into the flywheel, then comes back. Its numbers
-go in its own section (`Tunables.FeederWheel`). Two ways, chosen with `alwaysOn`:
+go in its own section (`Tunables.FeederWheel`). With `.feedWheelOutWith(intake)` it also runs backward
+while the intake pushes out, so a piece stuck between the wheel and the arm comes back out. Two ways, chosen with `alwaysOn`:
 
 - **Only while firing** (`alwaysOn = false`, the default): for each piece the wheel starts, runs `stageSec`
   (0.2 s, the piece gets to the arm), then the arm pushes while the wheel still turns. The wheel stops
