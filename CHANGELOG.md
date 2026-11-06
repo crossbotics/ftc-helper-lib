@@ -2,6 +2,13 @@
 
 What changed in each version. Newest first. How to update: [Keep it up to date](docs/02-keep-up-to-date.md).
 
+## v0.31.1 - 2026-11-06
+
+### Fixed
+
+- **Finders guide, "A new servo part, step by step":** it still told you to use D-pad right and RB; now it uses the
+  new step buttons (D-pad up/down moves, left/right picks the step).
+
 ## v0.31.0 - 2026-11-06
 
 ### Added

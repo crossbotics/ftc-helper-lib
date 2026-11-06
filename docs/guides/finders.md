@@ -162,13 +162,13 @@ Use **Tune and check > Servo Finder**: it knows Robot.java (`reversed()`, a seco
    of its turn and holds there.
 3. **Put the arm on in the middle of the part's swing**, so the part can move both ways from here. Tighten the
    screw. Mark the horn and the shaft with a paint pen: a new horn later goes on the same tooth.
-4. **Find the direction.** Press **D-pad right** (0.01 bigger) a few times and watch the part. Write it down:
+4. **Find the direction.** Press **D-pad left** once (a 0.01 step), then **D-pad up** (bigger) a few times and watch the part. Write it down:
    "bigger = open", "bigger = up". There is no standard way a servo turns
    ([why](../conventions.md#servos-and-motors-which-way-is-bigger)); for a catalog servo the screen shows a
    **Hint** (goBILDA: "bigger = clockwise (seller)"), but only your test counts, because the part's way depends
    on how the servo is mounted.
-5. **Find each end, slowly.** Move toward one end in small steps (D-pad right/left, hold **RB** for 10 times
-   finer) until the part JUST touches the frame. **A servo that hums is pushing on something: back off at once**
+5. **Find each end, slowly.** Move toward one end in small steps (D-pad up/down; D-pad left makes the step
+   smaller, down to 0.001) until the part JUST touches the frame. **A servo that hums is pushing on something: back off at once**
    (it gets hot and can strip its gears). Back off 0.01 more and press **X**. The same at the other end: **B**.
 6. **Save each position you need** (open, closed, rest, push...): move there, press **A**. Then copy the lines
    into `Tunables.java` (step 3 below).
