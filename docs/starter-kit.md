@@ -163,7 +163,7 @@ the TeleOp waits.
 | left stick | drive | D-pad up/down | lift one position up/down |
 | right stick X | turn | A / Y | lift DOWN / HIGH |
 | left trigger | slow (squeeze) | left stick Y | lift by hand |
-| Y | field-centric on/off | right bumper | claw open/close |
+| Y | double-tap: field-centric on/off | right bumper | claw open/close |
 | BACK | reset "forward" | left bumper | intake on/off |
 | GUIDE | tuning menu (PRACTICE) | B (hold) | intake reverse |
 | BACK + START together | debug telemetry on/off | | |

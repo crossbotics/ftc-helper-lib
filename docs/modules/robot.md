@@ -186,7 +186,7 @@ public class Tunables {
 - **A part that is not on the robot** ([`optional()`](#parts-not-on-the-robot-yet), device not in the
   configuration) needs no section: nothing about its numbers stops INIT, not even a Lift's `min`/`max`.
 - **Missing numbers are not errors**, with a few exceptions: the library's default is used and INIT
-  names the part in its `Starting numbers in use` line (the robot log has the full line,
+  names a library guess in its `Library starting values` line (PRACTICE only) (the robot log has the full line,
   `Tunables.Lift: kD, kF not written: library defaults used (fine)`). **The exceptions are
   safety numbers** (a safety limit never comes from a library default): a Lift's or Arm's `min` and
   `max`, a Hood's `posA` and `posB` (or its `calibration`), a servo Turret's `posA`, `angleA`, `posB`,
@@ -875,7 +875,7 @@ stays), or one table per game piece: `speedByDistancePollen`, `speedByDistanceNe
 at). **First run:** the ones not written start from the parts catalog for the motor in
 `Launcher.flywheel(...)` (F = 32767 / its top speed in counts per second, P = F / 10, I = P / 10, D = 0: a
 6000 RPM motor gets kF 11.7, kP 1.17, kI 0.117), not the hub's own gains, and an unwritten `speedRpm` is 60%
-of the motor's top speed (3600). INIT names the launcher in its "Starting numbers in use" line; the robot
+of the motor's top speed (3600). The parts catalog's numbers are not on the INIT screen (they are fine as they are); the robot
 log has the values: `Launcher: defaults from the catalog (gobilda-5203-6000): kF 11.7, kP 1.17, kI 0.117,
 speed 3600 rpm. Run the Flywheel Finder, then the Shot Tuner`. A written number
 always wins; `DEFAULT` in place of a number is the same as no line
@@ -1662,7 +1662,7 @@ The whole table, with how to move each: [the button menu](../guides/buttons.md#m
 | Right stick | turn (X) | arm by hand (Y), turret by hand (X) |
 | LT / RT | slow (the further, the slower) / free | intake out (hold) / intake in (hold, or on/off) |
 | LB / RB | free | launcher spin up/down / fire one (hold: keep firing) |
-| A / X / Y / B | free / free / field-centric on/off (mecanum) / free | lift lowest / second / highest / claw |
+| A / X / Y / B | free / free / double-tap: field-centric on/off (mecanum) / free | lift lowest / second / highest / claw |
 | D-pad up/down | free | lift next height, or launcher speed |
 | D-pad left/right | free | wrist |
 | BACK | press: **pause** everything at once (stopped on brake), a tap again: go on; held 1 s (field-centric on): also "forward" = away from you now (with odometry: the pose stays, only the driver's "forward" changes), still paused | turret following on/off (with a turret; else free) |

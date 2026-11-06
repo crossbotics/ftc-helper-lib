@@ -89,6 +89,8 @@ final class LibraryKeys {
         this.clock = clock;
         for (LibraryButtons.Slot s : slots) {
             Runnable tap = s.tap == null ? null : jobs.get(s.tap);
+            // Field-centric on/off only on a second press soon after the first (an accidental tap does nothing).
+            if (tap != null && s.tap == LibraryButtons.Job.FIELD_CENTRIC) tap = onSecondTap(tap, clock);
             Runnable hold = s.hold == null ? null : jobs.get(s.hold);
             if (tap == null && hold == null) continue;
             boolean menu = s.tap == LibraryButtons.Job.TUNING_MENU || s.tap == LibraryButtons.Job.BUTTON_MAP
@@ -211,6 +213,23 @@ final class LibraryKeys {
         }
         if (!down) g.blocked = false;
         g.wasDown = down;
+    }
+
+    // Runs the job only on the second of two presses closer together than FIELD_CENTRIC_DOUBLE_TAP_SEC.
+    private static Runnable onSecondTap(Runnable job, LongSupplier clock) {
+        final long gap = (long) (LibraryButtons.FIELD_CENTRIC_DOUBLE_TAP_SEC * 1e9);
+        final long[] first = {0};
+        final boolean[] waiting = {false};
+        return () -> {
+            long now = clock.getAsLong();
+            if (waiting[0] && now - first[0] <= gap) {
+                waiting[0] = false;
+                job.run();
+            } else {
+                waiting[0] = true;
+                first[0] = now;
+            }
+        };
     }
 
     // A job that changes how the robot drives: it waits while the robot is paused.

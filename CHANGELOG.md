@@ -11,6 +11,13 @@ What changed in each version. Newest first. How to update: [Keep it up to date](
 
 ### Changed
 
+- **Field-centric on/off needs a double tap** (two presses within 0.35 s) of its button (Y, or the right stick click
+  with one driver). One tap by accident turned the sticks around. The button map says `double-tap: field-centric on/off`.
+- **A quieter INIT screen:** the "Starting numbers in use" line is now `Library starting values (DEFAULT): ...`,
+  in the PRACTICE profile only, and it names the numbers (`Launcher.stepRpm`) left at a library guess. The
+  parts catalog's numbers (the seller's, such as a servo's speed) and numbers not written are fine as they are:
+  robot log only. "Switch alliance : off" is gone (the line shows only when it is on). A part's button that
+  Controls.java took or freed on purpose ("Intake in (hold): no button ...") goes to the robot log, not the screen.
 - **Firing with the flywheel off:** a fire press while the wheel is idle (switched off) spins it up, fires, and
   then goes back to idle by itself. Before, it stayed spun up after the shot.
 - **`Tunables.Launcher.maxFiringQueue = 0` is allowed:** no queue, a press while a shot is on its way is ignored.

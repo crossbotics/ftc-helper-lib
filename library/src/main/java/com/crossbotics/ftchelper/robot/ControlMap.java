@@ -34,7 +34,7 @@ import java.util.Set;
  * }</pre>
  *
  * <p><b>The library's own buttons</b> (gamepad 1 by default): left stick drives (and strafes on
- * mecanum), right stick X turns, LT slow (the further it is pulled, the slower), Y field-centric on/off
+ * mecanum), right stick X turns, LT slow (the further it is pulled, the slower), Y double-tap: field-centric on/off
  * (mecanum), BACK pauses everything at the press (motors on brake; a tap again to go on), holding BACK
  * 1 s also resets "forward" (field-centric), hold START then press BACK: debug lines (BACK first is
  * just a pause), START held 1 s sets the pose to
@@ -53,6 +53,9 @@ import java.util.Set;
  * Docs: docs/modules/robot.md (section "Controls")
  */
 public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
+    // The button notes went to the robot log once (they are not all on the screen).
+    private boolean buttonNotesLogged = false;
+
     private R robot;
     private Boolean oneDriver = null;
     private ButtonPlan plan;
@@ -631,7 +634,16 @@ public abstract class ControlMap<R extends RobotDefinition> extends EasyTeleOp {
         String noSlow = noSlowWarning(libraryKeys(), plan);
         if (noSlow != null) t.warn(noSlow);
         robot().showNotes(t);   // a part that is off: a "!!" warning in COMPETITION
-        if (plan != null) for (String n : plan.notes()) t.text(n);
+        if (plan != null) for (String n : plan.screenNotes()) t.text(n);
+        if (plan != null && !buttonNotesLogged) {
+            // The rest (a part's button that Controls.java took or freed on purpose): the robot log only.
+            buttonNotesLogged = true;
+            try {
+                for (String n : plan.notes()) com.qualcomm.robotcore.util.RobotLog.ii("ftc-helper", "INIT " + com.crossbotics.ftchelper.gamepad.ButtonNames.say(n));
+            } catch (RuntimeException | LinkageError e) {
+                // no robot log (a test without the SDK)
+            }
+        }
         List<String> changed = RobotDefinition.changedTunables();
         if (!changed.isEmpty()) {
             t.section("Tuned on this robot (copy into Tunables.java)");

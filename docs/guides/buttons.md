@@ -169,7 +169,7 @@ on the button.
 While the robot is paused (a tap of gamepad 1 BACK), no button job runs, with one exception: a hold's
 stop job (the second job in `hold(job, stopJob)`) still runs when the button is let go, or when the
 pause starts in the middle of a gesture's hold. **Why:** so a part a hold started is told to stop, and
-stays stopped when the pause ends. Of the library's own buttons, field-centric on/off and slow on/off wait
+stays stopped when the pause ends. Field-centric on/off needs a **double tap** (two presses within 0.35 s): one tap by accident would turn the sticks around. Of the library's own buttons, field-centric on/off and slow on/off wait
 too; pause, "forward", the menus, the debug lines, set pose and the alliance switch still work.
 
 ## 4. Feedback

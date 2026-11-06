@@ -198,7 +198,7 @@ public class Tunables {
   `kP` to `kF` are goBILDA's tested numbers too. `DEFAULT` = "use the library's default"
   (more below): here, numbers where the library's default is the right one.
 - A number you leave out uses the library's default, and INIT tells you which part
-  (its `Starting numbers in use` line; the tuning menu shows each value). A few safety numbers, like a
+  (its `Library starting values` line in PRACTICE, the robot log; the tuning menu shows each value). A few safety numbers, like a
   lift's `min` and `max`, have no default: INIT stops and says which line to write.
 - **Numbers you do not have yet:** write a word in their place, so every setting is in the file from day
   one. Which one to write:
